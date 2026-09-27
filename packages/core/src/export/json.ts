@@ -7,8 +7,6 @@ const ExportSchema = z.object({
   authors: z.array(AuthorSchema).max(MAX_AUTHORS),
 });
 
-export type CreditExport = z.infer<typeof ExportSchema>;
-
 /** Serialize authors to a JSON string (pretty-printed). */
 export function toJson(authors: Author[]): string {
   const payload = ExportSchema.parse({ version: 1, authors });

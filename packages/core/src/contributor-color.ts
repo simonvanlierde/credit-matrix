@@ -55,13 +55,7 @@ export function mixHex(a: string, b: string, t: number): string {
   return `#${[round(ar, br), round(ag, bg), round(ab, bb)].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
 
-/** Relative luminance (0–1), sRGB approximation. */
-export function luminance(hex: string): number {
-  const [r, g, b] = rgb(hex);
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-}
-
-/** WCAG 2.x relative luminance: gamma-linearised, unlike the cheap `luminance` above. */
+/** WCAG 2.x relative luminance: gamma-linearised. */
 function wcagLuminance(hex: string): number {
   const [r, g, b] = rgb(hex).map((channel) => {
     const s = channel / 255;
@@ -96,7 +90,7 @@ export function onColor(background: string): string {
 function rgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
   // Expand shorthand (#abc → #aabbcc) and reject anything else so a malformed
-  // color can't poison mixHex/luminance with NaN channels.
+  // color can't poison mixHex/contrastRatio with NaN channels.
   const full = h.length === 3 ? h.replace(/./g, "$&$&") : h;
   if (!/^[0-9a-fA-F]{6}$/.test(full)) return [0, 0, 0];
   return [parseInt(full.slice(0, 2), 16), parseInt(full.slice(2, 4), 16), parseInt(full.slice(4, 6), 16)];
