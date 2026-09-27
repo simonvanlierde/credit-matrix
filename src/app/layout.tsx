@@ -13,6 +13,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Announcer } from "@/lib/announce";
 import { AppIntlProvider } from "@/lib/intl";
+import { PERSIST_KEY } from "@/store/persist-meta";
 // Server component: the manifest is read at build time and never bundled for the
 // client: only the version string is passed down to AboutPopover.
 import packageJson from "../../package.json";
@@ -65,6 +66,17 @@ export const viewport: Viewport = {
   ],
 };
 
+/**
+ * Declare the saved interface language before first paint.
+ *
+ * The page is prerendered once as `en`, and AppIntlProvider only corrects the
+ * attribute after hydration. Reading a locale cookie here instead would make
+ * every route dynamic (a per-request render on the Worker, not the static
+ * shell), so this reads the persisted store directly. The provider still has
+ * the final word once the catalog loads.
+ */
+const LANG_SCRIPT = `try{var l=JSON.parse(localStorage.getItem(${JSON.stringify(PERSIST_KEY)})).state.uiLocale;if(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(l))document.documentElement.lang=l}catch(e){}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -72,6 +84,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${plexSans.variable} ${plexMono.variable} ${newsreader.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, no user input */}
+        <script dangerouslySetInnerHTML={{ __html: LANG_SCRIPT }} />
+      </head>
       <body className="min-h-screen bg-surface text-on-surface">
         <AppIntlProvider>
           <ThemeProvider>
