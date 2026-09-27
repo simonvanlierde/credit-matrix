@@ -645,9 +645,12 @@ describe("contribution store", () => {
       // Writes are refused before the restore lands; this is about the ones
       // after it, where a full quota is the realistic failure.
       const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
-      // Spy on the instance, not Storage.prototype: the test environment's
-      // localStorage is a plain in-memory stand-in (see src/test-setup.ts).
-      const full = vi.spyOn(globalThis.localStorage, "setItem").mockImplementation(() => {
+      // Spy where setItem lives: jsdom's Storage.prototype, or the instance
+      // when src/test-setup.ts swapped in its plain in-memory stand-in. A spy
+      // on a jsdom Storage instance is stored as an item and never called.
+      const ls = globalThis.localStorage;
+      const owner = Object.hasOwn(ls, "setItem") ? ls : (Object.getPrototypeOf(ls) as Storage);
+      const full = vi.spyOn(owner, "setItem").mockImplementation(() => {
         throw new DOMException("QuotaExceededError");
       });
 
