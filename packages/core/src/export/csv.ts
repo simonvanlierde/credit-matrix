@@ -35,7 +35,7 @@ function escapeCsvValue(value: string): string {
   // Also guard values that already start with `'` so the unescape below is a
   // true inverse (otherwise a genuine leading apostrophe would be stripped).
   const guarded = value.startsWith("'") || FORMULA_PREFIX.test(value) ? `'${value}` : value;
-  if (/["\n,]/.test(guarded)) {
+  if (/["\r\n,]/.test(guarded)) {
     return `"${guarded.replace(/"/g, '""')}"`;
   }
   return guarded;
