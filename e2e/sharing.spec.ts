@@ -59,20 +59,17 @@ test("full round trip: ask → locked fill → reply link click → visible merg
   const pageB = await openBrowser(coauthor);
   await pageB.goto(askLink);
 
-  // Locked claim mode: banner up, no add row, other rows read-only.
+  // Locked claim mode: banner up, no add row, and only Bob's own row travelled.
   await expect(claimBanner(pageB)).toBeVisible();
   await expect(pageB.getByLabel("New author names or ORCID iD")).toHaveCount(0);
-  await expect(pageB.getByRole("button", { name: /^Investigation for Jane Smith:/ })).toHaveAttribute(
-    "aria-disabled",
-    "true",
-  );
+  await expect(pageB.getByRole("button", { name: /^Investigation for Jane Smith:/ })).toHaveCount(0);
   // Nothing that would rewrite the roster is offered either.
   await expect(pageB.getByRole("button", { name: /^Remove / })).toHaveCount(0);
 
   await pageB.getByRole("button", { name: /^Investigation for Bob White:/ }).click();
   await expect(pageB.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
   // On their own row the co-author is the authority — the name they type ships.
-  const ownName = pageB.getByLabel("Name or ORCID iD", { exact: true }).nth(1);
+  const ownName = pageB.getByLabel("Name or ORCID iD", { exact: true });
   await ownName.fill("Bob B. White");
   await ownName.press("Enter");
   await pageB.getByRole("button", { name: "Copy the link to send back" }).click();
@@ -177,10 +174,6 @@ test("keep as an ordinary draft unlocks for good", async ({ browser }) => {
   await pageB.getByRole("button", { name: "Keep as an ordinary draft" }).click();
   await expect(banner).toHaveCount(0);
   await expect(pageB.getByLabel("New author names or ORCID iD")).toBeVisible();
-  await expect(pageB.getByRole("button", { name: /^Investigation for Jane Smith:/ })).not.toHaveAttribute(
-    "aria-disabled",
-    "true",
-  );
 
   await pageB.reload();
   await expect(banner).toHaveCount(0);

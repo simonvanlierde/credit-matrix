@@ -88,7 +88,11 @@ export interface SharePayloadInput {
 
 /** Serialize authors and envelope into the compact share shape. Minified, never pretty. */
 export function toSharePayload(input: SharePayloadInput): string {
-  const { authors, title, claimId, sourceDraftId, reply } = input;
+  const { title, claimId, sourceDraftId, reply } = input;
+  // A claim link is addressed to one person and travels through their mail:
+  // it carries their own row and nobody else's names, iDs, or scores. The
+  // reply comes back the same way, and the merge only ever takes that row.
+  const authors = claimId ? input.authors.filter((author) => author.id === claimId) : input.authors;
 
   const scoreByRole = (author: Author) => {
     const scores = new Map(author.contributions.map((contribution) => [contribution.role, contribution.score]));

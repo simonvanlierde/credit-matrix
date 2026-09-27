@@ -36,11 +36,32 @@ describe("share payload v2", () => {
       }),
     );
 
-    expect(restored.authors.map((a) => a.id)).toEqual(authors.map((a) => a.id));
+    expect(restored.authors.map((a) => a.id)).toEqual([bob.id]);
     expect(restored.title).toBe("Trust in electric eels");
     expect(restored.claimId).toBe(bob.id);
     expect(restored.sourceDraftId).toBe("11111111-2222-3333-4444-555555555555");
     expect(restored.reply).toBe(true);
+  });
+
+  it("carries only the claimed contributor's row on a claim link, never the rest of the roster", () => {
+    const authors = makeAuthors();
+    const jane = authors[0];
+    if (!jane) throw new Error("expected Jane");
+    const payload = toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1" });
+
+    expect(payload).not.toContain("Bob White");
+    const restored = fromSharePayload(payload);
+    expect(restored.authors.map((a) => a.name)).toEqual(["Jane A. Smith"]);
+    expect(restored.authors[0]?.orcid).toBe("0000-0002-1825-0097");
+    expect(restored.claimId).toBe(jane.id);
+  });
+
+  it("still opens a full-roster claim link from before claims were trimmed", () => {
+    const authors = makeAuthors();
+    const raw = JSON.parse(toSharePayload({ authors }));
+    const restored = fromSharePayload(JSON.stringify({ ...raw, c: authors[1]?.id, d: "draft-1" }));
+    expect(restored.authors).toHaveLength(2);
+    expect(restored.claimId).toBe(authors[1]?.id);
   });
 
   it("round-trips a plain share with no claim, no source, no reply", () => {
