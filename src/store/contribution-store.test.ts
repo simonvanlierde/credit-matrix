@@ -52,6 +52,33 @@ describe("contribution store", () => {
       expect(store().authors).toHaveLength(1);
     });
 
+    it("keeps imported name parts, such as a multi-word surname, through later edits", () => {
+      store().loadAuthors([
+        createAuthor("Anne van der Berg", { firstName: "Anne", middleName: "", surname: "van der Berg" }),
+      ]);
+      store().addAuthor("Bob White");
+      expect(store().authors[0]).toMatchObject({ surname: "van der Berg", middleName: "", initials: "AV" });
+
+      // A rename re-parses: the old parts no longer describe the name.
+      const id = store().authors[0]?.id ?? "";
+      store().updateAuthorName(id, "Anne Smith");
+      expect(store().authors[0]?.surname).toBe("Smith");
+    });
+
+    it("gives an imported contributor a fresh id when it is duplicated or unshareable", () => {
+      const jane = createAuthor("Jane Smith", { id: "same" });
+      store().loadAuthors([
+        jane,
+        { ...createAuthor("Bob White"), id: "same" },
+        createAuthor("Cy Young", { id: "a b/c" }),
+      ]);
+
+      const ids = store().authors.map((a) => a.id);
+      expect(ids[0]).toBe("same");
+      expect(new Set(ids).size).toBe(3);
+      expect(ids.every((id) => /^[\w-]{1,64}$/.test(id))).toBe(true);
+    });
+
     it("keeps an ORCID iD given alongside the name", () => {
       store().addAuthor("Jane Smith", "0000-0002-1825-0097");
       expect(store().authors[0]?.orcid).toBe("0000-0002-1825-0097");

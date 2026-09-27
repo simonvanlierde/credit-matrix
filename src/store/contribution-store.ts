@@ -204,18 +204,36 @@ function normalizeAuthors(authors: Author[]): Author[] {
   if (authors.length > MAX_AUTHORS) {
     throw new Error(`A draft can contain at most ${MAX_AUTHORS} contributors.`);
   }
+  const seenIds = new Set<string>();
   return deduplicateAuthorInitials(
-    authors.map((author) =>
-      createAuthor(author.name, {
-        id: author.id,
+    authors.map((author) => {
+      // Ids key every lookup and must survive a share link: an imported
+      // duplicate or unshareable id gets a fresh one.
+      const id = CLAIM_ID_REGEX.test(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
+      seenIds.add(id);
+      return createAuthor(author.name, {
+        id,
         orcid: author.orcid,
         contributorType: author.contributorType,
         contributions: author.contributions,
         equalContribution: author.equalContribution,
         corresponding: author.corresponding,
-      }),
-    ),
+        ...consistentNameParts(author),
+      });
+    }),
   );
+}
+
+/**
+ * The stored name parts, while they still describe the name. Re-parsing the
+ * name cannot recover a structured import's multi-word surname ("van der
+ * Berg"); a rename re-parses, so parts that no longer fit are dropped.
+ */
+function consistentNameParts(author: Author): Pick<Author, "firstName" | "middleName" | "surname"> | undefined {
+  const { name, firstName, middleName, surname } = author;
+  if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+  const fits = name.startsWith(firstName) && name.endsWith(surname) && name.includes(middleName);
+  return fits ? { firstName, middleName, surname } : undefined;
 }
 
 /** Snapshot the live top-level fields as a draft record. */
