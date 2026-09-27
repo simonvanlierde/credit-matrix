@@ -98,7 +98,9 @@ export function StatementOutput() {
   function downloadData() {
     if (!hasAuthors) return;
     const { serialize, filename, mime } = DATA_FORMATS[dataFormat];
-    download(new Blob([serialize(authors, translateRole, translateUi, outputLanguage)], { type: mime }), filename);
+    // A BOM makes Excel read the file as UTF-8, so non-ASCII names survive.
+    const bom = dataFormat === "csv" ? "﻿" : "";
+    download(new Blob([bom, serialize(authors, translateRole, translateUi, outputLanguage)], { type: mime }), filename);
   }
 
   return (
