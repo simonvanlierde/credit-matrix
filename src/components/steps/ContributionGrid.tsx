@@ -347,7 +347,7 @@ export function ContributionGrid() {
   return (
     <div className="flex min-w-0 max-w-full flex-col bg-surface-bright rounded-lg shadow-sm border border-outline-variant/20 p-3 md:p-4 desk:h-full desk:overflow-y-auto">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <StepHeader n={2} title={t("stepContributions")} />
+        <StepHeader n={2} title={t("stepContributions")} id="contributions-heading" />
         <div className="flex flex-wrap items-start gap-1.5">
           <SegmentedControl
             ariaLabel={t("assignmentMode")}
@@ -486,7 +486,11 @@ export function ContributionGrid() {
                   }`}
                 >
                   {t("transpose")}
-                  {transpose ? <Columns3 className="h-3.5 w-3.5" /> : <Rows3 className="h-3.5 w-3.5" />}
+                  {transpose ? (
+                    <Columns3 className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <Rows3 className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
                 </button>
                 <span className="flex min-h-9 items-center gap-1.5 text-xs text-on-surface-variant">
                   {/* The accessible name starts with the visible "Use initials",
@@ -589,7 +593,10 @@ export function ContributionGrid() {
           transpose || !acronyms ? "pr-32" : ""
         }`}
       >
-        <table className="w-max min-w-full table-auto border-separate border-spacing-[3px]">
+        <table
+          aria-labelledby="contributions-heading"
+          className="w-max min-w-full table-auto border-separate border-spacing-[3px]"
+        >
           <thead>
             <tr>
               <th
