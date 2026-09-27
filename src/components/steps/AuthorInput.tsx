@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { StepHeader } from "@/components/ui/step-header";
 import { announce } from "@/lib/announce";
@@ -131,6 +131,7 @@ async function forEachWithConcurrency<T>(items: T[], limit: number, task: (item:
 
 export function AuthorList() {
   const t = useTranslations();
+  const format = useFormatter();
   const {
     activeDraftId,
     authors,
@@ -287,11 +288,12 @@ export function AuthorList() {
 
     const addedCount = acceptedTokens.length - rejected.length - badChecksum.length;
     const added = t("annContributorsAdded", { count: addedCount });
+    // The UI locale's own list punctuation: "、" in Japanese, not ", ".
+    const list = (items: string[]) => format.list(items, { type: "conjunction" });
     const problems = [
-      rejected.length > 0 && t("annEntriesSkippedNoName", { count: rejected.length, entries: rejected.join(", ") }),
-      badChecksum.length > 0 &&
-        t("annOrcidChecksumsSkipped", { count: badChecksum.length, ids: badChecksum.join(", ") }),
-      failed.length > 0 && t("annOrcidLookupsFailed", { count: failed.length, ids: failed.join(", ") }),
+      rejected.length > 0 && t("annEntriesSkippedNoName", { count: rejected.length, entries: list(rejected) }),
+      badChecksum.length > 0 && t("annOrcidChecksumsSkipped", { count: badChecksum.length, ids: list(badChecksum) }),
+      failed.length > 0 && t("annOrcidLookupsFailed", { count: failed.length, ids: list(failed) }),
       skippedForLimit > 0 && t("annContributorsSkippedLimit", { count: skippedForLimit, limit: MAX_AUTHORS }),
     ].filter(Boolean);
 
