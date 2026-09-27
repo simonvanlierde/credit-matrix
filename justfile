@@ -10,10 +10,6 @@ default:
 test-watch:
     pnpm --filter @credit-generator/core exec vitest
 
-# Lint and auto-fix
-lint-fix:
-    pnpm biome check --write .
-
 # Release: bump package.json, sync CITATION.cff, commit, and tag
 # (write the dated CHANGELOG entry first)
 release version:
