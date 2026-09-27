@@ -1,7 +1,7 @@
 "use client";
 
 import { OKABE_ITO, onColor } from "@credit-generator/core";
-import { Check, RotateCcw } from "lucide-react";
+import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
@@ -22,31 +22,26 @@ const OKABE_ITO_NAME_KEYS = {
 } as const;
 
 /**
- * A small color picker in a popover: the Okabe–Ito swatches, a native custom
- * picker, and (when `onReset` is given) a reset-to-default action. `trigger` is
- * the clickable element that opens it (e.g. an author's color badge).
+ * A small color picker in a popover: the Okabe–Ito swatches and a native custom
+ * picker. `trigger` is the clickable element that opens it.
  */
 export function ColorPopover({
   value,
   onChange,
-  onReset,
   trigger,
   label,
 }: {
   value: string;
   onChange: (hex: string) => void;
-  onReset?: () => void;
   trigger: ReactNode;
-  label?: string;
+  label: string;
 }) {
   const t = useTranslations();
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent className="w-56">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-          {label ?? t("chooseColor")}
-        </p>
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{label}</p>
         <div className="grid grid-cols-8 gap-1.5">
           {OKABE_ITO.map((hex) => {
             const selected = hex.toLowerCase() === value.toLowerCase();
@@ -67,28 +62,16 @@ export function ColorPopover({
             );
           })}
         </div>
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <label className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-            <input
-              type="color"
-              value={value}
-              onChange={(event) => onChange(event.target.value)}
-              aria-label={t("a11yCustomColor")}
-              className="h-6 w-6 cursor-pointer rounded border border-outline-variant bg-transparent p-0"
-            />
-            {t("customColor")}
-          </label>
-          {onReset && (
-            <button
-              type="button"
-              onClick={onReset}
-              className="inline-flex items-center gap-1 text-[11px] text-on-surface-variant transition-colors hover:text-primary"
-            >
-              <RotateCcw className="h-3 w-3" />
-              {t("resetColor")}
-            </button>
-          )}
-        </div>
+        <label className="mt-3 flex items-center gap-1.5 text-xs text-on-surface-variant">
+          <input
+            type="color"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            aria-label={t("a11yCustomColor")}
+            className="h-6 w-6 cursor-pointer rounded border border-outline-variant bg-transparent p-0"
+          />
+          {t("customColor")}
+        </label>
       </PopoverContent>
     </Popover>
   );
