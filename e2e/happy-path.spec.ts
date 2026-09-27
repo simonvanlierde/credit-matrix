@@ -219,6 +219,25 @@ test.describe("Happy path UI flows", () => {
     await expect(page.locator("#import-text")).toBeVisible();
   });
 
+  test("keeps a malformed XML file's error visible after import", async ({ page }) => {
+    // Unlike the paste path above, a file goes through the browser's real
+    // DOMParser via the file input, so this is the one place the <parsererror>
+    // branch in xml-import.ts actually runs (linkedom does not emit it).
+    await page.goto("/");
+    await page.getByRole("button", { name: "Import" }).click();
+    await page.getByLabel("Upload CSV, JSON, or XML file").setInputFiles({
+      name: "contributors.xml",
+      mimeType: "application/xml",
+      buffer: Buffer.from("<a><b>"),
+    });
+    await page.getByRole("button", { name: "Import data" }).click();
+
+    await expect(
+      page.locator("dialog").getByText("Could not import those contributors.", { exact: false }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
+  });
+
   test("Adding a comma-separated author list creates one row per name", async ({ page }) => {
     await page.goto("/");
 

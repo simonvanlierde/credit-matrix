@@ -52,7 +52,8 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
 
   // Note: the malformed-XML throw path depends on the browser DOMParser emitting
   // a <parsererror> element. linkedom (the Node test DOM) does not replicate this,
-  // so that branch is only exercisable in a real browser / e2e test.
+  // so that branch is covered instead by e2e/happy-path.spec.ts's malformed XML
+  // file import test, which runs against a real browser DOMParser.
 });
 
 describe("toJats4rXml", () => {
