@@ -83,7 +83,6 @@ export function WelcomeCard({ version }: { version: string }) {
   if (!hydrated) return null;
 
   return (
-    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: the onMouseDown closes the dialog on backdrop click; Escape and the Dismiss button provide the accessible paths.
     <dialog
       ref={setDialogEl}
       id="getting-started"

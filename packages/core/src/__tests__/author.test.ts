@@ -164,13 +164,13 @@ describe("schemas", () => {
 
   // Adding a contributor by iD seeds the row named after the iD, so this
   // placeholder has to pass validation, persistence and export.
-  it.each([
-    "0000-0002-1825-0097",
-    "https://orcid.org/0000-0002-1825-0097",
-  ])("accepts the ORCID placeholder name %o", (name) => {
-    expect(AuthorSchema.parse({ ...VALID_AUTHOR, name }).name).toBe(name);
-    expect(() => createAuthor(name)).not.toThrow();
-  });
+  it.each(["0000-0002-1825-0097", "https://orcid.org/0000-0002-1825-0097"])(
+    "accepts the ORCID placeholder name %o",
+    (name) => {
+      expect(AuthorSchema.parse({ ...VALID_AUTHOR, name }).name).toBe(name);
+      expect(() => createAuthor(name)).not.toThrow();
+    },
+  );
 
   it.each(["Jane Smith", "李雷", "O'Brien", "Ana-María"])("accepts the real name %o", (name) => {
     expect(AuthorSchema.parse({ ...VALID_AUTHOR, name }).name).toBe(name);

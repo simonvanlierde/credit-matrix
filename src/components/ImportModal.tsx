@@ -296,7 +296,6 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   }
 
   return (
-    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: the onMouseDown closes the dialog on backdrop click; Escape and the Close button provide the accessible paths.
     <dialog
       ref={dialogRef}
       aria-labelledby="import-title"
