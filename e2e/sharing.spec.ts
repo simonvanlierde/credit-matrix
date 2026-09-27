@@ -1,5 +1,5 @@
 import { type Browser, type BrowserContext, expect, type Page, test } from "@playwright/test";
-import { asReturningVisitor, onScreen } from "./helpers";
+import { asReturningVisitor, copyFrom, onScreen } from "./helpers";
 
 /**
  * Draft sharing end to end: a request goes out, comes back, and lands — or is
@@ -24,8 +24,7 @@ async function makeAskLink(page: Page): Promise<string> {
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(2);
 
   await page.getByRole("button", { name: "Actions for Bob White" }).click();
-  await page.getByRole("button", { name: "Ask Bob White to fill this in" }).click();
-  return page.evaluate(() => navigator.clipboard.readText());
+  return copyFrom(page, page.getByRole("button", { name: "Ask Bob White to fill this in" }));
 }
 
 /** The claim banner's own copy, not the announcement that echoes it. */
@@ -39,8 +38,7 @@ async function answerAskLink(page: Page, askLink: string): Promise<string> {
   await expect(claimBanner(page)).toBeVisible();
   await page.getByRole("button", { name: /^Investigation for Bob White:/ }).click();
   await expect(page.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
-  await page.getByRole("button", { name: "Copy the link to send back" }).click();
-  return page.evaluate(() => navigator.clipboard.readText());
+  return copyFrom(page, page.getByRole("button", { name: "Copy the link to send back" }));
 }
 
 function newContext(browser: Browser) {
@@ -72,8 +70,7 @@ test("full round trip: ask → locked fill → reply link click → visible merg
   const ownName = pageB.getByLabel("Name or ORCID iD", { exact: true });
   await ownName.fill("Bob B. White");
   await ownName.press("Enter");
-  await pageB.getByRole("button", { name: "Copy the link to send back" }).click();
-  const replyLink = await pageB.evaluate(() => navigator.clipboard.readText());
+  const replyLink = await copyFrom(pageB, pageB.getByRole("button", { name: "Copy the link to send back" }));
 
   // The originator CLICKS the reply — no Import knowledge required.
   await pageA.goto(replyLink);
@@ -190,8 +187,7 @@ test("pasting a share link into an open tab reacts without reload", async ({ pag
   await page.getByRole("button", { name: "Load sample data" }).click();
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
   await page.getByRole("button", { name: "Share" }).click();
-  await page.getByRole("button", { name: "Copy data link" }).click();
-  const url = await page.evaluate(() => navigator.clipboard.readText());
+  const url = await copyFrom(page, page.getByRole("button", { name: "Copy data link" }));
 
   // Simulate URL-bar paste: hash assignment fires hashchange, no reload.
   await page.evaluate((href) => {
