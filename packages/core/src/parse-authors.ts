@@ -54,11 +54,16 @@ function cleanNamePart(value: string): string {
   return value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "").trim();
 }
 
+/** A run of scripts written without spaces between family and given name. */
+const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul}]+$/u;
+
 /**
  * Build initials from name parts (e.g. "Jane A. Smith" → "JAS").
- * Only uses first letter of each non-empty part.
+ * Only uses first letter of each non-empty part. A single-token CJK name
+ * ("王小明") has no initials to take, so the whole name is the label.
  */
 function buildInitials(firstName: string, middleName: string, surname: string): string {
+  if (!(middleName || surname) && UNSPACED_NAME_REGEX.test(firstName)) return firstName;
   return (
     [firstName, middleName, surname]
       .filter(Boolean)

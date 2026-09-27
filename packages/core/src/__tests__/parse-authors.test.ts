@@ -76,6 +76,15 @@ describe("createAuthor", () => {
       "0000-0002-1825-0097",
     );
   });
+
+  it("labels an unspaced CJK name by the whole name", () => {
+    // Han, kana and Hangul names are written without spaces, so the first
+    // character is the family name alone, not an initial.
+    expect(createAuthor("王小明").initials).toBe("王小明");
+    expect(createAuthor("ヤマダタロー").initials).toBe("ヤマダタロー");
+    expect(createAuthor("김민준").initials).toBe("김민준");
+    expect(parseAuthors(["王小明", "王大明"]).map((a) => a.initials)).toEqual(["王小明", "王大明"]);
+  });
 });
 
 describe("deduplicateAuthorInitials", () => {
