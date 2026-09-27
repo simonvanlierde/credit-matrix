@@ -71,7 +71,7 @@ async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok:
 
 type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";
 
-function detect(text: string): DetectedFormat {
+export function detect(text: string): DetectedFormat {
   const trimmed = text.trim();
   // A share link, most usefully one a co-author sent back with their own roles.
   if (/^https?:\/\/\S+#s=/.test(trimmed)) return "link";
@@ -86,7 +86,20 @@ function detect(text: string): DetectedFormat {
       /* fall through */
     }
   }
-  if (trimmed.includes(",") && trimmed.toLowerCase().includes("name")) return "csv";
+  // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
+  const headerCells = (trimmed.split(/\r?\n/, 1)[0] ?? "").split(",");
+  if (
+    headerCells.some(
+      (cell) =>
+        cell
+          .trim()
+          .replace(/^"(.*)"$/, "$1")
+          .trim()
+          .toLowerCase() === "name",
+    )
+  ) {
+    return "csv";
+  }
   if (trimmed.length > 0) return "names";
   return "unknown";
 }
