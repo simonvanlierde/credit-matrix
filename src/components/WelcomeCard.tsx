@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { AboutPopover } from "@/components/AboutPopover";
 import { StepNumber } from "@/components/ui/step-number";
+import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
+import { useHydrated } from "@/lib/use-hydrated";
 import { useContributionStore } from "@/store/contribution-store";
 
 const STEPS = [
@@ -50,7 +52,7 @@ export function WelcomeCard({ version }: { version: string }) {
   // The store uses skipHydration (see contribution-store.ts), so the persisted
   // flags aren't known until HeaderActions triggers rehydration. Gate on that,
   // then auto-open exactly once for a first-time visitor.
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useHydrated();
   // State, not a ref: the About panel portals into the dialog rather than
   // <body>, because showModal() puts this element in the top layer and makes
   // the rest of the document inert, so a panel outside it would render but
@@ -58,27 +60,19 @@ export function WelcomeCard({ version }: { version: string }) {
   // has to be state.
   const [dialogEl, setDialogEl] = useState<HTMLDialogElement | null>(null);
   useEffect(() => {
-    const onHydrated = () => {
-      setHydrated(true);
-      const state = useContributionStore.getState();
-      // A claim or merge banner is the onboarding for a link arrival, so the
-      // welcome must not land on top of it. The hash is still here at
-      // hydration (the router strips it later), and `welcomeSeen` stays false
-      // so a later plain visit still gets greeted.
-      const arrivedOnShareLink = window.location.hash.startsWith("#s=");
-      if (!state.welcomeSeen && !arrivedOnShareLink) state.openWelcome();
-    };
-    if (useContributionStore.persist.hasHydrated()) onHydrated();
-    return useContributionStore.persist.onFinishHydration(onHydrated);
-  }, []);
+    if (!hydrated) return;
+    const state = useContributionStore.getState();
+    // A claim or merge banner is the onboarding for a link arrival, so the
+    // welcome must not land on top of it. The hash is still here at
+    // hydration (the router strips it later), and `welcomeSeen` stays false
+    // so a later plain visit still gets greeted.
+    const arrivedOnShareLink = window.location.hash.startsWith("#s=");
+    if (!state.welcomeSeen && !arrivedOnShareLink) state.openWelcome();
+  }, [hydrated]);
 
   // Drive the native dialog from the store flag, so the header's "How it works"
   // and the first-run auto-open share one code path.
-  useEffect(() => {
-    if (!dialogEl) return;
-    if (welcomeOpen && !dialogEl.open) dialogEl.showModal();
-    else if (!welcomeOpen && dialogEl.open) dialogEl.close();
-  }, [welcomeOpen, dialogEl]);
+  useModalDialog(dialogEl, welcomeOpen);
 
   if (!hydrated) return null;
 
@@ -88,9 +82,7 @@ export function WelcomeCard({ version }: { version: string }) {
       id="getting-started"
       aria-labelledby="getting-started-title"
       onClose={closeWelcome}
-      onMouseDown={(event) => {
-        if (event.target === dialogEl) dialogEl?.close();
-      }}
+      onMouseDown={closeOnBackdrop}
       className="m-auto w-full max-w-3xl max-h-[90dvh] overflow-y-auto rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
     >
       {/* The entrance moved onto the <dialog> itself (globals.css), so this card

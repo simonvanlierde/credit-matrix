@@ -27,11 +27,13 @@ import {
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { ColorPopover } from "@/components/ui/color-popover";
+import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StepHeader } from "@/components/ui/step-header";
 import { Switch } from "@/components/ui/switch";
+import { UndoBar } from "@/components/ui/undo-bar";
 import { announce } from "@/lib/announce";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -146,6 +148,15 @@ export function ContributionGrid() {
     { value: "levels", label: t("modeLevels") },
   ];
 
+  /** Accessible name for one assignment: cells, the mobile list and every announcement share it. */
+  const levelLabel = (score: number) => translateUi(graded ? scoreToLevel(score) : score > 0 ? "contributed" : "none");
+  const assignmentLabel = (author: Author, roleIndex: number, score: number) =>
+    t("a11yRoleAssignment", {
+      role: translateInterfaceRole(CREDIT_ROLES[roleIndex]?.name ?? ""),
+      name: author.name,
+      level: levelLabel(score),
+    });
+
   function handleCellClick(author: Author, roleIndex: number, score: number) {
     if (isFrozen(author.id)) return;
     if (inputMode === "levels") {
@@ -154,16 +165,7 @@ export function ContributionGrid() {
       const next = LEVEL_CYCLE.find((step) => step > score) ?? 0;
       setAuthorScore(author.id, roleIndex, next);
       // The pressed state alone can't convey a 4-level value to screen readers.
-      const role = CREDIT_ROLES[roleIndex];
-      if (role) {
-        announce(
-          t("a11yRoleAssignment", {
-            role: translateInterfaceRole(role.name),
-            name: author.name,
-            level: translateUi(scoreToLevel(next)),
-          }),
-        );
-      }
+      announce(assignmentLabel(author, roleIndex, next));
     } else {
       toggleContribution(author.id, roleIndex);
     }
@@ -228,16 +230,7 @@ export function ContributionGrid() {
       if (score === null) return;
       event.preventDefault();
       setAuthorScore(author.id, roleIndex, score);
-      const role = CREDIT_ROLES[roleIndex];
-      if (role) {
-        announce(
-          t("a11yRoleAssignment", {
-            role: translateInterfaceRole(role.name),
-            name: author.name,
-            level: translateUi(graded ? scoreToLevel(score) : score > 0 ? "contributed" : "none"),
-          }),
-        );
-      }
+      announce(assignmentLabel(author, roleIndex, score));
       return;
     }
 
@@ -276,13 +269,8 @@ export function ContributionGrid() {
     // the contributor row; here the same fact is a halo over their cells, in
     // either orientation, so the change is visible where the roles landed.
     const recent = author.id === recentReply;
-    const level = translateUi(graded ? scoreToLevel(score) : score > 0 ? "contributed" : "none");
     const fill = score > 0 ? heatCellColor(heatmapMonoColor, graded ? score : 100) : null;
-    const label = t("a11yRoleAssignment", {
-      role: role ? translateInterfaceRole(role.name) : "",
-      name: author.name,
-      level,
-    });
+    const label = assignmentLabel(author, roleIndex, score);
     return (
       <td key={`${author.id}-${role?.name}`} className="min-w-11 p-0">
         <button
@@ -528,7 +516,6 @@ export function ContributionGrid() {
         >
           {CREDIT_ROLES.map((role, roleIndex) => {
             const score = selectedAuthor.contributions[roleIndex]?.score ?? 0;
-            const level = translateUi(graded ? scoreToLevel(score) : score > 0 ? "contributed" : "none");
             return (
               <li key={role.name} className="flex min-h-14 items-center gap-2 py-1.5">
                 <span className="flex min-w-0 flex-1 items-center gap-1">
@@ -547,11 +534,7 @@ export function ContributionGrid() {
                   // No roving tab order to protect here, so the plain disabled
                   // idiom (as the export buttons use) fits.
                   disabled={isFrozen(selectedAuthor.id)}
-                  aria-label={t("a11yRoleAssignment", {
-                    role: translateInterfaceRole(role.name),
-                    name: selectedAuthor.name,
-                    level,
-                  })}
+                  aria-label={assignmentLabel(selectedAuthor, roleIndex, score)}
                   onClick={() => handleCellClick(selectedAuthor, roleIndex, score)}
                   className={`contribution-cell flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
                     score > 0 ? "text-on-surface shadow-sm" : "text-on-surface-variant"
@@ -574,7 +557,7 @@ export function ContributionGrid() {
                       <Check className="size-3.5" strokeWidth={3} />
                     </span>
                   )}
-                  {level}
+                  {levelLabel(score)}
                 </button>
               </li>
             );
@@ -702,8 +685,7 @@ export function ContributionGrid() {
       {picker &&
         (() => {
           const pickerAuthor = authors.find((candidate) => candidate.id === picker.authorId);
-          const pickerRole = CREDIT_ROLES[picker.roleIndex];
-          if (!pickerAuthor || !pickerRole) return null;
+          if (!pickerAuthor) return null;
           const current = pickerAuthor.contributions[picker.roleIndex]?.score ?? 0;
           const close = () => {
             picker.cell.focus();
@@ -719,13 +701,7 @@ export function ContributionGrid() {
                     type="button"
                     onClick={() => {
                       setAuthorScore(pickerAuthor.id, picker.roleIndex, score);
-                      announce(
-                        t("a11yRoleAssignment", {
-                          role: translateInterfaceRole(pickerRole.name),
-                          name: pickerAuthor.name,
-                          level: translateUi(key),
-                        }),
-                      );
+                      announce(assignmentLabel(pickerAuthor, picker.roleIndex, score));
                       close();
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container"
@@ -746,26 +722,8 @@ export function ContributionGrid() {
           );
         })()}
 
-      {/* Same open-from-zero bar a row removal gets; see .undo-enter. */}
-      {bulkUndo && (
-        <div className="undo-enter grid">
-          <div className="overflow-hidden">
-            <div
-              role="status"
-              className="mt-2 flex items-center justify-between gap-3 rounded-lg bg-surface-container px-3 py-2 text-sm text-on-surface"
-            >
-              <span className="min-w-0 truncate">{t("bulkChangeApplied")}</span>
-              <button
-                type="button"
-                onClick={undoBulk}
-                className="shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                {t("undo")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Same bar a row removal gets. */}
+      {bulkUndo && <UndoBar message={t("bulkChangeApplied")} onUndo={undoBulk} className="mt-2" />}
 
       {/* No flex-wrap here: the export buttons stay pinned right in both modes,
           and the legend (which is longer in Levels) wraps inside its own share
@@ -798,18 +756,6 @@ function BulkButton({ children, onClick }: { children: ReactNode; onClick: () =>
     >
       {children}
     </button>
-  );
-}
-
-/** A contributor's initials badge, with the full name as a tooltip. */
-function InitialsChip({ author }: { author: Author }) {
-  return (
-    <span
-      title={author.name}
-      className="inline-flex items-center justify-center min-w-[2.5rem] h-6 px-1.5 rounded-md font-mono text-[11px] font-semibold bg-primary/10 text-primary"
-    >
-      {author.initials}
-    </span>
   );
 }
 

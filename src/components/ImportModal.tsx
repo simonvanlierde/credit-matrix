@@ -16,9 +16,13 @@ import { FileUp, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { announce } from "@/lib/announce";
+import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import type { Messages } from "@/lib/intl";
 import { postLookup } from "@/lib/post-lookup";
 import { MAX_DRAFTS } from "@/store/contribution-store";
+
+/** Why a pasted share link could not be used, as a message key. */
+export type LinkFailure = "errShareLinkBroken" | "mergeWrongDraft" | "mergeUnmatched" | "draftLimitReached";
 
 interface Props {
   open: boolean;
@@ -30,9 +34,7 @@ interface Props {
    * used, or null on success. Lives with the caller because merging a returned
    * link needs the current workspace, which this dialog does not hold.
    */
-  onLink: (
-    url: string,
-  ) => Promise<"errShareLinkBroken" | "mergeWrongDraft" | "mergeUnmatched" | "draftLimitReached" | null>;
+  onLink: (url: string) => Promise<LinkFailure | null>;
   onClose: () => void;
 }
 
@@ -137,7 +139,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   const [pending, setPending] = useState<PendingImport | null>(null);
   const [doi, setDoi] = useState("");
   const [doiLoading, setDoiLoading] = useState(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  // State, not a ref, so useModalDialog re-runs once the element exists.
+  const [dialog, setDialog] = useState<HTMLDialogElement | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const importRef = useRef<HTMLButtonElement>(null);
@@ -155,8 +158,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     }
     if (!hadPending.current) return;
     hadPending.current = false;
-    if (dialogRef.current?.open) importRef.current?.focus();
-  }, [pending]);
+    if (dialog?.open) importRef.current?.focus();
+  }, [pending, dialog]);
 
   const format: DetectedFormat = detect(text);
 
@@ -166,15 +169,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     announce(message, { assertive: true });
   }
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (open && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
+  useModalDialog(dialog, open);
 
   async function handleFileRead(file: File) {
     if (file.size > MAX_IMPORT_BYTES) {
@@ -224,7 +219,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
           showError(failure === "draftLimitReached" ? t(failure, { count: MAX_DRAFTS }) : t(failure));
           return;
         }
-        dialogRef.current?.close();
+        dialog?.close();
         return;
       }
       const { parse, emptyMessageKey } = IMPORTERS[format];
@@ -297,7 +292,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
       return;
     }
     setPending(null);
-    dialogRef.current?.close();
+    dialog?.close();
   }
 
   function handleClose() {
@@ -310,13 +305,11 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
 
   return (
     <dialog
-      ref={dialogRef}
+      ref={setDialog}
       aria-labelledby="import-title"
       aria-describedby="import-description"
       onClose={handleClose}
-      onMouseDown={(event) => {
-        if (event.target === dialogRef.current) dialogRef.current?.close();
-      }}
+      onMouseDown={closeOnBackdrop}
       className="relative m-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
     >
       <div>
@@ -333,7 +326,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
           </p>
           <button
             type="button"
-            onClick={() => dialogRef.current?.close()}
+            onClick={() => dialog?.close()}
             className="absolute right-5 top-5 text-on-surface-variant hover:text-on-surface transition-colors"
           >
             <X className="h-5 w-5" />
@@ -491,7 +484,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         <div className="px-8 py-3 border-t border-outline-variant/10 bg-surface-container-low flex justify-end gap-3">
           <button
             type="button"
-            onClick={() => dialogRef.current?.close()}
+            onClick={() => dialog?.close()}
             className="px-5 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
           >
             {t("cancel")}

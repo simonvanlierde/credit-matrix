@@ -47,7 +47,7 @@ const DATA_FORMATS: Record<
   csv: { label: "CSV", serialize: toCsv, filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
   markdown: {
     label: "Markdown",
-    serialize: (authors, translateRole, translateUi, locale) => toMarkdown(authors, translateRole, translateUi, locale),
+    serialize: toMarkdown,
     filename: "credit-contributors.md",
     mime: "text/markdown;charset=utf-8",
   },
