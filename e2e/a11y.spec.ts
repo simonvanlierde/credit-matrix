@@ -281,6 +281,23 @@ test.describe("Accessibility (axe-core)", () => {
     expect(color).toBe("rgb(22, 24, 28)");
   });
 
+  test("each contribution level has its own mark, not just a lighter fill", async ({ page }) => {
+    await page.goto("/");
+    // The sample's scores are graded, so it opens in Levels.
+    await page.getByRole("button", { name: "Load sample data" }).click();
+
+    const dots = (level: string) =>
+      page
+        .getByRole("table")
+        .getByRole("button", { name: new RegExp(`^[^:]+ for [^:]+: ${level}$`) })
+        .first()
+        .locator("circle")
+        .count();
+    expect(await dots("Lead")).toBe(3);
+    expect(await dots("Equal")).toBe(2);
+    expect(await dots("Supporting")).toBe(1);
+  });
+
   test("compact icon controls meet the minimum target size", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();

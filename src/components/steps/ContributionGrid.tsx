@@ -325,7 +325,7 @@ export function ContributionGrid() {
             // the fill it sits on (WCAG 1.4.11). Hardcoded white failed that on
             // every pale fill; at the default hue's "supporting" level, and at
             // every level of the lighter presets. onColor measures instead.
-            <Check aria-hidden="true" className="size-3.5" style={{ color: onColor(fill) }} strokeWidth={3} />
+            <LevelMark score={score} graded={graded} color={onColor(fill)} />
           )}
         </button>
       </td>
@@ -822,6 +822,42 @@ function RoleInfo({
   );
 }
 
+const LEVEL_DOTS: Record<string, number> = { supporting: 1, equal: 2, lead: 3 };
+
+/**
+ * What an assigned cell shows. Yes/no mode keeps the check; Levels mode counts
+ * the level in dots (1 supporting, 2 equal, 3 lead), so the level never rests
+ * on fill lightness alone (WCAG 1.4.1). `color` must come from onColor so the
+ * mark clears 3:1 against its fill (WCAG 1.4.11).
+ */
+function LevelMark({
+  score,
+  graded,
+  color,
+  size = "cell",
+}: {
+  score: number;
+  graded: boolean;
+  color: string;
+  size?: "cell" | "small";
+}) {
+  if (!graded) return <Check aria-hidden="true" className="size-3.5" style={{ color }} strokeWidth={3} />;
+  const dots = LEVEL_DOTS[scoreToLevel(score)] ?? 0;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox={`0 0 ${dots * 6 - 1} 5`}
+      className={size === "cell" ? "h-1.5 w-auto" : "h-1 w-auto"}
+      style={{ color }}
+    >
+      {Array.from({ length: dots }, (_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: the dots are identical and never reorder.
+        <circle key={i} cx={2.5 + i * 6} cy={2.5} r={2.5} fill="currentColor" />
+      ))}
+    </svg>
+  );
+}
+
 /** A single key mapping cell intensity to its contribution level. */
 function GridLegend({
   monoColor,
@@ -856,13 +892,17 @@ function GridLegend({
         {(graded ? LEVEL_KEY : FLAT_KEY).map(({ key, score }) => (
           <span key={key} className="inline-flex items-center gap-1.5">
             <span
-              className="h-3 w-3 rounded-sm border border-outline-variant"
+              className={`inline-flex h-3 items-center justify-center rounded-sm border border-outline-variant ${graded ? "w-6" : "w-3"}`}
               style={{
                 // Zero-score swatch matches the grid's theme-aware empty cells,
                 // not the download SVG's fixed paper-white fill.
                 backgroundColor: score > 0 ? heatCellColor(monoColor, score) : "var(--color-surface-container-high)",
               }}
-            />
+            >
+              {graded && score > 0 && (
+                <LevelMark score={score} graded color={onColor(heatCellColor(monoColor, score))} size="small" />
+              )}
+            </span>
             {translateUi(key)}
           </span>
         ))}
