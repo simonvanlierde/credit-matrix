@@ -60,13 +60,16 @@ const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx
 /**
  * Build initials from name parts (e.g. "Jane A. Smith" → "JAS").
  * Only uses first letter of each non-empty part. A single-token CJK name
- * ("王小明") has no initials to take, so the whole name is the label.
+ * ("王小明") has no initials to take, so the whole name is the label, as is a
+ * name with no lettered part (a row still named by its ORCID iD).
  */
-function buildInitials(firstName: string, middleName: string, surname: string): string {
+function buildInitials(name: string, firstName: string, middleName: string, surname: string): string {
+  if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
   if (!(middleName || surname) && UNSPACED_NAME_REGEX.test(firstName)) return firstName;
+  const parts = [firstName, middleName, surname].filter((part) => /\p{L}/u.test(part));
+  if (parts.length === 0) return name.trim();
   return (
-    [firstName, middleName, surname]
-      .filter(Boolean)
+    parts
       // Iterate by code point so an astral first letter isn't split into a
       // lone surrogate half.
       .map((p) => [...p][0]?.toUpperCase() ?? "")
@@ -129,7 +132,7 @@ export function createAuthor(
     firstName,
     middleName,
     surname,
-    initials: buildInitials(firstName, middleName, surname),
+    initials: buildInitials(name, firstName, middleName, surname),
     ...(overrides?.orcid ? { orcid: normalizeOrcid(overrides.orcid) } : {}),
     contributorType: overrides?.contributorType ?? "author",
     contributions: normalizeContributions(overrides?.contributions),

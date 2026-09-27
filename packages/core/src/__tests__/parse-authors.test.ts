@@ -85,6 +85,14 @@ describe("createAuthor", () => {
     expect(createAuthor("김민준").initials).toBe("김민준");
     expect(parseAuthors(["王小明", "王大明"]).map((a) => a.initials)).toEqual(["王小明", "王大明"]);
   });
+
+  it("never builds initials from punctuation", () => {
+    // A row still named by its ORCID (lookup failed) keeps the iD as its label.
+    expect(createAuthor("0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
+    expect(createAuthor("0000-0002-1694-233X").initials).toBe("0000-0002-1694-233X");
+    expect(createAuthor("https://orcid.org/0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
+    expect(createAuthor("Jane - Smith").initials).toBe("JS");
+  });
 });
 
 describe("deduplicateAuthorInitials", () => {
