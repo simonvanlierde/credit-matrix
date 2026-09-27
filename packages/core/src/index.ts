@@ -43,7 +43,7 @@ export { toJats4rXml } from "./export/xml";
 export { fromJats4rXml, fromXmlDocument } from "./export/xml-import";
 export type { StatementFormat } from "./generate-statement";
 export { generateStatement } from "./generate-statement";
-export { mergeContributorRow } from "./merge-row";
+export { keepKnownIds, mergeContributorRow } from "./merge-row";
 export type { OrcidLookupResult } from "./orcid-lookup";
 export { lookupOrcidPerson } from "./orcid-lookup";
 export {
