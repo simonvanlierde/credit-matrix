@@ -104,4 +104,36 @@ describe("toJats4rXml", () => {
     expect(parsed).toHaveLength(1);
     expect(parsed[0]?.name).toBe("Jane Smith");
   });
+
+  it("skips a contrib whose name is rejected instead of aborting the import", () => {
+    const xml = `<article><contrib-group>
+      <contrib contrib-type="author"><name><surname>123</surname><given-names>!!!</given-names></name></contrib>
+      <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib>
+    </contrib-group></article>`;
+
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Smith"]);
+  });
+
+  it("imports only authors and contributors, not editors or reviewers", () => {
+    const xml = `<article><contrib-group>
+      <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib>
+      <contrib contrib-type="editor"><name><surname>Editor</surname><given-names>Ed</given-names></name></contrib>
+      <contrib contrib-type="reviewer"><name><surname>Reviewer</surname><given-names>Rev</given-names></name></contrib>
+      <contrib contrib-type="contributor"><name><surname>White</surname><given-names>Bob</given-names></name></contrib>
+    </contrib-group></article>`;
+
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
+  });
+
+  it("matches roles by their CRediT identifier before the term text", () => {
+    const xml = `<article><contrib contrib-type="author">
+      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <role vocab="credit" vocab-term="Writing - original draft" vocab-term-identifier="http://credit.niso.org/contributor-roles/writing-original-draft">Writing - original draft</role>
+      <role vocab="credit" vocab-term="Conceptualization">Conceptualization</role>
+    </contrib></article>`;
+
+    const [jane] = fromJats4rXml(xml);
+    const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(active).toEqual(["Conceptualization", "Writing – original draft"]);
+  });
 });
