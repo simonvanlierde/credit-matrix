@@ -158,7 +158,7 @@
   "draftDeleted": "Rascunho eliminado.",
   "switchToDraft": "Mudar para {title}",
   "claimBannerTitle": "Está a preencher as contribuições de {name}",
-  "claimBannerBody": "Marque os papéis que {name} desempenhou e devolva o link. As outras linhas estão bloqueadas. Cada pessoa responde por si.",
+  "claimBannerBody": "Marque os papéis que {name} desempenhou e devolva o link. O link abrange apenas esta linha. Cada pessoa responde por si.",
   "claimBannerHow": "Copie o link e devolva-o pelo mesmo meio em que o recebeu. E-mail serve.",
   "claimUnlock": "Manter como rascunho normal",
   "annClaimUnlocked": "Agora é um rascunho normal. Todas as linhas podem ser editadas.",

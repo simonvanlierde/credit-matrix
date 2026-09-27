@@ -158,7 +158,7 @@
   "draftDeleted": "Deleted the draft.",
   "switchToDraft": "Switch to {title}",
   "claimBannerTitle": "You are filling in {name}'s contributions",
-  "claimBannerBody": "Tick the roles {name} carried out, then send the link back. The other rows are locked. Everyone answers for themselves.",
+  "claimBannerBody": "Tick the roles {name} carried out, then send the link back. The link covers only this row. Everyone answers for themselves.",
   "claimBannerHow": "Copy the link and send it back the way you received it. Email is fine.",
   "claimUnlock": "Keep as an ordinary draft",
   "annClaimUnlocked": "This is now an ordinary draft. Every row can be edited.",

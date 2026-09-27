@@ -158,7 +158,7 @@
   "draftDeleted": "Borrador eliminado.",
   "switchToDraft": "Cambiar a {title}",
   "claimBannerTitle": "Está rellenando las contribuciones de {name}",
-  "claimBannerBody": "Marque los roles que asumió {name} y devuelva el enlace. Las demás filas están bloqueadas: cada persona responde por sí misma.",
+  "claimBannerBody": "Marque los roles que asumió {name} y devuelva el enlace. El enlace solo cubre esta fila: cada persona responde por sí misma.",
   "claimBannerHow": "Copie el enlace y devuélvalo por el mismo medio por el que lo recibió; un correo basta.",
   "claimUnlock": "Conservar como borrador normal",
   "annClaimUnlocked": "Ahora es un borrador normal. Todas las filas se pueden editar.",

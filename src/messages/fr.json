@@ -158,7 +158,7 @@
   "draftDeleted": "Brouillon supprimé.",
   "switchToDraft": "Passer à {title}",
   "claimBannerTitle": "Vous renseignez les contributions de {name}",
-  "claimBannerBody": "Cochez les rôles assurés par {name}, puis renvoyez le lien. Les autres lignes sont verrouillées. Chacun répond pour soi.",
+  "claimBannerBody": "Cochez les rôles assurés par {name}, puis renvoyez le lien. Le lien ne concerne que cette ligne. Chacun répond pour soi.",
   "claimBannerHow": "Copiez le lien et renvoyez-le par le même canal que celui par lequel vous l'avez reçu. Un e-mail suffit.",
   "claimUnlock": "Conserver comme brouillon ordinaire",
   "annClaimUnlocked": "Ceci est désormais un brouillon ordinaire. Toutes les lignes sont modifiables.",

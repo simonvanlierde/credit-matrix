@@ -158,7 +158,7 @@
   "draftDeleted": "Bozza eliminata.",
   "switchToDraft": "Passa a {title}",
   "claimBannerTitle": "Stai compilando i contributi di {name}",
-  "claimBannerBody": "Spunta i ruoli svolti da {name}, poi rimanda il link. Le altre righe sono bloccate: ognuno risponde per sé.",
+  "claimBannerBody": "Spunta i ruoli svolti da {name}, poi rimanda il link. Il link riguarda solo questa riga: ognuno risponde per sé.",
   "claimBannerHow": "Copia il link e rimandalo per la stessa via da cui è arrivato: un'email va benissimo.",
   "claimUnlock": "Mantieni come bozza normale",
   "annClaimUnlocked": "Ora è una bozza normale. Tutte le righe sono modificabili.",
