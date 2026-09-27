@@ -62,28 +62,17 @@ test.describe("Offline", () => {
 
   test("activating a new service worker drops caches from a previous version", async ({ page }) => {
     test.skip(!process.env.CI, "needs the production build; CI runs one");
+    // Leave a cache from an older version before any worker exists. /health
+    // is same-origin but plain JSON, so nothing registers the worker there.
+    // Re-registering from a controlled page would not do: an identical script
+    // revives the old registration and `activate` never runs again.
+    await page.goto("/health");
+    await page.evaluate(() => caches.open("credit-matrix-v0-stale"));
+
+    // The first visit installs and activates the worker, and `activate` runs
+    // dropOldCaches().
     await page.goto("/");
     await page.evaluate(() => navigator.serviceWorker.ready);
-
-    // Simulate a leftover cache from before a cache-name version bump, then
-    // force a fresh install/activate cycle (unregister + register): `activate`
-    // is where dropOldCaches() runs, and it should sweep anything that is not
-    // the current cache name, regardless of what that name is.
-    await page.evaluate(async () => {
-      await caches.open("credit-matrix-v0-stale");
-      const registration = await navigator.serviceWorker.getRegistration();
-      await registration?.unregister();
-      const fresh = await navigator.serviceWorker.register("/sw.js");
-      await new Promise<void>((resolve) => {
-        if (fresh.active) return resolve();
-        const worker = fresh.installing ?? fresh.waiting;
-        worker?.addEventListener("statechange", () => {
-          if (worker.state === "activated") resolve();
-        });
-      });
-    });
-
-    const cacheNames = await page.evaluate(() => caches.keys());
-    expect(cacheNames).not.toContain("credit-matrix-v0-stale");
+    await expect.poll(() => page.evaluate(() => caches.keys())).not.toContain("credit-matrix-v0-stale");
   });
 });

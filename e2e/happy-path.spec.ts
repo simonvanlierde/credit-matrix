@@ -295,12 +295,10 @@ test.describe("Happy path UI flows", () => {
     await coauthor.goto(askUrl);
     await expect(onScreen(coauthor, "You are filling in Rosalind E. Franklin's contributions")).toBeVisible();
 
-    // She assigns herself a role; someone else's is refused outright.
+    // She assigns herself a role. The link carries only her row, so no one
+    // else's is there to change.
     await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    await expect(coauthor.getByRole("button", { name: /^Validation for Ada Lovelace:/ })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
+    await expect(coauthor.getByRole("button", { name: /^Validation for Ada Lovelace:/ })).toHaveCount(0);
 
     const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
     await coauthorContext.close();
