@@ -46,7 +46,8 @@ ${DOCTYPE}
 /**
  * The given-names half of the display name. The parsed parts keep only the
  * first, second and last token, so rebuilding from them drops the rest
- * ("Anne van der Berg" → "Anne van Berg"); take the name minus its surname.
+ * ("Anne van der Berg" → "Anne van Berg"). Take the name minus its surname
+ * instead.
  */
 function givenNamesOf(author: Author): string {
   const name = author.name.trim();

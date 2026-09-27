@@ -55,8 +55,8 @@ export function asReturningVisitor(page: Page) {
  * Click a copy button and return what it put on the clipboard.
  *
  * `click()` resolves once the click is dispatched, not once the handler's async
- * work (deflating the payload, then the clipboard write) has finished, so an
- * immediate read races it and sees whatever was there before. Clear first, then
+ * work (deflating the payload, then the clipboard write) finishes. An
+ * immediate read races that work and can see the old value. Clear first, then
  * wait for the new value: waiting for "a link" would also match the previous
  * copy.
  */

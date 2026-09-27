@@ -43,8 +43,8 @@ test.describe("Offline", () => {
 
     await context.setOffline(true);
     // sw.js's fetch handler bails out for anything but GET, so a POST is never
-    // written to or answered from the cache: offline, it must fail like any
-    // other network request rather than come back with a cached 200.
+    // written to or answered from the cache. Offline, it must fail like any
+    // other network request, not come back with a cached 200.
     const outcome = await page.evaluate(async () => {
       try {
         await fetch("/api/doi", {

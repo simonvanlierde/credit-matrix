@@ -3,9 +3,9 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 /**
  * Reports the commit currently deployed (baked in at build time via
  * `next.config.ts`'s `env`, from Cloudflare Workers Builds'
- * `WORKERS_CI_COMMIT_SHA`) and whether the rate limiter this Worker depends on
- * is actually bound, so a smoke test can tell "deployed" from "deployed and
- * configured" rather than trusting a static 200.
+ * `WORKERS_CI_COMMIT_SHA`), and whether the rate limiter this Worker depends
+ * on is actually bound. This lets a smoke test tell "deployed" from "deployed
+ * and configured" rather than trusting a static 200.
  */
 export function GET() {
   let bound = true;

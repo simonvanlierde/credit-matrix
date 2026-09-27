@@ -24,7 +24,7 @@ export interface MergeResult {
  * who they are in *your* list: the row replaced is the one with that id, or
  * none, and they are reported as unmatched. Matching by ORCID or name would
  * let a reply under an id nobody was asked about overwrite whichever
- * co-author it names; falling back to position would let a contributor nobody
+ * co-author it names. Falling back to position would let a contributor nobody
  * recognises overwrite whoever happens to sit at that index.
  */
 export function mergeContributorRow(current: Author[], incoming: Author[], claimId: string): MergeResult {

@@ -72,8 +72,8 @@ export const viewport: Viewport = {
  * The page is prerendered once as `en`, and AppIntlProvider only corrects the
  * attribute after hydration. Reading a locale cookie here instead would make
  * every route dynamic (a per-request render on the Worker, not the static
- * shell), so this reads the persisted store directly. The provider still has
- * the final word once the catalog loads.
+ * shell). This reads the persisted store directly instead. The provider still
+ * has the final word once the catalog loads.
  */
 const LANG_SCRIPT = `try{var l=JSON.parse(localStorage.getItem(${JSON.stringify(PERSIST_KEY)})).state.uiLocale;if(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(l))document.documentElement.lang=l}catch(e){}`;
 

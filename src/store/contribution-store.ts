@@ -454,7 +454,7 @@ export function announcingStorage(): PersistStorage<PersistedState> {
   const written = new Map<string, Draft>();
   // Draft ids this tab held at its last read or write. Another tab shares the
   // same storage, so an id missing from this tab's drafts is only a deletion
-  // when this tab held it before; anything else belongs to the other tab.
+  // when this tab held it before. Anything else belongs to the other tab.
   let known = new Set<string>();
 
   // An unreadable value must not escape as a throw: a parse failure would
