@@ -59,6 +59,13 @@ const nextConfig: NextConfig = {
   // @opennextjs/cloudflare, so no Next `output` mode is needed.
   // core ships its TS source (just-in-time internal package); Next transpiles it.
   transpilePackages: ["@credit-generator/core"],
+  // Cloudflare Workers Builds sets this for the deploy that runs the build;
+  // baked in here so /health can report which commit is actually live. `env`
+  // inlines the value at build time, since the Worker has no process.env at
+  // request time the way a container would.
+  env: {
+    WORKERS_CI_COMMIT_SHA: process.env.WORKERS_CI_COMMIT_SHA ?? "dev",
+  },
 };
 
 export default nextConfig;
