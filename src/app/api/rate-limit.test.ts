@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { getCloudflareContext } = vi.hoisted(() => ({ getCloudflareContext: vi.fn() }));
 vi.mock("@opennextjs/cloudflare", () => ({ getCloudflareContext }));
 
-import { checkRateLimit, checkSameOrigin } from "./rate-limit";
+import { checkRateLimit, checkSameOrigin, rateLimitKey } from "./rate-limit";
 
 function request(headers: Record<string, string> = {}): NextRequest {
   return new Request("http://localhost/api/doi", { method: "POST", headers }) as unknown as NextRequest;
@@ -65,6 +65,51 @@ describe("checkRateLimit", () => {
     expect(await checkRateLimit(request())).toBeNull();
     expect(errorLog).toHaveBeenCalledOnce();
     errorLog.mockRestore();
+  });
+});
+
+describe("checkRateLimit under a failing limiter", () => {
+  it("fails closed once the limiter has failed five times in a row, and recovers on success", async () => {
+    const limit = vi.fn(async () => ({ success: true }));
+    getCloudflareContext.mockReturnValue(limiterEnv(limit));
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    // Start from a clean streak: the module keeps it across requests.
+    await checkRateLimit(request());
+
+    limit.mockRejectedValue(new Error("limiter unavailable"));
+    for (let i = 0; i < 4; i += 1) expect(await checkRateLimit(request())).toBeNull();
+    const closed = await checkRateLimit(request());
+    expect(closed?.status).toBe(503);
+    expect(await closed?.json()).toMatchObject({ code: "UNAVAILABLE" });
+    expect(errorLog).toHaveBeenLastCalledWith(expect.stringContaining("failing closed"));
+
+    // One success ends the streak; the next isolated fault fails open again.
+    limit.mockResolvedValueOnce({ success: true });
+    expect(await checkRateLimit(request())).toBeNull();
+    expect(await checkRateLimit(request())).toBeNull();
+    errorLog.mockRestore();
+  });
+});
+
+describe("rateLimitKey", () => {
+  it("leaves IPv4 alone", () => {
+    expect(rateLimitKey("203.0.113.9")).toBe("203.0.113.9");
+  });
+
+  it("buckets IPv6 by its /64, however the address is written", () => {
+    const key = rateLimitKey("2001:db8:85a3:12::1");
+    expect(key).toBe(rateLimitKey("2001:0db8:85a3:0012:ffff:0:0:2"));
+    expect(key).toBe(rateLimitKey("2001:DB8:85A3:12:abcd::"));
+    expect(key).not.toBe(rateLimitKey("2001:db8:85a3:13::1"));
+    expect(rateLimitKey("::1")).toBe(rateLimitKey("0:0:0:0:0:0:0:1"));
+  });
+
+  it("keys an IPv4-mapped IPv6 address by its IPv4 part", () => {
+    expect(rateLimitKey("::ffff:203.0.113.9")).toBe("203.0.113.9");
+  });
+
+  it("does not throw on garbage from an off-edge header", () => {
+    expect(() => rateLimitKey("1:2:3:4:5:6:7:8:9::10")).not.toThrow();
   });
 });
 
