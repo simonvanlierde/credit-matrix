@@ -23,13 +23,37 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     expect(parsed[0]?.contributions.find((c) => c.role === "Conceptualization")?.score).toBe(100);
   });
 
+  it.each([
+    "Anne van der Berg",
+    // spell-checker: ignore Carmen García López
+    "Maria del Carmen García López",
+    "Jane A. Smith",
+    "Madonna",
+    // A row still named by its ORCID iD after a failed lookup.
+    "0000-0002-1825-0097",
+  ])("round-trips the full name %s", (name) => {
+    const parsed = fromJats4rXml(toJats4rXml(parseAuthorText(name)));
+    expect(parsed.map((a) => a.name)).toEqual([name]);
+  });
+
+  it("round-trips a name imported with a multi-word surname", () => {
+    const [anne] = fromJats4rXml(
+      `<article><contrib contrib-type="author"><name><surname>van der Berg</surname><given-names>Anne</given-names></name></contrib></article>`,
+    );
+    if (!anne) throw new Error("expected author");
+    const [again] = fromJats4rXml(toJats4rXml([anne]));
+    expect(again?.name).toBe("Anne van der Berg");
+    expect(again?.surname).toBe("van der Berg");
+  });
+
   it("returns an empty array when there are no contrib elements", () => {
     expect(fromJats4rXml("<article><front/></article>")).toEqual([]);
   });
 
   // Note: the malformed-XML throw path depends on the browser DOMParser emitting
   // a <parsererror> element. linkedom (the Node test DOM) does not replicate this,
-  // so that branch is only exercisable in a real browser / e2e test.
+  // so that branch is covered instead by e2e/happy-path.spec.ts's malformed XML
+  // file import test, which runs against a real browser DOMParser.
 });
 
 describe("toJats4rXml", () => {
@@ -45,6 +69,13 @@ describe("toJats4rXml", () => {
     const xml = toJats4rXml(authors);
     expect(xml).toContain("Writing – review &amp; editing");
     expect(xml).not.toMatch(/review & editing/);
+  });
+
+  it("falls back to the stored given names when the name no longer holds the surname", () => {
+    const [jane] = parseAuthorText("Jane Q Smith");
+    if (!jane) throw new Error("expected author");
+    const xml = toJats4rXml([{ ...jane, name: "J. Q. S." }]);
+    expect(xml).toContain("<given-names>Jane Q</given-names>");
   });
 
   it("only emits role elements for active contributions", () => {
@@ -80,5 +111,37 @@ describe("toJats4rXml", () => {
     const parsed = fromJats4rXml(xml);
     expect(parsed).toHaveLength(1);
     expect(parsed[0]?.name).toBe("Jane Smith");
+  });
+
+  it("skips a contrib whose name is rejected instead of aborting the import", () => {
+    const xml = `<article><contrib-group>
+      <contrib contrib-type="author"><name><surname>123</surname><given-names>!!!</given-names></name></contrib>
+      <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib>
+    </contrib-group></article>`;
+
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Smith"]);
+  });
+
+  it("imports only authors and contributors, not editors or reviewers", () => {
+    const xml = `<article><contrib-group>
+      <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib>
+      <contrib contrib-type="editor"><name><surname>Editor</surname><given-names>Ed</given-names></name></contrib>
+      <contrib contrib-type="reviewer"><name><surname>Reviewer</surname><given-names>Rev</given-names></name></contrib>
+      <contrib contrib-type="contributor"><name><surname>White</surname><given-names>Bob</given-names></name></contrib>
+    </contrib-group></article>`;
+
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
+  });
+
+  it("matches roles by their CRediT identifier before the term text", () => {
+    const xml = `<article><contrib contrib-type="author">
+      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <role vocab="credit" vocab-term="Writing - original draft" vocab-term-identifier="http://credit.niso.org/contributor-roles/writing-original-draft">Writing - original draft</role>
+      <role vocab="credit" vocab-term="Conceptualization">Conceptualization</role>
+    </contrib></article>`;
+
+    const [jane] = fromJats4rXml(xml);
+    const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(active).toEqual(["Conceptualization", "Writing – original draft"]);
   });
 });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Author } from "./author";
-import { MAX_AUTHORS } from "./author";
+import { clampScore, MAX_AUTHORS } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
 
@@ -88,7 +88,11 @@ export interface SharePayloadInput {
 
 /** Serialize authors and envelope into the compact share shape. Minified, never pretty. */
 export function toSharePayload(input: SharePayloadInput): string {
-  const { authors, title, claimId, sourceDraftId, reply } = input;
+  const { title, claimId, sourceDraftId, reply } = input;
+  // A claim link is addressed to one person and travels through their mail:
+  // it carries their own row and nobody else's names, iDs, or scores. The
+  // reply comes back the same way, and the merge only ever takes that row.
+  const authors = claimId ? input.authors.filter((author) => author.id === claimId) : input.authors;
 
   const scoreByRole = (author: Author) => {
     const scores = new Map(author.contributions.map((contribution) => [contribution.role, contribution.score]));
@@ -144,10 +148,4 @@ export function fromSharePayload(json: string): ShareData {
     sourceDraftId: payload.d ?? null,
     reply: payload.r === 1,
   };
-}
-
-/** Scores are integers 0–100 everywhere else; a hand-edited link is not trusted. */
-function clampScore(score: number): number {
-  if (!Number.isFinite(score)) return 0;
-  return Math.round(Math.max(0, Math.min(100, score)));
 }

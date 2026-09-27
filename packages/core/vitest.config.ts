@@ -21,6 +21,8 @@ export default defineConfig({
       reportsDirectory: "./coverage",
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/**/*.d.ts", "src/test-setup.ts"],
+      // A few points under the measured level: a drop fails CI, noise does not.
+      thresholds: { statements: 94, branches: 84, functions: 95, lines: 95 },
     },
   },
 });

@@ -140,4 +140,16 @@ describe("generateStatement with translateRole", () => {
     expect(stmt).toContain("Conceptualisation: Jane Smith");
     expect(stmt).not.toContain("Conceptualization:");
   });
+
+  // Separators carry meaningful whitespace: trimming them ran names together.
+  it("keeps the spaces in localized separators", async () => {
+    const translateUi = makeUiTranslator(await loadUiCatalog("de"));
+    const authors = makeAuthors();
+    const bobConc = authors[1]?.contributions[0];
+    if (!bobConc) throw new Error("expected contributions");
+    bobConc.score = 100;
+    const stmt = generateStatement(authors, { format: "by-role", translateUi });
+    expect(stmt).toContain("Jane Smith, Bob White");
+    expect(stmt).toMatch(/Bob White; \S/);
+  });
 });

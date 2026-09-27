@@ -31,6 +31,12 @@ describe("lookupDoiWork", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it("rejects an implausibly long DOI without calling upstream", async () => {
+    const fetcher = vi.fn<typeof fetch>();
+    expect(await lookupDoiWork(`10.1038/${"x".repeat(301)}`, fetcher)).toMatchObject({ code: "INVALID_DOI" });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("maps network failure, 404, and a malformed body", async () => {
     const offline = vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"));
     expect(await lookupDoiWork("10.1038/x", offline)).toMatchObject({ status: 502, code: "UNAVAILABLE" });

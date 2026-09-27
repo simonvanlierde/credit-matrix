@@ -48,9 +48,11 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
+import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { StepHeader } from "@/components/ui/step-header";
+import { UndoBar } from "@/components/ui/undo-bar";
 import { announce } from "@/lib/announce";
 import { postLookup } from "@/lib/post-lookup";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
@@ -131,6 +133,7 @@ async function forEachWithConcurrency<T>(items: T[], limit: number, task: (item:
 
 export function AuthorList() {
   const t = useTranslations();
+  const format = useFormatter();
   const {
     activeDraftId,
     authors,
@@ -287,11 +290,12 @@ export function AuthorList() {
 
     const addedCount = acceptedTokens.length - rejected.length - badChecksum.length;
     const added = t("annContributorsAdded", { count: addedCount });
+    // The UI locale's own list punctuation: "、" in Japanese, not ", ".
+    const list = (items: string[]) => format.list(items, { type: "conjunction" });
     const problems = [
-      rejected.length > 0 && t("annEntriesSkippedNoName", { count: rejected.length, entries: rejected.join(", ") }),
-      badChecksum.length > 0 &&
-        t("annOrcidChecksumsSkipped", { count: badChecksum.length, ids: badChecksum.join(", ") }),
-      failed.length > 0 && t("annOrcidLookupsFailed", { count: failed.length, ids: failed.join(", ") }),
+      rejected.length > 0 && t("annEntriesSkippedNoName", { count: rejected.length, entries: list(rejected) }),
+      badChecksum.length > 0 && t("annOrcidChecksumsSkipped", { count: badChecksum.length, ids: list(badChecksum) }),
+      failed.length > 0 && t("annOrcidLookupsFailed", { count: failed.length, ids: list(failed) }),
       skippedForLimit > 0 && t("annContributorsSkippedLimit", { count: skippedForLimit, limit: MAX_AUTHORS }),
     ].filter(Boolean);
 
@@ -441,26 +445,12 @@ export function AuthorList() {
         </SortableContext>
       </DndContext>
 
-      {/* The two wrappers are the height transition, not layout: the grid row
-          opens from 0fr and the inner div clips what overflows while it does. */}
       {removed && (
-        <div className="undo-enter grid">
-          <div className="overflow-hidden">
-            <div
-              role="status"
-              className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-surface-container px-3 py-2 text-sm text-on-surface"
-            >
-              <span className="min-w-0 truncate">{t("removedContributor", { name: removed.author.name })}</span>
-              <button
-                type="button"
-                onClick={undoRemove}
-                className="shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                {t("undo")}
-              </button>
-            </div>
-          </div>
-        </div>
+        <UndoBar
+          message={t("removedContributor", { name: removed.author.name })}
+          onUndo={undoRemove}
+          className="mt-3"
+        />
       )}
 
       {addError !== null && <p className="mt-4 -mb-2 text-xs text-error">{addError}</p>}
@@ -812,12 +802,7 @@ function AuthorRow({
             </button>
           )}
 
-          <span
-            title={author.name}
-            className="shrink-0 inline-flex items-center justify-center min-w-[2.5rem] h-6 px-1.5 rounded-md font-mono text-[11px] font-semibold bg-primary/10 text-primary"
-          >
-            {author.initials}
-          </span>
+          <InitialsChip author={author} />
 
           <div className="flex-1 min-w-0">
             <input

@@ -1,6 +1,6 @@
 "use client";
 
-import type { LocaleCode } from "@credit-generator/core";
+import { type LocaleCode, normalizeLocaleCode } from "@credit-generator/core";
 import { type ReactNode, useEffect, useState } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
 import { announce, STORAGE_FULL_EVENT } from "@/lib/announce";
@@ -42,7 +42,56 @@ const LOADERS: Record<Exclude<LocaleCode, "en">, () => Promise<{ default: Messag
   ja: () => import("@/messages/ja.json"),
 };
 
+/**
+ * The interface language a browser asks for: the first of its preferred
+ * languages that has a catalog, else English. Regions fold into the catalog
+ * that serves them (pt-BR → pt-PT), except that Traditional Chinese is not
+ * served by the Simplified catalog.
+ */
+export function detectUiLocale(languages: readonly string[]): LocaleCode {
+  for (const tag of languages) {
+    let locale: Intl.Locale;
+    try {
+      locale = new Intl.Locale(tag).maximize();
+    } catch {
+      continue;
+    }
+    if (locale.language === "en") return "en";
+    if (locale.language === "zh" && locale.script !== "Hans") continue;
+    const code = normalizeLocaleCode(locale.language);
+    if (code !== "en") return code;
+  }
+  return "en";
+}
+
+/**
+ * On a first visit, before anyone has picked a language, start in the
+ * browser's. Once the store persists, uiLocale is saved with it, so this
+ * runs once per browser, and an explicit choice (English included) wins.
+ */
+function useFirstVisitUiLocale() {
+  useEffect(() => {
+    const { persist } = useContributionStore;
+    let chosen: boolean;
+    try {
+      const raw = window.localStorage.getItem(persist.getOptions().name ?? "");
+      chosen = raw !== null && JSON.parse(raw)?.state?.uiLocale !== undefined;
+    } catch {
+      // Storage blocked or unreadable: nothing would persist the pick anyway.
+      return;
+    }
+    if (chosen) return;
+    const apply = () => {
+      const detected = detectUiLocale(navigator.languages ?? []);
+      if (detected !== "en") useContributionStore.getState().setUiLocale(detected);
+    };
+    if (persist.hasHydrated()) apply();
+    else return persist.onFinishHydration(apply);
+  }, []);
+}
+
 export function AppIntlProvider({ children }: { children: ReactNode }) {
+  useFirstVisitUiLocale();
   const locale = useContributionStore((s) => s.uiLocale);
   const [loaded, setLoaded] = useState<{ requested: LocaleCode; effective: LocaleCode; messages: Messages }>({
     requested: "en",

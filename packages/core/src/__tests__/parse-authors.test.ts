@@ -76,6 +76,23 @@ describe("createAuthor", () => {
       "0000-0002-1825-0097",
     );
   });
+
+  it("labels an unspaced CJK name by the whole name", () => {
+    // Han, kana and Hangul names are written without spaces, so the first
+    // character is the family name alone, not an initial.
+    expect(createAuthor("王小明").initials).toBe("王小明");
+    expect(createAuthor("ヤマダタロー").initials).toBe("ヤマダタロー");
+    expect(createAuthor("김민준").initials).toBe("김민준");
+    expect(parseAuthors(["王小明", "王大明"]).map((a) => a.initials)).toEqual(["王小明", "王大明"]);
+  });
+
+  it("never builds initials from punctuation", () => {
+    // A row still named by its ORCID (lookup failed) keeps the iD as its label.
+    expect(createAuthor("0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
+    expect(createAuthor("0000-0002-1694-233X").initials).toBe("0000-0002-1694-233X");
+    expect(createAuthor("https://orcid.org/0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
+    expect(createAuthor("Jane - Smith").initials).toBe("JS");
+  });
 });
 
 describe("deduplicateAuthorInitials", () => {
@@ -103,6 +120,16 @@ describe("deduplicateAuthorInitials", () => {
 
     expect(initials).toEqual(["A𐐀", "A𐐀y"]);
     expect(initials.every((value) => value.isWellFormed())).toBe(true);
+  });
+
+  it("terminates when the counter suffix collides with an existing label", () => {
+    // Raw name-part overrides (as XML import passes) can yield a digit initial
+    // ("J" + "2nd" → "J2"), which the counter fallback then has to step past.
+    const authors = [createAuthor("J 2nd", { firstName: "J", surname: "2nd" }), createAuthor("J"), createAuthor("J")];
+    expect(authors[0]?.initials).toBe("J2");
+
+    const initials = deduplicateAuthorInitials(authors).map((a) => a.initials);
+    expect(new Set(initials).size).toBe(3);
   });
 });
 

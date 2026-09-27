@@ -1,18 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { mergeContributorRow } from "../merge-row";
+import { keepKnownIds, mergeContributorRow } from "../merge-row";
 import { createAuthor } from "../parse-authors";
 
 const JANE_ORCID = "0000-0002-1825-0097";
 
+const DRAFT = [
+  createAuthor("Jane A. Smith", { orcid: JANE_ORCID, contributions: [{ role: "Conceptualization", score: 100 }] }),
+  createAuthor("Bob White", { contributions: [{ role: "Investigation", score: 50 }] }),
+  createAuthor("Carol Davis", { contributions: [{ role: "Software", score: 100 }] }),
+];
+
+/** Your roster: a fresh copy each time, with the ids a claim link carries. */
 function draft() {
-  return [
-    createAuthor("Jane A. Smith", { orcid: JANE_ORCID, contributions: [{ role: "Conceptualization", score: 100 }] }),
-    createAuthor("Bob White", { contributions: [{ role: "Investigation", score: 50 }] }),
-    createAuthor("Carol Davis", { contributions: [{ role: "Software", score: 100 }] }),
-  ];
+  return structuredClone(DRAFT);
 }
 
-/** What a co-author sends back: the whole draft, with their own row filled in. */
+/** What a co-author sends back: the draft, with their own row filled in. */
 function returned(edit: (authors: ReturnType<typeof draft>) => void) {
   const authors = draft();
   edit(authors);
@@ -85,25 +88,16 @@ describe("mergeContributorRow", () => {
     expect(result.authors[0]?.name).toBe("Jane Alexandra Smith");
   });
 
-  it("matches on name when neither side carries an iD, ignoring case and spacing", () => {
-    const current = [createAuthor("Anne de Vries")];
-    const incoming = [createAuthor("anne  DE vries", { contributions: [{ role: "Methodology", score: 100 }] })];
-
-    const result = mergeContributorRow(current, incoming, idAt(incoming, 0));
-    expect(scoreFor(result.authors[0] as never, "Methodology")).toBe(100);
-  });
-
   it("takes their ORCID as answered: filling a gap, correcting yours, or clearing it", () => {
-    const current = [createAuthor("Bob White")];
-    const incoming = [createAuthor("Bob White", { orcid: JANE_ORCID })];
-    expect(mergeContributorRow(current, incoming, idAt(incoming, 0)).authors[0]?.orcid).toBe(JANE_ORCID);
+    const bob = createAuthor("Bob White");
+    const answered = { ...bob, orcid: JANE_ORCID };
+    expect(mergeContributorRow([bob], [answered], bob.id).authors[0]?.orcid).toBe(JANE_ORCID);
 
-    const held = [createAuthor("Bob White", { orcid: "0000-0001-5109-3700" })];
-    expect(mergeContributorRow(held, incoming, idAt(incoming, 0)).authors[0]?.orcid).toBe(JANE_ORCID);
+    const held = { ...bob, orcid: "0000-0001-5109-3700" };
+    expect(mergeContributorRow([held], [answered], bob.id).authors[0]?.orcid).toBe(JANE_ORCID);
 
-    const cleared = [createAuthor("Bob White", { orcid: JANE_ORCID })];
-    const withoutId = [createAuthor("Bob White")];
-    expect(mergeContributorRow(cleared, withoutId, idAt(withoutId, 0)).authors[0]?.orcid).toBeUndefined();
+    const withoutId = { ...bob, orcid: undefined };
+    expect(mergeContributorRow([answered], [withoutId], bob.id).authors[0]?.orcid).toBeUndefined();
   });
 
   it("keeps your row id while shipping the name they typed for themselves", () => {
@@ -158,24 +152,6 @@ describe("mergeContributorRow", () => {
   });
 });
 
-describe("name matching robustness", () => {
-  it("matches across Unicode normalization forms and is host-locale independent", () => {
-    // "é" typed as NFC on one device and as NFD (e + combining accent) on
-    // another is the same person; toLocaleLowerCase would additionally make
-    // the match depend on the host's locale (Turkish "I" → "ı").
-    const current = [createAuthor("Renée Dupont", { contributions: [{ role: "Software", score: 0 }] })];
-    const incoming = [createAuthor("Renée DUPONT", { contributions: [{ role: "Software", score: 100 }] })];
-
-    const result = mergeContributorRow(current, incoming, idAt(incoming, 0));
-    expect(result.unmatched).toBeNull();
-    // The normalization-insensitive match still lands the row; the spelling
-    // the co-author typed for themselves is the one that ships (their string
-    // is NFD, so compare normalized rather than byte-for-byte).
-    expect(result.merged?.name.normalize("NFC")).toBe("Renée DUPONT");
-    expect(result.authors[0]?.contributions.find((c) => c.role === "Software")?.score).toBe(100);
-  });
-});
-
 describe("matching by id", () => {
   it("selects the claimed row by id, surviving reorder and deletion in the reply", () => {
     const [jane, bob] = [createAuthor("Jane Smith"), createAuthor("Bob White")];
@@ -187,14 +163,17 @@ describe("matching by id", () => {
     expect(result.authors[1]?.contributions.find((c) => c.role === "Investigation")?.score).toBe(100);
   });
 
-  it("falls back to ORCID then name when the id is not in the current roster", () => {
-    const jane = createAuthor("Jane Smith", { orcid: "0000-0002-1825-0097" });
-    const replyJane = createAuthor("Jane A. Smith", {
-      orcid: "0000-0002-1825-0097",
+  it("never lets a reply land on a row whose id is not the claim, whatever ORCID or name it carries", () => {
+    // A forged reply: an id nobody was asked under, dressed in Jane's iD and name.
+    const current = draft();
+    const forged = createAuthor("Jane A. Smith", {
+      orcid: JANE_ORCID,
       contributions: [{ role: "Software", score: 100 }],
-    }); // fresh id: simulates the originator having re-imported the roster
-    const result = mergeContributorRow([jane], [replyJane], replyJane.id);
-    expect(result.merged?.id).toBe(jane.id);
+    });
+    const result = mergeContributorRow(current, [forged], forged.id);
+    expect(result.merged).toBeNull();
+    expect(result.unmatched?.id).toBe(forged.id);
+    expect(result.authors).toBe(current);
   });
 
   it("returns unmatched when the claim id is absent from the incoming roster", () => {
@@ -210,5 +189,48 @@ describe("matching by id", () => {
     const reply = { ...jane, contributorType: "non-author" as const };
     const result = mergeContributorRow([jane], [reply], jane.id);
     expect(result.merged?.contributorType).toBe("non-author");
+  });
+});
+
+describe("keepKnownIds", () => {
+  it("gives re-imported contributors the ids they already had, so open asks still match", () => {
+    const current = draft();
+    const imported = [
+      createAuthor("Carol Davis"),
+      createAuthor("J. Smith", { orcid: JANE_ORCID }),
+      createAuthor("bob  white"),
+      createAuthor("Dan Evans"),
+    ];
+
+    const result = keepKnownIds(current, imported);
+    expect(result.map((author) => author.id)).toEqual([
+      idAt(current, 2),
+      idAt(current, 0),
+      idAt(current, 1),
+      idAt(imported, 3),
+    ]);
+    // A reply to the old ask now merges into the re-imported row.
+    const reply = returned(([jane]) => {
+      if (jane) jane.contributions[0] = { role: "Conceptualization", score: 33 };
+    });
+    expect(mergeContributorRow(result, reply, idAt(current, 0)).merged?.name).toBe("Jane A. Smith");
+  });
+
+  it("gives each existing id to one contributor only", () => {
+    const current = draft();
+    const result = keepKnownIds(current, [createAuthor("Bob White"), createAuthor("Bob White")]);
+    expect(result[0]?.id).toBe(idAt(current, 1));
+    expect(result[1]?.id).not.toBe(idAt(current, 1));
+  });
+
+  it("keeps an id the import already carries", () => {
+    const current = draft();
+    const [bob] = current.slice(1);
+    if (!bob) throw new Error("expected Bob");
+    expect(keepKnownIds(current, [bob])[0]?.id).toBe(bob.id);
+    // Even when an earlier row would match Bob by name.
+    const result = keepKnownIds(current, [createAuthor("Bob White"), bob]);
+    expect(result[1]?.id).toBe(bob.id);
+    expect(result[0]?.id).not.toBe(bob.id);
   });
 });

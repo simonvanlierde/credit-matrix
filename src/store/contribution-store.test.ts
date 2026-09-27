@@ -1,7 +1,7 @@
 import { createAuthor, type LocaleCode } from "@credit-generator/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
-import { type Draft, MAX_DRAFTS, ROLE_NAMES, useContributionStore } from "./contribution-store";
+import { announcingStorage, type Draft, MAX_DRAFTS, ROLE_NAMES, useContributionStore } from "./contribution-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
@@ -50,6 +50,33 @@ describe("contribution store", () => {
       expect(store().authors[0]?.name).toBe("Jane Smith");
       expect(store().addAuthor("   ")).toBeNull();
       expect(store().authors).toHaveLength(1);
+    });
+
+    it("keeps imported name parts, such as a multi-word surname, through later edits", () => {
+      store().loadAuthors([
+        createAuthor("Anne van der Berg", { firstName: "Anne", middleName: "", surname: "van der Berg" }),
+      ]);
+      store().addAuthor("Bob White");
+      expect(store().authors[0]).toMatchObject({ surname: "van der Berg", middleName: "", initials: "AV" });
+
+      // A rename re-parses: the old parts no longer describe the name.
+      const id = store().authors[0]?.id ?? "";
+      store().updateAuthorName(id, "Anne Smith");
+      expect(store().authors[0]?.surname).toBe("Smith");
+    });
+
+    it("gives an imported contributor a fresh id when it is duplicated or unshareable", () => {
+      const jane = createAuthor("Jane Smith", { id: "same" });
+      store().loadAuthors([
+        jane,
+        { ...createAuthor("Bob White"), id: "same" },
+        createAuthor("Cy Young", { id: "a b/c" }),
+      ]);
+
+      const ids = store().authors.map((a) => a.id);
+      expect(ids[0]).toBe("same");
+      expect(new Set(ids).size).toBe(3);
+      expect(ids.every((id) => /^[\w-]{1,64}$/.test(id))).toBe(true);
     });
 
     it("keeps an ORCID iD given alongside the name", () => {
@@ -818,6 +845,65 @@ describe("contribution store", () => {
 
       storage.removeItem(PERSIST_KEY);
       expect(storage.getItem(PERSIST_KEY)).toBeNull();
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
+    it("keeps drafts another tab created or parked when this tab writes", () => {
+      // Two tabs are two storage adapters over one localStorage.
+      const tabA = announcingStorage();
+      const tabB = announcingStorage();
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      globalThis.localStorage.clear();
+
+      const draft = (id: string, title: string): Draft => ({
+        id,
+        title,
+        authors: [],
+        inputMode: "toggle",
+        heatmapMonoColor: "#2563eb",
+        outputLocale: "en",
+        updatedAt: 0,
+        claim: null,
+        asked: {},
+      });
+      const write = (tab: typeof tabA, active: string, drafts: Draft[]) =>
+        tab.setItem(PERSIST_KEY, {
+          state: {
+            drafts: Object.fromEntries(drafts.map((d) => [d.id, d])),
+            activeDraftId: active,
+            uiLocale: "en",
+            welcomeSeen: true,
+          },
+          version: PERSIST_VERSION,
+        });
+      const storedTitles = () => {
+        const read = announcingStorage().getItem(PERSIST_KEY) as { state: { drafts: Record<string, Draft> } } | null;
+        return Object.values(read?.state.drafts ?? {})
+          .map((d) => d.title)
+          .sort();
+      };
+
+      const p = draft("p", "Shared paper");
+      write(tabA, "p", [p]);
+      tabA.getItem(PERSIST_KEY);
+      tabB.getItem(PERSIST_KEY);
+
+      // Tab A starts a new paper, which lives only in the main key...
+      write(tabA, "x", [p, draft("x", "Paper from A")]);
+      // ...until tab B saves an edit to its own active draft.
+      write(tabB, "p", [draft("p", "Shared paper, edited")]);
+      expect(storedTitles()).toEqual(["Paper from A", "Shared paper, edited"]);
+
+      // Tab A parks its paper; tab B's next save must not delete that key.
+      write(tabA, "y", [p, draft("x", "Paper from A"), draft("y", "Third paper")]);
+      write(tabB, "p", [draft("p", "Shared paper, edited again")]);
+      expect(storedTitles()).toEqual(["Paper from A", "Shared paper, edited again", "Third paper"]);
+
+      // A draft this tab deletes is still removed.
+      write(tabA, "y", [p, draft("y", "Third paper")]);
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:x`)).toBeNull();
+
       hydrated.mockRestore();
       globalThis.localStorage.clear();
     });

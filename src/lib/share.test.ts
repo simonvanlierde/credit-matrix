@@ -64,7 +64,7 @@ describe("share links", () => {
     expect(decoded?.sourceDraftId).toBe("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
     expect(decoded?.reply).toBe(true);
     expect(decoded?.title).toBe("Eel cognition");
-    expect(decoded?.authors.map((a) => a.id)).toEqual(authors.map((a) => a.id));
+    expect(decoded?.authors.map((a) => a.id)).toEqual([authors[1]?.id]);
   });
 
   it("returns null for a v1-era link with trailing parameters", async () => {

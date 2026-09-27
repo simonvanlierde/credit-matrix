@@ -63,13 +63,7 @@ async function transformBytes(
     }
     chunks.push(value);
   }
-  const out = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return out;
+  return new Uint8Array(await new Blob(chunks as Uint8Array<ArrayBuffer>[]).arrayBuffer());
 }
 
 /** Deflate the payload so the link stays short enough to paste into an email. */

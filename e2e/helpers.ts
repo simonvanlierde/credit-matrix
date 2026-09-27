@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { PERSIST_KEY, PERSIST_VERSION } from "../src/store/persist-meta";
 
 /**
@@ -49,4 +49,21 @@ export function seedStorage(
  */
 export function asReturningVisitor(page: Page) {
   return seedStorage(page, { authors: [], welcomeSeen: true }, { onlyIfEmpty: true });
+}
+
+/**
+ * Click a copy button and return what it put on the clipboard.
+ *
+ * `click()` resolves once the click is dispatched, not once the handler's async
+ * work (deflating the payload, then the clipboard write) finishes. An
+ * immediate read races that work and can see the old value. Clear first, then
+ * wait for the new value: waiting for "a link" would also match the previous
+ * copy.
+ */
+export async function copyFrom(page: Page, button: Locator): Promise<string> {
+  const read = () => page.evaluate(() => navigator.clipboard.readText());
+  await page.evaluate(() => navigator.clipboard.writeText(""));
+  await button.click();
+  await expect.poll(read).not.toBe("");
+  return read();
 }

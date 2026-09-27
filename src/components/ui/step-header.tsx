@@ -5,11 +5,13 @@ import { StepNumber } from "@/components/ui/step-number";
  * workflow sections (contributors, matrix, output) so their numbering and
  * typography stay in lockstep. `className` sets the surrounding spacing.
  */
-export function StepHeader({ n, title, className }: { n: number; title: string; className?: string }) {
+export function StepHeader({ n, title, className, id }: { n: number; title: string; className?: string; id?: string }) {
   return (
     <div className={`flex items-center gap-2.5 ${className ?? ""}`}>
       <StepNumber n={n} />
-      <h2 className="font-headline text-lg italic font-semibold text-primary">{title}</h2>
+      <h2 id={id} className="font-headline text-lg italic font-semibold text-primary">
+        {title}
+      </h2>
     </div>
   );
 }

@@ -65,6 +65,26 @@ describe("CSV import/export", () => {
     expect(parsed[0]?.name).toBe("Jane\nSmith");
   });
 
+  it("round-trips a field containing a bare carriage return", () => {
+    // The record parser ends a row on a lone \r too, so the field must be quoted.
+    const [author] = parseAuthorText("Jane Smith");
+    if (!author) throw new Error("expected author");
+    author.name = "Ann\r=HYPERLINK()";
+
+    const parsed = fromCsv(toCsv([author]));
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]?.name).toBe("Ann\r=HYPERLINK()");
+  });
+
+  it("reads a CSV that starts with a UTF-8 byte order mark", () => {
+    // Downloads carry a BOM so Excel reads non-ASCII names as UTF-8.
+    const [author] = parseAuthorText("José García");
+    if (!author) throw new Error("expected author");
+
+    const parsed = fromCsv(`﻿${toCsv([author])}`);
+    expect(parsed.map((a) => a.name)).toEqual(["José García"]);
+  });
+
   it("parses escaped quotes and commas inside a quoted field", () => {
     // RFC-4180: `""` is a literal quote and a comma inside quotes is data, not a
     // column break. The score column must still land at 100.

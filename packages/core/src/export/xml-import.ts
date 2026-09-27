@@ -39,11 +39,16 @@ export function fromJats4rXml(xmlString: string): Author[] {
  */
 export function fromXmlDocument(doc: Document): Author[] {
   const roleNames = new Set<string>(CREDIT_ROLES.map((r) => r.name));
+  const roleNameByUrl = new Map<string, string>(CREDIT_ROLES.map((r) => [normalizeRoleUrl(r.url), r.name]));
 
   const contribEls = Array.from(doc.querySelectorAll("contrib"));
   if (contribEls.length === 0) return [];
 
   const authors = contribEls.flatMap((contrib) => {
+    // Editors, reviewers and other non-credited contrib types are not authors.
+    const contribType = contrib.getAttribute("contrib-type");
+    if (contribType && contribType !== "author" && contribType !== "contributor") return [];
+
     const givenNamesEl = contrib.querySelector("given-names");
     const surnameEl = contrib.querySelector("surname");
 
@@ -60,11 +65,19 @@ export function fromXmlDocument(doc: Document): Author[] {
     // rather than throwing and discarding every other valid author.
     if (!displayName) return [];
 
-    // Parse role elements. The `vocab-term` attribute is authoritative; fall back to text content
+    // Parse role elements. The `vocab-term-identifier` URL is authoritative, as
+    // term spellings vary ("Writing - original draft"); then `vocab-term`, then
+    // the text content.
     const roleEls = Array.from(contrib.querySelectorAll("role"));
     const activeRoleNames = new Set(
       roleEls
-        .map((el) => el.getAttribute("vocab-term") ?? el.textContent?.trim() ?? "")
+        .map(
+          (el) =>
+            roleNameByUrl.get(normalizeRoleUrl(el.getAttribute("vocab-term-identifier") ?? "")) ??
+            el.getAttribute("vocab-term") ??
+            el.textContent?.trim() ??
+            "",
+        )
         .filter((name) => roleNames.has(name)),
     );
 
@@ -80,26 +93,41 @@ export function fromXmlDocument(doc: Document): Author[] {
     // biome-ignore lint/security/noSecrets: this is a CSS attribute selector, not a credential.
     const orcidEl = contrib.querySelector('contrib-id[contrib-id-type="orcid"]');
     const orcid = orcidEl?.textContent?.trim() ?? "";
-    const contributorType = contrib.getAttribute("contrib-type") === "contributor" ? "non-author" : "author";
+    const contributorType = contribType === "contributor" ? "non-author" : "author";
     // JATS spells both markers "yes"; anything else, including absence, is no.
     const equalContribution = contrib.getAttribute("equal-contrib") === "yes";
     const corresponding = contrib.getAttribute("corresp") === "yes";
 
-    return [
-      createAuthor(displayName, {
-        contributions,
-        contributorType,
-        equalContribution,
-        corresponding,
-        // JATS already separates the parts, so hand them over instead of
-        // letting the parser re-split `displayName`, which would read a particle
-        // surname ("van der Berg") back as middle name "van" + surname "Berg".
-        ...(givenNames && surname ? { firstName: givenFirst, middleName: givenMiddle, surname } : {}),
-        // Drop an unparseable ORCID rather than aborting the whole import.
-        ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),
-      }),
-    ];
+    // Skip a rejected contrib (e.g. a name with no letters) rather than
+    // aborting the whole import.
+    try {
+      return [
+        createAuthor(displayName, {
+          contributions,
+          contributorType,
+          equalContribution,
+          corresponding,
+          // JATS already separates the parts, so hand them over instead of
+          // letting the parser re-split `displayName`, which would read a particle
+          // surname ("van der Berg") back as middle name "van" + surname "Berg".
+          ...(givenNames && surname ? { firstName: givenFirst, middleName: givenMiddle, surname } : {}),
+          // Drop an unparseable ORCID rather than aborting the whole import.
+          ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),
+        }),
+      ];
+    } catch {
+      return [];
+    }
   });
 
   return deduplicateAuthorInitials(authors);
+}
+
+/** Compare role URLs regardless of scheme, case and trailing slash. */
+function normalizeRoleUrl(url: string): string {
+  return url
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "");
 }

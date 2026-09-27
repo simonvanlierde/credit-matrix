@@ -2,7 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { PERSIST_KEY } from "../src/store/persist-meta";
-import { asReturningVisitor, onScreen, seedStorage } from "./helpers";
+import { asReturningVisitor, copyFrom, onScreen, seedStorage } from "./helpers";
 
 test.describe("Happy path UI flows", () => {
   test.beforeEach(async ({ page }) => {
@@ -219,6 +219,25 @@ test.describe("Happy path UI flows", () => {
     await expect(page.locator("#import-text")).toBeVisible();
   });
 
+  test("keeps a malformed XML file's error visible after import", async ({ page }) => {
+    // Unlike the paste path above, a file goes through the browser's real
+    // DOMParser via the file input, so this is the one place the <parsererror>
+    // branch in xml-import.ts actually runs (linkedom does not emit it).
+    await page.goto("/");
+    await page.getByRole("button", { name: "Import" }).click();
+    await page.getByLabel("Upload CSV, JSON, or XML file").setInputFiles({
+      name: "contributors.xml",
+      mimeType: "application/xml",
+      buffer: Buffer.from("<a><b>"),
+    });
+    await page.getByRole("button", { name: "Import data" }).click();
+
+    await expect(
+      page.locator("dialog").getByText("Could not import those contributors.", { exact: false }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
+  });
+
   test("Adding a comma-separated author list creates one row per name", async ({ page }) => {
     await page.goto("/");
 
@@ -242,8 +261,7 @@ test.describe("Happy path UI flows", () => {
 
     await page.getByRole("button", { name: "Share" }).click();
     await expect(page.getByText("Anyone with this link can read every contributor name")).toBeVisible();
-    await page.getByRole("button", { name: "Copy data link" }).click();
-    const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
+    const shareUrl = await copyFrom(page, page.getByRole("button", { name: "Copy data link" }));
     expect(shareUrl).toContain("#s=");
 
     // Open the link in a fresh page (clears local storage) and confirm the state loads.
@@ -264,8 +282,7 @@ test.describe("Happy path UI flows", () => {
 
     // Ask the second contributor (Rosalind E. Franklin) to fill in their own row.
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    await page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }).click();
-    const askUrl = await page.evaluate(() => navigator.clipboard.readText());
+    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
     // Everything the link carries — whose row, which draft — rides inside the
     // payload now; the URL is nothing but the fragment.
     expect(askUrl).toContain("#s=");
@@ -278,15 +295,12 @@ test.describe("Happy path UI flows", () => {
     await coauthor.goto(askUrl);
     await expect(onScreen(coauthor, "You are filling in Rosalind E. Franklin's contributions")).toBeVisible();
 
-    // She assigns herself a role; someone else's is refused outright.
+    // She assigns herself a role. The link carries only her row, so no one
+    // else's is there to change.
     await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    await expect(coauthor.getByRole("button", { name: /^Validation for Ada Lovelace:/ })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
+    await expect(coauthor.getByRole("button", { name: /^Validation for Ada Lovelace:/ })).toHaveCount(0);
 
-    await coauthor.getByRole("button", { name: "Copy the link to send back" }).click();
-    const returnedUrl = await coauthor.evaluate(() => navigator.clipboard.readText());
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
     await coauthorContext.close();
 
     // The originator just opens what she sent — no Import knowledge required.
@@ -307,15 +321,13 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
 
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    await page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }).click();
-    const askUrl = await page.evaluate(() => navigator.clipboard.readText());
+    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
 
     const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
     const coauthor = await coauthorContext.newPage();
     await coauthor.goto(askUrl);
     await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    await coauthor.getByRole("button", { name: "Copy the link to send back" }).click();
-    const returnedUrl = await coauthor.evaluate(() => navigator.clipboard.readText());
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
     await coauthorContext.close();
 
     await page.getByRole("button", { name: "Import" }).click();
@@ -336,8 +348,7 @@ test.describe("Happy path UI flows", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
     await page.getByRole("button", { name: "Share" }).click();
-    await page.getByRole("button", { name: "Copy data link" }).click();
-    const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
+    const shareUrl = await copyFrom(page, page.getByRole("button", { name: "Copy data link" }));
 
     // Someone else's browser, already holding a paper of their own.
     const other = await context.newPage();
@@ -389,8 +400,7 @@ test.describe("Happy path UI flows", () => {
     await page.locator("#import-text").fill("Ada Lovelace\nRosalind E. Franklin");
     await page.getByRole("button", { name: "Import data" }).click();
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    await page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }).click();
-    const askUrl = await page.evaluate(() => navigator.clipboard.readText());
+    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
 
     // The co-author answers — in their own browser, not a page sharing this
     // one's localStorage (which the old clearFirst seed silently wiped).
@@ -399,8 +409,7 @@ test.describe("Happy path UI flows", () => {
     await seedStorage(coauthor, { welcomeSeen: true });
     await coauthor.goto(askUrl);
     await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    await coauthor.getByRole("button", { name: "Copy the link to send back" }).click();
-    const returnedUrl = await coauthor.evaluate(() => navigator.clipboard.readText());
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
     await coauthorContext.close();
 
     // Meanwhile you have gone back to paper one. The reply must not land here.

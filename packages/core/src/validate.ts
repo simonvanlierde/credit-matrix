@@ -1,8 +1,6 @@
 import type { Author } from "./author";
-import { hasContributions } from "./author";
+import { hasContributions, rolesWithContributions } from "./author";
 import type { CreditRoleName } from "./credit-roles";
-
-export type ValidationLevel = "warning" | "info";
 
 export type ValidationIssue =
   // authorId keys the rendered list: two contributors can share a name.
@@ -39,12 +37,7 @@ export function validateContributions(authors: Author[]): ValidationIssue[] {
     }
   }
 
-  const assigned = new Set<string>();
-  for (const author of authors) {
-    for (const contribution of author.contributions) {
-      if (contribution.score > 0) assigned.add(contribution.role);
-    }
-  }
+  const assigned = new Set(rolesWithContributions(authors));
 
   for (const role of EXPECTED_ROLES) {
     if (!assigned.has(role)) {

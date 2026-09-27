@@ -1,20 +1,18 @@
 "use client";
 
 import type { Author } from "@credit-generator/core";
-import { mergeContributorRow } from "@credit-generator/core";
+import { keepKnownIds, mergeContributorRow } from "@credit-generator/core";
 import { Check, CircleAlert, Link2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { DraftPicker } from "@/components/DraftPicker";
-import { ImportModal } from "@/components/ImportModal";
+import { ImportModal, type LinkFailure } from "@/components/ImportModal";
 import { showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { type DraftClaim, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
-
-type LinkFailure = "errShareLinkBroken" | "mergeWrongDraft" | "mergeUnmatched" | "draftLimitReached";
 
 /**
  * Import / Share buttons rendered in the nav bar.
@@ -243,7 +241,8 @@ export function HeaderActions() {
 
   function handleImport(importedAuthors: Author[], importedTitle?: string) {
     // Errors surface in ImportModal, which keeps the dialog open on failure.
-    loadAuthors(importedAuthors);
+    // Re-imported contributors keep their ids, so their open asks still match.
+    loadAuthors(keepKnownIds(useContributionStore.getState().authors, importedAuthors));
     // Only the DOI path carries a title. Guard on it rather than on emptiness,
     // so a record with no title still clears a stale one from the last import.
     if (importedTitle !== undefined) setTitle(importedTitle);
