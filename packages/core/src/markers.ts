@@ -1,6 +1,11 @@
 import type { Author } from "./author";
 import { DEFAULT_UI_TRANSLATOR, fillTemplate, type UiTranslator } from "./credit-i18n/ui-strings";
 
+/** How a statement names a contributor: their initials, or their name with whitespace collapsed. */
+export function contributorLabel(author: Author, useInitials: boolean): string {
+  return useInitials ? author.initials : author.name.replace(/\s+/g, " ").trim();
+}
+
 /**
  * Notes for the two authorship markers that sit outside CRediT: shared first
  * authorship and corresponding authorship.
@@ -15,10 +20,9 @@ export function markerNotes(
   options: { useInitials?: boolean; translateUi?: UiTranslator; locale?: string } = {},
 ): string[] {
   const { useInitials = false, translateUi = DEFAULT_UI_TRANSLATOR, locale = "en" } = options;
-  const label = (author: Author) => (useInitials ? author.initials : author.name.replace(/\s+/g, " ").trim());
   // CLDR owns the list wording ("A, B, and C" / "A、B") per locale.
   const list = new Intl.ListFormat(locale, { type: "conjunction" });
-  const join = (people: Author[]) => list.format(people.map(label));
+  const join = (people: Author[]) => list.format(people.map((author) => contributorLabel(author, useInitials)));
 
   const notes: string[] = [];
   const equal = authors.filter((author) => author.equalContribution);

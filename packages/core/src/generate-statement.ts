@@ -3,7 +3,7 @@ import { activeContributions, scoreToLevel } from "./author";
 import { DEFAULT_ROLE_TRANSLATOR, type RoleTranslator } from "./credit-i18n/index";
 import { DEFAULT_UI_TRANSLATOR, fillTemplate, type UiTranslator } from "./credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "./credit-roles";
-import { markerNotes } from "./markers";
+import { contributorLabel, markerNotes } from "./markers";
 
 export type StatementFormat = "by-role" | "by-role-short" | "by-author" | "by-author-short";
 
@@ -146,7 +146,7 @@ export function generateStatement(authors: Author[], options: StatementOptions):
 }
 
 /** Annotate a role or contributor label with its non-lead level: "label (Equal)". */
-function withLevel(label: string, score: number, translateUi: UiTranslator): string {
+export function withLevel(label: string, score: number, translateUi: UiTranslator): string {
   const level = scoreToLevel(score);
   if (level === "lead") return label;
   const levelLabel = level === "equal" ? translateUi("equal") : translateUi("supporting");
@@ -167,7 +167,7 @@ function generateByRole(
   const roleMap = new Map<string, string[]>();
 
   for (const author of authors) {
-    const label = useInitials ? author.initials : author.name.replace(/\s+/g, " ").trim();
+    const label = contributorLabel(author, useInitials);
     for (const contrib of activeContributions(author)) {
       const list = roleMap.get(contrib.role) ?? [];
       list.push(fmt.text(showLevels ? withLevel(label, contrib.score, translateUi) : label));
@@ -205,7 +205,7 @@ function generateByAuthor(
     const active = activeContributions(author);
     if (active.length === 0) continue;
 
-    const label = useInitials ? author.initials : author.name.replace(/\s+/g, " ").trim();
+    const label = contributorLabel(author, useInitials);
 
     const roleList = active.map((c) =>
       showLevels ? withLevel(translateRole(c.role), c.score, translateUi) : translateRole(c.role),

@@ -136,6 +136,15 @@ export type ContributorType = Author["contributorType"];
  */
 export type ContributionLevel = "none" | "supporting" | "equal" | "lead";
 
+/**
+ * Coerce any number to a valid score: an integer 0–100, with NaN and infinities
+ * read as 0. Imported and hand-edited data is not trusted to be either.
+ */
+export function clampScore(score: number): number {
+  if (!Number.isFinite(score)) return 0;
+  return Math.round(Math.max(0, Math.min(100, score)));
+}
+
 export function scoreToLevel(score: number): ContributionLevel {
   if (score === 0) return "none";
   if (score <= 33) return "supporting";

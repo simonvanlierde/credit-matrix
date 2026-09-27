@@ -1,5 +1,5 @@
 import type { Author, Contribution } from "../author";
-import { isValidOrcid } from "../author";
+import { clampScore, isValidOrcid } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 
@@ -148,11 +148,7 @@ export function fromCsv(csv: string): Author[] {
 
     const contributions: Contribution[] = CREDIT_ROLES.map((role) => {
       const scoreText = cells[roleIndexByHeader.get(role.name) ?? -1] ?? "0";
-      const parsedScore = Number(scoreText);
-      // Scores are integer 0–100 everywhere else; round so a "50.5" cell can't
-      // leak a non-integer that AuthorSchema would reject.
-      const score = Number.isFinite(parsedScore) ? Math.round(Math.max(0, Math.min(100, parsedScore))) : 0;
-      return { role: role.name, score };
+      return { role: role.name, score: clampScore(Number(scoreText)) };
     });
 
     const contributorType = cells[typeIndex] === "non-author" ? "non-author" : "author";

@@ -1,6 +1,7 @@
 import type { Author, CreditRoleName, LocaleCode } from "@credit-generator/core";
 import {
   CREDIT_ROLES,
+  clampScore,
   createAuthor,
   DEFAULT_MONO_COLOR,
   deduplicateAuthorInitials,
@@ -150,10 +151,6 @@ export const ROLE_NAMES = CREDIT_ROLES.map((role) => role.name);
 /** Cap on the stored work title. Long enough for any real one, short enough
  *  that a pasted document cannot bloat the persisted draft. */
 const MAX_TITLE_LENGTH = 500;
-
-function clampScore(score: number): number {
-  return Math.max(0, Math.min(100, score));
-}
 
 /**
  * A small, realistic dataset for the first-run "Load sample" action.

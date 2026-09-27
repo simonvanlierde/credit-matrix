@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Author } from "./author";
-import { MAX_AUTHORS } from "./author";
+import { clampScore, MAX_AUTHORS } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
 
@@ -148,10 +148,4 @@ export function fromSharePayload(json: string): ShareData {
     sourceDraftId: payload.d ?? null,
     reply: payload.r === 1,
   };
-}
-
-/** Scores are integers 0–100 everywhere else; a hand-edited link is not trusted. */
-function clampScore(score: number): number {
-  if (!Number.isFinite(score)) return 0;
-  return Math.round(Math.max(0, Math.min(100, score)));
 }
