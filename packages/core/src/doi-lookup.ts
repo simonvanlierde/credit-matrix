@@ -22,8 +22,12 @@ const MESSAGES: Record<DoiErrorCode, string> = {
 /** Resolver prefixes stripped on input: doi.org and dx.doi.org, with or without a scheme or `www.`, plus a bare `doi:`. */
 const DOI_PREFIX = /^(?:(?:https?:\/\/)?(?:www\.)?(?:dx\.)?doi\.org\/|doi:)\s*/i;
 
-/** DOI accepted on input: bare form, a `doi:` prefix, or a doi.org URL. */
-export const DOI_INPUT_REGEX = /^(?:(?:https?:\/\/)?(?:www\.)?(?:dx\.)?doi\.org\/|doi:)?\s*10\.\d{4,9}\/\S+$/i;
+/**
+ * DOI accepted on input: bare form, a `doi:` prefix, or a doi.org URL. The
+ * suffix is capped at 300 characters: real DOIs stay far below that, and the
+ * value is forwarded upstream.
+ */
+export const DOI_INPUT_REGEX = /^(?:(?:https?:\/\/)?(?:www\.)?(?:dx\.)?doi\.org\/|doi:)?\s*10\.\d{4,9}\/\S{1,300}$/i;
 
 export interface DoiAuthor {
   name: string;
