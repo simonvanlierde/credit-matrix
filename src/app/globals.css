@@ -10,159 +10,71 @@
 @custom-variant desk (@media (min-width: 80rem) and (min-height: 45rem));
 
 /* Source of truth for the design tokens. DESIGN.md's front matter mirrors the
-   colors, radii and type stacks below for documentation; a drift test in
-   packages/core keeps the two honest. Change a value here first. */
+   colors below for documentation; a drift test in e2e/ keeps the two honest.
+   Change a value here first. Radii stay on Tailwind's defaults. */
 :root {
   /* --- Accent (single ink-blue: links, focus, primary buttons only) --- */
   --color-primary: #1f4e79;
   --color-primary-container: #2c63924d; /* accent @ 30% for soft fills */
   --color-on-primary: #ffffff;
-  --color-on-primary-container: #16181c;
-  --color-primary-fixed: #d6e2ee;
-  --color-primary-fixed-dim: #a8c1da;
-  --color-inverse-primary: #a8c1da;
-
-  --color-secondary: #595c63;
-  --color-secondary-container: #ececea;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #16181c;
-  --color-secondary-fixed: #ececea;
-  --color-secondary-fixed-dim: #d6d6d2;
-  --color-on-secondary-fixed: #16181c;
-  --color-on-secondary-fixed-variant: #595c63;
-
-  --color-tertiary: #1f4e79;
-  --color-tertiary-container: #d6e2ee;
-  --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #16181c;
-  --color-tertiary-fixed: #d6e2ee;
-  --color-tertiary-fixed-dim: #a8c1da;
-  --color-on-tertiary-fixed: #16181c;
-  --color-on-tertiary-fixed-variant: #1f4e79;
 
   /* --- Neutrals (ink on paper) --- */
   --color-surface: #fafaf9;
   --color-surface-bright: #ffffff;
-  --color-surface-dim: #ececea;
-  --color-surface-tint: #1f4e79;
-  --color-surface-variant: #f4f4f2;
-  --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #f4f4f2;
   --color-surface-container: #efefed;
   --color-surface-container-high: #ececea;
   --color-surface-container-highest: #e4e4e1;
   --color-on-surface: #16181c;
   --color-on-surface-variant: #595c63;
-  --color-inverse-surface: #2a2c30;
-  --color-inverse-on-surface: #fafaf9;
 
   --color-outline: #c9c9c5;
   --color-outline-variant: #e4e4e1;
 
   --color-background: #fafaf9;
-  --color-on-background: #16181c;
 
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
   --color-on-error: #ffffff;
   --color-on-error-container: #93000a;
 
-  /* --- Contributor palette (Okabe–Ito, colorblind-safe; cycles after 8) --- */
-  --color-contrib-1: #0072b2;
-  --color-contrib-2: #e69f00;
-  --color-contrib-3: #009e73;
-  --color-contrib-4: #cc79a7;
-  --color-contrib-5: #d55e00;
-  --color-contrib-6: #56b4e9;
-  --color-contrib-7: #f0e442;
-  --color-contrib-8: #000000;
-
   /* --- Typography --- */
   --font-headline: var(--font-newsreader), Georgia, serif;
   --font-body: var(--font-plex-sans), system-ui, sans-serif;
-  --font-label: var(--font-plex-sans), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
-
-  /* --- Radii --- */
-  --radius-DEFAULT: 0.125rem;
-  --radius-sm: 0.125rem;
-  --radius-md: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-full: 0.75rem;
 }
 
 /*
  * Dark theme. next-themes toggles `class="dark"` on <html> (system-aware on
- * first visit, persisted after). Only the neutrals/accent are overridden here;
- * everything else (typography, radii, the colorblind-safe contributor hues) is
- * shared, so every `bg-surface`/`text-on-surface` utility recolors for free.
+ * first visit, persisted after). Only the colors are overridden here;
+ * typography is shared, so every `bg-surface`/`text-on-surface` utility recolors for free.
  * Inverted ink-on-paper: light ink on a warm near-black, lighter blue accent.
  */
 .dark {
   --color-primary: #a8c1da;
   --color-primary-container: #2c639266;
   --color-on-primary: #16181c;
-  --color-on-primary-container: #d6e2ee;
-  --color-primary-fixed: #d6e2ee;
-  --color-primary-fixed-dim: #a8c1da;
-  --color-inverse-primary: #1f4e79;
-
-  --color-secondary: #c5c6cd;
-  --color-secondary-container: #3a3d42;
-  --color-on-secondary: #16181c;
-  --color-on-secondary-container: #e4e4e1;
-  --color-secondary-fixed: #ececea;
-  --color-secondary-fixed-dim: #d6d6d2;
-  --color-on-secondary-fixed: #16181c;
-  --color-on-secondary-fixed-variant: #c5c6cd;
-
-  --color-tertiary: #a8c1da;
-  --color-tertiary-container: #2a4a6b;
-  --color-on-tertiary: #16181c;
-  --color-on-tertiary-container: #d6e2ee;
-  --color-tertiary-fixed: #d6e2ee;
-  --color-tertiary-fixed-dim: #a8c1da;
-  --color-on-tertiary-fixed: #16181c;
-  --color-on-tertiary-fixed-variant: #a8c1da;
 
   --color-surface: #16181c;
   --color-surface-bright: #2a2c30;
-  --color-surface-dim: #101113;
-  --color-surface-tint: #a8c1da;
-  --color-surface-variant: #1d1f23;
-  --color-surface-container-lowest: #101113;
   --color-surface-container-low: #1a1c20;
   --color-surface-container: #1e2024;
   --color-surface-container-high: #25272b;
   --color-surface-container-highest: #303236;
   --color-on-surface: #e4e4e1;
   --color-on-surface-variant: #c9c9c5;
-  --color-inverse-surface: #e4e4e1;
-  --color-inverse-on-surface: #2a2c30;
 
   --color-outline: #45474b;
   --color-outline-variant: #2e3034;
 
   --color-background: #16181c;
-  --color-on-background: #e4e4e1;
 
   --color-error: #ffb4ab;
   --color-error-container: #93000a;
   --color-on-error: #690005;
   --color-on-error-container: #ffdad6;
-
-  /* Okabe–Ito black is invisible on dark; lift it to near-white. */
-  --color-contrib-8: #f5f5f3;
 }
 
-/*
- * Register the design tokens above into Tailwind's theme namespace so the
- * color/font utilities (bg-primary, text-on-surface-variant, font-mono, …)
- * actually generate. `inline` makes each utility reference the :root variable
- * directly, keeping :root as the single source of truth (and themeable).
- * Radii are intentionally left on Tailwind's defaults. The --radius-full token
- * (0.75rem) would otherwise un-round every rounded-full pill.
- */
 /*
  * Motion. One curve for the whole app — exponential ease-out, so a panel
  * arrives fast and settles rather than drifting in at a constant rate.
@@ -173,78 +85,44 @@
  * coming later in the file, which is a build-order accident rather than a
  * decision. Overriding it deliberately is the point — the `ease-out` utility
  * and `var(--ease-out)` then resolve to the same house curve, so a control
- * written either way cannot drift off-system. This is the opposite call from
- * the radii below, where taking the namespace would have un-rounded every pill.
+ * written either way cannot drift off-system.
  */
 @theme {
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/*
+ * Register the design tokens above into Tailwind's theme namespace so the
+ * color/font utilities (bg-primary, text-on-surface-variant, font-mono, …)
+ * actually generate. `inline` makes each utility reference the :root variable
+ * directly, keeping :root as the single source of truth (and themeable).
+ */
 @theme inline {
   --color-primary: var(--color-primary);
   --color-primary-container: var(--color-primary-container);
   --color-on-primary: var(--color-on-primary);
-  --color-on-primary-container: var(--color-on-primary-container);
-  --color-primary-fixed: var(--color-primary-fixed);
-  --color-primary-fixed-dim: var(--color-primary-fixed-dim);
-  --color-inverse-primary: var(--color-inverse-primary);
-
-  --color-secondary: var(--color-secondary);
-  --color-secondary-container: var(--color-secondary-container);
-  --color-on-secondary: var(--color-on-secondary);
-  --color-on-secondary-container: var(--color-on-secondary-container);
-  --color-secondary-fixed: var(--color-secondary-fixed);
-  --color-secondary-fixed-dim: var(--color-secondary-fixed-dim);
-  --color-on-secondary-fixed: var(--color-on-secondary-fixed);
-  --color-on-secondary-fixed-variant: var(--color-on-secondary-fixed-variant);
-
-  --color-tertiary: var(--color-tertiary);
-  --color-tertiary-container: var(--color-tertiary-container);
-  --color-on-tertiary: var(--color-on-tertiary);
-  --color-on-tertiary-container: var(--color-on-tertiary-container);
-  --color-tertiary-fixed: var(--color-tertiary-fixed);
-  --color-tertiary-fixed-dim: var(--color-tertiary-fixed-dim);
-  --color-on-tertiary-fixed: var(--color-on-tertiary-fixed);
-  --color-on-tertiary-fixed-variant: var(--color-on-tertiary-fixed-variant);
 
   --color-surface: var(--color-surface);
   --color-surface-bright: var(--color-surface-bright);
-  --color-surface-dim: var(--color-surface-dim);
-  --color-surface-tint: var(--color-surface-tint);
-  --color-surface-variant: var(--color-surface-variant);
-  --color-surface-container-lowest: var(--color-surface-container-lowest);
   --color-surface-container-low: var(--color-surface-container-low);
   --color-surface-container: var(--color-surface-container);
   --color-surface-container-high: var(--color-surface-container-high);
   --color-surface-container-highest: var(--color-surface-container-highest);
   --color-on-surface: var(--color-on-surface);
   --color-on-surface-variant: var(--color-on-surface-variant);
-  --color-inverse-surface: var(--color-inverse-surface);
-  --color-inverse-on-surface: var(--color-inverse-on-surface);
 
   --color-outline: var(--color-outline);
   --color-outline-variant: var(--color-outline-variant);
 
   --color-background: var(--color-background);
-  --color-on-background: var(--color-on-background);
 
   --color-error: var(--color-error);
   --color-error-container: var(--color-error-container);
   --color-on-error: var(--color-on-error);
   --color-on-error-container: var(--color-on-error-container);
 
-  --color-contrib-1: var(--color-contrib-1);
-  --color-contrib-2: var(--color-contrib-2);
-  --color-contrib-3: var(--color-contrib-3);
-  --color-contrib-4: var(--color-contrib-4);
-  --color-contrib-5: var(--color-contrib-5);
-  --color-contrib-6: var(--color-contrib-6);
-  --color-contrib-7: var(--color-contrib-7);
-  --color-contrib-8: var(--color-contrib-8);
-
   --font-headline: var(--font-headline);
   --font-body: var(--font-body);
-  --font-label: var(--font-label);
   --font-mono: var(--font-mono);
 }
 
