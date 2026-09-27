@@ -71,6 +71,13 @@ describe("toJats4rXml", () => {
     expect(xml).not.toMatch(/review & editing/);
   });
 
+  it("falls back to the stored given names when the name no longer holds the surname", () => {
+    const [jane] = parseAuthorText("Jane Q Smith");
+    if (!jane) throw new Error("expected author");
+    const xml = toJats4rXml([{ ...jane, name: "J. Q. S." }]);
+    expect(xml).toContain("<given-names>Jane Q</given-names>");
+  });
+
   it("only emits role elements for active contributions", () => {
     const authors = parseAuthorText("Jane Smith");
     const [jane] = authors;

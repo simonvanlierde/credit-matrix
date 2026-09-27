@@ -47,6 +47,24 @@ describe("lookupOrcidPerson", () => {
     });
   });
 
+  it("keeps the name parts a partial or malformed record does have", async () => {
+    const respond = (name: unknown) =>
+      vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ name }), { status: 200 }));
+
+    expect(
+      await lookupOrcidPerson(
+        "0000-0002-1825-0097",
+        respond({ "given-names": { value: 5 }, "family-name": { value: "Curie" } }),
+      ),
+    ).toEqual({ ok: true, firstName: "", surname: "Curie", displayName: "Curie" });
+    expect(await lookupOrcidPerson("0000-0002-1825-0097", respond({ "given-names": { value: "Marie" } }))).toEqual({
+      ok: true,
+      firstName: "Marie",
+      surname: "",
+      displayName: "Marie",
+    });
+  });
+
   // Codes are API surface: a client localizes from them, so renaming one
   // breaks every older client. Adding is safe; renaming is not.
   it("returns a stable code and an English fallback for every failure", async () => {
