@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_UI_TRANSLATOR } from "../credit-i18n/ui-strings";
 import { toMarkdown } from "../export/markdown";
 import { parseAuthorText } from "../parse-authors";
 
@@ -35,9 +36,21 @@ describe("toMarkdown", () => {
     const md = toMarkdown(
       authors,
       (name) => `«${name}»`,
-      (key) => (key === "equal" ? "Égal" : key),
+      (key) => (key === "equal" ? "Égal" : DEFAULT_UI_TRANSLATOR(key)),
     );
     expect(md).toContain("«Methodology» (Égal)");
+  });
+
+  it("annotates levels with the locale's template, like the statement", () => {
+    const [jane] = parseAuthorText("Jane Smith");
+    const meth = jane?.contributions.find((c) => c.role === "Methodology");
+    if (!(jane && meth)) throw new Error("expected author");
+    meth.score = 50;
+
+    const md = toMarkdown([jane], undefined, (key) =>
+      key === "levelAnnotation" ? "{label}（{level}）" : DEFAULT_UI_TRANSLATOR(key),
+    );
+    expect(md).toContain("Methodology（Equal）");
   });
 
   it("escapes pipe characters that would break the table", () => {

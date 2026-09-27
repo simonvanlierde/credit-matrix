@@ -1,7 +1,8 @@
 import type { Author } from "../author";
-import { activeContributions, scoreToLevel } from "../author";
+import { activeContributions } from "../author";
 import { DEFAULT_ROLE_TRANSLATOR, type RoleTranslator } from "../credit-i18n/index";
 import { DEFAULT_UI_TRANSLATOR, type UiTranslator } from "../credit-i18n/ui-strings";
+import { withLevel } from "../generate-statement";
 import { markerNotes } from "../markers";
 import { GENERATOR_NOTE } from "./generator-note";
 
@@ -34,17 +35,7 @@ export function toMarkdown(
   const rows = authors.map((author) => {
     const active = activeContributions(author);
     const roles =
-      active.length === 0
-        ? "—"
-        : active
-            .map((c) => {
-              const role = translateRole(c.role);
-              const level = scoreToLevel(c.score);
-              if (level === "lead") return role;
-              const levelLabel = level === "equal" ? translateUi("equal") : translateUi("supporting");
-              return `${role} (${levelLabel})`;
-            })
-            .join(", ");
+      active.length === 0 ? "—" : active.map((c) => withLevel(translateRole(c.role), c.score, translateUi)).join(", ");
     return `| ${escapeCell(author.name)} | ${escapeCell(roles)} |`;
   });
 
