@@ -23,6 +23,29 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     expect(parsed[0]?.contributions.find((c) => c.role === "Conceptualization")?.score).toBe(100);
   });
 
+  it.each([
+    "Anne van der Berg",
+    // spell-checker: ignore Carmen García López
+    "Maria del Carmen García López",
+    "Jane A. Smith",
+    "Madonna",
+    // A row still named by its ORCID iD after a failed lookup.
+    "0000-0002-1825-0097",
+  ])("round-trips the full name %s", (name) => {
+    const parsed = fromJats4rXml(toJats4rXml(parseAuthorText(name)));
+    expect(parsed.map((a) => a.name)).toEqual([name]);
+  });
+
+  it("round-trips a name imported with a multi-word surname", () => {
+    const [anne] = fromJats4rXml(
+      `<article><contrib contrib-type="author"><name><surname>van der Berg</surname><given-names>Anne</given-names></name></contrib></article>`,
+    );
+    if (!anne) throw new Error("expected author");
+    const [again] = fromJats4rXml(toJats4rXml([anne]));
+    expect(again?.name).toBe("Anne van der Berg");
+    expect(again?.surname).toBe("van der Berg");
+  });
+
   it("returns an empty array when there are no contrib elements", () => {
     expect(fromJats4rXml("<article><front/></article>")).toEqual([]);
   });

@@ -43,8 +43,24 @@ ${DOCTYPE}
 </article>`;
 }
 
+/**
+ * The given-names half of the display name. The parsed parts keep only the
+ * first, second and last token, so rebuilding from them drops the rest
+ * ("Anne van der Berg" → "Anne van Berg"); take the name minus its surname.
+ */
+function givenNamesOf(author: Author): string {
+  const name = author.name.trim();
+  const { surname } = author;
+  // A mononym or an ORCID placeholder: the whole name, so it re-imports as is.
+  if (!surname) return name;
+  if (name.endsWith(surname)) return name.slice(0, -surname.length).trim();
+  // Inverted input ("Curie, Marie").
+  if (name.startsWith(`${surname},`)) return name.slice(surname.length + 1).trim();
+  return author.middleName ? `${author.firstName} ${author.middleName}` : author.firstName;
+}
+
 function authorToXml(author: Author): string {
-  const givenNames = author.middleName ? `${author.firstName} ${author.middleName}` : author.firstName;
+  const givenNames = givenNamesOf(author);
 
   const orcidEl = author.orcid
     ? `\n      <contrib-id contrib-id-type="orcid">${escapeXml(author.orcid)}</contrib-id>`
