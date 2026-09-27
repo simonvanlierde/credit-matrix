@@ -104,6 +104,16 @@ describe("deduplicateAuthorInitials", () => {
     expect(initials).toEqual(["A𐐀", "A𐐀y"]);
     expect(initials.every((value) => value.isWellFormed())).toBe(true);
   });
+
+  it("terminates when the counter suffix collides with an existing label", () => {
+    // Raw name-part overrides (as XML import passes) can yield a digit initial
+    // ("J" + "2nd" → "J2"), which the counter fallback then has to step past.
+    const authors = [createAuthor("J 2nd", { firstName: "J", surname: "2nd" }), createAuthor("J"), createAuthor("J")];
+    expect(authors[0]?.initials).toBe("J2");
+
+    const initials = deduplicateAuthorInitials(authors).map((a) => a.initials);
+    expect(new Set(initials).size).toBe(3);
+  });
 });
 
 describe("parseAuthorText", () => {

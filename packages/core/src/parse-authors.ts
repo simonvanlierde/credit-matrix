@@ -167,7 +167,9 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
         attempt = initials + (surnameCodePoints[extraIdx]?.toLowerCase() ?? String(extraIdx));
         extraIdx += 1;
       } else {
-        attempt = initials + String(existingInitials.size);
+        // Keep counting: a fixed suffix loops forever when it is already taken.
+        attempt = initials + String(extraIdx);
+        extraIdx += 1;
       }
     }
 
