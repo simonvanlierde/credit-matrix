@@ -4,3 +4,10 @@
 /*
   X-Content-Type-Options: nosniff
   Strict-Transport-Security: max-age=31536000
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), geolocation=(), microphone=()
+  X-Frame-Options: DENY
+
+# The worker script itself: it fetches same-origin only.
+/sw.js
+  Content-Security-Policy: default-src 'self'
