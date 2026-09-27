@@ -431,12 +431,16 @@ function draftKeys(): string[] {
  * since some point the user cannot identify. Saying it once, when it happens,
  * is the difference between losing this edit and losing the afternoon.
  */
-function announcingStorage(): PersistStorage<PersistedState> {
+export function announcingStorage(): PersistStorage<PersistedState> {
   let warned = false;
   // Parked drafts already on disk, by reference. Immer's structural sharing
   // keeps an untouched draft's identity across edits, so a reference match
   // means the stored JSON is current and the write can be skipped.
   const written = new Map<string, Draft>();
+  // Draft ids this tab held at its last read or write. Another tab shares the
+  // same storage, so an id missing from this tab's drafts is only a deletion
+  // when this tab held it before; anything else belongs to the other tab.
+  let known = new Set<string>();
 
   // An unreadable value must not escape as a throw: a parse failure would
   // abort hydration with hasHydrated never set — inputs stay readOnly and the
@@ -481,6 +485,7 @@ function announcingStorage(): PersistStorage<PersistedState> {
       ) as Record<string, unknown>;
       // Main wins for the active draft; hydrateDrafts repairs whatever merges.
       const state = { ...mainState, drafts: { ...parked, ...mainDrafts } };
+      known = new Set(Object.keys(state.drafts));
       return {
         state: state as unknown as PersistedState,
         version: typeof record.version === "number" ? record.version : 0,
@@ -501,7 +506,19 @@ function announcingStorage(): PersistStorage<PersistedState> {
       // emptied value back. One early keystroke could erase a saved paper.
       if (!useContributionStore.persist.hasHydrated()) return;
       const { drafts, activeDraftId, uiLocale, welcomeSeen } = value.state;
+      const deleted = new Set([...known].filter((id) => !(id in drafts)));
       try {
+        // The main key may hold another tab's active draft, stored nowhere
+        // else: park it before this write replaces the main key. First, so this
+        // tab's own changed drafts below still win.
+        const main = readJson(key) as { state?: { drafts?: unknown } } | null;
+        const mainDrafts = main?.state?.drafts;
+        if (mainDrafts !== null && typeof mainDrafts === "object") {
+          for (const [id, draft] of Object.entries(mainDrafts)) {
+            if (id === activeDraftId || deleted.has(id)) continue;
+            window.localStorage.setItem(DRAFT_KEY_PREFIX + id, JSON.stringify(draft));
+          }
+        }
         for (const [id, draft] of Object.entries(drafts)) {
           if (id === activeDraftId || written.get(id) === draft) continue;
           window.localStorage.setItem(DRAFT_KEY_PREFIX + id, JSON.stringify(draft));
@@ -509,13 +526,11 @@ function announcingStorage(): PersistStorage<PersistedState> {
         }
         // The active draft lives in the main key, and a deleted draft's key
         // would otherwise resurrect it on the next load.
-        for (const draftKey of draftKeys()) {
-          const id = draftKey.slice(DRAFT_KEY_PREFIX.length);
-          if (id === activeDraftId || !(id in drafts)) {
-            window.localStorage.removeItem(draftKey);
-            written.delete(id);
-          }
+        for (const id of [activeDraftId, ...deleted]) {
+          window.localStorage.removeItem(DRAFT_KEY_PREFIX + id);
+          written.delete(id);
         }
+        known = new Set(Object.keys(drafts));
         window.localStorage.setItem(
           key,
           JSON.stringify({
