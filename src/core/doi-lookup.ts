@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "zod/mini";
 import { isValidOrcid, MAX_AUTHORS, normalizeOrcid } from "./author";
 import { fetchUpstreamJson } from "./upstream-fetch";
 
@@ -45,17 +45,17 @@ export type DoiLookupResult =
  */
 const CrossrefWorkSchema = z.object({
   message: z.object({
-    title: z.array(z.string()).optional(),
-    author: z
-      .array(
+    title: z.optional(z.array(z.string())),
+    author: z.optional(
+      z.array(
         z.object({
-          given: z.string().optional(),
-          family: z.string().optional(),
-          name: z.string().optional(),
-          ORCID: z.string().optional(),
+          given: z.optional(z.string()),
+          family: z.optional(z.string()),
+          name: z.optional(z.string()),
+          ORCID: z.optional(z.string()),
         }),
-      )
-      .optional(),
+      ),
+    ),
   }),
 });
 
@@ -68,19 +68,24 @@ const CrossrefWorkSchema = z.object({
 const DataCiteWorkSchema = z.object({
   data: z.object({
     attributes: z.object({
-      titles: z.array(z.object({ title: z.string().optional() })).optional(),
-      creators: z
-        .array(
+      titles: z.optional(z.array(z.object({ title: z.optional(z.string()) }))),
+      creators: z.optional(
+        z.array(
           z.object({
-            givenName: z.string().optional(),
-            familyName: z.string().optional(),
-            name: z.string().optional(),
-            nameIdentifiers: z
-              .array(z.object({ nameIdentifier: z.string().optional(), nameIdentifierScheme: z.string().optional() }))
-              .optional(),
+            givenName: z.optional(z.string()),
+            familyName: z.optional(z.string()),
+            name: z.optional(z.string()),
+            nameIdentifiers: z.optional(
+              z.array(
+                z.object({
+                  nameIdentifier: z.optional(z.string()),
+                  nameIdentifierScheme: z.optional(z.string()),
+                }),
+              ),
+            ),
           }),
-        )
-        .optional(),
+        ),
+      ),
     }),
   }),
 });

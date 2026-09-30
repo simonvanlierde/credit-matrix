@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "zod/mini";
 import type { Author } from "./author";
 import { clampScore, MAX_AUTHORS } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
@@ -26,45 +26,47 @@ const SharePayloadSchema = z
     /** Payload version. v2 carries ids and the envelope; nothing older decodes. */
     v: z.literal(2),
     /** draft title */
-    t: z.string().max(500).optional(),
+    t: z.optional(z.string().check(z.maxLength(500))),
     /** source draft id */
-    d: z.string().regex(ID_REGEX).optional(),
+    d: z.optional(z.string().check(z.regex(ID_REGEX))),
     /** claimed contributor id */
-    c: z.string().regex(ID_REGEX).optional(),
+    c: z.optional(z.string().check(z.regex(ID_REGEX))),
     /** reply flag: set on the link a claimee sends back */
-    r: z.literal(1).optional(),
+    r: z.optional(z.literal(1)),
     a: z
       .array(
         z.object({
           /** stable contributor id */
-          i: z.string().regex(ID_REGEX),
+          i: z.string().check(z.regex(ID_REGEX)),
           /** name */
           n: z.string(),
           /** ORCID iD, omitted when there is none */
-          o: z.string().optional(),
+          o: z.optional(z.string()),
           /** 1 for a non-author contributor; omitted for a named author */
-          t: z.literal(1).optional(),
+          t: z.optional(z.literal(1)),
           /** scores, in CREDIT_ROLES order */
           s: z.array(z.number()),
           /** shares first authorship */
-          e: z.literal(1).optional(),
+          e: z.optional(z.literal(1)),
           /** corresponding author */
-          c: z.literal(1).optional(),
+          c: z.optional(z.literal(1)),
         }),
       )
-      .max(MAX_AUTHORS),
+      .check(z.maxLength(MAX_AUTHORS)),
   })
-  .superRefine((payload, ctx) => {
-    // A claim needs a home to reply to, and a reply is always a claim.
-    if (payload.c && !payload.d) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "claim without source draft" });
-    if (payload.r && !payload.c) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "reply without claim" });
-    if (payload.c && !payload.a.some((entry) => entry.i === payload.c)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "claim names an absent contributor" });
-    }
-    if (new Set(payload.a.map((entry) => entry.i)).size !== payload.a.length) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "duplicate contributor ids" });
-    }
-  });
+  .check(
+    z.superRefine((payload, ctx) => {
+      // A claim needs a home to reply to, and a reply is always a claim.
+      if (payload.c && !payload.d) ctx.addIssue({ code: "custom", message: "claim without source draft" });
+      if (payload.r && !payload.c) ctx.addIssue({ code: "custom", message: "reply without claim" });
+      if (payload.c && !payload.a.some((entry) => entry.i === payload.c)) {
+        ctx.addIssue({ code: "custom", message: "claim names an absent contributor" });
+      }
+      if (new Set(payload.a.map((entry) => entry.i)).size !== payload.a.length) {
+        ctx.addIssue({ code: "custom", message: "duplicate contributor ids" });
+      }
+    }),
+  );
 
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 export interface ShareData {

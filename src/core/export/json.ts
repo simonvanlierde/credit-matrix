@@ -1,10 +1,10 @@
-import * as z from "zod";
+import * as z from "zod/mini";
 import type { Author } from "../author";
 import { AuthorSchema, MAX_AUTHORS } from "../author";
 
 const ExportSchema = z.object({
   version: z.literal(1),
-  authors: z.array(AuthorSchema).max(MAX_AUTHORS),
+  authors: z.array(AuthorSchema).check(z.maxLength(MAX_AUTHORS)),
 });
 
 /** Serialize authors to a JSON string (pretty-printed). */

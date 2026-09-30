@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "zod/mini";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
 
@@ -22,7 +22,7 @@ export const MAX_IMPORT_BYTES = 1_000_000;
  */
 export const ContributionSchema = z.object({
   role: z.enum(CREDIT_ROLES.map((r) => r.name) as [CreditRoleName, ...CreditRoleName[]]),
-  score: z.number().int().min(0).max(100),
+  score: z.int().check(z.gte(0), z.lte(100)),
 });
 
 export type Contribution = z.infer<typeof ContributionSchema>;
@@ -68,10 +68,7 @@ export function isUsableAuthorName(name: string): boolean {
 
 export const AuthorSchema = z.object({
   /** Stable unique identifier for UI state and persistence */
-  id: z
-    .string()
-    .min(1)
-    .default(() => globalThis.crypto.randomUUID()),
+  id: z._default(z.string().check(z.minLength(1)), () => globalThis.crypto.randomUUID()),
   /**
    * Display name as entered by the user (e.g. "Jane A. Smith").
    *
@@ -82,31 +79,33 @@ export const AuthorSchema = z.object({
    */
   name: z
     .string()
-    .min(1)
-    .max(MAX_AUTHOR_NAME_LENGTH)
-    .refine(isUsableAuthorName, "Author name must contain at least one letter."),
+    .check(
+      z.minLength(1),
+      z.maxLength(MAX_AUTHOR_NAME_LENGTH),
+      z.refine(isUsableAuthorName, "Author name must contain at least one letter."),
+    ),
   /** Parsed first name */
-  firstName: z.string().max(MAX_AUTHOR_NAME_LENGTH),
+  firstName: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
   /** Parsed middle name (may be empty) */
-  middleName: z.string().max(MAX_AUTHOR_NAME_LENGTH),
+  middleName: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
   /** Parsed surname */
-  surname: z.string().max(MAX_AUTHOR_NAME_LENGTH),
+  surname: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
   /**
    * Unique initials (e.g. "JAS"). Generated automatically, deduplicated
    * across the author list. Used in the short statement format.
    */
-  initials: z.string().max(MAX_AUTHOR_NAME_LENGTH),
+  initials: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
   /**
    * ORCID iD in URL form (e.g. "https://orcid.org/0000-0002-1825-0097")
    * or bare 16-digit format ("0000-0002-1825-0097"). Optional.
    */
-  orcid: z.string().refine(isValidOrcid, "Invalid ORCID iD.").transform(normalizeOrcid).optional(),
+  orcid: z.optional(z.pipe(z.string().check(z.refine(isValidOrcid, "Invalid ORCID iD.")), z.transform(normalizeOrcid))),
   /**
    * Whether this person is a named author or a non-author contributor credited
    * in an Acknowledgements section. CRediT applies to both (see NISO guidance);
    * the distinction drives the JATS `contrib-type`. Defaults to "author".
    */
-  contributorType: z.enum(["author", "non-author"]).default("author"),
+  contributorType: z._default(z.enum(["author", "non-author"]), "author"),
   /**
    * Scores for each of the 14 CRediT roles, keyed by role name.
    *
@@ -120,9 +119,9 @@ export const AuthorSchema = z.object({
    * CRediT role — the taxonomy has no slot for it — but journals ask for it in
    * the same paragraph, so it travels with the contributions.
    */
-  equalContribution: z.boolean().default(false),
+  equalContribution: z._default(z.boolean(), false),
   /** Whether this person is a corresponding author. Also outside CRediT. */
-  corresponding: z.boolean().default(false),
+  corresponding: z._default(z.boolean(), false),
 });
 
 export type Author = z.infer<typeof AuthorSchema>;
