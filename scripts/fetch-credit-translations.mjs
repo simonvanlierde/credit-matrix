@@ -31,7 +31,7 @@ const LOCALES = {
   ja: "ja_Jpan",
 };
 
-const outDir = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "credit-i18n", "translations");
+const outDir = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "core", "credit-i18n", "translations");
 await mkdir(outDir, { recursive: true });
 
 const fmtTranslator = (t) => {

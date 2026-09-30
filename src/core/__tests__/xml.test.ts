@@ -4,7 +4,7 @@ import { fromJats4rXml } from "../export/xml-import";
 import { parseAuthorText } from "../parse-authors";
 
 // `fromJats4rXml` relies on a global DOMParser. In the browser this is native;
-// here it is provided by linkedom in test-setup.ts, so this exercises the same
+// here jsdom provides it, so this exercises the same
 // entry point the web app calls.
 describe("fromJats4rXml (DOMParser entry point)", () => {
   it("round-trips through the browser-facing parser", () => {
@@ -50,10 +50,9 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     expect(fromJats4rXml("<article><front/></article>")).toEqual([]);
   });
 
-  // Note: the malformed-XML throw path depends on the browser DOMParser emitting
-  // a <parsererror> element. linkedom (the Node test DOM) does not replicate this,
-  // so that branch is covered instead by e2e/happy-path.spec.ts's malformed XML
-  // file import test, which runs against a real browser DOMParser.
+  it("throws on malformed XML", () => {
+    expect(() => fromJats4rXml("<article><contrib>")).toThrow(/XML parse error/);
+  });
 });
 
 describe("toJats4rXml", () => {

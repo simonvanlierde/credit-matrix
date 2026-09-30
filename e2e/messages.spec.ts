@@ -4,8 +4,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import process from "node:process";
-import { AVAILABLE_LOCALES } from "@credit-generator/core";
 import { expect, type Page, test } from "@playwright/test";
+import { AVAILABLE_LOCALES } from "../src/core";
 import { seedStorage } from "./helpers";
 
 /**

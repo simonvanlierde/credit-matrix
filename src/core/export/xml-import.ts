@@ -5,39 +5,16 @@ import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 
 /**
  * Parse a JATS4R XML string (as produced by `toJats4rXml()` or the original
- * Python app) back into an Author array.
- *
- * Runs in both browser (DOMParser) and Node (requires a DOM; see note below).
- *
- * Node note: this function uses the global `DOMParser`. In Node ≥ 19 there is
- * no built-in DOMParser, so callers that need server-side XML import should
- * pass in a pre-parsed Document via the overloaded `fromXmlDocument()` helper,
- * or use a lightweight DOM library such as `linkedom`.
- * In the browser this just works.
+ * Python app) back into an Author array, with the browser's `DOMParser`.
  */
 export function fromJats4rXml(xmlString: string): Author[] {
-  if (typeof DOMParser === "undefined") {
-    throw new Error(
-      "DOMParser is not available in this environment. " +
-        "Use fromXmlDocument() with a server-side DOM parser instead.",
-    );
-  }
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlString, "application/xml");
+  const doc = new DOMParser().parseFromString(xmlString, "application/xml");
 
   const parseError = doc.querySelector("parsererror");
   if (parseError) {
     throw new Error(`XML parse error: ${parseError.textContent?.trim() ?? "invalid XML"}`);
   }
 
-  return fromXmlDocument(doc);
-}
-
-/**
- * Extract authors from a pre-parsed XML Document.
- * Works in any environment: pass the Document from whatever DOM library you use.
- */
-export function fromXmlDocument(doc: Document): Author[] {
   const roleNames = new Set<string>(CREDIT_ROLES.map((r) => r.name));
   const roleNameByUrl = new Map<string, string>(CREDIT_ROLES.map((r) => [normalizeRoleUrl(r.url), r.name]));
 

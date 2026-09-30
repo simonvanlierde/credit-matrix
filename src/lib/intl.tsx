@@ -1,8 +1,8 @@
 "use client";
 
-import { type LocaleCode, normalizeLocaleCode } from "@credit-generator/core";
 import { type ReactNode, useEffect, useState } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
+import { type LocaleCode, normalizeLocaleCode } from "@/core";
 import { announce, STORAGE_FULL_EVENT } from "@/lib/announce";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";

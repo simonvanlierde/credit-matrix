@@ -51,8 +51,7 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
 
 ## Architecture
 
-TypeScript 6 throughout, on pnpm workspaces: the app at the root, reusable `packages/core` beside
-it.
+TypeScript throughout: one Next.js app, with the framework-agnostic domain logic in `src/core`.
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -67,13 +66,13 @@ it.
 Browser
   └─ Next.js app  (repo root, App Router)
        ├─ React UI + Zustand store (persisted to localStorage)
-       ├─ @credit-generator/core   ← all domain logic, runs in the browser
+       ├─ src/core   ← all domain logic, runs in the browser
        │     statements · JATS4R XML · CSV · JSON · Markdown · heatmap SVG · validation
        └─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org
                                      ← the only calls that leave the browser
 ```
 
-Everything runs in the browser, served as a static export. [`packages/core`](packages/core/README.md) holds the domain
+Everything runs in the browser, served as a static export. [`src/core`](src/core/README.md) holds the domain
 logic as pure TypeScript, with `zod` as its only runtime dependency. XML import uses the native
 `DOMParser`, and the PNG is drawn from the heatmap SVG onto a `<canvas>`.
 
@@ -83,7 +82,7 @@ those two origins.
 
 Contributions store a 0–100 integer `score` rather than a boolean, so the UI switches between
 binary and level-based editing without changing the stored model. See
-[`packages/core/README.md`](packages/core/README.md#domain-model) for the score-to-level boundaries.
+[`src/core/README.md`](src/core/README.md#domain-model) for the score-to-level boundaries.
 
 **No accounts, no server-side storage.** This is a deliberate constraint, not a missing feature. A
 draft holds the names and ORCID iDs of co-authors who never visited this site. Keeping those in
@@ -96,7 +95,7 @@ this to be revisited.
 
 ## Self-hosting
 
-**Prerequisites:** Node ≥ 26, pnpm ≥ 11, [just](https://github.com/casey/just) (optional)
+**Prerequisites:** Node ≥ 26, pnpm ≥ 11
 
 ```bash
 git clone https://github.com/simonvanlierde/credit-matrix
@@ -106,7 +105,6 @@ pnpm dev            # → http://localhost:3000
 ```
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the full command list and the lint/typecheck/test checklist.
-Run `just` to list the watch/fix recipes layered on the pnpm scripts.
 
 ### Deployment
 
@@ -132,8 +130,8 @@ pnpm deploy         # build + deploy to your Cloudflare account
 - **Widen locale coverage.** Eight translated locales ship today (de, es, fr, it, ja, nl, pt-PT,
   zh-Hans), a curated subset of
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation), vendored
-  under [`packages/core/src/credit-i18n/translations`](packages/core/src/credit-i18n/translations).
-  Refresh them with `node packages/core/scripts/fetch-credit-translations.mjs`.
+  under [`src/core/credit-i18n/translations`](src/core/credit-i18n/translations).
+  Refresh them with `node scripts/fetch-credit-translations.mjs`.
 - **Read more from ORCID.** The lookup takes the name only. Affiliation is the field submission
   systems ask for next.
 - **Make sharing discoverable.** The onboarding barely hints at sharing a draft or asking a

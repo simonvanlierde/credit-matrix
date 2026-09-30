@@ -1,6 +1,6 @@
-import * as core from "@credit-generator/core";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as core from "@/core";
 import { useContributionStore } from "@/store/contribution-store";
 import { useCreditTranslators } from "./use-credit-translators";
 

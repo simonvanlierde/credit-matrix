@@ -5,8 +5,7 @@ features are welcome.
 
 ## Getting set up
 
-**Prerequisites:** Node ≥ 26, pnpm ≥ 11, and optionally
-[just](https://github.com/casey/just).
+**Prerequisites:** Node ≥ 26, pnpm ≥ 11.
 
 ```bash
 git clone https://github.com/simonvanlierde/credit-matrix
@@ -17,10 +16,10 @@ pnpm dev            # → http://localhost:3000
 
 ## Where things live
 
-- `packages/core`: pure, framework-agnostic domain logic (statements, exports,
+- `src/core`: pure, framework-agnostic domain logic (statements, exports,
   validation, heatmap SVG). No React/Next/Node APIs at import time. Most changes
   and most tests belong here.
-- `src/`: the Next.js UI, built as a static export.
+- the rest of `src/`: the Next.js UI, built as a static export.
 
 [ADR&nbsp;0001](docs/adr/0001-client-side-architecture.md) records why it's split
 this way.
@@ -29,17 +28,17 @@ this way.
 
 ```bash
 pnpm lint           # Biome (format + lint); append :fix to auto-fix
-pnpm typecheck      # TypeScript across all packages
+pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
 ```
 
 `pnpm lint`, `pnpm typecheck`, and `pnpm test` all run in CI on every push and PR.
-Add or update tests in `packages/core/src/__tests__` for any change to domain logic.
+Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 ## Testing
 
-- **Unit (Vitest)**: `pnpm --filter @credit-generator/core test`. Covers the domain layer: name
+- **Unit (Vitest)**: `pnpm test`. Covers the domain layer, the store, and `src/lib`: name
   parsing, initials deduplication, statement formats, score-to-level boundaries, import/export round
   trips, validation, and heatmap SVG generation.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and

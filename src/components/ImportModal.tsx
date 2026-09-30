@@ -1,6 +1,9 @@
 "use client";
 
-import type { Author, DoiLookupResult } from "@credit-generator/core";
+import { FileUp, Search, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
+import type { Author, DoiLookupResult } from "@/core";
 import {
   createAuthor,
   DOI_INPUT_REGEX,
@@ -12,10 +15,7 @@ import {
   MAX_IMPORT_BYTES,
   normalizeDoi,
   parseAuthorText,
-} from "@credit-generator/core";
-import { FileUp, Search, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
+} from "@/core";
 import { announce } from "@/lib/announce";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import type { Messages } from "@/lib/intl";

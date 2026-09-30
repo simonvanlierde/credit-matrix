@@ -1,4 +1,4 @@
-# @credit-generator/core
+# Core
 
 Framework-agnostic TypeScript for CRediT Matrix. It models contributors, validates
 contribution data, and produces [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/)
@@ -53,7 +53,7 @@ Only non-zero contributions appear in statements.
 
 | Format      | Out               | In                                  |
 | ----------- | ----------------- | ----------------------------------- |
-| JATS4R XML  | `toJats4rXml`     | `fromJats4rXml` / `fromXmlDocument` |
+| JATS4R XML  | `toJats4rXml`     | `fromJats4rXml`                     |
 | CSV         | `toCsv`           | `fromCsv`                           |
 | JSON        | `toJson`          | `fromJson`                          |
 | Markdown    | `toMarkdown`      | —                                   |
@@ -62,10 +62,7 @@ Only non-zero contributions appear in statements.
 `buildHeatmapSvg` returns a self-contained SVG string using system fonts and no embedded assets. The
 web app uses that same SVG for preview, SVG download, and canvas-to-PNG export.
 
-`fromJats4rXml(xml)` uses the global `DOMParser`, which is native in browsers. In Node, either put
-one on `globalThis` (the tests use `linkedom` in `src/test-setup.ts`) or parse the XML yourself and
-call `fromXmlDocument(doc)`. Malformed-XML detection relies on a browser emitting a `<parsererror>`
-element, which `linkedom` doesn't reproduce.
+`fromJats4rXml(xml)` uses the global `DOMParser`: native in browsers, supplied by jsdom in tests.
 
 ## Validation
 
@@ -75,9 +72,9 @@ element, which `linkedom` doesn't reproduce.
 ## Testing
 
 ```sh
-pnpm --filter @credit-generator/core test
+pnpm test
 ```
 
-Vitest runs in Node, with `linkedom` supplying `DOMParser`. Tests cover name parsing, initials
+Vitest runs under jsdom. Tests cover name parsing, initials
 deduplication, statement formats, score-to-level boundaries, import/export round trips, validation,
 and heatmap SVG generation.

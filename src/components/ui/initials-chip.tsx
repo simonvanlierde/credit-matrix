@@ -1,4 +1,4 @@
-import type { Author } from "@credit-generator/core";
+import type { Author } from "@/core";
 
 /** A contributor's initials badge, with the full name as a tooltip. */
 export function InitialsChip({ author }: { author: Author }) {

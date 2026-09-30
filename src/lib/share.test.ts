@@ -1,7 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; zlib hand-builds hostile payloads
 import { deflateRawSync } from "node:zlib";
-import { createAuthor, toSharePayload } from "@credit-generator/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createAuthor, toSharePayload } from "@/core";
 import { buildShareUrl, decodeShareHash, shareFailureKey } from "./share";
 
 function draft() {

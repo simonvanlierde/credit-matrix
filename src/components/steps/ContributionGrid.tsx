@@ -1,18 +1,6 @@
 "use client";
 
 import {
-  type Author,
-  buildHeatmapSvg,
-  CREDIT_ROLES,
-  heatCellColor,
-  onColor,
-  type RoleDescriber,
-  type RoleTranslator,
-  scoreToLevel,
-  type UiKey,
-  type UiTranslator,
-} from "@credit-generator/core";
-import {
   Check,
   Columns3,
   Copy,
@@ -34,6 +22,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StepHeader } from "@/components/ui/step-header";
 import { Switch } from "@/components/ui/switch";
 import { UndoBar } from "@/components/ui/undo-bar";
+import {
+  type Author,
+  buildHeatmapSvg,
+  CREDIT_ROLES,
+  heatCellColor,
+  onColor,
+  type RoleDescriber,
+  type RoleTranslator,
+  scoreToLevel,
+  type UiKey,
+  type UiTranslator,
+} from "@/core";
 import { announce } from "@/lib/announce";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";

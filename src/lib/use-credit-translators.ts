@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   DEFAULT_ROLE_TRANSLATOR,
   DEFAULT_UI_TRANSLATOR,
@@ -13,8 +14,7 @@ import {
   type RoleDescriber,
   type RoleTranslator,
   type UiTranslator,
-} from "@credit-generator/core";
-import { useEffect, useState } from "react";
+} from "@/core";
 import { useContributionStore } from "@/store/contribution-store";
 
 /** Canonical English description, from the bundled role catalog. */

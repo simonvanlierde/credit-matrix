@@ -1,7 +1,7 @@
 # Brand assets
 
 The mark is a 3×3 crop of the contribution matrix, lead on the diagonal. Cell fills are the app's
-real intensity tiers from `packages/core/src/contributor-color.ts`: white mixed 0.4, 0.7, and 1.0
+real intensity tiers from `src/core/contributor-color.ts`: white mixed 0.4, 0.7, and 1.0
 toward ink-blue, plus the empty-cell fill.
 
 | Asset | Source | Output |

@@ -1,7 +1,5 @@
 "use client";
 
-import type { Author } from "@credit-generator/core";
-import { keepKnownIds, mergeContributorRow } from "@credit-generator/core";
 import { Check, CircleAlert, Link2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -9,6 +7,8 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure } from "@/components/ImportModal";
 import { showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { Author } from "@/core";
+import { keepKnownIds, mergeContributorRow } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";

@@ -1,9 +1,8 @@
-import { DOMParser } from "linkedom";
 import { describe, expect, it } from "vitest";
 import { MAX_AUTHORS } from "../author";
 import { fromJson, toJson } from "../export/json";
 import { toJats4rXml } from "../export/xml";
-import { fromXmlDocument } from "../export/xml-import";
+import { fromJats4rXml } from "../export/xml-import";
 import { parseAuthorText } from "../parse-authors";
 
 describe("round-trip exports", () => {
@@ -28,9 +27,7 @@ describe("round-trip exports", () => {
     jane.orcid = "0000-0002-1825-0097";
 
     const xml = toJats4rXml(authors);
-    // Node environment: parse with linkedom DOMParser and use fromXmlDocument
-    const doc = new DOMParser().parseFromString(xml, "text/xml");
-    const parsed = fromXmlDocument(doc as unknown as Document);
+    const parsed = fromJats4rXml(xml);
 
     expect(parsed).toHaveLength(2);
     const [pJane, pBob] = parsed;
@@ -87,10 +84,7 @@ describe("round-trip exports", () => {
     jane.orcid = "0000-0001-2345-6789";
     const xml = toJats4rXml(authors);
 
-    // Use fromJats4rXml path that throws if DOMParser absent, but in Node we'll parse
-    // with linkedom and call fromXmlDocument instead
-    const doc = new DOMParser().parseFromString(xml, "text/xml");
-    const parsed = fromXmlDocument(doc as unknown as Document);
+    const parsed = fromJats4rXml(xml);
     expect(parsed[0]?.orcid).toBe("0000-0001-2345-6789");
   });
 
@@ -99,8 +93,7 @@ describe("round-trip exports", () => {
     if (!contributor) throw new Error("expected contributor");
     contributor.contributorType = "non-author";
 
-    const doc = new DOMParser().parseFromString(toJats4rXml([contributor]), "text/xml");
-    const [parsed] = fromXmlDocument(doc as unknown as Document);
+    const [parsed] = fromJats4rXml(toJats4rXml([contributor]));
 
     expect(parsed?.contributorType).toBe("non-author");
   });
@@ -126,8 +119,7 @@ describe("round-trip exports", () => {
     const [author] = parseAuthorText(input);
     if (!author) throw new Error("expected contributor");
 
-    const doc = new DOMParser().parseFromString(toJats4rXml([author]), "text/xml");
-    const [parsed] = fromXmlDocument(doc as unknown as Document);
+    const [parsed] = fromJats4rXml(toJats4rXml([author]));
 
     expect(parsed?.firstName).toBe(first);
     expect(parsed?.middleName).toBe(middle);

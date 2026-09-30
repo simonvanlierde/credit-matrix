@@ -9,8 +9,6 @@ const nextConfig: NextConfig = {
   // Response headers, including the CSP, live in public/_headers.
   output: "export",
   poweredByHeader: false,
-  // core ships its TS source (just-in-time internal package); Next transpiles it.
-  transpilePackages: ["@credit-generator/core"],
   // Cloudflare Workers Builds sets this for the deploy that runs the build;
   // baked in here so /health.json can report which commit is actually live.
   env: {

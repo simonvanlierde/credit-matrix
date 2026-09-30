@@ -1,9 +1,9 @@
 "use client";
 
-import { OKABE_ITO, onColor } from "@credit-generator/core";
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { OKABE_ITO, onColor } from "@/core";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 /**

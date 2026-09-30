@@ -68,7 +68,7 @@ function authorToXml(author: Author): string {
     : "";
 
   // JATS4R encodes role presence only; the 0–100 score is not representable,
-  // so an export→import round-trip is lossy (see fromXmlDocument).
+  // so an export→import round-trip is lossy (see fromJats4rXml).
   const roles = activeContributions(author)
     .map((c) => {
       const role = getRoleByName(c.role);

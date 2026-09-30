@@ -1,7 +1,7 @@
-import type { ShareData, SharePayloadInput } from "@credit-generator/core";
-import { fromSharePayload, MAX_IMPORT_BYTES, toSharePayload } from "@credit-generator/core";
+import type { ShareData, SharePayloadInput } from "@/core";
+import { fromSharePayload, MAX_IMPORT_BYTES, toSharePayload } from "@/core";
 
-export type { ShareData } from "@credit-generator/core";
+export type { ShareData } from "@/core";
 
 /** The payload is base64url over deflate-raw compressed JSON. */
 const HASH_PREFIX = "#s=";

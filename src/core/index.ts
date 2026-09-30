@@ -40,7 +40,7 @@ export { buildHeatmapSvg } from "./export/heatmap-svg";
 export { fromJson, toJson } from "./export/json";
 export { toMarkdown } from "./export/markdown";
 export { toJats4rXml } from "./export/xml";
-export { fromJats4rXml, fromXmlDocument } from "./export/xml-import";
+export { fromJats4rXml } from "./export/xml-import";
 export type { StatementFormat } from "./generate-statement";
 export { generateStatement } from "./generate-statement";
 export { keepKnownIds, mergeContributorRow } from "./merge-row";

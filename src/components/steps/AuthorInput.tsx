@@ -1,16 +1,6 @@
 "use client";
 
 import {
-  type Author,
-  isValidOrcid,
-  lookupOrcidPerson,
-  MAX_AUTHOR_NAME_LENGTH,
-  MAX_AUTHORS,
-  normalizeOrcid,
-  ORCID_REGEX,
-  splitNameList,
-} from "@credit-generator/core";
-import {
   type Announcements,
   closestCenter,
   DndContext,
@@ -54,6 +44,16 @@ import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { StepHeader } from "@/components/ui/step-header";
 import { UndoBar } from "@/components/ui/undo-bar";
+import {
+  type Author,
+  isValidOrcid,
+  lookupOrcidPerson,
+  MAX_AUTHOR_NAME_LENGTH,
+  MAX_AUTHORS,
+  normalizeOrcid,
+  ORCID_REGEX,
+  splitNameList,
+} from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useClaimLock } from "@/lib/use-claim-lock";

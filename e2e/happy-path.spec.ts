@@ -219,8 +219,7 @@ test.describe("Happy path UI flows", () => {
 
   test("keeps a malformed XML file's error visible after import", async ({ page }) => {
     // Unlike the paste path above, a file goes through the browser's real
-    // DOMParser via the file input, so this is the one place the <parsererror>
-    // branch in xml-import.ts actually runs (linkedom does not emit it).
+    // DOMParser via the file input.
     await page.goto("/");
     await page.getByRole("button", { name: "Import" }).click();
     await page.getByLabel("Upload CSV, JSON, or XML file").setInputFiles({

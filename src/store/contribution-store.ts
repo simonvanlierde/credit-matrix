@@ -1,4 +1,7 @@
-import type { Author, CreditRoleName, LocaleCode } from "@credit-generator/core";
+import { create } from "zustand";
+import { type PersistStorage, persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import type { Author, CreditRoleName, LocaleCode } from "@/core";
 import {
   CREDIT_ROLES,
   clampScore,
@@ -11,10 +14,7 @@ import {
   MAX_AUTHORS,
   normalizeLocaleCode,
   normalizeOrcid,
-} from "@credit-generator/core";
-import { create } from "zustand";
-import { type PersistStorage, persist } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
+} from "@/core";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
