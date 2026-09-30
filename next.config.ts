@@ -1,5 +1,3 @@
-// biome-ignore lint/correctness/noNodejsModules: the Next config runs in Node, not the browser.
-import process from "node:process";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -9,11 +7,6 @@ const nextConfig: NextConfig = {
   // Response headers, including the CSP, live in public/_headers.
   output: "export",
   poweredByHeader: false,
-  // Cloudflare Workers Builds sets this for the deploy that runs the build;
-  // baked in here so /health.json can report which commit is actually live.
-  env: {
-    WORKERS_CI_COMMIT_SHA: process.env.WORKERS_CI_COMMIT_SHA ?? "dev",
-  },
 };
 
 export default nextConfig;

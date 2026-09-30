@@ -123,7 +123,7 @@ pnpm deploy         # build + deploy to your Cloudflare account
 `pnpm build` runs `next build`, then [`scripts/postbuild.mjs`](scripts/postbuild.mjs). That script
 replaces `'unsafe-inline'` in the CSP with the hashes of the exported inline scripts, and names the
 service worker's cache after the build. To roll back a bad deploy, pick the previous version under the
-Worker's **Deployments** in the Cloudflare dashboard; the smoke workflow flags a broken one.
+Worker's **Deployments** in the Cloudflare dashboard.
 
 ## Roadmap
 

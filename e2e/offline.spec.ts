@@ -59,10 +59,10 @@ test.describe("Offline", () => {
   test("activating a new service worker drops caches from a previous version", async ({ page }) => {
     test.skip(!process.env.CI, "needs the production build; CI runs one");
     // Leave a cache from an older version before any worker exists.
-    // /health.json is same-origin but plain JSON, so nothing registers the worker there.
+    // The manifest is same-origin but plain JSON, so nothing registers the worker there.
     // Re-registering from a controlled page would not do: an identical script
     // revives the old registration and `activate` never runs again.
-    await page.goto("/health.json");
+    await page.goto("/manifest.webmanifest");
     await page.evaluate(() => caches.open("credit-matrix-v0-stale"));
 
     // The first visit installs and activates the worker, and `activate` runs
