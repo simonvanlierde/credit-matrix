@@ -1,11 +1,10 @@
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import path from "node:path";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import process from "node:process";
 import { expect, type Page, test } from "@playwright/test";
-import { AVAILABLE_LOCALES } from "../src/core";
 import { seedStorage } from "./helpers";
 
 /**
@@ -31,17 +30,6 @@ const TRANSLATED = LOCALES.filter((l: string) => l !== "en");
 const placeholders = (s: string) => new Set([...s.matchAll(/\{(\w+)[,}]/g)].map((m) => m[1]));
 
 test.describe("interface messages", () => {
-  // The loaders import `<dir>/${code}.json` by name, so a missing or misnamed
-  // file only shows up at runtime, as an English fallback.
-  test("ships every catalog for every locale the language picker offers", () => {
-    const dirs = ["src/messages", "src/core/credit-i18n/ui", "src/core/credit-i18n/translations"];
-    for (const { code } of AVAILABLE_LOCALES.filter((locale) => locale.code !== "en")) {
-      for (const dir of dirs) {
-        expect(existsSync(path.join(process.cwd(), dir, `${code}.json`)), `${dir}/${code}.json is missing`).toBe(true);
-      }
-    }
-  });
-
   /**
    * Key sets must match English exactly, in both directions.
    *

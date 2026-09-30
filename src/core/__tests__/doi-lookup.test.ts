@@ -7,7 +7,7 @@ function crossrefResponse(message: unknown): Response {
 }
 
 describe("normalizeDoi", () => {
-  it("strips the resolver prefix and lowercases the registrant half", () => {
+  it("strips the resolver prefix and preserves the suffix's case", () => {
     expect(normalizeDoi("https://doi.org/10.1038/S41586-020-2649-2")).toBe("10.1038/S41586-020-2649-2");
     expect(normalizeDoi("  doi:10.1038/x  ")).toBe("10.1038/x");
     expect(normalizeDoi("10.1038/x")).toBe("10.1038/x");

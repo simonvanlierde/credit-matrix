@@ -1,5 +1,17 @@
+// biome-ignore lint/correctness/noNodejsModules: the catalogs are checked on disk.
+import { existsSync } from "node:fs";
+// biome-ignore lint/correctness/noNodejsModules: the catalogs are checked on disk.
+import path from "node:path";
+// biome-ignore lint/correctness/noNodejsModules: the catalogs are checked on disk.
+import process from "node:process";
 import { describe, expect, it } from "vitest";
-import { loadRoleCatalog, makeRoleDescriber, makeRoleTranslator, normalizeLocaleCode } from "../credit-i18n/index";
+import {
+  AVAILABLE_LOCALES,
+  loadRoleCatalog,
+  makeRoleDescriber,
+  makeRoleTranslator,
+  normalizeLocaleCode,
+} from "../credit-i18n/index";
 import { DEFAULT_UI_TRANSLATOR, loadUiCatalog, makeUiTranslator, type UiKey } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../credit-roles";
 import { generateStatement } from "../generate-statement";
@@ -18,7 +30,17 @@ function makeAuthors() {
 }
 
 /** Every locale offered besides `en`, which is the canonical source and ships no catalog. */
-const CATALOG_LOCALES = ["fr", "de", "es", "it", "pt-PT", "nl", "zh-Hans", "ja"];
+const CATALOG_LOCALES = AVAILABLE_LOCALES.map(({ code }) => code).filter((code) => code !== "en");
+
+// The loaders import `<dir>/${code}.json` by name, so a missing or misnamed
+// file only shows up at runtime, as an English fallback.
+describe("shipped catalogs", () => {
+  const dirs = ["src/messages", "src/core/credit-i18n/ui", "src/core/credit-i18n/translations"];
+  it.each(dirs)("%s has a file for every locale the language picker offers", (dir) => {
+    const missing = CATALOG_LOCALES.filter((code) => !existsSync(path.join(process.cwd(), dir, `${code}.json`)));
+    expect(missing).toEqual([]);
+  });
+});
 
 describe("makeRoleTranslator", () => {
   it("falls back to English when catalog is null", () => {

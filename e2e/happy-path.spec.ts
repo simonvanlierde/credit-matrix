@@ -138,6 +138,35 @@ test.describe("Happy path UI flows", () => {
     );
   });
 
+  test("a failed ORCID lookup says the service is unavailable and adds no row", async ({ page }) => {
+    // Aborted, not stubbed with a status: this is the network-level failure.
+    await page.route("https://pub.orcid.org/**", (route) => route.abort("failed"));
+    await page.goto("/");
+
+    const adder = page.getByLabel("New author names or ORCID iD");
+    await adder.fill("0000-0002-1825-0097");
+    await adder.press("Enter");
+
+    await expect(
+      onScreen(page, "The ORCID service is unavailable. Try again shortly, or type the name."),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
+  });
+
+  test("a DOI lookup while offline says so", async ({ page, context }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Import" }).click();
+    await page.locator("#import-doi").fill("10.1038/s41586-020-2649-2");
+    await context.setOffline(true);
+    await page.getByRole("button", { name: "Look up" }).click();
+
+    await expect(
+      page
+        .getByRole("dialog")
+        .getByText("You are offline, so DOI lookups are unavailable. Paste the author list instead."),
+    ).toBeVisible();
+  });
+
   test("explains a DOI that resolves to nothing, and keeps the dialog open", async ({ page }) => {
     await stubUpstream(page, "https://api.crossref.org/**", 404, {});
     await page.goto("/");
