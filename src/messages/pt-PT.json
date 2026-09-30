@@ -149,6 +149,7 @@
   "draftCreated": "Novo rascunho iniciado.",
   "draftDuplicated": "Rascunho duplicado.",
   "draftDeleted": "Rascunho eliminado.",
+  "draftUpdatedElsewhere": "Este rascunho foi atualizado noutro separador.",
   "switchToDraft": "Mudar para {title}",
   "claimBannerTitle": "Está a preencher as contribuições de {name}",
   "claimBannerBody": "Marque os papéis que {name} desempenhou e devolva o link. O link abrange apenas esta linha. Cada pessoa responde por si.",

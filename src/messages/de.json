@@ -149,6 +149,7 @@
   "draftCreated": "Neuen Entwurf begonnen.",
   "draftDuplicated": "Entwurf dupliziert.",
   "draftDeleted": "Entwurf gelöscht.",
+  "draftUpdatedElsewhere": "Dieser Entwurf wurde in einem anderen Tab geändert.",
   "switchToDraft": "Zu {title} wechseln",
   "claimBannerTitle": "Sie tragen die Beiträge von {name} ein",
   "claimBannerBody": "Haken Sie die Rollen ab, die {name} übernommen hat, und senden Sie den Link zurück. Der Link gilt nur für diese Zeile. Jede Person antwortet für sich selbst.",

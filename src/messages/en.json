@@ -149,6 +149,7 @@
   "draftCreated": "Started a new draft.",
   "draftDuplicated": "Duplicated the draft.",
   "draftDeleted": "Deleted the draft.",
+  "draftUpdatedElsewhere": "This draft was updated in another tab.",
   "switchToDraft": "Switch to {title}",
   "claimBannerTitle": "You are filling in {name}'s contributions",
   "claimBannerBody": "Tick the roles {name} carried out, then send the link back. The link covers only this row. Everyone answers for themselves.",

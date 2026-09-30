@@ -149,6 +149,7 @@
   "draftCreated": "已开始新的草稿。",
   "draftDuplicated": "已复制草稿。",
   "draftDeleted": "已删除草稿。",
+  "draftUpdatedElsewhere": "此草稿已在另一个标签页中更新。",
   "switchToDraft": "切换到 {title}",
   "claimBannerTitle": "您正在填写 {name} 的贡献",
   "claimBannerBody": "勾选 {name} 承担的角色，然后将链接发回。此链接只包含这一行，每个人只回答自己的部分。",

@@ -149,6 +149,7 @@
   "draftCreated": "Se ha empezado un borrador nuevo.",
   "draftDuplicated": "Borrador duplicado.",
   "draftDeleted": "Borrador eliminado.",
+  "draftUpdatedElsewhere": "Este borrador se actualizó en otra pestaña.",
   "switchToDraft": "Cambiar a {title}",
   "claimBannerTitle": "Está rellenando las contribuciones de {name}",
   "claimBannerBody": "Marque los roles que asumió {name} y devuelva el enlace. El enlace solo cubre esta fila: cada persona responde por sí misma.",

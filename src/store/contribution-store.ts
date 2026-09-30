@@ -403,6 +403,13 @@ const DRAFT_KEY_PREFIX = `${PERSIST_KEY}:draft:`;
  */
 const UNREADABLE_KEY = `${PERSIST_KEY}:unreadable`;
 
+/**
+ * Set while this tab adopts another tab's save. The adopted state is already
+ * on disk, and writing it back (with a fresh `updatedAt`) would wake the other
+ * tab, which would adopt that and write it back in turn.
+ */
+let adopting = false;
+
 /** Every parked-draft key currently in localStorage. */
 function draftKeys(): string[] {
   const keys: string[] = [];
@@ -512,7 +519,7 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       // paint and the rehydrate would save the *empty* initial state over the
       // draft in storage — and the rehydrate that follows would then read that
       // emptied value back. One early keystroke could erase a saved paper.
-      if (!useContributionStore.persist.hasHydrated()) return;
+      if (adopting || !useContributionStore.persist.hasHydrated()) return;
       const { drafts, activeDraftId, uiLocale, welcomeSeen } = value.state;
       const deleted = new Set([...known].filter((id) => !(id in drafts)));
       try {
@@ -557,6 +564,46 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       }
     },
   };
+}
+
+/**
+ * Follow another tab's save of the draft open in this one.
+ *
+ * Two tabs on one draft would otherwise overwrite each other, each save
+ * silently discarding the other tab's edits. So a `storage` event on the main
+ * key, or on the open draft's own key, re-reads storage and adopts what is
+ * there for that draft, along with the shelf and the preferences saved with
+ * it. The open draft stays open: another tab switching papers is not a reason
+ * to switch here, and a draft the other tab deleted stays until this tab's
+ * next save puts it back.
+ *
+ * Returns whether the open draft changed, so the caller can say so.
+ */
+export function followOtherTab(event: StorageEvent): boolean {
+  if (event.storageArea !== window.localStorage) return false;
+  const store = useContributionStore.persist;
+  if (!store.hasHydrated()) return false;
+  const live = useContributionStore.getState();
+  const id = live.activeDraftId;
+  if (event.key !== PERSIST_KEY && event.key !== DRAFT_KEY_PREFIX + id) return false;
+
+  const stored = store.getOptions().storage?.getItem(PERSIST_KEY);
+  if (!stored || stored instanceof Promise || (stored.version ?? 0) > PERSIST_VERSION) return false;
+  const theirs = (stored.state.drafts as Record<string, unknown>)[id];
+  if (theirs === undefined) return false;
+  // Every save by a tab not on this draft still rewrites this draft's key with
+  // the content this tab saved. Compare as the repair pass sees both, without
+  // the save time, so only a real edit counts.
+  const comparable = (draft: unknown) => JSON.stringify({ ...repairSingleDraft(draft, id), updatedAt: 0 });
+  if (comparable(theirs) === comparable(liveDraft(live))) return false;
+
+  adopting = true;
+  try {
+    useContributionStore.setState(hydrateDrafts({ ...stored.state, activeDraftId: id }));
+  } finally {
+    adopting = false;
+  }
+  return true;
 }
 
 /**

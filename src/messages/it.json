@@ -149,6 +149,7 @@
   "draftCreated": "Nuova bozza iniziata.",
   "draftDuplicated": "Bozza duplicata.",
   "draftDeleted": "Bozza eliminata.",
+  "draftUpdatedElsewhere": "Questa bozza è stata aggiornata in un'altra scheda.",
   "switchToDraft": "Passa a {title}",
   "claimBannerTitle": "Stai compilando i contributi di {name}",
   "claimBannerBody": "Spunta i ruoli svolti da {name}, poi rimanda il link. Il link riguarda solo questa riga: ognuno risponde per sé.",

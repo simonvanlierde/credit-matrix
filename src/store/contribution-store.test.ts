@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor, type LocaleCode } from "@/core";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
-import { announcingStorage, type Draft, MAX_DRAFTS, ROLE_NAMES, useContributionStore } from "./contribution-store";
+import {
+  announcingStorage,
+  type Draft,
+  followOtherTab,
+  MAX_DRAFTS,
+  ROLE_NAMES,
+  useContributionStore,
+} from "./contribution-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
@@ -606,6 +613,83 @@ describe("contribution store", () => {
 
       store().clearAsked(jane.id);
       expect(store().asked[jane.id]).toBeUndefined();
+    });
+  });
+
+  describe("another tab", () => {
+    let hydrated: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      globalThis.localStorage.clear();
+      return () => {
+        hydrated.mockRestore();
+        globalThis.localStorage.clear();
+      };
+    });
+
+    /**
+     * Another tab: its own adapter over the same localStorage, saving `drafts`
+     * with `active` open. It has read nothing, so it deletes nothing.
+     */
+    function saveFromOtherTab(active: string, drafts: Record<string, Partial<Draft>>, uiLocale: LocaleCode = "en") {
+      announcingStorage().setItem(PERSIST_KEY, {
+        state: { drafts: drafts as Record<string, Draft>, activeDraftId: active, uiLocale, welcomeSeen: true },
+        version: PERSIST_VERSION,
+      });
+    }
+    const storageEvent = (key: string) => new StorageEvent("storage", { key, storageArea: globalThis.localStorage });
+
+    it("adopts the other tab's save of the open draft without writing it back", () => {
+      store().setTitle("Mine");
+      const held = store().activeDraftId;
+      store().createDraft();
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
+      saveFromOtherTab(open, { [open]: { ...stored.state.drafts[open], title: "Edited there" } }, "nl");
+
+      const writes = vi.spyOn(Storage.prototype, "setItem");
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(true);
+
+      expect(store().activeDraftId).toBe(open);
+      expect(store().title).toBe("Edited there");
+      expect(store().uiLocale).toBe("nl");
+      // This tab's other draft is still here.
+      expect(store().drafts[held]?.title).toBe("Mine");
+      // Writing back would wake the other tab, which would adopt, write back...
+      expect(writes).not.toHaveBeenCalled();
+      writes.mockRestore();
+    });
+
+    it("stays put when the other tab saved a different draft", () => {
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      // Saving parks this tab's draft into its own key: same content, new key.
+      saveFromOtherTab("theirs", { theirs: { id: "theirs", title: "Their paper" } });
+
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(followOtherTab(storageEvent(`${PERSIST_KEY}:draft:${open}`))).toBe(false);
+      expect(store().activeDraftId).toBe(open);
+      expect(store().title).toBe("Open here");
+    });
+
+    it("keeps the open draft when the other tab deleted it", () => {
+      store().setTitle("Open here");
+      saveFromOtherTab("theirs", { theirs: { id: "theirs", title: "Their paper" } });
+      globalThis.localStorage.removeItem(`${PERSIST_KEY}:draft:${store().activeDraftId}`);
+
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(store().title).toBe("Open here");
+    });
+
+    it("ignores keys that are not the open draft's", () => {
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      saveFromOtherTab(open, { [open]: { id: open, title: "Edited there" } });
+
+      expect(followOtherTab(storageEvent(`${PERSIST_KEY}:draft:someone-else`))).toBe(false);
+      expect(followOtherTab(storageEvent("unrelated"))).toBe(false);
+      expect(store().title).toBe("Open here");
     });
   });
 

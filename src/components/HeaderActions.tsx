@@ -12,7 +12,7 @@ import { keepKnownIds, mergeContributorRow } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
-import { type DraftClaim, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
+import { type DraftClaim, followOtherTab, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
 
 /**
  * Import / Share buttons rendered in the nav bar.
@@ -46,6 +46,17 @@ export function HeaderActions() {
   useEffect(() => {
     void useContributionStore.persist.rehydrate();
   }, []);
+
+  // Another tab saving the draft open here: follow it, rather than let the
+  // next save here silently discard its edits. Re-registered with `t` so the
+  // message speaks the current interface language.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (followOtherTab(event)) announce(t("draftUpdatedElsewhere"));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [t]);
 
   // The listener is registered once, so it must not capture this render's
   // handler: `t` changes with the interface language, and a hash pasted after

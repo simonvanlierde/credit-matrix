@@ -149,6 +149,7 @@
   "draftCreated": "Nieuw concept begonnen.",
   "draftDuplicated": "Concept gedupliceerd.",
   "draftDeleted": "Concept verwijderd.",
+  "draftUpdatedElsewhere": "Dit concept is in een ander tabblad bijgewerkt.",
   "switchToDraft": "Overschakelen naar {title}",
   "claimBannerTitle": "U vult de bijdragen van {name} in",
   "claimBannerBody": "Vink de rollen aan die {name} heeft vervuld en stuur de link terug. De link geldt alleen voor deze rij. Iedereen antwoordt voor zichzelf.",

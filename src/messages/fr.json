@@ -149,6 +149,7 @@
   "draftCreated": "Nouveau brouillon commencé.",
   "draftDuplicated": "Brouillon dupliqué.",
   "draftDeleted": "Brouillon supprimé.",
+  "draftUpdatedElsewhere": "Ce brouillon a été modifié dans un autre onglet.",
   "switchToDraft": "Passer à {title}",
   "claimBannerTitle": "Vous renseignez les contributions de {name}",
   "claimBannerBody": "Cochez les rôles assurés par {name}, puis renvoyez le lien. Le lien ne concerne que cette ligne. Chacun répond pour soi.",
