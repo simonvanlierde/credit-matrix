@@ -29,7 +29,6 @@ describe("validateContributions", () => {
       code: "authorNoRoles",
       authorId: bob?.id,
       authorName: "Bob White",
-      message: "Bob White has no assigned CRediT roles.",
     });
   });
 
@@ -37,9 +36,9 @@ describe("validateContributions", () => {
     const authors = parseAuthorText("Jane Smith");
     setScore(authors, 0, "Investigation", 100); // present, but not an expected role
 
-    const messages = validateContributions(authors).map((i) => i.message);
-    expect(messages).toContain("No contributor is assigned \u201cConceptualization\u201d.");
-    expect(messages).toContain("No contributor is assigned \u201cWriting – original draft\u201d.");
+    const issues = validateContributions(authors);
+    expect(issues).toContainEqual({ level: "info", code: "roleUnassigned", role: "Conceptualization" });
+    expect(issues).toContainEqual({ level: "info", code: "roleUnassigned", role: "Writing – original draft" });
   });
 
   it("is clean when expected roles are covered and everyone contributes", () => {

@@ -282,21 +282,6 @@ function stashLive(state: ContributionState): void {
   state.drafts[state.activeDraftId] = liveDraft(state);
 }
 
-/**
- * There are no per-version migration steps: `hydrateDrafts` repairs and
- * normalizes the whole persisted shape on every load anyway (see its doc), so
- * until launch a shape change only needs a version bump to invalidate newer
- * drafts. A draft from a *newer* build may hold fields this one does not
- * understand, and there is no way to walk backwards: start fresh rather than
- * guess. A real migration registry comes back with the first post-launch bump.
- */
-function migratePersisted(persisted: unknown, from: number): PersistedState {
-  // The cast is a formality for persist's types: `hydrateDrafts` re-checks
-  // every field of whatever this returns.
-  if (persisted === null || typeof persisted !== "object") return {} as PersistedState;
-  return (from > PERSIST_VERSION ? {} : persisted) as PersistedState;
-}
-
 /** Drop anything from a draft's contributor list that would make a later edit throw. */
 function repairAuthors(authors: unknown): Author[] {
   if (!Array.isArray(authors)) return [];
@@ -392,19 +377,13 @@ function hydrateDrafts(persisted: unknown): Partial<ContributionState> {
   const active = drafts[storedId] ?? Object.values(drafts).sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? emptyDraft();
   drafts[active.id] = active;
 
-  return {
+  const out = {
     drafts,
-    activeDraftId: active.id,
-    title: active.title,
-    authors: active.authors,
-    inputMode: active.inputMode,
-    heatmapMonoColor: active.heatmapMonoColor,
-    outputLocale: active.outputLocale,
-    claim: active.claim,
-    asked: active.asked,
     uiLocale: normalizeLocaleCode(state.uiLocale),
     ...(typeof state.welcomeSeen === "boolean" ? { welcomeSeen: state.welcomeSeen } : {}),
-  };
+  } as ContributionState;
+  applyDraft(out, active);
+  return out;
 }
 
 /** The shape partialize hands to storage. */
@@ -950,16 +929,12 @@ export const useContributionStore = create<ContributionState>()(
     {
       name: PERSIST_KEY,
       storage: announcingStorage(),
-      /**
-       * Stays at 1 until launch. There are no users, so the persisted shape can
-       * change freely without a migration step for a version nobody holds.
-       *
-       * After launch: bump this and grow `migratePersisted` into a real
-       * per-version migration chain (today it only discards shapes from a
-       * newer build; see its doc).
-       */
       version: PERSIST_VERSION,
-      migrate: migratePersisted,
+      // No per-version steps: `hydrateDrafts` repairs the whole shape on every
+      // load. A draft from a *newer* build may hold fields this one does not
+      // understand, and there is no walking backwards, so start fresh. The
+      // cast is for persist's types; `hydrateDrafts` re-checks every field.
+      migrate: (persisted, from) => (from > PERSIST_VERSION ? {} : persisted) as PersistedState,
       /** Unpack the stored drafts and repair them; see `hydrateDrafts`. */
       merge: (persisted, current) => {
         const next = { ...current, ...hydrateDrafts(persisted) };

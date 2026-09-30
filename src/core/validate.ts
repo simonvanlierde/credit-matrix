@@ -3,11 +3,10 @@ import { hasContributions, rolesWithContributions } from "./author";
 import type { CreditRoleName } from "./credit-roles";
 
 export type ValidationIssue =
-  // authorId keys the rendered list: two contributors can share a name.
-  // `message` is the English fallback for non-UI consumers of the core
-  // package; the app renders its own localized text from `code`.
-  | { level: "warning"; code: "authorNoRoles"; authorId: string; authorName: string; message: string }
-  | { level: "info"; code: "roleUnassigned"; role: CreditRoleName; message: string };
+  // authorId keys the rendered list: two contributors can share a name. The
+  // app renders localized text from `code`.
+  | { level: "warning"; code: "authorNoRoles"; authorId: string; authorName: string }
+  | { level: "info"; code: "roleUnassigned"; role: CreditRoleName };
 
 /** Roles most journals expect to be assigned to at least one contributor. */
 const EXPECTED_ROLES: CreditRoleName[] = ["Conceptualization", "Writing – original draft"];
@@ -32,7 +31,6 @@ export function validateContributions(authors: Author[]): ValidationIssue[] {
         code: "authorNoRoles",
         authorId: author.id,
         authorName: author.name || "An author",
-        message: `${author.name || "An author"} has no assigned CRediT roles.`,
       });
     }
   }
@@ -45,7 +43,6 @@ export function validateContributions(authors: Author[]): ValidationIssue[] {
         level: "info",
         code: "roleUnassigned",
         role,
-        message: `No contributor is assigned “${role}”.`,
       });
     }
   }

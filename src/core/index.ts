@@ -24,6 +24,7 @@ export type { LocaleCode, RoleDescriber, RoleTranslator } from "./credit-i18n/in
 export {
   AVAILABLE_LOCALES,
   DEFAULT_ROLE_TRANSLATOR,
+  hasCatalog,
   loadRoleCatalog,
   makeRoleDescriber,
   makeRoleTranslator,

@@ -922,34 +922,24 @@ type ExportFormat = "svg" | "png";
  * the 85mm single-column width most publishers ask for. 3× clears it, and
  * still lands well inside the clipboard's practical size.
  */
-function svgToPngBlob(svg: string, scale = 3): Promise<Blob> {
+async function svgToPngBlob(svg: string, scale = 3): Promise<Blob> {
+  const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+  const img = new Image();
+  img.src = url;
+  try {
+    await img.decode();
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(img.naturalWidth * scale);
+  canvas.height = Math.round(img.naturalHeight * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
+  ctx.scale(scale, scale);
+  ctx.drawImage(img, 0, 0);
   return new Promise((resolve, reject) => {
-    const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round((img.naturalWidth || img.width) * scale);
-      canvas.height = Math.round((img.naturalHeight || img.height) * scale);
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        URL.revokeObjectURL(url);
-        reject(new Error("Canvas not supported"));
-        return;
-      }
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("PNG encoding failed"));
-      }, "image/png");
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Could not render SVG"));
-    };
-    img.src = url;
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("PNG encoding failed"))), "image/png");
   });
 }
 

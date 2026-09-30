@@ -653,10 +653,13 @@ describe("contribution store", () => {
       expect(migrate?.({ title: "from the future" }, 99)).toEqual({});
     });
 
-    it("discards a persisted value that is not an object", () => {
-      const migrate = useContributionStore.persist.getOptions().migrate;
-      expect(migrate?.(null, 0)).toEqual({});
-      expect(migrate?.("corrupted", 0)).toEqual({});
+    it("discards a persisted value that is not an object", async () => {
+      const { migrate, merge } = useContributionStore.persist.getOptions();
+      for (const garbage of [null, "corrupted"]) {
+        const next = merge?.(await migrate?.(garbage, 0), useContributionStore.getState());
+        expect(next?.authors).toEqual([]);
+        expect(next?.drafts[next.activeDraftId]).toBeDefined();
+      }
     });
 
     /**

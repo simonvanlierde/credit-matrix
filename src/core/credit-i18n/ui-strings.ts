@@ -10,7 +10,7 @@
  * not the community role repo's, hence a separate directory.
  */
 
-import type { LocaleCode } from "./index";
+import { hasCatalog } from "./index";
 
 export type UiKey =
   | "acknowledgements"
@@ -69,25 +69,10 @@ const EN_UI: Record<UiKey, string> = {
   levelAnnotation: "{label} ({level})",
 };
 
-// One static import() per locale so bundlers code-split each catalog (only the
-// selected language ships to the client). The exhaustive key type makes adding
-// a locale to AVAILABLE_LOCALES without a catalog here a compile error.
-const LOADERS: Record<Exclude<LocaleCode, "en">, () => Promise<{ default: UiCatalog }>> = {
-  fr: () => import("./ui/fr.json"),
-  de: () => import("./ui/de.json"),
-  es: () => import("./ui/es.json"),
-  it: () => import("./ui/it.json"),
-  "pt-PT": () => import("./ui/pt.json"),
-  nl: () => import("./ui/nl.json"),
-  "zh-Hans": () => import("./ui/zh.json"),
-  ja: () => import("./ui/ja.json"),
-};
-
 /** Load a locale's UI catalog. Returns null for `en` or any unknown locale (→ English). */
 export async function loadUiCatalog(locale: string): Promise<UiCatalog | null> {
-  const loader = Object.hasOwn(LOADERS, locale) ? LOADERS[locale as Exclude<LocaleCode, "en">] : undefined;
-  if (!loader) return null;
-  const mod = await loader();
+  if (!hasCatalog(locale)) return null;
+  const mod: { default: UiCatalog } = await import(`./ui/${locale}.json`);
   return mod.default;
 }
 

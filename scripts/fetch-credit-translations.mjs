@@ -1,7 +1,7 @@
 // Refreshes the vendored CRediT role translations from the community repo:
 //   https://github.com/contributorshipcollaboration/credit-translation
 //
-// Downloads the curated locale set into src/credit-i18n/translations/ as
+// Downloads the curated locale set into src/core/credit-i18n/translations/ as
 // pruned JSON (metadata.translators + translations only, no schema/render
 // cruft). Run with `node scripts/fetch-credit-translations.mjs` and review the
 // diff before committing.
@@ -25,9 +25,9 @@ const LOCALES = {
   de: "de_Latn",
   es: "es_Latn",
   it: "it_Latn",
-  pt: "pt_Latn",
+  "pt-PT": "pt_Latn",
   nl: "nl_Latn",
-  zh: "zh_Hans",
+  "zh-Hans": "zh_Hans",
   ja: "ja_Jpan",
 };
 

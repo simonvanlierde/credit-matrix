@@ -25,29 +25,13 @@ interface CatalogFile {
   default: { translations: RoleCatalog };
 }
 
-// One static import() per vendored locale so bundlers code-split each catalog
-// (only the selected language ships to the client). Regenerate the JSON with
-// scripts/fetch-credit-translations.mjs. The exhaustive key type makes adding
-// a locale to AVAILABLE_LOCALES without a catalog here a compile error.
-const LOADERS: Record<Exclude<LocaleCode, "en">, () => Promise<CatalogFile>> = {
-  fr: () => import("./translations/fr.json"),
-  de: () => import("./translations/de.json"),
-  es: () => import("./translations/es.json"),
-  it: () => import("./translations/it.json"),
-  "pt-PT": () => import("./translations/pt.json"),
-  nl: () => import("./translations/nl.json"),
-  "zh-Hans": () => import("./translations/zh.json"),
-  ja: () => import("./translations/ja.json"),
-};
-
 export interface LocaleInfo {
   code: string;
   name: string;
 }
 
-/** Locales offered in the output language picker. `en` is the canonical source (no catalog). */
 /**
- * Every language the picker offers.
+ * Every language the picker offers. `en` is the canonical source (no catalog).
  *
  * `as const` so the codes form a literal union: the app types its interface
  * catalogs against {@link LocaleCode}, which turns "offered a language with no
@@ -72,6 +56,16 @@ export type LocaleCode = (typeof AVAILABLE_LOCALES)[number]["code"];
 const LOCALE_CODES = new Set<string>(AVAILABLE_LOCALES.map(({ code }) => code));
 
 /**
+ * Whether a locale has catalog files to load: an offered code other than
+ * English, spelled exactly. Also what keeps an arbitrary string out of a
+ * catalog import path. e2e/messages.spec.ts checks every offered code has its
+ * files.
+ */
+export function hasCatalog(locale: string): locale is Exclude<LocaleCode, "en"> {
+  return locale !== "en" && LOCALE_CODES.has(locale);
+}
+
+/**
  * Normalize stored locale identifiers and reject unsupported values.
  *
  * `pt` and `zh` shipped before their regional/script variants were made
@@ -85,19 +79,40 @@ export function normalizeLocaleCode(locale: unknown): LocaleCode {
 
 /** Load a locale's role catalog. Returns null for `en` or any unknown locale (→ identity translator). */
 export async function loadRoleCatalog(locale: string): Promise<RoleCatalog | null> {
-  const loader = Object.hasOwn(LOADERS, locale) ? LOADERS[locale as Exclude<LocaleCode, "en">] : undefined;
-  if (!loader) return null;
-  const mod = await loader();
+  if (!hasCatalog(locale)) return null;
+  // A template import() code-splits one chunk per file, so only the selected
+  // language ships. Regenerate the JSON with scripts/fetch-credit-translations.mjs.
+  const mod: CatalogFile = await import(`./translations/${locale}.json`);
   return mod.default.translations;
 }
 
-/**
- * Build a role-name translator from a catalog. Maps English name → NISO URL →
- * localized name, falling back to the English name when the catalog is null or
- * lacks the role. Safe to call with any string (unknown names pass through).
- */
 /** Maps a canonical English role name to its localized description. */
 export type RoleDescriber = (englishName: string) => string;
+
+/**
+ * Look one field of a role up in a catalog: English name → NISO URL → entry.
+ * Falls back when the catalog is null, lacks the role, or holds an empty value
+ * (`||`, not `??`). Safe to call with any string: unknown names fall back.
+ */
+function makeRoleLookup(
+  catalog: RoleCatalog | null | undefined,
+  field: keyof RoleTranslation,
+  fallback: (name: string) => string,
+): (name: string) => string {
+  if (!catalog) return fallback;
+  return (name) => {
+    try {
+      return catalog[getRoleByName(name).url]?.[field] || fallback(name);
+    } catch {
+      return fallback(name);
+    }
+  };
+}
+
+/** Localized role names; unknown or untranslated roles keep their English name. */
+export function makeRoleTranslator(catalog: RoleCatalog | null | undefined): RoleTranslator {
+  return makeRoleLookup(catalog, "name", (name) => name);
+}
 
 /**
  * Localized role descriptions, from the same community catalog as the names.
@@ -107,27 +122,7 @@ export type RoleDescriber = (englishName: string) => string;
  * language — a role name has to match the statement it will appear in.
  */
 export function makeRoleDescriber(catalog: RoleCatalog | null | undefined, fallback: RoleDescriber): RoleDescriber {
-  if (!catalog) return fallback;
-  return (name) => {
-    try {
-      // `||` (not `??`) so an empty localized description falls back to English.
-      return catalog[getRoleByName(name).url]?.description || fallback(name);
-    } catch {
-      return fallback(name);
-    }
-  };
-}
-
-export function makeRoleTranslator(catalog: RoleCatalog | null | undefined): RoleTranslator {
-  if (!catalog) return (name) => name;
-  return (name) => {
-    try {
-      // `||` (not `??`) so an empty localized name falls back to English.
-      return catalog[getRoleByName(name).url]?.name || name;
-    } catch {
-      return name;
-    }
-  };
+  return makeRoleLookup(catalog, "description", fallback);
 }
 
 /** Identity role translator (no catalog): the canonical English default. */

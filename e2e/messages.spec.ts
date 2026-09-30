@@ -1,5 +1,5 @@
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import path from "node:path";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
@@ -26,19 +26,19 @@ const LOCALES = readdirSync(MESSAGES_DIR)
   .filter((f: string) => f.endsWith(".json"))
   .map((f: string) => f.replace(".json", ""));
 const TRANSLATED = LOCALES.filter((l: string) => l !== "en");
-const MESSAGE_FILE_ALIASES: Partial<Record<(typeof AVAILABLE_LOCALES)[number]["code"], string>> = {
-  "pt-PT": "pt",
-  "zh-Hans": "zh",
-};
 
 /** Placeholder names an ICU message declares: {name}, {count, plural, ...}. */
 const placeholders = (s: string) => new Set([...s.matchAll(/\{(\w+)[,}]/g)].map((m) => m[1]));
 
 test.describe("interface messages", () => {
-  test("ships a catalog for every locale the language picker offers", () => {
-    for (const { code } of AVAILABLE_LOCALES) {
-      const fileLocale = MESSAGE_FILE_ALIASES[code] ?? code;
-      expect(LOCALES, `the picker offers "${code}" but its message catalog is missing`).toContain(fileLocale);
+  // The loaders import `<dir>/${code}.json` by name, so a missing or misnamed
+  // file only shows up at runtime, as an English fallback.
+  test("ships every catalog for every locale the language picker offers", () => {
+    const dirs = ["src/messages", "src/core/credit-i18n/ui", "src/core/credit-i18n/translations"];
+    for (const { code } of AVAILABLE_LOCALES.filter((locale) => locale.code !== "en")) {
+      for (const dir of dirs) {
+        expect(existsSync(path.join(process.cwd(), dir, `${code}.json`)), `${dir}/${code}.json is missing`).toBe(true);
+      }
     }
   });
 

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { AboutPopover } from "@/components/AboutPopover";
 import { Lockup } from "@/components/BrandMark";
 import { BrandMenu } from "@/components/BrandMenu";
@@ -9,7 +10,6 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { SkipLink } from "@/components/SkipLink";
 import { StatusBanner } from "@/components/StatusBanner";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Announcer } from "@/lib/announce";
 import { AppIntlProvider } from "@/lib/intl";
@@ -90,7 +90,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-surface text-on-surface">
         <AppIntlProvider>
-          <ThemeProvider>
+          {/* Follows the OS on first visit; the header toggle's choice then persists. */}
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <SkipLink />
             {/* pr compensates the scrollbar width modal primitives remove on open; the fixed
               header escapes the body padding that keeps <main> from reflowing. */}
