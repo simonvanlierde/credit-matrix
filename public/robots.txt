@@ -1,2 +1,5 @@
 User-agent: *
 Allow: /
+# Backend lookups: each crawl costs Worker CPU and upstream rate limit.
+Disallow: /api/
+Disallow: /health
