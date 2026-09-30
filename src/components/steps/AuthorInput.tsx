@@ -601,7 +601,7 @@ function RowMenu({
           {corresponding ? t("correspondingUnset") : t("correspondingSet")}
         </button>
         {allowAsk && (
-          <button type="button" onClick={onAsk} className={item}>
+          <button type="button" onClick={onAsk} title={t("askLinkHint")} className={item}>
             {askCopied ? (
               <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
             ) : (
