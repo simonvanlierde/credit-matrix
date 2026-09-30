@@ -52,7 +52,9 @@ export function HeaderActions() {
   // message speaks the current interface language.
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (followOtherTab(event)) announce(t("draftUpdatedElsewhere"));
+      // Visible too: the content changing under a sighted user with no
+      // note would read as a glitch.
+      if (followOtherTab(event)) showStatus({ kind: "success", message: t("draftUpdatedElsewhere") });
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
