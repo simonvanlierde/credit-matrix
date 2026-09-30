@@ -15,6 +15,7 @@ vi.mock("@/core", async (importOriginal) => ({
 
 const ALICE = "0000-0002-1825-0097";
 const BOB = "0000-0001-5109-3700";
+const NOT_FOUND: OrcidLookupResult = { ok: false, status: 404, code: "NOT_FOUND", error: "" };
 
 const initial = useContributionStore.getState();
 
@@ -44,8 +45,56 @@ function renderList() {
 const authors = () => useContributionStore.getState().authors;
 const addField = () => screen.getByLabelText<HTMLInputElement>(en.addContributor);
 
+function addById(orcid: string) {
+  fireEvent.change(addField(), { target: { value: orcid } });
+  fireEvent.keyDown(addField(), { key: "Enter" });
+}
+
 beforeEach(() => {
   useContributionStore.setState(initial, true);
+});
+
+describe("adding a contributor by ORCID iD", () => {
+  it("drops the seeded row and restores the iD when the lookup fails", async () => {
+    const resolve = deferLookups();
+    renderList();
+    addById(ALICE);
+    expect(authors()).toHaveLength(1);
+
+    await resolve(ALICE, NOT_FOUND);
+
+    expect(authors()).toHaveLength(0);
+    expect(addField().value).toBe(ALICE);
+  });
+
+  it("keeps a row the user renamed during the lookup, and what they typed next", async () => {
+    const resolve = deferLookups();
+    renderList();
+    addById(ALICE);
+    const id = authors()[0]?.id ?? "";
+    act(() => {
+      useContributionStore.getState().updateAuthorName(id, "Alice Carberry");
+    });
+    fireEvent.change(addField(), { target: { value: "Bob Smith" } });
+
+    await resolve(ALICE, NOT_FOUND);
+
+    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry"]);
+    expect(addField().value).toBe("Bob Smith");
+  });
+
+  it("keeps a row the user gave a role during the lookup", async () => {
+    const resolve = deferLookups();
+    renderList();
+    addById(ALICE);
+    act(() => {
+      useContributionStore.getState().toggleContribution(authors()[0]?.id ?? "", 0);
+    });
+
+    await resolve(ALICE, NOT_FOUND);
+
+    expect(authors()).toHaveLength(1);
+  });
 });
 
 describe("pasting a list of ORCID iDs", () => {

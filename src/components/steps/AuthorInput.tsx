@@ -47,6 +47,7 @@ import { StepHeader } from "@/components/ui/step-header";
 import { UndoBar } from "@/components/ui/undo-bar";
 import {
   type Author,
+  hasContributions,
   isValidOrcid,
   lookupOrcidPerson,
   MAX_AUTHOR_NAME_LENGTH,
@@ -360,11 +361,15 @@ export function AuthorList() {
       setNewName("");
       const { id, error } = await addOrcidAuthor(orcid);
       if (error) {
-        // No junk author named after the iD survives a failed lookup.
-        if (id) removeAuthor(id);
+        // No junk author named after the iD survives a failed lookup, but a row
+        // the user renamed or gave roles while waiting is theirs, not junk.
+        // Read from the store: `authors` here is the list from before the await.
+        const row = useContributionStore.getState().authors.find((a) => a.id === id);
+        if (row && row.name === orcid && !hasContributions(row)) removeAuthor(row.id);
         setAddError(error);
         announce(error, { assertive: true });
-        setNewName(orcid);
+        // Hand the iD back only to an empty field, not over the next name typed.
+        setNewName((current) => (current.trim() ? current : orcid));
       }
     } else if (addAuthor(trimmed)) {
       setNewName("");

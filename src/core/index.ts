@@ -3,6 +3,7 @@ export {
   AuthorSchema,
   ContributionSchema,
   clampScore,
+  hasContributions,
   isAllBinary,
   isUsableAuthorName,
   isValidOrcid,
