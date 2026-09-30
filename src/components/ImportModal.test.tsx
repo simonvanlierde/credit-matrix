@@ -98,4 +98,16 @@ describe("DOI lookup", () => {
     expect(lookupDoiWork).toHaveBeenCalledTimes(1);
     await resolve(WORK);
   });
+
+  it("says offline when the connection dropped during the request", async () => {
+    const resolve = deferLookup();
+    const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+    renderModal(0);
+    fireEvent.click(screen.getByRole("button", { name: en.doiLookUp }));
+
+    onLine.mockReturnValue(false);
+    await resolve({ ok: false, status: 502, code: "UNAVAILABLE", error: "" });
+
+    expect(screen.getByText(en.errDoiOFFLINE)).toBeTruthy();
+  });
 });

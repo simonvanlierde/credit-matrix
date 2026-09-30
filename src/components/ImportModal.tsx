@@ -70,7 +70,10 @@ const POLITE_MAILTO = "credit@duinlab.nl";
 async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok: true }> | DoiFailure> {
   if (!navigator.onLine) return { code: "OFFLINE" };
   const result = await lookupDoiWork(normalizeDoi(doi), fetch, POLITE_MAILTO);
-  return result.ok ? result : { code: result.code };
+  if (result.ok) return result;
+  // A connection that drops mid-request fails as UNAVAILABLE; say offline.
+  if (result.code === "UNAVAILABLE" && !navigator.onLine) return { code: "OFFLINE" };
+  return { code: result.code };
 }
 
 type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";

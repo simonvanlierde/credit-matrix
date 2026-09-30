@@ -92,7 +92,10 @@ async function fetchOrcidName(orcid: string): Promise<{ displayName: string } | 
   // rather than blaming ORCID.
   if (!navigator.onLine) return { code: "OFFLINE" };
   const result = await lookupOrcidPerson(normalizeOrcid(orcid));
-  if (!result.ok) return { code: result.code };
+  if (!result.ok) {
+    // A connection that drops mid-request fails as UNAVAILABLE; say offline.
+    return { code: result.code === "UNAVAILABLE" && !navigator.onLine ? "OFFLINE" : result.code };
+  }
   return { displayName: result.displayName };
 }
 

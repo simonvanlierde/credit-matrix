@@ -16,6 +16,7 @@ vi.mock("@/core", async (importOriginal) => ({
 const ALICE = "0000-0002-1825-0097";
 const BOB = "0000-0001-5109-3700";
 const NOT_FOUND: OrcidLookupResult = { ok: false, status: 404, code: "NOT_FOUND", error: "" };
+const UNAVAILABLE: OrcidLookupResult = { ok: false, status: 502, code: "UNAVAILABLE", error: "" };
 
 const initial = useContributionStore.getState();
 
@@ -94,6 +95,18 @@ describe("adding a contributor by ORCID iD", () => {
     await resolve(ALICE, NOT_FOUND);
 
     expect(authors()).toHaveLength(1);
+  });
+
+  it("says offline when the connection dropped during the request", async () => {
+    const resolve = deferLookups();
+    const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+    renderList();
+    addById(ALICE);
+
+    onLine.mockReturnValue(false);
+    await resolve(ALICE, UNAVAILABLE);
+
+    expect(screen.getByText(en.errOffline)).toBeTruthy();
   });
 });
 
