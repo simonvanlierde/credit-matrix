@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import type { Author } from "./author";
 import { clampScore, MAX_AUTHORS } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";

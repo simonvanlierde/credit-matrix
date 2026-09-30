@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { isValidOrcid, normalizeOrcid, ORCID_REGEX } from "./author";
 import { fetchUpstreamJson } from "./upstream-fetch";
 
