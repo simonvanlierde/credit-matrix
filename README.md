@@ -27,7 +27,8 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
 - **Ask your co-authors**: send each person a link addressed to their own row. They tick what they
   did and send the link back; opening it fills in their row (roles, name, and iD) and nothing
   else
-- **Drafts**: one per paper, switched from the header. They stay in this browser
+- **Drafts**: one per paper, switched from the header. They stay in this browser, open tabs follow
+  each other's changes, and **Delete all drafts** clears them
 - **Contribution grid**: select a cell to assign one of the 14 roles, as a yes/no value or as a
   contribution level. The grid is the heatmap, so you can transpose it, swap initials for full
   names, and recolor it
@@ -60,7 +61,7 @@ TypeScript throughout: one Next.js app, with the framework-agnostic domain logic
 | State | Zustand + immer + persist | Survives a refresh via localStorage |
 | Validation | Zod | Schema checks at trust boundaries |
 | Heatmap | Hand-crafted SVG (`core`) | One SVG source feeds both download and canvas PNG |
-| Offline | Service worker + manifest | Runtime cache of the app's own files; no build step |
+| Offline | Service worker + manifest | Precaches the app's own files under a per-build cache name |
 
 ```text
 Browser
@@ -72,8 +73,8 @@ Browser
                                      ← the only calls that leave the browser
 ```
 
-Everything runs in the browser, served as a static export. [`src/core`](src/core/README.md) holds the domain
-logic as pure TypeScript, with `zod` as its only runtime dependency. XML import uses the native
+Everything runs in the browser, served as a static export. [`src/core`](src/core/README.md) holds the
+domain logic as pure TypeScript, with `zod` as its only runtime dependency. XML import uses the native
 `DOMParser`, and the PNG is drawn from the heatmap SVG onto a `<canvas>`.
 
 The ORCID and DOI lookups call ORCID's, Crossref's and DataCite's public APIs straight from the browser
@@ -84,12 +85,10 @@ Contributions store a 0–100 integer `score` rather than a boolean, so the UI s
 binary and level-based editing without changing the stored model. See
 [`src/core/README.md`](src/core/README.md#domain-model) for the score-to-level boundaries.
 
-**No accounts, no server-side storage.** This is a deliberate constraint, not a missing feature. A
-draft holds the names and ORCID iDs of co-authors who never visited this site. Keeping those in
-your browser means there is nothing to ask anyone to delete. Drafts are per-browser: move one
-between devices by exporting JSON. See
-[ADR 0002](docs/adr/0002-no-accounts-or-server-side-storage.md) for what would have to change for
-this to be revisited.
+**No accounts, no server-side storage.** A draft holds the names and ORCID iDs of co-authors who
+never visited this site, so it stays in your browser and there is nothing to delete on request.
+Move a draft between devices by exporting JSON. [ADR 0002](docs/adr/0002-no-accounts-or-server-side-storage.md)
+says what would have to change to revisit this.
 
 ---
 
@@ -111,7 +110,8 @@ pnpm dev            # → http://localhost:3000
 `pnpm build` writes a static export to `out/`, which any static host can serve; response headers,
 including the CSP, are in [`public/_headers`](public/_headers). The live demo serves it as
 Cloudflare Workers static assets, with no Worker code. A push to `main` builds and deploys it;
-[CI](.github/workflows/ci.yml) lints, tests, and build-checks, and never deploys.
+[CI](.github/workflows/ci.yml) runs on pull requests: it lints, typechecks, runs the unit and
+end-to-end tests, and dry-runs the build. It never deploys.
 
 To host it on Cloudflare yourself, set your own domain in [wrangler.jsonc](wrangler.jsonc):
 
@@ -120,9 +120,9 @@ pnpm preview        # build + serve out/ locally, headers applied
 pnpm deploy         # build + deploy to your Cloudflare account
 ```
 
-`pnpm build` runs [`scripts/postbuild.mjs`](scripts/postbuild.mjs) after `next build`: it swaps
-`'unsafe-inline'` in the CSP for the hashes of the exported inline scripts and stamps the service
-worker's cache with the build. To roll back a bad deploy, pick the previous version under the
+`pnpm build` runs `next build`, then [`scripts/postbuild.mjs`](scripts/postbuild.mjs). That script
+replaces `'unsafe-inline'` in the CSP with the hashes of the exported inline scripts, and names the
+service worker's cache after the build. To roll back a bad deploy, pick the previous version under the
 Worker's **Deployments** in the Cloudflare dashboard; the smoke workflow flags a broken one.
 
 ## Roadmap

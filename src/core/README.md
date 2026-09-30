@@ -4,8 +4,8 @@ Framework-agnostic TypeScript for CRediT Matrix. It models contributors, validat
 contribution data, and produces [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/)
 statements and exports.
 
-The package has one runtime dependency, `zod`, and no React or Node APIs at import time. The web app
-uses it directly in the browser.
+It has one runtime dependency, `zod`, and uses no React or Node APIs at import time. The web app
+imports it directly and runs it in the browser.
 
 ## Domain model
 
@@ -75,6 +75,6 @@ web app uses that same SVG for preview, SVG download, and canvas-to-PNG export.
 pnpm test
 ```
 
-Vitest runs under jsdom. Tests cover name parsing, initials
-deduplication, statement formats, score-to-level boundaries, import/export round trips, validation,
+One Vitest run, under jsdom, covers the core, the store, and `src/lib`. Core tests cover name parsing,
+initials deduplication, statement formats, score-to-level boundaries, import/export round trips, validation,
 and heatmap SVG generation.

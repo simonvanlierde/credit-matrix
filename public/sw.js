@@ -8,7 +8,7 @@
  *   is complete offline before it takes over
  * - navigations: network first (bounded), cached page as the fallback
  * - other same-origin GETs: cache first, unhashed ones refreshed in the background
- * - cross-origin (the ORCID and Crossref lookups): never cached, so a lookup
+ * - cross-origin (the ORCID, Crossref, and DataCite lookups): never cached, so a lookup
  *   fails honestly when offline
  *
  * The cache is named per build (scripts/postbuild.mjs stamps BUILD_ID), so

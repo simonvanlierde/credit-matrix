@@ -33,7 +33,7 @@ pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
 ```
 
-`pnpm lint`, `pnpm typecheck`, and `pnpm test` all run in CI on every push and PR.
+CI runs `pnpm lint`, `pnpm typecheck`, and `pnpm test:coverage` on every PR.
 Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 ## Testing
@@ -43,12 +43,13 @@ Add or update tests in `src/core/__tests__` for any change to domain logic.
   trips, validation, and heatmap SVG generation.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
-  the co-author claim round trip. `a11y.spec.ts` runs the axe scans. `messages.spec.ts`,
+  the co-author claim round trip. `drafts.spec.ts` covers deleting all drafts. `a11y.spec.ts` runs the axe scans. `messages.spec.ts`,
   `design-tokens.spec.ts`, and `offline.spec.ts` guard the locale catalogs, the design tokens, and
   the service worker.
 
-Every push and PR runs Biome, typecheck, unit coverage, the axe scans, and the static export
-build. The rest of the E2E suite runs on manual dispatch or on PRs labeled `e2e`.
+Every PR runs Biome, typecheck, unit coverage, the full Playwright suite (including the axe scans),
+and a static export build. In CI, Playwright runs against `wrangler dev`, which applies
+`public/_headers`. Locally it uses `pnpm dev`, which has no CSP.
 
 ### Accessibility
 
@@ -56,8 +57,8 @@ Two automated checks guard the UI. They are guardrails, not a WCAG conformance c
 
 | Check | Command | Scope | In CI |
 | --- | --- | --- | --- |
-| Biome [`a11y`](https://biomejs.dev/linter/rules/#accessibility) lint | `pnpm lint` | alt text, ARIA validity, button `type`, keyboard handlers | Every push and PR |
-| [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1 A/AA rules over the main screens, light + dark | Every push and PR |
+| Biome [`a11y`](https://biomejs.dev/linter/rules/#accessibility) lint | `pnpm lint` | alt text, ARIA validity, button `type`, keyboard handlers | Every PR |
+| [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1 A/AA rules over the main screens, light + dark | Every PR |
 
 The UI includes a skip link, landmark regions, radiogroup segmented controls, and a
 `prefers-reduced-motion` fallback that neutralizes transitions and animations. Drag-to-reorder is
