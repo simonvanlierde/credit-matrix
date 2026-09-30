@@ -985,6 +985,29 @@ describe("contribution store", () => {
       globalThis.localStorage.clear();
     });
 
+    it("ends in a usable workspace whatever types the persisted fields have", async () => {
+      const { migrate, merge } = useContributionStore.persist.getOptions();
+      const garbage = [
+        { drafts: "x", activeDraftId: 5, authors: "not a list", uiLocale: 7, welcomeSeen: "yes" },
+        { drafts: [1, null], activeDraftId: null },
+        {
+          activeDraftId: "d1",
+          drafts: { d1: { authors: { 0: "Jane" }, title: 3, asked: "x", claim: 1, updatedAt: "now" }, d2: null },
+        },
+      ];
+      for (const persisted of garbage) {
+        useContributionStore.setState(initial, true);
+        useContributionStore.setState(merge?.(await migrate?.(persisted, 0), store()) ?? {});
+
+        expect(store().authors).toEqual([]);
+        expect(store().drafts[store().activeDraftId]).toBeDefined();
+        expect(typeof store().title).toBe("string");
+        // Usable means the next edits work, not just that the load did.
+        expect(store().addAuthor("Jane Smith")).toBeTruthy();
+        expect(store().createDraft()).toBeTruthy();
+      }
+    });
+
     it("loads an old single-key value, from before the shelf was split out", () => {
       const storage = useContributionStore.persist.getOptions().storage;
       if (!storage) throw new Error("expected a storage adapter");
