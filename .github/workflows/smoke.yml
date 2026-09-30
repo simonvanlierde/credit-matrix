@@ -45,7 +45,11 @@ jobs:
           exit 1
 
       - name: App page loads
-        run: curl -fsS "$SITE/" | grep -q "<title>CRediT Matrix"
+        # Captured, not piped: `grep -q` stops reading at the title, and under
+        # pipefail curl's failed write to the closed pipe fails the step.
+        run: |
+          html=$(curl -fsS "$SITE/")
+          grep -q "<title>CRediT Matrix" <<<"$html"
 
       # public/_headers is the only place the CSP is set, and postbuild.mjs
       # rewrites it: a typo drops it silently, a missed rewrite ships
