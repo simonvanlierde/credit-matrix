@@ -747,6 +747,9 @@ describe("contribution store", () => {
       expect(storage.getItem("credit-generator-state")).toBeNull();
       // Removed, not just skipped: the next save must not sit behind it.
       expect(globalThis.localStorage.getItem("credit-generator-state")).toBeNull();
+      // ...but kept aside, so a person can still recover it by hand.
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:unreadable`)).toBe("{truncated");
+      globalThis.localStorage.clear();
     });
 
     it("drops a malformed iD or contributions list, not the contributor", () => {
@@ -944,6 +947,40 @@ describe("contribution store", () => {
       write(tabA, "y", [p, draft("y", "Third paper")]);
       expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:x`)).toBeNull();
 
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
+    it("keeps a just-opened draft on disk when the main key cannot be written", () => {
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      globalThis.localStorage.clear();
+      const storage = announcingStorage();
+      const draft = (id: string, title: string): Draft => ({
+        id,
+        title,
+        authors: [],
+        inputMode: "toggle",
+        heatmapMonoColor: "#2563eb",
+        outputLocale: "en",
+        updatedAt: 0,
+        claim: null,
+        asked: {},
+      });
+      const drafts = { a: draft("a", "First"), b: draft("b", "Held paper") };
+      const state = { drafts, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
+      storage.setItem(PERSIST_KEY, { state, version: PERSIST_VERSION });
+
+      // Switch to b, and have the main-key write fail (quota, say): b's own
+      // key is then the only copy of it, and must survive.
+      const original = Storage.prototype.setItem;
+      const failing = vi.spyOn(Storage.prototype, "setItem").mockImplementation(function (this: Storage, key, value) {
+        if (key === PERSIST_KEY) throw new DOMException("QuotaExceededError");
+        original.call(this, key, value);
+      });
+      storage.setItem(PERSIST_KEY, { state: { ...state, activeDraftId: "b" }, version: PERSIST_VERSION });
+      failing.mockRestore();
+
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:b`)).toContain("Held paper");
       hydrated.mockRestore();
       globalThis.localStorage.clear();
     });

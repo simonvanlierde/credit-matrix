@@ -397,6 +397,12 @@ interface PersistedState {
 /** Where a parked draft lives: one localStorage key per draft, under the main key's namespace. */
 const DRAFT_KEY_PREFIX = `${PERSIST_KEY}:draft:`;
 
+/**
+ * Where the last value that failed to parse is kept, so a corrupted draft can
+ * still be recovered by hand. One slot, overwritten: a backup, not a history.
+ */
+const UNREADABLE_KEY = `${PERSIST_KEY}:unreadable`;
+
 /** Every parked-draft key currently in localStorage. */
 function draftKeys(): string[] {
   const keys: string[] = [];
@@ -442,12 +448,19 @@ export function announcingStorage(): PersistStorage<PersistedState> {
   // clears localStorage by hand. A truncated value from a crashed tab is
   // exactly the case hydrateDrafts exists for, but repair only runs on a
   // parsed value. Drop what cannot be read instead — for a parked draft that
-  // costs one draft, not the workspace.
+  // costs one draft, not the workspace — after copying it aside, since a value
+  // JSON cannot parse may still be mostly a paper a person can piece together.
   const readJson = (key: string): unknown => {
+    let raw: string | null = null;
     try {
-      const raw = window.localStorage.getItem(key);
+      raw = window.localStorage.getItem(key);
       return raw === null ? null : JSON.parse(raw);
     } catch {
+      try {
+        if (raw !== null) window.localStorage.setItem(UNREADABLE_KEY, raw);
+      } catch {
+        // Best effort: a full quota must not keep the value blocking hydration.
+      }
       try {
         window.localStorage.removeItem(key);
       } catch {
@@ -519,13 +532,6 @@ export function announcingStorage(): PersistStorage<PersistedState> {
           window.localStorage.setItem(DRAFT_KEY_PREFIX + id, JSON.stringify(draft));
           written.set(id, draft);
         }
-        // The active draft lives in the main key, and a deleted draft's key
-        // would otherwise resurrect it on the next load.
-        for (const id of [activeDraftId, ...deleted]) {
-          window.localStorage.removeItem(DRAFT_KEY_PREFIX + id);
-          written.delete(id);
-        }
-        known = new Set(Object.keys(drafts));
         window.localStorage.setItem(
           key,
           JSON.stringify({
@@ -533,6 +539,14 @@ export function announcingStorage(): PersistStorage<PersistedState> {
             version: value.version,
           }),
         );
+        // The active draft lives in the main key, and a deleted draft's key
+        // would otherwise resurrect it on the next load. Only after the main
+        // write: until it lands, a just-opened draft's own key is its only copy.
+        for (const id of [activeDraftId, ...deleted]) {
+          window.localStorage.removeItem(DRAFT_KEY_PREFIX + id);
+          written.delete(id);
+        }
+        known = new Set(Object.keys(drafts));
         warned = false;
       } catch {
         // Every change retries the write; announcing each one would flood
