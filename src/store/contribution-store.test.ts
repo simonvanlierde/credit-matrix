@@ -1,7 +1,14 @@
-import { createAuthor, type LocaleCode } from "@credit-generator/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createAuthor, type LocaleCode } from "@/core";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
-import { announcingStorage, type Draft, MAX_DRAFTS, ROLE_NAMES, useContributionStore } from "./contribution-store";
+import {
+  announcingStorage,
+  type Draft,
+  followOtherTab,
+  MAX_DRAFTS,
+  ROLE_NAMES,
+  useContributionStore,
+} from "./contribution-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
@@ -499,6 +506,29 @@ describe("contribution store", () => {
       store().switchDraft(first);
       expect(store().authors[0]?.name).toBe("Jane Smith");
     });
+
+    it("deletes every draft, on disk too, and keeps the person's preferences", () => {
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      globalThis.localStorage.clear();
+      store().setUiLocale("nl");
+      store().addAuthor("Jane Smith");
+      store().createDraft();
+      store().setTitle("Second paper");
+      // A shelf key another tab wrote, which this tab never knew about.
+      globalThis.localStorage.setItem(`${PERSIST_KEY}:draft:elsewhere`, JSON.stringify({ title: "Other tab" }));
+
+      store().deleteAllDrafts();
+
+      expect(Object.keys(store().drafts)).toEqual([store().activeDraftId]);
+      expect(store().title).toBe("");
+      expect(store().authors).toHaveLength(0);
+      expect(store().uiLocale).toBe("nl");
+      const keys = Object.keys(globalThis.localStorage);
+      expect(keys.filter((key) => key.includes(":draft:"))).toEqual([]);
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).not.toContain("Second paper");
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
   });
 
   describe("claim lock", () => {
@@ -609,6 +639,130 @@ describe("contribution store", () => {
     });
   });
 
+  describe("another tab", () => {
+    let hydrated: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      globalThis.localStorage.clear();
+      return () => {
+        hydrated.mockRestore();
+        globalThis.localStorage.clear();
+      };
+    });
+
+    /**
+     * Another tab: its own adapter over the same localStorage, saving `drafts`
+     * with `active` open. It has read nothing, so it deletes nothing.
+     */
+    function saveFromOtherTab(active: string, drafts: Record<string, Partial<Draft>>, uiLocale: LocaleCode = "en") {
+      announcingStorage().setItem(PERSIST_KEY, {
+        state: { drafts: drafts as Record<string, Draft>, activeDraftId: active, uiLocale, welcomeSeen: true },
+        version: PERSIST_VERSION,
+      });
+    }
+    const storageEvent = (key: string) => new StorageEvent("storage", { key, storageArea: globalThis.localStorage });
+
+    it("adopts the other tab's save of the open draft without writing it back", () => {
+      store().setTitle("Mine");
+      const held = store().activeDraftId;
+      store().createDraft();
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
+      saveFromOtherTab(open, { [open]: { ...stored.state.drafts[open], title: "Edited there" } }, "nl");
+
+      const writes = vi.spyOn(Storage.prototype, "setItem");
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(true);
+
+      expect(store().activeDraftId).toBe(open);
+      expect(store().title).toBe("Edited there");
+      expect(store().uiLocale).toBe("nl");
+      // This tab's other draft is still here.
+      expect(store().drafts[held]?.title).toBe("Mine");
+      // Writing back would wake the other tab, which would adopt, write back...
+      expect(writes).not.toHaveBeenCalled();
+      writes.mockRestore();
+    });
+
+    it("stays put when the other tab saved a different draft", () => {
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      // Saving parks this tab's draft into its own key: same content, new key.
+      saveFromOtherTab("theirs", { theirs: { id: "theirs", title: "Their paper" } });
+
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(followOtherTab(storageEvent(`${PERSIST_KEY}:draft:${open}`))).toBe(false);
+      expect(store().activeDraftId).toBe(open);
+      expect(store().title).toBe("Open here");
+    });
+
+    // Reading storage to check for a change must not teach this tab's adapter
+    // about drafts only the other tab holds: its next save would count them
+    // as deleted here and remove them from storage.
+    it("never deletes a draft only the other tab holds", () => {
+      store().setTitle("Open here");
+      saveFromOtherTab("theirs", { theirs: { id: "theirs", title: "Their paper" } });
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+
+      store().setTitle("Edited here");
+
+      const everything = Object.keys(globalThis.localStorage)
+        .map((key) => globalThis.localStorage.getItem(key))
+        .join("\n");
+      expect(everything).toContain("Their paper");
+    });
+
+    it("removes a draft adopted from the other tab when it is deleted here", () => {
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
+      saveFromOtherTab(open, {
+        [open]: { ...stored.state.drafts[open], title: "Edited there" },
+        theirs: { ...stored.state.drafts[open], id: "theirs", title: "Their paper" },
+      });
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(true);
+      expect(store().drafts.theirs?.title).toBe("Their paper");
+
+      store().deleteDraft("theirs");
+
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:theirs`)).toBeNull();
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).not.toContain("Their paper");
+    });
+
+    it("ignores events it cannot act on", () => {
+      store().setTitle("Open here");
+      const fromSession = new StorageEvent("storage", { key: PERSIST_KEY, storageArea: globalThis.sessionStorage });
+      expect(followOtherTab(fromSession)).toBe(false);
+
+      // A newer build's save is not this tab's to adopt.
+      globalThis.localStorage.setItem(PERSIST_KEY, JSON.stringify({ state: {}, version: PERSIST_VERSION + 1 }));
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+
+      hydrated.mockReturnValue(false);
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(store().title).toBe("Open here");
+    });
+
+    it("keeps the open draft when the other tab deleted it", () => {
+      store().setTitle("Open here");
+      saveFromOtherTab("theirs", { theirs: { id: "theirs", title: "Their paper" } });
+      globalThis.localStorage.removeItem(`${PERSIST_KEY}:draft:${store().activeDraftId}`);
+
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(store().title).toBe("Open here");
+    });
+
+    it("ignores keys that are not the open draft's", () => {
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      saveFromOtherTab(open, { [open]: { id: open, title: "Edited there" } });
+
+      expect(followOtherTab(storageEvent(`${PERSIST_KEY}:draft:someone-else`))).toBe(false);
+      expect(followOtherTab(storageEvent("unrelated"))).toBe(false);
+      expect(store().title).toBe("Open here");
+    });
+  });
+
   describe("first-draft id", () => {
     it("replaces the SSR-constant draft-1 id with a UUID at hydration", async () => {
       await useContributionStore.persist.rehydrate();
@@ -653,10 +807,13 @@ describe("contribution store", () => {
       expect(migrate?.({ title: "from the future" }, 99)).toEqual({});
     });
 
-    it("discards a persisted value that is not an object", () => {
-      const migrate = useContributionStore.persist.getOptions().migrate;
-      expect(migrate?.(null, 0)).toEqual({});
-      expect(migrate?.("corrupted", 0)).toEqual({});
+    it("discards a persisted value that is not an object", async () => {
+      const { migrate, merge } = useContributionStore.persist.getOptions();
+      for (const garbage of [null, "corrupted"]) {
+        const next = merge?.(await migrate?.(garbage, 0), useContributionStore.getState());
+        expect(next?.authors).toEqual([]);
+        expect(next?.drafts[next.activeDraftId]).toBeDefined();
+      }
     });
 
     /**
@@ -672,12 +829,9 @@ describe("contribution store", () => {
       // Writes are refused before the restore lands; this is about the ones
       // after it, where a full quota is the realistic failure.
       const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
-      // Spy where setItem lives: jsdom's Storage.prototype, or the instance
-      // when src/test-setup.ts swapped in its plain in-memory stand-in. A spy
-      // on a jsdom Storage instance is stored as an item and never called.
-      const ls = globalThis.localStorage;
-      const owner = Object.hasOwn(ls, "setItem") ? ls : (Object.getPrototypeOf(ls) as Storage);
-      const full = vi.spyOn(owner, "setItem").mockImplementation(() => {
+      // Spy on jsdom's Storage.prototype: a spy on the instance is stored as
+      // an item and never called.
+      const full = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
         throw new DOMException("QuotaExceededError");
       });
 
@@ -736,6 +890,20 @@ describe("contribution store", () => {
       expect(merged.authors.map((a) => a.name)).toEqual(["Jane A. Smith"]);
     });
 
+    it("reads an unversioned value as version 0, and survives storage that refuses reads", () => {
+      const storage = announcingStorage();
+      globalThis.localStorage.setItem(PERSIST_KEY, JSON.stringify({ state: { activeDraftId: "a" } }));
+      expect(storage.getItem(PERSIST_KEY)).toMatchObject({ version: 0 });
+
+      // Blocked storage (SecurityError) has nothing to back up or clean up.
+      const blocked = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new DOMException("blocked", "SecurityError");
+      });
+      expect(() => storage.getItem(PERSIST_KEY)).not.toThrow();
+      blocked.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
     it("clears an unreadable persisted value rather than failing hydration forever", () => {
       // A truncated write from a crashed tab. Left in place, zustand's
       // JSON.parse would reject hydration on every visit: hasHydrated never
@@ -747,6 +915,9 @@ describe("contribution store", () => {
       expect(storage.getItem("credit-generator-state")).toBeNull();
       // Removed, not just skipped: the next save must not sit behind it.
       expect(globalThis.localStorage.getItem("credit-generator-state")).toBeNull();
+      // ...but kept aside, so a person can still recover it by hand.
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:unreadable`)).toBe("{truncated");
+      globalThis.localStorage.clear();
     });
 
     it("drops a malformed iD or contributions list, not the contributor", () => {
@@ -849,6 +1020,48 @@ describe("contribution store", () => {
       globalThis.localStorage.clear();
     });
 
+    // A rollback past a schema bump starts fresh in memory, but the newer
+    // build's drafts are only unreadable here, not gone: the first write must
+    // not treat them as deleted.
+    it("keeps drafts saved by a newer build on disk", () => {
+      // Not yet hydrated: this read is the restore, which records the ids.
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(false);
+      const storage = announcingStorage();
+      const newer = (id: string, title: string) => ({ id, title, authors: [], updatedAt: 0 });
+      globalThis.localStorage.setItem(
+        PERSIST_KEY,
+        JSON.stringify({
+          state: { drafts: { a: newer("a", "Active paper") }, activeDraftId: "a" },
+          version: PERSIST_VERSION + 1,
+        }),
+      );
+      globalThis.localStorage.setItem(`${PERSIST_KEY}:draft:b`, JSON.stringify(newer("b", "Held paper")));
+
+      storage.getItem(PERSIST_KEY);
+      hydrated.mockReturnValue(true);
+      const fresh = {
+        id: "c",
+        title: "",
+        authors: [],
+        inputMode: "toggle" as const,
+        heatmapMonoColor: "#2563eb",
+        outputLocale: "en" as const,
+        updatedAt: 0,
+        claim: null,
+        asked: {},
+      };
+      storage.setItem(PERSIST_KEY, {
+        state: { drafts: { c: fresh }, activeDraftId: "c", uiLocale: "en", welcomeSeen: true },
+        version: PERSIST_VERSION,
+      });
+
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:b`)).toContain("Held paper");
+      // The newer active draft moves to the shelf rather than being overwritten.
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:a`)).toContain("Active paper");
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
     it("keeps drafts another tab created or parked when this tab writes", () => {
       // Two tabs are two storage adapters over one localStorage.
       const tabA = announcingStorage();
@@ -906,6 +1119,63 @@ describe("contribution store", () => {
 
       hydrated.mockRestore();
       globalThis.localStorage.clear();
+    });
+
+    it("keeps a just-opened draft on disk when the main key cannot be written", () => {
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      globalThis.localStorage.clear();
+      const storage = announcingStorage();
+      const draft = (id: string, title: string): Draft => ({
+        id,
+        title,
+        authors: [],
+        inputMode: "toggle",
+        heatmapMonoColor: "#2563eb",
+        outputLocale: "en",
+        updatedAt: 0,
+        claim: null,
+        asked: {},
+      });
+      const drafts = { a: draft("a", "First"), b: draft("b", "Held paper") };
+      const state = { drafts, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
+      storage.setItem(PERSIST_KEY, { state, version: PERSIST_VERSION });
+
+      // Switch to b, and have the main-key write fail (quota, say): b's own
+      // key is then the only copy of it, and must survive.
+      const original = Storage.prototype.setItem;
+      const failing = vi.spyOn(Storage.prototype, "setItem").mockImplementation(function (this: Storage, key, value) {
+        if (key === PERSIST_KEY) throw new DOMException("QuotaExceededError");
+        original.call(this, key, value);
+      });
+      storage.setItem(PERSIST_KEY, { state: { ...state, activeDraftId: "b" }, version: PERSIST_VERSION });
+      failing.mockRestore();
+
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:b`)).toContain("Held paper");
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
+    it("ends in a usable workspace whatever types the persisted fields have", async () => {
+      const { migrate, merge } = useContributionStore.persist.getOptions();
+      const garbage = [
+        { drafts: "x", activeDraftId: 5, authors: "not a list", uiLocale: 7, welcomeSeen: "yes" },
+        { drafts: [1, null], activeDraftId: null },
+        {
+          activeDraftId: "d1",
+          drafts: { d1: { authors: { 0: "Jane" }, title: 3, asked: "x", claim: 1, updatedAt: "now" }, d2: null },
+        },
+      ];
+      for (const persisted of garbage) {
+        useContributionStore.setState(initial, true);
+        useContributionStore.setState(merge?.(await migrate?.(persisted, 0), store()) ?? {});
+
+        expect(store().authors).toEqual([]);
+        expect(store().drafts[store().activeDraftId]).toBeDefined();
+        expect(typeof store().title).toBe("string");
+        // Usable means the next edits work, not just that the load did.
+        expect(store().addAuthor("Jane Smith")).toBeTruthy();
+        expect(store().createDraft()).toBeTruthy();
+      }
     });
 
     it("loads an old single-key value, from before the shelf was split out", () => {

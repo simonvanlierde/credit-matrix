@@ -3,8 +3,9 @@ name: CI
 # No push trigger: main only advances through a PR, so a push run repeats
 # the check that already passed on the PR head.
 on:
+  # Every PR, not only those into main: a stacked PR otherwise runs no checks
+  # until its base merges.
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -40,7 +41,7 @@ jobs:
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: packages/core/coverage/lcov.info,coverage/lcov.info
+          files: coverage/lcov.info
           fail_ci_if_error: false
 
   e2e:

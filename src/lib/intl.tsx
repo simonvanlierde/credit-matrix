@@ -1,9 +1,10 @@
 "use client";
 
-import { type LocaleCode, normalizeLocaleCode } from "@credit-generator/core";
 import { type ReactNode, useEffect, useState } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
+import { hasCatalog, type LocaleCode, normalizeLocaleCode } from "@/core";
 import { announce, STORAGE_FULL_EVENT } from "@/lib/announce";
+import { reloadForNewBuild } from "@/lib/reload-for-new-build";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
 
@@ -23,24 +24,6 @@ import { useContributionStore } from "@/store/contribution-store";
 
 /** Messages are flat key → ICU string; English defines the shape. */
 export type Messages = typeof en;
-
-/**
- * One entry per non-English locale, typed against {@link LocaleCode}.
- *
- * Adding a language to AVAILABLE_LOCALES without an interface catalog is a
- * compile error here, rather than a picker that offers a language and then
- * silently renders English.
- */
-const LOADERS: Record<Exclude<LocaleCode, "en">, () => Promise<{ default: Messages }>> = {
-  fr: () => import("@/messages/fr.json"),
-  de: () => import("@/messages/de.json"),
-  es: () => import("@/messages/es.json"),
-  it: () => import("@/messages/it.json"),
-  "pt-PT": () => import("@/messages/pt.json"),
-  nl: () => import("@/messages/nl.json"),
-  "zh-Hans": () => import("@/messages/zh.json"),
-  ja: () => import("@/messages/ja.json"),
-};
 
 /**
  * The interface language a browser asks for: the first of its preferred
@@ -102,19 +85,18 @@ export function AppIntlProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    const load = Object.hasOwn(LOADERS, locale) ? LOADERS[locale as Exclude<LocaleCode, "en">] : undefined;
-    if (!load) {
+    if (!hasCatalog(locale)) {
       setLoaded({ requested: locale, effective: "en", messages: en });
       return;
     }
-    load()
+    (import(`@/messages/${locale}.json`) as Promise<{ default: Messages }>)
       .then((mod) => {
         if (active) setLoaded({ requested: locale, effective: locale, messages: mod.default });
       })
       .catch(() => {
-        // A locale chunk failed to load (e.g. a stale deploy). English is a
-        // working interface; a missing-message crash is not.
-        if (active) setLoaded({ requested: locale, effective: "en", messages: en });
+        // A locale chunk failed to load: after a deploy, reload into the new
+        // build. Otherwise English is a working interface; a crash is not.
+        if (active && !reloadForNewBuild()) setLoaded({ requested: locale, effective: "en", messages: en });
       });
     return () => {
       active = false;

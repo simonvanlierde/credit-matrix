@@ -33,7 +33,7 @@ URL or import a supported format.
 ## Constraints
 
 - Keep contribution data client-side. The ORCID and DOI lookups are the only calls that leave the
-  browser, and they go straight to ORCID and Crossref.
+  browser, and they go straight to ORCID, Crossref and DataCite.
 - Preserve scientific accuracy, round-trip integrity, privacy, accessibility, and localization.
 
 ## Voice and claims
@@ -48,7 +48,7 @@ control may shorten it to *Non-author*, never to *Contributor*, which describes 
 list.
 
 Support every claim from the workflow in `src/`, the screenshots in `docs/screenshots/`, the tests
-in `packages/core/`, the records in `docs/adr/`, and `CITATION.cff`. Invent no testimonials,
+in `src/core/`, the records in `docs/adr/`, and `CITATION.cff`. Invent no testimonials,
 customer logos, usage statistics, or performance numbers.
 
 ## Principles

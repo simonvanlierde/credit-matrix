@@ -15,6 +15,10 @@ export function ServiceWorkerRegistrar() {
     // A failed registration (private mode, an unsupported context) costs the
     // app nothing but offline support, so it stays quiet.
     navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    // Drafts live only in this origin's storage. Without this, storage
+    // pressure lets the browser evict the whole origin, drafts included.
+    // A request, not a guarantee; a refusal changes nothing.
+    navigator.storage?.persist?.().catch(() => undefined);
   }, []);
 
   return null;

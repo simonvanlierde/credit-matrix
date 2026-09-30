@@ -12,7 +12,7 @@ import { expect, test } from "@playwright/test";
  * reader would trust a swatch the app no longer uses. This asserts the colors
  * still agree; the cheapest thing that fails when someone changes one side.
  *
- * Lives in the Playwright suite (rather than packages/core) because it reads
+ * Lives in the Playwright suite (rather than src/core) because it reads
  * repo files, not core's public API.
  */
 // Playwright resolves testDir from the repo root, so cwd is the repo root.

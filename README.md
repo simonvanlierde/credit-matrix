@@ -27,7 +27,8 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
 - **Ask your co-authors**: send each person a link addressed to their own row. They tick what they
   did and send the link back; opening it fills in their row (roles, name, and iD) and nothing
   else
-- **Drafts**: one per paper, switched from the header. They stay in this browser
+- **Drafts**: one per paper, switched from the header. They stay in this browser, open tabs follow
+  each other's changes, and **Delete all drafts** clears them
 - **Contribution grid**: select a cell to assign one of the 14 roles, as a yes/no value or as a
   contribution level. The grid is the heatmap, so you can transpose it, swap initials for full
   names, and recolor it
@@ -51,8 +52,7 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
 
 ## Architecture
 
-TypeScript 6 throughout, on pnpm workspaces: the app at the root, reusable `packages/core` beside
-it.
+TypeScript throughout: one Next.js app, with the framework-agnostic domain logic in `src/core`.
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -61,42 +61,40 @@ it.
 | State | Zustand + immer + persist | Survives a refresh via localStorage |
 | Validation | Zod | Schema checks at trust boundaries |
 | Heatmap | Hand-crafted SVG (`core`) | One SVG source feeds both download and canvas PNG |
-| Offline | Service worker + manifest | Runtime cache of the app's own files; no build step |
+| Offline | Service worker + manifest | Precaches the app's own files under a per-build cache name |
 
 ```text
 Browser
   └─ Next.js app  (repo root, App Router)
        ├─ React UI + Zustand store (persisted to localStorage)
-       ├─ @credit-generator/core   ← all domain logic, runs in the browser
+       ├─ src/core   ← all domain logic, runs in the browser
        │     statements · JATS4R XML · CSV · JSON · Markdown · heatmap SVG · validation
-       └─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org
+       └─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org · api.datacite.org
                                      ← the only calls that leave the browser
 ```
 
-Everything runs in the browser, served as a static export. [`packages/core`](packages/core/README.md) holds the domain
-logic as pure TypeScript, with `zod` as its only runtime dependency. XML import uses the native
+Everything runs in the browser, served as a static export. [`src/core`](src/core/README.md) holds the
+domain logic as pure TypeScript, with `zod` as its only runtime dependency. XML import uses the native
 `DOMParser`, and the PNG is drawn from the heatmap SVG onto a `<canvas>`.
 
-The ORCID and DOI lookups call ORCID's and Crossref's public APIs straight from the browser. Both
-send `Access-Control-Allow-Origin: *`; the CSP in [`public/_headers`](public/_headers) allows exactly
-those two origins.
+The ORCID and DOI lookups call ORCID's, Crossref's and DataCite's public APIs straight from the browser
+(DataCite only for DOIs Crossref does not hold, such as arXiv and Zenodo). All send CORS headers
+the browser accepts; the CSP in [`public/_headers`](public/_headers) allows exactly those origins.
 
 Contributions store a 0–100 integer `score` rather than a boolean, so the UI switches between
 binary and level-based editing without changing the stored model. See
-[`packages/core/README.md`](packages/core/README.md#domain-model) for the score-to-level boundaries.
+[`src/core/README.md`](src/core/README.md#domain-model) for the score-to-level boundaries.
 
-**No accounts, no server-side storage.** This is a deliberate constraint, not a missing feature. A
-draft holds the names and ORCID iDs of co-authors who never visited this site. Keeping those in
-your browser means there is nothing to ask anyone to delete. Drafts are per-browser: move one
-between devices by exporting JSON. See
-[ADR 0002](docs/adr/0002-no-accounts-or-server-side-storage.md) for what would have to change for
-this to be revisited.
+**No accounts, no server-side storage.** A draft holds the names and ORCID iDs of co-authors who
+never visited this site, so it stays in your browser and there is nothing to delete on request.
+Move a draft between devices by exporting JSON. [ADR 0002](docs/adr/0002-no-accounts-or-server-side-storage.md)
+says what would have to change to revisit this.
 
 ---
 
 ## Self-hosting
 
-**Prerequisites:** Node ≥ 26, pnpm ≥ 11, [just](https://github.com/casey/just) (optional)
+**Prerequisites:** Node ≥ 26, pnpm ≥ 11
 
 ```bash
 git clone https://github.com/simonvanlierde/credit-matrix
@@ -106,14 +104,14 @@ pnpm dev            # → http://localhost:3000
 ```
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the full command list and the lint/typecheck/test checklist.
-Run `just` to list the watch/fix recipes layered on the pnpm scripts.
 
 ### Deployment
 
 `pnpm build` writes a static export to `out/`, which any static host can serve; response headers,
 including the CSP, are in [`public/_headers`](public/_headers). The live demo serves it as
 Cloudflare Workers static assets, with no Worker code. A push to `main` builds and deploys it;
-[CI](.github/workflows/ci.yml) lints, tests, and build-checks, and never deploys.
+[CI](.github/workflows/ci.yml) runs on pull requests: it lints, typechecks, runs the unit and
+end-to-end tests, and dry-runs the build. It never deploys.
 
 To host it on Cloudflare yourself, set your own domain in [wrangler.jsonc](wrangler.jsonc):
 
@@ -121,6 +119,11 @@ To host it on Cloudflare yourself, set your own domain in [wrangler.jsonc](wrang
 pnpm preview        # build + serve out/ locally, headers applied
 pnpm deploy         # build + deploy to your Cloudflare account
 ```
+
+`pnpm build` runs `next build`, then [`scripts/postbuild.mjs`](scripts/postbuild.mjs). That script
+replaces `'unsafe-inline'` in the CSP with the hashes of the exported inline scripts, and names the
+service worker's cache after the build. To roll back a bad deploy, pick the previous version under the
+Worker's **Deployments** in the Cloudflare dashboard; the smoke workflow flags a broken one.
 
 ## Roadmap
 
@@ -132,8 +135,8 @@ pnpm deploy         # build + deploy to your Cloudflare account
 - **Widen locale coverage.** Eight translated locales ship today (de, es, fr, it, ja, nl, pt-PT,
   zh-Hans), a curated subset of
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation), vendored
-  under [`packages/core/src/credit-i18n/translations`](packages/core/src/credit-i18n/translations).
-  Refresh them with `node packages/core/scripts/fetch-credit-translations.mjs`.
+  under [`src/core/credit-i18n/translations`](src/core/credit-i18n/translations).
+  Refresh them with `node scripts/fetch-credit-translations.mjs`.
 - **Read more from ORCID.** The lookup takes the name only. Affiliation is the field submission
   systems ask for next.
 - **Make sharing discoverable.** The onboarding barely hints at sharing a draft or asking a
@@ -184,3 +187,6 @@ from it. The archived, versioned release is on Zenodo:
 ## License
 
 [MIT](LICENSE) © Simon van Lierde
+
+The bundled fonts, IBM Plex and Newsreader, are under the SIL Open Font License:
+[IBM Plex](public/fonts/OFL-ibm-plex.txt), [Newsreader](public/fonts/OFL-newsreader.txt).
