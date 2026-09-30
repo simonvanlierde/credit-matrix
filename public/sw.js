@@ -2,28 +2,31 @@
  * Offline support.
  *
  * Everything except the ORCID and DOI lookups works without a network, so the
- * app only needs its own files back. There is no
- * build step here on purpose: Next's asset URLs are content-hashed, so a
- * runtime cache is as good as a precache manifest and costs no tooling.
+ * app only needs its own files back.
  *
- * - navigations: network first, cached document as the fallback
- * - other same-origin GETs: cache first, refreshed in the background
+ * - install: precache the page and every asset it references, so a new version
+ *   is complete offline before it takes over
+ * - navigations: network first (bounded), cached page as the fallback
+ * - other same-origin GETs: cache first, unhashed ones refreshed in the background
  * - cross-origin (the ORCID and Crossref lookups): never cached, so a lookup
  *   fails honestly when offline
  *
- * NOTE: nothing is precached, so the first visit must happen online, and a
- * chunk that has never loaded (a locale, a lazy modal) is missing offline.
- * Precache the build manifest if that ceiling starts to bite.
+ * The cache is named per build (scripts/postbuild.mjs stamps BUILD_ID), so
+ * activating a new version drops the previous build's chunks instead of
+ * letting them pile up.
  *
- * NOTE: the runtime cache is never pruned, so content-hashed chunks from past
- * deploys accumulate until the browser evicts the whole cache under storage
- * pressure. Add age-based eviction on activate if that starts to bite.
+ * NOTE: lazy chunks the page does not reference (a locale, a modal) are cached
+ * only once loaded online. Precache the build manifest if that ceiling bites.
  */
 
-const CACHE = "credit-matrix-v1";
+const CACHE = "credit-matrix-BUILD_ID";
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+// Past this, a hanging connection falls back to the cached page instead of
+// leaving a blank tab until the browser's own network timeout.
+const NAVIGATION_TIMEOUT_MS = 4000;
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {
@@ -36,8 +39,21 @@ self.addEventListener("fetch", (event) => {
 
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  event.respondWith(request.mode === "navigate" ? handleNavigation(request) : handleAsset(request));
+  event.respondWith(request.mode === "navigate" ? handleNavigation(request) : handleAsset(request, event));
 });
+
+/** The page plus every script, style and font it links, fetched fresh. */
+async function precache() {
+  const cache = await caches.open(CACHE);
+  const page = await fetch("/", { cache: "no-cache" });
+  if (!page.ok) throw new Error(`precache: / answered ${page.status}`);
+  const html = await page.clone().text();
+  // The inline payload repeats these URLs JSON-escaped (`…js\"`): stop at a
+  // backslash too, or one bad URL fails addAll and with it the install.
+  const assets = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) ?? [])];
+  await cache.addAll(assets);
+  await cache.put("/", page);
+}
 
 async function dropOldCaches() {
   const keys = await caches.keys();
@@ -48,11 +64,13 @@ async function dropOldCaches() {
 /** Network first: an online visitor always gets the freshest document. */
 async function handleNavigation(request) {
   try {
-    const response = await fetch(request);
+    const response = await fetch(request, { signal: AbortSignal.timeout(NAVIGATION_TIMEOUT_MS) });
+    // A server error is not a better answer than the working copy on hand.
+    if (response.status >= 500) return (await caches.match("/")) ?? response;
     // Share links live in the fragment, which never reaches the server, so one
     // cached document answers every URL of this app. Only the app's own page
-    // may become that document: /health.json or an image opened directly must not
-    // replace the offline shell.
+    // may become that document: /health.json or an image opened directly must
+    // not replace the offline shell.
     if (response.ok && new URL(request.url).pathname === "/") await cachePut("/", response.clone());
     return response;
   } catch {
@@ -61,12 +79,13 @@ async function handleNavigation(request) {
 }
 
 /** Cache first: hashed asset URLs are never stale; unhashed ones refresh in the background. */
-async function handleAsset(request) {
+async function handleAsset(request, event) {
   const cached = await caches.match(request);
   if (cached) {
     // /_next/static/ URLs are content-hashed, so their cached copy is the
     // final word; only unhashed assets (favicon, manifest) can change in place.
-    if (!new URL(request.url).pathname.startsWith("/_next/static/")) void refresh(request);
+    // waitUntil keeps the worker alive until the refresh lands.
+    if (!new URL(request.url).pathname.startsWith("/_next/static/")) event.waitUntil(refresh(request));
     return cached;
   }
   return fetch(request).then(async (response) => {

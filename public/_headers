@@ -3,18 +3,22 @@
 #
 # CSP: a directive does not inherit from `default-src` when absent, it is
 # simply unrestricted, so `default-src 'self'` is the base.
-# - script-src keeps 'unsafe-inline' for Next's inline bootstrap. With it,
-#   script-src is NOT an XSS mitigation; the real controls are React's escaping
-#   plus connect-src/form-action/object-src limiting where anything could go.
-#   Dropping it needs hashes of the exported inline scripts.
+# - script-src: scripts/postbuild.mjs replaces 'unsafe-inline' with the hash
+#   of each inline script the export emits (Next's bootstrap), so the deployed
+#   policy allows exactly those. 'unsafe-inline' only survives in `next dev`,
+#   which does not read this file anyway.
 # - img-src needs blob:/data: for the heatmap PNG (canvas -> createObjectURL).
 # - connect-src names the two lookup APIs the browser calls directly.
+# - static.cloudflareinsights.com / cloudflareinsights.com: Cloudflare Web
+#   Analytics, which the edge injects when it is enabled for this hostname.
 # `next dev` does not read this file, so the dev server runs without a CSP.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pub.orcid.org https://api.crossref.org; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pub.orcid.org https://api.crossref.org https://cloudflareinsights.com; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
   Permissions-Policy: camera=(), geolocation=(), microphone=()
   Referrer-Policy: no-referrer
-  Strict-Transport-Security: max-age=31536000
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
 
