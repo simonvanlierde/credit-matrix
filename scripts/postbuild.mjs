@@ -43,7 +43,9 @@ const placeholder = '"credit-matrix-BUILD_ID"';
 if (!sw.includes(placeholder)) throw new Error(`postbuild: no ${placeholder} in ${swPath}`);
 // The page references every hashed chunk, so its digest changes exactly when
 // the build does.
-const buildId = sha256(await readFile(join(OUT, "index.html"))).replace(/[^A-Za-z0-9]/g, "").slice(0, 12);
+const buildId = sha256(await readFile(join(OUT, "index.html")))
+  .replace(/[^A-Za-z0-9]/g, "")
+  .slice(0, 12);
 await writeFile(swPath, sw.replace(placeholder, `"credit-matrix-${buildId}"`));
 
 console.log(`postbuild: ${hashes.size} script hashes in the CSP, service worker cache ${buildId}`);
