@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CRediT Matrix">
   <!-- A 3x3 crop of the contribution matrix. Cell fills are the app's real
-       intensity tiers (see packages/core/src/contributor-color.ts): white mixed
+       intensity tiers (see src/core/contributor-color.ts): white mixed
        0.4 / 0.7 / 1.0 toward ink-blue, plus the empty-cell fill. Dark values
        mirror the .dark tokens in globals.css. -->
   <style>

@@ -3,17 +3,12 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 /**
- * Unit tests for the app layer: the Zustand store, the `src/lib` helpers, and
- * anything else that is plain TypeScript rather than a React tree.
+ * Unit tests for plain TypeScript: the domain logic in `src/core`, the Zustand
+ * store, and the `src/lib` helpers. User-visible behaviour is covered by
+ * Playwright in `e2e/`.
  *
- * The domain logic lives in `packages/core` and has its own Vitest project;
- * user-visible behaviour is covered by Playwright in `e2e/`. This sits between
- * them, for the browser-facing glue that has real branching but no UI worth
- * driving a browser for.
- *
- * `jsdom` rather than `node`: the code under test reaches for `localStorage`,
- * `navigator`, and `Blob` the way it does in the browser, and stubbing those by
- * hand in every file is more work than the environment costs.
+ * `jsdom` rather than `node`: the code under test reaches for `DOMParser`,
+ * `localStorage`, `navigator`, and `Blob` the way it does in the browser.
  */
 export default defineConfig({
   test: {
@@ -21,16 +16,19 @@ export default defineConfig({
     globals: true,
     restoreMocks: true,
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-    setupFiles: ["./src/test-setup.ts"],
+    // Node's experimental `localStorage` global is unusable without
+    // `--localstorage-file` and shadows jsdom's, so the store would persist
+    // into nothing. Switch it off and jsdom's storage applies.
+    execArgv: ["--no-experimental-webstorage"],
     coverage: {
       provider: "v8",
       // lcov feeds Codecov; text prints a summary in the terminal/CI log
       reporter: ["text", "lcov"],
       reportsDirectory: "./coverage",
-      include: ["src/lib/**/*.ts", "src/store/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/**/*.d.ts", "src/test-setup.ts"],
+      include: ["src/core/**/*.ts", "src/lib/**/*.ts", "src/store/**/*.ts"],
+      exclude: ["src/**/*.test.ts", "src/**/*.d.ts"],
       // A few points under the measured level: a drop fails CI, noise does not.
-      thresholds: { statements: 93, branches: 86, functions: 96, lines: 96 },
+      thresholds: { statements: 95, branches: 87, functions: 97, lines: 97 },
     },
   },
   // The app's tsconfig sets `jsx: preserve` for Next's own compiler, so the

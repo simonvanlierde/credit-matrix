@@ -1,4 +1,7 @@
-import type { Author, CreditRoleName, LocaleCode } from "@credit-generator/core";
+import { create } from "zustand";
+import { type PersistStorage, persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import type { Author, CreditRoleName, LocaleCode } from "@/core";
 import {
   CREDIT_ROLES,
   clampScore,
@@ -11,10 +14,7 @@ import {
   MAX_AUTHORS,
   normalizeLocaleCode,
   normalizeOrcid,
-} from "@credit-generator/core";
-import { create } from "zustand";
-import { type PersistStorage, persist } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
+} from "@/core";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
@@ -121,6 +121,8 @@ interface ContributionState {
   /** Copy a draft, contributions and all. Returns the new id, or null at the cap. */
   duplicateDraft: (draftId: string) => string | null;
   deleteDraft: (draftId: string) => void;
+  /** Delete every draft, on disk too, and start over with one empty one. Preferences stay. */
+  deleteAllDrafts: () => void;
   loadSample: (names: readonly string[]) => void;
   /** Adds a contributor and returns its id; null when the name has no letters to parse. */
   addAuthor: (name: string, orcid?: string) => string | null;
@@ -282,21 +284,6 @@ function stashLive(state: ContributionState): void {
   state.drafts[state.activeDraftId] = liveDraft(state);
 }
 
-/**
- * There are no per-version migration steps: `hydrateDrafts` repairs and
- * normalizes the whole persisted shape on every load anyway (see its doc), so
- * until launch a shape change only needs a version bump to invalidate newer
- * drafts. A draft from a *newer* build may hold fields this one does not
- * understand, and there is no way to walk backwards: start fresh rather than
- * guess. A real migration registry comes back with the first post-launch bump.
- */
-function migratePersisted(persisted: unknown, from: number): PersistedState {
-  // The cast is a formality for persist's types: `hydrateDrafts` re-checks
-  // every field of whatever this returns.
-  if (persisted === null || typeof persisted !== "object") return {} as PersistedState;
-  return (from > PERSIST_VERSION ? {} : persisted) as PersistedState;
-}
-
 /** Drop anything from a draft's contributor list that would make a later edit throw. */
 function repairAuthors(authors: unknown): Author[] {
   if (!Array.isArray(authors)) return [];
@@ -392,19 +379,13 @@ function hydrateDrafts(persisted: unknown): Partial<ContributionState> {
   const active = drafts[storedId] ?? Object.values(drafts).sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? emptyDraft();
   drafts[active.id] = active;
 
-  return {
+  const out = {
     drafts,
-    activeDraftId: active.id,
-    title: active.title,
-    authors: active.authors,
-    inputMode: active.inputMode,
-    heatmapMonoColor: active.heatmapMonoColor,
-    outputLocale: active.outputLocale,
-    claim: active.claim,
-    asked: active.asked,
     uiLocale: normalizeLocaleCode(state.uiLocale),
     ...(typeof state.welcomeSeen === "boolean" ? { welcomeSeen: state.welcomeSeen } : {}),
-  };
+  } as ContributionState;
+  applyDraft(out, active);
+  return out;
 }
 
 /** The shape partialize hands to storage. */
@@ -417,6 +398,19 @@ interface PersistedState {
 
 /** Where a parked draft lives: one localStorage key per draft, under the main key's namespace. */
 const DRAFT_KEY_PREFIX = `${PERSIST_KEY}:draft:`;
+
+/**
+ * Where the last value that failed to parse is kept, so a corrupted draft can
+ * still be recovered by hand. One slot, overwritten: a backup, not a history.
+ */
+const UNREADABLE_KEY = `${PERSIST_KEY}:unreadable`;
+
+/**
+ * Set while this tab adopts another tab's save. The adopted state is already
+ * on disk, and writing it back (with a fresh `updatedAt`) would wake the other
+ * tab, which would adopt that and write it back in turn.
+ */
+let adopting = false;
 
 /** Every parked-draft key currently in localStorage. */
 function draftKeys(): string[] {
@@ -463,12 +457,19 @@ export function announcingStorage(): PersistStorage<PersistedState> {
   // clears localStorage by hand. A truncated value from a crashed tab is
   // exactly the case hydrateDrafts exists for, but repair only runs on a
   // parsed value. Drop what cannot be read instead — for a parked draft that
-  // costs one draft, not the workspace.
+  // costs one draft, not the workspace — after copying it aside, since a value
+  // JSON cannot parse may still be mostly a paper a person can piece together.
   const readJson = (key: string): unknown => {
+    let raw: string | null = null;
     try {
-      const raw = window.localStorage.getItem(key);
+      raw = window.localStorage.getItem(key);
       return raw === null ? null : JSON.parse(raw);
     } catch {
+      try {
+        if (raw !== null) window.localStorage.setItem(UNREADABLE_KEY, raw);
+      } catch {
+        // Best effort: a full quota must not keep the value blocking hydration.
+      }
       try {
         window.localStorage.removeItem(key);
       } catch {
@@ -500,16 +501,25 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       ) as Record<string, unknown>;
       // Main wins for the active draft; hydrateDrafts repairs whatever merges.
       const state = { ...mainState, drafts: { ...parked, ...mainDrafts } };
-      known = new Set(Object.keys(state.drafts));
-      return {
-        state: state as unknown as PersistedState,
-        version: typeof record.version === "number" ? record.version : 0,
-      };
+      const version = typeof record.version === "number" ? record.version : 0;
+      // A newer build's drafts are discarded in memory (see `migrate`), not on
+      // disk: leave them unknown so the first write parks them instead of
+      // deleting them, and a roll-forward finds them again.
+      //
+      // Only the restore sets it. followOtherTab reads storage through here
+      // too, and storage then holds drafts only the other tab has open: were
+      // they "known", this tab's next save would count them as deleted.
+      if (!useContributionStore.persist.hasHydrated()) {
+        known = version > PERSIST_VERSION ? new Set() : new Set(Object.keys(state.drafts));
+      }
+      return { state: state as unknown as PersistedState, version };
     },
     removeItem: (key) => {
       if (typeof window === "undefined") return;
       window.localStorage.removeItem(key);
       for (const draftKey of draftKeys()) window.localStorage.removeItem(draftKey);
+      // Holds draft data too; clearing the drafts should not leave a copy behind.
+      window.localStorage.removeItem(UNREADABLE_KEY);
       written.clear();
     },
     setItem: (key, value) => {
@@ -521,6 +531,13 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       // emptied value back. One early keystroke could erase a saved paper.
       if (!useContributionStore.persist.hasHydrated()) return;
       const { drafts, activeDraftId, uiLocale, welcomeSeen } = value.state;
+      // Adopting another tab's save writes nothing back (it would wake that
+      // tab, which would adopt, write back...), but this tab now holds those
+      // drafts, so deleting one later must remove its key.
+      if (adopting) {
+        known = new Set(Object.keys(drafts));
+        return;
+      }
       const deleted = new Set([...known].filter((id) => !(id in drafts)));
       try {
         // The main key may hold another tab's active draft, stored nowhere
@@ -539,13 +556,6 @@ export function announcingStorage(): PersistStorage<PersistedState> {
           window.localStorage.setItem(DRAFT_KEY_PREFIX + id, JSON.stringify(draft));
           written.set(id, draft);
         }
-        // The active draft lives in the main key, and a deleted draft's key
-        // would otherwise resurrect it on the next load.
-        for (const id of [activeDraftId, ...deleted]) {
-          window.localStorage.removeItem(DRAFT_KEY_PREFIX + id);
-          written.delete(id);
-        }
-        known = new Set(Object.keys(drafts));
         window.localStorage.setItem(
           key,
           JSON.stringify({
@@ -553,6 +563,14 @@ export function announcingStorage(): PersistStorage<PersistedState> {
             version: value.version,
           }),
         );
+        // The active draft lives in the main key, and a deleted draft's key
+        // would otherwise resurrect it on the next load. Only after the main
+        // write: until it lands, a just-opened draft's own key is its only copy.
+        for (const id of [activeDraftId, ...deleted]) {
+          window.localStorage.removeItem(DRAFT_KEY_PREFIX + id);
+          written.delete(id);
+        }
+        known = new Set(Object.keys(drafts));
         warned = false;
       } catch {
         // Every change retries the write; announcing each one would flood
@@ -563,6 +581,46 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       }
     },
   };
+}
+
+/**
+ * Follow another tab's save of the draft open in this one.
+ *
+ * Two tabs on one draft would otherwise overwrite each other, each save
+ * silently discarding the other tab's edits. So a `storage` event on the main
+ * key, or on the open draft's own key, re-reads storage and adopts what is
+ * there for that draft, along with the shelf and the preferences saved with
+ * it. The open draft stays open: another tab switching papers is not a reason
+ * to switch here, and a draft the other tab deleted stays until this tab's
+ * next save puts it back.
+ *
+ * Returns whether the open draft changed, so the caller can say so.
+ */
+export function followOtherTab(event: StorageEvent): boolean {
+  if (event.storageArea !== window.localStorage) return false;
+  const store = useContributionStore.persist;
+  if (!store.hasHydrated()) return false;
+  const live = useContributionStore.getState();
+  const id = live.activeDraftId;
+  if (event.key !== PERSIST_KEY && event.key !== DRAFT_KEY_PREFIX + id) return false;
+
+  const stored = store.getOptions().storage?.getItem(PERSIST_KEY);
+  if (!stored || stored instanceof Promise || (stored.version ?? 0) > PERSIST_VERSION) return false;
+  const theirs = (stored.state.drafts as Record<string, unknown>)[id];
+  if (theirs === undefined) return false;
+  // Every save by a tab not on this draft still rewrites this draft's key with
+  // the content this tab saved. Compare as the repair pass sees both, without
+  // the save time, so only a real edit counts.
+  const comparable = (draft: unknown) => JSON.stringify({ ...repairSingleDraft(draft, id), updatedAt: 0 });
+  if (comparable(theirs) === comparable(liveDraft(live))) return false;
+
+  adopting = true;
+  try {
+    useContributionStore.setState(hydrateDrafts({ ...stored.state, activeDraftId: id }));
+  } finally {
+    adopting = false;
+  }
+  return true;
 }
 
 /**
@@ -678,6 +736,18 @@ export const useContributionStore = create<ContributionState>()(
           state.drafts[target.id] = target;
           applyDraft(state, target);
         }),
+
+      deleteAllDrafts: () => {
+        // Through the adapter's removeItem first: the next save only removes
+        // the shelf keys of drafts this tab knew, and another tab's would
+        // otherwise survive the "all".
+        useContributionStore.persist.clearStorage();
+        set((state) => {
+          const draft = emptyDraft();
+          state.drafts = { [draft.id]: draft };
+          applyDraft(state, draft);
+        });
+      },
 
       // Guarded like every other whole-roster write: an Import dialog or a bulk
       // undo can still be in flight when a claim link lands, and replacing the
@@ -950,16 +1020,12 @@ export const useContributionStore = create<ContributionState>()(
     {
       name: PERSIST_KEY,
       storage: announcingStorage(),
-      /**
-       * Stays at 1 until launch. There are no users, so the persisted shape can
-       * change freely without a migration step for a version nobody holds.
-       *
-       * After launch: bump this and grow `migratePersisted` into a real
-       * per-version migration chain (today it only discards shapes from a
-       * newer build; see its doc).
-       */
       version: PERSIST_VERSION,
-      migrate: migratePersisted,
+      // No per-version steps: `hydrateDrafts` repairs the whole shape on every
+      // load. A draft from a *newer* build may hold fields this one does not
+      // understand, and there is no walking backwards, so start fresh. The
+      // cast is for persist's types; `hydrateDrafts` re-checks every field.
+      migrate: (persisted, from) => (from > PERSIST_VERSION ? {} : persisted) as PersistedState,
       /** Unpack the stored drafts and repair them; see `hydrateDrafts`. */
       merge: (persisted, current) => {
         const next = { ...current, ...hydrateDrafts(persisted) };

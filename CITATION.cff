@@ -23,8 +23,8 @@ keywords:
   - ORCID
   - DOI
   - localization
-version: "0.5.0"
-date-released: "2026-08-27"
+version: "0.6.0"
+date-released: "2026-09-30"
 # Concept DOI: resolves to all versions, so it stays fixed across releases.
 doi: "10.5281/zenodo.21213659"
 references:

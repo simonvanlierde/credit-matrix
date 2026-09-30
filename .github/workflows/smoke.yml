@@ -20,6 +20,12 @@ concurrency:
 env:
   SITE: https://credit.duinlab.nl
 
+# `shell: bash` runs with -o pipefail, so a failed curl cannot hide behind a
+# grep further down the pipe (the implicit default shell has no pipefail).
+defaults:
+  run:
+    shell: bash
+
 jobs:
   smoke:
     name: Smoke test production
@@ -39,9 +45,32 @@ jobs:
           exit 1
 
       - name: App page loads
-        run: curl -fsS "$SITE/" | grep -q "<title>CRediT Matrix"
+        # Captured, not piped: `grep -q` stops reading at the title, and under
+        # pipefail curl's failed write to the closed pipe fails the step.
+        run: |
+          html=$(curl -fsS "$SITE/")
+          grep -q "<title>CRediT Matrix" <<<"$html"
 
-      # public/_headers is the only place the CSP is set; a typo there drops it
-      # silently, and the browser lookups need its connect-src.
-      - name: CSP allows the lookup APIs
-        run: curl -fsSI "$SITE/" | grep -i '^content-security-policy:' | grep -q 'https://pub.orcid.org'
+      # public/_headers is the only place the CSP is set, and postbuild.mjs
+      # rewrites it: a typo drops it silently, a missed rewrite ships
+      # 'unsafe-inline', and the browser lookups need its connect-src.
+      - name: CSP is hashed and allows the lookup APIs
+        run: |
+          csp=$(curl -fsSI "$SITE/" | grep -i '^content-security-policy:')
+          grep -q "script-src 'self' 'sha256-" <<<"$csp"
+          grep -q 'https://pub.orcid.org' <<<"$csp"
+
+      # Hashed chunks are cached for a year, so the page that names them must
+      # revalidate, or a deploy strands visitors on the old chunk list.
+      - name: Cache headers
+        run: |
+          # Captured, not piped: under pipefail a `grep -q` that stops reading
+          # early would fail the step on curl's SIGPIPE.
+          page=$(curl -fsSI "$SITE/")
+          sw=$(curl -fsSI "$SITE/sw.js")
+          html=$(curl -fsS "$SITE/")
+          [[ $html =~ (/_next/static/chunks/[^\"\\]+\.js) ]]
+          asset=$(curl -fsSI "$SITE${BASH_REMATCH[1]}")
+          grep -qi '^cache-control:.*max-age=0' <<<"$page"
+          grep -qi '^cache-control:.*max-age=0' <<<"$sw"
+          grep -qi '^cache-control:.*immutable' <<<"$asset"

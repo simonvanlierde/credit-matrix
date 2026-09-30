@@ -5,8 +5,7 @@ features are welcome.
 
 ## Getting set up
 
-**Prerequisites:** Node ≥ 26, pnpm ≥ 11, and optionally
-[just](https://github.com/casey/just).
+**Prerequisites:** Node ≥ 26, pnpm ≥ 11.
 
 ```bash
 git clone https://github.com/simonvanlierde/credit-matrix
@@ -17,10 +16,10 @@ pnpm dev            # → http://localhost:3000
 
 ## Where things live
 
-- `packages/core`: pure, framework-agnostic domain logic (statements, exports,
+- `src/core`: pure, framework-agnostic domain logic (statements, exports,
   validation, heatmap SVG). No React/Next/Node APIs at import time. Most changes
   and most tests belong here.
-- `src/`: the Next.js UI, built as a static export.
+- the rest of `src/`: the Next.js UI, built as a static export.
 
 [ADR&nbsp;0001](docs/adr/0001-client-side-architecture.md) records why it's split
 this way.
@@ -29,27 +28,28 @@ this way.
 
 ```bash
 pnpm lint           # Biome (format + lint); append :fix to auto-fix
-pnpm typecheck      # TypeScript across all packages
+pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
 ```
 
-`pnpm lint`, `pnpm typecheck`, and `pnpm test` all run in CI on every push and PR.
-Add or update tests in `packages/core/src/__tests__` for any change to domain logic.
+CI runs `pnpm lint`, `pnpm typecheck`, and `pnpm test:coverage` on every PR.
+Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 ## Testing
 
-- **Unit (Vitest)**: `pnpm --filter @credit-generator/core test`. Covers the domain layer: name
+- **Unit (Vitest)**: `pnpm test`. Covers the domain layer, the store, and `src/lib`: name
   parsing, initials deduplication, statement formats, score-to-level boundaries, import/export round
   trips, validation, and heatmap SVG generation.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
-  the co-author claim round trip. `a11y.spec.ts` runs the axe scans. `messages.spec.ts`,
+  the co-author claim round trip. `drafts.spec.ts` covers deleting all drafts. `a11y.spec.ts` runs the axe scans. `messages.spec.ts`,
   `design-tokens.spec.ts`, and `offline.spec.ts` guard the locale catalogs, the design tokens, and
   the service worker.
 
-Every push and PR runs Biome, typecheck, unit coverage, the axe scans, and the static export
-build. The rest of the E2E suite runs on manual dispatch or on PRs labeled `e2e`.
+Every PR runs Biome, typecheck, unit coverage, the full Playwright suite (including the axe scans),
+and a static export build. In CI, Playwright runs against `wrangler dev`, which applies
+`public/_headers`. Locally it uses `pnpm dev`, which has no CSP.
 
 ### Accessibility
 
@@ -57,8 +57,8 @@ Two automated checks guard the UI. They are guardrails, not a WCAG conformance c
 
 | Check | Command | Scope | In CI |
 | --- | --- | --- | --- |
-| Biome [`a11y`](https://biomejs.dev/linter/rules/#accessibility) lint | `pnpm lint` | alt text, ARIA validity, button `type`, keyboard handlers | Every push and PR |
-| [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1 A/AA rules over the main screens, light + dark | Every push and PR |
+| Biome [`a11y`](https://biomejs.dev/linter/rules/#accessibility) lint | `pnpm lint` | alt text, ARIA validity, button `type`, keyboard handlers | Every PR |
+| [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1 A/AA rules over the main screens, light + dark | Every PR |
 
 The UI includes a skip link, landmark regions, radiogroup segmented controls, and a
 `prefers-reduced-motion` fallback that neutralizes transitions and animations. Drag-to-reorder is

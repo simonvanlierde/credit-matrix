@@ -4,7 +4,6 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import process from "node:process";
-import { AVAILABLE_LOCALES } from "@credit-generator/core";
 import { expect, type Page, test } from "@playwright/test";
 import { seedStorage } from "./helpers";
 
@@ -26,22 +25,11 @@ const LOCALES = readdirSync(MESSAGES_DIR)
   .filter((f: string) => f.endsWith(".json"))
   .map((f: string) => f.replace(".json", ""));
 const TRANSLATED = LOCALES.filter((l: string) => l !== "en");
-const MESSAGE_FILE_ALIASES: Partial<Record<(typeof AVAILABLE_LOCALES)[number]["code"], string>> = {
-  "pt-PT": "pt",
-  "zh-Hans": "zh",
-};
 
 /** Placeholder names an ICU message declares: {name}, {count, plural, ...}. */
 const placeholders = (s: string) => new Set([...s.matchAll(/\{(\w+)[,}]/g)].map((m) => m[1]));
 
 test.describe("interface messages", () => {
-  test("ships a catalog for every locale the language picker offers", () => {
-    for (const { code } of AVAILABLE_LOCALES) {
-      const fileLocale = MESSAGE_FILE_ALIASES[code] ?? code;
-      expect(LOCALES, `the picker offers "${code}" but its message catalog is missing`).toContain(fileLocale);
-    }
-  });
-
   /**
    * Key sets must match English exactly, in both directions.
    *

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   DEFAULT_ROLE_TRANSLATOR,
   DEFAULT_UI_TRANSLATOR,
@@ -13,8 +14,8 @@ import {
   type RoleDescriber,
   type RoleTranslator,
   type UiTranslator,
-} from "@credit-generator/core";
-import { useEffect, useState } from "react";
+} from "@/core";
+import { reloadForNewBuild } from "@/lib/reload-for-new-build";
 import { useContributionStore } from "@/store/contribution-store";
 
 /** Canonical English description, from the bundled role catalog. */
@@ -110,9 +111,9 @@ export function useCreditTranslators(): CreditTranslators {
         });
       })
       .catch(() => {
-        // A locale chunk failed to load (e.g. a stale deploy). English is a
-        // working interface; a crash is not.
-        if (active)
+        // A locale chunk failed to load: after a deploy, reload into the new
+        // build. Otherwise English is a working interface; a crash is not.
+        if (active && !reloadForNewBuild())
           setLoaded({
             ...ENGLISH,
             requestedOutputLocale: outputLocale,

@@ -1,7 +1,7 @@
-import type { ShareData, SharePayloadInput } from "@credit-generator/core";
-import { fromSharePayload, MAX_IMPORT_BYTES, toSharePayload } from "@credit-generator/core";
+import type { ShareData, SharePayloadInput } from "@/core";
+import { fromSharePayload, MAX_IMPORT_BYTES, toSharePayload } from "@/core";
 
-export type { ShareData } from "@credit-generator/core";
+export type { ShareData } from "@/core";
 
 /** The payload is base64url over deflate-raw compressed JSON. */
 const HASH_PREFIX = "#s=";
@@ -41,12 +41,8 @@ async function transformBytes(
   transform: ReadableWritablePair<Uint8Array, BufferSource>,
   maxBytes: number,
 ): Promise<Uint8Array> {
-  const source = new ReadableStream<Uint8Array>({
-    start(controller) {
-      controller.enqueue(bytes);
-      controller.close();
-    },
-  });
+  // A body built from bytes is never null.
+  const source = new Response(bytes as Uint8Array<ArrayBuffer>).body as ReadableStream<Uint8Array>;
   // The DOM lib types the writable side as WritableStream<BufferSource>, which
   // pipeThrough's ReadableWritablePair<T, Uint8Array> shape rejects; the bytes
   // fed in are Uint8Arrays, so the pair is narrower in practice than in type.
@@ -94,13 +90,6 @@ export async function buildShareUrl(input: SharePayloadInput): Promise<string> {
 }
 
 /**
- * Decode a `#s=…` location hash into the v2 payload. Returns null when the
- * hash is absent, malformed, or a v1-era link (bare payload, or one with a
- * trailing `&c=`/`&d=` tail from before the envelope moved inside the
- * payload), so a bad or stale link degrades to the normal app rather than
- * crashing.
- */
-/**
  * Which failure to report when buildShareUrl throws: a pre-2023 browser with
  * no CompressionStream cannot build any link, and telling that user their
  * draft is "too large" sends them trimming a roster that was never the problem.
@@ -109,6 +98,13 @@ export function shareFailureKey(): "errShareUnsupported" | "errShareTooLarge" {
   return typeof CompressionStream === "undefined" ? "errShareUnsupported" : "errShareTooLarge";
 }
 
+/**
+ * Decode a `#s=…` location hash into the v2 payload. Returns null when the
+ * hash is absent, malformed, or a v1-era link (bare payload, or one with a
+ * trailing `&c=`/`&d=` tail from before the envelope moved inside the
+ * payload), so a bad or stale link degrades to the normal app rather than
+ * crashing.
+ */
 export async function decodeShareHash(hash: string): Promise<ShareData | null> {
   if (!hash.startsWith(HASH_PREFIX)) return null;
   const encoded = hash.slice(HASH_PREFIX.length);

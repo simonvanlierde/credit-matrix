@@ -1,10 +1,10 @@
 "use client";
 
-import { AVAILABLE_LOCALES, type LocaleCode } from "@credit-generator/core";
 import { Languages } from "lucide-react";
 import { useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AVAILABLE_LOCALES, type LocaleCode } from "@/core";
 import { useContributionStore } from "@/store/contribution-store";
 
 /**

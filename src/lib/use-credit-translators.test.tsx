@@ -1,8 +1,13 @@
-import * as core from "@credit-generator/core";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as core from "@/core";
 import { useContributionStore } from "@/store/contribution-store";
+import { reloadForNewBuild } from "./reload-for-new-build";
 import { useCreditTranslators } from "./use-credit-translators";
+
+// A real reload is a navigation jsdom cannot perform; the tests decide
+// whether it "happened".
+vi.mock("./reload-for-new-build", () => ({ reloadForNewBuild: vi.fn(() => false) }));
 
 const initial = useContributionStore.getState();
 
@@ -57,11 +62,27 @@ describe("useCreditTranslators", () => {
 
     const { result } = renderHook(() => useCreditTranslators());
 
+    // The hook starts out English, so wait for the reload attempt first:
+    // otherwise this passes before the failure has even been handled.
+    await waitFor(() => expect(reloadForNewBuild).toHaveBeenCalled());
     await waitFor(() => expect(result.current.outputLanguage).toBe("en"));
     expect(result.current.translateRole("Conceptualization")).toBe("Conceptualization");
     // Help text falls back to the bundled English catalog, not to a blank panel.
     expect(result.current.describeRole("Conceptualization")).toBe(core.getRoleByName("Conceptualization").description);
     expect(result.current.describeRole("Not A Role")).toBe("");
+  });
+
+  it("leaves the state alone when the failure reloads the page", async () => {
+    vi.mocked(reloadForNewBuild).mockReturnValueOnce(true);
+    vi.spyOn(core, "loadRoleCatalog").mockRejectedValue(new Error("chunk load failed"));
+    setLocales("ja", "ja");
+
+    const { result } = renderHook(() => useCreditTranslators());
+    const before = result.current;
+    await waitFor(() => expect(reloadForNewBuild).toHaveBeenCalled());
+
+    // The page is going away; a state update would only flash English first.
+    expect(result.current).toBe(before);
   });
 
   it("drops a resolved load for a language the reader has already moved off", async () => {

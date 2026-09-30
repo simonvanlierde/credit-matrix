@@ -6,16 +6,34 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-30
+
+### Added
+
+- DOIs that Crossref does not know, such as arXiv and Zenodo records, are looked up in DataCite.
+- *Delete all drafts* in the drafts menu clears every draft from this browser.
+- A draft open in two tabs stays in step: an edit in one shows up in the other, with a note.
+- *About* says which lookups leave your browser. The ask link says it carries names and iDs.
+
 ### Changed
 
-- The app is a static export served without Worker code. The OpenNext Worker failed its cold start
-  with Cloudflare error 1102 about once an hour, answering `503` for a minute or two.
-- ORCID and DOI lookups go from the browser straight to ORCID and Crossref, which both allow it.
+- The site is now plain static files. The server it ran on failed about once an hour and showed an
+  error page for a minute or two.
+- ORCID and DOI lookups go straight from your browser to ORCID, Crossref and DataCite.
+- The app loads less code, and long contributor lists respond faster.
+- After an update, an open tab reloads once instead of switching to English.
 - `/health` is now `/health.json`.
 
 ### Removed
 
-- The `/api/orcid` and `/api/doi` proxies and their rate limiter.
+- The `/api/orcid` and `/api/doi` endpoints.
+
+### Fixed
+
+- A DOI lookup that finished after you closed the dialog could replace your contributors.
+- Two quick ORCID lookups on one row could pair one person's name with another's iD.
+- A contributor you edited while their ORCID lookup failed was deleted.
+- Going back to an older version deleted drafts saved by the newer one.
 
 ## [0.5.0] - 2026-08-27
 
@@ -243,7 +261,8 @@ Persisted local drafts migrate automatically.
   contribution heatmap, JATS4R XML / CSV / JSON / Markdown exports, ORCID lookup,
   share links, and a framework-agnostic `@credit-generator/core` domain package.
 
-[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.2.0...v0.3.0

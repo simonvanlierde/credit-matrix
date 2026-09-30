@@ -1,16 +1,7 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "includes": [
-      "**",
-      "!**/node_modules",
-      "!**/dist",
-      "!**/coverage",
-      "!.next",
-      "!pnpm-lock.yaml",
-      "!package-lock.json",
-      "!src/app/globals.css"
-    ]
+    "includes": ["**", "!src/app/globals.css"]
   },
   "formatter": {
     "enabled": true,
@@ -36,17 +27,7 @@
   },
   "overrides": [
     {
-      "includes": ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"],
-      "linter": {
-        "rules": {
-          "security": {
-            "noSecrets": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/components/**"],
+      "includes": ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "src/components/**"],
       "linter": {
         "rules": {
           "security": {

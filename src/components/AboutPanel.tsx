@@ -86,6 +86,7 @@ export function AboutPanel({ version }: { version: string }) {
           (<LicenseLink>CC BY 4.0</LicenseLink>).
         </p>
         <p>{t.rich("aboutTaxonomy", { cc: (chunks) => <LicenseLink>{chunks}</LicenseLink> })}</p>
+        <p>{t("aboutPrivacy")}</p>
       </div>
     </>
   );

@@ -1,6 +1,15 @@
 "use client";
 
-import type { Author, RoleTranslator, StatementFormat, UiTranslator } from "@credit-generator/core";
+import { CheckCircle2, Copy, Download, Info, Settings2, TriangleAlert } from "lucide-react";
+import { useState } from "react";
+import { useTranslations } from "use-intl";
+import { CreditBadge } from "@/components/ui/credit-badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SegmentedControl } from "@/components/ui/segmented";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StepHeader } from "@/components/ui/step-header";
+import { Switch } from "@/components/ui/switch";
+import type { Author, RoleTranslator, StatementFormat, UiTranslator } from "@/core";
 import {
   CREDIT_ROLES,
   generateStatement,
@@ -11,16 +20,7 @@ import {
   toJson,
   toMarkdown,
   validateContributions,
-} from "@credit-generator/core";
-import { CheckCircle2, Copy, Download, Info, Settings2, TriangleAlert } from "lucide-react";
-import { useState } from "react";
-import { useTranslations } from "use-intl";
-import { CreditBadge } from "@/components/ui/credit-badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { SegmentedControl } from "@/components/ui/segmented";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StepHeader } from "@/components/ui/step-header";
-import { Switch } from "@/components/ui/switch";
+} from "@/core";
 import { copyRichText } from "@/lib/copy-rich-text";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
@@ -54,7 +54,7 @@ const DATA_FORMATS: Record<
 };
 
 export function StatementOutput() {
-  const { authors } = useContributionStore();
+  const authors = useContributionStore((s) => s.authors);
   const { translateRole, translateUi, translateInterfaceRole, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   // Last beat of the population sequence; see .enter-fade in globals.css.

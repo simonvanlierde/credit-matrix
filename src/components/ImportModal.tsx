@@ -1,6 +1,9 @@
 "use client";
 
-import type { Author, DoiLookupResult } from "@credit-generator/core";
+import { FileUp, Search, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
+import type { Author, DoiLookupResult } from "@/core";
 import {
   createAuthor,
   DOI_INPUT_REGEX,
@@ -12,10 +15,7 @@ import {
   MAX_IMPORT_BYTES,
   normalizeDoi,
   parseAuthorText,
-} from "@credit-generator/core";
-import { FileUp, Search, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
+} from "@/core";
 import { announce } from "@/lib/announce";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import type { Messages } from "@/lib/intl";
@@ -70,7 +70,10 @@ const POLITE_MAILTO = "credit@duinlab.nl";
 async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok: true }> | DoiFailure> {
   if (!navigator.onLine) return { code: "OFFLINE" };
   const result = await lookupDoiWork(normalizeDoi(doi), fetch, POLITE_MAILTO);
-  return result.ok ? result : { code: result.code };
+  if (result.ok) return result;
+  // A connection that drops mid-request fails as UNAVAILABLE; say offline.
+  if (result.code === "UNAVAILABLE" && !navigator.onLine) return { code: "OFFLINE" };
+  return { code: result.code };
 }
 
 type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";
@@ -146,6 +149,9 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   const fileRef = useRef<HTMLInputElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const importRef = useRef<HTMLButtonElement>(null);
+  // Bumped per lookup and on close: a result whose number is no longer current
+  // belongs to a dialog the user has left, and must not import or confirm.
+  const doiRequest = useRef(0);
 
   // The confirmation disables the Import button the user just activated, so
   // hand focus to the safe choice; declining hands it back once Import is
@@ -256,8 +262,10 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
       showError(t("errDoiINVALID_DOI"), "doi");
       return;
     }
+    const request = ++doiRequest.current;
     setDoiLoading(true);
     const result = await fetchDoiWork(trimmed);
+    if (request !== doiRequest.current) return;
     setDoiLoading(false);
     if (!("ok" in result)) {
       showError(t(DOI_ERROR_KEYS[result.code]), "doi");
@@ -298,6 +306,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   }
 
   function handleClose() {
+    doiRequest.current += 1;
+    setDoiLoading(false);
     setText("");
     setDoi("");
     setError(null);
@@ -358,6 +368,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
+                    // The same guard as the button's `disabled`, which Enter bypasses.
+                    if (doiLoading || pending !== null) return;
                     void handleDoiLookup();
                   }
                 }}

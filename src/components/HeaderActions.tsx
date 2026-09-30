@@ -1,7 +1,5 @@
 "use client";
 
-import type { Author } from "@credit-generator/core";
-import { keepKnownIds, mergeContributorRow } from "@credit-generator/core";
 import { Check, CircleAlert, Link2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -9,10 +7,12 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure } from "@/components/ImportModal";
 import { showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { Author } from "@/core";
+import { keepKnownIds, mergeContributorRow } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
-import { type DraftClaim, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
+import { type DraftClaim, followOtherTab, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
 
 /**
  * Import / Share buttons rendered in the nav bar.
@@ -47,6 +47,19 @@ export function HeaderActions() {
     void useContributionStore.persist.rehydrate();
   }, []);
 
+  // Another tab saving the draft open here: follow it, rather than let the
+  // next save here silently discard its edits. Re-registered with `t` so the
+  // message speaks the current interface language.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      // Visible too: the content changing under a sighted user with no
+      // note would read as a glitch.
+      if (followOtherTab(event)) showStatus({ kind: "success", message: t("draftUpdatedElsewhere") });
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [t]);
+
   // The listener is registered once, so it must not capture this render's
   // handler: `t` changes with the interface language, and a hash pasted after
   // that switch has to speak the new one.
@@ -76,6 +89,9 @@ export function HeaderActions() {
     // once done) keeps the link from opening over a draft not yet restored.
     await useContributionStore.persist.rehydrate();
     const shared = await decodeShareHash(hash);
+    // Names and ORCID iDs ride in the fragment; a failed open must not leave
+    // them in the address bar and history. Keep any query string intact.
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
     if (!shared || shared.authors.length === 0) {
       // A link that says it is a share but does not decode is worth a visible
       // verdict; the workspace is untouched either way.
@@ -90,8 +106,6 @@ export function HeaderActions() {
       });
       return;
     }
-    // Drop only the fragment; keep any query string intact.
-    window.history.replaceState(null, "", window.location.pathname + window.location.search);
   }
 
   /**
