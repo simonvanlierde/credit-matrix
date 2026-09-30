@@ -6,6 +6,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Removed
+
+- `/health.json`. It only served the post-deploy smoke test, which is gone too.
+
 ## [0.6.0] - 2026-09-30
 
 ### Added

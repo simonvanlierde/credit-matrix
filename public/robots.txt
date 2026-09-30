@@ -1,4 +1,2 @@
 User-agent: *
 Allow: /
-# Not a page: the deployed commit, read by the smoke test.
-Disallow: /health.json

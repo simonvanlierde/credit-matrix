@@ -69,7 +69,7 @@ async function handleNavigation(request) {
     if (response.status >= 500) return (await caches.match("/")) ?? response;
     // Share links live in the fragment, which never reaches the server, so one
     // cached document answers every URL of this app. Only the app's own page
-    // may become that document: /health.json or an image opened directly must
+    // may become that document: the manifest or an image opened directly must
     // not replace the offline shell.
     if (response.ok && new URL(request.url).pathname === "/") await cachePut("/", response.clone());
     return response;

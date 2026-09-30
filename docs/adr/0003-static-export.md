@@ -22,7 +22,9 @@ The proxies' premise was also wrong: ORCID's public API does send
 Build with `output: "export"` and serve `out/` as Cloudflare Workers static assets, with no Worker
 code. The browser calls `pub.orcid.org` and `api.crossref.org` itself, plus `api.datacite.org` for DOIs
 Crossref does not hold (arXiv, Zenodo). The CSP's `connect-src` names those origins. Response headers
-move from `next.config.ts` to `public/_headers`, and `/health` becomes a static `/health.json` carrying the build's commit.
+move from `next.config.ts` to `public/_headers`, and `/health` becomes a static `/health.json` carrying the build's commit. (That file and the
+post-deploy smoke test that read it were later removed: uptime monitoring covers availability, and CI
+builds the exact deploy output.)
 
 ## Consequences
 
