@@ -6,12 +6,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- DOIs that Crossref does not know, such as arXiv and Zenodo records, are looked up in DataCite.
+- *Delete all drafts* in the draft picker removes every draft from this browser.
+- A second tab follows edits to the draft it has open, and says so.
+- *About* says which lookups leave the browser, and the ask link says it carries names and iDs.
+
 ### Changed
 
 - The app is a static export served without Worker code. The OpenNext Worker failed its cold start
   with Cloudflare error 1102 about once an hour, answering `503` for a minute or two.
 - ORCID and DOI lookups go from the browser straight to ORCID and Crossref, which both allow it.
 - `/health` is now `/health.json`.
+- The CSP allows the site's own inline scripts by hash instead of `'unsafe-inline'`.
+- The offline copy is precached per build, and a tab open across a deploy reloads once instead of
+  falling back to English.
+- Faster editing of long contributor lists: rows and grid cells re-render only when their own
+  contributor changes.
+
+### Fixed
+
+- A DOI lookup that finished after the dialog closed could replace the draft's contributors.
+- Two quick ORCID lookups on one row could pair one person's name with another's iD.
+- Rolling back to an older version no longer deletes drafts saved by the newer one.
+- The badge preview no longer requests an image URL a static host cannot serve.
 
 ### Removed
 
