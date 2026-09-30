@@ -146,6 +146,9 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   const fileRef = useRef<HTMLInputElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const importRef = useRef<HTMLButtonElement>(null);
+  // Bumped per lookup and on close: a result whose number is no longer current
+  // belongs to a dialog the user has left, and must not import or confirm.
+  const doiRequest = useRef(0);
 
   // The confirmation disables the Import button the user just activated, so
   // hand focus to the safe choice; declining hands it back once Import is
@@ -256,8 +259,10 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
       showError(t("errDoiINVALID_DOI"), "doi");
       return;
     }
+    const request = ++doiRequest.current;
     setDoiLoading(true);
     const result = await fetchDoiWork(trimmed);
+    if (request !== doiRequest.current) return;
     setDoiLoading(false);
     if (!("ok" in result)) {
       showError(t(DOI_ERROR_KEYS[result.code]), "doi");
@@ -298,6 +303,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   }
 
   function handleClose() {
+    doiRequest.current += 1;
+    setDoiLoading(false);
     setText("");
     setDoi("");
     setError(null);
@@ -358,6 +365,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
+                    // The same guard as the button's `disabled`, which Enter bypasses.
+                    if (doiLoading || pending !== null) return;
                     void handleDoiLookup();
                   }
                 }}
