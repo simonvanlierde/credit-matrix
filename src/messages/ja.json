@@ -207,6 +207,7 @@
   "opensInNewTab": "（新しいタブで開きます）",
   "acknowledgements": "謝辞",
   "aboutTaxonomy": "CRediT は ANSI/NISO 標準（<cc>CC BY 4.0</cc>）です。本プロジェクトは NISO から独立しており、NISO の承認を受けたものではありません。",
+  "aboutPrivacy": "ORCID iD を検索すると、ブラウザーから pub.orcid.org に送信されます。DOI を検索すると、このサイトの連絡先アドレスとともに api.crossref.org に送信されます。それ以外はブラウザーの外に出ません。下書きはローカルストレージにのみ保存されます。",
   "getCreditBadge": "CRediT バッジを入手",
   "creditBadge": "CRediT バッジ",
   "copiedHtml": "HTML をコピーしました",

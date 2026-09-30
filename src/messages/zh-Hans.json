@@ -207,6 +207,7 @@
   "opensInNewTab": "（在新标签页中打开）",
   "acknowledgements": "致谢",
   "aboutTaxonomy": "CRediT 是 ANSI/NISO 标准（<cc>CC BY 4.0</cc>）。本项目独立于 NISO，未获 NISO 认可。",
+  "aboutPrivacy": "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org。除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中。",
   "getCreditBadge": "获取 CRediT 徽章",
   "creditBadge": "CRediT 徽章",
   "copiedHtml": "已复制 HTML",

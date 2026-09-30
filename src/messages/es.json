@@ -207,6 +207,7 @@
   "opensInNewTab": "(se abre en una pestaña nueva)",
   "acknowledgements": "Agradecimientos",
   "aboutTaxonomy": "CRediT es un estándar ANSI/NISO (<cc>CC BY 4.0</cc>). Este proyecto es independiente de NISO y no cuenta con su respaldo.",
+  "aboutPrivacy": "Al buscar un ORCID iD, tu navegador lo envía a pub.orcid.org. Al buscar un DOI, lo envía a api.crossref.org junto con la dirección de contacto de este sitio. Nada más sale de tu navegador: los borradores se quedan en su almacenamiento local.",
   "getCreditBadge": "Obtener insignia CRediT",
   "creditBadge": "Insignia CRediT",
   "copiedHtml": "HTML copiado",
