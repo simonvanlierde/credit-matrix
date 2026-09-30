@@ -506,6 +506,29 @@ describe("contribution store", () => {
       store().switchDraft(first);
       expect(store().authors[0]?.name).toBe("Jane Smith");
     });
+
+    it("deletes every draft, on disk too, and keeps the person's preferences", () => {
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      globalThis.localStorage.clear();
+      store().setUiLocale("nl");
+      store().addAuthor("Jane Smith");
+      store().createDraft();
+      store().setTitle("Second paper");
+      // A shelf key another tab wrote, which this tab never knew about.
+      globalThis.localStorage.setItem(`${PERSIST_KEY}:draft:elsewhere`, JSON.stringify({ title: "Other tab" }));
+
+      store().deleteAllDrafts();
+
+      expect(Object.keys(store().drafts)).toEqual([store().activeDraftId]);
+      expect(store().title).toBe("");
+      expect(store().authors).toHaveLength(0);
+      expect(store().uiLocale).toBe("nl");
+      const keys = Object.keys(globalThis.localStorage);
+      expect(keys.filter((key) => key.includes(":draft:"))).toEqual([]);
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).not.toContain("Second paper");
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
   });
 
   describe("claim lock", () => {

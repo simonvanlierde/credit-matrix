@@ -121,6 +121,8 @@ interface ContributionState {
   /** Copy a draft, contributions and all. Returns the new id, or null at the cap. */
   duplicateDraft: (draftId: string) => string | null;
   deleteDraft: (draftId: string) => void;
+  /** Delete every draft, on disk too, and start over with one empty one. Preferences stay. */
+  deleteAllDrafts: () => void;
   loadSample: (names: readonly string[]) => void;
   /** Adds a contributor and returns its id; null when the name has no letters to parse. */
   addAuthor: (name: string, orcid?: string) => string | null;
@@ -510,6 +512,8 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       if (typeof window === "undefined") return;
       window.localStorage.removeItem(key);
       for (const draftKey of draftKeys()) window.localStorage.removeItem(draftKey);
+      // Holds draft data too; clearing the drafts should not leave a copy behind.
+      window.localStorage.removeItem(UNREADABLE_KEY);
       written.clear();
     },
     setItem: (key, value) => {
@@ -719,6 +723,18 @@ export const useContributionStore = create<ContributionState>()(
           state.drafts[target.id] = target;
           applyDraft(state, target);
         }),
+
+      deleteAllDrafts: () => {
+        // Through the adapter's removeItem first: the next save only removes
+        // the shelf keys of drafts this tab knew, and another tab's would
+        // otherwise survive the "all".
+        useContributionStore.persist.clearStorage();
+        set((state) => {
+          const draft = emptyDraft();
+          state.drafts = { [draft.id]: draft };
+          applyDraft(state, draft);
+        });
+      },
 
       // Guarded like every other whole-roster write: an Import dialog or a bulk
       // undo can still be in flight when a claim link lands, and replacing the

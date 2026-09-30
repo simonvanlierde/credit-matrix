@@ -28,6 +28,7 @@ export function DraftPicker() {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [pendingDeleteAll, setPendingDeleteAll] = useState(false);
   const cancelDeleteRef = useRef<HTMLButtonElement>(null);
 
   // The Delete button that was activated unmounts with the row swap, so focus
@@ -35,10 +36,10 @@ export function DraftPicker() {
   // the question. Hand focus to Cancel (which also reads the pair) and speak
   // the question itself.
   useEffect(() => {
-    if (pendingDelete === null) return;
+    if (pendingDelete === null && !pendingDeleteAll) return;
     cancelDeleteRef.current?.focus();
-    announce(t("confirmDeleteDraft"));
-  }, [pendingDelete, t]);
+    announce(t(pendingDeleteAll ? "confirmDeleteAllDrafts" : "confirmDeleteDraft"));
+  }, [pendingDelete, pendingDeleteAll, t]);
 
   const drafts = useContributionStore((s) => s.drafts);
   const activeDraftId = useContributionStore((s) => s.activeDraftId);
@@ -48,6 +49,7 @@ export function DraftPicker() {
   const switchDraft = useContributionStore((s) => s.switchDraft);
   const duplicateDraft = useContributionStore((s) => s.duplicateDraft);
   const deleteDraft = useContributionStore((s) => s.deleteDraft);
+  const deleteAllDrafts = useContributionStore((s) => s.deleteAllDrafts);
   const claim = useContributionStore((s) => s.claim);
   const clearClaimFor = useContributionStore((s) => s.clearClaimFor);
 
@@ -91,13 +93,25 @@ export function DraftPicker() {
     announce(t("draftDeleted"));
   }
 
+  function handleDeleteAll() {
+    deleteAllDrafts();
+    setPendingDeleteAll(false);
+    announce(t("allDraftsDeleted"));
+  }
+
+  /** Only one question at a time: asking about one draft withdraws the other question. */
+  function askDelete(draftId: string | null, all = false) {
+    setPendingDelete(draftId);
+    setPendingDeleteAll(all);
+  }
+
   return (
     <Popover
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
         // A pending confirmation should not be waiting the next time this opens.
-        if (!next) setPendingDelete(null);
+        if (!next) askDelete(null);
       }}
     >
       <PopoverTrigger asChild>
@@ -126,7 +140,7 @@ export function DraftPicker() {
                     <button
                       ref={cancelDeleteRef}
                       type="button"
-                      onClick={() => setPendingDelete(null)}
+                      onClick={() => askDelete(null)}
                       className="rounded px-2 py-1 text-xs font-semibold text-on-surface-variant hover:text-on-surface"
                     >
                       {t("cancel")}
@@ -196,7 +210,7 @@ export function DraftPicker() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPendingDelete(draft.id)}
+                    onClick={() => askDelete(draft.id)}
                     aria-label={t("deleteDraft")}
                     title={t("deleteDraft")}
                     className="rounded p-1.5 text-on-surface-variant reveal-on-hover transition-[color,opacity] hover:text-error"
@@ -218,6 +232,37 @@ export function DraftPicker() {
             <FilePlus2 className="h-4 w-4" />
             {t("newDraft")}
           </button>
+          {pendingDeleteAll ? (
+            <div className="flex w-full items-center justify-between gap-2 rounded-lg bg-error-container/30 px-2 py-1.5">
+              <span className="text-xs text-on-surface">{t("confirmDeleteAllDrafts")}</span>
+              <span className="flex shrink-0 gap-1">
+                <button
+                  ref={cancelDeleteRef}
+                  type="button"
+                  onClick={() => askDelete(null)}
+                  className="rounded px-2 py-1 text-xs font-semibold text-on-surface-variant hover:text-on-surface"
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteAll}
+                  className="rounded bg-error px-2 py-1 text-xs font-semibold text-on-error hover:opacity-90"
+                >
+                  {t("deleteDraft")}
+                </button>
+              </span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => askDelete(null, true)}
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t("deleteAllDrafts")}
+            </button>
+          )}
           <p className="px-2 pb-1 pt-2 text-[11px] leading-relaxed text-on-surface-variant">{t("draftsHint")}</p>
         </div>
       </PopoverContent>
