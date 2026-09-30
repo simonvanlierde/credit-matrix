@@ -1,13 +1,23 @@
-# Headers for statically served assets. The worker's responses get these from
-# next.config.ts headers(); the ASSETS binding serves /sw.js, icons, and
-# /_next/static/* before the worker runs, so they need their own copy.
+# Response headers for the whole site. Cloudflare applies these to every static
+# asset; there is no Worker code, so this file is the only place they are set.
+#
+# CSP: a directive does not inherit from `default-src` when absent, it is
+# simply unrestricted, so `default-src 'self'` is the base.
+# - script-src keeps 'unsafe-inline' for Next's inline bootstrap. With it,
+#   script-src is NOT an XSS mitigation; the real controls are React's escaping
+#   plus connect-src/form-action/object-src limiting where anything could go.
+#   Dropping it needs hashes of the exported inline scripts.
+# - img-src needs blob:/data: for the heatmap PNG (canvas -> createObjectURL).
+# - connect-src names the two lookup APIs the browser calls directly.
+# `next dev` does not read this file, so the dev server runs without a CSP.
 /*
-  X-Content-Type-Options: nosniff
-  Strict-Transport-Security: max-age=31536000
-  Referrer-Policy: no-referrer
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pub.orcid.org https://api.crossref.org; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'
   Permissions-Policy: camera=(), geolocation=(), microphone=()
+  Referrer-Policy: no-referrer
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
 
-# The worker script itself: it fetches same-origin only.
-/sw.js
-  Content-Security-Policy: default-src 'self'
+# Content-hashed: a changed file gets a new URL, so the browser never needs to revalidate.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

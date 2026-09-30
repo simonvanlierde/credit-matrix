@@ -36,22 +36,18 @@ test.describe("Offline", () => {
     }
   });
 
-  test("a POST to /api/doi is never served from the cache offline", async ({ page, context }) => {
+  test("a lookup is never served from the cache offline", async ({ page, context }) => {
     test.skip(!process.env.CI, "needs the production build; CI runs one");
     await page.goto("/");
     await page.evaluate(() => navigator.serviceWorker.ready);
 
     await context.setOffline(true);
-    // sw.js's fetch handler bails out for anything but GET, so a POST is never
-    // written to or answered from the cache. Offline, it must fail like any
-    // other network request, not come back with a cached 200.
+    // sw.js leaves cross-origin requests alone, so a lookup is never written
+    // to or answered from the cache. Offline, it must fail like any other
+    // network request, not come back with a cached 200.
     const outcome = await page.evaluate(async () => {
       try {
-        await fetch("/api/doi", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ doi: "10.1234/abcde" }),
-        });
+        await fetch("https://api.crossref.org/works/10.1234/abcde");
         return "responded";
       } catch {
         return "network-error";
@@ -62,11 +58,11 @@ test.describe("Offline", () => {
 
   test("activating a new service worker drops caches from a previous version", async ({ page }) => {
     test.skip(!process.env.CI, "needs the production build; CI runs one");
-    // Leave a cache from an older version before any worker exists. /health
-    // is same-origin but plain JSON, so nothing registers the worker there.
+    // Leave a cache from an older version before any worker exists.
+    // /health.json is same-origin but plain JSON, so nothing registers the worker there.
     // Re-registering from a controlled page would not do: an identical script
     // revives the old registration and `activate` never runs again.
-    await page.goto("/health");
+    await page.goto("/health.json");
     await page.evaluate(() => caches.open("credit-matrix-v0-stale"));
 
     // The first visit installs and activates the worker, and `activate` runs

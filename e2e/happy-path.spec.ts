@@ -2,7 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { PERSIST_KEY } from "../src/store/persist-meta";
-import { asReturningVisitor, copyFrom, onScreen, seedStorage } from "./helpers";
+import { asReturningVisitor, copyFrom, onScreen, seedStorage, stubUpstream } from "./helpers";
 
 test.describe("Happy path UI flows", () => {
   test.beforeEach(async ({ page }) => {
@@ -111,16 +111,16 @@ test.describe("Happy path UI flows", () => {
   });
 
   test("imports the contributor list from a DOI", async ({ page }) => {
-    // Stub the proxy: what is under test is the modal wiring, not Crossref.
-    await page.route("**/api/doi", (route) =>
-      route.fulfill({
-        json: {
-          ok: true,
-          title: "A study of studies",
-          authors: [{ name: "Jane A. Smith", orcid: "0000-0002-1825-0097" }, { name: "Bob White" }],
-        },
-      }),
-    );
+    // Stub Crossref: what is under test is the modal wiring, not the registry.
+    await stubUpstream(page, "https://api.crossref.org/**", 200, {
+      message: {
+        title: ["A study of studies"],
+        author: [
+          { given: "Jane A.", family: "Smith", ORCID: "https://orcid.org/0000-0002-1825-0097" },
+          { given: "Bob", family: "White" },
+        ],
+      },
+    });
     await page.goto("/");
 
     await page.getByRole("button", { name: "Import" }).click();
@@ -139,9 +139,7 @@ test.describe("Happy path UI flows", () => {
   });
 
   test("explains a DOI that resolves to nothing, and keeps the dialog open", async ({ page }) => {
-    await page.route("**/api/doi", (route) =>
-      route.fulfill({ status: 404, json: { code: "NOT_FOUND", error: "No published record matches that DOI." } }),
-    );
+    await stubUpstream(page, "https://api.crossref.org/**", 404, {});
     await page.goto("/");
 
     await page.getByRole("button", { name: "Import" }).click();
@@ -615,10 +613,10 @@ test.describe("Happy path UI flows", () => {
   });
 
   test("explains a rejected ORCID iD instead of dropping it, and never sticks on the lookup", async ({ page }) => {
-    // Stub the proxy so the row's own states are what is under test, not the registry.
-    await page.route("**/api/orcid", (route) =>
-      route.fulfill({ json: { firstName: "Jane", surname: "Smith", displayName: "Jane A. Smith" } }),
-    );
+    // Stub ORCID so the row's own states are what is under test, not the registry.
+    await stubUpstream(page, "https://pub.orcid.org/**", 200, {
+      name: { "given-names": { value: "Jane A." }, "family-name": { value: "Smith" } },
+    });
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
@@ -666,9 +664,9 @@ test.describe("Happy path UI flows", () => {
   });
 
   test("gives an attached ORCID iD its own aligned line rather than a ragged wrap", async ({ page }) => {
-    await page.route("**/api/orcid", (route) =>
-      route.fulfill({ json: { firstName: "Jane", surname: "Smith", displayName: "Jane A. Smith" } }),
-    );
+    await stubUpstream(page, "https://pub.orcid.org/**", 200, {
+      name: { "given-names": { value: "Jane A." }, "family-name": { value: "Smith" } },
+    });
     await page.setViewportSize({ width: 1600, height: 900 });
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
@@ -822,16 +820,14 @@ test.describe("Happy path UI flows", () => {
   // must leave no row named after the raw iD.
   test("removes the seeded row when a bare ORCID lookup fails", async ({ page }) => {
     await asReturningVisitor(page);
-    await page.route("**/api/orcid", (route) =>
-      route.fulfill({ status: 404, json: { code: "NOT_FOUND", error: "No ORCID record matches that iD." } }),
-    );
+    await stubUpstream(page, "https://pub.orcid.org/**", 404, {});
     await page.goto("/");
 
     const field = page.getByLabel("New author names or ORCID iD");
     await field.fill("0000-0002-1825-0097");
     await field.press("Enter");
 
-    // The stub controls this text, so it is deterministic.
+    // A 404 maps to NOT_FOUND, so the text is deterministic.
     await expect(onScreen(page, "No ORCID record matches that iD.")).toBeVisible();
     // No contributor row at all, and specifically none named after the iD.
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
@@ -885,38 +881,6 @@ test.describe("Happy path UI flows", () => {
     expect(await page.evaluate(() => document.body.scrollWidth)).toBe(320);
     const statement = page.getByLabel("Statement and export");
     expect((await statement.boundingBox())?.width).toBeLessThanOrEqual(320);
-  });
-
-  test("rejects malformed ORCID API requests before upstream lookup", async ({ request }) => {
-    const response = await request.post("/api/orcid", { data: { id: "0000-0002-1825-0098" } });
-    expect(response.status()).toBe(400);
-    // `code` is what a client localizes from; `error` is the English fallback
-    // that rides along for logs and for clients predating a code.
-    await expect(response.json()).resolves.toEqual({
-      code: "INVALID_ID",
-      error: "That is not a valid ORCID iD. Check the digits and try again.",
-    });
-  });
-
-  test("rejects malformed DOI API requests before upstream lookup", async ({ request }) => {
-    // Mirrors the ORCID spec above: the route's own request-level branches
-    // never ran anywhere (e2e stubs the route in the browser; core tests
-    // cover lookupDoiWork, not the handler).
-    const badDoi = await request.post("/api/doi", { data: { doi: "not-a-doi" } });
-    expect(badDoi.status()).toBe(400);
-    await expect(badDoi.json()).resolves.toEqual({
-      code: "INVALID_DOI",
-      error: "That is not a valid DOI. It should look like 10.1234/abcde.",
-    });
-
-    // A Buffer goes out raw; a string here would be JSON-stringified into a
-    // *valid* JSON string body and take the INVALID_DOI branch instead.
-    const unreadable = await request.post("/api/doi", {
-      headers: { "content-type": "application/json" },
-      data: Buffer.from("{not json"),
-    });
-    expect(unreadable.status()).toBe(400);
-    await expect(unreadable.json()).resolves.toMatchObject({ code: "BAD_REQUEST" });
   });
 
   test("XML export downloads client-side (no API round-trip)", async ({ page }) => {

@@ -1,6 +1,7 @@
 # 1. Client-side architecture with a framework-agnostic core
 
-- Status: accepted; amended in part by [ADR 0002](0002-no-accounts-or-server-side-storage.md)
+- Status: accepted; amended in part by [ADR 0002](0002-no-accounts-or-server-side-storage.md);
+  the lookup proxies and the OpenNext deployment are superseded by [ADR 0003](0003-static-export.md)
 - Date: 2026-06-29
 
 ## Context

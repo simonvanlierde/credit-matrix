@@ -1,10 +1,12 @@
 import type { MetadataRoute } from "next";
 
+export const dynamic = "force-static";
+
 /**
  * Web app manifest, served at `/manifest.webmanifest`.
  *
  * Paired with `public/sw.js`, this makes the app installable and lets a draft
- * survive a flight: everything except the ORCID lookup already runs in the
+ * survive a flight: everything except the ORCID and DOI lookups runs in the
  * browser (see the architecture note in the README).
  *
  * The maskable icon is rendered from `docs/brand/maskable-icon.html`; the SVG

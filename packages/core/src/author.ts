@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
 

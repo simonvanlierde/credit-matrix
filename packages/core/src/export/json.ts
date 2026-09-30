@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import type { Author } from "../author";
 import { AuthorSchema, MAX_AUTHORS } from "../author";
 

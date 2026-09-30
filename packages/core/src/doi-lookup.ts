@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { isValidOrcid, MAX_AUTHORS, normalizeOrcid } from "./author";
 import { fetchUpstreamJson } from "./upstream-fetch";
 
@@ -77,9 +77,7 @@ export function normalizeDoi(doi: string): string {
  * Resolve a DOI to its title and contributor list through an injected fetcher.
  *
  * Pass `mailto` to join Crossref's "polite pool", which gets faster and more
- * reliable service than the anonymous pool. The address is a parameter rather
- * than a constant here so it lives in the server route alone and can never be
- * bundled into the client through this module.
+ * reliable service than the anonymous pool.
  */
 export async function lookupDoiWork(
   doi: string,
