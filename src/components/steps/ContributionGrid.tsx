@@ -13,7 +13,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
 import { InitialsChip } from "@/components/ui/initials-chip";
@@ -105,6 +105,9 @@ export function ContributionGrid() {
     interfaceRoleLanguage,
   } = useCreditTranslators();
   const t = useTranslations();
+  // The interface messages load separately from the role catalog, so a cell's
+  // label depends on both; see GridCell's `language`.
+  const messagesLocale = useLocale();
   // The store already refuses locked edits; this makes the grid look refused
   // too, instead of offering controls that silently do nothing.
   const { locked, editableAuthorId } = useClaimLock();
@@ -304,7 +307,7 @@ export function ContributionGrid() {
       recent={author.id === recentReply}
       graded={graded}
       monoColor={heatmapMonoColor}
-      language={interfaceRoleLanguage}
+      language={`${interfaceRoleLanguage}:${messagesLocale}`}
     />
   );
 
@@ -742,7 +745,8 @@ interface CellApi {
  * One assignment in the matrix. Memoized: immer keeps an untouched author
  * identical, so a click re-renders one contributor's cells, not all 14×N.
  * `language` is only there to re-render every label when the interface
- * language changes, since the label function arrives through `api`.
+ * language changes (role catalog and messages, which load separately), since
+ * the label function arrives through `api`.
  */
 const GridCell = memo(function GridCellInner({
   api,
