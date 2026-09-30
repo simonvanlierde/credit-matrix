@@ -26,3 +26,8 @@
 # Content-hashed: a changed file gets a new URL, so the browser never needs to revalidate.
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Vendored fonts (src/app/fonts.css). Not hashed, so changing one means a new
+# file name, never new bytes under the old one.
+/fonts/*.woff2
+  Cache-Control: public, max-age=31536000, immutable

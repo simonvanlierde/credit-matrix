@@ -50,7 +50,7 @@ async function precache() {
   const html = await page.clone().text();
   // The inline payload repeats these URLs JSON-escaped (`…js\"`): stop at a
   // backslash too, or one bad URL fails addAll and with it the install.
-  const assets = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) ?? [])];
+  const assets = [...new Set(html.match(/\/(?:_next\/static|fonts)\/[^"'\s)\\]+/g) ?? [])];
   await cache.addAll(assets);
   await cache.put("/", page);
 }
@@ -82,10 +82,11 @@ async function handleNavigation(request) {
 async function handleAsset(request, event) {
   const cached = await caches.match(request);
   if (cached) {
-    // /_next/static/ URLs are content-hashed, so their cached copy is the
-    // final word; only unhashed assets (favicon, manifest) can change in place.
-    // waitUntil keeps the worker alive until the refresh lands.
-    if (!new URL(request.url).pathname.startsWith("/_next/static/")) event.waitUntil(refresh(request));
+    // /_next/static/ URLs are content-hashed and /fonts/ files are renamed
+    // rather than changed, so their cached copy is the final word; only other
+    // assets (favicon, manifest) can change in place. waitUntil keeps the
+    // worker alive until the refresh lands.
+    if (!/^\/(?:_next\/static|fonts)\//.test(new URL(request.url).pathname)) event.waitUntil(refresh(request));
     return cached;
   }
   return fetch(request).then(async (response) => {

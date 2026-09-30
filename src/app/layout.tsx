@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { preload } from "react-dom";
 import { AboutPopover } from "@/components/AboutPopover";
 import { Lockup } from "@/components/BrandMark";
 import { BrandMenu } from "@/components/BrandMenu";
@@ -17,29 +17,17 @@ import { PERSIST_KEY } from "@/store/persist-meta";
 // Server component: the manifest is read at build time and never bundled for the
 // client: only the version string is passed down to AboutPopover.
 import packageJson from "../../package.json";
+import "./fonts.css";
 import "./globals.css";
 
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-sans",
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-plex-mono",
-  display: "swap",
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-newsreader",
-  display: "swap",
-});
+// The latin subsets of each face the first paint uses; see fonts.css.
+const PRELOADED_FONTS = [
+  "/fonts/plex-sans-latin.woff2",
+  "/fonts/plex-mono-400-latin.woff2",
+  "/fonts/plex-mono-500-latin.woff2",
+  "/fonts/newsreader-latin.woff2",
+  "/fonts/newsreader-italic-latin.woff2",
+];
 
 const description = "Draft CRediT contribution statements for scholarly publications.";
 
@@ -78,12 +66,11 @@ export const viewport: Viewport = {
 const LANG_SCRIPT = `try{var l=JSON.parse(localStorage.getItem(${JSON.stringify(PERSIST_KEY)})).state.uiLocale;if(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(l))document.documentElement.lang=l}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // React emits each as one <link rel="preload"> in <head>; a literal <link>
+  // there is hoisted *and* kept, so it would ship twice.
+  for (const href of PRELOADED_FONTS) preload(href, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
   return (
-    <html
-      lang="en"
-      className={`${plexSans.variable} ${plexMono.variable} ${newsreader.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, no user input */}
         <script dangerouslySetInnerHTML={{ __html: LANG_SCRIPT }} />

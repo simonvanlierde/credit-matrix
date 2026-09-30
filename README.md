@@ -187,3 +187,6 @@ from it. The archived, versioned release is on Zenodo:
 ## License
 
 [MIT](LICENSE) © Simon van Lierde
+
+The bundled fonts, IBM Plex and Newsreader, are under the SIL Open Font License:
+[IBM Plex](public/fonts/OFL-ibm-plex.txt), [Newsreader](public/fonts/OFL-newsreader.txt).
