@@ -849,6 +849,46 @@ describe("contribution store", () => {
       globalThis.localStorage.clear();
     });
 
+    // A rollback past a schema bump starts fresh in memory, but the newer
+    // build's drafts are only unreadable here, not gone: the first write must
+    // not treat them as deleted.
+    it("keeps drafts saved by a newer build on disk", () => {
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      const storage = announcingStorage();
+      const newer = (id: string, title: string) => ({ id, title, authors: [], updatedAt: 0 });
+      globalThis.localStorage.setItem(
+        PERSIST_KEY,
+        JSON.stringify({
+          state: { drafts: { a: newer("a", "Active paper") }, activeDraftId: "a" },
+          version: PERSIST_VERSION + 1,
+        }),
+      );
+      globalThis.localStorage.setItem(`${PERSIST_KEY}:draft:b`, JSON.stringify(newer("b", "Held paper")));
+
+      storage.getItem(PERSIST_KEY);
+      const fresh = {
+        id: "c",
+        title: "",
+        authors: [],
+        inputMode: "toggle" as const,
+        heatmapMonoColor: "#2563eb",
+        outputLocale: "en" as const,
+        updatedAt: 0,
+        claim: null,
+        asked: {},
+      };
+      storage.setItem(PERSIST_KEY, {
+        state: { drafts: { c: fresh }, activeDraftId: "c", uiLocale: "en", welcomeSeen: true },
+        version: PERSIST_VERSION,
+      });
+
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:b`)).toContain("Held paper");
+      // The newer active draft moves to the shelf rather than being overwritten.
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:a`)).toContain("Active paper");
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
     it("keeps drafts another tab created or parked when this tab writes", () => {
       // Two tabs are two storage adapters over one localStorage.
       const tabA = announcingStorage();

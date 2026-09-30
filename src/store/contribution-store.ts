@@ -479,11 +479,12 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       ) as Record<string, unknown>;
       // Main wins for the active draft; hydrateDrafts repairs whatever merges.
       const state = { ...mainState, drafts: { ...parked, ...mainDrafts } };
-      known = new Set(Object.keys(state.drafts));
-      return {
-        state: state as unknown as PersistedState,
-        version: typeof record.version === "number" ? record.version : 0,
-      };
+      const version = typeof record.version === "number" ? record.version : 0;
+      // A newer build's drafts are discarded in memory (see `migrate`), not on
+      // disk: leave them unknown so the first write parks them instead of
+      // deleting them, and a roll-forward finds them again.
+      known = version > PERSIST_VERSION ? new Set() : new Set(Object.keys(state.drafts));
+      return { state: state as unknown as PersistedState, version };
     },
     removeItem: (key) => {
       if (typeof window === "undefined") return;
