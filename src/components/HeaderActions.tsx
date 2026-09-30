@@ -76,6 +76,9 @@ export function HeaderActions() {
     // once done) keeps the link from opening over a draft not yet restored.
     await useContributionStore.persist.rehydrate();
     const shared = await decodeShareHash(hash);
+    // Names and ORCID iDs ride in the fragment; a failed open must not leave
+    // them in the address bar and history. Keep any query string intact.
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
     if (!shared || shared.authors.length === 0) {
       // A link that says it is a share but does not decode is worth a visible
       // verdict; the workspace is untouched either way.
@@ -90,8 +93,6 @@ export function HeaderActions() {
       });
       return;
     }
-    // Drop only the fragment; keep any query string intact.
-    window.history.replaceState(null, "", window.location.pathname + window.location.search);
   }
 
   /**
