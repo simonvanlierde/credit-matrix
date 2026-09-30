@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- The app is a static export served without Worker code. The OpenNext Worker failed its cold start
+  with Cloudflare error 1102 about once an hour, answering `503` for a minute or two.
+- ORCID and DOI lookups go from the browser straight to ORCID and Crossref, which both allow it.
+- `/health` is now `/health.json`.
+
+### Removed
+
+- The `/api/orcid` and `/api/doi` proxies and their rate limiter.
+
 ## [0.5.0] - 2026-08-27
 
 ### Added

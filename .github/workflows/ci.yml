@@ -142,13 +142,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
 
-      # Build the actual artifact that ships (Cloudflare Workers bundle via
-      # OpenNext), not just `next build`, so worker-bundling failures surface in CI.
+      # The static export in out/ is exactly what Cloudflare serves.
       - name: Build
-        run: pnpm exec opennextjs-cloudflare build
+        run: pnpm build
 
-      # Nothing else in CI reads wrangler.jsonc, and the real deploy runs from
-      # Cloudflare Builds on merge to main: a bad binding, route or `main` path
-      # would first fail in production. The dry run needs no credentials.
+      # The real deploy runs from Cloudflare Builds on merge to main, so a bad
+      # route or assets path in wrangler.jsonc would first fail in production.
+      # The dry run needs no credentials.
       - name: Validate Worker config
         run: pnpm exec wrangler deploy --dry-run

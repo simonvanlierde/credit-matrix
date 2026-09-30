@@ -6,3 +6,4 @@ reasoning behind each one. The format follows
 
 - [0001: Client-side architecture with a framework-agnostic core](0001-client-side-architecture.md)
 - [0002: No accounts or server-side storage](0002-no-accounts-or-server-side-storage.md)
+- [0003: Static export, lookups from the browser](0003-static-export.md)

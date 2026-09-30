@@ -7,6 +7,7 @@ import {
   fromCsv,
   fromJats4rXml,
   fromJson,
+  lookupDoiWork,
   MAX_AUTHORS,
   MAX_IMPORT_BYTES,
   normalizeDoi,
@@ -18,7 +19,6 @@ import { useTranslations } from "use-intl";
 import { announce } from "@/lib/announce";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import type { Messages } from "@/lib/intl";
-import { postLookup } from "@/lib/post-lookup";
 import { MAX_DRAFTS } from "@/store/contribution-store";
 
 /** Why a pasted share link could not be used, as a message key. */
@@ -55,20 +55,22 @@ const DOI_ERROR_KEYS = {
   NO_AUTHORS: "errDoiNO_AUTHORS",
   TOO_MANY_AUTHORS: "errDoiTOO_MANY_AUTHORS",
   UNAVAILABLE: "errDoiUNAVAILABLE",
-  RATE_LIMITED: "errDoiRATE_LIMITED",
-  BAD_REQUEST: "errDoiBAD_REQUEST",
-  UNREACHABLE: "errDoiUNREACHABLE",
   OFFLINE: "errDoiOFFLINE",
 } as const;
 
 type DoiFailure = { code: keyof typeof DOI_ERROR_KEYS };
 
+/**
+ * Contact address for Crossref's "polite pool", which gets faster and more
+ * reliable service than the anonymous pool. A public address, not a secret.
+ */
+const POLITE_MAILTO = "credit@duinlab.nl";
+
+/** Look a DOI up straight from Crossref, which sends `Access-Control-Allow-Origin: *`. */
 async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok: true }> | DoiFailure> {
-  const result = await postLookup<Extract<DoiLookupResult, { ok: true }>>("/api/doi", { doi: normalizeDoi(doi) });
-  if ("code" in result) {
-    return { code: result.code in DOI_ERROR_KEYS ? (result.code as keyof typeof DOI_ERROR_KEYS) : "BAD_REQUEST" };
-  }
-  return result;
+  if (!navigator.onLine) return { code: "OFFLINE" };
+  const result = await lookupDoiWork(normalizeDoi(doi), fetch, POLITE_MAILTO);
+  return result.ok ? result : { code: result.code };
 }
 
 type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";

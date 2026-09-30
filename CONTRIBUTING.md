@@ -20,7 +20,7 @@ pnpm dev            # → http://localhost:3000
 - `packages/core`: pure, framework-agnostic domain logic (statements, exports,
   validation, heatmap SVG). No React/Next/Node APIs at import time. Most changes
   and most tests belong here.
-- `src/`: the Next.js UI and the `/api/orcid` and `/api/doi` route handlers.
+- `src/`: the Next.js UI, built as a static export.
 
 [ADR&nbsp;0001](docs/adr/0001-client-side-architecture.md) records why it's split
 this way.
@@ -48,7 +48,7 @@ Add or update tests in `packages/core/src/__tests__` for any change to domain lo
   `design-tokens.spec.ts`, and `offline.spec.ts` guard the locale catalogs, the design tokens, and
   the service worker.
 
-Every push and PR runs Biome, typecheck, unit coverage, the axe scans, and the Cloudflare Worker
+Every push and PR runs Biome, typecheck, unit coverage, the axe scans, and the static export
 build. The rest of the E2E suite runs on manual dispatch or on PRs labeled `e2e`.
 
 ### Accessibility

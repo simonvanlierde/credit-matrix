@@ -56,7 +56,7 @@ it.
 
 | Layer | Choice | Why |
 |---|---|---|
-| Frontend | Next.js 16 (App Router) | Runs on Cloudflare Workers via OpenNext |
+| Frontend | Next.js 16 (App Router) | Static export on Cloudflare, no server code |
 | Styling | Tailwind CSS v4 | Design tokens via `@theme`; no runtime CSS |
 | State | Zustand + immer + persist | Survives a refresh via localStorage |
 | Validation | Zod | Schema checks at trust boundaries |
@@ -69,17 +69,17 @@ Browser
        ├─ React UI + Zustand store (persisted to localStorage)
        ├─ @credit-generator/core   ← all domain logic, runs in the browser
        │     statements · JATS4R XML · CSV · JSON · Markdown · heatmap SVG · validation
-       └─ /api/orcid · /api/doi  (route handlers) ──→ pub.orcid.org · api.crossref.org
-                                                      ← the only server-side calls
+       └─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org
+                                     ← the only calls that leave the browser
 ```
 
-Nearly everything runs in the browser. [`packages/core`](packages/core/README.md) holds the domain
+Everything runs in the browser, served as a static export. [`packages/core`](packages/core/README.md) holds the domain
 logic as pure TypeScript, with `zod` as its only runtime dependency. XML import uses the native
 `DOMParser`, and the PNG is drawn from the heatmap SVG onto a `<canvas>`.
 
-The ORCID and DOI lookups are the exceptions, proxied by `/api/orcid` and `/api/doi`. ORCID's
-public API sends no CORS headers. Crossref's polite-pool contact address belongs on the server,
-not in every client bundle.
+The ORCID and DOI lookups call ORCID's and Crossref's public APIs straight from the browser. Both
+send `Access-Control-Allow-Origin: *`; the CSP in [`public/_headers`](public/_headers) allows exactly
+those two origins.
 
 Contributions store a 0–100 integer `score` rather than a boolean, so the UI switches between
 binary and level-based editing without changing the stored model. See
@@ -110,23 +110,17 @@ Run `just` to list the watch/fix recipes layered on the pnpm scripts.
 
 ### Deployment
 
-The live demo runs on Cloudflare Workers via
-[`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare), which adapts the Next.js build. A
-push to `main` builds and deploys it; [CI](.github/workflows/ci.yml) lints, tests, and
-build-checks, and never deploys.
+`pnpm build` writes a static export to `out/`, which any static host can serve; response headers,
+including the CSP, are in [`public/_headers`](public/_headers). The live demo serves it as
+Cloudflare Workers static assets, with no Worker code. A push to `main` builds and deploys it;
+[CI](.github/workflows/ci.yml) lints, tests, and build-checks, and never deploys.
 
-To run the Worker yourself, set your own domain and bindings in
-[wrangler.jsonc](wrangler.jsonc) and [open-next.config.ts](open-next.config.ts):
+To host it on Cloudflare yourself, set your own domain in [wrangler.jsonc](wrangler.jsonc):
 
 ```bash
-pnpm preview        # build + run the Worker locally
+pnpm preview        # build + serve out/ locally, headers applied
 pnpm deploy         # build + deploy to your Cloudflare account
 ```
-
-Both upstream proxies (`/api/orcid`, `/api/doi`) share one rate-limiter binding, `API_RATE_LIMITER`.
-Without the binding, they fail open: the lookups keep working, unthrottled, and say so once in the
-invocation log. After changing the binding, check the first deploy's logs for
-`API_RATE_LIMITER binding missing`.
 
 ## Roadmap
 

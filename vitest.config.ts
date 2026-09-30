@@ -27,7 +27,7 @@ export default defineConfig({
       // lcov feeds Codecov; text prints a summary in the terminal/CI log
       reporter: ["text", "lcov"],
       reportsDirectory: "./coverage",
-      include: ["src/lib/**/*.ts", "src/store/**/*.ts", "src/app/api/**/*.ts", "src/app/health/**/*.ts"],
+      include: ["src/lib/**/*.ts", "src/store/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/**/*.d.ts", "src/test-setup.ts"],
       // A few points under the measured level: a drop fails CI, noise does not.
       thresholds: { statements: 93, branches: 86, functions: 96, lines: 96 },

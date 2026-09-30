@@ -6,8 +6,8 @@ coverage
 *.tsbuildinfo
 **/test-results/
 
-# Cloudflare / OpenNext build output
-.open-next
+# Static export and Cloudflare local state
+out
 .wrangler
 
 # env files

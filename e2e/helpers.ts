@@ -67,3 +67,11 @@ export async function copyFrom(page: Page, button: Locator): Promise<string> {
   await expect.poll(read).not.toBe("");
   return read();
 }
+
+/**
+ * Stub a lookup API the browser calls cross-origin (ORCID, Crossref). The
+ * response needs the CORS header the real API sends, or the browser drops it.
+ */
+export function stubUpstream(page: Page, url: string, status: number, json: unknown) {
+  return page.route(url, (route) => route.fulfill({ status, json, headers: { "access-control-allow-origin": "*" } }));
+}

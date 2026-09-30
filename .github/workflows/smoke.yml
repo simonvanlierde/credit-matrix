@@ -26,11 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # /health reports the commit baked in at build time; wait until it is ours.
+      # /health.json reports the commit baked in at build time; wait until it is ours.
       - name: Wait for this commit to go live
         run: |
           for _ in $(seq 1 30); do
-            commit=$(curl -fsS "$SITE/health" | jq -r .commit || true)
+            commit=$(curl -fsS "$SITE/health.json" | jq -r .commit || true)
             if [ "$commit" = "$GITHUB_SHA" ]; then echo "live: $commit"; exit 0; fi
             echo "serving ${commit:-nothing}, waiting"
             sleep 20
@@ -38,17 +38,10 @@ jobs:
           echo "::error::$GITHUB_SHA was not live after 10 minutes"
           exit 1
 
-      - name: Health reports ok
-        run: curl -fsS "$SITE/health" | jq -e '.status == "ok"'
-
       - name: App page loads
         run: curl -fsS "$SITE/" | grep -q "<title>CRediT Matrix"
 
-      # Exercises the rate-limiter binding and the ORCID upstream end to end.
-      # 0000-0002-1825-0097 is ORCID's documented example record.
-      - name: ORCID lookup works
-        run: |-
-          curl -fsS "$SITE/api/orcid" \
-            -H "Origin: $SITE" \
-            -H "Content-Type: application/json" \
-            -d '{"id":"0000-0002-1825-0097"}' | jq -e '.ok == true'
+      # public/_headers is the only place the CSP is set; a typo there drops it
+      # silently, and the browser lookups need its connect-src.
+      - name: CSP allows the lookup APIs
+        run: curl -fsSI "$SITE/" | grep -i '^content-security-policy:' | grep -q 'https://pub.orcid.org'

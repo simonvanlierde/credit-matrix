@@ -1,6 +1,6 @@
 # 2. No accounts or server-side storage
 
-- Status: accepted
+- Status: accepted; the lookup proxies it mentions are removed by [ADR 0003](0003-static-export.md)
 - Date: 2026-08-26
 
 ## Context

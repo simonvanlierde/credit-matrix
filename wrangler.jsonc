@@ -2,42 +2,23 @@
   // Deploys via Cloudflare Workers Builds (Git integration) on push to `main`.
   // The following settings live in the Cloudflare dashboard, not here:
   // Build configuration:
-  //   Build:   pnpm exec opennextjs-cloudflare build
-  //   Deploy:  pnpm exec opennextjs-cloudflare deploy
+  //   Build:   pnpm build
+  //   Deploy:  pnpm exec wrangler deploy
   //   Root:    /
   // Branch control:
   //   Production branch: main
   //   Non-production builds: disabled
+  //
+  // Static assets only, no `main`: no code runs per request, so there is no
+  // cold start and no CPU or memory limit to exceed. OpenNext's Worker used to
+  // fail its cold start with error 1102 every hour or so.
   "$schema": "node_modules/wrangler/config-schema.json",
   "assets": {
-    "binding": "ASSETS",
-    "directory": ".open-next/assets"
+    "directory": "./out",
+    "not_found_handling": "404-page"
   },
   "compatibility_date": "2026-07-06",
-  // nodejs_compat lets the Next.js server bundle use Node built-ins on Workers.
-  "compatibility_flags": ["nodejs_compat"],
-  "main": ".open-next/worker.js",
   "name": "credit-heatmap",
-  "ratelimits": [
-    {
-      "name": "API_RATE_LIMITER",
-      "namespace_id": "1001",
-      "simple": { "limit": 30, "period": 60 }
-    }
-  ],
-  "observability": {
-    "enabled": true,
-    // Sample every invocation: the head-sampling decision is per-request, so
-    // anything below 1 drops most of the deliberate console.error warnings
-    // (rate-limiter fail-open, missing binding) on a low-traffic deploy. At
-    // this traffic the full-sampling log volume is negligible.
-    "head_sampling_rate": 1,
-    "logs": {
-      "enabled": true,
-      // ORCID identifiers are submitted to /api/orcid and must not land in request logs.
-      "invocation_logs": false
-    }
-  },
   // Bound to a Custom Domain
   "routes": [
     {

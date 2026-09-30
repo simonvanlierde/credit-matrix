@@ -3,6 +3,7 @@
 import {
   type Author,
   isValidOrcid,
+  lookupOrcidPerson,
   MAX_AUTHOR_NAME_LENGTH,
   MAX_AUTHORS,
   normalizeOrcid,
@@ -54,7 +55,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { StepHeader } from "@/components/ui/step-header";
 import { UndoBar } from "@/components/ui/undo-bar";
 import { announce } from "@/lib/announce";
-import { postLookup } from "@/lib/post-lookup";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -70,27 +70,21 @@ function detectOrcid(text: string): string | null {
   return ORCID_REGEX.test(candidate) ? candidate : null;
 }
 
-interface OrcidLookupResult {
-  firstName: string;
-  surname: string;
-  displayName: string;
-}
-
 /**
- * Resolve an ORCID iD to a display name.
+ * Resolve an ORCID iD to a display name, straight from ORCID's public API
+ * (it sends `Access-Control-Allow-Origin: *`).
  *
  * Returns a failure *code*, not a message: this runs outside React, so it
- * cannot translate. The caller holds `t` and renders the code. The server's
- * Unknown server codes use the localized generic failure message.
+ * cannot translate. The caller holds `t` and renders the code.
  */
-type OrcidFailure = { code: string };
+type OrcidFailure = { code: keyof typeof ORCID_ERROR_KEYS };
 
 async function fetchOrcidName(orcid: string): Promise<{ displayName: string } | OrcidFailure> {
-  const result = await postLookup<OrcidLookupResult>("/api/orcid", { id: normalizeOrcid(orcid) });
-  if ("code" in result) return result;
-  if (!result.displayName.trim()) {
-    return { code: "NO_NAME" };
-  }
+  // The lookup is the one part of the app that needs a network; say so
+  // rather than blaming ORCID.
+  if (!navigator.onLine) return { code: "OFFLINE" };
+  const result = await lookupOrcidPerson(normalizeOrcid(orcid));
+  if (!result.ok) return { code: result.code };
   return { displayName: result.displayName };
 }
 
@@ -103,22 +97,17 @@ const ORCID_ERROR_KEYS = {
   INVALID_ID: "errOrcidINVALID_ID",
   NOT_FOUND: "errOrcidNOT_FOUND",
   UNAVAILABLE: "errOrcidUNAVAILABLE",
-  RATE_LIMITED: "errOrcidRATE_LIMITED",
-  BAD_REQUEST: "errOrcidBAD_REQUEST",
-  NO_NAME: "errOrcidNO_NAME",
-  UNREACHABLE: "errOrcidUNREACHABLE",
   OFFLINE: "errOffline",
 } as const;
 
 /** Render an ORCID failure in the interface language. */
 function orcidErrorText(failure: OrcidFailure, t: ReturnType<typeof useTranslations>): string {
-  const key = ORCID_ERROR_KEYS[failure.code as keyof typeof ORCID_ERROR_KEYS];
-  return t(key ?? "errOrcidBAD_REQUEST");
+  return t(ORCID_ERROR_KEYS[failure.code]);
 }
 
 // NOTE: a courtesy cap on concurrent ORCID lookups, not app correctness — a
 // plain Promise.all would work; keep the cap so a 100-iD paste doesn't hammer
-// the registry through our proxy.
+// the registry from one browser.
 async function forEachWithConcurrency<T>(items: T[], limit: number, task: (item: T) => Promise<void>): Promise<void> {
   let nextIndex = 0;
   const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {

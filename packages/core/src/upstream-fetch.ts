@@ -1,5 +1,5 @@
 /**
- * The one upstream JSON fetch both lookups share: same headers, same caching,
+ * The one upstream JSON fetch both lookups share: same headers,
  * same deadline, same failure ladder. Each caller maps the kinds onto its own
  * error codes and messages and parses the body with its own schema.
  */
@@ -13,12 +13,9 @@ export async function fetchUpstreamJson(url: string, fetcher: typeof fetch): Pro
   try {
     response = await fetcher(url, {
       headers: { Accept: "application/json" },
-      cache: "force-cache",
-      next: { revalidate: 3600 },
-      // Without a deadline a hung upstream pins the request until the platform
-      // kills it; the caller maps "unavailable" to a 502.
+      // Without a deadline a hung upstream leaves the lookup spinning.
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    } as RequestInit);
+    });
   } catch {
     return { kind: "unavailable" };
   }

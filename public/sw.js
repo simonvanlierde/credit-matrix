@@ -1,14 +1,15 @@
 /**
  * Offline support.
  *
- * Everything except the ORCID lookup runs in the browser, so the app only
- * needs its own files back to keep working without a network. There is no
+ * Everything except the ORCID and DOI lookups works without a network, so the
+ * app only needs its own files back. There is no
  * build step here on purpose: Next's asset URLs are content-hashed, so a
  * runtime cache is as good as a precache manifest and costs no tooling.
  *
  * - navigations: network first, cached document as the fallback
  * - other same-origin GETs: cache first, refreshed in the background
- * - /api/*: never cached, so an ORCID lookup fails honestly when offline
+ * - cross-origin (the ORCID and Crossref lookups): never cached, so a lookup
+ *   fails honestly when offline
  *
  * NOTE: nothing is precached, so the first visit must happen online, and a
  * chunk that has never loaded (a locale, a lazy modal) is missing offline.
@@ -33,9 +34,7 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/api/")) {
-    return;
-  }
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
   event.respondWith(request.mode === "navigate" ? handleNavigation(request) : handleAsset(request));
 });
@@ -52,7 +51,7 @@ async function handleNavigation(request) {
     const response = await fetch(request);
     // Share links live in the fragment, which never reaches the server, so one
     // cached document answers every URL of this app. Only the app's own page
-    // may become that document: /health or an image opened directly must not
+    // may become that document: /health.json or an image opened directly must not
     // replace the offline shell.
     if (response.ok && new URL(request.url).pathname === "/") await cachePut("/", response.clone());
     return response;
