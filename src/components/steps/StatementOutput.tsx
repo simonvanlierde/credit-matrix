@@ -54,7 +54,7 @@ const DATA_FORMATS: Record<
 };
 
 export function StatementOutput() {
-  const { authors } = useContributionStore();
+  const authors = useContributionStore((s) => s.authors);
   const { translateRole, translateUi, translateInterfaceRole, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   // Last beat of the population sequence; see .enter-fade in globals.css.

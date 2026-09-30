@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
+import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -79,7 +80,23 @@ export function ContributionGrid() {
     setRoleScores,
     toggleContribution,
     welcomeOpen,
-  } = useContributionStore();
+  } = useContributionStore(
+    // Only what the grid renders: a whole-store subscription re-rendered every
+    // cell on writes it never shows, such as a title edit or a recorded ask.
+    useShallow((s) => ({
+      authors: s.authors,
+      inputMode: s.inputMode,
+      setInputMode: s.setInputMode,
+      heatmapMonoColor: s.heatmapMonoColor,
+      setHeatmapMonoColor: s.setHeatmapMonoColor,
+      loadAuthors: s.loadAuthors,
+      setAuthorScore: s.setAuthorScore,
+      setAllAuthorScores: s.setAllAuthorScores,
+      setRoleScores: s.setRoleScores,
+      toggleContribution: s.toggleContribution,
+      welcomeOpen: s.welcomeOpen,
+    })),
+  );
   const recentReply = useContributionStore((s) => s.recentReply);
   const {
     describeRole,

@@ -38,8 +38,9 @@ import {
   X,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
+import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { StepHeader } from "@/components/ui/step-header";
@@ -61,6 +62,12 @@ import { useCopyStatus } from "@/lib/use-copy-status";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useSettled } from "@/lib/use-settled";
 import { useContributionStore } from "@/store/contribution-store";
+
+// Module constants, not inline literals: dnd-kit memoizes a sensor on its
+// options object, and a fresh one each render rebuilds the activators, which
+// re-renders every sortable row.
+const POINTER_SENSOR = { activationConstraint: { distance: 5 } };
+const KEYBOARD_SENSOR = { coordinateGetter: sortableKeyboardCoordinates };
 
 const ORCID_EXTRACT_REGEX = /(\d{4}-\d{4}-\d{4}-\d{3}[0-9X])/i;
 
@@ -136,8 +143,28 @@ export function AuthorList() {
     updateAuthorName,
     welcomeOpen,
     welcomeSeen,
-  } = useContributionStore();
+  } = useContributionStore(
+    // Only what this list renders: a whole-store subscription re-rendered it
+    // (and every row) on writes it never shows, such as an ask being recorded.
+    useShallow((s) => ({
+      activeDraftId: s.activeDraftId,
+      authors: s.authors,
+      addAuthor: s.addAuthor,
+      loadSample: s.loadSample,
+      moveAuthor: s.moveAuthor,
+      removeAuthor: s.removeAuthor,
+      restoreAuthor: s.restoreAuthor,
+      setTitle: s.setTitle,
+      title: s.title,
+      updateAuthorName: s.updateAuthorName,
+      welcomeOpen: s.welcomeOpen,
+      welcomeSeen: s.welcomeSeen,
+    })),
+  );
 
+  // Stable while the order is: a fresh array each render changes the sortable
+  // context and re-renders every row straight through their memo.
+  const authorIds = useContributionStore(useShallow((s) => s.authors.map((a) => a.id)));
   const { locked } = useClaimLock();
   const hydrated = useHydrated();
   // Edited locally, committed on blur — like the contributor name fields. A
@@ -180,16 +207,20 @@ export function AuthorList() {
     setFocusAfterRemove(null);
   }, [focusAfterRemove]);
 
-  function handleRemove(author: Author, index: number) {
-    removeAuthor(author.id);
-    // No announce() here: the undo bar below mounts as role="status" with the
-    // same fact, and saying it twice reads as an echo.
-    setRemoved({ author, index });
-    // The button that was just activated is unmounting, which drops focus to
-    // <body> and sends a keyboard user back to the top of the document. Hand
-    // focus to the row that takes its place instead.
-    setFocusAfterRemove(index);
-  }
+  // Stable, so a memoized AuthorRow is not re-rendered by a new callback.
+  const handleRemove = useCallback(
+    (author: Author, index: number) => {
+      removeAuthor(author.id);
+      // No announce() here: the undo bar below mounts as role="status" with the
+      // same fact, and saying it twice reads as an echo.
+      setRemoved({ author, index });
+      // The button that was just activated is unmounting, which drops focus to
+      // <body> and sends a keyboard user back to the top of the document. Hand
+      // focus to the row that takes its place instead.
+      setFocusAfterRemove(index);
+    },
+    [removeAuthor],
+  );
 
   function undoRemove() {
     if (!removed) return;
@@ -203,10 +234,7 @@ export function AuthorList() {
     setRemoved(null);
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, POINTER_SENSOR), useSensor(KeyboardSensor, KEYBOARD_SENSOR));
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -422,7 +450,7 @@ export function AuthorList() {
         onDragEnd={handleDragEnd}
         accessibility={{ announcements }}
       >
-        <SortableContext items={authors.map((a) => a.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={authorIds} strategy={verticalListSortingStrategy}>
           {/* A real list, so assistive tech announces the item count and each
               row's position; the ordering a sighted user reads straight off
               the layout. Tailwind's preflight already strips the markers. */}
@@ -589,7 +617,12 @@ function RowMenu({
   );
 }
 
-function AuthorRow({
+/**
+ * Memoized, and subscribed to its own contributor only: immer keeps an
+ * untouched author object identical, so an edit to one row (or one grid cell)
+ * re-renders that row, not all of them.
+ */
+const AuthorRow = memo(function AuthorRowInner({
   index,
   onRemove,
   enter,
@@ -599,10 +632,16 @@ function AuthorRow({
   enter: boolean;
 }) {
   const t = useTranslations();
-  const { activeDraftId, authors, title, updateAuthorName, updateAuthorOrcid, setAuthorType, setAuthorMarker } =
-    useContributionStore();
+  const { author, updateAuthorName, updateAuthorOrcid, setAuthorType, setAuthorMarker } = useContributionStore(
+    useShallow((s) => ({
+      author: s.authors[index],
+      updateAuthorName: s.updateAuthorName,
+      updateAuthorOrcid: s.updateAuthorOrcid,
+      setAuthorType: s.setAuthorType,
+      setAuthorMarker: s.setAuthorMarker,
+    })),
+  );
   const { locked, editableAuthorId } = useClaimLock();
-  const author = authors[index];
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
   const markAsked = useContributionStore((s) => s.markAsked);
@@ -632,6 +671,9 @@ function AuthorRow({
     if (!author) return;
     let url: string;
     try {
+      // Read at click time: the link carries the whole draft, which this row
+      // does not subscribe to.
+      const { authors, title, activeDraftId } = useContributionStore.getState();
       url = await buildShareUrl({ authors, title, claimId: author.id, sourceDraftId: activeDraftId });
     } catch {
       announce(t(shareFailureKey()), { assertive: true });
@@ -999,4 +1041,4 @@ function AuthorRow({
       </div>
     </li>
   );
-}
+});
