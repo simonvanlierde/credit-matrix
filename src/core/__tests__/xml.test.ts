@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
 import { parseAuthorText } from "../parse-authors";
@@ -52,6 +52,20 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
 
   it("throws on malformed XML", () => {
     expect(() => fromJats4rXml("<article><contrib>")).toThrow(/XML parse error/);
+  });
+
+  it("throws on the <parsererror> document browsers return instead of raising", () => {
+    // Browsers never throw from DOMParser: they return a document with a
+    // <parsererror> element inside it, here after a valid <contrib> so the
+    // guard, not an empty result, is what must stop the import.
+    const doc = new DOMParser().parseFromString("<root/>", "application/xml");
+    doc.documentElement.innerHTML = "<contrib/><parsererror>error on line 1 at column 9</parsererror>";
+    const spy = vi.spyOn(DOMParser.prototype, "parseFromString").mockReturnValue(doc);
+    try {
+      expect(() => fromJats4rXml("<article><contrib>")).toThrow("XML parse error: error on line 1 at column 9");
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 

@@ -112,15 +112,22 @@ test.describe("Happy path UI flows", () => {
 
   test("imports the contributor list from a DOI", async ({ page }) => {
     // Stub Crossref: what is under test is the modal wiring, not the registry.
-    await stubUpstream(page, "https://api.crossref.org/**", 200, {
-      message: {
-        title: ["A study of studies"],
-        author: [
-          { given: "Jane A.", family: "Smith", ORCID: "https://orcid.org/0000-0002-1825-0097" },
-          { given: "Bob", family: "White" },
-        ],
+    // The exact URL (encoded DOI plus the polite-pool mailto) is part of the
+    // contract, so a `**` pattern must not hide a malformed request.
+    await stubUpstream(
+      page,
+      "https://api.crossref.org/works/10.1038%2Fs41586-020-2649-2?mailto=credit%40duinlab.nl",
+      200,
+      {
+        message: {
+          title: ["A study of studies"],
+          author: [
+            { given: "Jane A.", family: "Smith", ORCID: "https://orcid.org/0000-0002-1825-0097" },
+            { given: "Bob", family: "White" },
+          ],
+        },
       },
-    });
+    );
     await page.goto("/");
 
     await page.getByRole("button", { name: "Import" }).click();
@@ -136,6 +143,36 @@ test.describe("Happy path UI flows", () => {
       "href",
       "https://orcid.org/0000-0002-1825-0097",
     );
+  });
+
+  test("falls back to DataCite when Crossref has no record of the DOI", async ({ page }) => {
+    await stubUpstream(page, "https://api.crossref.org/**", 404, {});
+    await stubUpstream(page, "https://api.datacite.org/dois/10.48550%2FarXiv.1706.03762", 200, {
+      data: {
+        attributes: {
+          titles: [{ title: "Attention Is All You Need" }],
+          creators: [
+            {
+              givenName: "Ashish",
+              familyName: "Vaswani",
+              nameIdentifiers: [
+                { nameIdentifier: "https://orcid.org/0000-0002-1825-0097", nameIdentifierScheme: "ORCID" },
+              ],
+            },
+            { givenName: "Noam", familyName: "Shazeer" },
+          ],
+        },
+      },
+    });
+    await page.goto("/");
+
+    await page.getByRole("button", { name: "Import" }).click();
+    await page.locator("#import-doi").fill("10.48550/arXiv.1706.03762");
+    await page.getByRole("button", { name: "Look up" }).click();
+
+    const names = page.getByLabel("Name or ORCID iD", { exact: true });
+    await expect(names).toHaveCount(2);
+    await expect(names.first()).toHaveValue("Ashish Vaswani");
   });
 
   test("a failed ORCID lookup says the service is unavailable and adds no row", async ({ page }) => {
@@ -642,7 +679,8 @@ test.describe("Happy path UI flows", () => {
 
   test("explains a rejected ORCID iD instead of dropping it, and never sticks on the lookup", async ({ page }) => {
     // Stub ORCID so the row's own states are what is under test, not the registry.
-    await stubUpstream(page, "https://pub.orcid.org/**", 200, {
+    // Exact URL: only the checksum-valid iD may reach the registry.
+    await stubUpstream(page, "https://pub.orcid.org/v3.0/0000-0002-1825-0097/person", 200, {
       name: { "given-names": { value: "Jane A." }, "family-name": { value: "Smith" } },
     });
     await page.goto("/");
