@@ -729,6 +729,20 @@ describe("contribution store", () => {
       expect(globalThis.localStorage.getItem(PERSIST_KEY)).not.toContain("Their paper");
     });
 
+    it("ignores events it cannot act on", () => {
+      store().setTitle("Open here");
+      const fromSession = new StorageEvent("storage", { key: PERSIST_KEY, storageArea: globalThis.sessionStorage });
+      expect(followOtherTab(fromSession)).toBe(false);
+
+      // A newer build's save is not this tab's to adopt.
+      globalThis.localStorage.setItem(PERSIST_KEY, JSON.stringify({ state: {}, version: PERSIST_VERSION + 1 }));
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+
+      hydrated.mockReturnValue(false);
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(store().title).toBe("Open here");
+    });
+
     it("keeps the open draft when the other tab deleted it", () => {
       store().setTitle("Open here");
       saveFromOtherTab("theirs", { theirs: { id: "theirs", title: "Their paper" } });
@@ -876,6 +890,20 @@ describe("contribution store", () => {
       expect(merged.authors.map((a) => a.name)).toEqual(["Jane A. Smith"]);
     });
 
+    it("reads an unversioned value as version 0, and survives storage that refuses reads", () => {
+      const storage = announcingStorage();
+      globalThis.localStorage.setItem(PERSIST_KEY, JSON.stringify({ state: { activeDraftId: "a" } }));
+      expect(storage.getItem(PERSIST_KEY)).toMatchObject({ version: 0 });
+
+      // Blocked storage (SecurityError) has nothing to back up or clean up.
+      const blocked = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new DOMException("blocked", "SecurityError");
+      });
+      expect(() => storage.getItem(PERSIST_KEY)).not.toThrow();
+      blocked.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
     it("clears an unreadable persisted value rather than failing hydration forever", () => {
       // A truncated write from a crashed tab. Left in place, zustand's
       // JSON.parse would reject hydration on every visit: hasHydrated never
@@ -996,7 +1024,8 @@ describe("contribution store", () => {
     // build's drafts are only unreadable here, not gone: the first write must
     // not treat them as deleted.
     it("keeps drafts saved by a newer build on disk", () => {
-      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      // Not yet hydrated: this read is the restore, which records the ids.
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(false);
       const storage = announcingStorage();
       const newer = (id: string, title: string) => ({ id, title, authors: [], updatedAt: 0 });
       globalThis.localStorage.setItem(
@@ -1009,6 +1038,7 @@ describe("contribution store", () => {
       globalThis.localStorage.setItem(`${PERSIST_KEY}:draft:b`, JSON.stringify(newer("b", "Held paper")));
 
       storage.getItem(PERSIST_KEY);
+      hydrated.mockReturnValue(true);
       const fresh = {
         id: "c",
         title: "",

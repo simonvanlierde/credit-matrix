@@ -25,6 +25,14 @@ describe("reloadForNewBuild", () => {
     expect(reloadForNewBuild()).toBe(true);
   });
 
+  it("does not reload without sessionStorage to guard against a loop", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("blocked", "SecurityError");
+    });
+    expect(reloadForNewBuild()).toBe(false);
+    expect(reload).not.toHaveBeenCalled();
+  });
+
   it("does not reload offline, where a reload cannot fetch the new build", () => {
     vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     expect(reloadForNewBuild()).toBe(false);

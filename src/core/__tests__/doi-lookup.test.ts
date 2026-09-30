@@ -196,6 +196,16 @@ describe("DataCite fallback", () => {
     });
   });
 
+  it("maps a Crossref record of the wrong shape to UNAVAILABLE", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(crossrefResponse("not a work"));
+    expect(await lookupDoiWork("10.1038/x", fetcher)).toMatchObject({ code: "UNAVAILABLE" });
+  });
+
+  it("reports a DataCite record without creators as having no authors", async () => {
+    const result = await lookupDoiWork("10.5281/x", fallbackFetcher(dataCite({ titles: [{ title: "Data" }] })));
+    expect(result).toMatchObject({ code: "NO_AUTHORS" });
+  });
+
   it("applies the same author-count rules", async () => {
     const many = Array.from({ length: 201 }, (_, i) => ({ givenName: "A", familyName: `Author${i}` }));
     expect(await lookupDoiWork("10.1038/x", fallbackFetcher(dataCite({ creators: many })))).toMatchObject({

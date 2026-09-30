@@ -72,6 +72,19 @@ describe("useCreditTranslators", () => {
     expect(result.current.describeRole("Not A Role")).toBe("");
   });
 
+  it("leaves the state alone when the failure reloads the page", async () => {
+    vi.mocked(reloadForNewBuild).mockReturnValueOnce(true);
+    vi.spyOn(core, "loadRoleCatalog").mockRejectedValue(new Error("chunk load failed"));
+    setLocales("ja", "ja");
+
+    const { result } = renderHook(() => useCreditTranslators());
+    const before = result.current;
+    await waitFor(() => expect(reloadForNewBuild).toHaveBeenCalled());
+
+    // The page is going away; a state update would only flash English first.
+    expect(result.current).toBe(before);
+  });
+
   it("drops a resolved load for a language the reader has already moved off", async () => {
     setLocales("es", "es");
     const { result, unmount } = renderHook(() => useCreditTranslators());
