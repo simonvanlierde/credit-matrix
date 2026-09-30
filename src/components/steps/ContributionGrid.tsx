@@ -12,7 +12,7 @@ import {
   Settings2,
   UserPlus,
 } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
@@ -120,6 +120,9 @@ export function ContributionGrid() {
   // The single tab stop in the matrix; arrow keys move it. Reset when the
   // orientation flips, since row/col swap meaning.
   const [activeCell, setActiveCell] = useState({ row: 0, col: 0 });
+  // Handlers for the memoized cells, refreshed every render. The cells read
+  // them through this ref, so a new closure never re-renders all 14×N of them.
+  const cellApi = useRef<CellApi>(null);
   // The roster as it stood before the last bulk action. One click can rewrite
   // fourteen assignments, so it earns the same undo bar a row removal has.
   const [bulkUndo, setBulkUndo] = useState<Author[] | null>(null);
@@ -278,76 +281,32 @@ export function ContributionGrid() {
     target?.focus();
   }
 
-  const renderCell = (author: Author, roleIndex: number, row: number, col: number) => {
-    const role = CREDIT_ROLES[roleIndex];
-    const score = author.contributions[roleIndex]?.score ?? 0;
-    const frozen = isFrozen(author.id);
-    // The row a just-opened reply filled in. The worded Updated badge lives on
-    // the contributor row; here the same fact is a halo over their cells, in
-    // either orientation, so the change is visible where the roles landed.
-    const recent = author.id === recentReply;
-    const fill = score > 0 ? heatCellColor(heatmapMonoColor, graded ? score : 100) : null;
-    const label = assignmentLabel(author, roleIndex, score);
-    return (
-      <td key={`${author.id}-${role?.name}`} className="min-w-11 p-0">
-        <button
-          type="button"
-          data-cell={`${row}-${col}`}
-          // One tab stop for the whole matrix; arrows move within it. Without
-          // this a keyboard user tabs through every cell, up to 14 x 200.
-          tabIndex={row === active.row && col === active.col ? 0 : -1}
-          onFocus={() => setActiveCell({ row, col })}
-          onKeyDown={(event) => handleCellKeyDown(event, row, col, author, roleIndex)}
-          // A toggle only in yes/no mode: pressed semantics misdescribe a
-          // four-way value, whose level the accessible name carries instead.
-          aria-pressed={graded ? undefined : score > 0}
-          // aria-disabled, not disabled: a disabled button drops out of the
-          // roving tab order, which would strand arrow navigation on a locked
-          // draft. The handlers refuse instead.
-          aria-disabled={frozen || undefined}
-          onContextMenu={
-            graded && !frozen
-              ? (event) => {
-                  event.preventDefault();
-                  setPicker({
-                    authorId: author.id,
-                    roleIndex,
-                    x: event.clientX,
-                    y: event.clientY,
-                    cell: event.currentTarget,
-                  });
-                }
-              : undefined
-          }
-          aria-label={label}
-          title={label}
-          onClick={() => handleCellClick(author, roleIndex, score)}
-          // The fill transitions, and deliberately nothing moves: in Levels mode
-          // a click's only result is the shade stepping up, and at this cadence
-          // (hundreds a session, in a 3px-gapped grid) a press scale would read
-          // as the matrix twitching rather than as feedback.
-          // Empty cells get a hairline ring: fill-on-fill alone is ~1.2:1
-          // against the card, which loses the click target on dim displays.
-          className={`contribution-cell flex h-7 w-full items-center justify-center rounded transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-            frozen ? "cursor-not-allowed opacity-40" : "hover:ring-2 hover:ring-primary/50"
-          } ${fill ? "" : "ring-1 ring-inset ring-outline/70"} ${
-            recent
-              ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
-              : ""
-          }`}
-          style={{ backgroundColor: fill ?? "var(--color-surface-container-high)" }}
-        >
-          {fill && (
-            // The check is the state indicator, so it must clear 3:1 against
-            // the fill it sits on (WCAG 1.4.11). Hardcoded white failed that on
-            // every pale fill; at the default hue's "supporting" level, and at
-            // every level of the lighter presets. onColor measures instead.
-            <LevelMark score={score} graded={graded} color={onColor(fill)} />
-          )}
-        </button>
-      </td>
-    );
+  cellApi.current = {
+    label: assignmentLabel,
+    click: handleCellClick,
+    keyDown: handleCellKeyDown,
+    focus: (row, col) => setActiveCell({ row, col }),
+    openPicker: (authorId, roleIndex, event) => {
+      event.preventDefault();
+      setPicker({ authorId, roleIndex, x: event.clientX, y: event.clientY, cell: event.currentTarget });
+    },
   };
+  const renderCell = (author: Author, roleIndex: number, row: number, col: number) => (
+    <GridCell
+      key={`${author.id}-${CREDIT_ROLES[roleIndex]?.name}`}
+      api={cellApi as RefObject<CellApi>}
+      author={author}
+      roleIndex={roleIndex}
+      row={row}
+      col={col}
+      tabbable={row === active.row && col === active.col}
+      frozen={isFrozen(author.id)}
+      recent={author.id === recentReply}
+      graded={graded}
+      monoColor={heatmapMonoColor}
+      language={interfaceRoleLanguage}
+    />
+  );
 
   return (
     <div className="flex min-w-0 max-w-full flex-col bg-surface-bright rounded-lg shadow-sm border border-outline-variant/20 p-3 md:p-4 desk:h-full desk:overflow-y-auto">
@@ -763,6 +722,102 @@ export function ContributionGrid() {
     </div>
   );
 }
+
+/** What a grid cell calls back into. Read through a ref so the cells can stay memoized. */
+interface CellApi {
+  label: (author: Author, roleIndex: number, score: number) => string;
+  click: (author: Author, roleIndex: number, score: number) => void;
+  keyDown: (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    row: number,
+    col: number,
+    author: Author,
+    roleIndex: number,
+  ) => void;
+  focus: (row: number, col: number) => void;
+  openPicker: (authorId: string, roleIndex: number, event: React.MouseEvent<HTMLButtonElement>) => void;
+}
+
+/**
+ * One assignment in the matrix. Memoized: immer keeps an untouched author
+ * identical, so a click re-renders one contributor's cells, not all 14×N.
+ * `language` is only there to re-render every label when the interface
+ * language changes, since the label function arrives through `api`.
+ */
+const GridCell = memo(function GridCellInner({
+  api,
+  author,
+  roleIndex,
+  row,
+  col,
+  tabbable,
+  frozen,
+  recent,
+  graded,
+  monoColor,
+}: {
+  api: RefObject<CellApi>;
+  author: Author;
+  roleIndex: number;
+  row: number;
+  col: number;
+  tabbable: boolean;
+  frozen: boolean;
+  recent: boolean;
+  graded: boolean;
+  monoColor: string;
+  language: string;
+}) {
+  const score = author.contributions[roleIndex]?.score ?? 0;
+  const fill = score > 0 ? heatCellColor(monoColor, graded ? score : 100) : null;
+  const label = api.current.label(author, roleIndex, score);
+  return (
+    <td className="min-w-11 p-0">
+      <button
+        type="button"
+        data-cell={`${row}-${col}`}
+        // One tab stop for the whole matrix; arrows move within it. Without
+        // this a keyboard user tabs through every cell, up to 14 x 200.
+        tabIndex={tabbable ? 0 : -1}
+        onFocus={() => api.current.focus(row, col)}
+        onKeyDown={(event) => api.current.keyDown(event, row, col, author, roleIndex)}
+        // A toggle only in yes/no mode: pressed semantics misdescribe a
+        // four-way value, whose level the accessible name carries instead.
+        aria-pressed={graded ? undefined : score > 0}
+        // aria-disabled, not disabled: a disabled button drops out of the
+        // roving tab order, which would strand arrow navigation on a locked
+        // draft. The handlers refuse instead.
+        aria-disabled={frozen || undefined}
+        onContextMenu={graded && !frozen ? (event) => api.current.openPicker(author.id, roleIndex, event) : undefined}
+        aria-label={label}
+        title={label}
+        onClick={() => api.current.click(author, roleIndex, score)}
+        // The fill transitions, and deliberately nothing moves: in Levels mode
+        // a click's only result is the shade stepping up, and at this cadence
+        // (hundreds a session, in a 3px-gapped grid) a press scale would read
+        // as the matrix twitching rather than as feedback.
+        // Empty cells get a hairline ring: fill-on-fill alone is ~1.2:1
+        // against the card, which loses the click target on dim displays.
+        className={`contribution-cell flex h-7 w-full items-center justify-center rounded transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          frozen ? "cursor-not-allowed opacity-40" : "hover:ring-2 hover:ring-primary/50"
+        } ${fill ? "" : "ring-1 ring-inset ring-outline/70"} ${
+          recent
+            ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
+            : ""
+        }`}
+        style={{ backgroundColor: fill ?? "var(--color-surface-container-high)" }}
+      >
+        {fill && (
+          // The check is the state indicator, so it must clear 3:1 against
+          // the fill it sits on (WCAG 1.4.11). Hardcoded white failed that on
+          // every pale fill; at the default hue's "supporting" level, and at
+          // every level of the lighter presets. onColor measures instead.
+          <LevelMark score={score} graded={graded} color={onColor(fill)} />
+        )}
+      </button>
+    </td>
+  );
+});
 
 function BulkButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
