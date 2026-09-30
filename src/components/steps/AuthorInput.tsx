@@ -264,7 +264,11 @@ export function AuthorList() {
     if (!id) return { id, error: null };
     const result = await fetchOrcidName(orcid);
     if ("code" in result) return { id, error: orcidErrorText(result, t) };
-    updateAuthorName(id, result.displayName);
+    // A refused write (the row went with a draft switch mid-lookup) leaves the
+    // row named after its iD, so it is a failure, not a success.
+    if (!updateAuthorName(id, result.displayName)) {
+      return { id, error: t("annOrcidLookupsFailed", { count: 1, ids: orcid }) };
+    }
     return { id, error: null };
   }
 
@@ -301,8 +305,8 @@ export function AuthorList() {
     const failed: string[] = [];
     await forEachWithConcurrency(pending, 4, async ({ id, orcid }) => {
       const result = await fetchOrcidName(orcid);
-      if ("code" in result) failed.push(orcid);
-      else updateAuthorName(id, result.displayName);
+      // A refused write leaves the row named after its iD, same as a failed lookup.
+      if ("code" in result || !updateAuthorName(id, result.displayName)) failed.push(orcid);
     });
 
     const addedCount = acceptedTokens.length - rejected.length - badChecksum.length;

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor, lookupOrcidPerson, type OrcidLookupResult } from "@/core";
+import { announce } from "@/lib/announce";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
 import { AuthorList } from "./AuthorInput";
@@ -41,8 +42,30 @@ function renderList() {
 }
 
 const authors = () => useContributionStore.getState().authors;
+const addField = () => screen.getByLabelText<HTMLInputElement>(en.addContributor);
+
 beforeEach(() => {
   useContributionStore.setState(initial, true);
+});
+
+describe("pasting a list of ORCID iDs", () => {
+  it("reports lookups whose name could not be written as failed", async () => {
+    const resolve = deferLookups();
+    renderList();
+    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ALICE}, ${BOB}` } });
+    expect(authors()).toHaveLength(2);
+
+    // A draft switch mid-lookup: the rows the names were meant for are gone.
+    act(() => {
+      useContributionStore.getState().createDraft();
+    });
+    await resolve(ALICE, found("Alice Carberry"));
+    await resolve(BOB, found("Bob Smith"));
+
+    expect(vi.mocked(announce)).toHaveBeenLastCalledWith(expect.stringContaining("Could not look up 2 ORCID iDs"), {
+      assertive: true,
+    });
+  });
 });
 
 describe("a row's ORCID lookup", () => {
