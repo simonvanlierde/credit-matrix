@@ -505,7 +505,13 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       // A newer build's drafts are discarded in memory (see `migrate`), not on
       // disk: leave them unknown so the first write parks them instead of
       // deleting them, and a roll-forward finds them again.
-      known = version > PERSIST_VERSION ? new Set() : new Set(Object.keys(state.drafts));
+      //
+      // Only the restore sets it. followOtherTab reads storage through here
+      // too, and storage then holds drafts only the other tab has open: were
+      // they "known", this tab's next save would count them as deleted.
+      if (!useContributionStore.persist.hasHydrated()) {
+        known = version > PERSIST_VERSION ? new Set() : new Set(Object.keys(state.drafts));
+      }
       return { state: state as unknown as PersistedState, version };
     },
     removeItem: (key) => {
@@ -523,8 +529,15 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       // paint and the rehydrate would save the *empty* initial state over the
       // draft in storage — and the rehydrate that follows would then read that
       // emptied value back. One early keystroke could erase a saved paper.
-      if (adopting || !useContributionStore.persist.hasHydrated()) return;
+      if (!useContributionStore.persist.hasHydrated()) return;
       const { drafts, activeDraftId, uiLocale, welcomeSeen } = value.state;
+      // Adopting another tab's save writes nothing back (it would wake that
+      // tab, which would adopt, write back...), but this tab now holds those
+      // drafts, so deleting one later must remove its key.
+      if (adopting) {
+        known = new Set(Object.keys(drafts));
+        return;
+      }
       const deleted = new Set([...known].filter((id) => !(id in drafts)));
       try {
         // The main key may hold another tab's active draft, stored nowhere

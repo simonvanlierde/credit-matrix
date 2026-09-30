@@ -696,6 +696,39 @@ describe("contribution store", () => {
       expect(store().title).toBe("Open here");
     });
 
+    // Reading storage to check for a change must not teach this tab's adapter
+    // about drafts only the other tab holds: its next save would count them
+    // as deleted here and remove them from storage.
+    it("never deletes a draft only the other tab holds", () => {
+      store().setTitle("Open here");
+      saveFromOtherTab("theirs", { theirs: { id: "theirs", title: "Their paper" } });
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+
+      store().setTitle("Edited here");
+
+      const everything = Object.keys(globalThis.localStorage)
+        .map((key) => globalThis.localStorage.getItem(key))
+        .join("\n");
+      expect(everything).toContain("Their paper");
+    });
+
+    it("removes a draft adopted from the other tab when it is deleted here", () => {
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
+      saveFromOtherTab(open, {
+        [open]: { ...stored.state.drafts[open], title: "Edited there" },
+        theirs: { ...stored.state.drafts[open], id: "theirs", title: "Their paper" },
+      });
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(true);
+      expect(store().drafts.theirs?.title).toBe("Their paper");
+
+      store().deleteDraft("theirs");
+
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:theirs`)).toBeNull();
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).not.toContain("Their paper");
+    });
+
     it("keeps the open draft when the other tab deleted it", () => {
       store().setTitle("Open here");
       saveFromOtherTab("theirs", { theirs: { id: "theirs", title: "Their paper" } });
