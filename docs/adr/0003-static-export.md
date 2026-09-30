@@ -20,8 +20,8 @@ The proxies' premise was also wrong: ORCID's public API does send
 ## Decision
 
 Build with `output: "export"` and serve `out/` as Cloudflare Workers static assets, with no Worker
-code. The browser calls `pub.orcid.org` and `api.crossref.org` itself; the CSP's `connect-src`
-names those two origins. Response headers move from `next.config.ts` to `public/_headers`, and
+code. The browser calls `pub.orcid.org` and `api.crossref.org` itself, plus `api.datacite.org` for DOIs
+Crossref does not hold (arXiv, Zenodo); the CSP's `connect-src` names those origins. Response headers move from `next.config.ts` to `public/_headers`, and
 `/health` becomes a static `/health.json` carrying the build's commit.
 
 ## Consequences
@@ -34,7 +34,7 @@ names those two origins. Response headers move from `next.config.ts` to `public/
 
 **Trade-offs**
 
-- No rate limiter of our own. Each visitor's lookups count against ORCID's and Crossref's limits
+- No rate limiter of our own. Each visitor's lookups count against ORCID's, Crossref's and DataCite's limits
   for their own address, not ours.
 - The Crossref polite-pool contact address ships in the client bundle. It is a public address.
 - `next dev` does not read `public/_headers`, so the dev server runs without a CSP. The E2E suite

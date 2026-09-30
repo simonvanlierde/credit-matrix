@@ -129,3 +129,80 @@ describe("polite pool contact", () => {
     expect(String(fetcher.mock.calls[1]?.[0])).toContain("?mailto=polite%40example.org");
   });
 });
+
+describe("DataCite fallback", () => {
+  const dataCite = (attributes: unknown) => new Response(JSON.stringify({ data: { attributes } }), { status: 200 });
+
+  /** Crossref 404s, DataCite answers with `second`. */
+  const fallbackFetcher = (second: Response) =>
+    vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(second);
+
+  it("asks DataCite after a Crossref 404 and maps creators, ORCID and title", async () => {
+    const fetcher = fallbackFetcher(
+      dataCite({
+        titles: [{ title: "Attention Is All You Need" }],
+        creators: [
+          {
+            name: "Smith, Jane",
+            givenName: "Jane",
+            familyName: "Smith",
+            nameIdentifiers: [
+              { nameIdentifier: "https://orcid.org/0000-0002-1825-0097", nameIdentifierScheme: "ORCID" },
+            ],
+          },
+          {
+            name: "Bad, Bob",
+            givenName: "Bob",
+            familyName: "Bad",
+            nameIdentifiers: [{ nameIdentifier: "x", nameIdentifierScheme: "ISNI" }],
+          },
+          { name: "The Zenodo Consortium", nameType: "Organizational" },
+        ],
+      }),
+    );
+
+    expect(await lookupDoiWork("10.48550/arXiv.1706.03762", fetcher)).toEqual({
+      ok: true,
+      title: "Attention Is All You Need",
+      authors: [
+        { name: "Jane Smith", orcid: "0000-0002-1825-0097" },
+        { name: "Bob Bad" },
+        { name: "The Zenodo Consortium" },
+      ],
+    });
+    expect(String(fetcher.mock.calls[1]?.[0])).toBe("https://api.datacite.org/dois/10.48550%2FarXiv.1706.03762");
+  });
+
+  it("reports NOT_FOUND only when both registries miss", async () => {
+    const fetcher = fallbackFetcher(new Response(null, { status: 404 }));
+    expect(await lookupDoiWork("10.1038/x", fetcher)).toMatchObject({ status: 404, code: "NOT_FOUND" });
+  });
+
+  it("does not ask DataCite when Crossref is merely unavailable", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 503 }));
+    expect(await lookupDoiWork("10.1038/x", fetcher)).toMatchObject({ status: 502, code: "UNAVAILABLE" });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("maps DataCite failure and a malformed body to UNAVAILABLE", async () => {
+    expect(await lookupDoiWork("10.1038/x", fallbackFetcher(new Response(null, { status: 500 })))).toMatchObject({
+      code: "UNAVAILABLE",
+    });
+    expect(await lookupDoiWork("10.1038/x", fallbackFetcher(new Response("{}", { status: 200 })))).toMatchObject({
+      code: "UNAVAILABLE",
+    });
+  });
+
+  it("applies the same author-count rules", async () => {
+    const many = Array.from({ length: 201 }, (_, i) => ({ givenName: "A", familyName: `Author${i}` }));
+    expect(await lookupDoiWork("10.1038/x", fallbackFetcher(dataCite({ creators: many })))).toMatchObject({
+      code: "TOO_MANY_AUTHORS",
+    });
+    expect(await lookupDoiWork("10.1038/x", fallbackFetcher(dataCite({ creators: [] })))).toMatchObject({
+      code: "NO_AUTHORS",
+    });
+  });
+});

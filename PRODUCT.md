@@ -33,7 +33,7 @@ URL or import a supported format.
 ## Constraints
 
 - Keep contribution data client-side. The ORCID and DOI lookups are the only calls that leave the
-  browser, and they go straight to ORCID and Crossref.
+  browser, and they go straight to ORCID, Crossref and DataCite.
 - Preserve scientific accuracy, round-trip integrity, privacy, accessibility, and localization.
 
 ## Voice and claims

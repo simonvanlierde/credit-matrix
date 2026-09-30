@@ -68,7 +68,7 @@ Browser
        ├─ React UI + Zustand store (persisted to localStorage)
        ├─ src/core   ← all domain logic, runs in the browser
        │     statements · JATS4R XML · CSV · JSON · Markdown · heatmap SVG · validation
-       └─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org
+       └─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org · api.datacite.org
                                      ← the only calls that leave the browser
 ```
 
@@ -76,9 +76,9 @@ Everything runs in the browser, served as a static export. [`src/core`](src/core
 logic as pure TypeScript, with `zod` as its only runtime dependency. XML import uses the native
 `DOMParser`, and the PNG is drawn from the heatmap SVG onto a `<canvas>`.
 
-The ORCID and DOI lookups call ORCID's and Crossref's public APIs straight from the browser. Both
-send `Access-Control-Allow-Origin: *`; the CSP in [`public/_headers`](public/_headers) allows exactly
-those two origins.
+The ORCID and DOI lookups call ORCID's, Crossref's and DataCite's public APIs straight from the browser
+(DataCite only for DOIs Crossref does not hold, such as arXiv and Zenodo). All send CORS headers
+the browser accepts; the CSP in [`public/_headers`](public/_headers) allows exactly those origins.
 
 Contributions store a 0–100 integer `score` rather than a boolean, so the UI switches between
 binary and level-based editing without changing the stored model. See

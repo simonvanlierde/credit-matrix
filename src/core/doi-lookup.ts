@@ -16,7 +16,7 @@ const MESSAGES: Record<DoiErrorCode, string> = {
   NOT_FOUND: "No published record matches that DOI.",
   NO_AUTHORS: "That record lists no contributors, so there is nothing to import.",
   TOO_MANY_AUTHORS: `That record lists more than ${MAX_AUTHORS} contributors, which is more than a draft can hold.`,
-  UNAVAILABLE: "The Crossref service is unavailable. Try again shortly, or paste the author list.",
+  UNAVAILABLE: "The DOI lookup service is unavailable. Try again shortly, or paste the author list.",
 };
 
 /** Resolver prefixes stripped on input: doi.org and dx.doi.org, with or without a scheme or `www.`, plus a bare `doi:`. */
@@ -59,6 +59,35 @@ const CrossrefWorkSchema = z.object({
   }),
 });
 
+/**
+ * DataCite (arXiv, Zenodo, Figshare and other repository DOIs) is not in
+ * Crossref. Its JSON:API body nests everything under `data.attributes`; a
+ * creator has `givenName`/`familyName` or only `name`, and an ORCID arrives in
+ * `nameIdentifiers` tagged by scheme.
+ */
+const DataCiteWorkSchema = z.object({
+  data: z.object({
+    attributes: z.object({
+      titles: z.array(z.object({ title: z.string().optional() })).optional(),
+      creators: z
+        .array(
+          z.object({
+            givenName: z.string().optional(),
+            familyName: z.string().optional(),
+            name: z.string().optional(),
+            nameIdentifiers: z
+              .array(z.object({ nameIdentifier: z.string().optional(), nameIdentifierScheme: z.string().optional() }))
+              .optional(),
+          }),
+        )
+        .optional(),
+    }),
+  }),
+});
+
+/** The contributor shape both lookups are reduced to before reading. */
+type CrossrefAuthor = { given?: string; family?: string; name?: string; ORCID?: string };
+
 /** Build a failure carrying both the code and its English description. */
 function fail(status: 400 | 404 | 422 | 502, code: DoiErrorCode): DoiLookupResult {
   return { ok: false, status, code, error: MESSAGES[code] };
@@ -74,7 +103,8 @@ export function normalizeDoi(doi: string): string {
 }
 
 /**
- * Resolve a DOI to its title and contributor list through an injected fetcher.
+ * Resolve a DOI to its title and contributor list through an injected fetcher,
+ * asking Crossref first and DataCite when Crossref has no such record.
  *
  * Pass `mailto` to join Crossref's "polite pool", which gets faster and more
  * reliable service than the anonymous pool.
@@ -92,13 +122,38 @@ export async function lookupDoiWork(
     `https://api.crossref.org/works/${encodeURIComponent(normalized)}${politeSuffix}`,
     fetcher,
   );
-  if (upstream.kind === "not-found") return fail(404, "NOT_FOUND");
+  // Crossref only knows its own registrant DOIs; ask DataCite before giving up.
+  if (upstream.kind === "not-found") return lookupDataCite(normalized, fetcher);
   if (upstream.kind !== "ok") return fail(502, "UNAVAILABLE");
 
   const parsed = CrossrefWorkSchema.safeParse(upstream.body);
   if (!parsed.success) return fail(502, "UNAVAILABLE");
 
-  const entries = parsed.data.message.author ?? [];
+  return toResult(parsed.data.message.title?.[0], parsed.data.message.author ?? []);
+}
+
+async function lookupDataCite(doi: string, fetcher: typeof fetch): Promise<DoiLookupResult> {
+  const upstream = await fetchUpstreamJson(`https://api.datacite.org/dois/${encodeURIComponent(doi)}`, fetcher);
+  if (upstream.kind === "not-found") return fail(404, "NOT_FOUND");
+  if (upstream.kind !== "ok") return fail(502, "UNAVAILABLE");
+
+  const parsed = DataCiteWorkSchema.safeParse(upstream.body);
+  if (!parsed.success) return fail(502, "UNAVAILABLE");
+
+  const { titles, creators } = parsed.data.data.attributes;
+  // Prefer given/family: DataCite's own `name` is "Family, Given", which would
+  // import backwards. It is the fallback for organisations, which have no split.
+  const entries = (creators ?? []).map((creator) => ({
+    given: creator.givenName,
+    family: creator.familyName,
+    name: creator.givenName || creator.familyName ? undefined : creator.name,
+    ORCID: creator.nameIdentifiers?.find((id) => id.nameIdentifierScheme?.toUpperCase() === "ORCID")?.nameIdentifier,
+  }));
+  return toResult(titles?.[0]?.title, entries);
+}
+
+/** Shared tail of both lookups: apply the author-count rules and read each entry. */
+function toResult(title: string | undefined, entries: CrossrefAuthor[]): DoiLookupResult {
   // Reject on the raw count, before dropping unusable entries: a 300-author
   // record should say "too many", not quietly import the 199 it could read.
   if (entries.length > MAX_AUTHORS) return fail(422, "TOO_MANY_AUTHORS");
@@ -106,17 +161,17 @@ export async function lookupDoiWork(
   const authors = entries.map(readAuthor).filter((author): author is DoiAuthor => author !== null);
   if (authors.length === 0) return fail(422, "NO_AUTHORS");
 
-  return { ok: true, title: parsed.data.message.title?.[0]?.trim() ?? "", authors };
+  return { ok: true, title: title?.trim() ?? "", authors };
 }
 
 /**
- * Read one Crossref contributor. Returns null when there is no usable name —
+ * Read one contributor. Returns null when there is no usable name —
  * a consortium entry with neither `name` nor `family` is not importable.
  *
  * An ORCID that fails its checksum is dropped rather than fatal: the name is
  * still worth having, and exporting an unverified iD would be worse.
  */
-function readAuthor(entry: { given?: string; family?: string; name?: string; ORCID?: string }): DoiAuthor | null {
+function readAuthor(entry: CrossrefAuthor): DoiAuthor | null {
   const name = (entry.name?.trim() || `${entry.given?.trim() ?? ""} ${entry.family?.trim() ?? ""}`.trim()).replace(
     /\s+/g,
     " ",
