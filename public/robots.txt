@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-# Backend lookups: each crawl costs Worker CPU and upstream rate limit.
-Disallow: /api/
-Disallow: /health
+# Not a page: the deployed commit, read by the smoke test.
+Disallow: /health.json
