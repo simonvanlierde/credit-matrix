@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
 import { hasCatalog, type LocaleCode, normalizeLocaleCode } from "@/core";
 import { announce, STORAGE_FULL_EVENT } from "@/lib/announce";
+import { reloadForNewBuild } from "@/lib/reload-for-new-build";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
 
@@ -93,9 +94,9 @@ export function AppIntlProvider({ children }: { children: ReactNode }) {
         if (active) setLoaded({ requested: locale, effective: locale, messages: mod.default });
       })
       .catch(() => {
-        // A locale chunk failed to load (e.g. a stale deploy). English is a
-        // working interface; a missing-message crash is not.
-        if (active) setLoaded({ requested: locale, effective: "en", messages: en });
+        // A locale chunk failed to load: after a deploy, reload into the new
+        // build. Otherwise English is a working interface; a crash is not.
+        if (active && !reloadForNewBuild()) setLoaded({ requested: locale, effective: "en", messages: en });
       });
     return () => {
       active = false;

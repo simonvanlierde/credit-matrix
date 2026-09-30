@@ -2,7 +2,12 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as core from "@/core";
 import { useContributionStore } from "@/store/contribution-store";
+import { reloadForNewBuild } from "./reload-for-new-build";
 import { useCreditTranslators } from "./use-credit-translators";
+
+// A real reload is a navigation jsdom cannot perform; the tests decide
+// whether it "happened".
+vi.mock("./reload-for-new-build", () => ({ reloadForNewBuild: vi.fn(() => false) }));
 
 const initial = useContributionStore.getState();
 
@@ -57,6 +62,9 @@ describe("useCreditTranslators", () => {
 
     const { result } = renderHook(() => useCreditTranslators());
 
+    // The hook starts out English, so wait for the reload attempt first:
+    // otherwise this passes before the failure has even been handled.
+    await waitFor(() => expect(reloadForNewBuild).toHaveBeenCalled());
     await waitFor(() => expect(result.current.outputLanguage).toBe("en"));
     expect(result.current.translateRole("Conceptualization")).toBe("Conceptualization");
     // Help text falls back to the bundled English catalog, not to a blank panel.
