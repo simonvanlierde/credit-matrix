@@ -143,4 +143,17 @@ describe("a row's ORCID lookup", () => {
 
     expect(authors()[0]).toMatchObject({ name: "Bob Smith", orcid: BOB });
   });
+
+  it("says why when the registry's name fails the name rules, and keeps the old one", async () => {
+    const resolve = deferLookups();
+    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ALICE })] });
+    renderList();
+
+    fireEvent.click(screen.getByRole("button", { name: en.lookupOrcidName }));
+    await resolve(ALICE, found("x".repeat(600)));
+
+    expect(authors()[0]?.name).toBe("Someone");
+    expect(announce).toHaveBeenCalledWith(en.errNameTooLong, { assertive: true });
+    expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("x".repeat(600)));
+  });
 });

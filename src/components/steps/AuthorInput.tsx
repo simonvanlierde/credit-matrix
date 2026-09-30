@@ -754,10 +754,15 @@ const AuthorRow = memo(function AuthorRowInner({
       const message = orcidErrorText(result, t);
       setLookupError(message);
       announce(message, { assertive: true });
-    } else {
-      updateAuthorName(authorId, result.displayName);
+    } else if (updateAuthorName(authorId, result.displayName)) {
       setLookedUp(orcid);
       announce(t("annNameFromOrcid", { name: result.displayName }));
+    } else {
+      // The registry's name failed the same rules a typed name must pass;
+      // the row keeps its name, so say why rather than report a success.
+      const message = t(result.displayName.length > MAX_AUTHOR_NAME_LENGTH ? "errNameTooLong" : "errNameNoLetter");
+      setLookupError(message);
+      announce(message, { assertive: true });
     }
   }
 
