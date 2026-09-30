@@ -695,6 +695,9 @@ const AuthorRow = memo(function AuthorRowInner({
       mounted.current = false;
     };
   }, []);
+  // Only the latest lookup may write: a slower, older one would otherwise pair
+  // one person's name with another's iD, and clear `loading` too early.
+  const lookupSeq = useRef(0);
 
   // Keyed on the stored name, not the author object: normalizeAuthors rebuilds
   // every author on any list mutation, so an identity-keyed effect overwrote
@@ -728,11 +731,12 @@ const AuthorRow = memo(function AuthorRowInner({
   const isNonAuthor = author.contributorType === "non-author";
 
   async function lookup(orcid: string) {
+    const seq = ++lookupSeq.current;
     setLoading(true);
     setLookupError(null);
     setLookedUp(null);
     const result = await fetchOrcidName(orcid);
-    if (!mounted.current) return;
+    if (!mounted.current || seq !== lookupSeq.current) return;
     setLoading(false);
     if ("code" in result) {
       const message = orcidErrorText(result, t);
@@ -762,6 +766,9 @@ const AuthorRow = memo(function AuthorRowInner({
   }
 
   function clearOrcid() {
+    // A lookup still in flight is for the iD being removed; drop its answer.
+    lookupSeq.current += 1;
+    setLoading(false);
     updateAuthorOrcid(authorId, "");
     setLookupError(null);
     setLookedUp(null);
