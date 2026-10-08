@@ -173,6 +173,9 @@ CRediT Matrix builds on prior tools and scholarship on contributorship:
 - Nakagawa, S., Ivimey-Cook, E. R., Grainger, M. J., O'Dea, R. E., et al. (2023). Method Reporting
   with Initials for Transparency (MeRIT) promotes more granularity and accountability for author
   contributions. *Nature Communications, 14*, 1788. <https://doi.org/10.1038/s41467-023-37039-1>
+- Holcombe, A. O., Kovacs, M., Lagisz, M., et al. (2026). Facilitating multilingual research
+  publishing: Translations of the Contributor Roles Taxonomy (CRediT). *MetaArXiv*.
+  <https://doi.org/10.31222/osf.io/2rp7s_v2>
 
 ## Citing this software
 
