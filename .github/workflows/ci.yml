@@ -1,11 +1,13 @@
 name: CI
 
-# No push trigger: main only advances through a PR, so a push run repeats
-# the check that already passed on the PR head.
 on:
   # Every PR, not only those into main: a stacked PR otherwise runs no checks
   # until its base merges.
   pull_request:
+  # Main only, so a PR branch runs once (via pull_request), not twice. The
+  # push run keeps the README badge on main's latest commit.
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
