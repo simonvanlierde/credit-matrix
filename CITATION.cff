@@ -85,3 +85,17 @@ references:
     year: 2023
     volume: 14
     doi: "10.1038/s41467-023-37039-1"
+  - type: article
+    title: "Facilitating multilingual research publishing: Translations of the Contributor Roles Taxonomy (CRediT)"
+    notes: "Source of the role-name translations vendored in src/core/credit-i18n/translations."
+    authors:
+      - family-names: Holcombe
+        given-names: Alex O.
+      - family-names: Kovacs
+        given-names: Marton
+      - family-names: Lagisz
+        given-names: Malgorzata
+      - name: "et al."
+    journal: "MetaArXiv"
+    year: 2026
+    doi: "10.31222/osf.io/2rp7s_v2"
