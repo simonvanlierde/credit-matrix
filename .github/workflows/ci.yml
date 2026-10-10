@@ -41,6 +41,9 @@ jobs:
       - name: Lint, typecheck, test
         run: pnpm verify --coverage
 
+      - name: Validate JATS export against the DTD
+        run: sudo apt-get install -y --no-install-recommends libxml2-utils && ./scripts/validate-jats.sh
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
