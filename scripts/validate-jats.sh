@@ -9,5 +9,5 @@ trap 'rm -f "$fresh"' EXIT
 
 JATS_OUT=$fresh pnpm exec vitest run src/core/__tests__/jats-sample-export.test.ts >/dev/null
 
-"${XMLLINT:-xmllint}" --noout --dtdvalid "$dtd" src/core/__tests__/fixtures/export-jats.xml "$fresh"
+"${XMLLINT:-xmllint}" --noout --path test/jats-dtd --dtdvalid "$dtd" src/core/__tests__/fixtures/export-jats.xml "$fresh"
 echo "JATS validation passed"
