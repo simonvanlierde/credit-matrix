@@ -13,9 +13,10 @@ on:
 permissions:
   contents: read
 
+# A newer push supersedes a PR run, but a run on main may be mid-deploy.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   check:
