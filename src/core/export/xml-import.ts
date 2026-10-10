@@ -58,8 +58,7 @@ export function fromJats4rXml(xmlString: string): Author[] {
       const name =
         roleNameByUrl.get(normalizeRoleUrl(el.getAttribute("vocab-term-identifier") ?? "")) ??
         el.getAttribute("vocab-term") ??
-        el.textContent?.trim() ??
-        "";
+        el.textContent.trim();
       if (!roleNames.has(name)) continue;
       // No or an unknown `degree-contribution` (JATS before 1.3) means lead.
       const score = LEVEL_SCORES.get(el.getAttribute("degree-contribution")?.trim().toLowerCase() ?? "") ?? 100;
