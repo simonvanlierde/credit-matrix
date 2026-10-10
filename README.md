@@ -110,8 +110,8 @@ pnpm dev            # → http://localhost:3000
 `pnpm build` writes a static export to `out/`, which any static host can serve; response headers,
 including the CSP, are in [`public/_headers`](public/_headers). The live demo serves it as
 Cloudflare Workers static assets, with no Worker code. A push to `main` builds and deploys it;
-[CI](.github/workflows/ci.yml) runs on pull requests: it lints, typechecks, runs the unit and
-end-to-end tests, and dry-runs the build. It never deploys.
+[CI](.github/workflows/ci.yml) runs on pull requests and on pushes to `main`: it lints, typechecks,
+runs the unit and end-to-end tests, and dry-runs the build. It never deploys.
 
 To host it on Cloudflare yourself, set your own domain in [wrangler.jsonc](wrangler.jsonc):
 

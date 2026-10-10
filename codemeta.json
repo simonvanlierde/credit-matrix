@@ -1,0 +1,36 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "type": "SoftwareSourceCode",
+  "name": "CRediT Matrix",
+  "description": "A client-side web app for drafting CRediT (Contributor Roles Taxonomy) contribution statements for scholarly publications, with a contribution heatmap and JATS4R XML, CSV, JSON, and Markdown exports for journal submission systems. Contributors can be filled in from an ORCID iD or a DOI, and the interface and the generated statement are localized independently across nine languages.",
+  "version": "0.6.0",
+  "datePublished": "2026-09-30",
+  "license": "https://spdx.org/licenses/MIT",
+  "author": [
+    {
+      "type": "Person",
+      "id": "https://orcid.org/0009-0006-6953-909X",
+      "givenName": "Simon",
+      "familyName": "van Lierde"
+    }
+  ],
+  "codeRepository": "https://github.com/simonvanlierde/credit-matrix",
+  "url": "https://credit.duinlab.nl",
+  "identifier": "https://doi.org/10.5281/zenodo.21213659",
+  "programmingLanguage": "TypeScript",
+  "applicationCategory": "Scholarly publishing",
+  "operatingSystem": "Web browser",
+  "keywords": [
+    "CRediT",
+    "contributor roles taxonomy",
+    "authorship",
+    "contribution matrix",
+    "contribution heatmap",
+    "JATS4R",
+    "scholarly publishing",
+    "research software",
+    "ORCID",
+    "DOI",
+    "localization"
+  ]
+}

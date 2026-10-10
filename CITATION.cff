@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
 title: "CRediT Matrix"
 abstract: >-
-  A client-side web app and TypeScript library for drafting CRediT (Contributor Roles Taxonomy) contribution statements for scholarly publications, with a contribution heatmap and JATS4R XML, CSV, JSON, and Markdown exports for journal submission systems. Contributors can be filled in from an ORCID iD or a DOI, and the interface and the generated statement are localized independently across nine languages.
+  A client-side web app for drafting CRediT (Contributor Roles Taxonomy) contribution statements for scholarly publications, with a contribution heatmap and JATS4R XML, CSV, JSON, and Markdown exports for journal submission systems. Contributors can be filled in from an ORCID iD or a DOI, and the interface and the generated statement are localized independently across nine languages.
 type: software
 authors:
   - given-names: Simon

@@ -33,7 +33,10 @@ pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
 ```
 
-CI runs `pnpm lint`, `pnpm typecheck`, and `pnpm test:coverage` on every PR.
+Before the first e2e run, install the browser: `pnpm exec playwright install chromium`.
+
+CI runs on every pull request and on every push to `main`. It runs `pnpm lint`, `pnpm typecheck`,
+and `pnpm test:coverage`, plus the e2e suite and a build dry run.
 Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 ## Testing
@@ -49,7 +52,9 @@ Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 Every PR runs Biome, typecheck, unit coverage, the full Playwright suite (including the axe scans),
 and a static export build. In CI, Playwright runs against `wrangler dev`, which applies
-`public/_headers`. Locally it uses `pnpm dev`, which has no CSP.
+`public/_headers`. Locally it uses `pnpm dev`, which has no CSP. You only need
+[wrangler](https://developers.cloudflare.com/workers/wrangler/) for `pnpm preview` and
+`pnpm deploy`, not for development or the tests you run locally.
 
 ### Accessibility
 
@@ -63,6 +68,38 @@ Two automated checks guard the UI. They are guardrails, not a WCAG conformance c
 The UI includes a skip link, landmark regions, radiogroup segmented controls, and a
 `prefers-reduced-motion` fallback that neutralizes transitions and animations. Drag-to-reorder is
 keyboard-accessible, and a live region announces copy, ORCID-lookup, and import status.
+
+## Translating
+
+The app has nine languages. A translation lives in one of three places, depending on the string.
+
+| What | File | Notes |
+| --- | --- | --- |
+| Interface text (buttons, labels, dialogs) | `src/messages/<locale>.json` | ICU messages. `en.json` is the source. |
+| Statement and heatmap text ("Acknowledgements", contribution levels, empty-state line) | `src/core/credit-i18n/ui/<locale>.json` | Holds only overrides. A missing key falls back to English. |
+| CRediT role names and descriptions | `src/core/credit-i18n/translations/<locale>.json` | Vendored from [contributorshipcollaboration/credit-translation](https://github.com/contributorshipcollaboration/credit-translation). Do not edit it here. Fix the role name upstream, then refresh with `node scripts/fetch-credit-translations.mjs` and review the diff. |
+
+Locale codes are BCP 47 tags, such as `pt-PT` and `zh-Hans`.
+
+**Add a language**
+
+1. Add `{ code, name }` to `AVAILABLE_LOCALES` in `src/core/credit-i18n/index.ts`. The name is the
+   language's own name for itself.
+2. Add `src/messages/<code>.json` with every key from `en.json`.
+3. Add `src/core/credit-i18n/ui/<code>.json`, copying the keys from an existing locale.
+4. Add the locale to `LOCALES` in `scripts/fetch-credit-translations.mjs` and run the script. This
+   only works if upstream already has that language. If it does not, translate the roles upstream
+   first.
+
+**The gate.** `e2e/messages.spec.ts` fails if a locale the picker offers has no catalog files, if a
+key set differs from English in either direction, if ICU syntax is malformed, or if a placeholder is
+dropped. Run it with `pnpm exec playwright test e2e/messages.spec.ts`.
+
+To report a wrong or missing translation without a PR, use the translation issue form.
+
+## Deploys and rollback
+
+See [docs/deploy.md](docs/deploy.md).
 
 ## Commit and PR conventions
 
