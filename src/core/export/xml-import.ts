@@ -3,6 +3,13 @@ import { isValidOrcid } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 
+/** The score each `degree-contribution` level imports as: the top of its `scoreToLevel` band. */
+const LEVEL_SCORES = new Map([
+  ["lead", 100],
+  ["equal", 66],
+  ["supporting", 33],
+]);
+
 /**
  * Parse a JATS4R XML string (as produced by `toJats4rXml()` or the original
  * Python app) back into an Author array, with the browser's `DOMParser`.
@@ -46,24 +53,22 @@ export function fromJats4rXml(xmlString: string): Author[] {
     // term spellings vary ("Writing - original draft"); then `vocab-term`, then
     // the text content.
     const roleEls = Array.from(contrib.querySelectorAll("role"));
-    const activeRoleNames = new Set(
-      roleEls
-        .map(
-          (el) =>
-            roleNameByUrl.get(normalizeRoleUrl(el.getAttribute("vocab-term-identifier") ?? "")) ??
-            el.getAttribute("vocab-term") ??
-            el.textContent?.trim() ??
-            "",
-        )
-        .filter((name) => roleNames.has(name)),
-    );
+    const scoreByRole = new Map<string, number>();
+    for (const el of roleEls) {
+      const name =
+        roleNameByUrl.get(normalizeRoleUrl(el.getAttribute("vocab-term-identifier") ?? "")) ??
+        el.getAttribute("vocab-term") ??
+        el.textContent?.trim() ??
+        "";
+      if (!roleNames.has(name)) continue;
+      // No or an unknown `degree-contribution` (JATS before 1.3) means lead.
+      const score = LEVEL_SCORES.get(el.getAttribute("degree-contribution")?.trim().toLowerCase() ?? "") ?? 100;
+      scoreByRole.set(name, Math.max(score, scoreByRole.get(name) ?? 0));
+    }
 
-    // JATS4R carries no score, only role presence, so every active role comes
-    // back as 100. A score of e.g. 50 exported to XML re-imports as 100; this
-    // lossy round-trip is by design (the format has no field for it).
     const contributions: Contribution[] = CREDIT_ROLES.map((r) => ({
       role: r.name,
-      score: activeRoleNames.has(r.name) ? 100 : 0,
+      score: scoreByRole.get(r.name) ?? 0,
     }));
 
     // Try to read ORCID from an `<contrib-id contrib-id-type="orcid">` element
