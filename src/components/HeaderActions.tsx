@@ -9,7 +9,7 @@ import { showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Author } from "@/core";
 import { keepKnownIds, mergeContributorRow } from "@/core";
-import { announce, NEWER_VERSION_EVENT } from "@/lib/announce";
+import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { type DraftClaim, followOtherTab, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
@@ -62,11 +62,10 @@ export function HeaderActions() {
 
   // A newer build saved in another tab and this one could not reload into it:
   // its edits are no longer saved, which nobody should find out later.
+  const newerVersionBlocked = useContributionStore((s) => s.newerVersionBlocked);
   useEffect(() => {
-    const onNewer = () => showStatus({ kind: "error", message: t("errNewerVersionSaved") });
-    window.addEventListener(NEWER_VERSION_EVENT, onNewer);
-    return () => window.removeEventListener(NEWER_VERSION_EVENT, onNewer);
-  }, [t]);
+    if (newerVersionBlocked) showStatus({ kind: "error", message: t("errNewerVersionSaved") });
+  }, [newerVersionBlocked, t]);
 
   // The listener is registered once, so it must not capture this render's
   // handler: `t` changes with the interface language, and a hash pasted after

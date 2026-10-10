@@ -15,13 +15,6 @@ export function requestStorageFullAnnouncement() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(STORAGE_FULL_EVENT));
 }
 
-export const NEWER_VERSION_EVENT = "credit-newer-version";
-
-/** Ask the mounted interface to say that a newer build owns the saved drafts now. */
-export function requestNewerVersionNotice() {
-  if (typeof window !== "undefined") window.dispatchEvent(new Event(NEWER_VERSION_EVENT));
-}
-
 /**
  * Announce a transient message to assistive tech via the global live region.
  * Use `assertive` for errors that should interrupt; the default (polite) waits

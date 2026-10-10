@@ -15,8 +15,8 @@ import {
   normalizeLocaleCode,
   normalizeOrcid,
 } from "@/core";
-import { requestNewerVersionNotice, requestStorageFullAnnouncement } from "@/lib/announce";
-import { reloadForNewBuild } from "@/lib/reload-for-new-build";
+import { requestStorageFullAnnouncement } from "@/lib/announce";
+import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 export type InputMode = "toggle" | "levels";
@@ -102,6 +102,12 @@ interface ContributionState {
    * leaves), and a draft switch clears it too.
    */
   recentReply: string | null;
+  /**
+   * A newer build saved the drafts and this tab could not reload into it, so
+   * nothing here is saved any more. State rather than an event: at load it is
+   * found before anything that shows it has mounted. Not persisted.
+   */
+  newerVersionBlocked: boolean;
   /** Whether the welcome card is currently open. Ephemeral (not persisted), so a
    *  "How it works" re-open never survives a reload as a fake first run. */
   welcomeOpen: boolean;
@@ -475,13 +481,13 @@ function draftKeys(): string[] {
 export function announcingStorage(): PersistStorage<PersistedState> {
   let warned = false;
   // A newer build saved here, so this tab is the old one: reload to become
-  // that build. When the reload is refused (offline, or it just happened), say
-  // once that edits here are not being saved.
+  // that build. When the reload is refused (offline, or it just happened),
+  // flag that edits here are not being saved.
   let yielded = false;
   const yieldToNewerBuild = () => {
     if (yielded) return;
     yielded = true;
-    if (!reloadForNewBuild()) requestNewerVersionNotice();
+    if (!reloadForNewerSave()) useContributionStore.setState({ newerVersionBlocked: true });
   };
   // Parked drafts already on disk, by reference. Immer's structural sharing
   // keeps an untouched draft's identity across edits, so a reference match
@@ -552,8 +558,10 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       // they "known", this tab's next save would count them as deleted.
       if (!useContributionStore.persist.hasHydrated()) {
         known = version > PERSIST_VERSION ? new Set() : new Set(Object.keys(state.drafts));
-        if (version > PERSIST_VERSION) yieldToNewerBuild();
       }
+      // At the restore, or when followOtherTab sees another tab's save: yield
+      // now, before this idle tab's next edit is refused.
+      if (version > PERSIST_VERSION) yieldToNewerBuild();
       return { state: state as unknown as PersistedState, version };
     },
     removeItem: (key) => {
@@ -653,6 +661,8 @@ export function followOtherTab(event: StorageEvent): boolean {
   const id = live.activeDraftId;
   if (event.key !== PERSIST_KEY && event.key !== DRAFT_KEY_PREFIX + id) return false;
 
+  // A newer build's save is not this tab's to adopt; reading it is what makes
+  // this tab yield to that build (see announcingStorage).
   const stored = store.getOptions().storage?.getItem(PERSIST_KEY);
   if (!stored || stored instanceof Promise || (stored.version ?? 0) > PERSIST_VERSION) return false;
   const theirs = (stored.state.drafts as Record<string, unknown>)[id];
@@ -704,6 +714,7 @@ export const useContributionStore = create<ContributionState>()(
       uiLocale: "en",
       welcomeSeen: false,
       welcomeOpen: false,
+      newerVersionBlocked: false,
       claim: null,
       asks: {},
       recentReply: null,

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor, type LocaleCode } from "@/core";
-import { requestNewerVersionNotice, requestStorageFullAnnouncement } from "@/lib/announce";
-import { reloadForNewBuild } from "@/lib/reload-for-new-build";
+import { requestStorageFullAnnouncement } from "@/lib/announce";
+import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
   announcingStorage,
   type Draft,
@@ -12,8 +12,8 @@ import {
 } from "./contribution-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
-vi.mock("@/lib/announce", () => ({ requestNewerVersionNotice: vi.fn(), requestStorageFullAnnouncement: vi.fn() }));
-vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewBuild: vi.fn(() => true) }));
+vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
+vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
 const initial = useContributionStore.getState();
 
@@ -25,7 +25,7 @@ describe("contribution store", () => {
   beforeEach(() => {
     useContributionStore.setState(initial, true);
     vi.clearAllMocks();
-    vi.mocked(reloadForNewBuild).mockReturnValue(true);
+    vi.mocked(reloadForNewerSave).mockReturnValue(true);
   });
 
   describe("title", () => {
@@ -762,10 +762,6 @@ describe("contribution store", () => {
       const fromSession = new StorageEvent("storage", { key: PERSIST_KEY, storageArea: globalThis.sessionStorage });
       expect(followOtherTab(fromSession)).toBe(false);
 
-      // A newer build's save is not this tab's to adopt.
-      globalThis.localStorage.setItem(PERSIST_KEY, JSON.stringify({ state: {}, version: PERSIST_VERSION + 1 }));
-      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
-
       hydrated.mockReturnValue(false);
       expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
       expect(store().title).toBe("Open here");
@@ -774,6 +770,8 @@ describe("contribution store", () => {
     // A version bump alone cannot protect a newer build's data from a tab that
     // was already open on the same draft: it never re-reads that draft. Its
     // next save is what has to stop.
+    // The real store's adapter yields once per page, so this is the one test
+    // that sees it do so.
     it("never saves over a newer build's save of the draft open here, and reloads instead", () => {
       store().setTitle("Open here");
       const open = store().activeDraftId;
@@ -787,13 +785,15 @@ describe("contribution store", () => {
         version: PERSIST_VERSION + 1,
       });
       globalThis.localStorage.setItem(PERSIST_KEY, newerSave);
+      // Not adopted, but this idle tab reloads into the newer build at once.
       expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
 
       store().setTitle("Edited here");
 
       expect(globalThis.localStorage.getItem(PERSIST_KEY)).toBe(newerSave);
       expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${open}`)).toBeNull();
-      expect(reloadForNewBuild).toHaveBeenCalledTimes(1);
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
     });
 
     it("keeps the open draft when the other tab deleted it", () => {
@@ -1168,15 +1168,15 @@ describe("contribution store", () => {
       expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:b`)).toContain("Held paper");
       expect(globalThis.localStorage.getItem(PERSIST_KEY)).toContain("Active paper");
       expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:c`)).toBeNull();
-      expect(reloadForNewBuild).toHaveBeenCalledTimes(1);
-      expect(requestNewerVersionNotice).not.toHaveBeenCalled();
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
+      expect(store().newerVersionBlocked).toBe(false);
       hydrated.mockRestore();
       globalThis.localStorage.clear();
     });
 
-    it("says once that edits are not saved when it cannot reload into the newer build", () => {
+    it("flags once that edits are not saved when it cannot reload into the newer build", () => {
       const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
-      vi.mocked(reloadForNewBuild).mockReturnValue(false);
+      vi.mocked(reloadForNewerSave).mockReturnValue(false);
       const storage = announcingStorage();
       const newerSave = JSON.stringify({ state: { drafts: {}, activeDraftId: "a" }, version: PERSIST_VERSION + 1 });
       globalThis.localStorage.setItem(PERSIST_KEY, newerSave);
@@ -1189,7 +1189,8 @@ describe("contribution store", () => {
       storage.setItem(PERSIST_KEY, value);
 
       expect(globalThis.localStorage.getItem(PERSIST_KEY)).toBe(newerSave);
-      expect(requestNewerVersionNotice).toHaveBeenCalledTimes(1);
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
+      expect(store().newerVersionBlocked).toBe(true);
       hydrated.mockRestore();
       globalThis.localStorage.clear();
     });
