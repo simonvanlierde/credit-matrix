@@ -19,7 +19,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - An open tab no longer saves over drafts that a newer version saved in another tab. It reloads
   into the newer version, or says that its edits are not being saved when it cannot.
 - Saved drafts move to a new storage version. Open asks carry over. An older version opened later
-  starts empty and leaves the newer drafts in place.
+  starts empty and leaves the newer drafts in place. After updating, reload any other tab that still
+  has CRediT Matrix open: a tab opened before the update has no such guard and can overwrite changes
+  made in the updated version.
 
 ### Fixed
 

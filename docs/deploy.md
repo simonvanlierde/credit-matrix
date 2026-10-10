@@ -22,6 +22,9 @@ On pull requests, the `preview` job uploads the build as a Worker version with `
 
 A rollback by CLI or dashboard lasts only until the next push to `main` deploys again.
 
+> [!WARNING]
+> Do not roll back across a release that raised the storage version (`PERSIST_VERSION` in `src/store/persist-meta.ts`). Browsers that ran the newer build hold drafts saved in its format, and an older build refuses to write over them: those users would see their edits go unsaved. After such a release, roll forward with a fix instead.
+
 ## One-time setup
 
 1. Create an API token at dash.cloudflare.com, My Profile, API Tokens. Use the "Edit Cloudflare Workers" template, limited to this account.
