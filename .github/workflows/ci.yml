@@ -29,15 +29,17 @@ jobs:
 
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
-          runtime: node@26
+          node-version-file: .node-version
           cache: true
           install: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # `verify` is the pre-push gate (biome, tsc, vitest); the extra flag
+      # adds coverage output for Codecov.
       - name: Lint, typecheck, test
-        run: pnpm biome check . && pnpm typecheck && pnpm test:coverage
+        run: pnpm verify --coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
@@ -57,7 +59,7 @@ jobs:
 
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
-          runtime: node@26
+          node-version-file: .node-version
           cache: true
           install: false
 
@@ -127,7 +129,7 @@ jobs:
 
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
-          runtime: node@26
+          node-version-file: .node-version
           cache: true
           install: false
 
@@ -149,8 +151,128 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # The real deploy runs from Cloudflare Builds on merge to main, so a bad
-      # route or assets path in wrangler.jsonc would first fail in production.
-      # The dry run needs no credentials.
+      # The deploy job ships this exact out/, so a bad route or assets path in
+      # wrangler.jsonc is caught here first. The dry run needs no credentials.
       - name: Validate Worker config
         run: pnpm exec wrangler deploy --dry-run
+
+      - name: Upload static export
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: out
+          path: out
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  # Preview of a PR's build as a Worker version (not live). Needs the token
+  # secret, which fork PRs never get, so both cases skip with a notice.
+  preview:
+    name: Preview
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build]
+    steps:
+      - name: Check credentials
+        id: gate
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          if [ "$FORK" = "true" ] || [ -z "$TOKEN" ]; then
+            echo "::notice::Preview skipped: fork PR or CLOUDFLARE_API_TOKEN not set."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - if: steps.gate.outputs.run == 'true'
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          node-version-file: .node-version
+          cache: true
+          install: false
+
+      - if: steps.gate.outputs.run == 'true'
+        name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - if: steps.gate.outputs.run == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: out
+          path: out
+
+      - if: steps.gate.outputs.run == 'true'
+        name: Upload Worker version
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          MESSAGE: PR ${{ github.event.pull_request.number }} at ${{ github.event.pull_request.head.sha }}
+        run: |
+          pnpm exec wrangler versions upload --message "$MESSAGE" | tee upload.log
+          {
+            echo "### Preview"
+            url=$(grep -Eo 'https://[^ ]+' upload.log | grep -i 'preview' | head -n 1 || true)
+            if [ -n "$url" ]; then echo "$url"; else echo "Version uploaded, but wrangler printed no preview URL. Enable Preview URLs for the Worker in the dashboard."; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Production deploy of the build job's out/, after every check passes.
+  deploy:
+    name: Deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [check, e2e, build]
+    # Serialise deploys; never cancel one half way.
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          node-version-file: .node-version
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: out
+          path: out
+
+      - name: Pack export
+        run: tar -czf out.tar.gz -C out .
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: out.tar.gz
+
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::notice::Deploy skipped: CLOUDFLARE_API_TOKEN is not set."
+            echo "Deploy skipped: CLOUDFLARE_API_TOKEN is not set." >> "$GITHUB_STEP_SUMMARY"
+          else
+            pnpm exec wrangler deploy
+          fi
