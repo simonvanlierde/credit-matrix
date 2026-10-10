@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The JATS4R XML export no longer claims "© 2019 JATS4R" and a CC BY licence for your paper. That
+  block was sample text and is gone.
+- The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as
+  JATS 1.3 `degree-contribution`, and importing the file restores them. Files without it import
+  every role as lead, as before.
+
 ### Removed
 
 - `/health.json`. It only served the post-deploy smoke test, which is gone too.

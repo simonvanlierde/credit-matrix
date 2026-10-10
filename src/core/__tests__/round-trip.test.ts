@@ -44,11 +44,12 @@ describe("round-trip exports", () => {
     expect(janeActive).toContain("Conceptualization");
     expect(janeActive).toContain("Software");
 
-    // JATS4R has no score field, so the round-trip is lossy by design: a
-    // score of 50 (Software) comes back as 100, not the original value.
-    const reSoftware = pJane?.contributions.find((c) => c.role === "Software");
-    expect(jc8.score).toBe(50);
-    expect(reSoftware?.score).toBe(100);
+    // `degree-contribution` keeps the level, not the exact score: 50 (equal)
+    // comes back as 66, 20 (supporting) as 33.
+    expect(pJane?.contributions.find((c) => c.role === "Software")?.score).toBe(66);
+    expect(pBob?.contributions[0]?.score).toBe(33);
+    expect(pBob?.contributions[4]?.score).toBe(100);
+    expect(xml).not.toContain("permissions");
   });
 
   it("JSON round-trip preserves all fields including id", () => {

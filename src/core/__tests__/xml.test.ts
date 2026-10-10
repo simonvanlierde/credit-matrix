@@ -157,4 +157,28 @@ describe("toJats4rXml", () => {
     const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
     expect(active).toEqual(["Conceptualization", "Writing – original draft"]);
   });
+
+  it("reads degree-contribution, and falls back to lead when it is missing or unknown", () => {
+    const xml = `<article><contrib contrib-type="author">
+      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <role vocab-term="Conceptualization" degree-contribution="supporting">Conceptualization</role>
+      <role vocab-term="Methodology">Methodology</role>
+      <role vocab-term="Software" degree-contribution="major">Software</role>
+      <role vocab-term="Resources" degree-contribution="supporting">Resources</role>
+      <role vocab-term="Resources" degree-contribution="equal">Resources</role>
+      <role degree-contribution="equal">Visualization</role>
+      <role>Not a CRediT role</role>
+    </contrib></article>`;
+
+    const [jane] = fromJats4rXml(xml);
+    const score = (role: string) => jane?.contributions.find((c) => c.role === role)?.score;
+    expect(score("Conceptualization")).toBe(33);
+    expect(score("Methodology")).toBe(100);
+    expect(score("Software")).toBe(100);
+    // A role listed twice keeps its higher level.
+    expect(score("Resources")).toBe(66);
+    // Only the text content names the role.
+    expect(score("Visualization")).toBe(66);
+    expect(jane?.contributions.filter((c) => c.score > 0)).toHaveLength(5);
+  });
 });
