@@ -7,7 +7,7 @@ Report it privately through GitHub:
 Please do not open a public issue for a security problem.
 
 Say what you found, how to reproduce it, and which version or URL you tested. This is a
-single-maintainer project, so replies can take a few days.
+single-maintainer project; expect a reply within two weeks.
 
 ## Scope
 
