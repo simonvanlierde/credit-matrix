@@ -74,6 +74,49 @@ describe("share payload v2", () => {
     expect(restored.authors[0]?.corresponding).toBe(true);
   });
 
+  it("sends a blank ask with the row's scores zeroed, and says when it was sent", () => {
+    const authors = makeAuthors();
+    const jane = authors[0];
+    if (!jane) throw new Error("expected Jane");
+    const sentAt = 1_760_000_000_000;
+    const payload = toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1", blank: true, sentAt });
+
+    expect(JSON.parse(payload)).toMatchObject({ b: 1, w: sentAt });
+    const restored = fromSharePayload(payload);
+    expect(restored.blank).toBe(true);
+    expect(restored.sentAt).toBe(sentAt);
+    expect(restored.authors[0]?.contributions.every((c) => c.score === 0)).toBe(true);
+    expect(restored.authors[0]?.orcid).toBe(jane.orcid);
+  });
+
+  it("keeps the guess on a pre-filled ask", () => {
+    const authors = makeAuthors();
+    const jane = authors[0];
+    if (!jane) throw new Error("expected Jane");
+    const restored = fromSharePayload(
+      toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1", sentAt: 5 }),
+    );
+    expect(restored.blank).toBe(false);
+    expect(restored.sentAt).toBe(5);
+    expect(restored.authors[0]?.contributions.find((c) => c.role === "Conceptualization")?.score).toBe(100);
+  });
+
+  it("never blanks a share that is not addressed to anyone", () => {
+    const payload = toSharePayload({ authors: makeAuthors(), blank: true });
+    expect(JSON.parse(payload)).not.toHaveProperty("b");
+    expect(fromSharePayload(payload).authors[0]?.contributions.some((c) => c.score > 0)).toBe(true);
+  });
+
+  it("reads a link from before blank asks and send times as pre-filled and undated", () => {
+    // Frozen: the shape v0.6.0 wrote, with no `b` or `w`.
+    const old =
+      '{"v":2,"d":"draft-1","c":"jane-1","a":[{"i":"jane-1","n":"Jane Smith","s":[100,0,0,0,0,0,0,0,0,0,0,0,0,0]}]}';
+    const restored = fromSharePayload(old);
+    expect(restored.blank).toBe(false);
+    expect(restored.sentAt).toBeNull();
+    expect(restored.authors[0]?.contributions[0]?.score).toBe(100);
+  });
+
   it("rejects a v1 payload outright", () => {
     expect(() => fromSharePayload(JSON.stringify({ v: 1, a: [{ n: "Jane Smith", s: [] }] }))).toThrow();
   });

@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor, lookupOrcidPerson, type OrcidLookupResult } from "@/core";
 import { announce } from "@/lib/announce";
+import { decodeShareHash } from "@/lib/share";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
 import { AuthorList } from "./AuthorInput";
@@ -155,5 +156,59 @@ describe("a row's ORCID lookup", () => {
     expect(authors()[0]?.name).toBe("Someone");
     expect(announce).toHaveBeenCalledWith(en.errNameTooLong, { assertive: true });
     expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("x".repeat(600)));
+  });
+});
+
+describe("asking a contributor", () => {
+  let writeText = vi.fn<(text: string) => Promise<void>>();
+  function stubClipboard(impl: (text: string) => Promise<void>) {
+    writeText = vi.fn(impl);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+  }
+
+  /** Click an ask item and wait out the link build and the clipboard write. */
+  async function ask(item: string) {
+    // The menu stays open after an item, so open it only the first time.
+    if (!screen.queryByRole("button", { name: item })) {
+      fireEvent.click(screen.getByRole("button", { name: "Actions for Jane Smith" }));
+    }
+    fireEvent.click(screen.getByRole("button", { name: item }));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    await act(async () => {
+      await writeText.mock.results[0]?.value?.catch(() => undefined);
+    });
+  }
+
+  it("records the ask only once the link reached the clipboard", async () => {
+    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    const id = authors()[0]?.id ?? "";
+    renderList();
+
+    stubClipboard(() => Promise.reject(new Error("denied")));
+    await ask("Ask Jane Smith what they did");
+    expect(useContributionStore.getState().asks).toEqual({});
+
+    let copied = "";
+    stubClipboard((text) => {
+      copied = text;
+      return Promise.resolve();
+    });
+    await ask("Ask Jane Smith what they did");
+    const recorded = useContributionStore.getState().asks[id];
+    expect(recorded).toMatchObject({ prefilled: false });
+
+    // The link and the record agree on what was sent and when.
+    const shared = await decodeShareHash(copied.slice(copied.indexOf("#")));
+    expect(shared).toMatchObject({ blank: true, sentAt: recorded?.sentAt, claimId: id });
+  });
+
+  it("records a pre-filled ask as such", async () => {
+    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    renderList();
+    stubClipboard(() => Promise.resolve());
+    await ask("Ask Jane Smith to check your guess");
+    expect(Object.values(useContributionStore.getState().asks)).toEqual([
+      { sentAt: expect.any(Number), prefilled: true },
+    ]);
   });
 });

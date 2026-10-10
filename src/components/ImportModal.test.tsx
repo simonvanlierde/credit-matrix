@@ -3,7 +3,7 @@ import { IntlProvider } from "use-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { type DoiLookupResult, lookupDoiWork } from "@/core";
 import en from "@/messages/en.json";
-import { detect, ImportModal } from "./ImportModal";
+import { detect, ImportModal, madeByNewerVersion } from "./ImportModal";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
 vi.mock("@/core", async (importOriginal) => ({
@@ -109,5 +109,26 @@ describe("DOI lookup", () => {
     await resolve({ ok: false, status: 502, code: "UNAVAILABLE", error: "" });
 
     expect(screen.getByText(en.errDoiOFFLINE)).toBeTruthy();
+  });
+});
+
+describe("a JSON export from a newer version", () => {
+  it("says so, instead of failing validation", async () => {
+    const { onImport } = renderModal(0);
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), {
+      target: { value: JSON.stringify({ version: 2, authors: [{ name: "Jane Smith", future: true }] }) },
+    });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+
+    expect(screen.getByText(en.errImportNewerVersion)).toBeTruthy();
+    expect(onImport).not.toHaveBeenCalled();
+  });
+
+  it("reads only a numeric version above 1 as newer", () => {
+    expect(madeByNewerVersion('{"version": 2}')).toBe(true);
+    expect(madeByNewerVersion('{"version": 1}')).toBe(false);
+    expect(madeByNewerVersion('{"version": "2"}')).toBe(false);
+    expect(madeByNewerVersion("[]")).toBe(false);
+    expect(madeByNewerVersion("null")).toBe(false);
   });
 });

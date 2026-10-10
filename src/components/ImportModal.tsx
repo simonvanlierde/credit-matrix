@@ -111,6 +111,15 @@ export function detect(text: string): DetectedFormat {
   return "unknown";
 }
 
+/**
+ * A JSON export stamped above version 1 comes from a newer build. Said
+ * plainly, rather than as the validation failure it would otherwise be.
+ */
+export function madeByNewerVersion(json: string): boolean {
+  const version = (JSON.parse(json) as { version?: unknown } | null)?.version;
+  return typeof version === "number" && version > 1;
+}
+
 /** The import size cap, written the way the messages below say it. */
 const MAX_IMPORT_MB = `${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB`;
 
@@ -228,6 +237,10 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
           return;
         }
         dialog?.close();
+        return;
+      }
+      if (format === "json" && madeByNewerVersion(text)) {
+        showError(t("errImportNewerVersion"));
         return;
       }
       const { parse, emptyMessageKey } = IMPORTERS[format];

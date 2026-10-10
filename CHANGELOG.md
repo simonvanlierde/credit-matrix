@@ -6,10 +6,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- A blank ask. A contributor's menu now offers *Ask … what they did*, which sends their row with
+  nothing ticked, beside *Ask … to check your guess*, which sends your guess as before. The co-author
+  sees which one they got.
+- Importing a JSON file from a newer version of CRediT Matrix says so, instead of a validation error.
+
+### Changed
+
+- The ask menu says in plain text what the link carries: the title, and that person's name and iD.
+- An open tab no longer saves over drafts that a newer version saved in another tab. It reloads
+  into the newer version, or says that its edits are not being saved when it cannot.
+- Saved drafts move to a new storage version. Open asks carry over. An older version opened later
+  starts empty and leaves the newer drafts in place.
+
 ### Fixed
 
 - The JATS4R XML export writes ORCID iDs as full `https://orcid.org/...` links, as JATS4R
   recommends. Importing accepts both the full link and the bare iD, so older files still load.
+- Resetting a draft clears its open asks, and removing a contributor drops theirs (undo restores it).
 - The JATS4R XML export no longer claims "© 2019 JATS4R" and a CC BY licence for your paper. That
   block was sample text and is gone.
 - The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as

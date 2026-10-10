@@ -20,6 +20,7 @@ const ID_REGEX = /^[\w-]{1,64}$/;
  * v2 adds the envelope this link needs beyond the author matrix: a title, and
  * the claim/reply/source-draft triangle that lets a claim link round-trip back
  * to the draft it came from and be told apart from the reply the claimee sends.
+ * Keys added since are optional, so a reader that predates them ignores them.
  */
 const SharePayloadSchema = z
   .object({
@@ -33,6 +34,10 @@ const SharePayloadSchema = z
     c: z.optional(z.string().check(z.regex(ID_REGEX))),
     /** reply flag: set on the link a claimee sends back */
     r: z.optional(z.literal(1)),
+    /** blank ask: the claimed row was sent with its scores zeroed */
+    b: z.optional(z.literal(1)),
+    /** when the link was sent, in epoch milliseconds */
+    w: z.optional(z.number().check(z.nonnegative())),
     a: z
       .array(
         z.object({
@@ -78,6 +83,10 @@ export interface ShareData {
   /** always non-null when claimId is non-null */
   sourceDraftId: string | null;
   reply: boolean;
+  /** an ask sent without the asker's guess */
+  blank: boolean;
+  /** when the link was sent; null on links from before this was recorded */
+  sentAt: number | null;
 }
 
 export interface SharePayloadInput {
@@ -86,17 +95,22 @@ export interface SharePayloadInput {
   claimId?: string;
   sourceDraftId?: string;
   reply?: boolean;
+  /** Send the claimed row with its scores zeroed. Only meaningful with `claimId`. */
+  blank?: boolean;
+  sentAt?: number;
 }
 
 /** Serialize authors and envelope into the compact share shape. Minified, never pretty. */
 export function toSharePayload(input: SharePayloadInput): string {
-  const { title, claimId, sourceDraftId, reply } = input;
+  const { title, claimId, sourceDraftId, reply, sentAt } = input;
+  const blank = Boolean(input.blank && claimId);
   // A claim link is addressed to one person and travels through their mail:
   // it carries their own row and nobody else's names, iDs, or scores. The
   // reply comes back the same way, and the merge only ever takes that row.
   const authors = claimId ? input.authors.filter((author) => author.id === claimId) : input.authors;
 
   const scoreByRole = (author: Author) => {
+    if (blank) return CREDIT_ROLES.map(() => 0);
     const scores = new Map(author.contributions.map((contribution) => [contribution.role, contribution.score]));
     return CREDIT_ROLES.map((role) => scores.get(role.name) ?? 0);
   };
@@ -107,6 +121,8 @@ export function toSharePayload(input: SharePayloadInput): string {
     ...(sourceDraftId ? { d: sourceDraftId } : {}),
     ...(claimId ? { c: claimId } : {}),
     ...(reply ? { r: 1 } : {}),
+    ...(blank ? { b: 1 } : {}),
+    ...(sentAt !== undefined ? { w: sentAt } : {}),
     a: authors.map((author) => ({
       i: author.id,
       n: author.name,
@@ -149,5 +165,7 @@ export function fromSharePayload(json: string): ShareData {
     claimId: payload.c ?? null,
     sourceDraftId: payload.d ?? null,
     reply: payload.r === 1,
+    blank: payload.b === 1,
+    sentAt: payload.w ?? null,
   };
 }

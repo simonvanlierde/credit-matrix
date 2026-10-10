@@ -9,7 +9,7 @@ import { showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Author } from "@/core";
 import { keepKnownIds, mergeContributorRow } from "@/core";
-import { announce } from "@/lib/announce";
+import { announce, NEWER_VERSION_EVENT } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { type DraftClaim, followOtherTab, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
@@ -58,6 +58,14 @@ export function HeaderActions() {
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
+  }, [t]);
+
+  // A newer build saved in another tab and this one could not reload into it:
+  // its edits are no longer saved, which nobody should find out later.
+  useEffect(() => {
+    const onNewer = () => showStatus({ kind: "error", message: t("errNewerVersionSaved") });
+    window.addEventListener(NEWER_VERSION_EVENT, onNewer);
+    return () => window.removeEventListener(NEWER_VERSION_EVENT, onNewer);
   }, [t]);
 
   // The listener is registered once, so it must not capture this render's
@@ -142,8 +150,8 @@ export function HeaderActions() {
       // The reply answers the ask, so the row's "Asked" chip comes down — and
       // goes back up if the merge is undone, because the ask is open again.
       const mergedId = result.merged.id;
-      const askedAt = useContributionStore.getState().asked[mergedId];
-      if (askedAt !== undefined) clearAsked(mergedId);
+      const ask = useContributionStore.getState().asks[mergedId];
+      if (ask) clearAsked(mergedId);
       // Mark the row itself, so the status strip's message has a visible
       // counterpart where the change actually landed. The strip owns the
       // mark's lifetime through onDismiss below: dismissing, undoing, timing
@@ -161,7 +169,7 @@ export function HeaderActions() {
             switchDraft(target);
             if (useContributionStore.getState().activeDraftId !== target) return;
             loadAuthors(before);
-            if (askedAt !== undefined) markAsked(mergedId);
+            if (ask) markAsked(mergedId, ask);
             setRecentReply(null);
             announce(t("annMergeUndone"));
           },
@@ -209,7 +217,11 @@ export function HeaderActions() {
       } catch {
         return "errShareLinkBroken";
       }
-      setClaim({ contributorId: shared.claimId, sourceDraftId: shared.sourceDraftId });
+      setClaim({
+        contributorId: shared.claimId,
+        sourceDraftId: shared.sourceDraftId,
+        ...(shared.blank ? { blank: true } : {}),
+      });
       return null;
     }
 
