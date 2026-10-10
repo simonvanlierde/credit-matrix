@@ -51,8 +51,9 @@ function givenNamesOf(author: Author): string {
 function authorToXml(author: Author): string {
   const givenNames = givenNamesOf(author);
 
+  // JATS4R wants the full URI, not the bare iD.
   const orcidEl = author.orcid
-    ? `\n      <contrib-id contrib-id-type="orcid">${escapeXml(author.orcid)}</contrib-id>`
+    ? `\n      <contrib-id contrib-id-type="orcid">https://orcid.org/${escapeXml(author.orcid)}</contrib-id>`
     : "";
 
   // JATS 1.3 carries the level as `degree-contribution` (lead / equal /

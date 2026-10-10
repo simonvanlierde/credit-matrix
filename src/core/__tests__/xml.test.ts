@@ -91,6 +91,24 @@ describe("toJats4rXml", () => {
     expect(xml).toContain("<given-names>Jane Q</given-names>");
   });
 
+  it("writes the ORCID iD as a full orcid.org URI", () => {
+    const [jane] = parseAuthorText("Jane Smith");
+    if (!jane) throw new Error("expected author");
+    jane.orcid = "0000-0002-1825-0097";
+
+    const xml = toJats4rXml([jane]);
+    expect(xml).toContain('<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-1825-0097</contrib-id>');
+    expect(xml).not.toContain("authenticated");
+  });
+
+  it.each(["https://orcid.org/0000-0002-1825-0097", "http://orcid.org/0000-0002-1825-0097", "0000-0002-1825-0097"])(
+    "imports the ORCID iD written as %s",
+    (id) => {
+      const xml = `<article><contrib contrib-type="author"><contrib-id contrib-id-type="orcid">${id}</contrib-id><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib></article>`;
+      expect(fromJats4rXml(xml)[0]?.orcid).toBe("0000-0002-1825-0097");
+    },
+  );
+
   it("only emits role elements for active contributions", () => {
     const authors = parseAuthorText("Jane Smith");
     const [jane] = authors;

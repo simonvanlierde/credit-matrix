@@ -19,6 +19,27 @@ describe("CREDIT_ROLES", () => {
     }
   });
 
+  // Share links store scores by position, so reordering or renaming a role
+  // silently reassigns every link already out there.
+  it("keeps the role names in the order share links depend on", () => {
+    expect(CREDIT_ROLES.map((r) => r.name)).toEqual([
+      "Conceptualization",
+      "Data curation",
+      "Formal analysis",
+      "Funding acquisition",
+      "Investigation",
+      "Methodology",
+      "Project administration",
+      "Resources",
+      "Software",
+      "Supervision",
+      "Validation",
+      "Visualization",
+      "Writing \u2013 original draft",
+      "Writing \u2013 review & editing",
+    ]);
+  });
+
   it("uses NISO's canonical role names (e.g. lowercase 'Formal analysis')", () => {
     const names = CREDIT_ROLES.map((r) => r.name);
     expect(names).toContain("Formal analysis");

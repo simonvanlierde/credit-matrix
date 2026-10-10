@@ -8,6 +8,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- The JATS4R XML export writes ORCID iDs as full `https://orcid.org/...` links, as JATS4R
+  recommends. Importing accepts both the full link and the bare iD, so older files still load.
 - The JATS4R XML export no longer claims "© 2019 JATS4R" and a CC BY licence for your paper. That
   block was sample text and is gone.
 - The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as

@@ -1,0 +1,4 @@
+Name,ORCID,Type,Equal contribution,Corresponding,Conceptualization,Data curation,Formal analysis,Funding acquisition,Investigation,Methodology,Project administration,Resources,Software,Supervision,Validation,Visualization,Writing – original draft,Writing – review & editing
+Ada Lovelace,0000-0002-1825-0097,author,yes,yes,100,0,0,0,0,66,0,0,0,0,0,0,100,0
+Marie Curie,,author,yes,no,0,33,0,0,100,0,0,0,0,0,0,0,0,66
+Alan Turing,,non-author,no,no,0,0,0,0,0,0,0,0,100,33,0,0,0,0
