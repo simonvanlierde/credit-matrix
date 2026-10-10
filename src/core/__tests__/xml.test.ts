@@ -101,6 +101,14 @@ describe("toJats4rXml", () => {
     expect(xml).not.toContain("authenticated");
   });
 
+  it("does not double the prefix of an iD stored as a URL", () => {
+    const [jane] = parseAuthorText("Jane Smith");
+    if (!jane) throw new Error("expected author");
+    jane.orcid = "https://orcid.org/0000-0002-1825-0097";
+
+    expect(toJats4rXml([jane])).toContain(">https://orcid.org/0000-0002-1825-0097</contrib-id>");
+  });
+
   it.each(["https://orcid.org/0000-0002-1825-0097", "http://orcid.org/0000-0002-1825-0097", "0000-0002-1825-0097"])(
     "imports the ORCID iD written as %s",
     (id) => {

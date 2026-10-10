@@ -36,7 +36,7 @@ const SharePayloadSchema = z
     r: z.optional(z.literal(1)),
     /** blank ask: the claimed row was sent with its scores zeroed */
     b: z.optional(z.literal(1)),
-    /** when the link was sent, in epoch milliseconds */
+    /** when the link was sent, in epoch milliseconds; written now so a later release can order replies */
     w: z.optional(z.number().check(z.nonnegative())),
     a: z
       .array(

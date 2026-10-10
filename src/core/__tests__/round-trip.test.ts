@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MAX_AUTHORS } from "../author";
-import { fromJson, toJson } from "../export/json";
+import { fromJson, NewerVersionError, toJson } from "../export/json";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
 import { parseAuthorText } from "../parse-authors";
@@ -75,6 +75,14 @@ describe("round-trip exports", () => {
     const payload = JSON.stringify({ version: 1, authors: Array.from({ length: MAX_AUTHORS + 1 }, () => author) });
 
     expect(() => fromJson(payload)).toThrow();
+  });
+
+  it("rejects only a numeric version above the supported one as newer", () => {
+    expect(() => fromJson('{"version": 2, "authors": []}')).toThrow(NewerVersionError);
+    expect(() => fromJson('{"version": "2", "authors": []}')).not.toThrow(NewerVersionError);
+    expect(() => fromJson("[]")).not.toThrow(NewerVersionError);
+    expect(() => fromJson("null")).not.toThrow(NewerVersionError);
+    expect(fromJson('{"version": 1, "authors": []}')).toEqual([]);
   });
 
   it("XML round-trip preserves ORCID value", () => {

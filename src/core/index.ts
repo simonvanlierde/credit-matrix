@@ -39,7 +39,7 @@ export type { DoiLookupResult } from "./doi-lookup";
 export { DOI_INPUT_REGEX, lookupDoiWork, normalizeDoi } from "./doi-lookup";
 export { fromCsv, toCsv } from "./export/csv";
 export { buildHeatmapSvg } from "./export/heatmap-svg";
-export { fromJson, toJson } from "./export/json";
+export { fromJson, NewerVersionError, toJson } from "./export/json";
 export { toMarkdown } from "./export/markdown";
 export { toJats4rXml } from "./export/xml";
 export { fromJats4rXml } from "./export/xml-import";

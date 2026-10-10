@@ -701,18 +701,23 @@ const AuthorRow = memo(function AuthorRowInner({
     if (!author) return;
     setAskKind(blank ? "blank" : "prefilled");
     const sentAt = Date.now();
+    // Read at click time: the link carries the title, which this row does
+    // not subscribe to.
+    const { authors, title, activeDraftId } = useContributionStore.getState();
     let url: string;
     try {
-      // Read at click time: the link carries the title, which this row does
-      // not subscribe to.
-      const { authors, title, activeDraftId } = useContributionStore.getState();
       url = await buildShareUrl({ authors, title, claimId: author.id, sourceDraftId: activeDraftId, blank, sentAt });
     } catch {
       announce(t(shareFailureKey()), { assertive: true });
       return;
     }
     // Only a link that actually reached the clipboard counts as an ask.
-    if (await copyAsk(url)) markAsked(author.id, { sentAt, prefilled: !blank });
+    if (!(await copyAsk(url))) return;
+    // The draft may have switched, or the row gone, while the link was built
+    // and copied: the ask belongs to neither.
+    const now = useContributionStore.getState();
+    if (now.activeDraftId !== activeDraftId || !now.authors.some((a) => a.id === author.id)) return;
+    markAsked(author.id, { sentAt, prefilled: !blank });
   }
 
   const nameInputRef = useRef<HTMLInputElement>(null);

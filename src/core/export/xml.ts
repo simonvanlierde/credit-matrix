@@ -1,7 +1,7 @@
 // spell-checker: ignore archivearticle, mathml
 
 import type { Author } from "../author";
-import { activeContributions, scoreToLevel } from "../author";
+import { activeContributions, normalizeOrcid, scoreToLevel } from "../author";
 import { getRoleByName } from "../credit-roles";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
@@ -53,7 +53,7 @@ function authorToXml(author: Author): string {
 
   // JATS4R wants the full URI, not the bare iD.
   const orcidEl = author.orcid
-    ? `\n      <contrib-id contrib-id-type="orcid">https://orcid.org/${escapeXml(author.orcid)}</contrib-id>`
+    ? `\n      <contrib-id contrib-id-type="orcid">https://orcid.org/${escapeXml(normalizeOrcid(author.orcid))}</contrib-id>`
     : "";
 
   // JATS 1.3 carries the level as `degree-contribution` (lead / equal /

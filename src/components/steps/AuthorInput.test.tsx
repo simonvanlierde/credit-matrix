@@ -211,4 +211,32 @@ describe("asking a contributor", () => {
       { sentAt: expect.any(Number), prefilled: true },
     ]);
   });
+
+  it("records nothing when the draft switched during the copy", async () => {
+    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    const asked = useContributionStore.getState().activeDraftId;
+    renderList();
+    stubClipboard(() => {
+      useContributionStore.getState().createDraft();
+      return Promise.resolve();
+    });
+    await ask("Ask Jane Smith what they did");
+
+    const state = useContributionStore.getState();
+    expect(state.activeDraftId).not.toBe(asked);
+    expect(state.asks).toEqual({});
+    expect(state.drafts[asked]?.asks).toEqual({});
+  });
+
+  it("records nothing when the contributor was removed during the copy", async () => {
+    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    renderList();
+    stubClipboard(() => {
+      useContributionStore.setState({ authors: [] });
+      return Promise.resolve();
+    });
+    await ask("Ask Jane Smith what they did");
+
+    expect(useContributionStore.getState().asks).toEqual({});
+  });
 });

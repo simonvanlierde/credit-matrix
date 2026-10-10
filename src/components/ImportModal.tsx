@@ -13,6 +13,7 @@ import {
   lookupDoiWork,
   MAX_AUTHORS,
   MAX_IMPORT_BYTES,
+  NewerVersionError,
   normalizeDoi,
   parseAuthorText,
 } from "@/core";
@@ -109,15 +110,6 @@ export function detect(text: string): DetectedFormat {
   }
   if (trimmed.length > 0) return "names";
   return "unknown";
-}
-
-/**
- * A JSON export stamped above version 1 comes from a newer build. Said
- * plainly, rather than as the validation failure it would otherwise be.
- */
-export function madeByNewerVersion(json: string): boolean {
-  const version = (JSON.parse(json) as { version?: unknown } | null)?.version;
-  return typeof version === "number" && version > 1;
 }
 
 /** The import size cap, written the way the messages below say it. */
@@ -239,10 +231,6 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         dialog?.close();
         return;
       }
-      if (format === "json" && madeByNewerVersion(text)) {
-        showError(t("errImportNewerVersion"));
-        return;
-      }
       const { parse, emptyMessageKey } = IMPORTERS[format];
       const authors = parse(text.trim());
       if (authors.length === 0) {
@@ -254,8 +242,9 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         return;
       }
       stageImport({ authors });
-    } catch {
-      showError(t("errImportFailed"));
+    } catch (failure) {
+      // A newer build's export is said plainly, not as a validation failure.
+      showError(t(failure instanceof NewerVersionError ? "errImportNewerVersion" : "errImportFailed"));
     }
   }
 

@@ -3,7 +3,7 @@ import { IntlProvider } from "use-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { type DoiLookupResult, lookupDoiWork } from "@/core";
 import en from "@/messages/en.json";
-import { detect, ImportModal, madeByNewerVersion } from "./ImportModal";
+import { detect, ImportModal } from "./ImportModal";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
 vi.mock("@/core", async (importOriginal) => ({
@@ -122,13 +122,5 @@ describe("a JSON export from a newer version", () => {
 
     expect(screen.getByText(en.errImportNewerVersion)).toBeTruthy();
     expect(onImport).not.toHaveBeenCalled();
-  });
-
-  it("reads only a numeric version above 1 as newer", () => {
-    expect(madeByNewerVersion('{"version": 2}')).toBe(true);
-    expect(madeByNewerVersion('{"version": 1}')).toBe(false);
-    expect(madeByNewerVersion('{"version": "2"}')).toBe(false);
-    expect(madeByNewerVersion("[]")).toBe(false);
-    expect(madeByNewerVersion("null")).toBe(false);
   });
 });
