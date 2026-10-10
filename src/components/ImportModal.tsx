@@ -13,6 +13,7 @@ import {
   lookupDoiWork,
   MAX_AUTHORS,
   MAX_IMPORT_BYTES,
+  NewerVersionError,
   normalizeDoi,
   parseAuthorText,
 } from "@/core";
@@ -241,8 +242,9 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         return;
       }
       stageImport({ authors });
-    } catch {
-      showError(t("errImportFailed"));
+    } catch (failure) {
+      // A newer build's export is said plainly, not as a validation failure.
+      showError(t(failure instanceof NewerVersionError ? "errImportNewerVersion" : "errImportFailed"));
     }
   }
 

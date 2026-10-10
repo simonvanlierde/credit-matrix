@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor, type LocaleCode } from "@/core";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
+import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
   announcingStorage,
   type Draft,
@@ -12,6 +13,7 @@ import {
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
+vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
 const initial = useContributionStore.getState();
 
@@ -22,6 +24,8 @@ function store() {
 describe("contribution store", () => {
   beforeEach(() => {
     useContributionStore.setState(initial, true);
+    vi.clearAllMocks();
+    vi.mocked(reloadForNewerSave).mockReturnValue(true);
   });
 
   describe("title", () => {
@@ -619,23 +623,47 @@ describe("contribution store", () => {
     });
   });
 
-  describe("asked tracking", () => {
-    it("marks per draft, survives a switch away and back, and clears", () => {
+  describe("asks", () => {
+    const ask = { sentAt: 1_700_000_000_000, prefilled: false };
+    function addJane() {
       store().addAuthor("Jane Smith");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected Jane");
-      store().markAsked(jane.id);
-      expect(store().asked[jane.id]).toBeTypeOf("number");
+      return jane;
+    }
+
+    it("marks per draft, survives a switch away and back, and clears", () => {
+      const jane = addJane();
+      store().markAsked(jane.id, ask);
+      expect(store().asks[jane.id]).toEqual(ask);
 
       const home = store().activeDraftId;
       store().createDraft();
       // A fresh draft has no open asks of its own.
-      expect(store().asked).toEqual({});
+      expect(store().asks).toEqual({});
       store().switchDraft(home);
-      expect(store().asked[jane.id]).toBeTypeOf("number");
+      expect(store().asks[jane.id]).toEqual(ask);
 
       store().clearAsked(jane.id);
-      expect(store().asked[jane.id]).toBeUndefined();
+      expect(store().asks[jane.id]).toBeUndefined();
+    });
+
+    it("drops a contributor's ask when they are removed", () => {
+      const jane = addJane();
+      store().markAsked(jane.id, ask);
+      store().removeAuthor(jane.id);
+      expect(store().asks).toEqual({});
+    });
+
+    it("clears on reset, and does not travel into a duplicate", () => {
+      const jane = addJane();
+      store().markAsked(jane.id, ask);
+      const copy = store().duplicateDraft(store().activeDraftId);
+      expect(copy && store().drafts[copy]?.asks).toEqual({});
+
+      store().reset();
+      expect(store().asks).toEqual({});
+      expect(store().drafts[store().activeDraftId]?.asks).toEqual({});
     });
   });
 
@@ -734,13 +762,38 @@ describe("contribution store", () => {
       const fromSession = new StorageEvent("storage", { key: PERSIST_KEY, storageArea: globalThis.sessionStorage });
       expect(followOtherTab(fromSession)).toBe(false);
 
-      // A newer build's save is not this tab's to adopt.
-      globalThis.localStorage.setItem(PERSIST_KEY, JSON.stringify({ state: {}, version: PERSIST_VERSION + 1 }));
-      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
-
       hydrated.mockReturnValue(false);
       expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
       expect(store().title).toBe("Open here");
+    });
+
+    // A version bump alone cannot protect a newer build's data from a tab that
+    // was already open on the same draft: it never re-reads that draft. Its
+    // next save is what has to stop.
+    // The real store's adapter yields once per page, so this is the one test
+    // that sees it do so.
+    it("never saves over a newer build's save of the draft open here, and reloads instead", () => {
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
+      const reply = { contributions: [], sentAt: 9 };
+      const newerSave = JSON.stringify({
+        state: {
+          drafts: { [open]: { ...stored.state.drafts[open], asks: { jane: { sentAt: 1, prefilled: false, reply } } } },
+          activeDraftId: open,
+        },
+        version: PERSIST_VERSION + 1,
+      });
+      globalThis.localStorage.setItem(PERSIST_KEY, newerSave);
+      // Not adopted, but this idle tab reloads into the newer build at once.
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
+
+      store().setTitle("Edited here");
+
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).toBe(newerSave);
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${open}`)).toBeNull();
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
     });
 
     it("keeps the open draft when the other tab deleted it", () => {
@@ -958,7 +1011,13 @@ describe("contribution store", () => {
               // A claim is a lock: an id that a URL fragment would mangle, or a
               // half-written one, must not be honoured.
               claim: { contributorId: "not a valid id", sourceDraftId: "src-1" },
-              asked: { "bad id": 1, "good-id": 2, "another-good-id": "yesterday" },
+              asks: {
+                "bad id": { sentAt: 1, prefilled: true },
+                "good-id": { sentAt: 2, prefilled: false },
+                "no-time": { prefilled: true },
+                "no-kind": { sentAt: 3 },
+                "not-an-object": 4,
+              },
             },
           },
         },
@@ -966,7 +1025,56 @@ describe("contribution store", () => {
       ) as typeof initial;
 
       expect(merged.claim).toBeNull();
-      expect(merged.asked).toEqual({ "good-id": 2 });
+      expect(merged.asks).toEqual({ "good-id": { sentAt: 2, prefilled: false } });
+    });
+
+    it("turns the old asked timestamps into pre-filled asks", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const merged = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: { asked: { "bad id": 1, "good-id": 2, "another-good-id": "yesterday" } },
+            d2: { asked: { jane: 5 } },
+          },
+        },
+        initial,
+      ) as typeof initial;
+
+      // Every ask before blank asks existed carried the asker's guess.
+      expect(merged.asks).toEqual({ "good-id": { sentAt: 2, prefilled: true } });
+      expect(merged.drafts.d2?.asks).toEqual({ jane: { sentAt: 5, prefilled: true } });
+      expect(merged.drafts.d2).not.toHaveProperty("asked");
+      // Persisted through the live draft too, not only the shelf.
+      const saved = useContributionStore.persist.getOptions().partialize?.(merged) as { drafts: Record<string, Draft> };
+      expect(saved.drafts.d1).not.toHaveProperty("asked");
+    });
+
+    // A later build adds fields (a co-author's reply on an ask, say). An older
+    // tab that loads them and saves must write them back untouched.
+    it("keeps keys it does not know, on drafts and on asks, through load and save", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const reply = { contributions: [], sentAt: 9 };
+      const merged = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: { future: "kept", asks: { jane: { sentAt: 1, prefilled: false, reply } } },
+            d2: { future: "kept too" },
+          },
+        },
+        initial,
+      ) as typeof initial;
+      useContributionStore.setState(merged);
+      store().setTitle("Edited here");
+
+      const saved = useContributionStore.persist.getOptions().partialize?.(store()) as {
+        drafts: Record<string, Draft & { future?: string }>;
+      };
+      expect(saved.drafts.d1?.future).toBe("kept");
+      expect(saved.drafts.d1?.title).toBe("Edited here");
+      expect(saved.drafts.d1?.asks.jane).toEqual({ sentAt: 1, prefilled: false, reply });
+      expect(saved.drafts.d2?.future).toBe("kept too");
     });
 
     it("keeps a well-formed claim through the repair pass", () => {
@@ -991,7 +1099,7 @@ describe("contribution store", () => {
         outputLocale: "en",
         updatedAt: 0,
         claim: null,
-        asked: {},
+        asks: {},
       });
       const state = {
         drafts: { a: draft("a", "Active paper"), b: draft("b", "Held paper") },
@@ -1048,16 +1156,41 @@ describe("contribution store", () => {
         outputLocale: "en" as const,
         updatedAt: 0,
         claim: null,
-        asked: {},
+        asks: {},
       };
       storage.setItem(PERSIST_KEY, {
         state: { drafts: { c: fresh }, activeDraftId: "c", uiLocale: "en", welcomeSeen: true },
         version: PERSIST_VERSION,
       });
 
+      // Nothing written: the newer build's save is left exactly as it was,
+      // and this tab reloads to become that build.
       expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:b`)).toContain("Held paper");
-      // The newer active draft moves to the shelf rather than being overwritten.
-      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:a`)).toContain("Active paper");
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).toContain("Active paper");
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:c`)).toBeNull();
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
+      expect(store().newerVersionBlocked).toBe(false);
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
+    it("flags once that edits are not saved when it cannot reload into the newer build", () => {
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      vi.mocked(reloadForNewerSave).mockReturnValue(false);
+      const storage = announcingStorage();
+      const newerSave = JSON.stringify({ state: { drafts: {}, activeDraftId: "a" }, version: PERSIST_VERSION + 1 });
+      globalThis.localStorage.setItem(PERSIST_KEY, newerSave);
+      const value = {
+        state: { drafts: {}, activeDraftId: "c", uiLocale: "en" as const, welcomeSeen: true },
+        version: PERSIST_VERSION,
+      };
+
+      storage.setItem(PERSIST_KEY, value);
+      storage.setItem(PERSIST_KEY, value);
+
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).toBe(newerSave);
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
+      expect(store().newerVersionBlocked).toBe(true);
       hydrated.mockRestore();
       globalThis.localStorage.clear();
     });
@@ -1078,7 +1211,7 @@ describe("contribution store", () => {
         outputLocale: "en",
         updatedAt: 0,
         claim: null,
-        asked: {},
+        asks: {},
       });
       const write = (tab: typeof tabA, active: string, drafts: Draft[]) =>
         tab.setItem(PERSIST_KEY, {
@@ -1134,7 +1267,7 @@ describe("contribution store", () => {
         outputLocale: "en",
         updatedAt: 0,
         claim: null,
-        asked: {},
+        asks: {},
       });
       const drafts = { a: draft("a", "First"), b: draft("b", "Held paper") };
       const state = { drafts, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };

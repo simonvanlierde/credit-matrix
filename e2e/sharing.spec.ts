@@ -15,7 +15,7 @@ async function openBrowser(context: BrowserContext, { firstRun = false } = {}): 
   return page;
 }
 
-/** Build a draft with two contributors and copy the ask-link for the second. */
+/** Build a draft with two contributors and copy the (blank) ask-link for the second. */
 async function makeAskLink(page: Page): Promise<string> {
   await page.goto("/");
   const adder = page.getByLabel("New author names or ORCID iD");
@@ -24,7 +24,7 @@ async function makeAskLink(page: Page): Promise<string> {
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(2);
 
   await page.getByRole("button", { name: "Actions for Bob White" }).click();
-  return copyFrom(page, page.getByRole("button", { name: "Ask Bob White to fill this in" }));
+  return copyFrom(page, page.getByRole("button", { name: "Ask Bob White what they did" }));
 }
 
 /** The claim banner's own copy, not the announcement that echoes it. */
@@ -98,6 +98,42 @@ test("full round trip: ask → locked fill → reply link click → visible merg
 
   await originator.close();
   await coauthor.close();
+});
+
+test("a blank ask arrives empty; asking to check a guess sends the guess", async ({ browser }) => {
+  const originator = await newContext(browser);
+  const pageA = await openBrowser(originator);
+  await pageA.goto("/");
+  const adder = pageA.getByLabel("New author names or ORCID iD");
+  await adder.fill("Jane Smith, Bob White");
+  await adder.press("Enter");
+  // The guess: Bob did the investigation.
+  await pageA.getByRole("button", { name: /^Investigation for Bob White:/ }).click();
+  await expect(pageA.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
+
+  await pageA.getByRole("button", { name: "Actions for Bob White" }).click();
+  // What travels is said in plain text, not only on hover.
+  await expect(pageA.getByText("The link carries the title, this person's name and iD.")).toBeVisible();
+  const blankLink = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White what they did" }));
+  const guessLink = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White to check your guess" }));
+
+  const blankSide = await newContext(browser);
+  const pageB = await openBrowser(blankSide);
+  await pageB.goto(blankLink);
+  await expect(claimBanner(pageB)).toBeVisible();
+  await expect(onScreen(pageB, /Nothing is ticked yet/)).toBeVisible();
+  await expect(pageB.getByRole("button", { name: "Investigation for Bob White: None" })).toBeVisible();
+
+  const guessSide = await newContext(browser);
+  const pageC = await openBrowser(guessSide);
+  await pageC.goto(guessLink);
+  await expect(claimBanner(pageC)).toBeVisible();
+  await expect(onScreen(pageC, /What is ticked is the guess of the person who asked/)).toBeVisible();
+  await expect(pageC.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
+
+  await originator.close();
+  await blankSide.close();
+  await guessSide.close();
 });
 
 test("refresh mid-claim keeps the banner; re-opening the link revisits, never forks", async ({ browser }) => {

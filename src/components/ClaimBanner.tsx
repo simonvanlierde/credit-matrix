@@ -47,6 +47,7 @@ export function ClaimBanner() {
           claimId: claim.contributorId,
           sourceDraftId: claim.sourceDraftId,
           reply: true,
+          sentAt: Date.now(),
         }),
       );
     } catch {
@@ -63,7 +64,8 @@ export function ClaimBanner() {
     <div role="status" className="mx-3 mt-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 md:mx-4 md:mt-4">
       <p className="text-sm font-semibold text-on-surface">{t("claimBannerTitle", { name: claimed.name })}</p>
       <p className="mt-1 text-xs leading-relaxed text-on-surface-variant">
-        {t("claimBannerBody", { name: claimed.name })} {t("claimBannerHow")}
+        {claim.blank ? t("claimBannerBlank") : t("claimBannerPrefilled")} {t("claimBannerBody", { name: claimed.name })}{" "}
+        {t("claimBannerHow")}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <button

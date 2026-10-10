@@ -13,9 +13,6 @@ commit-msg:
 
 pre-push:
     commands:
-        lint:
-            run: pnpm lint
-            root: .
-        test:
-            run: pnpm test
+        verify:
+            run: pnpm verify
             root: .

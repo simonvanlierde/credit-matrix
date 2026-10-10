@@ -111,3 +111,16 @@ describe("DOI lookup", () => {
     expect(screen.getByText(en.errDoiOFFLINE)).toBeTruthy();
   });
 });
+
+describe("a JSON export from a newer version", () => {
+  it("says so, instead of failing validation", async () => {
+    const { onImport } = renderModal(0);
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), {
+      target: { value: JSON.stringify({ version: 2, authors: [{ name: "Jane Smith", future: true }] }) },
+    });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+
+    expect(screen.getByText(en.errImportNewerVersion)).toBeTruthy();
+    expect(onImport).not.toHaveBeenCalled();
+  });
+});

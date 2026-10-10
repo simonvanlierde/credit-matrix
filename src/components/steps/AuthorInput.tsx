@@ -62,7 +62,7 @@ import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useSettled } from "@/lib/use-settled";
-import { useContributionStore } from "@/store/contribution-store";
+import { type Ask, useContributionStore } from "@/store/contribution-store";
 
 // Module constants, not inline literals: dnd-kit memoizes a sensor on its
 // options object, and a fresh one each render rebuilds the activators, which
@@ -140,6 +140,7 @@ export function AuthorList() {
     addAuthor,
     loadSample,
     moveAuthor,
+    markAsked,
     removeAuthor,
     restoreAuthor,
     setTitle,
@@ -156,6 +157,7 @@ export function AuthorList() {
       addAuthor: s.addAuthor,
       loadSample: s.loadSample,
       moveAuthor: s.moveAuthor,
+      markAsked: s.markAsked,
       removeAuthor: s.removeAuthor,
       restoreAuthor: s.restoreAuthor,
       setTitle: s.setTitle,
@@ -180,7 +182,7 @@ export function AuthorList() {
   useEffect(() => setTitleDraft(title), [title]);
   const [newName, setNewName] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
-  const [removed, setRemoved] = useState<{ author: Author; index: number } | null>(null);
+  const [removed, setRemoved] = useState<{ author: Author; index: number; ask?: Ask } | null>(null);
   const [focusAfterRemove, setFocusAfterRemove] = useState<number | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
@@ -214,10 +216,12 @@ export function AuthorList() {
   // Stable, so a memoized AuthorRow is not re-rendered by a new callback.
   const handleRemove = useCallback(
     (author: Author, index: number) => {
+      // Removing a contributor drops their open ask; undo brings it back.
+      const ask = useContributionStore.getState().asks[author.id];
       removeAuthor(author.id);
       // No announce() here: the undo bar below mounts as role="status" with the
       // same fact, and saying it twice reads as an echo.
-      setRemoved({ author, index });
+      setRemoved({ author, index, ask });
       // The button that was just activated is unmounting, which drops focus to
       // <body> and sends a keyboard user back to the top of the document. Hand
       // focus to the row that takes its place instead.
@@ -231,6 +235,7 @@ export function AuthorList() {
     // restoreAuthor no-ops when the list has refilled to the cap; claiming
     // the contributor came back when they did not would be a lie.
     if (restoreAuthor(removed.author, removed.index)) {
+      if (removed.ask) markAsked(removed.author.id, removed.ask);
       announce(t("annContributorRestored", { name: removed.author.name }));
     } else {
       announce(t("errAtContributorLimit", { limit: MAX_AUTHORS }), { assertive: true });
@@ -553,12 +558,13 @@ function RowMenu({
   equalContribution: boolean;
   corresponding: boolean;
   canAddOrcid: boolean;
-  askCopied: boolean;
+  /** Which ask link was just copied, if any. */
+  askCopied: "blank" | "prefilled" | null;
   /** Asking someone else to fill a draft you are answering is nonsense. */
   allowAsk: boolean;
   onToggleEqual: () => void;
   onToggleCorresponding: () => void;
-  onAsk: () => void;
+  onAsk: (blank: boolean) => void;
   onAddOrcid: () => void;
 }) {
   const t = useTranslations();
@@ -601,14 +607,23 @@ function RowMenu({
           {corresponding ? t("correspondingUnset") : t("correspondingSet")}
         </button>
         {allowAsk && (
-          <button type="button" onClick={onAsk} title={t("askLinkHint")} className={item}>
-            {askCopied ? (
-              <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
-            ) : (
-              <Send className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-            )}
-            {askCopied ? t("askCopied") : t("askContributor", { name })}
-          </button>
+          <div className="my-1 border-y border-outline-variant/40 py-1">
+            {(["blank", "prefilled"] as const).map((kind) => (
+              <button key={kind} type="button" onClick={() => onAsk(kind === "blank")} className={item}>
+                {askCopied === kind ? (
+                  <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+                ) : (
+                  <Send className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
+                )}
+                {askCopied === kind
+                  ? t("askCopied")
+                  : kind === "blank"
+                    ? t("askBlank", { name })
+                    : t("askPrefilled", { name })}
+              </button>
+            ))}
+            <p className="px-2 pt-0.5 pb-1 text-[11px] leading-snug text-on-surface-variant">{t("askLinkHint")}</p>
+          </div>
         )}
         {canAddOrcid && (
           <button
@@ -657,7 +672,7 @@ const AuthorRow = memo(function AuthorRowInner({
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
   const markAsked = useContributionStore((s) => s.markAsked);
-  const askedAt = useContributionStore((s) => (author === undefined ? undefined : s.asked[author.id]));
+  const asked = useContributionStore((s) => author !== undefined && author.id in s.asks);
   const isRecentReply = useContributionStore((s) => s.recentReply !== null && s.recentReply === author?.id);
 
   const [loading, setLoading] = useState(false);
@@ -673,26 +688,36 @@ const AuthorRow = memo(function AuthorRowInner({
   const [askStatus, copyAsk] = useCopyStatus({
     copied: t("askContributorCopied", { name: author?.name ?? "" }),
   });
-  const askCopied = askStatus === "copied";
+  const [askKind, setAskKind] = useState<"blank" | "prefilled">("blank");
+  const askCopied = askStatus === "copied" ? askKind : null;
 
   /**
    * Copy a link addressed at this contributor. They open it, tick their own
    * roles, and send the same link back; importing it collects that row alone.
+   * A blank ask sends their row empty, so the answer is their own account
+   * rather than a check of your guess.
    */
-  async function handleAsk() {
+  async function handleAsk(blank: boolean) {
     if (!author) return;
+    setAskKind(blank ? "blank" : "prefilled");
+    const sentAt = Date.now();
+    // Read at click time: the link carries the title, which this row does
+    // not subscribe to.
+    const { authors, title, activeDraftId } = useContributionStore.getState();
     let url: string;
     try {
-      // Read at click time: the link carries the whole draft, which this row
-      // does not subscribe to.
-      const { authors, title, activeDraftId } = useContributionStore.getState();
-      url = await buildShareUrl({ authors, title, claimId: author.id, sourceDraftId: activeDraftId });
+      url = await buildShareUrl({ authors, title, claimId: author.id, sourceDraftId: activeDraftId, blank, sentAt });
     } catch {
       announce(t(shareFailureKey()), { assertive: true });
       return;
     }
     // Only a link that actually reached the clipboard counts as an ask.
-    if (await copyAsk(url)) markAsked(author.id);
+    if (!(await copyAsk(url))) return;
+    // The draft may have switched, or the row gone, while the link was built
+    // and copied: the ask belongs to neither.
+    const now = useContributionStore.getState();
+    if (now.activeDraftId !== activeDraftId || !now.authors.some((a) => a.id === author.id)) return;
+    markAsked(author.id, { sentAt, prefilled: !blank });
   }
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -936,7 +961,7 @@ const AuthorRow = memo(function AuthorRowInner({
               )}
               {/* An open ask: quiet, because it is a reminder, not a state of
                   the paper. It comes down by itself when the reply merges. */}
-              {askedAt !== undefined && (
+              {asked && (
                 <span
                   title={t("askedChipTitle")}
                   className="inline-flex items-center gap-1 rounded-full bg-surface-container px-2 py-0.5 text-[11px] font-medium text-on-surface-variant"
@@ -958,7 +983,7 @@ const AuthorRow = memo(function AuthorRowInner({
                   allowAsk={!locked}
                   onToggleEqual={() => setAuthorMarker(author.id, "equalContribution", !author.equalContribution)}
                   onToggleCorresponding={() => setAuthorMarker(author.id, "corresponding", !author.corresponding)}
-                  onAsk={() => void handleAsk()}
+                  onAsk={(blank) => void handleAsk(blank)}
                   onAddOrcid={() => setEditingOrcid(true)}
                 />
               )}

@@ -16,6 +16,7 @@ import {
   normalizeOrcid,
 } from "@/core";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
+import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 export type InputMode = "toggle" | "levels";
@@ -24,6 +25,16 @@ export type InputMode = "toggle" | "levels";
 export interface DraftClaim {
   contributorId: string;
   sourceDraftId: string;
+  /** The ask came with the row empty. Absent on asks made before blank asks existed, which were all pre-filled. */
+  blank?: boolean;
+}
+
+/** One contributor's open ask. Later builds add keys (a reply); repair keeps them. */
+export interface Ask {
+  /** When the ask link was copied, in epoch milliseconds. */
+  sentAt: number;
+  /** Whether the link carried the asker's guess, or an empty row. */
+  prefilled: boolean;
 }
 
 /**
@@ -49,11 +60,11 @@ export interface Draft {
    */
   claim: DraftClaim | null;
   /**
-   * When each contributor was asked to fill in their own row, by id. An entry
-   * appears when their ask link is copied and leaves when their reply merges,
-   * so a row can say "Asked" during the days an email round trip takes.
+   * Open asks, by contributor id. An entry appears when their ask link is
+   * copied and leaves when their reply merges, so a row can say "Asked" during
+   * the days an email round trip takes.
    */
-  asked: Record<string, number>;
+  asks: Record<string, Ask>;
 }
 
 /** More than anyone writes at once, and well inside what localStorage holds. */
@@ -82,8 +93,8 @@ interface ContributionState {
    * own row (see `claimRefuses`).
    */
   claim: DraftClaim | null;
-  /** Ask timestamps for the live draft, by contributor id. See `Draft.asked`. */
-  asked: Record<string, number>;
+  /** Open asks for the live draft, by contributor id. See `Draft.asks`. */
+  asks: Record<string, Ask>;
   /**
    * The contributor whose row a just-opened reply filled in, so the status
    * strip's message has a matching mark on the row itself. Ephemeral: the
@@ -91,6 +102,12 @@ interface ContributionState {
    * leaves), and a draft switch clears it too.
    */
   recentReply: string | null;
+  /**
+   * A newer build saved the drafts and this tab could not reload into it, so
+   * nothing here is saved any more. State rather than an event: at load it is
+   * found before anything that shows it has mounted. Not persisted.
+   */
+  newerVersionBlocked: boolean;
   /** Whether the welcome card is currently open. Ephemeral (not persisted), so a
    *  "How it works" re-open never survives a reload as a fake first run. */
   welcomeOpen: boolean;
@@ -109,8 +126,8 @@ interface ContributionState {
   clearClaimFor: (draftId: string) => void;
   /** Point at (or clear) the row a just-opened reply filled in. */
   setRecentReply: (contributorId: string | null) => void;
-  /** Record that this contributor's ask link was copied just now. */
-  markAsked: (contributorId: string) => void;
+  /** Record that this contributor's ask link was copied, or restore an ask a merge undo reopens. */
+  markAsked: (contributorId: string, ask: Ask) => void;
   /** Forget the ask, because the reply landed (or the merge was undone). */
   clearAsked: (contributorId: string) => void;
   setTitle: (title: string) => void;
@@ -238,6 +255,8 @@ function consistentNameParts(author: Author): Pick<Author, "firstName" | "middle
 /** Snapshot the live top-level fields as a draft record. */
 function liveDraft(state: ContributionState): Draft {
   return {
+    // The map copy carries keys a newer build wrote, which this one keeps.
+    ...state.drafts[state.activeDraftId],
     id: state.activeDraftId,
     title: state.title,
     authors: state.authors,
@@ -246,7 +265,7 @@ function liveDraft(state: ContributionState): Draft {
     outputLocale: state.outputLocale,
     updatedAt: Date.now(),
     claim: state.claim,
-    asked: state.asked,
+    asks: state.asks,
   };
 }
 
@@ -259,7 +278,7 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.heatmapMonoColor = draft.heatmapMonoColor;
   state.outputLocale = draft.outputLocale;
   state.claim = draft.claim;
-  state.asked = draft.asked;
+  state.asks = draft.asks;
   // The highlight describes a moment, not the draft: leaving the draft ends it.
   state.recentReply = null;
 }
@@ -275,7 +294,7 @@ function emptyDraft(title = ""): Draft {
     outputLocale: "en",
     updatedAt: Date.now(),
     claim: null,
-    asked: {},
+    asks: {},
   };
 }
 
@@ -324,20 +343,39 @@ function isDraftClaim(value: unknown): value is DraftClaim {
   );
 }
 
-/** Ask timestamps by contributor id; a malformed entry costs that entry. */
-function repairAsked(value: unknown): Record<string, number> {
-  if (value === null || typeof value !== "object") return {};
-  const asked: Record<string, number> = {};
-  for (const [id, at] of Object.entries(value)) {
-    if (CLAIM_ID_REGEX.test(id) && typeof at === "number") asked[id] = at;
+const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object";
+
+/**
+ * Open asks by contributor id; a malformed entry costs that entry. `legacy` is
+ * the `asked` map of timestamps that came before, and every one of those asks
+ * carried the asker's guess.
+ */
+function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
+  const asks: Record<string, Ask> = {};
+  if (isRecord(legacy)) {
+    for (const [id, at] of Object.entries(legacy)) {
+      if (CLAIM_ID_REGEX.test(id) && typeof at === "number") asks[id] = { sentAt: at, prefilled: true };
+    }
   }
-  return asked;
+  if (isRecord(value)) {
+    for (const [id, ask] of Object.entries(value)) {
+      if (!(CLAIM_ID_REGEX.test(id) && isRecord(ask))) continue;
+      const { sentAt, prefilled } = ask;
+      if (typeof sentAt === "number" && typeof prefilled === "boolean") asks[id] = { ...ask, sentAt, prefilled };
+    }
+  }
+  return asks;
 }
 
-/** Rebuild one persisted draft, filling anything missing or malformed. */
+/**
+ * Rebuild one persisted draft, filling anything missing or malformed. Keys
+ * this build does not know are kept: a newer build's fields must survive an
+ * older tab's save.
+ */
 function repairSingleDraft(value: unknown, id: string): Draft {
-  const raw = (value !== null && typeof value === "object" ? value : {}) as Partial<Draft>;
+  const { asked, ...raw } = (isRecord(value) ? value : {}) as Partial<Draft> & { asked?: unknown };
   return {
+    ...raw,
     id,
     title: typeof raw.title === "string" ? raw.title.slice(0, MAX_TITLE_LENGTH) : "",
     authors: repairAuthors(raw.authors),
@@ -346,7 +384,7 @@ function repairSingleDraft(value: unknown, id: string): Draft {
     outputLocale: normalizeLocaleCode(raw.outputLocale),
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
     claim: isDraftClaim(raw.claim) ? raw.claim : null,
-    asked: repairAsked(raw.asked),
+    asks: repairAsks(raw.asks, asked),
   };
 }
 
@@ -442,6 +480,15 @@ function draftKeys(): string[] {
  */
 export function announcingStorage(): PersistStorage<PersistedState> {
   let warned = false;
+  // A newer build saved here, so this tab is the old one: reload to become
+  // that build. When the reload is refused (offline, or it just happened),
+  // flag that edits here are not being saved.
+  let yielded = false;
+  const yieldToNewerBuild = () => {
+    if (yielded) return;
+    yielded = true;
+    if (!reloadForNewerSave()) useContributionStore.setState({ newerVersionBlocked: true });
+  };
   // Parked drafts already on disk, by reference. Immer's structural sharing
   // keeps an untouched draft's identity across edits, so a reference match
   // means the stored JSON is current and the write can be skipped.
@@ -503,8 +550,8 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       const state = { ...mainState, drafts: { ...parked, ...mainDrafts } };
       const version = typeof record.version === "number" ? record.version : 0;
       // A newer build's drafts are discarded in memory (see `migrate`), not on
-      // disk: leave them unknown so the first write parks them instead of
-      // deleting them, and a roll-forward finds them again.
+      // disk: this tab reloads into that build, and setItem refuses to write
+      // over them meanwhile. They stay unknown, so nothing counts as deleted.
       //
       // Only the restore sets it. followOtherTab reads storage through here
       // too, and storage then holds drafts only the other tab has open: were
@@ -512,6 +559,9 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       if (!useContributionStore.persist.hasHydrated()) {
         known = version > PERSIST_VERSION ? new Set() : new Set(Object.keys(state.drafts));
       }
+      // At the restore, or when followOtherTab sees another tab's save: yield
+      // now, before this idle tab's next edit is refused.
+      if (version > PERSIST_VERSION) yieldToNewerBuild();
       return { state: state as unknown as PersistedState, version };
     },
     removeItem: (key) => {
@@ -539,11 +589,18 @@ export function announcingStorage(): PersistStorage<PersistedState> {
         return;
       }
       const deleted = new Set([...known].filter((id) => !(id in drafts)));
+      // A tab that loaded before a newer build saved must not write that
+      // build's data back in a shape it does not fully know. Checked on every
+      // write, since a tab open on the active draft never re-reads it.
+      const main = readJson(key) as { state?: { drafts?: unknown }; version?: unknown } | null;
+      if (typeof main?.version === "number" && main.version > PERSIST_VERSION) {
+        yieldToNewerBuild();
+        return;
+      }
       try {
         // The main key may hold another tab's active draft, stored nowhere
         // else: park it before this write replaces the main key. First, so this
         // tab's own changed drafts below still win.
-        const main = readJson(key) as { state?: { drafts?: unknown } } | null;
         const mainDrafts = main?.state?.drafts;
         if (mainDrafts !== null && typeof mainDrafts === "object") {
           for (const [id, draft] of Object.entries(mainDrafts)) {
@@ -604,6 +661,8 @@ export function followOtherTab(event: StorageEvent): boolean {
   const id = live.activeDraftId;
   if (event.key !== PERSIST_KEY && event.key !== DRAFT_KEY_PREFIX + id) return false;
 
+  // A newer build's save is not this tab's to adopt; reading it is what makes
+  // this tab yield to that build (see announcingStorage).
   const stored = store.getOptions().storage?.getItem(PERSIST_KEY);
   if (!stored || stored instanceof Promise || (stored.version ?? 0) > PERSIST_VERSION) return false;
   const theirs = (stored.state.drafts as Record<string, unknown>)[id];
@@ -655,8 +714,9 @@ export const useContributionStore = create<ContributionState>()(
       uiLocale: "en",
       welcomeSeen: false,
       welcomeOpen: false,
+      newerVersionBlocked: false,
       claim: null,
-      asked: {},
+      asks: {},
       recentReply: null,
 
       createDraft: () => {
@@ -714,7 +774,7 @@ export const useContributionStore = create<ContributionState>()(
             updatedAt: Date.now(),
             // Fresh contributor ids invalidate the claim and the asks anyway.
             claim: null,
-            asked: {},
+            asks: {},
           };
           state.drafts[copy.id] = copy;
           created = copy.id;
@@ -778,14 +838,14 @@ export const useContributionStore = create<ContributionState>()(
           state.recentReply = contributorId;
         }),
 
-      markAsked: (contributorId) =>
+      markAsked: (contributorId, ask) =>
         set((state) => {
-          state.asked[contributorId] = Date.now();
+          state.asks[contributorId] = ask;
         }),
 
       clearAsked: (contributorId) =>
         set((state) => {
-          delete state.asked[contributorId];
+          delete state.asks[contributorId];
         }),
 
       setTitle: (title) =>
@@ -830,6 +890,7 @@ export const useContributionStore = create<ContributionState>()(
           if (index === -1) return;
           state.authors.splice(index, 1);
           state.authors = normalizeAuthors(state.authors);
+          delete state.asks[authorId];
         }),
 
       restoreAuthor: (author, index) => {
@@ -1009,6 +1070,7 @@ export const useContributionStore = create<ContributionState>()(
           state.inputMode = "toggle";
           state.heatmapMonoColor = DEFAULT_MONO_COLOR;
           state.outputLocale = "en";
+          state.asks = {};
           // uiLocale is a display preference, not draft data: a workspace reset
           // should not silently switch the interface back to English.
           state.welcomeOpen = false;

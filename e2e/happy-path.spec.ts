@@ -345,7 +345,10 @@ test.describe("Happy path UI flows", () => {
 
     // Ask the second contributor (Rosalind E. Franklin) to fill in their own row.
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
+    const askUrl = await copyFrom(
+      page,
+      page.getByRole("button", { name: "Ask Rosalind E. Franklin to check your guess" }),
+    );
     // Everything the link carries — whose row, which draft — rides inside the
     // payload now; the URL is nothing but the fragment.
     expect(askUrl).toContain("#s=");
@@ -384,7 +387,10 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
 
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
+    const askUrl = await copyFrom(
+      page,
+      page.getByRole("button", { name: "Ask Rosalind E. Franklin to check your guess" }),
+    );
 
     const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
     const coauthor = await coauthorContext.newPage();
@@ -463,7 +469,10 @@ test.describe("Happy path UI flows", () => {
     await page.locator("#import-text").fill("Ada Lovelace\nRosalind E. Franklin");
     await page.getByRole("button", { name: "Import data" }).click();
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
+    const askUrl = await copyFrom(
+      page,
+      page.getByRole("button", { name: "Ask Rosalind E. Franklin to check your guess" }),
+    );
 
     // The co-author answers — in their own browser, not a page sharing this
     // one's localStorage (which the old clearFirst seed silently wiped).
