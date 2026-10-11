@@ -29,12 +29,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The **Review** tab lists where each co-author's answer differs from your draft, per person, in
   the grid's dots: "Software: You ●● Equal → Ben ●●● Lead". For each difference choose
   *Use Ben's*, *Keep yours* or *Ask Ben about this*, which copies a message about that role with a
-  link to check your guess. *Use all of Ben's* takes his whole answer. Each choice has Undo, moves on
-  to the next difference, and animates the grid cell as it changes.
+  link to check your guess. *Use all of Ben's* takes his whole answer. Each choice moves on to the
+  next difference and animates the grid cell as it changes. Every decided line keeps its own Undo,
+  also after *Use all*, and undoing *Use Ben's* puts your own level back.
 - Grid cells where a co-author answered differently carry a corner mark, and a screen reader hears
   what they said ("Ben says Lead"). A count under each column header opens Review on that person.
 - *This is me* in a contributor's menu marks your own row. You are left out of the Team tab, of
-  asks, and of the answered count, and your column says "You".
+  asks, and of the answered count, and your column says "You". The JSON export remembers it, and
+  importing the file back into the same draft marks you again.
 - The Statement tab says when contributions still differ and that the statement uses your version,
   with a link to Review. Copying and exporting are never blocked.
 - The Export data menu has an *Includes co-author answers* checkbox for the JSON file, ticked by
@@ -44,7 +46,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - A co-author's reply no longer overwrites your row. Their name and iD are taken; their
   roles and markers are kept beside your row, and the status strip says how many differ ("Ben's
-  answer arrived: 3 differences") or that the answer matches yours. Until you choose, your row is
+  answer arrived: 3 differences"), with Undo and a *Review* button, or that the answer matches yours. Until you choose, your row is
   what the statement uses.
 - A reply older than the one you already have is ignored, and opening the same reply twice changes
   nothing. Undo on a reply restores the name and iD and leaves any edits you made since then alone.

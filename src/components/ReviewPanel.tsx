@@ -89,7 +89,6 @@ export function ReviewPanel() {
   const authors = useContributionStore((s) => s.authors);
   const asks = useContributionStore((s) => s.asks);
   const selfId = useContributionStore((s) => s.selfId);
-  const askUndo = useContributionStore((s) => s.askUndo);
   const reviewFocus = useContributionStore((s) => s.reviewFocus);
   const tab = useContributionStore((s) => s.inspectorTab);
   const monoColor = useContributionStore((s) => s.heatmapMonoColor);
@@ -97,8 +96,6 @@ export function ReviewPanel() {
   const dark = useTheme().resolvedTheme === "dark";
   const { translateInterfaceRole, translateInterfaceUi } = useCreditTranslators();
   const listRef = useRef<HTMLDivElement>(null);
-  // The last choice made here. Its Undo holds while the store's undo is still this choice's.
-  const [last, setLast] = useState<{ contributorId: string; targets: Target[]; undo: object | null } | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   // Where focus goes once the list has re-rendered after a choice: past the line, or back onto it.
   const pendingFocus = useRef<{ key: string; stay: boolean } | null>(null);
@@ -184,7 +181,6 @@ export function ReviewPanel() {
       at: Date.now(),
     });
     if (outcome.kind !== "settled") return;
-    setLast({ contributorId: author.id, targets, undo: useContributionStore.getState().askUndo });
     if (choice === "theirs") {
       store.setReviewSettled({ contributorId: author.id, targets });
       window.setTimeout(() => {
@@ -203,9 +199,15 @@ export function ReviewPanel() {
     pendingFocus.current = { key, stay: false };
   }
 
-  function undo(key: string) {
-    if (!useContributionStore.getState().undoAskStep()) return;
-    setLast(null);
+  /** Clear one line's decision; a "theirs" also puts the row's own value back. */
+  function undo(author: Author, target: Target, key: string) {
+    const store = useContributionStore.getState();
+    const outcome = store.applyAskStep(store.activeDraftId, {
+      kind: "settle",
+      contributorId: author.id,
+      choices: { [target]: null },
+    });
+    if (outcome.kind !== "settled") return;
     announce(t("annReviewUndone"));
     pendingFocus.current = { key, stay: true };
   }
@@ -237,7 +239,6 @@ export function ReviewPanel() {
             ? t("teamSettledOn", { date: format.dateTime(settledAt(reply), { day: "numeric", month: "short" }) })
             : `${t("teamAnsweredDays", { days })} · ${ask.prefilled ? t("teamAskedGuess") : t("teamAskedBlank")}`;
         const headingId = `review-person-${author.id}`;
-        const undoable = last?.contributorId === author.id && last.undo !== null && last.undo === askUndo;
         return (
           <section key={author.id} aria-labelledby={headingId} className="flex flex-col gap-2">
             <div className="flex items-start justify-between gap-3">
@@ -289,15 +290,18 @@ export function ReviewPanel() {
                             : t("reviewKindAdded");
                   const isOpen = line.state === "open";
                   const graded = levels || (line.state !== "used" && line.difference.kind === "level");
+                  // Focus rings the cell as hovering does; the buttons carry it, since the line is not focusable.
+                  const focusRing = {
+                    onFocus: () => highlight(author, line.target),
+                    onBlur: () => highlight(author, null),
+                  };
                   return (
                     <li
                       key={line.target}
                       data-review-line={key}
                       data-open={isOpen}
-                      onMouseEnter={() => highlight(author, line.target)}
-                      onMouseLeave={() => highlight(author, null)}
-                      onFocus={() => highlight(author, line.target)}
-                      onBlur={() => highlight(author, null)}
+                      onPointerEnter={() => highlight(author, line.target)}
+                      onPointerLeave={() => highlight(author, null)}
                       className={`flex flex-col gap-2 rounded-lg border p-3 transition-colors hover:border-flag focus-within:border-flag ${
                         isOpen ? "border-outline bg-surface-bright" : "border-outline-variant bg-surface-container-low"
                       }`}
@@ -332,6 +336,7 @@ export function ReviewPanel() {
                             onClick={() => choose(author, [line.target], "theirs", key)}
                             aria-label={`${t("reviewUseTheirs", { name })}: ${role}`}
                             className={PRIMARY_BUTTON}
+                            {...focusRing}
                           >
                             {t("reviewUseTheirs", { name })}
                           </button>
@@ -340,6 +345,7 @@ export function ReviewPanel() {
                             onClick={() => choose(author, [line.target], "mine", key)}
                             aria-label={`${t("reviewKeepYours")}: ${role}`}
                             className={SECONDARY_BUTTON}
+                            {...focusRing}
                           >
                             {t("reviewKeepYours")}
                           </button>
@@ -348,6 +354,7 @@ export function ReviewPanel() {
                             onClick={() => void askAbout(author, line.target, key)}
                             aria-label={copiedKey === key ? undefined : `${t("reviewAskAbout", { name })}: ${role}`}
                             className={LINK_BUTTON}
+                            {...focusRing}
                           >
                             {copiedKey === key ? t("copied") : t("reviewAskAbout", { name })}
                           </button>
@@ -358,17 +365,16 @@ export function ReviewPanel() {
                           <span className="flex-1">
                             {line.state === "used" ? t("reviewUsedTheirs", { name }) : t("reviewKeptYours")}
                           </span>
-                          {undoable && last.targets.includes(line.target) && (
-                            <button
-                              type="button"
-                              data-review-first=""
-                              onClick={() => undo(key)}
-                              aria-label={`${t("undo")}: ${role}`}
-                              className={LINK_BUTTON}
-                            >
-                              {t("undo")}
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            data-review-first=""
+                            onClick={() => undo(author, line.target, key)}
+                            aria-label={`${t("undo")}: ${role}`}
+                            className={LINK_BUTTON}
+                            {...focusRing}
+                          >
+                            {t("undo")}
+                          </button>
                         </div>
                       )}
                     </li>

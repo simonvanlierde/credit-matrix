@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Ask, AskState, Choice, Target } from "../ask";
-import { ASK_TARGETS, applyPatch, askStep, importAsks, review, settledAt } from "../ask";
+import { ASK_TARGETS, applyPatch, askStep, importAsks, importSelfId, review, settledAt } from "../ask";
 import type { Author } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromJson, toJson } from "../export/json";
@@ -161,7 +161,7 @@ describe("askStep reply", () => {
   });
 });
 
-function settle(state: AskState, id: string, choices: Choice | Partial<Record<Target, Choice>>): AskState {
+function settle(state: AskState, id: string, choices: Choice | Partial<Record<Target, Choice | null>>): AskState {
   return applyPatch(state, askStep(state, { kind: "settle", contributorId: id, choices }).patch);
 }
 
@@ -225,6 +225,49 @@ describe("askStep settle", () => {
       const matchesTheirs = !Object.hasOwn(result.byTarget, edit);
       expect(result.open.some((d) => d.target === edit)).toBe(!matchesTheirs);
     }
+  });
+
+  it("clearing a decision reopens it and puts back the row's value a 'theirs' took", () => {
+    const valueIn = (row: Author, target: Target) =>
+      target === "equalContribution" || target === "corresponding"
+        ? row[target]
+        : Math.max(0, ...row.contributions.filter((c) => c.role === target).map((c) => c.score));
+    for (let seed = 1; seed <= ROUNDS; seed++) {
+      const { state, target, row, random } = scenario(seed);
+      const received = receive(state, target.id, row, 1500).state;
+      const open = review(rowOf(received, target.id), received.asks[target.id]).open;
+      const choices = Object.fromEntries(open.map((d) => [d.target, random() < 0.5 ? "theirs" : "mine"]));
+      const decided = settle(received, target.id, choices);
+      // Clear every decision at once, or one at a time: the result is the same.
+      const cleared = Object.fromEntries(open.map((d) => [d.target, null]));
+      const undone =
+        random() < 0.5
+          ? settle(decided, target.id, cleared)
+          : open.reduce((acc, d) => settle(acc, target.id, { [d.target]: null }), decided);
+      const before = rowOf(received, target.id);
+      const after = rowOf(undone, target.id);
+      for (const d of open) expect(valueIn(after, d.target)).toEqual(valueIn(before, d.target));
+      expect(undone.asks[target.id]?.reply?.decisions).toEqual({});
+      expect(review(after, undone.asks[target.id]).open).toEqual(open);
+    }
+  });
+
+  it("clearing a 'theirs' leaves a row edited since alone, and ignores targets with no decision", () => {
+    const ada = createAuthor("Ada Lovelace", { id: "ada" });
+    const state: AskState = { authors: [ada], asks: { ada: { sentAt: 1, prefilled: false } } };
+    const reply = createAuthor("Ada Lovelace", { id: "ada", contributions: [{ role: "Software", score: 50 }] });
+    const taken = settle(receive(state, "ada", reply, 10).state, "ada", { Software: "theirs" });
+    expect(askStep(taken, { kind: "settle", contributorId: "ada", choices: { Methodology: null } }).patch).toEqual({
+      rows: {},
+      asks: { ada: taken.asks.ada },
+    });
+    const edited: AskState = {
+      ...taken,
+      authors: [{ ...rowOf(taken, "ada"), contributions: [{ role: "Software", score: 100 }] }],
+    };
+    const cleared = settle(edited, "ada", { Software: null });
+    expect(rowOf(cleared, "ada").contributions).toEqual([{ role: "Software", score: 100 }]);
+    expect(cleared.asks.ada?.reply?.decisions).toEqual({});
   });
 
   it("treats markers like roles", () => {
@@ -326,5 +369,25 @@ describe("asks in JSON", () => {
     expect(importAsks([ada], incoming, mapped, held, fromFile)).toEqual({ ada: { sentAt: 2, prefilled: false } });
     // Into an empty draft nothing can be unmatched: the file's answers come along.
     expect(importAsks([], incoming, incoming, {}, fromFile)).toEqual(fromFile);
+  });
+
+  it("reads back who made the file, through the same id map as the answers", () => {
+    const authors = scenario(9).state.authors as Author[];
+    const self = authors[1]?.id;
+    expect(fromJson(toJson(authors, { selfId: self })).selfId).toBe(self);
+    expect(fromJson(toJson(authors))).not.toHaveProperty("selfId");
+
+    const ada = createAuthor("Ada Lovelace", { id: "ada" });
+    const incoming = [
+      createAuthor("Ada Lovelace", { id: "file-ada" }),
+      createAuthor("Grace Hopper", { id: "file-grace" }),
+    ];
+    const mapped = keepKnownIds([ada], incoming);
+    expect(importSelfId([ada], incoming, mapped, "file-ada")).toBe("ada");
+    // A row that matched nobody here is not you in this draft.
+    expect(importSelfId([ada], incoming, mapped, "file-grace")).toBeUndefined();
+    expect(importSelfId([ada], incoming, mapped, "nobody")).toBeUndefined();
+    expect(importSelfId([ada], incoming, mapped, undefined)).toBeUndefined();
+    expect(importSelfId([], incoming, incoming, "file-grace")).toBe("file-grace");
   });
 });

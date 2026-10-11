@@ -8,7 +8,8 @@ import { announce } from "@/lib/announce";
 export interface Status {
   kind: "success" | "error";
   message: string;
-  action?: { label: string; onAct: () => void };
+  /** Buttons after the message, in this order (Undo first, then a way onward). Each also dismisses the strip. */
+  actions?: readonly { label: string; onAct: () => void }[];
   /**
    * Runs when the strip leaves for any reason — the dismiss button, the
    * timeout, the action, or a newer status replacing it — so anything shown
@@ -65,7 +66,7 @@ export function StatusBanner() {
         status.onDismiss?.();
         setStatus(null);
       },
-      status.action ? 60000 : 10000,
+      status.actions?.length ? 60000 : 10000,
     );
     return () => window.clearTimeout(timer);
   }, [status]);
@@ -87,18 +88,19 @@ export function StatusBanner() {
           <CircleCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
         )}
         <span className="min-w-0">{status.message}</span>
-        {status.action && (
+        {status.actions?.map((action) => (
           <button
+            key={action.label}
             type="button"
             onClick={() => {
-              status.action?.onAct();
+              action.onAct();
               dismiss();
             }}
             className="min-h-6 shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            {status.action.label}
+            {action.label}
           </button>
-        )}
+        ))}
         <button
           type="button"
           onClick={dismiss}

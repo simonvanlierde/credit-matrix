@@ -7,7 +7,7 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { importAsks, isAllBinary, keepKnownIds } from "@/core";
+import { importAsks, importSelfId, isAllBinary, keepKnownIds } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -49,6 +49,7 @@ export function HeaderActions() {
   const applyAskStep = useContributionStore((s) => s.applyAskStep);
   const undoAskStep = useContributionStore((s) => s.undoAskStep);
   const setRecentReply = useContributionStore((s) => s.setRecentReply);
+  const openReview = useContributionStore((s) => s.openReview);
   const decodedOnMount = useRef(false);
 
   // Rehydrate persisted state on the client (the store skips hydration at
@@ -178,16 +179,30 @@ export function HeaderActions() {
         kind: "success",
         message:
           outcome.open > 0 ? t("askReplyDiffers", { name, count: outcome.open }) : t("askReplyMatches", { name }),
-        action: {
-          label: t("undo"),
-          onAct: () => {
-            // The strip lives a minute, long enough to switch drafts under it.
-            switchDraft(target);
-            if (!undoAskStep()) return;
-            setRecentReply(null);
-            announce(t("annMergeUndone"));
+        actions: [
+          {
+            label: t("undo"),
+            onAct: () => {
+              // The strip lives a minute, long enough to switch drafts under it.
+              switchDraft(target);
+              if (!undoAskStep()) return;
+              setRecentReply(null);
+              announce(t("annMergeUndone"));
+            },
           },
-        },
+          // The banner covers the grid strip's Review button, so it offers its own.
+          ...(outcome.open > 0
+            ? [
+                {
+                  label: t("reviewAction"),
+                  onAct: () => {
+                    switchDraft(target);
+                    openReview(contributorId);
+                  },
+                },
+              ]
+            : []),
+        ],
         onDismiss: () => {
           // Guarded by id: a newer reply owns the mark by now, and this
           // strip's departure must not take the newer mark down.
@@ -286,14 +301,16 @@ export function HeaderActions() {
     showStatus({
       kind: "success",
       message: t("claimRequestUpdated"),
-      action: {
-        label: t("undo"),
-        onAct: () => {
-          switchDraft(draftId);
-          if (useContributionStore.getState().activeDraftId !== draftId) return;
-          write(previous);
+      actions: [
+        {
+          label: t("undo"),
+          onAct: () => {
+            switchDraft(draftId);
+            if (useContributionStore.getState().activeDraftId !== draftId) return;
+            write(previous);
+          },
         },
-      },
+      ],
     });
     return null;
   }
@@ -324,12 +341,16 @@ export function HeaderActions() {
     return occupied ? "occupied" : "fresh";
   }
 
-  function handleImport({ authors: importedAuthors, title: importedTitle, asks }: PendingImport) {
+  function handleImport({ authors: importedAuthors, title: importedTitle, asks, selfId }: PendingImport) {
     // Errors surface in ImportModal, which keeps the dialog open on failure.
     // Re-imported contributors keep their ids, so their open asks still match.
     const { authors: current, asks: held } = useContributionStore.getState();
     const mapped = keepKnownIds(current, importedAuthors);
-    loadAuthors(mapped, asks ? importAsks(current, importedAuthors, mapped, held, asks) : undefined);
+    loadAuthors(
+      mapped,
+      asks ? importAsks(current, importedAuthors, mapped, held, asks) : undefined,
+      importSelfId(current, importedAuthors, mapped, selfId),
+    );
     // Only the DOI path carries a title. Guard on it rather than on emptiness,
     // so a record with no title still clears a stale one from the last import.
     if (importedTitle !== undefined) setTitle(importedTitle);

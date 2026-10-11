@@ -143,7 +143,8 @@ interface ContributionState {
   drafts: Record<string, Draft>;
   activeDraftId: string;
   /** Replace the roster. `asks`, when given, replaces the asks too, for the rows the roster keeps. */
-  loadAuthors: (authors: Author[], asks?: Record<string, Ask>) => void;
+  /** With `selfId`, also marks that row as you, when it survives normalizing. */
+  loadAuthors: (authors: Author[], asks?: Record<string, Ask>, selfId?: string) => void;
   setClaim: (claim: DraftClaim | null) => void;
   /** Unlock a draft's claim, active or parked. */
   clearClaimFor: (draftId: string) => void;
@@ -151,7 +152,7 @@ interface ContributionState {
   setRecentReply: (contributorId: string | null) => void;
   /** Put back an ask a removal took with it. */
   markAsked: (contributorId: string, ask: Ask) => void;
-  /** Send, reply, settle or remove on one draft, open or parked, in one write. Keeps the undo in `askUndo`. */
+  /** Send, reply, settle or remove on one draft, open or parked, in one write. Keeps the undo in `askUndo`, except a settle's. */
   applyAskStep: (draftId: string, event: AskEvent) => Outcome;
   /** Take back the last ask step. False when there is nothing to undo or its draft is gone. */
   undoAskStep: () => boolean;
@@ -879,13 +880,14 @@ export const useContributionStore = create<ContributionState>()(
       // Guarded like every other whole-roster write: an Import dialog or a bulk
       // undo can still be in flight when a claim link lands, and replacing the
       // roster under a claim would break the lock's one rule.
-      loadAuthors: (authors, asks) =>
+      loadAuthors: (authors, asks, selfId) =>
         set((state) => {
           if (claimRefuses(state)) return;
           state.authors = normalizeAuthors(authors);
-          if (!asks) return;
           // Normalizing re-keys a row whose id was unusable; answers under the old id have no row left.
           const ids = new Set(state.authors.map((author) => author.id));
+          if (selfId !== undefined && ids.has(selfId)) state.selfId = selfId;
+          if (!asks) return;
           state.asks = Object.fromEntries(Object.entries(asks).filter(([id]) => ids.has(id)));
         }),
 
@@ -923,7 +925,8 @@ export const useContributionStore = create<ContributionState>()(
         const next = applyPatch(source, patch);
         set((draft) => {
           writeAskState(draft, draftId, next.authors, next.asks);
-          draft.askUndo = { draftId, patch: undo };
+          // A decision is undone on its own Review line, so the last reply stays undoable.
+          if (event.kind !== "settle") draft.askUndo = { draftId, patch: undo };
         });
         return outcome;
       },

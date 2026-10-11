@@ -724,6 +724,29 @@ describe("contribution store", () => {
       expect(store().asks).toEqual({ [jane.id]: ask });
     });
 
+    it("marks an imported selfId as you only while that row is in the roster", () => {
+      const jane = addJane();
+      store().loadAuthors(store().authors, undefined, "gone");
+      expect(store().selfId).toBeNull();
+      store().loadAuthors(store().authors, undefined, jane.id);
+      expect(store().selfId).toBe(jane.id);
+    });
+
+    it("keeps the reply's undo while answers are settled", () => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 2,
+        at: 3,
+      });
+      const undo = store().askUndo;
+      store().applyAskStep(draftId, { kind: "settle", contributorId: jane.id, choices: "theirs" });
+      expect(store().askUndo).toBe(undo);
+    });
+
     it("drops a contributor's ask when they are removed", () => {
       const jane = addJane();
       store().markAsked(jane.id, ask);

@@ -53,10 +53,10 @@ export function toJson(
  * Throws a NewerVersionError for a newer build's export, and a ZodError for
  * any other data that doesn't match the expected shape.
  */
-export function fromJson(json: string): { authors: Author[]; asks?: Record<string, Ask> } {
+export function fromJson(json: string): { authors: Author[]; asks?: Record<string, Ask>; selfId?: string } {
   const data: unknown = JSON.parse(json);
   const version = (data as { version?: unknown } | null)?.version;
   if (typeof version === "number" && version > JSON_EXPORT_VERSION) throw new NewerVersionError(version);
-  const { authors, asks } = ExportSchema.parse(data);
-  return asks ? { authors, asks } : { authors };
+  const { authors, asks, selfId } = ExportSchema.parse(data);
+  return { authors, ...(asks ? { asks } : {}), ...(selfId ? { selfId } : {}) };
 }

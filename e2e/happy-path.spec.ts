@@ -116,6 +116,7 @@ test.describe("Happy path UI flows", () => {
     // contract, so a `**` pattern must not hide a malformed request.
     await stubUpstream(
       page,
+      // biome-ignore lint/security/noSecrets: a public Crossref URL, not a credential.
       "https://api.crossref.org/works/10.1038%2Fs41586-020-2649-2?mailto=credit%40duinlab.nl",
       200,
       {

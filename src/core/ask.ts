@@ -24,6 +24,8 @@ const DecisionSchema = z.object({
   rowLevel: z.union([z.enum(["none", "supporting", "equal", "lead"]), z.boolean()]),
   /** When it was made, in epoch milliseconds. Absent on decisions from before it was kept. */
   at: z.optional(z.number()),
+  /** On "theirs": the row's exact score, or marker, before their answer replaced it. Clearing the decision puts it back. */
+  before: z.optional(z.union([z.number(), z.boolean()])),
 });
 export type Decision = z.infer<typeof DecisionSchema>;
 
@@ -67,7 +69,8 @@ export interface Patch {
 export type AskEvent =
   | { kind: "sent"; contributorId: string; prefilled: boolean; at: number }
   | { kind: "reply"; contributorId: string; row: unknown; sentAt: number | null; at: number }
-  | { kind: "settle"; contributorId: string; choices: Choice | Partial<Record<Target, Choice>>; at?: number }
+  /** A `null` choice clears that target's decision, and a "theirs" one puts the row's value back. */
+  | { kind: "settle"; contributorId: string; choices: Choice | Partial<Record<Target, Choice | null>>; at?: number }
   | { kind: "removed"; contributorId: string };
 
 export type Outcome =
@@ -256,12 +259,13 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       const reply = held?.reply;
       if (!(held && reply)) return nothing("noReply");
       const current = review(author, held);
-      const picks: [Target, Choice][] =
+      const picks: [Target, Choice | null][] =
         typeof event.choices === "string"
           ? current.open.map((difference) => [difference.target, event.choices as Choice])
-          : (Object.entries(event.choices) as [Target, Choice][]).filter(
-              ([target, choice]) =>
-                Object.hasOwn(current.byTarget, target) && (choice === "theirs" || choice === "mine"),
+          : (Object.entries(event.choices) as [Target, Choice | null][]).filter(([target, choice]) =>
+              choice === null
+                ? Object.hasOwn(reply.decisions, target)
+                : Object.hasOwn(current.byTarget, target) && (choice === "theirs" || choice === "mine"),
             );
 
       const next: Answer = {
@@ -271,11 +275,22 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       };
       const decisions = { ...reply.decisions };
       for (const [target, choice] of picks) {
-        if (choice === "theirs") takeTheirs(next, reply, target);
+        if (choice === null) {
+          const decision = decisions[target];
+          delete decisions[target];
+          // Only a row still as the decision left it goes back: a later edit is the lead's own.
+          if (decision?.before !== undefined && levelOf(next, target) === decision.rowLevel) {
+            setValue(next, target, decision.before);
+          }
+          continue;
+        }
+        const before = exactValue(next, target);
+        if (choice === "theirs") setValue(next, target, exactValue(reply, target));
         decisions[target] = {
           choice,
           rowLevel: levelOf(next, target),
           ...(event.at === undefined ? {} : { at: event.at }),
+          ...(choice === "theirs" ? { before } : {}),
         };
       }
       const ask: Ask = { ...held, reply: { ...reply, decisions } };
@@ -307,13 +322,18 @@ export function settledAt(reply: Reply): number {
   return at;
 }
 
-/** Copy their exact score or marker into the row. */
-function takeTheirs(row: Answer, reply: Answer, target: Target): void {
+/** The exact score, or the marker, a row holds for a target. */
+function exactValue(answer: Answer, target: Target): number | boolean {
+  return isMarker(target) ? answer[target] === true : scoreOf(answer, target);
+}
+
+/** Write an exact score or marker into the row. */
+function setValue(row: Answer, target: Target, value: number | boolean): void {
   if (isMarker(target)) {
-    row[target] = reply[target];
+    row[target] = value === true;
     return;
   }
-  const score = scoreOf(reply, target);
+  const score = Number(value);
   const existing = row.contributions.filter((contribution) => contribution.role === target);
   if (existing.length === 0) row.contributions.push({ role: target, score } satisfies Contribution);
   for (const contribution of existing) contribution.score = score;
@@ -366,4 +386,20 @@ export function importAsks(
     if (ask) asks[id] = ask;
   });
   return asks;
+}
+
+/**
+ * The file's `selfId` under the id the imported roster gives that row, by the
+ * same rule as `importAsks`: into a draft that has contributors, only a row
+ * that matched one of them keeps it. Undefined when it does not survive.
+ */
+export function importSelfId(
+  current: readonly Author[],
+  incoming: readonly Author[],
+  mapped: readonly Author[],
+  selfId: string | undefined,
+): string | undefined {
+  const id = mapped[incoming.findIndex((author) => author.id === selfId)]?.id;
+  if (!id) return undefined;
+  return current.length === 0 || current.some((author) => author.id === id) ? id : undefined;
 }

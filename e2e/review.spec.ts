@@ -31,9 +31,12 @@ async function leadWithReply(browser: Browser): Promise<Page> {
   const bob = await (await newContext(browser)).newPage();
   await asReturningVisitor(bob);
   await bob.goto(askLink);
-  await bob.getByRole("button", { name: /^Investigation for Bob White:/ }).click();
-  await expect(bob.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
-  const reply = await copyFrom(bob, bob.getByRole("button", { name: "Copy the link to send back" }));
+  const investigation = bob
+    .getByRole("radiogroup", { name: "Investigation", exact: true })
+    .getByRole("radio", { name: "Contributed", exact: true });
+  await investigation.click();
+  await expect(investigation).toBeChecked();
+  const reply = await copyFrom(bob, bob.getByRole("button", { name: "Send back" }));
   await bob.context().close();
 
   await lead.goto(reply);
@@ -97,6 +100,13 @@ test("an answer is reviewed, settled either way, undone, and the statement notic
   // You are not on your own team list.
   await expect(page.getByRole("button", { name: "Copy message for Jane Smith" })).toHaveCount(0);
 
+  // Any decided line undoes on its own, not only the last one.
+  await page.getByRole("tab", { name: "Review" }).click();
+  await review(page).getByRole("button", { name: "Undo: Investigation" }).click();
+  await expect(page.getByRole("button", { name: "Investigation for Bob White: None" })).toBeVisible();
+  await expect(review(page).getByRole("button", { name: "Use Bob's: Investigation" })).toBeFocused();
+  await expect(review(page).getByText("Kept yours")).toBeVisible();
+
   await page.context().close();
 });
 
@@ -124,12 +134,11 @@ test("a difference settles from the keyboard alone", async ({ browser }) => {
 
 test("the Review tab with open differences has no accessibility violations", async ({ browser }) => {
   const page = await leadWithReply(browser);
-  // The arrival message sits over the status strip until it is dismissed.
-  await page.getByRole("button", { name: "Dismiss" }).click();
-  await page
-    .getByRole("region", { name: "Contribution grid" })
-    .getByRole("button", { name: "Review", exact: true })
-    .click();
+  // The arrival message covers the grid's status strip, so it carries its own way to Review.
+  const arrival = onScreen(page, "Bob White's answer arrived: 2 differences.");
+  await arrival.locator("..").getByRole("button", { name: "Review", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Bob White" })).toBeFocused();
+  await expect(arrival).toHaveCount(0);
   await expect(review(page).getByRole("button", { name: "Use Bob's: Investigation" })).toBeVisible();
   // Hovering a line rings its grid cell; the scan covers that state too.
   await review(page).getByText("Investigation", { exact: true }).hover();

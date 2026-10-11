@@ -45,6 +45,8 @@ export interface PendingImport {
   title?: string;
   /** Co-author asks and answers, from a JSON export that has them. */
   asks?: Record<string, Ask>;
+  /** The contributor who made a JSON export, under the file's own id. */
+  selfId?: string;
 }
 
 /**
@@ -120,7 +122,7 @@ const MAX_IMPORT_MB = `${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB`;
 /** Parser + "nothing found" message for each detectable format. */
 const IMPORTERS: Record<
   Exclude<DetectedFormat, "unknown" | "link">,
-  { parse: (text: string) => { authors: Author[]; asks?: Record<string, Ask> }; emptyMessageKey: keyof Messages }
+  { parse: (text: string) => Omit<PendingImport, "title">; emptyMessageKey: keyof Messages }
 > = {
   json: { parse: fromJson, emptyMessageKey: "errImportNoJsonContributors" },
   csv: { parse: (text) => ({ authors: fromCsv(text) }), emptyMessageKey: "errImportNoCsvRows" },
@@ -234,7 +236,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         return;
       }
       const { parse, emptyMessageKey } = IMPORTERS[format];
-      const { authors, asks } = parse(text.trim());
+      const parsed = parse(text.trim());
+      const { authors } = parsed;
       if (authors.length === 0) {
         showError(t(emptyMessageKey));
         return;
@@ -243,7 +246,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         showError(t("errTooManyContributors", { limit: MAX_AUTHORS }));
         return;
       }
-      stageImport(asks ? { authors, asks } : { authors });
+      stageImport(parsed);
     } catch (failure) {
       // A newer build's export is said plainly, not as a validation failure.
       showError(t(failure instanceof NewerVersionError ? "errImportNewerVersion" : "errImportFailed"));
