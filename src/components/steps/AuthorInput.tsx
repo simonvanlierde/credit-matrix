@@ -37,6 +37,7 @@ import {
   UserCheck,
   UserMinus,
   UserPlus,
+  UserRound,
   UserSearch,
   Users,
   X,
@@ -600,6 +601,8 @@ function RowMenu({
   canAddOrcid,
   askCopied,
   allowAsk,
+  isSelf,
+  onToggleSelf,
   onToggleEqual,
   onToggleCorresponding,
   onAsk,
@@ -615,6 +618,9 @@ function RowMenu({
   askCopied: "blank" | "prefilled" | null;
   /** Asking someone else to fill a draft you are answering is nonsense. */
   allowAsk: boolean;
+  /** This row is the person using the app; absent where that cannot be set. */
+  isSelf?: boolean;
+  onToggleSelf?: () => void;
   onToggleEqual: () => void;
   onToggleCorresponding: () => void;
   onAsk: (blank: boolean) => void;
@@ -668,6 +674,12 @@ function RowMenu({
               {t("moveDown")}
             </button>
           </div>
+        )}
+        {onToggleSelf && (
+          <button type="button" onClick={onToggleSelf} aria-pressed={isSelf} className={item}>
+            <UserRound className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
+            {isSelf ? t("thisIsNotMe") : t("thisIsMe")}
+          </button>
         )}
         <button type="button" onClick={onToggleEqual} aria-pressed={equalContribution} className={item}>
           <Users className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
@@ -743,6 +755,8 @@ const AuthorRow = memo(function AuthorRowInner({
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
   const applyAskStep = useContributionStore((s) => s.applyAskStep);
+  const isSelf = useContributionStore((s) => author !== undefined && s.selfId === author.id);
+  const setSelfId = useContributionStore((s) => s.setSelfId);
   const moveAuthor = useContributionStore((s) => s.moveAuthor);
   const rowCount = useContributionStore((s) => s.authors.length);
   // Down once their answer is in, up again on a re-ask.
@@ -1014,6 +1028,11 @@ const AuthorRow = memo(function AuthorRowInner({
                 {isNonAuthor ? <UserMinus className="h-3 w-3" /> : <UserCheck className="h-3 w-3" />}
                 {isNonAuthor ? t("contributorTypeNonAuthor") : t("contributorTypeAuthor")}
               </button>
+              {isSelf && (
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                  {t("teamYou")}
+                </span>
+              )}
               {isClaimed && (
                 // No icon: the neighbouring type chip already carries UserCheck,
                 // and two identical glyphs side by side read as a mistake.
@@ -1062,7 +1081,9 @@ const AuthorRow = memo(function AuthorRowInner({
                   corresponding={author.corresponding}
                   canAddOrcid={!hasOrcid && !editingOrcid}
                   askCopied={askCopied}
-                  allowAsk={!locked}
+                  allowAsk={!(locked || isSelf)}
+                  isSelf={isSelf}
+                  onToggleSelf={locked ? undefined : () => setSelfId(isSelf ? null : author.id)}
                   onToggleEqual={() => setAuthorMarker(author.id, "equalContribution", !author.equalContribution)}
                   onToggleCorresponding={() => setAuthorMarker(author.id, "corresponding", !author.corresponding)}
                   onAsk={(blank) => void handleAsk(blank)}

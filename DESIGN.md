@@ -13,6 +13,7 @@ colors:
   graphite-muted: "#595c63"
   rule: "#c9c9c5"
   error: "#ba1a1a"
+  flag: "#b45309"
 typography:
   headline:
     fontFamily: "Newsreader, Georgia, serif"
@@ -98,6 +99,10 @@ dark page, where the palest cell is the brightest, so dark mode keeps the hue an
 lightness instead: 30%, 48% and 77% (for ink blue `#1f4f7a`, `#327ec3`, `#a2c6e7`),
 with dark marks on Lead. Exported heatmaps always use the light ramp, since a figure goes onto a
 white page. `heatCellColor` in `src/core/contributor-color.ts` holds both ramps.
+
+Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the
+ring around the cell a Review line points at, and the ring that fades off a cell as a difference is
+settled. It is a mark, never a fill, and always comes with a shape or text.
 
 ## Typography
 

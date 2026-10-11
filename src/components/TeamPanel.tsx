@@ -2,11 +2,11 @@
 
 import { Check, Copy, Send } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { InitialsChip } from "@/components/ui/initials-chip";
-import type { Author } from "@/core";
+import { type Author, review, settledAt } from "@/core";
 import { announce } from "@/lib/announce";
-import { buildShareUrl, shareFailureKey } from "@/lib/share";
+import { copyAskMessage } from "@/lib/ask-message";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useContributionStore } from "@/store/contribution-store";
 
@@ -27,7 +27,9 @@ export function TeamPanel() {
   const authors = useContributionStore((s) => s.authors);
   const asks = useContributionStore((s) => s.asks);
   const activeDraftId = useContributionStore((s) => s.activeDraftId);
-  const applyAskStep = useContributionStore((s) => s.applyAskStep);
+  const selfId = useContributionStore((s) => s.selfId);
+  const openReview = useContributionStore((s) => s.openReview);
+  const format = useFormatter();
   const { locked } = useClaimLock();
   // The last message copied, for the visible confirmation and the row's check.
   const [copied, setCopied] = useState<{ id: string; name: string } | null>(null);
@@ -47,58 +49,45 @@ export function TeamPanel() {
   if (locked) {
     return <p className="text-sm text-on-surface-variant">{t("claimLockedHint")}</p>;
   }
-  if (authors.length === 0) {
+  // You are not your own co-author.
+  const team = authors.filter((author) => author.id !== selfId);
+  if (team.length === 0) {
     return <p className="text-sm text-on-surface-variant">{t("teamEmpty")}</p>;
   }
 
-  const notAsked = authors.filter((author) => !(author.id in asks));
+  const notAsked = team.filter((author) => !(author.id in asks));
+  const daysSince = (at: number) => Math.max(0, Math.floor((Date.now() - at) / DAY_MS));
+
+  function statusOf(author: Author): { text: string; toReview: boolean } {
+    const ask = asks[author.id];
+    if (!ask) return { text: t("teamNotAsked"), toReview: false };
+    const { status } = review(author, ask);
+    const kindLabel = ask.prefilled ? t("teamAskedGuess") : t("teamAskedBlank");
+    if (status.kind === "differs" && ask.reply) {
+      return {
+        text: `${t("teamAnsweredDays", { days: daysSince(ask.reply.receivedAt) })} · ${t("teamToReview", { count: status.count })}`,
+        toReview: true,
+      };
+    }
+    if (status.kind === "settled" && ask.reply) {
+      const date = format.dateTime(settledAt(ask.reply), { day: "numeric", month: "short" });
+      return { text: t("teamSettledOn", { date }), toReview: false };
+    }
+    return { text: `${t("teamAskedDays", { days: daysSince(ask.sentAt) })} · ${kindLabel}`, toReview: false };
+  }
 
   /** Copy one person's message and record the ask. Returns whether it reached the clipboard. */
   async function copyMessage(author: Author): Promise<boolean> {
-    const sentAt = Date.now();
-    // Read at click time: the link carries the whole roster and the title.
-    const state = useContributionStore.getState();
-    let link: string;
-    try {
-      link = await buildShareUrl({
-        authors: state.authors,
-        title: state.title,
-        claimId: author.id,
-        sourceDraftId: state.activeDraftId,
-        blank: true,
-        sentAt,
-      });
-    } catch {
-      announce(t(shareFailureKey()), { assertive: true });
-      return false;
-    }
-    const title = state.title.trim();
-    const text = t("teamMessage", {
-      name: author.name,
-      work: title ? t("teamMessageWork", { title }) : t("teamMessageNoTitle"),
-      link,
-    });
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      announce(t("annCopyFailed"), { assertive: true });
-      return false;
-    }
-    // The draft may have switched, or the row gone, while the link was built.
-    const now = useContributionStore.getState();
-    if (now.activeDraftId === state.activeDraftId && now.authors.some((a) => a.id === author.id)) {
-      applyAskStep(now.activeDraftId, { kind: "sent", contributorId: author.id, prefilled: false, at: sentAt });
-    }
+    if (!(await copyAskMessage(author, t))) return false;
     setCopied({ id: author.id, name: author.name });
     setFinished(null);
-    announce(t("teamMessageCopied", { name: author.name }));
     return true;
   }
 
   async function askNext() {
     const ids = queue?.ids ?? notAsked.map((author) => author.id);
     const done = queue?.done ?? 0;
-    const next = authors.find((candidate) => candidate.id === ids[done]);
+    const next = team.find((candidate) => candidate.id === ids[done]);
     if (!next) {
       setQueue(null);
       return;
@@ -113,7 +102,7 @@ export function TeamPanel() {
     }
   }
 
-  const nextName = queue ? authors.find((author) => author.id === queue.ids[queue.done])?.name : undefined;
+  const nextName = queue ? team.find((author) => author.id === queue.ids[queue.done])?.name : undefined;
 
   return (
     <div className="flex flex-col gap-3">
@@ -149,9 +138,9 @@ export function TeamPanel() {
       <p className="text-xs leading-relaxed text-on-surface-variant">{t("teamPrivacy")}</p>
 
       <ul className="flex flex-col divide-y divide-outline-variant/40 border-t border-outline-variant/40">
-        {authors.map((author) => {
+        {team.map((author) => {
           const ask = asks[author.id];
-          const days = ask ? Math.max(0, Math.floor((Date.now() - ask.sentAt) / DAY_MS)) : 0;
+          const status = statusOf(author);
           const justCopied = copied?.id === author.id;
           return (
             <li key={author.id} className="flex items-center gap-2.5 py-2">
@@ -160,25 +149,34 @@ export function TeamPanel() {
                 <span className="truncate text-[13px] font-medium text-on-surface" title={author.name}>
                   {author.name}
                 </span>
-                <span className="text-xs text-on-surface-variant">
-                  {ask
-                    ? `${t("teamAskedDays", { days })} · ${ask.prefilled ? t("teamAskedGuess") : t("teamAskedBlank")}`
-                    : t("teamNotAsked")}
+                <span className={`text-xs ${status.toReview ? "font-medium text-primary" : "text-on-surface-variant"}`}>
+                  {status.text}
                 </span>
               </span>
-              <button
-                type="button"
-                onClick={() => void copyMessage(author)}
-                aria-label={t("teamCopyMessageFor", { name: author.name })}
-                className={ask ? SECONDARY_BUTTON : PRIMARY_BUTTON}
-              >
-                {justCopied ? (
-                  <Check className="size-3.5" aria-hidden="true" />
-                ) : (
-                  <Copy className="size-3.5" aria-hidden="true" />
-                )}
-                {justCopied ? t("copied") : t("teamCopyMessage")}
-              </button>
+              {status.toReview ? (
+                <button
+                  type="button"
+                  onClick={() => openReview(author.id)}
+                  aria-label={t("teamReviewFor", { name: author.name })}
+                  className={PRIMARY_BUTTON}
+                >
+                  {t("reviewAction")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void copyMessage(author)}
+                  aria-label={t("teamCopyMessageFor", { name: author.name })}
+                  className={ask ? SECONDARY_BUTTON : PRIMARY_BUTTON}
+                >
+                  {justCopied ? (
+                    <Check className="size-3.5" aria-hidden="true" />
+                  ) : (
+                    <Copy className="size-3.5" aria-hidden="true" />
+                  )}
+                  {justCopied ? t("copied") : t("teamCopyMessage")}
+                </button>
+              )}
             </li>
           );
         })}

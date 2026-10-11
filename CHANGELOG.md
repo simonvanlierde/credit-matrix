@@ -20,26 +20,42 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - *Move up* and *Move down* in each contributor's menu, so the author order can be changed without
   dragging.
 - Skip links to the grid and to the statement.
+- The **Review** tab lists where each co-author's answer differs from your draft, per person, in
+  the grid's dots: "Software: You ●● Equal → Ben ●●● Lead". For each difference choose
+  *Use Ben's*, *Keep yours* or *Ask Ben about this*, which copies a message about that role with a
+  link to check your guess. *Use all of Ben's* takes his whole answer. Each choice has Undo, moves on
+  to the next difference, and animates the grid cell as it changes.
+- Grid cells where a co-author answered differently carry a corner mark, and a screen reader hears
+  what they said ("Ben says Lead"). A count under each column header opens Review on that person.
+- *This is me* in a contributor's menu marks your own row. You are left out of the Team tab, of
+  asks, and of the answered count, and your column says "You".
+- The Statement tab says when contributions still differ and that the statement uses your version,
+  with a link to Review. Copying and exporting are never blocked.
+- The Export data menu has an *Includes co-author answers* checkbox for the JSON file, ticked by
+  default.
 
 ### Changed
 
 - A co-author's reply no longer overwrites your row. Their name and iD are taken; their
   roles and markers are kept beside your row, and the status strip says how many differ ("Ben's
-  answer arrived: 3 differences") or that the answer matches yours. Choosing between the two answers
-  comes with the redesigned workspace; until then your row is what the statement uses.
+  answer arrived: 3 differences") or that the answer matches yours. Until you choose, your row is
+  what the statement uses.
 - A reply older than the one you already have is ignored, and opening the same reply twice changes
   nothing. Undo on a reply restores the name and iD and leaves any edits you made since then alone.
 - A new workspace layout. The contribution grid is now the main canvas, with the contributor list
   as a slim rail on the left (it folds to initials) and a panel on the right with three tabs:
   - **Statement**: the statement and *Copy statement*, plus one *Export data* menu where each format
     has its own Copy and Download.
-  - **Team**: who you have asked and when, a *Copy message* button per person that copies an
+  - **Team**: who you have asked and when, who answered and how much is left to review, and when
+    each answer was settled; a *Copy message* button per person that copies an
     email-ready text with their ask link, and *Ask everyone not yet asked*, which copies one message
     per person in turn.
-  - **Review**: a place for co-authors' answers, filled in by a later release.
-- A strip above the grid shows how many contributors you have asked and holds the Yes/No vs Levels
+  - **Review**: co-authors' answers beside your draft (see Added).
+- A strip above the grid shows how many co-authors answered and how many answers differ, with a
+  *Review* button, and holds the Yes/No vs Levels
   switch, bulk assign, display options, and heatmap export (copy, SVG, PNG).
-- Column headers show full names at an angle, with a mark under each for asked or not asked.
+- Column headers show full names at an angle, with a mark under each for not asked, asked, open
+  differences or settled.
   Past 20 contributors, or with *Use initials* on, they show initials.
 - Selecting a role name opens its description; the separate info buttons are gone. From the grid,
   press the Left arrow on the first column to reach the role name.
