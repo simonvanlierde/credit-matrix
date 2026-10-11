@@ -38,6 +38,8 @@ const SharePayloadSchema = z
     b: z.optional(z.literal(1)),
     /** when the link was sent, in epoch milliseconds; written now so a later release can order replies */
     w: z.optional(z.number().check(z.nonnegative())),
+    /** the asker works in yes/no mode, so the co-author answers yes or no rather than in levels */
+    y: z.optional(z.literal(1)),
     a: z
       .array(
         z.object({
@@ -87,6 +89,8 @@ export interface ShareData {
   blank: boolean;
   /** when the link was sent; null on links from before this was recorded */
   sentAt: number | null;
+  /** the asker works in yes/no mode; false on links from before this was recorded */
+  yesNo: boolean;
 }
 
 export interface SharePayloadInput {
@@ -98,6 +102,8 @@ export interface SharePayloadInput {
   /** Send the claimed row with its scores zeroed. Only meaningful with `claimId`. */
   blank?: boolean;
   sentAt?: number;
+  /** The asker works in yes/no mode. Only meaningful with `claimId`. */
+  yesNo?: boolean;
 }
 
 /** Serialize authors and envelope into the compact share shape. Minified, never pretty. */
@@ -123,6 +129,7 @@ export function toSharePayload(input: SharePayloadInput): string {
     ...(reply ? { r: 1 } : {}),
     ...(blank ? { b: 1 } : {}),
     ...(sentAt !== undefined ? { w: sentAt } : {}),
+    ...(input.yesNo && claimId ? { y: 1 } : {}),
     a: authors.map((author) => ({
       i: author.id,
       n: author.name,
@@ -167,5 +174,6 @@ export function fromSharePayload(json: string): ShareData {
     reply: payload.r === 1,
     blank: payload.b === 1,
     sentAt: payload.w ?? null,
+    yesNo: payload.y === 1,
   };
 }
