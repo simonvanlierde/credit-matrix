@@ -31,12 +31,14 @@ pnpm lint           # Biome (format + lint); append :fix to auto-fix
 pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
+pnpm verify         # lint, typecheck and unit tests in one go (also the pre-push hook)
+pnpm validate:jats  # check the JATS export against the JATS 1.3 DTD (needs xmllint)
 ```
 
 Before the first e2e run, install the browser: `pnpm exec playwright install chromium`.
 
-CI runs on every pull request and on every push to `main`. It runs `pnpm lint`, `pnpm typecheck`,
-and `pnpm test:coverage`, plus the e2e suite and a build dry run.
+CI runs on every pull request and on every push to `main`. It runs `pnpm verify` with coverage,
+`pnpm validate:jats`, the e2e suite and a build, and deploys `main` only when all of them pass.
 Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 ## Testing

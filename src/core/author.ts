@@ -96,8 +96,8 @@ export const AuthorSchema = z.object({
    */
   initials: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
   /**
-   * ORCID iD in URL form (e.g. "https://orcid.org/0000-0002-1825-0097")
-   * or bare 16-digit format ("0000-0002-1825-0097"). Optional.
+   * ORCID iD, stored bare ("0000-0002-1825-0097"). Input may also be the
+   * orcid.org URL form; the transform strips it. Optional.
    */
   orcid: z.optional(z.pipe(z.string().check(z.refine(isValidOrcid, "Invalid ORCID iD.")), z.transform(normalizeOrcid))),
   /**
