@@ -3,11 +3,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-dtd=test/jats-dtd/JATS-archivearticle1-3-mathml3.dtd
 fresh=$(mktemp --suffix=.xml)
 trap 'rm -f "$fresh"' EXIT
 
 JATS_OUT=$fresh pnpm exec vitest run src/core/__tests__/jats-sample-export.test.ts >/dev/null
 
-"${XMLLINT:-xmllint}" --noout --path test/jats-dtd --dtdvalid "$dtd" src/core/__tests__/fixtures/export-jats.xml "$fresh"
+# The catalog maps the DOCTYPE's public identifier to the vendored DTD, so this
+# also fails when an export names the wrong DTD; --nonet keeps it off the network.
+XML_CATALOG_FILES=test/jats-dtd/catalog-jats-v1-3-no-base.xml \
+	"${XMLLINT:-xmllint}" --nonet --noout --valid src/core/__tests__/fixtures/export-jats.xml "$fresh"
 echo "JATS validation passed"
