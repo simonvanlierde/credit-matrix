@@ -4,6 +4,7 @@ import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
   announcingStorage,
+  askSummary,
   type Draft,
   followOtherTab,
   MAX_DRAFTS,
@@ -742,6 +743,66 @@ describe("contribution store", () => {
     });
   });
 
+  describe("this is me", () => {
+    function addTwo() {
+      store().addAuthor("Ana Lima");
+      store().addAuthor("Ben White");
+      const [ana, ben] = store().authors;
+      if (!(ana && ben)) throw new Error("expected two contributors");
+      return { ana, ben };
+    }
+
+    it("is kept per draft, through a switch away and back", () => {
+      const { ana } = addTwo();
+      store().setSelfId(ana.id);
+      const home = store().activeDraftId;
+      store().createDraft();
+      expect(store().selfId).toBeNull();
+      store().switchDraft(home);
+      expect(store().selfId).toBe(ana.id);
+    });
+
+    it("leaves you out of the co-authors and their answers", () => {
+      const { ana, ben } = addTwo();
+      const draftId = store().activeDraftId;
+      for (const { id } of [ana, ben]) {
+        store().applyAskStep(draftId, { kind: "sent", contributorId: id, prefilled: false, at: 1 });
+        const row = createAuthor(id === ana.id ? ana.name : ben.name, {
+          id,
+          contributions: ROLE_NAMES.map((role) => ({ role, score: role === "Software" ? 100 : 0 })),
+        });
+        store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt: 2, at: 3 });
+      }
+      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, answered: 2, open: 2 });
+      store().setSelfId(ana.id);
+      expect(askSummary(store().authors, store().asks, store().selfId)).toEqual({ total: 1, answered: 1, open: 1 });
+    });
+
+    it("follows the row into a duplicate, and clears on reset", () => {
+      const { ben } = addTwo();
+      store().setSelfId(ben.id);
+      const copy = store().duplicateDraft(store().activeDraftId);
+      const duplicate = copy ? store().drafts[copy] : undefined;
+      expect(duplicate?.selfId).toBe(duplicate?.authors[1]?.id);
+      expect(duplicate?.selfId).not.toBe(ben.id);
+
+      store().reset();
+      expect(store().selfId).toBeNull();
+    });
+
+    it("survives a repair, and a malformed one is dropped", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const merged = merge?.(
+        { activeDraftId: "d1", drafts: { d1: { selfId: "ana-1" }, d2: { selfId: "not an id" } } },
+        initial,
+      ) as typeof initial;
+      expect(merged.selfId).toBe("ana-1");
+      expect(merged.drafts.d2?.selfId).toBeNull();
+      const saved = useContributionStore.persist.getOptions().partialize?.(merged) as { drafts: Record<string, Draft> };
+      expect(saved.drafts.d1?.selfId).toBe("ana-1");
+    });
+  });
+
   describe("another tab", () => {
     let hydrated: ReturnType<typeof vi.spyOn>;
     beforeEach(() => {
@@ -1191,6 +1252,7 @@ describe("contribution store", () => {
         updatedAt: 0,
         claim: null,
         asks: {},
+        selfId: null,
       });
       const state = {
         drafts: { a: draft("a", "Active paper"), b: draft("b", "Held paper") },
@@ -1248,6 +1310,7 @@ describe("contribution store", () => {
         updatedAt: 0,
         claim: null,
         asks: {},
+        selfId: null,
       };
       storage.setItem(PERSIST_KEY, {
         state: { drafts: { c: fresh }, activeDraftId: "c", uiLocale: "en", welcomeSeen: true },
@@ -1303,6 +1366,7 @@ describe("contribution store", () => {
         updatedAt: 0,
         claim: null,
         asks: {},
+        selfId: null,
       });
       const write = (tab: typeof tabA, active: string, drafts: Draft[]) =>
         tab.setItem(PERSIST_KEY, {
@@ -1359,6 +1423,7 @@ describe("contribution store", () => {
         updatedAt: 0,
         claim: null,
         asks: {},
+        selfId: null,
       });
       const drafts = { a: draft("a", "First"), b: draft("b", "Held paper") };
       const state = { drafts, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };

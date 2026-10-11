@@ -22,6 +22,8 @@ const DecisionSchema = z.object({
   choice: z.enum(["theirs", "mine"]),
   /** The row's level when the decision was made; a later edit to the row reopens it. */
   rowLevel: z.union([z.enum(["none", "supporting", "equal", "lead"]), z.boolean()]),
+  /** When it was made, in epoch milliseconds. Absent on decisions from before it was kept. */
+  at: z.optional(z.number()),
 });
 export type Decision = z.infer<typeof DecisionSchema>;
 
@@ -65,7 +67,7 @@ export interface Patch {
 export type AskEvent =
   | { kind: "sent"; contributorId: string; prefilled: boolean; at: number }
   | { kind: "reply"; contributorId: string; row: unknown; sentAt: number | null; at: number }
-  | { kind: "settle"; contributorId: string; choices: Choice | Partial<Record<Target, Choice>> }
+  | { kind: "settle"; contributorId: string; choices: Choice | Partial<Record<Target, Choice>>; at?: number }
   | { kind: "removed"; contributorId: string };
 
 export type Outcome =
@@ -270,7 +272,11 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       const decisions = { ...reply.decisions };
       for (const [target, choice] of picks) {
         if (choice === "theirs") takeTheirs(next, reply, target);
-        decisions[target] = { choice, rowLevel: levelOf(next, target) };
+        decisions[target] = {
+          choice,
+          rowLevel: levelOf(next, target),
+          ...(event.at === undefined ? {} : { at: event.at }),
+        };
       }
       const ask: Ask = { ...held, reply: { ...reply, decisions } };
       const rowChanged = !sameAnswer(author, next);
@@ -292,6 +298,13 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       };
     }
   }
+}
+
+/** When the answer was settled: its last decision, or its arrival when nothing needed one. */
+export function settledAt(reply: Reply): number {
+  let at = reply.receivedAt;
+  for (const decision of Object.values(reply.decisions)) if (decision?.at && decision.at > at) at = decision.at;
+  return at;
 }
 
 /** Copy their exact score or marker into the row. */

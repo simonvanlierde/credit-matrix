@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { type PersistStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import type { Ask, AskEvent, Author, CreditRoleName, LocaleCode, Outcome, Patch } from "@/core";
+import { useShallow } from "zustand/react/shallow";
+import type { Ask, AskEvent, Author, CreditRoleName, LocaleCode, Outcome, Patch, Target } from "@/core";
 import {
   AskSchema,
   applyPatch,
@@ -17,6 +18,7 @@ import {
   MAX_AUTHORS,
   normalizeLocaleCode,
   normalizeOrcid,
+  review,
 } from "@/core";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
@@ -65,6 +67,14 @@ export interface Draft {
    * "Asked" during the days an email round trip takes and show what differs after.
    */
   asks: Record<string, Ask>;
+  /** The contributor the person using this browser is, if they said so: never asked, never counted as a co-author. */
+  selfId: string | null;
+}
+
+/** A grid cell the Review list points at: a contributor and a role or marker. */
+export interface ReviewCell {
+  contributorId: string;
+  target: Target;
 }
 
 /** More than anyone writes at once, and well inside what localStorage holds. */
@@ -95,6 +105,14 @@ interface ContributionState {
   claim: DraftClaim | null;
   /** Open asks for the live draft, by contributor id. See `Draft.asks`. */
   asks: Record<string, Ask>;
+  /** Mirrors the active draft's `selfId`. */
+  selfId: string | null;
+  /** The cell the Review line under the pointer or focus is about. Ephemeral. */
+  reviewHighlight: ReviewCell | null;
+  /** The cells a Review choice just changed, so the grid can mark the change. Ephemeral. */
+  reviewSettled: { contributorId: string; targets: Target[] } | null;
+  /** The contributor whose answers the Review tab should bring into view. Ephemeral. */
+  reviewFocus: string | null;
   /**
    * The contributor whose row a just-opened reply filled in, so the status
    * strip's message has a matching mark on the row itself. Ephemeral: the
@@ -137,6 +155,12 @@ interface ContributionState {
   applyAskStep: (draftId: string, event: AskEvent) => Outcome;
   /** Take back the last ask step. False when there is nothing to undo or its draft is gone. */
   undoAskStep: () => boolean;
+  /** Mark (or, with null, unmark) the contributor who is the person using this browser. */
+  setSelfId: (contributorId: string | null) => void;
+  setReviewHighlight: (cell: ReviewCell | null) => void;
+  setReviewSettled: (cells: { contributorId: string; targets: Target[] } | null) => void;
+  /** Open the Review tab on one contributor's answers. */
+  openReview: (contributorId: string | null) => void;
   setTitle: (title: string) => void;
   /** Start an empty draft and switch to it. Returns its id, or null at the cap. */
   createDraft: () => string | null;
@@ -274,6 +298,7 @@ function liveDraft(state: ContributionState): Draft {
     updatedAt: Date.now(),
     claim: state.claim,
     asks: state.asks,
+    selfId: state.selfId,
   };
 }
 
@@ -287,6 +312,10 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.outputLocale = draft.outputLocale;
   state.claim = draft.claim;
   state.asks = draft.asks;
+  state.selfId = draft.selfId;
+  state.reviewHighlight = null;
+  state.reviewSettled = null;
+  state.reviewFocus = null;
   // The highlight describes a moment, not the draft: leaving the draft ends it.
   state.recentReply = null;
 }
@@ -303,6 +332,7 @@ function emptyDraft(title = ""): Draft {
     updatedAt: Date.now(),
     claim: null,
     asks: {},
+    selfId: null,
   };
 }
 
@@ -412,6 +442,7 @@ function repairSingleDraft(value: unknown, id: string): Draft {
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
     claim: isDraftClaim(raw.claim) ? raw.claim : null,
     asks: repairAsks(raw.asks, asked),
+    selfId: typeof raw.selfId === "string" && CLAIM_ID_REGEX.test(raw.selfId) ? raw.selfId : null,
   };
 }
 
@@ -745,6 +776,10 @@ export const useContributionStore = create<ContributionState>()(
       newerVersionBlocked: false,
       claim: null,
       asks: {},
+      selfId: null,
+      reviewHighlight: null,
+      reviewSettled: null,
+      reviewFocus: null,
       recentReply: null,
       askUndo: null,
 
@@ -794,12 +829,15 @@ export const useContributionStore = create<ContributionState>()(
           if (Object.keys(state.drafts).length >= MAX_DRAFTS) return;
           const source = state.drafts[draftId];
           if (!source) return;
+          const authors = source.authors.map((author) => ({ ...author, id: globalThis.crypto.randomUUID() }));
+          const selfIndex = source.authors.findIndex((author) => author.id === source.selfId);
           const copy: Draft = {
             ...source,
             id: globalThis.crypto.randomUUID(),
             // Fresh ids throughout: two drafts sharing a contributor id would
             // make every id-keyed lookup ambiguous once both are in memory.
-            authors: source.authors.map((author) => ({ ...author, id: globalThis.crypto.randomUUID() })),
+            authors,
+            selfId: authors[selfIndex]?.id ?? null,
             updatedAt: Date.now(),
             // Fresh contributor ids invalidate the claim and the asks anyway.
             claim: null,
@@ -902,6 +940,27 @@ export const useContributionStore = create<ContributionState>()(
         });
         return true;
       },
+
+      setSelfId: (contributorId) =>
+        set((state) => {
+          state.selfId = contributorId;
+        }),
+
+      setReviewHighlight: (cell) =>
+        set((state) => {
+          state.reviewHighlight = cell;
+        }),
+
+      setReviewSettled: (cells) =>
+        set((state) => {
+          state.reviewSettled = cells;
+        }),
+
+      openReview: (contributorId) =>
+        set((state) => {
+          state.inspectorTab = "review";
+          state.reviewFocus = contributorId;
+        }),
 
       setTitle: (title) =>
         set((state) => {
@@ -1132,6 +1191,7 @@ export const useContributionStore = create<ContributionState>()(
           state.heatmapMonoColor = DEFAULT_MONO_COLOR;
           state.outputLocale = "en";
           state.asks = {};
+          state.selfId = null;
           // uiLocale is a display preference, not draft data: a workspace reset
           // should not silently switch the interface back to English.
           state.welcomeOpen = false;
@@ -1182,3 +1242,32 @@ export const useContributionStore = create<ContributionState>()(
     },
   ),
 );
+
+/**
+ * The co-authors' answers at a glance: how many co-authors there are (you
+ * excluded), how many answered (and were not asked again since), and how many
+ * differences still wait for a decision.
+ */
+export function askSummary(
+  authors: readonly Author[],
+  asks: Readonly<Record<string, Ask>>,
+  selfId: string | null,
+): { total: number; answered: number; open: number } {
+  let total = 0;
+  let answered = 0;
+  let open = 0;
+  for (const author of authors) {
+    if (author.id === selfId) continue;
+    total += 1;
+    const ask = asks[author.id];
+    if (!ask) continue;
+    const result = review(author, ask);
+    if (result.status.kind === "differs" || result.status.kind === "settled") answered += 1;
+    open += result.open.length;
+  }
+  return { total, answered, open };
+}
+
+export const useAskSummary = () => useContributionStore(useShallow((s) => askSummary(s.authors, s.asks, s.selfId)));
+
+export const useOpenDifferences = () => useContributionStore((s) => askSummary(s.authors, s.asks, s.selfId).open);
