@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
+  version and release date in step, as it does for `CITATION.cff`.
+
 ### Fixed
 
 - The JATS4R XML export no longer claims "© 2019 JATS4R" and a CC BY licence for your paper. That
