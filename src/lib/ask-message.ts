@@ -28,6 +28,7 @@ export async function copyAskMessage(
       sourceDraftId: state.activeDraftId,
       blank,
       sentAt,
+      yesNo: state.inputMode === "toggle",
     });
   } catch {
     announce(t(shareFailureKey()), { assertive: true });
