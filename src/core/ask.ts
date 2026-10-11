@@ -3,7 +3,7 @@ import type { Author, Contribution, ContributionLevel } from "./author";
 import { AuthorSchema, ContributionSchema, scoreToLevel } from "./author";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
-import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
+import { buildInitials, createAuthor, deduplicateAuthorInitials } from "./parse-authors";
 
 /** What a reply answers: each role, and the two markers outside CRediT. */
 export type Target = CreditRoleName | "equalContribution" | "corresponding";
@@ -16,7 +16,9 @@ type Marker = (typeof MARKERS)[number];
 /** Roles in CREDIT_ROLES order, then the two markers: the order `review().open` lists them in. */
 export const ASK_TARGETS: readonly Target[] = [...CREDIT_ROLES.map((role) => role.name), ...MARKERS];
 
-const isMarker = (target: Target): target is Marker => target === "equalContribution" || target === "corresponding";
+export const isMarker = (target: Target): target is Marker =>
+  target === "equalContribution" || target === "corresponding";
+const isTarget = (key: string): key is Target => (ASK_TARGETS as readonly string[]).includes(key);
 
 const DecisionSchema = z.object({
   choice: z.enum(["theirs", "mine"]),
@@ -37,7 +39,13 @@ const ReplySchema = z.looseObject({
   /** When the co-author sent it (the link's `w`), or when it was opened for links without one. */
   sentAt: z.number(),
   receivedAt: z.number(),
-  decisions: z.partialRecord(z.enum(ASK_TARGETS as [Target, ...Target[]]), DecisionSchema),
+  // Loose too: a target a later release adds keeps its decision here, and the logic skips it.
+  decisions: z.looseObject(
+    Object.fromEntries(ASK_TARGETS.map((target) => [target, z.optional(DecisionSchema)])) as Record<
+      Target,
+      z.ZodMiniOptional<typeof DecisionSchema>
+    >,
+  ),
 });
 export type Reply = z.infer<typeof ReplySchema>;
 
@@ -70,8 +78,7 @@ export type AskEvent =
   | { kind: "sent"; contributorId: string; prefilled: boolean; at: number }
   | { kind: "reply"; contributorId: string; row: unknown; sentAt: number | null; at: number }
   /** A `null` choice clears that target's decision, and a "theirs" one puts the row's value back. */
-  | { kind: "settle"; contributorId: string; choices: Choice | Partial<Record<Target, Choice | null>>; at?: number }
-  | { kind: "removed"; contributorId: string };
+  | { kind: "settle"; contributorId: string; choices: Choice | Partial<Record<Target, Choice | null>>; at?: number };
 
 export type Outcome =
   | { kind: "recorded" }
@@ -104,7 +111,8 @@ export interface Review {
 
 type Answer = Pick<Author, "contributions" | "equalContribution" | "corresponding">;
 
-const IDENTITY = ["name", "firstName", "middleName", "surname", "orcid", "contributorType"] as const;
+// The name parts are derived from the name, so they only follow it (see applyPatch).
+const IDENTITY = ["name", "orcid", "contributorType"] as const;
 
 const emptyPatch = (): Patch => ({ rows: {}, asks: {} });
 const nothing = (kind: "unmatched" | "broken" | "stale" | "noReply") => ({
@@ -121,7 +129,8 @@ function scoreOf(answer: Answer, role: CreditRoleName): number {
   return score;
 }
 
-function levelOf(answer: Answer, target: Target): Level {
+/** A role's level, or whether a marker is set, as a row or a reply holds it. */
+export function levelOf(answer: Answer, target: Target): Level {
   return isMarker(target) ? answer[target] === true : scoreToLevel(scoreOf(answer, target));
 }
 
@@ -192,14 +201,6 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
   const author = state.authors.find((candidate) => candidate.id === id);
 
   switch (event.kind) {
-    case "removed":
-      if (!held) return { outcome: { kind: "recorded" }, patch: emptyPatch(), undo: emptyPatch() };
-      return {
-        outcome: { kind: "recorded" },
-        patch: { rows: {}, asks: { [id]: null } },
-        undo: { rows: {}, asks: { [id]: held } },
-      };
-
     case "sent": {
       if (!author) return nothing("unmatched");
       // A re-ask keeps the last answer: it stays the record until a newer one replaces it.
@@ -223,22 +224,6 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         equalContribution: row.equalContribution,
         corresponding: row.corresponding,
       };
-      if (held?.reply) {
-        if (sentAt < held.reply.sentAt) return nothing("stale");
-        const sameLink = event.sentAt === null || sentAt === held.reply.sentAt;
-        if (sameLink && sameAnswer(held.reply, answer)) {
-          return {
-            outcome: { kind: "received", open: review(author, held).open.length, duplicate: true },
-            patch: emptyPatch(),
-            undo: emptyPatch(),
-          };
-        }
-      }
-      // A newer reply starts with no decisions, so a renewed objection shows again.
-      const reply: Reply = { ...answer, sentAt, receivedAt: event.at, decisions: {} };
-      // A reply with no recorded ask (asked before asks were kept, or the ask was undone): every such ask was pre-filled.
-      const ask: Ask = { ...(held ?? { sentAt: 0, prefilled: true }), reply };
-
       const identity: Partial<Author> = {};
       const previous: Partial<Author> = {};
       for (const field of IDENTITY) {
@@ -246,7 +231,39 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         Object.assign(identity, { [field]: row[field] });
         Object.assign(previous, { [field]: author[field] });
       }
+      // Undoing a rename puts back the parts too: re-parsing cannot recover a structured surname.
+      if (identity.name !== undefined) {
+        Object.assign(previous, {
+          firstName: author.firstName,
+          middleName: author.middleName,
+          surname: author.surname,
+        });
+      }
       const changed = Object.keys(identity).length > 0;
+
+      const same = held?.reply !== undefined && sameAnswer(held.reply, answer);
+      if (held?.reply) {
+        if (sentAt < held.reply.sentAt) return nothing("stale");
+        const sameLink = event.sentAt === null || sentAt === held.reply.sentAt;
+        // The same answer again is a duplicate, unless it renames the row or answers an ask sent since.
+        const reAsked = held.sentAt > held.reply.receivedAt;
+        if (same && !changed && (sameLink || !reAsked)) {
+          return {
+            outcome: { kind: "received", open: review(author, held).open.length, duplicate: true },
+            patch: emptyPatch(),
+            undo: emptyPatch(),
+          };
+        }
+      }
+      // A changed answer starts with no decisions, so a renewed objection shows again.
+      const reply: Reply = {
+        ...answer,
+        sentAt,
+        receivedAt: event.at,
+        decisions: same && held?.reply ? held.reply.decisions : {},
+      };
+      // A reply with no recorded ask (asked before asks were kept, or the ask was undone): every such ask was pre-filled.
+      const ask: Ask = { ...(held ?? { sentAt: 0, prefilled: true }), reply };
       return {
         outcome: { kind: "received", open: review({ ...author, ...identity }, ask).open.length, duplicate: false },
         patch: { rows: changed ? { [id]: identity } : {}, asks: { [id]: ask } },
@@ -262,10 +279,12 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       const picks: [Target, Choice | null][] =
         typeof event.choices === "string"
           ? current.open.map((difference) => [difference.target, event.choices as Choice])
-          : (Object.entries(event.choices) as [Target, Choice | null][]).filter(([target, choice]) =>
-              choice === null
-                ? Object.hasOwn(reply.decisions, target)
-                : Object.hasOwn(current.byTarget, target) && (choice === "theirs" || choice === "mine"),
+          : (Object.entries(event.choices) as [Target, Choice | null][]).filter(
+              ([target, choice]) =>
+                isTarget(target) &&
+                (choice === null
+                  ? Object.hasOwn(reply.decisions, target)
+                  : Object.hasOwn(current.byTarget, target) && (choice === "theirs" || choice === "mine")),
             );
 
       const next: Answer = {
@@ -318,7 +337,10 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
 /** When the answer was settled: its last decision, or its arrival when nothing needed one. */
 export function settledAt(reply: Reply): number {
   let at = reply.receivedAt;
-  for (const decision of Object.values(reply.decisions)) if (decision?.at && decision.at > at) at = decision.at;
+  for (const target of ASK_TARGETS) {
+    const decided = reply.decisions[target]?.at;
+    if (decided && decided > at) at = decided;
+  }
   return at;
 }
 
@@ -341,24 +363,45 @@ function setValue(row: Answer, target: Target, value: number | boolean): void {
 
 /**
  * Apply a patch to plain values. Rows a patch names but the roster no longer
- * holds are skipped. Initials are re-derived, since a rename can change them.
+ * holds are skipped, and so are its asks for them: a late undo never brings
+ * back an ask for a removed row. A rename re-derives the name parts (unless
+ * the patch carries them) and the initials; untouched rows stay the same objects.
  */
 export function applyPatch(state: AskState, patch: Patch): AskState {
   let renamed = false;
-  const authors = state.authors.map((author) => {
-    const fields = patch.rows[author.id];
-    if (!fields) return author;
-    const merged = { ...author, ...fields };
-    if (fields.name === undefined) return merged;
-    renamed = true;
-    return createAuthor(merged.name, merged);
-  });
+  const authors =
+    Object.keys(patch.rows).length === 0
+      ? state.authors
+      : state.authors.map((author) => {
+          const fields = patch.rows[author.id];
+          if (!fields) return author;
+          const merged = { ...author, ...fields };
+          if (fields.name === undefined || fields.name === author.name) return merged;
+          renamed = true;
+          const { firstName, middleName, surname } = fields;
+          return createAuthor(merged.name, { ...merged, firstName, middleName, surname });
+        });
+  const ids = new Set(authors.map((author) => author.id));
   const asks = { ...state.asks };
   for (const [id, ask] of Object.entries(patch.asks)) {
     if (ask === null) delete asks[id];
-    else asks[id] = ask;
+    else if (ids.has(id)) asks[id] = ask;
   }
-  return { authors: renamed ? deduplicateAuthorInitials(authors) : authors, asks };
+  return { authors: renamed ? rederiveInitials(authors) : authors, asks };
+}
+
+/** Initials from scratch across the roster, as normalizing does, keeping each row whose initials hold. */
+function rederiveInitials(authors: readonly Author[]): Author[] {
+  const fresh = deduplicateAuthorInitials(
+    authors.map((author) => ({
+      ...author,
+      initials: buildInitials(author.name, author.firstName, author.middleName, author.surname),
+    })),
+  );
+  return fresh.map((author, index) => {
+    const before = authors[index] as Author;
+    return author.initials === before.initials ? before : author;
+  });
 }
 
 /**

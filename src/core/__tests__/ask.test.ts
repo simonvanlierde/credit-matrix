@@ -108,19 +108,71 @@ describe("askStep reply", () => {
     }
   });
 
-  it("starts a newer reply with no decisions, so a repeated objection shows again", () => {
+  it("starts a changed reply with no decisions, so a renewed objection shows again", () => {
     for (let seed = 1; seed <= ROUNDS; seed++) {
       const { state, target, row } = scenario(seed);
       const first = receive(state, target.id, row, 1500).state;
       const kept = settle(first, target.id, "mine");
       expect(review(rowOf(kept, target.id), kept.asks[target.id]).open).toEqual([]);
-      const again = receive(kept, target.id, row, 1600, 5000);
+      const changed = { ...row, corresponding: !row.corresponding };
+      const again = receive(kept, target.id, changed, 1600, 5000);
       const ask = again.state.asks[target.id];
       expect(ask?.reply?.decisions).toEqual({});
-      expect(review(rowOf(again.state, target.id), ask).open.length).toBe(
-        review(rowOf(first, target.id), first.asks[target.id]).open.length,
-      );
     }
+  });
+
+  it("takes the same answer under a newer send time as a duplicate, decisions kept", () => {
+    for (let seed = 1; seed <= ROUNDS; seed++) {
+      const { state, target, row } = scenario(seed);
+      const kept = settle(receive(state, target.id, row, 1500).state, target.id, "mine");
+      const again = receive(kept, target.id, { ...row, name: rowOf(kept, target.id).name }, 1600, 5000);
+      expect(again.outcome).toMatchObject({ kind: "received", duplicate: true });
+      expect(again.state).toEqual(kept);
+    }
+  });
+
+  it("takes the same answer to a newer ask as the answer, decisions kept", () => {
+    const { state, target, row } = scenario(3);
+    const kept = settle(receive(state, target.id, row, 1500, 2000).state, target.id, "mine");
+    const reAsked = applyPatch(
+      kept,
+      askStep(kept, { kind: "sent", contributorId: target.id, prefilled: true, at: 3000 }).patch,
+    );
+    const again = receive(reAsked, target.id, { ...row, name: target.name }, 3500, 4000);
+    expect(again.outcome).toMatchObject({ kind: "received", duplicate: false });
+    const reply = again.state.asks[target.id]?.reply;
+    expect(reply?.receivedAt).toBe(4000);
+    expect(reply?.decisions).toEqual(kept.asks[target.id]?.reply?.decisions);
+  });
+
+  it("keeps a structured surname when the reply carries the same name", () => {
+    const lead = createAuthor("Anne van der Berg", {
+      id: "anne",
+      firstName: "Anne",
+      middleName: "",
+      surname: "van der Berg",
+    });
+    const state: AskState = { authors: [lead], asks: { anne: { sentAt: 1, prefilled: true } } };
+    // The co-author's app re-parsed the name: surname "Berg", "van der" as middle names.
+    const row = createAuthor("Anne van der Berg", { id: "anne" });
+    expect(row.surname).not.toBe("van der Berg");
+    const { patch, state: next } = receive(state, "anne", row, 5);
+    expect(patch.rows).toEqual({});
+    expect(rowOf(next, "anne")).toBe(lead);
+  });
+
+  it("re-derives the name parts from a new name, and undo puts the structured ones back", () => {
+    const lead = createAuthor("Anne van der Berg", {
+      id: "anne",
+      firstName: "Anne",
+      middleName: "",
+      surname: "van der Berg",
+    });
+    const state: AskState = { authors: [lead], asks: {} };
+    const { undo, state: renamed } = receive(state, "anne", createAuthor("Anne Smith", { id: "anne" }), 5);
+    expect(rowOf(renamed, "anne")).toMatchObject({ name: "Anne Smith", surname: "Smith", initials: "AS" });
+    const back = rowOf(applyPatch(renamed, undo), "anne");
+    expect(back).toMatchObject({ name: lead.name, surname: "van der Berg", initials: lead.initials });
   });
 
   it("refuses a broken row, a row under another id, and a contributor not in the roster", () => {
@@ -188,7 +240,9 @@ describe("askStep settle", () => {
     const step = askStep(received, { kind: "settle", contributorId: target.id, choices: "mine", at: 9000 });
     const decided = applyPatch(received, step.patch).asks[target.id]?.reply;
     if (!decided) throw new Error("expected a reply");
-    expect(Object.values(decided.decisions).every((decision) => decision?.at === 9000)).toBe(true);
+    expect(ASK_TARGETS.every((t) => decided.decisions[t] === undefined || decided.decisions[t]?.at === 9000)).toBe(
+      true,
+    );
     expect(settledAt(decided)).toBe(Object.keys(decided.decisions).length > 0 ? 9000 : 2000);
   });
 
@@ -311,7 +365,7 @@ describe("askStep settle", () => {
   });
 });
 
-describe("askStep sent and removed", () => {
+describe("askStep sent", () => {
   it("a re-ask keeps the last answer and shows the row as asked", () => {
     const { state, target, row } = scenario(11);
     const received = receive(state, target.id, row, 1500).state;
@@ -322,11 +376,30 @@ describe("askStep sent and removed", () => {
     expect(applyPatch(asked, step.undo).asks).toEqual(received.asks);
   });
 
-  it("removing a contributor deletes their ask; undo restores it", () => {
-    const { state, target } = scenario(5);
-    const step = askStep(state, { kind: "removed", contributorId: target.id });
-    expect(applyPatch(state, step.patch).asks).toEqual({});
-    expect(applyPatch(applyPatch(state, step.patch), step.undo).asks).toEqual(state.asks);
+  it("a late undo never brings back an ask for a row that is gone", () => {
+    const { state, target, row } = scenario(5);
+    const { undo, state: received } = receive(state, target.id, row, 1500);
+    const without: AskState = {
+      authors: received.authors.filter((author) => author.id !== target.id),
+      asks: {},
+    };
+    expect(applyPatch(without, undo).asks).toEqual({});
+  });
+});
+
+describe("applyPatch", () => {
+  it("keeps every row it does not change the same object, so review stays cached", () => {
+    const { state, target, row } = scenario(4);
+    const received = receive(state, target.id, { ...row, name: target.name }, 1500).state;
+    const settled = settle(received, target.id, "theirs");
+    for (const author of settled.authors) {
+      if (author.id !== target.id) expect(author).toBe(rowOf(state, author.id));
+    }
+    const reAsked = applyPatch(
+      settled,
+      askStep(settled, { kind: "sent", contributorId: target.id, prefilled: true, at: 9 }).patch,
+    );
+    expect(reAsked.authors).toBe(settled.authors);
   });
 });
 
@@ -346,6 +419,20 @@ describe("asks in JSON", () => {
     const authors = [...received.authors];
     expect(fromJson(toJson(authors, { asks: received.asks }))).toEqual({ authors, asks: received.asks });
     expect(fromJson(toJson(authors, { asks: received.asks, includeAnswers: false }))).toEqual({ authors });
+  });
+
+  it("keeps a decision on a target a later release adds, and ignores it", () => {
+    const { state, target, row } = scenario(9);
+    const received = receive(state, target.id, row, 1500, 2000).state;
+    const ask = received.asks[target.id] as Ask;
+    const future = { ...ask, reply: { ...ask.reply, decisions: { preprint: { choice: "theirs", at: 99_999 } } } };
+    const read = fromJson(toJson(received.authors as Author[], { asks: { [target.id]: future as Ask } }));
+    const reply = read.asks?.[target.id]?.reply;
+    expect(reply?.decisions).toEqual({ preprint: { choice: "theirs", at: 99_999 } });
+    if (!reply) throw new Error("expected a reply");
+    expect(settledAt(reply)).toBe(2000);
+    const author = rowOf(received, target.id);
+    expect(review(author, read.asks?.[target.id]).open).toEqual(review(author, ask).open);
   });
 
   it("says who made the file, while that row is in it", () => {

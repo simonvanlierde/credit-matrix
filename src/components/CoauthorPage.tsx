@@ -70,6 +70,9 @@ function CoauthorPage() {
   const [cancelled, setCancelled] = useState(false);
   const [copyStatus, copy] = useCopyStatus({ copied: t("annLinkCopied") });
   const headingRef = useRef<HTMLHeadingElement>(null);
+  // The link's `w`: when this answer was first sent, so sharing then copying the same answer
+  // gives the same link, and the lead's decisions on it hold.
+  const answeredAt = useRef<{ answer: string; at: number } | null>(null);
   const firstAuthorId = useId();
   const correspondingId = useId();
 
@@ -90,6 +93,8 @@ function CoauthorPage() {
 
   async function buildReply(): Promise<string | null> {
     if (!claim) return null;
+    const answer = JSON.stringify([authors, title]);
+    if (answeredAt.current?.answer !== answer) answeredAt.current = { answer, at: Date.now() };
     try {
       return await buildShareUrl({
         authors,
@@ -97,7 +102,7 @@ function CoauthorPage() {
         claimId: claim.contributorId,
         sourceDraftId: claim.sourceDraftId,
         reply: true,
-        sentAt: Date.now(),
+        sentAt: answeredAt.current.at,
       });
     } catch {
       announce(t(shareFailureKey()), { assertive: true });

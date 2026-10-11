@@ -120,8 +120,6 @@ interface ContributionState {
    * leaves), and a draft switch clears it too.
    */
   recentReply: string | null;
-  /** How to take back the last ask step that changed something, for the status strip's Undo. Not persisted. */
-  askUndo: { draftId: string; patch: Patch } | null;
   /**
    * A newer build saved the drafts and this tab could not reload into it, so
    * nothing here is saved any more. State rather than an event: at load it is
@@ -152,10 +150,13 @@ interface ContributionState {
   setRecentReply: (contributorId: string | null) => void;
   /** Put back an ask a removal took with it. */
   markAsked: (contributorId: string, ask: Ask) => void;
-  /** Send, reply, settle or remove on one draft, open or parked, in one write. Keeps the undo in `askUndo`, except a settle's. */
-  applyAskStep: (draftId: string, event: AskEvent) => Outcome;
-  /** Take back the last ask step. False when there is nothing to undo or its draft is gone. */
-  undoAskStep: () => boolean;
+  /** Send, reply or settle on one draft, open or parked, in one write. The undo is the caller's to keep. */
+  applyAskStep: (draftId: string, event: AskEvent) => { outcome: Outcome; undo: Patch };
+  /**
+   * Write a patch (an ask step's undo) into that draft only. Its asks for rows
+   * the draft no longer has are skipped. False when the draft is gone.
+   */
+  applyAskPatch: (draftId: string, patch: Patch) => boolean;
   /** Mark (or, with null, unmark) the contributor who is the person using this browser. */
   setSelfId: (contributorId: string | null) => void;
   setReviewHighlight: (cell: ReviewCell | null) => void;
@@ -337,19 +338,17 @@ function emptyDraft(title = ""): Draft {
   };
 }
 
-/** Write a roster and its asks into a draft, open or parked. Normalizing re-derives initials a rename can change. */
-function writeAskState(
-  state: ContributionState,
-  draftId: string,
-  authors: readonly Author[],
-  asks: Record<string, Ask>,
-) {
+/** Apply a patch to a draft, open or parked, in one write. False when the draft is gone. */
+function writeAskPatch(state: ContributionState, draftId: string, patch: Patch): boolean {
   const live = draftId === state.activeDraftId;
   const target = live ? state : state.drafts[draftId];
-  if (!target) return;
-  target.authors = normalizeAuthors([...authors]);
-  target.asks = asks;
+  if (!target) return false;
+  // applyPatch re-derives what a rename changes and leaves every other row the same object.
+  const next = applyPatch(target, patch);
+  target.authors = next.authors as Author[];
+  target.asks = next.asks;
   if (!live) (target as Draft).updatedAt = Date.now();
+  return true;
 }
 
 /** Park the live draft in the map, so a switch does not lose it. */
@@ -782,7 +781,6 @@ export const useContributionStore = create<ContributionState>()(
       reviewSettled: null,
       reviewFocus: null,
       recentReply: null,
-      askUndo: null,
 
       createDraft: () => {
         let created: string | null = null;
@@ -887,6 +885,7 @@ export const useContributionStore = create<ContributionState>()(
           // Normalizing re-keys a row whose id was unusable; answers under the old id have no row left.
           const ids = new Set(state.authors.map((author) => author.id));
           if (selfId !== undefined && ids.has(selfId)) state.selfId = selfId;
+          else if (state.selfId !== null && !ids.has(state.selfId)) state.selfId = null;
           if (!asks) return;
           state.asks = Object.fromEntries(Object.entries(asks).filter(([id]) => ids.has(id)));
         }),
@@ -919,29 +918,22 @@ export const useContributionStore = create<ContributionState>()(
       applyAskStep: (draftId, event) => {
         const state = get();
         const source = draftId === state.activeDraftId ? state : state.drafts[draftId];
-        if (!source) return { kind: "unmatched" };
+        if (!source) return { outcome: { kind: "unmatched" }, undo: { rows: {}, asks: {} } };
         const { outcome, patch, undo } = askStep(source, event);
-        if (Object.keys(patch.rows).length === 0 && Object.keys(patch.asks).length === 0) return outcome;
-        const next = applyPatch(source, patch);
-        set((draft) => {
-          writeAskState(draft, draftId, next.authors, next.asks);
-          // A decision is undone on its own Review line, so the last reply stays undoable.
-          if (event.kind !== "settle") draft.askUndo = { draftId, patch: undo };
-        });
-        return outcome;
+        if (Object.keys(patch.rows).length > 0 || Object.keys(patch.asks).length > 0) {
+          set((draft) => {
+            writeAskPatch(draft, draftId, patch);
+          });
+        }
+        return { outcome, undo };
       },
 
-      undoAskStep: () => {
-        const state = get();
-        const undo = state.askUndo;
-        const source = undo && (undo.draftId === state.activeDraftId ? state : state.drafts[undo.draftId]);
-        if (!(undo && source)) return false;
-        const next = applyPatch(source, undo.patch);
+      applyAskPatch: (draftId, patch) => {
+        let written = false;
         set((draft) => {
-          writeAskState(draft, undo.draftId, next.authors, next.asks);
-          draft.askUndo = null;
+          written = writeAskPatch(draft, draftId, patch);
         });
-        return true;
+        return written;
       },
 
       setSelfId: (contributorId) =>
@@ -1005,10 +997,11 @@ export const useContributionStore = create<ContributionState>()(
           if (claimRefuses(state)) return;
           const index = findAuthorIndex(state.authors, authorId);
           if (index === -1) return;
-          const { patch } = askStep(state, { kind: "removed", contributorId: authorId });
           state.authors.splice(index, 1);
           state.authors = normalizeAuthors(state.authors);
-          state.asks = applyPatch({ authors: [], asks: state.asks }, patch).asks;
+          // Undo of the removal puts the ask back through markAsked.
+          delete state.asks[authorId];
+          if (state.selfId === authorId) state.selfId = null;
         }),
 
       restoreAuthor: (author, index) => {

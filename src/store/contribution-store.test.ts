@@ -673,14 +673,16 @@ describe("contribution store", () => {
       const id = who === "jane" ? jane.id : who;
       const row = "row" in extra ? extra.row : janeReply(id);
       const sentAt = "sentAt" in extra ? extra.sentAt : null;
-      expect(store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt, at: 6 }).kind).toBe(kind);
+      expect(store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt, at: 6 }).outcome.kind).toBe(
+        kind,
+      );
     });
 
     it("keeps a reply beside the row, renames it, and undoes the identity but not later scores", () => {
       const jane = addJane();
       const draftId = store().activeDraftId;
       store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
-      const outcome = store().applyAskStep(draftId, {
+      const { outcome, undo } = store().applyAskStep(draftId, {
         kind: "reply",
         contributorId: jane.id,
         row: janeReply(jane.id),
@@ -695,18 +697,80 @@ describe("contribution store", () => {
       expect(store().asks[jane.id]?.reply?.sentAt).toBe(2);
 
       store().setAuthorScore(jane.id, 0, 100);
-      expect(store().undoAskStep()).toBe(true);
+      expect(store().applyAskPatch(draftId, undo)).toBe(true);
       expect(store().authors[0]?.name).toBe("Jane Smith");
       expect(store().authors[0]?.contributions[0]?.score).toBe(100);
       expect(store().asks[jane.id]).toEqual({ sentAt: 1, prefilled: false });
-      expect(store().undoAskStep()).toBe(false);
+      expect(store().applyAskPatch("no-such-draft", undo)).toBe(false);
+    });
+
+    it("undoes a reply in its own draft, whatever ask steps came after", () => {
+      const jane = addJane();
+      store().addAuthor("Bob White");
+      const bob = store().authors[1];
+      if (!bob) throw new Error("expected Bob");
+      const home = store().activeDraftId;
+      const { undo } = store().applyAskStep(home, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 2,
+        at: 3,
+      });
+      store().applyAskStep(home, { kind: "sent", contributorId: bob.id, prefilled: false, at: 4 });
+      store().createDraft();
+      store().addAuthor("Cleo Park");
+      const elsewhere = store().authors;
+
+      expect(store().applyAskPatch(home, undo)).toBe(true);
+      expect(store().authors).toBe(elsewhere);
+      expect(store().drafts[home]?.asks[jane.id]).toBeUndefined();
+      expect(store().drafts[home]?.asks[bob.id]).toEqual({ sentAt: 4, prefilled: false });
+      expect(store().drafts[home]?.authors[0]?.name).toBe("Jane Smith");
+    });
+
+    it.each(["removeAuthor", "reset"] as const)("a late reply undo after %s brings back no ask", (how) => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const { undo } = store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 2,
+        at: 3,
+      });
+      if (how === "reset") store().reset();
+      else store().removeAuthor(jane.id);
+      store().applyAskPatch(draftId, undo);
+      expect(store().asks).toEqual({});
+    });
+
+    it("keeps other rows the same objects through ask steps", () => {
+      const jane = addJane();
+      store().addAuthor("Bob White");
+      const draftId = store().activeDraftId;
+      const bob = store().authors[1];
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const before = store().authors;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: true, at: 2 });
+      expect(store().authors).toBe(before);
+      store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id, "Jane Smith"),
+        sentAt: 3,
+        at: 4,
+      });
+      store().applyAskStep(draftId, { kind: "settle", contributorId: jane.id, choices: "theirs" });
+      expect(store().authors[1]).toBe(bob);
     });
 
     it("stores a reply into a parked draft without switching to it", () => {
       const jane = addJane();
       const home = store().activeDraftId;
       store().createDraft();
-      const outcome = store().applyAskStep(home, {
+      const { outcome } = store().applyAskStep(home, {
         kind: "reply",
         contributorId: jane.id,
         row: janeReply(jane.id, "Jane Smith"),
@@ -732,19 +796,20 @@ describe("contribution store", () => {
       expect(store().selfId).toBe(jane.id);
     });
 
-    it("keeps the reply's undo while answers are settled", () => {
+    it("forgets who you are when your row leaves the roster", () => {
       const jane = addJane();
-      const draftId = store().activeDraftId;
-      store().applyAskStep(draftId, {
-        kind: "reply",
-        contributorId: jane.id,
-        row: janeReply(jane.id),
-        sentAt: 2,
-        at: 3,
-      });
-      const undo = store().askUndo;
-      store().applyAskStep(draftId, { kind: "settle", contributorId: jane.id, choices: "theirs" });
-      expect(store().askUndo).toBe(undo);
+      store().addAuthor("Bob White");
+      store().setSelfId(jane.id);
+      store().loadAuthors(store().authors.filter((author) => author.id !== jane.id));
+      expect(store().selfId).toBeNull();
+
+      const bob = store().authors[0];
+      if (!bob) throw new Error("expected Bob");
+      store().setSelfId(bob.id);
+      store().loadAuthors(store().authors);
+      expect(store().selfId).toBe(bob.id);
+      store().removeAuthor(bob.id);
+      expect(store().selfId).toBeNull();
     });
 
     it("drops a contributor's ask when they are removed", () => {

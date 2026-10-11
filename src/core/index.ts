@@ -12,7 +12,18 @@ export type {
   Review,
   Target,
 } from "./ask";
-export { ASK_TARGETS, AskSchema, applyPatch, askStep, importAsks, importSelfId, review, settledAt } from "./ask";
+export {
+  ASK_TARGETS,
+  AskSchema,
+  applyPatch,
+  askStep,
+  importAsks,
+  importSelfId,
+  isMarker,
+  levelOf,
+  review,
+  settledAt,
+} from "./ask";
 export type { Author, Contribution } from "./author";
 export {
   AuthorSchema,

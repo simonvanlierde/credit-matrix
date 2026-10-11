@@ -13,11 +13,12 @@ import {
   CREDIT_ROLES,
   type Difference,
   heatCellColor,
+  isMarker,
   type Level,
+  levelOf,
   onColor,
   type Reply,
   review,
-  scoreToLevel,
   settledAt,
   type Target,
 } from "@/core";
@@ -43,18 +44,6 @@ type Line =
   | { target: Target; state: "open" | "kept"; difference: Difference }
   | { target: Target; state: "used"; level: Level };
 
-const isMarker = (target: Target): target is "equalContribution" | "corresponding" =>
-  target === "equalContribution" || target === "corresponding";
-
-function levelNow(author: Author, target: Target): Level {
-  if (isMarker(target)) return author[target];
-  let score = 0;
-  for (const contribution of author.contributions) {
-    if (contribution.role === target) score = Math.max(score, contribution.score);
-  }
-  return scoreToLevel(score);
-}
-
 /** Every difference in one answer, open or decided, in `ASK_TARGETS` order. */
 function linesOf(author: Author, ask: Ask, reply: Reply): Line[] {
   const { byTarget, open } = review(author, ask);
@@ -65,7 +54,7 @@ function linesOf(author: Author, ask: Ask, reply: Reply): Line[] {
     if (difference && open.includes(difference)) lines.push({ target, state: "open", difference });
     else if (difference && decision?.choice === "mine") lines.push({ target, state: "kept", difference });
     else if (!difference && decision?.choice === "theirs") {
-      lines.push({ target, state: "used", level: levelNow(author, target) });
+      lines.push({ target, state: "used", level: levelOf(author, target) });
     }
   }
   return lines;
@@ -174,7 +163,7 @@ export function ReviewPanel() {
 
   function choose(author: Author, targets: Target[], choice: Choice, key: string) {
     const store = useContributionStore.getState();
-    const outcome = store.applyAskStep(store.activeDraftId, {
+    const { outcome } = store.applyAskStep(store.activeDraftId, {
       kind: "settle",
       contributorId: author.id,
       choices: Object.fromEntries(targets.map((target) => [target, choice])),
@@ -202,7 +191,7 @@ export function ReviewPanel() {
   /** Clear one line's decision; a "theirs" also puts the row's own value back. */
   function undo(author: Author, target: Target, key: string) {
     const store = useContributionStore.getState();
-    const outcome = store.applyAskStep(store.activeDraftId, {
+    const { outcome } = store.applyAskStep(store.activeDraftId, {
       kind: "settle",
       contributorId: author.id,
       choices: { [target]: null },

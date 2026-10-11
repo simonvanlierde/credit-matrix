@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
-import { showStatus } from "@/components/StatusBanner";
+import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { importAsks, importSelfId, isAllBinary, keepKnownIds } from "@/core";
 import { announce } from "@/lib/announce";
@@ -47,10 +47,12 @@ export function HeaderActions() {
   const switchDraft = useContributionStore((s) => s.switchDraft);
   const deleteDraft = useContributionStore((s) => s.deleteDraft);
   const applyAskStep = useContributionStore((s) => s.applyAskStep);
-  const undoAskStep = useContributionStore((s) => s.undoAskStep);
+  const applyAskPatch = useContributionStore((s) => s.applyAskPatch);
   const setRecentReply = useContributionStore((s) => s.setRecentReply);
   const openReview = useContributionStore((s) => s.openReview);
   const decodedOnMount = useRef(false);
+  // Counts arrivals, so only the newest reply's strip takes the row mark down when it leaves.
+  const replyReceipt = useRef(0);
 
   // Rehydrate persisted state on the client (the store skips hydration at
   // creation to avoid an SSR mismatch). Runs before the share-hash effect below
@@ -148,7 +150,7 @@ export function HeaderActions() {
       const contributorId = shared.claimId;
       // Stored against the named draft *before* going there: a reply that turns
       // out to be unusable leaves you on the paper you were on.
-      const outcome = applyAskStep(target, {
+      const { outcome, undo } = applyAskStep(target, {
         kind: "reply",
         contributorId,
         row: shared.authors.find((author) => author.id === contributorId),
@@ -174,8 +176,19 @@ export function HeaderActions() {
       // counterpart where the answer landed. The strip owns the mark's
       // lifetime through onDismiss below: dismissing, undoing, timing out, or
       // being replaced all take the mark down with the message.
+      const receipt = ++replyReceipt.current;
       setRecentReply(contributorId);
-      showStatus({
+      const askNow = () => {
+        const now = useContributionStore.getState();
+        return (target === now.activeDraftId ? now.asks : now.drafts[target]?.asks)?.[contributorId];
+      };
+      const received = askNow();
+      // Undo holds only while the ask is as this reply left it: a decision or a re-ask since would be
+      // dropped with it, and a decision's copied scores would stay behind.
+      const stopWatching = useContributionStore.subscribe(() => {
+        if (askNow() !== received) dismissStatus(status);
+      });
+      const status: Status = {
         kind: "success",
         message:
           outcome.open > 0 ? t("askReplyDiffers", { name, count: outcome.open }) : t("askReplyMatches", { name }),
@@ -185,8 +198,7 @@ export function HeaderActions() {
             onAct: () => {
               // The strip lives a minute, long enough to switch drafts under it.
               switchDraft(target);
-              if (!undoAskStep()) return;
-              setRecentReply(null);
+              if (!applyAskPatch(target, undo)) return;
               announce(t("annMergeUndone"));
             },
           },
@@ -204,11 +216,12 @@ export function HeaderActions() {
             : []),
         ],
         onDismiss: () => {
-          // Guarded by id: a newer reply owns the mark by now, and this
-          // strip's departure must not take the newer mark down.
-          if (useContributionStore.getState().recentReply === contributorId) setRecentReply(null);
+          stopWatching();
+          // A newer reply owns the mark by now, even for the same contributor.
+          if (replyReceipt.current === receipt) setRecentReply(null);
         },
-      });
+      };
+      showStatus(status);
       return null;
     }
 
