@@ -74,7 +74,8 @@ describe("frozen format fixtures", () => {
 
   it("reads the version-1 JSON export", () => {
     expect(JSON.parse(fixture("export-v1.json")).version).toBe(1);
-    const authors = fromJson(fixture("export-v1.json"));
+    const { authors, asks } = fromJson(fixture("export-v1.json"));
+    expect(asks).toBeUndefined();
     expect(authors.map((a) => a.id)).toEqual(["ada", "marie", "alan"]);
     expect(summarize(authors)).toEqual(ROSTER);
   });

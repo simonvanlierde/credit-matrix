@@ -43,7 +43,13 @@ const DATA_FORMATS: Record<
   // XML/JSON/CSV are machine round-trip formats, kept in canonical English.
   // Only Markdown (a human-facing paste artifact) follows the output language.
   xml: { label: "XML (JATS4R)", serialize: toJats4rXml, filename: "credit-contributors.xml", mime: "application/xml" },
-  json: { label: "JSON", serialize: toJson, filename: "credit_result.json", mime: "application/json" },
+  // Co-author answers travel in the JSON export: it is the backup and device-move format.
+  json: {
+    label: "JSON",
+    serialize: (authors) => toJson(authors, { asks: useContributionStore.getState().asks }),
+    filename: "credit_result.json",
+    mime: "application/json",
+  },
   csv: { label: "CSV", serialize: toCsv, filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
   markdown: {
     label: "Markdown",

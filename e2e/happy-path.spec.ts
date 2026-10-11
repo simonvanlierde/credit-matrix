@@ -371,10 +371,10 @@ test.describe("Happy path UI flows", () => {
 
     // The originator just opens what she sent — no Import knowledge required.
     await page.goto(returnedUrl);
-    await expect(onScreen(page, /Rosalind E\. Franklin's roles were filled in/)).toBeVisible();
+    await expect(onScreen(page, "Rosalind E. Franklin's answer arrived: 1 difference.")).toBeVisible();
 
-    // Her row lands; her opinion about Ada's row does not.
-    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: Lead" })).toBeVisible();
+    // Her answer is kept beside her row, which keeps your levels until you settle it.
+    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: None" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Validation for Ada Lovelace: None" })).toBeVisible();
   });
 
@@ -403,8 +403,8 @@ test.describe("Happy path UI flows", () => {
     await page.locator("#import-text").fill(returnedUrl);
     await page.getByRole("button", { name: "Import data" }).click();
 
-    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: Lead" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Validation for Ada Lovelace: None" })).toBeVisible();
+    await expect(onScreen(page, "Rosalind E. Franklin's answer arrived: 1 difference.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: None" })).toBeVisible();
 
     // Dismissing the outcome strip takes the row's Updated mark down with it.
     await expect(page.getByText("Updated", { exact: true })).toBeVisible();
@@ -493,9 +493,8 @@ test.describe("Happy path UI flows", () => {
     await page.locator("#import-text").fill(returnedUrl);
     await page.getByRole("button", { name: "Import data" }).click();
 
-    // It switched to paper two and merged there. Paper two is an ordinary
-    // yes/no draft, so the merged full score reads as Contributed.
-    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: Contributed" })).toBeVisible();
+    // It switched to paper two and kept the answer there.
+    await expect(onScreen(page, "Rosalind E. Franklin's answer arrived: 1 difference.")).toBeVisible();
     await expect(page.getByRole("button", { name: /^Drafts: Paper two/ })).toBeVisible();
 
     // Paper one still has its three sample contributors, unchanged.

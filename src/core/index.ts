@@ -1,3 +1,18 @@
+export type {
+  Ask,
+  AskEvent,
+  AskState,
+  Choice,
+  Decision,
+  Difference,
+  Level,
+  Outcome,
+  Patch,
+  Reply,
+  Review,
+  Target,
+} from "./ask";
+export { ASK_TARGETS, AskSchema, applyPatch, askStep, importAsks, review } from "./ask";
 export type { Author, Contribution } from "./author";
 export {
   AuthorSchema,
@@ -45,7 +60,7 @@ export { toJats4rXml } from "./export/xml";
 export { fromJats4rXml } from "./export/xml-import";
 export type { StatementFormat } from "./generate-statement";
 export { generateStatement } from "./generate-statement";
-export { keepKnownIds, mergeContributorRow } from "./merge-row";
+export { keepKnownIds } from "./merge-row";
 export type { OrcidLookupResult } from "./orcid-lookup";
 export { lookupOrcidPerson } from "./orcid-lookup";
 export {

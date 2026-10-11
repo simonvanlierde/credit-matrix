@@ -54,6 +54,7 @@ import {
   MAX_AUTHORS,
   normalizeOrcid,
   ORCID_REGEX,
+  review,
   splitNameList,
 } from "@/core";
 import { announce } from "@/lib/announce";
@@ -671,8 +672,11 @@ const AuthorRow = memo(function AuthorRowInner({
   const { locked, editableAuthorId } = useClaimLock();
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
-  const markAsked = useContributionStore((s) => s.markAsked);
-  const asked = useContributionStore((s) => author !== undefined && author.id in s.asks);
+  const applyAskStep = useContributionStore((s) => s.applyAskStep);
+  // Down once their answer is in, up again on a re-ask.
+  const asked = useContributionStore(
+    (s) => author !== undefined && review(author, s.asks[author.id]).status.kind === "asked",
+  );
   const isRecentReply = useContributionStore((s) => s.recentReply !== null && s.recentReply === author?.id);
 
   const [loading, setLoading] = useState(false);
@@ -717,7 +721,7 @@ const AuthorRow = memo(function AuthorRowInner({
     // and copied: the ask belongs to neither.
     const now = useContributionStore.getState();
     if (now.activeDraftId !== activeDraftId || !now.authors.some((a) => a.id === author.id)) return;
-    markAsked(author.id, { sentAt, prefilled: !blank });
+    applyAskStep(activeDraftId, { kind: "sent", contributorId: author.id, prefilled: !blank, at: sentAt });
   }
 
   const nameInputRef = useRef<HTMLInputElement>(null);

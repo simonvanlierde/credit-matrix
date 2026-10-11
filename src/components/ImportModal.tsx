@@ -3,7 +3,7 @@
 import { FileUp, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import type { Author, DoiLookupResult } from "@/core";
+import type { Ask, Author, DoiLookupResult } from "@/core";
 import {
   createAuthor,
   DOI_INPUT_REGEX,
@@ -28,8 +28,7 @@ export type LinkFailure = "errShareLinkBroken" | "mergeWrongDraft" | "mergeUnmat
 interface Props {
   open: boolean;
   existingContributorCount: number;
-  /** `title` is set only by the DOI path; the other importers carry no title. */
-  onImport: (authors: Author[], title?: string) => void;
+  onImport: (next: PendingImport) => void;
   /**
    * Handle a pasted share link. Returns a message key when it could not be
    * used, or null on success. Lives with the caller because merging a returned
@@ -40,9 +39,12 @@ interface Props {
 }
 
 /** What a resolved import is waiting to write, once any replace is confirmed. */
-interface PendingImport {
+export interface PendingImport {
   authors: Author[];
+  /** Set only by the DOI path; the other importers carry no title. */
   title?: string;
+  /** Co-author asks and answers, from a JSON export that has them. */
+  asks?: Record<string, Ask>;
 }
 
 /**
@@ -118,12 +120,12 @@ const MAX_IMPORT_MB = `${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB`;
 /** Parser + "nothing found" message for each detectable format. */
 const IMPORTERS: Record<
   Exclude<DetectedFormat, "unknown" | "link">,
-  { parse: (text: string) => Author[]; emptyMessageKey: keyof Messages }
+  { parse: (text: string) => { authors: Author[]; asks?: Record<string, Ask> }; emptyMessageKey: keyof Messages }
 > = {
   json: { parse: fromJson, emptyMessageKey: "errImportNoJsonContributors" },
-  csv: { parse: fromCsv, emptyMessageKey: "errImportNoCsvRows" },
-  xml: { parse: fromJats4rXml, emptyMessageKey: "errImportNoXmlContribs" },
-  names: { parse: parseAuthorText, emptyMessageKey: "errImportNoNames" },
+  csv: { parse: (text) => ({ authors: fromCsv(text) }), emptyMessageKey: "errImportNoCsvRows" },
+  xml: { parse: (text) => ({ authors: fromJats4rXml(text) }), emptyMessageKey: "errImportNoXmlContribs" },
+  names: { parse: (text) => ({ authors: parseAuthorText(text) }), emptyMessageKey: "errImportNoNames" },
 };
 
 /** Label shown beside the paste area; "JATS4R XML" and "CSV" are format names, not prose. */
@@ -232,7 +234,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         return;
       }
       const { parse, emptyMessageKey } = IMPORTERS[format];
-      const authors = parse(text.trim());
+      const { authors, asks } = parse(text.trim());
       if (authors.length === 0) {
         showError(t(emptyMessageKey));
         return;
@@ -241,7 +243,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         showError(t("errTooManyContributors", { limit: MAX_AUTHORS }));
         return;
       }
-      stageImport({ authors });
+      stageImport(asks ? { authors, asks } : { authors });
     } catch (failure) {
       // A newer build's export is said plainly, not as a validation failure.
       showError(t(failure instanceof NewerVersionError ? "errImportNewerVersion" : "errImportFailed"));
@@ -292,13 +294,13 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     stageImport({ authors, title: result.title });
   }
 
-  function finishImport({ authors, title }: PendingImport) {
+  function finishImport(next: PendingImport) {
     // `onImport` runs the authors back through the store's normalizeAuthors,
     // which throws on anything createAuthor cannot rebuild. On the confirm
     // path this sits outside handleImport's try, so an unguarded throw here
     // escaped the click handler instead of showing as an import error.
     try {
-      onImport(authors, title);
+      onImport(next);
     } catch {
       showError(t("errImportFailed"));
       return;

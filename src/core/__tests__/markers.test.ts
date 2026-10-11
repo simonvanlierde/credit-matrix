@@ -52,7 +52,7 @@ describe("marker data model", () => {
   });
 
   it("round-trips through JSON", () => {
-    const restored = fromJson(toJson(makeAuthors()));
+    const restored = fromJson(toJson(makeAuthors())).authors;
     expect(restored[0]?.equalContribution).toBe(true);
     expect(restored[0]?.corresponding).toBe(true);
     expect(restored[2]?.equalContribution).toBe(false);

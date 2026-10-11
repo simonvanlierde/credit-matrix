@@ -4,11 +4,10 @@ import { Check, CircleAlert, Link2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { DraftPicker } from "@/components/DraftPicker";
-import { ImportModal, type LinkFailure } from "@/components/ImportModal";
+import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { Author } from "@/core";
-import { keepKnownIds, mergeContributorRow } from "@/core";
+import { importAsks, keepKnownIds } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -35,8 +34,8 @@ export function HeaderActions() {
   const createDraft = useContributionStore((s) => s.createDraft);
   const switchDraft = useContributionStore((s) => s.switchDraft);
   const deleteDraft = useContributionStore((s) => s.deleteDraft);
-  const markAsked = useContributionStore((s) => s.markAsked);
-  const clearAsked = useContributionStore((s) => s.clearAsked);
+  const applyAskStep = useContributionStore((s) => s.applyAskStep);
+  const undoAskStep = useContributionStore((s) => s.undoAskStep);
   const setRecentReply = useContributionStore((s) => s.setRecentReply);
   const decodedOnMount = useRef(false);
 
@@ -126,57 +125,58 @@ export function HeaderActions() {
     const isLocal = (id: string | null): id is string =>
       id !== null && (id === state.activeDraftId || !!state.drafts[id]);
 
-    // A reply to a request: merge one row into the draft it was asked about.
+    // A reply to a request: keep it beside the row it answers, in the draft it was asked about.
     if (shared.reply && shared.claimId) {
       const target = shared.sourceDraftId;
       if (!isLocal(target)) return "mergeWrongDraft";
-      // Merge against the named draft's roster *before* going there: a reply
-      // that turns out to be unusable must leave you on the paper you were on.
-      const before = target === state.activeDraftId ? state.authors : (state.drafts[target]?.authors ?? []);
-      const result = mergeContributorRow(before, shared.authors, shared.claimId);
-      if (result.unmatched) return "mergeUnmatched";
-      if (!result.merged) return "errShareLinkBroken";
-      // loadAuthors writes into the live draft, so the switch has to come
-      // first; a throw leaves state untouched, and going back undoes the move.
-      const previous = state.activeDraftId;
+      const contributorId = shared.claimId;
+      // Stored against the named draft *before* going there: a reply that turns
+      // out to be unusable leaves you on the paper you were on.
+      const outcome = applyAskStep(target, {
+        kind: "reply",
+        contributorId,
+        row: shared.authors.find((author) => author.id === contributorId),
+        sentAt: shared.sentAt,
+        at: Date.now(),
+      });
+      if (outcome.kind === "unmatched") return "mergeUnmatched";
+      if (outcome.kind !== "received" && outcome.kind !== "stale") return "errShareLinkBroken";
       switchDraft(target);
-      try {
-        loadAuthors(result.authors);
-      } catch {
-        switchDraft(previous);
-        return "errShareLinkBroken";
+      const name =
+        useContributionStore.getState().authors.find((author) => author.id === contributorId)?.name ??
+        shared.authors[0]?.name ??
+        "";
+      if (outcome.kind === "stale") {
+        showStatus({ kind: "success", message: t("askReplyStale", { name }) });
+        return null;
       }
-      // The reply answers the ask, so the row's "Asked" chip comes down — and
-      // goes back up if the merge is undone, because the ask is open again.
-      const mergedId = result.merged.id;
-      const ask = useContributionStore.getState().asks[mergedId];
-      if (ask) clearAsked(mergedId);
+      if (outcome.duplicate) {
+        showStatus({ kind: "success", message: t("askReplyDuplicate", { name }) });
+        return null;
+      }
       // Mark the row itself, so the status strip's message has a visible
-      // counterpart where the change actually landed. The strip owns the
-      // mark's lifetime through onDismiss below: dismissing, undoing, timing
-      // out, or being replaced all take the mark down with the message.
-      setRecentReply(mergedId);
-      const title = useContributionStore.getState().title.trim() || t("untitledDraft");
+      // counterpart where the answer landed. The strip owns the mark's
+      // lifetime through onDismiss below: dismissing, undoing, timing out, or
+      // being replaced all take the mark down with the message.
+      setRecentReply(contributorId);
       showStatus({
         kind: "success",
-        message: t("mergedRowInto", { name: result.merged.name, title }),
+        message:
+          outcome.open > 0 ? t("askReplyDiffers", { name, count: outcome.open }) : t("askReplyMatches", { name }),
         action: {
           label: t("undo"),
           onAct: () => {
             // The strip lives a minute, long enough to switch drafts under it.
-            // Put the roster back where it came from, or nowhere at all.
             switchDraft(target);
-            if (useContributionStore.getState().activeDraftId !== target) return;
-            loadAuthors(before);
-            if (ask) markAsked(mergedId, ask);
+            if (!undoAskStep()) return;
             setRecentReply(null);
             announce(t("annMergeUndone"));
           },
         },
         onDismiss: () => {
-          // Guarded by id: a newer merge owns the mark by now, and this
+          // Guarded by id: a newer reply owns the mark by now, and this
           // strip's departure must not take the newer mark down.
-          if (useContributionStore.getState().recentReply === mergedId) setRecentReply(null);
+          if (useContributionStore.getState().recentReply === contributorId) setRecentReply(null);
         },
       });
       return null;
@@ -192,9 +192,19 @@ export function HeaderActions() {
         showStatus({ kind: "success", message: t("requestLinkOwn", { name: claimedName }) });
         return null;
       }
+      const incoming: DraftClaim = {
+        contributorId: shared.claimId,
+        sourceDraftId: shared.sourceDraftId,
+        ...(shared.blank ? { blank: true } : {}),
+        ...(shared.sentAt !== null ? { sentAt: shared.sentAt } : {}),
+      };
       const matches = (candidate: DraftClaim | null) =>
         candidate?.contributorId === shared.claimId && candidate.sourceDraftId === shared.sourceDraftId;
-      if (matches(state.claim)) {
+      // A request sent after the one this draft answers replaces it; the same or an older one resumes.
+      const isNewer = (held: DraftClaim) =>
+        shared.sentAt !== null && shared.sentAt > (typeof held.sentAt === "number" ? held.sentAt : -1);
+      if (state.claim && matches(state.claim)) {
+        if (isNewer(state.claim)) return replaceClaim(state.activeDraftId, incoming, shared);
         showStatus({ kind: "success", message: t("claimResumed") });
         return null;
       }
@@ -205,7 +215,8 @@ export function HeaderActions() {
       const existing = Object.values(state.drafts).find(
         (draft) => draft.id !== state.activeDraftId && matches(draft.claim),
       );
-      if (existing) {
+      if (existing?.claim) {
+        if (isNewer(existing.claim)) return replaceClaim(existing.id, incoming, shared);
         // Re-opening the same request revisits the draft it made, never forks it.
         switchDraft(existing.id);
         showStatus({ kind: "success", message: t("claimResumed") });
@@ -216,11 +227,7 @@ export function HeaderActions() {
       } catch {
         return "errShareLinkBroken";
       }
-      setClaim({
-        contributorId: shared.claimId,
-        sourceDraftId: shared.sourceDraftId,
-        ...(shared.blank ? { blank: true } : {}),
-      });
+      setClaim(incoming);
       return null;
     }
 
@@ -235,6 +242,42 @@ export function HeaderActions() {
     } catch {
       return "errShareLinkBroken";
     }
+    return null;
+  }
+
+  /**
+   * Answer a newer request in the claim draft the older one made: its row and
+   * title replace the earlier answers, with Undo. The claim lock refuses
+   * roster writes, so it comes off for the swap and goes back on after.
+   */
+  function replaceClaim(draftId: string, incoming: DraftClaim, shared: ShareData): LinkFailure | null {
+    switchDraft(draftId);
+    const before = useContributionStore.getState();
+    const previous = { authors: before.authors, title: before.title, claim: before.claim };
+    const write = (next: typeof previous) => {
+      setClaim(null);
+      loadAuthors(next.authors);
+      setTitle(next.title);
+      setClaim(next.claim);
+    };
+    try {
+      write({ authors: shared.authors, title: shared.title, claim: incoming });
+    } catch {
+      write(previous);
+      return "errShareLinkBroken";
+    }
+    showStatus({
+      kind: "success",
+      message: t("claimRequestUpdated"),
+      action: {
+        label: t("undo"),
+        onAct: () => {
+          switchDraft(draftId);
+          if (useContributionStore.getState().activeDraftId !== draftId) return;
+          write(previous);
+        },
+      },
+    });
     return null;
   }
 
@@ -264,10 +307,12 @@ export function HeaderActions() {
     return occupied ? "occupied" : "fresh";
   }
 
-  function handleImport(importedAuthors: Author[], importedTitle?: string) {
+  function handleImport({ authors: importedAuthors, title: importedTitle, asks }: PendingImport) {
     // Errors surface in ImportModal, which keeps the dialog open on failure.
     // Re-imported contributors keep their ids, so their open asks still match.
-    loadAuthors(keepKnownIds(useContributionStore.getState().authors, importedAuthors));
+    const { authors: current, asks: held } = useContributionStore.getState();
+    const mapped = keepKnownIds(current, importedAuthors);
+    loadAuthors(mapped, asks ? importAsks(current, importedAuthors, mapped, held, asks) : undefined);
     // Only the DOI path carries a title. Guard on it rather than on emptiness,
     // so a record with no title still clears a stale one from the last import.
     if (importedTitle !== undefined) setTitle(importedTitle);

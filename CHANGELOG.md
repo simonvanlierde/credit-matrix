@@ -12,9 +12,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   nothing ticked, beside *Ask … to check your guess*, which sends your guess as before. The co-author
   sees which one they got.
 - Importing a JSON file from a newer version of CRediT Matrix says so, instead of a validation error.
+- If you send a co-author a new request while they still have the old one open, opening the new
+  link replaces their earlier answers and says so, with Undo. Opening the older link again just
+  goes back to their draft.
+- The JSON export includes your co-authors' answers, and importing the file into the same draft
+  brings them back. Versions before this one ignore them.
 
 ### Changed
 
+- A co-author's reply no longer overwrites your row. Their name and iD are taken; their
+  roles and markers are kept beside your row, and the status strip says how many differ ("Ben's
+  answer arrived: 3 differences") or that the answer matches yours. Choosing between the two answers
+  comes with the redesigned workspace; until then your row is what the statement uses.
+- A reply older than the one you already have is ignored, and opening the same reply twice changes
+  nothing. Undo on a reply restores the name and iD and leaves any edits you made since then alone.
 - The ask menu says in plain text what the link carries: the title, and that person's name and iD.
 - An open tab no longer saves over drafts that a newer version saved in another tab. It reloads
   into the newer version, or says that its edits are not being saved when it cannot.

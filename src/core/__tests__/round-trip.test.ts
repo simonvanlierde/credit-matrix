@@ -61,7 +61,7 @@ describe("round-trip exports", () => {
     if (!jc) throw new Error("expected contribution 0 for jane");
     jc.score = 100;
     const json = toJson(authors);
-    const parsed = fromJson(json);
+    const parsed = fromJson(json).authors;
 
     expect(parsed).toHaveLength(2);
     expect(parsed[0]?.id).toBeDefined();
@@ -82,7 +82,7 @@ describe("round-trip exports", () => {
     expect(() => fromJson('{"version": "2", "authors": []}')).not.toThrow(NewerVersionError);
     expect(() => fromJson("[]")).not.toThrow(NewerVersionError);
     expect(() => fromJson("null")).not.toThrow(NewerVersionError);
-    expect(fromJson('{"version": 1, "authors": []}')).toEqual([]);
+    expect(fromJson('{"version": 1, "authors": []}')).toEqual({ authors: [] });
   });
 
   it("XML round-trip preserves ORCID value", () => {

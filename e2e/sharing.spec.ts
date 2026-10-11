@@ -41,11 +41,21 @@ async function answerAskLink(page: Page, askLink: string): Promise<string> {
   return copyFrom(page, page.getByRole("button", { name: "Copy the link to send back" }));
 }
 
+/**
+ * Open a link as a fresh page load, the way a link clicked in a mail client
+ * arrives. Several hash-only navigations in one document could leave the last
+ * one without its status strip under parallel load.
+ */
+async function openLink(page: Page, link: string) {
+  await page.goto("about:blank");
+  await page.goto(link);
+}
+
 function newContext(browser: Browser) {
   return browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
 }
 
-test("full round trip: ask → locked fill → reply link click → visible merge with undo", async ({ browser }) => {
+test("full round trip: blank ask → locked fill → reply kept beside the row, with undo", async ({ browser }) => {
   const originator = await newContext(browser);
   const coauthor = await newContext(browser);
   const pageA = await openBrowser(originator);
@@ -74,19 +84,19 @@ test("full round trip: ask → locked fill → reply link click → visible merg
 
   // The originator CLICKS the reply — no Import knowledge required.
   await pageA.goto(replyLink);
-  await expect(onScreen(pageA, /Bob B\. White's roles were filled in/)).toBeVisible();
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: Contributed" })).toBeVisible();
-  // The row itself says what changed: the corrected name and an Updated mark,
-  // and the matrix haloes that contributor's cells where the roles landed.
+  await expect(onScreen(pageA, "Bob B. White's answer arrived: 1 difference.")).toBeVisible();
+  // The answer is kept beside the row: the name is theirs, the scores stay yours.
   await expect(pageA.getByLabel("Name or ORCID iD", { exact: true }).nth(1)).toHaveValue("Bob B. White");
+  await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: None" })).toBeVisible();
+  // The row says it changed, and the matrix haloes that contributor's cells.
   await expect(pageA.getByText("Updated", { exact: true })).toBeVisible();
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: Contributed" })).toHaveClass(
+  await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: None" })).toHaveClass(
     /outline-primary/,
   );
   // The reply answers the ask, so the chip comes down.
   await expect(pageA.getByText("Asked", { exact: true })).toHaveCount(0);
 
-  // Undo restores the pre-merge roster — name included — and reopens the ask.
+  // Undo restores the name and reopens the ask.
   await pageA.getByRole("button", { name: "Undo" }).click();
   await expect(pageA.getByRole("button", { name: "Investigation for Bob White: None" })).toBeVisible();
   await expect(pageA.getByRole("button", { name: /^Remove / })).toHaveCount(2);
@@ -257,4 +267,73 @@ test("a mangled link fails visibly and keeps the draft", async ({ page }) => {
   await page.goto("/#s=definitely-not-a-payload");
   await expect(onScreen(page, /That shared link could not be opened/)).toBeVisible();
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
+});
+
+test("a reply opened out of order is ignored, and the same reply twice changes nothing", async ({ browser }) => {
+  const originator = await newContext(browser);
+  const coauthor = await newContext(browser);
+  const pageA = await openBrowser(originator);
+  const askLink = await makeAskLink(pageA);
+  const pageB = await openBrowser(coauthor);
+  const firstReply = await answerAskLink(pageB, askLink);
+  // A second thought: Software too, sent after the first reply.
+  await pageB.getByRole("button", { name: /^Software for Bob White:/ }).click();
+  await expect(pageB.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
+  // The button may still say the first copy landed.
+  const sendBack = pageB.getByRole("button", { name: /^(Copy the link to send back|Link copied\. Send it back)/ });
+  const secondReply = await copyFrom(pageB, sendBack);
+  expect(secondReply).not.toBe(firstReply);
+
+  await openLink(pageA, secondReply);
+  await expect(onScreen(pageA, "Bob White's answer arrived: 2 differences.")).toBeVisible();
+  await openLink(pageA, firstReply);
+  await expect(
+    onScreen(pageA, "This answer from Bob White is older than the one you have, so it was not used."),
+  ).toBeVisible();
+  await openLink(pageA, secondReply);
+  await expect(onScreen(pageA, "You already have this answer from Bob White.")).toBeVisible();
+  // Your row never took their scores.
+  await expect(pageA.getByRole("button", { name: "Software for Bob White: None" })).toBeVisible();
+
+  await originator.close();
+  await coauthor.close();
+});
+
+test("a newer request replaces the co-author's earlier answers, with undo", async ({ browser }) => {
+  const originator = await newContext(browser);
+  const coauthor = await newContext(browser);
+  const pageA = await openBrowser(originator);
+  const firstAsk = await makeAskLink(pageA);
+  const pageB = await openBrowser(coauthor);
+  await answerAskLink(pageB, firstAsk);
+
+  // The lead asks again, this time with a guess: Software.
+  await pageA.keyboard.press("Escape");
+  await pageA.getByRole("button", { name: /^Software for Bob White:/ }).click();
+  await expect(pageA.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
+  await pageA.getByRole("button", { name: "Actions for Bob White" }).click();
+  const secondAsk = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White to check your guess" }));
+
+  const updated = onScreen(pageB, "The request was updated. Your earlier answers were replaced.");
+  await openLink(pageB, secondAsk);
+  await expect(updated).toBeVisible();
+  await expect(pageB.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
+  await expect(pageB.getByRole("button", { name: "Investigation for Bob White: None" })).toBeVisible();
+
+  // Undo brings the earlier answers back.
+  await pageB.getByRole("button", { name: "Undo" }).click();
+  await expect(pageB.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
+  await expect(pageB.getByRole("button", { name: "Software for Bob White: None" })).toBeVisible();
+
+  // Opened again it replaces them again; the older request then only resumes.
+  await openLink(pageB, secondAsk);
+  await expect(updated).toBeVisible();
+  await openLink(pageB, firstAsk);
+  await expect(onScreen(pageB, "Picked up where you left off on this request.")).toBeVisible();
+  await expect(pageB.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
+  await pageB.getByRole("button", { name: /^Drafts:/ }).click();
+  await expect(pageB.getByRole("button", { name: "Switch to Untitled draft" })).toHaveCount(1);
+
+  await originator.close();
+  await coauthor.close();
 });

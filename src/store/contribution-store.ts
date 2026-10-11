@@ -1,8 +1,11 @@
 import { create } from "zustand";
 import { type PersistStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import type { Author, CreditRoleName, LocaleCode } from "@/core";
+import type { Ask, AskEvent, Author, CreditRoleName, LocaleCode, Outcome, Patch } from "@/core";
 import {
+  AskSchema,
+  applyPatch,
+  askStep,
   CREDIT_ROLES,
   clampScore,
   createAuthor,
@@ -27,15 +30,11 @@ export interface DraftClaim {
   sourceDraftId: string;
   /** The ask came with the row empty. Absent on asks made before blank asks existed, which were all pre-filled. */
   blank?: boolean;
+  /** The ask link's send time (`w`), so a newer request can replace this one. Absent on links without one. */
+  sentAt?: number;
 }
 
-/** One contributor's open ask. Later builds add keys (a reply); repair keeps them. */
-export interface Ask {
-  /** When the ask link was copied, in epoch milliseconds. */
-  sentAt: number;
-  /** Whether the link carried the asker's guess, or an empty row. */
-  prefilled: boolean;
-}
+export type { Ask };
 
 /**
  * One paper's worth of work.
@@ -60,9 +59,9 @@ export interface Draft {
    */
   claim: DraftClaim | null;
   /**
-   * Open asks, by contributor id. An entry appears when their ask link is
-   * copied and leaves when their reply merges, so a row can say "Asked" during
-   * the days an email round trip takes.
+   * Asks and their latest answers, by contributor id. An entry appears when
+   * the ask link is copied and holds the reply beside the row, so a row can say
+   * "Asked" during the days an email round trip takes and show what differs after.
    */
   asks: Record<string, Ask>;
 }
@@ -102,6 +101,8 @@ interface ContributionState {
    * leaves), and a draft switch clears it too.
    */
   recentReply: string | null;
+  /** How to take back the last ask step that changed something, for the status strip's Undo. Not persisted. */
+  askUndo: { draftId: string; patch: Patch } | null;
   /**
    * A newer build saved the drafts and this tab could not reload into it, so
    * nothing here is saved any more. State rather than an event: at load it is
@@ -120,16 +121,19 @@ interface ContributionState {
    */
   drafts: Record<string, Draft>;
   activeDraftId: string;
-  loadAuthors: (authors: Author[]) => void;
+  /** Replace the roster. `asks`, when given, replaces the asks too, for the rows the roster keeps. */
+  loadAuthors: (authors: Author[], asks?: Record<string, Ask>) => void;
   setClaim: (claim: DraftClaim | null) => void;
   /** Unlock a draft's claim, active or parked. */
   clearClaimFor: (draftId: string) => void;
   /** Point at (or clear) the row a just-opened reply filled in. */
   setRecentReply: (contributorId: string | null) => void;
-  /** Record that this contributor's ask link was copied, or restore an ask a merge undo reopens. */
+  /** Put back an ask a removal took with it. */
   markAsked: (contributorId: string, ask: Ask) => void;
-  /** Forget the ask, because the reply landed (or the merge was undone). */
-  clearAsked: (contributorId: string) => void;
+  /** Send, reply, settle or remove on one draft, open or parked, in one write. Keeps the undo in `askUndo`. */
+  applyAskStep: (draftId: string, event: AskEvent) => Outcome;
+  /** Take back the last ask step. False when there is nothing to undo or its draft is gone. */
+  undoAskStep: () => boolean;
   setTitle: (title: string) => void;
   /** Start an empty draft and switch to it. Returns its id, or null at the cap. */
   createDraft: () => string | null;
@@ -298,6 +302,21 @@ function emptyDraft(title = ""): Draft {
   };
 }
 
+/** Write a roster and its asks into a draft, open or parked. Normalizing re-derives initials a rename can change. */
+function writeAskState(
+  state: ContributionState,
+  draftId: string,
+  authors: readonly Author[],
+  asks: Record<string, Ask>,
+) {
+  const live = draftId === state.activeDraftId;
+  const target = live ? state : state.drafts[draftId];
+  if (!target) return;
+  target.authors = normalizeAuthors([...authors]);
+  target.asks = asks;
+  if (!live) (target as Draft).updatedAt = Date.now();
+}
+
 /** Park the live draft in the map, so a switch does not lose it. */
 function stashLive(state: ContributionState): void {
   state.drafts[state.activeDraftId] = liveDraft(state);
@@ -361,7 +380,11 @@ function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
     for (const [id, ask] of Object.entries(value)) {
       if (!(CLAIM_ID_REGEX.test(id) && isRecord(ask))) continue;
       const { sentAt, prefilled } = ask;
-      if (typeof sentAt === "number" && typeof prefilled === "boolean") asks[id] = { ...ask, sentAt, prefilled };
+      if (!(typeof sentAt === "number" && typeof prefilled === "boolean")) continue;
+      // A malformed reply costs the reply, not the ask.
+      const { reply: _reply, ...rest } = ask;
+      const parsed = AskSchema.safeParse(ask);
+      asks[id] = parsed.success ? parsed.data : { ...rest, sentAt, prefilled };
     }
   }
   return asks;
@@ -701,7 +724,7 @@ function claimRefuses(state: ContributionState, authorId?: string): boolean {
 
 export const useContributionStore = create<ContributionState>()(
   persist(
-    immer((set) => ({
+    immer((set, get) => ({
       authors: [],
       title: "",
       // One empty draft always exists: "no active draft" is not a renderable
@@ -718,6 +741,7 @@ export const useContributionStore = create<ContributionState>()(
       claim: null,
       asks: {},
       recentReply: null,
+      askUndo: null,
 
       createDraft: () => {
         let created: string | null = null;
@@ -812,10 +836,14 @@ export const useContributionStore = create<ContributionState>()(
       // Guarded like every other whole-roster write: an Import dialog or a bulk
       // undo can still be in flight when a claim link lands, and replacing the
       // roster under a claim would break the lock's one rule.
-      loadAuthors: (authors) =>
+      loadAuthors: (authors, asks) =>
         set((state) => {
           if (claimRefuses(state)) return;
           state.authors = normalizeAuthors(authors);
+          if (!asks) return;
+          // Normalizing re-keys a row whose id was unusable; answers under the old id have no row left.
+          const ids = new Set(state.authors.map((author) => author.id));
+          state.asks = Object.fromEntries(Object.entries(asks).filter(([id]) => ids.has(id)));
         }),
 
       setClaim: (claim) =>
@@ -843,10 +871,32 @@ export const useContributionStore = create<ContributionState>()(
           state.asks[contributorId] = ask;
         }),
 
-      clearAsked: (contributorId) =>
-        set((state) => {
-          delete state.asks[contributorId];
-        }),
+      applyAskStep: (draftId, event) => {
+        const state = get();
+        const source = draftId === state.activeDraftId ? state : state.drafts[draftId];
+        if (!source) return { kind: "unmatched" };
+        const { outcome, patch, undo } = askStep(source, event);
+        if (Object.keys(patch.rows).length === 0 && Object.keys(patch.asks).length === 0) return outcome;
+        const next = applyPatch(source, patch);
+        set((draft) => {
+          writeAskState(draft, draftId, next.authors, next.asks);
+          draft.askUndo = { draftId, patch: undo };
+        });
+        return outcome;
+      },
+
+      undoAskStep: () => {
+        const state = get();
+        const undo = state.askUndo;
+        const source = undo && (undo.draftId === state.activeDraftId ? state : state.drafts[undo.draftId]);
+        if (!(undo && source)) return false;
+        const next = applyPatch(source, undo.patch);
+        set((draft) => {
+          writeAskState(draft, undo.draftId, next.authors, next.asks);
+          draft.askUndo = null;
+        });
+        return true;
+      },
 
       setTitle: (title) =>
         set((state) => {
@@ -888,9 +938,10 @@ export const useContributionStore = create<ContributionState>()(
           if (claimRefuses(state)) return;
           const index = findAuthorIndex(state.authors, authorId);
           if (index === -1) return;
+          const { patch } = askStep(state, { kind: "removed", contributorId: authorId });
           state.authors.splice(index, 1);
           state.authors = normalizeAuthors(state.authors);
-          delete state.asks[authorId];
+          state.asks = applyPatch({ authors: [], asks: state.asks }, patch).asks;
         }),
 
       restoreAuthor: (author, index) => {

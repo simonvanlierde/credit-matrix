@@ -632,7 +632,7 @@ describe("contribution store", () => {
       return jane;
     }
 
-    it("marks per draft, survives a switch away and back, and clears", () => {
+    it("marks per draft and survives a switch away and back", () => {
       const jane = addJane();
       store().markAsked(jane.id, ask);
       expect(store().asks[jane.id]).toEqual(ask);
@@ -643,9 +643,84 @@ describe("contribution store", () => {
       expect(store().asks).toEqual({});
       store().switchDraft(home);
       expect(store().asks[jane.id]).toEqual(ask);
+    });
 
-      store().clearAsked(jane.id);
-      expect(store().asks[jane.id]).toBeUndefined();
+    /** Jane's reply row: renamed, with Investigation she did not have. */
+    function janeReply(id: string, name = "Jane B. Smith") {
+      return createAuthor(name, {
+        id,
+        contributions: ROLE_NAMES.map((role) => ({ role, score: role === "Investigation" ? 100 : 0 })),
+      });
+    }
+
+    it.each([
+      ["received", "jane", { sentAt: 5 }],
+      ["unmatched", "nobody", { sentAt: 5 }],
+      ["broken", "jane", { row: { name: 1 } }],
+      ["stale", "jane", { sentAt: 1 }],
+    ] as const)("routes a %s reply through applyAskStep", (kind, who, extra) => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 3,
+        at: 4,
+      });
+      const id = who === "jane" ? jane.id : who;
+      const row = "row" in extra ? extra.row : janeReply(id);
+      const sentAt = "sentAt" in extra ? extra.sentAt : null;
+      expect(store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt, at: 6 }).kind).toBe(kind);
+    });
+
+    it("keeps a reply beside the row, renames it, and undoes the identity but not later scores", () => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const outcome = store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 2,
+        at: 3,
+      });
+      expect(outcome).toEqual({ kind: "received", open: 1, duplicate: false });
+      const row = store().authors[0];
+      expect(row?.name).toBe("Jane B. Smith");
+      expect(row?.initials).toBe("JBS");
+      expect(row?.contributions.every((c) => c.score === 0)).toBe(true);
+      expect(store().asks[jane.id]?.reply?.sentAt).toBe(2);
+
+      store().setAuthorScore(jane.id, 0, 100);
+      expect(store().undoAskStep()).toBe(true);
+      expect(store().authors[0]?.name).toBe("Jane Smith");
+      expect(store().authors[0]?.contributions[0]?.score).toBe(100);
+      expect(store().asks[jane.id]).toEqual({ sentAt: 1, prefilled: false });
+      expect(store().undoAskStep()).toBe(false);
+    });
+
+    it("stores a reply into a parked draft without switching to it", () => {
+      const jane = addJane();
+      const home = store().activeDraftId;
+      store().createDraft();
+      const outcome = store().applyAskStep(home, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id, "Jane Smith"),
+        sentAt: null,
+        at: 3,
+      });
+      expect(outcome.kind).toBe("received");
+      expect(store().activeDraftId).not.toBe(home);
+      expect(store().drafts[home]?.asks[jane.id]?.reply).toBeDefined();
+    });
+
+    it("loads imported answers only for rows the roster keeps", () => {
+      const jane = addJane();
+      store().loadAuthors(store().authors, { [jane.id]: ask, gone: ask });
+      expect(store().asks).toEqual({ [jane.id]: ask });
     });
 
     it("drops a contributor's ask when they are removed", () => {
@@ -1054,12 +1129,26 @@ describe("contribution store", () => {
     // tab that loads them and saves must write them back untouched.
     it("keeps keys it does not know, on drafts and on asks, through load and save", () => {
       const merge = useContributionStore.persist.getOptions().merge;
-      const reply = { contributions: [], sentAt: 9 };
+      const reply = {
+        contributions: [],
+        equalContribution: false,
+        corresponding: false,
+        sentAt: 9,
+        receivedAt: 10,
+        decisions: {},
+        provenance: "a later key",
+      };
       const merged = merge?.(
         {
           activeDraftId: "d1",
           drafts: {
-            d1: { future: "kept", asks: { jane: { sentAt: 1, prefilled: false, reply } } },
+            d1: {
+              future: "kept",
+              asks: {
+                jane: { sentAt: 1, prefilled: false, reply },
+                bob: { sentAt: 2, prefilled: true, reply: { contributions: "garbled" } },
+              },
+            },
             d2: { future: "kept too" },
           },
         },
@@ -1074,6 +1163,8 @@ describe("contribution store", () => {
       expect(saved.drafts.d1?.future).toBe("kept");
       expect(saved.drafts.d1?.title).toBe("Edited here");
       expect(saved.drafts.d1?.asks.jane).toEqual({ sentAt: 1, prefilled: false, reply });
+      // A malformed reply costs the reply, not the ask.
+      expect(saved.drafts.d1?.asks.bob).toEqual({ sentAt: 2, prefilled: true });
       expect(saved.drafts.d2?.future).toBe("kept too");
     });
 
