@@ -24,7 +24,7 @@ import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
-import { useContributionStore } from "@/store/contribution-store";
+import { useContributionStore, useOpenDifferences } from "@/store/contribution-store";
 
 type DataFormat = "xml" | "json" | "csv" | "markdown";
 
@@ -44,10 +44,10 @@ const DATA_FORMATS: Record<
   // XML/JSON/CSV are machine round-trip formats, kept in canonical English.
   // Only Markdown (a human-facing paste artifact) follows the output language.
   xml: { label: "XML (JATS4R)", serialize: toJats4rXml, filename: "credit-contributors.xml", mime: "application/xml" },
-  // Co-author answers travel in the JSON export: it is the backup and device-move format.
+  // Replaced per export in the component, which knows whether answers go in.
   json: {
     label: "JSON",
-    serialize: (authors) => toJson(authors, { asks: useContributionStore.getState().asks }),
+    serialize: (authors) => toJson(authors),
     filename: "credit_result.json",
     mime: "application/json",
   },
@@ -62,6 +62,13 @@ const DATA_FORMATS: Record<
 
 export function StatementOutput() {
   const authors = useContributionStore((s) => s.authors);
+  const asks = useContributionStore((s) => s.asks);
+  const selfId = useContributionStore((s) => s.selfId);
+  const openReview = useContributionStore((s) => s.openReview);
+  const openDifferences = useOpenDifferences();
+  // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
+  const [includeAnswers, setIncludeAnswers] = useState(true);
+  const answerCount = authors.filter((author) => asks[author.id]?.reply).length;
   const { translateRole, translateUi, translateInterfaceRole, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   // Last beat of the population sequence; see .enter-fade in globals.css.
@@ -103,16 +110,39 @@ export function StatementOutput() {
   // The split control only matters once someone is marked a non-author contributor.
   const hasNonAuthors = authors.some((author) => author.contributorType === "non-author");
 
+  function serialize(dataFormat: DataFormat): string {
+    if (dataFormat === "json") return toJson(authors, { asks, includeAnswers, selfId });
+    return DATA_FORMATS[dataFormat].serialize(authors, translateRole, translateUi, outputLanguage);
+  }
+
   function downloadData(dataFormat: DataFormat) {
     if (!hasAuthors) return;
-    const { serialize, filename, mime } = DATA_FORMATS[dataFormat];
+    const { filename, mime } = DATA_FORMATS[dataFormat];
     // A BOM makes Excel read the file as UTF-8, so non-ASCII names survive.
     const bom = dataFormat === "csv" ? "﻿" : "";
-    download(new Blob([bom, serialize(authors, translateRole, translateUi, outputLanguage)], { type: mime }), filename);
+    download(new Blob([bom, serialize(dataFormat)], { type: mime }), filename);
+  }
+
+  function goToReview() {
+    openReview(null);
+    requestAnimationFrame(() => document.getElementById("inspector-tab-review")?.focus());
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Says the statement is the lead's version; never blocks copying it. */}
+      {openDifferences > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-primary/10 px-3 py-2 text-[13px] text-on-surface">
+          <span className="flex-1">{t("statementDiffers", { count: openDifferences })}</span>
+          <button
+            type="button"
+            onClick={goToReview}
+            className="min-h-6 rounded px-1 font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            {t("reviewAction")}
+          </button>
+        </p>
+      )}
       {/* One non-wrapping cluster, so the gear never dangles alone. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="flex items-center gap-2">
@@ -300,9 +330,7 @@ export function StatementOutput() {
                       type="button"
                       onClick={() => {
                         setCopiedFormat(value);
-                        void copyDataText(
-                          DATA_FORMATS[value].serialize(authors, translateRole, translateUi, outputLanguage),
-                        );
+                        void copyDataText(serialize(value));
                       }}
                       aria-label={t("copyFormat", { format: label })}
                       title={t("copyFormat", { format: label })}
@@ -329,6 +357,17 @@ export function StatementOutput() {
                 );
               })}
             </ul>
+            {answerCount > 0 && (
+              <label className="flex min-h-8 items-center gap-2 border-t border-outline-variant/40 px-2 pt-1 text-xs text-on-surface-variant">
+                <input
+                  type="checkbox"
+                  checked={includeAnswers}
+                  onChange={(event) => setIncludeAnswers(event.target.checked)}
+                  className="size-4 accent-primary"
+                />
+                {t("exportIncludesAnswers", { count: answerCount })}
+              </label>
+            )}
           </PopoverContent>
         </Popover>
 

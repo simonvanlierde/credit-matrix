@@ -2,6 +2,7 @@
 
 import {
   Check,
+  CheckCheck,
   ChevronDown,
   Clock,
   Columns3,
@@ -19,6 +20,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
 import { InitialsChip } from "@/components/ui/initials-chip";
+import { LevelMark } from "@/components/ui/level-mark";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,6 +34,7 @@ import {
   onColor,
   type RoleDescriber,
   type RoleTranslator,
+  review,
   scoreToLevel,
   type UiKey,
   type UiTranslator,
@@ -42,7 +45,7 @@ import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";
 import { download as downloadBlob } from "@/lib/utils";
-import { type InputMode, useContributionStore } from "@/store/contribution-store";
+import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
 
 // Canonical level↔score mapping. Clicks in Levels mode cycle through it
 // ascending; the legend renders it descending (lead→none).
@@ -66,8 +69,8 @@ const DEFAULT_BULK_LEVEL = 66;
 // rows it labels, so the headers fall back to initials.
 const MAX_NAMED_COLUMNS = 20;
 
-/** Whether this contributor has been sent an ask, from the grid's point of view. */
-type AskState = "you" | "asked" | "none";
+/** Where this contributor's ask stands, from the grid's point of view. */
+type AskState = { kind: "you" | "asked" | "settled" | "none" } | { kind: "differs"; count: number };
 
 /** Shared look for the small outlined controls in the status strip and menus. */
 const TOOL_BUTTON =
@@ -114,7 +117,12 @@ export function ContributionGrid() {
   );
   const recentReply = useContributionStore((s) => s.recentReply);
   const asks = useContributionStore((s) => s.asks);
+  const selfId = useContributionStore((s) => s.selfId);
+  const reviewHighlight = useContributionStore((s) => s.reviewHighlight);
+  const reviewSettled = useContributionStore((s) => s.reviewSettled);
+  const openReview = useContributionStore((s) => s.openReview);
   const setInspectorTab = useContributionStore((s) => s.setInspectorTab);
+  const summary = useAskSummary();
   // The light ramp mixes toward white, which reads inverted on a dark page.
   const dark = useTheme().resolvedTheme === "dark";
   const {
@@ -337,10 +345,24 @@ export function ContributionGrid() {
     table?.querySelector<HTMLButtonElement>(selector)?.focus();
   }
 
-  const askState = (author: Author): AskState =>
-    locked ? (author.id === editableAuthorId ? "you" : "none") : author.id in asks ? "asked" : "none";
   // Locked, this is someone else's draft: their asks are not yours to track.
-  const askedCount = authors.filter((author) => author.id in asks).length;
+  const reviewOf = (author: Author) => (locked || author.id === selfId ? undefined : review(author, asks[author.id]));
+  const askState = (author: Author): AskState => {
+    if (locked) return { kind: author.id === editableAuthorId ? "you" : "none" };
+    if (author.id === selfId) return { kind: "you" };
+    const { status, open } = review(author, asks[author.id]);
+    if (open.length > 0) return { kind: "differs", count: open.length };
+    return { kind: status.kind === "differs" ? "asked" : status.kind };
+  };
+  /** What a co-author said where it differs from the cell, for its accessible description. */
+  const theySay = (author: Author, roleIndex: number) => {
+    const role = CREDIT_ROLES[roleIndex]?.name;
+    const difference = reviewOf(author)?.open.find((candidate) => candidate.target === role);
+    if (!difference || typeof difference.theirs === "boolean") return undefined;
+    // In yes/no mode a level is only worth naming when both sides contributed.
+    const level = graded || difference.kind === "level" ? difference.theirs : "contributed";
+    return t("cellTheySay", { name: author.firstName || author.name, level: translateUi(level) });
+  };
   const namedHeaders = !acronyms && authors.length <= MAX_NAMED_COLUMNS;
 
   cellApi.current = {
@@ -364,6 +386,14 @@ export function ContributionGrid() {
       tabbable={row === active.row && col === active.col}
       frozen={isFrozen(author.id)}
       recent={author.id === recentReply}
+      theySay={theySay(author, roleIndex)}
+      highlighted={
+        reviewHighlight?.contributorId === author.id && reviewHighlight.target === CREDIT_ROLES[roleIndex]?.name
+      }
+      settling={
+        reviewSettled?.contributorId === author.id &&
+        reviewSettled.targets.some((target) => target === CREDIT_ROLES[roleIndex]?.name)
+      }
       graded={graded}
       dark={dark}
       monoColor={heatmapMonoColor}
@@ -391,10 +421,10 @@ export function ContributionGrid() {
     );
   };
 
-  function openTeam() {
-    setInspectorTab("team");
+  function openInspector(tab: "team" | "review") {
+    setInspectorTab(tab);
     // After the tab has rendered as selected, so focus lands on a tab stop.
-    requestAnimationFrame(() => document.getElementById("inspector-tab-team")?.focus());
+    requestAnimationFrame(() => document.getElementById(`inspector-tab-${tab}`)?.focus());
   }
 
   return (
@@ -408,23 +438,46 @@ export function ContributionGrid() {
         {!locked && (
           <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
             <span aria-hidden="true" className="flex flex-wrap gap-0.5">
-              {authors.map((author) => (
-                <span
-                  key={author.id}
-                  className={`size-2 rounded-[2px] ${author.id in asks ? "bg-primary" : "bg-outline"}`}
-                />
-              ))}
+              {authors.map((author) => {
+                const state = askState(author);
+                if (state.kind === "you") return null;
+                const answered = state.kind === "differs" || state.kind === "settled";
+                return (
+                  <span
+                    key={author.id}
+                    className={`size-2 rounded-[2px] ${
+                      answered ? "bg-primary" : state.kind === "asked" ? "bg-primary/35" : "bg-outline"
+                    }`}
+                  />
+                );
+              })}
             </span>
             <span className="font-semibold text-on-surface">
-              {t("stripAsked", { asked: askedCount, total: authors.length })}
+              {t("stripAnswered", { answered: summary.answered, total: summary.total })}
             </span>
-            <button
-              type="button"
-              onClick={openTeam}
-              className="min-h-6 rounded px-1 font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              {t("stripOpenTeam")}
-            </button>
+            {summary.open > 0 ? (
+              <>
+                <span aria-hidden="true" className="text-on-surface-variant">
+                  ·
+                </span>
+                <span className="text-on-surface-variant">{t("stripDiffer", { count: summary.open })}</span>
+                <button
+                  type="button"
+                  onClick={() => openInspector("review")}
+                  className="min-h-6 rounded-full bg-primary px-3 text-xs font-semibold text-on-primary transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  {t("reviewAction")}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openInspector("team")}
+                className="min-h-6 rounded px-1 font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {t("stripOpenTeam")}
+              </button>
+            )}
           </p>
         )}
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
@@ -726,7 +779,11 @@ export function ContributionGrid() {
                               <span className="sr-only">{author.name}</span>
                             </>
                           )}
-                          <AskGlyph state={askState(author)} />
+                          <AskGlyph
+                            state={askState(author)}
+                            name={author.name}
+                            onReview={() => openReview(author.id)}
+                          />
                         </span>
                       </th>
                     ))}
@@ -739,7 +796,11 @@ export function ContributionGrid() {
                       <th scope="row" className="sticky left-0 z-10 bg-surface-bright py-0 text-left">
                         <span className="flex items-center gap-1.5 min-w-0">
                           <InitialsChip author={author} />
-                          <AskGlyph state={askState(author)} />
+                          <AskGlyph
+                            state={askState(author)}
+                            name={author.name}
+                            onReview={() => openReview(author.id)}
+                          />
                           {!acronyms && (
                             <span
                               className="max-w-36 truncate text-[13px] font-medium text-on-surface"
@@ -816,7 +877,13 @@ export function ContributionGrid() {
         {/* `w-0 min-w-full` keeps the legend out of the pane's max-content width,
           so switching modes cannot resize the whole column to fit a longer key. */}
         <div className="mt-2 w-0 min-w-full">
-          <GridLegend monoColor={heatmapMonoColor} graded={graded} dark={dark} translateUi={translateUi} />
+          <GridLegend
+            monoColor={heatmapMonoColor}
+            graded={graded}
+            dark={dark}
+            translateUi={translateUi}
+            differs={summary.open > 0}
+          />
         </div>
       </div>
     </div>
@@ -854,6 +921,9 @@ const GridCell = memo(function GridCellInner({
   tabbable,
   frozen,
   recent,
+  theySay,
+  highlighted,
+  settling,
   graded,
   dark,
   monoColor,
@@ -866,6 +936,12 @@ const GridCell = memo(function GridCellInner({
   tabbable: boolean;
   frozen: boolean;
   recent: boolean;
+  /** "Ben says Lead" where a co-author's answer differs and is still open. */
+  theySay: string | undefined;
+  /** The Review line under the pointer or focus is about this cell. */
+  highlighted: boolean;
+  /** A Review choice just changed this cell. */
+  settling: boolean;
   graded: boolean;
   dark: boolean;
   monoColor: string;
@@ -874,11 +950,14 @@ const GridCell = memo(function GridCellInner({
   const score = author.contributions[roleIndex]?.score ?? 0;
   const fill = score > 0 ? heatCellColor(monoColor, graded ? score : 100, dark) : null;
   const label = api.current.label(author, roleIndex, score);
+  const describedBy = theySay ? `cell-says-${row}-${col}` : undefined;
   return (
-    <td className="min-w-11 p-0">
+    <td className="relative min-w-11 p-0">
       <button
         type="button"
         data-cell={`${row}-${col}`}
+        data-cell-key={`${author.id}:${roleIndex}`}
+        aria-describedby={describedBy}
         // One tab stop for the whole matrix; arrows move within it. Without
         // this a keyboard user tabs through every cell, up to 14 x 200.
         tabIndex={tabbable ? 0 : -1}
@@ -894,7 +973,7 @@ const GridCell = memo(function GridCellInner({
         aria-keyshortcuts={frozen ? undefined : graded ? "0 1 2 3 Shift+F10" : "0 1"}
         onContextMenu={graded && !frozen ? (event) => api.current.openPicker(author.id, roleIndex, event) : undefined}
         aria-label={label}
-        title={label}
+        title={theySay ? `${label}. ${theySay}` : label}
         onClick={() => api.current.click(author, roleIndex, score)}
         // The fill transitions, and deliberately nothing moves: in Levels mode
         // a click's only result is the shade stepping up, and at this cadence
@@ -905,10 +984,12 @@ const GridCell = memo(function GridCellInner({
         className={`contribution-cell flex h-7 w-full items-center justify-center rounded transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
           frozen ? "cursor-not-allowed opacity-40" : "hover:ring-2 hover:ring-primary/50"
         } ${fill ? "" : "ring-1 ring-inset ring-outline/70"} ${
-          recent
-            ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
-            : ""
-        }`}
+          highlighted
+            ? "outline outline-[3px] outline-flag outline-offset-1"
+            : recent
+              ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
+              : ""
+        } ${settling ? "cell-settle" : ""}`}
         style={{ backgroundColor: fill ?? "var(--color-surface-container-high)" }}
       >
         {fill && (
@@ -919,6 +1000,21 @@ const GridCell = memo(function GridCellInner({
           <LevelMark score={score} graded={graded} color={onColor(fill)} />
         )}
       </button>
+      {theySay && (
+        <>
+          {/* The corner mark is a shape, so the difference never rests on colour alone. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 10 10"
+            className="pointer-events-none absolute top-0 right-0 size-2.5 text-flag"
+          >
+            <path d="M0 0H10V10Z" fill="currentColor" />
+          </svg>
+          <span id={describedBy} className="sr-only">
+            {theySay}
+          </span>
+        </>
+      )}
     </td>
   );
 });
@@ -956,18 +1052,34 @@ function AngledLabel({ title, children }: { title?: string; children: ReactNode 
 }
 
 /**
- * Whether a column's contributor has been asked, as an icon or word with a
- * spoken label: never color alone.
+ * Where a column's contributor stands, as an icon, word or count with a spoken
+ * label: never color alone. Open differences are a button into the Review tab.
  */
-function AskGlyph({ state }: { state: AskState }) {
+function AskGlyph({ state, name, onReview }: { state: AskState; name: string; onReview: () => void }) {
   const t = useTranslations();
-  if (state === "you") {
+  if (state.kind === "you") {
     return <span className="text-[11px] font-semibold text-primary">{t("teamYou")}</span>;
   }
-  const label = state === "asked" ? t("askedChip") : t("teamNotAsked");
+  if (state.kind === "differs") {
+    return (
+      <button
+        type="button"
+        onClick={onReview}
+        aria-label={t("columnOpenDifferences", { name, count: state.count })}
+        title={t("columnOpenDifferences", { name, count: state.count })}
+        className="inline-flex h-5 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-on-primary transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+      >
+        {state.count}
+      </button>
+    );
+  }
+  const label =
+    state.kind === "settled" ? t("columnSettled") : state.kind === "asked" ? t("askedChip") : t("teamNotAsked");
   return (
-    <span role="img" aria-label={label} title={label} className="flex h-4 items-center text-on-surface-variant">
-      {state === "asked" ? (
+    <span role="img" aria-label={label} title={label} className="flex h-5 items-center text-on-surface-variant">
+      {state.kind === "settled" ? (
+        <CheckCheck aria-hidden="true" className="size-3.5 text-primary" />
+      ) : state.kind === "asked" ? (
         <Clock aria-hidden="true" className="size-3.5" />
       ) : (
         <span aria-hidden="true" className="text-xs leading-none">
@@ -1030,53 +1142,20 @@ function RoleInfo({
   );
 }
 
-const LEVEL_DOTS: Record<string, number> = { supporting: 1, equal: 2, lead: 3 };
-
-/**
- * What an assigned cell shows. Yes/no mode keeps the check; Levels mode counts
- * the level in dots (1 supporting, 2 equal, 3 lead), so the level never rests
- * on fill lightness alone (WCAG 1.4.1). `color` must come from onColor so the
- * mark clears 3:1 against its fill (WCAG 1.4.11).
- */
-function LevelMark({
-  score,
-  graded,
-  color,
-  size = "cell",
-}: {
-  score: number;
-  graded: boolean;
-  color: string;
-  size?: "cell" | "small";
-}) {
-  if (!graded) return <Check aria-hidden="true" className="size-3.5" style={{ color }} strokeWidth={3} />;
-  const dots = LEVEL_DOTS[scoreToLevel(score)] ?? 0;
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox={`0 0 ${dots * 6 - 1} 5`}
-      className={size === "cell" ? "h-1.5 w-auto" : "h-1 w-auto"}
-      style={{ color }}
-    >
-      {Array.from({ length: dots }, (_, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: the dots are identical and never reorder.
-        <circle key={i} cx={2.5 + i * 6} cy={2.5} r={2.5} fill="currentColor" />
-      ))}
-    </svg>
-  );
-}
-
 /** A single key mapping cell intensity to its contribution level. */
 function GridLegend({
   monoColor,
   graded,
   translateUi,
   dark,
+  differs,
 }: {
   monoColor: string;
   graded: boolean;
   translateUi: UiTranslator;
   dark: boolean;
+  /** Some cell carries a difference mark, so the key explains it. */
+  differs: boolean;
 }) {
   const t = useTranslations();
   return (
@@ -1101,6 +1180,14 @@ function GridLegend({
             {translateUi(key)}
           </span>
         ))}
+        {differs && (
+          <span className="inline-flex items-center gap-1.5">
+            <svg aria-hidden="true" viewBox="0 0 10 10" className="size-2.5 text-flag">
+              <path d="M0 0H10V10Z" fill="currentColor" />
+            </svg>
+            {t("legendDiffers")}
+          </span>
+        )}
       </span>
       {/* Always shown and never truncated: the keys are the only direct way to
           set a level, so hiding them behind a tooltip hid the feature. */}

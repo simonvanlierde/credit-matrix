@@ -335,7 +335,7 @@ test("the Team tab copies one email-ready ask per person, in sequence", async ({
   const adder = page.getByLabel("New author names or ORCID iD");
   await adder.fill("Jane Smith, Bob White");
   await adder.press("Enter");
-  await expect(page.getByText("0 of 2 asked")).toBeVisible();
+  await expect(page.getByText("0 of 2 answered")).toBeVisible();
 
   // The status strip leads to the Team tab.
   await page.getByRole("button", { name: "Ask co-authors" }).click();
@@ -352,7 +352,7 @@ test("the Team tab copies one email-ready ask per person, in sequence", async ({
   expect(second).toMatch(/^Hi Bob White,/);
   await expect(onScreen(page, "All 2 messages copied.")).toBeVisible();
   await expect(team.getByText("Asked today · blank")).toHaveCount(2);
-  await expect(page.getByText("2 of 2 asked")).toBeVisible();
+  await expect(page.getByText("0 of 2 answered")).toBeVisible();
 
   await context.close();
 });

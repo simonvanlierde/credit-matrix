@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Ask, AskState, Choice, Target } from "../ask";
-import { ASK_TARGETS, applyPatch, askStep, importAsks, review } from "../ask";
+import { ASK_TARGETS, applyPatch, askStep, importAsks, review, settledAt } from "../ask";
 import type { Author } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromJson, toJson } from "../export/json";
@@ -179,6 +179,19 @@ describe("askStep settle", () => {
     }
   });
 
+  it("dates a settled answer by its last decision, or by its arrival when it needed none", () => {
+    const { state, target, row } = scenario(1);
+    const received = receive(state, target.id, row, 1500, 2000).state;
+    const reply = received.asks[target.id]?.reply;
+    if (!reply) throw new Error("expected a reply");
+    expect(settledAt(reply)).toBe(2000);
+    const step = askStep(received, { kind: "settle", contributorId: target.id, choices: "mine", at: 9000 });
+    const decided = applyPatch(received, step.patch).asks[target.id]?.reply;
+    if (!decided) throw new Error("expected a reply");
+    expect(Object.values(decided.decisions).every((decision) => decision?.at === 9000)).toBe(true);
+    expect(settledAt(decided)).toBe(Object.keys(decided.decisions).length > 0 ? 9000 : 2000);
+  });
+
   it("taking theirs copies the exact score and marker", () => {
     for (let seed = 1; seed <= ROUNDS; seed++) {
       const { state, target, row } = scenario(seed);
@@ -290,6 +303,13 @@ describe("asks in JSON", () => {
     const authors = [...received.authors];
     expect(fromJson(toJson(authors, { asks: received.asks }))).toEqual({ authors, asks: received.asks });
     expect(fromJson(toJson(authors, { asks: received.asks, includeAnswers: false }))).toEqual({ authors });
+  });
+
+  it("says who made the file, while that row is in it", () => {
+    const authors = scenario(9).state.authors as Author[];
+    const self = authors[0]?.id;
+    expect(JSON.parse(toJson(authors, { selfId: self })).selfId).toBe(self);
+    expect(JSON.parse(toJson(authors, { selfId: "gone" }))).not.toHaveProperty("selfId");
   });
 
   it("imports answers through the id map, replacing matched ones and dropping the rest", () => {

@@ -1,11 +1,11 @@
 "use client";
 
-import { MessagesSquare } from "lucide-react";
 import { type KeyboardEvent, type ReactNode, useRef } from "react";
 import { useTranslations } from "use-intl";
+import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatementOutput } from "@/components/steps/StatementOutput";
 import { TeamPanel } from "@/components/TeamPanel";
-import { type InspectorTab, useContributionStore } from "@/store/contribution-store";
+import { type InspectorTab, useContributionStore, useOpenDifferences } from "@/store/contribution-store";
 
 const TABS: InspectorTab[] = ["statement", "team", "review"];
 
@@ -22,6 +22,7 @@ export function Inspector() {
   const tab = useContributionStore((s) => s.inspectorTab);
   const setTab = useContributionStore((s) => s.setInspectorTab);
   const listRef = useRef<HTMLDivElement>(null);
+  const openCount = useOpenDifferences();
 
   const labels: Record<InspectorTab, string> = {
     statement: t("stepStatement"),
@@ -31,7 +32,7 @@ export function Inspector() {
   const panels: Record<InspectorTab, ReactNode> = {
     statement: <StatementOutput />,
     team: <TeamPanel />,
-    review: <ReviewPlaceholder />,
+    review: <ReviewPanel />,
   };
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -81,6 +82,12 @@ export function Inspector() {
               }`}
             >
               {labels[id]}
+              {id === "review" && openCount > 0 && (
+                <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-on-primary">
+                  <span aria-hidden="true">{openCount}</span>
+                  <span className="sr-only">{t("tabReviewOpen", { count: openCount })}</span>
+                </span>
+              )}
             </button>
           );
         })}
@@ -99,18 +106,6 @@ export function Inspector() {
           {panels[id]}
         </div>
       ))}
-    </div>
-  );
-}
-
-/** Where co-author answers will be compared with the draft. */
-function ReviewPlaceholder() {
-  const t = useTranslations();
-  return (
-    <div className="flex flex-col items-center gap-2 rounded-lg bg-surface-container-low px-4 py-8 text-center">
-      <MessagesSquare className="size-6 text-on-surface-variant" aria-hidden="true" />
-      <p className="font-headline text-lg italic text-primary">{t("reviewEmptyTitle")}</p>
-      <p className="max-w-[40ch] text-sm text-on-surface-variant">{t("reviewEmptyBody")}</p>
     </div>
   );
 }
