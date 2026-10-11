@@ -167,6 +167,12 @@ body {
   overflow-x: hidden;
 }
 
+/* The header is fixed, so anything focus scrolls into view would otherwise
+   land under it (WCAG 2.4.11). */
+html {
+  scroll-padding-top: 4rem;
+}
+
 /*
  * Popovers and selects. Radix keeps a closing panel mounted only while a CSS
  * *animation* is running: it listens for `animationend` and ignores

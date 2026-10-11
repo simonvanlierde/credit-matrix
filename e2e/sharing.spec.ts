@@ -258,3 +258,32 @@ test("a mangled link fails visibly and keeps the draft", async ({ page }) => {
   await expect(onScreen(page, /That shared link could not be opened/)).toBeVisible();
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
 });
+
+test("the Team tab copies one email-ready ask per person, in sequence", async ({ browser }) => {
+  const context = await newContext(browser);
+  const page = await openBrowser(context);
+  await page.goto("/");
+  const adder = page.getByLabel("New author names or ORCID iD");
+  await adder.fill("Jane Smith, Bob White");
+  await adder.press("Enter");
+  await expect(page.getByText("0 of 2 asked")).toBeVisible();
+
+  // The status strip leads to the Team tab.
+  await page.getByRole("button", { name: "Ask co-authors" }).click();
+  await expect(page.getByRole("tab", { name: "Team" })).toHaveAttribute("aria-selected", "true");
+  const team = page.getByRole("tabpanel", { name: "Team" });
+  await expect(team.getByText("Not asked yet")).toHaveCount(2);
+  // What travels is said in plain text, not only on hover.
+  await expect(team.getByText(/Nothing is stored on a server/)).toBeVisible();
+
+  const first = await copyFrom(page, team.getByRole("button", { name: "Ask everyone not yet asked (2)" }));
+  expect(first).toMatch(/^Hi Jane Smith,/);
+  expect(first).toMatch(/#s=/);
+  const second = await copyFrom(page, team.getByRole("button", { name: "Copy next: Bob White (2 of 2)" }));
+  expect(second).toMatch(/^Hi Bob White,/);
+  await expect(onScreen(page, "All 2 messages copied.")).toBeVisible();
+  await expect(team.getByText("Asked today · blank")).toHaveCount(2);
+  await expect(page.getByText("2 of 2 asked")).toBeVisible();
+
+  await context.close();
+});

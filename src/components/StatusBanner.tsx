@@ -94,7 +94,7 @@ export function StatusBanner() {
               status.action?.onAct();
               dismiss();
             }}
-            className="shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="min-h-6 shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             {status.action.label}
           </button>
@@ -103,7 +103,7 @@ export function StatusBanner() {
           type="button"
           onClick={dismiss}
           aria-label={t("statusDismiss")}
-          className="shrink-0 rounded p-1 text-on-surface-variant transition-colors hover:text-on-surface"
+          className="flex size-7 shrink-0 items-center justify-center rounded text-on-surface-variant transition-colors hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <X className="h-3.5 w-3.5" />
         </button>

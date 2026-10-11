@@ -677,7 +677,7 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: "Data curation for Ada Lovelace: None" })).toBeVisible();
 
     await page.getByRole("button", { name: "Author" }).first().click();
-    const statement = page.getByLabel("Statement and export").locator("p").filter({ hasText: "CRediT:" });
+    const statement = page.getByRole("tabpanel", { name: "Statement" }).locator("p").filter({ hasText: "CRediT:" });
     await expect(statement).toContainText("Acknowledgements: Ada Lovelace");
     // The wording toggles live behind the statement's options gear now.
     await page.getByRole("button", { name: "Statement options" }).click();
@@ -786,7 +786,7 @@ test.describe("Happy path UI flows", () => {
     // The export buttons and the card width must not move when the legend grows.
     // Start from Yes / no (the sample opens in Levels) so the flip is real.
     await page.getByRole("radio", { name: "Yes / no" }).click();
-    const exports = page.getByRole("group", { name: "Heatmap" });
+    const exports = page.getByRole("button", { name: "Heatmap", exact: true });
     const card = page.locator("section[aria-label='Contribution grid'] > div");
     const before = { x: (await exports.boundingBox())?.x, w: (await card.boundingBox())?.width };
     await page.getByRole("radio", { name: "Levels" }).click();
@@ -923,8 +923,9 @@ test.describe("Happy path UI flows", () => {
   test("downloads a browser-generated PNG heatmap", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
+    await page.getByRole("button", { name: "Heatmap", exact: true }).click();
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: "PNG" }).click();
+    await page.getByRole("button", { name: "Download PNG" }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("credit-heatmap.png");
     const path = await download.path();
@@ -954,7 +955,7 @@ test.describe("Happy path UI flows", () => {
     await firstName.fill("A".repeat(240));
     await firstName.press("Enter");
     expect(await page.evaluate(() => document.body.scrollWidth)).toBe(320);
-    const statement = page.getByLabel("Statement and export");
+    const statement = page.getByRole("tabpanel", { name: "Statement" });
     expect((await statement.boundingBox())?.width).toBeLessThanOrEqual(320);
   });
 
@@ -963,11 +964,11 @@ test.describe("Happy path UI flows", () => {
     await page.getByRole("button", { name: "Load sample data" }).click();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
 
-    // XML (JATS4R) is the default export format; downloading generates it in the
-    // browser and saves it directly (no API round-trip).
-    await expect(page.getByRole("combobox", { name: "Export format" })).toHaveText(/XML \(JATS4R\)/);
+    // Downloading generates the file in the browser and saves it directly (no
+    // API round-trip).
+    await page.getByRole("button", { name: "Export data" }).click();
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Download" }).click();
+    await page.getByRole("button", { name: "Download XML (JATS4R)" }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("credit-contributors.xml");
   });

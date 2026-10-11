@@ -20,6 +20,7 @@ import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 export type InputMode = "toggle" | "levels";
+export type InspectorTab = "statement" | "team" | "review";
 
 /** A claim link's target: which contributor, on which draft it came from. */
 export interface DraftClaim {
@@ -111,6 +112,8 @@ interface ContributionState {
   /** Whether the welcome card is currently open. Ephemeral (not persisted), so a
    *  "How it works" re-open never survives a reload as a fake first run. */
   welcomeOpen: boolean;
+  /** The open tab of the workspace inspector. UI state only: never persisted. */
+  inspectorTab: InspectorTab;
   /**
    * Every draft *except* the live one, which is held in the top-level fields
    * above so no component has to reach through a map to read its authors.
@@ -162,6 +165,7 @@ interface ContributionState {
   setUiLocale: (locale: LocaleCode) => void;
   openWelcome: () => void;
   closeWelcome: () => void;
+  setInspectorTab: (tab: InspectorTab) => void;
   reset: () => void;
 }
 
@@ -714,6 +718,7 @@ export const useContributionStore = create<ContributionState>()(
       uiLocale: "en",
       welcomeSeen: false,
       welcomeOpen: false,
+      inspectorTab: "statement",
       newerVersionBlocked: false,
       claim: null,
       asks: {},
@@ -1056,6 +1061,11 @@ export const useContributionStore = create<ContributionState>()(
         set((state) => {
           state.welcomeOpen = false;
           state.welcomeSeen = true;
+        }),
+
+      setInspectorTab: (tab) =>
+        set((state) => {
+          state.inspectorTab = tab;
         }),
 
       // Clears the workspace, not the user's history: welcomeSeen stays true, so

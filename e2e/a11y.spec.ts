@@ -10,10 +10,10 @@ import { asReturningVisitor } from "./helpers";
  * alternative sits beside it) so axe correctly skips it.
  */
 
-// Pin the rule set to WCAG 2.0/2.1 A + AA so the scan matches what the README
+// Pin the rule set to WCAG 2.0, 2.1 and 2.2 A + AA so the scan matches what CONTRIBUTING.md
 // documents, rather than tracking axe's shifting defaults (which also include
 // best-practice rules).
-const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
+const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 /**
  * Panels scale in and rows fade up, and axe samples computed color; including
  * the opacity of an element still mid-transition. Scanning before motion
@@ -236,6 +236,52 @@ test.describe("Accessibility (axe-core)", () => {
     await expect(handle).not.toHaveAttribute("aria-pressed", "true");
   });
 
+  // WCAG 2.5.7: author order is credit, so it must not depend on dragging.
+  test("reorders a contributor without dragging", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    const rows = contributorRows(page);
+    await expect(rows).toHaveCount(3);
+
+    await page.getByRole("button", { name: "Actions for Ada Lovelace" }).click();
+    await expect(page.getByRole("button", { name: "Move up" })).toBeDisabled();
+    await page.getByRole("button", { name: "Move down" }).click();
+    await expect(rows.nth(1).getByLabel("Name or ORCID iD", { exact: true })).toHaveValue("Ada Lovelace");
+  });
+
+  test("inspector tabs follow the tabs pattern", async ({ page }) => {
+    await page.goto("/");
+    const statement = page.getByRole("tab", { name: "Statement" });
+    await statement.focus();
+    await page.keyboard.press("ArrowRight");
+    const team = page.getByRole("tab", { name: "Team" });
+    await expect(team).toBeFocused();
+    await expect(team).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tabpanel", { name: "Team" })).toBeVisible();
+    await page.keyboard.press("End");
+    await expect(page.getByRole("tab", { name: "Review" })).toBeFocused();
+    await expect(page.getByText("Answers from co-authors appear here")).toBeVisible();
+  });
+
+  // The role names left the tab order with the info buttons; arrow keys reach them.
+  test("arrow keys reach a role name, which opens its description", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    const cell = page.getByRole("button", { name: /^Conceptualization for Ada Lovelace:/ });
+    await expect(cell).toHaveAttribute("aria-keyshortcuts", "0 1 2 3 Shift+F10");
+    await cell.focus();
+    await page.keyboard.press("ArrowLeft");
+    const role = page.getByRole("button", { name: "Conceptualization", exact: true });
+    await expect(role).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("link", { name: /Full definition/ })).toBeVisible();
+    await page.keyboard.press("Escape");
+    // Focus comes back once the panel's exit animation ends.
+    await expect(role).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(cell).toBeFocused();
+  });
+
   test("the contributor list exposes its rows as a list", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
@@ -308,7 +354,7 @@ test.describe("Accessibility (axe-core)", () => {
     };
 
     const reorder = await settled(page.getByRole("button", { name: /Reorder Ada/ }));
-    const roleInfo = await settled(page.getByRole("button", { name: "About Conceptualization" }));
+    const roleInfo = await settled(page.getByRole("button", { name: "Conceptualization", exact: true }));
     await page.getByRole("button", { name: "Heatmap options" }).click();
     await page.getByRole("button", { name: "Heatmap color" }).click();
     const swatch = await settled(page.getByRole("button", { name: /Set color/ }).first());
