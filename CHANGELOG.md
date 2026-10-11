@@ -13,6 +13,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as
   JATS 1.3 `degree-contribution`, and importing the file restores them. Files without it import
   every role as lead, as before.
+- The JATS4R XML export writes ORCID iDs as the full `https://orcid.org/` URL, as the JATS4R
+  authors recommendation asks. Files with a bare iD still import.
 
 ### Removed
 
