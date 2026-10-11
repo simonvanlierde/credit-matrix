@@ -67,6 +67,20 @@ describe("heatCellColor tiers", () => {
     }
   });
 
+  it("rises in luminance from Supporting to Lead in the dark ramp", () => {
+    // Mixed toward white, Supporting was the brightest cell on a dark page.
+    for (const hue of ALL_HUES) {
+      const fills = SCORES.map((s) => heatCellColor(hue, s, true));
+      const [supporting = "", equal = "", lead = ""] = fills;
+      const lum = (c: string) => contrastRatio(c, "#000000");
+      expect(lum(equal), `${hue} equal`).toBeGreaterThan(lum(supporting));
+      expect(lum(lead), `${hue} lead`).toBeGreaterThan(lum(equal));
+      for (const fill of fills) {
+        expect(contrastRatio(fill, onColor(fill))).toBeGreaterThanOrEqual(NON_TEXT_MIN);
+      }
+    }
+  });
+
   it("returns a well-formed hex for hostile input, so SVG fill needs no escaping", () => {
     // heatCellColor is the only path monoColor takes into an SVG fill attribute.
     for (const attack of ['"/><script>alert(1)</script>', 'red" onload="alert(1)', "javascript:x"]) {
