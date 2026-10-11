@@ -41,16 +41,6 @@ async function answerAskLink(page: Page, askLink: string): Promise<string> {
   return copyFrom(page, page.getByRole("button", { name: "Copy the link to send back" }));
 }
 
-/**
- * Open a link as a fresh page load, the way a link clicked in a mail client
- * arrives. Several hash-only navigations in one document could leave the last
- * one without its status strip under parallel load.
- */
-async function openLink(page: Page, link: string) {
-  await page.goto("about:blank");
-  await page.goto(link);
-}
-
 function newContext(browser: Browser) {
   return browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
 }
@@ -284,13 +274,13 @@ test("a reply opened out of order is ignored, and the same reply twice changes n
   const secondReply = await copyFrom(pageB, sendBack);
   expect(secondReply).not.toBe(firstReply);
 
-  await openLink(pageA, secondReply);
+  await pageA.goto(secondReply);
   await expect(onScreen(pageA, "Bob White's answer arrived: 2 differences.")).toBeVisible();
-  await openLink(pageA, firstReply);
+  await pageA.goto(firstReply);
   await expect(
     onScreen(pageA, "This answer from Bob White is older than the one you have, so it was not used."),
   ).toBeVisible();
-  await openLink(pageA, secondReply);
+  await pageA.goto(secondReply);
   await expect(onScreen(pageA, "You already have this answer from Bob White.")).toBeVisible();
   // Your row never took their scores.
   await expect(pageA.getByRole("button", { name: "Software for Bob White: None" })).toBeVisible();
@@ -315,7 +305,7 @@ test("a newer request replaces the co-author's earlier answers, with undo", asyn
   const secondAsk = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White to check your guess" }));
 
   const updated = onScreen(pageB, "The request was updated. Your earlier answers were replaced.");
-  await openLink(pageB, secondAsk);
+  await pageB.goto(secondAsk);
   await expect(updated).toBeVisible();
   await expect(pageB.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
   await expect(pageB.getByRole("button", { name: "Investigation for Bob White: None" })).toBeVisible();
@@ -326,9 +316,9 @@ test("a newer request replaces the co-author's earlier answers, with undo", asyn
   await expect(pageB.getByRole("button", { name: "Software for Bob White: None" })).toBeVisible();
 
   // Opened again it replaces them again; the older request then only resumes.
-  await openLink(pageB, secondAsk);
+  await pageB.goto(secondAsk);
   await expect(updated).toBeVisible();
-  await openLink(pageB, firstAsk);
+  await pageB.goto(firstAsk);
   await expect(onScreen(pageB, "Picked up where you left off on this request.")).toBeVisible();
   await expect(pageB.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
   await pageB.getByRole("button", { name: /^Drafts:/ }).click();

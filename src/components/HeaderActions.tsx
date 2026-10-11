@@ -77,19 +77,22 @@ export function HeaderActions() {
   // Mount + hashchange share one handler: pasting a link into an already-open
   // tab must react exactly like opening it fresh.
   useEffect(() => {
-    const handle = () => void handlerRef.current();
     // StrictMode re-runs effects in development; the mount decode would then
     // load the link twice. A ref survives that re-run, an effect body does not.
     if (!decodedOnMount.current) {
       decodedOnMount.current = true;
-      handle();
+      void handlerRef.current(window.location.hash);
     }
-    window.addEventListener("hashchange", handle);
-    return () => window.removeEventListener("hashchange", handle);
+    // The link comes from the event, not the address bar. Stripping the last
+    // link's hash makes Next.js sync its router to that URL in a transition,
+    // and that write can land after the next hash navigation and erase it
+    // before this event runs.
+    const onHashChange = (event: HashChangeEvent) => void handlerRef.current(new URL(event.newURL).hash);
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  async function handleIncomingHash(): Promise<void> {
-    const hash = window.location.hash;
+  async function handleIncomingHash(hash: string): Promise<void> {
     if (!hash.startsWith("#s=")) return;
     // On mount this can beat the rehydrate effect above; awaiting it (a no-op
     // once done) keeps the link from opening over a draft not yet restored.
