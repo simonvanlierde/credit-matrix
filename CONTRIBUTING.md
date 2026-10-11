@@ -31,7 +31,7 @@ pnpm lint           # Biome (format + lint); append :fix to auto-fix
 pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
-pnpm validate:jats  # JATS fixture against the JATS 1.3 DTD (needs xmllint)
+pnpm validate:jats  # JATS fixture against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
 ```
 
 CI runs `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`, and `pnpm validate:jats` on every PR.

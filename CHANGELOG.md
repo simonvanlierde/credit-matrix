@@ -10,6 +10,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
   version and release date in step, as it does for `CITATION.cff`.
+- Every CI run checks the JATS4R XML export of the sample draft against the official JATS 1.3 DTD
+  and the JATS4R Schematron rules (`pnpm validate:jats`).
 
 ### Fixed
 
