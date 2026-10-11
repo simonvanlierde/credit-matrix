@@ -27,3 +27,6 @@ next-env.d.ts
 
 # pnpm
 .pnpm-store
+
+# Downloaded JATS DTD (scripts/validate-jats.sh)
+.cache

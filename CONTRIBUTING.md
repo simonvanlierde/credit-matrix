@@ -31,16 +31,19 @@ pnpm lint           # Biome (format + lint); append :fix to auto-fix
 pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
+pnpm validate:jats  # JATS fixture against the JATS 1.3 DTD (needs xmllint)
 ```
 
-CI runs `pnpm lint`, `pnpm typecheck`, and `pnpm test:coverage` on every PR.
+CI runs `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`, and `pnpm validate:jats` on every PR.
 Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 ## Testing
 
 - **Unit (Vitest)**: `pnpm test`. Covers the domain layer, the store, and `src/lib`: name
   parsing, initials deduplication, statement formats, score-to-level boundaries, import/export round
-  trips, validation, and heatmap SVG generation.
+  trips, validation, and heatmap SVG generation. `jats-fixture.test.ts` keeps the JATS export of
+  the sample draft in `src/core/__tests__/fixtures/`; after a deliberate change to the export,
+  update it with `pnpm vitest run -u` and run `pnpm validate:jats`.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
   the co-author claim round trip. `drafts.spec.ts` covers deleting all drafts. `a11y.spec.ts` runs the axe scans. `messages.spec.ts`,
