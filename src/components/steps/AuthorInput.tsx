@@ -799,10 +799,18 @@ const AuthorRow = memo(function AuthorRowInner({
     const sentAt = Date.now();
     // Read at click time: the link carries the title, which this row does
     // not subscribe to.
-    const { authors, title, activeDraftId } = useContributionStore.getState();
+    const { authors, title, activeDraftId, inputMode } = useContributionStore.getState();
     let url: string;
     try {
-      url = await buildShareUrl({ authors, title, claimId: author.id, sourceDraftId: activeDraftId, blank, sentAt });
+      url = await buildShareUrl({
+        authors,
+        title,
+        claimId: author.id,
+        sourceDraftId: activeDraftId,
+        blank,
+        sentAt,
+        yesNo: inputMode === "toggle",
+      });
     } catch {
       announce(t(shareFailureKey()), { assertive: true });
       return;

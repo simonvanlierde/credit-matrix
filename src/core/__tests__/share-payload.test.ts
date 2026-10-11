@@ -114,7 +114,18 @@ describe("share payload v2", () => {
     const restored = fromSharePayload(old);
     expect(restored.blank).toBe(false);
     expect(restored.sentAt).toBeNull();
+    expect(restored.yesNo).toBe(false);
     expect(restored.authors[0]?.contributions[0]?.score).toBe(100);
+  });
+
+  it("says when the asker works in yes/no mode, on a claim only", () => {
+    const authors = makeAuthors();
+    const jane = authors[0];
+    if (!jane) throw new Error("expected Jane");
+    const ask = toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1", yesNo: true });
+    expect(JSON.parse(ask)).toMatchObject({ y: 1 });
+    expect(fromSharePayload(ask).yesNo).toBe(true);
+    expect(JSON.parse(toSharePayload({ authors, yesNo: true }))).not.toHaveProperty("y");
   });
 
   it("rejects a v1 payload outright", () => {
