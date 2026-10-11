@@ -173,6 +173,34 @@ html {
   scroll-padding-top: 4rem;
 }
 
+/* The co-author page stands alone: no app header, no workspace skip links, and
+   the page scrolls as a document under its sticky Send bar. */
+body:has([data-coauthor-page]) {
+  [data-app-header],
+  [data-workspace-skip] {
+    display: none;
+  }
+
+  #main-content {
+    height: auto;
+    overflow: visible;
+    padding-top: 0;
+  }
+}
+
+html:has([data-coauthor-page]) {
+  scroll-padding-top: 1rem;
+  scroll-padding-bottom: 7rem;
+
+  /* hidden makes body a scroll container that never scrolls, which pins the
+     sticky Send bar to the end of the page; clip trims the same overflow
+     without that. */
+  &,
+  & body {
+    overflow-x: clip;
+  }
+}
+
 /*
  * Popovers and selects. Radix keeps a closing panel mounted only while a CSS
  * *animation* is running: it listens for `animationend` and ignores

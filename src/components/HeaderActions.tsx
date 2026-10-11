@@ -7,11 +7,22 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { importAsks, keepKnownIds } from "@/core";
+import { importAsks, isAllBinary, keepKnownIds } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
-import { type DraftClaim, followOtherTab, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
+import {
+  type DraftClaim,
+  followOtherTab,
+  type InputMode,
+  MAX_DRAFTS,
+  useContributionStore,
+} from "@/store/contribution-store";
+
+/** Answer the way the asker works: yes/no only when the link says so and the row holds nothing finer. */
+function claimMode(shared: ShareData): InputMode {
+  return shared.yesNo && isAllBinary(shared.authors) ? "toggle" : "levels";
+}
 
 /**
  * Import / Share buttons rendered in the nav bar.
@@ -30,6 +41,7 @@ export function HeaderActions() {
   const loadAuthors = useContributionStore((s) => s.loadAuthors);
   const setTitle = useContributionStore((s) => s.setTitle);
   const setClaim = useContributionStore((s) => s.setClaim);
+  const setInputMode = useContributionStore((s) => s.setInputMode);
   const claim = useContributionStore((s) => s.claim);
   const createDraft = useContributionStore((s) => s.createDraft);
   const switchDraft = useContributionStore((s) => s.switchDraft);
@@ -231,6 +243,7 @@ export function HeaderActions() {
         return "errShareLinkBroken";
       }
       setClaim(incoming);
+      setInputMode(claimMode(shared));
       return null;
     }
 
@@ -256,15 +269,16 @@ export function HeaderActions() {
   function replaceClaim(draftId: string, incoming: DraftClaim, shared: ShareData): LinkFailure | null {
     switchDraft(draftId);
     const before = useContributionStore.getState();
-    const previous = { authors: before.authors, title: before.title, claim: before.claim };
+    const previous = { authors: before.authors, title: before.title, claim: before.claim, mode: before.inputMode };
     const write = (next: typeof previous) => {
       setClaim(null);
       loadAuthors(next.authors);
       setTitle(next.title);
+      setInputMode(next.mode);
       setClaim(next.claim);
     };
     try {
-      write({ authors: shared.authors, title: shared.title, claim: incoming });
+      write({ authors: shared.authors, title: shared.title, claim: incoming, mode: claimMode(shared) });
     } catch {
       write(previous);
       return "errShareLinkBroken";

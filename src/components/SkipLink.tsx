@@ -16,10 +16,10 @@ export function SkipLink() {
       <a href="#main-content" className={LINK}>
         {t("skipToContent")}
       </a>
-      <a href="#grid" className={LINK}>
+      <a href="#grid" data-workspace-skip className={LINK}>
         {t("skipToGrid")}
       </a>
-      <a href="#inspector" className={LINK}>
+      <a href="#inspector" data-workspace-skip className={LINK}>
         {t("skipToStatement")}
       </a>
     </>

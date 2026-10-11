@@ -8,6 +8,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A page of its own for co-authors. Opening an ask link now shows one column, made for a phone:
+  the 14 roles with a short description and None · Supporting · Equal · Lead buttons for each
+  (None · Contributed when you work in Yes/No), switches for shared first authorship and
+  corresponding author, and a *Send back* button that opens the phone's share sheet or copies the
+  reply link. Name and ORCID iD can still be corrected under *Your details*, and *Keep as an
+  ordinary draft* still opens the full workspace. Ask links from older versions open in levels.
 - A blank ask. A contributor's menu now offers *Ask … what they did*, which sends their row with
   nothing ticked, beside *Ask … to check your guess*, which sends your guess as before. The co-author
   sees which one they got.

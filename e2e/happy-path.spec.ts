@@ -2,7 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { PERSIST_KEY } from "../src/store/persist-meta";
-import { asReturningVisitor, copyFrom, onScreen, seedStorage, stubUpstream } from "./helpers";
+import { asReturningVisitor, copyFrom, onScreen, seedStorage, strongestAnswer, stubUpstream } from "./helpers";
 
 test.describe("Happy path UI flows", () => {
   test.beforeEach(async ({ page }) => {
@@ -359,14 +359,14 @@ test.describe("Happy path UI flows", () => {
     const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
     const coauthor = await coauthorContext.newPage();
     await coauthor.goto(askUrl);
-    await expect(onScreen(coauthor, "You are filling in Rosalind E. Franklin's contributions")).toBeVisible();
+    await expect(onScreen(coauthor, /Answering as Rosalind E\. Franklin\./)).toBeVisible();
 
     // She assigns herself a role. The link carries only her row, so no one
     // else's is there to change.
-    await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    await expect(coauthor.getByRole("button", { name: /^Validation for Ada Lovelace:/ })).toHaveCount(0);
+    await strongestAnswer(coauthor, "Validation").click();
+    await expect(coauthor.getByText("Ada Lovelace")).toHaveCount(0);
 
-    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Send back" }));
     await coauthorContext.close();
 
     // The originator just opens what she sent — no Import knowledge required.
@@ -395,8 +395,8 @@ test.describe("Happy path UI flows", () => {
     const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
     const coauthor = await coauthorContext.newPage();
     await coauthor.goto(askUrl);
-    await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
+    await strongestAnswer(coauthor, "Validation").click();
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Send back" }));
     await coauthorContext.close();
 
     await page.getByRole("button", { name: "Import" }).click();
@@ -480,8 +480,8 @@ test.describe("Happy path UI flows", () => {
     const coauthor = await coauthorContext.newPage();
     await seedStorage(coauthor, { welcomeSeen: true });
     await coauthor.goto(askUrl);
-    await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
+    await strongestAnswer(coauthor, "Validation").click();
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Send back" }));
     await coauthorContext.close();
 
     // Meanwhile you have gone back to paper one. The reply must not land here.
