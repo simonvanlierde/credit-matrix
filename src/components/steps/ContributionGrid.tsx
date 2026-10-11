@@ -2,16 +2,18 @@
 
 import {
   Check,
+  ChevronDown,
+  Clock,
   Columns3,
   Copy,
   Download,
   ExternalLink,
-  Info,
   ListChecks,
   Rows3,
   Settings2,
   UserPlus,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
@@ -20,7 +22,6 @@ import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StepHeader } from "@/components/ui/step-header";
 import { Switch } from "@/components/ui/switch";
 import { UndoBar } from "@/components/ui/undo-bar";
 import {
@@ -61,6 +62,20 @@ const FLAT_KEY: { key: UiKey; score: number }[] = [
 const ASSIGNABLE_LEVELS = LEVEL_KEY.filter(({ score }) => score > 0);
 // Equal, not Lead: bulk-marking everyone as Lead overstates every one of them.
 const DEFAULT_BULK_LEVEL = 66;
+// Past this many columns the angled names make the header taller than the
+// rows it labels, so the headers fall back to initials.
+const MAX_NAMED_COLUMNS = 20;
+
+/** Whether this contributor has been sent an ask, from the grid's point of view. */
+type AskState = "you" | "asked" | "none";
+
+/** Shared look for the small outlined controls in the status strip and menus. */
+const TOOL_BUTTON =
+  "flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant/60 px-3 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/30 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary";
+const ICON_TOOL_BUTTON =
+  "flex size-9 items-center justify-center rounded-lg border border-outline-variant/60 text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary";
+const MENU_ITEM =
+  "flex min-h-9 w-full items-center gap-2 rounded-md px-2 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:text-on-surface-variant/60";
 
 /**
  * The contribution matrix as one editable grid: roles as rows, contributors as
@@ -98,6 +113,10 @@ export function ContributionGrid() {
     })),
   );
   const recentReply = useContributionStore((s) => s.recentReply);
+  const asks = useContributionStore((s) => s.asks);
+  const setInspectorTab = useContributionStore((s) => s.setInspectorTab);
+  // The light ramp mixes toward white, which reads inverted on a dark page.
+  const dark = useTheme().resolvedTheme === "dark";
   const {
     describeRole,
     translateInterfaceRole,
@@ -114,7 +133,7 @@ export function ContributionGrid() {
   const isFrozen = (authorId: string) => locked && authorId !== editableAuthorId;
   // Second beat of the population sequence; see .enter-fade in globals.css.
   const settled = useSettled();
-  const [acronyms, setAcronyms] = useState(true);
+  const [acronyms, setAcronyms] = useState(false);
   const [selectedAuthorId, setSelectedAuthorId] = useState("");
   const [bulkAuthorId, setBulkAuthorId] = useState("");
   const [transpose, setTranspose] = useState(false);
@@ -196,8 +215,8 @@ export function ContributionGrid() {
 
   if (authors.length === 0) {
     return (
-      <div className="bg-surface-bright rounded-lg shadow-sm border border-outline-variant/20 p-3 md:p-4">
-        <StepHeader n={2} title={t("stepContributions")} className="mb-3" />
+      <div className="p-3 md:p-4">
+        <h2 className="sr-only">{t("stepContributions")}</h2>
         {welcomeOpen ? (
           <p className="text-sm text-on-surface-variant">{t("gridEmptyHint")}</p>
         ) : (
@@ -257,6 +276,20 @@ export function ContributionGrid() {
       return;
     }
 
+    // Off the role edge of the matrix, focus steps onto the role name, which
+    // opens its description. The role names sit outside the tab order, so this
+    // is how a keyboard user reaches them.
+    if (event.key === (transpose ? "ArrowUp" : "ArrowLeft") && (transpose ? row : col) === 0) {
+      const head = event.currentTarget
+        .closest("table")
+        ?.querySelector<HTMLButtonElement>(`[data-role-head="${transpose ? col : row}"]`);
+      if (head) {
+        event.preventDefault();
+        head.focus();
+        return;
+      }
+    }
+
     const moves: Record<string, [number, number]> = {
       ArrowUp: [-1, 0],
       ArrowDown: [1, 0],
@@ -284,6 +317,32 @@ export function ContributionGrid() {
     target?.focus();
   }
 
+  /** Arrow keys on a role name: along the role axis, or back into the matrix. */
+  function handleRoleHeadKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, roleIndex: number) {
+    const table = event.currentTarget.closest("table");
+    const [previous, next, intoGrid] = transpose
+      ? ["ArrowLeft", "ArrowRight", "ArrowDown"]
+      : ["ArrowUp", "ArrowDown", "ArrowRight"];
+    let selector: string | null = null;
+    if (event.key === intoGrid) {
+      const cell = transpose ? { row: 0, col: roleIndex } : { row: roleIndex, col: 0 };
+      setActiveCell(cell);
+      selector = `[data-cell="${cell.row}-${cell.col}"]`;
+    } else if (event.key === previous || event.key === next) {
+      const target = roleIndex + (event.key === next ? 1 : -1);
+      if (target >= 0 && target < CREDIT_ROLES.length) selector = `[data-role-head="${target}"]`;
+    }
+    if (!selector) return;
+    event.preventDefault();
+    table?.querySelector<HTMLButtonElement>(selector)?.focus();
+  }
+
+  const askState = (author: Author): AskState =>
+    locked ? (author.id === editableAuthorId ? "you" : "none") : author.id in asks ? "asked" : "none";
+  // Locked, this is someone else's draft: their asks are not yours to track.
+  const askedCount = authors.filter((author) => author.id in asks).length;
+  const namedHeaders = !acronyms && authors.length <= MAX_NAMED_COLUMNS;
+
   cellApi.current = {
     label: assignmentLabel,
     click: handleCellClick,
@@ -306,16 +365,69 @@ export function ContributionGrid() {
       frozen={isFrozen(author.id)}
       recent={author.id === recentReply}
       graded={graded}
+      dark={dark}
       monoColor={heatmapMonoColor}
       language={`${interfaceRoleLanguage}:${messagesLocale}`}
     />
   );
 
+  /** A role's name in the matrix: opens its description, and joins the grid's arrow-key focus. */
+  const roleHead = (roleIndex: number, className?: string) => {
+    const role = CREDIT_ROLES[roleIndex];
+    if (!role) return null;
+    return (
+      <RoleInfo
+        role={role}
+        translateRole={translateInterfaceRole}
+        describeRole={describeRole}
+        language={interfaceRoleLanguage}
+        className={className}
+        triggerProps={{
+          tabIndex: -1,
+          "data-role-head": roleIndex,
+          onKeyDown: (event) => handleRoleHeadKeyDown(event, roleIndex),
+        }}
+      />
+    );
+  };
+
+  function openTeam() {
+    setInspectorTab("team");
+    // After the tab has rendered as selected, so focus lands on a tab stop.
+    requestAnimationFrame(() => document.getElementById("inspector-tab-team")?.focus());
+  }
+
   return (
-    <div className="flex min-w-0 max-w-full flex-col bg-surface-bright rounded-lg shadow-sm border border-outline-variant/20 p-3 md:p-4 desk:h-full desk:overflow-y-auto">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <StepHeader n={2} title={t("stepContributions")} id="contributions-heading" />
-        <div className="flex flex-wrap items-start gap-1.5">
+    <div className="flex min-w-0 max-w-full flex-col desk:h-full">
+      {/* The status strip: what the draft is waiting on, then every control
+          that changes the whole grid. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-outline-variant/40 bg-surface-container-low px-3 py-2 md:px-4">
+        <h2 id="contributions-heading" className="sr-only">
+          {t("stepContributions")}
+        </h2>
+        {!locked && (
+          <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
+            <span aria-hidden="true" className="flex flex-wrap gap-0.5">
+              {authors.map((author) => (
+                <span
+                  key={author.id}
+                  className={`size-2 rounded-[2px] ${author.id in asks ? "bg-primary" : "bg-outline"}`}
+                />
+              ))}
+            </span>
+            <span className="font-semibold text-on-surface">
+              {t("stripAsked", { asked: askedCount, total: authors.length })}
+            </span>
+            <button
+              type="button"
+              onClick={openTeam}
+              className="min-h-6 rounded px-1 font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {t("stripOpenTeam")}
+            </button>
+          </p>
+        )}
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
           <SegmentedControl
             ariaLabel={t("assignmentMode")}
             options={inputModeOptions}
@@ -328,11 +440,7 @@ export function ContributionGrid() {
             {/* Every bulk action is list-wide, which a claim freezes outright. */}
             {!locked && (
               <Popover>
-                <PopoverTrigger
-                  aria-label={t("bulkAssign")}
-                  title={t("bulkAssign")}
-                  className="flex size-9 items-center justify-center rounded-lg border border-outline-variant/60 text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
-                >
+                <PopoverTrigger aria-label={t("bulkAssign")} title={t("bulkAssign")} className={ICON_TOOL_BUTTON}>
                   <ListChecks className="size-4" aria-hidden="true" />
                 </PopoverTrigger>
                 <PopoverContent align="end" className="grid w-72 max-w-[calc(100vw-2rem)] gap-4">
@@ -414,11 +522,7 @@ export function ContributionGrid() {
             {/* Icon-only: display settings, not a workflow action, so it earns
               the quietest slot at the cluster's far end. */}
             <Popover>
-              <PopoverTrigger
-                aria-label={t("heatmapOptions")}
-                title={t("heatmapOptions")}
-                className="flex size-9 items-center justify-center rounded-lg border border-outline-variant/60 text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
-              >
+              <PopoverTrigger aria-label={t("heatmapOptions")} title={t("heatmapOptions")} className={ICON_TOOL_BUTTON}>
                 <Settings2 className="size-4" aria-hidden="true" />
               </PopoverTrigger>
               <PopoverContent align="end" className="flex w-auto max-w-[calc(100vw-2rem)] flex-wrap items-center gap-3">
@@ -446,7 +550,7 @@ export function ContributionGrid() {
                   aria-pressed={transpose}
                   onClick={() => setTranspose(!transpose)}
                   title={t("transposeHint")}
-                  className={`flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors ${
+                  className={`flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     transpose
                       ? "border-primary text-primary"
                       : "border-outline-variant/60 text-on-surface-variant hover:border-primary hover:text-primary"
@@ -468,259 +572,252 @@ export function ContributionGrid() {
               </PopoverContent>
             </Popover>
           </span>
+          <HeatmapExports
+            authors={authors}
+            monoColor={heatmapMonoColor}
+            showLevels={graded}
+            transpose={transpose}
+            acronyms={acronyms}
+          />
         </div>
       </div>
 
-      <div className={`md:hidden ${settled ? "enter-fade" : ""}`} style={{ transitionDelay: "120ms" }}>
-        <div className="sticky top-13 z-20 -mx-1 mb-2 bg-surface-bright px-1 py-2">
-          <label className="mb-1.5 block text-xs font-semibold text-on-surface" htmlFor="mobile-contributor">
-            {t("contributorToAssign")}
-          </label>
-          <Select value={selectedAuthor.id} onValueChange={setSelectedAuthorId}>
-            <SelectTrigger id="mobile-contributor" className="w-full" aria-label={t("contributorToAssign")}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {authors.map((author) => (
-                <SelectItem key={author.id} value={author.id}>
-                  {author.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <ul
-          className="divide-y divide-outline-variant/25"
-          aria-label={t("a11yRolesForContributor", { name: selectedAuthor.name })}
-        >
-          {CREDIT_ROLES.map((role, roleIndex) => {
-            const score = selectedAuthor.contributions[roleIndex]?.score ?? 0;
-            return (
-              <li key={role.name} className="flex min-h-14 items-center gap-2 py-1.5">
-                <span className="flex min-w-0 flex-1 items-center gap-1">
-                  <span className="text-sm font-medium text-on-surface">{translateInterfaceRole(role.name)}</span>
-                  <RoleInfo
-                    role={role}
-                    translateRole={translateInterfaceRole}
-                    describeRole={describeRole}
-                    language={interfaceRoleLanguage}
-                  />
-                </span>
-                <button
-                  type="button"
-                  // Same as the desktop cell: pressed semantics only fit yes/no.
-                  aria-pressed={graded ? undefined : score > 0}
-                  // No roving tab order to protect here, so the plain disabled
-                  // idiom (as the export buttons use) fits.
-                  disabled={isFrozen(selectedAuthor.id)}
-                  aria-label={assignmentLabel(selectedAuthor, roleIndex, score)}
-                  onClick={() => handleCellClick(selectedAuthor, roleIndex, score)}
-                  className={`contribution-cell flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
-                    score > 0 ? "text-on-surface shadow-sm" : "text-on-surface-variant"
-                  }`}
-                >
-                  {/* The label never sits on the dynamic fill: a mid-tone
+      <div className="flex min-h-0 flex-1 flex-col p-3 md:p-4">
+        <div className={`md:hidden ${settled ? "enter-fade" : ""}`} style={{ transitionDelay: "120ms" }}>
+          <div className="sticky top-13 z-20 -mx-1 mb-2 bg-surface-bright px-1 py-2">
+            <label className="mb-1.5 block text-xs font-semibold text-on-surface" htmlFor="mobile-contributor">
+              {t("contributorToAssign")}
+            </label>
+            <Select value={selectedAuthor.id} onValueChange={setSelectedAuthorId}>
+              <SelectTrigger id="mobile-contributor" className="w-full" aria-label={t("contributorToAssign")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {authors.map((author) => (
+                  <SelectItem key={author.id} value={author.id}>
+                    {author.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <ul
+            className="divide-y divide-outline-variant/25"
+            aria-label={t("a11yRolesForContributor", { name: selectedAuthor.name })}
+          >
+            {CREDIT_ROLES.map((role, roleIndex) => {
+              const score = selectedAuthor.contributions[roleIndex]?.score ?? 0;
+              return (
+                // scroll-mt clears the fixed header and the sticky contributor
+                // picker when focus scrolls a row into view.
+                <li key={role.name} className="flex min-h-14 scroll-mt-40 items-center gap-2 py-1.5">
+                  <span className="flex min-w-0 flex-1 items-center">
+                    <RoleInfo
+                      role={role}
+                      translateRole={translateInterfaceRole}
+                      describeRole={describeRole}
+                      language={interfaceRoleLanguage}
+                      className="text-sm"
+                    />
+                  </span>
+                  <button
+                    type="button"
+                    // Same as the desktop cell: pressed semantics only fit yes/no.
+                    aria-pressed={graded ? undefined : score > 0}
+                    // No roving tab order to protect here, so the plain disabled
+                    // idiom (as the export buttons use) fits.
+                    disabled={isFrozen(selectedAuthor.id)}
+                    aria-label={assignmentLabel(selectedAuthor, roleIndex, score)}
+                    onClick={() => handleCellClick(selectedAuthor, roleIndex, score)}
+                    className={`contribution-cell flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
+                      score > 0 ? "text-on-surface shadow-sm" : "text-on-surface-variant"
+                    }`}
+                  >
+                    {/* The label never sits on the dynamic fill: a mid-tone
                       preset has no 4.5:1 text companion at all, and the
                       palette is user-picked. The swatch carries the color;
                       its check needs only the 3:1 non-text ratio, which
                       onColor guarantees. */}
-                  {score > 0 && (
-                    <span
-                      aria-hidden="true"
-                      className="flex size-5 shrink-0 items-center justify-center rounded"
-                      style={(() => {
-                        const fill = heatCellColor(heatmapMonoColor, graded ? score : 100);
-                        return { backgroundColor: fill, color: onColor(fill) };
-                      })()}
-                    >
-                      <Check className="size-3.5" strokeWidth={3} />
-                    </span>
-                  )}
-                  {levelLabel(score)}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      {/* A bounded viewport makes both sticky axes persistent during long desktop matrices. */}
-      <div
-        style={{ transitionDelay: "120ms" }}
-        className={`hidden max-h-[min(70vh,44rem)] max-w-full overflow-auto md:block desk:max-h-none desk:min-h-0 desk:flex-1 ${
-          settled ? "enter-fade " : ""
-        }${
-          // Right padding lets the last angled label overhang its own column:
-          // a 9.5rem label rotated 45° reaches ~107px past its own centre.
-          transpose || !acronyms ? "pr-32" : ""
-        }`}
-      >
-        <table
-          aria-labelledby="contributions-heading"
-          className="w-max min-w-full table-auto border-separate border-spacing-[3px]"
-        >
-          <thead>
-            <tr>
-              <th
-                scope="col"
-                className={`sticky left-0 top-0 z-40 bg-surface-bright pb-1 text-left align-bottom font-mono text-xs font-medium uppercase tracking-wider text-on-surface-variant ${
-                  // Transposed with initials, the row headers are 40px chips,
-                  // let the axis title size the column instead of reserving the
-                  // width a full role name needs.
-                  transpose && acronyms ? "" : "min-w-40 md:min-w-48"
-                }`}
-              >
-                {transpose ? t("contributorColumn") : t("roleColumn")}
-              </th>
-              {transpose
-                ? CREDIT_ROLES.map((role, columnIndex) => (
-                    <th
-                      key={role.name}
-                      scope="col"
-                      // An angled label overhangs its own column to the right, so
-                      // without a reversed paint order the next header's opaque
-                      // background covers all but its first few characters.
-                      style={{ zIndex: 20 + (CREDIT_ROLES.length - columnIndex) }}
-                      className="sticky top-0 min-w-[2rem] bg-surface-bright pb-1 align-bottom"
-                    >
-                      <span className="flex flex-col items-center gap-1">
-                        <AngledLabel text={translateInterfaceRole(role.name)} />
-                        <RoleInfo
-                          role={role}
-                          translateRole={translateInterfaceRole}
-                          describeRole={describeRole}
-                          language={interfaceRoleLanguage}
-                        />
+                    {score > 0 && (
+                      <span
+                        aria-hidden="true"
+                        className="flex size-5 shrink-0 items-center justify-center rounded"
+                        style={(() => {
+                          const fill = heatCellColor(heatmapMonoColor, graded ? score : 100, dark);
+                          return { backgroundColor: fill, color: onColor(fill) };
+                        })()}
+                      >
+                        <Check className="size-3.5" strokeWidth={3} />
                       </span>
-                    </th>
-                  ))
-                : authors.map((author, columnIndex) => (
-                    <th
-                      key={author.id}
-                      scope="col"
-                      style={{ zIndex: 20 + (authors.length - columnIndex) }}
-                      className="sticky top-0 min-w-[2.75rem] bg-surface-bright pb-1 align-bottom"
-                    >
-                      {acronyms ? (
-                        <>
-                          <InitialsChip author={author} />
-                          <span className="sr-only">{author.name}</span>
-                        </>
-                      ) : (
-                        <AngledLabel text={author.name} />
-                      )}
-                    </th>
-                  ))}
-            </tr>
-          </thead>
-          <tbody>
-            {transpose
-              ? authors.map((author, authorRow) => (
-                  <tr key={author.id}>
-                    <th scope="row" className="sticky left-0 z-10 bg-surface-bright py-0 text-left">
-                      <span className="flex items-center gap-1.5 min-w-0">
-                        <InitialsChip author={author} />
-                        {!acronyms && (
-                          <span
-                            className="max-w-36 truncate text-[13px] font-medium text-on-surface"
-                            title={author.name}
-                          >
-                            {author.name}
-                          </span>
-                        )}
-                        {acronyms && <span className="sr-only">{author.name}</span>}
-                      </span>
-                    </th>
-                    {CREDIT_ROLES.map((_, roleIndex) => renderCell(author, roleIndex, authorRow, roleIndex))}
-                  </tr>
-                ))
-              : CREDIT_ROLES.map((role, roleIndex) => (
-                  <tr key={role.name}>
-                    <th
-                      scope="row"
-                      className="sticky left-0 z-10 bg-surface-bright py-0 text-left font-medium text-[13px] text-on-surface"
-                    >
-                      <span className="flex items-center gap-1.5 min-w-0">
-                        <span className="truncate" title={translateInterfaceRole(role.name)}>
-                          {translateInterfaceRole(role.name)}
-                        </span>
-                        <RoleInfo
-                          role={role}
-                          translateRole={translateInterfaceRole}
-                          describeRole={describeRole}
-                          language={interfaceRoleLanguage}
-                        />
-                      </span>
-                    </th>
-                    {authors.map((author, authorCol) => renderCell(author, roleIndex, roleIndex, authorCol))}
-                  </tr>
-                ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Right-click level picker: one shared panel, anchored at the cursor.
-          Focus returns to the cell on every close, as a context menu's does. */}
-      {picker &&
-        (() => {
-          const pickerAuthor = authors.find((candidate) => candidate.id === picker.authorId);
-          if (!pickerAuthor) return null;
-          const current = pickerAuthor.contributions[picker.roleIndex]?.score ?? 0;
-          const close = () => {
-            picker.cell.focus();
-            setPicker(null);
-          };
-          return (
-            <Popover open onOpenChange={(open) => !open && close()}>
-              <PopoverAnchor className="fixed" style={{ left: picker.x, top: picker.y }} />
-              <PopoverContent align="start" className="w-40 p-1" onCloseAutoFocus={(event) => event.preventDefault()}>
-                {LEVEL_KEY.map(({ key, score }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => {
-                      setAuthorScore(pickerAuthor.id, picker.roleIndex, score);
-                      announce(assignmentLabel(pickerAuthor, picker.roleIndex, score));
-                      close();
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container"
-                  >
-                    <span
-                      className="h-3 w-3 rounded-sm border border-outline-variant"
-                      style={{
-                        backgroundColor:
-                          score > 0 ? heatCellColor(heatmapMonoColor, score) : "var(--color-surface-container-high)",
-                      }}
-                    />
-                    {translateUi(key)}
-                    {score === current && <Check aria-hidden="true" className="ml-auto size-3.5 text-primary" />}
+                    )}
+                    {levelLabel(score)}
                   </button>
-                ))}
-              </PopoverContent>
-            </Popover>
-          );
-        })()}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-      {/* Same bar a row removal gets. */}
-      {bulkUndo && <UndoBar message={t("bulkChangeApplied")} onUndo={undoBulk} className="mt-2" />}
+        {/* A bounded viewport makes both sticky axes persistent during long desktop matrices. */}
+        <div
+          style={{
+            transitionDelay: "120ms",
+            // Keeps a focused cell clear of the sticky headers when arrow keys
+            // scroll the matrix (WCAG 2.4.11).
+            scrollPaddingTop: namedHeaders || transpose ? "9.5rem" : "4rem",
+            scrollPaddingLeft: transpose && acronyms ? "6rem" : "12.5rem",
+          }}
+          className={`hidden max-h-[min(70vh,44rem)] max-w-full overflow-auto md:block desk:max-h-none desk:min-h-0 desk:flex-1 ${
+            settled ? "enter-fade " : ""
+          }${
+            // Right padding lets the last angled label overhang its own column:
+            // a 9rem label rotated 50° reaches ~5.8rem past its own centre.
+            transpose || namedHeaders ? "pr-24" : ""
+          }`}
+        >
+          <table
+            aria-labelledby="contributions-heading"
+            className="mx-auto w-max table-auto border-separate border-spacing-[3px]"
+          >
+            <thead>
+              <tr>
+                <th
+                  scope="col"
+                  className={`sticky left-0 top-0 z-40 bg-surface-bright pb-1 text-left align-bottom font-mono text-xs font-medium uppercase tracking-wider text-on-surface-variant ${
+                    // Transposed with initials, the row headers are 40px chips,
+                    // let the axis title size the column instead of reserving the
+                    // width a full role name needs.
+                    transpose && acronyms ? "" : "min-w-40 md:min-w-48"
+                  }`}
+                >
+                  {transpose ? t("contributorColumn") : t("roleColumn")}
+                </th>
+                {transpose
+                  ? CREDIT_ROLES.map((role, columnIndex) => (
+                      <th
+                        key={role.name}
+                        scope="col"
+                        // An angled label overhangs its own column to the right, so
+                        // without a reversed paint order the next header's opaque
+                        // background covers all but its first few characters.
+                        style={{ zIndex: 20 + (CREDIT_ROLES.length - columnIndex) }}
+                        className="sticky top-0 min-w-[2rem] bg-surface-bright pb-1 align-bottom"
+                      >
+                        <AngledLabel title={translateInterfaceRole(role.name)}>
+                          {roleHead(columnIndex, "text-xs")}
+                        </AngledLabel>
+                      </th>
+                    ))
+                  : authors.map((author, columnIndex) => (
+                      <th
+                        key={author.id}
+                        scope="col"
+                        style={{ zIndex: 20 + (authors.length - columnIndex) }}
+                        className="sticky top-0 min-w-[2.75rem] bg-surface-bright pb-1 align-bottom"
+                      >
+                        <span className="flex flex-col items-center gap-1">
+                          {namedHeaders ? (
+                            <AngledLabel title={author.name}>
+                              <span className="text-xs font-medium text-on-surface">{author.name}</span>
+                            </AngledLabel>
+                          ) : (
+                            <>
+                              <InitialsChip author={author} />
+                              <span className="sr-only">{author.name}</span>
+                            </>
+                          )}
+                          <AskGlyph state={askState(author)} />
+                        </span>
+                      </th>
+                    ))}
+              </tr>
+            </thead>
+            <tbody>
+              {transpose
+                ? authors.map((author, authorRow) => (
+                    <tr key={author.id}>
+                      <th scope="row" className="sticky left-0 z-10 bg-surface-bright py-0 text-left">
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <InitialsChip author={author} />
+                          <AskGlyph state={askState(author)} />
+                          {!acronyms && (
+                            <span
+                              className="max-w-36 truncate text-[13px] font-medium text-on-surface"
+                              title={author.name}
+                            >
+                              {author.name}
+                            </span>
+                          )}
+                          {acronyms && <span className="sr-only">{author.name}</span>}
+                        </span>
+                      </th>
+                      {CREDIT_ROLES.map((_, roleIndex) => renderCell(author, roleIndex, authorRow, roleIndex))}
+                    </tr>
+                  ))
+                : CREDIT_ROLES.map((role, roleIndex) => (
+                    <tr key={role.name}>
+                      <th scope="row" className="sticky left-0 z-10 max-w-56 bg-surface-bright py-0 text-left">
+                        {roleHead(roleIndex, "max-w-full truncate text-[13px]")}
+                      </th>
+                      {authors.map((author, authorCol) => renderCell(author, roleIndex, roleIndex, authorCol))}
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
+        </div>
 
-      {/* No flex-wrap here: the export buttons stay pinned right in both modes,
-          and the legend (which is longer in Levels) wraps inside its own share
-          of the row instead of displacing them.
-          `w-0 min-w-full` keeps this row out of the card's max-content width, so
-          switching modes cannot resize the whole column to fit a longer legend. */}
-      {/* items-start: the legend may wrap taller in Levels, and a centered
-          export cluster would ride the height change. Anchored to the row's
-          top, it holds still whatever the legend does below. */}
-      <div className="mt-2 flex w-0 min-w-full items-start justify-between gap-3">
-        <GridLegend monoColor={heatmapMonoColor} graded={graded} translateUi={translateUi} />
-        <HeatmapExports
-          authors={authors}
-          monoColor={heatmapMonoColor}
-          showLevels={graded}
-          transpose={transpose}
-          acronyms={acronyms}
-        />
+        {/* Right-click level picker: one shared panel, anchored at the cursor.
+          Focus returns to the cell on every close, as a context menu's does. */}
+        {picker &&
+          (() => {
+            const pickerAuthor = authors.find((candidate) => candidate.id === picker.authorId);
+            if (!pickerAuthor) return null;
+            const current = pickerAuthor.contributions[picker.roleIndex]?.score ?? 0;
+            const close = () => {
+              picker.cell.focus();
+              setPicker(null);
+            };
+            return (
+              <Popover open onOpenChange={(open) => !open && close()}>
+                <PopoverAnchor className="fixed" style={{ left: picker.x, top: picker.y }} />
+                <PopoverContent align="start" className="w-40 p-1" onCloseAutoFocus={(event) => event.preventDefault()}>
+                  {LEVEL_KEY.map(({ key, score }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setAuthorScore(pickerAuthor.id, picker.roleIndex, score);
+                        announce(assignmentLabel(pickerAuthor, picker.roleIndex, score));
+                        close();
+                      }}
+                      className={MENU_ITEM}
+                    >
+                      <span
+                        className="h-3 w-3 rounded-sm border border-outline-variant"
+                        style={{
+                          backgroundColor:
+                            score > 0
+                              ? heatCellColor(heatmapMonoColor, score, dark)
+                              : "var(--color-surface-container-high)",
+                        }}
+                      />
+                      {translateUi(key)}
+                      {score === current && <Check aria-hidden="true" className="ml-auto size-3.5 text-primary" />}
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            );
+          })()}
+
+        {/* Same bar a row removal gets. */}
+        {bulkUndo && <UndoBar message={t("bulkChangeApplied")} onUndo={undoBulk} className="mt-2" />}
+
+        {/* `w-0 min-w-full` keeps the legend out of the pane's max-content width,
+          so switching modes cannot resize the whole column to fit a longer key. */}
+        <div className="mt-2 w-0 min-w-full">
+          <GridLegend monoColor={heatmapMonoColor} graded={graded} dark={dark} translateUi={translateUi} />
+        </div>
       </div>
     </div>
   );
@@ -758,6 +855,7 @@ const GridCell = memo(function GridCellInner({
   frozen,
   recent,
   graded,
+  dark,
   monoColor,
 }: {
   api: RefObject<CellApi>;
@@ -769,11 +867,12 @@ const GridCell = memo(function GridCellInner({
   frozen: boolean;
   recent: boolean;
   graded: boolean;
+  dark: boolean;
   monoColor: string;
   language: string;
 }) {
   const score = author.contributions[roleIndex]?.score ?? 0;
-  const fill = score > 0 ? heatCellColor(monoColor, graded ? score : 100) : null;
+  const fill = score > 0 ? heatCellColor(monoColor, graded ? score : 100, dark) : null;
   const label = api.current.label(author, roleIndex, score);
   return (
     <td className="min-w-11 p-0">
@@ -792,6 +891,7 @@ const GridCell = memo(function GridCellInner({
         // roving tab order, which would strand arrow navigation on a locked
         // draft. The handlers refuse instead.
         aria-disabled={frozen || undefined}
+        aria-keyshortcuts={frozen ? undefined : graded ? "0 1 2 3 Shift+F10" : "0 1"}
         onContextMenu={graded && !frozen ? (event) => api.current.openPicker(author.id, roleIndex, event) : undefined}
         aria-label={label}
         title={label}
@@ -836,53 +936,85 @@ function BulkButton({ children, onClick }: { children: ReactNode; onClick: () =>
 }
 
 /**
- * A 45°-angled column label for long names in narrow columns, leaning up-right
- * from the column's bottom center, the same style as the downloaded heatmap's
- * top axis. The label overhangs its own column, so the table wrapper pads the
- * right edge for the last one and the header cells paint in reverse order (see
- * the thead) so a neighbour's background cannot cover it.
+ * A 50°-angled column label, leaning up-right from the column's bottom
+ * center, so a full name fits over a column one cell wide. The label
+ * overhangs its own column, so the table wrapper pads the right edge for the
+ * last one and the header cells paint in reverse order (see the thead) so a
+ * neighbour's background cannot cover it.
  */
-function AngledLabel({ text }: { text: string }) {
+function AngledLabel({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <span className="relative block h-28 w-full">
       <span
-        title={text}
-        className="absolute bottom-0 left-1/2 max-w-[9.5rem] origin-bottom-left -rotate-45 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-medium text-on-surface-variant"
+        title={title}
+        className="absolute bottom-0 left-1/2 max-w-[9rem] origin-bottom-left -rotate-[50deg] overflow-hidden text-ellipsis whitespace-nowrap"
       >
-        {text}
+        {children}
       </span>
     </span>
   );
 }
 
-/** The role's short description with a link to its full NISO definition. */
+/**
+ * Whether a column's contributor has been asked, as an icon or word with a
+ * spoken label: never color alone.
+ */
+function AskGlyph({ state }: { state: AskState }) {
+  const t = useTranslations();
+  if (state === "you") {
+    return <span className="text-[11px] font-semibold text-primary">{t("teamYou")}</span>;
+  }
+  const label = state === "asked" ? t("askedChip") : t("teamNotAsked");
+  return (
+    <span role="img" aria-label={label} title={label} className="flex h-4 items-center text-on-surface-variant">
+      {state === "asked" ? (
+        <Clock aria-hidden="true" className="size-3.5" />
+      ) : (
+        <span aria-hidden="true" className="text-xs leading-none">
+          –
+        </span>
+      )}
+    </span>
+  );
+}
+
+/**
+ * A role's name as a button that opens its short description, with a link to
+ * the full NISO definition. The name is the trigger, so the matrix spends no
+ * tab stop or column on a separate info button.
+ */
 function RoleInfo({
   role,
   translateRole,
   describeRole,
   language,
+  className,
+  triggerProps,
 }: {
   role: (typeof CREDIT_ROLES)[number];
   translateRole: RoleTranslator;
   describeRole: RoleDescriber;
   language: string;
+  className?: string;
+  triggerProps?: React.ComponentProps<"button"> & { "data-role-head"?: number };
 }) {
   const t = useTranslations();
-  // The name follows the output language (it must match the statement); the
-  // description follows the interface language (it is help, never exported).
+  const name = translateRole(role.name);
+  // The description follows the interface language: it is help, never exported.
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={t("aboutRole", { role: translateRole(role.name) })}
-          className="touch-target flex size-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          title={name}
+          {...triggerProps}
+          className={`block min-h-6 rounded text-left font-medium text-on-surface underline decoration-outline decoration-dotted underline-offset-4 transition-colors hover:text-primary hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary ${className ?? ""}`}
         >
-          <Info className="h-4 w-4" />
+          {name}
         </button>
       </PopoverTrigger>
       <PopoverContent lang={language} className="max-w-xs text-xs leading-relaxed text-on-surface-variant">
-        <strong className="text-on-surface">{translateRole(role.name)}.</strong> {describeRole(role.name)}{" "}
+        <strong className="text-on-surface">{name}.</strong> {describeRole(role.name)}{" "}
         <a
           href={role.url}
           target="_blank"
@@ -939,32 +1071,18 @@ function GridLegend({
   monoColor,
   graded,
   translateUi,
+  dark,
 }: {
   monoColor: string;
   graded: boolean;
   translateUi: UiTranslator;
+  dark: boolean;
 }) {
   const t = useTranslations();
   return (
-    // The label heads the legend rather than sharing its line, so the entries
-    // get the full width and no longer dangle onto a second row in Levels. Both
-    // modes are two lines, so switching them cannot change the row's height.
     <div className="flex min-w-0 flex-col gap-1 text-xs text-on-surface-variant">
-      <span className="flex min-w-0 items-center gap-3">
-        <span className="font-mono text-xs uppercase tracking-wider">{graded ? t("legendLevel") : t("legendKey")}</span>
-        {/* Yes/no needs no hint: the grid says it. Levels does, because the click
-            cycle isn't visible. Capped to one line (full text in the tooltip):
-            a wrapped hint made this row taller in Levels, so toggling modes
-            bounced the export cluster below. */}
-        {graded && (
-          <span className="min-w-0 truncate" title={`${t("clickToCycle")} · ${t("levelKeysHint")}`}>
-            {/* A language-neutral separator: the two hints are separate
-                sentences, and jamming them read as one run-on label. */}
-            {t("clickToCycle")} <span className="hidden md:inline">· {t("levelKeysHint")}</span>
-          </span>
-        )}
-      </span>
       <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="font-mono uppercase tracking-wider">{graded ? t("legendLevel") : t("legendKey")}</span>
         {(graded ? LEVEL_KEY : FLAT_KEY).map(({ key, score }) => (
           <span key={key} className="inline-flex items-center gap-1.5">
             <span
@@ -972,17 +1090,30 @@ function GridLegend({
               style={{
                 // Zero-score swatch matches the grid's theme-aware empty cells,
                 // not the download SVG's fixed paper-white fill.
-                backgroundColor: score > 0 ? heatCellColor(monoColor, score) : "var(--color-surface-container-high)",
+                backgroundColor:
+                  score > 0 ? heatCellColor(monoColor, score, dark) : "var(--color-surface-container-high)",
               }}
             >
               {graded && score > 0 && (
-                <LevelMark score={score} graded color={onColor(heatCellColor(monoColor, score))} size="small" />
+                <LevelMark score={score} graded color={onColor(heatCellColor(monoColor, score, dark))} size="small" />
               )}
             </span>
             {translateUi(key)}
           </span>
         ))}
       </span>
+      {/* Always shown and never truncated: the keys are the only direct way to
+          set a level, so hiding them behind a tooltip hid the feature. */}
+      <p>
+        {graded ? (
+          <>
+            {/* A language-neutral separator: the two hints are separate sentences. */}
+            {t("clickToCycle")} · {t("levelKeysHint")}
+          </>
+        ) : (
+          t("toggleKeysHint")
+        )}
+      </p>
     </div>
   );
 }
@@ -1085,21 +1216,24 @@ function HeatmapExports({
   }
 
   return (
-    // The error gets its own full-width line under the buttons instead of a
-    // 120px truncation: the hover-title fallback was unreachable on touch.
-    <div className="flex shrink-0 flex-col items-end gap-1">
-      {/* No visible "HEATMAP" label: the group's accessible name carries it,
-          and the freed width is what keeps the legend beside it on one line. */}
-      <fieldset aria-label={t("heatmapLabel")} className="flex items-center gap-2">
+    // One menu in the status strip: the heatmap is a figure you take out of
+    // the app, so its three ways out sit together, away from the cells.
+    <Popover>
+      <PopoverTrigger className={TOOL_BUTTON}>
+        <Download className="size-3.5" aria-hidden="true" />
+        {t("heatmapLabel")}
+        <ChevronDown className="size-3.5" aria-hidden="true" />
+      </PopoverTrigger>
+      <PopoverContent align="end" className="grid w-56 gap-0.5 p-1">
         <button
           type="button"
           disabled={loading !== null}
           onClick={() => void copyPng()}
           title={t("copyHeatmapHint")}
-          className="flex items-center gap-1.5 px-2.5 py-1 border border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary rounded-lg text-[11px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className={MENU_ITEM}
         >
-          <Copy className="h-3.5 w-3.5" />
-          {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copy")}
+          <Copy className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
+          {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyPng")}
         </button>
         {(["svg", "png"] as ExportFormat[]).map((format) => (
           <button
@@ -1107,14 +1241,14 @@ function HeatmapExports({
             type="button"
             disabled={loading !== null}
             onClick={() => download(format)}
-            className="flex items-center gap-1.5 px-2.5 py-1 border border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary rounded-lg text-[11px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className={MENU_ITEM}
           >
-            <Download className="h-3.5 w-3.5" />
-            {loading === format ? "…" : format.toUpperCase()}
+            <Download className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
+            {loading === format ? "…" : format === "svg" ? t("downloadSvg") : t("downloadPng")}
           </button>
         ))}
-      </fieldset>
-      {error && <span className="max-w-56 text-right text-[11px] text-error">{error}</span>}
-    </div>
+        {error && <p className="px-2 pt-1 pb-1.5 text-[11px] text-error">{error}</p>}
+      </PopoverContent>
+    </Popover>
   );
 }

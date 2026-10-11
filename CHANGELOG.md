@@ -17,6 +17,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   goes back to their draft.
 - The JSON export includes your co-authors' answers, and importing the file into the same draft
   brings them back. Versions before this one ignore them.
+- *Move up* and *Move down* in each contributor's menu, so the author order can be changed without
+  dragging.
+- Skip links to the grid and to the statement.
 
 ### Changed
 
@@ -26,6 +29,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   comes with the redesigned workspace; until then your row is what the statement uses.
 - A reply older than the one you already have is ignored, and opening the same reply twice changes
   nothing. Undo on a reply restores the name and iD and leaves any edits you made since then alone.
+- A new workspace layout. The contribution grid is now the main canvas, with the contributor list
+  as a slim rail on the left (it folds to initials) and a panel on the right with three tabs:
+  - **Statement**: the statement and *Copy statement*, plus one *Export data* menu where each format
+    has its own Copy and Download.
+  - **Team**: who you have asked and when, a *Copy message* button per person that copies an
+    email-ready text with their ask link, and *Ask everyone not yet asked*, which copies one message
+    per person in turn.
+  - **Review**: a place for co-authors' answers, filled in by a later release.
+- A strip above the grid shows how many contributors you have asked and holds the Yes/No vs Levels
+  switch, bulk assign, display options, and heatmap export (copy, SVG, PNG).
+- Column headers show full names at an angle, with a mark under each for asked or not asked.
+  Past 20 contributors, or with *Use initials* on, they show initials.
+- Selecting a role name opens its description; the separate info buttons are gone. From the grid,
+  press the Left arrow on the first column to reach the role name.
+- In dark mode the heatmap gets brighter from Supporting to Lead, as it gets darker in light mode.
+  Downloaded heatmaps keep the light colors.
+- *Import* and *Share* in the header are secondary buttons, and disabled buttons look disabled.
 - The ask menu says in plain text what the link carries: the title, and that person's name and iD.
 - An open tab no longer saves over drafts that a newer version saved in another tab. It reloads
   into the newer version, or says that its edits are not being saved when it cannot.
@@ -39,6 +59,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The JATS4R XML export writes ORCID iDs as full `https://orcid.org/...` links, as JATS4R
   recommends. Importing accepts both the full link and the bare iD, so older files still load.
 - Resetting a draft clears its open asks, and removing a contributor drops theirs (undo restores it).
+- Keyboard and touch fixes: the grid's key hint (0–3 set a level) is always visible, cells announce
+  their shortcuts, a focused cell no longer hides under the sticky headers, and small buttons in the
+  contributor rows, status messages and heatmap controls have visible focus and 24px targets.
 - The JATS4R XML export no longer claims "© 2019 JATS4R" and a CC BY licence for your paper. That
   block was sample text and is gone.
 - The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as

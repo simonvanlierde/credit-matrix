@@ -15,16 +15,18 @@ import type { Messages } from "@/lib/intl";
  */
 export function LabelledSection({
   labelKey,
+  id,
   className,
   children,
 }: {
   labelKey: keyof Messages;
+  id?: string;
   className?: string;
   children: ReactNode;
 }) {
   const t = useTranslations();
   return (
-    <section aria-label={t(labelKey)} className={className}>
+    <section id={id} aria-label={t(labelKey)} className={className}>
       {children}
     </section>
   );
