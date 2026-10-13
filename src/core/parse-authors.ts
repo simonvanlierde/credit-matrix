@@ -19,9 +19,10 @@ import { CREDIT_ROLES } from "./credit-roles";
  *    apostrophes, hyphens and whitespace (so "José", "O'Brien" and
  *    "Mary-Jane" survive intact)
  *  - First token  → firstName
- *  - Last token   → surname  (when >1 token), with any lower-case particles
- *                   just before it ("Anne van der Berg" → "van der Berg"), as
- *                   the "van der Berg, Anne" form already reads it
+ *  - Last token   → surname  (when >1 token), with any particles just before
+ *                   it, in any case ("Anne van der Berg" → "van der Berg",
+ *                   "Anne DE LA CRUZ" → "DE LA CRUZ"), as the
+ *                   "van der Berg, Anne" form already reads it
  *  - Middle token → middleName (first of any tokens left between the two)
  *
  * A single-token name (e.g. "Madonna") yields a firstName with empty
@@ -53,10 +54,10 @@ export function parseNameParts(name: string): {
   const cleaned = cleanNamePart(name);
   const parts = cleaned.split(/\s+/).filter(Boolean);
 
-  // Where the surname starts: the last token, pulled back over lower-case
-  // particles, never into the first name.
+  // Where the surname starts: the last token, pulled back over particles,
+  // never into the first name.
   let surnameStart = Math.max(parts.length - 1, 1);
-  while (surnameStart > 1 && PARTICLES.has(parts[surnameStart - 1] ?? "")) surnameStart -= 1;
+  while (surnameStart > 1 && isParticle(parts[surnameStart - 1] ?? "")) surnameStart -= 1;
 
   const firstName = parts[0] ?? "";
   const surname = parts.slice(surnameStart).join(" ");
@@ -74,14 +75,16 @@ const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx
 
 /**
  * Build initials from name parts (e.g. "Jane A. Smith" → "JAS").
- * Only uses first letter of each non-empty part. A single-token CJK name
+ * Only uses first letter of each non-empty part. The surname gives the letter
+ * of its first word that is not a particle, so "Anne van der Berg" is "AB"
+ * however the name was entered or imported. A single-token CJK name
  * ("王小明") has no initials to take, so the whole name is the label, as is a
  * name with no lettered part (a row still named by its ORCID iD).
  */
 export function buildInitials(name: string, firstName: string, middleName: string, surname: string): string {
   if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
   if (!(middleName || surname) && UNSPACED_NAME_REGEX.test(firstName)) return firstName;
-  const parts = [firstName, middleName, surname].filter((part) => /\p{L}/u.test(part));
+  const parts = [firstName, middleName, surnameCore(surname)].filter((part) => /\p{L}/u.test(part));
   if (parts.length === 0) return name.trim();
   return (
     parts
@@ -213,7 +216,8 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
 
   return authors.map((author) => {
     const initials = author.initials;
-    const surnameCodePoints = [...author.surname];
+    // Continue from the letter the initials took, past any particles.
+    const surnameCodePoints = [...surnameCore(author.surname)];
     let attempt = initials;
     let extraIdx = 1;
 
@@ -313,7 +317,11 @@ function consistentNameParts(author: Author): Pick<Author, "firstName" | "middle
   return fits ? { firstName, middleName, surname } : undefined;
 }
 
-/** Surname particles that stay attached to the surname ("van der Berg, Anne"). */
+/**
+ * Surname particles that stay attached to the surname ("van der Berg, Anne"),
+ * lower case with a straight apostrophe. Not "y", which joins two surnames
+ * ("Ortega y Gasset") rather than leading one.
+ */
 const PARTICLES = new Set([
   "van",
   "von",
@@ -329,7 +337,36 @@ const PARTICLES = new Set([
   "der",
   "ten",
   "ter",
+  "dos",
+  "das",
+  "do",
+  "los",
+  "las",
+  "degli",
+  "dei",
+  "dalla",
+  "dal",
+  "zu",
+  "zur",
+  "af",
+  "bin",
+  "ibn",
+  "el",
+  "al",
+  "van't",
 ]);
+
+/** A surname particle, in any case and with any apostrophe ("Van", "van’t"). */
+function isParticle(word: string): boolean {
+  return PARTICLES.has(word.toLowerCase().replace(/[’ʼ]/gu, "'"));
+}
+
+/** The surname from its first word that is not a particle ("van der Berg" → "Berg"), or whole if it has none. */
+function surnameCore(surname: string): string {
+  const words = surname.split(/\s+/).filter(Boolean);
+  const start = words.findIndex((word) => !isParticle(word));
+  return start === -1 ? surname : words.slice(start).join(" ");
+}
 
 /** A bare surname: one word, or particles followed by one word. Never an ORCID. */
 function isSurnamePart(text: string): boolean {
@@ -337,7 +374,7 @@ function isSurnamePart(text: string): boolean {
   const words = text.split(/\s+/).filter(Boolean);
   const last = words.pop();
   if (!last || !/\p{L}/u.test(last)) return false;
-  return words.every((word) => PARTICLES.has(word.toLowerCase()));
+  return words.every(isParticle);
 }
 
 /** A given-name fragment: up to three words, each a name or an initial ("J.", "Marie"). */

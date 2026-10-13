@@ -53,7 +53,7 @@ describe("parseNameParts", () => {
     });
   });
 
-  it("keeps lower-case particles with the surname, as the comma form does", () => {
+  it("keeps particles with the surname, in any case, as the comma form does", () => {
     const parts = { firstName: "Anne", middleName: "", surname: "van der Berg" };
     expect(parseNameParts("Anne van der Berg")).toEqual(parts);
     expect(parseNameParts("van der Berg, Anne")).toEqual(parts);
@@ -62,9 +62,14 @@ describe("parseNameParts", () => {
       middleName: "Luisa",
       surname: "de la Cruz",
     });
-    // Capitalised, "Van" is a name of its own; and the first name is never a particle.
-    expect(parseNameParts("Anne Van Berg").surname).toBe("Berg");
+    expect(parseNameParts("Anne Van der Berg").surname).toBe("Van der Berg");
+    expect(parseNameParts("Anne DE LA CRUZ").surname).toBe("DE LA CRUZ");
+    expect(parseNameParts("Jacobus van’t Hoff").surname).toBe("van’t Hoff");
+    expect(parseNameParts("João dos Santos").surname).toBe("dos Santos");
+    expect(parseNameParts("Ahmad bin Ali").surname).toBe("bin Ali");
+    // The first name is never a particle, and "y" joins two surnames rather than leading one.
     expect(parseNameParts("van Berg").firstName).toBe("van");
+    expect(parseNameParts("José Ortega y Gasset").surname).toBe("Gasset");
   });
 
   it("treats a single-token name as a first name with empty surname", () => {
@@ -105,6 +110,18 @@ describe("createAuthor", () => {
     expect(createAuthor("0000-0002-1694-233X").initials).toBe("0000-0002-1694-233X");
     expect(createAuthor("https://orcid.org/0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
     expect(createAuthor("Jane - Smith").initials).toBe("JS");
+  });
+
+  it("takes the surname initial from its first word that is not a particle", () => {
+    expect(createAuthor("Anne van der Berg").initials).toBe("AB");
+    expect(createAuthor("van der Berg, Anne").initials).toBe("AB");
+    expect(createAuthor("Leonardo da Vinci").initials).toBe("LV");
+    expect(createAuthor("Jean-Luc de la Fontaine").initials).toBe("JF");
+    expect(
+      createAuthor("Anne van der Berg", { firstName: "Anne", middleName: "", surname: "van der Berg" }).initials,
+    ).toBe("AB");
+    // Telling two apart continues from that word, not from the particle.
+    expect(parseAuthorText("Anne Bakker\nAnne van der Berg").map((a) => a.initials)).toEqual(["AB", "ABe"]);
   });
 
   it("keeps one character per name part when upper case would add one", () => {

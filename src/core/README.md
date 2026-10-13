@@ -59,6 +59,9 @@ An **`Author`** has identity fields (`id`, `name`, parsed name parts, deduplicat
 optional `orcid`), a `contributorType`, and a fixed array of 14 **`Contribution`** entries, one per
 CRediT role.
 
+Particles such as `van`, `de la` or `bin`, in any case, stay with the surname: "Anne van der Berg"
+and "van der Berg, Anne" both have surname `van der Berg`. Initials skip them, so both are `AB`.
+
 `contributorType` is either `author` or `non-author`. A statement can put non-author contributors
 on a separate `Acknowledgements:` line. The JATS4R export writes the value as `contrib-type`.
 
