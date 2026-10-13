@@ -41,7 +41,8 @@ TypeScript derives the `CreditRoleName` union from that same tuple.
 
 The options you'll most likely want:
 
-- `showLevels`: annotate non-lead roles in by-author formats, for example `Software (Equal)`
+- `showLevels`: mark non-lead contributions with their level, after the role in by-author formats
+  (for example `Software (Equal)`) and after the name in by-role formats
 - `translateRole`: translate role names; the official English role names stay the keys inside
 - `translateUi`: localize `Acknowledgements`, `Equal`, and `Supporting`
 - `separateAcknowledgements`: keep non-author contributors on an `Acknowledgements:` line; defaults to
@@ -105,7 +106,7 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
   `Decision`, `Difference`, `Level`, `Outcome`, `Patch`, `Reply`, `Review`, `Target`
 - `author`: `Author`, `Contribution`, `AuthorSchema`, `ContributionSchema`, `clampScore`,
   `hasContributions`, `isAllBinary`, `isUsableAuthorName`, `isValidOrcid`, `normalizeOrcid`,
-  `ORCID_REGEX`, `rolesWithContributions`, `scoreToLevel`, `MAX_AUTHOR_NAME_LENGTH`, `MAX_AUTHORS`,
+  `ORCID_REGEX`, `rolesWithContributions`, `scoreToLevel`, `LEVEL_SCORE`, `MAX_AUTHOR_NAME_LENGTH`, `MAX_AUTHORS`,
   `MAX_IMPORT_BYTES`
 - `contributor-color`: `DEFAULT_MONO_COLOR`, `heatCellColor`, `OKABE_ITO`, `onColor`
 - `credit-i18n`: `AVAILABLE_LOCALES`, `DEFAULT_ROLE_TRANSLATOR`, `hasCatalog`, `loadRoleCatalog`,

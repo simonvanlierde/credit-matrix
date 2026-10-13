@@ -235,8 +235,9 @@ accessible label, and in the exported data. Keep bulk assignment behind a toggle
 first.
 
 Column headers show full names at 50°. They switch to initials past 20 columns, or when the person
-asks for initials. Under each name, a glyph says whether that person has been asked (a
-clock, a dash, or "You"), with a spoken label. The role name itself opens the role's description,
+asks for initials. Under each name, a glyph with a spoken label says where that person stands: a
+dash for not asked, a clock for asked, a count of open differences that opens Review, a double
+check for settled, or "You" for your own column. The role name itself opens the role's description,
 so there are no separate info buttons. Role names are not in the tab order. Instead you reach them
 with the grid's arrow keys, so the whole matrix is one tab stop. The key hint under the legend is
 always visible.
