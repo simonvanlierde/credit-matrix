@@ -63,7 +63,7 @@ const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx
  * ("王小明") has no initials to take, so the whole name is the label, as is a
  * name with no lettered part (a row still named by its ORCID iD).
  */
-function buildInitials(name: string, firstName: string, middleName: string, surname: string): string {
+export function buildInitials(name: string, firstName: string, middleName: string, surname: string): string {
   if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
   if (!(middleName || surname) && UNSPACED_NAME_REGEX.test(firstName)) return firstName;
   const parts = [firstName, middleName, surname].filter((part) => /\p{L}/u.test(part));

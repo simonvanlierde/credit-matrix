@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { reloadForNewBuild } from "./reload-for-new-build";
+import { reloadForNewBuild, reloadForNewerSave } from "./reload-for-new-build";
 
 describe("reloadForNewBuild", () => {
   const reload = vi.fn();
@@ -23,6 +23,13 @@ describe("reloadForNewBuild", () => {
   it("reloads again once the window has passed", () => {
     sessionStorage.setItem("credit-matrix:reloaded-for-new-build", String(Date.now() - 61_000));
     expect(reloadForNewBuild()).toBe(true);
+  });
+
+  it("guards a newer-save reload separately from a chunk reload", () => {
+    expect(reloadForNewBuild()).toBe(true);
+    expect(reloadForNewerSave()).toBe(true);
+    expect(reloadForNewerSave()).toBe(false);
+    expect(reload).toHaveBeenCalledTimes(2);
   });
 
   it("does not reload without sessionStorage to guard against a loop", () => {

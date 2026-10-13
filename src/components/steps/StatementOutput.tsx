@@ -1,13 +1,11 @@
 "use client";
 
-import { CheckCircle2, Copy, Download, Info, Settings2, TriangleAlert } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Settings2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StepHeader } from "@/components/ui/step-header";
 import { Switch } from "@/components/ui/switch";
 import type { Author, RoleTranslator, StatementFormat, UiTranslator } from "@/core";
 import {
@@ -26,9 +24,12 @@ import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
-import { useContributionStore } from "@/store/contribution-store";
+import { useContributionStore, useOpenDifferences } from "@/store/contribution-store";
 
 type DataFormat = "xml" | "json" | "csv" | "markdown";
+
+const EXPORT_ITEM_BUTTON =
+  "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 /** Machine-readable export formats, each able to be copied or downloaded. */
 const DATA_FORMATS: Record<
@@ -42,8 +43,20 @@ const DATA_FORMATS: Record<
 > = {
   // XML/JSON/CSV are machine round-trip formats, kept in canonical English.
   // Only Markdown (a human-facing paste artifact) follows the output language.
-  xml: { label: "XML (JATS4R)", serialize: toJats4rXml, filename: "credit-contributors.xml", mime: "application/xml" },
-  json: { label: "JSON", serialize: toJson, filename: "credit_result.json", mime: "application/json" },
+  // XML and JSON are replaced per export in the component, which knows the
+  // input mode and whether answers go in.
+  xml: {
+    label: "XML (JATS4R)",
+    serialize: (authors) => toJats4rXml(authors),
+    filename: "credit-contributors.xml",
+    mime: "application/xml",
+  },
+  json: {
+    label: "JSON",
+    serialize: (authors) => toJson(authors),
+    filename: "credit_result.json",
+    mime: "application/json",
+  },
   csv: { label: "CSV", serialize: toCsv, filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
   markdown: {
     label: "Markdown",
@@ -55,6 +68,15 @@ const DATA_FORMATS: Record<
 
 export function StatementOutput() {
   const authors = useContributionStore((s) => s.authors);
+  const asks = useContributionStore((s) => s.asks);
+  const selfId = useContributionStore((s) => s.selfId);
+  const yesNo = useContributionStore((s) => s.inputMode === "toggle");
+  const openReview = useContributionStore((s) => s.openReview);
+  const openDifferences = useOpenDifferences();
+  // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
+  const [includeAnswers, setIncludeAnswers] = useState(true);
+  // Everyone asked, answered or not: the JSON export carries the ask history too.
+  const askedCount = authors.filter((author) => author.id in asks).length;
   const { translateRole, translateUi, translateInterfaceRole, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   // Last beat of the population sequence; see .enter-fade in globals.css.
@@ -67,7 +89,8 @@ export function StatementOutput() {
   const [dataCopyStatus, copyDataText] = useCopyStatus({
     copied: t("annExportDataCopied"),
   });
-  const [dataFormat, setDataFormat] = useState<DataFormat>("xml");
+  // Which format the shared copy status belongs to, so feedback lands on that row.
+  const [copiedFormat, setCopiedFormat] = useState<DataFormat>("xml");
   // Statement-local output controls (independent of the heatmap's).
   const [grouping, setGrouping] = useState<"by-author" | "by-role">("by-author");
   const [acronyms, setAcronyms] = useState(false);
@@ -95,22 +118,42 @@ export function StatementOutput() {
   // The split control only matters once someone is marked a non-author contributor.
   const hasNonAuthors = authors.some((author) => author.contributorType === "non-author");
 
-  function downloadData() {
+  function serialize(dataFormat: DataFormat): string {
+    if (dataFormat === "json") return toJson(authors, { asks, includeAnswers, selfId });
+    if (dataFormat === "xml") return toJats4rXml(authors, { yesNo });
+    return DATA_FORMATS[dataFormat].serialize(authors, translateRole, translateUi, outputLanguage);
+  }
+
+  function downloadData(dataFormat: DataFormat) {
     if (!hasAuthors) return;
-    const { serialize, filename, mime } = DATA_FORMATS[dataFormat];
+    const { filename, mime } = DATA_FORMATS[dataFormat];
     // A BOM makes Excel read the file as UTF-8, so non-ASCII names survive.
     const bom = dataFormat === "csv" ? "﻿" : "";
-    download(new Blob([bom, serialize(authors, translateRole, translateUi, outputLanguage)], { type: mime }), filename);
+    download(new Blob([bom, serialize(dataFormat)], { type: mime }), filename);
+  }
+
+  function goToReview() {
+    openReview(null);
+    requestAnimationFrame(() => document.getElementById("inspector-tab-review")?.focus());
   }
 
   return (
-    <div className="bg-surface-bright rounded-lg shadow-md border border-outline-variant/10 p-3 md:p-4 flex flex-col gap-3 desk:h-full desk:overflow-y-auto">
-      {/* One left-aligned wrapping row: a conditional toggle extends the row
-          instead of reflowing a justified cluster, so nothing jumps around. */}
+    <div className="flex flex-col gap-3">
+      {/* Says the statement is the lead's version; never blocks copying it. */}
+      {openDifferences > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-primary/10 px-3 py-2 text-[13px] text-on-surface">
+          <span className="flex-1">{t("statementDiffers", { count: openDifferences })}</span>
+          <button
+            type="button"
+            onClick={goToReview}
+            className="min-h-6 rounded px-1 font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            {t("reviewAction")}
+          </button>
+        </p>
+      )}
+      {/* One non-wrapping cluster, so the gear never dangles alone. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <StepHeader n={3} title={t("statementExportLabel")} className="mr-2" />
-        {/* One non-wrapping cluster: when the column is narrow the pair moves
-            below the heading together, and the gear never dangles alone. */}
         <span className="flex items-center gap-2">
           <SegmentedControl
             ariaLabel={t("a11yStatementGrouping")}
@@ -254,11 +297,10 @@ export function StatementOutput() {
         </ul>
       )}
 
-      {/* One action row: copy the statement (primary), export a data format, and
-          the badge anchored at the right. The groups wrap onto their own lines
-          in the narrow 2xl column, so the t("exportData") label carries the
-          separation rather than a divider that would be left orphaned. */}
-      <div className="relative z-10 flex flex-wrap items-center gap-x-4 gap-y-3">
+      {/* Copy statement is the primary action; the data formats share one menu
+          beside it, each with its own Copy and Download, so switching format
+          costs no extra click. */}
+      <div className="relative z-10 flex flex-wrap items-center gap-x-3 gap-y-3">
         <button
           type="button"
           onClick={() =>
@@ -267,59 +309,76 @@ export function StatementOutput() {
             copyText(() => copyRichText(statement, generateStatement(authors, { ...statementOptions, asHtml: true })))
           }
           disabled={!statement}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:shadow-none"
         >
-          <Copy className="h-[18px] w-[18px]" />
+          <Copy className="h-[18px] w-[18px]" aria-hidden="true" />
           {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyStatement")}
         </button>
 
-        {/* Secondary: pick a data format, then copy or download it */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t("exportData")}</span>
-          {/* The label sits above so it stops competing for the row's width and
-              leaving Download dangling on its own line. The controls still wrap
-              on a phone, where three of them genuinely do not fit one line. */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={dataFormat} onValueChange={(value) => setDataFormat(value as DataFormat)}>
-              <SelectTrigger className="w-32 py-1.5 text-xs" aria-label={t("a11yExportFormat")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(DATA_FORMATS) as DataFormat[]).map((value) => (
-                  <SelectItem key={value} value={value} className="text-sm">
-                    {DATA_FORMATS[value].label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <button
-              type="button"
-              onClick={() =>
-                copyDataText(DATA_FORMATS[dataFormat].serialize(authors, translateRole, translateUi, outputLanguage))
-              }
-              disabled={!hasAuthors}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 border border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary rounded-lg text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Copy className="h-3.5 w-3.5" />
-              {dataCopyStatus === "copied"
-                ? t("copied")
-                : dataCopyStatus === "error"
-                  ? t("copyFailedMessage")
-                  : t("copy")}
-            </button>
-
-            <button
-              type="button"
-              onClick={downloadData}
-              disabled={!hasAuthors}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 border border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary rounded-lg text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Download className="h-3.5 w-3.5" />
-              {t("download")}
-            </button>
-          </div>
-        </div>
+        <Popover>
+          <PopoverTrigger
+            disabled={!hasAuthors}
+            className="flex min-h-10 items-center gap-1.5 rounded-lg border border-outline-variant px-3 text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60 data-[state=open]:border-primary data-[state=open]:text-primary"
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {t("exportData")}
+            <ChevronDown className="size-3.5" aria-hidden="true" />
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-72 max-w-[calc(100vw-2rem)] p-1">
+            <ul aria-label={t("a11yExportFormat")} className="grid">
+              {(Object.keys(DATA_FORMATS) as DataFormat[]).map((value) => {
+                const { label } = DATA_FORMATS[value];
+                const copiedThis = copiedFormat === value && dataCopyStatus !== "idle";
+                return (
+                  <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">
+                    <div className="flex items-center gap-1">
+                      <span className="min-w-0 flex-1">{label}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCopiedFormat(value);
+                          void copyDataText(serialize(value));
+                        }}
+                        aria-label={t("copyFormat", { format: label })}
+                        title={t("copyFormat", { format: label })}
+                        className={EXPORT_ITEM_BUTTON}
+                      >
+                        {copiedThis && dataCopyStatus === "copied" ? (
+                          <Check className="size-3.5 text-primary" aria-hidden="true" />
+                        ) : (
+                          <Copy className="size-3.5" aria-hidden="true" />
+                        )}
+                        {copiedThis ? (dataCopyStatus === "copied" ? t("copied") : t("copyFailedMessage")) : t("copy")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadData(value)}
+                        aria-label={t("downloadFormat", { format: label })}
+                        title={t("downloadFormat", { format: label })}
+                        className={EXPORT_ITEM_BUTTON}
+                      >
+                        <Download className="size-3.5" aria-hidden="true" />
+                        {t("download")}
+                      </button>
+                    </div>
+                    {/* Only JSON carries asks, so the choice sits on its row. */}
+                    {value === "json" && askedCount > 0 && (
+                      <label className="flex min-h-8 items-center gap-2 pr-2 text-xs text-on-surface-variant">
+                        <input
+                          type="checkbox"
+                          checked={includeAnswers}
+                          onChange={(event) => setIncludeAnswers(event.target.checked)}
+                          className="size-4 shrink-0 accent-primary"
+                        />
+                        {t("exportIncludesAnswers", { count: askedCount })}
+                      </label>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </PopoverContent>
+        </Popover>
 
         {/* Its own left-aligned line: hung off the right edge it read as a
             dangling leftover of the export row rather than a quiet extra. */}

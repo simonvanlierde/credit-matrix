@@ -10,20 +10,101 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
   version and release date in step, as it does for `CITATION.cff`.
-- Every CI run checks the JATS4R XML export of the sample draft against the official JATS 1.3 DTD
-  and the JATS4R Schematron rules (`pnpm validate:jats`).
+- Every CI run checks the JATS4R XML export against the official JATS 1.3 DTD and the JATS4R
+  Schematron rules (`pnpm validate:jats`).
+- A page of its own for co-authors. Opening an ask link now shows one column, made for a phone:
+  the 14 roles with a short description and None · Supporting · Equal · Lead buttons for each
+  (None · Contributed when you work in Yes/No), switches for shared first authorship and
+  corresponding author, and a *Send back* button that opens the phone's share sheet or copies the
+  reply link. Name and ORCID iD can still be corrected under *Your details*, and *Keep as an
+  ordinary draft* still opens the full workspace. Ask links from older versions open in levels.
+- A blank ask. A contributor's menu now offers *Ask … what they did*, which sends their row with
+  nothing ticked, beside *Ask … to check your guess*, which sends your guess as before. The co-author
+  sees which one they got.
+- Importing a JSON file from a newer version of CRediT Matrix says so, instead of a validation error.
+- If you send a co-author a new request while they still have the old one open, opening the new
+  link replaces their earlier answers and says so, with Undo. Opening the older link again just
+  goes back to their draft.
+- The JSON export includes your co-authors' answers, and importing the file into the same draft
+  brings them back. Versions before this one ignore them.
+- *Move up* and *Move down* in each contributor's menu, so the author order can be changed without
+  dragging.
+- Skip links to the grid and to the statement.
+- The **Review** tab lists where each co-author's answer differs from your draft, per person, in
+  the grid's dots: "Software: You ●● Equal → Ben ●●● Lead". For each difference choose
+  *Use Ben's*, *Keep yours* or *Ask Ben about this*, which copies a message about that role with a
+  link to check your guess. *Use all of Ben's* takes his whole answer. Each choice moves on to the
+  next difference and animates the grid cell as it changes. Every decided line keeps its own Undo,
+  also after *Use all*, and undoing *Use Ben's* puts your own level back.
+- Grid cells where a co-author answered differently carry a corner mark, and a screen reader hears
+  what they said ("Ben says Lead"). The mark has an outline that stands out on every level, in every
+  heatmap colour and both themes. A count under each column header opens Review on that person.
+- *This is me* in a contributor's menu marks your own row. You are left out of the Team tab, of
+  asks, and of the answered count, and your column says "You". The JSON export remembers it, and
+  importing the file back into the same draft marks you again.
+- The Statement tab says when contributions still differ and that the statement uses your version,
+  with a link to Review. Copying and exporting are never blocked.
+- The JSON row of the Export data menu has an *Include co-author answers and ask history* checkbox,
+  ticked by default.
+- The privacy note in About says that co-author asks and answers stay in this browser, that the JSON
+  export includes them unless you untick that box, and that sending a reply hands its link to the
+  app you pick.
+
+### Changed
+
+- A co-author's reply no longer overwrites your row. Their name and iD are taken; their
+  roles and markers are kept beside your row, and the status strip says how many differ ("Ben's
+  answer arrived: 3 differences"), with Undo and a *Review* button, or that the answer matches yours. Until you choose, your row is
+  what the statement uses.
+- A reply older than the one you already have is ignored, and opening the same reply twice changes
+  nothing. Undo on a reply restores the name and iD and leaves any edits you made since then alone.
+- A new workspace layout. The contribution grid is now the main canvas, with the contributor list
+  as a slim rail on the left (it folds to initials) and a panel on the right with three tabs:
+  - **Statement**: the statement and *Copy statement*, plus one *Export data* menu where each format
+    has its own Copy and Download.
+  - **Team**: who you have asked and when, who answered and how much is left to review, and when
+    each answer was settled; a *Copy message* button per person that copies an
+    email-ready text with their ask link, and *Ask everyone not yet asked*, which copies one message
+    per person in turn.
+  - **Review**: co-authors' answers beside your draft (see Added).
+- A strip above the grid shows how many co-authors answered and how many answers differ, with a
+  *Review* button, and holds the Yes/No vs Levels
+  switch, bulk assign, display options, and heatmap export (copy, SVG, PNG).
+- Column headers show full names at an angle, with a mark under each for not asked, asked, open
+  differences or settled.
+  Past 20 contributors, or with *Use initials* on, they show initials.
+- Selecting a role name opens its description; the separate info buttons are gone. From the grid,
+  press the Left arrow on the first column to reach the role name.
+- In dark mode the heatmap gets brighter from Supporting to Lead, as it gets darker in light mode.
+  Downloaded heatmaps keep the light colors.
+- *Import* and *Share* in the header are secondary buttons, and disabled buttons look disabled.
+- The ask menu says in plain text what the link carries: the title, and that person's name and iD.
+- An open tab no longer saves over drafts that a newer version saved in another tab. It reloads
+  into the newer version, or says that its edits are not being saved when it cannot.
+- Saved drafts move to a new storage version. Open asks carry over. An older version opened later
+  starts empty and leaves the newer drafts in place. After updating, reload any other tab that still
+  has CRediT Matrix open: a tab opened before the update has no such guard and can overwrite changes
+  made in the updated version.
 
 ### Fixed
 
+- The JATS4R XML export writes ORCID iDs as full `https://orcid.org/...` links, as JATS4R
+  recommends. Importing accepts both the full link and the bare iD, so older files still load.
+- The JATS4R XML export marks shared first authorship only when at least two authors share it. A
+  single marked author made the file break the JATS4R rules; the mark still travels in JSON and CSV.
+- Resetting a draft clears its open asks, and removing a contributor drops theirs (undo restores it).
+- After *Reset* or *Delete all drafts*, Undo for a removed contributor or a bulk change no longer
+  brings the cleared work back. A bulk change's Undo also no longer follows you to another draft.
+- Keyboard and touch fixes: the grid's key hint (0–3 set a level) is always visible, cells announce
+  their shortcuts, a focused cell no longer hides under the sticky headers, and small buttons in the
+  contributor rows, status messages and heatmap controls have visible focus and 24px targets.
 - The JATS4R XML export no longer claims "© 2019 JATS4R" and a CC BY licence for your paper. That
   block was sample text and is gone.
 - The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as
   JATS 1.3 `degree-contribution`, and importing the file restores them. Files without it import
   every role as lead, as before.
-- The JATS4R XML export writes ORCID iDs as the full `https://orcid.org/` URL, as the JATS4R
-  authors recommendation asks. Files with a bare iD still import.
-- The contributor name field, the author/non-author chip and the actions button in each contributor
-  row are at least 24 px tall, the minimum target size in WCAG 2.2.
+  In Yes/No mode the export leaves `degree-contribution` out, rather than call every role lead:
+  you never chose a level. Such a file imports every role as contributed.
 
 ### Removed
 

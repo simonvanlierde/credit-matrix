@@ -64,6 +64,63 @@ web app uses that same SVG for preview, SVG download, and canvas-to-PNG export.
 
 `fromJats4rXml(xml)` uses the global `DOMParser`: native in browsers, supplied by jsdom in tests.
 
+`toJson(authors, { asks, includeAnswers, selfId })` also writes the asks and co-author answers
+(unless `includeAnswers` is `false`) and `selfId`, the contributor who made the file. Both are
+optional, so older files still load. `fromJson` returns `{ authors, asks?, selfId? }`. It throws a
+`NewerVersionError` for a file whose `version` is above the one this build writes (`JSON_EXPORT_VERSION` in
+`export/json.ts`), and a `ZodError` for
+any other data that does not match.
+
+## Asks and review
+
+`ask.ts` models asking a co-author for their row and settling their answer. An **`Ask`** records when
+the link was sent, whether it carried your guess (`prefilled`), and the latest `reply`. A reply keeps
+the co-author's roles and markers beside the row, plus a `Decision` per target once you choose.
+A target is one of the 14 roles or one of the two markers (`equalContribution`, `corresponding`);
+`ASK_TARGETS` lists them in order.
+
+- `askStep(state, event)`: every change to asks and replies (`sent`, `reply`, `settle`). Pure: time
+  comes in on the event, and it never throws on a reply's untrusted row. Returns an `outcome`, a
+  `patch`, and the `undo` patch.
+- `applyPatch(state, patch)`: applies a patch to `{ authors, asks }`. It skips rows that are gone, so
+  a late undo never brings back an ask for a removed row.
+- `review(author, ask)`: the ask's status (`none`, `asked`, `differs`, `settled`), every difference
+  by target, and the ones still `open`. Cached per object pair, so replace state, never mutate it.
+- `settledAt(reply)`: when an answer was settled: its last decision, or its arrival if nothing needed
+  one.
+- `importAnswers(current, incoming, mapped, held, { asks, selfId })`: carries a JSON file's answers
+  and `selfId` over to the ids `keepKnownIds` gave the imported rows. Into a draft that has contributors, only rows
+  that matched one keep them.
+- `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
+- `AskSchema` validates stored and imported asks.
+
+## Exports
+
+`index.ts` is the public surface. Grouped by module:
+
+- `ask`: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
+  `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
+  `Decision`, `Difference`, `Level`, `Outcome`, `Patch`, `Reply`, `Review`, `Target`
+- `author`: `Author`, `Contribution`, `AuthorSchema`, `ContributionSchema`, `clampScore`,
+  `hasContributions`, `isAllBinary`, `isUsableAuthorName`, `isValidOrcid`, `normalizeOrcid`,
+  `ORCID_REGEX`, `rolesWithContributions`, `scoreToLevel`, `MAX_AUTHOR_NAME_LENGTH`, `MAX_AUTHORS`,
+  `MAX_IMPORT_BYTES`
+- `contributor-color`: `DEFAULT_MONO_COLOR`, `heatCellColor`, `OKABE_ITO`, `onColor`
+- `credit-i18n`: `AVAILABLE_LOCALES`, `DEFAULT_ROLE_TRANSLATOR`, `hasCatalog`, `loadRoleCatalog`,
+  `makeRoleDescriber`, `makeRoleTranslator`, `normalizeLocaleCode`, `DEFAULT_UI_TRANSLATOR`,
+  `loadUiCatalog`, `makeUiTranslator`, and the types `LocaleCode`, `RoleDescriber`,
+  `RoleTranslator`, `UiKey`, `UiTranslator`
+- `credit-roles`: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
+- Lookups: `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`, `DoiLookupResult`,
+  `lookupOrcidPerson`, `OrcidLookupResult`
+- Import and export: `toCsv`, `fromCsv`, `toJson`, `fromJson`, `NewerVersionError`, `toMarkdown`,
+  `toJats4rXml`, `fromJats4rXml`, `buildHeatmapSvg`
+- Statements: `generateStatement`, `StatementFormat`
+- Rows: `createAuthor`, `deduplicateAuthorInitials`, `parseAuthorText`, `splitNameList`,
+  `keepKnownIds`
+- Share links: `toSharePayload`, `fromSharePayload`, `ShareData`, `SharePayloadInput`
+- `validateContributions`
+
 ## Validation
 
 `AuthorSchema` and `ContributionSchema` validate imported or otherwise untrusted data. Scores must be

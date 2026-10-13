@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor, type LocaleCode } from "@/core";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
+import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
   announcingStorage,
+  askSummary,
   type Draft,
   followOtherTab,
   MAX_DRAFTS,
@@ -12,6 +14,7 @@ import {
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
+vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
 const initial = useContributionStore.getState();
 
@@ -22,6 +25,8 @@ function store() {
 describe("contribution store", () => {
   beforeEach(() => {
     useContributionStore.setState(initial, true);
+    vi.clearAllMocks();
+    vi.mocked(reloadForNewerSave).mockReturnValue(true);
   });
 
   describe("title", () => {
@@ -619,23 +624,298 @@ describe("contribution store", () => {
     });
   });
 
-  describe("asked tracking", () => {
-    it("marks per draft, survives a switch away and back, and clears", () => {
+  describe("asks", () => {
+    const ask = { sentAt: 1_700_000_000_000, prefilled: false };
+    function addJane() {
       store().addAuthor("Jane Smith");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected Jane");
-      store().markAsked(jane.id);
-      expect(store().asked[jane.id]).toBeTypeOf("number");
+      return jane;
+    }
+
+    it("marks per draft and survives a switch away and back", () => {
+      const jane = addJane();
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
+      expect(store().asks[jane.id]).toEqual(ask);
 
       const home = store().activeDraftId;
       store().createDraft();
       // A fresh draft has no open asks of its own.
-      expect(store().asked).toEqual({});
+      expect(store().asks).toEqual({});
       store().switchDraft(home);
-      expect(store().asked[jane.id]).toBeTypeOf("number");
+      expect(store().asks[jane.id]).toEqual(ask);
+    });
 
-      store().clearAsked(jane.id);
-      expect(store().asked[jane.id]).toBeUndefined();
+    /** Jane's reply row: renamed, with Investigation she did not have. */
+    function janeReply(id: string, name = "Jane B. Smith") {
+      return createAuthor(name, {
+        id,
+        contributions: ROLE_NAMES.map((role) => ({ role, score: role === "Investigation" ? 100 : 0 })),
+      });
+    }
+
+    it.each([
+      ["received", "jane", { sentAt: 5 }],
+      ["unmatched", "nobody", { sentAt: 5 }],
+      ["broken", "jane", { row: { name: 1 } }],
+      ["stale", "jane", { sentAt: 1 }],
+    ] as const)("routes a %s reply through applyAskStep", (kind, who, extra) => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 3,
+        at: 4,
+      });
+      const id = who === "jane" ? jane.id : who;
+      const row = "row" in extra ? extra.row : janeReply(id);
+      const sentAt = "sentAt" in extra ? extra.sentAt : null;
+      const before = store().asks;
+      const authorsBefore = store().authors;
+      expect(store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt, at: 6 }).outcome.kind).toBe(
+        kind,
+      );
+      // Only a received reply may write; the others leave the draft as it was.
+      if (kind !== "received") {
+        expect(store().asks).toBe(before);
+        expect(store().authors).toBe(authorsBefore);
+      }
+    });
+
+    it("lets no reply undo write after Delete all", () => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const { undo } = store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 1,
+        at: 2,
+      });
+      const cleared = store().workspaceCleared;
+
+      store().deleteAllDrafts();
+
+      expect(store().workspaceCleared).toBe(cleared + 1);
+      expect(store().applyAskPatch(draftId, undo)).toBe(false);
+      expect(store().authors).toEqual([]);
+      expect(store().asks).toEqual({});
+    });
+
+    it("keeps a reply beside the row, renames it, and undoes the identity but not later scores", () => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const { outcome, undo } = store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 2,
+        at: 3,
+      });
+      expect(outcome).toEqual({ kind: "received", open: 1, duplicate: false });
+      const row = store().authors[0];
+      expect(row?.name).toBe("Jane B. Smith");
+      expect(row?.initials).toBe("JBS");
+      expect(row?.contributions.every((c) => c.score === 0)).toBe(true);
+      expect(store().asks[jane.id]?.reply?.sentAt).toBe(2);
+
+      store().setAuthorScore(jane.id, 0, 100);
+      expect(store().applyAskPatch(draftId, undo)).toBe(true);
+      expect(store().authors[0]?.name).toBe("Jane Smith");
+      expect(store().authors[0]?.contributions[0]?.score).toBe(100);
+      expect(store().asks[jane.id]).toEqual({ sentAt: 1, prefilled: false });
+      expect(store().applyAskPatch("no-such-draft", undo)).toBe(false);
+    });
+
+    it("undoes a reply in its own draft, whatever ask steps came after", () => {
+      const jane = addJane();
+      store().addAuthor("Bob White");
+      const bob = store().authors[1];
+      if (!bob) throw new Error("expected Bob");
+      const home = store().activeDraftId;
+      const { undo } = store().applyAskStep(home, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 2,
+        at: 3,
+      });
+      store().applyAskStep(home, { kind: "sent", contributorId: bob.id, prefilled: false, at: 4 });
+      store().createDraft();
+      store().addAuthor("Cleo Park");
+      const elsewhere = store().authors;
+
+      expect(store().applyAskPatch(home, undo)).toBe(true);
+      expect(store().authors).toBe(elsewhere);
+      expect(store().drafts[home]?.asks[jane.id]).toBeUndefined();
+      expect(store().drafts[home]?.asks[bob.id]).toEqual({ sentAt: 4, prefilled: false });
+      expect(store().drafts[home]?.authors[0]?.name).toBe("Jane Smith");
+    });
+
+    it.each(["removeAuthor", "reset"] as const)("a late reply undo after %s brings back no ask", (how) => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const { undo } = store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 2,
+        at: 3,
+      });
+      if (how === "reset") store().reset();
+      else store().removeAuthor(jane.id);
+      store().applyAskPatch(draftId, undo);
+      expect(store().asks).toEqual({});
+    });
+
+    it("keeps other rows the same objects through ask steps", () => {
+      const jane = addJane();
+      store().addAuthor("Bob White");
+      const draftId = store().activeDraftId;
+      const bob = store().authors[1];
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const before = store().authors;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: true, at: 2 });
+      expect(store().authors).toBe(before);
+      store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id, "Jane Smith"),
+        sentAt: 3,
+        at: 4,
+      });
+      store().applyAskStep(draftId, { kind: "settle", contributorId: jane.id, choices: "theirs" });
+      expect(store().authors[1]).toBe(bob);
+    });
+
+    it("stores a reply into a parked draft without switching to it", () => {
+      const jane = addJane();
+      const home = store().activeDraftId;
+      store().createDraft();
+      const { outcome } = store().applyAskStep(home, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id, "Jane Smith"),
+        sentAt: null,
+        at: 3,
+      });
+      expect(outcome.kind).toBe("received");
+      expect(store().activeDraftId).not.toBe(home);
+      expect(store().drafts[home]?.asks[jane.id]?.reply).toBeDefined();
+    });
+
+    it("loads imported answers only for rows the roster keeps", () => {
+      const jane = addJane();
+      store().loadAuthors(store().authors, { [jane.id]: ask, gone: ask });
+      expect(store().asks).toEqual({ [jane.id]: ask });
+    });
+
+    it("marks an imported selfId as you only while that row is in the roster", () => {
+      const jane = addJane();
+      store().loadAuthors(store().authors, undefined, "gone");
+      expect(store().selfId).toBeNull();
+      store().loadAuthors(store().authors, undefined, jane.id);
+      expect(store().selfId).toBe(jane.id);
+    });
+
+    it("forgets who you are when your row leaves the roster", () => {
+      const jane = addJane();
+      store().addAuthor("Bob White");
+      store().setSelfId(jane.id);
+      store().loadAuthors(store().authors.filter((author) => author.id !== jane.id));
+      expect(store().selfId).toBeNull();
+
+      const bob = store().authors[0];
+      if (!bob) throw new Error("expected Bob");
+      store().setSelfId(bob.id);
+      store().loadAuthors(store().authors);
+      expect(store().selfId).toBe(bob.id);
+      store().removeAuthor(bob.id);
+      expect(store().selfId).toBeNull();
+    });
+
+    it("drops a contributor's ask when they are removed", () => {
+      const jane = addJane();
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
+      store().removeAuthor(jane.id);
+      expect(store().asks).toEqual({});
+    });
+
+    it("clears on reset, and does not travel into a duplicate", () => {
+      const jane = addJane();
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
+      const copy = store().duplicateDraft(store().activeDraftId);
+      expect(copy && store().drafts[copy]?.asks).toEqual({});
+
+      store().reset();
+      expect(store().asks).toEqual({});
+      expect(store().drafts[store().activeDraftId]?.asks).toEqual({});
+    });
+  });
+
+  describe("this is me", () => {
+    function addTwo() {
+      store().addAuthor("Ana Lima");
+      store().addAuthor("Ben White");
+      const [ana, ben] = store().authors;
+      if (!(ana && ben)) throw new Error("expected two contributors");
+      return { ana, ben };
+    }
+
+    it("is kept per draft, through a switch away and back", () => {
+      const { ana } = addTwo();
+      store().setSelfId(ana.id);
+      const home = store().activeDraftId;
+      store().createDraft();
+      expect(store().selfId).toBeNull();
+      store().switchDraft(home);
+      expect(store().selfId).toBe(ana.id);
+    });
+
+    it("leaves you out of the co-authors and their answers", () => {
+      const { ana, ben } = addTwo();
+      const draftId = store().activeDraftId;
+      for (const { id } of [ana, ben]) {
+        store().applyAskStep(draftId, { kind: "sent", contributorId: id, prefilled: false, at: 1 });
+        const row = createAuthor(id === ana.id ? ana.name : ben.name, {
+          id,
+          contributions: ROLE_NAMES.map((role) => ({ role, score: role === "Software" ? 100 : 0 })),
+        });
+        store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt: 2, at: 3 });
+      }
+      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, answered: 2, open: 2 });
+      store().setSelfId(ana.id);
+      expect(askSummary(store().authors, store().asks, store().selfId)).toEqual({ total: 1, answered: 1, open: 1 });
+    });
+
+    it("follows the row into a duplicate, and clears on reset", () => {
+      const { ben } = addTwo();
+      store().setSelfId(ben.id);
+      const copy = store().duplicateDraft(store().activeDraftId);
+      const duplicate = copy ? store().drafts[copy] : undefined;
+      expect(duplicate?.selfId).toBe(duplicate?.authors[1]?.id);
+      expect(duplicate?.selfId).not.toBe(ben.id);
+
+      store().reset();
+      expect(store().selfId).toBeNull();
+    });
+
+    it("survives a repair, and a malformed one is dropped", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const merged = merge?.(
+        { activeDraftId: "d1", drafts: { d1: { selfId: "ana-1" }, d2: { selfId: "not an id" } } },
+        initial,
+      ) as typeof initial;
+      expect(merged.selfId).toBe("ana-1");
+      expect(merged.drafts.d2?.selfId).toBeNull();
+      const saved = useContributionStore.persist.getOptions().partialize?.(merged) as { drafts: Record<string, Draft> };
+      expect(saved.drafts.d1?.selfId).toBe("ana-1");
     });
   });
 
@@ -661,6 +941,17 @@ describe("contribution store", () => {
       });
     }
     const storageEvent = (key: string) => new StorageEvent("storage", { key, storageArea: globalThis.localStorage });
+
+    it("writes nothing for a change storage does not keep", () => {
+      store().setTitle("Saved");
+      const writes = vi.spyOn(Storage.prototype, "setItem");
+      store().setReviewHighlight({ contributorId: "a", target: "corresponding" });
+      store().setInspectorTab("review");
+      expect(writes).not.toHaveBeenCalled();
+      store().setTitle("Edited");
+      expect(writes).toHaveBeenCalled();
+      writes.mockRestore();
+    });
 
     it("adopts the other tab's save of the open draft without writing it back", () => {
       store().setTitle("Mine");
@@ -734,13 +1025,38 @@ describe("contribution store", () => {
       const fromSession = new StorageEvent("storage", { key: PERSIST_KEY, storageArea: globalThis.sessionStorage });
       expect(followOtherTab(fromSession)).toBe(false);
 
-      // A newer build's save is not this tab's to adopt.
-      globalThis.localStorage.setItem(PERSIST_KEY, JSON.stringify({ state: {}, version: PERSIST_VERSION + 1 }));
-      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
-
       hydrated.mockReturnValue(false);
       expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
       expect(store().title).toBe("Open here");
+    });
+
+    // A version bump alone cannot protect a newer build's data from a tab that
+    // was already open on the same draft: it never re-reads that draft. Its
+    // next save is what has to stop.
+    // The real store's adapter yields once per page, so this is the one test
+    // that sees it do so.
+    it("never saves over a newer build's save of the draft open here, and reloads instead", () => {
+      store().setTitle("Open here");
+      const open = store().activeDraftId;
+      const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
+      const reply = { contributions: [], sentAt: 9 };
+      const newerSave = JSON.stringify({
+        state: {
+          drafts: { [open]: { ...stored.state.drafts[open], asks: { jane: { sentAt: 1, prefilled: false, reply } } } },
+          activeDraftId: open,
+        },
+        version: PERSIST_VERSION + 1,
+      });
+      globalThis.localStorage.setItem(PERSIST_KEY, newerSave);
+      // Not adopted, but this idle tab reloads into the newer build at once.
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
+
+      store().setTitle("Edited here");
+
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).toBe(newerSave);
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${open}`)).toBeNull();
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
     });
 
     it("keeps the open draft when the other tab deleted it", () => {
@@ -958,7 +1274,13 @@ describe("contribution store", () => {
               // A claim is a lock: an id that a URL fragment would mangle, or a
               // half-written one, must not be honoured.
               claim: { contributorId: "not a valid id", sourceDraftId: "src-1" },
-              asked: { "bad id": 1, "good-id": 2, "another-good-id": "yesterday" },
+              asks: {
+                "bad id": { sentAt: 1, prefilled: true },
+                "good-id": { sentAt: 2, prefilled: false },
+                "no-time": { prefilled: true },
+                "no-kind": { sentAt: 3 },
+                "not-an-object": 4,
+              },
             },
           },
         },
@@ -966,7 +1288,72 @@ describe("contribution store", () => {
       ) as typeof initial;
 
       expect(merged.claim).toBeNull();
-      expect(merged.asked).toEqual({ "good-id": 2 });
+      expect(merged.asks).toEqual({ "good-id": { sentAt: 2, prefilled: false } });
+    });
+
+    it("turns the old asked timestamps into pre-filled asks", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const merged = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: { asked: { "bad id": 1, "good-id": 2, "another-good-id": "yesterday" } },
+            d2: { asked: { jane: 5 } },
+          },
+        },
+        initial,
+      ) as typeof initial;
+
+      // Every ask before blank asks existed carried the asker's guess.
+      expect(merged.asks).toEqual({ "good-id": { sentAt: 2, prefilled: true } });
+      expect(merged.drafts.d2?.asks).toEqual({ jane: { sentAt: 5, prefilled: true } });
+      expect(merged.drafts.d2).not.toHaveProperty("asked");
+      // Persisted through the live draft too, not only the shelf.
+      const saved = useContributionStore.persist.getOptions().partialize?.(merged) as { drafts: Record<string, Draft> };
+      expect(saved.drafts.d1).not.toHaveProperty("asked");
+    });
+
+    // A later build adds fields (a co-author's reply on an ask, say). An older
+    // tab that loads them and saves must write them back untouched.
+    it("keeps keys it does not know, on drafts and on asks, through load and save", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const reply = {
+        contributions: [],
+        equalContribution: false,
+        corresponding: false,
+        sentAt: 9,
+        receivedAt: 10,
+        decisions: {},
+        provenance: "a later key",
+      };
+      const merged = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: {
+              future: "kept",
+              asks: {
+                jane: { sentAt: 1, prefilled: false, reply },
+                bob: { sentAt: 2, prefilled: true, reply: { contributions: "garbled" } },
+              },
+            },
+            d2: { future: "kept too" },
+          },
+        },
+        initial,
+      ) as typeof initial;
+      useContributionStore.setState(merged);
+      store().setTitle("Edited here");
+
+      const saved = useContributionStore.persist.getOptions().partialize?.(store()) as {
+        drafts: Record<string, Draft & { future?: string }>;
+      };
+      expect(saved.drafts.d1?.future).toBe("kept");
+      expect(saved.drafts.d1?.title).toBe("Edited here");
+      expect(saved.drafts.d1?.asks.jane).toEqual({ sentAt: 1, prefilled: false, reply });
+      // A malformed reply costs the reply, not the ask.
+      expect(saved.drafts.d1?.asks.bob).toEqual({ sentAt: 2, prefilled: true });
+      expect(saved.drafts.d2?.future).toBe("kept too");
     });
 
     it("keeps a well-formed claim through the repair pass", () => {
@@ -991,7 +1378,8 @@ describe("contribution store", () => {
         outputLocale: "en",
         updatedAt: 0,
         claim: null,
-        asked: {},
+        asks: {},
+        selfId: null,
       });
       const state = {
         drafts: { a: draft("a", "Active paper"), b: draft("b", "Held paper") },
@@ -1048,16 +1436,42 @@ describe("contribution store", () => {
         outputLocale: "en" as const,
         updatedAt: 0,
         claim: null,
-        asked: {},
+        asks: {},
+        selfId: null,
       };
       storage.setItem(PERSIST_KEY, {
         state: { drafts: { c: fresh }, activeDraftId: "c", uiLocale: "en", welcomeSeen: true },
         version: PERSIST_VERSION,
       });
 
+      // Nothing written: the newer build's save is left exactly as it was,
+      // and this tab reloads to become that build.
       expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:b`)).toContain("Held paper");
-      // The newer active draft moves to the shelf rather than being overwritten.
-      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:a`)).toContain("Active paper");
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).toContain("Active paper");
+      expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:c`)).toBeNull();
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
+      expect(store().newerVersionBlocked).toBe(false);
+      hydrated.mockRestore();
+      globalThis.localStorage.clear();
+    });
+
+    it("flags once that edits are not saved when it cannot reload into the newer build", () => {
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      vi.mocked(reloadForNewerSave).mockReturnValue(false);
+      const storage = announcingStorage();
+      const newerSave = JSON.stringify({ state: { drafts: {}, activeDraftId: "a" }, version: PERSIST_VERSION + 1 });
+      globalThis.localStorage.setItem(PERSIST_KEY, newerSave);
+      const value = {
+        state: { drafts: {}, activeDraftId: "c", uiLocale: "en" as const, welcomeSeen: true },
+        version: PERSIST_VERSION,
+      };
+
+      storage.setItem(PERSIST_KEY, value);
+      storage.setItem(PERSIST_KEY, value);
+
+      expect(globalThis.localStorage.getItem(PERSIST_KEY)).toBe(newerSave);
+      expect(reloadForNewerSave).toHaveBeenCalledTimes(1);
+      expect(store().newerVersionBlocked).toBe(true);
       hydrated.mockRestore();
       globalThis.localStorage.clear();
     });
@@ -1078,7 +1492,8 @@ describe("contribution store", () => {
         outputLocale: "en",
         updatedAt: 0,
         claim: null,
-        asked: {},
+        asks: {},
+        selfId: null,
       });
       const write = (tab: typeof tabA, active: string, drafts: Draft[]) =>
         tab.setItem(PERSIST_KEY, {
@@ -1134,7 +1549,8 @@ describe("contribution store", () => {
         outputLocale: "en",
         updatedAt: 0,
         claim: null,
-        asked: {},
+        asks: {},
+        selfId: null,
       });
       const drafts = { a: draft("a", "First"), b: draft("b", "Held paper") };
       const state = { drafts, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };

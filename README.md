@@ -18,15 +18,17 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
 
 **Try it:** [credit.duinlab.nl](https://credit.duinlab.nl)
 
-![The CRediT Matrix workspace in three columns: contributors on the left, an editable contribution grid in the middle, and the generated statement with export controls on the right. One contributor row is hovered, showing its controls and the row menu that holds the ask-a-co-author action](docs/screenshots/hero.png)
+![The CRediT Matrix workspace with sample data: a contributor rail on the left, the contribution grid as the main canvas with a strip above it counting answered co-authors, and an inspector on the right with Statement, Team and Review tabs. The Team tab is open and lists each contributor as not asked yet, with a Copy message button per person and an Ask everyone not yet asked button](docs/screenshots/hero.png)
 
 ## What it does
 
 - **Contributors**: add, rename, reorder, or paste a whole author list. Paste an ORCID iD or URL to
   look up the name, or a DOI to fill the whole list from the published record
-- **Ask your co-authors**: send each person a link addressed to their own row. They tick what they
-  did and send the link back; opening it fills in their row (roles, name, and iD) and nothing
-  else
+- **Ask your co-authors**: send each person a link addressed to their own row, either blank or
+  with your guess for them to check. The link opens a co-author page made for a phone, where they
+  pick a level per role and send the link back. Opening the reply keeps their answer beside your
+  row instead of overwriting it. You settle each difference in the Review tab, and each choice can
+  be undone on its own. The Team tab shows who you asked and who answered
 - **Drafts**: one per paper, switched from the header. They stay in this browser, open tabs follow
   each other's changes, and **Delete all drafts** clears them
 - **Contribution grid**: select a cell to assign one of the 14 roles, as a yes/no value or as a
@@ -39,14 +41,15 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation);
   machine-readable exports keep the canonical English CRediT terms
 - **Exports**: copy or download JATS4R XML, CSV, JSON, and Markdown, or download the heatmap as SVG
-  or PNG
-- **Sharing and import**: encode a draft in a URL, paste names, or import JSON, CSV, or JATS4R XML
+  or PNG. The JSON file also carries your co-authors' answers
+- **Sharing and import**: encode a draft in a URL, paste names, or import JSON, CSV, or JATS4R XML.
+  Importing a JSON file into the same draft brings the co-authors' answers back
 - **Works offline**: install it, and a draft survives a flight. Only the ORCID and DOI lookups need
   a network
 
 | First run | Statement & export |
 |---|---|
-| ![The first-run welcome over the empty workspace: three numbered steps, notes on drafts and asking co-authors, and a load-sample-data action](docs/screenshots/empty-state.png) | ![The statement pane: grouping and level options, the generated statement, a copy-statement button, and a format picker offering copy or download](docs/screenshots/statement-export.png) |
+| ![The first-run welcome as a dialog over the empty workspace: three numbered steps, notes on drafts and asking co-authors, and Load sample data and Start fresh buttons](docs/screenshots/empty-state.png) | ![The Statement tab of the inspector: a By author or By role switch, the generated statement, a Copy statement button, and the open Export data menu with Copy and Download for XML (JATS4R), JSON, CSV and Markdown](docs/screenshots/statement-export.png) |
 
 ---
 
@@ -109,9 +112,11 @@ pnpm dev            # → http://localhost:3000
 
 `pnpm build` writes a static export to `out/`, which any static host can serve; response headers,
 including the CSP, are in [`public/_headers`](public/_headers). The live demo serves it as
-Cloudflare Workers static assets, with no Worker code. A push to `main` builds and deploys it;
-[CI](.github/workflows/ci.yml) runs on pull requests and on pushes to `main`: it lints,
-typechecks, runs the unit and end-to-end tests, and dry-runs the build. It never deploys.
+Cloudflare Workers static assets, with no Worker code. [CI](.github/workflows/ci.yml) runs on pull
+requests and on pushes to `main`: it lints, typechecks, runs the unit and end-to-end tests, and
+builds the site. On `main`, once all of that passes, GitHub Actions deploys the build it tested. A
+pull request gets a preview version that does not go live. [docs/deploy.md](docs/deploy.md) has the
+details and the one-time setup.
 
 To host it on Cloudflare yourself, set your own domain in [wrangler.jsonc](wrangler.jsonc):
 
@@ -122,8 +127,8 @@ pnpm deploy         # build + deploy to your Cloudflare account
 
 `pnpm build` runs `next build`, then [`scripts/postbuild.mjs`](scripts/postbuild.mjs). That script
 replaces `'unsafe-inline'` in the CSP with the hashes of the exported inline scripts, and names the
-service worker's cache after the build. To roll back a bad deploy, pick the previous version under the
-Worker's **Deployments** in the Cloudflare dashboard.
+service worker's cache after the build. To roll back a bad deploy, see
+[docs/deploy.md](docs/deploy.md#roll-back).
 
 ## Roadmap
 
@@ -139,8 +144,6 @@ Worker's **Deployments** in the Cloudflare dashboard.
   Refresh them with `node scripts/fetch-credit-translations.mjs`.
 - **Read more from ORCID.** The lookup takes the name only. Affiliation is the field submission
   systems ask for next.
-- **Make sharing discoverable.** The onboarding barely hints at sharing a draft or asking a
-  co-author to fill in their own row. Both are easy to miss entirely.
 
 ## Contributing
 

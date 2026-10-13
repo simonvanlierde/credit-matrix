@@ -2,7 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { PERSIST_KEY } from "../src/store/persist-meta";
-import { asReturningVisitor, copyFrom, onScreen, seedStorage, stubUpstream } from "./helpers";
+import { asReturningVisitor, copyFrom, onScreen, seedStorage, strongestAnswer, stubUpstream } from "./helpers";
 
 test.describe("Happy path UI flows", () => {
   test.beforeEach(async ({ page }) => {
@@ -116,6 +116,7 @@ test.describe("Happy path UI flows", () => {
     // contract, so a `**` pattern must not hide a malformed request.
     await stubUpstream(
       page,
+      // biome-ignore lint/security/noSecrets: a public Crossref URL, not a credential.
       "https://api.crossref.org/works/10.1038%2Fs41586-020-2649-2?mailto=credit%40duinlab.nl",
       200,
       {
@@ -345,7 +346,10 @@ test.describe("Happy path UI flows", () => {
 
     // Ask the second contributor (Rosalind E. Franklin) to fill in their own row.
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
+    const askUrl = await copyFrom(
+      page,
+      page.getByRole("button", { name: "Ask Rosalind E. Franklin to check your guess" }),
+    );
     // Everything the link carries — whose row, which draft — rides inside the
     // payload now; the URL is nothing but the fragment.
     expect(askUrl).toContain("#s=");
@@ -356,22 +360,22 @@ test.describe("Happy path UI flows", () => {
     const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
     const coauthor = await coauthorContext.newPage();
     await coauthor.goto(askUrl);
-    await expect(onScreen(coauthor, "You are filling in Rosalind E. Franklin's contributions")).toBeVisible();
+    await expect(onScreen(coauthor, /Answering as Rosalind E\. Franklin\./)).toBeVisible();
 
     // She assigns herself a role. The link carries only her row, so no one
     // else's is there to change.
-    await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    await expect(coauthor.getByRole("button", { name: /^Validation for Ada Lovelace:/ })).toHaveCount(0);
+    await strongestAnswer(coauthor, "Validation").click();
+    await expect(coauthor.getByText("Ada Lovelace")).toHaveCount(0);
 
-    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Send back" }));
     await coauthorContext.close();
 
     // The originator just opens what she sent — no Import knowledge required.
     await page.goto(returnedUrl);
-    await expect(onScreen(page, /Rosalind E\. Franklin's roles were filled in/)).toBeVisible();
+    await expect(onScreen(page, "Rosalind E. Franklin's answer arrived: 1 difference.")).toBeVisible();
 
-    // Her row lands; her opinion about Ada's row does not.
-    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: Lead" })).toBeVisible();
+    // Her answer is kept beside her row, which keeps your levels until you settle it.
+    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: None" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Validation for Ada Lovelace: None" })).toBeVisible();
   });
 
@@ -384,21 +388,24 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
 
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
+    const askUrl = await copyFrom(
+      page,
+      page.getByRole("button", { name: "Ask Rosalind E. Franklin to check your guess" }),
+    );
 
     const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
     const coauthor = await coauthorContext.newPage();
     await coauthor.goto(askUrl);
-    await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
+    await strongestAnswer(coauthor, "Validation").click();
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Send back" }));
     await coauthorContext.close();
 
     await page.getByRole("button", { name: "Import" }).click();
     await page.locator("#import-text").fill(returnedUrl);
     await page.getByRole("button", { name: "Import data" }).click();
 
-    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: Lead" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Validation for Ada Lovelace: None" })).toBeVisible();
+    await expect(onScreen(page, "Rosalind E. Franklin's answer arrived: 1 difference.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: None" })).toBeVisible();
 
     // Dismissing the outcome strip takes the row's Updated mark down with it.
     await expect(page.getByText("Updated", { exact: true })).toBeVisible();
@@ -463,7 +470,10 @@ test.describe("Happy path UI flows", () => {
     await page.locator("#import-text").fill("Ada Lovelace\nRosalind E. Franklin");
     await page.getByRole("button", { name: "Import data" }).click();
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
-    const askUrl = await copyFrom(page, page.getByRole("button", { name: "Ask Rosalind E. Franklin to fill this in" }));
+    const askUrl = await copyFrom(
+      page,
+      page.getByRole("button", { name: "Ask Rosalind E. Franklin to check your guess" }),
+    );
 
     // The co-author answers — in their own browser, not a page sharing this
     // one's localStorage (which the old clearFirst seed silently wiped).
@@ -471,8 +481,8 @@ test.describe("Happy path UI flows", () => {
     const coauthor = await coauthorContext.newPage();
     await seedStorage(coauthor, { welcomeSeen: true });
     await coauthor.goto(askUrl);
-    await coauthor.getByRole("button", { name: /^Validation for Rosalind E\. Franklin:/ }).click();
-    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Copy the link to send back" }));
+    await strongestAnswer(coauthor, "Validation").click();
+    const returnedUrl = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Send back" }));
     await coauthorContext.close();
 
     // Meanwhile you have gone back to paper one. The reply must not land here.
@@ -484,9 +494,8 @@ test.describe("Happy path UI flows", () => {
     await page.locator("#import-text").fill(returnedUrl);
     await page.getByRole("button", { name: "Import data" }).click();
 
-    // It switched to paper two and merged there. Paper two is an ordinary
-    // yes/no draft, so the merged full score reads as Contributed.
-    await expect(page.getByRole("button", { name: "Validation for Rosalind E. Franklin: Contributed" })).toBeVisible();
+    // It switched to paper two and kept the answer there.
+    await expect(onScreen(page, "Rosalind E. Franklin's answer arrived: 1 difference.")).toBeVisible();
     await expect(page.getByRole("button", { name: /^Drafts: Paper two/ })).toBeVisible();
 
     // Paper one still has its three sample contributors, unchanged.
@@ -668,7 +677,7 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: "Data curation for Ada Lovelace: None" })).toBeVisible();
 
     await page.getByRole("button", { name: "Author" }).first().click();
-    const statement = page.getByLabel("Statement and export").locator("p").filter({ hasText: "CRediT:" });
+    const statement = page.getByRole("tabpanel", { name: "Statement" }).locator("p").filter({ hasText: "CRediT:" });
     await expect(statement).toContainText("Acknowledgements: Ada Lovelace");
     // The wording toggles live behind the statement's options gear now.
     await page.getByRole("button", { name: "Statement options" }).click();
@@ -777,7 +786,7 @@ test.describe("Happy path UI flows", () => {
     // The export buttons and the card width must not move when the legend grows.
     // Start from Yes / no (the sample opens in Levels) so the flip is real.
     await page.getByRole("radio", { name: "Yes / no" }).click();
-    const exports = page.getByRole("group", { name: "Heatmap" });
+    const exports = page.getByRole("button", { name: "Heatmap", exact: true });
     const card = page.locator("section[aria-label='Contribution grid'] > div");
     const before = { x: (await exports.boundingBox())?.x, w: (await card.boundingBox())?.width };
     await page.getByRole("radio", { name: "Levels" }).click();
@@ -914,8 +923,9 @@ test.describe("Happy path UI flows", () => {
   test("downloads a browser-generated PNG heatmap", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
+    await page.getByRole("button", { name: "Heatmap", exact: true }).click();
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: "PNG" }).click();
+    await page.getByRole("button", { name: "Download PNG" }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("credit-heatmap.png");
     const path = await download.path();
@@ -945,7 +955,7 @@ test.describe("Happy path UI flows", () => {
     await firstName.fill("A".repeat(240));
     await firstName.press("Enter");
     expect(await page.evaluate(() => document.body.scrollWidth)).toBe(320);
-    const statement = page.getByLabel("Statement and export");
+    const statement = page.getByRole("tabpanel", { name: "Statement" });
     expect((await statement.boundingBox())?.width).toBeLessThanOrEqual(320);
   });
 
@@ -954,11 +964,11 @@ test.describe("Happy path UI flows", () => {
     await page.getByRole("button", { name: "Load sample data" }).click();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
 
-    // XML (JATS4R) is the default export format; downloading generates it in the
-    // browser and saves it directly (no API round-trip).
-    await expect(page.getByRole("combobox", { name: "Export format" })).toHaveText(/XML \(JATS4R\)/);
+    // Downloading generates the file in the browser and saves it directly (no
+    // API round-trip).
+    await page.getByRole("button", { name: "Export data" }).click();
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Download" }).click();
+    await page.getByRole("button", { name: "Download XML (JATS4R)" }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("credit-contributors.xml");
   });

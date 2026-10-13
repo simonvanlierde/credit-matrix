@@ -1,14 +1,10 @@
 import type { Author, Contribution } from "../author";
-import { isValidOrcid } from "../author";
+import { isValidOrcid, LEVEL_SCORE, normalizeOrcid } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 
-/** The score each `degree-contribution` level imports as: the top of its `scoreToLevel` band. */
-const LEVEL_SCORES = new Map([
-  ["lead", 100],
-  ["equal", 66],
-  ["supporting", 33],
-]);
+/** The score each `degree-contribution` level imports as. "none" is not one: a listed role counts. */
+const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(([level]) => level !== "none"));
 
 /**
  * Parse a JATS4R XML string (as produced by `toJats4rXml()` or the original
@@ -70,10 +66,10 @@ export function fromJats4rXml(xmlString: string): Author[] {
       score: scoreByRole.get(r.name) ?? 0,
     }));
 
-    // Try to read ORCID from an `<contrib-id contrib-id-type="orcid">` element
+    // The iD is a full URI (JATS4R) or bare (older exports); state keeps it bare.
     // biome-ignore lint/security/noSecrets: this is a CSS attribute selector, not a credential.
     const orcidEl = contrib.querySelector('contrib-id[contrib-id-type="orcid"]');
-    const orcid = orcidEl?.textContent?.trim() ?? "";
+    const orcid = normalizeOrcid(orcidEl?.textContent?.trim() ?? "");
     const contributorType = contribType === "contributor" ? "non-author" : "author";
     // JATS spells both markers "yes"; anything else, including absence, is no.
     const equalContribution = contrib.getAttribute("equal-contrib") === "yes";

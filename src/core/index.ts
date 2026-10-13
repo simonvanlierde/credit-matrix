@@ -1,3 +1,28 @@
+export type {
+  Ask,
+  AskEvent,
+  AskState,
+  Choice,
+  Decision,
+  Difference,
+  Level,
+  Outcome,
+  Patch,
+  Reply,
+  Review,
+  Target,
+} from "./ask";
+export {
+  ASK_TARGETS,
+  AskSchema,
+  applyPatch,
+  askStep,
+  importAnswers,
+  isMarker,
+  levelOf,
+  review,
+  settledAt,
+} from "./ask";
 export type { Author, Contribution } from "./author";
 export {
   AuthorSchema,
@@ -7,6 +32,7 @@ export {
   isAllBinary,
   isUsableAuthorName,
   isValidOrcid,
+  LEVEL_SCORE,
   MAX_AUTHOR_NAME_LENGTH,
   MAX_AUTHORS,
   MAX_IMPORT_BYTES,
@@ -39,13 +65,13 @@ export type { DoiLookupResult } from "./doi-lookup";
 export { DOI_INPUT_REGEX, lookupDoiWork, normalizeDoi } from "./doi-lookup";
 export { fromCsv, toCsv } from "./export/csv";
 export { buildHeatmapSvg } from "./export/heatmap-svg";
-export { fromJson, toJson } from "./export/json";
+export { fromJson, NewerVersionError, toJson } from "./export/json";
 export { toMarkdown } from "./export/markdown";
 export { toJats4rXml } from "./export/xml";
 export { fromJats4rXml } from "./export/xml-import";
 export type { StatementFormat } from "./generate-statement";
 export { generateStatement } from "./generate-statement";
-export { keepKnownIds, mergeContributorRow } from "./merge-row";
+export { keepKnownIds } from "./merge-row";
 export type { OrcidLookupResult } from "./orcid-lookup";
 export { lookupOrcidPerson } from "./orcid-lookup";
 export {

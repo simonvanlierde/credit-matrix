@@ -31,28 +31,35 @@ pnpm lint           # Biome (format + lint); append :fix to auto-fix
 pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
-pnpm validate:jats  # JATS fixture against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
+pnpm verify         # lint, typecheck, and unit tests under the coverage gate (also the pre-push hook)
+pnpm validate:jats  # check the JATS export against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
 ```
 
-CI runs `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`, and `pnpm validate:jats` on every PR.
+Before the first e2e run, install the browser: `pnpm exec playwright install chromium`.
+
+CI runs on every pull request and on every push to `main`. It runs `pnpm verify`,
+`pnpm validate:jats`, the e2e suite and a build, and deploys `main` only when all of them pass.
 Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 ## Testing
 
 - **Unit (Vitest)**: `pnpm test`. Covers the domain layer, the store, and `src/lib`: name
   parsing, initials deduplication, statement formats, score-to-level boundaries, import/export round
-  trips, validation, and heatmap SVG generation. `jats-fixture.test.ts` keeps the JATS export of
-  the sample draft in `src/core/__tests__/fixtures/`; after a deliberate change to the export,
-  update it with `pnpm vitest run -u` and run `pnpm validate:jats`.
+  trips, validation, and heatmap SVG generation. `format-fixtures.test.ts` decodes frozen files
+  in `src/core/__tests__/fixtures/` (a share link, JSON, CSV and JATS); after a deliberate format
+  change, regenerate the affected fixture and run `pnpm validate:jats`.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
-  the co-author claim round trip. `drafts.spec.ts` covers deleting all drafts. `a11y.spec.ts` runs the axe scans. `messages.spec.ts`,
-  `design-tokens.spec.ts`, and `offline.spec.ts` guard the locale catalogs, the design tokens, and
-  the service worker.
+  the co-author claim round trip. `review.spec.ts` covers settling co-author answers in the Review
+  tab, with its own axe scan. `drafts.spec.ts` covers deleting all drafts. `a11y.spec.ts` runs the
+  axe scans. `messages.spec.ts`, `design-tokens.spec.ts`, and `offline.spec.ts` guard the locale
+  catalogs, the design tokens, and the service worker.
 
 Every PR runs Biome, typecheck, unit coverage, the full Playwright suite (including the axe scans),
 and a static export build. In CI, Playwright runs against `wrangler dev`, which applies
-`public/_headers`. Locally it uses `pnpm dev`, which has no CSP.
+`public/_headers`. Locally it uses `pnpm dev`, which has no CSP. You only need
+[wrangler](https://developers.cloudflare.com/workers/wrangler/) for `pnpm preview` and
+`pnpm deploy`, not for development or the tests you run locally.
 
 ### Accessibility
 
@@ -66,6 +73,38 @@ Two automated checks guard the UI. They are guardrails, not a WCAG conformance c
 The UI includes a skip link, landmark regions, radiogroup segmented controls, and a
 `prefers-reduced-motion` fallback that neutralizes transitions and animations. Drag-to-reorder is
 keyboard-accessible, and a live region announces copy, ORCID-lookup, and import status.
+
+## Translating
+
+The app has nine languages. A translation lives in one of three places, depending on the string.
+
+| What | File | Notes |
+| --- | --- | --- |
+| Interface text (buttons, labels, dialogs) | `src/messages/<locale>.json` | ICU messages. `en.json` is the source. |
+| Statement and heatmap text ("Acknowledgements", contribution levels, empty-state line) | `src/core/credit-i18n/ui/<locale>.json` | Holds only overrides. A missing key falls back to English. |
+| CRediT role names and descriptions | `src/core/credit-i18n/translations/<locale>.json` | Vendored from [contributorshipcollaboration/credit-translation](https://github.com/contributorshipcollaboration/credit-translation). Do not edit it here. Fix the role name upstream, then refresh with `node scripts/fetch-credit-translations.mjs` and review the diff. |
+
+Locale codes are BCP 47 tags, such as `pt-PT` and `zh-Hans`.
+
+**Add a language**
+
+1. Add `{ code, name }` to `AVAILABLE_LOCALES` in `src/core/credit-i18n/index.ts`. The name is the
+   language's own name for itself.
+2. Add `src/messages/<code>.json` with every key from `en.json`.
+3. Add `src/core/credit-i18n/ui/<code>.json`, copying the keys from an existing locale.
+4. Add the locale to `LOCALES` in `scripts/fetch-credit-translations.mjs` and run the script. This
+   only works if upstream already has that language. If it does not, translate the roles upstream
+   first.
+
+**The gate.** `e2e/messages.spec.ts` fails if a locale the picker offers has no catalog files, if a
+key set differs from English in either direction, if ICU syntax is malformed, or if a placeholder is
+dropped. Run it with `pnpm exec playwright test e2e/messages.spec.ts`.
+
+To report a wrong or missing translation without a PR, use the translation issue form.
+
+## Deploys and rollback
+
+See [docs/deploy.md](docs/deploy.md).
 
 ## Commit and PR conventions
 

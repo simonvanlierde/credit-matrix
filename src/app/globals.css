@@ -38,6 +38,9 @@
   --color-on-error: #ffffff;
   --color-on-error-container: #93000a;
 
+  /* --- Flag: a co-author answered differently. Marks and highlights only, never fills. --- */
+  --color-flag: #b45309;
+
   /* --- Typography --- */
   --font-headline: var(--font-newsreader), Georgia, serif;
   --font-body: var(--font-plex-sans), system-ui, sans-serif;
@@ -73,6 +76,8 @@
   --color-error-container: #93000a;
   --color-on-error: #690005;
   --color-on-error-container: #ffdad6;
+
+  --color-flag: #f0a35e;
 }
 
 /*
@@ -120,6 +125,7 @@
   --color-error-container: var(--color-error-container);
   --color-on-error: var(--color-on-error);
   --color-on-error-container: var(--color-on-error-container);
+  --color-flag: var(--color-flag);
 
   --font-headline: var(--font-headline);
   --font-body: var(--font-body);
@@ -165,6 +171,40 @@ html,
 body {
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* The header is fixed, so anything focus scrolls into view would otherwise
+   land under it (WCAG 2.4.11). */
+html {
+  scroll-padding-top: 4rem;
+}
+
+/* The co-author page stands alone: no app header, no workspace skip links, and
+   the page scrolls as a document under its sticky Send bar. */
+body:has([data-coauthor-page]) {
+  [data-app-header],
+  [data-workspace-skip] {
+    display: none;
+  }
+
+  #main-content {
+    height: auto;
+    overflow: visible;
+    padding-top: 0;
+  }
+}
+
+html:has([data-coauthor-page]) {
+  scroll-padding-top: 1rem;
+  scroll-padding-bottom: 7rem;
+
+  /* hidden makes body a scroll container that never scrolls, which pins the
+     sticky Send bar to the end of the page; clip trims the same overflow
+     without that. */
+  &,
+  & body {
+    overflow-x: clip;
+  }
 }
 
 /*
@@ -296,6 +336,20 @@ dialog[open]::backdrop {
   .undo-enter {
     grid-template-rows: 0fr;
     opacity: 0;
+  }
+}
+
+/* Settling a difference: the cell eases into its agreed level, and a flag ring
+   fades off it, so the heatmap visibly becomes the record. Reduced motion keeps
+   only the fill step (see the carve-out below). */
+.contribution-cell.cell-settle {
+  transition-duration: 600ms;
+  animation: cell-settle 900ms var(--ease-out);
+}
+
+@keyframes cell-settle {
+  from {
+    box-shadow: 0 0 0 3px var(--color-flag);
   }
 }
 

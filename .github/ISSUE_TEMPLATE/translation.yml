@@ -1,0 +1,45 @@
+name: Translation fix
+description: Report a wrong, unclear, or missing translation
+labels: [translation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        CRediT role names come from the community
+        [credit-translation](https://github.com/contributorshipcollaboration/credit-translation)
+        repository. If the problem is a role name or description, please also report it there.
+  - type: input
+    id: locale
+    attributes:
+      label: Language
+      description: The language and code, for example Dutch (nl) or Portuguese (pt-PT).
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: String key or screen
+      description: The key in src/messages/<locale>.json, or where you see the text in the app.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text
+    validations:
+      required: true
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested text
+    validations:
+      required: true
+  - type: dropdown
+    id: native
+    attributes:
+      label: Are you a native speaker of this language?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { PERSIST_KEY, PERSIST_VERSION } from "../src/store/persist-meta";
 import { onScreen } from "./helpers";
 
 test("deletes every draft after confirmation, and a reload finds none", async ({ page }) => {
@@ -41,4 +42,19 @@ test("follows another tab's edit of the open draft and says so", async ({ page, 
 
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(2);
   await expect(onScreen(page, "This draft was updated in another tab.")).toBeVisible();
+});
+
+// The refusal is found during the restore, before the status strip has
+// mounted: it must still be shown.
+test("says at load that edits are not saved when it cannot reload into a newer build", async ({ page }) => {
+  await page.addInitScript(
+    ({ key, version }) => {
+      window.localStorage.setItem(key, JSON.stringify({ state: { drafts: {}, activeDraftId: "a" }, version }));
+      // A reload just happened, so the loop guard refuses another.
+      window.sessionStorage.setItem("credit-matrix:reloaded-for-newer-save", String(Date.now()));
+    },
+    { key: PERSIST_KEY, version: PERSIST_VERSION + 1 },
+  );
+  await page.goto("/");
+  await expect(onScreen(page, /A newer version of CRediT Matrix saved your drafts/)).toBeVisible();
 });

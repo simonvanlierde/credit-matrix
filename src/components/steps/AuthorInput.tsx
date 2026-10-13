@@ -19,11 +19,15 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  ArrowDown,
+  ArrowUp,
   AtSign,
   Check,
   Fingerprint,
   GripVertical,
   MoreHorizontal,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pencil,
   Plus,
   PlusCircle,
@@ -33,6 +37,7 @@ import {
   UserCheck,
   UserMinus,
   UserPlus,
+  UserRound,
   UserSearch,
   Users,
   X,
@@ -43,7 +48,6 @@ import { useFormatter, useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { StepHeader } from "@/components/ui/step-header";
 import { UndoBar } from "@/components/ui/undo-bar";
 import {
   type Author,
@@ -54,6 +58,7 @@ import {
   MAX_AUTHORS,
   normalizeOrcid,
   ORCID_REGEX,
+  review,
   splitNameList,
 } from "@/core";
 import { announce } from "@/lib/announce";
@@ -62,7 +67,7 @@ import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useSettled } from "@/lib/use-settled";
-import { useContributionStore } from "@/store/contribution-store";
+import { type Ask, useContributionStore } from "@/store/contribution-store";
 
 // Module constants, not inline literals: dnd-kit memoizes a sensor on its
 // options object, and a fresh one each render rebuilds the activators, which
@@ -140,6 +145,7 @@ export function AuthorList() {
     addAuthor,
     loadSample,
     moveAuthor,
+    applyAskPatch,
     removeAuthor,
     restoreAuthor,
     setTitle,
@@ -156,6 +162,7 @@ export function AuthorList() {
       addAuthor: s.addAuthor,
       loadSample: s.loadSample,
       moveAuthor: s.moveAuthor,
+      applyAskPatch: s.applyAskPatch,
       removeAuthor: s.removeAuthor,
       restoreAuthor: s.restoreAuthor,
       setTitle: s.setTitle,
@@ -169,6 +176,7 @@ export function AuthorList() {
   // Stable while the order is: a fresh array each render changes the sortable
   // context and re-renders every row straight through their memo.
   const authorIds = useContributionStore(useShallow((s) => s.authors.map((a) => a.id)));
+  const workspaceCleared = useContributionStore((s) => s.workspaceCleared);
   const { locked } = useClaimLock();
   const hydrated = useHydrated();
   // Edited locally, committed on blur — like the contributor name fields. A
@@ -178,9 +186,10 @@ export function AuthorList() {
   // External writers (hydration, draft switch, DOI import) own the field when
   // it is not being edited.
   useEffect(() => setTitleDraft(title), [title]);
+  const [collapsed, setCollapsed] = useState(false);
   const [newName, setNewName] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
-  const [removed, setRemoved] = useState<{ author: Author; index: number } | null>(null);
+  const [removed, setRemoved] = useState<{ author: Author; index: number; ask?: Ask } | null>(null);
   const [focusAfterRemove, setFocusAfterRemove] = useState<number | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
@@ -197,9 +206,10 @@ export function AuthorList() {
   }, [removed]);
 
   // The undo buffer belongs to the draft the row was removed from: restoring
-  // it after a switch would insert one paper's contributor into another.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-runs on draft switch by design
-  useEffect(() => setRemoved(null), [activeDraftId]);
+  // it after a switch would insert one paper's contributor into another, and
+  // after Reset or Delete all it would bring back cleared work.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-runs on draft switch and clear by design
+  useEffect(() => setRemoved(null), [activeDraftId, workspaceCleared]);
 
   // Runs after the removed row has left the DOM, so the buttons queried here
   // are the surviving ones. Falls back to the add field when the list empties.
@@ -214,10 +224,12 @@ export function AuthorList() {
   // Stable, so a memoized AuthorRow is not re-rendered by a new callback.
   const handleRemove = useCallback(
     (author: Author, index: number) => {
+      // Removing a contributor drops their open ask; undo brings it back.
+      const ask = useContributionStore.getState().asks[author.id];
       removeAuthor(author.id);
       // No announce() here: the undo bar below mounts as role="status" with the
       // same fact, and saying it twice reads as an echo.
-      setRemoved({ author, index });
+      setRemoved({ author, index, ask });
       // The button that was just activated is unmounting, which drops focus to
       // <body> and sends a keyboard user back to the top of the document. Hand
       // focus to the row that takes its place instead.
@@ -231,6 +243,7 @@ export function AuthorList() {
     // restoreAuthor no-ops when the list has refilled to the cap; claiming
     // the contributor came back when they did not would be a lie.
     if (restoreAuthor(removed.author, removed.index)) {
+      if (removed.ask) applyAskPatch(activeDraftId, { rows: {}, asks: { [removed.author.id]: removed.ask } });
       announce(t("annContributorRestored", { name: removed.author.name }));
     } else {
       announce(t("errAtContributorLimit", { limit: MAX_AUTHORS }), { assertive: true });
@@ -394,9 +407,35 @@ export function AuthorList() {
     void addMany(tokens);
   }
 
-  return (
-    <div className="flex flex-col bg-surface-bright rounded-lg shadow-sm border border-outline-variant/20 p-3 md:p-4 desk:h-full desk:overflow-y-auto">
-      <StepHeader n={1} title={t("stepContributors")} className="mb-3" />
+  const header = (
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <h2
+        className={`text-xs font-semibold uppercase tracking-wider text-on-surface-variant ${collapsed ? "xl:sr-only" : ""}`}
+      >
+        {t("stepContributors")}
+        {authors.length > 0 && <span className="font-normal"> · {authors.length}</span>}
+      </h2>
+      {/* The rail folds away on a desktop only; stacked, it is a section like any other. */}
+      <button
+        type="button"
+        onClick={() => setCollapsed(!collapsed)}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? t("expandContributors") : t("collapseContributors")}
+        title={collapsed ? t("expandContributors") : t("collapseContributors")}
+        className="hidden size-7 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary xl:flex"
+      >
+        {collapsed ? (
+          <PanelLeftOpen className="size-4" aria-hidden="true" />
+        ) : (
+          <PanelLeftClose className="size-4" aria-hidden="true" />
+        )}
+      </button>
+    </div>
+  );
+
+  const full = (
+    <div className="flex flex-col p-3 md:p-4 xl:w-[18rem] xl:p-3 desk:h-full desk:overflow-y-auto">
+      {header}
 
       {locked && (
         <p className="mb-3 rounded-lg bg-primary/5 px-3 py-2 text-xs text-on-surface-variant">{t("claimLockedHint")}</p>
@@ -518,6 +557,26 @@ export function AuthorList() {
           browser, right where deleting them lives. */}
     </div>
   );
+
+  if (!collapsed) return full;
+  return (
+    <>
+      {/* Collapsed: initials only, on a desktop. Narrower windows ignore the
+          fold and show the full list, since the rail is not beside anything. */}
+      <div className="hidden flex-col items-center p-2 xl:flex desk:h-full desk:overflow-y-auto">
+        {header}
+        <ul className="flex flex-col items-center gap-1.5">
+          {authors.map((author) => (
+            <li key={author.id}>
+              <InitialsChip author={author} />
+              <span className="sr-only">{author.name}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="xl:hidden">{full}</div>
+    </>
+  );
 }
 
 /** A set authorship marker, shown as a fact about the paper rather than a control. */
@@ -544,22 +603,33 @@ function RowMenu({
   canAddOrcid,
   askCopied,
   allowAsk,
+  isSelf,
+  onToggleSelf,
   onToggleEqual,
   onToggleCorresponding,
   onAsk,
   onAddOrcid,
+  onMoveUp,
+  onMoveDown,
 }: {
   name: string;
   equalContribution: boolean;
   corresponding: boolean;
   canAddOrcid: boolean;
-  askCopied: boolean;
+  /** Which ask link was just copied, if any. */
+  askCopied: "blank" | "prefilled" | null;
   /** Asking someone else to fill a draft you are answering is nonsense. */
   allowAsk: boolean;
+  /** This row is the person using the app; absent where that cannot be set. */
+  isSelf?: boolean;
+  onToggleSelf?: () => void;
   onToggleEqual: () => void;
   onToggleCorresponding: () => void;
-  onAsk: () => void;
+  onAsk: (blank: boolean) => void;
   onAddOrcid: () => void;
+  /** Absent at the top (or bottom) of the list. */
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
@@ -569,7 +639,7 @@ function RowMenu({
   const openedOrcidRef = useRef(false);
 
   const item =
-    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container";
+    "flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-disabled:cursor-not-allowed aria-disabled:text-on-surface-variant/50 aria-disabled:hover:bg-transparent";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -578,7 +648,7 @@ function RowMenu({
           type="button"
           aria-label={t("contributorActions", { name })}
           title={t("contributorActions", { name })}
-          className="touch-target inline-flex min-h-6 items-center rounded-full px-1.5 py-0.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+          className="touch-target inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <MoreHorizontal className="h-4 w-4" />
         </button>
@@ -592,6 +662,27 @@ function RowMenu({
         }}
         className="w-60 p-1"
       >
+        {/* Author order is credit, and dragging is not something every pointer
+            can do (WCAG 2.5.7). The menu stays open, so a row can move several
+            places in a row. */}
+        {(onMoveUp || onMoveDown) && (
+          <div className="mb-1 border-b border-outline-variant/40 pb-1">
+            <button type="button" onClick={onMoveUp} aria-disabled={!onMoveUp || undefined} className={item}>
+              <ArrowUp className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
+              {t("moveUp")}
+            </button>
+            <button type="button" onClick={onMoveDown} aria-disabled={!onMoveDown || undefined} className={item}>
+              <ArrowDown className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
+              {t("moveDown")}
+            </button>
+          </div>
+        )}
+        {onToggleSelf && (
+          <button type="button" onClick={onToggleSelf} aria-pressed={isSelf} className={item}>
+            <UserRound className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
+            {isSelf ? t("thisIsNotMe") : t("thisIsMe")}
+          </button>
+        )}
         <button type="button" onClick={onToggleEqual} aria-pressed={equalContribution} className={item}>
           <Users className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
           {equalContribution ? t("equalContributionUnset") : t("equalContributionSet")}
@@ -601,14 +692,23 @@ function RowMenu({
           {corresponding ? t("correspondingUnset") : t("correspondingSet")}
         </button>
         {allowAsk && (
-          <button type="button" onClick={onAsk} title={t("askLinkHint")} className={item}>
-            {askCopied ? (
-              <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
-            ) : (
-              <Send className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-            )}
-            {askCopied ? t("askCopied") : t("askContributor", { name })}
-          </button>
+          <div className="my-1 border-y border-outline-variant/40 py-1">
+            {(["blank", "prefilled"] as const).map((kind) => (
+              <button key={kind} type="button" onClick={() => onAsk(kind === "blank")} className={item}>
+                {askCopied === kind ? (
+                  <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+                ) : (
+                  <Send className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
+                )}
+                {askCopied === kind
+                  ? t("askCopied")
+                  : kind === "blank"
+                    ? t("askBlank", { name })
+                    : t("askPrefilled", { name })}
+              </button>
+            ))}
+            <p className="px-2 pt-0.5 pb-1 text-[11px] leading-snug text-on-surface-variant">{t("askLinkHint")}</p>
+          </div>
         )}
         {canAddOrcid && (
           <button
@@ -656,8 +756,21 @@ const AuthorRow = memo(function AuthorRowInner({
   const { locked, editableAuthorId } = useClaimLock();
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
-  const markAsked = useContributionStore((s) => s.markAsked);
-  const askedAt = useContributionStore((s) => (author === undefined ? undefined : s.asked[author.id]));
+  const applyAskStep = useContributionStore((s) => s.applyAskStep);
+  const isSelf = useContributionStore((s) => author !== undefined && s.selfId === author.id);
+  const setSelfId = useContributionStore((s) => s.setSelfId);
+  const moveAuthor = useContributionStore((s) => s.moveAuthor);
+  const rowCount = useContributionStore((s) => s.authors.length);
+  // Down once their answer is in, up again on a re-ask.
+  const asked = useContributionStore(
+    (s) => author !== undefined && review(author, s.asks[author.id]).status.kind === "asked",
+  );
+
+  function move(by: -1 | 1) {
+    if (!author) return;
+    moveAuthor(index, index + by);
+    announce(t("annMoved", { name: author.name, position: index + by + 1, total: rowCount }));
+  }
   const isRecentReply = useContributionStore((s) => s.recentReply !== null && s.recentReply === author?.id);
 
   const [loading, setLoading] = useState(false);
@@ -673,26 +786,44 @@ const AuthorRow = memo(function AuthorRowInner({
   const [askStatus, copyAsk] = useCopyStatus({
     copied: t("askContributorCopied", { name: author?.name ?? "" }),
   });
-  const askCopied = askStatus === "copied";
+  const [askKind, setAskKind] = useState<"blank" | "prefilled">("blank");
+  const askCopied = askStatus === "copied" ? askKind : null;
 
   /**
    * Copy a link addressed at this contributor. They open it, tick their own
    * roles, and send the same link back; importing it collects that row alone.
+   * A blank ask sends their row empty, so the answer is their own account
+   * rather than a check of your guess.
    */
-  async function handleAsk() {
+  async function handleAsk(blank: boolean) {
     if (!author) return;
+    setAskKind(blank ? "blank" : "prefilled");
+    const sentAt = Date.now();
+    // Read at click time: the link carries the title, which this row does
+    // not subscribe to.
+    const { authors, title, activeDraftId, inputMode } = useContributionStore.getState();
     let url: string;
     try {
-      // Read at click time: the link carries the whole draft, which this row
-      // does not subscribe to.
-      const { authors, title, activeDraftId } = useContributionStore.getState();
-      url = await buildShareUrl({ authors, title, claimId: author.id, sourceDraftId: activeDraftId });
+      url = await buildShareUrl({
+        authors,
+        title,
+        claimId: author.id,
+        sourceDraftId: activeDraftId,
+        blank,
+        sentAt,
+        yesNo: inputMode === "toggle",
+      });
     } catch {
       announce(t(shareFailureKey()), { assertive: true });
       return;
     }
     // Only a link that actually reached the clipboard counts as an ask.
-    if (await copyAsk(url)) markAsked(author.id);
+    if (!(await copyAsk(url))) return;
+    // The draft may have switched, or the row gone, while the link was built
+    // and copied: the ask belongs to neither.
+    const now = useContributionStore.getState();
+    if (now.activeDraftId !== activeDraftId || !now.authors.some((a) => a.id === author.id)) return;
+    applyAskStep(activeDraftId, { kind: "sent", contributorId: author.id, prefilled: !blank, at: sentAt });
   }
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -902,11 +1033,16 @@ const AuthorRow = memo(function AuthorRowInner({
                 onClick={() => setAuthorType(author.id, isNonAuthor ? "author" : "non-author")}
                 disabled={rowLocked}
                 title={isNonAuthor ? t("contributorTypeSetAuthor") : t("contributorTypeSetNonAuthor")}
-                className="inline-flex min-h-6 items-center gap-1 rounded-full bg-surface-container px-2 py-0.5 text-[11px] font-medium text-on-surface-variant hover:text-primary transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-6 items-center gap-1 rounded-full bg-surface-container px-2 text-[11px] font-medium text-on-surface-variant hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isNonAuthor ? <UserMinus className="h-3 w-3" /> : <UserCheck className="h-3 w-3" />}
                 {isNonAuthor ? t("contributorTypeNonAuthor") : t("contributorTypeAuthor")}
               </button>
+              {isSelf && (
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                  {t("teamYou")}
+                </span>
+              )}
               {isClaimed && (
                 // No icon: the neighbouring type chip already carries UserCheck,
                 // and two identical glyphs side by side read as a mistake.
@@ -936,7 +1072,7 @@ const AuthorRow = memo(function AuthorRowInner({
               )}
               {/* An open ask: quiet, because it is a reminder, not a state of
                   the paper. It comes down by itself when the reply merges. */}
-              {askedAt !== undefined && (
+              {asked && (
                 <span
                   title={t("askedChipTitle")}
                   className="inline-flex items-center gap-1 rounded-full bg-surface-container px-2 py-0.5 text-[11px] font-medium text-on-surface-variant"
@@ -955,11 +1091,15 @@ const AuthorRow = memo(function AuthorRowInner({
                   corresponding={author.corresponding}
                   canAddOrcid={!hasOrcid && !editingOrcid}
                   askCopied={askCopied}
-                  allowAsk={!locked}
+                  allowAsk={!(locked || isSelf)}
+                  isSelf={isSelf}
+                  onToggleSelf={locked ? undefined : () => setSelfId(isSelf ? null : author.id)}
                   onToggleEqual={() => setAuthorMarker(author.id, "equalContribution", !author.equalContribution)}
                   onToggleCorresponding={() => setAuthorMarker(author.id, "corresponding", !author.corresponding)}
-                  onAsk={() => void handleAsk()}
+                  onAsk={(blank) => void handleAsk(blank)}
                   onAddOrcid={() => setEditingOrcid(true)}
+                  onMoveUp={!locked && index > 0 ? () => move(-1) : undefined}
+                  onMoveDown={!locked && index < rowCount - 1 ? () => move(1) : undefined}
                 />
               )}
             </div>
@@ -1010,7 +1150,7 @@ const AuthorRow = memo(function AuthorRowInner({
                     onClick={() => void lookup(bareOrcid)}
                     aria-label={t("lookupOrcidName")}
                     title={t("lookupOrcidName")}
-                    className="reveal-on-hover ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] text-primary transition-opacity hover:underline disabled:opacity-50"
+                    className="reveal-on-hover ml-auto inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center gap-1 text-[11px] text-primary transition-opacity hover:underline disabled:opacity-50"
                   >
                     <UserSearch className="h-3.5 w-3.5" />
                     {loading && t("lookingUp")}
@@ -1021,7 +1161,7 @@ const AuthorRow = memo(function AuthorRowInner({
                     type="button"
                     onClick={clearOrcid}
                     aria-label={t("removeOrcid")}
-                    className="ml-auto shrink-0 text-on-surface-variant transition-colors hover:text-error"
+                    className="ml-auto flex size-6 shrink-0 items-center justify-center rounded text-on-surface-variant transition-colors hover:text-error"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

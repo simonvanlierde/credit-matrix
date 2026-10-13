@@ -13,6 +13,7 @@ colors:
   graphite-muted: "#595c63"
   rule: "#c9c9c5"
   error: "#ba1a1a"
+  flag: "#b45309"
 typography:
   headline:
     fontFamily: "Newsreader, Georgia, serif"
@@ -92,6 +93,17 @@ focus, and selected states. Use contributor colors only to identify data.
 Ink blue does not clear 3:1 against muted paper text, so a link inside a sentence is underlined as
 well as recolored. A link that owns its own line may stay quiet until hover.
 
+The heatmap tiers must get more prominent from Supporting to Lead in both themes. In light mode the
+fill mixes the chosen hue toward white (40%, 70%, 100% of the hue). That ramp reads inverted on a
+dark page, where the palest cell is the brightest, so dark mode keeps the hue and raises its
+lightness instead: 30%, 48% and 77% (for ink blue `#1f4f7a`, `#327ec3`, `#a2c6e7`),
+with dark marks on Lead. Exported heatmaps always use the light ramp, since a figure goes onto a
+white page. `heatCellColor` in `src/core/contributor-color.ts` holds both ramps.
+
+Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the
+ring around the cell a Review line points at, and the ring that fades off a cell as a difference is
+settled. It is a mark, never a fill, and always comes with a shape or text.
+
 ## Typography
 
 Use Newsreader with Georgia fallback for identity, section headings, and manuscript output. Keep
@@ -118,18 +130,17 @@ the name anyway — the mark is decorative, so without it the heading has no acc
 
 ## Layout
 
-Follow the task order: contributors, contributions, then statement and export.
+The grid is the canvas. From `xl`, the roster is a slim rail on the left that folds to initials,
+the grid fills the middle, and an inspector on the right holds three tabs: Statement, Team and
+Review. A status strip above the grid says what the draft is waiting on and holds the controls that
+change the whole grid (Yes/No vs Levels, bulk assign, display options, heatmap export). Below `xl`
+the same parts stack in that order: rail, strip, grid (as the contributor-focused role list on a
+phone), inspector.
 
-Use one column on small screens. From `xl`, give all three steps their own column, so the workflow
-reads left to right. Never give the statement a full-width row. Its prose is capped at 75ch, so a
-wide column wraps the text at half its width and leaves the rest empty. Clamp the contributors and
-statement columns, and size the matrix to its roster: with many contributors it takes the screen
-(every visible column is one it does not scroll), and with few, the content-sized row centers in
-symmetric gutters rather than stretching cells to fill.
-
-Let the page use the screen it's given. There is no page-width cap: the workflow row is
-content-sized and centered, so unused width shows up as symmetric gutters, and a roster that needs
-the width gets all of it.
+Never give the statement a full-width row. Its prose is capped at 75ch, so a wide column wraps the
+text at half its width and leaves the rest empty. Keep the rail and inspector at fixed widths and
+give the grid what remains. The table is content-sized and centered in it, so a small roster sits
+in calm gutters and a large one gets every column the screen can show.
 
 On a desktop-sized window the workspace is height-locked to the viewport. The page itself doesn't
 scroll; each pane scrolls its own content.
@@ -178,7 +189,11 @@ status, segmented controls, switches, and identity markers.
 ### Buttons
 
 Primary buttons use ink blue with bright paper text. Secondary buttons use quiet outlines and paper
-or transparent fills. Give every control visible keyboard focus and an adequate tap target.
+or transparent fills. Give every control visible keyboard focus and a target of at least 24px.
+
+Keep one primary action per view: Copy statement. Header actions (Share, Import) are secondary.
+A disabled button drops its fill and mutes its text and outline, so it never reads as a live
+primary at lower opacity.
 
 ### Cards and containers
 
@@ -214,6 +229,12 @@ project's own copyright with the identity rather than in the small print.
 Use the matrix on larger screens and a contributor-focused role list on narrow screens. Keep role
 and contributor labels visible during scrolling. Show each selected value with color, a mark, an
 accessible label, and exported data. Keep bulk assignment behind a disclosure.
+
+Column headers show full names at 50°, and fall back to initials past 20 columns or when the
+person asks for initials. Under each name, a glyph says whether that person has been asked (a
+clock, a dash, or "You"), with a spoken label. The role name itself opens the role's description:
+no separate info buttons. Role names sit outside the tab order and join the grid's arrow-key focus
+instead, so the matrix stays one tab stop. The key hint under the legend is always visible.
 
 ## Do and don't
 

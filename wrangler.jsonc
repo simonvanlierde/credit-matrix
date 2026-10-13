@@ -1,13 +1,6 @@
 {
-  // Deploys via Cloudflare Workers Builds (Git integration) on push to `main`.
-  // The following settings live in the Cloudflare dashboard, not here:
-  // Build configuration:
-  //   Build:   pnpm build
-  //   Deploy:  pnpm exec wrangler deploy
-  //   Root:    /
-  // Branch control:
-  //   Production branch: main
-  //   Non-production builds: disabled
+  // Deployed from GitHub Actions (.github/workflows/ci.yml) after CI passes on
+  // `main`. See docs/deploy.md.
   //
   // Static assets only, no `main`: no code runs per request, so there is no
   // cold start and no CPU or memory limit to exceed. OpenNext's Worker used to

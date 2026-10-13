@@ -1,45 +1,50 @@
-import { ClaimBanner } from "@/components/ClaimBanner";
+import { ClaimGate } from "@/components/CoauthorPage";
+import { Inspector } from "@/components/Inspector";
 import { LabelledSection } from "@/components/LabelledSection";
 import { AuthorList } from "@/components/steps/AuthorInput";
 import { ContributionGrid } from "@/components/steps/ContributionGrid";
-import { StatementOutput } from "@/components/steps/StatementOutput";
 import { WelcomeCard } from "@/components/WelcomeCard";
 // Server component: only the version string crosses into the client bundle.
 import packageJson from "../../package.json";
 
 export default function HomePage() {
   return (
-    <>
-      <WelcomeCard version={packageJson.version} />
-      <ClaimBanner />
-      {/* Steps 1–3 in DOM (and tab) order. Below xl they stack and the page
-          scrolls; from xl each step gets its own column, so the workflow reads
-          left to right and fits one desktop viewport.
-
-          The statement never spans a full-width row: its prose is capped at 75ch
-          for readability, so a wide column would wrap the text at half its
-          width and leave the rest empty. Contributors and statement are
-          therefore clamped, and the matrix column takes exactly the width its
-          roster needs (minmax(0,max-content)): a wide monitor goes to more
-          visible columns when there are many contributors, and to centered
-          gutters (justify-center) when there are not. Narrower windows shrink
-          the matrix into its own scroller instead of overflowing the page.
+    <ClaimGate>
+      <div className="desk:flex desk:h-full desk:flex-col">
+        <WelcomeCard version={packageJson.version} />
+        {/* The workspace: the roster as a slim rail, the grid as the canvas, and
+          the inspector (statement, team, review) on the right. Below xl they
+          stack in that order and the page scrolls. The grid column takes all
+          the width the two side columns leave, so a big roster gets the
+          screen and a small one sits in a calm, wide canvas.
 
           `desk` additionally locks the row to the viewport height; each pane
           scrolls its own content from there. */}
-      <div className="flex flex-col gap-3 p-3 md:gap-4 md:p-4 xl:grid xl:grid-cols-[20rem_minmax(0,max-content)_minmax(26rem,29rem)] xl:items-start xl:justify-center desk:h-full desk:items-stretch desk:overflow-hidden">
-        <LabelledSection labelKey="stepContributors" className="min-w-0 desk:min-h-0">
-          <AuthorList />
-        </LabelledSection>
+        <div className="flex flex-col xl:grid xl:grid-cols-[auto_minmax(0,1fr)_26rem] 2xl:grid-cols-[auto_minmax(0,1fr)_30rem] desk:min-h-0 desk:flex-1 desk:overflow-hidden">
+          <LabelledSection
+            labelKey="stepContributors"
+            className="min-w-0 border-b border-outline-variant/40 bg-surface-bright xl:border-b-0 xl:border-r desk:min-h-0"
+          >
+            <AuthorList />
+          </LabelledSection>
 
-        <LabelledSection labelKey="a11yContributionGrid" className="min-w-0 desk:min-h-0">
-          <ContributionGrid />
-        </LabelledSection>
+          <LabelledSection
+            id="grid"
+            labelKey="a11yContributionGrid"
+            className="min-w-0 scroll-mt-16 bg-surface-bright desk:min-h-0"
+          >
+            <ContributionGrid />
+          </LabelledSection>
 
-        <LabelledSection labelKey="a11yStatementExport" className="min-w-0 desk:min-h-0">
-          <StatementOutput />
-        </LabelledSection>
+          <LabelledSection
+            id="inspector"
+            labelKey="a11yInspector"
+            className="min-w-0 scroll-mt-16 border-t border-outline-variant/40 bg-surface-bright xl:border-t-0 xl:border-l desk:min-h-0"
+          >
+            <Inspector />
+          </LabelledSection>
+        </div>
       </div>
-    </>
+    </ClaimGate>
   );
 }

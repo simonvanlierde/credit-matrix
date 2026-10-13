@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "authors": [
+    {
+      "id": "ada",
+      "name": "Ada Lovelace",
+      "firstName": "Ada",
+      "middleName": "",
+      "surname": "Lovelace",
+      "initials": "AL",
+      "orcid": "0000-0002-1825-0097",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 100
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 66
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 100
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": true,
+      "corresponding": true
+    },
+    {
+      "id": "marie",
+      "name": "Marie Curie",
+      "firstName": "Marie",
+      "middleName": "",
+      "surname": "Curie",
+      "initials": "MC",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 33
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 100
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 66
+        }
+      ],
+      "equalContribution": true,
+      "corresponding": false
+    },
+    {
+      "id": "alan",
+      "name": "Alan Turing",
+      "firstName": "Alan",
+      "middleName": "",
+      "surname": "Turing",
+      "initials": "AT",
+      "contributorType": "non-author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 100
+        },
+        {
+          "role": "Supervision",
+          "score": 33
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    }
+  ]
+}

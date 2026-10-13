@@ -1,14 +1,15 @@
 "use client";
 
 import { CircleAlert, CircleCheck, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { announce } from "@/lib/announce";
 
 export interface Status {
   kind: "success" | "error";
   message: string;
-  action?: { label: string; onAct: () => void };
+  /** Buttons after the message, in this order (Undo first, then a way onward). Each also dismisses the strip. */
+  actions?: readonly { label: string; onAct: () => void }[];
   /**
    * Runs when the strip leaves for any reason — the dismiss button, the
    * timeout, the action, or a newer status replacing it — so anything shown
@@ -19,12 +20,18 @@ export interface Status {
 
 // Module-level fan-out, same pattern as announce(): any client module can show
 // a status without threading context through the server layout.
-const listeners = new Set<(status: Status) => void>();
+// `replacing` set: take the strip down only while it still shows that status.
+const listeners = new Set<(status: Status | null, replacing?: Status) => void>();
 
 /** Show a visible outcome strip. Announces to assistive tech itself. */
 export function showStatus(status: Status) {
   announce(status.message, { assertive: status.kind === "error" });
   for (const listener of listeners) listener(status);
+}
+
+/** Take this strip down, if it is still the one showing. */
+export function dismissStatus(status: Status) {
+  for (const listener of listeners) listener(null, status);
 }
 
 /**
@@ -36,39 +43,38 @@ export function showStatus(status: Status) {
 export function StatusBanner() {
   const t = useTranslations();
   const [status, setStatus] = useState<Status | null>(null);
+  // The strip on screen, read synchronously: onDismiss runs here, never inside a state updater.
+  const showing = useRef<Status | null>(null);
+
+  const replace = useCallback((next: Status | null) => {
+    const previous = showing.current;
+    if (previous === next) return;
+    showing.current = next;
+    // A replaced strip was still dismissed: its companions leave with it.
+    previous?.onDismiss?.();
+    setStatus(next);
+  }, []);
 
   useEffect(() => {
-    const onStatus = (next: Status) =>
-      setStatus((previous) => {
-        // A replaced strip was still dismissed: its companions leave with it.
-        if (previous !== next) previous?.onDismiss?.();
-        return next;
-      });
+    const onStatus = (next: Status | null, replacing?: Status) => {
+      if (replacing === undefined || showing.current === replacing) replace(next);
+    };
     listeners.add(onStatus);
     return () => {
       listeners.delete(onStatus);
     };
-  }, []);
+  }, [replace]);
 
-  function dismiss() {
-    status?.onDismiss?.();
-    setStatus(null);
-  }
+  const dismiss = () => replace(null);
 
   // Successes leave on their own; errors stay until dismissed. A success
   // carrying an action (Undo) gets the same 60s the contributor-removal undo
   // gives, for the same WCAG 2.2.1 reason.
   useEffect(() => {
     if (!status || status.kind === "error") return;
-    const timer = window.setTimeout(
-      () => {
-        status.onDismiss?.();
-        setStatus(null);
-      },
-      status.action ? 60000 : 10000,
-    );
+    const timer = window.setTimeout(() => replace(null), status.actions?.length ? 60000 : 10000);
     return () => window.clearTimeout(timer);
-  }, [status]);
+  }, [status, replace]);
 
   if (!status) return null;
 
@@ -87,23 +93,24 @@ export function StatusBanner() {
           <CircleCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
         )}
         <span className="min-w-0">{status.message}</span>
-        {status.action && (
+        {status.actions?.map((action) => (
           <button
+            key={action.label}
             type="button"
             onClick={() => {
-              status.action?.onAct();
+              action.onAct();
               dismiss();
             }}
-            className="shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="min-h-6 shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            {status.action.label}
+            {action.label}
           </button>
-        )}
+        ))}
         <button
           type="button"
           onClick={dismiss}
           aria-label={t("statusDismiss")}
-          className="shrink-0 rounded p-1 text-on-surface-variant transition-colors hover:text-on-surface"
+          className="flex size-7 shrink-0 items-center justify-center rounded text-on-surface-variant transition-colors hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <X className="h-3.5 w-3.5" />
         </button>

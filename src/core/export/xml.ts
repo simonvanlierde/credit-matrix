@@ -1,7 +1,7 @@
 // spell-checker: ignore archivearticle, mathml
 
 import type { Author } from "../author";
-import { activeContributions, scoreToLevel } from "../author";
+import { activeContributions, isAllBinary, normalizeOrcid, scoreToLevel } from "../author";
 import { getRoleByName } from "../credit-roles";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
@@ -12,9 +12,17 @@ const DOCTYPE =
 /**
  * Serialize authors to a JATS4R-compliant XML string.
  * Output mirrors the format produced by the original Python app.
+ * With `yesNo` (the Yes/No input mode) and only 0/100 scores, roles carry no
+ * `degree-contribution`: the author never chose a level, so writing every role
+ * as "lead" would claim one.
  */
-export function toJats4rXml(authors: Author[]): string {
-  const contributions = authors.map(authorToXml).join("\n    ");
+export function toJats4rXml(authors: Author[], { yesNo = false }: { yesNo?: boolean } = {}): string {
+  const withLevels = !(yesNo && isAllBinary(authors));
+  // JATS4R rejects equal-contrib on a single author: equal with whom? A lone
+  // flag stays in JSON and CSV, where the draft round-trips, but not here.
+  const sharedFirst =
+    authors.filter((author) => author.equalContribution && author.contributorType !== "non-author").length > 1;
+  const contributions = authors.map((author) => authorToXml(author, sharedFirst, withLevels)).join("\n    ");
 
   return `<?xml version='1.0' encoding='UTF-8'?>
 ${DOCTYPE}
@@ -48,12 +56,12 @@ function givenNamesOf(author: Author): string {
   return author.middleName ? `${author.firstName} ${author.middleName}` : author.firstName;
 }
 
-function authorToXml(author: Author): string {
+function authorToXml(author: Author, sharedFirst: boolean, withLevels: boolean): string {
   const givenNames = givenNamesOf(author);
 
-  // JATS4R wants the full ORCID URL; state keeps the bare iD.
+  // JATS4R wants the full URI, not the bare iD.
   const orcidEl = author.orcid
-    ? `\n      <contrib-id contrib-id-type="orcid">https://orcid.org/${escapeXml(author.orcid)}</contrib-id>`
+    ? `\n      <contrib-id contrib-id-type="orcid">https://orcid.org/${escapeXml(normalizeOrcid(author.orcid))}</contrib-id>`
     : "";
 
   // JATS 1.3 carries the level as `degree-contribution` (lead / equal /
@@ -61,7 +69,8 @@ function authorToXml(author: Author): string {
   const roles = activeContributions(author)
     .map((c) => {
       const role = getRoleByName(c.role);
-      return `        <role vocab="credit" vocab-identifier="https://credit.niso.org/" vocab-term="${escapeXml(c.role)}" vocab-term-identifier="${role.url}" degree-contribution="${scoreToLevel(c.score)}">${escapeXml(c.role)}</role>`;
+      const degree = withLevels ? ` degree-contribution="${scoreToLevel(c.score)}"` : "";
+      return `        <role vocab="credit" vocab-identifier="https://credit.niso.org/" vocab-term="${escapeXml(c.role)}" vocab-term-identifier="${role.url}"${degree}>${escapeXml(c.role)}</role>`;
     })
     .join("\n");
 
@@ -72,7 +81,7 @@ function authorToXml(author: Author): string {
 
   // JATS carries both markers as attributes on <contrib>, outside the CRediT
   // vocabulary: the taxonomy has no term for either.
-  const equalAttr = author.equalContribution ? ' equal-contrib="yes"' : "";
+  const equalAttr = sharedFirst && author.equalContribution && contribType === "author" ? ' equal-contrib="yes"' : "";
   const correspAttr = author.corresponding ? ' corresp="yes"' : "";
 
   return `<contrib contrib-type="${contribType}"${equalAttr}${correspAttr}>${orcidEl}

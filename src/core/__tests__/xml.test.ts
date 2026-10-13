@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
-import { parseAuthorText } from "../parse-authors";
+import { createAuthor, parseAuthorText } from "../parse-authors";
 
 // `fromJats4rXml` relies on a global DOMParser. In the browser this is native;
 // here jsdom provides it, so this exercises the same
@@ -87,12 +87,52 @@ describe("toJats4rXml", () => {
     expect(xml).not.toMatch(/review & editing/);
   });
 
+  it("writes equal-contrib only when two or more authors share first authorship", () => {
+    const [jane, bob, ann] = parseAuthorText("Jane Smith, Bob White, Ann Lee");
+    if (!jane || !bob || !ann) throw new Error("expected authors");
+    const count = (xml: string) => xml.match(/equal-contrib="yes"/g)?.length ?? 0;
+
+    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, bob]))).toBe(0);
+    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, { ...bob, equalContribution: true }, ann]))).toBe(
+      2,
+    );
+    // A non-author contributor does not make a lone author's flag shared.
+    const acknowledged = { ...bob, equalContribution: true, contributorType: "non-author" as const };
+    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, acknowledged]))).toBe(0);
+  });
+
   it("falls back to the stored given names when the name no longer holds the surname", () => {
     const [jane] = parseAuthorText("Jane Q Smith");
     if (!jane) throw new Error("expected author");
     const xml = toJats4rXml([{ ...jane, name: "J. Q. S." }]);
     expect(xml).toContain("<given-names>Jane Q</given-names>");
   });
+
+  it("writes the ORCID iD as a full orcid.org URI", () => {
+    const [jane] = parseAuthorText("Jane Smith");
+    if (!jane) throw new Error("expected author");
+    jane.orcid = "0000-0002-1825-0097";
+
+    const xml = toJats4rXml([jane]);
+    expect(xml).toContain('<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-1825-0097</contrib-id>');
+    expect(xml).not.toContain("authenticated");
+  });
+
+  it("does not double the prefix of an iD stored as a URL", () => {
+    const [jane] = parseAuthorText("Jane Smith");
+    if (!jane) throw new Error("expected author");
+    jane.orcid = "https://orcid.org/0000-0002-1825-0097";
+
+    expect(toJats4rXml([jane])).toContain(">https://orcid.org/0000-0002-1825-0097</contrib-id>");
+  });
+
+  it.each(["https://orcid.org/0000-0002-1825-0097", "http://orcid.org/0000-0002-1825-0097", "0000-0002-1825-0097"])(
+    "imports the ORCID iD written as %s",
+    (id) => {
+      const xml = `<article><contrib contrib-type="author"><contrib-id contrib-id-type="orcid">${id}</contrib-id><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib></article>`;
+      expect(fromJats4rXml(xml)[0]?.orcid).toBe("0000-0002-1825-0097");
+    },
+  );
 
   it("only emits role elements for active contributions", () => {
     const authors = parseAuthorText("Jane Smith");
@@ -183,5 +223,23 @@ describe("toJats4rXml", () => {
     // Only the text content names the role.
     expect(score("Visualization")).toBe(66);
     expect(jane?.contributions.filter((c) => c.score > 0)).toHaveLength(5);
+  });
+
+  it("leaves out degree-contribution in yes/no mode and keeps it when a score is graded", () => {
+    const yesNo = [
+      createAuthor("Jane Smith", { contributions: [{ role: "Conceptualization", score: 100 }] }),
+      createAuthor("Bob White", { contributions: [{ role: "Software", score: 100 }] }),
+    ];
+    const xml = toJats4rXml(yesNo, { yesNo: true });
+    expect(xml).not.toContain("degree-contribution");
+    expect(xml).toContain('vocab-term="Software"');
+    // Without the level, every role imports as contributed (100), as it was.
+    const parsed = fromJats4rXml(xml);
+    expect(parsed.map((a) => a.contributions.filter((c) => c.score > 0).map((c) => c.score))).toEqual([[100], [100]]);
+
+    // Levels mode, or yes/no with a graded score left over, keeps the level.
+    expect(toJats4rXml(yesNo)).toContain('degree-contribution="lead"');
+    const graded = [createAuthor("Jane Smith", { contributions: [{ role: "Conceptualization", score: 33 }] })];
+    expect(toJats4rXml(graded, { yesNo: true })).toContain('degree-contribution="supporting"');
   });
 });

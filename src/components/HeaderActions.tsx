@@ -4,15 +4,25 @@ import { Check, CircleAlert, Link2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { DraftPicker } from "@/components/DraftPicker";
-import { ImportModal, type LinkFailure } from "@/components/ImportModal";
-import { showStatus } from "@/components/StatusBanner";
+import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
+import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { Author } from "@/core";
-import { keepKnownIds, mergeContributorRow } from "@/core";
+import { importAnswers, isAllBinary, keepKnownIds } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
-import { type DraftClaim, followOtherTab, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
+import {
+  type DraftClaim,
+  followOtherTab,
+  type InputMode,
+  MAX_DRAFTS,
+  useContributionStore,
+} from "@/store/contribution-store";
+
+/** Answer the way the asker works: yes/no only when the link says so and the row holds nothing finer. */
+function claimMode(shared: ShareData): InputMode {
+  return shared.yesNo && isAllBinary(shared.authors) ? "toggle" : "levels";
+}
 
 /**
  * Import / Share buttons rendered in the nav bar.
@@ -31,14 +41,18 @@ export function HeaderActions() {
   const loadAuthors = useContributionStore((s) => s.loadAuthors);
   const setTitle = useContributionStore((s) => s.setTitle);
   const setClaim = useContributionStore((s) => s.setClaim);
+  const setInputMode = useContributionStore((s) => s.setInputMode);
   const claim = useContributionStore((s) => s.claim);
   const createDraft = useContributionStore((s) => s.createDraft);
   const switchDraft = useContributionStore((s) => s.switchDraft);
   const deleteDraft = useContributionStore((s) => s.deleteDraft);
-  const markAsked = useContributionStore((s) => s.markAsked);
-  const clearAsked = useContributionStore((s) => s.clearAsked);
+  const applyAskStep = useContributionStore((s) => s.applyAskStep);
+  const applyAskPatch = useContributionStore((s) => s.applyAskPatch);
   const setRecentReply = useContributionStore((s) => s.setRecentReply);
+  const openReview = useContributionStore((s) => s.openReview);
   const decodedOnMount = useRef(false);
+  // Counts arrivals, so only the newest reply's strip takes the row mark down when it leaves.
+  const replyReceipt = useRef(0);
 
   // Rehydrate persisted state on the client (the store skips hydration at
   // creation to avoid an SSR mismatch). Runs before the share-hash effect below
@@ -60,6 +74,13 @@ export function HeaderActions() {
     return () => window.removeEventListener("storage", onStorage);
   }, [t]);
 
+  // A newer build saved in another tab and this one could not reload into it:
+  // its edits are no longer saved, which nobody should find out later.
+  const newerVersionBlocked = useContributionStore((s) => s.newerVersionBlocked);
+  useEffect(() => {
+    if (newerVersionBlocked) showStatus({ kind: "error", message: t("errNewerVersionSaved") });
+  }, [newerVersionBlocked, t]);
+
   // The listener is registered once, so it must not capture this render's
   // handler: `t` changes with the interface language, and a hash pasted after
   // that switch has to speak the new one.
@@ -71,19 +92,22 @@ export function HeaderActions() {
   // Mount + hashchange share one handler: pasting a link into an already-open
   // tab must react exactly like opening it fresh.
   useEffect(() => {
-    const handle = () => void handlerRef.current();
     // StrictMode re-runs effects in development; the mount decode would then
     // load the link twice. A ref survives that re-run, an effect body does not.
     if (!decodedOnMount.current) {
       decodedOnMount.current = true;
-      handle();
+      void handlerRef.current(window.location.hash);
     }
-    window.addEventListener("hashchange", handle);
-    return () => window.removeEventListener("hashchange", handle);
+    // The link comes from the event, not the address bar. Stripping the last
+    // link's hash makes Next.js sync its router to that URL in a transition,
+    // and that write can land after the next hash navigation and erase it
+    // before this event runs.
+    const onHashChange = (event: HashChangeEvent) => void handlerRef.current(new URL(event.newURL).hash);
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  async function handleIncomingHash(): Promise<void> {
-    const hash = window.location.hash;
+  async function handleIncomingHash(hash: string): Promise<void> {
     if (!hash.startsWith("#s=")) return;
     // On mount this can beat the rehydrate effect above; awaiting it (a no-op
     // once done) keeps the link from opening over a draft not yet restored.
@@ -119,59 +143,85 @@ export function HeaderActions() {
     const isLocal = (id: string | null): id is string =>
       id !== null && (id === state.activeDraftId || !!state.drafts[id]);
 
-    // A reply to a request: merge one row into the draft it was asked about.
+    // A reply to a request: keep it beside the row it answers, in the draft it was asked about.
     if (shared.reply && shared.claimId) {
       const target = shared.sourceDraftId;
       if (!isLocal(target)) return "mergeWrongDraft";
-      // Merge against the named draft's roster *before* going there: a reply
-      // that turns out to be unusable must leave you on the paper you were on.
-      const before = target === state.activeDraftId ? state.authors : (state.drafts[target]?.authors ?? []);
-      const result = mergeContributorRow(before, shared.authors, shared.claimId);
-      if (result.unmatched) return "mergeUnmatched";
-      if (!result.merged) return "errShareLinkBroken";
-      // loadAuthors writes into the live draft, so the switch has to come
-      // first; a throw leaves state untouched, and going back undoes the move.
-      const previous = state.activeDraftId;
-      switchDraft(target);
-      try {
-        loadAuthors(result.authors);
-      } catch {
-        switchDraft(previous);
-        return "errShareLinkBroken";
-      }
-      // The reply answers the ask, so the row's "Asked" chip comes down — and
-      // goes back up if the merge is undone, because the ask is open again.
-      const mergedId = result.merged.id;
-      const askedAt = useContributionStore.getState().asked[mergedId];
-      if (askedAt !== undefined) clearAsked(mergedId);
-      // Mark the row itself, so the status strip's message has a visible
-      // counterpart where the change actually landed. The strip owns the
-      // mark's lifetime through onDismiss below: dismissing, undoing, timing
-      // out, or being replaced all take the mark down with the message.
-      setRecentReply(mergedId);
-      const title = useContributionStore.getState().title.trim() || t("untitledDraft");
-      showStatus({
-        kind: "success",
-        message: t("mergedRowInto", { name: result.merged.name, title }),
-        action: {
-          label: t("undo"),
-          onAct: () => {
-            // The strip lives a minute, long enough to switch drafts under it.
-            // Put the roster back where it came from, or nowhere at all.
-            switchDraft(target);
-            if (useContributionStore.getState().activeDraftId !== target) return;
-            loadAuthors(before);
-            if (askedAt !== undefined) markAsked(mergedId);
-            setRecentReply(null);
-            announce(t("annMergeUndone"));
-          },
-        },
-        onDismiss: () => {
-          // Guarded by id: a newer merge owns the mark by now, and this
-          // strip's departure must not take the newer mark down.
-          if (useContributionStore.getState().recentReply === mergedId) setRecentReply(null);
-        },
+      const contributorId = shared.claimId;
+      // Stored against the named draft *before* going there: a reply that turns
+      // out to be unusable leaves you on the paper you were on.
+      const { outcome, undo } = applyAskStep(target, {
+        kind: "reply",
+        contributorId,
+        row: shared.authors.find((author) => author.id === contributorId),
+        sentAt: shared.sentAt,
+        at: Date.now(),
       });
+      if (outcome.kind === "unmatched") return "mergeUnmatched";
+      if (outcome.kind !== "received" && outcome.kind !== "stale") return "errShareLinkBroken";
+      switchDraft(target);
+      const name =
+        useContributionStore.getState().authors.find((author) => author.id === contributorId)?.name ??
+        shared.authors[0]?.name ??
+        "";
+      if (outcome.kind === "stale") {
+        showStatus({ kind: "success", message: t("askReplyStale", { name }) });
+        return null;
+      }
+      if (outcome.duplicate) {
+        showStatus({ kind: "success", message: t("askReplyDuplicate", { name }) });
+        return null;
+      }
+      // Mark the row itself, so the status strip's message has a visible
+      // counterpart where the answer landed. The strip owns the mark's
+      // lifetime through onDismiss below: dismissing, undoing, timing out, or
+      // being replaced all take the mark down with the message.
+      const receipt = ++replyReceipt.current;
+      setRecentReply(contributorId);
+      const askNow = () => {
+        const now = useContributionStore.getState();
+        return (target === now.activeDraftId ? now.asks : now.drafts[target]?.asks)?.[contributorId];
+      };
+      const received = askNow();
+      // Undo holds only while the ask is as this reply left it: a decision or a re-ask since would be
+      // dropped with it, and a decision's copied scores would stay behind.
+      const stopWatching = useContributionStore.subscribe(() => {
+        if (askNow() !== received) dismissStatus(status);
+      });
+      const status: Status = {
+        kind: "success",
+        message:
+          outcome.open > 0 ? t("askReplyDiffers", { name, count: outcome.open }) : t("askReplyMatches", { name }),
+        actions: [
+          {
+            label: t("undo"),
+            onAct: () => {
+              // The strip lives a minute, long enough to switch drafts under it.
+              switchDraft(target);
+              if (!applyAskPatch(target, undo)) return;
+              announce(t("annMergeUndone"));
+            },
+          },
+          // The banner covers the grid strip's Review button, so it offers its own.
+          ...(outcome.open > 0
+            ? [
+                {
+                  label: t("reviewAction"),
+                  onAct: () => {
+                    switchDraft(target);
+                    openReview(contributorId);
+                  },
+                },
+              ]
+            : []),
+        ],
+        onDismiss: () => {
+          stopWatching();
+          // A newer reply owns the mark by now, even for the same contributor.
+          if (replyReceipt.current === receipt) setRecentReply(null);
+        },
+      };
+      showStatus(status);
       return null;
     }
 
@@ -185,9 +235,19 @@ export function HeaderActions() {
         showStatus({ kind: "success", message: t("requestLinkOwn", { name: claimedName }) });
         return null;
       }
+      const incoming: DraftClaim = {
+        contributorId: shared.claimId,
+        sourceDraftId: shared.sourceDraftId,
+        ...(shared.blank ? { blank: true } : {}),
+        ...(shared.sentAt !== null ? { sentAt: shared.sentAt } : {}),
+      };
       const matches = (candidate: DraftClaim | null) =>
         candidate?.contributorId === shared.claimId && candidate.sourceDraftId === shared.sourceDraftId;
-      if (matches(state.claim)) {
+      // A request sent after the one this draft answers replaces it; the same or an older one resumes.
+      const isNewer = (held: DraftClaim) =>
+        shared.sentAt !== null && shared.sentAt > (typeof held.sentAt === "number" ? held.sentAt : -1);
+      if (state.claim && matches(state.claim)) {
+        if (isNewer(state.claim)) return replaceClaim(state.activeDraftId, incoming, shared);
         showStatus({ kind: "success", message: t("claimResumed") });
         return null;
       }
@@ -198,7 +258,8 @@ export function HeaderActions() {
       const existing = Object.values(state.drafts).find(
         (draft) => draft.id !== state.activeDraftId && matches(draft.claim),
       );
-      if (existing) {
+      if (existing?.claim) {
+        if (isNewer(existing.claim)) return replaceClaim(existing.id, incoming, shared);
         // Re-opening the same request revisits the draft it made, never forks it.
         switchDraft(existing.id);
         showStatus({ kind: "success", message: t("claimResumed") });
@@ -209,7 +270,8 @@ export function HeaderActions() {
       } catch {
         return "errShareLinkBroken";
       }
-      setClaim({ contributorId: shared.claimId, sourceDraftId: shared.sourceDraftId });
+      setClaim(incoming);
+      setInputMode(claimMode(shared));
       return null;
     }
 
@@ -224,6 +286,45 @@ export function HeaderActions() {
     } catch {
       return "errShareLinkBroken";
     }
+    return null;
+  }
+
+  /**
+   * Answer a newer request in the claim draft the older one made: its row and
+   * title replace the earlier answers, with Undo. The claim lock refuses
+   * roster writes, so it comes off for the swap and goes back on after.
+   */
+  function replaceClaim(draftId: string, incoming: DraftClaim, shared: ShareData): LinkFailure | null {
+    switchDraft(draftId);
+    const before = useContributionStore.getState();
+    const previous = { authors: before.authors, title: before.title, claim: before.claim, mode: before.inputMode };
+    const write = (next: typeof previous) => {
+      setClaim(null);
+      loadAuthors(next.authors);
+      setTitle(next.title);
+      setInputMode(next.mode);
+      setClaim(next.claim);
+    };
+    try {
+      write({ authors: shared.authors, title: shared.title, claim: incoming, mode: claimMode(shared) });
+    } catch {
+      write(previous);
+      return "errShareLinkBroken";
+    }
+    showStatus({
+      kind: "success",
+      message: t("claimRequestUpdated"),
+      actions: [
+        {
+          label: t("undo"),
+          onAct: () => {
+            switchDraft(draftId);
+            if (useContributionStore.getState().activeDraftId !== draftId) return;
+            write(previous);
+          },
+        },
+      ],
+    });
     return null;
   }
 
@@ -253,10 +354,13 @@ export function HeaderActions() {
     return occupied ? "occupied" : "fresh";
   }
 
-  function handleImport(importedAuthors: Author[], importedTitle?: string) {
+  function handleImport({ authors: importedAuthors, title: importedTitle, asks, selfId }: PendingImport) {
     // Errors surface in ImportModal, which keeps the dialog open on failure.
     // Re-imported contributors keep their ids, so their open asks still match.
-    loadAuthors(keepKnownIds(useContributionStore.getState().authors, importedAuthors));
+    const { authors: current, asks: held } = useContributionStore.getState();
+    const mapped = keepKnownIds(current, importedAuthors);
+    const answers = importAnswers(current, importedAuthors, mapped, held, { asks, selfId });
+    loadAuthors(mapped, answers.asks, answers.selfId);
     // Only the DOI path carries a title. Guard on it rather than on emptiness,
     // so a record with no title still clears a stale one from the last import.
     if (importedTitle !== undefined) setTitle(importedTitle);
@@ -291,7 +395,7 @@ export function HeaderActions() {
               disabled={authorCount === 0 || claim !== null}
               aria-label={t("a11yShareLink")}
               title={claim !== null ? t("claimLockedHint") : t("a11yShareLink")}
-              className="touch-target flex size-9 items-center justify-center gap-2 rounded-lg border border-primary/30 text-sm font-medium text-primary transition-colors hover:border-primary hover:bg-primary hover:text-on-primary disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:px-4"
+              className="touch-target flex size-9 items-center justify-center gap-2 rounded-lg border border-outline-variant text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 sm:w-auto sm:px-4"
             >
               {shareStatus === "copied" ? (
                 <Check className="h-4 w-4" />
@@ -327,7 +431,9 @@ export function HeaderActions() {
           disabled={claim !== null}
           aria-label={t("import")}
           title={claim !== null ? t("claimLockedHint") : t("import")}
-          className="touch-target flex size-9 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:px-5"
+          // Secondary, like Share: importing is an occasional start, not the
+          // page's main action, which is copying the statement.
+          className="touch-target flex size-9 items-center justify-center gap-2 rounded-lg border border-outline-variant text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 sm:w-auto sm:px-4"
         >
           <Upload className="h-4 w-4" />
           <span className="sr-only sm:not-sr-only">{t("import")}</span>

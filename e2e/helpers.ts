@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { PERSIST_KEY, PERSIST_VERSION } from "../src/store/persist-meta";
 
@@ -74,4 +75,33 @@ export async function copyFrom(page: Page, button: Locator): Promise<string> {
  */
 export function stubUpstream(page: Page, url: string, status: number, json: unknown) {
   return page.route(url, (route) => route.fulfill({ status, json, headers: { "access-control-allow-origin": "*" } }));
+}
+
+// Pin the rule set to WCAG 2.0, 2.1 and 2.2 A + AA so the scan matches what CONTRIBUTING.md
+// documents, rather than tracking axe's shifting defaults (which also include
+// best-practice rules).
+const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
+/**
+ * Panels scale in and rows fade up, and axe samples computed color; including
+ * the opacity of an element still mid-transition. Scanning before motion
+ * settles reports contrast failures that never reach the eye, and geometry
+ * reads ~4% small. Wait for every running animation, with a ceiling so an
+ * intentionally looping one can't hang the suite.
+ */
+export async function settleMotion(page: Page) {
+  await page.evaluate(() => {
+    const done = Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
+    const cap = new Promise<void>((r) => setTimeout(r, 2000));
+    return Promise.race([done, cap]).then(() => undefined);
+  });
+}
+
+export const scan = async (page: Page) => {
+  await settleMotion(page);
+  return new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+};
+
+/** A role's strongest answer on the co-author page: Lead in levels, Contributed in yes/no. */
+export function strongestAnswer(page: Page, role: string): Locator {
+  return page.getByRole("radiogroup", { name: role, exact: true }).getByRole("radio").last();
 }

@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createAuthor, lookupOrcidPerson, type OrcidLookupResult } from "@/core";
+import { type Ask, createAuthor, lookupOrcidPerson, type OrcidLookupResult } from "@/core";
 import { announce } from "@/lib/announce";
+import { decodeShareHash } from "@/lib/share";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
 import { AuthorList } from "./AuthorInput";
@@ -155,5 +156,134 @@ describe("a row's ORCID lookup", () => {
     expect(authors()[0]?.name).toBe("Someone");
     expect(announce).toHaveBeenCalledWith(en.errNameTooLong, { assertive: true });
     expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("x".repeat(600)));
+  });
+});
+
+describe("asking a contributor", () => {
+  let writeText = vi.fn<(text: string) => Promise<void>>();
+  function stubClipboard(impl: (text: string) => Promise<void>) {
+    writeText = vi.fn(impl);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+  }
+
+  /** Click an ask item and wait out the link build and the clipboard write. */
+  async function ask(item: string) {
+    // The menu stays open after an item, so open it only the first time.
+    if (!screen.queryByRole("button", { name: item })) {
+      fireEvent.click(screen.getByRole("button", { name: "Actions for Jane Smith" }));
+    }
+    fireEvent.click(screen.getByRole("button", { name: item }));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    await act(async () => {
+      await writeText.mock.results[0]?.value?.catch(() => undefined);
+    });
+  }
+
+  it("records the ask only once the link reached the clipboard", async () => {
+    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    const id = authors()[0]?.id ?? "";
+    renderList();
+
+    stubClipboard(() => Promise.reject(new Error("denied")));
+    await ask("Ask Jane Smith what they did");
+    expect(useContributionStore.getState().asks).toEqual({});
+
+    let copied = "";
+    stubClipboard((text) => {
+      copied = text;
+      return Promise.resolve();
+    });
+    await ask("Ask Jane Smith what they did");
+    const recorded = useContributionStore.getState().asks[id];
+    expect(recorded).toMatchObject({ prefilled: false });
+
+    // The link and the record agree on what was sent and when.
+    const shared = await decodeShareHash(copied.slice(copied.indexOf("#")));
+    expect(shared).toMatchObject({ blank: true, sentAt: recorded?.sentAt, claimId: id });
+  });
+
+  it("records a pre-filled ask as such", async () => {
+    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    renderList();
+    stubClipboard(() => Promise.resolve());
+    await ask("Ask Jane Smith to check your guess");
+    expect(Object.values(useContributionStore.getState().asks)).toEqual([
+      { sentAt: expect.any(Number), prefilled: true },
+    ]);
+  });
+
+  it("records nothing when the draft switched during the copy", async () => {
+    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    const asked = useContributionStore.getState().activeDraftId;
+    renderList();
+    stubClipboard(() => {
+      useContributionStore.getState().createDraft();
+      return Promise.resolve();
+    });
+    await ask("Ask Jane Smith what they did");
+
+    const state = useContributionStore.getState();
+    expect(state.activeDraftId).not.toBe(asked);
+    expect(state.asks).toEqual({});
+    expect(state.drafts[asked]?.asks).toEqual({});
+  });
+
+  it("records nothing when the contributor was removed during the copy", async () => {
+    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    renderList();
+    stubClipboard(() => {
+      useContributionStore.setState({ authors: [] });
+      return Promise.resolve();
+    });
+    await ask("Ask Jane Smith what they did");
+
+    expect(useContributionStore.getState().asks).toEqual({});
+  });
+});
+
+describe("undoing a removal", () => {
+  it("puts the contributor's ask back", () => {
+    const ann = createAuthor("Ann Lee");
+    const ask = { sentAt: 1, prefilled: false } as Ask;
+    useContributionStore.setState({ authors: [ann], asks: { [ann.id]: ask } });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    expect(useContributionStore.getState().asks).toEqual({});
+
+    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    expect(useContributionStore.getState().asks).toEqual({ [ann.id]: ask });
+  });
+
+  it.each(["reset", "deleteAllDrafts"] as const)("restores nothing after %s", (clear) => {
+    useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    expect(screen.getByRole("button", { name: en.undo })).toBeTruthy();
+
+    act(() => useContributionStore.getState()[clear]());
+
+    expect(screen.queryByRole("button", { name: en.undo })).toBeNull();
+    expect(authors()).toEqual([]);
+  });
+});
+
+describe("moving a contributor from the menu", () => {
+  it("keeps focus on Move up once the row reaches the top, and ignores further clicks", () => {
+    useContributionStore.setState({ authors: [createAuthor("Ann Lee"), createAuthor("Ben Okoro")] });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Ben Okoro" }));
+
+    const moveUp = screen.getByRole("button", { name: en.moveUp });
+    moveUp.focus();
+    fireEvent.click(moveUp);
+    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
+
+    // A disabled button would drop focus to the page body here.
+    expect(moveUp).not.toHaveProperty("disabled", true);
+    expect(moveUp.getAttribute("aria-disabled")).toBe("true");
+    expect(document.activeElement).toBe(moveUp);
+
+    fireEvent.click(moveUp);
+    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
   });
 });

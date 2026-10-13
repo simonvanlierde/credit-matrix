@@ -10,10 +10,11 @@
  * stops it recurring.
  *
  * Bump `PERSIST_VERSION` when the persisted shape changes. There is no
- * migration registry until launch: the repair pass in contribution-store.ts
- * normalizes on every load, and a bump only invalidates newer drafts.
+ * migration registry: the repair pass in contribution-store.ts normalizes on
+ * every load. A tab never writes over a value stamped with a newer version; it
+ * reloads to pick up the newer build instead.
  */
-export const PERSIST_VERSION = 2;
+export const PERSIST_VERSION = 3;
 
 /** localStorage key the store persists under. */
 export const PERSIST_KEY = "credit-generator-state";

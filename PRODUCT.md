@@ -28,6 +28,8 @@ URL or import a supported format.
 - Add, rename, reorder, paste, import, and classify contributors. Optionally resolve names through
   ORCID, or fill a whole list from a DOI.
 - Assign all 14 canonical CRediT roles as yes/no values or contribution levels.
+- Ask co-authors by link for their own row, keep each answer beside the draft, and settle every
+  difference in one place.
 - Localize human-readable statements and exports. Keep canonical English terms in machine formats.
 
 ## Constraints
