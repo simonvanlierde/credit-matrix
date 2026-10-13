@@ -102,11 +102,19 @@ function fail(status: 400 | 404 | 422 | 502, code: DoiErrorCode): DoiLookupResul
 
 /**
  * Return the canonical DOI form used in requests: no resolver prefix, no
- * surrounding space. Case is left alone — the registrant half of a DOI is
- * case-insensitive but the suffix is not, so lowercasing can break resolution.
+ * surrounding space, and not percent-encoded (a DOI copied from the address
+ * bar is, and the request would encode it a second time). Case is left alone —
+ * the registrant half of a DOI is case-insensitive but the suffix is not, so
+ * lowercasing can break resolution.
  */
 export function normalizeDoi(doi: string): string {
-  return doi.trim().replace(DOI_PREFIX, "").trim();
+  const bare = doi.trim().replace(DOI_PREFIX, "").trim();
+  try {
+    return decodeURIComponent(bare);
+  } catch {
+    // A lone "%" is not an escape: keep the DOI as typed.
+    return bare;
+  }
 }
 
 /**

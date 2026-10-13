@@ -48,6 +48,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   cell may also hold a level word (`Lead`, `Equal`, `Supporting`, `None`); it used to read as 0.
 - JATS XML import: members of a group author (`<collab>`) import once each instead of twice, and
   line breaks or extra spaces inside a name are dropped.
+- DOI lookup: a DOI copied from the address bar with `%3C`-style escapes is now found; it used to
+  come back as not found.
 
 ## [0.7.0] - 2026-10-13
 
