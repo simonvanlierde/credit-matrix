@@ -44,6 +44,10 @@ class Article:
     """The free text the roles were read from (for contrib_text, "1. Name: text" per author), parsed or not.
     Kept for labelling."""
     unresolved: list[str] = field(default_factory=list)
+    paired: set[tuple[int, str]] | None = None
+    """For an article whose roles are tagged (jats4r, plos_uri) and that also prints a statement: what
+    the statement parser reads from that statement. Scored against `assignments`, it measures the
+    parser without hand labels."""
 
 
 _ORCID_RE = re.compile(r"\d{4}-\d{4}-\d{4}-\d{3}[\dX]")
@@ -124,7 +128,11 @@ def _statement_candidates(root: ET.Element):
 
 
 def parse_article(xml: bytes) -> Article:
-    root = ET.fromstring(xml)
+    return parse_element(ET.fromstring(xml))
+
+
+def parse_element(root: ET.Element) -> Article:
+    """Parse one <article> element, as a bulk file's iterparse hands it over."""
     meta = root.find("front/article-meta")
     if meta is None:
         raise ValueError("no front/article-meta")
@@ -175,6 +183,9 @@ def parse_article(xml: bytes) -> Article:
                 for i, (_, texts) in enumerate(per_author)
                 if texts
             )
+        elif text := next(_statement_candidates(root), None):
+            article.statement = text
+            article.paired = parse_statement(text, article.authors).assignments
         return article
 
     # The first statement that names a role is kept even when it does not parse: those are the hard

@@ -1,14 +1,14 @@
 """How published papers use CRediT roles; see the README in census/."""
 
 import argparse
+import csv
 import re
 import sys
 from pathlib import Path
 
 import duckdb
 
-from census import fields, labels, pipeline, pmc_s3, snapshot, store
-from census.net import get
+from census import bulk, export, fields, labels, pipeline, pmc_s3, snapshot, store
 from census.reports import REPORTS
 
 ROOT = Path(__file__).resolve().parents[2]  # census/, so commands work from any directory
@@ -52,14 +52,10 @@ def cmd_run(args: argparse.Namespace) -> None:
         raise Failure(error) from error
     if args.inventory not in (None, "latest") and not INVENTORY_RE.fullmatch(args.inventory):
         raise Failure(f"--inventory {args.inventory!r} is not a date like 2026-10-12T01-00Z or 'latest'")
-    db = _db(args, must_exist=False)
-    if args.fresh:
-        db.unlink(missing_ok=True)
+    db = _open_db(args, "bucket")
     pin_file = SNAPSHOTS / f"{args.snapshot}.inventory"
     committed = pin_file.read_text().strip() if pin_file.exists() else None
     with store.connect(db) as con:
-        if mismatches := store.mismatched_pins(con):
-            raise Failure(f"{db} was built by other code ({'; '.join(mismatches)}); rerun with --fresh")
         (used,) = con.execute("SELECT value FROM meta WHERE key = 'inventory'").fetchone() or (None,)
         # The committed pin wins over the newest inventory, so a clean clone reproduces the sample.
         date = pmc_s3.latest_inventory() if args.inventory == "latest" else args.inventory or used or committed
@@ -67,10 +63,53 @@ def cmd_run(args: argparse.Namespace) -> None:
         if store.pin(con, "inventory", date) != date:
             raise Failure(f"{db} was read from inventory {used}; use --fresh or another --db to read {date}")
     versions = pmc_s3.load_versions(date, DATA / f"pmc-inventory-{date}.parquet")
-    counts = pipeline.run(manifest, versions, db, args.workers, pmc_s3.cached(get, args.xml_cache))
+    source = pmc_s3.BucketSource(manifest, versions, pmc_s3.CachedFetch(args.xml_cache), args.workers)
+    counts = pipeline.run(source, db, args.processes)
     if committed is None and "stopped" not in counts:
         pin_file.write_text(date + "\n")
     print(f"inventory {date}: " + ", ".join(f"{v} {k}" for k, v in sorted(counts.items())))
+
+
+def _open_db(args: argparse.Namespace, source: str) -> Path:
+    """The run's database, after --fresh and the parser, schema and source pins are checked."""
+    db = _db(args, must_exist=False)
+    if args.fresh:
+        db.unlink(missing_ok=True)
+    with store.connect(db) as con:
+        mismatches = store.mismatched_pins(con)
+        if (pinned := store.pin(con, "source", source)) != source:
+            mismatches.append(f"source {pinned} (this run: {source})")
+        if mismatches:
+            raise Failure(f"{db} was built by other code ({'; '.join(mismatches)}); rerun with --fresh")
+    return db
+
+
+def cmd_bulk(args: argparse.Namespace) -> None:
+    db = _open_db(args, "bulk")
+    pin_file = SNAPSHOTS / f"{args.snapshot}.files.csv"
+    if pin_file.exists():
+        with pin_file.open(newline="") as f:
+            files = list(csv.DictReader(f))
+    else:
+        # The listing this snapshot reads, committed before any download: the weekly refresh can
+        # replace files, and the hashes written at the end show which content was read.
+        files = bulk.list_files()
+        _write_files(pin_file, files)
+    source = bulk.BulkSource(files, args.cache)
+    counts = pipeline.run(source, db, args.processes, args.limit)
+    with duckdb.connect(str(db), read_only=True) as con:
+        hashes = dict(con.execute("SELECT unit, sha256 FROM units WHERE finished").fetchall())
+    _write_files(pin_file, [{**f, "sha256": hashes.get(f["unit"], f.get("sha256", ""))} for f in files])
+    print(f"{len(hashes)}/{len(files)} files read: " + ", ".join(f"{v} {k}" for k, v in sorted(counts.items())))
+
+
+def _write_files(path: Path, files: list[dict[str, str]]) -> None:
+    with path.open("w", newline="") as f:
+        writer = csv.DictWriter(
+            f, fieldnames=["unit", "listed_date", "sha256"], lineterminator="\n", extrasaction="ignore"
+        )
+        writer.writeheader()
+        writer.writerows({"sha256": "", **row} for row in files)
 
 
 def cmd_fields(args: argparse.Namespace) -> None:
@@ -89,6 +128,13 @@ def cmd_report(args: argparse.Namespace) -> None:
                 continue
             print(f"\n{title}")
             con.sql(query).show(max_rows=60, max_width=200)
+
+
+def cmd_export(args: argparse.Namespace) -> None:
+    out = args.out or DATA / "export" / args.snapshot
+    with duckdb.connect(str(_db(args)), read_only=True) as con:
+        counts = export.export(con, out, args.snapshot)
+    print(f"{out}: " + ", ".join(f"{v} {k}" for k, v in counts.items()))
 
 
 def cmd_label(args: argparse.Namespace) -> None:
@@ -122,15 +168,26 @@ def main(argv: list[str] | None = None) -> int:
     cmd.set_defaults(func=cmd_snapshot)
     cmd = sub.add_parser("run", parents=[snap, db], help="read the manifest from the PMC bucket into the database")
     cmd.add_argument("--inventory", help="bucket inventory date, or 'latest' (default: the snapshot's pin)")
-    cmd.add_argument("--workers", type=int, default=32, help="parallel downloads")
+    cmd.add_argument("--workers", type=int, default=16, help="parallel downloads in each process")
+    cmd.add_argument("--processes", type=int, default=8, help="worker processes (0: none)")
     cmd.add_argument("--fresh", action="store_true", help="delete the database first (cached XML is reused)")
     cmd.add_argument("--xml-cache", type=Path, default=DATA / "xml-cache", help="gzipped XML kept for re-parsing")
     cmd.set_defaults(func=cmd_run)
+    cmd = sub.add_parser("bulk", parents=[db], help="read every open-access article from Europe PMC's bulk files")
+    cmd.add_argument("--snapshot", default="oa-2026-10", help="name of the file listing in census/snapshots/")
+    cmd.add_argument("--processes", type=int, default=16, help="files downloaded and parsed at once (0: none)")
+    cmd.add_argument("--fresh", action="store_true", help="delete the database first (downloaded files are reused)")
+    cmd.add_argument("--cache", type=Path, default=DATA / "bulk", help="where the bulk files are kept (about 168 GB)")
+    cmd.add_argument("--limit", type=int, help="read at most this many unread files, to try a run")
+    cmd.set_defaults(func=cmd_bulk)
     cmd = sub.add_parser("fields", parents=[snap, db], help="add journal fields from OpenAlex")
     cmd.add_argument("--sources", default=fields.OPENALEX_SOURCES, help="OpenAlex sources Parquet")
     cmd.set_defaults(func=cmd_fields)
     cmd = sub.add_parser("report", parents=[snap, db], help="print the summary tables")
     cmd.set_defaults(func=cmd_report)
+    cmd = sub.add_parser("export", parents=[snap, db], help="write the public dataset (no author names)")
+    cmd.add_argument("--out", type=Path, help="directory (default: census/data/export/<snapshot>)")
+    cmd.set_defaults(func=cmd_export)
     cmd = sub.add_parser("label", parents=[snap, db], help="export a blind sample to hand-label")
     cmd.add_argument("--per-style", type=int, default=50, help="articles per text style")
     cmd.add_argument("--seed", type=int, default=20261013, help="seed for the sample")

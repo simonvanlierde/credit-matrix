@@ -24,6 +24,8 @@ REPORTS = {
             JOIN (SELECT place, count(*) AS n FROM authors GROUP BY place) t USING (place)
             GROUP BY r.role, au.place
         ) ON place IN ('first', 'middle', 'last') USING round(any_value(share), 3) ORDER BY role""",
+    "Statement parser scored against the tags of articles that have both": """
+        SELECT * FROM paired_scores WHERE articles >= 5 OR publisher = '(all)' ORDER BY articles DESC""",
     "Articles with roles, per field": """
         SELECT f.field, count(*) AS articles, round(avg((a.n_authors_with_roles > 0)::INT), 3) AS with_roles
         FROM articles a JOIN article_fields f USING (pmcid)

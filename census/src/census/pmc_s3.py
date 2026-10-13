@@ -11,10 +11,10 @@ import re
 import threading
 import urllib.error
 import zlib
-from collections.abc import Callable, Iterable, Iterator
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from itertools import islice
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
 
 import duckdb
 
@@ -63,12 +63,18 @@ def xml_url(pmcid: str, version: int) -> str:
     return f"{BUCKET}/{pmcid}.{version}/{pmcid}.{version}.xml"
 
 
-def cached(fetch: Callable[[str], bytes], cache: Path) -> Callable[[str], bytes]:
-    """`fetch`, keeping a gzipped copy of each file in `cache` so a re-parse needs no download."""
-    cache.mkdir(parents=True, exist_ok=True)
+class CachedFetch:
+    """`fetch`, keeping a gzipped copy of each file in `cache` so a re-parse needs no download.
 
-    def read(url: str) -> bytes:
-        path = cache / (url.rsplit("/", 1)[1] + ".gz")
+    A class, not a closure, so a source holding it can be sent to worker processes.
+    """
+
+    def __init__(self, cache: Path, fetch: Callable[[str], bytes] = get):
+        self.cache, self.fetch = cache, fetch
+
+    def __call__(self, url: str) -> bytes:
+        self.cache.mkdir(parents=True, exist_ok=True)
+        path = self.cache / (url.rsplit("/", 1)[1] + ".gz")
         if path.exists():
             try:
                 data = gzip.decompress(path.read_bytes())
@@ -77,57 +83,58 @@ def cached(fetch: Callable[[str], bytes], cache: Path) -> Callable[[str], bytes]
             except OSError, EOFError, zlib.error:
                 pass
             path.unlink(missing_ok=True)  # truncated, empty or not gzip: fetch it again
-        data = fetch(url)
+        data = self.fetch(url)
         # One temp name per writer, so two runs sharing the cache never rename each other's half file.
         tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
         tmp.write_bytes(gzip.compress(data, compresslevel=6))
         tmp.rename(path)
         return data
 
-    return read
 
-
-Download = tuple[str, str, int | None, bytes | None, tuple[str, str] | None]
-"""pmcid, stratum, version, the XML, and (style, error) when there is none."""
-
-
-def _download(pmcid: str, stratum: str, version: int | None, fetch: Callable[[str], bytes]) -> Download:
+def _one(pmcid: str, stratum: str, version: int | None, fetch: Callable[[str], bytes]) -> Rows:
     if version is None:
-        return pmcid, stratum, None, None, ("missing", "not in the PMC Open Access Subset")
+        return failed_row(pmcid, stratum, "missing", "not in the PMC Open Access Subset")
     try:
-        return pmcid, stratum, version, fetch(xml_url(pmcid, version)), None
+        xml = fetch(xml_url(pmcid, version))
     except urllib.error.HTTPError as error:
-        if error.code == 404:
-            return pmcid, stratum, version, None, ("missing", "HTTP 404")
-        return pmcid, stratum, version, None, ("retry", f"HTTP {error.code}")
+        style = "missing" if error.code == 404 else "retry"
+        return failed_row(pmcid, stratum, style, f"HTTP {error.code}", version)
     except Exception as error:  # IncompleteRead and other http.client errors are not OSErrors
-        return pmcid, stratum, version, None, ("retry", f"fetch failed: {type(error).__name__}: {error}")
-
-
-def _parse(item: Download) -> Rows:
-    pmcid, stratum, version, xml, failure = item
-    if xml is None:
-        style, error = failure or ("error", "no XML")
-        return failed_row(pmcid, stratum, style, error, version)
+        return failed_row(pmcid, stratum, "retry", f"fetch failed: {type(error).__name__}: {error}", version)
     return rows_for(pmcid, stratum, xml, version)
 
 
-def stream(
-    rows: Iterable[dict[str, str]],
-    versions: dict[str, int],
-    workers: int = 32,
-    fetch: Callable[[str], bytes] = get,
-    processes: int | None = None,
-) -> Iterator[Rows]:
-    """Fetch and parse each manifest row's article; results in manifest order.
+class BucketSource:
+    """Articles listed in a manifest, one request each, from the PMC bucket: for samples.
 
-    Downloads run in `workers` threads and parsing in `processes` processes (default: one per CPU), so
-    a re-parse from the cache is not held to one core. A failed download comes back with style "retry"
-    for the caller to leave out, so a resumed run tries it again. Work is queued a batch at a time,
-    because Executor.map would queue every row up front.
+    Units are chunks of `chunk` manifest rows, each downloaded by `workers` threads in one process.
+    An article whose download failed comes back with style "retry" and keeps its unit unfinished.
     """
-    rows = iter(rows)
-    with ThreadPoolExecutor(workers) as io, ProcessPoolExecutor(processes) as cpu:
-        while batch := list(islice(rows, 2000)):
-            downloads = io.map(lambda r: _download(r["pmcid"], r["stratum"], versions.get(r["pmcid"]), fetch), batch)
-            yield from cpu.map(_parse, downloads, chunksize=32)
+
+    name = "bucket"
+
+    def __init__(
+        self,
+        manifest: list[dict[str, str]],
+        versions: dict[str, int],
+        fetch: Callable[[str], bytes],
+        workers: int = 16,
+        chunk: int = 200,
+    ):
+        # Only the manifest's versions: the whole inventory (about 9 million) would go to every process.
+        self.versions = {r["pmcid"]: versions[r["pmcid"]] for r in manifest if r["pmcid"] in versions}
+        self.chunks = {f"bucket-{i // chunk:05d}": manifest[i : i + chunk] for i in range(0, len(manifest), chunk)}
+        self.fetch, self.workers = fetch, workers
+
+    def units(self) -> list[str]:
+        return list(self.chunks)
+
+    def read(self, unit: str) -> tuple[list[Rows], dict[str, Any]]:
+        rows = self.chunks[unit]
+        with ThreadPoolExecutor(self.workers) as pool:
+            results = list(
+                pool.map(lambda r: _one(r["pmcid"], r["stratum"], self.versions.get(r["pmcid"]), self.fetch), rows)
+            )
+        retries = sum(r.style == "retry" for r in results)
+        stored = [r for r in results if r.style != "retry"]
+        return stored, {"unit": unit, "articles": len(stored), "retries": retries, "finished": retries == 0}

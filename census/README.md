@@ -23,6 +23,18 @@ statement_text`; those counts change when the parser does.
 Every command takes `--snapshot <name>` (default `sample-2026-10`) and `--db <path>` (default
 `data/<snapshot>.duckdb`). `uv run census <command> --help` lists the rest.
 
+### Every open-access article
+
+```sh
+uv run census bulk      # all of Europe PMC's open-access subset into data/oa-2026-10.duckdb
+uv run census export --snapshot oa-2026-10
+```
+
+`bulk` reads Europe PMC's bulk files (`ftp.ebi.ac.uk/pub/databases/pmc/oa/`, 1,308 files of
+about 9,000 articles, 168 GB), 16 files at a time, each downloaded once into `data/bulk/` and
+parsed as it streams in (about 480 articles a second a process). Unlike Europe PMC's REST API,
+the files keep the role markup. `--limit 2` reads just two files to try it.
+
 ### What makes a run reproducible
 
 - **The manifest:** `snapshots/<name>.csv` lists the PMCIDs. `census snapshot` draws a new one,
@@ -33,12 +45,16 @@ Every command takes `--snapshot <name>` (default `sample-2026-10`) and `--db <pa
   a new database.
 - **The parser:** the database records a hash of the parsing code and the schema version. A run
   refuses a database built by other code; `--fresh` deletes it and re-parses from the cache.
-- **The files:** each article's sha256 is in `articles.xml_sha256`; the OpenAlex snapshot date the
-  fields came from is in `meta`.
+- **The bulk listing:** the first `bulk` run writes the file list it reads (names and listed dates)
+  to `snapshots/<name>.files.csv` and adds each file's sha256 as it is read. Europe PMC replaces
+  the files weekly and keeps no old versions, so the hashes are what pins the content.
+- **The files:** a bucket article's sha256 is in `articles.xml_sha256`; a bulk article names its
+  file in `articles.source_unit`. The OpenAlex snapshot date the fields came from is in `meta`.
 
-`run` skips articles already in the database, so an interrupted run picks up where it stopped. A
-failed download is not stored and is tried again next time; a run stops by itself when nearly all
-recent downloads fail.
+Both commands work in units (a bulk file, or 200 manifest articles) and record each in the `units`
+table. A rerun skips finished units and reads unfinished ones again, so an interrupted run picks up
+where it stopped and failed downloads are retried. A run stops by itself when several units in a
+row could not be downloaded.
 
 ## What it reads
 
@@ -74,12 +90,21 @@ such as "A.B. conceived the study" yields no roles.
   journal has. A journal whose top field holds under 45% (PLOS ONE, Scientific Reports) counts as
   multidisciplinary. OpenAlex has no free bulk route to topics per article, so fields are per
   journal.
-- `meta`: the schema version, parser hash, inventory date and OpenAlex snapshot date.
+- `paired`: for articles whose roles are tagged and that also print a statement, what the statement
+  parser reads from it. The `paired_scores` view scores that against the tags per publisher, which
+  measures the parser on tens of thousands of articles without hand labels.
+- `units`: each bulk file or manifest chunk read, with its sha256, article count and whether it is
+  finished.
+- `meta`: the source, schema version, parser hash, inventory date and OpenAlex snapshot date.
 
-The database is local working data. Author names and statement text stay in it; the public
-dataset will hold role facts and ORCIDs only, with statement text just for CC BY and CC0 articles.
+The database is local working data with author names in it. `census export` writes the public
+dataset to `data/export/<snapshot>/`: `articles.parquet` and `assignments.parquet` (role facts and
+bare ORCIDs, no names, CC0), `statements.parquet` (the statement text of CC BY and CC0 articles
+only, with each licence), `meta.json` (counts and the pins) and a README.
 
 ## Measuring accuracy
+
+`census report` includes the paired scores. For formats with no tagged twin, hand labels:
 
 ```sh
 uv run census label --per-style 50   # blind sample to data/labels/<snapshot>.csv
