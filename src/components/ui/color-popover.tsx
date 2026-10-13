@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useId, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { OKABE_ITO, onColor } from "@/core/contributor-color";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
@@ -37,6 +37,7 @@ export function ColorPopover({
   label: string;
 }) {
   const t = useTranslations();
+  const customId = useId();
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
@@ -62,17 +63,53 @@ export function ColorPopover({
             );
           })}
         </div>
-        <label className="mt-3 flex items-center gap-1.5 text-xs text-on-surface-variant">
-          <input
-            type="color"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            aria-label={t("a11yCustomColor")}
-            className="h-6 w-6 cursor-pointer rounded border border-outline-variant bg-transparent p-0"
-          />
+        <label htmlFor={customId} className="mt-3 flex items-center gap-1.5 text-xs text-on-surface-variant">
+          <CustomColorInput id={customId} value={value} onChange={onChange} label={t("a11yCustomColor")} />
           {t("customColor")}
         </label>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/**
+ * The native picker, uncontrolled. Dragging in it fires `input` on every step,
+ * and each store write repaints every grid cell and saves the draft, so only
+ * the committed pick (the native `change` event) reaches `onChange`. The
+ * picker's own swatch still follows the drag.
+ */
+function CustomColorInput({
+  id,
+  value,
+  onChange,
+  label,
+}: {
+  id: string;
+  value: string;
+  onChange: (hex: string) => void;
+  label: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  // A swatch picked elsewhere still shows here.
+  useEffect(() => {
+    if (ref.current) ref.current.value = value;
+  }, [value]);
+  // React's onChange is the `input` event; the native `change` is the commit.
+  useEffect(() => {
+    const input = ref.current;
+    if (!input) return;
+    const commit = () => onChange(input.value);
+    input.addEventListener("change", commit);
+    return () => input.removeEventListener("change", commit);
+  }, [onChange]);
+  return (
+    <input
+      ref={ref}
+      id={id}
+      type="color"
+      defaultValue={value}
+      aria-label={label}
+      className="h-6 w-6 cursor-pointer rounded border border-outline-variant bg-transparent p-0"
+    />
   );
 }

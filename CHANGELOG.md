@@ -41,6 +41,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Import: clicking *Import* twice on a pasted share link no longer opens the draft a second time.
 - Team: removing a contributor during *Ask everyone* skips them and goes on to the next person,
   instead of stopping the sequence.
+- Dragging in the custom heatmap color picker no longer redraws and saves the grid at every step,
+  which made it stutter on large teams. The grid takes the color once you pick it.
 
 ## [0.7.0] - 2026-10-13
 
