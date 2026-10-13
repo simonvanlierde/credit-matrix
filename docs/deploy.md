@@ -63,8 +63,8 @@ token, so no `NPM_TOKEN` secret exists, and the package page links each version 
 that built it.
 
 Check what would be published with `cd src/core && npm pack --dry-run`. On every pull request, the
-CI `check` job builds the package and tests its export list, public types and CLI
-(`src/core/__tests__/package.test.ts`).
+CI `check` job builds the package and tests the files it publishes, its export list, public types
+and CLI (`src/core/__tests__/package.test.ts`).
 
 ### First publish
 
