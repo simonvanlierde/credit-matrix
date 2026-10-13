@@ -144,6 +144,12 @@ export function clampScore(score: number): number {
   return Math.round(Math.max(0, Math.min(100, score)));
 }
 
+/** The score each level stores: the top of its `scoreToLevel` band. */
+export const LEVEL_SCORE = { none: 0, supporting: 33, equal: 66, lead: 100 } as const satisfies Record<
+  ContributionLevel,
+  number
+>;
+
 export function scoreToLevel(score: number): ContributionLevel {
   if (score === 0) return "none";
   if (score <= 33) return "supporting";

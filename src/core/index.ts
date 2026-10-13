@@ -33,6 +33,7 @@ export {
   isAllBinary,
   isUsableAuthorName,
   isValidOrcid,
+  LEVEL_SCORE,
   MAX_AUTHOR_NAME_LENGTH,
   MAX_AUTHORS,
   MAX_IMPORT_BYTES,

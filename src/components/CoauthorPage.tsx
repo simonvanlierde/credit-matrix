@@ -7,7 +7,15 @@ import { useTranslations } from "use-intl";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Switch } from "@/components/ui/switch";
-import { type Author, CREDIT_ROLES, DEFAULT_MONO_COLOR, heatCellColor, isValidOrcid, onColor } from "@/core";
+import {
+  type Author,
+  CREDIT_ROLES,
+  DEFAULT_MONO_COLOR,
+  heatCellColor,
+  isValidOrcid,
+  LEVEL_SCORE,
+  onColor,
+} from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -17,10 +25,10 @@ import { useContributionStore } from "@/store/contribution-store";
 
 /** The grid's level scores: Levels mode stores these, yes/no mode stores 0 or 100. */
 const LEVELS = [
-  { key: "none", score: 0, dots: 0 },
-  { key: "supporting", score: 33, dots: 1 },
-  { key: "equal", score: 66, dots: 2 },
-  { key: "lead", score: 100, dots: 3 },
+  { key: "none", score: LEVEL_SCORE.none, dots: 0 },
+  { key: "supporting", score: LEVEL_SCORE.supporting, dots: 1 },
+  { key: "equal", score: LEVEL_SCORE.equal, dots: 2 },
+  { key: "lead", score: LEVEL_SCORE.lead, dots: 3 },
 ] as const;
 const YES_NO = [
   { key: "none", score: 0, dots: 0 },

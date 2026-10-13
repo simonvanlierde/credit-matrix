@@ -31,6 +31,7 @@ import {
   buildHeatmapSvg,
   CREDIT_ROLES,
   heatCellColor,
+  LEVEL_SCORE,
   onColor,
   type RoleDescriber,
   type RoleTranslator,
@@ -47,15 +48,12 @@ import { useSettled } from "@/lib/use-settled";
 import { download as downloadBlob } from "@/lib/utils";
 import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-// Canonical level↔score mapping. Clicks in Levels mode cycle through it
-// ascending; the legend renders it descending (lead→none).
-const LEVEL_CYCLE = [0, 33, 66, 100];
-const LEVEL_KEY: { key: UiKey; score: number }[] = [
-  { key: "lead", score: 100 },
-  { key: "equal", score: 66 },
-  { key: "supporting", score: 33 },
-  { key: "none", score: 0 },
-];
+// Clicks in Levels mode cycle through the scores ascending; the legend renders
+// them descending (lead→none).
+const LEVEL_CYCLE: number[] = Object.values(LEVEL_SCORE);
+const LEVEL_KEY: { key: UiKey; score: number }[] = Object.entries(LEVEL_SCORE)
+  .map(([key, score]) => ({ key: key as UiKey, score }))
+  .reverse();
 const FLAT_KEY: { key: UiKey; score: number }[] = [
   { key: "contributed", score: 100 },
   { key: "none", score: 0 },

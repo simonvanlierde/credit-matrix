@@ -1,14 +1,10 @@
 import type { Author, Contribution } from "../author";
-import { isValidOrcid, normalizeOrcid } from "../author";
+import { isValidOrcid, LEVEL_SCORE, normalizeOrcid } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 
-/** The score each `degree-contribution` level imports as: the top of its `scoreToLevel` band. */
-const LEVEL_SCORES = new Map([
-  ["lead", 100],
-  ["equal", 66],
-  ["supporting", 33],
-]);
+/** The score each `degree-contribution` level imports as. "none" is not one: a listed role counts. */
+const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(([level]) => level !== "none"));
 
 /**
  * Parse a JATS4R XML string (as produced by `toJats4rXml()` or the original

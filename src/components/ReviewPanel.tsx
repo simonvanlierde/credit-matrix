@@ -14,6 +14,7 @@ import {
   type Difference,
   heatCellColor,
   isMarker,
+  LEVEL_SCORE,
   type Level,
   levelOf,
   onColor,
@@ -28,7 +29,6 @@ import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useContributionStore } from "@/store/contribution-store";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const LEVEL_SCORE = { none: 0, supporting: 33, equal: 66, lead: 100 } as const;
 
 const PRIMARY_BUTTON =
   "inline-flex min-h-8 items-center rounded-lg bg-primary px-3 text-xs font-semibold text-on-primary transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
