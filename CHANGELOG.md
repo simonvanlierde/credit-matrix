@@ -55,6 +55,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - CSV and tenzing import skip a row with no usable name (empty, or no letters) and keep the other
   rows, as JATS XML import does. One bad row used to stop the whole import. A CSV without a Name
   column is still refused.
+- Statements: a contributor name containing `{level}` or `{names}` is printed as written.
 
 ## [0.7.0] - 2026-10-13
 
