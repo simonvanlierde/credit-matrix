@@ -225,6 +225,7 @@
   "acknowledgements": "Danksagungen",
   "aboutTaxonomy": "CRediT ist ein ANSI/NISO-Standard (<cc>CC BY 4.0</cc>). Dieses Projekt ist unabhängig von NISO und wird nicht von NISO unterstützt.",
   "aboutPrivacy": "Beim Nachschlagen einer ORCID iD wird sie von Ihrem Browser aus an pub.orcid.org gesendet. Beim Nachschlagen einer DOI wird sie zusammen mit der Kontaktadresse dieser Website an api.crossref.org gesendet, und an api.datacite.org, wenn Crossref sie nicht kennt. Diese Website nutzt Cloudflare Web Analytics, das ohne Cookies auskommt und Besuche nur aggregiert zählt. Sonst verlässt nichts Ihren Browser: Entwürfe bleiben im lokalen Speicher. Anfragen an Mitautoren und deren Antworten werden nur in diesem Browser gespeichert und sind in JSON-Exporten enthalten, sofern Sie diese Option nicht abwählen. Wer eine Antwort sendet, übergibt den Link mit Namen und iD dieser Person an die gewählte App.",
+  "accessibilityStatement": "Erklärung zur Barrierefreiheit",
   "getCreditBadge": "CRediT-Badge abrufen",
   "creditBadge": "CRediT-Badge",
   "copiedHtml": "HTML kopiert",

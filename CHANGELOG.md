@@ -15,6 +15,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A JATS conformance suite in [`conformance/`](conformance/README.md): contributor lists with the
   JATS XML CRediT Matrix writes for each, all checked against the JATS 1.3 DTD and the JATS4R
   rules. Other tools that write CRediT roles into JATS can test themselves against it.
+- An [accessibility statement](docs/accessibility.md), linked from the About panel: what the app
+  aims for (WCAG 2.2 AA), how it is checked, what is known not to work yet, and how to report a
+  problem.
 - `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
   version and release date in step, as it does for `CITATION.cff`.
 - Every CI run checks the JATS4R XML export against the official JATS 1.3 DTD and the JATS4R

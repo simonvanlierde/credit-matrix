@@ -225,6 +225,7 @@
   "acknowledgements": "致谢",
   "aboutTaxonomy": "CRediT 是 ANSI/NISO 标准（<cc>CC BY 4.0</cc>）。本项目独立于 NISO，未获 NISO 认可。",
   "aboutPrivacy": "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。本站使用 Cloudflare Web Analytics，不使用 Cookie，仅统计汇总的访问量。除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。",
+  "accessibilityStatement": "无障碍声明",
   "getCreditBadge": "获取 CRediT 徽章",
   "creditBadge": "CRediT 徽章",
   "copiedHtml": "已复制 HTML",
