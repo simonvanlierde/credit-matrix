@@ -512,12 +512,18 @@ function persistedState(state: ContributionState): PersistedState {
   return value;
 }
 
-/** Every parked-draft key currently in localStorage. */
+/** Every parked-draft key currently in localStorage; none when site data is blocked. */
 function draftKeys(): string[] {
   const keys: string[] = [];
-  for (let i = 0; i < window.localStorage.length; i++) {
-    const key = window.localStorage.key(i);
-    if (key?.startsWith(DRAFT_KEY_PREFIX)) keys.push(key);
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key?.startsWith(DRAFT_KEY_PREFIX)) keys.push(key);
+    }
+  } catch {
+    // Reading `window.localStorage` throws a SecurityError when the browser
+    // blocks site data. Thrown here it would abort the restore, and the
+    // workspace would stay read-only.
   }
   return keys;
 }
@@ -630,10 +636,14 @@ export function announcingStorage(): PersistStorage<PersistedState> {
     },
     removeItem: (key) => {
       if (typeof window === "undefined") return;
-      window.localStorage.removeItem(key);
-      for (const draftKey of draftKeys()) window.localStorage.removeItem(draftKey);
-      // Holds draft data too; clearing the drafts should not leave a copy behind.
-      window.localStorage.removeItem(UNREADABLE_KEY);
+      try {
+        window.localStorage.removeItem(key);
+        for (const draftKey of draftKeys()) window.localStorage.removeItem(draftKey);
+        // Holds draft data too; clearing the drafts should not leave a copy behind.
+        window.localStorage.removeItem(UNREADABLE_KEY);
+      } catch {
+        // Storage blocked entirely (SecurityError): nothing on disk to clear.
+      }
       written.clear();
       lastWritten = undefined;
     },

@@ -1221,6 +1221,18 @@ describe("contribution store", () => {
       globalThis.localStorage.clear();
     });
 
+    // A browser blocking site data throws on any touch of `window.localStorage`.
+    it("restores, and takes edits, when the browser blocks storage", async () => {
+      const blocked = vi.spyOn(window, "localStorage", "get").mockImplementation(() => {
+        throw new DOMException("blocked", "SecurityError");
+      });
+      await useContributionStore.persist.rehydrate();
+      expect(useContributionStore.persist.hasHydrated()).toBe(true);
+      expect(store().addAuthor("Jane Smith")).toBeTruthy();
+      expect(() => store().deleteAllDrafts()).not.toThrow();
+      blocked.mockRestore();
+    });
+
     it("clears an unreadable persisted value rather than failing hydration forever", () => {
       // A truncated write from a crashed tab. Left in place, zustand's
       // JSON.parse would reject hydration on every visit: hasHydrated never
