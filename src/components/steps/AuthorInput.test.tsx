@@ -316,6 +316,17 @@ describe("undoing a removal", () => {
     expect(useContributionStore.getState().asks).toEqual({ [ann.id]: ask });
   });
 
+  it("marks the row as you again", () => {
+    const ann = createAuthor("Ann Lee");
+    useContributionStore.setState({ authors: [ann], selfId: ann.id });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    expect(useContributionStore.getState().selfId).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    expect(useContributionStore.getState().selfId).toBe(ann.id);
+  });
+
   it.each(["reset", "deleteAllDrafts"] as const)("restores nothing after %s", (clear) => {
     useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
     renderList();

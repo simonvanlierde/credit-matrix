@@ -159,6 +159,7 @@ export function AuthorList() {
     applyAskPatch,
     removeAuthor,
     restoreAuthor,
+    setSelfId,
     setTitle,
     title,
     updateAuthorName,
@@ -176,6 +177,7 @@ export function AuthorList() {
       applyAskPatch: s.applyAskPatch,
       removeAuthor: s.removeAuthor,
       restoreAuthor: s.restoreAuthor,
+      setSelfId: s.setSelfId,
       setTitle: s.setTitle,
       title: s.title,
       updateAuthorName: s.updateAuthorName,
@@ -200,7 +202,12 @@ export function AuthorList() {
   const [collapsed, setCollapsed] = useState(false);
   const [newName, setNewName] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
-  const [removed, setRemoved] = useState<{ author: Author; index: number; ask?: Ask } | null>(null);
+  const [removed, setRemoved] = useState<{
+    author: Author;
+    index: number;
+    ask?: Ask;
+    wasSelf: boolean;
+  } | null>(null);
   const [focusAfterRemove, setFocusAfterRemove] = useState<number | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
@@ -235,12 +242,13 @@ export function AuthorList() {
   // Stable, so a memoized AuthorRow is not re-rendered by a new callback.
   const handleRemove = useCallback(
     (author: Author, index: number) => {
-      // Removing a contributor drops their open ask; undo brings it back.
-      const ask = useContributionStore.getState().asks[author.id];
+      // Removing a contributor drops their open ask and their "This is me"
+      // mark; undo brings both back.
+      const { asks, selfId } = useContributionStore.getState();
       removeAuthor(author.id);
       // No announce() here: the undo bar below mounts as role="status" with the
       // same fact, and saying it twice reads as an echo.
-      setRemoved({ author, index, ask });
+      setRemoved({ author, index, ask: asks[author.id], wasSelf: selfId === author.id });
       // The button that was just activated is unmounting, which drops focus to
       // <body> and sends a keyboard user back to the top of the document. Hand
       // focus to the row that takes its place instead.
@@ -255,6 +263,7 @@ export function AuthorList() {
     // the contributor came back when they did not would be a lie.
     if (restoreAuthor(removed.author, removed.index)) {
       if (removed.ask) applyAskPatch(activeDraftId, { rows: {}, asks: { [removed.author.id]: removed.ask } });
+      if (removed.wasSelf) setSelfId(removed.author.id);
       announce(t("annContributorRestored", { name: removed.author.name }));
     } else {
       announce(t("errAtContributorLimit", { limit: MAX_AUTHORS }), { assertive: true });
