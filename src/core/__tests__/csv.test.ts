@@ -101,6 +101,16 @@ describe("CSV import/export", () => {
     expect(parsed[0]?.contributions[0]?.score).toBe(100);
   });
 
+  it("matches headers and level words whatever their case or dash", () => {
+    const csv = `name,type,conceptualization,Writing - original draft,SOFTWARE\nJane Smith,Non-author,Lead,supporting,50`;
+    const [jane] = fromCsv(csv);
+    expect(jane?.contributorType).toBe("non-author");
+    const score = (role: string) => jane?.contributions.find((c) => c.role === role)?.score;
+    expect(score("Conceptualization")).toBe(100);
+    expect(score("Writing – original draft")).toBe(33);
+    expect(score("Software")).toBe(50);
+  });
+
   it("rounds a fractional score cell to an integer", () => {
     const csv = `Name,Conceptualization\nJane Smith,50.5`;
     const parsed = fromCsv(csv);

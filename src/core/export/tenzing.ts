@@ -1,6 +1,6 @@
 import type { Author } from "../author";
 import { isValidOrcid } from "../author";
-import { CREDIT_ROLES } from "../credit-roles";
+import { CREDIT_ROLES, headerKey as key } from "../credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 import { delimiterOf, headerCells, parseCsvRecords } from "./csv";
 
@@ -10,15 +10,6 @@ import { delimiterOf, headerCells, parseCsvRecords } from "./csv";
  * order and on "Notes" vs "Note", so columns are found by header name, never by
  * position.
  */
-
-/** Compare headers ignoring case, spacing and the kind of dash. */
-function key(header: string): string {
-  return header
-    .toLowerCase()
-    .replace(/[‐-―-]/g, "-")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 const ROLE_KEYS = new Map(CREDIT_ROLES.map((role) => [key(role.name), role.name]));
 

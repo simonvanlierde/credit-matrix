@@ -42,6 +42,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the rest of the file into that one contributor.
 - Pasted names separated by Word's Shift+Enter line breaks now become separate contributors, and
   control characters in a name become a space, so JATS XML and heatmap SVG exports stay valid XML.
+- CSV and JATS XML import match column headers and role names whatever their case or dash, as
+  tenzing import already did: `name`, `conceptualization` and `Writing - original draft` are no
+  longer refused or dropped, and a `Non-author` Type cell is read as a non-author. A CSV score
+  cell may also hold a level word (`Lead`, `Equal`, `Supporting`, `None`); it used to read as 0.
 
 ## [0.7.0] - 2026-10-13
 

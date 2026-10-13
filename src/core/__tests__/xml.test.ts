@@ -222,6 +222,19 @@ describe("toJats4rXml", () => {
     expect(active).toEqual(["Conceptualization", "Writing – original draft"]);
   });
 
+  it("matches role names without an identifier whatever their case or dash", () => {
+    const xml = `<article><contrib contrib-type="author">
+      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <role vocab-term="Writing - original draft">Writing - original draft</role>
+      <role>conceptualization</role>
+      <role vocab-term="nonsense">Software</role>
+    </contrib></article>`;
+
+    const [jane] = fromJats4rXml(xml);
+    const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(active).toEqual(["Conceptualization", "Software", "Writing – original draft"]);
+  });
+
   it("reads degree-contribution, and falls back to lead when it is missing or unknown", () => {
     const xml = `<article><contrib contrib-type="author">
       <name><surname>Smith</surname><given-names>Jane</given-names></name>
