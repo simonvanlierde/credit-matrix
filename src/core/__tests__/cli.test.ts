@@ -146,8 +146,8 @@ describe("credit-matrix ask", () => {
 });
 
 describe("credit-matrix usage", () => {
-  it("prints usage for no command or --help, and refuses an unknown one or a missing file", async () => {
-    expect(await run([])).toBe(USAGE);
+  it("prints usage for --help, and refuses no command, an unknown one or a missing file", async () => {
+    await expect(run([])).rejects.toThrow("Give a command: statement, convert, ask.");
     expect(await run(["statement", "--help"])).toBe(USAGE);
     await expect(run(["sideways", csv])).rejects.toThrow("Unknown command: sideways.");
     await expect(run(["statment", csv])).rejects.toThrow("Unknown command: statment. Did you mean 'statement'?");

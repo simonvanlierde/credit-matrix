@@ -181,7 +181,8 @@ export async function run(argv: string[]): Promise<string> {
   });
   const [command, file] = positionals;
   if (values.version) return pkg.version;
-  if (values.help || !command) return USAGE;
+  if (values.help) return USAGE;
+  if (!command) throw new UsageError(`Give a command: ${COMMANDS.join(", ")}.`);
   // Checked before reading the file too, so a typo does not wait on standard input.
   if (!COMMANDS.includes(command)) {
     const closest = COMMANDS.find((c) => distance(command, c) <= 2);
