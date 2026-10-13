@@ -36,35 +36,44 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- Names with lower-case surname particles typed first-name-first now keep the particles with the
-  surname, as the "surname, given name" form already did: "Anne van der Berg" has surname
-  "van der Berg" and initials AV (was AVB), and JATS XML writes `<given-names>Anne</given-names>`.
-  Contributors already in a draft keep their initials until their name is edited.
+- Surname particles stay with the surname however the name is written: "Anne van der Berg",
+  "Anne Van der Berg" and "van der Berg, Anne" all have surname "van der Berg", and JATS XML writes
+  `<given-names>Anne</given-names>`. Particles are recognised in any case, and dos, das, do, los,
+  las, degli, dei, dalla, dal, zu, zur, af, bin, ibn, el, al and van't are now among them. This
+  applies to the `credit-matrix` package too.
+- Initials skip surname particles: "Anne van der Berg" is AB (was AVB) and "Leonardo da Vinci" is
+  LV. Contributors already in a draft keep their initials until the contributor list next changes.
 
 ### Fixed
 
 - Drafts open in two tabs: a tab you opened earlier no longer saves its old copy of a draft over
-  the edits you made to it in another tab.
+  the edits you made to it in another tab, and a draft created in another tab shows in this tab's
+  list straight away. A draft deleted in another tab stays here until you reload.
 - Opening a share link or a co-author's reply no longer switches you to another tab's draft or
   drops changes that had not been saved yet.
-- When the browser stops saving, a message now says so on screen. Before, only screen readers
-  heard it. The message says whether storage is full or the browser blocks it for this site.
+- When the browser stops saving, a notice under the header now says so, and stays until saving
+  works again. Before, only screen readers heard it. The notice says whether storage is full or the
+  browser blocks it for this site. When a newer version has saved your drafts in another tab, its
+  notice also stays until you reload, instead of disappearing behind the next message.
 - With site data blocked in the browser, the app now works (without saving) instead of leaving
   every field read-only.
 - Import: screen readers now read the DOI hint and any error with the field they belong to, a file
   dropped beside the drop zone no longer replaces the page, and the dialog names the file it read.
 - CSV import: a quote inside a name (`Ann O"Brien`) is read as part of the name. It used to swallow
-  the rest of the file into that one contributor.
+  the rest of the file into that one contributor. A quoted cell after a space (`Name, "Smith, Jane"`)
+  is still read as one cell.
+- Importing a name with a very long run of spaces no longer freezes the page.
 - Pasted names separated by Word's Shift+Enter line breaks now become separate contributors, and
   control characters in a name become a space, so JATS XML and heatmap SVG exports stay valid XML.
 - CSV and JATS XML import match column headers and role names whatever their case or dash, as
   tenzing import already did: `name`, `conceptualization` and `Writing - original draft` are no
-  longer refused or dropped, and a `Non-author` Type cell is read as a non-author. A CSV score
-  cell may also hold a level word (`Lead`, `Equal`, `Supporting`, `None`); it used to read as 0.
+  longer refused or dropped, and a `Non-author` Type cell is read as a non-author. Full-width
+  hyphens and decomposed accents match too. A CSV score cell may also hold a level word (`Lead`,
+  `Equal`, `Supporting`, `None`); it used to read as 0.
 - JATS XML import: members of a group author (`<collab>`) import once each instead of twice, and
   line breaks or extra spaces inside a name are dropped.
 - DOI lookup: a DOI copied from the address bar with `%3C`-style escapes is now found; it used to
-  come back as not found.
+  come back as not found. A bare DOI that contains `%` is looked up as typed.
 - JSON import: a contributor whose stored first name, middle name or surname is empty or no longer
   matches the name gets initials from the name itself, instead of the whole name or stale letters.
 - CSV and tenzing import skip a row with no usable name (empty, or no letters) and keep the other
@@ -75,15 +84,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Adding a contributor as a name and an ORCID iD together ("Jane Smith 0000-0002-1825-0097"),
   typed or in a pasted list, keeps the name you typed. It was replaced by the name ORCID has on
   record, or lost when the lookup failed.
-- A contributor you rename while their ORCID name is still being looked up keeps your name.
+- A contributor you rename while their ORCID name is still being looked up keeps your name, also
+  while you are still typing it.
+- A name typed next to an ORCID iD drops full-width punctuation around it ("王小明：…" keeps
+  "王小明").
 - Undoing the removal of the contributor marked *This is me* marks them as you again.
 - Undoing a contributor's removal after the grid's Undo already brought them back no longer
   claims the draft is at its 200-contributor limit.
 - Import: clicking *Import* twice on a pasted share link no longer opens the draft a second time.
 - Team: removing a contributor during *Ask everyone* skips them and goes on to the next person,
-  instead of stopping the sequence.
+  instead of stopping the sequence, and the sequence ends when nobody is left in it.
 - Dragging in the custom heatmap color picker no longer redraws and saves the grid at every step,
-  which made it stutter on large teams. The grid takes the color once you pick it.
+  which made it stutter on large teams. The grid takes the color once you pick it, also when the
+  popover closes first. Screen readers name the color input by its visible label, *Custom*.
+- On phones, the *Contributor to assign* picker stays in view while you scroll the role list.
+- Keyboard: an option group with nothing selected can be reached with Tab, and Alt+Left (browser
+  Back) works while an option has focus.
 
 ## [0.7.0] - 2026-10-13
 
