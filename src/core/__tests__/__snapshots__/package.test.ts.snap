@@ -9,6 +9,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "CREDIT_ROLES",
     "ContributionSchema",
     "NewerVersionError",
+    "STATEMENT_FORMATS",
     "applyPatch",
     "askStep",
     "buildHeatmapSvg",

@@ -1,15 +1,16 @@
 // element.d.ts
 //#region element.d.ts
 /**
- * `<credit-matrix src="contributions.json" format="by-author">`: the CRediT
- * statement and contribution heatmap for a CRediT Matrix JSON export, read
- * from `src` or from a `<script type="application/json">` child.
+ * `<credit-matrix src="contributions.json" format="by-author" locale="fr">`:
+ * the CRediT statement and contribution heatmap for a CRediT Matrix JSON
+ * export, read from `src` or from a `<script type="application/json">` child.
  */
 export declare class CreditMatrixElement extends HTMLElement {
   #private;
   static observedAttributes: string[];
   constructor();
   connectedCallback(): void;
+  disconnectedCallback(): void;
   attributeChangedCallback(): void;
   render(): Promise<void>;
 }
@@ -968,7 +969,8 @@ export declare function fromJats4rXml(xmlString: string, { parser }?: {
 }): Author[];
 //#endregion
 //#region generate-statement.d.ts
-type StatementFormat = "by-role" | "by-role-short" | "by-author" | "by-author-short";
+export declare const STATEMENT_FORMATS: readonly ["by-role", "by-role-short", "by-author", "by-author-short"];
+type StatementFormat = (typeof STATEMENT_FORMATS)[number];
 interface StatementOptions {
   format: StatementFormat;
   /**

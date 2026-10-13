@@ -35,6 +35,18 @@ describe("credit-matrix statement", () => {
     expect(await run(["statement", csv, "--locale", "fr"])).toContain("Conceptualisation: Jane Smith");
   });
 
+  it("takes a language without its region, or a region it does not offer", async () => {
+    const german = await run(["statement", csv, "--locale", "de"]);
+    expect(await run(["statement", csv, "--locale", "de-DE"])).toBe(german);
+    const portuguese = await run(["statement", csv, "--locale", "pt-PT"]);
+    expect(await run(["statement", csv, "--locale", "pt"])).toBe(portuguese);
+    expect(await run(["statement", csv, "--locale", "pt-BR"])).toBe(portuguese);
+    const chinese = await run(["statement", csv, "--locale", "zh-Hans"]);
+    expect(await run(["statement", csv, "--locale", "zh"])).toBe(chinese);
+    expect(await run(["statement", csv, "--locale", "zh-CN"])).toBe(chinese);
+    expect(chinese).not.toBe(await run(["statement", csv]));
+  });
+
   it("refuses an unknown format or locale", async () => {
     await expect(run(["statement", csv, "--format", "sideways"])).rejects.toThrow(/Unknown format/);
     await expect(run(["statement", csv, "--locale", "xx"])).rejects.toThrow(/Unknown locale/);
@@ -161,6 +173,22 @@ describe("credit-matrix as a program", () => {
     const { err } = await launch("statement", csv, "--nope");
     expect(err).toContain(USAGE);
     expect(process.exitCode).toBe(2);
+  });
+
+  it("refuses a cut-off XML file, and exits 1", async () => {
+    const xml = await run(["convert", csv, "--to", "jats"]);
+    const { out, err } = await launch("statement", file("cut.xml", xml.slice(0, xml.indexOf("</contrib>"))));
+    expect(out).toBe("");
+    expect(err).toMatch(/^credit-matrix: XML parse error/);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("prints an invalid JSON export's problem on one line, and exits 1", async () => {
+    const { err } = await launch("convert", file("bad.json", '{"version":1,"authors":[{"name":5}]}'), "--to", "csv");
+    expect(err).toMatch(
+      /^credit-matrix: \S*bad\.json is not a CRediT Matrix JSON export\. Check authors\.0\.\S+.*\.\n$/,
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it("prints only the message when the file cannot be read, and exits 1", async () => {

@@ -112,3 +112,43 @@ describe("a JSON export from a newer version", () => {
     expect(onImport).not.toHaveBeenCalled();
   });
 });
+
+describe("accessibility and drops", () => {
+  it("ties the form error to the textarea", async () => {
+    renderModal(0);
+    const text = screen.getByLabelText(en.pasteRawData);
+    fireEvent.change(text, { target: { value: JSON.stringify({ version: 2, authors: [] }) } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+
+    expect(text.getAttribute("aria-invalid")).toBe("true");
+    const id = text.getAttribute("aria-describedby") ?? "";
+    expect(document.getElementById(id)?.textContent).toBe(en.errImportNewerVersion);
+  });
+
+  it("ties the DOI hint and error to the DOI input", () => {
+    const { input } = renderModal(0);
+    const id = input.getAttribute("aria-describedby") ?? "";
+    expect(document.getElementById(id)?.textContent).toBe(en.doiHint);
+    expect(input.getAttribute("aria-invalid")).toBeNull();
+
+    fireEvent.change(input, { target: { value: "nope" } });
+    fireEvent.click(screen.getByRole("button", { name: en.doiLookUp }));
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(document.getElementById(id)?.textContent).toBe(en.errDoiINVALID_DOI);
+  });
+
+  it("stops a file dropped outside the zone from navigating away", () => {
+    renderModal(0);
+    const dialog = document.querySelector("dialog") as HTMLDialogElement;
+    expect(fireEvent.drop(dialog)).toBe(false);
+    expect(fireEvent.dragOver(dialog)).toBe(false);
+  });
+
+  it("names the file that replaced the textarea", async () => {
+    renderModal(0);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["Jane Smith"], "authors.csv");
+    await act(async () => fireEvent.change(input, { target: { files: [file] } }));
+    expect(screen.getByText(en.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
+  });
+});

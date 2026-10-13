@@ -80,8 +80,36 @@ describe("fromTenzing edge cases", () => {
     expect(roles(ana)).toEqual([]);
   });
 
-  it("reads a header-only sheet as nobody", () => {
+  it("reads a header-only sheet and empty text as nobody", () => {
     expect(fromTenzing("Firstname,Surname")).toEqual([]);
+    expect(fromTenzing("")).toEqual([]);
+  });
+
+  it("keeps a comma inside a quoted cell", () => {
+    const [ana] = fromTenzing('Firstname,Surname,Software\nAna,"Lopez, Jr",TRUE');
+    expect(ana).toMatchObject({ firstName: "Ana", surname: "Lopez, Jr" });
+    expect(roles(ana)).toEqual(["Software:100"]);
+  });
+
+  it("reads a semicolon sheet, as Excel saves it in Dutch, German or French", () => {
+    // The quoted "Led the work, wrote it" note becomes a quoted cell holding a semicolon.
+    const sheet = fixture("tenzing.csv").replaceAll(",", ";");
+    expect(isTenzing(sheet)).toBe(true);
+    const [ana] = fromTenzing(sheet);
+    expect(ana).toMatchObject({ name: "Ana María José-García", corresponding: true });
+    expect(roles(ana)).toEqual(ANA_ROLES);
+  });
+
+  it("reads a TSV", () => {
+    const [ana] = fromTenzing("Firstname\tSurname\tSoftware\nAna\tLopez\tTRUE");
+    expect(ana?.name).toBe("Ana Lopez");
+    expect(roles(ana)).toEqual(["Software:100"]);
+  });
+
+  it("ignores unknown headers and reads the first of two same-named columns", () => {
+    const [ana] = fromTenzing("Firstname,Surname,Shoe size,Software,Software\nAna,Lopez,38,TRUE,");
+    expect(ana?.name).toBe("Ana Lopez");
+    expect(roles(ana)).toEqual(["Software:100"]);
   });
 });
 

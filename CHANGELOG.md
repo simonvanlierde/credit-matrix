@@ -19,9 +19,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   statement for a JSON, CSV, JATS4R XML or name-list file, in any of the nine languages; `convert`
   turns one format into another; `ask` prints an ask link for one contributor.
 - A `<credit-matrix>` web element that shows the statement and the heatmap for a JSON export on any
-  page, without a framework. [docs/element.md](docs/element.md) has a copy-paste example.
+  page, without a framework, in any of the nine languages (`locale`, or the page's `lang`). It
+  stays readable on dark pages and in narrow columns, and screen readers get the levels as a
+  table. [docs/element.md](docs/element.md) has a copy-paste example.
 - Import a [tenzing](https://github.com/marton-balazs-kovacs/tenzing) contributor spreadsheet.
-  Save it as CSV (or TSV) first; Excel files are not read. Names, author order, ORCID iDs, roles,
+  Save it as CSV or TSV first; Excel files are not read. Sheets saved with semicolons, as Excel
+  does in Dutch, German or French, work too. Names, author order, ORCID iDs, roles,
   corresponding authors and acknowledgees (as non-authors) come across. tenzing records a role as
   done or not, so each ticked role imports at Lead.
 - A JATS conformance suite in [`conformance/`](conformance/README.md): contributor lists with the
@@ -30,6 +33,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - An [accessibility statement](docs/accessibility.md), linked from the About panel: what the app
   aims for (WCAG 2.2 AA), how it is checked, what is known not to work yet, and how to report a
   problem.
+
+### Fixed
+
+- Import: screen readers now read the DOI hint and any error with the field they belong to, a file
+  dropped beside the drop zone no longer replaces the page, and the dialog names the file it read.
 
 ## [0.7.0] - 2026-10-13
 

@@ -1,8 +1,5 @@
 import { encodeShareHash, type SharePayloadInput } from "@/core";
 
-export type { ShareData } from "@/core";
-export { decodeShareHash } from "@/core";
-
 /** A share link to this page for the draft. See `encodeShareHash`. */
 export function buildShareUrl(input: SharePayloadInput): Promise<string> {
   const { origin, pathname } = window.location;

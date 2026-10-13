@@ -1,8 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
-import { createAuthor } from "@/core";
+import { createAuthor, decodeShareHash } from "@/core";
 import { useContributionStore } from "@/store/contribution-store";
 import { copyAskMessage } from "./ask-message";
-import { decodeShareHash } from "./share";
 
 vi.mock("./announce", () => ({ announce: vi.fn(), requestStorageFullAnnouncement: vi.fn() }));
 

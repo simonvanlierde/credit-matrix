@@ -12,8 +12,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-fresh=$(mktemp --suffix=.xml)
-trap 'rm -f "$fresh"' EXIT
+# A temporary directory, not mktemp --suffix, which only GNU mktemp has.
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+fresh=$tmp/export.xml
 
 JATS_OUT=$fresh pnpm exec vitest run src/core/__tests__/jats-sample-export.test.ts >/dev/null
 files=(src/core/__tests__/fixtures/export-jats.xml conformance/cases/*.xml "$fresh")
@@ -28,7 +30,11 @@ echo "JATS 1.3 DTD: passed"
 # fetch <url> <sha256> <dest>
 fetch() {
 	curl -fsSL --retry 3 -o "$3" "$1"
-	echo "$2  $3" | shasum -a 256 -c --quiet -
+	if command -v sha256sum >/dev/null; then
+		echo "$2  $3" | sha256sum -c --quiet -
+	else
+		echo "$2  $3" | shasum -a 256 -c --quiet -
+	fi
 }
 
 j4r=.cache/jats4r

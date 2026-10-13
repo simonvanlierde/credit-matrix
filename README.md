@@ -61,10 +61,13 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
 ## Use the package
 
 The app's statements and file formats are also a TypeScript package,
-[`credit-matrix`](src/core/README.md), for Node and the browser:
+[`credit-matrix`](src/core/README.md), for Node and the browser. It goes on npm with the first
+release after 0.7.0, as `npm install credit-matrix`. Until then, build it from this repository and
+install the tarball:
 
 ```bash
-npm install credit-matrix
+pnpm install && cd src/core && npm pack    # writes credit-matrix-<version>.tgz
+npm install /path/to/credit-matrix-<version>.tgz   # in your own project
 ```
 
 ```ts
@@ -76,10 +79,11 @@ console.log(generateStatement(authors, { format: "by-author" }));
 ```
 
 It reads and writes JSON, CSV, JATS4R XML and Markdown, draws the heatmap SVG, and builds ask
-links. Its CLI does the same from a shell:
+links. Its CLI does the same from a shell (`npx credit-matrix` once the package is on npm; until
+then, run the built file):
 
 ```bash
-npx credit-matrix statement contributions.json --format by-author --locale nl
+node src/core/dist/cli.js statement contributions.json --format by-author --locale nl
 ```
 
 A `<credit-matrix>` element shows a statement and heatmap on any web page: see

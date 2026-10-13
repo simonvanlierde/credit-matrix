@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { createAuthor, generateStatement } from "@/core";
-import plugin, { authorsFor, normalizeRole, statementNode } from "./credit-matrix.mjs";
+import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import plugin, { authorsFor, normalizeRole, ROLES, statementNode } from "./credit-matrix.mjs";
 
 type Node = { type: string; value?: string; children?: Node[] };
 const text = (nodes: Node[]): string => nodes.map((n) => n.value ?? text(n.children ?? [])).join("");
@@ -38,6 +38,16 @@ describe("MyST plugin", () => {
     for (const c of jane.contributions) c.score = c.role === "Software" || c.role === "Validation" ? 100 : 0;
     const app = generateStatement([jane], { format: "by-author" }).replace(/^CRediT: /, "");
     expect(text(statementNode([{ name: "Jane A. Smith", roles: ["Validation", "Software"] }]))).toBe(`${app}.`);
+  });
+
+  it("accepts a single author instead of a list, and skips authors without roles", () => {
+    expect(text(statementNode({ name: "Jane", roles: ["Software"] }))).toBe("Jane: Software.");
+    expect(statementNode("Jane Doe")).toEqual([]);
+    expect(text(statementNode(["Jane Doe", { name: "Bob", roles: "Software" }]))).toBe("Bob: Software.");
+  });
+
+  it("keeps its role list in step with the core role names", () => {
+    expect(ROLES).toEqual(CREDIT_ROLES.map((r: { name: string }) => r.name));
   });
 
   it("renders nothing when no author has CRediT roles", () => {

@@ -5,7 +5,9 @@ import { DEFAULT_UI_TRANSLATOR, fillTemplate, type UiTranslator } from "./credit
 import { CREDIT_ROLES } from "./credit-roles";
 import { contributorLabel, markerNotes } from "./markers";
 
-export type StatementFormat = "by-role" | "by-role-short" | "by-author" | "by-author-short";
+export const STATEMENT_FORMATS = ["by-role", "by-role-short", "by-author", "by-author-short"] as const;
+
+export type StatementFormat = (typeof STATEMENT_FORMATS)[number];
 
 export interface StatementOptions {
   format: StatementFormat;

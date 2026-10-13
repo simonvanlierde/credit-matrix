@@ -15,7 +15,7 @@
     "deploy": "pnpm build && wrangler deploy",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p src/core/tsconfig.cli.json",
     "verify": "pnpm --filter credit-matrix build && pnpm lint && pnpm typecheck && pnpm test:coverage",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

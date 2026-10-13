@@ -79,8 +79,12 @@ export function buildInitials(name: string, firstName: string, middleName: strin
   return (
     parts
       // Iterate by code point so an astral first letter isn't split into a
-      // lone surrogate half.
-      .map((p) => [...p][0]?.toUpperCase() ?? "")
+      // lone surrogate half, and keep a letter whose upper case is two ("ß" → "SS").
+      .map((p) => {
+        const letter = [...p][0] ?? "";
+        const upper = letter.toUpperCase();
+        return [...upper].length === 1 ? upper : letter;
+      })
       .join("")
   );
 }
@@ -114,10 +118,13 @@ export function createAuthor(
     surname?: string;
   },
 ): Author {
+  // One Unicode form, so a decomposed "é" (e + accent, as macOS file names
+  // give it) and a precomposed one make the same contributor.
+  name = name.normalize("NFC");
   const parsed = parseNameParts(name);
-  const firstName = overrides?.firstName ?? parsed.firstName;
-  const middleName = overrides?.middleName ?? parsed.middleName;
-  const surname = overrides?.surname ?? parsed.surname;
+  const firstName = overrides?.firstName?.normalize("NFC") ?? parsed.firstName;
+  const middleName = overrides?.middleName?.normalize("NFC") ?? parsed.middleName;
+  const surname = overrides?.surname?.normalize("NFC") ?? parsed.surname;
 
   // Punctuation-only names ("-- --") survive cleanNamePart, which keeps hyphens
   // and apostrophes. Share one predicate with AuthorSchema.name: a schema that

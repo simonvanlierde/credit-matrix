@@ -7,13 +7,20 @@ It has not been audited, so this is a goal, not a claim that it conforms.
 
 Last reviewed: 13 October 2026.
 
+## Conformance status
+
+**Not evaluated.** Nobody has checked the app or the web element against every WCAG 2.2 criterion.
+What has been done: automated axe-core scans in CI on every pull request, plus manual checks during
+development. Both are described below. Date of this assessment: 13 October 2026.
+
 ## How it is checked
 
 - **Automated scan.** The end-to-end tests run [axe-core](https://github.com/dequelabs/axe-core)
   over the main screens with the WCAG 2.0, 2.1 and 2.2 level A and AA rules (`wcag2a`, `wcag2aa`,
   `wcag21a`, `wcag21aa`, `wcag22a`, `wcag22aa`). The screens include the welcome dialog, the empty
   and filled workspace, a phone-sized screen, the import dialog, an error state, an open popover
-  and dark mode. See [`e2e/a11y.spec.ts`](../e2e/a11y.spec.ts).
+  and dark mode, and the web element on a light page, a dark page and a 320px-wide screen. See
+  [`e2e/a11y.spec.ts`](../e2e/a11y.spec.ts).
 - **Keyboard tests.** The same tests use the keyboard alone to move through the contributor list,
   reorder a contributor without dragging, switch the inspector tabs, move through the grid with
   the arrow keys and use the segmented controls. They also check that focus stays in place after a
@@ -38,11 +45,27 @@ can run into, so a passing run does not mean there are none.
   wording may be unclear. The CRediT role names themselves come from the reviewed
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation) project.
 - **This statement is in English only.**
-- **Heatmap images.** The downloaded SVG carries a title that screen readers read. A PNG cannot
-  carry one, so when you put the heatmap in a paper or slide, add your own alt text there.
+- **Heatmap images.** The downloaded SVG has a title, "Contribution heatmap", that screen readers
+  read. The title only names the image: it does not say who did what. A PNG has no title at all. When
+  you put the heatmap in a paper or slide, add alt text there, or put the statement next to it.
+
+## Web element
+
+The `<credit-matrix>` element ([docs/element.md](element.md)) shows the heatmap and statement on
+other websites. It is covered by the same automated scan.
+
+- **Its own background.** The element draws a light card with dark text, so its text keeps enough
+  contrast on a dark page.
+- **A text version of the heatmap.** Screen readers skip the drawing and read a table instead: a row
+  per role, a column per contributor, and the level (Lead, Equal, Supporting or None) in each cell.
+  On a narrow screen the drawing scrolls sideways rather than shrinking its labels.
+- **Language.** The statement, heatmap and table follow the `locale` attribute or the page's `lang`,
+  and the element marks that language so screen readers pronounce it right. Its loading and error
+  messages are in English, and marked as English.
 
 ## Report a problem
 
-If something in the app is hard or impossible for you to use, please
+If something in the app or the web element is hard or impossible for you to use, please
 [open an issue on GitHub](https://github.com/simonvanlierde/credit-matrix/issues/new). Say what you
 were trying to do, what happened, and which browser and assistive technology you use, if any.
+GitHub is the only contact channel for now.
