@@ -60,34 +60,13 @@ through `.github/workflows/release-core.yml`. It runs in two jobs:
 
 It uses npm trusted publishing: npm accepts the workflow's GitHub OIDC token instead of an access
 token, so no `NPM_TOKEN` secret exists, and the package page links each version to the workflow run
-that built it.
+that built it. On npmjs.com, the trusted publisher may publish but not move dist-tags, and the
+package refuses access tokens, so a version comes from this workflow or from the owner's own
+two-factor login.
 
 Check what would be published with `cd src/core && npm pack --dry-run`. On every pull request, the
 CI `check` job builds the package and tests the files it publishes, its export list, public types
 and CLI (`src/core/__tests__/package.test.ts`).
-
-### First publish
-
-Trusted publishing can only be added to a package that exists, so 0.8.0, the first version on npm,
-goes out by hand. The workflow run for its tag fails, as npm has no publisher for the package yet.
-
-1. From a clean checkout of the tag, logged in as the owner with two-factor authentication:
-
-   ```bash
-   git switch --detach v0.8.0
-   pnpm install --frozen-lockfile
-   pnpm exec vitest run --project core
-   cd src/core && npm publish --access public --provenance=false
-   ```
-
-   `--provenance=false` because provenance needs the CI token; this one version goes without.
-2. On npmjs.com, open the package, then Settings, Trusted publishing, and add a GitHub Actions
-   publisher: organization or user `simonvanlierde`, repository `credit-matrix`, workflow filename
-   `release-core.yml`, environment `npm-release`.
-3. Under Settings, Publishing access, choose "Require two-factor authentication and disallow
-   tokens", so only the trusted workflow can publish.
-4. Push the next release tag and check that the `Publish to npm` job passed and that the version on
-   npmjs.com shows a provenance badge.
 
 ### Roll back a version
 
