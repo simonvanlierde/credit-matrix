@@ -116,6 +116,20 @@ describe("normalizeRoster", () => {
     expect(new Set(result.map((a) => a.initials)).size).toBe(2);
   });
 
+  it.each([
+    ["empty", { firstName: "", middleName: "", surname: "" }],
+    ["stale", { firstName: "Jan", middleName: "", surname: "Smit" }],
+    ["partial-word", { firstName: "Ja", middleName: "", surname: "th" }],
+  ])("re-parses %s name parts instead of keeping them", (_, parts) => {
+    const [jane] = roster();
+    if (!jane) throw new Error("expected an author");
+    expect(normalizeRoster([{ ...jane, ...parts }])[0]).toMatchObject({
+      firstName: "Jane",
+      surname: "Smith",
+      initials: "JS",
+    });
+  });
+
   it("refuses more than MAX_AUTHORS rows", () => {
     const many = Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => createAuthor(`Person ${i} Name`));
     expect(() => normalizeRoster(many)).toThrow(/at most/);

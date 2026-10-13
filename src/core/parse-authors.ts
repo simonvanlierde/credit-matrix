@@ -246,11 +246,30 @@ export function normalizeRoster(authors: Author[]): Author[] {
  * The stored name parts, while they still describe the name. Re-parsing the
  * name cannot recover a structured import's multi-word surname ("van der
  * Berg"); a rename re-parses, so parts that no longer fit are dropped.
+ *
+ * Parts fit when, word for word, the name opens with the first name, closes
+ * with the surname, and the middle name opens what lies between. Without a
+ * surname the first and middle names must be the whole name.
  */
 function consistentNameParts(author: Author): Pick<Author, "firstName" | "middleName" | "surname"> | undefined {
   const { name, firstName, middleName, surname } = author;
   if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
-  const fits = name.startsWith(firstName) && name.endsWith(surname) && name.includes(middleName);
+  const words = (text: string) => cleanNamePart(text).split(/\s+/).filter(Boolean);
+  const opens = (whole: string[], part: string[]) => part.every((word, i) => whole[i] === word);
+  const [all, first, middle, last] = [name, firstName, middleName, surname].map(words) as [
+    string[],
+    string[],
+    string[],
+    string[],
+  ];
+  const between = all.slice(first.length, all.length - last.length);
+  const fits =
+    first.length > 0 &&
+    first.length + last.length <= all.length &&
+    opens(all, first) &&
+    opens([...all].reverse(), [...last].reverse()) &&
+    opens(between, middle) &&
+    (last.length > 0 || between.length === middle.length);
   return fits ? { firstName, middleName, surname } : undefined;
 }
 

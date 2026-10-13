@@ -50,6 +50,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   line breaks or extra spaces inside a name are dropped.
 - DOI lookup: a DOI copied from the address bar with `%3C`-style escapes is now found; it used to
   come back as not found.
+- JSON import: a contributor whose stored first name, middle name or surname is empty or no longer
+  matches the name gets initials from the name itself, instead of the whole name or stale letters.
 
 ## [0.7.0] - 2026-10-13
 
