@@ -38,6 +38,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Import: screen readers now read the DOI hint and any error with the field they belong to, a file
   dropped beside the drop zone no longer replaces the page, and the dialog names the file it read.
+- Import: clicking *Import* twice on a pasted share link no longer opens the draft a second time.
 
 ## [0.7.0] - 2026-10-13
 

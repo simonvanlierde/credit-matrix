@@ -112,6 +112,9 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   const [pending, setPending] = useState<PendingImport | null>(null);
   const [doi, setDoi] = useState("");
   const [doiLoading, setDoiLoading] = useState(false);
+  // A second click during the await would run the import again: for a share
+  // link, the first fills the empty workspace and the second opens a duplicate.
+  const [importing, setImporting] = useState(false);
   // State, not a ref, so useModalDialog re-runs once the element exists.
   const [dialog, setDialog] = useState<HTMLDialogElement | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -193,6 +196,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   async function handleImport() {
     setError(null);
     if (format === "unknown") return;
+    setImporting(true);
     try {
       if (new TextEncoder().encode(text).byteLength > MAX_IMPORT_BYTES) {
         showError(t("errImportTooLarge", { limit: MAX_IMPORT_MB }));
@@ -223,6 +227,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     } catch (failure) {
       // A newer build's export is said plainly, not as a validation failure.
       showError(t(failure instanceof NewerVersionError ? "errImportNewerVersion" : "errImportFailed"));
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -505,7 +511,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
             ref={importRef}
             type="button"
             onClick={() => void handleImport()}
-            disabled={format === "unknown" || pending !== null}
+            disabled={format === "unknown" || pending !== null || importing}
             className="px-7 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg shadow hover:bg-primary-container transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t("importData")}
