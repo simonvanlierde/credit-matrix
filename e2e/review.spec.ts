@@ -10,43 +10,8 @@ function newContext(browser: Browser) {
   return browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
 }
 
-/**
- * The lead guesses Bob did the software; Bob says he did the investigation
- * instead. Returns the lead's page with Bob's reply opened.
- */
-async function leadWithReply(browser: Browser): Promise<Page> {
-  const lead = await (await newContext(browser)).newPage();
-  await asReturningVisitor(lead);
-  await lead.goto("/");
-  const adder = lead.getByLabel("New author names or ORCID iD");
-  await adder.fill("Jane Smith, Bob White");
-  await adder.press("Enter");
-  await lead.getByRole("button", { name: /^Software for Bob White:/ }).click();
-  await expect(lead.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
-  await lead.getByRole("button", { name: "Actions for Bob White" }).click();
-  const askLink = await copyFrom(lead, lead.getByRole("button", { name: "Ask Bob White what they did" }));
-  await lead.keyboard.press("Escape");
-
-  const bob = await (await newContext(browser)).newPage();
-  await asReturningVisitor(bob);
-  await bob.goto(askLink);
-  const investigation = bob
-    .getByRole("radiogroup", { name: "Investigation", exact: true })
-    .getByRole("radio", { name: "Contributed", exact: true });
-  await investigation.click();
-  await expect(investigation).toBeChecked();
-  const reply = await copyFrom(bob, bob.getByRole("button", { name: "Send back" }));
-  await bob.context().close();
-
-  await lead.goto(reply);
-  await expect(onScreen(lead, "Bob White's answer arrived: 2 differences.")).toBeVisible();
-  return lead;
-}
-
-const review = (page: Page) => page.getByRole("tabpanel", { name: /^Review/ });
-
 /** Copies the ask link for one contributor from the lead's row menu. */
-async function askLink(lead: Page, name: string): Promise<string> {
+async function copyAsk(lead: Page, name: string): Promise<string> {
   await lead.getByRole("button", { name: `Actions for ${name}` }).click();
   const link = await copyFrom(lead, lead.getByRole("button", { name: `Ask ${name} what they did` }));
   await lead.keyboard.press("Escape");
@@ -70,6 +35,28 @@ async function answer(browser: Browser, link: string, roles: string[]): Promise<
   return reply;
 }
 
+/**
+ * The lead guesses Bob did the software; Bob says he did the investigation
+ * instead. Returns the lead's page with Bob's reply opened.
+ */
+async function leadWithReply(browser: Browser): Promise<Page> {
+  const lead = await (await newContext(browser)).newPage();
+  await asReturningVisitor(lead);
+  await lead.goto("/");
+  const adder = lead.getByLabel("New author names or ORCID iD");
+  await adder.fill("Jane Smith, Bob White");
+  await adder.press("Enter");
+  await lead.getByRole("button", { name: /^Software for Bob White:/ }).click();
+  await expect(lead.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
+  const reply = await answer(browser, await copyAsk(lead, "Bob White"), ["Investigation"]);
+
+  await lead.goto(reply);
+  await expect(onScreen(lead, "Bob White's answer arrived: 2 differences.")).toBeVisible();
+  return lead;
+}
+
+const review = (page: Page) => page.getByRole("tabpanel", { name: /^Review/ });
+
 test("two co-authors answer the same draft, and each answer is settled on its own", async ({ browser }) => {
   const lead = await (await newContext(browser)).newPage();
   await asReturningVisitor(lead);
@@ -84,8 +71,8 @@ test("two co-authors answer the same draft, and each answer is settled on its ow
   await expect(lead.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
 
   // Both asks go out before either answer comes back.
-  const bobAsk = await askLink(lead, "Bob White");
-  const annAsk = await askLink(lead, "Ann Lee");
+  const bobAsk = await copyAsk(lead, "Bob White");
+  const annAsk = await copyAsk(lead, "Ann Lee");
   const bobReply = await answer(browser, bobAsk, ["Investigation"]);
   const annReply = await answer(browser, annAsk, ["Conceptualization"]);
 
