@@ -45,6 +45,83 @@ async function leadWithReply(browser: Browser): Promise<Page> {
 
 const review = (page: Page) => page.getByRole("tabpanel", { name: /^Review/ });
 
+/** Copies the ask link for one contributor from the lead's row menu. */
+async function askLink(lead: Page, name: string): Promise<string> {
+  await lead.getByRole("button", { name: `Actions for ${name}` }).click();
+  const link = await copyFrom(lead, lead.getByRole("button", { name: `Ask ${name} what they did` }));
+  await lead.keyboard.press("Escape");
+  return link;
+}
+
+/** Answers an ask in a browser of the co-author's own, ticking the given roles, and returns the reply link. */
+async function answer(browser: Browser, link: string, roles: string[]): Promise<string> {
+  const page = await (await newContext(browser)).newPage();
+  await asReturningVisitor(page);
+  await page.goto(link);
+  for (const role of roles) {
+    const contributed = page
+      .getByRole("radiogroup", { name: role, exact: true })
+      .getByRole("radio", { name: "Contributed", exact: true });
+    await contributed.click();
+    await expect(contributed).toBeChecked();
+  }
+  const reply = await copyFrom(page, page.getByRole("button", { name: "Send back" }));
+  await page.context().close();
+  return reply;
+}
+
+test("two co-authors answer the same draft, and each answer is settled on its own", async ({ browser }) => {
+  const lead = await (await newContext(browser)).newPage();
+  await asReturningVisitor(lead);
+  await lead.goto("/");
+  const adder = lead.getByLabel("New author names or ORCID iD");
+  await adder.fill("Jane Smith, Bob White, Ann Lee");
+  await adder.press("Enter");
+  await lead.getByRole("button", { name: "Actions for Jane Smith" }).click();
+  await lead.getByRole("button", { name: "This is me" }).click();
+  await lead.keyboard.press("Escape");
+  await lead.getByRole("button", { name: /^Software for Bob White:/ }).click();
+  await expect(lead.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
+
+  // Both asks go out before either answer comes back.
+  const bobAsk = await askLink(lead, "Bob White");
+  const annAsk = await askLink(lead, "Ann Lee");
+  const bobReply = await answer(browser, bobAsk, ["Investigation"]);
+  const annReply = await answer(browser, annAsk, ["Conceptualization"]);
+
+  // Opened in the other order than they were asked.
+  await lead.goto(annReply);
+  await expect(onScreen(lead, "Ann Lee's answer arrived: 1 difference.")).toBeVisible();
+  await lead.goto(bobReply);
+  await expect(onScreen(lead, "Bob White's answer arrived: 2 differences.")).toBeVisible();
+
+  await expect(lead.getByText("2 of 2 answered")).toBeVisible();
+  await expect(lead.getByRole("button", { name: "Ann Lee: 1 open difference" })).toBeVisible();
+  await expect(lead.getByRole("button", { name: "Bob White: 2 open differences" })).toBeVisible();
+  // Bob's later reply did not replace Ann's: each answer stays beside its own row.
+  await expect(lead.getByRole("button", { name: "Conceptualization for Ann Lee: None" })).toHaveAccessibleDescription(
+    "Ann says Contributed",
+  );
+  await expect(lead.getByRole("button", { name: "Investigation for Bob White: None" })).toHaveAccessibleDescription(
+    "Bob says Contributed",
+  );
+
+  // Settling Ann's answer leaves Bob's open.
+  await lead.getByRole("button", { name: "Ann Lee: 1 open difference" }).click();
+  await expect(lead.getByRole("heading", { name: "Ann Lee" })).toBeFocused();
+  await review(lead).getByRole("button", { name: "Use Ann's: Conceptualization" }).click();
+  await expect(lead.getByRole("button", { name: "Conceptualization for Ann Lee: Contributed" })).toBeVisible();
+  await expect(lead.getByRole("button", { name: "Ann Lee: 1 open difference" })).toHaveCount(0);
+  await expect(lead.getByRole("button", { name: "Bob White: 2 open differences" })).toBeVisible();
+
+  await review(lead).getByRole("button", { name: "Use all of Bob's" }).click();
+  await expect(lead.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
+  await expect(lead.getByRole("button", { name: /^Software for Bob White: None/ })).toBeVisible();
+  await expect(onScreen(lead, "Everything is settled.")).toBeVisible();
+
+  await lead.context().close();
+});
+
 test("an answer is reviewed, settled either way, undone, and the statement notice goes", async ({ browser }) => {
   const page = await leadWithReply(browser);
 
