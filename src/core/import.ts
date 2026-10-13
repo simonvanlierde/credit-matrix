@@ -2,11 +2,12 @@ import type { Ask } from "./ask";
 import type { Author } from "./author";
 import { fromCsv } from "./export/csv";
 import { fromJson } from "./export/json";
+import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
 import { parseAuthorText } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
 
-export type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";
+export type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "names" | "unknown";
 
 /** Guess what pasted or loaded text is, from its shape alone. */
 export function detectFormat(text: string): DetectedFormat {
@@ -24,6 +25,7 @@ export function detectFormat(text: string): DetectedFormat {
       /* fall through */
     }
   }
+  if (isTenzing(trimmed)) return "tenzing";
   // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
   const headerCells = (trimmed.split(/\r?\n/, 1)[0] ?? "").split(",");
   if (
@@ -70,6 +72,8 @@ export async function importAny(text: string, { parser }: { parser?: XmlParser }
       return { format, ...fromJson(trimmed) };
     case "csv":
       return { format, authors: fromCsv(trimmed) };
+    case "tenzing":
+      return { format, authors: fromTenzing(trimmed) };
     case "xml":
       return { format, authors: fromJats4rXml(trimmed, { parser }) };
     case "names":

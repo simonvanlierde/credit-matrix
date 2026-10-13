@@ -41,11 +41,15 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation);
   machine-readable exports keep the canonical English CRediT terms
 - **Exports**: copy or download JATS4R XML, CSV, JSON, and Markdown, or download the heatmap as SVG
-  or PNG. The JSON file also carries your co-authors' answers
-- **Sharing and import**: encode a draft in a URL, paste names, or import JSON, CSV, or JATS4R XML.
+  or PNG. The JSON file also carries your co-authors' answers. The JATS export is checked against
+  a [conformance suite](conformance/README.md) that other tools can reuse
+- **Sharing and import**: encode a draft in a URL, paste names, or import JSON, CSV, JATS4R XML,
+  or a [tenzing](https://github.com/marton-balazs-kovacs/tenzing) spreadsheet saved as CSV.
   Importing a JSON file into the same draft brings the co-authors' answers back
 - **Works offline**: install it, and a draft survives a flight. Only the ORCID and DOI lookups need
   a network
+- **Accessibility**: aims to meet WCAG 2.2 AA. The [accessibility statement](docs/accessibility.md)
+  says how that is checked, what is known not to work yet, and how to report a problem
 
 | First run | Statement & export |
 |---|---|

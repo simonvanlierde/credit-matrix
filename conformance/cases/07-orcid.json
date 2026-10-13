@@ -1,0 +1,23 @@
+{
+  "description": "ORCID iDs, given bare and as a URL, are both written as the full https://orcid.org/ URI. A contributor without one gets no contrib-id.",
+  "mode": "levels",
+  "contributors": [
+    {
+      "givenNames": "Josiah",
+      "surname": "Carberry",
+      "orcid": "0000-0002-1825-0097",
+      "roles": { "Conceptualization": "lead" }
+    },
+    {
+      "givenNames": "Ada",
+      "surname": "Lovelace",
+      "orcid": "https://orcid.org/0000-0001-5109-3700",
+      "roles": { "Formal analysis": "equal" }
+    },
+    {
+      "givenNames": "Marie",
+      "surname": "Curie",
+      "roles": { "Validation": "supporting" }
+    }
+  ]
+}

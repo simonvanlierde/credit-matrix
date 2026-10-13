@@ -1,0 +1,22 @@
+{
+  "description": "Yes/no mode: roles were ticked, not graded, so no role carries degree-contribution.",
+  "mode": "yes-no",
+  "contributors": [
+    {
+      "givenNames": "Ada",
+      "surname": "Lovelace",
+      "roles": {
+        "Conceptualization": "yes",
+        "Formal analysis": "yes"
+      }
+    },
+    {
+      "givenNames": "Marie",
+      "surname": "Curie",
+      "roles": {
+        "Data curation": "yes",
+        "Writing – review & editing": "yes"
+      }
+    }
+  ]
+}

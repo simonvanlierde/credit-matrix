@@ -23,6 +23,10 @@ describe("detectFormat", () => {
     expect(detectFormat("﻿Name,Conceptualization\nJane Smith,100")).toBe("csv");
   });
 
+  it("reads a tenzing header as tenzing", () => {
+    expect(detectFormat("Author/Acknowledgee,Firstname,Surname\nAuthor,Jane,Smith")).toBe("tenzing");
+  });
+
   it("tells JSON, XML, links and nothing apart", () => {
     expect(detectFormat('{"version":1}')).toBe("json");
     expect(detectFormat("[not json, Name")).toBe("csv");

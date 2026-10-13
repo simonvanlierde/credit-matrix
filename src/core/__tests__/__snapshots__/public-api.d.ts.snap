@@ -929,6 +929,11 @@ export declare function fromJson(json: string): {
  */
 export declare function toMarkdown(authors: Author[], translateRole?: RoleTranslator, translateUi?: UiTranslator, locale?: string): string;
 //#endregion
+//#region export/tenzing.d.ts
+/** True for a header row that looks like a tenzing contributor spreadsheet. */
+export declare function isTenzing(text: string): boolean;
+export declare function fromTenzing(text: string): Author[];
+//#endregion
 //#region export/xml.d.ts
 /**
  * Serialize authors to a JATS4R-compliant XML string.
@@ -1028,7 +1033,7 @@ interface StatementOptions {
 export declare function generateStatement(authors: Author[], options: StatementOptions): string;
 //#endregion
 //#region import.d.ts
-type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";
+type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "names" | "unknown";
 /** Guess what pasted or loaded text is, from its shape alone. */
 export declare function detectFormat(text: string): DetectedFormat;
 /** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */

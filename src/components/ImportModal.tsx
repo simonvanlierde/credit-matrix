@@ -86,6 +86,7 @@ const MAX_IMPORT_MB = `${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB`;
 const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link">, keyof Messages> = {
   json: "errImportNoJsonContributors",
   csv: "errImportNoCsvRows",
+  tenzing: "errImportNoCsvRows",
   xml: "errImportNoXmlContribs",
   names: "errImportNoNames",
 };
@@ -97,6 +98,7 @@ const FORMAT_LABEL: Record<Exclude<DetectedFormat, "unknown">, (t: ReturnType<ty
   json: (t) => t("formatJsonExport"),
   xml: () => "JATS4R XML",
   csv: () => "CSV",
+  tenzing: () => "tenzing",
 };
 
 export function ImportModal({ open, existingContributorCount, onImport, onLink, onClose }: Props) {
@@ -391,7 +393,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
               <input
                 ref={fileRef}
                 type="file"
-                accept=".csv,.json,.xml"
+                accept=".csv,.tsv,.json,.xml"
                 className="hidden"
                 onChange={handleFileInput}
                 aria-label={t("a11yUploadFile")}

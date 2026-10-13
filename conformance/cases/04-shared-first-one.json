@@ -1,0 +1,17 @@
+{
+  "description": "Only one author is marked as sharing first authorship. Equal with whom? JATS4R rejects a lone equal-contrib, so it is left out.",
+  "mode": "levels",
+  "contributors": [
+    {
+      "givenNames": "Ada",
+      "surname": "Lovelace",
+      "equalContribution": true,
+      "roles": { "Conceptualization": "lead" }
+    },
+    {
+      "givenNames": "Marie",
+      "surname": "Curie",
+      "roles": { "Investigation": "lead" }
+    }
+  ]
+}
