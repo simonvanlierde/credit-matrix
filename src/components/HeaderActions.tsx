@@ -7,7 +7,7 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { importAsks, importSelfId, isAllBinary, keepKnownIds } from "@/core";
+import { importAnswers, isAllBinary, keepKnownIds } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -359,11 +359,8 @@ export function HeaderActions() {
     // Re-imported contributors keep their ids, so their open asks still match.
     const { authors: current, asks: held } = useContributionStore.getState();
     const mapped = keepKnownIds(current, importedAuthors);
-    loadAuthors(
-      mapped,
-      asks ? importAsks(current, importedAuthors, mapped, held, asks) : undefined,
-      importSelfId(current, importedAuthors, mapped, selfId),
-    );
+    const answers = importAnswers(current, importedAuthors, mapped, held, { asks, selfId });
+    loadAuthors(mapped, answers.asks, answers.selfId);
     // Only the DOI path carries a title. Guard on it rather than on emptiness,
     // so a record with no title still clears a stale one from the last import.
     if (importedTitle !== undefined) setTitle(importedTitle);

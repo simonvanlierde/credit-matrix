@@ -411,44 +411,37 @@ function rederiveInitials(authors: readonly Author[]): Author[] {
 }
 
 /**
- * The answers an imported file brings, keyed by the ids the imported roster
- * takes (`mapped` is `keepKnownIds(current, incoming)`, index for index).
- * Importing into a draft that has contributors, a file's answer replaces the
- * held one for the row it matched, and answers for rows that matched nobody
- * are dropped. Held answers for matched rows the file has none for are kept.
+ * The answers and `selfId` an imported file brings, keyed by the ids the
+ * imported roster takes (`mapped` is `keepKnownIds(current, incoming)`, index
+ * for index). Importing into a draft that has contributors, a file's answer
+ * replaces the held one for the row it matched, and answers for rows that
+ * matched nobody are dropped. Held answers for matched rows the file has none
+ * for are kept. `selfId` follows the same rule. `asks` is undefined when the
+ * file carries none, and `selfId` when it does not survive.
  */
-export function importAsks(
+export function importAnswers(
   current: readonly Author[],
   incoming: readonly Author[],
   mapped: readonly Author[],
   held: Readonly<Record<string, Ask>>,
-  fromFile: Readonly<Record<string, Ask>>,
-): Record<string, Ask> {
+  fromFile: { asks?: Readonly<Record<string, Ask>>; selfId?: string },
+): { asks: Record<string, Ask> | undefined; selfId: string | undefined } {
   const known = new Set(current.map((author) => author.id));
-  const asks: Record<string, Ask> = {};
-  incoming.forEach((author, index) => {
-    const id = mapped[index]?.id;
-    if (!id) return;
-    const filed = Object.hasOwn(fromFile, author.id) ? fromFile[author.id] : undefined;
-    const kept = Object.hasOwn(held, id) ? held[id] : undefined;
-    const ask = filed && (known.size === 0 || known.has(id)) ? filed : kept;
-    if (ask) asks[id] = ask;
-  });
-  return asks;
-}
-
-/**
- * The file's `selfId` under the id the imported roster gives that row, by the
- * same rule as `importAsks`: into a draft that has contributors, only a row
- * that matched one of them keeps it. Undefined when it does not survive.
- */
-export function importSelfId(
-  current: readonly Author[],
-  incoming: readonly Author[],
-  mapped: readonly Author[],
-  selfId: string | undefined,
-): string | undefined {
-  const id = mapped[incoming.findIndex((author) => author.id === selfId)]?.id;
-  if (!id) return undefined;
-  return current.length === 0 || current.some((author) => author.id === id) ? id : undefined;
+  const matched = (id: string) => known.size === 0 || known.has(id);
+  const fileAsks = fromFile.asks;
+  let asks: Record<string, Ask> | undefined;
+  if (fileAsks) {
+    const found: Record<string, Ask> = {};
+    incoming.forEach((author, index) => {
+      const id = mapped[index]?.id;
+      if (!id) return;
+      const filed = Object.hasOwn(fileAsks, author.id) ? fileAsks[author.id] : undefined;
+      const kept = Object.hasOwn(held, id) ? held[id] : undefined;
+      const ask = filed && matched(id) ? filed : kept;
+      if (ask) found[id] = ask;
+    });
+    asks = found;
+  }
+  const selfId = mapped[incoming.findIndex((author) => author.id === fromFile.selfId)]?.id;
+  return { asks, selfId: selfId && matched(selfId) ? selfId : undefined };
 }

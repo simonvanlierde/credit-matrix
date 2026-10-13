@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Ask, AskState, Choice, Target } from "../ask";
-import { ASK_TARGETS, applyPatch, askStep, importAsks, importSelfId, review, settledAt } from "../ask";
+import { ASK_TARGETS, applyPatch, askStep, importAnswers, review, settledAt } from "../ask";
 import type { Author } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromJson, toJson } from "../export/json";
@@ -535,9 +535,13 @@ describe("asks in JSON", () => {
     };
     const incoming = [fileAda, fileNew];
     const mapped = keepKnownIds([ada], incoming);
-    expect(importAsks([ada], incoming, mapped, held, fromFile)).toEqual({ ada: { sentAt: 2, prefilled: false } });
+    expect(importAnswers([ada], incoming, mapped, held, { asks: fromFile }).asks).toEqual({
+      ada: { sentAt: 2, prefilled: false },
+    });
     // Into an empty draft nothing can be unmatched: the file's answers come along.
-    expect(importAsks([], incoming, incoming, {}, fromFile)).toEqual(fromFile);
+    expect(importAnswers([], incoming, incoming, {}, { asks: fromFile }).asks).toEqual(fromFile);
+    // A file without answers leaves the held ones to the caller.
+    expect(importAnswers([ada], incoming, mapped, held, {}).asks).toBeUndefined();
   });
 
   it("reads back who made the file, through the same id map as the answers", () => {
@@ -552,11 +556,11 @@ describe("asks in JSON", () => {
       createAuthor("Grace Hopper", { id: "file-grace" }),
     ];
     const mapped = keepKnownIds([ada], incoming);
-    expect(importSelfId([ada], incoming, mapped, "file-ada")).toBe("ada");
+    expect(importAnswers([ada], incoming, mapped, {}, { selfId: "file-ada" }).selfId).toBe("ada");
     // A row that matched nobody here is not you in this draft.
-    expect(importSelfId([ada], incoming, mapped, "file-grace")).toBeUndefined();
-    expect(importSelfId([ada], incoming, mapped, "nobody")).toBeUndefined();
-    expect(importSelfId([ada], incoming, mapped, undefined)).toBeUndefined();
-    expect(importSelfId([], incoming, incoming, "file-grace")).toBe("file-grace");
+    expect(importAnswers([ada], incoming, mapped, {}, { selfId: "file-grace" }).selfId).toBeUndefined();
+    expect(importAnswers([ada], incoming, mapped, {}, { selfId: "nobody" }).selfId).toBeUndefined();
+    expect(importAnswers([ada], incoming, mapped, {}, {}).selfId).toBeUndefined();
+    expect(importAnswers([], incoming, incoming, {}, { selfId: "file-grace" }).selfId).toBe("file-grace");
   });
 });

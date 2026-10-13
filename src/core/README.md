@@ -88,9 +88,8 @@ A target is one of the 14 roles or one of the two markers (`equalContribution`, 
   by target, and the ones still `open`. Cached per object pair, so replace state, never mutate it.
 - `settledAt(reply)`: when an answer was settled: its last decision, or its arrival if nothing needed
   one.
-- `importAsks(current, incoming, mapped, held, fromFile)` and
-  `importSelfId(current, incoming, mapped, selfId)`: carry a JSON file's answers and `selfId` over
-  to the ids `keepKnownIds` gave the imported rows. Into a draft that has contributors, only rows
+- `importAnswers(current, incoming, mapped, held, { asks, selfId })`: carries a JSON file's answers
+  and `selfId` over to the ids `keepKnownIds` gave the imported rows. Into a draft that has contributors, only rows
   that matched one keep them.
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
 - `AskSchema` validates stored and imported asks.
@@ -99,7 +98,7 @@ A target is one of the 14 roles or one of the two markers (`equalContribution`, 
 
 `index.ts` is the public surface. Grouped by module:
 
-- `ask`: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAsks`, `importSelfId`, `isMarker`,
+- `ask`: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
   `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
   `Decision`, `Difference`, `Level`, `Outcome`, `Patch`, `Reply`, `Review`, `Target`
 - `author`: `Author`, `Contribution`, `AuthorSchema`, `ContributionSchema`, `clampScore`,
