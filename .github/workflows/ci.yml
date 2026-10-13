@@ -39,6 +39,11 @@ jobs:
       - name: Lint, typecheck, test
         run: pnpm biome check . && pnpm typecheck && pnpm test:coverage
 
+      - name: Validate the JATS export against the JATS 1.3 DTD and the JATS4R rules
+        run: |
+          command -v xmllint || { sudo apt-get update -q && sudo apt-get install -yq libxml2-utils; }
+          pnpm validate:jats
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:

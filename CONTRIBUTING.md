@@ -31,16 +31,19 @@ pnpm lint           # Biome (format + lint); append :fix to auto-fix
 pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
+pnpm validate:jats  # JATS fixture against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
 ```
 
-CI runs `pnpm lint`, `pnpm typecheck`, and `pnpm test:coverage` on every PR.
+CI runs `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`, and `pnpm validate:jats` on every PR.
 Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 ## Testing
 
 - **Unit (Vitest)**: `pnpm test`. Covers the domain layer, the store, and `src/lib`: name
   parsing, initials deduplication, statement formats, score-to-level boundaries, import/export round
-  trips, validation, and heatmap SVG generation.
+  trips, validation, and heatmap SVG generation. `jats-fixture.test.ts` keeps the JATS export of
+  the sample draft in `src/core/__tests__/fixtures/`; after a deliberate change to the export,
+  update it with `pnpm vitest run -u` and run `pnpm validate:jats`.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
   the co-author claim round trip. `drafts.spec.ts` covers deleting all drafts. `a11y.spec.ts` runs the axe scans. `messages.spec.ts`,
@@ -58,7 +61,7 @@ Two automated checks guard the UI. They are guardrails, not a WCAG conformance c
 | Check | Command | Scope | In CI |
 | --- | --- | --- | --- |
 | Biome [`a11y`](https://biomejs.dev/linter/rules/#accessibility) lint | `pnpm lint` | alt text, ARIA validity, button `type`, keyboard handlers | Every PR |
-| [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1 A/AA rules over the main screens, light + dark | Every PR |
+| [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1/2.2 A/AA rules over the main screens, light + dark | Every PR |
 
 The UI includes a skip link, landmark regions, radiogroup segmented controls, and a
 `prefers-reduced-motion` fallback that neutralizes transitions and animations. Drag-to-reorder is

@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
+  version and release date in step, as it does for `CITATION.cff`.
+- Every CI run checks the JATS4R XML export of the sample draft against the official JATS 1.3 DTD
+  and the JATS4R Schematron rules (`pnpm validate:jats`).
+
 ### Fixed
 
 - The JATS4R XML export no longer claims "© 2019 JATS4R" and a CC BY licence for your paper. That
@@ -13,6 +20,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as
   JATS 1.3 `degree-contribution`, and importing the file restores them. Files without it import
   every role as lead, as before.
+- The JATS4R XML export writes ORCID iDs as the full `https://orcid.org/` URL, as the JATS4R
+  authors recommendation asks. Files with a bare iD still import.
+- The contributor name field, the author/non-author chip and the actions button in each contributor
+  row are at least 24 px tall, the minimum target size in WCAG 2.2.
 
 ### Removed
 

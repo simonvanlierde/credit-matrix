@@ -16,7 +16,10 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     conc.score = 100;
     jane.orcid = "0000-0002-1825-0097";
 
-    const parsed = fromJats4rXml(toJats4rXml(authors));
+    const xml = toJats4rXml(authors);
+    // JATS4R Authors and Affiliations v2.0 asks for the full ORCID URL.
+    expect(xml).toContain('<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-1825-0097</contrib-id>');
+    const parsed = fromJats4rXml(xml);
     expect(parsed).toHaveLength(1);
     expect(parsed[0]?.surname).toBe("Smith");
     expect(parsed[0]?.orcid).toBe("0000-0002-1825-0097");

@@ -10,10 +10,10 @@ import { asReturningVisitor } from "./helpers";
  * alternative sits beside it) so axe correctly skips it.
  */
 
-// Pin the rule set to WCAG 2.0/2.1 A + AA so the scan matches what the README
+// Pin the rule set to WCAG 2.0/2.1/2.2 A + AA so the scan matches what CONTRIBUTING.md
 // documents, rather than tracking axe's shifting defaults (which also include
 // best-practice rules).
-const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
+const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 /**
  * Panels scale in and rows fade up, and axe samples computed color; including
  * the opacity of an element still mid-transition. Scanning before motion
