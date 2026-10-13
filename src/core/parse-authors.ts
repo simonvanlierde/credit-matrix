@@ -168,9 +168,10 @@ export function createAuthor(
  * of them, and they would hide where one word ends.
  */
 function cleanText(value: string): string {
+  // One match per whitespace run: a pattern that backtracks through a long run of spaces is quadratic.
   return value
     .normalize("NFC")
-    .replace(/\s*\p{Cc}[\s\p{Cc}]*/gu, " ")
+    .replace(/[\s\p{Cc}]+/gu, (run) => (/\p{Cc}/u.test(run) ? " " : run))
     .trim();
 }
 

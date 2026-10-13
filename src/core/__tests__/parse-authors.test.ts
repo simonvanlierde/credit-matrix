@@ -124,6 +124,12 @@ describe("createAuthor", () => {
     expect(author.name).toBe("Ann Lee");
     expect(author.surname).toBe("Lee");
   });
+
+  it("cleans a long run of spaces in linear time, then applies the length cap", () => {
+    const started = performance.now();
+    expect(() => createAuthor(`a${" ".repeat(1_000_000)}b`)).toThrow(/characters or fewer/);
+    expect(performance.now() - started).toBeLessThan(500);
+  });
 });
 
 describe("deduplicateAuthorInitials", () => {
