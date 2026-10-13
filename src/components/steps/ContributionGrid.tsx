@@ -1,21 +1,8 @@
 "use client";
 
-import {
-  Check,
-  CheckCheck,
-  ChevronDown,
-  Clock,
-  Columns3,
-  Copy,
-  Download,
-  ExternalLink,
-  ListChecks,
-  Rows3,
-  Settings2,
-  UserPlus,
-} from "lucide-react";
+import { Check, CheckCheck, Clock, Columns3, Rows3, Settings2, UserPlus } from "lucide-react";
 import { useTheme } from "next-themes";
-import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
+import { memo, type ReactNode, type RefObject, useRef, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
@@ -23,50 +10,37 @@ import { InitialsChip } from "@/components/ui/initials-chip";
 import { LevelMark } from "@/components/ui/level-mark";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { UndoBar } from "@/components/ui/undo-bar";
-import { type Author, buildHeatmapSvg, CREDIT_ROLES, review, scoreToLevel } from "@/core";
+import { type Author, CREDIT_ROLES, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
 import { heatCellColor, onColor } from "@/core/contributor-color";
-import type { RoleDescriber, RoleTranslator, UiKey, UiTranslator } from "@/core/i18n";
+import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useClaimLock } from "@/lib/use-claim-lock";
-import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";
-import { download as downloadBlob } from "@/lib/utils";
 import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
+import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
+import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM } from "./grid-shared";
+import { HeatmapExports } from "./HeatmapExports";
+import { MobileRoleList } from "./MobileRoleList";
+import { RoleInfo } from "./RoleInfo";
 
 // Clicks in Levels mode cycle through the scores ascending; the legend renders
 // them descending (lead→none).
 const LEVEL_CYCLE: number[] = Object.values(LEVEL_SCORE);
-const LEVEL_KEY: { key: UiKey; score: number }[] = Object.entries(LEVEL_SCORE)
-  .map(([key, score]) => ({ key: key as UiKey, score }))
-  .reverse();
 const FLAT_KEY: { key: UiKey; score: number }[] = [
   { key: "contributed", score: 100 },
   { key: "none", score: 0 },
 ];
 
-// "None" is what Clear does, so the bulk picker offers only the assignable levels.
-const ASSIGNABLE_LEVELS = LEVEL_KEY.filter(({ score }) => score > 0);
-// Equal, not Lead: bulk-marking everyone as Lead overstates every one of them.
-const DEFAULT_BULK_LEVEL = 66;
 // Past this many columns the angled names make the header taller than the
 // rows it labels, so the headers fall back to initials.
 const MAX_NAMED_COLUMNS = 20;
 
 /** Where this contributor's ask stands, from the grid's point of view. */
 type AskState = { kind: "you" | "asked" | "settled" | "none" } | { kind: "differs"; count: number };
-
-/** Shared look for the small outlined controls in the status strip and menus. */
-const TOOL_BUTTON =
-  "flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant/60 px-3 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/30 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary";
-const ICON_TOOL_BUTTON =
-  "flex size-9 items-center justify-center rounded-lg border border-outline-variant/60 text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary";
-const MENU_ITEM =
-  "flex min-h-9 w-full items-center gap-2 rounded-md px-2 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:text-on-surface-variant/60";
 
 /**
  * The contribution matrix as one editable grid: roles as rows, contributors as
@@ -80,10 +54,7 @@ export function ContributionGrid() {
     setInputMode,
     heatmapMonoColor,
     setHeatmapMonoColor,
-    loadAuthors,
     setAuthorScore,
-    setAllAuthorScores,
-    setRoleScores,
     toggleContribution,
     welcomeOpen,
   } = useContributionStore(
@@ -95,10 +66,7 @@ export function ContributionGrid() {
       setInputMode: s.setInputMode,
       heatmapMonoColor: s.heatmapMonoColor,
       setHeatmapMonoColor: s.setHeatmapMonoColor,
-      loadAuthors: s.loadAuthors,
       setAuthorScore: s.setAuthorScore,
-      setAllAuthorScores: s.setAllAuthorScores,
-      setRoleScores: s.setRoleScores,
       toggleContribution: s.toggleContribution,
       welcomeOpen: s.welcomeOpen,
     })),
@@ -130,20 +98,14 @@ export function ContributionGrid() {
   // Second beat of the population sequence; see .enter-fade in globals.css.
   const settled = useSettled();
   const [acronyms, setAcronyms] = useState(false);
-  const [selectedAuthorId, setSelectedAuthorId] = useState("");
-  const [bulkAuthorId, setBulkAuthorId] = useState("");
   const [transpose, setTranspose] = useState(false);
-  const [bulkRoleIndex, setBulkRoleIndex] = useState("0");
-  const [bulkLevel, setBulkLevel] = useState(String(DEFAULT_BULK_LEVEL));
   // The single tab stop in the matrix; arrow keys move it. Reset when the
   // orientation flips, since row/col swap meaning.
   const [activeCell, setActiveCell] = useState({ row: 0, col: 0 });
   // Handlers for the memoized cells, refreshed every render. The cells read
   // them through this ref, so a new closure never re-renders all 14×N of them.
   const cellApi = useRef<CellApi>(null);
-  // The roster as it stood before the last bulk action. One click can rewrite
-  // fourteen assignments, so it earns the same undo bar a row removal has.
-  const [bulkUndo, setBulkUndo] = useState<Author[] | null>(null);
+  const { bulkUndo, runBulk, undoBulk } = useBulkUndo();
   // Right-click level picker: direct selection for pointer users, so correcting
   // an overshoot never means cycling a value through None. The anchor is the
   // cursor point; the cell element takes focus back when the panel closes.
@@ -154,36 +116,6 @@ export function ContributionGrid() {
     y: number;
     cell: HTMLButtonElement;
   } | null>(null);
-
-  useEffect(() => {
-    if (!bulkUndo) return;
-    const timer = window.setTimeout(() => setBulkUndo(null), 8000);
-    return () => window.clearTimeout(timer);
-  }, [bulkUndo]);
-
-  // The snapshot is one draft's roster: undoing it after a switch, Reset or
-  // Delete all would load it over other or cleared work.
-  const activeDraftId = useContributionStore((s) => s.activeDraftId);
-  const workspaceCleared = useContributionStore((s) => s.workspaceCleared);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-runs on draft switch and clear by design
-  useEffect(() => setBulkUndo(null), [activeDraftId, workspaceCleared]);
-
-  /** Run a bulk mutation with the roster snapshotted for undo. */
-  function runBulk(action: () => void) {
-    const before = useContributionStore.getState().authors;
-    action();
-    setBulkUndo(before);
-    announce(t("bulkChangeApplied"));
-  }
-
-  // NOTE: restores the whole roster snapshot, so it also reverts any edit made
-  // inside the 8-second window — simple last-state undo, not an operation log.
-  function undoBulk() {
-    if (!bulkUndo) return;
-    loadAuthors(bulkUndo);
-    announce(t("annBulkUndone"));
-    setBulkUndo(null);
-  }
 
   // Graded (level) colors and labels follow the input mode, so the legend and
   // cells always match the way clicks behave.
@@ -231,19 +163,6 @@ export function ContributionGrid() {
       </div>
     );
   }
-
-  const firstAuthor = authors[0];
-  if (!firstAuthor) return null;
-  // On a locked draft the only editable row is the claimee's, so open there
-  // rather than on whoever happens to sort first.
-  const selectedAuthor =
-    authors.find((author) => author.id === selectedAuthorId) ??
-    (locked ? authors.find((author) => author.id === editableAuthorId) : undefined) ??
-    firstAuthor;
-  const bulkAuthor = authors.find((author) => author.id === bulkAuthorId) ?? firstAuthor;
-  const parsedBulkRoleIndex = Number.parseInt(bulkRoleIndex, 10);
-  // Yes/no has one "assigned" value; levels asks which one.
-  const assignScore = graded ? Number.parseInt(bulkLevel, 10) : 100;
 
   // Grid extent, in the current orientation: transposed puts contributors on
   // rows and roles on columns, otherwise the reverse.
@@ -487,85 +406,13 @@ export function ContributionGrid() {
           <span className="flex items-center gap-1.5">
             {/* Every bulk action is list-wide, which a claim freezes outright. */}
             {!locked && (
-              <Popover>
-                <PopoverTrigger aria-label={t("bulkAssign")} title={t("bulkAssign")} className={ICON_TOOL_BUTTON}>
-                  <ListChecks className="size-4" aria-hidden="true" />
-                </PopoverTrigger>
-                <PopoverContent align="end" className="grid w-72 max-w-[calc(100vw-2rem)] gap-4">
-                  {graded && (
-                    <div className="grid gap-2 text-xs font-semibold text-on-surface">
-                      <span id="bulk-level">{t("bulkAssignLevel")}</span>
-                      <Select value={bulkLevel} onValueChange={setBulkLevel}>
-                        <SelectTrigger className="w-full text-xs font-normal" aria-labelledby="bulk-level">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ASSIGNABLE_LEVELS.map(({ key, score }) => (
-                            <SelectItem key={key} value={String(score)}>
-                              {translateUi(key)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {/* A <legend> renders unreliably inside a `display: grid` fieldset,
-                  so the group is labelled by a plain heading instead. */}
-                  <fieldset aria-labelledby="bulk-one-contributor" className="grid gap-2">
-                    <p id="bulk-one-contributor" className="mb-1 text-xs font-semibold text-on-surface">
-                      {t("bulkOneContributor")}
-                    </p>
-                    <Select value={bulkAuthor?.id} onValueChange={setBulkAuthorId}>
-                      <SelectTrigger className="w-full text-xs" aria-label={t("a11yBulkContributor")}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {authors.map((author) => (
-                          <SelectItem key={author.id} value={author.id}>
-                            {author.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="grid grid-cols-2 gap-2">
-                      <BulkButton onClick={() => runBulk(() => setAllAuthorScores(bulkAuthor.id, assignScore))}>
-                        {t("bulkAssignAll")}
-                      </BulkButton>
-                      <BulkButton onClick={() => runBulk(() => setAllAuthorScores(bulkAuthor.id, 0))}>
-                        {t("bulkClearAll")}
-                      </BulkButton>
-                    </div>
-                  </fieldset>
-                  <fieldset
-                    aria-labelledby="bulk-one-role"
-                    className="grid gap-2 border-t border-outline-variant/30 pt-3"
-                  >
-                    <p id="bulk-one-role" className="mb-1 text-xs font-semibold text-on-surface">
-                      {t("bulkOneRole")}
-                    </p>
-                    <Select value={bulkRoleIndex} onValueChange={setBulkRoleIndex}>
-                      <SelectTrigger className="w-full text-xs" aria-label={t("a11yBulkRole")}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CREDIT_ROLES.map((role, roleIndex) => (
-                          <SelectItem key={role.name} value={String(roleIndex)}>
-                            {translateInterfaceRole(role.name)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="grid grid-cols-2 gap-2">
-                      <BulkButton onClick={() => runBulk(() => setRoleScores(parsedBulkRoleIndex, assignScore))}>
-                        {t("bulkAssignToAll")}
-                      </BulkButton>
-                      <BulkButton onClick={() => runBulk(() => setRoleScores(parsedBulkRoleIndex, 0))}>
-                        {t("bulkClearRole")}
-                      </BulkButton>
-                    </div>
-                  </fieldset>
-                </PopoverContent>
-              </Popover>
+              <BulkAssignMenu
+                authors={authors}
+                graded={graded}
+                translateUi={translateUi}
+                translateRole={translateInterfaceRole}
+                runBulk={runBulk}
+              />
             )}
             {/* Icon-only: display settings, not a workflow action, so it earns
               the quietest slot at the cluster's far end. */}
@@ -631,80 +478,20 @@ export function ContributionGrid() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col p-3 md:p-4">
-        <div className={`md:hidden ${settled ? "enter-fade" : ""}`} style={{ transitionDelay: "120ms" }}>
-          <div className="sticky top-13 z-20 -mx-1 mb-2 bg-surface-bright px-1 py-2">
-            <label className="mb-1.5 block text-xs font-semibold text-on-surface" htmlFor="mobile-contributor">
-              {t("contributorToAssign")}
-            </label>
-            <Select value={selectedAuthor.id} onValueChange={setSelectedAuthorId}>
-              <SelectTrigger id="mobile-contributor" className="w-full" aria-label={t("contributorToAssign")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {authors.map((author) => (
-                  <SelectItem key={author.id} value={author.id}>
-                    {author.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <ul
-            className="divide-y divide-outline-variant/25"
-            aria-label={t("a11yRolesForContributor", { name: selectedAuthor.name })}
-          >
-            {CREDIT_ROLES.map((role, roleIndex) => {
-              const score = selectedAuthor.contributions[roleIndex]?.score ?? 0;
-              return (
-                // scroll-mt clears the fixed header and the sticky contributor
-                // picker when focus scrolls a row into view.
-                <li key={role.name} className="flex min-h-14 scroll-mt-40 items-center gap-2 py-1.5">
-                  <span className="flex min-w-0 flex-1 items-center">
-                    <RoleInfo
-                      role={role}
-                      translateRole={translateInterfaceRole}
-                      describeRole={describeRole}
-                      language={interfaceRoleLanguage}
-                      className="text-sm"
-                    />
-                  </span>
-                  <button
-                    type="button"
-                    // Same as the desktop cell: pressed semantics only fit yes/no.
-                    aria-pressed={graded ? undefined : score > 0}
-                    // No roving tab order to protect here, so the plain disabled
-                    // idiom (as the export buttons use) fits.
-                    disabled={isFrozen(selectedAuthor.id)}
-                    aria-label={assignmentLabel(selectedAuthor, roleIndex, score)}
-                    onClick={() => handleCellClick(selectedAuthor, roleIndex, score)}
-                    className={`contribution-cell flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
-                      score > 0 ? "text-on-surface shadow-sm" : "text-on-surface-variant"
-                    }`}
-                  >
-                    {/* The label never sits on the dynamic fill: a mid-tone
-                      preset has no 4.5:1 text companion at all, and the
-                      palette is user-picked. The swatch carries the color;
-                      its check needs only the 3:1 non-text ratio, which
-                      onColor guarantees. */}
-                    {score > 0 && (
-                      <span
-                        aria-hidden="true"
-                        className="flex size-5 shrink-0 items-center justify-center rounded"
-                        style={(() => {
-                          const fill = heatCellColor(heatmapMonoColor, graded ? score : 100, dark);
-                          return { backgroundColor: fill, color: onColor(fill) };
-                        })()}
-                      >
-                        <Check className="size-3.5" strokeWidth={3} />
-                      </span>
-                    )}
-                    {levelLabel(score)}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        <MobileRoleList
+          authors={authors}
+          graded={graded}
+          heatmapMonoColor={heatmapMonoColor}
+          dark={dark}
+          settled={settled}
+          isFrozen={isFrozen}
+          assignmentLabel={assignmentLabel}
+          levelLabel={levelLabel}
+          handleCellClick={handleCellClick}
+          translateInterfaceRole={translateInterfaceRole}
+          describeRole={describeRole}
+          interfaceRoleLanguage={interfaceRoleLanguage}
+        />
 
         {/* A bounded viewport makes both sticky axes persistent during long desktop matrices. */}
         <div
@@ -1028,18 +815,6 @@ function DifferenceMark({ cellFill, className }: { cellFill: string | null; clas
   );
 }
 
-function BulkButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="min-h-9 rounded-lg border border-outline-variant/60 px-2 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-    >
-      {children}
-    </button>
-  );
-}
-
 /**
  * A 50°-angled column label, leaning up-right from the column's bottom
  * center, so a full name fits over a column one cell wide. The label
@@ -1099,58 +874,6 @@ function AskGlyph({ state, name, onReview }: { state: AskState; name: string; on
   );
 }
 
-/**
- * A role's name as a button that opens its short description, with a link to
- * the full NISO definition. The name is the trigger, so the matrix spends no
- * tab stop or column on a separate info button.
- */
-function RoleInfo({
-  role,
-  translateRole,
-  describeRole,
-  language,
-  className,
-  triggerProps,
-}: {
-  role: (typeof CREDIT_ROLES)[number];
-  translateRole: RoleTranslator;
-  describeRole: RoleDescriber;
-  language: string;
-  className?: string;
-  triggerProps?: React.ComponentProps<"button"> & { "data-role-head"?: number };
-}) {
-  const t = useTranslations();
-  const name = translateRole(role.name);
-  // The description follows the interface language: it is help, never exported.
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          title={name}
-          {...triggerProps}
-          className={`block min-h-6 rounded text-left font-medium text-on-surface underline decoration-outline decoration-dotted underline-offset-4 transition-colors hover:text-primary hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary ${className ?? ""}`}
-        >
-          {name}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent lang={language} className="max-w-xs text-xs leading-relaxed text-on-surface-variant">
-        <strong className="text-on-surface">{name}.</strong> {describeRole(role.name)}{" "}
-        <a
-          href={role.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 text-primary hover:underline whitespace-nowrap"
-        >
-          {t("fullDefinition")}
-          <ExternalLink className="h-3 w-3" aria-hidden="true" />
-          <span className="sr-only">{t("opensInNewTab")}</span>
-        </a>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 /** A single key mapping cell intensity to its contribution level. */
 function GridLegend({
   monoColor,
@@ -1206,140 +929,5 @@ function GridLegend({
           set a level, so hiding them behind a tooltip hid the feature. */}
       <p>{graded ? t("levelHint") : t("toggleKeysHint")}</p>
     </div>
-  );
-}
-
-type ExportFormat = "svg" | "png";
-
-/**
- * Rasterise an SVG string to a PNG Blob entirely in the browser, with no
- * server round-trip.
- *
- * 3×, not 2×: at the default 22px cell a single-column journal figure comes
- * out around 500 CSS px wide, which 2× rasterises to ~3.4in at 300 dpi — under
- * the 85mm single-column width most publishers ask for. 3× clears it, and
- * still lands well inside the clipboard's practical size.
- */
-async function svgToPngBlob(svg: string, scale = 3): Promise<Blob> {
-  const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
-  const img = new Image();
-  img.src = url;
-  try {
-    await img.decode();
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(img.naturalWidth * scale);
-  canvas.height = Math.round(img.naturalHeight * scale);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas not supported");
-  ctx.scale(scale, scale);
-  ctx.drawImage(img, 0, 0);
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("PNG encoding failed"))), "image/png");
-  });
-}
-
-/** Download the grid as a heatmap image, mirroring the on-screen display options. */
-function HeatmapExports({
-  authors,
-  monoColor,
-  showLevels,
-  transpose,
-  acronyms,
-}: {
-  authors: Author[];
-  monoColor: string;
-  showLevels: boolean;
-  transpose: boolean;
-  acronyms: boolean;
-}) {
-  const { translateRole, translateUi } = useCreditTranslators();
-  const t = useTranslations();
-  const [loading, setLoading] = useState<ExportFormat | "copy" | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [copyStatus, copy] = useCopyStatus({
-    copied: t("annHeatmapCopied"),
-  });
-
-  function renderSvg() {
-    return buildHeatmapSvg(authors, { transpose, monoColor, showLevels, acronyms, translateRole, translateUi });
-  }
-
-  function fail(format: ExportFormat) {
-    const message = t("errHeatmapExport", { format: format.toUpperCase() });
-    setError(message);
-    announce(message, { assertive: true });
-  }
-
-  async function download(format: ExportFormat) {
-    setLoading(format);
-    setError(null);
-    try {
-      const svg = renderSvg();
-      if (format === "svg") {
-        downloadBlob(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }), "credit-heatmap.svg");
-      } else {
-        downloadBlob(await svgToPngBlob(svg), "credit-heatmap.png");
-      }
-    } catch {
-      fail(format);
-    } finally {
-      setLoading(null);
-    }
-  }
-
-  // Copy the image bytes (not a URL) so it pastes straight into a doc or slide,
-  // the same move the CRediT badge makes. PNG, because that is what editors take.
-  async function copyPng() {
-    setLoading("copy");
-    setError(null);
-    try {
-      // useCopyStatus owns the status, the announce and the 2s reset; this only
-      // supplies the clipboard write and the inline error text.
-      await copy(async () => {
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": svgToPngBlob(renderSvg()) })]);
-      });
-    } finally {
-      setLoading(null);
-    }
-  }
-
-  return (
-    // One menu in the status strip: the heatmap is a figure you take out of
-    // the app, so its three ways out sit together, away from the cells.
-    <Popover>
-      <PopoverTrigger className={TOOL_BUTTON}>
-        <Download className="size-3.5" aria-hidden="true" />
-        {t("heatmapLabel")}
-        <ChevronDown className="size-3.5" aria-hidden="true" />
-      </PopoverTrigger>
-      <PopoverContent align="end" className="grid w-56 gap-0.5 p-1">
-        <button
-          type="button"
-          disabled={loading !== null}
-          onClick={() => void copyPng()}
-          title={t("copyHeatmapHint")}
-          className={MENU_ITEM}
-        >
-          <Copy className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
-          {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyPng")}
-        </button>
-        {(["svg", "png"] as ExportFormat[]).map((format) => (
-          <button
-            key={format}
-            type="button"
-            disabled={loading !== null}
-            onClick={() => download(format)}
-            className={MENU_ITEM}
-          >
-            <Download className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
-            {loading === format ? "…" : format === "svg" ? t("downloadSvg") : t("downloadPng")}
-          </button>
-        ))}
-        {error && <p className="px-2 pt-1 pb-1.5 text-[11px] text-error">{error}</p>}
-      </PopoverContent>
-    </Popover>
   );
 }

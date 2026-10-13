@@ -31,7 +31,7 @@ function deferLookup() {
   return (result: DoiLookupResult) => act(async () => resolve(result));
 }
 
-function renderModal(existingContributorCount = 0) {
+function renderModal(existingContributorCount = 0, onLink: () => Promise<null> = async () => null) {
   const onImport = vi.fn();
   const view = render(
     <IntlProvider locale="en" messages={en}>
@@ -39,7 +39,7 @@ function renderModal(existingContributorCount = 0) {
         open
         existingContributorCount={existingContributorCount}
         onImport={onImport}
-        onLink={async () => null}
+        onLink={onLink}
         onClose={vi.fn()}
       />
     </IntlProvider>,
@@ -97,6 +97,21 @@ describe("DOI lookup", () => {
     await resolve({ ok: false, status: 502, code: "UNAVAILABLE", error: "" });
 
     expect(screen.getByText(en.errDoiOFFLINE)).toBeTruthy();
+  });
+});
+
+describe("a pasted share link", () => {
+  it("imports once when Import is clicked again while the link decodes", async () => {
+    const { promise, resolve } = Promise.withResolvers<null>();
+    const onLink = vi.fn(() => promise);
+    renderModal(0, onLink);
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: "#s=abc" } });
+    const button = screen.getByRole("button", { name: en.importData });
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    expect(onLink).toHaveBeenCalledTimes(1);
+    await act(async () => resolve(null));
   });
 });
 
