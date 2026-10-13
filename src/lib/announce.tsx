@@ -10,9 +10,13 @@ const listeners = new Set<(a: Announcement) => void>();
 
 export const STORAGE_FULL_EVENT = "credit-storage-full";
 
-/** Ask the mounted, localized interface to announce a persistence failure. */
-export function requestStorageFullAnnouncement() {
-  if (typeof window !== "undefined") window.dispatchEvent(new Event(STORAGE_FULL_EVENT));
+/**
+ * Ask the mounted, localized interface to announce a persistence failure.
+ * `blocked` means the browser refuses site storage outright, rather than
+ * running out of room.
+ */
+export function requestStorageFullAnnouncement(blocked = false) {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(STORAGE_FULL_EVENT, { detail: { blocked } }));
 }
 
 /**

@@ -1212,7 +1212,27 @@ describe("contribution store", () => {
 
       // Once per run of failures, not once per keystroke.
       expect(requestStorageFullAnnouncement).toHaveBeenCalledTimes(1);
+      expect(requestStorageFullAnnouncement).toHaveBeenCalledWith(false);
       full.mockRestore();
+      hydrated.mockRestore();
+    });
+
+    it("says storage is blocked, not full, when the browser blocks site data", () => {
+      const storage = useContributionStore.persist.getOptions().storage;
+      if (!storage) throw new Error("expected a storage adapter");
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      const state = { drafts: {}, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
+      // A good save first, so an earlier test's failure run is over.
+      storage.setItem("credit-generator-state", { state, version: 1 });
+      vi.mocked(requestStorageFullAnnouncement).mockClear();
+      const blocked = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new DOMException("The operation is insecure.", "SecurityError");
+      });
+
+      storage.setItem("credit-generator-state", { state: { ...state, welcomeSeen: false }, version: 1 });
+
+      expect(requestStorageFullAnnouncement).toHaveBeenCalledWith(true);
+      blocked.mockRestore();
       hydrated.mockRestore();
     });
 

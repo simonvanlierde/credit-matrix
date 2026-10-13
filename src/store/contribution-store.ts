@@ -732,12 +732,15 @@ export function announcingStorage(): DraftStorage {
         known = new Set(Object.keys(drafts));
         lastWritten = value.state;
         warned = false;
-      } catch {
+      } catch (error) {
         // Every change retries the write; announcing each one would flood
         // the live region. Say it once per run of failures.
         if (warned) return;
         warned = true;
-        requestStorageFullAnnouncement();
+        // Blocked site data: Chromium throws SecurityError on reading
+        // `window.localStorage`, Firefox leaves it null (a TypeError here).
+        const blocked = error instanceof DOMException ? error.name === "SecurityError" : error instanceof TypeError;
+        requestStorageFullAnnouncement(blocked);
       }
     },
   };

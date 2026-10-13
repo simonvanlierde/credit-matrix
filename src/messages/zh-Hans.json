@@ -269,6 +269,7 @@
   "errImportNewerVersion": "此文件由更新版本的 CRediT Matrix 创建。请重新加载页面以更新，然后重试。",
   "errHeatmapExport": "无法将贡献热图导出为 {format} 格式。",
   "errStorageFull": "浏览器存储空间已满，最近的更改可能无法保存。",
+  "errStorageBlocked": "此浏览器阻止了本网站的存储，因此无法保存您的更改。请允许本网站的数据，或在关闭标签页前导出草稿。",
   "errNewerVersionSaved": "更新版本的 CRediT Matrix 已在另一个标签页中保存了您的草稿。请重新加载此页面：在此处所做的更改不会被保存。",
   "formatShareLink": "共享链接",
   "formatJsonExport": "JSON 导出",

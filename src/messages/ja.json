@@ -269,6 +269,7 @@
   "errImportNewerVersion": "このファイルは CRediT Matrix の新しいバージョンで作成されました。ページを再読み込みして更新してから、もう一度お試しください。",
   "errHeatmapExport": "ヒートマップを{format}形式でエクスポートできませんでした。",
   "errStorageFull": "ブラウザの保存領域がいっぱいです。直近の変更が保存されない可能性があります。",
+  "errStorageBlocked": "このブラウザーがこのサイトの保存領域をブロックしているため、変更を保存できませんでした。サイトデータを許可するか、タブを閉じる前に下書きをエクスポートしてください。",
   "errNewerVersionSaved": "CRediT Matrix の新しいバージョンが別のタブで下書きを保存しました。このページを再読み込みしてください。ここでの変更は保存されません。",
   "formatShareLink": "共有リンク",
   "formatJsonExport": "JSONエクスポート",

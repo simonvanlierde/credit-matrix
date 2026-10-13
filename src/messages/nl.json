@@ -269,6 +269,7 @@
   "errImportNewerVersion": "Dit bestand is gemaakt met een nieuwere versie van CRediT Matrix. Laad de pagina opnieuw om bij te werken en probeer het dan nog eens.",
   "errHeatmapExport": "De heatmap kan niet als {format} worden geëxporteerd.",
   "errStorageFull": "De browseropslag is vol. De nieuwste wijzigingen worden mogelijk niet opgeslagen.",
+  "errStorageBlocked": "Uw wijzigingen konden niet worden opgeslagen, omdat deze browser opslag voor deze site blokkeert. Sta sitegegevens toe, of exporteer uw concept voordat u het tabblad sluit.",
   "errNewerVersionSaved": "Een nieuwere versie van CRediT Matrix heeft uw concepten in een ander tabblad opgeslagen. Laad deze pagina opnieuw: wijzigingen hier worden niet opgeslagen.",
   "formatShareLink": "Gedeelde link",
   "formatJsonExport": "JSON-export",

@@ -36,7 +36,7 @@ test("works, unsaved, when the browser blocks site data", async ({ baseURL }) =>
     await add.fill("Jane Smith");
     await add.press("Enter");
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(1);
-    await expect(onScreen(page, /could not be saved/)).toBeVisible();
+    await expect(onScreen(page, /browser blocks storage/)).toBeVisible();
   } finally {
     await context.close();
     await rm(profile, { recursive: true, force: true });

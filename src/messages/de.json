@@ -269,6 +269,7 @@
   "errImportNewerVersion": "Diese Datei stammt aus einer neueren Version von CRediT Matrix. Laden Sie die Seite neu, um zu aktualisieren, und versuchen Sie es dann erneut.",
   "errHeatmapExport": "Die Heatmap konnte nicht als {format} exportiert werden.",
   "errStorageFull": "Dieser Entwurf konnte nicht gespeichert werden, weil der Browserspeicher voll ist. Exportieren Sie ihn oder löschen Sie einen nicht mehr benötigten Entwurf.",
+  "errStorageBlocked": "Ihre Änderungen konnten nicht gespeichert werden, weil dieser Browser den Speicher für diese Website blockiert. Erlauben Sie Websitedaten, oder exportieren Sie Ihren Entwurf, bevor Sie den Tab schließen.",
   "errNewerVersionSaved": "Eine neuere Version von CRediT Matrix hat Ihre Entwürfe in einem anderen Tab gespeichert. Laden Sie diese Seite neu: Änderungen hier werden nicht gespeichert.",
   "formatShareLink": "Geteilter Link",
   "formatJsonExport": "JSON-Export",

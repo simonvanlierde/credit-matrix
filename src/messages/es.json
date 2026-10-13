@@ -269,6 +269,7 @@
   "errImportNewerVersion": "Este archivo se creó con una versión más reciente de CRediT Matrix. Recargue la página para actualizarla e inténtelo de nuevo.",
   "errHeatmapExport": "No se pudo exportar el mapa de calor como {format}.",
   "errStorageFull": "No se pudo guardar este borrador porque el almacenamiento del navegador está lleno. Expórtelo o elimine un borrador que ya no necesite.",
+  "errStorageBlocked": "No se pudieron guardar los cambios porque este navegador bloquea el almacenamiento para este sitio. Permita los datos del sitio, o exporte el borrador antes de cerrar la pestaña.",
   "errNewerVersionSaved": "Una versión más reciente de CRediT Matrix guardó sus borradores en otra pestaña. Recargue esta página: los cambios hechos aquí no se guardan.",
   "formatShareLink": "Enlace compartido",
   "formatJsonExport": "Exportación JSON",

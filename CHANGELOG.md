@@ -43,6 +43,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Drafts open in two tabs: a tab you opened earlier no longer saves its old copy of a draft over
+  the edits you made to it in another tab.
+- Opening a share link or a co-author's reply no longer switches you to another tab's draft or
+  drops changes that had not been saved yet.
+- When the browser stops saving, a message now says so on screen. Before, only screen readers
+  heard it. The message says whether storage is full or the browser blocks it for this site.
+- With site data blocked in the browser, the app now works (without saving) instead of leaving
+  every field read-only.
 - Import: screen readers now read the DOI hint and any error with the field they belong to, a file
   dropped beside the drop zone no longer replaces the page, and the dialog names the file it read.
 - CSV import: a quote inside a name (`Ann O"Brien`) is read as part of the name. It used to swallow

@@ -269,6 +269,7 @@
   "errImportNewerVersion": "This file was made by a newer version of CRediT Matrix. Reload the page to update, then try again.",
   "errHeatmapExport": "Could not export the heatmap as {format}.",
   "errStorageFull": "This draft could not be saved because the browser storage is full. Export it, or delete a draft you no longer need.",
+  "errStorageBlocked": "Your changes could not be saved because this browser blocks storage for this site. Allow site data for it, or export your draft before you close the tab.",
   "errNewerVersionSaved": "A newer version of CRediT Matrix saved your drafts in another tab. Reload this page: changes made here are not saved.",
   "formatShareLink": "Share link",
   "formatJsonExport": "JSON export",

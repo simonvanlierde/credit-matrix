@@ -146,3 +146,14 @@ it("shows, not only announces, that the browser stopped saving", async () => {
   act(() => requestStorageFullAnnouncement());
   expect(await screen.findByText(en.errStorageFull)).toBeTruthy();
 });
+
+it("says the browser blocks storage when that is why saving stopped", async () => {
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <HeaderActions />
+      <StatusBanner />
+    </IntlProvider>,
+  );
+  act(() => requestStorageFullAnnouncement(true));
+  expect(await screen.findByText(en.errStorageBlocked)).toBeTruthy();
+});

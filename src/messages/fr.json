@@ -269,6 +269,7 @@
   "errImportNewerVersion": "Ce fichier a été créé par une version plus récente de CRediT Matrix. Rechargez la page pour la mettre à jour, puis réessayez.",
   "errHeatmapExport": "Impossible d’exporter la heatmap au format {format}.",
   "errStorageFull": "Le stockage du navigateur est saturé. Les modifications les plus récentes risquent de ne pas être enregistrées.",
+  "errStorageBlocked": "Vos modifications n'ont pas pu être enregistrées, car ce navigateur bloque le stockage pour ce site. Autorisez les données de site, ou exportez votre brouillon avant de fermer l'onglet.",
   "errNewerVersionSaved": "Une version plus récente de CRediT Matrix a enregistré vos brouillons dans un autre onglet. Rechargez cette page : les modifications faites ici ne sont pas enregistrées.",
   "formatShareLink": "Lien partagé",
   "formatJsonExport": "Export JSON",

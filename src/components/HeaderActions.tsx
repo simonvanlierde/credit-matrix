@@ -86,7 +86,10 @@ export function HeaderActions() {
   // The browser refused a save: shown, not only announced, since nothing
   // else on screen changes when saving stops.
   useEffect(() => {
-    const onStorageFull = () => showStatus({ kind: "error", message: t("errStorageFull") });
+    const onStorageFull = (event: Event) => {
+      const blocked = (event as CustomEvent<{ blocked?: boolean }>).detail?.blocked;
+      showStatus({ kind: "error", message: t(blocked ? "errStorageBlocked" : "errStorageFull") });
+    };
     window.addEventListener(STORAGE_FULL_EVENT, onStorageFull);
     return () => window.removeEventListener(STORAGE_FULL_EVENT, onStorageFull);
   }, [t]);
