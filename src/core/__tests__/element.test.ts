@@ -95,6 +95,26 @@ describe("<credit-matrix>", () => {
     }
   });
 
+  it("downloads src again when it is set again or render() is called, but not for a format change", async () => {
+    const fetch = vi.fn(async () => new Response(json));
+    vi.stubGlobal("fetch", fetch);
+    try {
+      const element = document.createElement("credit-matrix") as HTMLElement & { render(): Promise<void> };
+      element.setAttribute("src", "a.json");
+      document.body.append(element);
+      await vi.waitFor(() => expect(element.shadowRoot?.querySelector("svg")).not.toBeNull());
+      element.setAttribute("format", "by-author");
+      await vi.waitFor(() => expect(element.shadowRoot?.querySelector("p")?.textContent).toMatch(/^CRediT: Jane/));
+      expect(fetch).toHaveBeenCalledTimes(1);
+      element.setAttribute("src", "a.json");
+      await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+      await element.render();
+      expect(fetch).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("fetches once when it upgrades with several attributes already set", async () => {
     const fetch = vi.fn(async () => new Response(json));
     vi.stubGlobal("fetch", fetch);

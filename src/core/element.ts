@@ -107,12 +107,15 @@ export class CreditMatrixElement extends HTMLElement {
    * attribute while isConnected is already true, so this keeps those calls from each starting a fetch.
    */
   #connected = false;
-  /** The last src fetched, so a format or locale change re-renders without downloading it again. */
+  /**
+   * The last src fetched, so a format or locale change re-renders without downloading it again.
+   * Setting src, even to the same URL, or calling render() drops it: that is how a page asks for fresh data.
+   */
   #fetched: { src: string; text: string } | null = null;
   #style = document.createElement("style");
   /** Re-renders when inline JSON is added or edited after the element connected. */
   #children = new MutationObserver(() => {
-    if (!this.hasAttribute("src")) void this.render();
+    if (!this.hasAttribute("src")) void this.#draw();
   });
 
   constructor() {
@@ -124,7 +127,7 @@ export class CreditMatrixElement extends HTMLElement {
   connectedCallback() {
     this.#connected = true;
     this.#children.observe(this, { childList: true, characterData: true, subtree: true });
-    void this.render();
+    void this.#draw();
   }
 
   disconnectedCallback() {
@@ -132,8 +135,10 @@ export class CreditMatrixElement extends HTMLElement {
     this.#children.disconnect();
   }
 
-  attributeChangedCallback() {
-    if (this.#connected) void this.render();
+  attributeChangedCallback(name: string) {
+    if (!this.#connected) return;
+    if (name === "src") this.#fetched = null;
+    void this.#draw();
   }
 
   #show(...nodes: Node[]) {
@@ -147,7 +152,13 @@ export class CreditMatrixElement extends HTMLElement {
     return text;
   }
 
-  async render() {
+  /** Render again, downloading `src` afresh. */
+  render(): Promise<void> {
+    this.#fetched = null;
+    return this.#draw();
+  }
+
+  async #draw() {
     const render = ++this.#render;
     const src = this.getAttribute("src");
     const locale = resolveLocale(this.getAttribute("locale") ?? this.closest("[lang]")?.getAttribute("lang"));

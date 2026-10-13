@@ -11,7 +11,8 @@ export declare class CreditMatrixElement extends HTMLElement {
   constructor();
   connectedCallback(): void;
   disconnectedCallback(): void;
-  attributeChangedCallback(): void;
+  attributeChangedCallback(name: string): void;
+  /** Render again, downloading `src` afresh. */
   render(): Promise<void>;
 }
 //#endregion
