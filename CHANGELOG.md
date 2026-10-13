@@ -12,12 +12,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   version and release date in step, as it does for `CITATION.cff`.
 - Every CI run checks the JATS4R XML export against the official JATS 1.3 DTD and the JATS4R
   Schematron rules (`pnpm validate:jats`).
-- A page of its own for co-authors. Opening an ask link now shows one column, made for a phone:
-  the 14 roles with a short description and None · Supporting · Equal · Lead buttons for each
-  (None · Contributed when you work in Yes/No), switches for shared first authorship and
-  corresponding author, and a *Send back* button that opens the phone's share sheet or copies the
-  reply link. Name and ORCID iD can still be corrected under *Your details*, and *Keep as an
-  ordinary draft* still opens the full workspace. Ask links from older versions open in levels.
+- A page of its own for co-authors. Opening an ask link now shows one column, made for a phone.
+  It has the 14 roles, each with a short description and None · Supporting · Equal · Lead buttons
+  (None · Contributed when you work in Yes/No). Below them are switches for shared first authorship
+  and corresponding author, and a *Send back* button that opens the phone's share sheet or copies
+  the reply link. Co-authors can still correct their name and ORCID iD under *Your details*, and
+  *Keep as an ordinary draft* still opens the full workspace. Ask links from older versions open in
+  levels.
 - A blank ask. A contributor's menu now offers *Ask … what they did*, which sends their row with
   nothing ticked, beside *Ask … to check your guess*, which sends your guess as before. The co-author
   sees which one they got.
@@ -52,28 +53,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- A co-author's reply no longer overwrites your row. Their name and iD are taken; their
+- A co-author's reply no longer overwrites your row. Their name and iD are taken over. Their
   roles and markers are kept beside your row, and the status strip says how many differ ("Ben's
-  answer arrived: 3 differences"), with Undo and a *Review* button, or that the answer matches yours. Until you choose, your row is
-  what the statement uses.
+  answer arrived: 3 differences"), with Undo and a *Review* button. If the answer matches yours, it
+  says that instead. Until you choose, the statement uses your row.
 - A reply older than the one you already have is ignored, and opening the same reply twice changes
   nothing. Undo on a reply restores the name and iD and leaves any edits you made since then alone.
 - A new workspace layout. The contribution grid is now the main canvas, with the contributor list
   as a slim rail on the left (it folds to initials) and a panel on the right with three tabs:
   - **Statement**: the statement and *Copy statement*, plus one *Export data* menu where each format
     has its own Copy and Download.
-  - **Team**: who you have asked and when, who answered and how much is left to review, and when
-    each answer was settled; a *Copy message* button per person that copies an
-    email-ready text with their ask link, and *Ask everyone not yet asked*, which copies one message
-    per person in turn.
+  - **Team**: who you have asked and when, who answered, how much is left to review, and when
+    each answer was settled. A *Copy message* button per person copies a text ready for an email,
+    with their ask link. *Ask everyone not yet asked* copies one message per person in turn.
   - **Review**: co-authors' answers beside your draft (see Added).
 - A strip above the grid shows how many co-authors answered and how many answers differ, with a
-  *Review* button, and holds the Yes/No vs Levels
-  switch, bulk assign, display options, and heatmap export (copy, SVG, PNG).
+  *Review* button. It also holds the Yes/No vs Levels switch, bulk assign, display options, and
+  heatmap export (copy, SVG, PNG).
 - Column headers show full names at an angle, with a mark under each for not asked, asked, open
   differences or settled.
   Past 20 contributors, or with *Use initials* on, they show initials.
-- Selecting a role name opens its description; the separate info buttons are gone. From the grid,
+- Selecting a role name opens its description. The separate info buttons are gone. From the grid,
   press the Left arrow on the first column to reach the role name.
 - In dark mode the heatmap gets brighter from Supporting to Lead, as it gets darker in light mode.
   Downloaded heatmaps keep the light colors.
@@ -91,7 +91,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The JATS4R XML export writes ORCID iDs as full `https://orcid.org/...` links, as JATS4R
   recommends. Importing accepts both the full link and the bare iD, so older files still load.
 - The JATS4R XML export marks shared first authorship only when at least two authors share it. A
-  single marked author made the file break the JATS4R rules; the mark still travels in JSON and CSV.
+  single marked author made the file break the JATS4R rules. The mark still travels in JSON and CSV.
 - Resetting a draft clears its open asks, and removing a contributor drops theirs (undo restores it).
 - After *Reset* or *Delete all drafts*, Undo for a removed contributor or a bulk change no longer
   brings the cleared work back. A bulk change's Undo also no longer follows you to another draft.

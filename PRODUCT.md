@@ -1,67 +1,71 @@
 # Product brief
 
-A reference for anyone writing copy or designing screens for CRediT Matrix. It covers the
-audience, the promise, and the claims this product may make. It is not user documentation: for what
-the app does, read the [README](README.md), and for visual rules, read [DESIGN.md](DESIGN.md).
+Read this before you write text or design screens for CRediT Matrix. It says who the app is for,
+what it promises, and what we may claim about it. It is not user documentation. For what the app
+does, read the [README](README.md). For the visual rules, read [DESIGN.md](DESIGN.md).
 
 ## Users
 
-Researchers and research teams preparing manuscripts on the web. They use the CRediT Contributor
-Roles Taxonomy to agree on, record, and export each contributor's work.
+Researchers and research teams who are preparing a manuscript. They use CRediT, the Contributor
+Roles Taxonomy, to agree on each contributor's work, write it down, and export it.
 
 ## Purpose
 
-CRediT Matrix turns contributor names and role assignments into a manuscript-ready statement
-and submission files, so teams never format the taxonomy by hand.
+CRediT Matrix turns contributor names and their roles into a statement ready for the manuscript,
+and into files for submission. Teams never have to format the roles by hand.
 
-The contribution matrix is both the editor and the source of a downloadable heatmap. The same data
-produces prose, JATS4R XML, CSV, JSON, and Markdown.
+The contribution matrix is where you edit, and it is also the heatmap you can download. The same
+data produces the statement text, JATS4R XML, CSV, JSON, and Markdown.
 
 ## Operating context
 
-The app supports manuscript preparation and revision alongside author lists, ORCID records, journal
-requirements, and co-author discussions. Drafts persist in the browser. A user can share an encoded
-URL or import a supported format.
+People use the app while they write and revise a manuscript, next to their author list, ORCID
+records, the journal's requirements, and talks with co-authors. Drafts are saved in the browser.
+A user can share a draft as a URL, or import a file in one of the supported formats.
 
 ## Capabilities
 
-- Add, rename, reorder, paste, import, and classify contributors. Optionally resolve names through
-  ORCID, or fill a whole list from a DOI.
-- Assign all 14 canonical CRediT roles as yes/no values or contribution levels.
-- Ask co-authors by link for their own row, keep each answer beside the draft, and settle every
+- Add, rename, reorder, paste, import, and classify contributors. Look up names through ORCID, or
+  fill a whole list from a DOI, if you want to.
+- Assign all 14 official CRediT roles as yes/no values or contribution levels.
+- Ask co-authors by link for their own row. Keep each answer beside the draft, and settle every
   difference in one place.
-- Localize human-readable statements and exports. Keep canonical English terms in machine formats.
+- Translate statements and exports meant for people. Keep the official English terms in formats
+  meant for software.
 
 ## Constraints
 
-- Keep contribution data client-side. The ORCID and DOI lookups are the only calls that leave the
-  browser, and they go straight to ORCID, Crossref and DataCite.
-- Preserve scientific accuracy, round-trip integrity, privacy, accessibility, and localization.
+- Keep contribution data in the browser. The ORCID and DOI lookups are the only calls that leave
+  it, and they go straight to ORCID, Crossref and DataCite.
+- Protect scientific accuracy, privacy, accessibility, and translations. Data you export and import
+  back must come back the same.
 
 ## Voice and claims
 
-The product name is **CRediT Matrix**. Its signature artifact is the **contribution heatmap**. Use
-the full term in prose, documentation, and help text, so it travels into methods sections. A
-space-constrained control may shorten it to *Heatmap* once the full term is established on screen.
+The product name is **CRediT Matrix**. What it's known for is the **contribution heatmap**. Use
+that full term in text, documentation, and help, so people carry it into their methods sections.
+A control with little room may shorten it to *Heatmap*, once the full term is already on screen.
 
-The voice is direct, precise, calm, and useful. Explain specialist concepts without weakening their
-meaning. A non-author contributor is called exactly that in prose and docs. A space-constrained
-control may shorten it to *Non-author*, never to *Contributor*, which describes everyone on the
-list.
+The voice is direct, precise, calm, and useful. Explain specialist ideas without making them less
+exact. A non-author contributor is called exactly that in text and docs. A control with little room
+may shorten it to *Non-author*, but never to *Contributor*, because everyone on the list is a
+contributor.
 
-Support every claim from the workflow in `src/`, the screenshots in `docs/screenshots/`, the tests
-in `src/core/`, the records in `docs/adr/`, and `CITATION.cff`. Invent no testimonials,
-customer logos, usage statistics, or performance numbers.
+Back every claim with something in the repo: the workflow in `src/`, the screenshots in
+`docs/screenshots/`, the tests in `src/core/`, the records in `docs/adr/`, or `CITATION.cff`. Don't
+invent testimonials, customer logos, usage statistics, or performance numbers.
 
 ## Principles
 
-- Make an accurate contribution statement the shortest clear path.
-- Keep contributors, assignments, and generated output visibly connected.
-- Teach with examples and contextual help, not blocking tutorials.
-- Preserve user work across refreshes, errors, imports, and interruptions.
-- Treat accessibility, localization, privacy, and export correctness as product behavior.
+- The shortest clear path through the app should end in an accurate contribution statement.
+- Keep contributors, their roles, and the output visibly connected.
+- Teach with examples and help in place, not with tutorials that block the screen.
+- Keep the user's work through refreshes, errors, imports, and interruptions.
+- Accessibility, translation, privacy, and correct exports are part of how the product works, not
+  extras.
 
 ## Accessibility and inclusion
 
-The full workflow must support keyboards, screen readers, narrow widths, and 200% zoom. It must not
-rely on color alone. Localized output must support longer labels and non-English scripts.
+The whole workflow must work with a keyboard, a screen reader, a narrow screen, and 200% zoom. It
+must not rely on color alone. Translated output must leave room for longer labels and for scripts
+other than the Latin alphabet.

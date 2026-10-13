@@ -5,82 +5,85 @@
 
 ## Context
 
-[ADR 0001](0001-client-side-architecture.md) chose a client-side architecture,
-resting on the assertion that the app has "no user account, no shared state
-between users, and nothing worth persisting on a server". Two pieces of planned
-work put pressure on that assertion:
+[ADR 0001](0001-client-side-architecture.md) chose to run everything in the
+browser. It rested on the claim that the app has "no user account, no shared
+state between users, and nothing worth persisting on a server". Two pieces of
+planned work put that claim to the test:
 
-- **Multiple drafts.** The store persists one draft, so starting a second paper
-  destroys the first. Anyone who writes more than one paper a year hits this.
+- **Multiple drafts.** The store saves one draft, so starting a second paper
+  wipes out the first. Anyone who writes more than one paper a year runs into
+  this.
 - **Collecting roles from co-authors.** The slow part of a CRediT statement is
   asking twelve people what they did. A server would turn "send a link, they
   send it back, you paste it" into "send a link, their answer appears".
 
-Both are real. Neither is what ADR 0001 anticipated, so the decision was
-revisited rather than assumed.
+Both needs are real. ADR 0001 didn't foresee either, so I looked at the
+decision again instead of assuming it still held.
 
-Accounts would also buy cross-device access and durability against a browser
-clearing its site data.
+Accounts would also give access from any device, and keep drafts safe when a
+browser clears its site data.
 
 ## Decision
 
-Keep the app account-free, with **no server-side storage of draft data**. The
-one server-side surface stays what ADR 0001 described: stateless proxies to
-public APIs that send no browser-friendly CORS headers, now ORCID and Crossref.
+Keep the app free of accounts, with **no draft data stored on a server**. The
+only server code stays what ADR 0001 described: proxies that keep no state, for
+public APIs that send no CORS headers a browser accepts. Those are now ORCID
+and Crossref.
 
-Multiple drafts are solved locally: a map of drafts in `localStorage` behind a
-picker. Co-author collection is solved with a claimed share link that carries
-the draft in its fragment and comes back the same way.
+Multiple drafts are handled in the browser: a map of drafts in `localStorage`,
+with a picker. Asking co-authors works with a share link addressed to one
+person. It carries the draft in its fragment (the part after `#`) and comes
+back the same way.
 
 ## Rationale
 
-The deciding argument is not cost or effort. ORCID OAuth suits this audience
-and an edge database is readily available. It is what the data *is*.
+What decides it is not cost or effort. ORCID OAuth suits these users, and an
+edge database is easy to get. What decides it is what the data *is*.
 
-A stored draft holds the names and ORCID iDs of **third parties who never
-visited the site**. Storing those server-side means processing personal data of
-identifiable people who gave no consent. That brings a lawful basis, a
-retention policy, a privacy notice, and deletion requests. These obligations are
-permanent, for a free tool with one maintainer. Today the honest answer to
-"what do you keep about my co-authors" is *nothing; it is in their browser*.
-That answer is worth more than the convenience it costs.
+A stored draft holds the names and ORCID iDs of **other people who never
+visited the site**. Storing those on a server means processing personal data of
+people who can be identified and who never agreed to it. That needs a legal
+basis, a retention policy, a privacy notice, and handling deletion requests.
+Those duties never end, and this is a free tool with one maintainer. Today the
+honest answer to "what do you keep about my co-authors" is *nothing; it is in
+their browser*. That answer is worth more than the convenience it costs.
 
-Two further points:
+Two more points:
 
-- Sync would undo the offline guarantee. Offline plus a server means conflict
-  resolution, and "it just works on a plane" stops being true.
-- Durability matters less than it looks. This is a drafting tool: a session is
-  minutes, and the artifact of record is the manuscript, not the app's state.
-  Losing a draft costs a re-import from the DOI.
+- Syncing would break working offline. Offline plus a server means resolving
+  conflicts, and "it just works on a plane" stops being true.
+- Losing a draft matters less than it looks. This is a drafting tool: a session
+  takes minutes, and the record that counts is the manuscript, not the app's
+  state. Losing a draft costs a new import from the DOI.
 
 ## Consequences
 
 **Good**
 
-- The privacy claim stays absolute and needs no policy document to explain.
-- The app remains installable, offline-capable, and deployable by any lab that
-  wants its own copy, with no operational burden on the maintainer.
-- No auth, no database, no sync, and no conflict resolution to build or secure.
+- The privacy claim has no exceptions, and needs no policy document to explain.
+- The app can still be installed, used offline, and deployed by any lab that
+  wants its own copy, and none of that is work for the maintainer.
+- There is no login, database, sync, or conflict resolution to build or secure.
 
 **Trade-offs**
 
-- Collecting roles from co-authors stays a manual round trip: each person
-  returns a link that the corresponding author pastes back in.
+- Collecting roles from co-authors stays a manual round trip. Each person
+  sends back a link, and the corresponding author pastes it in.
   - Note, 2026-10-13: still a manual link round trip, but opening a reply no
     longer pastes it over the row. The co-author's answer is kept beside the
     corresponding author's row, and each difference is settled in the Review
     tab. The decision above is unchanged.
-- Drafts are per-browser. Moving between devices means exporting JSON and
-  importing it on the other side.
-- Clearing site data destroys unexported drafts, with no recovery path.
-- Draft size stays bounded by what fits in a URL fragment and in
-  `localStorage`.
+- Drafts live in one browser. To move to another device, you export JSON and
+  import it there.
+- Clearing site data deletes drafts you haven't exported, and they can't be
+  recovered.
+- A draft can't grow beyond what fits in a URL fragment and in `localStorage`.
 
 ## Revisit when
 
-Both of these are true, not either one:
+Both of these have to be true, not just one:
 
 1. People who are not the maintainer ask for cross-device drafts or complain
    that the link round trip is too fiddly in real use.
-2. Someone is willing to carry the operational and data-protection burden that
-   storing third-party personal data creates.
+2. Someone is willing to take on running a server and the data-protection
+   duties that come with storing other people's personal data.

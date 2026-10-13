@@ -79,171 +79,177 @@ components:
 
 ## Overview
 
-The interface resembles a prepared working document: scholarly, compact, and quiet. Editorial type
-gives manuscript output authority, and the sans-serif interface keeps controls practical.
+The interface looks like a working document: scholarly, compact, and quiet. A book-like serif gives
+the manuscript output weight, and a sans-serif keeps the controls practical.
 
-This is a workspace, not a marketing page. Its character comes from the visible flow from
-contributors, through the matrix, to manuscript output.
+This is a workspace, not a marketing page. Its character comes from what you can see flowing from
+the contributors, through the matrix, to the text for the manuscript.
 
 ## Colors
 
 Use warm paper neutrals throughout the interface. Reserve ink blue for primary actions, links,
 focus, and selected states. Use contributor colors only to identify data.
 
-Ink blue does not clear 3:1 against muted paper text, so a link inside a sentence is underlined as
-well as recolored. A link that owns its own line may stay quiet until hover.
+Ink blue does not reach a 3:1 contrast against muted paper text. So a link inside a sentence is
+underlined as well as colored. A link on a line of its own may stay plain until you hover over it.
 
-The heatmap tiers must get more prominent from Supporting to Lead in both themes. In light mode the
-fill mixes the chosen hue toward white (40%, 70%, 100% of the hue). That ramp reads inverted on a
-dark page, where the palest cell is the brightest, so dark mode keeps the hue and raises its
-lightness instead: 30%, 48% and 77% (for ink blue `#1f4f7a`, `#327ec3`, `#a2c6e7`),
-with dark marks on Lead. Exported heatmaps always use the light ramp, since a figure goes onto a
-white page. `heatCellColor` in `src/core/contributor-color.ts` holds both ramps.
+The heatmap levels must stand out more from Supporting to Lead, in both themes. In light mode the
+fill mixes the chosen hue with white (40%, 70%, 100% of the hue). On a dark page that scale looks
+upside down, because the palest cell is the brightest one. So dark mode keeps the hue and raises
+its lightness instead: 30%, 48% and 77% (for ink blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark
+marks on Lead. Exported heatmaps always use the light scale, because a figure goes onto a white
+page. `heatCellColor` in `src/core/contributor-color.ts` holds both scales.
 
-Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the
-ring around the cell a Review line points at, and the ring that fades off a cell as a difference is
-settled. It is a mark, never a fill, and always comes with a shape or text.
+Flag amber marks where a co-author answered differently. It is used for the corner mark on a grid
+cell, the ring around the cell a Review line points at, and the ring that fades off a cell when you
+settle a difference. It is a mark, never a fill, and it always comes with a shape or text.
 
 ## Typography
 
-Use Newsreader with Georgia fallback for identity, section headings, and manuscript output. Keep
-manuscript prose roman and reserve italics for short accents. Use IBM Plex Sans for controls and
-explanations. Use IBM Plex Mono for contributor initials and compact data labels.
+Use Newsreader, with Georgia as the fallback, for the brand, section headings, and manuscript
+output. Keep manuscript text upright, and use italics only for short accents. Use IBM Plex Sans for
+controls and explanations. Use IBM Plex Mono for contributor initials and short data labels.
 
 ## Brand
 
-The mark is a 3×3 crop of the contribution matrix, lead on the diagonal. It is drawn on a 32px
-grid with 8px cells and 1px gaps. Its fills are the heatmap's real intensity tiers, not decorative
-tints, so the mark and the product's data speak the same language.
+The mark (the logo) is a 3×3 crop of the contribution matrix, with lead on the diagonal. It is
+drawn on a 32px grid with 8px cells and 1px gaps. Its fills are the heatmap's real levels, not
+decorative tints, so the mark looks like the product's own data.
 
-Use the mark in `currentColor` wherever it sits beside text (the header lockup does), and with
-literal ink-blue tiers wherever it stands alone. The lockup is the mark at cap height, then a gap,
-then the wordmark in Newsreader italic. Never letterspace or recolor the wordmark away from the
-primary token, and never set the mark and the wordmark in different colors.
+Draw the mark in `currentColor` wherever it sits beside text, as it does in the header lockup. Where
+it stands alone, use the ink-blue levels themselves. The lockup is the mark at cap height, then a
+gap, then the wordmark (the name set as type) in Newsreader italic. Never letterspace the wordmark,
+never color it other than the primary token, and never give the mark and the wordmark different
+colors.
 
-The wordmark never wraps and never shrinks to fit. A two-line brand spills out of the fixed
-header, and a squeezed one stops being the wordmark: draw it only where the row measurably has the
-width, and let the mark carry the brand alone below that. Wherever the wordmark is not drawn, say
-the name anyway — the mark is decorative, so without it the heading has no accessible name.
+The wordmark never wraps and never shrinks to fit. On two lines, the brand spills out of the fixed
+header. Squeezed, it stops being the wordmark. So draw it only where you have measured that the row
+is wide enough, and below that let the mark show the brand alone. Wherever the wordmark is not
+drawn, still give the name in text. The mark is decorative, so without the name the heading has no
+accessible name.
 
-`docs/brand/` holds the sources for the exported PNG assets and the command that re-renders them.
+`docs/brand/` holds the sources for the exported PNG assets and the command that renders them again.
 
 ## Layout
 
-The grid is the canvas. From `xl`, the roster is a slim rail on the left that folds to initials,
-the grid fills the middle, and an inspector on the right holds three tabs: Statement, Team and
-Review. A status strip above the grid says what the draft is waiting on and holds the controls that
-change the whole grid (Yes/No vs Levels, bulk assign, display options, heatmap export). Below `xl`
-the same parts stack in that order: rail, strip, grid (as the contributor-focused role list on a
-phone), inspector.
+The grid is the canvas. From `xl` up, the contributor list is a slim rail on the left that folds to
+initials. The grid fills the middle. An inspector on the right holds three tabs: Statement, Team and
+Review. A status strip above the grid says what the draft is waiting for. It also holds the controls
+that change the whole grid (Yes/No vs Levels, bulk assign, display options, heatmap export). Below
+`xl` the same parts stack in that order: rail, strip, grid, inspector. On a phone the grid becomes a
+list of roles per contributor.
 
-Never give the statement a full-width row. Its prose is capped at 75ch, so a wide column wraps the
-text at half its width and leaves the rest empty. Keep the rail and inspector at fixed widths and
-give the grid what remains. The table is content-sized and centered in it, so a small roster sits
-in calm gutters and a large one gets every column the screen can show.
+Never give the statement a full-width row. Its text is capped at 75ch, so in a wide column it wraps
+at half the width and leaves the rest empty. Keep the rail and the inspector at fixed widths, and
+give the grid what is left. The table is as wide as its content and centered in the grid's space. A
+short contributor list sits in calm margins, and a long one gets every column the screen can show.
 
-On a desktop-sized window the workspace is height-locked to the viewport. The page itself doesn't
-scroll; each pane scrolls its own content.
+In a desktop-sized window the workspace is locked to the window's height. The page itself doesn't
+scroll. Each pane scrolls its own content.
 
-Height-lock only behind both halves of the `desk` guard: ≥80rem wide **and** ≥45rem tall. Without
-the height half, a short window, a zoomed page, or a phone in landscape traps the app in a nested
-scroller. Those windows need ordinary document flow.
+Only lock the height when both halves of the `desk` guard hold: ≥80rem wide **and** ≥45rem tall.
+Without the height half, a short window, a zoomed page, or a phone held sideways traps the app in a
+scroll area inside another one. Those windows need the page to scroll as normal.
 
-Give a pane that scrolls but holds no focusable content a tab stop, or keyboard users can't reach
-its overflow.
+If a pane scrolls but holds nothing you can focus, give it a tab stop. Otherwise keyboard users
+can't scroll it.
 
-A panel anchored to a control belongs in a popover, not a hand-placed absolute box. A popover
-dismisses on an outside click and on Escape, and portals out of any scrolling ancestor. It also
-reports its open state, so the control that opened it can show that state.
+A panel that opens from a control belongs in a popover, not in a box placed by hand with absolute
+positioning. A popover closes on a click outside it and on Escape. It renders outside any parent
+that scrolls. It also reports whether it is open, so the control that opened it can show that.
 
-A row whose content changes with a mode must not reflow when it does. Otherwise flipping the mode
-moves controls the visitor was about to click. Pin the elements that anchor to an edge. Let the
-variable-length part wrap inside its own share of the row. Keep a row of varying width out of a
-`max-content` column's intrinsic sizing, with `w-0 min-w-full`.
+When a row's content changes with a mode, the row must not shift. Otherwise switching the mode moves
+the controls the visitor was about to click. Pin the elements that sit against an edge. Let the part
+whose length varies wrap inside its own share of the row. Use `w-0 min-w-full` so that a row whose
+width varies does not set the width of a `max-content` column.
 
-Use a contributor-focused role list on narrow screens. Keep the desktop matrix in a bounded viewport
-with sticky row and column labels.
+Use a list of roles per contributor on narrow screens. On desktop, keep the matrix inside a box of
+fixed size, with row and column labels that stay put while you scroll.
 
 ## Density
 
-This is a working surface, not a reading one. On a standard 1080p desktop viewport the whole
-workflow should be visible at once, with no page scroll. Spend vertical space on contributor rows
-and matrix rows, and take it back from chrome. Bound a list that grows without limit (contributors,
-validation checks) rather than letting it push the workflow below the fold.
+This is a screen to work on, not to read. On a standard 1080p desktop screen you should see the
+whole workflow at once, without scrolling the page. Spend height on contributor rows and matrix
+rows, and take it from the frame around them. Give a list that can grow without limit (contributors,
+validation checks) a maximum height, so it can't push the workflow off the screen.
 
-First-run guidance overlays the workspace rather than taking a band in the layout flow. An inline
-band costs that height permanently, and reflows the whole page when dismissed.
+The first-run help sits over the workspace, not in a band of its own in the layout. A band would
+take that height for good, and the whole page would shift when you close it.
 
 ## Elevation and depth
 
-Use tonal paper surfaces and fine neutral rules. Give work cards a low shadow and the generated
-result a slightly stronger one.
+Use paper surfaces in slightly different tones, and thin neutral lines. Give work cards a low
+shadow, and the generated result a slightly stronger one.
 
 ## Shapes
 
-Use 2–4px corners for document details and 8px corners for controls and cards. Reserve pills for
-status, segmented controls, switches, and identity markers.
+Use 2–4px corners for document details and 8px corners for controls and cards. Use pill shapes
+only for status, segmented controls, switches, and identity markers.
 
 ## Components
 
 ### Buttons
 
-Primary buttons use ink blue with bright paper text. Secondary buttons use quiet outlines and paper
-or transparent fills. Give every control visible keyboard focus and a target of at least 24px.
+Primary buttons use ink blue with bright paper text. Secondary buttons use a quiet outline and a
+paper or transparent fill. Give every control a visible keyboard focus and a target of at least
+24px.
 
-Keep one primary action per view: Copy statement. Header actions (Share, Import) are secondary.
-A disabled button drops its fill and mutes its text and outline, so it never reads as a live
-primary at lower opacity.
+Keep one primary action per view: Copy statement. The header actions (Share, Import) are secondary.
+A disabled button loses its fill and mutes its text and outline. That way it never looks like a
+working primary button that is just a little faded.
 
 ### Cards and containers
 
-Cards use bright paper, 8px corners, a fine outline, and low elevation. Use spacing or a divider
-instead of nested cards.
+Cards use bright paper, 8px corners, a thin outline, and a low shadow. Use spacing or a divider
+instead of a card inside a card.
 
 ### Inputs and fields
 
-Fields use bright or muted paper with quiet rules. Use a visible focus style. Keep error and
-inactive text readable, and explain how to recover.
+Fields use bright or muted paper with quiet lines. Use a visible focus style. Keep error text and
+inactive text readable, and say how to fix the problem.
 
 ### Navigation
 
-Keep identity and global actions in the fixed header. On narrow screens, use labeled icons without
-clipping or hiding accessible names.
+Keep the brand and the global actions in the fixed header. On narrow screens, use icons with
+labels, and don't cut off or hide their accessible names.
 
-Measure the header before adding to it. Where a global link no longer fits, give it to the lockup,
-which is otherwise the one element up there with nothing to do: the product name opens what the
-product is. Earn that with a chevron: an unmarked lockup reads as a title, and a title nobody
-taps hides the link as thoroughly as a breakpoint does. Never park such links behind an unnamed
-glyph while named ones exist. The nav and the menu share one boundary, so exactly one is ever on
-screen.
+Measure the header before you add to it. When a global link no longer fits, give it to the lockup.
+Otherwise the lockup is the one thing up there with nothing to do, and this way the product name
+opens what the product is. Show that with a chevron. Without one, the lockup looks like a
+title, and nobody taps a title, so the link is as hidden as if a breakpoint had removed it. Never
+put such links behind an unlabeled icon while labeled ones exist. The nav and the menu switch at
+the same width, so exactly one of them is on screen at a time.
 
 ### Attribution
 
-A license that asks for attribution is satisfied in the deployed app, not only in the repository:
-someone using the site never opens `LICENSE`. Name the work, name its creator, and link the license
-itself. Put the notice beside the control that carries the material off the page, and keep the
-project's own copyright with the identity rather than in the small print.
+When a license asks for attribution, give it in the deployed app, not only in the repository.
+Someone using the site never opens `LICENSE`. Name the work, name its creator, and link the license
+itself. Put the notice next to the control that takes the material off the page. Keep the project's
+own copyright with the brand, not in the small print.
 
 ### Contribution matrix
 
-Use the matrix on larger screens and a contributor-focused role list on narrow screens. Keep role
-and contributor labels visible during scrolling. Show each selected value with color, a mark, an
-accessible label, and exported data. Keep bulk assignment behind a disclosure.
+Use the matrix on larger screens, and a list of roles per contributor on narrow screens. Keep role
+and contributor labels visible while you scroll. Show each selected value with color, a mark, an
+accessible label, and in the exported data. Keep bulk assignment behind a toggle that you open
+first.
 
-Column headers show full names at 50°, and fall back to initials past 20 columns or when the
-person asks for initials. Under each name, a glyph says whether that person has been asked (a
-clock, a dash, or "You"), with a spoken label. The role name itself opens the role's description:
-no separate info buttons. Role names sit outside the tab order and join the grid's arrow-key focus
-instead, so the matrix stays one tab stop. The key hint under the legend is always visible.
+Column headers show full names at 50°. They switch to initials past 20 columns, or when the person
+asks for initials. Under each name, a glyph with a spoken label says where that person stands: a
+dash for not asked, a clock for asked, a count of open differences that opens Review, a double
+check for settled, or "You" for your own column. The role name itself opens the role's description,
+so there are no separate info buttons. Role names are not in the tab order. Instead you reach them
+with the grid's arrow keys, so the whole matrix is one tab stop. The key hint under the legend is
+always visible.
 
 ## Do and don't
 
 ### Do
 
-- **Do** preserve the visible relationship between input, assignment, and output.
-- **Do** use semantic tokens across light and dark themes.
-- **Do** define specialist terminology at the decision point.
-- **Do** budget for long names, translations, keyboards, and tap targets.
+- **Do** keep the link between input, roles, and output visible.
+- **Do** use semantic tokens in both the light and the dark theme.
+- **Do** explain specialist terms where the person has to decide.
+- **Do** leave room for long names, translations, keyboards, and tap targets.
 - **Do** keep the desktop workflow inside one viewport, and let each pane scroll its own overflow.
 - **Do** ask which level a bulk action assigns. Defaulting to the strongest one overstates the
   claim.
@@ -255,5 +261,5 @@ instead, so the matrix stays one tab stop. The key hint under the legend is alwa
 - **Don't** hide core contribution features on small screens.
 - **Don't** make color the only way to distinguish a matrix value, or a link from the prose it sits
   in.
-- **Don't** height-lock the workspace without a viewport-height guard. A zoomed or short window
-  needs ordinary document flow.
+- **Don't** lock the workspace to the window's height without a check on that height. A zoomed or
+  short window needs the page to scroll as normal.
