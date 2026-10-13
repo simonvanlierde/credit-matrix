@@ -61,7 +61,7 @@ Two automated checks guard the UI. They are guardrails, not a WCAG conformance c
 | Check | Command | Scope | In CI |
 | --- | --- | --- | --- |
 | Biome [`a11y`](https://biomejs.dev/linter/rules/#accessibility) lint | `pnpm lint` | alt text, ARIA validity, button `type`, keyboard handlers | Every PR |
-| [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1 A/AA rules over the main screens, light + dark | Every PR |
+| [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1/2.2 A/AA rules over the main screens, light + dark | Every PR |
 
 The UI includes a skip link, landmark regions, radiogroup segmented controls, and a
 `prefers-reduced-motion` fallback that neutralizes transitions and animations. Drag-to-reorder is
