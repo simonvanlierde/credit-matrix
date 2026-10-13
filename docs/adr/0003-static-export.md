@@ -7,24 +7,25 @@
 
 ## Context
 
-The app ran as a Next.js server on Cloudflare Workers through OpenNext, only to host two lookup
-proxies and a `/health` route. The page itself was already prerendered.
+The app ran as a Next.js server on Cloudflare Workers through OpenNext. The server was only there
+for two lookup proxies and a `/health` route. The page itself was already prerendered.
 
-That server failed in production. About once an hour, a fresh Worker instance booting the OpenNext
-bundle exceeded its resource limit, and for a minute or two the site answered `503` with Cloudflare
-error 1102. An uptime probe caught it 13 times in one day.
+That server failed in production. About once an hour, a new Worker instance went over its resource
+limit while it loaded the OpenNext bundle. For a minute or two the site then answered `503` with
+Cloudflare error 1102. An uptime probe caught it 13 times in one day.
 
-The proxies' premise was also wrong: ORCID's public API does send
+The reason for the proxies was also wrong. ORCID's public API does send
 `Access-Control-Allow-Origin: *`, as Crossref's does, so the browser can call both directly.
 
 ## Decision
 
 Build with `output: "export"` and serve `out/` as Cloudflare Workers static assets, with no Worker
-code. The browser calls `pub.orcid.org` and `api.crossref.org` itself, plus `api.datacite.org` for DOIs
-Crossref does not hold (arXiv, Zenodo). The CSP's `connect-src` names those origins. Response headers
-move from `next.config.ts` to `public/_headers`, and `/health` becomes a static `/health.json` carrying the build's commit. (That file and the
-post-deploy smoke test that read it were later removed: uptime monitoring covers availability, and CI
-builds the exact deploy output.)
+code. The browser calls `pub.orcid.org` and `api.crossref.org` itself. It also calls
+`api.datacite.org` for DOIs that Crossref does not hold (arXiv, Zenodo). The CSP's `connect-src`
+names those origins. Response headers move from `next.config.ts` to `public/_headers`. `/health`
+becomes a static `/health.json` that holds the build's commit. (I later removed that file, and the
+check after each deploy that read it. Uptime monitoring shows whether the site is up, and CI builds
+exactly what gets deployed.)
 
 ## Consequences
 
@@ -38,6 +39,7 @@ builds the exact deploy output.)
 
 - No rate limiter of our own. Each visitor's lookups count against the ORCID, Crossref, and DataCite
   limits for their own address, not ours.
-- The Crossref polite-pool contact address ships in the client bundle. It is a public address.
+- The contact address for Crossref's "polite pool" (the faster lane for callers who give an email)
+  ships in the client bundle. It is a public address anyway.
 - `next dev` does not read `public/_headers`, so the dev server runs without a CSP. CI runs the E2E
   suite against `wrangler dev`, which applies it.
