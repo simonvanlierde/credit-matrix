@@ -42,6 +42,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Adding a contributor as a name and an ORCID iD together ("Jane Smith 0000-0002-1825-0097"),
   typed or in a pasted list, keeps the name you typed. It was replaced by the name ORCID has on
   record, or lost when the lookup failed.
+- A contributor you rename while their ORCID name is still being looked up keeps your name.
 
 ## [0.7.0] - 2026-10-13
 

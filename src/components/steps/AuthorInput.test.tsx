@@ -85,6 +85,19 @@ describe("adding a contributor by ORCID iD", () => {
     expect(addField().value).toBe("Bob Smith");
   });
 
+  it("keeps a name the user typed while the lookup ran", async () => {
+    const resolve = deferLookups();
+    renderList();
+    addById(ALICE);
+    act(() => {
+      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Alice Carberry");
+    });
+
+    await resolve(ALICE, found("Josiah Carberry"));
+
+    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry"]);
+  });
+
   it("keeps a row the user gave a role during the lookup", async () => {
     const resolve = deferLookups();
     renderList();
@@ -147,6 +160,20 @@ describe("adding a contributor by name and ORCID iD", () => {
 });
 
 describe("pasting a list of ORCID iDs", () => {
+  it("keeps a name the user typed while the lookups ran", async () => {
+    const resolve = deferLookups();
+    renderList();
+    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ALICE}, ${BOB}` } });
+    act(() => {
+      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Alice Carberry");
+    });
+
+    await resolve(ALICE, found("Josiah Carberry"));
+    await resolve(BOB, found("Bob Smith"));
+
+    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry", "Bob Smith"]);
+  });
+
   it("reports lookups whose name could not be written as failed", async () => {
     const resolve = deferLookups();
     renderList();

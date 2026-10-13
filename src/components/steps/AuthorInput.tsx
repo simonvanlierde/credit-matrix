@@ -126,6 +126,12 @@ function orcidErrorText(failure: OrcidFailure, t: ReturnType<typeof useTranslati
   return t(ORCID_ERROR_KEYS[failure.code]);
 }
 
+/** The user renamed a row seeded from an iD while its lookup ran; their name wins. */
+function renamedDuringLookup(id: string, orcid: string): boolean {
+  const row = useContributionStore.getState().authors.find((a) => a.id === id);
+  return row !== undefined && row.name !== orcid;
+}
+
 // NOTE: a courtesy cap on concurrent ORCID lookups, not app correctness — a
 // plain Promise.all would work; keep the cap so a 100-iD paste doesn't hammer
 // the registry from one browser.
@@ -286,6 +292,7 @@ export function AuthorList() {
     if (!id) return { id, error: null };
     const result = await fetchOrcidName(orcid);
     if ("code" in result) return { id, error: orcidErrorText(result, t) };
+    if (renamedDuringLookup(id, orcid)) return { id, error: null };
     // A refused write (the row went with a draft switch mid-lookup) leaves the
     // row named after its iD, so it is a failure, not a success.
     if (!updateAuthorName(id, result.displayName)) {
@@ -329,6 +336,7 @@ export function AuthorList() {
     const failed: string[] = [];
     await forEachWithConcurrency(pending, 4, async ({ id, orcid }) => {
       const result = await fetchOrcidName(orcid);
+      if (!("code" in result) && renamedDuringLookup(id, orcid)) return;
       // A refused write leaves the row named after its iD, same as a failed lookup.
       if ("code" in result || !updateAuthorName(id, result.displayName)) failed.push(orcid);
     });
