@@ -37,8 +37,7 @@ appears if Preview URLs are on for the Worker (dashboard: Settings, Domains and 
 ## Roll back
 
 - Fastest: `pnpm exec wrangler rollback` (pick a version, or pass a version id).
-- Dashboard: Workers & Pages, `credit-heatmap` (the Worker keeps the project's old name, set in
-  `wrangler.jsonc`), Deployments tab, then "Rollback" on an earlier deployment.
+- Dashboard: Workers & Pages, `credit-matrix`, Deployments tab, then "Rollback" on an earlier deployment.
 - Permanent: `git revert <sha>` and push to `main`. The pipeline redeploys the reverted code.
 
 A rollback by CLI or dashboard lasts only until the next push to `main` deploys again.
