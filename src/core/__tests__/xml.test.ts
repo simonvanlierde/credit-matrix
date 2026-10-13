@@ -3,9 +3,9 @@ import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
 import { createAuthor, parseAuthorText } from "../parse-authors";
 
-// `fromJats4rXml` relies on a global DOMParser. In the browser this is native;
-// here jsdom provides it, so this exercises the same
-// entry point the web app calls.
+// `fromJats4rXml` defaults to the global DOMParser, native in the browser and
+// linkedom's here (see setup.ts), so this exercises the same entry point the
+// web app calls.
 describe("fromJats4rXml (DOMParser entry point)", () => {
   it("round-trips through the browser-facing parser", () => {
     const authors = parseAuthorText("Jane Smith");
@@ -53,21 +53,24 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     expect(fromJats4rXml("<article><front/></article>")).toEqual([]);
   });
 
-  it("throws on malformed XML", () => {
-    expect(() => fromJats4rXml("<article><contrib>")).toThrow(/XML parse error/);
-  });
-
   it("throws on the <parsererror> document browsers return instead of raising", () => {
     // Browsers never throw from DOMParser: they return a document with a
     // <parsererror> element inside it, here after a valid <contrib> so the
     // guard, not an empty result, is what must stop the import.
     const doc = new DOMParser().parseFromString("<root/>", "application/xml");
     doc.documentElement.innerHTML = "<contrib/><parsererror>error on line 1 at column 9</parsererror>";
-    const spy = vi.spyOn(DOMParser.prototype, "parseFromString").mockReturnValue(doc);
+    const parser = { parseFromString: () => doc };
+    expect(() => fromJats4rXml("<article><contrib>", { parser })).toThrow(
+      "XML parse error: error on line 1 at column 9",
+    );
+  });
+
+  it("says what to pass where there is no global DOMParser", () => {
+    vi.stubGlobal("DOMParser", undefined);
     try {
-      expect(() => fromJats4rXml("<article><contrib>")).toThrow("XML parse error: error on line 1 at column 9");
+      expect(() => fromJats4rXml("<article/>")).toThrow(/pass \{ parser \}/);
     } finally {
-      spy.mockRestore();
+      vi.unstubAllGlobals();
     }
   });
 });

@@ -26,20 +26,10 @@ import { SegmentedControl } from "@/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { UndoBar } from "@/components/ui/undo-bar";
-import {
-  type Author,
-  buildHeatmapSvg,
-  CREDIT_ROLES,
-  heatCellColor,
-  LEVEL_SCORE,
-  onColor,
-  type RoleDescriber,
-  type RoleTranslator,
-  review,
-  scoreToLevel,
-  type UiKey,
-  type UiTranslator,
-} from "@/core";
+import { type Author, buildHeatmapSvg, CREDIT_ROLES, review, scoreToLevel } from "@/core";
+import { LEVEL_SCORE } from "@/core/author";
+import { heatCellColor, onColor } from "@/core/contributor-color";
+import type { RoleDescriber, RoleTranslator, UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";

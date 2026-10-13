@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as core from "@/core";
+import * as i18n from "@/core/i18n";
 import { useContributionStore } from "@/store/contribution-store";
 import { reloadForNewBuild } from "./reload-for-new-build";
 import { useCreditTranslators } from "./use-credit-translators";
@@ -11,7 +12,7 @@ vi.mock("./reload-for-new-build", () => ({ reloadForNewBuild: vi.fn(() => false)
 
 const initial = useContributionStore.getState();
 
-function setLocales(outputLocale: core.LocaleCode, uiLocale: core.LocaleCode) {
+function setLocales(outputLocale: i18n.LocaleCode, uiLocale: i18n.LocaleCode) {
   useContributionStore.setState({ outputLocale, uiLocale });
 }
 
@@ -37,13 +38,13 @@ describe("useCreditTranslators", () => {
     expect(result.current.interfaceRoleLanguage).toBe("nl");
     // The description is help the reader is reading now, not export text.
     expect(result.current.describeRole("Conceptualization")).toBe(
-      (await core.loadRoleCatalog("nl"))?.[core.getRoleByName("Conceptualization").url]?.description,
+      (await i18n.loadRoleCatalog("nl"))?.[core.getRoleByName("Conceptualization").url]?.description,
     );
   });
 
   it("fetches each catalog once when both languages agree", async () => {
-    const loadRoles = vi.spyOn(core, "loadRoleCatalog");
-    const loadUi = vi.spyOn(core, "loadUiCatalog");
+    const loadRoles = vi.spyOn(i18n, "loadRoleCatalog");
+    const loadUi = vi.spyOn(i18n, "loadUiCatalog");
     setLocales("de", "de");
 
     const { result } = renderHook(() => useCreditTranslators());
@@ -57,7 +58,7 @@ describe("useCreditTranslators", () => {
   });
 
   it("falls back to English when a locale chunk fails to load", async () => {
-    vi.spyOn(core, "loadRoleCatalog").mockRejectedValue(new Error("chunk load failed"));
+    vi.spyOn(i18n, "loadRoleCatalog").mockRejectedValue(new Error("chunk load failed"));
     setLocales("ja", "ja");
 
     const { result } = renderHook(() => useCreditTranslators());
@@ -74,7 +75,7 @@ describe("useCreditTranslators", () => {
 
   it("leaves the state alone when the failure reloads the page", async () => {
     vi.mocked(reloadForNewBuild).mockReturnValueOnce(true);
-    vi.spyOn(core, "loadRoleCatalog").mockRejectedValue(new Error("chunk load failed"));
+    vi.spyOn(i18n, "loadRoleCatalog").mockRejectedValue(new Error("chunk load failed"));
     setLocales("ja", "ja");
 
     const { result } = renderHook(() => useCreditTranslators());

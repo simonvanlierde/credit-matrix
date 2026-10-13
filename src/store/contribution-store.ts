@@ -3,24 +3,27 @@ import { type PersistStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { useShallow } from "zustand/react/shallow";
 import { shallow } from "zustand/shallow";
-import type { Ask, AskEvent, Author, CreditRoleName, LocaleCode, Outcome, Patch, Target } from "@/core";
 import {
+  type Ask,
+  type AskEvent,
   AskSchema,
+  type Author,
   applyPatch,
   askStep,
   CREDIT_ROLES,
-  clampScore,
+  type CreditRoleName,
   createAuthor,
-  DEFAULT_MONO_COLOR,
-  deduplicateAuthorInitials,
-  isUsableAuthorName,
   isValidOrcid,
-  MAX_AUTHOR_NAME_LENGTH,
-  MAX_AUTHORS,
-  normalizeLocaleCode,
   normalizeOrcid,
+  normalizeRoster,
+  type Outcome,
+  type Patch,
   review,
+  type Target,
 } from "@/core";
+import { clampScore, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
+import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
+import { type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
@@ -254,42 +257,6 @@ function findAuthorIndex(authors: Author[], authorId: string): number {
   return authors.findIndex((author) => author.id === authorId);
 }
 
-function normalizeAuthors(authors: Author[]): Author[] {
-  if (authors.length > MAX_AUTHORS) {
-    throw new Error(`A draft can contain at most ${MAX_AUTHORS} contributors.`);
-  }
-  const seenIds = new Set<string>();
-  return deduplicateAuthorInitials(
-    authors.map((author) => {
-      // Ids key every lookup and must survive a share link: an imported
-      // duplicate or unshareable id gets a fresh one.
-      const id = CLAIM_ID_REGEX.test(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
-      seenIds.add(id);
-      return createAuthor(author.name, {
-        id,
-        orcid: author.orcid,
-        contributorType: author.contributorType,
-        contributions: author.contributions,
-        equalContribution: author.equalContribution,
-        corresponding: author.corresponding,
-        ...consistentNameParts(author),
-      });
-    }),
-  );
-}
-
-/**
- * The stored name parts, while they still describe the name. Re-parsing the
- * name cannot recover a structured import's multi-word surname ("van der
- * Berg"); a rename re-parses, so parts that no longer fit are dropped.
- */
-function consistentNameParts(author: Author): Pick<Author, "firstName" | "middleName" | "surname"> | undefined {
-  const { name, firstName, middleName, surname } = author;
-  if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
-  const fits = name.startsWith(firstName) && name.endsWith(surname) && name.includes(middleName);
-  return fits ? { firstName, middleName, surname } : undefined;
-}
-
 /** Snapshot the live top-level fields as a draft record. */
 function liveDraft(state: ContributionState): Draft {
   return {
@@ -456,7 +423,7 @@ function repairSingleDraft(value: unknown, id: string): Draft {
  * Repair runs on every load, not just on a version change: a draft can be
  * malformed without its version being wrong — localStorage edited by hand, a
  * half-written value from a crashed tab, or a field this build no longer
- * accepts. `normalizeAuthors` throws on a contributor it cannot rebuild, and it
+ * accepts. `normalizeRoster` throws on a contributor it cannot rebuild, and it
  * runs inside the reducer for *every* list edit, so one bad row means adding,
  * removing or renaming anything throws uncaught and the workspace is unusable
  * until localStorage is cleared. Dropping the bad rows costs those rows;
@@ -926,7 +893,7 @@ export const useContributionStore = create<ContributionState>()(
       loadAuthors: (authors, asks, selfId) =>
         set((state) => {
           if (claimRefuses(state)) return;
-          state.authors = normalizeAuthors(authors);
+          state.authors = normalizeRoster(authors);
           // Normalizing re-keys a row whose id was unusable; answers under the old id have no row left.
           const ids = new Set(state.authors.map((author) => author.id));
           if (selfId !== undefined && ids.has(selfId)) state.selfId = selfId;
@@ -1005,7 +972,7 @@ export const useContributionStore = create<ContributionState>()(
       loadSample: (names) =>
         set((state) => {
           if (claimRefuses(state)) return;
-          state.authors = normalizeAuthors(buildSampleAuthors(names));
+          state.authors = normalizeRoster(buildSampleAuthors(names));
           // The sample's scores are graded; yes/no would hide the very thing
           // it exists to demonstrate.
           state.inputMode = "levels";
@@ -1026,7 +993,7 @@ export const useContributionStore = create<ContributionState>()(
         set((state) => {
           if (claimRefuses(state)) return;
           if (state.authors.length >= MAX_AUTHORS) return;
-          state.authors = normalizeAuthors([...state.authors, nextAuthor]);
+          state.authors = normalizeRoster([...state.authors, nextAuthor]);
           added = true;
         });
         return added ? nextAuthor.id : null;
@@ -1038,7 +1005,7 @@ export const useContributionStore = create<ContributionState>()(
           const index = findAuthorIndex(state.authors, authorId);
           if (index === -1) return;
           state.authors.splice(index, 1);
-          state.authors = normalizeAuthors(state.authors);
+          state.authors = normalizeRoster(state.authors);
           // Undo of the removal puts the ask back through applyAskPatch.
           delete state.asks[authorId];
           if (state.selfId === authorId) state.selfId = null;
@@ -1054,7 +1021,7 @@ export const useContributionStore = create<ContributionState>()(
           // uncaught inside the reducer. Matches addAuthor's guard.
           if (state.authors.length >= MAX_AUTHORS) return;
           state.authors.splice(Math.max(0, Math.min(index, state.authors.length)), 0, author);
-          state.authors = normalizeAuthors(state.authors);
+          state.authors = normalizeRoster(state.authors);
           restored = true;
         });
         return restored;
@@ -1075,7 +1042,7 @@ export const useContributionStore = create<ContributionState>()(
           const [movedAuthor] = state.authors.splice(fromIndex, 1);
           if (!movedAuthor) return;
           state.authors.splice(toIndex, 0, movedAuthor);
-          state.authors = normalizeAuthors(state.authors);
+          state.authors = normalizeRoster(state.authors);
         }),
 
       updateAuthorName: (authorId, name) => {
@@ -1098,7 +1065,7 @@ export const useContributionStore = create<ContributionState>()(
           } catch {
             return;
           }
-          state.authors = normalizeAuthors(state.authors);
+          state.authors = normalizeRoster(state.authors);
           updated = true;
         });
         return updated;
@@ -1112,7 +1079,7 @@ export const useContributionStore = create<ContributionState>()(
           if (!author) return;
           const trimmed = orcid.trim();
           // Reject invalid values: an unvalidated iD here would make the next
-          // normalizeAuthors() -> createAuthor() throw inside this reducer.
+          // normalizeRoster() -> createAuthor() throw inside this reducer.
           if (trimmed && !isValidOrcid(trimmed)) return;
           author.orcid = trimmed ? normalizeOrcid(trimmed) : undefined;
         }),

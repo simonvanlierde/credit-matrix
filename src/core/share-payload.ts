@@ -1,10 +1,8 @@
 import * as z from "zod/mini";
 import type { Author } from "./author";
-import { clampScore, MAX_AUTHORS } from "./author";
+import { clampScore, ID_REGEX, MAX_AUTHORS } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
-
-const ID_REGEX = /^[\w-]{1,64}$/;
 
 /**
  * A draft squeezed small enough to travel in a URL.

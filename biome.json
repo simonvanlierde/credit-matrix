@@ -27,6 +27,26 @@
   },
   "overrides": [
     {
+      "includes": ["src/core/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["react", "react/**", "react-dom", "react-dom/**", "next", "next/**", "@/**"],
+                    "message": "src/core is the published package: it cannot depend on React, Next or the app."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "src/components/**"],
       "linter": {
         "rules": {

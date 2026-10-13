@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getRoleByName } from "@/core";
 import {
   DEFAULT_ROLE_TRANSLATOR,
   DEFAULT_UI_TRANSLATOR,
-  getRoleByName,
   type LocaleCode,
   loadRoleCatalog,
   loadUiCatalog,
@@ -14,7 +14,7 @@ import {
   type RoleDescriber,
   type RoleTranslator,
   type UiTranslator,
-} from "@/core";
+} from "@/core/i18n";
 import { reloadForNewBuild } from "@/lib/reload-for-new-build";
 import { useContributionStore } from "@/store/contribution-store";
 

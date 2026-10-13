@@ -3,7 +3,7 @@
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { OKABE_ITO, onColor } from "@/core";
+import { OKABE_ITO, onColor } from "@/core/contributor-color";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 /**

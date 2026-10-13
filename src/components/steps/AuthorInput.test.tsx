@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { type Ask, createAuthor, lookupOrcidPerson, type OrcidLookupResult } from "@/core";
+import { type Ask, createAuthor } from "@/core";
+import { lookupOrcidPerson, type OrcidLookupResult } from "@/core/lookup";
 import { announce } from "@/lib/announce";
 import { decodeShareHash } from "@/lib/share";
 import en from "@/messages/en.json";
@@ -9,8 +10,8 @@ import { useContributionStore } from "@/store/contribution-store";
 import { AuthorList } from "./AuthorInput";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
-vi.mock("@/core", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/core")>()),
+vi.mock("@/core/lookup", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/core/lookup")>()),
   lookupOrcidPerson: vi.fn(),
 }));
 

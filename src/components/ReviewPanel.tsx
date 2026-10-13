@@ -13,17 +13,16 @@ import {
   type Choice,
   CREDIT_ROLES,
   type Difference,
-  heatCellColor,
   isMarker,
-  LEVEL_SCORE,
   type Level,
   levelOf,
-  onColor,
   type Reply,
   review,
   settledAt,
   type Target,
 } from "@/core";
+import { LEVEL_SCORE } from "@/core/author";
+import { heatCellColor, onColor } from "@/core/contributor-color";
 import { announce } from "@/lib/announce";
 import { copyAskMessage } from "@/lib/ask-message";
 import { useCreditTranslators } from "@/lib/use-credit-translators";

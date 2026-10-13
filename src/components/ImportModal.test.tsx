@@ -1,13 +1,13 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { type DoiLookupResult, lookupDoiWork } from "@/core";
+import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import en from "@/messages/en.json";
-import { detect, ImportModal } from "./ImportModal";
+import { ImportModal } from "./ImportModal";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
-vi.mock("@/core", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/core")>()),
+vi.mock("@/core/lookup", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/core/lookup")>()),
   lookupDoiWork: vi.fn(),
 }));
 
@@ -48,18 +48,6 @@ function renderModal(existingContributorCount = 0) {
   fireEvent.change(input, { target: { value: DOI } });
   return { ...view, onImport, input };
 }
-
-describe("detect", () => {
-  it("reads a comma list of names containing 'name' as names, not CSV", () => {
-    expect(detect("Anne Namer, Bob Smith")).toBe("names");
-  });
-
-  it("reads text with a Name header cell as CSV", () => {
-    expect(detect("Name,ORCID\nJane Smith,")).toBe("csv");
-    expect(detect('"name" , Conceptualization\nJane Smith,100')).toBe("csv");
-    expect(detect("﻿Name,Conceptualization\nJane Smith,100")).toBe("csv");
-  });
-});
 
 describe("DOI lookup", () => {
   it("drops a result that lands after the dialog closed", async () => {

@@ -5,6 +5,8 @@ import { CREDIT_ROLES } from "./credit-roles";
 export const MAX_AUTHORS = 200;
 export const MAX_AUTHOR_NAME_LENGTH = 500;
 export const MAX_IMPORT_BYTES = 1_000_000;
+/** A contributor or draft id that fits in a share link. */
+export const ID_REGEX = /^[\w-]{1,64}$/;
 
 /**
  * A contribution is a 0–100 integer score for one CRediT role.
@@ -74,7 +76,7 @@ export const AuthorSchema = z.object({
    *
    * The letter check mirrors `createAuthor`, which throws on a name that keeps
    * no letters once punctuation and digits are stripped. Without it the schema
-   * accepts names (e.g. "123") that every downstream `normalizeAuthors` call
+   * accepts names (e.g. "123") that every downstream `normalizeRoster` call
    * then throws on, turning a bad import into a crash instead of an error.
    */
   name: z

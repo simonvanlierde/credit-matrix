@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createAuthor, type LocaleCode } from "@/core";
+import { createAuthor } from "@/core";
+import type { LocaleCode } from "@/core/i18n";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
@@ -142,7 +143,7 @@ describe("contribution store", () => {
     });
 
     it("keeps the markers through an unrelated edit", () => {
-      // Every mutation rebuilds the list through `normalizeAuthors`; a field it
+      // Every mutation rebuilds the list through `normalizeRoster`; a field it
       // forgets to carry is silently lost on the next keystroke.
       const id = store().addAuthor("Jane Smith");
       if (!id) throw new Error("expected an author");
@@ -1135,7 +1136,7 @@ describe("contribution store", () => {
     /**
      * Repair runs on every load, not only on a version change: a draft can be
      * malformed while its version is current (hand-edited storage, a
-     * half-written value from a crashed tab). `normalizeAuthors` throws on a
+     * half-written value from a crashed tab). `normalizeRoster` throws on a
      * contributor it cannot rebuild and runs on every list edit, so one bad row
      * would make add/remove/rename all throw uncaught.
      */

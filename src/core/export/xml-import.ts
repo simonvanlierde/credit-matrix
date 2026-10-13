@@ -6,12 +6,29 @@ import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 /** The score each `degree-contribution` level imports as. "none" is not one: a listed role counts. */
 const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(([level]) => level !== "none"));
 
+/** The part of a DOM element the importer reads. Browser and linkedom elements both fit. */
+export interface XmlElement {
+  readonly textContent: string | null;
+  getAttribute(name: string): string | null;
+  querySelector(selectors: string): XmlElement | null;
+  querySelectorAll(selectors: string): ArrayLike<XmlElement>;
+}
+
+/** A `DOMParser`: the browser's own, or linkedom's in Node. */
+export interface XmlParser {
+  parseFromString(xml: string, type: "application/xml"): Pick<XmlElement, "querySelector" | "querySelectorAll">;
+}
+
 /**
  * Parse a JATS4R XML string (as produced by `toJats4rXml()` or the original
- * Python app) back into an Author array, with the browser's `DOMParser`.
+ * Python app) back into an Author array. `parser` defaults to the global
+ * `DOMParser`; pass one where there is none, such as linkedom's in Node.
  */
-export function fromJats4rXml(xmlString: string): Author[] {
-  const doc = new DOMParser().parseFromString(xmlString, "application/xml");
+export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParser } = {}): Author[] {
+  if (!parser && typeof DOMParser === "undefined") {
+    throw new Error("fromJats4rXml needs a DOMParser: pass { parser } where there is no global one.");
+  }
+  const doc = (parser ?? new DOMParser()).parseFromString(xmlString, "application/xml");
 
   const parseError = doc.querySelector("parsererror");
   if (parseError) {
@@ -54,7 +71,7 @@ export function fromJats4rXml(xmlString: string): Author[] {
       const name =
         roleNameByUrl.get(normalizeRoleUrl(el.getAttribute("vocab-term-identifier") ?? "")) ??
         el.getAttribute("vocab-term") ??
-        el.textContent.trim();
+        (el.textContent ?? "").trim();
       if (!roleNames.has(name)) continue;
       // No or an unknown `degree-contribution` (JATS before 1.3) means lead.
       const score = LEVEL_SCORES.get(el.getAttribute("degree-contribution")?.trim().toLowerCase() ?? "") ?? 100;

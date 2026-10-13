@@ -1,11 +1,11 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; fixtures are files on disk
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { decodeShareHash } from "@/lib/share";
 import type { Author } from "../author";
 import { fromCsv } from "../export/csv";
 import { fromJson } from "../export/json";
 import { fromJats4rXml } from "../export/xml-import";
+import { decodeShareHash } from "../share-link";
 
 // Frozen files, written once by the encoders of the day. Never regenerate them
 // to make a test pass: a change that breaks one of these breaks every link or

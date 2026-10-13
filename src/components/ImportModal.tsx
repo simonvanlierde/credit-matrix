@@ -3,20 +3,18 @@
 import { FileUp, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import type { Ask, Author, DoiLookupResult } from "@/core";
 import {
+  type Ask,
+  type Author,
   createAuthor,
-  DOI_INPUT_REGEX,
-  fromCsv,
-  fromJats4rXml,
-  fromJson,
-  lookupDoiWork,
-  MAX_AUTHORS,
-  MAX_IMPORT_BYTES,
+  type DetectedFormat,
+  detectFormat,
+  importAny,
   NewerVersionError,
-  normalizeDoi,
-  parseAuthorText,
 } from "@/core";
+import { MAX_AUTHORS, MAX_IMPORT_BYTES } from "@/core/author";
+import type { DoiLookupResult } from "@/core/lookup";
+import { DOI_INPUT_REGEX, lookupDoiWork, normalizeDoi } from "@/core/lookup";
 import { announce } from "@/lib/announce";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import type { Messages } from "@/lib/intl";
@@ -81,53 +79,15 @@ async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok:
   return { code: result.code };
 }
 
-type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";
-
-export function detect(text: string): DetectedFormat {
-  const trimmed = text.trim();
-  // A share link, most usefully one a co-author sent back with their own roles.
-  if (/^https?:\/\/\S+#s=/.test(trimmed)) return "link";
-  if (trimmed.startsWith("<")) return "xml";
-  // JSON must be checked before the CSV heuristic: a toJson() payload contains
-  // both a comma and a "name" field, so the CSV check would misclassify it.
-  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-    try {
-      JSON.parse(trimmed);
-      return "json";
-    } catch {
-      /* fall through */
-    }
-  }
-  // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
-  const headerCells = (trimmed.split(/\r?\n/, 1)[0] ?? "").split(",");
-  if (
-    headerCells.some(
-      (cell) =>
-        cell
-          .trim()
-          .replace(/^"(.*)"$/, "$1")
-          .trim()
-          .toLowerCase() === "name",
-    )
-  ) {
-    return "csv";
-  }
-  if (trimmed.length > 0) return "names";
-  return "unknown";
-}
-
 /** The import size cap, written the way the messages below say it. */
 const MAX_IMPORT_MB = `${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB`;
 
-/** Parser + "nothing found" message for each detectable format. */
-const IMPORTERS: Record<
-  Exclude<DetectedFormat, "unknown" | "link">,
-  { parse: (text: string) => Omit<PendingImport, "title">; emptyMessageKey: keyof Messages }
-> = {
-  json: { parse: fromJson, emptyMessageKey: "errImportNoJsonContributors" },
-  csv: { parse: (text) => ({ authors: fromCsv(text) }), emptyMessageKey: "errImportNoCsvRows" },
-  xml: { parse: (text) => ({ authors: fromJats4rXml(text) }), emptyMessageKey: "errImportNoXmlContribs" },
-  names: { parse: (text) => ({ authors: parseAuthorText(text) }), emptyMessageKey: "errImportNoNames" },
+/** The "nothing found" message for each importable format. */
+const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link">, keyof Messages> = {
+  json: "errImportNoJsonContributors",
+  csv: "errImportNoCsvRows",
+  xml: "errImportNoXmlContribs",
+  names: "errImportNoNames",
 };
 
 /** Label shown beside the paste area; "JATS4R XML" and "CSV" are format names, not prose. */
@@ -174,7 +134,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     if (dialog?.open) importRef.current?.focus();
   }, [pending, dialog]);
 
-  const format: DetectedFormat = detect(text);
+  const format = detectFormat(text);
 
   /** Show an import error and announce it (errors interrupt via role="alert"). */
   function showError(message: string, where: "doi" | "form" = "form") {
@@ -235,11 +195,10 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         dialog?.close();
         return;
       }
-      const { parse, emptyMessageKey } = IMPORTERS[format];
-      const parsed = parse(text.trim());
+      const parsed = await importAny(text);
       const { authors } = parsed;
       if (authors.length === 0) {
-        showError(t(emptyMessageKey));
+        showError(t(EMPTY_MESSAGE_KEYS[format]));
         return;
       }
       if (authors.length > MAX_AUTHORS) {

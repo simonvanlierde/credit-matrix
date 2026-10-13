@@ -7,18 +7,19 @@ import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Switch } from "@/components/ui/switch";
-import type { Author, RoleTranslator, StatementFormat, UiTranslator } from "@/core";
 import {
+  type Author,
   CREDIT_ROLES,
   generateStatement,
-  isAllBinary,
-  rolesWithContributions,
+  type StatementFormat,
   toCsv,
   toJats4rXml,
   toJson,
   toMarkdown,
-  validateContributions,
 } from "@/core";
+import { isAllBinary, rolesWithContributions } from "@/core/author";
+import type { RoleTranslator, UiTranslator } from "@/core/i18n";
+import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";

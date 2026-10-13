@@ -7,15 +7,9 @@ import { useTranslations } from "use-intl";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Switch } from "@/components/ui/switch";
-import {
-  type Author,
-  CREDIT_ROLES,
-  DEFAULT_MONO_COLOR,
-  heatCellColor,
-  isValidOrcid,
-  LEVEL_SCORE,
-  onColor,
-} from "@/core";
+import { type Author, CREDIT_ROLES, isValidOrcid } from "@/core";
+import { LEVEL_SCORE } from "@/core/author";
+import { DEFAULT_MONO_COLOR, heatCellColor, onColor } from "@/core/contributor-color";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";

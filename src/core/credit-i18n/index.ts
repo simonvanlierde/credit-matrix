@@ -80,11 +80,24 @@ export function normalizeLocaleCode(locale: unknown): LocaleCode {
 /** Load a locale's role catalog. Returns null for `en` or any unknown locale (→ identity translator). */
 export async function loadRoleCatalog(locale: string): Promise<RoleCatalog | null> {
   if (!hasCatalog(locale)) return null;
-  // A template import() code-splits one chunk per file, so only the selected
-  // language ships. Regenerate the JSON with scripts/fetch-credit-translations.mjs.
-  const mod: CatalogFile = await import(`./translations/${locale}.json`);
-  return mod.default.translations;
+  return (await ROLE_CATALOGS[locale]()).default.translations;
 }
+
+/**
+ * One import() per file, so bundlers split a chunk per language and only the
+ * selected one ships. Literal paths, unlike a template, also resolve in Node.
+ * Regenerate the JSON with scripts/fetch-credit-translations.mjs.
+ */
+const ROLE_CATALOGS: Record<Exclude<LocaleCode, "en">, () => Promise<CatalogFile>> = {
+  fr: () => import("./translations/fr.json"),
+  de: () => import("./translations/de.json"),
+  es: () => import("./translations/es.json"),
+  it: () => import("./translations/it.json"),
+  "pt-PT": () => import("./translations/pt-PT.json"),
+  nl: () => import("./translations/nl.json"),
+  "zh-Hans": () => import("./translations/zh-Hans.json"),
+  ja: () => import("./translations/ja.json"),
+};
 
 /** Maps a canonical English role name to its localized description. */
 export type RoleDescriber = (englishName: string) => string;

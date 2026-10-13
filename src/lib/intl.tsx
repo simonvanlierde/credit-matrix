@@ -2,7 +2,7 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
-import { hasCatalog, type LocaleCode, normalizeLocaleCode } from "@/core";
+import { hasCatalog, type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
 import { announce, STORAGE_FULL_EVENT } from "@/lib/announce";
 import { reloadForNewBuild } from "@/lib/reload-for-new-build";
 import en from "@/messages/en.json";
