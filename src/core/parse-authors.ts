@@ -162,6 +162,19 @@ export function createAuthor(
 }
 
 /**
+ * `createAuthor` for one imported row, as a list for `flatMap`: empty when the
+ * row has no usable name, so one bad row is skipped rather than aborting the
+ * whole import.
+ */
+export function tryCreateAuthor(...args: Parameters<typeof createAuthor>): Author[] {
+  try {
+    return [createAuthor(...args)];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * One Unicode form, so a decomposed "é" (e + accent, as macOS file names give
  * it) and a precomposed one make the same contributor. Control characters (a
  * pasted line break, Word's Shift+Enter) become a space: XML cannot hold most

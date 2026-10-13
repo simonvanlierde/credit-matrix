@@ -1,7 +1,7 @@
 import type { Author, Contribution } from "../author";
 import { clampScore, isValidOrcid, LEVEL_SCORE } from "../author";
 import { CREDIT_ROLES, headerKey } from "../credit-roles";
-import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
+import { deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
 
 const NAME_HEADER = "Name";
 const ORCID_HEADER = "ORCID";
@@ -185,19 +185,13 @@ export function fromCsv(csv: string): Author[] {
     // Drop an unparseable ORCID rather than aborting the whole import.
     const orcid = cells[orcidIndex];
 
-    try {
-      return [
-        createAuthor(name, {
-          orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
-          contributorType,
-          contributions,
-          equalContribution: readYesNo(cells[equalIndex]),
-          corresponding: readYesNo(cells[correspondingIndex]),
-        }),
-      ];
-    } catch {
-      return [];
-    }
+    return tryCreateAuthor(name, {
+      orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
+      contributorType,
+      contributions,
+      equalContribution: readYesNo(cells[equalIndex]),
+      corresponding: readYesNo(cells[correspondingIndex]),
+    });
   });
 
   return deduplicateAuthorInitials(authors);
