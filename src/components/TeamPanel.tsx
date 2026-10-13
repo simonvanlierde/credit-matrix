@@ -56,6 +56,8 @@ export function TeamPanel() {
     ids: queue.ids.filter((id, index) => index < queue.done || team.some((author) => author.id === id)),
     done: queue.done,
   };
+  // Nobody left to copy: the queue is over, not stuck on a missing name.
+  if (live && live.ids.length <= live.done) setQueue(null);
 
   function statusOf(author: Author): { text: string; toReview: boolean } {
     const ask = asks[author.id];
