@@ -102,6 +102,13 @@ export class CreditMatrixElement extends HTMLElement {
   static observedAttributes = ["src", "format", "locale"];
   /** Bumped per render, so a slow fetch or catalog load for an old render never overwrites a newer one. */
   #render = 0;
+  /**
+   * Set between connect and disconnect. On upgrade, attributeChangedCallback fires once per existing
+   * attribute while isConnected is already true, so this keeps those calls from each starting a fetch.
+   */
+  #connected = false;
+  /** The last src fetched, so a format or locale change re-renders without downloading it again. */
+  #fetched: { src: string; text: string } | null = null;
   #style = document.createElement("style");
   /** Re-renders when inline JSON is added or edited after the element connected. */
   #children = new MutationObserver(() => {
@@ -115,34 +122,43 @@ export class CreditMatrixElement extends HTMLElement {
   }
 
   connectedCallback() {
+    this.#connected = true;
     this.#children.observe(this, { childList: true, characterData: true, subtree: true });
     void this.render();
   }
 
   disconnectedCallback() {
+    this.#connected = false;
     this.#children.disconnect();
   }
 
   attributeChangedCallback() {
-    if (this.isConnected) void this.render();
+    if (this.#connected) void this.render();
   }
 
   #show(...nodes: Node[]) {
     (this.shadowRoot as ShadowRoot).replaceChildren(this.#style, ...nodes);
   }
 
+  async #fetch(src: string): Promise<string> {
+    if (this.#fetched?.src === src) return this.#fetched.text;
+    const text = await fetchJson(src);
+    this.#fetched = { src, text };
+    return text;
+  }
+
   async render() {
     const render = ++this.#render;
     const src = this.getAttribute("src");
     const locale = resolveLocale(this.getAttribute("locale") ?? this.closest("[lang]")?.getAttribute("lang"));
-    if (src) this.#show(englishParagraph("Loading contributions…"));
+    if (src && this.#fetched?.src !== src) this.#show(englishParagraph("Loading contributions…"));
 
     // A catalog that fails to load leaves that part in English rather than failing the render.
     const catalogs = Promise.all([loadRoleCatalog(locale).catch(() => null), loadUiCatalog(locale).catch(() => null)]);
     let authors: Author[];
     try {
       const json = src
-        ? await fetchJson(src)
+        ? await this.#fetch(src)
         : (this.querySelector('script[type="application/json"]')?.textContent ?? "");
       try {
         authors = normalizeRoster(fromJson(json).authors);
