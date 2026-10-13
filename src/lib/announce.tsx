@@ -8,13 +8,6 @@ type Announcement = { message: string; assertive: boolean };
 // context through the (server-component) layout.
 const listeners = new Set<(a: Announcement) => void>();
 
-export const STORAGE_FULL_EVENT = "credit-storage-full";
-
-/** Ask the mounted, localized interface to announce a persistence failure. */
-export function requestStorageFullAnnouncement() {
-  if (typeof window !== "undefined") window.dispatchEvent(new Event(STORAGE_FULL_EVENT));
-}
-
 /**
  * Announce a transient message to assistive tech via the global live region.
  * Use `assertive` for errors that should interrupt; the default (polite) waits

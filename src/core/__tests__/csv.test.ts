@@ -55,14 +55,15 @@ describe("CSV import/export", () => {
 
   it("round-trips a quoted field containing a newline", () => {
     // A name with an embedded newline must survive quoting on export and the
-    // quote-aware record parser on import (a naive line-split would tear it).
+    // quote-aware record parser on import (a naive line-split would tear it);
+    // createAuthor then reads the line break as a space.
     const [author] = parseAuthorText("Jane Smith");
     if (!author) throw new Error("expected author");
     author.name = "Jane\nSmith";
 
     const parsed = fromCsv(toCsv([author]));
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.name).toBe("Jane\nSmith");
+    expect(parsed[0]?.name).toBe("Jane Smith");
   });
 
   it("round-trips a field containing a bare carriage return", () => {
@@ -73,7 +74,7 @@ describe("CSV import/export", () => {
 
     const parsed = fromCsv(toCsv([author]));
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.name).toBe("Ann\r=HYPERLINK()");
+    expect(parsed[0]?.name).toBe("Ann =HYPERLINK()");
   });
 
   it("reads a CSV that starts with a UTF-8 byte order mark", () => {
@@ -92,6 +93,33 @@ describe("CSV import/export", () => {
     expect(parsed).toHaveLength(1);
     expect(parsed[0]?.name).toBe('Jane "JS", Smith'); // field reassembled verbatim, comma not treated as a column break
     expect(parsed[0]?.contributions[0]?.score).toBe(100);
+  });
+
+  it("reads a quote inside an unquoted field as a literal character", () => {
+    const parsed = fromCsv(`Name,Conceptualization\nAnn O"Brien,100\nBob Lee,100`);
+    expect(parsed.map((a) => a.name)).toEqual(['Ann O"Brien', "Bob Lee"]);
+    expect(parsed[0]?.contributions[0]?.score).toBe(100);
+  });
+
+  it("reads a quoted field that follows a space after the comma", () => {
+    const [jane] = fromCsv(`Name,Software\n "Smith, Jane", "Lead"`);
+    expect(jane?.name).toBe("Smith, Jane");
+    expect(jane?.contributions.find((c) => c.role === "Software")?.score).toBe(100);
+  });
+
+  it("matches headers and level words whatever their case or dash", () => {
+    const csv = `name,type,conceptualization,Writing - original draft,SOFTWARE\nJane Smith,Non-author,Lead,supporting,50`;
+    const [jane] = fromCsv(csv);
+    expect(jane?.contributorType).toBe("non-author");
+    const score = (role: string) => jane?.contributions.find((c) => c.role === role)?.score;
+    expect(score("Conceptualization")).toBe(100);
+    expect(score("Writing – original draft")).toBe(33);
+    expect(score("Software")).toBe(50);
+  });
+
+  it("skips a row with no usable name and keeps the rest", () => {
+    const parsed = fromCsv(`Name,Conceptualization\nJane Smith,100\n,100\n123,100\nBob Lee,100`);
+    expect(parsed.map((a) => a.name)).toEqual(["Jane Smith", "Bob Lee"]);
   });
 
   it("rounds a fractional score cell to an integer", () => {

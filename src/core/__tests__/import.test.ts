@@ -6,6 +6,7 @@ import { toJats4rXml } from "../export/xml";
 import { detectFormat, importAny } from "../import";
 import { createAuthor, normalizeRoster } from "../parse-authors";
 import { encodeShareHash } from "../share-link";
+import { fromSharePayload } from "../share-payload";
 
 const roster = () => [
   createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] }),
@@ -101,11 +102,40 @@ describe("normalizeRoster", () => {
     expect(result.every((a) => /^[\w-]{1,64}$/.test(a.id))).toBe(true);
   });
 
+  it.each(["constructor", "toString", "__proto__"])("replaces the id %s, which plain objects already hold", (id) => {
+    const [jane] = roster();
+    if (!jane) throw new Error("expected an author");
+    expect(normalizeRoster([{ ...jane, id }])[0]?.id).not.toBe(id);
+    expect(() => fromSharePayload(JSON.stringify({ v: 2, a: [{ i: id, n: "Jane Smith", s: [] }] }))).toThrow();
+  });
+
   it("deduplicates initials and keeps a structured particle surname", () => {
     const anne = createAuthor("Anne van der Berg", { firstName: "Anne", middleName: "", surname: "van der Berg" });
     const result = normalizeRoster([anne, createAuthor("Anna Vogel")]);
     expect(result[0]?.surname).toBe("van der Berg");
     expect(new Set(result.map((a) => a.initials)).size).toBe(2);
+  });
+
+  it.each([
+    ["empty", { firstName: "", middleName: "", surname: "" }],
+    ["stale", { firstName: "Jan", middleName: "", surname: "Smit" }],
+    ["partial-word", { firstName: "Ja", middleName: "", surname: "th" }],
+  ])("re-parses %s name parts instead of keeping them", (_, parts) => {
+    const [jane] = roster();
+    if (!jane) throw new Error("expected an author");
+    expect(normalizeRoster([{ ...jane, ...parts }])[0]).toMatchObject({
+      firstName: "Jane",
+      surname: "Smith",
+      initials: "JS",
+    });
+  });
+
+  it("returns an unchanged row as the same object", () => {
+    const [jane, bob] = normalizeRoster(roster());
+    if (!(jane && bob)) throw new Error("expected two authors");
+    const [sameJane, renamedBob] = normalizeRoster([jane, { ...bob, name: "Bob Black" }]);
+    expect(sameJane).toBe(jane);
+    expect(renamedBob).toMatchObject({ name: "Bob Black", surname: "Black" });
   });
 
   it("refuses more than MAX_AUTHORS rows", () => {

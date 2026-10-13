@@ -15,7 +15,7 @@ import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import {
   type DraftClaim,
-  followOtherTab,
+  ensureHydrated,
   type InputMode,
   MAX_DRAFTS,
   useContributionStore,
@@ -56,33 +56,6 @@ export function HeaderActions() {
   // Counts arrivals, so only the newest reply's strip takes the row mark down when it leaves.
   const replyReceipt = useRef(0);
 
-  // Rehydrate persisted state on the client (the store skips hydration at
-  // creation to avoid an SSR mismatch). Runs before the share-hash effect below
-  // so a `#s=…` link still wins over whatever was restored from localStorage.
-  useEffect(() => {
-    void useContributionStore.persist.rehydrate();
-  }, []);
-
-  // Another tab saving the draft open here: follow it, rather than let the
-  // next save here silently discard its edits. Re-registered with `t` so the
-  // message speaks the current interface language.
-  useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      // Visible too: the content changing under a sighted user with no
-      // note would read as a glitch.
-      if (followOtherTab(event)) showStatus({ kind: "success", message: t("draftUpdatedElsewhere") });
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [t]);
-
-  // A newer build saved in another tab and this one could not reload into it:
-  // its edits are no longer saved, which nobody should find out later.
-  const newerVersionBlocked = useContributionStore((s) => s.newerVersionBlocked);
-  useEffect(() => {
-    if (newerVersionBlocked) showStatus({ kind: "error", message: t("errNewerVersionSaved") });
-  }, [newerVersionBlocked, t]);
-
   // The listener is registered once, so it must not capture this render's
   // handler: `t` changes with the interface language, and a hash pasted after
   // that switch has to speak the new one.
@@ -111,9 +84,9 @@ export function HeaderActions() {
 
   async function handleIncomingHash(hash: string): Promise<void> {
     if (!hash.startsWith("#s=")) return;
-    // On mount this can beat the rehydrate effect above; awaiting it (a no-op
-    // once done) keeps the link from opening over a draft not yet restored.
-    await useContributionStore.persist.rehydrate();
+    // On mount this can beat the restore in PersistenceStatus; awaiting it
+    // keeps the link from opening over a draft not yet restored.
+    await ensureHydrated();
     const shared = await decodeShareHash(hash);
     // Names and ORCID iDs ride in the fragment; a failed open must not leave
     // them in the address bar and history. Keep any query string intact.

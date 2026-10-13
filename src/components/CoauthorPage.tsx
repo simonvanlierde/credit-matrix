@@ -2,7 +2,7 @@
 
 import { Check, ChevronDown, CircleCheck, Send } from "lucide-react";
 import { useTheme } from "next-themes";
-import { type KeyboardEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -11,6 +11,7 @@ import { type Author, CREDIT_ROLES, isValidOrcid } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
 import { DEFAULT_MONO_COLOR, heatCellColor, onColor } from "@/core/contributor-color";
 import { announce } from "@/lib/announce";
+import { moveRadioSelection } from "@/lib/roving-radio";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
@@ -328,28 +329,12 @@ function LevelGroup({
   fill: (option: Option) => string;
   onChange: (option: Option) => void;
 }) {
-  const groupRef = useRef<HTMLDivElement>(null);
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
-    const back = event.key === "ArrowLeft" || event.key === "ArrowUp";
-    if (!(forward || back)) return;
-    event.preventDefault();
-    const current = options.indexOf(value);
-    const nextIndex = (current + (forward ? 1 : options.length - 1)) % options.length;
-    const next = options[nextIndex];
-    if (!next) return;
-    onChange(next);
-    groupRef.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[nextIndex]?.focus();
-  }
-
   return (
     <div
-      ref={groupRef}
       role="radiogroup"
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
-      onKeyDown={handleKeyDown}
+      onKeyDown={(event) => moveRadioSelection(event, options, options.indexOf(value), onChange)}
       className={cn("grid gap-1", options.length === 4 ? "grid-cols-4" : "grid-cols-2")}
     >
       {options.map((option) => {

@@ -1,7 +1,7 @@
 import type { Author, Contribution } from "../author";
-import { clampScore, isValidOrcid } from "../author";
-import { CREDIT_ROLES } from "../credit-roles";
-import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
+import { clampScore, isValidOrcid, LEVEL_SCORE } from "../author";
+import { CREDIT_ROLES, headerKey } from "../credit-roles";
+import { deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
 
 const NAME_HEADER = "Name";
 const ORCID_HEADER = "ORCID";
@@ -21,6 +21,12 @@ const CSV_HEADERS = [
 /** Markers are written as yes/no, which reads in a spreadsheet and parses back. */
 function yesNo(value: boolean): string {
   return value ? "yes" : "no";
+}
+
+/** A score cell: a number, or a level word ("Lead") as a person typing one would write it. */
+function readScore(value: string): number {
+  const level = value.trim().toLowerCase();
+  return Object.hasOwn(LEVEL_SCORE, level) ? LEVEL_SCORE[level as keyof typeof LEVEL_SCORE] : clampScore(Number(value));
 }
 
 function readYesNo(value: string | undefined): boolean {
@@ -74,8 +80,10 @@ export function parseCsvRecords(csv: string, delimiter = ","): string[][] {
       continue;
     }
 
-    if (char === '"') {
+    // Only a quote that opens a field starts quoting, after any spaces (`a, "b"`); one mid-field ("O"Brien") is data.
+    if (char === '"' && field.trim() === "") {
       inQuotes = true;
+      field = "";
     } else if (char === delimiter) {
       row.push(field);
       field = "";
@@ -147,36 +155,37 @@ export function fromCsv(csv: string): Author[] {
 
   if (records.length === 0) return [];
 
-  const headers = records[0] ?? [];
-  const nameIndex = headers.indexOf(NAME_HEADER);
+  // Headers match whatever their case or dash, as `detectFormat` finds them.
+  const headers = (records[0] ?? []).map(headerKey);
+  const nameIndex = headers.indexOf(headerKey(NAME_HEADER));
   if (nameIndex === -1) {
     throw new Error('CSV must include a "Name" column.');
   }
 
-  const orcidIndex = headers.indexOf(ORCID_HEADER);
-  const typeIndex = headers.indexOf(TYPE_HEADER);
+  const orcidIndex = headers.indexOf(headerKey(ORCID_HEADER));
+  const typeIndex = headers.indexOf(headerKey(TYPE_HEADER));
   // Absent in a CSV written before these columns existed; `indexOf` returns -1
   // and the lookup below reads as "no", which is the right default.
-  const equalIndex = headers.indexOf(EQUAL_HEADER);
-  const correspondingIndex = headers.indexOf(CORRESPONDING_HEADER);
-  const roleIndexByHeader = new Map(headers.map((header, index) => [header, index]));
+  const equalIndex = headers.indexOf(headerKey(EQUAL_HEADER));
+  const correspondingIndex = headers.indexOf(headerKey(CORRESPONDING_HEADER));
+  const roleIndexes = CREDIT_ROLES.map((role) => headers.indexOf(headerKey(role.name)));
 
-  const authors = records.slice(1).map((cells) => {
+  // A row with no usable name is skipped, as JATS import skips a nameless
+  // contrib, rather than aborting the whole import.
+  const authors = records.slice(1).flatMap((cells) => {
     const name = cells[nameIndex] ?? "";
-    if (!name) {
-      throw new Error("Each CSV row must include a contributor name.");
-    }
+    if (!name) return [];
 
-    const contributions: Contribution[] = CREDIT_ROLES.map((role) => {
-      const scoreText = cells[roleIndexByHeader.get(role.name) ?? -1] ?? "0";
-      return { role: role.name, score: clampScore(Number(scoreText)) };
-    });
+    const contributions: Contribution[] = CREDIT_ROLES.map((role, i) => ({
+      role: role.name,
+      score: readScore(cells[roleIndexes[i] ?? -1] ?? "0"),
+    }));
 
-    const contributorType = cells[typeIndex] === "non-author" ? "non-author" : "author";
+    const contributorType = headerKey(cells[typeIndex] ?? "") === "non-author" ? "non-author" : "author";
     // Drop an unparseable ORCID rather than aborting the whole import.
     const orcid = cells[orcidIndex];
 
-    return createAuthor(name, {
+    return tryCreateAuthor(name, {
       orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
       contributorType,
       contributions,

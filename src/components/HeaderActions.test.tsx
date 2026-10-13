@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { IntlProvider } from "use-intl";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { createAuthor } from "@/core";
 import { buildShareUrl } from "@/lib/share";
 import en from "@/messages/en.json";
@@ -107,4 +107,30 @@ it("leaves the strip's Undo on its own reply when other rows are asked meanwhile
   const { asks } = useContributionStore.getState();
   expect(asks[jane.id]).toBeUndefined();
   expect(asks[bob.id]).toEqual({ sentAt: 6, prefilled: false });
+});
+
+it("keeps what this tab holds unsaved when a link opens", async () => {
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <HeaderActions />
+      <StatusBanner />
+    </IntlProvider>,
+  );
+  await act(() => useContributionStore.persist.rehydrate());
+  // The browser refuses the save, so the edit lives in memory only.
+  const full = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw new DOMException("full", "QuotaExceededError");
+  });
+  act(() => {
+    useContributionStore.getState().createDraft();
+    useContributionStore.getState().addAuthor("Ann Unsaved");
+  });
+  const held = useContributionStore.getState().activeDraftId;
+  full.mockRestore();
+
+  const link = await buildShareUrl({ authors: [createAuthor("Ben Shared")] });
+  window.dispatchEvent(new HashChangeEvent("hashchange", { oldURL: window.location.href, newURL: link }));
+
+  expect(await screen.findByText("Opened the shared draft beside your own work.")).toBeTruthy();
+  expect(useContributionStore.getState().drafts[held]?.authors.map((author) => author.name)).toEqual(["Ann Unsaved"]);
 });

@@ -210,6 +210,19 @@ describe("toJats4rXml", () => {
     expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
   });
 
+  it("imports each member of a collab once, and collapses spaces inside names", () => {
+    const xml = `<article><contrib-group>
+      <contrib contrib-type="author"><collab>The Lab
+        <contrib-group>
+          <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane   Ann</given-names></name></contrib>
+          <contrib contrib-type="author"><name><surname>White</surname><given-names>Bob</given-names></name></contrib>
+        </contrib-group>
+      </collab></contrib>
+    </contrib-group></article>`;
+
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Ann Smith", "Bob White"]);
+  });
+
   it("matches roles by their CRediT identifier before the term text", () => {
     const xml = `<article><contrib contrib-type="author">
       <name><surname>Smith</surname><given-names>Jane</given-names></name>
@@ -220,6 +233,19 @@ describe("toJats4rXml", () => {
     const [jane] = fromJats4rXml(xml);
     const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
     expect(active).toEqual(["Conceptualization", "Writing – original draft"]);
+  });
+
+  it("matches role names without an identifier whatever their case or dash", () => {
+    const xml = `<article><contrib contrib-type="author">
+      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <role vocab-term="Writing - original draft">Writing - original draft</role>
+      <role>conceptualization</role>
+      <role vocab-term="nonsense">Software</role>
+    </contrib></article>`;
+
+    const [jane] = fromJats4rXml(xml);
+    const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(active).toEqual(["Conceptualization", "Software", "Writing – original draft"]);
   });
 
   it("reads degree-contribution, and falls back to lead when it is missing or unknown", () => {
@@ -262,5 +288,17 @@ describe("toJats4rXml", () => {
     expect(toJats4rXml(yesNo)).toContain('degree-contribution="lead"');
     const graded = [createAuthor("Jane Smith", { contributions: [{ role: "Conceptualization", score: 33 }] })];
     expect(toJats4rXml(graded, { yesNo: true })).toContain('degree-contribution="supporting"');
+  });
+});
+
+describe("toJats4rXml with characters XML cannot hold", () => {
+  it("writes none of them, even from a contributor built without createAuthor", () => {
+    const [author] = parseAuthorText("Jane Smith");
+    if (!author) throw new Error("expected author");
+    const xml = toJats4rXml([{ ...author, firstName: "Ja\u0001ne", surname: "Sm\u000Bith\uFFFE" }]);
+    expect(xml).toContain("<given-names>Jane</given-names>");
+    expect(xml).toContain("<surname>Smith</surname>");
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: the characters under test.
+    expect(xml).not.toMatch(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/);
   });
 });

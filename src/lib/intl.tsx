@@ -1,9 +1,8 @@
 "use client";
 
 import { type ReactNode, useEffect, useState } from "react";
-import { IntlProvider, useTranslations } from "use-intl";
+import { IntlProvider } from "use-intl";
 import { hasCatalog, type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
-import { announce, STORAGE_FULL_EVENT } from "@/lib/announce";
 import { reloadForNewBuild } from "@/lib/reload-for-new-build";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
@@ -123,18 +122,7 @@ export function AppIntlProvider({ children }: { children: ReactNode }) {
         // above already renders something sensible, so stay quiet.
       }}
     >
-      <LocalizedSystemAnnouncements />
       {children}
     </IntlProvider>
   );
-}
-
-function LocalizedSystemAnnouncements() {
-  const t = useTranslations();
-  useEffect(() => {
-    const onStorageFull = () => announce(t("errStorageFull"), { assertive: true });
-    window.addEventListener(STORAGE_FULL_EVENT, onStorageFull);
-    return () => window.removeEventListener(STORAGE_FULL_EVENT, onStorageFull);
-  }, [t]);
-  return null;
 }

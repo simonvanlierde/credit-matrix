@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   createAuthor,
   deduplicateAuthorInitials,
-  parseAuthors,
   parseAuthorText,
   parseNameParts,
   splitNameList,
@@ -54,6 +53,25 @@ describe("parseNameParts", () => {
     });
   });
 
+  it("keeps particles with the surname, in any case, as the comma form does", () => {
+    const parts = { firstName: "Anne", middleName: "", surname: "van der Berg" };
+    expect(parseNameParts("Anne van der Berg")).toEqual(parts);
+    expect(parseNameParts("van der Berg, Anne")).toEqual(parts);
+    expect(parseNameParts("Maria Luisa de la Cruz")).toEqual({
+      firstName: "Maria",
+      middleName: "Luisa",
+      surname: "de la Cruz",
+    });
+    expect(parseNameParts("Anne Van der Berg").surname).toBe("Van der Berg");
+    expect(parseNameParts("Anne DE LA CRUZ").surname).toBe("DE LA CRUZ");
+    expect(parseNameParts("Jacobus van’t Hoff").surname).toBe("van’t Hoff");
+    expect(parseNameParts("João dos Santos").surname).toBe("dos Santos");
+    expect(parseNameParts("Ahmad bin Ali").surname).toBe("bin Ali");
+    // The first name is never a particle, and "y" joins two surnames rather than leading one.
+    expect(parseNameParts("van Berg").firstName).toBe("van");
+    expect(parseNameParts("José Ortega y Gasset").surname).toBe("Gasset");
+  });
+
   it("treats a single-token name as a first name with empty surname", () => {
     expect(parseNameParts("Madonna")).toEqual({
       firstName: "Madonna",
@@ -83,7 +101,7 @@ describe("createAuthor", () => {
     expect(createAuthor("王小明").initials).toBe("王小明");
     expect(createAuthor("ヤマダタロー").initials).toBe("ヤマダタロー");
     expect(createAuthor("김민준").initials).toBe("김민준");
-    expect(parseAuthors(["王小明", "王大明"]).map((a) => a.initials)).toEqual(["王小明", "王大明"]);
+    expect(parseAuthorText("王小明\n王大明").map((a) => a.initials)).toEqual(["王小明", "王大明"]);
   });
 
   it("never builds initials from punctuation", () => {
@@ -92,6 +110,18 @@ describe("createAuthor", () => {
     expect(createAuthor("0000-0002-1694-233X").initials).toBe("0000-0002-1694-233X");
     expect(createAuthor("https://orcid.org/0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
     expect(createAuthor("Jane - Smith").initials).toBe("JS");
+  });
+
+  it("takes the surname initial from its first word that is not a particle", () => {
+    expect(createAuthor("Anne van der Berg").initials).toBe("AB");
+    expect(createAuthor("van der Berg, Anne").initials).toBe("AB");
+    expect(createAuthor("Leonardo da Vinci").initials).toBe("LV");
+    expect(createAuthor("Jean-Luc de la Fontaine").initials).toBe("JF");
+    expect(
+      createAuthor("Anne van der Berg", { firstName: "Anne", middleName: "", surname: "van der Berg" }).initials,
+    ).toBe("AB");
+    // Telling two apart continues from that word, not from the particle.
+    expect(parseAuthorText("Anne Bakker\nAnne van der Berg").map((a) => a.initials)).toEqual(["AB", "ABe"]);
   });
 
   it("keeps one character per name part when upper case would add one", () => {
@@ -104,6 +134,18 @@ describe("createAuthor", () => {
     expect(nfd.name).toBe("Zoë Müller");
     expect(nfd.firstName).toBe("Zoë");
     expect(nfd.initials).toBe("ZM");
+  });
+
+  it("turns control characters in a name into a space", () => {
+    const author = createAuthor("Ann\u0001Lee\t", { surname: "Lee\u0000" });
+    expect(author.name).toBe("Ann Lee");
+    expect(author.surname).toBe("Lee");
+  });
+
+  it("cleans a long run of spaces in linear time, then applies the length cap", () => {
+    const started = performance.now();
+    expect(() => createAuthor(`a${" ".repeat(1_000_000)}b`)).toThrow(/characters or fewer/);
+    expect(performance.now() - started).toBeLessThan(500);
   });
 });
 
@@ -122,13 +164,13 @@ describe("deduplicateAuthorInitials", () => {
   it("still assigns unique initials when the surname runs out of letters", () => {
     // "Jo Li" → JL, then JLi (the surname's 2nd letter), and then the surname is
     // spent, so the disambiguator falls back to a counter suffix.
-    const initials = parseAuthors(["Jo Li", "Jo Li", "Jo Li"]).map((a) => a.initials);
+    const initials = parseAuthorText("Jo Li\nJo Li\nJo Li").map((a) => a.initials);
     expect(new Set(initials).size).toBe(3);
     expect(initials.slice(0, 2)).toEqual(["JL", "JLi"]);
   });
 
   it("deduplicates supplementary-plane initials without corrupting Unicode", () => {
-    const initials = parseAuthors(["A 𐐀x", "A 𐐀y"]).map((author) => author.initials);
+    const initials = parseAuthorText("A 𐐀x\nA 𐐀y").map((author) => author.initials);
 
     expect(initials).toEqual(["A𐐀", "A𐐀y"]);
     expect(initials.every((value) => value.isWellFormed())).toBe(true);
@@ -182,6 +224,16 @@ describe("splitNameList", () => {
       "Bob White",
       "Carol Davis",
       "Dan Evans",
+    ]);
+  });
+
+  it("splits on Word's Shift+Enter, form feeds and bare carriage returns", () => {
+    expect(splitNameList("Ann Lee\vBob Kim\fCay Dunn\rDee Fox\r\nEd Ng")).toEqual([
+      "Ann Lee",
+      "Bob Kim",
+      "Cay Dunn",
+      "Dee Fox",
+      "Ed Ng",
     ]);
   });
 

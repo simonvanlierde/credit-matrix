@@ -25,7 +25,7 @@ import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
-import { useContributionStore, useOpenDifferences } from "@/store/contribution-store";
+import { useAskSummary, useContributionStore } from "@/store/contribution-store";
 
 type DataFormat = "xml" | "json" | "csv" | "markdown";
 
@@ -73,7 +73,7 @@ export function StatementOutput() {
   const selfId = useContributionStore((s) => s.selfId);
   const yesNo = useContributionStore((s) => s.inputMode === "toggle");
   const openReview = useContributionStore((s) => s.openReview);
-  const openDifferences = useOpenDifferences();
+  const openDifferences = useAskSummary().open;
   // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
   const [includeAnswers, setIncludeAnswers] = useState(true);
   // Everyone asked, answered or not: the JSON export carries the ask history too.

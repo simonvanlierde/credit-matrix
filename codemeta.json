@@ -3,7 +3,7 @@
   "@type": "SoftwareSourceCode",
   "name": "CRediT Matrix",
   "description": "A client-side web app and the credit-matrix TypeScript package for drafting CRediT (Contributor Roles Taxonomy) contribution statements for scholarly publications, with a contribution heatmap and JATS4R XML, CSV, JSON, and Markdown exports for journal submission systems. Contributors can be filled in from an ORCID iD or a DOI, and the interface and the generated statement are localized independently across nine languages.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "datePublished": "2026-10-13",
   "identifier": "https://doi.org/10.5281/zenodo.21213659",
   "license": "https://spdx.org/licenses/MIT",

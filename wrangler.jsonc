@@ -11,7 +11,7 @@
     "not_found_handling": "404-page"
   },
   "compatibility_date": "2026-07-06",
-  "name": "credit-heatmap",
+  "name": "credit-matrix",
   // Bound to a Custom Domain
   "routes": [
     {

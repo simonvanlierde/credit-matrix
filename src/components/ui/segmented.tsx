@@ -1,6 +1,7 @@
 "use client";
 
-import { type KeyboardEvent, type ReactNode, useRef } from "react";
+import type { ReactNode } from "react";
+import { moveRadioSelection } from "@/lib/roving-radio";
 import { cn } from "@/lib/utils";
 
 export interface SegmentedOption<T extends string> {
@@ -32,31 +33,15 @@ export function SegmentedControl<T extends string>({
   className?: string;
   ariaLabel?: string;
 }) {
-  const groupRef = useRef<HTMLDivElement>(null);
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
-    const back = event.key === "ArrowLeft" || event.key === "ArrowUp";
-    if (!(forward || back)) return;
-    event.preventDefault();
-    const current = options.findIndex((option) => option.value === value);
-    const nextIndex = (current + (forward ? 1 : options.length - 1)) % options.length;
-    const next = options[nextIndex];
-    if (!next) return;
-    onChange(next.value);
-    // Roving tabindex: move focus to the newly selected radio.
-    groupRef.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[nextIndex]?.focus();
-  }
-
+  const selected = options.findIndex((option) => option.value === value);
   return (
     <div
-      ref={groupRef}
       role="radiogroup"
       aria-label={ariaLabel}
-      onKeyDown={handleKeyDown}
+      onKeyDown={(event) => moveRadioSelection(event, options, selected, (next) => onChange(next.value))}
       className={cn("inline-flex bg-surface-container-high p-1 rounded-lg gap-0.5", className)}
     >
-      {options.map(({ value: optionValue, label, title }) => {
+      {options.map(({ value: optionValue, label, title }, index) => {
         const active = value === optionValue;
         return (
           // biome-ignore lint/a11y/useSemanticElements: styled pill buttons, not native <input type="radio">; role=radio + roving tabindex is the intended pattern.
@@ -65,7 +50,8 @@ export function SegmentedControl<T extends string>({
             type="button"
             role="radio"
             aria-checked={active}
-            tabIndex={active ? 0 : -1}
+            // With nothing selected, the first radio keeps the group in the tab order.
+            tabIndex={active || (selected === -1 && index === 0) ? 0 : -1}
             title={title}
             onClick={() => onChange(optionValue)}
             className={cn(

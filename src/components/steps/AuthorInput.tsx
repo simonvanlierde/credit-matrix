@@ -23,7 +23,6 @@ import {
   ArrowUp,
   AtSign,
   Check,
-  Fingerprint,
   GripVertical,
   MoreHorizontal,
   PanelLeftClose,
@@ -38,28 +37,27 @@ import {
   UserMinus,
   UserPlus,
   UserRound,
-  UserSearch,
   Users,
-  X,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useFormatter, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UndoBar } from "@/components/ui/undo-bar";
-import { type Author, isValidOrcid, normalizeOrcid, review } from "@/core";
-import { hasContributions, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS, ORCID_REGEX } from "@/core/author";
-import { lookupOrcidPerson } from "@/core/lookup";
-import { splitNameList } from "@/core/parse-authors";
+import { type Author, review } from "@/core";
+import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { announce } from "@/lib/announce";
-import { buildShareUrl, shareFailureKey } from "@/lib/share";
+import { copyAskLink } from "@/lib/ask-message";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useSettled } from "@/lib/use-settled";
 import { type Ask, useContributionStore } from "@/store/contribution-store";
+import { OrcidLine, useOrcidLine } from "./OrcidLine";
+import { detectOrcid } from "./orcid";
+import { useAddContributors } from "./use-add-contributors";
 
 // Module constants, not inline literals: dnd-kit memoizes a sensor on its
 // options object, and a fresh one each render rebuilds the activators, which
@@ -67,82 +65,19 @@ import { type Ask, useContributionStore } from "@/store/contribution-store";
 const POINTER_SENSOR = { activationConstraint: { distance: 5 } };
 const KEYBOARD_SENSOR = { coordinateGetter: sortableKeyboardCoordinates };
 
-const ORCID_EXTRACT_REGEX = /(\d{4}-\d{4}-\d{4}-\d{3}[0-9X])/i;
-
-/** Pull a valid ORCID iD out of arbitrary text (a raw id or an orcid.org URL). */
-function detectOrcid(text: string): string | null {
-  const candidate = text.trim().match(ORCID_EXTRACT_REGEX)?.[1]?.toUpperCase() ?? "";
-  return ORCID_REGEX.test(candidate) ? candidate : null;
-}
-
-/**
- * Resolve an ORCID iD to a display name, straight from ORCID's public API
- * (it sends `Access-Control-Allow-Origin: *`).
- *
- * Returns a failure *code*, not a message: this runs outside React, so it
- * cannot translate. The caller holds `t` and renders the code.
- */
-type OrcidFailure = { code: keyof typeof ORCID_ERROR_KEYS };
-
-async function fetchOrcidName(orcid: string): Promise<{ displayName: string } | OrcidFailure> {
-  // The lookup is the one part of the app that needs a network; say so
-  // rather than blaming ORCID.
-  if (!navigator.onLine) return { code: "OFFLINE" };
-  const result = await lookupOrcidPerson(normalizeOrcid(orcid));
-  if (!result.ok) {
-    // A connection that drops mid-request fails as UNAVAILABLE; say offline.
-    return { code: result.code === "UNAVAILABLE" && !navigator.onLine ? "OFFLINE" : result.code };
-  }
-  return { displayName: result.displayName };
-}
-
-/**
- * Failure code → message key. Explicit rather than built by string
- * concatenation, so the typed-message guarantee still holds: a key removed
- * from en.json breaks the build here instead of silently rendering a key name.
- */
-const ORCID_ERROR_KEYS = {
-  INVALID_ID: "errOrcidINVALID_ID",
-  NOT_FOUND: "errOrcidNOT_FOUND",
-  UNAVAILABLE: "errOrcidUNAVAILABLE",
-  OFFLINE: "errOffline",
-} as const;
-
-/** Render an ORCID failure in the interface language. */
-function orcidErrorText(failure: OrcidFailure, t: ReturnType<typeof useTranslations>): string {
-  return t(ORCID_ERROR_KEYS[failure.code]);
-}
-
-// NOTE: a courtesy cap on concurrent ORCID lookups, not app correctness — a
-// plain Promise.all would work; keep the cap so a 100-iD paste doesn't hammer
-// the registry from one browser.
-async function forEachWithConcurrency<T>(items: T[], limit: number, task: (item: T) => Promise<void>): Promise<void> {
-  let nextIndex = 0;
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (nextIndex < items.length) {
-      const item = items[nextIndex];
-      nextIndex += 1;
-      if (item !== undefined) await task(item);
-    }
-  });
-  await Promise.all(workers);
-}
-
 export function AuthorList() {
   const t = useTranslations();
-  const format = useFormatter();
   const {
     activeDraftId,
     authors,
-    addAuthor,
     loadSample,
     moveAuthor,
     applyAskPatch,
     removeAuthor,
     restoreAuthor,
+    setSelfId,
     setTitle,
     title,
-    updateAuthorName,
     welcomeOpen,
     welcomeSeen,
   } = useContributionStore(
@@ -151,15 +86,14 @@ export function AuthorList() {
     useShallow((s) => ({
       activeDraftId: s.activeDraftId,
       authors: s.authors,
-      addAuthor: s.addAuthor,
       loadSample: s.loadSample,
       moveAuthor: s.moveAuthor,
       applyAskPatch: s.applyAskPatch,
       removeAuthor: s.removeAuthor,
       restoreAuthor: s.restoreAuthor,
+      setSelfId: s.setSelfId,
       setTitle: s.setTitle,
       title: s.title,
-      updateAuthorName: s.updateAuthorName,
       welcomeOpen: s.welcomeOpen,
       welcomeSeen: s.welcomeSeen,
     })),
@@ -179,9 +113,13 @@ export function AuthorList() {
   // it is not being edited.
   useEffect(() => setTitleDraft(title), [title]);
   const [collapsed, setCollapsed] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [addError, setAddError] = useState<string | null>(null);
-  const [removed, setRemoved] = useState<{ author: Author; index: number; ask?: Ask } | null>(null);
+  const { newName, setNewName, addError, setAddError, handleAdd, handleAddPaste } = useAddContributors();
+  const [removed, setRemoved] = useState<{
+    author: Author;
+    index: number;
+    ask?: Ask;
+    wasSelf: boolean;
+  } | null>(null);
   const [focusAfterRemove, setFocusAfterRemove] = useState<number | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
@@ -216,12 +154,13 @@ export function AuthorList() {
   // Stable, so a memoized AuthorRow is not re-rendered by a new callback.
   const handleRemove = useCallback(
     (author: Author, index: number) => {
-      // Removing a contributor drops their open ask; undo brings it back.
-      const ask = useContributionStore.getState().asks[author.id];
+      // Removing a contributor drops their open ask and their "This is me"
+      // mark; undo brings both back.
+      const { asks, selfId } = useContributionStore.getState();
       removeAuthor(author.id);
       // No announce() here: the undo bar below mounts as role="status" with the
       // same fact, and saying it twice reads as an echo.
-      setRemoved({ author, index, ask });
+      setRemoved({ author, index, ask: asks[author.id], wasSelf: selfId === author.id });
       // The button that was just activated is unmounting, which drops focus to
       // <body> and sends a keyboard user back to the top of the document. Hand
       // focus to the row that takes its place instead.
@@ -233,11 +172,14 @@ export function AuthorList() {
   function undoRemove() {
     if (!removed) return;
     // restoreAuthor no-ops when the list has refilled to the cap; claiming
-    // the contributor came back when they did not would be a lie.
+    // the contributor came back when they did not would be a lie. It also
+    // no-ops when they are already back (the grid's Undo restored the whole
+    // roster), and then there is nothing to report.
     if (restoreAuthor(removed.author, removed.index)) {
       if (removed.ask) applyAskPatch(activeDraftId, { rows: {}, asks: { [removed.author.id]: removed.ask } });
+      if (removed.wasSelf) setSelfId(removed.author.id);
       announce(t("annContributorRestored", { name: removed.author.name }));
-    } else {
+    } else if (!useContributionStore.getState().authors.some((a) => a.id === removed.author.id)) {
       announce(t("errAtContributorLimit", { limit: MAX_AUTHORS }), { assertive: true });
     }
     setRemoved(null);
@@ -267,136 +209,8 @@ export function AuthorList() {
     onDragCancel: ({ active }) => t("dndCancelled", { name: nameForId(active.id) }),
   };
 
-  /** Seed a row from an ORCID iD, then fill its name from the registry. */
-  async function addOrcidAuthor(orcid: string): Promise<{ id: string | null; error: string | null }> {
-    const id = addAuthor(orcid, orcid);
-    if (!id) return { id, error: null };
-    const result = await fetchOrcidName(orcid);
-    if ("code" in result) return { id, error: orcidErrorText(result, t) };
-    // A refused write (the row went with a draft switch mid-lookup) leaves the
-    // row named after its iD, so it is a failure, not a success.
-    if (!updateAuthorName(id, result.displayName)) {
-      return { id, error: t("annOrcidLookupsFailed", { count: 1, ids: orcid }) };
-    }
-    return { id, error: null };
-  }
-
-  /**
-   * Add several contributors at once. Every row lands immediately, in the pasted
-   * order; ORCID names then fill in from concurrent lookups.
-   */
-  async function addMany(tokens: string[]) {
-    const pending: { id: string; orcid: string }[] = [];
-    const rejected: string[] = [];
-    const capacity = Math.max(0, MAX_AUTHORS - authors.length);
-    const acceptedTokens = tokens.slice(0, capacity);
-    const skippedForLimit = tokens.length - acceptedTokens.length;
-
-    // An iD with the right shape but a bad check digit used to fall through to
-    // addAuthor, throw inside createAuthor, and land in `rejected`; reported
-    // as "no name in them", which is the wrong diagnosis. The single-add path
-    // already checks the checksum, so bucket it the same way here.
-    const badChecksum: string[] = [];
-    for (const token of acceptedTokens) {
-      const orcid = detectOrcid(token);
-      if (orcid && !isValidOrcid(orcid)) {
-        badChecksum.push(orcid);
-        continue;
-      }
-      const id = addAuthor(orcid ?? token, orcid ?? undefined);
-      if (!id) rejected.push(token);
-      else if (orcid) pending.push({ id, orcid });
-    }
-
-    // Keep the row on a failed lookup (named after its iD) so one bad token
-    // doesn't silently vanish from a pasted list, but say which ones failed,
-    // so the rows still named after an iD aren't mistaken for real names.
-    const failed: string[] = [];
-    await forEachWithConcurrency(pending, 4, async ({ id, orcid }) => {
-      const result = await fetchOrcidName(orcid);
-      // A refused write leaves the row named after its iD, same as a failed lookup.
-      if ("code" in result || !updateAuthorName(id, result.displayName)) failed.push(orcid);
-    });
-
-    const addedCount = acceptedTokens.length - rejected.length - badChecksum.length;
-    const added = t("annContributorsAdded", { count: addedCount });
-    // The UI locale's own list punctuation: "、" in Japanese, not ", ".
-    const list = (items: string[]) => format.list(items, { type: "conjunction" });
-    const problems = [
-      rejected.length > 0 && t("annEntriesSkippedNoName", { count: rejected.length, entries: list(rejected) }),
-      badChecksum.length > 0 && t("annOrcidChecksumsSkipped", { count: badChecksum.length, ids: list(badChecksum) }),
-      failed.length > 0 && t("annOrcidLookupsFailed", { count: failed.length, ids: list(failed) }),
-      skippedForLimit > 0 && t("annContributorsSkippedLimit", { count: skippedForLimit, limit: MAX_AUTHORS }),
-    ].filter(Boolean);
-
-    if (problems.length === 0) {
-      announce(added);
-      return;
-    }
-    const message = problems.join(" ");
-    setAddError(message);
-    announce(`${added} ${message}`, { assertive: true });
-  }
-
-  /** Add from the input: a bare ORCID seeds the row then fills its name from ORCID. */
-  async function handleAdd() {
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-    setAddError(null);
-    // addAuthor returns null both for an unparseable name and for a full list,
-    // so check the cap here. Without it, adding at the limit either reported
-    // "that doesn't look like a name" (false) or, for an ORCID, cleared the
-    // input and silently did nothing. addMany already reports this separately.
-    if (authors.length >= MAX_AUTHORS) {
-      const message = t("errAtContributorLimit", { limit: MAX_AUTHORS });
-      setAddError(message);
-      announce(message, { assertive: true });
-      return;
-    }
-    const tokens = splitNameList(trimmed);
-    if (tokens.length > 1) {
-      setNewName("");
-      await addMany(tokens);
-      return;
-    }
-    const orcid = detectOrcid(trimmed);
-    if (orcid) {
-      if (!isValidOrcid(orcid)) {
-        setAddError(t("errOrcidChecksum"));
-        announce(t("errOrcidChecksum"), { assertive: true });
-        return;
-      }
-      setNewName("");
-      const { id, error } = await addOrcidAuthor(orcid);
-      if (error) {
-        // No junk author named after the iD survives a failed lookup, but a row
-        // the user renamed or gave roles while waiting is theirs, not junk.
-        // Read from the store: `authors` here is the list from before the await.
-        const row = useContributionStore.getState().authors.find((a) => a.id === id);
-        if (row && row.name === orcid && !hasContributions(row)) removeAuthor(row.id);
-        setAddError(error);
-        announce(error, { assertive: true });
-        // Hand the iD back only to an empty field, not over the next name typed.
-        setNewName((current) => (current.trim() ? current : orcid));
-      }
-    } else if (addAuthor(trimmed)) {
-      setNewName("");
-    } else {
-      setAddError(t("errNameNoLetter"));
-    }
-  }
-
   function handleNewNameKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") void handleAdd();
-  }
-
-  /** Pasting a whole author list adds every name; single names paste normally. */
-  function handleAddPaste(event: React.ClipboardEvent<HTMLInputElement>) {
-    const tokens = splitNameList(event.clipboardData.getData("text"));
-    if (tokens.length <= 1) return;
-    event.preventDefault();
-    setAddError(null);
-    void addMany(tokens);
   }
 
   const header = (
@@ -736,11 +550,10 @@ const AuthorRow = memo(function AuthorRowInner({
   enter: boolean;
 }) {
   const t = useTranslations();
-  const { author, updateAuthorName, updateAuthorOrcid, setAuthorType, setAuthorMarker } = useContributionStore(
+  const { author, updateAuthorName, setAuthorType, setAuthorMarker } = useContributionStore(
     useShallow((s) => ({
       author: s.authors[index],
       updateAuthorName: s.updateAuthorName,
-      updateAuthorOrcid: s.updateAuthorOrcid,
       setAuthorType: s.setAuthorType,
       setAuthorMarker: s.setAuthorMarker,
     })),
@@ -748,7 +561,6 @@ const AuthorRow = memo(function AuthorRowInner({
   const { locked, editableAuthorId } = useClaimLock();
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
-  const applyAskStep = useContributionStore((s) => s.applyAskStep);
   const isSelf = useContributionStore((s) => author !== undefined && s.selfId === author.id);
   const setSelfId = useContributionStore((s) => s.setSelfId);
   const moveAuthor = useContributionStore((s) => s.moveAuthor);
@@ -765,15 +577,8 @@ const AuthorRow = memo(function AuthorRowInner({
   }
   const isRecentReply = useContributionStore((s) => s.recentReply !== null && s.recentReply === author?.id);
 
-  const [loading, setLoading] = useState(false);
-  const [lookupError, setLookupError] = useState<string | null>(null);
-  const [lookedUp, setLookedUp] = useState<string | null>(null);
-  // Revealed-but-empty ORCID input, and a guard so an Enter-commit's unmount
-  // blur doesn't re-apply the iD.
-  const [editingOrcid, setEditingOrcid] = useState(false);
   const [nameDraft, setNameDraft] = useState(author?.name ?? "");
   const [nameError, setNameError] = useState<string | null>(null);
-  const committedRef = useRef(false);
   // Same status/announce/reset contract as every other copy affordance.
   const [askStatus, copyAsk] = useCopyStatus({
     copied: t("askContributorCopied", { name: author?.name ?? "" }),
@@ -790,140 +595,44 @@ const AuthorRow = memo(function AuthorRowInner({
   async function handleAsk(blank: boolean) {
     if (!author) return;
     setAskKind(blank ? "blank" : "prefilled");
-    const sentAt = Date.now();
-    // Read at click time: the link carries the title, which this row does
-    // not subscribe to.
-    const { authors, title, activeDraftId, inputMode } = useContributionStore.getState();
-    let url: string;
-    try {
-      url = await buildShareUrl({
-        authors,
-        title,
-        claimId: author.id,
-        sourceDraftId: activeDraftId,
-        blank,
-        sentAt,
-        yesNo: inputMode === "toggle",
-      });
-    } catch {
-      announce(t(shareFailureKey()), { assertive: true });
-      return;
-    }
     // Only a link that actually reached the clipboard counts as an ask.
-    if (!(await copyAsk(url))) return;
-    // The draft may have switched, or the row gone, while the link was built
-    // and copied: the ask belongs to neither.
-    const now = useContributionStore.getState();
-    if (now.activeDraftId !== activeDraftId || !now.authors.some((a) => a.id === author.id)) return;
-    applyAskStep(activeDraftId, { kind: "sent", contributorId: author.id, prefilled: !blank, at: sentAt });
+    await copyAskLink(author, t, blank, (link) => copyAsk(link));
   }
 
   const nameInputRef = useRef<HTMLInputElement>(null);
-  // Guard against setState after the row unmounts mid-lookup (delete/reorder).
-  const mounted = useRef(true);
-  useEffect(() => {
-    // Set on mount, not just at creation: React re-runs effects on a StrictMode
-    // remount, and the cleanup would otherwise leave this false for good, so every
-    // later lookup would bail out before clearing t("doiLookingUp").
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-  // Only the latest lookup may write: a slower, older one would otherwise pair
-  // one person's name with another's iD, and clear `loading` too early.
-  const lookupSeq = useRef(0);
+  const orcidLine = useOrcidLine(author?.id ?? "", () => nameInputRef.current?.focus());
 
   // Keyed on the stored name, not the author object: normalizeAuthors rebuilds
   // every author on any list mutation, so an identity-keyed effect overwrote
   // whatever the user was typing whenever an unrelated ORCID lookup resolved.
+  // Text typed into the focused field but not yet committed also wins over a
+  // name that lands meanwhile, such as this row's own lookup; blur commits it.
   const storedName = author?.name;
+  const previousStoredName = useRef(storedName);
   useEffect(() => {
-    if (storedName !== undefined) setNameDraft(storedName);
+    const previous = previousStoredName.current;
+    previousStoredName.current = storedName;
+    if (storedName === undefined) return;
+    const typing = document.activeElement === nameInputRef.current;
+    setNameDraft((draft) => (typing && draft !== previous ? draft : storedName));
   }, [storedName]);
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: author?.id ?? index,
   });
 
-  // Transient ORCID status (success or error) clears itself after a few seconds.
-  useEffect(() => {
-    if (lookedUp === null && lookupError === null) return;
-    const timer = setTimeout(() => {
-      setLookedUp(null);
-      setLookupError(null);
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [lookedUp, lookupError]);
-
   if (!author) return null;
 
   const authorId = author.id;
-  const orcidValue = author.orcid ?? "";
-  const bareOrcid = normalizeOrcid(orcidValue);
-  const hasOrcid = orcidValue.length > 0;
-  const orcidValid = isValidOrcid(orcidValue);
+  const hasOrcid = (author.orcid ?? "").length > 0;
   const isNonAuthor = author.contributorType === "non-author";
-
-  async function lookup(orcid: string) {
-    const seq = ++lookupSeq.current;
-    setLoading(true);
-    setLookupError(null);
-    setLookedUp(null);
-    const result = await fetchOrcidName(orcid);
-    if (!mounted.current || seq !== lookupSeq.current) return;
-    setLoading(false);
-    if ("code" in result) {
-      const message = orcidErrorText(result, t);
-      setLookupError(message);
-      announce(message, { assertive: true });
-    } else if (updateAuthorName(authorId, result.displayName)) {
-      setLookedUp(orcid);
-      announce(t("annNameFromOrcid", { name: result.displayName }));
-    } else {
-      // The registry's name failed the same rules a typed name must pass;
-      // the row keeps its name, so say why rather than report a success.
-      const message = t(result.displayName.length > MAX_AUTHOR_NAME_LENGTH ? "errNameTooLong" : "errNameNoLetter");
-      setLookupError(message);
-      announce(message, { assertive: true });
-    }
-  }
-
-  /** Returns true when the iD was accepted and the editor closed. */
-  function applyOrcid(orcid: string): boolean {
-    if (!isValidOrcid(orcid)) {
-      setLookupError(t("errOrcidChecksum"));
-      announce(t("errOrcidChecksum"), { assertive: true });
-      setEditingOrcid(true);
-      return false;
-    }
-    updateAuthorOrcid(authorId, orcid);
-    setEditingOrcid(false);
-    setLookupError(null);
-    setLookedUp(null);
-    void lookup(orcid);
-    return true;
-  }
-
-  function clearOrcid() {
-    // A lookup still in flight is for the iD being removed; drop its answer.
-    lookupSeq.current += 1;
-    setLoading(false);
-    updateAuthorOrcid(authorId, "");
-    setLookupError(null);
-    setLookedUp(null);
-    setEditingOrcid(false);
-    // This unmounts the whole ORCID line, including the button that was just
-    // activated. Put focus on the row's name field rather than losing it.
-    nameInputRef.current?.focus();
-  }
 
   function handleSmartPaste(event: React.ClipboardEvent<HTMLInputElement>) {
     if (rowLocked) return;
     const orcid = detectOrcid(event.clipboardData.getData("text"));
     if (!orcid) return;
     event.preventDefault();
-    applyOrcid(orcid);
+    orcidLine.applyOrcid(orcid);
   }
 
   function commitName() {
@@ -998,10 +707,11 @@ const AuthorRow = memo(function AuthorRowInner({
               onBlur={commitName}
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
+                // Revert without blurring, as the title field does: blur()
+                // commits before the revert renders, saving the abandoned text.
                 if (event.key === "Escape") {
                   setNameDraft(author.name);
                   setNameError(null);
-                  event.currentTarget.blur();
                 }
               }}
               onPaste={handleSmartPaste}
@@ -1081,7 +791,7 @@ const AuthorRow = memo(function AuthorRowInner({
                   name={author.name}
                   equalContribution={author.equalContribution}
                   corresponding={author.corresponding}
-                  canAddOrcid={!hasOrcid && !editingOrcid}
+                  canAddOrcid={!hasOrcid && !orcidLine.editingOrcid}
                   askCopied={askCopied}
                   allowAsk={!(locked || isSelf)}
                   isSelf={isSelf}
@@ -1089,7 +799,7 @@ const AuthorRow = memo(function AuthorRowInner({
                   onToggleEqual={() => setAuthorMarker(author.id, "equalContribution", !author.equalContribution)}
                   onToggleCorresponding={() => setAuthorMarker(author.id, "corresponding", !author.corresponding)}
                   onAsk={(blank) => void handleAsk(blank)}
-                  onAddOrcid={() => setEditingOrcid(true)}
+                  onAddOrcid={() => orcidLine.setEditingOrcid(true)}
                   onMoveUp={!locked && index > 0 ? () => move(-1) : undefined}
                   onMoveDown={!locked && index < rowCount - 1 ? () => move(1) : undefined}
                 />
@@ -1110,90 +820,7 @@ const AuthorRow = memo(function AuthorRowInner({
           )}
         </div>
 
-        {/* ORCID line. A 19-character iD never fits beside the type badge in this
-          column, so it gets a line of its own, indented to the name column so it
-          shares a left edge with the type badge above it, and with its actions on
-          the same line instead of wrapping into a ragged fourth one. */}
-        {(hasOrcid || editingOrcid || lookupError !== null) && (
-          <div className="mt-1 flex items-center gap-1.5 pl-20">
-            {hasOrcid ? (
-              <>
-                <a
-                  href={`https://orcid.org/${bareOrcid}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  title={bareOrcid}
-                  className="inline-flex min-w-0 items-center gap-1 rounded-full bg-surface-container px-2 py-0.5 font-mono text-[11px] text-on-surface-variant transition-colors hover:text-primary"
-                >
-                  <Fingerprint className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{bareOrcid}</span>
-                  {!orcidValid && (
-                    <span className="shrink-0 text-error">
-                      <span aria-hidden="true">✗</span>
-                      <span className="sr-only">({t("a11yInvalidOrcid")})</span>
-                    </span>
-                  )}
-                  <span className="sr-only">{t("opensInNewTab")}</span>
-                </a>
-                {!rowLocked && orcidValid && lookedUp !== bareOrcid && (
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => void lookup(bareOrcid)}
-                    aria-label={t("lookupOrcidName")}
-                    title={t("lookupOrcidName")}
-                    className="reveal-on-hover ml-auto inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center gap-1 text-[11px] text-primary transition-opacity hover:underline disabled:opacity-50"
-                  >
-                    <UserSearch className="h-3.5 w-3.5" />
-                    {loading && t("lookingUp")}
-                  </button>
-                )}
-                {!rowLocked && (
-                  <button
-                    type="button"
-                    onClick={clearOrcid}
-                    aria-label={t("removeOrcid")}
-                    className="ml-auto flex size-6 shrink-0 items-center justify-center rounded text-on-surface-variant transition-colors hover:text-error"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-                {lookedUp === bareOrcid && (
-                  <span className="shrink-0 text-[11px] leading-tight text-primary">{t("nameUpdated")}</span>
-                )}
-              </>
-            ) : editingOrcid && !rowLocked ? (
-              <input
-                // biome-ignore lint/a11y/noAutofocus: revealed on explicit user action, so focusing it is expected.
-                autoFocus
-                type="text"
-                aria-label={t("a11yOrcidInput")}
-                placeholder="0000-0000-0000-0000"
-                title={t("a11yOrcidHint")}
-                onPaste={handleSmartPaste}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter") return;
-                  const orcid = detectOrcid(event.currentTarget.value);
-                  // Only suppress the follow-up blur when the apply actually
-                  // took. On a checksum failure the input stays mounted, and a
-                  // latched ref made the next blur discard the corrected iD.
-                  if (orcid) committedRef.current = applyOrcid(orcid);
-                }}
-                onBlur={(event) => {
-                  if (committedRef.current) {
-                    committedRef.current = false;
-                    return;
-                  }
-                  const orcid = detectOrcid(event.currentTarget.value);
-                  if (orcid) applyOrcid(orcid);
-                  else setEditingOrcid(false);
-                }}
-                className="w-full min-w-0 border-b border-outline-variant/40 bg-transparent p-0 font-mono text-xs text-on-surface-variant outline-none focus:border-primary focus:ring-0"
-              />
-            ) : null}
-          </div>
-        )}
-        {lookupError !== null && <p className="mt-1 pl-20 text-[11px] leading-tight text-error">{lookupError}</p>}
+        <OrcidLine author={author} rowLocked={rowLocked} line={orcidLine} onPaste={handleSmartPaste} />
       </div>
     </li>
   );

@@ -1,9 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor } from "@/core";
-import { useAskSummary, useContributionStore, useOpenDifferences } from "./contribution-store";
+import { useAskSummary, useContributionStore } from "./contribution-store";
 
-vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
 vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
 const initial = useContributionStore.getState();
@@ -47,14 +46,11 @@ describe("workspace view state", () => {
     expect(store().drafts[second]).toBeDefined();
   });
 
-  it("counts answers and open differences for the hooks", () => {
+  it("counts answers and open differences for the hook", () => {
     const { result: summary } = renderHook(() => useAskSummary());
-    const { result: open } = renderHook(() => useOpenDifferences());
     expect(summary.current).toEqual({ total: 0, answered: 0, open: 0 });
-    expect(open.current).toBe(0);
 
     act(() => store().loadAuthors([createAuthor("Jane Smith"), createAuthor("Bob White")]));
     expect(summary.current.total).toBe(2);
-    expect(open.current).toBe(0);
   });
 });

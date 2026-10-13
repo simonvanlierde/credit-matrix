@@ -161,8 +161,8 @@ describe("askStep reply", () => {
       surname: "van der Berg",
     });
     const state: AskState = { authors: [lead], asks: { anne: { sentAt: 1, prefilled: true } } };
-    // The co-author's app re-parsed the name: surname "Berg", "van der" as middle names.
-    const row = createAuthor("Anne van der Berg", { id: "anne" });
+    // The co-author's app split the name differently: surname "Berg", "van" as middle name.
+    const row = createAuthor("Anne van der Berg", { id: "anne", middleName: "van", surname: "Berg" });
     expect(row.surname).not.toBe("van der Berg");
     const { patch, state: next } = receive(state, "anne", row, 5);
     expect(patch.rows).toEqual({});

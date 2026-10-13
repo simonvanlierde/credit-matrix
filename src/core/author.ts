@@ -5,8 +5,14 @@ import { CREDIT_ROLES } from "./credit-roles";
 export const MAX_AUTHORS = 200;
 export const MAX_AUTHOR_NAME_LENGTH = 500;
 export const MAX_IMPORT_BYTES = 1_000_000;
-/** A contributor or draft id that fits in a share link. */
-export const ID_REGEX = /^[\w-]{1,64}$/;
+/**
+ * A contributor or draft id that fits in a share link. Never a name
+ * `Object.prototype` already has ("constructor", "__proto__"): asks are kept in
+ * plain objects keyed by id, where such a key reads or sets the prototype.
+ */
+export function isShareableId(id: string): boolean {
+  return /^[\w-]{1,64}$/.test(id) && !(id in Object.prototype);
+}
 
 /**
  * A contribution is a 0–100 integer score for one CRediT role.

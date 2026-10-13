@@ -1,6 +1,6 @@
 import type { Author, Contribution, ContributorType } from "./author";
 import {
-  ID_REGEX,
+  isShareableId,
   isUsableAuthorName,
   isValidOrcid,
   MAX_AUTHOR_NAME_LENGTH,
@@ -19,8 +19,11 @@ import { CREDIT_ROLES } from "./credit-roles";
  *    apostrophes, hyphens and whitespace (so "José", "O'Brien" and
  *    "Mary-Jane" survive intact)
  *  - First token  → firstName
- *  - Last token   → surname  (when >1 token)
- *  - Middle token → middleName (only when >2 tokens; first of any middle tokens)
+ *  - Last token   → surname  (when >1 token), with any particles just before
+ *                   it, in any case ("Anne van der Berg" → "van der Berg",
+ *                   "Anne DE LA CRUZ" → "DE LA CRUZ"), as the
+ *                   "van der Berg, Anne" form already reads it
+ *  - Middle token → middleName (first of any tokens left between the two)
  *
  * A single-token name (e.g. "Madonna") yields a firstName with empty
  * middleName and surname. That is intentional, not an error.
@@ -51,9 +54,14 @@ export function parseNameParts(name: string): {
   const cleaned = cleanNamePart(name);
   const parts = cleaned.split(/\s+/).filter(Boolean);
 
+  // Where the surname starts: the last token, pulled back over particles,
+  // never into the first name.
+  let surnameStart = Math.max(parts.length - 1, 1);
+  while (surnameStart > 1 && isParticle(parts[surnameStart - 1] ?? "")) surnameStart -= 1;
+
   const firstName = parts[0] ?? "";
-  const surname = parts.length > 1 ? (parts.at(-1) ?? "") : "";
-  const middleName = parts.length > 2 ? (parts[1] ?? "") : "";
+  const surname = parts.slice(surnameStart).join(" ");
+  const middleName = surnameStart > 1 ? (parts[1] ?? "") : "";
 
   return { firstName, middleName, surname };
 }
@@ -67,14 +75,16 @@ const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx
 
 /**
  * Build initials from name parts (e.g. "Jane A. Smith" → "JAS").
- * Only uses first letter of each non-empty part. A single-token CJK name
+ * Only uses first letter of each non-empty part. The surname gives the letter
+ * of its first word that is not a particle, so "Anne van der Berg" is "AB"
+ * however the name was entered or imported. A single-token CJK name
  * ("王小明") has no initials to take, so the whole name is the label, as is a
  * name with no lettered part (a row still named by its ORCID iD).
  */
 export function buildInitials(name: string, firstName: string, middleName: string, surname: string): string {
   if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
   if (!(middleName || surname) && UNSPACED_NAME_REGEX.test(firstName)) return firstName;
-  const parts = [firstName, middleName, surname].filter((part) => /\p{L}/u.test(part));
+  const parts = [firstName, middleName, surnameCore(surname)].filter((part) => /\p{L}/u.test(part));
   if (parts.length === 0) return name.trim();
   return (
     parts
@@ -110,21 +120,19 @@ export function createAuthor(
     /**
      * Pre-split name parts, for callers that already hold structured names
      * (e.g. JATS `<surname>`/`<given-names>`). Re-parsing a joined string
-     * cannot recover a multi-word surname: "Anne van der Berg" parses back as
-     * surname "Berg" with "van" as a middle name, which also changes initials.
+     * cannot recover a multi-word surname: "Ana García López" parses back as
+     * surname "López" with "García" as a middle name, which also changes initials.
      */
     firstName?: string;
     middleName?: string;
     surname?: string;
   },
 ): Author {
-  // One Unicode form, so a decomposed "é" (e + accent, as macOS file names
-  // give it) and a precomposed one make the same contributor.
-  name = name.normalize("NFC");
+  name = cleanText(name);
   const parsed = parseNameParts(name);
-  const firstName = overrides?.firstName?.normalize("NFC") ?? parsed.firstName;
-  const middleName = overrides?.middleName?.normalize("NFC") ?? parsed.middleName;
-  const surname = overrides?.surname?.normalize("NFC") ?? parsed.surname;
+  const firstName = overrides?.firstName === undefined ? parsed.firstName : cleanText(overrides.firstName);
+  const middleName = overrides?.middleName === undefined ? parsed.middleName : cleanText(overrides.middleName);
+  const surname = overrides?.surname === undefined ? parsed.surname : cleanText(overrides.surname);
 
   // Punctuation-only names ("-- --") survive cleanNamePart, which keeps hyphens
   // and apostrophes. Share one predicate with AuthorSchema.name: a schema that
@@ -157,6 +165,33 @@ export function createAuthor(
 }
 
 /**
+ * `createAuthor` for one imported row, as a list for `flatMap`: empty when the
+ * row has no usable name, so one bad row is skipped rather than aborting the
+ * whole import.
+ */
+export function tryCreateAuthor(...args: Parameters<typeof createAuthor>): Author[] {
+  try {
+    return [createAuthor(...args)];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * One Unicode form, so a decomposed "é" (e + accent, as macOS file names give
+ * it) and a precomposed one make the same contributor. Control characters (a
+ * pasted line break, Word's Shift+Enter) become a space: XML cannot hold most
+ * of them, and they would hide where one word ends.
+ */
+function cleanText(value: string): string {
+  // One match per whitespace run: a pattern that backtracks through a long run of spaces is quadratic.
+  return value
+    .normalize("NFC")
+    .replace(/[\s\p{Cc}]+/gu, (run) => (/\p{Cc}/u.test(run) ? " " : run))
+    .trim();
+}
+
+/**
  * Project an arbitrary contributions list onto the canonical CREDIT_ROLES order
  * and length, keyed by role name. Imported, shared, or older-export data may
  * carry contributions in a different order or with roles missing; the matrix and
@@ -181,7 +216,8 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
 
   return authors.map((author) => {
     const initials = author.initials;
-    const surnameCodePoints = [...author.surname];
+    // Continue from the letter the initials took, past any particles.
+    const surnameCodePoints = [...surnameCore(author.surname)];
     let attempt = initials;
     let extraIdx = 1;
 
@@ -205,18 +241,19 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
  * Rebuild a roster under the rules every caller shares: at most `MAX_AUTHORS`
  * rows, ids unique and shareable in a link, and initials re-derived and
  * deduplicated. Throws when there are too many rows, or on a row
- * `createAuthor` cannot rebuild.
+ * `createAuthor` cannot rebuild. A row that comes out unchanged is returned
+ * as the same object, so memoised rows and cached reviews keep it.
  */
 export function normalizeRoster(authors: Author[]): Author[] {
   if (authors.length > MAX_AUTHORS) {
     throw new Error(`A draft can contain at most ${MAX_AUTHORS} contributors.`);
   }
   const seenIds = new Set<string>();
-  return deduplicateAuthorInitials(
+  const rebuilt = deduplicateAuthorInitials(
     authors.map((author) => {
       // Ids key every lookup and must survive a share link: an imported
       // duplicate or unshareable id gets a fresh one.
-      const id = ID_REGEX.test(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
+      const id = isShareableId(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
       seenIds.add(id);
       return createAuthor(author.name, {
         id,
@@ -229,25 +266,62 @@ export function normalizeRoster(authors: Author[]): Author[] {
       });
     }),
   );
+  return rebuilt.map((author, index) => {
+    const original = authors[index];
+    return original && isSameAuthor(original, author) ? original : author;
+  });
+}
+
+/** Field-by-field equality, contributions included, for the shape `createAuthor` builds. */
+function isSameAuthor(a: Author, b: Author): boolean {
+  const keys = Object.keys(b) as (keyof Author)[];
+  return (
+    Object.keys(a).length === keys.length &&
+    keys.every((key) =>
+      key === "contributions"
+        ? a.contributions.length === b.contributions.length &&
+          a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i]?.score)
+        : a[key] === b[key],
+    )
+  );
 }
 
 /**
  * The stored name parts, while they still describe the name. Re-parsing the
- * name cannot recover a structured import's multi-word surname ("van der
- * Berg"); a rename re-parses, so parts that no longer fit are dropped.
+ * name cannot recover a structured import's multi-word surname ("García
+ * López"); a rename re-parses, so parts that no longer fit are dropped.
+ *
+ * Parts fit when, word for word, the name opens with the first name, closes
+ * with the surname, and the middle name opens what lies between. Without a
+ * surname the first and middle names must be the whole name.
  */
 function consistentNameParts(author: Author): Pick<Author, "firstName" | "middleName" | "surname"> | undefined {
   const { name, firstName, middleName, surname } = author;
   if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
-  const fits = name.startsWith(firstName) && name.endsWith(surname) && name.includes(middleName);
+  const words = (text: string) => cleanNamePart(text).split(/\s+/).filter(Boolean);
+  const opens = (whole: string[], part: string[]) => part.every((word, i) => whole[i] === word);
+  const [all, first, middle, last] = [name, firstName, middleName, surname].map(words) as [
+    string[],
+    string[],
+    string[],
+    string[],
+  ];
+  const between = all.slice(first.length, all.length - last.length);
+  const fits =
+    first.length > 0 &&
+    first.length + last.length <= all.length &&
+    opens(all, first) &&
+    opens([...all].reverse(), [...last].reverse()) &&
+    opens(between, middle) &&
+    (last.length > 0 || between.length === middle.length);
   return fits ? { firstName, middleName, surname } : undefined;
 }
 
-export function parseAuthors(names: string[]): Author[] {
-  return deduplicateAuthorInitials(names.map((name) => createAuthor(name)));
-}
-
-/** Surname particles that stay attached to the surname ("van der Berg, Anne"). */
+/**
+ * Surname particles that stay attached to the surname ("van der Berg, Anne"),
+ * lower case with a straight apostrophe. Not "y", which joins two surnames
+ * ("Ortega y Gasset") rather than leading one.
+ */
 const PARTICLES = new Set([
   "van",
   "von",
@@ -263,7 +337,36 @@ const PARTICLES = new Set([
   "der",
   "ten",
   "ter",
+  "dos",
+  "das",
+  "do",
+  "los",
+  "las",
+  "degli",
+  "dei",
+  "dalla",
+  "dal",
+  "zu",
+  "zur",
+  "af",
+  "bin",
+  "ibn",
+  "el",
+  "al",
+  "van't",
 ]);
+
+/** A surname particle, in any case and with any apostrophe ("Van", "van’t"). */
+function isParticle(word: string): boolean {
+  return PARTICLES.has(word.toLowerCase().replace(/[’ʼ]/gu, "'"));
+}
+
+/** The surname from its first word that is not a particle ("van der Berg" → "Berg"), or whole if it has none. */
+function surnameCore(surname: string): string {
+  const words = surname.split(/\s+/).filter(Boolean);
+  const start = words.findIndex((word) => !isParticle(word));
+  return start === -1 ? surname : words.slice(start).join(" ");
+}
 
 /** A bare surname: one word, or particles followed by one word. Never an ORCID. */
 function isSurnamePart(text: string): boolean {
@@ -271,7 +374,7 @@ function isSurnamePart(text: string): boolean {
   const words = text.split(/\s+/).filter(Boolean);
   const last = words.pop();
   if (!last || !/\p{L}/u.test(last)) return false;
-  return words.every((word) => PARTICLES.has(word.toLowerCase()));
+  return words.every(isParticle);
 }
 
 /** A given-name fragment: up to three words, each a name or an initial ("J.", "Marie"). */
@@ -282,8 +385,8 @@ function isGivenNamePart(text: string): boolean {
 }
 
 /**
- * Split typed or pasted text into contributor name tokens. Newlines and
- * semicolons always separate. A comma is ambiguous on its own: it separates
+ * Split typed or pasted text into contributor name tokens. Line breaks of any
+ * kind (including Word's Shift+Enter, U+000B) and semicolons always separate. A comma is ambiguous on its own: it separates
  * contributors ("Marie Curie, Jane Smith") or the halves of one inverted name
  * ("Curie, Marie"), so the choice is made per line, over the whole chunk list
  * rather than per comma: a line is read as inverted names only when its chunks
@@ -291,7 +394,7 @@ function isGivenNamePart(text: string): boolean {
  */
 export function splitNameList(text: string): string[] {
   return text
-    .split(/[\n;]+/)
+    .split(/[\n\r\v\f;]+/)
     .flatMap((line) => splitCommaLine(line))
     .map((part) => part.trim())
     .filter(Boolean);
@@ -322,5 +425,5 @@ function splitCommaLine(line: string): string[] {
  * Empty lines / entries are ignored.
  */
 export function parseAuthorText(text: string): Author[] {
-  return parseAuthors(splitNameList(text));
+  return deduplicateAuthorInitials(splitNameList(text).map((name) => createAuthor(name)));
 }

@@ -44,8 +44,10 @@ that points `zod/mini` at a copy of zod.
 | `format`  | `by-role` (default), `by-role-short`, `by-author` or `by-author-short`. Any other value is `by-role`. |
 | `locale`  | Language of the statement and heatmap, such as `fr` or `zh-Hans`. See below.                          |
 
-Changing any attribute renders again. Without `src`, adding or editing the JSON child also renders
-again, so a script can fill it in after the element is on the page.
+Changing any attribute renders again. A `format` or `locale` change reuses the file already
+downloaded; setting `src`, even to the same URL, downloads it again, as does calling `render()`.
+Without `src`, adding or editing the JSON child also renders again, so a script can fill it in after
+the element is on the page.
 
 ## Language
 

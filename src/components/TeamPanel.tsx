@@ -50,6 +50,14 @@ export function TeamPanel() {
   }
 
   const notAsked = team.filter((author) => !(author.id in asks));
+  // Someone removed from the roster mid-queue is skipped, not the end of it:
+  // ids already copied stay so the count holds, later ones must still exist.
+  const live = queue && {
+    ids: queue.ids.filter((id, index) => index < queue.done || team.some((author) => author.id === id)),
+    done: queue.done,
+  };
+  // Nobody left to copy: the queue is over, not stuck on a missing name.
+  if (live && live.ids.length <= live.done) setQueue(null);
 
   function statusOf(author: Author): { text: string; toReview: boolean } {
     const ask = asks[author.id];
@@ -80,8 +88,8 @@ export function TeamPanel() {
   }
 
   async function askNext() {
-    const ids = queue?.ids ?? notAsked.map((author) => author.id);
-    const done = queue?.done ?? 0;
+    const ids = live?.ids ?? notAsked.map((author) => author.id);
+    const done = live?.done ?? 0;
     const next = team.find((candidate) => candidate.id === ids[done]);
     if (!next) {
       setQueue(null);
@@ -97,7 +105,7 @@ export function TeamPanel() {
     }
   }
 
-  const nextName = queue ? team.find((author) => author.id === queue.ids[queue.done])?.name : undefined;
+  const nextName = live ? team.find((author) => author.id === live.ids[live.done])?.name : undefined;
 
   return (
     <div className="flex flex-col gap-3">
@@ -106,8 +114,8 @@ export function TeamPanel() {
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => void askNext()} className={`${PRIMARY_BUTTON} min-h-9 text-sm`}>
               <Send className="size-4" aria-hidden="true" />
-              {queue && nextName
-                ? t("teamAskNext", { name: nextName, index: queue.done + 1, total: queue.ids.length })
+              {live && nextName
+                ? t("teamAskNext", { name: nextName, index: live.done + 1, total: live.ids.length })
                 : t("teamAskAll", { count: notAsked.length })}
             </button>
             {queue && (

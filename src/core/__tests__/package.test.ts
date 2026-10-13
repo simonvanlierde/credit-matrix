@@ -28,6 +28,25 @@ describe("the built credit-matrix package", () => {
     await expect(declarations).toMatchFileSnapshot("__snapshots__/public-api.d.ts.snap");
   });
 
+  it("publishes dist, the README, the licence and every file the exports map and bin point at", () => {
+    const root = fileURLToPath(new URL("..", import.meta.url));
+    // Scripts off: prepack would rebuild dist/ under the other tests reading it.
+    const packed = JSON.parse(
+      execFileSync("pnpm", ["pack", "--dry-run", "--json", "--config.ignore-scripts=true"], {
+        cwd: root,
+        encoding: "utf8",
+      }),
+    ) as { files: { path: string }[] };
+    const files = packed.files.map((file) => file.path).sort();
+    const expected = [...readdirSync(dist).map((name) => `dist/${name}`), "LICENSE", "README.md", "package.json"];
+    expect(files).toEqual(expected.sort());
+
+    const manifest = JSON.parse(readFileSync(`${root}package.json`, "utf8"));
+    for (const target of [...Object.values(manifest.exports), ...Object.values(manifest.bin), manifest.types]) {
+      expect(files).toContain(String(target).replace(/^\.\//, ""));
+    }
+  });
+
   it("runs the CLI with its bundled XML parser", () => {
     const run = (...args: string[]) => execFileSync("node", [`${dist}cli.js`, ...args], { encoding: "utf8" });
     const xml = fileURLToPath(new URL("fixtures/export-jats.xml", import.meta.url));
