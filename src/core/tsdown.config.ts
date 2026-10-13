@@ -15,7 +15,9 @@ export default defineConfig([
   {
     // linkedom is a dev dependency, so it is bundled here and never installed by library users.
     // One file, so its locale chunks cannot overwrite the library's.
+    // zod is bundled too: loading its separate module files from node_modules takes about 25 ms at every start.
     entry: { cli: "cli.ts" },
+    deps: { alwaysBundle: ["zod", /^zod\//] },
     outputOptions: { codeSplitting: false },
     minify: true,
     platform: "node",

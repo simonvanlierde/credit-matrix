@@ -131,6 +131,9 @@ importers:
       linkedom:
         specifier: 0.18.13
         version: 0.18.13
+      rolldown:
+        specifier: 1.2.13
+        version: 1.2.13
       tsdown:
         specifier: 0.23.0
         version: 0.23.0(typescript@7.0.2)

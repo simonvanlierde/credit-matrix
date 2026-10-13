@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "linkedom": "0.18.13",
+    "rolldown": "1.2.13",
     "tsdown": "0.23.0"
   }
 }

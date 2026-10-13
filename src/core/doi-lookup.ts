@@ -43,21 +43,22 @@ export type DoiLookupResult =
  * `given`/`family` or a bare `name`, and `ORCID` may be a URL. Parse
  * permissively and let the reader below decide what is usable.
  */
-const CrossrefWorkSchema = z.object({
-  message: z.object({
-    title: z.optional(z.array(z.string())),
-    author: z.optional(
-      z.array(
-        z.object({
-          given: z.optional(z.string()),
-          family: z.optional(z.string()),
-          name: z.optional(z.string()),
-          ORCID: z.optional(z.string()),
-        }),
+const CrossrefWorkSchema = /* @__PURE__ */ (() =>
+  z.object({
+    message: z.object({
+      title: z.optional(z.array(z.string())),
+      author: z.optional(
+        z.array(
+          z.object({
+            given: z.optional(z.string()),
+            family: z.optional(z.string()),
+            name: z.optional(z.string()),
+            ORCID: z.optional(z.string()),
+          }),
+        ),
       ),
-    ),
-  }),
-});
+    }),
+  }))();
 
 /**
  * DataCite (arXiv, Zenodo, Figshare and other repository DOIs) is not in
@@ -65,30 +66,31 @@ const CrossrefWorkSchema = z.object({
  * creator has `givenName`/`familyName` or only `name`, and an ORCID arrives in
  * `nameIdentifiers` tagged by scheme.
  */
-const DataCiteWorkSchema = z.object({
-  data: z.object({
-    attributes: z.object({
-      titles: z.optional(z.array(z.object({ title: z.optional(z.string()) }))),
-      creators: z.optional(
-        z.array(
-          z.object({
-            givenName: z.optional(z.string()),
-            familyName: z.optional(z.string()),
-            name: z.optional(z.string()),
-            nameIdentifiers: z.optional(
-              z.array(
-                z.object({
-                  nameIdentifier: z.optional(z.string()),
-                  nameIdentifierScheme: z.optional(z.string()),
-                }),
+const DataCiteWorkSchema = /* @__PURE__ */ (() =>
+  z.object({
+    data: z.object({
+      attributes: z.object({
+        titles: z.optional(z.array(z.object({ title: z.optional(z.string()) }))),
+        creators: z.optional(
+          z.array(
+            z.object({
+              givenName: z.optional(z.string()),
+              familyName: z.optional(z.string()),
+              name: z.optional(z.string()),
+              nameIdentifiers: z.optional(
+                z.array(
+                  z.object({
+                    nameIdentifier: z.optional(z.string()),
+                    nameIdentifierScheme: z.optional(z.string()),
+                  }),
+                ),
               ),
-            ),
-          }),
+            }),
+          ),
         ),
-      ),
+      }),
     }),
-  }),
-});
+  }))();
 
 /** The contributor shape both lookups are reduced to before reading. */
 type CrossrefAuthor = { given?: string; family?: string; name?: string; ORCID?: string };
