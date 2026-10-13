@@ -84,6 +84,20 @@ describe("toJats4rXml", () => {
     expect(xml).not.toMatch(/review & editing/);
   });
 
+  it("writes equal-contrib only when two or more authors share first authorship", () => {
+    const [jane, bob, ann] = parseAuthorText("Jane Smith, Bob White, Ann Lee");
+    if (!jane || !bob || !ann) throw new Error("expected authors");
+    const count = (xml: string) => xml.match(/equal-contrib="yes"/g)?.length ?? 0;
+
+    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, bob]))).toBe(0);
+    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, { ...bob, equalContribution: true }, ann]))).toBe(
+      2,
+    );
+    // A non-author contributor does not make a lone author's flag shared.
+    const acknowledged = { ...bob, equalContribution: true, contributorType: "non-author" as const };
+    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, acknowledged]))).toBe(0);
+  });
+
   it("falls back to the stored given names when the name no longer holds the surname", () => {
     const [jane] = parseAuthorText("Jane Q Smith");
     if (!jane) throw new Error("expected author");

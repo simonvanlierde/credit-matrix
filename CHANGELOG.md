@@ -82,6 +82,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The JATS4R XML export writes ORCID iDs as full `https://orcid.org/...` links, as JATS4R
   recommends. Importing accepts both the full link and the bare iD, so older files still load.
+- The JATS4R XML export marks shared first authorship only when at least two authors share it. A
+  single marked author made the file break the JATS4R rules; the mark still travels in JSON and CSV.
 - Resetting a draft clears its open asks, and removing a contributor drops theirs (undo restores it).
 - Keyboard and touch fixes: the grid's key hint (0–3 set a level) is always visible, cells announce
   their shortcuts, a focused cell no longer hides under the sticky headers, and small buttons in the

@@ -14,7 +14,11 @@ const DOCTYPE =
  * Output mirrors the format produced by the original Python app.
  */
 export function toJats4rXml(authors: Author[]): string {
-  const contributions = authors.map(authorToXml).join("\n    ");
+  // JATS4R rejects equal-contrib on a single author: equal with whom? A lone
+  // flag stays in JSON and CSV, where the draft round-trips, but not here.
+  const sharedFirst =
+    authors.filter((author) => author.equalContribution && author.contributorType !== "non-author").length > 1;
+  const contributions = authors.map((author) => authorToXml(author, sharedFirst)).join("\n    ");
 
   return `<?xml version='1.0' encoding='UTF-8'?>
 ${DOCTYPE}
@@ -48,7 +52,7 @@ function givenNamesOf(author: Author): string {
   return author.middleName ? `${author.firstName} ${author.middleName}` : author.firstName;
 }
 
-function authorToXml(author: Author): string {
+function authorToXml(author: Author, sharedFirst: boolean): string {
   const givenNames = givenNamesOf(author);
 
   // JATS4R wants the full URI, not the bare iD.
@@ -72,7 +76,7 @@ function authorToXml(author: Author): string {
 
   // JATS carries both markers as attributes on <contrib>, outside the CRediT
   // vocabulary: the taxonomy has no term for either.
-  const equalAttr = author.equalContribution ? ' equal-contrib="yes"' : "";
+  const equalAttr = sharedFirst && author.equalContribution && contribType === "author" ? ' equal-contrib="yes"' : "";
   const correspAttr = author.corresponding ? ' corresp="yes"' : "";
 
   return `<contrib contrib-type="${contribType}"${equalAttr}${correspAttr}>${orcidEl}

@@ -29,8 +29,8 @@ export function markerNotes(
   const corresponding = authors.filter((author) => author.corresponding);
 
   // One marked contributor cannot have contributed "equally" with anyone, so
-  // the note would be nonsense; the marker stays in the data and in the
-  // structured exports, which is where a lone flag still means something.
+  // the note would be nonsense. The marker stays in the data, JSON and CSV, so
+  // the draft round-trips; the JATS export drops a lone flag (export/xml.ts).
   if (equal.length > 1) notes.push(fillTemplate(translateUi("equalContributionNote"), { names: join(equal) }));
   if (corresponding.length > 0) {
     notes.push(fillTemplate(translateUi("correspondenceNote"), { names: join(corresponding) }));
