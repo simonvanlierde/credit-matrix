@@ -1013,12 +1013,79 @@ describe("contribution store", () => {
         theirs: { ...stored.state.drafts[open], id: "theirs", title: "Their paper" },
       });
       expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(true);
+      expect(followOtherTab(storageEvent(`${PERSIST_KEY}:draft:theirs`))).toBe(false);
       expect(store().drafts.theirs?.title).toBe("Their paper");
 
       store().deleteDraft("theirs");
 
       expect(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:theirs`)).toBeNull();
       expect(globalThis.localStorage.getItem(PERSIST_KEY)).not.toContain("Their paper");
+    });
+
+    /** This tab after a load: `x` open, `y` parked with the title "Y0". */
+    async function loadedWithParked() {
+      store().setTitle("X0");
+      const first = store().activeDraftId;
+      store().createDraft();
+      store().setTitle("Y0");
+      const y = store().activeDraftId;
+      store().switchDraft(first);
+      await useContributionStore.persist.rehydrate();
+      // The restore re-keys the initial draft's id.
+      return { x: store().activeDraftId, y };
+    }
+
+    /** The other tab opens `y` and saves an edit to it. */
+    function editParkedThere(y: string) {
+      const stored = JSON.parse(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${y}`) ?? "{}");
+      saveFromOtherTab(y, { [y]: { ...stored, title: "Y1" } });
+    }
+    const titleOnDisk = (id: string) =>
+      JSON.parse(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${id}`) ?? "{}").title;
+
+    it("takes in the other tab's edit of a draft parked here, and never saves its old copy over it", async () => {
+      const { x, y } = await loadedWithParked();
+      editParkedThere(y);
+
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      expect(store().activeDraftId).toBe(x);
+      expect(store().drafts[y]?.title).toBe("Y1");
+
+      store().setTitle("X1");
+      expect(titleOnDisk(y)).toBe("Y1");
+      store().switchDraft(y);
+      expect(store().title).toBe("Y1");
+    });
+
+    it("keeps the other tab's edit when this tab saves before hearing of it", async () => {
+      const { y } = await loadedWithParked();
+      editParkedThere(y);
+
+      // The storage event is still queued: this tab's save comes first.
+      store().setTitle("X1");
+      expect(titleOnDisk(y)).toBe("Y1");
+      // By the time the event runs, the main key holds this tab's save again.
+      expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(false);
+      await Promise.resolve();
+      expect(store().drafts[y]?.title).toBe("Y1");
+    });
+
+    it("takes in a parked draft the other tab saved to its own key", async () => {
+      const { y } = await loadedWithParked();
+      const stored = JSON.parse(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${y}`) ?? "{}");
+      globalThis.localStorage.setItem(`${PERSIST_KEY}:draft:${y}`, JSON.stringify({ ...stored, title: "Y1" }));
+
+      expect(followOtherTab(storageEvent(`${PERSIST_KEY}:draft:${y}`))).toBe(false);
+      expect(store().drafts[y]?.title).toBe("Y1");
+    });
+
+    // Another tab saves on every keystroke: one event must not parse the whole shelf.
+    it("reads only the key that changed", async () => {
+      await loadedWithParked();
+      const reads = vi.spyOn(Storage.prototype, "getItem");
+      followOtherTab(storageEvent(PERSIST_KEY));
+      expect(reads.mock.calls).toEqual([[PERSIST_KEY]]);
+      reads.mockRestore();
     });
 
     it("ignores events it cannot act on", () => {
