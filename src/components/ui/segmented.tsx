@@ -1,6 +1,7 @@
 "use client";
 
-import { type KeyboardEvent, type ReactNode, useRef } from "react";
+import type { ReactNode } from "react";
+import { moveRadioSelection } from "@/lib/roving-radio";
 import { cn } from "@/lib/utils";
 
 export interface SegmentedOption<T extends string> {
@@ -32,28 +33,18 @@ export function SegmentedControl<T extends string>({
   className?: string;
   ariaLabel?: string;
 }) {
-  const groupRef = useRef<HTMLDivElement>(null);
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
-    const back = event.key === "ArrowLeft" || event.key === "ArrowUp";
-    if (!(forward || back)) return;
-    event.preventDefault();
-    const current = options.findIndex((option) => option.value === value);
-    const nextIndex = (current + (forward ? 1 : options.length - 1)) % options.length;
-    const next = options[nextIndex];
-    if (!next) return;
-    onChange(next.value);
-    // Roving tabindex: move focus to the newly selected radio.
-    groupRef.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[nextIndex]?.focus();
-  }
-
   return (
     <div
-      ref={groupRef}
       role="radiogroup"
       aria-label={ariaLabel}
-      onKeyDown={handleKeyDown}
+      onKeyDown={(event) =>
+        moveRadioSelection(
+          event,
+          options,
+          options.findIndex((option) => option.value === value),
+          (next) => onChange(next.value),
+        )
+      }
       className={cn("inline-flex bg-surface-container-high p-1 rounded-lg gap-0.5", className)}
     >
       {options.map(({ value: optionValue, label, title }) => {
