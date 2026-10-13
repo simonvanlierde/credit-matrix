@@ -1087,7 +1087,8 @@ export declare function createAuthor(name: string, overrides?: {
  * Rebuild a roster under the rules every caller shares: at most `MAX_AUTHORS`
  * rows, ids unique and shareable in a link, and initials re-derived and
  * deduplicated. Throws when there are too many rows, or on a row
- * `createAuthor` cannot rebuild.
+ * `createAuthor` cannot rebuild. A row that comes out unchanged is returned
+ * as the same object, so memoised rows and cached reviews keep it.
  */
 export declare function normalizeRoster(authors: Author[]): Author[];
 /**

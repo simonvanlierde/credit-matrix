@@ -223,14 +223,15 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
  * Rebuild a roster under the rules every caller shares: at most `MAX_AUTHORS`
  * rows, ids unique and shareable in a link, and initials re-derived and
  * deduplicated. Throws when there are too many rows, or on a row
- * `createAuthor` cannot rebuild.
+ * `createAuthor` cannot rebuild. A row that comes out unchanged is returned
+ * as the same object, so memoised rows and cached reviews keep it.
  */
 export function normalizeRoster(authors: Author[]): Author[] {
   if (authors.length > MAX_AUTHORS) {
     throw new Error(`A draft can contain at most ${MAX_AUTHORS} contributors.`);
   }
   const seenIds = new Set<string>();
-  return deduplicateAuthorInitials(
+  const rebuilt = deduplicateAuthorInitials(
     authors.map((author) => {
       // Ids key every lookup and must survive a share link: an imported
       // duplicate or unshareable id gets a fresh one.
@@ -246,6 +247,24 @@ export function normalizeRoster(authors: Author[]): Author[] {
         ...consistentNameParts(author),
       });
     }),
+  );
+  return rebuilt.map((author, index) => {
+    const original = authors[index];
+    return original && isSameAuthor(original, author) ? original : author;
+  });
+}
+
+/** Field-by-field equality, contributions included, for the shape `createAuthor` builds. */
+function isSameAuthor(a: Author, b: Author): boolean {
+  const keys = Object.keys(b) as (keyof Author)[];
+  return (
+    Object.keys(a).length === keys.length &&
+    keys.every((key) =>
+      key === "contributions"
+        ? a.contributions.length === b.contributions.length &&
+          a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i]?.score)
+        : a[key] === b[key],
+    )
   );
 }
 

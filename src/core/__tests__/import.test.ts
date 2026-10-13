@@ -130,6 +130,14 @@ describe("normalizeRoster", () => {
     });
   });
 
+  it("returns an unchanged row as the same object", () => {
+    const [jane, bob] = normalizeRoster(roster());
+    if (!(jane && bob)) throw new Error("expected two authors");
+    const [sameJane, renamedBob] = normalizeRoster([jane, { ...bob, name: "Bob Black" }]);
+    expect(sameJane).toBe(jane);
+    expect(renamedBob).toMatchObject({ name: "Bob Black", surname: "Black" });
+  });
+
   it("refuses more than MAX_AUTHORS rows", () => {
     const many = Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => createAuthor(`Person ${i} Name`));
     expect(() => normalizeRoster(many)).toThrow(/at most/);
