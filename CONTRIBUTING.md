@@ -45,7 +45,9 @@ Add or update tests in `src/core/__tests__` for any change to domain logic.
 
 - **Unit (Vitest)**: `pnpm test`. Covers the domain layer, the store, and `src/lib`: name
   parsing, initials deduplication, statement formats, score-to-level boundaries, import/export round
-  trips, validation, and heatmap SVG generation.
+  trips, validation, and heatmap SVG generation. `format-fixtures.test.ts` decodes frozen files
+  in `src/core/__tests__/fixtures/` (a share link, JSON, CSV and JATS); after a deliberate format
+  change, regenerate the affected fixture and run `pnpm validate:jats`.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
   the co-author claim round trip. `review.spec.ts` covers settling co-author answers in the Review
