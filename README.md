@@ -177,7 +177,8 @@ pnpm preview        # build + serve out/ locally, headers applied
 pnpm deploy         # build + deploy to your Cloudflare account
 ```
 
-`pnpm build` runs `next build`, then [`scripts/postbuild.mjs`](scripts/postbuild.mjs). That script
+`pnpm build` builds the `credit-matrix` package, runs `next build`, then
+[`scripts/postbuild.mjs`](scripts/postbuild.mjs). That script
 replaces `'unsafe-inline'` in the CSP with the hashes of the exported inline scripts. It also names
 the service worker's cache after the build. To roll back a bad deploy, see
 [docs/deploy.md](docs/deploy.md#roll-back).

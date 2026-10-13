@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node scripts/postbuild.mjs",
+    "build": "pnpm --filter credit-matrix build && next build && node scripts/postbuild.mjs",
     "start": "wrangler dev",
     "preview": "pnpm build && wrangler dev",
     "deploy": "pnpm build && wrangler deploy",
