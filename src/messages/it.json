@@ -289,7 +289,7 @@
   "welcomeDraftsBody": "Più di un articolo? Cambia bozza dall'intestazione; ognuna è conservata separatamente in questo browser.",
   "welcomeAskTitle": "Chiedi direttamente ai coautori",
   "welcomeAskBody": "Copiare un link dal menu della riga di una persona e inviarglielo. Quando torna un link, aprirlo: compila soltanto i ruoli di quella persona.",
-  "importDescription": "Parti da un DOI, incolla i nomi o un link che ti è stato rimandato, oppure carica un file CSV, JSON o JATS4R XML. JSON e XML ripristinano anche i livelli di contributo.",
+  "importDescription": "Parti da un DOI, incolla i nomi o un link che ti è stato rimandato, oppure carica un file CSV, JSON o JATS4R XML. JSON e XML ripristinano anche i contributi, con i livelli se il file li contiene.",
   "contributorActions": "Azioni per {name}",
   "colorBlue": "Blu",
   "colorOrange": "Arancione",

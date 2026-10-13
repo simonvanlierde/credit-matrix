@@ -289,7 +289,7 @@
   "welcomeDraftsBody": "Plusieurs articles ? Changez de brouillon depuis l'en-tête ; chacun est conservé séparément dans ce navigateur.",
   "welcomeAskTitle": "Demandez directement aux co-auteurs",
   "welcomeAskBody": "Copiez un lien depuis le menu de la ligne d'une personne et envoyez-le-lui. Quand un lien revient, ouvrez-le : il ne remplit que les rôles de cette personne.",
-  "importDescription": "Partez d'un DOI, collez des noms ou un lien qu'une personne vous a renvoyé, ou téléversez un fichier CSV, JSON ou JATS4R XML. JSON et XML restaurent aussi les niveaux de contribution.",
+  "importDescription": "Partez d'un DOI, collez des noms ou un lien qu'une personne vous a renvoyé, ou téléversez un fichier CSV, JSON ou JATS4R XML. JSON et XML restaurent aussi les contributions, avec leurs niveaux si le fichier les contient.",
   "contributorActions": "Actions pour {name}",
   "colorBlue": "Bleu",
   "colorOrange": "Orange",
