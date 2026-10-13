@@ -24,6 +24,8 @@ def build_journals(con: duckdb.DuckDBPyConnection, sources: str = OPENALEX_SOURC
     con.execute(
         "CREATE OR REPLACE TEMP TABLE sources AS SELECT * FROM read_parquet(?, union_by_name = true)", [sources]
     )
+    # All or nothing: a failure halfway must not leave new journals beside old keys.
+    con.begin()
     con.execute(
         """
         CREATE OR REPLACE TABLE journals AS
@@ -65,8 +67,12 @@ def build_journals(con: duckdb.DuckDBPyConnection, sources: str = OPENALEX_SOURC
             SELECT pmcid, 'title:' || lower(journal), 2 FROM articles WHERE journal IS NOT NULL
         ),
         matched AS (
-            SELECT k.pmcid, arg_min(j.openalex_id, k.preference) AS openalex_id
-            FROM keys k JOIN journal_keys j USING (key) GROUP BY k.pmcid
+            -- An article whose ISSNs point at two journals takes the same one every time.
+            SELECT pmcid, openalex_id FROM (
+                SELECT k.pmcid, j.openalex_id,
+                       row_number() OVER (PARTITION BY k.pmcid ORDER BY k.preference, j.openalex_id) AS rank
+                FROM keys k JOIN journal_keys j USING (key)
+            ) WHERE rank = 1
         )
         SELECT a.pmcid, j.openalex_id,
                CASE WHEN j.field_share < {MULTIDISCIPLINARY} THEN 'Multidisciplinary' ELSE j.field END AS field,
@@ -74,5 +80,10 @@ def build_journals(con: duckdb.DuckDBPyConnection, sources: str = OPENALEX_SOURC
         FROM articles a LEFT JOIN matched m USING (pmcid) LEFT JOIN journals j USING (openalex_id)
         """
     )
+    # Which OpenAlex snapshot the fields came from: its newest updated_date.
+    con.execute(
+        "INSERT OR REPLACE INTO meta SELECT 'openalex_sources', CAST(max(updated_date) AS VARCHAR) FROM sources"
+    )
+    con.commit()
     (count,) = con.execute("SELECT count(*) FROM journals").fetchone() or (0,)
     return count

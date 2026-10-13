@@ -16,7 +16,7 @@ from pathlib import Path
 
 import duckdb
 
-from observatory.roles import clean, find_roles
+from census.roles import clean, find_roles
 
 # Styles read from free text, which is where parsing can go wrong. jats4r and plos_uri are machine tags.
 TEXT_STYLES = ("statement_text", "contrib_text", "none")
@@ -34,13 +34,18 @@ def export(con: duckdb.DuckDBPyConnection, path: Path, per_style: int, seed: int
         ).fetchall()
         for pmcid, style_, authors, text in rng.sample(pool, min(per_style, len(pool))):
             numbered = " | ".join(f"{i}. {name}" for i, name in enumerate(authors, 1))
-            rows.append((pmcid, style_, numbered, text, ""))
+            rows.append((pmcid, style_, numbered, _cell(text), ""))
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as f:
         writer = csv.writer(f, lineterminator="\n")
         writer.writerow(["pmcid", "style", "authors", "text", "gold"])
         writer.writerows(rows)
     return len(rows)
+
+
+def _cell(text: str) -> str:
+    """Article text, defused for spreadsheets: a leading = + - @ would run as a formula."""
+    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
 
 
 def parse_gold(gold: str, n_authors: int) -> set[tuple[int, str]]:

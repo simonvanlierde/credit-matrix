@@ -4,8 +4,8 @@ import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 
-from observatory.roles import clean, find_roles, slug_from_url
-from observatory.statement import Author, parse_statement
+from census.roles import clean, find_roles, slug_from_url
+from census.statement import Author, parse_statement
 
 XLINK = "{http://www.w3.org/1999/xlink}"
 ALI = "{http://www.niso.org/schemas/ali/1.0/}"
@@ -46,32 +46,51 @@ class Article:
     unresolved: list[str] = field(default_factory=list)
 
 
+_ORCID_RE = re.compile(r"\d{4}-\d{4}-\d{4}-\d{3}[\dX]")
+
+
 def _text(el: ET.Element | None) -> str:
-    return re.sub(r"\s+", " ", "".join(el.itertext())).strip() if el is not None else ""
+    # Joined with spaces: list items, paragraphs and <break/> otherwise glue words ("analysisS.").
+    return re.sub(r"\s+", " ", " ".join(el.itertext())).strip() if el is not None else ""
+
+
+def _own_text(el: ET.Element, skip: str) -> str:
+    """Text of `el` without what sits inside its `skip` children (a consortium's member list)."""
+    parts = [el.text or ""]
+    for child in el:
+        if child.tag != skip:
+            parts.append(_text(child))
+        parts.append(child.tail or "")
+    return re.sub(r"\s+", " ", " ".join(parts)).strip()
 
 
 def _author(contrib: ET.Element) -> Author:
     name = contrib.find("name")
-    orcid = next(
-        (_text(c) for c in contrib.findall("contrib-id") if c.get("contrib-id-type") == "orcid"),
-        None,
-    )
+    ids = (_ORCID_RE.search(_text(c)) for c in contrib.findall("contrib-id") if c.get("contrib-id-type") == "orcid")
+    orcid = next((m.group() for m in ids if m), None)  # bare form: http and https URIs both occur
     if name is not None:
         return Author(_text(name.find("given-names")), _text(name.find("surname")), orcid)
-    return Author("", _text(contrib.find("collab")) or _text(contrib.find("string-name")), orcid)
+    collab = contrib.find("collab")
+    return Author(
+        "", _own_text(collab, "contrib-group") if collab is not None else _text(contrib.find("string-name")), orcid
+    )
 
 
 def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> tuple[list[tuple[str, str]], list[str]]:
     """(style, slug) for each role tagged on one author, and the free text it came from."""
     found, texts = [], []
     for role in contrib.findall("role"):
-        if role.get("vocab") == "credit":
-            slug = slug_from_url(role.get("vocab-term-identifier", ""))
-            found += [("jats4r", slug)] if slug else []
-        elif slug := slug_from_url(role.get("content-type", "")):
-            found.append(("plos_uri", slug))
-        else:
+        url = role.get("vocab-term-identifier", "") if role.get("vocab") == "credit" else role.get("content-type", "")
+        style = "jats4r" if role.get("vocab") == "credit" else "plos_uri"
+        if style == "plos_uri" and not re.search(r"credit|casrai", url):
             texts.append(_text(role))
+        elif slug := slug_from_url(url):
+            found.append((style, slug))
+        else:
+            # A malformed role URL ("contributor-roles/formal analysis/", casrai.org): read the term,
+            # the URL's last segment or the text, and keep the tagged style.
+            fallback = " ".join([role.get("vocab-term", ""), url.rstrip("/").rsplit("/", 1)[-1], _text(role)])
+            found += [(style, s) for s in {s for _, _, s in find_roles(clean(fallback))}]
     texts += [fns[rid] for x in contrib.findall("xref") if (rid := x.get("rid", "")) in fns]
     found += [("contrib_text", s) for t in texts for _, _, s in find_roles(clean(t))]
     return found, texts
@@ -87,8 +106,17 @@ def _holds_statement(el: ET.Element) -> bool:
 
 
 def _statement_candidates(root: ET.Element):
-    """Free text of each element that may hold the statement, title left out, if it names a role."""
-    for el in root.iter():
+    """Free text of each element that may hold the statement, title left out, if it names a role.
+
+    Back matter first: a body section titled "Contribution" (the paper's own contribution) must not
+    win over the author contributions note after it.
+    """
+    back = root.find("back")
+    seen: set[int] = set()
+    for el in [*(back.iter() if back is not None else []), *root.iter()]:
+        if id(el) in seen:
+            continue
+        seen.add(id(el))
         if _holds_statement(el):
             text = " ".join(_text(child) for child in el if child.tag != "title")
             if find_roles(clean(text)):
@@ -101,7 +129,9 @@ def parse_article(xml: bytes) -> Article:
     if meta is None:
         raise ValueError("no front/article-meta")
     ids = {i.get("pub-id-type"): _text(i) for i in meta.findall("article-id")}
+    # A sane range keeps a mistyped year ("20225") out of an INTEGER column.
     years = [int(y) for y in (_text(d.find("year")) for d in meta.findall("pub-date")) if y.isdigit()]
+    years = [y for y in years if 1900 <= y <= 2100]
     lic = meta.find("permissions/license")
     article = Article(
         pmcid=ids.get("pmcid") or (f"PMC{ids['pmc']}" if ids.get("pmc", "").isdigit() else ids.get("pmc")),
@@ -116,9 +146,10 @@ def parse_article(xml: bytes) -> Article:
 
     # Springer Nature and Frontiers leave contrib-type out; editors and reviewers carry one, or sit in a
     # contrib-group marked as theirs (eLife).
+    # Direct children only: a <collab> holds its own contrib-group of consortium members.
     contribs = [
         c
-        for group in meta.iter("contrib-group")
+        for group in meta.findall("contrib-group")
         if group.get("content-type", "author") in {"author", "authors"}
         for c in group.findall("contrib")
         if c.get("contrib-type", "author") == "author"

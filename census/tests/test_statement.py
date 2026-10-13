@@ -1,5 +1,5 @@
-from observatory.roles import ROLE_PATTERNS, clean, find_roles, slug_from_url
-from observatory.statement import Author, parse_statement, resolve_initials
+from census.roles import ROLE_PATTERNS, clean, find_roles, slug_from_url
+from census.statement import Author, parse_statement, resolve_initials
 
 AUTHORS = [
     Author("Anna", "Peters"),
@@ -79,3 +79,49 @@ def test_all_authors_contributing_is_an_assignment():
     text = "All authors contributed to the investigation and conceptualization. All authors read and approved the manuscript."
     parsed = parse_statement(text, AUTHORS[:2])
     assert parsed.assignments == {(i, r) for i in (0, 1) for r in ("investigation", "conceptualization")}
+
+
+THREE = [Author("Ann", "Bell"), Author("Carl", "Dunn"), Author("Eva", "Fox")]
+
+
+def test_a_clause_without_credit_wording_does_not_shift_the_rest():
+    parsed = parse_statement("AB: conceptualization. CD: drew the figures. EF: software.", THREE)
+    assert parsed.assignments == {(0, "conceptualization"), (2, "software")}
+
+
+def test_role_first_clauses_ended_by_full_stops():
+    parsed = parse_statement("Conceptualization, A.B. Methodology, C.D. and E.F.", THREE)
+    assert parsed.assignments == {(0, "conceptualization"), (1, "methodology"), (2, "methodology")}
+
+
+def test_a_clause_of_roles_alone_goes_to_the_people_before_it():
+    parsed = parse_statement("A.B.: conceptualization; methodology. C.D.: software.", THREE)
+    assert parsed.assignments == {(0, "conceptualization"), (0, "methodology"), (1, "software")}
+
+
+def test_initials_stop_at_a_sentence_end():
+    parsed = parse_statement("Supervision: EF. AB is the guarantor.", THREE)
+    assert parsed.assignments == {(2, "supervision")}
+
+
+def test_vancouver_surname_and_initials():
+    authors = [Author("Ki Chang", "Nam"), Author("Dong Gyun", "Yim")]
+    parsed = parse_statement("Conceptualization: Nam KC. Data curation: Yim DG.", authors)
+    assert parsed.assignments == {(0, "conceptualization"), (1, "data-curation")}
+
+
+def test_non_ascii_initials():
+    authors = [Author("Hana", "Šigutová"), Author("Filip", "Harabiš")]
+    parsed = parse_statement("Software: H.Š. and F.H.", authors)
+    assert parsed.assignments == {(0, "software"), (1, "software")}
+
+
+def test_given_name_first_wins_over_surname_first():
+    authors = [Author("Hao", "Leng"), Author("Liang", "Hong")]
+    assert resolve_initials("L.H.", authors) == 1
+
+
+def test_particles_inside_initials():
+    authors = [Author("Fernanda", "da Silva Nunes"), Author("João Antonio", "dos Santos-Silva")]
+    parsed = parse_statement("Methodology, F.d.S.N. and J.A.d.S.-S.", authors)
+    assert parsed.assignments == {(0, "methodology"), (1, "methodology")}

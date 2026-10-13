@@ -6,8 +6,11 @@ metadata files lists every version, so one inventory date pins which version a r
 
 import gzip
 import json
+import os
 import re
+import threading
 import urllib.error
+import zlib
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from itertools import islice
@@ -15,8 +18,8 @@ from pathlib import Path
 
 import duckdb
 
-from observatory.net import get
-from observatory.store import Rows, failed_row, rows_for
+from census.net import get
+from census.store import Rows, failed_row, rows_for
 
 BUCKET = "https://pmc-oa-opendata.s3.amazonaws.com"
 INVENTORY = "inventory-reports/pmc-oa-opendata/metadata"
@@ -37,6 +40,7 @@ def load_versions(date: str, cache: Path) -> dict[str, int]:
         manifest = json.loads(get(f"{BUCKET}/{INVENTORY}/{date}/manifest.json"))
         urls = [f"{BUCKET}/{f['key']}" for f in manifest["files"]]
         cache.parent.mkdir(parents=True, exist_ok=True)
+        tmp = cache.with_name(cache.name + ".tmp")
         with duckdb.connect() as con:
             con.execute("SET enable_progress_bar = false")
             con.execute(
@@ -47,9 +51,10 @@ def load_versions(date: str, cache: Path) -> dict[str, int]:
                                   'modified': 'VARCHAR', 'etag': 'VARCHAR'}})
                     WHERE key LIKE '%.json'
                     GROUP BY 1
-                ) TO '{cache}' (FORMAT parquet)""",
+                ) TO '{tmp}' (FORMAT parquet)""",
                 [urls],
             )
+        tmp.rename(cache)  # an interrupted COPY never leaves a broken file under the real name
     with duckdb.connect() as con:
         return dict(con.execute("SELECT pmcid, version FROM read_parquet(?)", [str(cache)]).fetchall())
 
@@ -65,11 +70,18 @@ def cached(fetch: Callable[[str], bytes], cache: Path) -> Callable[[str], bytes]
     def read(url: str) -> bytes:
         path = cache / (url.rsplit("/", 1)[1] + ".gz")
         if path.exists():
-            return gzip.decompress(path.read_bytes())
+            try:
+                data = gzip.decompress(path.read_bytes())
+                if data:
+                    return data
+            except OSError, EOFError, zlib.error:
+                pass
+            path.unlink(missing_ok=True)  # truncated, empty or not gzip: fetch it again
         data = fetch(url)
-        tmp = path.with_suffix(".tmp")
+        # One temp name per writer, so two runs sharing the cache never rename each other's half file.
+        tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
         tmp.write_bytes(gzip.compress(data, compresslevel=6))
-        tmp.rename(path)  # never leaves a half-written file under the real name
+        tmp.rename(path)
         return data
 
     return read
@@ -88,8 +100,8 @@ def _download(pmcid: str, stratum: str, version: int | None, fetch: Callable[[st
         if error.code == 404:
             return pmcid, stratum, version, None, ("missing", "HTTP 404")
         return pmcid, stratum, version, None, ("retry", f"HTTP {error.code}")
-    except OSError as error:
-        return pmcid, stratum, version, None, ("retry", f"fetch failed: {error}")
+    except Exception as error:  # IncompleteRead and other http.client errors are not OSErrors
+        return pmcid, stratum, version, None, ("retry", f"fetch failed: {type(error).__name__}: {error}")
 
 
 def _parse(item: Download) -> Rows:

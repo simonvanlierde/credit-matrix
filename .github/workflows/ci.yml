@@ -64,13 +64,13 @@ jobs:
           files: coverage/lcov.info
           fail_ci_if_error: false
 
-  observatory:
-    name: Observatory
+  census:
+    name: Census
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
       run:
-        working-directory: observatory
+        working-directory: census
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -78,7 +78,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          working-directory: observatory
+          working-directory: census
 
       - name: Lint, typecheck, test
         run: |

@@ -35,6 +35,14 @@ CI runs `pnpm verify`, `pnpm validate:jats`, the full Playwright suite (with the
 static export build on every pull request and every push to `main`. It deploys `main` only when all
 of them pass. If you change the domain logic, add or update tests in `src/core/__tests__`.
 
+The CRediT census in `census/` is a Python project with its own checks, which `pnpm verify` does
+not run. It needs [uv](https://docs.astral.sh/uv/); the pre-push hook runs these when census files
+change:
+
+```bash
+cd census && uv run --locked ruff format --check . && uv run --locked ruff check . && uv run --locked ty check && uv run --locked pytest -q
+```
+
 ## Testing
 
 - **Unit (Vitest)**: two projects. `core` runs `src/core` under Node and checks the built package:
