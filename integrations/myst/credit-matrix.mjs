@@ -8,7 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parse } from "yaml";
 
-const ROLES = [
+export const ROLES = [
   "Conceptualization",
   "Data curation",
   "Formal analysis",
@@ -59,7 +59,9 @@ function authorName(author) {
 
 /** One `Name: Role, Role` entry per author with CRediT roles, in canonical role order. */
 export function statementEntries(authors) {
-  return (authors ?? []).flatMap((author) => {
+  // A single author may be a map or a string rather than a list; a bare string has no roles.
+  return [].concat(authors ?? []).flatMap((author) => {
+    if (typeof author !== "object" || author === null) return [];
     const raw = typeof author.roles === "string" ? author.roles.split(/[,;]/) : (author.roles ?? []);
     const roles = new Set(raw.map((r) => normalizeRole(String(r))).filter(Boolean));
     if (roles.size === 0) return [];

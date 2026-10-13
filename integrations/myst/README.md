@@ -54,7 +54,10 @@ names, spellings and aliases follow MyST (`writing`, `editing`, `review`, `analy
   front matter from disk. A notebook page uses the project's authors.
 - An author listed only by `id` in a page is not looked up in the project's list.
 - MyST roles have no degree of contribution, so the statement shows no Equal or Supporting.
-- English role names only, and one format: by author. The
+- English only. The plugin ignores the document's `lang`: role names, separators and the
+  statement are always English, and you write any heading yourself. For another language, run
+  `credit-matrix statement file.json --locale fr` from the package CLI and paste the result.
+- One format: by author. The
   [`credit-matrix`](../../src/core/README.md) package also writes by role, with initials and in
   eight other languages. The plugin carries its own copy of the wording instead of importing the
   package, so it has a single dependency.

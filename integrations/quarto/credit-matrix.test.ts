@@ -1,8 +1,10 @@
 // biome-ignore-all lint/correctness/noNodejsModules: runs Quarto from Node when it is installed.
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { createAuthor, generateStatement } from "@/core";
+import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
 
 // What the filter renders for example.qmd, without the Markdown bold around each name.
 const EXPECTED =
@@ -26,14 +28,26 @@ describe("Quarto filter", () => {
   });
 });
 
-describe.skipIf(spawnSync("quarto", ["--version"]).status !== 0)("Quarto filter, rendered", () => {
+it("keeps the Lua role list in step with the core role names", () => {
+  const lua = readFileSync(new URL("_extensions/credit-matrix/credit-matrix.lua", import.meta.url), "utf8");
+  const block = /local CREDIT_TERMS = \{([\s\S]*?)\n\}/.exec(lua)?.[1] ?? "";
+  const terms = [...block.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  expect(terms).toEqual(CREDIT_ROLES.map((r: { name: string }) => r.name.toLowerCase()));
+});
+
+// Locally the rendered test is skipped without Quarto; in CI a missing Quarto fails it.
+const hasQuarto = spawnSync("quarto", ["--version"]).status === 0;
+
+describe.skipIf(!hasQuarto && !process.env.CI)("Quarto filter, rendered", () => {
   it("renders the statement into example.qmd", () => {
+    expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
     const dir = fileURLToPath(new URL(".", import.meta.url));
-    const md = execFileSync("quarto", ["render", "example.qmd", "--to", "gfm", "-o", "-"], {
+    const run = spawnSync("quarto", ["render", "example.qmd", "--to", "gfm", "-o", "-"], {
       cwd: dir,
       encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
     });
+    expect(run.status, run.stderr).toBe(0);
+    const md = run.stdout;
     expect(md).toContain("# CRediT authorship contribution statement");
     expect(md.replaceAll("**", "").replace(/\s+/g, " ")).toContain(EXPECTED);
   });
