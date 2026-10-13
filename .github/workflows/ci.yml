@@ -171,10 +171,12 @@ jobs:
 
   # Preview of a PR's build as a Worker version (not live). Needs the token
   # secret, which fork PRs never get, so both cases skip with a notice.
+  # The secrets live in the `preview` environment, apart from production's.
   preview:
     name: Preview
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    environment: preview
     timeout-minutes: 10
     needs: [build]
     steps:
@@ -227,21 +229,44 @@ jobs:
             if [ -n "$url" ]; then echo "$url"; else echo "Version uploaded, but wrangler printed no preview URL. Enable Preview URLs for the Worker in the dashboard."; fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # Provenance for the exact files the deploy job ships. Kept apart from
+  # deploy so the OIDC token never sits in a job that runs project code.
+  attest:
+    name: Attest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build]
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: out
+          path: out
+
+      # One subject per file, so each served file can be checked on its own.
+      # The action caps a run at 1024 subjects; the export has under 100.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: 'out/**'
+
   # Production deploy of the build job's out/, after every check passes.
+  # The secrets live in the `production` environment, limited to main.
   deploy:
     name: Deploy
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [check, e2e, build]
+    needs: [check, e2e, build, attest]
+    environment: production
     # Serialise deploys; never cancel one half way.
     concurrency:
       group: deploy
       cancel-in-progress: false
-    permissions:
-      contents: read
-      id-token: write
-      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -260,14 +285,6 @@ jobs:
         with:
           name: out
           path: out
-
-      - name: Pack export
-        run: tar -czf out.tar.gz -C out .
-
-      - name: Attest build provenance
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: out.tar.gz
 
       - name: Deploy to Cloudflare
         env:

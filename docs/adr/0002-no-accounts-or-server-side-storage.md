@@ -66,6 +66,10 @@ Two further points:
 
 - Collecting roles from co-authors stays a manual round trip: each person
   returns a link that the corresponding author pastes back in.
+  - Note, 2026-10-13: still a manual link round trip, but opening a reply no
+    longer pastes it over the row. The co-author's answer is kept beside the
+    corresponding author's row, and each difference is settled in the Review
+    tab. The decision above is unchanged.
 - Drafts are per-browser. Moving between devices means exporting JSON and
   importing it on the other side.
 - Clearing site data destroys unexported drafts, with no recovery path.

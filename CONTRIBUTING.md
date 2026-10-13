@@ -48,10 +48,10 @@ Add or update tests in `src/core/__tests__` for any change to domain logic.
   trips, validation, and heatmap SVG generation.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
-  the co-author claim round trip. `review.spec.ts` covers settling co-author answers in the Review tab,
-  with its own axe scan. `drafts.spec.ts` covers deleting all drafts. `a11y.spec.ts` runs the axe scans. `messages.spec.ts`,
-  `design-tokens.spec.ts`, and `offline.spec.ts` guard the locale catalogs, the design tokens, and
-  the service worker.
+  the co-author claim round trip. `review.spec.ts` covers settling co-author answers in the Review
+  tab, with its own axe scan. `drafts.spec.ts` covers deleting all drafts. `a11y.spec.ts` runs the
+  axe scans. `messages.spec.ts`, `design-tokens.spec.ts`, and `offline.spec.ts` guard the locale
+  catalogs, the design tokens, and the service worker.
 
 Every PR runs Biome, typecheck, unit coverage, the full Playwright suite (including the axe scans),
 and a static export build. In CI, Playwright runs against `wrangler dev`, which applies

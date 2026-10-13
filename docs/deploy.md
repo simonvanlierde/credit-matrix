@@ -4,15 +4,16 @@
 
 The site is a static export (`out/`) served by a Cloudflare Worker with static assets only.
 
-On every push to `main`, `.github/workflows/ci.yml` runs `check`, `e2e` and `build`. When all three pass, the `deploy` job:
+On every push to `main`, `.github/workflows/ci.yml` runs `check`, `e2e` and `build`. After `build`, the `attest` job downloads the `out/` folder and attests build provenance for each file in it (see the Attestations tab on GitHub). It is the only job that can request a GitHub OIDC token. It installs nothing and runs no project code.
+
+When `check`, `e2e`, `build` and `attest` all pass, the `deploy` job:
 
 1. Downloads the `out/` folder the `build` job made, so the deployed files are the ones that were built and tested.
-2. Attests build provenance for a tarball of `out/` (see the Attestations tab on GitHub).
-3. Runs `wrangler deploy`.
+2. Runs `wrangler deploy`.
 
-If the `CLOUDFLARE_API_TOKEN` secret is missing, the deploy step prints a notice and the job still passes.
+The `deploy` job runs in the `production` environment and reads its Cloudflare secrets from there. If `CLOUDFLARE_API_TOKEN` is missing, the deploy step prints a notice and the job still passes.
 
-On pull requests, the `preview` job uploads the build as a Worker version with `wrangler versions upload` and writes the preview URL to the job summary. It skips on fork PRs and when the secret is missing. The URL only appears if Preview URLs are on for the Worker (dashboard: Settings, Domains and Routes).
+On pull requests, the `preview` job uploads the build as a Worker version with `wrangler versions upload` and writes the preview URL to the job summary. It runs in the `preview` environment and reads its own secrets from there. It skips on fork PRs and when the token is missing. The URL only appears if Preview URLs are on for the Worker (dashboard: Settings, Domains and Routes).
 
 ## Roll back
 
@@ -27,9 +28,12 @@ A rollback by CLI or dashboard lasts only until the next push to `main` deploys 
 
 ## One-time setup
 
-1. Create an API token at dash.cloudflare.com, My Profile, API Tokens. Use the "Edit Cloudflare Workers" template, limited to this account.
-2. In the GitHub repo, Settings, Secrets and variables, Actions, add:
-   - `CLOUDFLARE_API_TOKEN`: the token.
-   - `CLOUDFLARE_ACCOUNT_ID`: the account id (dashboard sidebar or `wrangler whoami`).
-3. Push to `main` and check that the `Deploy` job ran `wrangler deploy` and the site updated.
-4. After that first Actions deploy works, turn off Cloudflare Workers Builds: Workers & Pages, `credit-heatmap`, Settings, Builds, disconnect the Git repository. Leaving it on deploys every commit twice.
+1. Create two API tokens at dash.cloudflare.com, My Profile, API Tokens, both limited to this account:
+   - Production: the "Edit Cloudflare Workers" template.
+   - Preview: a separate token with only the rights `wrangler versions upload` needs (Account, Workers Scripts, Edit). Give it a short expiry and rotate it.
+2. In the GitHub repo, Settings, Environments, create two environments:
+   - `production`: under "Deployment branches and tags", choose "Selected branches and tags" and add `main` only. Add the secrets `CLOUDFLARE_API_TOKEN` (the production token) and `CLOUDFLARE_ACCOUNT_ID` (dashboard sidebar or `wrangler whoami`).
+   - `preview`: add `CLOUDFLARE_API_TOKEN` (the preview token) and `CLOUDFLARE_ACCOUNT_ID`.
+3. Delete the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets, if any (Settings, Secrets and variables, Actions). Only the environments should hold them.
+4. Push to `main` and check that the `Deploy` job ran `wrangler deploy` and the site updated.
+5. After that first Actions deploy works, turn off Cloudflare Workers Builds: Workers & Pages, `credit-heatmap`, Settings, Builds, disconnect the Git repository. Leaving it on deploys every commit twice.
