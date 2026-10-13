@@ -1232,6 +1232,22 @@ describe("contribution store", () => {
       hydrated.mockRestore();
     });
 
+    it("does not call a failure blocked while storage itself is reachable", () => {
+      const storage = useContributionStore.persist.getOptions().storage;
+      if (!storage) throw new Error("expected a storage adapter");
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      const failing = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new TypeError("Do not know how to serialize a BigInt");
+      });
+
+      const state = { drafts: {}, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
+      storage.setItem("credit-generator-state", { state, version: 1 });
+
+      expect(store().saveFailure).toBe("full");
+      failing.mockRestore();
+      hydrated.mockRestore();
+    });
+
     it("survives a normalize/denormalize round trip", () => {
       // The one contract that matters here: what partialize writes, merge must
       // read back as the same live workspace.

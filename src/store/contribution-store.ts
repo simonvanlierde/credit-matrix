@@ -738,8 +738,14 @@ export function announcingStorage(): DraftStorage {
         if (useContributionStore.getState().saveFailure) useContributionStore.setState({ saveFailure: null });
       } catch (error) {
         // Blocked site data: Chromium throws SecurityError on reading
-        // `window.localStorage`, Firefox leaves it null (a TypeError here).
-        const blocked = error instanceof DOMException ? error.name === "SecurityError" : error instanceof TypeError;
+        // `window.localStorage`, Firefox leaves it null. Any other failure is
+        // reported as full, the one other way a write here can fail.
+        let blocked = error instanceof DOMException && error.name === "SecurityError";
+        try {
+          blocked ||= window.localStorage === null;
+        } catch {
+          blocked = true;
+        }
         const failure = blocked ? "blocked" : "full";
         // Set only on a change: every edit retries the write, and the setState
         // itself runs setItem again.
