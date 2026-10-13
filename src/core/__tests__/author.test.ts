@@ -4,6 +4,7 @@ import {
   activeContributions,
   ContributionSchema,
   hasContributions,
+  isAllBinary,
   isValidOrcid,
   ORCID_INPUT_REGEX,
   ORCID_REGEX,
@@ -21,6 +22,16 @@ const VALID_AUTHOR = {
   initials: "JS",
   contributions: [],
 };
+
+describe("isAllBinary", () => {
+  it("is true only when every score is 0 or 100", () => {
+    expect(isAllBinary([])).toBe(true);
+    const yes = createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] });
+    expect(isAllBinary([yes])).toBe(true);
+    const level = createAuthor("Bob White", { contributions: [{ role: "Software", score: 50 }] });
+    expect(isAllBinary([yes, level])).toBe(false);
+  });
+});
 
 describe("isValidOrcid", () => {
   it("accepts iDs with a correct MOD 11-2 check digit (bare and URL form)", () => {
