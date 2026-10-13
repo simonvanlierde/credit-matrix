@@ -8,6 +8,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A [Quarto extension](integrations/quarto/README.md) that writes a CRediT authorship statement
+  from the author `roles` in a document's front matter, with Equal and Supporting levels.
+- A [MyST plugin](integrations/myst/README.md) with a `{credit-statement}` directive that does the
+  same from the authors in `myst.yml` or the page's front matter.
 - The `credit-matrix` npm package: the statements, file formats, heatmap and ask links behind the
   app, for your own scripts and sites, in Node or the browser. ORCID and DOI lookups are under
   `credit-matrix/lookup`, the role translations under `credit-matrix/i18n`.

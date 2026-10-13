@@ -82,6 +82,15 @@ npx credit-matrix statement contributions.json --format by-author --locale nl
 A `<credit-matrix>` element shows a statement and heatmap on any web page: see
 [docs/element.md](docs/element.md).
 
+## Use it in your manuscript
+
+Quarto and MyST already let you record CRediT roles for each author in the front matter. Two small
+add-ons turn those roles into a CRediT statement in the document:
+
+- [Quarto extension](integrations/quarto/README.md): `quarto add
+  simonvanlierde/credit-matrix/integrations/quarto`, then `filters: [credit-matrix]`.
+- [MyST plugin](integrations/myst/README.md): a `{credit-statement}` directive.
+
 ---
 
 ## Architecture

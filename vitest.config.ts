@@ -5,7 +5,7 @@ import { configDefaults, defineConfig } from "vitest/config";
 const src = fileURLToPath(new URL("./src", import.meta.url));
 
 /**
- * Unit tests for plain TypeScript, in two projects:
+ * Unit tests for plain TypeScript, in three projects:
  *
  * - `core`: the published package in `src/core`, under `node`, so a reach for a
  *   browser global fails here before it fails for a package user. linkedom
@@ -13,6 +13,7 @@ const src = fileURLToPath(new URL("./src", import.meta.url));
  * - `app`: the Zustand store, `src/lib` and the components, under `jsdom`,
  *   because they reach for `localStorage`, `navigator` and `Blob` the way they
  *   do in the browser.
+ * - `integrations`: the Quarto and MyST renderers in `integrations/`, under `node`.
  *
  * User-visible behaviour is covered by Playwright in `e2e/`.
  */
@@ -46,6 +47,10 @@ export default defineConfig({
           setupFiles: ["src/core/__tests__/setup.ts"],
           globalSetup: ["src/core/__tests__/global-setup.ts"],
         },
+      },
+      {
+        extends: true,
+        test: { name: "integrations", environment: "node", include: ["integrations/**/*.test.ts"] },
       },
       {
         extends: true,

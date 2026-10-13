@@ -1,0 +1,20 @@
+---
+title: "A CRediT statement from front matter"
+author:
+  - name: Jane A. Smith
+    roles:
+      - conceptualization: lead
+      - software: supporting
+      - writing: lead
+  - name: Bob White
+    roles:
+      - investigation
+      - formal analysis: equal
+      - editing
+filters:
+  - credit-matrix
+---
+
+# Introduction
+
+The CRediT statement below is built from the `roles` in the front matter.
