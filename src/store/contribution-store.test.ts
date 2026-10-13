@@ -1055,6 +1055,17 @@ describe("contribution store", () => {
       expect(store().drafts[y]?.title).toBe("Y1");
     });
 
+    it("lists a draft the other tab just created when this tab saves before hearing of it", async () => {
+      const { y } = await loadedWithParked();
+      const stored = JSON.parse(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${y}`) ?? "{}");
+      saveFromOtherTab("fresh", { fresh: { ...stored, id: "fresh", title: "New there" } });
+
+      store().setTitle("X1");
+      followOtherTab(storageEvent(PERSIST_KEY));
+      await Promise.resolve();
+      expect(store().drafts.fresh?.title).toBe("New there");
+    });
+
     it("takes in a parked draft the other tab saved to its own key", async () => {
       const { y } = await loadedWithParked();
       const stored = JSON.parse(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${y}`) ?? "{}");

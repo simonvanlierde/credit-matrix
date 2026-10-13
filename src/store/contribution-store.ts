@@ -710,8 +710,9 @@ export function announcingStorage(): DraftStorage {
             window.localStorage.setItem(DRAFT_KEY_PREFIX + id, JSON.stringify(draft));
             // Another tab's save this tab may not have heard of yet: its event
             // can arrive after this write, when the main key no longer holds
-            // it. Take it in once this save is done, or a stale copy stays here.
-            if (id in drafts) queueMicrotask(() => adoptKey(DRAFT_KEY_PREFIX + id));
+            // it. Take it in once this save is done, or a stale copy (or no
+            // copy, for a draft just created there) stays here.
+            queueMicrotask(() => adoptKey(DRAFT_KEY_PREFIX + id));
           }
         }
         for (const [id, draft] of Object.entries(drafts)) {
