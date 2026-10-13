@@ -154,8 +154,6 @@ interface ContributionState {
   clearClaimFor: (draftId: string) => void;
   /** Point at (or clear) the row a just-opened reply filled in. */
   setRecentReply: (contributorId: string | null) => void;
-  /** Put back an ask a removal took with it. */
-  markAsked: (contributorId: string, ask: Ask) => void;
   /** Send, reply or settle on one draft, open or parked, in one write. The undo is the caller's to keep. */
   applyAskStep: (draftId: string, event: AskEvent) => { outcome: Outcome; undo: Patch };
   /**
@@ -957,11 +955,6 @@ export const useContributionStore = create<ContributionState>()(
           state.recentReply = contributorId;
         }),
 
-      markAsked: (contributorId, ask) =>
-        set((state) => {
-          state.asks[contributorId] = ask;
-        }),
-
       applyAskStep: (draftId, event) => {
         const state = get();
         const source = draftId === state.activeDraftId ? state : state.drafts[draftId];
@@ -1046,7 +1039,7 @@ export const useContributionStore = create<ContributionState>()(
           if (index === -1) return;
           state.authors.splice(index, 1);
           state.authors = normalizeAuthors(state.authors);
-          // Undo of the removal puts the ask back through markAsked.
+          // Undo of the removal puts the ask back through applyAskPatch.
           delete state.asks[authorId];
           if (state.selfId === authorId) state.selfId = null;
         }),

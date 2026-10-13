@@ -635,7 +635,7 @@ describe("contribution store", () => {
 
     it("marks per draft and survives a switch away and back", () => {
       const jane = addJane();
-      store().markAsked(jane.id, ask);
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
       expect(store().asks[jane.id]).toEqual(ask);
 
       const home = store().activeDraftId;
@@ -842,14 +842,14 @@ describe("contribution store", () => {
 
     it("drops a contributor's ask when they are removed", () => {
       const jane = addJane();
-      store().markAsked(jane.id, ask);
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
       store().removeAuthor(jane.id);
       expect(store().asks).toEqual({});
     });
 
     it("clears on reset, and does not travel into a duplicate", () => {
       const jane = addJane();
-      store().markAsked(jane.id, ask);
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
       const copy = store().duplicateDraft(store().activeDraftId);
       expect(copy && store().drafts[copy]?.asks).toEqual({});
 

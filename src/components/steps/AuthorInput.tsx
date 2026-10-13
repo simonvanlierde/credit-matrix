@@ -145,7 +145,7 @@ export function AuthorList() {
     addAuthor,
     loadSample,
     moveAuthor,
-    markAsked,
+    applyAskPatch,
     removeAuthor,
     restoreAuthor,
     setTitle,
@@ -162,7 +162,7 @@ export function AuthorList() {
       addAuthor: s.addAuthor,
       loadSample: s.loadSample,
       moveAuthor: s.moveAuthor,
-      markAsked: s.markAsked,
+      applyAskPatch: s.applyAskPatch,
       removeAuthor: s.removeAuthor,
       restoreAuthor: s.restoreAuthor,
       setTitle: s.setTitle,
@@ -243,7 +243,7 @@ export function AuthorList() {
     // restoreAuthor no-ops when the list has refilled to the cap; claiming
     // the contributor came back when they did not would be a lie.
     if (restoreAuthor(removed.author, removed.index)) {
-      if (removed.ask) markAsked(removed.author.id, removed.ask);
+      if (removed.ask) applyAskPatch(activeDraftId, { rows: {}, asks: { [removed.author.id]: removed.ask } });
       announce(t("annContributorRestored", { name: removed.author.name }));
     } else {
       announce(t("errAtContributorLimit", { limit: MAX_AUTHORS }), { assertive: true });

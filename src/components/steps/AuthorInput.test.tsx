@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createAuthor, lookupOrcidPerson, type OrcidLookupResult } from "@/core";
+import { type Ask, createAuthor, lookupOrcidPerson, type OrcidLookupResult } from "@/core";
 import { announce } from "@/lib/announce";
 import { decodeShareHash } from "@/lib/share";
 import en from "@/messages/en.json";
@@ -242,6 +242,18 @@ describe("asking a contributor", () => {
 });
 
 describe("undoing a removal", () => {
+  it("puts the contributor's ask back", () => {
+    const ann = createAuthor("Ann Lee");
+    const ask = { sentAt: 1, prefilled: false } as Ask;
+    useContributionStore.setState({ authors: [ann], asks: { [ann.id]: ask } });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    expect(useContributionStore.getState().asks).toEqual({});
+
+    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    expect(useContributionStore.getState().asks).toEqual({ [ann.id]: ask });
+  });
+
   it.each(["reset", "deleteAllDrafts"] as const)("restores nothing after %s", (clear) => {
     useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
     renderList();
