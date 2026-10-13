@@ -30,6 +30,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - An [accessibility statement](docs/accessibility.md), linked from the About panel: what the app
   aims for (WCAG 2.2 AA), how it is checked, what is known not to work yet, and how to report a
   problem.
+
+## [0.7.0] - 2026-10-13
+
+After updating, reload any other tab that still has CRediT Matrix open. A tab opened before the
+update does not know the new storage version and can overwrite changes made in the updated one.
+
+### Added
+
 - `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
   version and release date in step, as it does for `CITATION.cff`.
 - Every CI run checks the JATS4R XML export against the official JATS 1.3 DTD and the JATS4R
@@ -387,7 +395,8 @@ Persisted local drafts migrate automatically.
   contribution heatmap, JATS4R XML / CSV / JSON / Markdown exports, ORCID lookup,
   share links, and a framework-agnostic `@credit-generator/core` domain package.
 
-[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.3.0...v0.4.0
