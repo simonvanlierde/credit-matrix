@@ -6,6 +6,7 @@ import {
   announcingStorage,
   askSummary,
   type Draft,
+  ensureHydrated,
   followOtherTab,
   MAX_DRAFTS,
   useContributionStore,
@@ -1257,6 +1258,19 @@ describe("contribution store", () => {
       expect(store().saveFailure).toBe("full");
       failing.mockRestore();
       hydrated.mockRestore();
+    });
+
+    it("restores once, never over what this tab holds", async () => {
+      const rehydrate = vi.spyOn(useContributionStore.persist, "rehydrate");
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(false);
+      await ensureHydrated();
+      expect(rehydrate).toHaveBeenCalledTimes(1);
+
+      hydrated.mockReturnValue(true);
+      await ensureHydrated();
+      expect(rehydrate).toHaveBeenCalledTimes(1);
+      hydrated.mockRestore();
+      rehydrate.mockRestore();
     });
 
     it("survives a normalize/denormalize round trip", () => {

@@ -514,7 +514,7 @@ function persistedState(state: ContributionState): PersistedState {
 }
 
 /** The store's storage adapter; see `announcingStorage`. */
-export interface DraftStorage extends PersistStorage<PersistedState> {
+interface DraftStorage extends PersistStorage<PersistedState> {
   /**
    * Read one key as stored, or null. Reading the main key also yields to a
    * newer build that saved there.
@@ -774,6 +774,14 @@ export function announcingStorage(): DraftStorage {
 export function followOtherTab(event: StorageEvent): boolean {
   if (event.storageArea !== window.localStorage || event.key === null) return false;
   return adoptKey(event.key);
+}
+
+/**
+ * Restore the saved drafts, unless that already happened. Every rehydrate
+ * reads storage again, which would drop whatever this tab holds unsaved.
+ */
+export async function ensureHydrated(): Promise<void> {
+  if (!useContributionStore.persist.hasHydrated()) await useContributionStore.persist.rehydrate();
 }
 
 /** Adopt what one key holds; see `followOtherTab`. */
