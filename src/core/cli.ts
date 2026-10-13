@@ -115,7 +115,7 @@ export async function run(argv: string[]): Promise<string> {
   if (!file) throw new UsageError(`${command} needs a file.`);
 
   const imported = await importAny(await read(file), { parser }).catch((error: unknown) => {
-    throw error instanceof z.core.$ZodError ? new Error(describeZodError(error)) : error;
+    throw error instanceof z.core.$ZodError ? new Error(describeZodError(error, file)) : error;
   });
   const authors = normalizeRoster(imported.authors);
 
@@ -169,12 +169,13 @@ export async function run(argv: string[]): Promise<string> {
   }
 }
 
-/** The first problem a JSON export fails validation on, in one line. */
-function describeZodError(error: z.core.$ZodError): string {
-  const [first, ...others] = error.issues;
-  const where = first?.path.length ? `${first.path.map(String).join(".")}: ` : "";
-  const more = others.length > 0 ? ` (and ${others.length} more)` : "";
-  return `Not a valid CRediT Matrix JSON export: ${where}${first?.message ?? "invalid data"}${more}`;
+/** Why JSON failed validation as an export, in one line: up to three failing fields and a count of the rest. */
+function describeZodError(error: z.core.$ZodError, file: string): string {
+  // zod's own message is a JSON dump of every issue: name the fields that failed instead.
+  const fields = [...new Set(error.issues.map((issue) => issue.path.map(String).join(".") || "the top level"))];
+  const listed =
+    fields.length > 3 ? `${fields.slice(0, 3).join(", ")} and ${fields.length - 3} more` : fields.join(", ");
+  return `${file === "-" ? "The input" : file} is not a CRediT Matrix JSON export. Check ${listed}.`;
 }
 
 // Only when run as a program (also through the npm bin symlink), not when a test imports run().

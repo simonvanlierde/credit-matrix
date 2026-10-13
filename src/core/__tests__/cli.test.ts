@@ -7,7 +7,7 @@ import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { run, USAGE } from "../cli";
-import { toJson } from "../export/json";
+import { NewerVersionError, toJson } from "../export/json";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash } from "../share-link";
 
@@ -110,6 +110,19 @@ describe("credit-matrix usage", () => {
     await expect(run(["sideways", csv])).rejects.toThrow(/Unknown command/);
     await expect(run(["statement"])).rejects.toThrow(/needs a file/);
   });
+
+  it("names the failing fields of JSON that is not an export, not zod's issue dump", async () => {
+    const other = file("other.json", '{"version": 1, "authors": [{"name": "123"}], "asks": 5}');
+    await expect(run(["statement", other])).rejects.toThrow(
+      `${other} is not a CRediT Matrix JSON export. Check authors.0.name, authors.0.firstName, authors.0.middleName and 4 more.`,
+    );
+    await expect(run(["statement", file("list.json", "[]")])).rejects.toThrow(/Check the top level\.$/);
+  });
+
+  it("passes other import errors through unchanged", async () => {
+    const newer = file("newer.json", '{"version": 99, "authors": []}');
+    await expect(run(["statement", newer])).rejects.toBeInstanceOf(NewerVersionError);
+  });
 });
 
 describe("credit-matrix standard input", () => {
@@ -121,6 +134,14 @@ describe("credit-matrix standard input", () => {
       ]) as unknown as typeof process.stdin,
     );
     expect(await run(["statement", "-"])).toBe("CRediT: Software: Jane Smith");
+    vi.restoreAllMocks();
+  });
+
+  it("calls piped JSON that is not an export the input, having no file name", async () => {
+    vi.spyOn(process, "stdin", "get").mockReturnValue(
+      Readable.from([Buffer.from("[]")]) as unknown as typeof process.stdin,
+    );
+    await expect(run(["statement", "-"])).rejects.toThrow(/^The input is not a CRediT Matrix JSON export\./);
     vi.restoreAllMocks();
   });
 });
@@ -177,7 +198,9 @@ describe("credit-matrix as a program", () => {
 
   it("prints an invalid JSON export's problem on one line, and exits 1", async () => {
     const { err } = await launch("convert", file("bad.json", '{"version":1,"authors":[{"name":5}]}'), "--to", "csv");
-    expect(err).toMatch(/^credit-matrix: Not a valid CRediT Matrix JSON export: authors\.0\.\S+: .+\n$/);
+    expect(err).toMatch(
+      /^credit-matrix: \S*bad\.json is not a CRediT Matrix JSON export\. Check authors\.0\.\S+.*\.\n$/,
+    );
     expect(process.exitCode).toBe(1);
   });
 
