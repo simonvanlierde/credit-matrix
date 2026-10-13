@@ -8,6 +8,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The `credit-matrix` npm package: the statements, file formats, heatmap and ask links behind the
+  app, for your own scripts and sites, in Node or the browser. ORCID and DOI lookups are under
+  `credit-matrix/lookup`, the role translations under `credit-matrix/i18n`.
+- A `credit-matrix` command line tool, from the same package: `statement` prints the CRediT
+  statement for a JSON, CSV, JATS4R XML or name-list file, in any of the nine languages; `convert`
+  turns one format into another; `ask` prints an ask link for one contributor.
+- A `<credit-matrix>` web element that shows the statement and the heatmap for a JSON export on any
+  page, without a framework. [docs/element.md](docs/element.md) has a copy-paste example.
 - `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
   version and release date in step, as it does for `CITATION.cff`.
 - Every CI run checks the JATS4R XML export against the official JATS 1.3 DTD and the JATS4R

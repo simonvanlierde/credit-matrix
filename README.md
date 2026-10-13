@@ -51,6 +51,33 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
 |---|---|
 | ![The first-run welcome as a dialog over the empty workspace: three numbered steps, notes on drafts and asking co-authors, and Load sample data and Start fresh buttons](docs/screenshots/empty-state.png) | ![The Statement tab of the inspector: a By author or By role switch, the generated statement, a Copy statement button, and the open Export data menu with Copy and Download for XML (JATS4R), JSON, CSV and Markdown](docs/screenshots/statement-export.png) |
 
+## Use the package
+
+The app's statements and file formats are also a TypeScript package,
+[`credit-matrix`](src/core/README.md), for Node and the browser:
+
+```bash
+npm install credit-matrix
+```
+
+```ts
+import { readFile } from "node:fs/promises";
+import { generateStatement, importAny } from "credit-matrix";
+
+const { authors } = await importAny(await readFile("contributions.csv", "utf8"));
+console.log(generateStatement(authors, { format: "by-author" }));
+```
+
+It reads and writes JSON, CSV, JATS4R XML and Markdown, draws the heatmap SVG, and builds ask
+links. Its CLI does the same from a shell:
+
+```bash
+npx credit-matrix statement contributions.json --format by-author --locale nl
+```
+
+A `<credit-matrix>` element shows a statement and heatmap on any web page: see
+[docs/element.md](docs/element.md).
+
 ---
 
 ## Architecture
@@ -77,7 +104,8 @@ Browser
 ```
 
 Everything runs in the browser, served as a static export. [`src/core`](src/core/README.md) holds the
-domain logic as pure TypeScript, with `zod` as its only runtime dependency. XML import uses the native
+domain logic as pure TypeScript, with `zod` as its only runtime dependency, and is published as the
+`credit-matrix` package. XML import uses the native
 `DOMParser`, and the PNG is drawn from the heatmap SVG onto a `<canvas>`.
 
 The ORCID and DOI lookups call ORCID's, Crossref's and DataCite's public APIs straight from the browser

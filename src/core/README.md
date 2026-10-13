@@ -1,11 +1,42 @@
-# Core
+# credit-matrix
 
-Framework-agnostic TypeScript for CRediT Matrix. It models contributors, validates
-contribution data, and produces [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/)
-statements and exports.
+Model, check and export [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) contribution
+statements. This is the code behind the [CRediT Matrix](https://credit.duinlab.nl) web app, published as
+an ESM package with types. Its one runtime dependency is `zod`.
 
-It has one runtime dependency, `zod`, and uses no React or Node APIs at import time. The web app
-imports it directly and runs it in the browser.
+```bash
+npm install credit-matrix
+```
+
+```ts
+import { generateStatement, importAny, toJats4rXml } from "credit-matrix";
+
+const { authors } = await importAny(csvText); // JSON, CSV, JATS4R XML, a share link or names
+generateStatement(authors, { format: "by-role" }); // "CRediT: Conceptualization: Jane Smith; …"
+toJats4rXml(authors);
+```
+
+## Entry points
+
+| Import | Contents | Needs |
+| --- | --- | --- |
+| `credit-matrix` | the model and roles, statements, every format, heatmap SVG, links, asks | nothing (in Node, JATS import takes a parser) |
+| `credit-matrix/lookup` | ORCID and DOI lookups | `fetch` |
+| `credit-matrix/i18n` | role names and output strings in nine languages | nothing |
+| `credit-matrix/element` | registers the `<credit-matrix>` element ([docs](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/element.md)) | a DOM |
+| `credit-matrix` (bin) | the CLI, with an XML parser bundled | Node |
+
+## CLI
+
+```bash
+npx credit-matrix statement team.csv --format by-author --locale fr
+npx credit-matrix convert paper.xml --to json      # json, csv, jats or md
+npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
+```
+
+Each command reads a file, or `-` for standard input, in any format `importAny` reads. `ask` prints a
+link that opens the contributor's own row in the web app (`--base-url` points it at another copy).
+The link they send back can be read with `convert`.
 
 ## Domain model
 
@@ -62,7 +93,17 @@ Only non-zero contributions appear in statements.
 `buildHeatmapSvg` returns a self-contained SVG string using system fonts and no embedded assets. The
 web app uses that same SVG for preview, SVG download, and canvas-to-PNG export.
 
-`fromJats4rXml(xml)` uses the global `DOMParser`: native in browsers, supplied by jsdom in tests.
+`fromJats4rXml(xml, { parser })` reads XML with `parser`, which defaults to the global `DOMParser`.
+In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:
+
+```ts
+import { DOMParser } from "linkedom";
+fromJats4rXml(xml, { parser: new DOMParser() });
+```
+
+`detectFormat(text)` guesses the format from the text's shape, and `importAny(text, { parser })`
+reads any of them, share links included. It returns the `format` it read, plus `asks`, `selfId` and
+`title` when the format carries them.
 
 `toJson(authors, { asks, includeAnswers, selfId })` also writes the asks and co-author answers
 (unless `includeAnswers` is `false`) and `selfId`, the contributor who made the file. Both are
@@ -94,32 +135,42 @@ A target is one of the 14 roles or one of the two markers (`equalContribution`, 
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
 - `AskSchema` validates stored and imported asks.
 
+## Rosters and links
+
+`createAuthor(name, fields)` builds one contributor and `parseAuthorText(text)` a list from pasted
+names. `normalizeRoster(authors)` applies the rules every caller shares: at most 200 contributors,
+ids unique and short enough for a link, and initials made unique.
+
+`encodeShareHash(input, baseUrl)` writes a draft, or one contributor's row for an ask, into a
+compressed `#s=…` link, and `decodeShareHash(hash)` reads one back (or returns `null`).
+
 ## Exports
 
-`index.ts` is the public surface. Grouped by module:
+The [type snapshot](https://github.com/simonvanlierde/credit-matrix/blob/main/src/core/__tests__/__snapshots__/public-api.d.ts.snap) holds the exact public interface.
 
-- `ask`: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
-  `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
-  `Decision`, `Difference`, `Level`, `Outcome`, `Patch`, `Reply`, `Review`, `Target`
-- `author`: `Author`, `Contribution`, `AuthorSchema`, `ContributionSchema`, `clampScore`,
-  `hasContributions`, `isAllBinary`, `isUsableAuthorName`, `isValidOrcid`, `normalizeOrcid`,
-  `ORCID_REGEX`, `rolesWithContributions`, `scoreToLevel`, `MAX_AUTHOR_NAME_LENGTH`, `MAX_AUTHORS`,
-  `MAX_IMPORT_BYTES`
-- `contributor-color`: `DEFAULT_MONO_COLOR`, `heatCellColor`, `OKABE_ITO`, `onColor`
-- `credit-i18n`: `AVAILABLE_LOCALES`, `DEFAULT_ROLE_TRANSLATOR`, `hasCatalog`, `loadRoleCatalog`,
-  `makeRoleDescriber`, `makeRoleTranslator`, `normalizeLocaleCode`, `DEFAULT_UI_TRANSLATOR`,
-  `loadUiCatalog`, `makeUiTranslator`, and the types `LocaleCode`, `RoleDescriber`,
-  `RoleTranslator`, `UiKey`, `UiTranslator`
-- `credit-roles`: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
-- Lookups: `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`, `DoiLookupResult`,
-  `lookupOrcidPerson`, `OrcidLookupResult`
-- Import and export: `toCsv`, `fromCsv`, `toJson`, `fromJson`, `NewerVersionError`, `toMarkdown`,
-  `toJats4rXml`, `fromJats4rXml`, `buildHeatmapSvg`
-- Statements: `generateStatement`, `StatementFormat`
-- Rows: `createAuthor`, `deduplicateAuthorInitials`, `parseAuthorText`, `splitNameList`,
-  `keepKnownIds`
-- Share links: `toSharePayload`, `fromSharePayload`, `ShareData`, `SharePayloadInput`
-- `validateContributions`
+- `credit-matrix`
+  - Model: `Author`, `Contribution`, `ContributionLevel`, `ContributorType`, `AuthorSchema`,
+    `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`
+  - Roles: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
+  - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
+  - Statements: `generateStatement`, `StatementFormat`, `StatementOptions`
+  - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
+    `fromJats4rXml`, `XmlParser`, `XmlElement`, `toMarkdown`, `buildHeatmapSvg`, `HeatmapSvgOptions`,
+    `detectFormat`, `importAny`, `DetectedFormat`, `Imported`
+  - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`
+  - Asks: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
+    `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
+    `Decision`, `Difference`, `Level`, `Outcome`, `Patch`, `Reply`, `Review`, `Target`
+- `credit-matrix/lookup`: `lookupOrcidPerson`, `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`,
+  and the types `OrcidLookupResult`, `OrcidErrorCode`, `DoiLookupResult`, `DoiErrorCode`, `DoiAuthor`
+- `credit-matrix/i18n`: `AVAILABLE_LOCALES`, `normalizeLocaleCode`, `hasCatalog`,
+  `loadRoleCatalog`, `makeRoleTranslator`, `makeRoleDescriber`, `DEFAULT_ROLE_TRANSLATOR`,
+  `loadUiCatalog`, `makeUiTranslator`, `DEFAULT_UI_TRANSLATOR`, and the types `LocaleCode`,
+  `RoleCatalog`, `RoleDescriber`, `RoleTranslator`, `UiCatalog`, `UiKey`, `UiTranslator`
+- `credit-matrix/element`: `CreditMatrixElement`
+
+The palette, limits and merge helpers the web app also uses are internal: the app imports them by
+path.
 
 ## Validation
 
@@ -129,9 +180,12 @@ A target is one of the 14 roles or one of the two markers (`equalContribution`, 
 ## Testing
 
 ```sh
-pnpm test
+pnpm test                          # from the repository root
+pnpm --filter credit-matrix build  # dist/, as published
 ```
 
-One Vitest run, under jsdom, covers the core, the store, and `src/lib`. Core tests cover name parsing,
-initials deduplication, statement formats, score-to-level boundaries, import/export round trips, validation,
-and heatmap SVG generation.
+The core tests run under Node, not a browser environment, so a stray browser global fails here first;
+linkedom stands in for `DOMParser`. The element test opts into jsdom. Before they run, the package is
+built, and one test imports it through its `exports` map, checks the export list, compares the
+declarations with the committed type snapshot, and runs the built CLI. Update the snapshots with
+`pnpm exec vitest run --project core -u` when the public interface changes on purpose.
