@@ -48,20 +48,24 @@ const parser: XmlParser = {
 
 /** Throws on a tag left open, closed out of order, or cut off: what a truncated file looks like. */
 function assertBalancedTags(xml: string): void {
-  const body = xml.replace(/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<!DOCTYPE[^>]*>/g, "");
+  // Comments, CDATA, processing instructions and the doctype match without a name and are skipped.
+  const token =
+    /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<!DOCTYPE[^>]*>|<(\/?)([^\s/>!?]+)(?:[^>"']|"[^"]*"|'[^']*')*?(\/?)>/g;
   const open: string[] = [];
-  const rest = body.replace(
-    /<(\/?)([^\s/>]+)(?:[^>"']|"[^"]*"|'[^']*')*?(\/?)>/g,
-    (_tag, closing, name, selfClosing) => {
-      if (closing) {
-        if (open.pop() !== name) throw new Error(`XML parse error: unexpected </${name}>.`);
-      } else if (!selfClosing) {
-        open.push(name);
-      }
-      return "";
-    },
-  );
-  if (rest.includes("<")) throw new Error("XML parse error: a tag is cut off.");
+  let end = 0;
+  for (const match of xml.matchAll(token)) {
+    // A "<" between tokens starts something no token matched: a tag or comment cut off.
+    if (xml.slice(end, match.index).includes("<")) throw new Error("XML parse error: a tag is cut off.");
+    end = match.index + match[0].length;
+    const [, closing, name, selfClosing] = match;
+    if (name === undefined) continue;
+    if (closing) {
+      if (open.pop() !== name) throw new Error(`XML parse error: unexpected </${name}>.`);
+    } else if (!selfClosing) {
+      open.push(name);
+    }
+  }
+  if (xml.slice(end).includes("<")) throw new Error("XML parse error: a tag is cut off.");
   if (open.length > 0) throw new Error(`XML parse error: <${open.at(-1)}> is never closed.`);
 }
 
