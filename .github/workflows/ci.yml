@@ -101,7 +101,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('**/*.{js,jsx,ts,tsx}') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', '!src/**/node_modules/**', '!src/core/dist/**', 'public/**', 'next.config.ts', 'postcss.config.mjs', 'tsconfig.json') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
 
@@ -133,34 +133,6 @@ jobs:
           name: playwright-traces
           path: test-results
 
-  # The `credit-matrix` npm package: what `npm publish` would ship, and its
-  # export list, public types and CLI as built (src/core/__tests__/package.test.ts).
-  package:
-    name: Package
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
-        with:
-          node-version-file: .node-version
-          cache: true
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # prepack builds dist/ first.
-      - name: List what npm would publish
-        working-directory: src/core
-        run: npm pack --dry-run
-
-      - name: Check the export list, the type snapshot and the CLI
-        run: pnpm exec vitest run --project core src/core/__tests__/package.test.ts
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -182,12 +154,13 @@ jobs:
 
       # Persist Next.js' incremental build cache (.next/cache) across runs so
       # rebuilds are faster. Keyed on lockfile + source; falls back to the last
-      # cache for the same deps when only source changed.
+      # cache for the same deps when only source changed. hashFiles does not
+      # expand braces, so each input is its own pattern.
       - name: Cache Next.js build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('**/*.{js,jsx,ts,tsx}') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', '!src/**/node_modules/**', '!src/core/dist/**', 'public/**', 'next.config.ts', 'postcss.config.mjs', 'tsconfig.json') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
 

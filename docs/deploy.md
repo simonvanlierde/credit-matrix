@@ -72,8 +72,9 @@ It uses npm trusted publishing: npm accepts the workflow's GitHub OIDC token ins
 token, so no `NPM_TOKEN` secret exists, and the package page links each version to the workflow run
 that built it.
 
-Check what would be published with `cd src/core && npm pack --dry-run`. The CI `package` job runs
-the same on every pull request.
+Check what would be published with `cd src/core && npm pack --dry-run`. On every pull request, the
+CI `check` job builds the package and tests its export list, public types and CLI
+(`src/core/__tests__/package.test.ts`).
 
 ### One-time setup
 
