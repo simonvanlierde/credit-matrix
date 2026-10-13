@@ -2,7 +2,7 @@
 
 import { Check, ChevronDown, CircleCheck, Send } from "lucide-react";
 import { useTheme } from "next-themes";
-import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -44,11 +44,25 @@ function optionFor(options: readonly Option[], score: number): Option {
 }
 
 /**
+ * The workspace's main area while a claim (ask) link is open: the workspace
+ * itself, or the single-purpose page that answers the ask in its place.
+ */
+export function ClaimGate({ children }: { children: ReactNode }) {
+  // Keyed on the ask, so a newer request (or its Undo) opens on the form, never on "Sent".
+  const askKey = useContributionStore((s) =>
+    s.claim && s.authors.some((author) => author.id === s.claim?.contributorId)
+      ? `${s.claim.sourceDraftId}:${s.claim.contributorId}:${s.claim.sentAt ?? ""}`
+      : null,
+  );
+  return askKey ? <CoauthorPage key={askKey} /> : children;
+}
+
+/**
  * One person answering one ask, usually on a phone, having never seen the app.
  * Their row, two markers, their details, and a way to send the answer back.
  * The lock stays in the store; this page only offers what it allows.
  */
-export function CoauthorPage() {
+function CoauthorPage() {
   const t = useTranslations();
   const claim = useContributionStore((s) => s.claim);
   const authors = useContributionStore((s) => s.authors);

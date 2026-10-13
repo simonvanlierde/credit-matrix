@@ -1,23 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { type KeyboardEvent, type ReactNode, useRef } from "react";
 import { useTranslations } from "use-intl";
+import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatementOutput } from "@/components/steps/StatementOutput";
+import { TeamPanel } from "@/components/TeamPanel";
 import { type InspectorTab, useContributionStore, useOpenDifferences } from "@/store/contribution-store";
-
-// Both start hidden behind the Statement tab, so they load after first paint.
-const panelSkeleton = () => (
-  <div aria-hidden="true" className="h-24 animate-pulse rounded-lg bg-surface-container-low" />
-);
-const TeamPanel = dynamic(() => import("@/components/TeamPanel").then((m) => m.TeamPanel), {
-  ssr: false,
-  loading: panelSkeleton,
-});
-const ReviewPanel = dynamic(() => import("@/components/ReviewPanel").then((m) => m.ReviewPanel), {
-  ssr: false,
-  loading: panelSkeleton,
-});
 
 const TABS: InspectorTab[] = ["statement", "team", "review"];
 
