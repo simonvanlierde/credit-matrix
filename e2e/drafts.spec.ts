@@ -85,10 +85,11 @@ test("keeps another tab's edit of a draft parked here", async ({ page, context }
   await page.getByLabel("Draft title").press("Enter");
 
   await expect(other.getByLabel("Draft title")).toHaveValue("Paper Y, edited there");
-  // Saved too: a reload opens the draft saved last, so look for it in the picker.
-  await other.reload();
-  await other.getByRole("button", { name: /^Drafts:/ }).click();
-  await expect(other.getByRole("button", { name: "Switch to Paper Y, edited there" })).toHaveCount(1);
+  // Saved too, and no stale copy left anywhere in storage. Read storage rather
+  // than reload: which draft a reload opens depends on which tab saved last.
+  const stored = await other.evaluate(() => Object.values({ ...window.localStorage }).join("\n"));
+  expect(stored).toContain('"title":"Paper Y, edited there"');
+  expect(stored).not.toContain('"title":"Paper Y"');
   await page.getByRole("button", { name: /^Drafts:/ }).click();
   await page.getByRole("button", { name: "Switch to Paper Y, edited there" }).click();
   await expect(page.getByLabel("Draft title")).toHaveValue("Paper Y, edited there");
