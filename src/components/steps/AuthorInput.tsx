@@ -54,7 +54,7 @@ import { hasContributions, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS, ORCID_REGEX } fr
 import { lookupOrcidPerson } from "@/core/lookup";
 import { splitNameList } from "@/core/parse-authors";
 import { announce } from "@/lib/announce";
-import { buildShareUrl, shareFailureKey } from "@/lib/share";
+import { copyAskLink } from "@/lib/ask-message";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useHydrated } from "@/lib/use-hydrated";
@@ -789,7 +789,6 @@ const AuthorRow = memo(function AuthorRowInner({
   const { locked, editableAuthorId } = useClaimLock();
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
-  const applyAskStep = useContributionStore((s) => s.applyAskStep);
   const isSelf = useContributionStore((s) => author !== undefined && s.selfId === author.id);
   const setSelfId = useContributionStore((s) => s.setSelfId);
   const moveAuthor = useContributionStore((s) => s.moveAuthor);
@@ -831,32 +830,8 @@ const AuthorRow = memo(function AuthorRowInner({
   async function handleAsk(blank: boolean) {
     if (!author) return;
     setAskKind(blank ? "blank" : "prefilled");
-    const sentAt = Date.now();
-    // Read at click time: the link carries the title, which this row does
-    // not subscribe to.
-    const { authors, title, activeDraftId, inputMode } = useContributionStore.getState();
-    let url: string;
-    try {
-      url = await buildShareUrl({
-        authors,
-        title,
-        claimId: author.id,
-        sourceDraftId: activeDraftId,
-        blank,
-        sentAt,
-        yesNo: inputMode === "toggle",
-      });
-    } catch {
-      announce(t(shareFailureKey()), { assertive: true });
-      return;
-    }
     // Only a link that actually reached the clipboard counts as an ask.
-    if (!(await copyAsk(url))) return;
-    // The draft may have switched, or the row gone, while the link was built
-    // and copied: the ask belongs to neither.
-    const now = useContributionStore.getState();
-    if (now.activeDraftId !== activeDraftId || !now.authors.some((a) => a.id === author.id)) return;
-    applyAskStep(activeDraftId, { kind: "sent", contributorId: author.id, prefilled: !blank, at: sentAt });
+    await copyAskLink(author, t, blank, (link) => copyAsk(link));
   }
 
   const nameInputRef = useRef<HTMLInputElement>(null);
