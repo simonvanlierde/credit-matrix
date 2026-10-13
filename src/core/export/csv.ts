@@ -80,9 +80,10 @@ export function parseCsvRecords(csv: string, delimiter = ","): string[][] {
       continue;
     }
 
-    // Only a quote that opens a field starts quoting; one mid-field ("O"Brien") is data.
-    if (char === '"' && field === "") {
+    // Only a quote that opens a field starts quoting, after any spaces (`a, "b"`); one mid-field ("O"Brien") is data.
+    if (char === '"' && field.trim() === "") {
       inQuotes = true;
+      field = "";
     } else if (char === delimiter) {
       row.push(field);
       field = "";
