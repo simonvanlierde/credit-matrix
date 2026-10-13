@@ -17,11 +17,8 @@ planned work put that claim to the test:
   asking twelve people what they did. A server would turn "send a link, they
   send it back, you paste it" into "send a link, their answer appears".
 
-Both needs are real. ADR 0001 didn't foresee either, so I looked at the
-decision again instead of assuming it still held.
-
-Accounts would also give access from any device, and keep drafts safe when a
-browser clears its site data.
+ADR 0001 didn't foresee either. Accounts would also give access from any
+device, and keep drafts safe when a browser clears its site data.
 
 ## Decision
 
@@ -37,8 +34,8 @@ back the same way.
 
 ## Rationale
 
-What decides it is not cost or effort. ORCID OAuth suits these users, and an
-edge database is easy to get. What decides it is what the data *is*.
+Not cost or effort: ORCID OAuth suits these users, and an edge database is
+easy to get. What decides it is what the data *is*.
 
 A stored draft holds the names and ORCID iDs of **other people who never
 visited the site**. Storing those on a server means processing personal data of

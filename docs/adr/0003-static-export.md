@@ -23,9 +23,9 @@ Build with `output: "export"` and serve `out/` as Cloudflare Workers static asse
 code. The browser calls `pub.orcid.org` and `api.crossref.org` itself. It also calls
 `api.datacite.org` for DOIs that Crossref does not hold (arXiv, Zenodo). The CSP's `connect-src`
 names those origins. Response headers move from `next.config.ts` to `public/_headers`. `/health`
-becomes a static `/health.json` that holds the build's commit. (I later removed that file, and the
-check after each deploy that read it. Uptime monitoring shows whether the site is up, and CI builds
-exactly what gets deployed.)
+becomes a static `/health.json` that holds the build's commit. (Later removed, with the check after
+each deploy that read it: uptime monitoring shows whether the site is up, and CI builds exactly what
+gets deployed.)
 
 ## Consequences
 

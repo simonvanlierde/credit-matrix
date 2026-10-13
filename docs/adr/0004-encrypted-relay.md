@@ -7,10 +7,10 @@
 
 ## Context
 
-Collecting roles from co-authors is a link round trip. The lead copies an ask link, the co-author
-answers and copies a reply link back, and the lead opens it. Since v0.7.0 the reply is kept beside the
-lead's row and settled in the Review tab, but the copy and paste remain. Live co-editing of one draft is
-not possible at all.
+Collecting roles from co-authors is a link round trip: the lead copies an ask link, the co-author
+copies a reply link back, and the lead opens it. Since v0.7.0 the reply is kept beside the lead's row
+and settled in the Review tab, but the copy and paste remain. Live co-editing of one draft is not
+possible at all.
 
 [ADR 0002](0002-no-accounts-or-server-side-storage.md) chose this on purpose. It says to revisit only
 when both of its conditions hold:
@@ -23,8 +23,7 @@ when both of its conditions hold:
    that burden zero (see "What the server still sees").
 
 So this ADR does not reopen ADR 0002. It proposes a design for when condition 1 is met, or for the
-maintainer's own use before then. The link round trip stays the default and keeps working without the
-relay.
+maintainer's own use before then. The link round trip stays the default.
 
 The research behind it is dated 2026-10-08. Versions and maturity claims below are as of that date.
 

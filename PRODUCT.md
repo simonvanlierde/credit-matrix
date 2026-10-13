@@ -1,8 +1,7 @@
 # Product brief
 
-Read this before you write text or design screens for CRediT Matrix. It says who the app is for,
-what it promises, and what we may claim about it. It is not user documentation. For what the app
-does, read the [README](README.md). For the visual rules, read [DESIGN.md](DESIGN.md).
+Read this before you write text or design screens for CRediT Matrix: who it is for, what it
+promises, and what we may claim about it. The visual rules are in [DESIGN.md](DESIGN.md).
 
 ## Users
 
@@ -12,16 +11,14 @@ Roles Taxonomy, to agree on each contributor's work, write it down, and export i
 ## Purpose
 
 CRediT Matrix turns contributor names and their roles into a statement ready for the manuscript,
-and into files for submission. Teams never have to format the roles by hand.
-
-The contribution matrix is where you edit, and it is also the heatmap you can download. The same
-data produces the statement text, JATS4R XML, CSV, JSON, and Markdown.
+and into files for submission, so teams never format the roles by hand. The contribution matrix is
+where you edit, and it is also the heatmap you can download.
 
 ## Operating context
 
 People use the app while they write and revise a manuscript, next to their author list, ORCID
-records, the journal's requirements, and talks with co-authors. Drafts are saved in the browser.
-A user can share a draft as a URL, or import a file in one of the supported formats.
+records, the journal's requirements, and talks with co-authors. Drafts are saved in the browser,
+and can be shared as a URL or imported from a file.
 
 ## Capabilities
 

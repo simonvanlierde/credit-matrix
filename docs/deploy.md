@@ -1,19 +1,37 @@
 # Deploying
 
-## How it works
+## Self-hosting
 
-The site is a static export (`out/`) served by a Cloudflare Worker with static assets only.
+`pnpm build` builds the `credit-matrix` package, runs `next build`, then
+[`scripts/postbuild.mjs`](../scripts/postbuild.mjs), which replaces `'unsafe-inline'` in the CSP
+with the hashes of the exported inline scripts and names the service worker's cache after the
+build. The result is a static export in `out/` that any static host can serve. The response
+headers, including the CSP, are in [`public/_headers`](../public/_headers).
 
-On every push to `main`, `.github/workflows/ci.yml` runs `check`, `e2e` and `build`. After `build`, the `attest` job downloads the `out/` folder and attests build provenance for each file in it (see the Attestations tab on GitHub). It is the only job that can request a GitHub OIDC token. It installs nothing and runs no project code.
+To host it on Cloudflare yourself, set your own domain in [`wrangler.jsonc`](../wrangler.jsonc):
 
-When `check`, `e2e`, `build` and `attest` all pass, the `deploy` job:
+```bash
+pnpm preview        # build + serve out/ locally, headers applied
+pnpm deploy         # build + deploy to your Cloudflare account
+```
 
-1. Downloads the `out/` folder the `build` job made, so the deployed files are the ones that were built and tested.
-2. Runs `wrangler deploy`.
+## How the live site deploys
 
-The `deploy` job runs in the `production` environment and reads its Cloudflare secrets from there. If `CLOUDFLARE_API_TOKEN` is missing, the deploy step prints a notice and the job still passes.
+The live site serves `out/` as Cloudflare Workers static assets, with no Worker code.
 
-On pull requests, the `preview` job uploads the build as a Worker version with `wrangler versions upload` and writes the preview URL to the job summary. It runs in the `preview` environment and reads its own secrets from there. It skips on fork PRs and when the token is missing. The URL only appears if Preview URLs are on for the Worker (dashboard: Settings, Domains and Routes).
+On every push to `main`, `.github/workflows/ci.yml` runs `check`, `e2e` and `build`. The `attest` job
+then attests build provenance for each file in `out/` (see the Attestations tab on GitHub). It is
+the only job that can request a GitHub OIDC token, and it installs nothing and runs no project code.
+
+When all four pass, the `deploy` job downloads the `out/` folder the `build` job made, so the
+deployed files are the ones that were built and tested, and runs `wrangler deploy`. It runs in the
+`production` environment and reads its Cloudflare secrets from there. If `CLOUDFLARE_API_TOKEN` is
+missing, the deploy step prints a notice and the job still passes.
+
+On pull requests, the `preview` job uploads the build as a Worker version with
+`wrangler versions upload` and writes the preview URL to the job summary. It runs in the `preview`
+environment with its own secrets, and skips on fork PRs and when the token is missing. The URL only
+appears if Preview URLs are on for the Worker (dashboard: Settings, Domains and Routes).
 
 ## Roll back
 
@@ -40,8 +58,8 @@ A rollback by CLI or dashboard lasts only until the next push to `main` deploys 
 
 ## The npm package
 
-`.github/workflows/release-core.yml` publishes `src/core` as the [`credit-matrix`](../src/core/README.md) npm package
-when a `v*` tag is pushed. It runs in two jobs:
+Pushing a `v*` tag publishes `src/core` as the [`credit-matrix`](../src/core/README.md) npm package,
+through `.github/workflows/release-core.yml`. It runs in two jobs:
 
 1. `build`, with read-only rights: checks that the tagged commit is on `main` and that the tag
    matches the version in `src/core/package.json` (`pnpm version` keeps it in step with the
@@ -51,8 +69,8 @@ when a `v*` tag is pushed. It runs in two jobs:
    runs no project code, so the token it holds never meets a dependency's install script.
 
 It uses npm trusted publishing: npm accepts the workflow's GitHub OIDC token instead of an access
-token, so no `NPM_TOKEN` secret exists. The package page then links each version to the workflow
-run that built it.
+token, so no `NPM_TOKEN` secret exists, and the package page links each version to the workflow run
+that built it.
 
 Check what would be published with `cd src/core && npm pack --dry-run`. The CI `package` job runs
 the same on every pull request.

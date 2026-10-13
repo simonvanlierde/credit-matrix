@@ -82,27 +82,27 @@ components:
 The interface looks like a working document: scholarly, compact, and quiet. A book-like serif gives
 the manuscript output weight, and a sans-serif keeps the controls practical.
 
-This is a workspace, not a marketing page. Its character comes from what you can see flowing from
-the contributors, through the matrix, to the text for the manuscript.
+This is a workspace, not a marketing page. Its character comes from the visible flow from the
+contributors, through the matrix, to the text for the manuscript.
 
 ## Colors
 
 Use warm paper neutrals throughout the interface. Reserve ink blue for primary actions, links,
 focus, and selected states. Use contributor colors only to identify data.
 
-Ink blue does not reach a 3:1 contrast against muted paper text. So a link inside a sentence is
-underlined as well as colored. A link on a line of its own may stay plain until you hover over it.
+Ink blue does not reach a 3:1 contrast against muted paper text, so a link inside a sentence is
+underlined as well as colored. A link on a line of its own may stay plain until hovered.
 
 The heatmap levels must stand out more from Supporting to Lead, in both themes. In light mode the
 fill mixes the chosen hue with white (40%, 70%, 100% of the hue). On a dark page that scale looks
-upside down, because the palest cell is the brightest one. So dark mode keeps the hue and raises
-its lightness instead: 30%, 48% and 77% (for ink blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark
-marks on Lead. Exported heatmaps always use the light scale, because a figure goes onto a white
-page. `heatCellColor` in `src/core/contributor-color.ts` holds both scales.
+upside down, so dark mode keeps the hue and raises its lightness instead: 30%, 48% and 77% (for ink
+blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark marks on Lead. Exported heatmaps always use the
+light scale, because a figure goes onto a white page. `heatCellColor` in
+`src/core/contributor-color.ts` holds both scales.
 
-Flag amber marks where a co-author answered differently. It is used for the corner mark on a grid
-cell, the ring around the cell a Review line points at, and the ring that fades off a cell when you
-settle a difference. It is a mark, never a fill, and it always comes with a shape or text.
+Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the ring
+around the cell a Review line points at, and the ring that fades off a cell when you settle a
+difference. It is a mark, never a fill, and it always comes with a shape or text.
 
 ## Typography
 
@@ -122,10 +122,9 @@ gap, then the wordmark (the name set as type) in Newsreader italic. Never letter
 never color it other than the primary token, and never give the mark and the wordmark different
 colors.
 
-The wordmark never wraps and never shrinks to fit. On two lines, the brand spills out of the fixed
-header. Squeezed, it stops being the wordmark. So draw it only where you have measured that the row
-is wide enough, and below that let the mark show the brand alone. Wherever the wordmark is not
-drawn, still give the name in text. The mark is decorative, so without the name the heading has no
+The wordmark never wraps and never shrinks to fit. Draw it only where you have measured that the
+row is wide enough, and below that let the mark show the brand alone. Wherever the wordmark is not
+drawn, still give the name in text: the mark is decorative, so without the name the heading has no
 accessible name.
 
 `docs/brand/` holds the sources for the exported PNG assets and the command that renders them again.
@@ -145,26 +144,21 @@ give the grid what is left. The table is as wide as its content and centered in 
 short contributor list sits in calm margins, and a long one gets every column the screen can show.
 
 In a desktop-sized window the workspace is locked to the window's height. The page itself doesn't
-scroll. Each pane scrolls its own content.
-
-Only lock the height when both halves of the `desk` guard hold: ≥80rem wide **and** ≥45rem tall.
-Without the height half, a short window, a zoomed page, or a phone held sideways traps the app in a
-scroll area inside another one. Those windows need the page to scroll as normal.
+scroll; each pane scrolls its own content. Only lock the height when both halves of the `desk` guard
+hold: ≥80rem wide **and** ≥45rem tall. A short window, a zoomed page, or a phone held sideways needs
+the page to scroll as normal.
 
 If a pane scrolls but holds nothing you can focus, give it a tab stop. Otherwise keyboard users
 can't scroll it.
 
 A panel that opens from a control belongs in a popover, not in a box placed by hand with absolute
-positioning. A popover closes on a click outside it and on Escape. It renders outside any parent
-that scrolls. It also reports whether it is open, so the control that opened it can show that.
+positioning. A popover closes on a click outside it and on Escape, renders outside any parent that
+scrolls, and reports whether it is open, so the control that opened it can show that.
 
-When a row's content changes with a mode, the row must not shift. Otherwise switching the mode moves
-the controls the visitor was about to click. Pin the elements that sit against an edge. Let the part
+When a row's content changes with a mode, the row must not shift under the visitor's next click.
+Pin the elements that sit against an edge. Let the part
 whose length varies wrap inside its own share of the row. Use `w-0 min-w-full` so that a row whose
 width varies does not set the width of a `max-content` column.
-
-Use a list of roles per contributor on narrow screens. On desktop, keep the matrix inside a box of
-fixed size, with row and column labels that stay put while you scroll.
 
 ## Density
 
@@ -173,8 +167,8 @@ whole workflow at once, without scrolling the page. Spend height on contributor 
 rows, and take it from the frame around them. Give a list that can grow without limit (contributors,
 validation checks) a maximum height, so it can't push the workflow off the screen.
 
-The first-run help sits over the workspace, not in a band of its own in the layout. A band would
-take that height for good, and the whole page would shift when you close it.
+The first-run help sits over the workspace, not in a band of its own, which would take that
+height for good and shift the page when closed.
 
 ## Elevation and depth
 
@@ -195,8 +189,8 @@ paper or transparent fill. Give every control a visible keyboard focus and a tar
 24px.
 
 Keep one primary action per view: Copy statement. The header actions (Share, Import) are secondary.
-A disabled button loses its fill and mutes its text and outline. That way it never looks like a
-working primary button that is just a little faded.
+A disabled button loses its fill and mutes its text and outline, so it never looks like a faded
+working primary button.
 
 ### Cards and containers
 
@@ -213,17 +207,16 @@ inactive text readable, and say how to fix the problem.
 Keep the brand and the global actions in the fixed header. On narrow screens, use icons with
 labels, and don't cut off or hide their accessible names.
 
-Measure the header before you add to it. When a global link no longer fits, give it to the lockup.
-Otherwise the lockup is the one thing up there with nothing to do, and this way the product name
-opens what the product is. Show that with a chevron. Without one, the lockup looks like a
-title, and nobody taps a title, so the link is as hidden as if a breakpoint had removed it. Never
-put such links behind an unlabeled icon while labeled ones exist. The nav and the menu switch at
-the same width, so exactly one of them is on screen at a time.
+Measure the header before you add to it. When a global link no longer fits, give it to the lockup,
+so the product name opens what the product is, and show that with a chevron: without one, the
+lockup looks like a title nobody taps. Never put such links behind an unlabeled icon while labeled
+ones exist. The nav and the menu switch at the same width, so exactly one of them is on screen at a
+time.
 
 ### Attribution
 
-When a license asks for attribution, give it in the deployed app, not only in the repository.
-Someone using the site never opens `LICENSE`. Name the work, name its creator, and link the license
+When a license asks for attribution, give it in the deployed app, not only in the repository. Name
+the work, name its creator, and link the license
 itself. Put the notice next to the control that takes the material off the page. Keep the project's
 own copyright with the brand, not in the small print.
 
@@ -250,7 +243,6 @@ always visible.
 - **Do** use semantic tokens in both the light and the dark theme.
 - **Do** explain specialist terms where the person has to decide.
 - **Do** leave room for long names, translations, keyboards, and tap targets.
-- **Do** keep the desktop workflow inside one viewport, and let each pane scroll its own overflow.
 - **Do** ask which level a bulk action assigns. Defaulting to the strongest one overstates the
   claim.
 
@@ -261,5 +253,3 @@ always visible.
 - **Don't** hide core contribution features on small screens.
 - **Don't** make color the only way to distinguish a matrix value, or a link from the prose it sits
   in.
-- **Don't** lock the workspace to the window's height without a check on that height. A zoomed or
-  short window needs the page to scroll as normal.

@@ -77,7 +77,7 @@ export function stubUpstream(page: Page, url: string, status: number, json: unkn
   return page.route(url, (route) => route.fulfill({ status, json, headers: { "access-control-allow-origin": "*" } }));
 }
 
-// Pin the rule set to WCAG 2.0, 2.1 and 2.2 A + AA so the scan matches what CONTRIBUTING.md
+// Pin the rule set to WCAG 2.0, 2.1 and 2.2 A + AA so the scan matches what docs/accessibility.md
 // documents, rather than tracking axe's shifting defaults (which also include
 // best-practice rules).
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];

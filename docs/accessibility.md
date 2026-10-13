@@ -5,13 +5,8 @@ CRediT Matrix ([credit.duinlab.nl](https://credit.duinlab.nl)) aims to meet
 [EN 301 549 v4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf).
 It has not been audited, so this is a goal, not a claim that it conforms.
 
-Last reviewed: 13 October 2026.
-
-## Conformance status
-
-**Not evaluated.** Nobody has checked the app or the web element against every WCAG 2.2 criterion.
-What has been done: automated axe-core scans in CI on every pull request, plus manual checks during
-development. Both are described below. Date of this assessment: 13 October 2026.
+**Conformance status: not evaluated.** Nobody has checked the app or the web element against every
+WCAG 2.2 criterion. What has been done is described below. Date of this assessment: 13 October 2026.
 
 ## How it is checked
 
@@ -51,17 +46,12 @@ can run into, so a passing run does not mean there are none.
 
 ## Web element
 
-The `<credit-matrix>` element ([docs/element.md](element.md)) shows the heatmap and statement on
-other websites. It is covered by the same automated scan.
-
-- **Its own background.** The element draws a light card with dark text, so its text keeps enough
-  contrast on a dark page.
-- **A text version of the heatmap.** Screen readers skip the drawing and read a table instead: a row
-  per role, a column per contributor, and the level (Lead, Equal, Supporting or None) in each cell.
-  On a narrow screen the drawing scrolls sideways rather than shrinking its labels.
-- **Language.** The statement, heatmap and table follow the `locale` attribute or the page's `lang`,
-  and the element marks that language so screen readers pronounce it right. Its loading and error
-  messages are in English, and marked as English.
+The [`<credit-matrix>` element](element.md) is covered by the same automated scan. It draws a light
+card with dark text, so its text keeps enough contrast on a dark page. Screen readers skip the
+heatmap drawing and read a table instead: a row per role, a column per contributor, and the level
+(Lead, Equal, Supporting or None) in each cell. The element marks the language of its statement,
+heatmap and table, so screen readers pronounce it right. Its loading and error messages are in
+English, and marked as English.
 
 ## Report a problem
 
