@@ -942,6 +942,17 @@ describe("contribution store", () => {
     }
     const storageEvent = (key: string) => new StorageEvent("storage", { key, storageArea: globalThis.localStorage });
 
+    it("writes nothing for a change storage does not keep", () => {
+      store().setTitle("Saved");
+      const writes = vi.spyOn(Storage.prototype, "setItem");
+      store().setReviewHighlight({ contributorId: "a", target: "corresponding" });
+      store().setInspectorTab("review");
+      expect(writes).not.toHaveBeenCalled();
+      store().setTitle("Edited");
+      expect(writes).toHaveBeenCalled();
+      writes.mockRestore();
+    });
+
     it("adopts the other tab's save of the open draft without writing it back", () => {
       store().setTitle("Mine");
       const held = store().activeDraftId;

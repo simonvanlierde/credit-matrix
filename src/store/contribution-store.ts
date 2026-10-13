@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { type PersistStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { useShallow } from "zustand/react/shallow";
+import { shallow } from "zustand/shallow";
 import type { Ask, AskEvent, Author, CreditRoleName, LocaleCode, Outcome, Patch, Target } from "@/core";
 import {
   AskSchema,
@@ -513,6 +514,39 @@ const UNREADABLE_KEY = `${PERSIST_KEY}:unreadable`;
  */
 let adopting = false;
 
+/**
+ * The last value partialize built, returned again while nothing it reads has
+ * changed. Persist calls setItem on every set(), hover highlights included;
+ * the stable reference lets setItem skip those writes.
+ */
+let lastPersisted: { state: ContributionState; value: PersistedState } | undefined;
+
+function persistedState(state: ContributionState): PersistedState {
+  const prev = lastPersisted;
+  // updatedAt is stamped on every call, so it alone never counts as a change.
+  if (
+    prev &&
+    prev.state.drafts === state.drafts &&
+    prev.state.activeDraftId === state.activeDraftId &&
+    prev.state.uiLocale === state.uiLocale &&
+    prev.state.welcomeSeen === state.welcomeSeen &&
+    shallow({ ...liveDraft(prev.state), updatedAt: 0 }, { ...liveDraft(state), updatedAt: 0 })
+  ) {
+    return prev.value;
+  }
+  const value = {
+    // Storage sees the normalized shape: every draft in one map, with the
+    // live top-level fields folded back into the active entry. Memory keeps
+    // them unpacked so components read `authors` directly.
+    drafts: { ...state.drafts, [state.activeDraftId]: liveDraft(state) },
+    activeDraftId: state.activeDraftId,
+    uiLocale: state.uiLocale,
+    welcomeSeen: state.welcomeSeen,
+  };
+  lastPersisted = { state, value };
+  return value;
+}
+
 /** Every parked-draft key currently in localStorage. */
 function draftKeys(): string[] {
   const keys: string[] = [];
@@ -556,6 +590,8 @@ export function announcingStorage(): PersistStorage<PersistedState> {
   // keeps an untouched draft's identity across edits, so a reference match
   // means the stored JSON is current and the write can be skipped.
   const written = new Map<string, Draft>();
+  // The value of the last successful main-key write (see persistedState).
+  let lastWritten: PersistedState | undefined;
   // Draft ids this tab held at its last read or write. Another tab shares the
   // same storage, so an id missing from this tab's drafts is only a deletion
   // when this tab held it before. Anything else belongs to the other tab.
@@ -634,6 +670,7 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       // Holds draft data too; clearing the drafts should not leave a copy behind.
       window.localStorage.removeItem(UNREADABLE_KEY);
       written.clear();
+      lastWritten = undefined;
     },
     setItem: (key, value) => {
       if (typeof window === "undefined") return;
@@ -643,12 +680,14 @@ export function announcingStorage(): PersistStorage<PersistedState> {
       // draft in storage — and the rehydrate that follows would then read that
       // emptied value back. One early keystroke could erase a saved paper.
       if (!useContributionStore.persist.hasHydrated()) return;
+      if (value.state === lastWritten) return;
       const { drafts, activeDraftId, uiLocale, welcomeSeen } = value.state;
       // Adopting another tab's save writes nothing back (it would wake that
       // tab, which would adopt, write back...), but this tab now holds those
       // drafts, so deleting one later must remove its key.
       if (adopting) {
         known = new Set(Object.keys(drafts));
+        lastWritten = value.state;
         return;
       }
       const deleted = new Set([...known].filter((id) => !(id in drafts)));
@@ -691,6 +730,7 @@ export function announcingStorage(): PersistStorage<PersistedState> {
           written.delete(id);
         }
         known = new Set(Object.keys(drafts));
+        lastWritten = value.state;
         warned = false;
       } catch {
         // Every change retries the write; announcing each one would flood
@@ -1234,15 +1274,7 @@ export const useContributionStore = create<ContributionState>()(
       // rehydrate() after mount instead; see HeaderActions.
       skipHydration: true,
       // spell-checker: ignore partialize
-      partialize: (state) => ({
-        // Storage sees the normalized shape: every draft in one map, with the
-        // live top-level fields folded back into the active entry. Memory keeps
-        // them unpacked so components read `authors` directly.
-        drafts: { ...state.drafts, [state.activeDraftId]: liveDraft(state) },
-        activeDraftId: state.activeDraftId,
-        uiLocale: state.uiLocale,
-        welcomeSeen: state.welcomeSeen,
-      }),
+      partialize: persistedState,
     },
   ),
 );
