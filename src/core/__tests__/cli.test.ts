@@ -253,6 +253,12 @@ describe("credit-matrix as a program", () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it("prints only the message for a contributor the file does not have, and exits 1", async () => {
+    const { err } = await launch("ask", csv, "--contributor", "Nobody");
+    expect(err).toBe("credit-matrix: No contributor named or with id Nobody. Contributors: Jane Smith, Bob White.\n");
+    expect(process.exitCode).toBe(1);
+  });
+
   it("prints only the message when the file cannot be read, and exits 1", async () => {
     const { err } = await launch("statement", join(dir, "missing.csv"));
     expect(err).toBe(`credit-matrix: Cannot read ${join(dir, "missing.csv")}: no such file.\n`);

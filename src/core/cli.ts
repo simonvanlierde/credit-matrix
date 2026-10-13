@@ -154,7 +154,8 @@ function findContributor(authors: Author[], wanted: string): Author {
   const listed = (partial.length > 1 ? partial : authors).map((a) => a.name);
   const names =
     listed.length > 10 ? `${listed.slice(0, 10).join(", ")} and ${listed.length - 10} more` : listed.join(", ");
-  throw new UsageError(
+  // The command line was fine; the file just has no such person, so this exits 1, not 2.
+  throw new Error(
     partial.length > 1
       ? `${wanted} matches more than one contributor: ${names}. Give the full name or id.`
       : `No contributor named or with id ${wanted}. ${authors.length > 0 ? `Contributors: ${names}.` : "The file has no contributors."}`,
