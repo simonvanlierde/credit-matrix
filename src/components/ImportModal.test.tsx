@@ -59,6 +59,10 @@ describe("detect", () => {
     expect(detect('"name" , Conceptualization\nJane Smith,100')).toBe("csv");
     expect(detect("﻿Name,Conceptualization\nJane Smith,100")).toBe("csv");
   });
+
+  it("reads a tenzing header as tenzing", () => {
+    expect(detect("Author/Acknowledgee,Firstname,Surname\nAuthor,Jane,Smith")).toBe("tenzing");
+  });
 });
 
 describe("DOI lookup", () => {

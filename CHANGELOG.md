@@ -8,6 +8,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Import a [tenzing](https://github.com/marton-balazs-kovacs/tenzing) contributor spreadsheet.
+  Save it as CSV (or TSV) first; Excel files are not read. Names, author order, ORCID iDs, roles,
+  corresponding authors and acknowledgees (as non-authors) come across. tenzing records a role as
+  done or not, so each ticked role imports at Lead.
 - `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
   version and release date in step, as it does for `CITATION.cff`.
 - Every CI run checks the JATS4R XML export against the official JATS 1.3 DTD and the JATS4R

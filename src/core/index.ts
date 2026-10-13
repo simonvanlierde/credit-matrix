@@ -67,6 +67,7 @@ export { fromCsv, toCsv } from "./export/csv";
 export { buildHeatmapSvg } from "./export/heatmap-svg";
 export { fromJson, NewerVersionError, toJson } from "./export/json";
 export { toMarkdown } from "./export/markdown";
+export { fromTenzing, isTenzing } from "./export/tenzing";
 export { toJats4rXml } from "./export/xml";
 export { fromJats4rXml } from "./export/xml-import";
 export type { StatementFormat } from "./generate-statement";

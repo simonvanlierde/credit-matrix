@@ -282,7 +282,7 @@
   "welcomeDraftsBody": "Mehr als ein Manuskript? Wechseln Sie Entwürfe über die Kopfzeile; jeder wird separat in diesem Browser gespeichert.",
   "welcomeAskTitle": "Co-Autoren direkt fragen",
   "welcomeAskBody": "Kopieren Sie einen Link aus dem Zeilenmenü einer Person und schicken Sie ihn ihr. Kommt der Link zurück, öffnen Sie ihn: Die Antwort wird neben ihrer Zeile abgelegt, und Abweichungen klären Sie im Tab „Abgleich“.",
-  "importDescription": "Beginnen Sie mit einer DOI, fügen Sie Namen oder einen zurückgesendeten Link ein, oder laden Sie eine CSV-, JSON- oder JATS4R-XML-Datei hoch. JSON und XML stellen auch die Beiträge wieder her, samt Stufen, wenn die Datei sie enthält.",
+  "importDescription": "Beginnen Sie mit einer DOI, fügen Sie Namen oder einen zurückgesendeten Link ein, oder laden Sie eine CSV-, JSON- oder JATS4R-XML-Datei hoch. JSON und XML stellen auch die Beiträge wieder her, samt Stufen, wenn die Datei sie enthält. Eine tenzing-Tabelle (CSV) geht auch: Speichern Sie sie zuerst als CSV.",
   "contributorActions": "Aktionen für {name}",
   "colorBlue": "Blau",
   "colorOrange": "Orange",

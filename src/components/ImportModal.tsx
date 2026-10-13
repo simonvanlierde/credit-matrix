@@ -10,6 +10,8 @@ import {
   fromCsv,
   fromJats4rXml,
   fromJson,
+  fromTenzing,
+  isTenzing,
   lookupDoiWork,
   MAX_AUTHORS,
   MAX_IMPORT_BYTES,
@@ -81,7 +83,7 @@ async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok:
   return { code: result.code };
 }
 
-type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";
+type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "names" | "unknown";
 
 export function detect(text: string): DetectedFormat {
   const trimmed = text.trim();
@@ -98,6 +100,7 @@ export function detect(text: string): DetectedFormat {
       /* fall through */
     }
   }
+  if (isTenzing(trimmed)) return "tenzing";
   // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
   const headerCells = (trimmed.split(/\r?\n/, 1)[0] ?? "").split(",");
   if (
@@ -126,6 +129,7 @@ const IMPORTERS: Record<
 > = {
   json: { parse: fromJson, emptyMessageKey: "errImportNoJsonContributors" },
   csv: { parse: (text) => ({ authors: fromCsv(text) }), emptyMessageKey: "errImportNoCsvRows" },
+  tenzing: { parse: (text) => ({ authors: fromTenzing(text) }), emptyMessageKey: "errImportNoCsvRows" },
   xml: { parse: (text) => ({ authors: fromJats4rXml(text) }), emptyMessageKey: "errImportNoXmlContribs" },
   names: { parse: (text) => ({ authors: parseAuthorText(text) }), emptyMessageKey: "errImportNoNames" },
 };
@@ -137,6 +141,7 @@ const FORMAT_LABEL: Record<Exclude<DetectedFormat, "unknown">, (t: ReturnType<ty
   json: (t) => t("formatJsonExport"),
   xml: () => "JATS4R XML",
   csv: () => "CSV",
+  tenzing: () => "tenzing",
 };
 
 export function ImportModal({ open, existingContributorCount, onImport, onLink, onClose }: Props) {
@@ -432,7 +437,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
               <input
                 ref={fileRef}
                 type="file"
-                accept=".csv,.json,.xml"
+                accept=".csv,.tsv,.json,.xml"
                 className="hidden"
                 onChange={handleFileInput}
                 aria-label={t("a11yUploadFile")}
