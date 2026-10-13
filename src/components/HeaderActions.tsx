@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { decodeShareHash, importAnswers, type ShareData } from "@/core";
 import { isAllBinary } from "@/core/author";
 import { keepKnownIds } from "@/core/merge-row";
-import { announce } from "@/lib/announce";
+import { announce, STORAGE_FULL_EVENT } from "@/lib/announce";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import {
@@ -82,6 +82,14 @@ export function HeaderActions() {
   useEffect(() => {
     if (newerVersionBlocked) showStatus({ kind: "error", message: t("errNewerVersionSaved") });
   }, [newerVersionBlocked, t]);
+
+  // The browser refused a save: shown, not only announced, since nothing
+  // else on screen changes when saving stops.
+  useEffect(() => {
+    const onStorageFull = () => showStatus({ kind: "error", message: t("errStorageFull") });
+    window.addEventListener(STORAGE_FULL_EVENT, onStorageFull);
+    return () => window.removeEventListener(STORAGE_FULL_EVENT, onStorageFull);
+  }, [t]);
 
   // The listener is registered once, so it must not capture this render's
   // handler: `t` changes with the interface language, and a hash pasted after

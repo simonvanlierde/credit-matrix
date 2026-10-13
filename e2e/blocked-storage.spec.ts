@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium, expect, test } from "@playwright/test";
+import { onScreen } from "./helpers";
 
 // A browser set to block site data throws a SecurityError on any touch of
 // `window.localStorage`. The setting lives in the profile, so this test runs
@@ -35,6 +36,7 @@ test("works, unsaved, when the browser blocks site data", async ({ baseURL }) =>
     await add.fill("Jane Smith");
     await add.press("Enter");
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(1);
+    await expect(onScreen(page, /could not be saved/)).toBeVisible();
   } finally {
     await context.close();
     await rm(profile, { recursive: true, force: true });
