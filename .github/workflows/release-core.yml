@@ -88,21 +88,18 @@ jobs:
       contents: read
       id-token: write
     steps:
-      # Only the version files the setup step reads; nothing from the repo runs here.
+      # Only the version file the setup step reads; nothing from the repo runs here.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          sparse-checkout: |
-            .node-version
-            package.json
+          sparse-checkout: .node-version
           sparse-checkout-cone-mode: false
 
-      # Sets up Node from .node-version; `install: false` runs no pnpm install.
-      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+      # setup-node, not pnpm/setup: pnpm's Node runtime comes without npm, so
+      # `npm` would be the runner's older system npm.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .node-version
-          cache: false
-          install: false
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
