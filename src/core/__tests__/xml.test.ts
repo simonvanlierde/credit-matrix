@@ -210,6 +210,19 @@ describe("toJats4rXml", () => {
     expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
   });
 
+  it("imports each member of a collab once, and collapses spaces inside names", () => {
+    const xml = `<article><contrib-group>
+      <contrib contrib-type="author"><collab>The Lab
+        <contrib-group>
+          <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane   Ann</given-names></name></contrib>
+          <contrib contrib-type="author"><name><surname>White</surname><given-names>Bob</given-names></name></contrib>
+        </contrib-group>
+      </collab></contrib>
+    </contrib-group></article>`;
+
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Ann Smith", "Bob White"]);
+  });
+
   it("matches roles by their CRediT identifier before the term text", () => {
     const xml = `<article><contrib contrib-type="author">
       <name><surname>Smith</surname><given-names>Jane</given-names></name>

@@ -44,12 +44,16 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     // Editors, reviewers and other non-credited contrib types are not authors.
     const contribType = contrib.getAttribute("contrib-type");
     if (contribType && contribType !== "author" && contribType !== "contributor") return [];
+    // A <collab> with members holds their contribs: they import on their own,
+    // and reading the group would pick up the first member's name again.
+    if (contrib.querySelector("contrib")) return [];
 
     const givenNamesEl = contrib.querySelector("given-names");
     const surnameEl = contrib.querySelector("surname");
 
-    const givenNames = givenNamesEl?.textContent?.trim() ?? "";
-    const surname = surnameEl?.textContent?.trim() ?? "";
+    // Pretty-printed XML can leave line breaks and indentation inside a name.
+    const givenNames = (givenNamesEl?.textContent ?? "").replace(/\s+/g, " ").trim();
+    const surname = (surnameEl?.textContent ?? "").replace(/\s+/g, " ").trim();
 
     const displayName = [givenNames, surname].filter(Boolean).join(" ");
     // Split given names the same way `parseNameParts` does for its comma branch:

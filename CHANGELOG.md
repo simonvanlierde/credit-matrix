@@ -46,6 +46,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   tenzing import already did: `name`, `conceptualization` and `Writing - original draft` are no
   longer refused or dropped, and a `Non-author` Type cell is read as a non-author. A CSV score
   cell may also hold a level word (`Lead`, `Equal`, `Supporting`, `None`); it used to read as 0.
+- JATS XML import: members of a group author (`<collab>`) import once each instead of twice, and
+  line breaks or extra spaces inside a name are dropped.
 
 ## [0.7.0] - 2026-10-13
 
