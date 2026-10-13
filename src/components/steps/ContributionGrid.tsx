@@ -22,7 +22,7 @@ import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";
 import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
-import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM } from "./grid-shared";
+import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
 import { MobileRoleList } from "./MobileRoleList";
 import { RoleInfo } from "./RoleInfo";
@@ -426,12 +426,7 @@ export function ContributionGrid() {
                   onChange={setHeatmapMonoColor}
                   label={t("gridColor")}
                   trigger={
-                    <button
-                      type="button"
-                      aria-label={t("gridColor")}
-                      title={t("gridColor")}
-                      className="flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant/60 px-3 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    >
+                    <button type="button" aria-label={t("gridColor")} title={t("gridColor")} className={TOOL_BUTTON}>
                       {t("colorLabel")}
                       <span
                         className="h-3 w-3 rounded-full border border-outline-variant/50"
@@ -445,11 +440,7 @@ export function ContributionGrid() {
                   aria-pressed={transpose}
                   onClick={() => setTranspose(!transpose)}
                   title={t("transposeHint")}
-                  className={`flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    transpose
-                      ? "border-primary text-primary"
-                      : "border-outline-variant/60 text-on-surface-variant hover:border-primary hover:text-primary"
-                  }`}
+                  className={`${TOOL_BUTTON} aria-pressed:border-primary aria-pressed:text-primary`}
                 >
                   {t("transpose")}
                   {transpose ? (
@@ -488,9 +479,6 @@ export function ContributionGrid() {
           assignmentLabel={assignmentLabel}
           levelLabel={levelLabel}
           handleCellClick={handleCellClick}
-          translateInterfaceRole={translateInterfaceRole}
-          describeRole={describeRole}
-          interfaceRoleLanguage={interfaceRoleLanguage}
         />
 
         {/* A bounded viewport makes both sticky axes persistent during long desktop matrices. */}

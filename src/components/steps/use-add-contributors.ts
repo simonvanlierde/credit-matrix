@@ -73,10 +73,7 @@ export function useAddContributors() {
     const acceptedTokens = tokens.slice(0, capacity);
     const skippedForLimit = tokens.length - acceptedTokens.length;
 
-    // An iD with the right shape but a bad check digit used to fall through to
-    // addAuthor, throw inside createAuthor, and land in `rejected`; reported
-    // as "no name in them", which is the wrong diagnosis. The single-add path
-    // already checks the checksum, so bucket it the same way here.
+    // A bad check digit is reported as such, not as an entry with no name.
     const badChecksum: string[] = [];
     for (const token of acceptedTokens) {
       const orcid = detectOrcid(token);
@@ -127,10 +124,7 @@ export function useAddContributors() {
     const trimmed = newName.trim();
     if (!trimmed) return;
     setAddError(null);
-    // addAuthor returns null both for an unparseable name and for a full list,
-    // so check the cap here. Without it, adding at the limit either reported
-    // "that doesn't look like a name" (false) or, for an ORCID, cleared the
-    // input and silently did nothing. addMany already reports this separately.
+    // addAuthor returns null for a full list too, so name the cap before it can.
     if (authorCount >= MAX_AUTHORS) {
       const message = t("errAtContributorLimit", { limit: MAX_AUTHORS });
       setAddError(message);

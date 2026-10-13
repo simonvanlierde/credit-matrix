@@ -24,18 +24,20 @@ export function nameBesideOrcid(text: string): string | null {
   return /\p{L}/u.test(rest) ? rest : null;
 }
 
-/**
- * Resolve an ORCID iD to a display name, straight from ORCID's public API
- * (it sends `Access-Control-Allow-Origin: *`).
- *
- * Returns a failure *code*, not a message: this runs outside React, so it
- * cannot translate. The caller holds `t` and renders the code.
- */
+/** Failure code to message key, spelled out so a key missing from en.json fails the build. */
+const ORCID_ERROR_KEYS = {
+  INVALID_ID: "errOrcidINVALID_ID",
+  NOT_FOUND: "errOrcidNOT_FOUND",
+  UNAVAILABLE: "errOrcidUNAVAILABLE",
+  OFFLINE: "errOffline",
+} as const;
+
+/** A failure code, not a message: the lookup runs outside React, so the caller translates it. */
 type OrcidFailure = { code: keyof typeof ORCID_ERROR_KEYS };
 
+/** Resolve an ORCID iD to a display name from ORCID's public API, which allows any origin. */
 export async function fetchOrcidName(orcid: string): Promise<{ displayName: string } | OrcidFailure> {
-  // The lookup is the one part of the app that needs a network; say so
-  // rather than blaming ORCID.
+  // The one part of the app that needs a network: say offline, don't blame ORCID.
   if (!navigator.onLine) return { code: "OFFLINE" };
   const result = await lookupOrcidPerson(normalizeOrcid(orcid));
   if (!result.ok) {
@@ -44,18 +46,6 @@ export async function fetchOrcidName(orcid: string): Promise<{ displayName: stri
   }
   return { displayName: result.displayName };
 }
-
-/**
- * Failure code → message key. Explicit rather than built by string
- * concatenation, so the typed-message guarantee still holds: a key removed
- * from en.json breaks the build here instead of silently rendering a key name.
- */
-const ORCID_ERROR_KEYS = {
-  INVALID_ID: "errOrcidINVALID_ID",
-  NOT_FOUND: "errOrcidNOT_FOUND",
-  UNAVAILABLE: "errOrcidUNAVAILABLE",
-  OFFLINE: "errOffline",
-} as const;
 
 /** Render an ORCID failure in the interface language. */
 export function orcidErrorText(failure: OrcidFailure, t: ReturnType<typeof useTranslations>): string {

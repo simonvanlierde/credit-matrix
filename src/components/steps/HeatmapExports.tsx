@@ -9,11 +9,7 @@ import { announce } from "@/lib/announce";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { download as downloadBlob } from "@/lib/utils";
-import { MENU_ITEM } from "./grid-shared";
-
-/** Shared look for the small outlined controls in the status strip and menus. */
-const TOOL_BUTTON =
-  "flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant/60 px-3 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/30 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary";
+import { MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 
 type ExportFormat = "svg" | "png";
 
