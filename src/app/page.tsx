@@ -1,4 +1,4 @@
-import { ClaimGate } from "@/components/CoauthorPage";
+import { ClaimGate } from "@/components/ClaimGate";
 import { Inspector } from "@/components/Inspector";
 import { LabelledSection } from "@/components/LabelledSection";
 import { AuthorList } from "@/components/steps/AuthorInput";

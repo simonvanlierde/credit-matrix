@@ -4,7 +4,7 @@ import { expect, it, vi } from "vitest";
 import { decodeShareHash } from "@/lib/share";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
-import { ClaimGate } from "./CoauthorPage";
+import { ClaimGate } from "./ClaimGate";
 
 it("sends the same answer with the same send time, shared or copied", async () => {
   const store = useContributionStore.getState();
@@ -31,7 +31,7 @@ it("sends the same answer with the same send time, shared or copied", async () =
     return (await decodeShareHash(new URL(url).hash))?.sentAt;
   };
 
-  fireEvent.click(screen.getByRole("button", { name: "Send back" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Send back" }));
   const first = await sentAt(1);
   fireEvent.click(await screen.findByRole("button", { name: /Copy the link instead|Link copied/ }));
   expect(await sentAt(2)).toBe(first);
