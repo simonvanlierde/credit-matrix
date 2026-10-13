@@ -7,6 +7,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { DOMParser } from "linkedom";
+import { core } from "zod/mini";
 import { hasCatalog, loadRoleCatalog, makeRoleTranslator } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
 import { toCsv } from "./export/csv";
@@ -69,7 +70,14 @@ export async function run(argv: string[]): Promise<string> {
   if (!["statement", "convert", "ask"].includes(command)) throw new UsageError(`Unknown command: ${command}`);
   if (!file) throw new UsageError(`${command} needs a file.`);
 
-  const imported = await importAny(await read(file), { parser });
+  const imported = await importAny(await read(file), { parser }).catch((error: unknown) => {
+    if (!(error instanceof core.$ZodError)) throw error;
+    // zod's own message is a JSON dump of every issue: name the fields that failed instead.
+    const fields = [...new Set(error.issues.map((issue) => issue.path.join(".") || "the top level"))];
+    const listed =
+      fields.length > 3 ? `${fields.slice(0, 3).join(", ")} and ${fields.length - 3} more` : fields.join(", ");
+    throw new Error(`${file === "-" ? "The input" : file} is not a CRediT Matrix JSON export. Check ${listed}.`);
+  });
   const authors = normalizeRoster(imported.authors);
 
   switch (command) {

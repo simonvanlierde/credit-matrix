@@ -98,6 +98,14 @@ describe("credit-matrix usage", () => {
     await expect(run(["sideways", csv])).rejects.toThrow(/Unknown command/);
     await expect(run(["statement"])).rejects.toThrow(/needs a file/);
   });
+
+  it("names the failing fields of JSON that is not an export, not zod's issue dump", async () => {
+    const other = file("other.json", '{"version": 1, "authors": [{"name": "123"}], "asks": 5}');
+    await expect(run(["statement", other])).rejects.toThrow(
+      `${other} is not a CRediT Matrix JSON export. Check authors.0.name, authors.0.firstName, authors.0.middleName and 4 more.`,
+    );
+    await expect(run(["statement", file("list.json", "[]")])).rejects.toThrow(/Check the top level\.$/);
+  });
 });
 
 describe("credit-matrix standard input", () => {
