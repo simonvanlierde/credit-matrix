@@ -40,7 +40,7 @@ jobs:
       # `verify` is the pre-push gate (biome, tsc, vitest); the extra flag
       # adds coverage output for Codecov.
       - name: Lint, typecheck, test
-        run: pnpm verify --coverage
+        run: pnpm verify
 
       - name: Validate JATS export against the DTD and the JATS4R rules
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libxml2-utils && pnpm validate:jats
