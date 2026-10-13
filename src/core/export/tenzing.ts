@@ -46,19 +46,26 @@ export function fromTenzing(text: string): Author[] {
     .filter((person) => person.firstName || person.middleName || person.surname)
     .sort((a, b) => a.order - b.order || a.index - b.index);
 
-  const authors = people.map(({ row, firstName, middleName, surname }) => {
+  const authors = people.flatMap(({ row, firstName, middleName, surname }) => {
     const orcid = cell(row, "orcid id");
-    return createAuthor([firstName, middleName, surname].filter(Boolean).join(" "), {
-      firstName,
-      middleName,
-      surname,
-      // Drop an unparseable ORCID rather than aborting the whole import.
-      orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
-      contributorType: cell(row, "author/acknowledgee").toLowerCase() === "acknowledgee" ? "non-author" : "author",
-      corresponding: isTrue(cell(row, "corresponding author?")),
-      // tenzing records a role as done or not, with no degree: done is the top score.
-      contributions: [...ROLE_KEYS].map(([header, role]) => ({ role, score: isTrue(cell(row, header)) ? 100 : 0 })),
-    });
+    // Skip a row createAuthor rejects (a name with no letters) rather than abort the import.
+    try {
+      return [
+        createAuthor([firstName, middleName, surname].filter(Boolean).join(" "), {
+          firstName,
+          middleName,
+          surname,
+          // Drop an unparseable ORCID rather than aborting the whole import.
+          orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
+          contributorType: cell(row, "author/acknowledgee").toLowerCase() === "acknowledgee" ? "non-author" : "author",
+          corresponding: isTrue(cell(row, "corresponding author?")),
+          // tenzing records a role as done or not, with no degree: done is the top score.
+          contributions: [...ROLE_KEYS].map(([header, role]) => ({ role, score: isTrue(cell(row, header)) ? 100 : 0 })),
+        }),
+      ];
+    } catch {
+      return [];
+    }
   });
 
   return deduplicateAuthorInitials(authors);

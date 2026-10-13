@@ -111,6 +111,11 @@ describe("CSV import/export", () => {
     expect(score("Software")).toBe(50);
   });
 
+  it("skips a row with no usable name and keeps the rest", () => {
+    const parsed = fromCsv(`Name,Conceptualization\nJane Smith,100\n,100\n123,100\nBob Lee,100`);
+    expect(parsed.map((a) => a.name)).toEqual(["Jane Smith", "Bob Lee"]);
+  });
+
   it("rounds a fractional score cell to an integer", () => {
     const csv = `Name,Conceptualization\nJane Smith,50.5`;
     const parsed = fromCsv(csv);

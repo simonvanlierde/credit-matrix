@@ -168,11 +168,11 @@ export function fromCsv(csv: string): Author[] {
   const equalIndex = headers.indexOf(headerKey(EQUAL_HEADER));
   const correspondingIndex = headers.indexOf(headerKey(CORRESPONDING_HEADER));
 
-  const authors = records.slice(1).map((cells) => {
+  // A row with no usable name is skipped, as JATS import skips a nameless
+  // contrib, rather than aborting the whole import.
+  const authors = records.slice(1).flatMap((cells) => {
     const name = cells[nameIndex] ?? "";
-    if (!name) {
-      throw new Error("Each CSV row must include a contributor name.");
-    }
+    if (!name) return [];
 
     const contributions: Contribution[] = CREDIT_ROLES.map((role) => {
       const scoreText = cells[headers.indexOf(headerKey(role.name))] ?? "0";
@@ -183,13 +183,19 @@ export function fromCsv(csv: string): Author[] {
     // Drop an unparseable ORCID rather than aborting the whole import.
     const orcid = cells[orcidIndex];
 
-    return createAuthor(name, {
-      orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
-      contributorType,
-      contributions,
-      equalContribution: readYesNo(cells[equalIndex]),
-      corresponding: readYesNo(cells[correspondingIndex]),
-    });
+    try {
+      return [
+        createAuthor(name, {
+          orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
+          contributorType,
+          contributions,
+          equalContribution: readYesNo(cells[equalIndex]),
+          corresponding: readYesNo(cells[correspondingIndex]),
+        }),
+      ];
+    } catch {
+      return [];
+    }
   });
 
   return deduplicateAuthorInitials(authors);

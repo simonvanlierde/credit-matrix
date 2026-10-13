@@ -52,6 +52,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   come back as not found.
 - JSON import: a contributor whose stored first name, middle name or surname is empty or no longer
   matches the name gets initials from the name itself, instead of the whole name or stale letters.
+- CSV and tenzing import skip a row with no usable name (empty, or no letters) and keep the other
+  rows, as JATS XML import does. One bad row used to stop the whole import. A CSV without a Name
+  column is still refused.
 
 ## [0.7.0] - 2026-10-13
 

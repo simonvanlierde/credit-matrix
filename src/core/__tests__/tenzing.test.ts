@@ -22,6 +22,11 @@ const ANA_ROLES = [
 ];
 
 describe("fromTenzing", () => {
+  it("skips a row with no usable name and keeps the rest", () => {
+    const authors = fromTenzing("Firstname,Surname,Conceptualization\nAna,Lee,TRUE\n--,--,TRUE\nBo,Kim,FALSE");
+    expect(authors.map((a) => a.name)).toEqual(["Ana Lee", "Bo Kim"]);
+  });
+
   it("reads tenzing's example CSV layout in publication order", () => {
     const [ana, bob, carol, ...rest] = fromTenzing(fixture("tenzing.csv"));
     expect(rest).toEqual([]);
