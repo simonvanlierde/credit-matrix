@@ -64,3 +64,11 @@ it("restores the saved drafts and follows another tab's saves", async () => {
   expect(useContributionStore.getState().title).toBe("Edited there");
   expect(screen.getByText(en.draftUpdatedElsewhere)).toBeTruthy();
 });
+
+it("keeps saying a newer version took over when another status shows", async () => {
+  await renderStatus();
+  act(() => useContributionStore.setState({ newerVersionBlocked: true }));
+  act(() => showStatus({ kind: "success", message: "Link copied." }));
+
+  expect(screen.getByRole("alert").textContent).toBe(en.errNewerVersionSaved);
+});
