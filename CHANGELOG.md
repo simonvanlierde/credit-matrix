@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-13
+
+### Fixed
+
+- `credit-matrix` with no command now prints a one-line error naming the commands and exits with
+  2, like any other mistake in the command line. It used to print the help and exit with 0, so a
+  script could not tell it from success.
+- The package's README on npm now says to install it with `npm install credit-matrix`. It still
+  described the package as not yet published.
+
 ## [0.8.0] - 2026-10-13
 
 ### Added
@@ -469,7 +479,8 @@ Persisted local drafts migrate automatically.
   contribution heatmap, JATS4R XML / CSV / JSON / Markdown exports, ORCID lookup,
   share links, and a framework-agnostic `@credit-generator/core` domain package.
 
-[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.5.0...v0.6.0
