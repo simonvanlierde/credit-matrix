@@ -1,6 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { type Browser, expect, type Page, test } from "@playwright/test";
-import { asReturningVisitor, copyFrom, onScreen } from "./helpers";
+import { asReturningVisitor, copyFrom, onScreen, scan } from "./helpers";
 
 /**
  * Settling co-author answers: a reply lands beside the row, the grid marks
@@ -142,9 +141,7 @@ test("the Review tab with open differences has no accessibility violations", asy
   await expect(review(page).getByRole("button", { name: "Use Bob's: Investigation" })).toBeVisible();
   // Hovering a line rings its grid cell; the scan covers that state too.
   await review(page).getByText("Investigation", { exact: true }).hover();
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"])
-    .analyze();
+  const results = await scan(page);
   expect(results.violations).toEqual([]);
   await page.context().close();
 });
