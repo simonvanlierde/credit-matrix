@@ -299,10 +299,6 @@ function consistentNameParts(author: Author): Pick<Author, "firstName" | "middle
   return fits ? { firstName, middleName, surname } : undefined;
 }
 
-export function parseAuthors(names: string[]): Author[] {
-  return deduplicateAuthorInitials(names.map((name) => createAuthor(name)));
-}
-
 /** Surname particles that stay attached to the surname ("van der Berg, Anne"). */
 const PARTICLES = new Set([
   "van",
@@ -378,5 +374,5 @@ function splitCommaLine(line: string): string[] {
  * Empty lines / entries are ignored.
  */
 export function parseAuthorText(text: string): Author[] {
-  return parseAuthors(splitNameList(text));
+  return deduplicateAuthorInitials(splitNameList(text).map((name) => createAuthor(name)));
 }

@@ -85,7 +85,7 @@ function hslHex(h: number, s: number, l: number): string {
 }
 
 /** Linear mix of two hex colors; t=0 → a, t=1 → b. */
-export function mixHex(a: string, b: string, t: number): string {
+function mixHex(a: string, b: string, t: number): string {
   const [ar, ag, ab] = rgb(a);
   const [br, bg, bb] = rgb(b);
   const round = (x: number, y: number) => Math.round(x + (y - x) * t);

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   createAuthor,
   deduplicateAuthorInitials,
-  parseAuthors,
   parseAuthorText,
   parseNameParts,
   splitNameList,
@@ -97,7 +96,7 @@ describe("createAuthor", () => {
     expect(createAuthor("王小明").initials).toBe("王小明");
     expect(createAuthor("ヤマダタロー").initials).toBe("ヤマダタロー");
     expect(createAuthor("김민준").initials).toBe("김민준");
-    expect(parseAuthors(["王小明", "王大明"]).map((a) => a.initials)).toEqual(["王小明", "王大明"]);
+    expect(parseAuthorText("王小明\n王大明").map((a) => a.initials)).toEqual(["王小明", "王大明"]);
   });
 
   it("never builds initials from punctuation", () => {
@@ -142,13 +141,13 @@ describe("deduplicateAuthorInitials", () => {
   it("still assigns unique initials when the surname runs out of letters", () => {
     // "Jo Li" → JL, then JLi (the surname's 2nd letter), and then the surname is
     // spent, so the disambiguator falls back to a counter suffix.
-    const initials = parseAuthors(["Jo Li", "Jo Li", "Jo Li"]).map((a) => a.initials);
+    const initials = parseAuthorText("Jo Li\nJo Li\nJo Li").map((a) => a.initials);
     expect(new Set(initials).size).toBe(3);
     expect(initials.slice(0, 2)).toEqual(["JL", "JLi"]);
   });
 
   it("deduplicates supplementary-plane initials without corrupting Unicode", () => {
-    const initials = parseAuthors(["A 𐐀x", "A 𐐀y"]).map((author) => author.initials);
+    const initials = parseAuthorText("A 𐐀x\nA 𐐀y").map((author) => author.initials);
 
     expect(initials).toEqual(["A𐐀", "A𐐀y"]);
     expect(initials.every((value) => value.isWellFormed())).toBe(true);
