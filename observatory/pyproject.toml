@@ -1,0 +1,33 @@
+[project]
+name = "credit-observatory"
+version = "0.1.0"
+description = "How CRediT roles are used in published papers, extracted from Europe PMC JATS"
+license = "MIT"
+requires-python = ">=3.14"
+dependencies = ["duckdb>=1.4"]
+
+[project.scripts]
+observatory = "observatory.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.4", "ruff>=0.14", "ty>=0.0.1a20"]
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv.build-backend]
+module-name = "observatory"
+
+[tool.ruff.lint.per-file-ignores]
+# The tests feed the en dashes publishers use.
+"tests/*" = ["RUF001", "E501"]
