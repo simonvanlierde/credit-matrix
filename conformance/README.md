@@ -5,9 +5,6 @@ roles into JATS XML. Each case is a list of contributors with their roles, and t
 [CRediT Matrix](https://credit.duinlab.nl) writes for it. Every expected file is checked against
 the JATS 1.3 DTD and the [JATS4R Schematron rules](https://github.com/jats4r/jats-schematrons).
 
-The cases are meant to be reused. If you build a tool that writes CRediT roles into JATS, you can
-feed it the same inputs and compare what it writes with the expected files.
-
 ## What is here
 
 Each case is two files in [`cases/`](cases/) with the same name:

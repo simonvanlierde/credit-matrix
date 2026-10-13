@@ -7,7 +7,7 @@ export const dynamic = "force-static";
  *
  * Paired with `public/sw.js`, this makes the app installable and lets a draft
  * survive a flight: everything except the ORCID and DOI lookups runs in the
- * browser (see the architecture note in the README).
+ * browser (see docs/architecture.md).
  *
  * The maskable icon is rendered from `docs/brand/maskable-icon.html`; the SVG
  * is the same favicon the document links.

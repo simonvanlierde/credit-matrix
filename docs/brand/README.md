@@ -1,6 +1,6 @@
 # Brand assets
 
-The mark (the logo) is a 3×3 crop of the contribution matrix, with lead on the diagonal. Its cell
+The rules for the mark and the lockup are in [DESIGN.md](../../DESIGN.md#brand). The mark's cell
 fills are the app's real heatmap levels from `src/core/contributor-color.ts`: white mixed 0.4, 0.7,
 and 1.0 of the way toward ink-blue, plus the fill of an empty cell.
 
@@ -12,9 +12,8 @@ and 1.0 of the way toward ink-blue, plus the fill of an empty cell.
 | Social card | `docs/brand/opengraph-image.html` | `src/app/opengraph-image.png` |
 | Maskable icon | `docs/brand/maskable-icon.html` | `public/icon-512.png`, via the web app manifest |
 
-The two PNGs are rendered from the HTML in this folder ahead of time, not on each request. That's
-because `next/og` needs a WASM renderer, and the Cloudflare Workers runtime doesn't include one for
-free.
+The two PNGs are rendered from the HTML in this folder ahead of time, not on each request, because
+`next/og` needs a WASM renderer that the Cloudflare Workers runtime doesn't include for free.
 
 ```sh
 pnpm exec playwright screenshot --viewport-size=1200,630 \
@@ -25,5 +24,5 @@ pnpm exec playwright screenshot --viewport-size=512,512 \
   "file://$PWD/docs/brand/maskable-icon.html" public/icon-512.png
 ```
 
-The social card shows the same sample data that the app's "Load sample data" button loads. So the
-statement on the card is one the app really produces.
+The social card shows the sample data that "Load sample data" loads, so its statement is one the
+app really produces.

@@ -1,10 +1,8 @@
 # credit-matrix
 
-The TypeScript at the heart of CRediT Matrix, with no tie to React or Next.js. It models
-contributors, validates contribution data, and produces
-[CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) statements and exports. The
-[CRediT Matrix](https://credit.duinlab.nl) web app runs this code in the browser. It is published
-as an ESM package with types, and its one runtime dependency is `zod`.
+[CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) statements and exports, as the
+[CRediT Matrix](https://credit.duinlab.nl) web app runs them in the browser. It is an ESM package
+with types, with no tie to React or Next.js, and its one runtime dependency is `zod`.
 
 The package goes on npm with the first release after 0.7.0, as `npm install credit-matrix`. Until
 then, build it from the repository and install the tarball:
@@ -56,8 +54,7 @@ CRediT role.
 `contributorType` is either `author` or `non-author`. A statement can put non-author contributors
 on a separate `Acknowledgements:` line. The JATS4R export writes the value as `contrib-type`.
 
-A contribution stores a **0–100 integer score**, not a yes/no value. The UI can collect it with a
-toggle, a picker, or a slider without changing the data model. `scoreToLevel()` maps scores to
+A contribution stores a **0–100 integer score**, not a yes/no value. `scoreToLevel()` maps scores to
 CRediT's optional levels of contribution:
 
 | Score    | Level        |
@@ -67,8 +64,12 @@ CRediT's optional levels of contribution:
 | `34–66`  | `equal`      |
 | `67–100` | `lead`       |
 
-The 14 roles are defined once, in `credit-roles.ts`, with their NISO UUIDs, descriptions, and URLs.
-TypeScript derives the `CreditRoleName` union from that same tuple.
+The 14 roles are defined once, in `credit-roles.ts`, with their NISO UUIDs, descriptions, and URLs,
+and the `CreditRoleName` union derives from them.
+
+`AuthorSchema` and `ContributionSchema` validate imported data and any other data the app can't
+trust. Scores must be `0–100` integers, and roles must be known CRediT names. ORCID iDs are checked
+for shape and checksum.
 
 ## Statements
 
@@ -102,8 +103,7 @@ Only non-zero contributions appear in statements.
 | Heatmap SVG | `buildHeatmapSvg` | —                                   |
 
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
-assets. The web app uses that same SVG for the preview, the SVG download, and the PNG export (drawn
-onto a canvas).
+assets.
 
 `fromJats4rXml(xml, { parser })` reads XML with `parser`, which defaults to the global `DOMParser`.
 In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:
@@ -185,15 +185,8 @@ holds its exact shape. By entry point:
   `RoleCatalog`, `RoleDescriber`, `RoleTranslator`, `UiCatalog`, `UiKey`, `UiTranslator`
 - `credit-matrix/element`: `CreditMatrixElement`
 
-The palette, the limits and the merge helpers are internal. This split is deliberate: the web app
-imports any core module by its path (`@/core/author`, `@/core/contributor-color`, …), while users
-of the package get only the entry points above.
-
-## Validation
-
-`AuthorSchema` and `ContributionSchema` validate imported data and any other data the app can't
-trust. Scores must be `0–100` integers, and roles must be known CRediT names. ORCID iDs are checked
-for shape and checksum.
+The palette, the limits and the merge helpers are internal: the web app imports core modules by
+path (`@/core/author`, …), and users of the package get only the entry points above.
 
 ## Testing
 
@@ -202,9 +195,6 @@ pnpm test                          # from the repository root
 pnpm --filter credit-matrix build  # dist/, as published
 ```
 
-The core tests run under Node, not in a browser environment, so a browser global used by mistake
-fails here first. linkedom stands in for `DOMParser`. The element test opts into jsdom. The package
-is built before the tests run. One test imports it through its `exports` map, checks the list of
-exports, compares the declarations with the committed type snapshot, and runs the built CLI. If you
-change the public interface on purpose, update the snapshots with
-`pnpm exec vitest run --project core -u`.
+The core tests run under Node, with linkedom standing in for `DOMParser`. See
+[CONTRIBUTING.md](https://github.com/simonvanlierde/credit-matrix/blob/main/CONTRIBUTING.md#testing)
+for the package checks and how to update the type snapshot.

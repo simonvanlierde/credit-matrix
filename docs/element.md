@@ -57,13 +57,12 @@ regional tag such as `de-DE` uses its language, `de`. Any language it does not o
 
 ## What it renders
 
-Inside a shadow root, so the page's styles neither leak in nor out, on its own light card, so it
-reads the same on a dark page:
+Inside a shadow root, so the page's styles neither leak in nor out, on its own light card:
 
 - the heatmap, drawn at its full size. On a narrow page it scrolls sideways instead of shrinking
   its labels;
-- a table of each contributor's level in each role, hidden on screen but read by screen readers in
-  place of the drawing;
+- a table of each contributor's level in each role, for screen readers (see the
+  [accessibility statement](accessibility.md#web-element));
 - the statement as plain text, one paragraph per line (the `CRediT:` line, then any
   acknowledgements and notes).
 
