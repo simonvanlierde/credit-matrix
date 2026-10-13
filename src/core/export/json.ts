@@ -7,14 +7,15 @@ import { AuthorSchema, MAX_AUTHORS } from "../author";
 /** The export format version this build writes and reads. */
 export const JSON_EXPORT_VERSION = 1;
 
-const ExportSchema = z.object({
-  version: z.literal(JSON_EXPORT_VERSION),
-  authors: z.array(AuthorSchema).check(z.maxLength(MAX_AUTHORS)),
-  /** Asks and co-author answers by contributor id. Optional, so files from before them still load. */
-  asks: z.optional(z.record(z.string(), AskSchema)),
-  /** The contributor who made the file said they are. */
-  selfId: z.optional(z.string()),
-});
+const ExportSchema = /* @__PURE__ */ (() =>
+  z.object({
+    version: z.literal(JSON_EXPORT_VERSION),
+    authors: z.array(AuthorSchema).check(z.maxLength(MAX_AUTHORS)),
+    /** Asks and co-author answers by contributor id. Optional, so files from before them still load. */
+    asks: z.optional(z.record(z.string(), AskSchema)),
+    /** The contributor who made the file said they are. */
+    selfId: z.optional(z.string()),
+  }))();
 
 /** Thrown by `fromJson` for an export stamped by a newer build. */
 export class NewerVersionError extends Error {

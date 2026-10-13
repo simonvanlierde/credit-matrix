@@ -19,43 +19,46 @@ export const ASK_TARGETS: readonly Target[] = [...CREDIT_ROLES.map((role) => rol
 export const isMarker = (target: Target): target is Marker => (MARKERS as readonly string[]).includes(target);
 const isTarget = (key: string): key is Target => (ASK_TARGETS as readonly string[]).includes(key);
 
-const DecisionSchema = z.object({
-  choice: z.enum(["theirs", "mine"]),
-  /** The row's level when the decision was made; a later edit to the row reopens it. */
-  rowLevel: z.union([z.enum(["none", "supporting", "equal", "lead"]), z.boolean()]),
-  /** When it was made, in epoch milliseconds. Absent on decisions from before it was kept. */
-  at: z.optional(z.number()),
-  /** On "theirs": the row's exact score, or marker, before their answer replaced it. Clearing the decision puts it back. */
-  before: z.optional(z.union([z.number(), z.boolean()])),
-});
+const DecisionSchema = /* @__PURE__ */ (() =>
+  z.object({
+    choice: z.enum(["theirs", "mine"]),
+    /** The row's level when the decision was made; a later edit to the row reopens it. */
+    rowLevel: z.union([z.enum(["none", "supporting", "equal", "lead"]), z.boolean()]),
+    /** When it was made, in epoch milliseconds. Absent on decisions from before it was kept. */
+    at: z.optional(z.number()),
+    /** On "theirs": the row's exact score, or marker, before their answer replaced it. Clearing the decision puts it back. */
+    before: z.optional(z.union([z.number(), z.boolean()])),
+  }))();
 export type Decision = z.infer<typeof DecisionSchema>;
 
 // Loose: keys a later release adds (a reply's provenance) survive a round trip through this one.
-const ReplySchema = z.looseObject({
-  contributions: z.array(ContributionSchema),
-  equalContribution: z.boolean(),
-  corresponding: z.boolean(),
-  /** When the co-author sent it (the link's `w`), or when it was opened for links without one. */
-  sentAt: z.number(),
-  receivedAt: z.number(),
-  // Loose too: a target a later release adds keeps its decision here, and the logic skips it.
-  decisions: z.looseObject(
-    Object.fromEntries(ASK_TARGETS.map((target) => [target, z.optional(DecisionSchema)])) as Record<
-      Target,
-      z.ZodMiniOptional<typeof DecisionSchema>
-    >,
-  ),
-});
+const ReplySchema = /* @__PURE__ */ (() =>
+  z.looseObject({
+    contributions: z.array(ContributionSchema),
+    equalContribution: z.boolean(),
+    corresponding: z.boolean(),
+    /** When the co-author sent it (the link's `w`), or when it was opened for links without one. */
+    sentAt: z.number(),
+    receivedAt: z.number(),
+    // Loose too: a target a later release adds keeps its decision here, and the logic skips it.
+    decisions: z.looseObject(
+      Object.fromEntries(ASK_TARGETS.map((target) => [target, z.optional(DecisionSchema)])) as Record<
+        Target,
+        z.ZodMiniOptional<typeof DecisionSchema>
+      >,
+    ),
+  }))();
 export type Reply = z.infer<typeof ReplySchema>;
 
 /** One contributor's ask and their latest answer. Validates stored and imported asks. */
-export const AskSchema = z.looseObject({
-  /** When the ask link was copied, in epoch milliseconds. */
-  sentAt: z.number(),
-  /** Whether the link carried the asker's guess, or an empty row. */
-  prefilled: z.boolean(),
-  reply: z.optional(ReplySchema),
-});
+export const AskSchema = /* @__PURE__ */ (() =>
+  z.looseObject({
+    /** When the ask link was copied, in epoch milliseconds. */
+    sentAt: z.number(),
+    /** Whether the link carried the asker's guess, or an empty row. */
+    prefilled: z.boolean(),
+    reply: z.optional(ReplySchema),
+  }))();
 export type Ask = z.infer<typeof AskSchema>;
 
 export interface AskState {

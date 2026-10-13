@@ -28,10 +28,11 @@ export type OrcidLookupResult =
  * a malformed one reads as missing (`catch`), so a partial record still yields
  * whatever name parts it has.
  */
-const NamePart = z.catch(z.nullish(z.object({ value: z.string() })), null);
-const OrcidPersonSchema = z.object({
-  name: z.catch(z.nullish(z.object({ "given-names": NamePart, "family-name": NamePart })), null),
-});
+const NamePart = /* @__PURE__ */ (() => z.catch(z.nullish(z.object({ value: z.string() })), null))();
+const OrcidPersonSchema = /* @__PURE__ */ (() =>
+  z.object({
+    name: z.catch(z.nullish(z.object({ "given-names": NamePart, "family-name": NamePart })), null),
+  }))();
 
 /** Build a failure carrying both the code and its English description. */
 function fail(status: 400 | 404 | 502, code: OrcidErrorCode): OrcidLookupResult {

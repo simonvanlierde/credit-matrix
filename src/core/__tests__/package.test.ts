@@ -32,6 +32,30 @@ describe("the built credit-matrix package", () => {
     const run = (...args: string[]) => execFileSync("node", [`${dist}cli.js`, ...args], { encoding: "utf8" });
     const xml = fileURLToPath(new URL("fixtures/export-jats.xml", import.meta.url));
     expect(run("statement", xml)).toMatch(/^CRediT: /);
-    expect(readFileSync(`${dist}cli.js`, "utf8")).not.toMatch(/from "linkedom"/);
+    // The CLI is minified, so an import of a dependency reads `from"zod/mini"`.
+    expect(readFileSync(`${dist}cli.js`, "utf8")).not.toMatch(/from\s*"(linkedom|zod)/);
+  });
+
+  it("lets an app that never validates drop zod from its bundle", async () => {
+    const { rolldown } = await import("rolldown");
+    // An app's bundle of index.js that uses one export, as a bundler that tree-shakes builds it.
+    const bundle = async (name: string) => {
+      const build = await rolldown({
+        input: "entry",
+        plugins: [
+          {
+            name: "entry",
+            resolveId: (id) => (id === "entry" ? id : null),
+            load: (id) => (id === "entry" ? `import { ${name} } from "${dist}index.js"; console.log(${name});` : null),
+          },
+        ],
+        logLevel: "silent",
+      });
+      const { output } = await build.generate({ format: "esm" });
+      return output[0].code;
+    };
+    // zod names its schema classes with strings like "$ZodObject", which survive bundling.
+    expect(await bundle("generateStatement")).not.toMatch(/\$Zod/);
+    expect(await bundle("fromJson")).toMatch(/\$ZodObject/);
   });
 });

@@ -20,58 +20,59 @@ import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
  * to the draft it came from and be told apart from the reply the claimee sends.
  * Keys added since are optional, so a reader that predates them ignores them.
  */
-const SharePayloadSchema = z
-  .object({
-    /** Payload version. v2 carries ids and the envelope; nothing older decodes. */
-    v: z.literal(2),
-    /** draft title */
-    t: z.optional(z.string().check(z.maxLength(500))),
-    /** source draft id */
-    d: z.optional(z.string().check(z.regex(ID_REGEX))),
-    /** claimed contributor id */
-    c: z.optional(z.string().check(z.regex(ID_REGEX))),
-    /** reply flag: set on the link a claimee sends back */
-    r: z.optional(z.literal(1)),
-    /** blank ask: the claimed row was sent with its scores zeroed */
-    b: z.optional(z.literal(1)),
-    /** when the link was sent, in epoch milliseconds; written now so a later release can order replies */
-    w: z.optional(z.number().check(z.nonnegative())),
-    /** the asker works in yes/no mode, so the co-author answers yes or no rather than in levels */
-    y: z.optional(z.literal(1)),
-    a: z
-      .array(
-        z.object({
-          /** stable contributor id */
-          i: z.string().check(z.regex(ID_REGEX)),
-          /** name */
-          n: z.string(),
-          /** ORCID iD, omitted when there is none */
-          o: z.optional(z.string()),
-          /** 1 for a non-author contributor; omitted for a named author */
-          t: z.optional(z.literal(1)),
-          /** scores, in CREDIT_ROLES order */
-          s: z.array(z.number()),
-          /** shares first authorship */
-          e: z.optional(z.literal(1)),
-          /** corresponding author */
-          c: z.optional(z.literal(1)),
-        }),
-      )
-      .check(z.maxLength(MAX_AUTHORS)),
-  })
-  .check(
-    z.superRefine((payload, ctx) => {
-      // A claim needs a home to reply to, and a reply is always a claim.
-      if (payload.c && !payload.d) ctx.addIssue({ code: "custom", message: "claim without source draft" });
-      if (payload.r && !payload.c) ctx.addIssue({ code: "custom", message: "reply without claim" });
-      if (payload.c && !payload.a.some((entry) => entry.i === payload.c)) {
-        ctx.addIssue({ code: "custom", message: "claim names an absent contributor" });
-      }
-      if (new Set(payload.a.map((entry) => entry.i)).size !== payload.a.length) {
-        ctx.addIssue({ code: "custom", message: "duplicate contributor ids" });
-      }
-    }),
-  );
+const SharePayloadSchema = /* @__PURE__ */ (() =>
+  z
+    .object({
+      /** Payload version. v2 carries ids and the envelope; nothing older decodes. */
+      v: z.literal(2),
+      /** draft title */
+      t: z.optional(z.string().check(z.maxLength(500))),
+      /** source draft id */
+      d: z.optional(z.string().check(z.regex(ID_REGEX))),
+      /** claimed contributor id */
+      c: z.optional(z.string().check(z.regex(ID_REGEX))),
+      /** reply flag: set on the link a claimee sends back */
+      r: z.optional(z.literal(1)),
+      /** blank ask: the claimed row was sent with its scores zeroed */
+      b: z.optional(z.literal(1)),
+      /** when the link was sent, in epoch milliseconds; written now so a later release can order replies */
+      w: z.optional(z.number().check(z.nonnegative())),
+      /** the asker works in yes/no mode, so the co-author answers yes or no rather than in levels */
+      y: z.optional(z.literal(1)),
+      a: z
+        .array(
+          z.object({
+            /** stable contributor id */
+            i: z.string().check(z.regex(ID_REGEX)),
+            /** name */
+            n: z.string(),
+            /** ORCID iD, omitted when there is none */
+            o: z.optional(z.string()),
+            /** 1 for a non-author contributor; omitted for a named author */
+            t: z.optional(z.literal(1)),
+            /** scores, in CREDIT_ROLES order */
+            s: z.array(z.number()),
+            /** shares first authorship */
+            e: z.optional(z.literal(1)),
+            /** corresponding author */
+            c: z.optional(z.literal(1)),
+          }),
+        )
+        .check(z.maxLength(MAX_AUTHORS)),
+    })
+    .check(
+      z.superRefine((payload, ctx) => {
+        // A claim needs a home to reply to, and a reply is always a claim.
+        if (payload.c && !payload.d) ctx.addIssue({ code: "custom", message: "claim without source draft" });
+        if (payload.r && !payload.c) ctx.addIssue({ code: "custom", message: "reply without claim" });
+        if (payload.c && !payload.a.some((entry) => entry.i === payload.c)) {
+          ctx.addIssue({ code: "custom", message: "claim names an absent contributor" });
+        }
+        if (new Set(payload.a.map((entry) => entry.i)).size !== payload.a.length) {
+          ctx.addIssue({ code: "custom", message: "duplicate contributor ids" });
+        }
+      }),
+    ))();
 
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 export interface ShareData {

@@ -22,10 +22,14 @@ export const ID_REGEX = /^[\w-]{1,64}$/;
  * contribution levels without committing to a fixed tier count in
  * the data model: the UI input mode is a presentation concern only.
  */
-export const ContributionSchema = z.object({
-  role: z.enum(CREDIT_ROLES.map((r) => r.name) as [CreditRoleName, ...CreditRoleName[]]),
-  score: z.int().check(z.gte(0), z.lte(100)),
-});
+// NOTE: every module-level schema in the package sits in a `@__PURE__` arrow that runs once.
+// The `.check()` calls inside a schema stop a bundler from dropping it, so without the
+// wrapper an app that never validates still ships all of zod (package.test.ts checks this).
+export const ContributionSchema = /* @__PURE__ */ (() =>
+  z.object({
+    role: z.enum(CREDIT_ROLES.map((r) => r.name) as [CreditRoleName, ...CreditRoleName[]]),
+    score: z.int().check(z.gte(0), z.lte(100)),
+  }))();
 
 export type Contribution = z.infer<typeof ContributionSchema>;
 
@@ -68,63 +72,66 @@ export function isUsableAuthorName(name: string): boolean {
   return /[\p{L}\p{M}]/u.test(name) || ORCID_INPUT_REGEX.test(name.trim());
 }
 
-export const AuthorSchema = z.object({
-  /** Stable unique identifier for UI state and persistence */
-  id: z._default(z.string().check(z.minLength(1)), () => globalThis.crypto.randomUUID()),
-  /**
-   * Display name as entered by the user (e.g. "Jane A. Smith").
-   *
-   * The letter check mirrors `createAuthor`, which throws on a name that keeps
-   * no letters once punctuation and digits are stripped. Without it the schema
-   * accepts names (e.g. "123") that every downstream `normalizeRoster` call
-   * then throws on, turning a bad import into a crash instead of an error.
-   */
-  name: z
-    .string()
-    .check(
-      z.minLength(1),
-      z.maxLength(MAX_AUTHOR_NAME_LENGTH),
-      z.refine(isUsableAuthorName, "Author name must contain at least one letter."),
+export const AuthorSchema = /* @__PURE__ */ (() =>
+  z.object({
+    /** Stable unique identifier for UI state and persistence */
+    id: z._default(z.string().check(z.minLength(1)), () => globalThis.crypto.randomUUID()),
+    /**
+     * Display name as entered by the user (e.g. "Jane A. Smith").
+     *
+     * The letter check mirrors `createAuthor`, which throws on a name that keeps
+     * no letters once punctuation and digits are stripped. Without it the schema
+     * accepts names (e.g. "123") that every downstream `normalizeRoster` call
+     * then throws on, turning a bad import into a crash instead of an error.
+     */
+    name: z
+      .string()
+      .check(
+        z.minLength(1),
+        z.maxLength(MAX_AUTHOR_NAME_LENGTH),
+        z.refine(isUsableAuthorName, "Author name must contain at least one letter."),
+      ),
+    /** Parsed first name */
+    firstName: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
+    /** Parsed middle name (may be empty) */
+    middleName: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
+    /** Parsed surname */
+    surname: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
+    /**
+     * Unique initials (e.g. "JAS"). Generated automatically, deduplicated
+     * across the author list. Used in the short statement format.
+     */
+    initials: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
+    /**
+     * ORCID iD, stored bare ("0000-0002-1825-0097"). Input may also be the
+     * orcid.org URL form; the transform strips it. Optional.
+     */
+    orcid: z.optional(
+      z.pipe(z.string().check(z.refine(isValidOrcid, "Invalid ORCID iD.")), z.transform(normalizeOrcid)),
     ),
-  /** Parsed first name */
-  firstName: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
-  /** Parsed middle name (may be empty) */
-  middleName: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
-  /** Parsed surname */
-  surname: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
-  /**
-   * Unique initials (e.g. "JAS"). Generated automatically, deduplicated
-   * across the author list. Used in the short statement format.
-   */
-  initials: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
-  /**
-   * ORCID iD, stored bare ("0000-0002-1825-0097"). Input may also be the
-   * orcid.org URL form; the transform strips it. Optional.
-   */
-  orcid: z.optional(z.pipe(z.string().check(z.refine(isValidOrcid, "Invalid ORCID iD.")), z.transform(normalizeOrcid))),
-  /**
-   * Whether this person is a named author or a non-author contributor credited
-   * in an Acknowledgements section. CRediT applies to both (see NISO guidance);
-   * the distinction drives the JATS `contrib-type`. Defaults to "author".
-   */
-  contributorType: z._default(z.enum(["author", "non-author"]), "author"),
-  /**
-   * Scores for each of the 14 CRediT roles, keyed by role name.
-   *
-   * Deliberately not capped at `CREDIT_ROLES.length`: an imported array may
-   * legally repeat a role, and `normalizeContributions` merges duplicates by
-   * keeping the highest score. A cap here rejects that payload outright.
-   */
-  contributions: z.array(ContributionSchema),
-  /**
-   * Whether this person shares first authorship with others so marked. Not a
-   * CRediT role — the taxonomy has no slot for it — but journals ask for it in
-   * the same paragraph, so it travels with the contributions.
-   */
-  equalContribution: z._default(z.boolean(), false),
-  /** Whether this person is a corresponding author. Also outside CRediT. */
-  corresponding: z._default(z.boolean(), false),
-});
+    /**
+     * Whether this person is a named author or a non-author contributor credited
+     * in an Acknowledgements section. CRediT applies to both (see NISO guidance);
+     * the distinction drives the JATS `contrib-type`. Defaults to "author".
+     */
+    contributorType: z._default(z.enum(["author", "non-author"]), "author"),
+    /**
+     * Scores for each of the 14 CRediT roles, keyed by role name.
+     *
+     * Deliberately not capped at `CREDIT_ROLES.length`: an imported array may
+     * legally repeat a role, and `normalizeContributions` merges duplicates by
+     * keeping the highest score. A cap here rejects that payload outright.
+     */
+    contributions: z.array(ContributionSchema),
+    /**
+     * Whether this person shares first authorship with others so marked. Not a
+     * CRediT role — the taxonomy has no slot for it — but journals ask for it in
+     * the same paragraph, so it travels with the contributions.
+     */
+    equalContribution: z._default(z.boolean(), false),
+    /** Whether this person is a corresponding author. Also outside CRediT. */
+    corresponding: z._default(z.boolean(), false),
+  }))();
 
 export type Author = z.infer<typeof AuthorSchema>;
 
