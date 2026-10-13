@@ -1,6 +1,6 @@
 {
   "name": "credit-matrix",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "CRediT (Contributor Roles Taxonomy) statements and exports: JATS4R XML, CSV, JSON, Markdown and a heatmap SVG, with a CLI and a <credit-matrix> element.",
   "keywords": [
     "CRediT",
