@@ -267,6 +267,23 @@ describe("undoing a removal", () => {
   });
 });
 
+describe("editing a contributor's name", () => {
+  it("discards the edit on Escape, also when the field is left afterwards", () => {
+    // jsdom has no element scrolling; leaving the field rewinds it.
+    HTMLElement.prototype.scrollTo = vi.fn();
+    useContributionStore.setState({ authors: [createAuthor("Alice Smith")] });
+    renderList();
+    const field = screen.getByLabelText<HTMLInputElement>(en.nameLabel);
+    field.focus();
+    fireEvent.change(field, { target: { value: "Zed Typo" } });
+    fireEvent.keyDown(field, { key: "Escape" });
+    fireEvent.blur(field);
+
+    expect(authors()[0]?.name).toBe("Alice Smith");
+    expect(field.value).toBe("Alice Smith");
+  });
+});
+
 describe("moving a contributor from the menu", () => {
   it("keeps focus on Move up once the row reaches the top, and ignores further clicks", () => {
     useContributionStore.setState({ authors: [createAuthor("Ann Lee"), createAuthor("Ben Okoro")] });

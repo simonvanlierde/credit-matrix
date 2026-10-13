@@ -998,10 +998,11 @@ const AuthorRow = memo(function AuthorRowInner({
               onBlur={commitName}
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
+                // Revert without blurring, as the title field does: blur()
+                // commits before the revert renders, saving the abandoned text.
                 if (event.key === "Escape") {
                   setNameDraft(author.name);
                   setNameError(null);
-                  event.currentTarget.blur();
                 }
               }}
               onPaste={handleSmartPaste}

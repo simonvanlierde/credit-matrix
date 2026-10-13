@@ -38,6 +38,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Import: screen readers now read the DOI hint and any error with the field they belong to, a file
   dropped beside the drop zone no longer replaces the page, and the dialog names the file it read.
+- Pressing Escape in a contributor's name field now discards what you typed, instead of saving it.
 
 ## [0.7.0] - 2026-10-13
 
