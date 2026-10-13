@@ -3,13 +3,14 @@
 [![CI](https://github.com/simonvanlierde/credit-matrix/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/simonvanlierde/credit-matrix/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/simonvanlierde/credit-matrix/branch/main/graph/badge.svg)](https://codecov.io/gh/simonvanlierde/credit-matrix)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fcredit.duinlab.nl)](https://credit.duinlab.nl)
+[![npm](https://img.shields.io/npm/v/credit-matrix)](https://www.npmjs.com/package/credit-matrix)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21213659-blue.svg)](https://doi.org/10.5281/zenodo.21213659)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 A web app for writing the contribution statement of a paper: who did what, in the 14 roles of
-[CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/). It was released as
-*CRediT Generator* before. Add your contributors, give each of them their roles, and copy a
+[CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/). It was formerly
+called *CRediT Generator*. Add your contributors, give each of them their roles, and copy a
 statement for the manuscript, a **contribution heatmap** figure, or files for journal submission
 systems: JATS4R XML, CSV, JSON, and Markdown.
 

@@ -4,12 +4,8 @@
 [CRediT Matrix](https://credit.duinlab.nl) web app runs them in the browser. It is an ESM package
 with types, with no tie to React or Next.js, and its one runtime dependency is `zod`.
 
-The package goes on npm with the first release after 0.7.0, as `npm install credit-matrix`. Until
-then, build it from the repository and install the tarball:
-
 ```bash
-pnpm install && cd src/core && npm pack    # in a clone; writes credit-matrix-<version>.tgz
-npm install /path/to/credit-matrix-<version>.tgz   # in your own project
+npm install credit-matrix
 ```
 
 ```ts
@@ -32,7 +28,7 @@ toJats4rXml(authors);
 ## CLI
 
 The package also installs a `credit-matrix` command: the CLI, with an XML parser bundled. It needs
-Node 20.12 or later. Run it with `npx credit-matrix` once the package is on npm, or with
+Node 20.12 or later. Run it with `npx credit-matrix` without installing, or with
 `node src/core/dist/cli.js` from a clone after `pnpm --filter credit-matrix build`.
 
 ```bash

@@ -20,7 +20,7 @@ WCAG 2.2 criterion. What has been done is described below. Date of this assessme
   reorder a contributor without dragging, switch the inspector tabs, move through the grid with
   the arrow keys and use the segmented controls. They also check that focus stays in place after a
   contributor is removed, and that small icon buttons are big enough to hit.
-- **Lint.** [Biome's accessibility rules](https://biomejs.dev/linter/rules/#accessibility) check
+- **Lint.** [Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) check
   every change for things like missing alt text, invalid ARIA and click handlers without a
   keyboard equivalent.
 
