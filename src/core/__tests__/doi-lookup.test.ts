@@ -12,6 +12,13 @@ describe("normalizeDoi", () => {
     expect(normalizeDoi("10.1000/100%")).toBe("10.1000/100%");
   });
 
+  it("keeps a bare DOI as typed, so normalizing twice changes nothing", () => {
+    expect(normalizeDoi("10.1000/a%2Fb")).toBe("10.1000/a%2Fb");
+    for (const doi of ["https://doi.org/10.1000/a%252Fb", "doi:10.1000/a%25", "10.1000/a%2Fb"]) {
+      expect(normalizeDoi(normalizeDoi(doi))).toBe(normalizeDoi(doi));
+    }
+  });
+
   it("strips the resolver prefix and preserves the suffix's case", () => {
     expect(normalizeDoi("https://doi.org/10.1038/S41586-020-2649-2")).toBe("10.1038/S41586-020-2649-2");
     expect(normalizeDoi("  doi:10.1038/x  ")).toBe("10.1038/x");
