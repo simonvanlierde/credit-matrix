@@ -6,8 +6,12 @@ contributors, validates contribution data, and produces
 [CRediT Matrix](https://credit.duinlab.nl) web app runs this code in the browser. It is published
 as an ESM package with types, and its one runtime dependency is `zod`.
 
+The package goes on npm with the first release after 0.7.0, as `npm install credit-matrix`. Until
+then, build it from the repository and install the tarball:
+
 ```bash
-npm install credit-matrix
+pnpm install && cd src/core && npm pack    # in a clone; writes credit-matrix-<version>.tgz
+npm install /path/to/credit-matrix-<version>.tgz   # in your own project
 ```
 
 ```ts
@@ -26,9 +30,12 @@ toJats4rXml(authors);
 | `credit-matrix/lookup` | ORCID and DOI lookups | `fetch` |
 | `credit-matrix/i18n` | role names and output strings in nine languages | nothing |
 | `credit-matrix/element` | registers the `<credit-matrix>` element ([docs](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/element.md)) | a DOM |
-| `credit-matrix` (bin) | the CLI, with an XML parser bundled | Node |
 
 ## CLI
+
+The package also installs a `credit-matrix` command: the CLI, with an XML parser bundled. It needs
+Node 20.12 or later. Run it with `npx credit-matrix` once the package is on npm, or with
+`node src/core/dist/cli.js` from a clone after `pnpm --filter credit-matrix build`.
 
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr
@@ -178,7 +185,9 @@ holds its exact shape. By entry point:
   `RoleCatalog`, `RoleDescriber`, `RoleTranslator`, `UiCatalog`, `UiKey`, `UiTranslator`
 - `credit-matrix/element`: `CreditMatrixElement`
 
-The palette, the limits and the merge helpers are internal. The web app imports them by path.
+The palette, the limits and the merge helpers are internal. This split is deliberate: the web app
+imports any core module by its path (`@/core/author`, `@/core/contributor-color`, …), while users
+of the package get only the entry points above.
 
 ## Validation
 

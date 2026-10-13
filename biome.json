@@ -27,7 +27,7 @@
   },
   "overrides": [
     {
-      "includes": ["src/core/**"],
+      "includes": ["src/core/*"],
       "linter": {
         "rules": {
           "style": {
@@ -36,8 +36,28 @@
               "options": {
                 "patterns": [
                   {
-                    "group": ["react", "react/**", "react-dom", "react-dom/**", "next", "next/**", "@/**"],
-                    "message": "src/core is the published package: it cannot depend on React, Next or the app."
+                    "group": ["react", "react/**", "react-dom", "react-dom/**", "next", "next/**", "@/**", "../**"],
+                    "message": "src/core is the published package: it cannot depend on React, Next or anything outside src/core."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/core/*/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["react", "react/**", "react-dom", "react-dom/**", "next", "next/**", "@/**", "../../**"],
+                    "message": "src/core is the published package: it cannot depend on React, Next or anything outside src/core."
                   }
                 ]
               }

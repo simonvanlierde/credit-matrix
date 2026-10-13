@@ -20,8 +20,8 @@ pnpm dev            # → http://localhost:3000
   as plain TypeScript with no side effects. It is published as the
   `credit-matrix` npm package, with a CLI (`cli.ts`) and a web element
   (`element.ts`). Apart from the CLI, it uses no React, Next.js or Node APIs
-  when it's imported. Biome refuses imports of React, Next.js or `@/` there.
-  Most changes and most tests go here.
+  when it's imported. Biome refuses imports there of React, Next.js, `@/`, or
+  relative paths that leave `src/core`. Most changes and most tests go here.
 - the rest of `src/`: the Next.js UI, built as a static export.
 
 [ADR&nbsp;0001](docs/adr/0001-client-side-architecture.md) explains why I split
@@ -31,7 +31,7 @@ it this way.
 
 ```bash
 pnpm lint           # Biome (format + lint); append :fix to auto-fix
-pnpm typecheck      # TypeScript
+pnpm typecheck      # TypeScript, plus the CLI's modules checked again without the DOM types
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
 pnpm verify         # build the package, then lint, typecheck, and unit tests under the coverage gate (also the pre-push hook)
@@ -39,6 +39,9 @@ pnpm validate:jats  # check the JATS fixture, the conformance cases and a fresh 
 ```
 
 Before the first e2e run, install the browser: `pnpm exec playwright install chromium`.
+
+The first `pnpm validate:jats` downloads the JATS4R rules and SchXslt2 into `.cache/` and
+compiles them, which takes about 1.5 minutes. Later runs reuse the cache.
 
 CI runs on every pull request and on every push to `main`. It runs `pnpm verify`,
 `pnpm validate:jats`, the e2e suite and a build. It deploys `main` only when all of them pass.
@@ -55,6 +58,11 @@ If you change the domain logic, add or update tests in `src/core/__tests__`.
   `format-fixtures.test.ts` decodes saved files in `src/core/__tests__/fixtures/` that never change
   (a share link, JSON, CSV and JATS). If you change a format on purpose, regenerate the fixture it
   affects and run `pnpm validate:jats`.
+  Vitest's global setup builds the package's `dist/` once, when Vitest starts. In watch mode
+  (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest before
+  trusting the package tests.
+  The rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto` on your
+  `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
   the co-author claim round trip. `review.spec.ts` covers settling co-author answers in the Review

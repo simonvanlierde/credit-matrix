@@ -41,9 +41,14 @@ A rollback by CLI or dashboard lasts only until the next push to `main` deploys 
 ## The npm package
 
 `.github/workflows/release-core.yml` publishes `src/core` as the [`credit-matrix`](../src/core/README.md) npm package
-when a `v*` tag is pushed. It checks that the tag matches the version in `src/core/package.json`
-(`pnpm version` keeps it in step with the app's), runs the core tests against the build, and runs
-`npm publish --provenance --access public`.
+when a `v*` tag is pushed. It runs in two jobs:
+
+1. `build`, with read-only rights: checks that the tagged commit is on `main` and that the tag
+   matches the version in `src/core/package.json` (`pnpm version` keeps it in step with the
+   app's), runs the core tests against the build, packs the tarball with `npm pack` and uploads it.
+2. `publish`, in the `npm-release` environment: downloads that tarball, checks npm is 11.5.1 or
+   later, and runs `npm publish <tarball> --provenance --access public`. It installs nothing and
+   runs no project code, so the token it holds never meets a dependency's install script.
 
 It uses npm trusted publishing: npm accepts the workflow's GitHub OIDC token instead of an access
 token, so no `NPM_TOKEN` secret exists. The package page then links each version to the workflow
@@ -54,21 +59,44 @@ the same on every pull request.
 
 ### One-time setup
 
-1. Create the package on npmjs.com. Trusted publishing can only be added to a package that exists,
-   so publish the first version by hand from a clean checkout of the release tag, logged in as the
-   owner with two-factor authentication:
+The `v0.7.0` tag predates the package, so the first version on npm is the release after 0.7.0.
+
+1. In the GitHub repo, Settings, Environments, create `npm-release`. Under "Deployment branches
+   and tags", choose "Selected branches and tags" and add the tag rule `v*` only. It needs no
+   secrets.
+2. Settings, Rules, Rulesets: add a tag ruleset targeting `v*` that restricts creations (and
+   updates and deletions), with only yourself on the bypass list, so nobody else can push a
+   release tag.
+3. Create the package on npmjs.com. Trusted publishing can only be added to a package that exists,
+   so publish the first version by hand. Bump the version (`pnpm version minor` or `patch`), merge
+   it to `main` and push the tag. The workflow run for that tag fails, as npm has no publisher for
+   the package yet. Then, from a clean checkout of that tag, logged in as the owner with
+   two-factor authentication:
 
    ```bash
+   git switch --detach vX.Y.Z
    pnpm install --frozen-lockfile
+   pnpm exec vitest run --project core
    cd src/core && npm publish --access public --provenance=false
    ```
 
-   `--provenance=false` because provenance needs the CI token; this one version goes without. The
-   workflow run for that tag fails, as it has no publisher yet or finds the version taken.
-2. On npmjs.com, open the package, then Settings, Trusted publishing, and add a GitHub Actions
+   `--provenance=false` because provenance needs the CI token; this one version goes without.
+4. On npmjs.com, open the package, then Settings, Trusted publishing, and add a GitHub Actions
    publisher: organization or user `simonvanlierde`, repository `credit-matrix`, workflow filename
-   `release-core.yml`, no environment.
-3. Under Settings, Publishing access, choose "Require two-factor authentication and disallow
+   `release-core.yml`, environment `npm-release`.
+5. Under Settings, Publishing access, choose "Require two-factor authentication and disallow
    tokens", so only the trusted workflow can publish.
-4. Push the next release tag and check that the `Publish to npm` job passed and that the version on
+6. Push the next release tag and check that the `Publish to npm` job passed and that the version on
    npmjs.com shows a provenance badge.
+
+### Roll back a version
+
+A published name and version can never be used again, even after an unpublish. So roll forward:
+
+1. Fix the problem and release a patch version.
+2. Point people away from the bad one:
+   `npm deprecate credit-matrix@<version> "<what is wrong>, use <fixed version>"`. Installs of that
+   version still work, but print the message.
+
+Unpublish (`npm unpublish credit-matrix@<version>`) only within 72 hours of publishing, and only
+when no other package depends on it. Even then, prefer deprecating.
