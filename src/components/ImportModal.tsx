@@ -108,6 +108,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   // the foot of a tall dialog is far from the field that caused it.
   const [error, setError] = useState<{ where: "doi" | "form"; message: string } | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingImport | null>(null);
   const [doi, setDoi] = useState("");
   const [doiLoading, setDoiLoading] = useState(false);
@@ -153,6 +154,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     }
     try {
       setText(await file.text());
+      setFileName(file.name);
       setError(null);
     } catch {
       showError(t("errFileUnreadable"));
@@ -169,6 +171,16 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   function handleFileDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     setDragging(true);
+  }
+
+  // A file dropped outside the zone would make the browser open it and lose the draft.
+  function swallowDrag(e: React.DragEvent<HTMLDialogElement>) {
+    e.preventDefault();
+  }
+
+  function handleFileDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    // dragleave also fires when the pointer moves onto a child of the zone.
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
   }
 
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
@@ -259,7 +271,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   }
 
   function finishImport(next: PendingImport) {
-    // `onImport` runs the authors back through the store's normalizeAuthors,
+    // `onImport` runs the authors back through the store's normalizeRoster,
     // which throws on anything createAuthor cannot rebuild. On the confirm
     // path this sits outside handleImport's try, so an unguarded throw here
     // escaped the click handler instead of showing as an import error.
@@ -278,6 +290,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     setDoiLoading(false);
     setText("");
     setDoi("");
+    setFileName(null);
     setError(null);
     setPending(null);
     onClose();
@@ -290,6 +303,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
       aria-describedby="import-description"
       onClose={handleClose}
       onMouseDown={closeOnBackdrop}
+      onDragOver={swallowDrag}
+      onDrop={swallowDrag}
       className="relative m-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
     >
       <div>
@@ -329,6 +344,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
                 type="text"
                 inputMode="url"
                 value={doi}
+                aria-describedby="import-doi-note"
+                aria-invalid={error?.where === "doi" || undefined}
                 onChange={(e) => {
                   setDoi(e.target.value);
                   setError(null);
@@ -356,7 +373,10 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
             </div>
             {/* One slot for both, floored at the hint's two lines: swapping a
                 one-line error in for the hint must not move the panels below. */}
-            <p className={`mt-2 min-h-8 text-xs ${error?.where === "doi" ? "text-error" : "text-on-surface-variant"}`}>
+            <p
+              id="import-doi-note"
+              className={`mt-2 min-h-8 text-xs ${error?.where === "doi" ? "text-error" : "text-on-surface-variant"}`}
+            >
               {error?.where === "doi" ? error.message : t("doiHint")}
             </p>
           </div>
@@ -370,7 +390,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
             {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: same as above. */}
             <div
               onDragOver={handleFileDragOver}
-              onDragLeave={() => setDragging(false)}
+              onDragLeave={handleFileDragLeave}
               onDrop={handleFileDrop}
               className={`border-2 border-dashed rounded-lg p-3 flex flex-wrap items-center gap-x-4 gap-y-3 transition-colors ${
                 dragging ? "border-primary bg-surface-container" : "border-outline-variant/40 bg-surface"
@@ -410,6 +430,11 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
               >
                 {t("pasteRawData")}
               </label>
+              {fileName && (
+                <span className="text-[11px] text-on-surface-variant italic">
+                  {t("fileLoaded", { name: fileName })}
+                </span>
+              )}
               {format !== "unknown" && (
                 <span className="text-[11px] text-primary font-medium italic">
                   {t("detectedFormat", { format: FORMAT_LABEL[format](t) })}
@@ -419,8 +444,11 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
             <textarea
               id="import-text"
               value={text}
+              aria-describedby={error?.where === "form" ? "import-form-error" : undefined}
+              aria-invalid={error?.where === "form" || undefined}
               onChange={(e) => {
                 setText(e.target.value);
+                setFileName(null);
                 setError(null);
               }}
               placeholder={t("importPlaceholder", { names: t("sampleNames") })}
@@ -430,7 +458,9 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
           </div>
 
           {error?.where === "form" && (
-            <p className="text-sm text-error bg-error-container/30 rounded px-4 py-2">{error.message}</p>
+            <p id="import-form-error" className="text-sm text-error bg-error-container/30 rounded px-4 py-2">
+              {error.message}
+            </p>
           )}
 
           {pending && (

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { expect, it, vi } from "vitest";
-import { decodeShareHash } from "@/lib/share";
+import { decodeShareHash } from "@/core";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
 import { ClaimGate } from "./CoauthorPage";

@@ -3,6 +3,10 @@ name: Release package
 # Publishes src/core as the `credit-matrix` npm package when a release is tagged.
 # npm trusted publishing: npm checks this workflow's GitHub OIDC token, so
 # there is no npm token to store or leak. docs/deploy.md has the one-time setup.
+#
+# Two jobs: `build` installs and runs project code with read-only rights and
+# packs the tarball; `publish` holds the OIDC token, runs in the `npm-release`
+# environment (limited to v* tags) and only uploads that tarball.
 on:
   push:
     tags: ["v*"]
@@ -15,17 +19,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish to npm
+  build:
+    name: Build and test the package
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
-      id-token: write
+    outputs:
+      tarball: ${{ steps.pack.outputs.tarball }}
     steps:
+      # Full history, so the check below can see whether the tag is on main.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: Check the tagged commit is on main
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at $GITHUB_SHA, which is not on main."
+            exit 1
+          fi
 
       # No dependency cache: a release builds only from the lockfile.
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
@@ -49,8 +63,60 @@ jobs:
       - name: Test the package
         run: pnpm exec vitest run --project core
 
-      # Trusted publishing needs npm 11.5.1 or later; Node 26 ships it.
       # prepack rebuilds dist/ before the tarball is made.
-      - name: Publish
+      - name: Pack
+        id: pack
         working-directory: src/core
-        run: npm publish --provenance --access public
+        run: |
+          tarball=$(npm pack --silent | tail -n 1)
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: package
+          path: src/core/${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish to npm
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      # Only the version files the setup step reads; nothing from the repo runs here.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .node-version
+            package.json
+          sparse-checkout-cone-mode: false
+
+      # Sets up Node from .node-version; `install: false` runs no pnpm install.
+      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          node-version-file: .node-version
+          cache: false
+          install: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+
+      - name: Check npm supports trusted publishing
+        run: |
+          version=$(npm --version)
+          if ! node -e 'const [a, b, c] = process.argv[1].split(".").map(Number); process.exit(a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1))) ? 0 : 1)' "$version"; then
+            echo "::error::npm $version is too old for trusted publishing (needs 11.5.1 or later)."
+            exit 1
+          fi
+
+      - name: Publish
+        env:
+          TARBALL: ${{ needs.build.outputs.tarball }}
+        run: npm publish "./$TARBALL" --provenance --access public

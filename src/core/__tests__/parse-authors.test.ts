@@ -93,6 +93,18 @@ describe("createAuthor", () => {
     expect(createAuthor("https://orcid.org/0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
     expect(createAuthor("Jane - Smith").initials).toBe("JS");
   });
+
+  it("keeps one character per name part when upper case would add one", () => {
+    // "ß".toUpperCase() is "SS".
+    expect(createAuthor("ßtefan Weiß").initials).toBe("ßW");
+  });
+
+  it("stores names in one Unicode form", () => {
+    const nfd = createAuthor("Zoë Müller", { firstName: "Zoë" });
+    expect(nfd.name).toBe("Zoë Müller");
+    expect(nfd.firstName).toBe("Zoë");
+    expect(nfd.initials).toBe("ZM");
+  });
 });
 
 describe("deduplicateAuthorInitials", () => {

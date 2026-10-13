@@ -23,8 +23,14 @@ describe("detectFormat", () => {
     expect(detectFormat("﻿Name,Conceptualization\nJane Smith,100")).toBe("csv");
   });
 
-  it("reads a tenzing header as tenzing", () => {
+  it("reads a tenzing header as tenzing, whatever the separator", () => {
     expect(detectFormat("Author/Acknowledgee,Firstname,Surname\nAuthor,Jane,Smith")).toBe("tenzing");
+    expect(detectFormat("Author/Acknowledgee;Firstname;Surname\nAuthor;Jane;Smith")).toBe("tenzing");
+  });
+
+  it("reads a tab- or semicolon-separated sheet with a Name header as CSV", () => {
+    expect(detectFormat("Name\tSoftware\nJane Smith\t100")).toBe("csv");
+    expect(detectFormat("Name;Software\nJane Smith;100")).toBe("csv");
   });
 
   it("tells JSON, XML, links and nothing apart", () => {
@@ -32,6 +38,7 @@ describe("detectFormat", () => {
     expect(detectFormat("[not json, Name")).toBe("csv");
     expect(detectFormat("  <article/>")).toBe("xml");
     expect(detectFormat("https://credit.duinlab.nl/#s=abc")).toBe("link");
+    expect(detectFormat(" #s=jc67_-Ab \n")).toBe("link");
     expect(detectFormat(" \n ")).toBe("unknown");
   });
 });
@@ -49,6 +56,26 @@ describe("importAny", () => {
     const imported = await importAny(text);
     expect(imported.format).toBe(format);
     expect(names(imported.authors)).toEqual(["Jane Smith", "Bob White"]);
+  });
+
+  it("reads a bare share hash", async () => {
+    const imported = await importAny(await encodeShareHash({ authors: roster() }));
+    expect(imported.format).toBe("link");
+    expect(names(imported.authors)).toEqual(["Jane Smith", "Bob White"]);
+  });
+
+  it("reads a semicolon CSV", async () => {
+    const imported = await importAny("Name;Software\nJane Smith;100\nBob White;66");
+    expect(imported.format).toBe("csv");
+    expect(imported.authors[1]?.contributions.find((c) => c.role === "Software")?.score).toBe(66);
+  });
+
+  it("gives the same contributor for decomposed and precomposed names", async () => {
+    const nfd = await importAny("José Gálvez");
+    const nfc = await importAny("José Gálvez");
+    const strip = ({ id: _, ...rest }: { id: string }) => rest;
+    expect(nfd.authors.map(strip)).toEqual(nfc.authors.map(strip));
+    expect(nfd.authors[0]?.name).toBe("José Gálvez");
   });
 
   it("reads a share link with its title", async () => {

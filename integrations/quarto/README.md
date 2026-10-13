@@ -67,7 +67,10 @@ To put the statement somewhere else, leave an empty div where it should go:
 
 ## Limitations
 
-- English role names only. The [app](https://github.com/simonvanlierde/credit-matrix) and the
+- English only. The filter ignores the document's `lang`: role names, separators and the default
+  heading are always English. Set `heading` for a different title. For the statement in another
+  language, run `credit-matrix statement file.json --locale fr` from the package CLI and paste
+  the result. The [app](https://github.com/simonvanlierde/credit-matrix) and the
   `credit-matrix` package also write the statement in eight other languages.
 - One format: by author, with levels. The app also writes by role and with initials.
 - Contributors who are not authors (acknowledgements) are not handled: Quarto has no field for

@@ -95,6 +95,27 @@ export function parseCsvRecords(csv: string, delimiter = ","): string[][] {
   return records;
 }
 
+function firstLine(text: string): string {
+  return text.slice(0, text.search(/\r?\n|$/));
+}
+
+/**
+ * The delimiter a sheet uses: whichever of comma, semicolon and tab is most
+ * frequent in its first line, comma on a tie. Excel saves CSV with `;` in
+ * locales where the comma is the decimal mark (nl, de, fr).
+ */
+export function delimiterOf(text: string): string {
+  const line = firstLine(text);
+  const count = (delimiter: string) => line.split(delimiter).length;
+  return [";", "\t"].reduce((best, delimiter) => (count(delimiter) > count(best) ? delimiter : best), ",");
+}
+
+/** The first row's cells, unquoted, trimmed and lower-cased, split on {@link delimiterOf}. */
+export function headerCells(text: string): string[] {
+  const line = firstLine(text.replace(/^﻿/, "").trim());
+  return (parseCsvRecords(line, delimiterOf(line))[0] ?? []).map((cell) => cell.trim().toLowerCase());
+}
+
 export function toCsv(authors: Author[]): string {
   const rows = [
     CSV_HEADERS.map(escapeCsvValue).join(","),
@@ -120,7 +141,7 @@ export function toCsv(authors: Author[]): string {
 }
 
 export function fromCsv(csv: string): Author[] {
-  const records = parseCsvRecords(csv)
+  const records = parseCsvRecords(csv, delimiterOf(csv))
     .map((cells) => cells.map((cell) => unescapeCsvValue(cell.trim())))
     .filter((cells) => cells.some((cell) => cell !== ""));
 

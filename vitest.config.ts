@@ -35,7 +35,7 @@ export default defineConfig({
         "src/core/tsdown.config.ts",
       ],
       // A few points under the measured level: a drop fails CI, noise does not.
-      thresholds: { statements: 95, branches: 87, functions: 97, lines: 97 },
+      thresholds: { statements: 97, branches: 91, functions: 99, lines: 99 },
     },
     projects: [
       {

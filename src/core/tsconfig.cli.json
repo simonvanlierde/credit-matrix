@@ -1,0 +1,12 @@
+{
+  // The CLI's import graph type-checked as Node sees it: no DOM lib, so a `window` or
+  // `document` in a module the CLI loads fails here. element.ts is not in that graph.
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "files": ["cli.ts", "types/node-globals.d.ts"],
+  "include": []
+}

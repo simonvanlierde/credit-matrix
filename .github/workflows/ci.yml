@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # integrations/quarto/credit-matrix.test.ts renders a document with the filter.
+      - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
+
       # `verify` is the pre-push gate (biome, tsc, vitest with coverage); the
       # coverage output feeds Codecov below.
       - name: Lint, typecheck, test
