@@ -207,7 +207,6 @@
   "a11yStatementNotes": "Points à vérifier sur la déclaration",
   "a11yBulkContributor": "Contributeur pour l'attribution groupée",
   "a11yBulkRole": "Rôle pour l'attribution groupée",
-  "a11yCustomColor": "Couleur personnalisée de la heatmap",
   "a11yExportFormat": "Format d'export",
   "a11yOrcidInput": "ORCID iD",
   "a11yOrcidHint": "Saisissez un iD ORCID, ou collez-en un sous forme d'iD ou d'URL orcid.org",

@@ -207,7 +207,6 @@
   "a11yStatementNotes": "著者貢献に関する確認事項",
   "a11yBulkContributor": "一括割り当ての対象となる貢献者",
   "a11yBulkRole": "一括割り当ての対象となる役割",
-  "a11yCustomColor": "ヒートマップのカスタム色",
   "a11yExportFormat": "エクスポート形式",
   "a11yOrcidInput": "ORCID iD",
   "a11yOrcidHint": "ORCID iD を入力するか、iD または orcid.org の URL として貼り付けてください",

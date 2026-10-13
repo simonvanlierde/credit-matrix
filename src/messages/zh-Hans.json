@@ -207,7 +207,6 @@
   "a11yStatementNotes": "声明的待确认事项",
   "a11yBulkContributor": "批量分配的目标贡献者",
   "a11yBulkRole": "批量分配的目标角色",
-  "a11yCustomColor": "自定义热图颜色",
   "a11yExportFormat": "导出格式",
   "a11yOrcidInput": "ORCID iD",
   "a11yOrcidHint": "输入 ORCID iD，或以 iD 或 orcid.org 网址的形式粘贴",

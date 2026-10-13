@@ -207,7 +207,6 @@
   "a11yStatementNotes": "Statement notes",
   "a11yBulkContributor": "Contributor for bulk assignment",
   "a11yBulkRole": "Role for bulk assignment",
-  "a11yCustomColor": "Custom heatmap color",
   "a11yExportFormat": "Export format",
   "a11yOrcidInput": "ORCID iD",
   "a11yOrcidHint": "Type an ORCID iD, or paste one as an iD or an orcid.org URL",
