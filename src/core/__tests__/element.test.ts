@@ -85,7 +85,28 @@ describe("<credit-matrix>", () => {
       await vi.waitFor(() => expect(loose.shadowRoot?.querySelector("svg")).not.toBeNull());
       loose.setAttribute("format", "by-author");
       await vi.waitFor(() => expect(loose.shadowRoot?.querySelector("p")?.textContent).toMatch(/^CRediT: Jane Smith/));
+      // A format change re-renders from the JSON already fetched.
+      expect(fetch).toHaveBeenCalledTimes(1);
+      loose.setAttribute("src", "b.json");
+      await vi.waitFor(() => expect(fetch).toHaveBeenCalledWith("b.json"));
       expect(fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("fetches once when it upgrades with several attributes already set", async () => {
+    const fetch = vi.fn(async () => new Response(json));
+    vi.stubGlobal("fetch", fetch);
+    try {
+      // Parsed into an inert template, the element is not upgraded until it joins the document,
+      // as when the module script loads after the page is parsed.
+      const template = document.createElement("template");
+      template.innerHTML = '<credit-matrix src="a.json" format="by-author" locale="fr"></credit-matrix>';
+      const element = template.content.firstElementChild as HTMLElement;
+      document.body.append(element);
+      await vi.waitFor(() => expect(element.shadowRoot?.querySelector("svg")).not.toBeNull());
+      expect(fetch).toHaveBeenCalledTimes(1);
     } finally {
       vi.unstubAllGlobals();
     }
