@@ -30,3 +30,6 @@ next-env.d.ts
 
 # Downloaded JATS4R rules and compiler (scripts/validate-jats.sh)
 .cache
+
+# Copied in by the credit-matrix package build
+src/core/LICENSE

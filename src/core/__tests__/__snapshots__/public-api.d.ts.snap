@@ -1,0 +1,1322 @@
+// element.d.ts
+//#region element.d.ts
+/**
+ * `<credit-matrix src="contributions.json" format="by-author">`: the CRediT
+ * statement and contribution heatmap for a CRediT Matrix JSON export, read
+ * from `src` or from a `<script type="application/json">` child.
+ */
+export declare class CreditMatrixElement extends HTMLElement {
+  #private;
+  static observedAttributes: string[];
+  constructor();
+  connectedCallback(): void;
+  attributeChangedCallback(): void;
+  render(): Promise<void>;
+}
+//#endregion
+// i18n.d.ts
+import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog } from "./ui-strings.js";
+export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode };
+// index.d.ts
+import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
+import * as z from "zod/mini";
+//#region author.d.ts
+/**
+ * A contribution is a 0–100 integer score for one CRediT role.
+ *
+ * Score semantics (used by UI and statement generation). The non-zero tiers use
+ * NISO's optional "degree of contribution" vocabulary (lead / equal / supporting):
+ *   0       = no contribution
+ *   1–33    = supporting
+ *   34–66   = equal
+ *   67–100  = lead
+ *
+ * Storing a continuous score (not just a boolean) lets us express
+ * contribution levels without committing to a fixed tier count in
+ * the data model: the UI input mode is a presentation concern only.
+ */
+export declare const ContributionSchema: z.ZodMiniObject<{
+  role: z.ZodMiniEnum<{
+    Conceptualization: "Conceptualization";
+    "Data curation": "Data curation";
+    "Formal analysis": "Formal analysis";
+    "Funding acquisition": "Funding acquisition";
+    Investigation: "Investigation";
+    Methodology: "Methodology";
+    "Project administration": "Project administration";
+    Resources: "Resources";
+    Software: "Software";
+    Supervision: "Supervision";
+    Validation: "Validation";
+    Visualization: "Visualization";
+    "Writing – original draft": "Writing – original draft";
+    "Writing – review & editing": "Writing – review & editing";
+  }>;
+  score: z.ZodMiniInt;
+}, z.core.$strip>;
+type Contribution = z.infer<typeof ContributionSchema>;
+/** Return the canonical bare ORCID form used in state and exports. */
+export declare function normalizeOrcid(id: string): string;
+/**
+ * Validate an ORCID iD fully: correct shape *and* a valid ISO 7064 MOD 11-2
+ * check digit. The shape regexes alone accept checksum-invalid iDs (e.g. a
+ * mistyped digit), which would then be exported as if verified.
+ * Accepts the bare form or the orcid.org URL.
+ */
+export declare function isValidOrcid(id: string): boolean;
+export declare const AuthorSchema: z.ZodMiniObject<{
+  id: z.ZodMiniDefault<z.ZodMiniString<string>>;
+  name: z.ZodMiniString<string>;
+  firstName: z.ZodMiniString<string>;
+  middleName: z.ZodMiniString<string>;
+  surname: z.ZodMiniString<string>;
+  initials: z.ZodMiniString<string>;
+  orcid: z.ZodMiniOptional<z.ZodMiniPipe<z.ZodMiniString<string>, z.ZodMiniTransform<string, string>>>;
+  contributorType: z.ZodMiniDefault<z.ZodMiniEnum<{
+    author: "author";
+    "non-author": "non-author";
+  }>>;
+  contributions: z.ZodMiniArray<z.ZodMiniObject<{
+    role: z.ZodMiniEnum<{
+      Conceptualization: "Conceptualization";
+      "Data curation": "Data curation";
+      "Formal analysis": "Formal analysis";
+      "Funding acquisition": "Funding acquisition";
+      Investigation: "Investigation";
+      Methodology: "Methodology";
+      "Project administration": "Project administration";
+      Resources: "Resources";
+      Software: "Software";
+      Supervision: "Supervision";
+      Validation: "Validation";
+      Visualization: "Visualization";
+      "Writing – original draft": "Writing – original draft";
+      "Writing – review & editing": "Writing – review & editing";
+    }>;
+    score: z.ZodMiniInt;
+  }, z.core.$strip>>;
+  equalContribution: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
+  corresponding: z.ZodMiniDefault<z.ZodMiniBoolean<boolean>>;
+}, z.core.$strip>;
+type Author = z.infer<typeof AuthorSchema>;
+/** Author (named on the byline) vs. non-author contributor (Acknowledgements). */
+type ContributorType = Author["contributorType"];
+/**
+ * Contribution level derived from a 0-100 score, using NISO's optional
+ * degree-of-contribution terms (lead / equal / supporting).
+ */
+type ContributionLevel = "none" | "supporting" | "equal" | "lead";
+export declare function scoreToLevel(score: number): ContributionLevel;
+//#endregion
+//#region credit-roles.d.ts
+/**
+ * The 14 CRediT (Contributor Roles Taxonomy) roles as defined by NISO.
+ * https://credit.niso.org/
+ *
+ * Stored as a const tuple so the role names are narrowed to their literal
+ * string types, so callers can use `CreditRoleName` as a union type.
+ *
+ * Each role carries its canonical NISO `id` (the official role UUID) so the
+ * identifiers travel with exported data. Crossref adds CRediT to its metadata
+ * schema in 2026 and these UUIDs are the machine-readable role keys.
+ */
+export declare const CREDIT_ROLES: readonly [{
+  readonly name: "Conceptualization";
+  readonly id: "8b73531f-db56-4914-9502-4cc4d4d8ed73";
+  readonly description: "Ideas; formulation or evolution of overarching research goals and aims.";
+  readonly url: "https://credit.niso.org/contributor-roles/conceptualization/";
+}, {
+  readonly name: "Data curation";
+  readonly id: "f93e0f44-f2a4-4ea1-824a-4e0853b05c9d";
+  readonly description: "Management activities to annotate (produce metadata), scrub data and maintain research data (including software code, where it is necessary for interpreting the data itself) for initial use and later re-use.";
+  readonly url: "https://credit.niso.org/contributor-roles/data-curation/";
+}, {
+  readonly name: "Formal analysis";
+  readonly id: "95394cbd-4dc8-4735-b589-7e5f9e622b3f";
+  readonly description: "Application of statistical, mathematical, computational, or other formal techniques to analyze or synthesize study data.";
+  readonly url: "https://credit.niso.org/contributor-roles/formal-analysis/";
+}, {
+  readonly name: "Funding acquisition";
+  readonly id: "34ff6d68-132f-4438-a1f4-fba61ccf364a";
+  readonly description: "Acquisition of the financial support for the project leading to this publication.";
+  readonly url: "https://credit.niso.org/contributor-roles/funding-acquisition/";
+}, {
+  readonly name: "Investigation";
+  readonly id: "2451924d-425e-4778-9f4c-36c848ca70c2";
+  readonly description: "Conducting a research and investigation process, specifically performing the experiments, or data/evidence collection.";
+  readonly url: "https://credit.niso.org/contributor-roles/investigation/";
+}, {
+  readonly name: "Methodology";
+  readonly id: "f21e2be9-4e38-4ab7-8691-d6f72d5d5843";
+  readonly description: "Development or design of methodology; creation of models.";
+  readonly url: "https://credit.niso.org/contributor-roles/methodology/";
+}, {
+  readonly name: "Project administration";
+  readonly id: "a693fe76-ea33-49ad-9dcc-5e4f3ac5f938";
+  readonly description: "Management and coordination responsibility for the research activity planning and execution.";
+  readonly url: "https://credit.niso.org/contributor-roles/project-administration/";
+}, {
+  readonly name: "Resources";
+  readonly id: "ebd781f0-bf79-492c-ac21-b31b9c3c990c";
+  readonly description: "Provision of study materials, reagents, materials, patients, laboratory samples, animals, instrumentation, computing resources, or other analysis tools.";
+  readonly url: "https://credit.niso.org/contributor-roles/resources/";
+}, {
+  readonly name: "Software";
+  readonly id: "f89c5233-01b0-4778-93e9-cc7d107aa2c8";
+  readonly description: "Programming, software development; designing computer programs; implementation of the computer code and supporting algorithms; testing of existing code components.";
+  readonly url: "https://credit.niso.org/contributor-roles/software/";
+}, {
+  readonly name: "Supervision";
+  readonly id: "0c8ca7d4-06ad-4527-9cea-a8801fcb8746";
+  readonly description: "Oversight and leadership responsibility for the research activity planning and execution, including mentorship external to the core team.";
+  readonly url: "https://credit.niso.org/contributor-roles/supervision/";
+}, {
+  readonly name: "Validation";
+  readonly id: "4b1bf348-faf2-4fc4-bd66-4cd3a84b9d44";
+  readonly description: "Verification, whether as a part of the activity or separate, of the overall replication/reproducibility of results/experiments and other research outputs.";
+  readonly url: "https://credit.niso.org/contributor-roles/validation/";
+}, {
+  readonly name: "Visualization";
+  readonly id: "76b9d56a-e430-4e0a-84c9-59c11be343ae";
+  readonly description: "Preparation, creation and/or presentation of the published work, specifically visualization/data presentation.";
+  readonly url: "https://credit.niso.org/contributor-roles/visualization/";
+}, {
+  readonly name: "Writing – original draft";
+  readonly id: "43ebbd94-98b4-42f1-866b-c930cef228ca";
+  readonly description: "Preparation, creation and/or presentation of the published work, specifically writing the initial draft (including substantive translation).";
+  readonly url: "https://credit.niso.org/contributor-roles/writing-original-draft/";
+}, {
+  readonly name: "Writing – review & editing";
+  readonly id: "d3aead86-f2a2-47f7-bb99-79de6421164d";
+  readonly description: "Preparation, creation and/or presentation of the published work by those from the original research group, specifically critical review, commentary or revision – including pre- or post-publication stages.";
+  readonly url: "https://credit.niso.org/contributor-roles/writing-review-editing/";
+}];
+type CreditRoleName = (typeof CREDIT_ROLES)[number]["name"];
+/** Lookup a role by name. Throws if the name is not a valid CRediT role. */
+export declare function getRoleByName(name: string): (typeof CREDIT_ROLES)[number];
+//#endregion
+//#region ask.d.ts
+/** What a reply answers: each role, and the two markers outside CRediT. */
+type Target = CreditRoleName | "equalContribution" | "corresponding";
+type Choice = "theirs" | "mine";
+/** A role's level, or whether a marker is set. Differences compare these, never raw scores. */
+type Level = ContributionLevel | boolean;
+declare const MARKERS: readonly ["equalContribution", "corresponding"];
+type Marker = (typeof MARKERS)[number];
+/** Roles in CREDIT_ROLES order, then the two markers: the order `review().open` lists them in. */
+export declare const ASK_TARGETS: readonly Target[];
+export declare const isMarker: (target: Target) => target is Marker;
+declare const DecisionSchema: z.ZodMiniObject<{
+  choice: z.ZodMiniEnum<{
+    mine: "mine";
+    theirs: "theirs";
+  }>;
+  rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+    equal: "equal";
+    lead: "lead";
+    none: "none";
+    supporting: "supporting";
+  }>, z.ZodMiniBoolean<boolean>]>;
+  at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+  before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+}, z.core.$strip>;
+type Decision = z.infer<typeof DecisionSchema>;
+declare const ReplySchema: z.ZodMiniObject<{
+  contributions: z.ZodMiniArray<z.ZodMiniObject<{
+    role: z.ZodMiniEnum<{
+      Conceptualization: "Conceptualization";
+      "Data curation": "Data curation";
+      "Formal analysis": "Formal analysis";
+      "Funding acquisition": "Funding acquisition";
+      Investigation: "Investigation";
+      Methodology: "Methodology";
+      "Project administration": "Project administration";
+      Resources: "Resources";
+      Software: "Software";
+      Supervision: "Supervision";
+      Validation: "Validation";
+      Visualization: "Visualization";
+      "Writing – original draft": "Writing – original draft";
+      "Writing – review & editing": "Writing – review & editing";
+    }>;
+    score: z.ZodMiniInt;
+  }, z.core.$strip>>;
+  equalContribution: z.ZodMiniBoolean<boolean>;
+  corresponding: z.ZodMiniBoolean<boolean>;
+  sentAt: z.ZodMiniNumber<number>;
+  receivedAt: z.ZodMiniNumber<number>;
+  decisions: z.ZodMiniObject<{
+    Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    "Data curation": z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    "Formal analysis": z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    "Funding acquisition": z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    Investigation: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    Methodology: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    "Project administration": z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    Resources: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    Software: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    Supervision: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    Validation: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    Visualization: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    "Writing – original draft": z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    "Writing – review & editing": z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    corresponding: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+    equalContribution: z.ZodMiniOptional<z.ZodMiniObject<{
+      choice: z.ZodMiniEnum<{
+        mine: "mine";
+        theirs: "theirs";
+      }>;
+      rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+        equal: "equal";
+        lead: "lead";
+        none: "none";
+        supporting: "supporting";
+      }>, z.ZodMiniBoolean<boolean>]>;
+      at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+      before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+    }, z.core.$strip>>;
+  }, z.core.$loose>;
+}, z.core.$loose>;
+type Reply = z.infer<typeof ReplySchema>;
+/** One contributor's ask and their latest answer. Validates stored and imported asks. */
+export declare const AskSchema: z.ZodMiniObject<{
+  sentAt: z.ZodMiniNumber<number>;
+  prefilled: z.ZodMiniBoolean<boolean>;
+  reply: z.ZodMiniOptional<z.ZodMiniObject<{
+    contributions: z.ZodMiniArray<z.ZodMiniObject<{
+      role: z.ZodMiniEnum<{
+        Conceptualization: "Conceptualization";
+        "Data curation": "Data curation";
+        "Formal analysis": "Formal analysis";
+        "Funding acquisition": "Funding acquisition";
+        Investigation: "Investigation";
+        Methodology: "Methodology";
+        "Project administration": "Project administration";
+        Resources: "Resources";
+        Software: "Software";
+        Supervision: "Supervision";
+        Validation: "Validation";
+        Visualization: "Visualization";
+        "Writing – original draft": "Writing – original draft";
+        "Writing – review & editing": "Writing – review & editing";
+      }>;
+      score: z.ZodMiniInt;
+    }, z.core.$strip>>;
+    equalContribution: z.ZodMiniBoolean<boolean>;
+    corresponding: z.ZodMiniBoolean<boolean>;
+    sentAt: z.ZodMiniNumber<number>;
+    receivedAt: z.ZodMiniNumber<number>;
+    decisions: z.ZodMiniObject<{
+      Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      "Data curation": z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      "Formal analysis": z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      "Funding acquisition": z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      Investigation: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      Methodology: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      "Project administration": z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      Resources: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      Software: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      Supervision: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      Validation: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      Visualization: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      "Writing – original draft": z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      "Writing – review & editing": z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      corresponding: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+      equalContribution: z.ZodMiniOptional<z.ZodMiniObject<{
+        choice: z.ZodMiniEnum<{
+          mine: "mine";
+          theirs: "theirs";
+        }>;
+        rowLevel: z.ZodMiniUnion<readonly [z.ZodMiniEnum<{
+          equal: "equal";
+          lead: "lead";
+          none: "none";
+          supporting: "supporting";
+        }>, z.ZodMiniBoolean<boolean>]>;
+        at: z.ZodMiniOptional<z.ZodMiniNumber<number>>;
+        before: z.ZodMiniOptional<z.ZodMiniUnion<readonly [z.ZodMiniNumber<number>, z.ZodMiniBoolean<boolean>]>>;
+      }, z.core.$strip>>;
+    }, z.core.$loose>;
+  }, z.core.$loose>>;
+}, z.core.$loose>;
+type Ask = z.infer<typeof AskSchema>;
+interface AskState {
+  authors: readonly Author[];
+  asks: Readonly<Record<string, Ask>>;
+}
+/**
+ * Changes to apply. A row entry holds only the fields that change, merged onto
+ * the row as it is when the patch is applied, so undoing a reply restores the
+ * identity fields and leaves scores edited since then alone. `null` deletes an ask.
+ */
+interface Patch {
+  rows: Record<string, Partial<Author>>;
+  asks: Record<string, Ask | null>;
+}
+type AskEvent = {
+  kind: "sent";
+  contributorId: string;
+  prefilled: boolean;
+  at: number;
+} | {
+  kind: "reply";
+  contributorId: string;
+  row: unknown;
+  sentAt: number | null;
+  at: number;
+} |
+/** A `null` choice clears that target's decision, and a "theirs" one puts the row's value back. */
+{
+  kind: "settle";
+  contributorId: string;
+  choices: Choice | Partial<Record<Target, Choice | null>>;
+  at?: number;
+};
+type Outcome = {
+  kind: "recorded";
+} | {
+  kind: "received";
+  open: number;
+  duplicate: boolean;
+} | {
+  kind: "settled";
+  open: number;
+} | {
+  kind: "unmatched";
+} | {
+  kind: "broken";
+} | {
+  kind: "stale";
+} | {
+  kind: "noReply";
+};
+interface Difference {
+  target: Target;
+  /** "added": they claim what you left empty; "dropped": the reverse; "level": both set, levels differ. */
+  kind: "added" | "dropped" | "level";
+  mine: Level;
+  theirs: Level;
+}
+interface Review {
+  status: {
+    kind: "none";
+  } | {
+    kind: "asked";
+    prefilled: boolean;
+  } | {
+    kind: "differs";
+    count: number;
+  } | {
+    kind: "settled";
+  };
+  /** Every target where the levels differ, decided or not. */
+  byTarget: Partial<Record<Target, Difference>>;
+  /** The differences still waiting for a decision, in `ASK_TARGETS` order. */
+  open: Difference[];
+}
+type Answer = Pick<Author, "contributions" | "equalContribution" | "corresponding">;
+/** A role's level, or whether a marker is set, as a row or a reply holds it. */
+export declare function levelOf(answer: Answer, target: Target): Level;
+/**
+ * Everything a row, cell, review list or notice shows about one contributor's
+ * ask. Cached per (author, ask) object pair, so state must be replaced, never
+ * mutated in place.
+ */
+export declare function review(author: Author, ask?: Ask): Review;
+/**
+ * Every change to asks and replies. Pure: time comes in on the event. Never
+ * throws on outside input; a `reply` event's row is untrusted.
+ */
+export declare function askStep(state: AskState, event: AskEvent): {
+  outcome: Outcome;
+  patch: Patch;
+  undo: Patch;
+};
+/** When the answer was settled: its last decision, or its arrival when nothing needed one. */
+export declare function settledAt(reply: Reply): number;
+/**
+ * Apply a patch to plain values. Rows a patch names but the roster no longer
+ * holds are skipped, and so are its asks for them: a late undo never brings
+ * back an ask for a removed row. A rename re-derives the name parts (unless
+ * the patch carries them) and the initials; untouched rows stay the same objects.
+ */
+export declare function applyPatch(state: AskState, patch: Patch): AskState;
+/**
+ * The answers and `selfId` an imported file brings, keyed by the ids the
+ * imported roster takes (`mapped` is `keepKnownIds(current, incoming)`, index
+ * for index). Importing into a draft that has contributors, a file's answer
+ * replaces the held one for the row it matched, and answers for rows that
+ * matched nobody are dropped. Held answers for matched rows the file has none
+ * for are kept. `selfId` follows the same rule. `asks` is undefined when the
+ * file carries none, and `selfId` when it does not survive.
+ */
+export declare function importAnswers(current: readonly Author[], incoming: readonly Author[], mapped: readonly Author[], held: Readonly<Record<string, Ask>>, fromFile: {
+  asks?: Readonly<Record<string, Ask>>;
+  selfId?: string;
+}): {
+  asks: Record<string, Ask> | undefined;
+  selfId: string | undefined;
+};
+//#endregion
+//#region export/csv.d.ts
+export declare function toCsv(authors: Author[]): string;
+export declare function fromCsv(csv: string): Author[];
+//#endregion
+//#region export/heatmap-svg.d.ts
+interface HeatmapSvgOptions {
+  /** Base hue for the heatmap; defaults to the app accent. */
+  monoColor?: string;
+  /** Swap axes: authors down the left, roles across the top. */
+  transpose?: boolean;
+  /**
+   * Grade cell fills by contribution level. When false, fills are flat
+   * (contributed/none) and the legend collapses to two keys. Defaults to true.
+   */
+  showLevels?: boolean;
+  /**
+   * Label authors by their initials (true) or full names (false) on the axis.
+   * Defaults to true. The legend always uses initials badges.
+   */
+  acronyms?: boolean;
+  /** Scale all layout dimensions (min 0.1). */
+  scale?: number;
+  /** Localize displayed role names. Defaults to identity; lookups stay canonical English. */
+  translateRole?: RoleTranslator;
+  /** Localize the level legend and empty-state line. Defaults to English. */
+  translateUi?: UiTranslator;
+}
+/**
+ * Render a contribution heatmap as a self-contained SVG string.
+ *
+ * Pure and dependency-free. Runs in the browser (for live preview, SVG
+ * download, and canvas→PNG export) and in Node (for tests). The SVG uses
+ * system font stacks, so no font embedding is required.
+ *
+ * Every band is measured from the labels it actually carries, and the legend
+ * wraps to the figure's own width, so the canvas is the drawing's bounding box
+ * rather than a fixed frame around it: a two-author figure no longer inherits
+ * the width of a four-key legend. Roles that no author contributed to are
+ * omitted, matching the live chart. There is no *rendered* image title:
+ * captions belong to the embedding document. The `<title>` element is the
+ * accessible name for the `role="img"` graphic, which assistive technology
+ * reads and nothing draws.
+ */
+export declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string;
+//#endregion
+//#region export/json.d.ts
+/** Thrown by `fromJson` for an export stamped by a newer build. */
+export declare class NewerVersionError extends Error {
+  constructor(version: number);
+}
+/**
+ * Serialize authors to a JSON string (pretty-printed). Asks and their answers
+ * go in by default; `includeAnswers: false` leaves them out. `selfId` goes in
+ * while it names a contributor in the file.
+ */
+export declare function toJson(authors: Author[], { asks, includeAnswers, selfId }?: {
+  asks?: Readonly<Record<string, Ask>>;
+  includeAnswers?: boolean;
+  selfId?: string | null;
+}): string;
+/**
+ * Parse a JSON string previously produced by `toJson()`.
+ * Throws a NewerVersionError for a newer build's export, and a ZodError for
+ * any other data that doesn't match the expected shape.
+ */
+export declare function fromJson(json: string): {
+  authors: Author[];
+  asks?: Record<string, Ask>;
+  selfId?: string;
+};
+//#endregion
+//#region export/markdown.d.ts
+/**
+ * Render the contributions as a Markdown table (Contributor → CRediT roles),
+ * suitable for pasting into a README, GitHub issue, or manuscript draft.
+ *
+ * Lead-level roles are listed plainly; equal/supporting roles are annotated
+ * with their level, matching the statement's `showLevels` behaviour.
+ */
+export declare function toMarkdown(authors: Author[], translateRole?: RoleTranslator, translateUi?: UiTranslator, locale?: string): string;
+//#endregion
+//#region export/xml.d.ts
+/**
+ * Serialize authors to a JATS4R-compliant XML string.
+ * Output mirrors the format produced by the original Python app.
+ * With `yesNo` (the Yes/No input mode) and only 0/100 scores, roles carry no
+ * `degree-contribution`: the author never chose a level, so writing every role
+ * as "lead" would claim one.
+ */
+export declare function toJats4rXml(authors: Author[], { yesNo }?: {
+  yesNo?: boolean;
+}): string;
+//#endregion
+//#region export/xml-import.d.ts
+/** The part of a DOM element the importer reads. Browser and linkedom elements both fit. */
+interface XmlElement {
+  readonly textContent: string | null;
+  getAttribute(name: string): string | null;
+  querySelector(selectors: string): XmlElement | null;
+  querySelectorAll(selectors: string): ArrayLike<XmlElement>;
+}
+/** A `DOMParser`: the browser's own, or linkedom's in Node. */
+interface XmlParser {
+  parseFromString(xml: string, type: "application/xml"): Pick<XmlElement, "querySelector" | "querySelectorAll">;
+}
+/**
+ * Parse a JATS4R XML string (as produced by `toJats4rXml()` or the original
+ * Python app) back into an Author array. `parser` defaults to the global
+ * `DOMParser`; pass one where there is none, such as linkedom's in Node.
+ */
+export declare function fromJats4rXml(xmlString: string, { parser }?: {
+  parser?: XmlParser;
+}): Author[];
+//#endregion
+//#region generate-statement.d.ts
+type StatementFormat = "by-role" | "by-role-short" | "by-author" | "by-author-short";
+interface StatementOptions {
+  format: StatementFormat;
+  /**
+   * When true, append the contribution level (Equal / Supporting) after each
+   * role name (by-author formats) or contributor label (by-role formats)
+   * whose score is not 0 or 100. Lead contributions stay unannotated.
+   */
+  showLevels?: boolean;
+  /**
+   * Localize displayed role names (e.g. for a non-English statement). Defaults
+   * to identity. The "CRediT:" prefix stays English.
+   */
+  translateRole?: RoleTranslator;
+  /**
+   * Localize the "Acknowledgements:" prefix and the Equal/Supporting level
+   * labels. Defaults to English.
+   */
+  translateUi?: UiTranslator;
+  /**
+   * BCP-47 locale of the output language; drives the CLDR name-list wording
+   * in the marker notes. Defaults to "en".
+   */
+  locale?: string;
+  /**
+   * When true (default), people marked as non-author contributors are credited
+   * on a separate `Acknowledgements:` line. When false, everyone is listed
+   * together on the single `CRediT:` line.
+   */
+  separateAcknowledgements?: boolean;
+  /**
+   * Emit HTML rather than plain text: each line becomes a `<p>`, and the
+   * `CRediT:` prefix plus each leading label (the role in a by-role statement,
+   * the contributor in a by-author one) is wrapped in `<strong>`.
+   *
+   * Both forms carry identical wording, because they travel together on the
+   * clipboard and the recipient's editor picks one.
+   */
+  asHtml?: boolean;
+}
+/**
+ * Generate a CRediT author statement.
+ *
+ * Named authors are listed after a `CRediT:` prefix; people marked as non-author
+ * contributors are credited on a second `Acknowledgements:` line. CRediT applies
+ * to both (see NISO guidance). Either line is omitted when no one on that side has
+ * contributions; the two lines are separated by a blank line.
+ *
+ * Four formats, matching the original Python app:
+ *
+ * `by-role`:
+ *   "CRediT: Conceptualization: Jane A. Smith, Bob White; Data curation: Jane A. Smith; ..."
+ *
+ * `by-role-short`:
+ *   "CRediT: Conceptualization: JAS, BW; Data curation: JAS; ..."
+ *
+ * `by-author`:
+ *   "CRediT: Jane A Smith: Conceptualization, Data curation; Bob White: Investigation; ..."
+ *
+ * `by-author-short`:
+ *   "CRediT: JAS: Conceptualization, Data curation; BW: Investigation; ..."
+ */
+export declare function generateStatement(authors: Author[], options: StatementOptions): string;
+//#endregion
+//#region import.d.ts
+type DetectedFormat = "link" | "csv" | "json" | "xml" | "names" | "unknown";
+/** Guess what pasted or loaded text is, from its shape alone. */
+export declare function detectFormat(text: string): DetectedFormat;
+/** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */
+interface Imported {
+  format: Exclude<DetectedFormat, "unknown">;
+  authors: Author[];
+  asks?: Record<string, Ask>;
+  selfId?: string;
+  title?: string;
+}
+/**
+ * Read text in any format {@link detectFormat} knows. Throws on text it cannot
+ * place, on a link that does not decode, and whatever the format's own reader
+ * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
+ * `authors` means the format was right but held nobody.
+ */
+export declare function importAny(text: string, { parser }?: {
+  parser?: XmlParser;
+}): Promise<Imported>;
+//#endregion
+//#region parse-authors.d.ts
+/**
+ * Given a list of raw name strings, parse them and assign unique initials.
+ *
+ * When two authors would share the same initials, we disambiguate by
+ * appending lowercase characters from the surname, matching the original
+ * Python app's `generate_unique_initials()` strategy.
+ */
+export declare function createAuthor(name: string, overrides?: {
+  id?: string;
+  orcid?: string;
+  contributorType?: ContributorType;
+  contributions?: Contribution[];
+  /** Shares first authorship. Outside the CRediT taxonomy; see AuthorSchema. */
+  equalContribution?: boolean;
+  /** Is a corresponding author. Outside the CRediT taxonomy; see AuthorSchema. */
+  corresponding?: boolean;
+  /**
+   * Pre-split name parts, for callers that already hold structured names
+   * (e.g. JATS `<surname>`/`<given-names>`). Re-parsing a joined string
+   * cannot recover a multi-word surname: "Anne van der Berg" parses back as
+   * surname "Berg" with "van" as a middle name, which also changes initials.
+   */
+  firstName?: string;
+  middleName?: string;
+  surname?: string;
+}): Author;
+/**
+ * Rebuild a roster under the rules every caller shares: at most `MAX_AUTHORS`
+ * rows, ids unique and shareable in a link, and initials re-derived and
+ * deduplicated. Throws when there are too many rows, or on a row
+ * `createAuthor` cannot rebuild.
+ */
+export declare function normalizeRoster(authors: Author[]): Author[];
+/**
+ * Parse a newline- or comma-separated string of author names into Author objects.
+ * Empty lines / entries are ignored.
+ */
+export declare function parseAuthorText(text: string): Author[];
+//#endregion
+//#region share-payload.d.ts
+/** Decoded share link: the author matrix plus the envelope it travelled with. */
+interface ShareData {
+  authors: Author[];
+  /** "" when the payload carries none */
+  title: string;
+  /** contributor id the link is addressed to */
+  claimId: string | null;
+  /** always non-null when claimId is non-null */
+  sourceDraftId: string | null;
+  reply: boolean;
+  /** an ask sent without the asker's guess */
+  blank: boolean;
+  /** when the link was sent; null on links from before this was recorded */
+  sentAt: number | null;
+  /** the asker works in yes/no mode; false on links from before this was recorded */
+  yesNo: boolean;
+}
+interface SharePayloadInput {
+  authors: Author[];
+  title?: string;
+  claimId?: string;
+  sourceDraftId?: string;
+  reply?: boolean;
+  /** Send the claimed row with its scores zeroed. Only meaningful with `claimId`. */
+  blank?: boolean;
+  sentAt?: number;
+  /** The asker works in yes/no mode. Only meaningful with `claimId`. */
+  yesNo?: boolean;
+}
+//#endregion
+//#region share-link.d.ts
+/**
+ * Encode the v2 payload (authors plus the title/claim/source-draft/reply
+ * envelope), deflate-compressed, as a `#s=…` fragment appended to `baseUrl`.
+ * Throws when the draft is too large, or where there is no CompressionStream
+ * (browsers before 2023).
+ */
+export declare function encodeShareHash(input: SharePayloadInput, baseUrl?: string): Promise<string>;
+/**
+ * Decode a `#s=…` location hash into the v2 payload. Returns null when the
+ * hash is absent, malformed, or a v1-era link (bare payload, or one with a
+ * trailing `&c=`/`&d=` tail from before the envelope moved inside the
+ * payload), so a bad or stale link degrades to the normal app rather than
+ * crashing.
+ */
+export declare function decodeShareHash(hash: string): Promise<ShareData | null>;
+//#endregion
+export type { Ask, AskEvent, AskState, Author, Choice, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, Outcome, Patch, Reply, Review, ShareData, SharePayloadInput, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
+// lookup.d.ts
+//#region doi-lookup.d.ts
+/**
+ * Stable machine-readable failure codes.
+ *
+ * The client localizes from the code; the `error` string beside it stays English
+ * for logs and `curl`. Codes are API surface: add rather than rename.
+ */
+type DoiErrorCode = "INVALID_DOI" | "NOT_FOUND" | "NO_AUTHORS" | "TOO_MANY_AUTHORS" | "UNAVAILABLE";
+/**
+ * DOI accepted on input: bare form, a `doi:` prefix, or a doi.org URL. The
+ * suffix is capped at 300 characters: real DOIs stay far below that, and the
+ * value is forwarded upstream.
+ */
+export declare const DOI_INPUT_REGEX: RegExp;
+interface DoiAuthor {
+  name: string;
+  orcid?: string;
+}
+type DoiLookupResult = {
+  ok: true;
+  title: string;
+  authors: DoiAuthor[];
+} | {
+  ok: false;
+  status: 400 | 404 | 422 | 502;
+  code: DoiErrorCode;
+  error: string;
+};
+/**
+ * Return the canonical DOI form used in requests: no resolver prefix, no
+ * surrounding space. Case is left alone — the registrant half of a DOI is
+ * case-insensitive but the suffix is not, so lowercasing can break resolution.
+ */
+export declare function normalizeDoi(doi: string): string;
+/**
+ * Resolve a DOI to its title and contributor list through an injected fetcher,
+ * asking Crossref first and DataCite when Crossref has no such record.
+ *
+ * Pass `mailto` to join Crossref's "polite pool", which gets faster and more
+ * reliable service than the anonymous pool.
+ */
+export declare function lookupDoiWork(doi: string, fetcher?: typeof fetch, mailto?: string): Promise<DoiLookupResult>;
+//#endregion
+//#region orcid-lookup.d.ts
+/**
+ * Stable machine-readable failure codes.
+ *
+ * The client localizes from the code; the `error` string beside it stays
+ * English and exists for logs, `curl`, and any client that meets a code it
+ * does not recognise yet. Codes are part of the API contract — rename one and
+ * you break older clients, so add rather than rename.
+ */
+type OrcidErrorCode = "INVALID_ID" | "NOT_FOUND" | "UNAVAILABLE";
+type OrcidLookupResult = {
+  ok: true;
+  firstName: string;
+  surname: string;
+  displayName: string;
+} | {
+  ok: false;
+  status: 400 | 404 | 502;
+  code: OrcidErrorCode;
+  error: string;
+};
+/** Validate an ORCID iD and resolve its public name through an injected fetcher. */
+export declare function lookupOrcidPerson(id: string, fetcher?: typeof fetch): Promise<OrcidLookupResult>;
+//#endregion
+export type { DoiAuthor, DoiErrorCode, DoiLookupResult, OrcidErrorCode, OrcidLookupResult };
+// ui-strings.d.ts
+//#region credit-i18n/index.d.ts
+/**
+ * Localized CRediT role names/descriptions, sourced from the community
+ * credit-translation repo and keyed by the canonical NISO role URL:
+ *   https://github.com/contributorshipcollaboration/credit-translation
+ *
+ * Output-only: this localizes the *displayed* role names in the generated
+ * statement and human-facing exports (markdown, heatmap SVG). The data model
+ * and CSV/XML/JSON interchange stay in canonical English.
+ */
+interface RoleTranslation {
+  name: string;
+  description: string;
+}
+/** A locale's catalog, keyed by NISO role URL, matching the upstream `translations` object. */
+type RoleCatalog = Record<string, RoleTranslation>;
+/** Maps a canonical English role name to its localized display name. */
+type RoleTranslator = (englishName: string) => string;
+/**
+ * Every language the picker offers. `en` is the canonical source (no catalog).
+ *
+ * `as const` so the codes form a literal union: the app types its interface
+ * catalogs against {@link LocaleCode}, which turns "offered a language with no
+ * interface strings" into a compile error instead of a silent English UI.
+ */
+declare const AVAILABLE_LOCALES: readonly [{
+  readonly code: "en";
+  readonly name: "English";
+}, {
+  readonly code: "fr";
+  readonly name: "Français";
+}, {
+  readonly code: "de";
+  readonly name: "Deutsch";
+}, {
+  readonly code: "es";
+  readonly name: "Español";
+}, {
+  readonly code: "it";
+  readonly name: "Italiano";
+}, {
+  readonly code: "pt-PT";
+  readonly name: "Português (Portugal)";
+}, {
+  readonly code: "nl";
+  readonly name: "Nederlands";
+}, {
+  readonly code: "zh-Hans";
+  readonly name: "简体中文";
+}, {
+  readonly code: "ja";
+  readonly name: "日本語";
+}];
+/** A language code the picker offers. */
+type LocaleCode = (typeof AVAILABLE_LOCALES)[number]["code"];
+/**
+ * Whether a locale has catalog files to load: an offered code other than
+ * English, spelled exactly. Also what keeps an arbitrary string out of a
+ * catalog import path. e2e/messages.spec.ts checks every offered code has its
+ * files.
+ */
+declare function hasCatalog(locale: string): locale is Exclude<LocaleCode, "en">;
+/**
+ * Normalize stored locale identifiers and reject unsupported values.
+ *
+ * `pt` and `zh` shipped before their regional/script variants were made
+ * explicit. Keep those drafts readable while all new state uses BCP 47 tags.
+ */
+declare function normalizeLocaleCode(locale: unknown): LocaleCode;
+/** Load a locale's role catalog. Returns null for `en` or any unknown locale (→ identity translator). */
+declare function loadRoleCatalog(locale: string): Promise<RoleCatalog | null>;
+/** Maps a canonical English role name to its localized description. */
+type RoleDescriber = (englishName: string) => string;
+/** Localized role names; unknown or untranslated roles keep their English name. */
+declare function makeRoleTranslator(catalog: RoleCatalog | null | undefined): RoleTranslator;
+/**
+ * Localized role descriptions, from the same community catalog as the names.
+ *
+ * Descriptions are explanatory help and never reach an export, so the app reads
+ * them in the *interface* language, while role names follow the *output*
+ * language — a role name has to match the statement it will appear in.
+ */
+declare function makeRoleDescriber(catalog: RoleCatalog | null | undefined, fallback: RoleDescriber): RoleDescriber;
+/** Identity role translator (no catalog): the canonical English default. */
+declare const DEFAULT_ROLE_TRANSLATOR: RoleTranslator;
+//#endregion
+//#region credit-i18n/ui-strings.d.ts
+/**
+ * UI-string translations: the non-role strings in human-facing output
+ * (statement + heatmap): "Acknowledgements", the contribution-level labels, the
+ * heatmap's accessible name, and the empty-state line.
+ *
+ * Mirrors the role-catalog setup (one lazy-loaded JSON per locale, code-split by
+ * the bundler) so the live UI and exports share one mechanism and this can grow
+ * to cover the whole app. English is the canonical source and the per-key
+ * fallback; per-locale catalogs in ./ui/ hold only the overrides. Our strings,
+ * not the community role repo's, hence a separate directory.
+ */
+type UiKey = "acknowledgements" | "lead" | "equal" | "supporting" | "none" | "contributed" | "emptyState" | "heatmapTitle" | "equalContributionNote" | "correspondenceNote" | "nameListSeparator" | "segmentSeparator" | "levelAnnotation";
+type UiTranslator = (key: UiKey) => string;
+/** A complete output catalog. Missing prose must fail before release. */
+type UiCatalog = Record<UiKey, string>;
+/** Load a locale's UI catalog. Returns null for `en` or any unknown locale (→ English). */
+declare function loadUiCatalog(locale: string): Promise<UiCatalog | null>;
+/**
+ * Build a UI-string translator from a catalog. A missing catalog uses English.
+ */
+declare function makeUiTranslator(catalog: Partial<UiCatalog> | null | undefined): UiTranslator;
+/** Canonical English UI translator (no catalog): the default for all consumers. */
+declare const DEFAULT_UI_TRANSLATOR: UiTranslator;
+//#endregion
+export { normalizeLocaleCode as _, loadUiCatalog as a, DEFAULT_ROLE_TRANSLATOR as c, RoleDescriber as d, RoleTranslator as f, makeRoleTranslator as g, makeRoleDescriber as h, UiTranslator as i, LocaleCode as l, loadRoleCatalog as m, UiCatalog as n, makeUiTranslator as o, hasCatalog as p, UiKey as r, AVAILABLE_LOCALES as s, DEFAULT_UI_TRANSLATOR as t, RoleCatalog as u };

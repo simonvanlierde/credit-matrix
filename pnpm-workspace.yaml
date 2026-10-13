@@ -1,3 +1,7 @@
+# The app at the root, and the published `credit-matrix` package in src/core.
+packages:
+  - src/core
+
 minimumReleaseAge: 4320 # minutes (3 days); blocks installing very fresh (often compromised) releases
 
 allowBuilds:

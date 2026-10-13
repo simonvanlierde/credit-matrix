@@ -15,6 +15,7 @@
       }
     ],
     "paths": {
+      "@/core": ["./src/core/index.ts"],
       "@/*": ["./src/*"]
     },
     "noEmit": true,
