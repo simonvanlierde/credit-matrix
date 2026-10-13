@@ -74,7 +74,8 @@ export function parseCsvRecords(csv: string, delimiter = ","): string[][] {
       continue;
     }
 
-    if (char === '"') {
+    // Only a quote that opens a field starts quoting; one mid-field ("O"Brien") is data.
+    if (char === '"' && field === "") {
       inQuotes = true;
     } else if (char === delimiter) {
       row.push(field);

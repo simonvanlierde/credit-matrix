@@ -94,6 +94,12 @@ describe("CSV import/export", () => {
     expect(parsed[0]?.contributions[0]?.score).toBe(100);
   });
 
+  it("reads a quote inside an unquoted field as a literal character", () => {
+    const parsed = fromCsv(`Name,Conceptualization\nAnn O"Brien,100\nBob Lee,100`);
+    expect(parsed.map((a) => a.name)).toEqual(['Ann O"Brien', "Bob Lee"]);
+    expect(parsed[0]?.contributions[0]?.score).toBe(100);
+  });
+
   it("rounds a fractional score cell to an integer", () => {
     const csv = `Name,Conceptualization\nJane Smith,50.5`;
     const parsed = fromCsv(csv);

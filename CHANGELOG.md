@@ -38,6 +38,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Import: screen readers now read the DOI hint and any error with the field they belong to, a file
   dropped beside the drop zone no longer replaces the page, and the dialog names the file it read.
+- CSV import: a quote inside a name (`Ann O"Brien`) is read as part of the name. It used to swallow
+  the rest of the file into that one contributor.
 
 ## [0.7.0] - 2026-10-13
 
