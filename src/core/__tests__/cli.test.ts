@@ -7,7 +7,7 @@ import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { run, USAGE } from "../cli";
-import { toJson } from "../export/json";
+import { NewerVersionError, toJson } from "../export/json";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash } from "../share-link";
 
@@ -118,6 +118,11 @@ describe("credit-matrix usage", () => {
     );
     await expect(run(["statement", file("list.json", "[]")])).rejects.toThrow(/Check the top level\.$/);
   });
+
+  it("passes other import errors through unchanged", async () => {
+    const newer = file("newer.json", '{"version": 99, "authors": []}');
+    await expect(run(["statement", newer])).rejects.toBeInstanceOf(NewerVersionError);
+  });
 });
 
 describe("credit-matrix standard input", () => {
@@ -129,6 +134,14 @@ describe("credit-matrix standard input", () => {
       ]) as unknown as typeof process.stdin,
     );
     expect(await run(["statement", "-"])).toBe("CRediT: Software: Jane Smith");
+    vi.restoreAllMocks();
+  });
+
+  it("calls piped JSON that is not an export the input, having no file name", async () => {
+    vi.spyOn(process, "stdin", "get").mockReturnValue(
+      Readable.from([Buffer.from("[]")]) as unknown as typeof process.stdin,
+    );
+    await expect(run(["statement", "-"])).rejects.toThrow(/^The input is not a CRediT Matrix JSON export\./);
     vi.restoreAllMocks();
   });
 });

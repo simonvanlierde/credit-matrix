@@ -169,7 +169,7 @@ export async function run(argv: string[]): Promise<string> {
   }
 }
 
-/** The first problem a JSON export fails validation on, in one line. */
+/** Why JSON failed validation as an export, in one line: up to three failing fields and a count of the rest. */
 function describeZodError(error: z.core.$ZodError, file: string): string {
   // zod's own message is a JSON dump of every issue: name the fields that failed instead.
   const fields = [...new Set(error.issues.map((issue) => issue.path.map(String).join(".") || "the top level"))];
