@@ -116,6 +116,10 @@ Only non-zero contributions appear in statements.
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
 assets.
 
+`fromCsv` needs a `Name` column. Other headers and role names match whatever their case or kind of
+dash. A score cell is a number from 0 to 100 or a level word (`None`, `Supporting`, `Equal`, `Lead`).
+Rows without a usable name are skipped.
+
 `fromJats4rXml(xml, { parser })` reads XML with `parser`, which defaults to the global `DOMParser`.
 In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:
 
