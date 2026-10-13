@@ -9,10 +9,8 @@ import {
 import { loadUiCatalog, makeUiTranslator, type UiTranslator } from "./credit-i18n/ui-strings";
 import { buildHeatmapSvg } from "./export/heatmap-svg";
 import { fromJson } from "./export/json";
-import { generateStatement, type StatementFormat } from "./generate-statement";
+import { generateStatement, STATEMENT_FORMATS, type StatementFormat } from "./generate-statement";
 import { normalizeRoster } from "./parse-authors";
-
-const FORMATS: readonly StatementFormat[] = ["by-role", "by-role-short", "by-author", "by-author-short"];
 
 // The app's paper-and-ink look: IBM Plex Sans where the page has it, its neutrals otherwise.
 // The element is its own card, so its text keeps its contrast on a dark page too.
@@ -166,7 +164,7 @@ export class CreditMatrixElement extends HTMLElement {
     const translateRole = makeRoleTranslator(roleCatalog);
     const translateUi = makeUiTranslator(uiCatalog);
     const asked = this.getAttribute("format") as StatementFormat;
-    const format = FORMATS.includes(asked) ? asked : "by-role";
+    const format = STATEMENT_FORMATS.includes(asked) ? asked : "by-role";
 
     const figure = document.createElement("figure");
     figure.lang = locale;

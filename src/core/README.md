@@ -169,7 +169,7 @@ holds its exact shape. By entry point:
     `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`
   - Roles: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
   - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
-  - Statements: `generateStatement`, `StatementFormat`, `StatementOptions`
+  - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toMarkdown`,
     `buildHeatmapSvg`, `HeatmapSvgOptions`, `detectFormat`, `importAny`, `DetectedFormat`, `Imported`
