@@ -168,6 +168,7 @@ export function fromCsv(csv: string): Author[] {
   // and the lookup below reads as "no", which is the right default.
   const equalIndex = headers.indexOf(headerKey(EQUAL_HEADER));
   const correspondingIndex = headers.indexOf(headerKey(CORRESPONDING_HEADER));
+  const roleIndexes = CREDIT_ROLES.map((role) => headers.indexOf(headerKey(role.name)));
 
   // A row with no usable name is skipped, as JATS import skips a nameless
   // contrib, rather than aborting the whole import.
@@ -175,10 +176,10 @@ export function fromCsv(csv: string): Author[] {
     const name = cells[nameIndex] ?? "";
     if (!name) return [];
 
-    const contributions: Contribution[] = CREDIT_ROLES.map((role) => {
-      const scoreText = cells[headers.indexOf(headerKey(role.name))] ?? "0";
-      return { role: role.name, score: readScore(scoreText) };
-    });
+    const contributions: Contribution[] = CREDIT_ROLES.map((role, i) => ({
+      role: role.name,
+      score: readScore(cells[roleIndexes[i] ?? -1] ?? "0"),
+    }));
 
     const contributorType = headerKey(cells[typeIndex] ?? "") === "non-author" ? "non-author" : "author";
     // Drop an unparseable ORCID rather than aborting the whole import.
