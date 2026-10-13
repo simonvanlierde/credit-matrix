@@ -1,0 +1,17 @@
+{
+  "description": "The second author is the corresponding author: corresp=\"yes\" on that contrib only.",
+  "mode": "levels",
+  "contributors": [
+    {
+      "givenNames": "Ada",
+      "surname": "Lovelace",
+      "roles": { "Conceptualization": "lead" }
+    },
+    {
+      "givenNames": "Marie",
+      "surname": "Curie",
+      "corresponding": true,
+      "roles": { "Supervision": "lead", "Project administration": "equal" }
+    }
+  ]
+}

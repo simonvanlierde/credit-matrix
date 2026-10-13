@@ -87,6 +87,18 @@ export function AboutPanel({ version }: { version: string }) {
         </p>
         <p>{t.rich("aboutTaxonomy", { cc: (chunks) => <LicenseLink>{chunks}</LicenseLink> })}</p>
         <p>{t("aboutPrivacy")}</p>
+        <p>
+          <a
+            href="https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-0.5 text-primary hover:underline"
+          >
+            {t("accessibilityStatement")}
+            <ExternalLink className="size-3" aria-hidden="true" />
+            <span className="sr-only">{t("opensInNewTab")}</span>
+          </a>
+        </p>
       </div>
     </>
   );

@@ -1,5 +1,13 @@
 import type { Author, Contribution, ContributorType } from "./author";
-import { isUsableAuthorName, isValidOrcid, MAX_AUTHOR_NAME_LENGTH, normalizeOrcid, ORCID_INPUT_REGEX } from "./author";
+import {
+  ID_REGEX,
+  isUsableAuthorName,
+  isValidOrcid,
+  MAX_AUTHOR_NAME_LENGTH,
+  MAX_AUTHORS,
+  normalizeOrcid,
+  ORCID_INPUT_REGEX,
+} from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
 
 /**
@@ -184,6 +192,48 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
     existingInitials.add(attempt);
     return { ...author, initials: attempt };
   });
+}
+
+/**
+ * Rebuild a roster under the rules every caller shares: at most `MAX_AUTHORS`
+ * rows, ids unique and shareable in a link, and initials re-derived and
+ * deduplicated. Throws when there are too many rows, or on a row
+ * `createAuthor` cannot rebuild.
+ */
+export function normalizeRoster(authors: Author[]): Author[] {
+  if (authors.length > MAX_AUTHORS) {
+    throw new Error(`A draft can contain at most ${MAX_AUTHORS} contributors.`);
+  }
+  const seenIds = new Set<string>();
+  return deduplicateAuthorInitials(
+    authors.map((author) => {
+      // Ids key every lookup and must survive a share link: an imported
+      // duplicate or unshareable id gets a fresh one.
+      const id = ID_REGEX.test(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
+      seenIds.add(id);
+      return createAuthor(author.name, {
+        id,
+        orcid: author.orcid,
+        contributorType: author.contributorType,
+        contributions: author.contributions,
+        equalContribution: author.equalContribution,
+        corresponding: author.corresponding,
+        ...consistentNameParts(author),
+      });
+    }),
+  );
+}
+
+/**
+ * The stored name parts, while they still describe the name. Re-parsing the
+ * name cannot recover a structured import's multi-word surname ("van der
+ * Berg"); a rename re-parses, so parts that no longer fit are dropped.
+ */
+function consistentNameParts(author: Author): Pick<Author, "firstName" | "middleName" | "surname"> | undefined {
+  const { name, firstName, middleName, surname } = author;
+  if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+  const fits = name.startsWith(firstName) && name.endsWith(surname) && name.includes(middleName);
+  return fits ? { firstName, middleName, surname } : undefined;
 }
 
 export function parseAuthors(names: string[]): Author[] {

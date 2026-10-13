@@ -37,3 +37,38 @@ A rollback by CLI or dashboard lasts only until the next push to `main` deploys 
 3. Delete the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets, if any (Settings, Secrets and variables, Actions). Only the environments should hold them.
 4. Push to `main` and check that the `Deploy` job ran `wrangler deploy` and the site updated.
 5. After that first Actions deploy works, turn off Cloudflare Workers Builds: Workers & Pages, `credit-heatmap`, Settings, Builds, disconnect the Git repository. Leaving it on deploys every commit twice.
+
+## The npm package
+
+`.github/workflows/release-core.yml` publishes `src/core` as the [`credit-matrix`](../src/core/README.md) npm package
+when a `v*` tag is pushed. It checks that the tag matches the version in `src/core/package.json`
+(`pnpm version` keeps it in step with the app's), runs the core tests against the build, and runs
+`npm publish --provenance --access public`.
+
+It uses npm trusted publishing: npm accepts the workflow's GitHub OIDC token instead of an access
+token, so no `NPM_TOKEN` secret exists. The package page then links each version to the workflow
+run that built it.
+
+Check what would be published with `cd src/core && npm pack --dry-run`. The CI `package` job runs
+the same on every pull request.
+
+### One-time setup
+
+1. Create the package on npmjs.com. Trusted publishing can only be added to a package that exists,
+   so publish the first version by hand from a clean checkout of the release tag, logged in as the
+   owner with two-factor authentication:
+
+   ```bash
+   pnpm install --frozen-lockfile
+   cd src/core && npm publish --access public --provenance=false
+   ```
+
+   `--provenance=false` because provenance needs the CI token; this one version goes without. The
+   workflow run for that tag fails, as it has no publisher yet or finds the version taken.
+2. On npmjs.com, open the package, then Settings, Trusted publishing, and add a GitHub Actions
+   publisher: organization or user `simonvanlierde`, repository `credit-matrix`, workflow filename
+   `release-core.yml`, no environment.
+3. Under Settings, Publishing access, choose "Require two-factor authentication and disallow
+   tokens", so only the trusted workflow can publish.
+4. Push the next release tag and check that the `Publish to npm` job passed and that the version on
+   npmjs.com shows a provenance badge.

@@ -17,8 +17,11 @@ pnpm dev            # → http://localhost:3000
 ## Where things live
 
 - `src/core`: the domain logic (statements, exports, validation, heatmap SVG),
-  as plain TypeScript with no side effects. It uses no React, Next.js or Node
-  APIs when it's imported. Most changes and most tests go here.
+  as plain TypeScript with no side effects. It is published as the
+  `credit-matrix` npm package, with a CLI (`cli.ts`) and a web element
+  (`element.ts`). Apart from the CLI, it uses no React, Next.js or Node APIs
+  when it's imported. Biome refuses imports of React, Next.js or `@/` there.
+  Most changes and most tests go here.
 - the rest of `src/`: the Next.js UI, built as a static export.
 
 [ADR&nbsp;0001](docs/adr/0001-client-side-architecture.md) explains why I split
@@ -31,8 +34,8 @@ pnpm lint           # Biome (format + lint); append :fix to auto-fix
 pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
-pnpm verify         # lint, typecheck, and unit tests under the coverage gate (also the pre-push hook)
-pnpm validate:jats  # check the JATS export against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
+pnpm verify         # build the package, then lint, typecheck, and unit tests under the coverage gate (also the pre-push hook)
+pnpm validate:jats  # check the JATS fixture, the conformance cases and a fresh export against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
 ```
 
 Before the first e2e run, install the browser: `pnpm exec playwright install chromium`.
@@ -43,11 +46,15 @@ If you change the domain logic, add or update tests in `src/core/__tests__`.
 
 ## Testing
 
-- **Unit (Vitest)**: `pnpm test`. Covers the domain layer, the store, and `src/lib`: name
-  parsing, removing duplicate initials, statement formats, which score maps to which level, exporting
-  and importing back, validation, and the heatmap SVG. `format-fixtures.test.ts` decodes saved files
-  in `src/core/__tests__/fixtures/` that never change (a share link, JSON, CSV and JATS). If you
-  change a format on purpose, regenerate the fixture it affects and run `pnpm validate:jats`.
+- **Unit (Vitest)**: `pnpm test`. There are two projects. `core` runs `src/core` under Node and
+  checks the built package: its exports, the type snapshot and the CLI. `app` runs the rest under
+  jsdom. If you change the package's interface on purpose, update the snapshots with
+  `pnpm exec vitest run --project core -u`. The tests cover the domain layer, the store, and
+  `src/lib`: name parsing, removing duplicate initials, statement formats, which score maps to
+  which level, exporting and importing back, validation, and the heatmap SVG.
+  `format-fixtures.test.ts` decodes saved files in `src/core/__tests__/fixtures/` that never change
+  (a share link, JSON, CSV and JATS). If you change a format on purpose, regenerate the fixture it
+  affects and run `pnpm validate:jats`.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
   the co-author claim round trip. `review.spec.ts` covers settling co-author answers in the Review
@@ -94,7 +101,8 @@ Locale codes are BCP 47 tags, such as `pt-PT` and `zh-Hans`.
    language's own name for itself.
 2. Add `src/messages/<code>.json` with every key from `en.json`.
 3. Add `src/core/credit-i18n/ui/<code>.json`, copying the keys from an existing locale.
-4. Add the locale to `LOCALES` in `scripts/fetch-credit-translations.mjs` and run the script. This
+4. Add the locale to `LOCALES` in `scripts/fetch-credit-translations.mjs` and run the script, then
+   add both new files to the import maps in `credit-i18n/index.ts` and `credit-i18n/ui-strings.ts`. This
    only works if upstream already has that language. If it does not, translate the roles upstream
    first.
 

@@ -1,0 +1,24 @@
+{
+  "description": "Roles at all three levels. Each role carries degree-contribution.",
+  "mode": "levels",
+  "contributors": [
+    {
+      "givenNames": "Ada",
+      "surname": "Lovelace",
+      "roles": {
+        "Conceptualization": "lead",
+        "Methodology": "equal",
+        "Writing – original draft": "supporting"
+      }
+    },
+    {
+      "givenNames": "Marie",
+      "surname": "Curie",
+      "roles": {
+        "Investigation": "lead",
+        "Methodology": "equal",
+        "Writing – review & editing": "supporting"
+      }
+    }
+  ]
+}

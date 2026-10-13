@@ -6,6 +6,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- A [Quarto extension](integrations/quarto/README.md) that writes a CRediT authorship statement
+  from the author `roles` in a document's front matter, with Equal and Supporting levels.
+- A [MyST plugin](integrations/myst/README.md) with a `{credit-statement}` directive that does the
+  same from the authors in `myst.yml` or the page's front matter.
+- The `credit-matrix` npm package: the statements, file formats, heatmap and ask links behind the
+  app, for your own scripts and sites, in Node or the browser. ORCID and DOI lookups are under
+  `credit-matrix/lookup`, the role translations under `credit-matrix/i18n`.
+- A `credit-matrix` command line tool, from the same package: `statement` prints the CRediT
+  statement for a JSON, CSV, JATS4R XML or name-list file, in any of the nine languages; `convert`
+  turns one format into another; `ask` prints an ask link for one contributor.
+- A `<credit-matrix>` web element that shows the statement and the heatmap for a JSON export on any
+  page, without a framework. [docs/element.md](docs/element.md) has a copy-paste example.
+- Import a [tenzing](https://github.com/marton-balazs-kovacs/tenzing) contributor spreadsheet.
+  Save it as CSV (or TSV) first; Excel files are not read. Names, author order, ORCID iDs, roles,
+  corresponding authors and acknowledgees (as non-authors) come across. tenzing records a role as
+  done or not, so each ticked role imports at Lead.
+- A JATS conformance suite in [`conformance/`](conformance/README.md): contributor lists with the
+  JATS XML CRediT Matrix writes for each, all checked against the JATS 1.3 DTD and the JATS4R
+  rules. Other tools that write CRediT roles into JATS can test themselves against it.
+- An [accessibility statement](docs/accessibility.md), linked from the About panel: what the app
+  aims for (WCAG 2.2 AA), how it is checked, what is known not to work yet, and how to report a
+  problem.
+
 ## [0.7.0] - 2026-10-13
 
 After updating, reload any other tab that still has CRediT Matrix open. A tab opened before the

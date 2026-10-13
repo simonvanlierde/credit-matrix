@@ -10,7 +10,7 @@
  * not the community role repo's, hence a separate directory.
  */
 
-import { hasCatalog } from "./index";
+import { hasCatalog, type LocaleCode } from "./index";
 
 export type UiKey =
   | "acknowledgements"
@@ -72,9 +72,20 @@ const EN_UI: Record<UiKey, string> = {
 /** Load a locale's UI catalog. Returns null for `en` or any unknown locale (→ English). */
 export async function loadUiCatalog(locale: string): Promise<UiCatalog | null> {
   if (!hasCatalog(locale)) return null;
-  const mod: { default: UiCatalog } = await import(`./ui/${locale}.json`);
-  return mod.default;
+  return (await UI_CATALOGS[locale]()).default;
 }
+
+/** One import() per file, as for the role catalogs in ./index. */
+const UI_CATALOGS: Record<Exclude<LocaleCode, "en">, () => Promise<{ default: UiCatalog }>> = {
+  fr: () => import("./ui/fr.json"),
+  de: () => import("./ui/de.json"),
+  es: () => import("./ui/es.json"),
+  it: () => import("./ui/it.json"),
+  "pt-PT": () => import("./ui/pt-PT.json"),
+  nl: () => import("./ui/nl.json"),
+  "zh-Hans": () => import("./ui/zh-Hans.json"),
+  ja: () => import("./ui/ja.json"),
+};
 
 /**
  * Build a UI-string translator from a catalog. A missing catalog uses English.

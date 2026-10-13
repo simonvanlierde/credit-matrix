@@ -1,0 +1,17 @@
+{
+  "description": "A person credited in the acknowledgements, not as an author: contrib-type=\"contributor\".",
+  "mode": "levels",
+  "contributors": [
+    {
+      "givenNames": "Ada",
+      "surname": "Lovelace",
+      "roles": { "Conceptualization": "lead", "Writing – original draft": "lead" }
+    },
+    {
+      "givenNames": "Alan",
+      "surname": "Turing",
+      "type": "non-author",
+      "roles": { "Software": "lead", "Resources": "supporting" }
+    }
+  ]
+}

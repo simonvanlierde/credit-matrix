@@ -51,7 +51,7 @@ function unescapeCsvValue(value: string): string {
  * commas and newlines *inside* quoted fields. (Splitting on newlines first, as
  * a naive parser does, tears a quoted multi-line field into broken rows.)
  */
-function parseCsvRecords(csv: string): string[][] {
+export function parseCsvRecords(csv: string, delimiter = ","): string[][] {
   const records: string[][] = [];
   let row: string[] = [];
   let field = "";
@@ -76,7 +76,7 @@ function parseCsvRecords(csv: string): string[][] {
 
     if (char === '"') {
       inQuotes = true;
-    } else if (char === ",") {
+    } else if (char === delimiter) {
       row.push(field);
       field = "";
     } else if (char === "\n" || char === "\r") {

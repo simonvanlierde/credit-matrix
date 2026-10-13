@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate the JATS fixture and a fresh export twice:
+# Validate the JATS fixture, the conformance suite and a fresh export twice:
 #   1. against the vendored JATS 1.3 DTD, with xmllint;
 #   2. against the JATS4R Schematron rules (MIT, github.com/jats4r/jats-schematrons),
 #      compiled to XSLT with SchXslt2 (MIT) and run with SaxonJS (the xslt3 dev
@@ -16,7 +16,7 @@ fresh=$(mktemp --suffix=.xml)
 trap 'rm -f "$fresh"' EXIT
 
 JATS_OUT=$fresh pnpm exec vitest run src/core/__tests__/jats-sample-export.test.ts >/dev/null
-files=(src/core/__tests__/fixtures/export-jats.xml "$fresh")
+files=(src/core/__tests__/fixtures/export-jats.xml conformance/cases/*.xml "$fresh")
 
 # 1. DTD. The catalog maps the DOCTYPE's public identifier to the vendored DTD, so
 # this also fails when an export names the wrong DTD; --nonet keeps it off the network.

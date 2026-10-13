@@ -130,6 +130,34 @@ jobs:
           name: playwright-traces
           path: test-results
 
+  # The `credit-matrix` npm package: what `npm publish` would ship, and its
+  # export list, public types and CLI as built (src/core/__tests__/package.test.ts).
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          node-version-file: .node-version
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # prepack builds dist/ first.
+      - name: List what npm would publish
+        working-directory: src/core
+        run: npm pack --dry-run
+
+      - name: Check the export list, the type snapshot and the CLI
+        run: pnpm exec vitest run --project core src/core/__tests__/package.test.ts
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -299,7 +327,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
+        run: |-
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
             echo "::notice::Deploy skipped: CLOUDFLARE_API_TOKEN is not set."
             echo "Deploy skipped: CLOUDFLARE_API_TOKEN is not set." >> "$GITHUB_STEP_SUMMARY"

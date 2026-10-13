@@ -44,15 +44,55 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation). Exports
   meant for software keep the official English CRediT terms
 - **Exports**: copy or download JATS4R XML, CSV, JSON, and Markdown, or download the heatmap as SVG
-  or PNG. The JSON file also carries your co-authors' answers
-- **Sharing and import**: encode a draft in a URL, paste names, or import JSON, CSV, or JATS4R XML.
+  or PNG. The JSON file also carries your co-authors' answers. The JATS export is checked against
+  a [conformance suite](conformance/README.md) that other tools can reuse
+- **Sharing and import**: encode a draft in a URL, paste names, or import JSON, CSV, JATS4R XML,
+  or a [tenzing](https://github.com/marton-balazs-kovacs/tenzing) spreadsheet saved as CSV.
   Importing a JSON file into the same draft brings the co-authors' answers back
 - **Works offline**: install it, and you can keep working on a flight. Only the ORCID and DOI
   lookups need a network
+- **Accessibility**: aims to meet WCAG 2.2 AA. The [accessibility statement](docs/accessibility.md)
+  says how that is checked, what is known not to work yet, and how to report a problem
 
 | First run | Statement & export |
 |---|---|
 | ![The first-run welcome as a dialog over the empty workspace: three numbered steps, notes on drafts and asking co-authors, and Load sample data and Start fresh buttons](docs/screenshots/empty-state.png) | ![The Statement tab of the inspector: a By author or By role switch, the generated statement, a Copy statement button, and the open Export data menu with Copy and Download for XML (JATS4R), JSON, CSV and Markdown](docs/screenshots/statement-export.png) |
+
+## Use the package
+
+The app's statements and file formats are also a TypeScript package,
+[`credit-matrix`](src/core/README.md), for Node and the browser:
+
+```bash
+npm install credit-matrix
+```
+
+```ts
+import { readFile } from "node:fs/promises";
+import { generateStatement, importAny } from "credit-matrix";
+
+const { authors } = await importAny(await readFile("contributions.csv", "utf8"));
+console.log(generateStatement(authors, { format: "by-author" }));
+```
+
+It reads and writes JSON, CSV, JATS4R XML and Markdown, draws the heatmap SVG, and builds ask
+links. Its CLI does the same from a shell:
+
+```bash
+npx credit-matrix statement contributions.json --format by-author --locale nl
+```
+
+A `<credit-matrix>` element shows a statement and heatmap on any web page: see
+[docs/element.md](docs/element.md).
+
+## Use it in your manuscript
+
+Quarto and MyST already let you record CRediT roles for each author in the front matter. Two small
+add-ons turn those roles into a CRediT statement in the document:
+
+- [Quarto extension](integrations/quarto/README.md): `quarto add
+  simonvanlierde/credit-matrix/integrations/quarto`, then `filters: [credit-matrix]`.
+- [MyST plugin](integrations/myst/README.md): a `{credit-statement}` directive.
 
 ---
 
@@ -82,8 +122,8 @@ Browser
 
 Everything runs in the browser. The site is a static export, so there is no server code.
 [`src/core`](src/core/README.md) holds the domain logic as plain TypeScript, and `zod` is its only
-runtime dependency. XML import uses the browser's own `DOMParser`. The PNG is drawn from the
-heatmap SVG onto a `<canvas>`.
+runtime dependency. It is also published as the `credit-matrix` package. XML import uses the
+browser's own `DOMParser`. The PNG is drawn from the heatmap SVG onto a `<canvas>`.
 
 The ORCID and DOI lookups call the public APIs of ORCID, Crossref and DataCite straight from the
 browser. DataCite is only asked about DOIs that Crossref does not hold, such as arXiv and Zenodo
@@ -126,6 +166,10 @@ runs the unit and end-to-end tests, and builds the site. On `main`, once all of 
 Actions deploys the build it tested. A pull request gets a preview version that does not go live.
 [docs/deploy.md](docs/deploy.md) has the details and the one-time setup.
 
+Pushing a `v*` release tag also publishes the `credit-matrix` package to npm, through
+[release-core.yml](.github/workflows/release-core.yml). The one-time npm setup is in
+[docs/deploy.md](docs/deploy.md#the-npm-package).
+
 To host it on Cloudflare yourself, set your own domain in [wrangler.jsonc](wrangler.jsonc):
 
 ```bash
@@ -133,7 +177,8 @@ pnpm preview        # build + serve out/ locally, headers applied
 pnpm deploy         # build + deploy to your Cloudflare account
 ```
 
-`pnpm build` runs `next build`, then [`scripts/postbuild.mjs`](scripts/postbuild.mjs). That script
+`pnpm build` builds the `credit-matrix` package, runs `next build`, then
+[`scripts/postbuild.mjs`](scripts/postbuild.mjs). That script
 replaces `'unsafe-inline'` in the CSP with the hashes of the exported inline scripts. It also names
 the service worker's cache after the build. To roll back a bad deploy, see
 [docs/deploy.md](docs/deploy.md#roll-back).

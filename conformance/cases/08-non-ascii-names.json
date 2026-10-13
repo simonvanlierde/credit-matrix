@@ -1,0 +1,31 @@
+{
+  "description": "Names outside ASCII, a multi-word surname and an apostrophe are written as UTF-8 text, unchanged.",
+  "mode": "levels",
+  "contributors": [
+    {
+      "givenNames": "José Ángel",
+      "surname": "Muñoz Pérez",
+      "roles": { "Conceptualization": "lead" }
+    },
+    {
+      "givenNames": "Anne",
+      "surname": "van der Berg",
+      "roles": { "Methodology": "equal" }
+    },
+    {
+      "givenNames": "Thị Minh",
+      "surname": "Nguyễn",
+      "roles": { "Data curation": "lead" }
+    },
+    {
+      "givenNames": "Siobhán",
+      "surname": "O'Brien",
+      "roles": { "Visualization": "supporting" }
+    },
+    {
+      "givenNames": "小明",
+      "surname": "王",
+      "roles": { "Software": "equal" }
+    }
+  ]
+}

@@ -49,18 +49,10 @@ import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UndoBar } from "@/components/ui/undo-bar";
-import {
-  type Author,
-  hasContributions,
-  isValidOrcid,
-  lookupOrcidPerson,
-  MAX_AUTHOR_NAME_LENGTH,
-  MAX_AUTHORS,
-  normalizeOrcid,
-  ORCID_REGEX,
-  review,
-  splitNameList,
-} from "@/core";
+import { type Author, isValidOrcid, normalizeOrcid, review } from "@/core";
+import { hasContributions, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS, ORCID_REGEX } from "@/core/author";
+import { lookupOrcidPerson } from "@/core/lookup";
+import { splitNameList } from "@/core/parse-authors";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useClaimLock } from "@/lib/use-claim-lock";

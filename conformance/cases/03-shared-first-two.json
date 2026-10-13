@@ -1,0 +1,23 @@
+{
+  "description": "Two authors share first authorship: both carry equal-contrib=\"yes\".",
+  "mode": "levels",
+  "contributors": [
+    {
+      "givenNames": "Ada",
+      "surname": "Lovelace",
+      "equalContribution": true,
+      "roles": { "Conceptualization": "lead" }
+    },
+    {
+      "givenNames": "Marie",
+      "surname": "Curie",
+      "equalContribution": true,
+      "roles": { "Investigation": "lead" }
+    },
+    {
+      "givenNames": "Alan",
+      "surname": "Turing",
+      "roles": { "Software": "supporting" }
+    }
+  ]
+}
