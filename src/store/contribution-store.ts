@@ -174,7 +174,6 @@ interface ContributionState {
   /** Start an empty draft and switch to it. Returns its id, or null at the cap. */
   createDraft: () => string | null;
   switchDraft: (draftId: string) => void;
-  renameDraft: (draftId: string, title: string) => void;
   /** Copy a draft, contributions and all. Returns the new id, or null at the cap. */
   duplicateDraft: (draftId: string) => string | null;
   deleteDraft: (draftId: string) => void;
@@ -206,7 +205,7 @@ interface ContributionState {
   reset: () => void;
 }
 
-export const ROLE_NAMES = CREDIT_ROLES.map((role) => role.name);
+const ROLE_NAMES = CREDIT_ROLES.map((role) => role.name);
 
 /** Cap on the stored work title. Long enough for any real one, short enough
  *  that a pasted document cannot bloat the persisted draft. */
@@ -889,21 +888,6 @@ export const useContributionStore = create<ContributionState>()(
           applyDraft(state, target);
         }),
 
-      renameDraft: (draftId, title) =>
-        set((state) => {
-          const trimmed = title.trim().slice(0, MAX_TITLE_LENGTH);
-          // The live draft's title is the top-level one; the map copy is
-          // refreshed on the way out, so writing only here would be lost.
-          if (draftId === state.activeDraftId) {
-            state.title = trimmed;
-            return;
-          }
-          const target = state.drafts[draftId];
-          if (!target) return;
-          target.title = trimmed;
-          target.updatedAt = Date.now();
-        }),
-
       duplicateDraft: (draftId) => {
         let created: string | null = null;
         set((state) => {
@@ -1340,5 +1324,3 @@ export function askSummary(
 }
 
 export const useAskSummary = () => useContributionStore(useShallow((s) => askSummary(s.authors, s.asks, s.selfId)));
-
-export const useOpenDifferences = () => useContributionStore((s) => askSummary(s.authors, s.asks, s.selfId).open);

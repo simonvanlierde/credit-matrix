@@ -5,7 +5,7 @@ import { useTranslations } from "use-intl";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatementOutput } from "@/components/steps/StatementOutput";
 import { TeamPanel } from "@/components/TeamPanel";
-import { type InspectorTab, useContributionStore, useOpenDifferences } from "@/store/contribution-store";
+import { type InspectorTab, useAskSummary, useContributionStore } from "@/store/contribution-store";
 
 const TABS: InspectorTab[] = ["statement", "team", "review"];
 
@@ -22,7 +22,7 @@ export function Inspector() {
   const tab = useContributionStore((s) => s.inspectorTab);
   const setTab = useContributionStore((s) => s.setInspectorTab);
   const listRef = useRef<HTMLDivElement>(null);
-  const openCount = useOpenDifferences();
+  const openCount = useAskSummary().open;
   // The APG tabs pattern makes a panel a tab stop only when nothing in it is
   // focusable; otherwise it is an extra stop before its own first control.
   // These mirror the empty states of TeamPanel and ReviewPanel.

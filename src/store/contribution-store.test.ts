@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createAuthor } from "@/core";
+import { CREDIT_ROLES, createAuthor } from "@/core";
 import type { LocaleCode } from "@/core/i18n";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
@@ -9,7 +9,6 @@ import {
   type Draft,
   followOtherTab,
   MAX_DRAFTS,
-  ROLE_NAMES,
   useContributionStore,
 } from "./contribution-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
@@ -18,6 +17,7 @@ vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
 vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
 const initial = useContributionStore.getState();
+const ROLE_NAMES = CREDIT_ROLES.map((role) => role.name);
 
 function store() {
   return useContributionStore.getState();
@@ -417,19 +417,6 @@ describe("contribution store", () => {
       const second = store().createDraft();
       if (!second) throw new Error("expected a new draft");
       expect(store().uiLocale).toBe("nl");
-    });
-
-    it("renames the live draft and an inactive one alike", () => {
-      const first = store().activeDraftId;
-      const second = store().createDraft();
-      if (!second) throw new Error("expected a new draft");
-
-      store().renameDraft(second, "  Second paper  ");
-      store().renameDraft(first, "First paper");
-
-      expect(store().title).toBe("Second paper");
-      store().switchDraft(first);
-      expect(store().title).toBe("First paper");
     });
 
     it("duplicates a draft with fresh contributor ids", () => {
