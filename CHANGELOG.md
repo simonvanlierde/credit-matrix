@@ -8,6 +8,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Every CI run checks the JATS4R XML export against the official JATS 1.3 DTD and the JATS4R
+  Schematron rules (`pnpm validate:jats`).
 - A page of its own for co-authors. Opening an ask link now shows one column, made for a phone:
   the 14 roles with a short description and None · Supporting · Equal · Lead buttons for each
   (None · Contributed when you work in Yes/No), switches for shared first authorship and

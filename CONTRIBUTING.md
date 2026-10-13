@@ -32,7 +32,7 @@ pnpm typecheck      # TypeScript
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
 pnpm verify         # lint, typecheck and unit tests in one go (also the pre-push hook)
-pnpm validate:jats  # check the JATS export against the JATS 1.3 DTD (needs xmllint)
+pnpm validate:jats  # check the JATS export against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
 ```
 
 Before the first e2e run, install the browser: `pnpm exec playwright install chromium`.
