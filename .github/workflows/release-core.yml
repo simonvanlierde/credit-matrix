@@ -1,0 +1,56 @@
+name: Release package
+
+# Publishes src/core as the `credit-matrix` npm package when a release is tagged.
+# npm trusted publishing: npm checks this workflow's GitHub OIDC token, so
+# there is no npm token to store or leak. docs/deploy.md has the one-time setup.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # No dependency cache: a release builds only from the lockfile.
+      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          node-version-file: .node-version
+          cache: false
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check the tag matches the package version
+        run: |
+          version=$(node -p 'require("./src/core/package.json").version')
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match src/core/package.json version $version."
+            exit 1
+          fi
+
+      # Builds dist/ (global setup), then runs every core test against it.
+      - name: Test the package
+        run: pnpm exec vitest run --project core
+
+      # Trusted publishing needs npm 11.5.1 or later; Node 26 ships it.
+      # prepack rebuilds dist/ before the tarball is made.
+      - name: Publish
+        working-directory: src/core
+        run: npm publish --provenance --access public
