@@ -13,7 +13,7 @@ framework and no build step.
 ```
 
 This loads the latest release. To keep a page from changing under you, pin the version you tested
-with, for example `https://esm.sh/credit-matrix@1.2.3/element` (use the version you installed).
+with, for example `https://esm.sh/credit-matrix@0.8.0/element` (use the version you installed).
 
 Or put the JSON in the page:
 
