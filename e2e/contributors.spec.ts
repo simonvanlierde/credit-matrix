@@ -41,7 +41,7 @@ test.describe("the contributor list", () => {
     await expect(addField(page)).toHaveValue("");
   });
 
-  test("an ORCID lookup does not overwrite a rename made while it ran", async ({ page }) => {
+  test("an ORCID lookup does not overwrite a name being typed while it ran", async ({ page }) => {
     const { promise: held, resolve: release } = Promise.withResolvers<void>();
     await page.route(PERSON_URL, async (route) => {
       await held;
@@ -50,15 +50,18 @@ test.describe("the contributor list", () => {
     await page.goto("/");
     await add(page, ORCID);
     await expect(nameField(page)).toHaveValue(ORCID);
-    await nameField(page).fill("Jane Q. Smith");
-    await nameField(page).press("Enter");
+    await nameField(page).click();
+    await nameField(page).press("End");
+    await nameField(page).pressSequentially(" typed");
 
-    const answered = page.waitForResponse(PERSON_URL);
     release();
-    await answered;
-    // Give the resolved lookup a moment to write, if it is going to.
-    await page.waitForTimeout(300);
-    await expect(nameField(page)).toHaveValue("Jane Q. Smith");
+    // The registry's name reaches the store (the remove button's label) but not the field.
+    await expect(page.getByRole("button", { name: "Remove Jane A. Smith" })).toBeVisible();
+    await expect(nameField(page)).toBeFocused();
+    await expect(nameField(page)).toHaveValue(`${ORCID} typed`);
+
+    await nameField(page).press("Enter");
+    await expect(page.getByRole("button", { name: `Remove ${ORCID} typed` })).toBeVisible();
   });
 
   test("undoing the removal of your own row keeps it marked as you", async ({ page }) => {
@@ -89,7 +92,8 @@ test.describe("the contributor list", () => {
     const removedBar = page.getByRole("status").filter({ hasText: "Removed Bob Jones" });
     await removedBar.getByRole("button").click();
     await expect(removedBar).toBeHidden();
-    await page.waitForTimeout(100);
+    // An announcement reaches the live region on the frame after the click.
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
     expect((await statusText(page)).join(" ")).not.toContain("at most 200 contributors");
     await expect(page.getByRole("button", { name: "Remove Bob Jones" })).toHaveCount(1);
   });
