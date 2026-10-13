@@ -58,6 +58,33 @@ describe("fromTenzing", () => {
   });
 });
 
+describe("fromTenzing edge cases", () => {
+  it("drops a bad ORCID but keeps the person, and leaves a blank one unset", () => {
+    const [ana, bob] = fromTenzing("Firstname,Surname,ORCID ID\nAna,Lopez,not-an-orcid\nBob,White,");
+    expect(ana).toMatchObject({ name: "Ana Lopez" });
+    expect(ana?.orcid).toBeUndefined();
+    expect(bob?.orcid).toBeUndefined();
+  });
+
+  it("keeps sheet order for rows without an order, and sorts the numbered rows first", () => {
+    const names = fromTenzing(
+      "Firstname,Surname,Order in publication\nCy,Third,\nAl,Second,2\nDi,Fourth,\nBo,First,1",
+    ).map((a) => a.name);
+    expect(names).toEqual(["Bo First", "Al Second", "Cy Third", "Di Fourth"]);
+  });
+
+  it("reads a sheet with a BOM, CRLF lines and short rows", () => {
+    const [ana, ...rest] = fromTenzing("\uFEFFFirstname,Surname,Software\r\nAna,Lopez\r\n");
+    expect(rest).toEqual([]);
+    expect(ana?.name).toBe("Ana Lopez");
+    expect(roles(ana)).toEqual([]);
+  });
+
+  it("reads a header-only sheet as nobody", () => {
+    expect(fromTenzing("Firstname,Surname")).toEqual([]);
+  });
+});
+
 describe("isTenzing", () => {
   it("recognises both layouts", () => {
     expect(isTenzing(fixture("tenzing.csv"))).toBe(true);
@@ -70,5 +97,7 @@ describe("isTenzing", () => {
     expect(isTenzing(`Firstname,Surname,${roleHeaders},${more}`)).toBe(true);
     expect(isTenzing(`Name,${roleHeaders},${more}`)).toBe(false);
     expect(isTenzing("Anne Namer, Bob Smith")).toBe(false);
+    expect(isTenzing("Firstname,Surname")).toBe(false);
+    expect(isTenzing("")).toBe(false);
   });
 });

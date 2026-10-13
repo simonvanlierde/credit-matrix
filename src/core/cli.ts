@@ -97,7 +97,8 @@ export async function run(argv: string[]): Promise<string> {
         default:
           throw new UsageError("convert needs --to json, csv, jats or md.");
       }
-    case "ask": {
+    default: {
+      // Only "ask" is left: every other command was refused above.
       const wanted = values.contributor?.trim();
       if (!wanted) throw new UsageError("ask needs --contributor.");
       const author =
@@ -116,8 +117,6 @@ export async function run(argv: string[]): Promise<string> {
         values["base-url"],
       );
     }
-    default:
-      throw new UsageError(`Unknown command: ${command}`);
   }
 }
 

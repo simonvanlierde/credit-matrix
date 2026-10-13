@@ -27,7 +27,7 @@ export function detectFormat(text: string): DetectedFormat {
   }
   if (isTenzing(trimmed)) return "tenzing";
   // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
-  const headerCells = (trimmed.split(/\r?\n/, 1)[0] ?? "").split(",");
+  const headerCells = trimmed.slice(0, trimmed.search(/\r?\n|$/)).split(",");
   if (
     headerCells.some(
       (cell) =>

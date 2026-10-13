@@ -44,6 +44,7 @@ describe("importAny", () => {
     ["csv", toCsv(roster())],
     ["xml", toJats4rXml(roster())],
     ["names", "Jane Smith\nBob White"],
+    ["tenzing", "Author/Acknowledgee,Firstname,Surname\nAuthor,Jane,Smith\nAuthor,Bob,White"],
   ])("reads %s", async (format, text) => {
     const imported = await importAny(text);
     expect(imported.format).toBe(format);

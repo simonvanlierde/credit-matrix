@@ -65,6 +65,24 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     );
   });
 
+  it("reports a custom parser's empty error element and skips a role with no text", () => {
+    type El = import("../export/xml-import").XmlElement;
+    const el = (text: string | null, attrs: Record<string, string> = {}, kids: Record<string, El[]> = {}): El => ({
+      textContent: text,
+      getAttribute: (name) => attrs[name] ?? null,
+      querySelector: (selector) => kids[selector]?.[0] ?? null,
+      querySelectorAll: (selector) => kids[selector] ?? [],
+    });
+    const failing = { parseFromString: () => el(null, {}, { parsererror: [el(null)] }) };
+    expect(() => fromJats4rXml("<x/>", { parser: failing })).toThrow("XML parse error: invalid XML");
+
+    const contrib = el(null, {}, { "given-names": [el("Jane")], surname: [el("Smith")], role: [el(null)] });
+    const ok = { parseFromString: () => el(null, {}, { contrib: [contrib] }) };
+    const [jane] = fromJats4rXml("<x/>", { parser: ok });
+    expect(jane?.name).toBe("Jane Smith");
+    expect(jane?.contributions.every((c) => c.score === 0)).toBe(true);
+  });
+
   it("says what to pass where there is no global DOMParser", () => {
     vi.stubGlobal("DOMParser", undefined);
     try {

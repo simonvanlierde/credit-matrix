@@ -2,7 +2,10 @@
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it, vi } from "vitest";
+import process from "node:process";
+import { Readable } from "node:stream";
+import { fileURLToPath } from "node:url";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { run, USAGE } from "../cli";
 import { toJson } from "../export/json";
 import { createAuthor } from "../parse-authors";
@@ -94,5 +97,68 @@ describe("credit-matrix usage", () => {
     expect(await run(["statement", "--help"])).toBe(USAGE);
     await expect(run(["sideways", csv])).rejects.toThrow(/Unknown command/);
     await expect(run(["statement"])).rejects.toThrow(/needs a file/);
+  });
+});
+
+describe("credit-matrix standard input", () => {
+  it("reads the roster from - when piped in", async () => {
+    vi.spyOn(process, "stdin", "get").mockReturnValue(
+      Readable.from([
+        Buffer.from("Name,Software\nJane "),
+        Buffer.from("Smith,100\n"),
+      ]) as unknown as typeof process.stdin,
+    );
+    expect(await run(["statement", "-"])).toBe("CRediT: Software: Jane Smith");
+    vi.restoreAllMocks();
+  });
+});
+
+describe("credit-matrix as a program", () => {
+  const cliPath = fileURLToPath(new URL("../cli.ts", import.meta.url));
+  const originalArgv = process.argv;
+  const originalExitCode = process.exitCode;
+
+  async function launch(...args: string[]) {
+    process.argv = ["node", cliPath, ...args];
+    const out = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    const err = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    vi.resetModules();
+    await import("../cli");
+    await vi.waitUntil(() => out.mock.calls.length + err.mock.calls.length > 0);
+    return { out: out.mock.calls.join(""), err: err.mock.calls.join("") };
+  }
+
+  afterEach(() => {
+    process.argv = originalArgv;
+    process.exitCode = originalExitCode;
+    vi.restoreAllMocks();
+  });
+
+  it("prints the result with one trailing newline and exits 0", async () => {
+    const { out, err } = await launch("statement", csv);
+    expect(out).toBe("CRediT: Conceptualization: Jane Smith; Software: Jane Smith, Bob White\n");
+    expect(err).toBe("");
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("prints the message and usage for a command line mistake, and exits 2", async () => {
+    const { out, err } = await launch("convert", csv);
+    expect(out).toBe("");
+    expect(err).toContain("credit-matrix: convert needs --to json, csv, jats or md.");
+    expect(err).toContain(USAGE);
+    expect(process.exitCode).toBe(2);
+  });
+
+  it("treats an option the parser rejects as a mistake too", async () => {
+    const { err } = await launch("statement", csv, "--nope");
+    expect(err).toContain(USAGE);
+    expect(process.exitCode).toBe(2);
+  });
+
+  it("prints only the message when the file cannot be read, and exits 1", async () => {
+    const { err } = await launch("statement", join(dir, "missing.csv"));
+    expect(err).toMatch(/^credit-matrix: ENOENT/);
+    expect(err).not.toContain("Usage:");
+    expect(process.exitCode).toBe(1);
   });
 });

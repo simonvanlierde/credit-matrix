@@ -29,9 +29,13 @@ function delimiterOf(headerLine: string): string {
   return (headerLine.match(/\t/g)?.length ?? 0) > (headerLine.match(/,/g)?.length ?? 0) ? "\t" : ",";
 }
 
+function firstLine(text: string): string {
+  return text.slice(0, text.search(/\r?\n|$/));
+}
+
 /** True for a header row that looks like a tenzing contributor spreadsheet. */
 export function isTenzing(text: string): boolean {
-  const headerLine = text.trim().split(/\r?\n/, 1)[0] ?? "";
+  const headerLine = firstLine(text.trim());
   const headers = headerLine.split(delimiterOf(headerLine)).map(key);
   if (headers.includes("author/acknowledgee")) return true;
   return headers.includes("firstname") && headers.filter((header) => ROLE_KEYS.has(header)).length >= 10;
@@ -43,7 +47,7 @@ function isTrue(value: string | undefined): boolean {
 
 export function fromTenzing(text: string): Author[] {
   const trimmed = text.replace(/^﻿/, "").trim();
-  const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(trimmed.split(/\r?\n/, 1)[0] ?? ""));
+  const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(firstLine(trimmed)));
   const column = new Map(headerRow.map((header, index) => [key(header), index]));
   const cell = (row: string[], header: string) => row[column.get(header) ?? -1]?.trim() ?? "";
 
