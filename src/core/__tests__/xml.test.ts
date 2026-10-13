@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
-import { parseAuthorText } from "../parse-authors";
+import { createAuthor, parseAuthorText } from "../parse-authors";
 
 // `fromJats4rXml` relies on a global DOMParser. In the browser this is native;
 // here jsdom provides it, so this exercises the same
@@ -223,5 +223,23 @@ describe("toJats4rXml", () => {
     // Only the text content names the role.
     expect(score("Visualization")).toBe(66);
     expect(jane?.contributions.filter((c) => c.score > 0)).toHaveLength(5);
+  });
+
+  it("leaves out degree-contribution in yes/no mode and keeps it when a score is graded", () => {
+    const yesNo = [
+      createAuthor("Jane Smith", { contributions: [{ role: "Conceptualization", score: 100 }] }),
+      createAuthor("Bob White", { contributions: [{ role: "Software", score: 100 }] }),
+    ];
+    const xml = toJats4rXml(yesNo, { yesNo: true });
+    expect(xml).not.toContain("degree-contribution");
+    expect(xml).toContain('vocab-term="Software"');
+    // Without the level, every role imports as contributed (100), as it was.
+    const parsed = fromJats4rXml(xml);
+    expect(parsed.map((a) => a.contributions.filter((c) => c.score > 0).map((c) => c.score))).toEqual([[100], [100]]);
+
+    // Levels mode, or yes/no with a graded score left over, keeps the level.
+    expect(toJats4rXml(yesNo)).toContain('degree-contribution="lead"');
+    const graded = [createAuthor("Jane Smith", { contributions: [{ role: "Conceptualization", score: 33 }] })];
+    expect(toJats4rXml(graded, { yesNo: true })).toContain('degree-contribution="supporting"');
   });
 });

@@ -1,7 +1,7 @@
 // spell-checker: ignore archivearticle, mathml
 
 import type { Author } from "../author";
-import { activeContributions, normalizeOrcid, scoreToLevel } from "../author";
+import { activeContributions, isAllBinary, normalizeOrcid, scoreToLevel } from "../author";
 import { getRoleByName } from "../credit-roles";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
@@ -12,13 +12,17 @@ const DOCTYPE =
 /**
  * Serialize authors to a JATS4R-compliant XML string.
  * Output mirrors the format produced by the original Python app.
+ * With `yesNo` (the Yes/No input mode) and only 0/100 scores, roles carry no
+ * `degree-contribution`: the author never chose a level, so writing every role
+ * as "lead" would claim one.
  */
-export function toJats4rXml(authors: Author[]): string {
+export function toJats4rXml(authors: Author[], { yesNo = false }: { yesNo?: boolean } = {}): string {
+  const withLevels = !(yesNo && isAllBinary(authors));
   // JATS4R rejects equal-contrib on a single author: equal with whom? A lone
   // flag stays in JSON and CSV, where the draft round-trips, but not here.
   const sharedFirst =
     authors.filter((author) => author.equalContribution && author.contributorType !== "non-author").length > 1;
-  const contributions = authors.map((author) => authorToXml(author, sharedFirst)).join("\n    ");
+  const contributions = authors.map((author) => authorToXml(author, sharedFirst, withLevels)).join("\n    ");
 
   return `<?xml version='1.0' encoding='UTF-8'?>
 ${DOCTYPE}
@@ -52,7 +56,7 @@ function givenNamesOf(author: Author): string {
   return author.middleName ? `${author.firstName} ${author.middleName}` : author.firstName;
 }
 
-function authorToXml(author: Author, sharedFirst: boolean): string {
+function authorToXml(author: Author, sharedFirst: boolean, withLevels: boolean): string {
   const givenNames = givenNamesOf(author);
 
   // JATS4R wants the full URI, not the bare iD.
@@ -65,7 +69,8 @@ function authorToXml(author: Author, sharedFirst: boolean): string {
   const roles = activeContributions(author)
     .map((c) => {
       const role = getRoleByName(c.role);
-      return `        <role vocab="credit" vocab-identifier="https://credit.niso.org/" vocab-term="${escapeXml(c.role)}" vocab-term-identifier="${role.url}" degree-contribution="${scoreToLevel(c.score)}">${escapeXml(c.role)}</role>`;
+      const degree = withLevels ? ` degree-contribution="${scoreToLevel(c.score)}"` : "";
+      return `        <role vocab="credit" vocab-identifier="https://credit.niso.org/" vocab-term="${escapeXml(c.role)}" vocab-term-identifier="${role.url}"${degree}>${escapeXml(c.role)}</role>`;
     })
     .join("\n");
 

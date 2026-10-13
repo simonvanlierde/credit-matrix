@@ -288,7 +288,7 @@
   "welcomeDraftsBody": "Mais do que um artigo? Mude de rascunho no cabeçalho; cada um é guardado separadamente neste navegador.",
   "welcomeAskTitle": "Peça diretamente aos coautores",
   "welcomeAskBody": "Copie um link no menu da linha de uma pessoa e envie-lho. Quando o link voltar, abra-o: a resposta fica guardada junto à linha dessa pessoa e as diferenças resolvem-se no separador Revisão.",
-  "importDescription": "Comece por um DOI, cole nomes ou uma ligação que lhe devolveram, ou carregue um ficheiro CSV, JSON ou JATS4R XML. JSON e XML repõem também os níveis de contribuição.",
+  "importDescription": "Comece por um DOI, cole nomes ou uma ligação que lhe devolveram, ou carregue um ficheiro CSV, JSON ou JATS4R XML. JSON e XML repõem também as contribuições, com os níveis quando o ficheiro os inclui.",
   "contributorActions": "Ações para {name}",
   "colorBlue": "Azul",
   "colorOrange": "Laranja",

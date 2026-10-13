@@ -288,7 +288,7 @@
   "welcomeDraftsBody": "撰写多篇论文？在页眉中切换草稿；每份草稿单独保存在此浏览器中。",
   "welcomeAskTitle": "直接邀请合著者",
   "welcomeAskBody": "从贡献者行菜单复制链接并发送给对方。收到回传的链接后打开它：回复会保存在该贡献者的行旁边，差异在“核对”标签页中处理。",
-  "importDescription": "可以从 DOI 开始，粘贴姓名或合作者回传的链接，也可以上传 CSV、JSON 或 JATS4R XML 文件。JSON 和 XML 还会恢复贡献程度。",
+  "importDescription": "可以从 DOI 开始，粘贴姓名或合作者回传的链接，也可以上传 CSV、JSON 或 JATS4R XML 文件。JSON 和 XML 还会恢复贡献，文件中含有等级时也会恢复等级。",
   "contributorActions": "针对 {name} 的操作",
   "colorBlue": "蓝色",
   "colorOrange": "橙色",

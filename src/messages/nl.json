@@ -288,7 +288,7 @@
   "welcomeDraftsBody": "Meer dan één artikel? Wissel van concept via de koptekst; elk wordt apart in deze browser bewaard.",
   "welcomeAskTitle": "Vraag co-auteurs rechtstreeks",
   "welcomeAskBody": "Kopieer een link uit het rijmenu van een persoon en stuur die naar hen. Komt de link terug, open die dan: het antwoord wordt naast de rij van die persoon bewaard en verschillen handelt u af op het tabblad Controle.",
-  "importDescription": "Begin met een DOI, plak namen of een teruggestuurde link, of upload een CSV-, JSON- of JATS4R-XML-bestand. JSON en XML herstellen ook de bijdragescores.",
+  "importDescription": "Begin met een DOI, plak namen of een teruggestuurde link, of upload een CSV-, JSON- of JATS4R-XML-bestand. JSON en XML herstellen ook de bijdragen, met niveaus als het bestand die bevat.",
   "contributorActions": "Acties voor {name}",
   "colorBlue": "Blauw",
   "colorOrange": "Oranje",

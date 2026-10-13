@@ -43,8 +43,14 @@ const DATA_FORMATS: Record<
 > = {
   // XML/JSON/CSV are machine round-trip formats, kept in canonical English.
   // Only Markdown (a human-facing paste artifact) follows the output language.
-  xml: { label: "XML (JATS4R)", serialize: toJats4rXml, filename: "credit-contributors.xml", mime: "application/xml" },
-  // Replaced per export in the component, which knows whether answers go in.
+  // XML and JSON are replaced per export in the component, which knows the
+  // input mode and whether answers go in.
+  xml: {
+    label: "XML (JATS4R)",
+    serialize: (authors) => toJats4rXml(authors),
+    filename: "credit-contributors.xml",
+    mime: "application/xml",
+  },
   json: {
     label: "JSON",
     serialize: (authors) => toJson(authors),
@@ -64,6 +70,7 @@ export function StatementOutput() {
   const authors = useContributionStore((s) => s.authors);
   const asks = useContributionStore((s) => s.asks);
   const selfId = useContributionStore((s) => s.selfId);
+  const yesNo = useContributionStore((s) => s.inputMode === "toggle");
   const openReview = useContributionStore((s) => s.openReview);
   const openDifferences = useOpenDifferences();
   // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
@@ -113,6 +120,7 @@ export function StatementOutput() {
 
   function serialize(dataFormat: DataFormat): string {
     if (dataFormat === "json") return toJson(authors, { asks, includeAnswers, selfId });
+    if (dataFormat === "xml") return toJats4rXml(authors, { yesNo });
     return DATA_FORMATS[dataFormat].serialize(authors, translateRole, translateUi, outputLanguage);
   }
 

@@ -288,7 +288,7 @@
   "welcomeDraftsBody": "¿Más de un artículo? Cambie de borrador desde la cabecera; cada uno se guarda por separado en este navegador.",
   "welcomeAskTitle": "Pregunte directamente a sus coautores",
   "welcomeAskBody": "Copie un enlace desde el menú de la fila de una persona y envíeselo. Cuando le devuelvan el enlace, ábralo: la respuesta se guarda junto a su fila y las diferencias se resuelven en la pestaña Revisión.",
-  "importDescription": "Empiece por un DOI, pegue nombres o un enlace que le hayan devuelto, o suba un archivo CSV, JSON o JATS4R XML. JSON y XML también restauran los niveles de contribución.",
+  "importDescription": "Empiece por un DOI, pegue nombres o un enlace que le hayan devuelto, o suba un archivo CSV, JSON o JATS4R XML. JSON y XML también restauran las contribuciones, con sus niveles si el archivo los incluye.",
   "contributorActions": "Acciones para {name}",
   "colorBlue": "Azul",
   "colorOrange": "Naranja",

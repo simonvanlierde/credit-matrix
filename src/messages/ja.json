@@ -288,7 +288,7 @@
   "welcomeDraftsBody": "複数の論文を執筆中ですか？ヘッダーから下書きを切り替えられます。各下書きはこのブラウザに個別に保存されます。",
   "welcomeAskTitle": "共著者に直接依頼",
   "welcomeAskBody": "貢献者の行メニューからリンクをコピーして本人に送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。",
-  "importDescription": "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML ファイルをアップロードしてください。JSON と XML は貢献度も復元します。",
+  "importDescription": "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。",
   "contributorActions": "{name} に対する操作",
   "colorBlue": "青",
   "colorOrange": "オレンジ",

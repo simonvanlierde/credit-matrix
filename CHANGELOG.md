@@ -103,6 +103,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as
   JATS 1.3 `degree-contribution`, and importing the file restores them. Files without it import
   every role as lead, as before.
+  In Yes/No mode the export leaves `degree-contribution` out, rather than call every role lead:
+  you never chose a level. Such a file imports every role as contributed.
 
 ### Removed
 
