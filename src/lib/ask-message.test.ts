@@ -3,7 +3,7 @@ import { createAuthor, decodeShareHash } from "@/core";
 import { useContributionStore } from "@/store/contribution-store";
 import { copyAskMessage } from "./ask-message";
 
-vi.mock("./announce", () => ({ announce: vi.fn(), requestStorageFullAnnouncement: vi.fn() }));
+vi.mock("./announce", () => ({ announce: vi.fn() }));
 
 const initial = useContributionStore.getState();
 const t = ((key: string, values?: { link?: string }) => values?.link ?? key) as never;

@@ -24,7 +24,6 @@ import {
 import { clampScore, isShareableId, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import { type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
-import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
@@ -135,6 +134,11 @@ interface ContributionState {
    * found before anything that shows it has mounted. Not persisted.
    */
   newerVersionBlocked: boolean;
+  /**
+   * Why the last save failed, until one succeeds: the browser storage is full,
+   * or the browser blocks storage for this site. Not persisted.
+   */
+  saveFailure: "full" | "blocked" | null;
   /** Whether the welcome card is currently open. Ephemeral (not persisted), so a
    *  "How it works" re-open never survives a reload as a fake first run. */
   welcomeOpen: boolean;
@@ -551,11 +555,11 @@ function draftKeys(): string[] {
  * A quota error is the realistic failure once several drafts are held, and
  * zustand's default storage swallows it into a console message nobody reads:
  * the app keeps working, the drafts keep growing, and nothing has been saved
- * since some point the user cannot identify. Saying it once, when it happens,
- * is the difference between losing this edit and losing the afternoon.
+ * since some point the user cannot identify. Saying so in `saveFailure`, from
+ * the first failed write until one succeeds, is the difference between losing
+ * this edit and losing the afternoon.
  */
 export function announcingStorage(): DraftStorage {
-  let warned = false;
   // A newer build saved here, so this tab is the old one: reload to become
   // that build. When the reload is refused (offline, or it just happened),
   // flag that edits here are not being saved.
@@ -731,16 +735,16 @@ export function announcingStorage(): DraftStorage {
         }
         known = new Set(Object.keys(drafts));
         lastWritten = value.state;
-        warned = false;
+        if (useContributionStore.getState().saveFailure) useContributionStore.setState({ saveFailure: null });
       } catch (error) {
-        // Every change retries the write; announcing each one would flood
-        // the live region. Say it once per run of failures.
-        if (warned) return;
-        warned = true;
         // Blocked site data: Chromium throws SecurityError on reading
         // `window.localStorage`, Firefox leaves it null (a TypeError here).
         const blocked = error instanceof DOMException ? error.name === "SecurityError" : error instanceof TypeError;
-        requestStorageFullAnnouncement(blocked);
+        const failure = blocked ? "blocked" : "full";
+        // Set only on a change: every edit retries the write, and the setState
+        // itself runs setItem again.
+        if (useContributionStore.getState().saveFailure !== failure)
+          useContributionStore.setState({ saveFailure: failure });
       }
     },
   };
@@ -855,6 +859,7 @@ export const useContributionStore = create<ContributionState>()(
       welcomeOpen: false,
       inspectorTab: "statement",
       newerVersionBlocked: false,
+      saveFailure: null,
       claim: null,
       asks: {},
       selfId: null,

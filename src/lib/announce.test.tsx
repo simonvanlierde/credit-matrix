@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { act } from "react";
-import { describe, expect, it, vi } from "vitest";
-import { Announcer, announce, requestStorageFullAnnouncement, STORAGE_FULL_EVENT } from "./announce";
+import { describe, expect, it } from "vitest";
+import { Announcer, announce } from "./announce";
 
 /** Announcements land a frame late, on purpose; run that frame. */
 async function flushFrame() {
@@ -42,17 +42,5 @@ describe("Announcer", () => {
     render(<Announcer />).unmount();
 
     expect(() => announce("Copied to clipboard")).not.toThrow();
-  });
-});
-
-describe("requestStorageFullAnnouncement", () => {
-  it("asks the mounted, localized interface to speak, rather than announcing English itself", () => {
-    const onStorageFull = vi.fn();
-    window.addEventListener(STORAGE_FULL_EVENT, onStorageFull);
-
-    requestStorageFullAnnouncement();
-
-    expect(onStorageFull).toHaveBeenCalledTimes(1);
-    window.removeEventListener(STORAGE_FULL_EVENT, onStorageFull);
   });
 });

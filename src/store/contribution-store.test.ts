@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
 import type { LocaleCode } from "@/core/i18n";
-import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
   announcingStorage,
@@ -13,7 +12,6 @@ import {
 } from "./contribution-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
-vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
 vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
 const initial = useContributionStore.getState();
@@ -1194,7 +1192,7 @@ describe("contribution store", () => {
      * contributor it cannot rebuild and runs on every list edit, so one bad row
      * would make add/remove/rename all throw uncaught.
      */
-    it("says so once when the browser refuses to save", () => {
+    it("holds a refused save until a save works again", () => {
       const storage = useContributionStore.persist.getOptions().storage;
       if (!storage) throw new Error("expected a storage adapter");
       // Writes are refused before the restore lands; this is about the ones
@@ -1208,12 +1206,13 @@ describe("contribution store", () => {
 
       const state = { drafts: {}, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
       storage.setItem("credit-generator-state", { state, version: 1 });
-      storage.setItem("credit-generator-state", { state, version: 1 });
+      expect(store().saveFailure).toBe("full");
+      storage.setItem("credit-generator-state", { state: { ...state, welcomeSeen: false }, version: 1 });
+      expect(store().saveFailure).toBe("full");
 
-      // Once per run of failures, not once per keystroke.
-      expect(requestStorageFullAnnouncement).toHaveBeenCalledTimes(1);
-      expect(requestStorageFullAnnouncement).toHaveBeenCalledWith(false);
       full.mockRestore();
+      storage.setItem("credit-generator-state", { state, version: 1 });
+      expect(store().saveFailure).toBeNull();
       hydrated.mockRestore();
     });
 
@@ -1222,16 +1221,13 @@ describe("contribution store", () => {
       if (!storage) throw new Error("expected a storage adapter");
       const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
       const state = { drafts: {}, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
-      // A good save first, so an earlier test's failure run is over.
-      storage.setItem("credit-generator-state", { state, version: 1 });
-      vi.mocked(requestStorageFullAnnouncement).mockClear();
       const blocked = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
         throw new DOMException("The operation is insecure.", "SecurityError");
       });
 
-      storage.setItem("credit-generator-state", { state: { ...state, welcomeSeen: false }, version: 1 });
+      storage.setItem("credit-generator-state", { state, version: 1 });
 
-      expect(requestStorageFullAnnouncement).toHaveBeenCalledWith(true);
+      expect(store().saveFailure).toBe("blocked");
       blocked.mockRestore();
       hydrated.mockRestore();
     });

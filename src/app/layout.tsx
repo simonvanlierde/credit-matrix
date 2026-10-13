@@ -7,6 +7,7 @@ import { BrandMenu } from "@/components/BrandMenu";
 import { HeaderActions } from "@/components/HeaderActions";
 import { HowItWorks } from "@/components/HowItWorks";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { PersistenceStatus } from "@/components/PersistenceStatus";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { SkipLink } from "@/components/SkipLink";
 import { StatusBanner } from "@/components/StatusBanner";
@@ -123,8 +124,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* No page cap: the workflow row sizes itself to its content and
                 centers, so a big monitor goes to the matrix when the roster
                 needs it and to symmetric gutters when it does not. */}
-            <main id="main-content" className="mx-auto pt-13 desk:h-dvh desk:overflow-hidden">
-              {children}
+            {/* The save-failure notice sits in flow above the page, so on a
+                height-locked desk it shortens the workspace rather than covering it. */}
+            <main id="main-content" className="mx-auto pt-13 desk:flex desk:h-dvh desk:flex-col desk:overflow-hidden">
+              <PersistenceStatus />
+              <div className="desk:min-h-0 desk:flex-1">{children}</div>
             </main>
             <Announcer />
             <StatusBanner />
