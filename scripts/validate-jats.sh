@@ -4,6 +4,9 @@
 #   2. against the JATS4R Schematron rules (MIT, github.com/jats4r/jats-schematrons),
 #      compiled to XSLT with SchXslt2 (MIT) and run with SaxonJS (the xslt3 dev
 #      dependency), because the rules need XPath 2.0, which xmllint lacks.
+# SaxonJS is free to run but not open source (Saxonica's licence allows use, not
+# unmodified redistribution outside an app). Keep xslt3 a dev dependency: it must
+# never ship in the site or in a published package.
 # The rules and SchXslt2 download on first run, are checked against pinned
 # hashes, and are cached in .cache/.
 set -euo pipefail
