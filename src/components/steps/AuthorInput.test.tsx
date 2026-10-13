@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type Ask, createAuthor, decodeShareHash } from "@/core";
 import { lookupOrcidPerson, type OrcidLookupResult } from "@/core/lookup";
 import { announce } from "@/lib/announce";
@@ -54,6 +54,12 @@ function addById(orcid: string) {
 
 beforeEach(() => {
   useContributionStore.setState(initial, true);
+  // jsdom has no element scrolling; leaving a name field rewinds it.
+  HTMLElement.prototype.scrollTo = vi.fn();
+});
+
+afterEach(() => {
+  delete (HTMLElement.prototype as Partial<HTMLElement>).scrollTo;
 });
 
 describe("adding a contributor by ORCID iD", () => {
@@ -355,9 +361,31 @@ describe("undoing a removal", () => {
 });
 
 describe("editing a contributor's name", () => {
+  it.each([
+    ["a new row's lookup", () => addById(ALICE)],
+    [
+      "a row's lookup",
+      () => {
+        act(() => useContributionStore.setState({ authors: [createAuthor(ALICE, { orcid: ALICE })] }));
+        fireEvent.click(screen.getByRole("button", { name: en.lookupOrcidName }));
+      },
+    ],
+  ])("keeps what the user is typing when %s lands, and commits it on leaving", async (_, startLookup) => {
+    const resolve = deferLookups();
+    renderList();
+    startLookup();
+    const field = screen.getByLabelText<HTMLInputElement>(en.nameLabel);
+    field.focus();
+    fireEvent.change(field, { target: { value: `${ALICE} typed` } });
+
+    await resolve(ALICE, found("Josiah Carberry"));
+    expect(field.value).toBe(`${ALICE} typed`);
+
+    fireEvent.blur(field);
+    expect(authors()[0]?.name).toBe(`${ALICE} typed`);
+  });
+
   it("discards the edit on Escape, also when the field is left afterwards", () => {
-    // jsdom has no element scrolling; leaving the field rewinds it.
-    HTMLElement.prototype.scrollTo = vi.fn();
     useContributionStore.setState({ authors: [createAuthor("Alice Smith")] });
     renderList();
     const field = screen.getByLabelText<HTMLInputElement>(en.nameLabel);

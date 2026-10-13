@@ -605,9 +605,16 @@ const AuthorRow = memo(function AuthorRowInner({
   // Keyed on the stored name, not the author object: normalizeAuthors rebuilds
   // every author on any list mutation, so an identity-keyed effect overwrote
   // whatever the user was typing whenever an unrelated ORCID lookup resolved.
+  // Text typed into the focused field but not yet committed also wins over a
+  // name that lands meanwhile, such as this row's own lookup; blur commits it.
   const storedName = author?.name;
+  const previousStoredName = useRef(storedName);
   useEffect(() => {
-    if (storedName !== undefined) setNameDraft(storedName);
+    const previous = previousStoredName.current;
+    previousStoredName.current = storedName;
+    if (storedName === undefined) return;
+    const typing = document.activeElement === nameInputRef.current;
+    setNameDraft((draft) => (typing && draft !== previous ? draft : storedName));
   }, [storedName]);
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({

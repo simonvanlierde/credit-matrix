@@ -28,3 +28,26 @@ it("skips someone removed mid-queue and still asks everyone after them", async (
 
   expect(vi.mocked(copyAskMessage).mock.calls.map(([author]) => author.name)).toEqual(["Ann One", "Cat Three"]);
 });
+
+it("ends the queue when everyone left in it is removed", async () => {
+  vi.mocked(copyAskMessage).mockResolvedValue(true);
+  act(() => {
+    useContributionStore.getState().createDraft();
+    for (const name of ["Ann One", "Bob Two", "Cat Three"]) useContributionStore.getState().addAuthor(name);
+  });
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <TeamPanel />
+    </IntlProvider>,
+  );
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: /^Ask everyone/ })));
+  act(() => {
+    for (const author of useContributionStore.getState().authors.filter((a) => a.name !== "Ann One")) {
+      useContributionStore.getState().removeAuthor(author.id);
+    }
+  });
+
+  expect(screen.queryByRole("button", { name: en.cancel })).toBeNull();
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: /^Ask everyone/ })));
+  expect(vi.mocked(copyAskMessage)).toHaveBeenCalledTimes(2);
+});

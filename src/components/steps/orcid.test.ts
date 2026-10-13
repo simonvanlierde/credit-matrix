@@ -10,6 +10,8 @@ describe("nameBesideOrcid", () => {
     [`Jane Smith (https://orcid.org/${ID})`, "Jane Smith"],
     [`Jane Smith – ORCID iD: ${ID}`, "Jane Smith"],
     [`Smith, Jane ${ID}`, "Smith, Jane"],
+    [`王小明：${ID}`, "王小明"],
+    [`（王小明、${ID}）`, "王小明"],
   ])("finds the name in %s", (text, name) => {
     expect(nameBesideOrcid(text)).toBe(name);
   });
@@ -20,4 +22,10 @@ describe("nameBesideOrcid", () => {
       expect(nameBesideOrcid(text)).toBeNull();
     },
   );
+
+  it("takes linear time over a long run of spaces", () => {
+    const started = performance.now();
+    expect(nameBesideOrcid(`Jane${" ".repeat(100_000)}x ${ID}`)).toBe("Jane x");
+    expect(performance.now() - started).toBeLessThan(200);
+  });
 });

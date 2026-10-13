@@ -6,8 +6,8 @@ import { useTranslations } from "use-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Author, CREDIT_ROLES } from "@/core";
 import { heatCellColor, onColor } from "@/core/contributor-color";
-import type { RoleDescriber, RoleTranslator } from "@/core/i18n";
 import { useClaimLock } from "@/lib/use-claim-lock";
+import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { RoleInfo } from "./RoleInfo";
 
 /**
@@ -24,9 +24,6 @@ export function MobileRoleList({
   assignmentLabel,
   levelLabel,
   handleCellClick,
-  translateInterfaceRole,
-  describeRole,
-  interfaceRoleLanguage,
 }: {
   authors: Author[];
   graded: boolean;
@@ -37,11 +34,9 @@ export function MobileRoleList({
   assignmentLabel: (author: Author, roleIndex: number, score: number) => string;
   levelLabel: (score: number) => string;
   handleCellClick: (author: Author, roleIndex: number, score: number) => void;
-  translateInterfaceRole: RoleTranslator;
-  describeRole: RoleDescriber;
-  interfaceRoleLanguage: string;
 }) {
   const t = useTranslations();
+  const { translateInterfaceRole, describeRole, interfaceRoleLanguage } = useCreditTranslators();
   const { locked, editableAuthorId } = useClaimLock();
   const [selectedAuthorId, setSelectedAuthorId] = useState("");
 

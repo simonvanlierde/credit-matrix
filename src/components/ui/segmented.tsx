@@ -33,21 +33,15 @@ export function SegmentedControl<T extends string>({
   className?: string;
   ariaLabel?: string;
 }) {
+  const selected = options.findIndex((option) => option.value === value);
   return (
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      onKeyDown={(event) =>
-        moveRadioSelection(
-          event,
-          options,
-          options.findIndex((option) => option.value === value),
-          (next) => onChange(next.value),
-        )
-      }
+      onKeyDown={(event) => moveRadioSelection(event, options, selected, (next) => onChange(next.value))}
       className={cn("inline-flex bg-surface-container-high p-1 rounded-lg gap-0.5", className)}
     >
-      {options.map(({ value: optionValue, label, title }) => {
+      {options.map(({ value: optionValue, label, title }, index) => {
         const active = value === optionValue;
         return (
           // biome-ignore lint/a11y/useSemanticElements: styled pill buttons, not native <input type="radio">; role=radio + roving tabindex is the intended pattern.
@@ -56,7 +50,8 @@ export function SegmentedControl<T extends string>({
             type="button"
             role="radio"
             aria-checked={active}
-            tabIndex={active ? 0 : -1}
+            // With nothing selected, the first radio keeps the group in the tab order.
+            tabIndex={active || (selected === -1 && index === 0) ? 0 : -1}
             title={title}
             onClick={() => onChange(optionValue)}
             className={cn(
