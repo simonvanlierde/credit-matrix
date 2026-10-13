@@ -167,10 +167,13 @@ body {
   }
 }
 
+/* clip, not hidden: hidden makes body a scroll container that never scrolls,
+   so nothing inside it (the phone contributor picker, the co-author page's
+   Send bar) can stick to the viewport. */
 html,
 body {
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* The header is fixed, so anything focus scrolls into view would otherwise
@@ -197,14 +200,6 @@ body:has([data-coauthor-page]) {
 html:has([data-coauthor-page]) {
   scroll-padding-top: 1rem;
   scroll-padding-bottom: 7rem;
-
-  /* hidden makes body a scroll container that never scrolls, which pins the
-     sticky Send bar to the end of the page; clip trims the same overflow
-     without that. */
-  &,
-  & body {
-    overflow-x: clip;
-  }
 }
 
 /*

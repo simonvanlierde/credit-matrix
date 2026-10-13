@@ -920,6 +920,20 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: /Conceptualization for Ada Lovelace/ })).toBeHidden();
   });
 
+  test("keeps the phone contributor picker in view while the role list scrolls", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    const picker = page.getByRole("combobox", { name: "Contributor to assign" });
+    await page.getByRole("button", { name: /^Writing – review & editing for/ }).scrollIntoViewIfNeeded();
+    await page.mouse.wheel(0, 300);
+
+    // Stuck under the 52px header, not scrolled away with the page.
+    await expect.poll(async () => (await picker.boundingBox())?.y).toBeGreaterThanOrEqual(52);
+    expect((await picker.boundingBox())?.y).toBeLessThanOrEqual(90);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  });
+
   test("downloads a browser-generated PNG heatmap", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
