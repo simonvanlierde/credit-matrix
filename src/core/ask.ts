@@ -16,8 +16,7 @@ type Marker = (typeof MARKERS)[number];
 /** Roles in CREDIT_ROLES order, then the two markers: the order `review().open` lists them in. */
 export const ASK_TARGETS: readonly Target[] = [...CREDIT_ROLES.map((role) => role.name), ...MARKERS];
 
-export const isMarker = (target: Target): target is Marker =>
-  target === "equalContribution" || target === "corresponding";
+export const isMarker = (target: Target): target is Marker => (MARKERS as readonly string[]).includes(target);
 const isTarget = (key: string): key is Target => (ASK_TARGETS as readonly string[]).includes(key);
 
 const DecisionSchema = z.object({
