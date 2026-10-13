@@ -55,14 +55,15 @@ describe("CSV import/export", () => {
 
   it("round-trips a quoted field containing a newline", () => {
     // A name with an embedded newline must survive quoting on export and the
-    // quote-aware record parser on import (a naive line-split would tear it).
+    // quote-aware record parser on import (a naive line-split would tear it);
+    // createAuthor then reads the line break as a space.
     const [author] = parseAuthorText("Jane Smith");
     if (!author) throw new Error("expected author");
     author.name = "Jane\nSmith";
 
     const parsed = fromCsv(toCsv([author]));
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.name).toBe("Jane\nSmith");
+    expect(parsed[0]?.name).toBe("Jane Smith");
   });
 
   it("round-trips a field containing a bare carriage return", () => {
@@ -73,7 +74,7 @@ describe("CSV import/export", () => {
 
     const parsed = fromCsv(toCsv([author]));
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.name).toBe("Ann\r=HYPERLINK()");
+    expect(parsed[0]?.name).toBe("Ann =HYPERLINK()");
   });
 
   it("reads a CSV that starts with a UTF-8 byte order mark", () => {

@@ -105,6 +105,12 @@ describe("createAuthor", () => {
     expect(nfd.firstName).toBe("Zoë");
     expect(nfd.initials).toBe("ZM");
   });
+
+  it("turns control characters in a name into a space", () => {
+    const author = createAuthor("Ann\u0001Lee\t", { surname: "Lee\u0000" });
+    expect(author.name).toBe("Ann Lee");
+    expect(author.surname).toBe("Lee");
+  });
 });
 
 describe("deduplicateAuthorInitials", () => {
@@ -182,6 +188,16 @@ describe("splitNameList", () => {
       "Bob White",
       "Carol Davis",
       "Dan Evans",
+    ]);
+  });
+
+  it("splits on Word's Shift+Enter, form feeds and bare carriage returns", () => {
+    expect(splitNameList("Ann Lee\vBob Kim\fCay Dunn\rDee Fox\r\nEd Ng")).toEqual([
+      "Ann Lee",
+      "Bob Kim",
+      "Cay Dunn",
+      "Dee Fox",
+      "Ed Ng",
     ]);
   });
 

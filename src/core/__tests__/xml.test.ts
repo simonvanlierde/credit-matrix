@@ -264,3 +264,15 @@ describe("toJats4rXml", () => {
     expect(toJats4rXml(graded, { yesNo: true })).toContain('degree-contribution="supporting"');
   });
 });
+
+describe("toJats4rXml with characters XML cannot hold", () => {
+  it("writes none of them, even from a contributor built without createAuthor", () => {
+    const [author] = parseAuthorText("Jane Smith");
+    if (!author) throw new Error("expected author");
+    const xml = toJats4rXml([{ ...author, firstName: "Ja\u0001ne", surname: "Sm\u000Bith\uFFFE" }]);
+    expect(xml).toContain("<given-names>Jane</given-names>");
+    expect(xml).toContain("<surname>Smith</surname>");
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: the characters under test.
+    expect(xml).not.toMatch(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/);
+  });
+});

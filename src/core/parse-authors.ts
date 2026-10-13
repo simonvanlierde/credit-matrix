@@ -118,13 +118,11 @@ export function createAuthor(
     surname?: string;
   },
 ): Author {
-  // One Unicode form, so a decomposed "é" (e + accent, as macOS file names
-  // give it) and a precomposed one make the same contributor.
-  name = name.normalize("NFC");
+  name = cleanText(name);
   const parsed = parseNameParts(name);
-  const firstName = overrides?.firstName?.normalize("NFC") ?? parsed.firstName;
-  const middleName = overrides?.middleName?.normalize("NFC") ?? parsed.middleName;
-  const surname = overrides?.surname?.normalize("NFC") ?? parsed.surname;
+  const firstName = overrides?.firstName === undefined ? parsed.firstName : cleanText(overrides.firstName);
+  const middleName = overrides?.middleName === undefined ? parsed.middleName : cleanText(overrides.middleName);
+  const surname = overrides?.surname === undefined ? parsed.surname : cleanText(overrides.surname);
 
   // Punctuation-only names ("-- --") survive cleanNamePart, which keeps hyphens
   // and apostrophes. Share one predicate with AuthorSchema.name: a schema that
@@ -154,6 +152,19 @@ export function createAuthor(
     equalContribution: overrides?.equalContribution ?? false,
     corresponding: overrides?.corresponding ?? false,
   };
+}
+
+/**
+ * One Unicode form, so a decomposed "é" (e + accent, as macOS file names give
+ * it) and a precomposed one make the same contributor. Control characters (a
+ * pasted line break, Word's Shift+Enter) become a space: XML cannot hold most
+ * of them, and they would hide where one word ends.
+ */
+function cleanText(value: string): string {
+  return value
+    .normalize("NFC")
+    .replace(/\s*\p{Cc}[\s\p{Cc}]*/gu, " ")
+    .trim();
 }
 
 /**
@@ -282,8 +293,8 @@ function isGivenNamePart(text: string): boolean {
 }
 
 /**
- * Split typed or pasted text into contributor name tokens. Newlines and
- * semicolons always separate. A comma is ambiguous on its own: it separates
+ * Split typed or pasted text into contributor name tokens. Line breaks of any
+ * kind (including Word's Shift+Enter, U+000B) and semicolons always separate. A comma is ambiguous on its own: it separates
  * contributors ("Marie Curie, Jane Smith") or the halves of one inverted name
  * ("Curie, Marie"), so the choice is made per line, over the whole chunk list
  * rather than per comma: a line is read as inverted names only when its chunks
@@ -291,7 +302,7 @@ function isGivenNamePart(text: string): boolean {
  */
 export function splitNameList(text: string): string[] {
   return text
-    .split(/[\n;]+/)
+    .split(/[\n\r\v\f;]+/)
     .flatMap((line) => splitCommaLine(line))
     .map((part) => part.trim())
     .filter(Boolean);

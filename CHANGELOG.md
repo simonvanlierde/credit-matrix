@@ -40,6 +40,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   dropped beside the drop zone no longer replaces the page, and the dialog names the file it read.
 - CSV import: a quote inside a name (`Ann O"Brien`) is read as part of the name. It used to swallow
   the rest of the file into that one contributor.
+- Pasted names separated by Word's Shift+Enter line breaks now become separate contributors, and
+  control characters in a name become a space, so JATS XML and heatmap SVG exports stay valid XML.
 
 ## [0.7.0] - 2026-10-13
 
