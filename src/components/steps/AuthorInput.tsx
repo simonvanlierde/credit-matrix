@@ -260,12 +260,14 @@ export function AuthorList() {
   function undoRemove() {
     if (!removed) return;
     // restoreAuthor no-ops when the list has refilled to the cap; claiming
-    // the contributor came back when they did not would be a lie.
+    // the contributor came back when they did not would be a lie. It also
+    // no-ops when they are already back (the grid's Undo restored the whole
+    // roster), and then there is nothing to report.
     if (restoreAuthor(removed.author, removed.index)) {
       if (removed.ask) applyAskPatch(activeDraftId, { rows: {}, asks: { [removed.author.id]: removed.ask } });
       if (removed.wasSelf) setSelfId(removed.author.id);
       announce(t("annContributorRestored", { name: removed.author.name }));
-    } else {
+    } else if (!useContributionStore.getState().authors.some((a) => a.id === removed.author.id)) {
       announce(t("errAtContributorLimit", { limit: MAX_AUTHORS }), { assertive: true });
     }
     setRemoved(null);

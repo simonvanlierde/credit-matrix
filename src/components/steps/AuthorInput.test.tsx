@@ -327,6 +327,20 @@ describe("undoing a removal", () => {
     expect(useContributionStore.getState().selfId).toBe(ann.id);
   });
 
+  it("reports no limit when the contributor is already back", () => {
+    const ann = createAuthor("Ann Lee");
+    useContributionStore.setState({ authors: [ann] });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    // The grid's bulk Undo puts the whole roster back first.
+    act(() => useContributionStore.getState().loadAuthors([ann]));
+
+    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("at most"), expect.anything());
+    expect(screen.queryByRole("button", { name: en.undo })).toBeNull();
+    expect(authors()).toHaveLength(1);
+  });
+
   it.each(["reset", "deleteAllDrafts"] as const)("restores nothing after %s", (clear) => {
     useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
     renderList();

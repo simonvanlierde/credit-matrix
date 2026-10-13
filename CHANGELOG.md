@@ -44,6 +44,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   record, or lost when the lookup failed.
 - A contributor you rename while their ORCID name is still being looked up keeps your name.
 - Undoing the removal of the contributor marked *This is me* marks them as you again.
+- Undoing a contributor's removal after the grid's Undo already brought them back no longer
+  claims the draft is at its 200-contributor limit.
 
 ## [0.7.0] - 2026-10-13
 
