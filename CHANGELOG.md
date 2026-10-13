@@ -12,6 +12,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Save it as CSV (or TSV) first; Excel files are not read. Names, author order, ORCID iDs, roles,
   corresponding authors and acknowledgees (as non-authors) come across. tenzing records a role as
   done or not, so each ticked role imports at Lead.
+- A JATS conformance suite in [`conformance/`](conformance/README.md): contributor lists with the
+  JATS XML CRediT Matrix writes for each, all checked against the JATS 1.3 DTD and the JATS4R
+  rules. Other tools that write CRediT roles into JATS can test themselves against it.
 - `codemeta.json`, so software registries can read the project metadata. `pnpm version` keeps its
   version and release date in step, as it does for `CITATION.cff`.
 - Every CI run checks the JATS4R XML export against the official JATS 1.3 DTD and the JATS4R
