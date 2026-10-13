@@ -111,9 +111,10 @@ export function HeaderActions() {
 
   async function handleIncomingHash(hash: string): Promise<void> {
     if (!hash.startsWith("#s=")) return;
-    // On mount this can beat the rehydrate effect above; awaiting it (a no-op
-    // once done) keeps the link from opening over a draft not yet restored.
-    await useContributionStore.persist.rehydrate();
+    // On mount this can beat the rehydrate effect above; awaiting it keeps the
+    // link from opening over a draft not yet restored. Only then: every
+    // rehydrate reads storage again, dropping whatever this tab holds unsaved.
+    if (!useContributionStore.persist.hasHydrated()) await useContributionStore.persist.rehydrate();
     const shared = await decodeShareHash(hash);
     // Names and ORCID iDs ride in the fragment; a failed open must not leave
     // them in the address bar and history. Keep any query string intact.
