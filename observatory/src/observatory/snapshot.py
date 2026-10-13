@@ -1,17 +1,19 @@
-"""Draw a stratified sample of Europe PMC articles, pin it as a manifest, fetch and hash their JATS."""
+"""Europe PMC: draw a stratified sample or list every candidate, pin it as a manifest, fetch its JATS."""
 
 import csv
+import gzip
 import hashlib
 import json
 import random
 import time
 import urllib.error
 import urllib.parse
-import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 
+from observatory.net import get
+
 API = "https://www.ebi.ac.uk/europepmc/webservices/rest"
-USER_AGENT = "credit-observatory (https://github.com/simonvanlierde/credit-matrix)"
 
 # Publishers with the most CRediT statements in Europe PMC, by markup style (counts in the README).
 STRATA = {
@@ -26,34 +28,26 @@ STRATA = {
 }
 YEARS = range(2020, 2026)
 # shortcut: samples from the first POOL hits in Europe PMC's default order, not the whole stratum;
-# switch to the bulk OA files once the full run starts.
+# the full run (`candidates`, then `run`) reads every article.
 POOL = 1000
 
-
-def _get(url: str, retries: int = 3) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    for attempt in range(retries):
-        try:
-            with urllib.request.urlopen(request, timeout=60) as response:
-                return response.read()
-        except urllib.error.HTTPError as error:
-            if error.code == 404 or attempt == retries - 1:
-                raise
-        except urllib.error.URLError:
-            if attempt == retries - 1:
-                raise
-        time.sleep(2**attempt)
-    raise AssertionError("unreachable")
+# Every open-access article whose text uses the two roles nearly every CRediT statement has. Phrase
+# search ignores punctuation, so "Writing - original draft" with any dash matches too. CRediT dates from 2014.
+CANDIDATE_QUERY = " AND ".join(
+    ['("writing original draft" OR "writing review editing")', "OPEN_ACCESS:y", "IN_EPMC:y", "PUB_YEAR:[2014 TO 2026]"]
+)
 
 
-def search_ids(query: str, limit: int) -> list[str]:
-    """PMCIDs of the first `limit` hits for a Europe PMC query."""
+def search_ids(query: str, limit: int | None = None, progress: Callable[[int], None] | None = None) -> list[str]:
+    """PMCIDs of the first `limit` hits (all hits when None) for a Europe PMC query."""
     ids: list[str] = []
     cursor = "*"
-    while len(ids) < limit:
+    while limit is None or len(ids) < limit:
         params = {"query": query, "format": "json", "resultType": "idlist", "pageSize": "1000", "cursorMark": cursor}
-        page = json.loads(_get(f"{API}/search?{urllib.parse.urlencode(params)}"))
+        page = json.loads(get(f"{API}/search?{urllib.parse.urlencode(params)}"))
         ids += [r["pmcid"] for r in page["resultList"]["result"] if r.get("pmcid")]
+        if progress:
+            progress(len(ids))
         if not page["resultList"]["result"] or page.get("nextCursorMark") in (None, cursor):
             break
         cursor = page["nextCursorMark"]
@@ -73,16 +67,21 @@ def draw(per_cell: int, seed: int) -> list[dict[str, str]]:
     return rows
 
 
+def _open(path: Path, mode: str):
+    return gzip.open(path, mode + "t", newline="") if path.suffix == ".gz" else path.open(mode, newline="")
+
+
 def write_manifest(rows: list[dict[str, str]], path: Path) -> None:
+    """A CSV of pmcid, stratum, year; gzipped when `path` ends in .gz."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="") as f:
+    with _open(path, "w") as f:
         writer = csv.DictWriter(f, fieldnames=["pmcid", "stratum", "year"], lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
 
 def read_manifest(path: Path) -> list[dict[str, str]]:
-    with path.open(newline="") as f:
+    with _open(path, "r") as f:
         return list(csv.DictReader(f))
 
 
@@ -102,7 +101,7 @@ def fetch(rows: list[dict[str, str]], xml_dir: Path, hashes_path: Path) -> dict[
             counts["cached"] += 1
         else:
             try:
-                path.write_bytes(_get(f"{API}/{pmcid}/fullTextXML"))
+                path.write_bytes(get(f"{API}/{pmcid}/fullTextXML"))
             except urllib.error.HTTPError as error:
                 counts["missing" if error.code == 404 else "failed"] += 1
                 continue

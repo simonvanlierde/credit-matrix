@@ -73,3 +73,9 @@ def test_ambiguous_initials_are_reported_not_guessed():
 def test_prose_yields_nothing():
     parsed = parse_statement("A.P. conceived the study and N.Z. wrote the paper.", AUTHORS)
     assert parsed.assignments == set()
+
+
+def test_all_authors_contributing_is_an_assignment():
+    text = "All authors contributed to the investigation and conceptualization. All authors read and approved the manuscript."
+    parsed = parse_statement(text, AUTHORS[:2])
+    assert parsed.assignments == {(i, r) for i in (0, 1) for r in ("investigation", "conceptualization")}

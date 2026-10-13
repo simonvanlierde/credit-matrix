@@ -43,9 +43,10 @@ UNRESOLVED = -2
 # Initials such as "AP", "Q.M.L.", "YiL" (Frontiers adds letters to tell authors apart), "L. - J. Z."
 _INITIALS_RE = re.compile(r"(?<![\w.])(?:[A-Z][a-z]{0,2}(?:\.? - |\. ?)?){1,5}(?!\w)")
 _ALL_RE = re.compile(r"\ball (?:the )?(?:other )?authors\b", re.IGNORECASE)
-# The closing "All authors read and approved the manuscript." is not a role assignment.
+# The closing "All authors read and approved the manuscript." is not a role assignment. "All authors
+# contributed to the investigation" is, so only approval wording is dropped.
 _APPROVAL_RE = re.compile(
-    r"\ball (?:the )?authors (?:have |has )?(?:read|approved|agreed|reviewed|contributed|gave|discussed)"
+    r"\ball (?:the )?authors (?:have |has )?(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)"
     r"[^;]*?(?:\.(?=\s|$)|;|$)",
     re.IGNORECASE,
 )

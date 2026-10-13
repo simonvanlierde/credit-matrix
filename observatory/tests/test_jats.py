@@ -124,3 +124,14 @@ def test_extract_writes_tables(tmp_path):
             ("PMC2", "error", 0, 0),
         ]
         assert con.sql("SELECT * FROM assignments").fetchall() == [("PMC1", 1, "Ann Smith", None, "software")]
+
+
+def test_contrib_text_keeps_its_source_text():
+    a = parse_article(article(contrib("Ann", "Smith", "<role>Software, Validation</role>") + contrib("Bo", "Jones")))
+    assert a.statement == "1. Ann Smith: Software, Validation"
+
+
+def test_contribution_to_the_field_is_not_a_statement():
+    back = "<sec><title>Contribution to the field</title><p>AS: software.</p></sec>"
+    a = parse_article(article(contrib("Ann", "Smith"), back))
+    assert (a.style, a.statement) == ("none", None)

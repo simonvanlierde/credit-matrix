@@ -20,7 +20,9 @@ STYLES = ("jats4r", "plos_uri", "contrib_text", "statement_text", "none")
 - none: no CRediT roles found
 """
 
-_STATEMENT_TITLE_RE = re.compile(r"contribut|credit", re.IGNORECASE)
+# "Author contributions", "CRediT authorship contribution statement", "Contributors", "Contributions";
+# not Frontiers' "Contribution to the field".
+_STATEMENT_TITLE_RE = re.compile(r"author|credit|contributor|^\W*contributions?\W*$", re.IGNORECASE)
 _CON_ID_RE = re.compile(r"con\d+")
 
 
@@ -30,6 +32,7 @@ class Article:
     article_type: str | None = None
     doi: str | None = None
     journal: str | None = None
+    issn: list[str] = field(default_factory=list)
     publisher: str | None = None
     year: int | None = None
     license: str | None = None
@@ -38,7 +41,8 @@ class Article:
     assignments: set[tuple[int, str]] = field(default_factory=set)
     """(author index, role slug) pairs."""
     statement: str | None = None
-    """The free-text statement, parsed or not; kept for labelling."""
+    """The free text the roles were read from (for contrib_text, "1. Name: text" per author), parsed or not.
+    Kept for labelling."""
     unresolved: list[str] = field(default_factory=list)
 
 
@@ -57,9 +61,9 @@ def _author(contrib: ET.Element) -> Author:
     return Author("", _text(contrib.find("collab")) or _text(contrib.find("string-name")), orcid)
 
 
-def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> list[tuple[str, str]]:
-    """(style, slug) for each role tagged on one author."""
-    found = []
+def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> tuple[list[tuple[str, str]], list[str]]:
+    """(style, slug) for each role tagged on one author, and the free text it came from."""
+    found, texts = [], []
     for role in contrib.findall("role"):
         if role.get("vocab") == "credit":
             slug = slug_from_url(role.get("vocab-term-identifier", ""))
@@ -67,11 +71,10 @@ def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> list[tuple[str, 
         elif slug := slug_from_url(role.get("content-type", "")):
             found.append(("plos_uri", slug))
         else:
-            found += [("contrib_text", s) for _, _, s in find_roles(clean(_text(role)))]
-    for xref in contrib.findall("xref"):
-        if (rid := xref.get("rid")) in fns:
-            found += [("contrib_text", s) for _, _, s in find_roles(clean(fns[rid]))]
-    return found
+            texts.append(_text(role))
+    texts += [fns[rid] for x in contrib.findall("xref") if (rid := x.get("rid", "")) in fns]
+    found += [("contrib_text", s) for t in texts for _, _, s in find_roles(clean(t))]
+    return found, texts
 
 
 def _holds_statement(el: ET.Element) -> bool:
@@ -105,6 +108,7 @@ def parse_article(xml: bytes) -> Article:
         article_type=root.get("article-type"),
         doi=ids.get("doi"),
         journal=_text(root.find("front/journal-meta/journal-title-group/journal-title")) or None,
+        issn=[_text(i) for i in root.findall("front/journal-meta/issn") if _text(i)],
         publisher=_text(root.find("front/journal-meta/publisher/publisher-name")) or None,
         year=min(years) if years else None,
         license=(lic.get(f"{XLINK}href") or _text(lic.find(f"{ALI}license_ref")) or None) if lic is not None else None,
@@ -125,14 +129,21 @@ def parse_article(xml: bytes) -> Article:
         for fn in root.iter("fn")
         if fn.get("fn-type") == "con" or _CON_ID_RE.fullmatch(fn.get("id", ""))
     }
-    tagged = [(i, style, slug) for i, c in enumerate(contribs) for style, slug in _contrib_roles(c, fns)]
+    per_author = [_contrib_roles(c, fns) for c in contribs]
     # Older eLife: one <fn id="conN"> per author, in author order, with no link from the author.
-    if not tagged and len(fns) == len(contribs) and all(_CON_ID_RE.fullmatch(k) for k in fns):
-        ordered = sorted(fns.items(), key=lambda kv: int(kv[0][3:]))
-        tagged = [(i, "contrib_text", s) for i, (_, t) in enumerate(ordered) for _, _, s in find_roles(clean(t))]
+    if not any(found for found, _ in per_author) and len(fns) == len(contribs) and all(map(_CON_ID_RE.fullmatch, fns)):
+        ordered = [t for _, t in sorted(fns.items(), key=lambda kv: int(kv[0][3:]))]
+        per_author = [([("contrib_text", s) for _, _, s in find_roles(clean(t))], [t]) for t in ordered]
+    tagged = [(i, style, slug) for i, (found, _) in enumerate(per_author) for style, slug in found]
     if tagged:
         article.style = min((style for _, style, _ in tagged), key=STYLES.index)
         article.assignments = {(i, slug) for i, style, slug in tagged if style == article.style}
+        if article.style == "contrib_text":
+            article.statement = "; ".join(
+                f"{i + 1}. {article.authors[i].name}: {' '.join(texts)}"
+                for i, (_, texts) in enumerate(per_author)
+                if texts
+            )
         return article
 
     # The first statement that names a role is kept even when it does not parse: those are the hard
