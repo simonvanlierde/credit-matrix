@@ -3,19 +3,13 @@
 import { Check, Copy, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
+import { daysSince, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/ask-panel-shared";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { type Author, review, settledAt } from "@/core";
 import { announce } from "@/lib/announce";
 import { copyAskMessage } from "@/lib/ask-message";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useContributionStore } from "@/store/contribution-store";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-const SECONDARY_BUTTON =
-  "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-outline-variant px-3 text-xs font-semibold text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
-const PRIMARY_BUTTON =
-  "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
 
 /**
  * Who has been asked, and the message that asks them. Each message is an
@@ -56,7 +50,6 @@ export function TeamPanel() {
   }
 
   const notAsked = team.filter((author) => !(author.id in asks));
-  const daysSince = (at: number) => Math.max(0, Math.floor((Date.now() - at) / DAY_MS));
 
   function statusOf(author: Author): { text: string; toReview: boolean } {
     const ask = asks[author.id];

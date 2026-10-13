@@ -4,6 +4,7 @@ import { ArrowRight, Check, MessagesSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
+import { daysSince, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/ask-panel-shared";
 import { LevelMark } from "@/components/ui/level-mark";
 import {
   ASK_TARGETS,
@@ -28,12 +29,6 @@ import { copyAskMessage } from "@/lib/ask-message";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useContributionStore } from "@/store/contribution-store";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-const PRIMARY_BUTTON =
-  "inline-flex min-h-8 items-center rounded-lg bg-primary px-3 text-xs font-semibold text-on-primary transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
-const SECONDARY_BUTTON =
-  "inline-flex min-h-8 items-center rounded-lg border border-outline px-3 text-xs font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const LINK_BUTTON =
   "inline-flex min-h-8 items-center rounded px-1 text-xs font-medium text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
@@ -229,7 +224,7 @@ export function ReviewPanel() {
 
       {people.map(({ author, ask, reply, result, lines }) => {
         const name = firstName(author);
-        const days = Math.max(0, Math.floor((Date.now() - reply.receivedAt) / DAY_MS));
+        const days = daysSince(reply.receivedAt);
         const meta =
           result.status.kind === "settled"
             ? t("teamSettledOn", { date: format.dateTime(settledAt(reply), { day: "numeric", month: "short" }) })
