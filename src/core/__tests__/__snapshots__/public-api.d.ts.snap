@@ -1,15 +1,16 @@
 // element.d.ts
 //#region element.d.ts
 /**
- * `<credit-matrix src="contributions.json" format="by-author">`: the CRediT
- * statement and contribution heatmap for a CRediT Matrix JSON export, read
- * from `src` or from a `<script type="application/json">` child.
+ * `<credit-matrix src="contributions.json" format="by-author" locale="fr">`:
+ * the CRediT statement and contribution heatmap for a CRediT Matrix JSON
+ * export, read from `src` or from a `<script type="application/json">` child.
  */
 export declare class CreditMatrixElement extends HTMLElement {
   #private;
   static observedAttributes: string[];
   constructor();
   connectedCallback(): void;
+  disconnectedCallback(): void;
   attributeChangedCallback(): void;
   render(): Promise<void>;
 }

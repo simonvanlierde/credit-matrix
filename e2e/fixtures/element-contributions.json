@@ -1,0 +1,350 @@
+{
+  "version": 1,
+  "authors": [
+    {
+      "id": "0f11a84d-037f-4f7c-b571-c0b91d5505de",
+      "name": "José Ángel Muñoz Pérez",
+      "firstName": "José",
+      "middleName": "Ángel",
+      "surname": "Muñoz Pérez",
+      "initials": "JÁM",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 100
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    },
+    {
+      "id": "0df85520-a5d3-4c0a-b7fa-670103011bc8",
+      "name": "Anne van der Berg",
+      "firstName": "Anne",
+      "middleName": "",
+      "surname": "van der Berg",
+      "initials": "AV",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 66
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    },
+    {
+      "id": "4c5b9531-3805-48f3-b728-64bdd7084cad",
+      "name": "Thị Minh Nguyễn",
+      "firstName": "Thị",
+      "middleName": "Minh",
+      "surname": "Nguyễn",
+      "initials": "TMN",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 100
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    },
+    {
+      "id": "2f7043eb-7119-4363-a617-8e3294b980f8",
+      "name": "Siobhán O'Brien",
+      "firstName": "Siobhán",
+      "middleName": "",
+      "surname": "O'Brien",
+      "initials": "SO",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 33
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    },
+    {
+      "id": "b2bf4290-bce8-480b-a62c-3dfdc4623901",
+      "name": "小明 王",
+      "firstName": "小明",
+      "middleName": "",
+      "surname": "王",
+      "initials": "小王",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 66
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    }
+  ]
+}
