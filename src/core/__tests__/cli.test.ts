@@ -49,7 +49,37 @@ describe("credit-matrix statement", () => {
 
   it("refuses an unknown format or locale", async () => {
     await expect(run(["statement", csv, "--format", "sideways"])).rejects.toThrow(/Unknown format/);
-    await expect(run(["statement", csv, "--locale", "xx"])).rejects.toThrow(/Unknown locale/);
+    await expect(run(["statement", csv, "--locale", "xx"])).rejects.toThrow(
+      "Unknown locale: xx. Use one of en, fr, de, es, it, pt-PT, nl, zh-Hans, ja.",
+    );
+  });
+
+  it("shows levels below Lead with --levels", async () => {
+    const levels = file("levels.csv", "Name,Software\nJane Smith,50\nBob White,100\n");
+    expect(await run(["statement", levels, "--levels"])).toBe("CRediT: Software: Jane Smith (Equal), Bob White");
+  });
+
+  it("refuses a roster with no roles rather than print an empty statement", async () => {
+    await expect(run(["statement", file("names.txt", "Jane Smith, Bob White")])).rejects.toThrow(
+      "No roles assigned yet: the statement is empty.",
+    );
+  });
+
+  it("refuses a spreadsheet or other binary file instead of reading it as names", async () => {
+    const message = "Excel and other spreadsheet files are not read: save the sheet as CSV first.";
+    await expect(run(["statement", file("team.xlsx", "Jane Smith")])).rejects.toThrow(message);
+    await expect(run(["statement", file("team.bin", "PK\x03\x04Jane Smith")])).rejects.toThrow(message);
+    await expect(run(["statement", file("team.dat", "Jane\0Smith")])).rejects.toThrow(message);
+  });
+
+  it("reads a UTF-16 file, as Excel's Unicode Text export writes, instead of refusing it", async () => {
+    const text = "Name,Conceptualization\nJane Smith,100\n";
+    const le = join(dir, "utf16le.csv");
+    writeFileSync(le, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, "utf16le")]));
+    expect(await run(["statement", le])).toBe("CRediT: Conceptualization: Jane Smith");
+    const be = join(dir, "utf16be.csv");
+    writeFileSync(be, Buffer.concat([Buffer.from([0xfe, 0xff]), Buffer.from(text, "utf16le").swap16()]));
+    expect(await run(["statement", be])).toBe("CRediT: Conceptualization: Jane Smith");
   });
 });
 
@@ -97,8 +127,20 @@ describe("credit-matrix ask", () => {
     expect(shared?.authors[0]?.contributions.every((c) => c.score === 0)).toBe(true);
   });
 
-  it("refuses an unknown or missing contributor", async () => {
-    await expect(run(["ask", json, "--contributor", "Nobody"])).rejects.toThrow(/No contributor/);
+  it("finds a contributor by a first name or surname only they have", async () => {
+    const link = await run(["ask", json, "--contributor", "SMITH"]);
+    expect((await decodeShareHash(link.slice(link.indexOf("#"))))?.claimId).toBe(jane.id);
+    expect(await run(["ask", json, "--contributor", "bob"])).toContain("#s=");
+  });
+
+  it("lists the contributors when none or several match", async () => {
+    const twins = file("twins.json", toJson([createAuthor("Jane Smith"), createAuthor("Jane Doe")]));
+    await expect(run(["ask", twins, "--contributor", "jane"])).rejects.toThrow(
+      "jane matches more than one contributor: Jane Smith, Jane Doe. Give the full name or id.",
+    );
+    await expect(run(["ask", json, "--contributor", "Nobody"])).rejects.toThrow(
+      "No contributor named or with id Nobody. Contributors: Jane Smith, Bob White.",
+    );
     await expect(run(["ask", json])).rejects.toThrow(/needs --contributor/);
   });
 });
@@ -107,8 +149,14 @@ describe("credit-matrix usage", () => {
   it("prints usage for no command or --help, and refuses an unknown one or a missing file", async () => {
     expect(await run([])).toBe(USAGE);
     expect(await run(["statement", "--help"])).toBe(USAGE);
-    await expect(run(["sideways", csv])).rejects.toThrow(/Unknown command/);
+    await expect(run(["sideways", csv])).rejects.toThrow("Unknown command: sideways.");
+    await expect(run(["statment", csv])).rejects.toThrow("Unknown command: statment. Did you mean 'statement'?");
     await expect(run(["statement"])).rejects.toThrow(/needs a file/);
+  });
+
+  it("prints the package version for --version or -v", async () => {
+    expect(await run(["--version"])).toMatch(/^\d+\.\d+\.\d+/);
+    expect(await run(["-v"])).toBe(await run(["--version"]));
   });
 
   it("names the failing fields of JSON that is not an export, not zod's issue dump", async () => {
@@ -174,17 +222,18 @@ describe("credit-matrix as a program", () => {
     expect(process.exitCode).toBeUndefined();
   });
 
-  it("prints the message and usage for a command line mistake, and exits 2", async () => {
+  it("prints the message and a pointer to --help for a command line mistake, and exits 2", async () => {
     const { out, err } = await launch("convert", csv);
     expect(out).toBe("");
-    expect(err).toContain("credit-matrix: convert needs --to json, csv, jats or md.");
-    expect(err).toContain(USAGE);
+    expect(err).toBe(
+      "credit-matrix: convert needs --to json, csv, jats or md.\nRun 'credit-matrix --help' for usage.\n",
+    );
     expect(process.exitCode).toBe(2);
   });
 
   it("treats an option the parser rejects as a mistake too", async () => {
     const { err } = await launch("statement", csv, "--nope");
-    expect(err).toContain(USAGE);
+    expect(err).toMatch(/^credit-matrix: Unknown option '--nope'.*\nRun 'credit-matrix --help' for usage\.\n$/);
     expect(process.exitCode).toBe(2);
   });
 
@@ -204,10 +253,15 @@ describe("credit-matrix as a program", () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it("prints only the message for a contributor the file does not have, and exits 1", async () => {
+    const { err } = await launch("ask", csv, "--contributor", "Nobody");
+    expect(err).toBe("credit-matrix: No contributor named or with id Nobody. Contributors: Jane Smith, Bob White.\n");
+    expect(process.exitCode).toBe(1);
+  });
+
   it("prints only the message when the file cannot be read, and exits 1", async () => {
     const { err } = await launch("statement", join(dir, "missing.csv"));
-    expect(err).toMatch(/^credit-matrix: ENOENT/);
-    expect(err).not.toContain("Usage:");
+    expect(err).toBe(`credit-matrix: Cannot read ${join(dir, "missing.csv")}: no such file.\n`);
     expect(process.exitCode).toBe(1);
   });
 });

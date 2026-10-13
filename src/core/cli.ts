@@ -8,7 +8,14 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { DOMParser } from "linkedom";
 import * as z from "zod/mini";
-import { type LocaleCode, loadRoleCatalog, makeRoleTranslator, normalizeLocaleCode } from "./credit-i18n/index";
+import type { Author } from "./author";
+import {
+  AVAILABLE_LOCALES,
+  type LocaleCode,
+  loadRoleCatalog,
+  makeRoleTranslator,
+  normalizeLocaleCode,
+} from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
 import { toCsv } from "./export/csv";
 import { toJson } from "./export/json";
@@ -17,17 +24,20 @@ import { toJats4rXml } from "./export/xml";
 import type { XmlParser } from "./export/xml-import";
 import { generateStatement, STATEMENT_FORMATS, type StatementFormat } from "./generate-statement";
 import { importAny } from "./import";
+import pkg from "./package.json" with { type: "json" };
 import { normalizeRoster } from "./parse-authors";
 import { encodeShareHash } from "./share-link";
 
 export const USAGE = `Usage: credit-matrix <command> <file> [options]
+       credit-matrix --help | --version
 
 Read <file> (or - for standard input) in any format CRediT Matrix imports:
 JSON, CSV, JATS4R XML, a share link, or a list of names.
 
 Commands:
-  statement <file> [--format ${STATEMENT_FORMATS.join("|")}] [--locale <code>]
-      Print the CRediT statement.
+  statement <file> [--format ${STATEMENT_FORMATS.join("|")}] [--locale <code>] [--levels]
+      Print the CRediT statement. --levels adds Equal or Supporting after
+      each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
   convert <file> --to json|csv|jats|md
       Print the contributions in another format.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
@@ -83,14 +93,73 @@ function resolveLocale(code: string): LocaleCode | null {
   return null;
 }
 
-/** Thrown for a mistake in the command line: printed with the usage, exit code 2. */
+const COMMANDS = ["statement", "convert", "ask"];
+
+/** Thrown for a mistake in the command line: printed with a pointer to --help, exit code 2. */
 class UsageError extends Error {}
 
+const READ_ERRORS: Record<string, string> = {
+  ENOENT: "no such file",
+  EISDIR: "it is a directory",
+  EACCES: "permission denied",
+};
+
 async function read(file: string): Promise<string> {
-  if (file !== "-") return readFile(file, "utf8");
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
-  return Buffer.concat(chunks).toString("utf8");
+  let bytes: Buffer;
+  if (file === "-") {
+    const chunks: Buffer[] = [];
+    for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
+    bytes = Buffer.concat(chunks);
+  } else {
+    bytes = await readFile(file).catch((error: { code?: string; message: string }) => {
+      throw new Error(`Cannot read ${file}: ${READ_ERRORS[error.code ?? ""] ?? error.message}.`);
+    });
+  }
+  // Excel's "Unicode Text" export is UTF-16 with a byte order mark; decode it rather than refuse it.
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(bytes);
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder("utf-16be").decode(bytes);
+  // A NUL byte never occurs in UTF-8 text; "PK\x03\x04" opens a ZIP, which .xlsx and .ods files are.
+  if (/\.(xlsx?|ods)$/i.test(file) || bytes.includes(0) || bytes.subarray(0, 4).equals(ZIP_MAGIC)) {
+    throw new Error("Excel and other spreadsheet files are not read: save the sheet as CSV first.");
+  }
+  return bytes.toString("utf8");
+}
+
+const ZIP_MAGIC = Buffer.from("PK\x03\x04", "latin1");
+
+/** Levenshtein distance, for suggesting a command after a typo. */
+function distance(a: string, b: string): number {
+  let row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) {
+      next[j] = Math.min(
+        (row[j] ?? 0) + 1,
+        (next[j - 1] ?? 0) + 1,
+        (row[j - 1] ?? 0) + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    row = next;
+  }
+  return row[b.length] ?? 0;
+}
+
+/** The contributor `wanted` names: by id, full name, then a first name or surname only one person has. */
+function findContributor(authors: Author[], wanted: string): Author {
+  const lower = wanted.toLowerCase();
+  const exact = authors.find((a) => a.id === wanted) ?? authors.find((a) => a.name.toLowerCase() === lower);
+  if (exact) return exact;
+  const partial = authors.filter((a) => a.firstName.toLowerCase() === lower || a.surname.toLowerCase() === lower);
+  if (partial.length === 1 && partial[0]) return partial[0];
+  const listed = (partial.length > 1 ? partial : authors).map((a) => a.name);
+  const names =
+    listed.length > 10 ? `${listed.slice(0, 10).join(", ")} and ${listed.length - 10} more` : listed.join(", ");
+  // The command line was fine; the file just has no such person, so this exits 1, not 2.
+  throw new Error(
+    partial.length > 1
+      ? `${wanted} matches more than one contributor: ${names}. Give the full name or id.`
+      : `No contributor named or with id ${wanted}. ${authors.length > 0 ? `Contributors: ${names}.` : "The file has no contributors."}`,
+  );
 }
 
 /** Run one command line (without `node` and the script) and return what to print. */
@@ -105,13 +174,19 @@ export async function run(argv: string[]): Promise<string> {
       contributor: { type: "string" },
       blank: { type: "boolean", default: false },
       "base-url": { type: "string", default: DEFAULT_BASE_URL },
+      levels: { type: "boolean", default: false },
       help: { type: "boolean", short: "h" },
+      version: { type: "boolean", short: "v" },
     },
   });
   const [command, file] = positionals;
+  if (values.version) return pkg.version;
   if (values.help || !command) return USAGE;
   // Checked before reading the file too, so a typo does not wait on standard input.
-  if (!["statement", "convert", "ask"].includes(command)) throw new UsageError(`Unknown command: ${command}`);
+  if (!COMMANDS.includes(command)) {
+    const closest = COMMANDS.find((c) => distance(command, c) <= 2);
+    throw new UsageError(`Unknown command: ${command}.${closest ? ` Did you mean '${closest}'?` : ""}`);
+  }
   if (!file) throw new UsageError(`${command} needs a file.`);
 
   const imported = await importAny(await read(file), { parser }).catch((error: unknown) => {
@@ -124,13 +199,19 @@ export async function run(argv: string[]): Promise<string> {
       const format = values.format;
       if (!isStatementFormat(format)) throw new UsageError(`Unknown format: ${format}`);
       const locale = resolveLocale(values.locale);
-      if (!locale) throw new UsageError(`Unknown locale: ${values.locale}`);
-      return generateStatement(authors, {
+      if (!locale) {
+        const codes = AVAILABLE_LOCALES.map((l) => l.code).join(", ");
+        throw new UsageError(`Unknown locale: ${values.locale}. Use one of ${codes}.`);
+      }
+      const statement = generateStatement(authors, {
         format,
         locale,
+        showLevels: values.levels,
         translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
         translateUi: makeUiTranslator(await loadUiCatalog(locale)),
       });
+      if (!statement) throw new Error("No roles assigned yet: the statement is empty.");
+      return statement;
     }
     case "convert":
       switch (values.to) {
@@ -148,9 +229,7 @@ export async function run(argv: string[]): Promise<string> {
     case "ask": {
       const wanted = values.contributor?.trim();
       if (!wanted) throw new UsageError("ask needs --contributor.");
-      const author =
-        authors.find((a) => a.id === wanted) ?? authors.find((a) => a.name.toLowerCase() === wanted.toLowerCase());
-      if (!author) throw new UsageError(`No contributor named or with id ${wanted}.`);
+      const author = findContributor(authors, wanted);
       return encodeShareHash(
         {
           authors,
@@ -184,7 +263,8 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
     (output) => process.stdout.write(output.endsWith("\n") ? output : `${output}\n`),
     (error: unknown) => {
       const usage = error instanceof UsageError || (error as { code?: string }).code?.startsWith("ERR_PARSE_ARGS");
-      process.stderr.write(`credit-matrix: ${(error as Error).message}\n${usage ? `\n${USAGE}` : ""}`);
+      const hint = usage ? "Run 'credit-matrix --help' for usage.\n" : "";
+      process.stderr.write(`credit-matrix: ${(error as Error).message}\n${hint}`);
       process.exitCode = usage ? 2 : 1;
     },
   );

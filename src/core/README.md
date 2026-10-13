@@ -36,14 +36,22 @@ Node 20.12 or later. Run it with `npx credit-matrix` once the package is on npm,
 `node src/core/dist/cli.js` from a clone after `pnpm --filter credit-matrix build`.
 
 ```bash
-npx credit-matrix statement team.csv --format by-author --locale fr
+npx credit-matrix statement team.csv --format by-author --locale fr --levels
 npx credit-matrix convert paper.xml --to json      # json, csv, jats or md
 npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
+npx credit-matrix --help                           # or --version
 ```
 
-Each command reads a file, or `-` for standard input, in any format `importAny` reads. `ask` prints a
-link that opens the contributor's own row in the web app (`--base-url` points it at another copy).
-The link they send back can be read with `convert`.
+Each command reads a file, or `-` for standard input, in any format `importAny` reads. Spreadsheet
+files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement --levels` adds Equal or
+Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
+
+`ask` prints a link that opens the contributor's own row in the web app (`--base-url` points it at
+another copy). `--contributor` takes an id, a full name, or a first name or surname only one person
+has; when nothing matches, the error lists the contributors. The link they send back can be read
+with `convert`.
+
+A mistake in the command line prints one line and exits with 2; any other error exits with 1.
 
 ## Domain model
 
