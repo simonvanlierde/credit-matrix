@@ -1,6 +1,6 @@
 import type { Author, Contribution } from "../author";
 import { isValidOrcid, LEVEL_SCORE, normalizeOrcid } from "../author";
-import { CREDIT_ROLES } from "../credit-roles";
+import { CREDIT_ROLES, roleNamed } from "../credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 
 /** The score each `degree-contribution` level imports as. "none" is not one: a listed role counts. */
@@ -35,7 +35,6 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     throw new Error(`XML parse error: ${parseError.textContent?.trim() ?? "invalid XML"}`);
   }
 
-  const roleNames = new Set<string>(CREDIT_ROLES.map((r) => r.name));
   const roleNameByUrl = new Map<string, string>(CREDIT_ROLES.map((r) => [normalizeRoleUrl(r.url), r.name]));
 
   const contribEls = Array.from(doc.querySelectorAll("contrib"));
@@ -45,12 +44,16 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     // Editors, reviewers and other non-credited contrib types are not authors.
     const contribType = contrib.getAttribute("contrib-type");
     if (contribType && contribType !== "author" && contribType !== "contributor") return [];
+    // A <collab> with members holds their contribs: they import on their own,
+    // and reading the group would pick up the first member's name again.
+    if (contrib.querySelector("contrib")) return [];
 
     const givenNamesEl = contrib.querySelector("given-names");
     const surnameEl = contrib.querySelector("surname");
 
-    const givenNames = givenNamesEl?.textContent?.trim() ?? "";
-    const surname = surnameEl?.textContent?.trim() ?? "";
+    // Pretty-printed XML can leave line breaks and indentation inside a name.
+    const givenNames = (givenNamesEl?.textContent ?? "").replace(/\s+/g, " ").trim();
+    const surname = (surnameEl?.textContent ?? "").replace(/\s+/g, " ").trim();
 
     const displayName = [givenNames, surname].filter(Boolean).join(" ");
     // Split given names the same way `parseNameParts` does for its comma branch:
@@ -62,17 +65,17 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     // rather than throwing and discarding every other valid author.
     if (!displayName) return [];
 
-    // Parse role elements. The `vocab-term-identifier` URL is authoritative, as
-    // term spellings vary ("Writing - original draft"); then `vocab-term`, then
-    // the text content.
+    // Parse role elements. The `vocab-term-identifier` URL is authoritative; then
+    // `vocab-term`, then the text content, read whatever their case or dash
+    // ("Writing - original draft").
     const roleEls = Array.from(contrib.querySelectorAll("role"));
     const scoreByRole = new Map<string, number>();
     for (const el of roleEls) {
       const name =
         roleNameByUrl.get(normalizeRoleUrl(el.getAttribute("vocab-term-identifier") ?? "")) ??
-        el.getAttribute("vocab-term") ??
-        (el.textContent ?? "").trim();
-      if (!roleNames.has(name)) continue;
+        roleNamed(el.getAttribute("vocab-term") ?? "") ??
+        roleNamed(el.textContent ?? "");
+      if (!name) continue;
       // No or an unknown `degree-contribution` (JATS before 1.3) means lead.
       const score = LEVEL_SCORES.get(el.getAttribute("degree-contribution")?.trim().toLowerCase() ?? "") ?? 100;
       scoreByRole.set(name, Math.max(score, scoreByRole.get(name) ?? 0));
@@ -102,8 +105,8 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
           equalContribution,
           corresponding,
           // JATS already separates the parts, so hand them over instead of
-          // letting the parser re-split `displayName`, which would read a particle
-          // surname ("van der Berg") back as middle name "van" + surname "Berg".
+          // letting the parser re-split `displayName`, which would read a double
+          // surname ("García López") back as middle name "García" + surname "López".
           ...(givenNames && surname ? { firstName: givenFirst, middleName: givenMiddle, surname } : {}),
           // Drop an unparseable ORCID rather than aborting the whole import.
           ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),

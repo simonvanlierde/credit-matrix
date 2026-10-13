@@ -115,3 +115,18 @@ export function getRoleByName(name: string): (typeof CREDIT_ROLES)[number] {
   if (!role) throw new Error(`Unknown CRediT role: "${name}"`);
   return role;
 }
+
+/** Compare headers and role names ignoring case, spacing and the kind of dash. */
+export function headerKey(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[\u2010-\u2015\u2212-]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** The role a header, cell or label names, however it is cased, spaced or dashed. */
+export function roleNamed(text: string): CreditRoleName | undefined {
+  const wanted = headerKey(text);
+  return CREDIT_ROLES.find((role) => headerKey(role.name) === wanted)?.name;
+}

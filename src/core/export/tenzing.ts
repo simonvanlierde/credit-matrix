@@ -1,6 +1,6 @@
 import type { Author } from "../author";
 import { isValidOrcid } from "../author";
-import { CREDIT_ROLES } from "../credit-roles";
+import { CREDIT_ROLES, headerKey as key } from "../credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 import { delimiterOf, headerCells, parseCsvRecords } from "./csv";
 
@@ -10,15 +10,6 @@ import { delimiterOf, headerCells, parseCsvRecords } from "./csv";
  * order and on "Notes" vs "Note", so columns are found by header name, never by
  * position.
  */
-
-/** Compare headers ignoring case, spacing and the kind of dash. */
-function key(header: string): string {
-  return header
-    .toLowerCase()
-    .replace(/[‐-―-]/g, "-")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 const ROLE_KEYS = new Map(CREDIT_ROLES.map((role) => [key(role.name), role.name]));
 
@@ -55,19 +46,26 @@ export function fromTenzing(text: string): Author[] {
     .filter((person) => person.firstName || person.middleName || person.surname)
     .sort((a, b) => a.order - b.order || a.index - b.index);
 
-  const authors = people.map(({ row, firstName, middleName, surname }) => {
+  const authors = people.flatMap(({ row, firstName, middleName, surname }) => {
     const orcid = cell(row, "orcid id");
-    return createAuthor([firstName, middleName, surname].filter(Boolean).join(" "), {
-      firstName,
-      middleName,
-      surname,
-      // Drop an unparseable ORCID rather than aborting the whole import.
-      orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
-      contributorType: cell(row, "author/acknowledgee").toLowerCase() === "acknowledgee" ? "non-author" : "author",
-      corresponding: isTrue(cell(row, "corresponding author?")),
-      // tenzing records a role as done or not, with no degree: done is the top score.
-      contributions: [...ROLE_KEYS].map(([header, role]) => ({ role, score: isTrue(cell(row, header)) ? 100 : 0 })),
-    });
+    // Skip a row createAuthor rejects (a name with no letters) rather than abort the import.
+    try {
+      return [
+        createAuthor([firstName, middleName, surname].filter(Boolean).join(" "), {
+          firstName,
+          middleName,
+          surname,
+          // Drop an unparseable ORCID rather than aborting the whole import.
+          orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
+          contributorType: cell(row, "author/acknowledgee").toLowerCase() === "acknowledgee" ? "non-author" : "author",
+          corresponding: isTrue(cell(row, "corresponding author?")),
+          // tenzing records a role as done or not, with no degree: done is the top score.
+          contributions: [...ROLE_KEYS].map(([header, role]) => ({ role, score: isTrue(cell(row, header)) ? 100 : 0 })),
+        }),
+      ];
+    } catch {
+      return [];
+    }
   });
 
   return deduplicateAuthorInitials(authors);

@@ -12,7 +12,13 @@ import {
   makeRoleTranslator,
   normalizeLocaleCode,
 } from "../credit-i18n/index";
-import { DEFAULT_UI_TRANSLATOR, loadUiCatalog, makeUiTranslator, type UiKey } from "../credit-i18n/ui-strings";
+import {
+  DEFAULT_UI_TRANSLATOR,
+  fillTemplate,
+  loadUiCatalog,
+  makeUiTranslator,
+  type UiKey,
+} from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../credit-roles";
 import { generateStatement } from "../generate-statement";
 import { parseAuthorText } from "../parse-authors";
@@ -173,5 +179,11 @@ describe("generateStatement with translateRole", () => {
     const stmt = generateStatement(authors, { format: "by-role", translateUi });
     expect(stmt).toContain("Jane Smith, Bob White");
     expect(stmt).toMatch(/Bob White; \S/);
+  });
+});
+
+describe("fillTemplate", () => {
+  it("leaves a placeholder inside a filled-in value as written", () => {
+    expect(fillTemplate("{label} ({level})", { label: "Ann {level}", level: "Equal" })).toBe("Ann {level} (Equal)");
   });
 });

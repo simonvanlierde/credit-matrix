@@ -30,16 +30,13 @@ export type UiKey =
 export type UiTranslator = (key: UiKey) => string;
 
 /**
- * Fill `{name}` placeholders in a catalog template. Replacer functions, not
- * replacement strings: a value containing "$&" or "$'" would otherwise be
- * expanded as a replacement pattern.
+ * Fill `{name}` placeholders in a catalog template, in one pass so a value
+ * that itself contains "{level}" (a contributor's name) is left as written.
+ * A replacer function, not a replacement string: a value containing "$&" or
+ * "$'" would otherwise be expanded as a replacement pattern.
  */
 export function fillTemplate(template: string, vars: Record<string, string>): string {
-  let result = template;
-  for (const [key, value] of Object.entries(vars)) {
-    result = result.replace(`{${key}}`, () => value);
-  }
-  return result;
+  return template.replace(/\{(\w+)\}/g, (match, key: string) => (Object.hasOwn(vars, key) ? (vars[key] ?? "") : match));
 }
 
 /** A complete output catalog. Missing prose must fail before release. */

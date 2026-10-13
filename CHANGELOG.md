@@ -34,10 +34,35 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   aims for (WCAG 2.2 AA), how it is checked, what is known not to work yet, and how to report a
   problem.
 
+### Changed
+
+- Names with lower-case surname particles typed first-name-first now keep the particles with the
+  surname, as the "surname, given name" form already did: "Anne van der Berg" has surname
+  "van der Berg" and initials AV (was AVB), and JATS XML writes `<given-names>Anne</given-names>`.
+  Contributors already in a draft keep their initials until their name is edited.
+
 ### Fixed
 
 - Import: screen readers now read the DOI hint and any error with the field they belong to, a file
   dropped beside the drop zone no longer replaces the page, and the dialog names the file it read.
+- CSV import: a quote inside a name (`Ann O"Brien`) is read as part of the name. It used to swallow
+  the rest of the file into that one contributor.
+- Pasted names separated by Word's Shift+Enter line breaks now become separate contributors, and
+  control characters in a name become a space, so JATS XML and heatmap SVG exports stay valid XML.
+- CSV and JATS XML import match column headers and role names whatever their case or dash, as
+  tenzing import already did: `name`, `conceptualization` and `Writing - original draft` are no
+  longer refused or dropped, and a `Non-author` Type cell is read as a non-author. A CSV score
+  cell may also hold a level word (`Lead`, `Equal`, `Supporting`, `None`); it used to read as 0.
+- JATS XML import: members of a group author (`<collab>`) import once each instead of twice, and
+  line breaks or extra spaces inside a name are dropped.
+- DOI lookup: a DOI copied from the address bar with `%3C`-style escapes is now found; it used to
+  come back as not found.
+- JSON import: a contributor whose stored first name, middle name or surname is empty or no longer
+  matches the name gets initials from the name itself, instead of the whole name or stale letters.
+- CSV and tenzing import skip a row with no usable name (empty, or no letters) and keep the other
+  rows, as JATS XML import does. One bad row used to stop the whole import. A CSV without a Name
+  column is still refused.
+- Statements: a contributor name containing `{level}` or `{names}` is printed as written.
 
 ## [0.7.0] - 2026-10-13
 
