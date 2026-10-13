@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES, getRoleByName } from "../credit-roles";
+import { CREDIT_ROLES, getRoleByName, headerKey, roleNamed } from "../credit-roles";
 
 describe("CREDIT_ROLES", () => {
   it("defines exactly the 14 NISO roles with unique names, official UUIDs, and URLs", () => {
@@ -54,5 +54,13 @@ describe("getRoleByName", () => {
 
   it("throws on an unknown role", () => {
     expect(() => getRoleByName("Nonexistent")).toThrow(/Unknown CRediT role/);
+  });
+});
+
+describe("headerKey", () => {
+  it("matches full-width and small hyphens and decomposed accents", () => {
+    expect(roleNamed("Writing \uFF0D original draft")).toBe("Writing \u2013 original draft");
+    expect(roleNamed("Writing \uFE63 review & editing")).toBe("Writing \u2013 review & editing");
+    expect(headerKey("E\u0301quipe")).toBe(headerKey("\u00C9quipe"));
   });
 });

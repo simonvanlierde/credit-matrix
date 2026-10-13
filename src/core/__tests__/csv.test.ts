@@ -101,6 +101,12 @@ describe("CSV import/export", () => {
     expect(parsed[0]?.contributions[0]?.score).toBe(100);
   });
 
+  it("reads a quoted field that follows a space after the comma", () => {
+    const [jane] = fromCsv(`Name,Software\n "Smith, Jane", "Lead"`);
+    expect(jane?.name).toBe("Smith, Jane");
+    expect(jane?.contributions.find((c) => c.role === "Software")?.score).toBe(100);
+  });
+
   it("matches headers and level words whatever their case or dash", () => {
     const csv = `name,type,conceptualization,Writing - original draft,SOFTWARE\nJane Smith,Non-author,Lead,supporting,50`;
     const [jane] = fromCsv(csv);

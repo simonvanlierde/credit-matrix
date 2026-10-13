@@ -69,7 +69,7 @@ describe("contribution store", () => {
         createAuthor("Anne van der Berg", { firstName: "Anne", middleName: "", surname: "van der Berg" }),
       ]);
       store().addAuthor("Bob White");
-      expect(store().authors[0]).toMatchObject({ surname: "van der Berg", middleName: "", initials: "AV" });
+      expect(store().authors[0]).toMatchObject({ surname: "van der Berg", middleName: "", initials: "AB" });
 
       // A rename re-parses: the old parts no longer describe the name.
       const id = store().authors[0]?.id ?? "";

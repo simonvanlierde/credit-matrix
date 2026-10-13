@@ -103,12 +103,17 @@ function fail(status: 400 | 404 | 422 | 502, code: DoiErrorCode): DoiLookupResul
 /**
  * Return the canonical DOI form used in requests: no resolver prefix, no
  * surrounding space, and not percent-encoded (a DOI copied from the address
- * bar is, and the request would encode it a second time). Case is left alone —
- * the registrant half of a DOI is case-insensitive but the suffix is not, so
- * lowercasing can break resolution.
+ * bar is, and the request would encode it a second time). Only a DOI that
+ * came with a resolver prefix is decoded: a bare DOI may hold a literal "%",
+ * and decoding it would look up another work. That also makes the function
+ * safe to apply to its own output. Case is left alone — the registrant half
+ * of a DOI is case-insensitive but the suffix is not, so lowercasing can
+ * break resolution.
  */
 export function normalizeDoi(doi: string): string {
-  const bare = doi.trim().replace(DOI_PREFIX, "").trim();
+  const trimmed = doi.trim();
+  const bare = trimmed.replace(DOI_PREFIX, "").trim();
+  if (bare === trimmed) return bare;
   try {
     return decodeURIComponent(bare);
   } catch {

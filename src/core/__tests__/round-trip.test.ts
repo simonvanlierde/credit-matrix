@@ -121,8 +121,8 @@ describe("round-trip exports", () => {
   // string, which cannot recover a multi-word surname. "van der Berg" came
   // back as middle name "van" + surname "Berg", changing the initials too.
   it.each([
-    ["van der Berg, Anne", "Anne", "", "van der Berg", "AV"],
-    ["de la Cruz, Maria", "Maria", "", "de la Cruz", "MD"],
+    ["van der Berg, Anne", "Anne", "", "van der Berg", "AB"],
+    ["de la Cruz, Maria", "Maria", "", "de la Cruz", "MC"],
     ["Smith, John", "John", "", "Smith", "JS"],
   ])("XML round-trip preserves the particle surname in %s", (input, first, middle, surname, initials) => {
     const [author] = parseAuthorText(input);

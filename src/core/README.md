@@ -59,6 +59,9 @@ An **`Author`** has identity fields (`id`, `name`, parsed name parts, deduplicat
 optional `orcid`), a `contributorType`, and a fixed array of 14 **`Contribution`** entries, one per
 CRediT role.
 
+Particles such as `van`, `de la` or `bin`, in any case, stay with the surname: "Anne van der Berg"
+and "van der Berg, Anne" both have surname `van der Berg`. Initials skip them, so both are `AB`.
+
 `contributorType` is either `author` or `non-author`. A statement can put non-author contributors
 on a separate `Acknowledgements:` line. The JATS4R export writes the value as `contrib-type`.
 
@@ -112,6 +115,10 @@ Only non-zero contributions appear in statements.
 
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
 assets.
+
+`fromCsv` needs a `Name` column. Other headers and role names match whatever their case or kind of
+dash. A score cell is a number from 0 to 100 or a level word (`None`, `Supporting`, `Equal`, `Lead`).
+Rows without a usable name are skipped.
 
 `fromJats4rXml(xml, { parser })` reads XML with `parser`, which defaults to the global `DOMParser`.
 In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:

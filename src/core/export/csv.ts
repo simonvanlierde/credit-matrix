@@ -1,7 +1,7 @@
 import type { Author, Contribution } from "../author";
 import { clampScore, isValidOrcid, LEVEL_SCORE } from "../author";
 import { CREDIT_ROLES, headerKey } from "../credit-roles";
-import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
+import { deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
 
 const NAME_HEADER = "Name";
 const ORCID_HEADER = "ORCID";
@@ -80,9 +80,10 @@ export function parseCsvRecords(csv: string, delimiter = ","): string[][] {
       continue;
     }
 
-    // Only a quote that opens a field starts quoting; one mid-field ("O"Brien") is data.
-    if (char === '"' && field === "") {
+    // Only a quote that opens a field starts quoting, after any spaces (`a, "b"`); one mid-field ("O"Brien") is data.
+    if (char === '"' && field.trim() === "") {
       inQuotes = true;
+      field = "";
     } else if (char === delimiter) {
       row.push(field);
       field = "";
@@ -167,6 +168,7 @@ export function fromCsv(csv: string): Author[] {
   // and the lookup below reads as "no", which is the right default.
   const equalIndex = headers.indexOf(headerKey(EQUAL_HEADER));
   const correspondingIndex = headers.indexOf(headerKey(CORRESPONDING_HEADER));
+  const roleIndexes = CREDIT_ROLES.map((role) => headers.indexOf(headerKey(role.name)));
 
   // A row with no usable name is skipped, as JATS import skips a nameless
   // contrib, rather than aborting the whole import.
@@ -174,28 +176,22 @@ export function fromCsv(csv: string): Author[] {
     const name = cells[nameIndex] ?? "";
     if (!name) return [];
 
-    const contributions: Contribution[] = CREDIT_ROLES.map((role) => {
-      const scoreText = cells[headers.indexOf(headerKey(role.name))] ?? "0";
-      return { role: role.name, score: readScore(scoreText) };
-    });
+    const contributions: Contribution[] = CREDIT_ROLES.map((role, i) => ({
+      role: role.name,
+      score: readScore(cells[roleIndexes[i] ?? -1] ?? "0"),
+    }));
 
     const contributorType = headerKey(cells[typeIndex] ?? "") === "non-author" ? "non-author" : "author";
     // Drop an unparseable ORCID rather than aborting the whole import.
     const orcid = cells[orcidIndex];
 
-    try {
-      return [
-        createAuthor(name, {
-          orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
-          contributorType,
-          contributions,
-          equalContribution: readYesNo(cells[equalIndex]),
-          corresponding: readYesNo(cells[correspondingIndex]),
-        }),
-      ];
-    } catch {
-      return [];
-    }
+    return tryCreateAuthor(name, {
+      orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
+      contributorType,
+      contributions,
+      equalContribution: readYesNo(cells[equalIndex]),
+      corresponding: readYesNo(cells[correspondingIndex]),
+    });
   });
 
   return deduplicateAuthorInitials(authors);

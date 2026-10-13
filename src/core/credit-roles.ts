@@ -116,9 +116,14 @@ export function getRoleByName(name: string): (typeof CREDIT_ROLES)[number] {
   return role;
 }
 
-/** Compare headers and role names ignoring case, spacing and the kind of dash. */
+/**
+ * Compare headers and role names ignoring case, spacing and the kind of dash.
+ * NFKC first, so a decomposed accent matches a precomposed one and a
+ * full-width or small hyphen-minus becomes a plain one.
+ */
 export function headerKey(text: string): string {
   return text
+    .normalize("NFKC")
     .toLowerCase()
     .replace(/[\u2010-\u2015\u2212-]/g, "-")
     .replace(/\s+/g, " ")
