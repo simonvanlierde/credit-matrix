@@ -22,6 +22,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   every role as lead, as before.
 - The JATS4R XML export writes ORCID iDs as the full `https://orcid.org/` URL, as the JATS4R
   authors recommendation asks. Files with a bare iD still import.
+- The contributor name field, the author/non-author chip and the actions button in each contributor
+  row are at least 24 px tall, the minimum target size in WCAG 2.2.
 
 ### Removed
 

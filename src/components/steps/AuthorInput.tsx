@@ -578,7 +578,7 @@ function RowMenu({
           type="button"
           aria-label={t("contributorActions", { name })}
           title={t("contributorActions", { name })}
-          className="touch-target inline-flex items-center rounded-full px-1.5 py-0.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+          className="touch-target inline-flex min-h-6 items-center rounded-full px-1.5 py-0.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
         >
           <MoreHorizontal className="h-4 w-4" />
         </button>
@@ -884,7 +884,7 @@ const AuthorRow = memo(function AuthorRowInner({
               onPaste={handleSmartPaste}
               aria-invalid={nameError !== null}
               aria-describedby={nameError ? `author-name-error-${author.id}` : undefined}
-              className="w-full text-ellipsis bg-transparent border-none p-0 focus:ring-0 text-on-surface font-medium border-b border-primary/20 focus:border-primary outline-none text-sm"
+              className="min-h-6 w-full text-ellipsis bg-transparent border-none p-0 focus:ring-0 text-on-surface font-medium border-b border-primary/20 focus:border-primary outline-none text-sm"
             />
             {nameError && (
               <span id={`author-name-error-${author.id}`} className="mt-1 block text-[11px] text-error">
@@ -902,7 +902,7 @@ const AuthorRow = memo(function AuthorRowInner({
                 onClick={() => setAuthorType(author.id, isNonAuthor ? "author" : "non-author")}
                 disabled={rowLocked}
                 title={isNonAuthor ? t("contributorTypeSetAuthor") : t("contributorTypeSetNonAuthor")}
-                className="inline-flex items-center gap-1 rounded-full bg-surface-container px-2 py-0.5 text-[11px] font-medium text-on-surface-variant hover:text-primary transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-6 items-center gap-1 rounded-full bg-surface-container px-2 py-0.5 text-[11px] font-medium text-on-surface-variant hover:text-primary transition-colors disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isNonAuthor ? <UserMinus className="h-3 w-3" /> : <UserCheck className="h-3 w-3" />}
                 {isNonAuthor ? t("contributorTypeNonAuthor") : t("contributorTypeAuthor")}
