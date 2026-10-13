@@ -105,8 +105,8 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
           equalContribution,
           corresponding,
           // JATS already separates the parts, so hand them over instead of
-          // letting the parser re-split `displayName`, which would read a particle
-          // surname ("van der Berg") back as middle name "van" + surname "Berg".
+          // letting the parser re-split `displayName`, which would read a double
+          // surname ("García López") back as middle name "García" + surname "López".
           ...(givenNames && surname ? { firstName: givenFirst, middleName: givenMiddle, surname } : {}),
           // Drop an unparseable ORCID rather than aborting the whole import.
           ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),

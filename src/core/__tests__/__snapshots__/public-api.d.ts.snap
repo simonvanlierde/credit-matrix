@@ -1076,8 +1076,8 @@ export declare function createAuthor(name: string, overrides?: {
   /**
    * Pre-split name parts, for callers that already hold structured names
    * (e.g. JATS `<surname>`/`<given-names>`). Re-parsing a joined string
-   * cannot recover a multi-word surname: "Anne van der Berg" parses back as
-   * surname "Berg" with "van" as a middle name, which also changes initials.
+   * cannot recover a multi-word surname: "Ana García López" parses back as
+   * surname "López" with "García" as a middle name, which also changes initials.
    */
   firstName?: string;
   middleName?: string;

@@ -19,8 +19,10 @@ import { CREDIT_ROLES } from "./credit-roles";
  *    apostrophes, hyphens and whitespace (so "José", "O'Brien" and
  *    "Mary-Jane" survive intact)
  *  - First token  → firstName
- *  - Last token   → surname  (when >1 token)
- *  - Middle token → middleName (only when >2 tokens; first of any middle tokens)
+ *  - Last token   → surname  (when >1 token), with any lower-case particles
+ *                   just before it ("Anne van der Berg" → "van der Berg"), as
+ *                   the "van der Berg, Anne" form already reads it
+ *  - Middle token → middleName (first of any tokens left between the two)
  *
  * A single-token name (e.g. "Madonna") yields a firstName with empty
  * middleName and surname. That is intentional, not an error.
@@ -51,9 +53,14 @@ export function parseNameParts(name: string): {
   const cleaned = cleanNamePart(name);
   const parts = cleaned.split(/\s+/).filter(Boolean);
 
+  // Where the surname starts: the last token, pulled back over lower-case
+  // particles, never into the first name.
+  let surnameStart = Math.max(parts.length - 1, 1);
+  while (surnameStart > 1 && PARTICLES.has(parts[surnameStart - 1] ?? "")) surnameStart -= 1;
+
   const firstName = parts[0] ?? "";
-  const surname = parts.length > 1 ? (parts.at(-1) ?? "") : "";
-  const middleName = parts.length > 2 ? (parts[1] ?? "") : "";
+  const surname = parts.slice(surnameStart).join(" ");
+  const middleName = surnameStart > 1 ? (parts[1] ?? "") : "";
 
   return { firstName, middleName, surname };
 }
@@ -110,8 +117,8 @@ export function createAuthor(
     /**
      * Pre-split name parts, for callers that already hold structured names
      * (e.g. JATS `<surname>`/`<given-names>`). Re-parsing a joined string
-     * cannot recover a multi-word surname: "Anne van der Berg" parses back as
-     * surname "Berg" with "van" as a middle name, which also changes initials.
+     * cannot recover a multi-word surname: "Ana García López" parses back as
+     * surname "López" with "García" as a middle name, which also changes initials.
      */
     firstName?: string;
     middleName?: string;
@@ -244,8 +251,8 @@ export function normalizeRoster(authors: Author[]): Author[] {
 
 /**
  * The stored name parts, while they still describe the name. Re-parsing the
- * name cannot recover a structured import's multi-word surname ("van der
- * Berg"); a rename re-parses, so parts that no longer fit are dropped.
+ * name cannot recover a structured import's multi-word surname ("García
+ * López"); a rename re-parses, so parts that no longer fit are dropped.
  *
  * Parts fit when, word for word, the name opens with the first name, closes
  * with the surname, and the middle name opens what lies between. Without a

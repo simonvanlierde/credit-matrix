@@ -42,7 +42,7 @@ ${DOCTYPE}
 /**
  * The given-names half of the display name. The parsed parts keep only the
  * first, second and last token, so rebuilding from them drops the rest
- * ("Anne van der Berg" → "Anne van Berg"). Take the name minus its surname
+ * ("María José García López" → "María José López"). Take the name minus its surname
  * instead.
  */
 function givenNamesOf(author: Author): string {

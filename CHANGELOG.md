@@ -34,6 +34,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   aims for (WCAG 2.2 AA), how it is checked, what is known not to work yet, and how to report a
   problem.
 
+### Changed
+
+- Names with lower-case surname particles typed first-name-first now keep the particles with the
+  surname, as the "surname, given name" form already did: "Anne van der Berg" has surname
+  "van der Berg" and initials AV (was AVB), and JATS XML writes `<given-names>Anne</given-names>`.
+  Contributors already in a draft keep their initials until their name is edited.
+
 ### Fixed
 
 - Import: screen readers now read the DOI hint and any error with the field they belong to, a file

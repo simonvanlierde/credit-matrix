@@ -54,6 +54,20 @@ describe("parseNameParts", () => {
     });
   });
 
+  it("keeps lower-case particles with the surname, as the comma form does", () => {
+    const parts = { firstName: "Anne", middleName: "", surname: "van der Berg" };
+    expect(parseNameParts("Anne van der Berg")).toEqual(parts);
+    expect(parseNameParts("van der Berg, Anne")).toEqual(parts);
+    expect(parseNameParts("Maria Luisa de la Cruz")).toEqual({
+      firstName: "Maria",
+      middleName: "Luisa",
+      surname: "de la Cruz",
+    });
+    // Capitalised, "Van" is a name of its own; and the first name is never a particle.
+    expect(parseNameParts("Anne Van Berg").surname).toBe("Berg");
+    expect(parseNameParts("van Berg").firstName).toBe("van");
+  });
+
   it("treats a single-token name as a first name with empty surname", () => {
     expect(parseNameParts("Madonna")).toEqual({
       firstName: "Madonna",
