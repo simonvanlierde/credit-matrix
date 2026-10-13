@@ -64,7 +64,7 @@ export function ColorPopover({
           })}
         </div>
         <label htmlFor={customId} className="mt-3 flex items-center gap-1.5 text-xs text-on-surface-variant">
-          <CustomColorInput id={customId} value={value} onChange={onChange} label={t("a11yCustomColor")} />
+          <CustomColorInput id={customId} value={value} onChange={onChange} />
           {t("customColor")}
         </label>
       </PopoverContent>
@@ -76,39 +76,37 @@ export function ColorPopover({
  * The native picker, uncontrolled. Dragging in it fires `input` on every step,
  * and each store write repaints every grid cell and saves the draft, so only
  * the committed pick (the native `change` event) reaches `onChange`. The
- * picker's own swatch still follows the drag.
+ * picker's own swatch still follows the drag. Closing the popover can unmount
+ * the input before a still-open picker fires `change`, so unmounting commits
+ * the last value shown too.
  */
-function CustomColorInput({
-  id,
-  value,
-  onChange,
-  label,
-}: {
-  id: string;
-  value: string;
-  onChange: (hex: string) => void;
-  label: string;
-}) {
+function CustomColorInput({ id, value, onChange }: { id: string; value: string; onChange: (hex: string) => void }) {
   const ref = useRef<HTMLInputElement>(null);
+  const latest = useRef({ value, onChange });
   // A swatch picked elsewhere still shows here.
   useEffect(() => {
+    latest.current = { value, onChange };
     if (ref.current) ref.current.value = value;
-  }, [value]);
+  }, [value, onChange]);
   // React's onChange is the `input` event; the native `change` is the commit.
   useEffect(() => {
     const input = ref.current;
     if (!input) return;
-    const commit = () => onChange(input.value);
+    const commit = () => {
+      if (input.value.toLowerCase() !== latest.current.value.toLowerCase()) latest.current.onChange(input.value);
+    };
     input.addEventListener("change", commit);
-    return () => input.removeEventListener("change", commit);
-  }, [onChange]);
+    return () => {
+      input.removeEventListener("change", commit);
+      commit();
+    };
+  }, []);
   return (
     <input
       ref={ref}
       id={id}
       type="color"
       defaultValue={value}
-      aria-label={label}
       className="h-6 w-6 cursor-pointer rounded border border-outline-variant bg-transparent p-0"
     />
   );
