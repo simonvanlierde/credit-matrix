@@ -96,8 +96,9 @@ test("full round trip: blank ask → locked fill → reply kept beside the row, 
   await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: None" })).toBeVisible();
   // The row says it changed, and the matrix haloes that contributor's cells.
   await expect(pageA.getByText("Updated", { exact: true })).toBeVisible();
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: None" })).toHaveClass(
-    /outline-primary/,
+  await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: None" })).toHaveAttribute(
+    "data-recent-reply",
+    "true",
   );
   // The reply answers the ask, so the chip comes down.
   await expect(pageA.getByText("Asked", { exact: true })).toHaveCount(0);
@@ -107,8 +108,8 @@ test("full round trip: blank ask → locked fill → reply kept beside the row, 
   await expect(pageA.getByRole("button", { name: "Investigation for Bob White: None" })).toBeVisible();
   await expect(pageA.getByRole("button", { name: /^Remove / })).toHaveCount(2);
   await expect(pageA.getByText("Updated", { exact: true })).toHaveCount(0);
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob White: None" })).not.toHaveClass(
-    /outline-primary/,
+  await expect(pageA.getByRole("button", { name: "Investigation for Bob White: None" })).not.toHaveAttribute(
+    "data-recent-reply",
   );
   await expect(pageA.getByText("Asked", { exact: true })).toBeVisible();
 

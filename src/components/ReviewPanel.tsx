@@ -86,6 +86,7 @@ export function ReviewPanel() {
   const { translateInterfaceRole, translateInterfaceUi } = useCreditTranslators();
   const listRef = useRef<HTMLDivElement>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Where focus goes once the list has re-rendered after a choice: past the line, or back onto it.
   const pendingFocus = useRef<{ key: string; stay: boolean } | null>(null);
 
@@ -110,6 +111,8 @@ export function ReviewPanel() {
     const button = target?.querySelector<HTMLElement>("[data-review-first]");
     (button ?? list.querySelector<HTMLElement>("[data-review-done]") ?? list).focus();
   });
+
+  useEffect(() => () => clearTimeout(copiedTimer.current), []);
 
   // A column badge or the Team tab asked for one person's answers.
   useEffect(() => {
@@ -202,7 +205,11 @@ export function ReviewPanel() {
   }
 
   async function askAbout(author: Author, target: Target, key: string) {
-    if (await copyAskMessage(author, t, { role: targetName(target) })) setCopiedKey(key);
+    if (!(await copyAskMessage(author, t, { role: targetName(target) }))) return;
+    setCopiedKey(key);
+    // Same 2s window as useCopyStatus, so "Copied" never outlives the copy.
+    clearTimeout(copiedTimer.current);
+    copiedTimer.current = setTimeout(() => setCopiedKey(null), 2000);
   }
 
   return (
@@ -226,7 +233,7 @@ export function ReviewPanel() {
         const meta =
           result.status.kind === "settled"
             ? t("teamSettledOn", { date: format.dateTime(settledAt(reply), { day: "numeric", month: "short" }) })
-            : `${t("teamAnsweredDays", { days })} · ${ask.prefilled ? t("teamAskedGuess") : t("teamAskedBlank")}`;
+            : t("reviewAnsweredMeta", { days, kind: ask.prefilled ? "prefilled" : "blank" });
         const headingId = `review-person-${author.id}`;
         return (
           <section key={author.id} aria-labelledby={headingId} className="flex flex-col gap-2">
@@ -341,7 +348,7 @@ export function ReviewPanel() {
                           <button
                             type="button"
                             onClick={() => void askAbout(author, line.target, key)}
-                            aria-label={copiedKey === key ? undefined : `${t("reviewAskAbout", { name })}: ${role}`}
+                            aria-label={t("reviewAskAboutRole", { name, role, copied: String(copiedKey === key) })}
                             className={LINK_BUTTON}
                             {...focusRing}
                           >

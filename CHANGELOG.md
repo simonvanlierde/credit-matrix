@@ -35,14 +35,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   next difference and animates the grid cell as it changes. Every decided line keeps its own Undo,
   also after *Use all*, and undoing *Use Ben's* puts your own level back.
 - Grid cells where a co-author answered differently carry a corner mark, and a screen reader hears
-  what they said ("Ben says Lead"). A count under each column header opens Review on that person.
+  what they said ("Ben says Lead"). The mark has an outline that stands out on every level, in every
+  heatmap colour and both themes. A count under each column header opens Review on that person.
 - *This is me* in a contributor's menu marks your own row. You are left out of the Team tab, of
   asks, and of the answered count, and your column says "You". The JSON export remembers it, and
   importing the file back into the same draft marks you again.
 - The Statement tab says when contributions still differ and that the statement uses your version,
   with a link to Review. Copying and exporting are never blocked.
-- The Export data menu has an *Includes co-author answers* checkbox for the JSON file, ticked by
-  default.
+- The JSON row of the Export data menu has an *Include co-author answers and ask history* checkbox,
+  ticked by default.
+- The privacy note in About says that co-author asks and answers stay in this browser, that the JSON
+  export includes them unless you untick that box, and that sending a reply hands its link to the
+  app you pick.
 
 ### Changed
 
@@ -87,6 +91,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The JATS4R XML export marks shared first authorship only when at least two authors share it. A
   single marked author made the file break the JATS4R rules; the mark still travels in JSON and CSV.
 - Resetting a draft clears its open asks, and removing a contributor drops theirs (undo restores it).
+- After *Reset* or *Delete all drafts*, Undo for a removed contributor or a bulk change no longer
+  brings the cleared work back. A bulk change's Undo also no longer follows you to another draft.
 - Keyboard and touch fixes: the grid's key hint (0–3 set a level) is always visible, cells announce
   their shortcuts, a focused cell no longer hides under the sticky headers, and small buttons in the
   contributor rows, status messages and heatmap controls have visible focus and 24px targets.

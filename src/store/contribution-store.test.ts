@@ -673,9 +673,37 @@ describe("contribution store", () => {
       const id = who === "jane" ? jane.id : who;
       const row = "row" in extra ? extra.row : janeReply(id);
       const sentAt = "sentAt" in extra ? extra.sentAt : null;
+      const before = store().asks;
+      const authorsBefore = store().authors;
       expect(store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt, at: 6 }).outcome.kind).toBe(
         kind,
       );
+      // Only a received reply may write; the others leave the draft as it was.
+      if (kind !== "received") {
+        expect(store().asks).toBe(before);
+        expect(store().authors).toBe(authorsBefore);
+      }
+    });
+
+    it("lets no reply undo write after Delete all", () => {
+      const jane = addJane();
+      const draftId = store().activeDraftId;
+      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const { undo } = store().applyAskStep(draftId, {
+        kind: "reply",
+        contributorId: jane.id,
+        row: janeReply(jane.id),
+        sentAt: 1,
+        at: 2,
+      });
+      const cleared = store().workspaceCleared;
+
+      store().deleteAllDrafts();
+
+      expect(store().workspaceCleared).toBe(cleared + 1);
+      expect(store().applyAskPatch(draftId, undo)).toBe(false);
+      expect(store().authors).toEqual([]);
+      expect(store().asks).toEqual({});
     });
 
     it("keeps a reply beside the row, renames it, and undoes the identity but not later scores", () => {

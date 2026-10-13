@@ -121,6 +121,11 @@ interface ContributionState {
    */
   recentReply: string | null;
   /**
+   * Counts Reset and Delete all. Ephemeral. Components holding an undo
+   * buffer drop it when this changes, so Undo cannot bring back cleared work.
+   */
+  workspaceCleared: number;
+  /**
    * A newer build saved the drafts and this tab could not reload into it, so
    * nothing here is saved any more. State rather than an event: at load it is
    * found before anything that shows it has mounted. Not persisted.
@@ -781,6 +786,7 @@ export const useContributionStore = create<ContributionState>()(
       reviewSettled: null,
       reviewFocus: null,
       recentReply: null,
+      workspaceCleared: 0,
 
       createDraft: () => {
         let created: string | null = null;
@@ -872,6 +878,7 @@ export const useContributionStore = create<ContributionState>()(
           const draft = emptyDraft();
           state.drafts = { [draft.id]: draft };
           applyDraft(state, draft);
+          state.workspaceCleared += 1;
         });
       },
 
@@ -1194,6 +1201,7 @@ export const useContributionStore = create<ContributionState>()(
           // Empties the draft you are in; the other drafts are untouched.
           // Discarding them would make one button destroy a year of papers.
           state.drafts[state.activeDraftId] = liveDraft(state);
+          state.workspaceCleared += 1;
         }),
     })),
     {

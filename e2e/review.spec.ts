@@ -148,3 +148,43 @@ test("the Review tab with open differences has no accessibility violations", asy
   expect(results.violations).toEqual([]);
   await page.context().close();
 });
+
+test("asking about a difference names who and what in both states, and the label comes back", async ({ browser }) => {
+  const page = await leadWithReply(browser);
+  await page.getByRole("tab", { name: /^Review/ }).click();
+  const ask = review(page).getByRole("button", { name: "Ask Bob about this: Investigation", exact: true });
+  await ask.click();
+  await expect(
+    review(page).getByRole("button", { name: "Copied. Ask Bob about this: Investigation", exact: true }),
+  ).toBeVisible();
+  // Resets after 2s, like every other copy button.
+  await expect(ask).toBeVisible({ timeout: 5000 });
+  await page.context().close();
+});
+
+test("only a tab panel with nothing focusable in it is a tab stop", async ({ browser }) => {
+  const page = await leadWithReply(browser);
+  for (const id of ["statement", "team", "review"]) {
+    await expect(page.locator(`#inspector-panel-${id}`)).not.toHaveAttribute("tabindex");
+  }
+  const fresh = await (await newContext(browser)).newPage();
+  await asReturningVisitor(fresh);
+  await fresh.goto("/");
+  await expect(fresh.locator("#inspector-panel-statement")).not.toHaveAttribute("tabindex");
+  await expect(fresh.locator("#inspector-panel-team")).toHaveAttribute("tabindex", "0");
+  await expect(fresh.locator("#inspector-panel-review")).toHaveAttribute("tabindex", "0");
+  await fresh.context().close();
+  await page.context().close();
+});
+
+test("the export offers the ask history on the JSON row only, ticked", async ({ browser }) => {
+  const page = await leadWithReply(browser);
+  await page.getByRole("tab", { name: "Statement" }).click();
+  await page.getByRole("button", { name: "Export data" }).click();
+  const answers = page.getByRole("checkbox", { name: "Include co-author answers and ask history (1)" });
+  await expect(answers).toBeChecked();
+  const rows = page.getByRole("list", { name: "Export format" }).getByRole("listitem");
+  await expect(rows.filter({ has: answers })).toContainText("JSON");
+  await expect(page.getByRole("checkbox")).toHaveCount(1);
+  await page.context().close();
+});

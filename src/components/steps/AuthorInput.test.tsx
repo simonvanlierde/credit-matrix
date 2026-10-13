@@ -240,3 +240,38 @@ describe("asking a contributor", () => {
     expect(useContributionStore.getState().asks).toEqual({});
   });
 });
+
+describe("undoing a removal", () => {
+  it.each(["reset", "deleteAllDrafts"] as const)("restores nothing after %s", (clear) => {
+    useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    expect(screen.getByRole("button", { name: en.undo })).toBeTruthy();
+
+    act(() => useContributionStore.getState()[clear]());
+
+    expect(screen.queryByRole("button", { name: en.undo })).toBeNull();
+    expect(authors()).toEqual([]);
+  });
+});
+
+describe("moving a contributor from the menu", () => {
+  it("keeps focus on Move up once the row reaches the top, and ignores further clicks", () => {
+    useContributionStore.setState({ authors: [createAuthor("Ann Lee"), createAuthor("Ben Okoro")] });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Ben Okoro" }));
+
+    const moveUp = screen.getByRole("button", { name: en.moveUp });
+    moveUp.focus();
+    fireEvent.click(moveUp);
+    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
+
+    // A disabled button would drop focus to the page body here.
+    expect(moveUp).not.toHaveProperty("disabled", true);
+    expect(moveUp.getAttribute("aria-disabled")).toBe("true");
+    expect(document.activeElement).toBe(moveUp);
+
+    fireEvent.click(moveUp);
+    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
+  });
+});

@@ -1,3 +1,5 @@
+// biome-ignore lint/correctness/noNodejsModules: tests run in Node; the theme colours live in a CSS file
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   contrastRatio,
@@ -86,5 +88,40 @@ describe("heatCellColor tiers", () => {
     for (const attack of ['"/><script>alert(1)</script>', 'red" onload="alert(1)', "javascript:x"]) {
       expect(heatCellColor(attack, 100)).toMatch(/^#[0-9a-f]{6}$/);
     }
+  });
+});
+
+describe("difference corner mark", () => {
+  // Mirrored from globals.css: --color-flag and --color-surface-container-high per theme.
+  const THEMES = [
+    { dark: false, flag: "#b45309", empty: NONE_FILL },
+    { dark: true, flag: "#f0a35e", empty: "#25272b" },
+  ];
+
+  it("has an edge at 3:1 or more against every filled cell, per preset, tier and theme", () => {
+    // The flag fill alone sits near 1:1 on some Lead cells, so the edge carries the shape.
+    for (const { dark } of THEMES) {
+      for (const hue of ALL_HUES) {
+        for (const score of SCORES) {
+          const fill = heatCellColor(hue, score, dark);
+          const edge = onColor(fill);
+          expect(contrastRatio(edge, fill), `${hue} @ ${score} dark=${dark}`).toBeGreaterThanOrEqual(NON_TEXT_MIN);
+        }
+      }
+    }
+  });
+
+  it("clears 3:1 on its own on an empty cell, where it is drawn without an edge", () => {
+    for (const { flag, empty, dark } of THEMES) {
+      expect(contrastRatio(flag, empty), `dark=${dark}`).toBeGreaterThanOrEqual(NON_TEXT_MIN);
+    }
+  });
+
+  it("keeps the mirrored theme colours in step with globals.css", () => {
+    const css = readFileSync("src/app/globals.css", "utf8");
+    const pick = (name: string) =>
+      [...css.matchAll(new RegExp(`--color-${name}:\\s*(#[0-9a-f]{6})`, "gi"))].map((m) => m[1]?.toLowerCase());
+    expect(pick("flag")).toEqual(THEMES.map((theme) => theme.flag));
+    expect(pick("surface-container-high")).toEqual(THEMES.map((theme) => theme.empty));
   });
 });

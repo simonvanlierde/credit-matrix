@@ -23,6 +23,16 @@ export function Inspector() {
   const setTab = useContributionStore((s) => s.setInspectorTab);
   const listRef = useRef<HTMLDivElement>(null);
   const openCount = useOpenDifferences();
+  // The APG tabs pattern makes a panel a tab stop only when nothing in it is
+  // focusable; otherwise it is an extra stop before its own first control.
+  // These mirror the empty states of TeamPanel and ReviewPanel.
+  const teamEmpty = useContributionStore(
+    (s) => s.claim !== null || !s.authors.some((author) => author.id !== s.selfId),
+  );
+  const reviewEmpty = useContributionStore(
+    (s) => !s.authors.some((author) => author.id !== s.selfId && s.asks[author.id]?.reply),
+  );
+  const panelIsStop: Record<InspectorTab, boolean> = { statement: false, team: teamEmpty, review: reviewEmpty };
 
   const labels: Record<InspectorTab, string> = {
     statement: t("stepStatement"),
@@ -99,8 +109,7 @@ export function Inspector() {
           id={`inspector-panel-${id}`}
           aria-labelledby={`inspector-tab-${id}`}
           hidden={id !== tab}
-          // biome-ignore lint/a11y/noNoninteractiveTabindex: the APG tabs pattern makes a panel focusable, and the panel scrolls on its own.
-          tabIndex={0}
+          tabIndex={panelIsStop[id] ? 0 : undefined}
           className="p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary md:p-4 desk:min-h-0 desk:flex-1 desk:overflow-y-auto"
         >
           {panels[id]}

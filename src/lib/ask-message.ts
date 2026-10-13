@@ -17,7 +17,7 @@ export async function copyAskMessage(
 ): Promise<boolean> {
   const blank = role === undefined;
   const sentAt = Date.now();
-  // Read at click time: the link carries the whole roster and the title.
+  // Read at click time: the link carries this person's current row and the title.
   const state = useContributionStore.getState();
   let link: string;
   try {

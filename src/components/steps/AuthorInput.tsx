@@ -176,6 +176,7 @@ export function AuthorList() {
   // Stable while the order is: a fresh array each render changes the sortable
   // context and re-renders every row straight through their memo.
   const authorIds = useContributionStore(useShallow((s) => s.authors.map((a) => a.id)));
+  const workspaceCleared = useContributionStore((s) => s.workspaceCleared);
   const { locked } = useClaimLock();
   const hydrated = useHydrated();
   // Edited locally, committed on blur — like the contributor name fields. A
@@ -205,9 +206,10 @@ export function AuthorList() {
   }, [removed]);
 
   // The undo buffer belongs to the draft the row was removed from: restoring
-  // it after a switch would insert one paper's contributor into another.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-runs on draft switch by design
-  useEffect(() => setRemoved(null), [activeDraftId]);
+  // it after a switch would insert one paper's contributor into another, and
+  // after Reset or Delete all it would bring back cleared work.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-runs on draft switch and clear by design
+  useEffect(() => setRemoved(null), [activeDraftId, workspaceCleared]);
 
   // Runs after the removed row has left the DOM, so the buttons queried here
   // are the surviving ones. Falls back to the add field when the list empties.
@@ -637,7 +639,7 @@ function RowMenu({
   const openedOrcidRef = useRef(false);
 
   const item =
-    "flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:text-on-surface-variant/50 disabled:hover:bg-transparent";
+    "flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-disabled:cursor-not-allowed aria-disabled:text-on-surface-variant/50 aria-disabled:hover:bg-transparent";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -665,11 +667,11 @@ function RowMenu({
             places in a row. */}
         {(onMoveUp || onMoveDown) && (
           <div className="mb-1 border-b border-outline-variant/40 pb-1">
-            <button type="button" onClick={onMoveUp} disabled={!onMoveUp} className={item}>
+            <button type="button" onClick={onMoveUp} aria-disabled={!onMoveUp || undefined} className={item}>
               <ArrowUp className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
               {t("moveUp")}
             </button>
-            <button type="button" onClick={onMoveDown} disabled={!onMoveDown} className={item}>
+            <button type="button" onClick={onMoveDown} aria-disabled={!onMoveDown || undefined} className={item}>
               <ArrowDown className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
               {t("moveDown")}
             </button>

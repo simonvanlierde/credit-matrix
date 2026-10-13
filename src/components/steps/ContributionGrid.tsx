@@ -173,6 +173,13 @@ export function ContributionGrid() {
     return () => window.clearTimeout(timer);
   }, [bulkUndo]);
 
+  // The snapshot is one draft's roster: undoing it after a switch, Reset or
+  // Delete all would load it over other or cleared work.
+  const activeDraftId = useContributionStore((s) => s.activeDraftId);
+  const workspaceCleared = useContributionStore((s) => s.workspaceCleared);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-runs on draft switch and clear by design
+  useEffect(() => setBulkUndo(null), [activeDraftId, workspaceCleared]);
+
   /** Run a bulk mutation with the roster snapshotted for undo. */
   function runBulk(action: () => void) {
     const before = useContributionStore.getState().authors;
@@ -957,6 +964,7 @@ const GridCell = memo(function GridCellInner({
         type="button"
         data-cell={`${row}-${col}`}
         data-cell-key={`${author.id}:${roleIndex}`}
+        data-recent-reply={recent || undefined}
         aria-describedby={describedBy}
         // One tab stop for the whole matrix; arrows move within it. Without
         // this a keyboard user tabs through every cell, up to 14 x 200.
@@ -1003,13 +1011,7 @@ const GridCell = memo(function GridCellInner({
       {theySay && (
         <>
           {/* The corner mark is a shape, so the difference never rests on colour alone. */}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 10 10"
-            className="pointer-events-none absolute top-0 right-0 size-2.5 text-flag"
-          >
-            <path d="M0 0H10V10Z" fill="currentColor" />
-          </svg>
+          <DifferenceMark cellFill={fill} className="pointer-events-none absolute top-0 right-0" />
           <span id={describedBy} className="sr-only">
             {theySay}
           </span>
@@ -1018,6 +1020,25 @@ const GridCell = memo(function GridCellInner({
     </td>
   );
 });
+
+/**
+ * Flag-coloured corner triangle for a cell a co-author answered differently.
+ * The flag fill can sit near 1:1 on a strong cell, so on a filled cell the
+ * triangle gets an edge in the cell's on-colour, which clears 3:1 (WCAG 1.4.11).
+ */
+function DifferenceMark({ cellFill, className }: { cellFill: string | null; className: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 10 10" className={`size-2.5 text-flag ${className}`}>
+      <path
+        d="M0 0H10V10Z"
+        fill="currentColor"
+        stroke={cellFill ? onColor(cellFill) : "none"}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function BulkButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
@@ -1182,25 +1203,20 @@ function GridLegend({
         ))}
         {differs && (
           <span className="inline-flex items-center gap-1.5">
-            <svg aria-hidden="true" viewBox="0 0 10 10" className="size-2.5 text-flag">
-              <path d="M0 0H10V10Z" fill="currentColor" />
-            </svg>
+            {/* Shown on a Lead swatch, where the flag fill alone has the least contrast. */}
+            <span
+              className="relative inline-block size-3 rounded-sm"
+              style={{ backgroundColor: heatCellColor(monoColor, 100, dark) }}
+            >
+              <DifferenceMark cellFill={heatCellColor(monoColor, 100, dark)} className="absolute top-0 right-0" />
+            </span>
             {t("legendDiffers")}
           </span>
         )}
       </span>
       {/* Always shown and never truncated: the keys are the only direct way to
           set a level, so hiding them behind a tooltip hid the feature. */}
-      <p>
-        {graded ? (
-          <>
-            {/* A language-neutral separator: the two hints are separate sentences. */}
-            {t("clickToCycle")} · {t("levelKeysHint")}
-          </>
-        ) : (
-          t("toggleKeysHint")
-        )}
-      </p>
+      <p>{graded ? t("levelHint") : t("toggleKeysHint")}</p>
     </div>
   );
 }

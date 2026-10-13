@@ -26,8 +26,27 @@ const LOCALES = readdirSync(MESSAGES_DIR)
   .map((f: string) => f.replace(".json", ""));
 const TRANSLATED = LOCALES.filter((l: string) => l !== "en");
 
-/** Placeholder names an ICU message declares: {name}, {count, plural, ...}. */
-const placeholders = (s: string) => new Set([...s.matchAll(/\{(\w+)[,}]/g)].map((m) => m[1]));
+/**
+ * Placeholder names an ICU message declares: {name}, {count, plural, ...}.
+ * A brace that opens a plural or select branch ("other {blank}") is text, not a placeholder.
+ */
+function placeholders(s: string): Set<string> {
+  const names = new Set<string>();
+  // One entry per open brace: does it open a plural/select argument, whose next braces are branches?
+  const stack: boolean[] = [];
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === "}") stack.pop();
+    if (s[i] !== "{") continue;
+    if (stack.at(-1)) {
+      stack.push(false);
+      continue;
+    }
+    const match = /^\{\s*(\w+)\s*(?:\}|,\s*(\w+))/.exec(s.slice(i));
+    if (match?.[1]) names.add(match[1]);
+    stack.push(["plural", "select", "selectordinal"].includes(match?.[2] ?? ""));
+  }
+  return names;
+}
 
 test.describe("interface messages", () => {
   /**

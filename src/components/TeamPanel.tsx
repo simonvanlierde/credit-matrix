@@ -62,10 +62,9 @@ export function TeamPanel() {
     const ask = asks[author.id];
     if (!ask) return { text: t("teamNotAsked"), toReview: false };
     const { status } = review(author, ask);
-    const kindLabel = ask.prefilled ? t("teamAskedGuess") : t("teamAskedBlank");
     if (status.kind === "differs" && ask.reply) {
       return {
-        text: `${t("teamAnsweredDays", { days: daysSince(ask.reply.receivedAt) })} · ${t("teamToReview", { count: status.count })}`,
+        text: t("teamStatusAnswered", { days: daysSince(ask.reply.receivedAt), count: status.count }),
         toReview: true,
       };
     }
@@ -73,7 +72,10 @@ export function TeamPanel() {
       const date = format.dateTime(settledAt(ask.reply), { day: "numeric", month: "short" });
       return { text: t("teamSettledOn", { date }), toReview: false };
     }
-    return { text: `${t("teamAskedDays", { days: daysSince(ask.sentAt) })} · ${kindLabel}`, toReview: false };
+    return {
+      text: t("teamStatusAsked", { days: daysSince(ask.sentAt), kind: ask.prefilled ? "prefilled" : "blank" }),
+      toReview: false,
+    };
   }
 
   /** Copy one person's message and record the ask. Returns whether it reached the clipboard. */

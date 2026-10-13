@@ -68,7 +68,8 @@ export function StatementOutput() {
   const openDifferences = useOpenDifferences();
   // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
   const [includeAnswers, setIncludeAnswers] = useState(true);
-  const answerCount = authors.filter((author) => asks[author.id]?.reply).length;
+  // Everyone asked, answered or not: the JSON export carries the ask history too.
+  const askedCount = authors.filter((author) => author.id in asks).length;
   const { translateRole, translateUi, translateInterfaceRole, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   // Last beat of the population sequence; see .enter-fade in globals.css.
@@ -321,53 +322,53 @@ export function StatementOutput() {
                 const { label } = DATA_FORMATS[value];
                 const copiedThis = copiedFormat === value && dataCopyStatus !== "idle";
                 return (
-                  <li
-                    key={value}
-                    className="flex items-center gap-1 rounded-md py-0.5 pl-2 text-[13px] text-on-surface"
-                  >
-                    <span className="min-w-0 flex-1">{label}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCopiedFormat(value);
-                        void copyDataText(serialize(value));
-                      }}
-                      aria-label={t("copyFormat", { format: label })}
-                      title={t("copyFormat", { format: label })}
-                      className={EXPORT_ITEM_BUTTON}
-                    >
-                      {copiedThis && dataCopyStatus === "copied" ? (
-                        <Check className="size-3.5 text-primary" aria-hidden="true" />
-                      ) : (
-                        <Copy className="size-3.5" aria-hidden="true" />
-                      )}
-                      {copiedThis ? (dataCopyStatus === "copied" ? t("copied") : t("copyFailedMessage")) : t("copy")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => downloadData(value)}
-                      aria-label={t("downloadFormat", { format: label })}
-                      title={t("downloadFormat", { format: label })}
-                      className={EXPORT_ITEM_BUTTON}
-                    >
-                      <Download className="size-3.5" aria-hidden="true" />
-                      {t("download")}
-                    </button>
+                  <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">
+                    <div className="flex items-center gap-1">
+                      <span className="min-w-0 flex-1">{label}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCopiedFormat(value);
+                          void copyDataText(serialize(value));
+                        }}
+                        aria-label={t("copyFormat", { format: label })}
+                        title={t("copyFormat", { format: label })}
+                        className={EXPORT_ITEM_BUTTON}
+                      >
+                        {copiedThis && dataCopyStatus === "copied" ? (
+                          <Check className="size-3.5 text-primary" aria-hidden="true" />
+                        ) : (
+                          <Copy className="size-3.5" aria-hidden="true" />
+                        )}
+                        {copiedThis ? (dataCopyStatus === "copied" ? t("copied") : t("copyFailedMessage")) : t("copy")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadData(value)}
+                        aria-label={t("downloadFormat", { format: label })}
+                        title={t("downloadFormat", { format: label })}
+                        className={EXPORT_ITEM_BUTTON}
+                      >
+                        <Download className="size-3.5" aria-hidden="true" />
+                        {t("download")}
+                      </button>
+                    </div>
+                    {/* Only JSON carries asks, so the choice sits on its row. */}
+                    {value === "json" && askedCount > 0 && (
+                      <label className="flex min-h-8 items-center gap-2 pr-2 text-xs text-on-surface-variant">
+                        <input
+                          type="checkbox"
+                          checked={includeAnswers}
+                          onChange={(event) => setIncludeAnswers(event.target.checked)}
+                          className="size-4 shrink-0 accent-primary"
+                        />
+                        {t("exportIncludesAnswers", { count: askedCount })}
+                      </label>
+                    )}
                   </li>
                 );
               })}
             </ul>
-            {answerCount > 0 && (
-              <label className="flex min-h-8 items-center gap-2 border-t border-outline-variant/40 px-2 pt-1 text-xs text-on-surface-variant">
-                <input
-                  type="checkbox"
-                  checked={includeAnswers}
-                  onChange={(event) => setIncludeAnswers(event.target.checked)}
-                  className="size-4 accent-primary"
-                />
-                {t("exportIncludesAnswers", { count: answerCount })}
-              </label>
-            )}
           </PopoverContent>
         </Popover>
 
