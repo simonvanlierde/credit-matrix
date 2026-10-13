@@ -177,3 +177,28 @@ describe("share payload v2", () => {
     expect(restored.authors[0]?.initials).not.toBe(restored.authors[1]?.initials);
   });
 });
+
+describe("share payload envelope validation", () => {
+  const base = { v: 2, a: [{ i: "jane", n: "Jane Smith", s: [100] }] };
+  // Raw JSON text, so values JSON.stringify cannot write (1e400 parses to Infinity) reach the parser.
+  const withKey = (key: string, raw: string) => `${JSON.stringify(base).slice(0, -1)},"${key}":${raw}}`;
+
+  it.each([
+    ["b: 2", withKey("b", "2")],
+    ['y: "1"', withKey("y", '"1"')],
+    ["w: -1", withKey("w", "-1")],
+    ['w: "x"', withKey("w", '"x"')],
+    ["w: null", withKey("w", "null")],
+    ["w: 1e400 (Infinity)", withKey("w", "1e400")],
+  ])("refuses %s", (_, json) => {
+    expect(() => fromSharePayload(json)).toThrow();
+  });
+
+  it("accepts a far-future sentAt as it stands", () => {
+    // Nothing clamps w to the present. A reply echoes the asker's own send
+    // time, so only a hand-edited link carries a far-future one. Its harm is
+    // bounded: later replies to that one contributor's ask read as stale.
+    const farFuture = Date.UTC(3000, 0, 1);
+    expect(fromSharePayload(withKey("w", String(farFuture))).sentAt).toBe(farFuture);
+  });
+});

@@ -286,6 +286,10 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
                   ? Object.hasOwn(reply.decisions, target)
                   : Object.hasOwn(current.byTarget, target) && (choice === "theirs" || choice === "mine")),
             );
+      // Nothing valid to decide: no write, so the ask stays the same object and review stays cached.
+      if (picks.length === 0) {
+        return { outcome: { kind: "settled", open: current.open.length }, patch: emptyPatch(), undo: emptyPatch() };
+      }
 
       const next: Answer = {
         contributions: author.contributions.map((contribution) => ({ ...contribution })),

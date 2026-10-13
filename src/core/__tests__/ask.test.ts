@@ -313,7 +313,7 @@ describe("askStep settle", () => {
     const taken = settle(receive(state, "ada", reply, 10).state, "ada", { Software: "theirs" });
     expect(askStep(taken, { kind: "settle", contributorId: "ada", choices: { Methodology: null } }).patch).toEqual({
       rows: {},
-      asks: { ada: taken.asks.ada },
+      asks: {},
     });
     const edited: AskState = {
       ...taken,
@@ -362,6 +362,80 @@ describe("askStep settle", () => {
     expect(askStep(state, { kind: "settle", contributorId: "x", choices: "mine" }).outcome).toEqual({
       kind: "unmatched",
     });
+  });
+
+  it.each([
+    // JSON.parse makes "__proto__" an own key; an object literal would set the prototype instead.
+    ["an unknown target (__proto__)", () => JSON.parse('{"__proto__":"theirs"}')],
+    ["an unknown target (Bogus)", () => ({ Bogus: "theirs" })],
+    ["a bad choice", () => ({ Software: "garbage" })],
+    ["theirs for a target with no difference", () => ({ Methodology: "theirs" })],
+  ])("writes nothing for %s", (_, choices) => {
+    const ada = createAuthor("Ada Lovelace", { id: "ada" });
+    const reply = createAuthor("Ada Lovelace", { id: "ada", contributions: [{ role: "Software", score: 100 }] });
+    const received = receive({ authors: [ada], asks: { ada: { sentAt: 1, prefilled: false } } }, "ada", reply, 1).state;
+    const decisions = received.asks.ada?.reply?.decisions;
+
+    const step = askStep(received, { kind: "settle", contributorId: "ada", choices: choices() });
+
+    expect(step.outcome).toEqual({ kind: "settled", open: 1 });
+    expect(step.patch).toEqual({ rows: {}, asks: {} });
+    expect(applyPatch(received, step.patch).asks.ada?.reply?.decisions).toBe(decisions);
+  });
+});
+
+describe("askStep reply with a malformed row", () => {
+  const ada = createAuthor("Ada Lovelace", { id: "ada" });
+  const state: AskState = { authors: [ada], asks: { ada: { sentAt: 1, prefilled: false } } };
+  const row = (patch: Record<string, unknown>) => ({ ...createAuthor("Ada Lovelace", { id: "ada" }), ...patch });
+
+  it.each([
+    ["a score over 100", row({ contributions: [{ role: "Software", score: 101 }] }), "broken"],
+    ["a NaN score", row({ contributions: [{ role: "Software", score: Number.NaN }] }), "broken"],
+    ["an unknown role", row({ contributions: [{ role: "Astrology", score: 100 }] }), "broken"],
+    ["contributions that are not an array", row({ contributions: { Software: 100 } }), "broken"],
+    ["a name past the length limit", row({ name: "A".repeat(501) }), "broken"],
+    ["another contributor's row", row({ id: "bob" }), "broken"],
+    ["a row for nobody in the roster", { ...row({ id: "bob" }) }, "unmatched", "bob"],
+  ])("reads %s as %s, with nothing to write", (_, payload, kind, contributorId = "ada") => {
+    let step: ReturnType<typeof askStep> | undefined;
+    expect(() => {
+      step = askStep(state, { kind: "reply", contributorId, row: payload, sentAt: 2, at: 3 });
+    }).not.toThrow();
+    expect(step?.outcome.kind).toBe(kind);
+    expect(step?.patch).toEqual({ rows: {}, asks: {} });
+    expect(step?.undo).toEqual({ rows: {}, asks: {} });
+  });
+
+  it("takes a repeated role at its highest score", () => {
+    const payload = row({
+      contributions: [
+        { role: "Software", score: 20 },
+        { role: "Software", score: 100 },
+      ],
+    });
+    const { outcome, state: next } = receive(state, "ada", payload as Author, 2);
+    expect(outcome.kind).toBe("received");
+    expect(review(rowOf(next, "ada"), next.asks.ada).byTarget.Software?.theirs).toBe("lead");
+  });
+});
+
+describe("askStep reply with the same send time", () => {
+  const ada = createAuthor("Ada Lovelace", { id: "ada" });
+  const first = createAuthor("Ada Lovelace", { id: "ada", contributions: [{ role: "Software", score: 100 }] });
+  const received = receive({ authors: [ada], asks: { ada: { sentAt: 1, prefilled: false } } }, "ada", first, 5).state;
+
+  it("is a duplicate when the answer is the same", () => {
+    const step = askStep(received, { kind: "reply", contributorId: "ada", row: first, sentAt: 5, at: 9 });
+    expect(step.outcome).toEqual({ kind: "received", open: 1, duplicate: true });
+    expect(step.patch).toEqual({ rows: {}, asks: {} });
+  });
+
+  it("replaces the answer when it changed, as the later word from the same link", () => {
+    const changed = createAuthor("Ada Lovelace", { id: "ada", contributions: [{ role: "Methodology", score: 100 }] });
+    const step = askStep(received, { kind: "reply", contributorId: "ada", row: changed, sentAt: 5, at: 9 });
+    expect(step.outcome).toEqual({ kind: "received", open: 1, duplicate: false });
+    expect(step.patch.asks.ada?.reply?.receivedAt).toBe(9);
   });
 });
 
