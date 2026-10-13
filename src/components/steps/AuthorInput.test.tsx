@@ -85,6 +85,19 @@ describe("adding a contributor by ORCID iD", () => {
     expect(addField().value).toBe("Bob Smith");
   });
 
+  it("keeps a name the user typed while the lookup ran", async () => {
+    const resolve = deferLookups();
+    renderList();
+    addById(ALICE);
+    act(() => {
+      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Alice Carberry");
+    });
+
+    await resolve(ALICE, found("Josiah Carberry"));
+
+    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry"]);
+  });
+
   it("keeps a row the user gave a role during the lookup", async () => {
     const resolve = deferLookups();
     renderList();
@@ -111,7 +124,56 @@ describe("adding a contributor by ORCID iD", () => {
   });
 });
 
+describe("adding a contributor by name and ORCID iD", () => {
+  it("keeps the typed name and looks nothing up", () => {
+    renderList();
+    addById(`Jane Smith ${ALICE}`);
+
+    expect(authors()).toMatchObject([{ name: "Jane Smith", orcid: ALICE }]);
+    expect(addField().value).toBe("");
+    expect(lookupOrcidPerson).not.toHaveBeenCalled();
+  });
+
+  it("keeps the typed names in a pasted list, and looks up only the bare iDs", () => {
+    deferLookups();
+    renderList();
+    fireEvent.paste(addField(), {
+      clipboardData: { getData: () => `Jane Smith (https://orcid.org/${ALICE}); ${BOB}` },
+    });
+
+    expect(authors()).toMatchObject([
+      { name: "Jane Smith", orcid: ALICE },
+      { name: BOB, orcid: BOB },
+    ]);
+    expect(vi.mocked(lookupOrcidPerson).mock.calls.map(([orcid]) => orcid)).toEqual([BOB]);
+  });
+
+  it("gives back the whole link when a lookup for one fails", async () => {
+    const resolve = deferLookups();
+    renderList();
+    addById(`https://orcid.org/${ALICE}`);
+
+    await resolve(ALICE, NOT_FOUND);
+
+    expect(addField().value).toBe(`https://orcid.org/${ALICE}`);
+  });
+});
+
 describe("pasting a list of ORCID iDs", () => {
+  it("keeps a name the user typed while the lookups ran", async () => {
+    const resolve = deferLookups();
+    renderList();
+    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ALICE}, ${BOB}` } });
+    act(() => {
+      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Alice Carberry");
+    });
+
+    await resolve(ALICE, found("Josiah Carberry"));
+    await resolve(BOB, found("Bob Smith"));
+
+    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry", "Bob Smith"]);
+  });
+
   it("reports lookups whose name could not be written as failed", async () => {
     const resolve = deferLookups();
     renderList();
@@ -254,6 +316,31 @@ describe("undoing a removal", () => {
     expect(useContributionStore.getState().asks).toEqual({ [ann.id]: ask });
   });
 
+  it("marks the row as you again", () => {
+    const ann = createAuthor("Ann Lee");
+    useContributionStore.setState({ authors: [ann], selfId: ann.id });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    expect(useContributionStore.getState().selfId).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    expect(useContributionStore.getState().selfId).toBe(ann.id);
+  });
+
+  it("reports no limit when the contributor is already back", () => {
+    const ann = createAuthor("Ann Lee");
+    useContributionStore.setState({ authors: [ann] });
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    // The grid's bulk Undo puts the whole roster back first.
+    act(() => useContributionStore.getState().loadAuthors([ann]));
+
+    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("at most"), expect.anything());
+    expect(screen.queryByRole("button", { name: en.undo })).toBeNull();
+    expect(authors()).toHaveLength(1);
+  });
+
   it.each(["reset", "deleteAllDrafts"] as const)("restores nothing after %s", (clear) => {
     useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
     renderList();
@@ -264,6 +351,23 @@ describe("undoing a removal", () => {
 
     expect(screen.queryByRole("button", { name: en.undo })).toBeNull();
     expect(authors()).toEqual([]);
+  });
+});
+
+describe("editing a contributor's name", () => {
+  it("discards the edit on Escape, also when the field is left afterwards", () => {
+    // jsdom has no element scrolling; leaving the field rewinds it.
+    HTMLElement.prototype.scrollTo = vi.fn();
+    useContributionStore.setState({ authors: [createAuthor("Alice Smith")] });
+    renderList();
+    const field = screen.getByLabelText<HTMLInputElement>(en.nameLabel);
+    field.focus();
+    fireEvent.change(field, { target: { value: "Zed Typo" } });
+    fireEvent.keyDown(field, { key: "Escape" });
+    fireEvent.blur(field);
+
+    expect(authors()[0]?.name).toBe("Alice Smith");
+    expect(field.value).toBe("Alice Smith");
   });
 });
 
