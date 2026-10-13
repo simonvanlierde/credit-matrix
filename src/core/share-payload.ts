@@ -122,7 +122,15 @@ export function toSharePayload(input: SharePayloadInput): string {
 
   return JSON.stringify({
     v: 2,
-    ...(title?.trim() ? { t: title.trim().slice(0, 500) } : {}),
+    // Cut at 500 UTF-16 units, the schema's limit, without leaving half an emoji at the end.
+    ...(title?.trim()
+      ? {
+          t: title
+            .trim()
+            .slice(0, 500)
+            .replace(/[\uD800-\uDBFF]$/, ""),
+        }
+      : {}),
     ...(sourceDraftId ? { d: sourceDraftId } : {}),
     ...(claimId ? { c: claimId } : {}),
     ...(reply ? { r: 1 } : {}),

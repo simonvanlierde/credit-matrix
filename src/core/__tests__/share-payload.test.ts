@@ -178,6 +178,14 @@ describe("share payload v2", () => {
   });
 });
 
+describe("share payload title", () => {
+  it("cuts a long title without splitting an emoji in half", () => {
+    const title = `${"a".repeat(499)}😀`;
+    const { t } = JSON.parse(toSharePayload({ authors: makeAuthors(), title }));
+    expect(t).toBe("a".repeat(499));
+  });
+});
+
 describe("share payload envelope validation", () => {
   const base = { v: 2, a: [{ i: "jane", n: "Jane Smith", s: [100] }] };
   // Raw JSON text, so values JSON.stringify cannot write (1e400 parses to Infinity) reach the parser.
