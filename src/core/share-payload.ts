@@ -1,6 +1,6 @@
 import * as z from "zod/mini";
 import type { Author } from "./author";
-import { clampScore, ID_REGEX, MAX_AUTHORS } from "./author";
+import { clampScore, isShareableId, MAX_AUTHORS } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
 
@@ -28,9 +28,9 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
       /** draft title */
       t: z.optional(z.string().check(z.maxLength(500))),
       /** source draft id */
-      d: z.optional(z.string().check(z.regex(ID_REGEX))),
+      d: z.optional(z.string().check(z.refine(isShareableId))),
       /** claimed contributor id */
-      c: z.optional(z.string().check(z.regex(ID_REGEX))),
+      c: z.optional(z.string().check(z.refine(isShareableId))),
       /** reply flag: set on the link a claimee sends back */
       r: z.optional(z.literal(1)),
       /** blank ask: the claimed row was sent with its scores zeroed */
@@ -43,7 +43,7 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
         .array(
           z.object({
             /** stable contributor id */
-            i: z.string().check(z.regex(ID_REGEX)),
+            i: z.string().check(z.refine(isShareableId)),
             /** name */
             n: z.string(),
             /** ORCID iD, omitted when there is none */

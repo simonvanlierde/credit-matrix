@@ -1,6 +1,6 @@
 import type { Author, Contribution, ContributorType } from "./author";
 import {
-  ID_REGEX,
+  isShareableId,
   isUsableAuthorName,
   isValidOrcid,
   MAX_AUTHOR_NAME_LENGTH,
@@ -227,7 +227,7 @@ export function normalizeRoster(authors: Author[]): Author[] {
     authors.map((author) => {
       // Ids key every lookup and must survive a share link: an imported
       // duplicate or unshareable id gets a fresh one.
-      const id = ID_REGEX.test(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
+      const id = isShareableId(author.id) && !seenIds.has(author.id) ? author.id : globalThis.crypto.randomUUID();
       seenIds.add(id);
       return createAuthor(author.name, {
         id,

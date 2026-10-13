@@ -21,7 +21,7 @@ import {
   review,
   type Target,
 } from "@/core";
-import { clampScore, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
+import { clampScore, isShareableId, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import { type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
 import { requestStorageFullAnnouncement } from "@/lib/announce";
@@ -353,17 +353,14 @@ function repairAuthors(authors: unknown): Author[] {
     }));
 }
 
-/** A contributor id or draft id, as they appear in a claim: bounded, and free of anything a URL hash would mangle. */
-const CLAIM_ID_REGEX = /^[\w-]{1,64}$/;
-
 function isDraftClaim(value: unknown): value is DraftClaim {
   if (value === null || typeof value !== "object") return false;
   const { contributorId, sourceDraftId } = value as Partial<DraftClaim>;
   return (
     typeof contributorId === "string" &&
-    CLAIM_ID_REGEX.test(contributorId) &&
+    isShareableId(contributorId) &&
     typeof sourceDraftId === "string" &&
-    CLAIM_ID_REGEX.test(sourceDraftId)
+    isShareableId(sourceDraftId)
   );
 }
 
@@ -378,12 +375,12 @@ function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
   const asks: Record<string, Ask> = {};
   if (isRecord(legacy)) {
     for (const [id, at] of Object.entries(legacy)) {
-      if (CLAIM_ID_REGEX.test(id) && typeof at === "number") asks[id] = { sentAt: at, prefilled: true };
+      if (isShareableId(id) && typeof at === "number") asks[id] = { sentAt: at, prefilled: true };
     }
   }
   if (isRecord(value)) {
     for (const [id, ask] of Object.entries(value)) {
-      if (!(CLAIM_ID_REGEX.test(id) && isRecord(ask))) continue;
+      if (!(isShareableId(id) && isRecord(ask))) continue;
       const { sentAt, prefilled } = ask;
       if (!(typeof sentAt === "number" && typeof prefilled === "boolean")) continue;
       // A malformed reply costs the reply, not the ask.
@@ -413,7 +410,7 @@ function repairSingleDraft(value: unknown, id: string): Draft {
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
     claim: isDraftClaim(raw.claim) ? raw.claim : null,
     asks: repairAsks(raw.asks, asked),
-    selfId: typeof raw.selfId === "string" && CLAIM_ID_REGEX.test(raw.selfId) ? raw.selfId : null,
+    selfId: typeof raw.selfId === "string" && isShareableId(raw.selfId) ? raw.selfId : null,
   };
 }
 
