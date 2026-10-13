@@ -3,7 +3,6 @@ import { StrictMode } from "react";
 import { IntlProvider } from "use-intl";
 import { expect, it, vi } from "vitest";
 import { createAuthor } from "@/core";
-import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { buildShareUrl } from "@/lib/share";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
@@ -134,26 +133,4 @@ it("keeps what this tab holds unsaved when a link opens", async () => {
 
   expect(await screen.findByText("Opened the shared draft beside your own work.")).toBeTruthy();
   expect(useContributionStore.getState().drafts[held]?.authors.map((author) => author.name)).toEqual(["Ann Unsaved"]);
-});
-
-it("shows, not only announces, that the browser stopped saving", async () => {
-  render(
-    <IntlProvider locale="en" messages={en}>
-      <HeaderActions />
-      <StatusBanner />
-    </IntlProvider>,
-  );
-  act(() => requestStorageFullAnnouncement());
-  expect(await screen.findByText(en.errStorageFull)).toBeTruthy();
-});
-
-it("says the browser blocks storage when that is why saving stopped", async () => {
-  render(
-    <IntlProvider locale="en" messages={en}>
-      <HeaderActions />
-      <StatusBanner />
-    </IntlProvider>,
-  );
-  act(() => requestStorageFullAnnouncement(true));
-  expect(await screen.findByText(en.errStorageBlocked)).toBeTruthy();
 });

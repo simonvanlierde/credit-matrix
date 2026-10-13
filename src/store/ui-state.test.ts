@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor } from "@/core";
 import { useAskSummary, useContributionStore } from "./contribution-store";
 
-vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
 vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
 const initial = useContributionStore.getState();

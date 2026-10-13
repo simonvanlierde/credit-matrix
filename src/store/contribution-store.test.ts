@@ -1,19 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
 import type { LocaleCode } from "@/core/i18n";
-import { requestStorageFullAnnouncement } from "@/lib/announce";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
   announcingStorage,
   askSummary,
   type Draft,
+  ensureHydrated,
   followOtherTab,
   MAX_DRAFTS,
   useContributionStore,
 } from "./contribution-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
-vi.mock("@/lib/announce", () => ({ requestStorageFullAnnouncement: vi.fn() }));
 vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
 const initial = useContributionStore.getState();
@@ -1057,6 +1056,17 @@ describe("contribution store", () => {
       expect(store().drafts[y]?.title).toBe("Y1");
     });
 
+    it("lists a draft the other tab just created when this tab saves before hearing of it", async () => {
+      const { y } = await loadedWithParked();
+      const stored = JSON.parse(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${y}`) ?? "{}");
+      saveFromOtherTab("fresh", { fresh: { ...stored, id: "fresh", title: "New there" } });
+
+      store().setTitle("X1");
+      followOtherTab(storageEvent(PERSIST_KEY));
+      await Promise.resolve();
+      expect(store().drafts.fresh?.title).toBe("New there");
+    });
+
     it("takes in a parked draft the other tab saved to its own key", async () => {
       const { y } = await loadedWithParked();
       const stored = JSON.parse(globalThis.localStorage.getItem(`${PERSIST_KEY}:draft:${y}`) ?? "{}");
@@ -1194,7 +1204,7 @@ describe("contribution store", () => {
      * contributor it cannot rebuild and runs on every list edit, so one bad row
      * would make add/remove/rename all throw uncaught.
      */
-    it("says so once when the browser refuses to save", () => {
+    it("holds a refused save until a save works again", () => {
       const storage = useContributionStore.persist.getOptions().storage;
       if (!storage) throw new Error("expected a storage adapter");
       // Writes are refused before the restore lands; this is about the ones
@@ -1208,12 +1218,13 @@ describe("contribution store", () => {
 
       const state = { drafts: {}, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
       storage.setItem("credit-generator-state", { state, version: 1 });
-      storage.setItem("credit-generator-state", { state, version: 1 });
+      expect(store().saveFailure).toBe("full");
+      storage.setItem("credit-generator-state", { state: { ...state, welcomeSeen: false }, version: 1 });
+      expect(store().saveFailure).toBe("full");
 
-      // Once per run of failures, not once per keystroke.
-      expect(requestStorageFullAnnouncement).toHaveBeenCalledTimes(1);
-      expect(requestStorageFullAnnouncement).toHaveBeenCalledWith(false);
       full.mockRestore();
+      storage.setItem("credit-generator-state", { state, version: 1 });
+      expect(store().saveFailure).toBeNull();
       hydrated.mockRestore();
     });
 
@@ -1222,18 +1233,44 @@ describe("contribution store", () => {
       if (!storage) throw new Error("expected a storage adapter");
       const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
       const state = { drafts: {}, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
-      // A good save first, so an earlier test's failure run is over.
-      storage.setItem("credit-generator-state", { state, version: 1 });
-      vi.mocked(requestStorageFullAnnouncement).mockClear();
       const blocked = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
         throw new DOMException("The operation is insecure.", "SecurityError");
       });
 
-      storage.setItem("credit-generator-state", { state: { ...state, welcomeSeen: false }, version: 1 });
+      storage.setItem("credit-generator-state", { state, version: 1 });
 
-      expect(requestStorageFullAnnouncement).toHaveBeenCalledWith(true);
+      expect(store().saveFailure).toBe("blocked");
       blocked.mockRestore();
       hydrated.mockRestore();
+    });
+
+    it("does not call a failure blocked while storage itself is reachable", () => {
+      const storage = useContributionStore.persist.getOptions().storage;
+      if (!storage) throw new Error("expected a storage adapter");
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
+      const failing = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new TypeError("Do not know how to serialize a BigInt");
+      });
+
+      const state = { drafts: {}, activeDraftId: "a", uiLocale: "en" as const, welcomeSeen: true };
+      storage.setItem("credit-generator-state", { state, version: 1 });
+
+      expect(store().saveFailure).toBe("full");
+      failing.mockRestore();
+      hydrated.mockRestore();
+    });
+
+    it("restores once, never over what this tab holds", async () => {
+      const rehydrate = vi.spyOn(useContributionStore.persist, "rehydrate");
+      const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(false);
+      await ensureHydrated();
+      expect(rehydrate).toHaveBeenCalledTimes(1);
+
+      hydrated.mockReturnValue(true);
+      await ensureHydrated();
+      expect(rehydrate).toHaveBeenCalledTimes(1);
+      hydrated.mockRestore();
+      rehydrate.mockRestore();
     });
 
     it("survives a normalize/denormalize round trip", () => {
