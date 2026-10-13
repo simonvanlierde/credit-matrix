@@ -115,7 +115,10 @@ async function read(file: string): Promise<string> {
       throw new Error(`Cannot read ${file}: ${READ_ERRORS[error.code ?? ""] ?? error.message}.`);
     });
   }
-  // A NUL byte never occurs in text; "PK\x03\x04" opens a ZIP, which .xlsx and .ods files are.
+  // Excel's "Unicode Text" export is UTF-16 with a byte order mark; decode it rather than refuse it.
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(bytes);
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder("utf-16be").decode(bytes);
+  // A NUL byte never occurs in UTF-8 text; "PK\x03\x04" opens a ZIP, which .xlsx and .ods files are.
   if (/\.(xlsx?|ods)$/i.test(file) || bytes.includes(0) || bytes.subarray(0, 4).equals(ZIP_MAGIC)) {
     throw new Error("Excel and other spreadsheet files are not read: save the sheet as CSV first.");
   }

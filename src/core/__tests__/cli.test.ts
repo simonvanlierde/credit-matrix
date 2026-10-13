@@ -71,6 +71,16 @@ describe("credit-matrix statement", () => {
     await expect(run(["statement", file("team.bin", "PK\x03\x04Jane Smith")])).rejects.toThrow(message);
     await expect(run(["statement", file("team.dat", "Jane\0Smith")])).rejects.toThrow(message);
   });
+
+  it("reads a UTF-16 file, as Excel's Unicode Text export writes, instead of refusing it", async () => {
+    const text = "Name,Conceptualization\nJane Smith,100\n";
+    const le = join(dir, "utf16le.csv");
+    writeFileSync(le, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, "utf16le")]));
+    expect(await run(["statement", le])).toBe("CRediT: Conceptualization: Jane Smith");
+    const be = join(dir, "utf16be.csv");
+    writeFileSync(be, Buffer.concat([Buffer.from([0xfe, 0xff]), Buffer.from(text, "utf16le").swap16()]));
+    expect(await run(["statement", be])).toBe("CRediT: Conceptualization: Jane Smith");
+  });
 });
 
 describe("credit-matrix convert", () => {
