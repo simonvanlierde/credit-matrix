@@ -111,6 +111,41 @@ describe("adding a contributor by ORCID iD", () => {
   });
 });
 
+describe("adding a contributor by name and ORCID iD", () => {
+  it("keeps the typed name and looks nothing up", () => {
+    renderList();
+    addById(`Jane Smith ${ALICE}`);
+
+    expect(authors()).toMatchObject([{ name: "Jane Smith", orcid: ALICE }]);
+    expect(addField().value).toBe("");
+    expect(lookupOrcidPerson).not.toHaveBeenCalled();
+  });
+
+  it("keeps the typed names in a pasted list, and looks up only the bare iDs", () => {
+    deferLookups();
+    renderList();
+    fireEvent.paste(addField(), {
+      clipboardData: { getData: () => `Jane Smith (https://orcid.org/${ALICE}); ${BOB}` },
+    });
+
+    expect(authors()).toMatchObject([
+      { name: "Jane Smith", orcid: ALICE },
+      { name: BOB, orcid: BOB },
+    ]);
+    expect(vi.mocked(lookupOrcidPerson).mock.calls.map(([orcid]) => orcid)).toEqual([BOB]);
+  });
+
+  it("gives back the whole link when a lookup for one fails", async () => {
+    const resolve = deferLookups();
+    renderList();
+    addById(`https://orcid.org/${ALICE}`);
+
+    await resolve(ALICE, NOT_FOUND);
+
+    expect(addField().value).toBe(`https://orcid.org/${ALICE}`);
+  });
+});
+
 describe("pasting a list of ORCID iDs", () => {
   it("reports lookups whose name could not be written as failed", async () => {
     const resolve = deferLookups();

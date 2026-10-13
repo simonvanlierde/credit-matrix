@@ -76,6 +76,19 @@ function detectOrcid(text: string): string | null {
 }
 
 /**
+ * The name typed beside an ORCID iD ("Jane Smith 0000-…"), or null when the
+ * text is only the iD, bare or as an orcid.org link.
+ */
+function nameBesideOrcid(text: string): string | null {
+  const rest = text
+    .replace(/(?:https?:\/\/)?(?:www\.)?orcid\.org\/|\borcid\b(?:\s+id\b)?:?/gi, " ")
+    .replace(ORCID_EXTRACT_REGEX, " ")
+    .replace(/^[\s,;:()[\]<>|]+|[\s,;:()[\]<>|]+$/g, "")
+    .replace(/\s+/g, " ");
+  return /\p{L}/u.test(rest) ? rest : null;
+}
+
+/**
  * Resolve an ORCID iD to a display name, straight from ORCID's public API
  * (it sends `Access-Control-Allow-Origin: *`).
  *
@@ -303,9 +316,11 @@ export function AuthorList() {
         badChecksum.push(orcid);
         continue;
       }
-      const id = addAuthor(orcid ?? token, orcid ?? undefined);
+      // A name typed with the iD is the user's; only a bare iD needs a lookup.
+      const name = orcid ? nameBesideOrcid(token) : null;
+      const id = addAuthor(name ?? orcid ?? token, orcid ?? undefined);
       if (!id) rejected.push(token);
-      else if (orcid) pending.push({ id, orcid });
+      else if (orcid && !name) pending.push({ id, orcid });
     }
 
     // Keep the row on a failed lookup (named after its iD) so one bad token
@@ -366,6 +381,13 @@ export function AuthorList() {
         announce(t("errOrcidChecksum"), { assertive: true });
         return;
       }
+      // A name typed with the iD is the user's: keep it, and skip the lookup.
+      const name = nameBesideOrcid(trimmed);
+      if (name) {
+        if (addAuthor(name, orcid)) setNewName("");
+        else setAddError(t("errNameNoLetter"));
+        return;
+      }
       setNewName("");
       const { id, error } = await addOrcidAuthor(orcid);
       if (error) {
@@ -376,8 +398,8 @@ export function AuthorList() {
         if (row && row.name === orcid && !hasContributions(row)) removeAuthor(row.id);
         setAddError(error);
         announce(error, { assertive: true });
-        // Hand the iD back only to an empty field, not over the next name typed.
-        setNewName((current) => (current.trim() ? current : orcid));
+        // Hand the text back only to an empty field, not over the next name typed.
+        setNewName((current) => (current.trim() ? current : trimmed));
       }
     } else if (addAuthor(trimmed)) {
       setNewName("");
