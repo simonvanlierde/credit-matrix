@@ -1,7 +1,7 @@
 # Contributing
 
-Thanks for your interest in CRediT Matrix. Bug reports, fixes, and small
-features are welcome.
+Bug reports, fixes, and small features are all welcome. This page has what you
+need to get set up and get a change in.
 
 ## Getting set up
 
@@ -16,13 +16,13 @@ pnpm dev            # → http://localhost:3000
 
 ## Where things live
 
-- `src/core`: pure, framework-agnostic domain logic (statements, exports,
-  validation, heatmap SVG). No React/Next/Node APIs at import time. Most changes
-  and most tests belong here.
+- `src/core`: the domain logic (statements, exports, validation, heatmap SVG),
+  as plain TypeScript with no side effects. It uses no React, Next.js or Node
+  APIs when it's imported. Most changes and most tests go here.
 - the rest of `src/`: the Next.js UI, built as a static export.
 
-[ADR&nbsp;0001](docs/adr/0001-client-side-architecture.md) records why it's split
-this way.
+[ADR&nbsp;0001](docs/adr/0001-client-side-architecture.md) explains why I split
+it this way.
 
 ## Before you open a PR
 
@@ -38,16 +38,16 @@ pnpm validate:jats  # check the JATS export against the JATS 1.3 DTD and JATS4R 
 Before the first e2e run, install the browser: `pnpm exec playwright install chromium`.
 
 CI runs on every pull request and on every push to `main`. It runs `pnpm verify`,
-`pnpm validate:jats`, the e2e suite and a build, and deploys `main` only when all of them pass.
-Add or update tests in `src/core/__tests__` for any change to domain logic.
+`pnpm validate:jats`, the e2e suite and a build. It deploys `main` only when all of them pass.
+If you change the domain logic, add or update tests in `src/core/__tests__`.
 
 ## Testing
 
 - **Unit (Vitest)**: `pnpm test`. Covers the domain layer, the store, and `src/lib`: name
-  parsing, initials deduplication, statement formats, score-to-level boundaries, import/export round
-  trips, validation, and heatmap SVG generation. `format-fixtures.test.ts` decodes frozen files
-  in `src/core/__tests__/fixtures/` (a share link, JSON, CSV and JATS); after a deliberate format
-  change, regenerate the affected fixture and run `pnpm validate:jats`.
+  parsing, removing duplicate initials, statement formats, which score maps to which level, exporting
+  and importing back, validation, and the heatmap SVG. `format-fixtures.test.ts` decodes saved files
+  in `src/core/__tests__/fixtures/` that never change (a share link, JSON, CSV and JATS). If you
+  change a format on purpose, regenerate the fixture it affects and run `pnpm validate:jats`.
 - **End-to-end (Playwright)**: `pnpm test:e2e`. `happy-path.spec.ts` covers sample data, DOI and
   name import, the grid, and the client-side XML download. `sharing.spec.ts` covers share links and
   the co-author claim round trip. `review.spec.ts` covers settling co-author answers in the Review
@@ -55,28 +55,30 @@ Add or update tests in `src/core/__tests__` for any change to domain logic.
   axe scans. `messages.spec.ts`, `design-tokens.spec.ts`, and `offline.spec.ts` guard the locale
   catalogs, the design tokens, and the service worker.
 
-Every PR runs Biome, typecheck, unit coverage, the full Playwright suite (including the axe scans),
-and a static export build. In CI, Playwright runs against `wrangler dev`, which applies
-`public/_headers`. Locally it uses `pnpm dev`, which has no CSP. You only need
-[wrangler](https://developers.cloudflare.com/workers/wrangler/) for `pnpm preview` and
-`pnpm deploy`, not for development or the tests you run locally.
+Every PR runs Biome, typecheck, the unit tests with coverage, the full Playwright suite (with the
+axe scans), and a static export build. In CI, Playwright runs against `wrangler dev`, which applies
+`public/_headers`. On your machine it uses `pnpm dev`, which has no Content Security Policy (CSP).
+You only need [wrangler](https://developers.cloudflare.com/workers/wrangler/) for `pnpm preview` and
+`pnpm deploy`. You don't need it to develop or to run the tests locally.
 
 ### Accessibility
 
-Two automated checks guard the UI. They are guardrails, not a WCAG conformance claim.
+Two automated checks guard the UI. They catch common mistakes. They don't mean the app meets WCAG,
+the web accessibility guidelines.
 
 | Check | Command | Scope | In CI |
 | --- | --- | --- | --- |
 | Biome [`a11y`](https://biomejs.dev/linter/rules/#accessibility) lint | `pnpm lint` | alt text, ARIA validity, button `type`, keyboard handlers | Every PR |
 | [axe-core](https://github.com/dequelabs/axe-core-npm) scan ([`e2e/a11y.spec.ts`](e2e/a11y.spec.ts)) | `pnpm test:e2e` | WCAG 2.0/2.1/2.2 A/AA rules over the main screens, light + dark | Every PR |
 
-The UI includes a skip link, landmark regions, radiogroup segmented controls, and a
-`prefers-reduced-motion` fallback that neutralizes transitions and animations. Drag-to-reorder is
-keyboard-accessible, and a live region announces copy, ORCID-lookup, and import status.
+The UI has a skip link, landmark regions, and segmented controls built as radio groups. With
+`prefers-reduced-motion` set, transitions and animations are switched off. You can reorder by
+keyboard as well as by dragging. A live region tells screen readers how a copy, an ORCID lookup or
+an import went.
 
 ## Translating
 
-The app has nine languages. A translation lives in one of three places, depending on the string.
+The app has nine languages. Where a translation lives depends on the text, in one of three places.
 
 | What | File | Notes |
 | --- | --- | --- |
@@ -96,9 +98,14 @@ Locale codes are BCP 47 tags, such as `pt-PT` and `zh-Hans`.
    only works if upstream already has that language. If it does not, translate the roles upstream
    first.
 
-**The gate.** `e2e/messages.spec.ts` fails if a locale the picker offers has no catalog files, if a
-key set differs from English in either direction, if ICU syntax is malformed, or if a placeholder is
-dropped. Run it with `pnpm exec playwright test e2e/messages.spec.ts`.
+**The check.** `e2e/messages.spec.ts` fails in four cases:
+
+- a language in the picker has no catalog files;
+- a catalog has keys that English lacks, or lacks keys that English has;
+- the ICU syntax is broken;
+- a placeholder is missing.
+
+Run it with `pnpm exec playwright test e2e/messages.spec.ts`.
 
 To report a wrong or missing translation without a PR, use the translation issue form.
 
@@ -108,8 +115,8 @@ See [docs/deploy.md](docs/deploy.md).
 
 ## Commit and PR conventions
 
-- Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
-  and are checked by commitlint (a `commit-msg` hook runs it locally).
-- The lefthook hooks auto-format staged files on commit and run lint + tests on
-  push, so most CI failures are caught before you push.
-- Keep PRs focused. Describe the change and how you verified it.
+- Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
+  commitlint checks them, and a `commit-msg` hook runs it on your machine.
+- The lefthook hooks format staged files when you commit, and run lint and
+  tests when you push. So most CI failures show up before you push.
+- Keep each PR to one change. Say what it changes and how you checked it.
