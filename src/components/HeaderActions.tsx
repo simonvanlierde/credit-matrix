@@ -7,11 +7,11 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { importAnswers } from "@/core";
+import { decodeShareHash, importAnswers, type ShareData } from "@/core";
 import { isAllBinary } from "@/core/author";
 import { keepKnownIds } from "@/core/merge-row";
 import { announce } from "@/lib/announce";
-import { buildShareUrl, decodeShareHash, type ShareData, shareFailureKey } from "@/lib/share";
+import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import {
   type DraftClaim,

@@ -1,6 +1,6 @@
 import type { Ask } from "./ask";
 import type { Author } from "./author";
-import { fromCsv } from "./export/csv";
+import { fromCsv, headerCells } from "./export/csv";
 import { fromJson } from "./export/json";
 import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
@@ -13,7 +13,8 @@ export type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "name
 export function detectFormat(text: string): DetectedFormat {
   const trimmed = text.trim();
   // A share link, most usefully one a co-author sent back with their own roles.
-  if (/^https?:\/\/\S+#s=/.test(trimmed)) return "link";
+  // `encodeShareHash` without a base URL gives the bare `#s=…` hash.
+  if (/^https?:\/\/\S+#s=/.test(trimmed) || /^#s=[\w-]+$/.test(trimmed)) return "link";
   if (trimmed.startsWith("<")) return "xml";
   // JSON must be checked before the CSV heuristic: a toJson() payload contains
   // both a comma and a "name" field, so the CSV check would misclassify it.
@@ -27,19 +28,7 @@ export function detectFormat(text: string): DetectedFormat {
   }
   if (isTenzing(trimmed)) return "tenzing";
   // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
-  const headerCells = trimmed.slice(0, trimmed.search(/\r?\n|$/)).split(",");
-  if (
-    headerCells.some(
-      (cell) =>
-        cell
-          .trim()
-          .replace(/^"(.*)"$/, "$1")
-          .trim()
-          .toLowerCase() === "name",
-    )
-  ) {
-    return "csv";
-  }
+  if (headerCells(trimmed).includes("name")) return "csv";
   if (trimmed.length > 0) return "names";
   return "unknown";
 }

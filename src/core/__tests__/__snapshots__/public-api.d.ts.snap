@@ -968,7 +968,8 @@ export declare function fromJats4rXml(xmlString: string, { parser }?: {
 }): Author[];
 //#endregion
 //#region generate-statement.d.ts
-type StatementFormat = "by-role" | "by-role-short" | "by-author" | "by-author-short";
+export declare const STATEMENT_FORMATS: readonly ["by-role", "by-role-short", "by-author", "by-author-short"];
+type StatementFormat = (typeof STATEMENT_FORMATS)[number];
 interface StatementOptions {
   format: StatementFormat;
   /**

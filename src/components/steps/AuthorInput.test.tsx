@@ -1,10 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { type Ask, createAuthor } from "@/core";
+import { type Ask, createAuthor, decodeShareHash } from "@/core";
 import { lookupOrcidPerson, type OrcidLookupResult } from "@/core/lookup";
 import { announce } from "@/lib/announce";
-import { decodeShareHash } from "@/lib/share";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
 import { AuthorList } from "./AuthorInput";

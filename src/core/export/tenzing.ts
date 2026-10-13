@@ -2,7 +2,7 @@ import type { Author } from "../author";
 import { isValidOrcid } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
-import { parseCsvRecords } from "./csv";
+import { delimiterOf, headerCells, parseCsvRecords } from "./csv";
 
 /*
  * tenzing (github.com/marton-balazs-kovacs/tenzing) contributor spreadsheets,
@@ -11,11 +11,9 @@ import { parseCsvRecords } from "./csv";
  * position.
  */
 
-/** Compare headers ignoring case, spacing, quotes and the kind of dash. */
+/** Compare headers ignoring case, spacing and the kind of dash. */
 function key(header: string): string {
   return header
-    .trim()
-    .replace(/^"(.*)"$/, "$1")
     .toLowerCase()
     .replace(/[‐-―-]/g, "-")
     .replace(/\s+/g, " ")
@@ -24,19 +22,9 @@ function key(header: string): string {
 
 const ROLE_KEYS = new Map(CREDIT_ROLES.map((role) => [key(role.name), role.name]));
 
-/** Tab-separated when the header has more tabs than commas. */
-function delimiterOf(headerLine: string): string {
-  return (headerLine.match(/\t/g)?.length ?? 0) > (headerLine.match(/,/g)?.length ?? 0) ? "\t" : ",";
-}
-
-function firstLine(text: string): string {
-  return text.slice(0, text.search(/\r?\n|$/));
-}
-
 /** True for a header row that looks like a tenzing contributor spreadsheet. */
 export function isTenzing(text: string): boolean {
-  const headerLine = firstLine(text.trim());
-  const headers = headerLine.split(delimiterOf(headerLine)).map(key);
+  const headers = headerCells(text).map(key);
   if (headers.includes("author/acknowledgee")) return true;
   return headers.includes("firstname") && headers.filter((header) => ROLE_KEYS.has(header)).length >= 10;
 }
@@ -47,8 +35,12 @@ function isTrue(value: string | undefined): boolean {
 
 export function fromTenzing(text: string): Author[] {
   const trimmed = text.replace(/^﻿/, "").trim();
-  const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(firstLine(trimmed)));
-  const column = new Map(headerRow.map((header, index) => [key(header), index]));
+  const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(trimmed));
+  const column = new Map<string, number>();
+  // The first of two same-named columns wins, so a stray empty copy cannot blank a filled one.
+  for (const [index, header] of headerRow.entries()) {
+    if (!column.has(key(header))) column.set(key(header), index);
+  }
   const cell = (row: string[], header: string) => row[column.get(header) ?? -1]?.trim() ?? "";
 
   const people = rows
