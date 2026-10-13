@@ -48,6 +48,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Offline use: the app now always saves its offline copy. A cut-off file link in the page could
+  make that step fail, so the app would not load without a network.
 - Drafts open in two tabs: a tab you opened earlier no longer saves its old copy of a draft over
   the edits you made to it in another tab, and a draft created in another tab shows in this tab's
   list straight away. A draft deleted in another tab stays here until you reload.

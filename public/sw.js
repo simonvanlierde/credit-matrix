@@ -48,9 +48,13 @@ async function precache() {
   const page = await fetch("/", { cache: "no-cache" });
   if (!page.ok) throw new Error(`precache: / answered ${page.status}`);
   const html = await page.clone().text();
-  // The inline payload repeats these URLs JSON-escaped (`…js\"`): stop at a
-  // backslash too, or one bad URL fails addAll and with it the install.
-  const assets = [...new Set(html.match(/\/(?:_next\/static|fonts)\/[^"'\s)\\]+/g) ?? [])];
+  // The inline payload repeats these URLs JSON-escaped (`…js\"`) and can split
+  // one across two script chunks (`/fonts/newsreader-ital"])`). Take only
+  // URLs that end in a file extension, or one cut-off URL fails addAll and
+  // with it the install.
+  const assets = [
+    ...new Set(html.match(/\/(?:_next\/static|fonts)\/[^"'\s)\\]+\.(?:js|css|woff2)(?=["'\s)\\])/g) ?? []),
+  ];
   await cache.addAll(assets);
   await cache.put("/", page);
 }
