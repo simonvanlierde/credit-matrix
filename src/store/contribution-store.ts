@@ -1310,7 +1310,7 @@ export const useContributionStore = create<ContributionState>()(
       // Don't read localStorage during store creation: the server renders the
       // empty initial state, so a synchronous rehydrate here would desync the
       // first client render (hydration mismatch). A client effect calls
-      // rehydrate() after mount instead; see HeaderActions.
+      // rehydrate() after mount instead; see PersistenceStatus.
       skipHydration: true,
       // spell-checker: ignore partialize
       partialize: persistedState,
