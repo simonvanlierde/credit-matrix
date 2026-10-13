@@ -108,6 +108,14 @@ describe("askStep reply", () => {
     }
   });
 
+  it("treats a send time after arrival as sent on arrival, so a forged future time blocks nothing", () => {
+    const { state, target, row, random } = scenario(1);
+    const forged = receive(state, target.id, row, Date.UTC(3000, 0, 1), 2000).state;
+    expect(forged.asks[target.id]?.reply?.sentAt).toBe(2000);
+    const later = randomRow(random, "Someone Else", target.id);
+    expect(receive(forged, target.id, later, 2500, 3000).outcome.kind).toBe("received");
+  });
+
   it("starts a changed reply with no decisions, so a renewed objection shows again", () => {
     for (let seed = 1; seed <= ROUNDS; seed++) {
       const { state, target, row } = scenario(seed);

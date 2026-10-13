@@ -218,7 +218,9 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
       if (!author) return nothing("unmatched");
       const row = parsed.data;
       // A link from before send times were recorded counts as sent when opened.
-      const sentAt = event.sentAt ?? event.at;
+      // A link cannot have been sent after it arrived; a hand-edited future `w`
+      // would otherwise make every later reply to this ask look stale.
+      const sentAt = Math.min(event.sentAt ?? event.at, event.at);
       const answer: Answer = {
         contributions: row.contributions,
         equalContribution: row.equalContribution,

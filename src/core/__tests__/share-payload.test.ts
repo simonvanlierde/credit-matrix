@@ -194,10 +194,9 @@ describe("share payload envelope validation", () => {
     expect(() => fromSharePayload(json)).toThrow();
   });
 
-  it("accepts a far-future sentAt as it stands", () => {
-    // Nothing clamps w to the present. A reply echoes the asker's own send
-    // time, so only a hand-edited link carries a far-future one. Its harm is
-    // bounded: later replies to that one contributor's ask read as stale.
+  it("decodes a far-future sentAt as it stands", () => {
+    // The payload keeps it; askStep clamps a reply's send time to when it
+    // arrived, so a hand-edited future w cannot make later replies stale.
     const farFuture = Date.UTC(3000, 0, 1);
     expect(fromSharePayload(withKey("w", String(farFuture))).sentAt).toBe(farFuture);
   });
