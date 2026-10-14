@@ -150,6 +150,8 @@ def test_double_encoded_text_is_repaired():
     assert a.authors[0].surname == "Smăth"
     assert a.statement == "Ann Smith: writing—review and editing; “quoted”"
     assert parse_article(article(contrib("Zoë", "Café"))).authors[0].name == "Zoë Café"  # real Latin-1 stays
+    # continuation bytes Python counts as whitespace: "\xa0" in "à", "\x85" in "Å"
+    assert parse_article(article(contrib("NicolÃ ", "Ã\u0085berg"))).authors[0].name == "Nicolà Åberg"
 
 
 @pytest.mark.parametrize("title", ["Green credit policy", "Author gender", "Authorship criteria and credit"])

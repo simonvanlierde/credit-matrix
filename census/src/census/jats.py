@@ -71,7 +71,8 @@ def _repair(match: re.Match[str]) -> str:
 
 
 def _squash(text: str) -> str:
-    return _MOJIBAKE_RE.sub(_repair, re.sub(r"\s+", " ", text)).strip()
+    # Repair first: some continuation bytes are whitespace to Python ("\xa0" in "à", "\x85" in "Å").
+    return re.sub(r"\s+", " ", _MOJIBAKE_RE.sub(_repair, text)).strip()
 
 
 def _text(el: ET.Element | None) -> str:
