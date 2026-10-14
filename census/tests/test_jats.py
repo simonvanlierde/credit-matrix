@@ -72,15 +72,15 @@ def test_unlinked_con_footnotes_map_by_author_order():
 @pytest.mark.parametrize(
     "back",
     [
-        '<notes notes-type="author-contribution"><p>A.S.: software; B.J.: validation.</p></notes>',
-        "<sec><title>CRediT authorship contribution statement</title><p>Ann Smith: Software. Bo Jones: Validation.</p></sec>",
-        "<fn-group><fn><p><bold>Contributors:</bold> AS: software. BJ: validation.</p></fn></fn-group>",
+        '<notes notes-type="author-contribution"><p>A.S.: software; B.J.: visualization.</p></notes>',
+        "<sec><title>CRediT authorship contribution statement</title><p>Ann Smith: Software. Bo Jones: Visualization.</p></sec>",
+        "<fn-group><fn><p><bold>Contributors:</bold> AS: software. BJ: visualization.</p></fn></fn-group>",
     ],
 )
 def test_statement_text(back):
     a = parse_article(article(contrib("Ann", "Smith") + contrib("Bo", "Jones"), back))
     assert a.style == "statement_text"
-    assert a.assignments == {(0, "software"), (1, "validation")}
+    assert a.assignments == {(0, "software"), (1, "visualization")}
     assert a.statement
 
 
@@ -122,10 +122,10 @@ def test_malformed_role_url_keeps_its_style():
 def test_back_matter_statement_beats_a_body_contribution_section():
     xml = article(
         contrib("Ann", "Smith"),
-        '<notes notes-type="author-contribution"><p>AS: software.</p></notes>',
+        '<notes notes-type="author-contribution"><p>AS: software, visualization.</p></notes>',
     ).replace(b"</front>", b"</front><body><sec><title>Contribution</title><p>Software matters.</p></sec></body>")
     a = parse_article(xml)
-    assert (a.style, a.assignments) == ("statement_text", {(0, "software")})
+    assert (a.style, a.assignments) == ("statement_text", {(0, "software"), (0, "visualization")})
 
 
 def test_list_items_are_not_glued_together():
@@ -140,3 +140,28 @@ def test_list_items_are_not_glued_together():
 def test_impossible_year_is_dropped():
     a = parse_article(article(contrib("Ann", "Smith")).replace(b"<year>2024</year>", b"<year>20225</year>"))
     assert a.year is None
+
+
+def test_double_encoded_text_is_repaired():
+    mojibake = "Ann Smith: writingâ\u0080\u0094review and editing; â\u0080\u009cquotedâ\u0080\u009d"
+    a = parse_article(
+        article(contrib("Ann", "SmÄ\u0083th"), f"<sec><title>Author contributions</title><p>{mojibake}</p></sec>")
+    )
+    assert a.authors[0].surname == "Smăth"
+    assert a.statement == "Ann Smith: writing—review and editing; “quoted”"
+    assert parse_article(article(contrib("Zoë", "Café"))).authors[0].name == "Zoë Café"  # real Latin-1 stays
+
+
+@pytest.mark.parametrize("title", ["Green credit policy", "Author gender", "Authorship criteria and credit"])
+def test_body_sections_about_credit_or_authors_are_not_statements(title):
+    xml = article(contrib("Ann", "Smith")).replace(
+        b"</front>", f"</front><body><sec><title>{title}</title><p>AS: formal analysis.</p></sec></body>".encode()
+    )
+    assert parse_article(xml).statement is None
+
+
+def test_prose_naming_only_common_role_words_is_not_credit():
+    back = "<sec><title>Authors' contributions</title><p>AS performed the review under the supervision of BJ.</p></sec>"
+    a = parse_article(article(contrib("Ann", "Smith") + contrib("Bo", "Jones"), back))
+    assert (a.style, a.assignments) == ("none", set())
+    assert a.statement

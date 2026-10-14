@@ -136,14 +136,17 @@ def _mask(text: str, start: int, end: int) -> str:
 
 
 def _name_variants(author: Author) -> set[str]:
-    """Full-name spellings: "Ann Smith", "Smith Ann", and Vancouver style "Smith AB" / "Smith A.B."."""
+    """Full-name spellings: "Ann Smith", "Smith Ann", Vancouver style "Smith AB" / "Smith A.B.", and
+    initials first, "AB Smith" / "A.B. Smith" (Life Science Alliance)."""
     if not author.surname:
         return set()
     given, _ = _name_parts(author)
     initials = "".join(g[0] for g in given)
     variants = {author.name, f"{author.surname} {author.given}"}
     if initials:
-        variants |= {f"{author.surname} {initials}", f"{author.surname} {'.'.join(initials)}."}
+        dotted = f"{'.'.join(initials)}."
+        variants |= {f"{author.surname} {initials}", f"{author.surname} {dotted}"}
+        variants |= {f"{initials} {author.surname}", f"{dotted} {author.surname}"}
     return {clean(v) for v in variants if v.strip()}
 
 

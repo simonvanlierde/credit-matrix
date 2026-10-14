@@ -125,3 +125,9 @@ def test_particles_inside_initials():
     authors = [Author("Fernanda", "da Silva Nunes"), Author("João Antonio", "dos Santos-Silva")]
     parsed = parse_statement("Methodology, F.d.S.N. and J.A.d.S.-S.", authors)
     assert parsed.assignments == {(0, "methodology"), (1, "methodology")}
+
+
+def test_initials_before_surname():
+    authors = [Author("Brendan James", "Houston"), Author("Duc", "Merriner")]
+    parsed = parse_statement("BJ Houston: data curation. D. Merriner: software.", authors)
+    assert parsed.assignments == {(0, "data-curation"), (1, "software")}

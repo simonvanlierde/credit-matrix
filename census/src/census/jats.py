@@ -4,7 +4,7 @@ import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 
-from census.roles import clean, find_roles, slug_from_url
+from census.roles import clean, find_roles, names_credit, slug_from_url
 from census.statement import Author, parse_statement
 
 XLINK = "{http://www.w3.org/1999/xlink}"
@@ -20,9 +20,14 @@ STYLES = ("jats4r", "plos_uri", "contrib_text", "statement_text", "none")
 - none: no CRediT roles found
 """
 
-# "Author contributions", "CRediT authorship contribution statement", "Contributors", "Contributions";
-# not Frontiers' "Contribution to the field".
-_STATEMENT_TITLE_RE = re.compile(r"author|credit|contributor|^\W*contributions?\W*$", re.IGNORECASE)
+# "Author contributions", "CRediT authorship contribution statement", "Contributors", "Contributions",
+# "Author statement", "Authorship"; not Frontiers' "Contribution to the field", nor a body section on
+# "Green credit policy" or "Author gender".
+_STATEMENT_TITLE_RE = re.compile(
+    r"author'?s?'?\W+contribution|contributions? of (?:the )?authors|(?-i:\bCRediT\b)|contributor"
+    r"|^\W*contributions?\W*$|author\w*\W+statement|^\W*authorship\W*$",
+    re.IGNORECASE,
+)
 _CON_ID_RE = re.compile(r"con\d+")
 
 
@@ -53,9 +58,25 @@ class Article:
 _ORCID_RE = re.compile(r"\d{4}-\d{4}-\d{4}-\d{3}[\dX]")
 
 
+# UTF-8 bytes that were read as Latin-1 and encoded again: Europe PMC's bulk files store "—" as
+# "â\x80\x94" and "ă" as "Ä\x83" in about two in three articles.
+_MOJIBAKE_RE = re.compile("[\xc2-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xf4][\x80-\xbf]{3}")
+
+
+def _repair(match: re.Match[str]) -> str:
+    try:
+        return match.group().encode("latin-1").decode("utf-8")
+    except UnicodeDecodeError:
+        return match.group()
+
+
+def _squash(text: str) -> str:
+    return _MOJIBAKE_RE.sub(_repair, re.sub(r"\s+", " ", text)).strip()
+
+
 def _text(el: ET.Element | None) -> str:
     # Joined with spaces: list items, paragraphs and <break/> otherwise glue words ("analysisS.").
-    return re.sub(r"\s+", " ", " ".join(el.itertext())).strip() if el is not None else ""
+    return _squash(" ".join(el.itertext())) if el is not None else ""
 
 
 def _own_text(el: ET.Element, skip: str) -> str:
@@ -65,7 +86,7 @@ def _own_text(el: ET.Element, skip: str) -> str:
         if child.tag != skip:
             parts.append(_text(child))
         parts.append(child.tail or "")
-    return re.sub(r"\s+", " ", " ".join(parts)).strip()
+    return _squash(" ".join(parts))
 
 
 def _author(contrib: ET.Element) -> Author:
@@ -188,12 +209,12 @@ def parse_element(root: ET.Element) -> Article:
             article.paired = parse_statement(text, article.authors).assignments
         return article
 
-    # The first statement that names a role is kept even when it does not parse: those are the hard
-    # cases the labelled set needs.
+    # The first statement that names a role is kept even when it does not parse or is not CRediT:
+    # those are the hard cases the labelled set needs.
     for text in _statement_candidates(root):
         parsed = parse_statement(text, article.authors)
         article.statement, article.unresolved = text, parsed.unresolved
-        if parsed.assignments:
+        if parsed.assignments and names_credit(clean(text)):
             article.style, article.assignments = "statement_text", parsed.assignments
         break
     return article

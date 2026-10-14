@@ -15,7 +15,7 @@ XML = {
     ),
     "PMC2": article(
         contrib("Ann", "Smith") + contrib("Bo", "Jones"),
-        "<sec><title>Author contributions</title><p>AS: software. BJ: validation, software.</p></sec>",
+        "<sec><title>Author contributions</title><p>AS: software. BJ: visualization, software.</p></sec>",
     ),
     "PMC3": b"<article><broken",
 }
@@ -51,7 +51,7 @@ def test_bucket_unit_reads_versions_and_reports_failures():
     ]
     assert record == {"unit": unit, "articles": 5, "retries": 2, "finished": False}  # PMC6 and PMC7 retry
     assert rows[2].article["xml_sha256"]  # a broken file still gets its hash
-    assert rows[1].roles == [(1, "software"), (2, "software"), (2, "validation")]
+    assert rows[1].roles == [(1, "software"), (2, "software"), (2, "visualization")]
 
 
 def test_run_resumes_unfinished_units_only(tmp_path):

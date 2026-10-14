@@ -11,7 +11,7 @@ XML = {
     ),
     "PMC2": article(
         contrib("Ann", "Smith") + contrib("Bo", "Jones"),
-        "<sec><title>Author contributions</title><p>=AS: software. BJ: validation, software.</p></sec>",
+        "<sec><title>Author contributions</title><p>=AS: software. BJ: visualization, software.</p></sec>",
     ),
 }
 
@@ -59,7 +59,7 @@ def test_label_export_and_score(db, tmp_path):
     for row in rows:  # blind: no prediction anywhere but the source text
         assert not row["gold"]
     assert next(r["text"] for r in rows if r["pmcid"] == "PMC2").startswith("'=")  # no spreadsheet formula
-    gold = {"PMC1": "1: software; 2: validation", "PMC2": "1: software; 2: validation"}
+    gold = {"PMC1": "1: software; 2: validation", "PMC2": "1: software; 2: visualization"}
     for row in rows:
         row["gold"] = gold[row["pmcid"]]
     with out.open("w", newline="") as f:

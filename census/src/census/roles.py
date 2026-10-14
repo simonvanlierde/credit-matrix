@@ -27,6 +27,19 @@ ROLE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Terms prose rarely uses. "Supervision", "software" or "investigation" alone turn up in narrative
+# statements ("under the supervision of NS") and ICMJE lists, which are not CRediT.
+_DISTINCT = {
+    "conceptualization",
+    "data-curation",
+    "formal-analysis",
+    "funding-acquisition",
+    "project-administration",
+    "visualization",
+    "writing-original-draft",
+    "writing-review-editing",
+}
+
 _URL_RE = re.compile(r"credit\.niso\.org/contributor-roles/([a-z-]+)")
 _DASHES = re.compile("\\s*[\\u2010-\\u2015\\u2212-]+\\s*")  # hyphen to horizontal bar, minus, ASCII hyphen
 
@@ -41,6 +54,11 @@ def slug_from_url(url: str) -> str | None:
     """The role slug in a credit.niso.org role URL, or None for anything else."""
     match = _URL_RE.search(url)
     return match.group(1) if match and match.group(1) in ROLE_PATTERNS else None
+
+
+def names_credit(text: str) -> bool:
+    """Whether `clean`ed text uses CRediT's own vocabulary, not just a common word that is also a role."""
+    return any(slug in _DISTINCT for _, _, slug in find_roles(text))
 
 
 def find_roles(text: str) -> list[tuple[int, int, str]]:
