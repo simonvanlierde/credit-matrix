@@ -53,7 +53,7 @@ def test_fields_per_journal(db, tmp_path):
 def test_label_export_and_score(db, tmp_path):
     out = tmp_path / "labels.csv"
     assert labels.export(db, out, per_style=5, seed=1) == 2
-    with out.open() as f:
+    with out.open(encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
     assert rows[0]["authors"] == "1. Ann Smith | 2. Bo Jones"
     for row in rows:  # blind: no prediction anywhere but the source text
@@ -62,7 +62,7 @@ def test_label_export_and_score(db, tmp_path):
     gold = {"PMC1": "1: software; 2: validation", "PMC2": "1: software; 2: visualization"}
     for row in rows:
         row["gold"] = gold[row["pmcid"]]
-    with out.open("w", newline="") as f:
+    with out.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
@@ -80,5 +80,13 @@ def test_parse_gold():
         (2, "writing-review-editing"),
     }
     assert labels.parse_gold("none", 3) == set()
-    with pytest.raises(ValueError, match="neither"):
-        labels.parse_gold("A.S.: software", 2)
+    for bad in ("A.S.: software", "²: software", "software", "3: software", "1: drew the figures"):
+        with pytest.raises(ValueError, match="'"):
+            labels.parse_gold(bad, 2)
+
+
+def test_score_unknown_pmcid(db, tmp_path):
+    out = tmp_path / "labels.csv"
+    out.write_text("pmcid,style,authors,text,gold\nPMC404,none,,x,none\n", encoding="utf-8-sig")
+    with pytest.raises(ValueError, match="PMC404"):
+        labels.score(db, out)

@@ -36,7 +36,8 @@ def export(con: duckdb.DuckDBPyConnection, path: Path, per_style: int, seed: int
             numbered = " | ".join(f"{i}. {name}" for i, name in enumerate(authors, 1))
             rows.append((pmcid, style_, numbered, _cell(text), ""))
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="") as f:
+    # utf-8-sig so a spreadsheet opened for labelling shows the names right.
+    with path.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f, lineterminator="\n")
         writer.writerow(["pmcid", "style", "authors", "text", "gold"])
         writer.writerows(rows)
@@ -53,30 +54,35 @@ def parse_gold(gold: str, n_authors: int) -> set[tuple[int, str]]:
     if gold.strip().lower() == "none":
         return set()
     pairs = set()
-    for part in gold.split(";"):
-        who, _, roles = part.partition(":")
+    for part in filter(str.strip, gold.split(";")):
+        who, colon, roles = part.partition(":")
         who = who.strip().lower()
-        if not roles.strip():
-            continue
-        if who != "all" and not who.isdigit():
-            raise ValueError(f"author {who!r} is neither a number nor 'all'")
+        if not colon or (who != "all" and not (who.isascii() and who.isdigit())):
+            raise ValueError(f"{part.strip()!r}: author is neither a number nor 'all'")
+        if who != "all" and not 1 <= int(who) <= n_authors:
+            raise ValueError(f"{part.strip()!r}: the article has {n_authors} authors")
+        slugs = {slug for _, _, slug in find_roles(clean(roles))}
+        if not slugs:
+            raise ValueError(f"{part.strip()!r}: no CRediT role found")
         positions = range(1, n_authors + 1) if who == "all" else [int(who)]
-        pairs |= {(p, slug) for p in positions for _, _, slug in find_roles(clean(roles))}
+        pairs |= {(p, slug) for p in positions for slug in slugs}
     return pairs
 
 
 def score(con: duckdb.DuckDBPyConnection, path: Path) -> list[tuple]:
     """Precision, recall and F1 over (author, role) pairs, and the share of articles exactly right, per style."""
-    with path.open(newline="") as f:
+    with path.open(newline="", encoding="utf-8-sig") as f:
         labelled = [r for r in csv.DictReader(f) if r["gold"].strip()]
     counts: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0])  # tp, fp, fn, exact, articles
     for row in labelled:
         n_authors = con.execute("SELECT n_authors FROM articles WHERE pmcid = ?", [row["pmcid"]]).fetchone()
+        if n_authors is None:
+            raise ValueError(f"{row['pmcid']}: not in this database")
         predicted = set(
             con.execute("SELECT author_position, role FROM assignments WHERE pmcid = ?", [row["pmcid"]]).fetchall()
         )
         try:
-            gold = parse_gold(row["gold"], n_authors[0] if n_authors else 0)
+            gold = parse_gold(row["gold"], n_authors[0] or 0)
         except ValueError as error:
             raise ValueError(f"{row['pmcid']}: {error}") from error
         c = counts[row["style"]]
