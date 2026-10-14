@@ -20,14 +20,16 @@ STYLES = ("jats4r", "plos_uri", "contrib_text", "statement_text", "none")
 - none: no CRediT roles found
 """
 
-# "Author contributions", "CRediT authorship contribution statement", "Contributors", "Contributions",
-# "Author statement", "Authorship"; not Frontiers' "Contribution to the field", nor a body section on
-# "Green credit policy" or "Author gender".
+# "Author contributions", "CRediT authorship contribution statement", "Contributors", "Author statement",
+# "Authorship"; not Frontiers' "Contribution to the field", nor a body section on "Green credit policy"
+# or "Author gender".
 _STATEMENT_TITLE_RE = re.compile(
     r"author'?s?'?\W+contribution|contributions? of (?:the )?authors|(?-i:\bCRediT\b)|contributor"
-    r"|^\W*contributions?\W*$|author\w*\W+statement|^\W*authorship\W*$",
+    r"|author\w*\W+statement|^\W*authorship\W*$",
     re.IGNORECASE,
 )
+# A bare "Contributions" outside the body: in the body it is the paper's own contribution.
+_BARE_TITLE_RE = re.compile(r"^\W*contributions?\W*$", re.IGNORECASE)
 _CON_ID_RE = re.compile(r"con\d+")
 
 
@@ -122,28 +124,28 @@ def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> tuple[list[tuple
     return found, texts
 
 
-def _holds_statement(el: ET.Element) -> bool:
+def _holds_statement(el: ET.Element, in_body: bool) -> bool:
     if el.tag == "notes" and "contribution" in (el.get("notes-type") or ""):
         return True
-    if el.tag in {"sec", "fn-group", "notes"}:
-        return bool(_STATEMENT_TITLE_RE.search(_text(el.find("title"))))
-    # BMJ: <fn><p><bold>Contributors:</bold> ...
-    return el.tag == "fn" and bool(_STATEMENT_TITLE_RE.search(_text(el.find("p/bold"))))
+    title = _text(el.find("title")) if el.tag in {"sec", "fn-group", "notes"} else ""
+    if el.tag == "fn":  # BMJ: <fn><p><bold>Contributors:</bold> ...
+        title = _text(el.find("p/bold"))
+    return bool(_STATEMENT_TITLE_RE.search(title) or (not in_body and _BARE_TITLE_RE.search(title)))
 
 
 def _statement_candidates(root: ET.Element):
     """Free text of each element that may hold the statement, title left out, if it names a role.
 
-    Back matter first: a body section titled "Contribution" (the paper's own contribution) must not
-    win over the author contributions note after it.
+    Back matter first, so the author contributions note wins over anything in the body.
     """
-    back = root.find("back")
+    back, body = root.find("back"), root.find("body")
+    in_body = {id(el) for el in body.iter()} if body is not None else set()
     seen: set[int] = set()
     for el in [*(back.iter() if back is not None else []), *root.iter()]:
         if id(el) in seen:
             continue
         seen.add(id(el))
-        if _holds_statement(el):
+        if _holds_statement(el, id(el) in in_body):
             text = " ".join(_text(child) for child in el if child.tag != "title")
             if find_roles(clean(text)):
                 yield text

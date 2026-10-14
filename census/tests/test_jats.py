@@ -167,3 +167,13 @@ def test_prose_naming_only_common_role_words_is_not_credit():
     a = parse_article(article(contrib("Ann", "Smith") + contrib("Bo", "Jones"), back))
     assert (a.style, a.assignments) == ("none", set())
     assert a.statement
+
+
+def test_a_body_contributions_section_is_the_papers_not_the_authors():
+    role = '<role vocab="credit" vocab-term-identifier="https://credit.niso.org/contributor-roles/software/">S</role>'
+    xml = article(contrib("Ann", "Smith", role)).replace(
+        b"</front>", b"</front><body><sec><title>Contributions</title><p>We release software.</p></sec></body>"
+    )
+    assert parse_article(xml).statement is None
+    back = "<sec><title>Contributions</title><p>AS: software, visualization.</p></sec>"
+    assert parse_article(article(contrib("Ann", "Smith"), back)).style == "statement_text"
