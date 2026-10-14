@@ -17,7 +17,7 @@ uv run census report    # markup styles, adoption per year, roles by author posi
 
 The sample is 720 articles; the first `run` downloads the bucket inventory (about 50 MB) and the
 articles (about 20 MB, kept gzipped in `data/xml-cache/`), in under two minutes. A correct run
-ends with `inventory 2026-10-12T01-00Z: 80 contrib_text, 49 jats4r, 353 none, 84 plos_uri, 154
+ends with `inventory 2026-10-12T01-00Z: 80 contrib_text, 49 jats4r, 375 none, 84 plos_uri, 132
 statement_text`; those counts change when the parser does.
 
 Every command takes `--snapshot <name>` (default `sample-2026-10`) and `--db <path>` (default
@@ -76,7 +76,10 @@ figures") cannot shift the rest. Initials are resolved against the author list, 
 non-ASCII initials, particles ("F.d.S.N."), given names written as one word ("Q.M. Li" for Qinming
 Li), Frontiers' extra letters ("YiL") and Vancouver style ("Nam KC"). Initials that fit no author
 or several are listed in `articles.unresolved`, never guessed. Only CRediT wording counts, so prose
-such as "A.B. conceived the study" yields no roles.
+such as "A.B. conceived the study" yields no roles, and a statement needs at least one term prose
+rarely uses (conceptualization, data curation, original draft, ...): "under the supervision of B.J."
+or an ICMJE list with "Supervision" stays `none`, its text kept. Text that Europe PMC's bulk files
+store double-encoded ("â\x80\x94" for an em dash) is repaired before parsing.
 
 ## Tables
 
