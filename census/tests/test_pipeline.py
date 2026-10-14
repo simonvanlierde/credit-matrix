@@ -3,6 +3,7 @@ import gzip
 import hashlib
 import os
 import urllib.error
+import xml.etree.ElementTree as ET
 from email.message import Message
 from http.client import IncompleteRead
 from pathlib import Path
@@ -367,3 +368,13 @@ class DyingSource:
 def test_run_stops_when_a_worker_dies(tmp_path, capsys):
     assert pipeline.run(DyingSource(), tmp_path / "w.duckdb", processes=1) == {"stopped": 1}
     assert "a worker process died" in capsys.readouterr().err
+
+
+def test_bulk_article_without_a_pmcid_id_falls_back_to_the_pmc_number():
+    xml = article(contrib("Ann", "Smith")).replace(b'pub-id-type="pmcid">PMC1', b'pub-id-type="pmc">42')
+    element = ET.fromstring(xml)
+    found = rows.rows_for_element(element, "all", "u")
+    assert found is not None and found.article["pmcid"] == "PMC42"
+    for child in element.iterfind("front/article-meta/article-id"):
+        child.text = "x"
+    assert rows.rows_for_element(element, "all", "u") is None  # nothing to key it by
