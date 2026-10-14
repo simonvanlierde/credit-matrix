@@ -187,7 +187,7 @@ def test_export_leaves_names_out_and_keeps_only_open_statements(tmp_path):
                 store.rows_for("PMC2", "all", nd),
             ],
         )
-        counts = export.export(con, tmp_path / "out", "test")
+        counts = export.export(con, tmp_path / "out", "test", partial=True)
         assert counts == {"articles": 2, "assignments": 4, "statements": 1}
         assert con.sql(f"SELECT pmcid FROM '{tmp_path}/out/statements.parquet'").fetchall() == [("PMC1",)]
         assert con.sql(
@@ -245,6 +245,6 @@ def test_export_names_the_bulk_files_it_came_from(tmp_path):
     with store.connect(tmp_path / "f.duckdb") as con:
         unit = {"unit": "PMC1_PMC9.xml.gz", "sha256": "ab" * 32, "articles": 1, "retries": 0, "finished": True}
         store.insert(con, [store.rows_for("PMC1", "all", XML["PMC1"])], unit)
-        export.export(con, tmp_path / "out", "test")
+        export.export(con, tmp_path / "out", "test", partial=True)
     meta = (tmp_path / "out" / "meta.json").read_text()
     assert '"files": "1"' in meta and '"files_digest"' in meta

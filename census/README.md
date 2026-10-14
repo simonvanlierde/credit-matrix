@@ -98,12 +98,23 @@ store double-encoded ("â\x80\x94" for an em dash) is repaired before parsing.
   measures the parser on tens of thousands of articles without hand labels.
 - `units`: each bulk file or manifest chunk read, with its sha256, article count and whether it is
   finished.
-- `meta`: the source, schema version, parser hash, inventory date and OpenAlex snapshot date.
+- `meta`: the source, schema version, parser hash, inventory date, and the OpenAlex snapshot date
+  and code hash the fields came from.
 
 The database is local working data with author names in it. `census export` writes the public
-dataset to `data/export/<snapshot>/`: `articles.parquet` and `assignments.parquet` (role facts and
-bare ORCIDs, no names, CC0), `statements.parquet` (the statement text of CC BY and CC0 articles
-only, with each licence), `meta.json` (counts and the pins) and a README.
+dataset to `data/export/<snapshot>/`:
+
+- `articles.parquet` and `assignments.parquet`: role facts and bare ORCIDs, CC0. These carry no
+  author names.
+- `statements.parquet`: the verbatim statement text of CC BY and CC0 articles only, each with its
+  licence and style, under CC BY 4.0. The text names authors as the source does.
+- `meta.json`: dataset and file-schema versions, export date, code commit and hashes, whether the
+  run was complete, counts, licences per file, and the pins from `meta`.
+- `README.md`: a column table for each file, the licences, and how to ask for an ORCID's removal.
+
+Bare ORCIDs are personal data under the GDPR; they are published for research on contribution
+practices. Export refuses a database with unfinished units or no fields unless told it is partial,
+and replaces the previous export only once the new one is written.
 
 ## Measuring accuracy
 

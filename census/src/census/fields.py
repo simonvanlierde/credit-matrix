@@ -10,10 +10,21 @@ Articles match a journal by ISSN, or else by journal title when only one journal
 Europe PMC's copy of the JATS often leaves the ISSN out.
 """
 
+import hashlib
+from pathlib import Path
+
 import duckdb
 
 OPENALEX_SOURCES = "s3://openalex/data/parquet/sources/*/*.parquet"
 MULTIDISCIPLINARY = 0.45
+FIELDS_VERSION = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+"""Pinned in `meta` as `fields`, so a database whose fields came from older code shows it."""
+
+
+def has_fields(con: duckdb.DuckDBPyConnection) -> bool:
+    """Whether `build_journals` has run on this database."""
+    (n,) = con.execute("SELECT count(*) FROM duckdb_views() WHERE view_name = 'article_fields'").fetchone() or (0,)
+    return n > 0
 
 
 def build_journals(con: duckdb.DuckDBPyConnection, sources: str = OPENALEX_SOURCES) -> int:
@@ -84,6 +95,7 @@ def build_journals(con: duckdb.DuckDBPyConnection, sources: str = OPENALEX_SOURC
     con.execute(
         "INSERT OR REPLACE INTO meta SELECT 'openalex_sources', CAST(max(updated_date) AS VARCHAR) FROM sources"
     )
+    con.execute("INSERT OR REPLACE INTO meta VALUES ('fields', ?)", [FIELDS_VERSION])
     con.commit()
     (count,) = con.execute("SELECT count(*) FROM journals").fetchone() or (0,)
     return count
