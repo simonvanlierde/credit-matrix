@@ -34,7 +34,7 @@ _BARE_TITLE_RE = re.compile(r"^\W*contributions?\W*$", re.IGNORECASE)
 _TITLE_WORD_RE = re.compile(r"author|contribut|credit", re.IGNORECASE)
 """A word every match of the two title patterns holds."""
 _CON_ID_RE = re.compile(r"con\d+")
-_CANDIDATE_TAGS = ("sec", "fn-group", "notes", "fn")
+_CANDIDATE_TAGS = {"sec", "fn-group", "notes", "fn"}
 
 
 @dataclass
@@ -140,15 +140,16 @@ def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> tuple[list[tuple
     return found, texts
 
 
-def _statement_candidates(root: ET.Element):
+def _statement_candidates(root: ET.Element, nodes: list[ET.Element]):
     """Free text of each element that may hold the statement, title left out, if it names a role.
+    `nodes` holds the article's elements with a _CANDIDATE_TAGS tag.
 
     Back matter first, then document order, so the author contributions note wins over anything in the body.
     """
     back, body = root.find("back"), root.find("body")
     in_body: set[ET.Element] | None = None
     hits = []
-    for el in (el for tag in _CANDIDATE_TAGS for el in root.iter(tag)):
+    for el in nodes:
         if el.tag == "notes" and "contribution" in (el.get("notes-type") or ""):
             hits.append(el)
             continue
@@ -210,10 +211,12 @@ def parse_element(root: ET.Element) -> Article:
         if c.get("contrib-type", "author") == "author"
     ]
     article.authors = [_author(c) for c in contribs]
+    # One walk for the footnotes and the statement candidates: each walk visits the whole article.
+    nodes = [el for el in root.iter() if el.tag in _CANDIDATE_TAGS]
     fns = {
         fn.get("id", ""): _text(fn)
-        for fn in root.iter("fn")
-        if fn.get("fn-type") == "con" or _CON_ID_RE.fullmatch(fn.get("id", ""))
+        for fn in nodes
+        if fn.tag == "fn" and (fn.get("fn-type") == "con" or _CON_ID_RE.fullmatch(fn.get("id", "")))
     }
     per_author = [_contrib_roles(c, fns) for c in contribs]
     # Older eLife: one <fn id="conN"> per author, in author order, with no link from the author.
@@ -228,14 +231,14 @@ def parse_element(root: ET.Element) -> Article:
             article.statement = "; ".join(
                 f"{i + 1}: {' '.join(texts)}" for i, (_, texts) in enumerate(per_author) if texts
             )
-        elif text := next(_statement_candidates(root), None):
+        elif text := next(_statement_candidates(root, nodes), None):
             article.statement = text
             article.paired = parse_statement(text, article.authors).assignments
         return article
 
     # The first statement that names a role is kept even when it does not parse or is not CRediT:
     # those are the hard cases the labelled set needs.
-    for text in _statement_candidates(root):
+    for text in _statement_candidates(root, nodes):
         parsed = parse_statement(text, article.authors)
         article.statement, article.unresolved = text, parsed.unresolved
         if parsed.assignments and names_credit(clean(text)):
