@@ -1,13 +1,17 @@
+import ast
 import gzip
+import hashlib
+import os
 import urllib.error
 from email.message import Message
 from http.client import IncompleteRead
+from pathlib import Path
 
 import duckdb
 import pytest
 from helpers import article, contrib
 
-from census import bulk, export, pipeline, pmc_s3, store
+from census import bulk, export, pipeline, pmc_s3, rows, store
 
 XML = {
     "PMC1": article(
@@ -49,7 +53,13 @@ def test_bucket_unit_reads_versions_and_reports_failures():
         ("PMC4", None, "missing"),  # not in the inventory
         ("PMC5", 1, "missing"),  # in the inventory, 404 from the bucket
     ]
-    assert record == {"unit": unit, "articles": 5, "retries": 2, "finished": False}  # PMC6 and PMC7 retry
+    assert record == {  # PMC6 and PMC7 retry
+        "unit": unit,
+        "articles": 5,
+        "retries": 2,
+        "finished": False,
+        "error": "2 downloads failed, e.g. fetch failed: URLError: <urlopen error connection reset>",
+    }
     assert rows[2].article["xml_sha256"]  # a broken file still gets its hash
     assert rows[1].roles == [(1, "software"), (2, "software"), (2, "visualization")]
 
@@ -97,11 +107,11 @@ def test_bulk_source_downloads_hashes_and_parses_a_file(tmp_path):
     files = {"PMC1_PMC9.xml.gz": bulk_file(XML["PMC1"], with_pmcid(XML["PMC2"], "PMC2"), b"<article/>")}
     calls = []
 
-    def download(url: str) -> bytes:
+    def download(url: str, path) -> None:
         calls.append(url)
         if url.endswith("PMC10_PMC19.xml.gz"):
             raise urllib.error.URLError("down")
-        return files[url.rsplit("/", 1)[1]]
+        path.write_bytes(files[url.rsplit("/", 1)[1]])
 
     listing = [{"unit": "PMC1_PMC9.xml.gz", "listed_date": "2026-10-03 04:02"}, {"unit": "PMC10_PMC19.xml.gz"}]
     source = bulk.BulkSource(listing, tmp_path, base="https://x/", download=download)
@@ -118,6 +128,20 @@ def test_bulk_source_downloads_hashes_and_parses_a_file(tmp_path):
     (tmp_path / "PMC1_PMC9.xml.gz").write_bytes(files["PMC1_PMC9.xml.gz"][:40])  # truncated
     assert source.read("PMC1_PMC9.xml.gz")[1]["finished"] is False
     assert not (tmp_path / "PMC1_PMC9.xml.gz").exists()  # removed, so the next read downloads it again
+    malformed = tmp_path / "PMC20_PMC29.xml.gz"
+    malformed.write_bytes(bulk_file(XML["PMC1"], b"<article><oops></article>"))
+    source = bulk.BulkSource([{"unit": malformed.name}], tmp_path, download=download)
+    rows, record = source.read(malformed.name)
+    assert (rows, record["finished"], record["retries"]) == ([], False, 0)
+    assert record["error"].startswith("ParseError") and malformed.exists()  # a good download is kept
+
+
+def test_bulk_source_refuses_a_file_that_differs_from_its_pin(tmp_path):
+    (tmp_path / "PMC1_PMC9.xml.gz").write_bytes(bulk_file(XML["PMC1"]))
+    source = bulk.BulkSource([{"unit": "PMC1_PMC9.xml.gz", "sha256": "ab" * 32}], tmp_path)
+    rows, record = source.read("PMC1_PMC9.xml.gz")
+    assert (rows, record["finished"]) == ([], False)
+    assert f"is not the pinned {'ab' * 32}" in record["error"]
 
 
 def test_list_files_reads_the_index(monkeypatch):
@@ -210,28 +234,62 @@ def test_insert_stores_a_rejected_row_as_an_error(tmp_path):
         ]
 
 
+def unit(name: str) -> store.Unit:
+    return {"unit": name, "articles": 0, "retries": 0, "finished": True}
+
+
 def test_an_article_in_two_units_is_replaced_not_duplicated(tmp_path):
     with store.connect(tmp_path / "d.duckdb") as con:
-        store.insert(con, [store.rows_for("PMC1", "all", XML["PMC1"])], {"unit": "a", "finished": True})
+        store.insert(con, [store.rows_for("PMC1", "all", XML["PMC1"])], unit("a"))
         again = store.rows_for("PMC1", "all", XML["PMC1"])
-        store.insert(con, [again, store.rows_for("PMC2", "all", XML["PMC2"])], {"unit": "b", "finished": True})
+        store.insert(con, [again, store.rows_for("PMC2", "all", XML["PMC2"])], unit("b"))
         assert con.sql("SELECT pmcid FROM articles ORDER BY 1").fetchall() == [("PMC1",), ("PMC2",)]
         assert con.sql("SELECT count(*) FROM assignments WHERE pmcid = 'PMC1'").fetchone() == (len(again.roles),)
         assert con.sql("SELECT unit FROM units ORDER BY 1").fetchall() == [("a",), ("b",)]
 
 
-def test_pins_refuse_rows_from_other_code(tmp_path, monkeypatch):
-    with store.connect(tmp_path / "p.duckdb") as con:
+def test_pins_refuse_rows_from_other_code(tmp_path, monkeypatch, capsys):
+    db = tmp_path / "p.duckdb"
+    with store.connect(db) as con:
         assert store.mismatched_pins(con) == []
         assert store.pin(con, "inventory", "2026-10-12") == "2026-10-12"
         assert store.pin(con, "inventory", "2026-10-13") == "2026-10-12"
-        old = store.PARSER_VERSION
-        monkeypatch.setattr(store, "PARSER_VERSION", "changed")
-        assert store.mismatched_pins(con) == [f"parser {old} (this code: changed)"]
+    old = store.PARSER_VERSION
+    monkeypatch.setattr(store, "PARSER_VERSION", "changed")
+    with pytest.raises(store.PinMismatch, match=f"parser {old} \\(this code: changed\\)"):
+        store.connect(db)
+    store.connect(db, read_only=True).close()  # a reader only warns
+    assert f"warning: {db} was built by other code (parser {old}" in capsys.readouterr().err
+
+
+def test_parser_version_covers_exactly_the_code_that_makes_rows():
+    """rows.py and every census module it imports, directly or not, and nothing else."""
+    src = Path(store.__file__).parent
+    todo, seen = ["rows"], set()
+    while todo:
+        name = todo.pop()
+        seen.add(name)
+        for node in ast.walk(ast.parse((src / f"{name}.py").read_text(encoding="utf-8"))):
+            module = node.module if isinstance(node, ast.ImportFrom) else None
+            if module and module.startswith("census.") and module[7:] not in seen:
+                todo.append(module[7:])
+    assert {f"{name}.py" for name in seen} == set(store._PARSER_FILES)
+    digest = hashlib.sha256(b"".join((src / name).read_bytes() for name in store._PARSER_FILES))
+    assert digest.hexdigest()[:12] == store.PARSER_VERSION
+
+
+def test_schema_version_follows_the_tables():
+    source = Path(store.__file__).read_text(encoding="utf-8")
+    edited = source.replace('"doi": "VARCHAR"', '"doi": "INTEGER"')
+    assert edited != source
+    namespace = {"__file__": store.__file__, "__name__": "edited"}
+    exec(compile(edited, store.__file__, "exec"), namespace)
+    assert namespace["SCHEMA_VERSION"] != store.SCHEMA_VERSION
 
 
 def test_rows_without_a_parser_pin_are_refused(tmp_path):
-    with store.connect(tmp_path / "old.duckdb") as con:
+    with duckdb.connect(str(tmp_path / "old.duckdb")) as con:
+        con.execute(store.SCHEMA)
         con.execute("INSERT INTO articles (pmcid, style) VALUES ('PMC1', 'none')")
         assert store.mismatched_pins(con) == ["rows from code that pinned no parser version"]
 
@@ -243,8 +301,69 @@ def test_assignments_key_rejects_duplicates(tmp_path):
 
 def test_export_names_the_bulk_files_it_came_from(tmp_path):
     with store.connect(tmp_path / "f.duckdb") as con:
-        unit = {"unit": "PMC1_PMC9.xml.gz", "sha256": "ab" * 32, "articles": 1, "retries": 0, "finished": True}
+        unit: store.Unit = {
+            "unit": "PMC1_PMC9.xml.gz",
+            "sha256": "ab" * 32,
+            "articles": 1,
+            "retries": 0,
+            "finished": True,
+        }
         store.insert(con, [store.rows_for("PMC1", "all", XML["PMC1"])], unit)
         export.export(con, tmp_path / "out", "test")
     meta = (tmp_path / "out" / "meta.json").read_text()
     assert '"files": "1"' in meta and '"files_digest"' in meta
+
+
+def pmc(pmcid: str) -> rows.Rows:
+    return rows.rows_for(pmcid, "all", with_pmcid(XML["PMC1"], pmcid))
+
+
+def test_insert_replaces_an_article_another_unit_holds_last_in_the_batch(tmp_path):
+    with store.connect(tmp_path / "dup.duckdb") as con:
+        store.insert(con, [pmc("PMC1"), pmc("PMC2")], unit("a"))
+        store.insert(con, [pmc("PMC3"), pmc("PMC2")], unit("b"))
+        store.insert(con, [pmc("PMC9"), pmc("PMC9")], unit("c"))
+        assert con.sql("SELECT pmcid FROM articles ORDER BY 1").fetchall() == [
+            ("PMC1",),
+            ("PMC2",),
+            ("PMC3",),
+            ("PMC9",),
+        ]
+        assert con.sql("SELECT unit FROM units ORDER BY 1").fetchall() == [("a",), ("b",), ("c",)]
+
+
+def test_reading_a_recorded_unit_again_replaces_all_its_rows(tmp_path):
+    with store.connect(tmp_path / "again.duckdb") as con:
+        store.insert(con, [rows.rows_for("PMC1", "all", TAGGED)], unit("a"))
+        assert con.sql("SELECT count(*) FROM paired").fetchone() == (3,)
+        changed = rows.rows_for("PMC1", "all", XML["PMC1"])
+        store.insert(con, [changed], unit("a"))
+        assert con.sql("SELECT count(*) FROM paired").fetchone() == (0,)  # no stale statement reading
+        assert con.sql("SELECT author_position, role FROM assignments ORDER BY 1").fetchall() == changed.roles
+        assert con.sql("SELECT style FROM articles").fetchall() == [("contrib_text",)]
+
+
+def test_insert_lets_storage_errors_through_and_records_no_unit(tmp_path, monkeypatch):
+    def full_disk(*args):
+        raise duckdb.IOException("No space left on device")
+
+    with store.connect(tmp_path / "io.duckdb") as con:
+        monkeypatch.setattr(store, "_insert", full_disk)
+        with pytest.raises(duckdb.IOException):
+            store.insert(con, [pmc("PMC1")], unit("a"))
+        assert con.sql("SELECT count(*) FROM units").fetchone() == (0,)
+
+
+class DyingSource:
+    name = "dying"
+
+    def units(self) -> list[str]:
+        return ["u"]
+
+    def read(self, unit: str):
+        os._exit(1)
+
+
+def test_run_stops_when_a_worker_dies(tmp_path, capsys):
+    assert pipeline.run(DyingSource(), tmp_path / "w.duckdb", processes=1) == {"stopped": 1}
+    assert "a worker process died" in capsys.readouterr().err

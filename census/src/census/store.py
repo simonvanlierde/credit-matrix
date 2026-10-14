@@ -1,17 +1,15 @@
-"""The DuckDB tables an extraction writes, and turning a parsed article into their rows."""
+"""The DuckDB tables an extraction writes, the writer, and the pins that keep one database to one parser."""
 
 import hashlib
-import xml.etree.ElementTree as ET
-from dataclasses import dataclass, field
+import sys
 from pathlib import Path
-from typing import Any
+from typing import NotRequired, TypedDict
 
 import duckdb
 import pyarrow as pa
 
-from census.jats import Article, parse_article, parse_element
-
-SCHEMA_VERSION = "3"
+from census.rows import Rows, failed_row
+from census.rows import rows_for as rows_for  # re-exported: callers use store.rows_for
 
 ARTICLE_COLUMNS = {
     "pmcid": "VARCHAR PRIMARY KEY",
@@ -54,7 +52,7 @@ CREATE TABLE IF NOT EXISTS paired (
 );
 CREATE TABLE IF NOT EXISTS units (
     unit VARCHAR PRIMARY KEY, listed_date VARCHAR, size BIGINT, sha256 VARCHAR, articles INTEGER,
-    retries INTEGER, finished BOOLEAN NOT NULL DEFAULT false
+    retries INTEGER, finished BOOLEAN NOT NULL DEFAULT false, error VARCHAR
 );
 CREATE TABLE IF NOT EXISTS meta (key VARCHAR PRIMARY KEY, value VARCHAR);
 CREATE OR REPLACE VIEW paired_scores AS
@@ -76,30 +74,53 @@ SELECT publisher, articles, round(hits / nullif(parsed, 0), 3) AS precision,
 FROM counts;
 """
 
-_PARSER_FILES = ("roles.py", "statement.py", "jats.py", "store.py")
+SCHEMA_VERSION = hashlib.sha256(f"{SCHEMA}{_ARTICLE_SCHEMA}{_ROLE_SCHEMA}".encode()).hexdigest()[:12]
+"""Changes with any edit to the tables, so a database never gets rows its tables were not made for."""
+
+_PARSER_FILES = ("roles.py", "statement.py", "jats.py", "rows.py")
 PARSER_VERSION = hashlib.sha256(
     b"".join((Path(__file__).parent / name).read_bytes() for name in _PARSER_FILES)
 ).hexdigest()[:12]
 """Changes whenever the code that turns XML into rows changes, so one database never mixes parsers."""
 
 
-@dataclass
-class Rows:
-    article: dict[str, object]
-    roles: list[tuple[int, str]] = field(default_factory=list)
-    """(author position, role slug) pairs, positions counted from 1."""
-    paired: list[tuple[int, str]] = field(default_factory=list)
-    """The statement parser's reading of a tagged article's statement, positions from 1."""
+class Unit(TypedDict):
+    """A unit's record in the units table, as a source's `read` returns it."""
 
-    @property
-    def style(self) -> str:
-        return str(self.article["style"])
+    unit: str
+    articles: int
+    retries: int
+    """Articles (or, for a bulk file, the file) left for the next run because a download failed."""
+    finished: bool
+    listed_date: NotRequired[str | None]
+    size: NotRequired[int]
+    sha256: NotRequired[str]
+    error: NotRequired[str]
+    """Why an unfinished unit failed."""
 
 
-def connect(db: Path) -> duckdb.DuckDBPyConnection:
-    db.parent.mkdir(parents=True, exist_ok=True)
-    con = duckdb.connect(str(db))
-    con.execute(SCHEMA)
+class PinMismatch(Exception):
+    """The database was built by other parser or schema code."""
+
+
+def connect(db: Path, read_only: bool = False) -> duckdb.DuckDBPyConnection:
+    """Open `db` after checking its pins: a writer refuses a database built by other code (PinMismatch),
+    a reader prints a one-line warning, and a writer pins this code's versions into a new database."""
+    if read_only:
+        con = duckdb.connect(str(db), read_only=True)
+    else:
+        db.parent.mkdir(parents=True, exist_ok=True)
+        con = duckdb.connect(str(db))
+        con.execute(SCHEMA)
+    if mismatches := mismatched_pins(con):
+        message = f"{db} was built by other code ({'; '.join(mismatches)})"
+        if not read_only:
+            con.close()
+            raise PinMismatch(f"{message}; rerun with --fresh")
+        print(f"warning: {message}; its rows may not match this code", file=sys.stderr)
+    elif not read_only:
+        pin(con, "schema", SCHEMA_VERSION)
+        pin(con, "parser", PARSER_VERSION)
     return con
 
 
@@ -112,107 +133,54 @@ def pin(con: duckdb.DuckDBPyConnection, key: str, value: str) -> str:
 
 def mismatched_pins(con: duckdb.DuckDBPyConnection) -> list[str]:
     """Pins this code disagrees with: rows from another parser or schema must not be mixed in."""
-    expected = {"schema": SCHEMA_VERSION, "parser": PARSER_VERSION}
-    pinned = dict(con.execute("SELECT key, value FROM meta").fetchall())
-    (rows,) = con.execute("SELECT count(*) FROM articles").fetchone() or (0,)
+    try:
+        pinned = dict(con.execute("SELECT key, value FROM meta").fetchall())
+        (rows,) = con.execute("SELECT count(*) FROM articles").fetchone() or (0,)
+    except duckdb.CatalogException:
+        return ["no census tables"]
     if rows and "parser" not in pinned:
         return ["rows from code that pinned no parser version"]
-    return [f"{k} {pin(con, k, v)} (this code: {v})" for k, v in expected.items() if pin(con, k, v) != v]
+    expected = {"schema": SCHEMA_VERSION, "parser": PARSER_VERSION}
+    return [f"{k} {pinned[k]} (this code: {v})" for k, v in expected.items() if pinned.get(k, v) != v]
 
 
-def done(con: duckdb.DuckDBPyConnection) -> set[str]:
-    """PMCIDs already in the articles table, which a resumed run skips."""
-    return {pmcid for (pmcid,) in con.execute("SELECT pmcid FROM articles").fetchall()}
+# Errors from a value DuckDB or Arrow rejects. Anything else (a full disk, out of memory) propagates,
+# so the unit stays unrecorded and is read again.
+_VALUE_ERRORS = (
+    pa.ArrowException,
+    duckdb.ConversionException,
+    duckdb.ConstraintException,
+    duckdb.InvalidInputException,
+)
 
 
-def failed_row(pmcid: str, stratum: str, style: str, error: str, version: int | None = None) -> Rows:
-    """`style` is "error" (the XML does not parse), "missing" (no XML to read) or "retry" (download failed)."""
-    return Rows({"pmcid": pmcid, "stratum": stratum, "version": version, "style": style, "error": error})
-
-
-def rows_for(pmcid: str, stratum: str, xml: bytes, version: int | None = None) -> Rows:
-    """Rows for one article's XML (the bucket reader)."""
-    digest = hashlib.sha256(xml).hexdigest()
-    try:
-        a = parse_article(xml)
-    except Exception as error:  # one bad article must not stop a run over millions
-        rows = failed_row(pmcid, stratum, "error", f"{type(error).__name__}: {error}", version)
-        rows.article["xml_sha256"] = digest
-        return rows
-    return _rows(a, pmcid, stratum, version, digest, None)
-
-
-def rows_for_element(element: ET.Element, stratum: str, unit: str) -> Rows | None:
-    """Rows for one <article> of a bulk file, or None when it has no PMCID to key it by. The file's
-    hash, in `units`, pins the XML; articles carry the file's name instead of their own hash."""
-    ids = {i.get("pub-id-type"): (i.text or "").strip() for i in element.iterfind("front/article-meta/article-id")}
-    pmcid = ids.get("pmcid") or (f"PMC{ids['pmc']}" if ids.get("pmc", "").isdigit() else "")
-    if not pmcid.startswith("PMC"):
-        return None
-    try:
-        a = parse_element(element)
-    except Exception as error:
-        rows = failed_row(pmcid, stratum, "error", f"{type(error).__name__}: {error}")
-        rows.article["source_unit"] = unit
-        return rows
-    return _rows(a, pmcid, stratum, None, None, unit)
-
-
-def _rows(a: Article, pmcid: str, stratum: str, version: int | None, digest: str | None, unit: str | None) -> Rows:
-    article = {
-        "pmcid": pmcid,
-        "stratum": stratum,
-        "source_unit": unit,
-        "version": version,
-        "xml_sha256": digest,
-        "article_type": a.article_type,
-        "doi": a.doi,
-        "journal": a.journal,
-        "issn": a.issn,
-        "publisher": a.publisher,
-        "year": a.year,
-        "license": a.license,
-        "style": a.style,
-        "authors": [x.name for x in a.authors],
-        "orcids": [x.orcid for x in a.authors],
-        "n_authors": len(a.authors),
-        "n_authors_with_roles": len({i for i, _ in a.assignments}),
-        "statement": a.statement,
-        "unresolved": a.unresolved,
-    }
-    return Rows(
-        article,
-        [(i + 1, slug) for i, slug in sorted(a.assignments)],
-        [(i + 1, slug) for i, slug in sorted(a.paired or ())],
-    )
-
-
-def insert(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, Any] | None = None) -> None:
+def insert(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: Unit | None = None) -> None:
     """Write a batch, and the record of the unit it came from, in one transaction, so an interrupted
     run never leaves half an article or a unit marked finished without its rows.
 
     If DuckDB rejects the batch, each article is written on its own and a rejected one is stored as
-    an error row, so one bad value does not stop the run on every resume.
+    an error row, so one bad value does not stop the run on every resume. Those single writes always
+    replace, so an article already stored (by another unit, or twice in this batch) cannot fail them.
     """
     try:
         _write(con, batch, unit)
-    except duckdb.Error, pa.ArrowException:
+    except _VALUE_ERRORS:
         for i, rows in enumerate(batch):
             last = unit if i == len(batch) - 1 else None
             try:
-                _write(con, [rows], last)
-            except (duckdb.Error, pa.ArrowException) as error:
+                _write(con, [rows], last, replace=True)
+            except _VALUE_ERRORS as error:
                 a = rows.article
-                _write(con, [failed_row(str(a["pmcid"]), str(a["stratum"]), "error", f"insert: {error}")], last)
+                failed = failed_row(str(a["pmcid"]), str(a["stratum"]), "error", f"insert: {error}")
+                _write(con, [failed], last, replace=True)
 
 
-def _write(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, Any] | None = None) -> None:
+def _write(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: Unit | None = None, replace: bool = False) -> None:
     con.begin()
     try:
-        # Re-reading a unit replaces its articles' rows, so a unit can always be read again. A unit never
-        # recorded has no rows to replace; if one slipped in anyway, the primary key rejects the batch and
-        # `insert` writes it again an article at a time, through this delete.
-        if unit is None or con.execute("SELECT 1 FROM units WHERE unit = ?", [unit["unit"]]).fetchone():
+        # Re-reading a unit replaces its articles' rows. A unit never recorded has none to replace, so
+        # the delete is skipped; a duplicate that slips in fails the batch and `insert` retries it with replace.
+        if replace or unit is None or con.execute("SELECT 1 FROM units WHERE unit = ?", [unit["unit"]]).fetchone():
             ids = [r.article["pmcid"] for r in batch]
             for table in ("assignments", "paired", "articles"):
                 con.execute(f"DELETE FROM {table} WHERE pmcid IN (SELECT unnest(?))", [ids])
@@ -222,8 +190,11 @@ def _write(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, An
         if unit is not None:
             con.execute(
                 "INSERT OR REPLACE INTO units BY NAME SELECT * FROM (SELECT ? AS unit, ? AS listed_date, ? AS size,"
-                " ? AS sha256, ? AS articles, ? AS retries, ? AS finished)",
-                [unit.get(k) for k in ("unit", "listed_date", "size", "sha256", "articles", "retries", "finished")],
+                " ? AS sha256, ? AS articles, ? AS retries, ? AS finished, ? AS error)",
+                [
+                    unit.get(k)
+                    for k in ("unit", "listed_date", "size", "sha256", "articles", "retries", "finished", "error")
+                ],
             )
         con.commit()
     except duckdb.Error, pa.ArrowException:

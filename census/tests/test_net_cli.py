@@ -1,3 +1,4 @@
+import gzip
 import io
 import json
 import urllib.error
@@ -6,7 +7,7 @@ from http.client import IncompleteRead
 
 import pytest
 
-from census import cli, net, snapshot
+from census import cli, net, snapshot, store
 
 URL = "https://example.invalid/x"
 
@@ -22,7 +23,7 @@ class Responses:
         item = self.items.pop(0)
         if isinstance(item, BaseException):
             raise item
-        return io.BytesIO(item)
+        return item if isinstance(item, io.BytesIO) else io.BytesIO(item)
 
 
 def http_error(code: int) -> urllib.error.HTTPError:
@@ -48,6 +49,33 @@ def test_get_raises_client_errors_at_once(monkeypatch, no_sleep, code):
     with pytest.raises(urllib.error.HTTPError):
         net.get(URL)
     assert responses.calls == 1
+
+
+class Short(io.BytesIO):
+    """A response whose connection dropped before the length it announced."""
+
+    length = 10
+
+
+def test_get_retries_a_body_shorter_than_announced(monkeypatch, no_sleep):
+    monkeypatch.setattr(net.urllib.request, "urlopen", Responses(Short(b"half"), b"body"))
+    assert net.get(URL) == b"body"
+
+
+def test_get_gives_up_on_a_trickle_past_the_deadline(monkeypatch, no_sleep):
+    monkeypatch.setattr(net, "DEADLINE", -1)
+    monkeypatch.setattr(net.urllib.request, "urlopen", Responses(*[b"slow"] * 5))
+    with pytest.raises(TimeoutError):
+        net.get(URL)
+
+
+def test_download_streams_to_the_file_and_leaves_no_temp_on_failure(tmp_path, monkeypatch, no_sleep):
+    monkeypatch.setattr(net.urllib.request, "urlopen", Responses(b"body", *[http_error(503)] * 5))
+    net.download(URL, tmp_path / "ok")
+    assert (tmp_path / "ok").read_bytes() == b"body"
+    with pytest.raises(urllib.error.HTTPError):
+        net.download(URL, tmp_path / "failed")
+    assert [p.name for p in tmp_path.iterdir()] == ["ok"]
 
 
 def test_get_gives_up_after_its_retries(monkeypatch, no_sleep):
@@ -83,7 +111,41 @@ def test_cli_failures_are_one_line(tmp_path, capsys):
     assert "not a date" in capsys.readouterr().err
 
 
-def test_cli_run_uses_the_committed_inventory_pin(tmp_path, monkeypatch):
+def test_commands_after_a_bulk_run_default_to_its_database(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    for command in ("fields", "report", "export", "label"):
+        assert cli.main([command]) == 1
+        assert "oa-2026-10.duckdb" in capsys.readouterr().err
+
+
+def test_report_warns_on_a_database_from_another_parser(tmp_path, monkeypatch, capsys):
+    db = tmp_path / "r.duckdb"
+    store.connect(db).close()
+    monkeypatch.setattr(store, "PARSER_VERSION", "changed")
+    assert cli.main(["report", "--db", str(db)]) == 0
+    assert "warning:" in capsys.readouterr().err
+    assert cli.main(["fields", "--db", str(db)]) == 1  # a writer refuses
+    assert "rerun with --fresh" in capsys.readouterr().err
+
+
+def test_bulk_fails_a_file_that_differs_from_its_pinned_hash(tmp_path, monkeypatch, capsys):
+    snapshots, cache = tmp_path / "snapshots", tmp_path / "bulk"
+    snapshots.mkdir()
+    cache.mkdir()
+    (cache / "PMC1_PMC9.xml.gz").write_bytes(gzip.compress(b"<articles/>"))
+    (cache / "PMC1_PMC9.xml.gz.123.456.tmp").write_bytes(b"half")  # left by a killed run
+    pin = "unit,listed_date,sha256\nPMC1_PMC9.xml.gz,2026-10-03 04:02," + "ab" * 32 + "\n"
+    (snapshots / "s.files.csv").write_text(pin, encoding="utf-8")
+    monkeypatch.setattr(cli, "SNAPSHOTS", snapshots)
+    args = ["bulk", "--snapshot", "s", "--db", str(tmp_path / "b.duckdb"), "--cache", str(cache), "--processes", "0"]
+    assert cli.main(args) == 2
+    err = capsys.readouterr().err
+    assert "PMC1_PMC9.xml.gz: sha256" in err and "1 units unfinished" in err
+    assert (snapshots / "s.files.csv").read_text(encoding="utf-8") == pin
+    assert [p.name for p in cache.iterdir()] == ["PMC1_PMC9.xml.gz"]
+
+
+def test_cli_run_uses_the_committed_inventory_pin(tmp_path, monkeypatch, capsys):
     snapshots = tmp_path / "snapshots"
     snapshots.mkdir()
     snapshot.write_manifest([{"pmcid": "PMC1", "stratum": "all", "year": ""}], snapshots / "s.csv")
@@ -101,3 +163,4 @@ def test_cli_run_uses_the_committed_inventory_pin(tmp_path, monkeypatch):
         cli.main(["run", "--snapshot", "s", "--db", str(tmp_path / "s.duckdb"), "--inventory", "2026-10-13T01-00Z"])
         == 1
     )
+    assert "pinned to inventory 2026-10-12T01-00Z" in capsys.readouterr().err

@@ -1,7 +1,6 @@
 """Draw a stratified sample of articles from Europe PMC's search and pin it as a manifest."""
 
 import csv
-import gzip
 import json
 import random
 import re
@@ -58,21 +57,17 @@ def draw(per_cell: int, seed: int) -> list[dict[str, str]]:
     return rows
 
 
-def _open(path: Path, mode: str):
-    return gzip.open(path, mode + "t", newline="") if path.suffix == ".gz" else path.open(mode, newline="")
-
-
 def write_manifest(rows: list[dict[str, str]], path: Path) -> None:
-    """A CSV of pmcid, stratum, year; gzipped when `path` ends in .gz."""
+    """A CSV of pmcid, stratum, year."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with _open(path, "w") as f:
+    with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["pmcid", "stratum", "year"], lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
 
 def read_manifest(path: Path) -> list[dict[str, str]]:
-    with _open(path, "r") as f:
+    with path.open(newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     if bad := [r["pmcid"] for r in rows if not PMCID_RE.fullmatch(r["pmcid"])]:
         raise ValueError(f"{path}: not PMCIDs: {', '.join(bad[:5])}")

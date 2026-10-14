@@ -6,20 +6,18 @@ metadata files lists every version, so one inventory date pins which version a r
 
 import gzip
 import json
-import os
 import re
-import threading
 import urllib.error
 import zlib
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any
 
 import duckdb
 
-from census.net import get
-from census.store import Rows, failed_row, rows_for
+from census.net import get, replacing
+from census.rows import Rows, failed_row, rows_for
+from census.store import Unit
 
 BUCKET = "https://pmc-oa-opendata.s3.amazonaws.com"
 INVENTORY = "inventory-reports/pmc-oa-opendata/metadata"
@@ -40,8 +38,7 @@ def load_versions(date: str, cache: Path) -> dict[str, int]:
         manifest = json.loads(get(f"{BUCKET}/{INVENTORY}/{date}/manifest.json"))
         urls = [f"{BUCKET}/{f['key']}" for f in manifest["files"]]
         cache.parent.mkdir(parents=True, exist_ok=True)
-        tmp = cache.with_name(cache.name + ".tmp")
-        with duckdb.connect() as con:
+        with replacing(cache) as tmp, duckdb.connect() as con:
             con.execute("SET enable_progress_bar = false")
             con.execute(
                 f"""COPY (
@@ -54,7 +51,6 @@ def load_versions(date: str, cache: Path) -> dict[str, int]:
                 ) TO '{tmp}' (FORMAT parquet)""",
                 [urls],
             )
-        tmp.rename(cache)  # an interrupted COPY never leaves a broken file under the real name
     with duckdb.connect() as con:
         return dict(con.execute("SELECT pmcid, version FROM read_parquet(?)", [str(cache)]).fetchall())
 
@@ -84,10 +80,8 @@ class CachedFetch:
                 pass
             path.unlink(missing_ok=True)  # truncated, empty or not gzip: fetch it again
         data = self.fetch(url)
-        # One temp name per writer, so two runs sharing the cache never rename each other's half file.
-        tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
-        tmp.write_bytes(gzip.compress(data, compresslevel=6))
-        tmp.rename(path)
+        with replacing(path) as tmp:
+            tmp.write_bytes(gzip.compress(data, compresslevel=6))
         return data
 
 
@@ -129,12 +123,15 @@ class BucketSource:
     def units(self) -> list[str]:
         return list(self.chunks)
 
-    def read(self, unit: str) -> tuple[list[Rows], dict[str, Any]]:
+    def read(self, unit: str) -> tuple[list[Rows], Unit]:
         rows = self.chunks[unit]
         with ThreadPoolExecutor(self.workers) as pool:
             results = list(
                 pool.map(lambda r: _one(r["pmcid"], r["stratum"], self.versions.get(r["pmcid"]), self.fetch), rows)
             )
-        retries = sum(r.style == "retry" for r in results)
+        failed = [r for r in results if r.style == "retry"]
         stored = [r for r in results if r.style != "retry"]
-        return stored, {"unit": unit, "articles": len(stored), "retries": retries, "finished": retries == 0}
+        record: Unit = {"unit": unit, "articles": len(stored), "retries": len(failed), "finished": not failed}
+        if failed:
+            record["error"] = f"{len(failed)} downloads failed, e.g. {failed[0].article['error']}"
+        return stored, record
