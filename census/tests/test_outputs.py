@@ -20,7 +20,7 @@ XML = {
 @pytest.fixture
 def db(tmp_path):
     con = store.connect(tmp_path / "o.duckdb")
-    unit = {"unit": "u1", "sha256": "ab", "finished": True}
+    unit: store.Unit = {"unit": "u1", "sha256": "ab", "articles": len(XML), "retries": 0, "finished": True}
     store.insert(con, [store.rows_for(pmcid, "all", xml) for pmcid, xml in XML.items()], unit)
     yield con
     con.close()

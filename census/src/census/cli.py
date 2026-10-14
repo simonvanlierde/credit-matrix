@@ -151,9 +151,7 @@ def cmd_fields(args: argparse.Namespace) -> None:
 
 def cmd_report(args: argparse.Namespace) -> None:
     with store.connect(_db(args), read_only=True) as con:
-        (has_fields,) = con.execute(
-            "SELECT count(*) FROM duckdb_views() WHERE view_name = 'article_fields'"
-        ).fetchone() or (0,)
+        has_fields = fields.has_fields(con)
         for title, query in REPORTS.items():
             if "article_fields" in query and not has_fields:
                 print(f"\n{title}: run `census fields` first")
@@ -165,7 +163,10 @@ def cmd_report(args: argparse.Namespace) -> None:
 def cmd_export(args: argparse.Namespace) -> None:
     out = args.out or DATA / "export" / args.snapshot
     with store.connect(_db(args), read_only=True) as con:
-        counts = export.export(con, out, args.snapshot)
+        try:
+            counts = export.export(con, out, args.snapshot, partial=args.partial)
+        except ValueError as error:
+            raise Failure(error) from error
     print(f"{out}: " + ", ".join(f"{v} {k}" for k, v in counts.items()))
 
 
@@ -214,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd = sub.add_parser("bulk", parents=[snap, db], help="read every open-access article from Europe PMC's bulk files")
     cmd.add_argument("--processes", type=int, default=16, help="files downloaded and parsed at once (0: none)")
     cmd.add_argument("--fresh", action="store_true", help="delete the database first (downloaded files are reused)")
-    cmd.add_argument("--cache", type=Path, default=DATA / "bulk", help="where the bulk files are kept (about 168 GB)")
+    cmd.add_argument("--cache", type=Path, default=DATA / "bulk", help="where the bulk files are kept (about 169 GB)")
     cmd.add_argument("--limit", type=int, help="read at most this many unread files, to try a run")
     cmd.set_defaults(func=cmd_bulk)
     cmd = sub.add_parser("fields", parents=[snap, db], help="add journal fields from OpenAlex")
@@ -222,7 +223,12 @@ def main(argv: list[str] | None = None) -> int:
     cmd.set_defaults(func=cmd_fields)
     cmd = sub.add_parser("report", parents=[snap, db], help="print the summary tables")
     cmd.set_defaults(func=cmd_report)
-    cmd = sub.add_parser("export", parents=[snap, db], help="write the public dataset (no author names)")
+    cmd = sub.add_parser(
+        "export",
+        parents=[snap, db],
+        help="write the public dataset (no names in the role tables; statements only from CC BY and CC0 articles)",
+    )
+    cmd.add_argument("--partial", action="store_true", help="export even with unfinished units or no fields")
     cmd.add_argument("--out", type=Path, help="directory (default: census/data/export/<snapshot>)")
     cmd.set_defaults(func=cmd_export)
     cmd = sub.add_parser("label", parents=[snap, db], help="export a blind sample to hand-label")
