@@ -256,11 +256,14 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
     for m in _ALL_RE.finditer(text):
         mentions.append((m.start(), m.end(), "A", ALL_AUTHORS))
         text = _mask(text, m.start(), m.end())
+    resolved: dict[str, int | None] = {}  # role-first statements repeat each author's initials per role
     for m in _INITIALS_RE.finditer(text):
         token = m.group().strip()
         if not token[0].isupper():
             continue
-        i = resolve_initials(token, authors)
+        if token not in resolved:
+            resolved[token] = resolve_initials(token, authors)
+        i = resolved[token]
         if i is not None:
             mentions.append((m.start(), m.end(), "A", i))
         elif sum(c.isupper() for c in token) >= 2:

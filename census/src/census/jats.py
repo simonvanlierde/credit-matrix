@@ -5,7 +5,7 @@ import unicodedata
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 
-from census.roles import clean, find_roles, names_credit, slug_from_url
+from census.roles import SPACES, clean, find_roles, names_credit, slug_from_url
 from census.statement import Author, parse_statement
 
 XLINK = "{http://www.w3.org/1999/xlink}"
@@ -31,6 +31,8 @@ _STATEMENT_TITLE_RE = re.compile(
 )
 # A bare "Contributions" outside the body: in the body it is the paper's own contribution.
 _BARE_TITLE_RE = re.compile(r"^\W*contributions?\W*$", re.IGNORECASE)
+_TITLE_WORD_RE = re.compile(r"author|contribut|credit", re.IGNORECASE)
+"""A word every match of the two title patterns holds."""
 _CON_ID_RE = re.compile(r"con\d+")
 _CANDIDATE_TAGS = ("sec", "fn-group", "notes", "fn")
 
@@ -88,7 +90,7 @@ def _repair(match: re.Match[str]) -> str:
 def _squash(text: str) -> str:
     # Repair first: some continuation bytes are whitespace to Python ("\xa0" in "à", "\x85" in "Å").
     # NFC so a letter and its accent are one character: initials and names match either way.
-    return unicodedata.normalize("NFC", re.sub(r"\s+", " ", _MOJIBAKE_RE.sub(_repair, text)).strip())
+    return unicodedata.normalize("NFC", SPACES.sub(" ", _MOJIBAKE_RE.sub(_repair, text)).strip())
 
 
 def _text(el: ET.Element | None) -> str:
@@ -151,7 +153,11 @@ def _statement_candidates(root: ET.Element):
             hits.append(el)
             continue
         # BMJ: <fn><p><bold>Contributors:</bold> ...
-        title = _text(el.find("p/bold" if el.tag == "fn" else "title"))
+        title_el = el.find("p/bold" if el.tag == "fn" else "title")
+        raw = " ".join(title_el.itertext()) if title_el is not None else ""
+        if raw.isascii() and not _TITLE_WORD_RE.search(raw):
+            continue  # _squash leaves ASCII as is but for spaces, so neither title pattern can match
+        title = _squash(raw)
         if _STATEMENT_TITLE_RE.search(title):
             hits.append(el)
         elif _BARE_TITLE_RE.search(title):

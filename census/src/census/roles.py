@@ -41,12 +41,13 @@ _DISTINCT = {
 
 _URL_RE = re.compile(r"credit\.niso\.org/contributor-roles/([a-z-]+)")
 _DASHES = re.compile("\\s*[\\u2010-\\u2015\\u2212-]+\\s*")  # hyphen to horizontal bar, minus, ASCII hyphen
+SPACES = re.compile(r"\s+")
 
 
 def clean(text: str) -> str:
     """One kind of dash, single spaces, "&" as "and". Keeps case, which initials need."""
     text = _DASHES.sub(" - ", text.replace("&", " and "))
-    return re.sub(r"\s+", " ", text).strip()
+    return SPACES.sub(" ", text).strip()
 
 
 def slug_from_url(url: str) -> str | None:
