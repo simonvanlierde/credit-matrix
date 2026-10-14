@@ -4,6 +4,7 @@ import hashlib
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import duckdb
 
@@ -59,7 +60,8 @@ pairs AS (
     FROM gold g FULL JOIN paired p USING (pmcid, author_position, role)
 ),
 counts AS (
-    SELECT coalesce(a.publisher, '(all)') AS publisher, count(DISTINCT pmcid) AS articles,
+    SELECT CASE WHEN grouping(a.publisher) = 1 THEN '(all)' ELSE coalesce(a.publisher, '(no publisher)') END
+               AS publisher, count(DISTINCT pmcid) AS articles,
            count(*) FILTER (tagged AND parsed) AS hits, count(*) FILTER (parsed) AS parsed,
            count(*) FILTER (tagged) AS tagged
     FROM pairs JOIN articles a USING (pmcid) GROUP BY ROLLUP (a.publisher)
@@ -180,7 +182,7 @@ def _rows(a: Article, pmcid: str, stratum: str, version: int | None, digest: str
     )
 
 
-def insert(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, object] | None = None) -> None:
+def insert(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, Any] | None = None) -> None:
     """Write a batch, and the record of the unit it came from, in one transaction, so an interrupted
     run never leaves half an article or a unit marked finished without its rows.
 
@@ -199,7 +201,7 @@ def insert(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, ob
                 _write(con, [failed_row(str(a["pmcid"]), str(a["stratum"]), "error", f"insert: {error}")], last)
 
 
-def _write(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, object] | None = None) -> None:
+def _write(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, Any] | None = None) -> None:
     con.begin()
     try:
         # Re-reading a unit replaces its articles' rows, so a unit can always be read again.

@@ -165,6 +165,7 @@ def test_paired_scores_compare_the_statement_with_the_tags(tmp_path):
             (2, "software"),
             (2, "validation"),
         ]
+        assert con.sql("SELECT publisher FROM paired_scores ORDER BY 1").fetchall() == [("(all)",), ("Test Press",)]
         # Tags: 2 pairs. Parsed: 3, of which 2 match.
         assert con.sql(
             "SELECT articles, precision, recall FROM paired_scores WHERE publisher = '(all)'"
@@ -228,3 +229,12 @@ def test_rows_without_a_parser_pin_are_refused(tmp_path):
 def test_assignments_key_rejects_duplicates(tmp_path):
     with store.connect(tmp_path / "k.duckdb") as con, pytest.raises(duckdb.ConstraintException):
         con.execute("INSERT INTO assignments VALUES ('PMC1', 1, 'software'), ('PMC1', 1, 'software')")
+
+
+def test_export_names_the_bulk_files_it_came_from(tmp_path):
+    with store.connect(tmp_path / "f.duckdb") as con:
+        unit = {"unit": "PMC1_PMC9.xml.gz", "sha256": "ab" * 32, "articles": 1, "retries": 0, "finished": True}
+        store.insert(con, [store.rows_for("PMC1", "all", XML["PMC1"])], unit)
+        export.export(con, tmp_path / "out", "test")
+    meta = (tmp_path / "out" / "meta.json").read_text()
+    assert '"files": "1"' in meta and '"files_digest"' in meta

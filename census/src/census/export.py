@@ -54,6 +54,13 @@ def export(con: duckdb.DuckDBPyConnection, out: Path, name: str) -> dict[str, in
         con.execute(f"COPY ({query}) TO '{path}' (FORMAT parquet)")
         (counts[table],) = con.execute(f"SELECT count(*) FROM read_parquet('{path}')").fetchone() or (0,)
     meta = dict(con.execute("SELECT key, value FROM meta ORDER BY key").fetchall())
+    # One digest over every finished unit's file hash: names the exact bulk files the data came from.
+    (units, digest) = con.execute(
+        "SELECT count(*), sha256(string_agg(unit || ' ' || sha256, '\n' ORDER BY unit)) FROM units"
+        " WHERE finished AND sha256 IS NOT NULL"
+    ).fetchone() or (0, None)
+    if units:
+        meta |= {"files": str(units), "files_digest": digest}
     (out / "meta.json").write_text(json.dumps({"name": name, "counts": counts, "provenance": meta}, indent=2) + "\n")
     (out / "README.md").write_text(README.format(name=name))
     return counts
