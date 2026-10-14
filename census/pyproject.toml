@@ -3,17 +3,18 @@ name = "credit-census"
 version = "0.1.0"
 description = "How CRediT roles are used in published papers, extracted from Europe PMC JATS"
 license = "MIT"
-requires-python = ">=3.14"
+# duckdb has no 3.15 wheel yet
+requires-python = ">=3.14,<3.15"
 dependencies = [
-    "duckdb>=1.4",
-    "pyarrow>=21",
+    "duckdb>=1.5",
+    "pyarrow>=26",
 ]
 
 [project.scripts]
 census = "census.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8.4", "ruff>=0.14", "ty>=0.0.1a20"]
+dev = ["pytest>=9.1", "ruff>=0.17", "ty>=0.0.86"]
 
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]
