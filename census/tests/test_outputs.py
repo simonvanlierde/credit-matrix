@@ -1,9 +1,10 @@
 import csv
+import json
 
 import pytest
 from helpers import article, contrib
 
-from census import fields, labels, store
+from census import export, fields, labels, store
 
 XML = {
     "PMC1": article(
@@ -19,7 +20,8 @@ XML = {
 @pytest.fixture
 def db(tmp_path):
     con = store.connect(tmp_path / "o.duckdb")
-    store.insert(con, [store.rows_for(pmcid, "all", xml) for pmcid, xml in XML.items()])
+    unit = {"unit": "u1", "sha256": "ab", "finished": True}
+    store.insert(con, [store.rows_for(pmcid, "all", xml) for pmcid, xml in XML.items()], unit)
     yield con
     con.close()
 
@@ -53,7 +55,7 @@ def test_fields_per_journal(db, tmp_path):
 def test_label_export_and_score(db, tmp_path):
     out = tmp_path / "labels.csv"
     assert labels.export(db, out, per_style=5, seed=1) == 2
-    with out.open() as f:
+    with out.open(encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
     assert rows[0]["authors"] == "1. Ann Smith | 2. Bo Jones"
     for row in rows:  # blind: no prediction anywhere but the source text
@@ -62,7 +64,7 @@ def test_label_export_and_score(db, tmp_path):
     gold = {"PMC1": "1: software; 2: validation", "PMC2": "1: software; 2: visualization"}
     for row in rows:
         row["gold"] = gold[row["pmcid"]]
-    with out.open("w", newline="") as f:
+    with out.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
@@ -80,5 +82,43 @@ def test_parse_gold():
         (2, "writing-review-editing"),
     }
     assert labels.parse_gold("none", 3) == set()
-    with pytest.raises(ValueError, match="neither"):
-        labels.parse_gold("A.S.: software", 2)
+    for bad in ("A.S.: software", "²: software", "software", "3: software", "1: drew the figures"):
+        with pytest.raises(ValueError, match="'"):
+            labels.parse_gold(bad, 2)
+
+
+def test_score_unknown_pmcid(db, tmp_path):
+    out = tmp_path / "labels.csv"
+    out.write_text("pmcid,style,authors,text,gold\nPMC404,none,,x,none\n", encoding="utf-8-sig")
+    with pytest.raises(ValueError, match="PMC404"):
+        labels.score(db, out)
+
+
+def test_export(db, tmp_path, monkeypatch):
+    out = tmp_path / "export"
+    with pytest.raises(ValueError, match="fields missing"):
+        export.export(db, out, "t")
+    assert not out.exists()
+    # A contrib_text statement as the parser writes it: author positions, no names.
+    db.execute(
+        "UPDATE articles SET statement = '1: Software; 2: Validation', style = 'contrib_text' WHERE pmcid = 'PMC1'"
+    )
+    assert export.export(db, out, "t", partial=True) == {"articles": 2, "assignments": 5, "statements": 2}
+    names = [n for (a,) in db.sql("SELECT authors FROM articles").fetchall() for n in a]
+    for table in ("articles", "assignments"):
+        text = " ".join(map(str, db.sql(f"SELECT * FROM read_parquet('{out}/{table}.parquet')").fetchall()))
+        assert not any(n in text for n in names)
+    (contrib_text,) = db.sql(
+        f"SELECT statement FROM '{out}/statements.parquet' WHERE style = 'contrib_text'"
+    ).fetchone()
+    assert not any(n in contrib_text for n in names)
+    types = dict(db.sql(f"SELECT column_name, column_type FROM (DESCRIBE '{out}/articles.parquet')").fetchall())
+    assert types["field"] == types["domain"] == types["source_unit"] == "VARCHAR"
+    meta = json.loads((out / "meta.json").read_text())
+    assert (meta["complete"], meta["units_total"], meta["licenses"]["statements.parquet"]) == (False, 1, "CC-BY-4.0")
+    # A failed export leaves the previous one in place and no temporary directory behind.
+    monkeypatch.setattr(export, "README", "{missing}")
+    with pytest.raises(KeyError):
+        export.export(db, out, "t", partial=True)
+    assert json.loads((out / "meta.json").read_text()) == meta
+    assert [p.name for p in tmp_path.iterdir() if p.name.startswith(".")] == []
