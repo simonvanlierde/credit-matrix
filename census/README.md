@@ -22,8 +22,8 @@ uv run census report    # markup styles, adoption per year, roles by author posi
 
 The sample is 720 articles; the first `run` downloads the bucket inventory (about 50 MB) and the
 articles (about 20 MB, kept gzipped in `data/xml-cache/`), in under two minutes. A correct run
-ends with a line of counts per style (`inventory 2026-10-12T01-00Z: 80 contrib_text, 49 jats4r, ...`);
-the counts change when the parser does.
+ends with `inventory 2026-10-12T01-00Z: 80 contrib_text, 49 jats4r, 375 none, 84 plos_uri, 132
+statement_text`; the counts change when the parser does.
 
 `run` and `snapshot` default to `--snapshot sample-2026-10`. Every other command defaults to
 `--snapshot oa-2026-10`, so add `--snapshot sample-2026-10` to run `fields`, `report` or `export` on
