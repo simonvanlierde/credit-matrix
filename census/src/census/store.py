@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
+import pyarrow as pa
 
 from census.jats import Article, parse_article, parse_element
 
@@ -36,6 +37,10 @@ ARTICLE_COLUMNS = {
 }
 """Column -> type. `authors` and `orcids` run in author order (an ORCID is NULL when the article gives
 none); they stay local, the public export leaves names out."""
+
+_ARROW_TYPES = {"VARCHAR": pa.string(), "INTEGER": pa.int32(), "VARCHAR[]": pa.list_(pa.string())}
+_ARTICLE_SCHEMA = pa.schema([(c, _ARROW_TYPES[t.split()[0]]) for c, t in ARTICLE_COLUMNS.items()])
+_ROLE_SCHEMA = pa.schema([("pmcid", pa.string()), ("author_position", pa.int32()), ("role", pa.string())])
 
 SCHEMA = f"""
 CREATE TABLE IF NOT EXISTS articles ({", ".join(f"{c} {t}" for c, t in ARTICLE_COLUMNS.items())});
@@ -191,12 +196,12 @@ def insert(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, An
     """
     try:
         _write(con, batch, unit)
-    except duckdb.Error:
+    except duckdb.Error, pa.ArrowException:
         for i, rows in enumerate(batch):
             last = unit if i == len(batch) - 1 else None
             try:
                 _write(con, [rows], last)
-            except duckdb.Error as error:
+            except (duckdb.Error, pa.ArrowException) as error:
                 a = rows.article
                 _write(con, [failed_row(str(a["pmcid"]), str(a["stratum"]), "error", f"insert: {error}")], last)
 
@@ -204,15 +209,16 @@ def insert(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, An
 def _write(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, Any] | None = None) -> None:
     con.begin()
     try:
-        # Re-reading a unit replaces its articles' rows, so a unit can always be read again.
-        ids = [r.article["pmcid"] for r in batch]
-        for table in ("assignments", "paired", "articles"):
-            con.execute(f"DELETE FROM {table} WHERE pmcid IN (SELECT unnest(?))", [ids])
-        columns = list(ARTICLE_COLUMNS)
-        _insert(con, "articles", columns, [[r.article.get(c) for c in columns] for r in batch])
-        role_columns = ["pmcid", "author_position", "role"]
-        _insert(con, "assignments", role_columns, [[r.article["pmcid"], p, role] for r in batch for p, role in r.roles])
-        _insert(con, "paired", role_columns, [[r.article["pmcid"], p, role] for r in batch for p, role in r.paired])
+        # Re-reading a unit replaces its articles' rows, so a unit can always be read again. A unit never
+        # recorded has no rows to replace; if one slipped in anyway, the primary key rejects the batch and
+        # `insert` writes it again an article at a time, through this delete.
+        if unit is None or con.execute("SELECT 1 FROM units WHERE unit = ?", [unit["unit"]]).fetchone():
+            ids = [r.article["pmcid"] for r in batch]
+            for table in ("assignments", "paired", "articles"):
+                con.execute(f"DELETE FROM {table} WHERE pmcid IN (SELECT unnest(?))", [ids])
+        _insert(con, "articles", _ARTICLE_SCHEMA, [[r.article.get(c) for c in ARTICLE_COLUMNS] for r in batch])
+        _insert(con, "assignments", _ROLE_SCHEMA, [[r.article["pmcid"], p, role] for r in batch for p, role in r.roles])
+        _insert(con, "paired", _ROLE_SCHEMA, [[r.article["pmcid"], p, role] for r in batch for p, role in r.paired])
         if unit is not None:
             con.execute(
                 "INSERT OR REPLACE INTO units BY NAME SELECT * FROM (SELECT ? AS unit, ? AS listed_date, ? AS size,"
@@ -220,15 +226,19 @@ def _write(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: dict[str, An
                 [unit.get(k) for k in ("unit", "listed_date", "size", "sha256", "articles", "retries", "finished")],
             )
         con.commit()
-    except duckdb.Error:
+    except duckdb.Error, pa.ArrowException:
         con.rollback()
         raise
 
 
-def _insert(con: duckdb.DuckDBPyConnection, table: str, columns: list[str], rows: list[list], chunk: int = 500) -> None:
-    """Multi-row INSERTs with named columns. DuckDB's executemany runs one statement per row, about 10
-    times slower here."""
-    for start in range(0, len(rows), chunk):
-        part = rows[start : start + chunk]
-        values = ", ".join([f"({', '.join('?' * len(columns))})"] * len(part))
-        con.execute(f"INSERT INTO {table} ({', '.join(columns)}) VALUES {values}", [v for row in part for v in row])
+def _insert(con: duckdb.DuckDBPyConnection, table: str, schema: pa.Schema, rows: list[list]) -> None:
+    """Hand DuckDB whole columns as an Arrow table: binding every value as a SQL parameter made the
+    single writing process the bottleneck of a run."""
+    if not rows:
+        return
+    columns = [pa.array(values, type=f.type) for values, f in zip(zip(*rows, strict=True), schema, strict=True)]
+    con.register("_batch", pa.Table.from_arrays(columns, schema=schema))
+    try:
+        con.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _batch")
+    finally:
+        con.unregister("_batch")

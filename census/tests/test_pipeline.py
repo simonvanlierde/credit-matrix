@@ -210,6 +210,16 @@ def test_insert_stores_a_rejected_row_as_an_error(tmp_path):
         ]
 
 
+def test_an_article_in_two_units_is_replaced_not_duplicated(tmp_path):
+    with store.connect(tmp_path / "d.duckdb") as con:
+        store.insert(con, [store.rows_for("PMC1", "all", XML["PMC1"])], {"unit": "a", "finished": True})
+        again = store.rows_for("PMC1", "all", XML["PMC1"])
+        store.insert(con, [again, store.rows_for("PMC2", "all", XML["PMC2"])], {"unit": "b", "finished": True})
+        assert con.sql("SELECT pmcid FROM articles ORDER BY 1").fetchall() == [("PMC1",), ("PMC2",)]
+        assert con.sql("SELECT count(*) FROM assignments WHERE pmcid = 'PMC1'").fetchone() == (len(again.roles),)
+        assert con.sql("SELECT unit FROM units ORDER BY 1").fetchall() == [("a",), ("b",)]
+
+
 def test_pins_refuse_rows_from_other_code(tmp_path, monkeypatch):
     with store.connect(tmp_path / "p.duckdb") as con:
         assert store.mismatched_pins(con) == []

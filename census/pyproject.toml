@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "How CRediT roles are used in published papers, extracted from Europe PMC JATS"
 license = "MIT"
 requires-python = ">=3.14"
-dependencies = ["duckdb>=1.4"]
+dependencies = [
+    "duckdb>=1.4",
+    "pyarrow>=21",
+]
 
 [project.scripts]
 census = "census.cli:main"
