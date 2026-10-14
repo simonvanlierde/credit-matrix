@@ -32,6 +32,7 @@ _STATEMENT_TITLE_RE = re.compile(
 # A bare "Contributions" outside the body: in the body it is the paper's own contribution.
 _BARE_TITLE_RE = re.compile(r"^\W*contributions?\W*$", re.IGNORECASE)
 _CON_ID_RE = re.compile(r"con\d+")
+_CANDIDATE_TAGS = ("sec", "fn-group", "notes", "fn")
 
 
 @dataclass
@@ -137,31 +138,35 @@ def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> tuple[list[tuple
     return found, texts
 
 
-def _holds_statement(el: ET.Element, in_body: bool) -> bool:
-    if el.tag == "notes" and "contribution" in (el.get("notes-type") or ""):
-        return True
-    title = _text(el.find("title")) if el.tag in {"sec", "fn-group", "notes"} else ""
-    if el.tag == "fn":  # BMJ: <fn><p><bold>Contributors:</bold> ...
-        title = _text(el.find("p/bold"))
-    return bool(_STATEMENT_TITLE_RE.search(title) or (not in_body and _BARE_TITLE_RE.search(title)))
-
-
 def _statement_candidates(root: ET.Element):
     """Free text of each element that may hold the statement, title left out, if it names a role.
 
-    Back matter first, so the author contributions note wins over anything in the body.
+    Back matter first, then document order, so the author contributions note wins over anything in the body.
     """
     back, body = root.find("back"), root.find("body")
-    in_body = {id(el) for el in body.iter()} if body is not None else set()
-    seen: set[int] = set()
-    for el in [*(back.iter() if back is not None else []), *root.iter()]:
-        if id(el) in seen:
+    in_body: set[ET.Element] | None = None
+    hits = []
+    for el in (el for tag in _CANDIDATE_TAGS for el in root.iter(tag)):
+        if el.tag == "notes" and "contribution" in (el.get("notes-type") or ""):
+            hits.append(el)
             continue
-        seen.add(id(el))
-        if _holds_statement(el, id(el) in in_body):
-            text = " ".join(_text(child) for child in el if child.tag != "title")
-            if find_roles(clean(text)):
-                yield text
+        # BMJ: <fn><p><bold>Contributors:</bold> ...
+        title = _text(el.find("p/bold" if el.tag == "fn" else "title"))
+        if _STATEMENT_TITLE_RE.search(title):
+            hits.append(el)
+        elif _BARE_TITLE_RE.search(title):
+            if in_body is None:
+                in_body = {e for tag in _CANDIDATE_TAGS for e in body.iter(tag)} if body is not None else set()
+            if el not in in_body:
+                hits.append(el)
+    if len(hits) > 1:  # rare: walk the whole article only to put the hits in order
+        in_back = set(back.iter()) if back is not None else set()
+        position = {el: n for n, el in enumerate(root.iter())}
+        hits.sort(key=lambda el: (el not in in_back, position[el]))
+    for el in hits:
+        text = " ".join(_text(child) for child in el if child.tag != "title")
+        if find_roles(clean(text)):
+            yield text
 
 
 def parse_article(xml: bytes) -> Article:
