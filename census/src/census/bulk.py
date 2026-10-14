@@ -32,7 +32,7 @@ def list_files(base: str = BASE) -> list[dict[str, str]]:
 
 class BulkSource:
     """One unit per bulk file. Reading a unit downloads the file once into `cache` (the downloads are
-    the re-parse cache, about 168 GB in all), checks its sha256 against the pinned one when the listing
+    the re-parse cache, about 169 GB in all), checks its sha256 against the pinned one when the listing
     has it, and parses its articles as they stream in."""
 
     name = "bulk"

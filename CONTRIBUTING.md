@@ -43,6 +43,10 @@ change:
 cd census && uv run --locked ruff format --check . && uv run --locked ruff check . && uv run --locked ty check && uv run --locked pytest -q
 ```
 
+`census/tests/corpus.jsonl` pins the statement parser's output on 60 real statements, so any change
+in what it reads fails a test. After a change you meant to make, review the diff and rewrite the
+expected output with `CENSUS_UPDATE_CORPUS=1 uv run pytest -q tests/test_corpus.py`.
+
 ## Testing
 
 - **Unit (Vitest)**: two projects. `core` runs `src/core` under Node and checks the built package:
