@@ -1,6 +1,7 @@
 """Extract per-author CRediT roles from a JATS article, whichever markup the publisher used."""
 
 import re
+import unicodedata
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 
@@ -31,11 +32,11 @@ _STATEMENT_TITLE_RE = re.compile(
 # A bare "Contributions" outside the body: in the body it is the paper's own contribution.
 _BARE_TITLE_RE = re.compile(r"^\W*contributions?\W*$", re.IGNORECASE)
 _CON_ID_RE = re.compile(r"con\d+")
+_CANDIDATE_TAGS = ("sec", "fn-group", "notes", "fn")
 
 
 @dataclass
 class Article:
-    pmcid: str | None = None
     article_type: str | None = None
     doi: str | None = None
     journal: str | None = None
@@ -48,8 +49,8 @@ class Article:
     assignments: set[tuple[int, str]] = field(default_factory=set)
     """(author index, role slug) pairs."""
     statement: str | None = None
-    """The free text the roles were read from (for contrib_text, "1. Name: text" per author), parsed or not.
-    Kept for labelling."""
+    """The free text the roles were read from (for contrib_text, "1: text" per author position, without
+    names), parsed or not. Kept for labelling."""
     unresolved: list[str] = field(default_factory=list)
     paired: set[tuple[int, str]] | None = None
     """For an article whose roles are tagged (jats4r, plos_uri) and that also prints a statement: what
@@ -61,20 +62,33 @@ _ORCID_RE = re.compile(r"\d{4}-\d{4}-\d{4}-\d{3}[\dX]")
 
 
 # UTF-8 bytes that were read as Latin-1 and encoded again: Europe PMC's bulk files store "—" as
-# "â\x80\x94" and "ă" as "Ä\x83" in about two in three articles.
-_MOJIBAKE_RE = re.compile("[\xc2-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xf4][\x80-\xbf]{3}")
+# "â\x80\x94" and "ă" as "Ä\x83" in about two in three articles. A second byte from \x80-\x9f is a
+# control character no real text holds. One from \xa0-\xbf is a printable Latin-1 character, so a
+# pair is repaired only after the first bytes real double encoding produces there (Â, Ã: Latin-1;
+# Ä-Ó: Latin Extended, IPA, combining marks, Greek, Cyrillic; Ø-Û: Arabic), only into a letter, mark
+# or punctuation, and a no-break space only after Greek and Cyrillic first bytes. That leaves
+# "JOSÉ\xa0", "Groß\xa0", "Ö¿", a multiplication sign before "±", and "Å²" (square ångström) alone.
+_MOJIBAKE_RE = re.compile(
+    "[\xc2-\xdf][\x80-\x9f]|[\xc2\xc3][\xa0-\xbf]|Å[\xa0-\xb1\xb4-\xbf]|[\xc4\xc6-\xd3\xd8-\xdb][\xa1-\xbf]"
+    "|[\xce-\xd1]\xa0|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xf4][\x80-\xbf]{3}"
+)
 
 
 def _repair(match: re.Match[str]) -> str:
+    raw = match.group()
     try:
-        return match.group().encode("latin-1").decode("utf-8")
+        char = raw.encode("latin-1").decode("utf-8")
     except UnicodeDecodeError:
-        return match.group()
+        return raw
+    if len(raw) == 2 and raw[0] not in "ÂÃ" and raw[1] >= "\xa0" and unicodedata.category(char)[0] not in "LMP":
+        return raw
+    return char
 
 
 def _squash(text: str) -> str:
     # Repair first: some continuation bytes are whitespace to Python ("\xa0" in "à", "\x85" in "Å").
-    return re.sub(r"\s+", " ", _MOJIBAKE_RE.sub(_repair, text)).strip()
+    # NFC so a letter and its accent are one character: initials and names match either way.
+    return unicodedata.normalize("NFC", re.sub(r"\s+", " ", _MOJIBAKE_RE.sub(_repair, text)).strip())
 
 
 def _text(el: ET.Element | None) -> str:
@@ -124,31 +138,35 @@ def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> tuple[list[tuple
     return found, texts
 
 
-def _holds_statement(el: ET.Element, in_body: bool) -> bool:
-    if el.tag == "notes" and "contribution" in (el.get("notes-type") or ""):
-        return True
-    title = _text(el.find("title")) if el.tag in {"sec", "fn-group", "notes"} else ""
-    if el.tag == "fn":  # BMJ: <fn><p><bold>Contributors:</bold> ...
-        title = _text(el.find("p/bold"))
-    return bool(_STATEMENT_TITLE_RE.search(title) or (not in_body and _BARE_TITLE_RE.search(title)))
-
-
 def _statement_candidates(root: ET.Element):
     """Free text of each element that may hold the statement, title left out, if it names a role.
 
-    Back matter first, so the author contributions note wins over anything in the body.
+    Back matter first, then document order, so the author contributions note wins over anything in the body.
     """
     back, body = root.find("back"), root.find("body")
-    in_body = {id(el) for el in body.iter()} if body is not None else set()
-    seen: set[int] = set()
-    for el in [*(back.iter() if back is not None else []), *root.iter()]:
-        if id(el) in seen:
+    in_body: set[ET.Element] | None = None
+    hits = []
+    for el in (el for tag in _CANDIDATE_TAGS for el in root.iter(tag)):
+        if el.tag == "notes" and "contribution" in (el.get("notes-type") or ""):
+            hits.append(el)
             continue
-        seen.add(id(el))
-        if _holds_statement(el, id(el) in in_body):
-            text = " ".join(_text(child) for child in el if child.tag != "title")
-            if find_roles(clean(text)):
-                yield text
+        # BMJ: <fn><p><bold>Contributors:</bold> ...
+        title = _text(el.find("p/bold" if el.tag == "fn" else "title"))
+        if _STATEMENT_TITLE_RE.search(title):
+            hits.append(el)
+        elif _BARE_TITLE_RE.search(title):
+            if in_body is None:
+                in_body = {e for tag in _CANDIDATE_TAGS for e in body.iter(tag)} if body is not None else set()
+            if el not in in_body:
+                hits.append(el)
+    if len(hits) > 1:  # rare: walk the whole article only to put the hits in order
+        in_back = set(back.iter()) if back is not None else set()
+        position = {el: n for n, el in enumerate(root.iter())}
+        hits.sort(key=lambda el: (el not in in_back, position[el]))
+    for el in hits:
+        text = " ".join(_text(child) for child in el if child.tag != "title")
+        if find_roles(clean(text)):
+            yield text
 
 
 def parse_article(xml: bytes) -> Article:
@@ -166,7 +184,6 @@ def parse_element(root: ET.Element) -> Article:
     years = [y for y in years if 1900 <= y <= 2100]
     lic = meta.find("permissions/license")
     article = Article(
-        pmcid=ids.get("pmcid") or (f"PMC{ids['pmc']}" if ids.get("pmc", "").isdigit() else ids.get("pmc")),
         article_type=root.get("article-type"),
         doi=ids.get("doi"),
         journal=_text(root.find("front/journal-meta/journal-title-group/journal-title")) or None,
@@ -203,9 +220,7 @@ def parse_element(root: ET.Element) -> Article:
         article.assignments = {(i, slug) for i, style, slug in tagged if style == article.style}
         if article.style == "contrib_text":
             article.statement = "; ".join(
-                f"{i + 1}. {article.authors[i].name}: {' '.join(texts)}"
-                for i, (_, texts) in enumerate(per_author)
-                if texts
+                f"{i + 1}: {' '.join(texts)}" for i, (_, texts) in enumerate(per_author) if texts
             )
         elif text := next(_statement_candidates(root), None):
             article.statement = text

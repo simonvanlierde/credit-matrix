@@ -22,10 +22,9 @@ ROLE_PATTERNS: dict[str, str] = {
     "writing-review-editing": r"(?:writing ?- ?)?review(?:ing)? and edit(?:ing)?",
 }
 
-ROLE_RE = re.compile(
-    "|".join(rf"(?P<{slug.replace('-', '_')}>\b{pattern}\b)" for slug, pattern in ROLE_PATTERNS.items()),
-    re.IGNORECASE,
-)
+# One group per role, in ROLE_PATTERNS order; the patterns themselves capture nothing.
+_SLUGS = list(ROLE_PATTERNS)
+ROLE_RE = re.compile("|".join(rf"(\b{pattern}\b)" for pattern in ROLE_PATTERNS.values()), re.IGNORECASE)
 
 # Terms prose rarely uses. "Supervision", "software" or "investigation" alone turn up in narrative
 # statements ("under the supervision of NS") and ICMJE lists, which are not CRediT.
@@ -63,4 +62,4 @@ def names_credit(text: str) -> bool:
 
 def find_roles(text: str) -> list[tuple[int, int, str]]:
     """(start, end, slug) for each role named in `clean`ed text, in order."""
-    return [(m.start(), m.end(), m.lastgroup.replace("_", "-")) for m in ROLE_RE.finditer(text) if m.lastgroup]
+    return [(m.start(), m.end(), _SLUGS[m.lastindex - 1]) for m in ROLE_RE.finditer(text) if m.lastindex]

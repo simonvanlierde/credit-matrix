@@ -1,4 +1,6 @@
-from census.roles import ROLE_PATTERNS, clean, find_roles, slug_from_url
+import pytest
+
+from census.roles import ROLE_PATTERNS, clean, find_roles, names_credit, slug_from_url
 from census.statement import Author, parse_statement, resolve_initials
 
 AUTHORS = [
@@ -131,3 +133,124 @@ def test_initials_before_surname():
     authors = [Author("Brendan James", "Houston"), Author("Duc", "Merriner")]
     parsed = parse_statement("BJ Houston: data curation. D. Merriner: software.", authors)
     assert parsed.assignments == {(0, "data-curation"), (1, "software")}
+
+
+def test_initials_first_name_is_not_read_inside_hyphenated_initials():
+    authors = [Author("Xiao-Ming", "Li"), Author("Ming", "Li")]
+    parsed = parse_statement("X.-M. Li: software; M. Li: validation.", authors)
+    assert parsed.assignments == {(0, "software"), (1, "validation")}
+    parsed = parse_statement("X.M. Li: software; M. Li: validation.", [Author("Xiao Ming", "Li"), Author("Ming", "Li")])
+    assert parsed.assignments == {(0, "software"), (1, "validation")}
+
+
+@pytest.mark.parametrize(
+    ("authors", "text", "unresolved"),
+    [
+        ([Author("Hong", "Wang"), Author("Wei", "Zhang"), Author("Hao", "Wang")], "H Wang: software", ["H Wang"]),
+        (
+            [Author("Li", "Wang"), Author("Wang", "Li")],
+            "Li Wang: software. Wang Li: validation.",
+            ["Li Wang", "Wang Li"],
+        ),
+    ],
+)
+def test_a_name_two_authors_share_stays_unresolved(authors, text, unresolved):
+    parsed = parse_statement(text, authors)
+    assert parsed.assignments == set()
+    assert parsed.unresolved == unresolved
+
+
+def test_surname_comma_initials():
+    parsed = parse_statement("A.B.: software; Dunn, C: writing - review and editing", THREE)
+    assert parsed.assignments == {(0, "software"), (1, "writing-review-editing")}
+    parsed = parse_statement("Software: Bell, Ann, Fox, E.", THREE)
+    assert parsed.assignments == {(0, "software"), (2, "software")}
+
+
+def test_unknown_name_does_not_inherit_the_previous_authors_roles():
+    parsed = parse_statement("A.B.: software; Dunne, C: writing - review and editing", THREE)
+    assert parsed.assignments == {(0, "software")}
+
+
+def test_surname_comma_given_does_not_split_a_list_of_names():
+    authors = [Author("Ajaya", "Sharma"), Author("Monica", "Sharma")]
+    parsed = parse_statement("Data curation: Ajaya Sharma, Monica Sharma.", authors)
+    assert parsed.assignments == {(0, "data-curation"), (1, "data-curation")}
+
+
+def test_hyphenated_given_names():
+    authors = [Author("Jun-Ho", "Kim"), Author("Wei-Jie", "Zhang")]
+    parsed = parse_statement("J.-H. Kim: software. Zhang W.-J.: validation.", authors)
+    assert parsed.assignments == {(0, "software"), (1, "validation")}
+    parsed = parse_statement("Software: Kim J-H and W.-J. Zhang.", authors)
+    assert parsed.assignments == {(0, "software"), (1, "software")}
+
+
+@pytest.mark.parametrize(
+    ("token", "author"),
+    [
+        ("JvdB", Author("Jan", "van der Berg")),
+        ("AdS", Author("Ana", "da Silva")),
+        ("CL", Author("Chiara", "De Luca")),
+        ("JG", Author("José", "García López")),
+        ("ZL", Author("Li", "Zhao")),  # surname first
+        ("L.Z.", Author("Li-Jun", "Zhao")),  # first given name only
+    ],
+)
+def test_initials_tiers(token, author):
+    assert resolve_initials(token, [Author("Ann", "Bell"), author]) == 1
+
+
+def test_a_stricter_tier_wins_over_particles():
+    assert resolve_initials("CL", [Author("Chiara", "De Luca"), Author("Carlo", "Lanza")]) == 1
+
+
+def test_full_names_in_any_case():
+    parsed = parse_statement("ISIK DEMIR: methodology. bo wu: software.", [Author("Isik", "Demir"), Author("Bo", "Wu")])
+    assert parsed.assignments == {(0, "methodology"), (1, "software")}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Software, A.B. All authors read and approved the manuscript.",
+        "A.B.: software. All authors have read and approved the final manuscript.",
+    ],
+)
+def test_approval_sentence_is_dropped(text):
+    assert parse_statement(text, THREE).assignments == {(0, "software")}
+
+
+_WORDINGS = {
+    "conceptualization": ["Conceptualization", "conceptualisation"],
+    "data-curation": ["Data curation"],
+    "formal-analysis": ["Formal analysis", "formal analyses"],
+    "funding-acquisition": ["Funding acquisition"],
+    "investigation": ["Investigation"],
+    "methodology": ["Methodology"],
+    "project-administration": ["Project administration"],
+    "resources": ["Resources"],
+    "software": ["Software"],
+    "supervision": ["Supervision"],
+    "validation": ["Validation"],
+    "visualization": ["Visualization", "visualisation"],
+    "writing-original-draft": ["Original draft", "original draft preparation"]
+    + [f"Writing{d}original draft" for d in ("‐", "–", "—", "−", "-", " - ")],
+    "writing-review-editing": ["review and edit", "Reviewing and editing", "review & editing"]
+    + [f"Writing{d}review and editing" for d in ("‐", "–", "—", "−", "-", " - ")],
+}
+
+
+def test_every_role_has_wordings():
+    assert set(_WORDINGS) == set(ROLE_PATTERNS)
+
+
+@pytest.mark.parametrize(("slug", "wording"), [(s, w) for s, ws in _WORDINGS.items() for w in ws])
+def test_role_wording(slug, wording):
+    assert [s for _, _, s in find_roles(clean(f"AB: {wording}."))] == [slug]
+
+
+@pytest.mark.parametrize(("slug", "wording"), [(s, ws[0]) for s, ws in _WORDINGS.items()])
+def test_names_credit_only_for_distinctive_roles(slug, wording):
+    common = {"investigation", "methodology", "resources", "software", "supervision", "validation"}
+    assert names_credit(clean(wording)) is (slug not in common)

@@ -93,7 +93,7 @@ def test_unparsed_statement_is_kept():
 
 def test_contrib_text_keeps_its_source_text():
     a = parse_article(article(contrib("Ann", "Smith", "<role>Software, Validation</role>") + contrib("Bo", "Jones")))
-    assert a.statement == "1. Ann Smith: Software, Validation"
+    assert a.statement == "1: Software, Validation"  # positions, not names: the labelling CSV lists the authors
 
 
 def test_contribution_to_the_field_is_not_a_statement():
@@ -177,3 +177,71 @@ def test_a_body_contributions_section_is_the_papers_not_the_authors():
     assert parse_article(xml).statement is None
     back = "<sec><title>Contributions</title><p>AS: software, visualization.</p></sec>"
     assert parse_article(article(contrib("Ann", "Smith"), back)).style == "statement_text"
+
+
+@pytest.mark.parametrize(
+    ("raw", "repaired"),
+    [
+        ("Ä\u0083", "ă"),  # second byte a C1 control
+        ("Å ", "Š"),
+        ("Î±", "α"),
+        ("Ð\u00a0", "\u0420"),  # a no-break space after a Cyrillic first byte
+        ("SzleÌ¨k", "Szlęk"),  # a combining mark, composed by NFC
+        ("ð\u009f\u0098\u0080", "\U0001f600"),  # four bytes
+        ("à\u0080\u0080", "à\u0080\u0080"),  # not valid UTF-8: left as it is
+        ("J. Groß and A. JOSÉ GARCÍA", "J. Groß and A. JOSÉ GARCÍA"),
+        ("5×±2", "5×±2"),
+        ("Ö¿", "Ö¿"),
+        ("2 Å²", "2 Å²"),  # square ångström
+    ],
+)
+def test_only_plausible_double_encoding_is_repaired(raw, repaired):
+    assert parse_article(article(contrib("Ann", raw))).authors[0].surname == repaired
+
+
+def test_decomposed_accents_are_composed():
+    back = "<sec><title>Author contributions</title><p>Formal analysis: H.S\u030c.</p></sec>"
+    a = parse_article(article(contrib("Hana", "S\u030cigutova\u0301"), back))
+    assert a.authors[0].surname == "\u0160igutov\u00e1"
+    assert a.assignments == {(0, "formal-analysis")}
+
+
+@pytest.mark.parametrize("title", ["Author statement", "Contributions of the authors", "Authorship"])
+def test_statement_titles(title):
+    back = f"<sec><title>{title}</title><p>AS: formal analysis.</p></sec>"
+    assert parse_article(article(contrib("Ann", "Smith"), back)).assignments == {(0, "formal-analysis")}
+
+
+def test_a_statement_title_without_roles_gives_way_to_the_next():
+    back = (
+        "<sec><title>Author contributions</title><p>All authors wrote the paper.</p></sec>"
+        "<sec><title>CRediT authorship contribution statement</title><p>AS: formal analysis.</p></sec>"
+    )
+    a = parse_article(article(contrib("Ann", "Smith"), back))
+    assert (a.style, a.assignments) == ("statement_text", {(0, "formal-analysis")})
+
+
+def test_back_matter_statement_beats_a_body_statement():
+    xml = article(
+        contrib("Ann", "Smith"), '<notes notes-type="author-contribution"><p>AS: formal analysis.</p></notes>'
+    ).replace(
+        b"</front>", b"</front><body><sec><title>Author contributions</title><p>AS: visualization.</p></sec></body>"
+    )
+    assert parse_article(xml).assignments == {(0, "formal-analysis")}
+
+
+def test_earliest_publication_year_wins():
+    dates = b"<pub-date><year>2025</year></pub-date><pub-date><year>2023</year></pub-date><pub-date><year>2024</year></pub-date>"
+    a = parse_article(article(contrib("Ann", "Smith")).replace(b"<pub-date><year>2024</year></pub-date>", dates))
+    assert a.year == 2023
+
+
+def test_license_from_ali_license_ref():
+    lic = (
+        b'<license><ali:license_ref xmlns:ali="http://www.niso.org/schemas/ali/1.0/">'
+        b"https://creativecommons.org/licenses/by-nc/4.0/</ali:license_ref></license>"
+    )
+    xml = article(contrib("Ann", "Smith")).replace(
+        b'<license xlink:href="https://creativecommons.org/licenses/by/4.0/"/>', lic
+    )
+    assert parse_article(xml).license == "https://creativecommons.org/licenses/by-nc/4.0/"
