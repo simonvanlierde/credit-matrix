@@ -4,9 +4,14 @@ How published papers use CRediT roles, read from open-access JATS. It feeds the 
 the "paste a statement" import in CRediT Matrix, and a public dataset of per-author role facts.
 
 A Python project, separate from the web app. You need [uv](https://docs.astral.sh/uv/) 0.13 or
-newer (it fetches Python 3.14 itself) and outbound HTTPS. Commands work from any directory.
+newer (it fetches Python 3.14 itself) and outbound HTTPS. The examples run from `census/`. From the
+repo root, write `uv run --project census census <command>`: data and snapshots are always read from
+and written to `census/`.
 
-## Run it
+The order of use is the one `uv run census --help` prints: `run` or `bulk`, then `fields`, then
+`report`, `export`, `label` or `score`.
+
+## Run it on a sample
 
 ```sh
 cd census
@@ -17,23 +22,42 @@ uv run census report    # markup styles, adoption per year, roles by author posi
 
 The sample is 720 articles; the first `run` downloads the bucket inventory (about 50 MB) and the
 articles (about 20 MB, kept gzipped in `data/xml-cache/`), in under two minutes. A correct run
-ends with `inventory 2026-10-12T01-00Z: 80 contrib_text, 49 jats4r, 375 none, 84 plos_uri, 132
-statement_text`; those counts change when the parser does.
+ends with a line of counts per style (`inventory 2026-10-12T01-00Z: 80 contrib_text, 49 jats4r, ...`);
+the counts change when the parser does.
 
-Every command takes `--snapshot <name>` (default `sample-2026-10`) and `--db <path>` (default
-`data/<snapshot>.duckdb`). `uv run census <command> --help` lists the rest.
+`run` and `snapshot` default to `--snapshot sample-2026-10`. Every other command defaults to
+`--snapshot oa-2026-10`, so add `--snapshot sample-2026-10` to run `fields`, `report` or `export` on
+the sample. All of them take `--db <path>` (default `data/<snapshot>.duckdb`).
+`uv run census <command> --help` lists the rest.
 
 ### Every open-access article
 
+This downloads 169 GB into `data/bulk/`. The first run takes about 2.5 hours, downloads included;
+a re-parse from the downloaded files takes about 36 minutes with 16 processes.
+
 ```sh
 uv run census bulk      # all of Europe PMC's open-access subset into data/oa-2026-10.duckdb
-uv run census export --snapshot oa-2026-10
+uv run census fields    # research field per journal; reads OpenAlex's public Parquet from S3, no login
+uv run census export    # the public dataset; refuses an incomplete database or one without fields
+uv run census report
 ```
 
 `bulk` reads Europe PMC's bulk files (`ftp.ebi.ac.uk/pub/databases/pmc/oa/`, 1,308 files of
-about 9,000 articles, 168 GB), 16 files at a time, each downloaded once into `data/bulk/` and
-parsed as it streams in (about 480 articles a second a process). Unlike Europe PMC's REST API,
-the files keep the role markup. `--limit 2` reads just two files to try it.
+about 9,000 articles), 16 files at a time, each downloaded once and parsed as it streams in (about
+480 articles a second a process). Unlike Europe PMC's REST API, the files keep the role markup.
+`--limit 2` reads just two files to try it. `export` takes `--partial` to write an incomplete
+database or one without fields.
+
+### Interrupted or changed parser
+
+- **Interrupted run:** repeat the same command without `--fresh`. Finished files are kept and the
+  rest are read again.
+- **Changed parser or schema:** a command that writes refuses the database and tells you to rerun
+  with `--fresh`. That deletes the database and re-parses; downloaded files are reused (about 36
+  minutes for the full dataset). Commands that only read (`report`, `export`, ...) warn instead.
+- **Exit codes:** 1 for a mistake you can fix, or a pin that does not match. 2 for an unfinished
+  run: it stopped, files are unfinished, or a file's sha256 differs from the one committed in
+  `snapshots/<name>.files.csv`.
 
 ### What makes a run reproducible
 
@@ -43,11 +67,13 @@ the files keep the role markup. `--limit 2` reads just two files to try it.
   [PMC Open Access Subset on AWS](https://pmc.ncbi.nlm.nih.gov/tools/pmcaws/). The date is pinned
   in `snapshots/<name>.inventory` and in the database; `--inventory latest` reads a newer one into
   a new database.
-- **The parser:** the database records a hash of the parsing code and the schema version. A run
-  refuses a database built by other code; `--fresh` deletes it and re-parses from the cache.
+- **The parser:** the database records a hash of the parsing code (`roles.py`, `statement.py`,
+  `jats.py` and `rows.py`) and a schema version derived from the table definitions. A run refuses a
+  database built by other code; `--fresh` deletes it and re-parses from the cache.
 - **The bulk listing:** the first `bulk` run writes the file list it reads (names and listed dates)
-  to `snapshots/<name>.files.csv` and adds each file's sha256 as it is read. Europe PMC replaces
-  the files weekly and keeps no old versions, so the hashes are what pins the content.
+  to `snapshots/<name>.files.csv` and fills in each file's sha256 as it is read. A hash already
+  committed is checked, never overwritten. Europe PMC replaces the files weekly and keeps no old
+  versions, so the hashes are what pins the content.
 - **The files:** a bucket article's sha256 is in `articles.xml_sha256`; a bulk article names its
   file in `articles.source_unit`. The OpenAlex snapshot date the fields came from is in `meta`.
 
@@ -136,3 +162,5 @@ the file, so a label is not anchored to its guess. `score` prints precision, rec
   order, not the whole stratum.
 - Europe PMC and PMC are biomedical by construction.
 - Raw XML stays in `data/`, which git ignores.
+- Python is pinned to 3.14 because duckdb has no 3.15 wheel yet.
+- pyarrow is only the bridge into duckdb: the database writer inserts rows as Arrow batches.
