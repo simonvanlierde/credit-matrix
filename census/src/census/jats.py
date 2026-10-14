@@ -66,11 +66,11 @@ _ORCID_RE = re.compile(r"\d{4}-\d{4}-\d{4}-\d{3}[\dX]")
 # control character no real text holds. One from \xa0-\xbf is a printable Latin-1 character, so a
 # pair is repaired only after the first bytes real double encoding produces there (Â, Ã: Latin-1;
 # Ä-Ó: Latin Extended, IPA, combining marks, Greek, Cyrillic; Ø-Û: Arabic), only into a letter, mark
-# or punctuation, and never for a no-break space after a letter that may be real. That leaves
+# or punctuation, and a no-break space only after Greek and Cyrillic first bytes. That leaves
 # "JOSÉ\xa0", "Groß\xa0", "Ö¿", a multiplication sign before "±", and "Å²" (square ångström) alone.
 _MOJIBAKE_RE = re.compile(
     "[\xc2-\xdf][\x80-\x9f]|[\xc2\xc3][\xa0-\xbf]|Å[\xa0-\xb1\xb4-\xbf]|[\xc4\xc6-\xd3\xd8-\xdb][\xa1-\xbf]"
-    "|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xf4][\x80-\xbf]{3}"
+    "|[\xce-\xd1]\xa0|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xf4][\x80-\xbf]{3}"
 )
 
 

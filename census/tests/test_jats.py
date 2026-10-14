@@ -185,6 +185,7 @@ def test_a_body_contributions_section_is_the_papers_not_the_authors():
         ("Ä\u0083", "ă"),  # second byte a C1 control
         ("Å ", "Š"),
         ("Î±", "α"),
+        ("Ð\u00a0", "\u0420"),  # a no-break space after a Cyrillic first byte
         ("SzleÌ¨k", "Szlęk"),  # a combining mark, composed by NFC
         ("ð\u009f\u0098\u0080", "\U0001f600"),  # four bytes
         ("à\u0080\u0080", "à\u0080\u0080"),  # not valid UTF-8: left as it is
