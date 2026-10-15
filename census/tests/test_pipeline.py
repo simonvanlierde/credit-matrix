@@ -3,7 +3,6 @@ import gzip
 import hashlib
 import os
 import urllib.error
-import xml.etree.ElementTree as ET
 from email.message import Message
 from http.client import IncompleteRead
 from pathlib import Path
@@ -11,6 +10,7 @@ from pathlib import Path
 import duckdb
 import pytest
 from helpers import article, contrib
+from lxml import etree
 
 from census import bulk, export, pipeline, pmc_s3, rows, store
 
@@ -372,7 +372,7 @@ def test_run_stops_when_a_worker_dies(tmp_path, capsys):
 
 def test_bulk_article_without_a_pmcid_id_falls_back_to_the_pmc_number():
     xml = article(contrib("Ann", "Smith")).replace(b'pub-id-type="pmcid">PMC1', b'pub-id-type="pmc">42')
-    element = ET.fromstring(xml)
+    element = etree.fromstring(xml)
     found = rows.rows_for_element(element, "all", "u")
     assert found is not None and found.article["pmcid"] == "PMC42"
     for child in element.iterfind("front/article-meta/article-id"):

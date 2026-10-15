@@ -3,8 +3,9 @@ from pathlib import Path
 
 import pytest
 from helpers import article, contrib
+from lxml import etree
 
-from census.jats import parse_article
+from census.jats import PARSER, parse_article
 from census.roles import ROLE_PATTERNS
 
 
@@ -245,3 +246,12 @@ def test_license_from_ali_license_ref():
         b'<license xlink:href="https://creativecommons.org/licenses/by/4.0/"/>', lic
     )
     assert parse_article(xml).license == "https://creativecommons.org/licenses/by-nc/4.0/"
+
+
+def test_entities_are_not_expanded_and_comments_stay_out_of_text():
+    bomb = b'<!DOCTYPE a [<!ENTITY x "xxxxxxxxxx"><!ENTITY y "&x;&x;&x;&x;&x;&x;&x;&x;&x;&x;">]><a>&y;</a>'
+    assert "xxxxxxxxxx" not in "".join(etree.fromstring(bomb, PARSER).itertext())
+    secret = b'<!DOCTYPE a [<!ENTITY s SYSTEM "file:///etc/os-release">]><a>&s;</a>'
+    assert "NAME=" not in "".join(etree.fromstring(secret, PARSER).itertext())
+    xml = article(contrib("Ann", "Sm<!-- note -->ith<?pi x?>"))
+    assert parse_article(xml).authors[0].name == "Ann Smith"

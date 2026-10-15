@@ -6,9 +6,10 @@ stratum they get), so a change to it forces a re-parse and a change to downloadi
 
 import gzip
 import hashlib
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from lxml import etree
 
 from census.jats import Article, parse_article, parse_element
 
@@ -43,7 +44,7 @@ def rows_for(pmcid: str, stratum: str, xml: bytes, version: int | None = None) -
     return _rows(a, pmcid, stratum, version, digest, None)
 
 
-def rows_for_element(element: ET.Element, stratum: str, unit: str) -> Rows | None:
+def rows_for_element(element: etree._Element, stratum: str, unit: str) -> Rows | None:
     """Rows for one <article> of a bulk file, or None when it has no PMCID to key it by. The file's
     hash, in `units`, pins the XML; articles carry the file's name instead of their own hash."""
     ids = {i.get("pub-id-type"): (i.text or "").strip() for i in element.iterfind("front/article-meta/article-id")}
@@ -92,9 +93,16 @@ def parse_file(path: Path, unit: str) -> list[Rows]:
     """Rows for every article with a PMCID in a gzipped bulk file."""
     rows = []
     with gzip.open(path) as stream:
-        for _, element in ET.iterparse(stream, events=("end",)):
-            if element.tag == "article":
-                if (one := rows_for_element(element, "all", unit)) is not None:
-                    rows.append(one)
-                element.clear()  # the file holds about 9,000 articles; keep one in memory at a time
+        # The options of jats.PARSER: iterparse takes them as arguments, not as a parser.
+        articles = etree.iterparse(
+            stream, tag="article", resolve_entities=False, no_network=True, remove_comments=True, remove_pis=True
+        )
+        for _, element in articles:
+            if (one := rows_for_element(element, "all", unit)) is not None:
+                rows.append(one)
+            # The file holds about 9,000 articles: free each one and the finished ones before it.
+            element.clear(keep_tail=False)
+            parent = element.getparent()
+            while parent is not None and element.getprevious() is not None:
+                del parent[0]
     return rows

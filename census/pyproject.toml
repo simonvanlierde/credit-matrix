@@ -7,6 +7,7 @@ license = "MIT"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "duckdb>=1.5",
+    "lxml>=6",
     "pyarrow>=26",
 ]
 
@@ -14,7 +15,12 @@ dependencies = [
 census = "census.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=9.1", "ruff>=0.17", "ty>=0.0.86"]
+dev = [
+    "pytest>=9.1",
+    "ruff>=0.17",
+    "ty>=0.0.86",
+    "types-lxml>=2026.2.16",
+]
 
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]

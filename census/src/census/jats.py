@@ -2,12 +2,16 @@
 
 import re
 import unicodedata
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
+
+from lxml import etree
 
 from census.roles import SPACES, clean, find_roles, names_credit, slug_from_url
 from census.statement import Author, parse_statement
 
+# Entities stay unexpanded and nothing is fetched; comments and processing instructions are dropped,
+# as ElementTree did, so they never reach the text of a name or statement.
+PARSER = etree.XMLParser(resolve_entities=False, no_network=True, remove_comments=True, remove_pis=True)
 XLINK = "{http://www.w3.org/1999/xlink}"
 ALI = "{http://www.niso.org/schemas/ali/1.0/}"
 
@@ -93,12 +97,12 @@ def _squash(text: str) -> str:
     return unicodedata.normalize("NFC", SPACES.sub(" ", _MOJIBAKE_RE.sub(_repair, text)).strip())
 
 
-def _text(el: ET.Element | None) -> str:
+def _text(el: etree._Element | None) -> str:
     # Joined with spaces: list items, paragraphs and <break/> otherwise glue words ("analysisS.").
     return _squash(" ".join(el.itertext())) if el is not None else ""
 
 
-def _own_text(el: ET.Element, skip: str) -> str:
+def _own_text(el: etree._Element, skip: str) -> str:
     """Text of `el` without what sits inside its `skip` children (a consortium's member list)."""
     parts = [el.text or ""]
     for child in el:
@@ -108,7 +112,7 @@ def _own_text(el: ET.Element, skip: str) -> str:
     return _squash(" ".join(parts))
 
 
-def _author(contrib: ET.Element) -> Author:
+def _author(contrib: etree._Element) -> Author:
     name = contrib.find("name")
     ids = (_ORCID_RE.search(_text(c)) for c in contrib.findall("contrib-id") if c.get("contrib-id-type") == "orcid")
     orcid = next((m.group() for m in ids if m), None)  # bare form: http and https URIs both occur
@@ -120,7 +124,7 @@ def _author(contrib: ET.Element) -> Author:
     )
 
 
-def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> tuple[list[tuple[str, str]], list[str]]:
+def _contrib_roles(contrib: etree._Element, fns: dict[str, str]) -> tuple[list[tuple[str, str]], list[str]]:
     """(style, slug) for each role tagged on one author, and the free text it came from."""
     found, texts = [], []
     for role in contrib.findall("role"):
@@ -140,14 +144,14 @@ def _contrib_roles(contrib: ET.Element, fns: dict[str, str]) -> tuple[list[tuple
     return found, texts
 
 
-def _statement_candidates(root: ET.Element, nodes: list[ET.Element]):
+def _statement_candidates(root: etree._Element, nodes: list[etree._Element]):
     """Free text of each element that may hold the statement, title left out, if it names a role.
     `nodes` holds the article's elements with a _CANDIDATE_TAGS tag.
 
     Back matter first, then document order, so the author contributions note wins over anything in the body.
     """
     back, body = root.find("back"), root.find("body")
-    in_body: set[ET.Element] | None = None
+    in_body: set[etree._Element] | None = None
     hits = []
     for el in nodes:
         if el.tag == "notes" and "contribution" in (el.get("notes-type") or ""):
@@ -177,10 +181,10 @@ def _statement_candidates(root: ET.Element, nodes: list[ET.Element]):
 
 
 def parse_article(xml: bytes) -> Article:
-    return parse_element(ET.fromstring(xml))
+    return parse_element(etree.fromstring(xml, PARSER))
 
 
-def parse_element(root: ET.Element) -> Article:
+def parse_element(root: etree._Element) -> Article:
     """Parse one <article> element, as a bulk file's iterparse hands it over."""
     meta = root.find("front/article-meta")
     if meta is None:

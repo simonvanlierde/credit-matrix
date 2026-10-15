@@ -8,9 +8,10 @@ pins the listing it started from (file names and dates) and the sha256 of every 
 import hashlib
 import http.client
 import re
-import xml.etree.ElementTree as ET
 import zlib
 from pathlib import Path
+
+from lxml import etree
 
 from census.net import download, get
 from census.rows import Rows, parse_file
@@ -63,7 +64,7 @@ class BulkSource:
             # A failed download or a truncated file (BadGzipFile is an OSError): download it again next run.
             path.unlink(missing_ok=True)
             return [], {**record, "retries": 1, "error": f"{type(error).__name__}: {error}"}
-        except ET.ParseError as error:
+        except etree.ParseError as error:
             # Malformed XML in a good download: keep the file. iterparse cannot go on past the error.
             return [], {**record, "error": f"ParseError: {error}"}
         return rows, {**record, "articles": len(rows), "finished": True}
