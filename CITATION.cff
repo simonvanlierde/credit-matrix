@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
-title: "CRediT Matrix"
+title: "CRediT Matrix: drafting CRediT contribution statements with co-authors"
 abstract: >-
-  A client-side web app and the credit-matrix TypeScript package for drafting CRediT (Contributor Roles Taxonomy) contribution statements for scholarly publications, with a contribution heatmap and JATS4R XML, CSV, JSON, and Markdown exports for journal submission systems. Contributors can be filled in from an ORCID iD or a DOI, and the interface and the generated statement are localized independently across nine languages.
+  CRediT Matrix helps a research team draft the CRediT (Contributor Roles Taxonomy) statement for a paper. Co-authors fill in their own rows through a shared link, and their replies are settled in one review. Contributors can be added from an ORCID iD, a DOI or a tenzing sheet. The tool exports a contribution heatmap and the statement as JATS4R XML, CSV, JSON or Markdown. The web app works offline in nine languages. The credit-matrix npm package adds a command-line tool, a credit-matrix web element, and Quarto and MyST plugins.
 type: software
 authors:
   - given-names: Simon
@@ -15,14 +15,15 @@ keywords:
   - CRediT
   - contributor roles taxonomy
   - authorship
-  - contribution matrix
-  - contribution heatmap
+  - contributorship
+  - contribution statement
   - JATS4R
-  - scholarly publishing
-  - research software
   - ORCID
-  - DOI
-  - localization
+  - scholarly publishing
+  - open science
+  - research software
+  - Quarto
+  - MyST
 version: "0.8.1"
 date-released: "2026-10-13"
 # Concept DOI: resolves to all versions, so it stays fixed across releases.
