@@ -1,0 +1,43 @@
+[project]
+name = "credit-census"
+version = "0.1.0"
+description = "How CRediT roles are used in published papers, extracted from Europe PMC JATS"
+license = "MIT"
+# duckdb has no 3.15 wheel yet
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "duckdb>=1.5",
+    "lxml>=6",
+    "pyarrow>=26",
+]
+
+[project.scripts]
+census = "census.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1",
+    "ruff>=0.17",
+    "ty>=0.0.86",
+    "types-lxml>=2026.2.16",
+]
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv.build-backend]
+module-name = "census"
+
+[tool.ruff.lint.per-file-ignores]
+# The tests feed the en dashes publishers use.
+"tests/*" = ["RUF001", "E501"]
