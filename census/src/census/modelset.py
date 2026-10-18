@@ -171,6 +171,92 @@ def score(
     )
 
 
+# --- the whole corpus: free-text statements, read by a model and by the rule parser ---
+
+FREE_TEXT_STYLES = ("statement_text", "contrib_text")
+_FREE_TEXT = f"FROM articles WHERE style IN {FREE_TEXT_STYLES} AND statement IS NOT NULL"
+
+
+def count_free_text(con: duckdb.DuckDBPyConnection, limit: int | None = None) -> int:
+    (n,) = con.execute(f"SELECT count(*) {_FREE_TEXT}").fetchone() or (0,)
+    return min(n, limit) if limit else n
+
+
+def free_text_chunks(con: duckdb.DuckDBPyConnection, size: int, limit: int | None = None) -> Iterator[list[dict]]:
+    """Every article whose roles the rule parser read from free text, in pmcid order, `size` at a time."""
+    cursor = con.execute(
+        f"SELECT pmcid, statement, coalesce(authors, []) {_FREE_TEXT} ORDER BY pmcid LIMIT ?", [limit or 2**62]
+    )
+    while batch := cursor.fetchmany(size):
+        yield [{"pmcid": p, "statement": s, "authors": a} for p, s, a in batch]
+
+
+COMPARISON = {
+    "Research articles with roles, per year (tagged articles as tagged; free text by each reader)": """
+        WITH per AS (
+            SELECT a.year, a.n_authors_with_roles > 0 AS rules,
+                   CASE WHEN c.pmcid IS NULL THEN a.n_authors_with_roles > 0 ELSE c.n > 0 END AS model
+            FROM articles a LEFT JOIN covered c USING (pmcid)
+            WHERE a.article_type = 'research-article' AND a.year IS NOT NULL
+        )
+        SELECT year, count(*) AS articles, round(avg(rules::INT), 3) AS rules, round(avg(model::INT), 3) AS model
+        FROM per GROUP BY year ORDER BY year""",
+    "Share of authors with a role holding each role, by byline position (free-text research articles, 3+ authors)": """
+        WITH arts AS (
+            SELECT a.pmcid, a.n_authors FROM articles a JOIN covered USING (pmcid)
+            WHERE a.article_type = 'research-article' AND a.n_authors > 2
+        ),
+        pairs AS (
+            SELECT 'rules' AS reader, pmcid, author_position, role FROM assignments
+            WHERE pmcid IN (SELECT pmcid FROM arts)
+            UNION ALL
+            SELECT 'model', pmcid, author_position, role FROM model WHERE pmcid IN (SELECT pmcid FROM arts)
+        ),
+        placed AS (
+            SELECT p.*, CASE WHEN author_position = 1 THEN 'first' WHEN author_position = a.n_authors THEN 'last'
+                        ELSE 'middle' END AS place
+            FROM pairs p JOIN arts a USING (pmcid)
+        ),
+        holders AS (SELECT reader, place, count(DISTINCT (pmcid, author_position)) AS n FROM placed GROUP BY ALL)
+        SELECT role, reader, place, round(count(*) / any_value(h.n), 3) AS share, any_value(h.n) AS authors_with_roles
+        FROM placed JOIN holders h USING (reader, place) GROUP BY ALL ORDER BY role, place, reader""",
+    "Rules against the model per publisher (free-text articles; pair F1 of one against the other)": """
+        WITH r AS (SELECT pmcid, author_position, role FROM assignments WHERE pmcid IN (SELECT pmcid FROM covered)),
+        both_ AS (
+            SELECT pmcid, r.role IS NOT NULL AS by_rules, m.role IS NOT NULL AS by_model
+            FROM r FULL JOIN model m USING (pmcid, author_position, role)
+        ),
+        per AS (
+            SELECT pmcid, bool_and(by_rules = by_model) AS same, count(*) FILTER (by_rules AND by_model) AS hits,
+                   count(*) FILTER (by_rules) AS n_rules, count(*) FILTER (by_model) AS n_model
+            FROM both_ GROUP BY pmcid
+        ),
+        pub AS (
+            SELECT CASE WHEN grouping(a.publisher) = 1 THEN '(all)' ELSE coalesce(a.publisher, '(no publisher)') END
+                       AS publisher,
+                   count(*) AS articles, avg(coalesce(p.same, true)::INT) AS same,
+                   sum(coalesce(hits, 0)) AS hits, sum(coalesce(n_rules, 0) + coalesce(n_model, 0)) AS pairs
+            FROM covered c JOIN articles a USING (pmcid) LEFT JOIN per p USING (pmcid) GROUP BY ROLLUP (a.publisher)
+        )
+        SELECT publisher, articles, round(same, 3) AS same_pairs, round(2 * hits / nullif(pairs, 0), 3) AS pair_f1
+        FROM pub ORDER BY publisher <> '(all)', articles DESC LIMIT 31""",
+}
+"""`covered` holds (pmcid, n) for each article the model read, n its pairs; `model` its pairs."""
+
+
+def compare(con: duckdb.DuckDBPyConnection, parts: str) -> dict[str, list[dict[str, Any]]]:
+    """COMPARISON's tables for the model's Parquet parts (a glob of `encoder.predict_corpus` output)."""
+    source = f"read_parquet('{parts}')"
+    con.execute(f"CREATE OR REPLACE TEMP VIEW model AS SELECT * FROM {source} WHERE role IS NOT NULL")
+    con.execute(f"CREATE OR REPLACE TEMP VIEW covered AS SELECT pmcid, count(role) AS n FROM {source} GROUP BY pmcid")
+    tables = {}
+    for title, sql in COMPARISON.items():
+        cursor = con.execute(sql)
+        columns = [d[0] for d in cursor.description or ()]
+        tables[title] = [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
+    return tables
+
+
 # --- zero-shot baseline, from a local chat-completions server such as vLLM ---
 
 MAX_TOKENS = 4000

@@ -4,6 +4,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import ClassVar
 
+import pyarrow as pa
 import pytest
 
 from census import labels, modelset, store
@@ -172,3 +173,41 @@ def test_zero_shot_runner_resumes_and_handles_bad_answers(server, tmp_path, caps
     assert body["model"] == "m"
     assert body["response_format"]["json_schema"]["schema"] == modelset.SCHEMA
     assert "1. Ann Smith\n2. Bo Jones" in body["messages"][1]["content"]
+
+
+def test_compare_reads_free_text_by_rules_and_by_model(tmp_path):
+    import pyarrow.parquet as pq
+
+    def free(i: int, roles: list) -> Rows:
+        article = {
+            "pmcid": f"PMC{i}",
+            "stratum": "all",
+            "publisher": "P",
+            "year": 2024,
+            "article_type": "research-article",
+            "style": "statement_text",
+            "authors": ["A", "B", "C"],
+            "n_authors": 3,
+            "n_authors_with_roles": len({p for p, _ in roles}),
+            "statement": "text",
+        }
+        return Rows(article, roles=roles)
+
+    rows = [free(1, [(1, "software"), (3, "supervision")]), free(2, [(2, "software")]), tagged(3, "x")]
+    with make_db(tmp_path / "c.duckdb", rows) as con:
+        assert modelset.count_free_text(con) == 2 and modelset.count_free_text(con, limit=1) == 1
+        chunks = list(modelset.free_text_chunks(con, 1))
+        assert [[r["pmcid"] for r in c] for c in chunks] == [["PMC1"], ["PMC2"]]
+        # The model agrees on PMC1 and finds nothing in PMC2.
+        model = {
+            "pmcid": ["PMC1", "PMC1", "PMC2"],
+            "author_position": [1, 3, None],
+            "role": ["software", "supervision", None],
+        }
+        pq.write_table(pa.table(model), tmp_path / "part-00000.parquet")
+        tables = modelset.compare(con, str(tmp_path / "part-*.parquet"))
+    years, positions, publishers = tables.values()
+    assert years == [{"year": 2024, "articles": 2, "rules": 1.0, "model": 0.5}]  # the tagged article has no type
+    first = {(r["role"], r["reader"]): r["share"] for r in positions if r["place"] == "first"}
+    assert first == {("software", "rules"): 1.0, ("software", "model"): 1.0}
+    assert publishers[0] == {"publisher": "(all)", "articles": 2, "same_pairs": 0.5, "pair_f1": 0.8}

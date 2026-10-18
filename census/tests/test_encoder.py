@@ -169,6 +169,37 @@ def test_train_and_predict_write_a_run_and_scorable_predictions(tmp_path):
     assert all(p in {1, 2} for pairs in predicted.values() for p, _ in pairs)
 
 
+def test_pair_rows_keep_articles_given_no_role():
+    columns = encoder.pair_rows(["A", "B"], [{(2, "software"), (1, "validation")}, set()])
+    assert columns == {
+        "pmcid": ["A", "A", "B"],
+        "author_position": [1, 2, None],
+        "role": ["validation", "software", None],
+    }
+
+
+def test_predict_corpus_writes_parts_and_resumes(tmp_path):
+    run = tmp_path / "run"
+    tiny_model(run / "checkpoint")
+    import pyarrow.parquet as pq
+    from transformers import AutoModelForSequenceClassification
+
+    model = AutoModelForSequenceClassification.from_pretrained(run / "checkpoint", num_labels=14)
+    model.save_pretrained(run / "checkpoint")
+    (run / "best.json").write_text('{"threshold": 0.0}')  # every role, so every author gets 14 rows
+    (run / "config.json").write_text('{"max_length": 32}')
+    items = [{"pmcid": f"PMC{i}", "statement": "software", "authors": ["Ann Smith"] * (i % 2)} for i in range(5)]
+    chunks = [items[:2], items[2:4], items[4:]]
+    out = tmp_path / "parts"
+    assert encoder.predict_corpus(run, chunks, out, "cpu", total=5) == 5
+    rows = pq.read_table(out).to_pylist()
+    assert sorted({r["pmcid"] for r in rows}) == [f"PMC{i}" for i in range(5)]
+    assert sum(r["pmcid"] == "PMC1" for r in rows) == 14
+    assert [r["role"] for r in rows if r["pmcid"] == "PMC0"] == [None]  # no authors, still listed
+    (out / "part-00001.parquet").unlink()
+    assert encoder.predict_corpus(run, chunks, out, "cpu", total=5) == 2  # only the missing part
+
+
 def test_cli_train_refuses_a_run_with_a_checkpoint(tmp_path, monkeypatch, capsys):
     from census import cli
 

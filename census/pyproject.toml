@@ -15,6 +15,11 @@ dependencies = [
 census = "census.cli:main"
 
 [dependency-groups]
+browser = [
+    "onnx>=1.23.2",
+    "onnxruntime>=1.31.0",
+    "onnxscript>=0.7.2",
+]
 dev = [
     "pytest>=9.1",
     "ruff>=0.17",
@@ -47,5 +52,5 @@ module-name = "census"
 "tests/*" = ["RUF001", "E501"]
 
 [tool.ty.analysis]
-# CI type-checks without the `train` group: torch's wheels are too large to install there.
-allowed-unresolved-imports = ["torch", "transformers", "tokenizers"]
+# CI type-checks without the `train` and `browser` groups: torch's wheels are too large to install there.
+allowed-unresolved-imports = ["torch", "transformers", "tokenizers", "onnx", "onnxruntime.**", "numpy"]
