@@ -1,9 +1,11 @@
 {
   "snapshot": "oa-2026-10",
   "dataset_version": "1.0.0",
-  "code_commit": "3985bc1bf993cbf9c2331147c61871fd89a02180",
+  "code_commit": "06fcedde5b975bb4c01fa9190b407792bd8d59fc",
   "files_date": "2026-10-03",
   "openalex_sources": "2026-10-14",
+  "parser_f1": 0.877,
+  "parser_f1_articles": 556653,
   "min_articles": 1000,
   "min_authors": 50,
   "positions": ["single", "first", "middle", "last"],
