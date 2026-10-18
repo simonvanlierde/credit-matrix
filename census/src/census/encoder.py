@@ -14,6 +14,7 @@ import json
 import math
 import random
 import re
+import subprocess
 import sys
 import time
 from collections import defaultdict
@@ -34,6 +35,8 @@ class Config:
     """Every setting of a run, written to `<run>/config.json`."""
 
     model: str = "answerdotai/ModernBERT-base"
+    revision: str = "8949b909ec900327062f0ebf497f51aef5e6f0c8"
+    """The base model's commit on the Hugging Face Hub, so a rerun starts from the same weights."""
     train_articles: int = 120_000
     """Articles drawn from train.jsonl, by publisher and style (see `subsample`)."""
     dev_articles: int = 2_000
@@ -177,7 +180,10 @@ def _probabilities(torch: Any, model: Any, encoded: Encoded, batch_size: int, de
     lengths = [len(encoded.ids(i)) for i in range(len(encoded.examples))]
     out: list[list[float]] = [[] for _ in lengths]
     model.eval()
-    with torch.inference_mode(), torch.autocast(device, dtype=torch.bfloat16, enabled=device == "cuda"):
+    with (
+        torch.inference_mode(),
+        torch.autocast(device, dtype=torch.bfloat16, enabled=torch.device(device).type == "cuda"),
+    ):
         for batch in _batches(lengths, batch_size * 4, None):
             probs = torch.sigmoid(model(**_tensors(torch, encoded, batch, device)).logits.float()).tolist()
             for i, p in zip(batch, probs, strict=True):
@@ -209,14 +215,23 @@ def _log(log: Path, record: dict[str, Any]) -> None:
         f.write(json.dumps(record) + "\n")
 
 
+def _git_commit() -> str | None:
+    try:
+        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=Path(__file__).parent, capture_output=True, text=True)
+    except OSError:  # no git on this machine
+        return None
+    return out.stdout.strip() if out.returncode == 0 else None
+
+
 def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     """Fine-tune on a subsample of `dataset/train.jsonl`, scoring dev after each epoch. Writes config.json,
-    metrics.jsonl (one line per epoch, plus progress lines) and the best epoch's model to `run/checkpoint/`
-    with its threshold in `run/best.json`. Returns best.json's content."""
+    metrics.jsonl (a first line with the git commit, the data's hash, library versions and example counts,
+    then one line per epoch, plus progress lines) and the best epoch's model to `run/checkpoint/` with its
+    threshold in `run/best.json`. Returns best.json's content."""
     import torch
+    import transformers
     from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
 
-    random.seed(config.seed)
     torch.manual_seed(config.seed)
     run.mkdir(parents=True, exist_ok=True)
     (run / "config.json").write_text(json.dumps(asdict(config), indent=2) + "\n", encoding="utf-8")
@@ -230,13 +245,19 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     train_rows = subsample(pool[False], config.train_articles, config.seed)
     dev_rows = random.Random(config.seed).sample(pool[True], min(config.dev_articles, len(pool[True])))
 
-    tokenizer: Any = AutoTokenizer.from_pretrained(config.model)
+    with (dataset / "train.jsonl").open("rb") as f:
+        train_sha256 = hashlib.file_digest(f, "sha256").hexdigest()
+    tokenizer: Any = AutoTokenizer.from_pretrained(config.model, revision=config.revision)
     train_set = Encoded(tokenizer, train_rows, config.max_length)
     dev_set = Encoded(tokenizer, dev_rows, config.max_length)
     targets = [v for r in train_rows for v in label_vectors(r["gold"], len(r["authors"]))]
     _log(
         log,
         {
+            "git_commit": _git_commit(),
+            "train_jsonl_sha256": train_sha256,
+            "torch": torch.__version__,
+            "transformers": transformers.__version__,
             "train_articles": len(train_rows),
             "train_examples": len(train_set.examples),
             "dev_articles": len(dev_rows),
@@ -247,7 +268,10 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     )
 
     model = AutoModelForSequenceClassification.from_pretrained(
-        config.model, num_labels=len(ROLES), problem_type="multi_label_classification"
+        config.model,
+        revision=config.revision,
+        num_labels=len(ROLES),
+        problem_type="multi_label_classification",
     ).to(config.device)
     lengths = [len(train_set.ids(i)) for i in range(len(train_set.examples))]
     rng = random.Random(config.seed)
@@ -255,7 +279,7 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
     schedule = get_linear_schedule_with_warmup(optimizer, int(steps * config.warmup_share), steps)
     loss_fn = torch.nn.BCEWithLogitsLoss()
-    use_bf16 = config.device == "cuda"
+    use_bf16 = torch.device(config.device).type == "cuda"
     best: dict[str, Any] = {"f1": -1.0}
     start, step = time.monotonic(), 0
     for epoch in range(1, config.epochs + 1):
@@ -279,7 +303,7 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
         metrics = evaluate(dev_rows, probs)
         threshold, top = max(metrics.items(), key=lambda kv: kv[1]["f1"])
         record = {"epoch": epoch, "seconds": round(time.monotonic() - start), "dev": metrics}
-        if config.device == "cuda":
+        if use_bf16:
             record["max_gpu_memory_gb"] = round(torch.cuda.max_memory_allocated() / 1e9, 2)
         _log(log, record)
         if top["f1"] > best["f1"]:

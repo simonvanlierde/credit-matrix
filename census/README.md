@@ -259,6 +259,9 @@ uv run census model predict --name modernbert-120k  # held-out predictions, scor
 uv run census model score data/model/oa-2026-10/predictions/encoder-modernbert-120k-held_out.jsonl
 ```
 
+CI does not install the `train` group, so it skips the end-to-end train-and-predict test. Run it
+locally with `uv run --group train pytest tests/test_encoder.py`.
+
 Each example is one author of one article: the author's name, its initials ("N.-G.R.", "NGR",
 "Ryu NG") and place in the byline, then the statement. The model answers yes or no for each of
 the 14 roles, so its answers are the (author, role) pairs the scorers count. Training draws 120,000
@@ -289,6 +292,11 @@ The encoder gains on recall and holds the rule parser's precision. By publisher,
 Press (0.776, 0.938). MDPI stays lowest for every method. Part of the reason: its tags can name
 roles its statement does not give (PMC10000114 tags an author with investigation and resources
 that the statement never mentions), which no reader of the statement can recover.
+
+The 203 held-out articles whose statements were cut score far lower: F1 0.850 and exact 0.049,
+against 0.901 and 0.543 for the other 27,671. The cut stays at 512 tokens because the run above
+was trained with it. ModernBERT reads up to 8,192 tokens, so a longer limit is an option for a
+later run.
 
 ## Limits
 

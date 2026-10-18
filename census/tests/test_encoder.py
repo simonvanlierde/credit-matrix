@@ -56,18 +56,40 @@ class WordTokenizer:
         return {"input_ids": [[len(w) for w in t.split()] for t in texts]}
 
 
+class CharTokenizer(WordTokenizer):
+    """One id per character, so a long name runs past the author cap."""
+
+    def __call__(self, texts, add_special_tokens=False):
+        return {"input_ids": [[ord(c) for c in t] for t in texts]}
+
+
 def test_examples_join_author_and_statement_and_cut_long_statements():
     rows = [
         {"statement": "aa bbb", "authors": ["Ann Smith", "Bo Jones"]},
-        {"statement": " ".join(["x"] * 100), "authors": ["Cy Li"]},
+        {"statement": " ".join("x" * (i % 7 + 1) for i in range(100)), "authors": ["Cy Li"]},
     ]
     encoded = encoder.Encoded(WordTokenizer(), rows, max_length=40)
     assert [k for k, _ in encoded.examples] == [0, 0, 1]
     ids = encoded.ids(0)
     # [CLS], ten words of "Ann Smith (A.S., AS, Smith A); author 1 of 2", [SEP], "aa bbb", [SEP]
     assert ids[0] == 1 and ids[-3:] == [2, 3, 2] and len(ids) == 15
-    assert len(encoded.ids(2)) == 40 and encoded.ids(2)[-1] == 2
+    ids = encoded.ids(2)
+    author = encoded.examples[2][1]
+    assert len(ids) == 40 and ids[0] == 1 and ids[-1] == 2
+    assert ids[1 : len(author) + 2] == [*author, 2]  # the author survives whole
+    assert ids[len(author) + 2 : -1] == encoded.statements[1][: 40 - len(author) - 3]
     assert encoded.truncated == {1}
+
+
+def test_a_runaway_author_name_is_cut_at_a_quarter_of_the_length():
+    name = " ".join(f"Name{i:02d}" for i in range(40))
+    rows = [{"statement": "s" * 600, "authors": [name]}]
+    encoded = encoder.Encoded(CharTokenizer(), rows, max_length=512)
+    ids = encoded.ids(0)
+    assert len(encoded.examples[0][1]) > 128
+    assert len(ids) == 512
+    assert ids[1:130] == [*encoded.examples[0][1][:128], 2]
+    assert ids[130:-1] == encoded.statements[0][: 512 - 128 - 3]
 
 
 def test_evaluate_scores_dev_like_census_model_score():

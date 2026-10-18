@@ -45,3 +45,7 @@ module-name = "census"
 [tool.ruff.lint.per-file-ignores]
 # The tests feed the en dashes publishers use.
 "tests/*" = ["RUF001", "E501"]
+
+[tool.ty.analysis]
+# CI type-checks without the `train` group: torch's wheels are too large to install there.
+allowed-unresolved-imports = ["torch", "transformers", "tokenizers"]
