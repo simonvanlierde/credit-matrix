@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { applyPatch, askStep } from "../ask";
+import { applyPatch, askStep, recheckSignIns } from "../ask";
+import type { Author } from "../author";
 import { fromJson, toJson } from "../export/json";
 import {
   fetchOrcidKeys,
   ORCID_CLIENT_ID,
+  type OrcidKey,
   orcidSignInUrl,
   replyNonce,
   verifyOrcidToken,
@@ -73,6 +75,15 @@ describe("ORCID sign-in on a reply", () => {
     expect(await check(await signToken({ nonce, aud: [ORCID_CLIENT_ID] }))).not.toBeNull();
     // A subject in URL form reads as the bare iD.
     expect(await check(await signToken({ nonce, sub: `https://orcid.org/${ORCID}` }))).toMatchObject({ orcid: ORCID });
+  });
+
+  it("checks a token without a key id against each of ORCID's keys", async () => {
+    const { keys } = await issuer;
+    const other = await testIssuer(NOW);
+    const token = await signToken({ nonce: "n" }, { kid: undefined });
+    const several = [...other.keys, ...keys];
+    expect(await verifyOrcidToken(token, { nonce: "n", keys: several, payload: "" })).toMatchObject({ orcid: ORCID });
+    expect(await verifyOrcidToken(token, { nonce: "n", keys: other.keys, payload: "" })).toBeNull();
   });
 
   it("checks expiry only when given the time: the lead reads the reply after the token expired", async () => {
@@ -170,5 +181,83 @@ describe("a signed reply in the ask record", () => {
     const broken = fromJson(JSON.stringify(file));
     expect(broken.asks?.bob?.reply).toBeDefined();
     expect(broken.asks?.bob?.reply?.provenance).toBeUndefined();
+  });
+
+  it("flags a signed reply that changed the row's iD, keeping the iD the ask went to", async () => {
+    const orcid = await proof();
+    const asked = "0000-0001-5109-3700";
+    const state = { authors: [{ ...(lead()[0] as Author), orcid: asked }], asks: {} };
+    const changing = { ...row(), orcid: ORCID };
+    const step = askStep(state, {
+      kind: "reply",
+      contributorId: "bob",
+      row: changing,
+      sentAt: NOW,
+      at: NOW + 1,
+      orcid,
+    });
+    expect(applyPatch(state, step.patch).asks.bob?.reply?.provenance).toEqual({ orcid, replacedOrcid: asked });
+    // A signed reply that keeps the row's iD flags nothing.
+    const keeping = askStep(state, {
+      kind: "reply",
+      contributorId: "bob",
+      row: { ...row(), orcid: asked },
+      sentAt: NOW,
+      at: NOW + 1,
+      orcid,
+    });
+    expect(applyPatch(state, keeping.patch).asks.bob?.reply?.provenance).toEqual({ orcid });
+  });
+
+  describe("checked again on import", () => {
+    async function imported() {
+      const orcid = await proof();
+      const state = { authors: lead(), asks: {} };
+      const step = askStep(state, { kind: "reply", contributorId: "bob", row: row(), sentAt: NOW, at: NOW + 1, orcid });
+      const { authors, asks } = applyPatch(state, step.patch);
+      return JSON.parse(toJson([...authors], { asks }));
+    }
+    const keys = async (): Promise<OrcidKey[] | null> => (await issuer).keys;
+    const recheck = async (file: unknown, from = keys) =>
+      (await recheckSignIns(fromJson(JSON.stringify(file)).asks ?? {}, from)).bob?.reply;
+
+    it("keeps a genuine sign-in", async () => {
+      expect((await recheck(await imported()))?.provenance?.orcid).toMatchObject({ orcid: ORCID });
+    });
+
+    it("drops a hand-edited iD, name, or token, and keeps the answer", async () => {
+      const file = await imported();
+      file.asks.bob.reply.provenance.orcid.orcid = "0000-0001-5109-3700";
+      file.asks.bob.reply.provenance.orcid.name = "Someone Else";
+      // The token's own claims win over the edited fields.
+      expect((await recheck(file))?.provenance?.orcid).toMatchObject({ orcid: ORCID, name: "Bob White" });
+
+      file.asks.bob.reply.provenance.orcid.token = await (await testIssuer(NOW)).sign({ nonce: "x" });
+      const forged = await recheck(file);
+      expect(forged?.provenance).toBeUndefined();
+      expect(forged?.contributions).toEqual(row()?.contributions);
+    });
+
+    it("drops a real sign-in moved onto a different answer or another contributor", async () => {
+      const changed = await imported();
+      changed.asks.bob.reply.contributions = [{ role: "Software", score: 100 }];
+      expect((await recheck(changed))?.provenance).toBeUndefined();
+
+      const moved = await imported();
+      moved.authors[0].id = "ann";
+      moved.asks = { ann: moved.asks.bob };
+      expect(
+        (await recheckSignIns(fromJson(JSON.stringify(moved)).asks ?? {}, keys)).ann?.reply?.provenance,
+      ).toBeUndefined();
+    });
+
+    it("drops every sign-in when ORCID's keys cannot be fetched, and fetches none when there is nothing to check", async () => {
+      expect((await recheck(await imported(), async () => null))?.provenance).toBeUndefined();
+      const fetcher = vi.fn(keys);
+      const file = await imported();
+      delete file.asks.bob.reply.provenance;
+      await recheck(file, fetcher);
+      expect(fetcher).not.toHaveBeenCalled();
+    });
   });
 });

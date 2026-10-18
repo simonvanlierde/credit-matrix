@@ -11,7 +11,7 @@ import { decodeShareHash, importAnswers, type OrcidProof, type ShareData } from 
 import { isAllBinary } from "@/core/author";
 import { keepKnownIds } from "@/core/merge-row";
 import { announce } from "@/lib/announce";
-import { verifyIncoming } from "@/lib/orcid-sign-in";
+import { discardOrcidReturn, isOrcidReturn, verifyIncoming } from "@/lib/orcid-sign-in";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import {
@@ -84,6 +84,14 @@ export function HeaderActions() {
   }, []);
 
   async function handleIncomingHash(hash: string): Promise<void> {
+    if (isOrcidReturn(hash)) {
+      await ensureHydrated();
+      // The co-author page takes ORCID's answer; with no ask restored it never mounts, so the tokens go here.
+      const { claim: open, authors } = useContributionStore.getState();
+      const answering = open && authors.some((author) => author.id === open.contributorId);
+      if (!answering && isOrcidReturn(window.location.hash)) discardOrcidReturn();
+      return;
+    }
     if (!hash.startsWith("#s=")) return;
     // On mount this can beat the restore in PersistenceStatus; awaiting it
     // keeps the link from opening over a draft not yet restored.

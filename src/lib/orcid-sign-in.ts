@@ -21,12 +21,19 @@ interface Pending {
   state: string;
   nonce: string;
   payload: string;
+  /** The reply's `w`, so the page can rebuild the exact payload ORCID signed. */
+  sentAt: number;
 }
 
 /** Send the co-author to ORCID to sign this reply. False when the tab cannot keep the pending sign-in. */
-export async function startOrcidSignIn(reply: SharePayloadInput): Promise<boolean> {
+export async function startOrcidSignIn(reply: SharePayloadInput & { sentAt: number }): Promise<boolean> {
   const payload = toSharePayload(reply);
-  const pending: Pending = { state: crypto.randomUUID(), nonce: await replyNonce(payload), payload };
+  const pending: Pending = {
+    state: crypto.randomUUID(),
+    nonce: await replyNonce(payload),
+    payload,
+    sentAt: reply.sentAt,
+  };
   try {
     sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
   } catch {
@@ -40,27 +47,46 @@ export async function startOrcidSignIn(reply: SharePayloadInput): Promise<boolea
   return true;
 }
 
+/** Whether a URL fragment is ORCID sending the browser back. */
+export function isOrcidReturn(hash: string): boolean {
+  const params = new URLSearchParams(hash.slice(1));
+  return params.has("id_token") || params.has("access_token") || params.has("error");
+}
+
 /**
- * Read ORCID's answer from the address bar, if this page load is one, and
- * clear it from the address bar and history. Null when it is not; `null`
- * proof when the sign-in was cancelled or does not check out.
+ * Clear ORCID's answer from the address bar and history, and the pending
+ * sign-in from the tab, and return both. For a page that cannot use the
+ * answer, it is the whole job: the tokens must not stay behind.
  */
-export async function takeOrcidReturn(fetcher: typeof fetch = fetch): Promise<{ proof: OrcidProof | null } | null> {
+export function discardOrcidReturn(): { params: URLSearchParams; pending: Pending | null } {
   const params = new URLSearchParams(window.location.hash.slice(1));
-  if (!(params.has("id_token") || params.has("access_token") || params.has("error"))) return null;
   window.history.replaceState(null, "", window.location.pathname + window.location.search);
   let pending: Pending | null = null;
   try {
     pending = JSON.parse(sessionStorage.getItem(PENDING_KEY) ?? "null");
     sessionStorage.removeItem(PENDING_KEY);
   } catch {
-    // No storage, no pending sign-in: handled below.
+    // No storage, no pending sign-in.
   }
+  return { params, pending };
+}
+
+/**
+ * Read ORCID's answer from the address bar, if this page load is one, and
+ * clear it (see `discardOrcidReturn`). Null when it is not; `null` proof when
+ * the sign-in was cancelled or does not check out. `sentAt` is the signed
+ * reply's `w`.
+ */
+export async function takeOrcidReturn(
+  fetcher: typeof fetch = fetch,
+): Promise<{ proof: OrcidProof; sentAt: number } | { proof: null } | null> {
+  if (!isOrcidReturn(window.location.hash)) return null;
+  const { params, pending } = discardOrcidReturn();
   const token = params.get("id_token");
   if (!(pending && token) || params.get("state") !== pending.state) return { proof: null };
   const keys = await fetchOrcidKeys(fetcher);
   const proof = keys && (await verifyOrcidToken(token, { ...pending, keys, now: Date.now() }));
-  return { proof: proof || null };
+  return proof ? { proof, sentAt: pending.sentAt } : { proof: null };
 }
 
 /** Check the sign-in a reply link carries. Undefined when it has none, or it does not check out. */

@@ -165,7 +165,12 @@ event as `orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`): th
 co-author signed in, the token, and the link payload the token was issued for. "Verified" means
 ORCID's signature checks out, the token was issued for this app, and its nonce is the SHA-256 of
 that payload. Expiry is not checked when the reply is opened: the token lasts ten minutes, and the
-reply is read later.
+reply is read later. When a signed reply changes the row's iD, the reply also keeps the old one as
+`provenance.replacedOrcid`, so a sign-in by someone else than the person asked still shows.
+`recheckSignIns(asks, fetchOrcidKeys)` checks every sign-in in imported asks again, and drops the
+ones that fail (or all of them, when ORCID's keys cannot be fetched) while keeping the answers. Run
+it on the `asks` that `fromJson` or `importAny` returns before you show any sign-in as verified.
+
 - `AskSchema` validates stored and imported asks.
 
 ## Rosters and links

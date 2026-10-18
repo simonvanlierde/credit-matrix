@@ -74,7 +74,7 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
   await lead.goto(reply);
   await expect(onScreen(lead, /Bob White's answer arrived/)).toBeVisible();
   await lead.getByRole("tab", { name: /^Review/ }).click();
-  const verified = lead.getByText(`Verified by ORCID as ${TEST_ORCID}`, { exact: false });
+  const verified = lead.getByText(`Verified by ORCID as Bob White (${TEST_ORCID})`, { exact: false });
   await expect(verified).toBeVisible();
   expect((await scan(lead)).violations).toEqual([]);
 
@@ -91,15 +91,32 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
   };
   await lead.context().close();
 
-  const fresh = await (await newContext(browser)).newPage();
-  await asReturningVisitor(fresh);
-  await fresh.goto("/");
-  await fresh.getByRole("button", { name: "Import" }).click();
-  await fresh.getByLabel("Upload CSV, TSV, JSON, or XML file").setInputFiles(file);
-  await fresh.getByRole("button", { name: "Import data" }).click();
-  await fresh.getByRole("tab", { name: /^Review/ }).click();
-  await expect(fresh.getByText(`Verified by ORCID as ${TEST_ORCID}`, { exact: false })).toBeVisible();
+  /** Import `buffer` into a fresh browser and open its Review tab. ORCID's keys check the sign-in again. */
+  async function importInto(buffer: Buffer) {
+    const fresh = await (await newContext(browser)).newPage();
+    await asReturningVisitor(fresh);
+    await stubOrcid(fresh, issuer);
+    await fresh.goto("/");
+    await fresh.getByRole("button", { name: "Import" }).click();
+    await fresh.getByLabel("Upload CSV, TSV, JSON, or XML file").setInputFiles({ ...file, buffer });
+    await fresh.getByRole("button", { name: "Import data" }).click();
+    await fresh.getByRole("tab", { name: /^Review/ }).click();
+    return fresh;
+  }
+
+  const fresh = await importInto(file.buffer);
+  await expect(fresh.getByText(`Verified by ORCID as Bob White (${TEST_ORCID})`, { exact: false })).toBeVisible();
   await fresh.context().close();
+
+  // A file edited to put the sign-in on a different answer imports without the mark.
+  const edited = JSON.parse(file.buffer.toString());
+  const [bob] = Object.values(edited.asks) as { reply: { contributions: unknown[] } }[];
+  if (!bob) throw new Error("expected Bob's answer in the export");
+  bob.reply.contributions = [{ role: "Software", score: 100 }];
+  const forged = await importInto(Buffer.from(JSON.stringify(edited)));
+  await expect(forged.getByRole("heading", { name: "Bob White" })).toBeVisible();
+  await expect(forged.locator("[data-orcid-verified]")).toHaveCount(0);
+  await forged.context().close();
 });
 
 test("a token signed for another answer arrives unverified", async ({ browser }) => {

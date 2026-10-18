@@ -105,27 +105,25 @@ export async function verifyOrcidToken(
     const [head, body, signature, ...rest] = token.split(".");
     if (!(head && body && signature) || rest.length > 0) return null;
     const header = HeaderSchema.parse(decodeJson(head));
-    const jwk = keys.find(
+    // Without a `kid`, any of ORCID's keys may have signed it: try each.
+    const candidates = keys.filter(
       (candidate) => candidate.kty === "RSA" && (header.kid === undefined || candidate.kid === header.kid),
     );
-    if (!jwk) return null;
-    const key = await crypto.subtle.importKey(
-      "jwk",
-      { kty: "RSA", n: jwk.n, e: jwk.e },
-      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-      false,
-      ["verify"],
-    );
     const signed = new TextEncoder().encode(`${head}.${body}`);
-    if (
-      !(await crypto.subtle.verify(
-        "RSASSA-PKCS1-v1_5",
-        key,
-        fromBase64Url(signature) as Uint8Array<ArrayBuffer>,
-        signed,
-      ))
-    )
-      return null;
+    const bytes = fromBase64Url(signature) as Uint8Array<ArrayBuffer>;
+    let valid = false;
+    for (const jwk of candidates) {
+      const key = await crypto.subtle.importKey(
+        "jwk",
+        { kty: "RSA", n: jwk.n, e: jwk.e },
+        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        false,
+        ["verify"],
+      );
+      valid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, bytes, signed);
+      if (valid) break;
+    }
+    if (!valid) return null;
 
     const claims = ClaimsSchema.parse(decodeJson(body));
     const audience = typeof claims.aud === "string" ? [claims.aud] : claims.aud;

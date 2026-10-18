@@ -207,6 +207,15 @@ declare const OrcidProofSchema: z.ZodMiniObject<{
   payload: z.ZodMiniString<string>;
 }, z.core.$loose>;
 type OrcidProof = z.infer<typeof OrcidProofSchema>;
+/** One RSA key from ORCID's JWKS, as much of it as this reads. */
+type OrcidKey = {
+  kty: string;
+  kid?: string;
+  n?: string;
+  e?: string;
+};
+/** ORCID's signing keys. Null when ORCID cannot be reached or answers with something else. */
+export declare function fetchOrcidKeys(fetcher?: typeof fetch): Promise<OrcidKey[] | null>;
 //#endregion
 //#region ask.d.ts
 /** What a reply answers: each role, and the two markers outside CRediT. */
@@ -266,6 +275,7 @@ declare const ReplySchema: z.ZodMiniObject<{
       token: z.ZodMiniString<string>;
       payload: z.ZodMiniString<string>;
     }, z.core.$loose>>;
+    replacedOrcid: z.ZodMiniOptional<z.ZodMiniString<string>>;
   }, z.core.$loose>>>;
   decisions: z.ZodMiniObject<{
     Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
@@ -531,6 +541,7 @@ export declare const AskSchema: z.ZodMiniObject<{
         token: z.ZodMiniString<string>;
         payload: z.ZodMiniString<string>;
       }, z.core.$loose>>;
+      replacedOrcid: z.ZodMiniOptional<z.ZodMiniString<string>>;
     }, z.core.$loose>>>;
     decisions: z.ZodMiniObject<{
       Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
@@ -856,6 +867,17 @@ export declare function askStep(state: AskState, event: AskEvent): {
   patch: Patch;
   undo: Patch;
 };
+/**
+ * Check every reply's ORCID sign-in again, as an imported file needs: it is
+ * outside input, and a hand edit can put any iD in it. A sign-in stays only
+ * when `verifyReplyProof` passes, it signed a reply to this contributor, and
+ * its row there holds the same answer as the stored reply. The draft it was
+ * signed in (`d`) is not compared, because an export does not keep draft ids.
+ * A failing sign-in is dropped with its provenance; the answer stays. `keys`
+ * is called only when some reply carries a sign-in, and null (ORCID cannot be
+ * reached) drops them all, so nothing shows as verified unchecked.
+ */
+export declare function recheckSignIns(asks: Readonly<Record<string, Ask>>, keys: () => Promise<readonly OrcidKey[] | null>): Promise<Record<string, Ask>>;
 /** When the answer was settled: its last decision, or its arrival when nothing needed one. */
 export declare function settledAt(reply: Reply): number;
 /**
@@ -1185,7 +1207,7 @@ export declare function encodeShareHash(input: SharePayloadInput, baseUrl?: stri
  */
 export declare function decodeShareHash(hash: string): Promise<ShareData | null>;
 //#endregion
-export type { Ask, AskEvent, AskState, Author, Choice, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, OrcidProof, Outcome, Patch, Reply, Review, ShareData, SharePayloadInput, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
+export type { Ask, AskEvent, AskState, Author, Choice, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, OrcidKey, OrcidProof, Outcome, Patch, Reply, Review, ShareData, SharePayloadInput, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
 // lookup.d.ts
 //#region doi-lookup.d.ts
 /**

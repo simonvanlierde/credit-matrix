@@ -12,9 +12,11 @@ import {
   importAny,
   NewerVersionError,
 } from "@/core";
+import { recheckSignIns } from "@/core/ask";
 import { MAX_AUTHORS, MAX_IMPORT_BYTES } from "@/core/author";
 import type { DoiLookupResult } from "@/core/lookup";
 import { DOI_INPUT_REGEX, lookupDoiWork, normalizeDoi } from "@/core/lookup";
+import { fetchOrcidKeys } from "@/core/orcid-proof";
 import { announce } from "@/lib/announce";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import type { Messages } from "@/lib/intl";
@@ -223,6 +225,8 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         showError(t("errTooManyContributors", { limit: MAX_AUTHORS }));
         return;
       }
+      // A file's ORCID sign-ins are only claims until checked against ORCID's keys.
+      if (parsed.asks) parsed.asks = await recheckSignIns(parsed.asks, () => fetchOrcidKeys());
       stageImport(parsed);
     } catch (failure) {
       // A newer build's export is said plainly, not as a validation failure.

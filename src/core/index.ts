@@ -20,6 +20,7 @@ export {
   importAnswers,
   isMarker,
   levelOf,
+  recheckSignIns,
   review,
   settledAt,
 } from "./ask";
@@ -40,7 +41,8 @@ export type { StatementFormat, StatementOptions } from "./generate-statement";
 export { generateStatement, STATEMENT_FORMATS } from "./generate-statement";
 export type { DetectedFormat, Imported } from "./import";
 export { detectFormat, importAny } from "./import";
-export type { OrcidProof } from "./orcid-proof";
+export type { OrcidKey, OrcidProof } from "./orcid-proof";
+export { fetchOrcidKeys } from "./orcid-proof";
 export { createAuthor, normalizeRoster, parseAuthorText } from "./parse-authors";
 export { decodeShareHash, encodeShareHash } from "./share-link";
 export type { ShareData, SharePayloadInput } from "./share-payload";

@@ -98,11 +98,7 @@ function CoauthorPage() {
     if (tookReturn.current) return;
     tookReturn.current = true;
     void takeOrcidReturn().then((result) => {
-      if (!result) return;
-      const { proof } = result;
-      // The signed answer's send time, so the reply link rebuilds the exact payload ORCID signed.
-      const sentAt = proof ? (JSON.parse(proof.payload) as { w?: number }).w : undefined;
-      setSignIn(proof && sentAt !== undefined ? { proof, sentAt } : "failed");
+      if (result) setSignIn(result.proof ? result : "failed");
     });
   }, []);
 
@@ -119,7 +115,7 @@ function CoauthorPage() {
   const marked = author.contributions.filter((c) => c.score > 0).length;
   const workTitle = title.trim();
 
-  function replyInput(): SharePayloadInput {
+  function replyInput(): SharePayloadInput & { sentAt: number } {
     if (signedIn) return { ...reply, sentAt: signedIn.sentAt, idToken: signedIn.proof.token };
     const answer = JSON.stringify([authors, title]);
     if (answeredAt.current?.answer !== answer) answeredAt.current = { answer, at: Date.now() };
