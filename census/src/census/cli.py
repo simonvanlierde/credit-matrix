@@ -245,6 +245,8 @@ def cmd_model_score(args: argparse.Namespace) -> None:
         else:
             predicted = modelset.rule_predictions(con, gold)
         tables = {by: modelset.score(con, gold, predicted, by) for by in ("style", "publisher")}
+    # The held-out set has hundreds of publishers: show "(all)" and the 20 largest.
+    tables["publisher"] = sorted(tables["publisher"], key=lambda row: -row[1])[:21]
     # "-" is a rate with nothing to count.
     for by, results in tables.items():
         print(f"\n{by:<40}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'exact':>7}{'exact 95%':>13}")
