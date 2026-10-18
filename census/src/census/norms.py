@@ -37,13 +37,14 @@ ROLES = (
     "writing-review-editing",
 )
 
-# Research articles with roles and a field. The denominator is authors with at least one role: an
-# author the parser gave no role (unresolved initials) would otherwise count as holding none.
+# Research articles with roles and a field, for both the article count and the shares.
+ARTICLES = """articles a JOIN article_fields f USING (pmcid)
+    WHERE a.article_type = 'research-article' AND a.n_authors_with_roles > 0 AND f.field IS NOT NULL"""
+# The denominator is authors with at least one role: an author the parser gave no role (unresolved
+# initials) would otherwise count as holding none.
 QUERY = """
 WITH arts AS (
-    SELECT a.pmcid, a.n_authors, f.field
-    FROM articles a JOIN article_fields f USING (pmcid)
-    WHERE a.article_type = 'research-article' AND a.n_authors_with_roles > 0 AND f.field IS NOT NULL
+    SELECT a.pmcid, a.n_authors, f.field FROM {articles}
 ),
 authors AS (
     SELECT s.pmcid, s.author_position, list(s.role) AS roles, any_value(arts.field) AS field,
@@ -64,9 +65,7 @@ def build(con: duckdb.DuckDBPyConnection, snapshot: str, min_articles: int = MIN
         raise ValueError("no fields in this database; run `census fields` first")
     articles = dict(
         con.execute(
-            """SELECT f.field, count(*) FROM articles a JOIN article_fields f USING (pmcid)
-               WHERE a.article_type = 'research-article' AND a.n_authors_with_roles > 0 AND f.field IS NOT NULL
-               GROUP BY f.field HAVING count(*) >= ?""",
+            f"SELECT f.field, count(*) FROM {ARTICLES} GROUP BY f.field HAVING count(*) >= ?",
             [min_articles],
         ).fetchall()
     )
@@ -75,7 +74,7 @@ def build(con: duckdb.DuckDBPyConnection, snapshot: str, min_articles: int = MIN
         name: {"articles": n, "authors": dict.fromkeys(POSITIONS, 0), "shares": dict.fromkeys(POSITIONS)}
         for name, n in sorted(articles.items(), key=lambda kv: -kv[1])
     }
-    for field, position, authors, *counts in con.execute(QUERY.format(roles=roles)).fetchall():
+    for field, position, authors, *counts in con.execute(QUERY.format(articles=ARTICLES, roles=roles)).fetchall():
         if field not in fields:
             continue
         fields[field]["authors"][position] = authors
@@ -83,12 +82,17 @@ def build(con: duckdb.DuckDBPyConnection, snapshot: str, min_articles: int = MIN
             fields[field]["shares"][position] = [round(n / authors, 3) for n in counts]
     meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
     (files_date,) = con.execute("SELECT max(listed_date) FROM units WHERE finished").fetchone() or (None,)
+    # The parser against publisher tags over every tagged article: the `(all)` row `census report` prints.
+    paired = con.execute("SELECT f1, articles FROM paired_scores WHERE publisher = '(all)'").fetchone()
+    f1, f1_articles = paired or (None, 0)
     return {
         "snapshot": snapshot,
         "dataset_version": DATASET_VERSION,
         "code_commit": _commit(),
         "files_date": files_date and files_date[:10],
         "openalex_sources": meta.get("openalex_sources"),
+        "parser_f1": f1,
+        "parser_f1_articles": f1_articles,
         "min_articles": min_articles,
         "min_authors": MIN_AUTHORS,
         "positions": list(POSITIONS),
