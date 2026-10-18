@@ -12,7 +12,9 @@ from census.export import DATASET_VERSION, _commit
 from census.fields import has_fields
 
 MIN_ARTICLES = 1000
-"""A year, field or style with fewer research articles than this is left out: its share is noise."""
+"""A year, field or style with fewer research articles than this is left out: its share is noise. The year
+series also starts at the first year with this many articles with roles, which keeps out the few free-text
+matches from before CRediT existed."""
 TOP_PUBLISHERS = 20
 
 _RESEARCH = "a.article_type = 'research-article' AND a.style NOT IN ('error', 'missing', 'retry')"
@@ -30,13 +32,13 @@ QUERIES = {
         SELECT f.field, count(*) AS articles, count(*) FILTER (a.n_authors_with_roles > 0) AS with_roles
         FROM articles a JOIN article_fields f USING (pmcid)
         WHERE {_RESEARCH} AND a.year = $year AND f.field IS NOT NULL
-        GROUP BY ALL HAVING count(*) >= $min ORDER BY with_roles / articles DESC, f.field""",
+        GROUP BY ALL HAVING count(*) >= $min ORDER BY f.field""",
     "publishers": f"""
         SELECT a.publisher, count(*) AS articles, count(*) FILTER (a.n_authors_with_roles > 0) AS with_roles
         FROM articles a WHERE {_RESEARCH} AND a.year = $year AND a.publisher IS NOT NULL
         GROUP BY ALL ORDER BY articles DESC, a.publisher LIMIT {TOP_PUBLISHERS}""",
-    # Share of authors in each byline place holding each role, in articles with roles and three or more
-    # authors, so first, middle and last are distinct people.
+    # Share of the authors with at least one role, in each byline place, who hold each role. Articles with
+    # roles and three or more authors only, so first, middle and last are distinct people.
     "roles": f"""
         WITH authors AS (
             SELECT a.pmcid, p.position,
@@ -46,14 +48,17 @@ QUERIES = {
             WHERE {_RESEARCH} AND a.n_authors_with_roles > 0 AND a.n_authors > 2
         ),
         held AS (
-            SELECT r.role, au.place FROM authors au
+            SELECT r.role, au.pmcid, au.position, au.place FROM authors au
             JOIN assignments r ON r.pmcid = au.pmcid AND r.author_position = au.position
         ),
         counts AS (
             SELECT role, coalesce(place, 'all') AS place, count(*) AS n FROM held
             GROUP BY GROUPING SETS ((role, place), (role))
         ),
-        totals AS (SELECT coalesce(place, 'all') AS place, count(*) AS n FROM authors GROUP BY ROLLUP (place))
+        totals AS (
+            SELECT coalesce(place, 'all') AS place, count(*) AS n
+            FROM (SELECT DISTINCT pmcid, position, place FROM held) GROUP BY ROLLUP (place)
+        )
         SELECT c.role, c.place, round(c.n / t.n, 4) AS share FROM counts c JOIN totals t USING (place)
         ORDER BY c.role, c.place""",
 }
@@ -78,7 +83,12 @@ def aggregate(
         )
     meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
     # The newest year is still being published, so per-field and per-publisher shares use the one before.
-    (newest,) = con.execute(f"SELECT max(year) FROM articles a WHERE {_RESEARCH}").fetchone() or (None,)
+    # Newest by volume, not max(year): a few articles dated ahead must not move it.
+    (newest,) = con.execute(
+        f"SELECT max(year) FROM (SELECT a.year FROM articles a WHERE {_RESEARCH} GROUP BY a.year"
+        " HAVING count(*) >= $min)",
+        {"min": min_articles},
+    ).fetchone() or (None,)
     year = newest - 1 if newest else None
 
     def rows(key: str) -> list[dict]:
@@ -93,6 +103,11 @@ def aggregate(
         "SELECT count(*) FROM articles WHERE style NOT IN ('error', 'missing', 'retry')"
     ).fetchone() or (0,)
     paired = con.execute("SELECT articles, f1 FROM paired_scores WHERE publisher = '(all)'").fetchone()
+    # The paired score rests mostly on these two publishers, whose tags are themselves unchecked.
+    (mdpi_frontiers,) = con.execute(
+        "SELECT coalesce(sum(articles), 0) FROM paired_scores"
+        " WHERE publisher LIKE '%(MDPI)%' OR publisher LIKE 'Frontiers %'"
+    ).fetchone() or (0,)
     data = {
         "snapshot": name,
         "dataset_version": DATASET_VERSION,
@@ -102,9 +117,13 @@ def aggregate(
         "complete": complete,
         "articles": articles,
         "focus_year": year,
-        "paired": {"articles": paired[0], "f1": paired[1]} if paired and paired[0] else None,
+        "paired": {"articles": paired[0], "f1": paired[1], "mdpi_frontiers_share": round(mdpi_frontiers / paired[0], 3)}
+        if paired and paired[0]
+        else None,
         **{key: rows(key) for key in QUERIES},
     }
+    first = min((row["year"] for row in data["years"] if row["with_roles"] >= min_articles), default=None)
+    data["years"] = [row for row in data["years"] if first is not None and row["year"] >= first]
     years = {row["year"] for row in data["years"]}
     data["styles"] = [row for row in data["styles"] if row["year"] in years]
     out.parent.mkdir(parents=True, exist_ok=True)
