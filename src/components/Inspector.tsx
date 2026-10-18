@@ -12,8 +12,9 @@ const TABS: InspectorTab[] = ["statement", "team", "review", "norms"];
 
 /**
  * The workspace's right-hand pane: the statement, the team's ask status,
- * co-author answers, and field norms as context, as one tab list (WAI-ARIA tabs pattern: one tab stop,
- * arrow keys and Home/End move between tabs, which select on focus).
+ * co-author answers, and published practice as context, as one tab list (WAI-ARIA
+ * tabs pattern: one tab stop, arrow keys and Home/End move between tabs, which
+ * select on focus).
  *
  * Inactive panels stay mounted and hidden, so statement options survive a
  * look at the Team tab.
@@ -37,7 +38,9 @@ export function Inspector() {
     statement: false,
     team: teamEmpty,
     review: reviewEmpty,
-    norms: false,
+    // The table scrolls inside the panel and holds no control, so the panel takes the stop that
+    // lets a keyboard scroll it.
+    norms: true,
   };
 
   const labels: Record<InspectorTab, string> = {
@@ -79,7 +82,7 @@ export function Inspector() {
         role="tablist"
         aria-label={t("a11yInspector")}
         onKeyDown={handleKeyDown}
-        className="flex shrink-0 gap-1 border-b border-outline-variant/40 px-3 pt-2 md:px-4"
+        className="flex shrink-0 gap-0.5 overflow-x-auto border-b border-outline-variant/40 px-3 pt-2 md:px-4"
       >
         {TABS.map((id) => {
           const selected = id === tab;
@@ -93,7 +96,7 @@ export function Inspector() {
               aria-controls={`inspector-panel-${id}`}
               tabIndex={selected ? 0 : -1}
               onClick={() => setTab(id)}
-              className={`-mb-px min-h-10 border-b-2 px-3 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
+              className={`min-h-10 border-b-2 px-2 text-[13px] leading-tight sm:px-3 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
                 selected
                   ? "border-primary text-primary"
                   : "border-transparent text-on-surface-variant hover:text-on-surface"

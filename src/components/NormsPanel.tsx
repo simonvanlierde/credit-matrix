@@ -1,16 +1,13 @@
 "use client";
 
 import { Info } from "lucide-react";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { NORM_FIELDS, NORMS, normRows, POSITIONS, positionOf } from "@/lib/field-norms";
+import { NORM_FIELDS, NORMS, normRows, POSITIONS, selfPosition } from "@/lib/field-norms";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { cn } from "@/lib/utils";
 import { useContributionStore } from "@/store/contribution-store";
-
-/** Held-out F1 of the statement parser against publisher tags, `census model score` on oa-2026-10. */
-const PARSER_F1 = 0.877;
 
 /**
  * How often published papers in a field give each role, by author position.
@@ -18,7 +15,9 @@ const PARSER_F1 = 0.877;
  * Context only: it never fills, suggests or judges a cell. The grid stays the
  * team's account; this tab is what the published record looks like beside it.
  * The numbers are a table first (every value as text, read with its row and
- * column headers), with a thin bar under each value as the picture.
+ * column headers), with a thin bar under each value as the picture. Bars and
+ * the user's column stay neutral: primary is for actions, and a colored value
+ * would read as a target.
  */
 export function NormsPanel() {
   const t = useTranslations();
@@ -26,15 +25,13 @@ export function NormsPanel() {
   const { translateInterfaceRole } = useCreditTranslators();
   const field = useContributionStore((s) => s.normsField);
   const setField = useContributionStore((s) => s.setNormsField);
-  const position = useContributionStore((s) =>
-    positionOf(
-      s.authors.findIndex((author) => author.id === s.selfId),
-      s.authors.length,
-    ),
-  );
+  const self = useContributionStore((s) => selfPosition(s.authors, s.selfId));
+  const position = self === "non-author" ? null : self;
   const labelId = useId();
-  // A saved field the current file no longer lists counts as none picked.
+  // A saved field the current file no longer lists counts as none picked, with a line saying so.
   const rows = normRows(field);
+  // OpenAlex's field names, which have no translations.
+  const fieldName = (chunks: ReactNode) => <span lang="en">{chunks}</span>;
   const entry = rows && field ? NORMS.fields[field] : undefined;
   const filesDate = NORMS.files_date
     ? format.dateTime(new Date(NORMS.files_date), { dateStyle: "medium", timeZone: "UTC" })
@@ -42,18 +39,18 @@ export function NormsPanel() {
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      <p className="text-on-surface-variant">{t("normsIntro")}</p>
+      <p className="text-xs leading-relaxed text-on-surface-variant">{t("normsIntro")}</p>
       <div className="grid gap-1.5 text-xs font-medium text-on-surface">
         <span id={labelId}>{t("normsField")}</span>
-        <Select value={rows ? (field ?? undefined) : undefined} onValueChange={setField}>
+        <Select value={rows && field ? field : ""} onValueChange={setField}>
           <SelectTrigger aria-labelledby={labelId} className="min-h-9 w-full text-sm font-normal">
             <SelectValue placeholder={t("normsFieldPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {NORM_FIELDS.map((name) => (
-              // OpenAlex's field names, which have no translations.
-              <SelectItem key={name} value={name} lang="en" className="text-sm">
-                {name}
+              // The span, not the item, carries lang: the trigger shows a copy of the item's text.
+              <SelectItem key={name} value={name} className="text-sm">
+                {fieldName(name)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -63,17 +60,33 @@ export function NormsPanel() {
       {rows && entry ? (
         <>
           <div className="flex gap-2 rounded-lg bg-surface-container-low p-3 text-xs leading-relaxed text-on-surface-variant">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden="true" />
+            <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
             <div className="flex flex-col gap-1.5">
               <p className="text-on-surface">
-                {t("normsCoverage", { articles: entry.articles, field: field ?? "", date: filesDate })}
+                {t.rich("normsCoverage", {
+                  articles: entry.articles,
+                  field: field ?? "",
+                  date: filesDate,
+                  name: fieldName,
+                })}
               </p>
-              <p>{t("normsUnvalidated", { f1: format.number(PARSER_F1) })}</p>
+              {NORMS.parser_f1 !== null && (
+                <p>
+                  {t("normsUnvalidated", {
+                    tagged: NORMS.parser_f1_articles,
+                    f1: format.number(NORMS.parser_f1, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  })}
+                </p>
+              )}
             </div>
           </div>
 
           <p className="text-xs text-on-surface-variant">
-            {position ? t("normsYourPosition", { position }) : t("normsNoSelf")}
+            {self === "non-author"
+              ? t("normsNonAuthor")
+              : position
+                ? t("normsYourPosition", { position })
+                : t("normsNoSelf")}
           </p>
 
           <table className="w-full border-collapse text-xs">
@@ -89,12 +102,12 @@ export function NormsPanel() {
                     scope="col"
                     className={cn(
                       "w-[17%] px-1.5 py-1.5 text-right align-bottom font-medium text-on-surface-variant",
-                      column === position && "rounded-t bg-primary/8 text-on-surface",
+                      column === position && "rounded-t bg-on-surface/6 text-on-surface",
                     )}
                   >
                     {t("normsPosition", { position: column })}
                     {column === position && (
-                      <span className="block text-[11px] font-semibold text-primary">{t("teamYou")}</span>
+                      <span className="block text-[11px] font-semibold text-on-surface">{t("teamYou")}</span>
                     )}
                   </th>
                 ))}
@@ -111,7 +124,7 @@ export function NormsPanel() {
                     return (
                       <td
                         key={column}
-                        className={cn("px-1.5 py-1.5 text-right align-top", column === position && "bg-primary/8")}
+                        className={cn("px-1.5 py-1.5 text-right align-top", column === position && "bg-on-surface/6")}
                       >
                         {share === null ? (
                           <>
@@ -127,7 +140,7 @@ export function NormsPanel() {
                             </span>
                             <span aria-hidden="true" className="mt-1 block h-1 rounded-full bg-on-surface/10">
                               <span
-                                className="block h-full rounded-full bg-primary"
+                                className="block h-full rounded-full bg-on-surface-variant/35"
                                 style={{ width: `${share * 100}%` }}
                               />
                             </span>
@@ -151,7 +164,9 @@ export function NormsPanel() {
           </p>
         </>
       ) : (
-        <p className="text-xs text-on-surface-variant">{t("normsEmpty")}</p>
+        <p className="text-xs text-on-surface-variant">
+          {field ? t.rich("normsFieldGone", { field, name: fieldName }) : t("normsEmpty")}
+        </p>
       )}
     </div>
   );

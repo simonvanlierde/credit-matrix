@@ -1178,6 +1178,14 @@ describe("contribution store", () => {
       expect(store().normsField).toBe("Medicine");
     });
 
+    it("loads a save from before field norms with no field picked", () => {
+      store().setNormsField("Medicine");
+      const options = useContributionStore.persist.getOptions();
+      expect(options.merge?.({ activeDraftId: "paper", drafts: { paper: {} } }, store())).toMatchObject({
+        normsField: null,
+      });
+    });
+
     it("normalizes legacy Portuguese and Chinese locale aliases on load", () => {
       // Owned by the repair pass in `merge`, which runs on every load, not by
       // a migration step: a version bump is not required for a legacy alias.

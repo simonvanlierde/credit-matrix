@@ -8,9 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- A Field norms tab beside the grid shows how often published papers in a field give each CRediT
-  role, for sole, first, middle and last authors. Pick your field once and the app remembers it;
-  mark your own row with "This is me" and your column is marked. The shares come from about 1.7
+- A Published practice tab beside the grid shows how often published papers in a field give each
+  CRediT role, for sole, first, middle and last authors. Pick your field once and the app remembers
+  it; mark your own row with "This is me" and your column is marked, counting authors only. The shares come from about 1.7
   million open-access research articles in Europe PMC. They are context only: nothing here fills in
   or comments on your grid. The roles were read from the papers automatically and have not been
   checked by hand yet, and the tab says so, with the article count for the field. Fields with fewer

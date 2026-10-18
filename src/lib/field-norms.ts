@@ -1,4 +1,4 @@
-import { CREDIT_ROLES, type CreditRoleName } from "@/core";
+import { type Author, CREDIT_ROLES, type CreditRoleName } from "@/core";
 import data from "@/data/field-norms.json";
 
 /** Where an author sits in the byline, as the census counts it. */
@@ -13,6 +13,9 @@ export interface FieldNorms {
   code_commit: string | null;
   /** Date of the newest Europe PMC bulk file read, YYYY-MM-DD. */
   files_date: string | null;
+  /** Parser F1 against publisher tags over every tagged article, and how many articles that is. */
+  parser_f1: number | null;
+  parser_f1_articles: number;
   min_articles: number;
   min_authors: number;
   positions: string[];
@@ -26,8 +29,8 @@ export interface FieldNorms {
 
 export const NORMS = data as FieldNorms;
 
-/** Field names, largest first, as the file lists them. */
-export const NORM_FIELDS = Object.keys(NORMS.fields);
+/** Field names in alphabetical order. They are OpenAlex's English names, so they sort the same in every locale. */
+export const NORM_FIELDS = Object.keys(NORMS.fields).sort((a, b) => a.localeCompare(b, "en"));
 
 /** The byline position of the author at `index` among `count` authors, or null when there is no such author. */
 export function positionOf(index: number, count: number): Position | null {
@@ -35,6 +38,18 @@ export function positionOf(index: number, count: number): Position | null {
   if (count === 1) return "single";
   if (index === 0) return "first";
   return index === count - 1 ? "last" : "middle";
+}
+
+/**
+ * Where `selfId` sits among the authors only, as the census counts the byline: non-authors sit in
+ * the acknowledgements, not the byline. "non-author" when that contributor is one, null when nobody is marked.
+ */
+export function selfPosition(authors: readonly Author[], selfId: string | null): Position | "non-author" | null {
+  const self = authors.find((author) => author.id === selfId);
+  if (!self) return null;
+  if (self.contributorType === "non-author") return "non-author";
+  const byline = authors.filter((author) => author.contributorType !== "non-author");
+  return positionOf(byline.indexOf(self), byline.length);
 }
 
 export interface NormRow {

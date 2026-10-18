@@ -971,6 +971,17 @@ test.describe("Happy path UI flows", () => {
     expect(await page.evaluate(() => document.body.scrollWidth)).toBe(320);
     const statement = page.getByRole("tabpanel", { name: "Statement" });
     expect((await statement.boundingBox())?.width).toBeLessThanOrEqual(320);
+
+    // French has the longest tab labels; all four still fit without scrolling the tab list.
+    await seedStorage(
+      page,
+      { authors: [], welcomeSeen: true, uiLocale: "fr", outputLocale: "fr" },
+      { clearFirst: true },
+    );
+    await page.reload();
+    const tabs = page.getByRole("tablist", { name: /Déclaration/ });
+    await expect(tabs.getByRole("tab")).toHaveCount(4);
+    expect(await tabs.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
   });
 
   test("XML export downloads client-side (no API round-trip)", async ({ page }) => {

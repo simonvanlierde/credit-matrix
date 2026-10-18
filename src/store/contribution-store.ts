@@ -100,7 +100,7 @@ interface ContributionState {
   /** Whether the first-run welcome has ever been shown. Persisted; only ever set
    *  true, so returning users are never auto-greeted again. */
   welcomeSeen: boolean;
-  /** The research field the Field norms tab shows, or null before one is picked. A preference, not draft data. */
+  /** The research field the Published practice tab shows, or null before one is picked. A preference, not draft data. */
   normsField: string | null;
   /**
    * Mirrors the active draft's `claim`, like `title` mirrors its title.
