@@ -11,7 +11,7 @@ const MAX_ENCODED_LENGTH = Math.ceil((MAX_IMPORT_BYTES * 4) / 3) + 4;
  * fromBase64 methods only landed in browsers from late 2024/2025, so feature-
  * detect and fall back to btoa/atob for older engines instead of throwing.
  */
-function toBase64Url(bytes: Uint8Array): string {
+export function toBase64Url(bytes: Uint8Array): string {
   if (typeof bytes.toBase64 === "function") {
     return bytes.toBase64({ alphabet: "base64url", omitPadding: true });
   }
@@ -20,7 +20,7 @@ function toBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/[=]+$/, "");
 }
 
-function fromBase64Url(encoded: string): Uint8Array {
+export function fromBase64Url(encoded: string): Uint8Array {
   if (typeof Uint8Array.fromBase64 === "function") {
     return Uint8Array.fromBase64(encoded, { alphabet: "base64url" });
   }

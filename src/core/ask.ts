@@ -3,7 +3,9 @@ import type { Author, Contribution, ContributionLevel } from "./author";
 import { AuthorSchema, ContributionSchema, scoreToLevel } from "./author";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
+import { type OrcidKey, type OrcidProof, OrcidProofSchema, verifyOrcidToken } from "./orcid-proof";
 import { buildInitials, createAuthor, deduplicateAuthorInitials } from "./parse-authors";
+import { fromSharePayload } from "./share-payload";
 
 /** What a reply answers: each role, and the two markers outside CRediT. */
 export type Target = CreditRoleName | "equalContribution" | "corresponding";
@@ -40,6 +42,17 @@ const ReplySchema = /* @__PURE__ */ (() =>
     /** When the co-author sent it (the link's `w`), or when it was opened for links without one. */
     sentAt: z.number(),
     receivedAt: z.number(),
+    /** How the reply was sent. A malformed one is dropped, never the reply. */
+    provenance: z.catch(
+      z.optional(
+        z.looseObject({
+          orcid: z.optional(OrcidProofSchema),
+          /** The row's ORCID iD before this signed reply changed it: the iD the ask went to. */
+          replacedOrcid: z.optional(z.string()),
+        }),
+      ),
+      undefined,
+    ),
     // Loose too: a target a later release adds keeps its decision here, and the logic skips it.
     decisions: z.looseObject(
       Object.fromEntries(ASK_TARGETS.map((target) => [target, z.optional(DecisionSchema)])) as Record<
@@ -78,7 +91,8 @@ export interface Patch {
 
 export type AskEvent =
   | { kind: "sent"; contributorId: string; prefilled: boolean; at: number }
-  | { kind: "reply"; contributorId: string; row: unknown; sentAt: number | null; at: number }
+  /** `orcid` is a sign-in the caller has already verified. */
+  | { kind: "reply"; contributorId: string; row: unknown; sentAt: number | null; at: number; orcid?: OrcidProof }
   /** A `null` choice clears that target's decision, and a "theirs" one puts the row's value back. */
   | { kind: "settle"; contributorId: string; choices: Choice | Partial<Record<Target, Choice | null>>; at?: number };
 
@@ -251,7 +265,9 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         const sameLink = event.sentAt === null || sentAt === held.reply.sentAt;
         // The same answer again is a duplicate, unless it renames the row or answers an ask sent since.
         const reAsked = held.sentAt > held.reply.receivedAt;
-        if (same && !changed && (sameLink || !reAsked)) {
+        // A sign-in the held answer lacks is news too.
+        const newlySigned = event.orcid !== undefined && held.reply.provenance === undefined;
+        if (same && !changed && (sameLink || !reAsked) && !newlySigned) {
           return {
             outcome: { kind: "received", open: review(author, held).open.length, duplicate: true },
             patch: emptyPatch(),
@@ -264,6 +280,9 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         ...answer,
         sentAt,
         receivedAt: event.at,
+        ...(event.orcid
+          ? { provenance: { orcid: event.orcid, ...(previous.orcid ? { replacedOrcid: previous.orcid } : {}) } }
+          : {}),
         decisions: same && held?.reply ? held.reply.decisions : {},
       };
       // A reply with no recorded ask (asked before asks were kept, or the ask was undone): every such ask was pre-filled.
@@ -339,6 +358,49 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         },
       };
     }
+  }
+}
+
+/**
+ * Check every reply's ORCID sign-in again, as an imported file needs. A
+ * sign-in stays only when its token verifies (see `orcid-proof.ts`), it signed
+ * a reply to this contributor, and its row there holds the same answer as the
+ * stored reply; the draft id is not compared, because an export does not keep
+ * it. A failing sign-in is dropped, the answer stays. `keys` is called only
+ * when some reply carries a sign-in; null from it drops every sign-in.
+ */
+export async function recheckSignIns(
+  asks: Readonly<Record<string, Ask>>,
+  keys: () => Promise<readonly OrcidKey[] | null>,
+): Promise<Record<string, Ask>> {
+  const checked = { ...asks };
+  const signed = Object.entries(asks).filter(([, ask]) => ask.reply?.provenance?.orcid);
+  if (signed.length === 0) return checked;
+  const fetched = await keys();
+  for (const [id, ask] of signed) {
+    const reply = ask.reply as Reply;
+    const { provenance, ...unsigned } = reply;
+    const proof = fetched && (await signedFor(id, reply, provenance?.orcid as OrcidProof, fetched));
+    // The checked proof replaces the stored one, so its iD, name and time are the token's.
+    checked[id] = { ...ask, reply: proof ? { ...reply, provenance: { ...provenance, orcid: proof } } : unsigned };
+  }
+  return checked;
+}
+
+async function signedFor(
+  id: string,
+  reply: Reply,
+  proof: OrcidProof,
+  keys: readonly OrcidKey[],
+): Promise<OrcidProof | null> {
+  const verified = await verifyOrcidToken(proof.token, { payload: proof.payload, keys });
+  if (!verified) return null;
+  try {
+    const shared = fromSharePayload(verified.payload);
+    const row = shared.authors.find((author) => author.id === id);
+    return shared.reply && shared.claimId === id && row && sameAnswer(row, reply) ? verified : null;
+  } catch {
+    return null;
   }
 }
 

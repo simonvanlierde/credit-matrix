@@ -1,16 +1,18 @@
 "use client";
 
-import { Check, ChevronDown, CircleCheck, Send } from "lucide-react";
+import { BadgeCheck, Check, ChevronDown, CircleCheck, Send } from "lucide-react";
 import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Switch } from "@/components/ui/switch";
-import { type Author, CREDIT_ROLES, isValidOrcid } from "@/core";
+import { type Author, CREDIT_ROLES, isValidOrcid, type OrcidProof, type SharePayloadInput } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
 import { DEFAULT_MONO_COLOR, heatCellColor, onColor } from "@/core/contributor-color";
+import { toSharePayload } from "@/core/share-payload";
 import { announce } from "@/lib/announce";
+import { startOrcidSignIn, takeOrcidReturn } from "@/lib/orcid-sign-in";
 import { moveRadioSelection } from "@/lib/roving-radio";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -76,6 +78,9 @@ function CoauthorPage() {
   // The link's `w`: when this answer was first sent, so sharing then copying the same answer
   // gives the same link, and the lead's decisions on it hold.
   const answeredAt = useRef<{ answer: string; at: number } | null>(null);
+  // Back from ORCID: the sign-in and the send time of the answer it signed; "failed" when cancelled or not valid.
+  const [signIn, setSignIn] = useState<{ proof: OrcidProof; sentAt: number } | "failed" | null>(null);
+  const tookReturn = useRef(false);
   const firstAuthorId = useId();
   const correspondingId = useId();
 
@@ -88,25 +93,38 @@ function CoauthorPage() {
     if (view) headingRef.current?.focus();
   }, [view]);
 
+  // A ref, so StrictMode's second run does not read the address bar after the first cleared it.
+  useEffect(() => {
+    if (tookReturn.current) return;
+    tookReturn.current = true;
+    void takeOrcidReturn().then((result) => {
+      if (result) setSignIn(result.proof ? result : "failed");
+    });
+  }, []);
+
   if (!claim || !author) return null;
+
+  const reply = { authors, title, claimId: claim.contributorId, sourceDraftId: claim.sourceDraftId, reply: true };
+  // The sign-in holds while the answer is still the one ORCID signed; any change needs a new one.
+  const signedIn =
+    signIn && signIn !== "failed" && toSharePayload({ ...reply, sentAt: signIn.sentAt }) === signIn.proof.payload
+      ? signIn
+      : null;
 
   const options = inputMode === "toggle" ? YES_NO : LEVELS;
   const marked = author.contributions.filter((c) => c.score > 0).length;
   const workTitle = title.trim();
 
-  async function buildReply(): Promise<string | null> {
-    if (!claim) return null;
+  function replyInput(): SharePayloadInput & { sentAt: number } {
+    if (signedIn) return { ...reply, sentAt: signedIn.sentAt, idToken: signedIn.proof.token };
     const answer = JSON.stringify([authors, title]);
     if (answeredAt.current?.answer !== answer) answeredAt.current = { answer, at: Date.now() };
+    return { ...reply, sentAt: answeredAt.current.at };
+  }
+
+  async function buildReply(): Promise<string | null> {
     try {
-      return await buildShareUrl({
-        authors,
-        title,
-        claimId: claim.contributorId,
-        sourceDraftId: claim.sourceDraftId,
-        reply: true,
-        sentAt: answeredAt.current.at,
-      });
+      return await buildShareUrl(replyInput());
     } catch {
       announce(t(shareFailureKey()), { assertive: true });
       return null;
@@ -136,6 +154,10 @@ function CoauthorPage() {
       }
     }
     if (await copy(url)) setSent("copied");
+  }
+
+  async function handleSignIn() {
+    if (!(await startOrcidSignIn(replyInput()))) setSignIn("failed");
   }
 
   function handleUnlock() {
@@ -266,6 +288,12 @@ function CoauthorPage() {
           onChange={(value) => setAuthorMarker(author.id, "corresponding", value)}
         />
         <YourDetails author={author} />
+        <OrcidSignIn
+          signedIn={signedIn?.proof ?? null}
+          failed={signIn === "failed"}
+          changed={signIn !== null && !signedIn}
+          onSignIn={() => void handleSignIn()}
+        />
         <p className="mt-6 mb-4 text-xs text-on-surface-variant">
           <button
             type="button"
@@ -406,6 +434,59 @@ function MarkerSwitch({
         {label}
       </label>
       <Switch id={id} checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+/**
+ * Optional ORCID sign-in: the answer then reaches the asker marked as
+ * verified by ORCID. The sign-in travels in the reply link and nowhere else.
+ */
+function OrcidSignIn({
+  signedIn,
+  failed,
+  changed,
+  onSignIn,
+}: {
+  signedIn: OrcidProof | null;
+  failed: boolean;
+  changed: boolean;
+  onSignIn: () => void;
+}) {
+  const t = useTranslations();
+  if (signedIn) {
+    return (
+      <p
+        role="status"
+        className="mt-4 flex items-start gap-2 rounded-lg bg-primary/10 px-3 py-2.5 text-sm leading-relaxed text-on-surface"
+      >
+        <BadgeCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+        <span>
+          {t("coauthorOrcidSigned", {
+            who: signedIn.name ? `${signedIn.name} (${signedIn.orcid})` : signedIn.orcid,
+          })}
+        </span>
+      </p>
+    );
+  }
+  return (
+    <div className="mt-4 flex flex-col gap-2 border-t border-outline-variant pt-4">
+      <p className="text-sm leading-relaxed text-on-surface-variant">
+        {changed && !failed ? t("coauthorOrcidChanged") : t("coauthorOrcidHint")}
+      </p>
+      {failed && (
+        <p role="alert" className="text-sm text-error">
+          {t("coauthorOrcidFailed")}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={onSignIn}
+        className="flex min-h-11 items-center justify-center gap-2 self-start rounded-lg border border-outline bg-surface-bright px-4 font-medium text-on-surface transition-colors hover:border-primary hover:text-primary"
+      >
+        <BadgeCheck className="size-4" aria-hidden="true" />
+        {t("coauthorOrcidSignIn")}
+      </button>
     </div>
   );
 }

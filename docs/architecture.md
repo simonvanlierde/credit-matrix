@@ -18,7 +18,8 @@ Browser
        ├─ React UI + Zustand store (persisted to localStorage)
        ├─ src/core   ← all domain logic, runs in the browser
        │     statements · JATS4R XML · CSV · JSON · Markdown · heatmap SVG · validation
-       └─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org · api.datacite.org
+       ├─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org · api.datacite.org
+       └─ ORCID sign-in on replies ──→ orcid.org (sign-in page, public keys)
                                      ← the only calls that leave the browser
 ```
 
@@ -42,7 +43,8 @@ yes/no and levels without changing what is stored. The
 The ORCID and DOI lookups call the public APIs of ORCID, Crossref and DataCite straight from the
 browser. DataCite is only asked about DOIs that Crossref does not hold, such as arXiv and Zenodo
 records. All three send CORS headers that let the browser call them. The Content Security Policy
-(CSP) in [`public/_headers`](../public/_headers) allows exactly those origins.
+(CSP) in [`public/_headers`](../public/_headers) allows exactly those origins, plus `orcid.org`, whose
+public keys check a co-author's ORCID sign-in on a reply.
 
 ## No accounts, no server-side storage
 

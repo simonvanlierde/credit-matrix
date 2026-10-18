@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, MessagesSquare } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, MessagesSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -229,6 +229,10 @@ export function ReviewPanel() {
             ? t("teamSettledOn", { date: format.dateTime(settledAt(reply), { day: "numeric", month: "short" }) })
             : t("reviewAnsweredMeta", { days, kind: ask.prefilled ? "prefilled" : "blank" });
         const headingId = `review-person-${author.id}`;
+        const signIn = reply.provenance?.orcid;
+        // The row's iD now, or the one the reply replaced: a forwarded link signed by someone else shows here.
+        const otherId =
+          signIn && [author.orcid, reply.provenance?.replacedOrcid].some((orcid) => orcid && orcid !== signIn.orcid);
         return (
           <section key={author.id} aria-labelledby={headingId} className="flex flex-col gap-2">
             <div className="flex items-start justify-between gap-3">
@@ -241,6 +245,18 @@ export function ReviewPanel() {
                   {author.name}
                 </h3>
                 <p className="text-xs text-on-surface-variant">{meta}</p>
+                {signIn && (
+                  <p className="mt-0.5 flex items-start gap-1 text-xs text-on-surface" data-orcid-verified="">
+                    <BadgeCheck className="mt-px size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                    <span>
+                      {t("reviewOrcidVerified", {
+                        who: signIn.name ? `${signIn.name} (${signIn.orcid})` : signIn.orcid,
+                        date: format.dateTime(signIn.issuedAt, { dateStyle: "medium" }),
+                      })}
+                      {otherId && <span data-orcid-other-id=""> {t("reviewOrcidOtherId")}</span>}
+                    </span>
+                  </p>
+                )}
               </div>
               {result.open.length > 1 && (
                 <button

@@ -158,6 +158,14 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
   and `selfId` over to the ids that `keepKnownIds` gave the imported rows. When you import into a
   draft that already has contributors, only rows that matched one of them keep their answers.
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
+
+A reply can carry an ORCID sign-in. The caller checks it and passes it on the `reply` event as
+`orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`). What "verified" means is
+defined in the module comment of `orcid-proof.ts`. When a signed reply changes the row's iD, the
+reply also keeps the old one as `provenance.replacedOrcid`. Run `recheckSignIns(asks,
+fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before you show any sign-in
+as verified.
+
 - `AskSchema` validates stored and imported asks.
 
 ## Rosters and links
@@ -187,7 +195,7 @@ holds its exact shape. By entry point:
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`
   - Asks: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
     `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
-    `Decision`, `Difference`, `Level`, `Outcome`, `Patch`, `Reply`, `Review`, `Target`
+    `Decision`, `Difference`, `Level`, `Outcome`, `OrcidProof`, `Patch`, `Reply`, `Review`, `Target`
 - `credit-matrix/lookup`: `lookupOrcidPerson`, `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`,
   and the types `OrcidLookupResult`, `OrcidErrorCode`, `DoiLookupResult`, `DoiErrorCode`, `DoiAuthor`
 - `credit-matrix/i18n`: `AVAILABLE_LOCALES`, `normalizeLocaleCode`, `hasCatalog`,

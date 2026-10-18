@@ -27,6 +27,18 @@ it("opens a link even when the address bar lost its hash before hashchange fired
   expect(useContributionStore.getState().authors.map((author) => author.name)).toEqual(["Ann One"]);
 });
 
+it("clears ORCID's tokens and the pending sign-in when no ask is open to take them", async () => {
+  sessionStorage.setItem("credit-matrix:orcid-sign-in", JSON.stringify({ state: "s", nonce: "n", payload: "p" }));
+  window.history.replaceState(null, "", "/#access_token=a&id_token=b.c.d&state=s");
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <HeaderActions />
+    </IntlProvider>,
+  );
+  await waitFor(() => expect(window.location.hash).toBe(""));
+  expect(sessionStorage.getItem("credit-matrix:orcid-sign-in")).toBeNull();
+});
+
 /** Open a reply link and wait until its answer, sent at `sentAt`, is held. */
 async function openReply(link: string, contributorId: string, sentAt: number) {
   window.dispatchEvent(new HashChangeEvent("hashchange", { oldURL: window.location.href, newURL: link }));
