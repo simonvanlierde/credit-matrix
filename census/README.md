@@ -153,8 +153,56 @@ uv run census score data/labels/sample-2026-10.csv
 ```
 
 `label` samples articles whose roles were read from free text and leaves the parser's output out of
-the file, so a label is not anchored to its guess. `score` prints precision, recall and F1 over
-(author, role) pairs, and the share of articles exactly right, per style.
+the file, so a label is not anchored to its guess. It also leaves out the style (the parser's verdict
+on the text) and shuffles the rows. `score` prints precision, recall and F1 over
+(author, role) pairs, and the share of articles exactly right with a 95% interval, per style. It
+takes the style from the database, not the CSV.
+
+## Validation
+
+The paired scores cover only publishers with 1,000 or more tagged articles that also print a
+statement (MDPI, Frontiers, OUP, SAGE, The Royal Society, AAAS and Pensoft). `census label --set`
+(seed 20261013) writes the hand-label set for the rest:
+
+- `data/labels/oa-2026-10-set.csv`, 160 articles for the labeller: `pmcid`, `overlap`, `authors`,
+  `text` and `gold`, shuffled, blind like the `label` sample. Each article's stratum and weight are
+  in `data/labels/oa-2026-10-set-key.csv`, which the labeller does not open: a stratum or weight
+  would give away the style. Within each style, publishers get rows by the square root of their
+  article count; publishers under 0.5% of a style share an "(other)" stratum.
+  - 100 `statement_text` articles (about 707,000 in the pool). Springer Nature gets 27 rows over
+    its BMC (11), Nature Publishing Group (11) and Springer (5) strata; Elsevier and articles with
+    no publisher get 12 each, "(other)" 11, Wiley 10 and Wolters Kluwer 7, then 2 to 4 each for
+    RSC, ACS, ASBMB, BMJ, KeAi, Taylor & Francis and the Company of Biologists.
+  - 30 `contrib_text` articles (about 22,400 in the pool, two thirds of them eLife). eLife gets 7
+    rows; 13 of the other 23 go to Brazilian society journals, one each.
+  - 30 `none` articles from every publisher: a contributions text was found but no CRediT roles
+    were read from it. A gold label other than `none` is a missed statement. Only 255,341 of the
+    6.1 million `none` articles keep such a text; misses in the other 5.9 million are not measured.
+  - A key file's `weight` is a stratum's article count over its rows. Square-root allocation draws
+    small publishers more often than their size, so `score` counts each row by its weight; the
+    article counts it prints are unweighted. `score` reads `<labels>-key.csv` beside the labels, or
+    the file given with `--key`; without one, every row weighs 1 under the database's publisher.
+  - 25 rows marked `overlap` for a second labeller. Copy the blank file before anyone labels it;
+    the second labeller fills only the overlap rows of the copy, and
+    `census score <first.csv> --second <copy.csv>` prints their agreement on those rows.
+- `data/labels/oa-2026-10-set-disagreements.csv`: 20 MDPI articles where the parser and the tags
+  disagree, with both shown, drawn with their own seed so the label set can change without changing
+  them. Fill `wrong` with `tag`, `parser`, `both` or `neither`, and `notes`; `census score` on that
+  file counts the answers. If the tags are often the wrong ones, the paired F1 understates accuracy.
+
+What the set can show, once labelled (`census score data/labels/oa-2026-10-set.csv`):
+
+| Style | Articles | Precision | Recall | F1 | Exact (95% interval) |
+| --- | --- | --- | --- | --- | --- |
+| `statement_text` | 100 | | | | |
+| `contrib_text` | 30 | | | | |
+| `none` | 30 | | | | |
+
+These are pooled, weighted figures per style. `score` also prints a table per style and publisher,
+but with 1 to 12 rows per stratum it is for spotting failure patterns, not for accuracy per
+publisher. Agreement between labellers, one figure over the 25 overlap rows: F1 \_\_. MDPI
+disagreements, a rough verdict on whether the tag or the parser errs from 20 rows: tag wrong \_\_,
+parser wrong \_\_, both \_\_, neither \_\_.
 
 ## Training a statement parser
 
