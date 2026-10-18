@@ -2,16 +2,17 @@
 
 import { type KeyboardEvent, type ReactNode, useRef } from "react";
 import { useTranslations } from "use-intl";
+import { NormsPanel } from "@/components/NormsPanel";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatementOutput } from "@/components/steps/StatementOutput";
 import { TeamPanel } from "@/components/TeamPanel";
 import { type InspectorTab, useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-const TABS: InspectorTab[] = ["statement", "team", "review"];
+const TABS: InspectorTab[] = ["statement", "team", "review", "norms"];
 
 /**
- * The workspace's right-hand pane: the statement, the team's ask status, and
- * co-author answers, as one tab list (WAI-ARIA tabs pattern: one tab stop,
+ * The workspace's right-hand pane: the statement, the team's ask status,
+ * co-author answers, and field norms as context, as one tab list (WAI-ARIA tabs pattern: one tab stop,
  * arrow keys and Home/End move between tabs, which select on focus).
  *
  * Inactive panels stay mounted and hidden, so statement options survive a
@@ -32,17 +33,24 @@ export function Inspector() {
   const reviewEmpty = useContributionStore(
     (s) => !s.authors.some((author) => author.id !== s.selfId && s.asks[author.id]?.reply),
   );
-  const panelIsStop: Record<InspectorTab, boolean> = { statement: false, team: teamEmpty, review: reviewEmpty };
+  const panelIsStop: Record<InspectorTab, boolean> = {
+    statement: false,
+    team: teamEmpty,
+    review: reviewEmpty,
+    norms: false,
+  };
 
   const labels: Record<InspectorTab, string> = {
     statement: t("stepStatement"),
     team: t("tabTeam"),
     review: t("tabReview"),
+    norms: t("tabNorms"),
   };
   const panels: Record<InspectorTab, ReactNode> = {
     statement: <StatementOutput />,
     team: <TeamPanel />,
     review: <ReviewPanel />,
+    norms: <NormsPanel />,
   };
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {

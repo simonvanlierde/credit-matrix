@@ -132,8 +132,10 @@ accessible name.
 ## Layout
 
 The grid is the canvas. From `xl` up, the contributor list is a slim rail on the left that folds to
-initials. The grid fills the middle. An inspector on the right holds three tabs: Statement, Team and
-Review. A status strip above the grid says what the draft is waiting for. It also holds the controls
+initials. The grid fills the middle. An inspector on the right holds four tabs: Statement, Team,
+Review and Field norms. Field norms is reference beside the grid, not a step: a table of how often
+published papers in a field give each role per author position, with a thin bar under each value. It
+never fills, suggests or flags a cell. A status strip above the grid says what the draft is waiting for. It also holds the controls
 that change the whole grid (Yes/No vs Levels, bulk assign, display options, heatmap export). Below
 `xl` the same parts stack in that order: rail, strip, grid, inspector. On a phone the grid becomes a
 list of roles per contributor.

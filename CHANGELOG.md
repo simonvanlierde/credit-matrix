@@ -8,6 +8,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A Field norms tab beside the grid shows how often published papers in a field give each CRediT
+  role, for sole, first, middle and last authors. Pick your field once and the app remembers it;
+  mark your own row with "This is me" and your column is marked. The shares come from about 1.7
+  million open-access research articles in Europe PMC. They are context only: nothing here fills in
+  or comments on your grid. The roles were read from the papers automatically and have not been
+  checked by hand yet, and the tab says so, with the article count for the field. Fields with fewer
+  than 1,000 articles are not listed.
 - Co-authors can sign in with ORCID before they send their answer back. The Review tab then shows
   "Verified by ORCID" with their name, iD and sign-in day, and warns when that iD is not the row's.
   The sign-in travels inside the reply link and JSON exports; no server keeps it. A sign-in moved

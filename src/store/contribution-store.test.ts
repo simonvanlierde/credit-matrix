@@ -1157,9 +1157,25 @@ describe("contribution store", () => {
       // not survive a reload as a fake first run.
       const options = useContributionStore.persist.getOptions();
       const persisted = options.partialize?.(store()) ?? {};
-      // Storage sees the normalized shape: drafts in one map, plus the two
+      // Storage sees the normalized shape: drafts in one map, plus the
       // preferences that belong to the person rather than to any paper.
-      expect(Object.keys(persisted).sort()).toEqual(["activeDraftId", "drafts", "uiLocale", "welcomeSeen"]);
+      expect(Object.keys(persisted).sort()).toEqual([
+        "activeDraftId",
+        "drafts",
+        "normsField",
+        "uiLocale",
+        "welcomeSeen",
+      ]);
+    });
+
+    it("keeps the field-norms choice as a preference across drafts and reloads", async () => {
+      store().setNormsField("Medicine");
+      store().createDraft();
+      expect(store().normsField).toBe("Medicine");
+      const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
+      expect(stored.state.normsField).toBe("Medicine");
+      await useContributionStore.persist.rehydrate();
+      expect(store().normsField).toBe("Medicine");
     });
 
     it("normalizes legacy Portuguese and Chinese locale aliases on load", () => {

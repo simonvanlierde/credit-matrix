@@ -240,8 +240,32 @@ test.describe("Accessibility (axe-core)", () => {
     await expect(team).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("tabpanel", { name: "Team" })).toBeVisible();
     await page.keyboard.press("End");
+    await expect(page.getByRole("tab", { name: "Field norms" })).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
     await expect(page.getByRole("tab", { name: "Review" })).toBeFocused();
     await expect(page.getByText("Answers from co-authors appear here")).toBeVisible();
+  });
+
+  test("the field norms tab is a labelled table with no detectable violations, light and dark", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    await page.getByRole("tab", { name: "Field norms" }).click();
+    const panel = page.getByRole("tabpanel", { name: "Field norms" });
+    await panel.getByRole("combobox", { name: "Your field" }).click();
+    await page.getByRole("option", { name: "Medicine" }).click();
+    const table = panel.getByRole("table", { name: "Share of authors given each role, by author position" });
+    await expect(table.getByRole("row")).toHaveCount(15);
+    await expect(table.getByRole("rowheader", { name: "Conceptualization" })).toBeVisible();
+    await expect(panel.getByText(/not been checked by hand/)).toBeVisible();
+    // Nobody in the sample is marked as you, so no column is marked and the panel says how to.
+    await expect(panel.getByText(/choose “This is me”/)).toBeVisible();
+    expect((await scan(page)).violations).toEqual([]);
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect((await scan(page)).violations).toEqual([]);
+    // The choice is a preference: it survives a reload.
+    await page.reload();
+    await page.getByRole("tab", { name: "Field norms" }).click();
+    await expect(page.getByRole("combobox", { name: "Your field" })).toHaveText(/Medicine/);
   });
 
   // The role names left the tab order with the info buttons; arrow keys reach them.

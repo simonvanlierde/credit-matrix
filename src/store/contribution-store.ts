@@ -28,7 +28,7 @@ import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 export type InputMode = "toggle" | "levels";
-export type InspectorTab = "statement" | "team" | "review";
+export type InspectorTab = "statement" | "team" | "review" | "norms";
 
 /** A claim link's target: which contributor, on which draft it came from. */
 export interface DraftClaim {
@@ -100,6 +100,8 @@ interface ContributionState {
   /** Whether the first-run welcome has ever been shown. Persisted; only ever set
    *  true, so returning users are never auto-greeted again. */
   welcomeSeen: boolean;
+  /** The research field the Field norms tab shows, or null before one is picked. A preference, not draft data. */
+  normsField: string | null;
   /**
    * Mirrors the active draft's `claim`, like `title` mirrors its title.
    * While set, the lock rule refuses any edit but the claimed contributor's
@@ -206,6 +208,7 @@ interface ContributionState {
   openWelcome: () => void;
   closeWelcome: () => void;
   setInspectorTab: (tab: InspectorTab) => void;
+  setNormsField: (field: string | null) => void;
   reset: () => void;
 }
 
@@ -450,6 +453,7 @@ function hydrateDrafts(persisted: unknown): Partial<ContributionState> {
     drafts,
     uiLocale: normalizeLocaleCode(state.uiLocale),
     ...(typeof state.welcomeSeen === "boolean" ? { welcomeSeen: state.welcomeSeen } : {}),
+    normsField: typeof state.normsField === "string" ? state.normsField : null,
   } as ContributionState;
   applyDraft(out, active);
   return out;
@@ -461,6 +465,8 @@ interface PersistedState {
   activeDraftId: string;
   uiLocale: LocaleCode;
   welcomeSeen: boolean;
+  /** Absent in saves from builds before field norms. */
+  normsField?: string | null;
 }
 
 /** Where a parked draft lives: one localStorage key per draft, under the main key's namespace. */
@@ -496,6 +502,7 @@ function persistedState(state: ContributionState): PersistedState {
     prev.state.activeDraftId === state.activeDraftId &&
     prev.state.uiLocale === state.uiLocale &&
     prev.state.welcomeSeen === state.welcomeSeen &&
+    prev.state.normsField === state.normsField &&
     shallow({ ...liveDraft(prev.state), updatedAt: 0 }, { ...liveDraft(state), updatedAt: 0 })
   ) {
     return prev.value;
@@ -508,6 +515,7 @@ function persistedState(state: ContributionState): PersistedState {
     activeDraftId: state.activeDraftId,
     uiLocale: state.uiLocale,
     welcomeSeen: state.welcomeSeen,
+    normsField: state.normsField,
   };
   lastPersisted = { state, value };
   return value;
@@ -676,7 +684,7 @@ export function announcingStorage(): DraftStorage {
       // emptied value back. One early keystroke could erase a saved paper.
       if (!useContributionStore.persist.hasHydrated()) return;
       if (value.state === lastWritten) return;
-      const { drafts, activeDraftId, uiLocale, welcomeSeen } = value.state;
+      const { drafts, activeDraftId, uiLocale, welcomeSeen, normsField } = value.state;
       // Adopting another tab's save writes nothing back (it would wake that
       // tab, which would adopt, write back...), but this tab now holds those
       // drafts, so deleting one later must remove its key.
@@ -723,7 +731,13 @@ export function announcingStorage(): DraftStorage {
         window.localStorage.setItem(
           key,
           JSON.stringify({
-            state: { drafts: { [activeDraftId]: drafts[activeDraftId] }, activeDraftId, uiLocale, welcomeSeen },
+            state: {
+              drafts: { [activeDraftId]: drafts[activeDraftId] },
+              activeDraftId,
+              uiLocale,
+              welcomeSeen,
+              normsField,
+            },
             version: value.version,
           }),
         );
@@ -831,6 +845,7 @@ function adoptKey(key: string): boolean {
       applyDraft(state, open);
       if ("uiLocale" in prefs) state.uiLocale = normalizeLocaleCode(prefs.uiLocale);
       if (typeof prefs.welcomeSeen === "boolean") state.welcomeSeen = prefs.welcomeSeen;
+      if (typeof prefs.normsField === "string") state.normsField = prefs.normsField;
     });
   } finally {
     adopting = null;
@@ -871,6 +886,7 @@ export const useContributionStore = create<ContributionState>()(
       outputLocale: "en",
       uiLocale: "en",
       welcomeSeen: false,
+      normsField: null,
       welcomeOpen: false,
       inspectorTab: "statement",
       newerVersionBlocked: false,
@@ -1255,6 +1271,11 @@ export const useContributionStore = create<ContributionState>()(
       setInspectorTab: (tab) =>
         set((state) => {
           state.inspectorTab = tab;
+        }),
+
+      setNormsField: (field) =>
+        set((state) => {
+          state.normsField = field;
         }),
 
       // Clears the workspace, not the user's history: welcomeSeen stays true, so
