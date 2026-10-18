@@ -93,13 +93,14 @@ export async function fetchOrcidKeys(fetcher: typeof fetch = fetch): Promise<Orc
 const decodeJson = (part: string): unknown => JSON.parse(new TextDecoder().decode(fromBase64Url(part)));
 
 /**
- * Check an ORCID `id_token` against `keys` and the expected nonce. Returns the
- * proof, or null when anything fails. With `now`, an expired token fails too;
- * without it, expiry is not checked (see the module comment).
+ * Check an ORCID `id_token` against `keys` and the reply `payload` its nonce
+ * must hash. Returns the proof, or null when anything fails. With `now`, an
+ * expired token fails too; without it, expiry is not checked (see the module
+ * comment).
  */
 export async function verifyOrcidToken(
   token: string,
-  { nonce, keys, payload, now }: { nonce: string; keys: readonly OrcidKey[]; payload: string; now?: number },
+  { payload, keys, now }: { payload: string; keys: readonly OrcidKey[]; now?: number },
 ): Promise<OrcidProof | null> {
   try {
     const [head, body, signature, ...rest] = token.split(".");
@@ -127,7 +128,7 @@ export async function verifyOrcidToken(
 
     const claims = ClaimsSchema.parse(decodeJson(body));
     const audience = typeof claims.aud === "string" ? [claims.aud] : claims.aud;
-    if (!audience.includes(ORCID_CLIENT_ID) || claims.nonce !== nonce) return null;
+    if (!audience.includes(ORCID_CLIENT_ID) || claims.nonce !== (await replyNonce(payload))) return null;
     if (now !== undefined && (claims.exp * 1000 + SKEW_MS < now || claims.iat * 1000 - SKEW_MS > now)) return null;
     const name = [claims.given_name, claims.family_name].filter(Boolean).join(" ");
     return {
@@ -140,12 +141,4 @@ export async function verifyOrcidToken(
   } catch {
     return null;
   }
-}
-
-/** Verify a reply link's token: its nonce must be the hash of the payload it travelled in. */
-export async function verifyReplyProof(
-  proof: { token: string; payload: string },
-  keys: readonly OrcidKey[],
-): Promise<OrcidProof | null> {
-  return verifyOrcidToken(proof.token, { nonce: await replyNonce(proof.payload), keys, payload: proof.payload });
 }

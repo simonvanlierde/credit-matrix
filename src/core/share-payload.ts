@@ -96,7 +96,7 @@ export interface ShareData {
   sentAt: number | null;
   /** the asker works in yes/no mode; false on links from before this was recorded */
   yesNo: boolean;
-  /** A reply's ORCID sign-in, unchecked: the token and the payload its nonce must hash. See `verifyReplyProof`. */
+  /** A reply's ORCID sign-in, unchecked: the token and the payload its nonce must hash. See `verifyOrcidToken`. */
   signIn: { token: string; payload: string } | null;
 }
 

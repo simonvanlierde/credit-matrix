@@ -1,12 +1,5 @@
 import type { ShareData, SharePayloadInput } from "@/core";
-import {
-  fetchOrcidKeys,
-  type OrcidProof,
-  orcidSignInUrl,
-  replyNonce,
-  verifyOrcidToken,
-  verifyReplyProof,
-} from "@/core/orcid-proof";
+import { fetchOrcidKeys, type OrcidProof, orcidSignInUrl, replyNonce, verifyOrcidToken } from "@/core/orcid-proof";
 import { toSharePayload } from "@/core/share-payload";
 
 /**
@@ -19,7 +12,6 @@ const PENDING_KEY = "credit-matrix:orcid-sign-in";
 
 interface Pending {
   state: string;
-  nonce: string;
   payload: string;
   /** The reply's `w`, so the page can rebuild the exact payload ORCID signed. */
   sentAt: number;
@@ -28,12 +20,7 @@ interface Pending {
 /** Send the co-author to ORCID to sign this reply. False when the tab cannot keep the pending sign-in. */
 export async function startOrcidSignIn(reply: SharePayloadInput & { sentAt: number }): Promise<boolean> {
   const payload = toSharePayload(reply);
-  const pending: Pending = {
-    state: crypto.randomUUID(),
-    nonce: await replyNonce(payload),
-    payload,
-    sentAt: reply.sentAt,
-  };
+  const pending: Pending = { state: crypto.randomUUID(), payload, sentAt: reply.sentAt };
   try {
     sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
   } catch {
@@ -41,9 +28,8 @@ export async function startOrcidSignIn(reply: SharePayloadInput & { sentAt: numb
   }
   // ORCID only returns to a registered address: the production page. Elsewhere sign-in fails at ORCID.
   const { origin, pathname } = window.location;
-  window.location.assign(
-    orcidSignInUrl({ redirectUri: `${origin}${pathname}`, nonce: pending.nonce, state: pending.state }),
-  );
+  const nonce = await replyNonce(payload);
+  window.location.assign(orcidSignInUrl({ redirectUri: `${origin}${pathname}`, nonce, state: pending.state }));
   return true;
 }
 
@@ -85,7 +71,7 @@ export async function takeOrcidReturn(
   const token = params.get("id_token");
   if (!(pending && token) || params.get("state") !== pending.state) return { proof: null };
   const keys = await fetchOrcidKeys(fetcher);
-  const proof = keys && (await verifyOrcidToken(token, { ...pending, keys, now: Date.now() }));
+  const proof = keys && (await verifyOrcidToken(token, { payload: pending.payload, keys, now: Date.now() }));
   return proof ? { proof, sentAt: pending.sentAt } : { proof: null };
 }
 
@@ -96,5 +82,5 @@ export async function verifyIncoming(
 ): Promise<OrcidProof | undefined> {
   if (!shared.signIn) return undefined;
   const keys = await fetchOrcidKeys(fetcher);
-  return (keys && (await verifyReplyProof(shared.signIn, keys))) || undefined;
+  return (keys && (await verifyOrcidToken(shared.signIn.token, { payload: shared.signIn.payload, keys }))) || undefined;
 }

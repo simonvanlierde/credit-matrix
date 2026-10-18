@@ -31,6 +31,18 @@ async function stubOrcid(page: Page, issuer: Awaited<ReturnType<typeof testIssue
   });
 }
 
+/** Add Bob White on the lead's page and copy the link that asks him what he did. */
+async function askBob(lead: Page) {
+  await lead.goto("/");
+  const adder = lead.getByLabel("New author names or ORCID iD");
+  await adder.fill("Jane Smith, Bob White");
+  await adder.press("Enter");
+  await lead.getByRole("button", { name: "Actions for Bob White" }).click();
+  const ask = await copyFrom(lead, lead.getByRole("button", { name: "Ask Bob White what they did" }));
+  await lead.keyboard.press("Escape");
+  return ask;
+}
+
 test("a co-author signs in with ORCID, and the lead's review shows it, through export and import", async ({
   browser,
 }) => {
@@ -39,13 +51,7 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
   const lead = await (await newContext(browser)).newPage();
   await asReturningVisitor(lead);
   await stubOrcid(lead, issuer);
-  await lead.goto("/");
-  const adder = lead.getByLabel("New author names or ORCID iD");
-  await adder.fill("Jane Smith, Bob White");
-  await adder.press("Enter");
-  await lead.getByRole("button", { name: "Actions for Bob White" }).click();
-  const ask = await copyFrom(lead, lead.getByRole("button", { name: "Ask Bob White what they did" }));
-  await lead.keyboard.press("Escape");
+  const ask = await askBob(lead);
 
   // The co-author answers, signs in, and sends the answer back.
   const coauthor = await (await newContext(browser)).newPage();
@@ -124,13 +130,7 @@ test("a token signed for another answer arrives unverified", async ({ browser })
   const lead = await (await newContext(browser)).newPage();
   await asReturningVisitor(lead);
   await stubOrcid(lead, issuer);
-  await lead.goto("/");
-  const adder = lead.getByLabel("New author names or ORCID iD");
-  await adder.fill("Jane Smith, Bob White");
-  await adder.press("Enter");
-  await lead.getByRole("button", { name: "Actions for Bob White" }).click();
-  const ask = await copyFrom(lead, lead.getByRole("button", { name: "Ask Bob White what they did" }));
-  await lead.keyboard.press("Escape");
+  const ask = await askBob(lead);
 
   // A token signed for some other answer, carried by this one.
   const shared = await decodeShareHash(ask.slice(ask.indexOf("#")));

@@ -3,7 +3,7 @@ import type { Author, Contribution, ContributionLevel } from "./author";
 import { AuthorSchema, ContributionSchema, scoreToLevel } from "./author";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
-import { type OrcidKey, type OrcidProof, OrcidProofSchema, verifyReplyProof } from "./orcid-proof";
+import { type OrcidKey, type OrcidProof, OrcidProofSchema, verifyOrcidToken } from "./orcid-proof";
 import { buildInitials, createAuthor, deduplicateAuthorInitials } from "./parse-authors";
 import { fromSharePayload } from "./share-payload";
 
@@ -362,14 +362,12 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
 }
 
 /**
- * Check every reply's ORCID sign-in again, as an imported file needs: it is
- * outside input, and a hand edit can put any iD in it. A sign-in stays only
- * when `verifyReplyProof` passes, it signed a reply to this contributor, and
- * its row there holds the same answer as the stored reply. The draft it was
- * signed in (`d`) is not compared, because an export does not keep draft ids.
- * A failing sign-in is dropped with its provenance; the answer stays. `keys`
- * is called only when some reply carries a sign-in, and null (ORCID cannot be
- * reached) drops them all, so nothing shows as verified unchecked.
+ * Check every reply's ORCID sign-in again, as an imported file needs. A
+ * sign-in stays only when its token verifies (see `orcid-proof.ts`), it signed
+ * a reply to this contributor, and its row there holds the same answer as the
+ * stored reply; the draft id is not compared, because an export does not keep
+ * it. A failing sign-in is dropped, the answer stays. `keys` is called only
+ * when some reply carries a sign-in; null from it drops every sign-in.
  */
 export async function recheckSignIns(
   asks: Readonly<Record<string, Ask>>,
@@ -395,7 +393,7 @@ async function signedFor(
   proof: OrcidProof,
   keys: readonly OrcidKey[],
 ): Promise<OrcidProof | null> {
-  const verified = await verifyReplyProof(proof, keys);
+  const verified = await verifyOrcidToken(proof.token, { payload: proof.payload, keys });
   if (!verified) return null;
   try {
     const shared = fromSharePayload(verified.payload);

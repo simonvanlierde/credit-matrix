@@ -33,11 +33,10 @@ describe("ORCID sign-in in the browser", () => {
     const { keys, sign } = await testIssuer();
     // jsdom does not navigate; the pending sign-in is what matters.
     await startOrcidSignIn(reply());
-    const { state, nonce, payload } = pending();
+    const { state, payload } = pending();
     expect(payload).toBe(toSharePayload(reply()));
-    expect(nonce).toBe(await replyNonce(payload));
 
-    const token = await sign({ nonce });
+    const token = await sign({ nonce: await replyNonce(payload) });
     window.history.replaceState(null, "", `/?x=1#access_token=a&token_type=bearer&id_token=${token}&state=${state}`);
     const result = await takeOrcidReturn(jwks(keys));
     expect(result?.proof).toMatchObject({ orcid: TEST_ORCID, name: "Bob White", token, payload });
@@ -50,8 +49,12 @@ describe("ORCID sign-in in the browser", () => {
   it("refuses a token that expired before it came back", async () => {
     const { keys, sign } = await testIssuer(Date.now() - 24 * 3600 * 1000);
     await startOrcidSignIn(reply());
-    const { state, nonce } = pending();
-    window.history.replaceState(null, "", `/#id_token=${await sign({ nonce })}&state=${state}`);
+    const { state, payload } = pending();
+    window.history.replaceState(
+      null,
+      "",
+      `/#id_token=${await sign({ nonce: await replyNonce(payload) })}&state=${state}`,
+    );
     expect(await takeOrcidReturn(jwks(keys))).toEqual({ proof: null });
   });
 
@@ -70,7 +73,7 @@ describe("ORCID sign-in in the browser", () => {
     expect(await takeOrcidReturn(jwks(keys))).toEqual({ proof: null });
 
     await startOrcidSignIn(reply());
-    const token = await sign({ nonce: pending().nonce });
+    const token = await sign({ nonce: await replyNonce(pending().payload) });
     window.history.replaceState(null, "", `/#id_token=${token}&state=someone-else`);
     expect(await takeOrcidReturn(jwks(keys))).toEqual({ proof: null });
 
@@ -78,13 +81,12 @@ describe("ORCID sign-in in the browser", () => {
     expect(await takeOrcidReturn(jwks(keys))).toEqual({ proof: null });
   });
 
-  it("verifies a reply link's sign-in, and leaves an unsigned or unreachable one unverified", async () => {
+  it("leaves a reply link's sign-in unverified when ORCID is unreachable, and fetches nothing when unsigned", async () => {
     const { keys, sign } = await testIssuer();
     const token = await sign({ nonce: await replyNonce(toSharePayload(reply())) });
     const url = await encodeShareHash({ ...reply(), idToken: token });
     const shared = await decodeShareHash(url.slice(url.indexOf("#")));
     if (!shared) throw new Error("expected a link");
-    expect(await verifyIncoming(shared, jwks(keys))).toMatchObject({ orcid: TEST_ORCID });
     expect(await verifyIncoming(shared, vi.fn<typeof fetch>().mockRejectedValue(new Error("offline")))).toBeUndefined();
     const fetcher = jwks(keys);
     expect(await verifyIncoming({ ...shared, signIn: null }, fetcher)).toBeUndefined();

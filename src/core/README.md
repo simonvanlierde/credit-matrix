@@ -159,17 +159,12 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
   draft that already has contributors, only rows that matched one of them keep their answers.
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
 
-A reply can carry an ORCID sign-in. The co-author signs in with ORCID, and the token travels inside
-the reply link. The caller checks it (in the app, `orcid-proof.ts`) and passes it on the `reply`
-event as `orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`): the ORCID iD, when the
-co-author signed in, the token, and the link payload the token was issued for. "Verified" means
-ORCID's signature checks out, the token was issued for this app, and its nonce is the SHA-256 of
-that payload. Expiry is not checked when the reply is opened: the token lasts ten minutes, and the
-reply is read later. When a signed reply changes the row's iD, the reply also keeps the old one as
-`provenance.replacedOrcid`, so a sign-in by someone else than the person asked still shows.
-`recheckSignIns(asks, fetchOrcidKeys)` checks every sign-in in imported asks again, and drops the
-ones that fail (or all of them, when ORCID's keys cannot be fetched) while keeping the answers. Run
-it on the `asks` that `fromJson` or `importAny` returns before you show any sign-in as verified.
+A reply can carry an ORCID sign-in. The caller checks it and passes it on the `reply` event as
+`orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`). What "verified" means is
+defined in the module comment of `orcid-proof.ts`. When a signed reply changes the row's iD, the
+reply also keeps the old one as `provenance.replacedOrcid`. Run `recheckSignIns(asks,
+fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before you show any sign-in
+as verified.
 
 - `AskSchema` validates stored and imported asks.
 

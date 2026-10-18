@@ -9,7 +9,6 @@ import {
   orcidSignInUrl,
   replyNonce,
   verifyOrcidToken,
-  verifyReplyProof,
 } from "../orcid-proof";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash, encodeShareHash, toBase64Url } from "../share-link";
@@ -43,9 +42,8 @@ describe("ORCID sign-in on a reply", () => {
   it("accepts a token ORCID signed for this app and this reply", async () => {
     const { keys } = await issuer;
     const payload = toSharePayload(replyInput());
-    const nonce = await replyNonce(payload);
-    const token = await signToken({ nonce });
-    expect(await verifyOrcidToken(token, { nonce, keys, payload, now: NOW })).toEqual({
+    const token = await signToken({ nonce: await replyNonce(payload) });
+    expect(await verifyOrcidToken(token, { payload, keys, now: NOW })).toEqual({
       orcid: ORCID,
       name: "Bob White",
       issuedAt: NOW - 30_000,
@@ -56,10 +54,10 @@ describe("ORCID sign-in on a reply", () => {
 
   it("refuses a token with the wrong signer, issuer, audience, nonce, key id, or shape", async () => {
     const { keys } = await issuer;
-    const nonce = "n";
-    const check = (token: string) => verifyOrcidToken(token, { nonce, keys, payload: "", now: NOW });
+    const nonce = await replyNonce("");
+    const check = (token: string) => verifyOrcidToken(token, { payload: "", keys, now: NOW });
     const other = await testIssuer(NOW);
-    expect(await verifyOrcidToken(await signToken({ nonce }), { nonce, keys: other.keys, payload: "" })).toBeNull();
+    expect(await verifyOrcidToken(await signToken({ nonce }), { payload: "", keys: other.keys })).toBeNull();
     expect(await check(await signToken({ nonce, iss: "https://sandbox.orcid.org" }))).toBeNull();
     expect(await check(await signToken({ nonce, aud: "APP-SOMEONEELSE000" }))).toBeNull();
     expect(await check(await signToken({ nonce: "other" }))).toBeNull();
@@ -80,20 +78,20 @@ describe("ORCID sign-in on a reply", () => {
   it("checks a token without a key id against each of ORCID's keys", async () => {
     const { keys } = await issuer;
     const other = await testIssuer(NOW);
-    const token = await signToken({ nonce: "n" }, { kid: undefined });
+    const token = await signToken({ nonce: await replyNonce("") }, { kid: undefined });
     const several = [...other.keys, ...keys];
-    expect(await verifyOrcidToken(token, { nonce: "n", keys: several, payload: "" })).toMatchObject({ orcid: ORCID });
-    expect(await verifyOrcidToken(token, { nonce: "n", keys: other.keys, payload: "" })).toBeNull();
+    expect(await verifyOrcidToken(token, { payload: "", keys: several })).toMatchObject({ orcid: ORCID });
+    expect(await verifyOrcidToken(token, { payload: "", keys: other.keys })).toBeNull();
   });
 
   it("checks expiry only when given the time: the lead reads the reply after the token expired", async () => {
     const { keys } = await issuer;
-    const token = await signToken({ nonce: "n" });
+    const token = await signToken({ nonce: await replyNonce("") });
     const later = NOW + 24 * 3600 * 1000;
-    expect(await verifyOrcidToken(token, { nonce: "n", keys, payload: "", now: later })).toBeNull();
-    expect(await verifyOrcidToken(token, { nonce: "n", keys, payload: "" })).not.toBeNull();
+    expect(await verifyOrcidToken(token, { payload: "", keys, now: later })).toBeNull();
+    expect(await verifyOrcidToken(token, { payload: "", keys })).not.toBeNull();
     // Issued in the future, beyond the allowed drift.
-    expect(await verifyOrcidToken(token, { nonce: "n", keys, payload: "", now: NOW - 10 * 60_000 })).toBeNull();
+    expect(await verifyOrcidToken(token, { payload: "", keys, now: NOW - 10 * 60_000 })).toBeNull();
   });
 
   it("carries the token in the reply link, bound to that link's answer", async () => {
@@ -107,14 +105,18 @@ describe("ORCID sign-in on a reply", () => {
     expect(url.length - unsigned.length).toBeLessThan(1000);
     const shared = await decodeShareHash(url.slice(url.indexOf("#")));
     expect(shared?.signIn?.token).toBe(token);
-    expect(shared?.signIn && (await verifyReplyProof(shared.signIn, keys))).toMatchObject({ orcid: ORCID });
+    expect(
+      shared?.signIn && (await verifyOrcidToken(shared.signIn.token, { payload: shared.signIn.payload, keys })),
+    ).toMatchObject({ orcid: ORCID });
 
     // The same token on a different answer does not verify.
     const changed = replyInput();
     (changed.authors[0] as (typeof changed.authors)[0]).contributions = [{ role: "Software", score: 100 }];
     const lifted = await encodeShareHash({ ...changed, idToken: token });
     const moved = await decodeShareHash(lifted.slice(lifted.indexOf("#")));
-    expect(moved?.signIn && (await verifyReplyProof(moved.signIn, keys))).toBeNull();
+    expect(
+      moved?.signIn && (await verifyOrcidToken(moved.signIn.token, { payload: moved.signIn.payload, keys })),
+    ).toBeNull();
   });
 
   it("keeps the token off anything but a reply, and links without one read as unsigned", async () => {
