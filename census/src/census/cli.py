@@ -171,20 +171,41 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 
 def cmd_label(args: argparse.Namespace) -> None:
-    out = args.out or DATA / "labels" / f"{args.snapshot}.csv"
+    out = args.out or DATA / "labels" / f"{args.snapshot}{'-set' if args.set else ''}.csv"
     with store.connect(_db(args), read_only=True) as con:
-        print(f"{labels.export(con, out, args.per_style, args.seed)} articles to label in {out}")
+        if not args.set:
+            print(f"{labels.export(con, out, args.per_style, args.seed)} articles to label in {out}")
+            return
+        disagreements = out.with_stem(out.stem + "-disagreements")
+        n = labels.export_set(con, out, args.seed)
+        m = labels.export_disagreements(con, disagreements, args.seed)
+    print(f"{n} articles to label in {out} (strata in {labels.key_path(out)}), {m} to judge in {disagreements}")
 
 
 def cmd_score(args: argparse.Namespace) -> None:
+    with args.labels.open(encoding="utf-8-sig") as f:
+        header = f.readline()
     with store.connect(_db(args), read_only=True) as con:
         try:
-            results = labels.score(con, args.labels)
+            if "wrong" in header.strip().split(","):
+                for verdict, n in labels.verdicts(args.labels).most_common():
+                    print(f"{verdict:<10}{n:>4}")
+                return
+            tables = {by: labels.score(con, args.labels, by, args.key) for by in ("style", "publisher")}
+            second = args.second and labels.agreement(con, args.labels, args.second)
         except ValueError as error:
             raise Failure(error) from error
-    print(f"{'style':<16}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'exact':>7}")
-    for style, n, p, r, f1, exact in results:
-        print(f"{style:<16}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}")
+    # Rates are weighted by stratum; "-" is a rate with nothing to count.
+    for by, results in tables.items():
+        print(f"{by:<56}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'exact':>7}{'exact 95%':>13}")
+        for key, n, *rates, low, high in results:
+            p, r, f1, exact = ("-" if x is None else x for x in rates)
+            print(f"{key[:55]:<56}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}{f'{low}-{high}':>13}")
+        print()
+    print("The publisher rows hold a few articles each: read them for failure patterns, not accuracy.")
+    if second:
+        n, _, _, f1, exact, _, _ = second
+        print(f"second labeller against the first: {n} overlap articles, f1 {'-' if f1 is None else f1}, exact {exact}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -235,9 +256,20 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--per-style", type=int, default=50, help="articles per text style")
     cmd.add_argument("--seed", type=int, default=20261013, help="seed for the sample")
     cmd.add_argument("--out", type=Path, help="CSV path (default: census/data/labels/<snapshot>.csv)")
+    cmd.add_argument(
+        "--set",
+        action="store_true",
+        help="write the label set instead: publishers without paired articles, by publisher and style, an overlap"
+        " for a second labeller, the strata and weights in a -key.csv beside it, and paired disagreements to judge"
+        " (default: census/data/labels/<snapshot>-set.csv)",
+    )
     cmd.set_defaults(func=cmd_label)
     cmd = sub.add_parser("score", parents=[snap, db], help="score the parser against a labelled CSV")
-    cmd.add_argument("labels", type=Path, help="the CSV from `census label`, with the gold column filled")
+    cmd.add_argument(
+        "labels", type=Path, help="the CSV from `census label`, gold filled (or a disagreement file, wrong filled)"
+    )
+    cmd.add_argument("--second", type=Path, help="a second labeller's copy, scored against the first on the overlap")
+    cmd.add_argument("--key", type=Path, help="the label set's strata and weights (default: <labels>-key.csv if there)")
     cmd.set_defaults(func=cmd_score)
 
     args = parser.parse_args(argv)
