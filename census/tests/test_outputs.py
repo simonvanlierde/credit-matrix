@@ -94,6 +94,93 @@ def test_score_unknown_pmcid(db, tmp_path):
         labels.score(db, out)
 
 
+def test_allocate_by_square_root_of_size():
+    assert labels._allocate({"big": 900, "mid": 100, "small": 1}, 10) == {"big": 7, "mid": 3, "small": 0}
+    assert sum(labels._allocate({str(i): i + 1 for i in range(30)}, 13).values()) == 13
+
+
+@pytest.fixture
+def set_db(tmp_path):
+    """Publisher A has enough paired articles to be measured there; B and C have none."""
+    con = store.connect(tmp_path / "s.duckdb")
+    articles = [(f"PMC{i}", "A", "statement_text") for i in range(10)]
+    articles += [(f"PMC{i}", "B", "statement_text") for i in range(10, 50)]
+    articles += [(f"PMC{i}", "C", "contrib_text") for i in range(50, 60)]
+    articles += [(f"PMC{i}", "A", "none") for i in range(60, 70)]
+    articles += [(f"PMC{i}", labels.DISAGREEMENT_PUBLISHER, "jats4r") for i in range(70, 74)]
+    for pmcid, publisher, style in articles:
+        con.execute(
+            "INSERT INTO articles (pmcid, publisher, style, authors, n_authors, statement)"
+            " VALUES (?, ?, ?, ['Ann Smith', 'Bo Jones'], 2, 'AS: software')",
+            [pmcid, publisher, style],
+        )
+    n = labels.PAIRED_ENOUGH
+    con.execute("INSERT INTO articles (pmcid, publisher, style) SELECT 'X' || i, 'A', 'jats4r' FROM range(?) t(i)", [n])
+    con.execute("INSERT INTO paired SELECT 'X' || i, 1, 'software' FROM range(?) t(i)", [n])
+    # PMC70 and PMC71 agree with their tags; PMC72 has an extra parsed role, PMC73 a missing one.
+    con.execute("INSERT INTO assignments SELECT 'PMC' || i, 1, 'software' FROM range(70, 74) t(i)")
+    con.execute("INSERT INTO paired SELECT 'PMC' || i, 1, 'software' FROM range(70, 73) t(i)")
+    con.execute("INSERT INTO paired VALUES ('PMC72', 2, 'resources')")
+    yield con
+    con.close()
+
+
+def _rewrite(path, rows):
+    with path.open("w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def test_label_set(set_db, tmp_path):
+    out, dis = tmp_path / "set.csv", tmp_path / "dis.csv"
+    sizes = {"statement_text": 6, "contrib_text": 3, "none": 4}
+    assert labels.export_set(set_db, out, dis, seed=3, sizes=sizes, overlap=5) == (13, 2)
+    labels.export_set(set_db, tmp_path / "again.csv", tmp_path / "d2.csv", seed=3, sizes=sizes, overlap=5)
+    assert out.read_bytes() == (tmp_path / "again.csv").read_bytes()  # the seed fixes the draw
+    with out.open(encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f))
+    assert list(rows[0]) == ["pmcid", "publisher", "style", "overlap", "authors", "text", "gold"]
+    # A is measured by its pairs, but its `none` articles never are.
+    assert {(r["style"], r["publisher"]) for r in rows} == {
+        ("statement_text", "B"),
+        ("contrib_text", "C"),
+        ("none", "A"),
+    }
+    assert sum(r["overlap"] == "1" for r in rows) == 5
+    assert not any(r["gold"] for r in rows)
+    with dis.open(encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f))
+    assert [(r["pmcid"], r["tags"], r["only_tags"], r["only_parser"]) for r in rows] == [
+        ("PMC72", "1: software", "", "2: resources"),
+        ("PMC73", "1: software", "1: software", ""),
+    ]
+    rows[0]["wrong"], rows[1]["wrong"] = "parser", "Parser"
+    _rewrite(dis, rows)
+    assert labels.verdicts(dis) == {"parser": 2}
+    rows[1]["wrong"] = "tags"
+    _rewrite(dis, rows)
+    with pytest.raises(ValueError, match="tags"):
+        labels.verdicts(dis)
+
+
+def test_score_per_publisher_and_agreement(db, tmp_path):
+    first, second = tmp_path / "a.csv", tmp_path / "b.csv"
+    header = "pmcid,publisher,style,overlap,authors,text,gold\n"
+    first.write_text(
+        header + "PMC1,P,contrib_text,1,,x,1: software; 2: validation\nPMC2,Q,statement_text,,,x,1: software\n",
+        encoding="utf-8-sig",
+    )
+    second.write_text(
+        header + "PMC1,P,contrib_text,1,,x,1: software\nPMC2,Q,statement_text,,,x,\n", encoding="utf-8-sig"
+    )
+    assert labels.score(db, first, by="publisher") == [
+        ("P", 1, 1.0, 1.0, 1.0, 1.0),
+        ("Q", 1, 0.333, 1.0, 0.5, 0.0),
+    ]
+    assert labels.agreement(db, first, second) == (1, 1.0, 0.5, 0.667, 0.0)
+
+
 def test_export(db, tmp_path, monkeypatch):
     out = tmp_path / "export"
     with pytest.raises(ValueError, match="fields missing"):

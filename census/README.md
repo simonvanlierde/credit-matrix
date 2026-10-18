@@ -154,7 +154,38 @@ uv run census score data/labels/sample-2026-10.csv
 
 `label` samples articles whose roles were read from free text and leaves the parser's output out of
 the file, so a label is not anchored to its guess. `score` prints precision, recall and F1 over
-(author, role) pairs, and the share of articles exactly right, per style.
+(author, role) pairs, and the share of articles exactly right, per style and per publisher.
+
+## Validation
+
+The paired scores cover only publishers that tag roles and also print a statement (MDPI, Frontiers,
+OUP, SAGE and a few smaller ones). `census label --set` (seed 20261013) writes the hand-label set for the rest:
+
+- `data/labels/oa-2026-10-set.csv`, 160 articles, blind like the `label` sample:
+  - 100 `statement_text` and 30 `contrib_text` articles from publishers with fewer than 1,000 paired
+    articles. Each style is split over publishers by the square root of their article count, so
+    Elsevier, Springer Nature, Wiley and the rest get the most rows and BMJ and smaller publishers
+    still some. Publishers under 0.5% of a style share an "(other)" stratum, named in `publisher`.
+  - 30 `none` articles: a contributions text was found but no CRediT roles were read from it. A gold
+    label other than `none` is a missed statement. Only 255,341 of the 6.1 million `none` articles
+    keep such a text; the rest have none in the database, so their misses are not measured here.
+  - 25 rows marked `overlap` for a second labeller. They fill a copy of the file on those rows, and
+    `census score <first.csv> --second <copy.csv>` prints their agreement with the first labeller.
+- `data/labels/oa-2026-10-set-disagreements.csv`: 20 MDPI articles where the parser and the tags
+  disagree, with both shown. Fill `wrong` with `tag`, `parser`, `both` or `neither`, and `notes`;
+  `census score` on that file counts the answers. If the tags are often the wrong ones, the paired
+  F1 understates accuracy and needs these labels next to it.
+
+Accuracy, to fill in after labelling (`census score data/labels/oa-2026-10-set.csv`):
+
+| Style | Articles | Precision | Recall | F1 | Exact |
+| --- | --- | --- | --- | --- | --- |
+| `statement_text` | 100 | | | | |
+| `contrib_text` | 30 | | | | |
+| `none` | 30 | | | | |
+
+Agreement between labellers on the 25 overlap rows: F1 \_\_. MDPI disagreements: tag wrong \_\_,
+parser wrong \_\_, both \_\_, neither \_\_.
 
 ## Limits
 
