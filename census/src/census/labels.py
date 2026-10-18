@@ -9,7 +9,8 @@ with author numbers from the `authors` column ("all" for every author), CRediT r
 wording the parser knows, and `none` for a statement that assigns no CRediT roles.
 
 `export_set` writes the label set for the publishers `paired` cannot measure, stratified by
-publisher, plus a file of paired articles where the tags and the parser disagree, to be judged by hand.
+publisher, and `export_disagreements` a file of paired articles where the tags and the parser
+disagree, to be judged by hand.
 """
 
 import csv
@@ -29,12 +30,20 @@ SET_SIZES = {"statement_text": 100, "contrib_text": 30, "none": 30}
 """Articles per style in the label set. `none` rows have a contributions text with no CRediT roles
 found, so their labels count the statements the parser missed."""
 PAIRED_ENOUGH = 1000
-"""A publisher with this many articles in `paired` is measured there and left out of the label set."""
+"""A publisher with this many articles in `paired_scores` is measured there and left out of the label set."""
 MIN_SHARE = 0.005
 """A publisher with less than this share of a style's pool is sampled within "(other)"."""
 DISAGREEMENT_PUBLISHER = "Multidisciplinary Digital Publishing Institute (MDPI)"
 VERDICTS = ("tag", "parser", "both", "neither")
 """What a `wrong` cell in the disagreement file may say."""
+
+# Counts articles the way the paired_scores view does: tagged, with a statement, and with a tag or a parsed role.
+_COVERED = """
+SELECT publisher FROM articles
+WHERE style IN ('jats4r', 'plos_uri') AND statement IS NOT NULL
+  AND (pmcid IN (SELECT pmcid FROM assignments) OR pmcid IN (SELECT pmcid FROM paired))
+GROUP BY 1 HAVING count(*) >= ?
+"""
 
 _DISAGREEING = """
 WITH t AS (
@@ -64,30 +73,19 @@ def export(con: duckdb.DuckDBPyConnection, path: Path, per_style: int, seed: int
 
 
 def export_set(
-    con: duckdb.DuckDBPyConnection,
-    path: Path,
-    disagreements_path: Path,
-    seed: int,
-    sizes: dict[str, int] = SET_SIZES,
-    overlap: int = 25,
-    disagreements: int = 20,
-) -> tuple[int, int]:
-    """The label set to `path` and the disagreements to `disagreements_path`; returns both row counts.
+    con: duckdb.DuckDBPyConnection, path: Path, seed: int, sizes: dict[str, int] = SET_SIZES, overlap: int = 25
+) -> int:
+    """The label set to `path`; returns the row count.
 
     Each style's articles come from publishers with fewer than PAIRED_ENOUGH paired articles (all
     publishers for `none`, which is never paired), split over publishers by the square root of their
-    size so the big ones get the most rows and the small ones still some. `overlap` rows, drawn by the
-    same seed, are marked for a second labeller.
+    size so the big ones get the most rows and the small ones still some. `weight` is the stratum's
+    article count over the rows drawn from it, so `score` counts each row for the articles it stands
+    for. `overlap` rows, drawn by the same seed, are marked for a second labeller. The style is left
+    out and the rows shuffled, so the file does not show the parser's verdict.
     """
     rng = random.Random(seed)
-    covered = {
-        p
-        for (p,) in con.execute(
-            "SELECT a.publisher FROM (SELECT DISTINCT pmcid FROM paired) JOIN articles a USING (pmcid)"
-            " GROUP BY 1 HAVING count(*) >= ?",
-            [PAIRED_ENOUGH],
-        ).fetchall()
-    }
+    covered = {p for (p,) in con.execute(_COVERED, [PAIRED_ENOUGH]).fetchall()}
     picked = []
     for style, n in sizes.items():
         pool = con.execute(
@@ -96,19 +94,24 @@ def export_set(
         pool = [(pmcid, p) for pmcid, p in pool if style == "none" or p not in covered]
         strata = _strata(pool)
         for stratum, quota in sorted(_allocate({k: len(v) for k, v in strata.items()}, n).items()):
-            picked += [
-                (pmcid, stratum, style) for pmcid in rng.sample(strata[stratum], min(quota, len(strata[stratum])))
-            ]
+            weight = f"{len(strata[stratum]) / quota:.6g}" if quota else ""
+            picked += [(pmcid, stratum, weight) for pmcid in rng.sample(strata[stratum], quota)]
     second = set(rng.sample([pmcid for pmcid, _, _ in picked], min(overlap, len(picked))))
+    rng.shuffle(picked)
     texts = _texts(con, [pmcid for pmcid, _, _ in picked])
     rows = [
-        (pmcid, stratum, style, "1" if pmcid in second else "", _numbered(texts[pmcid][0]), _cell(texts[pmcid][1]), "")
-        for pmcid, stratum, style in picked
+        (pmcid, stratum, "1" if pmcid in second else "", _numbered(texts[pmcid][0]), _cell(texts[pmcid][1]), "", w)
+        for pmcid, stratum, w in picked
     ]
-    _write(path, ["pmcid", "publisher", "style", "overlap", "authors", "text", "gold"], rows)
+    _write(path, ["pmcid", "publisher", "overlap", "authors", "text", "gold", "weight"], rows)
+    return len(rows)
 
+
+def export_disagreements(con: duckdb.DuckDBPyConnection, path: Path, seed: int, n: int = 20) -> int:
+    """`n` paired DISAGREEMENT_PUBLISHER articles where the tags and the parser differ, both shown, to
+    `path`; returns the row count. It has its own random draw, so changing the label set leaves it alone."""
     ids = [p for (p,) in con.execute(_DISAGREEING, [DISAGREEMENT_PUBLISHER]).fetchall()]
-    ids = sorted(rng.sample(ids, min(disagreements, len(ids))))
+    ids = sorted(random.Random(seed).sample(ids, min(n, len(ids))))
     texts = _texts(con, ids)
     rows = []
     for pmcid in ids:
@@ -118,9 +121,8 @@ def export_set(
         rows.append(
             (pmcid, _numbered(authors), _cell(text), _pairs(tags), _pairs(tags - parsed), _pairs(parsed - tags), "", "")
         )
-    header = ["pmcid", "authors", "text", "tags", "only_tags", "only_parser", "wrong", "notes"]
-    _write(disagreements_path, header, rows)
-    return len(picked), len(rows)
+    _write(path, ["pmcid", "authors", "text", "tags", "only_tags", "only_parser", "wrong", "notes"], rows)
+    return len(rows)
 
 
 def _strata(pool: list[tuple[str, str | None]]) -> dict[str, list[str]]:
@@ -135,13 +137,21 @@ def _strata(pool: list[tuple[str, str | None]]) -> dict[str, list[str]]:
 
 
 def _allocate(sizes: dict[str, int], n: int) -> dict[str, int]:
-    """`n` split over strata in proportion to the square root of their size, by largest remainder."""
-    total = sum(math.sqrt(s) for s in sizes.values())
-    exact = {k: n * math.sqrt(s) / total for k, s in sizes.items()} if total else {}
-    quota = {k: int(x) for k, x in exact.items()}
-    for k in sorted(exact, key=lambda k: (quota[k] - exact[k], k))[: n - sum(quota.values())]:
-        quota[k] += 1
-    return quota
+    """`n` split over strata in proportion to the square root of their size, by largest remainder. A
+    stratum smaller than its share gives all it has, and the rest is split over the others."""
+    full: dict[str, int] = {}
+    while True:
+        rest = {k: s for k, s in sizes.items() if k not in full}
+        left = n - sum(full.values())
+        total = sum(math.sqrt(s) for s in rest.values())
+        exact = {k: left * math.sqrt(s) / total for k, s in rest.items()} if total else {}
+        quota = {k: int(x) for k, x in exact.items()}
+        for k in sorted(exact, key=lambda k: (quota[k] - exact[k], k))[: left - sum(quota.values())]:
+            quota[k] += 1
+        short = {k: sizes[k] for k in quota if quota[k] > sizes[k]}
+        if not short:
+            return full | quota
+        full |= short
 
 
 def _texts(con: duckdb.DuckDBPyConnection, ids: list[str]) -> dict[str, tuple[list[str], str]]:
@@ -200,12 +210,12 @@ def _labelled(path: Path) -> list[dict[str, str]]:
         return [r for r in csv.DictReader(f) if r["gold"].strip()]
 
 
-def _article(con: duckdb.DuckDBPyConnection, pmcid: str) -> tuple[int, str]:
-    """Author count and publisher of an article in the database."""
-    found = con.execute("SELECT n_authors, publisher FROM articles WHERE pmcid = ?", [pmcid]).fetchone()
+def _article(con: duckdb.DuckDBPyConnection, pmcid: str) -> tuple[int, str, str]:
+    """Author count, publisher and style of an article in the database."""
+    found = con.execute("SELECT n_authors, publisher, style FROM articles WHERE pmcid = ?", [pmcid]).fetchone()
     if found is None:
         raise ValueError(f"{pmcid}: not in this database")
-    return found[0] or 0, found[1] or "(no publisher)"
+    return found[0] or 0, found[1] or "(no publisher)", found[2]
 
 
 def _gold(row: dict[str, str], n_authors: int) -> set[tuple[int, str]]:
@@ -215,45 +225,60 @@ def _gold(row: dict[str, str], n_authors: int) -> set[tuple[int, str]]:
         raise ValueError(f"{row['pmcid']}: {error}") from error
 
 
-def _add(c: list[int], predicted: set, gold: set) -> None:
-    c[0] += len(predicted & gold)
-    c[1] += len(predicted - gold)
-    c[2] += len(gold - predicted)
-    c[3] += predicted == gold
-    c[4] += 1
+def _add(c: list[float], predicted: set, gold: set, weight: float = 1.0) -> None:
+    """Adds one article to weighted tp, fp, fn, exact, weight and squared weight, and the unweighted count."""
+    for i, x in enumerate((len(predicted & gold), len(predicted - gold), len(gold - predicted), predicted == gold, 1)):
+        c[i] += weight * x
+    c[5] += weight * weight
+    c[6] += 1
 
 
-def _rates(tp: int, fp: int, fn: int, exact: int, n: int) -> tuple:
-    precision = tp / (tp + fp) if tp + fp else 1.0
-    recall = tp / (tp + fn) if tp + fn else 1.0
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    return n, round(precision, 3), round(recall, 3), round(f1, 3), round(exact / n, 3)
+def _rates(tp: float, fp: float, fn: float, exact: float, w: float, w2: float, n: float) -> tuple:
+    """Articles, precision, recall, F1, the share exactly right and its 95% interval. A rate with
+    nothing to count is None: precision when nothing was predicted, recall when nothing was to be found."""
+    precision = tp / (tp + fp) if tp + fp else None
+    recall = tp / (tp + fn) if tp + fn else None
+    f1 = 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else None
+    share = exact / w
+    low, high = _wilson(share, w * w / w2)
+    return int(n), *(None if x is None else round(x, 3) for x in (precision, recall, f1, share, low, high))
+
+
+def _wilson(p: float, n: float, z: float = 1.96) -> tuple[float, float]:
+    """Wilson score interval for a share `p` of `n` articles. With weighted rows `n` is the effective
+    sample size, the squared sum of the weights over the sum of their squares."""
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return centre - half, centre + half
 
 
 def score(con: duckdb.DuckDBPyConnection, path: Path, by: str = "style") -> list[tuple]:
-    """Precision, recall and F1 over (author, role) pairs, and the share of articles exactly right, per
-    style or per publisher (the CSV's `publisher` stratum when it has one, else the database's)."""
-    counts: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0])  # tp, fp, fn, exact, articles
+    """Precision, recall and F1 over (author, role) pairs, and the share of articles exactly right with
+    its 95% interval, per style or per style and publisher (the CSV's `publisher` stratum when it has
+    one, else the database's). The style is the database's. Each row counts by its `weight` (1 when
+    the CSV has none); the article count is unweighted."""
+    counts: dict[str, list[float]] = defaultdict(lambda: [0.0] * 7)
     for row in _labelled(path):
-        n_authors, publisher = _article(con, row["pmcid"])
+        n_authors, publisher, style = _article(con, row["pmcid"])
         predicted = set(
             con.execute("SELECT author_position, role FROM assignments WHERE pmcid = ?", [row["pmcid"]]).fetchall()
         )
-        key = row["style"] if by == "style" else row.get("publisher") or publisher
-        _add(counts[key], predicted, _gold(row, n_authors))
+        key = style if by == "style" else f"{style}: {row.get('publisher') or publisher}"
+        _add(counts[key], predicted, _gold(row, n_authors), float(row.get("weight") or 1))
     return [(key, *_rates(*c)) for key, c in sorted(counts.items())]
 
 
 def agreement(con: duckdb.DuckDBPyConnection, first: Path, second: Path) -> tuple:
-    """The second labeller scored against the first on the articles both labelled, as one `score` row."""
-    a = {r["pmcid"]: r for r in _labelled(first)}
-    c = [0, 0, 0, 0, 0]
+    """The second labeller scored against the first on the overlap rows both labelled, as one unweighted
+    `score` row."""
+    a = {r["pmcid"]: r for r in _labelled(first) if r.get("overlap") == "1"}
+    c = [0.0] * 7
     for row in _labelled(second):
         if row["pmcid"] in a:
-            n_authors, _ = _article(con, row["pmcid"])
+            n_authors, _, _ = _article(con, row["pmcid"])
             _add(c, _gold(row, n_authors), _gold(a[row["pmcid"]], n_authors))
-    if not c[4]:
-        raise ValueError(f"{first} and {second} share no labelled article")
+    if not c[6]:
+        raise ValueError(f"{first} and {second} share no labelled overlap article")
     return _rates(*c)
 
 

@@ -1,10 +1,12 @@
 import csv
 import json
+from collections import Counter
+from itertools import pairwise
 
 import pytest
 from helpers import article, contrib
 
-from census import export, fields, labels, store
+from census import cli, export, fields, labels, store
 
 XML = {
     "PMC1": article(
@@ -69,9 +71,14 @@ def test_label_export_and_score(db, tmp_path):
         writer.writeheader()
         writer.writerows(rows)
     # PMC2's parser output adds software for author 2: one false positive.
-    assert labels.score(db, out) == [
+    assert [r[:6] for r in labels.score(db, out)] == [
         ("contrib_text", 1, 1.0, 1.0, 1.0, 1.0),
         ("statement_text", 1, 0.667, 1.0, 0.8, 0.0),
+    ]
+    # An older CSV with no publisher column takes the database's.
+    assert [r[0] for r in labels.score(db, out, by="publisher")] == [
+        "contrib_text: Test Press",
+        "statement_text: Test Press",
     ]
 
 
@@ -97,26 +104,33 @@ def test_score_unknown_pmcid(db, tmp_path):
 def test_allocate_by_square_root_of_size():
     assert labels._allocate({"big": 900, "mid": 100, "small": 1}, 10) == {"big": 7, "mid": 3, "small": 0}
     assert sum(labels._allocate({str(i): i + 1 for i in range(30)}, 13).values()) == 13
+    # A stratum smaller than its share hands the rest to the others, until the pool runs out.
+    assert labels._allocate({"a": 100, "b": 1}, 30) == {"a": 29, "b": 1}
+    assert labels._allocate({"a": 3, "b": 1}, 10) == {"a": 3, "b": 1}
 
 
 @pytest.fixture
 def set_db(tmp_path):
-    """Publisher A has enough paired articles to be measured there; B and C have none."""
+    """Publisher A has enough tagged articles to be measured by paired_scores; B to E have none. D is
+    under MIN_SHARE of statement_text, so it is sampled within "(other)"."""
     con = store.connect(tmp_path / "s.duckdb")
-    articles = [(f"PMC{i}", "A", "statement_text") for i in range(10)]
-    articles += [(f"PMC{i}", "B", "statement_text") for i in range(10, 50)]
-    articles += [(f"PMC{i}", "C", "contrib_text") for i in range(50, 60)]
-    articles += [(f"PMC{i}", "A", "none") for i in range(60, 70)]
-    articles += [(f"PMC{i}", labels.DISAGREEMENT_PUBLISHER, "jats4r") for i in range(70, 74)]
-    for pmcid, publisher, style in articles:
+    articles = [("PMC", 0, 10, "A", "statement_text"), ("B", 0, 200, "B", "statement_text")]
+    articles += [("D", 0, 1, "D", "statement_text"), ("C", 0, 10, "C", "contrib_text")]
+    articles += [("E", 0, 1, "E", "contrib_text"), ("PMC", 60, 70, "A", "none")]
+    articles += [("PMC", 70, 74, labels.DISAGREEMENT_PUBLISHER, "jats4r")]
+    for prefix, start, stop, publisher, style in articles:
         con.execute(
             "INSERT INTO articles (pmcid, publisher, style, authors, n_authors, statement)"
-            " VALUES (?, ?, ?, ['Ann Smith', 'Bo Jones'], 2, 'AS: software')",
-            [pmcid, publisher, style],
+            " SELECT ? || i, ?, ?, ['Ann Smith', 'Bo Jones'], 2, 'AS: software' FROM range(?, ?) t(i)",
+            [prefix, publisher, style, start, stop],
         )
+    # Tags but no parsed role: paired_scores still counts these articles, so A is measured.
     n = labels.PAIRED_ENOUGH
-    con.execute("INSERT INTO articles (pmcid, publisher, style) SELECT 'X' || i, 'A', 'jats4r' FROM range(?) t(i)", [n])
-    con.execute("INSERT INTO paired SELECT 'X' || i, 1, 'software' FROM range(?) t(i)", [n])
+    con.execute(
+        "INSERT INTO articles (pmcid, publisher, style, statement) SELECT 'X' || i, 'A', 'jats4r', 'x' FROM range(?) t(i)",
+        [n],
+    )
+    con.execute("INSERT INTO assignments SELECT 'X' || i, 1, 'software' FROM range(?) t(i)", [n])
     # PMC70 and PMC71 agree with their tags; PMC72 has an extra parsed role, PMC73 a missing one.
     con.execute("INSERT INTO assignments SELECT 'PMC' || i, 1, 'software' FROM range(70, 74) t(i)")
     con.execute("INSERT INTO paired SELECT 'PMC' || i, 1, 'software' FROM range(70, 73) t(i)")
@@ -134,21 +148,31 @@ def _rewrite(path, rows):
 
 def test_label_set(set_db, tmp_path):
     out, dis = tmp_path / "set.csv", tmp_path / "dis.csv"
-    sizes = {"statement_text": 6, "contrib_text": 3, "none": 4}
-    assert labels.export_set(set_db, out, dis, seed=3, sizes=sizes, overlap=5) == (13, 2)
-    labels.export_set(set_db, tmp_path / "again.csv", tmp_path / "d2.csv", seed=3, sizes=sizes, overlap=5)
+    sizes = {"statement_text": 15, "contrib_text": 8, "none": 4}
+    assert labels.export_set(set_db, out, seed=3, sizes=sizes, overlap=5) == 27
+    labels.export_set(set_db, tmp_path / "again.csv", seed=3, sizes=sizes, overlap=5)
     assert out.read_bytes() == (tmp_path / "again.csv").read_bytes()  # the seed fixes the draw
     with out.open(encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
-    assert list(rows[0]) == ["pmcid", "publisher", "style", "overlap", "authors", "text", "gold"]
-    # A is measured by its pairs, but its `none` articles never are.
-    assert {(r["style"], r["publisher"]) for r in rows} == {
-        ("statement_text", "B"),
-        ("contrib_text", "C"),
-        ("none", "A"),
+    # Blind: no style, the parser's verdict, in the header.
+    assert list(rows[0]) == ["pmcid", "publisher", "overlap", "authors", "text", "gold", "weight"]
+    style = dict(set_db.sql("SELECT pmcid, style FROM articles").fetchall())
+    styles = [style[r["pmcid"]] for r in rows]
+    assert sum(a != b for a, b in pairwise(styles)) > len(sizes)  # shuffled, not in blocks
+    # A is measured by paired_scores, but its `none` articles never are. E has 1 article for its 2-row
+    # share, so C takes the other. Weight is the stratum's articles over its rows.
+    weights = {(style[r["pmcid"]], r["publisher"]): r["weight"] for r in rows}
+    assert weights == {
+        ("statement_text", "B"): "14.2857",
+        ("statement_text", "(other)"): "1",
+        ("contrib_text", "C"): "1.42857",
+        ("contrib_text", "E"): "1",
+        ("none", "A"): "2.5",
     }
+    assert Counter(styles) == sizes
     assert sum(r["overlap"] == "1" for r in rows) == 5
     assert not any(r["gold"] for r in rows)
+    assert labels.export_disagreements(set_db, dis, seed=3) == 2
     with dis.open(encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
     assert [(r["pmcid"], r["tags"], r["only_tags"], r["only_parser"]) for r in rows] == [
@@ -164,21 +188,49 @@ def test_label_set(set_db, tmp_path):
         labels.verdicts(dis)
 
 
-def test_score_per_publisher_and_agreement(db, tmp_path):
-    first, second = tmp_path / "a.csv", tmp_path / "b.csv"
-    header = "pmcid,publisher,style,overlap,authors,text,gold\n"
-    first.write_text(
-        header + "PMC1,P,contrib_text,1,,x,1: software; 2: validation\nPMC2,Q,statement_text,,,x,1: software\n",
-        encoding="utf-8-sig",
-    )
-    second.write_text(
-        header + "PMC1,P,contrib_text,1,,x,1: software\nPMC2,Q,statement_text,,,x,\n", encoding="utf-8-sig"
-    )
-    assert labels.score(db, first, by="publisher") == [
-        ("P", 1, 1.0, 1.0, 1.0, 1.0),
-        ("Q", 1, 0.333, 1.0, 0.5, 0.0),
+def test_label_set_cli(set_db, tmp_path, capsys):
+    set_db.close()
+    out = tmp_path / "cli.csv"
+    assert cli.main(["label", "--set", "--db", str(tmp_path / "s.duckdb"), "--out", str(out)]) == 0
+    # The default sizes ask for more contrib_text (11) and none (10) rows than there are: all are taken.
+    assert "121 articles to label" in capsys.readouterr().out
+    assert len((tmp_path / "cli-disagreements.csv").read_text(encoding="utf-8-sig").splitlines()) == 3
+
+
+def _labels(path, rows):
+    path.write_text("pmcid,publisher,overlap,authors,text,gold,weight\n" + rows, encoding="utf-8-sig")
+
+
+def test_score_weights_rows_by_stratum(db, tmp_path):
+    db.execute("UPDATE articles SET style = 'contrib_text'")
+    out = tmp_path / "w.csv"
+    # PMC2's parser output has 2 right pairs and 1 wrong; its row stands for 3 articles.
+    _labels(out, "PMC1,P,,,x,1: software; 2: validation,1\nPMC2,Q,,,x,1: software; 2: visualization,3\n")
+    [(style, n, precision, recall, f1, exact, low, high)] = labels.score(db, out)
+    assert (style, n, precision, recall, f1, exact) == ("contrib_text", 2, 0.727, 1.0, 0.842, 0.25)
+    assert low < exact < high
+
+
+def test_score_per_style_and_publisher(db, tmp_path):
+    db.execute("INSERT INTO articles (pmcid, publisher, style, n_authors) VALUES ('PMC8', 'P', 'none', 1)")
+    db.execute("INSERT INTO articles (pmcid, publisher, style, n_authors) VALUES ('PMC9', 'P', 'none', 1)")
+    out = tmp_path / "p.csv"
+    # P is a stratum in two styles; nothing was predicted for PMC8 and PMC9, so precision is None.
+    _labels(out, "PMC1,P,,,x,1: software; 2: validation,\nPMC8,P,,,x,1: software,\nPMC9,P,,,x,none,\n")
+    assert [r[:6] for r in labels.score(db, out, by="publisher")] == [
+        ("contrib_text: P", 1, 1.0, 1.0, 1.0, 1.0),
+        ("none: P", 2, None, 0.0, 0.0, 0.5),
     ]
-    assert labels.agreement(db, first, second) == (1, 1.0, 0.5, 0.667, 0.0)
+    _labels(out, "PMC9,P,,,x,none,\n")
+    assert labels.score(db, out)[0][:6] == ("none", 1, None, None, None, 1.0)
+
+
+def test_agreement_on_overlap_rows_only(db, tmp_path):
+    first, second = tmp_path / "a.csv", tmp_path / "b.csv"
+    # PMC2 is labelled the same in both but is not an overlap row, so it does not count.
+    _labels(first, "PMC1,P,1,,x,1: software; 2: validation,\nPMC2,Q,,,x,1: software,\n")
+    _labels(second, "PMC1,P,1,,x,1: software,\nPMC2,Q,,,x,1: software,\n")
+    assert labels.agreement(db, first, second)[:5] == (1, 1.0, 0.5, 0.667, 0.0)
 
 
 def test_export(db, tmp_path, monkeypatch):
