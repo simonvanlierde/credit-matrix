@@ -142,6 +142,13 @@ Bare ORCIDs are personal data under the GDPR; they are published for research on
 practices. Export refuses a database with unfinished units or no fields unless told it is partial,
 and replaces the previous export only once the new one is written.
 
+`census aggregate` writes the counts the app's census page shows to `public/data/census.json` (about
+13 KB, committed): research articles and those with roles per year, roles per author, styles per
+year, fields and the 20 largest publishers in the last full year, and the share of authors holding
+each role by byline place. Groups under 1,000 articles are left out. It holds no names and no
+article rows, and records the snapshot, dataset version, code commit, parser hash and OpenAlex
+sources date. Like `export`, it refuses an incomplete database unless given `--partial`.
+
 ## Measuring accuracy
 
 `census report` includes the paired scores. For formats with no tagged twin, hand labels:
