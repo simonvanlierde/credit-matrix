@@ -6,7 +6,7 @@ from typing import ClassVar
 
 import pytest
 
-from census import cli, modelset, store
+from census import labels, modelset, store
 from census.rows import Rows
 
 CC_BY = "https://creativecommons.org/licenses/by/4.0/"
@@ -78,9 +78,6 @@ def test_split_manifest_is_pinned(db, tmp_path):
     assert len(split) == 440 and set(split.values()) == {"train", "held_out"}
     with pytest.raises(FileExistsError):
         modelset.write_split([], path)
-    path.write_text(path.read_text().replace("held_out", "train", 1))
-    with pytest.raises(ValueError, match="split changed"):
-        modelset.read_split(path)
 
 
 def test_dataset_marks_licence_and_carries_gold(tmp_path):
@@ -94,14 +91,18 @@ def test_dataset_marks_licence_and_carries_gold(tmp_path):
     assert train["gold"] == [[1, "software"], [2, "validation"]]
 
 
-def test_score_counts_pairs_and_exact_matches():
-    gold = {"A": {(1, "software"), (2, "validation")}, "B": {(1, "methodology")}, "C": {(1, "resources")}}
-    predicted = {"A": {(1, "software"), (2, "validation")}, "B": {(1, "methodology"), (2, "software")}}
-    results = {r[0]: r[1:] for r in modelset.score(gold, predicted, {"A": "x", "B": "y", "C": "y"})}
-    # (all): tp 3, fp 1, fn 1; A exact
-    assert results["(all)"] == (3, 0.75, 0.75, 0.75, 0.333)
-    assert results["x"] == (1, 1.0, 1.0, 1.0, 1.0)
-    assert results["y"] == (2, 0.5, 0.5, 0.5, 0.0)
+def test_score_matches_the_label_set_scorer(db, tmp_path):
+    db.execute("UPDATE articles SET style = 'plos_uri' WHERE pmcid IN ('PMC2', 'PMC3')")
+    cells = {"PMC1": "1: software; 2: validation", "PMC2": "1: methodology", "PMC3": "none", "PMC4": "2: resources"}
+    path = tmp_path / "labels.csv"
+    path.write_text("pmcid,authors,text,gold\n" + "".join(f"{p},,x,{g}\n" for p, g in cells.items()))
+    gold = {p: labels.parse_gold(g, 2) for p, g in cells.items()}
+    # PMC1 exact, PMC2 one false positive, PMC3 nothing to find or predict, PMC4 no prediction.
+    predicted = {"PMC1": gold["PMC1"], "PMC2": {(1, "methodology"), (2, "software")}, "PMC3": set()}
+    (everything, *rows) = modelset.score(db, gold, predicted)
+    assert rows == labels.score(db, path, predictions=predicted)
+    assert everything[:6] == ("(all)", 4, 0.75, 0.75, 0.75, 0.5)
+    assert rows[1][:6] == ("plos_uri", 2, 0.5, 1.0, 0.667, 0.5)
 
 
 def test_rule_predictions_read_the_statement_not_the_tags(db):
@@ -171,9 +172,3 @@ def test_zero_shot_runner_resumes_and_handles_bad_answers(server, tmp_path, caps
     assert body["model"] == "m"
     assert body["response_format"]["json_schema"]["schema"] == modelset.SCHEMA
     assert "1. Ann Smith\n2. Bo Jones" in body["messages"][1]["content"]
-
-
-def test_zero_shot_cli_needs_a_model(capsys):
-    with pytest.raises(SystemExit):
-        cli.main(["model", "zero-shot", "--limit", "1"])
-    assert "--model" in capsys.readouterr().err

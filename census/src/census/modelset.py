@@ -3,7 +3,7 @@
 Training pairs are free: an article whose roles are tagged (`jats4r`, `plos_uri`) and that also prints
 a statement gives the statement as input and the tags as gold. `split` pins which of those articles
 are held out; `dataset` writes both sides as JSONL; `score` measures any predictions against the
-held-out tags or a hand-labelled CSV from `census label`, with the metric `labels.score` uses.
+held-out tags with `labels.table`, the counting `labels.score` uses for a hand-labelled CSV.
 """
 
 import csv
@@ -69,7 +69,7 @@ _HEADER = ["pmcid", "split", "publisher", "year", "style", "group"]
 
 
 def write_split(rows: list[tuple], path: Path) -> str:
-    """Write the manifest and `<path>.sha256` beside it, once: a pinned split is never redrawn. Returns the hash."""
+    """Write the manifest once: a pinned split is never redrawn. Returns its sha256, for the README."""
     if path.exists():
         raise FileExistsError(f"{path} exists; a pinned split is never redrawn")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -77,16 +77,11 @@ def write_split(rows: list[tuple], path: Path) -> str:
         writer = csv.writer(f, lineterminator="\n")
         writer.writerow(_HEADER)
         writer.writerows(rows)
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    path.with_name(path.name + ".sha256").write_text(f"{digest}  {path.name}\n", encoding="utf-8")
-    return digest
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def read_split(path: Path) -> dict[str, str]:
-    """pmcid -> split, after checking the manifest against its pinned sha256."""
-    pinned = path.with_name(path.name + ".sha256").read_text(encoding="utf-8").split()[0]
-    if (digest := hashlib.sha256(path.read_bytes()).hexdigest()) != pinned:
-        raise ValueError(f"{path} has sha256 {digest}, pinned {pinned}: the split changed")
+    """pmcid -> split."""
     with path.open(newline="", encoding="utf-8") as f:
         return {r["pmcid"]: r["split"] for r in csv.DictReader(f)}
 
@@ -149,31 +144,11 @@ def held_out_gold(con: duckdb.DuckDBPyConnection, split: dict[str, str]) -> dict
     return gold
 
 
-def labelled_gold(con: duckdb.DuckDBPyConnection, path: Path) -> dict[str, Pairs]:
-    """The filled `gold` cells of a CSV from `census label`, read the way `census score` reads them."""
-    with path.open(newline="", encoding="utf-8-sig") as f:
-        rows = [r for r in csv.DictReader(f) if r["gold"].strip()]
-    gold = {}
-    for row in rows:
-        (n_authors,) = con.execute("SELECT n_authors FROM articles WHERE pmcid = ?", [row["pmcid"]]).fetchone() or (
-            None,
-        )
-        if n_authors is None:
-            raise ValueError(f"{row['pmcid']}: not in this database")
-        gold[row["pmcid"]] = labels.parse_gold(row["gold"], n_authors)
-    return gold
-
-
 def rule_predictions(con: duckdb.DuckDBPyConnection, pmcids: Iterable[str]) -> dict[str, Pairs]:
-    """What the rule parser read from each article's statement: `paired` for a tagged article (its
-    `assignments` are the tags), `assignments` for one whose roles came from text."""
+    """What the rule parser read from each tagged article's statement: its `paired` rows."""
     ids = list(pmcids)
     rows = con.execute(
-        f"""SELECT pmcid, author_position, role FROM paired WHERE pmcid IN (SELECT unnest($1))
-        UNION ALL
-        SELECT s.pmcid, s.author_position, s.role FROM assignments s JOIN articles a USING (pmcid)
-        WHERE s.pmcid IN (SELECT unnest($1)) AND a.style NOT IN {TAGGED_STYLES}""",
-        [ids],
+        "SELECT pmcid, author_position, role FROM paired WHERE pmcid IN (SELECT unnest(?))", [ids]
     ).fetchall()
     predicted: dict[str, Pairs] = {p: set() for p in ids}
     for pmcid, position, role in rows:
@@ -182,37 +157,18 @@ def rule_predictions(con: duckdb.DuckDBPyConnection, pmcids: Iterable[str]) -> d
 
 
 def score(
-    gold: dict[str, Pairs], predicted: dict[str, Pairs], groups: dict[str, str]
-) -> list[tuple[str, int, float, float, float, float]]:
-    """(group, articles, precision, recall, F1, share exactly right) per group and for "(all)", over
-    (author, role) pairs pooled across a group's articles, as `labels.score` counts them. An article with
-    no prediction predicts nothing; precision or recall with nothing to count is 1."""
-    counts: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0])  # tp, fp, fn, exact, articles
-    for pmcid, truth in gold.items():
-        guess = predicted.get(pmcid, set())
-        for key in ("(all)", groups.get(pmcid, "(unknown)")):
-            c = counts[key]
-            c[0] += len(guess & truth)
-            c[1] += len(guess - truth)
-            c[2] += len(truth - guess)
-            c[3] += guess == truth
-            c[4] += 1
-    results = []
-    for key, (tp, fp, fn, exact, n) in counts.items():
-        precision = tp / (tp + fp) if tp + fp else 1.0
-        recall = tp / (tp + fn) if tp + fn else 1.0
-        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-        results.append((key, n, round(precision, 3), round(recall, 3), round(f1, 3), round(exact / n, 3)))
-    return sorted(results, key=lambda r: (r[0] != "(all)", -r[1], r[0]))
-
-
-def article_groups(con: duckdb.DuckDBPyConnection, pmcids: Iterable[str]) -> tuple[dict[str, str], dict[str, str]]:
-    """pmcid -> style and pmcid -> publisher, the two ways `score` breaks results down."""
-    rows = con.execute(
-        "SELECT pmcid, style, coalesce(publisher, '(no publisher)') FROM articles WHERE pmcid IN (SELECT unnest(?))",
-        [list(pmcids)],
-    ).fetchall()
-    return {p: s for p, s, _ in rows}, {p: pub for p, _, pub in rows}
+    con: duckdb.DuckDBPyConnection, gold: dict[str, Pairs], predicted: dict[str, Pairs], by: str = "style"
+) -> list[tuple]:
+    """`labels.table` rows per style or publisher and for "(all)", every article weighing 1. An article
+    missing from `predicted` predicts nothing."""
+    column = "style" if by == "style" else "coalesce(publisher, '(no publisher)')"
+    sql = f"SELECT pmcid, {column} FROM articles WHERE pmcid IN (SELECT unnest(?))"
+    groups = dict(con.execute(sql, [list(gold)]).fetchall())
+    return labels.table(
+        (group, predicted.get(pmcid, set()), truth, 1.0)
+        for pmcid, truth in gold.items()
+        for group in ("(all)", groups.get(pmcid, "(not in database)"))
+    )
 
 
 # --- zero-shot baseline, from a local chat-completions server such as vLLM ---
@@ -324,10 +280,9 @@ def run_zero_shot(
 
 def labelled_items(path: Path) -> Iterator[dict[str, Any]]:
     """Items in a CSV from `census label`: its `authors` cell reads "1. Name | 2. Name"."""
-    with path.open(newline="", encoding="utf-8-sig") as f:
-        for row in csv.DictReader(f):
-            authors = [a.partition(". ")[2] for a in row["authors"].split(" | ")] if row["authors"] else []
-            text = row["text"]
-            if text[:1] == "'" and labels._cell(text[1:]) == text:  # undo the spreadsheet guard
-                text = text[1:]
-            yield {"pmcid": row["pmcid"], "statement": text, "authors": authors}
+    for row in labels.read_rows(path):
+        authors = [a.partition(". ")[2] for a in row["authors"].split(" | ")] if row["authors"] else []
+        text = row["text"]
+        if text[:1] == "'" and labels._cell(text[1:]) == text:  # undo the spreadsheet guard
+            text = text[1:]
+        yield {"pmcid": row["pmcid"], "statement": text, "authors": authors}

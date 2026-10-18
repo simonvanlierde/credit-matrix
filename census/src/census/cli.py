@@ -60,10 +60,7 @@ def cmd_snapshot(args: argparse.Namespace) -> None:
 
 
 def cmd_run(args: argparse.Namespace) -> None:
-    try:
-        manifest = snapshot.read_manifest(_manifest(args.snapshot))
-    except ValueError as error:
-        raise Failure(error) from error
+    manifest = snapshot.read_manifest(_manifest(args.snapshot))
     if args.inventory not in (None, "latest") and not INVENTORY_RE.fullmatch(args.inventory):
         raise Failure(f"--inventory {args.inventory!r} is not a date like 2026-10-12T01-00Z or 'latest'")
     db = _open_db(args, "bucket")
@@ -165,10 +162,7 @@ def cmd_report(args: argparse.Namespace) -> None:
 def cmd_export(args: argparse.Namespace) -> None:
     out = args.out or DATA / "export" / args.snapshot
     with store.connect(_db(args), read_only=True) as con:
-        try:
-            counts = export.export(con, out, args.snapshot, partial=args.partial)
-        except ValueError as error:
-            raise Failure(error) from error
+        counts = export.export(con, out, args.snapshot, partial=args.partial)
     print(f"{out}: " + ", ".join(f"{v} {k}" for k, v in counts.items()))
 
 
@@ -187,16 +181,14 @@ def cmd_label(args: argparse.Namespace) -> None:
 def cmd_score(args: argparse.Namespace) -> None:
     with args.labels.open(encoding="utf-8-sig") as f:
         header = f.readline()
+    predictions = args.predictions and modelset.read_predictions(args.predictions)
     with store.connect(_db(args), read_only=True) as con:
-        try:
-            if "wrong" in header.strip().split(","):
-                for verdict, n in labels.verdicts(args.labels).most_common():
-                    print(f"{verdict:<10}{n:>4}")
-                return
-            tables = {by: labels.score(con, args.labels, by, args.key) for by in ("style", "publisher")}
-            second = args.second and labels.agreement(con, args.labels, args.second)
-        except ValueError as error:
-            raise Failure(error) from error
+        if "wrong" in header.strip().split(","):
+            for verdict, n in labels.verdicts(args.labels).most_common():
+                print(f"{verdict:<10}{n:>4}")
+            return
+        tables = {by: labels.score(con, args.labels, by, args.key, predictions) for by in ("style", "publisher")}
+        second = args.second and labels.agreement(con, args.labels, args.second)
     # Rates are weighted by stratum; "-" is a rate with nothing to count.
     for by, results in tables.items():
         print(f"{by:<56}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'exact':>7}{'exact 95%':>13}")
@@ -218,10 +210,7 @@ def _split(args: argparse.Namespace) -> dict[str, str]:
     path = _model_dir(args) / "split.csv"
     if not path.exists():
         raise Failure(f"no split {path}; draw it with `census model split`")
-    try:
-        return modelset.read_split(path)
-    except ValueError as error:
-        raise Failure(error) from error
+    return modelset.read_split(path)
 
 
 def cmd_model_split(args: argparse.Namespace) -> None:
@@ -244,12 +233,7 @@ def cmd_model_dataset(args: argparse.Namespace) -> None:
 
 def cmd_model_score(args: argparse.Namespace) -> None:
     with store.connect(_db(args), read_only=True) as con:
-        try:
-            gold = (
-                modelset.labelled_gold(con, args.labels) if args.labels else modelset.held_out_gold(con, _split(args))
-            )
-        except ValueError as error:
-            raise Failure(error) from error
+        gold = modelset.held_out_gold(con, _split(args))
         if args.predictions:
             # A run cut short with --limit covers part of the set: score the articles it covers.
             predicted = modelset.read_predictions(args.predictions)
@@ -260,12 +244,13 @@ def cmd_model_score(args: argparse.Namespace) -> None:
                 predicted = modelset.rule_predictions(con, gold)
         else:
             predicted = modelset.rule_predictions(con, gold)
-        by_style, by_publisher = modelset.article_groups(con, gold)
-    for title, groups in (("style", by_style), ("publisher", by_publisher)):
-        results = modelset.score(gold, predicted, groups)
-        print(f"\n{title:<40}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'exact':>7}")
-        for name, n, p, r, f1, exact in results[: args.top + 1]:
-            print(f"{name[:39]:<40}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}")
+        tables = {by: modelset.score(con, gold, predicted, by) for by in ("style", "publisher")}
+    # "-" is a rate with nothing to count.
+    for by, results in tables.items():
+        print(f"\n{by:<40}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'exact':>7}{'exact 95%':>13}")
+        for name, n, *rates, low, high in results:
+            p, r, f1, exact = ("-" if x is None else x for x in rates)
+            print(f"{name[:39]:<40}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}{f'{low}-{high}':>13}")
 
 
 def cmd_model_zero_shot(args: argparse.Namespace) -> None:
@@ -277,12 +262,13 @@ def cmd_model_zero_shot(args: argparse.Namespace) -> None:
             raise Failure(f"no {held_out}; write it with `census model dataset`")
         items, name = modelset.read_jsonl(held_out), "held_out"
     # One file per model and set, so a resumed run never mixes two models' answers.
-    out = args.out or _model_dir(args) / "predictions" / f"zero-shot-{args.model.replace('/', '_')}-{name}.jsonl"
+    out = _model_dir(args) / "predictions" / f"zero-shot-{args.model.replace('/', '_')}-{name}.jsonl"
     start = time.monotonic()
     answered, failed = modelset.run_zero_shot(args.base_url, args.model, items, out, args.limit, args.workers)
     seconds = time.monotonic() - start
     print(f"{answered} answered, {failed} failed in {seconds:.0f} s ({answered / max(seconds, 1e-9):.2f} articles/s)")
-    print(f"predictions in {out}; score with `census model score {out}`")
+    how = f"census score {args.labels} --predictions {out}" if args.labels else f"census model score {out}"
+    print(f"predictions in {out}; score with `{how}`")
     if failed:
         raise Unfinished(f"{failed} requests failed; rerun to retry them")
 
@@ -349,6 +335,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     cmd.add_argument("--second", type=Path, help="a second labeller's copy, scored against the first on the overlap")
     cmd.add_argument("--key", type=Path, help="the label set's strata and weights (default: <labels>-key.csv if there)")
+    cmd.add_argument("--predictions", type=Path, help="score the JSONL `census model zero-shot` wrote, not the parser")
     cmd.set_defaults(func=cmd_score)
     model = sub.add_parser("model", help="train/held-out split, dataset and baselines for a statement-parsing model")
     model_sub = model.add_subparsers(dest="model_command", required=True)
@@ -358,9 +345,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.set_defaults(func=cmd_model_dataset)
     cmd = model_sub.add_parser("score", parents=[snap, db], help="score predictions (default: the rule parser)")
     cmd.add_argument("predictions", type=Path, nargs="?", help='JSONL of {"pmcid", "pairs": [[position, slug]]}')
-    cmd.add_argument("--labels", type=Path, help="score against a labelled CSV instead of the held-out tags")
     cmd.add_argument("--rules", action="store_true", help="score the rule parser on the articles PREDICTIONS covers")
-    cmd.add_argument("--top", type=int, default=20, help="groups to print per table")
     cmd.set_defaults(func=cmd_model_score)
     cmd = model_sub.add_parser("zero-shot", parents=[snap, db], help="predict with a model on a local vLLM server")
     cmd.add_argument("--model", required=True, help="model name the server serves, e.g. Qwen/Qwen3.5-9B")
@@ -368,13 +353,12 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--workers", type=int, default=32, help="requests in flight, for the server to batch")
     cmd.add_argument("--limit", type=int, help="at most this many new articles")
     cmd.add_argument("--labels", type=Path, help="run on a labelled CSV instead of the held-out set")
-    cmd.add_argument("--out", type=Path, help="predictions JSONL (default: data/model/<snapshot>/predictions/)")
     cmd.set_defaults(func=cmd_model_zero_shot)
 
     args = parser.parse_args(argv)
     try:
         args.func(args)
-    except (Failure, store.PinMismatch) as error:
+    except (Failure, store.PinMismatch, ValueError) as error:  # a ValueError is bad input: one line, exit 1
         print(f"census {args.command}: {error}", file=sys.stderr)
         return getattr(error, "code", 1)
     return 0
