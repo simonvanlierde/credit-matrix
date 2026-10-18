@@ -17,6 +17,7 @@ import csv
 import math
 import random
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 
 import duckdb
@@ -213,9 +214,14 @@ def parse_gold(gold: str, n_authors: int) -> set[tuple[int, str]]:
     return pairs
 
 
-def _labelled(path: Path) -> list[dict[str, str]]:
+def read_rows(path: Path) -> list[dict[str, str]]:
+    """The rows of a CSV `export` or `export_set` wrote."""
     with path.open(newline="", encoding="utf-8-sig") as f:
-        return [r for r in csv.DictReader(f) if r["gold"].strip()]
+        return list(csv.DictReader(f))
+
+
+def _labelled(path: Path) -> list[dict[str, str]]:
+    return [r for r in read_rows(path) if r["gold"].strip()]
 
 
 def _article(con: duckdb.DuckDBPyConnection, pmcid: str) -> tuple[int, str, str]:
@@ -260,28 +266,45 @@ def _wilson(p: float, n: float, z: float = 1.96) -> tuple[float, float]:
     return centre - half, centre + half
 
 
-def score(con: duckdb.DuckDBPyConnection, path: Path, by: str = "style", key: Path | None = None) -> list[tuple]:
+def table(articles: Iterable[tuple[str, set, set, float]]) -> list[tuple]:
+    """`_rates` per group, sorted by group, from (group, predicted, gold, weight) for each article."""
+    counts: dict[str, list[float]] = defaultdict(lambda: [0.0] * 7)
+    for group, predicted, gold, weight in articles:
+        _add(counts[group], predicted, gold, weight)
+    return [(group, *_rates(*c)) for group, c in sorted(counts.items())]
+
+
+def score(
+    con: duckdb.DuckDBPyConnection,
+    path: Path,
+    by: str = "style",
+    key: Path | None = None,
+    predictions: dict[str, set[tuple[int, str]]] | None = None,
+) -> list[tuple]:
     """Precision, recall and F1 over (author, role) pairs, and the share of articles exactly right with
     its 95% interval, per style or per style and publisher. The style is the database's. The stratum
     and weight come from `key` (by default `key_path(path)` when it exists); without a key file each
-    row weighs 1 under the database's publisher. The article count is unweighted."""
+    row weighs 1 under the database's publisher. The article count is unweighted. `predictions` are
+    scored instead of the parser's `assignments`; an article missing from them predicts nothing."""
     key = key or key_path(path)
     strata = {}
     if key.exists():
         with key.open(newline="", encoding="utf-8-sig") as f:
             strata = {r["pmcid"]: (r["publisher"], float(r["weight"])) for r in csv.DictReader(f)}
-    counts: dict[str, list[float]] = defaultdict(lambda: [0.0] * 7)
+    articles = []
     for row in _labelled(path):
         n_authors, publisher, style = _article(con, row["pmcid"])
         if strata and row["pmcid"] not in strata:
             raise ValueError(f"{row['pmcid']}: not in {key}")
         publisher, weight = strata.get(row["pmcid"], (publisher, 1.0))
-        predicted = set(
-            con.execute("SELECT author_position, role FROM assignments WHERE pmcid = ?", [row["pmcid"]]).fetchall()
-        )
+        if predictions is None:
+            sql = "SELECT author_position, role FROM assignments WHERE pmcid = ?"
+            predicted = set(con.execute(sql, [row["pmcid"]]).fetchall())
+        else:
+            predicted = predictions.get(row["pmcid"], set())
         group = style if by == "style" else f"{style}: {publisher}"
-        _add(counts[group], predicted, _gold(row, n_authors), weight)
-    return [(group, *_rates(*c)) for group, c in sorted(counts.items())]
+        articles.append((group, predicted, _gold(row, n_authors), weight))
+    return table(articles)
 
 
 def agreement(con: duckdb.DuckDBPyConnection, first: Path, second: Path) -> tuple:
@@ -300,8 +323,7 @@ def agreement(con: duckdb.DuckDBPyConnection, first: Path, second: Path) -> tupl
 
 def verdicts(path: Path) -> Counter[str]:
     """How often the disagreement file says the tag, the parser, both or neither was wrong."""
-    with path.open(newline="", encoding="utf-8-sig") as f:
-        counts = Counter(r["wrong"].strip().lower() for r in csv.DictReader(f) if r["wrong"].strip())
+    counts = Counter(r["wrong"].strip().lower() for r in read_rows(path) if r["wrong"].strip())
     if bad := sorted(set(counts) - set(VERDICTS)):
         raise ValueError(f"wrong is {', '.join(bad)}; use one of {', '.join(VERDICTS)}")
     return counts

@@ -237,6 +237,25 @@ def test_score_weights_rows_by_stratum(db, tmp_path):
         labels.score(db, out)
 
 
+def test_score_with_predictions_equal_to_the_parser(db, tmp_path, capsys):
+    out = tmp_path / "w.csv"
+    _labels(
+        out, "PMC1,,,x,1: software; 2: validation\nPMC2,,,x,1: software; 2: visualization\n", "PMC1,P,1\nPMC2,Q,3\n"
+    )
+    preds = tmp_path / "preds.jsonl"
+    with preds.open("w") as f:
+        for pmcid in ("PMC1", "PMC2"):
+            pairs = db.execute("SELECT author_position, role FROM assignments WHERE pmcid = ?", [pmcid]).fetchall()
+            f.write(json.dumps({"pmcid": pmcid, "pairs": pairs}) + "\n")
+    db.close()
+    base = ["score", str(out), "--db", str(tmp_path / "o.duckdb")]
+    assert cli.main(base) == 0
+    parser = capsys.readouterr().out
+    assert cli.main([*base, "--predictions", str(preds)]) == 0
+    assert capsys.readouterr().out == parser
+    assert "statement_text: Q" in parser  # the key file's strata are used
+
+
 def test_score_per_style_and_publisher(db, tmp_path):
     db.execute("INSERT INTO articles (pmcid, publisher, style, n_authors) VALUES ('PMC8', 'P', 'none', 1)")
     db.execute("INSERT INTO articles (pmcid, publisher, style, n_authors) VALUES ('PMC9', 'P', 'none', 1)")
