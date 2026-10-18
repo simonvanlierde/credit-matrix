@@ -291,7 +291,7 @@
   "welcomeDraftsBody": "Mais do que um artigo? Mude de rascunho no cabeçalho; cada um é guardado separadamente neste navegador.",
   "welcomeAskTitle": "Peça diretamente aos coautores",
   "welcomeAskBody": "Copie um link no menu da linha de uma pessoa e envie-lho. Quando o link voltar, abra-o: a resposta fica guardada junto à linha dessa pessoa e as diferenças resolvem-se no separador Revisão.",
-  "importDescription": "Comece por um DOI, cole nomes ou uma ligação que lhe devolveram, ou carregue um ficheiro CSV, JSON ou JATS4R XML. JSON e XML repõem também as contribuições, com os níveis quando o ficheiro os inclui. Uma folha de cálculo do tenzing (CSV ou TSV) também serve.",
+  "importDescription": "Comece por um DOI, cole nomes ou uma ligação que lhe devolveram, ou carregue um ficheiro CSV, JSON ou JATS4R XML. JSON e XML repõem também as contribuições, com os níveis quando o ficheiro os inclui. Uma folha de cálculo do tenzing (CSV ou TSV) também serve. Cole uma declaração de contribuição dos autores para preencher as funções dos contribuidores que já estão aqui.",
   "contributorActions": "Ações para {name}",
   "colorBlue": "Azul",
   "colorOrange": "Laranja",
@@ -371,5 +371,18 @@
   "columnOpenDifferences": "{name}: {count, plural, one {# diferença em aberto} other {# diferenças em aberto}}",
   "columnSettled": "Resolvido",
   "legendDiffers": "Um coautor respondeu de forma diferente",
-  "reviewAskMessage": "Olá, {name},\n\nEstou a concluir a declaração de contribuições CRediT para {work}. As nossas respostas diferem em {role}. Pode abrir esta ligação, verificar a sua linha e devolver-me a ligação?\n\n{link}\n\nA ligação contém o título, o seu nome e o seu iD. Nada é guardado num servidor."
+  "reviewAskMessage": "Olá, {name},\n\nEstou a concluir a declaração de contribuições CRediT para {work}. As nossas respostas diferem em {role}. Pode abrir esta ligação, verificar a sua linha e devolver-me a ligação?\n\n{link}\n\nA ligação contém o título, o seu nome e o seu iD. Nada é guardado num servidor.",
+  "formatStatement": "Declaração CRediT",
+  "statementReview": "Rever funções",
+  "statementReviewTitle": "Funções encontradas na declaração",
+  "statementReviewSummary": "{added, plural, one {# função} other {# funções}} a adicionar para {people, plural, one {# contribuidor} other {# contribuidores}}. As funções que já estão na grelha não mudam.",
+  "statementNothingNew": "Todas as funções encontradas já estão na grelha.",
+  "statementNoRoles": "Nenhuma função encontrada",
+  "statementUnresolved": "Sem correspondência: {tokens}",
+  "statementUnresolvedBody": "Estes nomes ou iniciais não correspondem a nenhum contribuidor deste rascunho, ou a mais do que um, por isso as suas funções ficam de fora. Atribua-as na grelha depois de aplicar.",
+  "statementBack": "Voltar",
+  "statementApply": "Aplicar funções",
+  "statementApplied": "{count, plural, one {# função adicionada} other {# funções adicionadas}} a partir da declaração.",
+  "errStatementNoContributors": "Adicione primeiro os contribuidores e depois cole a declaração: é comparada com os nomes que já estão neste rascunho.",
+  "errStatementNoRoles": "Não foi possível associar nenhuma função CRediT aos contribuidores deste rascunho. Verifique se a declaração os nomeia como o rascunho, por nome ou iniciais."
 }

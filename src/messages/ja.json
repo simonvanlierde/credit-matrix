@@ -291,7 +291,7 @@
   "welcomeDraftsBody": "複数の論文を執筆中ですか？ヘッダーから下書きを切り替えられます。各下書きはこのブラウザに個別に保存されます。",
   "welcomeAskTitle": "共著者に直接依頼",
   "welcomeAskBody": "貢献者の行メニューからリンクをコピーして本人に送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。",
-  "importDescription": "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。",
+  "importDescription": "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。著者貢献声明を貼り付けると、ここにいる貢献者の役割を埋められます。",
   "contributorActions": "{name} に対する操作",
   "colorBlue": "青",
   "colorOrange": "オレンジ",
@@ -371,5 +371,18 @@
   "columnOpenDifferences": "{name}：{count, plural, other {未確定の相違 # 件}}",
   "columnSettled": "確定",
   "legendDiffers": "共著者の回答が異なる",
-  "reviewAskMessage": "{name} 様\n\n{work}の CRediT 貢献声明を仕上げています。{role}について私たちの回答が異なります。このリンクを開いてご自身の行を確認し、リンクを返送していただけますか。\n\n{link}\n\nリンクにはタイトル、お名前、iD が含まれます。サーバーには何も保存されません。"
+  "reviewAskMessage": "{name} 様\n\n{work}の CRediT 貢献声明を仕上げています。{role}について私たちの回答が異なります。このリンクを開いてご自身の行を確認し、リンクを返送していただけますか。\n\n{link}\n\nリンクにはタイトル、お名前、iD が含まれます。サーバーには何も保存されません。",
+  "formatStatement": "CRediT 声明",
+  "statementReview": "役割を確認",
+  "statementReviewTitle": "声明から見つかった役割",
+  "statementReviewSummary": "{people} 人の貢献者に {added} 件の役割を追加します。表にすでにある役割はそのままです。",
+  "statementNothingNew": "見つかった役割はすべて表にあります。",
+  "statementNoRoles": "役割は見つかりませんでした",
+  "statementUnresolved": "一致なし: {tokens}",
+  "statementUnresolvedBody": "これらの名前やイニシャルは、この下書きの貢献者のだれにも一致しないか、複数に一致するため、その役割は含めていません。適用した後に表で設定してください。",
+  "statementBack": "戻る",
+  "statementApply": "役割を適用",
+  "statementApplied": "声明から {count} 件の役割を追加しました。",
+  "errStatementNoContributors": "先に貢献者を追加してから声明を貼り付けてください。声明はこの下書きにある名前と照合されます。",
+  "errStatementNoRoles": "この下書きの貢献者に CRediT の役割を一つも対応づけられませんでした。声明が下書きと同じ名前かイニシャルで記載しているか確認してください。"
 }

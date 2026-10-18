@@ -1,0 +1,335 @@
+// biome-ignore lint/correctness/noNodejsModules: tests run in Node; the corpus is a file on disk
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { CREDIT_ROLES } from "../credit-roles";
+import { namesCredit, parseStatement, resolveInitials, type StatementAuthor, statementAuthor } from "../statement";
+
+const SLUG = new Map(CREDIT_ROLES.map((role) => [role.name, role.url.split("/").at(-2) ?? ""]));
+const author = (given: string, surname: string): StatementAuthor => ({ given, surname });
+
+/** The parse as the census tests write it: sorted [index, slug] pairs and the unresolved tokens. */
+function run(text: string, authors: StatementAuthor[]) {
+  const parsed = parseStatement(text, authors);
+  const pairs = parsed.assignments.map(({ author: i, role }): [number, string] => [i, SLUG.get(role) ?? ""]);
+  pairs.sort((a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : 1));
+  return { pairs, unresolved: parsed.unresolved };
+}
+
+const pairsOf = (text: string, authors: StatementAuthor[]) => run(text, authors).pairs;
+
+interface CorpusCase {
+  pmcid: string;
+  authors: [string, string][];
+  statement: string;
+  expected: [number, string][];
+  expected_unresolved: string[];
+}
+
+// The census parser's own regression corpus: real CC BY statements and what the Python parser
+// returned for each. The port must return exactly the same.
+const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
+  .split("\n")
+  .filter(Boolean)
+  .map((line) => JSON.parse(line));
+
+describe("parity with the census parser", () => {
+  it("covers the whole corpus", () => {
+    expect(CORPUS).toHaveLength(60);
+  });
+
+  it.each(CORPUS.map((c) => [c.pmcid, c] as const))("%s", (_, c) => {
+    const got = run(
+      c.statement,
+      c.authors.map(([given, surname]) => author(given, surname)),
+    );
+    expect(got).toEqual({ pairs: c.expected, unresolved: c.expected_unresolved });
+  });
+});
+
+const AUTHORS = [
+  author("Anna", "Peters"),
+  author("Nils", "Zandvoort"),
+  author("Li-Jun", "Zhao"),
+  author("Qinming", "Li"),
+  author("Yibo", "Lu"),
+  author("Yang", "Lin"),
+];
+const THREE = [author("Ann", "Bell"), author("Carl", "Dunn"), author("Eva", "Fox")];
+
+describe("parseStatement", () => {
+  it("reads author-first statements with initials", () => {
+    expect(pairsOf("AP: conceptualization, methodology; NZ, L.-J.Z.: writing – original draft.", AUTHORS)).toEqual([
+      [0, "conceptualization"],
+      [0, "methodology"],
+      [1, "writing-original-draft"],
+      [2, "writing-original-draft"],
+    ]);
+  });
+
+  it("reads role-first statements and drops the closing approval sentence", () => {
+    const text =
+      "Conceptualization, A.P. and N.Z.; Methodology, A.P.; Supervision, N.Z. " +
+      "All authors have read and agreed to the published version of the manuscript.";
+    expect(pairsOf(text, AUTHORS)).toEqual([
+      [0, "conceptualization"],
+      [0, "methodology"],
+      [1, "conceptualization"],
+      [1, "supervision"],
+    ]);
+  });
+
+  it("reads full names and 'All authors'", () => {
+    const pairs = pairsOf(
+      "Anna Peters: Software. Nils Zandvoort: Validation. All authors: Writing – review & editing.",
+      AUTHORS,
+    );
+    expect(pairs.filter(([i]) => i === 0)).toEqual([
+      [0, "software"],
+      [0, "writing-review-editing"],
+    ]);
+    expect(pairs.filter(([i]) => i === 5)).toEqual([[5, "writing-review-editing"]]);
+  });
+
+  it("reports ambiguous initials instead of guessing", () => {
+    expect(run("YL: software; AP: validation.", AUTHORS)).toEqual({ pairs: [[0, "validation"]], unresolved: ["YL"] });
+  });
+
+  it("yields nothing for prose", () => {
+    expect(pairsOf("A.P. conceived the study and N.Z. wrote the paper.", AUTHORS)).toEqual([]);
+  });
+
+  it("counts 'All authors contributed to' as an assignment", () => {
+    const text =
+      "All authors contributed to the investigation and conceptualization. All authors read and approved the manuscript.";
+    expect(pairsOf(text, AUTHORS.slice(0, 2))).toEqual([
+      [0, "conceptualization"],
+      [0, "investigation"],
+      [1, "conceptualization"],
+      [1, "investigation"],
+    ]);
+  });
+
+  it.each([
+    [
+      "AB: conceptualization. CD: drew the figures. EF: software.",
+      [
+        [0, "conceptualization"],
+        [2, "software"],
+      ],
+    ],
+    [
+      "Conceptualization, A.B. Methodology, C.D. and E.F.",
+      [
+        [0, "conceptualization"],
+        [1, "methodology"],
+        [2, "methodology"],
+      ],
+    ],
+    [
+      "A.B.: conceptualization; methodology. C.D.: software.",
+      [
+        [0, "conceptualization"],
+        [0, "methodology"],
+        [1, "software"],
+      ],
+    ],
+    ["Supervision: EF. AB is the guarantor.", [[2, "supervision"]]],
+    [
+      "A.B.: software; Dunn, C: writing - review and editing",
+      [
+        [0, "software"],
+        [1, "writing-review-editing"],
+      ],
+    ],
+    [
+      "Software: Bell, Ann, Fox, E.",
+      [
+        [0, "software"],
+        [2, "software"],
+      ],
+    ],
+    ["A.B.: software; Dunne, C: writing - review and editing", [[0, "software"]]],
+    ["Software, A.B. All authors read and approved the manuscript.", [[0, "software"]]],
+    ["A.B.: software. All authors have read and approved the final manuscript.", [[0, "software"]]],
+  ])("splits clauses in %j", (text, expected) => {
+    expect(pairsOf(text, THREE)).toEqual(expected);
+  });
+
+  it("reads Vancouver style, non-ASCII initials, particles and initials before a surname", () => {
+    expect(
+      pairsOf("Conceptualization: Nam KC. Data curation: Yim DG.", [
+        author("Ki Chang", "Nam"),
+        author("Dong Gyun", "Yim"),
+      ]),
+    ).toEqual([
+      [0, "conceptualization"],
+      [1, "data-curation"],
+    ]);
+    expect(pairsOf("Software: H.Š. and F.H.", [author("Hana", "Šigutová"), author("Filip", "Harabiš")])).toEqual([
+      [0, "software"],
+      [1, "software"],
+    ]);
+    const particles = [author("Fernanda", "da Silva Nunes"), author("João Antonio", "dos Santos-Silva")];
+    expect(pairsOf("Methodology, F.d.S.N. and J.A.d.S.-S.", particles)).toEqual([
+      [0, "methodology"],
+      [1, "methodology"],
+    ]);
+    const before = [author("Brendan James", "Houston"), author("Duc", "Merriner")];
+    expect(pairsOf("BJ Houston: data curation. D. Merriner: software.", before)).toEqual([
+      [0, "data-curation"],
+      [1, "software"],
+    ]);
+  });
+
+  it("does not read a first name inside hyphenated initials", () => {
+    expect(
+      pairsOf("X.-M. Li: software; M. Li: validation.", [author("Xiao-Ming", "Li"), author("Ming", "Li")]),
+    ).toEqual([
+      [0, "software"],
+      [1, "validation"],
+    ]);
+    expect(pairsOf("X.M. Li: software; M. Li: validation.", [author("Xiao Ming", "Li"), author("Ming", "Li")])).toEqual(
+      [
+        [0, "software"],
+        [1, "validation"],
+      ],
+    );
+  });
+
+  it.each([
+    [[author("Hong", "Wang"), author("Wei", "Zhang"), author("Hao", "Wang")], "H Wang: software", ["H Wang"]],
+    [[author("Li", "Wang"), author("Wang", "Li")], "Li Wang: software. Wang Li: validation.", ["Li Wang", "Wang Li"]],
+  ])("leaves a name two authors share unresolved", (authors, text, unresolved) => {
+    expect(run(text, authors)).toEqual({ pairs: [], unresolved });
+  });
+
+  it("does not split a list of names on 'Surname, Given'", () => {
+    const authors = [author("Ajaya", "Sharma"), author("Monica", "Sharma")];
+    expect(pairsOf("Data curation: Ajaya Sharma, Monica Sharma.", authors)).toEqual([
+      [0, "data-curation"],
+      [1, "data-curation"],
+    ]);
+  });
+
+  it("reads hyphenated given names", () => {
+    const authors = [author("Jun-Ho", "Kim"), author("Wei-Jie", "Zhang")];
+    expect(pairsOf("J.-H. Kim: software. Zhang W.-J.: validation.", authors)).toEqual([
+      [0, "software"],
+      [1, "validation"],
+    ]);
+    expect(pairsOf("Software: Kim J-H and W.-J. Zhang.", authors)).toEqual([
+      [0, "software"],
+      [1, "software"],
+    ]);
+  });
+
+  it("matches full names in any case", () => {
+    const authors = [author("Isik", "Demir"), author("Bo", "Wu")];
+    expect(pairsOf("ISIK DEMIR: methodology. bo wu: software.", authors)).toEqual([
+      [0, "methodology"],
+      [1, "software"],
+    ]);
+  });
+
+  it("matches a decomposed accent to a composed one", () => {
+    expect(pairsOf("Software: H.Š.", [author("Hana", "Šigutová")])).toEqual([[0, "software"]]);
+  });
+
+  it("reads every role wording", () => {
+    const wordings = [
+      "Conceptualisation",
+      "Data curation",
+      "formal analyses",
+      "Funding acquisition",
+      "Investigation",
+      "Methodology",
+      "Project administration",
+      "Resources",
+      "Software",
+      "Supervision",
+      "Validation",
+      "visualisation",
+      "Writing—original draft preparation",
+      "Writing − review & editing",
+    ];
+    const pairs = pairsOf(`AB: ${wordings.join(", ")}.`, THREE);
+    expect(pairs.map(([, slug]) => slug).sort()).toEqual([...SLUG.values()].sort());
+  });
+});
+
+describe("resolveInitials", () => {
+  it.each([
+    ["AP", 0],
+    ["L.J.Z.", 2],
+    ["Q.M.L.", 3],
+    ["YiL", 4],
+    ["YL", null],
+    ["XX", null],
+    ["", null],
+  ])("resolves %s", (token, expected) => {
+    expect(resolveInitials(token, AUTHORS)).toBe(expected);
+  });
+
+  it("prefers given name first", () => {
+    expect(resolveInitials("L.H.", [author("Hao", "Leng"), author("Liang", "Hong")])).toBe(1);
+  });
+
+  it.each([
+    ["JvdB", author("Jan", "van der Berg")],
+    ["AdS", author("Ana", "da Silva")],
+    ["CL", author("Chiara", "De Luca")],
+    ["JG", author("José", "García López")],
+    ["ZL", author("Li", "Zhao")],
+    ["L.Z.", author("Li-Jun", "Zhao")],
+  ])("resolves %s through its tier", (token, who) => {
+    expect(resolveInitials(token, [author("Ann", "Bell"), who])).toBe(1);
+  });
+
+  it("lets a stricter tier win over particles", () => {
+    expect(resolveInitials("CL", [author("Chiara", "De Luca"), author("Carlo", "Lanza")])).toBe(1);
+  });
+});
+
+describe("namesCredit", () => {
+  it.each([
+    ["Conceptualization", true],
+    ["Data curation", true],
+    ["Writing – original draft", true],
+    ["review & editing", true],
+    ["Software", false],
+    ["Supervision", false],
+    ["under the supervision of B.J.", false],
+    ["Anne Namer, Bob Smith", false],
+  ])("%s → %s", (text, expected) => {
+    expect(namesCredit(text)).toBe(expected);
+  });
+});
+
+describe("edge cases", () => {
+  it("keeps positions when lower case changes a letter's length", () => {
+    // "İ" lowers to two code units; the name after it must still be found.
+    expect(pairsOf("İŞ: software. Ann Bell: data curation.", THREE)).toEqual([[0, "data-curation"]]);
+  });
+
+  it("reads a contributor with one name only, and skips a name inside a longer word", () => {
+    const authors = [author("", "Madonna"), author("Ann", "Bell")];
+    expect(pairsOf("Madonna: data curation. Bellamy: software. Ann Bell: methodology.", authors)).toEqual([
+      [0, "data-curation"],
+      [1, "methodology"],
+    ]);
+  });
+});
+
+describe("statementAuthor", () => {
+  it.each([
+    [
+      { name: "Jane Anne Marie Smith", firstName: "Jane", middleName: "Anne", surname: "Smith" },
+      "Jane Anne Marie",
+      "Smith",
+    ],
+    [{ name: "Smith, Jane A.", firstName: "Jane", middleName: "A", surname: "Smith" }, "Jane A.", "Smith"],
+    [{ name: "Madonna", firstName: "Madonna", middleName: "", surname: "" }, "Madonna", ""],
+  ])("splits %j", (input, given, surname) => {
+    expect(statementAuthor(input)).toEqual({ given, surname });
+  });
+});

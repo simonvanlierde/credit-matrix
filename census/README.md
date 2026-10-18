@@ -107,6 +107,10 @@ rarely uses (conceptualization, data curation, original draft, ...): "under the 
 or an ICMJE list with "Supervision" stays `none`, its text kept. Text that Europe PMC's bulk files
 store double-encoded ("â\x80\x94" for an em dash) is repaired before parsing.
 
+The web app's paste-a-statement import runs a TypeScript port of `roles.py` and `statement.py`
+(`src/core/statement.ts`). A test there runs it over `tests/corpus.jsonl` and requires the same
+output as `expected` here, so a change to one parser needs the same change in the other.
+
 ## Tables
 
 - `articles`: one row per article: stratum, PMC version and the XML's sha256, article type, DOI,

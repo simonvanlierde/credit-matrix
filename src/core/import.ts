@@ -6,8 +6,9 @@ import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
 import { parseAuthorText } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
+import { namesCredit } from "./statement";
 
-export type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "names" | "unknown";
+export type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "statement" | "names" | "unknown";
 
 /** Guess what pasted or loaded text is, from its shape alone. */
 export function detectFormat(text: string): DetectedFormat {
@@ -29,13 +30,15 @@ export function detectFormat(text: string): DetectedFormat {
   if (isTenzing(trimmed)) return "tenzing";
   // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
   if (headerCells(trimmed).includes("name")) return "csv";
+  // A name list never says "conceptualization" or "original draft"; a CRediT statement does.
+  if (namesCredit(trimmed)) return "statement";
   if (trimmed.length > 0) return "names";
   return "unknown";
 }
 
 /** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */
 export interface Imported {
-  format: Exclude<DetectedFormat, "unknown">;
+  format: Exclude<DetectedFormat, "unknown" | "statement">;
   authors: Author[];
   asks?: Record<string, Ask>;
   selfId?: string;
@@ -44,7 +47,8 @@ export interface Imported {
 
 /**
  * Read text in any format {@link detectFormat} knows. Throws on text it cannot
- * place, on a link that does not decode, and whatever the format's own reader
+ * place, on a CRediT statement (it names roles, not contributors: read it with
+ * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
  * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
  * `authors` means the format was right but held nobody.
  */
@@ -67,6 +71,8 @@ export async function importAny(text: string, { parser }: { parser?: XmlParser }
       return { format, authors: fromJats4rXml(trimmed, { parser }) };
     case "names":
       return { format, authors: parseAuthorText(trimmed) };
+    case "statement":
+      throw new Error("A CRediT statement holds roles, not contributors. Read it with parseStatement.");
     default:
       throw new Error("Nothing to import.");
   }

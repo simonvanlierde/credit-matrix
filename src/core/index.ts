@@ -46,3 +46,5 @@ export { fetchOrcidKeys } from "./orcid-proof";
 export { createAuthor, normalizeRoster, parseAuthorText } from "./parse-authors";
 export { decodeShareHash, encodeShareHash } from "./share-link";
 export type { ShareData, SharePayloadInput } from "./share-payload";
+export type { ParsedStatement, StatementAuthor } from "./statement";
+export { namesCredit, parseStatement, statementAuthor } from "./statement";

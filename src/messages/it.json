@@ -291,7 +291,7 @@
   "welcomeDraftsBody": "Più di un articolo? Cambia bozza dall'intestazione; ognuna è conservata separatamente in questo browser.",
   "welcomeAskTitle": "Chiedi direttamente ai coautori",
   "welcomeAskBody": "Copiare un link dal menu della riga di una persona e inviarglielo. Quando il link torna, aprirlo: la risposta viene conservata accanto alla sua riga e le differenze si risolvono nella scheda Revisione.",
-  "importDescription": "Parti da un DOI, incolla i nomi o un link che ti è stato rimandato, oppure carica un file CSV, JSON o JATS4R XML. JSON e XML ripristinano anche i contributi, con i livelli se il file li contiene. Va bene anche un foglio di calcolo tenzing (CSV o TSV).",
+  "importDescription": "Parti da un DOI, incolla i nomi o un link che ti è stato rimandato, oppure carica un file CSV, JSON o JATS4R XML. JSON e XML ripristinano anche i contributi, con i livelli se il file li contiene. Va bene anche un foglio di calcolo tenzing (CSV o TSV). Incolla una dichiarazione dei contributi degli autori per compilare i ruoli dei contributori già presenti.",
   "contributorActions": "Azioni per {name}",
   "colorBlue": "Blu",
   "colorOrange": "Arancione",
@@ -371,5 +371,18 @@
   "columnOpenDifferences": "{name}: {count, plural, one {# differenza aperta} other {# differenze aperte}}",
   "columnSettled": "Risolto",
   "legendDiffers": "Un coautore ha risposto diversamente",
-  "reviewAskMessage": "Ciao {name},\n\nsto completando la dichiarazione dei contributi CRediT per {work}. Le nostre risposte differiscono su {role}. Potresti aprire questo link, controllare la tua riga e rimandarmi il link?\n\n{link}\n\nIl link contiene il titolo, il tuo nome e il tuo iD. Nulla viene salvato su un server."
+  "reviewAskMessage": "Ciao {name},\n\nsto completando la dichiarazione dei contributi CRediT per {work}. Le nostre risposte differiscono su {role}. Potresti aprire questo link, controllare la tua riga e rimandarmi il link?\n\n{link}\n\nIl link contiene il titolo, il tuo nome e il tuo iD. Nulla viene salvato su un server.",
+  "formatStatement": "Dichiarazione CRediT",
+  "statementReview": "Controlla i ruoli",
+  "statementReviewTitle": "Ruoli trovati nella dichiarazione",
+  "statementReviewSummary": "{added, plural, one {# ruolo} other {# ruoli}} da aggiungere per {people, plural, one {# contributore} other {# contributori}}. I ruoli già presenti nella griglia restano invariati.",
+  "statementNothingNew": "Tutti i ruoli trovati sono già nella griglia.",
+  "statementNoRoles": "Nessun ruolo trovato",
+  "statementUnresolved": "Non associati: {tokens}",
+  "statementUnresolvedBody": "Questi nomi o iniziali non corrispondono a nessun contributore di questa bozza, o a più di uno, quindi i loro ruoli vengono tralasciati. Assegnali nella griglia dopo l’applicazione.",
+  "statementBack": "Indietro",
+  "statementApply": "Applica i ruoli",
+  "statementApplied": "{count, plural, one {# ruolo aggiunto} other {# ruoli aggiunti}} dalla dichiarazione.",
+  "errStatementNoContributors": "Aggiungi prima i contributori, poi incolla la dichiarazione: viene confrontata con i nomi già presenti in questa bozza.",
+  "errStatementNoRoles": "Non è stato possibile associare alcun ruolo CRediT ai contributori di questa bozza. Verifica che la dichiarazione li nomini come la bozza, per nome o iniziali."
 }

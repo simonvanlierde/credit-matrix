@@ -291,7 +291,7 @@
   "welcomeDraftsBody": "Meer dan één artikel? Wissel van concept via de koptekst; elk wordt apart in deze browser bewaard.",
   "welcomeAskTitle": "Vraag co-auteurs rechtstreeks",
   "welcomeAskBody": "Kopieer een link uit het rijmenu van een persoon en stuur die naar hen. Komt de link terug, open die dan: het antwoord wordt naast de rij van die persoon bewaard en verschillen handelt u af op het tabblad Controle.",
-  "importDescription": "Begin met een DOI, plak namen of een teruggestuurde link, of upload een CSV-, JSON- of JATS4R-XML-bestand. JSON en XML herstellen ook de bijdragen, met niveaus als het bestand die bevat. Een tenzing-spreadsheet (CSV of TSV) kan ook.",
+  "importDescription": "Begin met een DOI, plak namen of een teruggestuurde link, of upload een CSV-, JSON- of JATS4R-XML-bestand. JSON en XML herstellen ook de bijdragen, met niveaus als het bestand die bevat. Een tenzing-spreadsheet (CSV of TSV) kan ook. Plak een verklaring over de bijdragen van auteurs om de rollen in te vullen van de bijdragers die er al staan.",
   "contributorActions": "Acties voor {name}",
   "colorBlue": "Blauw",
   "colorOrange": "Oranje",
@@ -371,5 +371,18 @@
   "columnOpenDifferences": "{name}: {count, plural, one {# open verschil} other {# open verschillen}}",
   "columnSettled": "Afgerond",
   "legendDiffers": "Een coauteur antwoordde anders",
-  "reviewAskMessage": "Hoi {name},\n\nIk rond de CRediT-bijdrageverklaring voor {work} af. Onze antwoorden verschillen bij {role}. Wil je deze link openen, je rij nakijken en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, je naam en je iD. Er wordt niets op een server opgeslagen."
+  "reviewAskMessage": "Hoi {name},\n\nIk rond de CRediT-bijdrageverklaring voor {work} af. Onze antwoorden verschillen bij {role}. Wil je deze link openen, je rij nakijken en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, je naam en je iD. Er wordt niets op een server opgeslagen.",
+  "formatStatement": "CRediT-verklaring",
+  "statementReview": "Rollen bekijken",
+  "statementReviewTitle": "Rollen gevonden in de verklaring",
+  "statementReviewSummary": "{added, plural, one {# rol} other {# rollen}} toe te voegen voor {people, plural, one {# bijdrager} other {# bijdragers}}. Rollen die al in de tabel staan, blijven zoals ze zijn.",
+  "statementNothingNew": "Alle gevonden rollen staan al in de tabel.",
+  "statementNoRoles": "Geen rollen gevonden",
+  "statementUnresolved": "Niet gekoppeld: {tokens}",
+  "statementUnresolvedBody": "Deze namen of initialen passen bij geen enkele bijdrager in dit concept, of bij meer dan één, dus hun rollen worden overgeslagen. Zet ze na het toepassen in de tabel.",
+  "statementBack": "Terug",
+  "statementApply": "Rollen toepassen",
+  "statementApplied": "{count, plural, one {# rol} other {# rollen}} toegevoegd uit de verklaring.",
+  "errStatementNoContributors": "Voeg eerst de bijdragers toe en plak dan de verklaring: die wordt vergeleken met de namen die al in dit concept staan.",
+  "errStatementNoRoles": "Er kon geen CRediT-rol aan de bijdragers in dit concept worden gekoppeld. Controleer of de verklaring hen noemt zoals het concept doet, met naam of initialen."
 }

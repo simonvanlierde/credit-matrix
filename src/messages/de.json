@@ -291,7 +291,7 @@
   "welcomeDraftsBody": "Mehr als ein Manuskript? Wechseln Sie Entwürfe über die Kopfzeile; jeder wird separat in diesem Browser gespeichert.",
   "welcomeAskTitle": "Co-Autoren direkt fragen",
   "welcomeAskBody": "Kopieren Sie einen Link aus dem Zeilenmenü einer Person und schicken Sie ihn ihr. Kommt der Link zurück, öffnen Sie ihn: Die Antwort wird neben ihrer Zeile abgelegt, und Abweichungen klären Sie im Tab „Abgleich“.",
-  "importDescription": "Beginnen Sie mit einer DOI, fügen Sie Namen oder einen zurückgesendeten Link ein, oder laden Sie eine CSV-, JSON- oder JATS4R-XML-Datei hoch. JSON und XML stellen auch die Beiträge wieder her, samt Stufen, wenn die Datei sie enthält. Eine tenzing-Tabelle (CSV oder TSV) geht auch.",
+  "importDescription": "Beginnen Sie mit einer DOI, fügen Sie Namen oder einen zurückgesendeten Link ein, oder laden Sie eine CSV-, JSON- oder JATS4R-XML-Datei hoch. JSON und XML stellen auch die Beiträge wieder her, samt Stufen, wenn die Datei sie enthält. Eine tenzing-Tabelle (CSV oder TSV) geht auch. Fügen Sie eine Erklärung zu den Beiträgen der Autorinnen und Autoren ein, um die Rollen der Mitwirkenden in diesem Entwurf auszufüllen.",
   "contributorActions": "Aktionen für {name}",
   "colorBlue": "Blau",
   "colorOrange": "Orange",
@@ -371,5 +371,18 @@
   "columnOpenDifferences": "{name}: {count, plural, one {# offene Abweichung} other {# offene Abweichungen}}",
   "columnSettled": "Abgeglichen",
   "legendDiffers": "Ein Mitautor hat anders geantwortet",
-  "reviewAskMessage": "Hallo {name},\n\nich stelle die CRediT-Beitragserklärung für {work} fertig. Bei {role} weichen unsere Angaben voneinander ab. Könnten Sie diesen Link öffnen, Ihre Zeile prüfen und mir den Link zurückschicken?\n\n{link}\n\nDer Link enthält den Titel, Ihren Namen und Ihre iD. Nichts wird auf einem Server gespeichert."
+  "reviewAskMessage": "Hallo {name},\n\nich stelle die CRediT-Beitragserklärung für {work} fertig. Bei {role} weichen unsere Angaben voneinander ab. Könnten Sie diesen Link öffnen, Ihre Zeile prüfen und mir den Link zurückschicken?\n\n{link}\n\nDer Link enthält den Titel, Ihren Namen und Ihre iD. Nichts wird auf einem Server gespeichert.",
+  "formatStatement": "CRediT-Erklärung",
+  "statementReview": "Rollen prüfen",
+  "statementReviewTitle": "In der Erklärung gefundene Rollen",
+  "statementReviewSummary": "{added, plural, one {# Rolle} other {# Rollen}} für {people, plural, one {# mitwirkende Person} other {# mitwirkende Personen}} hinzuzufügen. Rollen, die schon in der Tabelle stehen, bleiben unverändert.",
+  "statementNothingNew": "Alle gefundenen Rollen stehen schon in der Tabelle.",
+  "statementNoRoles": "Keine Rollen gefunden",
+  "statementUnresolved": "Nicht zugeordnet: {tokens}",
+  "statementUnresolvedBody": "Diese Namen oder Initialen passen zu keiner oder zu mehreren Personen in diesem Entwurf, daher werden ihre Rollen ausgelassen. Tragen Sie sie nach dem Übernehmen in der Tabelle ein.",
+  "statementBack": "Zurück",
+  "statementApply": "Rollen übernehmen",
+  "statementApplied": "{count, plural, one {# Rolle} other {# Rollen}} aus der Erklärung hinzugefügt.",
+  "errStatementNoContributors": "Fügen Sie zuerst die Mitwirkenden hinzu und dann die Erklärung ein: Sie wird mit den Namen in diesem Entwurf abgeglichen.",
+  "errStatementNoRoles": "Keine CRediT-Rolle ließ sich den Mitwirkenden in diesem Entwurf zuordnen. Prüfen Sie, ob die Erklärung sie so nennt wie der Entwurf, mit Namen oder Initialen."
 }

@@ -291,7 +291,7 @@
   "welcomeDraftsBody": "Writing more than one paper? Switch drafts from the header; each is kept separately in this browser.",
   "welcomeAskTitle": "Ask co-authors directly",
   "welcomeAskBody": "Copy a link from a contributor's row menu and send it to them. When their link comes back, open it: the answer is kept beside their row, and you settle any differences in the Review tab.",
-  "importDescription": "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too.",
+  "importDescription": "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too. Paste an author contribution statement to fill in the roles of the contributors already here.",
   "contributorActions": "Actions for {name}",
   "colorBlue": "Blue",
   "colorOrange": "Orange",
@@ -371,5 +371,18 @@
   "columnOpenDifferences": "{name}: {count, plural, one {# open difference} other {# open differences}}",
   "columnSettled": "Settled",
   "legendDiffers": "A co-author answered differently",
-  "reviewAskMessage": "Hi {name},\n\nI am finishing the CRediT contribution statement for {work}. Our answers differ on {role}. Could you open this link, check your row, and send the link back to me?\n\n{link}\n\nThe link carries the title, your name and your iD. Nothing is stored on a server."
+  "reviewAskMessage": "Hi {name},\n\nI am finishing the CRediT contribution statement for {work}. Our answers differ on {role}. Could you open this link, check your row, and send the link back to me?\n\n{link}\n\nThe link carries the title, your name and your iD. Nothing is stored on a server.",
+  "formatStatement": "CRediT statement",
+  "statementReview": "Review roles",
+  "statementReviewTitle": "Roles found in the statement",
+  "statementReviewSummary": "{added, plural, one {# role} other {# roles}} to add for {people, plural, one {# contributor} other {# contributors}}. Roles already in the grid stay as they are.",
+  "statementNothingNew": "Every role found is already in the grid.",
+  "statementNoRoles": "No roles found",
+  "statementUnresolved": "Not matched: {tokens}",
+  "statementUnresolvedBody": "These names or initials fit no contributor in this draft, or more than one, so their roles are left out. Set them in the grid after applying.",
+  "statementBack": "Back",
+  "statementApply": "Apply roles",
+  "statementApplied": "{count, plural, one {# role} other {# roles}} added from the statement.",
+  "errStatementNoContributors": "Add the contributors first, then paste the statement: it is matched to the names already in this draft.",
+  "errStatementNoRoles": "No CRediT roles could be matched to the contributors in this draft. Check that the statement names them as the draft does, by name or initials."
 }

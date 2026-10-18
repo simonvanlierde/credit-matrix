@@ -1,16 +1,19 @@
 "use client";
 
-import { FileUp, Search, X } from "lucide-react";
+import { CircleAlert, FileUp, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import {
   type Ask,
   type Author,
+  type CreditRoleName,
   createAuthor,
   type DetectedFormat,
   detectFormat,
   importAny,
   NewerVersionError,
+  parseStatement,
+  statementAuthor,
 } from "@/core";
 import { recheckSignIns } from "@/core/ask";
 import { MAX_AUTHORS, MAX_IMPORT_BYTES } from "@/core/author";
@@ -20,7 +23,8 @@ import { fetchOrcidKeys } from "@/core/orcid-proof";
 import { announce } from "@/lib/announce";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import type { Messages } from "@/lib/intl";
-import { MAX_DRAFTS } from "@/store/contribution-store";
+import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
 
 /** Why a pasted share link could not be used, as a message key. */
 export type LinkFailure = "errShareLinkBroken" | "mergeWrongDraft" | "mergeUnmatched" | "draftLimitReached";
@@ -35,7 +39,46 @@ interface Props {
    * link needs the current workspace, which this dialog does not hold.
    */
   onLink: (url: string) => Promise<LinkFailure | null>;
+  /** Write the roster with a pasted statement's roles added; `added` counts the new roles. */
+  onApplyStatement: (authors: Author[], added: number) => void;
   onClose: () => void;
+}
+
+/** A pasted statement read against the open draft, waiting for Apply. */
+interface StatementReview {
+  /** The roster with the statement's roles added. */
+  next: Author[];
+  /** Per contributor, the roles the statement gives them. */
+  rows: { id: string; name: string; roles: CreditRoleName[] }[];
+  unresolved: string[];
+  /** Roles the roster does not have yet. Ones already set are left as they are. */
+  added: number;
+}
+
+/**
+ * Read a statement against the roster. A role the statement names is set to
+ * 100, as an imported role without a degree is; one already set keeps its level.
+ */
+function reviewStatement(text: string, authors: Author[]): StatementReview {
+  const { assignments, unresolved } = parseStatement(text, authors.map(statementAuthor));
+  let added = 0;
+  const rows = authors.map((author, i) => ({
+    id: author.id,
+    name: author.name,
+    roles: assignments.filter((a) => a.author === i).map((a) => a.role),
+  }));
+  const next = authors.map((author, i) => {
+    const roles = new Set(rows[i]?.roles);
+    return {
+      ...author,
+      contributions: author.contributions.map((c) => {
+        if (!roles.has(c.role) || c.score > 0) return c;
+        added += 1;
+        return { ...c, score: 100 };
+      }),
+    };
+  });
+  return { next, rows, unresolved: [...new Set(unresolved)], added };
 }
 
 /** What a resolved import is waiting to write, once any replace is confirmed. */
@@ -85,7 +128,7 @@ async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok:
 const MAX_IMPORT_MB = `${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB`;
 
 /** The "nothing found" message for each importable format. */
-const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link">, keyof Messages> = {
+const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link" | "statement">, keyof Messages> = {
   json: "errImportNoJsonContributors",
   csv: "errImportNoCsvRows",
   tenzing: "errImportNoCsvRows",
@@ -98,14 +141,19 @@ const FORMAT_LABEL: Record<Exclude<DetectedFormat, "unknown">, (t: ReturnType<ty
   names: (t) => t("importAuthorList"),
   link: (t) => t("formatShareLink"),
   json: (t) => t("formatJsonExport"),
+  statement: (t) => t("formatStatement"),
   xml: () => "JATS4R XML",
   csv: () => "CSV",
   tenzing: () => "tenzing",
 };
 
-export function ImportModal({ open, existingContributorCount, onImport, onLink, onClose }: Props) {
+export function ImportModal({ open, existingContributorCount, onImport, onLink, onApplyStatement, onClose }: Props) {
   const t = useTranslations();
+  const { translateInterfaceRole } = useCreditTranslators();
+  const formatter = useFormatter();
   const [text, setText] = useState("");
+  const [review, setReview] = useState<StatementReview | null>(null);
+  const reviewHeadingRef = useRef<HTMLHeadingElement>(null);
   // Where the message belongs, not just what it says: a DOI failure shown at
   // the foot of a tall dialog is far from the field that caused it.
   const [error, setError] = useState<{ where: "doi" | "form"; message: string } | null>(null);
@@ -141,6 +189,12 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     hadPending.current = false;
     if (dialog?.open) importRef.current?.focus();
   }, [pending, dialog]);
+
+  // The review replaces the paste area's footer action, so its heading takes
+  // focus and a screen reader starts at the summary.
+  useEffect(() => {
+    if (review) reviewHeadingRef.current?.focus();
+  }, [review]);
 
   const format = detectFormat(text);
 
@@ -213,6 +267,21 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
           return;
         }
         dialog?.close();
+        return;
+      }
+      if (format === "statement") {
+        // Matched against the draft as it is now: a statement names no one the draft lacks.
+        const { authors } = useContributionStore.getState();
+        if (authors.length === 0) {
+          showError(t("errStatementNoContributors"));
+          return;
+        }
+        const found = reviewStatement(text, authors);
+        if (found.rows.every((row) => row.roles.length === 0)) {
+          showError(t("errStatementNoRoles"));
+          return;
+        }
+        setReview(found);
         return;
       }
       const parsed = await importAny(text);
@@ -295,6 +364,17 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     dialog?.close();
   }
 
+  function applyStatement(found: StatementReview) {
+    try {
+      onApplyStatement(found.next, found.added);
+    } catch {
+      showError(t("errImportFailed"));
+      return;
+    }
+    setReview(null);
+    dialog?.close();
+  }
+
   function handleClose() {
     doiRequest.current += 1;
     setDoiLoading(false);
@@ -303,6 +383,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
     setFileName(null);
     setError(null);
     setPending(null);
+    setReview(null);
     onClose();
   }
 
@@ -460,6 +541,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
                 setText(e.target.value);
                 setFileName(null);
                 setError(null);
+                setReview(null);
               }}
               placeholder={t("importPlaceholder", { names: t("sampleNames") })}
               rows={6}
@@ -501,6 +583,73 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
               </div>
             </div>
           )}
+
+          {review && (
+            <section
+              aria-labelledby="statement-review-title"
+              className="rounded-lg bg-surface-container-low p-4 text-sm"
+            >
+              <h3
+                id="statement-review-title"
+                ref={reviewHeadingRef}
+                tabIndex={-1}
+                className="text-lg font-semibold text-primary outline-none"
+                style={{ fontFamily: "var(--font-headline)" }}
+              >
+                {t("statementReviewTitle")}
+              </h3>
+              <p className="mt-1 text-on-surface-variant">
+                {review.added > 0
+                  ? t("statementReviewSummary", {
+                      added: review.added,
+                      people: review.rows.filter((row) => row.roles.length > 0).length,
+                    })
+                  : t("statementNothingNew")}
+              </p>
+              <ul className="mt-3 divide-y divide-outline-variant/30 border-y border-outline-variant/30">
+                {review.rows.map((row) => (
+                  <li key={row.id} className="grid gap-x-4 gap-y-0.5 py-2 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
+                    <span className="font-medium break-words text-on-surface">{row.name}</span>
+                    {row.roles.length > 0 ? (
+                      <span className="text-on-surface">
+                        {formatter.list(row.roles.map(translateInterfaceRole), { type: "unit" })}
+                      </span>
+                    ) : (
+                      <span className="italic text-on-surface-variant">{t("statementNoRoles")}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {review.unresolved.length > 0 && (
+                <div className="mt-3 flex gap-2 text-on-surface">
+                  <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-on-surface-variant" />
+                  <div className="min-w-0">
+                    <p className="font-semibold break-words">
+                      {t("statementUnresolved", { tokens: formatter.list(review.unresolved, { type: "unit" }) })}
+                    </p>
+                    <p className="mt-0.5 text-on-surface-variant">{t("statementUnresolvedBody")}</p>
+                  </div>
+                </div>
+              )}
+              <div className="mt-4 flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReview(null)}
+                  className="rounded-lg border border-outline-variant px-4 py-2 font-semibold text-on-surface-variant hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  {t("statementBack")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyStatement(review)}
+                  disabled={review.added === 0}
+                  className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t("statementApply")}
+                </button>
+              </div>
+            </section>
+          )}
         </div>
 
         <div className="px-8 py-3 border-t border-outline-variant/10 bg-surface-container-low flex justify-end gap-3">
@@ -515,10 +664,10 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
             ref={importRef}
             type="button"
             onClick={() => void handleImport()}
-            disabled={format === "unknown" || pending !== null || importing}
+            disabled={format === "unknown" || pending !== null || review !== null || importing}
             className="px-7 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg shadow hover:bg-primary-container transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {t("importData")}
+            {format === "statement" ? t("statementReview") : t("importData")}
           </button>
         </div>
       </div>

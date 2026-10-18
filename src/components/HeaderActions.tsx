@@ -7,7 +7,7 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { decodeShareHash, importAnswers, type OrcidProof, type ShareData } from "@/core";
+import { type Author, decodeShareHash, importAnswers, type OrcidProof, type ShareData } from "@/core";
 import { isAllBinary } from "@/core/author";
 import { keepKnownIds } from "@/core/merge-row";
 import { announce } from "@/lib/announce";
@@ -351,6 +351,26 @@ export function HeaderActions() {
     if (importedTitle !== undefined) setTitle(importedTitle);
   }
 
+  /** Add a pasted statement's roles in one write, with Undo while the same draft is open. */
+  function handleApplyStatement(next: Author[], added: number) {
+    const { authors: before, activeDraftId: draftId } = useContributionStore.getState();
+    loadAuthors(next);
+    showStatus({
+      kind: "success",
+      message: t("statementApplied", { count: added }),
+      actions: [
+        {
+          label: t("undo"),
+          onAct: () => {
+            if (useContributionStore.getState().activeDraftId !== draftId) return;
+            loadAuthors(before);
+            announce(t("annBulkUndone"));
+          },
+        },
+      ],
+    });
+  }
+
   /** Take a pasted share link through the same router every other entry uses. */
   async function handleLink(url: string): Promise<LinkFailure | null> {
     const hashAt = url.indexOf("#");
@@ -430,6 +450,7 @@ export function HeaderActions() {
         existingContributorCount={authorCount}
         onImport={handleImport}
         onLink={handleLink}
+        onApplyStatement={handleApplyStatement}
         onClose={() => setImportOpen(false)}
       />
     </>

@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import { createAuthor } from "@/core";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import en from "@/messages/en.json";
+import { useContributionStore } from "@/store/contribution-store";
 import { ImportModal } from "./ImportModal";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
@@ -33,6 +35,7 @@ function deferLookup() {
 
 function renderModal(existingContributorCount = 0, onLink: () => Promise<null> = async () => null) {
   const onImport = vi.fn();
+  const onApplyStatement = vi.fn();
   const view = render(
     <IntlProvider locale="en" messages={en}>
       <ImportModal
@@ -40,13 +43,14 @@ function renderModal(existingContributorCount = 0, onLink: () => Promise<null> =
         existingContributorCount={existingContributorCount}
         onImport={onImport}
         onLink={onLink}
+        onApplyStatement={onApplyStatement}
         onClose={vi.fn()}
       />
     </IntlProvider>,
   );
   const input = screen.getByLabelText(en.importFromDoi);
   fireEvent.change(input, { target: { value: DOI } });
-  return { ...view, onImport, input };
+  return { ...view, onImport, onApplyStatement, input };
 }
 
 describe("DOI lookup", () => {
@@ -165,5 +169,56 @@ describe("accessibility and drops", () => {
     const file = new File(["Jane Smith"], "authors.csv");
     await act(async () => fireEvent.change(input, { target: { files: [file] } }));
     expect(screen.getByText(en.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
+  });
+});
+
+describe("a pasted CRediT statement", () => {
+  const paste = (value: string) => fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value } });
+  const review = () => act(async () => fireEvent.click(screen.getByRole("button", { name: en.statementReview })));
+
+  it("asks for contributors first when the draft is empty", async () => {
+    useContributionStore.getState().loadAuthors([]);
+    renderModal(0);
+    paste("AB: conceptualization.");
+    await review();
+    expect(screen.getByText(en.errStatementNoContributors)).toBeTruthy();
+  });
+
+  it("shows what matched and what did not, and applies only on request", async () => {
+    useContributionStore
+      .getState()
+      .loadAuthors([
+        createAuthor("Ann Bell", { contributions: [{ role: "Software", score: 33 }] }),
+        createAuthor("Carl Dunn"),
+        createAuthor("Yibo Lu"),
+        createAuthor("Yang Lin"),
+      ]);
+    const { onApplyStatement } = renderModal(4);
+    paste("AB: conceptualization, software. YL: data curation.");
+    await review();
+
+    expect(screen.getByRole("heading", { name: en.statementReviewTitle })).toBe(document.activeElement);
+    expect(screen.getByText("Conceptualization, Software")).toBeTruthy();
+    expect(screen.getAllByText(en.statementNoRoles)).toHaveLength(3);
+    expect(screen.getByText("Not matched: YL")).toBeTruthy();
+    expect(onApplyStatement).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    const [next, added] = onApplyStatement.mock.calls[0] ?? [];
+    expect(added).toBe(1);
+    const scores = next[0].contributions.filter((c: { score: number }) => c.score > 0);
+    // The level already set stays; the new role is set.
+    expect(scores).toEqual([
+      { role: "Conceptualization", score: 100 },
+      { role: "Software", score: 33 },
+    ]);
+  });
+
+  it("says so when nothing matches the draft", async () => {
+    useContributionStore.getState().loadAuthors([createAuthor("Ann Bell")]);
+    renderModal(1);
+    paste("XY: conceptualization.");
+    await review();
+    expect(screen.getByText(en.errStatementNoRoles)).toBeTruthy();
   });
 });

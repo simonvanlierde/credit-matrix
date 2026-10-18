@@ -18,6 +18,14 @@ describe("detectFormat", () => {
     expect(detectFormat("Anne Namer, Bob Smith")).toBe("names");
   });
 
+  it("reads text with CRediT's own wording as a statement, and importAny refuses it", async () => {
+    const text = "MG: Writing, conceptualization. EM and FG: software.";
+    expect(detectFormat(text)).toBe("statement");
+    // "Software" alone also turns up in name lists and ICMJE prose.
+    expect(detectFormat("Software Smith, Jane Doe")).toBe("names");
+    await expect(importAny(text)).rejects.toThrow(/parseStatement/);
+  });
+
   it("reads text with a Name header cell as CSV", () => {
     expect(detectFormat("Name,ORCID\nJane Smith,")).toBe("csv");
     expect(detectFormat('"name" , Conceptualization\nJane Smith,100')).toBe("csv");

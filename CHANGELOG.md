@@ -13,6 +13,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   The sign-in travels inside the reply link and JSON exports; no server keeps it. A sign-in moved
   onto another answer does not verify, and importing a JSON export checks each sign-in again.
   If ORCID cannot be reached then, the answer arrives without the mark; try again later to add it.
+- Paste an existing author contribution statement into Import to fill in the grid. It is matched to
+  the contributors already in the draft, by full name or initials ("MG", "S.L.V.", "Nam KC"). You
+  see which roles each person gets and which names or initials matched no one, or more than one,
+  before you apply; one Undo takes it back. Only CRediT wording counts, so "drew the figures" or
+  "approved the manuscript" add nothing. The statement never leaves the browser.
+- The `credit-matrix` package exports `parseStatement`, `statementAuthor` and `namesCredit`, and
+  `detectFormat` returns `"statement"` for a CRediT statement. `importAny` throws on one, as a
+  statement names roles, not contributors.
 - In the `credit-matrix` package, replies can carry `provenance.orcid` (the new `OrcidProof` type)
   and `provenance.replacedOrcid`; run `recheckSignIns` on imported asks.
 

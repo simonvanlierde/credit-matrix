@@ -291,7 +291,7 @@
   "welcomeDraftsBody": "¿Más de un artículo? Cambie de borrador desde la cabecera; cada uno se guarda por separado en este navegador.",
   "welcomeAskTitle": "Pregunte directamente a sus coautores",
   "welcomeAskBody": "Copie un enlace desde el menú de la fila de una persona y envíeselo. Cuando le devuelvan el enlace, ábralo: la respuesta se guarda junto a su fila y las diferencias se resuelven en la pestaña Revisión.",
-  "importDescription": "Empiece por un DOI, pegue nombres o un enlace que le hayan devuelto, o suba un archivo CSV, JSON o JATS4R XML. JSON y XML también restauran las contribuciones, con sus niveles si el archivo los incluye. También sirve una hoja de cálculo de tenzing (CSV o TSV).",
+  "importDescription": "Empiece por un DOI, pegue nombres o un enlace que le hayan devuelto, o suba un archivo CSV, JSON o JATS4R XML. JSON y XML también restauran las contribuciones, con sus niveles si el archivo los incluye. También sirve una hoja de cálculo de tenzing (CSV o TSV). Pegue una declaración de contribución de autores para completar las funciones de los colaboradores que ya están aquí.",
   "contributorActions": "Acciones para {name}",
   "colorBlue": "Azul",
   "colorOrange": "Naranja",
@@ -371,5 +371,18 @@
   "columnOpenDifferences": "{name}: {count, plural, one {# diferencia abierta} other {# diferencias abiertas}}",
   "columnSettled": "Resuelto",
   "legendDiffers": "Un coautor respondió de otra forma",
-  "reviewAskMessage": "Hola, {name}:\n\nEstoy terminando la declaración de contribuciones CRediT para {work}. Nuestras respuestas difieren en {role}. ¿Podría abrir este enlace, revisar su fila y devolverme el enlace?\n\n{link}\n\nEl enlace contiene el título, su nombre y su iD. No se guarda nada en ningún servidor."
+  "reviewAskMessage": "Hola, {name}:\n\nEstoy terminando la declaración de contribuciones CRediT para {work}. Nuestras respuestas difieren en {role}. ¿Podría abrir este enlace, revisar su fila y devolverme el enlace?\n\n{link}\n\nEl enlace contiene el título, su nombre y su iD. No se guarda nada en ningún servidor.",
+  "formatStatement": "Declaración CRediT",
+  "statementReview": "Revisar funciones",
+  "statementReviewTitle": "Funciones encontradas en la declaración",
+  "statementReviewSummary": "{added, plural, one {# función} other {# funciones}} por añadir para {people, plural, one {# colaborador} other {# colaboradores}}. Las funciones que ya están en la tabla no cambian.",
+  "statementNothingNew": "Todas las funciones encontradas ya están en la tabla.",
+  "statementNoRoles": "No se encontraron funciones",
+  "statementUnresolved": "Sin coincidencia: {tokens}",
+  "statementUnresolvedBody": "Estos nombres o iniciales no corresponden a ningún colaborador de este borrador, o a más de uno, así que sus funciones se omiten. Asígnelas en la tabla después de aplicar.",
+  "statementBack": "Volver",
+  "statementApply": "Aplicar funciones",
+  "statementApplied": "{count, plural, one {# función añadida} other {# funciones añadidas}} desde la declaración.",
+  "errStatementNoContributors": "Añada primero a los colaboradores y luego pegue la declaración: se compara con los nombres que ya hay en este borrador.",
+  "errStatementNoRoles": "No se pudo asignar ninguna función CRediT a los colaboradores de este borrador. Compruebe que la declaración los nombra como el borrador, por nombre o iniciales."
 }
