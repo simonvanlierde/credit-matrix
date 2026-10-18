@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Co-authors can sign in with ORCID before they send their answer back. The Review tab then shows
+  "Verified by ORCID" with their ORCID iD and the day they signed in, and the mark stays when you
+  export the draft as JSON and import it again. The sign-in travels only inside the reply link; no
+  server keeps it. "Verified" means ORCID signed the sign-in for this app and for this exact
+  answer: a sign-in moved onto a different answer does not verify. If ORCID cannot be reached when
+  you open the link, the answer arrives without the mark; open the link again later to add it.
+  Signing in is optional, and it only works on the app's own address.
+- In the `credit-matrix` package, a reply can carry `provenance.orcid` (the new `OrcidProof` type)
+  with the token and the answer it was signed for, so the check can be repeated later.
+
 ## [0.8.1] - 2026-10-13
 
 ### Fixed

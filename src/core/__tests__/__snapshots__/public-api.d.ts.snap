@@ -197,6 +197,17 @@ type CreditRoleName = (typeof CREDIT_ROLES)[number]["name"];
 /** Lookup a role by name. Throws if the name is not a valid CRediT role. */
 export declare function getRoleByName(name: string): (typeof CREDIT_ROLES)[number];
 //#endregion
+//#region orcid-proof.d.ts
+/** What a verified reply keeps: who signed in, and the evidence to check it again. */
+declare const OrcidProofSchema: z.ZodMiniObject<{
+  orcid: z.ZodMiniString<string>;
+  name: z.ZodMiniOptional<z.ZodMiniString<string>>;
+  issuedAt: z.ZodMiniNumber<number>;
+  token: z.ZodMiniString<string>;
+  payload: z.ZodMiniString<string>;
+}, z.core.$loose>;
+type OrcidProof = z.infer<typeof OrcidProofSchema>;
+//#endregion
 //#region ask.d.ts
 /** What a reply answers: each role, and the two markers outside CRediT. */
 type Target = CreditRoleName | "equalContribution" | "corresponding";
@@ -247,6 +258,15 @@ declare const ReplySchema: z.ZodMiniObject<{
   corresponding: z.ZodMiniBoolean<boolean>;
   sentAt: z.ZodMiniNumber<number>;
   receivedAt: z.ZodMiniNumber<number>;
+  provenance: z.ZodMiniCatch<z.ZodMiniOptional<z.ZodMiniObject<{
+    orcid: z.ZodMiniOptional<z.ZodMiniObject<{
+      orcid: z.ZodMiniString<string>;
+      name: z.ZodMiniOptional<z.ZodMiniString<string>>;
+      issuedAt: z.ZodMiniNumber<number>;
+      token: z.ZodMiniString<string>;
+      payload: z.ZodMiniString<string>;
+    }, z.core.$loose>>;
+  }, z.core.$loose>>>;
   decisions: z.ZodMiniObject<{
     Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
       choice: z.ZodMiniEnum<{
@@ -503,6 +523,15 @@ export declare const AskSchema: z.ZodMiniObject<{
     corresponding: z.ZodMiniBoolean<boolean>;
     sentAt: z.ZodMiniNumber<number>;
     receivedAt: z.ZodMiniNumber<number>;
+    provenance: z.ZodMiniCatch<z.ZodMiniOptional<z.ZodMiniObject<{
+      orcid: z.ZodMiniOptional<z.ZodMiniObject<{
+        orcid: z.ZodMiniString<string>;
+        name: z.ZodMiniOptional<z.ZodMiniString<string>>;
+        issuedAt: z.ZodMiniNumber<number>;
+        token: z.ZodMiniString<string>;
+        payload: z.ZodMiniString<string>;
+      }, z.core.$loose>>;
+    }, z.core.$loose>>>;
     decisions: z.ZodMiniObject<{
       Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
         choice: z.ZodMiniEnum<{
@@ -750,12 +779,15 @@ type AskEvent = {
   contributorId: string;
   prefilled: boolean;
   at: number;
-} | {
+} |
+/** `orcid` is a sign-in the caller has already verified. */
+{
   kind: "reply";
   contributorId: string;
   row: unknown;
   sentAt: number | null;
   at: number;
+  orcid?: OrcidProof;
 } |
 /** A `null` choice clears that target's decision, and a "theirs" one puts the row's value back. */
 {
@@ -1115,6 +1147,11 @@ interface ShareData {
   sentAt: number | null;
   /** the asker works in yes/no mode; false on links from before this was recorded */
   yesNo: boolean;
+  /** A reply's ORCID sign-in, unchecked: the token and the payload its nonce must hash. See `verifyReplyProof`. */
+  signIn: {
+    token: string;
+    payload: string;
+  } | null;
 }
 interface SharePayloadInput {
   authors: Author[];
@@ -1127,6 +1164,8 @@ interface SharePayloadInput {
   sentAt?: number;
   /** The asker works in yes/no mode. Only meaningful with `claimId`. */
   yesNo?: boolean;
+  /** The co-author's ORCID id_token, issued for this payload without it. Only meaningful with `reply`. */
+  idToken?: string;
 }
 //#endregion
 //#region share-link.d.ts
@@ -1146,7 +1185,7 @@ export declare function encodeShareHash(input: SharePayloadInput, baseUrl?: stri
  */
 export declare function decodeShareHash(hash: string): Promise<ShareData | null>;
 //#endregion
-export type { Ask, AskEvent, AskState, Author, Choice, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, Outcome, Patch, Reply, Review, ShareData, SharePayloadInput, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
+export type { Ask, AskEvent, AskState, Author, Choice, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, OrcidProof, Outcome, Patch, Reply, Review, ShareData, SharePayloadInput, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
 // lookup.d.ts
 //#region doi-lookup.d.ts
 /**

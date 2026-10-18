@@ -3,6 +3,7 @@ import type { Author, Contribution, ContributionLevel } from "./author";
 import { AuthorSchema, ContributionSchema, scoreToLevel } from "./author";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
+import { type OrcidProof, OrcidProofSchema } from "./orcid-proof";
 import { buildInitials, createAuthor, deduplicateAuthorInitials } from "./parse-authors";
 
 /** What a reply answers: each role, and the two markers outside CRediT. */
@@ -40,6 +41,8 @@ const ReplySchema = /* @__PURE__ */ (() =>
     /** When the co-author sent it (the link's `w`), or when it was opened for links without one. */
     sentAt: z.number(),
     receivedAt: z.number(),
+    /** How the reply was sent. A malformed one is dropped, never the reply. */
+    provenance: z.catch(z.optional(z.looseObject({ orcid: z.optional(OrcidProofSchema) })), undefined),
     // Loose too: a target a later release adds keeps its decision here, and the logic skips it.
     decisions: z.looseObject(
       Object.fromEntries(ASK_TARGETS.map((target) => [target, z.optional(DecisionSchema)])) as Record<
@@ -78,7 +81,8 @@ export interface Patch {
 
 export type AskEvent =
   | { kind: "sent"; contributorId: string; prefilled: boolean; at: number }
-  | { kind: "reply"; contributorId: string; row: unknown; sentAt: number | null; at: number }
+  /** `orcid` is a sign-in the caller has already verified. */
+  | { kind: "reply"; contributorId: string; row: unknown; sentAt: number | null; at: number; orcid?: OrcidProof }
   /** A `null` choice clears that target's decision, and a "theirs" one puts the row's value back. */
   | { kind: "settle"; contributorId: string; choices: Choice | Partial<Record<Target, Choice | null>>; at?: number };
 
@@ -251,7 +255,9 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         const sameLink = event.sentAt === null || sentAt === held.reply.sentAt;
         // The same answer again is a duplicate, unless it renames the row or answers an ask sent since.
         const reAsked = held.sentAt > held.reply.receivedAt;
-        if (same && !changed && (sameLink || !reAsked)) {
+        // A sign-in the held answer lacks is news too.
+        const newlySigned = event.orcid !== undefined && held.reply.provenance === undefined;
+        if (same && !changed && (sameLink || !reAsked) && !newlySigned) {
           return {
             outcome: { kind: "received", open: review(author, held).open.length, duplicate: true },
             patch: emptyPatch(),
@@ -264,6 +270,7 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         ...answer,
         sentAt,
         receivedAt: event.at,
+        ...(event.orcid ? { provenance: { orcid: event.orcid } } : {}),
         decisions: same && held?.reply ? held.reply.decisions : {},
       };
       // A reply with no recorded ask (asked before asks were kept, or the ask was undone): every such ask was pre-filled.

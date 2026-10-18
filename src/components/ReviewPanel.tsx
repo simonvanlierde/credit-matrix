@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, MessagesSquare } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, MessagesSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -241,6 +241,18 @@ export function ReviewPanel() {
                   {author.name}
                 </h3>
                 <p className="text-xs text-on-surface-variant">{meta}</p>
+                {reply.provenance?.orcid && (
+                  <p className="mt-0.5 flex items-start gap-1 text-xs text-on-surface" data-orcid-verified="">
+                    <BadgeCheck className="mt-px size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                    <span>
+                      {t("reviewOrcidVerified", {
+                        orcid: reply.provenance.orcid.orcid,
+                        date: format.dateTime(reply.provenance.orcid.issuedAt, { dateStyle: "medium" }),
+                      })}
+                      {author.orcid && author.orcid !== reply.provenance.orcid.orcid && <> {t("reviewOrcidOtherId")}</>}
+                    </span>
+                  </p>
+                )}
               </div>
               {result.open.length > 1 && (
                 <button

@@ -1448,7 +1448,7 @@ describe("contribution store", () => {
         sentAt: 9,
         receivedAt: 10,
         decisions: {},
-        provenance: "a later key",
+        relay: "a later key",
       };
       const merged = merge?.(
         {

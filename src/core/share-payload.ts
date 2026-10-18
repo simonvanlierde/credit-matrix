@@ -20,6 +20,9 @@ import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
  * to the draft it came from and be told apart from the reply the claimee sends.
  * Keys added since are optional, so a reader that predates them ignores them.
  */
+/** An ORCID id_token is under 1 kB; the cap only keeps junk out. */
+const MAX_TOKEN_LENGTH = 4096;
+
 const SharePayloadSchema = /* @__PURE__ */ (() =>
   z
     .object({
@@ -39,6 +42,8 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
       w: z.optional(z.number().check(z.nonnegative())),
       /** the asker works in yes/no mode, so the co-author answers yes or no rather than in levels */
       y: z.optional(z.literal(1)),
+      /** ORCID id_token on a signed-in reply; always the last key, its nonce hashes the payload without it */
+      k: z.optional(z.string().check(z.maxLength(MAX_TOKEN_LENGTH))),
       a: z
         .array(
           z.object({
@@ -65,6 +70,7 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
         // A claim needs a home to reply to, and a reply is always a claim.
         if (payload.c && !payload.d) ctx.addIssue({ code: "custom", message: "claim without source draft" });
         if (payload.r && !payload.c) ctx.addIssue({ code: "custom", message: "reply without claim" });
+        if (payload.k && !payload.r) ctx.addIssue({ code: "custom", message: "sign-in on a link that is not a reply" });
         if (payload.c && !payload.a.some((entry) => entry.i === payload.c)) {
           ctx.addIssue({ code: "custom", message: "claim names an absent contributor" });
         }
@@ -90,6 +96,8 @@ export interface ShareData {
   sentAt: number | null;
   /** the asker works in yes/no mode; false on links from before this was recorded */
   yesNo: boolean;
+  /** A reply's ORCID sign-in, unchecked: the token and the payload its nonce must hash. See `verifyReplyProof`. */
+  signIn: { token: string; payload: string } | null;
 }
 
 export interface SharePayloadInput {
@@ -103,6 +111,8 @@ export interface SharePayloadInput {
   sentAt?: number;
   /** The asker works in yes/no mode. Only meaningful with `claimId`. */
   yesNo?: boolean;
+  /** The co-author's ORCID id_token, issued for this payload without it. Only meaningful with `reply`. */
+  idToken?: string;
 }
 
 /** Serialize authors and envelope into the compact share shape. Minified, never pretty. */
@@ -146,6 +156,8 @@ export function toSharePayload(input: SharePayloadInput): string {
       ...(author.equalContribution ? { e: 1 } : {}),
       ...(author.corresponding ? { c: 1 } : {}),
     })),
+    // Last, so dropping it gives back the exact payload the token's nonce hashes.
+    ...(input.idToken && reply ? { k: input.idToken } : {}),
   });
 }
 
@@ -154,7 +166,10 @@ export function toSharePayload(input: SharePayloadInput): string {
  * turns into "that link could not be opened".
  */
 export function fromSharePayload(json: string): ShareData {
-  const payload = SharePayloadSchema.parse(JSON.parse(json));
+  const raw = JSON.parse(json);
+  const payload = SharePayloadSchema.parse(raw);
+  // Re-serializing JSON.stringify output gives the same string back, so this is what the co-author hashed.
+  const { k: _token, ...signed } = raw;
   const authors = deduplicateAuthorInitials(
     payload.a.map((entry) =>
       createAuthor(entry.n, {
@@ -182,5 +197,6 @@ export function fromSharePayload(json: string): ShareData {
     blank: payload.b === 1,
     sentAt: payload.w ?? null,
     yesNo: payload.y === 1,
+    signIn: payload.k ? { token: payload.k, payload: JSON.stringify(signed) } : null,
   };
 }

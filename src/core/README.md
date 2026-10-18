@@ -158,6 +158,14 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
   and `selfId` over to the ids that `keepKnownIds` gave the imported rows. When you import into a
   draft that already has contributors, only rows that matched one of them keep their answers.
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
+
+A reply can carry an ORCID sign-in. The co-author signs in with ORCID, and the token travels inside
+the reply link. The caller checks it (in the app, `orcid-proof.ts`) and passes it on the `reply`
+event as `orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`): the ORCID iD, when the
+co-author signed in, the token, and the link payload the token was issued for. "Verified" means
+ORCID's signature checks out, the token was issued for this app, and its nonce is the SHA-256 of
+that payload. Expiry is not checked when the reply is opened: the token lasts ten minutes, and the
+reply is read later.
 - `AskSchema` validates stored and imported asks.
 
 ## Rosters and links
@@ -187,7 +195,7 @@ holds its exact shape. By entry point:
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`
   - Asks: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
     `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
-    `Decision`, `Difference`, `Level`, `Outcome`, `Patch`, `Reply`, `Review`, `Target`
+    `Decision`, `Difference`, `Level`, `Outcome`, `OrcidProof`, `Patch`, `Reply`, `Review`, `Target`
 - `credit-matrix/lookup`: `lookupOrcidPerson`, `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`,
   and the types `OrcidLookupResult`, `OrcidErrorCode`, `DoiLookupResult`, `DoiErrorCode`, `DoiAuthor`
 - `credit-matrix/i18n`: `AVAILABLE_LOCALES`, `normalizeLocaleCode`, `hasCatalog`,

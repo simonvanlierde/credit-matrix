@@ -7,10 +7,11 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { decodeShareHash, importAnswers, type ShareData } from "@/core";
+import { decodeShareHash, importAnswers, type OrcidProof, type ShareData } from "@/core";
 import { isAllBinary } from "@/core/author";
 import { keepKnownIds } from "@/core/merge-row";
 import { announce } from "@/lib/announce";
+import { verifyIncoming } from "@/lib/orcid-sign-in";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import {
@@ -97,7 +98,7 @@ export function HeaderActions() {
       showStatus({ kind: "error", message: t("errShareLinkBroken") });
       return;
     }
-    const failure = openFromLink(shared);
+    const failure = openFromLink(shared, await verifyIncoming(shared));
     if (failure) {
       showStatus({
         kind: "error",
@@ -113,7 +114,7 @@ export function HeaderActions() {
    * same way. Success paths surface their own status; failures return a key so
    * the Import dialog can render them inline and stay open.
    */
-  function openFromLink(shared: ShareData): LinkFailure | null {
+  function openFromLink(shared: ShareData, orcid?: OrcidProof): LinkFailure | null {
     const state = useContributionStore.getState();
     const isLocal = (id: string | null): id is string =>
       id !== null && (id === state.activeDraftId || !!state.drafts[id]);
@@ -131,6 +132,7 @@ export function HeaderActions() {
         row: shared.authors.find((author) => author.id === contributorId),
         sentAt: shared.sentAt,
         at: Date.now(),
+        ...(orcid ? { orcid } : {}),
       });
       if (outcome.kind === "unmatched") return "mergeUnmatched";
       if (outcome.kind !== "received" && outcome.kind !== "stale") return "errShareLinkBroken";
@@ -346,7 +348,7 @@ export function HeaderActions() {
     const hashAt = url.indexOf("#");
     const shared = hashAt === -1 ? null : await decodeShareHash(url.slice(hashAt));
     if (!shared || shared.authors.length === 0) return "errShareLinkBroken";
-    return openFromLink(shared);
+    return openFromLink(shared, await verifyIncoming(shared));
   }
 
   async function handleShare() {
