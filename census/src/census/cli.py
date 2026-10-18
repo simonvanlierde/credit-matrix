@@ -179,7 +179,7 @@ def cmd_label(args: argparse.Namespace) -> None:
         disagreements = out.with_stem(out.stem + "-disagreements")
         n = labels.export_set(con, out, args.seed)
         m = labels.export_disagreements(con, disagreements, args.seed)
-    print(f"{n} articles to label in {out}, {m} disagreements to judge in {disagreements}")
+    print(f"{n} articles to label in {out} (strata in {labels.key_path(out)}), {m} to judge in {disagreements}")
 
 
 def cmd_score(args: argparse.Namespace) -> None:
@@ -191,7 +191,7 @@ def cmd_score(args: argparse.Namespace) -> None:
                 for verdict, n in labels.verdicts(args.labels).most_common():
                     print(f"{verdict:<10}{n:>4}")
                 return
-            tables = {by: labels.score(con, args.labels, by) for by in ("style", "publisher")}
+            tables = {by: labels.score(con, args.labels, by, args.key) for by in ("style", "publisher")}
             second = args.second and labels.agreement(con, args.labels, args.second)
         except ValueError as error:
             raise Failure(error) from error
@@ -260,7 +260,8 @@ def main(argv: list[str] | None = None) -> int:
         "--set",
         action="store_true",
         help="write the label set instead: publishers without paired articles, by publisher and style, an overlap"
-        " for a second labeller, and paired disagreements to judge (default: census/data/labels/<snapshot>-set.csv)",
+        " for a second labeller, the strata and weights in a -key.csv beside it, and paired disagreements to judge"
+        " (default: census/data/labels/<snapshot>-set.csv)",
     )
     cmd.set_defaults(func=cmd_label)
     cmd = sub.add_parser("score", parents=[snap, db], help="score the parser against a labelled CSV")
@@ -268,6 +269,7 @@ def main(argv: list[str] | None = None) -> int:
         "labels", type=Path, help="the CSV from `census label`, gold filled (or a disagreement file, wrong filled)"
     )
     cmd.add_argument("--second", type=Path, help="a second labeller's copy, scored against the first on the overlap")
+    cmd.add_argument("--key", type=Path, help="the label set's strata and weights (default: <labels>-key.csv if there)")
     cmd.set_defaults(func=cmd_score)
 
     args = parser.parse_args(argv)

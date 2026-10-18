@@ -57,32 +57,39 @@ WHERE g.role IS NULL OR p.role IS NULL ORDER BY pmcid
 
 
 def export(con: duckdb.DuckDBPyConnection, path: Path, per_style: int, seed: int) -> int:
-    """`per_style` random articles with a statement for each text style. Returns the row count."""
+    """`per_style` random articles with a statement for each text style, shuffled and without the style.
+    Returns the row count."""
     rng = random.Random(seed)
     rows = []
     for style in TEXT_STYLES:
         pool = con.execute(
-            "SELECT pmcid, style, authors, statement FROM articles WHERE statement IS NOT NULL AND style = ?"
-            " ORDER BY pmcid",
+            "SELECT pmcid, authors, statement FROM articles WHERE statement IS NOT NULL AND style = ? ORDER BY pmcid",
             [style],
         ).fetchall()
-        for pmcid, style_, authors, text in rng.sample(pool, min(per_style, len(pool))):
-            rows.append((pmcid, style_, _numbered(authors), _cell(text), ""))
-    _write(path, ["pmcid", "style", "authors", "text", "gold"], rows)
+        for pmcid, authors, text in rng.sample(pool, min(per_style, len(pool))):
+            rows.append((pmcid, _numbered(authors), _cell(text), ""))
+    rng.shuffle(rows)
+    _write(path, ["pmcid", "authors", "text", "gold"], rows)
     return len(rows)
+
+
+def key_path(path: Path) -> Path:
+    """The key file `export_set` writes next to the label set: each article's stratum and weight."""
+    return path.with_stem(path.stem + "-key")
 
 
 def export_set(
     con: duckdb.DuckDBPyConnection, path: Path, seed: int, sizes: dict[str, int] = SET_SIZES, overlap: int = 25
 ) -> int:
-    """The label set to `path`; returns the row count.
+    """The label set to `path` and its strata to `key_path(path)`; returns the row count.
 
     Each style's articles come from publishers with fewer than PAIRED_ENOUGH paired articles (all
     publishers for `none`, which is never paired), split over publishers by the square root of their
-    size so the big ones get the most rows and the small ones still some. `weight` is the stratum's
-    article count over the rows drawn from it, so `score` counts each row for the articles it stands
-    for. `overlap` rows, drawn by the same seed, are marked for a second labeller. The style is left
-    out and the rows shuffled, so the file does not show the parser's verdict.
+    size so the big ones get the most rows and the small ones still some. The key gives each article's
+    stratum and its `weight`, the stratum's article count over the rows drawn from it, so `score`
+    counts each row for the articles it stands for. `overlap` rows, drawn by the same seed, are marked
+    for a second labeller. The labeller's file holds no style, stratum or weight, and its rows are
+    shuffled, so nothing in it shows the parser's verdict.
     """
     rng = random.Random(seed)
     covered = {p for (p,) in con.execute(_COVERED, [PAIRED_ENOUGH]).fetchall()}
@@ -100,10 +107,11 @@ def export_set(
     rng.shuffle(picked)
     texts = _texts(con, [pmcid for pmcid, _, _ in picked])
     rows = [
-        (pmcid, stratum, "1" if pmcid in second else "", _numbered(texts[pmcid][0]), _cell(texts[pmcid][1]), "", w)
-        for pmcid, stratum, w in picked
+        (pmcid, "1" if pmcid in second else "", _numbered(texts[pmcid][0]), _cell(texts[pmcid][1]), "")
+        for pmcid, _, _ in picked
     ]
-    _write(path, ["pmcid", "publisher", "overlap", "authors", "text", "gold", "weight"], rows)
+    _write(path, ["pmcid", "overlap", "authors", "text", "gold"], rows)
+    _write(key_path(path), ["pmcid", "publisher", "weight"], sorted(picked))
     return len(rows)
 
 
@@ -252,20 +260,28 @@ def _wilson(p: float, n: float, z: float = 1.96) -> tuple[float, float]:
     return centre - half, centre + half
 
 
-def score(con: duckdb.DuckDBPyConnection, path: Path, by: str = "style") -> list[tuple]:
+def score(con: duckdb.DuckDBPyConnection, path: Path, by: str = "style", key: Path | None = None) -> list[tuple]:
     """Precision, recall and F1 over (author, role) pairs, and the share of articles exactly right with
-    its 95% interval, per style or per style and publisher (the CSV's `publisher` stratum when it has
-    one, else the database's). The style is the database's. Each row counts by its `weight` (1 when
-    the CSV has none); the article count is unweighted."""
+    its 95% interval, per style or per style and publisher. The style is the database's. The stratum
+    and weight come from `key` (by default `key_path(path)` when it exists); without a key file each
+    row weighs 1 under the database's publisher. The article count is unweighted."""
+    key = key or key_path(path)
+    strata = {}
+    if key.exists():
+        with key.open(newline="", encoding="utf-8-sig") as f:
+            strata = {r["pmcid"]: (r["publisher"], float(r["weight"])) for r in csv.DictReader(f)}
     counts: dict[str, list[float]] = defaultdict(lambda: [0.0] * 7)
     for row in _labelled(path):
         n_authors, publisher, style = _article(con, row["pmcid"])
+        if strata and row["pmcid"] not in strata:
+            raise ValueError(f"{row['pmcid']}: not in {key}")
+        publisher, weight = strata.get(row["pmcid"], (publisher, 1.0))
         predicted = set(
             con.execute("SELECT author_position, role FROM assignments WHERE pmcid = ?", [row["pmcid"]]).fetchall()
         )
-        key = style if by == "style" else f"{style}: {row.get('publisher') or publisher}"
-        _add(counts[key], predicted, _gold(row, n_authors), float(row.get("weight") or 1))
-    return [(key, *_rates(*c)) for key, c in sorted(counts.items())]
+        group = style if by == "style" else f"{style}: {publisher}"
+        _add(counts[group], predicted, _gold(row, n_authors), weight)
+    return [(group, *_rates(*c)) for group, c in sorted(counts.items())]
 
 
 def agreement(con: duckdb.DuckDBPyConnection, first: Path, second: Path) -> tuple:

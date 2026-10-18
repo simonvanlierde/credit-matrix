@@ -59,6 +59,7 @@ def test_label_export_and_score(db, tmp_path):
     assert labels.export(db, out, per_style=5, seed=1) == 2
     with out.open(encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
+    assert list(rows[0]) == ["pmcid", "authors", "text", "gold"]  # blind: no style, the parser's verdict
     assert rows[0]["authors"] == "1. Ann Smith | 2. Bo Jones"
     for row in rows:  # blind: no prediction anywhere but the source text
         assert not row["gold"]
@@ -75,7 +76,7 @@ def test_label_export_and_score(db, tmp_path):
         ("contrib_text", 1, 1.0, 1.0, 1.0, 1.0),
         ("statement_text", 1, 0.667, 1.0, 0.8, 0.0),
     ]
-    # An older CSV with no publisher column takes the database's.
+    # With no key file, the publisher is the database's.
     assert [r[0] for r in labels.score(db, out, by="publisher")] == [
         "contrib_text: Test Press",
         "statement_text: Test Press",
@@ -154,14 +155,17 @@ def test_label_set(set_db, tmp_path):
     assert out.read_bytes() == (tmp_path / "again.csv").read_bytes()  # the seed fixes the draw
     with out.open(encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
-    # Blind: no style, the parser's verdict, in the header.
-    assert list(rows[0]) == ["pmcid", "publisher", "overlap", "authors", "text", "gold", "weight"]
+    # Blind: no style (the parser's verdict), stratum or weight in the labeller's file.
+    assert list(rows[0]) == ["pmcid", "overlap", "authors", "text", "gold"]
     style = dict(set_db.sql("SELECT pmcid, style FROM articles").fetchall())
     styles = [style[r["pmcid"]] for r in rows]
     assert sum(a != b for a, b in pairwise(styles)) > len(sizes)  # shuffled, not in blocks
+    with labels.key_path(out).open(encoding="utf-8-sig") as f:
+        key = list(csv.DictReader(f))
+    assert sorted(r["pmcid"] for r in key) == sorted(r["pmcid"] for r in rows)
     # A is measured by paired_scores, but its `none` articles never are. E has 1 article for its 2-row
     # share, so C takes the other. Weight is the stratum's articles over its rows.
-    weights = {(style[r["pmcid"]], r["publisher"]): r["weight"] for r in rows}
+    weights = {(style[r["pmcid"]], r["publisher"]): r["weight"] for r in key}
     assert weights == {
         ("statement_text", "B"): "14.2857",
         ("statement_text", "(other)"): "1",
@@ -195,20 +199,42 @@ def test_label_set_cli(set_db, tmp_path, capsys):
     # The default sizes ask for more contrib_text (11) and none (10) rows than there are: all are taken.
     assert "121 articles to label" in capsys.readouterr().out
     assert len((tmp_path / "cli-disagreements.csv").read_text(encoding="utf-8-sig").splitlines()) == 3
+    assert len((tmp_path / "cli-key.csv").read_text(encoding="utf-8-sig").splitlines()) == 122
 
 
-def _labels(path, rows):
-    path.write_text("pmcid,publisher,overlap,authors,text,gold,weight\n" + rows, encoding="utf-8-sig")
+def test_label_export_is_blind_and_shuffled(set_db, tmp_path):
+    out = tmp_path / "sample.csv"
+    assert labels.export(set_db, out, per_style=5, seed=3) == 15
+    with out.open(encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f))
+    style = dict(set_db.sql("SELECT pmcid, style FROM articles").fetchall())
+    assert sum(a != b for a, b in pairwise(style[r["pmcid"]] for r in rows)) > len(labels.TEXT_STYLES)
+
+
+def _labels(path, rows, key=None):
+    """A labeller's file, and its key file when `key` is given."""
+    path.write_text("pmcid,overlap,authors,text,gold\n" + rows, encoding="utf-8-sig")
+    if key is not None:
+        labels.key_path(path).write_text("pmcid,publisher,weight\n" + key, encoding="utf-8-sig")
 
 
 def test_score_weights_rows_by_stratum(db, tmp_path):
     db.execute("UPDATE articles SET style = 'contrib_text'")
     out = tmp_path / "w.csv"
     # PMC2's parser output has 2 right pairs and 1 wrong; its row stands for 3 articles.
-    _labels(out, "PMC1,P,,,x,1: software; 2: validation,1\nPMC2,Q,,,x,1: software; 2: visualization,3\n")
+    _labels(
+        out, "PMC1,,,x,1: software; 2: validation\nPMC2,,,x,1: software; 2: visualization\n", "PMC1,P,1\nPMC2,Q,3\n"
+    )
     [(style, n, precision, recall, f1, exact, low, high)] = labels.score(db, out)
     assert (style, n, precision, recall, f1, exact) == ("contrib_text", 2, 0.727, 1.0, 0.842, 0.25)
     assert low < exact < high
+    # A copy under another name finds no key beside it, so it is given one.
+    copy = tmp_path / "copy.csv"
+    copy.write_bytes(out.read_bytes())
+    assert labels.score(db, copy, key=labels.key_path(out))[0][:6] == (style, n, precision, recall, f1, exact)
+    _labels(out, "PMC1,,,x,1: software\n", "PMC2,Q,3\n")
+    with pytest.raises(ValueError, match="PMC1: not in"):
+        labels.score(db, out)
 
 
 def test_score_per_style_and_publisher(db, tmp_path):
@@ -216,20 +242,24 @@ def test_score_per_style_and_publisher(db, tmp_path):
     db.execute("INSERT INTO articles (pmcid, publisher, style, n_authors) VALUES ('PMC9', 'P', 'none', 1)")
     out = tmp_path / "p.csv"
     # P is a stratum in two styles; nothing was predicted for PMC8 and PMC9, so precision is None.
-    _labels(out, "PMC1,P,,,x,1: software; 2: validation,\nPMC8,P,,,x,1: software,\nPMC9,P,,,x,none,\n")
+    _labels(
+        out,
+        "PMC1,,,x,1: software; 2: validation\nPMC8,,,x,1: software\nPMC9,,,x,none\n",
+        "PMC1,P,1\nPMC8,P,1\nPMC9,P,1\n",
+    )
     assert [r[:6] for r in labels.score(db, out, by="publisher")] == [
         ("contrib_text: P", 1, 1.0, 1.0, 1.0, 1.0),
         ("none: P", 2, None, 0.0, 0.0, 0.5),
     ]
-    _labels(out, "PMC9,P,,,x,none,\n")
+    _labels(out, "PMC9,,,x,none\n", "PMC9,P,1\n")
     assert labels.score(db, out)[0][:6] == ("none", 1, None, None, None, 1.0)
 
 
 def test_agreement_on_overlap_rows_only(db, tmp_path):
     first, second = tmp_path / "a.csv", tmp_path / "b.csv"
     # PMC2 is labelled the same in both but is not an overlap row, so it does not count.
-    _labels(first, "PMC1,P,1,,x,1: software; 2: validation,\nPMC2,Q,,,x,1: software,\n")
-    _labels(second, "PMC1,P,1,,x,1: software,\nPMC2,Q,,,x,1: software,\n")
+    _labels(first, "PMC1,1,,x,1: software; 2: validation\nPMC2,,,x,1: software\n")
+    _labels(second, "PMC1,1,,x,1: software\nPMC2,,,x,1: software\n")
     assert labels.agreement(db, first, second)[:5] == (1, 1.0, 0.5, 0.667, 0.0)
 
 

@@ -153,7 +153,8 @@ uv run census score data/labels/sample-2026-10.csv
 ```
 
 `label` samples articles whose roles were read from free text and leaves the parser's output out of
-the file, so a label is not anchored to its guess. `score` prints precision, recall and F1 over
+the file, so a label is not anchored to its guess. It also leaves out the style (the parser's verdict
+on the text) and shuffles the rows. `score` prints precision, recall and F1 over
 (author, role) pairs, and the share of articles exactly right with a 95% interval, per style. It
 takes the style from the database, not the CSV.
 
@@ -163,10 +164,11 @@ The paired scores cover only publishers with 1,000 or more tagged articles that 
 statement (MDPI, Frontiers, OUP, SAGE, The Royal Society, AAAS and Pensoft). `census label --set`
 (seed 20261013) writes the hand-label set for the rest:
 
-- `data/labels/oa-2026-10-set.csv`, 160 articles. Like the `label` sample it leaves out the parser's
-  output, and also the style (the parser's verdict on the text) and any order by style: rows are
-  shuffled. Within each style, publishers get rows by the square root of their article count;
-  publishers under 0.5% of a style share an "(other)" stratum, named in `publisher`.
+- `data/labels/oa-2026-10-set.csv`, 160 articles for the labeller: `pmcid`, `overlap`, `authors`,
+  `text` and `gold`, shuffled, blind like the `label` sample. Each article's stratum and weight are
+  in `data/labels/oa-2026-10-set-key.csv`, which the labeller does not open: a stratum or weight
+  would give away the style. Within each style, publishers get rows by the square root of their
+  article count; publishers under 0.5% of a style share an "(other)" stratum.
   - 100 `statement_text` articles (about 707,000 in the pool). Springer Nature gets 27 rows over
     its BMC (11), Nature Publishing Group (11) and Springer (5) strata; Elsevier and articles with
     no publisher get 12 each, "(other)" 11, Wiley 10 and Wolters Kluwer 7, then 2 to 4 each for
@@ -176,9 +178,10 @@ statement (MDPI, Frontiers, OUP, SAGE, The Royal Society, AAAS and Pensoft). `ce
   - 30 `none` articles from every publisher: a contributions text was found but no CRediT roles
     were read from it. A gold label other than `none` is a missed statement. Only 255,341 of the
     6.1 million `none` articles keep such a text; misses in the other 5.9 million are not measured.
-  - `weight` is a stratum's article count over its rows. Square-root allocation draws small
-    publishers more often than their size, so `score` counts each row by its weight; the article
-    counts it prints are unweighted.
+  - A key file's `weight` is a stratum's article count over its rows. Square-root allocation draws
+    small publishers more often than their size, so `score` counts each row by its weight; the
+    article counts it prints are unweighted. `score` reads `<labels>-key.csv` beside the labels, or
+    the file given with `--key`; without one, every row weighs 1 under the database's publisher.
   - 25 rows marked `overlap` for a second labeller. Copy the blank file before anyone labels it;
     the second labeller fills only the overlap rows of the copy, and
     `census score <first.csv> --second <copy.csv>` prints their agreement on those rows.
