@@ -247,6 +247,49 @@ docker run -d --name vllm-census --gpus all --ipc=host -p 127.0.0.1:8000:8000 \
 
 The requests turn the model's reasoning block off (`chat_template_kwargs`, a vLLM extension).
 
+### A fine-tuned encoder
+
+The smallest model to compare: ModernBERT-base (150M parameters), fine-tuned on the training pairs.
+Its packages are in the optional `train` group, so the base install stays light:
+
+```sh
+uv sync --group train
+uv run census model train --name modernbert-120k   # a run in data/model/<snapshot>/runs/<name>/
+uv run census model predict --name modernbert-120k  # held-out predictions, scored like zero-shot's
+uv run census model score data/model/oa-2026-10/predictions/encoder-modernbert-120k-held_out.jsonl
+```
+
+Each example is one author of one article: the author's name, its initials ("N.-G.R.", "NGR",
+"Ryu NG") and place in the byline, then the statement. The model answers yes or no for each of
+the 14 roles, so its answers are the (author, role) pairs the scorers count. Training draws 120,000
+articles from `train.jsonl`, each publisher and style in proportion to the square root of its size
+(MDPI and Frontiers still lead; the small publishers, whose layouts differ, get more than their raw
+share). One statement group in 50 is kept out of training as a dev set, 2,000 articles of it; after
+each epoch the run scores dev at thresholds 0.3 to 0.7 and keeps the best epoch's model and
+threshold. The held-out set is never looked at while training. Statements longer than 512 tokens
+are cut, and the run counts how many. Every setting is in `encoder.Config` and the run's
+`config.json`; `metrics.jsonl` has the loss and the dev scores per epoch. `--train-articles`,
+`--epochs`, `--batch-size` and `--device cpu` change a run; on CPU, a run of 100 articles takes
+about 15 minutes.
+
+On `oa-2026-10`, the run with the defaults (814,249 examples, 2 epochs at batch 32) took 84
+minutes on one 24 GB GPU and used 12.7 GB of its memory; predicting the held-out set took under 4
+minutes. The first epoch scored best on dev (F1 0.903 at threshold 0.4); the second added nothing.
+1,176 training and 203 held-out statements were cut at 512 tokens. On the 27,874 held-out
+articles:
+
+| | precision | recall | F1 | exact |
+| --- | --- | --- | --- | --- |
+| rule parser | 0.878 | 0.875 | 0.877 | 0.488 |
+| Qwen3.5-9B, zero-shot | 0.854 | 0.871 | 0.862 | 0.425 |
+| ModernBERT-base, fine-tuned | 0.874 | 0.927 | **0.899** | **0.539** |
+
+The encoder gains on recall and holds the rule parser's precision. By publisher, F1 is 0.826 on MDPI
+(rules 0.798, zero-shot 0.761), 0.992 on Frontiers (0.980, 0.986) and 0.947 on Oxford University
+Press (0.776, 0.938). MDPI stays lowest for every method. Part of the reason: its tags can name
+roles its statement does not give (PMC10000114 tags an author with investigation and resources
+that the statement never mentions), which no reader of the statement can recover.
+
 ## Limits
 
 - The sample is drawn from the first 1,000 hits per publisher and year in Europe PMC's default

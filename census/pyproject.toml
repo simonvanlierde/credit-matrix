@@ -21,6 +21,10 @@ dev = [
     "ty>=0.0.86",
     "types-lxml>=2026.2.16",
 ]
+train = [
+    "torch>=2.14",
+    "transformers>=5.20",
+]
 
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]

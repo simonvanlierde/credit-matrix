@@ -4,7 +4,7 @@ Order of use:
   1. census run (a sample, from the PMC bucket) or census bulk (every open-access article)
   2. census fields
   3. census report, export, label or score
-  4. census model split, dataset, score or zero-shot
+  4. census model split, dataset, score, zero-shot, train or predict
 """
 
 import argparse
@@ -12,6 +12,7 @@ import csv
 import re
 import sys
 import time
+from collections.abc import Iterator
 from pathlib import Path
 
 from census import bulk, export, fields, labels, modelset, net, pipeline, pmc_s3, snapshot, store
@@ -255,14 +256,18 @@ def cmd_model_score(args: argparse.Namespace) -> None:
             print(f"{name[:39]:<40}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}{f'{low}-{high}':>13}")
 
 
-def cmd_model_zero_shot(args: argparse.Namespace) -> None:
+def _items(args: argparse.Namespace) -> tuple[Iterator[dict], str]:
+    """The articles to predict, and the set's name for the predictions file: held-out, or --labels."""
     if args.labels:
-        items, name = modelset.labelled_items(args.labels), args.labels.stem
-    else:
-        held_out = _model_dir(args) / "dataset" / "held_out.jsonl"
-        if not held_out.exists():
-            raise Failure(f"no {held_out}; write it with `census model dataset`")
-        items, name = modelset.read_jsonl(held_out), "held_out"
+        return modelset.labelled_items(args.labels), args.labels.stem
+    held_out = _model_dir(args) / "dataset" / "held_out.jsonl"
+    if not held_out.exists():
+        raise Failure(f"no {held_out}; write it with `census model dataset`")
+    return modelset.read_jsonl(held_out), "held_out"
+
+
+def cmd_model_zero_shot(args: argparse.Namespace) -> None:
+    items, name = _items(args)
     # One file per model and set, so a resumed run never mixes two models' answers.
     out = _model_dir(args) / "predictions" / f"zero-shot-{args.model.replace('/', '_')}-{name}.jsonl"
     start = time.monotonic()
@@ -273,6 +278,39 @@ def cmd_model_zero_shot(args: argparse.Namespace) -> None:
     print(f"predictions in {out}; score with `{how}`")
     if failed:
         raise Unfinished(f"{failed} requests failed; rerun to retry them")
+
+
+def _run_dir(args: argparse.Namespace) -> Path:
+    return _model_dir(args) / "runs" / args.name
+
+
+def cmd_model_train(args: argparse.Namespace) -> None:
+    from census import encoder
+
+    run = _run_dir(args)
+    if (run / "checkpoint").exists():
+        raise Failure(f"{run} has a checkpoint; pick a new --name")
+    dataset = _model_dir(args) / "dataset"
+    if not (dataset / "train.jsonl").exists():
+        raise Failure(f"no {dataset / 'train.jsonl'}; write it with `census model dataset`")
+    options = ("model", "train_articles", "dev_articles", "epochs", "batch_size", "device")
+    overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
+    best = encoder.train(encoder.Config(**overrides), dataset, run)
+    print(f"best epoch {best['epoch']}: dev F1 {best['f1']} at threshold {best['threshold']}; model in {run}")
+    print(f"predict with `census model predict --name {args.name}`")
+
+
+def cmd_model_predict(args: argparse.Namespace) -> None:
+    from census import encoder
+
+    run = _run_dir(args)
+    if not (run / "best.json").exists():
+        raise Failure(f"no trained model in {run}; train it with `census model train --name {args.name}`")
+    items, name = _items(args)
+    out = _model_dir(args) / "predictions" / f"encoder-{args.name}-{name}.jsonl"
+    start = time.monotonic()
+    n = encoder.predict(run, items, out, args.device)
+    print(f"{n} articles in {time.monotonic() - start:.0f} s; score with `census model score {out}`")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -356,6 +394,20 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--limit", type=int, help="at most this many new articles")
     cmd.add_argument("--labels", type=Path, help="run on a labelled CSV instead of the held-out set")
     cmd.set_defaults(func=cmd_model_zero_shot)
+    cmd = model_sub.add_parser("train", parents=[snap], help="fine-tune an encoder (needs `uv sync --group train`)")
+    cmd.add_argument("--name", required=True, help="run directory under data/model/<snapshot>/runs/")
+    cmd.add_argument("--model", help="Hugging Face checkpoint (default: answerdotai/ModernBERT-base)")
+    cmd.add_argument("--train-articles", type=int, help="training articles to draw (default: 120000)")
+    cmd.add_argument("--dev-articles", type=int, help="dev articles carved from train (default: 2000)")
+    cmd.add_argument("--epochs", type=int, help="passes over the drawn articles (default: 2)")
+    cmd.add_argument("--batch-size", type=int, help="examples per step (default: 32)")
+    cmd.add_argument("--device", help="cuda or cpu (default: cuda)")
+    cmd.set_defaults(func=cmd_model_train)
+    cmd = model_sub.add_parser("predict", parents=[snap], help="predict with a trained encoder run")
+    cmd.add_argument("--name", required=True, help="the run's directory name")
+    cmd.add_argument("--device", default="cuda", help="cuda or cpu (default: cuda)")
+    cmd.add_argument("--labels", type=Path, help="predict a labelled CSV instead of the held-out set")
+    cmd.set_defaults(func=cmd_model_predict)
 
     args = parser.parse_args(argv)
     try:
