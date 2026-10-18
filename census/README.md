@@ -156,6 +156,41 @@ uv run census score data/labels/sample-2026-10.csv
 the file, so a label is not anchored to its guess. `score` prints precision, recall and F1 over
 (author, role) pairs, and the share of articles exactly right, per style.
 
+## Training a statement parser
+
+Articles with tagged roles that also print a statement are free training pairs: the statement is the
+input, the tags are the answer.
+
+```sh
+uv run census model split     # pin the held-out 5% in data/model/<snapshot>/split.csv, with its sha256
+uv run census model dataset   # train.jsonl and held_out.jsonl: statement, authors, gold pairs, licence
+uv run census model score     # the rule parser on the held-out set, per style and publisher
+uv run census model score preds.jsonl --labels data/labels/oa-2026-10.csv   # other predictions, hand labels
+uv run census model zero-shot --model Qwen/Qwen3.5-9B --limit 200   # an open model, zero-shot
+```
+
+The split holds out every twentieth group of identical statements, in publisher and year order, so
+each publisher and year gets its share and no statement text sits on both sides. A pinned split is
+never redrawn. Only rows with `publishable` true (CC BY or CC0) may be shared; the files name
+authors and stay in `data/`. Predictions are JSONL lines `{"pmcid": ..., "pairs": [[position, slug], ...]}`,
+scored like `census score`.
+
+`zero-shot` asks any chat-completions server (`--base-url`, default `http://localhost:8000/v1`) for
+JSON that fits a schema, 32 requests at a time (`--workers`) so the server can batch them. It writes
+to `data/model/<snapshot>/predictions/`, one file per model and set, and skips articles already
+there, so a stopped run resumes. On one 24 GB GPU, vLLM serves Qwen3.5-9B quantized to FP8 when
+loading (the first start downloads about 19 GB to the Hugging Face cache):
+
+```sh
+docker run -d --name vllm-census --gpus all --ipc=host -p 127.0.0.1:8000:8000 \
+  -v ~/.cache/huggingface:/root/.cache/huggingface \
+  vllm/vllm-openai:v0.31.0 Qwen/Qwen3.5-9B \
+  --quantization fp8 --max-model-len 8192 --gpu-memory-utilization 0.90 \
+  --limit-mm-per-prompt '{"image": 0, "video": 0}'
+```
+
+The requests turn the model's reasoning block off (`chat_template_kwargs`, a vLLM extension).
+
 ## Limits
 
 - The sample is drawn from the first 1,000 hits per publisher and year in Europe PMC's default

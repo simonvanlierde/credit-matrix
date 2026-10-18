@@ -4,15 +4,17 @@ Order of use:
   1. census run (a sample, from the PMC bucket) or census bulk (every open-access article)
   2. census fields
   3. census report, export, label or score
+  4. census model split, dataset, score or zero-shot
 """
 
 import argparse
 import csv
 import re
 import sys
+import time
 from pathlib import Path
 
-from census import bulk, export, fields, labels, net, pipeline, pmc_s3, snapshot, store
+from census import bulk, export, fields, labels, modelset, net, pipeline, pmc_s3, snapshot, store
 from census.reports import REPORTS
 
 ROOT = Path(__file__).resolve().parents[2]  # census/, so commands work from any directory
@@ -187,6 +189,83 @@ def cmd_score(args: argparse.Namespace) -> None:
         print(f"{style:<16}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}")
 
 
+def _model_dir(args: argparse.Namespace) -> Path:
+    return DATA / "model" / args.snapshot
+
+
+def _split(args: argparse.Namespace) -> dict[str, str]:
+    path = _model_dir(args) / "split.csv"
+    if not path.exists():
+        raise Failure(f"no split {path}; draw it with `census model split`")
+    try:
+        return modelset.read_split(path)
+    except ValueError as error:
+        raise Failure(error) from error
+
+
+def cmd_model_split(args: argparse.Namespace) -> None:
+    path = _model_dir(args) / "split.csv"
+    if path.exists():
+        raise Failure(f"{path} exists; a pinned split is never redrawn")
+    with store.connect(_db(args), read_only=True) as con:
+        rows = modelset.draw_split(con)
+    digest = modelset.write_split(rows, path)
+    sizes = {s: sum(r[1] == s for r in rows) for s in ("train", "held_out")}
+    print(f"{path} (sha256 {digest}): " + ", ".join(f"{n} {s}" for s, n in sizes.items()))
+
+
+def cmd_model_dataset(args: argparse.Namespace) -> None:
+    split, out = _split(args), _model_dir(args) / "dataset"
+    with store.connect(_db(args), read_only=True) as con:
+        counts = modelset.write_dataset(con, split, out)
+    print(f"{out}: " + ", ".join(f"{n} {s}" for s, n in sorted(counts.items())))
+
+
+def cmd_model_score(args: argparse.Namespace) -> None:
+    with store.connect(_db(args), read_only=True) as con:
+        try:
+            gold = (
+                modelset.labelled_gold(con, args.labels) if args.labels else modelset.held_out_gold(con, _split(args))
+            )
+        except ValueError as error:
+            raise Failure(error) from error
+        if args.predictions:
+            # A run cut short with --limit covers part of the set: score the articles it covers.
+            predicted = modelset.read_predictions(args.predictions)
+            covered = {p: g for p, g in gold.items() if p in predicted}
+            print(f"{len(covered)} of {len(gold)} articles have predictions")
+            gold = covered
+            if args.rules:
+                predicted = modelset.rule_predictions(con, gold)
+        else:
+            predicted = modelset.rule_predictions(con, gold)
+        by_style, by_publisher = modelset.article_groups(con, gold)
+    for title, groups in (("style", by_style), ("publisher", by_publisher)):
+        results = modelset.score(gold, predicted, groups)
+        print(f"\n{title:<40}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'exact':>7}")
+        for name, n, p, r, f1, exact in results[: args.top + 1]:
+            print(f"{name[:39]:<40}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}")
+
+
+def cmd_model_zero_shot(args: argparse.Namespace) -> None:
+    if args.labels:
+        items, name = modelset.labelled_items(args.labels), args.labels.stem
+    else:
+        held_out = _model_dir(args) / "dataset" / "held_out.jsonl"
+        if not held_out.exists():
+            raise Failure(f"no {held_out}; write it with `census model dataset`")
+        items, name = modelset.read_jsonl(held_out), "held_out"
+    # One file per model and set, so a resumed run never mixes two models' answers.
+    out = args.out or _model_dir(args) / "predictions" / f"zero-shot-{args.model.replace('/', '_')}-{name}.jsonl"
+    start = time.monotonic()
+    answered, failed = modelset.run_zero_shot(args.base_url, args.model, items, out, args.limit, args.workers)
+    seconds = time.monotonic() - start
+    print(f"{answered} answered, {failed} failed in {seconds:.0f} s ({answered / max(seconds, 1e-9):.2f} articles/s)")
+    print(f"predictions in {out}; score with `census model score {out}`")
+    if failed:
+        raise Unfinished(f"{failed} requests failed; rerun to retry them")
+
+
 def main(argv: list[str] | None = None) -> int:
     def snapshot_option(default: str) -> argparse.ArgumentParser:
         parent = argparse.ArgumentParser(add_help=False)
@@ -239,6 +318,26 @@ def main(argv: list[str] | None = None) -> int:
     cmd = sub.add_parser("score", parents=[snap, db], help="score the parser against a labelled CSV")
     cmd.add_argument("labels", type=Path, help="the CSV from `census label`, with the gold column filled")
     cmd.set_defaults(func=cmd_score)
+    model = sub.add_parser("model", help="train/held-out split, dataset and baselines for a statement-parsing model")
+    model_sub = model.add_subparsers(dest="model_command", required=True)
+    cmd = model_sub.add_parser("split", parents=[snap, db], help="pin the held-out articles in data/model/")
+    cmd.set_defaults(func=cmd_model_split)
+    cmd = model_sub.add_parser("dataset", parents=[snap, db], help="write train and held-out JSONL")
+    cmd.set_defaults(func=cmd_model_dataset)
+    cmd = model_sub.add_parser("score", parents=[snap, db], help="score predictions (default: the rule parser)")
+    cmd.add_argument("predictions", type=Path, nargs="?", help='JSONL of {"pmcid", "pairs": [[position, slug]]}')
+    cmd.add_argument("--labels", type=Path, help="score against a labelled CSV instead of the held-out tags")
+    cmd.add_argument("--rules", action="store_true", help="score the rule parser on the articles PREDICTIONS covers")
+    cmd.add_argument("--top", type=int, default=20, help="groups to print per table")
+    cmd.set_defaults(func=cmd_model_score)
+    cmd = model_sub.add_parser("zero-shot", parents=[snap, db], help="predict with a model on a local vLLM server")
+    cmd.add_argument("--model", required=True, help="model name the server serves, e.g. Qwen/Qwen3.5-9B")
+    cmd.add_argument("--base-url", default="http://localhost:8000/v1", help="root of a chat-completions API")
+    cmd.add_argument("--workers", type=int, default=32, help="requests in flight, for the server to batch")
+    cmd.add_argument("--limit", type=int, help="at most this many new articles")
+    cmd.add_argument("--labels", type=Path, help="run on a labelled CSV instead of the held-out set")
+    cmd.add_argument("--out", type=Path, help="predictions JSONL (default: data/model/<snapshot>/predictions/)")
+    cmd.set_defaults(func=cmd_model_zero_shot)
 
     args = parser.parse_args(argv)
     try:
