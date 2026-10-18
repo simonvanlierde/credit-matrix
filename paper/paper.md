@@ -37,24 +37,27 @@ The lead author fills in a grid of contributors and roles, optionally with a lev
 cell (lead, equal or supporting). Each co-author gets a link to their own row, fills it in and
 sends a reply link back. The application shows where each reply differs from the lead's
 draft, and the lead settles every difference. It then writes the statement in nine languages,
-a contribution heatmap figure, and files for submission systems: JATS XML that follows the
-JATS4R recommendation [@jats4r_credit], CSV, JSON and Markdown. Everything runs in the
+a contribution heatmap figure, and files for submission systems: JATS XML (the
+XML format most journals use for articles) that follows the JATS4R recommendation
+[@jats4r_credit], a set of tagging rules for publishers, CSV, JSON and Markdown. Everything runs in the
 browser, and no server stores the draft. The same code is published as the `credit-matrix`
-npm package, with a command-line tool, a `<credit-matrix>` web element, and plugins for Quarto
+npm package, with a command-line tool, a `<credit-matrix>` web element (a custom HTML tag that works in any page), and plugins for Quarto
 and MyST. The repository also holds the CRediT census, a separate Python pipeline that reads
-the roles declared in open-access papers.
+the roles declared in biomedical open-access papers from Europe PMC.
 
 # Statement of need
 
 A CRediT statement is often written by one person: the first or corresponding author states
-the contributions of all co-authors [@creditas]. Co-authors are seldom asked for their own
-account, yet their account often differs. In a prospective study of 919 authors of 201
-manuscripts, corresponding authors disagreed with co-authors about those co-authors'
-contributions in 69.4% of cases, and 69.7% of corresponding authors changed at least one
-answer about their own work between two forms [@ilakovac2007]. The way the question is asked
-also changes the answer. In a meta-analysis of surveys, honorary authorship was reported for
-51% of papers when respondents listed what each co-author actually did, against 18% to 26%
-when they judged authorship as a whole [@meursinge2024].
+the contributions of all co-authors. Tools that collect each author's own account, such as
+CRediTas and tenzing [@creditas; @holcombe2020], merge the accounts into one table. Yet the
+accounts differ. In a prospective study of 919 authors of 201 manuscripts submitted to one
+general medical journal, corresponding authors disagreed with co-authors about those
+co-authors' contributions in 69.4% of cases, and 69.7% of corresponding authors changed at
+least one answer about their own work between two forms [@ilakovac2007]. The way the question
+is asked also changes the answer. In a meta-analysis of 19 surveys that the authors rate as
+of low methodological quality, researchers saw a co-author as honorary on 51% of papers when
+asked to declare what each co-author did, against 26% when given no authorship criteria and
+18% when referred to the ICMJE criteria [@meursinge2024].
 
 CRediT Matrix lets each co-author answer for themselves and keeps the answers apart. A
 co-author's reply never overwrites the lead's row. It is stored beside that row, and every role
@@ -66,7 +69,7 @@ that is valid against the standards they read.
 
 # State of the field
 
-tenzing is the established tool and the closest one [@holcombe2020; @tenzing]. It is an R
+tenzing is the closest and best-documented tool [@holcombe2020; @tenzing]. It is an R
 package with a Shiny web application. The team fills in one shared spreadsheet, and tenzing
 turns it into a contribution report, affiliation text, JATS XML, YAML for the `papaja` package,
 and funding and conflict-of-interest sections. Its template records each role as done or not,
@@ -75,12 +78,13 @@ statement in a text file [@creditas]. `latex-credits` defines a LaTeX command pe
 prints the statement [@latexcredits]. Publishing platforms now capture roles themselves. Open
 Journal Systems (OJS) has CRediT roles in its core from version 3.6, with a plugin for versions
 3.3 to 3.5 [@pkpcredit], and Quarto and MyST read roles from a document's author metadata
-[@quartoauthors; @mystfrontmatter]. Quarto and MyST print no statement from those roles.
+[@quartoauthors; @mystfrontmatter]. By default, Quarto and MyST print no statement from those roles.
 
 None of these tools collects a separate answer from each co-author or compares the answers
-with the lead's draft. Adding that to tenzing would replace its central design, one shared
-table for the whole team, and it would still run on an R server. CRediT Matrix keeps drafts off
-servers altogether, so it was built as a separate tool that works alongside tenzing. It imports
+with the lead's draft. We judged that adding that to tenzing would replace its central design,
+one shared table for the whole team. tenzing can also run locally with `tenzing::run_app()`, but
+it remains an R application. CRediT Matrix keeps drafts off servers altogether, so we built it as
+a separate tool that works alongside tenzing. It imports
 tenzing's spreadsheet, uses the CRediT role translations published by the same group
 [@holcombe2026], and publishes a conformance suite that tenzing or any other tool can use to
 test its JATS output. Writing that suite turned up a mismatch in the official JATS4R rules,
@@ -90,8 +94,8 @@ upstream [@jats4r_schematrons].
 Large studies of declared roles exist, for example of 30,054 PLOS papers [@lariviere2021] and
 of over 400,000 articles from several publishers [@assraf2025]. The census reads all four ways
 in which publishers mark up roles, including free-text statements that name authors by their
-initials. It covers the whole Europe PMC open-access subset and reads it from a pinned snapshot
-whose files are checked by hash.
+initials. It covers the biomedical open-access literature in Europe PMC [@europepmc_oa], read
+from a pinned snapshot whose files are checked by hash.
 
 # Software design
 
@@ -101,15 +105,17 @@ and no server-side storage. A draft lives in the browser's local storage. An ask
 one co-author's row in the URL fragment, which browsers do not send to the server, and the
 reply comes back the same way. The cost is that co-authors paste a link instead of seeing their
 answer arrive by itself. A relay that would store only encrypted replies is described in a
-design record but not built; it waits until users ask for it. The only network calls are the
-public ORCID, Crossref and DataCite lookups and the ORCID sign-in, and the Content Security
-Policy limits the page to those hosts.
+design record but not built; it waits until users ask for it. The page's own network calls are
+the public ORCID, Crossref and DataCite lookups, the ORCID sign-in and the fetch of ORCID's
+public keys. The hosted site also loads Cloudflare Web Analytics, a cookieless beacon that the
+edge injects. The Content Security Policy limits the page to these hosts.
 
 A reply can carry an ORCID sign-in. The co-author signs in through ORCID's OpenID Connect
 implicit flow, which needs no client secret and therefore no server of ours. The nonce sent to
 ORCID is the SHA-256 hash of the reply, so the token that ORCID signs names that exact answer
 and cannot be moved onto another. The lead's browser checks the signature against ORCID's
 public keys. This feature is merged but not yet in a tagged release.
+<!-- TODO(Simon): update at the next tag. -->
 
 All domain logic sits in `src/core`, plain TypeScript whose only runtime dependency is Zod, and
 a lint rule keeps React and Next.js out of it. The web application, the npm package, the
@@ -125,27 +131,26 @@ expected file. The interface aims at WCAG 2.2 AA. The end-to-end tests run axe-c
 keyboard-only checks, but there has been no audit and no testing by users of assistive
 technology.
 
-The census is a Python package built on DuckDB. It reads Europe PMC's bulk files
-[@europepmc_oa], keeps the sha256 hash of each file it reads, and stores a hash of its parser
-code in the database, so a changed parser cannot add to a database built by an older one.
-
 # Research impact statement
 
 The first commit dates from March 2026. There have been ten releases, from 0.1.0 in June 2026
-to 0.8.1 in October 2026, and the nine since 0.1.1 are archived on Zenodo under one concept DOI
-[@creditmatrix]. The `credit-matrix` package is on npm, published with provenance since 0.8.1.
-The software is listed in the Research Software Directory and in the awesome-PhD list, and
-listing requests to two other curated lists are open. Issues were filed with the CRediT
-translation project and with JATS4R.
-
-The October 2026 census run read 8,237,783 articles from the Europe PMC open-access subset and
-found CRediT roles in 2,105,251 of them, with 46.9 million author–role assignments. Among
-research articles, the share that declares roles rose from 6.2% in 2017 to 50.2% in 2025.
+to 0.8.1 in October 2026. Zenodo archives nine of them, 0.1.1 to 0.8.1, under one concept DOI
+[@creditmatrix]. The package is on npm (<https://www.npmjs.com/package/credit-matrix>), with
+provenance attestations since 0.8.1. The software has an entry in the Research Software Directory
+(<https://research-software-directory.org/software/credit-matrix>) and is listed in awesome-PhD
+(<https://github.com/helenahartmann/awesome-PhD/pull/51>). While writing the conformance suite we
+filed JATS4R issue 41 (<https://github.com/JATS4R/jats-schematrons/issues/41>); a fix is proposed
+in pull request 42 (<https://github.com/JATS4R/jats-schematrons/pull/42>).
 
 TODO: census dataset DOI and parser accuracy; Papers 1 and 2; outside users.
 
 <!-- TODO(Simon): cite the census dataset DOI here once it is on Zenodo, and add the parser
-accuracy from the hand-labelled set (census/README.md, Validation) once it is scored. -->
+accuracy from the hand-labelled set (census/README.md, Validation) once it is scored.
+     Then restate the census figures below with the DOI. They are in no tracked file yet, and the
+     scope is Europe PMC, which is biomedical by construction:
+     the October 2026 run read 8,237,783 articles from the Europe PMC open-access subset and found
+     CRediT roles in 2,105,251 of them, with 46.9 million author-role assignments. Among research
+     articles, the share that declares roles rose from 6.2% in 2017 to 50.2% in 2025. -->
 
 <!-- TODO(Simon): Papers 1 and 2. Once both teams have answered, state what the consensus view
 showed: how many co-authors were asked, how many replied, how many roles differed from the
