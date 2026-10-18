@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 /**
  * Plain SVG and HTML charts for the census page. One series each, in the ink
@@ -43,6 +43,8 @@ export function LineChart({
   yMax,
   formatY,
   label,
+  description,
+  partialAfter = Number.POSITIVE_INFINITY,
   height = 220,
   compact = false,
 }: {
@@ -51,11 +53,16 @@ export function LineChart({
   formatY: (y: number) => string;
   /** Names the chart for screen readers; the table beside it carries the values. */
   label: string;
+  /** One sentence on the trend, read after the name. */
+  description: string;
+  /** Points past this x are still being counted: drawn dashed and lighter, and never the labelled end. */
+  partialAfter?: number;
   height?: number;
   compact?: boolean;
 }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [active, setActive] = useState<number | null>(null);
+  const descriptionId = useId();
   const yTicks = ticks(yMax, compact ? 2 : 4);
   const top = yTicks.at(-1) ?? yMax;
   const pad = { top: 12, right: compact ? 12 : 48, bottom: 22, left: compact ? 34 : 42 };
@@ -65,10 +72,15 @@ export function LineChart({
   const plotH = height - pad.top - pad.bottom;
   const sx = (x: number) => pad.left + ((x - first) / Math.max(last - first, 1)) * plotW;
   const sy = (y: number) => pad.top + plotH - (y / top) * plotH;
-  const line = points.map((p, i) => `${i ? "L" : "M"}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join("");
-  const area = `${line}L${sx(last)},${sy(0)}L${sx(first)},${sy(0)}Z`;
+  const path = (ps: Point[]) =>
+    ps.map((p, i) => `${i ? "L" : "M"}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join("");
+  const settled = points.filter((p) => p.x <= partialAfter);
+  const end = settled.at(-1);
+  const line = path(settled);
+  // The dashed stretch starts at the last settled point, so the two lines join.
+  const partial = path([...(end ? [end] : []), ...points.filter((p) => p.x > partialAfter)]);
+  const area = end ? `${line}L${sx(end.x)},${sy(0)}L${sx(first)},${sy(0)}Z` : "";
   const xStep = compact || width < 480 ? 5 : 2;
-  const end = points.at(-1);
   const hovered = active === null ? undefined : points[active];
 
   const onPointer = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -83,12 +95,16 @@ export function LineChart({
 
   return (
     <div ref={ref} className="relative" style={{ height }}>
+      <p id={descriptionId} className="sr-only">
+        {description}
+      </p>
       {width > 0 && (
         <svg
           width={width}
           height={height}
           role="img"
           aria-label={label}
+          aria-describedby={descriptionId}
           className="block touch-pan-y overflow-visible"
           onPointerMove={onPointer}
           onPointerLeave={() => setActive(null)}
@@ -100,7 +116,7 @@ export function LineChart({
                 x2={pad.left + plotW}
                 y1={sy(v)}
                 y2={sy(v)}
-                className="stroke-outline-variant"
+                className="stroke-outline-variant [.dark_&]:stroke-outline"
                 strokeWidth={1}
               />
               <text
@@ -136,6 +152,17 @@ export function LineChart({
             strokeLinejoin="round"
             strokeLinecap="round"
           />
+          {partial.includes("L") && (
+            <path
+              d={partial}
+              fill="none"
+              className="stroke-primary"
+              strokeOpacity={0.55}
+              strokeWidth={2}
+              strokeDasharray="4 4"
+              strokeLinejoin="round"
+            />
+          )}
           {hovered && (
             <line
               x1={sx(hovered.x)}
@@ -156,7 +183,13 @@ export function LineChart({
             />
           )}
           {!compact && end && !hovered && (
-            <text x={sx(end.x) + 8} y={sy(end.y)} dy="0.32em" className="fill-on-surface text-xs font-semibold">
+            // Above and left of the point: the dashed partial stretch runs off to its right.
+            <text
+              x={sx(end.x) - 6}
+              y={sy(end.y) - 10}
+              textAnchor="end"
+              className="fill-on-surface text-xs font-semibold"
+            >
               {formatY(end.y)}
             </text>
           )}
@@ -196,13 +229,22 @@ export function BarList({ bars, formatShare }: { bars: Bar[]; formatShare: (shar
         >
           <span className="text-sm text-on-surface">{bar.label}</span>
           <span className="col-span-2 row-start-2 flex h-2.5 items-center sm:col-span-1 sm:row-start-auto">
-            <span
-              className="h-full rounded-r-[4px] bg-primary"
-              style={{ width: `${Math.max(bar.share * 100, 0.5)}%` }}
-            />
+            {bar.share > 0 && (
+              <span
+                className="h-full rounded-r-[4px] bg-primary"
+                style={{ width: `${Math.max(bar.share * 100, 0.5)}%` }}
+              />
+            )}
           </span>
           <span className="whitespace-nowrap text-right text-sm tabular-nums sm:min-w-36">
-            <span className="font-semibold text-on-surface">{formatShare(bar.share)}</span>{" "}
+            <span className="font-semibold text-on-surface">
+              {/* Whole percents would print 0% or 100% for shares that are neither. */}
+              {bar.share > 0 && bar.share < 0.01
+                ? `<${formatShare(0.01)}`
+                : bar.share < 1 && bar.share > 0.99
+                  ? `>${formatShare(0.99)}`
+                  : formatShare(bar.share)}
+            </span>{" "}
             <span className="text-xs text-on-surface-variant">{bar.detail}</span>
           </span>
         </li>
@@ -214,10 +256,13 @@ export function BarList({ bars, formatShare }: { bars: Bar[]; formatShare: (shar
 /** A table hidden behind a summary, the chart's text twin. */
 export function TableToggle({
   summary,
+  label,
   columns,
   rows,
 }: {
   summary: string;
+  /** Names the table region after its chart. */
+  label: string;
   columns: string[];
   rows: (string | number)[][];
 }) {
@@ -228,7 +273,7 @@ export function TableToggle({
         className="mt-2 overflow-x-auto rounded-md border border-outline-variant"
         // biome-ignore lint/a11y/noNoninteractiveTabindex: on a narrow screen the table scrolls sideways and holds nothing focusable, so it needs a tab stop (axe scrollable-region-focusable).
         tabIndex={0}
-        aria-label={summary}
+        aria-label={label}
       >
         <table className="w-full text-left tabular-nums">
           <thead className="sticky top-0 bg-surface-container-low text-xs text-on-surface-variant">

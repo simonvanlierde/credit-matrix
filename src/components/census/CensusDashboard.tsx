@@ -3,7 +3,7 @@
 import { ArrowLeft, ExternalLink, Info } from "lucide-react";
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import { BarList, LineChart, TableToggle } from "@/components/census/charts";
+import { BarList, LineChart, type Point, TableToggle } from "@/components/census/charts";
 import { IN_TEXT_LINK } from "@/components/ui/license-link";
 import { CREDIT_ROLES } from "@/core";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
@@ -11,9 +11,8 @@ import type censusJson from "../../../public/data/census.json";
 
 type CensusData = typeof censusJson;
 
-/** CRediT appeared in 2014; earlier "roles" are a handful of free-text matches. */
-const FIRST_YEAR = 2010;
-const STYLES = ["jats4r", "plos_uri", "statement_text", "contrib_text"] as const;
+/** In the order the parser picks them: an article counts under the first it uses. */
+const STYLES = ["jats4r", "plos_uri", "contrib_text", "statement_text"] as const;
 const PLACES = ["all", "first", "middle", "last"] as const;
 const SOURCE = "https://github.com/simonvanlierde/credit-matrix/tree/main/census";
 
@@ -31,6 +30,28 @@ const PLACE_KEYS = {
   last: "censusPlaceLast",
 } as const;
 
+/** OpenAlex field names with a translation; any other field shows its OpenAlex name. */
+const FIELD_KEYS = {
+  "Agricultural and Biological Sciences": "censusFieldAgriculturalAndBiologicalSciences",
+  "Biochemistry, Genetics and Molecular Biology": "censusFieldBiochemistryGeneticsAndMolecularBiology",
+  Chemistry: "censusFieldChemistry",
+  "Computer Science": "censusFieldComputerScience",
+  Dentistry: "censusFieldDentistry",
+  "Economics, Econometrics and Finance": "censusFieldEconomicsEconometricsAndFinance",
+  Engineering: "censusFieldEngineering",
+  "Environmental Science": "censusFieldEnvironmentalScience",
+  "Health Professions": "censusFieldHealthProfessions",
+  "Immunology and Microbiology": "censusFieldImmunologyAndMicrobiology",
+  "Materials Science": "censusFieldMaterialsScience",
+  Mathematics: "censusFieldMathematics",
+  Medicine: "censusFieldMedicine",
+  Multidisciplinary: "censusFieldMultidisciplinary",
+  Neuroscience: "censusFieldNeuroscience",
+  "Physics and Astronomy": "censusFieldPhysicsAndAstronomy",
+  Psychology: "censusFieldPsychology",
+  "Social Sciences": "censusFieldSocialSciences",
+} as const;
+
 /** The English role name for a credit.niso.org slug, which the role catalog translates. */
 function roleName(slug: string): string {
   return CREDIT_ROLES.find((r) => r.url.endsWith(`/${slug}/`))?.name ?? slug;
@@ -46,6 +67,19 @@ function Section({ title, caption, children }: { title: string; caption: ReactNo
   );
 }
 
+/** A square shaded by the share, so the eye finds the large cells; the printed share carries the value. */
+function Swatch({ shade }: { shade: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block size-3.5 shrink-0 rounded-[3px] border border-outline-variant"
+      style={{
+        background: `color-mix(in oklab, var(--color-primary) ${Math.round(shade * 100)}%, var(--color-surface-bright))`,
+      }}
+    />
+  );
+}
+
 export function CensusDashboard({ data }: { data: CensusData }) {
   const t = useTranslations();
   const format = useFormatter();
@@ -54,9 +88,13 @@ export function CensusDashboard({ data }: { data: CensusData }) {
     format.number(share, { style: "percent", maximumFractionDigits: digits, minimumFractionDigits: digits });
   const count = (n: number) => format.number(n);
 
-  const years = data.years.filter((y) => y.year >= FIRST_YEAR);
-  const newest = years.at(-1)?.year;
-  const focus = data.years.find((y) => y.year === data.focus_year);
+  const years = data.years;
+  const focusYear = data.focus_year;
+  // Years after the focus year are still being published.
+  const partialAfter = focusYear ?? Number.POSITIVE_INFINITY;
+  const partialYear = years.at(-1)?.year;
+  const yearLabel = (year: number) => (year > partialAfter ? `${year} ${t("censusPartial")}` : year);
+  const focus = years.find((y) => y.year === focusYear);
   const adoption = years.map((y) => ({ x: y.year, y: y.with_roles / y.articles }));
   const perAuthor = years.flatMap((y) => (y.roles_per_author === null ? [] : [{ x: y.year, y: y.roles_per_author }]));
   const total = new Map(years.map((y) => [y.year, y.articles]));
@@ -68,8 +106,24 @@ export function CensusDashboard({ data }: { data: CensusData }) {
         return { x: y.year, y: (row?.articles ?? 0) / (total.get(y.year) ?? 1) };
       }),
     ]),
-  ) as Record<(typeof STYLES)[number], { x: number; y: number }[]>;
+  ) as Record<(typeof STYLES)[number], Point[]>;
   const styleMax = Math.max(...Object.values(styleSeries).flatMap((s) => s.map((p) => p.y)));
+  /** The chart's trend in one sentence, over the settled years only. */
+  const trend = (points: Point[], formatY: (y: number) => string) => {
+    const settled = points.filter((p) => p.x <= partialAfter);
+    const [from, to] = [settled[0], settled.at(-1)];
+    const max = settled.reduce<Point | undefined>((best, p) => (best && best.y >= p.y ? best : p), undefined);
+    if (!from || !to || !max) return "";
+    return t("censusTrend", {
+      from: formatY(from.y),
+      first: from.x,
+      to: formatY(to.y),
+      last: to.x,
+      max: formatY(max.y),
+      maxYear: max.x,
+    });
+  };
+  const perAuthorFormat = (v: number) => format.number(v, { maximumFractionDigits: 1 });
   const shares = new Map(data.roles.map((r) => [`${r.role} ${r.place}`, r.share]));
   const roles = [...new Set(data.roles.map((r) => r.role))].sort(
     (a, b) => (shares.get(`${b} all`) ?? 0) - (shares.get(`${a} all`) ?? 0),
@@ -82,11 +136,14 @@ export function CensusDashboard({ data }: { data: CensusData }) {
     detail: t("censusOfArticles", { count: row.articles }),
   });
   const byShare = (a: { share: number }, b: { share: number }) => b.share - a.share;
-  const fields = data.fields.map((r) => bar(r.field, r)).sort(byShare);
+  const fieldName = (name: string) =>
+    Object.hasOwn(FIELD_KEYS, name) ? t(FIELD_KEYS[name as keyof typeof FIELD_KEYS]) : name;
+  const fields = data.fields.map((r) => bar(fieldName(r.field), r)).sort(byShare);
   const publishers = data.publishers.map((r) => bar(r.publisher, r)).sort(byShare);
 
   return (
-    <div className="desk:h-full desk:overflow-y-auto">
+    // relative: the sr-only text inside is absolutely placed, and must not size the page.
+    <div data-census-page className="desk:relative desk:h-full desk:overflow-y-auto">
       <article className="mx-auto max-w-5xl space-y-10 px-4 pt-6 pb-16 sm:px-8">
         <header className="space-y-5">
           <a href="/" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
@@ -104,7 +161,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           <p className="max-w-[65ch] text-on-surface-variant">{t("censusLead", { articles: count(data.articles) })}</p>
           <aside
             aria-labelledby="census-preliminary"
-            className="flex max-w-[75ch] gap-3 rounded-lg border border-outline bg-surface-container-low p-4 text-sm"
+            className="flex max-w-[65ch] gap-3 rounded-lg border border-outline bg-surface-container-low p-4 text-sm"
           >
             <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
             <div className="space-y-1">
@@ -113,7 +170,11 @@ export function CensusDashboard({ data }: { data: CensusData }) {
               </p>
               <p className="text-pretty text-on-surface-variant">
                 {data.paired
-                  ? t("censusPreliminary", { f1: format.number(data.paired.f1), articles: count(data.paired.articles) })
+                  ? t("censusPreliminary", {
+                      f1: format.number(data.paired.f1),
+                      articles: count(data.paired.articles),
+                      share: pct(data.paired.mdpi_frontiers_share),
+                    })
                   : t("censusPreliminaryUnscored")}
               </p>
               {!data.complete && <p className="font-semibold text-on-surface">{t("censusIncomplete")}</p>}
@@ -121,24 +182,29 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           </aside>
         </header>
 
-        <Section title={t("censusAdoptionTitle")} caption={t("censusAdoptionCaption", { year: newest ?? "" })}>
+        <Section title={t("censusAdoptionTitle")} caption={t("censusAdoptionCaption", { year: partialYear ?? "" })}>
           <LineChart
             points={adoption}
             yMax={Math.max(...adoption.map((p) => p.y))}
             formatY={pct}
             label={t("censusAdoptionTitle")}
+            description={trend(adoption, pct)}
+            partialAfter={partialAfter}
           />
           <h4 className="mt-8 text-sm font-semibold text-on-surface">{t("censusRolesPerAuthorTitle")}</h4>
           <p className="mt-1 max-w-[65ch] text-sm text-on-surface-variant">{t("censusRolesPerAuthorCaption")}</p>
           <LineChart
             points={perAuthor}
             yMax={Math.max(...perAuthor.map((p) => p.y))}
-            formatY={(v) => format.number(v, { maximumFractionDigits: 1 })}
+            formatY={perAuthorFormat}
             label={t("censusRolesPerAuthorTitle")}
+            description={trend(perAuthor, perAuthorFormat)}
+            partialAfter={partialAfter}
             height={160}
           />
           <TableToggle
             summary={t("censusShowTable")}
+            label={t("censusTableLabel", { chart: t("censusAdoptionTitle") })}
             columns={[
               t("censusYear"),
               t("censusResearchArticles"),
@@ -147,7 +213,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
               t("censusRolesPerAuthorTitle"),
             ]}
             rows={years.map((y) => [
-              y.year,
+              yearLabel(y.year),
               count(y.articles),
               count(y.with_roles),
               pct(y.with_roles / y.articles, 1),
@@ -156,7 +222,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           />
         </Section>
 
-        <Section title={t("censusStylesTitle")} caption={t("censusStylesCaption")}>
+        <Section title={t("censusStylesTitle")} caption={t("censusStylesCaption", { year: partialYear ?? "" })}>
           <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
             {STYLES.map((style) => {
               const [name, note] = STYLE_KEYS[style];
@@ -171,6 +237,8 @@ export function CensusDashboard({ data }: { data: CensusData }) {
                     yMax={styleMax}
                     formatY={pct}
                     label={t(name)}
+                    description={trend(styleSeries[style], pct)}
+                    partialAfter={partialAfter}
                     height={140}
                     compact
                   />
@@ -180,29 +248,52 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           </div>
           <TableToggle
             summary={t("censusShowTable")}
+            label={t("censusTableLabel", { chart: t("censusStylesTitle") })}
             columns={[t("censusYear"), ...STYLES.map((s) => t(STYLE_KEYS[s][0]))]}
             rows={years.map((y) => [
-              y.year,
+              yearLabel(y.year),
               ...STYLES.map((s) => pct(styleSeries[s].find((p) => p.x === y.year)?.y ?? 0, 1)),
             ])}
           />
         </Section>
 
-        <Section title={t("censusFieldsTitle")} caption={t("censusFieldsCaption", { year: data.focus_year ?? "" })}>
+        <Section title={t("censusFieldsTitle")} caption={t("censusFieldsCaption", { year: focusYear ?? "" })}>
           <BarList bars={fields} formatShare={pct} />
         </Section>
 
         <Section
           title={t("censusPublishersTitle")}
-          caption={t("censusPublishersCaption", { count: publishers.length, year: data.focus_year ?? "" })}
+          caption={t("censusPublishersCaption", { count: publishers.length, year: focusYear ?? "" })}
         >
           <BarList bars={publishers} formatShare={pct} />
         </Section>
 
         <Section title={t("censusRolesTitle")} caption={t("censusRolesCaption")}>
-          {/* The table is the chart: each share is printed, its swatch only adds the shade. */}
+          {/* The table is the chart: each share is printed, its swatch only adds the shade. A phone
+              gets one block per role instead, as four columns of shares do not fit its width. */}
+          <ul className="divide-y divide-outline-variant/60 sm:hidden">
+            {roles.map((role) => (
+              <li key={role} className="py-2.5">
+                <p className="text-sm font-semibold text-on-surface">{translateInterfaceRole(roleName(role))}</p>
+                <dl className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1 text-sm tabular-nums">
+                  {PLACES.map((place) => {
+                    const share = shares.get(`${role} ${place}`) ?? 0;
+                    return (
+                      <div key={place} className="flex items-center justify-between gap-2">
+                        <dt className="text-xs text-on-surface-variant">{t(PLACE_KEYS[place])}</dt>
+                        <dd className="inline-flex items-center gap-2 text-on-surface">
+                          <Swatch shade={share / roleMax} />
+                          {pct(share)}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              </li>
+            ))}
+          </ul>
           <section
-            className="overflow-x-auto"
+            className="hidden overflow-x-auto sm:block"
             // biome-ignore lint/a11y/noNoninteractiveTabindex: on a narrow screen the table scrolls sideways and holds nothing focusable, so it needs a tab stop (axe scrollable-region-focusable).
             tabIndex={0}
             aria-label={t("censusRolesTitle")}
@@ -231,13 +322,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
                       return (
                         <td key={place} className="px-3 py-1.5">
                           <span className="inline-flex items-center gap-2">
-                            <span
-                              aria-hidden="true"
-                              className="inline-block size-3.5 rounded-[3px] border border-outline-variant"
-                              style={{
-                                background: `color-mix(in oklab, var(--color-primary) ${Math.round((share / roleMax) * 100)}%, var(--color-surface-bright))`,
-                              }}
-                            />
+                            <Swatch shade={share / roleMax} />
                             <span className={place === "all" ? "font-semibold text-on-surface" : "text-on-surface"}>
                               {pct(share)}
                             </span>
@@ -254,7 +339,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
 
         <footer className="space-y-3 border-t border-outline-variant pt-8 text-sm text-on-surface-variant">
           <h3 className="font-headline text-xl font-semibold text-on-surface">{t("censusAboutTitle")}</h3>
-          <p className="max-w-[75ch] text-pretty">{t("censusMethod")}</p>
+          <p className="max-w-[65ch] text-pretty">{t("censusMethod")}</p>
           <dl className="grid max-w-xl grid-cols-[auto_1fr] gap-x-4 gap-y-1">
             <dt>{t("censusSnapshot")}</dt>
             <dd className="font-mono text-xs leading-5 text-on-surface">{data.snapshot}</dd>
