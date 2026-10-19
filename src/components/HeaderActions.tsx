@@ -403,7 +403,7 @@ export function HeaderActions() {
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+      <div data-draft-actions className="flex shrink-0 items-center gap-1 sm:gap-3">
         <DraftPicker />
         <Popover open={shareOpen} onOpenChange={setShareOpen}>
           <PopoverTrigger asChild>
