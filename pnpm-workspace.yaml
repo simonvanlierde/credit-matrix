@@ -2,7 +2,7 @@
 packages:
   - src/core
 
-minimumReleaseAge: 4320 # minutes (3 days); blocks installing very fresh (often compromised) releases
+minimumReleaseAge: 10080 # minutes (7 days), as in renovate.json5; blocks installing very fresh (often compromised) releases
 
 allowBuilds:
   esbuild: true

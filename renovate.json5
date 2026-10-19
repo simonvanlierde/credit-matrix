@@ -13,6 +13,10 @@
 
   // A week gives a hijacked release time to be yanked.
   minimumReleaseAge: "7 days",
+  // A lock file refresh has no release date, so Renovate's age check never
+  // passes on it. pnpm-workspace.yaml's minimumReleaseAge holds back the same
+  // week-old releases when the lock file is resolved.
+  lockFileMaintenance: { minimumReleaseAge: null, automerge: true },
 
   // Renovate merges once every check on the branch passes. GitHub's own
   // auto-merge would merge straight away, since main requires no checks. A merge
