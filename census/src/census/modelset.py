@@ -173,8 +173,7 @@ def score(
 
 # --- the whole corpus: free-text statements, read by a model and by the rule parser ---
 
-FREE_TEXT_STYLES = ("statement_text", "contrib_text")
-_FREE_TEXT = f"FROM articles WHERE style IN {FREE_TEXT_STYLES} AND statement IS NOT NULL"
+_FREE_TEXT = "FROM articles WHERE style IN ('statement_text', 'contrib_text') AND statement IS NOT NULL"
 
 
 def count_free_text(con: duckdb.DuckDBPyConnection, limit: int | None = None) -> int:

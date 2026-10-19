@@ -359,8 +359,8 @@ def predict_corpus(
     run: Path, chunks: Iterable[list[dict[str, Any]]], out: Path, device: str, total: int, batch_size: int = 32
 ) -> int:
     """Write `out/part-NNNNN.parquet` per chunk, with `pair_rows`' columns. A part already written is skipped,
-    so a stopped run resumes when given the same chunks in the same order. Prints progress per part.
-    Returns the number of articles read in this call."""
+    so a stopped run resumes when given the same chunks in the same order; a ValueError if a written part holds
+    other articles than its chunk. Prints progress per part. Returns the number of articles read in this call."""
     import pyarrow as pa
     import pyarrow.parquet as pq
     import torch
@@ -373,6 +373,11 @@ def predict_corpus(
         seen += len(rows)
         part = out / f"part-{n:05d}.parquet"
         if part.exists():
+            # Another --chunk, or a database that changed, puts other articles under the same part number.
+            if set(pq.read_table(part, columns=["pmcid"])["pmcid"].to_pylist()) != {r["pmcid"] for r in rows}:
+                raise ValueError(
+                    f"{part} holds other articles than chunk {n}; resume with the same --chunk and database"
+                )
             continue
         encoded = Encoded(tokenizer, rows, max_length)
         probs = _per_article(rows, encoded, _probabilities(torch, model, encoded, batch_size, device))
@@ -383,5 +388,9 @@ def predict_corpus(
         done += len(rows)
         rate = done / (time.monotonic() - start)
         left = (total - seen) / rate / 60
-        print(f"{part.name}: {seen} of {total} articles, {rate:.0f} articles/s, {left:.0f} min left", flush=True)
+        print(
+            f"{part.name}: {seen} of {total} articles ({len(encoded.truncated)} cut to {max_length} tokens),"
+            f" {rate:.0f} articles/s, {left:.0f} min left",
+            flush=True,
+        )
     return done

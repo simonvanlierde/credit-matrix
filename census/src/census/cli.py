@@ -308,6 +308,8 @@ def cmd_model_train(args: argparse.Namespace) -> None:
     dataset = _model_dir(args) / "dataset"
     if not (dataset / "train.jsonl").exists():
         raise Failure(f"no {dataset / 'train.jsonl'}; write it with `census model dataset`")
+    if args.model and not args.revision:
+        raise Failure("--model needs --revision, the model's Hub commit, so a rerun starts from the same weights")
     options = ("model", "revision", "train_articles", "dev_articles", "epochs", "batch_size", "seed", "device")
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
     best = encoder.train(encoder.Config(**overrides), dataset, run)
@@ -321,12 +323,14 @@ def cmd_model_predict(args: argparse.Namespace) -> None:
     run = _run_dir(args)
     if not (run / "best.json").exists():
         raise Failure(f"no trained model in {run}; train it with `census model train --name {args.name}`")
+    if not args.corpus and (args.limit or args.chunk):
+        raise Failure("--limit and --chunk go with --corpus")
     start = time.monotonic()
     if args.corpus:
         out = _corpus_dir(args)
         with store.connect(_db(args), read_only=True) as con:
             total = modelset.count_free_text(con, args.limit)
-            chunks = modelset.free_text_chunks(con, args.chunk, args.limit)
+            chunks = modelset.free_text_chunks(con, args.chunk or 20_000, args.limit)
             n = encoder.predict_corpus(run, chunks, out, args.device, total)
         print(f"{n} articles in {time.monotonic() - start:.0f} s into {out}; compare with `census model compare`")
         return
@@ -355,9 +359,7 @@ def cmd_model_compare(args: argparse.Namespace) -> None:
     for title, rows in tables.items():
         lines += ["", title, "\t".join(rows[0]) if rows else "(no rows)"]
         lines += ["\t".join(str(v) for v in row.values()) for row in rows]
-    text = "\n".join(lines[1:]) + "\n"
-    (parts.parent / f"{parts.name}-comparison.txt").write_text(text, encoding="utf-8")
-    print(text, end="")
+    print("\n".join(lines[1:]))
 
 
 def cmd_model_browser(args: argparse.Namespace) -> None:
@@ -490,7 +492,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="read every free-text statement in the database into Parquet parts under predictions/; resumes",
     )
-    cmd.add_argument("--chunk", type=int, default=20_000, help="articles per Parquet part (default: 20000)")
+    cmd.add_argument("--chunk", type=int, help="articles per Parquet part (default: 20000)")
     cmd.add_argument("--limit", type=int, help="with --corpus: only the first articles, to try a run")
     cmd.set_defaults(func=cmd_model_predict)
     cmd = model_sub.add_parser(

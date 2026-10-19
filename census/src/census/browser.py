@@ -61,17 +61,14 @@ def export(run: Path, out: Path) -> dict[str, int]:
 
 
 def _onnx_probabilities(session: Any, encoded: encoder.Encoded, batch_size: int) -> list[list[float]]:
-    import numpy as np
+    import torch
 
     lengths = [len(encoded.ids(i)) for i in range(len(encoded.examples))]
     out: list[list[float]] = [[] for _ in lengths]
     for batch in encoder._batches(lengths, batch_size, None):
-        ids = [encoded.ids(i) for i in batch]
-        width = max(map(len, ids))
-        input_ids = np.array([x + [encoded.pad] * (width - len(x)) for x in ids], dtype=np.int64)
-        mask = np.array([[1] * len(x) + [0] * (width - len(x)) for x in ids], dtype=np.int64)
-        (logits,) = session.run(["logits"], {"input_ids": input_ids, "attention_mask": mask})
-        for i, p in zip(batch, (1 / (1 + np.exp(-logits))).tolist(), strict=True):
+        inputs = {k: v.numpy() for k, v in encoder._tensors(torch, encoded, batch, "cpu").items()}
+        (logits,) = session.run(["logits"], inputs)
+        for i, p in zip(batch, torch.sigmoid(torch.from_numpy(logits)).tolist(), strict=True):
             out[i] = p
     return out
 
