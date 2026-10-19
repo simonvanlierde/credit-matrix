@@ -25,7 +25,7 @@ test("a pasted statement fills the grid after review, and Undo takes it back", a
   const review = page.getByRole("region", { name: "Roles found in the statement" });
   await expect(review).toBeVisible();
   await expect(review.getByRole("heading")).toBeFocused();
-  await expect(review.getByText("Not matched: YL")).toBeVisible();
+  await expect(review.getByText("YL: no contributor — left out: Software")).toBeVisible();
   await expect(review.getByRole("listitem").filter({ hasText: "Mark Green" })).toContainText(
     "Conceptualization, Writing – original draft",
   );

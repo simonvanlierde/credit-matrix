@@ -11,12 +11,14 @@ import {
   type DetectedFormat,
   detectFormat,
   importAny,
+  MAX_STATEMENT_LENGTH,
   NewerVersionError,
+  namesCredit,
   parseStatement,
   statementAuthor,
 } from "@/core";
 import { recheckSignIns } from "@/core/ask";
-import { MAX_AUTHORS, MAX_IMPORT_BYTES } from "@/core/author";
+import { MAX_AUTHORS, MAX_IMPORT_BYTES, scoreToLevel } from "@/core/author";
 import type { DoiLookupResult } from "@/core/lookup";
 import { DOI_INPUT_REGEX, lookupDoiWork, normalizeDoi } from "@/core/lookup";
 import { fetchOrcidKeys } from "@/core/orcid-proof";
@@ -24,7 +26,9 @@ import { announce } from "@/lib/announce";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import type { Messages } from "@/lib/intl";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
-import { MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
+import { MAX_DRAFTS } from "@/store/contribution-store";
+import { ASSIGNABLE_LEVELS, DEFAULT_BULK_LEVEL } from "./steps/BulkAssignMenu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 /** Why a pasted share link could not be used, as a message key. */
 export type LinkFailure = "errShareLinkBroken" | "mergeWrongDraft" | "mergeUnmatched" | "draftLimitReached";
@@ -39,46 +43,88 @@ interface Props {
    * link needs the current workspace, which this dialog does not hold.
    */
   onLink: (url: string) => Promise<LinkFailure | null>;
-  /** Write the roster with a pasted statement's roles added; `added` counts the new roles. */
-  onApplyStatement: (authors: Author[], added: number) => void;
+  /** The open draft's roster, which a pasted statement is matched against. */
+  authors: Author[];
+  /** Whether the draft records levels; a yes/no draft sets every role to 100. */
+  graded: boolean;
+  /**
+   * Write the roster with a pasted statement's roles added; `added` counts the new roles, and
+   * `level` names the level they got in a graded draft.
+   */
+  onApplyStatement: (authors: Author[], added: number, level?: string) => void;
   onClose: () => void;
 }
 
 /** A pasted statement read against the open draft, waiting for Apply. */
 interface StatementReview {
-  /** The roster with the statement's roles added. */
-  next: Author[];
-  /** Per contributor, the roles the statement gives them. */
-  rows: { id: string; name: string; roles: CreditRoleName[] }[];
-  unresolved: string[];
+  /** Per contributor, the roles the statement gives them; `set` ones the grid already has. */
+  rows: { id: string; name: string; roles: { role: CreditRoleName; set: boolean }[] }[];
+  /** Names or initials that fit no contributor, or several, with the roles left out. */
+  unmatched: { token: string; candidates: string[]; roles: CreditRoleName[] }[];
   /** Roles the roster does not have yet. Ones already set are left as they are. */
   added: number;
+  /** Contributors who gain at least one role. */
+  people: number;
+}
+
+// A line that ends on one of these runs on into the next: "Conceptualization, A.B.,\nC.D.".
+const RUNS_ON_RE = /(?:[,:&‐-―−-]|(?<!\p{L})and)$/iu;
+
+/**
+ * A line break as the end of a clause, as most statements laid out one person per line mean it:
+ * "A.B. - conceptualization\nC.D. - software". The shared parser reads it as a space, as the
+ * census does, so this applies to pasted text only.
+ */
+function breakLines(text: string): string {
+  let joined = "";
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    joined = joined ? `${joined}${RUNS_ON_RE.test(joined) ? " " : "; "}${trimmed}` : trimmed;
+  }
+  return joined;
+}
+
+/** Read a prepared statement against the roster. */
+function reviewStatement(text: string, authors: Author[]): StatementReview {
+  const { assignments, unmatched } = parseStatement(text, authors.map(statementAuthor));
+  const rows = authors.map((author, i) => {
+    const set = new Set(author.contributions.filter((c) => c.score > 0).map((c) => c.role));
+    return {
+      id: author.id,
+      name: author.name,
+      roles: assignments.filter((a) => a.author === i).map(({ role }) => ({ role, set: set.has(role) })),
+    };
+  });
+  const gaining = rows.filter((row) => row.roles.some((r) => !r.set));
+  return {
+    rows,
+    unmatched: unmatched.map((u) => ({ ...u, candidates: u.candidates.map((i) => authors[i]?.name ?? "") })),
+    added: gaining.reduce((sum, row) => sum + row.roles.filter((r) => !r.set).length, 0),
+    people: gaining.length,
+  };
 }
 
 /**
- * Read a statement against the roster. A role the statement names is set to
- * 100, as an imported role without a degree is; one already set keeps its level.
+ * The roster with the reviewed roles set to `score`, matched by contributor id. A role already
+ * set keeps its level, and a contributor the review does not know is left alone.
  */
-function reviewStatement(text: string, authors: Author[]): StatementReview {
-  const { assignments, unresolved } = parseStatement(text, authors.map(statementAuthor));
+function withStatementRoles(authors: Author[], review: StatementReview, score: number): [Author[], number] {
+  const byId = new Map(review.rows.map((row) => [row.id, new Set(row.roles.map((r) => r.role))]));
   let added = 0;
-  const rows = authors.map((author, i) => ({
-    id: author.id,
-    name: author.name,
-    roles: assignments.filter((a) => a.author === i).map((a) => a.role),
-  }));
-  const next = authors.map((author, i) => {
-    const roles = new Set(rows[i]?.roles);
+  const next = authors.map((author) => {
+    const roles = byId.get(author.id);
+    if (!roles) return author;
     return {
       ...author,
       contributions: author.contributions.map((c) => {
         if (!roles.has(c.role) || c.score > 0) return c;
         added += 1;
-        return { ...c, score: 100 };
+        return { ...c, score };
       }),
     };
   });
-  return { next, rows, unresolved: [...new Set(unresolved)], added };
+  return [next, added];
 }
 
 /** What a resolved import is waiting to write, once any replace is confirmed. */
@@ -147,13 +193,25 @@ const FORMAT_LABEL: Record<Exclude<DetectedFormat, "unknown">, (t: ReturnType<ty
   tenzing: () => "tenzing",
 };
 
-export function ImportModal({ open, existingContributorCount, onImport, onLink, onApplyStatement, onClose }: Props) {
+export function ImportModal({
+  open,
+  existingContributorCount,
+  authors: draftAuthors,
+  graded,
+  onImport,
+  onLink,
+  onApplyStatement,
+  onClose,
+}: Props) {
   const t = useTranslations();
-  const { translateInterfaceRole } = useCreditTranslators();
+  const { translateInterfaceRole, translateInterfaceUi } = useCreditTranslators();
   const formatter = useFormatter();
   const [text, setText] = useState("");
   const [review, setReview] = useState<StatementReview | null>(null);
+  const [statementLevel, setStatementLevel] = useState(String(DEFAULT_BULK_LEVEL));
   const reviewHeadingRef = useRef<HTMLHeadingElement>(null);
+  // Back hides the review and brings the footer's button back: focus goes there, not to the page.
+  const backedOut = useRef(false);
   // Where the message belongs, not just what it says: a DOI failure shown at
   // the foot of a tall dialog is far from the field that caused it.
   const [error, setError] = useState<{ where: "doi" | "form"; message: string } | null>(null);
@@ -194,6 +252,10 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   // focus and a screen reader starts at the summary.
   useEffect(() => {
     if (review) reviewHeadingRef.current?.focus();
+    else if (backedOut.current) {
+      backedOut.current = false;
+      importRef.current?.focus();
+    }
   }, [review]);
 
   const format = detectFormat(text);
@@ -270,15 +332,24 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
         return;
       }
       if (format === "statement") {
+        const statement = breakLines(text);
+        if (statement.length > MAX_STATEMENT_LENGTH) {
+          showError(t("errStatementTooLong", { limit: formatter.number(MAX_STATEMENT_LENGTH) }));
+          return;
+        }
         // Matched against the draft as it is now: a statement names no one the draft lacks.
-        const { authors } = useContributionStore.getState();
-        if (authors.length === 0) {
+        if (draftAuthors.length === 0) {
           showError(t("errStatementNoContributors"));
           return;
         }
-        const found = reviewStatement(text, authors);
+        const found = reviewStatement(statement, draftAuthors);
         if (found.rows.every((row) => row.roles.length === 0)) {
-          showError(t("errStatementNoRoles"));
+          // Prose ("A.B. wrote the paper") lands here too: say what the reader looks for.
+          showError(
+            namesCredit(statement)
+              ? t("errStatementNoRoles")
+              : `${t("errStatementNoRoles")} ${t("statementOnlyCredit")}`,
+          );
           return;
         }
         setReview(found);
@@ -365,8 +436,10 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
   }
 
   function applyStatement(found: StatementReview) {
+    const score = graded ? Number(statementLevel) : 100;
+    const [next, added] = withStatementRoles(draftAuthors, found, score);
     try {
-      onApplyStatement(found.next, found.added);
+      onApplyStatement(next, added, graded ? translateInterfaceUi(scoreToLevel(score)) : undefined);
     } catch {
       showError(t("errImportFailed"));
       return;
@@ -593,26 +666,61 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
                 id="statement-review-title"
                 ref={reviewHeadingRef}
                 tabIndex={-1}
+                aria-describedby="statement-review-summary"
                 className="text-lg font-semibold text-primary outline-none"
                 style={{ fontFamily: "var(--font-headline)" }}
               >
                 {t("statementReviewTitle")}
               </h3>
-              <p className="mt-1 text-on-surface-variant">
-                {review.added > 0
-                  ? t("statementReviewSummary", {
-                      added: review.added,
-                      people: review.rows.filter((row) => row.roles.length > 0).length,
-                    })
-                  : t("statementNothingNew")}
+              <p id="statement-review-summary" className="mt-1 text-on-surface-variant">
+                {review.added === 0
+                  ? t("statementNothingNew")
+                  : graded
+                    ? t("statementReviewSummaryLevel", {
+                        added: review.added,
+                        people: review.people,
+                        level: translateInterfaceUi(scoreToLevel(Number(statementLevel))),
+                      })
+                    : t("statementReviewSummary", { added: review.added, people: review.people })}
               </p>
+              {graded && review.added > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span id="statement-level" className="font-semibold text-on-surface">
+                    {t("bulkAssignLevel")}
+                  </span>
+                  <Select value={statementLevel} onValueChange={setStatementLevel}>
+                    <SelectTrigger className="w-40" aria-labelledby="statement-level">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ASSIGNABLE_LEVELS.map(({ key, score }) => (
+                        <SelectItem key={key} value={String(score)}>
+                          {translateInterfaceUi(key)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <ul className="mt-3 divide-y divide-outline-variant/30 border-y border-outline-variant/30">
                 {review.rows.map((row) => (
                   <li key={row.id} className="grid gap-x-4 gap-y-0.5 py-2 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
                     <span className="font-medium break-words text-on-surface">{row.name}</span>
                     {row.roles.length > 0 ? (
+                      // Commas only: an "and" would read as part of "Review and editing".
                       <span className="text-on-surface">
-                        {formatter.list(row.roles.map(translateInterfaceRole), { type: "unit" })}
+                        {row.roles.map(({ role, set }, i) => (
+                          <span key={role}>
+                            {i > 0 && ", "}
+                            {set ? (
+                              <span className="text-on-surface-variant">
+                                {t("statementRoleAlreadySet", { role: translateInterfaceRole(role) })}
+                              </span>
+                            ) : (
+                              translateInterfaceRole(role)
+                            )}
+                          </span>
+                        ))}
                       </span>
                     ) : (
                       <span className="italic text-on-surface-variant">{t("statementNoRoles")}</span>
@@ -620,21 +728,40 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
                   </li>
                 ))}
               </ul>
-              {review.unresolved.length > 0 && (
+              {review.unmatched.length > 0 && (
                 <div className="mt-3 flex gap-2 text-on-surface">
                   <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-on-surface-variant" />
                   <div className="min-w-0">
-                    <p className="font-semibold break-words">
-                      {t("statementUnresolved", { tokens: formatter.list(review.unresolved, { type: "unit" }) })}
-                    </p>
-                    <p className="mt-0.5 text-on-surface-variant">{t("statementUnresolvedBody")}</p>
+                    <p className="font-semibold">{t("statementUnmatchedTitle")}</p>
+                    <ul className="mt-0.5 space-y-0.5">
+                      {review.unmatched.map(({ token, candidates, roles }) => {
+                        const who =
+                          candidates.length > 1
+                            ? t("statementUnmatchedAmbiguous", {
+                                token,
+                                names: formatter.list(candidates, { type: "disjunction" }),
+                              })
+                            : t("statementUnmatchedNone", { token });
+                        return (
+                          <li key={token} className="break-words">
+                            {roles.length > 0
+                              ? t("statementLeftOut", { who, roles: roles.map(translateInterfaceRole).join(", ") })
+                              : who}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <p className="mt-1 text-on-surface-variant">{t("statementUnresolvedBody")}</p>
                   </div>
                 </div>
               )}
               <div className="mt-4 flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setReview(null)}
+                  onClick={() => {
+                    backedOut.current = true;
+                    setReview(null);
+                  }}
                   className="rounded-lg border border-outline-variant px-4 py-2 font-semibold text-on-surface-variant hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {t("statementBack")}
@@ -643,7 +770,7 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
                   type="button"
                   onClick={() => applyStatement(review)}
                   disabled={review.added === 0}
-                  className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {t("statementApply")}
                 </button>
@@ -660,15 +787,18 @@ export function ImportModal({ open, existingContributorCount, onImport, onLink, 
           >
             {t("cancel")}
           </button>
-          <button
-            ref={importRef}
-            type="button"
-            onClick={() => void handleImport()}
-            disabled={format === "unknown" || pending !== null || review !== null || importing}
-            className="px-7 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg shadow hover:bg-primary-container transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {format === "statement" ? t("statementReview") : t("importData")}
-          </button>
+          {/* The review carries its own Apply; a faded twin here would only compete with it. */}
+          {!review && (
+            <button
+              ref={importRef}
+              type="button"
+              onClick={() => void handleImport()}
+              disabled={format === "unknown" || pending !== null || importing}
+              className="px-7 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg shadow hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {format === "statement" ? t("statementReview") : t("importData")}
+            </button>
+          )}
         </div>
       </div>
     </dialog>

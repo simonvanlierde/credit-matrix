@@ -1,10 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { createAuthor } from "@/core";
+import { type Author, createAuthor } from "@/core";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import en from "@/messages/en.json";
-import { useContributionStore } from "@/store/contribution-store";
 import { ImportModal } from "./ImportModal";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
@@ -33,7 +32,11 @@ function deferLookup() {
   return (result: DoiLookupResult) => act(async () => resolve(result));
 }
 
-function renderModal(existingContributorCount = 0, onLink: () => Promise<null> = async () => null) {
+function renderModal(
+  existingContributorCount = 0,
+  onLink: () => Promise<null> = async () => null,
+  { authors = [], graded = false }: { authors?: Author[]; graded?: boolean } = {},
+) {
   const onImport = vi.fn();
   const onApplyStatement = vi.fn();
   const view = render(
@@ -41,6 +44,8 @@ function renderModal(existingContributorCount = 0, onLink: () => Promise<null> =
       <ImportModal
         open
         existingContributorCount={existingContributorCount}
+        authors={authors}
+        graded={graded}
         onImport={onImport}
         onLink={onLink}
         onApplyStatement={onApplyStatement}
@@ -175,9 +180,15 @@ describe("accessibility and drops", () => {
 describe("a pasted CRediT statement", () => {
   const paste = (value: string) => fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value } });
   const review = () => act(async () => fireEvent.click(screen.getByRole("button", { name: en.statementReview })));
+  const roster = () => [
+    createAuthor("Ann Bell", { contributions: [{ role: "Software", score: 33 }] }),
+    createAuthor("Carl Dunn"),
+    createAuthor("Yibo Lu"),
+    createAuthor("Yang Lin"),
+  ];
+  const listOf = (name: string) => screen.getByText(name).nextElementSibling?.textContent;
 
   it("asks for contributors first when the draft is empty", async () => {
-    useContributionStore.getState().loadAuthors([]);
     renderModal(0);
     paste("AB: conceptualization.");
     await review();
@@ -185,40 +196,81 @@ describe("a pasted CRediT statement", () => {
   });
 
   it("shows what matched and what did not, and applies only on request", async () => {
-    useContributionStore
-      .getState()
-      .loadAuthors([
-        createAuthor("Ann Bell", { contributions: [{ role: "Software", score: 33 }] }),
-        createAuthor("Carl Dunn"),
-        createAuthor("Yibo Lu"),
-        createAuthor("Yang Lin"),
-      ]);
-    const { onApplyStatement } = renderModal(4);
-    paste("AB: conceptualization, software. YL: data curation.");
+    const { onApplyStatement } = renderModal(4, undefined, { authors: roster() });
+    paste("AB: conceptualization, software, review & editing. YL: data curation.");
     await review();
 
-    expect(screen.getByRole("heading", { name: en.statementReviewTitle })).toBe(document.activeElement);
-    expect(screen.getByText("Conceptualization, Software")).toBeTruthy();
+    const heading = screen.getByRole("heading", { name: en.statementReviewTitle });
+    expect(heading).toBe(document.activeElement);
+    expect(document.getElementById(heading.getAttribute("aria-describedby") ?? "")?.textContent).toBe(
+      "2 roles to add for 1 contributor. Roles already in the grid stay as they are.",
+    );
+    // Commas only, and the role already set says so in words.
+    expect(listOf("Ann Bell")).toBe("Conceptualization, Software (already set), Writing – review & editing");
     expect(screen.getAllByText(en.statementNoRoles)).toHaveLength(3);
-    expect(screen.getByText("Not matched: YL")).toBeTruthy();
+    expect(screen.getByText("YL: could be Yibo Lu or Yang Lin — left out: Data curation")).toBeTruthy();
+    // The review's Apply is the only primary action on screen.
+    expect(screen.queryByRole("button", { name: en.statementReview })).toBeNull();
     expect(onApplyStatement).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
-    const [next, added] = onApplyStatement.mock.calls[0] ?? [];
-    expect(added).toBe(1);
+    const [next, added, level] = onApplyStatement.mock.calls[0] ?? [];
+    expect([added, level]).toEqual([2, undefined]);
     const scores = next[0].contributions.filter((c: { score: number }) => c.score > 0);
-    // The level already set stays; the new role is set.
+    // The level already set stays; the new roles are set.
     expect(scores).toEqual([
       { role: "Conceptualization", score: 100 },
       { role: "Software", score: 33 },
+      { role: "Writing – review & editing", score: 100 },
     ]);
   });
 
+  it("adds roles at Equal in a Levels draft, and names the level", async () => {
+    const { onApplyStatement } = renderModal(4, undefined, { authors: roster(), graded: true });
+    paste("CD: conceptualization. XY: funding acquisition.");
+    await review();
+
+    expect(
+      screen.getByText("1 role to add as Equal for 1 contributor. Roles already in the grid stay as they are."),
+    ).toBeTruthy();
+    expect(screen.getByText("XY: no contributor — left out: Funding acquisition")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    const [next, added, level] = onApplyStatement.mock.calls[0] ?? [];
+    expect([added, level]).toEqual([1, "Equal"]);
+    expect(next[1].contributions.find((c: { role: string }) => c.role === "Conceptualization").score).toBe(66);
+  });
+
+  it("reads a line break as the end of a contributor's roles", async () => {
+    const { onApplyStatement } = renderModal(2, undefined, {
+      authors: [createAuthor("Ann Bell"), createAuthor("Carl Dunn")],
+    });
+    paste("A.B. - conceptualization\nC.D. - writing - original draft");
+    await review();
+    expect(listOf("Ann Bell")).toBe("Conceptualization");
+    expect(listOf("Carl Dunn")).toBe("Writing – original draft");
+    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    expect(onApplyStatement.mock.calls[0]?.[1]).toBe(2);
+  });
+
   it("says so when nothing matches the draft", async () => {
-    useContributionStore.getState().loadAuthors([createAuthor("Ann Bell")]);
-    renderModal(1);
+    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
     paste("XY: conceptualization.");
     await review();
     expect(screen.getByText(en.errStatementNoRoles)).toBeTruthy();
+  });
+
+  it("explains that prose is not read, and never offers to replace the workspace", async () => {
+    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
+    paste("A.B. conceived the study. A.B. wrote the paper and analysed the data.");
+    await review();
+    expect(screen.getByText(`${en.errStatementNoRoles} ${en.statementOnlyCredit}`)).toBeTruthy();
+    expect(screen.queryByText(en.replaceWorkspaceTitle)).toBeNull();
+  });
+
+  it("refuses a statement over the length cap", async () => {
+    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
+    paste(`AB: conceptualization. ${"x".repeat(50_000)}`);
+    await review();
+    expect(screen.getByText(en.errStatementTooLong.replace("{limit}", "50,000"))).toBeTruthy();
   });
 });

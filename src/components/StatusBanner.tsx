@@ -99,7 +99,8 @@ export function StatusBanner() {
             type="button"
             onClick={() => {
               action.onAct();
-              dismiss();
+              // An action may show a status of its own ("nothing to undo"); that one stays.
+              if (showing.current === status) dismiss();
             }}
             className="min-h-6 shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >

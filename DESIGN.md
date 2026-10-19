@@ -5,6 +5,7 @@ name: CRediT Matrix
 description: A precise editorial workspace for scholarly contribution statements.
 colors:
   ink-blue: "#1f4e79"
+  ink-blue-hover: "#183f62"
   ink-blue-soft: "#d6e2ee"
   paper: "#fafaf9"
   paper-bright: "#ffffff"
@@ -184,7 +185,8 @@ only for status, segmented controls, switches, and identity markers.
 
 ### Buttons
 
-Primary buttons use ink blue with bright paper text. Secondary buttons use a quiet outline and a
+Primary buttons use ink blue with bright paper text, and a darker opaque ink blue on hover
+(`ink-blue-hover`), never a translucent tint that lets the text fade. Secondary buttons use a quiet outline and a
 paper or transparent fill. Give every control a visible keyboard focus and a target of at least
 24px.
 
