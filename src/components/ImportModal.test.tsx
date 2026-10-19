@@ -190,6 +190,7 @@ describe("a pasted CRediT statement", () => {
   ];
   // The first match is the contributor's row; a picker can show the same name further down.
   const listOf = (name: string) => screen.getAllByText(name)[0]?.nextElementSibling?.textContent;
+  const noRolesLine = () => screen.queryByText(/^No roles found for: /)?.textContent;
   /** Choose `option` in the picker labelled `token`, by keyboard: jsdom has no pointer capture. */
   const pick = async (token: string, option: string) => {
     await act(async () => fireEvent.keyDown(screen.getByRole("combobox", { name: token }), { key: "Enter" }));
@@ -215,7 +216,9 @@ describe("a pasted CRediT statement", () => {
     );
     // Commas only, and the role already set says so in words.
     expect(listOf("Ann Bell")).toBe("Conceptualization, Software (already set), Writing – review & editing");
-    expect(screen.getAllByText(en.statementNoRoles)).toHaveLength(3);
+    // Nobody without roles gets a row; one muted line names them, with the hint for the ambiguous token.
+    expect(screen.queryByText("Carl Dunn")).toBeNull();
+    expect(noRolesLine()).toBe("No roles found for: Carl Dunn, Yibo Lu (could be YL), Yang Lin (could be YL)");
     // An ambiguous token gets a picker that leaves its roles out until someone is chosen.
     expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(en.statementLeaveOut);
     // The review's Apply is the only primary action on screen.
@@ -244,7 +247,8 @@ describe("a pasted CRediT statement", () => {
       screen.getByText("3 roles to add for 2 contributors. Roles already in the grid stay as they are."),
     ).toBeTruthy();
     expect(listOf("Yang Lin")).toBe("Data curation, Software");
-    expect(listOf("Yibo Lu")).toBe(en.statementNoRoles);
+    expect(screen.queryByText("Yibo Lu")).toBeNull();
+    expect(noRolesLine()).toBe("No roles found for: Carl Dunn, Yibo Lu (could be YL)");
     fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
     const [next, added] = onApplyStatement.mock.calls[0] ?? [];
     expect(added).toBe(3);
@@ -260,7 +264,7 @@ describe("a pasted CRediT statement", () => {
     await pick("YL", "Yibo Lu");
     expect(listOf("Yibo Lu")).toBe("Data curation");
     await pick("YL", en.statementLeaveOut);
-    expect(listOf("Yibo Lu")).toBe(en.statementNoRoles);
+    expect(noRolesLine()).toContain("Yibo Lu (could be YL)");
     fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
     const [next, added] = onApplyStatement.mock.calls[0] ?? [];
     expect(added).toBe(1);
@@ -275,7 +279,7 @@ describe("a pasted CRediT statement", () => {
     paste("AB: conceptualization. YL: data curation. ");
     await review();
     expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(en.statementLeaveOut);
-    expect(listOf("Yibo Lu")).toBe(en.statementNoRoles);
+    expect(noRolesLine()).toContain("Yibo Lu (could be YL)");
   });
 
   it("adds roles at Equal in a Levels draft, and names the level", async () => {

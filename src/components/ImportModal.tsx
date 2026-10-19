@@ -226,6 +226,7 @@ export function ImportModal({
   // is derived, so a choice updates the counts, the rows and Apply together.
   const [reviewed, setReviewed] = useState<{ statement: string; picks: Record<string, string> } | null>(null);
   const review = reviewed && reviewStatement(reviewed.statement, draftAuthors, reviewed.picks);
+  const noRoles = review?.rows.filter((row) => row.roles.length === 0) ?? [];
   const reviewOpen = reviewed !== null;
   const [statementLevel, setStatementLevel] = useState(String(DEFAULT_BULK_LEVEL));
   const reviewHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -722,11 +723,15 @@ export function ImportModal({
                 </div>
               )}
               <ul className="mt-3 divide-y divide-outline-variant/30 border-y border-outline-variant/30">
-                {review.rows.map((row) => (
-                  <li key={row.id} className="grid gap-x-4 gap-y-0.5 py-2 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
-                    <span className="font-medium break-words text-on-surface">{row.name}</span>
-                    {row.roles.length > 0 ? (
-                      // Commas only: an "and" would read as part of "Review and editing".
+                {review.rows
+                  .filter((row) => row.roles.length > 0)
+                  .map((row) => (
+                    <li
+                      key={row.id}
+                      className="grid gap-x-4 gap-y-0.5 py-2 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]"
+                    >
+                      <span className="font-medium break-words text-on-surface">{row.name}</span>
+                      {/* Commas only: an "and" would read as part of "Review and editing". */}
                       <span className="text-on-surface">
                         {row.roles.map(({ role, set }, i) => (
                           <span key={role}>
@@ -741,12 +746,27 @@ export function ImportModal({
                           </span>
                         ))}
                       </span>
-                    ) : (
-                      <span className="italic text-on-surface-variant">{t("statementNoRoles")}</span>
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  ))}
               </ul>
+              {noRoles.length > 0 && (
+                <p className="mt-2 break-words text-on-surface-variant">
+                  {t("statementNoRolesFor", {
+                    names: noRoles
+                      .map(({ id, name }) => {
+                        // Only a token with a picker can still give this person roles.
+                        const tokens = review.unmatched
+                          .filter((u) => u.roles.length > 0 && u.candidates.length > 1)
+                          .filter((u) => u.candidates.some((c) => c.id === id))
+                          .map((u) => u.token);
+                        return tokens.length
+                          ? `${name} ${t("statementCouldBe", { token: formatter.list(tokens, { type: "disjunction" }) })}`
+                          : name;
+                      })
+                      .join(", "),
+                  })}
+                </p>
+              )}
               {review.unmatched.length > 0 && (
                 <div className="mt-3 flex gap-2 text-on-surface">
                   <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-on-surface-variant" />
