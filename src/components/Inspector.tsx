@@ -72,7 +72,10 @@ export function Inspector() {
     if (!next) return;
     event.preventDefault();
     setTab(next);
-    listRef.current?.querySelector<HTMLButtonElement>(`#inspector-tab-${next}`)?.focus();
+    const button = listRef.current?.querySelector<HTMLButtonElement>(`#inspector-tab-${next}`);
+    button?.focus();
+    // Focus alone does not scroll a tab list that overflows on a narrow screen.
+    button?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
   return (
