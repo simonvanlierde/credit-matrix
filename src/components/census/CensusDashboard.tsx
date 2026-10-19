@@ -160,7 +160,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
               <p className="text-pretty text-on-surface-variant">
                 {data.paired
                   ? t("censusPreliminary", {
-                      f1: format.number(data.paired.f1),
+                      f1: format.number(data.paired.f1, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                       articles: count(data.paired.articles),
                       share: pct(data.paired.mdpi_frontiers_share),
                     })
