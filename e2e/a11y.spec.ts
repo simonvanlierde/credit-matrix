@@ -240,8 +240,53 @@ test.describe("Accessibility (axe-core)", () => {
     await expect(team).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("tabpanel", { name: "Team" })).toBeVisible();
     await page.keyboard.press("End");
+    await expect(page.getByRole("tab", { name: "Published practice" })).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
     await expect(page.getByRole("tab", { name: "Review" })).toBeFocused();
     await expect(page.getByText("Answers from co-authors appear here")).toBeVisible();
+  });
+
+  test("the published practice tab is a labelled table with no detectable violations, light and dark", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    await page.getByRole("tab", { name: "Published practice" }).click();
+    const panel = page.getByRole("tabpanel", { name: "Published practice" });
+    await panel.getByRole("combobox", { name: "Your field" }).click();
+    await page.getByRole("option", { name: "Medicine" }).click();
+    const table = panel.getByRole("table", { name: "Share of authors given each role, by author position" });
+    await expect(table.getByRole("row")).toHaveCount(15);
+    await expect(table.getByRole("rowheader", { name: "Conceptualization" })).toBeVisible();
+    await expect(panel.getByText(/not checked by hand/)).toBeVisible();
+    // Nobody in the sample is marked as you, so no column is marked and the panel says how to.
+    await expect(panel.getByText(/choose “This is me”/)).toBeVisible();
+    expect((await scan(page)).violations).toEqual([]);
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect((await scan(page)).violations).toEqual([]);
+    // The choice is a preference: it survives a reload.
+    await page.reload();
+    await page.getByRole("tab", { name: "Published practice" }).click();
+    await expect(page.getByRole("combobox", { name: "Your field" })).toHaveText(/Medicine/);
+  });
+
+  test("a keyboard reaches the published practice panel and scrolls it to the last row", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 720 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    const tab = page.getByRole("tab", { name: "Published practice" });
+    await tab.click();
+    const panel = page.getByRole("tabpanel", { name: "Published practice" });
+    await panel.getByRole("combobox", { name: "Your field" }).click();
+    await page.getByRole("option", { name: "Medicine" }).click();
+    const lastRow = panel.getByRole("rowheader", { name: "Writing – review & editing" });
+    await expect(lastRow).not.toBeInViewport();
+    // The panel scrolls on its own and the table has no control in it, so the panel is the stop.
+    await tab.focus();
+    await page.keyboard.press("Tab");
+    await expect(panel).toBeFocused();
+    await page.keyboard.press("End");
+    await expect(lastRow).toBeInViewport();
   });
 
   // The role names left the tab order with the info buttons; arrow keys reach them.

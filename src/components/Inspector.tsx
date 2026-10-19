@@ -2,17 +2,19 @@
 
 import { type KeyboardEvent, type ReactNode, useRef } from "react";
 import { useTranslations } from "use-intl";
+import { NormsPanel } from "@/components/NormsPanel";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatementOutput } from "@/components/steps/StatementOutput";
 import { TeamPanel } from "@/components/TeamPanel";
 import { type InspectorTab, useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-const TABS: InspectorTab[] = ["statement", "team", "review"];
+const TABS: InspectorTab[] = ["statement", "team", "review", "norms"];
 
 /**
- * The workspace's right-hand pane: the statement, the team's ask status, and
- * co-author answers, as one tab list (WAI-ARIA tabs pattern: one tab stop,
- * arrow keys and Home/End move between tabs, which select on focus).
+ * The workspace's right-hand pane: the statement, the team's ask status,
+ * co-author answers, and published practice as context, as one tab list (WAI-ARIA
+ * tabs pattern: one tab stop, arrow keys and Home/End move between tabs, which
+ * select on focus).
  *
  * Inactive panels stay mounted and hidden, so statement options survive a
  * look at the Team tab.
@@ -32,17 +34,26 @@ export function Inspector() {
   const reviewEmpty = useContributionStore(
     (s) => !s.authors.some((author) => author.id !== s.selfId && s.asks[author.id]?.reply),
   );
-  const panelIsStop: Record<InspectorTab, boolean> = { statement: false, team: teamEmpty, review: reviewEmpty };
+  const panelIsStop: Record<InspectorTab, boolean> = {
+    statement: false,
+    team: teamEmpty,
+    review: reviewEmpty,
+    // The table scrolls inside the panel, and the panel's one control, the field Select, cannot
+    // scroll it, so the panel takes the stop that lets a keyboard scroll it.
+    norms: true,
+  };
 
   const labels: Record<InspectorTab, string> = {
     statement: t("stepStatement"),
     team: t("tabTeam"),
     review: t("tabReview"),
+    norms: t("tabNorms"),
   };
   const panels: Record<InspectorTab, ReactNode> = {
     statement: <StatementOutput />,
     team: <TeamPanel />,
     review: <ReviewPanel />,
+    norms: <NormsPanel />,
   };
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -61,7 +72,10 @@ export function Inspector() {
     if (!next) return;
     event.preventDefault();
     setTab(next);
-    listRef.current?.querySelector<HTMLButtonElement>(`#inspector-tab-${next}`)?.focus();
+    const button = listRef.current?.querySelector<HTMLButtonElement>(`#inspector-tab-${next}`);
+    button?.focus();
+    // Focus alone does not scroll a tab list that overflows on a narrow screen.
+    button?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
   return (
@@ -71,7 +85,7 @@ export function Inspector() {
         role="tablist"
         aria-label={t("a11yInspector")}
         onKeyDown={handleKeyDown}
-        className="flex shrink-0 gap-1 border-b border-outline-variant/40 px-3 pt-2 md:px-4"
+        className="flex shrink-0 gap-0.5 overflow-x-auto border-b border-outline-variant/40 px-3 pt-2 md:px-4"
       >
         {TABS.map((id) => {
           const selected = id === tab;
@@ -85,7 +99,7 @@ export function Inspector() {
               aria-controls={`inspector-panel-${id}`}
               tabIndex={selected ? 0 : -1}
               onClick={() => setTab(id)}
-              className={`-mb-px min-h-10 border-b-2 px-3 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
+              className={`min-h-10 border-b-2 px-2 text-[13px] leading-tight sm:px-3 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
                 selected
                   ? "border-primary text-primary"
                   : "border-transparent text-on-surface-variant hover:text-on-surface"
