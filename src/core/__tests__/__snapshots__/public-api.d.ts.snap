@@ -1227,7 +1227,18 @@ interface ParsedStatement {
   }[];
   /** Initials-like tokens and names that matched no author, or more than one, in the order found. */
   unresolved: string[];
+  /**
+   * Each distinct unresolved token once, in the order found: the authors it could be (empty when it
+   * fits no one) and the roles the statement gives it, which `assignments` leaves out.
+   */
+  unmatched: {
+    token: string;
+    candidates: number[];
+    roles: CreditRoleName[];
+  }[];
 }
+/** The longest statement {@link parseStatement} reads, in UTF-16 code units. Real ones are under 5,000. */
+export declare const MAX_STATEMENT_LENGTH = 50000;
 /**
  * Whether text uses CRediT's own vocabulary, not just a common word that is also a role: at least
  * one of conceptualization, data curation, formal analysis, funding acquisition, project
@@ -1239,6 +1250,8 @@ export declare function namesCredit(text: string): boolean;
  *
  * This does not judge whether the text is a CRediT statement at all: check {@link namesCredit}
  * first, as an ICMJE list or prose can still name a common role word ("software").
+ *
+ * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
 //#endregion

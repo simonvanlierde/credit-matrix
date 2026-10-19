@@ -6,7 +6,7 @@ import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
 import { parseAuthorText } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
-import { namesCredit } from "./statement";
+import { readsAsStatement } from "./statement";
 
 export type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "statement" | "names" | "unknown";
 
@@ -30,8 +30,8 @@ export function detectFormat(text: string): DetectedFormat {
   if (isTenzing(trimmed)) return "tenzing";
   // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
   if (headerCells(trimmed).includes("name")) return "csv";
-  // A name list never says "conceptualization" or "original draft"; a CRediT statement does.
-  if (namesCredit(trimmed)) return "statement";
+  // A name list never assigns "conceptualization" to initials or tells what the authors did.
+  if (readsAsStatement(trimmed)) return "statement";
   if (trimmed.length > 0) return "names";
   return "unknown";
 }

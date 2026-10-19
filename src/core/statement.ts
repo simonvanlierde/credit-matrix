@@ -48,7 +48,15 @@ export interface ParsedStatement {
   assignments: { author: number; role: CreditRoleName }[];
   /** Initials-like tokens and names that matched no author, or more than one, in the order found. */
   unresolved: string[];
+  /**
+   * Each distinct unresolved token once, in the order found: the authors it could be (empty when it
+   * fits no one) and the roles the statement gives it, which `assignments` leaves out.
+   */
+  unmatched: { token: string; candidates: number[]; roles: CreditRoleName[] }[];
 }
+
+/** The longest statement {@link parseStatement} reads, in UTF-16 code units. Real ones are under 5,000. */
+export const MAX_STATEMENT_LENGTH = 50_000;
 
 // Python's \w: any letter, digit or number, or "_". JS's \w and \b are ASCII-only.
 const W = String.raw`[\p{L}\p{N}_]`;
@@ -94,12 +102,17 @@ const DISTINCT = new Set([
   "writing-review-editing",
 ]);
 
-const DASHES = /\s*[‐-―−-]+\s*/gu;
+const DASHES = / ?[‐-―−-]+ ?/gu;
 const SPACES = /\s+/gu;
 
-/** One kind of dash, single spaces, "&" as "and". Keeps case, which initials need. */
+/**
+ * One kind of dash, single spaces, "&" as "and". Keeps case, which initials need.
+ *
+ * roles.py replaces `\s*dashes\s*` before collapsing spaces. That pattern takes quadratic time on a
+ * long run of spaces, so this collapses spaces first; the output is the same.
+ */
 function clean(text: string): string {
-  return text.replaceAll("&", " and ").replace(DASHES, " - ").replace(SPACES, " ").trim();
+  return text.replaceAll("&", " and ").replace(SPACES, " ").replace(DASHES, " - ").replace(SPACES, " ").trim();
 }
 
 /** (start, end, slug) for each role named in `clean`ed text, in order. */
@@ -121,7 +134,10 @@ export function namesCredit(text: string): boolean {
 }
 
 const ALL_AUTHORS = -1;
-/** Holds an unresolved author's place, so the roles next to it are not paired with a neighbour. */
+/**
+ * Holds an unresolved author's place, so the roles next to it are not paired with a neighbour:
+ * UNRESOLVED - k for the k-th entry of `unmatched`.
+ */
 const UNRESOLVED = -2;
 
 // Initials such as "AP", "Q.M.L.", "H.Š.", "YiL" (Frontiers adds letters to tell authors apart),
@@ -143,6 +159,39 @@ const APPROVAL_RE = new RegExp(
   "giu",
 );
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
+
+// A colon after a name, initials or a role: "MG: conceptualization", "Conceptualization: M.G.".
+const LABEL_COLON_RE = /[\p{L}.)] ?:(?!\/\/)/u;
+// Two capitals or more as initials, right after or right before a role: "Methodology, A.B." or "NZ - software".
+const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
+const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
+const SENTENCE_END_RE = /(?<!\p{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu;
+const LOWER_WORD_RE = /(?<!\p{L})\p{Ll}{2,}(?!\p{L})/gu;
+const AUTHOR_VERB_RE =
+  /\bauthors?\b[^.;]{0,80}?\b(?:wrote|written|performed|contributed|conceived|designed|drafted|revised|analy[sz]ed|collected|supervised|edited|reviewed|carried out)\b/iu;
+
+/**
+ * Whether pasted text reads as a contribution statement rather than a list of names: CRediT wording
+ * laid out as assignments (a colon after a name or role, or initials next to a role), or prose about
+ * what authors did (two sentences or more, or "authors" with a verb such as "wrote"). Prose names no
+ * contributors to import, so it belongs with statements even when {@link parseStatement} finds no role.
+ */
+export function readsAsStatement(text: string): boolean {
+  const cleaned = clean(text.normalize("NFC"));
+  const lowerWords = (cleaned.replace(ROLE_RE, " ").match(LOWER_WORD_RE) ?? []).filter(
+    (w) => w !== "and" && !PARTICLE_RE.test(w),
+  );
+  if (AUTHOR_VERB_RE.test(cleaned)) return true;
+  if ((cleaned.match(SENTENCE_END_RE) ?? []).length >= 2 && lowerWords.length >= 4) return true;
+  const roles = findRoles(cleaned);
+  if (!roles.some(([, , slug]) => DISTINCT.has(slug))) return false;
+  if (LABEL_COLON_RE.test(cleaned) || lowerWords.length >= 3) return true;
+  return roles.some(
+    ([start, end]) =>
+      INITIALS_AFTER_RE.test(cleaned.slice(end, end + 12)) ||
+      INITIALS_BEFORE_RE.test(cleaned.slice(Math.max(0, start - 12), start)),
+  );
+}
 
 const isUpper = (ch: string) => /^\p{Uppercase}/u.test(ch);
 const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
@@ -217,8 +266,14 @@ function chunksOf(token: string): string[] {
  * Hao Leng fits surname-first.
  */
 export function resolveInitials(token: string, authors: readonly StatementAuthor[]): number | null {
+  const hits = initialsCandidates(token, authors);
+  return hits.length === 1 ? (hits[0] ?? null) : null;
+}
+
+/** Every author the first order that fits any author finds for `token`; see {@link resolveInitials}. */
+function initialsCandidates(token: string, authors: readonly StatementAuthor[]): number[] {
   const chunks = chunksOf(token);
-  if (chunks.length === 0) return null;
+  if (chunks.length === 0) return [];
   const letters = chunks.join("");
   const parts = authors.map(nameParts);
   const tiers: ((g: Parts, s: Parts, w: Parts, c: Parts) => boolean)[] = [
@@ -232,9 +287,9 @@ export function resolveInitials(token: string, authors: readonly StatementAuthor
   ];
   for (const tier of tiers) {
     const hits = parts.flatMap((p, i) => (tier(...p) ? [i] : []));
-    if (hits.length > 0) return hits.length === 1 ? (hits[0] ?? null) : null;
+    if (hits.length > 0) return hits;
   }
-  return null;
+  return [];
 }
 
 const mask = (text: string, start: number, end: number) =>
@@ -352,12 +407,33 @@ function bisectLeft(ends: number[], start: number): number {
  *
  * This does not judge whether the text is a CRediT statement at all: check {@link namesCredit}
  * first, as an ICMJE list or prose can still name a common role word ("software").
+ *
+ * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement {
+  if (statement.length > MAX_STATEMENT_LENGTH) {
+    throw new RangeError(
+      `A statement is read up to ${MAX_STATEMENT_LENGTH} characters; this one has ${statement.length}.`,
+    );
+  }
   const authors = authorList.map((a) => ({ given: a.given.normalize("NFC"), surname: a.surname.normalize("NFC") }));
   const original = clean(statement.normalize("NFC")).replace(APPROVAL_RE, (m) => " ".repeat(m.length));
   let text = original;
   const unresolved: string[] = [];
+  const unmatched: ParsedStatement["unmatched"] = [];
+  const slugsOf: Set<string>[] = [];
+  const unmatchedAt = new Map<string, number>();
+  /** The placeholder for an unresolved token, one per distinct token. */
+  const placeholder = (token: string, candidates: number[]) => {
+    let k = unmatchedAt.get(token);
+    if (k === undefined) {
+      k = unmatched.push({ token, candidates, roles: [] }) - 1;
+      unmatchedAt.set(token, k);
+      slugsOf.push(new Set());
+    }
+    unresolved.push(token);
+    return UNRESOLVED - k;
+  };
   const mentions: Mention[] = findRoles(text).map(([s, e, slug]) => [s, e, "R", slug]);
   // Mask roles so their capitals ("Writing") are not read as initials.
   for (const [start, end] of mentions) text = mask(text, start, end);
@@ -396,8 +472,15 @@ export function parseStatement(statement: string, authorList: readonly Statement
       if (hits.size === 1) {
         mentions.push([start, end, "A", [...hits][0] as number]);
       } else {
-        mentions.push([start, end, "A", UNRESOLVED]);
-        unresolved.push(text.slice(start, end));
+        mentions.push([
+          start,
+          end,
+          "A",
+          placeholder(
+            text.slice(start, end),
+            [...hits].sort((a, b) => a - b),
+          ),
+        ]);
       }
       text = mask(text, start, end);
       lowered = mask(lowered, start, end);
@@ -408,17 +491,19 @@ export function parseStatement(statement: string, authorList: readonly Statement
     text = mask(text, m.index, m.index + m[0].length);
   }
   // Role-first statements repeat each author's initials per role.
-  const resolved = new Map<string, number | null>();
+  const resolved = new Map<string, number[]>();
   for (const m of text.matchAll(INITIALS_RE)) {
     const token = m[0].trim();
     if (!isUpper(first(token))) continue;
-    if (!resolved.has(token)) resolved.set(token, resolveInitials(token, authors));
-    const i = resolved.get(token) ?? null;
-    if (i !== null) {
-      mentions.push([m.index, m.index + m[0].length, "A", i]);
+    let hits = resolved.get(token);
+    if (!hits) {
+      hits = initialsCandidates(token, authors);
+      resolved.set(token, hits);
+    }
+    if (hits.length === 1) {
+      mentions.push([m.index, m.index + m[0].length, "A", hits[0] as number]);
     } else if ([...token].filter(isUpper).length >= 2) {
-      mentions.push([m.index, m.index + m[0].length, "A", UNRESOLVED]);
-      unresolved.push(token);
+      mentions.push([m.index, m.index + m[0].length, "A", placeholder(token, hits)]);
     }
   }
 
@@ -426,7 +511,9 @@ export function parseStatement(statement: string, authorList: readonly Statement
   const clauses = new Map<number, [number, Kind, number | string][]>();
   for (const [start, , kind, value] of [...mentions].sort(compareMentions)) {
     const k = bisectLeft(ends, start);
-    clauses.set(k, [...(clauses.get(k) ?? []), [start, kind, value]]);
+    const clause = clauses.get(k);
+    if (clause) clause.push([start, kind, value]);
+    else clauses.set(k, [[start, kind, value]]);
   }
 
   const assignments = new Set<string>();
@@ -451,8 +538,12 @@ export function parseStatement(statement: string, authorList: readonly Statement
       const [people, slugs] = lead[0] === "A" ? [lead[1], follow[1]] : [follow[1], lead[1]];
       const indices = people.includes(ALL_AUTHORS)
         ? authors.map((_, i) => i)
-        : people.filter((i) => i !== UNRESOLVED).map(Number);
+        : people.filter((i) => (i as number) >= 0).map(Number);
       for (const i of indices) for (const slug of slugs) assignments.add(`${i} ${slug}`);
+      for (const i of people) {
+        if ((i as number) <= UNRESOLVED)
+          for (const slug of slugs) slugsOf[UNRESOLVED - (i as number)]?.add(String(slug));
+      }
     }
     const peopleRuns = runs.filter(([kind]) => kind === "A");
     const lastPeople = peopleRuns.at(-1);
@@ -460,6 +551,11 @@ export function parseStatement(statement: string, authorList: readonly Statement
   }
 
   const roleOrder = (role: CreditRoleName) => CREDIT_ROLES.findIndex((r) => r.name === role);
+  unmatched.forEach((u, k) => {
+    u.roles = [...(slugsOf[k] ?? [])]
+      .map((slug) => ROLE_BY_SLUG.get(slug) as CreditRoleName)
+      .sort((a, b) => roleOrder(a) - roleOrder(b));
+  });
   return {
     assignments: [...assignments]
       .map((pair) => {
@@ -468,5 +564,6 @@ export function parseStatement(statement: string, authorList: readonly Statement
       })
       .sort((a, b) => a.author - b.author || roleOrder(a.role) - roleOrder(b.role)),
     unresolved,
+    unmatched,
   };
 }

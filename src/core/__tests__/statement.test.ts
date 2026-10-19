@@ -2,7 +2,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES } from "../credit-roles";
-import { namesCredit, parseStatement, resolveInitials, type StatementAuthor, statementAuthor } from "../statement";
+import {
+  MAX_STATEMENT_LENGTH,
+  namesCredit,
+  parseStatement,
+  resolveInitials,
+  type StatementAuthor,
+  statementAuthor,
+} from "../statement";
 
 const SLUG = new Map(CREDIT_ROLES.map((role) => [role.name, role.url.split("/").at(-2) ?? ""]));
 const author = (given: string, surname: string): StatementAuthor => ({ given, surname });
@@ -317,6 +324,44 @@ describe("edge cases", () => {
       [0, "data-curation"],
       [1, "methodology"],
     ]);
+  });
+});
+
+describe("unmatched", () => {
+  it("names each unresolved token once, with its candidates and the roles left out", () => {
+    const authors = [author("Mark", "Green"), author("Maria", "Garcia"), author("Eva", "Mills")];
+    const { unmatched } = parseStatement(
+      "MG: writing - original draft, conceptualization. EM: software. YL: funding acquisition. MG: data curation.",
+      authors,
+    );
+    expect(unmatched).toEqual([
+      { token: "MG", candidates: [0, 1], roles: ["Conceptualization", "Data curation", "Writing – original draft"] },
+      { token: "YL", candidates: [], roles: ["Funding acquisition"] },
+    ]);
+  });
+
+  it("gives the roles of a role-first clause to the token it names", () => {
+    const { unmatched } = parseStatement("Methodology, XY and A.B.", [author("Ann", "Bell")]);
+    expect(unmatched).toEqual([{ token: "XY", candidates: [], roles: ["Methodology"] }]);
+  });
+});
+
+describe("size", () => {
+  it(`refuses a statement longer than ${MAX_STATEMENT_LENGTH} characters`, () => {
+    expect(() => parseStatement("a".repeat(MAX_STATEMENT_LENGTH + 1), THREE)).toThrow(RangeError);
+  });
+
+  it.each([
+    ["spaces", (n: number) => `AB: conceptualization.${" ".repeat(n)}x`],
+    ["line breaks", (n: number) => `AB: conceptualization.${"\n".repeat(n)}x`],
+    ["unknown initials", (n: number) => `${"XY, ".repeat(n / 4)}: conceptualization`],
+    ["names and roles", (n: number) => "Ann Bell: conceptualization; ".repeat(n / 29)],
+  ])("reads %s up to the cap in well under a second", (_, make) => {
+    const text = make(MAX_STATEMENT_LENGTH - 100);
+    const start = performance.now();
+    namesCredit(text);
+    parseStatement(text, THREE);
+    expect(performance.now() - start).toBeLessThan(500);
   });
 });
 

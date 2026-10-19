@@ -127,13 +127,17 @@ fromJats4rXml(xml, { parser: new DOMParser() });
 `detectFormat(text)` guesses the format from the text's shape, and `importAny(text, { parser })`
 reads any of them, share links and [tenzing](https://github.com/marton-balazs-kovacs/tenzing)
 spreadsheets (CSV or TSV) included. It returns the `format` it read, plus `asks`, `selfId` and
-`title` when the format carries them. Text that uses CRediT's own wording is a `"statement"`, which
+`title` when the format carries them. Text that assigns CRediT roles ("MG: conceptualization",
+"Methodology, A.B.") or tells in sentences what the authors did is a `"statement"`, which
 `importAny` refuses: a statement names roles, not contributors.
 
 `parseStatement(text, authors)` reads a free-text CRediT statement against an author list of
 `{ given, surname }` (`statementAuthor(author)` splits a contributor's name that way). It returns
 `assignments`, each an author index and a role name, and `unresolved`: names or initials that fit
-no author, or more than one, which it never guesses. Only CRediT wording counts, so "A.B. conceived
+no author, or more than one, which it never guesses. `unmatched` lists each of those once, with
+`candidates` (the author indices it could be, empty when none) and the `roles` left out for it.
+It throws a `RangeError` on text longer than `MAX_STATEMENT_LENGTH` (50,000 characters); real
+statements stay under 5,000. Only CRediT wording counts, so "A.B. conceived
 the study" yields nothing. It does not judge whether the text is a CRediT statement at all:
 `namesCredit(text)` says whether it uses a term prose rarely does (conceptualization, data curation,
 original draft, ...). The parser is a port of the one in `census/`, which is scored there against
@@ -210,8 +214,8 @@ holds its exact shape. By entry point:
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toMarkdown`,
     `buildHeatmapSvg`, `HeatmapSvgOptions`, `detectFormat`, `importAny`, `DetectedFormat`, `Imported`
-  - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `ParsedStatement`,
-    `StatementAuthor`
+  - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
+    `ParsedStatement`, `StatementAuthor`
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`
   - Asks: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
     `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,

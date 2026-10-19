@@ -26,6 +26,32 @@ describe("detectFormat", () => {
     await expect(importAny(text)).rejects.toThrow(/parseStatement/);
   });
 
+  it.each([
+    "Conceptualization, A.B. and C.D.; Methodology, A.B.",
+    "Conceptualization: Jane Doe, John Smith",
+    "A.B. - conceptualization\nC.D. - writing - original draft",
+    "A.B. did the conceptualization and wrote the original draft.",
+  ])("reads an assignment of CRediT roles as a statement: %s", (text) => {
+    expect(detectFormat(text)).toBe("statement");
+  });
+
+  it.each([
+    "Jane Doe (Visualization Lab), John Smith",
+    "Jane Doe, Data Curation Unit\nJohn Smith",
+    "Prof. Jane Doe, Prof. John Smith",
+    "Jan van der Berg, Ana da Silva",
+  ])("keeps a name list that merely mentions a role word as names: %s", (text) => {
+    expect(detectFormat(text)).toBe("names");
+  });
+
+  it.each([
+    "A.B. conceived the study. C.D. wrote the paper and analysed the data.",
+    "All authors contributed to the study design.",
+    "The authors wrote the manuscript together",
+  ])("sends prose about what authors did to the statement path: %s", (text) => {
+    expect(detectFormat(text)).toBe("statement");
+  });
+
   it("reads text with a Name header cell as CSV", () => {
     expect(detectFormat("Name,ORCID\nJane Smith,")).toBe("csv");
     expect(detectFormat('"name" , Conceptualization\nJane Smith,100')).toBe("csv");
