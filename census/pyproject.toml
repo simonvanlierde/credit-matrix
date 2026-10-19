@@ -21,6 +21,10 @@ dev = [
     "ty>=0.0.86",
     "types-lxml>=2026.2.16",
 ]
+train = [
+    "torch>=2.14",
+    "transformers>=5.20",
+]
 
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]
@@ -41,3 +45,7 @@ module-name = "census"
 [tool.ruff.lint.per-file-ignores]
 # The tests feed the en dashes publishers use.
 "tests/*" = ["RUF001", "E501"]
+
+[tool.ty.analysis]
+# CI type-checks without the `train` group: torch's wheels are too large to install there.
+allowed-unresolved-imports = ["torch", "transformers", "tokenizers"]
