@@ -7,7 +7,7 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { decodeShareHash, importAnswers, type OrcidProof, type ShareData } from "@/core";
+import { type Author, decodeShareHash, importAnswers, type OrcidProof, type ShareData } from "@/core";
 import { isAllBinary } from "@/core/author";
 import { keepKnownIds } from "@/core/merge-row";
 import { announce } from "@/lib/announce";
@@ -21,6 +21,8 @@ import {
   MAX_DRAFTS,
   useContributionStore,
 } from "@/store/contribution-store";
+
+const NO_AUTHORS: Author[] = [];
 
 /** Answer the way the asker works: yes/no only when the link says so and the row holds nothing finer. */
 function claimMode(shared: ShareData): InputMode {
@@ -41,6 +43,9 @@ export function HeaderActions() {
   // Only the count is needed at render time; the array itself is read inside
   // the handlers via getState(), so score edits don't re-render the nav bar.
   const authorCount = useContributionStore((s) => s.authors.length);
+  // The open dialog matches a pasted statement against the roster; closed, it needs none.
+  const importAuthors = useContributionStore((s) => (importOpen ? s.authors : NO_AUTHORS));
+  const graded = useContributionStore((s) => s.inputMode === "levels");
   const loadAuthors = useContributionStore((s) => s.loadAuthors);
   const setTitle = useContributionStore((s) => s.setTitle);
   const setClaim = useContributionStore((s) => s.setClaim);
@@ -351,6 +356,33 @@ export function HeaderActions() {
     if (importedTitle !== undefined) setTitle(importedTitle);
   }
 
+  /**
+   * Add a pasted statement's roles in one write. Undo restores the roster only while it is still
+   * the one this wrote: after an edit or a draft switch it would throw away newer work.
+   */
+  function handleApplyStatement(next: Author[], added: number, level?: string) {
+    const before = useContributionStore.getState().authors;
+    loadAuthors(next);
+    const applied = useContributionStore.getState().authors;
+    showStatus({
+      kind: "success",
+      message: level ? t("statementAppliedLevel", { count: added, level }) : t("statementApplied", { count: added }),
+      actions: [
+        {
+          label: t("undo"),
+          onAct: () => {
+            if (useContributionStore.getState().authors !== applied) {
+              showStatus({ kind: "error", message: t("statementUndoStale") });
+              return;
+            }
+            loadAuthors(before);
+            announce(t("annBulkUndone"));
+          },
+        },
+      ],
+    });
+  }
+
   /** Take a pasted share link through the same router every other entry uses. */
   async function handleLink(url: string): Promise<LinkFailure | null> {
     const hashAt = url.indexOf("#");
@@ -404,7 +436,7 @@ export function HeaderActions() {
             <button
               type="button"
               onClick={() => void handleShare()}
-              className="mt-3 inline-flex min-h-9 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-container"
+              className="mt-3 inline-flex min-h-9 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
             >
               {t("copyDataLink")}
             </button>
@@ -430,6 +462,9 @@ export function HeaderActions() {
         existingContributorCount={authorCount}
         onImport={handleImport}
         onLink={handleLink}
+        authors={importAuthors}
+        graded={graded}
+        onApplyStatement={handleApplyStatement}
         onClose={() => setImportOpen(false)}
       />
     </>

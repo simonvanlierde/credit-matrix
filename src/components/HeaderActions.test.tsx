@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { IntlProvider } from "use-intl";
-import { expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { createAuthor } from "@/core";
 import { buildShareUrl } from "@/lib/share";
 import en from "@/messages/en.json";
@@ -145,4 +145,55 @@ it("keeps what this tab holds unsaved when a link opens", async () => {
 
   expect(await screen.findByText("Opened the shared draft beside your own work.")).toBeTruthy();
   expect(useContributionStore.getState().drafts[held]?.authors.map((author) => author.name)).toEqual(["Ann Unsaved"]);
+});
+
+describe("Undo after a pasted statement", () => {
+  beforeAll(() => {
+    // jsdom has no modal dialog API; stand in for the two calls useModalDialog makes.
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+      this.open = false;
+    };
+  });
+
+  async function applyStatement() {
+    render(
+      <IntlProvider locale="en" messages={en}>
+        <HeaderActions />
+        <StatusBanner />
+      </IntlProvider>,
+    );
+    await act(() => useContributionStore.persist.rehydrate());
+    act(() => {
+      useContributionStore.getState().createDraft();
+      useContributionStore.getState().addAuthor("Ann Bell");
+    });
+    fireEvent.click(screen.getByRole("button", { name: en.import }));
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: "AB: conceptualization." } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.statementReview })));
+    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    const ann = useContributionStore.getState().authors[0];
+    if (!ann) throw new Error("expected Ann");
+    return ann;
+  }
+  const score = (role: string) =>
+    useContributionStore.getState().authors[0]?.contributions.find((c) => c.role === role)?.score;
+
+  it("takes the roles back", async () => {
+    await applyStatement();
+    expect(score("Conceptualization")).toBe(100);
+    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    expect(score("Conceptualization")).toBe(0);
+  });
+
+  it("keeps an edit made after applying, and says why nothing was undone", async () => {
+    const ann = await applyStatement();
+    act(() => useContributionStore.getState().setAuthorScore(ann.id, 1, 100));
+    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    expect(score("Conceptualization")).toBe(100);
+    expect(score("Data curation")).toBe(100);
+    expect(screen.getByText(en.statementUndoStale)).toBeTruthy();
+  });
 });

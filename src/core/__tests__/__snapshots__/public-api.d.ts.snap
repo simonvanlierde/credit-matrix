@@ -1088,12 +1088,12 @@ interface StatementOptions {
 export declare function generateStatement(authors: Author[], options: StatementOptions): string;
 //#endregion
 //#region import.d.ts
-type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "names" | "unknown";
+type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "statement" | "names" | "unknown";
 /** Guess what pasted or loaded text is, from its shape alone. */
 export declare function detectFormat(text: string): DetectedFormat;
 /** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */
 interface Imported {
-  format: Exclude<DetectedFormat, "unknown">;
+  format: Exclude<DetectedFormat, "unknown" | "statement">;
   authors: Author[];
   asks?: Record<string, Ask>;
   selfId?: string;
@@ -1101,7 +1101,8 @@ interface Imported {
 }
 /**
  * Read text in any format {@link detectFormat} knows. Throws on text it cannot
- * place, on a link that does not decode, and whatever the format's own reader
+ * place, on a CRediT statement (it names roles, not contributors: read it with
+ * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
  * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
  * `authors` means the format was right but held nobody.
  */
@@ -1205,7 +1206,56 @@ export declare function encodeShareHash(input: SharePayloadInput, baseUrl?: stri
  */
 export declare function decodeShareHash(hash: string): Promise<ShareData | null>;
 //#endregion
-export type { Ask, AskEvent, AskState, Author, Choice, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, OrcidKey, OrcidProof, Outcome, Patch, Reply, Review, ShareData, SharePayloadInput, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
+//#region statement.d.ts
+/** An author as the parser needs it: given names and surname, as separate strings. */
+interface StatementAuthor {
+  given: string;
+  surname: string;
+}
+/**
+ * A contributor's name split the way the parser needs it. The given names are everything in the
+ * display name before the surname, so "Jane Anne Marie Smith" keeps all three, and "Smith, Jane"
+ * reads the part after the comma.
+ */
+export declare function statementAuthor(author: Pick<Author, "name" | "firstName" | "middleName" | "surname">): StatementAuthor;
+/** What {@link parseStatement} read. */
+interface ParsedStatement {
+  /** Each author (an index into the list passed in) and role the statement pairs, in author then CRediT order. */
+  assignments: {
+    author: number;
+    role: CreditRoleName;
+  }[];
+  /** Initials-like tokens and names that matched no author, or more than one, in the order found. */
+  unresolved: string[];
+  /**
+   * Each distinct unresolved token once, in the order found: the authors it could be (empty when it
+   * fits no one) and the roles the statement gives it, which `assignments` leaves out.
+   */
+  unmatched: {
+    token: string;
+    candidates: number[];
+    roles: CreditRoleName[];
+  }[];
+}
+/** The longest statement {@link parseStatement} reads, in UTF-16 code units. Real ones are under 5,000. */
+export declare const MAX_STATEMENT_LENGTH = 50000;
+/**
+ * Whether text uses CRediT's own vocabulary, not just a common word that is also a role: at least
+ * one of conceptualization, data curation, formal analysis, funding acquisition, project
+ * administration, visualization, original draft or review and editing.
+ */
+export declare function namesCredit(text: string): boolean;
+/**
+ * The role assignments in a free-text CRediT statement. Author indices refer to `authors`.
+ *
+ * This does not judge whether the text is a CRediT statement at all: check {@link namesCredit}
+ * first, as an ICMJE list or prose can still name a common role word ("software").
+ *
+ * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
+ */
+export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
+//#endregion
+export type { Ask, AskEvent, AskState, Author, Choice, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, OrcidKey, OrcidProof, Outcome, ParsedStatement, Patch, Reply, Review, ShareData, SharePayloadInput, StatementAuthor, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
 // lookup.d.ts
 //#region doi-lookup.d.ts
 /**

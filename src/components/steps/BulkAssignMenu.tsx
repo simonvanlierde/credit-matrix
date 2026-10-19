@@ -12,9 +12,9 @@ import { useContributionStore } from "@/store/contribution-store";
 import { ICON_TOOL_BUTTON, LEVEL_KEY } from "./grid-shared";
 
 // "None" is what Clear does, so the bulk picker offers only the assignable levels.
-const ASSIGNABLE_LEVELS = LEVEL_KEY.filter(({ score }) => score > 0);
+export const ASSIGNABLE_LEVELS = LEVEL_KEY.filter(({ score }) => score > 0);
 // Equal, not Lead: bulk-marking everyone as Lead overstates every one of them.
-const DEFAULT_BULK_LEVEL = 66;
+export const DEFAULT_BULK_LEVEL = 66;
 
 /**
  * The roster as it stood before the last bulk action, with the actions that

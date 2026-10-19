@@ -15,7 +15,7 @@
 :root {
   /* --- Accent (single ink-blue: links, focus, primary buttons only) --- */
   --color-primary: #1f4e79;
-  --color-primary-container: #2c63924d; /* accent @ 30% for soft fills */
+  --color-primary-hover: #183f62; /* opaque, under on-primary text on hover */
   --color-on-primary: #ffffff;
 
   /* --- Neutrals (ink on paper) --- */
@@ -55,7 +55,7 @@
  */
 .dark {
   --color-primary: #a8c1da;
-  --color-primary-container: #2c639266;
+  --color-primary-hover: #8fadc9;
   --color-on-primary: #16181c;
 
   --color-surface: #16181c;
@@ -104,7 +104,7 @@
  */
 @theme inline {
   --color-primary: var(--color-primary);
-  --color-primary-container: var(--color-primary-container);
+  --color-primary-hover: var(--color-primary-hover);
   --color-on-primary: var(--color-on-primary);
 
   --color-surface: var(--color-surface);

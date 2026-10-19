@@ -107,6 +107,14 @@ rarely uses (conceptualization, data curation, original draft, ...): "under the 
 or an ICMJE list with "Supervision" stays `none`, its text kept. Text that Europe PMC's bulk files
 store double-encoded ("â\x80\x94" for an em dash) is repaired before parsing.
 
+The web app's paste-a-statement import runs a TypeScript port of `roles.py` and `statement.py`
+(`src/core/statement.ts`). A test there runs it over `tests/corpus.jsonl` and requires the same
+output as `expected` here, so a change to one parser needs the same change in the other. One
+step differs in form only: `roles.clean` replaces dashes with the spaces around them before it
+collapses runs of spaces, and the port collapses spaces first, because the first order takes
+quadratic time on a long run of spaces in a browser. The output is the same. The comment for this
+lives here, not in `roles.py`: the database pins a hash of that file's bytes.
+
 ## Tables
 
 - `articles`: one row per article: stratum, PMC version and the XML's sha256, article type, DOI,

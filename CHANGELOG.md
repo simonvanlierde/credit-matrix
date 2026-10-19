@@ -25,8 +25,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   The sign-in travels inside the reply link and JSON exports; no server keeps it. A sign-in moved
   onto another answer does not verify, and importing a JSON export checks each sign-in again.
   If ORCID cannot be reached then, the answer arrives without the mark; try again later to add it.
+- Paste an existing author contribution statement into Import to fill in the grid. It is matched to
+  the contributors already in the draft, by full name or initials ("MG", "S.L.V.", "Nam KC"), and
+  each line counts as its own entry. You see which roles each person gets, and for each name or
+  initials that matched no one, or more than one, who it could be and which roles are left out,
+  before you apply. In a Levels draft you pick the level the roles get (Equal unless you change it).
+  Undo takes the roles back until you change the draft again. Only CRediT wording counts, so "drew
+  the figures" or "approved the manuscript" add nothing. Statements are read up to 50,000
+  characters, and never leave the browser.
+- The `credit-matrix` package exports `parseStatement`, `statementAuthor`, `namesCredit` and
+  `MAX_STATEMENT_LENGTH`. `parseStatement` also returns `unmatched`: each unresolved name or
+  initials once, with the authors it could be and the roles it was given. It throws a `RangeError`
+  on a statement longer than `MAX_STATEMENT_LENGTH` (50,000 characters).
 - In the `credit-matrix` package, replies can carry `provenance.orcid` (the new `OrcidProof` type)
   and `provenance.replacedOrcid`; run `recheckSignIns` on imported asks.
+
+### Changed
+
+- **Breaking:** in the `credit-matrix` package, `DetectedFormat` gains `"statement"`, which
+  `detectFormat` returns for a CRediT statement or for prose about what the authors did. Such text
+  used to come back as `"names"`. `importAny` now throws on it, as it names roles, not
+  contributors: read it with `parseStatement` against your author list. A `switch` over
+  `DetectedFormat` needs the new case. The next release is therefore 0.9.0.
+- Primary buttons darken on hover instead of fading, so their text stays readable.
 
 ## [0.8.1] - 2026-10-13
 

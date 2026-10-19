@@ -44,6 +44,7 @@ function cssVars(): Map<string, string> {
 // DESIGN.md token name -> the CSS custom property it documents.
 const MIRRORED: [string, string][] = [
   ["ink-blue", "color-primary"],
+  ["ink-blue-hover", "color-primary-hover"],
   ["paper-bright", "color-surface-bright"],
   ["graphite", "color-on-surface"],
   ["error", "color-error"],
