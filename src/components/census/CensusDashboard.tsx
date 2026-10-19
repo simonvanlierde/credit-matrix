@@ -6,6 +6,7 @@ import { useFormatter, useTranslations } from "use-intl";
 import { BarList, LineChart, type Point, TableToggle } from "@/components/census/charts";
 import { IN_TEXT_LINK } from "@/components/ui/license-link";
 import { CREDIT_ROLES } from "@/core";
+import { fieldKey } from "@/lib/field-names";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import type censusJson from "../../../public/data/census.json";
 
@@ -28,28 +29,6 @@ const PLACE_KEYS = {
   first: "censusPlaceFirst",
   middle: "censusPlaceMiddle",
   last: "censusPlaceLast",
-} as const;
-
-/** OpenAlex field names with a translation; any other field shows its OpenAlex name. */
-const FIELD_KEYS = {
-  "Agricultural and Biological Sciences": "censusFieldAgriculturalAndBiologicalSciences",
-  "Biochemistry, Genetics and Molecular Biology": "censusFieldBiochemistryGeneticsAndMolecularBiology",
-  Chemistry: "censusFieldChemistry",
-  "Computer Science": "censusFieldComputerScience",
-  Dentistry: "censusFieldDentistry",
-  "Economics, Econometrics and Finance": "censusFieldEconomicsEconometricsAndFinance",
-  Engineering: "censusFieldEngineering",
-  "Environmental Science": "censusFieldEnvironmentalScience",
-  "Health Professions": "censusFieldHealthProfessions",
-  "Immunology and Microbiology": "censusFieldImmunologyAndMicrobiology",
-  "Materials Science": "censusFieldMaterialsScience",
-  Mathematics: "censusFieldMathematics",
-  Medicine: "censusFieldMedicine",
-  Multidisciplinary: "censusFieldMultidisciplinary",
-  Neuroscience: "censusFieldNeuroscience",
-  "Physics and Astronomy": "censusFieldPhysicsAndAstronomy",
-  Psychology: "censusFieldPsychology",
-  "Social Sciences": "censusFieldSocialSciences",
 } as const;
 
 /** The English role name for a credit.niso.org slug, which the role catalog translates. */
@@ -144,8 +123,10 @@ export function CensusDashboard({ data }: { data: CensusData }) {
     );
   };
   const byShare = (a: { share: number }, b: { share: number }) => b.share - a.share;
-  const fieldName = (name: string) =>
-    Object.hasOwn(FIELD_KEYS, name) ? t(FIELD_KEYS[name as keyof typeof FIELD_KEYS]) : name;
+  const fieldName = (name: string) => {
+    const key = fieldKey(name);
+    return key ? t(key) : name;
+  };
   const fields = data.fields.map((r) => bar(fieldName(r.field), r)).sort(byShare);
   const publishers = data.publishers.map((r) => bar(r.publisher, r)).sort(byShare);
 

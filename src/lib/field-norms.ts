@@ -29,8 +29,8 @@ export interface FieldNorms {
 
 export const NORMS = data as FieldNorms;
 
-/** Field names in alphabetical order. They are OpenAlex's English names, so they sort the same in every locale. */
-export const NORM_FIELDS = Object.keys(NORMS.fields).sort((a, b) => a.localeCompare(b, "en"));
+/** OpenAlex's English field names, in the file's order; the panel sorts them by their translated names. */
+export const NORM_FIELDS = Object.keys(NORMS.fields);
 
 /** The byline position of the author at `index` among `count` authors, or null when there is no such author. */
 export function positionOf(index: number, count: number): Position | null {

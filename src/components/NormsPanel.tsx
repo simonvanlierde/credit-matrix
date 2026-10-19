@@ -2,8 +2,9 @@
 
 import { Info } from "lucide-react";
 import { type ReactNode, useId } from "react";
-import { useFormatter, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { fieldKey } from "@/lib/field-names";
 import { NORM_FIELDS, NORMS, normRows, POSITIONS, selfPosition } from "@/lib/field-norms";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { cn } from "@/lib/utils";
@@ -30,8 +31,16 @@ export function NormsPanel() {
   const labelId = useId();
   // A saved field the current file no longer lists counts as none picked, with a line saying so.
   const rows = normRows(field);
-  // OpenAlex's field names, which have no translations.
-  const fieldName = (chunks: ReactNode) => <span lang="en">{chunks}</span>;
+  const locale = useLocale();
+  const label = (name: string) => {
+    const key = fieldKey(name);
+    return key ? t(key) : name;
+  };
+  // A field with no translation shows OpenAlex's English name, marked as English.
+  const english = (name: string) => (chunks: ReactNode) => (fieldKey(name) ? chunks : <span lang="en">{chunks}</span>);
+  const fields = NORM_FIELDS.map((name) => ({ name, label: label(name) })).sort((a, b) =>
+    a.label.localeCompare(b.label, locale),
+  );
   const entry = rows && field ? NORMS.fields[field] : undefined;
   const filesDate = NORMS.files_date
     ? format.dateTime(new Date(NORMS.files_date), { dateStyle: "medium", timeZone: "UTC" })
@@ -47,10 +56,10 @@ export function NormsPanel() {
             <SelectValue placeholder={t("normsFieldPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            {NORM_FIELDS.map((name) => (
+            {fields.map(({ name, label }) => (
               // The span, not the item, carries lang: the trigger shows a copy of the item's text.
               <SelectItem key={name} value={name} className="text-sm">
-                {fieldName(name)}
+                {english(name)(label)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -65,9 +74,9 @@ export function NormsPanel() {
               <p className="text-on-surface">
                 {t.rich("normsCoverage", {
                   articles: entry.articles,
-                  field: field ?? "",
+                  field: field ? label(field) : "",
                   date: filesDate,
-                  name: fieldName,
+                  name: english(field ?? ""),
                 })}
               </p>
               {NORMS.parser_f1 !== null && (
@@ -165,7 +174,7 @@ export function NormsPanel() {
         </>
       ) : (
         <p className="text-xs text-on-surface-variant">
-          {field ? t.rich("normsFieldGone", { field, name: fieldName }) : t("normsEmpty")}
+          {field ? t.rich("normsFieldGone", { field: label(field), name: english(field) }) : t("normsEmpty")}
         </p>
       )}
     </div>

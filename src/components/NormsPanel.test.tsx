@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
 import { type FieldNorms, NORM_FIELDS, NORMS, normRows, positionOf, selfPosition } from "@/lib/field-norms";
 import en from "@/messages/en.json";
+import fr from "@/messages/fr.json";
 import { useContributionStore } from "@/store/contribution-store";
 import { NormsPanel } from "./NormsPanel";
 
@@ -84,9 +85,9 @@ describe("normRows", () => {
 });
 
 describe("NormsPanel", () => {
-  function renderPanel() {
+  function renderPanel(locale = "en", messages: typeof en = en) {
     render(
-      <IntlProvider locale="en" messages={en} timeZone="UTC">
+      <IntlProvider locale={locale} messages={messages} timeZone="UTC">
         <NormsPanel />
       </IntlProvider>,
     );
@@ -115,10 +116,17 @@ describe("NormsPanel", () => {
     );
     const articles = (NORMS.fields[field]?.articles ?? 0).toLocaleString("en");
     const coverage = screen.getByText(new RegExp(`^${articles} open-access research articles`));
-    // OpenAlex's English field name keeps its language inside a translated sentence.
-    expect(within(coverage).getByText(field).getAttribute("lang")).toBe("en");
+    // A translated field name needs no lang of its own.
+    expect(coverage.textContent).toContain(field);
+    expect(coverage.querySelector("[lang]")).toBeNull();
     // Context only: showing the norms writes nothing to the roster.
     expect(useContributionStore.getState().authors).toBe(before);
+  });
+
+  it("translates the field name in the UI language", () => {
+    act(() => useContributionStore.getState().setNormsField("Medicine"));
+    renderPanel("fr", fr);
+    expect(screen.getByText(/en libre accès en Médecine avec/)).toBeTruthy();
   });
 
   it("marks no column for a non-author and says why", () => {
