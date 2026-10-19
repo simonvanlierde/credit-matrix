@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "includes": ["**", "!src/app/globals.css", "!.vitest"]
+    "includes": ["**", "!src/app/globals.css", "!.vitest", "!public/data/census.json"]
   },
   "formatter": {
     "enabled": true,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Code, ExternalLink } from "lucide-react";
+import { ChartLine, Code, ExternalLink } from "lucide-react";
 import { useTranslations } from "use-intl";
 import { PRODUCT_NAME } from "@/components/BrandMark";
 import { IN_TEXT_LINK, LicenseLink } from "@/components/ui/license-link";
@@ -33,6 +33,10 @@ export function AboutPanel({ version }: { version: string }) {
         {t("sourceOnGitHub")}
         <ExternalLink className="size-3" aria-hidden="true" />
         <span className="sr-only">{t("opensInNewTab")}</span>
+      </a>
+      <a href="/census" className="flex items-center gap-1.5 font-medium text-primary hover:underline">
+        <ChartLine className="size-4" aria-hidden="true" />
+        {t("censusAboutLink")}
       </a>
       {/* Authorship and license sit with the identity, not in the small print:
           they say who made this, which is the same kind of fact as what it is.

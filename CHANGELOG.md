@@ -8,6 +8,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A CRediT census page (`/census`, linked from About) shows how published papers use CRediT,
+  from 8.2 million open-access articles in Europe PMC: the share of research articles with roles
+  per year, by markup style, field and publisher, and which roles first, middle and last authors
+  hold. The figures are preliminary: the parser that reads the roles is not yet validated against
+  hand labels. The counts behind the page are at `/data/census.json`.
 - Co-authors can sign in with ORCID before they send their answer back. The Review tab then shows
   "Verified by ORCID" with their name, iD and sign-in day, and warns when that iD is not the row's.
   The sign-in travels inside the reply link and JSON exports; no server keeps it. A sign-in moved

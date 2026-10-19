@@ -4,7 +4,7 @@ CRediT Matrix builds on earlier research on who gets credit for what in a paper:
 
 - Brand, A., Allen, L., Altman, M., Hlava, M., & Scott, J. (2015). Beyond authorship: attribution,
   contribution, collaboration, and credit. *Learned Publishing, 28*(2), 151–155.
-  <https://doi.org/10.1002/leap.1210>
+  <https://doi.org/10.1087/20150211>
 - Holcombe, A. O., Kovács, M., Aust, F., & Aczel, B. (2020). Documenting contributions to scholarly
   articles using CRediT and tenzing. *PLOS ONE, 15*(12), e0244611.
   <https://doi.org/10.1371/journal.pone.0244611>
