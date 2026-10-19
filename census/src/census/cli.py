@@ -9,6 +9,7 @@ Order of use:
 
 import argparse
 import csv
+import json
 import re
 import sys
 import time
@@ -271,6 +272,15 @@ def cmd_model_score(args: argparse.Namespace) -> None:
             print(f"{name[:39]:<40}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}{f'{low}-{high}':>13}")
 
 
+def cmd_model_hybrid(args: argparse.Namespace) -> None:
+    out = args.predictions.with_name("hybrid-" + args.predictions.name.removeprefix("encoder-"))
+    with store.connect(_db(args), read_only=True) as con:
+        combined = modelset.hybrid(con, modelset.read_predictions(args.predictions))
+    with out.open("w", encoding="utf-8") as f:
+        f.writelines(json.dumps({"pmcid": p, "pairs": sorted(pairs)}) + "\n" for p, pairs in combined.items())
+    print(f"{len(combined)} articles in {out}")
+
+
 def _items(args: argparse.Namespace) -> tuple[Iterator[dict], str]:
     """The articles to predict, and the set's name for the predictions file: held-out, or --labels."""
     if args.labels:
@@ -412,6 +422,9 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("predictions", type=Path, nargs="?", help='JSONL of {"pmcid", "pairs": [[position, slug]]}')
     cmd.add_argument("--rules", action="store_true", help="score the rule parser on the articles PREDICTIONS covers")
     cmd.set_defaults(func=cmd_model_score)
+    cmd = model_sub.add_parser("hybrid", parents=[snap, db], help="the rule parser's gate with an encoder's roles")
+    cmd.add_argument("predictions", type=Path, help="the encoder's JSONL from `census model predict`")
+    cmd.set_defaults(func=cmd_model_hybrid)
     cmd = model_sub.add_parser("zero-shot", parents=[snap, db], help="predict with a model on a local vLLM server")
     cmd.add_argument("--model", required=True, help="model name the server serves, e.g. Qwen/Qwen3.5-9B")
     cmd.add_argument("--base-url", default="http://localhost:8000/v1", help="root of a chat-completions API")

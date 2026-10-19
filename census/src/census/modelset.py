@@ -156,6 +156,25 @@ def rule_predictions(con: duckdb.DuckDBPyConnection, pmcids: Iterable[str]) -> d
     return predicted
 
 
+def hybrid(con: duckdb.DuckDBPyConnection, encoder: dict[str, Pairs]) -> dict[str, Pairs]:
+    """The rules decide and the encoder reads: an article the rule parser gives no role keeps none, a
+    `contrib_text` article keeps the rules' pairs (the encoder learned from statements, not per-author
+    text), and every other article takes the encoder's pairs."""
+    ids = list(encoder)
+    sql = "SELECT pmcid, style FROM articles WHERE pmcid IN (SELECT unnest(?))"
+    styles = dict(con.execute(sql, [ids]).fetchall())
+    # A tagged article's rule reading is in `paired`; `assignments` holds its tags.
+    rules = rule_predictions(con, [p for p in ids if styles.get(p) in TAGGED_STYLES])
+    untagged = [p for p in ids if p not in rules]
+    sql = "SELECT pmcid, author_position, role FROM assignments WHERE pmcid IN (SELECT unnest(?))"
+    for pmcid, position, role in con.execute(sql, [untagged]).fetchall():
+        rules.setdefault(pmcid, set()).add((position, role))
+    return {
+        p: rules.get(p, set()) if styles.get(p) == "contrib_text" or not rules.get(p) else pairs
+        for p, pairs in encoder.items()
+    }
+
+
 def score(
     con: duckdb.DuckDBPyConnection, gold: dict[str, Pairs], predicted: dict[str, Pairs], by: str = "style"
 ) -> list[tuple]:

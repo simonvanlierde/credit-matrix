@@ -111,6 +111,29 @@ def test_rule_predictions_read_the_statement_not_the_tags(db):
     assert modelset.rule_predictions(db, gold) == {"PMC1": {(1, "software")}}
 
 
+def test_hybrid_keeps_the_rules_gate_and_per_author_text(tmp_path):
+    def text(i: int, style: str, roles: list) -> Rows:
+        return Rows({**tagged(i, "x").article, "style": style}, roles=roles)
+
+    rows = [
+        tagged(1, "rules read some roles"),
+        Rows(tagged(2, "rules read none").article, roles=[(1, "software")]),
+        text(3, "contrib_text", [(1, "software")]),
+        text(4, "statement_text", [(1, "software")]),
+        text(5, "none", []),
+    ]
+    encoder = {f"PMC{i}": {(1, "software"), (2, "validation")} for i in range(1, 6)}
+    with make_db(tmp_path / "h.duckdb", rows) as con:
+        combined = modelset.hybrid(con, encoder)
+    assert combined == {
+        "PMC1": encoder["PMC1"],
+        "PMC2": set(),
+        "PMC3": {(1, "software")},
+        "PMC4": encoder["PMC4"],
+        "PMC5": set(),
+    }
+
+
 class ChatServer(BaseHTTPRequestHandler):
     """A chat-completions endpoint that answers from `replies`, keyed by the statement it is sent:
     (content, finish_reason), or an HTTP error code."""
