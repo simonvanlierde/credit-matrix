@@ -51,3 +51,53 @@ test("a pasted statement fills the grid after review, and Undo takes it back", a
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(markConcept).toHaveAttribute("aria-pressed", "false");
 });
+
+test("in a Levels draft, the level and the contributor behind shared initials are chosen by keyboard", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Import", exact: true }).click();
+  await page.locator("#import-text").fill("Mark Green\nMaria Garcia\nEva Mills");
+  await page.getByRole("button", { name: "Import data" }).click();
+  await page.getByRole("radio", { name: "Levels" }).click();
+
+  await page.getByRole("button", { name: "Import", exact: true }).click();
+  await page.locator("#import-text").fill("MG: conceptualization, writing – original draft. EM: software.");
+  await page.getByRole("button", { name: "Review roles" }).click();
+  const review = page.getByRole("region", { name: "Roles found in the statement" });
+  await expect(review.getByText("1 role to add as Equal for 1 contributor.", { exact: false })).toBeVisible();
+
+  // Both selects carry a name and open, move and choose from the keyboard alone.
+  const level = review.getByRole("combobox", { name: "Level to assign" });
+  const who = review.getByRole("combobox", { name: "MG" });
+  await expect(who).toHaveText("Leave out");
+  await level.focus();
+  await page.keyboard.press("Enter");
+  // The list opens on the current choice; wait for it before moving.
+  await expect(page.getByRole("option", { name: "Equal" })).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByRole("option", { name: "Lead" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(level).toHaveText("Lead");
+  await expect(level).toBeFocused();
+  await who.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("option", { name: "Leave out" })).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByRole("option", { name: "Maria Garcia" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(who).toHaveText("Maria Garcia");
+  await expect(review.getByText("3 roles to add as Lead for 2 contributors.", { exact: false })).toBeVisible();
+  await expect(review.getByRole("listitem").filter({ hasText: "Maria Garcia" }).first()).toContainText(
+    "Conceptualization, Writing – original draft",
+  );
+
+  expect((await scan(page)).violations).toEqual([]);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  expect((await scan(page)).violations).toEqual([]);
+
+  await review.getByRole("button", { name: "Apply roles" }).click();
+  await expect(page.getByRole("button", { name: "Conceptualization for Maria Garcia: Lead" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Conceptualization for Mark Green: None" })).toBeVisible();
+});
