@@ -8,7 +8,7 @@ from pathlib import Path
 
 import duckdb
 
-from census.export import DATASET_VERSION, _commit
+from census.export import DATASET_VERSION, commit
 from census.fields import has_fields
 
 MIN_ARTICLES = 1000
@@ -111,7 +111,7 @@ def aggregate(
     data = {
         "snapshot": name,
         "dataset_version": DATASET_VERSION,
-        "code_commit": _commit(),
+        "code_commit": commit(),
         "openalex_sources": meta.get("openalex_sources"),
         "parser": meta.get("parser"),
         "complete": complete,

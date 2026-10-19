@@ -438,6 +438,7 @@
   "censusSnapshot": "スナップショット",
   "censusDatasetVersion": "データセットのバージョン",
   "censusCodeCommit": "コードのコミット",
+  "censusParser": "パーサーのバージョン",
   "censusOpenAlex": "OpenAlex ソース",
   "censusDownload": "集計をダウンロード（JSON）",
   "censusSourceLink": "センサスの仕組み"

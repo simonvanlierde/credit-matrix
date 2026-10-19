@@ -11,17 +11,17 @@ import type censusJson from "../../../public/data/census.json";
 
 type CensusData = typeof censusJson;
 
-/** In the order the parser picks them: an article counts under the first it uses. */
-const STYLES = ["jats4r", "plos_uri", "contrib_text", "statement_text"] as const;
 const PLACES = ["all", "first", "middle", "last"] as const;
 const SOURCE = "https://github.com/simonvanlierde/credit-matrix/tree/main/census";
 
+/** In the order the parser picks them: an article counts under the first it uses. */
 const STYLE_KEYS = {
   jats4r: ["censusStyleJats4r", "censusStyleJats4rNote"],
   plos_uri: ["censusStylePlosUri", "censusStylePlosUriNote"],
-  statement_text: ["censusStyleStatement", "censusStyleStatementNote"],
   contrib_text: ["censusStyleContribText", "censusStyleContribTextNote"],
+  statement_text: ["censusStyleStatement", "censusStyleStatementNote"],
 } as const;
+const STYLES = Object.keys(STYLE_KEYS) as (keyof typeof STYLE_KEYS)[];
 
 const PLACE_KEYS = {
   all: "censusPlaceAll",
@@ -130,11 +130,19 @@ export function CensusDashboard({ data }: { data: CensusData }) {
   );
   const roleMax = Math.max(...data.roles.map((r) => r.share));
   const bar = (name: string, row: { articles: number; with_roles: number }) => ({
-    key: name,
     label: name,
     share: row.with_roles / row.articles,
     detail: t("censusOfArticles", { count: row.articles }),
   });
+  const cell = (role: string, place: (typeof PLACES)[number]) => {
+    const share = shares.get(`${role} ${place}`) ?? 0;
+    return (
+      <>
+        <Swatch shade={share / roleMax} />
+        <span className={place === "all" ? "font-semibold" : undefined}>{pct(share)}</span>
+      </>
+    );
+  };
   const byShare = (a: { share: number }, b: { share: number }) => b.share - a.share;
   const fieldName = (name: string) =>
     Object.hasOwn(FIELD_KEYS, name) ? t(FIELD_KEYS[name as keyof typeof FIELD_KEYS]) : name;
@@ -185,7 +193,6 @@ export function CensusDashboard({ data }: { data: CensusData }) {
         <Section title={t("censusAdoptionTitle")} caption={t("censusAdoptionCaption", { year: partialYear ?? "" })}>
           <LineChart
             points={adoption}
-            yMax={Math.max(...adoption.map((p) => p.y))}
             formatY={pct}
             label={t("censusAdoptionTitle")}
             description={trend(adoption, pct)}
@@ -195,7 +202,6 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           <p className="mt-1 max-w-[65ch] text-sm text-on-surface-variant">{t("censusRolesPerAuthorCaption")}</p>
           <LineChart
             points={perAuthor}
-            yMax={Math.max(...perAuthor.map((p) => p.y))}
             formatY={perAuthorFormat}
             label={t("censusRolesPerAuthorTitle")}
             description={trend(perAuthor, perAuthorFormat)}
@@ -276,28 +282,17 @@ export function CensusDashboard({ data }: { data: CensusData }) {
               <li key={role} className="py-2.5">
                 <p className="text-sm font-semibold text-on-surface">{translateInterfaceRole(roleName(role))}</p>
                 <dl className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1 text-sm tabular-nums">
-                  {PLACES.map((place) => {
-                    const share = shares.get(`${role} ${place}`) ?? 0;
-                    return (
-                      <div key={place} className="flex items-center justify-between gap-2">
-                        <dt className="text-xs text-on-surface-variant">{t(PLACE_KEYS[place])}</dt>
-                        <dd className="inline-flex items-center gap-2 text-on-surface">
-                          <Swatch shade={share / roleMax} />
-                          {pct(share)}
-                        </dd>
-                      </div>
-                    );
-                  })}
+                  {PLACES.map((place) => (
+                    <div key={place} className="flex items-center justify-between gap-2">
+                      <dt className="text-xs text-on-surface-variant">{t(PLACE_KEYS[place])}</dt>
+                      <dd className="inline-flex items-center gap-2 text-on-surface">{cell(role, place)}</dd>
+                    </div>
+                  ))}
                 </dl>
               </li>
             ))}
           </ul>
-          <section
-            className="hidden overflow-x-auto sm:block"
-            // biome-ignore lint/a11y/noNoninteractiveTabindex: on a narrow screen the table scrolls sideways and holds nothing focusable, so it needs a tab stop (axe scrollable-region-focusable).
-            tabIndex={0}
-            aria-label={t("censusRolesTitle")}
-          >
+          <section className="hidden sm:block" aria-label={t("censusRolesTitle")}>
             <table className="w-full min-w-[34rem] text-sm tabular-nums">
               <thead>
                 <tr className="border-b border-outline text-xs text-on-surface-variant">
@@ -317,19 +312,11 @@ export function CensusDashboard({ data }: { data: CensusData }) {
                     <th scope="row" className="py-1.5 pr-3 text-left font-normal text-on-surface">
                       {translateInterfaceRole(roleName(role))}
                     </th>
-                    {PLACES.map((place) => {
-                      const share = shares.get(`${role} ${place}`) ?? 0;
-                      return (
-                        <td key={place} className="px-3 py-1.5">
-                          <span className="inline-flex items-center gap-2">
-                            <Swatch shade={share / roleMax} />
-                            <span className={place === "all" ? "font-semibold text-on-surface" : "text-on-surface"}>
-                              {pct(share)}
-                            </span>
-                          </span>
-                        </td>
-                      );
-                    })}
+                    {PLACES.map((place) => (
+                      <td key={place} className="px-3 py-1.5">
+                        <span className="inline-flex items-center gap-2 text-on-surface">{cell(role, place)}</span>
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -358,6 +345,8 @@ export function CensusDashboard({ data }: { data: CensusData }) {
                 "–"
               )}
             </dd>
+            <dt>{t("censusParser")}</dt>
+            <dd className="font-mono text-xs leading-5 text-on-surface">{data.parser ?? "–"}</dd>
             <dt>{t("censusOpenAlex")}</dt>
             <dd className="font-mono text-xs leading-5 text-on-surface">{data.openalex_sources ?? "–"}</dd>
           </dl>

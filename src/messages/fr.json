@@ -438,6 +438,7 @@
   "censusSnapshot": "Instantané",
   "censusDatasetVersion": "Version du jeu de données",
   "censusCodeCommit": "Commit du code",
+  "censusParser": "Version de l'analyseur",
   "censusOpenAlex": "Sources OpenAlex",
   "censusDownload": "Télécharger les comptages (JSON)",
   "censusSourceLink": "Fonctionnement du recensement"

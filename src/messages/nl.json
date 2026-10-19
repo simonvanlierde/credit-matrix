@@ -438,6 +438,7 @@
   "censusSnapshot": "Momentopname",
   "censusDatasetVersion": "Versie van de dataset",
   "censusCodeCommit": "Code-commit",
+  "censusParser": "Parserversie",
   "censusOpenAlex": "OpenAlex-bronnen",
   "censusDownload": "De tellingen downloaden (JSON)",
   "censusSourceLink": "Hoe de census werkt"

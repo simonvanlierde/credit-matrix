@@ -438,6 +438,7 @@
   "censusSnapshot": "Stand",
   "censusDatasetVersion": "Datensatzversion",
   "censusCodeCommit": "Code-Commit",
+  "censusParser": "Parser-Version",
   "censusOpenAlex": "OpenAlex-Quellen",
   "censusDownload": "Zahlen herunterladen (JSON)",
   "censusSourceLink": "Wie der Zensus funktioniert"

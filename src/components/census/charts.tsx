@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 /**
  * Plain SVG and HTML charts for the census page. One series each, in the ink
@@ -40,7 +40,7 @@ function ticks(max: number, count: number): number[] {
 
 export function LineChart({
   points,
-  yMax,
+  yMax = Math.max(...points.map((p) => p.y)),
   formatY,
   label,
   description,
@@ -49,7 +49,8 @@ export function LineChart({
   compact = false,
 }: {
   points: Point[];
-  yMax: number;
+  /** The top of the scale; the largest y by default. Pass one to share a scale between charts. */
+  yMax?: number;
   formatY: (y: number) => string;
   /** Names the chart for screen readers; the table beside it carries the values. */
   label: string;
@@ -211,9 +212,8 @@ export function LineChart({
   );
 }
 
-export interface Bar {
-  key: string;
-  label: ReactNode;
+interface Bar {
+  label: string;
   share: number;
   detail: string;
 }
@@ -224,7 +224,7 @@ export function BarList({ bars, formatShare }: { bars: Bar[]; formatShare: (shar
     <ul className="divide-y divide-outline-variant/60">
       {bars.map((bar) => (
         <li
-          key={bar.key}
+          key={bar.label}
           className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-1.5 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_auto]"
         >
           <span className="text-sm text-on-surface">{bar.label}</span>
