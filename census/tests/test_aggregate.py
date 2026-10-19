@@ -104,3 +104,18 @@ def test_aggregate_command_refuses_incomplete(db, tmp_path, capsys):
     assert "--partial" in capsys.readouterr().err
     assert cli.main(["aggregate", "--db", str(db), "--out", str(out), "--partial"]) == 0
     assert json.loads(out.read_text(encoding="utf-8"))["years"] == []  # under the size floor
+
+
+def test_aggregate_scores_tags_against_the_statement(tmp_path):
+    role = '<role content-type="http://credit.niso.org/contributor-roles/{}/">x</role>'
+    tagged = article(
+        contrib("Ann", "Smith", role.format("software")) + contrib("Bo", "Jones", role.format("validation")),
+        "<sec><title>Author contributions</title><p>AS: software. BJ: validation, software.</p></sec>",
+    ).replace(b"Test Press", b"Multidisciplinary Digital Publishing Institute (MDPI)")
+    path = tmp_path / "p.duckdb"
+    con = store.connect(path)
+    unit: store.Unit = {"unit": "u1", "sha256": "ab", "articles": 1, "retries": 0, "finished": True}
+    store.insert(con, [store.rows_for("PMC9", "all", tagged)], unit)
+    con.close()
+    # Two tags, three parsed pairs of which two match: f1 = 2 * 2 / (3 + 2).
+    assert run(path, tmp_path / "census.json")["paired"] == {"articles": 1, "f1": 0.8, "mdpi_frontiers_share": 1.0}
