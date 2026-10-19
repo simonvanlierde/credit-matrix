@@ -15,7 +15,8 @@ statement for the manuscript, a **contribution heatmap** figure, or files for jo
 systems: JATS4R XML, CSV, JSON, and Markdown.
 
 Each co-author can check their own row through a link, and everything runs in your browser: only
-the ORCID and DOI lookups leave it. CRediT Matrix is an independent project. It is not affiliated
+the ORCID and DOI lookups, the fetch of ORCID's public keys and the hosted site's cookieless Cloudflare
+Web Analytics beacon leave it. CRediT Matrix is an independent project. It is not affiliated
 with or endorsed by NISO.
 
 **Try it:** [credit.duinlab.nl](https://credit.duinlab.nl)

@@ -166,7 +166,7 @@ def export(con: duckdb.DuckDBPyConnection, out: Path, name: str, partial: bool =
             "dataset_version": DATASET_VERSION,
             "export_schema": EXPORT_SCHEMA,
             "exported_at": datetime.now(UTC).date().isoformat(),
-            "code_commit": _commit(),
+            "code_commit": commit(),
             "code": {"export": EXPORT_VERSION, "multidisciplinary": MULTIDISCIPLINARY},
             "complete": complete,
             "units_total": units_total,
@@ -192,7 +192,7 @@ def export(con: duckdb.DuckDBPyConnection, out: Path, name: str, partial: bool =
     return counts
 
 
-def _commit() -> str | None:
+def commit() -> str | None:
     """The repository's HEAD commit, or None outside a git checkout."""
     try:
         run = subprocess.run(

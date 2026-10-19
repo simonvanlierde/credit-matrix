@@ -9,7 +9,7 @@ from pathlib import Path
 
 import duckdb
 
-from census.export import DATASET_VERSION, _commit
+from census.export import DATASET_VERSION, commit
 from census.fields import has_fields
 
 MIN_ARTICLES = 1000
@@ -88,7 +88,7 @@ def build(con: duckdb.DuckDBPyConnection, snapshot: str, min_articles: int = MIN
     return {
         "snapshot": snapshot,
         "dataset_version": DATASET_VERSION,
-        "code_commit": _commit(),
+        "code_commit": commit(),
         "files_date": files_date and files_date[:10],
         "openalex_sources": meta.get("openalex_sources"),
         "parser_f1": f1,

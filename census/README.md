@@ -9,7 +9,7 @@ repo root, write `uv run --project census census <command>`: data and snapshots 
 and written to `census/`.
 
 The order of use is the one `uv run census --help` prints: `run` or `bulk`, then `fields`, then
-`report`, `export`, `norms`, `label` or `score`.
+`report`, `export`, `aggregate`, `norms`, `label` or `score`.
 
 ## Run it on a sample
 
@@ -141,6 +141,16 @@ dataset to `data/export/<snapshot>/`:
 Bare ORCIDs are personal data under the GDPR; they are published for research on contribution
 practices. Export refuses a database with unfinished units or no fields unless told it is partial,
 and replaces the previous export only once the new one is written.
+
+`census aggregate` writes the counts the app's census page shows to `public/data/census.json` (about
+10 KB, committed): research articles and those with roles per year, roles per author, styles per
+year, fields and the 20 largest publishers in the last full year, the share of authors with roles
+holding each role by byline place, and the paired F1 with how much of it comes from MDPI and
+Frontiers. Groups under 1,000 articles are left out, and the years start at the first with 1,000
+articles with roles. The last full year is the one before the newest year with 1,000 articles. It
+holds no names and no article rows, and records the snapshot, dataset version, code commit, parser
+hash and OpenAlex sources date. Like `export`, it refuses an incomplete database unless given
+`--partial`.
 
 ## Field norms for the app
 

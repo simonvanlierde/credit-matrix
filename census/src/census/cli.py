@@ -3,7 +3,7 @@
 Order of use:
   1. census run (a sample, from the PMC bucket) or census bulk (every open-access article)
   2. census fields
-  3. census report, export, norms, label or score
+  3. census report, export, aggregate, norms, label or score
   4. census model split, dataset, score or zero-shot
 """
 
@@ -14,7 +14,7 @@ import sys
 import time
 from pathlib import Path
 
-from census import bulk, export, fields, labels, modelset, net, norms, pipeline, pmc_s3, snapshot, store
+from census import aggregate, bulk, export, fields, labels, modelset, net, norms, pipeline, pmc_s3, snapshot, store
 from census.reports import REPORTS
 
 ROOT = Path(__file__).resolve().parents[2]  # census/, so commands work from any directory
@@ -165,6 +165,13 @@ def cmd_export(args: argparse.Namespace) -> None:
     with store.connect(_db(args), read_only=True) as con:
         counts = export.export(con, out, args.snapshot, partial=args.partial)
     print(f"{out}: " + ", ".join(f"{v} {k}" for k, v in counts.items()))
+
+
+def cmd_aggregate(args: argparse.Namespace) -> None:
+    out = args.out or ROOT.parent / "public" / "data" / "census.json"
+    with store.connect(_db(args), read_only=True) as con:
+        size = aggregate.aggregate(con, out, args.snapshot, partial=args.partial)
+    print(f"{out}: {size} bytes")
 
 
 def cmd_norms(args: argparse.Namespace) -> None:
@@ -327,6 +334,10 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--partial", action="store_true", help="export even with unfinished units or no fields")
     cmd.add_argument("--out", type=Path, help="directory (default: census/data/export/<snapshot>)")
     cmd.set_defaults(func=cmd_export)
+    cmd = sub.add_parser("aggregate", parents=[snap, db], help="write the counts the app's census page shows")
+    cmd.add_argument("--partial", action="store_true", help="aggregate even with unfinished units or no fields")
+    cmd.add_argument("--out", type=Path, help="JSON path (default: public/data/census.json in the app)")
+    cmd.set_defaults(func=cmd_aggregate)
     cmd = sub.add_parser(
         "norms", parents=[snap, db], help="write role shares per field and author position for the app"
     )

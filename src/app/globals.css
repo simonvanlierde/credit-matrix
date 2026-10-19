@@ -202,6 +202,15 @@ html:has([data-coauthor-page]) {
   scroll-padding-bottom: 7rem;
 }
 
+/* The census page reads data, not a draft: the header keeps the brand, but not
+   the draft actions or the skip links into a workspace that is not there. */
+body:has([data-census-page]) {
+  [data-draft-actions],
+  [data-workspace-skip] {
+    display: none;
+  }
+}
+
 /*
  * Popovers and selects. Radix keeps a closing panel mounted only while a CSS
  * *animation* is running: it listens for `animationend` and ignores
