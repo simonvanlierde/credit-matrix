@@ -23,6 +23,8 @@ beforeAll(() => {
   HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
     this.open = false;
   };
+  // The candidate picker's list scrolls its selected option into view on open.
+  Element.prototype.scrollIntoView ??= () => undefined;
 });
 
 /** A lookup that resolves only when the test says so. */
@@ -186,7 +188,13 @@ describe("a pasted CRediT statement", () => {
     createAuthor("Yibo Lu"),
     createAuthor("Yang Lin"),
   ];
-  const listOf = (name: string) => screen.getByText(name).nextElementSibling?.textContent;
+  // The first match is the contributor's row; a picker can show the same name further down.
+  const listOf = (name: string) => screen.getAllByText(name)[0]?.nextElementSibling?.textContent;
+  /** Choose `option` in the picker labelled `token`, by keyboard: jsdom has no pointer capture. */
+  const pick = async (token: string, option: string) => {
+    await act(async () => fireEvent.keyDown(screen.getByRole("combobox", { name: token }), { key: "Enter" }));
+    await act(async () => fireEvent.keyDown(screen.getByRole("option", { name: option }), { key: "Enter" }));
+  };
 
   it("asks for contributors first when the draft is empty", async () => {
     renderModal(0);
@@ -208,7 +216,8 @@ describe("a pasted CRediT statement", () => {
     // Commas only, and the role already set says so in words.
     expect(listOf("Ann Bell")).toBe("Conceptualization, Software (already set), Writing – review & editing");
     expect(screen.getAllByText(en.statementNoRoles)).toHaveLength(3);
-    expect(screen.getByText("YL: could be Yibo Lu or Yang Lin — left out: Data curation")).toBeTruthy();
+    // An ambiguous token gets a picker that leaves its roles out until someone is chosen.
+    expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(en.statementLeaveOut);
     // The review's Apply is the only primary action on screen.
     expect(screen.queryByRole("button", { name: en.statementReview })).toBeNull();
     expect(onApplyStatement).not.toHaveBeenCalled();
@@ -223,6 +232,50 @@ describe("a pasted CRediT statement", () => {
       { role: "Software", score: 33 },
       { role: "Writing – review & editing", score: 100 },
     ]);
+  });
+
+  it("gives an ambiguous token's roles to the contributor picked for it", async () => {
+    const { onApplyStatement } = renderModal(4, undefined, { authors: roster() });
+    paste("AB: conceptualization. YL: data curation, software.");
+    await review();
+    await pick("YL", "Yang Lin");
+
+    expect(
+      screen.getByText("3 roles to add for 2 contributors. Roles already in the grid stay as they are."),
+    ).toBeTruthy();
+    expect(listOf("Yang Lin")).toBe("Data curation, Software");
+    expect(listOf("Yibo Lu")).toBe(en.statementNoRoles);
+    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    const [next, added] = onApplyStatement.mock.calls[0] ?? [];
+    expect(added).toBe(3);
+    const roles = (author: Author) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(roles(next[3])).toEqual(["Data curation", "Software"]);
+    expect(roles(next[2])).toEqual([]);
+  });
+
+  it("leaves an ambiguous token's roles out when switched back to Leave out", async () => {
+    const { onApplyStatement } = renderModal(4, undefined, { authors: roster() });
+    paste("AB: conceptualization. YL: data curation.");
+    await review();
+    await pick("YL", "Yibo Lu");
+    expect(listOf("Yibo Lu")).toBe("Data curation");
+    await pick("YL", en.statementLeaveOut);
+    expect(listOf("Yibo Lu")).toBe(en.statementNoRoles);
+    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    const [next, added] = onApplyStatement.mock.calls[0] ?? [];
+    expect(added).toBe(1);
+    expect(next[2].contributions.every((c: { score: number }) => c.score === 0)).toBe(true);
+  });
+
+  it("forgets the choices when the text changes", async () => {
+    renderModal(4, undefined, { authors: roster() });
+    paste("AB: conceptualization. YL: data curation.");
+    await review();
+    await pick("YL", "Yibo Lu");
+    paste("AB: conceptualization. YL: data curation. ");
+    await review();
+    expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(en.statementLeaveOut);
+    expect(listOf("Yibo Lu")).toBe(en.statementNoRoles);
   });
 
   it("adds roles at Equal in a Levels draft, and names the level", async () => {

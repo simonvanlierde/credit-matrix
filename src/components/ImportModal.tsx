@@ -6,6 +6,7 @@ import { useFormatter, useTranslations } from "use-intl";
 import {
   type Ask,
   type Author,
+  CREDIT_ROLES,
   type CreditRoleName,
   createAuthor,
   type DetectedFormat,
@@ -59,8 +60,8 @@ interface Props {
 interface StatementReview {
   /** Per contributor, the roles the statement gives them; `set` ones the grid already has. */
   rows: { id: string; name: string; roles: { role: CreditRoleName; set: boolean }[] }[];
-  /** Names or initials that fit no contributor, or several, with the roles left out. */
-  unmatched: { token: string; candidates: string[]; roles: CreditRoleName[] }[];
+  /** Names or initials that fit no contributor, or several, with the roles left out unless picked. */
+  unmatched: { token: string; candidates: { id: string; name: string }[]; roles: CreditRoleName[] }[];
   /** Roles the roster does not have yet. Ones already set are left as they are. */
   added: number;
   /** Contributors who gain at least one role. */
@@ -85,21 +86,32 @@ function breakLines(text: string): string {
   return joined;
 }
 
-/** Read a prepared statement against the roster. */
-function reviewStatement(text: string, authors: Author[]): StatementReview {
+/**
+ * Read a prepared statement against the roster. `picks` maps an unmatched token to the
+ * contributor id the user chose for it, who then gets that token's roles.
+ */
+function reviewStatement(text: string, authors: Author[], picks: Record<string, string> = {}): StatementReview {
   const { assignments, unmatched } = parseStatement(text, authors.map(statementAuthor));
+  const picked = unmatched.flatMap(({ token, roles }) => {
+    const author = authors.findIndex((a) => a.id === picks[token]);
+    return author < 0 ? [] : roles.map((role) => ({ author, role }));
+  });
   const rows = authors.map((author, i) => {
     const set = new Set(author.contributions.filter((c) => c.score > 0).map((c) => c.role));
+    const mine = new Set([...assignments, ...picked].filter((a) => a.author === i).map((a) => a.role));
     return {
       id: author.id,
       name: author.name,
-      roles: assignments.filter((a) => a.author === i).map(({ role }) => ({ role, set: set.has(role) })),
+      roles: CREDIT_ROLES.filter(({ name }) => mine.has(name)).map(({ name }) => ({ role: name, set: set.has(name) })),
     };
   });
   const gaining = rows.filter((row) => row.roles.some((r) => !r.set));
   return {
     rows,
-    unmatched: unmatched.map((u) => ({ ...u, candidates: u.candidates.map((i) => authors[i]?.name ?? "") })),
+    unmatched: unmatched.map((u) => ({
+      ...u,
+      candidates: u.candidates.flatMap((i) => (authors[i] ? [{ id: authors[i].id, name: authors[i].name }] : [])),
+    })),
     added: gaining.reduce((sum, row) => sum + row.roles.filter((r) => !r.set).length, 0),
     people: gaining.length,
   };
@@ -126,6 +138,9 @@ function withStatementRoles(authors: Author[], review: StatementReview, score: n
   });
   return [next, added];
 }
+
+/** The picker value for an ambiguous token left out; Radix reserves the empty string. */
+const LEAVE_OUT = "leave-out";
 
 /** What a resolved import is waiting to write, once any replace is confirmed. */
 export interface PendingImport {
@@ -207,7 +222,11 @@ export function ImportModal({
   const { translateInterfaceRole, translateInterfaceUi } = useCreditTranslators();
   const formatter = useFormatter();
   const [text, setText] = useState("");
-  const [review, setReview] = useState<StatementReview | null>(null);
+  // The statement under review and the contributor chosen per ambiguous token; the review itself
+  // is derived, so a choice updates the counts, the rows and Apply together.
+  const [reviewed, setReviewed] = useState<{ statement: string; picks: Record<string, string> } | null>(null);
+  const review = reviewed && reviewStatement(reviewed.statement, draftAuthors, reviewed.picks);
+  const reviewOpen = reviewed !== null;
   const [statementLevel, setStatementLevel] = useState(String(DEFAULT_BULK_LEVEL));
   const reviewHeadingRef = useRef<HTMLHeadingElement>(null);
   // Back hides the review and brings the footer's button back: focus goes there, not to the page.
@@ -251,12 +270,12 @@ export function ImportModal({
   // The review replaces the paste area's footer action, so its heading takes
   // focus and a screen reader starts at the summary.
   useEffect(() => {
-    if (review) reviewHeadingRef.current?.focus();
+    if (reviewOpen) reviewHeadingRef.current?.focus();
     else if (backedOut.current) {
       backedOut.current = false;
       importRef.current?.focus();
     }
-  }, [review]);
+  }, [reviewOpen]);
 
   const format = detectFormat(text);
 
@@ -352,7 +371,7 @@ export function ImportModal({
           );
           return;
         }
-        setReview(found);
+        setReviewed({ statement, picks: {} });
         return;
       }
       const parsed = await importAny(text);
@@ -444,7 +463,7 @@ export function ImportModal({
       showError(t("errImportFailed"));
       return;
     }
-    setReview(null);
+    setReviewed(null);
     dialog?.close();
   }
 
@@ -456,7 +475,7 @@ export function ImportModal({
     setFileName(null);
     setError(null);
     setPending(null);
-    setReview(null);
+    setReviewed(null);
     onClose();
   }
 
@@ -614,7 +633,7 @@ export function ImportModal({
                 setText(e.target.value);
                 setFileName(null);
                 setError(null);
-                setReview(null);
+                setReviewed(null);
               }}
               placeholder={t("importPlaceholder", { names: t("sampleNames") })}
               rows={6}
@@ -692,7 +711,7 @@ export function ImportModal({
                     <SelectTrigger className="w-40" aria-labelledby="statement-level">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent container={dialog}>
                       {ASSIGNABLE_LEVELS.map(({ key, score }) => (
                         <SelectItem key={key} value={String(score)}>
                           {translateInterfaceUi(key)}
@@ -734,19 +753,55 @@ export function ImportModal({
                   <div className="min-w-0">
                     <p className="font-semibold">{t("statementUnmatchedTitle")}</p>
                     <ul className="mt-0.5 space-y-0.5">
-                      {review.unmatched.map(({ token, candidates, roles }) => {
+                      {review.unmatched.map(({ token, candidates, roles }, k) => {
+                        const rolesText = roles.map(translateInterfaceRole).join(", ");
+                        if (candidates.length > 1 && roles.length > 0) {
+                          return (
+                            <li key={token} className="flex flex-wrap items-center gap-x-2 gap-y-1 py-0.5">
+                              <span id={`statement-pick-${k}`} className="font-medium break-words">
+                                {token}
+                              </span>
+                              <Select
+                                value={reviewed.picks[token] ?? LEAVE_OUT}
+                                onValueChange={(id) =>
+                                  setReviewed({ ...reviewed, picks: { ...reviewed.picks, [token]: id } })
+                                }
+                              >
+                                <SelectTrigger
+                                  className="w-44"
+                                  aria-labelledby={`statement-pick-${k}`}
+                                  aria-describedby={`statement-pick-roles-${k}`}
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent container={dialog}>
+                                  {candidates.map(({ id, name }) => (
+                                    <SelectItem key={id} value={id}>
+                                      {name}
+                                    </SelectItem>
+                                  ))}
+                                  <SelectItem value={LEAVE_OUT}>{t("statementLeaveOut")}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <span id={`statement-pick-roles-${k}`} className="min-w-0 break-words">
+                                {rolesText}
+                              </span>
+                            </li>
+                          );
+                        }
                         const who =
                           candidates.length > 1
                             ? t("statementUnmatchedAmbiguous", {
                                 token,
-                                names: formatter.list(candidates, { type: "disjunction" }),
+                                names: formatter.list(
+                                  candidates.map((c) => c.name),
+                                  { type: "disjunction" },
+                                ),
                               })
                             : t("statementUnmatchedNone", { token });
                         return (
                           <li key={token} className="break-words">
-                            {roles.length > 0
-                              ? t("statementLeftOut", { who, roles: roles.map(translateInterfaceRole).join(", ") })
-                              : who}
+                            {roles.length > 0 ? t("statementLeftOut", { who, roles: rolesText }) : who}
                           </li>
                         );
                       })}
@@ -760,7 +815,7 @@ export function ImportModal({
                   type="button"
                   onClick={() => {
                     backedOut.current = true;
-                    setReview(null);
+                    setReviewed(null);
                   }}
                   className="rounded-lg border border-outline-variant px-4 py-2 font-semibold text-on-surface-variant hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >

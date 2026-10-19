@@ -35,11 +35,16 @@ export function SelectTrigger({
 export function SelectContent({
   className,
   children,
+  container,
   ref,
   ...props
-}: React.ComponentPropsWithRef<typeof SelectPrimitive.Content>) {
+}: React.ComponentPropsWithRef<typeof SelectPrimitive.Content> & {
+  /** Portal target. Pass an open <dialog> element when the trigger lives inside
+   *  one: the top layer renders everything outside it inert. */
+  container?: HTMLElement | null;
+}) {
   return (
-    <SelectPrimitive.Portal>
+    <SelectPrimitive.Portal container={container}>
       <SelectPrimitive.Content
         ref={ref}
         position="popper"
