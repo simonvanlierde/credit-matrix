@@ -38,8 +38,8 @@ export function Inspector() {
     statement: false,
     team: teamEmpty,
     review: reviewEmpty,
-    // The table scrolls inside the panel and holds no control, so the panel takes the stop that
-    // lets a keyboard scroll it.
+    // The table scrolls inside the panel, and the panel's one control, the field Select, cannot
+    // scroll it, so the panel takes the stop that lets a keyboard scroll it.
     norms: true,
   };
 

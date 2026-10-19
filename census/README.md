@@ -156,9 +156,9 @@ hash and OpenAlex sources date. Like `export`, it refuses an incomplete database
 
 `census norms` writes `src/data/field-norms.json`, which the app's Published practice tab reads.
 For each field and author position (single author, first, middle, last) it holds the share of
-authors given each role, with the article and author counts behind it. It counts research articles with roles and
-a field, and only authors with at least one role, so an author whose initials the parser could not
-resolve does not count as holding none. Fields with fewer than 1,000 such articles are left out
+authors given each role, with the article and author counts behind it. It counts research
+articles with roles and a field, and only authors with at least one role, so an author whose
+initials the parser could not resolve does not count as holding none. Fields with fewer than 1,000 such articles are left out
 (`--min-articles`), and a position with fewer than 50 authors in a field gets no shares. The file
 names the snapshot, dataset version, code commit and the date of the newest bulk file, and the
 parser's F1 against publisher tags with its article count (the `(all)` row of the paired scores); it
