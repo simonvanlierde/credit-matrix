@@ -3,7 +3,7 @@
 Order of use:
   1. census run (a sample, from the PMC bucket) or census bulk (every open-access article)
   2. census fields
-  3. census report, export, aggregate, label or score
+  3. census report, export, aggregate, norms, label or score
   4. census model split, dataset, score, zero-shot, train or predict
 """
 
@@ -15,12 +15,13 @@ import time
 from collections.abc import Iterator
 from pathlib import Path
 
-from census import aggregate, bulk, export, fields, labels, modelset, net, pipeline, pmc_s3, snapshot, store
+from census import aggregate, bulk, export, fields, labels, modelset, net, norms, pipeline, pmc_s3, snapshot, store
 from census.reports import REPORTS
 
 ROOT = Path(__file__).resolve().parents[2]  # census/, so commands work from any directory
 SNAPSHOTS = ROOT / "snapshots"
 DATA = ROOT / "data"
+APP_NORMS = ROOT.parent / "src" / "data" / "field-norms.json"
 INVENTORY_RE = re.compile(r"\d{4}-\d\d-\d\dT\d\d-\d\dZ")
 
 
@@ -172,6 +173,13 @@ def cmd_aggregate(args: argparse.Namespace) -> None:
     with store.connect(_db(args), read_only=True) as con:
         size = aggregate.aggregate(con, out, args.snapshot, partial=args.partial)
     print(f"{out}: {size} bytes")
+
+
+def cmd_norms(args: argparse.Namespace) -> None:
+    with store.connect(_db(args), read_only=True) as con:
+        data = norms.build(con, args.snapshot, args.min_articles)
+    size = norms.write(data, args.out)
+    print(f"{args.out}: {len(data['fields'])} fields, {size} bytes")
 
 
 def cmd_label(args: argparse.Namespace) -> None:
@@ -368,6 +376,12 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--partial", action="store_true", help="aggregate even with unfinished units or no fields")
     cmd.add_argument("--out", type=Path, help="JSON path (default: public/data/census.json in the app)")
     cmd.set_defaults(func=cmd_aggregate)
+    cmd = sub.add_parser(
+        "norms", parents=[snap, db], help="write role shares per field and author position for the app"
+    )
+    cmd.add_argument("--min-articles", type=int, default=norms.MIN_ARTICLES, help="leave out smaller fields")
+    cmd.add_argument("--out", type=Path, default=APP_NORMS, help="JSON path (default: the app's src/data/)")
+    cmd.set_defaults(func=cmd_norms)
     cmd = sub.add_parser("label", parents=[snap, db], help="export a blind sample to hand-label")
     cmd.add_argument("--per-style", type=int, default=50, help="articles per text style")
     cmd.add_argument("--seed", type=int, default=20261013, help="seed for the sample")

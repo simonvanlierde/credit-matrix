@@ -46,7 +46,7 @@ Or use the same logic elsewhere:
   to write the statement from your manuscript's front matter
 
 The [CRediT census](census/README.md) in `census/` is a separate Python pipeline that reads roles
-from open-access papers, for field norms and a public dataset.
+from open-access papers, for the Published practice tab and a public dataset.
 
 ## Docs
 

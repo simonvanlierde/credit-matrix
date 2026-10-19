@@ -971,6 +971,32 @@ test.describe("Happy path UI flows", () => {
     expect(await page.evaluate(() => document.body.scrollWidth)).toBe(320);
     const statement = page.getByRole("tabpanel", { name: "Statement" });
     expect((await statement.boundingBox())?.width).toBeLessThanOrEqual(320);
+
+    // The locales with long tab labels: the four tabs either fit, or the tab list scrolls and
+    // keeps the focused tab in view.
+    for (const locale of ["fr", "de", "it"]) {
+      await seedStorage(
+        page,
+        { authors: [], welcomeSeen: true, uiLocale: locale, outputLocale: locale },
+        { clearFirst: true },
+      );
+      await page.reload();
+      const tabs = page.getByRole("tablist");
+      await expect(tabs.getByRole("tab")).toHaveCount(4);
+      const overflows = await tabs.evaluate((el) => el.scrollWidth > el.clientWidth);
+      if (!overflows) continue;
+      expect(await tabs.evaluate((el) => getComputedStyle(el).overflowX), locale).toBe("auto");
+      await tabs.getByRole("tab", { selected: true }).focus();
+      await page.keyboard.press("End");
+      const last = tabs.getByRole("tab").last();
+      await expect(last).toBeFocused();
+      const inView = await last.evaluate((tab) => {
+        const box = tab.getBoundingClientRect();
+        const list = tab.parentElement?.getBoundingClientRect();
+        return list !== undefined && box.left >= list.left - 1 && box.right <= list.right + 1;
+      });
+      expect(inView, locale).toBe(true);
+    }
   });
 
   test("XML export downloads client-side (no API round-trip)", async ({ page }) => {
