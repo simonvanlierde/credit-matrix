@@ -255,11 +255,13 @@ def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> 
 def _joins(text: str, ordered: list[tuple[int, int, str, int | str]], start: int, pos: int) -> bool:
     """Whether the end at `pos` falls inside one clause after all, given the clause so far from `start`:
     a semicolon inside a list of authors ("T.A.R.-L., C.O.-P.; J.M.G.-R.: software"), or the full stop
-    between a clause of roles and the initials that close it ("Investigation, methodology. S.H.;")."""
+    between a clause of roles and the initials that close it in a role-first statement ("Investigation,
+    methodology. S.H.;")."""
     if text[pos] == ";":
         following = next((kind for s, _, kind, _ in ordered if s > pos), None)
         return following == "A" and _only_authors(text, ordered, start + 1 if start else 0, pos)
-    if text[pos] != "." or {kind for s, _, kind, _ in ordered if start <= s < pos} != {"R"}:
+    # Role-first statements only: in "DP; wrote the original draft. PP; conceived ..." the initials open a clause.
+    if text[pos] != "." or ordered[0][2] != "R" or {kind for s, _, kind, _ in ordered if start <= s < pos} != {"R"}:
         return False
     stop = len(text) if (stop := text.find(";", pos)) < 0 else stop
     # Only resolved initials close it: "editing. Sarah Macek;" or "MD;" opens the next clause.

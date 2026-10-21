@@ -280,8 +280,30 @@ def test_full_names_do_not_close_a_clause_of_roles():
         "writing-review-editing",
     }
     assert roles_of(parsed, 2) == {"writing-review-editing"}
-    parsed = parse_statement("A.B.: software; visualization. CD; supervision. CD;", THREE)
+    parsed = parse_statement("Software, A.B.; visualization. CD; supervision. CD;", THREE)
     assert parsed.assignments == {(0, "software"), (1, "visualization"), (1, "supervision")}
+
+
+def test_author_first_initials_before_a_semicolon_do_not_close_the_previous_roles():
+    text = (
+        "DP; performed the experiments, wrote the original draft, and participated in the data analysis. PP; conceived "
+        "the idea, supervised the project, and reviewed and edited the manuscript. All authors read and approved the "
+        "final manuscript."
+    )
+    assert parse_statement(text, _split("Duc-Vinh Pham", "Pil-Hoon Park")).assignments == {
+        (0, "writing-original-draft")
+    }
+    text = (
+        "S.C.; experimental design, investigation, formal analysis, prepared all figures, and drafted the original "
+        "manuscript. T.S.; experimental design and methodology. C.N.; experimental design, methodology, and "
+        "supervision. N.C.; conceptualization, experimental design, supervision, validation, data interpretation, "
+        "critical review, prepared all figures, and final manuscript editing."
+    )
+    authors = _split("Sirinun Chaipunko", "Tichaporn Sookkua", "Chutikorn Nopparat", "Nuanchan Chutabhakdikul")
+    parsed = parse_statement(text, authors)
+    assert roles_of(parsed, 0) == {"investigation", "formal-analysis"}
+    assert roles_of(parsed, 1) == {"methodology"}
+    assert roles_of(parsed, 2) == {"methodology", "supervision"}
 
 
 def test_initials_in_a_sentence_do_not_close_a_clause_of_roles():
