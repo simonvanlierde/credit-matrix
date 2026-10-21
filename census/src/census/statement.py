@@ -14,6 +14,7 @@ yields nothing rather than a guess.
 """
 
 import re
+import unicodedata
 from bisect import bisect_left
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -82,6 +83,22 @@ def _name_parts(author: Author) -> tuple[Parts, Parts, Parts, Parts]:
     return given, surname, words, core
 
 
+# Đ has no decomposition; Vietnamese statements write it as D, like Á as A.
+_UNMARKED = str.maketrans("Đđ", "Dd")
+
+
+def _fold(text: str) -> str:
+    """`text` without diacritics: initials often drop them ("N.N.A." for Nguyễn Ngọc Ánh, "A.A.-A." for Ángel
+    Arias-Arias)."""
+    return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).translate(_UNMARKED)
+
+
+@lru_cache(maxsize=4096)
+def _folded_parts(author: Author) -> tuple[Parts, Parts, Parts, Parts]:
+    given, surname, words, core = (tuple(_fold(p) for p in parts) for parts in _name_parts(author))
+    return given, surname, words, core
+
+
 def _fits(chunks: list[str], parts: Parts) -> bool:
     return len(chunks) == len(parts) and all(
         p.casefold().startswith(c.casefold()) for c, p in zip(chunks, parts, strict=True)
@@ -129,8 +146,16 @@ def resolve_initials(token: str, authors: list[Author]) -> int | None:
     chunks = _chunks(token)
     if not chunks:
         return None
+    # Without diacritics only when no author fits as written: folded, "ŞY" for Şilan Yavuz fits Sema Y. too.
+    hits = _hits(chunks, [_name_parts(a) for a in authors]) or _hits(
+        [_fold(c) for c in chunks], [_folded_parts(a) for a in authors]
+    )
+    return hits[0] if len(hits) == 1 else None
+
+
+def _hits(chunks: list[str], parts: list[tuple[Parts, Parts, Parts, Parts]]) -> list[int]:
+    """Authors fitting the first order in `resolve_initials` that any author fits."""
     letters = "".join(chunks)
-    parts = [_name_parts(a) for a in authors]
     tiers = (
         lambda g, s, w, c: _fits(chunks, g + s),
         lambda g, s, w, c: _fits(chunks, s + g),
@@ -141,10 +166,9 @@ def resolve_initials(token: str, authors: list[Author]) -> int | None:
         lambda g, s, w, c: _fits(chunks, g + c[:1]) or _fits(chunks, g[:1] + c[:1]),
     )
     for fits in tiers:
-        hits = [i for i, p in enumerate(parts) if fits(*p)]
-        if hits:
-            return hits[0] if len(hits) == 1 else None
-    return None
+        if hits := [i for i, p in enumerate(parts) if fits(*p)]:
+            return hits
+    return []
 
 
 def _mask(text: str, start: int, end: int) -> str:
@@ -217,11 +241,45 @@ def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> 
     for (_, end, kind, _), (start, _, next_kind, _) in pairwise(ordered):
         gap = text[end - 1 : start]
         # "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
-        # unless a comma or "and" joins the two authors ("C.D. and E.F.").
-        joined = re.search(r",|\band\b", gap)
+        # unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
+        joined = re.search(r"[,;]|\band\b", gap)
         if kind == "A" and "." in gap and ":" not in gap and (next_kind == "R" or not joined):
             ends.append(end)
-    return sorted(ends)
+    kept: list[int] = []
+    for pos in sorted(ends):
+        if not _joins(text, ordered, kept[-1] if kept else 0, pos):
+            kept.append(pos)
+    return kept
+
+
+def _joins(text: str, ordered: list[tuple[int, int, str, int | str]], start: int, pos: int) -> bool:
+    """Whether the end at `pos` falls inside one clause after all, given the clause so far from `start`:
+    a semicolon inside a list of authors ("T.A.R.-L., C.O.-P.; J.M.G.-R.: software"), or the full stop
+    between a clause of roles and the initials that close it in a role-first statement ("Investigation,
+    methodology. S.H.;")."""
+    if text[pos] == ";":
+        following = next((kind for s, _, kind, _ in ordered if s > pos), None)
+        return following == "A" and _only_authors(text, ordered, start + 1 if start else 0, pos)
+    # Role-first statements only: in "DP; wrote the original draft. PP; conceived ..." the initials open a clause.
+    if text[pos] != "." or ordered[0][2] != "R" or {kind for s, _, kind, _ in ordered if start <= s < pos} != {"R"}:
+        return False
+    stop = len(text) if (stop := text.find(";", pos)) < 0 else stop
+    # Only resolved initials close it: "editing. Sarah Macek;" or "MD;" opens the next clause.
+    return _only_authors(text, ordered, pos + 1, stop) and all(
+        value not in (UNRESOLVED, ALL_AUTHORS) and _INITIALS_RE.fullmatch(text[s:e])
+        for s, e, _, value in ordered
+        if pos < s < stop
+    )
+
+
+def _only_authors(text: str, ordered: list[tuple[int, int, str, int | str]], start: int, stop: int) -> bool:
+    """Whether text[start:stop] names authors and holds nothing else but commas, "and", full stops and spaces:
+    "S.A.D. and M.R. conceptualized the project;" or "Funding was acquired by H.-J.L." is a sentence."""
+    spans = [(s, e) for s, e, _, _ in ordered if start <= s < stop]
+    if not spans or any(kind != "A" for s, _, kind, _ in ordered if start <= s < stop):
+        return False
+    rest = [text[e:s] for (_, e), (s, _) in pairwise([(start, start), *spans, (stop, stop)])]
+    return all(re.fullmatch(r"(?:[\s.,]|\band\b)*", r) for r in rest)
 
 
 def parse_statement(text: str, authors: list[Author]) -> Parsed:

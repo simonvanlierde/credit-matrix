@@ -96,6 +96,15 @@ def test_role_first_clauses_ended_by_full_stops():
     assert parsed.assignments == {(0, "conceptualization"), (1, "methodology"), (2, "methodology")}
 
 
+def test_role_first_clauses_closed_by_initials():
+    parsed = parse_statement("Investigation, methodology. A.B.; supervision. C.D.; software. E.F.", THREE)
+    assert parsed.assignments == {(0, "investigation"), (0, "methodology"), (1, "supervision"), (2, "software")}
+    assert parse_statement("A.B.: software; investigation. C.D. supervised the work.", THREE).assignments == {
+        (0, "software"),
+        (0, "investigation"),
+    }
+
+
 def test_a_clause_of_roles_alone_goes_to_the_people_before_it():
     parsed = parse_statement("A.B.: conceptualization; methodology. C.D.: software.", THREE)
     assert parsed.assignments == {(0, "conceptualization"), (0, "methodology"), (1, "software")}
@@ -184,6 +193,134 @@ def test_hyphenated_given_names():
     assert parsed.assignments == {(0, "software"), (1, "validation")}
     parsed = parse_statement("Software: Kim J-H and W.-J. Zhang.", authors)
     assert parsed.assignments == {(0, "software"), (1, "software")}
+
+
+def test_a_semicolon_inside_a_list_of_authors():
+    authors = [
+        Author("Tomás Andrés", "Ruiz-López"),
+        Author("Carlos", "Ortiz-Pérez"),
+        Author("José María", "García-Ruiz"),
+    ]
+    parsed = parse_statement("T.A.R.-L., C.O.-P.; J.M.G.-R.: software. T.A.R.-L.: validation.", authors)
+    assert parsed.assignments == {(0, "software"), (1, "software"), (2, "software"), (0, "validation")}
+    # A clause that names a role keeps its semicolon.
+    parsed = parse_statement("Validation: T.A.R.-L.; C.O.-P.: software.", authors)
+    assert parsed.assignments == {(0, "validation"), (1, "software")}
+
+
+def test_vietnamese_initials_without_diacritics():
+    authors = [Author("Ngọc Ánh", "Nguyễn"), Author("Văn Đức", "Trần"), Author("Nam", "Nguyen")]
+    parsed = parse_statement("N.N.A.: software; TVD: validation; NN: investigation.", authors)
+    assert parsed.assignments == {(0, "software"), (1, "validation"), (2, "investigation")}
+    assert resolve_initials("D.D.", [Author("Đức", "Đặng")]) == 0
+    assert resolve_initials("A.A.-A.", [Author("Ana", "Hernández-Martín"), Author("Ángel", "Arias-Arias")]) == 1
+
+
+def test_initials_with_diacritics_match_as_written_first():
+    # Folded, "ŞY" would fit the second author as well.
+    parsed = parse_statement(
+        "ŞY contributed to conceptualization, data curation, formal analysis, investigation, methodology, "
+        "writing – original draft.SDY contributed to funding acquisition, supervision, writing – review & editing.",
+        [Author("Şilan", "Yavuz"), Author("Sema", "Yılmaz")],
+    )
+    assert roles_of(parsed, 0) >= {"conceptualization", "data-curation", "methodology", "writing-original-draft"}
+    assert not roles_of(parsed, 1)
+
+
+def _split(*names):
+    return [Author(*name.rsplit(" ", 1)) for name in names]
+
+
+def test_a_semicolon_after_a_sentence_still_ends_the_clause():
+    authors = _split(
+        *("Preeti Singh", "Bandana Pahi", "Krishna T Sundaram", "Niranjani Gnanapragasam", "Sonali Vijay Habde"),
+        *("Nandigam Vinay Kumar", "Namrata Devidas Patil", "Pronob J Paul", "Rakesh Singh Kushwah", "Sanjay P Singh"),
+        *("Uma Maheshwar Singh", "Sanjay Kumar", "Arvind Kumar", "Ajay Kohli", "Vikas Kumar Singh"),
+    )
+    text = (
+        "PS and VKS: conceptualization and supervision; Preeti S: formal analysis and writing original draft; "
+        "Preeti S, BP, KTS, PS, and VKS: data interpretation; BP, NG, and KTS: bioinformatics work; "
+        "PJP: data curation; RSK and SPS: phenotypic data generation; SVH, NDP, and NVK: NILs generation; "
+        "UMS, SK, AK, and A. Kohli: review and editing."
+    )
+    parsed = parse_statement(text, authors)
+    assert {i for i, slug in parsed.assignments if slug == "data-curation"} == {7}
+    assert not {4, 5, 6} & {i for i, slug in parsed.assignments if slug == "writing-review-editing"}
+
+    authors = _split(
+        "Seungju Cha", "Minjeong Sohn", "Hyowon Yang", "Eric J. Yeh", "Ki-Hyun Baek", "Jeonghoon Ha", "Hyemin Ku"
+    )
+    text = (
+        "SC, HY, EJY, HK was resposible for conception or design; SC, HK was responsible for acquisition, analysis, "
+        "and interpretation of data; SC, HY was responsible for writing the original draft of this manuscript and "
+        "SC, HY, EJY, HK were responsible for reviewing and revising the manuscript; SC, MS, HY, EJY, KHB, JH, HK "
+        "read and approved the final manuscript."
+    )
+    assert parse_statement(text, authors).assignments == {(0, "writing-original-draft"), (2, "writing-original-draft")}
+
+    text = (
+        "S.A.D. and M.R. conceptualized the project; M.R. prepared the original draft and figures of the paper; "
+        "S.A.D. revised the paper. All authors read and approved the final manuscript."
+    )
+    parsed = parse_statement(text, _split("Moritz Reese", "Sameer A. Dhayat"))
+    assert parsed.assignments == {(0, "writing-original-draft")}
+
+
+def test_full_names_do_not_close_a_clause_of_roles():
+    text = (
+        "Emmanuel Luciano, MD; conceptualization, methodology, writing original draft and final review and editing. "
+        "Sarah Macek; conceptualization, methodology, writing original draft and final review and editing. "
+        "Felipe Pacheco, MD; final review and editing. Wael Solh, MD; final review and editing."
+    )
+    parsed = parse_statement(text, _split("Emmanuel Luciano", "Sarah Macek", "Felipe Pacheco", "Wael Solh"))
+    assert roles_of(parsed, 0) == {
+        "conceptualization",
+        "methodology",
+        "writing-original-draft",
+        "writing-review-editing",
+    }
+    assert roles_of(parsed, 2) == {"writing-review-editing"}
+    parsed = parse_statement("Software, A.B.; visualization. CD; supervision. CD;", THREE)
+    assert parsed.assignments == {(0, "software"), (1, "visualization"), (1, "supervision")}
+
+
+def test_author_first_initials_before_a_semicolon_do_not_close_the_previous_roles():
+    text = (
+        "DP; performed the experiments, wrote the original draft, and participated in the data analysis. PP; conceived "
+        "the idea, supervised the project, and reviewed and edited the manuscript. All authors read and approved the "
+        "final manuscript."
+    )
+    assert parse_statement(text, _split("Duc-Vinh Pham", "Pil-Hoon Park")).assignments == {
+        (0, "writing-original-draft")
+    }
+    text = (
+        "S.C.; experimental design, investigation, formal analysis, prepared all figures, and drafted the original "
+        "manuscript. T.S.; experimental design and methodology. C.N.; experimental design, methodology, and "
+        "supervision. N.C.; conceptualization, experimental design, supervision, validation, data interpretation, "
+        "critical review, prepared all figures, and final manuscript editing."
+    )
+    authors = _split("Sirinun Chaipunko", "Tichaporn Sookkua", "Chutikorn Nopparat", "Nuanchan Chutabhakdikul")
+    parsed = parse_statement(text, authors)
+    assert roles_of(parsed, 0) == {"investigation", "formal-analysis"}
+    assert roles_of(parsed, 1) == {"methodology"}
+    assert roles_of(parsed, 2) == {"methodology", "supervision"}
+
+
+def test_initials_in_a_sentence_do_not_close_a_clause_of_roles():
+    text = (
+        "All authors (S.-J.P., A.S. and H.-J.L.) were involved in the conceptualisation, writing—original draft, "
+        "review, and editing of the manuscript. All authors critically reviewed the manuscript. Funding was acquired "
+        "by H.-J.L. All authors have read and agreed to the published version of the manuscript."
+    )
+    parsed = parse_statement(text, _split("Seon-Joo Park", "Anshul Sharma", "Hae-Jeung Lee"))
+    assert parsed.assignments == {(i, r) for i in range(3) for r in ("conceptualization", "writing-original-draft")}
+
+    text = (
+        "Mr T.M.N. did the data collection and analysis and both authors did the conceptualisation and writing of the "
+        "article. Prof. J.A.C.M. supervised Mr T.M.N."
+    )
+    parsed = parse_statement(text, _split("Thabani M. Noncungu", "Jennifer A. Chipps"))
+    assert parsed.assignments == {(0, "conceptualization")}
 
 
 @pytest.mark.parametrize(
