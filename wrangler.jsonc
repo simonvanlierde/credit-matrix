@@ -11,6 +11,9 @@
     "not_found_handling": "404-page"
   },
   "compatibility_date": "2026-07-06",
+  // To rename, rename the Worker in the Cloudflare dashboard first. The PR
+  // preview job (`wrangler versions upload`) creates an empty Worker under any
+  // name that does not exist yet, which then blocks the dashboard rename.
   "name": "credit-matrix",
   // Bound to a Custom Domain
   "routes": [
