@@ -17,6 +17,7 @@ census = "census.cli:main"
 [dependency-groups]
 dev = [
     "pytest>=9.1",
+    "pytest-codspeed>=5.0.3",
     "ruff>=0.17",
     "ty>=0.0.86",
     "types-lxml>=2026.2.16",

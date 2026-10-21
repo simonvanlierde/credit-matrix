@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/simonvanlierde/credit-matrix/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/simonvanlierde/credit-matrix/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/simonvanlierde/credit-matrix/branch/main/graph/badge.svg)](https://codecov.io/gh/simonvanlierde/credit-matrix)
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/simonvanlierde/credit-matrix?utm_source=badge)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fcredit.duinlab.nl)](https://credit.duinlab.nl)
 [![npm](https://img.shields.io/npm/v/credit-matrix)](https://www.npmjs.com/package/credit-matrix)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21213659-blue.svg)](https://doi.org/10.5281/zenodo.21213659)

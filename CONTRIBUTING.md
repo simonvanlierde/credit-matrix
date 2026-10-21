@@ -58,6 +58,9 @@ expected output with `CENSUS_UPDATE_CORPUS=1 uv run pytest -q tests/test_corpus.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
+- **Benchmarks (CodSpeed)**: `pnpm bench` runs the `src/core` benchmarks in `src/core/__bench__/`,
+  and `cd census && uv run --locked pytest tests/test_benchmarks.py --codspeed` runs the census
+  ones. The CodSpeed workflow measures both on every pull request and reports any change in speed.
 - **Quarto**: the rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto`
   on your `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
 - **End-to-end (Playwright)**: the specs in `e2e/`. In CI they run against `wrangler dev`, which

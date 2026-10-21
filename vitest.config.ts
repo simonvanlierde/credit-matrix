@@ -31,6 +31,7 @@ export default defineConfig({
         "src/**/*.test.ts",
         "src/**/*.d.ts",
         "src/core/__tests__/**",
+        "src/core/__bench__/**",
         "src/core/dist/**",
         "src/core/tsdown.config.ts",
       ],
