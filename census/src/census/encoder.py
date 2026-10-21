@@ -314,25 +314,83 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     return best
 
 
-def predict(run: Path, items: Iterable[dict[str, Any]], out: Path, device: str, batch_size: int = 32) -> int:
-    """Write one line {"pmcid", "pairs"} per item with the run's best checkpoint and threshold, in the format
-    `run_zero_shot` writes. Returns the number of articles."""
-    import torch
+def _load(run: Path, device: str) -> tuple[Any, Any, float, int]:
+    """The run's tokenizer, model, best threshold and max length."""
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
     threshold = json.loads((run / "best.json").read_text(encoding="utf-8"))["threshold"]
     config = json.loads((run / "config.json").read_text(encoding="utf-8"))
     tokenizer = AutoTokenizer.from_pretrained(run / "checkpoint")
     model = AutoModelForSequenceClassification.from_pretrained(run / "checkpoint").to(device)
+    return tokenizer, model, threshold, config["max_length"]
+
+
+def predict(run: Path, items: Iterable[dict[str, Any]], out: Path, device: str, batch_size: int = 32) -> int:
+    """Write one line {"pmcid", "pairs"} per item with the run's best checkpoint and threshold, in the format
+    `run_zero_shot` writes. Returns the number of articles."""
+    import torch
+
+    tokenizer, model, threshold, max_length = _load(run, device)
     rows = list(items)
-    encoded = Encoded(tokenizer, rows, config["max_length"])
+    encoded = Encoded(tokenizer, rows, max_length)
     if encoded.truncated:
-        print(
-            f"{len(encoded.truncated)} of {len(rows)} statements cut to {config['max_length']} tokens", file=sys.stderr
-        )
+        print(f"{len(encoded.truncated)} of {len(rows)} statements cut to {max_length} tokens", file=sys.stderr)
     probs = _per_article(rows, encoded, _probabilities(torch, model, encoded, batch_size, device))
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8") as f:
         for row, p in zip(rows, probs, strict=True):
             f.write(json.dumps({"pmcid": row["pmcid"], "pairs": sorted(decode(p, threshold))}) + "\n")
     return len(rows)
+
+
+def pair_rows(pmcids: list[str], pairs: list[Pairs]) -> dict[str, list[Any]]:
+    """Columns pmcid, author_position, role: a row per pair, and one row with no position or role for an
+    article given no role, so the file also says which articles were read."""
+    columns: dict[str, list[Any]] = {"pmcid": [], "author_position": [], "role": []}
+    for pmcid, found in zip(pmcids, pairs, strict=True):
+        for position, role in sorted(found) or [(None, None)]:
+            columns["pmcid"].append(pmcid)
+            columns["author_position"].append(position)
+            columns["role"].append(role)
+    return columns
+
+
+def predict_corpus(
+    run: Path, chunks: Iterable[list[dict[str, Any]]], out: Path, device: str, total: int, batch_size: int = 32
+) -> int:
+    """Write `out/part-NNNNN.parquet` per chunk, with `pair_rows`' columns. A part already written is skipped,
+    so a stopped run resumes when given the same chunks in the same order; a ValueError if a written part holds
+    other articles than its chunk. Prints progress per part. Returns the number of articles read in this call."""
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    import torch
+
+    tokenizer, model, threshold, max_length = _load(run, device)
+    out.mkdir(parents=True, exist_ok=True)
+    schema = pa.schema([("pmcid", pa.string()), ("author_position", pa.int32()), ("role", pa.string())])
+    start, done, seen = time.monotonic(), 0, 0
+    for n, rows in enumerate(chunks):
+        seen += len(rows)
+        part = out / f"part-{n:05d}.parquet"
+        if part.exists():
+            # Another --chunk, or a database that changed, puts other articles under the same part number.
+            if set(pq.read_table(part, columns=["pmcid"])["pmcid"].to_pylist()) != {r["pmcid"] for r in rows}:
+                raise ValueError(
+                    f"{part} holds other articles than chunk {n}; resume with the same --chunk and database"
+                )
+            continue
+        encoded = Encoded(tokenizer, rows, max_length)
+        probs = _per_article(rows, encoded, _probabilities(torch, model, encoded, batch_size, device))
+        partial = part.with_suffix(".tmp")
+        table = pa.table(pair_rows([r["pmcid"] for r in rows], [decode(p, threshold) for p in probs]), schema=schema)
+        pq.write_table(table, partial)
+        partial.rename(part)
+        done += len(rows)
+        rate = done / (time.monotonic() - start)
+        left = (total - seen) / rate / 60
+        print(
+            f"{part.name}: {seen} of {total} articles ({len(encoded.truncated)} cut to {max_length} tokens),"
+            f" {rate:.0f} articles/s, {left:.0f} min left",
+            flush=True,
+        )
+    return done
