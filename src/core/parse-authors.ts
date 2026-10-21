@@ -66,6 +66,7 @@ export function parseNameParts(name: string): {
   return { firstName, middleName, surname };
 }
 
+/** A name part with the punctuation and digits `parseNameParts` drops removed. */
 export function cleanNamePart(value: string): string {
   return value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "").trim();
 }

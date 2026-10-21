@@ -137,4 +137,20 @@ describe("round-trip exports", () => {
     expect(parsed?.surname).toBe(surname);
     expect(parsed?.initials).toBe(initials);
   });
+
+  // Regression: when punctuation kept the name from ending in its parsed surname
+  // ("Jr." vs "Jr"), the given names were rebuilt from the first and middle name
+  // alone, so every word between them and the surname was lost.
+  it.each([
+    ["Martin Luther King Jr.", "Martin Luther King Jr"],
+    ["Ann B. C. Smith.", "Ann B. C. Smith"],
+    ["Jane Smith (ed)", "Jane Smith ed"],
+  ])("XML round-trip keeps every word of %s", (input, expected) => {
+    const [author] = parseAuthorText(input);
+    if (!author) throw new Error("expected contributor");
+
+    const [parsed] = fromJats4rXml(toJats4rXml([author]));
+
+    expect(parsed?.name).toBe(expected);
+  });
 });
