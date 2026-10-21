@@ -266,6 +266,24 @@ def test_a_semicolon_after_a_sentence_still_ends_the_clause():
     assert parsed.assignments == {(0, "writing-original-draft")}
 
 
+def test_full_names_do_not_close_a_clause_of_roles():
+    text = (
+        "Emmanuel Luciano, MD; conceptualization, methodology, writing original draft and final review and editing. "
+        "Sarah Macek; conceptualization, methodology, writing original draft and final review and editing. "
+        "Felipe Pacheco, MD; final review and editing. Wael Solh, MD; final review and editing."
+    )
+    parsed = parse_statement(text, _split("Emmanuel Luciano", "Sarah Macek", "Felipe Pacheco", "Wael Solh"))
+    assert roles_of(parsed, 0) == {
+        "conceptualization",
+        "methodology",
+        "writing-original-draft",
+        "writing-review-editing",
+    }
+    assert roles_of(parsed, 2) == {"writing-review-editing"}
+    parsed = parse_statement("A.B.: software; visualization. CD; supervision. CD;", THREE)
+    assert parsed.assignments == {(0, "software"), (1, "visualization"), (1, "supervision")}
+
+
 def test_initials_in_a_sentence_do_not_close_a_clause_of_roles():
     text = (
         "All authors (S.-J.P., A.S. and H.-J.L.) were involved in the conceptualisation, writing—original draft, "

@@ -261,8 +261,13 @@ def _joins(text: str, ordered: list[tuple[int, int, str, int | str]], start: int
         return following == "A" and _only_authors(text, ordered, start + 1 if start else 0, pos)
     if text[pos] != "." or {kind for s, _, kind, _ in ordered if start <= s < pos} != {"R"}:
         return False
-    stop = text.find(";", pos)
-    return _only_authors(text, ordered, pos + 1, len(text) if stop < 0 else stop)
+    stop = len(text) if (stop := text.find(";", pos)) < 0 else stop
+    # Only resolved initials close it: "editing. Sarah Macek;" or "MD;" opens the next clause.
+    return _only_authors(text, ordered, pos + 1, stop) and all(
+        value not in (UNRESOLVED, ALL_AUTHORS) and _INITIALS_RE.fullmatch(text[s:e])
+        for s, e, _, value in ordered
+        if pos < s < stop
+    )
 
 
 def _only_authors(text: str, ordered: list[tuple[int, int, str, int | str]], start: int, stop: int) -> bool:
