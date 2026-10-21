@@ -88,7 +88,8 @@ _UNMARKED = str.maketrans("Đđ", "Dd")
 
 
 def _fold(text: str) -> str:
-    """`text` without diacritics: initials often drop them ("N.N.A." for Nguyễn Ngọc Ánh)."""
+    """`text` without diacritics: initials often drop them ("N.N.A." for Nguyễn Ngọc Ánh, "A.A.-A." for Ángel
+    Arias-Arias)."""
     return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).translate(_UNMARKED)
 
 
@@ -142,11 +143,19 @@ def resolve_initials(token: str, authors: list[Author]) -> int | None:
     for José García López). The first order any author fits decides, so "L.H." is Liang Hong even when
     Hao Leng fits surname-first.
     """
-    chunks = [_fold(c) for c in _chunks(token)]
+    chunks = _chunks(token)
     if not chunks:
         return None
+    # Without diacritics only when no author fits as written: folded, "ŞY" for Şilan Yavuz fits Sema Y. too.
+    hits = _hits(chunks, [_name_parts(a) for a in authors]) or _hits(
+        [_fold(c) for c in chunks], [_folded_parts(a) for a in authors]
+    )
+    return hits[0] if len(hits) == 1 else None
+
+
+def _hits(chunks: list[str], parts: list[tuple[Parts, Parts, Parts, Parts]]) -> list[int]:
+    """Authors fitting the first order in `resolve_initials` that any author fits."""
     letters = "".join(chunks)
-    parts = [_folded_parts(a) for a in authors]
     tiers = (
         lambda g, s, w, c: _fits(chunks, g + s),
         lambda g, s, w, c: _fits(chunks, s + g),
@@ -157,10 +166,9 @@ def resolve_initials(token: str, authors: list[Author]) -> int | None:
         lambda g, s, w, c: _fits(chunks, g + c[:1]) or _fits(chunks, g[:1] + c[:1]),
     )
     for fits in tiers:
-        hits = [i for i, p in enumerate(parts) if fits(*p)]
-        if hits:
-            return hits[0] if len(hits) == 1 else None
-    return None
+        if hits := [i for i, p in enumerate(parts) if fits(*p)]:
+            return hits
+    return []
 
 
 def _mask(text: str, start: int, end: int) -> str:
@@ -248,21 +256,23 @@ def _joins(text: str, ordered: list[tuple[int, int, str, int | str]], start: int
     """Whether the end at `pos` falls inside one clause after all, given the clause so far from `start`:
     a semicolon inside a list of authors ("T.A.R.-L., C.O.-P.; J.M.G.-R.: software"), or the full stop
     between a clause of roles and the initials that close it ("Investigation, methodology. S.H.;")."""
-    kinds = {kind for s, _, kind, _ in ordered if start <= s < pos}
     if text[pos] == ";":
         following = next((kind for s, _, kind, _ in ordered if s > pos), None)
-        return kinds == {"A"} and following == "A"
-    if kinds != {"R"} or text[pos] != ".":
+        return following == "A" and _only_authors(text, ordered, start + 1 if start else 0, pos)
+    if text[pos] != "." or {kind for s, _, kind, _ in ordered if start <= s < pos} != {"R"}:
         return False
     stop = text.find(";", pos)
-    stop = len(text) if stop < 0 else stop
-    closing = [(s, e, kind) for s, e, kind, _ in ordered if pos < s < stop]
-    # Only authors up to the semicolon: "methodology. C.D. supervised." starts a sentence.
-    return (
-        bool(closing)
-        and all(kind == "A" for _, _, kind in closing)
-        and re.fullmatch(r"[\s.]*", text[closing[-1][1] : stop]) is not None
-    )
+    return _only_authors(text, ordered, pos + 1, len(text) if stop < 0 else stop)
+
+
+def _only_authors(text: str, ordered: list[tuple[int, int, str, int | str]], start: int, stop: int) -> bool:
+    """Whether text[start:stop] names authors and holds nothing else but commas, "and", full stops and spaces:
+    "S.A.D. and M.R. conceptualized the project;" or "Funding was acquired by H.-J.L." is a sentence."""
+    spans = [(s, e) for s, e, _, _ in ordered if start <= s < stop]
+    if not spans or any(kind != "A" for s, _, kind, _ in ordered if start <= s < stop):
+        return False
+    rest = [text[e:s] for (_, e), (s, _) in pairwise([(start, start), *spans, (stop, stop)])]
+    return all(re.fullmatch(r"(?:[\s.,]|\band\b)*", r) for r in rest)
 
 
 def parse_statement(text: str, authors: list[Author]) -> Parsed:
