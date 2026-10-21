@@ -230,7 +230,9 @@ What the set can show, once labelled (`census score data/labels/oa-2026-10-set.c
 
 These are pooled, weighted figures per style. `score` also prints a table per style and publisher,
 but with 1 to 12 rows per stratum it is for spotting failure patterns, not for accuracy per
-publisher. Agreement between labellers, one figure over the 25 overlap rows: F1 \_\_. MDPI
+publisher. A third table goes per style and role, counting for each role only the articles where it
+was predicted or labelled. It shows which roles the parser or a model gets wrong, such as data
+curation or resources, which free text describes in many ways. Agreement between labellers, one figure over the 25 overlap rows: F1 \_\_. MDPI
 disagreements, a rough verdict on whether the tag or the parser errs from 20 rows: tag wrong \_\_,
 parser wrong \_\_, both \_\_, neither \_\_.
 

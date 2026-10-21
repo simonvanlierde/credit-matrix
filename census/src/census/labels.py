@@ -282,7 +282,9 @@ def score(
     predictions: dict[str, set[tuple[int, str]]] | None = None,
 ) -> list[tuple]:
     """Precision, recall and F1 over (author, role) pairs, and the share of articles exactly right with
-    its 95% interval, per style or per style and publisher. The style is the database's. The stratum
+    its 95% interval, per style, per style and publisher, or per style and role. Per role, an article
+    counts only where the role is predicted or in its gold, and is exactly right when that role's
+    authors are. The style is the database's. The stratum
     and weight come from `key` (by default `key_path(path)` when it exists); without a key file each
     row weighs 1 under the database's publisher. The article count is unweighted. `predictions` are
     scored instead of the parser's `assignments`; an article missing from them predicts nothing."""
@@ -302,8 +304,15 @@ def score(
             predicted = set(con.execute(sql, [row["pmcid"]]).fetchall())
         else:
             predicted = predictions.get(row["pmcid"], set())
+        gold = _gold(row, n_authors)
+        if by == "role":
+            articles += [
+                (f"{style}: {slug}", {p for p in predicted if p[1] == slug}, {g for g in gold if g[1] == slug}, weight)
+                for slug in {role for _, role in predicted | gold}
+            ]
+            continue
         group = style if by == "style" else f"{style}: {publisher}"
-        articles.append((group, predicted, _gold(row, n_authors), weight))
+        articles.append((group, predicted, gold, weight))
     return table(articles)
 
 

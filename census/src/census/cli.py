@@ -204,7 +204,9 @@ def cmd_score(args: argparse.Namespace) -> None:
             for verdict, n in labels.verdicts(args.labels).most_common():
                 print(f"{verdict:<10}{n:>4}")
             return
-        tables = {by: labels.score(con, args.labels, by, args.key, predictions) for by in ("style", "publisher")}
+        tables = {
+            by: labels.score(con, args.labels, by, args.key, predictions) for by in ("style", "publisher", "role")
+        }
         second = args.second and labels.agreement(con, args.labels, args.second)
     # Rates are weighted by stratum; "-" is a rate with nothing to count.
     for by, results in tables.items():
@@ -213,7 +215,7 @@ def cmd_score(args: argparse.Namespace) -> None:
             p, r, f1, exact = ("-" if x is None else x for x in rates)
             print(f"{key[:55]:<56}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}{f'{low}-{high}':>13}")
         print()
-    print("The publisher rows hold a few articles each: read them for failure patterns, not accuracy.")
+    print("The publisher and role rows hold a few articles each: read them for failure patterns, not accuracy.")
     if second:
         n, _, _, f1, exact, _, _ = second
         print(f"second labeller against the first: {n} overlap articles, f1 {'-' if f1 is None else f1}, exact {exact}")
