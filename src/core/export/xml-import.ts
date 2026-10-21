@@ -1,7 +1,7 @@
 import type { Author, Contribution } from "../author";
 import { isValidOrcid, LEVEL_SCORE, normalizeOrcid } from "../author";
 import { CREDIT_ROLES, roleNamed } from "../credit-roles";
-import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
+import { cleanNamePart, createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 
 /** The score each `degree-contribution` level imports as. "none" is not one: a listed role counts. */
 const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(([level]) => level !== "none"));
@@ -58,7 +58,7 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     const displayName = [givenNames, surname].filter(Boolean).join(" ");
     // Split given names the same way `parseNameParts` does for its comma branch:
     // first token is the first name, the second (if any) is the middle name.
-    const givenParts = givenNames.split(/\s+/).filter(Boolean);
+    const givenParts = cleanNamePart(givenNames).split(/\s+/).filter(Boolean);
     const givenFirst = givenParts[0] ?? "";
     const givenMiddle = givenParts[1] ?? "";
     // Skip nameless contribs (e.g. a <collab> group, or a malformed entry)

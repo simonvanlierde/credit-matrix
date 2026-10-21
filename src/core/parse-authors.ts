@@ -66,7 +66,7 @@ export function parseNameParts(name: string): {
   return { firstName, middleName, surname };
 }
 
-function cleanNamePart(value: string): string {
+export function cleanNamePart(value: string): string {
   return value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "").trim();
 }
 
