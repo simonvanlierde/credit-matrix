@@ -124,6 +124,8 @@ describe("round-trip exports", () => {
     ["van der Berg, Anne", "Anne", "", "van der Berg", "AB"],
     ["de la Cruz, Maria", "Maria", "", "de la Cruz", "MC"],
     ["Smith, John", "John", "", "Smith", "JS"],
+    // Punctuation in the given names is not a middle name: the importer cleans them as `parseNameParts` does.
+    ["Smith & Co Lee", "Smith", "Co", "Lee", "SCL"],
   ])("XML round-trip preserves the particle surname in %s", (input, first, middle, surname, initials) => {
     const [author] = parseAuthorText(input);
     if (!author) throw new Error("expected contributor");
