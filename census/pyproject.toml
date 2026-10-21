@@ -26,6 +26,14 @@ train = [
     "transformers>=5.20",
 ]
 
+[tool.uv]
+# Resolve no release younger than 7 days, as Renovate already waits, so a lock refresh or a
+# manual `uv add` cannot pull a release published hours ago.
+exclude-newer = "7 days"
+# The train group needs transformers>=5.20, and 5.20.1 (locked) came out on 2026-10-16. Drop this
+# once it is a week old, after 2026-10-23, or it holds transformers at that date.
+exclude-newer-package = { transformers = "2026-10-17T00:00:00Z" }
+
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]
 build-backend = "uv_build"
