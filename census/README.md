@@ -289,8 +289,9 @@ uv run census model predict --name modernbert-120k  # held-out predictions, scor
 uv run census model score data/model/oa-2026-10/predictions/encoder-modernbert-120k-held_out.jsonl
 ```
 
-CI does not install the `train` group, so it skips the end-to-end train-and-predict test. Run it
-locally with `uv run --group train pytest tests/test_encoder.py`.
+CI installs neither the `train` nor the `browser` group, so it skips the end-to-end
+train-and-predict test and the check of the browser build against torch. Run both locally with
+`uv run --group train --group browser pytest tests/test_encoder.py`.
 
 Each example is one author of one article: the author's name, its initials ("N.-G.R.", "NGR",
 "Ryu NG") and place in the byline, then the statement. The model answers yes or no for each of
