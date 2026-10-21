@@ -305,7 +305,7 @@ each epoch the run scores dev at thresholds 0.3 to 0.7 and keeps the best epoch'
 threshold. The held-out set is never looked at while training. Statements longer than 512 tokens
 are cut, and the run counts how many. Every setting is in `encoder.Config` and the run's
 `config.json`; `metrics.jsonl` has the loss and the dev scores per epoch. `--train-articles`,
-`--epochs`, `--batch-size` and `--device cpu` change a run; on CPU, a run of 100 articles takes
+`--epochs`, `--batch-size`, `--learning-rate` and `--device cpu` change a run; on CPU, a run of 100 articles takes
 about 15 minutes.
 
 On `oa-2026-10`, the run with the defaults (814,249 examples, 2 epochs at batch 32) took 84
