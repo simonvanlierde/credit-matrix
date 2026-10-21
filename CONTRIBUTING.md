@@ -47,6 +47,10 @@ cd census && uv run --locked ruff format --check . && uv run --locked ruff check
 in what it reads fails a test. After a change you meant to make, review the diff and rewrite the
 expected output with `CENSUS_UPDATE_CORPUS=1 uv run pytest -q tests/test_corpus.py`.
 
+`census/tests/test_benchmarks.py` times the parser on that corpus and on two JATS articles. A plain
+`pytest` runs each once; on every pull request [CodSpeed](https://codspeed.io) measures them and
+comments when one gets slower or faster than on main.
+
 ## Testing
 
 - **Unit (Vitest)**: two projects. `core` runs `src/core` under Node and checks the built package:
