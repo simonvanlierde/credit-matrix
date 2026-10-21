@@ -1,7 +1,7 @@
 {
   "snapshot": "oa-2026-10",
   "dataset_version": "1.0.0",
-  "code_commit": "06fcedde5b975bb4c01fa9190b407792bd8d59fc",
+  "code_commit": "127ebe892df44ee4fcba2febeb8a3b5d96458c91",
   "files_date": "2026-10-03",
   "openalex_sources": "2026-10-14",
   "parser_f1": 0.877,
