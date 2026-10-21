@@ -308,7 +308,9 @@ def cmd_model_train(args: argparse.Namespace) -> None:
     dataset = _model_dir(args) / "dataset"
     if not (dataset / "train.jsonl").exists():
         raise Failure(f"no {dataset / 'train.jsonl'}; write it with `census model dataset`")
-    options = ("model", "train_articles", "dev_articles", "epochs", "batch_size", "device")
+    if args.model and not args.revision:
+        raise Failure("--model needs --revision, the model's Hub commit, so a rerun starts from the same weights")
+    options = ("model", "revision", "train_articles", "dev_articles", "epochs", "batch_size", "seed", "device")
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
     best = encoder.train(encoder.Config(**overrides), dataset, run)
     print(f"best epoch {best['epoch']}: dev F1 {best['f1']} at threshold {best['threshold']}; model in {run}")
@@ -321,11 +323,62 @@ def cmd_model_predict(args: argparse.Namespace) -> None:
     run = _run_dir(args)
     if not (run / "best.json").exists():
         raise Failure(f"no trained model in {run}; train it with `census model train --name {args.name}`")
+    if not args.corpus and (args.limit or args.chunk):
+        raise Failure("--limit and --chunk go with --corpus")
+    start = time.monotonic()
+    if args.corpus:
+        out = _corpus_dir(args)
+        with store.connect(_db(args), read_only=True) as con:
+            total = modelset.count_free_text(con, args.limit)
+            chunks = modelset.free_text_chunks(con, args.chunk or 20_000, args.limit)
+            n = encoder.predict_corpus(run, chunks, out, args.device, total)
+        print(f"{n} articles in {time.monotonic() - start:.0f} s into {out}; compare with `census model compare`")
+        return
     items, name = _items(args)
     out = _model_dir(args) / "predictions" / f"encoder-{args.name}-{name}.jsonl"
-    start = time.monotonic()
     n = encoder.predict(run, items, out, args.device)
     print(f"{n} articles in {time.monotonic() - start:.0f} s; score with `census model score {out}`")
+
+
+def _corpus_dir(args: argparse.Namespace) -> Path:
+    # A trial with --limit gets its own directory, so its parts never pass for the whole run's.
+    limit = f"-first{args.limit}" if args.limit else ""
+    return _model_dir(args) / "predictions" / f"encoder-{args.name}-corpus{limit}"
+
+
+def cmd_model_compare(args: argparse.Namespace) -> None:
+    import json
+
+    parts = _corpus_dir(args)
+    if not any(parts.glob("part-*.parquet")):
+        raise Failure(f"no parts in {parts}; write them with `census model predict --corpus --name {args.name}`")
+    with store.connect(_db(args), read_only=True) as con:
+        tables = modelset.compare(con, str(parts / "part-*.parquet"))
+    (parts.parent / f"{parts.name}-comparison.json").write_text(json.dumps(tables, indent=1) + "\n", encoding="utf-8")
+    lines = []
+    for title, rows in tables.items():
+        lines += ["", title, "\t".join(rows[0]) if rows else "(no rows)"]
+        lines += ["\t".join(str(v) for v in row.values()) for row in rows]
+    print("\n".join(lines[1:]))
+
+
+def cmd_model_browser(args: argparse.Namespace) -> None:
+    import json
+    import random
+
+    from census import browser
+
+    run, out = _run_dir(args), _model_dir(args) / "browser" / args.name
+    if not (run / "best.json").exists():
+        raise Failure(f"no trained model in {run}")
+    if not (out / "onnx" / browser.VARIANTS["q4"]).exists():
+        print(json.dumps({"bytes": browser.export(run, out)}), flush=True)
+    items, _ = _items(args)
+    rows = list(items)
+    rows = random.Random(args.seed).sample(rows, min(args.sample, len(rows)))
+    results = browser.evaluate(out, rows, args.threads)
+    (out / "evaluation.json").write_text(json.dumps(results, indent=1) + "\n", encoding="utf-8")
+    print(f"evaluation in {out / 'evaluation.json'}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -422,17 +475,40 @@ def main(argv: list[str] | None = None) -> int:
     cmd = model_sub.add_parser("train", parents=[snap], help="fine-tune an encoder (needs `uv sync --group train`)")
     cmd.add_argument("--name", required=True, help="run directory under data/model/<snapshot>/runs/")
     cmd.add_argument("--model", help="Hugging Face checkpoint (default: answerdotai/ModernBERT-base)")
+    cmd.add_argument("--revision", help="the model's Hub commit or branch (default: the pinned ModernBERT-base one)")
     cmd.add_argument("--train-articles", type=int, help="training articles to draw (default: 120000)")
     cmd.add_argument("--dev-articles", type=int, help="dev articles carved from train (default: 2000)")
     cmd.add_argument("--epochs", type=int, help="passes over the drawn articles (default: 2)")
     cmd.add_argument("--batch-size", type=int, help="examples per step (default: 32)")
+    cmd.add_argument("--seed", type=int, help="seed for the draw, the dev set and the batches (default: 20261018)")
     cmd.add_argument("--device", help="cuda or cpu (default: cuda)")
     cmd.set_defaults(func=cmd_model_train)
-    cmd = model_sub.add_parser("predict", parents=[snap], help="predict with a trained encoder run")
+    cmd = model_sub.add_parser("predict", parents=[snap, db], help="predict with a trained encoder run")
     cmd.add_argument("--name", required=True, help="the run's directory name")
     cmd.add_argument("--device", default="cuda", help="cuda or cpu (default: cuda)")
     cmd.add_argument("--labels", type=Path, help="predict a labelled CSV instead of the held-out set")
+    cmd.add_argument(
+        "--corpus",
+        action="store_true",
+        help="read every free-text statement in the database into Parquet parts under predictions/; resumes",
+    )
+    cmd.add_argument("--chunk", type=int, help="articles per Parquet part (default: 20000)")
+    cmd.add_argument("--limit", type=int, help="with --corpus: only the first articles, to try a run")
     cmd.set_defaults(func=cmd_model_predict)
+    cmd = model_sub.add_parser(
+        "compare", parents=[snap, db], help="rules against the encoder's corpus predictions, as JSON and text"
+    )
+    cmd.add_argument("--name", required=True, help="the run's directory name")
+    cmd.add_argument("--limit", type=int, help="the --limit the predictions were made with")
+    cmd.set_defaults(func=cmd_model_compare)
+    cmd = model_sub.add_parser(
+        "browser", parents=[snap], help="export to ONNX with int8 and q4 copies and score each on held-out, on CPU"
+    )
+    cmd.add_argument("--name", required=True, help="the run's directory name")
+    cmd.add_argument("--sample", type=int, default=2000, help="held-out articles to score (default: 2000)")
+    cmd.add_argument("--seed", type=int, default=20261019, help="seed for the sample")
+    cmd.add_argument("--threads", type=int, default=16, help="CPU threads for onnxruntime (default: 16)")
+    cmd.set_defaults(func=cmd_model_browser, labels=None)  # held-out only: a labelled CSV has no gold pairs
 
     args = parser.parse_args(argv)
     try:
