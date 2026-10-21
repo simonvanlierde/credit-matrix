@@ -322,7 +322,17 @@ def cmd_model_train(args: argparse.Namespace) -> None:
         raise Failure(f"no {dataset / 'train.jsonl'}; write it with `census model dataset`")
     if args.model and not args.revision:
         raise Failure("--model needs --revision, the model's Hub commit, so a rerun starts from the same weights")
-    options = ("model", "revision", "train_articles", "dev_articles", "epochs", "batch_size", "seed", "device")
+    options = (
+        "model",
+        "revision",
+        "train_articles",
+        "dev_articles",
+        "epochs",
+        "batch_size",
+        "learning_rate",
+        "seed",
+        "device",
+    )
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
     best = encoder.train(encoder.Config(**overrides), dataset, run)
     print(f"best epoch {best['epoch']}: dev F1 {best['f1']} at threshold {best['threshold']}; model in {run}")
@@ -495,6 +505,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--dev-articles", type=int, help="dev articles carved from train (default: 2000)")
     cmd.add_argument("--epochs", type=int, help="passes over the drawn articles (default: 2)")
     cmd.add_argument("--batch-size", type=int, help="examples per step (default: 32)")
+    cmd.add_argument("--learning-rate", type=float, help="peak learning rate for AdamW (default: 5e-5)")
     cmd.add_argument("--seed", type=int, help="seed for the draw, the dev set and the batches (default: 20261018)")
     cmd.add_argument("--device", help="cuda or cpu (default: cuda)")
     cmd.set_defaults(func=cmd_model_train)
