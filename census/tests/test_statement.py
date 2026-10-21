@@ -96,6 +96,15 @@ def test_role_first_clauses_ended_by_full_stops():
     assert parsed.assignments == {(0, "conceptualization"), (1, "methodology"), (2, "methodology")}
 
 
+def test_role_first_clauses_closed_by_initials():
+    parsed = parse_statement("Investigation, methodology. A.B.; supervision. C.D.; software. E.F.", THREE)
+    assert parsed.assignments == {(0, "investigation"), (0, "methodology"), (1, "supervision"), (2, "software")}
+    assert parse_statement("A.B.: software; investigation. C.D. supervised the work.", THREE).assignments == {
+        (0, "software"),
+        (0, "investigation"),
+    }
+
+
 def test_a_clause_of_roles_alone_goes_to_the_people_before_it():
     parsed = parse_statement("A.B.: conceptualization; methodology. C.D.: software.", THREE)
     assert parsed.assignments == {(0, "conceptualization"), (0, "methodology"), (1, "software")}
@@ -184,6 +193,26 @@ def test_hyphenated_given_names():
     assert parsed.assignments == {(0, "software"), (1, "validation")}
     parsed = parse_statement("Software: Kim J-H and W.-J. Zhang.", authors)
     assert parsed.assignments == {(0, "software"), (1, "software")}
+
+
+def test_a_semicolon_inside_a_list_of_authors():
+    authors = [
+        Author("Tomás Andrés", "Ruiz-López"),
+        Author("Carlos", "Ortiz-Pérez"),
+        Author("José María", "García-Ruiz"),
+    ]
+    parsed = parse_statement("T.A.R.-L., C.O.-P.; J.M.G.-R.: software. T.A.R.-L.: validation.", authors)
+    assert parsed.assignments == {(0, "software"), (1, "software"), (2, "software"), (0, "validation")}
+    # A clause that names a role keeps its semicolon.
+    parsed = parse_statement("Validation: T.A.R.-L.; C.O.-P.: software.", authors)
+    assert parsed.assignments == {(0, "validation"), (1, "software")}
+
+
+def test_vietnamese_initials_without_diacritics():
+    authors = [Author("Ngọc Ánh", "Nguyễn"), Author("Văn Đức", "Trần"), Author("Nam", "Nguyen")]
+    parsed = parse_statement("N.N.A.: software; TVD: validation; NN: investigation.", authors)
+    assert parsed.assignments == {(0, "software"), (1, "validation"), (2, "investigation")}
+    assert resolve_initials("D.D.", [Author("Đức", "Đặng")]) == 0
 
 
 @pytest.mark.parametrize(

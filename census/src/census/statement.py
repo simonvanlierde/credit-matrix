@@ -14,6 +14,7 @@ yields nothing rather than a guess.
 """
 
 import re
+import unicodedata
 from bisect import bisect_left
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -82,6 +83,21 @@ def _name_parts(author: Author) -> tuple[Parts, Parts, Parts, Parts]:
     return given, surname, words, core
 
 
+# Đ has no decomposition; Vietnamese statements write it as D, like Á as A.
+_UNMARKED = str.maketrans("Đđ", "Dd")
+
+
+def _fold(text: str) -> str:
+    """`text` without diacritics: initials often drop them ("N.N.A." for Nguyễn Ngọc Ánh)."""
+    return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).translate(_UNMARKED)
+
+
+@lru_cache(maxsize=4096)
+def _folded_parts(author: Author) -> tuple[Parts, Parts, Parts, Parts]:
+    given, surname, words, core = (tuple(_fold(p) for p in parts) for parts in _name_parts(author))
+    return given, surname, words, core
+
+
 def _fits(chunks: list[str], parts: Parts) -> bool:
     return len(chunks) == len(parts) and all(
         p.casefold().startswith(c.casefold()) for c, p in zip(chunks, parts, strict=True)
@@ -126,11 +142,11 @@ def resolve_initials(token: str, authors: list[Author]) -> int | None:
     for José García López). The first order any author fits decides, so "L.H." is Liang Hong even when
     Hao Leng fits surname-first.
     """
-    chunks = _chunks(token)
+    chunks = [_fold(c) for c in _chunks(token)]
     if not chunks:
         return None
     letters = "".join(chunks)
-    parts = [_name_parts(a) for a in authors]
+    parts = [_folded_parts(a) for a in authors]
     tiers = (
         lambda g, s, w, c: _fits(chunks, g + s),
         lambda g, s, w, c: _fits(chunks, s + g),
@@ -217,11 +233,36 @@ def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> 
     for (_, end, kind, _), (start, _, next_kind, _) in pairwise(ordered):
         gap = text[end - 1 : start]
         # "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
-        # unless a comma or "and" joins the two authors ("C.D. and E.F.").
-        joined = re.search(r",|\band\b", gap)
+        # unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
+        joined = re.search(r"[,;]|\band\b", gap)
         if kind == "A" and "." in gap and ":" not in gap and (next_kind == "R" or not joined):
             ends.append(end)
-    return sorted(ends)
+    kept: list[int] = []
+    for pos in sorted(ends):
+        if not _joins(text, ordered, kept[-1] if kept else 0, pos):
+            kept.append(pos)
+    return kept
+
+
+def _joins(text: str, ordered: list[tuple[int, int, str, int | str]], start: int, pos: int) -> bool:
+    """Whether the end at `pos` falls inside one clause after all, given the clause so far from `start`:
+    a semicolon inside a list of authors ("T.A.R.-L., C.O.-P.; J.M.G.-R.: software"), or the full stop
+    between a clause of roles and the initials that close it ("Investigation, methodology. S.H.;")."""
+    kinds = {kind for s, _, kind, _ in ordered if start <= s < pos}
+    if text[pos] == ";":
+        following = next((kind for s, _, kind, _ in ordered if s > pos), None)
+        return kinds == {"A"} and following == "A"
+    if kinds != {"R"} or text[pos] != ".":
+        return False
+    stop = text.find(";", pos)
+    stop = len(text) if stop < 0 else stop
+    closing = [(s, e, kind) for s, e, kind, _ in ordered if pos < s < stop]
+    # Only authors up to the semicolon: "methodology. C.D. supervised." starts a sentence.
+    return (
+        bool(closing)
+        and all(kind == "A" for _, _, kind in closing)
+        and re.fullmatch(r"[\s.]*", text[closing[-1][1] : stop]) is not None
+    )
 
 
 def parse_statement(text: str, authors: list[Author]) -> Parsed:
