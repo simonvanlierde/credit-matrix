@@ -49,6 +49,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `DetectedFormat` needs the new case. The next release is therefore 0.9.0.
 - Primary buttons darken on hover instead of fading, so their text stays readable.
 
+### Fixed
+
+- Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A
+  contributor exported as "Smith & Co Lee" came back with the middle name "&" instead of "Co", and
+  with the wrong initials.
+
 ## [0.8.1] - 2026-10-13
 
 ### Fixed
