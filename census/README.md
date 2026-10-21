@@ -328,6 +328,30 @@ against 0.901 and 0.543 for the other 27,671. The cut stays at 512 tokens becaus
 was trained with it. ModernBERT reads up to 8,192 tokens, so a longer limit is an option for a
 later run.
 
+The rule parser and the encoder are good at different things, so `hybrid` combines them. An
+article the rules give no role keeps none, an article with per-author contribution text
+(`contrib_text`) keeps the rules' reading, and every other article takes the encoder's roles:
+
+```sh
+uv run census model hybrid data/model/oa-2026-10/predictions/encoder-modernbert-120k-held_out.jsonl
+```
+
+It writes `hybrid-<run>-<set>.jsonl` beside the input. On the held-out set it scores F1 0.898 and
+exact 0.538, a little under the encoder alone, because tagged articles with statements the rules
+read nothing from now predict nothing. The label set is where it pays off. On its 160 articles
+(labelled by a model, not yet checked by hand), counting a statement that names no CRediT roles as
+giving none, F1 by style is:
+
+| | statement_text | contrib_text | articles without roles, exact |
+| --- | --- | --- | --- |
+| rule parser | 0.922 | 0.997 | 0.868 |
+| encoder | **0.949** | 0.885 | 0.000 |
+| hybrid | **0.949** | **0.997** | **0.868** |
+
+The encoder reads roles out of narrative statements ("designed the study") that are not CRediT, and
+the rules' gate keeps them out. It does not keep them out of a statement that mixes CRediT roles
+with narrative: on those, the encoder's extra roles make the hybrid score below the rules alone.
+
 ## Limits
 
 - The sample is drawn from the first 1,000 hits per publisher and year in Europe PMC's default
