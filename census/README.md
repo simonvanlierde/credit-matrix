@@ -289,8 +289,9 @@ uv run census model predict --name modernbert-120k  # held-out predictions, scor
 uv run census model score data/model/oa-2026-10/predictions/encoder-modernbert-120k-held_out.jsonl
 ```
 
-CI does not install the `train` group, so it skips the end-to-end train-and-predict test. Run it
-locally with `uv run --group train pytest tests/test_encoder.py`.
+CI installs neither the `train` nor the `browser` group, so it skips the end-to-end
+train-and-predict test and the check of the browser build against torch. Run both locally with
+`uv run --group train --group browser pytest tests/test_encoder.py`.
 
 Each example is one author of one article: the author's name, its initials ("N.-G.R.", "NGR",
 "Ryu NG") and place in the byline, then the statement. The model answers yes or no for each of
@@ -351,6 +352,48 @@ giving none, F1 by style is:
 The encoder reads roles out of narrative statements ("designed the study") that are not CRediT, and
 the rules' gate keeps them out. It does not keep them out of a statement that mixes CRediT roles
 with narrative: on those, the encoder's extra roles make the hybrid score below the rules alone.
+
+#### Every free-text statement
+
+```sh
+uv run census model predict --name modernbert-120k --corpus  # Parquet parts in predictions/encoder-<name>-corpus/
+uv run census model compare --name modernbert-120k           # the rule parser against the encoder
+```
+
+`--corpus` runs the encoder on every article whose statement is free text (styles `statement_text`
+and `contrib_text`), 20,000 articles to a Parquet part (`--chunk` changes that). Each part is
+renamed into place only once it is complete, so a stopped run starts again at the first missing
+part. Resume with the same `--chunk` and database: a part that holds other articles than its chunk
+stops the run. `--limit 1000` reads only the first 1,000 articles, into a directory of its own, to
+try a run.
+
+`compare` prints three tables and writes them to `predictions/encoder-<name>-corpus-comparison.json`:
+research articles with roles per year, the share of authors holding each role by byline position,
+and per publisher how far the rule parser and the encoder agree. On `oa-2026-10` the encoder read
+all 1,297,428 free-text articles in 65 parts. Over all of them the two readers agree at pair F1
+0.885, and give exactly the same pairs for 54.9% of articles; on MDPI (485,263 articles) at 0.947.
+
+#### In the browser
+
+```sh
+uv sync --group train --group browser
+uv run census model browser --name modernbert-120k
+```
+
+`browser` exports the run's best checkpoint to ONNX in `data/model/<snapshot>/browser/<name>/onnx/`,
+with an 8-bit (int8) and a 4-bit (q4) copy, under the file names transformers.js looks for. It then
+scores each on 2,000 held-out articles on CPU (`--sample`, `--threads`, 16 by default) and writes
+`evaluation.json` beside them. A rerun skips the export when the q4 file is already there. On
+`oa-2026-10`:
+
+| | size | F1 | exact | same pairs as fp32 | seconds for 2,000 articles |
+| --- | --- | --- | --- | --- | --- |
+| fp32 | 601 MB | 0.903 | 0.542 | 100% | 1,121 |
+| int8 | 152 MB | 0.903 | 0.541 | 92.2% | 641 |
+| q4 | 228 MB | 0.903 | 0.541 | 92.9% | 1,434 |
+
+Both copies keep the full model's F1. int8 is the smallest, and the fastest on CPU; q4 is slower
+than fp32 there.
 
 ## Limits
 
