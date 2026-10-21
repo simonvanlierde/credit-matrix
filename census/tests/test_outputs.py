@@ -274,6 +274,18 @@ def test_score_per_style_and_publisher(db, tmp_path):
     assert labels.score(db, out)[0][:6] == ("none", 1, None, None, None, 1.0)
 
 
+def test_score_per_role(db, tmp_path):
+    out = tmp_path / "r.csv"
+    # PMC2's parser output adds software for author 2; author 2's visualization is right.
+    _labels(out, "PMC1,,,x,1: software; 2: validation\nPMC2,,,x,1: software; 2: visualization\n")
+    assert [r[:6] for r in labels.score(db, out, by="role")] == [
+        ("contrib_text: software", 1, 1.0, 1.0, 1.0, 1.0),
+        ("contrib_text: validation", 1, 1.0, 1.0, 1.0, 1.0),
+        ("statement_text: software", 1, 0.5, 1.0, 0.667, 0.0),
+        ("statement_text: visualization", 1, 1.0, 1.0, 1.0, 1.0),
+    ]
+
+
 def test_agreement_on_overlap_rows_only(db, tmp_path):
     first, second = tmp_path / "a.csv", tmp_path / "b.csv"
     # PMC2 is labelled the same in both but is not an overlap row, so it does not count.
