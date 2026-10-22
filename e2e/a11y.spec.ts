@@ -106,7 +106,7 @@ test.describe("Accessibility (axe-core)", () => {
 
     await page.getByRole("heading", { name: "CRediT Matrix" }).getByRole("button").click();
     await expect(page.getByRole("button", { name: "How it works" })).toBeVisible();
-    await expect(page.getByText("Acknowledgements")).toBeVisible();
+    await expect(page.getByRole("link", { name: "About, citing and privacy" })).toBeVisible();
 
     const results = await scan(page);
     expect(results.violations).toEqual([]);
@@ -125,14 +125,14 @@ test.describe("Accessibility (axe-core)", () => {
     const dialog = page.locator("dialog#getting-started");
     await dialog.getByRole("button", { name: "About this app" }).click();
 
-    const panel = page.getByText("Acknowledgements");
+    const panel = page.getByRole("link", { name: "About, citing and privacy" });
     await expect(panel).toBeVisible();
     const box = await panel.boundingBox();
-    const topmost = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.textContent ?? null, [
-      (box?.x ?? 0) + 2,
-      (box?.y ?? 0) + 2,
-    ] as [number, number]);
-    expect(topmost).toBe("Acknowledgements");
+    const topmost = await page.evaluate(
+      ([x, y]) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("href") ?? null,
+      [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2] as [number, number],
+    );
+    expect(topmost).toBe("/about");
 
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
@@ -149,6 +149,20 @@ test.describe("Accessibility (axe-core)", () => {
     const results = await scan(page);
     expect(results.violations).toEqual([]);
   });
+
+  for (const route of ["/about"]) {
+    test(`${route} has no detectable violations, light, dark and on a phone`, async ({ page }) => {
+      await page.goto(route);
+      await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+      expect((await scan(page)).violations).toEqual([]);
+      await page.emulateMedia({ colorScheme: "dark" });
+      expect((await scan(page)).violations).toEqual([]);
+      await page.setViewportSize({ width: 320, height: 640 });
+      expect((await scan(page)).violations).toEqual([]);
+      // Long links (the DOI, the PDF of EN 301 549) wrap instead of widening the page.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+    });
+  }
 
   test("segmented control is keyboard-operable (radiogroup + arrow keys)", async ({ page }) => {
     await page.goto("/");

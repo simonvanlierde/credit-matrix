@@ -39,6 +39,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   on a statement longer than `MAX_STATEMENT_LENGTH` (50,000 characters).
 - In the `credit-matrix` package, replies can carry `provenance.orcid` (the new `OrcidProof` type)
   and `provenance.replacedOrcid`; run `recheckSignIns` on imported asks.
+- An About page (`/about`) says what the app is, how to cite it by its concept DOI, whom it
+  thanks, and, in its own Privacy section, what it sends where. The About panel is now a short card
+  that links to it.
 
 ### Changed
 
