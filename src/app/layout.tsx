@@ -4,6 +4,7 @@ import { preload } from "react-dom";
 import { AboutPopover } from "@/components/AboutPopover";
 import { Lockup } from "@/components/BrandMark";
 import { BrandMenu } from "@/components/BrandMenu";
+import { CensusLink } from "@/components/CensusLink";
 import { HeaderActions } from "@/components/HeaderActions";
 import { HowItWorks } from "@/components/HowItWorks";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -104,6 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </h1>
                   <nav className="hidden lg:flex gap-6 items-center">
                     <HowItWorks />
+                    <CensusLink />
                     <AboutPopover version={packageJson.version} />
                   </nav>
                 </div>
