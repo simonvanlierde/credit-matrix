@@ -54,6 +54,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A
   contributor exported as "Smith & Co Lee" came back with the middle name "&" instead of "Co", and
   with the wrong initials.
+- JATS XML export no longer drops words from a name that ends in punctuation. "Martin Luther King
+  Jr." used to come back as "Martin Luther Jr", and "Ann B. C. Smith." as "Ann B Smith".
+- CSV export keeps a leading apostrophe in a name that starts with a line break or spaces. It used
+  to come back without the apostrophe.
 
 ## [0.8.1] - 2026-10-13
 
