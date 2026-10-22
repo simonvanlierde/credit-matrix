@@ -99,8 +99,9 @@ and keeps its tagged style. Members of a consortium author are not counted as au
 Statements are parsed by rules (`src/census/statement.py`). The parser splits a statement into
 clauses and pairs authors with roles inside each, so a clause with no CRediT wording ("C.D. drew the
 figures") cannot shift the rest. Initials are resolved against the author list, including
-non-ASCII initials, particles ("F.d.S.N."), given names written as one word ("Q.M. Li" for Qinming
-Li), Frontiers' extra letters ("YiL") and Vancouver style ("Nam KC"). Initials that fit no author
+non-ASCII initials, initials without the name's accents ("A.A.-A." for Ángel Arias-Arias), particles
+("F.d.S.N."), given names written as one word ("Q.M. Li" for Qinming Li), Frontiers' extra letters
+("YiL") and Vancouver style ("Nam KC"). Initials that fit no author
 or several are listed in `articles.unresolved`, never guessed. Only CRediT wording counts, so prose
 such as "A.B. conceived the study" yields no roles, and a statement needs at least one term prose
 rarely uses (conceptualization, data curation, original draft, ...): "under the supervision of B.J."
@@ -231,10 +232,10 @@ What the set can show, once labelled (`census score data/labels/oa-2026-10-set.c
 These are pooled, weighted figures per style. `score` also prints a table per style and publisher,
 but with 1 to 12 rows per stratum it is for spotting failure patterns, not for accuracy per
 publisher. A third table goes per style and role, counting for each role only the articles where it
-was predicted or labelled. It shows which roles the parser or a model gets wrong, such as data
-curation or resources, which free text describes in many ways. Agreement between labellers, one figure over the 25 overlap rows: F1 \_\_. MDPI
-disagreements, a rough verdict on whether the tag or the parser errs from 20 rows: tag wrong \_\_,
-parser wrong \_\_, both \_\_, neither \_\_.
+was predicted or labelled. It shows which roles the parser or a model gets wrong: on `oa-2026-10`,
+visualization and writing – review & editing. Agreement between labellers, one figure over the 25
+overlap rows: F1 \_\_. MDPI disagreements, a rough verdict on whether the tag or the parser errs
+from 20 rows: tag wrong \_\_, parser wrong \_\_, both \_\_, neither \_\_.
 
 ## Training a statement parser
 
@@ -305,8 +306,8 @@ each epoch the run scores dev at thresholds 0.3 to 0.7 and keeps the best epoch'
 threshold. The held-out set is never looked at while training. Statements longer than 512 tokens
 are cut, and the run counts how many. Every setting is in `encoder.Config` and the run's
 `config.json`; `metrics.jsonl` has the loss and the dev scores per epoch. `--train-articles`,
-`--epochs`, `--batch-size`, `--learning-rate` and `--device cpu` change a run; on CPU, a run of 100 articles takes
-about 15 minutes.
+`--epochs`, `--batch-size`, `--learning-rate` and `--device cpu` change a run; on CPU, a run of 100
+articles takes about 15 minutes.
 
 On `oa-2026-10`, the run with the defaults (814,249 examples, 2 epochs at batch 32) took 84
 minutes on one 24 GB GPU and used 12.7 GB of its memory; predicting the held-out set took under 4

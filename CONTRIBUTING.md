@@ -59,6 +59,9 @@ comments when one gets slower or faster than on main.
 - **Format fixtures**: `format-fixtures.test.ts` decodes saved files in
   `src/core/__tests__/fixtures/` that never change (a share link, JSON, CSV and JATS). If you change
   a format on purpose, regenerate the fixture it affects and run `pnpm validate:jats`.
+- **Property tests**: `properties.test.ts` feeds random drafts through every format and random text
+  to the importers, with [fast-check](https://fast-check.dev). A failure prints the seed and the
+  smallest input that fails: add that input as a fixed test next to the fix.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
