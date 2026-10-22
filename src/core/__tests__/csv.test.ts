@@ -77,6 +77,16 @@ describe("CSV import/export", () => {
     expect(parsed[0]?.name).toBe("Ann =HYPERLINK()");
   });
 
+  it("keeps a leading apostrophe behind leading whitespace", () => {
+    // Import trims a cell before it strips the formula guard, so export must decide on the trimmed value too.
+    const [author] = parseAuthorText("Jane Smith");
+    if (!author) throw new Error("expected author");
+    author.name = "\n'-Ann Lee";
+
+    const parsed = fromCsv(toCsv([author]));
+    expect(parsed[0]?.name).toBe("'-Ann Lee");
+  });
+
   it("reads a CSV that starts with a UTF-8 byte order mark", () => {
     // Downloads carry a BOM so Excel reads non-ASCII names as UTF-8.
     const [author] = parseAuthorText("José García");

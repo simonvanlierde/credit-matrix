@@ -3,6 +3,7 @@
 import type { Author } from "../author";
 import { activeContributions, isAllBinary, normalizeOrcid, scoreToLevel } from "../author";
 import { getRoleByName } from "../credit-roles";
+import { cleanNamePart } from "../parse-authors";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 
@@ -50,10 +51,21 @@ function givenNamesOf(author: Author): string {
   const { surname } = author;
   // A mononym or an ORCID placeholder: the whole name, so it re-imports as is.
   if (!surname) return name;
-  if (name.endsWith(surname)) return name.slice(0, -surname.length).trim();
+  // Match whole words, as the parser cleaned them: "King Jr." ends in the surname "Jr",
+  // and "Anna" does not end in the surname "na".
+  const isSurname = (text: string) => text === surname || wordsOf(text) === wordsOf(surname);
+  const words = name.split(/\s+/);
+  for (let i = words.length - 1; i > 0; i -= 1) {
+    if (isSurname(words.slice(i).join(" "))) return words.slice(0, i).join(" ");
+  }
   // Inverted input ("Curie, Marie").
-  if (name.startsWith(`${surname},`)) return name.slice(surname.length + 1).trim();
+  const comma = name.indexOf(",");
+  if (comma > 0 && isSurname(name.slice(0, comma).trim())) return name.slice(comma + 1).trim();
   return author.middleName ? `${author.firstName} ${author.middleName}` : author.firstName;
+}
+
+function wordsOf(text: string): string {
+  return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
 }
 
 function authorToXml(author: Author, sharedFirst: boolean, withLevels: boolean): string {
