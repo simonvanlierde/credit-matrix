@@ -7,17 +7,25 @@ test.describe("CRediT census page", () => {
     await asReturningVisitor(page);
   });
 
-  test("is linked from About and shows the counts with their provenance", async ({ page }) => {
+  test("is linked from the header and About, and shows the counts with their provenance", async ({ page }) => {
     await page.goto("/");
+    // The header link shows from xl; the default 1280 px viewport is xl.
+    await expect(page.getByRole("banner").getByRole("link", { name: "CRediT census" })).toHaveAttribute(
+      "href",
+      "/census",
+    );
     await page.getByRole("button", { name: "About this app" }).click();
-    await page.getByRole("link", { name: /CRediT census/ }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("link", { name: /CRediT census/ })
+      .click();
     await expect(page).toHaveURL(/\/census\/?$/);
 
     await expect(page.getByRole("heading", { name: "CRediT census", exact: true })).toBeVisible();
     await expect(page.getByText("Preliminary figures")).toBeVisible();
     // Two decimals, as the Published practice tab prints it.
     const f1 = (data.paired?.f1 ?? Number.NaN).toFixed(2);
-    await expect(page.getByText(`F1 score of ${f1},`)).toBeVisible();
+    await expect(page.getByText(`F1 score of ${f1} `)).toBeVisible();
     await expect(page.getByText(data.snapshot, { exact: true })).toBeVisible();
     await expect(page.getByText(data.dataset_version, { exact: true })).toBeVisible();
     await expect(page.getByText(data.openalex_sources ?? "", { exact: true })).toBeVisible();
