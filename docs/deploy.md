@@ -3,10 +3,10 @@
 ## Self-hosting
 
 `pnpm build` builds the `credit-matrix` package, runs `next build`, then
-[`scripts/postbuild.mjs`](../scripts/postbuild.mjs), which replaces `'unsafe-inline'` in the CSP
-with the hashes of the exported inline scripts and names the service worker's cache after the
+[`scripts/postbuild.mjs`](../scripts/postbuild.mjs), which gives each exported page a `<meta>` CSP
+listing the hashes of that page's inline scripts and names the service worker's cache after the
 build. The result is a static export in `out/` that any static host can serve. The response
-headers, including the CSP, are in [`public/_headers`](../public/_headers).
+headers, including the rest of the CSP, are in [`public/_headers`](../public/_headers).
 
 To host it on Cloudflare yourself, set your own domain in [`wrangler.jsonc`](../wrangler.jsonc):
 
