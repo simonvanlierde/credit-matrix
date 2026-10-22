@@ -29,13 +29,13 @@ function useWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] 
 }
 
 /** Tick values from 0 to at least `max`, on a step of 1, 2 or 5 times a power of ten. */
-function ticks(max: number, count: number): number[] {
+export function ticks(max: number, count: number): number[] {
   const raw = max / count;
   const power = 10 ** Math.floor(Math.log10(raw));
   const step = ([1, 2, 5, 10].find((m) => m * power >= raw) ?? 10) * power;
-  const out: number[] = [];
-  for (let v = 0; v < max + step / 2; v += step) out.push(Number(v.toPrecision(6)));
-  return out;
+  // Round the top tick up, never to the nearest: the scale's top is the last tick.
+  const steps = Math.ceil(max / step - 1e-9);
+  return Array.from({ length: steps + 1 }, (_, i) => Number((i * step).toPrecision(6)));
 }
 
 export function LineChart({

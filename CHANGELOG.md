@@ -15,7 +15,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   only: nothing here fills in or comments on your grid. The roles were read from the papers
   automatically and have not been checked by hand yet, and the tab says so, with the article count
   for the field. Fields with fewer than 1,000 articles are not listed.
-- A CRediT census page (`/census`, linked from About) shows how published papers use CRediT,
+- A CRediT census page (`/census`, linked from the header on wide screens and from About) shows how published papers use CRediT,
   from 8.2 million open-access articles in Europe PMC: the share of research articles with roles
   per year, by markup style, field and publisher, and which roles first, middle and last authors
   hold. The figures are preliminary: the parser that reads the roles is not yet validated against
