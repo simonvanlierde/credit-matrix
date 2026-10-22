@@ -378,9 +378,14 @@ all 1,297,428 free-text articles in 65 parts. Over all of them the two readers a
 
 #### In the browser
 
+The browser model is Ettin-68M, fine-tuned the same way as ModernBERT-base. It scores the same at
+under half the download:
+
 ```sh
 uv sync --group train --group browser
-uv run census model browser --name modernbert-120k
+uv run census model train --name ettin-68m-120k --model jhu-clsp/ettin-encoder-68m \
+  --revision ac19ae4bc51093b31c475665ac872a936d056cc2
+uv run census model browser --name ettin-68m-120k
 ```
 
 `browser` exports the run's best checkpoint to ONNX in `data/model/<snapshot>/browser/<name>/onnx/`,
@@ -391,12 +396,16 @@ scores each on 2,000 held-out articles on CPU (`--sample`, `--threads`, 16 by de
 
 | | size | F1 | exact | same pairs as fp32 | seconds for 2,000 articles |
 | --- | --- | --- | --- | --- | --- |
-| fp32 | 601 MB | 0.903 | 0.542 | 100% | 1,121 |
-| int8 | 152 MB | 0.903 | 0.541 | 92.2% | 641 |
-| q4 | 228 MB | 0.903 | 0.541 | 92.9% | 1,434 |
+| Ettin-68M fp32 | 275 MB | 0.903 | 0.542 | 100% | 648 |
+| Ettin-68M int8 | 70 MB | 0.903 | 0.538 | 92.9% | 595 |
+| Ettin-68M q4 | 132 MB | 0.903 | 0.545 | 94.2% | 744 |
+| ModernBERT-base int8 | 152 MB | 0.903 | 0.541 | 92.2% | 641 |
 
-Both copies keep the full model's F1. int8 is the smallest, and the fastest on CPU; q4 is slower
-than fp32 there.
+Every copy keeps the full model's F1, so int8 Ettin-68M, the smallest, is the one to ship. q4 is
+larger than int8 and slower on CPU. Over three training seeds each, Ettin-68M and ModernBERT-base
+score the same on held-out (F1 0.899 to 0.900), and their label-set ranges overlap. Ettin-32M
+scored lower on the label set in its one run. Learning rates from 3e-5 to 1.5e-4, one epoch
+instead of two and four times the training articles all stayed inside the spread between seeds.
 
 ## Limits
 
