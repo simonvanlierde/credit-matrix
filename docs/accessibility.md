@@ -1,61 +1,133 @@
+<!--
+Keep this statement true. Every claim must be checkable in this repository: the tests in e2e/,
+the lint rules in biome.json, the styles in src/app/globals.css. When a known problem is fixed,
+move its bullet from "Known problems" to "How we check" in the same pull request as the fix.
+The site renders this file at /accessibility, so write plain Markdown with absolute links.
+e2e/accessibility-statement.spec.ts checks the headings, the status, the contact and the
+"Last reviewed" date.
+-->
+
 # Accessibility statement
 
-CRediT Matrix ([credit.duinlab.nl](https://credit.duinlab.nl)) aims to meet
-[WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA, and through it the web requirements of
+This statement covers CRediT Matrix at [credit.duinlab.nl](https://credit.duinlab.nl), with its
+CRediT census page and co-author reply page, and the `<credit-matrix>` web element in the
+[credit-matrix npm package](https://www.npmjs.com/package/credit-matrix). Simon van Lierde builds
+and maintains it, and is responsible for this statement.
+
+## Using CRediT Matrix
+
+You should be able to:
+
+- draft a statement with the keyboard alone: move through the contributor list, reorder a
+  contributor without dragging, move through the contribution grid with the arrow keys, and switch
+  the inspector tabs;
+- use it on a phone-sized screen, where the grid becomes a list of roles for each contributor;
+- tell contribution levels apart without color: Lead, Equal and Supporting each have their own mark
+  of three, two or one dots;
+- use a dark theme, which follows your system setting until you pick one;
+- stop the animations with your system's reduced-motion setting.
+
+## How accessible CRediT Matrix is
+
+CRediT Matrix aims to meet [WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA, and through it the
+web requirements of
 [EN 301 549 v4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf).
-It has not been audited, so this is a goal, not a claim that it conforms.
 
-**Conformance status: not evaluated.** Nobody has checked the app or the web element against every
-WCAG 2.2 criterion. What has been done is described below. Date of this assessment: 13 October 2026.
+Its conformance is **not assessed**. Nobody has checked the app or the web element against every
+WCAG 2.2 criterion, and there has been no external audit. This is a self-assessment by the
+developer. What is checked, and how, is under [How we check](#how-we-check).
 
-## How it is checked
+## Known problems
+
+- **Downloaded heatmap images do not say who did what.** A screen reader reads the SVG's title,
+  "Contribution heatmap", and nothing more; a PNG has no text at all. An image file has no place
+  for alt text that every editor reads. When you put the heatmap in a paper or slide, add alt text
+  there, or put the contribution statement next to it. No fix planned. [1.1.1 Non-text Content]
+- **The interface wording may be unclear in eight of the nine languages.** The German, Spanish,
+  French, Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
+  translated by machine, and no native speaker has reviewed it yet. If a label is unclear, switch
+  the language menu to English. The CRediT role names themselves come from the reviewed
+  [credit-translation](https://github.com/contributorshipcollaboration/credit-translation) project.
+  No fix date: it waits on volunteer reviewers.
+- **This statement is in English only.** Its exact wording matters, so it is not machine-translated.
+  Your browser's translate feature gives a rough version. No fix planned.
+
+### Content we don't control
+
+- **ORCID sign-in.** Signing a co-author answer with ORCID opens orcid.org, which ORCID runs, so
+  its accessibility is up to ORCID. An answer can be sent without signing in.
+
+## Tell us about a problem
+
+If something in the app or the web element is hard or impossible for you to use, email
+[credit@duinlab.nl](mailto:credit@duinlab.nl). You can also
+[open an issue on GitHub](https://github.com/simonvanlierde/credit-matrix/issues/new), but you do not
+need a GitHub account to report a problem.
+
+Say what you were trying to do, what happened, and which browser and assistive technology you use,
+if any. You will get a reply within 10 working days. If you need this statement, a contribution
+statement or an export in another format, ask, and we will send it.
+
+## How we check
 
 - **Automated scan.** The end-to-end tests run [axe-core](https://github.com/dequelabs/axe-core)
-  over the main screens with the WCAG 2.0, 2.1 and 2.2 level A and AA rules (`wcag2a`, `wcag2aa`,
-  `wcag21a`, `wcag21aa`, `wcag22a`, `wcag22aa`). The screens include the welcome dialog, the empty
-  and filled workspace, a phone-sized screen, the import dialog, an error state, an open popover
-  and dark mode, and the web element on a light page, a dark page and a 320px-wide screen. See
-  [`e2e/a11y.spec.ts`](../e2e/a11y.spec.ts).
+  with the WCAG 2.0, 2.1 and 2.2 level A and AA rules (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`,
+  `wcag22a`, `wcag22aa`). They scan the welcome dialog, the empty and filled workspace, a phone-sized
+  screen, the import dialog, an error state, an open popover, the published practice tab, dark
+  mode, the about page and this statement, and the web element on a light page, a dark page and a
+  320 px wide screen. See
+  [e2e/a11y.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/a11y.spec.ts).
 - **Keyboard tests.** The same tests use the keyboard alone to move through the contributor list,
-  reorder a contributor without dragging, switch the inspector tabs, move through the grid with
-  the arrow keys and use the segmented controls. They also check that focus stays in place after a
-  contributor is removed, and that small icon buttons are big enough to hit.
+  reorder a contributor without dragging, switch the inspector tabs, move through the grid with the
+  arrow keys, open a role's description from its name, and use the segmented controls. They also
+  check that focus stays in place after a contributor is removed, and that small icon buttons are
+  at least 24 by 24 px.
 - **Lint.** [Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) check
-  every change for things like missing alt text, invalid ARIA and click handlers without a
-  keyboard equivalent.
+  every change for things like missing alt text, invalid ARIA and click handlers without a keyboard
+  equivalent.
+- **This statement.**
+  [e2e/accessibility-statement.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/accessibility-statement.spec.ts)
+  fails when this page loses a section, claims a status it has not earned, loses its email contact,
+  or goes more than 400 days without a review.
 
-All of this runs on every pull request. Automated tools find only part of the problems a person
-can run into, so a passing run does not mean there are none.
+All of this runs on every pull request and every push to main. Automated tools find only part of
+the problems a person can run into, so a passing run does not mean there are none.
 
-## Known limitations
+Not checked yet: nobody who relies on a screen reader, switch access or voice control has tested
+the app. Screen-reader support is built in (labels, landmarks, live announcements), but only the
+automated tools above check it.
 
-- **No testing with assistive-technology users yet.** Nobody who relies on a screen reader,
-  switch access or voice control has tested the app. Screen-reader support is built in (labels,
-  landmarks, live announcements), but only checked by the automated tools above.
-- **One browser engine in the tests.** The automated tests run in Chromium only. Firefox and
-  Safari are not tested automatically.
-- **Machine-made translations.** Beside English, the interface is available in eight languages
-  (German, Spanish, French, Italian, Japanese, Dutch, European Portuguese and Simplified Chinese).
-  These translations were made by machine and have not been reviewed by native speakers, so some
-  wording may be unclear. The CRediT role names themselves come from the reviewed
-  [credit-translation](https://github.com/contributorshipcollaboration/credit-translation) project.
-- **This statement is in English only.**
-- **Heatmap images.** The downloaded SVG has a title, "Contribution heatmap", that screen readers
-  read. The title only names the image: it does not say who did what. A PNG has no title at all. When
-  you put the heatmap in a paper or slide, add alt text there, or put the statement next to it.
+### Heatmap text alternatives
 
-## Web element
+In the app, screen readers skip the heatmap drawing, and the contribution statement beside it says
+the same in words. The downloaded SVG has the title "Contribution heatmap"; Known problems says what
+that leaves out.
 
-The [`<credit-matrix>` element](element.md) is covered by the same automated scan. It draws a light
-card with dark text, so its text keeps enough contrast on a dark page. Screen readers skip the
-heatmap drawing and read a table instead: a row per role, a column per contributor, and the level
-(Lead, Equal, Supporting or None) in each cell. The element marks the language of its statement,
-heatmap and table, so screen readers pronounce it right. Its loading and error messages are in
-English, and marked as English.
+### The web element
 
-## Report a problem
+The [`<credit-matrix>` element](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/element.md)
+draws a light card with dark text, so its text keeps enough contrast on a dark page. Screen readers
+skip the heatmap drawing and read a table instead: a row per role, a column per contributor, and the
+level (Lead, Equal, Supporting or None) in each cell. The element marks the language of its
+statement, heatmap and table, so screen readers pronounce it right. Its loading and error messages
+are in English, and marked as English.
 
-If something in the app or the web element is hard or impossible for you to use, please
-[open an issue on GitHub](https://github.com/simonvanlierde/credit-matrix/issues/new). Say what you
-were trying to do, what happened, and which browser and assistive technology you use, if any.
-GitHub is the only contact channel for now.
+## Tested with
+
+- Chromium, in Playwright's desktop Chrome profile, with axe-core, on every pull request.
+
+Firefox and Safari are not tested, automatically or by hand, and no screen reader has been tried.
+CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
+
+## About this statement
+
+Prepared: 13 October 2026
+
+Last reviewed: 22 October 2026
+
+Next review: by 22 October 2027, or at the next major release if that comes first.
+
+Method: self-assessment by the developer, with the checks under [How we check](#how-we-check). No
+external audit.
+
+CRediT Matrix is not run by a public body, so no accessibility law requires this statement.

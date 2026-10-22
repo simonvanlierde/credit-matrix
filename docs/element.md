@@ -64,7 +64,7 @@ Inside a shadow root, so the page's styles neither leak in nor out, on its own l
 - the heatmap, drawn at its full size. On a narrow page it scrolls sideways instead of shrinking
   its labels;
 - a table of each contributor's level in each role, for screen readers (see the
-  [accessibility statement](accessibility.md#web-element));
+  [accessibility statement](accessibility.md#the-web-element));
 - the statement as plain text, one paragraph per line (the `CRediT:` line, then any
   acknowledgements and notes).
 
