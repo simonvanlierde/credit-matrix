@@ -258,7 +258,10 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           MESSAGE: PR ${{ github.event.pull_request.number }} at ${{ github.event.pull_request.head.sha }}
+        # pipefail: the default shell takes the pipe's status from tee, so a
+        # refused upload would otherwise pass.
         run: |
+          set -o pipefail
           pnpm exec wrangler versions upload --message "$MESSAGE" | tee upload.log
           {
             echo "### Preview"
