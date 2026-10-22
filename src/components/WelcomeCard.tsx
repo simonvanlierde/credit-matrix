@@ -68,7 +68,11 @@ export function WelcomeCard({ version }: { version: string }) {
     // hydration (the router strips it later), and `welcomeSeen` stays false
     // so a later plain visit still gets greeted.
     const arrivedOnShareLink = window.location.hash.startsWith("#s=");
-    if (!(state.welcomeSeen || arrivedOnShareLink || state.claim)) state.openWelcome();
+    // "How it works" on the other pages links here with this hash. Dropped
+    // once read, so a reload after closing the card does not open it again.
+    const askedFor = window.location.hash === "#getting-started";
+    if (askedFor) window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    if (askedFor || !(state.welcomeSeen || arrivedOnShareLink || state.claim)) state.openWelcome();
   }, [hydrated]);
 
   // Drive the native dialog from the store flag, so the header's "How it works"
