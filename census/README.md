@@ -372,9 +372,11 @@ try a run.
 
 `compare` prints three tables and writes them to `predictions/encoder-<name>-corpus-comparison.json`:
 research articles with roles per year, the share of authors holding each role by byline position,
-and per publisher how far the rule parser and the encoder agree. On `oa-2026-10` the encoder read
-all 1,297,428 free-text articles in 65 parts. Over all of them the two readers agree at pair F1
-0.885, and give exactly the same pairs for 54.9% of articles; on MDPI (485,263 articles) at 0.947.
+and per publisher how far the rule parser and the encoder agree. On `oa-2026-10` Ettin-68M read
+all 1,297,504 free-text articles in 65 parts, in 81 minutes on one RTX 4090. Over all of them the
+two readers agree at pair F1 0.881, and give exactly the same pairs for 54.4% of articles; on MDPI
+(485,266 articles) at 0.946. ModernBERT-base against the previous parser version agreed at 0.885,
+54.9% and 0.947.
 
 #### In the browser
 
