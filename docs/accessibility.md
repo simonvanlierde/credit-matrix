@@ -39,17 +39,16 @@ developer. What is checked, and how, is under [How we check](#how-we-check).
 
 ## Known problems
 
-- **Downloaded heatmap images do not say who did what.** A screen reader reads the SVG's title,
-  "Contribution heatmap", and nothing more; a PNG has no text at all. An image file has no place
+- **Downloaded heatmap images don't say who did what.** A screen reader reads the SVG's title,
+  "Contribution heatmap", and nothing more. A PNG has no text at all. An image file has no place
   for alt text that every editor reads. When you put the heatmap in a paper or slide, add alt text
   there, or put the contribution statement next to it. No fix planned. [1.1.1 Non-text Content]
-- **The interface wording may be unclear in eight of the nine languages.** The German, Spanish,
-  French, Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
-  translated by machine, and no native speaker has reviewed it yet. If a label is unclear, switch
-  the language menu to English. The CRediT role names themselves come from the reviewed
+- **No native speaker has checked eight of the nine languages yet.** The German, Spanish, French,
+  Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
+  translated by machine. If a label is unclear, switch the language menu to English. The CRediT role names themselves come from the reviewed
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation) project.
   No fix date: it waits on volunteer reviewers.
-- **This statement is in English only.** Its exact wording matters, so it is not machine-translated.
+- **This statement is in English only.** Its exact wording matters, so we don't machine-translate it.
   Your browser's translate feature gives a rough version. No fix planned.
 
 ### Content we don't control
@@ -61,12 +60,12 @@ developer. What is checked, and how, is under [How we check](#how-we-check).
 
 If something in the app or the web element is hard or impossible for you to use, email
 [credit@duinlab.nl](mailto:credit@duinlab.nl). You can also
-[open an issue on GitHub](https://github.com/simonvanlierde/credit-matrix/issues/new), but you do not
+[open an issue on GitHub](https://github.com/simonvanlierde/credit-matrix/issues/new), but you don't
 need a GitHub account to report a problem.
 
 Say what you were trying to do, what happened, and which browser and assistive technology you use,
 if any. You will get a reply within 10 working days. If you need this statement, a contribution
-statement or an export in another format, ask, and we will send it.
+statement or an export in another format, email us and we'll send it.
 
 ## How we check
 
@@ -100,8 +99,8 @@ automated tools above check it.
 ### Heatmap text alternatives
 
 In the app, screen readers skip the heatmap drawing, and the contribution statement beside it says
-the same in words. The downloaded SVG has the title "Contribution heatmap"; Known problems says what
-that leaves out.
+the same in words. The downloaded SVG has the title "Contribution heatmap"; The first known problem says
+what that leaves out.
 
 ### The web element
 
@@ -116,7 +115,7 @@ are in English, and marked as English.
 
 - Chromium, in Playwright's desktop Chrome profile, with axe-core, on every pull request.
 
-Firefox and Safari are not tested, automatically or by hand, and no screen reader has been tried.
+We haven't tested Firefox or Safari, automatically or by hand, or tried a screen reader.
 CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 
 ## About this statement
@@ -129,5 +128,3 @@ Next review: by 22 October 2027, or at the next major release if that comes firs
 
 Method: self-assessment by the developer, with the checks under [How we check](#how-we-check). No
 external audit.
-
-CRediT Matrix is not run by a public body, so no accessibility law requires this statement.

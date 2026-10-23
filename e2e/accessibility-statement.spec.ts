@@ -34,7 +34,8 @@ test.describe("Accessibility statement", () => {
     await expect(statement.getByRole("heading", { name: "Accessibility statement", exact: true })).toBeVisible();
     await expect(statement.getByRole("heading", { level: 3 })).toHaveText(SECTIONS);
 
-    await expect(statement.getByText(ALLOWED_STATUS).first()).toBeVisible();
+    // The status term must sit in the status sentence, not anywhere on the page.
+    await expect(statement.getByText(/^Its conformance is/)).toContainText(ALLOWED_STATUS);
     await expect(statement).not.toContainText(/fully conformant/i);
 
     // Email first: a GitHub account must never be the only way to report a barrier.
@@ -52,7 +53,10 @@ test.describe("Accessibility statement", () => {
       .textContent();
     const reviewed = new Date((line ?? "").replace(/^Last reviewed:\s*/, ""));
     expect(Number.isNaN(reviewed.getTime()), `unreadable date in "${line}"`).toBe(false);
-    expect((Date.now() - reviewed.getTime()) / DAY_MS).toBeLessThan(MAX_REVIEW_AGE_DAYS);
+    const ageDays = (Date.now() - reviewed.getTime()) / DAY_MS;
+    expect(ageDays).toBeLessThan(MAX_REVIEW_AGE_DAYS);
+    // -1, not 0, so a date entered in another time zone still counts as today.
+    expect(ageDays, `"${line}" is in the future`).toBeGreaterThan(-1);
   });
 
   test("the About panel links to it", async ({ page }) => {
