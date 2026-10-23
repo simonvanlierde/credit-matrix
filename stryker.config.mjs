@@ -10,8 +10,8 @@ export default {
   testRunner: "vitest",
   vitest: { configFile: "vitest.mutation.config.ts" },
   coverageAnalysis: "perTest",
-  // Stryker rewrites the tsconfig through the TypeScript JS API, which TypeScript 7 no longer has.
-  // No tsconfig reaches outside the sandbox, so I point it at a file that does not exist.
+  // Stryker skips its tsconfig rewrite when the file is missing; the rewrite needs the TypeScript JS API,
+  // which TypeScript 7 dropped. Remove once Stryker supports TS 7.
   tsconfigFile: "tsconfig.stryker-skip.json",
   mutate: [
     "src/core/export/**/*.ts",
