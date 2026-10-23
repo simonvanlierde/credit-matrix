@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronRight, HelpCircle } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { AboutPanel } from "@/components/AboutPanel";
@@ -23,7 +24,17 @@ export function BrandMenu({ version }: { version: string }) {
   const [open, setOpen] = useState(false);
   const openWelcome = useContributionStore((s) => s.openWelcome);
   const welcomeOpen = useContributionStore((s) => s.welcomeOpen);
+  const onMainPage = usePathname() === "/";
   const t = useTranslations();
+  const howItWorksClass =
+    "touch-target flex w-full items-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-low px-3 text-left font-semibold text-on-surface transition-colors hover:border-primary hover:bg-surface-container hover:text-primary";
+  const howItWorksLabel = (
+    <>
+      <HelpCircle className="size-4 shrink-0 text-primary" aria-hidden="true" />
+      {t("howItWorks")}
+      <ChevronRight className="ml-auto size-4 shrink-0 text-on-surface-variant" aria-hidden="true" />
+    </>
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -42,22 +53,28 @@ export function BrandMenu({ version }: { version: string }) {
       >
         {/* A framed row with a forward chevron: inside a panel, a bare line of
             text with an icon reads as a heading, not as the thing to tap. */}
-        <button
-          type="button"
-          aria-expanded={welcomeOpen}
-          aria-controls="getting-started"
-          onClick={() => {
-            // Close first: the welcome dialog is modal, and a popover left open
-            // behind it would sit in the inert layer with no way back to it.
-            setOpen(false);
-            openWelcome();
-          }}
-          className="touch-target flex w-full items-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-low px-3 text-left font-semibold text-on-surface transition-colors hover:border-primary hover:bg-surface-container hover:text-primary"
-        >
-          <HelpCircle className="size-4 shrink-0 text-primary" aria-hidden="true" />
-          {t("howItWorks")}
-          <ChevronRight className="ml-auto size-4 shrink-0 text-on-surface-variant" aria-hidden="true" />
-        </button>
+        {/* The welcome modal lives on the main page only; elsewhere this
+            links there and WelcomeCard opens it from the hash. */}
+        {onMainPage ? (
+          <button
+            type="button"
+            aria-expanded={welcomeOpen}
+            aria-controls="getting-started"
+            onClick={() => {
+              // Close first: the welcome dialog is modal, and a popover left open
+              // behind it would sit in the inert layer with no way back to it.
+              setOpen(false);
+              openWelcome();
+            }}
+            className={howItWorksClass}
+          >
+            {howItWorksLabel}
+          </button>
+        ) : (
+          <a href="/#getting-started" className={howItWorksClass}>
+            {howItWorksLabel}
+          </a>
+        )}
         <div className="space-y-3 border-t border-outline-variant/30 pt-3">
           <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t("about")}</p>
           <AboutPanel version={version} />

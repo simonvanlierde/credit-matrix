@@ -39,6 +39,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   on a statement longer than `MAX_STATEMENT_LENGTH` (50,000 characters).
 - In the `credit-matrix` package, replies can carry `provenance.orcid` (the new `OrcidProof` type)
   and `provenance.replacedOrcid`; run `recheckSignIns` on imported asks.
+- An About page (`/about`) says what the app is, how to cite it by its concept DOI, whom it
+  thanks, and, in its own Privacy section, what it sends where. The About panel is now a short card
+  that links to it.
+- The accessibility statement is now on the site, at `/accessibility`, rebuilt as a reader-first
+  page: what you should be able to do, its status (not assessed against WCAG 2.2 AA), known problems
+  each with a workaround, an email contact with a 10-working-day reply time, how we check, what it
+  was tested with, and when it was last reviewed. `docs/accessibility.md` stays the one source; the
+  build turns it into static HTML.
 
 ### Changed
 
