@@ -193,7 +193,8 @@ takes the style from the database, not the CSV.
 
 The paired scores cover only publishers with 1,000 or more tagged articles that also print a
 statement (MDPI, Frontiers, OUP, SAGE, The Royal Society, AAAS and Pensoft). `census label --set`
-(seed 20261013) writes the hand-label set for the rest:
+(seed 20261013) writes the hand-label set for the rest. `--sizes 700 150 150` draws a larger set
+with that many `statement_text`, `contrib_text` and `none` rows; the default is 100, 30 and 30:
 
 - `data/labels/oa-2026-10-set.csv`, 160 articles for the labeller: `pmcid`, `overlap`, `authors`,
   `text` and `gold`, shuffled, blind like the `label` sample. Each article's stratum and weight are
