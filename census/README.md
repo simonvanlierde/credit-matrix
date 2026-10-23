@@ -382,7 +382,7 @@ two readers agree at pair F1 0.881, and give exactly the same pairs for 54.4% of
 #### In the browser
 
 The browser model is Ettin-68M, fine-tuned the same way as ModernBERT-base. It scores the same at
-under half the download:
+under half the download. Its model card is [`MODEL_CARD.md`](MODEL_CARD.md).
 
 ```sh
 uv sync --group train --group browser
