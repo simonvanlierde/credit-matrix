@@ -344,12 +344,13 @@ uv run census model hybrid data/model/oa-2026-10/predictions/encoder-modernbert-
 It writes `hybrid-<run>-<set>.jsonl` beside the input. On the held-out set it scores F1 0.898 and
 exact 0.538, a little under the encoder alone, because tagged articles with statements the rules
 read nothing from now predict nothing. The label set is where it pays off. On its 160 articles
-(labelled by a model, not yet checked by hand), counting a statement that names no CRediT roles as
-giving none, F1 by style is:
+(labelled by two language-model runs, with a third settling disagreements, and a person checking
+20 rows; scored on `oa-2026-10-set-opus-adj-defb.csv`), counting a statement that names no CRediT
+roles as giving none, F1 by style is:
 
 | | statement_text | contrib_text | articles without roles, exact |
 | --- | --- | --- | --- |
-| rule parser | 0.922 | 0.997 | 0.868 |
+| rule parser | 0.932 | 0.997 | 0.868 |
 | encoder | **0.949** | 0.885 | 0.000 |
 | hybrid | **0.949** | **0.997** | **0.868** |
 
@@ -408,7 +409,7 @@ Every copy keeps the full model's F1, so int8 Ettin-68M, the smallest, is the on
 larger than int8 and slower on CPU. Over three training seeds each, Ettin-68M and ModernBERT-base
 score the same on held-out (F1 0.899 to 0.900), and their label-set ranges overlap. Ettin-32M
 scored lower on the label set in its one run. Learning rates from 3e-5 to 1.5e-4, one epoch
-instead of two and four times the training articles all stayed inside the spread between seeds.
+instead of two and four times the training articles all stayed within 0.002 of the spread between seeds.
 
 ## Limits
 
