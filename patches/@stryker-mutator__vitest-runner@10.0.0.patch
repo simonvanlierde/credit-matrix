@@ -1,0 +1,46 @@
+diff --git a/dist/src/stryker-setup.js b/dist/src/stryker-setup.js
+index aecfacbe47b285c272c47e54b3d66a716adfdc41..bbb824c27ced801655581014b11744276df50897 100644
+--- a/dist/src/stryker-setup.js
++++ b/dist/src/stryker-setup.js
+@@ -63,7 +63,7 @@ function collectTestName({ name, suite, }) {
+         nameParts.unshift(currentSuite.name);
+         currentSuite = currentSuite.suite;
+     }
+-    return nameParts.join(' ').trim();
++    return nameParts.join(' > ').trim();
+ }
+ function toRawTestId(test) {
+     return `${test.file?.filepath ?? 'unknown.js'}#${collectTestName(test)}`;
+diff --git a/dist/src/test-helpers.js b/dist/src/test-helpers.js
+index 56cc786f30c524ae18ce87eef1a67fdf26b703c5..2cd9786a153a6b3090b84e30e02750d1c20b5a0b 100644
+--- a/dist/src/test-helpers.js
++++ b/dist/src/test-helpers.js
+@@ -8,7 +8,7 @@ export function collectTestName({ name, suite, }) {
+         nameParts.unshift(currentSuite.name);
+         currentSuite = currentSuite.suite;
+     }
+-    return nameParts.join(' ').trim();
++    return nameParts.join(' > ').trim();
+ }
+ export function toRawTestId(test) {
+     return `${test.file?.filepath ?? 'unknown.js'}#${collectTestName(test)}`;
+diff --git a/dist/src/vitest-test-runner.js b/dist/src/vitest-test-runner.js
+index 84f1ca026503b8e92b7adc952ec6c6a401943656..ac399913c1d9beae3ff69327d1c7966f47c24306 100644
+--- a/dist/src/vitest-test-runner.js
++++ b/dist/src/vitest-test-runner.js
+@@ -177,6 +177,15 @@ export class VitestTestRunner {
+             failure ||= testResult.status === TestStatus.Failed;
+             return testResult;
+         });
++        // A test file that fails to load has no test results, only an error on the file.
++        const fileErrors = this.ctx.state.getFiles()
++            .flatMap((file) => (file.result?.state === 'fail' ? (file.result.errors ?? []) : []));
++        if (!failure && fileErrors.length > 0) {
++            return {
++                status: DryRunStatus.Error,
++                errorMessage: `A test file failed to load: ${fileErrors.map((error) => String(error.stack ?? error.message)).join('\n')}`,
++            };
++        }
+         if (!failure && this.ctx.state.errorsSet.size > 0) {
+             const errorText = [...this.ctx.state.errorsSet]
+                 .map(errorToString)

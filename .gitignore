@@ -34,3 +34,7 @@ next-env.d.ts
 
 # Copied in by the credit-matrix package build
 src/core/LICENSE
+
+# StrykerJS sandboxes and reports (pnpm mutation)
+/.stryker-tmp
+/reports
