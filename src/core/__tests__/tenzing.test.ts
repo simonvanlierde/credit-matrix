@@ -2,7 +2,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { Author } from "../author";
-import { fromTenzing, isTenzing } from "../export/tenzing";
+import { CREDIT_ROLES } from "../credit-roles";
+import { fromTenzing, isTenzing, toTenzing } from "../export/tenzing";
+import { detectFormat } from "../import";
+import { createAuthor } from "../parse-authors";
 
 function fixture(name: string): string {
   return readFileSync(`src/core/__tests__/fixtures/${name}`, "utf8");
@@ -132,5 +135,87 @@ describe("isTenzing", () => {
     expect(isTenzing("Anne Namer, Bob Smith")).toBe(false);
     expect(isTenzing("Firstname,Surname")).toBe(false);
     expect(isTenzing("")).toBe(false);
+  });
+});
+
+describe("toTenzing", () => {
+  const scored = (done: string[], score = 100) =>
+    CREDIT_ROLES.map((role) => ({ role: role.name, score: done.includes(role.name) ? score : 0 }));
+
+  const draft = [
+    createAuthor("Ana María José-García", {
+      firstName: "Ana",
+      middleName: "María",
+      surname: "José-García",
+      orcid: "0000-0002-1825-0097",
+      corresponding: true,
+      contributions: scored(["Conceptualization", "Writing – original draft", "Writing – review & editing"]),
+    }),
+    createAuthor("Kim Nam-joon", { contributorType: "non-author", contributions: scored(["Investigation"], 33) }),
+    createAuthor("Martin Luther King Jr.", { contributions: scored(["Software", "Data curation"], 66) }),
+    createAuthor("Gerard 't Hooft", { contributions: scored(CREDIT_ROLES.map((role) => role.name)) }),
+    createAuthor("María José García López", { corresponding: true, contributions: scored(["Resources"]) }),
+    createAuthor("Plato", { contributions: scored(["Validation", "Visualization"]) }),
+    createAuthor("Jane A. Smith", { contributorType: "non-author" }),
+    createAuthor("Seán O'Brien", { contributions: scored(["Supervision", "Project administration"]) }),
+    // A spreadsheet runs a cell that starts with "=" or "@"; a comma or quote needs quoting.
+    createAuthor("=Cy Lee, Jr", { firstName: "=Cy", surname: "Lee, Jr", contributions: scored(["Methodology"]) }),
+    createAuthor('@Dee "DJ" Ray', { firstName: "@Dee", middleName: '"DJ"', surname: "Ray" }),
+  ];
+
+  it("writes the columns of tenzing's example CSV, in its order", () => {
+    const header = (text: string) => text.split(/\r?\n/)[0];
+    expect(header(toTenzing([]))).toBe(header(fixture("tenzing.csv")));
+  });
+
+  it("is read back as a tenzing sheet", () => {
+    const sheet = toTenzing(draft);
+    expect(isTenzing(sheet)).toBe(true);
+    expect(detectFormat(sheet)).toBe("tenzing");
+  });
+
+  it("keeps every contributor and every role through a round trip", () => {
+    const summary = (authors: Author[]) =>
+      authors
+        .map((author) => ({
+          name: author.name,
+          orcid: author.orcid,
+          contributorType: author.contributorType,
+          corresponding: author.corresponding,
+          // tenzing has no degree, so a role keeps whether it was done.
+          roles: author.contributions.filter((c) => c.score > 0).map((c) => c.role),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    expect(summary(fromTenzing(toTenzing(draft)))).toEqual(summary(draft));
+  });
+
+  it("numbers authors in draft order and puts acknowledgees after them", () => {
+    const names = fromTenzing(toTenzing(draft)).map((a) => a.name);
+    expect(names).toEqual([
+      "Ana María José-García",
+      "Martin Luther King Jr.",
+      "Gerard 't Hooft",
+      "María José García López",
+      "Plato",
+      "Seán O'Brien",
+      "=Cy Lee, Jr",
+      '@Dee "DJ" Ray',
+      "Kim Nam-joon",
+      "Jane A. Smith",
+    ]);
+  });
+
+  it("writes a role as TRUE whatever its level, and keeps every word of a name", () => {
+    const rows = toTenzing(draft).split("\n");
+    expect(rows[2]).toBe(
+      "Acknowledgee,NA,Kim,,Nam-joon,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,FALSE,",
+    );
+    expect(rows[3]?.startsWith("Author,2,Martin,Luther King,Jr.,FALSE,TRUE,")).toBe(true);
+  });
+
+  it("guards a cell a spreadsheet would run as a formula", () => {
+    const rows = toTenzing(draft).split("\n");
+    expect(rows[9]?.startsWith('Author,7,\'=Cy,,"Lee, Jr",')).toBe(true);
+    expect(rows[10]?.startsWith('Author,8,\'@Dee,"""DJ""",Ray,')).toBe(true);
   });
 });

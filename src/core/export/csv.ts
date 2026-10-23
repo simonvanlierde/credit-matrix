@@ -36,7 +36,7 @@ function readYesNo(value: string | undefined): boolean {
 /** Leading characters a spreadsheet may interpret as the start of a formula. */
 const FORMULA_PREFIX = /^[=+\-@\t\r]/;
 
-function escapeCsvValue(raw: string): string {
+export function escapeCsvValue(raw: string): string {
   // Import trims a cell before it reads the guard, so decide on the trimmed value.
   const value = raw.trim();
   // Prefix a single quote so Excel/Sheets treat formula-like cells as text.
@@ -50,7 +50,7 @@ function escapeCsvValue(raw: string): string {
 }
 
 /** Inverse of the formula guard added by `escapeCsvValue`. */
-function unescapeCsvValue(value: string): string {
+export function unescapeCsvValue(value: string): string {
   return value.startsWith("'") && (value[1] === "'" || FORMULA_PREFIX.test(value.slice(1))) ? value.slice(1) : value;
 }
 

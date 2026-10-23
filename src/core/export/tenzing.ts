@@ -2,7 +2,8 @@ import type { Author } from "../author";
 import { isValidOrcid } from "../author";
 import { CREDIT_ROLES, headerKey as key } from "../credit-roles";
 import { deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
-import { delimiterOf, headerCells, parseCsvRecords } from "./csv";
+import { delimiterOf, escapeCsvValue, headerCells, parseCsvRecords, unescapeCsvValue } from "./csv";
+import { givenNamesOf } from "./xml";
 
 /*
  * tenzing (github.com/marton-balazs-kovacs/tenzing) contributor spreadsheets,
@@ -12,6 +13,73 @@ import { delimiterOf, headerCells, parseCsvRecords } from "./csv";
  */
 
 const ROLE_KEYS = new Map(CREDIT_ROLES.map((role) => [key(role.name), role.name]));
+
+// The column order of tenzing's example CSV. tenzing spells the writing roles with a hyphen.
+const TENZING_HEADERS = [
+  "Author/Acknowledgee",
+  "Order in publication",
+  "Firstname",
+  "Middle name",
+  "Surname",
+  ...CREDIT_ROLES.map((role) => role.name.replace("–", "-")),
+  "Notes",
+  "Affiliation 1",
+  "Affiliation 2",
+  "Affiliation 3",
+  "Funding",
+  "ORCID iD",
+  "Email address",
+  "Corresponding author?",
+  "Declares",
+];
+
+function trueFalse(value: boolean): string {
+  return value ? "TRUE" : "FALSE";
+}
+
+/**
+ * Firstname, middle name and surname cells that join back into the display name.
+ * The parsed parts drop punctuation and every word past the second, so
+ * "Martin Luther King Jr." would come back as "Martin Luther Jr".
+ */
+function nameCells(author: Author): string[] {
+  const name = author.name.trim();
+  const given = givenNamesOf(author);
+  // Inverted input ("Curie, Marie") has no surname after its given names.
+  const surname = name.startsWith(given) ? name.slice(given.length).trim() : author.surname;
+  const [first = "", ...middle] = given.split(/\s+/).filter(Boolean);
+  return [first, middle.join(" "), surname];
+}
+
+/**
+ * A draft as a tenzing contributor spreadsheet (CSV). tenzing records a role as
+ * done or not, so any score above 0 becomes TRUE, and it has no column for equal
+ * contribution. Authors are numbered in draft order; acknowledgees get NA, as in
+ * tenzing's example. Columns this app does not hold are left empty for the team.
+ */
+export function toTenzing(authors: Author[]): string {
+  const byline = authors.filter((author) => author.contributorType === "author");
+  const rows = authors.map((author) => {
+    const isAuthor = author.contributorType === "author";
+    const done = new Set(author.contributions.filter((c) => c.score > 0).map((c) => c.role));
+    return [
+      isAuthor ? "Author" : "Acknowledgee",
+      isAuthor ? String(byline.indexOf(author) + 1) : "NA",
+      ...nameCells(author),
+      ...CREDIT_ROLES.map((role) => trueFalse(done.has(role.name))),
+      "",
+      "",
+      "",
+      "",
+      "",
+      author.orcid ?? "",
+      "",
+      trueFalse(author.corresponding),
+      "",
+    ];
+  });
+  return [TENZING_HEADERS, ...rows].map((cells) => cells.map(escapeCsvValue).join(",")).join("\n");
+}
 
 /** True for a header row that looks like a tenzing contributor spreadsheet. */
 export function isTenzing(text: string): boolean {
@@ -32,7 +100,8 @@ export function fromTenzing(text: string): Author[] {
   for (const [index, header] of headerRow.entries()) {
     if (!column.has(key(header))) column.set(key(header), index);
   }
-  const cell = (row: string[], header: string) => row[column.get(header) ?? -1]?.trim() ?? "";
+  // Undo the formula guard toTenzing adds, as fromCsv does.
+  const cell = (row: string[], header: string) => unescapeCsvValue(row[column.get(header) ?? -1]?.trim() ?? "");
 
   const people = rows
     .map((row, index) => {

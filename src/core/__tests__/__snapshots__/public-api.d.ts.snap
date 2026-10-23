@@ -984,6 +984,13 @@ export declare function fromJson(json: string): {
 export declare function toMarkdown(authors: Author[], translateRole?: RoleTranslator, translateUi?: UiTranslator, locale?: string): string;
 //#endregion
 //#region export/tenzing.d.ts
+/**
+ * A draft as a tenzing contributor spreadsheet (CSV). tenzing records a role as
+ * done or not, so any score above 0 becomes TRUE, and it has no column for equal
+ * contribution. Authors are numbered in draft order; acknowledgees get NA, as in
+ * tenzing's example. Columns this app does not hold are left empty for the team.
+ */
+export declare function toTenzing(authors: Author[]): string;
 /** True for a header row that looks like a tenzing contributor spreadsheet. */
 export declare function isTenzing(text: string): boolean;
 export declare function fromTenzing(text: string): Author[];
