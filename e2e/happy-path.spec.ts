@@ -207,6 +207,8 @@ test.describe("Happy path UI flows", () => {
 
   test("explains a DOI that resolves to nothing, and keeps the dialog open", async ({ page }) => {
     await stubUpstream(page, "https://api.crossref.org/**", 404, {});
+    // Crossref's 404 falls through to DataCite, so stub it too or the test depends on the live API.
+    await stubUpstream(page, "https://api.datacite.org/**", 404, {});
     await page.goto("/");
 
     await page.getByRole("button", { name: "Import" }).click();
