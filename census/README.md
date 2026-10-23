@@ -379,7 +379,7 @@ all 1,297,428 free-text articles in 65 parts. Over all of them the two readers a
 #### In the browser
 
 The browser model is Ettin-68M, fine-tuned the same way as ModernBERT-base. It scores the same at
-under half the download:
+under half the download. Its model card is [`MODEL_CARD.md`](MODEL_CARD.md).
 
 ```sh
 uv sync --group train --group browser
