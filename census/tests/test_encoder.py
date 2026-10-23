@@ -169,6 +169,31 @@ def test_train_and_predict_write_a_run_and_scorable_predictions(tmp_path):
     assert all(p in {1, 2} for pairs in predicted.values() for p, _ in pairs)
 
 
+def test_train_on_open_licences_only(tmp_path):
+    tiny_model(tmp_path / "tiny")
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+    rows = [
+        {
+            "pmcid": f"PMC{i}",
+            "publisher": "P",
+            "style": "jats4r",
+            "publishable": i % 4 != 0,
+            "statement": f"{i} software",
+            "authors": ["Ann Smith"],
+            "gold": [[1, "software"]],
+        }
+        for i in range(40)
+    ]
+    (dataset / "train.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    config = encoder.Config(
+        model=str(tmp_path / "tiny"), train_articles=100, dev_every=4, epochs=1, device="cpu", open_licence_only=True
+    )
+    encoder.train(config, dataset, tmp_path / "run")
+    first = json.loads((tmp_path / "run" / "metrics.jsonl").read_text().splitlines()[0])
+    assert first["train_articles"] + first["dev_articles"] == 30
+
+
 def test_pair_rows_keep_articles_given_no_role():
     columns = encoder.pair_rows(["A", "B"], [{(2, "software"), (1, "validation")}, set()])
     assert columns == {
