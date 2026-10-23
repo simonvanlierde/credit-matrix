@@ -190,7 +190,7 @@ def cmd_label(args: argparse.Namespace) -> None:
             print(f"{labels.export(con, out, args.per_style, args.seed)} articles to label in {out}")
             return
         disagreements = out.with_stem(out.stem + "-disagreements")
-        n = labels.export_set(con, out, args.seed)
+        n = labels.export_set(con, out, args.seed, dict(zip(labels.SET_SIZES, args.sizes, strict=True)))
         m = labels.export_disagreements(con, disagreements, args.seed)
     print(f"{n} articles to label in {out} (strata in {labels.key_path(out)}), {m} to judge in {disagreements}")
 
@@ -467,6 +467,14 @@ def main(argv: list[str] | None = None) -> int:
         help="write the label set instead: publishers without paired articles, by publisher and style, an overlap"
         " for a second labeller, the strata and weights in a -key.csv beside it, and paired disagreements to judge"
         " (default: census/data/labels/<snapshot>-set.csv)",
+    )
+    cmd.add_argument(
+        "--sizes",
+        type=int,
+        nargs=3,
+        default=list(labels.SET_SIZES.values()),
+        metavar=("STATEMENT", "CONTRIB", "NONE"),
+        help="label set rows per style: statement_text, contrib_text and none (default: %(default)s)",
     )
     cmd.set_defaults(func=cmd_label)
     cmd = sub.add_parser("score", parents=[snap, db], help="score the parser against a labelled CSV")
