@@ -7,7 +7,7 @@ changes are in the [changelog](../CHANGELOG.md).
 ## Now
 
 - **Release 0.9.0.** It carries the breaking `DetectedFormat` change in the `credit-matrix`
-  package, statement import, ORCID sign-in for co-authors and the CRediT census page.
+  package, statement import, ORCID sign-in for co-authors, the Published practice tab and the CRediT census page.
 - **Validate the census parser.** Score the parser that reads roles from published papers against
   hand labels, so the census and the Published practice tab can drop their "preliminary" note.
 - **Stronger tests.** Run mutation testing on `src/core` to find code the tests run but do not

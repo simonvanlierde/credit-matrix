@@ -14,14 +14,14 @@ The planned work is in the [roadmap](docs/roadmap.md).
 
 ## Who has access
 
-- **Repository:** only the maintainer has write and admin access. All other changes come in
-  through pull requests.
+- **Repository:** only the maintainer has write and admin access; the Renovate app also
+  merges dependency updates. Other contributors send changes as pull requests.
 - **npm package:** only the maintainer owns `credit-matrix` on npm. The release workflow publishes
   it from a `v*` tag through npm trusted publishing, with provenance, so no npm token is stored.
 - **Hosting:** only the maintainer has access to the Cloudflare account that serves
   <https://credit.duinlab.nl>. CI deploys `main` after every check passes.
 - **Bots:** Renovate opens dependency updates and merges minor and patch updates once every check
-  passes. It cannot merge majors.
+  passes. It does not merge majors (`renovate.json5`).
 
 ## If the maintainer is unavailable
 

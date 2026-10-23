@@ -25,7 +25,8 @@ pnpm preview                     # serve out/ with wrangler, under the productio
 ```
 
 To build only the npm package, run `pnpm --filter credit-matrix build`. `pnpm verify` builds the
-package and runs every check on it, so a clean `pnpm verify` means your build is sound.
+package and runs the checks the pre-push hook runs. CI adds the site build, the e2e suite and JATS
+validation.
 
 ## Before you open a PR
 

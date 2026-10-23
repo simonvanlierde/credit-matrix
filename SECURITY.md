@@ -17,15 +17,18 @@ single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
 - I publish each fixed vulnerability as a GitHub security advisory on this repository, with the
   affected and fixed versions, and request a CVE when the package is affected. The changelog
   lists the fix too.
-- Please keep the details private until the advisory is out, or until 90 days have passed,
-  whichever comes first.
+- Please keep the details private until the advisory is out, or until 90 days have passed or the
+  later date we agreed, whichever comes first.
 - I credit you by name in the advisory if you ask for it. Say how you want to be named.
 
 ## Security model
 
-- **No server holds your data.** The app is a static build. Drafts live in your browser's storage,
-  and share and reply links carry the draft in the URL fragment, which the browser does not send
-  to the server. There are no accounts and no passwords to steal.
+- **No server holds your data.** The app is a static build
+  ([ADR 0002](docs/adr/0002-no-accounts-or-server-side-storage.md)). Drafts live in your browser's
+  storage. Share and reply links carry the draft in the URL fragment, which browsers do not send
+  with page requests, and the app clears it from the address bar once it has read it. Until then,
+  scripts on the page can read it, including the hosted site's analytics beacon. There are no
+  accounts and no passwords to steal.
 - **Few outside calls.** Only the ORCID and DOI lookups, the fetch of ORCID's public keys and the
   hosted site's cookieless analytics beacon leave the browser. A lookup sends the ORCID iD or DOI
   you typed to ORCID, Crossref or DataCite. The Content Security Policy in
@@ -37,7 +40,7 @@ single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
   it only to the people who should see it. Drafts in browser storage are not encrypted.
 - **Untrusted input.** Names, imports, share links and pasted statements come from other people,
   so the app treats them as text and checks their shape before use. Property tests feed random
-  input to every importer.
+  input to the file and link importers.
 - **Supply chain.** Dependencies are pinned in `pnpm-lock.yaml`, and new releases wait before
   they are installed (see [CONTRIBUTING.md](CONTRIBUTING.md#dependencies)). CI pins actions by
   digest, attests the provenance of the deployed build, and publishes the npm package with
@@ -45,9 +48,7 @@ single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
 
 ## Scope
 
-CRediT Matrix is a static, client-side app. It has no accounts and no server that stores data
-(see [ADR 0002](docs/adr/0002-no-accounts-or-server-side-storage.md)). Drafts stay in your
-browser. In scope:
+In scope:
 
 - Script injection (XSS) through names, imports, share links, or exports.
 - Weaknesses in the Content Security Policy in [`public/_headers`](public/_headers).
