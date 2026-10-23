@@ -16,6 +16,17 @@ pnpm install        # also installs the lefthook git hooks
 pnpm dev            # → http://localhost:3000
 ```
 
+## Build from source
+
+```bash
+pnpm install --frozen-lockfile   # the exact versions in pnpm-lock.yaml
+pnpm build                       # the credit-matrix package in src/core/dist, then the static site in out/
+pnpm preview                     # serve out/ with wrangler, under the production headers
+```
+
+To build only the npm package, run `pnpm --filter credit-matrix build`. `pnpm verify` builds the
+package and runs every check on it, so a clean `pnpm verify` means your build is sound.
+
 ## Before you open a PR
 
 ```bash
@@ -50,6 +61,17 @@ expected output with `CENSUS_UPDATE_CORPUS=1 uv run pytest -q tests/test_corpus.
 `census/tests/test_benchmarks.py` times the parser on that corpus and on two JATS articles. A plain
 `pytest` runs each once; on every pull request [CodSpeed](https://codspeed.io) measures them and
 comments when one gets slower or faster than on main.
+
+## Dependencies
+
+I add a dependency only when it saves real work, is maintained, and has a license compatible with
+MIT. The browser bundle stays small, so prefer the platform or a few lines of code over a new
+package. `pnpm-lock.yaml` pins every version; commit it with any change to `package.json`. CI
+installs with `--frozen-lockfile`, so a stale lockfile fails. pnpm refuses releases younger than 3 days
+(`minimumReleaseAge` in `pnpm-workspace.yaml`). Renovate proposes updates once a month and waits 7
+days after a release before it does (`minimumReleaseAge` in `renovate.json5`), so a hijacked release
+has time to be pulled. It merges minor and patch updates once every check passes; majors wait for
+me. The census in `census/` follows the same rule through uv's `exclude-newer = "7 days"`.
 
 ## Testing
 
