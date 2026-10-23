@@ -35,7 +35,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   characters, and never leave the browser.
 - Export a draft as a tenzing contributor spreadsheet (Export data, then "tenzing CSV"), so a team
   can move between the two tools. It has the columns of tenzing's own example sheet. tenzing records a role as done or not, so any level
-  becomes TRUE, and it has no column for equal contribution. Acknowledgees are marked "Acknowledgment only", the value tenzing keeps, and come after the authors.
+  becomes TRUE, and it has no column for equal contribution. Acknowledgees are marked "Acknowledgment only", the value tenzing keeps, and are numbered after the authors, as tenzing needs. Only a corresponding author is marked as such.
   The `credit-matrix` package exports it as `toTenzing`.
 - The `credit-matrix` package exports `parseStatement`, `statementAuthor`, `namesCredit` and
   `MAX_STATEMENT_LENGTH`. `parseStatement` also returns `unmatched`: each unresolved name or

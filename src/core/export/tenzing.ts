@@ -2,7 +2,7 @@ import type { Author } from "../author";
 import { isValidOrcid } from "../author";
 import { CREDIT_ROLES, headerKey as key } from "../credit-roles";
 import { deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
-import { delimiterOf, escapeCsvValue, headerCells, parseCsvRecords, unescapeCsvValue } from "./csv";
+import { delimiterOf, escapeCsvFormulaOnly, headerCells, parseCsvRecords, unescapeCsvValue } from "./csv";
 import { givenNamesOf } from "./xml";
 
 /*
@@ -55,16 +55,22 @@ function nameCells(author: Author): string[] {
  * A draft as a tenzing contributor spreadsheet (CSV). tenzing records a role as
  * done or not, so any score above 0 becomes TRUE, and it has no column for equal
  * contribution. Authors are numbered in draft order; acknowledgees are marked
- * "Acknowledgment only", the value tenzing keeps, and get NA. Columns this app does not hold are left empty for the team.
+ * "Acknowledgment only", the value tenzing keeps, and numbered after the authors,
+ * because tenzing refuses to build the acknowledgee section from rows with no order.
+ * Only a formula prefix (= + - @ tab CR) is guarded with an apostrophe, never a
+ * leading apostrophe: tenzing does not undo the guard, so "'t Hooft" stays as it
+ * is. "'+Pat" keeps its stray apostrophe in tenzing, to protect Excel users.
+ * Columns this app does not hold are left empty for the team.
  */
 export function toTenzing(authors: Author[]): string {
   const byline = authors.filter((author) => author.contributorType === "author");
+  const acks = authors.filter((author) => author.contributorType !== "author");
   const rows = authors.map((author) => {
     const isAuthor = author.contributorType === "author";
     const done = new Set(author.contributions.filter((c) => c.score > 0).map((c) => c.role));
     return [
       isAuthor ? "Author" : "Acknowledgment only",
-      isAuthor ? String(byline.indexOf(author) + 1) : "NA",
+      String(isAuthor ? byline.indexOf(author) + 1 : byline.length + acks.indexOf(author) + 1),
       ...nameCells(author),
       ...CREDIT_ROLES.map((role) => trueFalse(done.has(role.name))),
       "",
@@ -74,11 +80,11 @@ export function toTenzing(authors: Author[]): string {
       "",
       author.orcid ?? "",
       "",
-      trueFalse(author.corresponding),
+      trueFalse(isAuthor && author.corresponding),
       "",
     ];
   });
-  return [TENZING_HEADERS, ...rows].map((cells) => cells.map(escapeCsvValue).join(",")).join("\n");
+  return [TENZING_HEADERS, ...rows].map((cells) => cells.map(escapeCsvFormulaOnly).join(",")).join("\n");
 }
 
 /** True for a header row that looks like a tenzing contributor spreadsheet. */
@@ -109,10 +115,13 @@ export function fromTenzing(text: string): Author[] {
       const middleName = cell(row, "middle name");
       const surname = cell(row, "surname");
       const order = Number.parseFloat(cell(row, "order in publication"));
-      return { row, index, firstName, middleName, surname, order: Number.isNaN(order) ? Infinity : order };
+      const status = cell(row, "author/acknowledgee");
+      return { row, index, firstName, middleName, surname, status, order: Number.isNaN(order) ? Infinity : order };
     })
     // Template rows a team did not fill in.
     .filter((person) => person.firstName || person.middleName || person.surname)
+    // tenzing's own "Don't agree to be named" (straight or curly apostrophe) is a person who opted out.
+    .filter((person) => !/^don['’]t agree to be named$/i.test(person.status))
     .sort((a, b) => a.order - b.order || a.index - b.index);
 
   const authors = people.flatMap(({ row, firstName, middleName, surname }) => {

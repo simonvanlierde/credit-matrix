@@ -63,6 +63,19 @@ describe("fromTenzing", () => {
     expect(ana).toMatchObject({ contributorType: "non-author" });
   });
 
+  it('drops a row where tenzing records "Don\'t agree to be named", but keeps a blank status as an author', () => {
+    const sheet = [
+      "Author/Acknowledgee,Firstname,Surname",
+      "Author,Ana,Lee",
+      "Don't agree to be named,Bo,Kim",
+      "don\u2019t agree to be named,Cy,Ray",
+      ",Di,Fox",
+    ].join("\n");
+    const authors = fromTenzing(sheet);
+    expect(authors.map((a) => a.name)).toEqual(["Ana Lee", "Di Fox"]);
+    expect(authors.every((a) => a.contributorType === "author")).toBe(true);
+  });
+
   it("matches headers by name in a reordered TSV with a Note column", () => {
     const [ana, ...rest] = fromTenzing(fixture("tenzing-reordered.tsv"));
     expect(rest).toEqual([]);
@@ -213,9 +226,37 @@ describe("toTenzing", () => {
   it("writes a role as TRUE whatever its level, and keeps every word of a name", () => {
     const rows = toTenzing(draft).split("\n");
     expect(rows[2]).toBe(
-      "Acknowledgment only,NA,Kim,,Nam-joon,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,FALSE,",
+      "Acknowledgment only,9,Kim,,Nam-joon,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,FALSE,",
     );
     expect(rows[3]?.startsWith("Author,2,Martin,Luther King,Jr.,FALSE,TRUE,")).toBe(true);
+  });
+
+  it("numbers every row, acknowledgees after the authors, so tenzing can build its acknowledgee section", () => {
+    const order = toTenzing(draft)
+      .split("\n")
+      .slice(1)
+      .map((row) => row.split(",")[1]);
+    expect(order).not.toContain("NA");
+    expect(order).toEqual(["1", "9", "2", "3", "4", "5", "10", "6", "7", "8"]);
+  });
+
+  it("exports a leading apostrophe once, and reads it back", () => {
+    const rows = toTenzing(draft).split("\n");
+    expect(rows[4]).toContain(",Gerard,'t,Hooft,");
+    expect(rows[4]).not.toContain("''t");
+    expect(fromTenzing(toTenzing(draft)).map((a) => a.name)).toContain("Gerard 't Hooft");
+  });
+
+  it("marks only an author as corresponding", () => {
+    const people = [
+      createAuthor("Ana Lee", { corresponding: true }),
+      createAuthor("Bo Kim", { contributorType: "non-author", corresponding: true }),
+    ];
+    const cells = toTenzing(people)
+      .split("\n")
+      .slice(1)
+      .map((row) => row.split(",").at(-2));
+    expect(cells).toEqual(["TRUE", "FALSE"]);
   });
 
   it("marks acknowledgees with the exact value tenzing keeps, and authors with Author", () => {
