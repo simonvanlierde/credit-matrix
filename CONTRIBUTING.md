@@ -62,6 +62,17 @@ comments when one gets slower or faster than on main.
 - **Property tests**: `properties.test.ts` feeds random drafts through every format and random text
   to the importers, with [fast-check](https://fast-check.dev). A failure prints the seed and the
   smallest input that fails: add that input as a fixed test next to the fix.
+- **Mutation tests**: `pnpm mutation` runs [StrykerJS](https://stryker-mutator.io) on the import
+  and export code in `src/core` (`export/`, `import.ts`, `share-payload.ts`, `parse-authors.ts`
+  and `statement.ts`). It changes the code one small edit at a time and runs the `core` tests
+  against each change, to find code the tests run but do not check. The score is in the header
+  of `test/mutation-baseline.txt`. It takes about 7 to 10 minutes on 12 cores, so CI does not run it. Run
+  it on the Node version in `.node-version`: another version moves the score by about half a point. It
+  writes an HTML report to `reports/mutation/` and the mutants no test kills to
+  `test/mutation-baseline.txt`. Commit that list with your change, and look at what the diff
+  adds: a new survivor is a test to write, or a change that does nothing. A patch in `patches/`
+  fixes two faults in the Vitest runner under Vitest 5: it matched no test by name, and it read a
+  test file that failed to load as a pass.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.

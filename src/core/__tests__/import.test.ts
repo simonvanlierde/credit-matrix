@@ -76,6 +76,19 @@ describe("detectFormat", () => {
     expect(detectFormat(" #s=jc67_-Ab \n")).toBe("link");
     expect(detectFormat(" \n ")).toBe("unknown");
   });
+
+  it("reads a link only when the text is the link, over http too", () => {
+    expect(detectFormat("http://localhost:3000/#s=abc")).toBe("link");
+    expect(detectFormat("Jane Smith, see https://example.org/#s=abc")).toBe("names");
+    expect(detectFormat("Jane Smith #s=abc")).toBe("names");
+    expect(detectFormat("#s=abc and Bob White")).toBe("names");
+  });
+
+  it("reads JSON only when it is an object or an array", () => {
+    expect(detectFormat("2024")).toBe("names");
+    expect(detectFormat('"Jane Smith"')).toBe("names");
+    expect(detectFormat("[]")).toBe("json");
+  });
 });
 
 describe("importAny", () => {
@@ -90,6 +103,21 @@ describe("importAny", () => {
   ])("reads %s", async (format, text) => {
     const imported = await importAny(text);
     expect(imported.format).toBe(format);
+    expect(names(imported.authors)).toEqual(["Jane Smith", "Bob White"]);
+  });
+
+  it("hands the XML parser the text without the blank lines before it", async () => {
+    // A browser's DOMParser refuses anything before an XML declaration.
+    const xml = toJats4rXml(roster());
+    const seen: string[] = [];
+    const parser = {
+      parseFromString(text: string, type: "application/xml") {
+        seen.push(text);
+        return new DOMParser().parseFromString(text, type);
+      },
+    };
+    const imported = await importAny(`\n  ${xml}\n`, { parser });
+    expect(seen).toEqual([xml]);
     expect(names(imported.authors)).toEqual(["Jane Smith", "Bob White"]);
   });
 
@@ -172,8 +200,45 @@ describe("normalizeRoster", () => {
     expect(renamedBob).toMatchObject({ name: "Bob Black", surname: "Black" });
   });
 
-  it("refuses more than MAX_AUTHORS rows", () => {
+  it("refuses more than MAX_AUTHORS rows, and takes exactly that many", () => {
     const many = Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => createAuthor(`Person ${i} Name`));
     expect(() => normalizeRoster(many)).toThrow(/at most/);
+    expect(normalizeRoster(many.slice(1))).toHaveLength(MAX_AUTHORS);
+  });
+
+  it("keeps a structured double surname the name alone would split", () => {
+    const maria = createAuthor("María García López", { firstName: "María", middleName: "", surname: "García López" });
+    const [kept] = normalizeRoster([maria]);
+    expect(kept).toBe(maria);
+    expect(kept).toMatchObject({ middleName: "", surname: "García López" });
+  });
+
+  it.each([
+    ["a first name the name does not open with", { name: "Ana García López" }, "López"],
+    ["a middle name that is not next", { name: "María Luisa García López", middleName: "Elena" }, "López"],
+    ["more parts than the name has", { name: "García López" }, "López"],
+    ["no surname and a word left over", { name: "María García", surname: "" }, "García"],
+  ])("drops stored parts with %s", (_, change, surname) => {
+    const maria = createAuthor("María García López", { firstName: "María", middleName: "", surname: "García López" });
+    expect(normalizeRoster([{ ...maria, ...change }])[0]?.surname).toBe(surname);
+  });
+
+  it("keeps stored parts without a surname when they are the whole name", () => {
+    const madonna = createAuthor("Madonna Louise", { firstName: "Madonna", middleName: "Louise", surname: "" });
+    expect(normalizeRoster([madonna])[0]).toMatchObject({ firstName: "Madonna", middleName: "Louise", surname: "" });
+  });
+
+  it("rebuilds a row whose contributions are out of order or that carries a stray field", () => {
+    const [jane] = normalizeRoster(roster());
+    if (!jane) throw new Error("expected an author");
+    const [first, second, ...rest] = jane.contributions;
+    if (!(first && second)) throw new Error("expected contributions");
+    const swapped = { ...jane, contributions: [second, first, ...rest] };
+    const [rebuilt] = normalizeRoster([swapped]);
+    expect(rebuilt).not.toBe(swapped);
+    expect(rebuilt?.contributions.map((c) => c.role)).toEqual(jane.contributions.map((c) => c.role));
+
+    const stray = { ...jane, legacy: true } as typeof jane;
+    expect(normalizeRoster([stray])[0]).not.toHaveProperty("legacy");
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fromCsv, toCsv } from "../export/csv";
+import { delimiterOf, fromCsv, headerCells, parseCsvRecords, toCsv } from "../export/csv";
 import { parseAuthorText } from "../parse-authors";
 
 describe("CSV import/export", () => {
@@ -136,5 +136,72 @@ describe("CSV import/export", () => {
     const csv = `Name,Conceptualization\nJane Smith,50.5`;
     const parsed = fromCsv(csv);
     expect(parsed[0]?.contributions[0]?.score).toBe(51);
+  });
+
+  it("writes the markers as yes and no, and an empty cell for a missing ORCID", () => {
+    const [jane, bob] = parseAuthorText("Jane Smith\nBob White");
+    if (!(jane && bob)) throw new Error("expected 2 authors");
+    jane.equalContribution = true;
+    jane.corresponding = true;
+
+    const [, janeRow, bobRow] = toCsv([jane, bob]).split("\n");
+    expect(janeRow?.startsWith("Jane Smith,,author,yes,yes,")).toBe(true);
+    expect(bobRow?.startsWith("Bob White,,author,no,no,")).toBe(true);
+    expect(fromCsv(toCsv([jane, bob])).map((a) => [a.equalContribution, a.corresponding])).toEqual([
+      [true, true],
+      [false, false],
+    ]);
+  });
+
+  it("keeps a leading apostrophe that does not guard a formula", () => {
+    const [author] = parseAuthorText("Jane Smith");
+    if (!author) throw new Error("expected author");
+    author.name = "'t Hooft";
+
+    expect(fromCsv(toCsv([author]))[0]?.name).toBe("'t Hooft");
+    expect(fromCsv("Name\n't Hooft")[0]?.name).toBe("'t Hooft");
+  });
+
+  it("strips the formula guard behind the spaces a spreadsheet may add", () => {
+    expect(fromCsv("Name\n  '=Jane Smith")[0]?.name).toBe("=Jane Smith");
+  });
+
+  it("guards only a formula character at the start of a cell", () => {
+    const [author] = parseAuthorText("Anne-Marie Lee");
+    if (!author) throw new Error("expected author");
+    expect(toCsv([author]).split("\n")[1]?.startsWith("Anne-Marie Lee,")).toBe(true);
+  });
+
+  it("reads the header cells of a sheet with a byte order mark", () => {
+    expect(headerCells("\uFEFFName,ORCID\nJane Smith,")).toEqual(["name", "orcid"]);
+  });
+
+  it("keeps a blank line as an empty record", () => {
+    expect(parseCsvRecords("a\n\nb")).toEqual([["a"], [""], ["b"]]);
+  });
+
+  it("ends a record on CRLF, LF or a bare CR, without an empty record between", () => {
+    expect(parseCsvRecords("a,b\r\nc,d\ne,f\rg,h")).toEqual([
+      ["a", "b"],
+      ["c", "d"],
+      ["e", "f"],
+      ["g", "h"],
+    ]);
+  });
+
+  it("skips blank lines, also before the header", () => {
+    expect(fromCsv("\n,\nName\nJane Smith\n\nBob White").map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
+  });
+
+  it("picks the delimiter from the first line only, and comma or semicolon on a tie", () => {
+    expect(delimiterOf("Name,ORCID\nJane;Smith;x;y")).toBe(",");
+    expect(delimiterOf("Name,ORCID\r\nJane;Smith;x;y")).toBe(",");
+    expect(delimiterOf("Name;ORCID\tType")).toBe(";");
+    expect(delimiterOf("Name")).toBe(",");
+  });
+
+  it("drops an ORCID that is not valid and keeps the contributor", () => {
+    const parsed = fromCsv("Name,ORCID\nJane Smith,0000-0000-0000-0000");
+    expect(parsed.map((a) => [a.name, a.orcid])).toEqual([["Jane Smith", undefined]]);
   });
 });
