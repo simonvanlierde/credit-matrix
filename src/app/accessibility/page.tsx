@@ -22,6 +22,10 @@ const markdown = new Marked({
     if (token.type === "heading") token.depth += 1;
   },
   renderer: {
+    // The maintainer comment at the top of the file stays out of the page.
+    html({ text }) {
+      return text.trimStart().startsWith("<!--") ? "" : text;
+    },
     heading({ tokens, depth, text }) {
       return `<h${depth} id="${slug(text)}">${this.parser.parseInline(tokens)}</h${depth}>\n`;
     },

@@ -106,6 +106,9 @@ test.describe("interface messages", () => {
         for (const name of placeholders(EN[key] ?? "")) {
           expect(placeholders(value), `${locale}.${key} dropped {${name}}`).toContain(name);
         }
+        // Dropping <link> keeps the words but silently loses the link.
+        const tags = (text: string) => [...text.matchAll(/<(\w+)>/g)].map(([, tag]) => tag).sort();
+        expect(tags(value), `${locale}.${key} changed its rich-text tags`).toEqual(tags(EN[key] ?? ""));
       }
     }
   });

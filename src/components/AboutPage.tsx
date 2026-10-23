@@ -60,7 +60,15 @@ export function AboutPage({ version }: { version: string }) {
       <p>{t("aboutPrivacy")}</p>
 
       <h3>{t("accessibility")}</h3>
-      <p>{t.rich("aboutAccessibility", { link: (chunks) => <a href="/accessibility">{chunks}</a> })}</p>
+      <p>
+        {t.rich("aboutAccessibility", {
+          link: (chunks) => (
+            <a href="/accessibility" hrefLang="en">
+              {chunks}
+            </a>
+          ),
+        })}
+      </p>
     </article>
   );
 }

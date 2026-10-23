@@ -30,6 +30,8 @@ test.describe("Accessibility statement", () => {
   test("renders its sections, claims no more than was checked, and passes axe", async ({ page }) => {
     await page.goto("/accessibility");
     await expect(page).toHaveTitle(/Accessibility statement/);
+    // The maintainer comment at the top of the Markdown is not published.
+    expect(await page.content()).not.toContain("Keep this statement true");
     const statement = page.locator("article");
     await expect(statement.getByRole("heading", { name: "Accessibility statement", exact: true })).toBeVisible();
     await expect(statement.getByRole("heading", { level: 3 })).toHaveText(SECTIONS);
@@ -54,7 +56,7 @@ test.describe("Accessibility statement", () => {
     const reviewed = new Date((line ?? "").replace(/^Last reviewed:\s*/, ""));
     expect(Number.isNaN(reviewed.getTime()), `unreadable date in "${line}"`).toBe(false);
     const ageDays = (Date.now() - reviewed.getTime()) / DAY_MS;
-    expect(ageDays).toBeLessThan(MAX_REVIEW_AGE_DAYS);
+    expect(ageDays, `"${line}": review docs/accessibility.md and update its date`).toBeLessThan(MAX_REVIEW_AGE_DAYS);
     // -1, not 0, so a date entered in another time zone still counts as today.
     expect(ageDays, `"${line}" is in the future`).toBeGreaterThan(-1);
   });

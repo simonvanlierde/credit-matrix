@@ -254,7 +254,7 @@
   "aboutSource": "ソースコード",
   "aboutAuthor": "作者",
   "aboutCiteTitle": "CRediT Matrix の引用",
-  "aboutCite": "論文で CRediT Matrix を使用した場合は、常に最新版を指すコンセプト DOI で引用してください:",
+  "aboutCite": "論文で CRediT Matrix を使用した場合は、常に最新版を指すコンセプト DOI で引用してください：",
   "aboutCiteMetadata": "完全な引用メタデータはリポジトリの <link>CITATION.cff</link> ファイルにあります。",
   "privacy": "プライバシー",
   "accessibility": "アクセシビリティ",

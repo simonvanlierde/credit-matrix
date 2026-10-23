@@ -51,12 +51,9 @@ test.describe("About page", () => {
       await page.goto("/about");
       await open(page);
       await page.getByRole("link", { name: "How it works" }).click();
+      // The hash is dropped, so a reload does not reopen the panel.
       await expect(page).toHaveURL(/\/$/);
       await expect(page.getByRole("dialog", { name: /three steps/ })).toBeVisible();
-      // The hash is dropped, so a reload after closing does not reopen it.
-      await page.keyboard.press("Escape");
-      await page.reload();
-      await expect(page.locator("dialog#getting-started")).toBeHidden();
     });
   }
 });

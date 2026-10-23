@@ -28,11 +28,15 @@ const OUT = "out";
 const INLINE_SCRIPT = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
 // The page's first element after the charset, so it covers every script.
 const HEAD_START = /<head>(<meta charSet="utf-8"\/>)?/;
-// Must match the external script origins in public/_headers' script-src.
-const SCRIPT_ORIGINS = "https://static.cloudflareinsights.com";
 // Cloudflare refuses a _headers file with a longer line (error 100324).
 const MAX_HEADER_LINE = 2000;
 const sha256 = (text) => createHash("sha256").update(text).digest("base64");
+
+const headersPath = join(OUT, "_headers");
+const headers = await readFile(headersPath, "utf8");
+// The meta CSP allows the same outside script origins as the header, read from it so the two cannot drift.
+const scriptOrigins = headers.match(/script-src 'self' 'unsafe-inline'([^;\n]*)/)?.[1];
+if (scriptOrigins === undefined) throw new Error(`postbuild: no script-src 'self' 'unsafe-inline' in ${headersPath}`);
 
 const pages = (await readdir(OUT, { recursive: true })).filter((file) => file.endsWith(".html"));
 const counts = [];
@@ -40,15 +44,14 @@ for (const page of pages) {
   const path = join(OUT, page);
   const html = await readFile(path, "utf8");
   const hashes = new Set([...html.matchAll(INLINE_SCRIPT)].map(([, body]) => `'sha256-${sha256(body)}'`));
-  const meta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' ${[...hashes].sort().join(" ")} ${SCRIPT_ORIGINS}"/>`;
+  const meta = `<meta http-equiv="Content-Security-Policy" content="script-src 'self' ${[...hashes].sort().join(" ")}${scriptOrigins}"/>`;
   const withMeta = html.replace(HEAD_START, (start) => start + meta);
   if (!withMeta.includes(meta)) throw new Error(`postbuild: no <head> to put the CSP in, in ${path}`);
   await writeFile(path, withMeta);
   counts.push(`${page} ${hashes.size}`);
 }
 
-const headersPath = join(OUT, "_headers");
-const tooLong = (await readFile(headersPath, "utf8")).split("\n").findIndex((line) => line.length > MAX_HEADER_LINE);
+const tooLong = headers.split("\n").findIndex((line) => line.length > MAX_HEADER_LINE);
 if (tooLong !== -1)
   throw new Error(`postbuild: ${headersPath} line ${tooLong + 1} is over ${MAX_HEADER_LINE} characters`);
 

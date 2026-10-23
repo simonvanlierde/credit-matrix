@@ -2,7 +2,7 @@
 Keep this statement true. Every claim must be checkable in this repository: the tests in e2e/,
 the lint rules in biome.json, the styles in src/app/globals.css. When a known problem is fixed,
 move its bullet from "Known problems" to "How we check" in the same pull request as the fix.
-The site renders this file at /accessibility, so write plain Markdown with absolute links.
+The site renders this file at /accessibility, so write plain Markdown with absolute links, or #anchors within this page.
 e2e/accessibility-statement.spec.ts checks the headings, the status, the contact and the
 "Last reviewed" date.
 -->
@@ -86,7 +86,7 @@ statement or an export in another format, email us and we'll send it.
   equivalent.
 - **This statement.**
   [e2e/accessibility-statement.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/accessibility-statement.spec.ts)
-  fails when this page loses a section, claims a status it has not earned, loses its email contact,
+  fails when this page loses a section, claims full conformance, loses its email contact,
   or goes more than 400 days without a review.
 
 All of this runs on every pull request and every push to main. Automated tools find only part of
@@ -99,7 +99,7 @@ automated tools above check it.
 ### Heatmap text alternatives
 
 In the app, screen readers skip the heatmap drawing, and the contribution statement beside it says
-the same in words. The downloaded SVG has the title "Contribution heatmap"; The first known problem says
+the same in words. The downloaded SVG has the title "Contribution heatmap". The first known problem says
 what that leaves out.
 
 ### The web element

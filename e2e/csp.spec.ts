@@ -35,7 +35,10 @@ test.describe("Content Security Policy", () => {
         }
       });
 
-      await page.goto(path);
+      // The header carries the rest of the policy, which a meta CSP cannot.
+      const csp = (await page.goto(path))?.headers()["content-security-policy"];
+      expect(csp).toContain("frame-ancestors 'none'");
+      expect(csp).toContain("object-src 'none'");
       await page.waitForLoadState("networkidle");
       // The page hydrated, which needs its inline bootstrap: the theme toggle
       // only gets this label from an effect.
