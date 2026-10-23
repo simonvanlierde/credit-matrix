@@ -121,15 +121,14 @@ To report a wrong or missing translation without a PR, use the translation issue
 Every commit in a pull request carries a `Signed-off-by:` line, which says you wrote the change
 or have the right to submit it under the MIT license: the
 [Developer Certificate of Origin 1.1](https://developercertificate.org/). `git commit -s` adds
-it; `git rebase --signoff origin/main` adds it to commits you already made. The `dco` workflow
+it; `git rebase --signoff upstream/main` (the branch you started from) adds it to commits you already made. The `dco` workflow
 fails a pull request from an outside contributor with a commit that lacks it. The maintainer's
 and the dependency bots' pull requests skip it.
 
 ## Who maintains this
 
 Simon van Lierde ([@simonvanlierde](https://github.com/simonvanlierde)) maintains CRediT
-Matrix: reviews and merges pull requests, and tags releases. Only he can merge to `main`, and
-only through a pull request whose checks pass. A new maintainer would be named here first. If he
+Matrix: reviews and merges pull requests, and tags releases. Only he can merge to `main`. A new maintainer would be named here first. If he
 stops maintaining it, the README says so and the repository is archived; anyone may fork it under
 the MIT license.
 
