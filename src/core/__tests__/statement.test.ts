@@ -6,6 +6,7 @@ import {
   MAX_STATEMENT_LENGTH,
   namesCredit,
   parseStatement,
+  readsAsStatement,
   resolveInitials,
   type StatementAuthor,
   statementAuthor,
@@ -346,9 +347,26 @@ describe("unmatched", () => {
   });
 });
 
+describe("assignment order", () => {
+  it("lists assignments by author, then in CRediT order, whatever order the text gives", () => {
+    const text = "Eva Fox: software, conceptualization. Ann Bell: writing – original draft, methodology.";
+    expect(parseStatement(text, THREE).assignments).toEqual([
+      { author: 0, role: "Methodology" },
+      { author: 0, role: "Writing – original draft" },
+      { author: 2, role: "Conceptualization" },
+      { author: 2, role: "Software" },
+    ]);
+  });
+});
+
 describe("size", () => {
   it(`refuses a statement longer than ${MAX_STATEMENT_LENGTH} characters`, () => {
-    expect(() => parseStatement("a".repeat(MAX_STATEMENT_LENGTH + 1), THREE)).toThrow(RangeError);
+    expect(() => parseStatement("a".repeat(MAX_STATEMENT_LENGTH + 1), THREE)).toThrow(
+      new RangeError(
+        `A statement is read up to ${MAX_STATEMENT_LENGTH} characters; this one has ${MAX_STATEMENT_LENGTH + 1}.`,
+      ),
+    );
+    expect(() => parseStatement("a".repeat(MAX_STATEMENT_LENGTH), THREE)).not.toThrow();
   });
 
   it.each([
@@ -374,7 +392,28 @@ describe("statementAuthor", () => {
     ],
     [{ name: "Smith, Jane A.", firstName: "Jane", middleName: "A", surname: "Smith" }, "Jane A.", "Smith"],
     [{ name: "Madonna", firstName: "Madonna", middleName: "", surname: "" }, "Madonna", ""],
+    [{ name: "Jane Smith", firstName: "Jane", middleName: "", surname: "Smith" }, "Jane", "Smith"],
+    // A name edited since it was parsed no longer holds the surname: the stored parts stand in.
+    [{ name: "J. Doe", firstName: "Jane", middleName: "Ann", surname: "Smith" }, "Jane Ann", "Smith"],
   ])("splits %j", (input, given, surname) => {
     expect(statementAuthor(input)).toEqual({ given, surname });
+  });
+});
+
+describe("readsAsStatement", () => {
+  it.each([
+    // Two sentences with four plain words between them read as prose.
+    ["Jane did all. Bob wrote code.", true],
+    ["Conceptualization - JP", true],
+    ["J.-P. Martin; conceptualization", false],
+    ["JP - conceptualization", true],
+    ["Conceptualization, Jo Lee", false],
+    // Many plain words, but no sentence and no distinctive role.
+    ["Jane Smith is the one who did it", false],
+    // Name particles and "and" are not prose words.
+    ["Ann van der Berg and Bob de la Cruz, conceptualization", false],
+    ["Ann Lee and Bob Kim and Cy Moe and Di Wu, conceptualization", false],
+  ])("reads %j as a statement: %s", (text, expected) => {
+    expect(readsAsStatement(text)).toBe(expected);
   });
 });

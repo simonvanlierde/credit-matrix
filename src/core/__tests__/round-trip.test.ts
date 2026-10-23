@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import * as z from "zod/mini";
 import { MAX_AUTHORS } from "../author";
 import { fromJson, NewerVersionError, toJson } from "../export/json";
 import { toJats4rXml } from "../export/xml";
@@ -83,6 +84,31 @@ describe("round-trip exports", () => {
     expect(() => fromJson("[]")).not.toThrow(NewerVersionError);
     expect(() => fromJson("null")).not.toThrow(NewerVersionError);
     expect(fromJson('{"version": 1, "authors": []}')).toEqual({ authors: [] });
+  });
+
+  it("names the newer version and its own in the error", () => {
+    const error = (() => {
+      try {
+        fromJson('{"version": 7, "authors": []}');
+      } catch (caught) {
+        return caught;
+      }
+    })();
+    expect(error).toBeInstanceOf(NewerVersionError);
+    expect(error).toMatchObject({ name: "NewerVersionError", message: "JSON export version 7 is newer than 1" });
+  });
+
+  it("refuses JSON null as a shape error, not a crash", () => {
+    expect(() => fromJson("null")).toThrow(z.core.$ZodError);
+  });
+
+  it("writes asks only for contributors in the file, and no asks key when there are none", () => {
+    const [jane] = parseAuthorText("Jane Smith");
+    if (!jane) throw new Error("expected author");
+    const ask = { sentAt: 1, prefilled: true };
+    expect(JSON.parse(toJson([jane]))).not.toHaveProperty("asks");
+    expect(JSON.parse(toJson([jane], { asks: { gone: ask } }))).not.toHaveProperty("asks");
+    expect(Object.keys(JSON.parse(toJson([jane], { asks: { [jane.id]: ask, gone: ask } })).asks)).toEqual([jane.id]);
   });
 
   it("XML round-trip preserves ORCID value", () => {
