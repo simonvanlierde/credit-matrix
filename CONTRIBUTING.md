@@ -66,7 +66,8 @@ comments when one gets slower or faster than on main.
   and export code in `src/core` (`export/`, `import.ts`, `share-payload.ts`, `parse-authors.ts`
   and `statement.ts`). It changes the code one small edit at a time and runs the `core` tests
   against each change, to find code the tests run but do not check. The score is in the header
-  of `test/mutation-baseline.txt`. It takes about 20 minutes on four cores, so CI does not run it. It
+  of `test/mutation-baseline.txt`. It takes about 20 minutes on four cores, so CI does not run it. Run
+  it on the Node version in `.node-version`: another version moves the score by about half a point. It
   writes an HTML report to `reports/mutation/` and the mutants no test kills to
   `test/mutation-baseline.txt`. Commit that list with your change, and look at what the diff
   adds: a new survivor is a test to write, or a change that does nothing. A patch in `patches/`
