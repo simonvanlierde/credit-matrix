@@ -65,7 +65,7 @@ comments when one gets slower or faster than on main.
 - **Mutation tests**: `pnpm mutation` runs [StrykerJS](https://stryker-mutator.io) on the import
   and export code in `src/core` (`export/`, `import.ts`, `share-payload.ts`, `parse-authors.ts`
   and `statement.ts`). It changes the code one small edit at a time and runs the `core` tests
-  against each change, to find code the tests run but do not check. The score is 80.1%: 1,855
+  against each change, to find code the tests run but do not check. The score is 80.8%: 1,871
   of 2,316 mutants are killed. It takes about 20 minutes on four cores, so CI does not run it. It
   writes an HTML report to `reports/mutation/` and the mutants no test kills to
   `test/mutation-baseline.txt`. Commit that list with your change, and look at what the diff

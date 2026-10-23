@@ -1,6 +1,6 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
 # Each line: file:line:column status mutator -> replacement | original line.
-# Score 80.09%: 1855 killed, 404 survived, 57 without coverage.
+# Score 80.79%: 1871 killed, 388 survived, 57 without coverage.
 src/core/export/csv.ts:28:17 Survived MethodExpression -> value | const level = value.trim().toLowerCase();
 src/core/export/csv.ts:125:26 Survived MethodExpression -> text.replace(/^﻿/, "") | const line = firstLine(text.replace(/^﻿/, "").trim());
 src/core/export/csv.ts:125:39 Survived Regex -> /﻿/ | const line = firstLine(text.replace(/^﻿/, "").trim());
@@ -190,10 +190,6 @@ src/core/export/xml.ts:63:30 Survived MethodExpression -> name.slice(0, comma) |
 src/core/export/xml.ts:68:10 Survived MethodExpression -> cleanNamePart(text).split(/\s+/) | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
 src/core/export/xml.ts:68:36 Survived Regex -> /\s/ | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
 src/core/export/xml.ts:68:64 Survived StringLiteral -> "" | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
-src/core/parse-authors.ts:36:22 Survived MethodExpression -> name.split(",").map(part => part.trim()) | const commaParts = name
-src/core/parse-authors.ts:38:20 Survived MethodExpression -> part | .map((part) => part.trim())
-src/core/parse-authors.ts:40:7 Survived LogicalOperator -> commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
-src/core/parse-authors.ts:40:7 Survived LogicalOperator -> commaParts.length === 2 || isSurnamePart(commaParts[0] ?? "" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
 src/core/parse-authors.ts:40:65 NoCoverage StringLiteral -> "Stryker was here!" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
 src/core/parse-authors.ts:40:105 NoCoverage StringLiteral -> "Stryker was here!" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
 src/core/parse-authors.ts:41:52 NoCoverage StringLiteral -> "Stryker was here!" | const surname = cleanNamePart(commaParts[0] ?? "");
@@ -204,20 +200,12 @@ src/core/parse-authors.ts:46:35 NoCoverage StringLiteral -> "Stryker was here!" 
 src/core/parse-authors.ts:47:19 Survived ConditionalExpression -> true | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
 src/core/parse-authors.ts:47:19 Survived EqualityOperator -> givenParts.length >= 1 | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
 src/core/parse-authors.ts:47:61 NoCoverage StringLiteral -> "Stryker was here!" | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
-src/core/parse-authors.ts:55:17 Survived MethodExpression -> cleaned.split(/\s+/) | const parts = cleaned.split(/\s+/).filter(Boolean);
-src/core/parse-authors.ts:55:31 Survived Regex -> /\s/ | const parts = cleaned.split(/\s+/).filter(Boolean);
 src/core/parse-authors.ts:60:68 NoCoverage StringLiteral -> "Stryker was here!" | while (surnameStart > 1 && isParticle(parts[surnameStart - 1] ?? "")) surnameStart -= 1;
 src/core/parse-authors.ts:62:33 Survived StringLiteral -> "Stryker was here!" | const firstName = parts[0] ?? "";
 src/core/parse-authors.ts:64:54 NoCoverage StringLiteral -> "Stryker was here!" | const middleName = surnameStart > 1 ? (parts[1] ?? "") : "";
-src/core/parse-authors.ts:71:10 Survived MethodExpression -> value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "") | return value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "").trim();
-src/core/parse-authors.ts:75:29 Survived Regex -> /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul} | const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul}]+$/u;
-src/core/parse-authors.ts:86:30 Survived MethodExpression -> name | if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
 src/core/parse-authors.ts:86:66 Survived MethodExpression -> name | if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
-src/core/parse-authors.ts:89:7 Survived ConditionalExpression -> false | if (parts.length === 0) return name.trim();
 src/core/parse-authors.ts:89:34 NoCoverage MethodExpression -> name | if (parts.length === 0) return name.trim();
 src/core/parse-authors.ts:95:37 NoCoverage StringLiteral -> "Stryker was here!" | const letter = [...p][0] ?? "";
-src/core/parse-authors.ts:191:14 Survived Regex -> /[\s\p{Cc}]/gu | .replace(/[\s\p{Cc}]+/gu, (run) => (/\p{Cc}/u.test(run) ? " " : run))
-src/core/parse-authors.ts:205:36 Survived ArrayDeclaration -> ["Stryker was here"] | for (const c of contributions ?? []) {
 src/core/parse-authors.ts:226:11 Survived ConditionalExpression -> true | if (extraIdx < surnameCodePoints.length) {
 src/core/parse-authors.ts:226:11 Survived EqualityOperator -> extraIdx <= surnameCodePoints.length | if (extraIdx < surnameCodePoints.length) {
 src/core/parse-authors.ts:227:31 Survived OptionalChaining -> surnameCodePoints[extraIdx].toLowerCase | attempt = initials + (surnameCodePoints[extraIdx]?.toLowerCase() ?? String(extraIdx));
@@ -238,10 +226,6 @@ src/core/parse-authors.ts:312:5 Survived LogicalOperator -> first.length > 0 || 
 src/core/parse-authors.ts:313:5 Survived ArithmeticOperator -> first.length - last.length | first.length + last.length <= all.length &&
 src/core/parse-authors.ts:313:5 Survived ConditionalExpression -> true | first.length + last.length <= all.length &&
 src/core/parse-authors.ts:317:6 Survived ConditionalExpression -> false | (last.length > 0 || between.length === middle.length);
-src/core/parse-authors.ts:367:17 Survived MethodExpression -> surname.split(/\s+/) | const words = surname.split(/\s+/).filter(Boolean);
-src/core/parse-authors.ts:367:31 Survived Regex -> /\s/ | const words = surname.split(/\s+/).filter(Boolean);
-src/core/parse-authors.ts:369:10 Survived ConditionalExpression -> false | return start === -1 ? surname : words.slice(start).join(" ");
-src/core/parse-authors.ts:369:59 Survived StringLiteral -> "" | return start === -1 ? surname : words.slice(start).join(" ");
 src/core/parse-authors.ts:374:7 Survived ConditionalExpression -> false | if (ORCID_INPUT_REGEX.test(text)) return false;
 src/core/parse-authors.ts:374:44 NoCoverage BooleanLiteral -> true | if (ORCID_INPUT_REGEX.test(text)) return false;
 src/core/parse-authors.ts:375:17 Survived MethodExpression -> text.split(/\s+/) | const words = text.split(/\s+/).filter(Boolean);
