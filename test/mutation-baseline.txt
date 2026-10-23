@@ -1,0 +1,464 @@
+# Mutants that no test kills, from `pnpm mutation` on src/core.
+# Each line: file:line:column status mutator -> replacement | original line.
+# Score 80.09%: 1855 killed, 404 survived, 57 without coverage.
+src/core/export/csv.ts:28:17 Survived MethodExpression -> value | const level = value.trim().toLowerCase();
+src/core/export/csv.ts:125:26 Survived MethodExpression -> text.replace(/^﻿/, "") | const line = firstLine(text.replace(/^﻿/, "").trim());
+src/core/export/csv.ts:125:39 Survived Regex -> /﻿/ | const line = firstLine(text.replace(/^﻿/, "").trim());
+src/core/export/csv.ts:126:58 NoCoverage ArrayDeclaration -> ["Stryker was here"] | return (parseCsvRecords(line, delimiterOf(line))[0] ?? []).map((cell) => cell.trim().toLowerCase());
+src/core/export/csv.ts:158:7 Survived ConditionalExpression -> false | if (records.length === 0) return [];
+src/core/export/csv.ts:158:36 NoCoverage ArrayDeclaration -> ["Stryker was here"] | if (records.length === 0) return [];
+src/core/export/csv.ts:161:34 NoCoverage ArrayDeclaration -> ["Stryker was here"] | const headers = (records[0] ?? []).map(headerKey);
+src/core/export/csv.ts:178:38 NoCoverage StringLiteral -> "Stryker was here!" | const name = cells[nameIndex] ?? "";
+src/core/export/csv.ts:179:9 Survived ConditionalExpression -> false | if (!name) return [];
+src/core/export/csv.ts:183:48 NoCoverage UnaryOperator -> +1 | score: readScore(cells[roleIndexes[i] ?? -1] ?? "0"),
+src/core/export/csv.ts:183:55 Survived StringLiteral -> "" | score: readScore(cells[roleIndexes[i] ?? -1] ?? "0"),
+src/core/export/csv.ts:186:59 Survived StringLiteral -> "Stryker was here!" | const contributorType = headerKey(cells[typeIndex] ?? "") === "non-author" ? "non-author" : "author"
+src/core/export/heatmap-svg.ts:22:14 Survived StringLiteral -> "" | const FONT = "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif";
+src/core/export/heatmap-svg.ts:32:20 Survived StringLiteral -> "" | const COLOR_TEXT = "#16181c";
+src/core/export/heatmap-svg.ts:33:24 Survived StringLiteral -> "" | const COLOR_TEXT_DIM = "#595c63";
+src/core/export/heatmap-svg.ts:34:18 Survived StringLiteral -> "" | const COLOR_BG = "#fafaf9";
+src/core/export/heatmap-svg.ts:35:22 Survived StringLiteral -> "" | const COLOR_BORDER = "#e4e4e1";
+src/core/export/heatmap-svg.ts:85:17 Survived OptionalChaining -> authors[ai].initials | (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
+src/core/export/heatmap-svg.ts:85:41 Survived OptionalChaining -> authors[ai].name | (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
+src/core/export/heatmap-svg.ts:85:63 NoCoverage OptionalChaining -> authors[ai].initials | (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
+src/core/export/heatmap-svg.ts:85:88 NoCoverage StringLiteral -> "Stryker was here!" | (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
+src/core/export/heatmap-svg.ts:91:17 Survived ArithmeticOperator -> PAD / scale | const PAD_S = PAD * scale;
+src/core/export/heatmap-svg.ts:95:15 Survived ArithmeticOperator -> 320 / scale | const w = 320 * scale;
+src/core/export/heatmap-svg.ts:96:15 Survived ArithmeticOperator -> 56 / scale | const h = 56 * scale;
+src/core/export/heatmap-svg.ts:98:7 Survived StringLiteral -> `` | `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="im
+src/core/export/heatmap-svg.ts:99:7 Survived StringLiteral -> `` | `<!-- ${GENERATOR_NOTE} -->`,
+src/core/export/heatmap-svg.ts:100:7 Survived StringLiteral -> `` | `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
+src/core/export/heatmap-svg.ts:101:7 Survived StringLiteral -> `` | `<rect width="${w}" height="${h}" fill="${COLOR_BG}"/>`,
+src/core/export/heatmap-svg.ts:102:32 Survived ArithmeticOperator -> PAD_S - 8 | `<text x="${PAD_S}" y="${PAD_S + 8}" font-family="${FONT}" font-size="${11 * scale}" fill="${COLOR_T
+src/core/export/heatmap-svg.ts:102:79 Survived ArithmeticOperator -> 11 / scale | `<text x="${PAD_S}" y="${PAD_S + 8}" font-family="${FONT}" font-size="${11 * scale}" fill="${COLOR_T
+src/core/export/heatmap-svg.ts:103:7 Survived StringLiteral -> "" | "</svg>",
+src/core/export/heatmap-svg.ts:104:12 Survived StringLiteral -> "" | ].join("\n");
+src/core/export/heatmap-svg.ts:111:5 Survived OptionalChaining -> author?.contributions.find(c => c.role === roleName).score | author?.contributions.find((c) => c.role === roleName)?.score ?? 0;
+src/core/export/heatmap-svg.ts:111:5 Survived OptionalChaining -> author.contributions | author?.contributions.find((c) => c.role === roleName)?.score ?? 0;
+src/core/export/heatmap-svg.ts:116:17 Survived ArithmeticOperator -> GAP / scale | const GAP_S = GAP * scale;
+src/core/export/heatmap-svg.ts:117:23 Survived ArithmeticOperator -> LABEL_GAP / scale | const LABEL_GAP_S = LABEL_GAP * scale;
+src/core/export/heatmap-svg.ts:127:20 Survived Regex -> /[^\u1100-\u11FF\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE3 | const CJK_CHAR = /[\u1100-\u11FF\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF]/;
+src/core/export/heatmap-svg.ts:130:62 Survived ArithmeticOperator -> labelUnits(label) * fontSize * CHAR_EM / scale | const textW = (label: string, fontSize: number): number => labelUnits(label) * fontSize * CHAR_EM * 
+src/core/export/heatmap-svg.ts:130:62 Survived ArithmeticOperator -> labelUnits(label) * fontSize / CHAR_EM | const textW = (label: string, fontSize: number): number => labelUnits(label) * fontSize * CHAR_EM * 
+src/core/export/heatmap-svg.ts:138:19 Survived MethodExpression -> Math.min(0, ...topLabelWs) | const maxTopW = Math.max(0, ...topLabelWs);
+src/core/export/heatmap-svg.ts:144:19 Survived ArithmeticOperator -> maxTopW * DIAG - LABEL_GAP_S | const topBand = maxTopW * DIAG + LABEL_GAP_S;
+src/core/export/heatmap-svg.ts:144:19 Survived ArithmeticOperator -> maxTopW / DIAG | const topBand = maxTopW * DIAG + LABEL_GAP_S;
+src/core/export/heatmap-svg.ts:145:20 Survived ArithmeticOperator -> maxLeftW - LABEL_GAP_S | const leftBand = maxLeftW + LABEL_GAP_S;
+src/core/export/heatmap-svg.ts:148:20 Survived LogicalOperator -> topLabelWs[topLabelWs.length - 1] && 0 | const lastTopW = topLabelWs[topLabelWs.length - 1] ?? 0;
+src/core/export/heatmap-svg.ts:148:31 Survived ArithmeticOperator -> topLabelWs.length + 1 | const lastTopW = topLabelWs[topLabelWs.length - 1] ?? 0;
+src/core/export/heatmap-svg.ts:149:25 Survived MethodExpression -> Math.min(0, lastTopW * DIAG - CELL_S / 2) | const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
+src/core/export/heatmap-svg.ts:149:37 Survived ArithmeticOperator -> lastTopW * DIAG + CELL_S / 2 | const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
+src/core/export/heatmap-svg.ts:149:37 Survived ArithmeticOperator -> lastTopW / DIAG | const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
+src/core/export/heatmap-svg.ts:149:55 Survived ArithmeticOperator -> CELL_S * 2 | const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
+src/core/export/heatmap-svg.ts:151:17 Survived ArithmeticOperator -> (transpose ? nRoles : nAuthors) * (CELL_S + GAP_S) + GAP_S | const gridW = (transpose ? nRoles : nAuthors) * (CELL_S + GAP_S) - GAP_S;
+src/core/export/heatmap-svg.ts:151:52 Survived ArithmeticOperator -> CELL_S - GAP_S | const gridW = (transpose ? nRoles : nAuthors) * (CELL_S + GAP_S) - GAP_S;
+src/core/export/heatmap-svg.ts:152:17 Survived ArithmeticOperator -> (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) + GAP_S | const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) - GAP_S;
+src/core/export/heatmap-svg.ts:152:17 Survived ArithmeticOperator -> (transpose ? nAuthors : nRoles) / (CELL_S + GAP_S) | const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) - GAP_S;
+src/core/export/heatmap-svg.ts:152:52 Survived ArithmeticOperator -> CELL_S - GAP_S | const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) - GAP_S;
+src/core/export/heatmap-svg.ts:172:20 Survived ArithmeticOperator -> SWATCH / scale | const SWATCH_S = SWATCH * scale;
+src/core/export/heatmap-svg.ts:173:29 Survived ArithmeticOperator -> LEGEND_ITEM_GAP / scale | const LEGEND_ITEM_GAP_S = LEGEND_ITEM_GAP * scale;
+src/core/export/heatmap-svg.ts:174:42 Survived ArithmeticOperator -> SWATCH_S - 6 * scale | const legendItemW = (label: string) => SWATCH_S + 6 * scale + textW(label, FONT_LEGEND) + LEGEND_ITE
+src/core/export/heatmap-svg.ts:174:53 Survived ArithmeticOperator -> 6 / scale | const legendItemW = (label: string) => SWATCH_S + 6 * scale + textW(label, FONT_LEGEND) + LEGEND_ITE
+src/core/export/heatmap-svg.ts:178:46 Survived ArithmeticOperator -> row.reduce((w, i) => w + i.w, 0) + LEGEND_ITEM_GAP_S | const rowWidth = (row: { w: number }[]) => row.reduce((w, i) => w + i.w, 0) - LEGEND_ITEM_GAP_S;
+src/core/export/heatmap-svg.ts:182:36 Survived ArithmeticOperator -> legendItems.length * perRow | Array.from({ length: Math.ceil(legendItems.length / perRow) }, (_, i) =>
+src/core/export/heatmap-svg.ts:186:22 Survived EqualityOperator -> rows < legendItems.length | for (let rows = 1; rows <= legendItems.length; rows++) {
+src/core/export/heatmap-svg.ts:188:9 Survived MethodExpression -> candidate.some(row => rowWidth(row) <= contentW) | if (candidate.every((row) => rowWidth(row) <= contentW)) {
+src/core/export/heatmap-svg.ts:188:34 Survived EqualityOperator -> rowWidth(row) < contentW | if (candidate.every((row) => rowWidth(row) <= contentW)) {
+src/core/export/heatmap-svg.ts:195:22 Survived MethodExpression -> Math.min(...legendRows.map(row => row.length)) | const legendCols = Math.max(...legendRows.map((row) => row.length));
+src/core/export/heatmap-svg.ts:195:49 Survived ArrowFunction -> () => undefined | const legendCols = Math.max(...legendRows.map((row) => row.length));
+src/core/export/heatmap-svg.ts:196:27 Survived ObjectLiteral -> {} | const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]
+src/core/export/heatmap-svg.ts:196:61 Survived MethodExpression -> Math.min(...legendRows.map(row => row[c]?.w ?? 0)) | const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]
+src/core/export/heatmap-svg.ts:196:97 Survived LogicalOperator -> row[c]?.w && 0 | const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]
+src/core/export/heatmap-svg.ts:196:97 Survived OptionalChaining -> row[c].w | const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]
+src/core/export/heatmap-svg.ts:197:25 Survived ArrowFunction -> () => undefined | const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
+src/core/export/heatmap-svg.ts:197:35 Survived MethodExpression -> colW | const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
+src/core/export/heatmap-svg.ts:197:59 Survived ArrowFunction -> () => undefined | const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
+src/core/export/heatmap-svg.ts:197:69 Survived ArithmeticOperator -> x - w | const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
+src/core/export/heatmap-svg.ts:198:19 Survived ArithmeticOperator -> colW.reduce((w, c) => w + c, 0) + LEGEND_ITEM_GAP_S | const legendW = colW.reduce((w, c) => w + c, 0) - LEGEND_ITEM_GAP_S;
+src/core/export/heatmap-svg.ts:198:41 Survived ArithmeticOperator -> w - c | const legendW = colW.reduce((w, c) => w + c, 0) - LEGEND_ITEM_GAP_S;
+src/core/export/heatmap-svg.ts:199:21 Survived ArithmeticOperator -> gridY + gridH - LEGEND_GAP * scale | const legendTop = gridY + gridH + LEGEND_GAP * scale;
+src/core/export/heatmap-svg.ts:199:37 Survived ArithmeticOperator -> LEGEND_GAP / scale | const legendTop = gridY + gridH + LEGEND_GAP * scale;
+src/core/export/heatmap-svg.ts:200:19 Survived ArithmeticOperator -> legendRows.length * LEGEND_ROW_H * scale + (LEGEND_ROW_H * s | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
+src/core/export/heatmap-svg.ts:200:19 Survived ArithmeticOperator -> legendRows.length * LEGEND_ROW_H / scale | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
+src/core/export/heatmap-svg.ts:200:19 Survived ArithmeticOperator -> legendRows.length / LEGEND_ROW_H | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
+src/core/export/heatmap-svg.ts:200:63 Survived ArithmeticOperator -> LEGEND_ROW_H * scale + SWATCH_S | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
+src/core/export/heatmap-svg.ts:200:63 Survived ArithmeticOperator -> LEGEND_ROW_H / scale | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
+src/core/export/heatmap-svg.ts:202:18 Survived ArithmeticOperator -> PAD_S / 2 | const totalW = PAD_S * 2 + Math.max(contentW, legendW);
+src/core/export/heatmap-svg.ts:203:18 Survived ArithmeticOperator -> legendTop - legendH | const totalH = legendTop + legendH + PAD_S;
+src/core/export/heatmap-svg.ts:203:18 Survived ArithmeticOperator -> legendTop + legendH - PAD_S | const totalH = legendTop + legendH + PAD_S;
+src/core/export/heatmap-svg.ts:204:18 Survived ArithmeticOperator -> totalW + PAD_S * 2 | const innerW = totalW - PAD_S * 2;
+src/core/export/heatmap-svg.ts:204:27 Survived ArithmeticOperator -> PAD_S / 2 | const innerW = totalW - PAD_S * 2;
+src/core/export/heatmap-svg.ts:209:5 Survived StringLiteral -> `` | `<!-- ${GENERATOR_NOTE} -->`,
+src/core/export/heatmap-svg.ts:212:14 Survived StringLiteral -> `` | lines.push(`<rect width="${totalW}" height="${totalH}" fill="${COLOR_BG}"/>`);
+src/core/export/heatmap-svg.ts:214:19 Survived EqualityOperator -> i <= topLabels.length | for (let i = 0; i < topLabels.length; i++) {
+src/core/export/heatmap-svg.ts:215:16 Survived ArithmeticOperator -> gridX - i * (CELL_S + GAP_S) | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
+src/core/export/heatmap-svg.ts:215:16 Survived ArithmeticOperator -> gridX + i * (CELL_S + GAP_S) - CELL_S / 2 | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
+src/core/export/heatmap-svg.ts:215:24 Survived ArithmeticOperator -> i / (CELL_S + GAP_S) | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
+src/core/export/heatmap-svg.ts:215:29 Survived ArithmeticOperator -> CELL_S - GAP_S | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
+src/core/export/heatmap-svg.ts:215:47 Survived ArithmeticOperator -> CELL_S * 2 | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
+src/core/export/heatmap-svg.ts:216:16 Survived ArithmeticOperator -> gridY + LABEL_GAP_S | const cy = gridY - LABEL_GAP_S;
+src/core/export/heatmap-svg.ts:218:116 Survived ArithmeticOperator -> FONT_TOP / scale | `<text transform="translate(${cx},${cy}) rotate(-45)" text-anchor="start" font-family="${FONT}" font
+src/core/export/heatmap-svg.ts:219:25 NoCoverage StringLiteral -> "Stryker was here!" | topLabels[i] ?? "",
+src/core/export/heatmap-svg.ts:227:16 Survived ArithmeticOperator -> gridY - r * (CELL_S + GAP_S) | const cy = gridY + r * (CELL_S + GAP_S);
+src/core/export/heatmap-svg.ts:227:24 Survived ArithmeticOperator -> r / (CELL_S + GAP_S) | const cy = gridY + r * (CELL_S + GAP_S);
+src/core/export/heatmap-svg.ts:227:29 Survived ArithmeticOperator -> CELL_S - GAP_S | const cy = gridY + r * (CELL_S + GAP_S);
+src/core/export/heatmap-svg.ts:229:19 Survived ArithmeticOperator -> gridX + LABEL_GAP_S | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
+src/core/export/heatmap-svg.ts:229:46 Survived ArithmeticOperator -> cy - CELL_S / 2 | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
+src/core/export/heatmap-svg.ts:229:46 Survived ArithmeticOperator -> cy + CELL_S / 2 - 4 * scale | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
+src/core/export/heatmap-svg.ts:229:51 Survived ArithmeticOperator -> CELL_S * 2 | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
+src/core/export/heatmap-svg.ts:229:64 Survived ArithmeticOperator -> 4 / scale | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
+src/core/export/heatmap-svg.ts:229:129 Survived ArithmeticOperator -> FONT_LEFT / scale | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
+src/core/export/heatmap-svg.ts:230:26 NoCoverage StringLiteral -> "Stryker was here!" | leftLabels[r] ?? "",
+src/core/export/heatmap-svg.ts:236:18 Survived ArithmeticOperator -> gridX - c * (CELL_S + GAP_S) | const cx = gridX + c * (CELL_S + GAP_S);
+src/core/export/heatmap-svg.ts:236:26 Survived ArithmeticOperator -> c / (CELL_S + GAP_S) | const cx = gridX + c * (CELL_S + GAP_S);
+src/core/export/heatmap-svg.ts:236:31 Survived ArithmeticOperator -> CELL_S - GAP_S | const cx = gridX + c * (CELL_S + GAP_S);
+src/core/export/heatmap-svg.ts:239:43 Survived OptionalChaining -> role.name | const score = scoreFor(authors[ai], role?.name ?? "");
+src/core/export/heatmap-svg.ts:239:57 NoCoverage StringLiteral -> "Stryker was here!" | const score = scoreFor(authors[ai], role?.name ?? "");
+src/core/export/heatmap-svg.ts:240:18 Survived ArithmeticOperator -> 3 / scale | const rx = 3 * scale;
+src/core/export/heatmap-svg.ts:249:5 Survived StringLiteral -> `` | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
+src/core/export/heatmap-svg.ts:249:17 Survived ArithmeticOperator -> gridX + 1 | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
+src/core/export/heatmap-svg.ts:249:34 Survived ArithmeticOperator -> gridY + 1 | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
+src/core/export/heatmap-svg.ts:249:55 Survived ArithmeticOperator -> gridW - 2 | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
+src/core/export/heatmap-svg.ts:249:77 Survived ArithmeticOperator -> gridH - 2 | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
+src/core/export/heatmap-svg.ts:249:95 Survived ArithmeticOperator -> 3 / scale | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
+src/core/export/heatmap-svg.ts:249:113 Survived ArithmeticOperator -> 3 / scale | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
+src/core/export/heatmap-svg.ts:249:178 Survived ArithmeticOperator -> 0.5 / scale | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
+src/core/export/heatmap-svg.ts:254:15 Survived ArithmeticOperator -> legendTop - rowIndex * LEGEND_ROW_H * scale | const y = legendTop + rowIndex * LEGEND_ROW_H * scale;
+src/core/export/heatmap-svg.ts:254:27 Survived ArithmeticOperator -> rowIndex * LEGEND_ROW_H / scale | const y = legendTop + rowIndex * LEGEND_ROW_H * scale;
+src/core/export/heatmap-svg.ts:254:27 Survived ArithmeticOperator -> rowIndex / LEGEND_ROW_H | const y = legendTop + rowIndex * LEGEND_ROW_H * scale;
+src/core/export/heatmap-svg.ts:255:20 Survived ArithmeticOperator -> PAD_S - (innerW - legendW) / 2 | const blockX = PAD_S + (innerW - legendW) / 2;
+src/core/export/heatmap-svg.ts:255:28 Survived ArithmeticOperator -> (innerW - legendW) * 2 | const blockX = PAD_S + (innerW - legendW) / 2;
+src/core/export/heatmap-svg.ts:255:29 Survived ArithmeticOperator -> innerW + legendW | const blockX = PAD_S + (innerW - legendW) / 2;
+src/core/export/heatmap-svg.ts:257:18 Survived ArithmeticOperator -> blockX - (colX[col] ?? 0) | const lx = blockX + (colX[col] ?? 0);
+src/core/export/heatmap-svg.ts:257:28 Survived LogicalOperator -> colX[col] && 0 | const lx = blockX + (colX[col] ?? 0);
+src/core/export/heatmap-svg.ts:259:82 Survived ArithmeticOperator -> 2 / scale | `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${2 * scale}" ry="${2 * scale
+src/core/export/heatmap-svg.ts:259:100 Survived ArithmeticOperator -> 2 / scale | `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${2 * scale}" ry="${2 * scale
+src/core/export/heatmap-svg.ts:262:21 Survived ArithmeticOperator -> lx - SWATCH_S | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
+src/core/export/heatmap-svg.ts:262:21 Survived ArithmeticOperator -> lx + SWATCH_S - 4 * scale | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
+src/core/export/heatmap-svg.ts:262:37 Survived ArithmeticOperator -> 4 / scale | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
+src/core/export/heatmap-svg.ts:262:54 Survived ArithmeticOperator -> y - SWATCH_S | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
+src/core/export/heatmap-svg.ts:262:54 Survived ArithmeticOperator -> y + SWATCH_S + 3 * scale | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
+src/core/export/heatmap-svg.ts:262:69 Survived ArithmeticOperator -> 3 / scale | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
+src/core/export/heatmap-svg.ts:262:116 Survived ArithmeticOperator -> FONT_LEGEND / scale | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
+src/core/export/heatmap-svg.ts:268:21 Survived StringLiteral -> "" | return lines.join("\n");
+src/core/export/tenzing.ts:24:10 Survived MethodExpression -> value | return value?.trim().toLowerCase() === "true";
+src/core/export/tenzing.ts:24:10 Survived OptionalChaining -> value.trim | return value?.trim().toLowerCase() === "true";
+src/core/export/tenzing.ts:28:19 Survived MethodExpression -> text.replace(/^﻿/, "") | const trimmed = text.replace(/^﻿/, "").trim();
+src/core/export/tenzing.ts:28:32 Survived Regex -> /﻿/ | const trimmed = text.replace(/^﻿/, "").trim();
+src/core/export/tenzing.ts:29:22 NoCoverage ArrayDeclaration -> ["Stryker was here"] | const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(trimmed));
+src/core/export/tenzing.ts:37:18 Survived MethodExpression -> rows.map((row, index) => {   const firstName = cell(row, "fi | const people = rows
+src/core/export/tenzing.ts:46:25 Survived ConditionalExpression -> false | .filter((person) => person.firstName || person.middleName || person.surname)
+src/core/export/tenzing.ts:46:25 Survived ConditionalExpression -> true | .filter((person) => person.firstName || person.middleName || person.surname)
+src/core/export/tenzing.ts:46:25 Survived LogicalOperator -> (person.firstName || person.middleName) && person.surname | .filter((person) => person.firstName || person.middleName || person.surname)
+src/core/export/tenzing.ts:46:25 Survived LogicalOperator -> person.firstName && person.middleName | .filter((person) => person.firstName || person.middleName || person.surname)
+src/core/export/tenzing.ts:47:42 Survived ArithmeticOperator -> a.index + b.index | .sort((a, b) => a.order - b.order || a.index - b.index);
+src/core/export/xml-import.ts:41:7 Survived ConditionalExpression -> false | if (contribEls.length === 0) return [];
+src/core/export/xml-import.ts:55:24 Survived MethodExpression -> (givenNamesEl?.textContent ?? "").replace(/\s+/g, " ") | const givenNames = (givenNamesEl?.textContent ?? "").replace(/\s+/g, " ").trim();
+src/core/export/xml-import.ts:56:21 Survived MethodExpression -> (surnameEl?.textContent ?? "").replace(/\s+/g, " ") | const surname = (surnameEl?.textContent ?? "").replace(/\s+/g, " ").trim();
+src/core/export/xml-import.ts:58:25 Survived MethodExpression -> [givenNames, surname] | const displayName = [givenNames, surname].filter(Boolean).join(" ");
+src/core/export/xml-import.ts:61:24 Survived MethodExpression -> cleanNamePart(givenNames).split(/\s+/) | const givenParts = cleanNamePart(givenNames).split(/\s+/).filter(Boolean);
+src/core/export/xml-import.ts:61:56 Survived Regex -> /\s/ | const givenParts = cleanNamePart(givenNames).split(/\s+/).filter(Boolean);
+src/core/export/xml-import.ts:62:41 Survived StringLiteral -> "Stryker was here!" | const givenFirst = givenParts[0] ?? "";
+src/core/export/xml-import.ts:66:9 Survived ConditionalExpression -> false | if (!displayName) return [];
+src/core/export/xml-import.ts:75:88 Survived StringLiteral -> "Stryker was here!" | roleNameByUrl.get(normalizeRoleUrl(el.getAttribute("vocab-term-identifier") ?? "")) ??
+src/core/export/xml-import.ts:76:35 Survived StringLiteral -> "" | roleNamed(el.getAttribute("vocab-term") ?? "") ??
+src/core/export/xml-import.ts:76:52 Survived StringLiteral -> "Stryker was here!" | roleNamed(el.getAttribute("vocab-term") ?? "") ??
+src/core/export/xml-import.ts:77:37 Survived StringLiteral -> "Stryker was here!" | roleNamed(el.textContent ?? "");
+src/core/export/xml-import.ts:78:11 Survived ConditionalExpression -> false | if (!name) continue;
+src/core/export/xml-import.ts:80:102 Survived StringLiteral -> "Stryker was here!" | const score = LEVEL_SCORES.get(el.getAttribute("degree-contribution")?.trim().toLowerCase() ?? "") ?
+src/core/export/xml-import.ts:92:34 Survived OptionalChaining -> orcidEl?.textContent.trim | const orcid = normalizeOrcid(orcidEl?.textContent?.trim() ?? "");
+src/core/export/xml-import.ts:92:66 Survived StringLiteral -> "Stryker was here!" | const orcid = normalizeOrcid(orcidEl?.textContent?.trim() ?? "");
+src/core/export/xml-import.ts:110:15 Survived ConditionalExpression -> false | ...(givenNames && surname ? { firstName: givenFirst, middleName: givenMiddle, surname } : {}),
+src/core/export/xml-import.ts:110:39 Survived ObjectLiteral -> {} | ...(givenNames && surname ? { firstName: givenFirst, middleName: givenMiddle, surname } : {}),
+src/core/export/xml-import.ts:112:15 Survived ConditionalExpression -> true | ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),
+src/core/export/xml-import.ts:112:15 Survived LogicalOperator -> orcid || isValidOrcid(orcid) | ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),
+src/core/export/xml-import.ts:125:10 Survived MethodExpression -> url.trim().toUpperCase() | return url
+src/core/export/xml-import.ts:128:14 Survived Regex -> /^https:\/\// | .replace(/^https?:\/\//, "")
+src/core/export/xml-import.ts:128:14 Survived Regex -> /https?:\/\// | .replace(/^https?:\/\//, "")
+src/core/export/xml-import.ts:128:30 Survived StringLiteral -> "Stryker was here!" | .replace(/^https?:\/\//, "")
+src/core/export/xml-import.ts:129:22 Survived StringLiteral -> "Stryker was here!" | .replace(/\/+$/, "");
+src/core/export/xml.ts:50:16 Survived MethodExpression -> author.name | const name = author.name.trim();
+src/core/export/xml.ts:56:39 Survived ConditionalExpression -> false | const isSurname = (text: string) => text === surname || wordsOf(text) === wordsOf(surname);
+src/core/export/xml.ts:57:28 Survived Regex -> /\s/ | const words = name.split(/\s+/);
+src/core/export/xml.ts:58:16 Survived ArithmeticOperator -> words.length + 1 | for (let i = words.length - 1; i > 0; i -= 1) {
+src/core/export/xml.ts:58:34 Survived EqualityOperator -> i >= 0 | for (let i = words.length - 1; i > 0; i -= 1) {
+src/core/export/xml.ts:59:39 Survived StringLiteral -> "" | if (isSurname(words.slice(i).join(" "))) return words.slice(0, i).join(" ");
+src/core/export/xml.ts:63:7 Survived ConditionalExpression -> true | if (comma > 0 && isSurname(name.slice(0, comma).trim())) return name.slice(comma + 1).trim();
+src/core/export/xml.ts:63:7 Survived EqualityOperator -> comma >= 0 | if (comma > 0 && isSurname(name.slice(0, comma).trim())) return name.slice(comma + 1).trim();
+src/core/export/xml.ts:63:7 Survived LogicalOperator -> comma > 0 || isSurname(name.slice(0, comma).trim()) | if (comma > 0 && isSurname(name.slice(0, comma).trim())) return name.slice(comma + 1).trim();
+src/core/export/xml.ts:63:30 Survived MethodExpression -> name.slice(0, comma) | if (comma > 0 && isSurname(name.slice(0, comma).trim())) return name.slice(comma + 1).trim();
+src/core/export/xml.ts:68:10 Survived MethodExpression -> cleanNamePart(text).split(/\s+/) | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
+src/core/export/xml.ts:68:36 Survived Regex -> /\s/ | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
+src/core/export/xml.ts:68:64 Survived StringLiteral -> "" | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
+src/core/parse-authors.ts:36:22 Survived MethodExpression -> name.split(",").map(part => part.trim()) | const commaParts = name
+src/core/parse-authors.ts:38:20 Survived MethodExpression -> part | .map((part) => part.trim())
+src/core/parse-authors.ts:40:7 Survived LogicalOperator -> commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
+src/core/parse-authors.ts:40:7 Survived LogicalOperator -> commaParts.length === 2 || isSurnamePart(commaParts[0] ?? "" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
+src/core/parse-authors.ts:40:65 NoCoverage StringLiteral -> "Stryker was here!" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
+src/core/parse-authors.ts:40:105 NoCoverage StringLiteral -> "Stryker was here!" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
+src/core/parse-authors.ts:41:52 NoCoverage StringLiteral -> "Stryker was here!" | const surname = cleanNamePart(commaParts[0] ?? "");
+src/core/parse-authors.ts:42:24 Survived MethodExpression -> cleanNamePart(commaParts[1] ?? "").split(/\s+/) | const givenParts = cleanNamePart(commaParts[1] ?? "")
+src/core/parse-authors.ts:42:55 NoCoverage StringLiteral -> "Stryker was here!" | const givenParts = cleanNamePart(commaParts[1] ?? "")
+src/core/parse-authors.ts:43:14 Survived Regex -> /\s/ | .split(/\s+/)
+src/core/parse-authors.ts:46:35 NoCoverage StringLiteral -> "Stryker was here!" | firstName: givenParts[0] ?? "",
+src/core/parse-authors.ts:47:19 Survived ConditionalExpression -> true | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
+src/core/parse-authors.ts:47:19 Survived EqualityOperator -> givenParts.length >= 1 | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
+src/core/parse-authors.ts:47:61 NoCoverage StringLiteral -> "Stryker was here!" | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
+src/core/parse-authors.ts:55:17 Survived MethodExpression -> cleaned.split(/\s+/) | const parts = cleaned.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:55:31 Survived Regex -> /\s/ | const parts = cleaned.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:60:68 NoCoverage StringLiteral -> "Stryker was here!" | while (surnameStart > 1 && isParticle(parts[surnameStart - 1] ?? "")) surnameStart -= 1;
+src/core/parse-authors.ts:62:33 Survived StringLiteral -> "Stryker was here!" | const firstName = parts[0] ?? "";
+src/core/parse-authors.ts:64:54 NoCoverage StringLiteral -> "Stryker was here!" | const middleName = surnameStart > 1 ? (parts[1] ?? "") : "";
+src/core/parse-authors.ts:71:10 Survived MethodExpression -> value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "") | return value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "").trim();
+src/core/parse-authors.ts:75:29 Survived Regex -> /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul} | const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul}]+$/u;
+src/core/parse-authors.ts:86:30 Survived MethodExpression -> name | if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
+src/core/parse-authors.ts:86:66 Survived MethodExpression -> name | if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
+src/core/parse-authors.ts:89:7 Survived ConditionalExpression -> false | if (parts.length === 0) return name.trim();
+src/core/parse-authors.ts:89:34 NoCoverage MethodExpression -> name | if (parts.length === 0) return name.trim();
+src/core/parse-authors.ts:95:37 NoCoverage StringLiteral -> "Stryker was here!" | const letter = [...p][0] ?? "";
+src/core/parse-authors.ts:191:14 Survived Regex -> /[\s\p{Cc}]/gu | .replace(/[\s\p{Cc}]+/gu, (run) => (/\p{Cc}/u.test(run) ? " " : run))
+src/core/parse-authors.ts:205:36 Survived ArrayDeclaration -> ["Stryker was here"] | for (const c of contributions ?? []) {
+src/core/parse-authors.ts:226:11 Survived ConditionalExpression -> true | if (extraIdx < surnameCodePoints.length) {
+src/core/parse-authors.ts:226:11 Survived EqualityOperator -> extraIdx <= surnameCodePoints.length | if (extraIdx < surnameCodePoints.length) {
+src/core/parse-authors.ts:227:31 Survived OptionalChaining -> surnameCodePoints[extraIdx].toLowerCase | attempt = initials + (surnameCodePoints[extraIdx]?.toLowerCase() ?? String(extraIdx));
+src/core/parse-authors.ts:283:11 Survived ConditionalExpression -> true | ? a.contributions.length === b.contributions.length &&
+src/core/parse-authors.ts:284:54 Survived OptionalChaining -> b.contributions[i].role | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
+src/core/parse-authors.ts:284:82 Survived ConditionalExpression -> true | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
+src/core/parse-authors.ts:284:94 Survived OptionalChaining -> b.contributions[i].score | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
+src/core/parse-authors.ts:301:7 Survived ConditionalExpression -> false | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+src/core/parse-authors.ts:301:8 Survived ArrayDeclaration -> [] | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+src/core/parse-authors.ts:301:8 Survived MethodExpression -> [firstName, middleName, surname].some(part => typeof part == | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+src/core/parse-authors.ts:301:57 Survived ConditionalExpression -> true | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+src/core/parse-authors.ts:302:61 Survived Regex -> /\s/ | const words = (text: string) => cleanNamePart(text).split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:310:43 Survived ArithmeticOperator -> all.length + last.length | const between = all.slice(first.length, all.length - last.length);
+src/core/parse-authors.ts:312:5 Survived ConditionalExpression -> true | first.length > 0 &&
+src/core/parse-authors.ts:312:5 Survived ConditionalExpression -> true | first.length > 0 &&
+src/core/parse-authors.ts:312:5 Survived EqualityOperator -> first.length >= 0 | first.length > 0 &&
+src/core/parse-authors.ts:312:5 Survived LogicalOperator -> first.length > 0 || first.length + last.length <= all.length | first.length > 0 &&
+src/core/parse-authors.ts:313:5 Survived ArithmeticOperator -> first.length - last.length | first.length + last.length <= all.length &&
+src/core/parse-authors.ts:313:5 Survived ConditionalExpression -> true | first.length + last.length <= all.length &&
+src/core/parse-authors.ts:317:6 Survived ConditionalExpression -> false | (last.length > 0 || between.length === middle.length);
+src/core/parse-authors.ts:367:17 Survived MethodExpression -> surname.split(/\s+/) | const words = surname.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:367:31 Survived Regex -> /\s/ | const words = surname.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:369:10 Survived ConditionalExpression -> false | return start === -1 ? surname : words.slice(start).join(" ");
+src/core/parse-authors.ts:369:59 Survived StringLiteral -> "" | return start === -1 ? surname : words.slice(start).join(" ");
+src/core/parse-authors.ts:374:7 Survived ConditionalExpression -> false | if (ORCID_INPUT_REGEX.test(text)) return false;
+src/core/parse-authors.ts:374:44 NoCoverage BooleanLiteral -> true | if (ORCID_INPUT_REGEX.test(text)) return false;
+src/core/parse-authors.ts:375:17 Survived MethodExpression -> text.split(/\s+/) | const words = text.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:375:28 Survived Regex -> /\s/ | const words = text.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:377:7 Survived ConditionalExpression -> false | if (!last || !/\p{L}/u.test(last)) return false;
+src/core/parse-authors.ts:377:7 Survived LogicalOperator -> !last && !/\p{L}/u.test(last) | if (!last || !/\p{L}/u.test(last)) return false;
+src/core/parse-authors.ts:383:7 Survived ConditionalExpression -> false | if (ORCID_INPUT_REGEX.test(text)) return false;
+src/core/parse-authors.ts:383:44 NoCoverage BooleanLiteral -> true | if (ORCID_INPUT_REGEX.test(text)) return false;
+src/core/parse-authors.ts:384:17 Survived MethodExpression -> text.split(/\s+/) | const words = text.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:384:28 Survived Regex -> /\s/ | const words = text.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts:385:10 Survived ConditionalExpression -> true | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
+src/core/parse-authors.ts:385:10 Survived EqualityOperator -> words.length >= 0 | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
+src/core/parse-authors.ts:385:51 Survived MethodExpression -> words.some(word => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u.test(word) | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
+src/core/parse-authors.ts:385:73 Survived Regex -> /\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
+src/core/parse-authors.ts:385:73 Survived Regex -> /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
+src/core/parse-authors.ts:385:73 Survived Regex -> /^\p{L}[\p{L}\P{M}'’ʼ-]*\.?$/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
+src/core/parse-authors.ts:397:10 Survived MethodExpression -> text.split(/[\n\r\v\f;]+/).flatMap(line => splitCommaLine(li | return text
+src/core/parse-authors.ts:398:12 Survived Regex -> /[\n\r\v\f;]/ | .split(/[\n\r\v\f;]+/)
+src/core/parse-authors.ts:400:20 Survived MethodExpression -> part | .map((part) => part.trim())
+src/core/parse-authors.ts:405:18 Survived MethodExpression -> line.split(",").map(part => part.trim()) | const chunks = line
+src/core/parse-authors.ts:409:7 Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
+src/core/parse-authors.ts:409:7 Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
+src/core/parse-authors.ts:409:7 Survived LogicalOperator -> chunks.length < 2 && chunks.length % 2 !== 0 | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
+src/core/parse-authors.ts:409:28 Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
+src/core/parse-authors.ts:416:34 NoCoverage StringLiteral -> "Stryker was here!" | const surname = chunks[i] ?? "";
+src/core/parse-authors.ts:417:36 NoCoverage StringLiteral -> "Stryker was here!" | const given = chunks[i + 1] ?? "";
+src/core/share-payload.ts:71:51 Survived ObjectLiteral -> {} | if (payload.c && !payload.d) ctx.addIssue({ code: "custom", message: "claim without source draft" })
+src/core/share-payload.ts:71:59 Survived StringLiteral -> "" | if (payload.c && !payload.d) ctx.addIssue({ code: "custom", message: "claim without source draft" })
+src/core/share-payload.ts:71:78 Survived StringLiteral -> "" | if (payload.c && !payload.d) ctx.addIssue({ code: "custom", message: "claim without source draft" })
+src/core/share-payload.ts:72:51 Survived ObjectLiteral -> {} | if (payload.r && !payload.c) ctx.addIssue({ code: "custom", message: "reply without claim" });
+src/core/share-payload.ts:72:59 Survived StringLiteral -> "" | if (payload.r && !payload.c) ctx.addIssue({ code: "custom", message: "reply without claim" });
+src/core/share-payload.ts:72:78 Survived StringLiteral -> "" | if (payload.r && !payload.c) ctx.addIssue({ code: "custom", message: "reply without claim" });
+src/core/share-payload.ts:73:51 Survived ObjectLiteral -> {} | if (payload.k && !payload.r) ctx.addIssue({ code: "custom", message: "sign-in on a link that is not 
+src/core/share-payload.ts:73:59 Survived StringLiteral -> "" | if (payload.k && !payload.r) ctx.addIssue({ code: "custom", message: "sign-in on a link that is not 
+src/core/share-payload.ts:73:78 Survived StringLiteral -> "" | if (payload.k && !payload.r) ctx.addIssue({ code: "custom", message: "sign-in on a link that is not 
+src/core/share-payload.ts:75:24 Survived ObjectLiteral -> {} | ctx.addIssue({ code: "custom", message: "claim names an absent contributor" });
+src/core/share-payload.ts:75:32 Survived StringLiteral -> "" | ctx.addIssue({ code: "custom", message: "claim names an absent contributor" });
+src/core/share-payload.ts:75:51 Survived StringLiteral -> "" | ctx.addIssue({ code: "custom", message: "claim names an absent contributor" });
+src/core/share-payload.ts:78:24 Survived ObjectLiteral -> {} | ctx.addIssue({ code: "custom", message: "duplicate contributor ids" });
+src/core/share-payload.ts:78:32 Survived StringLiteral -> "" | ctx.addIssue({ code: "custom", message: "duplicate contributor ids" });
+src/core/share-payload.ts:78:51 Survived StringLiteral -> "" | ctx.addIssue({ code: "custom", message: "duplicate contributor ids" });
+src/core/share-payload.ts:148:9 Survived ConditionalExpression -> true | ...(sentAt !== undefined ? { w: sentAt } : {}),
+src/core/statement.ts:37:7 Survived ConditionalExpression -> true | if (surname && comma > 0 && name.slice(0, comma).includes(surname)) {
+src/core/statement.ts:37:7 Survived LogicalOperator -> surname && comma > 0 || name.slice(0, comma).includes(surnam | if (surname && comma > 0 && name.slice(0, comma).includes(surname)) {
+src/core/statement.ts:37:7 Survived LogicalOperator -> surname || comma > 0 | if (surname && comma > 0 && name.slice(0, comma).includes(surname)) {
+src/core/statement.ts:37:18 Survived ConditionalExpression -> true | if (surname && comma > 0 && name.slice(0, comma).includes(surname)) {
+src/core/statement.ts:37:18 Survived EqualityOperator -> comma >= 0 | if (surname && comma > 0 && name.slice(0, comma).includes(surname)) {
+src/core/statement.ts:37:31 Survived MethodExpression -> name | if (surname && comma > 0 && name.slice(0, comma).includes(surname)) {
+src/core/statement.ts:41:17 Survived EqualityOperator -> at >= 0 | const given = at > 0 ? name.slice(0, at).trim() : [author.firstName, author.middleName].filter(Boole
+src/core/statement.ts:97:3 Survived StringLiteral -> "" | "formal-analysis",
+src/core/statement.ts:98:3 Survived StringLiteral -> "" | "funding-acquisition",
+src/core/statement.ts:99:3 Survived StringLiteral -> "" | "project-administration",
+src/core/statement.ts:100:3 Survived StringLiteral -> "" | "visualization",
+src/core/statement.ts:105:16 Survived Regex -> / ?[‐-―−-] ?/gu | const DASHES = / ?[‐-―−-]+ ?/gu;
+src/core/statement.ts:115:10 Survived MethodExpression -> text.replaceAll("&", " and ").replace(SPACES, " ").replace(D | return text.replaceAll("&", " and ").replace(SPACES, " ").replace(DASHES, " - ").replace(SPACES, " "
+src/core/statement.ts:123:75 NoCoverage StringLiteral -> "Stryker was here!" | SLUGS[m.findIndex((group, i) => i > 0 && group !== undefined) - 1] ?? "",
+src/core/statement.ts:158:15 Survived StringLiteral -> `` | String.raw`[^;]*?(?:\.(?=\s|$)|;|$)`,
+src/core/statement.ts:159:3 Survived StringLiteral -> "" | "giu",
+src/core/statement.ts:161:21 Survived Regex -> /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[^nr]|v[ao]n)$/u | const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", .
+src/core/statement.ts:161:21 Survived Regex -> /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[^ao]n)$/u | const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", .
+src/core/statement.ts:161:21 Survived Regex -> /^(?:d[aeiou]s?|del(?:la)|der|la|le|te[nr]|v[ao]n)$/u | const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", .
+src/core/statement.ts:166:27 Survived Regex -> /[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
+src/core/statement.ts:166:27 Survived Regex -> /^[ ,;:-]*\p{Lu}\.?(?: - ?)?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
+src/core/statement.ts:166:27 Survived Regex -> /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\P{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
+src/core/statement.ts:166:27 Survived Regex -> /^[ ,;:-]*\P{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
+src/core/statement.ts:166:27 Survived Regex -> /^[ ,;:-]*\p{Lu}\.?(?: ?- )?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
+src/core/statement.ts:167:28 Survived Regex -> /(?<!\p{L})\p{Lu}\.?(?: - ?)?\p{Lu}\.?[ ,;:-]*$/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
+src/core/statement.ts:167:28 Survived Regex -> /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
+src/core/statement.ts:167:28 Survived Regex -> /(?<!\P{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
+src/core/statement.ts:167:28 Survived Regex -> /(?<!\p{L})\p{Lu}\.?(?: ?- )?\p{Lu}\.?[ ,;:-]*$/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
+src/core/statement.ts:168:25 Survived Regex -> /(?<!\P{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu | const SENTENCE_END_RE = /(?<!\p{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu;
+src/core/statement.ts:168:25 Survived Regex -> /(?<=\p{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu | const SENTENCE_END_RE = /(?<!\p{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu;
+src/core/statement.ts:171:3 Survived Regex -> /\bauthors?\b[^.;]{0,80}?\b(?:wrote|written|performed|contri | /\bauthors?\b[^.;]{0,80}?\b(?:wrote|written|performed|contributed|conceived|designed|drafted|revised
+src/core/statement.ts:171:3 Survived Regex -> /\bauthors?\b[^.;]\b(?:wrote|written|performed|contributed|c | /\bauthors?\b[^.;]{0,80}?\b(?:wrote|written|performed|contributed|conceived|designed|drafted|revised
+src/core/statement.ts:171:3 Survived Regex -> /\bauthors\b[^.;]{0,80}?\b(?:wrote|written|performed|contrib | /\bauthors?\b[^.;]{0,80}?\b(?:wrote|written|performed|contributed|conceived|designed|drafted|revised
+src/core/statement.ts:181:48 Survived StringLiteral -> "" | const lowerWords = (cleaned.replace(ROLE_RE, " ").match(LOWER_WORD_RE) ?? []).filter(
+src/core/statement.ts:181:77 Survived ArrayDeclaration -> ["Stryker was here"] | const lowerWords = (cleaned.replace(ROLE_RE, " ").match(LOWER_WORD_RE) ?? []).filter(
+src/core/statement.ts:185:42 Survived ArrayDeclaration -> ["Stryker was here"] | if ((cleaned.match(SENTENCE_END_RE) ?? []).length >= 2 && lowerWords.length >= 4) return true;
+src/core/statement.ts:188:39 Survived EqualityOperator -> lowerWords.length > 3 | if (LABEL_COLON_RE.test(cleaned) || lowerWords.length >= 3) return true;
+src/core/statement.ts:189:10 Survived MethodExpression -> roles.every(([start, end]) => INITIALS_AFTER_RE.test(cleaned | return roles.some(
+src/core/statement.ts:196:33 Survived Regex -> /\p{Uppercase}/u | const isUpper = (ch: string) => /^\p{Uppercase}/u.test(ch);
+src/core/statement.ts:197:17 Survived ArrowFunction -> () => undefined | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
+src/core/statement.ts:197:45 Survived ConditionalExpression -> false | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
+src/core/statement.ts:197:45 Survived ConditionalExpression -> true | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
+src/core/statement.ts:197:45 Survived EqualityOperator -> ch === undefined | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
+src/core/statement.ts:197:65 Survived Regex -> /[\p{L}\p{N}_]/u | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
+src/core/statement.ts:198:43 NoCoverage StringLiteral -> "Stryker was here!" | const first = (s: string) => [...s][0] ?? "";
+src/core/statement.ts:200:61 Survived StringLiteral -> "" | const fold = (s: string) => s.toLowerCase().replaceAll("ß", "ss").replaceAll("ς", "σ");
+src/core/statement.ts:200:83 Survived StringLiteral -> "" | const fold = (s: string) => s.toLowerCase().replaceAll("ß", "ss").replaceAll("ς", "σ");
+src/core/statement.ts:204:15 Survived BooleanLiteral -> true | let cased = false;
+src/core/statement.ts:207:9 Survived ConditionalExpression -> true | if (/\p{Lowercase}/u.test(ch)) cased = true;
+src/core/statement.ts:219:17 Survived MethodExpression -> author.given.split(/[\s.-]+/u) | const given = author.given.split(/[\s.-]+/u).filter(Boolean);
+src/core/statement.ts:219:36 Survived Regex -> /[\s.-]/u | const given = author.given.split(/[\s.-]+/u).filter(Boolean);
+src/core/statement.ts:220:17 Survived MethodExpression -> author.surname.split(/[\s-]+/u) | const words = author.surname.split(/[\s-]+/u).filter(Boolean);
+src/core/statement.ts:220:38 Survived Regex -> /[\s-]/u | const words = author.surname.split(/[\s-]+/u).filter(Boolean);
+src/core/statement.ts:227:84 NoCoverage StringLiteral -> "Stryker was here!" | return chunks.length === parts.length && chunks.every((c, i) => fold(parts[i] ?? "").startsWith(fold
+src/core/statement.ts:232:7 Survived ConditionalExpression -> false | if (surname.length === 0) return false;
+src/core/statement.ts:232:36 NoCoverage BooleanLiteral -> true | if (surname.length === 0) return false;
+src/core/statement.ts:233:32 Survived UnaryOperator -> +surname.length | const head = chunks.slice(0, -surname.length);
+src/core/statement.ts:237:32 Survived StringLiteral -> "Stryker was here!" | const rest = fold(given.join(""));
+src/core/statement.ts:240:31 Survived BlockStatement -> {} | for (const chunk of others) {
+src/core/statement.ts:242:9 Survived ConditionalExpression -> false | if (pos < 0) return false;
+src/core/statement.ts:242:9 Survived EqualityOperator -> pos <= 0 | if (pos < 0) return false;
+src/core/statement.ts:242:25 NoCoverage BooleanLiteral -> true | if (pos < 0) return false;
+src/core/statement.ts:243:5 Survived AssignmentOperator -> pos -= chunk.length | pos += chunk.length;
+src/core/statement.ts:251:34 Survived Regex -> /(?<!\.)[a-z](?=\.)/g | for (const ch of token.replace(/(?<=\.)[a-z](?=\.)/g, "")) {
+src/core/statement.ts:251:34 Survived Regex -> /(?<=\.)[a-z](?!\.)/g | for (const ch of token.replace(/(?<=\.)[a-z](?=\.)/g, "")) {
+src/core/statement.ts:253:24 Survived ConditionalExpression -> false | if (isUpper(ch) || chunks.length === 0) chunks.push(ch);
+src/core/statement.ts:276:7 Survived ConditionalExpression -> false | if (chunks.length === 0) return [];
+src/core/statement.ts:282:5 Survived ArrowFunction -> () => undefined | (g, s) => fits(chunks, [...g.slice(0, 1), ...s]),
+src/core/statement.ts:282:28 Survived ArrayDeclaration -> [] | (g, s) => fits(chunks, [...g.slice(0, 1), ...s]),
+src/core/statement.ts:282:32 Survived MethodExpression -> g | (g, s) => fits(chunks, [...g.slice(0, 1), ...s]),
+src/core/statement.ts:285:5 Survived ArrowFunction -> () => undefined | (g, _s, _w, c) => fits(chunks, [...g, ...c]),
+src/core/statement.ts:285:36 Survived ArrayDeclaration -> [] | (g, _s, _w, c) => fits(chunks, [...g, ...c]),
+src/core/statement.ts:286:23 Survived LogicalOperator -> fits(chunks, [...g, ...c.slice(0, 1)]) && fits(chunks, [...g | (g, _s, _w, c) => fits(chunks, [...g, ...c.slice(0, 1)]) || fits(chunks, [...g.slice(0, 1), ...c.sli
+src/core/statement.ts:286:36 Survived ArrayDeclaration -> [] | (g, _s, _w, c) => fits(chunks, [...g, ...c.slice(0, 1)]) || fits(chunks, [...g.slice(0, 1), ...c.sli
+src/core/statement.ts:286:46 Survived MethodExpression -> c | (g, _s, _w, c) => fits(chunks, [...g, ...c.slice(0, 1)]) || fits(chunks, [...g.slice(0, 1), ...c.sli
+src/core/statement.ts:286:78 Survived ArrayDeclaration -> [] | (g, _s, _w, c) => fits(chunks, [...g, ...c.slice(0, 1)]) || fits(chunks, [...g.slice(0, 1), ...c.sli
+src/core/statement.ts:286:82 Survived MethodExpression -> g | (g, _s, _w, c) => fits(chunks, [...g, ...c.slice(0, 1)]) || fits(chunks, [...g.slice(0, 1), ...c.sli
+src/core/statement.ts:286:100 Survived MethodExpression -> c | (g, _s, _w, c) => fits(chunks, [...g, ...c.slice(0, 1)]) || fits(chunks, [...g.slice(0, 1), ...c.sli
+src/core/statement.ts:305:7 Survived ConditionalExpression -> false | if (!surname) return [new Set(), new Set()];
+src/core/statement.ts:305:24 NoCoverage ArrayDeclaration -> [] | if (!surname) return [new Set(), new Set()];
+src/core/statement.ts:306:16 Survived MethodExpression -> `${given} ${surname}` | const name = `${given} ${surname}`.trim();
+src/core/statement.ts:308:57 Survived StringLiteral -> "Stryker was here!" | const initials = nameParts(author)[0].map(first).join("");
+src/core/statement.ts:309:20 Survived MethodExpression -> given.split(/\s+/u) | const hyphened = given
+src/core/statement.ts:310:12 Survived Regex -> /\s/u | .split(/\s+/u)
+src/core/statement.ts:312:20 Survived MethodExpression -> word.split("-") | .map((word) => word.split("-").filter(Boolean).map(first).join("-"));
+src/core/statement.ts:313:74 Survived StringLiteral -> "Stryker was here!" | const dotted = hyphened.map((h) => `${h.replaceAll("-", ".-")}.`).join("");
+src/core/statement.ts:314:28 Survived StringLiteral -> `` | const forms = [initials, `${[...initials].join(".")}.`, hyphened.join(""), dotted];
+src/core/statement.ts:314:31 Survived ArrayDeclaration -> [] | const forms = [initials, `${[...initials].join(".")}.`, hyphened.join(""), dotted];
+src/core/statement.ts:314:50 Survived StringLiteral -> "" | const forms = [initials, `${[...initials].join(".")}.`, hyphened.join(""), dotted];
+src/core/statement.ts:314:73 Survived StringLiteral -> "Stryker was here!" | const forms = [initials, `${[...initials].join(".")}.`, hyphened.join(""), dotted];
+src/core/statement.ts:315:17 Survived MethodExpression -> forms | const short = forms
+src/core/statement.ts:316:30 Survived Regex -> /\.+|\.+$/g | .filter((f) => f.replace(/^\.+|\.+$/g, ""))
+src/core/statement.ts:316:30 Survived Regex -> /^\.+|\.+/g | .filter((f) => f.replace(/^\.+|\.+$/g, ""))
+src/core/statement.ts:316:30 Survived Regex -> /^\.+|\.$/g | .filter((f) => f.replace(/^\.+|\.+$/g, ""))
+src/core/statement.ts:316:30 Survived Regex -> /^\.|\.+$/g | .filter((f) => f.replace(/^\.+|\.+$/g, ""))
+src/core/statement.ts:316:44 Survived StringLiteral -> "Stryker was here!" | .filter((f) => f.replace(/^\.+|\.+$/g, ""))
+src/core/statement.ts:321:70 Survived StringLiteral -> "" | const AFTER_INITIAL_RE = new RegExp(`(?<!${W})${U}(?:\\.|\\.? - )$`, "gu");
+src/core/statement.ts:330:7 Survived ConditionalExpression -> false | if (start && isAlnum(text[start - 1])) return false;
+src/core/statement.ts:330:49 NoCoverage BooleanLiteral -> true | if (start && isAlnum(text[start - 1])) return false;
+src/core/statement.ts:331:7 Survived ConditionalExpression -> false | if (end !== text.length && isAlnum(text[end])) return false;
+src/core/statement.ts:331:7 Survived ConditionalExpression -> true | if (end !== text.length && isAlnum(text[end])) return false;
+src/core/statement.ts:331:7 Survived EqualityOperator -> end === text.length | if (end !== text.length && isAlnum(text[end])) return false;
+src/core/statement.ts:331:57 NoCoverage BooleanLiteral -> true | if (end !== text.length && isAlnum(text[end])) return false;
+src/core/statement.ts:332:32 Survived MethodExpression -> Math.min(0, start - 6) | AFTER_INITIAL_RE.lastIndex = Math.max(0, start - 6);
+src/core/statement.ts:332:44 Survived ArithmeticOperator -> start + 6 | AFTER_INITIAL_RE.lastIndex = Math.max(0, start - 6);
+src/core/statement.ts:333:10 Survived ConditionalExpression -> true | return AFTER_INITIAL_RE.exec(text.slice(0, start)) === null;
+src/core/statement.ts:342:9 Survived ConditionalExpression -> true | if (bounded(text, start, end)) {
+src/core/statement.ts:345:12 NoCoverage BlockStatement -> {} | } else {
+src/core/statement.ts:346:35 NoCoverage ArithmeticOperator -> start - 1 | start = hay.indexOf(needle, start + 1);
+src/core/statement.ts:354:19 Survived MethodExpression -> text.toUpperCase() | const lowered = text.toLowerCase();
+src/core/statement.ts:355:7 Survived ConditionalExpression -> false | if (lowered.length === text.length) return lowered;
+src/core/statement.ts:358:12 Survived ConditionalExpression -> true | return l.length === ch.length ? l : ch;
+src/core/statement.ts:366:3 Survived LogicalOperator -> a[0] - b[0] && a[1] - b[1] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:18 NoCoverage ArithmeticOperator -> a[1] + b[1] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:34 NoCoverage ConditionalExpression -> false | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:34 NoCoverage ConditionalExpression -> true | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:34 NoCoverage EqualityOperator -> a[2] <= b[2] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:34 NoCoverage EqualityOperator -> a[2] >= b[2] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:48 NoCoverage UnaryOperator -> +1 | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:53 NoCoverage ConditionalExpression -> false | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:53 NoCoverage ConditionalExpression -> true | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:53 NoCoverage EqualityOperator -> a[2] <= b[2] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:53 NoCoverage EqualityOperator -> a[2] >= b[2] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:78 NoCoverage ConditionalExpression -> false | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:78 NoCoverage ConditionalExpression -> true | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:78 NoCoverage EqualityOperator -> a[3] <= b[3] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:78 NoCoverage EqualityOperator -> a[3] >= b[3] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:92 NoCoverage UnaryOperator -> +1 | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:97 NoCoverage ConditionalExpression -> false | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:97 NoCoverage ConditionalExpression -> true | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:97 NoCoverage EqualityOperator -> a[3] <= b[3] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:366:97 NoCoverage EqualityOperator -> a[3] >= b[3] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >
+src/core/statement.ts:376:33 Survived Regex -> /\.(?=\s)/gu | for (const m of text.matchAll(/\.(?=\s|$)/gu)) {
+src/core/statement.ts:377:52 NoCoverage StringLiteral -> "Stryker was here!" | const before = m.index ? (text[m.index - 1] ?? "") : "";
+src/core/statement.ts:377:58 NoCoverage StringLiteral -> "Stryker was here!" | const before = m.index ? (text[m.index - 1] ?? "") : "";
+src/core/statement.ts:378:9 Survived ConditionalExpression -> false | if (before === "" || isLowerWord(before) || ")]".includes(before)) ends.push(m.index);
+src/core/statement.ts:378:20 Survived StringLiteral -> "Stryker was here!" | if (before === "" || isLowerWord(before) || ")]".includes(before)) ends.push(m.index);
+src/core/statement.ts:378:49 Survived StringLiteral -> "" | if (before === "" || isLowerWord(before) || ")]".includes(before)) ends.push(m.index);
+src/core/statement.ts:387:57 Survived StringLiteral -> "" | const joined = new RegExp(`,|(?<!${W})and(?!${W})`, "u").test(gap);
+src/core/statement.ts:388:69 Survived ConditionalExpression -> false | if (kind === "A" && gap.includes(".") && !gap.includes(":") && (nextKind === "R" || !joined)) ends.p
+src/core/statement.ts:388:82 Survived StringLiteral -> "" | if (kind === "A" && gap.includes(".") && !gap.includes(":") && (nextKind === "R" || !joined)) ends.p
+src/core/statement.ts:399:9 Survived EqualityOperator -> (ends[mid] ?? 0) <= start | if ((ends[mid] ?? 0) < start) lo = mid + 1;
+src/core/statement.ts:420:75 Survived ArrowFunction -> () => undefined | const original = clean(statement.normalize("NFC")).replace(APPROVAL_RE, (m) => " ".repeat(m.length))
+src/core/statement.ts:420:82 Survived StringLiteral -> "" | const original = clean(statement.normalize("NFC")).replace(APPROVAL_RE, (m) => " ".repeat(m.length))
+src/core/statement.ts:430:54 Survived ArrayDeclaration -> ["Stryker was here"] | k = unmatched.push({ token, candidates, roles: [] }) - 1;
+src/core/statement.ts:453:11 Survived ConditionalExpression -> true | if (v.includes(" ")) add(lower(v), true, i);
+src/core/statement.ts:453:22 Survived StringLiteral -> "" | if (v.includes(" ")) add(lower(v), true, i);
+src/core/statement.ts:460:19 Survived MethodExpression -> [...variants.values()] | const ordered = [...variants.values()].sort((x, y) => {
+src/core/statement.ts:460:57 Survived BlockStatement -> {} | const ordered = [...variants.values()].sort((x, y) => {
+src/core/statement.ts:463:21 Survived ConditionalExpression -> false | for (let k = 0; k < a.length; k += 1) {
+src/core/statement.ts:463:21 Survived EqualityOperator -> k <= a.length | for (let k = 0; k < a.length; k += 1) {
+src/core/statement.ts:463:21 Survived EqualityOperator -> k >= a.length | for (let k = 0; k < a.length; k += 1) {
+src/core/statement.ts:463:43 Survived BlockStatement -> {} | for (let k = 0; k < a.length; k += 1) {
+src/core/statement.ts:464:11 Survived ConditionalExpression -> false | if (a[k] !== b[k]) return (a[k] as number | string) < (b[k] as number | string) ? -1 : 1;
+src/core/statement.ts:464:11 Survived ConditionalExpression -> true | if (a[k] !== b[k]) return (a[k] as number | string) < (b[k] as number | string) ? -1 : 1;
+src/core/statement.ts:464:11 Survived EqualityOperator -> a[k] === b[k] | if (a[k] !== b[k]) return (a[k] as number | string) < (b[k] as number | string) ? -1 : 1;
+src/core/statement.ts:464:33 Survived ConditionalExpression -> false | if (a[k] !== b[k]) return (a[k] as number | string) < (b[k] as number | string) ? -1 : 1;
+src/core/statement.ts:464:33 Survived EqualityOperator -> a[k] as number | string <= (b[k] as number | string) | if (a[k] !== b[k]) return (a[k] as number | string) < (b[k] as number | string) ? -1 : 1;
+src/core/statement.ts:464:89 Survived UnaryOperator -> +1 | if (a[k] !== b[k]) return (a[k] as number | string) < (b[k] as number | string) ? -1 : 1;
+src/core/statement.ts:478:11 Survived StringLiteral -> "" | "A",
+src/core/statement.ts:481:13 Survived ArrayDeclaration -> [] | [...hits].sort((a, b) => a - b),
+src/core/statement.ts:481:13 Survived MethodExpression -> [...hits] | [...hits].sort((a, b) => a - b),
+src/core/statement.ts:481:28 Survived ArrowFunction -> () => undefined | [...hits].sort((a, b) => a - b),
+src/core/statement.ts:481:38 Survived ArithmeticOperator -> a + b | [...hits].sort((a, b) => a - b),
+src/core/statement.ts:490:29 Survived ArithmeticOperator -> m.index - m[0].length | mentions.push([m.index, m.index + m[0].length, "A", ALL_AUTHORS]);
+src/core/statement.ts:496:19 Survived MethodExpression -> m[0] | const token = m[0].trim();
+src/core/statement.ts:497:9 Survived ConditionalExpression -> false | if (!isUpper(first(token))) continue;
+src/core/statement.ts:520:45 Survived ArrayDeclaration -> ["Stryker was here"] | let previousPeople: (number | string)[] = [];
+src/core/statement.ts:521:29 Survived MethodExpression -> [...clauses] | for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {
+src/core/statement.ts:521:47 Survived ArrowFunction -> () => undefined | for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {
+src/core/statement.ts:521:57 Survived ArithmeticOperator -> a[0] + b[0] | for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {
+src/core/statement.ts:530:52 Survived OptionalChaining -> clause[0][0] | const leadIn = text.slice(k ? ends[k - 1] : 0, clause[0]?.[0]); // names found are masked
+src/core/statement.ts:531:30 Survived OptionalChaining -> runs[0][0] | if (runs.length === 1 && runs[0]?.[0] === "R" && previousPeople.length > 0 && !NAME_COLON_RE.test(le
+src/core/statement.ts:531:54 Survived ConditionalExpression -> true | if (runs.length === 1 && runs[0]?.[0] === "R" && previousPeople.length > 0 && !NAME_COLON_RE.test(le
+src/core/statement.ts:531:54 Survived EqualityOperator -> previousPeople.length >= 0 | if (runs.length === 1 && runs[0]?.[0] === "R" && previousPeople.length > 0 && !NAME_COLON_RE.test(le
+src/core/statement.ts:544:13 Survived ConditionalExpression -> true | if ((i as number) <= UNRESOLVED)
+src/core/statement.ts:545:37 Survived OptionalChaining -> slugsOf[UNRESOLVED - (i as number)].add | for (const slug of slugs) slugsOf[UNRESOLVED - (i as number)]?.add(String(slug));
+src/core/statement.ts:555:34 NoCoverage ArrayDeclaration -> ["Stryker was here"] | u.roles = [...(slugsOf[k] ?? [])]
