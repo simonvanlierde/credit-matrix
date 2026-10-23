@@ -147,6 +147,15 @@ def _rewrite(path, rows):
         writer.writerows(rows)
 
 
+def test_label_set_sizes_from_the_cli(set_db, tmp_path):
+    db = tmp_path / "s.duckdb"
+    set_db.close()
+    out = tmp_path / "big.csv"
+    assert cli.main(["label", "--set", "--db", str(db), "--out", str(out), "--sizes", "12", "6", "3"]) == 0
+    with labels.key_path(out).open(encoding="utf-8-sig") as f:
+        assert len(list(csv.DictReader(f))) == 21
+
+
 def test_label_set(set_db, tmp_path):
     out, dis = tmp_path / "set.csv", tmp_path / "dis.csv"
     sizes = {"statement_text": 15, "contrib_text": 8, "none": 4}
