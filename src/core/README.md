@@ -118,7 +118,7 @@ Rows without a usable name are skipped.
 
 `toTenzing` writes the columns of tenzing's example CSV. tenzing records a role as done or not, so
 any score above 0 becomes `TRUE`, and equal contribution is not kept. Authors are numbered in draft
-order and acknowledgees get `NA`. Affiliations, email and funding are left empty for the team.
+order, and acknowledgees are numbered after them. Affiliations, email and funding are left empty for the team.
 
 `fromJats4rXml(xml, { parser })` reads XML with `parser`, which defaults to the global `DOMParser`.
 In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:
@@ -217,7 +217,8 @@ holds its exact shape. By entry point:
   - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`,
-    `toMarkdown`, `buildHeatmapSvg`, `HeatmapSvgOptions`, `detectFormat`, `importAny`, `DetectedFormat`, `Imported`
+    `toMarkdown`, `buildHeatmapSvg`, `HeatmapSvgOptions`, `detectFormat`, `importAny`,
+    `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`
