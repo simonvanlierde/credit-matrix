@@ -49,6 +49,8 @@ class Config:
     weight_decay: float = 0.01
     warmup_share: float = 0.06
     seed: int = 20261018
+    open_licence_only: bool = False
+    """Train only on CC BY and CC0 articles (`publishable` in the dataset), so the weights can be shared."""
     device: str = "cuda"
 
 
@@ -240,7 +242,7 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
 
     pool: dict[bool, list[dict[str, Any]]] = {True: [], False: []}
     for row in read_jsonl(dataset / "train.jsonl"):
-        if row["authors"]:
+        if row["authors"] and (not config.open_licence_only or row["publishable"]):
             pool[is_dev(row["statement"], config.dev_every)].append(row)
     train_rows = subsample(pool[False], config.train_articles, config.seed)
     dev_rows = random.Random(config.seed).sample(pool[True], min(config.dev_articles, len(pool[True])))
