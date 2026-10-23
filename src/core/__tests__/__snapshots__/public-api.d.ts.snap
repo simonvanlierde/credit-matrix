@@ -987,8 +987,8 @@ export declare function toMarkdown(authors: Author[], translateRole?: RoleTransl
 /**
  * A draft as a tenzing contributor spreadsheet (CSV). tenzing records a role as
  * done or not, so any score above 0 becomes TRUE, and it has no column for equal
- * contribution. Authors are numbered in draft order; acknowledgees get NA, as in
- * tenzing's example. Columns this app does not hold are left empty for the team.
+ * contribution. Authors are numbered in draft order; acknowledgees are marked
+ * "Acknowledgment only", the value tenzing keeps, and get NA. Columns this app does not hold are left empty for the team.
  */
 export declare function toTenzing(authors: Author[]): string;
 /** True for a header row that looks like a tenzing contributor spreadsheet. */

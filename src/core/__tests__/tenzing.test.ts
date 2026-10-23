@@ -58,6 +58,11 @@ describe("fromTenzing", () => {
     expect(roles(carol)).toEqual(["Investigation:100"]);
   });
 
+  it("still reads the older Acknowledgee value as an acknowledgee", () => {
+    const [ana] = fromTenzing("Author/Acknowledgee,Firstname,Surname\nAcknowledgee,Ana,Lopez");
+    expect(ana).toMatchObject({ contributorType: "non-author" });
+  });
+
   it("matches headers by name in a reordered TSV with a Note column", () => {
     const [ana, ...rest] = fromTenzing(fixture("tenzing-reordered.tsv"));
     expect(rest).toEqual([]);
@@ -208,14 +213,35 @@ describe("toTenzing", () => {
   it("writes a role as TRUE whatever its level, and keeps every word of a name", () => {
     const rows = toTenzing(draft).split("\n");
     expect(rows[2]).toBe(
-      "Acknowledgee,NA,Kim,,Nam-joon,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,FALSE,",
+      "Acknowledgment only,NA,Kim,,Nam-joon,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,FALSE,",
     );
     expect(rows[3]?.startsWith("Author,2,Martin,Luther King,Jr.,FALSE,TRUE,")).toBe(true);
+  });
+
+  it("marks acknowledgees with the exact value tenzing keeps, and authors with Author", () => {
+    // tenzing's filter_acknowledgees matches "Acknowledgment only" exactly, filter_authors "Author".
+    const column = toTenzing(draft)
+      .split("\n")
+      .slice(1)
+      .map((row) => row.split(",")[0]);
+    expect(column.filter((value) => value !== "Author")).toEqual(["Acknowledgment only", "Acknowledgment only"]);
+    expect(column.filter((value) => value === "Author")).toHaveLength(8);
   });
 
   it("guards a cell a spreadsheet would run as a formula", () => {
     const rows = toTenzing(draft).split("\n");
     expect(rows[9]?.startsWith('Author,7,\'=Cy,,"Lee, Jr",')).toBe(true);
     expect(rows[10]?.startsWith('Author,8,\'@Dee,"""DJ""",Ray,')).toBe(true);
+  });
+
+  it("guards a cell that starts with + or -, and reads it back unchanged", () => {
+    const people = [
+      createAuthor("+Pat Lee", { firstName: "+Pat", surname: "Lee" }),
+      createAuthor("-Sam Ray", { firstName: "-Sam", surname: "Ray" }),
+    ];
+    const rows = toTenzing(people).split("\n");
+    expect(rows[1]?.startsWith("Author,1,'+Pat,,Lee,")).toBe(true);
+    expect(rows[2]?.startsWith("Author,2,'-Sam,,Ray,")).toBe(true);
+    expect(fromTenzing(toTenzing(people)).map((a) => a.name)).toEqual(["+Pat Lee", "-Sam Ray"]);
   });
 });

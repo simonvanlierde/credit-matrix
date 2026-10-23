@@ -54,8 +54,8 @@ function nameCells(author: Author): string[] {
 /**
  * A draft as a tenzing contributor spreadsheet (CSV). tenzing records a role as
  * done or not, so any score above 0 becomes TRUE, and it has no column for equal
- * contribution. Authors are numbered in draft order; acknowledgees get NA, as in
- * tenzing's example. Columns this app does not hold are left empty for the team.
+ * contribution. Authors are numbered in draft order; acknowledgees are marked
+ * "Acknowledgment only", the value tenzing keeps, and get NA. Columns this app does not hold are left empty for the team.
  */
 export function toTenzing(authors: Author[]): string {
   const byline = authors.filter((author) => author.contributorType === "author");
@@ -63,7 +63,7 @@ export function toTenzing(authors: Author[]): string {
     const isAuthor = author.contributorType === "author";
     const done = new Set(author.contributions.filter((c) => c.score > 0).map((c) => c.role));
     return [
-      isAuthor ? "Author" : "Acknowledgee",
+      isAuthor ? "Author" : "Acknowledgment only",
       isAuthor ? String(byline.indexOf(author) + 1) : "NA",
       ...nameCells(author),
       ...CREDIT_ROLES.map((role) => trueFalse(done.has(role.name))),
@@ -123,7 +123,10 @@ export function fromTenzing(text: string): Author[] {
       surname,
       // Drop an unparseable ORCID rather than aborting the whole import.
       orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
-      contributorType: cell(row, "author/acknowledgee").toLowerCase() === "acknowledgee" ? "non-author" : "author",
+      // "Acknowledgee" is the older spelling this app once wrote; tenzing itself keeps only "Acknowledgment only".
+      contributorType: ["acknowledgment only", "acknowledgee"].includes(cell(row, "author/acknowledgee").toLowerCase())
+        ? "non-author"
+        : "author",
       corresponding: isTrue(cell(row, "corresponding author?")),
       // tenzing records a role as done or not, with no degree: done is the top score.
       contributions: [...ROLE_KEYS].map(([header, role]) => ({ role, score: isTrue(cell(row, header)) ? 100 : 0 })),
