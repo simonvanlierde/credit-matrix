@@ -160,6 +160,7 @@ def test_train_and_predict_write_a_run_and_scorable_predictions(tmp_path):
     epochs = [json.loads(line) for line in (run / "metrics.jsonl").read_text().splitlines()]
     assert [e["epoch"] for e in epochs if "epoch" in e] == [1, 2]
     assert json.loads((run / "config.json").read_text())["seed"] == config.seed
+    assert json.loads((run / "checkpoint" / "config.json").read_text())["id2label"]["13"] == encoder.ROLES[13]
 
     out = tmp_path / "preds.jsonl"
     items = [*rows[:3], {"pmcid": "PMC99", "statement": "x", "authors": []}]

@@ -271,6 +271,8 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
         config.model,
         revision=config.revision,
         num_labels=len(ROLES),
+        id2label=dict(enumerate(ROLES)),
+        label2id={role: i for i, role in enumerate(ROLES)},
         problem_type="multi_label_classification",
     ).to(config.device)
     lengths = [len(train_set.ids(i)) for i in range(len(train_set.examples))]
