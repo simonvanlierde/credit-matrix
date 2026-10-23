@@ -223,6 +223,11 @@ describe("toTenzing", () => {
     ]);
   });
 
+  it("keeps the surname of a double-spaced name through a round trip", () => {
+    const [back] = fromTenzing(toTenzing([createAuthor("Martin  Luther King Jr.")]));
+    expect(back?.name).toBe("Martin Luther King Jr.");
+  });
+
   it("writes a role as TRUE whatever its level, and keeps every word of a name", () => {
     const rows = toTenzing(draft).split("\n");
     expect(rows[2]).toBe(

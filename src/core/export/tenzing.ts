@@ -43,7 +43,7 @@ function trueFalse(value: boolean): string {
  * "Martin Luther King Jr." would come back as "Martin Luther Jr".
  */
 function nameCells(author: Author): string[] {
-  const name = author.name.trim();
+  const name = author.name.trim().replace(/\s+/g, " ");
   const given = givenNamesOf(author);
   // Inverted input ("Curie, Marie") has no surname after its given names.
   const surname = name.startsWith(given) ? name.slice(given.length).trim() : author.surname;

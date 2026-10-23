@@ -47,7 +47,7 @@ function quoteCsvValue(value: string, guardApostrophe: boolean): string {
   return guarded;
 }
 
-export function escapeCsvValue(raw: string): string {
+function escapeCsvValue(raw: string): string {
   // Import trims a cell before it reads the guard, so decide on the trimmed value.
   return quoteCsvValue(raw.trim(), true);
 }
