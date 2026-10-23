@@ -16,8 +16,9 @@ changes are in the [changelog](../CHANGELOG.md).
 ## Next
 
 - **More export formats.** Add formats that other contributorship tools and journal systems read.
-- **More languages.** Add a language when someone offers to review its interface text. The role
-  names come from the official CRediT translations.
+- **Reviewed translations.** Ask native speakers to review the eight machine-made interface
+  translations ([accessibility statement](accessibility.md#known-limitations)). The role names
+  already come from the official CRediT translations.
 
 ## Later, or only if asked
 

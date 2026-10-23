@@ -11,7 +11,7 @@ single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
 
 ## Disclosure timeline
 
-- I confirm that I received your report within two weeks.
+- I reply within two weeks to confirm I received your report.
 - I aim to fix a confirmed vulnerability, or agree a later date with you, within 90 days of the
   report.
 - I publish each fixed vulnerability as a GitHub security advisory on this repository, with the
@@ -27,8 +27,14 @@ single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
   and share and reply links carry the draft in the URL fragment, which the browser does not send
   to the server. There are no accounts and no passwords to steal.
 - **Few outside calls.** Only the ORCID and DOI lookups, the fetch of ORCID's public keys and the
-  hosted site's cookieless analytics beacon leave the browser. The Content Security Policy in
+  hosted site's cookieless analytics beacon leave the browser. A lookup sends the ORCID iD or DOI
+  you typed to ORCID, Crossref or DataCite. The Content Security Policy in
   [`public/_headers`](public/_headers) allows no other hosts and blocks framing.
+- **ORCID sign-in.** A co-author who signs in leaves the page for orcid.org. The request carries a
+  hash of the reply, not the reply. ORCID returns a signed token in the URL fragment, and the app
+  checks it in the browser against ORCID's public keys. The token then travels inside the reply link.
+- **Links and storage.** Anyone who gets a share or reply link can read the draft in it, so send
+  it only to the people who should see it. Drafts in browser storage are not encrypted.
 - **Untrusted input.** Names, imports, share links and pasted statements come from other people,
   so the app treats them as text and checks their shape before use. Property tests feed random
   input to every importer.
