@@ -43,10 +43,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   thanks, and, in its own Privacy section, what it sends where. The About panel is now a short card
   that links to it.
 - The accessibility statement is now on the site, at `/accessibility`, rebuilt as a reader-first
-  page: what you should be able to do, its status (not assessed against WCAG 2.2 AA), known problems
+  page: what you should be able to do, its status against WCAG 2.2 AA, known problems
   each with a workaround, an email contact with a 10-working-day reply time, how we check, what it
   was tested with, and when it was last reviewed. `docs/accessibility.md` stays the one source; the
   build turns it into static HTML.
+- A WCAG 2.2 self-assessment (`docs/accessibility-assessment.md`) judges every level A and AA
+  criterion with its evidence. The statement now says "partially conformant": only the downloaded
+  heatmap images fail, as they have no text alternative.
 
 ### Changed
 
@@ -59,6 +62,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Accessibility fixes from the WCAG 2.2 self-assessment:
+  - Placeholder text, text-field edges, empty grid cells and the reorder handle now have enough
+    contrast in both themes, and the contributor name field shows a focus ring.
+  - At 200% zoom on a laptop the header no longer runs off the screen and hides Import.
+  - Undo after a bulk change stays 60 seconds, like every other Undo, instead of 8.
+  - Focus no longer goes under the sticky bar on a phone, or under a status message.
+  - A dialog closes only when you press and release on the backdrop, so a stray press keeps your
+    typed text.
+  - Escape hides the census chart's value readout.
+  - An ORCID iD, name or co-author name that is refused now says why, and the message stays
+    until you change the field. Screen readers hear it, and also hear which file was loaded in
+    Import.
+  - Every popover panel has a name for screen readers.
+- "How it works" did nothing outside the main page. It now takes you there and opens the welcome
+  panel, and closing the panel puts focus on the main content.
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A
   contributor exported as "Smith & Co Lee" came back with the middle name "&" instead of "Co", and
   with the wrong initials.
