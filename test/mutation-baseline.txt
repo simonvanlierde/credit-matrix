@@ -1,6 +1,6 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
 # Each line: file status mutator -> replacement | original line.
-# Score 80.79%: 1871 killed, 388 survived, 57 without coverage.
+# Score 81.57%: 1965 killed, 386 survived, 58 without coverage.
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | const headers = (records[0] ?? []).map(headerKey);
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | if (records.length === 0) return [];
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | return (parseCsvRecords(line, delimiterOf(line))[0] ?? []).map((cell) => cell.trim().toLowerCase());
@@ -8,6 +8,7 @@ src/core/export/csv.ts NoCoverage StringLiteral -> "Stryker was here!" | const n
 src/core/export/csv.ts NoCoverage UnaryOperator -> +1 | score: readScore(cells[roleIndexes[i] ?? -1] ?? "0"),
 src/core/export/csv.ts Survived ConditionalExpression -> false | if (!name) return [];
 src/core/export/csv.ts Survived ConditionalExpression -> false | if (records.length === 0) return [];
+src/core/export/csv.ts Survived MethodExpression -> raw | return quoteCsvValue(raw.trim(), false);
 src/core/export/csv.ts Survived MethodExpression -> text.replace(/^\uFEFF/, "") | const line = firstLine(text.replace(/^\uFEFF/, "").trim());
 src/core/export/csv.ts Survived MethodExpression -> value | const level = value.trim().toLowerCase();
 src/core/export/csv.ts Survived Regex -> /\uFEFF/ | const line = firstLine(text.replace(/^\uFEFF/, "").trim());
@@ -142,16 +143,21 @@ src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<svg xmlns="http:
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | lines.push(`<rect width="${totalW}" height="${totalH}" fill="${COLOR_BG}"/>`);
 src/core/export/tenzing.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(trimmed));
+src/core/export/tenzing.ts NoCoverage StringLiteral -> "Stryker was here!" | const [first = "", ...middle] = given.split(/\s+/).filter(Boolean);
 src/core/export/tenzing.ts Survived ArithmeticOperator -> a.index + b.index | .sort((a, b) => a.order - b.order || a.index - b.index);
-src/core/export/tenzing.ts Survived ConditionalExpression -> false | .filter((person) => person.firstName || person.middleName || person.surname)
+src/core/export/tenzing.ts Survived ConditionalExpression -> false | const surname = name === given || name.startsWith(`${given} `) ? name.slice(given.length).trim() : a
 src/core/export/tenzing.ts Survived ConditionalExpression -> true | .filter((person) => person.firstName || person.middleName || person.surname)
-src/core/export/tenzing.ts Survived LogicalOperator -> (person.firstName || person.middleName) && person.surname | .filter((person) => person.firstName || person.middleName || person.surname)
-src/core/export/tenzing.ts Survived LogicalOperator -> person.firstName && person.middleName | .filter((person) => person.firstName || person.middleName || person.surname)
+src/core/export/tenzing.ts Survived MethodExpression -> author.name | const name = author.name.trim().replace(/\s+/g, " ");
+src/core/export/tenzing.ts Survived MethodExpression -> given.split(/\s+/) | const [first = "", ...middle] = given.split(/\s+/).filter(Boolean);
+src/core/export/tenzing.ts Survived MethodExpression -> name.slice(given.length) | const surname = name === given || name.startsWith(`${given} `) ? name.slice(given.length).trim() : a
 src/core/export/tenzing.ts Survived MethodExpression -> rows.map((row, index) => {   const firstName = cell(row, "fi | const people = rows
 src/core/export/tenzing.ts Survived MethodExpression -> text.replace(/^\uFEFF/, "") | const trimmed = text.replace(/^\uFEFF/, "").trim();
 src/core/export/tenzing.ts Survived MethodExpression -> value | return value?.trim().toLowerCase() === "true";
 src/core/export/tenzing.ts Survived OptionalChaining -> value.trim | return value?.trim().toLowerCase() === "true";
+src/core/export/tenzing.ts Survived Regex -> /\s/ | const [first = "", ...middle] = given.split(/\s+/).filter(Boolean);
 src/core/export/tenzing.ts Survived Regex -> /\uFEFF/ | const trimmed = text.replace(/^\uFEFF/, "").trim();
+src/core/export/tenzing.ts Survived Regex -> /^don['’]t agree to be named/i | .filter((person) => !/^don['’]t agree to be named$/i.test(person.status))
+src/core/export/tenzing.ts Survived Regex -> /don['’]t agree to be named$/i | .filter((person) => !/^don['’]t agree to be named$/i.test(person.status))
 src/core/export/xml-import.ts Survived ConditionalExpression -> false | ...(givenNames && surname ? { firstName: givenFirst, middleName: givenMiddle, surname } : {}),
 src/core/export/xml-import.ts Survived ConditionalExpression -> false | if (!displayName) return [];
 src/core/export/xml-import.ts Survived ConditionalExpression -> false | if (!name) continue;
@@ -186,9 +192,7 @@ src/core/export/xml.ts Survived LogicalOperator -> comma > 0 || isSurname(name.s
 src/core/export/xml.ts Survived MethodExpression -> author.name | const name = author.name.trim();
 src/core/export/xml.ts Survived MethodExpression -> cleanNamePart(text).split(/\s+/) | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
 src/core/export/xml.ts Survived MethodExpression -> name.slice(0, comma) | if (comma > 0 && isSurname(name.slice(0, comma).trim())) return name.slice(comma + 1).trim();
-src/core/export/xml.ts Survived Regex -> /\s/ | const words = name.split(/\s+/);
 src/core/export/xml.ts Survived Regex -> /\s/ | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
-src/core/export/xml.ts Survived StringLiteral -> "" | if (isSurname(words.slice(i).join(" "))) return words.slice(0, i).join(" ");
 src/core/export/xml.ts Survived StringLiteral -> "" | return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
 src/core/parse-authors.ts NoCoverage BooleanLiteral -> true | if (ORCID_INPUT_REGEX.test(text)) return false;
 src/core/parse-authors.ts NoCoverage BooleanLiteral -> true | if (ORCID_INPUT_REGEX.test(text)) return false;
@@ -209,11 +213,9 @@ src/core/parse-authors.ts Survived ArithmeticOperator -> first.length - last.len
 src/core/parse-authors.ts Survived ArrayDeclaration -> [] | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | (last.length > 0 || between.length === middle.length);
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
-src/core/parse-authors.ts Survived ConditionalExpression -> false | if (!last || !/\p{L}/u.test(last)) return false;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
-src/core/parse-authors.ts Survived ConditionalExpression -> false | if (ORCID_INPUT_REGEX.test(text)) return false;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (ORCID_INPUT_REGEX.test(text)) return false;
 src/core/parse-authors.ts Survived ConditionalExpression -> true | ? a.contributions.length === b.contributions.length &&
 src/core/parse-authors.ts Survived ConditionalExpression -> true | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
@@ -228,7 +230,6 @@ src/core/parse-authors.ts Survived EqualityOperator -> extraIdx <= surnameCodePo
 src/core/parse-authors.ts Survived EqualityOperator -> first.length >= 0 | first.length > 0 &&
 src/core/parse-authors.ts Survived EqualityOperator -> givenParts.length >= 1 | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
 src/core/parse-authors.ts Survived EqualityOperator -> words.length >= 0 | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
-src/core/parse-authors.ts Survived LogicalOperator -> !last && !/\p{L}/u.test(last) | if (!last || !/\p{L}/u.test(last)) return false;
 src/core/parse-authors.ts Survived LogicalOperator -> chunks.length < 2 && chunks.length % 2 !== 0 | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
 src/core/parse-authors.ts Survived LogicalOperator -> first.length > 0 || first.length + last.length <= all.length | first.length > 0 &&
 src/core/parse-authors.ts Survived MethodExpression -> [firstName, middleName, surname].some(part => typeof part == | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
@@ -238,7 +239,6 @@ src/core/parse-authors.ts Survived MethodExpression -> name | if (ORCID_INPUT_RE
 src/core/parse-authors.ts Survived MethodExpression -> part | .map((part) => part.trim())
 src/core/parse-authors.ts Survived MethodExpression -> text.split(/[\n\r\v\f;]+/).flatMap(line => splitCommaLine(li | return text
 src/core/parse-authors.ts Survived MethodExpression -> text.split(/\s+/) | const words = text.split(/\s+/).filter(Boolean);
-src/core/parse-authors.ts Survived MethodExpression -> text.split(/\s+/) | const words = text.split(/\s+/).filter(Boolean);
 src/core/parse-authors.ts Survived MethodExpression -> words.some(word => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u.test(word) | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
 src/core/parse-authors.ts Survived OptionalChaining -> b.contributions[i].role | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
 src/core/parse-authors.ts Survived OptionalChaining -> b.contributions[i].score | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
@@ -247,7 +247,6 @@ src/core/parse-authors.ts Survived Regex -> /[\n\r\v\f;]/ | .split(/[\n\r\v\f;]+
 src/core/parse-authors.ts Survived Regex -> /\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
 src/core/parse-authors.ts Survived Regex -> /\s/ | .split(/\s+/)
 src/core/parse-authors.ts Survived Regex -> /\s/ | const words = (text: string) => cleanNamePart(text).split(/\s+/).filter(Boolean);
-src/core/parse-authors.ts Survived Regex -> /\s/ | const words = text.split(/\s+/).filter(Boolean);
 src/core/parse-authors.ts Survived Regex -> /\s/ | const words = text.split(/\s+/).filter(Boolean);
 src/core/parse-authors.ts Survived Regex -> /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
 src/core/parse-authors.ts Survived Regex -> /^\p{L}[\p{L}\P{M}'’ʼ-]*\.?$/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
