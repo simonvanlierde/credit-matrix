@@ -117,8 +117,9 @@ dash. A score cell is a number from 0 to 100 or a level word (`None`, `Supportin
 Rows without a usable name are skipped.
 
 `toTenzing` writes the columns of tenzing's example CSV. tenzing records a role as done or not, so
-any score above 0 becomes `TRUE`, and equal contribution is not kept. Authors are numbered in draft
-order, and acknowledgees are numbered after them. Affiliations, email and funding are left empty for the team.
+any score above 0 becomes `TRUE`, and equal contribution is not kept. Rows run in byline order:
+authors in draft order, then acknowledgees, numbered on from the authors. Affiliations, email,
+funding and declarations are left empty for the team.
 
 `fromJats4rXml(xml, { parser })` reads XML with `parser`, which defaults to the global `DOMParser`.
 In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:

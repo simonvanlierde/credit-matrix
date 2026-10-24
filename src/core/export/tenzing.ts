@@ -45,8 +45,9 @@ function trueFalse(value: boolean): string {
 function nameCells(author: Author): string[] {
   const name = author.name.trim().replace(/\s+/g, " ");
   const given = givenNamesOf(author);
-  // Inverted input ("Curie, Marie") has no surname after its given names.
-  const surname = name.startsWith(given) ? name.slice(given.length).trim() : author.surname;
+  // Inverted input ("Curie, Marie") has no surname after its given names; split on a word, so
+  // a first name "Ann" never takes "a" from "Anna".
+  const surname = name === given || name.startsWith(`${given} `) ? name.slice(given.length).trim() : author.surname;
   const [first = "", ...middle] = given.split(/\s+/).filter(Boolean);
   return [first, middle.join(" "), surname];
 }
@@ -54,23 +55,23 @@ function nameCells(author: Author): string[] {
 /**
  * A draft as a tenzing contributor spreadsheet (CSV). tenzing records a role as
  * done or not, so any score above 0 becomes TRUE, and it has no column for equal
- * contribution. Authors are numbered in draft order; acknowledgees are marked
- * "Acknowledgment only", the value tenzing keeps, and numbered after the authors,
- * because tenzing refuses to build the acknowledgee section from rows with no order.
+ * contribution. Rows run in byline order: authors in draft order, then the
+ * acknowledgees, marked "Acknowledgment only" (the value tenzing keeps) and numbered
+ * on from the authors, because tenzing refuses to build the acknowledgee section from
+ * rows with no order.
  * Only a formula prefix (= + - @ tab CR) is guarded with an apostrophe, never a
  * leading apostrophe: tenzing does not undo the guard, so "'t Hooft" stays as it
  * is. "'+Pat" keeps its stray apostrophe in tenzing, to protect Excel users.
  * Columns this app does not hold are left empty for the team.
  */
 export function toTenzing(authors: Author[]): string {
-  const byline = authors.filter((author) => author.contributorType === "author");
-  const acks = authors.filter((author) => author.contributorType !== "author");
-  const rows = authors.map((author) => {
-    const isAuthor = author.contributorType === "author";
+  const isAuthor = (author: Author) => author.contributorType === "author";
+  const ordered = [...authors.filter(isAuthor), ...authors.filter((author) => !isAuthor(author))];
+  const rows = ordered.map((author, index) => {
     const done = new Set(author.contributions.filter((c) => c.score > 0).map((c) => c.role));
     return [
-      isAuthor ? "Author" : "Acknowledgment only",
-      String(isAuthor ? byline.indexOf(author) + 1 : byline.length + acks.indexOf(author) + 1),
+      isAuthor(author) ? "Author" : "Acknowledgment only",
+      String(index + 1),
       ...nameCells(author),
       ...CREDIT_ROLES.map((role) => trueFalse(done.has(role.name))),
       "",
@@ -80,7 +81,7 @@ export function toTenzing(authors: Author[]): string {
       "",
       author.orcid ?? "",
       "",
-      trueFalse(isAuthor && author.corresponding),
+      trueFalse(isAuthor(author) && author.corresponding),
       "",
     ];
   });
@@ -124,7 +125,7 @@ export function fromTenzing(text: string): Author[] {
     .filter((person) => !/^don['’]t agree to be named$/i.test(person.status))
     .sort((a, b) => a.order - b.order || a.index - b.index);
 
-  const authors = people.flatMap(({ row, firstName, middleName, surname }) => {
+  const authors = people.flatMap(({ row, firstName, middleName, surname, status }) => {
     const orcid = cell(row, "orcid id");
     return tryCreateAuthor([firstName, middleName, surname].filter(Boolean).join(" "), {
       firstName,
@@ -133,9 +134,7 @@ export function fromTenzing(text: string): Author[] {
       // Drop an unparseable ORCID rather than aborting the whole import.
       orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
       // "Acknowledgee" is the older spelling this app once wrote; tenzing itself keeps only "Acknowledgment only".
-      contributorType: ["acknowledgment only", "acknowledgee"].includes(cell(row, "author/acknowledgee").toLowerCase())
-        ? "non-author"
-        : "author",
+      contributorType: ["acknowledgment only", "acknowledgee"].includes(status.toLowerCase()) ? "non-author" : "author",
       corresponding: isTrue(cell(row, "corresponding author?")),
       // tenzing records a role as done or not, with no degree: done is the top score.
       contributions: [...ROLE_KEYS].map(([header, role]) => ({ role, score: isTrue(cell(row, header)) ? 100 : 0 })),

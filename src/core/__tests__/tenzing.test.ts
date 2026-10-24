@@ -228,27 +228,35 @@ describe("toTenzing", () => {
     expect(back?.name).toBe("Martin Luther King Jr.");
   });
 
+  it("falls back to the parsed parts when they do not spell the name, as a hand-edited JSON may", () => {
+    const author = createAuthor("Anna Lee", { firstName: "Ann", middleName: "", surname: "Smith" });
+    expect(toTenzing([author]).split("\n")[1]?.startsWith("Author,1,Ann,,Smith,")).toBe(true);
+  });
+
   it("writes a role as TRUE whatever its level, and keeps every word of a name", () => {
     const rows = toTenzing(draft).split("\n");
-    expect(rows[2]).toBe(
+    expect(rows[9]).toBe(
       "Acknowledgment only,9,Kim,,Nam-joon,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,FALSE,",
     );
-    expect(rows[3]?.startsWith("Author,2,Martin,Luther King,Jr.,FALSE,TRUE,")).toBe(true);
+    expect(rows[2]?.startsWith("Author,2,Martin,Luther King,Jr.,FALSE,TRUE,")).toBe(true);
   });
 
   it("numbers every row, acknowledgees after the authors, so tenzing can build its acknowledgee section", () => {
     const order = toTenzing(draft)
       .split("\n")
       .slice(1)
-      .map((row) => row.split(",")[1]);
-    expect(order).not.toContain("NA");
-    expect(order).toEqual(["1", "9", "2", "3", "4", "5", "10", "6", "7", "8"]);
+      .map((row) => row.split(",").slice(0, 2).join(" "));
+    expect(order).toEqual([
+      ...["1", "2", "3", "4", "5", "6", "7", "8"].map((n) => `Author ${n}`),
+      "Acknowledgment only 9",
+      "Acknowledgment only 10",
+    ]);
   });
 
   it("exports a leading apostrophe once, and reads it back", () => {
     const rows = toTenzing(draft).split("\n");
-    expect(rows[4]).toContain(",Gerard,'t,Hooft,");
-    expect(rows[4]).not.toContain("''t");
+    expect(rows[3]).toContain(",Gerard,'t,Hooft,");
+    expect(rows[3]).not.toContain("''t");
     expect(fromTenzing(toTenzing(draft)).map((a) => a.name)).toContain("Gerard 't Hooft");
   });
 
@@ -276,8 +284,8 @@ describe("toTenzing", () => {
 
   it("guards a cell a spreadsheet would run as a formula", () => {
     const rows = toTenzing(draft).split("\n");
-    expect(rows[9]?.startsWith('Author,7,\'=Cy,,"Lee, Jr",')).toBe(true);
-    expect(rows[10]?.startsWith('Author,8,\'@Dee,"""DJ""",Ray,')).toBe(true);
+    expect(rows[7]?.startsWith('Author,7,\'=Cy,,"Lee, Jr",')).toBe(true);
+    expect(rows[8]?.startsWith('Author,8,\'@Dee,"""DJ""",Ray,')).toBe(true);
   });
 
   it("guards a cell that starts with + or -, and reads it back unchanged", () => {
