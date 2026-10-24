@@ -33,9 +33,11 @@ CRediT Matrix aims to meet [WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA
 web requirements of
 [EN 301 549 v4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf).
 
-Its conformance is **not assessed**. Nobody has checked the app or the web element against every
-WCAG 2.2 criterion, and there has been no external audit. This is a self-assessment by the
-developer. What is checked, and how, is under [How we check](#how-we-check).
+Its conformance is **partially conformant**: it fails one criterion, 1.1.1 Non-text Content, for
+the downloaded heatmap images (the first known problem below). The developer checked the app and
+the web element against every WCAG 2.2 level A and AA criterion on 24 October 2026, in the
+[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md). There has been no external audit. What is checked, and how, is under
+[How we check](#how-we-check).
 
 ## Known problems
 
@@ -69,6 +71,10 @@ statement or an export in another format, email us and we'll send it.
 
 ## How we check
 
+- **Self-assessment.** Every WCAG 2.2 level A and AA criterion was judged in Chromium on a sample
+  of the app, the co-author page, the census, the about page, this statement and the web element,
+  with the result and its evidence per criterion in the
+  [self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md). It is repeated at each yearly review.
 - **Automated scan.** The end-to-end tests run [axe-core](https://github.com/dequelabs/axe-core)
   with the WCAG 2.0, 2.1 and 2.2 level A and AA rules (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`,
   `wcag22a`, `wcag22aa`). They scan the welcome dialog, the empty and filled workspace, a phone-sized
@@ -93,8 +99,9 @@ All of this runs on every pull request and every push to main. Automated tools f
 the problems a person can run into, so a passing run does not mean there are none.
 
 Not checked yet: nobody who relies on a screen reader, switch access or voice control has tested
-the app. Screen-reader support is built in (labels, landmarks, live announcements), but only the
-automated tools above check it.
+the app, and the self-assessment did not use a screen reader. Screen-reader support is built in
+(labels, landmarks, live announcements), and the self-assessment read the accessibility tree, but
+no screen reader has read it out.
 
 ### Heatmap text alternatives
 
@@ -122,9 +129,9 @@ CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 
 Prepared: 13 October 2026
 
-Last reviewed: 22 October 2026
+Last reviewed: 24 October 2026
 
-Next review: by 22 October 2027, or at the next major release if that comes first.
+Next review: by 24 October 2027, or at the next major release if that comes first.
 
-Method: self-assessment by the developer, with the checks under [How we check](#how-we-check). No
-external audit.
+Method: self-assessment by the developer, following WCAG-EM, with the checks under
+[How we check](#how-we-check). No external audit.
