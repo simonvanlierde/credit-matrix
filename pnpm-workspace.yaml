@@ -13,3 +13,6 @@ allowBuilds:
 overrides:
   nanoid: "^3.3.18"
   postcss: "^8.5.23"
+  # miniflare (via wrangler) pins undici 7.29.1, which has three advisories
+  # (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, GHSA-xjj6-f33q-929c). Drop once wrangler moves it.
+  "miniflare>undici": "7.30.1"
