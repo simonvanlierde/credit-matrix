@@ -403,7 +403,7 @@ export function HeaderActions() {
 
   return (
     <>
-      <div data-draft-actions className="flex shrink-0 items-center gap-1 sm:gap-3">
+      <div data-draft-actions className="flex shrink-0 items-center gap-1 md:gap-3">
         <DraftPicker />
         <Popover open={shareOpen} onOpenChange={setShareOpen}>
           <PopoverTrigger asChild>
@@ -412,7 +412,7 @@ export function HeaderActions() {
               disabled={authorCount === 0 || claim !== null}
               aria-label={t("a11yShareLink")}
               title={claim !== null ? t("claimLockedHint") : t("a11yShareLink")}
-              className="touch-target flex size-9 items-center justify-center gap-2 rounded-lg border border-outline-variant text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 sm:w-auto sm:px-4"
+              className="touch-target flex size-9 items-center justify-center gap-2 rounded-lg border border-outline-variant text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 md:w-auto md:px-4"
             >
               {shareStatus === "copied" ? (
                 <Check className="h-4 w-4" />
@@ -421,7 +421,7 @@ export function HeaderActions() {
               ) : (
                 <Link2 className="h-4 w-4" />
               )}
-              <span className="sr-only sm:not-sr-only">
+              <span className="sr-only md:not-sr-only">
                 {shareStatus === "copied"
                   ? t("linkCopied")
                   : shareStatus === "error"
@@ -450,10 +450,10 @@ export function HeaderActions() {
           title={claim !== null ? t("claimLockedHint") : t("import")}
           // Secondary, like Share: importing is an occasional start, not the
           // page's main action, which is copying the statement.
-          className="touch-target flex size-9 items-center justify-center gap-2 rounded-lg border border-outline-variant text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 sm:w-auto sm:px-4"
+          className="touch-target flex size-9 items-center justify-center gap-2 rounded-lg border border-outline-variant text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 md:w-auto md:px-4"
         >
           <Upload className="h-4 w-4" />
-          <span className="sr-only sm:not-sr-only">{t("import")}</span>
+          <span className="sr-only md:not-sr-only">{t("import")}</span>
         </button>
       </div>
 
