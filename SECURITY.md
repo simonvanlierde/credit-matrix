@@ -4,10 +4,24 @@
 
 Report it privately through GitHub:
 [Report a vulnerability](https://github.com/simonvanlierde/credit-matrix/security/advisories/new).
-Please do not open a public issue for a security problem.
+Don't open a public issue or pull request for a security problem: anyone can read those before
+there is a fix.
 
-Say what you found, how to reproduce it, and which version or URL you tested. This is a
-single-maintainer project; expect a reply within two weeks.
+Please include:
+
+- What you found and where.
+- How to reproduce it, and which version or URL you tested.
+- The impact you expect.
+
+This is a single-maintainer project. I acknowledge a report within 14 days, then tell you whether
+I can reproduce it and when I expect a fix.
+
+## Fixes and disclosure
+
+A fix lands on `main` and the live site deploys it. If it touches the `credit-matrix` npm
+package, it also ships in a new tagged release. When the fix is live, I publish the GitHub
+security advisory for it, with a CVE where one applies, and credit you unless you'd rather not
+be named. The CHANGELOG entry for the fix links the advisory.
 
 ## Scope
 

@@ -5,6 +5,10 @@ is for, [DESIGN.md](DESIGN.md) holds the design rules UI changes have to follow,
 [docs/architecture.md](docs/architecture.md) says where things live. I record design decisions in
 [docs/adr](docs/adr/).
 
+To report a bug, open an [issue](https://github.com/simonvanlierde/credit-matrix/issues) and say
+what you did, what you expected, what happened, and which version or URL you used. Report a
+vulnerability as [SECURITY.md](SECURITY.md) says, not in an issue.
+
 ## Getting set up
 
 **Prerequisites:** Node ≥ 26, pnpm ≥ 11.
@@ -110,5 +114,21 @@ To report a wrong or missing translation without a PR, use the translation issue
   them in a `commit-msg` hook.
 - The lefthook hooks format staged files when you commit, and run `pnpm verify` when you push.
 - Keep each PR to one change. Say what it changes and how you checked it.
+- Sign off every commit, as the next section says.
+
+## Sign off your commits
+
+Every commit in a pull request carries a `Signed-off-by:` line, which says you wrote the change
+or have the right to submit it under the MIT license: the
+[Developer Certificate of Origin 1.1](https://developercertificate.org/). `git commit -s` adds
+it; `git rebase --signoff upstream/main` (the branch you started from) adds it to commits you already made. The `dco` workflow
+fails a pull request from a fork with a commit that lacks it. Pull requests from a branch in this repository skip it.
+
+## Who maintains this
+
+Simon van Lierde ([@simonvanlierde](https://github.com/simonvanlierde)) maintains CRediT
+Matrix: reviews and merges pull requests, and tags releases. Only he can merge to `main`. A new maintainer would be named here first. If he
+stops maintaining it, the README says so and the repository is archived; anyone may fork it under
+the MIT license.
 
 Deploys and rollback are in [docs/deploy.md](docs/deploy.md).
