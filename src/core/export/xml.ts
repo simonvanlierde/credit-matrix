@@ -46,7 +46,7 @@ ${DOCTYPE}
  * ("María José García López" → "María José López"). Take the name minus its surname
  * instead.
  */
-function givenNamesOf(author: Author): string {
+export function givenNamesOf(author: Author): string {
   const name = author.name.trim();
   const { surname } = author;
   // A mononym or an ORCID placeholder: the whole name, so it re-imports as is.
