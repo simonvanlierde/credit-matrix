@@ -1,5 +1,5 @@
 Author/Acknowledgee,Order in publication,Firstname,Middle name,Surname,Conceptualization,Data curation,Formal analysis,Funding acquisition,Investigation,Methodology,Project administration,Resources,Software,Supervision,Validation,Visualization,Writing - original draft,Writing - review & editing,Notes,Affiliation 1,Affiliation 2,Affiliation 3,Funding,ORCID iD,Email address,Corresponding author?,Declares
 Author,2,Bob,,White,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,,Leiden University,,,,not-an-orcid,bob@example.org,FALSE,
 Author,1,Ana,María,José-García,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,TRUE,TRUE,"Led the work, wrote it",Universidad de Sevilla,,,ERC grant 1,https://orcid.org/0000-0002-1825-0097,ana@example.org,TRUE,
-Acknowledgee,NA,Carol,,Black,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,NA,,FALSE,
+Acknowledgment only,NA,Carol,,Black,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,NA,,FALSE,
 ,,,,,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,,

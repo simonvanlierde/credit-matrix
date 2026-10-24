@@ -2,7 +2,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { Author } from "../author";
-import { fromTenzing, isTenzing } from "../export/tenzing";
+import { CREDIT_ROLES } from "../credit-roles";
+import { fromTenzing, isTenzing, toTenzing } from "../export/tenzing";
+import { detectFormat } from "../import";
+import { createAuthor } from "../parse-authors";
 
 function fixture(name: string): string {
   return readFileSync(`src/core/__tests__/fixtures/${name}`, "utf8");
@@ -53,6 +56,24 @@ describe("fromTenzing", () => {
 
     expect(carol).toMatchObject({ name: "Carol Black", contributorType: "non-author" });
     expect(roles(carol)).toEqual(["Investigation:100"]);
+  });
+
+  it("still reads the older Acknowledgee value as an acknowledgee", () => {
+    const [ana] = fromTenzing("Author/Acknowledgee,Firstname,Surname\nAcknowledgee,Ana,Lopez");
+    expect(ana).toMatchObject({ contributorType: "non-author" });
+  });
+
+  it('drops a row where tenzing records "Don\'t agree to be named", but keeps a blank status as an author', () => {
+    const sheet = [
+      "Author/Acknowledgee,Firstname,Surname",
+      "Author,Ana,Lee",
+      "Don't agree to be named,Bo,Kim",
+      "don\u2019t agree to be named,Cy,Ray",
+      ",Di,Fox",
+    ].join("\n");
+    const authors = fromTenzing(sheet);
+    expect(authors.map((a) => a.name)).toEqual(["Ana Lee", "Di Fox"]);
+    expect(authors.every((a) => a.contributorType === "author")).toBe(true);
   });
 
   it("matches headers by name in a reordered TSV with a Note column", () => {
@@ -132,5 +153,149 @@ describe("isTenzing", () => {
     expect(isTenzing("Anne Namer, Bob Smith")).toBe(false);
     expect(isTenzing("Firstname,Surname")).toBe(false);
     expect(isTenzing("")).toBe(false);
+  });
+});
+
+describe("toTenzing", () => {
+  const scored = (done: string[], score = 100) =>
+    CREDIT_ROLES.map((role) => ({ role: role.name, score: done.includes(role.name) ? score : 0 }));
+
+  const draft = [
+    createAuthor("Ana María José-García", {
+      firstName: "Ana",
+      middleName: "María",
+      surname: "José-García",
+      orcid: "0000-0002-1825-0097",
+      corresponding: true,
+      contributions: scored(["Conceptualization", "Writing – original draft", "Writing – review & editing"]),
+    }),
+    createAuthor("Kim Nam-joon", { contributorType: "non-author", contributions: scored(["Investigation"], 33) }),
+    createAuthor("Martin Luther King Jr.", { contributions: scored(["Software", "Data curation"], 66) }),
+    createAuthor("Gerard 't Hooft", { contributions: scored(CREDIT_ROLES.map((role) => role.name)) }),
+    createAuthor("María José García López", { corresponding: true, contributions: scored(["Resources"]) }),
+    createAuthor("Plato", { contributions: scored(["Validation", "Visualization"]) }),
+    createAuthor("Jane A. Smith", { contributorType: "non-author" }),
+    createAuthor("Seán O'Brien", { contributions: scored(["Supervision", "Project administration"]) }),
+    // A spreadsheet runs a cell that starts with "=" or "@"; a comma or quote needs quoting.
+    createAuthor("=Cy Lee, Jr", { firstName: "=Cy", surname: "Lee, Jr", contributions: scored(["Methodology"]) }),
+    createAuthor('@Dee "DJ" Ray', { firstName: "@Dee", middleName: '"DJ"', surname: "Ray" }),
+  ];
+
+  it("writes the columns of tenzing's example CSV, in its order", () => {
+    const header = (text: string) => text.split(/\r?\n/)[0];
+    expect(header(toTenzing([]))).toBe(header(fixture("tenzing.csv")));
+  });
+
+  it("is read back as a tenzing sheet", () => {
+    const sheet = toTenzing(draft);
+    expect(isTenzing(sheet)).toBe(true);
+    expect(detectFormat(sheet)).toBe("tenzing");
+  });
+
+  it("keeps every contributor and every role through a round trip", () => {
+    const summary = (authors: Author[]) =>
+      authors
+        .map((author) => ({
+          name: author.name,
+          orcid: author.orcid,
+          contributorType: author.contributorType,
+          corresponding: author.corresponding,
+          // tenzing has no degree, so a role keeps whether it was done.
+          roles: author.contributions.filter((c) => c.score > 0).map((c) => c.role),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    expect(summary(fromTenzing(toTenzing(draft)))).toEqual(summary(draft));
+  });
+
+  it("numbers authors in draft order and puts acknowledgees after them", () => {
+    const names = fromTenzing(toTenzing(draft)).map((a) => a.name);
+    expect(names).toEqual([
+      "Ana María José-García",
+      "Martin Luther King Jr.",
+      "Gerard 't Hooft",
+      "María José García López",
+      "Plato",
+      "Seán O'Brien",
+      "=Cy Lee, Jr",
+      '@Dee "DJ" Ray',
+      "Kim Nam-joon",
+      "Jane A. Smith",
+    ]);
+  });
+
+  it("keeps the surname of a double-spaced name through a round trip", () => {
+    const [back] = fromTenzing(toTenzing([createAuthor("Martin  Luther King Jr.")]));
+    expect(back?.name).toBe("Martin Luther King Jr.");
+  });
+
+  it("falls back to the parsed parts when they do not spell the name, as a hand-edited JSON may", () => {
+    const author = createAuthor("Anna Lee", { firstName: "Ann", middleName: "", surname: "Smith" });
+    expect(toTenzing([author]).split("\n")[1]?.startsWith("Author,1,Ann,,Smith,")).toBe(true);
+  });
+
+  it("writes a role as TRUE whatever its level, and keeps every word of a name", () => {
+    const rows = toTenzing(draft).split("\n");
+    expect(rows[9]).toBe(
+      "Acknowledgment only,9,Kim,,Nam-joon,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,FALSE,",
+    );
+    expect(rows[2]?.startsWith("Author,2,Martin,Luther King,Jr.,FALSE,TRUE,")).toBe(true);
+  });
+
+  it("numbers every row, acknowledgees after the authors, so tenzing can build its acknowledgee section", () => {
+    const order = toTenzing(draft)
+      .split("\n")
+      .slice(1)
+      .map((row) => row.split(",").slice(0, 2).join(" "));
+    expect(order).toEqual([
+      ...["1", "2", "3", "4", "5", "6", "7", "8"].map((n) => `Author ${n}`),
+      "Acknowledgment only 9",
+      "Acknowledgment only 10",
+    ]);
+  });
+
+  it("exports a leading apostrophe once, and reads it back", () => {
+    const rows = toTenzing(draft).split("\n");
+    expect(rows[3]).toContain(",Gerard,'t,Hooft,");
+    expect(rows[3]).not.toContain("''t");
+    expect(fromTenzing(toTenzing(draft)).map((a) => a.name)).toContain("Gerard 't Hooft");
+  });
+
+  it("marks only an author as corresponding", () => {
+    const people = [
+      createAuthor("Ana Lee", { corresponding: true }),
+      createAuthor("Bo Kim", { contributorType: "non-author", corresponding: true }),
+    ];
+    const cells = toTenzing(people)
+      .split("\n")
+      .slice(1)
+      .map((row) => row.split(",").at(-2));
+    expect(cells).toEqual(["TRUE", "FALSE"]);
+  });
+
+  it("marks acknowledgees with the exact value tenzing keeps, and authors with Author", () => {
+    // tenzing's filter_acknowledgees matches "Acknowledgment only" exactly, filter_authors "Author".
+    const column = toTenzing(draft)
+      .split("\n")
+      .slice(1)
+      .map((row) => row.split(",")[0]);
+    expect(column.filter((value) => value !== "Author")).toEqual(["Acknowledgment only", "Acknowledgment only"]);
+    expect(column.filter((value) => value === "Author")).toHaveLength(8);
+  });
+
+  it("guards a cell a spreadsheet would run as a formula", () => {
+    const rows = toTenzing(draft).split("\n");
+    expect(rows[7]?.startsWith('Author,7,\'=Cy,,"Lee, Jr",')).toBe(true);
+    expect(rows[8]?.startsWith('Author,8,\'@Dee,"""DJ""",Ray,')).toBe(true);
+  });
+
+  it("guards a cell that starts with + or -, and reads it back unchanged", () => {
+    const people = [
+      createAuthor("+Pat Lee", { firstName: "+Pat", surname: "Lee" }),
+      createAuthor("-Sam Ray", { firstName: "-Sam", surname: "Ray" }),
+    ];
+    const rows = toTenzing(people).split("\n");
+    expect(rows[1]?.startsWith("Author,1,'+Pat,,Lee,")).toBe(true);
+    expect(rows[2]?.startsWith("Author,2,'-Sam,,Ray,")).toBe(true);
+    expect(fromTenzing(toTenzing(people)).map((a) => a.name)).toEqual(["+Pat Lee", "-Sam Ray"]);
   });
 });

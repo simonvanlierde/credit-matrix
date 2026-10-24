@@ -16,6 +16,7 @@ import {
   toJats4rXml,
   toJson,
   toMarkdown,
+  toTenzing,
 } from "@/core";
 import { isAllBinary, rolesWithContributions } from "@/core/author";
 import type { RoleTranslator, UiTranslator } from "@/core/i18n";
@@ -27,7 +28,7 @@ import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-type DataFormat = "xml" | "json" | "csv" | "markdown";
+type DataFormat = "xml" | "json" | "csv" | "tenzing" | "markdown";
 
 const EXPORT_ITEM_BUTTON =
   "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
@@ -42,7 +43,7 @@ const DATA_FORMATS: Record<
     mime: string;
   }
 > = {
-  // XML/JSON/CSV are machine round-trip formats, kept in canonical English.
+  // XML/JSON/CSV/tenzing are machine round-trip formats, kept in canonical English.
   // Only Markdown (a human-facing paste artifact) follows the output language.
   // XML and JSON are replaced per export in the component, which knows the
   // input mode and whether answers go in.
@@ -59,6 +60,12 @@ const DATA_FORMATS: Record<
     mime: "application/json",
   },
   csv: { label: "CSV", serialize: toCsv, filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
+  tenzing: {
+    label: "tenzing CSV",
+    serialize: toTenzing,
+    filename: "tenzing-contributors.csv",
+    mime: "text/csv;charset=utf-8",
+  },
   markdown: {
     label: "Markdown",
     serialize: toMarkdown,
@@ -129,7 +136,7 @@ export function StatementOutput() {
     if (!hasAuthors) return;
     const { filename, mime } = DATA_FORMATS[dataFormat];
     // A BOM makes Excel read the file as UTF-8, so non-ASCII names survive.
-    const bom = dataFormat === "csv" ? "﻿" : "";
+    const bom = dataFormat === "csv" || dataFormat === "tenzing" ? "﻿" : "";
     download(new Blob([bom, serialize(dataFormat)], { type: mime }), filename);
   }
 

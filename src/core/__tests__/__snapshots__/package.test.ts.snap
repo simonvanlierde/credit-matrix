@@ -45,6 +45,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "toJats4rXml",
     "toJson",
     "toMarkdown",
+    "toTenzing",
   ],
   "./i18n": [
     "AVAILABLE_LOCALES",
