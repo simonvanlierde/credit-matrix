@@ -95,7 +95,7 @@ export function WelcomeCard({ version }: { version: string }) {
           document.getElementById("main-content")?.focus();
         }
       }}
-      onMouseDown={closeOnBackdrop}
+      {...closeOnBackdrop}
       className="m-auto w-full max-w-3xl max-h-[90dvh] overflow-y-auto rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
     >
       {/* The entrance moved onto the <dialog> itself (globals.css), so this card

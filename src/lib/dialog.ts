@@ -13,7 +13,21 @@ export function useModalDialog(dialog: HTMLDialogElement | null, open: boolean) 
   }, [dialog, open]);
 }
 
-/** `onMouseDown` for a modal `<dialog>`: a press on the backdrop (the element itself, outside its content) closes it. */
-export function closeOnBackdrop(event: MouseEvent<HTMLDialogElement>) {
-  if (event.target === event.currentTarget) event.currentTarget.close();
-}
+// Only one modal is open at a time, so one flag serves them all.
+let pressedOnBackdrop = false;
+
+/**
+ * Handlers for a modal `<dialog>`: it closes on a click whose press and release
+ * both landed on the backdrop (the element itself, outside its content). Closing
+ * on the press would lose typed text to a stray touch, and a drag that starts
+ * inside and ends outside must not count.
+ */
+export const closeOnBackdrop = {
+  onMouseDown(event: MouseEvent<HTMLDialogElement>) {
+    pressedOnBackdrop = event.target === event.currentTarget;
+  },
+  onClick(event: MouseEvent<HTMLDialogElement>) {
+    if (pressedOnBackdrop && event.target === event.currentTarget) event.currentTarget.close();
+    pressedOnBackdrop = false;
+  },
+};

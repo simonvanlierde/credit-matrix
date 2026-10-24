@@ -486,7 +486,7 @@ export function ImportModal({
       aria-labelledby="import-title"
       aria-describedby="import-description"
       onClose={handleClose}
-      onMouseDown={closeOnBackdrop}
+      {...closeOnBackdrop}
       onDragOver={swallowDrag}
       onDrop={swallowDrag}
       className="relative m-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"

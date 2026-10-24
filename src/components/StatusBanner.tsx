@@ -3,6 +3,7 @@
 import { CircleAlert, CircleCheck, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
+import { UNDO_WINDOW_MS } from "@/components/ui/undo-bar";
 import { announce } from "@/lib/announce";
 
 export interface Status {
@@ -67,19 +68,40 @@ export function StatusBanner() {
 
   const dismiss = () => replace(null);
 
+  // Fixed over the content, the strip would hide whatever takes focus beneath
+  // it (WCAG 2.4.11), and an error stays until dismissed. Focus landing under
+  // it sends it to the other edge instead.
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [atBottom, setAtBottom] = useState(false);
+  useEffect(() => {
+    if (!status) return;
+    const onFocusIn = (event: FocusEvent) => {
+      const strip = stripRef.current;
+      if (!strip || !(event.target instanceof Element) || strip.contains(event.target)) return;
+      const a = strip.getBoundingClientRect();
+      const b = event.target.getBoundingClientRect();
+      if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) setAtBottom((v) => !v);
+    };
+    document.addEventListener("focusin", onFocusIn);
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, [status]);
+
   // Successes leave on their own; errors stay until dismissed. A success
   // carrying an action (Undo) gets the same 60s the contributor-removal undo
   // gives, for the same WCAG 2.2.1 reason.
   useEffect(() => {
     if (!status || status.kind === "error") return;
-    const timer = window.setTimeout(() => replace(null), status.actions?.length ? 60000 : 10000);
+    const timer = window.setTimeout(() => replace(null), status.actions?.length ? UNDO_WINDOW_MS : 10000);
     return () => window.clearTimeout(timer);
   }, [status, replace]);
 
   if (!status) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-16 z-40 flex justify-center px-3">
+    <div
+      ref={stripRef}
+      className={`pointer-events-none fixed inset-x-0 z-40 flex justify-center px-3 ${atBottom ? "bottom-4" : "top-16"}`}
+    >
       <div
         className={`pointer-events-auto flex max-w-xl items-center gap-3 rounded-lg border px-4 py-2.5 text-sm shadow-md ${
           status.kind === "error"

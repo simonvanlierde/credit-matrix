@@ -39,14 +39,26 @@ describe("useModalDialog", () => {
 });
 
 describe("closeOnBackdrop", () => {
-  it("closes only on a press on the dialog itself, not its content", () => {
-    const dialog = fakeDialog();
-    const press = (target: unknown) =>
-      closeOnBackdrop({ target, currentTarget: dialog } as unknown as MouseEvent<HTMLDialogElement>);
+  const event = (target: unknown, dialog: unknown) =>
+    ({ target, currentTarget: dialog }) as unknown as MouseEvent<HTMLDialogElement>;
 
-    press({});
-    expect(dialog.close).not.toHaveBeenCalled();
-    press(dialog);
+  it("closes on a click whose press and release were both on the dialog itself", () => {
+    const dialog = fakeDialog();
+    closeOnBackdrop.onMouseDown(event(dialog, dialog));
+    closeOnBackdrop.onClick(event(dialog, dialog));
     expect(dialog.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignores a press on the content, and a drag from the content to the backdrop", () => {
+    const dialog = fakeDialog();
+    closeOnBackdrop.onMouseDown(event({}, dialog));
+    closeOnBackdrop.onClick(event(dialog, dialog));
+    expect(dialog.close).not.toHaveBeenCalled();
+  });
+
+  it("does not close on the press alone", () => {
+    const dialog = fakeDialog();
+    closeOnBackdrop.onMouseDown(event(dialog, dialog));
+    expect(dialog.close).not.toHaveBeenCalled();
   });
 });

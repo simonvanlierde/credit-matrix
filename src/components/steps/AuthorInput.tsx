@@ -45,7 +45,7 @@ import { useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { UndoBar } from "@/components/ui/undo-bar";
+import { UNDO_WINDOW_MS, UndoBar } from "@/components/ui/undo-bar";
 import { type Author, review } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { announce } from "@/lib/announce";
@@ -126,12 +126,11 @@ export function AuthorList() {
   // Rows that arrive after the app has settled animate in; a restored draft does not.
   const settled = useSettled();
 
-  // A long window on purpose: eight seconds was under WCAG 2.2.1's threshold,
-  // and a screen-reader user still hearing the removal announcement could
-  // lose the Undo mid-route.
+  // A screen-reader user still hearing the removal announcement could lose a
+  // short Undo mid-route, hence the long window.
   useEffect(() => {
     if (!removed) return;
-    const timer = window.setTimeout(() => setRemoved(null), 60000);
+    const timer = window.setTimeout(() => setRemoved(null), UNDO_WINDOW_MS);
     return () => window.clearTimeout(timer);
   }, [removed]);
 

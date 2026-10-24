@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
  * the inner div clips what overflows while it does. `className` sets the gap
  * above it.
  */
+/** How long an undo stays on offer: eight seconds was under WCAG 2.2.1's threshold. */
+export const UNDO_WINDOW_MS = 60_000;
+
 export function UndoBar({ message, onUndo, className }: { message: string; onUndo: () => void; className?: string }) {
   const t = useTranslations();
   return (

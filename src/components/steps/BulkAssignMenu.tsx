@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UNDO_WINDOW_MS } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES } from "@/core";
 import type { RoleTranslator, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
@@ -28,7 +29,7 @@ export function useBulkUndo() {
 
   useEffect(() => {
     if (!bulkUndo) return;
-    const timer = window.setTimeout(() => setBulkUndo(null), 8000);
+    const timer = window.setTimeout(() => setBulkUndo(null), UNDO_WINDOW_MS);
     return () => window.clearTimeout(timer);
   }, [bulkUndo]);
 
@@ -48,7 +49,7 @@ export function useBulkUndo() {
   }
 
   // NOTE: restores the whole roster snapshot, so it also reverts any edit made
-  // inside the 8-second window — simple last-state undo, not an operation log.
+  // inside the undo window — simple last-state undo, not an operation log.
   function undoBulk() {
     if (!bulkUndo) return;
     loadAuthors(bulkUndo);
