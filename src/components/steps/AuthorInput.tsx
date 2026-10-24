@@ -270,7 +270,7 @@ export function AuthorList() {
           // before that is silently overwritten by it.
           readOnly={!hydrated}
           placeholder={t("untitledDraft")}
-          className="peer w-full border-b border-outline-variant/30 bg-transparent pb-1 pr-6 text-sm font-medium text-on-surface outline-none transition-colors placeholder:font-normal placeholder:text-on-surface-variant/60 focus:border-primary"
+          className="peer w-full border-b border-outline-strong bg-transparent pb-1 pr-6 text-sm font-medium text-on-surface outline-none transition-colors placeholder:font-normal placeholder:text-on-surface-variant focus:border-primary"
         />
         <Pencil
           aria-hidden="true"
@@ -344,7 +344,7 @@ export function AuthorList() {
             readOnly={!hydrated}
             placeholder={t("addPlaceholder")}
             aria-label={t("addContributor")}
-            className="flex-1 min-w-0 text-ellipsis bg-surface-container-low border-b-2 border-outline-variant/40 focus:border-primary focus:ring-0 outline-none px-3 py-2 text-sm rounded-t text-on-surface placeholder-outline transition-colors"
+            className="flex-1 min-w-0 text-ellipsis bg-surface-container-low border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none px-3 py-2 text-sm rounded-t text-on-surface placeholder:text-on-surface-variant transition-colors"
           />
           <button
             type="button"
@@ -682,7 +682,7 @@ const AuthorRow = memo(function AuthorRowInner({
               {...attributes}
               {...listeners}
               aria-label={`${t("reorderContributor")} ${author.name}`}
-              className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-outline-variant transition-colors hover:text-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-outline-strong transition-colors hover:text-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <GripVertical className="h-4 w-4" />
             </button>
@@ -716,7 +716,7 @@ const AuthorRow = memo(function AuthorRowInner({
               onPaste={handleSmartPaste}
               aria-invalid={nameError !== null}
               aria-describedby={nameError ? `author-name-error-${author.id}` : undefined}
-              className="min-h-6 w-full text-ellipsis bg-transparent border-none p-0 focus:ring-0 text-on-surface font-medium border-b border-primary/20 focus:border-primary outline-none text-sm"
+              className="min-h-6 w-full text-ellipsis bg-transparent border-none p-0 focus:ring-0 text-on-surface font-medium border-b border-primary/20 focus:border-primary outline-none rounded-sm focus-visible:ring-2 focus-visible:ring-primary text-sm"
             />
             {nameError && (
               <span id={`author-name-error-${author.id}`} className="mt-1 block text-[11px] text-error">

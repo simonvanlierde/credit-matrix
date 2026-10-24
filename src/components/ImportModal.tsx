@@ -543,7 +543,7 @@ export function ImportModal({
                   }
                 }}
                 placeholder={t("doiPlaceholder")}
-                className="flex-1 min-w-0 bg-surface-container-low border-0 border-b-2 border-outline-variant/40 focus:border-primary focus:ring-0 outline-none text-sm font-mono px-4 py-2 text-on-surface rounded-t transition-colors"
+                className="flex-1 min-w-0 bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono px-4 py-2 text-on-surface placeholder:text-on-surface-variant rounded-t transition-colors"
               />
               <button
                 type="button"
@@ -638,7 +638,7 @@ export function ImportModal({
               }}
               placeholder={t("importPlaceholder", { names: t("sampleNames") })}
               rows={6}
-              className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/40 focus:border-primary focus:ring-0 outline-none text-sm font-mono p-4 text-on-surface rounded-t resize-none transition-colors"
+              className="w-full bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono p-4 text-on-surface placeholder:text-on-surface-variant rounded-t resize-none transition-colors"
             />
           </div>
 

@@ -30,6 +30,7 @@
 
   --color-outline: #c9c9c5;
   --color-outline-variant: #e4e4e1;
+  --color-outline-strong: #7c7c78; /* 3:1 on every surface: field edges, icon-only controls */
 
   --color-background: #fafaf9;
 
@@ -69,6 +70,7 @@
 
   --color-outline: #45474b;
   --color-outline-variant: #2e3034;
+  --color-outline-strong: #7a7d83;
 
   --color-background: #16181c;
 
@@ -118,6 +120,7 @@
 
   --color-outline: var(--color-outline);
   --color-outline-variant: var(--color-outline-variant);
+  --color-outline-strong: var(--color-outline-strong);
 
   --color-background: var(--color-background);
 
