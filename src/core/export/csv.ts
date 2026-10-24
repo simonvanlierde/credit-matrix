@@ -36,21 +36,32 @@ function readYesNo(value: string | undefined): boolean {
 /** Leading characters a spreadsheet may interpret as the start of a formula. */
 const FORMULA_PREFIX = /^[=+\-@\t\r]/;
 
-function escapeCsvValue(raw: string): string {
-  // Import trims a cell before it reads the guard, so decide on the trimmed value.
-  const value = raw.trim();
+function quoteCsvValue(value: string, guardApostrophe: boolean): string {
   // Prefix a single quote so Excel/Sheets treat formula-like cells as text.
-  // Also guard values that already start with `'` so the unescape below is a
-  // true inverse (otherwise a genuine leading apostrophe would be stripped).
-  const guarded = value.startsWith("'") || FORMULA_PREFIX.test(value) ? `'${value}` : value;
+  // A value that already starts with `'` is guarded too, so the unescape below
+  // is a true inverse (otherwise a genuine leading apostrophe would be stripped).
+  const guarded = (guardApostrophe && value.startsWith("'")) || FORMULA_PREFIX.test(value) ? `'${value}` : value;
   if (/["\r\n,]/.test(guarded)) {
     return `"${guarded.replace(/"/g, '""')}"`;
   }
   return guarded;
 }
 
+function escapeCsvValue(raw: string): string {
+  // Import trims a cell before it reads the guard, so decide on the trimmed value.
+  return quoteCsvValue(raw.trim(), true);
+}
+
+/**
+ * Like `escapeCsvValue`, but leaves a leading apostrophe alone. For readers that
+ * do not undo the guard, where `'t Hooft` would otherwise show as `''t Hooft`.
+ */
+export function escapeCsvFormulaOnly(raw: string): string {
+  return quoteCsvValue(raw.trim(), false);
+}
+
 /** Inverse of the formula guard added by `escapeCsvValue`. */
-function unescapeCsvValue(value: string): string {
+export function unescapeCsvValue(value: string): string {
   return value.startsWith("'") && (value[1] === "'" || FORMULA_PREFIX.test(value.slice(1))) ? value.slice(1) : value;
 }
 
