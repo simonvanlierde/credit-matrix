@@ -31,8 +31,8 @@ missing, the deploy step prints a notice and the job still passes.
 
 On pull requests, the `preview` job uploads the build as a Worker version with
 `wrangler versions upload` and writes the preview URL to the job summary. It runs in the `preview`
-environment with its own secrets, and skips on fork PRs and when the token is missing. The URL only
-appears if Preview URLs are on for the Worker (dashboard: Settings, Domains and Routes).
+environment with its own secrets, and skips on fork PRs and when the token is missing. `wrangler.jsonc`
+turns Preview URLs on with `preview_urls` and `workers_dev`.
 
 ## Roll back
 

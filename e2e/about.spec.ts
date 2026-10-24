@@ -54,6 +54,9 @@ test.describe("About page", () => {
       // The hash is dropped, so a reload does not reopen the panel.
       await expect(page).toHaveURL(/\/$/);
       await expect(page.getByRole("dialog", { name: /three steps/ })).toBeVisible();
+      // Opened on arrival, the panel has no button to give focus back to.
+      await page.keyboard.press("Escape");
+      await expect(page.locator("#main-content")).toBeFocused();
     });
   }
 });

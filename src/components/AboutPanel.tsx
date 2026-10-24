@@ -3,7 +3,6 @@
 import { Accessibility, BookOpen, ChartLine, Code, ExternalLink } from "lucide-react";
 import { useTranslations } from "use-intl";
 import { PRODUCT_NAME } from "@/components/BrandMark";
-import { IN_TEXT_LINK } from "@/components/ui/license-link";
 
 /**
  * A short card on what the app is, linking to the pages that say more: the
@@ -47,24 +46,6 @@ export function AboutPanel({ version }: { version: string }) {
         <ExternalLink className="size-3" aria-hidden="true" />
         <span className="sr-only">{t("opensInNewTab")}</span>
       </a>
-      {/* Authorship and license sit with the identity, not in the small print:
-          they say who made this, which is the same kind of fact as what it is.
-          Names and license from LICENSE and CITATION.cff. */}
-      <p className="text-xs text-on-surface-variant">
-        © 2026{" "}
-        <a href="https://github.com/simonvanlierde" target="_blank" rel="noopener noreferrer" className={IN_TEXT_LINK}>
-          Simon van Lierde
-        </a>
-        <span aria-hidden="true"> · </span>
-        <a
-          href="https://github.com/simonvanlierde/credit-matrix/blob/main/LICENSE"
-          target="_blank"
-          rel="noopener noreferrer license"
-          className={IN_TEXT_LINK}
-        >
-          MIT License
-        </a>
-      </p>
     </>
   );
 }
