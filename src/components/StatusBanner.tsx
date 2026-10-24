@@ -74,10 +74,16 @@ export function StatusBanner() {
   const stripRef = useRef<HTMLDivElement>(null);
   const [atBottom, setAtBottom] = useState(false);
   useEffect(() => {
-    if (!status) return;
+    // Each new message starts at the top again.
+    if (!status) {
+      setAtBottom(false);
+      return;
+    }
     const onFocusIn = (event: FocusEvent) => {
       const strip = stripRef.current;
       if (!strip || !(event.target instanceof Element) || strip.contains(event.target)) return;
+      // An open modal sits above the strip in the top layer, so nothing in it is hidden.
+      if (event.target.closest("dialog[open]")) return;
       const a = strip.getBoundingClientRect();
       const b = event.target.getBoundingClientRect();
       if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) setAtBottom((v) => !v);

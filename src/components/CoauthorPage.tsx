@@ -519,8 +519,8 @@ function YourDetails({ author }: { author: Author }) {
       return;
     }
     const message = t(name.trim().length > MAX_AUTHOR_NAME_LENGTH ? "errNameTooLong" : "errNameNoLetter");
+    if (message !== nameError) announce(message, { assertive: true });
     setNameError(message);
-    announce(message, { assertive: true });
   }
 
   function commitOrcid() {

@@ -26,6 +26,10 @@ export const closeOnBackdrop = {
   onMouseDown(event: MouseEvent<HTMLDialogElement>) {
     pressedOnBackdrop = event.target === event.currentTarget;
   },
+  // A press on the backdrop released on the content still clicks the dialog, the element both share.
+  onMouseUp(event: MouseEvent<HTMLDialogElement>) {
+    pressedOnBackdrop &&= event.target === event.currentTarget;
+  },
   onClick(event: MouseEvent<HTMLDialogElement>) {
     if (pressedOnBackdrop && event.target === event.currentTarget) event.currentTarget.close();
     pressedOnBackdrop = false;

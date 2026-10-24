@@ -45,6 +45,17 @@ test.describe("input errors reach assistive tech", () => {
     await expect(await describedBy(page, field)).toHaveText(INVALID_ID);
   });
 
+  test("Escape leaves a refused ORCID input without an error", async ({ page }) => {
+    const field = await openOrcidField(page);
+    await field.fill("garbage");
+    await field.press("Enter");
+    const error = await describedBy(page, field);
+    await expect(error).toHaveText(INVALID_ID);
+    await field.press("Escape");
+    await expect(field).toBeHidden();
+    await expect(error).toHaveCount(0);
+  });
+
   test("an empty ORCID input still closes quietly", async ({ page }) => {
     const field = await openOrcidField(page);
     await page.getByRole("heading", { name: "Contributors" }).click();

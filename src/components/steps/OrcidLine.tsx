@@ -69,8 +69,9 @@ export function useOrcidLine(authorId: string, focusName: () => void) {
 
   /** Say why the typed text was not taken, and keep the input open for the fix. */
   function rejectOrcid(message: string) {
+    // Enter and the blur after it both reject the same text: say it once.
+    if (message !== lookupError) announce(message, { assertive: true });
     setLookupError(message);
-    announce(message, { assertive: true });
     setEditingOrcid(true);
   }
 
@@ -206,6 +207,13 @@ export function OrcidLine({
               onPaste={onPaste}
               onChange={line.clearLookupError}
               onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  // Empty text makes any blur that follows close quietly too.
+                  event.currentTarget.value = "";
+                  line.clearLookupError();
+                  line.setEditingOrcid(false);
+                  return;
+                }
                 if (event.key !== "Enter") return;
                 const orcid = detectOrcid(event.currentTarget.value);
                 // Only suppress the follow-up blur when the apply actually

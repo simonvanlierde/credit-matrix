@@ -56,6 +56,15 @@ describe("closeOnBackdrop", () => {
     expect(dialog.close).not.toHaveBeenCalled();
   });
 
+  it("ignores a drag from the backdrop that is released on the content", () => {
+    const dialog = fakeDialog();
+    closeOnBackdrop.onMouseDown(event(dialog, dialog));
+    // The click then targets the dialog, the nearest element both ends share.
+    closeOnBackdrop.onMouseUp(event({}, dialog));
+    closeOnBackdrop.onClick(event(dialog, dialog));
+    expect(dialog.close).not.toHaveBeenCalled();
+  });
+
   it("does not close on the press alone", () => {
     const dialog = fakeDialog();
     closeOnBackdrop.onMouseDown(event(dialog, dialog));
