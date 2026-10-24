@@ -150,9 +150,7 @@ and the dependency bots' pull requests skip it.
 
 ## Who maintains this
 
-Simon van Lierde ([@simonvanlierde](https://github.com/simonvanlierde)) maintains CRediT
-Matrix: reviews and merges pull requests, and tags releases. Only he can merge to `main`. A new maintainer would be named here first. If he
-stops maintaining it, the README says so and the repository is archived; anyone may fork it under
-the MIT license.
+[GOVERNANCE.md](GOVERNANCE.md) says who decides, who has access, and what happens if the
+maintainer stops.
 
 Deploys and rollback are in [docs/deploy.md](docs/deploy.md).
