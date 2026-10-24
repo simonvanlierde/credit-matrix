@@ -460,6 +460,7 @@ function RowMenu({
       </PopoverTrigger>
       <PopoverContent
         align="start"
+        aria-label={t("contributorActions", { name })}
         onCloseAutoFocus={(event) => {
           if (!openedOrcidRef.current) return;
           openedOrcidRef.current = false;

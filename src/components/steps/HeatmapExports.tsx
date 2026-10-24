@@ -117,7 +117,7 @@ export function HeatmapExports({
         {t("heatmapLabel")}
         <ChevronDown className="size-3.5" aria-hidden="true" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="grid w-56 gap-0.5 p-1">
+      <PopoverContent align="end" aria-label={t("heatmapLabel")} className="grid w-56 gap-0.5 p-1">
         <button
           type="button"
           disabled={loading !== null}

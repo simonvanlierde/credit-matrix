@@ -129,7 +129,7 @@ export function DraftPicker() {
           <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 md:block" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 max-w-[calc(100vw-1.5rem)] p-0">
+      <PopoverContent align="start" aria-label={t("drafts")} className="w-80 max-w-[calc(100vw-1.5rem)] p-0">
         <ul className="max-h-64 overflow-y-auto py-1">
           {rows.map((draft) => (
             <li key={draft.id} className="group flex items-center gap-1 px-2">

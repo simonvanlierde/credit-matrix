@@ -26,6 +26,7 @@ export function AboutPopover({ version, container }: { version: string; containe
       </PopoverTrigger>
       <PopoverContent
         align="start"
+        aria-label={t("aboutApp")}
         container={container}
         className="w-[22rem] max-w-[calc(100vw-1.5rem)] space-y-3 text-sm text-on-surface-variant"
       >

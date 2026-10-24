@@ -41,7 +41,11 @@ export function RoleInfo({
           {name}
         </button>
       </PopoverTrigger>
-      <PopoverContent lang={language} className="max-w-xs text-xs leading-relaxed text-on-surface-variant">
+      <PopoverContent
+        lang={language}
+        aria-label={name}
+        className="max-w-xs text-xs leading-relaxed text-on-surface-variant"
+      >
         <strong className="text-on-surface">{name}.</strong> {describeRole(role.name)}{" "}
         <a
           href={role.url}

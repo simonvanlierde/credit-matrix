@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { AboutPanel } from "@/components/AboutPanel";
-import { Lockup } from "@/components/BrandMark";
+import { Lockup, PRODUCT_NAME } from "@/components/BrandMark";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useContributionStore } from "@/store/contribution-store";
 
@@ -49,6 +49,7 @@ export function BrandMenu({ version }: { version: string }) {
       </PopoverTrigger>
       <PopoverContent
         align="start"
+        aria-label={PRODUCT_NAME}
         className="w-[22rem] max-w-[calc(100vw-1.5rem)] space-y-4 text-sm text-on-surface-variant"
       >
         {/* A framed row with a forward chevron: inside a panel, a bare line of

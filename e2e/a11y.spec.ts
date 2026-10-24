@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import process from "node:process";
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { PERSIST_KEY } from "../src/store/persist-meta";
 import { asReturningVisitor, scan, settleMotion } from "./helpers";
@@ -90,6 +91,30 @@ test.describe("Accessibility (axe-core)", () => {
     // trips axe's aria-hidden-focus rule even though FocusScope traps focus.
     // That is a framework behavior, not an app defect. Keyboard operability of
     // a Radix radiogroup control is covered by the segmented-control test below.
+  });
+
+  test("every opened popover panel has an accessible name", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Import" }).click();
+    await page.locator("#import-text").fill("Jane Smith\nBob White");
+    await page.getByRole("button", { name: "Import data" }).click();
+    const panel = page.locator("[data-radix-popper-content-wrapper] [role=dialog]");
+    for (const name of [
+      "About this app",
+      "Language settings",
+      "Bulk assign",
+      "Heatmap options",
+      "Actions for Jane Smith",
+      "Conceptualization",
+    ]) {
+      await page.getByRole("button", { name, exact: true }).first().click();
+      await expect(panel).toBeVisible();
+      // best-practice rule, so the wcag tag filter in scan() skips it.
+      const results = await new AxeBuilder({ page }).withRules(["aria-dialog-name"]).analyze();
+      expect(results.violations, name).toEqual([]);
+      await page.keyboard.press("Escape");
+      await expect(panel).toBeHidden();
+    }
   });
 
   /**

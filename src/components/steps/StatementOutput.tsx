@@ -178,7 +178,7 @@ export function StatementOutput() {
             >
               <Settings2 className="size-4" aria-hidden="true" />
             </PopoverTrigger>
-            <PopoverContent align="end" className="grid w-60 gap-3">
+            <PopoverContent align="end" aria-label={t("statementOptions")} className="grid w-60 gap-3">
               <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
                 <Switch checked={acronyms} onCheckedChange={setAcronyms} aria-label={t("a11yUseInitials")} />
                 {t("useInitials")}
@@ -325,7 +325,7 @@ export function StatementOutput() {
             {t("exportData")}
             <ChevronDown className="size-3.5" aria-hidden="true" />
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 max-w-[calc(100vw-2rem)] p-1">
+          <PopoverContent align="start" aria-label={t("exportData")} className="w-72 max-w-[calc(100vw-2rem)] p-1">
             <ul aria-label={t("a11yExportFormat")} className="grid">
               {(Object.keys(DATA_FORMATS) as DataFormat[]).map((value) => {
                 const { label } = DATA_FORMATS[value];

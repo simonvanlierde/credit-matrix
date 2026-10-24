@@ -93,7 +93,7 @@ export function BulkAssignMenu({
       <PopoverTrigger aria-label={t("bulkAssign")} title={t("bulkAssign")} className={ICON_TOOL_BUTTON}>
         <ListChecks className="size-4" aria-hidden="true" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="grid w-72 max-w-[calc(100vw-2rem)] gap-4">
+      <PopoverContent align="end" aria-label={t("bulkAssign")} className="grid w-72 max-w-[calc(100vw-2rem)] gap-4">
         {graded && (
           <div className="grid gap-2 text-xs font-semibold text-on-surface">
             <span id="bulk-level">{t("bulkAssignLevel")}</span>

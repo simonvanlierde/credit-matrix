@@ -430,7 +430,7 @@ export function HeaderActions() {
               </span>
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-80 max-w-[calc(100vw-1.5rem)]">
+          <PopoverContent align="end" aria-label={t("share")} className="w-80 max-w-[calc(100vw-1.5rem)]">
             <p className="text-sm font-semibold text-on-surface">{t("shareWarningTitle")}</p>
             <p className="mt-1 text-xs leading-relaxed text-on-surface-variant">{t("shareWarningBody")}</p>
             <button
