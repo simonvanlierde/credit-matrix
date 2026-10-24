@@ -148,7 +148,10 @@ export function useAddContributors() {
       const name = nameBesideOrcid(trimmed);
       if (name) {
         if (addAuthor(name, orcid)) setNewName("");
-        else setAddError(t("errNameNoLetter"));
+        else {
+          setAddError(t("errNameNoLetter"));
+          announce(t("errNameNoLetter"), { assertive: true });
+        }
         return;
       }
       setNewName("");
@@ -168,6 +171,7 @@ export function useAddContributors() {
       setNewName("");
     } else {
       setAddError(t("errNameNoLetter"));
+      announce(t("errNameNoLetter"), { assertive: true });
     }
   }
 

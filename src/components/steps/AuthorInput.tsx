@@ -40,7 +40,7 @@ import {
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
@@ -114,6 +114,7 @@ export function AuthorList() {
   useEffect(() => setTitleDraft(title), [title]);
   const [collapsed, setCollapsed] = useState(false);
   const { newName, setNewName, addError, setAddError, handleAdd, handleAddPaste } = useAddContributors();
+  const addErrorId = useId();
   const [removed, setRemoved] = useState<{
     author: Author;
     index: number;
@@ -326,7 +327,11 @@ export function AuthorList() {
         />
       )}
 
-      {addError !== null && <p className="mt-4 -mb-2 text-xs text-error">{addError}</p>}
+      {addError !== null && (
+        <p id={addErrorId} className="mt-4 -mb-2 text-xs text-error">
+          {addError}
+        </p>
+      )}
 
       {!locked && (
         <div className="mt-3 flex gap-2 items-center">
@@ -342,6 +347,8 @@ export function AuthorList() {
             onKeyDown={handleNewNameKeyDown}
             onPaste={handleAddPaste}
             readOnly={!hydrated}
+            aria-invalid={addError !== null}
+            aria-describedby={addError !== null ? addErrorId : undefined}
             placeholder={t("addPlaceholder")}
             aria-label={t("addContributor")}
             className="flex-1 min-w-0 text-ellipsis bg-surface-container-low border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none px-3 py-2 text-sm rounded-t text-on-surface placeholder:text-on-surface-variant transition-colors"

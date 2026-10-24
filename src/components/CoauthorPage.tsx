@@ -8,7 +8,7 @@ import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Switch } from "@/components/ui/switch";
 import { type Author, CREDIT_ROLES, isValidOrcid, type OrcidProof, type SharePayloadInput } from "@/core";
-import { LEVEL_SCORE } from "@/core/author";
+import { LEVEL_SCORE, MAX_AUTHOR_NAME_LENGTH } from "@/core/author";
 import { DEFAULT_MONO_COLOR, heatCellColor, onColor } from "@/core/contributor-color";
 import { toSharePayload } from "@/core/share-payload";
 import { announce } from "@/lib/announce";
@@ -502,15 +502,25 @@ function YourDetails({ author }: { author: Author }) {
   const [name, setName] = useState(author.name);
   const [orcid, setOrcid] = useState(author.orcid ?? "");
   const [orcidInvalid, setOrcidInvalid] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const nameId = useId();
   const orcidId = useId();
 
   useEffect(() => setName(author.name), [author.name]);
 
   function commitName() {
-    if (name.trim() === author.name) return;
-    // An empty or unusable name is refused by the store; show what stands.
-    if (!updateAuthorName(author.id, name)) setName(author.name);
+    if (name.trim() === author.name) {
+      setNameError(null);
+      return;
+    }
+    // An empty or unusable name is refused by the store; say why and keep the text to fix.
+    if (updateAuthorName(author.id, name)) {
+      setNameError(null);
+      return;
+    }
+    const message = t(name.trim().length > MAX_AUTHOR_NAME_LENGTH ? "errNameTooLong" : "errNameNoLetter");
+    setNameError(message);
+    announce(message, { assertive: true });
   }
 
   function commitOrcid() {
@@ -543,12 +553,22 @@ function YourDetails({ author }: { author: Author }) {
             id={nameId}
             value={name}
             autoComplete="name"
-            onChange={(event) => setName(event.target.value)}
+            aria-invalid={nameError !== null}
+            aria-describedby={nameError !== null ? `${nameId}-error` : undefined}
+            onChange={(event) => {
+              setName(event.target.value);
+              setNameError(null);
+            }}
             onBlur={commitName}
             onKeyDown={(event) => event.key === "Enter" && commitName()}
-            className={field}
+            className={cn(field, nameError !== null && "border-error")}
           />
         </label>
+        {nameError !== null && (
+          <p id={`${nameId}-error`} className="text-sm text-error">
+            {nameError}
+          </p>
+        )}
         <label htmlFor={orcidId} className="flex flex-col gap-1 text-sm font-medium">
           {t("a11yOrcidInput")}
           <input

@@ -1,5 +1,5 @@
 import { Fingerprint, UserSearch, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { type Author, isValidOrcid, normalizeOrcid } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH } from "@/core/author";
@@ -36,15 +36,12 @@ export function useOrcidLine(authorId: string, focusName: () => void) {
   // one person's name with another's iD, and clear `loading` too early.
   const lookupSeq = useRef(0);
 
-  // Transient ORCID status (success or error) clears itself after a few seconds.
+  // The success note clears itself; an error stays until the iD is edited or the next attempt.
   useEffect(() => {
-    if (lookedUp === null && lookupError === null) return;
-    const timer = setTimeout(() => {
-      setLookedUp(null);
-      setLookupError(null);
-    }, 4000);
+    if (lookedUp === null) return;
+    const timer = setTimeout(() => setLookedUp(null), 4000);
     return () => clearTimeout(timer);
-  }, [lookedUp, lookupError]);
+  }, [lookedUp]);
 
   async function lookup(orcid: string) {
     const seq = ++lookupSeq.current;
@@ -70,12 +67,17 @@ export function useOrcidLine(authorId: string, focusName: () => void) {
     }
   }
 
+  /** Say why the typed text was not taken, and keep the input open for the fix. */
+  function rejectOrcid(message: string) {
+    setLookupError(message);
+    announce(message, { assertive: true });
+    setEditingOrcid(true);
+  }
+
   /** Returns true when the iD was accepted and the editor closed. */
   function applyOrcid(orcid: string): boolean {
     if (!isValidOrcid(orcid)) {
-      setLookupError(t("errOrcidChecksum"));
-      announce(t("errOrcidChecksum"), { assertive: true });
-      setEditingOrcid(true);
+      rejectOrcid(t("errOrcidChecksum"));
       return false;
     }
     updateAuthorOrcid(authorId, orcid);
@@ -99,7 +101,18 @@ export function useOrcidLine(authorId: string, focusName: () => void) {
     focusName();
   }
 
-  return { loading, lookupError, lookedUp, editingOrcid, setEditingOrcid, lookup, applyOrcid, clearOrcid };
+  return {
+    loading,
+    lookupError,
+    lookedUp,
+    editingOrcid,
+    setEditingOrcid,
+    lookup,
+    applyOrcid,
+    rejectOrcid,
+    clearLookupError: () => setLookupError(null),
+    clearOrcid,
+  };
 }
 
 /**
@@ -118,6 +131,7 @@ export function OrcidLine({
   onPaste: (event: React.ClipboardEvent<HTMLInputElement>) => void;
 }) {
   const t = useTranslations();
+  const errorId = useId();
   // Guards an Enter-commit's unmount blur from re-applying the iD.
   const committedRef = useRef(false);
   const orcidValue = author.orcid ?? "";
@@ -187,7 +201,10 @@ export function OrcidLine({
               aria-label={t("a11yOrcidInput")}
               placeholder="0000-0000-0000-0000"
               title={t("a11yOrcidHint")}
+              aria-invalid={line.lookupError !== null}
+              aria-describedby={line.lookupError !== null ? errorId : undefined}
               onPaste={onPaste}
+              onChange={line.clearLookupError}
               onKeyDown={(event) => {
                 if (event.key !== "Enter") return;
                 const orcid = detectOrcid(event.currentTarget.value);
@@ -195,6 +212,7 @@ export function OrcidLine({
                 // took. On a checksum failure the input stays mounted, and a
                 // latched ref made the next blur discard the corrected iD.
                 if (orcid) committedRef.current = line.applyOrcid(orcid);
+                else if (event.currentTarget.value.trim()) line.rejectOrcid(t("errOrcidINVALID_ID"));
               }}
               onBlur={(event) => {
                 if (committedRef.current) {
@@ -203,6 +221,7 @@ export function OrcidLine({
                 }
                 const orcid = detectOrcid(event.currentTarget.value);
                 if (orcid) line.applyOrcid(orcid);
+                else if (event.currentTarget.value.trim()) line.rejectOrcid(t("errOrcidINVALID_ID"));
                 else line.setEditingOrcid(false);
               }}
               className="w-full min-w-0 border-b border-outline-variant/40 bg-transparent p-0 font-mono text-xs text-on-surface-variant outline-none focus:border-primary focus:ring-0"
@@ -211,7 +230,9 @@ export function OrcidLine({
         </div>
       )}
       {line.lookupError !== null && (
-        <p className="mt-1 pl-20 text-[11px] leading-tight text-error">{line.lookupError}</p>
+        <p id={errorId} className="mt-1 pl-20 text-[11px] leading-tight text-error">
+          {line.lookupError}
+        </p>
       )}
     </>
   );
