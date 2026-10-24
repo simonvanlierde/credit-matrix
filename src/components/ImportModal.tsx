@@ -614,16 +614,19 @@ export function ImportModal({
               >
                 {t("pasteRawData")}
               </label>
-              {fileName && (
-                <span className="text-[11px] text-on-surface-variant italic">
-                  {t("fileLoaded", { name: fileName })}
-                </span>
-              )}
-              {format !== "unknown" && (
-                <span className="text-[11px] text-primary font-medium italic">
-                  {t("detectedFormat", { format: FORMAT_LABEL[format](t) })}
-                </span>
-              )}
+              {/* Always mounted, so a screen reader hears the file and format as they appear. */}
+              <div role="status" className="flex flex-wrap justify-end gap-x-3">
+                {fileName && (
+                  <span className="text-[11px] text-on-surface-variant italic">
+                    {t("fileLoaded", { name: fileName })}
+                  </span>
+                )}
+                {format !== "unknown" && (
+                  <span className="text-[11px] text-primary font-medium italic">
+                    {t("detectedFormat", { format: FORMAT_LABEL[format](t) })}
+                  </span>
+                )}
+              </div>
             </div>
             <textarea
               id="import-text"
