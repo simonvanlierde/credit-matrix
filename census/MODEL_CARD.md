@@ -63,10 +63,23 @@ from huggingface_hub import hf_hub_download
 from tokenizers import Tokenizer
 
 REPO = "<owner>/<repo>"
-ROLES = ["conceptualization", "data-curation", "formal-analysis", "funding-acquisition",
-         "investigation", "methodology", "project-administration", "resources", "software",
-         "supervision", "validation", "visualization", "writing-original-draft",
-         "writing-review-editing"]
+ROLES = [
+    "conceptualization",
+    "data-curation",
+    "formal-analysis",
+    "funding-acquisition",
+    "investigation",
+    "methodology",
+    "project-administration",
+    "resources",
+    "software",
+    "supervision",
+    "validation",
+    "visualization",
+    "writing-original-draft",
+    "writing-review-editing",
+]
+
 
 def initials(name):
     *given, surname = name.split()
@@ -76,10 +89,12 @@ def initials(name):
     variants = [dotted, compact + surname[0]] + ([f"{surname} {compact}"] if compact else [])
     return list(dict.fromkeys(variants))
 
+
 tokenizer = Tokenizer.from_file(hf_hub_download(REPO, "tokenizer.json"))
 tokenizer.enable_truncation(512, strategy="only_second")
 session = ort.InferenceSession(hf_hub_download(REPO, "onnx/model_int8.onnx"))
 threshold = json.load(open(hf_hub_download(REPO, "best.json")))["threshold"]
+
 
 def roles(statement, authors):
     pairs = set()
@@ -133,7 +148,8 @@ the tags are the answer.
 whatever its licence. Of the 120,000 articles, 10,817 are not CC BY or CC0, most of them from
 SAGE, Oxford University Press and AAAS. The training files name authors and are not published.
 The census publishes statement text only for CC BY and CC0 articles (`OPEN_LICENCE` in
-`src/census/export.py`).
+`src/census/export.py`). A retrain with `census model train --open-licence-only` draws train and
+dev from those articles alone.
 
 ## Training setup
 
