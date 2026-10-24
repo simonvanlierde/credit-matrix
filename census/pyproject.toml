@@ -36,6 +36,8 @@ train = [
 # Resolve no release younger than 7 days, as Renovate already waits, so a lock refresh or a
 # manual `uv add` cannot pull a release published hours ago.
 exclude-newer = "7 days"
+# setuptools 84.1.0 (2026-10-19) fixes GHSA-xmj3-9gf7-h52w. Remove this line after 2026-10-26.
+exclude-newer-package = { setuptools = "2026-10-24T00:00:00Z" }
 
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]
