@@ -481,5 +481,11 @@
   "censusParser": "Parser version",
   "censusOpenAlex": "OpenAlex sources",
   "censusDownload": "Download the counts (JSON)",
-  "censusSourceLink": "How the census works"
+  "censusSourceLink": "How the census works",
+  "censusHowTitle": "How the census reads statements",
+  "censusHowRules": "A rule parser reads each article. Where the publisher tags each author's roles in the JATS XML, it takes the tags. Otherwise it reads the free-text statement clause by clause and pairs authors with roles. Only CRediT wording counts, so \"A.B. conceived the study\" gives no roles.",
+  "censusHowModel": "A fine-tuned encoder, Ettin-68M, also reads every free-text statement. It is the census's browser model, made to run in a web browser. It finds more of the tagged roles than the rules do, at about the same precision. But it also gives roles to narrative statements that name none, so an article the rules give no role keeps none.",
+  "censusHowCaveat": "Both are scored against the roles publishers tag, and those tags are not gold. A tag can name a role the statement never gives. On 20 MDPI articles where the rule parser and the tags disagree, a language model judged the tags wrong on 18 and both wrong on 2. So an F1 score against the tags measures agreement with them, and it understates accuracy, most on MDPI.",
+  "censusHowCode": "The census code",
+  "censusHowModelCard": "The model card"
 }

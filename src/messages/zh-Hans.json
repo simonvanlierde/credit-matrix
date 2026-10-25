@@ -481,5 +481,11 @@
   "censusParser": "解析器版本",
   "censusOpenAlex": "OpenAlex 来源",
   "censusDownload": "下载统计数据（JSON）",
-  "censusSourceLink": "普查的工作原理"
+  "censusSourceLink": "普查的工作原理",
+  "censusHowTitle": "普查如何读取贡献声明",
+  "censusHowRules": "每篇文章由基于规则的解析器读取。如果出版商在 JATS XML 中为每位作者标注了角色，就直接采用这些标注。否则，它会逐个分句读取自由文本声明，把作者与角色对应起来。只有 CRediT 用语才算数，所以“A.B. conceived the study”不会得出任何角色。",
+  "censusHowModel": "一个经过微调的编码器 Ettin-68M 也会读取每一份自由文本声明。它是普查的浏览器模型，专为在网页浏览器中运行而做。它比规则找到更多已标注的角色，精确率大致相同。但它也会给没有列出角色的叙述性声明分配角色，所以规则没有读出角色的文章仍然不计角色。",
+  "censusHowCaveat": "两者都以出版商标注的角色为基准评分，而这些标注并不是金标准。标注可能列出声明中从未提到的角色。在解析器与标注不一致的 20 篇 MDPI 文章中，一个语言模型判断其中 18 篇是标注错了，2 篇是两者都错了。因此，相对于标注的 F1 值衡量的是与标注的一致程度，会低估实际准确度，在 MDPI 上尤其如此。",
+  "censusHowCode": "普查代码",
+  "censusHowModelCard": "模型卡"
 }

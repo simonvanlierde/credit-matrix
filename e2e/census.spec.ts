@@ -40,6 +40,21 @@ test.describe("CRediT census page", () => {
     await expect(page.getByRole("region", { name: "Adoption over time, as a table" })).toBeVisible();
   });
 
+  test("says how it reads statements, with links to the code and the model card", async ({ page }) => {
+    await page.goto("/census");
+    const how = page.getByRole("region", { name: "How the census reads statements" });
+    await expect(how.getByRole("heading", { name: "How the census reads statements" })).toBeVisible();
+    await expect(how.getByText(/judged the tags wrong on 18/)).toBeVisible();
+    await expect(how.getByRole("link", { name: /The census code/ })).toHaveAttribute(
+      "href",
+      "https://github.com/simonvanlierde/credit-matrix/tree/main/census",
+    );
+    await expect(how.getByRole("link", { name: /The model card/ })).toHaveAttribute(
+      "href",
+      "https://github.com/simonvanlierde/credit-matrix/blob/main/census/MODEL_CARD.md",
+    );
+  });
+
   test("scrolls inside its pane on a desktop, not as a page", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/census");
