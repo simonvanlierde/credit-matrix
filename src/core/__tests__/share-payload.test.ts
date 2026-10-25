@@ -148,6 +148,26 @@ describe("share payload v2", () => {
     expect(() => fromSharePayload(JSON.stringify({ ...raw, r: 1 }))).toThrow();
   });
 
+  it("rejects a claim on a roster that does not hold the claimed contributor", () => {
+    const raw = JSON.parse(toSharePayload({ authors: makeAuthors() }));
+    const claim = { ...raw, c: "someone-else", d: "11111111-2222-3333-4444-555555555555" };
+    expect(() => fromSharePayload(JSON.stringify(claim))).toThrow();
+  });
+
+  it("rejects an ORCID sign-in on a link that is not a reply", () => {
+    const authors = makeAuthors();
+    const raw = JSON.parse(
+      toSharePayload({ authors, claimId: authors[0]?.id, sourceDraftId: "11111111-2222-3333-4444-555555555555" }),
+    );
+    expect(() => fromSharePayload(JSON.stringify({ ...raw, k: "token" }))).toThrow();
+  });
+
+  it("round-trips the equal contribution and corresponding markers", () => {
+    const [jane, bob] = fromSharePayload(toSharePayload({ authors: makeAuthors() })).authors;
+    expect([jane?.equalContribution, jane?.corresponding]).toEqual([true, true]);
+    expect([bob?.equalContribution, bob?.corresponding]).toEqual([false, false]);
+  });
+
   it("rejects duplicate contributor ids", () => {
     const raw = JSON.parse(toSharePayload({ authors: makeAuthors() }));
     raw.a[1].i = raw.a[0].i;
@@ -183,6 +203,17 @@ describe("share payload title", () => {
     const title = `${"a".repeat(499)}😀`;
     const { t } = JSON.parse(toSharePayload({ authors: makeAuthors(), title }));
     expect(t).toBe("a".repeat(499));
+  });
+
+  it("keeps an emoji that is not at the cut", () => {
+    const title = `😀${"a".repeat(600)}`;
+    const { t } = JSON.parse(toSharePayload({ authors: makeAuthors(), title }));
+    expect(t).toBe(`😀${"a".repeat(498)}`);
+  });
+
+  it("trims the title, and leaves out one that is only spaces", () => {
+    expect(fromSharePayload(toSharePayload({ authors: makeAuthors(), title: "  Eels  " })).title).toBe("Eels");
+    expect(JSON.parse(toSharePayload({ authors: makeAuthors(), title: "   " }))).not.toHaveProperty("t");
   });
 });
 

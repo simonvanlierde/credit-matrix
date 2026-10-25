@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { escapeXml } from "../export/escape-xml";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
 import { createAuthor, parseAuthorText } from "../parse-authors";
@@ -120,6 +121,22 @@ describe("toJats4rXml", () => {
     // A non-author contributor does not make a lone author's flag shared.
     const acknowledged = { ...bob, equalContribution: true, contributorType: "non-author" as const };
     expect(count(toJats4rXml([{ ...jane, equalContribution: true }, acknowledged]))).toBe(0);
+    // Nor does a flagged non-author get the attribute when two authors do share it.
+    const shared = toJats4rXml([
+      { ...jane, equalContribution: true },
+      { ...ann, equalContribution: true },
+      acknowledged,
+    ]);
+    expect(count(shared)).toBe(2);
+    expect(shared).toContain('<contrib contrib-type="contributor">');
+  });
+
+  it("writes every given name of a surname-first name", () => {
+    const [curie] = parseAuthorText("Curie, Marie Salomea Skłodowska");
+    if (!curie) throw new Error("expected contributor");
+    const xml = toJats4rXml([curie]);
+    expect(xml).toContain("<given-names>Marie Salomea Skłodowska</given-names>");
+    expect(xml).toContain("<surname>Curie</surname>");
   });
 
   it("falls back to the stored given names when the name no longer holds the surname", () => {
@@ -300,5 +317,77 @@ describe("toJats4rXml with characters XML cannot hold", () => {
     expect(xml).toContain("<surname>Smith</surname>");
     // biome-ignore lint/suspicious/noControlCharactersInRegex: the characters under test.
     expect(xml).not.toMatch(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/);
+  });
+});
+
+describe("escapeXml", () => {
+  it("escapes the five predefined entities and drops what XML cannot hold", () => {
+    expect(escapeXml(`<a href="x">'Tom' & Jerry</a>\u0007`)).toBe(
+      "&lt;a href=&quot;x&quot;&gt;&apos;Tom&apos; &amp; Jerry&lt;/a&gt;",
+    );
+  });
+});
+
+describe("fromJats4rXml reading", () => {
+  const contrib = (inner: string, attrs = 'contrib-type="author"') =>
+    `<article><contrib ${attrs}>${inner}</contrib></article>`;
+  const active = (author: { contributions: { role: string; score: number }[] } | undefined) =>
+    author?.contributions.filter((c) => c.score > 0).map((c) => `${c.role}:${c.score}`);
+
+  it("trusts the role identifier over the term, whatever its scheme, case or trailing slash", () => {
+    const xml = contrib(`<name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <role vocab-term="Methodology" vocab-term-identifier=" HTTPS://CREDIT.NISO.ORG/contributor-roles/software// ">Methodology</role>
+      <role vocab-term="Methodology" vocab-term-identifier="ftp://credit.niso.org/contributor-roles/data-curation/">Methodology</role>`);
+    expect(active(fromJats4rXml(xml)[0])).toEqual(["Methodology:100", "Software:100"]);
+  });
+
+  it("reads a listed role as lead when its degree is none", () => {
+    const xml = contrib(`<name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <role vocab-term="Software" degree-contribution="none">Software</role>`);
+    expect(active(fromJats4rXml(xml)[0])).toEqual(["Software:100"]);
+  });
+
+  it("collapses line breaks inside the name parts and hands them over as they stand", () => {
+    const xml = contrib(`<name><surname>van der
+        Berg</surname><given-names>Anne
+        Marie</given-names></name>`);
+    expect(fromJats4rXml(xml)[0]).toMatchObject({
+      name: "Anne Marie van der Berg",
+      firstName: "Anne",
+      middleName: "Marie",
+      surname: "van der Berg",
+    });
+  });
+
+  it("parses the name itself when only one part is given", () => {
+    const [jane] = fromJats4rXml(contrib("<name><surname>Jane Ann Smith</surname></name>"));
+    expect(jane).toMatchObject({ name: "Jane Ann Smith", firstName: "Jane", middleName: "Ann", surname: "Smith" });
+  });
+
+  it("keeps an ORCID iD padded with spaces and drops one with a bad check digit", () => {
+    const orcid = (id: string) =>
+      fromJats4rXml(
+        contrib(`<contrib-id contrib-id-type="orcid">${id}</contrib-id><name><surname>Smith</surname></name>`),
+      )[0]?.orcid;
+    expect(orcid(" https://orcid.org/0000-0002-1825-0097 ")).toBe("0000-0002-1825-0097");
+    expect(orcid("0000-0002-1825-0098")).toBeUndefined();
+  });
+
+  it("asks the parser for XML and reports its error text trimmed", () => {
+    const types: string[] = [];
+    const error = {
+      textContent: "  line 1: bad  ",
+      getAttribute: () => null,
+      querySelector: () => null,
+      querySelectorAll: () => [],
+    };
+    const parser = {
+      parseFromString(_: string, type: "application/xml") {
+        types.push(type);
+        return { querySelector: () => error, querySelectorAll: () => [] };
+      },
+    };
+    expect(() => fromJats4rXml("<x/>", { parser })).toThrow(/^XML parse error: line 1: bad$/);
+    expect(types).toEqual(["application/xml"]);
   });
 });

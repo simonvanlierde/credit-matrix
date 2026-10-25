@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_UI_TRANSLATOR } from "../credit-i18n/ui-strings";
+import { GENERATOR_NOTE } from "../export/generator-note";
 import { toMarkdown } from "../export/markdown";
-import { parseAuthorText } from "../parse-authors";
+import { createAuthor, parseAuthorText } from "../parse-authors";
 
 describe("toMarkdown", () => {
   it("renders a contributor → roles table with level annotations", () => {
@@ -77,5 +78,39 @@ describe("toMarkdown", () => {
     expect(md.split("\n")).toHaveLength(5);
     expect(md).toContain("Jane \\[click\\](https://example.com) &lt;img src=x onerror=alert(1)&gt;");
     expect(md).not.toContain("<img");
+  });
+
+  it("escapes ampersands and backslashes, so an entity or an escape in a name stays literal", () => {
+    const [author] = parseAuthorText("Jane Smith");
+    if (!author) throw new Error("expected author");
+    author.name = String.raw`Smith &lt;Lab&gt; \*`;
+
+    expect(toMarkdown([author])).toContain(String.raw`| Smith &amp;lt;Lab&amp;gt; \\\* |`);
+  });
+
+  it("writes the marker notes in the locale and wording it is given", () => {
+    const authors = [
+      createAuthor("Jane Smith", { equalContribution: true, contributions: [{ role: "Software", score: 100 }] }),
+      createAuthor("Bob White", { equalContribution: true, contributions: [{ role: "Software", score: 100 }] }),
+    ];
+
+    const md = toMarkdown(
+      authors,
+      undefined,
+      (key) => (key === "equalContributionNote" ? "Gleich: {names}." : DEFAULT_UI_TRANSLATOR(key)),
+      "de",
+    );
+    expect(md.split("\n").slice(-4)).toEqual([
+      "",
+      "Gleich: Jane Smith und Bob White.",
+      "",
+      `<!-- ${GENERATOR_NOTE} -->`,
+    ]);
+  });
+
+  it("ends with the generator note as an HTML comment after a blank line", () => {
+    const md = toMarkdown(parseAuthorText("Jane Smith"));
+    expect(GENERATOR_NOTE).toContain("CRediT Matrix");
+    expect(md.split("\n").slice(-2)).toEqual(["", `<!-- ${GENERATOR_NOTE} -->`]);
   });
 });
