@@ -160,6 +160,7 @@ def test_train_and_predict_write_a_run_and_scorable_predictions(tmp_path):
     epochs = [json.loads(line) for line in (run / "metrics.jsonl").read_text().splitlines()]
     assert [e["epoch"] for e in epochs if "epoch" in e] == [1, 2]
     assert json.loads((run / "config.json").read_text())["seed"] == config.seed
+    assert json.loads((run / "checkpoint" / "config.json").read_text())["id2label"]["13"] == encoder.ROLES[13]
 
     out = tmp_path / "preds.jsonl"
     items = [*rows[:3], {"pmcid": "PMC99", "statement": "x", "authors": []}]
@@ -167,6 +168,31 @@ def test_train_and_predict_write_a_run_and_scorable_predictions(tmp_path):
     predicted = modelset.read_predictions(out)
     assert set(predicted) == {"PMC0", "PMC1", "PMC2", "PMC99"} and predicted["PMC99"] == set()
     assert all(p in {1, 2} for pairs in predicted.values() for p, _ in pairs)
+
+
+def test_train_on_open_licences_only(tmp_path):
+    tiny_model(tmp_path / "tiny")
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+    rows = [
+        {
+            "pmcid": f"PMC{i}",
+            "publisher": "P",
+            "style": "jats4r",
+            "publishable": i % 4 != 0,
+            "statement": f"{i} software",
+            "authors": ["Ann Smith"],
+            "gold": [[1, "software"]],
+        }
+        for i in range(40)
+    ]
+    (dataset / "train.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    config = encoder.Config(
+        model=str(tmp_path / "tiny"), train_articles=100, dev_every=4, epochs=1, device="cpu", open_licence_only=True
+    )
+    encoder.train(config, dataset, tmp_path / "run")
+    first = json.loads((tmp_path / "run" / "metrics.jsonl").read_text().splitlines()[0])
+    assert first["train_articles"] + first["dev_articles"] == 30
 
 
 def test_pair_rows_keep_articles_given_no_role():

@@ -193,7 +193,8 @@ takes the style from the database, not the CSV.
 
 The paired scores cover only publishers with 1,000 or more tagged articles that also print a
 statement (MDPI, Frontiers, OUP, SAGE, The Royal Society, AAAS and Pensoft). `census label --set`
-(seed 20261013) writes the hand-label set for the rest:
+(seed 20261013) writes the hand-label set for the rest. `--sizes 700 150 150` draws a larger set
+with that many `statement_text`, `contrib_text` and `none` rows; the default is 100, 30 and 30:
 
 - `data/labels/oa-2026-10-set.csv`, 160 articles for the labeller: `pmcid`, `overlap`, `authors`,
   `text` and `gold`, shuffled, blind like the `label` sample. Each article's stratum and weight are
@@ -343,12 +344,13 @@ uv run census model hybrid data/model/oa-2026-10/predictions/encoder-modernbert-
 It writes `hybrid-<run>-<set>.jsonl` beside the input. On the held-out set it scores F1 0.898 and
 exact 0.538, a little under the encoder alone, because tagged articles with statements the rules
 read nothing from now predict nothing. The label set is where it pays off. On its 160 articles
-(labelled by a model, not yet checked by hand), counting a statement that names no CRediT roles as
-giving none, F1 by style is:
+(labelled by two language-model runs, with a third settling disagreements, and a person checking
+20 rows; scored on `oa-2026-10-set-opus-adj-defb.csv`), counting a statement that names no CRediT
+roles as giving none, F1 by style is:
 
 | | statement_text | contrib_text | articles without roles, exact |
 | --- | --- | --- | --- |
-| rule parser | 0.922 | 0.997 | 0.868 |
+| rule parser | 0.932 | 0.997 | 0.868 |
 | encoder | **0.949** | 0.885 | 0.000 |
 | hybrid | **0.949** | **0.997** | **0.868** |
 
@@ -372,14 +374,16 @@ try a run.
 
 `compare` prints three tables and writes them to `predictions/encoder-<name>-corpus-comparison.json`:
 research articles with roles per year, the share of authors holding each role by byline position,
-and per publisher how far the rule parser and the encoder agree. On `oa-2026-10` the encoder read
-all 1,297,428 free-text articles in 65 parts. Over all of them the two readers agree at pair F1
-0.885, and give exactly the same pairs for 54.9% of articles; on MDPI (485,263 articles) at 0.947.
+and per publisher how far the rule parser and the encoder agree. On `oa-2026-10` Ettin-68M read
+all 1,297,504 free-text articles in 65 parts, in 81 minutes on one RTX 4090. Over all of them the
+two readers agree at pair F1 0.881, and give exactly the same pairs for 54.4% of articles; on MDPI
+(485,266 articles) at 0.946. ModernBERT-base against the previous parser version agreed at 0.885,
+54.9% and 0.947.
 
 #### In the browser
 
 The browser model is Ettin-68M, fine-tuned the same way as ModernBERT-base. It scores the same at
-under half the download:
+under half the download. Its model card is [`MODEL_CARD.md`](MODEL_CARD.md).
 
 ```sh
 uv sync --group train --group browser
@@ -405,7 +409,7 @@ Every copy keeps the full model's F1, so int8 Ettin-68M, the smallest, is the on
 larger than int8 and slower on CPU. Over three training seeds each, Ettin-68M and ModernBERT-base
 score the same on held-out (F1 0.899 to 0.900), and their label-set ranges overlap. Ettin-32M
 scored lower on the label set in its one run. Learning rates from 3e-5 to 1.5e-4, one epoch
-instead of two and four times the training articles all stayed inside the spread between seeds.
+instead of two and four times the training articles all stayed within 0.002 of the spread between seeds.
 
 ## Limits
 

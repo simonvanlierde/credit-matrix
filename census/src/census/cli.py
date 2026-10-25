@@ -190,7 +190,7 @@ def cmd_label(args: argparse.Namespace) -> None:
             print(f"{labels.export(con, out, args.per_style, args.seed)} articles to label in {out}")
             return
         disagreements = out.with_stem(out.stem + "-disagreements")
-        n = labels.export_set(con, out, args.seed)
+        n = labels.export_set(con, out, args.seed, dict(zip(labels.SET_SIZES, args.sizes, strict=True)))
         m = labels.export_disagreements(con, disagreements, args.seed)
     print(f"{n} articles to label in {out} (strata in {labels.key_path(out)}), {m} to judge in {disagreements}")
 
@@ -331,6 +331,7 @@ def cmd_model_train(args: argparse.Namespace) -> None:
         "batch_size",
         "learning_rate",
         "seed",
+        "open_licence_only",
         "device",
     )
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
@@ -468,6 +469,14 @@ def main(argv: list[str] | None = None) -> int:
         " for a second labeller, the strata and weights in a -key.csv beside it, and paired disagreements to judge"
         " (default: census/data/labels/<snapshot>-set.csv)",
     )
+    cmd.add_argument(
+        "--sizes",
+        type=int,
+        nargs=3,
+        default=list(labels.SET_SIZES.values()),
+        metavar=("STATEMENT", "CONTRIB", "NONE"),
+        help="label set rows per style: statement_text, contrib_text and none (default: %(default)s)",
+    )
     cmd.set_defaults(func=cmd_label)
     cmd = sub.add_parser("score", parents=[snap, db], help="score the parser against a labelled CSV")
     cmd.add_argument(
@@ -507,6 +516,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--batch-size", type=int, help="examples per step (default: 32)")
     cmd.add_argument("--learning-rate", type=float, help="peak learning rate for AdamW (default: 5e-5)")
     cmd.add_argument("--seed", type=int, help="seed for the draw, the dev set and the batches (default: 20261018)")
+    cmd.add_argument("--open-licence-only", action="store_true", help="train and dev only on CC BY and CC0 articles")
     cmd.add_argument("--device", help="cuda or cpu (default: cuda)")
     cmd.set_defaults(func=cmd_model_train)
     cmd = model_sub.add_parser("predict", parents=[snap, db], help="predict with a trained encoder run")

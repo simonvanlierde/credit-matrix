@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
+import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
 import { makeUiTranslator } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../credit-roles";
 import { buildHeatmapSvg } from "../export/heatmap-svg";
@@ -104,6 +105,30 @@ describe("buildHeatmapSvg", () => {
   it("ramps the chosen base color to full strength for a lead cell", () => {
     const svg = buildHeatmapSvg(authorsWithScores(), { monoColor: "#404040" });
     expect(svg).toContain('fill="#404040"'); // base color at lead (fraction 1)
+  });
+
+  it("colors each cell by its own author's score, in both orientations and in flat mode", () => {
+    const [jane, bob] = parseAuthorText("Jane Smith\nBob White");
+    if (!(jane && bob)) throw new Error("expected 2 authors");
+    setScore(jane, "Conceptualization", 33);
+    setScore(bob, "Software", 66);
+    const fills = (svg: string) => [...svg.matchAll(/width="22" height="22"[^>]*fill="([^"]+)"/g)].map((m) => m[1]);
+    const color = (score: number) => heatCellColor(DEFAULT_MONO_COLOR, score);
+
+    // Rows are roles, columns authors: Jane then Bob, for Conceptualization then Software.
+    expect(fills(buildHeatmapSvg([jane, bob]))).toEqual([color(33), color(0), color(0), color(66)]);
+    expect(fills(buildHeatmapSvg([jane, bob], { transpose: true }))).toEqual([
+      color(33),
+      color(0),
+      color(0),
+      color(66),
+    ]);
+    expect(fills(buildHeatmapSvg([jane, bob], { showLevels: false }))).toEqual([
+      color(100),
+      color(0),
+      color(0),
+      color(100),
+    ]);
   });
 
   it("scales layout dimensions", () => {
