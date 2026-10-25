@@ -52,8 +52,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   articles only, so the weights can be shared. Without it, about 9% of a 120,000-article draw came
   from articles under other licences. `census score` now also scores each role on its own.
 - Census: `census label --set --sizes 700 150 150` draws a larger hand-label set, such as the
-  1,000-row set, with the rows per style you choose. The default stays 100, 30 and 30, and the
-  existing set redraws the same.
+  1,000-row set, with the rows per style you choose. The default stays 100, 30 and 30.
 - A [model card](census/MODEL_CARD.md) for the Ettin-68M model that reads statements in the census
   and in the browser build: what it was trained on, its scores, its limits and how to cite it.
 - Project documents: governance, a roadmap and a security model, plus sections on disclosure, the
