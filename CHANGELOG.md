@@ -45,6 +45,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   on a statement longer than `MAX_STATEMENT_LENGTH` (50,000 characters).
 - In the `credit-matrix` package, replies can carry `provenance.orcid` (the new `OrcidProof` type)
   and `provenance.replacedOrcid`; run `recheckSignIns` on imported asks.
+- Census: for people who run it, `census model` trains and checks a model that reads contribution
+  statements. A fine-tuned encoder and a hybrid of the rule parser and the encoder sit beside the
+  rule parser, and `census model browser` exports the encoder for the browser. `--seed` fixes a
+  run, `--learning-rate` sets its learning rate, and `--open-licence-only` trains on CC BY and CC0
+  articles only, so the weights can be shared. Without it, about 9% of a 120,000-article draw came
+  from articles under other licences. `census score` now also scores each role on its own.
+- Census: `census label --set --sizes 700 150 150` draws a larger hand-label set, such as the
+  1,000-row set, with the rows per style you choose. The default stays 100, 30 and 30, and the
+  existing set redraws the same.
+- A [model card](census/MODEL_CARD.md) for the Ettin-68M model that reads statements in the census
+  and in the browser build: what it was trained on, its scores, its limits and how to cite it.
+- Project documents: governance, a roadmap and a security model, plus sections on disclosure, the
+  maintainer and the sign-off (DCO). The README shows the OpenSSF Scorecard badge.
 
 ### Changed
 
@@ -54,6 +67,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   contributors: read it with `parseStatement` against your author list. A `switch` over
   `DetectedFormat` needs the new case. The next release is therefore 0.9.0.
 - Primary buttons darken on hover instead of fading, so their text stays readable.
+- Census: the counts behind `/census` and the field norms were rebuilt with the second version of
+  the statement parser. Counts move by a few articles per year and field, and shares by at most
+  0.001. The census README now gives how well the Ettin-68M model agrees with the rule parser on
+  the whole corpus.
+- Census: locking the `transformers` package no longer needs a dated exception. The lock keeps
+  version 5.20.1.
 
 ### Fixed
 
@@ -64,6 +83,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Jr." used to come back as "Martin Luther Jr", and "Ann B. C. Smith." as "Ann B Smith".
 - CSV export keeps a leading apostrophe in a name that starts with a line break or spaces. It used
   to come back without the apostrophe.
+- Census: the parser reads more statements right. A clause that ends in initials after a full stop
+  ("Investigation, methodology. S.H.; supervision. T.D.") keeps its roles together. A semicolon
+  between authors with no role before it stays inside one author list. Initials without accents
+  match accented names ("N.N.A." for Nguyễn Ngọc Ánh).
+- Census: a trained model's config names its 14 role outputs. It called them `LABEL_0` to
+  `LABEL_13`, so anyone loading the weights had to look up the role order.
+- Census page: a chart no longer draws outside its box when its highest value is above the last tick
+  of the axis. The contribution-statement share peaks at 28.6% and the axis stopped at 20%. The
+  "preliminary figures" notice is shorter, in all nine languages.
+
+### Security
+
+- Updated build and test tools past published advisories: `fast-uri`, `undici` and, in the census,
+  `filelock` and `setuptools`. They are development dependencies only. The app and the
+  `credit-matrix` package do not ship them.
 
 ## [0.8.1] - 2026-10-13
 
