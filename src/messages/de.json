@@ -481,7 +481,6 @@
   "censusParser": "Parser-Version",
   "censusOpenAlex": "OpenAlex-Quellen",
   "censusDownload": "Zahlen herunterladen (JSON)",
-  "censusSourceLink": "Wie der Zensus funktioniert",
   "censusHowTitle": "Wie der Zensus Erklärungen liest",
   "censusHowRules": "Ein regelbasierter Parser liest jeden Artikel. Wo der Verlag die Rollen jeder Person im JATS-XML auszeichnet, übernimmt er die Auszeichnungen. Sonst liest er die Erklärung im Freitext Satzteil für Satzteil und ordnet Personen Rollen zu. Nur CRediT-Begriffe zählen, „A.B. conceived the study“ ergibt also keine Rollen.",
   "censusHowModel": "Ein feinabgestimmter Encoder, Ettin-68M, liest außerdem jede Erklärung im Freitext. Er ist das Browsermodell des Zensus, gebaut für den Webbrowser. Er findet mehr der ausgezeichneten Rollen als die Regeln, bei etwa gleicher Präzision. Er vergibt aber auch Rollen an erzählende Erklärungen, die keine nennen. Ein Artikel, dem die Regeln keine Rolle geben, behält daher keine.",

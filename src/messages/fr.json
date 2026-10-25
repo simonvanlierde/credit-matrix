@@ -481,7 +481,6 @@
   "censusParser": "Version de l'analyseur",
   "censusOpenAlex": "Sources OpenAlex",
   "censusDownload": "Télécharger les comptages (JSON)",
-  "censusSourceLink": "Fonctionnement du recensement",
   "censusHowTitle": "Comment le recensement lit les déclarations",
   "censusHowRules": "Un analyseur à base de règles lit chaque article. Quand l’éditeur balise les rôles de chaque auteur dans le XML JATS, il prend les balises. Sinon, il lit la déclaration en texte libre, proposition par proposition, et associe auteurs et rôles. Seuls les termes CRediT comptent : « A.B. conceived the study » ne donne donc aucun rôle.",
   "censusHowModel": "Un encodeur affiné, Ettin-68M, lit aussi chaque déclaration en texte libre. C’est le modèle navigateur du recensement, conçu pour tourner dans un navigateur web. Il trouve plus de rôles balisés que les règles, avec une précision proche. Mais il attribue aussi des rôles à des déclarations narratives qui n’en nomment aucun : un article auquel les règles ne donnent aucun rôle n’en garde donc aucun.",

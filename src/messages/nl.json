@@ -481,7 +481,6 @@
   "censusParser": "Parserversie",
   "censusOpenAlex": "OpenAlex-bronnen",
   "censusDownload": "De tellingen downloaden (JSON)",
-  "censusSourceLink": "Hoe de census werkt",
   "censusHowTitle": "Hoe de census verklaringen leest",
   "censusHowRules": "Een parser met regels leest elk artikel. Waar de uitgever de rollen van elke auteur in de JATS-XML tagt, neemt hij de tags over. Anders leest hij de verklaring in vrije tekst, zinsdeel voor zinsdeel, en koppelt auteurs aan rollen. Alleen CRediT-termen tellen, dus „A.B. conceived the study” levert geen rollen op.",
   "censusHowModel": "Een fijngestemde encoder, Ettin-68M, leest ook elke verklaring in vrije tekst. Het is het browsermodel van de census, gemaakt om in een webbrowser te draaien. Hij vindt meer van de getagde rollen dan de regels, bij ongeveer dezelfde precisie. Maar hij geeft ook rollen aan verhalende verklaringen die er geen noemen, dus een artikel waaraan de regels geen rol geven, houdt er geen.",

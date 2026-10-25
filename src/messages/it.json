@@ -481,7 +481,6 @@
   "censusParser": "Versione del parser",
   "censusOpenAlex": "Fonti OpenAlex",
   "censusDownload": "Scarica i conteggi (JSON)",
-  "censusSourceLink": "Come funziona il censimento",
   "censusHowTitle": "Come il censimento legge le dichiarazioni",
   "censusHowRules": "Un parser a regole legge ogni articolo. Se l’editore etichetta i ruoli di ogni autore nell’XML JATS, prende le etichette. Altrimenti legge la dichiarazione in testo libero, frase per frase, e abbina autori e ruoli. Contano solo i termini CRediT, quindi «A.B. conceived the study» non dà alcun ruolo.",
   "censusHowModel": "Un encoder addestrato su questi dati, Ettin-68M, legge anche ogni dichiarazione in testo libero. È il modello per browser del censimento, fatto per funzionare in un browser web. Trova più ruoli etichettati delle regole, con una precisione simile. Però assegna ruoli anche a dichiarazioni narrative che non ne nominano nessuno, quindi un articolo a cui le regole non danno alcun ruolo resta senza ruoli.",

@@ -369,7 +369,6 @@ export function CensusDashboard({ data }: { data: CensusData }) {
             <a href="/data/census.json" download className={IN_TEXT_LINK}>
               {t("censusDownload")}
             </a>
-            <ExternalAnchor href={SOURCE}>{t("censusSourceLink")}</ExternalAnchor>
           </p>
         </footer>
       </article>
