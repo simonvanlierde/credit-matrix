@@ -99,6 +99,19 @@ describe("fromTenzing edge cases", () => {
     expect(names).toEqual(["Bo First", "Al Second", "Cy Third", "Di Fourth"]);
   });
 
+  it("keeps sheet order when no row has an order", () => {
+    const names = fromTenzing("Firstname,Surname\nAl,One\nBo,Two\nCy,Three\nDi,Four\nEd,Five").map((a) => a.name);
+    expect(names).toEqual(["Al One", "Bo Two", "Cy Three", "Di Four", "Ed Five"]);
+  });
+
+  it("reads cells padded with spaces", () => {
+    const [ana] = fromTenzing(
+      "Firstname,Surname,ORCID ID,Author/Acknowledgee,Software\nAna,Lopez, 0000-0002-1825-0097 , Acknowledgee , TRUE ",
+    );
+    expect(ana).toMatchObject({ orcid: "0000-0002-1825-0097", contributorType: "non-author" });
+    expect(roles(ana)).toEqual(["Software:100"]);
+  });
+
   it("reads a sheet with a BOM, CRLF lines and short rows", () => {
     const [ana, ...rest] = fromTenzing("\uFEFFFirstname,Surname,Software\r\nAna,Lopez\r\n");
     expect(rest).toEqual([]);
@@ -150,6 +163,7 @@ describe("isTenzing", () => {
     const more = "Methodology,Project administration,Resources,Software,Supervision";
     expect(isTenzing(`Firstname,Surname,${roleHeaders},${more}`)).toBe(true);
     expect(isTenzing(`Name,${roleHeaders},${more}`)).toBe(false);
+    expect(isTenzing("Firstname,Surname,A,B,C,D,E,F,G,H,I,J")).toBe(false);
     expect(isTenzing("Anne Namer, Bob Smith")).toBe(false);
     expect(isTenzing("Firstname,Surname")).toBe(false);
     expect(isTenzing("")).toBe(false);

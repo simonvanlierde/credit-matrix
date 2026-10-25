@@ -13,3 +13,10 @@ allowBuilds:
 overrides:
   nanoid: "^3.3.18"
   postcss: "^8.5.23"
+  # miniflare (via wrangler) pins undici 7.29.1, which has three advisories
+  # (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, GHSA-xjj6-f33q-929c). Drop once wrangler moves it.
+  "miniflare>undici": "7.30.1"
+
+# Fixed upstream in @stryker-mutator/vitest-runner 10.1.0 (stryker-js #6214, #6269; 10.1.1 is the re-release on npm). Drop this patch, its Renovate rule and the CONTRIBUTING sentence with the bump to 10.1.1, installable from 2026-10-27.
+patchedDependencies:
+  '@stryker-mutator/vitest-runner@10.0.0': patches/@stryker-mutator__vitest-runner@10.0.0.patch

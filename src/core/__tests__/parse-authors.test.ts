@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_AUTHOR_NAME_LENGTH } from "../author";
 import {
   createAuthor,
   deduplicateAuthorInitials,
@@ -81,7 +82,79 @@ describe("parseNameParts", () => {
   });
 });
 
+describe("parseNameParts particles", () => {
+  it.each([
+    "van",
+    "von",
+    "de",
+    "del",
+    "della",
+    "di",
+    "da",
+    "du",
+    "le",
+    "la",
+    "den",
+    "der",
+    "ten",
+    "ter",
+    "dos",
+    "das",
+    "do",
+    "los",
+    "las",
+    "degli",
+    "dei",
+    "dalla",
+    "dal",
+    "zu",
+    "zur",
+    "af",
+    "bin",
+    "ibn",
+    "el",
+    "al",
+    "van't",
+  ])("keeps %s with the surname", (particle) => {
+    expect(parseNameParts(`Anna ${particle} Berg`)).toEqual({
+      firstName: "Anna",
+      middleName: "",
+      surname: `${particle} Berg`,
+    });
+  });
+
+  it("never pulls the first name into the surname", () => {
+    expect(parseNameParts("van Berg")).toEqual({ firstName: "van", middleName: "", surname: "Berg" });
+  });
+});
+
 describe("createAuthor", () => {
+  it("uses the name parts it is given over the ones it would parse", () => {
+    expect(
+      createAuthor("Anne Marie Curie", { firstName: "Annie", middleName: "", surname: "Marie Curie" }),
+    ).toMatchObject({ firstName: "Annie", middleName: "", surname: "Marie Curie" });
+  });
+
+  it("takes a name of exactly the maximum length", () => {
+    const name = `Jane ${"a".repeat(MAX_AUTHOR_NAME_LENGTH - 5)}`;
+    expect(createAuthor(name).name).toHaveLength(MAX_AUTHOR_NAME_LENGTH);
+    expect(() => createAuthor(`${name}a`)).toThrow(/characters or fewer/);
+  });
+
+  it("writes initials in upper case for a name typed in lower case", () => {
+    expect(createAuthor("jane anne smith").initials).toBe("JAS");
+  });
+
+  it.each([
+    ["さくら", "さくら"],
+    ["サクラ", "サクラ"],
+    ["김민준", "김민준"],
+    ["王 小明", "王小"],
+    ["A王", "A"],
+  ])("labels %s as %s", (name, initials) => {
+    expect(createAuthor(name).initials).toBe(initials);
+  });
+
   it("throws when the name contains no letters", () => {
     expect(() => createAuthor("123")).toThrow(/at least one letter/);
     expect(() => createAuthor("!!!")).toThrow(/at least one letter/);
@@ -167,6 +240,10 @@ describe("deduplicateAuthorInitials", () => {
     const initials = parseAuthorText("Jo Li\nJo Li\nJo Li").map((a) => a.initials);
     expect(new Set(initials).size).toBe(3);
     expect(initials.slice(0, 2)).toEqual(["JL", "JLi"]);
+  });
+
+  it("counts on from 2 once the surname has no letters left", () => {
+    expect(parseAuthorText("Jo Li\nJo Li\nJo Li\nJo Li").map((a) => a.initials)).toEqual(["JL", "JLi", "JL2", "JL3"]);
   });
 
   it("deduplicates supplementary-plane initials without corrupting Unicode", () => {
@@ -261,6 +338,15 @@ describe("splitNameList", () => {
       "Cher",
       "Madonna",
     ]);
+  });
+
+  it("reads up to three given names as the second half of an inverted name, not four", () => {
+    expect(splitNameList("Smith, Jane Ann Marie")).toEqual(["Smith, Jane Ann Marie"]);
+    expect(splitNameList("Smith, Jane Ann Marie Lou")).toEqual(["Smith", "Jane Ann Marie Lou"]);
+  });
+
+  it("does not read a chunk that ends without a letter as a surname", () => {
+    expect(splitNameList("Lab 42, Jane")).toEqual(["Lab 42", "Jane"]);
   });
 
   it("splits a list containing a mononym", () => {
