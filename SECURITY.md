@@ -54,6 +54,8 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
   digest, attests the provenance of the deployed build, and publishes the npm package with
   provenance and no stored token.
 
+The [assurance case](docs/assurance-case.md) gives the threat model and the argument in full.
+
 ## Scope
 
 In scope:
