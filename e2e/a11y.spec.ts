@@ -1,13 +1,7 @@
-// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
-import { existsSync, readFileSync } from "node:fs";
-// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
-import path from "node:path";
-// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
-import process from "node:process";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { PERSIST_KEY } from "../src/store/persist-meta";
-import { asReturningVisitor, scan, settleMotion } from "./helpers";
+import { asReturningVisitor, elementBundleBuilt, openElementHost, scan, settleMotion } from "./helpers";
 
 /**
  * Automated accessibility scans. axe-core catches a subset of WCAG issues
@@ -432,43 +426,10 @@ test.describe("Accessibility (axe-core)", () => {
   });
 });
 
-/**
- * The <credit-matrix> element from the built package, on a bare page outside the app. Its
- * bundle imports `zod/mini` by bare name, so the page maps that to the installed copy. Every
- * request goes to a made-up origin and is answered here; the app's server is not used.
- */
+/** The <credit-matrix> element from the built package, on a bare page outside the app. */
 test.describe("<credit-matrix> element (axe-core)", () => {
-  // Playwright resolves testDir from the repo root, so cwd is the repo root.
-  const repoRoot = process.cwd();
-  const bundle = path.join(repoRoot, "src/core/dist/element.js");
-  const contributions = readFileSync(path.join(repoRoot, "e2e/fixtures/element-contributions.json"), "utf8");
-
-  const hostPage = (background: string, color: string) => `<!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Element host</title>
-<script type="importmap">{"imports":{"zod/mini":"/zod/mini/index.js"}}</script>
-<style>body{background:${background};color:${color};margin:16px}</style></head>
-<body><main><h1>Beiträge</h1><credit-matrix src="/contributions.json" format="by-author"></credit-matrix></main>
-<script type="module" src="/dist/element.js"></script></body></html>`;
-
-  async function openHost(page: Page, background: string, color: string) {
-    await page.route("http://element.test/**", (route) => {
-      const pathname = new URL(route.request().url()).pathname;
-      if (pathname === "/") return route.fulfill({ contentType: "text/html", body: hostPage(background, color) });
-      if (pathname === "/contributions.json")
-        return route.fulfill({ contentType: "application/json", body: contributions });
-      if (pathname.startsWith("/dist/"))
-        return route.fulfill({ path: path.join(repoRoot, "src/core", pathname), contentType: "text/javascript" });
-      if (pathname.startsWith("/zod/"))
-        return route.fulfill({ path: path.join(repoRoot, "node_modules", pathname), contentType: "text/javascript" });
-      return route.fulfill({ status: 404, body: "" });
-    });
-    await page.goto("http://element.test/");
-    await expect(page.locator("credit-matrix figure p").first()).toBeVisible();
-  }
-
   test.beforeEach(() => {
-    // CI builds the package before the tests (playwright.config.ts); locally it may not exist yet.
-    test.skip(!(process.env.CI || existsSync(bundle)), "Build the package first: pnpm --filter credit-matrix build");
+    test.skip(!elementBundleBuilt(), "Build the package first: pnpm --filter credit-matrix build");
   });
 
   for (const [name, background, color] of [
@@ -476,7 +437,7 @@ test.describe("<credit-matrix> element (axe-core)", () => {
     ["dark", "#111111", "#eeeeee"],
   ] as const) {
     test(`element on a ${name} page has no detectable violations`, async ({ page }) => {
-      await openHost(page, background, color);
+      await openElementHost(page, background, color);
       expect((await scan(page)).violations).toEqual([]);
       // The page is German, so the figure is too, and the table gives each level in words.
       await expect(page.locator("credit-matrix figure")).toHaveAttribute("lang", "de");
@@ -488,7 +449,7 @@ test.describe("<credit-matrix> element (axe-core)", () => {
 
   test("element on a 320px screen scrolls the heatmap instead of shrinking it", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
-    await openHost(page, "#ffffff", "#111111");
+    await openElementHost(page, "#ffffff", "#111111");
     expect((await scan(page)).violations).toEqual([]);
     const svg = page.locator("credit-matrix svg");
     // Drawn at its own width (plus its 1px border on each side), wider than the 256px card.
