@@ -173,7 +173,7 @@ Every setting is in the run's `config.json` (`encoder.Config`). To train it agai
 ```sh
 uv sync --group train --group browser
 uv run census model train --name ettin-68m-120k --model jhu-clsp/ettin-encoder-68m \
-  --revision ac19ae4bc51093b31c475665ac872a936d056cc2
+  --revision ac19ae4bc51093b31c475665ac872a936d056cc2 --epochs 2 --learning-rate 5e-5
 ```
 
 ## Evaluation
@@ -198,9 +198,9 @@ and 0.946 on Oxford University Press (512). Over three training seeds, held-out 
 0.900. Learning rates from 3e-5 to 1.5e-4 and one epoch instead of two scored 0.898 to 0.900.
 
 **These tags are not gold.** A publisher's tags can name roles its statement never gives, and no
-reader of the statement can recover those. On 20 MDPI articles where the rule parser and the tags
-disagree, a language model judged the tags wrong on 18 and both wrong on 2. So the held-out F1
-measures agreement with the tags, and it understates accuracy, most on MDPI.
+reader of the statement can recover those. On 200 MDPI articles where the rule parser and the tags
+disagree, a language model judged the tags wrong on 192 and the parser alone wrong on 6. So the
+held-out F1 measures agreement with the tags, and it understates accuracy, most on MDPI.
 
 ### Against the label set
 
@@ -215,6 +215,9 @@ labels (`oa-2026-10-set-opus-adj-defb.csv`).
 | --- | --- | --- | --- |
 | rule parser | 0.932 | 0.997 | 0.868 |
 | Ettin-68M | 0.946 | 0.842 | 0.000 |
+
+On the later 1,000-row label set, the shipped settings (2 epochs, 5e-5) average statement_text F1
+0.905 over five seeds, and the rule parser 0.907 ([census README](README.md)).
 
 ### On every free-text statement
 

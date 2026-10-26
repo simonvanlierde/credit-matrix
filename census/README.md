@@ -408,8 +408,8 @@ scores each on 2,000 held-out articles on CPU (`--sample`, `--threads`, 16 by de
 Every copy keeps the full model's F1, so int8 Ettin-68M, the smallest, is the one to ship. q4 is
 larger than int8 and slower on CPU. Over three training seeds each, Ettin-68M and ModernBERT-base
 score the same on held-out (F1 0.899 to 0.900), and their label-set ranges overlap. Ettin-32M
-scored lower on the label set in its one run. Learning rates from 3e-5 to 1.5e-4, one epoch
-instead of two and four times the training articles all stayed within 0.002 of the spread between seeds.
+scored lower on the 160-row label set in its one run. Learning rates from 3e-5 to 1.5e-4, one epoch
+instead of two and four times the training articles all stayed within 0.002 of the spread between seeds on held-out.
 
 The 1,000-row label set (`oa-2026-10-set1000-opus-final-v2.csv`, three language-model labellers
 and a majority vote) is large enough to tell those settings apart on statements. Means over five
@@ -424,8 +424,8 @@ seeds of Ettin-68M, on its 700 `statement_text` rows:
 | rule parser | | 0.907 | | 0.551 |
 
 One epoch at 3e-5 scores a little higher and varies far less between seeds, so it is the default
-now. Training only on CC BY and CC0 articles (`--open-licence-only`) costs nothing measurable, and
-those are the weights that can be published. With the same settings and three seeds each, Ettin-32M
+now. Training only on CC BY and CC0 articles (`--open-licence-only`) costs no F1, though exact is about 0.01 lower, and
+those are the weights that can be published. With 1 epoch at 3e-5, CC BY and CC0 only, and three seeds each, Ettin-32M
 reaches F1 0.913 but exact 0.584, and Ettin-150M 0.905 and 0.617: neither beats Ettin-68M.
 
 ## Limits
