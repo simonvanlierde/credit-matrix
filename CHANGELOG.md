@@ -129,16 +129,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
-- Updated build and test tools past published advisories: `fast-uri`, `undici` and, in the census,
-  `filelock` and `setuptools`. They are development dependencies only. The app and the
-  `credit-matrix` package do not ship them.
-
-### Security
-
 - JATS XML import, in the app and the CLI, refuses a file that declares entities (`<!ENTITY`). The
   browser expanded them and the CLI did not, so one file could import different names in each, and
   a file with nested entities could freeze the browser tab for several seconds. JATS exports from
   this app and other tools do not declare entities.
+- Updated build and test tools past published advisories: `fast-uri`, `undici` and, in the census,
+  `filelock` and `setuptools`. They are development dependencies only. The app and the
+  `credit-matrix` package do not ship them.
 
 ## [0.8.1] - 2026-10-13
 
