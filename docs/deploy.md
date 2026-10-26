@@ -69,6 +69,9 @@ Check what would be published with `cd src/core && npm pack --dry-run`. On every
 CI `check` job builds the package and tests the files it publishes, its export list, public types
 and CLI (`src/core/__tests__/package.test.ts`).
 
+The package build is repeatable: two builds from the same commit give byte-identical tarballs.
+Check with `cd src/core && npm pack --pack-destination /tmp/a && npm pack --pack-destination /tmp/b && cmp /tmp/a/*.tgz /tmp/b/*.tgz`.
+
 ### Roll back a version
 
 A published name and version can never be used again, even after an unpublish. So roll forward:
