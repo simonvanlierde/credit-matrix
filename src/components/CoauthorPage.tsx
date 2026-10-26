@@ -253,9 +253,10 @@ function CoauthorPage() {
           return (
             <li key={role.name} className="flex flex-col gap-2 border-b border-outline-variant py-3.5">
               <div>
-                <p id={nameId} className="font-semibold">
+                {/* A heading, so a screen reader can jump from role to role. */}
+                <h2 id={nameId} className="font-semibold">
                   {translateInterfaceRole(role.name)}
-                </p>
+                </h2>
                 <p id={`${nameId}-desc`} className="text-[0.8125rem] leading-snug text-on-surface-variant">
                   {describeRole(role.name)}
                 </p>
