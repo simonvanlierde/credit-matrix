@@ -1,8 +1,9 @@
 "use client";
 
-import { ChartLine, Code, ExternalLink } from "lucide-react";
+import { ChartLine, Code } from "lucide-react";
 import { useTranslations } from "use-intl";
 import { PRODUCT_NAME } from "@/components/BrandMark";
+import { ExternalLink } from "@/components/ui/external-link";
 import { IN_TEXT_LINK, LicenseLink } from "@/components/ui/license-link";
 
 /**
@@ -23,17 +24,13 @@ export function AboutPanel({ version }: { version: string }) {
         </p>
         <p className="mt-0.5">{t("aboutTagline")}</p>
       </div>
-      <a
+      <ExternalLink
         href="https://github.com/simonvanlierde/credit-matrix"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+        className="gap-1.5 font-medium text-primary hover:underline"
       >
         <Code className="size-4" aria-hidden="true" />
         {t("sourceOnGitHub")}
-        <ExternalLink className="size-3" aria-hidden="true" />
-        <span className="sr-only">{t("opensInNewTab")}</span>
-      </a>
+      </ExternalLink>
       <a href="/census" className="flex items-center gap-1.5 font-medium text-primary hover:underline">
         <ChartLine className="size-4" aria-hidden="true" />
         {t("censusAboutLink")}
@@ -63,45 +60,33 @@ export function AboutPanel({ version }: { version: string }) {
         <p className="font-bold uppercase tracking-widest text-on-surface-variant">{t("acknowledgements")}</p>
         <p>
           {t("aboutInspiredBy")}{" "}
-          <a
+          <ExternalLink
             href="https://github.com/IPHYS-Bioinformatics/CRediT-Generator"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-0.5 text-primary hover:underline"
+            className="gap-0.5 text-primary hover:underline"
           >
             Python/Dash CRediT Generator
-            <ExternalLink className="size-3" aria-hidden="true" />
-            <span className="sr-only">{t("opensInNewTab")}</span>
-          </a>
+          </ExternalLink>
           .
         </p>
         <p>
           {t("aboutOutputTranslations")}{" "}
-          <a
+          <ExternalLink
             href="https://github.com/contributorshipcollaboration/credit-translation"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-0.5 text-primary hover:underline"
+            className="gap-0.5 text-primary hover:underline"
           >
             credit-translation contributors
-            <ExternalLink className="size-3" aria-hidden="true" />
-            <span className="sr-only">{t("opensInNewTab")}</span>
-          </a>{" "}
+          </ExternalLink>{" "}
           (<LicenseLink>CC BY 4.0</LicenseLink>).
         </p>
         <p>{t.rich("aboutTaxonomy", { cc: (chunks) => <LicenseLink>{chunks}</LicenseLink> })}</p>
         <p>{t("aboutPrivacy")}</p>
         <p>
-          <a
+          <ExternalLink
             href="https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility.md"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-0.5 text-primary hover:underline"
+            className="gap-0.5 text-primary hover:underline"
           >
             {t("accessibilityStatement")}
-            <ExternalLink className="size-3" aria-hidden="true" />
-            <span className="sr-only">{t("opensInNewTab")}</span>
-          </a>
+          </ExternalLink>
         </p>
       </div>
     </>

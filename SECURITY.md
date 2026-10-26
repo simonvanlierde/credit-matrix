@@ -17,7 +17,8 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
 
 ## Disclosure timeline
 
-- I reply within two weeks to confirm I received your report.
+- I reply within two weeks to confirm I received your report, then tell you whether I can
+  reproduce it and when I expect a fix.
 - I aim to fix a confirmed vulnerability, or agree a later date with you, within 90 days of the
   report.
 - A fix lands on `main` and the live site deploys it. If it touches the `credit-matrix` npm
@@ -27,7 +28,8 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
   advisory.
 - Please keep the details private until the advisory is out, or until 90 days have passed or the
   later date we agreed, whichever comes first.
-- I credit you by name in the advisory if you ask for it. Say how you want to be named.
+- I credit you in the advisory and the CHANGELOG unless you'd rather not be named. Say how you
+  want to be named.
 
 ## Security model
 
