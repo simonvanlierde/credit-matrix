@@ -46,6 +46,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   on a statement longer than `MAX_STATEMENT_LENGTH` (50,000 characters).
 - In the `credit-matrix` package, replies can carry `provenance.orcid` (the new `OrcidProof` type)
   and `provenance.replacedOrcid`; run `recheckSignIns` on imported asks.
+- An About page (`/about`) says what the app is, how to cite it by its concept DOI, whom it
+  thanks, and, in its own Privacy section, what it sends where. The About panel is now a short card
+  that links to it.
+- The accessibility statement is now on the site, at `/accessibility`, rebuilt as a reader-first
+  page: what you should be able to do, its status against WCAG 2.2 AA, known problems
+  each with a workaround, an email contact with a 10-working-day reply time, how we check, what it
+  was tested with, and when it was last reviewed. `docs/accessibility.md` stays the one source; the
+  build turns it into static HTML.
+- A WCAG 2.2 self-assessment (`docs/accessibility-assessment.md`) judges every level A and AA
+  criterion with its evidence. It finds no failing criterion; the statement says "partially
+  conformant" until a screen reader has read the app.
+- Downloaded heatmaps carry the contribution statement as their text alternative: the SVG in its
+  description, which screen readers read, the PNG in its Description field. Before, the SVG said
+  only "Contribution heatmap" and the PNG had no text at all.
 - Census: for people who run it, `census model` trains and checks a model that reads contribution
   statements. A fine-tuned encoder and a hybrid of the rule parser and the encoder sit beside the
   rule parser, and `census model browser` exports the encoder for the browser. `--seed` fixes a
@@ -74,6 +88,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Accessibility fixes from the WCAG 2.2 self-assessment:
+  - Placeholder text, text-field edges, empty grid cells and the reorder handle now have enough
+    contrast in both themes, and the contributor name field shows a focus ring.
+  - At 200% zoom on a laptop the header no longer runs off the screen and hides Import.
+  - Undo after a bulk change stays 60 seconds, like every other Undo, instead of 8.
+  - Focus no longer goes under the sticky bar on a phone, or under a status message.
+  - A dialog closes only when you press and release on the backdrop, so a stray press keeps your
+    typed text.
+  - Escape hides the census chart's value readout.
+  - An ORCID iD, name or co-author name that is refused now says why, and the message stays
+    until you change the field. Screen readers hear it, and also hear which file was loaded in
+    Import.
+  - Every popover panel has a name for screen readers.
+  - Screen readers hear a removed contributor and a bulk change once, through the same live
+    region as every other message. Before, the removal could go unheard and the bulk change was
+    said twice. Each Undo button now says what it undoes.
+  - A grid change is read out once, without the statement's contributor and role counts after it.
+  - Screen readers no longer read a contributor's initials before their name.
+  - On the co-author page each role name is a heading, so a screen reader can jump from role to
+    role.
+- "How it works" did nothing outside the main page. It now takes you there and opens the welcome
+  panel, and closing the panel puts focus on the main content.
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A
   contributor exported as "Smith & Co Lee" came back with the middle name "&" instead of "Co", and
   with the wrong initials.

@@ -30,6 +30,7 @@
 
   --color-outline: #c9c9c5;
   --color-outline-variant: #e4e4e1;
+  --color-outline-strong: #7c7c78; /* 3:1 on every surface: field edges, icon-only controls */
 
   --color-background: #fafaf9;
 
@@ -69,6 +70,7 @@
 
   --color-outline: #45474b;
   --color-outline-variant: #2e3034;
+  --color-outline-strong: #7a7d83;
 
   --color-background: #16181c;
 
@@ -118,6 +120,7 @@
 
   --color-outline: var(--color-outline);
   --color-outline-variant: var(--color-outline-variant);
+  --color-outline-strong: var(--color-outline-strong);
 
   --color-background: var(--color-background);
 
@@ -202,12 +205,104 @@ html:has([data-coauthor-page]) {
   scroll-padding-bottom: 7rem;
 }
 
-/* The census page reads data, not a draft: the header keeps the brand, but not
-   the draft actions or the skip links into a workspace that is not there. */
-body:has([data-census-page]) {
+/* The census, about and accessibility pages hold no draft: the header keeps the
+   brand, but not the draft actions or the skip links into a workspace that is
+   not there. */
+body:has([data-census-page], [data-reading-page]) {
   [data-draft-actions],
   [data-workspace-skip] {
     display: none;
+  }
+}
+
+/*
+ * A page to read (about, accessibility statement), set like the census page:
+ * Newsreader headings over a thin rule, sans body text at a 65ch measure.
+ * Plain element selectors, because the statement arrives as HTML rendered from
+ * Markdown at build time, with no classes of its own.
+ */
+.document {
+  max-width: 65ch;
+  color: var(--color-on-surface-variant);
+  line-height: 1.6;
+  text-wrap: pretty;
+
+  & h2 {
+    font-family: var(--font-headline);
+    font-size: 2.25rem;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-on-surface);
+    text-wrap: balance;
+  }
+  & h3 {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-outline-variant);
+    font-family: var(--font-headline);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--color-on-surface);
+    text-wrap: balance;
+  }
+  & h4 {
+    margin-top: 1.75rem;
+    font-weight: 600;
+    color: var(--color-on-surface);
+  }
+  & :is(h2, h3, h4) + * {
+    margin-top: 0.75rem;
+  }
+  & :is(p, ul, dl) + :is(p, ul, dl) {
+    margin-top: 0.75rem;
+  }
+  & p + dl {
+    margin-top: 1.5rem;
+  }
+  & ul {
+    padding-left: 1.25rem;
+    list-style: disc;
+  }
+  & li + li {
+    margin-top: 0.5rem;
+  }
+  & li::marker {
+    color: var(--color-outline);
+  }
+  & strong {
+    font-weight: 600;
+    color: var(--color-on-surface);
+  }
+  & code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 0.05em 0.3em;
+    border-radius: 2px;
+    background: var(--color-surface-container);
+    color: var(--color-on-surface);
+  }
+  /* Underlined as well as colored: ink blue on muted text does not clear 3:1 (DESIGN.md, Colors). */
+  & a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+    text-underline-offset: 2px;
+    overflow-wrap: anywhere;
+  }
+  & a:hover {
+    text-decoration-color: var(--color-primary);
+  }
+  & a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+@media (min-width: 40rem) {
+  .document h2 {
+    font-size: 3rem;
   }
 }
 

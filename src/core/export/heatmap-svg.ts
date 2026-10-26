@@ -4,6 +4,7 @@ import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
 import type { RoleTranslator } from "../credit-i18n/index";
 import { makeUiTranslator, type UiTranslator } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../credit-roles";
+import { generateStatement } from "../generate-statement";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 
@@ -55,6 +56,23 @@ export interface HeatmapSvgOptions {
   translateRole?: RoleTranslator;
   /** Localize the level legend and empty-state line. Defaults to English. */
   translateUi?: UiTranslator;
+  /** BCP-47 locale of the `<desc>` statement's name lists. Defaults to "en". */
+  locale?: string;
+}
+
+/**
+ * The heatmap's text alternative: the by-author contribution statement, in the
+ * same language and with the same levels as the figure. The SVG carries it as
+ * `<desc>`; a PNG export can carry it as a Description text chunk.
+ */
+export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string {
+  return generateStatement(authors, {
+    format: "by-author",
+    showLevels: opts?.showLevels ?? true,
+    translateRole: opts?.translateRole,
+    translateUi: opts?.translateUi,
+    locale: opts?.locale,
+  });
 }
 
 /**
@@ -70,8 +88,9 @@ export interface HeatmapSvgOptions {
  * the width of a four-key legend. Roles that no author contributed to are
  * omitted, matching the live chart. There is no *rendered* image title:
  * captions belong to the embedding document. The `<title>` element is the
- * accessible name for the `role="img"` graphic, which assistive technology
- * reads and nothing draws.
+ * accessible name for the `role="img"` graphic and `<desc>` its text
+ * alternative: the by-author contribution statement, so a screen reader hears
+ * who did what. Assistive technology reads both and nothing draws them.
  */
 export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string {
   const transpose = !!opts?.transpose;
@@ -204,10 +223,12 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const innerW = totalW - PAD_S * 2;
 
   const lines: string[] = [];
+  const description = heatmapDescription(authors, opts);
   lines.push(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" role="img">`,
     `<!-- ${GENERATOR_NOTE} -->`,
     `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
+    `<desc>${escapeXml(description)}</desc>`,
   );
   lines.push(`<rect width="${totalW}" height="${totalH}" fill="${COLOR_BG}"/>`);
 

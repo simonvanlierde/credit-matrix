@@ -75,16 +75,17 @@ export function MobileRoleList({
         {CREDIT_ROLES.map((role, roleIndex) => {
           const score = selectedAuthor.contributions[roleIndex]?.score ?? 0;
           return (
-            // scroll-mt clears the fixed header and the sticky contributor
-            // picker when focus scrolls a row into view.
-            <li key={role.name} className="flex min-h-14 scroll-mt-40 items-center gap-2 py-1.5">
+            // The scroll margin sits on the focusable buttons: focus scrolling
+            // uses the focused element's own, to clear the fixed header and the
+            // sticky contributor picker.
+            <li key={role.name} className="flex min-h-14 items-center gap-2 py-1.5">
               <span className="flex min-w-0 flex-1 items-center">
                 <RoleInfo
                   role={role}
                   translateRole={translateInterfaceRole}
                   describeRole={describeRole}
                   language={interfaceRoleLanguage}
-                  className="text-sm"
+                  className="scroll-mt-32 text-sm"
                 />
               </span>
               <button
@@ -96,7 +97,7 @@ export function MobileRoleList({
                 disabled={isFrozen(selectedAuthor.id)}
                 aria-label={assignmentLabel(selectedAuthor, roleIndex, score)}
                 onClick={() => handleCellClick(selectedAuthor, roleIndex, score)}
-                className={`contribution-cell flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`contribution-cell scroll-mt-32 flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
                   score > 0 ? "text-on-surface shadow-sm" : "text-on-surface-variant"
                 }`}
               >

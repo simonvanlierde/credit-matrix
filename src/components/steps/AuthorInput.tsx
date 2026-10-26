@@ -40,12 +40,12 @@ import {
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { UndoBar } from "@/components/ui/undo-bar";
+import { UNDO_WINDOW_MS, UndoBar } from "@/components/ui/undo-bar";
 import { type Author, review } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { announce } from "@/lib/announce";
@@ -114,6 +114,7 @@ export function AuthorList() {
   useEffect(() => setTitleDraft(title), [title]);
   const [collapsed, setCollapsed] = useState(false);
   const { newName, setNewName, addError, setAddError, handleAdd, handleAddPaste } = useAddContributors();
+  const addErrorId = useId();
   const [removed, setRemoved] = useState<{
     author: Author;
     index: number;
@@ -126,12 +127,11 @@ export function AuthorList() {
   // Rows that arrive after the app has settled animate in; a restored draft does not.
   const settled = useSettled();
 
-  // A long window on purpose: eight seconds was under WCAG 2.2.1's threshold,
-  // and a screen-reader user still hearing the removal announcement could
-  // lose the Undo mid-route.
+  // A screen-reader user still hearing the removal announcement could lose a
+  // short Undo mid-route, hence the long window.
   useEffect(() => {
     if (!removed) return;
-    const timer = window.setTimeout(() => setRemoved(null), 60000);
+    const timer = window.setTimeout(() => setRemoved(null), UNDO_WINDOW_MS);
     return () => window.clearTimeout(timer);
   }, [removed]);
 
@@ -158,15 +158,14 @@ export function AuthorList() {
       // mark; undo brings both back.
       const { asks, selfId } = useContributionStore.getState();
       removeAuthor(author.id);
-      // No announce() here: the undo bar below mounts as role="status" with the
-      // same fact, and saying it twice reads as an echo.
+      announce(t("removedContributor", { name: author.name }));
       setRemoved({ author, index, ask: asks[author.id], wasSelf: selfId === author.id });
       // The button that was just activated is unmounting, which drops focus to
       // <body> and sends a keyboard user back to the top of the document. Hand
       // focus to the row that takes its place instead.
       setFocusAfterRemove(index);
     },
-    [removeAuthor],
+    [removeAuthor, t],
   );
 
   function undoRemove() {
@@ -271,7 +270,7 @@ export function AuthorList() {
           // before that is silently overwritten by it.
           readOnly={!hydrated}
           placeholder={t("untitledDraft")}
-          className="peer w-full border-b border-outline-variant/30 bg-transparent pb-1 pr-6 text-sm font-medium text-on-surface outline-none transition-colors placeholder:font-normal placeholder:text-on-surface-variant/60 focus:border-primary"
+          className="peer w-full border-b border-outline-strong bg-transparent pb-1 pr-6 text-sm font-medium text-on-surface outline-none transition-colors placeholder:font-normal placeholder:text-on-surface-variant focus:border-primary"
         />
         <Pencil
           aria-hidden="true"
@@ -327,7 +326,11 @@ export function AuthorList() {
         />
       )}
 
-      {addError !== null && <p className="mt-4 -mb-2 text-xs text-error">{addError}</p>}
+      {addError !== null && (
+        <p id={addErrorId} className="mt-4 -mb-2 text-xs text-error">
+          {addError}
+        </p>
+      )}
 
       {!locked && (
         <div className="mt-3 flex gap-2 items-center">
@@ -343,9 +346,11 @@ export function AuthorList() {
             onKeyDown={handleNewNameKeyDown}
             onPaste={handleAddPaste}
             readOnly={!hydrated}
+            aria-invalid={addError !== null}
+            aria-describedby={addError !== null ? addErrorId : undefined}
             placeholder={t("addPlaceholder")}
             aria-label={t("addContributor")}
-            className="flex-1 min-w-0 text-ellipsis bg-surface-container-low border-b-2 border-outline-variant/40 focus:border-primary focus:ring-0 outline-none px-3 py-2 text-sm rounded-t text-on-surface placeholder-outline transition-colors"
+            className="flex-1 min-w-0 text-ellipsis bg-surface-container-low border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none px-3 py-2 text-sm rounded-t text-on-surface placeholder:text-on-surface-variant transition-colors"
           />
           <button
             type="button"
@@ -461,6 +466,7 @@ function RowMenu({
       </PopoverTrigger>
       <PopoverContent
         align="start"
+        aria-label={t("contributorActions", { name })}
         onCloseAutoFocus={(event) => {
           if (!openedOrcidRef.current) return;
           openedOrcidRef.current = false;
@@ -683,7 +689,7 @@ const AuthorRow = memo(function AuthorRowInner({
               {...attributes}
               {...listeners}
               aria-label={`${t("reorderContributor")} ${author.name}`}
-              className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-outline-variant transition-colors hover:text-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-outline-strong transition-colors hover:text-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <GripVertical className="h-4 w-4" />
             </button>
@@ -717,7 +723,7 @@ const AuthorRow = memo(function AuthorRowInner({
               onPaste={handleSmartPaste}
               aria-invalid={nameError !== null}
               aria-describedby={nameError ? `author-name-error-${author.id}` : undefined}
-              className="min-h-6 w-full text-ellipsis bg-transparent border-none p-0 focus:ring-0 text-on-surface font-medium border-b border-primary/20 focus:border-primary outline-none text-sm"
+              className="min-h-6 w-full text-ellipsis bg-transparent border-none p-0 focus:ring-0 text-on-surface font-medium border-b border-primary/20 focus:border-primary outline-none rounded-sm focus-visible:ring-2 focus-visible:ring-primary text-sm"
             />
             {nameError && (
               <span id={`author-name-error-${author.id}`} className="mt-1 block text-[11px] text-error">

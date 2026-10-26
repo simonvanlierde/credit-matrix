@@ -69,7 +69,11 @@ export function WelcomeCard({ version }: { version: string }) {
     // hydration (the router strips it later), and `welcomeSeen` stays false
     // so a later plain visit still gets greeted.
     const arrivedOnShareLink = window.location.hash.startsWith("#s=");
-    if (!(state.welcomeSeen || arrivedOnShareLink || state.claim)) state.openWelcome();
+    // "How it works" on the other pages links here with this hash. Dropped
+    // once read, so a reload after closing the card does not open it again.
+    const askedFor = window.location.hash === "#getting-started";
+    if (askedFor) window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    if (askedFor || !(state.welcomeSeen || arrivedOnShareLink || state.claim)) state.openWelcome();
   }, [hydrated]);
 
   // Drive the native dialog from the store flag, so the header's "How it works"
@@ -83,8 +87,16 @@ export function WelcomeCard({ version }: { version: string }) {
       ref={setDialogEl}
       id="getting-started"
       aria-labelledby="getting-started-title"
-      onClose={closeWelcome}
-      onMouseDown={closeOnBackdrop}
+      onClose={(event) => {
+        closeWelcome();
+        // Opened on arrival, the dialog has no opener to give focus back to, so
+        // focus would stay inside it and then drop to <body>.
+        const focused = document.activeElement;
+        if (!focused || focused === document.body || event.currentTarget.contains(focused)) {
+          document.getElementById("main-content")?.focus();
+        }
+      }}
+      {...closeOnBackdrop}
       className="m-auto w-full max-w-3xl max-h-[90dvh] overflow-y-auto rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
     >
       {/* The entrance moved onto the <dialog> itself (globals.css), so this card

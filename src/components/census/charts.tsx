@@ -84,6 +84,16 @@ export function LineChart({
   const xStep = compact || width < 480 ? 5 : 2;
   const hovered = active === null ? undefined : points[active];
 
+  // The readout appears on hover and rests under the pointer: Escape must clear it (WCAG 1.4.13).
+  useEffect(() => {
+    if (active === null) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActive(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [active]);
+
   const onPointer = (event: React.PointerEvent<SVGSVGElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
     const x = first + ((event.clientX - box.left - pad.left) / plotW) * (last - first);

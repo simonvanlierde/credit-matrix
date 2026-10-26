@@ -420,7 +420,11 @@ export function ContributionGrid() {
               <PopoverTrigger aria-label={t("heatmapOptions")} title={t("heatmapOptions")} className={ICON_TOOL_BUTTON}>
                 <Settings2 className="size-4" aria-hidden="true" />
               </PopoverTrigger>
-              <PopoverContent align="end" className="flex w-auto max-w-[calc(100vw-2rem)] flex-wrap items-center gap-3">
+              <PopoverContent
+                aria-label={t("heatmapOptions")}
+                align="end"
+                className="flex w-auto max-w-[calc(100vw-2rem)] flex-wrap items-center gap-3"
+              >
                 <ColorPopover
                   value={heatmapMonoColor}
                   onChange={setHeatmapMonoColor}
@@ -611,7 +615,12 @@ export function ContributionGrid() {
             return (
               <Popover open onOpenChange={(open) => !open && close()}>
                 <PopoverAnchor className="fixed" style={{ left: picker.x, top: picker.y }} />
-                <PopoverContent align="start" className="w-40 p-1" onCloseAutoFocus={(event) => event.preventDefault()}>
+                <PopoverContent
+                  align="start"
+                  aria-label={assignmentLabel(pickerAuthor, picker.roleIndex, current)}
+                  className="w-40 p-1"
+                  onCloseAutoFocus={(event) => event.preventDefault()}
+                >
                   {LEVEL_KEY.map(({ key, score }) => (
                     <button
                       key={key}
@@ -754,7 +763,7 @@ const GridCell = memo(function GridCellInner({
         // against the card, which loses the click target on dim displays.
         className={`contribution-cell flex h-7 w-full items-center justify-center rounded transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
           frozen ? "cursor-not-allowed opacity-40" : "hover:ring-2 hover:ring-primary/50"
-        } ${fill ? "" : "ring-1 ring-inset ring-outline/70"} ${
+        } ${fill ? "" : "ring-1 ring-inset ring-outline-strong"} ${
           highlighted
             ? "outline outline-[3px] outline-flag outline-offset-1"
             : recent

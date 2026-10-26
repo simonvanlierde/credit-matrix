@@ -486,7 +486,7 @@ export function ImportModal({
       aria-labelledby="import-title"
       aria-describedby="import-description"
       onClose={handleClose}
-      onMouseDown={closeOnBackdrop}
+      {...closeOnBackdrop}
       onDragOver={swallowDrag}
       onDrop={swallowDrag}
       className="relative m-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
@@ -543,7 +543,7 @@ export function ImportModal({
                   }
                 }}
                 placeholder={t("doiPlaceholder")}
-                className="flex-1 min-w-0 bg-surface-container-low border-0 border-b-2 border-outline-variant/40 focus:border-primary focus:ring-0 outline-none text-sm font-mono px-4 py-2 text-on-surface rounded-t transition-colors"
+                className="flex-1 min-w-0 bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono px-4 py-2 text-on-surface placeholder:text-on-surface-variant rounded-t transition-colors"
               />
               <button
                 type="button"
@@ -614,16 +614,19 @@ export function ImportModal({
               >
                 {t("pasteRawData")}
               </label>
-              {fileName && (
-                <span className="text-[11px] text-on-surface-variant italic">
-                  {t("fileLoaded", { name: fileName })}
-                </span>
-              )}
-              {format !== "unknown" && (
-                <span className="text-[11px] text-primary font-medium italic">
-                  {t("detectedFormat", { format: FORMAT_LABEL[format](t) })}
-                </span>
-              )}
+              {/* Always mounted, so a screen reader hears the file and format as they appear. */}
+              <div role="status" className="flex flex-wrap justify-end gap-x-3">
+                {fileName && (
+                  <span className="text-[11px] text-on-surface-variant italic">
+                    {t("fileLoaded", { name: fileName })}
+                  </span>
+                )}
+                {format !== "unknown" && (
+                  <span className="text-[11px] text-primary font-medium italic">
+                    {t("detectedFormat", { format: FORMAT_LABEL[format](t) })}
+                  </span>
+                )}
+              </div>
             </div>
             <textarea
               id="import-text"
@@ -638,7 +641,7 @@ export function ImportModal({
               }}
               placeholder={t("importPlaceholder", { names: t("sampleNames") })}
               rows={6}
-              className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/40 focus:border-primary focus:ring-0 outline-none text-sm font-mono p-4 text-on-surface rounded-t resize-none transition-colors"
+              className="w-full bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono p-4 text-on-surface placeholder:text-on-surface-variant rounded-t resize-none transition-colors"
             />
           </div>
 

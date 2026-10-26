@@ -67,7 +67,10 @@ jobs:
       - name: Pack
         id: pack
         working-directory: src/core
+        # pipefail: otherwise a failed pack leaves tarball empty and the
+        # upload below takes the whole src/core directory instead.
         run: |
+          set -o pipefail
           tarball=$(npm pack --silent | tail -n 1)
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
 
