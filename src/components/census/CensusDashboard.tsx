@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, ExternalLink, Info } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { BarList, LineChart, type Point, TableToggle } from "@/components/census/charts";
+import { ExternalLink } from "@/components/ui/external-link";
 import { IN_TEXT_LINK } from "@/components/ui/license-link";
 import { CREDIT_ROLES } from "@/core";
 import { fieldKey } from "@/lib/field-names";
@@ -35,23 +36,6 @@ const PLACE_KEYS = {
 /** The English role name for a credit.niso.org slug, which the role catalog translates. */
 function roleName(slug: string): string {
   return CREDIT_ROLES.find((r) => r.url.endsWith(`/${slug}/`))?.name ?? slug;
-}
-
-/** A link that opens in a new tab, and says so to a screen reader. */
-function ExternalAnchor({ href, children }: { href: string; children: ReactNode }) {
-  const t = useTranslations();
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 text-primary hover:underline"
-    >
-      {children}
-      <ExternalLink className="size-3" aria-hidden="true" />
-      <span className="sr-only">{t("opensInNewTab")}</span>
-    </a>
-  );
 }
 
 function Section({ title, caption, children }: { title: string; caption: ReactNode; children: ReactNode }) {
@@ -334,8 +318,12 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           <p className="max-w-[65ch] text-pretty">{t("censusHowModel")}</p>
           <p className="max-w-[65ch] text-pretty">{t("censusHowCaveat")}</p>
           <p className="flex flex-wrap gap-x-5 gap-y-1">
-            <ExternalAnchor href={SOURCE}>{t("censusHowCode")}</ExternalAnchor>
-            <ExternalAnchor href={MODEL_CARD}>{t("censusHowModelCard")}</ExternalAnchor>
+            <ExternalLink href={SOURCE} className="gap-1 text-primary hover:underline">
+              {t("censusHowCode")}
+            </ExternalLink>
+            <ExternalLink href={MODEL_CARD} className="gap-1 text-primary hover:underline">
+              {t("censusHowModelCard")}
+            </ExternalLink>
           </p>
         </section>
 
