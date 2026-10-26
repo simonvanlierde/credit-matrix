@@ -23,7 +23,7 @@ type ExportFormat = "svg" | "png";
  * the 85mm single-column width most publishers ask for. 3× clears it, and
  * still lands well inside the clipboard's practical size.
  */
-async function svgToPngBlob(svg: string, description: string, scale = 3): Promise<Blob> {
+async function svgToPngBlob(svg: string, description: string, language: string, scale = 3): Promise<Blob> {
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
   const img = new Image();
   img.src = url;
@@ -43,7 +43,7 @@ async function svgToPngBlob(svg: string, description: string, scale = 3): Promis
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("PNG encoding failed"))), "image/png");
   });
   // A PNG has no alt attribute; its Description text is the one place a text alternative can travel.
-  const bytes = withPngText(new Uint8Array(await png.arrayBuffer()), "Description", description);
+  const bytes = withPngText(new Uint8Array(await png.arrayBuffer()), "Description", description, language);
   return new Blob([bytes], { type: "image/png" });
 }
 
@@ -71,7 +71,7 @@ export function HeatmapExports({
 
   const svgOptions = { transpose, monoColor, showLevels, acronyms, translateRole, translateUi, locale: outputLanguage };
   const renderSvg = () => buildHeatmapSvg(authors, svgOptions);
-  const renderPng = () => svgToPngBlob(renderSvg(), heatmapDescription(authors, svgOptions));
+  const renderPng = () => svgToPngBlob(renderSvg(), heatmapDescription(authors, svgOptions), outputLanguage);
 
   function fail(format: ExportFormat) {
     const message = t("errHeatmapExport", { format: format.toUpperCase() });

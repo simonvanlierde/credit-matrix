@@ -13,15 +13,21 @@ function crc32(bytes: Uint8Array): number {
 /**
  * Add an uncompressed iTXt chunk (UTF-8 text) right after a PNG's IHDR chunk.
  * "Description" is the PNG spec's keyword for an image's text alternative.
+ * `language` is the text's BCP-47 tag, written into the chunk's language field.
  * Returns the input unchanged if it is not a PNG with an IHDR first.
  */
-export function withPngText(png: Uint8Array<ArrayBuffer>, keyword: string, text: string): Uint8Array<ArrayBuffer> {
+export function withPngText(
+  png: Uint8Array<ArrayBuffer>,
+  keyword: string,
+  text: string,
+  language = "",
+): Uint8Array<ArrayBuffer> {
   // 8-byte signature, then IHDR: 4 length + 4 type + 13 data + 4 CRC.
   const ihdrEnd = 33;
   if (png.length < ihdrEnd || String.fromCharCode(...png.subarray(12, 16)) !== "IHDR") return png;
   const enc = new TextEncoder();
-  // keyword NUL, compression flag 0, method 0, empty language tag NUL, empty translated keyword NUL.
-  const data = new Uint8Array([...enc.encode(keyword), 0, 0, 0, 0, 0, ...enc.encode(text)]);
+  // keyword NUL, compression flag 0, method 0, language tag NUL, empty translated keyword NUL.
+  const data = new Uint8Array([...enc.encode(keyword), 0, 0, 0, ...enc.encode(language), 0, 0, ...enc.encode(text)]);
   const chunk = new Uint8Array(12 + data.length);
   const view = new DataView(chunk.buffer);
   view.setUint32(0, data.length);

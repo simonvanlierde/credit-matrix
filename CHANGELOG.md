@@ -59,8 +59,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   conformant" until a screen reader has read the app.
 - Downloaded heatmaps carry the contribution statement as their text alternative: the SVG in its
   description, which screen readers read, the PNG in its Description field. Before, the SVG said
-  only "Contribution heatmap" and the PNG had no text at all. In the `credit-matrix` package,
-  `heatmapDescription` returns the same text.
+  only "Contribution heatmap" and the PNG had no text at all. Both are tagged with the output
+  language, so a screen reader reads them in that language. In the `credit-matrix` package,
+  `heatmapDescription` returns the same text, and `buildHeatmapSvg` sets `xml:lang` and `lang` when
+  you pass `locale`.
 - Census: for people who run it, `census model` trains and checks a model that reads contribution
   statements. A fine-tuned encoder and a hybrid of the rule parser and the encoder sit beside the
   rule parser, and `census model browser` exports the encoder for the browser. `--seed` fixes a
