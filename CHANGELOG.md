@@ -65,6 +65,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - CSV export keeps a leading apostrophe in a name that starts with a line break or spaces. It used
   to come back without the apostrophe.
 
+### Security
+
+- JATS XML import, in the app and the CLI, refuses a file that declares entities (`<!ENTITY`). The
+  browser expanded them and the CLI did not, so one file could import different names in each, and
+  a file with nested entities could freeze the browser tab for several seconds. JATS exports from
+  this app and other tools do not declare entities.
+
 ## [0.8.1] - 2026-10-13
 
 ### Fixed
