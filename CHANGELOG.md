@@ -101,6 +101,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     until you change the field. Screen readers hear it, and also hear which file was loaded in
     Import.
   - Every popover panel has a name for screen readers.
+  - Screen readers hear a removed contributor and a bulk change once, through the same live
+    region as every other message. Before, the removal could go unheard and the bulk change was
+    said twice. Each Undo button now says what it undoes.
+  - A grid change is read out once, without the statement's contributor and role counts after it.
+  - Screen readers no longer read a contributor's initials before their name.
+  - On the co-author page each role name is a heading, so a screen reader can jump from role to
+    role.
 - "How it works" did nothing outside the main page. It now takes you there and opens the welcome
   panel, and closing the panel puts focus on the main content.
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A

@@ -6,11 +6,16 @@ follows the steps of [WCAG-EM](https://www.w3.org/TR/WCAG-EM/): set the scope, p
 judge each criterion on it, report.
 
 - **Date:** 24 October 2026, on the build of the commit that added this file.
+- **Updated:** 26 October 2026. A second pass read the accessibility tree of every sampled surface
+  with Playwright's aria snapshots, logged every live-region message, and ran the axe, statement,
+  about, CSP, accessibility-tree and main workflow tests in Firefox and WebKit, the engine Safari
+  uses. Five workflow tests could not run there: they read the clipboard, which Playwright can only
+  allow in Chromium. It fixed four problems, listed under 1.3.1, 2.4.6 and 4.1.3.
 - **Who:** the developer. This is not an external audit.
 - **Browser:** Chromium (Playwright's desktop Chrome profile), at 1280 px, 640 px, 390 px and
-  320 px wide, in the light and dark themes.
-- **Not done yet:** a screen-reader pass (NVDA or VoiceOver), and Firefox and Safari. Rows that only
-  a screen reader can settle say so.
+  320 px wide, in the light and dark themes. Firefox and WebKit through Playwright, at 1280 px.
+- **Not done yet:** a screen-reader pass (NVDA or VoiceOver), and keyboard runs in Firefox and
+  Safari by hand. Rows that only a screen reader can settle say so.
 
 ## Sample
 
@@ -30,7 +35,8 @@ Each verdict rests on something seen in the browser, not on reading the code alo
 - reflow at 320 px and text spacing at the WCAG 1.4.12 values;
 - focus rectangles compared with the sticky bars and banners;
 - target sizes measured from bounding boxes;
-- the accessibility tree read with Playwright's `ariaSnapshot()`.
+- the accessibility tree read with Playwright's `ariaSnapshot()`, surface by surface, in
+  `e2e/screen-reader.spec.ts`, which also logs every message that reaches a live region.
 
 Where a problem was found and fixed, the Evidence column names the test that now guards it. Each
 of those tests failed before its fix.
@@ -44,14 +50,14 @@ N/A: the page has no content the criterion applies to.
 
 | Criterion | Level | Result | Evidence |
 | --- | --- | --- | --- |
-| 1.1.1 Non-text Content | A | Pass | In the app every image has a text alternative or is decorative, and the statement and table repeat the heatmap. The downloaded SVG has the contribution statement as its `<desc>` and the PNG as a Description text chunk (`heatmap-svg.test.ts`, `png-text.test.ts`). Editors may not use the PNG's: see Known problems in the statement. |
+| 1.1.1 Non-text Content | A | Pass | In the app every image has a text alternative or is decorative, and the statement and table repeat the heatmap. Each census chart has a sentence of its numbers and a table. The downloaded SVG has the contribution statement as its `<desc>` and the PNG as a Description text chunk; `e2e/screen-reader.spec.ts` downloads both through the menu and checks them. Editors may not use the PNG's: see Known problems in the statement. |
 | 1.2.1 Audio-only and Video-only (Prerecorded) | A | N/A | No audio or video. |
 | 1.2.2 Captions (Prerecorded) | A | N/A | No audio or video. |
 | 1.2.3 Audio Description or Media Alternative (Prerecorded) | A | N/A | No audio or video. |
 | 1.2.4 Captions (Live) | AA | N/A | No audio or video. |
 | 1.2.5 Audio Description (Prerecorded) | AA | N/A | No audio or video. |
-| 1.3.1 Info and Relationships | A | Pass | Landmarks, headings, real tables with header cells, lists, tabs and radio groups in the accessibility tree. Screen-reader check still to do. |
-| 1.3.2 Meaningful Sequence | A | Pass | Reading order matches the visual order; no positive `tabindex`. |
+| 1.3.1 Info and Relationships | A | Pass | Landmarks, headings, real tables with header cells, lists, tabs and radio groups in the accessibility tree, the same in Chromium, Firefox and WebKit. Fixed: the co-author page's 14 role names were not headings, and each initials badge was read as well as the name beside it. `e2e/screen-reader.spec.ts` checks both. Screen-reader check still to do. |
+| 1.3.2 Meaningful Sequence | A | Pass | The accessibility tree of each sampled surface follows the visual order (`e2e/screen-reader.spec.ts`); no positive `tabindex`. |
 | 1.3.3 Sensory Characteristics | A | Pass | Instructions name controls by their text. |
 | 1.3.4 Orientation | AA | Pass | No orientation lock in the CSS, scripts or web manifest. |
 | 1.3.5 Identify Input Purpose | AA | Pass | The co-author's own name field has `autocomplete="name"`; other fields hold other people's data. |
@@ -80,7 +86,7 @@ N/A: the page has no content the criterion applies to.
 | 2.4.3 Focus Order | A | Pass | Source order everywhere. Dialogs and popovers return focus to their opener, or to the main content when there is none. |
 | 2.4.4 Link Purpose (In Context) | A | Pass | Every link name read on the about, statement and census pages. |
 | 2.4.5 Multiple Ways | AA | Pass | The header navigation and links in the content reach every page. |
-| 2.4.6 Headings and Labels | AA | Pass | Headings and labels name their content. |
+| 2.4.6 Headings and Labels | AA | Pass | Headings and labels name their content: every name in the accessibility tree of each sampled surface was read. Fixed: the co-author page had one heading for 14 roles; each role now has its own. Each Undo now sits in a group named by what it undoes. |
 | 2.4.7 Focus Visible | AA | Pass | Every stop in a 400-stop Tab walk changed visibly. The contributor name field now has its own ring as well. |
 | 2.4.11 Focus Not Obscured (Minimum) | AA | Pass | Fixed: on phones, focus moving up the role list went under the sticky bar, and the status banner covered focused fields. `e2e/focus-and-timing.spec.ts` checks both. |
 | 2.5.1 Pointer Gestures | A | Pass | No multi-point or path gestures. |
@@ -112,13 +118,16 @@ N/A: the page has no content the criterion applies to.
 
 | Criterion | Level | Result | Evidence |
 | --- | --- | --- | --- |
-| 4.1.2 Name, Role, Value | A | Pass | Fixed: popover panels were dialogs without a name. `e2e/a11y.spec.ts` now runs axe's `aria-dialog-name` rule on them. Screen-reader check still to do. |
-| 4.1.3 Status Messages | AA | Pass | Fixed: picking a file in the import dialog announced nothing; `e2e/input-errors.spec.ts` checks it. Copy, undo, save and error messages go through a live region. Whether every screen reader reads an Undo strip that appears with its text already in it is still to check. |
+| 4.1.2 Name, Role, Value | A | Pass | Fixed: popover panels were dialogs without a name. `e2e/a11y.spec.ts` now runs axe's `aria-dialog-name` rule on them. Each popover's button reports it open, and focus returns to it on Escape; each grid cell names its level, and radios, tabs and switches report their state (`e2e/screen-reader.spec.ts`, also in Firefox and WebKit). Screen-reader check still to do. |
+| 4.1.3 Status Messages | AA | Pass | Fixed: picking a file in the import dialog announced nothing; `e2e/input-errors.spec.ts` checks it. Fixed: the Undo strip appeared with its text already in it, which many screen readers miss, and removing a contributor relied on it alone; a bulk change was said twice; and every grid change also read out the statement's counts. Each message now goes once through a live region that is already on the page, which `e2e/screen-reader.spec.ts` checks from a log of every live-region change. Screen-reader check still to do. |
 
 WCAG 2.2 removed 4.1.1 Parsing, so it is not listed.
 
 ## Summary
 
-Of the 55 level A and AA criteria, none fails, 47 pass and 8 do not apply. The statement still says
-"partially conformant": this is a self-assessment of a sample, not an audit, and no screen reader
-has read the app. Next: a screen-reader pass, which may change the rows that say so.
+Of the 55 level A and AA criteria, none fails, 47 pass and 8 do not apply. The 26 October pass
+read what a screen reader is given and ran the main checks in Firefox and WebKit; it changed no
+result, but fixed four problems behind 1.3.1, 2.4.6 and 4.1.3. The statement still says "partially
+conformant": this is a self-assessment of a sample, not an audit, and no screen reader has read the
+app. Next: a screen-reader pass with NVDA and Firefox, and VoiceOver and Safari, which may change
+the rows that say so.

@@ -37,8 +37,10 @@ Its conformance is **partially conformant**. The self-assessment found no criter
 it checks a sample of pages and no screen reader has read the app yet, so it does not claim full
 conformance. The developer checked the app and
 the web element against every WCAG 2.2 level A and AA criterion on 24 October 2026, in the
-[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md). There has been no external audit. What is checked, and how, is under
-[How we check](#how-we-check).
+[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md).
+On 26 October 2026 a second pass read what a screen reader is given on each page and ran the
+checks in Firefox and WebKit too. There has been no external audit. What is checked, and how, is
+under [How we check](#how-we-check).
 
 ## Known problems
 
@@ -84,6 +86,12 @@ statement or an export in another format, email us and we'll send it.
   mode, the about page and this statement, and the web element on a light page, a dark page and a
   320 px wide screen. See
   [e2e/a11y.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/a11y.spec.ts).
+- **What a screen reader is given.**
+  [e2e/screen-reader.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/screen-reader.spec.ts)
+  reads the accessibility tree of the workspace, the grid, every popover and dialog, the co-author
+  page, the census, the about page, this statement and the web element: the names, roles, states,
+  headings and landmarks a screen reader reads out. It also logs every message that reaches a live
+  region, and checks that copying, removing, undoing and changing the grid are each announced once.
 - **Keyboard tests.** The same tests use the keyboard alone to move through the contributor list,
   reorder a contributor without dragging, switch the inspector tabs, move through the grid with the
   arrow keys, open a role's description from its name, and use the segmented controls. They also
@@ -101,9 +109,9 @@ All of this runs on every pull request and every push to main. Automated tools f
 the problems a person can run into, so a passing run does not mean there are none.
 
 Not checked yet: nobody who relies on a screen reader, switch access or voice control has tested
-the app, and the self-assessment did not use a screen reader. Screen-reader support is built in
-(labels, landmarks, live announcements), and the self-assessment read the accessibility tree, but
-no screen reader has read it out.
+the app, and the self-assessment did not use a screen reader. The tests read the accessibility
+tree a screen reader gets, but no screen reader has read it out, so how NVDA, JAWS or VoiceOver
+speak it is not checked. Nobody has used the app in Firefox or Safari by hand.
 
 ### Heatmap text alternatives
 
@@ -124,17 +132,20 @@ are in English, and marked as English.
 ## Tested with
 
 - Chromium, in Playwright's desktop Chrome profile, with axe-core, on every pull request.
+- Firefox and WebKit, the engine Safari uses, in Playwright, once on 26 October 2026: the axe
+  scans, this statement, the about page, the accessibility tree and the main workflows. Five
+  workflow tests that read the clipboard could not run there.
 
-We haven't tested Firefox or Safari, automatically or by hand, or tried a screen reader.
+We haven't tested Firefox or Safari by hand, or tried a screen reader.
 CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 
 ## About this statement
 
 Prepared: 13 October 2026
 
-Last reviewed: 24 October 2026
+Last reviewed: 26 October 2026
 
-Next review: by 24 October 2027, or at the next major release if that comes first.
+Next review: by 26 October 2027, or at the next major release if that comes first.
 
 Method: self-assessment by the developer, following WCAG-EM, with the checks under
 [How we check](#how-we-check). No external audit.
