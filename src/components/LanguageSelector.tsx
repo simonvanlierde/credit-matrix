@@ -35,7 +35,7 @@ export function LanguageSelector() {
       >
         <Languages className="size-4" />
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-3">
+      <PopoverContent aria-label={t("languageSettings")} className="w-64 p-3">
         <div className="grid gap-3">
           <LocaleSelect id="ui-locale-label" label={t("interfaceLanguage")} value={uiLocale} onChange={setUiLocale} />
           <LocaleSelect

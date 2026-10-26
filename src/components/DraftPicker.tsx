@@ -120,16 +120,16 @@ export function DraftPicker() {
           // Names the control *and* which draft is live: below `sm` the title is
           // hidden, and without this the button would announce only "Drafts".
           aria-label={`${t("drafts")}: ${label}`}
-          className="flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface sm:max-w-[16rem]"
+          className="flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface md:max-w-[16rem]"
         >
           <Files className="h-4 w-4 shrink-0" />
           {/* The title is the first thing to go on a narrow header: the icon
               still opens the list, where the title is spelled out in full. */}
-          <span className="hidden truncate sm:inline">{label}</span>
-          <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
+          <span className="hidden truncate md:inline">{label}</span>
+          <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 md:block" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 max-w-[calc(100vw-1.5rem)] p-0">
+      <PopoverContent align="start" aria-label={t("drafts")} className="w-80 max-w-[calc(100vw-1.5rem)] p-0">
         <ul className="max-h-64 overflow-y-auto py-1">
           {rows.map((draft) => (
             <li key={draft.id} className="group flex items-center gap-1 px-2">

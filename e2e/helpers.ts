@@ -1,3 +1,9 @@
+// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
+import { existsSync, readFileSync } from "node:fs";
+// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
+import path from "node:path";
+// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
+import process from "node:process";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { PERSIST_KEY, PERSIST_VERSION } from "../src/store/persist-meta";
@@ -104,4 +110,41 @@ export const scan = async (page: Page) => {
 /** A role's strongest answer on the co-author page: Lead in levels, Contributed in yes/no. */
 export function strongestAnswer(page: Page, role: string): Locator {
   return page.getByRole("radiogroup", { name: role, exact: true }).getByRole("radio").last();
+}
+
+// Playwright resolves testDir from the repo root, so cwd is the repo root.
+const repoRoot = process.cwd();
+
+/** CI builds the package before the tests (playwright.config.ts); locally it may not exist yet. */
+export function elementBundleBuilt() {
+  return !!process.env.CI || existsSync(path.join(repoRoot, "src/core/dist/element.js"));
+}
+
+const elementHostPage = (background: string, color: string) => `<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Element host</title>
+<script type="importmap">{"imports":{"zod/mini":"/zod/mini/index.js"}}</script>
+<style>body{background:${background};color:${color};margin:16px}</style></head>
+<body><main><h1>Beiträge</h1><credit-matrix src="/contributions.json" format="by-author"></credit-matrix></main>
+<script type="module" src="/dist/element.js"></script></body></html>`;
+
+/**
+ * The <credit-matrix> element from the built package, on a bare German page outside the app.
+ * Its bundle imports `zod/mini` by bare name, so the page maps that to the installed copy.
+ * Every request goes to a made-up origin and is answered here; the app's server is not used.
+ */
+export async function openElementHost(page: Page, background = "#ffffff", color = "#111111") {
+  const contributions = readFileSync(path.join(repoRoot, "e2e/fixtures/element-contributions.json"), "utf8");
+  await page.route("http://element.test/**", (route) => {
+    const pathname = new URL(route.request().url()).pathname;
+    if (pathname === "/") return route.fulfill({ contentType: "text/html", body: elementHostPage(background, color) });
+    if (pathname === "/contributions.json")
+      return route.fulfill({ contentType: "application/json", body: contributions });
+    if (pathname.startsWith("/dist/"))
+      return route.fulfill({ path: path.join(repoRoot, "src/core", pathname), contentType: "text/javascript" });
+    if (pathname.startsWith("/zod/"))
+      return route.fulfill({ path: path.join(repoRoot, "node_modules", pathname), contentType: "text/javascript" });
+    return route.fulfill({ status: 404, body: "" });
+  });
+  await page.goto("http://element.test/");
+  await expect(page.locator("credit-matrix figure p").first()).toBeVisible();
 }

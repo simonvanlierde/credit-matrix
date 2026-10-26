@@ -4,8 +4,9 @@ import { ChevronDown, Copy, Download } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type Author, buildHeatmapSvg } from "@/core";
+import { type Author, buildHeatmapSvg, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
+import { withPngText } from "@/lib/png-text";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { download as downloadBlob } from "@/lib/utils";
@@ -22,7 +23,7 @@ type ExportFormat = "svg" | "png";
  * the 85mm single-column width most publishers ask for. 3× clears it, and
  * still lands well inside the clipboard's practical size.
  */
-async function svgToPngBlob(svg: string, scale = 3): Promise<Blob> {
+async function svgToPngBlob(svg: string, description: string, scale = 3): Promise<Blob> {
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
   const img = new Image();
   img.src = url;
@@ -38,9 +39,12 @@ async function svgToPngBlob(svg: string, scale = 3): Promise<Blob> {
   if (!ctx) throw new Error("Canvas not supported");
   ctx.scale(scale, scale);
   ctx.drawImage(img, 0, 0);
-  return new Promise((resolve, reject) => {
+  const png = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("PNG encoding failed"))), "image/png");
   });
+  // A PNG has no alt attribute; its Description text is the one place a text alternative can travel.
+  const bytes = withPngText(new Uint8Array(await png.arrayBuffer()), "Description", description);
+  return new Blob([bytes], { type: "image/png" });
 }
 
 /** Download the grid as a heatmap image, mirroring the on-screen display options. */
@@ -57,7 +61,7 @@ export function HeatmapExports({
   transpose: boolean;
   acronyms: boolean;
 }) {
-  const { translateRole, translateUi } = useCreditTranslators();
+  const { translateRole, translateUi, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   const [loading, setLoading] = useState<ExportFormat | "copy" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,9 +69,9 @@ export function HeatmapExports({
     copied: t("annHeatmapCopied"),
   });
 
-  function renderSvg() {
-    return buildHeatmapSvg(authors, { transpose, monoColor, showLevels, acronyms, translateRole, translateUi });
-  }
+  const svgOptions = { transpose, monoColor, showLevels, acronyms, translateRole, translateUi, locale: outputLanguage };
+  const renderSvg = () => buildHeatmapSvg(authors, svgOptions);
+  const renderPng = () => svgToPngBlob(renderSvg(), heatmapDescription(authors, svgOptions));
 
   function fail(format: ExportFormat) {
     const message = t("errHeatmapExport", { format: format.toUpperCase() });
@@ -83,7 +87,7 @@ export function HeatmapExports({
       if (format === "svg") {
         downloadBlob(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }), "credit-heatmap.svg");
       } else {
-        downloadBlob(await svgToPngBlob(svg), "credit-heatmap.png");
+        downloadBlob(await renderPng(), "credit-heatmap.png");
       }
     } catch {
       fail(format);
@@ -101,7 +105,7 @@ export function HeatmapExports({
       // useCopyStatus owns the status, the announce and the 2s reset; this only
       // supplies the clipboard write and the inline error text.
       await copy(async () => {
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": svgToPngBlob(renderSvg()) })]);
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": renderPng() })]);
       });
     } finally {
       setLoading(null);
@@ -117,7 +121,7 @@ export function HeatmapExports({
         {t("heatmapLabel")}
         <ChevronDown className="size-3.5" aria-hidden="true" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="grid w-56 gap-0.5 p-1">
+      <PopoverContent align="end" aria-label={t("heatmapLabel")} className="grid w-56 gap-0.5 p-1">
         <button
           type="button"
           disabled={loading !== null}

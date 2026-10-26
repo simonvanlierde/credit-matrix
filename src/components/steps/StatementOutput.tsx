@@ -185,7 +185,7 @@ export function StatementOutput() {
             >
               <Settings2 className="size-4" aria-hidden="true" />
             </PopoverTrigger>
-            <PopoverContent align="end" className="grid w-60 gap-3">
+            <PopoverContent align="end" aria-label={t("statementOptions")} className="grid w-60 gap-3">
               <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
                 <Switch checked={acronyms} onCheckedChange={setAcronyms} aria-label={t("a11yUseInitials")} />
                 {t("useInitials")}
@@ -208,23 +208,27 @@ export function StatementOutput() {
       </div>
 
       {hasAuthors && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-on-surface-variant" role="status">
-          <span
-            // Keyed on readiness so the flip remounts the chip and the house
-            // entrance plays once — the quiet acknowledgment that the statement
-            // is done. Gated on `settled` like every other entrance, so a
-            // restored draft that is already ready stays still on load.
-            key={isReady ? "ready" : "notes"}
-            className={`inline-flex items-center gap-1.5 font-medium ${isReady ? "text-primary" : "text-on-surface"} ${
-              settled ? "enter-rise" : ""
-            }`}
-          >
-            {isReady ? (
-              <CheckCircle2 className="size-4" aria-hidden="true" />
-            ) : (
-              <Info className="size-4" aria-hidden="true" />
-            )}
-            {isReady ? t("statusReady") : t("statusNotes", { count: issues.length })}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-on-surface-variant">
+          {/* Only the readiness is live. With the counts in it too, every grid
+              change was read out a second time after the grid's own message. */}
+          <span role="status">
+            <span
+              // Keyed on readiness so the flip remounts the chip and the house
+              // entrance plays once — the quiet acknowledgment that the statement
+              // is done. Gated on `settled` like every other entrance, so a
+              // restored draft that is already ready stays still on load.
+              key={isReady ? "ready" : "notes"}
+              className={`inline-flex items-center gap-1.5 font-medium ${isReady ? "text-primary" : "text-on-surface"} ${
+                settled ? "enter-rise" : ""
+              }`}
+            >
+              {isReady ? (
+                <CheckCircle2 className="size-4" aria-hidden="true" />
+              ) : (
+                <Info className="size-4" aria-hidden="true" />
+              )}
+              {isReady ? t("statusReady") : t("statusNotes", { count: issues.length })}
+            </span>
           </span>
           <span>{t("contributorCount", { count: authors.length })}</span>
           <span>{t("rolesUsed", { used: assignedRoleCount, total: CREDIT_ROLES.length })}</span>
@@ -332,7 +336,7 @@ export function StatementOutput() {
             {t("exportData")}
             <ChevronDown className="size-3.5" aria-hidden="true" />
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 max-w-[calc(100vw-2rem)] p-1">
+          <PopoverContent align="start" aria-label={t("exportData")} className="w-72 max-w-[calc(100vw-2rem)] p-1">
             <ul aria-label={t("a11yExportFormat")} className="grid">
               {(Object.keys(DATA_FORMATS) as DataFormat[]).map((value) => {
                 const { label } = DATA_FORMATS[value];
