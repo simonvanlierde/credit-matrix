@@ -34,6 +34,45 @@ test.describe("behaviours that must not trap or hide", () => {
     await expect(bar).toBeHidden();
   });
 
+  test("Undo on a removed contributor hands focus to the restored row (2.4.3)", async ({ page }) => {
+    await loadSample(page);
+    const second = page.getByRole("button", { name: /^Remove / }).nth(1);
+    const name = (await second.getAttribute("aria-label")) ?? "";
+    await second.focus();
+    await page.keyboard.press("Enter");
+    const undo = page.getByRole("group", { name: name.replace(/^Remove/, "Removed") }).getByRole("button");
+    await undo.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("button", { name, exact: true })).toBeFocused();
+  });
+
+  test("bulk Undo hands focus back to the bulk-assign button (2.4.3)", async ({ page }) => {
+    await loadSample(page);
+    const trigger = page.getByRole("button", { name: "Bulk assign" });
+    await trigger.click();
+    await page.getByRole("button", { name: "Assign every role", exact: true }).click();
+    await page.keyboard.press("Escape");
+    const undo = page.getByRole("group", { name: "Bulk change applied." }).getByRole("button");
+    await undo.focus();
+    await page.keyboard.press("Enter");
+    await expect(undo).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+
+  test("an Undo that times out while focused does not drop focus to the page (2.4.3)", async ({ page }) => {
+    await page.clock.install();
+    await loadSample(page);
+    await page
+      .getByRole("button", { name: /^Remove / })
+      .first()
+      .click();
+    const undo = page.getByRole("group", { name: /^Removed / }).getByRole("button");
+    await undo.focus();
+    await page.clock.runFor(65_000);
+    await expect(undo).toBeHidden();
+    await expect(page.getByRole("button", { name: /^Remove / }).first()).toBeFocused();
+  });
+
   test("shift-tabbing up the phone role list never lands under the sticky picker (2.4.11)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await loadSample(page);

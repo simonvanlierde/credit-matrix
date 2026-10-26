@@ -1,7 +1,7 @@
 "use client";
 
 import { ListChecks } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +26,8 @@ export function useBulkUndo() {
   const t = useTranslations();
   const loadAuthors = useContributionStore((s) => s.loadAuthors);
   const [bulkUndo, setBulkUndo] = useState<Author[] | null>(null);
+  // Where focus goes when the undo strip closes under it.
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!bulkUndo) return;
@@ -57,7 +59,7 @@ export function useBulkUndo() {
     setBulkUndo(null);
   }
 
-  return { bulkUndo, runBulk, undoBulk };
+  return { bulkUndo, runBulk, undoBulk, triggerRef };
 }
 
 /** Assign or clear a whole contributor or a whole role in one go. */
@@ -67,12 +69,14 @@ export function BulkAssignMenu({
   translateUi,
   translateRole,
   runBulk,
+  triggerRef,
 }: {
   authors: Author[];
   graded: boolean;
   translateUi: UiTranslator;
   translateRole: RoleTranslator;
   runBulk: (action: () => void) => void;
+  triggerRef: RefObject<HTMLButtonElement | null>;
 }) {
   const t = useTranslations();
   const setAllAuthorScores = useContributionStore((s) => s.setAllAuthorScores);
@@ -90,7 +94,12 @@ export function BulkAssignMenu({
 
   return (
     <Popover>
-      <PopoverTrigger aria-label={t("bulkAssign")} title={t("bulkAssign")} className={ICON_TOOL_BUTTON}>
+      <PopoverTrigger
+        ref={triggerRef}
+        aria-label={t("bulkAssign")}
+        title={t("bulkAssign")}
+        className={ICON_TOOL_BUTTON}
+      >
         <ListChecks className="size-4" aria-hidden="true" />
       </PopoverTrigger>
       <PopoverContent align="end" aria-label={t("bulkAssign")} className="grid w-72 max-w-[calc(100vw-2rem)] gap-4">

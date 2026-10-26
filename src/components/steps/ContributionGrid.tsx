@@ -105,7 +105,7 @@ export function ContributionGrid() {
   // Handlers for the memoized cells, refreshed every render. The cells read
   // them through this ref, so a new closure never re-renders all 14×N of them.
   const cellApi = useRef<CellApi>(null);
-  const { bulkUndo, runBulk, undoBulk } = useBulkUndo();
+  const { bulkUndo, runBulk, undoBulk, triggerRef: bulkTriggerRef } = useBulkUndo();
   // Right-click level picker: direct selection for pointer users, so correcting
   // an overshoot never means cycling a value through None. The anchor is the
   // cursor point; the cell element takes focus back when the panel closes.
@@ -412,6 +412,7 @@ export function ContributionGrid() {
                 translateUi={translateUi}
                 translateRole={translateInterfaceRole}
                 runBulk={runBulk}
+                triggerRef={bulkTriggerRef}
               />
             )}
             {/* Icon-only: display settings, not a workflow action, so it earns
@@ -651,7 +652,14 @@ export function ContributionGrid() {
           })()}
 
         {/* Same bar a row removal gets. */}
-        {bulkUndo && <UndoBar message={t("bulkChangeApplied")} onUndo={undoBulk} className="mt-2" />}
+        {bulkUndo && (
+          <UndoBar
+            message={t("bulkChangeApplied")}
+            onUndo={undoBulk}
+            onFocusLost={() => bulkTriggerRef.current?.focus()}
+            className="mt-2"
+          />
+        )}
 
         {/* `w-0 min-w-full` keeps the legend out of the pane's max-content width,
           so switching modes cannot resize the whole column to fit a longer key. */}

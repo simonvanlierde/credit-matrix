@@ -105,6 +105,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Screen readers hear a removed contributor and a bulk change once, through the same live
     region as every other message. Before, the removal could go unheard and the bulk change was
     said twice. Each Undo button now says what it undoes.
+  - After Undo, focus goes to the contributor who came back, or to the bulk-assign button, instead
+    of the top of the page. The same happens when an Undo you are on runs out of time.
   - A grid change is read out once, without the statement's contributor and role counts after it.
   - Screen readers no longer read a contributor's initials before their name.
   - On the co-author page each role name is a heading, so a screen reader can jump from role to

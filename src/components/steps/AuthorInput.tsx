@@ -322,6 +322,9 @@ export function AuthorList() {
         <UndoBar
           message={t("removedContributor", { name: removed.author.name })}
           onUndo={undoRemove}
+          // Undone, the restored row's Remove button sits at this index; timed
+          // out or refused, the row that took its place does.
+          onFocusLost={() => setFocusAfterRemove(removed.index)}
           className="mt-3"
         />
       )}
