@@ -310,7 +310,7 @@ are cut, and the run counts how many. Every setting is in `encoder.Config` and t
 `--epochs`, `--batch-size`, `--learning-rate` and `--device cpu` change a run; on CPU, a run of 100
 articles takes about 15 minutes.
 
-On `oa-2026-10`, the run with the defaults (814,249 examples, 2 epochs at batch 32) took 84
+On `oa-2026-10`, the first run (814,249 examples, 2 epochs at batch 32, learning rate 5e-5) took 84
 minutes on one 24 GB GPU and used 12.7 GB of its memory; predicting the held-out set took under 4
 minutes. The first epoch scored best on dev (F1 0.903 at threshold 0.4); the second added nothing.
 1,176 training and 203 held-out statements were cut at 512 tokens. On the 27,874 held-out
@@ -410,6 +410,23 @@ larger than int8 and slower on CPU. Over three training seeds each, Ettin-68M an
 score the same on held-out (F1 0.899 to 0.900), and their label-set ranges overlap. Ettin-32M
 scored lower on the label set in its one run. Learning rates from 3e-5 to 1.5e-4, one epoch
 instead of two and four times the training articles all stayed within 0.002 of the spread between seeds.
+
+The 1,000-row label set (`oa-2026-10-set1000-opus-final-v2.csv`, three language-model labellers
+and a majority vote) is large enough to tell those settings apart on statements. Means over five
+seeds of Ettin-68M, on its 700 `statement_text` rows:
+
+| | seeds | F1 | F1 range | exact |
+| --- | --- | --- | --- | --- |
+| 2 epochs, 5e-5 | 5 | 0.905 | 0.885 to 0.918 | 0.617 |
+| 2 epochs, 5e-5, CC BY and CC0 only | 5 | 0.906 | 0.892 to 0.919 | 0.604 |
+| 1 epoch, 3e-5 | 5 | 0.914 | 0.910 to 0.917 | 0.637 |
+| 1 epoch, 3e-5, CC BY and CC0 only | 5 | 0.916 | 0.911 to 0.919 | 0.627 |
+| rule parser | | 0.907 | | 0.551 |
+
+One epoch at 3e-5 scores a little higher and varies far less between seeds, so it is the default
+now. Training only on CC BY and CC0 articles (`--open-licence-only`) costs nothing measurable, and
+those are the weights that can be published. With the same settings and three seeds each, Ettin-32M
+reaches F1 0.913 but exact 0.584, and Ettin-150M 0.905 and 0.617: neither beats Ettin-68M.
 
 ## Limits
 
