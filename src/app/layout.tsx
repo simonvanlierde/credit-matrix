@@ -128,7 +128,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 needs it and to symmetric gutters when it does not. */}
             {/* The save-failure notice sits in flow above the page, so on a
                 height-locked desk it shortens the workspace rather than covering it. */}
-            <main id="main-content" className="mx-auto pt-13 desk:flex desk:h-dvh desk:flex-col desk:overflow-hidden">
+            <main
+              id="main-content"
+              tabIndex={-1}
+              className="mx-auto outline-none pt-13 desk:flex desk:h-dvh desk:flex-col desk:overflow-hidden"
+            >
               <PersistenceStatus />
               <div className="desk:min-h-0 desk:flex-1">{children}</div>
             </main>

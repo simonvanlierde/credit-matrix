@@ -41,7 +41,7 @@ export function ColorPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent className="w-56">
+      <PopoverContent aria-label={label} className="w-56">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{label}</p>
         <div className="grid grid-cols-8 gap-1.5">
           {OKABE_ITO.map((hex) => {

@@ -58,6 +58,22 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
 
 The [assurance case](docs/assurance-case.md) gives the threat model and the argument in full.
 
+## Verifying a release
+
+The release workflow publishes the `credit-matrix` package with npm provenance, which links each
+version to the GitHub Actions run that built it ([how releases work](docs/deploy.md#the-npm-package)).
+The workflow makes no separate GitHub attestation for the tarball, so `gh attestation verify`
+finds nothing for it. To check an install, run this in your project:
+
+```sh
+npm audit signatures
+```
+
+It checks the registry signature and the provenance of every installed package. For a good
+`credit-matrix` it prints `verified registry signatures` and `verified attestations` lines with
+no `invalid` or `missing` ones. For the tarball itself, `npm view credit-matrix dist.attestations`
+shows the provenance record.
+
 ## Scope
 
 In scope:

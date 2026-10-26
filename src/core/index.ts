@@ -30,7 +30,7 @@ export type { CreditRoleName } from "./credit-roles";
 export { CREDIT_ROLES, getRoleByName } from "./credit-roles";
 export { fromCsv, toCsv } from "./export/csv";
 export type { HeatmapSvgOptions } from "./export/heatmap-svg";
-export { buildHeatmapSvg } from "./export/heatmap-svg";
+export { buildHeatmapSvg, heatmapDescription } from "./export/heatmap-svg";
 export { fromJson, NewerVersionError, toJson } from "./export/json";
 export { toMarkdown } from "./export/markdown";
 export { fromTenzing, isTenzing, toTenzing } from "./export/tenzing";

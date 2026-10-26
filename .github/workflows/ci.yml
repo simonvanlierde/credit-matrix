@@ -258,12 +258,15 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           MESSAGE: PR ${{ github.event.pull_request.number }} at ${{ github.event.pull_request.head.sha }}
+        # pipefail: the default shell takes the pipe's status from tee, so a
+        # refused upload would otherwise pass.
         run: |
+          set -o pipefail
           pnpm exec wrangler versions upload --message "$MESSAGE" | tee upload.log
           {
             echo "### Preview"
             url=$(grep -Eo 'https://[^ ]+' upload.log | grep -i 'preview' | head -n 1 || true)
-            if [ -n "$url" ]; then echo "$url"; else echo "Version uploaded, but wrangler printed no preview URL. Enable Preview URLs for the Worker in the dashboard."; fi
+            if [ -n "$url" ]; then echo "$url"; else echo "Version uploaded, but wrangler printed no preview URL. Check preview_urls and workers_dev in wrangler.jsonc."; fi
           } >> "$GITHUB_STEP_SUMMARY"
 
   # Provenance for the exact files the deploy job ships. Kept apart from

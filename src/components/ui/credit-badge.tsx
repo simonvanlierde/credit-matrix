@@ -55,7 +55,7 @@ export function CreditBadge({ className }: { className?: string }) {
           {t("getCreditBadge")}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-4">
+      <PopoverContent aria-label={t("creditBadge")} className="w-72 p-4">
         <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
           {t("creditBadge")}
         </p>

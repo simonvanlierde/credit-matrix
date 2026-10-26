@@ -1,12 +1,7 @@
-// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
-import { existsSync, readFileSync } from "node:fs";
-// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
-import path from "node:path";
-// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
-import process from "node:process";
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { PERSIST_KEY } from "../src/store/persist-meta";
-import { asReturningVisitor, scan, settleMotion } from "./helpers";
+import { asReturningVisitor, elementBundleBuilt, openElementHost, scan, settleMotion } from "./helpers";
 
 /**
  * Automated accessibility scans. axe-core catches a subset of WCAG issues
@@ -92,6 +87,30 @@ test.describe("Accessibility (axe-core)", () => {
     // a Radix radiogroup control is covered by the segmented-control test below.
   });
 
+  test("every opened popover panel has an accessible name", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Import" }).click();
+    await page.locator("#import-text").fill("Jane Smith\nBob White");
+    await page.getByRole("button", { name: "Import data" }).click();
+    const panel = page.locator("[data-radix-popper-content-wrapper] [role=dialog]");
+    for (const name of [
+      "About this app",
+      "Language settings",
+      "Bulk assign",
+      "Heatmap options",
+      "Actions for Jane Smith",
+      "Conceptualization",
+    ]) {
+      await page.getByRole("button", { name, exact: true }).first().click();
+      await expect(panel).toBeVisible();
+      // best-practice rule, so the wcag tag filter in scan() skips it.
+      const results = await new AxeBuilder({ page }).withRules(["aria-dialog-name"]).analyze();
+      expect(results.violations, name).toEqual([]);
+      await page.keyboard.press("Escape");
+      await expect(panel).toBeHidden();
+    }
+  });
+
   /**
    * Below `lg` the header nav is hidden and the brand lockup becomes the only
    * route to "How it works" and "About". Every other header assertion in the
@@ -106,7 +125,7 @@ test.describe("Accessibility (axe-core)", () => {
 
     await page.getByRole("heading", { name: "CRediT Matrix" }).getByRole("button").click();
     await expect(page.getByRole("button", { name: "How it works" })).toBeVisible();
-    await expect(page.getByText("Acknowledgements")).toBeVisible();
+    await expect(page.getByRole("link", { name: "About, citing and privacy" })).toBeVisible();
 
     const results = await scan(page);
     expect(results.violations).toEqual([]);
@@ -125,14 +144,14 @@ test.describe("Accessibility (axe-core)", () => {
     const dialog = page.locator("dialog#getting-started");
     await dialog.getByRole("button", { name: "About this app" }).click();
 
-    const panel = page.getByText("Acknowledgements");
+    const panel = page.getByRole("link", { name: "About, citing and privacy" });
     await expect(panel).toBeVisible();
     const box = await panel.boundingBox();
-    const topmost = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.textContent ?? null, [
-      (box?.x ?? 0) + 2,
-      (box?.y ?? 0) + 2,
-    ] as [number, number]);
-    expect(topmost).toBe("Acknowledgements");
+    const topmost = await page.evaluate(
+      ([x, y]) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("href") ?? null,
+      [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2] as [number, number],
+    );
+    expect(topmost).toBe("/about");
 
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
@@ -149,6 +168,20 @@ test.describe("Accessibility (axe-core)", () => {
     const results = await scan(page);
     expect(results.violations).toEqual([]);
   });
+
+  for (const route of ["/about", "/accessibility"]) {
+    test(`${route} has no detectable violations, light, dark and on a phone`, async ({ page }) => {
+      await page.goto(route);
+      await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+      expect((await scan(page)).violations).toEqual([]);
+      await page.emulateMedia({ colorScheme: "dark" });
+      expect((await scan(page)).violations).toEqual([]);
+      await page.setViewportSize({ width: 320, height: 640 });
+      expect((await scan(page)).violations).toEqual([]);
+      // Long links (the DOI, the PDF of EN 301 549) wrap instead of widening the page.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+    });
+  }
 
   test("segmented control is keyboard-operable (radiogroup + arrow keys)", async ({ page }) => {
     await page.goto("/");
@@ -393,43 +426,10 @@ test.describe("Accessibility (axe-core)", () => {
   });
 });
 
-/**
- * The <credit-matrix> element from the built package, on a bare page outside the app. Its
- * bundle imports `zod/mini` by bare name, so the page maps that to the installed copy. Every
- * request goes to a made-up origin and is answered here; the app's server is not used.
- */
+/** The <credit-matrix> element from the built package, on a bare page outside the app. */
 test.describe("<credit-matrix> element (axe-core)", () => {
-  // Playwright resolves testDir from the repo root, so cwd is the repo root.
-  const repoRoot = process.cwd();
-  const bundle = path.join(repoRoot, "src/core/dist/element.js");
-  const contributions = readFileSync(path.join(repoRoot, "e2e/fixtures/element-contributions.json"), "utf8");
-
-  const hostPage = (background: string, color: string) => `<!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Element host</title>
-<script type="importmap">{"imports":{"zod/mini":"/zod/mini/index.js"}}</script>
-<style>body{background:${background};color:${color};margin:16px}</style></head>
-<body><main><h1>Beiträge</h1><credit-matrix src="/contributions.json" format="by-author"></credit-matrix></main>
-<script type="module" src="/dist/element.js"></script></body></html>`;
-
-  async function openHost(page: Page, background: string, color: string) {
-    await page.route("http://element.test/**", (route) => {
-      const pathname = new URL(route.request().url()).pathname;
-      if (pathname === "/") return route.fulfill({ contentType: "text/html", body: hostPage(background, color) });
-      if (pathname === "/contributions.json")
-        return route.fulfill({ contentType: "application/json", body: contributions });
-      if (pathname.startsWith("/dist/"))
-        return route.fulfill({ path: path.join(repoRoot, "src/core", pathname), contentType: "text/javascript" });
-      if (pathname.startsWith("/zod/"))
-        return route.fulfill({ path: path.join(repoRoot, "node_modules", pathname), contentType: "text/javascript" });
-      return route.fulfill({ status: 404, body: "" });
-    });
-    await page.goto("http://element.test/");
-    await expect(page.locator("credit-matrix figure p").first()).toBeVisible();
-  }
-
   test.beforeEach(() => {
-    // CI builds the package before the tests (playwright.config.ts); locally it may not exist yet.
-    test.skip(!(process.env.CI || existsSync(bundle)), "Build the package first: pnpm --filter credit-matrix build");
+    test.skip(!elementBundleBuilt(), "Build the package first: pnpm --filter credit-matrix build");
   });
 
   for (const [name, background, color] of [
@@ -437,7 +437,7 @@ test.describe("<credit-matrix> element (axe-core)", () => {
     ["dark", "#111111", "#eeeeee"],
   ] as const) {
     test(`element on a ${name} page has no detectable violations`, async ({ page }) => {
-      await openHost(page, background, color);
+      await openElementHost(page, background, color);
       expect((await scan(page)).violations).toEqual([]);
       // The page is German, so the figure is too, and the table gives each level in words.
       await expect(page.locator("credit-matrix figure")).toHaveAttribute("lang", "de");
@@ -449,7 +449,7 @@ test.describe("<credit-matrix> element (axe-core)", () => {
 
   test("element on a 320px screen scrolls the heatmap instead of shrinking it", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
-    await openHost(page, "#ffffff", "#111111");
+    await openElementHost(page, "#ffffff", "#111111");
     expect((await scan(page)).violations).toEqual([]);
     const svg = page.locator("credit-matrix svg");
     // Drawn at its own width (plus its 1px border on each side), wider than the 256px card.

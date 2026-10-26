@@ -3,10 +3,12 @@
 #
 # CSP: a directive does not inherit from `default-src` when absent, it is
 # simply unrestricted, so `default-src 'self'` is the base.
-# - script-src: scripts/postbuild.mjs replaces 'unsafe-inline' with the hash
-#   of each inline script the export emits (Next's bootstrap), so the deployed
-#   policy allows exactly those. 'unsafe-inline' only survives in `next dev`,
-#   which does not read this file anyway.
+# - script-src: allows inline script here, but scripts/postbuild.mjs gives
+#   every exported page a <meta> CSP whose script-src lists the hashes of that
+#   page's own inline scripts (Next's bootstrap). The browser enforces both
+#   policies, so only those scripts run. The hashes stay out of this file
+#   because Cloudflare refuses a line over 2000 characters, and postbuild
+#   fails the build if one is.
 # - img-src needs blob:/data: for the heatmap PNG (canvas -> createObjectURL).
 # - connect-src names the lookup APIs the browser calls directly
 #   (ORCID, Crossref, and DataCite for DOIs Crossref does not hold), and

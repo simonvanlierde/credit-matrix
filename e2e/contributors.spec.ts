@@ -74,7 +74,7 @@ test.describe("the contributor list", () => {
     await expect(row.getByText("You", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "Remove Alice Smith" }).click();
-    await page.getByRole("status").filter({ hasText: "Removed Alice Smith" }).getByRole("button").click();
+    await page.getByRole("group", { name: "Removed Alice Smith" }).getByRole("button").click();
     await expect(row.getByText("You", { exact: true })).toBeVisible();
   });
 
@@ -86,10 +86,10 @@ test.describe("the contributor list", () => {
     await page.getByRole("button", { name: "Assign every role", exact: true }).click();
 
     await page.getByRole("button", { name: "Remove Bob Jones" }).click();
-    await page.getByRole("status").filter({ hasText: "Bulk change applied." }).getByRole("button").click();
+    await page.getByRole("group", { name: "Bulk change applied." }).getByRole("button").click();
     await expect(page.getByRole("button", { name: "Remove Bob Jones" })).toBeVisible();
 
-    const removedBar = page.getByRole("status").filter({ hasText: "Removed Bob Jones" });
+    const removedBar = page.getByRole("group", { name: "Removed Bob Jones" });
     await removedBar.getByRole("button").click();
     await expect(removedBar).toBeHidden();
     // An announcement reaches the live region on the frame after the click.
