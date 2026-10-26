@@ -158,15 +158,14 @@ export function AuthorList() {
       // mark; undo brings both back.
       const { asks, selfId } = useContributionStore.getState();
       removeAuthor(author.id);
-      // No announce() here: the undo bar below mounts as role="status" with the
-      // same fact, and saying it twice reads as an echo.
+      announce(t("removedContributor", { name: author.name }));
       setRemoved({ author, index, ask: asks[author.id], wasSelf: selfId === author.id });
       // The button that was just activated is unmounting, which drops focus to
       // <body> and sends a keyboard user back to the top of the document. Hand
       // focus to the row that takes its place instead.
       setFocusAfterRemove(index);
     },
-    [removeAuthor],
+    [removeAuthor, t],
   );
 
   function undoRemove() {

@@ -26,7 +26,7 @@ test.describe("behaviours that must not trap or hide", () => {
     await loadSample(page);
     await page.getByRole("button", { name: "Bulk assign" }).click();
     await page.getByRole("button", { name: "Assign every role", exact: true }).click();
-    const bar = page.getByRole("status").filter({ hasText: "Bulk change applied." }).getByRole("button");
+    const bar = page.getByRole("group", { name: "Bulk change applied." }).getByRole("button");
     await expect(bar).toBeVisible();
     await page.clock.runFor(20_000);
     await expect(bar).toBeVisible();
