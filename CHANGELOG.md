@@ -100,6 +100,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Updated build and test tools past published advisories: `fast-uri`, `undici` and, in the census,
   `filelock` and `setuptools`. They are development dependencies only. The app and the
   `credit-matrix` package do not ship them.
+- Updated `qs`, a test-tool dependency, past three published advisories. It is a development
+  dependency only.
 
 ## [0.8.1] - 2026-10-13
 

@@ -16,6 +16,10 @@ overrides:
   # miniflare (via wrangler) pins undici 7.29.1, which has three advisories
   # (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, GHSA-xjj6-f33q-929c). Drop once wrangler moves it.
   "miniflare>undici": "7.30.1"
+  # typed-rest-client 2.3.x (via @stryker-mutator/core, which pins ~2.3.0) pins qs 6.15.1, which has
+  # three advisories (GHSA-4mjr-xmp4-gh2g, GHSA-q8mj-m7cp-5q26, GHSA-x5fp-wj9c-mxmx). Drop once
+  # stryker moves to typed-rest-client 3.
+  "typed-rest-client>qs": "^6.16.0"
 
 # Fixed upstream in @stryker-mutator/vitest-runner 10.1.0 (stryker-js #6214, #6269; 10.1.1 is the re-release on npm). Drop this patch, its Renovate rule and the CONTRIBUTING sentence with the bump to 10.1.1, installable from 2026-10-27.
 patchedDependencies:
