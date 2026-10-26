@@ -3,7 +3,8 @@
 This is the argument that CRediT Matrix meets its security needs: what could be harmed, where the
 trust boundaries are, which threats I considered and how the code counters each one, and what is
 left. Every claim points to the file or decision record that backs it. Where I could not check a
-claim in this repository, the text says "not verified".
+claim in this repository, the text says "not verified". Where I checked a claim by hand rather than
+with a test, the text gives the date.
 
 To report a problem, see [SECURITY.md](../SECURITY.md).
 
@@ -26,7 +27,9 @@ What could be harmed:
 - **The npm package.** Other tools import `credit-matrix` and run its CLI
   ([`.github/workflows/release-core.yml`](../.github/workflows/release-core.yml)).
 - **The deployed site.** The static files the live site serves. Tampered files would run in every
-  visitor's browser.
+  visitor's browser. A service worker ([`public/sw.js`](../public/sw.js)) keeps a copy of the last
+  build a visitor loaded and serves it when the network is down. Online, a new build takes over on
+  the next visit.
 - **The census outputs.** [`src/data/field-norms.json`](../src/data/field-norms.json), which the app
   shows as field norms, and the snapshot manifests and hashes that pin what the census read
   ([census README](../census/README.md#what-makes-a-run-reproducible)).
@@ -86,11 +89,14 @@ There are no accounts, passwords or server-side drafts to protect, because there
   [`src/core/author.ts`](../src/core/author.ts)). Share links clamp scores to 0 to 100.
 - **XML.** The app parses JATS with the browser's own `DOMParser` and reads only element text and
   attributes from it ([`src/core/export/xml-import.ts`](../src/core/export/xml-import.ts)). The code
-  does not reject a `DOCTYPE` and does not configure entity handling. What happens to entities is up
-  to the browser's parser. Browsers do not load external entities for `DOMParser`, and their XML
-  parsers limit internal entity expansion, but this is **not verified** here: no test feeds the
-  importer an entity or a DOCTYPE. The CLI parses with linkedom instead, after a tag-balance check
-  ([`src/core/cli.ts`](../src/core/cli.ts)); how linkedom treats entities is **not verified**.
+  does not reject a `DOCTYPE` and does not configure entity handling. Checked by hand on 2026-10-25
+  in Chromium 156, Firefox 157 and WebKit 27.2: `DOMParser` does not load external (`SYSTEM`)
+  entities. It expands internal entities declared in the file. It refuses a nested "billion laughs"
+  expansion with a parse error, which the importer reports. The CLI parses with linkedom instead,
+  after a tag-balance check ([`src/core/cli.ts`](../src/core/cli.ts)). linkedom 0.18.13 ignores the
+  `DOCTYPE` and leaves each entity reference as literal text (`&x;`). One test fixture has a
+  `DOCTYPE` with an external DTD reference (`export-jats.xml`). No test feeds the importer an entity
+  declaration, so neither behaviour is pinned.
 - **Testing.** Property tests feed random strings to `importAny` and random JSON to the share
   payload reader, and require a result or a documented error
   ([`src/core/__tests__/properties.test.ts`](../src/core/__tests__/properties.test.ts)).
@@ -142,10 +148,12 @@ There are no accounts, passwords or server-side drafts to protect, because there
   `exclude-newer = "7 days"` ([`census/pyproject.toml`](../census/pyproject.toml)).
 - **Pinned actions.** Every third-party action is pinned by commit digest, and Renovate keeps the
   pins current (`config:best-practices` in [`renovate.json5`](../renovate.json5)).
-- **Narrow CI rights.** Workflows default to `contents: read`. Only the jobs that need an OIDC token
-  get one, and those jobs run no project code: `attest` in
-  [`ci.yml`](../.github/workflows/ci.yml) and `publish` in
-  [`release-core.yml`](../.github/workflows/release-core.yml). Cloudflare secrets live in the
+- **Narrow CI rights.** Workflows default to `contents: read`. Four jobs can request an OIDC token.
+  `attest` in [`ci.yml`](../.github/workflows/ci.yml), `publish` in
+  [`release-core.yml`](../.github/workflows/release-core.yml) and the Scorecard job in
+  [`scorecard.yml`](../.github/workflows/scorecard.yml) run no project code. The benchmark job in
+  [`codspeed.yml`](../.github/workflows/codspeed.yml) does: it runs the census tests with a token
+  that CodSpeed uses to authenticate the run. Fork pull requests get no token. Cloudflare secrets live in the
   `production` and `preview` environments, and fork pull requests never get them
   ([docs/deploy.md](deploy.md)).
 - **Provenance.** CI attests build provenance for each deployed file. The npm package is published
@@ -184,10 +192,10 @@ There are no accounts, passwords or server-side drafts to protect, because there
 
 | Principle | Where it shows |
 | --- | --- |
-| Economy of mechanism | No server, no accounts, no database ([ADR 0002](adr/0002-no-accounts-or-server-side-storage.md), [ADR 0003](adr/0003-static-export.md)). `src/core` has one runtime dependency, `zod` ([docs/architecture.md](architecture.md)) |
+| Economy of mechanism | No server, no accounts, no database ([ADR 0002](adr/0002-no-accounts-or-server-side-storage.md), [ADR 0003](adr/0003-static-export.md)). `src/core` has one runtime dependency, `zod` ([docs/architecture.md](architecture.md)). The CLI bundles `zod` and linkedom into `dist/cli.js` ([`tsdown.config.ts`](../src/core/tsdown.config.ts)), so a fix to either reaches CLI users only through a new `credit-matrix` release |
 | Minimal attack surface | No code runs per request, so there is no server to attack ([ADR 0003](adr/0003-static-export.md)). The CSP allows five outside hosts for `connect-src` ([`public/_headers`](../public/_headers)) |
 | Fail-safe defaults | A link that does not decode opens the normal app ([`share-link.ts`](../src/core/share-link.ts)). A proof that does not verify is dropped ([`orcid-proof.ts`](../src/core/orcid-proof.ts)). The build fails rather than ship a CSP that blocks or allows the wrong scripts ([`postbuild.mjs`](../scripts/postbuild.mjs)) |
-| Least privilege | CI jobs start at `contents: read`. OIDC and secrets sit only in the jobs that need them, apart from project code ([`ci.yml`](../.github/workflows/ci.yml), [`release-core.yml`](../.github/workflows/release-core.yml)). The page denies camera, microphone and geolocation (`Permissions-Policy`) |
+| Least privilege | CI jobs start at `contents: read`. OIDC and secrets sit only in the jobs that need them, and only the CodSpeed benchmarks run project code beside a token ([`ci.yml`](../.github/workflows/ci.yml), [`release-core.yml`](../.github/workflows/release-core.yml)). The page denies camera, microphone and geolocation (`Permissions-Policy`) |
 | Complete mediation | The import dialog and the CLI read through `importAny`, and links through `decodeShareHash`. Rosters pass through `normalizeRoster` with its limits ([`import.ts`](../src/core/import.ts), [`parse-authors.ts`](../src/core/parse-authors.ts)). The lead's app re-checks a proof on every import instead of trusting a stored flag ([`ask.ts`](../src/core/ask.ts)) |
 | Separation of privilege | Releases need a `v*` tag and the `npm-release` environment. Deploys need `main` and the `production` environment ([GOVERNANCE.md](../GOVERNANCE.md), [docs/deploy.md](deploy.md)) |
 | Open design | The code, the CSP and the client id are public. The ORCID client id is public by design, because the implicit flow has no secret ([`orcid-proof.ts`](../src/core/orcid-proof.ts)) |
@@ -196,7 +204,9 @@ There are no accounts, passwords or server-side drafts to protect, because there
 ## Known weaknesses and residual risk
 
 - **Analytics script.** The CSP allows Cloudflare's Web Analytics script. Like any script on the
-  page, it can read a share link's fragment before the app clears it ([SECURITY.md](../SECURITY.md#security-model)).
+  page, it can read a share link's fragment, and the ORCID `id_token` that sign-in returns in the
+  fragment, before the app clears them ([SECURITY.md](../SECURITY.md#security-model)). A token signs
+  one exact answer, so a copy of it proves nothing else.
 - **`style-src 'unsafe-inline'`.** Kept for React style attributes
   ([`scripts/postbuild.mjs`](../scripts/postbuild.mjs)). Injected markup could still apply styles.
 - **No CSP in development.** `next dev` does not read `public/_headers`
@@ -214,13 +224,23 @@ There are no accounts, passwords or server-side drafts to protect, because there
   exact answer it signed.
 - **Drafts are not encrypted at rest.** Anyone with access to the browser profile can read them
   ([SECURITY.md](../SECURITY.md#security-model)).
-- **XML entity handling** in the browser and in linkedom is **not verified** (see
-  [Malicious imports](#malicious-imports)).
+- **XML entities.** Browsers expand internal entities and the CLI does not, so one file can import
+  different names in the app and in the CLI. Checked by hand on 2026-10-25: in Chromium, a file
+  under the 1 MB cap that repeats one large internal entity blocks the page for about 13 seconds
+  before the parse fails. Firefox and WebKit stop within half a second. Only a file the user picks
+  reaches the parser, so the cost is a frozen tab, not lost data. See
+  [Malicious imports](#malicious-imports).
 - **The CLI has no size cap.** `credit-matrix` reads a whole file or stdin into memory
   ([`src/core/cli.ts`](../src/core/cli.ts)). It reads local input the user chose, so the risk is low.
 - **Automerged dependency updates deploy.** Renovate merges minor and patch updates once checks pass,
   and a merge to `main` deploys ([`renovate.json5`](../renovate.json5)). The 7-day wait is the main
-  guard against a hijacked release.
+  guard against a hijacked release. The deploy step runs `wrangler` from the lockfile with the
+  Cloudflare API token in its environment ([`ci.yml`](../.github/workflows/ci.yml)), so a hijacked
+  `wrangler` or one of its dependencies could take that token.
+- **Benchmarks hold an OIDC token.** The CodSpeed job runs census code from same-repo branches with
+  an OIDC token for this repository ([`codspeed.yml`](../.github/workflows/codspeed.yml)). npm
+  publishing and Cloudflare do not accept it: npm checks the release workflow and environment, and
+  Cloudflare uses a stored secret.
 - **One maintainer.** One person holds every key ([GOVERNANCE.md](../GOVERNANCE.md)), so no second
   person reviews changes, including security fixes.
 - **No rate limiting of our own.** Each visitor's lookups count against the outside services' limits
