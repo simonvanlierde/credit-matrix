@@ -197,6 +197,84 @@ describe("buildHeatmapSvg", () => {
     expect(svgWidth(names)).toBeGreaterThan(svgWidth(initials));
     expect(firstCellX(names)).toBeGreaterThan(firstCellX(initials));
   });
+
+  describe("canvas geometry", () => {
+    // Two authors, three contributed roles. The widest label is "Writing – review & editing"
+    // (26 characters), which also happens to be the last role and so the last top label when transposed.
+    const DIAG = Math.SQRT1_2;
+    const WIDE_ROLE = 26 * 0.62; // em units; times the font size gives the label width
+
+    function geometry(svg: string) {
+      const head = svg.match(/<svg [^>]*width="([\d.]+)" height="([\d.]+)" viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+      const border = svg.match(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"[^>]*fill="none"/);
+      if (!(head && border)) throw new Error("no svg header or grid border");
+      const [w, h, vw, vh, bx, by, bw, bh] = [...head.slice(1), ...border.slice(1)].map(Number) as [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+      ];
+      return { w, h, vw, vh, bx, by, bw, bh };
+    }
+
+    it("sizes the canvas to its labels, grid and wrapped legend", () => {
+      const g = geometry(buildHeatmapSvg(authorsWithScores()));
+      // left band = widest role label at 10.5px + 6 gap; 24 padding each side.
+      const leftBand = WIDE_ROLE * 10.5 + 6;
+      expect(g.w).toBeCloseTo(24 * 2 + leftBand + (2 * 24 - 2), 6);
+      // top band = "JS" at 11px, rotated 45 degrees, + 6 gap. Grid is 3 rows tall, then an
+      // 18px gap, a legend wrapped to two rows (14px swatch + 20px pitch) and the bottom padding.
+      const topBand = 2 * 11 * 0.62 * DIAG + 6;
+      expect(g.h).toBeCloseTo(24 + topBand + (3 * 24 - 2) + 18 + (14 + 20) + 24, 6);
+      expect([g.vw, g.vh]).toEqual([g.w, g.h]);
+      // The border sits one pixel outside the grid, which starts after the padding and labels.
+      expect(g.bx).toBeCloseTo(24 + leftBand - 1, 6);
+      expect(g.by).toBeCloseTo(24 + topBand - 1, 6);
+      expect([g.bw, g.bh]).toEqual([2 * 24 - 2 + 2, 3 * 24 - 2 + 2]);
+    });
+
+    it("swaps the grid axes when transposed, and lets the last top label overhang the right edge", () => {
+      const g = geometry(buildHeatmapSvg(authorsWithScores(), { transpose: true }));
+      const leftBand = 2 * 10.5 * 0.62 + 6; // "JS" now runs down the left
+      const topBand = WIDE_ROLE * 11 * DIAG + 6; // roles are rotated across the top
+      const overhang = WIDE_ROLE * 11 * DIAG - 22 / 2; // last label climbs past the half-cell it starts from
+      expect(g.w).toBeCloseTo(24 * 2 + leftBand + (3 * 24 - 2) + overhang, 6);
+      expect(g.h).toBeCloseTo(24 + topBand + (2 * 24 - 2) + 18 + (14 + 20) + 24, 6);
+      expect([g.vw, g.vh]).toEqual([g.w, g.h]);
+      expect([g.bw, g.bh]).toEqual([3 * 24, 2 * 24]);
+      expect(g.bx).toBeCloseTo(24 + leftBand - 1, 6);
+      expect(g.by).toBeCloseTo(24 + topBand - 1, 6);
+    });
+
+    it("keeps the legend on one row when its keys fit, and on two when they do not", () => {
+      const levels = geometry(buildHeatmapSvg(authorsWithScores()));
+      const flat = geometry(buildHeatmapSvg(authorsWithScores(), { showLevels: false }));
+      // Same grid, so the height differs by one legend row (20px pitch).
+      expect(levels.h - flat.h).toBeCloseTo(20, 6);
+      expect(flat.w).toBeCloseTo(levels.w, 6);
+    });
+
+    it("scales every dimension linearly", () => {
+      const one = geometry(buildHeatmapSvg(authorsWithScores()));
+      const two = geometry(buildHeatmapSvg(authorsWithScores(), { scale: 2 }));
+      for (const key of ["w", "h", "vw", "vh"] as const) {
+        expect(two[key]).toBeCloseTo(one[key] * 2, 6);
+      }
+      // The border sits a fixed 1px outside the grid, which does not scale.
+      expect(two.bx + 1).toBeCloseTo((one.bx + 1) * 2, 6);
+      expect(two.by + 1).toBeCloseTo((one.by + 1) * 2, 6);
+      expect([two.bw, two.bh]).toEqual([94, 142]);
+    });
+
+    it("renders a fixed-size placeholder, scaled, when nothing is contributed", () => {
+      const svg = buildHeatmapSvg(parseAuthorText("Alice Brown"), { scale: 2 });
+      expect(svg).toContain('width="640" height="112" viewBox="0 0 640 112"');
+    });
+  });
 });
 
 /** Distinct y positions among the legend swatches (14×14 rects). */
