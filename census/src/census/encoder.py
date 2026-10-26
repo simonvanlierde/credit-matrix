@@ -44,8 +44,8 @@ class Config:
     """One statement group in this many goes to dev, carved from train; held-out is never looked at."""
     max_length: int = 512
     batch_size: int = 32
-    epochs: int = 2
-    learning_rate: float = 5e-5
+    epochs: int = 1
+    learning_rate: float = 3e-5
     weight_decay: float = 0.01
     warmup_share: float = 0.06
     seed: int = 20261018
