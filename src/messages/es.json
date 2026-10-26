@@ -481,5 +481,10 @@
   "censusParser": "Versión del analizador",
   "censusOpenAlex": "Fuentes de OpenAlex",
   "censusDownload": "Descargar los recuentos (JSON)",
-  "censusSourceLink": "Cómo funciona el censo"
+  "censusHowTitle": "Cómo lee el censo las declaraciones",
+  "censusHowRules": "Un analizador basado en reglas lee cada artículo. Si la editorial etiqueta los roles de cada autor en el XML JATS, toma las etiquetas. Si no, lee la declaración en texto libre, cláusula por cláusula, y empareja autores con roles. Solo cuentan los términos de CRediT, así que «A.B. conceived the study» no da ningún rol.",
+  "censusHowModel": "Un codificador ajustado, Ettin-68M, también lee cada declaración en texto libre. Es el modelo de navegador del censo, hecho para funcionar en un navegador web. Encuentra más roles etiquetados que las reglas, con una precisión parecida, pero también asigna roles a declaraciones narrativas que no nombran ninguno. Los recuentos de esta página proceden solo del analizador de reglas.",
+  "censusHowCaveat": "Ambos se miden contra los roles que etiquetan las editoriales, y esas etiquetas no son una referencia verificada. Una etiqueta puede nombrar un rol que la declaración nunca da. En 200 artículos de MDPI en los que el analizador de reglas y las etiquetas discrepan, un modelo de lenguaje juzgó erróneas las etiquetas en 192 y solo el analizador en 6. Así que una puntuación F1 frente a las etiquetas mide el acuerdo con ellas y subestima la exactitud, sobre todo en MDPI.",
+  "censusHowCode": "El código del censo",
+  "censusHowModelCard": "La ficha del modelo"
 }
