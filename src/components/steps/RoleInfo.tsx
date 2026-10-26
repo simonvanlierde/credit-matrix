@@ -1,7 +1,7 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
 import { useTranslations } from "use-intl";
+import { ExternalLink } from "@/components/ui/external-link";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { CREDIT_ROLES } from "@/core";
 import type { RoleDescriber, RoleTranslator } from "@/core/i18n";
@@ -47,16 +47,9 @@ export function RoleInfo({
         className="max-w-xs text-xs leading-relaxed text-on-surface-variant"
       >
         <strong className="text-on-surface">{name}.</strong> {describeRole(role.name)}{" "}
-        <a
-          href={role.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 text-primary hover:underline whitespace-nowrap"
-        >
+        <ExternalLink href={role.url} className="gap-0.5 text-primary hover:underline whitespace-nowrap">
           {t("fullDefinition")}
-          <ExternalLink className="h-3 w-3" aria-hidden="true" />
-          <span className="sr-only">{t("opensInNewTab")}</span>
-        </a>
+        </ExternalLink>
       </PopoverContent>
     </Popover>
   );

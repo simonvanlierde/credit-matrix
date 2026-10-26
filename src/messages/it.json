@@ -493,5 +493,10 @@
   "censusParser": "Versione del parser",
   "censusOpenAlex": "Fonti OpenAlex",
   "censusDownload": "Scarica i conteggi (JSON)",
-  "censusSourceLink": "Come funziona il censimento"
+  "censusHowTitle": "Come il censimento legge le dichiarazioni",
+  "censusHowRules": "Un parser a regole legge ogni articolo. Se l’editore etichetta i ruoli di ogni autore nell’XML JATS, prende le etichette. Altrimenti legge la dichiarazione in testo libero, frase per frase, e abbina autori e ruoli. Contano solo i termini CRediT, quindi «A.B. conceived the study» non dà alcun ruolo.",
+  "censusHowModel": "Un encoder affinato, Ettin-68M, legge anche ogni dichiarazione in testo libero. È il modello per browser del censimento, fatto per funzionare in un browser web. Trova più ruoli etichettati delle regole, con una precisione simile, ma assegna ruoli anche a dichiarazioni narrative che non ne nominano nessuno. I conteggi di questa pagina vengono solo dal parser a regole.",
+  "censusHowCaveat": "Entrambi sono valutati rispetto ai ruoli che gli editori etichettano, e queste etichette non sono un riferimento verificato. Un’etichetta può nominare un ruolo che la dichiarazione non dà mai. Su 200 articoli MDPI in cui il parser a regole e le etichette non concordano, un modello linguistico ha giudicato sbagliate le etichette in 192 casi e il solo parser in 6. Quindi un punteggio F1 rispetto alle etichette misura l’accordo con esse e sottostima l’accuratezza, soprattutto per MDPI.",
+  "censusHowCode": "Il codice del censimento",
+  "censusHowModelCard": "La scheda del modello"
 }

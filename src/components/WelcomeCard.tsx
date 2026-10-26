@@ -1,9 +1,10 @@
 "use client";
 
-import { ExternalLink, Files, Fingerprint, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
+import { Files, Fingerprint, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { AboutPopover } from "@/components/AboutPopover";
+import { ExternalLink } from "@/components/ui/external-link";
 import { StepNumber } from "@/components/ui/step-number";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
 import { useHydrated } from "@/lib/use-hydrated";
@@ -190,26 +191,18 @@ export function WelcomeCard({ version }: { version: string }) {
             {/* The one thing this card never says: what the app itself is, and
                 what it is built on. */}
             <AboutPopover version={version} container={dialogEl} />
-            <a
+            <ExternalLink
               href="https://credit.niso.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+              className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
             >
               {t("fullCreditStandard")}
-              <ExternalLink className="h-3 w-3" aria-hidden="true" />
-              <span className="sr-only">{t("opensInNewTab")}</span>
-            </a>
-            <a
+            </ExternalLink>
+            <ExternalLink
               href="https://doi.org/10.5281/zenodo.18421449"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+              className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
             >
               {t("creditRolesExamples")}
-              <ExternalLink className="h-3 w-3" aria-hidden="true" />
-              <span className="sr-only">{t("opensInNewTab")}</span>
-            </a>
+            </ExternalLink>
           </span>
         </div>
       </div>

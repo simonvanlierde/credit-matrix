@@ -493,5 +493,10 @@
   "censusParser": "Parser-Version",
   "censusOpenAlex": "OpenAlex-Quellen",
   "censusDownload": "Zahlen herunterladen (JSON)",
-  "censusSourceLink": "Wie der Zensus funktioniert"
+  "censusHowTitle": "Wie der Zensus Erklärungen liest",
+  "censusHowRules": "Ein regelbasierter Parser liest jeden Artikel. Wo der Verlag die Rollen jeder Person im JATS-XML auszeichnet, übernimmt er die Auszeichnungen. Sonst liest er die Erklärung im Freitext Satzteil für Satzteil und ordnet Personen Rollen zu. Nur CRediT-Begriffe zählen, „A.B. conceived the study“ ergibt also keine Rollen.",
+  "censusHowModel": "Ein feinabgestimmter Encoder, Ettin-68M, liest außerdem jede Erklärung im Freitext. Er ist das Browsermodell des Zensus, gebaut für den Webbrowser. Er findet mehr der ausgezeichneten Rollen als die Regeln, bei etwa gleicher Präzision, vergibt aber auch Rollen an erzählende Erklärungen, die keine nennen. Die Zahlen auf dieser Seite stammen allein vom Parser mit Regeln.",
+  "censusHowCaveat": "Beide werden an den Rollen gemessen, die Verlage auszeichnen, und diese Auszeichnungen sind kein Goldstandard. Eine Auszeichnung kann eine Rolle nennen, die die Erklärung nie angibt. Bei 200 MDPI-Artikeln, in denen Parser und Auszeichnungen voneinander abweichen, hielt ein Sprachmodell die Auszeichnungen in 192 Fällen für falsch und den Parser allein in 6. Ein F1-Wert gegen die Auszeichnungen misst also die Übereinstimmung mit ihnen und unterschätzt die Genauigkeit, am stärksten bei MDPI.",
+  "censusHowCode": "Der Code des Zensus",
+  "censusHowModelCard": "Die Modellkarte"
 }

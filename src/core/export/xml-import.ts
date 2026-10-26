@@ -25,6 +25,11 @@ export interface XmlParser {
  * `DOMParser`; pass one where there is none, such as linkedom's in Node.
  */
 export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParser } = {}): Author[] {
+  // JATS4R exports never declare entities. Browsers expand them and linkedom does not, so the app
+  // and the CLI would read different names, and a nested expansion can freeze the tab.
+  if (/<!ENTITY/i.test(xmlString)) {
+    throw new Error("XML parse error: entity declarations are not supported.");
+  }
   if (!parser && typeof DOMParser === "undefined") {
     throw new Error("fromJats4rXml needs a DOMParser: pass { parser } where there is no global one.");
   }

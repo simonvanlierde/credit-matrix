@@ -1,8 +1,9 @@
 "use client";
 
-import { Accessibility, BookOpen, ChartLine, Code, ExternalLink } from "lucide-react";
+import { Accessibility, BookOpen, ChartLine, Code } from "lucide-react";
 import { useTranslations } from "use-intl";
 import { PRODUCT_NAME } from "@/components/BrandMark";
+import { ExternalLink } from "@/components/ui/external-link";
 
 /**
  * A short card on what the app is, linking to the pages that say more: the
@@ -35,17 +36,13 @@ export function AboutPanel({ version }: { version: string }) {
         <ChartLine className="size-4" aria-hidden="true" />
         {t("censusAboutLink")}
       </a>
-      <a
+      <ExternalLink
         href="https://github.com/simonvanlierde/credit-matrix"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+        className="gap-1.5 font-medium text-primary hover:underline"
       >
         <Code className="size-4" aria-hidden="true" />
         {t("sourceOnGitHub")}
-        <ExternalLink className="size-3" aria-hidden="true" />
-        <span className="sr-only">{t("opensInNewTab")}</span>
-      </a>
+      </ExternalLink>
     </>
   );
 }

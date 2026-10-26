@@ -8,6 +8,12 @@
     "indentStyle": "space",
     "lineWidth": 120
   },
+  "markdown": {
+    "formatter": { "enabled": false }
+  },
+  "yaml": {
+    "formatter": { "enabled": false }
+  },
   "linter": {
     "domains": {
       "next": "recommended",

@@ -92,6 +92,22 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
       vi.unstubAllGlobals();
     }
   });
+
+  // Browsers expand internal entities and linkedom leaves them as text, so the same file would
+  // import different names in the app and the CLI. A large expansion also freezes the tab.
+  const contrib = '<contrib contrib-type="author"><name><surname>&x;</surname></name></contrib>';
+  it.each([
+    ["an internal entity", `<!DOCTYPE article [<!ENTITY x "Smith">]><article>${contrib}</article>`],
+    ["a SYSTEM entity", `<!DOCTYPE article [<!ENTITY x SYSTEM "file:///etc/passwd">]><article>${contrib}</article>`],
+    [
+      "a billion-laughs expansion",
+      `<!DOCTYPE article [<!ENTITY a "lol"><!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">` +
+        `<!ENTITY x "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">]><article>${contrib}</article>`,
+    ],
+    ["a lower-case declaration", `<!DOCTYPE article [<!entity x "Smith">]><article>${contrib}</article>`],
+  ])("refuses %s", (_, xml) => {
+    expect(() => fromJats4rXml(xml)).toThrow(/^XML parse error: entity declarations are not supported/);
+  });
 });
 
 describe("toJats4rXml", () => {
