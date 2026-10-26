@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, ExternalLink, Info } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { BarList, LineChart, type Point, TableToggle } from "@/components/census/charts";
+import { ExternalLink } from "@/components/ui/external-link";
 import { IN_TEXT_LINK } from "@/components/ui/license-link";
 import { CREDIT_ROLES } from "@/core";
 import { fieldKey } from "@/lib/field-names";
@@ -14,6 +15,7 @@ type CensusData = typeof censusJson;
 
 const PLACES = ["all", "first", "middle", "last"] as const;
 const SOURCE = "https://github.com/simonvanlierde/credit-matrix/tree/main/census";
+const MODEL_CARD = "https://github.com/simonvanlierde/credit-matrix/blob/main/census/MODEL_CARD.md";
 
 /** In the order the parser picks them: an article counts under the first it uses. */
 const STYLE_KEYS = {
@@ -305,6 +307,26 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           </section>
         </Section>
 
+        <section
+          aria-labelledby="census-how"
+          className="space-y-3 border-t border-outline-variant pt-8 text-sm text-on-surface-variant"
+        >
+          <h3 id="census-how" className="font-headline text-xl font-semibold text-on-surface">
+            {t("censusHowTitle")}
+          </h3>
+          <p className="max-w-[65ch] text-pretty">{t("censusHowRules")}</p>
+          <p className="max-w-[65ch] text-pretty">{t("censusHowModel")}</p>
+          <p className="max-w-[65ch] text-pretty">{t("censusHowCaveat")}</p>
+          <p className="flex flex-wrap gap-x-5 gap-y-1">
+            <ExternalLink href={SOURCE} className="gap-1 text-primary hover:underline">
+              {t("censusHowCode")}
+            </ExternalLink>
+            <ExternalLink href={MODEL_CARD} className="gap-1 text-primary hover:underline">
+              {t("censusHowModelCard")}
+            </ExternalLink>
+          </p>
+        </section>
+
         <footer className="space-y-3 border-t border-outline-variant pt-8 text-sm text-on-surface-variant">
           <h3 className="font-headline text-xl font-semibold text-on-surface">{t("censusAboutTitle")}</h3>
           <p className="max-w-[65ch] text-pretty">{t("censusMethod")}</p>
@@ -334,16 +356,6 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           <p className="flex flex-wrap gap-x-5 gap-y-1">
             <a href="/data/census.json" download className={IN_TEXT_LINK}>
               {t("censusDownload")}
-            </a>
-            <a
-              href={SOURCE}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary hover:underline"
-            >
-              {t("censusSourceLink")}
-              <ExternalLink className="size-3" aria-hidden="true" />
-              <span className="sr-only">{t("opensInNewTab")}</span>
             </a>
           </p>
         </footer>
