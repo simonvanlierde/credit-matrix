@@ -110,7 +110,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - A grid change is read out once, without the statement's contributor and role counts after it.
   - Screen readers no longer read a contributor's initials before their name.
   - On the co-author page each role name is a heading, so a screen reader can jump from role to
-    role.
+    role. The role headings sit under a "Your roles" heading, so the switches and the ORCID sign-in
+    after the list no longer read as part of the last role.
 - "How it works" did nothing outside the main page. It now takes you there and opens the welcome
   panel, and closing the panel puts focus on the main content.
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A

@@ -246,7 +246,12 @@ function CoauthorPage() {
         )}
       </div>
 
-      <ol aria-label={t("coauthorRoles")} className="mt-2 px-4 sm:px-6">
+      {/* The switches and sign-in below sit under this heading, not under the
+          last role's, when a screen reader moves by heading. */}
+      <h2 id="coauthor-roles" className="sr-only">
+        {t("coauthorRoles")}
+      </h2>
+      <ol aria-labelledby="coauthor-roles" className="mt-2 px-4 sm:px-6">
         {CREDIT_ROLES.map((role, roleIndex) => {
           const score = author.contributions[roleIndex]?.score ?? 0;
           const nameId = `coauthor-role-${roleIndex}`;
@@ -254,9 +259,9 @@ function CoauthorPage() {
             <li key={role.name} className="flex flex-col gap-2 border-b border-outline-variant py-3.5">
               <div>
                 {/* A heading, so a screen reader can jump from role to role. */}
-                <h2 id={nameId} className="font-semibold">
+                <h3 id={nameId} className="font-semibold">
                   {translateInterfaceRole(role.name)}
-                </h2>
+                </h3>
                 <p id={`${nameId}-desc`} className="text-[0.8125rem] leading-snug text-on-surface-variant">
                   {describeRole(role.name)}
                 </p>
