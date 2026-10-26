@@ -25,6 +25,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "fromTenzing",
     "generateStatement",
     "getRoleByName",
+    "heatmapDescription",
     "importAnswers",
     "importAny",
     "isMarker",

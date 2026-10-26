@@ -55,8 +55,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   was tested with, and when it was last reviewed. `docs/accessibility.md` stays the one source; the
   build turns it into static HTML.
 - A WCAG 2.2 self-assessment (`docs/accessibility-assessment.md`) judges every level A and AA
-  criterion with its evidence. The statement now says "partially conformant": only the downloaded
-  heatmap images fail, as they have no text alternative.
+  criterion with its evidence. It finds no failing criterion; the statement says "partially
+  conformant" until a screen reader has read the app.
+- Downloaded heatmaps carry the contribution statement as their text alternative: the SVG in its
+  description, which screen readers read, the PNG in its Description field. Before, the SVG said
+  only "Contribution heatmap" and the PNG had no text at all.
 - Census: for people who run it, `census model` trains and checks a model that reads contribution
   statements. A fine-tuned encoder and a hybrid of the rule parser and the encoder sit beside the
   rule parser, and `census model browser` exports the encoder for the browser. `--seed` fixes a

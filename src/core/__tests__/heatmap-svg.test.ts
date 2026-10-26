@@ -40,6 +40,14 @@ describe("buildHeatmapSvg", () => {
     expect(svg).toContain(">Lead<"); // legend label, no score range
   });
 
+  it("carries who did what as its text alternative, in <desc>", () => {
+    const svg = buildHeatmapSvg(authorsWithScores());
+    const desc = svg.match(/<desc>(.*)<\/desc>/s)?.[1] ?? "";
+    expect(desc).toContain("Jane Smith: Conceptualization");
+    expect(desc).toContain("Writing – review &amp; editing"); // escaped once
+    expect(desc).toContain("Bob White: Software");
+  });
+
   it("legend drops the meaningless 0–100 score ranges", () => {
     const svg = buildHeatmapSvg(authorsWithScores());
     expect(svg).not.toContain("67–100");

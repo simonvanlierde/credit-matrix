@@ -44,7 +44,7 @@ N/A: the page has no content the criterion applies to.
 
 | Criterion | Level | Result | Evidence |
 | --- | --- | --- | --- |
-| 1.1.1 Non-text Content | A | Fail | In the app every image has a text alternative or is decorative, and the statement and table repeat the heatmap. The downloaded heatmap SVG and PNG do not say who did what: see Known problems in the statement. |
+| 1.1.1 Non-text Content | A | Pass | In the app every image has a text alternative or is decorative, and the statement and table repeat the heatmap. The downloaded SVG has the contribution statement as its `<desc>` and the PNG as a Description text chunk (`heatmap-svg.test.ts`, `png-text.test.ts`). Editors may not use the PNG's: see Known problems in the statement. |
 | 1.2.1 Audio-only and Video-only (Prerecorded) | A | N/A | No audio or video. |
 | 1.2.2 Captions (Prerecorded) | A | N/A | No audio or video. |
 | 1.2.3 Audio Description or Media Alternative (Prerecorded) | A | N/A | No audio or video. |
@@ -119,6 +119,6 @@ WCAG 2.2 removed 4.1.1 Parsing, so it is not listed.
 
 ## Summary
 
-Of the 55 level A and AA criteria, 1 fails, 46 pass and 8 do not apply. The failure is 1.1.1, for
-the downloaded heatmap images only. The statement's status, "partially conformant", rests on this
-table. Next: a screen-reader pass, which may change the rows that say so.
+Of the 55 level A and AA criteria, none fails, 47 pass and 8 do not apply. The statement still says
+"partially conformant": this is a self-assessment of a sample, not an audit, and no screen reader
+has read the app. Next: a screen-reader pass, which may change the rows that say so.

@@ -928,7 +928,15 @@ interface HeatmapSvgOptions {
   translateRole?: RoleTranslator;
   /** Localize the level legend and empty-state line. Defaults to English. */
   translateUi?: UiTranslator;
+  /** BCP-47 locale of the `<desc>` statement's name lists. Defaults to "en". */
+  locale?: string;
 }
+/**
+ * The heatmap's text alternative: the by-author contribution statement, in the
+ * same language and with the same levels as the figure. The SVG carries it as
+ * `<desc>`; a PNG export can carry it as a Description text chunk.
+ */
+export declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string;
 /**
  * Render a contribution heatmap as a self-contained SVG string.
  *
@@ -942,8 +950,9 @@ interface HeatmapSvgOptions {
  * the width of a four-key legend. Roles that no author contributed to are
  * omitted, matching the live chart. There is no *rendered* image title:
  * captions belong to the embedding document. The `<title>` element is the
- * accessible name for the `role="img"` graphic, which assistive technology
- * reads and nothing draws.
+ * accessible name for the `role="img"` graphic and `<desc>` its text
+ * alternative: the by-author contribution statement, so a screen reader hears
+ * who did what. Assistive technology reads both and nothing draws them.
  */
 export declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string;
 //#endregion

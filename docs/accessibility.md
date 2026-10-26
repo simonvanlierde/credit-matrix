@@ -33,18 +33,20 @@ CRediT Matrix aims to meet [WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA
 web requirements of
 [EN 301 549 v4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf).
 
-Its conformance is **partially conformant**: it fails one criterion, 1.1.1 Non-text Content, for
-the downloaded heatmap images (the first known problem below). The developer checked the app and
+Its conformance is **partially conformant**. The self-assessment found no criterion it fails, but
+it checks a sample of pages and no screen reader has read the app yet, so it does not claim full
+conformance. The developer checked the app and
 the web element against every WCAG 2.2 level A and AA criterion on 24 October 2026, in the
 [self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md). There has been no external audit. What is checked, and how, is under
 [How we check](#how-we-check).
 
 ## Known problems
 
-- **Downloaded heatmap images don't say who did what.** A screen reader reads the SVG's title,
-  "Contribution heatmap", and nothing more. A PNG has no text at all. An image file has no place
-  for alt text that every editor reads. When you put the heatmap in a paper or slide, add alt text
-  there, or put the contribution statement next to it. No fix planned. [1.1.1 Non-text Content]
+- **Editors may not use a downloaded heatmap's description.** Both image files carry the
+  contribution statement as their text alternative: the SVG in its description, which screen
+  readers read, and the PNG in its Description field. A word processor or slide tool may not turn
+  that field into alt text. When you put the heatmap in a paper or slide, check its alt text there,
+  and paste in the contribution statement if it is empty.
 - **No native speaker has checked eight of the nine languages yet.** The German, Spanish, French,
   Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
   translated by machine. If a label is unclear, switch the language menu to English. The CRediT role names themselves come from the reviewed
@@ -106,8 +108,9 @@ no screen reader has read it out.
 ### Heatmap text alternatives
 
 In the app, screen readers skip the heatmap drawing, and the contribution statement beside it says
-the same in words. The downloaded SVG has the title "Contribution heatmap". The first known problem says
-what that leaves out.
+the same in words. The downloaded SVG has the title "Contribution heatmap" and, as its description,
+the contribution statement by author. The PNG carries the same statement in its Description field.
+The first known problem says where that text gets lost.
 
 ### The web element
 
