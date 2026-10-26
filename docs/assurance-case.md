@@ -88,15 +88,12 @@ There are no accounts, passwords or server-side drafts to protect, because there
   ([`src/core/parse-authors.ts`](../src/core/parse-authors.ts),
   [`src/core/author.ts`](../src/core/author.ts)). Share links clamp scores to 0 to 100.
 - **XML.** The app parses JATS with the browser's own `DOMParser` and reads only element text and
-  attributes from it ([`src/core/export/xml-import.ts`](../src/core/export/xml-import.ts)). The code
-  does not reject a `DOCTYPE` and does not configure entity handling. Checked by hand on 2026-10-25
-  in Chromium 156, Firefox 157 and WebKit 27.2: `DOMParser` does not load external (`SYSTEM`)
-  entities. It expands internal entities declared in the file. It refuses a nested "billion laughs"
-  expansion with a parse error, which the importer reports. The CLI parses with linkedom instead,
-  after a tag-balance check ([`src/core/cli.ts`](../src/core/cli.ts)). linkedom 0.18.13 ignores the
-  `DOCTYPE` and leaves each entity reference as literal text (`&x;`). One test fixture has a
-  `DOCTYPE` with an external DTD reference (`export-jats.xml`). No test feeds the importer an entity
-  declaration, so neither behaviour is pinned.
+  attributes from it ([`src/core/export/xml-import.ts`](../src/core/export/xml-import.ts)). The CLI
+  parses with linkedom instead, after a tag-balance check ([`src/core/cli.ts`](../src/core/cli.ts)).
+  Before either parser runs, `fromJats4rXml` refuses any file that declares an entity (`<!ENTITY`,
+  any case). So internal, external (`SYSTEM`) and nested ("billion laughs") entities never reach a
+  parser, in the app or the CLI ([`xml.test.ts`](../src/core/__tests__/xml.test.ts)). JATS exports
+  from this app and other tools declare none.
 - **Testing.** Property tests feed random strings to `importAny` and random JSON to the share
   payload reader, and require a result or a documented error
   ([`src/core/__tests__/properties.test.ts`](../src/core/__tests__/properties.test.ts)).
@@ -195,7 +192,7 @@ There are no accounts, passwords or server-side drafts to protect, because there
 | Economy of mechanism | No server, no accounts, no database ([ADR 0002](adr/0002-no-accounts-or-server-side-storage.md), [ADR 0003](adr/0003-static-export.md)). `src/core` has one runtime dependency, `zod` ([docs/architecture.md](architecture.md)). The CLI bundles `zod` and linkedom into `dist/cli.js` ([`tsdown.config.ts`](../src/core/tsdown.config.ts)), so a fix to either reaches CLI users only through a new `credit-matrix` release |
 | Minimal attack surface | No code runs per request, so there is no server to attack ([ADR 0003](adr/0003-static-export.md)). The CSP allows five outside hosts for `connect-src` ([`public/_headers`](../public/_headers)) |
 | Fail-safe defaults | A link that does not decode opens the normal app ([`share-link.ts`](../src/core/share-link.ts)). A proof that does not verify is dropped ([`orcid-proof.ts`](../src/core/orcid-proof.ts)). The build fails rather than ship a CSP that blocks or allows the wrong scripts ([`postbuild.mjs`](../scripts/postbuild.mjs)) |
-| Least privilege | CI jobs start at `contents: read`. OIDC and secrets sit only in the jobs that need them, and only the CodSpeed benchmarks run project code beside a token ([`ci.yml`](../.github/workflows/ci.yml), [`release-core.yml`](../.github/workflows/release-core.yml)). The page denies camera, microphone and geolocation (`Permissions-Policy`) |
+| Least privilege | CI jobs start at `contents: read`. OIDC and secrets sit only in the jobs that need them. Three of those jobs run project code or its dependencies beside one: the CodSpeed benchmarks (OIDC), and `preview` and `deploy`, which run `wrangler` with a Cloudflare token ([`ci.yml`](../.github/workflows/ci.yml), [`release-core.yml`](../.github/workflows/release-core.yml)). The page denies camera, microphone and geolocation (`Permissions-Policy`) |
 | Complete mediation | The import dialog and the CLI read through `importAny`, and links through `decodeShareHash`. Rosters pass through `normalizeRoster` with its limits ([`import.ts`](../src/core/import.ts), [`parse-authors.ts`](../src/core/parse-authors.ts)). The lead's app re-checks a proof on every import instead of trusting a stored flag ([`ask.ts`](../src/core/ask.ts)) |
 | Separation of privilege | Releases need a `v*` tag and the `npm-release` environment. Deploys need `main` and the `production` environment ([GOVERNANCE.md](../GOVERNANCE.md), [docs/deploy.md](deploy.md)) |
 | Open design | The code, the CSP and the client id are public. The ORCID client id is public by design, because the implicit flow has no secret ([`orcid-proof.ts`](../src/core/orcid-proof.ts)) |
@@ -204,9 +201,10 @@ There are no accounts, passwords or server-side drafts to protect, because there
 ## Known weaknesses and residual risk
 
 - **Analytics script.** The CSP allows Cloudflare's Web Analytics script. Like any script on the
-  page, it can read a share link's fragment, and the ORCID `id_token` that sign-in returns in the
-  fragment, before the app clears them ([SECURITY.md](../SECURITY.md#security-model)). A token signs
-  one exact answer, so a copy of it proves nothing else.
+  page, it can read a share link's fragment, and the ORCID `id_token` and `openid`-scope access
+  token that sign-in returns in the fragment (the app never uses the access token), before the app
+  clears them ([SECURITY.md](../SECURITY.md#security-model)). A token signs one exact answer, so a
+  copy of it proves nothing else.
 - **`style-src 'unsafe-inline'`.** Kept for React style attributes
   ([`scripts/postbuild.mjs`](../scripts/postbuild.mjs)). Injected markup could still apply styles.
 - **No CSP in development.** `next dev` does not read `public/_headers`
@@ -224,12 +222,10 @@ There are no accounts, passwords or server-side drafts to protect, because there
   exact answer it signed.
 - **Drafts are not encrypted at rest.** Anyone with access to the browser profile can read them
   ([SECURITY.md](../SECURITY.md#security-model)).
-- **XML entities.** Browsers expand internal entities and the CLI does not, so one file can import
-  different names in the app and in the CLI. Checked by hand on 2026-10-25: in Chromium, a file
-  under the 1 MB cap that repeats one large internal entity blocks the page for about 13 seconds
-  before the parse fails. Firefox and WebKit stop within half a second. Only a file the user picks
-  reaches the parser, so the cost is a frozen tab, not lost data. See
-  [Malicious imports](#malicious-imports).
+- **Undeclared entity references.** A file can still use an entity it does not declare, such as
+  `&eacute;` from an external DTD. linkedom leaves it as literal text. What each browser's
+  `DOMParser` does with it is not verified, so the app and the CLI may still read such a name
+  differently. Only a file the user picks reaches the parser.
 - **The CLI has no size cap.** `credit-matrix` reads a whole file or stdin into memory
   ([`src/core/cli.ts`](../src/core/cli.ts)). It reads local input the user chose, so the risk is low.
 - **Automerged dependency updates deploy.** Renovate merges minor and patch updates once checks pass,
@@ -241,6 +237,10 @@ There are no accounts, passwords or server-side drafts to protect, because there
   an OIDC token for this repository ([`codspeed.yml`](../.github/workflows/codspeed.yml)). npm
   publishing and Cloudflare do not accept it: npm checks the release workflow and environment, and
   Cloudflare uses a stored secret.
+- **Previews hold a Cloudflare token.** On every same-repo pull request, Renovate's included, the
+  `preview` job installs the branch's lockfile and runs its `wrangler` with the `preview`
+  environment's API token ([`ci.yml`](../.github/workflows/ci.yml)). That environment has no branch
+  rule. What that token can do beyond uploading a preview version is not verified.
 - **One maintainer.** One person holds every key ([GOVERNANCE.md](../GOVERNANCE.md)), so no second
   person reviews changes, including security fixes.
 - **No rate limiting of our own.** Each visitor's lookups count against the outside services' limits

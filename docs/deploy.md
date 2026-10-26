@@ -21,7 +21,8 @@ The live site serves `out/` as Cloudflare Workers static assets, with no Worker 
 
 On every push to `main`, `.github/workflows/ci.yml` runs `check`, `e2e` and `build`. The `attest` job
 then attests build provenance for each file in `out/` (see the Attestations tab on GitHub). It is
-the only job in this workflow that can request a GitHub OIDC token, and it installs nothing and runs no project code.
+the only job in this workflow that can request a GitHub OIDC token, and it installs nothing and runs
+no project code.
 
 When all four pass, the `deploy` job downloads the `out/` folder the `build` job made, so the
 deployed files are the ones that were built and tested, and runs `wrangler deploy`. It runs in the
