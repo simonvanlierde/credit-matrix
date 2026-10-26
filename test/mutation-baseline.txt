@@ -1,6 +1,6 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
 # Each line: file status mutator -> replacement | original line.
-# Score 81.57%: 1965 killed, 386 survived, 58 without coverage.
+# Score 82.25%: 1993 killed, 372 survived, 58 without coverage.
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | const headers = (records[0] ?? []).map(headerKey);
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | if (records.length === 0) return [];
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | return (parseCsvRecords(line, delimiterOf(line))[0] ?? []).map((cell) => cell.trim().toLowerCase());
@@ -20,9 +20,6 @@ src/core/export/heatmap-svg.ts NoCoverage StringLiteral -> "Stryker was here!" |
 src/core/export/heatmap-svg.ts NoCoverage StringLiteral -> "Stryker was here!" | leftLabels[r] ?? "",
 src/core/export/heatmap-svg.ts NoCoverage StringLiteral -> "Stryker was here!" | topLabels[i] ?? "",
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> (innerW - legendW) * 2 | const blockX = PAD_S + (innerW - legendW) / 2;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) + GAP_S | const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) - GAP_S;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> (transpose ? nAuthors : nRoles) / (CELL_S + GAP_S) | const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) - GAP_S;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> (transpose ? nRoles : nAuthors) * (CELL_S + GAP_S) + GAP_S | const gridW = (transpose ? nRoles : nAuthors) * (CELL_S + GAP_S) - GAP_S;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 0.5 / scale | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 2 / scale | `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${2 * scale}" ry="${2 * scale
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 2 / scale | `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${2 * scale}" ry="${2 * scale
@@ -34,71 +31,39 @@ src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 4 / scale | `<text
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 4 / scale | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 6 / scale | const legendItemW = (label: string) => SWATCH_S + 6 * scale + textW(label, FONT_LEGEND) + LEGEND_ITE
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 11 / scale | `<text x="${PAD_S}" y="${PAD_S + 8}" font-family="${FONT}" font-size="${11 * scale}" fill="${COLOR_T
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 56 / scale | const h = 56 * scale;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> 320 / scale | const w = 320 * scale;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> blockX - (colX[col] ?? 0) | const lx = blockX + (colX[col] ?? 0);
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> c / (CELL_S + GAP_S) | const cx = gridX + c * (CELL_S + GAP_S);
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> CELL_S - GAP_S | const cx = gridX + c * (CELL_S + GAP_S);
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> CELL_S - GAP_S | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> CELL_S - GAP_S | const cy = gridY + r * (CELL_S + GAP_S);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> CELL_S - GAP_S | const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) - GAP_S;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> CELL_S - GAP_S | const gridW = (transpose ? nRoles : nAuthors) * (CELL_S + GAP_S) - GAP_S;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> CELL_S * 2 | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> CELL_S * 2 | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> CELL_S * 2 | const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> colW.reduce((w, c) => w + c, 0) + LEGEND_ITEM_GAP_S | const legendW = colW.reduce((w, c) => w + c, 0) - LEGEND_ITEM_GAP_S;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> cy - CELL_S / 2 | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> cy + CELL_S / 2 - 4 * scale | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> FONT_LEFT / scale | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> FONT_LEGEND / scale | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> FONT_TOP / scale | `<text transform="translate(${cx},${cy}) rotate(-45)" text-anchor="start" font-family="${FONT}" font
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> GAP / scale | const GAP_S = GAP * scale;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridH - 2 | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridW - 2 | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridX - c * (CELL_S + GAP_S) | const cx = gridX + c * (CELL_S + GAP_S);
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridX - i * (CELL_S + GAP_S) | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridX + 1 | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridX + i * (CELL_S + GAP_S) - CELL_S / 2 | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridX + LABEL_GAP_S | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridY - r * (CELL_S + GAP_S) | const cy = gridY + r * (CELL_S + GAP_S);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridY + 1 | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridY + gridH - LEGEND_GAP * scale | const legendTop = gridY + gridH + LEGEND_GAP * scale;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridY + LABEL_GAP_S | const cy = gridY - LABEL_GAP_S;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> i / (CELL_S + GAP_S) | const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> innerW + legendW | const blockX = PAD_S + (innerW - legendW) / 2;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> LABEL_GAP / scale | const LABEL_GAP_S = LABEL_GAP * scale;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> labelUnits(label) * fontSize * CHAR_EM / scale | const textW = (label: string, fontSize: number): number => labelUnits(label) * fontSize * CHAR_EM * 
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> labelUnits(label) * fontSize / CHAR_EM | const textW = (label: string, fontSize: number): number => labelUnits(label) * fontSize * CHAR_EM * 
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> lastTopW * DIAG + CELL_S / 2 | const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> lastTopW / DIAG | const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> LEGEND_GAP / scale | const legendTop = gridY + gridH + LEGEND_GAP * scale;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> LEGEND_ITEM_GAP / scale | const LEGEND_ITEM_GAP_S = LEGEND_ITEM_GAP * scale;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> LEGEND_ROW_H * scale + SWATCH_S | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> LEGEND_ROW_H / scale | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> legendItems.length * perRow | Array.from({ length: Math.ceil(legendItems.length / perRow) }, (_, i) =>
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> legendRows.length * LEGEND_ROW_H * scale + (LEGEND_ROW_H * s | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> legendRows.length * LEGEND_ROW_H / scale | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> legendRows.length / LEGEND_ROW_H | const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> legendTop - legendH | const totalH = legendTop + legendH + PAD_S;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> legendTop - rowIndex * LEGEND_ROW_H * scale | const y = legendTop + rowIndex * LEGEND_ROW_H * scale;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> legendTop + legendH - PAD_S | const totalH = legendTop + legendH + PAD_S;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> lx - SWATCH_S | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> lx + SWATCH_S - 4 * scale | `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-s
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> maxLeftW - LABEL_GAP_S | const leftBand = maxLeftW + LABEL_GAP_S;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> maxTopW * DIAG - LABEL_GAP_S | const topBand = maxTopW * DIAG + LABEL_GAP_S;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> maxTopW / DIAG | const topBand = maxTopW * DIAG + LABEL_GAP_S;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> PAD / scale | const PAD_S = PAD * scale;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> PAD_S - (innerW - legendW) / 2 | const blockX = PAD_S + (innerW - legendW) / 2;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> PAD_S - 8 | `<text x="${PAD_S}" y="${PAD_S + 8}" font-family="${FONT}" font-size="${11 * scale}" fill="${COLOR_T
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> PAD_S / 2 | const innerW = totalW - PAD_S * 2;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> PAD_S / 2 | const totalW = PAD_S * 2 + Math.max(contentW, legendW);
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> r / (CELL_S + GAP_S) | const cy = gridY + r * (CELL_S + GAP_S);
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> row.reduce((w, i) => w + i.w, 0) + LEGEND_ITEM_GAP_S | const rowWidth = (row: { w: number }[]) => row.reduce((w, i) => w + i.w, 0) - LEGEND_ITEM_GAP_S;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> rowIndex * LEGEND_ROW_H / scale | const y = legendTop + rowIndex * LEGEND_ROW_H * scale;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> rowIndex / LEGEND_ROW_H | const y = legendTop + rowIndex * LEGEND_ROW_H * scale;
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> SWATCH / scale | const SWATCH_S = SWATCH * scale;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> SWATCH_S - 6 * scale | const legendItemW = (label: string) => SWATCH_S + 6 * scale + textW(label, FONT_LEGEND) + LEGEND_ITE
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> topLabelWs.length + 1 | const lastTopW = topLabelWs[topLabelWs.length - 1] ?? 0;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> totalW + PAD_S * 2 | const innerW = totalW - PAD_S * 2;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> w - c | const legendW = colW.reduce((w, c) => w + c, 0) - LEGEND_ITEM_GAP_S;
 src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> x - w | const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
@@ -107,26 +72,26 @@ src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> y + SWATCH_S + 3 *
 src/core/export/heatmap-svg.ts Survived ArrowFunction -> () => undefined | const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
 src/core/export/heatmap-svg.ts Survived ArrowFunction -> () => undefined | const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
 src/core/export/heatmap-svg.ts Survived ArrowFunction -> () => undefined | const legendCols = Math.max(...legendRows.map((row) => row.length));
+src/core/export/heatmap-svg.ts Survived BooleanLiteral -> false | showLevels: opts?.showLevels ?? true,
 src/core/export/heatmap-svg.ts Survived EqualityOperator -> i <= topLabels.length | for (let i = 0; i < topLabels.length; i++) {
 src/core/export/heatmap-svg.ts Survived EqualityOperator -> rows < legendItems.length | for (let rows = 1; rows <= legendItems.length; rows++) {
 src/core/export/heatmap-svg.ts Survived EqualityOperator -> rowWidth(row) < contentW | if (candidate.every((row) => rowWidth(row) <= contentW)) {
 src/core/export/heatmap-svg.ts Survived LogicalOperator -> colX[col] && 0 | const lx = blockX + (colX[col] ?? 0);
+src/core/export/heatmap-svg.ts Survived LogicalOperator -> leftLabels[r] && "" | leftLabels[r] ?? "",
+src/core/export/heatmap-svg.ts Survived LogicalOperator -> opts?.showLevels && true | showLevels: opts?.showLevels ?? true,
 src/core/export/heatmap-svg.ts Survived LogicalOperator -> row[c]?.w && 0 | const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]
-src/core/export/heatmap-svg.ts Survived LogicalOperator -> topLabelWs[topLabelWs.length - 1] && 0 | const lastTopW = topLabelWs[topLabelWs.length - 1] ?? 0;
 src/core/export/heatmap-svg.ts Survived MethodExpression -> candidate.some(row => rowWidth(row) <= contentW) | if (candidate.every((row) => rowWidth(row) <= contentW)) {
 src/core/export/heatmap-svg.ts Survived MethodExpression -> colW | const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
 src/core/export/heatmap-svg.ts Survived MethodExpression -> Math.min(...legendRows.map(row => row.length)) | const legendCols = Math.max(...legendRows.map((row) => row.length));
 src/core/export/heatmap-svg.ts Survived MethodExpression -> Math.min(...legendRows.map(row => row[c]?.w ?? 0)) | const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]
-src/core/export/heatmap-svg.ts Survived MethodExpression -> Math.min(0, ...topLabelWs) | const maxTopW = Math.max(0, ...topLabelWs);
-src/core/export/heatmap-svg.ts Survived MethodExpression -> Math.min(0, lastTopW * DIAG - CELL_S / 2) | const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
 src/core/export/heatmap-svg.ts Survived ObjectLiteral -> {} | const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]
+src/core/export/heatmap-svg.ts Survived ObjectLiteral -> {} | return generateStatement(authors, {
 src/core/export/heatmap-svg.ts Survived OptionalChaining -> author?.contributions.find(c => c.role === roleName).score | author?.contributions.find((c) => c.role === roleName)?.score ?? 0;
 src/core/export/heatmap-svg.ts Survived OptionalChaining -> author.contributions | author?.contributions.find((c) => c.role === roleName)?.score ?? 0;
 src/core/export/heatmap-svg.ts Survived OptionalChaining -> authors[ai].initials | (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
 src/core/export/heatmap-svg.ts Survived OptionalChaining -> authors[ai].name | (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
 src/core/export/heatmap-svg.ts Survived OptionalChaining -> role.name | const score = scoreFor(authors[ai], role?.name ?? "");
 src/core/export/heatmap-svg.ts Survived OptionalChaining -> row[c].w | const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]
-src/core/export/heatmap-svg.ts Survived Regex -> /[^\u1100-\u11FF\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE3 | const CJK_CHAR = /[\u1100-\u11FF\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF]/;
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | "</svg>",
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | ].join("\n");
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const COLOR_BG = "#fafaf9";
@@ -134,12 +99,12 @@ src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const COLOR_BORDER
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const COLOR_TEXT = "#16181c";
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const COLOR_TEXT_DIM = "#595c63";
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const FONT = "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif";
+src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | format: "by-author",
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | return lines.join("\n");
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<!-- ${GENERATOR_NOTE} -->`,
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<!-- ${GENERATOR_NOTE} -->`,
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<rect width="${w}" height="${h}" fill="${COLOR_BG}"/>`,
-src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}
-src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="im
+src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | lines.push(`<rect width="${totalW}" height="${totalH}" fill="${COLOR_BG}"/>`);
 src/core/export/tenzing.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(trimmed));
@@ -210,13 +175,18 @@ src/core/parse-authors.ts NoCoverage StringLiteral -> "Stryker was here!" | midd
 src/core/parse-authors.ts NoCoverage StringLiteral -> "Stryker was here!" | while (surnameStart > 1 && isParticle(parts[surnameStart - 1] ?? "")) surnameStart -= 1;
 src/core/parse-authors.ts Survived ArithmeticOperator -> all.length + last.length | const between = all.slice(first.length, all.length - last.length);
 src/core/parse-authors.ts Survived ArithmeticOperator -> first.length - last.length | first.length + last.length <= all.length &&
+src/core/parse-authors.ts Survived ArrayDeclaration -> ["Stryker was here"] | for (const c of contributions ?? []) {
 src/core/parse-authors.ts Survived ArrayDeclaration -> [] | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | (last.length > 0 || between.length === middle.length);
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+src/core/parse-authors.ts Survived ConditionalExpression -> false | if (!last || !/\p{L}/u.test(last)) return false;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
 src/core/parse-authors.ts Survived ConditionalExpression -> false | if (ORCID_INPUT_REGEX.test(text)) return false;
+src/core/parse-authors.ts Survived ConditionalExpression -> false | if (ORCID_INPUT_REGEX.test(text)) return false;
+src/core/parse-authors.ts Survived ConditionalExpression -> false | if (parts.length === 0) return name.trim();
+src/core/parse-authors.ts Survived ConditionalExpression -> false | return start === -1 ? surname : words.slice(start).join(" ");
 src/core/parse-authors.ts Survived ConditionalExpression -> true | ? a.contributions.length === b.contributions.length &&
 src/core/parse-authors.ts Survived ConditionalExpression -> true | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
 src/core/parse-authors.ts Survived ConditionalExpression -> true | first.length + last.length <= all.length &&
@@ -230,26 +200,40 @@ src/core/parse-authors.ts Survived EqualityOperator -> extraIdx <= surnameCodePo
 src/core/parse-authors.ts Survived EqualityOperator -> first.length >= 0 | first.length > 0 &&
 src/core/parse-authors.ts Survived EqualityOperator -> givenParts.length >= 1 | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
 src/core/parse-authors.ts Survived EqualityOperator -> words.length >= 0 | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
+src/core/parse-authors.ts Survived LogicalOperator -> !last && !/\p{L}/u.test(last) | if (!last || !/\p{L}/u.test(last)) return false;
 src/core/parse-authors.ts Survived LogicalOperator -> chunks.length < 2 && chunks.length % 2 !== 0 | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
 src/core/parse-authors.ts Survived LogicalOperator -> first.length > 0 || first.length + last.length <= all.length | first.length > 0 &&
 src/core/parse-authors.ts Survived MethodExpression -> [firstName, middleName, surname].some(part => typeof part == | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+src/core/parse-authors.ts Survived MethodExpression -> cleaned.split(/\s+/) | const parts = cleaned.split(/\s+/).filter(Boolean);
 src/core/parse-authors.ts Survived MethodExpression -> cleanNamePart(commaParts[1] ?? "").split(/\s+/) | const givenParts = cleanNamePart(commaParts[1] ?? "")
 src/core/parse-authors.ts Survived MethodExpression -> line.split(",").map(part => part.trim()) | const chunks = line
 src/core/parse-authors.ts Survived MethodExpression -> name | if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
+src/core/parse-authors.ts Survived MethodExpression -> name | if (ORCID_INPUT_REGEX.test(name.trim())) return normalizeOrcid(name.trim());
+src/core/parse-authors.ts Survived MethodExpression -> name.split(",").map(part => part.trim()) | const commaParts = name
 src/core/parse-authors.ts Survived MethodExpression -> part | .map((part) => part.trim())
+src/core/parse-authors.ts Survived MethodExpression -> part | .map((part) => part.trim())
+src/core/parse-authors.ts Survived MethodExpression -> surname.split(/\s+/) | const words = surname.split(/\s+/).filter(Boolean);
 src/core/parse-authors.ts Survived MethodExpression -> text.split(/[\n\r\v\f;]+/).flatMap(line => splitCommaLine(li | return text
 src/core/parse-authors.ts Survived MethodExpression -> text.split(/\s+/) | const words = text.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts Survived MethodExpression -> text.split(/\s+/) | const words = text.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts Survived MethodExpression -> value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "") | return value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "").trim();
 src/core/parse-authors.ts Survived MethodExpression -> words.some(word => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u.test(word) | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
 src/core/parse-authors.ts Survived OptionalChaining -> b.contributions[i].role | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
 src/core/parse-authors.ts Survived OptionalChaining -> b.contributions[i].score | a.contributions.every((c, i) => c.role === b.contributions[i]?.role && c.score === b.contributions[i
 src/core/parse-authors.ts Survived OptionalChaining -> surnameCodePoints[extraIdx].toLowerCase | attempt = initials + (surnameCodePoints[extraIdx]?.toLowerCase() ?? String(extraIdx));
 src/core/parse-authors.ts Survived Regex -> /[\n\r\v\f;]/ | .split(/[\n\r\v\f;]+/)
+src/core/parse-authors.ts Survived Regex -> /[\s\p{Cc}]/gu | .replace(/[\s\p{Cc}]+/gu, (run) => (/\p{Cc}/u.test(run) ? " " : run))
 src/core/parse-authors.ts Survived Regex -> /\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
 src/core/parse-authors.ts Survived Regex -> /\s/ | .split(/\s+/)
+src/core/parse-authors.ts Survived Regex -> /\s/ | const parts = cleaned.split(/\s+/).filter(Boolean);
 src/core/parse-authors.ts Survived Regex -> /\s/ | const words = (text: string) => cleanNamePart(text).split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts Survived Regex -> /\s/ | const words = surname.split(/\s+/).filter(Boolean);
 src/core/parse-authors.ts Survived Regex -> /\s/ | const words = text.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts Survived Regex -> /\s/ | const words = text.split(/\s+/).filter(Boolean);
+src/core/parse-authors.ts Survived Regex -> /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul} | const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul}]+$/u;
 src/core/parse-authors.ts Survived Regex -> /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
 src/core/parse-authors.ts Survived Regex -> /^\p{L}[\p{L}\P{M}'’ʼ-]*\.?$/u | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
+src/core/parse-authors.ts Survived StringLiteral -> "" | return start === -1 ? surname : words.slice(start).join(" ");
 src/core/parse-authors.ts Survived StringLiteral -> "Stryker was here!" | const firstName = parts[0] ?? "";
 src/core/share-payload.ts Survived ConditionalExpression -> true | ...(sentAt !== undefined ? { w: sentAt } : {}),
 src/core/share-payload.ts Survived ObjectLiteral -> {} | ctx.addIssue({ code: "custom", message: "claim names an absent contributor" });
@@ -324,6 +308,7 @@ src/core/statement.ts Survived BlockStatement -> {} | const ordered = [...varian
 src/core/statement.ts Survived BlockStatement -> {} | for (const chunk of others) {
 src/core/statement.ts Survived BlockStatement -> {} | for (let k = 0; k < a.length; k += 1) {
 src/core/statement.ts Survived BooleanLiteral -> true | let cased = false;
+src/core/statement.ts Survived CallExpression -> ; | resolved.set(token, hits);
 src/core/statement.ts Survived ConditionalExpression -> false | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
 src/core/statement.ts Survived ConditionalExpression -> false | for (let k = 0; k < a.length; k += 1) {
 src/core/statement.ts Survived ConditionalExpression -> false | if (!isUpper(first(token))) continue;
@@ -340,6 +325,7 @@ src/core/statement.ts Survived ConditionalExpression -> false | if (pos < 0) ret
 src/core/statement.ts Survived ConditionalExpression -> false | if (start && isAlnum(text[start - 1])) return false;
 src/core/statement.ts Survived ConditionalExpression -> false | if (surname.length === 0) return false;
 src/core/statement.ts Survived ConditionalExpression -> true | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
+src/core/statement.ts Survived ConditionalExpression -> true | if (!hits) {
 src/core/statement.ts Survived ConditionalExpression -> true | if ((i as number) <= UNRESOLVED)
 src/core/statement.ts Survived ConditionalExpression -> true | if (/\p{Lowercase}/u.test(ch)) cased = true;
 src/core/statement.ts Survived ConditionalExpression -> true | if (a[k] !== b[k]) return (a[k] as number | string) < (b[k] as number | string) ? -1 : 1;

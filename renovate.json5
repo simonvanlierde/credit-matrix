@@ -30,9 +30,7 @@
       matchUpdateTypes: ["minor", "patch", "pin", "digest"],
       automerge: true,
     },
-    // pnpm patches the Stryker Vitest runner by exact version. A bump leaves the
-    // patch unused and fails the install, so each bump needs the patch in
-    // patches/ re-checked by hand.
+    // Core and the Vitest runner must move together.
     {
       matchPackageNames: ["/^@stryker-mutator\\//"],
       groupName: "stryker",
