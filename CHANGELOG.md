@@ -70,8 +70,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the statement parser. Counts move by a few articles per year and field, and shares by at most
   0.001. The census README now gives how well the Ettin-68M model agrees with the rule parser on
   the whole corpus.
-- Census: locking the `transformers` package no longer needs a dated exception. The lock keeps
-  version 5.20.1.
 
 ### Fixed
 
