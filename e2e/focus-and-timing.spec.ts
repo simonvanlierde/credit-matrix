@@ -59,6 +59,20 @@ test.describe("behaviours that must not trap or hide", () => {
     await expect(trigger).toBeFocused();
   });
 
+  test("bulk Undo hands focus back to the bulk-assign button at phone width (2.4.3)", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await loadSample(page);
+    const trigger = page.getByRole("button", { name: "Bulk assign" });
+    await trigger.click();
+    await page.getByRole("button", { name: "Assign every role", exact: true }).click();
+    await page.keyboard.press("Escape");
+    const undo = page.getByRole("group", { name: "Bulk change applied." }).getByRole("button");
+    await undo.focus();
+    await page.keyboard.press("Enter");
+    await expect(undo).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+
   test("an Undo that times out while focused does not drop focus to the page (2.4.3)", async ({ page }) => {
     await page.clock.install();
     await loadSample(page);
