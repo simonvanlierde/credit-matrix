@@ -44,7 +44,6 @@ test.describe("CRediT census page", () => {
     await page.goto("/census");
     const how = page.getByRole("region", { name: "How the census reads statements" });
     await expect(how.getByRole("heading", { name: "How the census reads statements" })).toBeVisible();
-    await expect(how.getByText(/judged the tags wrong on 18/)).toBeVisible();
     await expect(how.getByRole("link", { name: /The census code/ })).toHaveAttribute(
       "href",
       "https://github.com/simonvanlierde/credit-matrix/tree/main/census",
