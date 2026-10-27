@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/simonvanlierde/credit-matrix/badge)](https://scorecard.dev/viewer/?uri=github.com/simonvanlierde/credit-matrix)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15968/badge)](https://www.bestpractices.dev/projects/15968)
 
 A web app for writing the contribution statement of a paper: who did what, in the 14 roles of
 [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/). It was formerly
