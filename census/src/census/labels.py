@@ -80,7 +80,12 @@ def key_path(path: Path) -> Path:
 
 
 def export_set(
-    con: duckdb.DuckDBPyConnection, path: Path, seed: int, sizes: dict[str, int] = SET_SIZES, overlap: int = 25
+    con: duckdb.DuckDBPyConnection,
+    path: Path,
+    seed: int,
+    sizes: dict[str, int] = SET_SIZES,
+    overlap: int = 25,
+    exclude: Iterable[str] = (),
 ) -> int:
     """The label set to `path` and its strata to `key_path(path)`; returns the row count.
 
@@ -90,16 +95,18 @@ def export_set(
     stratum and its `weight`, the stratum's article count over the rows drawn from it, so `score`
     counts each row for the articles it stands for. `overlap` rows, drawn by the same seed, are marked
     for a second labeller. The labeller's file holds no style, stratum or weight, and its rows are
-    shuffled, so nothing in it shows the parser's verdict.
+    shuffled, so nothing in it shows the parser's verdict. `exclude` leaves out articles an earlier set
+    already holds, so a second set adds new ones; its weights then stand for the articles left.
     """
     rng = random.Random(seed)
+    skip = set(exclude)
     covered = {p for (p,) in con.execute(_COVERED, [PAIRED_ENOUGH]).fetchall()}
     picked = []
     for style, n in sizes.items():
         pool = con.execute(
             "SELECT pmcid, publisher FROM articles WHERE statement IS NOT NULL AND style = ? ORDER BY pmcid", [style]
         ).fetchall()
-        pool = [(pmcid, p) for pmcid, p in pool if style == "none" or p not in covered]
+        pool = [(pmcid, p) for pmcid, p in pool if (style == "none" or p not in covered) and pmcid not in skip]
         strata = _strata(pool)
         for stratum, quota in sorted(_allocate({k: len(v) for k, v in strata.items()}, n).items()):
             weight = f"{len(strata[stratum]) / quota:.6g}" if quota else ""
