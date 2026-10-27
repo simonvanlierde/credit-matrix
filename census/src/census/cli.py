@@ -332,6 +332,8 @@ def cmd_model_train(args: argparse.Namespace) -> None:
         "learning_rate",
         "seed",
         "open_licence_only",
+        "tags",
+        "max_length",
         "device",
     )
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
@@ -517,6 +519,12 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--learning-rate", type=float, help="peak learning rate for AdamW (default: 3e-5)")
     cmd.add_argument("--seed", type=int, help="seed for the draw, the dev set and the batches (default: 20261018)")
     cmd.add_argument("--open-licence-only", action="store_true", help="train and dev only on CC BY and CC0 articles")
+    cmd.add_argument(
+        "--tags",
+        choices=("all", "named", "named-articles"),
+        help="drop tags for roles the statement never names: per tag (named) or per article (default: all)",
+    )
+    cmd.add_argument("--max-length", type=int, help="tokens per example; longer statements are cut (default: 512)")
     cmd.add_argument("--device", help="cuda or cpu (default: cuda)")
     cmd.set_defaults(func=cmd_model_train)
     cmd = model_sub.add_parser("predict", parents=[snap, db], help="predict with a trained encoder run")
