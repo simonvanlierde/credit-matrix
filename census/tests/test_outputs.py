@@ -333,3 +333,14 @@ def test_export(db, tmp_path, monkeypatch):
         export.export(db, out, "t", partial=True)
     assert json.loads((out / "meta.json").read_text()) == meta
     assert [p.name for p in tmp_path.iterdir() if p.name.startswith(".")] == []
+
+
+def test_label_set_exclude_draws_new_articles(set_db, tmp_path):
+    set_db.close()
+    db, first, second = tmp_path / "s.duckdb", tmp_path / "first.csv", tmp_path / "second.csv"
+    sizes = ["--sizes", "6", "3", "2"]
+    assert cli.main(["label", "--set", "--db", str(db), "--out", str(first), *sizes]) == 0
+    argv = ["label", "--set", "--db", str(db), "--out", str(second), "--seed", "4", *sizes, "--exclude", str(first)]
+    assert cli.main(argv) == 0
+    drawn = [{r["pmcid"] for r in labels.read_rows(f)} for f in (first, second)]
+    assert drawn[1] and not drawn[0] & drawn[1]

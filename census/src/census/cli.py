@@ -190,7 +190,9 @@ def cmd_label(args: argparse.Namespace) -> None:
             print(f"{labels.export(con, out, args.per_style, args.seed)} articles to label in {out}")
             return
         disagreements = out.with_stem(out.stem + "-disagreements")
-        n = labels.export_set(con, out, args.seed, dict(zip(labels.SET_SIZES, args.sizes, strict=True)))
+        skip = {r["pmcid"] for path in args.exclude for r in labels.read_rows(path)}
+        sizes = dict(zip(labels.SET_SIZES, args.sizes, strict=True))
+        n = labels.export_set(con, out, args.seed, sizes, exclude=skip)
         m = labels.export_disagreements(con, disagreements, args.seed)
     print(f"{n} articles to label in {out} (strata in {labels.key_path(out)}), {m} to judge in {disagreements}")
 
@@ -476,6 +478,14 @@ def main(argv: list[str] | None = None) -> int:
         default=list(labels.SET_SIZES.values()),
         metavar=("STATEMENT", "CONTRIB", "NONE"),
         help="label set rows per style: statement_text, contrib_text and none (default: %(default)s)",
+    )
+    cmd.add_argument(
+        "--exclude",
+        type=Path,
+        nargs="+",
+        default=[],
+        metavar="CSV",
+        help="with --set: leave out the articles in these label files, to draw a second set",
     )
     cmd.set_defaults(func=cmd_label)
     cmd = sub.add_parser("score", parents=[snap, db], help="score the parser against a labelled CSV")
