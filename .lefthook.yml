@@ -5,6 +5,11 @@ pre-commit:
             glob: "*.{js,ts,tsx,jsx,json,md,css,scss,html}"
             run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
             stage_fixed: true
+prepare-commit-msg:
+    commands:
+        sign-off:
+            # The dco workflow fails a pull request with a commit that lacks this line.
+            run: 'git interpret-trailers --in-place --if-exists doNothing --trailer "Signed-off-by: $(git config user.name) <$(git config user.email)>" {1}'
 commit-msg:
     commands:
         commitlint:
