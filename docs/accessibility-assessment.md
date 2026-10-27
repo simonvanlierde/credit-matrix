@@ -50,7 +50,7 @@ N/A: the page has no content the criterion applies to.
 
 | Criterion | Level | Result | Evidence |
 | --- | --- | --- | --- |
-| 1.1.1 Non-text Content | A | Pass | In the app every image has a text alternative or is decorative, and the statement and table repeat the heatmap. Each census chart has a sentence of its numbers and a table. The downloaded SVG has the contribution statement as its `<desc>` and the PNG as a Description text chunk; `e2e/screen-reader.spec.ts` downloads both through the menu and checks them. Editors may not use the PNG's: see Known problems in the statement. |
+| 1.1.1 Non-text Content | A | Pass | In the app every image has a text alternative or is decorative, and the statement and table repeat the heatmap. Each census chart has a sentence of its numbers and a table. The downloaded SVG has the contribution statement as its `<desc>` and the PNG as a Description text chunk; `e2e/screen-reader.spec.ts` downloads both through the menu and checks them. Editors may not use the PNG's, and Chromium drops it from a copied PNG: see Known problems in the statement. |
 | 1.2.1 Audio-only and Video-only (Prerecorded) | A | N/A | No audio or video. |
 | 1.2.2 Captions (Prerecorded) | A | N/A | No audio or video. |
 | 1.2.3 Audio Description or Media Alternative (Prerecorded) | A | N/A | No audio or video. |

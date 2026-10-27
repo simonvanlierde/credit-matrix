@@ -48,7 +48,9 @@ under [How we check](#how-we-check).
   contribution statement as their text alternative: the SVG in its description, which screen
   readers read, and the PNG in its Description field. A word processor or slide tool may not turn
   that field into alt text. When you put the heatmap in a paper or slide, check its alt text there,
-  and paste in the contribution statement if it is empty.
+  and paste in the contribution statement if it is empty. **Copy PNG** is worse: Chromium drops the
+  Description field from a copied image, so paste the contribution statement in as alt text, or
+  use **Download PNG** or **Download SVG**.
 - **No native speaker has checked eight of the nine languages yet.** The German, Spanish, French,
   Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
   translated by machine. If a label is unclear, switch the language menu to English. The CRediT role names themselves come from the reviewed
@@ -117,7 +119,7 @@ speak it is not checked. Nobody has used the app in Firefox or Safari by hand.
 
 In the app, screen readers skip the heatmap drawing, and the contribution statement beside it says
 the same in words. The downloaded SVG has the title "Contribution heatmap" and, as its description,
-the contribution statement by author. The PNG carries the same statement in its Description field.
+the contribution statement by author. The downloaded PNG carries the same statement in its Description field; a copied PNG does not.
 The first known problem says where that text gets lost.
 
 ### The web element
