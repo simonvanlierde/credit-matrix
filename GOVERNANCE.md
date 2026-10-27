@@ -25,6 +25,9 @@ The planned work is in the [roadmap](docs/roadmap.md).
 
 ## If the maintainer is unavailable
 
+A named person can take over the GitHub repository, and the recovery details for npm, Cloudflare
+and Zenodo are in an emergency-access vault.
+
 The code, the release history and the docs are public under the MIT license, so anyone can fork the
 project. The site is a static build: it keeps working without upkeep until a dependency or a lookup
 service changes.
