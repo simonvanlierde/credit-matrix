@@ -97,9 +97,7 @@ me. The census in `census/` follows the same rule through uv's `exclude-newer = 
   it on the Node version in `.node-version`: another version moves the score by about half a point. It
   writes an HTML report to `reports/mutation/` and the mutants no test kills to
   `test/mutation-baseline.txt`. Commit that list with your change, and look at what the diff
-  adds: a new survivor is a test to write, or a change that does nothing. A patch in `patches/`
-  fixes two faults in the Vitest runner under Vitest 5: it matched no test by name, and it read a
-  test file that failed to load as a pass.
+  adds: a new survivor is a test to write, or a change that does nothing.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.

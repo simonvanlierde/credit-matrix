@@ -20,7 +20,3 @@ overrides:
   # three advisories (GHSA-4mjr-xmp4-gh2g, GHSA-q8mj-m7cp-5q26, GHSA-x5fp-wj9c-mxmx). Drop once
   # stryker moves to typed-rest-client 3.
   "typed-rest-client>qs": "^6.16.0"
-
-# Fixed upstream in @stryker-mutator/vitest-runner 10.1.0 (stryker-js #6214, #6269; 10.1.1 is the re-release on npm). Drop this patch, its Renovate rule and the CONTRIBUTING sentence with the bump to 10.1.1, installable from 2026-10-27.
-patchedDependencies:
-  '@stryker-mutator/vitest-runner@10.0.0': patches/@stryker-mutator__vitest-runner@10.0.0.patch
