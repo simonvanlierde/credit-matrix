@@ -55,6 +55,12 @@ describe("withPngText", () => {
     expect(inflateSync(out[2]?.[1] ?? Buffer.alloc(0))).toEqual(Buffer.from([0, 128]));
   });
 
+  it("writes the language tag into the iTXt chunk", () => {
+    const out = chunks(withPngText(onePixelPng(), "Description", "x", "pt-BR"));
+    const data = out[1]?.[1] ?? Buffer.alloc(0);
+    expect(data.toString("latin1")).toBe("Description\0\0\0pt-BR\0\0x");
+  });
+
   it("leaves anything that is not a PNG alone", () => {
     const junk = new Uint8Array([1, 2, 3]);
     expect(withPngText(junk, "Description", "x")).toBe(junk);

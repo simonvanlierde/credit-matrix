@@ -166,6 +166,14 @@ describe("buildHeatmapSvg", () => {
     expect(b).toBe(a);
   });
 
+  it("tags its text alternative with the output language", () => {
+    const authors = authorsWithScores();
+    for (const svg of [buildHeatmapSvg(authors, { locale: "ja" }), buildHeatmapSvg([], { locale: "ja" })]) {
+      expect(svg).toMatch(/^<svg [^>]* xml:lang="ja" lang="ja"/);
+    }
+    expect(buildHeatmapSvg(authors)).not.toContain("lang=");
+  });
+
   it("names the graphic for assistive technology without drawing a title", () => {
     const svg = buildHeatmapSvg(authorsWithScores());
     expect(svg).toContain('role="img"');

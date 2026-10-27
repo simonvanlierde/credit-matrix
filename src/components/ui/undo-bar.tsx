@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useLayoutEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { cn } from "@/lib/utils";
 
@@ -13,17 +13,43 @@ import { cn } from "@/lib/utils";
  * Not a live region: one that mounts with its text already in it is missed by
  * many screen readers. The caller says the message with announce(); the group
  * name tells someone tabbing to Undo what it undoes.
+ *
+ * The strip unmounts on Undo and on timeout. If it holds focus then, focus
+ * would drop to <body>, so `onFocusLost` names where it goes instead.
  */
 /** How long an undo stays on offer: eight seconds was under WCAG 2.2.1's threshold. */
 export const UNDO_WINDOW_MS = 60_000;
 
-export function UndoBar({ message, onUndo, className }: { message: string; onUndo: () => void; className?: string }) {
+export function UndoBar({
+  message,
+  onUndo,
+  onFocusLost,
+  className,
+}: {
+  message: string;
+  onUndo: () => void;
+  onFocusLost: () => void;
+  className?: string;
+}) {
   const t = useTranslations();
   const messageId = useId();
+  const ref = useRef<HTMLFieldSetElement>(null);
+  // Read through a ref so the cleanup sees the latest callback, not the first.
+  const focusLost = useRef(onFocusLost);
+  focusLost.current = onFocusLost;
+  // A layout cleanup runs before React removes the strip's DOM, so the focused
+  // button is still there to be found.
+  useLayoutEffect(() => {
+    const bar = ref.current;
+    return () => {
+      if (bar?.contains(document.activeElement)) focusLost.current();
+    };
+  }, []);
   return (
     <div className="undo-enter grid">
       <div className="overflow-hidden">
         <fieldset
+          ref={ref}
           aria-labelledby={messageId}
           className={cn(
             "flex min-w-0 items-center justify-between gap-3 rounded-lg bg-surface-container px-3 py-2 text-sm text-on-surface",

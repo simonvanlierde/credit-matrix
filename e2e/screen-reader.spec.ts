@@ -272,7 +272,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
     `);
   });
 
-  test("co-author page: a heading per role and a named group of levels", async ({ page, browser }) => {
+  test("co-author page: a roles heading, a heading per role and a named group of levels", async ({ page, browser }) => {
     await memoryClipboard(page);
     await loadSample(page);
     await page.getByRole("button", { name: "Actions for Rosalind E. Franklin" }).click();
@@ -287,16 +287,17 @@ test.describe("screen-reader view (accessibility tree)", () => {
       - main:
         - button "Language settings"
         - heading "What did you do on this paper?" [level=1]
+        - heading "Your roles" [level=2]
         - list "Your roles":
           - listitem:
-            - heading "Conceptualization" [level=2]
+            - heading "Conceptualization" [level=3]
             - radiogroup "Conceptualization":
               - radio "None" [checked]
               - radio "Supporting"
               - radio "Equal"
               - radio "Lead"
           - listitem:
-            - heading "Data curation" [level=2]
+            - heading "Data curation" [level=3]
             - radiogroup "Data curation":
               - radio "Lead" [checked]
         - switch "I share first authorship"

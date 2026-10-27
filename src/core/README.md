@@ -111,6 +111,8 @@ Only non-zero contributions appear in statements.
 
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
 assets.
+Its `<desc>` is the by-author contribution statement, so a screen reader hears who did what;
+`heatmapDescription` returns that text, for an image's alt text or a PNG's Description field.
 
 `fromCsv` needs a `Name` column. Other headers and role names match whatever their case or kind of
 dash. A score cell is a number from 0 to 100 or a level word (`None`, `Supporting`, `Equal`, `Lead`).
@@ -218,8 +220,8 @@ holds its exact shape. By entry point:
   - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`,
-    `toMarkdown`, `buildHeatmapSvg`, `HeatmapSvgOptions`, `detectFormat`, `importAny`,
-    `DetectedFormat`, `Imported`
+    `toMarkdown`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
+    `importAny`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`

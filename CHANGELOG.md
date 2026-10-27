@@ -59,7 +59,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   conformant" until a screen reader has read the app.
 - Downloaded heatmaps carry the contribution statement as their text alternative: the SVG in its
   description, which screen readers read, the PNG in its Description field. Before, the SVG said
-  only "Contribution heatmap" and the PNG had no text at all.
+  only "Contribution heatmap" and the PNG had no text at all. Both are tagged with the output
+  language, so a screen reader reads them in that language. In the `credit-matrix` package,
+  `heatmapDescription` returns the same text, and `buildHeatmapSvg` sets `xml:lang` and `lang` when
+  you pass `locale`.
 - Census: for people who run it, `census model` trains and checks a model that reads contribution
   statements. A fine-tuned encoder and a hybrid of the rule parser and the encoder sit beside the
   rule parser, and `census model browser` exports the encoder for the browser. `--seed` fixes a
@@ -104,10 +107,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Screen readers hear a removed contributor and a bulk change once, through the same live
     region as every other message. Before, the removal could go unheard and the bulk change was
     said twice. Each Undo button now says what it undoes.
+  - After Undo, focus goes to the contributor who came back, or to the bulk-assign button, instead
+    of the top of the page. The same happens when an Undo you are on runs out of time.
   - A grid change is read out once, without the statement's contributor and role counts after it.
   - Screen readers no longer read a contributor's initials before their name.
   - On the co-author page each role name is a heading, so a screen reader can jump from role to
-    role.
+    role. The role headings sit under a "Your roles" heading, so the switches and the ORCID sign-in
+    after the list no longer read as part of the last role.
 - "How it works" did nothing outside the main page. It now takes you there and opens the welcome
   panel, and closing the panel puts focus on the main content.
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A

@@ -928,7 +928,11 @@ interface HeatmapSvgOptions {
   translateRole?: RoleTranslator;
   /** Localize the level legend and empty-state line. Defaults to English. */
   translateUi?: UiTranslator;
-  /** BCP-47 locale of the `<desc>` statement's name lists. Defaults to "en". */
+  /**
+   * BCP-47 locale of the `<desc>` statement's name lists. Defaults to "en".
+   * When set, it is also the root element's `xml:lang` and `lang`, so a screen
+   * reader reads `<title>` and `<desc>` in that language.
+   */
   locale?: string;
 }
 /**

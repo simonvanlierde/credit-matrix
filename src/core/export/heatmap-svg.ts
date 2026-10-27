@@ -56,7 +56,11 @@ export interface HeatmapSvgOptions {
   translateRole?: RoleTranslator;
   /** Localize the level legend and empty-state line. Defaults to English. */
   translateUi?: UiTranslator;
-  /** BCP-47 locale of the `<desc>` statement's name lists. Defaults to "en". */
+  /**
+   * BCP-47 locale of the `<desc>` statement's name lists. Defaults to "en".
+   * When set, it is also the root element's `xml:lang` and `lang`, so a screen
+   * reader reads `<title>` and `<desc>` in that language.
+   */
   locale?: string;
 }
 
@@ -100,6 +104,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const translateRole = opts?.translateRole ?? ((name: string) => name);
   const translateUi = opts?.translateUi ?? makeUiTranslator(null);
   const acronyms = opts?.acronyms ?? true;
+  const lang = opts?.locale ? ` xml:lang="${escapeXml(opts.locale)}" lang="${escapeXml(opts.locale)}"` : "";
   const authorLabel = (ai: number): string =>
     (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
 
@@ -114,7 +119,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
     const w = 320 * scale;
     const h = 56 * scale;
     return [
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img">`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img"${lang}>`,
       `<!-- ${GENERATOR_NOTE} -->`,
       `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
       `<rect width="${w}" height="${h}" fill="${COLOR_BG}"/>`,
@@ -225,7 +230,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const lines: string[] = [];
   const description = heatmapDescription(authors, opts);
   lines.push(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" role="img">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" role="img"${lang}>`,
     `<!-- ${GENERATOR_NOTE} -->`,
     `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
     `<desc>${escapeXml(description)}</desc>`,
