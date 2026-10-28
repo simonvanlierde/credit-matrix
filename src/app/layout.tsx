@@ -105,8 +105,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </h1>
                   <nav className="hidden lg:flex gap-6 items-center">
                     <HowItWorks />
-                    <CensusLink />
                     <AboutPopover version={packageJson.version} />
+                    <CensusLink />
                   </nav>
                 </div>
 

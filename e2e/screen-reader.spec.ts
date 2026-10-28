@@ -77,8 +77,8 @@ test.describe("screen-reader view (accessibility tree)", () => {
         - heading "CRediT Matrix" [level=1]
         - navigation:
           - button "How it works"
-          - link "CRediT census"
           - button "About this app"
+          - link "CRediT census"
         - button "Language settings"
         - button /Drafts:/
         - button "Share a link containing all contributor data"
