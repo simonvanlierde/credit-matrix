@@ -312,7 +312,8 @@ jobs:
           pnpm exec wrangler versions upload --message "$MESSAGE" | tee upload.log
           {
             echo "### Preview"
-            url=$(grep -Eo 'https://[^ ]+' upload.log | grep -i 'preview' | head -n 1 || true)
+            # The URL itself has no "preview" in it, so match wrangler's label.
+            url=$(grep 'Version Preview URL:' upload.log | grep -Eo 'https://[^ ]+' || true)
             if [ -n "$url" ]; then echo "$url"; else echo "Version uploaded, but wrangler printed no preview URL. Check preview_urls and workers_dev in wrangler.jsonc."; fi
           } >> "$GITHUB_STEP_SUMMARY"
 
