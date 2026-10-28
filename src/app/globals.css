@@ -217,12 +217,12 @@ body:has([data-census-page], [data-reading-page]) {
 
 /*
  * A page to read (about, accessibility statement), set like the census page:
- * Newsreader headings over a thin rule, sans body text at a 65ch measure.
+ * Newsreader headings over a thin rule, sans body text at an 80ch measure.
  * Plain element selectors, because the statement arrives as HTML rendered from
  * Markdown at build time, with no classes of its own.
  */
 .document {
-  max-width: 65ch;
+  max-width: 80ch;
   color: var(--color-on-surface-variant);
   line-height: 1.6;
   text-wrap: pretty;
