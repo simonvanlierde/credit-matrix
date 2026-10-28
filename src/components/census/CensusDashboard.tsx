@@ -42,7 +42,7 @@ function Section({ title, caption, children }: { title: string; caption: ReactNo
   return (
     <section className="border-t border-outline-variant pt-8">
       <h3 className="font-headline text-2xl font-semibold text-balance text-on-surface">{title}</h3>
-      <p className="mt-1.5 max-w-[65ch] text-sm text-pretty text-on-surface-variant">{caption}</p>
+      <p className="mt-1.5 max-w-[80ch] text-sm text-pretty text-on-surface-variant">{caption}</p>
       <div className="mt-5">{children}</div>
     </section>
   );
@@ -149,10 +149,10 @@ export function CensusDashboard({ data }: { data: CensusData }) {
               {t("censusHeadline", { year: focus.year, share: pct(focus.with_roles / focus.articles) })}
             </p>
           )}
-          <p className="max-w-[65ch] text-on-surface-variant">{t("censusLead", { articles: count(data.articles) })}</p>
+          <p className="max-w-[80ch] text-on-surface-variant">{t("censusLead", { articles: count(data.articles) })}</p>
           <aside
             aria-labelledby="census-preliminary"
-            className="flex max-w-[65ch] gap-3 rounded-lg border border-outline bg-surface-container-low p-4 text-sm"
+            className="flex max-w-[80ch] gap-3 rounded-lg border border-outline bg-surface-container-low p-4 text-sm"
           >
             <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
             <div className="space-y-1">
@@ -182,7 +182,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
             partialAfter={partialAfter}
           />
           <h4 className="mt-8 text-sm font-semibold text-on-surface">{t("censusRolesPerAuthorTitle")}</h4>
-          <p className="mt-1 max-w-[65ch] text-sm text-on-surface-variant">{t("censusRolesPerAuthorCaption")}</p>
+          <p className="mt-1 max-w-[80ch] text-sm text-on-surface-variant">{t("censusRolesPerAuthorCaption")}</p>
           <LineChart
             points={perAuthor}
             formatY={perAuthorFormat}
@@ -314,9 +314,9 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           <h3 id="census-how" className="font-headline text-xl font-semibold text-on-surface">
             {t("censusHowTitle")}
           </h3>
-          <p className="max-w-[65ch] text-pretty">{t("censusHowRules")}</p>
-          <p className="max-w-[65ch] text-pretty">{t("censusHowModel")}</p>
-          <p className="max-w-[65ch] text-pretty">{t("censusHowCaveat")}</p>
+          <p className="max-w-[80ch] text-pretty">{t("censusHowRules")}</p>
+          <p className="max-w-[80ch] text-pretty">{t("censusHowModel")}</p>
+          <p className="max-w-[80ch] text-pretty">{t("censusHowCaveat")}</p>
           <p className="flex flex-wrap gap-x-5 gap-y-1">
             <ExternalLink href={SOURCE} className="gap-1 text-primary hover:underline">
               {t("censusHowCode")}
@@ -329,7 +329,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
 
         <footer className="space-y-3 border-t border-outline-variant pt-8 text-sm text-on-surface-variant">
           <h3 className="font-headline text-xl font-semibold text-on-surface">{t("censusAboutTitle")}</h3>
-          <p className="max-w-[65ch] text-pretty">{t("censusMethod")}</p>
+          <p className="max-w-[80ch] text-pretty">{t("censusMethod")}</p>
           <dl className="grid max-w-xl grid-cols-[auto_1fr] gap-x-4 gap-y-1">
             <dt>{t("censusSnapshot")}</dt>
             <dd className="font-mono text-xs leading-5 text-on-surface">{data.snapshot}</dd>
