@@ -29,6 +29,7 @@ jobs:
         with:
           version: "0.13.x"
           working-directory: census
+          save-cache: ${{ github.event_name != 'pull_request' }}
 
       - name: Install dependencies
         working-directory: census

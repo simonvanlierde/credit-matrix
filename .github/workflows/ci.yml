@@ -1,5 +1,9 @@
 name: CI
 
+# Caches are saved only off pull requests (main push, dispatch): an entry a PR saves is
+# visible to that PR alone, and a full cache quota evicts the main entries every PR restores.
+# So PRs restore the caches below but never write one; pnpm/setup has no restore-only mode,
+# so a PR installs from the registry.
 on:
   # Every PR, not only those into main: a stacked PR otherwise runs no checks
   # until its base merges.
@@ -31,7 +35,7 @@ jobs:
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
           node-version-file: .node-version
-          cache: true
+          cache: ${{ github.event_name != 'pull_request' }}
           install: false
 
       - name: Install dependencies
@@ -52,7 +56,15 @@ jobs:
         run: pnpm verify
 
       # The JATS4R rules and SchXslt2 are pinned in the script, so its hash is the key.
+      - name: Cache the JATS4R rules (restore only on a pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .cache/jats4r
+          key: ${{ runner.os }}-jats4r-${{ hashFiles('scripts/validate-jats.sh') }}
+
       - name: Cache the JATS4R rules
+        if: github.event_name != 'pull_request'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: .cache/jats4r
@@ -86,6 +98,7 @@ jobs:
         with:
           version: "0.13.x"
           working-directory: census
+          save-cache: ${{ github.event_name != 'pull_request' }}
 
       - name: Lint, typecheck, test
         run: |
@@ -106,7 +119,7 @@ jobs:
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
           node-version-file: .node-version
-          cache: true
+          cache: ${{ github.event_name != 'pull_request' }}
           install: false
 
       - name: Install dependencies
@@ -115,7 +128,15 @@ jobs:
       # The browser download is ~130MB and never varies for a given Playwright
       # version, so key the cache on the lockfile. `--with-deps` still runs on a
       # hit: the apt system libraries live outside this path.
+      - name: Cache Playwright browsers (restore only on a pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Cache Playwright browsers
+        if: github.event_name != 'pull_request'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.cache/ms-playwright
@@ -127,7 +148,17 @@ jobs:
 
       # This job builds the app before the tests run (see playwright.config.ts),
       # so it wants the same incremental cache the build job keeps.
+      - name: Cache Next.js build (restore only on a pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', '!src/**/node_modules/**', '!src/core/dist/**', 'public/**', 'next.config.ts', 'postcss.config.mjs', 'tsconfig.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+
       - name: Cache Next.js build
+        if: github.event_name != 'pull_request'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: .next/cache
@@ -176,7 +207,7 @@ jobs:
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
           node-version-file: .node-version
-          cache: true
+          cache: ${{ github.event_name != 'pull_request' }}
           install: false
 
       - name: Install dependencies
@@ -186,7 +217,17 @@ jobs:
       # rebuilds are faster. Keyed on lockfile + source; falls back to the last
       # cache for the same deps when only source changed. hashFiles does not
       # expand braces, so each input is its own pattern.
+      - name: Cache Next.js build (restore only on a pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', '!src/**/node_modules/**', '!src/core/dist/**', 'public/**', 'next.config.ts', 'postcss.config.mjs', 'tsconfig.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+
       - name: Cache Next.js build
+        if: github.event_name != 'pull_request'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: .next/cache
@@ -245,7 +286,7 @@ jobs:
         uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
           node-version-file: .node-version
-          cache: true
+          cache: ${{ github.event_name != 'pull_request' }}
           install: false
 
       - if: steps.gate.outputs.run == 'true'
@@ -321,7 +362,7 @@ jobs:
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
           node-version-file: .node-version
-          cache: true
+          cache: ${{ github.event_name != 'pull_request' }}
           install: false
 
       - name: Install dependencies
