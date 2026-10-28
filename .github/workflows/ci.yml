@@ -37,6 +37,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Syntax errors and duplicate keys in every JSON, JSONC and JSON5 file,
+      # renovate.json5 included, which biome skips. After the install, so the
+      # $schema paths in biome.json and wrangler.jsonc resolve and both files are
+      # also checked against their schemas.
+      - uses: simonvanlierde/jsonvet@022d320d5b971eccb28cfa6ce205152cbb382e53 # v3.2.0
+
       # integrations/quarto/credit-matrix.test.ts renders a document with the filter.
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
 
