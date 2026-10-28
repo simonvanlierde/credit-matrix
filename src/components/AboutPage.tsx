@@ -30,7 +30,7 @@ export function AboutPage({ version }: { version: string }) {
         </dd>
         <dt>{t("aboutAuthor")}</dt>
         <dd className="text-on-surface">
-          © 2026 <a href="https://github.com/simonvanlierde">Simon van Lierde</a>
+          © 2026 <a href="https://simonvanlierde.com">Simon van Lierde</a>
         </dd>
       </dl>
 
