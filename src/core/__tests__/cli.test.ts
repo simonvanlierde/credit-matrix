@@ -1,5 +1,5 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the CLI reads files, so its tests write some.
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
@@ -59,8 +59,22 @@ describe("credit-matrix statement", () => {
     expect(await run(["statement", levels, "--levels"])).toBe("CRediT: Software: Jane Smith (Equal), Bob White");
   });
 
+  it("prints CodeMeta roles for authors with an ORCID iD, and warns once for each person left out", async () => {
+    const fixture = (name: string) => fileURLToPath(new URL(`fixtures/${name}`, import.meta.url));
+    const err = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    const output = await run(["statement", fixture("export-codemeta.json"), "--format", "codemeta"]);
+    expect(JSON.parse(output)).toEqual(JSON.parse(readFileSync(fixture("export-codemeta.expected.json"), "utf8")));
+    expect(err.mock.calls.join("")).toBe(
+      "credit-matrix: Ilse Marchetti is not an author, so their roles are left out.\n" +
+        "credit-matrix: Tomas Okafor has no ORCID iD, so their roles are left out.\n",
+    );
+    vi.restoreAllMocks();
+  });
+
   it("refuses a roster with no roles rather than print an empty statement", async () => {
-    await expect(run(["statement", file("names.txt", "Jane Smith, Bob White")])).rejects.toThrow(
+    const names = file("names.txt", "Jane Smith, Bob White");
+    await expect(run(["statement", names])).rejects.toThrow("No roles assigned yet: the statement is empty.");
+    await expect(run(["statement", names, "--format", "codemeta"])).rejects.toThrow(
       "No roles assigned yet: the statement is empty.",
     );
   });

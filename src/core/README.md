@@ -33,6 +33,7 @@ Node 20.12 or later. Run it with `npx credit-matrix` without installing, or with
 
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
+npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 roles
 npx credit-matrix convert paper.xml --to json      # json, csv, jats or md
 npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
 npx credit-matrix --help                           # or --version
@@ -41,6 +42,13 @@ npx credit-matrix --help                           # or --version
 Each command reads a file, or `-` for standard input, in any format `importAny` reads. Spreadsheet
 files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement --levels` adds Equal or
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
+
+`statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
+or `codemeta`. `codemeta` prints a JSON array of CodeMeta 3.0 `Role` objects, one for each person and
+role with a score above zero: `roleName` is the role's `credit.niso.org` URL and `schema:author` the
+person's ORCID URL. Paste them into the `author` list of your `codemeta.json`, beside a `Person`
+whose `id` is that ORCID URL. Non-authors are left out, since that list is for authors. So are
+people without an ORCID iD. Each person left out gets one warning on standard error.
 
 `ask` prints a link that opens the contributor's own row in the web app (`--base-url` points it at
 another copy). `--contributor` takes an id, a full name, or a first name or surname only one person
