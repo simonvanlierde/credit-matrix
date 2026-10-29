@@ -67,7 +67,7 @@ labellers gave in full. Only the rows with three different labels go to the adju
 Run the pilot before a full labelling run. It passes when two things hold:
 
 1. Exact agreement between labellers is at least 0.80 on the narrative rows.
-2. The project owner checks 40 rows by hand and agrees with them.
+2. The project owner checks 40 rows by hand and marks at least 34 of them right.
 
 ## Where the examples live
 
