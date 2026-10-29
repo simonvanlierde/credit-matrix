@@ -15,6 +15,8 @@ from pathlib import Path
 
 import duckdb
 
+from census import store
+
 OPENALEX_SOURCES = "s3://openalex/data/parquet/sources/*/*.parquet"
 MULTIDISCIPLINARY = 0.45
 FIELDS_VERSION = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
@@ -23,7 +25,7 @@ FIELDS_VERSION = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
 
 def has_fields(con: duckdb.DuckDBPyConnection) -> bool:
     """Whether `build_journals` has run on this database."""
-    (n,) = con.execute("SELECT count(*) FROM duckdb_views() WHERE view_name = 'article_fields'").fetchone() or (0,)
+    (n,) = store.one(con, "SELECT count(*) FROM duckdb_views() WHERE view_name = 'article_fields'") or (0,)
     return n > 0
 
 
@@ -97,5 +99,5 @@ def build_journals(con: duckdb.DuckDBPyConnection, sources: str = OPENALEX_SOURC
     )
     con.execute("INSERT OR REPLACE INTO meta VALUES ('fields', ?)", [FIELDS_VERSION])
     con.commit()
-    (count,) = con.execute("SELECT count(*) FROM journals").fetchone() or (0,)
+    (count,) = store.one(con, "SELECT count(*) FROM journals") or (0,)
     return count

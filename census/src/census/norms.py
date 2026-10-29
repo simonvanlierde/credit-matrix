@@ -9,6 +9,7 @@ from pathlib import Path
 
 import duckdb
 
+from census import store
 from census.export import DATASET_VERSION, commit
 from census.fields import has_fields
 
@@ -81,9 +82,9 @@ def build(con: duckdb.DuckDBPyConnection, snapshot: str, min_articles: int = MIN
         if authors >= MIN_AUTHORS:
             fields[field]["shares"][position] = [round(n / authors, 3) for n in counts]
     meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
-    (files_date,) = con.execute("SELECT max(listed_date) FROM units WHERE finished").fetchone() or (None,)
+    (files_date,) = store.one(con, "SELECT max(listed_date) FROM units WHERE finished") or (None,)
     # The parser against publisher tags over every tagged article: the `(all)` row `census report` prints.
-    paired = con.execute("SELECT f1, articles FROM paired_scores WHERE publisher = '(all)'").fetchone()
+    paired = store.one(con, "SELECT f1, articles FROM paired_scores WHERE publisher = '(all)'")
     f1, f1_articles = paired or (None, 0)
     return {
         "snapshot": snapshot,

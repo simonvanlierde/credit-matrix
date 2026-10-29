@@ -70,7 +70,7 @@ def cmd_run(args: argparse.Namespace) -> None:
     pin_file = SNAPSHOTS / f"{args.snapshot}.inventory"
     committed = pin_file.read_text(encoding="utf-8").strip() if pin_file.exists() else None
     with store.connect(db) as con:
-        (used,) = con.execute("SELECT value FROM meta WHERE key = 'inventory'").fetchone() or (None,)
+        (used,) = store.one(con, "SELECT value FROM meta WHERE key = 'inventory'") or (None,)
         # The committed pin wins over the newest inventory, so a clean clone reproduces the sample.
         date = pmc_s3.latest_inventory() if args.inventory == "latest" else args.inventory or used or committed
         date = date or pmc_s3.latest_inventory()

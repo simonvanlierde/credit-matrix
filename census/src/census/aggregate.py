@@ -8,6 +8,7 @@ from pathlib import Path
 
 import duckdb
 
+from census import store
 from census.export import DATASET_VERSION, commit
 from census.fields import has_fields
 
@@ -71,9 +72,7 @@ def aggregate(
 
     Refuses a database with unfinished units or no fields unless `partial`, like `census export`.
     """
-    (units_total, units_finished) = con.execute(
-        "SELECT count(*), count(*) FILTER (finished) FROM units"
-    ).fetchone() or (0, 0)
+    (units_total, units_finished) = store.one(con, "SELECT count(*), count(*) FILTER (finished) FROM units") or (0, 0)
     fielded = has_fields(con)
     complete = bool(units_total) and units_total == units_finished and fielded
     if not complete and not partial:
@@ -84,11 +83,12 @@ def aggregate(
     meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
     # The newest year is still being published, so per-field and per-publisher shares use the one before.
     # Newest by volume, not max(year): a few articles dated ahead must not move it.
-    (newest,) = con.execute(
+    (newest,) = store.one(
+        con,
         f"SELECT max(year) FROM (SELECT a.year FROM articles a WHERE {_RESEARCH} GROUP BY a.year"
         " HAVING count(*) >= $min)",
         {"min": min_articles},
-    ).fetchone() or (None,)
+    ) or (None,)
     year = newest - 1 if newest else None
 
     def rows(key: str) -> list[dict]:
@@ -99,15 +99,15 @@ def aggregate(
         columns = [d[0] for d in rel.description]
         return [dict(zip(columns, row, strict=True)) for row in rel.fetchall()]
 
-    (articles,) = con.execute(
-        "SELECT count(*) FROM articles WHERE style NOT IN ('error', 'missing', 'retry')"
-    ).fetchone() or (0,)
-    paired = con.execute("SELECT articles, f1 FROM paired_scores WHERE publisher = '(all)'").fetchone()
+    parsed = "SELECT count(*) FROM articles WHERE style NOT IN ('error', 'missing', 'retry')"
+    (articles,) = store.one(con, parsed) or (0,)
+    paired = store.one(con, "SELECT articles, f1 FROM paired_scores WHERE publisher = '(all)'")
     # The paired score rests mostly on these two publishers, whose tags are themselves unchecked.
-    (mdpi_frontiers,) = con.execute(
+    (mdpi_frontiers,) = store.one(
+        con,
         "SELECT coalesce(sum(articles), 0) FROM paired_scores"
-        " WHERE publisher LIKE '%(MDPI)%' OR publisher LIKE 'Frontiers %'"
-    ).fetchone() or (0,)
+        " WHERE publisher LIKE '%(MDPI)%' OR publisher LIKE 'Frontiers %'",
+    ) or (0,)
     data = {
         "snapshot": name,
         "dataset_version": DATASET_VERSION,
