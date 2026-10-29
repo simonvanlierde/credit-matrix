@@ -2,7 +2,7 @@
   "@context": "https://w3id.org/codemeta/3.0",
   "@type": "SoftwareSourceCode",
   "name": "CRediT Matrix",
-  "description": "CRediT Matrix helps a research team draft the CRediT (Contributor Roles Taxonomy) statement for a paper. Co-authors fill in their own rows through a shared link, and their replies are settled in one review. Contributors can be added from an ORCID iD, a DOI or a tenzing sheet. The tool exports a contribution heatmap and the statement as JATS4R XML, CSV, JSON or Markdown. The web app works offline in nine languages. The credit-matrix npm package adds a command-line tool, a credit-matrix web element, and Quarto and MyST plugins.",
+  "description": "CRediT Matrix helps a research team draft the CRediT (Contributor Roles Taxonomy) contribution statement for a paper with its co-authors. Co-authors fill in their own rows through a shared link, and their replies are settled in one review. Contributors can be added from an ORCID iD, a DOI or a tenzing sheet. The tool exports a contribution heatmap and the statement as JATS4R XML, CSV, JSON or Markdown. The web app works offline in nine languages. The credit-matrix npm package adds a command-line tool, a credit-matrix web element, and Quarto and MyST plugins.",
   "version": "0.8.1",
   "datePublished": "2026-10-13",
   "identifier": "https://doi.org/10.5281/zenodo.21213659",

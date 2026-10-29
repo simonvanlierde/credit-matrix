@@ -5,6 +5,10 @@ pre-commit:
             glob: "*.{js,ts,tsx,jsx,json,md,css,scss,html}"
             run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
             stage_fixed: true
+        citesync:
+            # The citation files and package manifests must agree (CITATION.cff is the source).
+            glob: "{CITATION.cff,codemeta.json,.zenodo.json,package.json}"
+            run: uvx citesync@0.1.0 check
 prepare-commit-msg:
     commands:
         sign-off:
