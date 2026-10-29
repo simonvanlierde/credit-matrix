@@ -8,5 +8,10 @@
     "type": "Role",
     "schema:author": "https://orcid.org/0000-0002-1825-0097",
     "roleName": "https://credit.niso.org/contributor-roles/formal-analysis/"
+  },
+  {
+    "type": "Role",
+    "schema:author": "https://orcid.org/0000-0002-1694-233X",
+    "roleName": "https://credit.niso.org/contributor-roles/validation/"
   }
 ]

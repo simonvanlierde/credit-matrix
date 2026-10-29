@@ -217,6 +217,7 @@
       "middleName": "",
       "surname": "Brandt",
       "initials": "NB",
+      "orcid": "0000-0002-1694-233X",
       "contributorType": "author",
       "contributions": [
         {
@@ -261,7 +262,7 @@
         },
         {
           "role": "Validation",
-          "score": 0
+          "score": 50
         },
         {
           "role": "Visualization",
