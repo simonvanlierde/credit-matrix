@@ -10,18 +10,27 @@ export interface CodemetaRole {
 }
 
 /**
- * CodeMeta `Role` objects for every person with an ORCID iD: one per CRediT
+ * CodeMeta `Role` objects for every author with an ORCID iD: one per CRediT
  * role with a score above zero, `roleName` the role's credit.niso.org URL.
- * `skipped` lists the people who have roles but no ORCID iD to link them to.
+ * `skipped` lists, in roster order, the people with roles who are left out:
+ * non-authors, since the roles go in codemeta.json's `author` list, and
+ * authors with no ORCID iD to link them to.
  */
-export function toCodemetaRoles(authors: Author[]): { roles: CodemetaRole[]; skipped: Author[] } {
+export function toCodemetaRoles(authors: Author[]): {
+  roles: CodemetaRole[];
+  skipped: { author: Author; reason: "non-author" | "no-orcid" }[];
+} {
   const roles: CodemetaRole[] = [];
-  const skipped: Author[] = [];
+  const skipped: { author: Author; reason: "non-author" | "no-orcid" }[] = [];
   for (const author of authors) {
     const active = activeContributions(author);
     if (active.length === 0) continue;
+    if (author.contributorType === "non-author") {
+      skipped.push({ author, reason: "non-author" });
+      continue;
+    }
     if (!author.orcid) {
-      skipped.push(author);
+      skipped.push({ author, reason: "no-orcid" });
       continue;
     }
     const orcidUrl = `https://orcid.org/${normalizeOrcid(author.orcid)}`;

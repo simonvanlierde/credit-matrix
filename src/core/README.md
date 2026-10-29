@@ -47,8 +47,8 @@ Supporting after each contribution below Lead. `statement` exits with 1 when nob
 or `codemeta`. `codemeta` prints a JSON array of CodeMeta 3.0 `Role` objects, one for each person and
 role with a score above zero: `roleName` is the role's `credit.niso.org` URL and `schema:author` the
 person's ORCID URL. Paste them into the `author` list of your `codemeta.json`, beside a `Person`
-whose `id` is that ORCID URL. People without an ORCID iD are left out, with one warning each on
-standard error.
+whose `id` is that ORCID URL. Non-authors are left out, since that list is for authors. So are
+people without an ORCID iD. Each person left out gets one warning on standard error.
 
 `ask` prints a link that opens the contributor's own row in the web app (`--base-url` points it at
 another copy). `--contributor` takes an id, a full name, or a first name or surname only one person

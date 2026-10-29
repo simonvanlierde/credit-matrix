@@ -75,8 +75,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and in the browser build: what it was trained on, its scores, its limits and how to cite it.
 - `credit-matrix statement --format codemeta` prints CodeMeta 3.0 `Role` objects for a
   `codemeta.json`: one for each person and CRediT role, with the role's `credit.niso.org` URL as
-  `roleName` and the person's ORCID URL as `schema:author`. People without an ORCID iD are left
-  out, with a warning for each.
+  `roleName` and the person's ORCID URL as `schema:author`. Non-authors and people without an
+  ORCID iD are left out, with a warning for each.
 - Project documents: governance, a roadmap and a security model, plus sections on disclosure, the
   maintainer and the sign-off (DCO). The README shows the OpenSSF Scorecard badge.
 
