@@ -148,6 +148,16 @@ def test_check_label_fills_others_of():
     assert labels.check_label([], "Nothing here.", 1) == []
 
 
+def test_label_format_needs_half_named():
+    def label(*evidence):
+        roles = [{"role": "methodology", "evidence": e} for e in evidence]
+        return [{"quote": "AB", "mentions": ["AB"], "authors": [1], "roles": roles}]
+
+    assert labels.label_format(label("named", "worded", "worded")) == "narrative"
+    assert labels.label_format(label("named", "worded")) == "credit"
+    assert labels.label_format([]) == "none"
+
+
 @pytest.mark.parametrize(
     ("change", "message"),
     [

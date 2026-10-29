@@ -307,7 +307,8 @@ def label_pairs(
     label: list[dict], evidence: Iterable[str] = EVIDENCE, *, pledges: bool = False
 ) -> set[tuple[int, str]]:
     """(author, slug) pairs of a checked label: strict is evidence=("named",), general the default,
-    generous adds pledges read as ICMJE_ROLES."""
+    generous adds pledges read as ICMJE_ROLES. Generous is an upper bound, not a training target: in tagged
+    articles with a pledge, 38% of the pairs it adds match a tag."""
     keep = set(evidence)
     pairs = {
         (n, ROLE_NAMES[r["role"]])
@@ -337,12 +338,11 @@ def label_degrees(label: list[dict], evidence: Iterable[str] = EVIDENCE) -> dict
 
 
 def label_format(label: list[dict]) -> str:
-    """credit if any role is named, narrative if roles are only worded or inferred, icmje if only pledges, else none."""
-    evidence = {r["evidence"] for a in label for r in a.get("roles", [])}
-    if "named" in evidence:
-        return "credit"
+    """credit if at least half the roles are named, narrative if fewer, icmje if only pledges, else none.
+    One CRediT word ("supervision") in a narrative statement does not make it a CRediT statement."""
+    evidence = [r["evidence"] for a in label for r in a.get("roles", [])]
     if evidence:
-        return "narrative"
+        return "credit" if 2 * evidence.count("named") >= len(evidence) else "narrative"
     return "icmje" if any("pledge" in a for a in label) else "none"
 
 
