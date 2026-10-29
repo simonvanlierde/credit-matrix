@@ -95,6 +95,86 @@ def test_parse_gold():
             labels.parse_gold(bad, 2)
 
 
+_TEXT = (
+    "AB designed the study and wrote the first draft. CD performed most of the experiments. "
+    "All other authors revised the manuscript. All authors meet the ICMJE criteria."
+)
+_LABEL = [
+    {
+        "quote": "AB designed the study and wrote the first draft",
+        "mentions": ["AB"],
+        "authors": [1],
+        "roles": [
+            {"role": "methodology", "evidence": "worded"},
+            {"role": "writing - original draft", "evidence": "worded"},
+        ],
+    },
+    {
+        "quote": "CD performed most of the experiments",
+        "mentions": ["CD"],
+        "authors": [2],
+        "roles": [{"role": "investigation", "evidence": "worded", "degree": "lead", "degree_evidence": "inferred"}],
+    },
+    {
+        "quote": "All other authors revised the manuscript",
+        "mentions": ["All other authors"],
+        "authors": [],
+        "roles": [{"role": "writing - review & editing", "evidence": "worded"}],
+        "others_of": [0, 1],
+    },
+    {
+        "quote": "All authors meet the ICMJE criteria",
+        "mentions": ["All authors"],
+        "authors": [1, 2, 3],
+        "pledge": "icmje",
+    },
+]
+
+
+def test_check_label_fills_others_of():
+    label = labels.check_label(_LABEL, _TEXT, 3)
+    assert label[2]["authors"] == [3]
+    assert labels.label_format(label) == "narrative"
+    assert labels.label_pairs(label, ("named",)) == set()
+    assert labels.label_pairs(label) == {
+        (1, "methodology"),
+        (1, "writing-original-draft"),
+        (2, "investigation"),
+        (3, "writing-review-editing"),
+    }
+    assert (3, "conceptualization") in labels.label_pairs(label, pledges=True)
+    assert labels.label_degrees(label) == {(2, "investigation"): "lead"}
+    assert labels.label_degrees(label, ("named", "worded")) == {}
+    assert labels.check_label([], "Nothing here.", 1) == []
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        ({"quote": "AB wrote everything"}, "not in the statement"),
+        ({"authors": [4]}, "authors"),
+        ({"roles": [{"role": "drew the figures", "evidence": "worded"}]}, "role"),
+        ({"roles": [{"role": "methodology", "evidence": "guessed"}]}, "evidence"),
+        ({"roles": [{"role": "methodology", "evidence": "worded", "degree": "lead"}]}, "degree_evidence"),
+        ({"roles": [], "pledge": "icmje"}, "roles or a pledge"),
+        ({"others_of": [0]}, "others_of"),
+        ({"resolved_by": "position"}, "resolved_by"),
+    ],
+)
+def test_check_label_refuses(change, message):
+    label = [dict(x) for x in _LABEL]
+    label[0] |= change
+    with pytest.raises(ValueError, match=message):
+        labels.check_label(label, _TEXT, 3)
+
+
+def test_check_label_refuses_wrong_complement():
+    label = [dict(x) for x in _LABEL]
+    label[2] |= {"authors": [2, 3]}
+    with pytest.raises(ValueError, match="others_of"):
+        labels.check_label(label, _TEXT, 3)
+
+
 def test_score_unknown_pmcid(db, tmp_path):
     out = tmp_path / "labels.csv"
     out.write_text("pmcid,style,authors,text,gold\nPMC404,none,,x,none\n", encoding="utf-8-sig")
