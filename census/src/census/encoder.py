@@ -25,9 +25,10 @@ from typing import Any
 
 from census import labels
 from census.modelset import Pairs, read_jsonl
-from census.roles import ROLE_PATTERNS
+from census.roles import ROLE_PATTERNS, clean, find_roles
 
 ROLES = list(ROLE_PATTERNS)
+TAG_FILTERS = ("all", "named", "named-articles")
 
 
 @dataclass
@@ -51,6 +52,8 @@ class Config:
     seed: int = 20261018
     open_licence_only: bool = False
     """Train only on CC BY and CC0 articles (`publishable` in the dataset), so the weights can be shared."""
+    tags: str = "all"
+    """Which tags to learn from (see `named_tags`): "all", "named" or "named-articles"."""
     device: str = "cuda"
 
 
@@ -108,6 +111,20 @@ def is_dev(statement: str, every: int) -> bool:
     land on the same side, so no copy of a dev text is trained on."""
     text = re.sub(r"\s+", " ", statement.strip()).lower()
     return int(hashlib.sha256(text.encode()).hexdigest(), 16) % every == 0
+
+
+def named_tags(row: dict[str, Any], tags: str) -> dict[str, Any] | None:
+    """The row with the tags a reader of its statement could recover. Publishers tag roles a statement
+    never names (most MDPI disagreements with the rule parser), which teaches the model to add roles.
+    "named" drops each tag whose role the statement does not name in CRediT wording; "named-articles"
+    drops the whole article instead (None); "all" keeps every tag."""
+    if tags == "all":
+        return row
+    named = {slug for _, _, slug in find_roles(clean(row["statement"]))}
+    gold = [g for g in row["gold"] if g[1] in named]
+    if tags == "named-articles" and len(gold) < len(row["gold"]):
+        return None
+    return {**row, "gold": gold}
 
 
 def subsample(rows: list[dict[str, Any]], target: int, seed: int) -> list[dict[str, Any]]:
@@ -242,8 +259,9 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
 
     pool: dict[bool, list[dict[str, Any]]] = {True: [], False: []}
     for row in read_jsonl(dataset / "train.jsonl"):
-        if row["authors"] and (not config.open_licence_only or row["publishable"]):
-            pool[is_dev(row["statement"], config.dev_every)].append(row)
+        usable = row["authors"] and (not config.open_licence_only or row["publishable"])
+        if usable and (kept := named_tags(row, config.tags)) is not None:
+            pool[is_dev(row["statement"], config.dev_every)].append(kept)
     train_rows = subsample(pool[False], config.train_articles, config.seed)
     dev_rows = random.Random(config.seed).sample(pool[True], min(config.dev_articles, len(pool[True])))
 

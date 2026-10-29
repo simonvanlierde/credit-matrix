@@ -34,6 +34,19 @@ def test_dev_keeps_identical_statements_together():
     assert 0 < sum(encoder.is_dev(f"statement {i}", 10) for i in range(1000)) < 200
 
 
+def test_named_tags_drop_roles_the_statement_never_names():
+    row = {
+        "statement": "A.S.: Conceptualization; writing \u2013 original draft.",
+        "gold": [[1, "conceptualization"], [1, "writing-original-draft"], [1, "funding-acquisition"]],
+    }
+    assert encoder.named_tags(row, "all") is row
+    named = encoder.named_tags(row, "named")
+    assert named is not None and named["gold"] == [[1, "conceptualization"], [1, "writing-original-draft"]]
+    assert encoder.named_tags(row, "named-articles") is None
+    clean = {**row, "gold": row["gold"][:2]}
+    assert encoder.named_tags(clean, "named-articles") == clean
+
+
 def test_subsample_shares_by_square_root_of_stratum_size():
     rows = [{"publisher": "Big", "style": "jats4r", "i": i} for i in range(400)]
     rows += [{"publisher": "Small", "style": "plos_uri", "i": i} for i in range(25)]
@@ -282,3 +295,18 @@ def test_cli_model_refuses_options_it_would_ignore_or_trip_on(tmp_path, monkeypa
     (tmp_path / "model" / "s" / "runs" / "r" / "best.json").write_text("{}")
     assert cli.main(["model", "predict", "--snapshot", "s", "--name", "r", "--limit", "5"]) == 1
     assert "go with --corpus" in capsys.readouterr().err
+
+
+def test_cli_train_passes_tags_and_max_length(tmp_path, monkeypatch):
+    from census import cli
+
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    (tmp_path / "model" / "s" / "dataset").mkdir(parents=True)
+    (tmp_path / "model" / "s" / "dataset" / "train.jsonl").write_text("")
+    seen = []
+    monkeypatch.setattr(
+        encoder, "train", lambda config, *_: seen.append(config) or {"epoch": 1, "f1": 0, "threshold": 0.5}
+    )
+    argv = ["model", "train", "--snapshot", "s", "--name", "r", "--tags", "named", "--max-length", "1024"]
+    assert cli.main(argv) == 0
+    assert (seen[0].tags, seen[0].max_length) == ("named", 1024)

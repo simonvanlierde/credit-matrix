@@ -430,6 +430,17 @@ now. Training only on CC BY and CC0 articles (`--open-licence-only`) costs no F1
 those are the weights that can be published. With 1 epoch at 3e-5, CC BY and CC0 only, and three seeds each, Ettin-32M
 reaches F1 0.913 but exact 0.584, and Ettin-150M 0.905 and 0.617: neither beats Ettin-68M.
 
+`--max-length 1024` reads statements that 512 tokens cut. With the settings above and three seeds,
+the 203 held-out statements longer than 512 tokens go from F1 0.849 to 0.886 and exact 0.056 to
+0.269, and the 1,000-row set from F1 0.916 to 0.921, at the same training time.
+
+Publishers sometimes tag a role the statement never names, and the model learns to add roles from
+that: on the 1,000-row set its precision (0.874 for ModernBERT-base) trails its recall (0.966).
+`--tags named` drops each tag whose role the statement does not name in CRediT wording, and
+`--tags named-articles` drops those articles instead. On `oa-2026-10`, 25.7% of training articles
+outside Frontiers carry such a tag, against 0.6% of Frontiers articles. Held-out scoring still uses
+every tag.
+
 ## Limits
 
 - The sample is drawn from the first 1,000 hits per publisher and year in Europe PMC's default
