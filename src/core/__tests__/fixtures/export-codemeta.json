@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "authors": [
+    {
+      "id": "wren",
+      "name": "Wren Halvorsen",
+      "firstName": "Wren",
+      "middleName": "",
+      "surname": "Halvorsen",
+      "initials": "WH",
+      "orcid": "0000-0002-1825-0097",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 100
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 33
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    },
+    {
+      "id": "ilse",
+      "name": "Ilse Marchetti",
+      "firstName": "Ilse",
+      "middleName": "",
+      "surname": "Marchetti",
+      "initials": "IM",
+      "orcid": "0000-0003-1234-5674",
+      "contributorType": "non-author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 66
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    },
+    {
+      "id": "tomas",
+      "name": "Tomas Okafor",
+      "firstName": "Tomas",
+      "middleName": "",
+      "surname": "Okafor",
+      "initials": "TO",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 100
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    },
+    {
+      "id": "nadia",
+      "name": "Nadia Brandt",
+      "firstName": "Nadia",
+      "middleName": "",
+      "surname": "Brandt",
+      "initials": "NB",
+      "contributorType": "author",
+      "contributions": [
+        {
+          "role": "Conceptualization",
+          "score": 0
+        },
+        {
+          "role": "Data curation",
+          "score": 0
+        },
+        {
+          "role": "Formal analysis",
+          "score": 0
+        },
+        {
+          "role": "Funding acquisition",
+          "score": 0
+        },
+        {
+          "role": "Investigation",
+          "score": 0
+        },
+        {
+          "role": "Methodology",
+          "score": 0
+        },
+        {
+          "role": "Project administration",
+          "score": 0
+        },
+        {
+          "role": "Resources",
+          "score": 0
+        },
+        {
+          "role": "Software",
+          "score": 0
+        },
+        {
+          "role": "Supervision",
+          "score": 0
+        },
+        {
+          "role": "Validation",
+          "score": 0
+        },
+        {
+          "role": "Visualization",
+          "score": 0
+        },
+        {
+          "role": "Writing – original draft",
+          "score": 0
+        },
+        {
+          "role": "Writing – review & editing",
+          "score": 0
+        }
+      ],
+      "equalContribution": false,
+      "corresponding": false
+    }
+  ]
+}

@@ -17,6 +17,7 @@ import {
   normalizeLocaleCode,
 } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
+import { toCodemetaRoles } from "./export/codemeta";
 import { toCsv } from "./export/csv";
 import { toJson } from "./export/json";
 import { toMarkdown } from "./export/markdown";
@@ -35,9 +36,11 @@ Read <file> (or - for standard input) in any format CRediT Matrix imports:
 JSON, CSV, JATS4R XML, a share link, or a list of names.
 
 Commands:
-  statement <file> [--format ${STATEMENT_FORMATS.join("|")}] [--locale <code>] [--levels]
+  statement <file> [--format ${[...STATEMENT_FORMATS, "codemeta"].join("|")}] [--locale <code>] [--levels]
       Print the CRediT statement. --levels adds Equal or Supporting after
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
+      --format codemeta prints CodeMeta 3.0 Role objects instead, one per
+      role, for people with an ORCID iD, and warns about each person left out.
   convert <file> --to json|csv|jats|md
       Print the contributions in another format.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
@@ -198,6 +201,15 @@ export async function run(argv: string[]): Promise<string> {
   switch (command) {
     case "statement": {
       const format = values.format;
+      if (format === "codemeta") {
+        const { roles, skipped } = toCodemetaRoles(authors);
+        if (roles.length === 0 && skipped.length === 0)
+          throw new Error("No roles assigned yet: the statement is empty.");
+        for (const author of skipped) {
+          process.stderr.write(`credit-matrix: ${author.name} has no ORCID iD, so their roles are left out.\n`);
+        }
+        return JSON.stringify(roles, null, 2);
+      }
       if (!isStatementFormat(format)) throw new UsageError(`Unknown format: ${format}`);
       const locale = resolveLocale(values.locale);
       if (!locale) {
