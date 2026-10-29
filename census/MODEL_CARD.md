@@ -135,6 +135,7 @@ at the threshold can flip between runtimes.
 The pairs come from Europe PMC's open-access subset, snapshot `oa-2026-10`. Some publishers tag
 each author's roles in the JATS XML and also print a statement. The statement is the input and
 the tags are the answer.
+
 - The split holds out every twentieth group of identical statements, in publisher and year order,
   so no statement text sits on both sides. Its sha256 is
   `fe3b1264b06d3fe98a9373cda8f9f46408f98b2ac4cf462f458f16f37683e43a`.
@@ -210,7 +211,8 @@ The label set is 160 articles whose roles were read from free text, drawn per st
 where they differed. A person checked a random sample of 20 rows and agreed with every label. Rows
 are weighted by their stratum's article count. With 30 to 100 articles per style, the intervals are
 wide. The table is scored on the adjudicated
-labels (`oa-2026-10-set-opus-adj-defb.csv`).
+labels (`oa-2026-10-set-opus-adj-defb.csv`). Later label sets use a gated three-labeller vote,
+described in [labelling/README.md](labelling/README.md).
 
 | | statement_text F1 (100) | contrib_text F1 (30) | articles without roles, exact (30) |
 | --- | --- | --- | --- |
