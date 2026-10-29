@@ -106,6 +106,15 @@ describe("credit-matrix convert", () => {
     expect(await run(["statement", xml])).toBe(await run(["statement", csv]));
   });
 
+  it("writes JATS without degree-contribution with --yes-no, and reads it back", async () => {
+    const ticks = file("ticks.csv", "Name,Conceptualization,Software\nJane Smith,100,100\nBob White,,100\n");
+    const xml = await run(["convert", ticks, "--to", "jats", "--yes-no"]);
+    expect(xml).not.toContain("degree-contribution");
+    expect(await run(["convert", ticks, "--to", "jats"])).toContain('degree-contribution="lead"');
+    // A role with no level imports as contributed, so the statement survives the round trip.
+    expect(await run(["statement", file("ticks.xml", xml)])).toBe(await run(["statement", ticks]));
+  });
+
   it("needs --to", async () => {
     await expect(run(["convert", csv])).rejects.toThrow(/--to json, csv, jats or md/);
   });
