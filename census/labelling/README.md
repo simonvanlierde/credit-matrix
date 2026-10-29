@@ -15,7 +15,7 @@ One JSON object per row. A statement that says nothing about who did what gets `
    "mentions": ["LV"], "authors": [1],
    "roles": [{"role": "methodology", "evidence": "worded"},
              {"role": "writing - original draft", "evidence": "worded"}]},
-  {"quote": "All authors approved the final version",
+  {"quote": "All authors meet the ICMJE authorship criteria",
    "mentions": ["All authors"], "authors": [1, 2, 3], "pledge": "icmje"}
 ]}
 ```
@@ -45,7 +45,7 @@ is not tracked.
 | `labelling/pilot_b.py` | Draws the 200-row pilot: 100 narrative rows and 100 rows with roles. Writes `oa-2026-10-pilot200b.csv` and its `-key.csv`. |
 | `labelling/check_b.py INPUT.csv PART.jsonl [FIRST COUNT \| partial]` | The gate. Checks every label in a labeller's file. Prints each fault and exits 1, or prints `ok N`. |
 | `labelling/vote_b.py NAME` | Takes the three labellers' files, prints their agreement, writes the rows with no majority to `NAME-splits.jsonl`, and builds `NAME-gold.jsonl` once `NAME-adjudicated.jsonl` covers every split. |
-| `labelling/label-workflow.js` | Runs the whole pipeline as an agent workflow. Set `CENSUS` at the top to the absolute path of this folder first. |
+| `labelling/label-workflow.js` | Runs the whole pipeline as an agent workflow. Pass `census`, the absolute path of this folder, in its args. |
 
 ## Pipeline
 

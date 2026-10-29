@@ -135,7 +135,6 @@ at the threshold can flip between runtimes.
 The pairs come from Europe PMC's open-access subset, snapshot `oa-2026-10`. Some publishers tag
 each author's roles in the JATS XML and also print a statement. The statement is the input and
 the tags are the answer.
-
 - The split holds out every twentieth group of identical statements, in publisher and year order,
   so no statement text sits on both sides. Its sha256 is
   `fe3b1264b06d3fe98a9373cda8f9f46408f98b2ac4cf462f458f16f37683e43a`.

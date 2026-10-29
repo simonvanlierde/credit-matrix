@@ -8,16 +8,16 @@ export const meta = {
   ],
 }
 
-// args: { name: 'pilot200b', rows: 200, chunk: 100, labellers: 'abc', model }. Input is oa-2026-10-<name>.csv.
+// args: { census, name: 'pilot200b', rows: 200, chunk: 100, labellers: 'abc', model }. Input is oa-2026-10-<name>.csv.
 // With fewer than three labellers the run stops after labelling (a cost or model probe).
 const NAME = args?.name ?? 'pilot200b'
 const ONLY = args?.labellers ?? 'abc'
 const MODEL = args?.model
 const ROWS = args?.rows ?? 200
 const CHUNK = args?.chunk ?? 100
-// The workflow runner has no filesystem API, so this must be an absolute path to the census folder.
-// Change this one constant to where the repo is cloned.
-const CENSUS = '/path/to/credit-matrix/census'
+// The runner has no filesystem API, so the census folder comes in as an absolute path: args.census.
+if (!args?.census) throw new Error('pass args.census, the absolute path of the census folder')
+const CENSUS = args.census
 const LAB = `${CENSUS}/data/labels`
 const PY = `${CENSUS}/.venv/bin/python`
 const S = `${CENSUS}/labelling`
