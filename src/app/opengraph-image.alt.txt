@@ -1,0 +1,1 @@
+The CRediT Matrix card: a contribution heatmap of three sample authors across the 14 CRediT roles, beside the author statement it generates.
