@@ -54,6 +54,14 @@ describe("toCrossrefContributors", () => {
     expect(xml).toMatch(/<person_name sequence="first">\n {4}<given_name>Jane A\./);
   });
 
+  it("puts each person and each left-out note on its own line", () => {
+    const xml = toCrossrefContributors([createAuthor("0000-0001-5109-3700"), jane, bob]);
+    expect(xml).toContain(`has no name yet. -->
+  <person_name sequence="first">`);
+    expect(xml).toContain(`</person_name>
+  <person_name sequence="additional">`);
+  });
+
   it("puts a single name in surname, as Crossref asks", () => {
     const xml = toCrossrefContributors([createAuthor("Madonna")]);
     expect(xml).toContain("<surname>Madonna</surname>");
