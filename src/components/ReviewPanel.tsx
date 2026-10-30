@@ -230,7 +230,7 @@ export function ReviewPanel() {
             : t("reviewAnsweredMeta", { days, kind: ask.prefilled ? "prefilled" : "blank" });
         const headingId = `review-person-${author.id}`;
         // A sign-in an offline import could not check is not shown as verified.
-        const signIn = reply.provenance?.unchecked ? undefined : reply.provenance?.orcid;
+        const signIn = reply.provenance?.orcid;
         // The row's iD now, or the one the reply replaced: a forwarded link signed by someone else shows here.
         const otherId =
           signIn && [author.orcid, reply.provenance?.replacedOrcid].some((orcid) => orcid && orcid !== signIn.orcid);

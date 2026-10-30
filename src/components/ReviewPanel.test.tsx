@@ -52,7 +52,7 @@ it("does not show a sign-in an offline import could not check as verified", () =
     corresponding: false,
     sentAt: 1,
     receivedAt: 2,
-    provenance: { orcid, unchecked: true as const },
+    provenance: { uncheckedOrcid: orcid },
     decisions: {},
   };
   act(() => useContributionStore.getState().loadAuthors([bob], { [bob.id]: { sentAt: 1, prefilled: true, reply } }));

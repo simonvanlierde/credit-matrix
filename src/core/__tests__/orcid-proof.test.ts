@@ -270,18 +270,15 @@ describe("a signed reply in the ask record", () => {
       expect(forged?.contributions).toEqual(row()?.contributions);
     });
 
-    it("keeps a sign-in whose row took a known id on import through the next export", async () => {
+    it("does not move a real sign-in onto another row named in the file", async () => {
+      // A file can name any row id: one row per signed id, the id the token signed for.
       const file = await imported();
-      const incoming = fromJson(JSON.stringify(file));
-      const asks = await recheckSignIns(incoming.asks ?? {}, keys);
-      // The draft already has Bob under another id, so his row takes that one.
-      const current = [createAuthor("Bob White", { id: "b2" })];
-      const mapped = keepKnownIds(current, incoming.authors);
-      expect(mapped[0]?.id).toBe("b2");
-      const moved = importAnswers(current, incoming.authors, mapped, {}, { asks }).asks ?? {};
-      const again = fromJson(toJson(mapped, { asks: moved }));
-      const checked = await recheckSignIns(again.asks ?? {}, keys);
-      expect(checked.b2?.reply?.provenance?.orcid).toMatchObject({ orcid: ORCID });
+      file.authors.push({ ...file.authors[0], id: "ann", name: "Ann Lee", orcid: undefined });
+      file.asks.ann = structuredClone(file.asks.bob);
+      file.asks.ann.reply.provenance.claimId = "bob";
+      const checked = await recheckSignIns(fromJson(JSON.stringify(file)).asks ?? {}, keys);
+      expect(checked.bob?.reply?.provenance?.orcid).toMatchObject({ orcid: ORCID });
+      expect(checked.ann?.reply?.provenance?.orcid).toBeUndefined();
     });
 
     it("drops a real sign-in moved onto a different answer or another contributor", async () => {
@@ -299,12 +296,13 @@ describe("a signed reply in the ask record", () => {
 
     it("keeps a sign-in unchecked when ORCID's keys cannot be fetched, and fetches none when there is nothing to check", async () => {
       const offline = await recheck(await imported(), async () => null);
-      expect(offline?.provenance).toMatchObject({ unchecked: true, orcid: { orcid: ORCID } });
+      expect(offline?.provenance).toMatchObject({ uncheckedOrcid: { orcid: ORCID } });
+      expect(offline?.provenance).not.toHaveProperty("orcid");
       // Checked again once ORCID answers, it counts as verified again.
       const file = JSON.parse(toJson([...lead()], { asks: { bob: { sentAt: NOW, prefilled: true, reply: offline } } }));
       const online = await recheck(file);
       expect(online?.provenance?.orcid).toMatchObject({ orcid: ORCID });
-      expect(online?.provenance).not.toHaveProperty("unchecked");
+      expect(online?.provenance).not.toHaveProperty("uncheckedOrcid");
       const fetcher = vi.fn(keys);
       const bare = await imported();
       delete bare.asks.bob.reply.provenance;

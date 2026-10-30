@@ -49,10 +49,8 @@ const ReplySchema = /* @__PURE__ */ (() =>
           orcid: z.optional(OrcidProofSchema),
           /** The row's ORCID iD before a reply to this ask changed it: the iD the ask went to. */
           replacedOrcid: z.optional(z.string()),
-          /** Set when ORCID could not be reached to check `orcid` on import: not shown as verified. */
-          unchecked: z.optional(z.literal(true)),
-          /** The row id the sign-in signed for, when an import moved the answer to another id. */
-          claimId: z.optional(z.string()),
+          /** A sign-in ORCID could not be reached to check on import; `orcid` only ever holds a checked one. */
+          uncheckedOrcid: z.optional(OrcidProofSchema),
         }),
       ),
       undefined,
@@ -270,8 +268,7 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         // The same answer again is a duplicate, unless it renames the row or answers an ask sent since.
         const reAsked = held.sentAt > held.reply.receivedAt;
         // A sign-in the held answer lacks is news too.
-        const newlySigned =
-          event.orcid !== undefined && (held.reply.provenance?.orcid === undefined || held.reply.provenance.unchecked);
+        const newlySigned = event.orcid !== undefined && held.reply.provenance?.orcid === undefined;
         if (same && !changed && (sameLink || !reAsked) && !newlySigned) {
           return {
             outcome: { kind: "received", open: review(author, held).open.length, duplicate: true },
@@ -373,32 +370,34 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
 /**
  * Check every reply's ORCID sign-in again, as an imported file needs. A
  * sign-in stays only when its token verifies (see `orcid-proof.ts`), it signed
- * a reply to this contributor (to `provenance.claimId` when an import moved the
- * answer to another id), and its row there holds the same answer as the
+ * a reply to this contributor, and its row there holds the same answer as the
  * stored reply; the draft id is not compared, because an export does not keep
  * it. A failing sign-in is dropped, the answer stays. `keys` is called only
- * when some reply carries a sign-in; null from it keeps every sign-in marked
- * `unchecked`, so a later check can still verify it.
+ * when some reply carries a sign-in; null from it moves every sign-in to
+ * `provenance.uncheckedOrcid`, so a later check can still verify it.
  */
 export async function recheckSignIns(
   asks: Readonly<Record<string, Ask>>,
   keys: () => Promise<readonly OrcidKey[] | null>,
 ): Promise<Record<string, Ask>> {
   const checked = { ...asks };
-  const signed = Object.entries(asks).filter(([, ask]) => ask.reply?.provenance?.orcid);
+  const signed = Object.entries(asks).filter(
+    ([, ask]) => ask.reply?.provenance?.orcid ?? ask.reply?.provenance?.uncheckedOrcid,
+  );
   if (signed.length === 0) return checked;
   const fetched = await keys();
   for (const [id, ask] of signed) {
     const reply = ask.reply as Reply;
     const { provenance: _, ...unsigned } = reply;
-    const { orcid, claimId, unchecked: _unchecked, ...rest } = reply.provenance ?? {};
+    const { orcid, uncheckedOrcid, ...rest } = reply.provenance ?? {};
+    const stored = (orcid ?? uncheckedOrcid) as OrcidProof;
     if (!fetched) {
-      checked[id] = { ...ask, reply: { ...reply, provenance: { ...reply.provenance, unchecked: true } } };
+      checked[id] = { ...ask, reply: { ...unsigned, provenance: { ...rest, uncheckedOrcid: stored } } };
       continue;
     }
-    const proof = await signedFor(claimId ?? id, reply, orcid as OrcidProof, fetched);
+    const proof = await signedFor(id, reply, stored, fetched);
     // The checked proof replaces the stored one, so its iD, name and time are the token's.
-    const kept = proof ? { ...rest, ...(claimId ? { claimId } : {}), orcid: proof } : rest;
+    const kept = proof ? { ...rest, orcid: proof } : rest;
     checked[id] = { ...ask, reply: Object.keys(kept).length > 0 ? { ...unsigned, provenance: kept } : unsigned };
   }
   return checked;
@@ -519,13 +518,7 @@ export function importAnswers(
       const filed = Object.hasOwn(fileAsks, author.id) ? fileAsks[author.id] : undefined;
       const kept = Object.hasOwn(held, id) ? held[id] : undefined;
       const ask = filed && matched(id) ? filed : kept;
-      if (!ask) return;
-      // A sign-in names the row it signed for: keep that id when the answer moves to another.
-      const provenance = ask === filed ? ask.reply?.provenance : undefined;
-      found[id] =
-        provenance?.orcid && id !== author.id && !provenance.claimId
-          ? { ...ask, reply: { ...(ask.reply as Reply), provenance: { ...provenance, claimId: author.id } } }
-          : ask;
+      if (ask) found[id] = ask;
     });
     asks = found;
   }
