@@ -100,6 +100,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- The privacy text on the About page said the site ran Cloudflare's analytics script. It doesn't:
+  Cloudflare counts page requests on its own servers, and the Content Security Policy no longer
+  allows an analytics script.
 - A heatmap downloaded at a larger size with no roles yet places its "no roles" message in the
   right spot. Its offset did not grow with the figure.
 - Link previews of the app describe the social card to screen readers (it had no alt text).

@@ -40,8 +40,7 @@ opting in, nothing changes.
   (libsodium) is the fallback if nonce handling becomes awkward, at the cost of a dependency. Each
   message carries a format version.
 - **Key.** One random symmetric key per shared draft, in the URL fragment. Browsers do not send the
-  fragment to the server. The app must also keep it out of `Referer`, logs and analytics, including the
-  Cloudflare Web Analytics script the edge injects.
+  fragment to the server. The app must also keep it out of `Referer`, logs and analytics.
 - **Presence** (who is online, which cell they are on) is encrypted under the same key.
 - **Expiry.** A DO alarm deletes stored blobs 14 days after the last write. The relay is a mailbox, not
   storage: the draft of record stays in each browser.

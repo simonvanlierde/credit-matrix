@@ -33,7 +33,7 @@ jobs, and the outside services. Attacks that need the user's device are out of
 | Boundary | What crosses it | Treatment |
 | --- | --- | --- |
 | User's browser | All app code and drafts | Trusted |
-| Static host (Cloudflare) | Built files, headers in [`_headers`](../public/_headers), the injected Web Analytics script | Trusted to serve what CI built. Runs no code of ours |
+| Static host (Cloudflare) | Built files, headers in [`_headers`](../public/_headers) | Trusted to serve what CI built. Runs no code of ours |
 | ORCID | An iD out, a name back; sign-in; public signing keys | Schema-checked ([`orcid-lookup.ts`](../src/core/orcid-lookup.ts), [`orcid-proof.ts`](../src/core/orcid-proof.ts)) |
 | Crossref, DataCite | A DOI out, metadata back | Schema-checked ([`doi-lookup.ts`](../src/core/doi-lookup.ts)) |
 | Share and reply links | A draft or one row from someone else | Untrusted (T7, T8) |
@@ -81,9 +81,6 @@ jobs, and the outside services. Attacks that need the user's device are out of
 
 ## Residual risk
 
-- **Analytics script.** It can read a link's fragment, and the `id_token` and `openid`-scope access
-  token that ORCID sign-in puts there, before the app clears them. The app never uses the access
-  token; the `id_token` signs one exact answer.
 - **Undeclared entity references** such as `&eacute;`. linkedom keeps them as text; what each
   browser's `DOMParser` does is not verified, so the app and CLI may read a name differently.
 - **Previews hold a Cloudflare token.** The `preview` job runs a same-repo pull request's `wrangler`
