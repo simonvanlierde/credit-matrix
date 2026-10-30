@@ -383,6 +383,18 @@ describe("size", () => {
   });
 });
 
+describe("resolveInitials with particles and double surnames", () => {
+  it("reads initials over a surname without its particles, when it has two words left", () => {
+    expect(resolveInitials("CLR", [author("Chiara", "De Luca Rossi")])).toBe(0);
+  });
+
+  it("reads initials over the first of two surnames, after one or more given names", () => {
+    const maria = [author("María José", "García López")];
+    expect(resolveInitials("MG", maria)).toBe(0);
+    expect(resolveInitials("MJG", maria)).toBe(0);
+  });
+});
+
 describe("name matching order", () => {
   it("reads a comma between two full names as a list, not as an inverted third name", () => {
     const authors = [author("Bo", "Lee"), author("Ann", "Lee"), author("Bo", "Wu")];
