@@ -8,6 +8,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Export the contributors as the `<contributors>` block of a Crossref deposit, with each person's
+  CRediT roles (Crossref metadata schema 5.5.0). Paste it into the record your journal deposits
+  with Crossref. Find it in the Export data menu as "XML (Crossref)", or run
+  `credit-matrix convert team.csv --to crossref`. Crossref has no place for lead, equal or
+  supporting, so the levels are left out.
 - A Published practice tab beside the grid shows how often published papers in a field give each
   CRediT role, for sole, first, middle and last authors. Pick your field once and the app remembers
   it; mark your own row with "This is me" and your column is marked, counting authors only. The

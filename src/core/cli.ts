@@ -18,6 +18,7 @@ import {
 } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
 import { toCodemetaRoles } from "./export/codemeta";
+import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
 import { toJson } from "./export/json";
 import { toMarkdown } from "./export/markdown";
@@ -41,9 +42,11 @@ Commands:
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
       --format codemeta prints CodeMeta 3.0 Role objects instead, one per
       role, for authors with an ORCID iD, and warns about each person left out.
-  convert <file> --to json|csv|jats|md [--yes-no]
+  convert <file> --to json|csv|jats|crossref|md [--yes-no]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level.
+      crossref prints the <contributors> block of a Crossref deposit (schema
+      5.5.0), which has no levels.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
       Print a link that asks one contributor to check their roles,
       or with --blank, to fill them in from scratch.
@@ -237,10 +240,12 @@ export async function run(argv: string[]): Promise<string> {
           return toCsv(authors);
         case "jats":
           return toJats4rXml(authors, { yesNo: values["yes-no"] });
+        case "crossref":
+          return toCrossrefContributors(authors);
         case "md":
           return toMarkdown(authors);
         default:
-          throw new UsageError("convert needs --to json, csv, jats or md.");
+          throw new UsageError("convert needs --to json, csv, jats, crossref or md.");
       }
     case "ask": {
       const wanted = values.contributor?.trim();

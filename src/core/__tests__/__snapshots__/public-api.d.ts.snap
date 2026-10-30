@@ -902,6 +902,18 @@ export declare function importAnswers(current: readonly Author[], incoming: read
   selfId: string | undefined;
 };
 //#endregion
+//#region export/crossref.d.ts
+/**
+ * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
+ * later), for a publisher to paste into the work's record. Each person gets a
+ * Crossref role (`author`, or `other` for people credited only in the
+ * Acknowledgements), `corresponding-author` where marked, and one CRediT role
+ * per contribution above zero. The schema has no slot for a contribution level
+ * or for equal contribution, so neither is written. The ORCID iD is never
+ * marked `authenticated`: only the depositing member can vouch for that.
+ */
+export declare function toCrossrefContributors(authors: Author[]): string;
+//#endregion
 //#region export/csv.d.ts
 export declare function toCsv(authors: Author[]): string;
 export declare function fromCsv(csv: string): Author[];
