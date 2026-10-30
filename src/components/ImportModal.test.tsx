@@ -158,6 +158,19 @@ describe("closing the dialog while ORCID's keys load", () => {
     expect(screen.queryByText(en.replaceWorkspaceTitle)).toBeNull();
   });
 
+  it("still imports when a DOI lookup starts while the keys load", async () => {
+    const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
+    vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
+    deferLookup();
+    const { onImport } = renderModal(0);
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    fireEvent.click(screen.getByRole("button", { name: en.doiLookUp }));
+    await act(async () => resolve(null));
+
+    expect(onImport).toHaveBeenCalledTimes(1);
+  });
+
   it("tells a pasted link it no longer belongs to an open dialog", async () => {
     const { promise, resolve } = Promise.withResolvers<null>();
     const onLink = vi.fn((_url: string, _current: () => boolean) => promise);

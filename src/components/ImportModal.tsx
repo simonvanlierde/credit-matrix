@@ -252,9 +252,11 @@ export function ImportModal({
   const fileRef = useRef<HTMLInputElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const importRef = useRef<HTMLButtonElement>(null);
-  // Bumped per lookup and on close: a DOI result or an import whose number is no
-  // longer current belongs to a dialog the user has left, and must not import or confirm.
+  // Bumped per lookup and on close: a DOI result whose number is no longer current
+  // belongs to a newer lookup or a dialog the user has left, and must not import or confirm.
   const request = useRef(0);
+  // Bumped on close only, so a DOI lookup started meanwhile does not drop an import.
+  const closes = useRef(0);
 
   // The confirmation disables the Import button the user just activated, so
   // hand focus to the safe choice; declining hands it back once Import is
@@ -338,8 +340,8 @@ export function ImportModal({
   async function handleImport() {
     setError(null);
     if (format === "unknown") return;
-    const started = request.current;
-    const current = () => started === request.current;
+    const started = closes.current;
+    const current = () => started === closes.current;
     setImporting(true);
     try {
       if (new TextEncoder().encode(text).byteLength > MAX_IMPORT_BYTES) {
@@ -478,6 +480,7 @@ export function ImportModal({
 
   function handleClose() {
     request.current += 1;
+    closes.current += 1;
     setDoiLoading(false);
     setText("");
     setDoi("");
