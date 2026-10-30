@@ -43,7 +43,8 @@ interface Props {
    * used, or null on success. Lives with the caller because merging a returned
    * link needs the current workspace, which this dialog does not hold.
    */
-  onLink: (url: string) => Promise<LinkFailure | null>;
+  /** `current` turns false once the dialog closes: a link that finishes loading after that must not open. */
+  onLink: (url: string, current: () => boolean) => Promise<LinkFailure | null>;
   /** The open draft's roster, which a pasted statement is matched against. */
   authors: Author[];
   /** Whether the draft records levels; a yes/no draft sets every role to 100. */
@@ -251,9 +252,9 @@ export function ImportModal({
   const fileRef = useRef<HTMLInputElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const importRef = useRef<HTMLButtonElement>(null);
-  // Bumped per lookup and on close: a result whose number is no longer current
-  // belongs to a dialog the user has left, and must not import or confirm.
-  const doiRequest = useRef(0);
+  // Bumped per lookup and on close: a DOI result or an import whose number is no
+  // longer current belongs to a dialog the user has left, and must not import or confirm.
+  const request = useRef(0);
 
   // The confirmation disables the Import button the user just activated, so
   // hand focus to the safe choice; declining hands it back once Import is
@@ -337,6 +338,8 @@ export function ImportModal({
   async function handleImport() {
     setError(null);
     if (format === "unknown") return;
+    const started = request.current;
+    const current = () => started === request.current;
     setImporting(true);
     try {
       if (new TextEncoder().encode(text).byteLength > MAX_IMPORT_BYTES) {
@@ -346,7 +349,8 @@ export function ImportModal({
       if (format === "link") {
         // The whole-draft and merge cases both need the current workspace, so
         // the caller owns this one; failures come back as a message key.
-        const failure = await onLink(text.trim());
+        const failure = await onLink(text.trim(), current);
+        if (!current()) return;
         if (failure) {
           showError(failure === "draftLimitReached" ? t(failure, { count: MAX_DRAFTS }) : t(failure));
           return;
@@ -390,6 +394,7 @@ export function ImportModal({
       }
       // A file's ORCID sign-ins are only claims until checked against ORCID's keys.
       if (parsed.asks) parsed.asks = await recheckSignIns(parsed.asks, () => fetchOrcidKeys());
+      if (!current()) return;
       stageImport(parsed);
     } catch (failure) {
       // A newer build's export is said plainly, not as a validation failure.
@@ -415,10 +420,10 @@ export function ImportModal({
       showError(t("errDoiINVALID_DOI"), "doi");
       return;
     }
-    const request = ++doiRequest.current;
+    const lookup = ++request.current;
     setDoiLoading(true);
     const result = await fetchDoiWork(trimmed);
-    if (request !== doiRequest.current) return;
+    if (lookup !== request.current) return;
     setDoiLoading(false);
     if (!("ok" in result)) {
       showError(t(DOI_ERROR_KEYS[result.code]), "doi");
@@ -472,7 +477,7 @@ export function ImportModal({
   }
 
   function handleClose() {
-    doiRequest.current += 1;
+    request.current += 1;
     setDoiLoading(false);
     setText("");
     setDoi("");

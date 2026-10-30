@@ -1,12 +1,17 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { type Author, createAuthor } from "@/core";
+import { type Author, createAuthor, toJson } from "@/core";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
+import { fetchOrcidKeys, type OrcidKey } from "@/core/orcid-proof";
 import en from "@/messages/en.json";
 import { ImportModal } from "./ImportModal";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
+vi.mock("@/core/orcid-proof", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/core/orcid-proof")>()),
+  fetchOrcidKeys: vi.fn(),
+}));
 vi.mock("@/core/lookup", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/core/lookup")>()),
   lookupDoiWork: vi.fn(),
@@ -36,7 +41,7 @@ function deferLookup() {
 
 function renderModal(
   existingContributorCount = 0,
-  onLink: () => Promise<null> = async () => null,
+  onLink: (url: string, current: () => boolean) => Promise<null> = async () => null,
   { authors = [], graded = false }: { authors?: Author[]; graded?: boolean } = {},
 ) {
   const onImport = vi.fn();
@@ -122,6 +127,47 @@ describe("a pasted share link", () => {
     fireEvent.click(button);
 
     expect(onLink).toHaveBeenCalledTimes(1);
+    await act(async () => resolve(null));
+  });
+});
+
+describe("closing the dialog while ORCID's keys load", () => {
+  const close = () =>
+    act(() => {
+      document.querySelector("dialog")?.dispatchEvent(new Event("close"));
+    });
+  /** A JSON export whose answer carries a sign-in, so importing it fetches ORCID's keys. */
+  function signedFile() {
+    const bob = createAuthor("Bob White", { id: "bob" });
+    const orcid = { orcid: "0000-0002-1825-0097", issuedAt: 1, token: "t", payload: "p" };
+    const reply = { ...bob, sentAt: 1, receivedAt: 2, provenance: { orcid }, decisions: {} };
+    return toJson([bob], { asks: { bob: { sentAt: 1, prefilled: true, reply } } });
+  }
+
+  it.each([0, 3])("imports nothing and stages no prompt (%i contributors already)", async (existing) => {
+    const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
+    vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
+    const { onImport } = renderModal(existing);
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    expect(fetchOrcidKeys).toHaveBeenCalled();
+    close();
+    await act(async () => resolve(null));
+
+    expect(onImport).not.toHaveBeenCalled();
+    expect(screen.queryByText(en.replaceWorkspaceTitle)).toBeNull();
+  });
+
+  it("tells a pasted link it no longer belongs to an open dialog", async () => {
+    const { promise, resolve } = Promise.withResolvers<null>();
+    const onLink = vi.fn((_url: string, _current: () => boolean) => promise);
+    renderModal(0, onLink);
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: "#s=abc" } });
+    fireEvent.click(screen.getByRole("button", { name: en.importData }));
+    const current = onLink.mock.calls[0]?.[1];
+    expect(current?.()).toBe(true);
+    close();
+    expect(current?.()).toBe(false);
     await act(async () => resolve(null));
   });
 });
