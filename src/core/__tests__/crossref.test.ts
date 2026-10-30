@@ -35,6 +35,21 @@ describe("toCrossrefContributors", () => {
 </contributors>`);
   });
 
+  it("writes a generational suffix after the surname", () => {
+    const xml = toCrossrefContributors([createAuthor("Martin Luther King Jr.")]);
+    expect(xml).toContain(`<given_name>Martin Luther</given_name>
+    <surname>King</surname>
+    <suffix>Jr.</suffix>
+    <role vocab="crossref" type="author"/>`);
+  });
+
+  it("writes only the elements a person has", () => {
+    expect(toCrossrefContributors([createAuthor("Madonna")])).toContain(`<person_name sequence="first">
+    <surname>Madonna</surname>
+    <role vocab="crossref" type="author"/>
+  </person_name>`);
+  });
+
   it("never claims a degree or an authenticated ORCID iD", () => {
     const xml = toCrossrefContributors([jane]);
     expect(xml).not.toMatch(/degree|lead|authenticated/);
