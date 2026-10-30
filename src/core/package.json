@@ -1,6 +1,6 @@
 {
   "name": "credit-matrix",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "CRediT (Contributor Roles Taxonomy) statements and exports: JATS4R XML, Crossref XML, CSV, JSON, Markdown and a heatmap SVG, with a CLI and a <credit-matrix> element.",
   "keywords": [
     "CRediT",
@@ -40,7 +40,7 @@
     "./dist/cli.js"
   ],
   "engines": {
-    "node": "^20.12.0 || >=21.2.0"
+    "node": ">=22"
   },
   "publishConfig": {
     "access": "public",

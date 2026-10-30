@@ -110,6 +110,42 @@ jobs:
           files: coverage/lcov.info
           fail_ci_if_error: false
 
+  # The package supports older Node than the repo builds with, so run the built
+  # CLI on the oldest supported line and the previous LTS.
+  cli-node:
+    name: CLI on Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node: ["22", "24"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          node-version-file: .node-version
+          cache: ${{ github.event_name != 'pull_request' }}
+          install: false
+
+      - name: Build the package
+        run: |
+          pnpm install --frozen-lockfile --filter credit-matrix...
+          pnpm --filter credit-matrix build
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Run the CLI
+        run: |
+          node --version
+          printf 'Name,Conceptualization,Software\nJane Smith,100,66\n' > team.csv
+          node src/core/dist/cli.js statement team.csv
+          node src/core/dist/cli.js convert team.csv --to jats > /dev/null
+
   census:
     name: Census
     runs-on: ubuntu-latest

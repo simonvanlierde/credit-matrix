@@ -28,7 +28,7 @@ toJats4rXml(authors);
 ## CLI
 
 The package also installs a `credit-matrix` command: the CLI, with an XML parser bundled. It needs
-Node 20.12 or later. Run it with `npx credit-matrix` without installing, or with
+Node 22 or later. Run it with `npx credit-matrix` without installing, or with
 `node src/core/dist/cli.js` from a clone after `pnpm --filter credit-matrix build`.
 
 ```bash
@@ -118,6 +118,7 @@ Only non-zero contributions appear in statements.
 | JSON        | `toJson`          | `fromJson`                          |
 | Markdown    | `toMarkdown`      | —                                   |
 | tenzing CSV | `toTenzing`       | `fromTenzing`                       |
+| Crossref 5.5 `<contributors>` | `toCrossrefContributors` | — |
 | Heatmap SVG | `buildHeatmapSvg` | —                                   |
 
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
@@ -198,15 +199,18 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
   and `selfId` over to the ids that `keepKnownIds` gave the imported rows. When you import into a
   draft that already has contributors, only rows that matched one of them keep their answers.
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
+- `AskSchema` validates stored and imported asks.
 
 A reply can carry an ORCID sign-in. The caller checks it and passes it on the `reply` event as
 `orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`). What "verified" means is
-defined in the module comment of `orcid-proof.ts`. When a signed reply changes the row's iD, the
-reply also keeps the old one as `provenance.replacedOrcid`. Run `recheckSignIns(asks,
-fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before you show any sign-in
-as verified.
-
-- `AskSchema` validates stored and imported asks.
+defined in the module comment of `orcid-proof.ts`. When a reply changes the row's iD, signed or not,
+it keeps the iD the ask went to as `provenance.replacedOrcid`, and later replies keep it too. Run
+`recheckSignIns(asks, fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before
+you show any sign-in as verified. `provenance.orcid` then holds only checked sign-ins: when ORCID
+cannot be reached, each one moves to `provenance.uncheckedOrcid`, which you should not show as
+verified, and a later check can still verify it. A sign-in counts only on the row id it signed for.
+To check a reply link's sign-in yourself, pass it to `verifyOrcidToken` with the keys from
+`fetchOrcidKeys()`.
 
 ## Rosters and links
 
@@ -231,14 +235,14 @@ holds its exact shape. By entry point:
   - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`,
-    `toMarkdown`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
+    `toMarkdown`, `toCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
     `importAny`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`
   - Asks: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
-    `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
-    `Decision`, `Difference`, `Level`, `Outcome`, `OrcidProof`, `Patch`, `Reply`, `Review`, `Target`
+    `levelOf`, `review`, `settledAt`, `recheckSignIns`, `fetchOrcidKeys`, `verifyOrcidToken`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
+    `Decision`, `Difference`, `Level`, `Outcome`, `OrcidKey`, `OrcidProof`, `Patch`, `Reply`, `Review`, `Target`
 - `credit-matrix/lookup`: `lookupOrcidPerson`, `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`,
   and the types `OrcidLookupResult`, `OrcidErrorCode`, `DoiLookupResult`, `DoiErrorCode`, `DoiAuthor`
 - `credit-matrix/i18n`: `AVAILABLE_LOCALES`, `normalizeLocaleCode`, `hasCatalog`,

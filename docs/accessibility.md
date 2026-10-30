@@ -139,7 +139,6 @@ are in English, and marked as English.
   the workflow tests that read the clipboard run there against a clipboard kept in the page.
   They don't check the browser's own clipboard.
 
-We haven't tested Firefox or Safari by hand, or tried a screen reader.
 CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 
 ## About this statement

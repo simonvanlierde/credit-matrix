@@ -6,100 +6,58 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-30
+
+Upgrading the `credit-matrix` package: it needs Node 22 or later, and `detectFormat` can now
+return `"statement"` (see Changed).
+
 ### Added
 
 - A [Typst package](integrations/typst/README.md) that prints the CRediT statement, a role table
   and the heatmap in a Typst document, in the app's nine languages, from inline roles or the app's
   JSON export.
-- Export the contributors as the `<contributors>` block of a Crossref deposit, with each person's
-  CRediT roles (Crossref metadata schema 5.5.0). Paste it into the record your journal deposits
-  with Crossref. Find it in the Export data menu as "XML (Crossref)", or run
-  `credit-matrix convert team.csv --to crossref`. Crossref has no place for lead, equal or
-  supporting, so the levels are left out.
-- A Published practice tab beside the grid shows how often published papers in a field give each
-  CRediT role, for sole, first, middle and last authors. Pick your field once and the app remembers
-  it; mark your own row with "This is me" and your column is marked, counting authors only. The
-  shares come from about 1.7 million open-access research articles in Europe PMC. They are context
-  only: nothing here fills in or comments on your grid. The roles were read from the papers
-  automatically and have not been checked by hand yet, and the tab says so, with the article count
-  for the field. Fields with fewer than 1,000 articles are not listed.
-- A CRediT census page (`/census`, linked from the header on wide screens and from About) shows how published papers use CRediT,
-  from 8.2 million open-access articles in Europe PMC: the share of research articles with roles
-  per year, by markup style, field and publisher, and which roles first, middle and last authors
-  hold. The figures are preliminary: the parser that reads the roles is not yet validated against
-  hand labels. The counts behind the page are at `/data/census.json`. A short section
-  explains how the census reads statements, with links to the census code and the model card.
+- Paste an existing author contribution statement into Import to fill in the grid. Names and
+  initials are matched to the contributors in the draft, and you see each person's roles, and any
+  name that matched no one, before you apply. The statement never leaves the browser.
 - Co-authors can sign in with ORCID before they send their answer back. The Review tab then shows
-  "Verified by ORCID" with their name, iD and sign-in day, and warns when that iD is not the row's.
-  The sign-in travels inside the reply link and JSON exports; no server keeps it. A sign-in moved
-  onto another answer does not verify, and importing a JSON export checks each sign-in again.
-  If ORCID cannot be reached then, the answer arrives without the mark; try again later to add it.
-- Paste an existing author contribution statement into Import to fill in the grid. It is matched to
-  the contributors already in the draft, by full name or initials ("MG", "S.L.V.", "Nam KC"), and
-  each line counts as its own entry. You see which roles each person gets, and for each name or
-  initials that matched no one, or more than one, who it could be and which roles are left out,
-  before you apply. In a Levels draft you pick the level the roles get (Equal unless you change it).
-  Undo takes the roles back until you change the draft again. Only CRediT wording counts, so "drew
-  the figures" or "approved the manuscript" add nothing. Statements are read up to 50,000
-  characters, and never leave the browser.
-- Export a draft as a tenzing contributor spreadsheet (Export data, then "tenzing CSV"), so a team
-  can move between the two tools. It has the columns of tenzing's own example sheet. tenzing records
-  a role as done or not, so any level becomes TRUE, and it has no column for equal contribution.
-  Acknowledgees are marked "Acknowledgment only", the value tenzing keeps, and are listed and
-  numbered after the authors, as tenzing needs. An acknowledgee is never marked as the corresponding
-  author. The `credit-matrix` package exports it as `toTenzing`.
-- The `credit-matrix` package exports `parseStatement`, `statementAuthor`, `namesCredit` and
-  `MAX_STATEMENT_LENGTH`. `parseStatement` also returns `unmatched`: each unresolved name or
-  initials once, with the authors it could be and the roles it was given. It throws a `RangeError`
-  on a statement longer than `MAX_STATEMENT_LENGTH` (50,000 characters).
-- In the `credit-matrix` package, replies can carry `provenance.orcid` (the new `OrcidProof` type)
-  and `provenance.replacedOrcid`; run `recheckSignIns` on imported asks.
-- An About page (`/about`) says what the app is, how to cite it by its concept DOI, whom it
-  thanks, and, in its own Privacy section, what it sends where. The About panel is now a short card
-  that links to it.
-- The accessibility statement is now on the site, at `/accessibility`, rebuilt as a reader-first
-  page: what you should be able to do, its status against WCAG 2.2 AA, known problems
-  each with a workaround, an email contact with a 10-working-day reply time, how we check, what it
-  was tested with, and when it was last reviewed. `docs/accessibility.md` stays the one source; the
-  build turns it into static HTML.
-- A WCAG 2.2 self-assessment (`docs/accessibility-assessment.md`) judges every level A and AA
-  criterion with its evidence. It finds no failing criterion; the statement says "partially
-  conformant" until a screen reader has read the app.
-- Downloaded heatmaps carry the contribution statement as their text alternative: the SVG in its
-  description, which screen readers read, the PNG in its Description field. Before, the SVG said
-  only "Contribution heatmap" and the PNG had no text at all. Both are tagged with the output
-  language, so a screen reader reads them in that language. In the `credit-matrix` package,
-  `heatmapDescription` returns the same text, and `buildHeatmapSvg` sets `xml:lang` and `lang` when
-  you pass `locale`.
-- Census: for people who run it, `census model` trains and checks a model that reads contribution
-  statements. A fine-tuned encoder and a hybrid of the rule parser and the encoder sit beside the
-  rule parser, and `census model browser` exports the encoder for the browser. `--seed` fixes a
-  run, `--learning-rate` sets its learning rate, and `--open-licence-only` trains on CC BY and CC0
-  articles only, so the weights can be shared. Without it, about 9% of a 120,000-article draw came
-  from articles under other licences. `census score` now also scores each role on its own.
-- Census: `census label --set --sizes 700 150 150` draws a larger hand-label set, such as the
-  1,000-row set, with the rows per style you choose. The default stays 100, 30 and 30.
-- A [model card](census/MODEL_CARD.md) for the Ettin-68M model that reads statements in the census
-  and in the browser build: what it was trained on, its scores, its limits and how to cite it.
+  "Verified by ORCID" with their iD, or a warning when it is not the row's. The sign-in travels in
+  the reply link and JSON exports; no server keeps it.
+- A Published practice tab beside the grid shows how often published papers in your field give
+  each CRediT role, for first, middle, last and sole authors, from about 1.7 million open-access
+  articles. The roles were read automatically and are not yet checked by hand.
+- A CRediT census page (`/census`) shows how 8.2 million open-access articles in Europe PMC use
+  CRediT, by year, markup style, field, publisher and author position. The figures are
+  preliminary; the counts are at `/data/census.json`.
+- Export the contributors as a Crossref 5.5 `<contributors>` block with CRediT roles, from the
+  Export data menu, with `credit-matrix convert --to crossref`, or with `toCrossrefContributors`.
+  Crossref has no lead, equal or supporting, so the levels are left out.
+- Export a draft as a tenzing contributor spreadsheet, from the Export data menu or with
+  `toTenzing`, so a team can move between the two tools.
 - `credit-matrix statement --format codemeta` prints CodeMeta 3.0 `Role` objects for a
-  `codemeta.json`: one for each person and CRediT role, with the role's `credit.niso.org` URL as
-  `roleName` and the person's ORCID URL as `schema:author`. Non-authors and people without an
-  ORCID iD are left out, with a warning for each.
-- Project documents: governance, a roadmap and a security model, plus sections on disclosure, the
-  maintainer and the sign-off (DCO). The README shows the OpenSSF Scorecard badge.
+  `codemeta.json`, for the authors with an ORCID iD.
+- Downloaded heatmaps carry the contribution statement as their text alternative, in the output
+  language: the SVG in its description, the PNG in its Description field. `heatmapDescription`
+  returns the same text.
+- An About page (`/about`) with how to cite the app and what it sends where, and the
+  [accessibility statement](docs/accessibility.md) at `/accessibility`, backed by a
+  [WCAG 2.2 self-assessment](docs/accessibility-assessment.md).
+- New exports in the `credit-matrix` package for pasted statements (`parseStatement` and friends)
+  and for ORCID-signed replies (`recheckSignIns`, `fetchOrcidKeys`, `verifyOrcidToken`); the
+  [package README](src/core/README.md) lists them.
+- For people who run the census: `census model` trains, scores and exports a model that reads
+  contribution statements, described in its [model card](census/MODEL_CARD.md), and
+  `census label --set --sizes` draws a larger label set ([census README](census/README.md)).
+- Project documents: [governance](GOVERNANCE.md), a [roadmap](docs/roadmap.md), a security model
+  in [SECURITY.md](SECURITY.md), and the sign-off (DCO) in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Changed
 
-- **Breaking:** in the `credit-matrix` package, `DetectedFormat` gains `"statement"`, which
-  `detectFormat` returns for a CRediT statement or for prose about what the authors did. Such text
-  used to come back as `"names"`. `importAny` now throws on it, as it names roles, not
-  contributors: read it with `parseStatement` against your author list. A `switch` over
-  `DetectedFormat` needs the new case. The next release is therefore 0.9.0.
+- **Breaking:** the `credit-matrix` package needs Node 22 or later. Node 20 reached its end of life
+  in April 2026.
+- **Breaking:** `detectFormat` returns `"statement"` for a CRediT statement or prose about what the
+  authors did, which used to come back as `"names"`, and `importAny` throws on it. A `switch` over
+  `DetectedFormat` needs the new case; read such text with `parseStatement`.
 - Primary buttons darken on hover instead of fading, so their text stays readable.
-- Census: the counts behind `/census` and the field norms were rebuilt with the second version of
-  the statement parser. Counts move by a few articles per year and field, and shares by at most
-  0.001. The census README now gives how well the Ettin-68M model agrees with the rule parser on
-  the whole corpus.
 
 ### Fixed
 
@@ -112,13 +70,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `<suffix>`. Pasted into the name list, each stays one contributor.
 - A Japanese or Chinese statement used an ASCII colon and space after each role or name next to its
   full-width semicolon. It now uses "：", and a French statement puts a non-breaking space before
-  its colons and semicolons. The Review tab's button labels for screen readers also read correctly in every
-  language.
+  its colons and semicolons. The Review tab's button labels for screen readers also read correctly
+  in every language.
 - `credit-matrix ask --contributor` finds a name typed with decomposed accents, as macOS
   and some keyboards produce.
 - Names with a middle dot ("ジョン・スミス", "Gal·la") or a zero-width joiner keep them when
   parsed, instead of having them dropped.
-- The privacy text on the About page said the site ran Cloudflare's analytics script. It doesn't:
+- The privacy text in the About panel said the site ran Cloudflare's analytics script. It doesn't:
   Cloudflare counts page requests on its own servers, and the Content Security Policy no longer
   allows an analytics script.
 - A heatmap downloaded at a larger size with no roles yet places its "no roles" message in the
@@ -137,7 +95,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Focus no longer goes under the sticky bar on a phone, or under a status message.
   - A dialog closes only when you press and release on the backdrop, so a stray press keeps your
     typed text.
-  - Escape hides the census chart's value readout.
   - An ORCID iD, name or co-author name that is refused now says why, and the message stays
     until you change the field. Screen readers hear it, and also hear which file was loaded in
     Import.
@@ -152,6 +109,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - On the co-author page each role name is a heading, so a screen reader can jump from role to
     role. The role headings sit under a "Your roles" heading, so the switches and the ORCID sign-in
     after the list no longer read as part of the last role.
+- A file or link that was still loading when you closed Import no longer lands in the draft
+  afterwards.
 - "How it works" did nothing outside the main page. It now takes you there and opens the welcome
   panel, and closing the panel puts focus on the main content.
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A
@@ -159,15 +118,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   with the wrong initials.
 - CSV export keeps a leading apostrophe in a name that starts with a line break or spaces. It used
   to come back without the apostrophe.
-- Census: the parser reads more statements right. A clause that ends in initials after a full stop
-  ("Investigation, methodology. S.H.; supervision. T.D.") keeps its roles together. A semicolon
-  between authors with no role before it stays inside one author list. Initials without accents
-  match accented names ("N.N.A." for Nguyễn Ngọc Ánh).
-- Census: a trained model's config names its 14 role outputs. It called them `LABEL_0` to
-  `LABEL_13`, so anyone loading the weights had to look up the role order.
-- Census page: a chart no longer draws outside its box when its highest value is above the last tick
-  of the axis. The contribution-statement share peaks at 28.6% and the axis stopped at 20%. The
-  "preliminary figures" notice is shorter, in all nine languages.
 
 ### Security
 
@@ -654,7 +604,8 @@ Persisted local drafts migrate automatically.
   contribution heatmap, JATS4R XML / CSV / JSON / Markdown exports, ORCID lookup,
   share links, and a framework-agnostic `@credit-generator/core` domain package.
 
-[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.6.0...v0.7.0

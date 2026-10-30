@@ -43,7 +43,7 @@ is at or above 0.4, the threshold that scored best on the dev set. The threshold
 beside the weights, because the model config does not hold it. Run the model once per author and
 the answers are (author, role) pairs.
 
-The published checkpoint predates named outputs, so its config calls them `LABEL_0` to `LABEL_13`;
+This checkpoint predates named outputs, so its config calls them `LABEL_0` to `LABEL_13`;
 a model trained from the current code names them by role in `id2label`. In order they are: conceptualization,
 data-curation, formal-analysis, funding-acquisition, investigation, methodology,
 project-administration, resources, software, supervision, validation, visualization,
@@ -146,7 +146,8 @@ the tags are the answer.
 
 **Licence of the training text.** Training used every tagged article in the training split,
 whatever its licence. Of the 120,000 articles, 10,817 are not CC BY or CC0, most of them from
-SAGE, Oxford University Press and AAAS. The training files name authors and are not published.
+SAGE, Oxford University Press and AAAS. The training files name authors and are not published. These weights are not published either: the model put on Hugging Face will be
+trained on CC BY and CC0 articles only.
 The census publishes statement text only for CC BY and CC0 articles (`OPEN_LICENCE` in
 `src/census/export.py`). A retrain with `census model train --open-licence-only` draws train and
 dev from those articles alone.
