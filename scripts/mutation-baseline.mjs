@@ -7,8 +7,9 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 
 const BASELINE = "test/mutation-baseline.txt";
-// A survivor judged equivalent (no test can tell it apart) carries its reason after this marker.
-const REASON = "  # equivalent: ";
+// A survivor left on purpose carries its reason after this marker: an equivalent mutant no test can
+// tell apart, or a design constant a test would only restate.
+const REASON = "  # kept: ";
 
 const report = JSON.parse(readFileSync("reports/mutation/mutation.json", "utf8"));
 const reasons = new Map();
@@ -45,14 +46,14 @@ for (const [file, { source, mutants }] of Object.entries(report.files)) {
 }
 lines.sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
 const annotated = lines.map((row) => row + (reasons.get(row) ?? ""));
-const equivalent = annotated.filter((row) => row.includes(REASON)).length;
+const kept = annotated.filter((row) => row.includes(REASON)).length;
 
 const total = killed + survived + noCoverage;
 const score = ((100 * killed) / total).toFixed(2);
 const header = [
   "# Mutants that no test kills, from `pnpm mutation` on src/core.",
-  "# Each line: file status mutator -> replacement | original line, and a reason when the mutant is equivalent.",
-  `# Score ${score}%: ${killed} killed, ${survived} survived, ${noCoverage} without coverage, ${equivalent} judged equivalent.`,
+  "# Each line: file status mutator -> replacement | original line, and why it is kept, for one left on purpose.",
+  `# Score ${score}%: ${killed} killed, ${survived} survived, ${noCoverage} without coverage, ${kept} kept with a reason.`,
 ];
 writeFileSync(BASELINE, `${[...header, ...annotated].join("\n")}\n`);
 console.log(`Mutation score ${score}% (${survived} survived, ${noCoverage} no coverage): ${BASELINE}`);
