@@ -37,12 +37,12 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
   ([ADR 0002](docs/adr/0002-no-accounts-or-server-side-storage.md)). Drafts live in your browser's
   storage. Share and reply links carry the draft in the URL fragment, which browsers do not send
   with page requests, and the app clears it from the address bar once it has read it. Until then,
-  scripts on the page can read it, including the hosted site's analytics beacon. There are no
-  accounts and no passwords to steal.
-- **Few outside calls.** Only the ORCID and DOI lookups, the fetch of ORCID's public keys and the
-  hosted site's cookieless analytics beacon leave the browser. A lookup sends the ORCID iD or DOI
-  you typed to ORCID, Crossref or DataCite. The Content Security Policy in
-  [`public/_headers`](public/_headers) allows no other hosts and blocks framing.
+  scripts on the page can read it, and the Content Security Policy lets only the app's own scripts
+  run. There are no accounts and no passwords to steal.
+- **Few outside calls.** Only the ORCID and DOI lookups and the fetch of ORCID's public keys leave
+  the browser. The host, Cloudflare, counts page requests on its own servers; no analytics script
+  runs on the page. A lookup sends the ORCID iD or DOI you typed to ORCID, Crossref or DataCite.
+  The Content Security Policy in [`public/_headers`](public/_headers) allows no other hosts and blocks framing.
 - **ORCID sign-in.** A co-author who signs in leaves the page for orcid.org. The request carries a
   hash of the reply, not the reply. ORCID returns a signed token in the URL fragment, and the app
   checks it in the browser against ORCID's public keys. The token then travels inside the reply link.

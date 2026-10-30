@@ -231,7 +231,7 @@
   "opensInNewTab": "（在新标签页中打开）",
   "acknowledgements": "致谢",
   "aboutTaxonomy": "CRediT 是 ANSI/NISO 标准（<cc>CC BY 4.0</cc>）。本项目独立于 NISO，未获 NISO 认可。",
-  "aboutPrivacy": "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。本站使用 Cloudflare Web Analytics，不使用 Cookie，仅统计汇总的访问量。除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录信息包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。",
+  "aboutPrivacy": "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在你的浏览器中运行脚本或设置 Cookie。除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录信息包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。",
   "accessibilityStatement": "无障碍声明",
   "getCreditBadge": "获取 CRediT 徽章",
   "creditBadge": "CRediT 徽章",
