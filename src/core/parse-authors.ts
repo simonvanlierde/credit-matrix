@@ -33,7 +33,7 @@ export function parseNameParts(name: string): {
   middleName: string;
   surname: string;
 } {
-  const commaParts = name
+  const commaParts = splitCommaSuffix(name)[0]
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);
@@ -302,6 +302,8 @@ function isSameAuthor(a: Author, b: Author): boolean {
 function consistentNameParts(author: Author): Pick<Author, "firstName" | "middleName" | "surname"> | undefined {
   const { name, firstName, middleName, surname } = author;
   if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+  // The word order below reads an inverted name with a suffix front to back, so it re-parses.
+  if (splitCommaSuffix(name)[1]) return undefined;
   const words = (text: string) => cleanNamePart(text).split(/\s+/).filter(Boolean);
   const opens = (whole: string[], part: string[]) => part.every((word, i) => whole[i] === word);
   const [named, first, middle, last] = [name, firstName, middleName, surname].map(words) as [
@@ -369,6 +371,20 @@ export function isSuffix(word: string): boolean {
   return /^(?:jr|sr|ii|iii)\.?$/i.test(word);
 }
 
+/**
+ * An inverted name without the generational suffix after its surname or given
+ * names, and that suffix: "King Jr., Martin" and "King, Martin, Jr." give
+ * ["King, Martin", "Jr."]. Any other name comes back whole, with no suffix.
+ */
+export function splitCommaSuffix(name: string): [string, string] {
+  const [surname = "", given = "", after, ...rest] = name.split(",").map((part) => part.trim());
+  if (!given || rest.length > 0) return [name, ""];
+  if (after !== undefined) return isSuffix(after) ? [`${surname}, ${given}`, after] : [name, ""];
+  const words = surname.split(/\s+/);
+  const suffix = words.pop() ?? "";
+  return words.length > 0 && isSuffix(suffix) ? [`${words.join(" ")}, ${given}`, suffix] : [name, ""];
+}
+
 /** A surname particle, in any case and with any apostrophe ("Van", "van’t"). */
 function isParticle(word: string): boolean {
   return PARTICLES.has(word.toLowerCase().replace(/[’ʼ]/gu, "'"));
@@ -385,6 +401,8 @@ function surnameCore(surname: string): string {
 function isSurnamePart(text: string): boolean {
   if (ORCID_INPUT_REGEX.test(text)) return false;
   const words = text.split(/\s+/).filter(Boolean);
+  // "King Jr.": a suffix may follow the surname.
+  if (words.length > 1 && isSuffix(words.at(-1) ?? "")) words.pop();
   const last = words.pop();
   if (!last || !/\p{L}/u.test(last)) return false;
   return words.every(isParticle);
@@ -417,7 +435,13 @@ function splitCommaLine(line: string): string[] {
   const chunks = line
     .split(",")
     .map((part) => part.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    // A suffix after a comma stays with the name before it ("Martin Luther King, Jr.").
+    .reduce<string[]>((kept, chunk) => {
+      if (kept.length > 0 && isSuffix(chunk)) kept.push(`${kept.pop()}, ${chunk}`);
+      else kept.push(chunk);
+      return kept;
+    }, []);
   if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
 
   // NOTE: a comma-only list of mononyms ("Cher, Madonna") reads as one
@@ -427,7 +451,7 @@ function splitCommaLine(line: string): string[] {
   for (let i = 0; i < chunks.length; i += 2) {
     const surname = chunks[i] ?? "";
     const given = chunks[i + 1] ?? "";
-    if (!isSurnamePart(surname) || !isGivenNamePart(given)) return chunks;
+    if (!isSurnamePart(surname) || !isGivenNamePart(given.split(",")[0] ?? "")) return chunks;
     pairs.push(`${surname}, ${given}`);
   }
   return pairs;

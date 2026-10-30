@@ -3,7 +3,7 @@ import { isValidOrcid } from "../author";
 import { CREDIT_ROLES, headerKey as key } from "../credit-roles";
 import { deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
 import { delimiterOf, escapeCsvFormulaOnly, headerCells, parseCsvRecords, unescapeCsvValue } from "./csv";
-import { givenNamesOf } from "./xml";
+import { givenNamesOf, suffixOf } from "./xml";
 
 /*
  * tenzing (github.com/marton-balazs-kovacs/tenzing) contributor spreadsheets,
@@ -46,8 +46,12 @@ function nameCells(author: Author): string[] {
   const name = author.name.trim().replace(/\s+/g, " ");
   const given = givenNamesOf(author);
   // Inverted input ("Curie, Marie") has no surname after its given names; split on a word, so
-  // a first name "Ann" never takes "a" from "Anna".
-  const surname = name === given || name.startsWith(`${given} `) ? name.slice(given.length).trim() : author.surname;
+  // a first name "Ann" never takes "a" from "Anna". tenzing has no suffix column, so a suffix
+  // stays in the surname cell, as it does for "Martin Luther King Jr.".
+  const surname =
+    name === given || name.startsWith(`${given} `)
+      ? name.slice(given.length).trim()
+      : [author.surname, suffixOf(author)].filter(Boolean).join(" ");
   const [first = "", ...middle] = given.split(/\s+/).filter(Boolean);
   return [first, middle.join(" "), surname];
 }

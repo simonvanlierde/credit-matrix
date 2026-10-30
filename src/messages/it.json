@@ -168,6 +168,7 @@
   "coauthorOrcidFailed": "L’accesso con ORCID non è stato completato. Puoi comunque inviare la risposta senza.",
   "reviewOrcidVerified": "Verificato da ORCID come {who}, accesso il {date}.",
   "reviewOrcidOtherId": "Non è l’iD della riga.",
+  "reviewOrcidNoRowId": "Questa riga non ha un iD ORCID con cui confrontarlo.",
   "coauthorNotSent": "Non ancora inviato.",
   "coauthorCopyInstead": "Copia invece il link",
   "coauthorShareTitle": "Ruoli CRediT di {name}",

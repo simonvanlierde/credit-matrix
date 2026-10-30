@@ -42,9 +42,10 @@ Commands:
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
       --format codemeta prints CodeMeta 3.0 Role objects instead, one per
       role, for authors with an ORCID iD, and warns about each person left out.
-  convert <file> --to json|csv|jats|crossref|md [--yes-no]
+  convert <file> --to json|csv|jats|crossref|md [--yes-no] [--locale <code>]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level.
+      --locale sets the language of the md role names.
       crossref prints the <contributors> block of a Crossref deposit (schema
       5.5.0), which has no levels.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
@@ -98,6 +99,13 @@ function resolveLocale(code: string): LocaleCode | null {
     if (locale !== "en") return locale;
   }
   return null;
+}
+
+function requireLocale(candidate: string): LocaleCode {
+  const locale = resolveLocale(candidate);
+  if (locale) return locale;
+  const codes = AVAILABLE_LOCALES.map((l) => l.code).join(", ");
+  throw new UsageError(`Unknown locale: ${candidate}. Use one of ${codes}.`);
 }
 
 const COMMANDS = ["statement", "convert", "ask"];
@@ -221,11 +229,7 @@ export async function run(argv: string[]): Promise<string> {
         return JSON.stringify(roles, null, 2);
       }
       if (!isStatementFormat(format)) throw new UsageError(`Unknown format: ${format}`);
-      const locale = resolveLocale(values.locale);
-      if (!locale) {
-        const codes = AVAILABLE_LOCALES.map((l) => l.code).join(", ");
-        throw new UsageError(`Unknown locale: ${values.locale}. Use one of ${codes}.`);
-      }
+      const locale = requireLocale(values.locale);
       const statement = generateStatement(authors, {
         format,
         locale,
@@ -246,8 +250,15 @@ export async function run(argv: string[]): Promise<string> {
           return toJats4rXml(authors, { yesNo: values["yes-no"] });
         case "crossref":
           return toCrossrefContributors(authors);
-        case "md":
-          return toMarkdown(authors);
+        case "md": {
+          const locale = requireLocale(values.locale);
+          return toMarkdown(
+            authors,
+            makeRoleTranslator(await loadRoleCatalog(locale)),
+            makeUiTranslator(await loadUiCatalog(locale)),
+            locale,
+          );
+        }
         default:
           throw new UsageError("convert needs --to json, csv, jats, crossref or md.");
       }

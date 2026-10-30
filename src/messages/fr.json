@@ -168,6 +168,7 @@
   "coauthorOrcidFailed": "La connexion ORCID n’a pas abouti. Vous pouvez quand même envoyer votre réponse sans elle.",
   "reviewOrcidVerified": "Vérifié par ORCID en tant que {who}, connexion le {date}.",
   "reviewOrcidOtherId": "Ce n’est pas l’iD de la ligne.",
+  "reviewOrcidNoRowId": "Cette ligne n’a pas d’iD ORCID à comparer.",
   "coauthorNotSent": "Pas encore envoyé.",
   "coauthorCopyInstead": "Copier plutôt le lien",
   "coauthorShareTitle": "Rôles CRediT de {name}",

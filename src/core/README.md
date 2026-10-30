@@ -44,6 +44,7 @@ npx credit-matrix --help                           # or --version
 Each command reads a file, or `-` for standard input, in any format `importAny` reads. Spreadsheet
 files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement --levels` adds Equal or
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
+`convert --to md` takes `--locale` too, for the language of the role names.
 
 `statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
 or `codemeta`. `codemeta` prints a JSON array of CodeMeta 3.0 `Role` objects, one for each person and

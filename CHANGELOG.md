@@ -107,6 +107,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the surname, and the JATS and Crossref exports write it as `<suffix>`, which the JATS import reads
   back. JATS XML export also keeps every word of a name that ends in punctuation: "Ann B. C. Smith."
   used to come back as "Ann B Smith".
+- Inverted names with a suffix ("King Jr., Martin", "King, Martin Luther, Jr.") now get the right
+  surname and given names. The suffix stays out of both, and JATS and Crossref write it as
+  `<suffix>`. Pasted into the name list, each stays one contributor.
 - A Japanese or Chinese statement used an ASCII colon and space after each role or name next to its
   full-width semicolon. It now uses "：", and a French statement puts a non-breaking space before
   its colons and semicolons. The Review tab's button labels for screen readers also read correctly in every
@@ -124,6 +127,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `credit-matrix convert --to jats` takes `--yes-no` for rosters ticked in yes/no mode. The JATS file
   then leaves out `degree-contribution`, as the app's own XML export does, instead of marking every
   role "lead".
+- `credit-matrix convert --to md` takes `--locale`, so the Markdown table names the roles in that
+  language, as the app's Markdown export does. It used to print English whatever the locale.
 - Accessibility fixes from the WCAG 2.2 self-assessment:
   - Placeholder text, text-field edges, empty grid cells and the reorder handle now have enough
     contrast in both themes, and the contributor name field shows a focus ring.

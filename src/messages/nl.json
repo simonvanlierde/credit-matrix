@@ -168,6 +168,7 @@
   "coauthorOrcidFailed": "Het inloggen met ORCID is niet afgerond. U kunt uw antwoord ook zonder versturen.",
   "reviewOrcidVerified": "Geverifieerd door ORCID als {who}, ingelogd op {date}.",
   "reviewOrcidOtherId": "Dit is niet de iD in de rij.",
+  "reviewOrcidNoRowId": "Deze rij heeft geen ORCID iD om mee te vergelijken.",
   "coauthorNotSent": "Nog niet verstuurd.",
   "coauthorCopyInstead": "Kopieer liever de link",
   "coauthorShareTitle": "CRediT-rollen van {name}",
