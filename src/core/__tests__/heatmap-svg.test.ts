@@ -3,7 +3,7 @@ import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
 import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
 import { makeUiTranslator } from "../credit-i18n/ui-strings";
-import { CREDIT_ROLES } from "../credit-roles";
+import { CREDIT_ROLES, type CreditRoleName } from "../credit-roles";
 import { GENERATOR_NOTE } from "../export/generator-note";
 import { buildHeatmapSvg } from "../export/heatmap-svg";
 import { createAuthor, parseAuthorText } from "../parse-authors";
@@ -414,7 +414,7 @@ describe("buildHeatmapSvg placement", () => {
 });
 
 describe("buildHeatmapSvg legend wrapping", () => {
-  const legendRows = (role: string) =>
+  const legendRows = (role: CreditRoleName) =>
     legendRowCount(buildHeatmapSvg([createAuthor("Jane Smith", { contributions: [{ role, score: 100 }] })]));
 
   it("stacks one key per row when no two keys fit side by side", () => {
