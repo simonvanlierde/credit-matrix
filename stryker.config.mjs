@@ -10,6 +10,8 @@ export default {
   testRunner: "vitest",
   vitest: { configFile: "vitest.mutation.config.ts" },
   coverageAnalysis: "perTest",
+  // The host runs a benchmark queue; 8 workers leave the rest of the cores free.
+  concurrency: 8,
   // Stryker skips its tsconfig rewrite when the file is missing; the rewrite needs the TypeScript JS API,
   // which TypeScript 7 dropped. Remove once Stryker supports TS 7.
   tsconfigFile: "tsconfig.stryker-skip.json",

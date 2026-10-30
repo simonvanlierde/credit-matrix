@@ -3,7 +3,8 @@ import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
 import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
 import { makeUiTranslator } from "../credit-i18n/ui-strings";
-import { CREDIT_ROLES } from "../credit-roles";
+import { CREDIT_ROLES, type CreditRoleName } from "../credit-roles";
+import { GENERATOR_NOTE } from "../export/generator-note";
 import { buildHeatmapSvg } from "../export/heatmap-svg";
 import { createAuthor, parseAuthorText } from "../parse-authors";
 
@@ -172,6 +173,18 @@ describe("buildHeatmapSvg", () => {
       expect(svg).toMatch(/^<svg [^>]* xml:lang="ja" lang="ja"/);
     }
     expect(buildHeatmapSvg(authors)).not.toContain("lang=");
+    expect(buildHeatmapSvg(authors)).toMatch(/^<svg [^>]*role="img">/);
+  });
+
+  it("states each contribution level in <desc> unless levels are off, as the figure does", () => {
+    const desc = (svg: string) => svg.match(/<desc>(.*)<\/desc>/s)?.[1] ?? "";
+    const authors = authorsWithScores();
+    if (authors[1]) setScore(authors[1], "Software", 33);
+    const levels = desc(buildHeatmapSvg(authors));
+    const flat = desc(buildHeatmapSvg(authors, { showLevels: false }));
+    expect(levels).toContain("Bob White: Software (Supporting)");
+    expect(flat).toContain("Bob White: Software");
+    expect(flat).not.toContain("(Supporting)");
   });
 
   it("names the graphic for assistive technology without drawing a title", () => {
@@ -281,6 +294,20 @@ describe("buildHeatmapSvg", () => {
     it("renders a fixed-size placeholder, scaled, when nothing is contributed", () => {
       const svg = buildHeatmapSvg(parseAuthorText("Alice Brown"), { scale: 2 });
       expect(svg).toContain('width="640" height="112" viewBox="0 0 640 112"');
+      expect(svg).toContain(`<!-- ${GENERATOR_NOTE} -->`);
+      expect(svg).toContain("<title>Contribution heatmap</title>");
+      expect(svg).toMatch(/<rect width="640" height="112" fill="#[0-9a-f]{6}"\/>/);
+      // The message keeps its place on the padded canvas at any scale.
+      expect(svg).toMatch(
+        /<text x="48" y="64" [^>]*font-size="22"[^>]*>No contributions assigned yet\.<\/text>\n<\/svg>$/,
+      );
+    });
+
+    it("notes its generator and fills the whole canvas behind the figure", () => {
+      const svg = buildHeatmapSvg(authorsWithScores());
+      const g = geometry(svg);
+      expect(svg).toContain(`<!-- ${GENERATOR_NOTE} -->`);
+      expect(svg).toContain(`<rect width="${g.w}" height="${g.h}" fill="#`);
     });
   });
 });
@@ -299,3 +326,103 @@ function svgWidth(svg: string): number {
 function firstCellX(svg: string): number {
   return Number(svg.match(/<rect x="([\d.]+)"[^>]*width="22" height="22"/)?.[1]);
 }
+
+describe("buildHeatmapSvg placement", () => {
+  /** Every numeric attribute and translate() argument of each drawn element, in document order. */
+  function numbers(svg: string): number[] {
+    return [...svg.matchAll(/<(?:rect|text)\b[^>]*>/g)]
+      .filter(([tag]) => !tag.includes('fill="none"'))
+      .flatMap(([tag]) => [
+        ...[...tag.matchAll(/ (?!font-weight)[\w-]+="(-?[\d.]+)"/g)].map((m) => Number(m[1])),
+        ...[...tag.matchAll(/translate\((-?[\d.]+),(-?[\d.]+)\)/g)].flatMap((m) => [Number(m[1]), Number(m[2])]),
+      ]);
+  }
+
+  const cells = (svg: string) =>
+    [...svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="22" height="22"/g)].map((m) => ({
+      x: Number(m[1]),
+      y: Number(m[2]),
+    }));
+  const swatches = (svg: string) =>
+    [...svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="14" height="14"/g)].map((m) => ({
+      x: Number(m[1]),
+      y: Number(m[2]),
+    }));
+  const unique = (values: number[]) => [...new Set(values)].sort((a, b) => a - b);
+
+  it("draws every element, labels and legend included, at the given scale", () => {
+    for (const transpose of [false, true]) {
+      const one = numbers(buildHeatmapSvg(authorsWithScores(), { transpose }));
+      const two = numbers(buildHeatmapSvg(authorsWithScores(), { transpose, scale: 2 }));
+      expect(two).toHaveLength(one.length);
+      two.forEach((value, i) => {
+        expect(value).toBeCloseTo((one[i] ?? Number.NaN) * 2, 6);
+      });
+    }
+    // The grid border sits a fixed 1px outside the grid, but its corners and stroke scale.
+    const border = (svg: string) =>
+      svg.match(/rx="([\d.]+)" ry="([\d.]+)" fill="none"[^>]*stroke-width="([\d.]+)"/)?.slice(1);
+    expect(border(buildHeatmapSvg(authorsWithScores(), { scale: 2 }))).toEqual(["6", "6", "1"]);
+  });
+
+  it("puts each axis label beside the column or row it names", () => {
+    const svg = buildHeatmapSvg(authorsWithScores());
+    const columnXs = unique(cells(svg).map((cell) => cell.x));
+    const rowYs = unique(cells(svg).map((cell) => cell.y));
+    // Cells sit on a 24px pitch: 22px cells and a 2px gap.
+    expect((columnXs[1] ?? 0) - (columnXs[0] ?? 0)).toBeCloseTo(24, 6);
+    expect(rowYs.slice(1).map((y, i) => y - (rowYs[i] ?? 0))).toEqual([24, 24]);
+
+    // Top labels start at the middle of their column, one label gap above the grid.
+    const top = [...svg.matchAll(/translate\(([\d.]+),([\d.]+)\) rotate\(-45\)[^>]*>([^<]*)</g)];
+    expect(top.map((m) => m[3])).toEqual(["JS", "BW"]);
+    expect(top.map((m) => Number(m[1]))).toEqual(columnXs.map((x) => x + 11));
+    for (const m of top) expect(Number(m[2])).toBeCloseTo((rowYs[0] ?? 0) - 6, 6);
+
+    // Left labels end one label gap before the grid, on their row's baseline.
+    const left = [...svg.matchAll(/<text x="([\d.]+)" y="([\d.]+)" text-anchor="end"[^>]*>([^<]*)</g)];
+    expect(left.map((m) => m[3])).toEqual(["Conceptualization", "Software", "Writing – review &amp; editing"]);
+    for (const m of left) expect(Number(m[1])).toBeCloseTo((columnXs[0] ?? 0) - 6, 6);
+    expect(left.map((m) => Number(m[2]))).toEqual(rowYs.map((y) => y + 15));
+  });
+
+  it("lines a wrapped legend up in columns, centred under the figure, with each label beside its swatch", () => {
+    const svg = buildHeatmapSvg(authorsWithScores());
+    const keys = swatches(svg);
+    // Lead, Equal / Supporting, None: two rows on a 20px pitch, in two shared columns.
+    expect(unique(keys.map((key) => key.y))).toHaveLength(2);
+    expect((keys[2]?.y ?? 0) - (keys[0]?.y ?? 0)).toBeCloseTo(20, 6);
+    expect([keys[2]?.x, keys[3]?.x]).toEqual([keys[0]?.x, keys[1]?.x]);
+    // The first column is as wide as its widest key: "Supporting" (10 characters at 10px), the
+    // 14px swatch, the 6px gap before the label and the 20px gap after it.
+    const firstColumn = 14 + 6 + 10 * 10 * 0.62 + 20;
+    expect((keys[1]?.x ?? 0) - (keys[0]?.x ?? 0)).toBeCloseTo(firstColumn, 6);
+    // Centred: the block is the two columns minus the trailing gap, with equal room either side.
+    const secondColumn = 14 + 6 + 5 * 10 * 0.62 + 20; // "Equal" and "None" are no wider
+    const legendW = firstColumn + secondColumn - 20;
+    expect((keys[0]?.x ?? 0) - 24).toBeCloseTo((svgWidth(svg) - 48 - legendW) / 2, 6);
+
+    const labels = [
+      ...svg.matchAll(/<text x="([\d.]+)" y="([\d.]+)" font-family="[^"]*" font-size="10"[^>]*>([^<]*)</g),
+    ];
+    expect(labels.map((m) => m[3])).toEqual(["Lead", "Equal", "Supporting", "None"]);
+    labels.forEach((m, i) => {
+      expect(Number(m[1])).toBeCloseTo((keys[i]?.x ?? 0) + 18, 6);
+      expect(Number(m[2])).toBeCloseTo((keys[i]?.y ?? 0) + 11, 6);
+    });
+  });
+});
+
+describe("buildHeatmapSvg legend wrapping", () => {
+  const legendRows = (role: CreditRoleName) =>
+    legendRowCount(buildHeatmapSvg([createAuthor("Jane Smith", { contributions: [{ role, score: 100 }] })]));
+
+  it("stacks one key per row when no two keys fit side by side", () => {
+    // A Methodology-only figure (about 100px wide) is narrower than any pair of keys but wider than
+    // the widest key, "Supporting" (82px).
+    expect(legendRows("Methodology")).toBe(4);
+    // Conceptualization (about 139px) fits "Lead, Equal" but not "Supporting, None": every row
+    // must fit, so the keys still stack.
+    expect(legendRows("Conceptualization")).toBe(4);
+  });
+});
