@@ -5,7 +5,7 @@ import path from "node:path";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import process from "node:process";
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Locator, type Page } from "@playwright/test";
+import { type Browser, type BrowserContext, expect, type Locator, type Page } from "@playwright/test";
 import { PERSIST_KEY, PERSIST_VERSION } from "../src/store/persist-meta";
 
 /**
@@ -56,6 +56,45 @@ export function seedStorage(
  */
 export function asReturningVisitor(page: Page) {
   return seedStorage(page, { authors: [], welcomeSeen: true }, { onlyIfEmpty: true });
+}
+
+/**
+ * A clipboard kept in the page. Firefox and WebKit have no clipboard permissions
+ * to grant, so copyFrom() could not read the real one there.
+ */
+export function memoryClipboard(target: Page | BrowserContext) {
+  return target.addInitScript(() => {
+    let text = "";
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: (value: string) => {
+          text = value;
+          return Promise.resolve();
+        },
+        readText: () => Promise.resolve(text),
+      },
+    });
+  });
+}
+
+/**
+ * Let a context read what the app copies. Chromium grants the real clipboard; Firefox and WebKit
+ * cannot, so there the context gets a clipboard kept in the page (the copy handlers still run, the
+ * browser's own clipboard write is not exercised).
+ */
+export async function grantClipboard(context: BrowserContext) {
+  if (context.browser()?.browserType().name() === "chromium") {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  } else {
+    await memoryClipboard(context);
+  }
+}
+
+/** A fresh browser context (own storage, own clipboard) that can read the clipboard. */
+export async function newClipboardContext(browser: Browser, options: Parameters<Browser["newContext"]>[0] = {}) {
+  const context = await browser.newContext(options);
+  await grantClipboard(context);
+  return context;
 }
 
 /**

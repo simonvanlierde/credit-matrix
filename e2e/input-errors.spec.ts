@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { asReturningVisitor, copyFrom, onScreen } from "./helpers";
+import { asReturningVisitor, copyFrom, newClipboardContext, onScreen } from "./helpers";
 
 const INVALID_ID = /not a valid ORCID iD/;
 const NO_LETTER = /doesn't look like a name/;
@@ -85,7 +85,7 @@ test.describe("input errors reach assistive tech", () => {
   });
 
   test("co-author details: a name that is refused says why", async ({ browser }) => {
-    const lead = await (await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] })).newPage();
+    const lead = await (await newClipboardContext(browser)).newPage();
     await asReturningVisitor(lead);
     await lead.goto("/");
     const add = lead.getByLabel("New author names or ORCID iD");

@@ -135,10 +135,16 @@ jobs:
           uv run --locked ty check
           uv run --locked pytest -q
 
+  # One leg per browser, in parallel: the three together take about four times as long as Chromium
+  # alone. The Chromium leg keeps the plain job name, which the branch ruleset requires.
   e2e:
-    name: E2E and accessibility
+    name: ${{ matrix.browser == 'chromium' && 'E2E and accessibility' || format('E2E and accessibility ({0})', matrix.browser) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -154,25 +160,24 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # The browser download is ~130MB and never varies for a given Playwright
-      # version, so key the cache on the lockfile. `--with-deps` still runs on a
+      # version, so key the cache on the lockfile and the browser. `--with-deps` still runs on a
       # hit: the apt system libraries live outside this path.
       - name: Cache Playwright browsers (restore only on a pull request)
         if: github.event_name == 'pull_request'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Cache Playwright browsers
         if: github.event_name != 'pull_request'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      # Only Chromium is needed; skip the other browsers.
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       # This job builds the app before the tests run (see playwright.config.ts),
       # so it wants the same incremental cache the build job keeps.
@@ -210,7 +215,7 @@ jobs:
       - name: Run Playwright suite
         env:
           CI: true
-        run: pnpm exec playwright test
+        run: pnpm exec playwright test --project=${{ matrix.browser }}
 
       # trace: "on-first-retry" is already set, so failures produce traces;
       # without this step they were thrown away and every red run had to be
@@ -219,7 +224,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: playwright-traces
+          name: playwright-traces-${{ matrix.browser }}
           path: test-results
 
   build:

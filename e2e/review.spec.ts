@@ -1,5 +1,5 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
-import { asReturningVisitor, copyFrom, onScreen, scan } from "./helpers";
+import { asReturningVisitor, copyFrom, newClipboardContext, onScreen, scan } from "./helpers";
 
 /**
  * Settling co-author answers: a reply lands beside the row, the grid marks
@@ -7,7 +7,7 @@ import { asReturningVisitor, copyFrom, onScreen, scan } from "./helpers";
  */
 
 function newContext(browser: Browser) {
-  return browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+  return newClipboardContext(browser);
 }
 
 /** Copies the ask link for one contributor from the lead's row menu. */
