@@ -28,7 +28,7 @@ toJats4rXml(authors);
 ## CLI
 
 The package also installs a `credit-matrix` command: the CLI, with an XML parser bundled. It needs
-Node 20.12 or later. Run it with `npx credit-matrix` without installing, or with
+Node 22 or later. Run it with `npx credit-matrix` without installing, or with
 `node src/core/dist/cli.js` from a clone after `pnpm --filter credit-matrix build`.
 
 ```bash
