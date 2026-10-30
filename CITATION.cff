@@ -28,8 +28,8 @@ keywords:
   - MyST
   - bibliometrics
   - Typst
-version: "0.8.1"
-date-released: "2026-10-13"
+version: "0.9.0"
+date-released: "2026-10-30"
 # Concept DOI: resolves to all versions, so it stays fixed across releases.
 doi: "10.5281/zenodo.21213659"
 references:
