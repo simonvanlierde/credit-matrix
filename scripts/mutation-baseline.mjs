@@ -3,10 +3,21 @@
 // biome-ignore-all lint/correctness/noNodejsModules: Node script, not client code.
 // biome-ignore-all lint/suspicious/noConsole: console is the script's summary output.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 
+const BASELINE = "test/mutation-baseline.txt";
+// A survivor judged equivalent (no test can tell it apart) carries its reason after this marker.
+const REASON = "  # equivalent: ";
+
 const report = JSON.parse(readFileSync("reports/mutation/mutation.json", "utf8"));
+const reasons = new Map();
+if (existsSync(BASELINE)) {
+  for (const row of readFileSync(BASELINE, "utf8").split("\n")) {
+    const at = row.lastIndexOf(REASON);
+    if (at > 0) reasons.set(row.slice(0, at), row.slice(at));
+  }
+}
 const root = `${process.cwd()}/`;
 
 const lines = [];
@@ -33,13 +44,15 @@ for (const [file, { source, mutants }] of Object.entries(report.files)) {
   }
 }
 lines.sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
+const annotated = lines.map((row) => row + (reasons.get(row) ?? ""));
+const equivalent = annotated.filter((row) => row.includes(REASON)).length;
 
 const total = killed + survived + noCoverage;
 const score = ((100 * killed) / total).toFixed(2);
 const header = [
   "# Mutants that no test kills, from `pnpm mutation` on src/core.",
-  "# Each line: file status mutator -> replacement | original line.",
-  `# Score ${score}%: ${killed} killed, ${survived} survived, ${noCoverage} without coverage.`,
+  "# Each line: file status mutator -> replacement | original line, and a reason when the mutant is equivalent.",
+  `# Score ${score}%: ${killed} killed, ${survived} survived, ${noCoverage} without coverage, ${equivalent} judged equivalent.`,
 ];
-writeFileSync("test/mutation-baseline.txt", `${[...header, ...lines].join("\n")}\n`);
-console.log(`Mutation score ${score}% (${survived} survived, ${noCoverage} no coverage): test/mutation-baseline.txt`);
+writeFileSync(BASELINE, `${[...header, ...annotated].join("\n")}\n`);
+console.log(`Mutation score ${score}% (${survived} survived, ${noCoverage} no coverage): ${BASELINE}`);

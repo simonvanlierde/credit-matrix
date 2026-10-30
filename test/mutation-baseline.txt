@@ -1,6 +1,7 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
-# Each line: file status mutator -> replacement | original line.
-# Score 82.25%: 1993 killed, 372 survived, 58 without coverage.
+# Each line: file status mutator -> replacement | original line, and a reason when the mutant is equivalent.
+# Score 82.25%: 2016 killed, 377 survived, 58 without coverage, 0 judged equivalent.
+src/core/export/codemeta.ts Survived StringLiteral -> "" | skipped.push({ author, reason: "no-orcid" });
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | const headers = (records[0] ?? []).map(headerKey);
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | if (records.length === 0) return [];
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | return (parseCsvRecords(line, delimiterOf(line))[0] ?? []).map((cell) => cell.trim().toLowerCase());
@@ -101,6 +102,7 @@ src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const COLOR_TEXT_D
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const FONT = "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif";
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | format: "by-author",
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | return lines.join("\n");
+src/core/export/heatmap-svg.ts Survived StringLiteral -> "Stryker was here!" | const lang = opts?.locale ? ` xml:lang="${escapeXml(opts.locale)}" lang="${escapeXml(opts.locale)}"`
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<!-- ${GENERATOR_NOTE} -->`,
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<!-- ${GENERATOR_NOTE} -->`,
 src/core/export/heatmap-svg.ts Survived StringLiteral -> `` | `<rect width="${w}" height="${h}" fill="${COLOR_BG}"/>`,
@@ -193,6 +195,7 @@ src/core/parse-authors.ts Survived ConditionalExpression -> true | first.length 
 src/core/parse-authors.ts Survived ConditionalExpression -> true | first.length > 0 &&
 src/core/parse-authors.ts Survived ConditionalExpression -> true | first.length > 0 &&
 src/core/parse-authors.ts Survived ConditionalExpression -> true | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
+src/core/parse-authors.ts Survived ConditionalExpression -> true | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
 src/core/parse-authors.ts Survived ConditionalExpression -> true | if (extraIdx < surnameCodePoints.length) {
 src/core/parse-authors.ts Survived ConditionalExpression -> true | middleName: givenParts.length > 1 ? (givenParts[1] ?? "") : "",
 src/core/parse-authors.ts Survived ConditionalExpression -> true | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
@@ -202,6 +205,8 @@ src/core/parse-authors.ts Survived EqualityOperator -> givenParts.length >= 1 | 
 src/core/parse-authors.ts Survived EqualityOperator -> words.length >= 0 | return words.length > 0 && words.length <= 3 && words.every((word) => /^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$/u
 src/core/parse-authors.ts Survived LogicalOperator -> !last && !/\p{L}/u.test(last) | if (!last || !/\p{L}/u.test(last)) return false;
 src/core/parse-authors.ts Survived LogicalOperator -> chunks.length < 2 && chunks.length % 2 !== 0 | if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
+src/core/parse-authors.ts Survived LogicalOperator -> commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
+src/core/parse-authors.ts Survived LogicalOperator -> commaParts.length === 2 || isSurnamePart(commaParts[0] ?? "" | if (commaParts.length === 2 && isSurnamePart(commaParts[0] ?? "") && isGivenNamePart(commaParts[1] ?
 src/core/parse-authors.ts Survived LogicalOperator -> first.length > 0 || first.length + last.length <= all.length | first.length > 0 &&
 src/core/parse-authors.ts Survived MethodExpression -> [firstName, middleName, surname].some(part => typeof part == | if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
 src/core/parse-authors.ts Survived MethodExpression -> cleaned.split(/\s+/) | const parts = cleaned.split(/\s+/).filter(Boolean);
