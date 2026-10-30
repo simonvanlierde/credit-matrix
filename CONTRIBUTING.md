@@ -41,13 +41,14 @@ pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
 pnpm verify         # build the package, then lint, typecheck, and unit tests under the coverage gate (also the pre-push hook)
 pnpm validate:jats  # check the JATS fixture, the conformance cases and a fresh export against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
+pnpm validate:crossref  # check a fresh Crossref export against the Crossref schema 5.5.0 (needs uv)
 ```
 
 Before the first e2e run, install the browser: `pnpm exec playwright install chromium`. The first
 `pnpm validate:jats` downloads the JATS4R rules and SchXslt2 into `.cache/` and compiles them,
 which takes about 1.5 minutes. Later runs reuse the cache.
 
-CI runs `pnpm verify`, `pnpm validate:jats`, the full Playwright suite (with the axe scans) and a
+CI runs `pnpm verify`, `pnpm validate:jats`, `pnpm validate:crossref`, the full Playwright suite (with the axe scans) and a
 static export build on every pull request and every push to `main`. It deploys `main` only when all
 of them pass. If you change the domain logic, add or update tests in `src/core/__tests__`.
 

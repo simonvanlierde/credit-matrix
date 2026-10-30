@@ -21,6 +21,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "validate:jats": "bash scripts/validate-jats.sh",
+    "validate:crossref": "bash scripts/validate-crossref.sh",
     "clean": "rm -rf .next out",
     "version": "bash scripts/sync-citation.sh",
     "prepare": "lefthook install || true",

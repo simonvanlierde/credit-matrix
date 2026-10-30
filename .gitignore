@@ -29,7 +29,7 @@ next-env.d.ts
 # pnpm
 .pnpm-store
 
-# Downloaded JATS4R rules and compiler (scripts/validate-jats.sh)
+# Downloaded JATS4R rules, compiler and Crossref schema (scripts/validate-*.sh)
 .cache
 
 # Copied in by the credit-matrix package build

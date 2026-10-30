@@ -34,7 +34,8 @@ Node 20.12 or later. Run it with `npx credit-matrix` without installing, or with
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
 npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 roles
-npx credit-matrix convert paper.xml --to json      # json, csv, jats or md
+npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref or md
+npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
 npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
 npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
 npx credit-matrix --help                           # or --version
