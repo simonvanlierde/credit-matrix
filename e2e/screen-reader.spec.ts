@@ -1,7 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import { readFile } from "node:fs/promises";
 import { expect, type Page, test } from "@playwright/test";
-import { asReturningVisitor, copyFrom, elementBundleBuilt, openElementHost } from "./helpers";
+import { asReturningVisitor, copyFrom, elementBundleBuilt, memoryClipboard, openElementHost } from "./helpers";
 
 /**
  * What a screen reader is given: the accessibility tree of each surface, read as
@@ -31,25 +31,6 @@ function recordAnnouncements(page: Page) {
     };
     (window as unknown as { announcements: Announcement[] }).announcements = log;
     new MutationObserver(sweep).observe(document, { subtree: true, childList: true, characterData: true });
-  });
-}
-
-/**
- * A clipboard kept in the page. Firefox and WebKit have no clipboard permissions
- * to grant, so copyFrom() could not read the real one there.
- */
-function memoryClipboard(page: Page) {
-  return page.addInitScript(() => {
-    let text = "";
-    Object.defineProperty(navigator, "clipboard", {
-      value: {
-        writeText: (value: string) => {
-          text = value;
-          return Promise.resolve();
-        },
-        readText: () => Promise.resolve(text),
-      },
-    });
   });
 }
 

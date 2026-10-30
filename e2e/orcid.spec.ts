@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { type Browser, expect, type Page, test } from "@playwright/test";
 import { TEST_ORCID, testIssuer } from "../src/core/__tests__/orcid-test-issuer";
 import { decodeShareHash, encodeShareHash } from "../src/core/share-link";
-import { asReturningVisitor, copyFrom, onScreen, scan } from "./helpers";
+import { asReturningVisitor, copyFrom, newClipboardContext, onScreen, scan } from "./helpers";
 
 /**
  * ORCID-verified replies. ORCID only sends a browser back to the production
@@ -13,7 +13,9 @@ import { asReturningVisitor, copyFrom, onScreen, scan } from "./helpers";
  */
 
 function newContext(browser: Browser) {
-  return browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+  // WebKit does not hand a page's cross-origin fetches to page.route() once the service worker
+  // controls it, and the stubbed JWKS fetch would go to the real ORCID.
+  return newClipboardContext(browser, { serviceWorkers: "block" });
 }
 
 async function stubOrcid(page: Page, issuer: Awaited<ReturnType<typeof testIssuer>>) {
@@ -27,7 +29,11 @@ async function stubOrcid(page: Page, issuer: Awaited<ReturnType<typeof testIssue
     const token = await issuer.sign({ nonce: params.get("nonce") });
     // The real ORCID returns to the registered redirect_uri; here, to whichever page asked.
     const back = `${params.get("redirect_uri")}#access_token=a&token_type=bearer&expires_in=599&id_token=${token}&state=${params.get("state")}`;
-    await route.fulfill({ status: 302, headers: { location: back } });
+    // WebKit refuses to fulfil with a redirect status, so a page that navigates stands in for the 302.
+    await route.fulfill({
+      contentType: "text/html",
+      body: `<script>location.replace(${JSON.stringify(back)})</script>`,
+    });
   });
 }
 

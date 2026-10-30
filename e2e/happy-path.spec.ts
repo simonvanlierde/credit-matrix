@@ -2,7 +2,20 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { PERSIST_KEY } from "../src/store/persist-meta";
-import { asReturningVisitor, copyFrom, onScreen, seedStorage, strongestAnswer, stubUpstream } from "./helpers";
+import {
+  asReturningVisitor,
+  copyFrom,
+  grantClipboard,
+  newClipboardContext,
+  onScreen,
+  seedStorage,
+  strongestAnswer,
+  stubUpstream,
+} from "./helpers";
+
+// WebKit does not hand a page's cross-origin fetches to page.route() once the service worker controls
+// it, so the Crossref and DataCite stubs below would never run. Nothing here needs the worker.
+test.use({ serviceWorkers: "block" });
 
 test.describe("Happy path UI flows", () => {
   test.beforeEach(async ({ page }) => {
@@ -320,7 +333,7 @@ test.describe("Happy path UI flows", () => {
   });
 
   test("Share link round-trips the state through the URL", async ({ page, context }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await grantClipboard(context);
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
@@ -341,7 +354,7 @@ test.describe("Happy path UI flows", () => {
   });
 
   test("collects one co-author's roles through a claimed link", async ({ page, context, browser }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await grantClipboard(context);
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
@@ -359,7 +372,7 @@ test.describe("Happy path UI flows", () => {
 
     // She opens it in her own browser: a separate context, so her storage is
     // hers alone and the originator can navigate without inheriting it.
-    const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+    const coauthorContext = await newClipboardContext(browser);
     const coauthor = await coauthorContext.newPage();
     await coauthor.goto(askUrl);
     await expect(onScreen(coauthor, /Answering as Rosalind E\. Franklin\./)).toBeVisible();
@@ -384,7 +397,7 @@ test.describe("Happy path UI flows", () => {
   // The link is also just text, so pasting it into Import has to work for
   // anyone who reaches for that instead of the address bar.
   test("accepts a co-author's reply pasted into the Import dialog", async ({ page, context, browser }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await grantClipboard(context);
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
@@ -395,7 +408,7 @@ test.describe("Happy path UI flows", () => {
       page.getByRole("button", { name: "Ask Rosalind E. Franklin to check your guess" }),
     );
 
-    const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+    const coauthorContext = await newClipboardContext(browser);
     const coauthor = await coauthorContext.newPage();
     await coauthor.goto(askUrl);
     await strongestAnswer(coauthor, "Validation").click();
@@ -416,7 +429,7 @@ test.describe("Happy path UI flows", () => {
   });
 
   test("a shared draft opens beside your work instead of replacing it", async ({ page, context }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await grantClipboard(context);
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
     await page.getByRole("button", { name: "Share" }).click();
@@ -450,7 +463,7 @@ test.describe("Happy path UI flows", () => {
   });
 
   test("a reply lands on the paper it was asked about, not the one you are on", async ({ page, context, browser }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await grantClipboard(context);
     await page.goto("/");
 
     // Paper one, the one that must come through untouched. The title is set
@@ -479,7 +492,7 @@ test.describe("Happy path UI flows", () => {
 
     // The co-author answers — in their own browser, not a page sharing this
     // one's localStorage (which the old clearFirst seed silently wiped).
-    const coauthorContext = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+    const coauthorContext = await newClipboardContext(browser);
     const coauthor = await coauthorContext.newPage();
     await seedStorage(coauthor, { welcomeSeen: true });
     await coauthor.goto(askUrl);
