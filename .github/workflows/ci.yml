@@ -80,6 +80,21 @@ jobs:
         with:
           version: "0.13.x"
 
+      # The schema archive is pinned by hash in the script, so its hash is the key.
+      - name: Cache the Crossref schema (restore only on a pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .cache/crossref
+          key: ${{ runner.os }}-crossref-${{ hashFiles('scripts/validate-crossref.sh') }}
+
+      - name: Cache the Crossref schema
+        if: github.event_name != 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .cache/crossref
+          key: ${{ runner.os }}-crossref-${{ hashFiles('scripts/validate-crossref.sh') }}
+
       - name: Validate the Crossref export against the Crossref schema 5.5.0
         run: pnpm validate:crossref
 
