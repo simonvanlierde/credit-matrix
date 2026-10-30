@@ -106,6 +106,11 @@ me. The census in `census/` follows the same rule through uv's `exclude-newer = 
   before trusting the package tests.
 - **Quarto**: the rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto`
   on your `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
+- **Typst**: `integrations/typst/translations.json` is generated from the app's catalogs. After
+  changing them, run `pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs`.
+  The Typst test (`integrations/typst/credit-matrix.test.ts`) fails when the file is stale. With
+  `typst` on your `PATH` it also compiles the examples and checks the statement text against the
+  app's; it is skipped without Typst, and CI installs it.
 - **End-to-end (Playwright)**: the specs in `e2e/`. In CI they run against `wrangler dev`, which
   applies `public/_headers`. On your machine they use `pnpm dev`, which has no Content Security
   Policy (CSP). You only need [wrangler](https://developers.cloudflare.com/workers/wrangler/) for

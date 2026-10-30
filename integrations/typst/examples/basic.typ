@@ -1,4 +1,5 @@
 #import "../lib.typ": *
+#set document(title: "CRediT statement")
 #set page(height: auto, margin: 1.5cm)
 
 #let team = (

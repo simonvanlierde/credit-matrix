@@ -50,8 +50,8 @@ An array of dictionaries, one per person:
 
 - `name`: the name as printed.
 - `roles`: a dictionary from role to level, or an array of roles (each one `"lead"`). A level is
-  `"lead"`, `"equal"`, `"supporting"`, `true` (lead), `false` or `"none"` (left out), or a score
-  from 0 to 100 (1 to 33 is supporting, 34 to 66 equal, 67 and up lead).
+  `"lead"`, `"equal"`, `"supporting"`, `true` (lead), `false` or `"none"` (left out), or a whole
+  score from 0 to 100 (1 to 33 is supporting, 34 to 66 equal, 67 and up lead).
 - `non-author: true` credits the person on an Acknowledgements line instead.
 - `equal-contribution: true` and `corresponding: true` add the notes the app adds: "A and B
   contributed equally to this work." and "Correspondence: A."
@@ -94,12 +94,14 @@ in English, French, German, Spanish, Italian, Portuguese (`pt`, Portugal), Dutch
 simplified) and Japanese. Any other document language falls back to English; an explicit `lang`
 the package lacks stops the build. The "CRediT:" prefix stays English, as in the app.
 
-[`examples/`](examples) has a document with inline roles and one that reads a JSON export in
-French.
+Examples: [a document with inline roles](examples/basic.typ) and
+[one that reads a JSON export in French](examples/team.typ).
 
-## Development
+### Accessible PDFs
 
-`translations.json` is generated from the app's catalogs: run
-`pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs` from the
-repository root. `credit-matrix.test.ts` fails when it is stale, and, with `typst` on the PATH,
-compiles the examples and checks the statement text against the app's.
+Give the document a title (`#set document(title: [..])`) so `--pdf-standard ua-1` passes. For a
+tagged PDF, put the table in a figure with a caption, as Typst 0.15 cannot mark row headers:
+
+```typ
+#figure(credit-table(team), caption: [Contributions by role.])
+```

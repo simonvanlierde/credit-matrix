@@ -1,5 +1,6 @@
 // The app's JSON export (Export data > JSON), in French.
 #import "../lib.typ": *
+#set document(title: "Déclaration CRediT")
 #set text(lang: "fr")
 
 #let team = json("team.json")

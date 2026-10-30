@@ -22,13 +22,13 @@
 #let _level(value, role, name) = {
   let bad = () => panic(
     "credit-matrix: " + name + " has " + repr(value) + " for " + role
-      + "; use \"lead\", \"equal\", \"supporting\", true, false or a score from 0 to 100",
+      + "; use \"lead\", \"equal\", \"supporting\", true, false or a whole score from 0 to 100",
   )
   if value == true { "lead" } else if value == false or value == none or value == "none" { "none" } else if (
     type(value) == int or type(value) == float
   ) {
-    if value < 0 or value > 100 { bad() }
-    _score-level(calc.round(value))
+    if value < 0 or value > 100 or value != calc.round(value) { bad() }
+    _score-level(value)
   } else if type(value) == str and value in _levels { value } else { bad() }
 }
 
@@ -94,8 +94,13 @@
   default: m.text,
 ))
 
-#let _join-names(names, list) = if names.len() <= 2 { names.join(list.pair) } else {
-  names.first() + list.start + names.slice(1, -1).join(list.middle) + list.end + names.last()
+// Spanish "y" becomes "e" before an i sound, as in ICU: "Ana e Isabel", but "Ana y Hierro".
+#let _sep(sep, next) = if sep.trim() == "y" and next.contains(regex("^(?i)h?i")) and not next.contains(
+  regex("^(?i)hi[aeiou]"),
+) { sep.replace("y", "e") } else { sep }
+
+#let _join-names(names, list) = if names.len() <= 2 { names.join(_sep(list.pair, names.last())) } else {
+  names.first() + list.start + names.slice(1, -1).join(list.middle) + _sep(list.end, names.last()) + names.last()
 }
 
 #let _with-level(label, level, loc, levels) = if levels and level != "lead" {
