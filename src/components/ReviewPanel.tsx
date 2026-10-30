@@ -340,7 +340,7 @@ export function ReviewPanel() {
                             type="button"
                             data-review-first=""
                             onClick={() => choose(author, [line.target], "theirs", key)}
-                            aria-label={`${t("reviewUseTheirs", { name })}: ${role}`}
+                            aria-label={t("reviewUseTheirsRole", { name, role })}
                             className={PRIMARY_BUTTON}
                             {...focusRing}
                           >
@@ -349,7 +349,7 @@ export function ReviewPanel() {
                           <button
                             type="button"
                             onClick={() => choose(author, [line.target], "mine", key)}
-                            aria-label={`${t("reviewKeepYours")}: ${role}`}
+                            aria-label={t("reviewKeepYoursRole", { role })}
                             className={SECONDARY_BUTTON}
                             {...focusRing}
                           >
@@ -375,7 +375,7 @@ export function ReviewPanel() {
                             type="button"
                             data-review-first=""
                             onClick={() => undo(author, line.target, key)}
-                            aria-label={`${t("undo")}: ${role}`}
+                            aria-label={t("undoRole", { role })}
                             className={LINK_BUTTON}
                             {...focusRing}
                           >

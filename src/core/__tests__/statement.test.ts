@@ -265,6 +265,46 @@ describe("parseStatement", () => {
   });
 });
 
+describe("clause ends and initials", () => {
+  it("reads two dashes in a row as one", () => {
+    expect(pairsOf("L. -- J. Z.: conceptualization", AUTHORS)).toEqual([[2, "conceptualization"]]);
+  });
+
+  it("skips a token that starts with a lower-case letter", () => {
+    expect(pairsOf("éB: conceptualization", [author("Émile", "Bernard")])).toEqual([]);
+  });
+
+  it("ends a clause at a full stop after a closing bracket", () => {
+    expect(pairsOf("Conceptualization (lead). AP: Software.", AUTHORS)).toEqual([[0, "software"]]);
+    expect(pairsOf("Conceptualization [lead]. AP: Software.", AUTHORS)).toEqual([[0, "software"]]);
+  });
+
+  it("ends a clause after all authors, whatever the case", () => {
+    expect(pairsOf("Methodology, ALL AUTHORS. Software", THREE)).toEqual([
+      [0, "methodology"],
+      [0, "software"],
+      [1, "methodology"],
+      [1, "software"],
+      [2, "methodology"],
+      [2, "software"],
+    ]);
+  });
+
+  it("ends a clause after initials when a comma comes before the next role", () => {
+    expect(pairsOf("Methodology, A.B., Software", THREE)).toEqual([
+      [0, "methodology"],
+      [0, "software"],
+    ]);
+  });
+
+  it("joins two authors only with a comma or the word and", () => {
+    expect(pairsOf("Methodology, EF. Standard AB: software", THREE)).toEqual([
+      [0, "software"],
+      [2, "methodology"],
+    ]);
+  });
+});
+
 describe("resolveInitials", () => {
   it.each([
     ["AP", 0],
@@ -295,6 +335,24 @@ describe("resolveInitials", () => {
 
   it("lets a stricter tier win over particles", () => {
     expect(resolveInitials("CL", [author("Chiara", "De Luca"), author("Carlo", "Lanza")])).toBe(1);
+  });
+
+  it("drops lower-case particles between dots from the initials", () => {
+    expect(resolveInitials("F.d.S.N.", [author("Fernanda", "De Silva Nunes")])).toBe(0);
+  });
+
+  it("keeps a lower-case letter that follows a dot but no dot follows", () => {
+    expect(resolveInitials("A.b", [author("Anna", "")])).toBeNull();
+  });
+
+  it("ignores separators at the edges of a name", () => {
+    const peters = [author("A. B.", "Peters"), author("Abel", "Peters")];
+    expect(resolveInitials("ABP", peters)).toBe(0);
+    expect(resolveInitials("AP", [author("Anna", "Peters "), author("Peter", "Adams")])).toBe(0);
+  });
+
+  it("keeps a surname written in a script without case", () => {
+    expect(resolveInitials("W", [author("Wei", "王")])).toBeNull();
   });
 });
 
@@ -514,6 +572,17 @@ describe("readsAsStatement", () => {
     // "Author" with a verb is prose about who did what, singular or plural, with words between.
     ["The first author wrote the software.", true],
     ["The authors jointly wrote and revised the text.", true],
+    ["The authors analyzed the data.", true],
+    ["The authors analysed the data.", true],
+    // Sentences that end in two-letter words count as sentences too.
+    ["He did it. She saw us. Then go on.", true],
+    // Initials count only right after a role, or right before it with nothing but separators between.
+    ["Conceptualization of AB", false],
+    ["Conceptualization, J", false],
+    ["Conceptualization AB.", true],
+    ["AB and the Conceptualization", false],
+    ["Smith AB Conceptualization", true],
+    ["McAB, Conceptualization", false],
   ])("reads %j as a statement: %s", (text, expected) => {
     expect(readsAsStatement(text)).toBe(expected);
   });

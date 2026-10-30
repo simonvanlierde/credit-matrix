@@ -9,6 +9,7 @@
   "heatmapTitle": "贡献热力图",
   "equalContributionNote": "{names}对本项工作贡献相同。",
   "correspondenceNote": "通讯作者：{names}。",
+  "labelSeparator": "：",
   "nameListSeparator": "、",
   "segmentSeparator": "；",
   "levelAnnotation": "{label}（{level}）"

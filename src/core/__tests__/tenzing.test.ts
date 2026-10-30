@@ -252,7 +252,7 @@ describe("toTenzing", () => {
     expect(rows[9]).toBe(
       "Acknowledgment only,9,Kim,,Nam-joon,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,,,,,,,FALSE,",
     );
-    expect(rows[2]?.startsWith("Author,2,Martin,Luther King,Jr.,FALSE,TRUE,")).toBe(true);
+    expect(rows[2]?.startsWith("Author,2,Martin,Luther,King Jr.,FALSE,TRUE,")).toBe(true);
   });
 
   it("numbers every row, acknowledgees after the authors, so tenzing can build its acknowledgee section", () => {
