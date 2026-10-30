@@ -309,6 +309,27 @@ describe("a pasted CRediT statement", () => {
     expect(onApplyStatement.mock.calls[0]?.[1]).toBe(2);
   });
 
+  it.each([
+    [
+      "Conceptualization, A.B. and C.D.; Formal\nanalysis, C.D.",
+      "Conceptualization",
+      "Conceptualization, Formal analysis",
+    ],
+    ["Conceptualization, A.B.\nand C.D.; Data curation, A.B.", "Conceptualization, Data curation", "Conceptualization"],
+    [
+      "A.B.: conceptualization, writing - original\ndraft; C.D.: software.",
+      "Conceptualization, Writing – original draft",
+      "Software",
+    ],
+    ["Conceptualization: A.B.\nSoftware: C.D.", "Conceptualization", "Software"],
+  ])("joins a line that runs on, and splits one that starts a new entry: %j", async (text, ann, carl) => {
+    renderModal(2, undefined, { authors: [createAuthor("Ann Bell"), createAuthor("Carl Dunn")] });
+    paste(text);
+    await review();
+    expect(listOf("Ann Bell")).toBe(ann);
+    expect(listOf("Carl Dunn")).toBe(carl);
+  });
+
   it("says so when nothing matches the draft", async () => {
     renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
     paste("XY: conceptualization.");

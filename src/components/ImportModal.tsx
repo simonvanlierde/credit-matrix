@@ -70,6 +70,8 @@ interface StatementReview {
 
 // A line that ends on one of these runs on into the next: "Conceptualization, A.B.,\nC.D.".
 const RUNS_ON_RE = /(?:[,:&‐-―−-]|(?<!\p{L})and)$/iu;
+// So does a line followed by one that starts lower-case or with "and": "Formal\nanalysis".
+const RUNS_ON_FROM_RE = /^(?:\p{Ll}|and\b)/u;
 
 /**
  * A line break as the end of a clause, as most statements laid out one person per line mean it:
@@ -81,7 +83,8 @@ function breakLines(text: string): string {
   for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    joined = joined ? `${joined}${RUNS_ON_RE.test(joined) ? " " : "; "}${trimmed}` : trimmed;
+    const runsOn = RUNS_ON_RE.test(joined) || RUNS_ON_FROM_RE.test(trimmed);
+    joined = joined ? `${joined}${runsOn ? " " : "; "}${trimmed}` : trimmed;
   }
   return joined;
 }
