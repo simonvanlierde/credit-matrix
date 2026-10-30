@@ -123,7 +123,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
       `<!-- ${GENERATOR_NOTE} -->`,
       `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
       `<rect width="${w}" height="${h}" fill="${COLOR_BG}"/>`,
-      `<text x="${PAD_S}" y="${PAD_S + 8}" font-family="${FONT}" font-size="${11 * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(translateUi("emptyState"))}</text>`,
+      `<text x="${PAD_S}" y="${(PAD + 8) * scale}" font-family="${FONT}" font-size="${11 * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(translateUi("emptyState"))}</text>`,
       "</svg>",
     ].join("\n");
   }
