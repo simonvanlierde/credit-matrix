@@ -107,6 +107,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the surname, and the JATS and Crossref exports write it as `<suffix>`, which the JATS import reads
   back. JATS XML export also keeps every word of a name that ends in punctuation: "Ann B. C. Smith."
   used to come back as "Ann B Smith".
+- Inverted names with a suffix ("King Jr., Martin", "King, Martin Luther, Jr.") now get the right
+  surname and given names. The suffix stays out of both, and JATS and Crossref write it as
+  `<suffix>`. Pasted into the name list, each stays one contributor.
 - A Japanese or Chinese statement used an ASCII colon and space after each role or name next to its
   full-width semicolon. It now uses "：", and a French statement puts a non-breaking space before
   its colons and semicolons. The Review tab's button labels for screen readers also read correctly in every

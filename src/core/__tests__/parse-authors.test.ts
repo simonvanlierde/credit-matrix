@@ -9,6 +9,7 @@ import {
   normalizeRoster,
   parseAuthorText,
   parseNameParts,
+  splitCommaSuffix,
   splitNameList,
 } from "../parse-authors";
 
@@ -29,6 +30,28 @@ describe("parseNameParts", () => {
     });
     expect(parseNameParts("Bob White III")).toEqual({ firstName: "Bob", middleName: "", surname: "White" });
     expect(parseNameParts("Ann Jr")).toEqual({ firstName: "Ann", middleName: "", surname: "Jr" });
+  });
+
+  it.each([
+    ["King Jr., Martin", { firstName: "Martin", middleName: "", surname: "King" }],
+    ["Smith Jr., John", { firstName: "John", middleName: "", surname: "Smith" }],
+    ["King, Martin Luther, Jr.", { firstName: "Martin", middleName: "Luther", surname: "King" }],
+  ])("keeps the suffix of the inverted name %s out of the surname", (name, parts) => {
+    expect(parseNameParts(name)).toEqual(parts);
+    expect(createAuthor(name)).toMatchObject({ name, ...parts });
+  });
+
+  it("reads a name with a comma before its suffix the usual way", () => {
+    expect(parseNameParts("Martin Luther King, Jr.")).toEqual({
+      firstName: "Martin",
+      middleName: "Luther",
+      surname: "King",
+    });
+  });
+
+  it("re-parses an inverted name with a suffix rather than keep parts read front to back", () => {
+    const old = createAuthor("King Jr., Martin", { firstName: "King", middleName: "Jr", surname: "Martin" });
+    expect(normalizeRoster([old])[0]).toMatchObject({ firstName: "Martin", middleName: "", surname: "King" });
   });
 
   it("reads a suffix only from a whole word", () => {
@@ -421,6 +444,20 @@ describe("splitNameList comma pairs", () => {
     expect(splitNameList("Curie, Marie,")).toEqual(["Curie, Marie"]);
   });
 
+  it("keeps a suffix with the name it follows", () => {
+    expect(splitNameList("King Jr., Martin; King, Martin Luther, Jr.")).toEqual([
+      "King Jr., Martin",
+      "King, Martin Luther, Jr.",
+    ]);
+    expect(splitNameList("Martin Luther King, Jr., Jane Smith")).toEqual(["Martin Luther King, Jr.", "Jane Smith"]);
+  });
+
+  it("joins a suffix only to a name before it, and reads a lone one as a surname", () => {
+    expect(splitNameList("Jr., Ann Lee")).toEqual(["Jr., Ann Lee"]);
+    expect(splitNameList("Jr, Ann")).toEqual(["Jr, Ann"]);
+    expect(splitNameList("van der Berg Jr., Anne")).toEqual(["van der Berg Jr., Anne"]);
+  });
+
   it("does not read an ORCID iD or a number as a surname", () => {
     expect(splitNameList("0000-0002-1825-009X, Jane")).toEqual(["0000-0002-1825-009X", "Jane"]);
     expect(splitNameList("2, Jane")).toEqual(["2", "Jane"]);
@@ -458,6 +495,7 @@ describe("normalizeRoster name parts", () => {
     });
     expect(parts("Martin Luther King Jr.", "Martin", "Luther", "King Jr.")).toMatchObject({ surname: "King Jr." });
     expect(parts("Ann B Jr", "Ann", "B", "Jr")).toMatchObject({ surname: "Jr" });
+    expect(parts("Ann Jr", "Ann", "", "")).toMatchObject({ surname: "Jr" });
   });
 
   it("re-parses a renamed row whose surname no longer ends the name", () => {
@@ -489,5 +527,25 @@ describe("normalizeRoster name parts", () => {
     const jane = createAuthor("Jane Smith");
     const [row] = normalizeRoster([{ ...jane, contributions: jane.contributions.slice(0, 3) }]);
     expect(row?.contributions).toHaveLength(jane.contributions.length);
+  });
+});
+
+describe("splitCommaSuffix", () => {
+  it("takes the suffix out of an inverted name", () => {
+    expect(splitCommaSuffix("van der Berg Jr., Anne")).toEqual(["van der Berg, Anne", "Jr."]);
+    expect(splitCommaSuffix("King  Jr., Martin")).toEqual(["King, Martin", "Jr."]);
+    expect(splitCommaSuffix("King, Martin, III")).toEqual(["King, Martin", "III"]);
+  });
+
+  it("leaves any other name whole", () => {
+    for (const name of [
+      "Martin King Jr.",
+      "Jr., Martin",
+      "Curie, Marie, Anne",
+      "King, Martin, Jr., Ann",
+      "King Jr.,",
+    ]) {
+      expect(splitCommaSuffix(name)).toEqual([name, ""]);
+    }
   });
 });

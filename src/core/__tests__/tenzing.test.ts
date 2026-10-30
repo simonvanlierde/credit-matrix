@@ -247,6 +247,25 @@ describe("toTenzing", () => {
     expect(toTenzing([author]).split("\n")[1]?.startsWith("Author,1,Ann,,Smith,")).toBe(true);
   });
 
+  it.each(["King Jr., Martin Luther", "King, Martin Luther, Jr.", "King, Martin Luther Jr."])(
+    "keeps the suffix of the inverted name %s in the surname cell",
+    (name) => {
+      expect(
+        toTenzing([createAuthor(name)])
+          .split("\n")[1]
+          ?.startsWith("Author,1,Martin,Luther,King Jr.,"),
+      ).toBe(true);
+    },
+  );
+
+  it("keeps the punctuation of a surname as typed", () => {
+    expect(
+      toTenzing([createAuthor("Ann  B. C. Smith.")])
+        .split("\n")[1]
+        ?.startsWith("Author,1,Ann,B. C.,Smith.,"),
+    ).toBe(true);
+  });
+
   it("writes a role as TRUE whatever its level, and keeps every word of a name", () => {
     const rows = toTenzing(draft).split("\n");
     expect(rows[9]).toBe(

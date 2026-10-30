@@ -42,11 +42,26 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     ["Anna Maria Lena van der Berg", "Anna Maria Lena", "van der Berg"],
     ["King, Martin Luther Jr.", "Martin Luther", "King"],
     ["Curie, Marie Anne", "Marie Anne", "Curie"],
+    ["King Jr., Martin", "Martin", "King"],
+    ["King, Martin Luther, Jr.", "Martin Luther", "King"],
   ])("keeps every given name of %s, and a suffix out of them", (name, given, surname) => {
     const xml = toJats4rXml([createAuthor(name)]);
     expect(xml).toContain(`<given-names>${given}</given-names>`);
     expect(xml).toContain(`<surname>${surname}</surname>`);
-    expect(xml.match(/<suffix>/g)?.length ?? 0).toBe(name.endsWith("Jr.") ? 1 : 0);
+    expect(xml.match(/<suffix>Jr\.<\/suffix>/g)?.length ?? 0).toBe(name.includes("Jr.") ? 1 : 0);
+  });
+
+  it("keeps the given names of an inverted name whose stored surname holds the suffix", () => {
+    const king = createAuthor("King Jr., Martin Luther", { firstName: "Martin", middleName: "", surname: "King Jr." });
+    const xml = toJats4rXml([king]);
+    expect(xml).toContain("<given-names>Martin Luther</given-names>");
+    expect(xml).not.toContain("<suffix>");
+  });
+
+  it("writes the given names with single spaces", () => {
+    expect(toJats4rXml([createAuthor("Martin  Luther King Jr.")])).toContain(
+      "<given-names>Martin Luther</given-names>",
+    );
   });
 
   const jats = (name: string) =>

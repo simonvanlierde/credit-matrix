@@ -3,7 +3,7 @@
 import type { Author } from "../author";
 import { activeContributions, isAllBinary, normalizeOrcid, scoreToLevel } from "../author";
 import { getRoleByName } from "../credit-roles";
-import { cleanNamePart, isSuffix } from "../parse-authors";
+import { cleanNamePart, isSuffix, splitCommaSuffix } from "../parse-authors";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 
@@ -48,8 +48,10 @@ ${DOCTYPE}
  */
 export function givenNamesOf(author: Author): string {
   // The suffix goes in its own element, whichever order the name is in.
-  const words = author.name.trim().split(/\s+/);
-  if (suffixOf(author)) words.pop();
+  const suffix = suffixOf(author);
+  const [unsuffixed, commaSuffix] = splitCommaSuffix(author.name);
+  const words = (suffix === commaSuffix ? unsuffixed : author.name).trim().split(/\s+/);
+  if (suffix && suffix !== commaSuffix) words.pop();
   const name = words.join(" ");
   const { surname } = author;
   // A mononym or an ORCID placeholder: the whole name, so it re-imports as is.
@@ -67,10 +69,13 @@ export function givenNamesOf(author: Author): string {
 }
 
 /**
- * The trailing generational suffix of the name ("Jr." in "Martin King Jr."),
- * unless the surname already ends in it ("Jr", or "King Jr." from another tool).
+ * The generational suffix of the name ("Jr." in "Martin King Jr.", "King Jr., Martin"
+ * or "King, Martin, Jr."), unless the surname already ends in it ("Jr", or
+ * "King Jr." from another tool).
  */
 export function suffixOf(author: Author): string {
+  const [unsuffixed, commaSuffix] = splitCommaSuffix(author.name);
+  if (commaSuffix) return wordsOf(unsuffixed.split(",")[0] ?? "") === wordsOf(author.surname) ? commaSuffix : "";
   const words = author.name.trim().split(/\s+/);
   const last = words.at(-1) ?? "";
   return words.length > 2 && isSuffix(last) && wordsOf(last) !== wordsOf(author.surname).split(" ").at(-1) ? last : "";
