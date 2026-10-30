@@ -202,12 +202,14 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
 
 A reply can carry an ORCID sign-in. The caller checks it and passes it on the `reply` event as
 `orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`). What "verified" means is
-defined in the module comment of `orcid-proof.ts`. When a reply changes the row's iD, signed or not, it
-keeps the iD the ask went to as `provenance.replacedOrcid`, and later replies keep it too. Run
+defined in the module comment of `orcid-proof.ts`. When a reply changes the row's iD, signed or not,
+it keeps the iD the ask went to as `provenance.replacedOrcid`, and later replies keep it too. Run
 `recheckSignIns(asks, fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before
-you show any sign-in as verified. When ORCID cannot be reached it keeps each sign-in marked
-`unchecked`, so a later check can still verify it. To check a reply link's sign-in yourself, pass
-it to `verifyOrcidToken` with the keys from `fetchOrcidKeys()`.
+you show any sign-in as verified. `provenance.orcid` then holds only checked sign-ins: when ORCID
+cannot be reached, each one moves to `provenance.uncheckedOrcid`, which you should not show as
+verified, and a later check can still verify it. A sign-in counts only on the row id it signed for.
+To check a reply link's sign-in yourself, pass it to `verifyOrcidToken` with the keys from
+`fetchOrcidKeys()`.
 
 ## Rosters and links
 
