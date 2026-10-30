@@ -8,7 +8,7 @@ changes are in the [changelog](../CHANGELOG.md).
 
 - **Release 0.9.0.** The [changelog](../CHANGELOG.md) lists what it brings, among them pasting an
   existing statement into Import, ORCID sign-in for co-authors, the Published practice tab and
-  the CRediT census page, tenzing CSV export, CodeMeta roles from the CLI, and the fixes from a
+  the CRediT census page, tenzing CSV and Crossref exports, CodeMeta roles from the CLI, and the fixes from a
   WCAG 2.2 self-assessment. It also carries the breaking `DetectedFormat` change in the
   `credit-matrix` package.
 - **Validate the census parser.** Score the parser that reads roles from published papers against
@@ -20,8 +20,8 @@ changes are in the [changelog](../CHANGELOG.md).
 
 ## Next
 
-- **More export formats.** tenzing CSV and CodeMeta roles now exist. Crossref is next, then other
-  formats that contributorship tools and journal systems read.
+- **More export formats.** tenzing CSV, Crossref deposit contributors and CodeMeta roles now
+  exist. Next are other formats that contributorship tools and journal systems read.
 - **Reviewed translations.** Ask native speakers to review the eight machine-made interface
   translations ([accessibility statement](accessibility.md#known-limitations)). The role names
   already come from the official CRediT translations.
