@@ -31,6 +31,11 @@ describe("parseNameParts", () => {
     expect(parseNameParts("Ann Jr")).toEqual({ firstName: "Ann", middleName: "", surname: "Jr" });
   });
 
+  it("reads a suffix only from a whole word", () => {
+    expect(parseNameParts("Priya Raman Srinivasan").surname).toBe("Srinivasan");
+    expect(parseNameParts("Hiro Kenta Fujii").surname).toBe("Fujii");
+  });
+
   it("keeps the middle dots, joiners and ZWNJ of a name", () => {
     expect(cleanNamePart("ジョン・スミス")).toBe("ジョン・スミス");
     expect(cleanNamePart("Gal·la")).toBe("Gal·la");
@@ -441,6 +446,27 @@ describe("normalizeRoster name parts", () => {
       surname: "García López",
     });
     expect(rebuilt(ana)).toEqual({ firstName: "Ana", middleName: "María", surname: "García López" });
+  });
+
+  it("looks past a suffix after the stored surname, but not one the surname holds", () => {
+    const parts = (name: string, firstName: string, middleName: string, surname: string) =>
+      rebuilt(createAuthor(name, { firstName, middleName, surname }));
+    expect(parts("Maria Garcia Lopez Jr.", "Maria", "", "Garcia Lopez")).toEqual({
+      firstName: "Maria",
+      middleName: "",
+      surname: "Garcia Lopez",
+    });
+    expect(parts("Martin Luther King Jr.", "Martin", "Luther", "King Jr.")).toMatchObject({ surname: "King Jr." });
+    expect(parts("Ann B Jr", "Ann", "B", "Jr")).toMatchObject({ surname: "Jr" });
+  });
+
+  it("re-parses a renamed row whose surname no longer ends the name", () => {
+    const maria = createAuthor("Maria Garcia Lopez", { firstName: "Maria", middleName: "", surname: "Garcia Lopez" });
+    expect(rebuilt({ ...maria, name: "Maria Garcia Lopez Smith" })).toEqual({
+      firstName: "Maria",
+      middleName: "Garcia",
+      surname: "Smith",
+    });
   });
 
   it("re-parses parts that leave out the first name or use a word twice", () => {

@@ -47,15 +47,16 @@ ${DOCTYPE}
  * instead.
  */
 export function givenNamesOf(author: Author): string {
-  const name = author.name.trim();
+  // The suffix goes in its own element, whichever order the name is in.
+  const words = author.name.trim().split(/\s+/);
+  if (suffixOf(author)) words.pop();
+  const name = words.join(" ");
   const { surname } = author;
   // A mononym or an ORCID placeholder: the whole name, so it re-imports as is.
   if (!surname) return name;
   // Match whole words, as the parser cleaned them: "King Jr." ends in the surname "Jr",
   // and "Anna" does not end in the surname "na".
   const isSurname = (text: string) => text === surname || wordsOf(text) === wordsOf(surname);
-  const words = name.split(/\s+/);
-  if (suffixOf(author)) words.pop();
   for (let i = words.length - 1; i > 0; i -= 1) {
     if (isSurname(words.slice(i).join(" "))) return words.slice(0, i).join(" ");
   }
@@ -65,11 +66,14 @@ export function givenNamesOf(author: Author): string {
   return author.middleName ? `${author.firstName} ${author.middleName}` : author.firstName;
 }
 
-/** The trailing generational suffix of the name ("Jr." in "Martin King Jr."), unless it is the surname. */
+/**
+ * The trailing generational suffix of the name ("Jr." in "Martin King Jr."),
+ * unless the surname already ends in it ("Jr", or "King Jr." from another tool).
+ */
 export function suffixOf(author: Author): string {
   const words = author.name.trim().split(/\s+/);
   const last = words.at(-1) ?? "";
-  return words.length > 2 && isSuffix(last) && wordsOf(last) !== wordsOf(author.surname) ? last : "";
+  return words.length > 2 && isSuffix(last) && wordsOf(last) !== wordsOf(author.surname).split(" ").at(-1) ? last : "";
 }
 
 function wordsOf(text: string): string {

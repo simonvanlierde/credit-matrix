@@ -304,12 +304,16 @@ function consistentNameParts(author: Author): Pick<Author, "firstName" | "middle
   if (![firstName, middleName, surname].every((part) => typeof part === "string")) return undefined;
   const words = (text: string) => cleanNamePart(text).split(/\s+/).filter(Boolean);
   const opens = (whole: string[], part: string[]) => part.every((word, i) => whole[i] === word);
-  const [all, first, middle, last] = [name, firstName, middleName, surname].map(words) as [
+  const [named, first, middle, last] = [name, firstName, middleName, surname].map(words) as [
     string[],
     string[],
     string[],
     string[],
   ];
+  // A generational suffix ends the name, not the surname, as in `parseNameParts`,
+  // unless the stored surname carries it ("King Jr.").
+  const suffixed = named.length > 2 && isSuffix(named.at(-1) ?? "") && last.at(-1) !== named.at(-1);
+  const all = suffixed ? named.slice(0, -1) : named;
   const between = all.slice(first.length, all.length - last.length);
   const fits =
     first.length > 0 &&
