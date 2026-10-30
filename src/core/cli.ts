@@ -41,8 +41,9 @@ Commands:
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
       --format codemeta prints CodeMeta 3.0 Role objects instead, one per
       role, for authors with an ORCID iD, and warns about each person left out.
-  convert <file> --to json|csv|jats|md
-      Print the contributions in another format.
+  convert <file> --to json|csv|jats|md [--yes-no]
+      Print the contributions in another format. --yes-no marks the roles
+      as yes/no ticks: JATS then leaves out the lead/equal/supporting level.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
       Print a link that asks one contributor to check their roles,
       or with --blank, to fill them in from scratch.
@@ -178,6 +179,7 @@ export async function run(argv: string[]): Promise<string> {
       blank: { type: "boolean", default: false },
       "base-url": { type: "string", default: DEFAULT_BASE_URL },
       levels: { type: "boolean", default: false },
+      "yes-no": { type: "boolean", default: false },
       help: { type: "boolean", short: "h" },
       version: { type: "boolean", short: "v" },
     },
@@ -234,7 +236,7 @@ export async function run(argv: string[]): Promise<string> {
         case "csv":
           return toCsv(authors);
         case "jats":
-          return toJats4rXml(authors);
+          return toJats4rXml(authors, { yesNo: values["yes-no"] });
         case "md":
           return toMarkdown(authors);
         default:
