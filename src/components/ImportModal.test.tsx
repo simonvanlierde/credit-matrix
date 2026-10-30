@@ -158,17 +158,38 @@ describe("closing the dialog while ORCID's keys load", () => {
     expect(screen.queryByText(en.replaceWorkspaceTitle)).toBeNull();
   });
 
-  it("still imports when a DOI lookup starts while the keys load", async () => {
+  it("keeps a DOI lookup and an import from running at once, so neither lands over the other", async () => {
     const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
     vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
-    deferLookup();
-    const { onImport } = renderModal(0);
+    renderModal(0);
     fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
-    fireEvent.click(screen.getByRole("button", { name: en.doiLookUp }));
+    expect((screen.getByRole("button", { name: en.doiLookUp }) as HTMLButtonElement).disabled).toBe(true);
+    await act(async () => resolve(null));
+  });
+
+  it("lets the dialog import again after it closes while the keys load", async () => {
+    const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
+    vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
+    renderModal(0);
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    close();
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
+    expect((screen.getByRole("button", { name: en.importData }) as HTMLButtonElement).disabled).toBe(false);
+    await act(async () => resolve(null));
+  });
+
+  it("imports nothing when the dialog unmounts while the keys load", async () => {
+    const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
+    vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
+    const { onImport, unmount } = renderModal(0);
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    unmount();
     await act(async () => resolve(null));
 
-    expect(onImport).toHaveBeenCalledTimes(1);
+    expect(onImport).not.toHaveBeenCalled();
   });
 
   it("tells a pasted link it no longer belongs to an open dialog", async () => {

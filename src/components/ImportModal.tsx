@@ -255,8 +255,15 @@ export function ImportModal({
   // Bumped per lookup and on close: a DOI result whose number is no longer current
   // belongs to a newer lookup or a dialog the user has left, and must not import or confirm.
   const request = useRef(0);
-  // Bumped on close only, so a DOI lookup started meanwhile does not drop an import.
+  // Bumped on close and unmount: an import that settles after either must not land.
   const closes = useRef(0);
+  useEffect(
+    () => () => {
+      closes.current += 1;
+      request.current += 1;
+    },
+    [],
+  );
 
   // The confirmation disables the Import button the user just activated, so
   // hand focus to the safe choice; declining hands it back once Import is
@@ -402,7 +409,8 @@ export function ImportModal({
       // A newer build's export is said plainly, not as a validation failure.
       showError(t(failure instanceof NewerVersionError ? "errImportNewerVersion" : "errImportFailed"));
     } finally {
-      setImporting(false);
+      // After a close, the flag belongs to whatever the reopened dialog started.
+      if (current()) setImporting(false);
     }
   }
 
@@ -482,6 +490,7 @@ export function ImportModal({
     request.current += 1;
     closes.current += 1;
     setDoiLoading(false);
+    setImporting(false);
     setText("");
     setDoi("");
     setFileName(null);
@@ -549,7 +558,7 @@ export function ImportModal({
                   if (e.key === "Enter") {
                     e.preventDefault();
                     // The same guard as the button's `disabled`, which Enter bypasses.
-                    if (doiLoading || pending !== null) return;
+                    if (doiLoading || importing || pending !== null) return;
                     void handleDoiLookup();
                   }
                 }}
@@ -559,7 +568,8 @@ export function ImportModal({
               <button
                 type="button"
                 onClick={() => void handleDoiLookup()}
-                disabled={doiLoading || doi.trim().length === 0 || pending !== null}
+                // One at a time: whichever landed second would replace the other's staged import.
+                disabled={doiLoading || importing || doi.trim().length === 0 || pending !== null}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded border border-primary px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-primary"
               >
                 <Search className="h-4 w-4" />
@@ -882,7 +892,7 @@ export function ImportModal({
               ref={importRef}
               type="button"
               onClick={() => void handleImport()}
-              disabled={format === "unknown" || pending !== null || importing}
+              disabled={format === "unknown" || pending !== null || importing || doiLoading}
               className="px-7 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg shadow hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {format === "statement" ? t("statementReview") : t("importData")}
