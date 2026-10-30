@@ -198,6 +198,7 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
   and `selfId` over to the ids that `keepKnownIds` gave the imported rows. When you import into a
   draft that already has contributors, only rows that matched one of them keep their answers.
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
+- `AskSchema` validates stored and imported asks.
 
 A reply can carry an ORCID sign-in. The caller checks it and passes it on the `reply` event as
 `orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`). What "verified" means is
@@ -205,8 +206,6 @@ defined in the module comment of `orcid-proof.ts`. When a signed reply changes t
 reply also keeps the old one as `provenance.replacedOrcid`. Run `recheckSignIns(asks,
 fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before you show any sign-in
 as verified.
-
-- `AskSchema` validates stored and imported asks.
 
 ## Rosters and links
 

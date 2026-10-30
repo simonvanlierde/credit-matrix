@@ -23,7 +23,7 @@ changes are in the [changelog](../CHANGELOG.md).
 - **More export formats.** tenzing CSV, Crossref deposit contributors and CodeMeta roles now
   exist. Next are other formats that contributorship tools and journal systems read.
 - **Reviewed translations.** Ask native speakers to review the eight machine-made interface
-  translations ([accessibility statement](accessibility.md#known-limitations)). The role names
+  translations ([accessibility statement](accessibility.md#known-problems)). The role names
   already come from the official CRediT translations.
 
 ## Later, or only if asked
