@@ -168,6 +168,7 @@
   "coauthorOrcidFailed": "O início de sessão com ORCID não terminou. Pode enviar a sua resposta sem ele.",
   "reviewOrcidVerified": "Verificado pelo ORCID como {who}, sessão iniciada em {date}.",
   "reviewOrcidOtherId": "Este não é o iD da linha.",
+  "reviewOrcidNoRowId": "Esta linha não tem um iD ORCID para comparar.",
   "coauthorNotSent": "Ainda não enviado.",
   "coauthorCopyInstead": "Copiar antes a ligação",
   "coauthorShareTitle": "Papéis CRediT de {name}",

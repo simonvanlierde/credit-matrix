@@ -234,6 +234,7 @@ export function ReviewPanel() {
         // The row's iD now, or the one the reply replaced: a forwarded link signed by someone else shows here.
         const otherId =
           signIn && [author.orcid, reply.provenance?.replacedOrcid].some((orcid) => orcid && orcid !== signIn.orcid);
+        const noRowId = signIn && !author.orcid && !reply.provenance?.replacedOrcid;
         return (
           <section key={author.id} aria-labelledby={headingId} className="flex flex-col gap-2">
             <div className="flex items-start justify-between gap-3">
@@ -255,6 +256,12 @@ export function ReviewPanel() {
                         date: format.dateTime(signIn.issuedAt, { dateStyle: "medium" }),
                       })}
                       {otherId && <span data-orcid-other-id=""> {t("reviewOrcidOtherId")}</span>}
+                      {noRowId && (
+                        <span data-orcid-no-row-id="" className="text-on-surface-variant">
+                          {" "}
+                          {t("reviewOrcidNoRowId")}
+                        </span>
+                      )}
                     </span>
                   </p>
                 )}

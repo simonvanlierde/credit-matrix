@@ -36,6 +36,37 @@ it("warns when a signed reply put a different iD on the row than the one asked",
   );
   expect(screen.getByText(`Verified by ORCID as Eve Other (${TEST_ORCID})`, { exact: false })).toBeTruthy();
   expect(screen.getByText(en.reviewOrcidOtherId)).toBeTruthy();
+  expect(screen.queryByText(en.reviewOrcidNoRowId)).toBeNull();
+});
+
+it("notes a signed reply on a row with no iD to compare with", () => {
+  act(() => {
+    useContributionStore.getState().createDraft();
+    useContributionStore.getState().addAuthor("Bob White");
+  });
+  const { activeDraftId, authors } = useContributionStore.getState();
+  const bob = authors[0];
+  if (!bob) throw new Error("expected Bob");
+  act(() => {
+    useContributionStore.getState().applyAskStep(activeDraftId, {
+      kind: "reply",
+      contributorId: bob.id,
+      row: { ...bob, contributions: [{ role: "Investigation", score: 100 }] },
+      sentAt: 1,
+      at: 2,
+      orcid: { orcid: TEST_ORCID, name: "Bob White", issuedAt: 1, token: "t", payload: "p" },
+    });
+  });
+  expect(useContributionStore.getState().authors[0]?.orcid).toBeUndefined();
+
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <ReviewPanel />
+    </IntlProvider>,
+  );
+  expect(screen.getByText(`Verified by ORCID as Bob White (${TEST_ORCID})`, { exact: false })).toBeTruthy();
+  expect(screen.getByText(en.reviewOrcidNoRowId)).toBeTruthy();
+  expect(screen.queryByText(en.reviewOrcidOtherId)).toBeNull();
 });
 
 it("does not show a sign-in an offline import could not check as verified", () => {

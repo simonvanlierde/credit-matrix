@@ -168,6 +168,7 @@
   "coauthorOrcidFailed": "El inicio de sesión con ORCID no se completó. Puede enviar su respuesta sin él.",
   "reviewOrcidVerified": "Verificado por ORCID como {who}, sesión iniciada el {date}.",
   "reviewOrcidOtherId": "Este no es el iD de la fila.",
+  "reviewOrcidNoRowId": "Esta fila no tiene un iD de ORCID con el que comparar.",
   "coauthorNotSent": "Aún no se ha enviado.",
   "coauthorCopyInstead": "Copiar el enlace en su lugar",
   "coauthorShareTitle": "Roles CRediT de {name}",
