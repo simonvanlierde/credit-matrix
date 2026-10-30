@@ -11,7 +11,8 @@
 //   build time, which is what makes hashes possible here; a nonce would need
 //   a server.
 // - Service worker: stamps the build id into its cache name, so a new version
-//   drops the previous build's chunks when it activates.
+//   drops the previous build's chunks when it activates, and checks that its
+//   page list names every exported page, so each one works offline.
 //
 // Runs after `next build` (see the `build` script); fails the build rather
 // than ship a page whose own scripts the CSP would block, a page without its
@@ -59,6 +60,14 @@ const swPath = join(OUT, "sw.js");
 const sw = await readFile(swPath, "utf8");
 const placeholder = '"credit-matrix-BUILD_ID"';
 if (!sw.includes(placeholder)) throw new Error(`postbuild: no ${placeholder} in ${swPath}`);
+const swPages = JSON.parse(sw.match(/const PAGES = (\[[^\]]*\]);/)?.[1] ?? "null");
+if (!swPages) throw new Error(`postbuild: no PAGES list in ${swPath}`);
+// 404 and _not-found are error pages, never navigated to by path.
+const exported = pages
+  .filter((page) => !/^(?:404|_not-found)\.html$/.test(page))
+  .map((page) => (page === "index.html" ? "/" : `/${page.replace(/\.html$/, "")}`));
+const missing = exported.filter((path) => !swPages.includes(path));
+if (missing.length > 0) throw new Error(`postbuild: ${swPath} PAGES lacks ${missing.join(", ")}`);
 // The page references every hashed chunk, so its digest changes exactly when
 // the build does.
 const buildId = sha256(await readFile(join(OUT, "index.html")))

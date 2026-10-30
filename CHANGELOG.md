@@ -11,6 +11,9 @@ return `"statement"` (see Changed).
 
 ### Added
 
+- A [Typst package](integrations/typst/README.md) that prints the CRediT statement, a role table
+  and the heatmap in a Typst document, in the app's nine languages, from inline roles or the app's
+  JSON export.
 - Paste an existing author contribution statement into Import to fill in the grid. Names and
   initials are matched to the contributors in the draft, and you see each person's roles, and any
   name that matched no one, before you apply. The statement never leaves the browser.

@@ -50,6 +50,11 @@ jobs:
       # integrations/quarto/credit-matrix.test.ts renders a document with the filter.
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
 
+      # integrations/typst/credit-matrix.test.ts compiles the Typst package's examples.
+      - uses: typst-community/setup-typst@fee4b65b091cc546f02ce3be15fad8760f38a108 # v5.3.0
+        with:
+          typst-version: 0.15.1
+
       # `verify` is the pre-push gate (biome, tsc, vitest with coverage); the
       # coverage output feeds Codecov below.
       - name: Lint, typecheck, test

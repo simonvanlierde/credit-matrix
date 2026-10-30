@@ -4,9 +4,10 @@
  * Everything except the ORCID and DOI lookups works without a network, so the
  * app only needs its own files back.
  *
- * - install: precache the page and every asset it references, so a new version
- *   is complete offline before it takes over
- * - navigations: network first (bounded), cached page as the fallback
+ * - install: precache every page and every asset they reference, so a new
+ *   version is complete offline before it takes over
+ * - navigations: network first (bounded), that path's cached page as the
+ *   fallback, or the app's page for any other path
  * - other same-origin GETs: cache first, unhashed ones refreshed in the background
  * - cross-origin (the ORCID, Crossref, and DataCite lookups): never cached, so a lookup
  *   fails honestly when offline
@@ -20,6 +21,9 @@
  */
 
 const CACHE = "credit-matrix-BUILD_ID";
+
+// Every exported page; scripts/postbuild.mjs fails the build when one is missing.
+const PAGES = ["/", "/about", "/accessibility", "/census"];
 
 // Past this, a hanging connection falls back to the cached page instead of
 // leaving a blank tab until the browser's own network timeout.
@@ -42,21 +46,37 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(request.mode === "navigate" ? handleNavigation(request) : handleAsset(request, event));
 });
 
-/** The page plus every script, style and font it links, fetched fresh. */
+/** Every page plus every script, style and font they link, fetched fresh. */
 async function precache() {
   const cache = await caches.open(CACHE);
-  const page = await fetch("/", { cache: "no-cache" });
-  if (!page.ok) throw new Error(`precache: / answered ${page.status}`);
-  const html = await page.clone().text();
+  const pages = await Promise.all(
+    PAGES.map(async (path) => {
+      const page = await fetch(path, { cache: "no-cache" });
+      if (!page.ok) throw new Error(`precache: ${path} answered ${page.status}`);
+      return [path, page, await page.clone().text()];
+    }),
+  );
   // The inline payload repeats these URLs JSON-escaped (`…js\"`) and can split
   // one across two script chunks (`/fonts/newsreader-ital"])`). Take only
   // URLs that end in a file extension, or one cut-off URL fails addAll and
   // with it the install.
-  const assets = [
-    ...new Set(html.match(/\/(?:_next\/static|fonts)\/[^"'\s)\\]+\.(?:js|css|woff2)(?=["'\s)\\])/g) ?? []),
-  ];
-  await cache.addAll(assets);
-  await cache.put("/", page);
+  const assets = new Set(
+    pages.flatMap(
+      ([, , html]) => html.match(/\/(?:_next\/static|fonts)\/[^"'\s)\\]+\.(?:js|css|woff2)(?=["'\s)\\])/g) ?? [],
+    ),
+  );
+  await cache.addAll([...assets]);
+  await Promise.all(pages.map(([path, page]) => cache.put(path, page)));
+}
+
+/** The cached page that answers a path: its own, or the app's for any other path. */
+function pageFor(url) {
+  const path = new URL(url).pathname.replace(/(?:\/|\.html)$/, "") || "/";
+  return PAGES.includes(path) ? path : "/";
+}
+
+async function cachedPage(request) {
+  return (await caches.match(pageFor(request.url))) ?? (await caches.match("/"));
 }
 
 async function dropOldCaches() {
@@ -70,15 +90,16 @@ async function handleNavigation(request) {
   try {
     const response = await fetch(request, { signal: AbortSignal.timeout(NAVIGATION_TIMEOUT_MS) });
     // A server error is not a better answer than the working copy on hand.
-    if (response.status >= 500) return (await caches.match("/")) ?? response;
-    // Share links live in the fragment, which never reaches the server, so one
-    // cached document answers every URL of this app. Only the app's own page
-    // may become that document: the manifest or an image opened directly must
-    // not replace the offline shell.
-    if (response.ok && new URL(request.url).pathname === "/") await cachePut("/", response.clone());
+    if (response.status >= 500) return (await cachedPage(request)) ?? response;
+    // Share links live in the fragment, which never reaches the server, so the
+    // app's page answers every path that is not one of the other pages. Only a
+    // page itself may refresh its cached copy: the manifest or an image opened
+    // directly must not replace the offline shell.
+    const path = new URL(request.url).pathname;
+    if (response.ok && PAGES.includes(path)) await cachePut(path, response.clone());
     return response;
   } catch {
-    return (await caches.match("/")) ?? Response.error();
+    return (await cachedPage(request)) ?? Response.error();
   }
 }
 

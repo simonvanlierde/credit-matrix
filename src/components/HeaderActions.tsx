@@ -383,12 +383,13 @@ export function HeaderActions() {
     });
   }
 
-  /** Take a pasted share link through the same router every other entry uses. */
-  async function handleLink(url: string): Promise<LinkFailure | null> {
+  /** Take a pasted share link through the same router every other entry uses, unless the dialog closed meanwhile. */
+  async function handleLink(url: string, current: () => boolean): Promise<LinkFailure | null> {
     const hashAt = url.indexOf("#");
     const shared = hashAt === -1 ? null : await decodeShareHash(url.slice(hashAt));
     if (!shared || shared.authors.length === 0) return "errShareLinkBroken";
-    return openFromLink(shared, await verifyIncoming(shared));
+    const orcid = await verifyIncoming(shared);
+    return current() ? openFromLink(shared, orcid) : null;
   }
 
   async function handleShare() {

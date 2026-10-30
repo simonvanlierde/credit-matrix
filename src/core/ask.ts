@@ -47,8 +47,10 @@ const ReplySchema = /* @__PURE__ */ (() =>
       z.optional(
         z.looseObject({
           orcid: z.optional(OrcidProofSchema),
-          /** The row's ORCID iD before this signed reply changed it: the iD the ask went to. */
+          /** The row's ORCID iD before a reply to this ask changed it: the iD the ask went to. */
           replacedOrcid: z.optional(z.string()),
+          /** A sign-in ORCID could not be reached to check on import; `orcid` only ever holds a checked one. */
+          uncheckedOrcid: z.optional(OrcidProofSchema),
         }),
       ),
       undefined,
@@ -266,7 +268,7 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
         // The same answer again is a duplicate, unless it renames the row or answers an ask sent since.
         const reAsked = held.sentAt > held.reply.receivedAt;
         // A sign-in the held answer lacks is news too.
-        const newlySigned = event.orcid !== undefined && held.reply.provenance === undefined;
+        const newlySigned = event.orcid !== undefined && held.reply.provenance?.orcid === undefined;
         if (same && !changed && (sameLink || !reAsked) && !newlySigned) {
           return {
             outcome: { kind: "received", open: review(author, held).open.length, duplicate: true },
@@ -275,14 +277,18 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
           };
         }
       }
+      // The iD the ask went to stays flagged across later replies, signed or not, until the reply is undone.
+      const replacedOrcid = previous.orcid ?? held?.reply?.provenance?.replacedOrcid;
+      const provenance = {
+        ...(event.orcid ? { orcid: event.orcid } : {}),
+        ...(replacedOrcid ? { replacedOrcid } : {}),
+      };
       // A changed answer starts with no decisions, so a renewed objection shows again.
       const reply: Reply = {
         ...answer,
         sentAt,
         receivedAt: event.at,
-        ...(event.orcid
-          ? { provenance: { orcid: event.orcid, ...(previous.orcid ? { replacedOrcid: previous.orcid } : {}) } }
-          : {}),
+        ...(Object.keys(provenance).length > 0 ? { provenance } : {}),
         decisions: same && held?.reply ? held.reply.decisions : {},
       };
       // A reply with no recorded ask (asked before asks were kept, or the ask was undone): every such ask was pre-filled.
@@ -367,22 +373,32 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
  * a reply to this contributor, and its row there holds the same answer as the
  * stored reply; the draft id is not compared, because an export does not keep
  * it. A failing sign-in is dropped, the answer stays. `keys` is called only
- * when some reply carries a sign-in; null from it drops every sign-in.
+ * when some reply carries a sign-in; null from it moves every sign-in to
+ * `provenance.uncheckedOrcid`, so a later check can still verify it.
  */
 export async function recheckSignIns(
   asks: Readonly<Record<string, Ask>>,
   keys: () => Promise<readonly OrcidKey[] | null>,
 ): Promise<Record<string, Ask>> {
   const checked = { ...asks };
-  const signed = Object.entries(asks).filter(([, ask]) => ask.reply?.provenance?.orcid);
+  const signed = Object.entries(asks).filter(
+    ([, ask]) => ask.reply?.provenance?.orcid ?? ask.reply?.provenance?.uncheckedOrcid,
+  );
   if (signed.length === 0) return checked;
   const fetched = await keys();
   for (const [id, ask] of signed) {
     const reply = ask.reply as Reply;
-    const { provenance, ...unsigned } = reply;
-    const proof = fetched && (await signedFor(id, reply, provenance?.orcid as OrcidProof, fetched));
+    const { provenance: _, ...unsigned } = reply;
+    const { orcid, uncheckedOrcid, ...rest } = reply.provenance ?? {};
+    const stored = (orcid ?? uncheckedOrcid) as OrcidProof;
+    if (!fetched) {
+      checked[id] = { ...ask, reply: { ...unsigned, provenance: { ...rest, uncheckedOrcid: stored } } };
+      continue;
+    }
+    const proof = await signedFor(id, reply, stored, fetched);
     // The checked proof replaces the stored one, so its iD, name and time are the token's.
-    checked[id] = { ...ask, reply: proof ? { ...reply, provenance: { ...provenance, orcid: proof } } : unsigned };
+    const kept = proof ? { ...rest, orcid: proof } : rest;
+    checked[id] = { ...ask, reply: Object.keys(kept).length > 0 ? { ...unsigned, provenance: kept } : unsigned };
   }
   return checked;
 }

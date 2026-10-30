@@ -216,6 +216,17 @@ type OrcidKey = {
 };
 /** ORCID's signing keys. Null when ORCID cannot be reached or answers with something else. */
 export declare function fetchOrcidKeys(fetcher?: typeof fetch): Promise<OrcidKey[] | null>;
+/**
+ * Check an ORCID `id_token` against `keys` and the reply `payload` its nonce
+ * must hash. Returns the proof, or null when anything fails. With `now`, an
+ * expired token fails too; without it, expiry is not checked (see the module
+ * comment).
+ */
+export declare function verifyOrcidToken(token: string, { payload, keys, now }: {
+  payload: string;
+  keys: readonly OrcidKey[];
+  now?: number;
+}): Promise<OrcidProof | null>;
 //#endregion
 //#region ask.d.ts
 /** What a reply answers: each role, and the two markers outside CRediT. */
@@ -276,6 +287,13 @@ declare const ReplySchema: z.ZodMiniObject<{
       payload: z.ZodMiniString<string>;
     }, z.core.$loose>>;
     replacedOrcid: z.ZodMiniOptional<z.ZodMiniString<string>>;
+    uncheckedOrcid: z.ZodMiniOptional<z.ZodMiniObject<{
+      orcid: z.ZodMiniString<string>;
+      name: z.ZodMiniOptional<z.ZodMiniString<string>>;
+      issuedAt: z.ZodMiniNumber<number>;
+      token: z.ZodMiniString<string>;
+      payload: z.ZodMiniString<string>;
+    }, z.core.$loose>>;
   }, z.core.$loose>>>;
   decisions: z.ZodMiniObject<{
     Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
@@ -542,6 +560,13 @@ export declare const AskSchema: z.ZodMiniObject<{
         payload: z.ZodMiniString<string>;
       }, z.core.$loose>>;
       replacedOrcid: z.ZodMiniOptional<z.ZodMiniString<string>>;
+      uncheckedOrcid: z.ZodMiniOptional<z.ZodMiniObject<{
+        orcid: z.ZodMiniString<string>;
+        name: z.ZodMiniOptional<z.ZodMiniString<string>>;
+        issuedAt: z.ZodMiniNumber<number>;
+        token: z.ZodMiniString<string>;
+        payload: z.ZodMiniString<string>;
+      }, z.core.$loose>>;
     }, z.core.$loose>>>;
     decisions: z.ZodMiniObject<{
       Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
@@ -873,7 +898,8 @@ export declare function askStep(state: AskState, event: AskEvent): {
  * a reply to this contributor, and its row there holds the same answer as the
  * stored reply; the draft id is not compared, because an export does not keep
  * it. A failing sign-in is dropped, the answer stays. `keys` is called only
- * when some reply carries a sign-in; null from it drops every sign-in.
+ * when some reply carries a sign-in; null from it moves every sign-in to
+ * `provenance.uncheckedOrcid`, so a later check can still verify it.
  */
 export declare function recheckSignIns(asks: Readonly<Record<string, Ask>>, keys: () => Promise<readonly OrcidKey[] | null>): Promise<Record<string, Ask>>;
 /** When the answer was settled: its last decision, or its arrival when nothing needed one. */
@@ -911,6 +937,8 @@ export declare function importAnswers(current: readonly Author[], incoming: read
  * per contribution above zero. The schema has no slot for a contribution level
  * or for equal contribution, so neither is written. The ORCID iD is never
  * marked `authenticated`: only the depositing member can vouch for that.
+ * Authors come first, then the others, each in roster order. A row still named
+ * after its ORCID iD has no name to deposit, so it is left out with a comment.
  */
 export declare function toCrossrefContributors(authors: Author[]): string;
 //#endregion
@@ -1206,7 +1234,10 @@ interface ShareData {
   sentAt: number | null;
   /** the asker works in yes/no mode; false on links from before this was recorded */
   yesNo: boolean;
-  /** A reply's ORCID sign-in, unchecked: the token and the payload its nonce must hash. See `verifyOrcidToken`. */
+  /**
+   * A reply's ORCID sign-in, unchecked: the token and the payload its nonce must hash. Check it with
+   * `verifyOrcidToken(token, { payload, keys })`, keys from `fetchOrcidKeys()`, before passing it on.
+   */
   signIn: {
     token: string;
     payload: string;
