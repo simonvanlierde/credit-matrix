@@ -1467,7 +1467,7 @@ declare const DEFAULT_ROLE_TRANSLATOR: RoleTranslator;
  * fallback; per-locale catalogs in ./ui/ hold only the overrides. Our strings,
  * not the community role repo's, hence a separate directory.
  */
-type UiKey = "acknowledgements" | "lead" | "equal" | "supporting" | "none" | "contributed" | "emptyState" | "heatmapTitle" | "equalContributionNote" | "correspondenceNote" | "nameListSeparator" | "segmentSeparator" | "levelAnnotation";
+type UiKey = "acknowledgements" | "lead" | "equal" | "supporting" | "none" | "contributed" | "emptyState" | "heatmapTitle" | "equalContributionNote" | "correspondenceNote" | "labelSeparator" | "nameListSeparator" | "segmentSeparator" | "levelAnnotation";
 type UiTranslator = (key: UiKey) => string;
 /** A complete output catalog. Missing prose must fail before release. */
 type UiCatalog = Record<UiKey, string>;

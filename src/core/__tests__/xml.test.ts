@@ -27,6 +27,16 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     expect(parsed[0]?.contributions.find((c) => c.role === "Conceptualization")?.score).toBe(100);
   });
 
+  it("writes a generational suffix as <suffix>, not as the surname", () => {
+    const [king] = parseAuthorText("Martin Luther King Jr.");
+    if (!king) throw new Error("expected contributor");
+    const xml = toJats4rXml([king]);
+    expect(xml).toContain("<given-names>Martin Luther</given-names>");
+    expect(xml).toContain("<surname>King</surname>");
+    expect(xml).toContain("<suffix>Jr.</suffix>");
+    expect(fromJats4rXml(xml)[0]).toMatchObject({ name: "Martin Luther King Jr.", surname: "King" });
+  });
+
   it.each([
     "Anne van der Berg",
     // spell-checker: ignore Carmen García López

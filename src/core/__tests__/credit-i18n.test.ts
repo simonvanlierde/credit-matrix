@@ -124,6 +124,7 @@ const UI_KEYS: UiKey[] = [
   "heatmapTitle",
   "equalContributionNote",
   "correspondenceNote",
+  "labelSeparator",
   "nameListSeparator",
   "segmentSeparator",
   "levelAnnotation",

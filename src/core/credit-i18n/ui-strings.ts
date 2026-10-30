@@ -23,6 +23,7 @@ export type UiKey =
   | "heatmapTitle"
   | "equalContributionNote"
   | "correspondenceNote"
+  | "labelSeparator"
   | "nameListSeparator"
   | "segmentSeparator"
   | "levelAnnotation";
@@ -56,6 +57,8 @@ const EN_UI: Record<UiKey, string> = {
   // `{names}` is substituted with the marked contributors.
   equalContributionNote: "{names} contributed equally to this work.",
   correspondenceNote: "Correspondence: {names}.",
+  // Between a label and what it lists ("Role: names"); CJK locales use "：".
+  labelSeparator: ": ",
   nameListSeparator: ", ",
   // Joins the segments of a statement ("Role: names; Role: names"). Its own
   // key because CJK locales use full-width punctuation ("；"), and mixing

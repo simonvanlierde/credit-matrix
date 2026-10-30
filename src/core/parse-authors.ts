@@ -56,11 +56,13 @@ export function parseNameParts(name: string): {
 
   // Where the surname starts: the last token, pulled back over particles,
   // never into the first name.
-  let surnameStart = Math.max(parts.length - 1, 1);
+  // A generational suffix ends the name, not the surname ("King Jr.").
+  const end = parts.length > 2 && isSuffix(parts.at(-1) ?? "") ? parts.length - 1 : parts.length;
+  let surnameStart = Math.max(end - 1, 1);
   while (surnameStart > 1 && isParticle(parts[surnameStart - 1] ?? "")) surnameStart -= 1;
 
   const firstName = parts[0] ?? "";
-  const surname = parts.slice(surnameStart).join(" ");
+  const surname = parts.slice(surnameStart, end).join(" ");
   const middleName = surnameStart > 1 ? (parts[1] ?? "") : "";
 
   return { firstName, middleName, surname };
@@ -68,7 +70,8 @@ export function parseNameParts(name: string): {
 
 /** A name part with the punctuation and digits `parseNameParts` drops removed. */
 export function cleanNamePart(value: string): string {
-  return value.replace(/[^\p{L}\p{M}'’ʼ\-\s]/gu, "").trim();
+  // Keep the middle dots (・ ·) and joiners (ZWNJ, ZWJ) that spell names in ja, ca and fa.
+  return value.replace(/[^\p{L}\p{M}'’ʼ\-\s・·\u200C\u200D]/gu, "").trim();
 }
 
 /** A run of scripts written without spaces between family and given name. */
@@ -356,6 +359,11 @@ const PARTICLES = new Set([
   "al",
   "van't",
 ]);
+
+/** A generational suffix, with or without its dot, in any case. */
+export function isSuffix(word: string): boolean {
+  return /^(?:jr|sr|ii|iii)\.?$/i.test(word);
+}
 
 /** A surname particle, in any case and with any apostrophe ("Van", "van’t"). */
 function isParticle(word: string): boolean {

@@ -3,7 +3,7 @@ import { activeContributions, normalizeOrcid } from "../author";
 import { getRoleByName } from "../credit-roles";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
-import { givenNamesOf } from "./xml";
+import { givenNamesOf, suffixOf } from "./xml";
 
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
@@ -30,6 +30,7 @@ function personToXml(author: Author, first: boolean): string {
   const lines = [
     ...(given ? [`<given_name>${escapeXml(given)}</given_name>`] : []),
     `<surname>${escapeXml(surname)}</surname>`,
+    ...(suffixOf(author) ? [`<suffix>${escapeXml(suffixOf(author))}</suffix>`] : []),
     `<role vocab="crossref" type="${author.contributorType === "non-author" ? "other" : "author"}"/>`,
     ...(author.corresponding ? ['<role vocab="crossref" type="corresponding-author"/>'] : []),
     // Crossref's CRediT values are the slugs of the credit.niso.org role URLs.

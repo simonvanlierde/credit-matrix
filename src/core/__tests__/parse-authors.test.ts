@@ -21,6 +21,22 @@ describe("parseNameParts", () => {
     });
   });
 
+  it("keeps a generational suffix out of the surname", () => {
+    expect(parseNameParts("Martin Luther King Jr.")).toEqual({
+      firstName: "Martin",
+      middleName: "Luther",
+      surname: "King",
+    });
+    expect(parseNameParts("Bob White III")).toEqual({ firstName: "Bob", middleName: "", surname: "White" });
+    expect(parseNameParts("Ann Jr")).toEqual({ firstName: "Ann", middleName: "", surname: "Jr" });
+  });
+
+  it("keeps the middle dots, joiners and ZWNJ of a name", () => {
+    expect(cleanNamePart("ジョン・スミス")).toBe("ジョン・スミス");
+    expect(cleanNamePart("Gal·la")).toBe("Gal·la");
+    expect(cleanNamePart("می\u200Cخواهم\u200D")).toBe("می\u200Cخواهم\u200D");
+  });
+
   it("parses a two-part name (no middle)", () => {
     expect(parseNameParts("Bob White")).toEqual({
       firstName: "Bob",

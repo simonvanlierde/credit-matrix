@@ -3,7 +3,7 @@
 import type { Author } from "../author";
 import { activeContributions, isAllBinary, normalizeOrcid, scoreToLevel } from "../author";
 import { getRoleByName } from "../credit-roles";
-import { cleanNamePart } from "../parse-authors";
+import { cleanNamePart, isSuffix } from "../parse-authors";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 
@@ -55,6 +55,7 @@ export function givenNamesOf(author: Author): string {
   // and "Anna" does not end in the surname "na".
   const isSurname = (text: string) => text === surname || wordsOf(text) === wordsOf(surname);
   const words = name.split(/\s+/);
+  if (suffixOf(author)) words.pop();
   for (let i = words.length - 1; i > 0; i -= 1) {
     if (isSurname(words.slice(i).join(" "))) return words.slice(0, i).join(" ");
   }
@@ -62,6 +63,13 @@ export function givenNamesOf(author: Author): string {
   const comma = name.indexOf(",");
   if (comma > 0 && isSurname(name.slice(0, comma).trim())) return name.slice(comma + 1).trim();
   return author.middleName ? `${author.firstName} ${author.middleName}` : author.firstName;
+}
+
+/** The trailing generational suffix of the name ("Jr." in "Martin King Jr."), unless it is the surname. */
+export function suffixOf(author: Author): string {
+  const words = author.name.trim().split(/\s+/);
+  const last = words.at(-1) ?? "";
+  return words.length > 2 && isSuffix(last) && wordsOf(last) !== wordsOf(author.surname) ? last : "";
 }
 
 function wordsOf(text: string): string {
@@ -90,6 +98,7 @@ function authorToXml(author: Author, sharedFirst: boolean, withLevels: boolean):
   // Acknowledgements section use the generic "contributor" (JATS contrib-type
   // is an open vocabulary).
   const contribType = author.contributorType === "non-author" ? "contributor" : "author";
+  const suffix = suffixOf(author);
 
   // JATS carries both markers as attributes on <contrib>, outside the CRediT
   // vocabulary: the taxonomy has no term for either.
@@ -99,7 +108,7 @@ function authorToXml(author: Author, sharedFirst: boolean, withLevels: boolean):
   return `<contrib contrib-type="${contribType}"${equalAttr}${correspAttr}>${orcidEl}
       <string-name>
         <given-names>${escapeXml(givenNames)}</given-names>
-        <surname>${escapeXml(author.surname)}</surname>
+        <surname>${escapeXml(author.surname)}</surname>${suffix ? `\n        <suffix>${escapeXml(suffix)}</suffix>` : ""}
       </string-name>
 ${roles}
     </contrib>`;

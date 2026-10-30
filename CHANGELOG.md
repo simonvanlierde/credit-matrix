@@ -100,6 +100,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- "Martin Luther King Jr." no longer gets the surname "Jr". The suffix (Jr, Sr, II, III) stays out of
+  the surname, and the JATS and Crossref exports write it as `<suffix>`; the JATS import reads it back.
+- A Japanese or Chinese statement used an ASCII colon and space after each role or name next to its
+  full-width semicolon. It now uses "：". The Review tab's button labels for screen readers also read
+  correctly in every language.
+- `credit-matrix ask --contributor` finds a name typed with decomposed accents, as macOS
+  and some keyboards produce.
+- Names with a middle dot ("ジョン・スミス", "Gal·la") or a zero-width joiner keep them when
+  parsed, instead of having them dropped.
 - The privacy text on the About page said the site ran Cloudflare's analytics script. It doesn't:
   Cloudflare counts page requests on its own servers, and the Content Security Policy no longer
   allows an analytics script.

@@ -9,6 +9,7 @@
   "heatmapTitle": "Beitragsheatmap",
   "equalContributionNote": "{names} haben gleichermaßen zu dieser Arbeit beigetragen.",
   "correspondenceNote": "Korrespondenz: {names}.",
+  "labelSeparator": ": ",
   "nameListSeparator": ", ",
   "segmentSeparator": "; ",
   "levelAnnotation": "{label} ({level})"

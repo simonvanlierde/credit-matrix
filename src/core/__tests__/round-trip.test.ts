@@ -168,7 +168,7 @@ describe("round-trip exports", () => {
   // ("Jr." vs "Jr"), the given names were rebuilt from the first and middle name
   // alone, so every word between them and the surname was lost.
   it.each([
-    ["Martin Luther King Jr.", "Martin Luther King Jr"],
+    ["Martin Luther King Jr.", "Martin Luther King Jr."],
     ["Ann B. C. Smith.", "Ann B. C. Smith"],
     ["Jane Smith (ed)", "Jane Smith ed"],
   ])("XML round-trip keeps every word of %s", (input, expected) => {
