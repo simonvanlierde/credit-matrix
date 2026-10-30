@@ -32,7 +32,13 @@ describe("credit-matrix statement", () => {
     expect(await run(["statement", csv, "--format", "by-author"])).toBe(
       "CRediT: Jane Smith: Conceptualization, Software; Bob White: Software",
     );
-    expect(await run(["statement", csv, "--locale", "fr"])).toContain("Conceptualisation: Jane Smith");
+    expect(await run(["statement", csv, "--locale", "fr"])).toContain("Conceptualisation\u00a0: Jane Smith");
+  });
+
+  it("keeps a ja statement in full-width punctuation", async () => {
+    const japanese = await run(["statement", csv, "--locale", "ja"]);
+    expect(japanese).toContain("：");
+    expect(japanese.replace("CRediT: ", "")).not.toContain(": ");
   });
 
   it("takes a language without its region, or a region it does not offer", async () => {
@@ -155,6 +161,13 @@ describe("credit-matrix ask", () => {
     const link = await run(["ask", json, "--contributor", "SMITH"]);
     expect((await decodeShareHash(link.slice(link.indexOf("#"))))?.claimId).toBe(jane.id);
     expect(await run(["ask", json, "--contributor", "bob"])).toContain("#s=");
+  });
+
+  it("finds a contributor whose name is typed decomposed", async () => {
+    const jose = createAuthor("Jos\u00E9 Garc\u00EDa");
+    const accents = file("accents.json", toJson([jose, createAuthor("Bob White")]));
+    const link = await run(["ask", accents, "--contributor", "Jose\u0301 Garci\u0301a"]);
+    expect((await decodeShareHash(link.slice(link.indexOf("#"))))?.claimId).toBe(jose.id);
   });
 
   it("lists the contributors when none or several match", async () => {

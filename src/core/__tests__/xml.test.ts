@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { escapeXml } from "../export/escape-xml";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
-import { createAuthor, parseAuthorText } from "../parse-authors";
+import { createAuthor, normalizeRoster, parseAuthorText } from "../parse-authors";
 
 // `fromJats4rXml` defaults to the global DOMParser, native in the browser and
 // linkedom's here (see setup.ts), so this exercises the same entry point the
@@ -25,6 +25,47 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     expect(parsed[0]?.surname).toBe("Smith");
     expect(parsed[0]?.orcid).toBe("0000-0002-1825-0097");
     expect(parsed[0]?.contributions.find((c) => c.role === "Conceptualization")?.score).toBe(100);
+  });
+
+  it("writes a generational suffix as <suffix>, not as the surname", () => {
+    const [king] = parseAuthorText("Martin Luther King Jr.");
+    if (!king) throw new Error("expected contributor");
+    const xml = toJats4rXml([king]);
+    expect(xml).toContain("<given-names>Martin Luther</given-names>");
+    expect(xml).toContain("<surname>King</surname>");
+    expect(xml).toContain("<suffix>Jr.</suffix>");
+    expect(fromJats4rXml(xml)[0]).toMatchObject({ name: "Martin Luther King Jr.", surname: "King" });
+  });
+
+  it.each([
+    ["Anna Maria Lena Smith Jr.", "Anna Maria Lena", "Smith"],
+    ["Anna Maria Lena van der Berg", "Anna Maria Lena", "van der Berg"],
+    ["King, Martin Luther Jr.", "Martin Luther", "King"],
+    ["Curie, Marie Anne", "Marie Anne", "Curie"],
+  ])("keeps every given name of %s, and a suffix out of them", (name, given, surname) => {
+    const xml = toJats4rXml([createAuthor(name)]);
+    expect(xml).toContain(`<given-names>${given}</given-names>`);
+    expect(xml).toContain(`<surname>${surname}</surname>`);
+    expect(xml.match(/<suffix>/g)?.length ?? 0).toBe(name.endsWith("Jr.") ? 1 : 0);
+  });
+
+  const jats = (name: string) =>
+    `<article><front><article-meta><contrib-group><contrib contrib-type="author"><string-name>${name}</string-name></contrib></contrib-group></article-meta></front></article>`;
+
+  it("keeps a compound JATS surname when a suffix follows it", () => {
+    const [maria] = normalizeRoster(
+      fromJats4rXml(jats("<given-names>Maria</given-names><surname>Garcia Lopez</surname><suffix>Jr.</suffix>")),
+    );
+    expect(maria?.surname).toBe("Garcia Lopez");
+  });
+
+  it.each([
+    "<given-names>Martin Luther</given-names><surname>King Jr.</surname>",
+    "<given-names>Maria</given-names><surname>Garcia Lopez Jr.</surname>",
+  ])("writes a suffix once when the imported surname already ends in it: %s", (name) => {
+    const [king] = fromJats4rXml(jats(name));
+    if (!king) throw new Error("expected contributor");
+    expect(toJats4rXml([king]).match(/Jr\./g)).toHaveLength(1);
   });
 
   it.each([
@@ -397,13 +438,20 @@ describe("fromJats4rXml reading", () => {
   it("collapses line breaks inside the name parts and hands them over as they stand", () => {
     const xml = contrib(`<name><surname>van der
         Berg</surname><given-names>Anne
-        Marie</given-names></name>`);
+        Marie</given-names><suffix>
+        Jr.
+        </suffix></name>`);
     expect(fromJats4rXml(xml)[0]).toMatchObject({
-      name: "Anne Marie van der Berg",
+      name: "Anne Marie van der Berg Jr.",
       firstName: "Anne",
       middleName: "Marie",
       surname: "van der Berg",
     });
+  });
+
+  it("joins a suffix to given names with no surname by one space", () => {
+    const [ann] = fromJats4rXml(contrib("<name><given-names>Ann</given-names><suffix>Jr.</suffix></name>"));
+    expect(ann?.name).toBe("Ann Jr.");
   });
 
   it("parses the name itself when only one part is given", () => {

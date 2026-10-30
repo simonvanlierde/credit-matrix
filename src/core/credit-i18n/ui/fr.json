@@ -8,8 +8,9 @@
   "emptyState": "Aucune contribution attribuée pour l'instant.",
   "heatmapTitle": "Heatmap des contributions",
   "equalContributionNote": "{names} ont contribué à parts égales à ce travail.",
-  "correspondenceNote": "Correspondance : {names}.",
+  "correspondenceNote": "Correspondance\u00a0: {names}.",
+  "labelSeparator": "\u00a0: ",
   "nameListSeparator": ", ",
-  "segmentSeparator": " ; ",
+  "segmentSeparator": "\u00a0; ",
   "levelAnnotation": "{label} ({level})"
 }

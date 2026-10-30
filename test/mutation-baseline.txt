@@ -1,7 +1,12 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
 # Each line: file status mutator -> replacement | original line, and why it is kept, for one left on purpose.
-# Score 89.48%: 2194 killed, 209 survived, 49 without coverage, 229 kept with a reason.
+# Score 90.35%: 2257 killed, 193 survived, 48 without coverage, 236 kept with a reason.
 src/core/export/codemeta.ts Survived StringLiteral -> "" | skipped.push({ author, reason: "no-orcid" });  # kept: equivalent: the CLI, the only caller, tells the reasons apart by non-author alone
+src/core/export/crossref.ts Survived ArrayDeclaration -> ["Stryker was here"] | ...(author.corresponding ? ['<role vocab="crossref" type="corresponding-author"/>'] : []),
+src/core/export/crossref.ts Survived ArrayDeclaration -> ["Stryker was here"] | ...(author.orcid ? [`<ORCID>https://orcid.org/${escapeXml(normalizeOrcid(author.orcid))}</ORCID>`] :
+src/core/export/crossref.ts Survived ArrayDeclaration -> ["Stryker was here"] | ...(given ? [`<given_name>${escapeXml(given)}</given_name>`] : []),
+src/core/export/crossref.ts Survived MethodExpression -> author.name | const surname = author.surname || author.name.trim();
+src/core/export/crossref.ts Survived StringLiteral -> "" | const people = authors.map((author) => personToXml(author, author === firstAuthor)).join("\n");
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | const headers = (records[0] ?? []).map(headerKey);  # kept: equivalent: records is not empty past the guard above
 src/core/export/csv.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | return (parseCsvRecords(line, delimiterOf(line))[0] ?? []).map((cell) => cell.trim().toLowerCase());  # kept: equivalent: parseCsvRecords always returns at least one record
 src/core/export/csv.ts NoCoverage UnaryOperator -> +1 | score: readScore(cells[roleIndexes[i] ?? -1] ?? "0"),  # kept: equivalent: a missing score cell reads as 0 either way
@@ -142,7 +147,6 @@ src/core/share-payload.ts Survived StringLiteral -> "" | if (payload.r && !paylo
 src/core/statement.ts NoCoverage ArithmeticOperator -> a[1] + b[1] | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >  # kept: equivalent: found names are masked, so no two mentions share a start, and start order is end order
 src/core/statement.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | u.roles = [...(slugsOf[k] ?? [])]  # kept: equivalent: the fallback is never reached
 src/core/statement.ts NoCoverage ArrayDeclaration -> [] | if (!surname) return [new Set(), new Set()];  # kept: parity with the census parser, which matches no name for an author without a surname
-src/core/statement.ts NoCoverage BooleanLiteral -> true | if (surname.length === 0) return false;  # kept: equivalent: without a surname the head is empty, so the lead check fails anyway
 src/core/statement.ts NoCoverage ConditionalExpression -> false | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >  # kept: equivalent: found names are masked, so no two mentions share a start, and start order is end order
 src/core/statement.ts NoCoverage ConditionalExpression -> false | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >  # kept: equivalent: found names are masked, so no two mentions share a start, and start order is end order
 src/core/statement.ts NoCoverage ConditionalExpression -> false | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >  # kept: equivalent: found names are masked, so no two mentions share a start, and start order is end order
@@ -168,7 +172,6 @@ src/core/statement.ts NoCoverage UnaryOperator -> +1 | a[0] - b[0] || a[1] - b[1
 src/core/statement.ts NoCoverage UnaryOperator -> +1 | a[0] - b[0] || a[1] - b[1] || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] >  # kept: equivalent: found names are masked, so no two mentions share a start, and start order is end order
 src/core/statement.ts Survived ArithmeticOperator -> a + b | [...hits].sort((a, b) => a - b),  # kept: equivalent: hits fill in author order, so they are already sorted
 src/core/statement.ts Survived ArithmeticOperator -> a[0] + b[0] | for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {  # kept: equivalent: clauses fill in text order, so they are already sorted
-src/core/statement.ts Survived ArithmeticOperator -> m.index - m[0].length | mentions.push([m.index, m.index + m[0].length, "A", ALL_AUTHORS]);
 src/core/statement.ts Survived ArrayDeclaration -> ["Stryker was here"] | const lowerWords = (cleaned.replace(ROLE_RE, " ").match(LOWER_WORD_RE) ?? []).filter(  # kept: equivalent: there are lower-case words whenever the threshold could be reached
 src/core/statement.ts Survived ArrayDeclaration -> ["Stryker was here"] | if ((cleaned.match(SENTENCE_END_RE) ?? []).length >= 2 && lowerWords.length >= 4) return true;  # kept: equivalent: one placeholder still counts under the two-sentence threshold
 src/core/statement.ts Survived ArrayDeclaration -> ["Stryker was here"] | k = unmatched.push({ token, candidates, roles: [] }) - 1;  # kept: equivalent: the roles are filled in after parsing, over this placeholder
@@ -179,20 +182,16 @@ src/core/statement.ts Survived ArrowFunction -> () => undefined | (g, s) => fits
 src/core/statement.ts Survived ArrowFunction -> () => undefined | [...hits].sort((a, b) => a - b),  # kept: equivalent: hits fill in author order, so they are already sorted
 src/core/statement.ts Survived ArrowFunction -> () => undefined | const original = clean(statement.normalize("NFC")).replace(APPROVAL_RE, (m) => " ".repeat(m.length))  # kept: equivalent: mentions and clause ends are both read from the same masked text
 src/core/statement.ts Survived ArrowFunction -> () => undefined | for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {  # kept: equivalent: clauses fill in text order, so they are already sorted
-src/core/statement.ts Survived BooleanLiteral -> true | let cased = false;
 src/core/statement.ts Survived CallExpression -> ; | resolved.set(token, hits);  # kept: equivalent: a cache; recomputing gives the same candidates
-src/core/statement.ts Survived ConditionalExpression -> false | if (!isUpper(first(token))) continue;
 src/core/statement.ts Survived ConditionalExpression -> false | if (!surname) return [new Set(), new Set()];  # kept: parity with the census parser, which matches no name for an author without a surname
 src/core/statement.ts Survived ConditionalExpression -> false | if (before === "" || isLowerWord(before) || ")]".includes(before)) ends.push(m.index);  # kept: differs only for a statement that opens with a full stop
 src/core/statement.ts Survived ConditionalExpression -> false | if (chunks.length === 0) return [];  # kept: equivalent: no author has an empty name, so no-chunk tokens match no one either way
 src/core/statement.ts Survived ConditionalExpression -> false | if (isUpper(ch) || chunks.length === 0) chunks.push(ch);  # kept: equivalent: no author has an empty name, so no-chunk tokens match no one either way
-src/core/statement.ts Survived ConditionalExpression -> false | if (kind === "A" && gap.includes(".") && !gap.includes(":") && (nextKind === "R" || !joined)) ends.p
 src/core/statement.ts Survived ConditionalExpression -> false | if (lowered.length === text.length) return lowered;  # kept: equivalent: the per-character path gives the same result when the lengths agree
 src/core/statement.ts Survived ConditionalExpression -> false | if (surname.length === 0) return false;  # kept: equivalent: without a surname the head is empty, so the lead check fails anyway
-src/core/statement.ts Survived ConditionalExpression -> true | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);
+src/core/statement.ts Survived ConditionalExpression -> true | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);  # kept: equivalent: both callers check the index first, so ch is never undefined
 src/core/statement.ts Survived ConditionalExpression -> true | if (!hits) {  # kept: equivalent: a cache; recomputing gives the same candidates
 src/core/statement.ts Survived ConditionalExpression -> true | if ((i as number) <= UNRESOLVED)  # kept: equivalent: the optional call skips indices that are not unresolved tokens
-src/core/statement.ts Survived ConditionalExpression -> true | if (/\p{Lowercase}/u.test(ch)) cased = true;
 src/core/statement.ts Survived ConditionalExpression -> true | if (end !== text.length && isAlnum(text[end])) return false;  # kept: equivalent: isAlnum reads past the end as no character
 src/core/statement.ts Survived ConditionalExpression -> true | if (runs.length === 1 && runs[0]?.[0] === "R" && previousPeople.length > 0 && !NAME_COLON_RE.test(le  # kept: equivalent: an empty people run assigns nothing, as no run does
 src/core/statement.ts Survived ConditionalExpression -> true | return l.length === ch.length ? l : ch;  # kept: differs only for an astral letter whose lower case has a different length, which names do not use
@@ -206,12 +205,10 @@ src/core/statement.ts Survived LogicalOperator -> a[0] - b[0] && a[1] - b[1] | a
 src/core/statement.ts Survived MethodExpression -> [...clauses] | for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {  # kept: equivalent: clauses fill in text order, so they are already sorted
 src/core/statement.ts Survived MethodExpression -> [...hits] | [...hits].sort((a, b) => a - b),  # kept: equivalent: hits fill in author order, so they are already sorted
 src/core/statement.ts Survived MethodExpression -> `${given} ${surname}` | const name = `${given} ${surname}`.trim();  # kept: equivalent: an author without given names never uses the joined name
-src/core/statement.ts Survived MethodExpression -> author.given.split(/[\s.-]+/u) | const given = author.given.split(/[\s.-]+/u).filter(Boolean);
-src/core/statement.ts Survived MethodExpression -> author.surname.split(/[\s-]+/u) | const words = author.surname.split(/[\s-]+/u).filter(Boolean);
 src/core/statement.ts Survived MethodExpression -> forms | const short = forms  # kept: equivalent: a form of dots alone matches no bounded text
 src/core/statement.ts Survived MethodExpression -> g | (g, s) => fits(chunks, [...g.slice(0, 1), ...s]),  # kept: equivalent: the loose tier after it accepts every token this tier does
 src/core/statement.ts Survived MethodExpression -> given.split(/\s+/u) | const hyphened = given  # kept: the initials pass resolves the same token when a written-out form is missed
-src/core/statement.ts Survived MethodExpression -> m[0] | const token = m[0].trim();
+src/core/statement.ts Survived MethodExpression -> m[0] | const token = m[0].trim();  # kept: equivalent: INITIALS_RE starts on a capital and ends on a letter or a dot, so the token has no spaces at its ends
 src/core/statement.ts Survived MethodExpression -> Math.min(0, start - 6) | AFTER_INITIAL_RE.lastIndex = Math.max(0, start - 6);  # kept: equivalent: the pattern is anchored at the end, so searching from 0 finds the same match
 src/core/statement.ts Survived MethodExpression -> text.replaceAll("&", " and ").replace(SPACES, " ").replace(D | return text.replaceAll("&", " and ").replace(SPACES, " ").replace(DASHES, " - ").replace(SPACES, " "  # kept: equivalent: DASHES takes the spaces around a dash with it, so no double space is left to collapse
 src/core/statement.ts Survived MethodExpression -> text.toUpperCase() | const lowered = text.toLowerCase();  # kept: equivalent: the text and the needles go through the same case mapping
@@ -219,39 +216,25 @@ src/core/statement.ts Survived MethodExpression -> word.split("-") | .map((word)
 src/core/statement.ts Survived OptionalChaining -> clause[0][0] | const leadIn = text.slice(k ? ends[k - 1] : 0, clause[0]?.[0]); // names found are masked  # kept: equivalent: a clause is never empty
 src/core/statement.ts Survived OptionalChaining -> runs[0][0] | if (runs.length === 1 && runs[0]?.[0] === "R" && previousPeople.length > 0 && !NAME_COLON_RE.test(le  # kept: equivalent: an empty people run assigns nothing, as no run does
 src/core/statement.ts Survived OptionalChaining -> slugsOf[UNRESOLVED - (i as number)].add | for (const slug of slugs) slugsOf[UNRESOLVED - (i as number)]?.add(String(slug));  # kept: equivalent: only unresolved tokens reach it, and they all have a set
-src/core/statement.ts Survived Regex -> / ?[‐-―−-] ?/gu | const DASHES = / ?[‐-―−-]+ ?/gu;
-src/core/statement.ts Survived Regex -> /(?<!\.)[a-z](?=\.)/g | for (const ch of token.replace(/(?<=\.)[a-z](?=\.)/g, "")) {
-src/core/statement.ts Survived Regex -> /(?<!\p{L})\p{Lu}\.?(?: - ?)?\p{Lu}\.?[ ,;:-]*$/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
-src/core/statement.ts Survived Regex -> /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
-src/core/statement.ts Survived Regex -> /(?<!\P{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
-src/core/statement.ts Survived Regex -> /(?<!\p{L})\p{Lu}\.?(?: ?- )?\p{Lu}\.?[ ,;:-]*$/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;
-src/core/statement.ts Survived Regex -> /(?<!\P{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu | const SENTENCE_END_RE = /(?<!\p{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu;
-src/core/statement.ts Survived Regex -> /(?<=\.)[a-z](?!\.)/g | for (const ch of token.replace(/(?<=\.)[a-z](?=\.)/g, "")) {
-src/core/statement.ts Survived Regex -> /(?<=\p{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu | const SENTENCE_END_RE = /(?<!\p{Ll})\p{Ll}{2,}[.!?](?= \p{Lu}|$)/gu;
-src/core/statement.ts Survived Regex -> /[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
+src/core/statement.ts Survived Regex -> /(?<!\p{L})\p{Lu}\.?(?: - ?)?\p{Lu}\.?[ ,;:-]*$/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;  # kept: equivalent: clean writes every dash as " - ", so the spaces around it are always there
+src/core/statement.ts Survived Regex -> /(?<!\p{L})\p{Lu}\.?(?: ?- )?\p{Lu}\.?[ ,;:-]*$/u | const INITIALS_BEFORE_RE = /(?<!\p{L})\p{Lu}\.?(?: ?- ?)?\p{Lu}\.?[ ,;:-]*$/u;  # kept: equivalent: clean writes every dash as " - ", so the spaces around it are always there
 src/core/statement.ts Survived Regex -> /[\p{L}\p{N}_]/u | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);  # kept: equivalent: only ever called on one character
-src/core/statement.ts Survived Regex -> /[\s-]/u | const words = author.surname.split(/[\s-]+/u).filter(Boolean);
-src/core/statement.ts Survived Regex -> /[\s.-]/u | const given = author.given.split(/[\s.-]+/u).filter(Boolean);
+src/core/statement.ts Survived Regex -> /[\s-]/u | const words = author.surname.split(/[\s-]+/u).filter(Boolean);  # kept: equivalent: the filter(Boolean) after the split drops the empty parts a one-character separator leaves, so the words are the same
+src/core/statement.ts Survived Regex -> /[\s.-]/u | const given = author.given.split(/[\s.-]+/u).filter(Boolean);  # kept: equivalent: the filter(Boolean) after the split drops the empty parts a one-character separator leaves, so the words are the same
 src/core/statement.ts Survived Regex -> /\.(?=\s)/gu | for (const m of text.matchAll(/\.(?=\s|$)/gu)) {  # kept: equivalent: a clause end at the very end of the text has nothing after it
 src/core/statement.ts Survived Regex -> /\.+|\.+$/g | .filter((f) => f.replace(/^\.+|\.+$/g, ""))  # kept: equivalent: a form of dots alone matches no bounded text
-src/core/statement.ts Survived Regex -> /\bauthors?\b[^.;]{0,80}?\b(?:wrote|written|performed|contri | /\bauthors?\b[^.;]{0,80}?\b(?:wrote|written|performed|contributed|conceived|designed|drafted|revised
 src/core/statement.ts Survived Regex -> /\p{Uppercase}/u | const isUpper = (ch: string) => /^\p{Uppercase}/u.test(ch);  # kept: equivalent: only ever called on one character
 src/core/statement.ts Survived Regex -> /\s/u | .split(/\s+/u)  # kept: the initials pass resolves the same token when a written-out form is missed
-src/core/statement.ts Survived Regex -> /^[ ,;:-]*\p{Lu}\.?(?: - ?)?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
-src/core/statement.ts Survived Regex -> /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\P{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
-src/core/statement.ts Survived Regex -> /^[ ,;:-]*\P{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
-src/core/statement.ts Survived Regex -> /^[ ,;:-]*\p{Lu}\.?(?: ?- )?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;
+src/core/statement.ts Survived Regex -> /^[ ,;:-]*\p{Lu}\.?(?: - ?)?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;  # kept: equivalent: clean writes every dash as " - ", so the spaces around it are always there
+src/core/statement.ts Survived Regex -> /^[ ,;:-]*\p{Lu}\.?(?: ?- )?\p{Lu}(?!\p{Ll})/u | const INITIALS_AFTER_RE = /^[ ,;:-]*\p{Lu}\.?(?: ?- ?)?\p{Lu}(?!\p{Ll})/u;  # kept: equivalent: clean writes every dash as " - ", so the spaces around it are always there
 src/core/statement.ts Survived Regex -> /^\.+|\.+/g | .filter((f) => f.replace(/^\.+|\.+$/g, ""))  # kept: equivalent: a form of dots alone matches no bounded text
 src/core/statement.ts Survived Regex -> /^\.+|\.$/g | .filter((f) => f.replace(/^\.+|\.+$/g, ""))  # kept: equivalent: a form of dots alone matches no bounded text
 src/core/statement.ts Survived Regex -> /^\.|\.+$/g | .filter((f) => f.replace(/^\.+|\.+$/g, ""))  # kept: equivalent: a form of dots alone matches no bounded text
 src/core/statement.ts Survived StringLiteral -> "" | const fold = (s: string) => s.toLowerCase().replaceAll("ß", "ss").replaceAll("ς", "σ");  # kept: fits() compares only the first letters of a name part, where ß and final sigma do not occur
 src/core/statement.ts Survived StringLiteral -> "" | const fold = (s: string) => s.toLowerCase().replaceAll("ß", "ss").replaceAll("ς", "σ");  # kept: fits() compares only the first letters of a name part, where ß and final sigma do not occur
 src/core/statement.ts Survived StringLiteral -> "" | const forms = [initials, `${[...initials].join(".")}.`, hyphened.join(""), dotted];  # kept: the initials pass resolves the same token when a written-out form is missed
-src/core/statement.ts Survived StringLiteral -> "" | const joined = new RegExp(`,|(?<!${W})and(?!${W})`, "u").test(gap);
 src/core/statement.ts Survived StringLiteral -> "" | const lowerWords = (cleaned.replace(ROLE_RE, " ").match(LOWER_WORD_RE) ?? []).filter(  # kept: differs only when a role name touches words on both sides
 src/core/statement.ts Survived StringLiteral -> "" | const original = clean(statement.normalize("NFC")).replace(APPROVAL_RE, (m) => " ".repeat(m.length))  # kept: equivalent: mentions and clause ends are both read from the same masked text
-src/core/statement.ts Survived StringLiteral -> "" | if (before === "" || isLowerWord(before) || ")]".includes(before)) ends.push(m.index);
-src/core/statement.ts Survived StringLiteral -> "" | if (kind === "A" && gap.includes(".") && !gap.includes(":") && (nextKind === "R" || !joined)) ends.p
 src/core/statement.ts Survived StringLiteral -> "Stryker was here!" | .filter((f) => f.replace(/^\.+|\.+$/g, ""))  # kept: equivalent: a form of dots alone matches no bounded text
 src/core/statement.ts Survived StringLiteral -> "Stryker was here!" | const dotted = hyphened.map((h) => `${h.replaceAll("-", ".-")}.`).join("");  # kept: the initials pass resolves the same token when a written-out form is missed
 src/core/statement.ts Survived StringLiteral -> "Stryker was here!" | const forms = [initials, `${[...initials].join(".")}.`, hyphened.join(""), dotted];  # kept: the initials pass resolves the same token when a written-out form is missed

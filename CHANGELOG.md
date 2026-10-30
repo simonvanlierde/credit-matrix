@@ -56,6 +56,18 @@ return `"statement"` (see Changed).
 
 ### Fixed
 
+- "Martin Luther King Jr." no longer gets the surname "Jr": the suffix (Jr, Sr, II, III) stays out of
+  the surname, and the JATS and Crossref exports write it as `<suffix>`, which the JATS import reads
+  back. JATS XML export also keeps every word of a name that ends in punctuation: "Ann B. C. Smith."
+  used to come back as "Ann B Smith".
+- A Japanese or Chinese statement used an ASCII colon and space after each role or name next to its
+  full-width semicolon. It now uses "：", and a French statement puts a non-breaking space before
+  its colons and semicolons. The Review tab's button labels for screen readers also read correctly
+  in every language.
+- `credit-matrix ask --contributor` finds a name typed with decomposed accents, as macOS
+  and some keyboards produce.
+- Names with a middle dot ("ジョン・スミス", "Gal·la") or a zero-width joiner keep them when
+  parsed, instead of having them dropped.
 - The privacy text in the About panel said the site ran Cloudflare's analytics script. It doesn't:
   Cloudflare counts page requests on its own servers, and the Content Security Policy no longer
   allows an analytics script.
@@ -94,8 +106,6 @@ return `"statement"` (see Changed).
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A
   contributor exported as "Smith & Co Lee" came back with the middle name "&" instead of "Co", and
   with the wrong initials.
-- JATS XML export no longer drops words from a name that ends in punctuation. "Martin Luther King
-  Jr." used to come back as "Martin Luther Jr", and "Ann B. C. Smith." as "Ann B Smith".
 - CSV export keeps a leading apostrophe in a name that starts with a line break or spaces. It used
   to come back without the apostrophe.
 

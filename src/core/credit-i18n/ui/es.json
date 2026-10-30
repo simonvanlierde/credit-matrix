@@ -9,6 +9,7 @@
   "heatmapTitle": "Mapa de calor de contribuciones",
   "equalContributionNote": "{names} contribuyeron por igual a este trabajo.",
   "correspondenceNote": "Autoría de correspondencia: {names}.",
+  "labelSeparator": ": ",
   "nameListSeparator": ", ",
   "segmentSeparator": "; ",
   "levelAnnotation": "{label} ({level})"

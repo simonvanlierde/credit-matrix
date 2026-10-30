@@ -59,8 +59,9 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     // Pretty-printed XML can leave line breaks and indentation inside a name.
     const givenNames = (givenNamesEl?.textContent ?? "").replace(/\s+/g, " ").trim();
     const surname = (surnameEl?.textContent ?? "").replace(/\s+/g, " ").trim();
+    const suffix = (contrib.querySelector("suffix")?.textContent ?? "").replace(/\s+/g, " ").trim();
 
-    const displayName = [givenNames, surname].filter(Boolean).join(" ");
+    const displayName = [givenNames, surname, suffix].filter(Boolean).join(" ");
     // Split given names the same way `parseNameParts` does for its comma branch:
     // first token is the first name, the second (if any) is the middle name.
     const givenParts = cleanNamePart(givenNames).split(/\s+/).filter(Boolean);

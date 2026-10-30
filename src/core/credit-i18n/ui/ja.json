@@ -9,6 +9,7 @@
   "heatmapTitle": "貢献ヒートマップ",
   "equalContributionNote": "{names}は本研究に同等に貢献しました。",
   "correspondenceNote": "責任著者：{names}。",
+  "labelSeparator": "：",
   "nameListSeparator": "、",
   "segmentSeparator": "；",
   "levelAnnotation": "{label}（{level}）"

@@ -142,7 +142,10 @@ export function generateStatement(authors: Author[], options: StatementOptions):
   const creditBody = body(namedAuthors);
   if (creditBody) lines.push(`${fmt.strong("CRediT:")} ${creditBody}`);
   const ackBody = body(nonAuthors);
-  if (ackBody) lines.push(`${fmt.strong(`${translateUi("acknowledgements")}:`)} ${ackBody}`);
+  if (ackBody)
+    lines.push(
+      `${fmt.strong(`${translateUi("acknowledgements")}${translateUi("labelSeparator").trimEnd()}`)} ${ackBody}`,
+    );
   if (lines.length === 0) return "";
   return fmt.join([...lines, ...notes]);
 }
@@ -186,7 +189,7 @@ function generateByRole(
   // ";" into otherwise full-width punctuation.
   const parts = CREDIT_ROLES.filter((r) => roleMap.has(r.name)).map(
     (r) =>
-      `${fmt.strong(translateRole(r.name))}: ${(roleMap.get(r.name) ?? []).join(translateUi("nameListSeparator"))}`,
+      `${fmt.strong(translateRole(r.name))}${translateUi("labelSeparator")}${(roleMap.get(r.name) ?? []).join(translateUi("nameListSeparator"))}`,
   );
 
   return parts.join(translateUi("segmentSeparator"));
@@ -213,7 +216,9 @@ function generateByAuthor(
       showLevels ? withLevel(translateRole(c.role), c.score, translateUi) : translateRole(c.role),
     );
 
-    parts.push(`${fmt.strong(label)}: ${roleList.map(fmt.text).join(translateUi("nameListSeparator"))}`);
+    parts.push(
+      `${fmt.strong(label)}${translateUi("labelSeparator")}${roleList.map(fmt.text).join(translateUi("nameListSeparator"))}`,
+    );
   }
 
   if (parts.length === 0) return "";
