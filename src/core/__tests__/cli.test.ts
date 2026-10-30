@@ -32,7 +32,7 @@ describe("credit-matrix statement", () => {
     expect(await run(["statement", csv, "--format", "by-author"])).toBe(
       "CRediT: Jane Smith: Conceptualization, Software; Bob White: Software",
     );
-    expect(await run(["statement", csv, "--locale", "fr"])).toContain("Conceptualisation: Jane Smith");
+    expect(await run(["statement", csv, "--locale", "fr"])).toContain("Conceptualisation\u00a0: Jane Smith");
   });
 
   it("keeps a ja statement in full-width punctuation", async () => {
