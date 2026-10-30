@@ -17,7 +17,7 @@ Browser
   └─ Next.js app  (repo root, App Router)
        ├─ React UI + Zustand store (persisted to localStorage)
        ├─ src/core   ← all domain logic, runs in the browser
-       │     statements · JATS4R XML · CSV · JSON · Markdown · heatmap SVG · validation
+       │     statements · JATS4R XML · CSV · tenzing CSV · JSON · Markdown · heatmap SVG · validation
        ├─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org · api.datacite.org
        └─ ORCID sign-in on replies ──→ orcid.org (sign-in page, public keys)
                                      ← the only calls that leave the browser

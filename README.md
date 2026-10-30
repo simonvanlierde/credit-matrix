@@ -14,7 +14,7 @@ A web app for writing the contribution statement of a paper: who did what, in th
 [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/). It was formerly
 called *CRediT Generator*. Add your contributors, give each of them their roles, and copy a
 statement for the manuscript, a **contribution heatmap** figure, or files for journal submission
-systems: JATS4R XML, CSV, JSON, and Markdown.
+systems: JATS4R XML, CSV, a tenzing spreadsheet, JSON, and Markdown.
 
 Each co-author can check their own row through a link, and everything runs in your browser: only
 the ORCID and DOI lookups, the fetch of ORCID's public keys and the hosted site's cookieless Cloudflare
