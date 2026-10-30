@@ -86,6 +86,7 @@
         "heatmapTitle": "Contribution heatmap",
         "equalContributionNote": "{names} contributed equally to this work.",
         "correspondenceNote": "Correspondence: {names}.",
+        "labelSeparator": ": ",
         "nameListSeparator": ", ",
         "segmentSeparator": "; ",
         "levelAnnotation": "{label} ({level})"
@@ -123,9 +124,10 @@
         "contributed": "Contribué",
         "heatmapTitle": "Heatmap des contributions",
         "equalContributionNote": "{names} ont contribué à parts égales à ce travail.",
-        "correspondenceNote": "Correspondance : {names}.",
+        "correspondenceNote": "Correspondance : {names}.",
+        "labelSeparator": " : ",
         "nameListSeparator": ", ",
-        "segmentSeparator": " ; ",
+        "segmentSeparator": " ; ",
         "levelAnnotation": "{label} ({level})"
       },
       "list": {
@@ -162,6 +164,7 @@
         "heatmapTitle": "Beitragsheatmap",
         "equalContributionNote": "{names} haben gleichermaßen zu dieser Arbeit beigetragen.",
         "correspondenceNote": "Korrespondenz: {names}.",
+        "labelSeparator": ": ",
         "nameListSeparator": ", ",
         "segmentSeparator": "; ",
         "levelAnnotation": "{label} ({level})"
@@ -200,6 +203,7 @@
         "heatmapTitle": "Mapa de calor de contribuciones",
         "equalContributionNote": "{names} contribuyeron por igual a este trabajo.",
         "correspondenceNote": "Autoría de correspondencia: {names}.",
+        "labelSeparator": ": ",
         "nameListSeparator": ", ",
         "segmentSeparator": "; ",
         "levelAnnotation": "{label} ({level})"
@@ -238,6 +242,7 @@
         "heatmapTitle": "Heatmap dei contributi",
         "equalContributionNote": "{names} hanno contribuito in egual misura a questo lavoro.",
         "correspondenceNote": "Corrispondenza: {names}.",
+        "labelSeparator": ": ",
         "nameListSeparator": ", ",
         "segmentSeparator": "; ",
         "levelAnnotation": "{label} ({level})"
@@ -276,6 +281,7 @@
         "heatmapTitle": "Mapa de calor das contribuições",
         "equalContributionNote": "{names} contribuíram de forma igual para este trabalho.",
         "correspondenceNote": "Correspondência: {names}.",
+        "labelSeparator": ": ",
         "nameListSeparator": ", ",
         "segmentSeparator": "; ",
         "levelAnnotation": "{label} ({level})"
@@ -314,6 +320,7 @@
         "heatmapTitle": "Bijdrageheatmap",
         "equalContributionNote": "{names} hebben in gelijke mate aan dit werk bijgedragen.",
         "correspondenceNote": "Correspondentie: {names}.",
+        "labelSeparator": ": ",
         "nameListSeparator": ", ",
         "segmentSeparator": "; ",
         "levelAnnotation": "{label} ({level})"
@@ -352,6 +359,7 @@
         "heatmapTitle": "贡献热力图",
         "equalContributionNote": "{names}对本项工作贡献相同。",
         "correspondenceNote": "通讯作者：{names}。",
+        "labelSeparator": "：",
         "nameListSeparator": "、",
         "segmentSeparator": "；",
         "levelAnnotation": "{label}（{level}）"
@@ -390,6 +398,7 @@
         "heatmapTitle": "貢献ヒートマップ",
         "equalContributionNote": "{names}は本研究に同等に貢献しました。",
         "correspondenceNote": "責任著者：{names}。",
+        "labelSeparator": "：",
         "nameListSeparator": "、",
         "segmentSeparator": "；",
         "levelAnnotation": "{label}（{level}）"

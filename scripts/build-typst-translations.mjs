@@ -19,6 +19,7 @@ const UI_KEYS = [
   "heatmapTitle",
   "equalContributionNote",
   "correspondenceNote",
+  "labelSeparator",
   "nameListSeparator",
   "segmentSeparator",
   "levelAnnotation",

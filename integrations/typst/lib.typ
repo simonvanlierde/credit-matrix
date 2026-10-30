@@ -129,7 +129,7 @@
   let credit = body(people.filter(p => not p.ack))
   if credit.len() > 0 { lines.push(("CRediT:", credit)) }
   let ack = body(people.filter(p => p.ack))
-  if ack.len() > 0 { lines.push((ui.acknowledgements + ":", ack)) }
+  if ack.len() > 0 { lines.push((ui.acknowledgements + ui.labelSeparator.trim(at: end), ack)) }
   if lines.len() == 0 { return ((), ()) }
   let notes = ()
   let equal = people.filter(p => p.equal).map(p => p.name)
@@ -150,7 +150,7 @@
   let loc = _locale(lang)
   let (lines, notes) = _statement-lines(_people(contributors), format, levels, loc)
   (
-    lines.map(((prefix, segs)) => prefix + " " + segs.map(((l, r)) => l + ": " + r).join(loc.ui.segmentSeparator))
+    lines.map(((prefix, segs)) => prefix + " " + segs.map(((l, r)) => l + loc.ui.labelSeparator + r).join(loc.ui.segmentSeparator))
       + notes
   ).join("\n\n", default: "")
 }
@@ -162,7 +162,7 @@
   let loc = _locale(lang)
   let (lines, notes) = _statement-lines(_people(contributors), format, levels, loc)
   for (prefix, segs) in lines {
-    par[#strong(prefix) #segs.map(((l, r)) => [#strong(l): #r]).join(loc.ui.segmentSeparator)]
+    par[#strong(prefix) #segs.map(((l, r)) => [#strong(l)#(loc.ui.labelSeparator)#r]).join(loc.ui.segmentSeparator)]
   }
   for note in notes { par(note) }
   [#metadata(credit-statement-text(contributors, format: format, levels: levels, lang: lang)) <credit-statement>]
