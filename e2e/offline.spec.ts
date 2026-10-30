@@ -26,6 +26,18 @@ test.describe("Offline", () => {
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
   });
 
+  test("each page opens offline as itself, not as the workspace", async ({ page, context }) => {
+    test.skip(!process.env.CI, "needs the production build; CI runs one");
+    await page.goto("/");
+    // Installing the worker precaches every page, so none needs a visit first.
+    await page.evaluate(() => navigator.serviceWorker.ready);
+
+    await context.setOffline(true);
+    await page.goto("/accessibility");
+
+    await expect(page).toHaveTitle("Accessibility statement · CRediT Matrix");
+  });
+
   test("the manifest is served and installable", async ({ request }) => {
     const res = await request.get("/manifest.webmanifest");
     expect(res.ok()).toBe(true);

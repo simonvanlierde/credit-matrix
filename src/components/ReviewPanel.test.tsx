@@ -37,3 +37,31 @@ it("warns when a signed reply put a different iD on the row than the one asked",
   expect(screen.getByText(`Verified by ORCID as Eve Other (${TEST_ORCID})`, { exact: false })).toBeTruthy();
   expect(screen.getByText(en.reviewOrcidOtherId)).toBeTruthy();
 });
+
+it("does not show a sign-in an offline import could not check as verified", () => {
+  act(() => {
+    useContributionStore.getState().createDraft();
+    useContributionStore.getState().addAuthor("Bob White", TEST_ORCID);
+  });
+  const bob = useContributionStore.getState().authors[0];
+  if (!bob) throw new Error("expected Bob");
+  const orcid = { orcid: TEST_ORCID, name: "Bob White", issuedAt: 1, token: "t", payload: "p" };
+  const reply = {
+    contributions: [{ role: "Investigation" as const, score: 100 }],
+    equalContribution: false,
+    corresponding: false,
+    sentAt: 1,
+    receivedAt: 2,
+    provenance: { uncheckedOrcid: orcid },
+    decisions: {},
+  };
+  act(() => useContributionStore.getState().loadAuthors([bob], { [bob.id]: { sentAt: 1, prefilled: true, reply } }));
+
+  const { container } = render(
+    <IntlProvider locale="en" messages={en}>
+      <ReviewPanel />
+    </IntlProvider>,
+  );
+  expect(screen.getByRole("heading", { name: "Bob White" })).toBeTruthy();
+  expect(container.querySelector("[data-orcid-verified]")).toBeNull();
+});

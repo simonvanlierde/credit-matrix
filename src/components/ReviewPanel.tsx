@@ -229,6 +229,7 @@ export function ReviewPanel() {
             ? t("teamSettledOn", { date: format.dateTime(settledAt(reply), { day: "numeric", month: "short" }) })
             : t("reviewAnsweredMeta", { days, kind: ask.prefilled ? "prefilled" : "blank" });
         const headingId = `review-person-${author.id}`;
+        // A sign-in an offline import could not check is not shown as verified.
         const signIn = reply.provenance?.orcid;
         // The row's iD now, or the one the reply replaced: a forwarded link signed by someone else shows here.
         const otherId =

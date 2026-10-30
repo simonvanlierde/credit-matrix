@@ -55,12 +55,26 @@ describe("toCrossrefContributors", () => {
     expect(xml).not.toMatch(/degree|lead|authenticated/);
   });
 
-  it("marks non-authors 'other', and gives 'first' to the first author", () => {
+  it("lists authors first, gives 'first' to the first of them, and marks non-authors 'other'", () => {
     const xml = toCrossrefContributors([bob, jane]);
     expect(xml).toMatch(
-      /<person_name sequence="additional">\n {4}<given_name>Bob<\/given_name>[\s\S]*?type="other"\/>/,
+      /<contributors>\n {2}<person_name sequence="first">\n {4}<given_name>Jane A\.[\s\S]*<person_name sequence="additional">\n {4}<given_name>Bob<\/given_name>[\s\S]*?type="other"\/>/,
     );
+  });
+
+  it("leaves out a contributor whose name is still an ORCID iD, and says so", () => {
+    const xml = toCrossrefContributors([createAuthor("0000-0001-5109-3700"), jane]);
+    expect(xml).not.toContain("<surname>0000-0001-5109-3700</surname>");
+    expect(xml).toContain("<!-- Left out: 0000-0001-5109-3700 has no name yet. -->");
     expect(xml).toMatch(/<person_name sequence="first">\n {4}<given_name>Jane A\./);
+  });
+
+  it("puts each person and each left-out note on its own line", () => {
+    const xml = toCrossrefContributors([createAuthor("0000-0001-5109-3700"), jane, bob]);
+    expect(xml).toContain(`has no name yet. -->
+  <person_name sequence="first">`);
+    expect(xml).toContain(`</person_name>
+  <person_name sequence="additional">`);
   });
 
   it("puts a single name in surname, as Crossref asks", () => {
@@ -85,6 +99,6 @@ it.runIf(process.env.CROSSREF_OUT)("writes a fresh export for XSD validation", (
   });
   writeFileSync(
     process.env.CROSSREF_OUT as string,
-    toCrossrefContributors([jane, everyRole, bob, createAuthor("Madonna")]),
+    toCrossrefContributors([jane, everyRole, bob, createAuthor("Madonna"), createAuthor("0000-0003-1415-9269")]),
   );
 });

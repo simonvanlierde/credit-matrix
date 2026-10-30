@@ -48,6 +48,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "toJson",
     "toMarkdown",
     "toTenzing",
+    "verifyOrcidToken",
   ],
   "./i18n": [
     "AVAILABLE_LOCALES",

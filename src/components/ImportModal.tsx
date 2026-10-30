@@ -43,7 +43,8 @@ interface Props {
    * used, or null on success. Lives with the caller because merging a returned
    * link needs the current workspace, which this dialog does not hold.
    */
-  onLink: (url: string) => Promise<LinkFailure | null>;
+  /** `current` turns false once the dialog closes: a link that finishes loading after that must not open. */
+  onLink: (url: string, current: () => boolean) => Promise<LinkFailure | null>;
   /** The open draft's roster, which a pasted statement is matched against. */
   authors: Author[];
   /** Whether the draft records levels; a yes/no draft sets every role to 100. */
@@ -70,6 +71,8 @@ interface StatementReview {
 
 // A line that ends on one of these runs on into the next: "Conceptualization, A.B.,\nC.D.".
 const RUNS_ON_RE = /(?:[,:&‐-―−-]|(?<!\p{L})and)$/iu;
+// So does a line followed by one that starts lower-case or with "and": "Formal\nanalysis".
+const RUNS_ON_FROM_RE = /^(?:\p{Ll}|and\b)/u;
 
 /**
  * A line break as the end of a clause, as most statements laid out one person per line mean it:
@@ -81,7 +84,8 @@ function breakLines(text: string): string {
   for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    joined = joined ? `${joined}${RUNS_ON_RE.test(joined) ? " " : "; "}${trimmed}` : trimmed;
+    const runsOn = RUNS_ON_RE.test(joined) || RUNS_ON_FROM_RE.test(trimmed);
+    joined = joined ? `${joined}${runsOn ? " " : "; "}${trimmed}` : trimmed;
   }
   return joined;
 }
@@ -248,9 +252,18 @@ export function ImportModal({
   const fileRef = useRef<HTMLInputElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const importRef = useRef<HTMLButtonElement>(null);
-  // Bumped per lookup and on close: a result whose number is no longer current
-  // belongs to a dialog the user has left, and must not import or confirm.
-  const doiRequest = useRef(0);
+  // Bumped per lookup and on close: a DOI result whose number is no longer current
+  // belongs to a newer lookup or a dialog the user has left, and must not import or confirm.
+  const request = useRef(0);
+  // Bumped on close and unmount: an import that settles after either must not land.
+  const closes = useRef(0);
+  useEffect(
+    () => () => {
+      closes.current += 1;
+      request.current += 1;
+    },
+    [],
+  );
 
   // The confirmation disables the Import button the user just activated, so
   // hand focus to the safe choice; declining hands it back once Import is
@@ -334,6 +347,8 @@ export function ImportModal({
   async function handleImport() {
     setError(null);
     if (format === "unknown") return;
+    const started = closes.current;
+    const current = () => started === closes.current;
     setImporting(true);
     try {
       if (new TextEncoder().encode(text).byteLength > MAX_IMPORT_BYTES) {
@@ -343,7 +358,8 @@ export function ImportModal({
       if (format === "link") {
         // The whole-draft and merge cases both need the current workspace, so
         // the caller owns this one; failures come back as a message key.
-        const failure = await onLink(text.trim());
+        const failure = await onLink(text.trim(), current);
+        if (!current()) return;
         if (failure) {
           showError(failure === "draftLimitReached" ? t(failure, { count: MAX_DRAFTS }) : t(failure));
           return;
@@ -387,12 +403,14 @@ export function ImportModal({
       }
       // A file's ORCID sign-ins are only claims until checked against ORCID's keys.
       if (parsed.asks) parsed.asks = await recheckSignIns(parsed.asks, () => fetchOrcidKeys());
+      if (!current()) return;
       stageImport(parsed);
     } catch (failure) {
       // A newer build's export is said plainly, not as a validation failure.
       showError(t(failure instanceof NewerVersionError ? "errImportNewerVersion" : "errImportFailed"));
     } finally {
-      setImporting(false);
+      // After a close, the flag belongs to whatever the reopened dialog started.
+      if (current()) setImporting(false);
     }
   }
 
@@ -412,10 +430,10 @@ export function ImportModal({
       showError(t("errDoiINVALID_DOI"), "doi");
       return;
     }
-    const request = ++doiRequest.current;
+    const lookup = ++request.current;
     setDoiLoading(true);
     const result = await fetchDoiWork(trimmed);
-    if (request !== doiRequest.current) return;
+    if (lookup !== request.current) return;
     setDoiLoading(false);
     if (!("ok" in result)) {
       showError(t(DOI_ERROR_KEYS[result.code]), "doi");
@@ -469,8 +487,10 @@ export function ImportModal({
   }
 
   function handleClose() {
-    doiRequest.current += 1;
+    request.current += 1;
+    closes.current += 1;
     setDoiLoading(false);
+    setImporting(false);
     setText("");
     setDoi("");
     setFileName(null);
@@ -538,7 +558,7 @@ export function ImportModal({
                   if (e.key === "Enter") {
                     e.preventDefault();
                     // The same guard as the button's `disabled`, which Enter bypasses.
-                    if (doiLoading || pending !== null) return;
+                    if (doiLoading || importing || pending !== null) return;
                     void handleDoiLookup();
                   }
                 }}
@@ -548,7 +568,8 @@ export function ImportModal({
               <button
                 type="button"
                 onClick={() => void handleDoiLookup()}
-                disabled={doiLoading || doi.trim().length === 0 || pending !== null}
+                // One at a time: whichever landed second would replace the other's staged import.
+                disabled={doiLoading || importing || doi.trim().length === 0 || pending !== null}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded border border-primary px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-primary"
               >
                 <Search className="h-4 w-4" />
@@ -871,7 +892,7 @@ export function ImportModal({
               ref={importRef}
               type="button"
               onClick={() => void handleImport()}
-              disabled={format === "unknown" || pending !== null || importing}
+              disabled={format === "unknown" || pending !== null || importing || doiLoading}
               className="px-7 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg shadow hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {format === "statement" ? t("statementReview") : t("importData")}
