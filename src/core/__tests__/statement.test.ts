@@ -341,6 +341,21 @@ describe("unmatched", () => {
     ]);
   });
 
+  it("reports a full name two authors share, with the roles it was given", () => {
+    const { assignments, unmatched } = parseStatement("Ann Lee: Software.", [
+      author("Ann", "Lee"),
+      author("Ann", "Lee"),
+    ]);
+    expect(assignments).toEqual([]);
+    expect(unmatched).toEqual([{ token: "Ann Lee", candidates: [0, 1], roles: ["Software"] }]);
+  });
+
+  it("matches a one-word name in its own case only", () => {
+    const wu = [author("", "Wu")];
+    expect(pairsOf("Wu: Software.", wu)).toEqual([[0, "software"]]);
+    expect(pairsOf("WU: Software.", wu)).toEqual([]);
+  });
+
   it("gives the roles of a role-first clause to the token it names", () => {
     const { unmatched } = parseStatement("Methodology, XY and A.B.", [author("Ann", "Bell")]);
     expect(unmatched).toEqual([{ token: "XY", candidates: [], roles: ["Methodology"] }]);
@@ -388,10 +403,40 @@ describe("resolveInitials with particles and double surnames", () => {
     expect(resolveInitials("CLR", [author("Chiara", "De Luca Rossi")])).toBe(0);
   });
 
+  it("leaves out a capitalised particle when reading initials", () => {
+    for (const surname of ["Del Rio", "Ten Berge", "Van Dijk"]) {
+      const initials = `J${surname.split(" ")[1]?.[0]}`;
+      expect(resolveInitials(initials, [author("Juan", surname)])).toBe(0);
+    }
+  });
+
   it("reads initials over the first of two surnames, after one or more given names", () => {
     const maria = [author("María José", "García López")];
     expect(resolveInitials("MG", maria)).toBe(0);
     expect(resolveInitials("MJG", maria)).toBe(0);
+  });
+});
+
+describe("approval wording", () => {
+  it("drops the closing approval sentence whole, roles named in it included", () => {
+    const authors = [author("Ann", "Lee")];
+    expect(
+      pairsOf("Ann Lee: Conceptualization. All authors read and approved the manuscript and its methodology.", authors),
+    ).toEqual([[0, "conceptualization"]]);
+  });
+});
+
+describe("name boundaries", () => {
+  it("does not find a name inside a longer word", () => {
+    const authors = [author("Ann", "Li")];
+    expect(pairsOf("Joann Li: Software.", authors)).toEqual([]);
+    expect(pairsOf("Ann Lim: Software.", authors)).toEqual([]);
+    expect(pairsOf("Ann Li: Software.", authors)).toEqual([[0, "software"]]);
+  });
+
+  it("does not find initials and a surname after another initial", () => {
+    expect(pairsOf("X.M. Li: Software.", [author("Ming", "Li")])).toEqual([]);
+    expect(pairsOf("M. Li: Software.", [author("Ming", "Li")])).toEqual([[0, "software"]]);
   });
 });
 
@@ -448,6 +493,18 @@ describe("readsAsStatement", () => {
     // Name particles and "and" are not prose words.
     ["Ann van der Berg and Bob de la Cruz, conceptualization", false],
     ["Ann Lee and Bob Kim and Cy Moe and Di Wu, conceptualization", false],
+    // Each distinctive role is enough with initials beside it.
+    ["Formal analysis - JP", true],
+    ["Funding acquisition - JP", true],
+    ["Project administration - JP", true],
+    ["Visualization - JP", true],
+    // Three plain words beside a distinctive role read as a statement.
+    ["Jane did all the conceptualization", true],
+    // Initials beside any one role are enough.
+    ["Visualization, conceptualization AB", true],
+    // "Author" with a verb is prose about who did what, singular or plural, with words between.
+    ["The first author wrote the software.", true],
+    ["The authors jointly wrote and revised the text.", true],
   ])("reads %j as a statement: %s", (text, expected) => {
     expect(readsAsStatement(text)).toBe(expected);
   });
