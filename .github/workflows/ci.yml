@@ -75,6 +75,29 @@ jobs:
           command -v xmllint || { sudo apt-get update -q && sudo apt-get install -yq libxml2-utils; }
           pnpm validate:jats
 
+      # The Crossref schema is XSD 1.1, which xmllint cannot read; the script runs xmlschema with uvx.
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.13.x"
+
+      # The schema archive is pinned by hash in the script, so its hash is the key.
+      - name: Cache the Crossref schema (restore only on a pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .cache/crossref
+          key: ${{ runner.os }}-crossref-${{ hashFiles('scripts/validate-crossref.sh') }}
+
+      - name: Cache the Crossref schema
+        if: github.event_name != 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .cache/crossref
+          key: ${{ runner.os }}-crossref-${{ hashFiles('scripts/validate-crossref.sh') }}
+
+      - name: Validate the Crossref export against the Crossref schema 5.5.0
+        run: pnpm validate:crossref
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:

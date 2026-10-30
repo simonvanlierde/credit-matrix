@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { delimiterOf, fromCsv, headerCells, parseCsvRecords, toCsv } from "../export/csv";
+import { delimiterOf, escapeCsvFormulaOnly, fromCsv, headerCells, parseCsvRecords, toCsv } from "../export/csv";
 import { parseAuthorText } from "../parse-authors";
 
 describe("CSV import/export", () => {
@@ -198,6 +198,20 @@ describe("CSV import/export", () => {
     expect(delimiterOf("Name,ORCID\r\nJane;Smith;x;y")).toBe(",");
     expect(delimiterOf("Name;ORCID\tType")).toBe(";");
     expect(delimiterOf("Name")).toBe(",");
+  });
+
+  it("reads empty text as nobody, without asking for a Name column", () => {
+    expect(fromCsv("")).toEqual([]);
+    expect(fromCsv("\n,,\n")).toEqual([]);
+  });
+
+  it("skips a row too short to reach the Name column", () => {
+    expect(fromCsv("ORCID,Name\n0000-0002-1825-0097\n,Jane Smith").map((a) => a.name)).toEqual(["Jane Smith"]);
+  });
+
+  it("guards a formula after leading spaces, as import trims the cell before reading it", () => {
+    expect(escapeCsvFormulaOnly("  =SUM(A1) ")).toBe("'=SUM(A1)");
+    expect(escapeCsvFormulaOnly(" 't Hooft")).toBe("'t Hooft");
   });
 
   it("drops an ORCID that is not valid and keeps the contributor", () => {

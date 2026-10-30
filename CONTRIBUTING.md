@@ -41,13 +41,14 @@ pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright (optional locally)
 pnpm verify         # build the package, then lint, typecheck, and unit tests under the coverage gate (also the pre-push hook)
 pnpm validate:jats  # check the JATS fixture, the conformance cases and a fresh export against the JATS 1.3 DTD and JATS4R rules (needs xmllint)
+pnpm validate:crossref  # check a fresh Crossref export against the Crossref schema 5.5.0 (needs uv)
 ```
 
 Before the first e2e run, install the browser: `pnpm exec playwright install chromium`. The first
 `pnpm validate:jats` downloads the JATS4R rules and SchXslt2 into `.cache/` and compiles them,
 which takes about 1.5 minutes. Later runs reuse the cache.
 
-CI runs `pnpm verify`, `pnpm validate:jats`, the full Playwright suite (with the axe scans) and a
+CI runs `pnpm verify`, `pnpm validate:jats`, `pnpm validate:crossref`, the full Playwright suite (with the axe scans) and a
 static export build on every pull request and every push to `main`. It deploys `main` only when all
 of them pass. If you change the domain logic, add or update tests in `src/core/__tests__`.
 
@@ -92,12 +93,14 @@ me. The census in `census/` follows the same rule through uv's `exclude-newer = 
 - **Mutation tests**: `pnpm mutation` runs [StrykerJS](https://stryker-mutator.io) on the import
   and export code in `src/core` (`export/`, `import.ts`, `share-payload.ts`, `parse-authors.ts`
   and `statement.ts`). It changes the code one small edit at a time and runs the `core` tests
-  against each change, to find code the tests run but do not check. The score is in the header
-  of `test/mutation-baseline.txt`. It takes about 7 to 10 minutes on 12 cores, so CI does not run it. Run
+  against each change, to find code the tests run but do not check. It scores 89.5%: 2,194 of
+  2,452 mutants are killed, and the header of `test/mutation-baseline.txt` keeps the current
+  score. It takes about 4 minutes with its 8 workers, so CI does not run it. Run
   it on the Node version in `.node-version`: another version moves the score by about half a point. It
   writes an HTML report to `reports/mutation/` and the mutants no test kills to
   `test/mutation-baseline.txt`. Commit that list with your change, and look at what the diff
-  adds: a new survivor is a test to write, or a change that does nothing.
+  adds: a new survivor is a test to write, or a change that does nothing. A survivor no test can
+  tell apart keeps its reason after `  # kept: ` at the end of its line, and the next run keeps it.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.

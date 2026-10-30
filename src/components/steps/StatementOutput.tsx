@@ -12,6 +12,7 @@ import {
   CREDIT_ROLES,
   generateStatement,
   type StatementFormat,
+  toCrossrefContributors,
   toCsv,
   toJats4rXml,
   toJson,
@@ -28,7 +29,7 @@ import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-type DataFormat = "xml" | "json" | "csv" | "tenzing" | "markdown";
+type DataFormat = "xml" | "crossref" | "json" | "csv" | "tenzing" | "markdown";
 
 const EXPORT_ITEM_BUTTON =
   "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
@@ -51,6 +52,12 @@ const DATA_FORMATS: Record<
     label: "XML (JATS4R)",
     serialize: (authors) => toJats4rXml(authors),
     filename: "credit-contributors.xml",
+    mime: "application/xml",
+  },
+  crossref: {
+    label: "XML (Crossref)",
+    serialize: toCrossrefContributors,
+    filename: "crossref-contributors.xml",
     mime: "application/xml",
   },
   json: {
