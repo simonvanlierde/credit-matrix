@@ -117,6 +117,7 @@ Only non-zero contributions appear in statements.
 | JSON        | `toJson`          | `fromJson`                          |
 | Markdown    | `toMarkdown`      | —                                   |
 | tenzing CSV | `toTenzing`       | `fromTenzing`                       |
+| Crossref 5.5 `<contributors>` | `toCrossrefContributors` | — |
 | Heatmap SVG | `buildHeatmapSvg` | —                                   |
 
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
@@ -230,14 +231,14 @@ holds its exact shape. By entry point:
   - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`,
-    `toMarkdown`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
+    `toMarkdown`, `toCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
     `importAny`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`
   - Asks: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
-    `levelOf`, `review`, `settledAt`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
-    `Decision`, `Difference`, `Level`, `Outcome`, `OrcidProof`, `Patch`, `Reply`, `Review`, `Target`
+    `levelOf`, `review`, `settledAt`, `recheckSignIns`, `fetchOrcidKeys`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
+    `Decision`, `Difference`, `Level`, `Outcome`, `OrcidKey`, `OrcidProof`, `Patch`, `Reply`, `Review`, `Target`
 - `credit-matrix/lookup`: `lookupOrcidPerson`, `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`,
   and the types `OrcidLookupResult`, `OrcidErrorCode`, `DoiLookupResult`, `DoiErrorCode`, `DoiAuthor`
 - `credit-matrix/i18n`: `AVAILABLE_LOCALES`, `normalizeLocaleCode`, `hasCatalog`,

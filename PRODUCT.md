@@ -25,15 +25,18 @@ and can be shared as a URL or imported from a file.
 - Add, rename, reorder, paste, import, and classify contributors. Look up names through ORCID, or
   fill a whole list from a DOI, if you want to.
 - Assign all 14 official CRediT roles as yes/no values or contribution levels.
+- Paste an existing contribution statement to fill in the grid.
 - Ask co-authors by link for their own row. Keep each answer beside the draft, and settle every
   difference in one place.
+- Show how published papers use each role: the census page, and per field beside the grid.
 - Translate statements and exports meant for people. Keep the official English terms in formats
   meant for software.
 
 ## Constraints
 
-- Keep contribution data in the browser. The ORCID and DOI lookups are the only calls that leave
-  it, and they go straight to ORCID, Crossref and DataCite.
+- Keep contribution data in the browser. The ORCID and DOI lookups and the ORCID sign-in on a
+  co-author's reply are the only calls that leave it, and they go straight to ORCID, Crossref and
+  DataCite.
 - Protect scientific accuracy, privacy, accessibility, and translations. Data you export and import
   back must come back the same.
 

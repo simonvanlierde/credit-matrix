@@ -138,7 +138,6 @@ are in English, and marked as English.
   scans, this statement, the about page, the accessibility tree and the main workflows. Five
   workflow tests that read the clipboard could not run there.
 
-We haven't tested Firefox or Safari by hand, or tried a screen reader.
 CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 
 ## About this statement

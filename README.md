@@ -18,8 +18,8 @@ systems: JATS4R XML, a Crossref `<contributors>` block, CSV, a tenzing spreadshe
 Markdown.
 
 Each co-author can check their own row through a link, and everything runs in your browser: only
-the ORCID and DOI lookups and the fetch of ORCID's public keys leave it. CRediT Matrix is an independent project. It is not affiliated
-with or endorsed by NISO.
+the ORCID and DOI lookups and the fetch of ORCID's public keys leave it. CRediT Matrix is an
+independent project. It is not affiliated with or endorsed by NISO.
 
 **Try it:** [credit.duinlab.nl](https://credit.duinlab.nl)
 
