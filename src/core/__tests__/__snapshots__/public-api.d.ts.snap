@@ -928,6 +928,8 @@ export declare function importAnswers(current: readonly Author[], incoming: read
  * per contribution above zero. The schema has no slot for a contribution level
  * or for equal contribution, so neither is written. The ORCID iD is never
  * marked `authenticated`: only the depositing member can vouch for that.
+ * Authors come first, then the others, each in roster order. A row still named
+ * after its ORCID iD has no name to deposit, so it is left out with a comment.
  */
 export declare function toCrossrefContributors(authors: Author[]): string;
 //#endregion
