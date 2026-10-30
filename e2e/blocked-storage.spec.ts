@@ -9,7 +9,9 @@ import { onScreen } from "./helpers";
 // `window.localStorage`. The setting lives in the profile, so this test runs
 // its own: full Chromium (the headless shell ignores profile preferences)
 // with cookies blocked for every site.
-test("works, unsaved, when the browser blocks site data", async ({ baseURL }) => {
+test("works, unsaved, when the browser blocks site data", async ({ baseURL, browserName }) => {
+  // The blocking profile is Chromium's, and each CI leg installs only its own browser.
+  test.skip(browserName !== "chromium", "uses a Chromium profile preference");
   const profile = await mkdtemp(join(tmpdir(), "credit-blocked-"));
   await mkdir(join(profile, "Default"));
   await writeFile(

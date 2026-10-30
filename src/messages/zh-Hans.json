@@ -168,6 +168,7 @@
   "coauthorOrcidFailed": "ORCID 登录未完成。您仍可以不登录发送回答。",
   "reviewOrcidVerified": "已由 ORCID 验证为 {who}，于 {date} 登录。",
   "reviewOrcidOtherId": "这不是该行中的 iD。",
+  "reviewOrcidNoRowId": "该行没有可供比较的 ORCID iD。",
   "coauthorNotSent": "尚未发送。",
   "coauthorCopyInstead": "改为复制链接",
   "coauthorShareTitle": "{name}的CRediT角色",

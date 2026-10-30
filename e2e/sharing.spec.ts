@@ -1,5 +1,5 @@
 import { type Browser, type BrowserContext, expect, type Page, test } from "@playwright/test";
-import { asReturningVisitor, copyFrom, onScreen, scan } from "./helpers";
+import { asReturningVisitor, copyFrom, grantClipboard, newClipboardContext, onScreen, scan } from "./helpers";
 
 /**
  * Draft sharing end to end: a request goes out, comes back, and lands — or is
@@ -54,7 +54,7 @@ async function answerAskLink(page: Page, askLink: string): Promise<string> {
 }
 
 function newContext(browser: Browser) {
-  return browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+  return newClipboardContext(browser);
 }
 
 test("full round trip: blank ask → locked fill → reply kept beside the row, with undo", async ({ browser }) => {
@@ -235,7 +235,7 @@ test("keep as an ordinary draft unlocks for good", async ({ browser }) => {
 });
 
 test("pasting a share link into an open tab reacts without reload", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await grantClipboard(context);
   await asReturningVisitor(page);
   await page.goto("/");
   await page.getByRole("button", { name: "Load sample data" }).click();
@@ -383,11 +383,7 @@ test("the Team tab copies one email-ready ask per person, in sequence", async ({
 
 test("a blank ask answered on a phone, by touch, sends back what was tapped", async ({ browser }) => {
   const originator = await newContext(browser);
-  const context = await browser.newContext({
-    viewport: { width: 390, height: 844 },
-    hasTouch: true,
-    permissions: ["clipboard-read", "clipboard-write"],
-  });
+  const context = await newClipboardContext(browser, { viewport: { width: 390, height: 844 }, hasTouch: true });
   const pageA = await openBrowser(originator);
   const askLink = await makeAskLink(pageA);
   // A levels draft asks in levels: switch before asking again.

@@ -133,10 +133,11 @@ are in English, and marked as English.
 
 ## Tested with
 
-- Chromium, in Playwright's desktop Chrome profile, with axe-core, on every pull request.
-- Firefox and WebKit, the engine Safari uses, in Playwright, once on 26 October 2026: the axe
-  scans, this statement, the about page, the accessibility tree and the main workflows. Five
-  workflow tests that read the clipboard could not run there.
+- Chromium, Firefox and WebKit, the engine Safari uses, in Playwright's desktop profiles, with
+  axe-core, on every pull request: the axe scans, this statement, the about page, the
+  accessibility tree and the main workflows. Firefox and WebKit have no clipboard permissions, so
+  the workflow tests that read the clipboard run there against a clipboard kept in the page.
+  They don't check the browser's own clipboard.
 
 CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 

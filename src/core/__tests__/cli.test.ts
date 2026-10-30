@@ -122,6 +122,13 @@ describe("credit-matrix convert", () => {
     expect(await run(["statement", file("ticks.xml", xml)])).toBe(await run(["statement", ticks]));
   });
 
+  it("writes Markdown in the --locale language", async () => {
+    const md = await run(["convert", csv, "--to", "md", "--locale", "fr"]);
+    expect(md).toContain("| Jane Smith | Conceptualisation");
+    expect(md).toContain("Logiciel(s)");
+    await expect(run(["convert", csv, "--to", "md", "--locale", "xx"])).rejects.toThrow("Unknown locale: xx.");
+  });
+
   it("needs --to", async () => {
     await expect(run(["convert", csv])).rejects.toThrow(/--to json, csv, jats, crossref or md/);
   });

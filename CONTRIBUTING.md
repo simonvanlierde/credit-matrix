@@ -44,11 +44,13 @@ pnpm validate:jats  # check the JATS fixture, the conformance cases and a fresh 
 pnpm validate:crossref  # check a fresh Crossref export against the Crossref schema 5.5.0 (needs uv)
 ```
 
-Before the first e2e run, install the browser: `pnpm exec playwright install chromium`. The first
+Before the first e2e run, install the browsers: `pnpm exec playwright install chromium firefox webkit`
+(add `--with-deps` on Linux). `pnpm test:e2e` runs all three; add `--project=firefox` to run one. The first
 `pnpm validate:jats` downloads the JATS4R rules and SchXslt2 into `.cache/` and compiles them,
 which takes about 1.5 minutes. Later runs reuse the cache.
 
-CI runs `pnpm verify`, `pnpm validate:jats`, `pnpm validate:crossref`, the full Playwright suite (with the axe scans) and a
+CI runs `pnpm verify`, `pnpm validate:jats`, `pnpm validate:crossref`, the full Playwright suite (with the axe scans) in
+Chromium, Firefox and WebKit, and a
 static export build on every pull request and every push to `main`. It deploys `main` only when all
 of them pass. If you change the domain logic, add or update tests in `src/core/__tests__`.
 

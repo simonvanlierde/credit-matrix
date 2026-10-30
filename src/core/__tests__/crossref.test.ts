@@ -43,6 +43,12 @@ describe("toCrossrefContributors", () => {
     <role vocab="crossref" type="author"/>`);
   });
 
+  it("writes the suffix of an inverted name after the surname", () => {
+    expect(toCrossrefContributors([createAuthor("Smith Jr., John")])).toContain(`<given_name>John</given_name>
+    <surname>Smith</surname>
+    <suffix>Jr.</suffix>`);
+  });
+
   it("writes only the elements a person has", () => {
     expect(toCrossrefContributors([createAuthor("Madonna")])).toContain(`<person_name sequence="first">
     <surname>Madonna</surname>

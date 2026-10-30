@@ -168,6 +168,7 @@
   "coauthorOrcidFailed": "Die ORCID-Anmeldung wurde nicht abgeschlossen. Sie können Ihre Antwort trotzdem ohne sie senden.",
   "reviewOrcidVerified": "Von ORCID verifiziert als {who}, angemeldet am {date}.",
   "reviewOrcidOtherId": "Das ist nicht die iD in dieser Zeile.",
+  "reviewOrcidNoRowId": "Diese Zeile hat keine ORCID-iD zum Vergleich.",
   "coauthorNotSent": "Noch nicht gesendet.",
   "coauthorCopyInstead": "Stattdessen den Link kopieren",
   "coauthorShareTitle": "CRediT-Rollen von {name}",

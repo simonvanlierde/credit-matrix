@@ -168,6 +168,7 @@
   "coauthorOrcidFailed": "The ORCID sign-in did not finish. You can still send your answer without it.",
   "reviewOrcidVerified": "Verified by ORCID as {who}, signed in {date}.",
   "reviewOrcidOtherId": "This is not the iD on the row.",
+  "reviewOrcidNoRowId": "This row has no ORCID iD to compare with.",
   "coauthorNotSent": "Not sent yet.",
   "coauthorCopyInstead": "Copy the link instead",
   "coauthorShareTitle": "{name}'s CRediT roles",
