@@ -93,7 +93,7 @@ const UI_CATALOGS: Record<Exclude<LocaleCode, "en">, () => Promise<{ default: Ui
 export function makeUiTranslator(catalog: Partial<UiCatalog> | null | undefined): UiTranslator {
   if (!catalog) return (key) => EN_UI[key];
   // Test blankness on the trimmed value but keep the original: separators
-  // (", ", " ; ") carry meaningful whitespace.
+  // (", ", "; ") carry meaningful whitespace.
   return (key) => {
     const value = catalog[key];
     return value?.trim() ? value : EN_UI[key];

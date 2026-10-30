@@ -181,6 +181,21 @@ describe("generateStatement with translateRole", () => {
     expect(stmt).toContain("Jane Smith, Bob White");
     expect(stmt).toMatch(/Bob White; \S/);
   });
+
+  it("puts a non-breaking space before French colons and semicolons", async () => {
+    const authors = makeAuthors();
+    const [jane] = authors;
+    if (!jane) throw new Error("expected contributor");
+    jane.corresponding = true;
+    const stmt = generateStatement(authors, {
+      format: "by-role",
+      translateRole: makeRoleTranslator(await loadRoleCatalog("fr")),
+      translateUi: makeUiTranslator(await loadUiCatalog("fr")),
+    });
+    expect(stmt).toContain("Conceptualisation\u00a0: Jane Smith\u00a0; Investigation\u00a0: Bob White");
+    expect(stmt).toContain("Correspondance\u00a0: Jane Smith.");
+    expect(stmt.replace("CRediT: ", "")).not.toMatch(/ [:;]/);
+  });
 });
 
 describe("fillTemplate", () => {
