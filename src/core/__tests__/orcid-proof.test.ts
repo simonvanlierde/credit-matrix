@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { applyPatch, askStep, recheckSignIns } from "../ask";
+import { type AskState, applyPatch, askStep, importAnswers, recheckSignIns } from "../ask";
 import type { Author } from "../author";
 import { fromJson, toJson } from "../export/json";
+import { keepKnownIds } from "../merge-row";
 import {
   fetchOrcidKeys,
   ORCID_CLIENT_ID,
@@ -211,6 +212,35 @@ describe("a signed reply in the ask record", () => {
     expect(applyPatch(state, keeping.patch).asks.bob?.reply?.provenance).toEqual({ orcid });
   });
 
+  it("keeps the iD the ask went to through later replies, signed or not", async () => {
+    const orcid = await proof();
+    const asked = "0000-0001-5109-3700";
+    const start: AskState = { authors: [{ ...(lead()[0] as Author), orcid: asked }], asks: {} };
+    const changing = { ...row(), orcid: ORCID };
+    const reply = (state: AskState, at: number, answer: unknown, signed: boolean) =>
+      applyPatch(
+        state,
+        askStep(state, {
+          kind: "reply",
+          contributorId: "bob",
+          row: answer,
+          sentAt: at,
+          at,
+          ...(signed ? { orcid } : {}),
+        }).patch,
+      );
+
+    // A signed reply changes the iD, then a second signed one edits a role.
+    const first = reply(start, NOW + 1, changing, true);
+    const edited = { ...changing, contributions: [{ role: "Software", score: 100 }] };
+    expect(reply(first, NOW + 2, edited, true).asks.bob?.reply?.provenance?.replacedOrcid).toBe(asked);
+
+    // An unsigned reply changes the iD, then the same answer arrives signed.
+    const unsigned = reply(start, NOW + 1, changing, false);
+    const resigned = reply(unsigned, NOW + 2, changing, true);
+    expect(resigned.asks.bob?.reply?.provenance).toEqual({ orcid, replacedOrcid: asked });
+  });
+
   describe("checked again on import", () => {
     async function imported() {
       const orcid = await proof();
@@ -240,6 +270,20 @@ describe("a signed reply in the ask record", () => {
       expect(forged?.contributions).toEqual(row()?.contributions);
     });
 
+    it("keeps a sign-in whose row took a known id on import through the next export", async () => {
+      const file = await imported();
+      const incoming = fromJson(JSON.stringify(file));
+      const asks = await recheckSignIns(incoming.asks ?? {}, keys);
+      // The draft already has Bob under another id, so his row takes that one.
+      const current = [createAuthor("Bob White", { id: "b2" })];
+      const mapped = keepKnownIds(current, incoming.authors);
+      expect(mapped[0]?.id).toBe("b2");
+      const moved = importAnswers(current, incoming.authors, mapped, {}, { asks }).asks ?? {};
+      const again = fromJson(toJson(mapped, { asks: moved }));
+      const checked = await recheckSignIns(again.asks ?? {}, keys);
+      expect(checked.b2?.reply?.provenance?.orcid).toMatchObject({ orcid: ORCID });
+    });
+
     it("drops a real sign-in moved onto a different answer or another contributor", async () => {
       const changed = await imported();
       changed.asks.bob.reply.contributions = [{ role: "Software", score: 100 }];
@@ -253,12 +297,18 @@ describe("a signed reply in the ask record", () => {
       ).toBeUndefined();
     });
 
-    it("drops every sign-in when ORCID's keys cannot be fetched, and fetches none when there is nothing to check", async () => {
-      expect((await recheck(await imported(), async () => null))?.provenance).toBeUndefined();
+    it("keeps a sign-in unchecked when ORCID's keys cannot be fetched, and fetches none when there is nothing to check", async () => {
+      const offline = await recheck(await imported(), async () => null);
+      expect(offline?.provenance).toMatchObject({ unchecked: true, orcid: { orcid: ORCID } });
+      // Checked again once ORCID answers, it counts as verified again.
+      const file = JSON.parse(toJson([...lead()], { asks: { bob: { sentAt: NOW, prefilled: true, reply: offline } } }));
+      const online = await recheck(file);
+      expect(online?.provenance?.orcid).toMatchObject({ orcid: ORCID });
+      expect(online?.provenance).not.toHaveProperty("unchecked");
       const fetcher = vi.fn(keys);
-      const file = await imported();
-      delete file.asks.bob.reply.provenance;
-      await recheck(file, fetcher);
+      const bare = await imported();
+      delete bare.asks.bob.reply.provenance;
+      await recheck(bare, fetcher);
       expect(fetcher).not.toHaveBeenCalled();
     });
   });

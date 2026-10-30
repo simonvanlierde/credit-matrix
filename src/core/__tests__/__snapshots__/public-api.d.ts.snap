@@ -276,6 +276,8 @@ declare const ReplySchema: z.ZodMiniObject<{
       payload: z.ZodMiniString<string>;
     }, z.core.$loose>>;
     replacedOrcid: z.ZodMiniOptional<z.ZodMiniString<string>>;
+    unchecked: z.ZodMiniOptional<z.ZodMiniLiteral<true>>;
+    claimId: z.ZodMiniOptional<z.ZodMiniString<string>>;
   }, z.core.$loose>>>;
   decisions: z.ZodMiniObject<{
     Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
@@ -542,6 +544,8 @@ export declare const AskSchema: z.ZodMiniObject<{
         payload: z.ZodMiniString<string>;
       }, z.core.$loose>>;
       replacedOrcid: z.ZodMiniOptional<z.ZodMiniString<string>>;
+      unchecked: z.ZodMiniOptional<z.ZodMiniLiteral<true>>;
+      claimId: z.ZodMiniOptional<z.ZodMiniString<string>>;
     }, z.core.$loose>>>;
     decisions: z.ZodMiniObject<{
       Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
@@ -870,10 +874,12 @@ export declare function askStep(state: AskState, event: AskEvent): {
 /**
  * Check every reply's ORCID sign-in again, as an imported file needs. A
  * sign-in stays only when its token verifies (see `orcid-proof.ts`), it signed
- * a reply to this contributor, and its row there holds the same answer as the
+ * a reply to this contributor (to `provenance.claimId` when an import moved the
+ * answer to another id), and its row there holds the same answer as the
  * stored reply; the draft id is not compared, because an export does not keep
  * it. A failing sign-in is dropped, the answer stays. `keys` is called only
- * when some reply carries a sign-in; null from it drops every sign-in.
+ * when some reply carries a sign-in; null from it keeps every sign-in marked
+ * `unchecked`, so a later check can still verify it.
  */
 export declare function recheckSignIns(asks: Readonly<Record<string, Ask>>, keys: () => Promise<readonly OrcidKey[] | null>): Promise<Record<string, Ask>>;
 /** When the answer was settled: its last decision, or its arrival when nothing needed one. */
