@@ -46,6 +46,8 @@ Or use the same logic elsewhere:
 - the [`<credit-matrix>` element](docs/element.md), to show a statement and heatmap on any web page
 - the [Quarto extension](integrations/quarto/README.md) and [MyST plugin](integrations/myst/README.md),
   to write the statement from your manuscript's front matter
+- the [Typst package](integrations/typst/README.md), to print the statement, a role table and the
+  heatmap in a Typst document, from inline roles or the app's JSON export
 
 The [CRediT census](census/README.md) in `census/` is a separate Python pipeline that reads roles
 from open-access papers, for the Published practice tab and a public dataset.

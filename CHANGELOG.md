@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A [Typst package](integrations/typst/README.md) that prints the CRediT statement, a role table
+  and the heatmap in a Typst document, in the app's nine languages, from inline roles or the app's
+  JSON export.
 - Export the contributors as the `<contributors>` block of a Crossref deposit, with each person's
   CRediT roles (Crossref metadata schema 5.5.0). Paste it into the record your journal deposits
   with Crossref. Find it in the Export data menu as "XML (Crossref)", or run

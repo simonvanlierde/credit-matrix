@@ -13,7 +13,7 @@ const src = fileURLToPath(new URL("./src", import.meta.url));
  * - `app`: the Zustand store, `src/lib` and the components, under `jsdom`,
  *   because they reach for `localStorage`, `navigator` and `Blob` the way they
  *   do in the browser.
- * - `integrations`: the Quarto and MyST renderers in `integrations/`, under `node`.
+ * - `integrations`: the Quarto, MyST and Typst renderers in `integrations/`, under `node`.
  *
  * User-visible behaviour is covered by Playwright in `e2e/`.
  */
