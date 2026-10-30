@@ -403,6 +403,13 @@ describe("resolveInitials with particles and double surnames", () => {
     expect(resolveInitials("CLR", [author("Chiara", "De Luca Rossi")])).toBe(0);
   });
 
+  it("reads initials inside a one-word given name only in their order", () => {
+    const qinming = [author("Qinming", "Li")];
+    expect(resolveInitials("Q.M.L.", qinming)).toBe(0);
+    expect(resolveInitials("Q.X.L.", qinming)).toBeNull();
+    expect(resolveInitials("Q.M.M.L.", qinming)).toBeNull();
+  });
+
   it("leaves out a capitalised particle when reading initials", () => {
     for (const surname of ["Del Rio", "Ten Berge", "Van Dijk"]) {
       const initials = `J${surname.split(" ")[1]?.[0]}`;
@@ -432,6 +439,8 @@ describe("name boundaries", () => {
     expect(pairsOf("Joann Li: Software.", authors)).toEqual([]);
     expect(pairsOf("Ann Lim: Software.", authors)).toEqual([]);
     expect(pairsOf("Ann Li: Software.", authors)).toEqual([[0, "software"]]);
+    // The end of the text bounds a name too.
+    expect(pairsOf("Software: Ann Li", authors)).toEqual([[0, "software"]]);
   });
 
   it("does not find initials and a surname after another initial", () => {
