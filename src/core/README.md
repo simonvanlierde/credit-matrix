@@ -202,10 +202,12 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
 
 A reply can carry an ORCID sign-in. The caller checks it and passes it on the `reply` event as
 `orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`). What "verified" means is
-defined in the module comment of `orcid-proof.ts`. When a signed reply changes the row's iD, the
-reply also keeps the old one as `provenance.replacedOrcid`. Run `recheckSignIns(asks,
-fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before you show any sign-in
-as verified.
+defined in the module comment of `orcid-proof.ts`. When a reply changes the row's iD, signed or not, it
+keeps the iD the ask went to as `provenance.replacedOrcid`, and later replies keep it too. Run
+`recheckSignIns(asks, fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before
+you show any sign-in as verified. When ORCID cannot be reached it keeps each sign-in marked
+`unchecked`, so a later check can still verify it. To check a reply link's sign-in yourself, pass
+it to `verifyOrcidToken` with the keys from `fetchOrcidKeys()`.
 
 ## Rosters and links
 
@@ -236,7 +238,7 @@ holds its exact shape. By entry point:
     `ParsedStatement`, `StatementAuthor`
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`
   - Asks: `ASK_TARGETS`, `AskSchema`, `applyPatch`, `askStep`, `importAnswers`, `isMarker`,
-    `levelOf`, `review`, `settledAt`, `recheckSignIns`, `fetchOrcidKeys`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
+    `levelOf`, `review`, `settledAt`, `recheckSignIns`, `fetchOrcidKeys`, `verifyOrcidToken`, and the types `Ask`, `AskEvent`, `AskState`, `Choice`,
     `Decision`, `Difference`, `Level`, `Outcome`, `OrcidKey`, `OrcidProof`, `Patch`, `Reply`, `Review`, `Target`
 - `credit-matrix/lookup`: `lookupOrcidPerson`, `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`,
   and the types `OrcidLookupResult`, `OrcidErrorCode`, `DoiLookupResult`, `DoiErrorCode`, `DoiAuthor`

@@ -37,7 +37,7 @@ return `"statement"` (see Changed).
   [accessibility statement](docs/accessibility.md) at `/accessibility`, backed by a
   [WCAG 2.2 self-assessment](docs/accessibility-assessment.md).
 - New exports in the `credit-matrix` package for pasted statements (`parseStatement` and friends)
-  and for ORCID-signed replies (`recheckSignIns`, `fetchOrcidKeys`); the
+  and for ORCID-signed replies (`recheckSignIns`, `fetchOrcidKeys`, `verifyOrcidToken`); the
   [package README](src/core/README.md) lists them.
 - For people who run the census: `census model` trains, scores and exports a model that reads
   contribution statements, described in its [model card](census/MODEL_CARD.md), and
