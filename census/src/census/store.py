@@ -124,10 +124,17 @@ def connect(db: Path, read_only: bool = False) -> duckdb.DuckDBPyConnection:
     return con
 
 
+def one(con: duckdb.DuckDBPyConnection, query: str, params: object = None) -> tuple | None:
+    """The first row of a query that returns at most one, or None. Reads the whole result: from
+    duckdb 2.0 a half-read `fetchone()` result blocks `con.sql()` and `con.register()` until closed."""
+    rows = con.execute(query, params).fetchall()
+    return rows[0] if rows else None
+
+
 def pin(con: duckdb.DuckDBPyConnection, key: str, value: str) -> str:
     """The value `key` was first pinned to in this database, pinning it to `value` if unset."""
     con.execute("INSERT INTO meta VALUES (?, ?) ON CONFLICT DO NOTHING", [key, value])
-    (pinned,) = con.execute("SELECT value FROM meta WHERE key = ?", [key]).fetchone() or (value,)
+    (pinned,) = one(con, "SELECT value FROM meta WHERE key = ?", [key]) or (value,)
     return pinned
 
 
@@ -135,7 +142,7 @@ def mismatched_pins(con: duckdb.DuckDBPyConnection) -> list[str]:
     """Pins this code disagrees with: rows from another parser or schema must not be mixed in."""
     try:
         pinned = dict(con.execute("SELECT key, value FROM meta").fetchall())
-        (rows,) = con.execute("SELECT count(*) FROM articles").fetchone() or (0,)
+        (rows,) = one(con, "SELECT count(*) FROM articles") or (0,)
     except duckdb.CatalogException:
         return ["no census tables"]
     if rows and "parser" not in pinned:
@@ -180,7 +187,7 @@ def _write(con: duckdb.DuckDBPyConnection, batch: list[Rows], unit: Unit | None 
     try:
         # Re-reading a unit replaces its articles' rows. A unit never recorded has none to replace, so
         # the delete is skipped; a duplicate that slips in fails the batch and `insert` retries it with replace.
-        if replace or unit is None or con.execute("SELECT 1 FROM units WHERE unit = ?", [unit["unit"]]).fetchone():
+        if replace or unit is None or one(con, "SELECT 1 FROM units WHERE unit = ?", [unit["unit"]]):
             ids = [r.article["pmcid"] for r in batch]
             for table in ("assignments", "paired", "articles"):
                 con.execute(f"DELETE FROM {table} WHERE pmcid IN (SELECT unnest(?))", [ids])
@@ -209,7 +216,7 @@ def _insert(con: duckdb.DuckDBPyConnection, table: str, schema: pa.Schema, rows:
         return
     columns = [pa.array(values, type=f.type) for values, f in zip(zip(*rows, strict=True), schema, strict=True)]
     con.register("_batch", pa.Table.from_arrays(columns, schema=schema))
-    try:
-        con.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _batch")
-    finally:
-        con.unregister("_batch")
+    # No finally: after a failed insert duckdb 2.0 refuses unregister in the aborted transaction, and
+    # the caller's rollback drops the view anyway.
+    con.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _batch")
+    con.unregister("_batch")

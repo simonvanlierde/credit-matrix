@@ -20,7 +20,7 @@ from typing import Any
 import duckdb
 import pyarrow as pa
 
-from census import labels
+from census import labels, store
 from census.export import OPEN_LICENCE
 from census.roles import ROLE_PATTERNS
 
@@ -118,6 +118,7 @@ def write_dataset(con: duckdb.DuckDBPyConnection, split: dict[str, str], out: Pa
     finally:
         for f in files.values():
             f.close()
+        con.abort()  # a half-read result blocks unregister and would hide the error that stopped the read
         con.unregister("_split")
     return dict(counts)
 
@@ -196,7 +197,7 @@ _FREE_TEXT = "FROM articles WHERE style IN ('statement_text', 'contrib_text') AN
 
 
 def count_free_text(con: duckdb.DuckDBPyConnection, limit: int | None = None) -> int:
-    (n,) = con.execute(f"SELECT count(*) {_FREE_TEXT}").fetchone() or (0,)
+    (n,) = store.one(con, f"SELECT count(*) {_FREE_TEXT}") or (0,)
     return min(n, limit) if limit else n
 
 

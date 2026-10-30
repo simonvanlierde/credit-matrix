@@ -22,6 +22,7 @@ from pathlib import Path
 
 import duckdb
 
+from census import store
 from census.roles import clean, find_roles
 
 # Styles read from free text, which is where parsing can go wrong. jats4r and plos_uri are machine tags.
@@ -233,7 +234,7 @@ def _labelled(path: Path) -> list[dict[str, str]]:
 
 def _article(con: duckdb.DuckDBPyConnection, pmcid: str) -> tuple[int, str, str]:
     """Author count, publisher and style of an article in the database."""
-    found = con.execute("SELECT n_authors, publisher, style FROM articles WHERE pmcid = ?", [pmcid]).fetchone()
+    found = store.one(con, "SELECT n_authors, publisher, style FROM articles WHERE pmcid = ?", [pmcid])
     if found is None:
         raise ValueError(f"{pmcid}: not in this database")
     return found[0] or 0, found[1] or "(no publisher)", found[2]

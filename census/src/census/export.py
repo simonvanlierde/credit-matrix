@@ -13,6 +13,7 @@ from pathlib import Path
 
 import duckdb
 
+from census import store
 from census.fields import MULTIDISCIPLINARY, has_fields
 
 DATASET_VERSION = "1.0.0"
@@ -115,9 +116,7 @@ def export(con: duckdb.DuckDBPyConnection, out: Path, name: str, partial: bool =
     Refuses a database with unfinished units or no fields unless `partial`. Writes to a sibling
     directory first, so a failed export leaves the previous one in place.
     """
-    (units_total, units_finished) = con.execute(
-        "SELECT count(*), count(*) FILTER (finished) FROM units"
-    ).fetchone() or (0, 0)
+    (units_total, units_finished) = store.one(con, "SELECT count(*), count(*) FILTER (finished) FROM units") or (0, 0)
     fielded = has_fields(con)
     complete = bool(units_total) and units_total == units_finished and fielded
     if not complete and not partial:
@@ -147,13 +146,14 @@ def export(con: duckdb.DuckDBPyConnection, out: Path, name: str, partial: bool =
         for table, query in queries.items():
             path = tmp / f"{table}.parquet"
             con.execute(f"COPY ({query}) TO '{path}' (FORMAT parquet)")
-            (counts[table],) = con.execute(f"SELECT count(*) FROM read_parquet('{path}')").fetchone() or (0,)
+            (counts[table],) = store.one(con, f"SELECT count(*) FROM read_parquet('{path}')") or (0,)
         provenance = dict(con.execute("SELECT key, value FROM meta ORDER BY key").fetchall())
         # One digest over every finished unit's file hash: names the exact bulk files the data came from.
-        (units, digest) = con.execute(
+        (units, digest) = store.one(
+            con,
             "SELECT count(*), sha256(string_agg(unit || ' ' || sha256, '\n' ORDER BY unit)) FROM units"
-            " WHERE finished AND sha256 IS NOT NULL"
-        ).fetchone() or (0, None)
+            " WHERE finished AND sha256 IS NOT NULL",
+        ) or (0, None)
         if units:
             provenance |= {
                 "files": str(units),

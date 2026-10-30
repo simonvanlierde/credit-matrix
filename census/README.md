@@ -436,5 +436,4 @@ reaches F1 0.913 but exact 0.584, and Ettin-150M 0.905 and 0.617: neither beats 
   order, not the whole stratum.
 - Europe PMC and PMC are biomedical by construction.
 - Raw XML stays in `data/`, which git ignores.
-- Python is pinned to 3.14 because duckdb has no 3.15 wheel yet.
 - pyarrow is only the bridge into duckdb: the database writer inserts rows as Arrow batches.

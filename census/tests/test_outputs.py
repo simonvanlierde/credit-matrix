@@ -51,7 +51,7 @@ def test_fields_per_journal(db, tmp_path):
         ("PMC2", "Multidisciplinary", "Multidisciplinary"),
         ("PMC9", "Ecology", "Life"),
     ]
-    assert db.sql("SELECT value FROM meta WHERE key = 'openalex_sources'").fetchone() == ("2026-10-05",)
+    assert db.sql("SELECT value FROM meta WHERE key = 'openalex_sources'").fetchall() == [("2026-10-05",)]
 
 
 def test_label_export_and_score(db, tmp_path):
@@ -319,9 +319,9 @@ def test_export(db, tmp_path, monkeypatch):
     for table in ("articles", "assignments"):
         text = " ".join(map(str, db.sql(f"SELECT * FROM read_parquet('{out}/{table}.parquet')").fetchall()))
         assert not any(n in text for n in names)
-    (contrib_text,) = db.sql(
+    [(contrib_text,)] = db.sql(
         f"SELECT statement FROM '{out}/statements.parquet' WHERE style = 'contrib_text'"
-    ).fetchone()
+    ).fetchall()
     assert not any(n in contrib_text for n in names)
     types = dict(db.sql(f"SELECT column_name, column_type FROM (DESCRIBE '{out}/articles.parquet')").fetchall())
     assert types["field"] == types["domain"] == types["source_unit"] == "VARCHAR"

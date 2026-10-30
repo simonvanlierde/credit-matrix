@@ -72,7 +72,7 @@ def test_run_resumes_unfinished_units_only(tmp_path):
     # The finished unit is skipped; the one with PMC6 is read again and still waits for it.
     assert pipeline.run(source, db, processes=0) == {"retry": 1}
     with duckdb.connect(str(db)) as con:
-        assert con.sql("SELECT count(*) FROM articles").fetchone() == (2,)
+        assert con.sql("SELECT count(*) FROM articles").fetchall() == [(2,)]
         assert con.sql("SELECT unit, finished FROM units ORDER BY 1").fetchall() == [
             ("bucket-00000", True),
             ("bucket-00001", False),
@@ -194,11 +194,7 @@ def test_paired_scores_compare_the_statement_with_the_tags(tmp_path):
         # Tags: 2 pairs. Parsed: 3, of which 2 match.
         assert con.sql(
             "SELECT articles, precision, recall FROM paired_scores WHERE publisher = '(all)'"
-        ).fetchone() == (
-            1,
-            0.667,
-            1.0,
-        )
+        ).fetchall() == [(1, 0.667, 1.0)]
 
 
 def test_export_leaves_names_out_and_keeps_only_open_statements(tmp_path):
@@ -245,7 +241,7 @@ def test_an_article_in_two_units_is_replaced_not_duplicated(tmp_path):
         again = store.rows_for("PMC1", "all", XML["PMC1"])
         store.insert(con, [again, store.rows_for("PMC2", "all", XML["PMC2"])], unit("b"))
         assert con.sql("SELECT pmcid FROM articles ORDER BY 1").fetchall() == [("PMC1",), ("PMC2",)]
-        assert con.sql("SELECT count(*) FROM assignments WHERE pmcid = 'PMC1'").fetchone() == (len(again.roles),)
+        assert con.sql("SELECT count(*) FROM assignments WHERE pmcid = 'PMC1'").fetchall() == [(len(again.roles),)]
         assert con.sql("SELECT unit FROM units ORDER BY 1").fetchall() == [("a",), ("b",)]
 
 
@@ -336,10 +332,10 @@ def test_insert_replaces_an_article_another_unit_holds_last_in_the_batch(tmp_pat
 def test_reading_a_recorded_unit_again_replaces_all_its_rows(tmp_path):
     with store.connect(tmp_path / "again.duckdb") as con:
         store.insert(con, [rows.rows_for("PMC1", "all", TAGGED)], unit("a"))
-        assert con.sql("SELECT count(*) FROM paired").fetchone() == (3,)
+        assert con.sql("SELECT count(*) FROM paired").fetchall() == [(3,)]
         changed = rows.rows_for("PMC1", "all", XML["PMC1"])
         store.insert(con, [changed], unit("a"))
-        assert con.sql("SELECT count(*) FROM paired").fetchone() == (0,)  # no stale statement reading
+        assert con.sql("SELECT count(*) FROM paired").fetchall() == [(0,)]  # no stale statement reading
         assert con.sql("SELECT author_position, role FROM assignments ORDER BY 1").fetchall() == changed.roles
         assert con.sql("SELECT style FROM articles").fetchall() == [("contrib_text",)]
 
@@ -352,7 +348,7 @@ def test_insert_lets_storage_errors_through_and_records_no_unit(tmp_path, monkey
         monkeypatch.setattr(store, "_insert", full_disk)
         with pytest.raises(duckdb.IOException):
             store.insert(con, [pmc("PMC1")], unit("a"))
-        assert con.sql("SELECT count(*) FROM units").fetchone() == (0,)
+        assert con.sql("SELECT count(*) FROM units").fetchall() == [(0,)]
 
 
 class DyingSource:
