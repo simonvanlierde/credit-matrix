@@ -96,6 +96,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - Link previews of the app describe the social card to screen readers (it had no alt text).
+- `credit-matrix convert --to jats` takes `--yes-no` for rosters ticked in yes/no mode. The JATS file
+  then leaves out `degree-contribution`, as the app's own XML export does, instead of marking every
+  role "lead".
 - Accessibility fixes from the WCAG 2.2 self-assessment:
   - Placeholder text, text-field edges, empty grid cells and the reorder handle now have enough
     contrast in both themes, and the contributor name field shows a focus ring.
