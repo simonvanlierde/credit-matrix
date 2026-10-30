@@ -383,6 +383,25 @@ describe("size", () => {
   });
 });
 
+describe("name matching order", () => {
+  it("reads a comma between two full names as a list, not as an inverted third name", () => {
+    const authors = [author("Bo", "Lee"), author("Ann", "Lee"), author("Bo", "Wu")];
+    expect(pairsOf("Ann Lee, Bo Wu: Software. Bo Lee: Validation.", authors)).toEqual([
+      [0, "validation"],
+      [1, "software"],
+      [2, "software"],
+    ]);
+  });
+
+  it("matches the longer of two names that start alike", () => {
+    const authors = [author("Ann", "Lee"), author("Ann", "Lee-Wu")];
+    expect(pairsOf("Ann Lee-Wu: Software; Ann Lee: Validation.", authors)).toEqual([
+      [0, "validation"],
+      [1, "software"],
+    ]);
+  });
+});
+
 describe("statementAuthor", () => {
   it.each([
     [
@@ -395,6 +414,10 @@ describe("statementAuthor", () => {
     [{ name: "Jane Smith", firstName: "Jane", middleName: "", surname: "Smith" }, "Jane", "Smith"],
     // A name edited since it was parsed no longer holds the surname: the stored parts stand in.
     [{ name: "J. Doe", firstName: "Jane", middleName: "Ann", surname: "Smith" }, "Jane Ann", "Smith"],
+    // Family name first, as Hungarian writes it: nothing comes before the surname.
+    [{ name: "Kovács János", firstName: "János", middleName: "", surname: "Kovács" }, "János", "Kovács"],
+    // A comma that does not follow the surname is not the inverted form.
+    [{ name: "Jane, Smith", firstName: "Jane", middleName: "", surname: "Smith" }, "Jane,", "Smith"],
   ])("splits %j", (input, given, surname) => {
     expect(statementAuthor(input)).toEqual({ given, surname });
   });

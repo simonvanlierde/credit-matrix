@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
+import type { Author } from "../author";
 import { MAX_AUTHOR_NAME_LENGTH } from "../author";
 import {
+  buildInitials,
+  cleanNamePart,
   createAuthor,
   deduplicateAuthorInitials,
+  normalizeRoster,
   parseAuthorText,
   parseNameParts,
   splitNameList,
@@ -359,5 +363,89 @@ describe("splitNameList", () => {
 
   it("ignores empty entries and surrounding whitespace", () => {
     expect(splitNameList("  Alice Brown ,, \n\n ; Bob White ")).toEqual(["Alice Brown", "Bob White"]);
+  });
+});
+
+describe("name parsing edge cases", () => {
+  it("reads an inverted name past a stray comma and doubled spaces", () => {
+    expect(parseNameParts("Curie, Marie,")).toEqual({ firstName: "Marie", middleName: "", surname: "Curie" });
+    expect(parseNameParts("Curie, Marie  Anne")).toEqual({ firstName: "Marie", middleName: "Anne", surname: "Curie" });
+    expect(parseNameParts("Jane  Ann Smith")).toEqual({ firstName: "Jane", middleName: "Ann", surname: "Smith" });
+  });
+
+  it("gives no name parts for a name without letters", () => {
+    expect(parseNameParts("1234")).toEqual({ firstName: "", middleName: "", surname: "" });
+  });
+
+  it("trims what it keeps of a name part", () => {
+    expect(cleanNamePart(" O'Brien! ")).toBe("O'Brien");
+  });
+
+  it("labels a name with no lettered part by the name itself, trimmed", () => {
+    expect(buildInitials(" 0000-0002-1825-009X ", "", "", "")).toBe("0000-0002-1825-009X");
+    expect(buildInitials(" #1 ", "", "", "")).toBe("#1");
+  });
+
+  it("takes the surname initial from an all-particle surname", () => {
+    expect(createAuthor("Anne De La").initials).toBe("AD");
+  });
+
+  it("turns a run of pasted line breaks into one space", () => {
+    expect(createAuthor("Jane\n\r\nSmith").name).toBe("Jane Smith");
+  });
+});
+
+describe("splitNameList comma pairs", () => {
+  it("keeps an inverted name whole past a trailing comma", () => {
+    expect(splitNameList("Curie, Marie,")).toEqual(["Curie, Marie"]);
+  });
+
+  it("does not read an ORCID iD or a number as a surname", () => {
+    expect(splitNameList("0000-0002-1825-009X, Jane")).toEqual(["0000-0002-1825-009X", "Jane"]);
+    expect(splitNameList("2, Jane")).toEqual(["2", "Jane"]);
+  });
+
+  it("pairs a surname only with given names made of letters", () => {
+    for (const given of ["Jane 2", "2Jane", "Jane2"]) {
+      expect(splitNameList(`Smith, ${given}`)).toEqual(["Smith", given]);
+    }
+  });
+});
+
+describe("normalizeRoster name parts", () => {
+  const rebuilt = (author: Author) => {
+    const [row] = normalizeRoster([author]);
+    return row && { firstName: row.firstName, middleName: row.middleName, surname: row.surname };
+  };
+
+  it("keeps a structured multi-word surname with more given names than the middle name holds", () => {
+    const ana = createAuthor("Ana María José García López", {
+      firstName: "Ana",
+      middleName: "María",
+      surname: "García López",
+    });
+    expect(rebuilt(ana)).toEqual({ firstName: "Ana", middleName: "María", surname: "García López" });
+  });
+
+  it("re-parses parts that leave out the first name or use a word twice", () => {
+    const jane = createAuthor("Jane Smith");
+    expect(rebuilt({ ...jane, firstName: "" })).toEqual({ firstName: "Jane", middleName: "", surname: "Smith" });
+    const smith = createAuthor("Smith");
+    expect(rebuilt({ ...smith, firstName: "Smith", surname: "Smith" })).toEqual({
+      firstName: "Smith",
+      middleName: "",
+      surname: "",
+    });
+  });
+
+  it("re-parses a row whose name parts are missing, as an old export has", () => {
+    const old = { ...createAuthor("Jane Ann Smith"), firstName: undefined, middleName: undefined, surname: undefined };
+    expect(rebuilt(old as unknown as Author)).toEqual({ firstName: "Jane", middleName: "Ann", surname: "Smith" });
+  });
+
+  it("fills in the roles a stored row is missing", () => {
+    const jane = createAuthor("Jane Smith");
+    const [row] = normalizeRoster([{ ...jane, contributions: jane.contributions.slice(0, 3) }]);
+    expect(row?.contributions).toHaveLength(jane.contributions.length);
   });
 });

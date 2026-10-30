@@ -256,6 +256,37 @@ describe("toJats4rXml", () => {
     expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Ann Smith", "Bob White"]);
   });
 
+  it("keeps a double surname as JATS splits it, with single spaces", () => {
+    const [ana, dot] = fromJats4rXml(
+      `<article>
+        <contrib contrib-type="author"><name><surname>García  López</surname><given-names>Ana</given-names></name></contrib>
+        <contrib contrib-type="author"><name><surname>Smith</surname><given-names>.</given-names></name></contrib>
+      </article>`,
+    );
+    expect(ana).toMatchObject({ name: "Ana García López", firstName: "Ana", surname: "García López", initials: "AG" });
+    // Given names with no letters leave the first name empty.
+    expect(dot).toMatchObject({ firstName: "", middleName: "", surname: "Smith" });
+  });
+
+  it("drops an ORCID iD that is not valid and keeps the contributor", () => {
+    const authors = fromJats4rXml(
+      `<article><contrib contrib-type="author"><contrib-id contrib-id-type="orcid">0000-0000-0000-0000</contrib-id>
+        <name><surname>Smith</surname><given-names>Jane</given-names></name></contrib></article>`,
+    );
+    expect(authors.map((a) => [a.name, a.orcid])).toEqual([["Jane Smith", undefined]]);
+  });
+
+  it("reads a role from its identifier alone, over http and without the trailing slash, or from vocab-term alone", () => {
+    const [jane] = fromJats4rXml(`<article><contrib contrib-type="author">
+      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <role vocab-term-identifier="http://credit.niso.org/contributor-roles/software">Code</role>
+      <role vocab-term-identifier=" HTTPS://credit.niso.org/contributor-roles/methodology// ">Methods</role>
+      <role vocab-term="Validation"/>
+    </contrib></article>`);
+    const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(active).toEqual(["Methodology", "Software", "Validation"]);
+  });
+
   it("matches roles by their CRediT identifier before the term text", () => {
     const xml = `<article><contrib contrib-type="author">
       <name><surname>Smith</surname><given-names>Jane</given-names></name>
