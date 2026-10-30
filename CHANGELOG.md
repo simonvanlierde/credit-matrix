@@ -87,6 +87,8 @@ return `"statement"` (see Changed).
   - On the co-author page each role name is a heading, so a screen reader can jump from role to
     role. The role headings sit under a "Your roles" heading, so the switches and the ORCID sign-in
     after the list no longer read as part of the last role.
+- A file or link that was still loading when you closed Import no longer lands in the draft
+  afterwards.
 - "How it works" did nothing outside the main page. It now takes you there and opens the welcome
   panel, and closing the panel puts focus on the main content.
 - Reading a JATS XML file no longer takes punctuation in a given name for a middle name. A

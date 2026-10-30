@@ -106,7 +106,7 @@ jobs:
           fail_ci_if_error: false
 
   # The package supports older Node than the repo builds with, so run the built
-  # CLI on the oldest supported line and the current LTS.
+  # CLI on the oldest supported line and the previous LTS.
   cli-node:
     name: CLI on Node ${{ matrix.node }}
     runs-on: ubuntu-latest
