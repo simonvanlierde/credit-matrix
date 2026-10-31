@@ -37,7 +37,7 @@ class CreditStatement(SphinxDirective):
         if "levels" in self.options:
             command.append("--levels")
         try:
-            result = subprocess.run(command, check=True, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(command, check=True, capture_output=True, encoding="utf-8", timeout=30)
         except subprocess.CalledProcessError as error:
             raise self.error(f"CRediT statement failed: {error.stderr.strip()}") from error
         except (OSError, subprocess.TimeoutExpired) as error:

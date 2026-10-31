@@ -1,7 +1,10 @@
 """Build real Sphinx projects against the published CLI entry point."""
 
 import io
+import os
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -108,3 +111,17 @@ def test_invalid_export_is_a_build_diagnostic(tmp_path, project):
     (source / "contributors.json").write_text('{"version": 999, "authors": []}', encoding="utf-8")
     app.build()
     assert "newer than" in warnings.getvalue()
+
+
+def test_unicode_output_under_non_utf8_locale(tmp_path, project):
+    _, _, source = project(language="fr")
+    output = tmp_path / "ascii-build"
+    result = subprocess.run(
+        [sys.executable, "-m", "sphinx", "-W", "-b", "html", str(source), str(output)],
+        env={**os.environ, "LC_ALL": "C", "PYTHONUTF8": "0", "PYTHONCOERCECLOCALE": "0"},
+        capture_output=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Analyse formelle" in (output / "index.html").read_text(encoding="utf-8")
