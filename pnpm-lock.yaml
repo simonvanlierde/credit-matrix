@@ -105,6 +105,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^5.0.3
         version: 5.0.5(vitest@5.0.5)
+      credit-matrix:
+        specifier: workspace:*
+        version: link:src/core
       fast-check:
         specifier: 4.10.2
         version: 4.10.2

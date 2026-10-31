@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The [MyST plugin](integrations/myst/README.md) now uses the `credit-matrix` package for role names
+  and statement wording. Install `credit-matrix` alongside `yaml` when upgrading the plugin.
+
 ## [0.9.0] - 2026-10-30
 
 Upgrading the `credit-matrix` package: it needs Node 22 or later, and `detectFormat` can now

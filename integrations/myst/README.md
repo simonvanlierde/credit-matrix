@@ -8,7 +8,7 @@ statement.
 ## Install
 
 1. Copy [`credit-matrix.mjs`](credit-matrix.mjs) into your project.
-2. Install its one dependency, a YAML parser, next to it: `npm install yaml`.
+2. Install the statement package and YAML parser next to it: `pnpm add credit-matrix yaml`.
 3. List it in `myst.yml`:
 
    ```yaml
@@ -24,9 +24,9 @@ Tested with mystmd 1.11.
 ```yaml
 project:
   authors:
-    - name: Jane A. Smith
+    - name: Marie Curie
       roles: [Conceptualization, Software, writing]
-    - name: Bob White
+    - name: Albert Einstein
       roles: [Investigation, Formal analysis, editing]
 ```
 
@@ -39,7 +39,7 @@ project:
 
 renders as:
 
-> **Jane A. Smith**: Conceptualization, Software, Writing – original draft; **Bob White**: Formal
+> **Marie Curie**: Conceptualization, Software, Writing – original draft; **Albert Einstein**: Formal
 > analysis, Investigation, Writing – review & editing.
 
 Authors in a page's own front matter replace the project's authors, as they do in MyST. Role
@@ -59,5 +59,4 @@ names, spellings and aliases follow MyST (`writing`, `editing`, `review`, `analy
   `credit-matrix statement file.json --locale fr` from the package CLI and paste the result.
 - One format: by author. The
   [`credit-matrix`](../../src/core/README.md) package also writes by role, with initials and in
-  eight other languages. The plugin carries its own copy of the wording instead of importing the
-  package, so it has a single dependency.
+  eight other languages. The plugin uses the package for role names and statement wording.
