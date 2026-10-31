@@ -17,7 +17,7 @@ statement.
        - credit-matrix.mjs
    ```
 
-Tested with mystmd 1.11.
+Tested with mystmd 1.12 and [Jupyter Book 2.1](../jupyter-book/README.md).
 
 ## Use
 

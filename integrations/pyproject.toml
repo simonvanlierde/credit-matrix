@@ -1,0 +1,28 @@
+[project]
+name = "credit-matrix-document-tests"
+version = "0.1.0"
+requires-python = ">=3.11,<3.16"
+dependencies = [
+  "hypothesis>=6",
+  "pypandoc-binary>=1.15",
+  "pytest>=9",
+  "ruff>=0.17",
+  "sphinx>=8",
+  "ty>=0.0.86",
+]
+
+[tool.uv]
+package = false
+exclude-newer = "7 days"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501", "RUF001"]

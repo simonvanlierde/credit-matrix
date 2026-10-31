@@ -1,12 +1,12 @@
 ---
 title: "A CRediT statement from front matter"
 author:
-  - name: Jane A. Smith
+  - name: Marie Curie
     roles:
       - conceptualization: lead
       - software: supporting
       - writing: lead
-  - name: Bob White
+  - name: Albert Einstein
     roles:
       - investigation
       - formal analysis: equal

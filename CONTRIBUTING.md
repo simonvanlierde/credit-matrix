@@ -106,6 +106,10 @@ me. The census in `census/` follows the same rule through uv's `exclude-newer = 
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
+- **Document integrations**: `pnpm test:integrations` runs real Pandoc, Sphinx, MyST and Jupyter
+  Book builds. It needs uv and the workspace package built (`pnpm --filter credit-matrix build`).
+  Python tools and Pandoc are locked in `integrations/uv.lock`; the two book CLIs are devDependencies.
+  `pnpm verify` includes these builds and checks the Python extension and tests with Ruff and ty.
 - **Quarto**: the rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto`
   on your `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
 - **Typst**: `integrations/typst/translations.json` is generated from the app's catalogs. After

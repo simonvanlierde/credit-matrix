@@ -1,0 +1,10 @@
+version: 1
+project:
+  title: Example Lab handbook
+  authors:
+    - name: Marie Curie
+      roles: [Software, writing]
+  plugins:
+    - ../../myst/credit-matrix.mjs
+site:
+  template: book-theme

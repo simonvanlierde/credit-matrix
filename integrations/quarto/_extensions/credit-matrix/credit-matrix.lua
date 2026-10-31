@@ -1,6 +1,4 @@
--- Renders a CRediT statement from the author roles Quarto has already normalised.
--- Quarto runs user filters after its own author normalisation, so each CRediT role
--- carries a lower-case `vocab-term` and an optional `degree-of-contribution`.
+-- Renders a CRediT statement from Pandoc metadata or Quarto's normalised author roles.
 -- Wording follows the by-author statement of the credit-matrix package
 -- (src/core/generate-statement.ts), English only.
 
@@ -12,33 +10,67 @@ local CREDIT_TERMS = {
   "supervision", "validation", "visualization", "writing – original draft",
   "writing – review & editing",
 }
-local ORDER = {}
-for i, term in ipairs(CREDIT_TERMS) do ORDER[term] = i end
 
 -- Lead and unspecified degrees stay unannotated, as in the app.
 local LEVELS = { equal = "Equal", supporting = "Supporting" }
 
 local DEFAULT_HEADING = "CRediT authorship contribution statement"
 
+local ALIASES = {
+  writing = "writing – original draft", editing = "writing – review & editing",
+  review = "writing – review & editing", analysis = "formal analysis",
+  funding = "funding acquisition", admin = "project administration",
+  administration = "project administration",
+}
+
+local function role_key(value)
+  return stringify(value):lower():gsub("&", "and"):gsub("z", "s"):gsub("[^a-z]", "")
+end
+
+local function role_term(value)
+  local key = role_key(value)
+  for _, term in ipairs(CREDIT_TERMS) do
+    if role_key(term) == key then return term end
+  end
+  return ALIASES[stringify(value):lower()]
+end
+
 local function author_name(author)
   local name = author.name
   if type(name) == "table" and name.literal then return stringify(name.literal) end
+  if type(name) == "table" and (name.given or name.family) then
+    return (stringify(name.given or "") .. " " .. stringify(name.family or "")):match("^%s*(.-)%s*$")
+  end
   return stringify(name or "")
 end
 
 local function role_labels(author)
   local roles = {}
-  for _, role in ipairs(author.roles or {}) do
-    local term = role["vocab-term"] and stringify(role["vocab-term"])
-    if term and ORDER[term] then
-      local level = LEVELS[stringify(role["degree-of-contribution"] or ""):lower()]
-      local label = term:sub(1, 1):upper() .. term:sub(2)
-      roles[#roles + 1] = { order = ORDER[term], label = level and (label .. " (" .. level .. ")") or label }
+  local function add(term, degree)
+    if not term then return end
+    local level = stringify(degree or ""):lower()
+    local rank = level == "supporting" and 1 or (level == "equal" and 2 or 3)
+    if not roles[term] or rank > roles[term].rank then roles[term] = { rank = rank, level = LEVELS[level] } end
+  end
+  local raw = author.roles or {}
+  if pandoc.utils.type(raw) == "Inlines" or type(raw) ~= "table" then raw = { raw } end
+  for _, role in ipairs(raw) do
+    if type(role) == "table" and role["vocab-term"] then
+      add(role_term(role["vocab-term"]), role["degree-of-contribution"])
+    elseif pandoc.utils.type(role) == "Inlines" or type(role) == "string" then
+      add(role_term(role))
+    elseif type(role) == "table" then
+      for term, degree in pairs(role) do add(role_term(term), degree) end
     end
   end
-  table.sort(roles, function(a, b) return a.order < b.order end)
   local labels = {}
-  for _, r in ipairs(roles) do labels[#labels + 1] = r.label end
+  for _, term in ipairs(CREDIT_TERMS) do
+    if roles[term] then
+      local label = term:sub(1, 1):upper() .. term:sub(2)
+      local level = roles[term].level
+      labels[#labels + 1] = level and (label .. " (" .. level .. ")") or label
+    end
+  end
   return labels
 end
 
@@ -57,7 +89,9 @@ local function statement(authors)
 end
 
 function Pandoc(doc)
-  local para = statement(doc.meta.authors)
+  local authors = doc.meta.authors or doc.meta.author or {}
+  if pandoc.utils.type(authors) ~= "List" then authors = { authors } end
+  local para = statement(authors)
   if not para then return nil end
 
   local options = doc.meta["credit-matrix"] or {}
