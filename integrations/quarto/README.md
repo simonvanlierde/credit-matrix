@@ -17,6 +17,7 @@ there. Or copy `_extensions/credit-matrix/` from this folder into your project's
 folder by hand.
 
 Needs Quarto 1.4 or later. Tested with Quarto 1.10.
+For plain Pandoc, use the same Lua file as described in the [Pandoc guide](../pandoc/README.md).
 
 ## Use
 
@@ -24,12 +25,12 @@ Needs Quarto 1.4 or later. Tested with Quarto 1.10.
 ---
 title: My paper
 author:
-  - name: Jane A. Smith
+  - name: Marie Curie
     roles:
       - conceptualization: lead
       - software: supporting
       - writing
-  - name: Bob White
+  - name: Albert Einstein
     roles: [investigation, formal analysis]
 filters:
   - credit-matrix
@@ -40,8 +41,8 @@ This adds, at the end of the body:
 
 > **CRediT authorship contribution statement**
 >
-> **Jane A. Smith**: Conceptualization, Software (Supporting), Writing – original draft;
-> **Bob White**: Formal analysis, Investigation.
+> **Marie Curie**: Conceptualization, Software (Supporting), Writing – original draft;
+> **Albert Einstein**: Formal analysis, Investigation.
 
 Roles use Quarto's names and aliases (`writing`, `editing`, `analysis`, `funding`). An `equal` or
 `supporting` degree is shown after the role; `lead` or no degree shows nothing. Roles that are not

@@ -44,8 +44,10 @@ Or use the same logic elsewhere:
 
 - the [`credit-matrix` package and CLI](src/core/README.md), for Node and the browser
 - the [`<credit-matrix>` element](docs/element.md), to show a statement and heatmap on any web page
-- the [Quarto extension](integrations/quarto/README.md) and [MyST plugin](integrations/myst/README.md),
-  to write the statement from your manuscript's front matter
+- the [Pandoc filter](integrations/pandoc/README.md), [Quarto extension](integrations/quarto/README.md)
+  and [MyST plugin](integrations/myst/README.md), to write the statement from manuscript front matter
+- [Jupyter Book 2](integrations/jupyter-book/README.md) support through the MyST plugin, and a
+  [Sphinx directive](integrations/sphinx/README.md) for contributor exports in software documentation
 - the [Typst package](integrations/typst/README.md), to print the statement, a role table and the
   heatmap in a Typst document, from inline roles or the app's JSON export
 

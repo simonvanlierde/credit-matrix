@@ -8,8 +8,8 @@ import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
 
 // What the filter renders for example.qmd, without the Markdown bold around each name.
 const EXPECTED =
-  "Jane A. Smith: Conceptualization, Software (Supporting), Writing – original draft; " +
-  "Bob White: Formal analysis (Equal), Investigation, Writing – review & editing.";
+  "Marie Curie: Conceptualization, Software (Supporting), Writing – original draft; " +
+  "Albert Einstein: Formal analysis (Equal), Investigation, Writing – review & editing.";
 
 function author(name: string, scores: Record<string, number>) {
   const a = createAuthor(name);
@@ -20,8 +20,8 @@ function author(name: string, scores: Record<string, number>) {
 describe("Quarto filter", () => {
   it("matches the app's by-author wording for the example's roles", () => {
     const authors = [
-      author("Jane A. Smith", { Conceptualization: 100, Software: 33, "Writing – original draft": 100 }),
-      author("Bob White", { Investigation: 100, "Formal analysis": 66, "Writing – review & editing": 100 }),
+      author("Marie Curie", { Conceptualization: 100, Software: 33, "Writing – original draft": 100 }),
+      author("Albert Einstein", { Investigation: 100, "Formal analysis": 66, "Writing – review & editing": 100 }),
     ];
     const statement = generateStatement(authors, { format: "by-author", showLevels: true });
     expect(`${statement.replace(/^CRediT: /, "")}.`).toBe(EXPECTED);
@@ -51,4 +51,10 @@ describe.skipIf(!hasQuarto && !process.env.CI)("Quarto filter, rendered", () => 
     expect(md).toContain("# CRediT authorship contribution statement");
     expect(md.replaceAll("**", "").replace(/\s+/g, " ")).toContain(EXPECTED);
   });
+});
+
+it("keeps the extension version in step with the package", () => {
+  const extension = readFileSync(new URL("_extensions/credit-matrix/_extension.yml", import.meta.url), "utf8");
+  const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+  expect(extension).toContain(`version: ${pkg.version}\n`);
 });

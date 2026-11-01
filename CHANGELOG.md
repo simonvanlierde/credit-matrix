@@ -6,6 +6,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- A [Pandoc filter](integrations/pandoc/README.md) reads roles from manuscript front matter without
+  Quarto. It shares the Quarto renderer and supports contribution levels and statement placement.
+- A [Sphinx directive](integrations/sphinx/README.md) renders contributor exports through the CLI,
+  with formats, contribution levels and the app's nine languages.
+- [Jupyter Book 2 support](integrations/jupyter-book/README.md) through the MyST plugin, with a
+  complete example and document-build checks in CI.
+
+### Changed
+
+- The [MyST plugin](integrations/myst/README.md) now uses the `credit-matrix` package for role names
+  and statement wording. Install `credit-matrix` alongside `yaml` when upgrading the plugin.
+
 ## [0.9.0] - 2026-10-30
 
 Upgrading the `credit-matrix` package: it needs Node 22 or later, and `detectFormat` can now

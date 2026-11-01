@@ -1,29 +1,12 @@
 // biome-ignore-all lint/correctness/noNodejsModules: MyST runs plugins in Node.
 // MyST plugin: a `{credit-statement}` directive that renders a CRediT statement from the
 // `roles` of the page's authors, or of the project's authors in myst.yml.
-// Wording follows the by-author statement of the credit-matrix package
-// (src/core/generate-statement.ts), English only. MyST roles carry no degree of contribution.
+// MyST roles carry no degree of contribution.
 
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { CREDIT_ROLES, createAuthor, generateStatement } from "credit-matrix";
 import { parse } from "yaml";
-
-export const ROLES = [
-  "Conceptualization",
-  "Data curation",
-  "Formal analysis",
-  "Funding acquisition",
-  "Investigation",
-  "Methodology",
-  "Project administration",
-  "Resources",
-  "Software",
-  "Supervision",
-  "Validation",
-  "Visualization",
-  "Writing – original draft",
-  "Writing – review & editing",
-];
 
 // The aliases MyST accepts (its `credit-roles` package), so a page that builds also renders.
 const ALIASES = {
@@ -46,7 +29,7 @@ const roleKey = (value) =>
 
 export function normalizeRole(value) {
   const key = roleKey(value);
-  return ROLES.find((role) => roleKey(role) === key) ?? ALIASES[value.trim().toLowerCase()];
+  return CREDIT_ROLES.find((role) => roleKey(role.name) === key)?.name ?? ALIASES[value.trim().toLowerCase()];
 }
 
 function authorName(author) {
@@ -57,7 +40,7 @@ function authorName(author) {
   return author.id ?? "";
 }
 
-/** One `Name: Role, Role` entry per author with CRediT roles, in canonical role order. */
+/** Adapt MyST front matter to the package's authors, in canonical role order. */
 export function statementEntries(authors) {
   // A single author may be a map or a string rather than a list; a bare string has no roles.
   return [].concat(authors ?? []).flatMap((author) => {
@@ -65,7 +48,12 @@ export function statementEntries(authors) {
     const raw = typeof author.roles === "string" ? author.roles.split(/[,;]/) : (author.roles ?? []);
     const roles = new Set(raw.map((r) => normalizeRole(String(r))).filter(Boolean));
     if (roles.size === 0) return [];
-    return [{ name: authorName(author), roles: ROLES.filter((r) => roles.has(r)) }];
+    const name = authorName(author).replace(/\s+/g, " ").trim();
+    // MyST also permits unnamed and id-only authors; keep those display names.
+    const entry = createAuthor("Contributor");
+    entry.name = name;
+    for (const contribution of entry.contributions) contribution.score = roles.has(contribution.role) ? 100 : 0;
+    return [entry];
   });
 }
 
@@ -73,11 +61,14 @@ export function statementEntries(authors) {
 export function statementNode(authors) {
   const entries = statementEntries(authors);
   if (entries.length === 0) return [];
-  const children = entries.flatMap(({ name, roles }, i) => [
-    ...(i > 0 ? [{ type: "text", value: "; " }] : []),
-    { type: "strong", children: [{ type: "text", value: name }] },
-    { type: "text", value: `: ${roles.join(", ")}` },
-  ]);
+  const children = entries.flatMap((author, i) => {
+    const statement = generateStatement([author], { format: "by-author" });
+    return [
+      ...(i > 0 ? [{ type: "text", value: "; " }] : []),
+      { type: "strong", children: [{ type: "text", value: author.name }] },
+      { type: "text", value: statement.slice(`CRediT: ${author.name}`.length) },
+    ];
+  });
   children.push({ type: "text", value: "." });
   return [{ type: "paragraph", children }];
 }
@@ -98,7 +89,7 @@ function projectConfig(file) {
 /**
  * Page authors replace project authors, as in MyST. Only Markdown pages are read for
  * front matter; a notebook page falls back to the project authors.
- * shortcut: authors listed by id only are not resolved against the project's list.
+ * NOTE: authors listed by id only are not resolved against the project's list.
  */
 export function authorsFor(file) {
   const page = file.endsWith(".md") ? readFrontmatter(file) : {};
