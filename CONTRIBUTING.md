@@ -98,6 +98,16 @@ A metadata error stops the script before staging files or updating Quarto. Some 
 package version fields may already have changed. Fix the reported file, then run `pnpm run version`
 to finish syncing the current version without another version bump.
 
+Before tagging, review the whole change since the previous tag, then run `pnpm verify`,
+`pnpm mutation`, `pnpm validate:jats` and `pnpm validate:crossref`. Check the citation abstract,
+title and keywords against the README and GitHub About text. Merge the release PR before
+creating its version tag on main; the tag starts the npm publishing workflow described in
+[deployment](docs/deploy.md#the-npm-package).
+
+After npm publishing succeeds, publish the matching GitHub release for the Zenodo archive.
+Zenodo copies `.zenodo.json`, or `CITATION.cff` when that file is absent, when the GitHub release
+is published. Later metadata edits do not update that archived version.
+
 ## Testing
 
 - **Unit (Vitest)**: two projects. `core` runs `src/core` under Node and checks the built package:

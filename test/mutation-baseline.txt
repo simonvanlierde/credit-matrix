@@ -1,7 +1,6 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
 # Each line: file status mutator -> replacement | original line, and why it is kept, for one left on purpose.
-# Score 90.61%: 2411 killed, 194 survived, 56 without coverage, 250 kept with a reason.
-src/core/export/codemeta.ts Survived StringLiteral -> "" | skipped.push({ author, reason: "no-orcid" });  # kept: equivalent: the CLI, the only caller, tells the reasons apart by non-author alone
+# Score 90.81%: 2459 killed, 193 survived, 56 without coverage, 249 kept with a reason.
 src/core/export/crossref.ts Survived MethodExpression -> author.name | .map((author) => `  <!-- Left out: ${escapeXml(normalizeOrcid(author.name.trim()))} has no name yet.  # kept: equivalent: createAuthor stores the name trimmed
 src/core/export/crossref.ts Survived MethodExpression -> author.name | const surname = author.surname || author.name.trim();  # kept: equivalent: createAuthor stores the name trimmed
 src/core/export/crossref.ts Survived MethodExpression -> author.name | const unnamed = (author: Author) => ORCID_INPUT_REGEX.test(author.name.trim());  # kept: equivalent: createAuthor stores the name trimmed

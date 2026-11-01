@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-01
+
+When upgrading, read both `author` and `contributor` from the CodeMeta CLI output;
+it now returns an object with linked people and roles instead of a role-only array.
+Install `credit-matrix` alongside `yaml` when using the MyST plugin.
+
 ### Added
 
 - A [Pandoc filter](integrations/pandoc/README.md) reads roles from manuscript front matter without
@@ -633,7 +639,8 @@ Persisted local drafts migrate automatically.
   contribution heatmap, JATS4R XML / CSV / JSON / Markdown exports, ORCID lookup,
   share links, and a framework-agnostic `@credit-generator/core` domain package.
 
-[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.7.0...v0.8.0
