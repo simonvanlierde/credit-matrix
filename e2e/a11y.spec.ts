@@ -131,31 +131,13 @@ test.describe("Accessibility (axe-core)", () => {
     expect(results.violations).toEqual([]);
   });
 
-  /**
-   * The About panel portals into the <dialog> rather than <body>: showModal()
-   * puts the dialog in the top layer and makes the rest of the document inert,
-   * so a panel portalled outside it would render and never take a click. Hit
-   * testing is the only thing that catches that — the panel looks fine either
-   * way.
-   */
-  test("the About panel inside the welcome modal is operable, and Escape closes only it", async ({ page }) => {
+  test("the welcome modal links to the About page and, from the statement, to the plugins", async ({ page }) => {
     await page.addInitScript((key) => window.localStorage.removeItem(key), PERSIST_KEY);
     await page.goto("/");
     const dialog = page.locator("dialog#getting-started");
-    await dialog.getByRole("button", { name: "About this app" }).click();
-
-    const panel = page.getByRole("link", { name: "About, citing and privacy" });
-    await expect(panel).toBeVisible();
-    const box = await panel.boundingBox();
-    const topmost = await page.evaluate(
-      ([x, y]) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("href") ?? null,
-      [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2] as [number, number],
-    );
-    expect(topmost).toBe("/about");
-
-    await page.keyboard.press("Escape");
-    await expect(panel).toBeHidden();
-    await expect(dialog).toHaveAttribute("open", "");
+    await expect(dialog.getByRole("link", { name: "About this app" })).toHaveAttribute("href", "/about");
+    await dialog.getByRole("button", { name: "Load sample data" }).click();
+    await expect(page.getByRole("link", { name: /Use a plugin/ })).toHaveAttribute("href", "/about#plugins");
   });
 
   test("dark mode (loaded state) has no detectable violations", async ({ page }) => {

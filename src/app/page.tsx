@@ -5,26 +5,35 @@ import { LabelledSection } from "@/components/LabelledSection";
 import { AuthorList } from "@/components/steps/AuthorInput";
 import { ContributionGrid } from "@/components/steps/ContributionGrid";
 import { WelcomeCard } from "@/components/WelcomeCard";
-// Server component: only the version string crosses into the client bundle.
-import packageJson from "../../package.json";
+import codemeta from "../../codemeta.json";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-// Structured data for search engines: what the app is, so a result can show it as software.
+// Structured data for search engines, built from codemeta.json (which citesync keeps in step with
+// CITATION.cff), so the licence, version and authors never drift from the release metadata.
+// Search engines read only schema.org terms, so the CodeMeta record is mapped, not embedded.
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "CRediT Matrix",
-  url: "https://credit.duinlab.nl/",
+  name: codemeta.name,
+  description: codemeta.description,
+  url: codemeta.url,
   applicationCategory: "ReferenceApplication",
-  operatingSystem: "Any (web browser)",
+  operatingSystem: codemeta.operatingSystem,
   isAccessibleForFree: true,
-  license: "https://opensource.org/licenses/MIT",
-  softwareVersion: packageJson.version,
-  sameAs: "https://github.com/simonvanlierde/credit-matrix",
-  author: { "@type": "Person", name: "Simon van Lierde", url: "https://simonvanlierde.com" },
+  license: codemeta.license,
+  softwareVersion: codemeta.version,
+  identifier: codemeta.identifier,
+  keywords: codemeta.keywords.join(", "),
+  sameAs: codemeta.codeRepository,
+  author: codemeta.author.map(({ "@id": id, givenName, familyName }) => ({
+    "@type": "Person",
+    "@id": id,
+    givenName,
+    familyName,
+  })),
 };
 
 export default function HomePage() {
@@ -38,7 +47,7 @@ export default function HomePage() {
       />
       <ClaimGate>
         <div className="desk:flex desk:h-full desk:flex-col">
-          <WelcomeCard version={packageJson.version} />
+          <WelcomeCard />
           {/* The workspace: the roster as a slim rail, the grid as the canvas, and
           the inspector (statement, team, review) on the right. Below xl they
           stack in that order and the page scrolls. The grid column takes all

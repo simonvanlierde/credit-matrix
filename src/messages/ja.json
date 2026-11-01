@@ -260,6 +260,7 @@
   "aboutPluginsTitle": "執筆ツール用プラグイン",
   "aboutPlugins": "論文を書く場所で、そのまま声明も書けます。これらのプラグインは、著者リストのロール、またはここからエクスポートしたファイルをもとに、文書に声明を追加します。各名前から設定ガイドを開けます。",
   "aboutPluginsSoftware": "ソフトウェア向けには、<cli>コマンドラインツール</cli>が人とロールを CodeMeta 形式でも出力します。<citesync>citesync</citesync> はそのメタデータから CITATION.cff と Zenodo のファイルを作成し、<drift>codemeta-drift</drift> は CodeMeta ファイルの整合性を確認します。",
+  "statementPlugins": "Quarto・MyST・Typst で執筆中ならプラグインを",
   "privacy": "プライバシー",
   "accessibility": "アクセシビリティ",
   "aboutAccessibility": "確認している内容、既知の問題、問題の報告方法は<link>アクセシビリティ方針</link>に記載しています。",

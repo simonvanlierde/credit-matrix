@@ -260,6 +260,7 @@
   "aboutPluginsTitle": "Plugin per gli strumenti di scrittura",
   "aboutPlugins": "Scrivi la dichiarazione dove scrivi l'articolo. Questi plugin la aggiungono al tuo documento, a partire dai ruoli nell'elenco degli autori o da un file esportato qui. Ogni nome rimanda alla sua guida di installazione.",
   "aboutPluginsSoftware": "Per il software, lo <cli>strumento a riga di comando</cli> scrive anche persone e ruoli in formato CodeMeta. <citesync>citesync</citesync> trasforma questi metadati in file CITATION.cff e Zenodo, e <drift>codemeta-drift</drift> controlla la coerenza di un file CodeMeta.",
+  "statementPlugins": "Scrivi in Quarto, MyST o Typst? Usa un plugin",
   "privacy": "Privacy",
   "accessibility": "Accessibilità",
   "aboutAccessibility": "La <link>dichiarazione di accessibilità</link> spiega cosa verifichiamo, quali problemi conosciamo e come segnalarne uno.",

@@ -10,6 +10,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The [About page](https://credit.duinlab.nl/about#plugins) lists the plugins for MyST, Jupyter
   Book, Quarto, Pandoc, Typst and Sphinx, and links citesync and codemeta-drift for software metadata.
+  The About menu and the Statement tab link to that list.
 - The site has a sitemap, canonical page addresses and structured data, so search engines can
   list the app and the census.
 
@@ -17,6 +18,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The [CRediT census](https://credit.duinlab.nl/census) link shows in the header at every width,
   and the Published practice tab links to it.
+- The welcome panel's About link opens the [About page](https://credit.duinlab.nl/about) instead of
+  a panel over the welcome text.
 
 ## [0.10.0] - 2026-11-01
 

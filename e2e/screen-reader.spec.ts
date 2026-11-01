@@ -198,6 +198,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
         `
         - dialog "About this app":
           - link "About, citing and privacy"
+          - link "Plugins for writing tools"
           - link "Accessibility statement"
           - link "Source code on GitHub (opens in new tab)"
         `,

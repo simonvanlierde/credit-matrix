@@ -260,6 +260,7 @@
   "aboutPluginsTitle": "Plug-ins voor schrijftools",
   "aboutPlugins": "Schrijf de verklaring waar u het artikel schrijft. Deze plug-ins zetten hem in uw document, uit de rollen in de auteurslijst of uit een bestand dat u hier exporteert. Elke naam linkt naar de installatiegids.",
   "aboutPluginsSoftware": "Voor software schrijft de <cli>opdrachtregeltool</cli> personen en rollen ook als CodeMeta. <citesync>citesync</citesync> maakt van die metadata CITATION.cff- en Zenodo-bestanden, en <drift>codemeta-drift</drift> controleert of een CodeMeta-bestand consistent is.",
+  "statementPlugins": "Schrijft u in Quarto, MyST of Typst? Gebruik een plug-in",
   "privacy": "Privacy",
   "accessibility": "Toegankelijkheid",
   "aboutAccessibility": "De <link>toegankelijkheidsverklaring</link> zegt wat we controleren, welke problemen we kennen en hoe u er een meldt.",
