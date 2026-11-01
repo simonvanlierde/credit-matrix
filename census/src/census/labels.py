@@ -282,8 +282,8 @@ def check_label(label: list[dict], text: str, n_authors: int) -> list[dict]:
                 raise ValueError(f"{where}: degree and degree_evidence come together")
             if "degree" in r and (r["degree"] not in DEGREES or r["degree_evidence"] not in EVIDENCE):
                 raise ValueError(f"{where}: degree {r['degree']!r} / {r['degree_evidence']!r} not allowed")
-        if a.get("resolved_by", "order") != "order":
-            raise ValueError(f"{where}: resolved_by {a['resolved_by']!r} is not 'order'")
+        if a.get("resolved_by", "order") not in ("order", "near-miss"):
+            raise ValueError(f"{where}: resolved_by {a['resolved_by']!r} is not 'order' or 'near-miss'")
     for i, a in enumerate(out):
         if "others_of" not in a:
             continue

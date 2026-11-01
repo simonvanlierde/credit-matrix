@@ -27,7 +27,7 @@ A **role assertion**:
 - `authors`: author numbers from the numbered author list. See "Matching authors".
 - `roles`: one entry per role, each with `evidence`, and `degree` + `degree_evidence` when there is
   one.
-- `resolved_by: "order"` (optional): see "Matching authors".
+- `resolved_by: "order"` or `"near-miss"` (optional): see "Matching authors".
 - `others_of` (optional): see "Group words".
 
 A **pledge assertion**: `{"quote": "...", "mentions": ["All authors"], "authors": [1, 2, 3], "pledge": "icmje"}`.
@@ -76,10 +76,10 @@ For a degree:
 | revised, edited, commented on, reviewed, critically reviewed or critically revised the manuscript | writing - review & editing |
 | supervised, led the team, oversaw, PI | supervision |
 | obtained or secured funding | funding acquisition |
-| provided samples, patients, reagents, equipment or compute, "technical or material support" | resources |
+| provided samples, patients, reagents, equipment or compute, recruited or selected participants or patients, "technical or material support" | resources |
 | made the figures | visualization |
 | wrote the code, built the pipeline, developed software | software |
-| recruited or selected participants or patients, coordinated or organized the project, the fieldwork, data collection or the writing process, project management, "administrative support" | project administration |
+| coordinated or organized the project, the fieldwork, data collection or the writing process, project management, "administrative support" | project administration |
 | verified, replicated, did pilot tests, ensured methodological rigor, assessed the quality of included studies | validation |
 
 House rules on top of NISO:
@@ -93,8 +93,9 @@ House rules on top of NISO:
   if it seems likely.
 - Supervising, guiding or overseeing a task is supervision, not the task: "guided N.H. in the
   statistical analysis" and "supervised the validation study" give supervision only.
-- Obtaining or collecting samples within the study is investigation ("obtained the samples from the
-  recruited patients"); providing or supplying them is resources.
+- Obtaining or collecting samples and assessing participants within the study is investigation;
+  recruiting the participants is resources. "Recruited the patients, performed their clinical
+  assessment, and obtained the samples" gives both.
 - Planning the manuscript is writing, not methodology: "contributed to the ideation, planning and
   drafting of the manuscript" gives original draft.
 - "Wrote the manuscript with input from all authors" (or "with contributions from all authors", "all
@@ -109,7 +110,8 @@ House rules on top of NISO:
 - "All authors contributed to the article / to the work / to this study" with no task named.
 - "Agrees to be accountable for all aspects of the work".
 - "Discussed the results", "participated in the discussion" on its own: discussing is not analysis.
-  "Discussed and interpreted the results" still gives formal analysis.
+  "Discussed and interpreted the results" still gives formal analysis, and review wording in the
+  same sentence still gives review & editing ("discussed the results and reviewed the manuscript").
 - Either-or lists said of everyone: "all authors participated in the planning, execution, or
   analysis of the study" says no one did any one of them.
 - Clinical or other non-research tasks: "primary physician", "contributed clinical input".
@@ -136,8 +138,11 @@ data...") is a description, not a pledge: map it to worded roles.
 - An author number goes in `authors` only when exactly one author fits the mention: by initials
   (including hyphenated and particle names: "JP-R", "TvdB"), by surname, by full name, or by a
   scoped group word.
-- Never match by position alone, and never by near-miss initials: "K.R." does not match Ren Kai
-  (R.K.), and "SSMT" does not match the only "SSM" author. Those stay unresolved.
+- Never match by position alone, and never by swapped initials: "K.R." does not match Ren Kai
+  (R.K.).
+- Near-miss initials match when exactly one author fits and the mention only drops or adds an
+  initial or a hyphenated part: "IW" for the only I. A. W. author, "SV" for the author written "SVM"
+  elsewhere, "E.A.S." for E. A. Silva-Junior. Mark that assertion `"resolved_by": "near-miss"`.
 - When initials fit several authors (two "MS") and the statement visibly names authors in byline
   order, the order of mention breaks the tie: the first "MS" is the earlier of the two in the byline.
   Mark that assertion `"resolved_by": "order"`.

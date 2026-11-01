@@ -178,6 +178,13 @@ def test_check_label_refuses(change, message):
         labels.check_label(label, _TEXT, 3)
 
 
+@pytest.mark.parametrize("how", ["order", "near-miss"])
+def test_check_label_takes_each_resolution(how):
+    label = [dict(x) for x in _LABEL]
+    label[0] |= {"resolved_by": how}
+    labels.check_label(label, _TEXT, 3)
+
+
 def test_check_label_refuses_wrong_complement():
     label = [dict(x) for x in _LABEL]
     label[2] |= {"authors": [2, 3]}
