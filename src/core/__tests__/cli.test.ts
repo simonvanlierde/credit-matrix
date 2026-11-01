@@ -127,6 +127,7 @@ describe("credit-matrix convert", () => {
     expect(await run(["convert", csv, "--to", "csv"])).toMatch(/^Name,ORCID/);
     expect(JSON.parse(await run(["convert", csv, "--to", "json"])).authors).toHaveLength(2);
     expect(await run(["convert", csv, "--to", "md"])).toContain("| Jane Smith |");
+    expect(await run(["convert", csv, "--to", "latex-credits"])).toContain("\\credit{Jane Smith}{");
     expect(await run(["convert", csv, "--to", "crossref"])).toContain('<role vocab="credit" type="software"/>');
     const xml = file("team.xml", await run(["convert", csv, "--to", "jats"]));
     expect(await run(["statement", xml])).toBe(await run(["statement", csv]));
@@ -149,7 +150,7 @@ describe("credit-matrix convert", () => {
   });
 
   it("needs --to", async () => {
-    await expect(run(["convert", csv])).rejects.toThrow(/--to json, csv, jats, crossref or md/);
+    await expect(run(["convert", csv])).rejects.toThrow(/--to json, csv, jats, crossref, md or latex-credits/);
   });
 });
 
@@ -289,7 +290,7 @@ describe("credit-matrix as a program", () => {
     const { out, err } = await launch("convert", csv);
     expect(out).toBe("");
     expect(err).toBe(
-      "credit-matrix: convert needs --to json, csv, jats, crossref or md.\nRun 'credit-matrix --help' for usage.\n",
+      "credit-matrix: convert needs --to json, csv, jats, crossref, md or latex-credits.\nRun 'credit-matrix --help' for usage.\n",
     );
     expect(process.exitCode).toBe(2);
   });

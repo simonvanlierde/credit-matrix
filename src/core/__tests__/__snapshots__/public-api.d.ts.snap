@@ -1057,6 +1057,16 @@ export declare function fromJson(json: string): {
   selfId?: string;
 };
 //#endregion
+//#region export/latex-credits.d.ts
+/**
+ * A draft as input for the latex-credits package (github.com/Pseudomanifold/latex-credits).
+ * Each author becomes one granular `\credit` line: 14 values in CRediT order, each the
+ * role's 0-100 score divided by 100, so lead, equal and supporting show as different
+ * shades in `\insertcreditsgranular`. The package's plain role list has no levels.
+ * Only authors are listed: the package has no place for acknowledgees.
+ */
+export declare function toLatexCredits(authors: Author[]): string;
+//#endregion
 //#region export/markdown.d.ts
 /**
  * Render the contributions as a Markdown table (Contributor → CRediT roles),

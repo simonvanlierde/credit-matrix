@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Export the grid as input for the [latex-credits](https://github.com/Pseudomanifold/latex-credits) LaTeX
+  package, from the Export data menu or with `credit-matrix convert --to latex-credits`. Lead, equal
+  and supporting show as shades. See the [package docs](src/core/README.md#import--export).
 - The [About page](https://credit.duinlab.nl/about#plugins) lists the plugins for MyST, Jupyter
   Book, Quarto, Pandoc, Typst and Sphinx, and links citesync and codemeta-drift for software metadata.
 - The site has a sitemap, canonical page addresses and structured data, so search engines can

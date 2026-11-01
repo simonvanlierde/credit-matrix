@@ -16,6 +16,7 @@ import {
   toCsv,
   toJats4rXml,
   toJson,
+  toLatexCredits,
   toMarkdown,
   toTenzing,
 } from "@/core";
@@ -29,7 +30,7 @@ import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-type DataFormat = "xml" | "crossref" | "json" | "csv" | "tenzing" | "markdown";
+type DataFormat = "xml" | "crossref" | "json" | "csv" | "tenzing" | "markdown" | "latex";
 
 const EXPORT_ITEM_BUTTON =
   "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
@@ -44,7 +45,7 @@ const DATA_FORMATS: Record<
     mime: string;
   }
 > = {
-  // XML/JSON/CSV/tenzing are machine round-trip formats, kept in canonical English.
+  // XML/JSON/CSV/tenzing/LaTeX are machine round-trip formats, kept in canonical English.
   // Only Markdown (a human-facing paste artifact) follows the output language.
   // XML and JSON are replaced per export in the component, which knows the
   // input mode and whether answers go in.
@@ -72,6 +73,12 @@ const DATA_FORMATS: Record<
     serialize: toTenzing,
     filename: "tenzing-contributors.csv",
     mime: "text/csv;charset=utf-8",
+  },
+  latex: {
+    label: "LaTeX (latex-credits)",
+    serialize: toLatexCredits,
+    filename: "credit-contributors.tex",
+    mime: "application/x-tex;charset=utf-8",
   },
   markdown: {
     label: "Markdown",
