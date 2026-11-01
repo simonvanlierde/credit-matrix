@@ -49,8 +49,9 @@ export function citations(source: CitationSource): Record<CitationFormat, string
   const bibFields = {
     title: `{${tex(source.name)}}`,
     author: source.author.map((a) => `{${tex(a.familyName)}}, {${tex(a.givenName)}}`).join(" and "),
-    doi: tex(doi),
-    url: tex(source.url),
+    // biblatex reads doi and url verbatim, so escaping them would break the link.
+    doi,
+    url: source.url,
     note: tex(`Software, version ${source.version}`),
     year: String(year),
   };

@@ -11,12 +11,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The [About page](https://credit.duinlab.nl/about#plugins) lists the plugins for MyST, Jupyter
   Book, Quarto, Pandoc, Typst and Sphinx, and links citesync and codemeta-drift for software metadata.
   The About menu and the Statement tab link to that list.
-- The About page shows how to cite CRediT Matrix in APA, BibTeX or CSL-JSON, to copy or download, built
+- The [About page](https://credit.duinlab.nl/about) shows how to cite CRediT Matrix in APA, BibTeX or CSL-JSON, to copy or download, built
   from the release metadata.
 - The site has a sitemap, canonical page addresses and structured data, so search engines can
   list the app and the census.
 - The [census counts](https://credit.duinlab.nl/data/census.json) are dedicated to the public domain
-  under CC0, stated in the file and in the census page's metadata.
+  under CC0.
 
 ### Changed
 

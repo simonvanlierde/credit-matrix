@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CensusDashboard } from "@/components/census/CensusDashboard";
+import { authors } from "@/lib/json-ld";
 // Server component: the counts are read at build time and arrive with the page,
 // so it renders without a fetch. The same file is downloadable at /data/census.json.
 import data from "../../../public/data/census.json";
@@ -23,7 +24,7 @@ const JSON_LD = {
   url: "https://credit.duinlab.nl/census",
   version: data.dataset_version,
   license: data.license,
-  creator: { "@type": "Person", name: "Simon van Lierde", url: "https://simonvanlierde.com" },
+  creator: authors,
   isBasedOn: "https://europepmc.org",
   distribution: {
     "@type": "DataDownload",

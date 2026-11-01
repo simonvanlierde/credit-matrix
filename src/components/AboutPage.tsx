@@ -47,6 +47,7 @@ function CitationBox({ citations }: { citations: Record<CitationFormat, string> 
       />
       {/* APA is a sentence to paste into a reference list; the other two are files. */}
       <pre
+        lang="en"
         className={cn(
           "whitespace-pre-wrap break-words rounded-lg bg-surface-container-low p-4 leading-relaxed text-on-surface",
           format === "apa" ? "font-sans text-sm" : "font-mono text-xs",

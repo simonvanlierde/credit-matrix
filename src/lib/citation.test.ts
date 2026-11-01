@@ -32,6 +32,16 @@ describe("citations", () => {
     expect(bib).toMatch(/^@misc\{credit-matrix,\n[\s\S]*\}\n$/);
   });
 
+  it("keeps the URL and DOI verbatim, as biblatex reads them", () => {
+    const bib = citations({
+      ...source,
+      url: "https://example.org/a_b%20c",
+      identifier: "https://doi.org/10.5555/x_y",
+    }).bibtex;
+    expect(bib).toContain("url = {https://example.org/a_b%20c},");
+    expect(bib).toContain("doi = {10.5555/x_y},");
+  });
+
   it("writes CSL-JSON with the full release date", () => {
     const [item] = JSON.parse(citations(source).csl);
     expect(item).toMatchObject({ type: "software", DOI: "10.5555/example", issued: { "date-parts": [[2026, 3, 4]] } });

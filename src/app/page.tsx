@@ -5,6 +5,7 @@ import { LabelledSection } from "@/components/LabelledSection";
 import { AuthorList } from "@/components/steps/AuthorInput";
 import { ContributionGrid } from "@/components/steps/ContributionGrid";
 import { WelcomeCard } from "@/components/WelcomeCard";
+import { authors } from "@/lib/json-ld";
 import codemeta from "../../codemeta.json";
 
 export const metadata: Metadata = {
@@ -28,12 +29,7 @@ const JSON_LD = {
   identifier: codemeta.identifier,
   keywords: codemeta.keywords.join(", "),
   sameAs: codemeta.codeRepository,
-  author: codemeta.author.map(({ "@id": id, givenName, familyName }) => ({
-    "@type": "Person",
-    "@id": id,
-    givenName,
-    familyName,
-  })),
+  author: authors,
 };
 
 export default function HomePage() {
