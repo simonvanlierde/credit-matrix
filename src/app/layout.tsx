@@ -101,9 +101,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         the labelled actions together overrun the row, and the
                         wordmark used to absorb it by wrapping out of the header. */}
                     <BrandMenu version={packageJson.version} />
-                    <span className="hidden shrink-0 items-center gap-2.5 lg:flex">
+                    {/* The lockup goes home, as a site's logo does; below lg it opens the menu instead. */}
+                    <a href="/" className="hidden shrink-0 items-center gap-2.5 rounded-lg lg:flex">
                       <Lockup />
-                    </span>
+                    </a>
                   </h1>
                   <nav className="hidden lg:flex gap-6 items-center">
                     <HowItWorks />

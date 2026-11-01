@@ -157,8 +157,8 @@ year, fields and the 20 largest publishers in the last full year, the share of a
 holding each role by byline place, and the paired F1 with how much of it comes from MDPI and
 Frontiers. Groups under 1,000 articles are left out, and the years start at the first with 1,000
 articles with roles. The last full year is the one before the newest year with 1,000 articles. It
-holds no names and no article rows, and records the snapshot, dataset version, code commit, parser
-hash and OpenAlex sources date. Like `export`, it refuses an incomplete database unless given
+is CC0, holds no names and no article rows, and records the snapshot, dataset version, code
+commit, parser hash and OpenAlex sources date. Like `export`, it refuses an incomplete database unless given
 `--partial`.
 
 ## Field norms for the app

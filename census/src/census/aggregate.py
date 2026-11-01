@@ -12,6 +12,8 @@ from census import store
 from census.export import DATASET_VERSION, commit
 from census.fields import has_fields
 
+# The counts are facts derived from the CC0 role-fact files, so they carry the same dedication.
+LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/"
 MIN_ARTICLES = 1000
 """A year, field or style with fewer research articles than this is left out: its share is noise. The year
 series also starts at the first year with this many articles with roles, which keeps out the few free-text
@@ -111,6 +113,7 @@ def aggregate(
     data = {
         "snapshot": name,
         "dataset_version": DATASET_VERSION,
+        "license": LICENSE,
         "code_commit": commit(),
         "openalex_sources": meta.get("openalex_sources"),
         "parser": meta.get("parser"),

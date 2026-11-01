@@ -34,6 +34,18 @@ The statement is added at the end of the document:
 > **Albert Einstein**: Formal analysis, Investigation.
 
 The filter also works with Pandoc's other writers, including Word and LaTeX.
+
+In R Markdown, pass it to the output format:
+
+```yaml
+output:
+  html_document:
+    pandoc_args: ["--lua-filter=credit-matrix.lua"]
+```
+
+Where Pandoc's default template would print an author with roles as "true" (HTML, LaTeX/PDF,
+ConTeXt, ms and Word), the filter turns each author into a plain name. Templates that read
+`author.name`, such as R Markdown's, and JATS keep the full author data.
 [`example.md`](example.md) is a complete manuscript to try.
 
 ## Metadata and placement
