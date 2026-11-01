@@ -14,9 +14,24 @@ import re
 import sys
 import time
 from collections.abc import Iterator
+from dataclasses import asdict
 from pathlib import Path
 
-from census import aggregate, bulk, export, fields, labels, modelset, net, norms, pipeline, pmc_s3, snapshot, store
+from census import (
+    aggregate,
+    bulk,
+    export,
+    fields,
+    labels,
+    modelset,
+    net,
+    norms,
+    pipeline,
+    pmc_s3,
+    runinfo,
+    snapshot,
+    store,
+)
 from census.reports import REPORTS
 
 ROOT = Path(__file__).resolve().parents[2]  # census/, so commands work from any directory
@@ -337,7 +352,25 @@ def cmd_model_train(args: argparse.Namespace) -> None:
         "device",
     )
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
-    best = encoder.train(encoder.Config(**overrides), dataset, run)
+    config = encoder.Config(**overrides)
+    with runinfo.track_energy() as energy:
+        best = encoder.train(config, dataset, run)
+    runinfo.write(
+        run / "manifest.json",
+        "train",
+        seed=config.seed,
+        config=asdict(config),
+        base_model=runinfo.base_model(config.model, config.revision),
+        data={p.name: runinfo.sha256(p) for p in sorted(dataset.glob("*.jsonl"))},
+        split={
+            "held_out": f"1 in {round(1 / modelset.HELD_OUT_SHARE)} statement groups, by seeded hash",
+            "held_out_seed": modelset.SPLIT_SEED,
+            "dev": f"1 statement group in {config.dev_every}, carved from train",
+        },
+        weights_sha256=runinfo.sha256(run / "checkpoint" / "model.safetensors"),
+        metrics=best,
+        energy=energy,
+    )
     print(f"best epoch {best['epoch']}: dev F1 {best['f1']} at threshold {best['threshold']}; model in {run}")
     print(f"predict with `census model predict --name {args.name}`")
 
@@ -353,16 +386,32 @@ def cmd_model_predict(args: argparse.Namespace) -> None:
     start = time.monotonic()
     if args.corpus:
         out = _corpus_dir(args)
-        with store.connect(_db(args), read_only=True) as con:
+        with runinfo.track_energy() as energy, store.connect(_db(args), read_only=True) as con:
             total = modelset.count_free_text(con, args.limit)
             chunks = modelset.free_text_chunks(con, args.chunk or 20_000, args.limit)
             n = encoder.predict_corpus(run, chunks, out, args.device, total)
+        _write_predict_manifest(run, out.name, args, energy, {"articles": n, "limit": args.limit})
         print(f"{n} articles in {time.monotonic() - start:.0f} s into {out}; compare with `census model compare`")
         return
     items, name = _items(args)
     out = _model_dir(args) / "predictions" / f"encoder-{args.name}-{name}.jsonl"
-    n = encoder.predict(run, items, out, args.device)
+    with runinfo.track_energy() as energy:
+        n = encoder.predict(run, items, out, args.device)
+    _write_predict_manifest(run, out.name, args, energy, {"articles": n, "output_sha256": runinfo.sha256(out)})
     print(f"{n} articles in {time.monotonic() - start:.0f} s; score with `census model score {out}`")
+
+
+def _write_predict_manifest(run: Path, what: str, args: argparse.Namespace, energy: dict, result: dict) -> None:
+    """`predict-<output>.json` beside the run's train manifest, so a second prediction never overwrites a first."""
+    runinfo.write(
+        run / f"predict-{what}.json",
+        "predict",
+        run=args.name,
+        device=args.device,
+        weights_sha256=runinfo.sha256(run / "checkpoint" / "model.safetensors"),
+        result=result,
+        energy=energy,
+    )
 
 
 def _corpus_dir(args: argparse.Namespace) -> Path:

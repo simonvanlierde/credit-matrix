@@ -312,6 +312,15 @@ are cut, and the run counts how many. Every setting is in `encoder.Config` and t
 `--epochs`, `--batch-size`, `--learning-rate` and `--device cpu` change a run; on CPU, a run of 100
 articles takes about 15 minutes.
 
+Each run also writes `manifest.json`, and each `predict` writes `predict-<output>.json`, in the run
+directory. They hold the git commit, the hash of `uv.lock`, the container image digest (from
+`CENSUS_IMAGE_DIGEST`, when set), the seed, the base model's repo, revision and weights hash, the
+hash of each dataset file, the split rule, the metrics, and the energy. Energy comes from
+CodeCarbon in offline mode (country NLD, Our World in Data grid average, power sampled every
+second). It says how each part was got: the CPU is `rapl` when the host lets CodeCarbon read
+`/sys/class/powercap`, else an `estimate` from the chip's TDP; the GPU is `nvml`; memory is always
+an `estimate`. Without CodeCarbon the manifest says `"tracked": false`.
+
 On `oa-2026-10`, the first run (814,249 examples, 2 epochs at batch 32, learning rate 5e-5) took 84
 minutes on one 24 GB GPU and used 12.7 GB of its memory; predicting the held-out set took under 4
 minutes. The first epoch scored best on dev (F1 0.903 at threshold 0.4); the second added nothing.
