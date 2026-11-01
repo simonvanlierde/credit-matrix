@@ -61,4 +61,4 @@ module-name = "census"
 
 [tool.ty.analysis]
 # CI type-checks without the `train` and `browser` groups: torch's wheels are too large to install there.
-allowed-unresolved-imports = ["torch", "transformers", "tokenizers", "onnx", "onnxruntime.**"]
+allowed-unresolved-imports = ["torch", "transformers", "tokenizers", "onnx", "onnxruntime.**", "codecarbon", "huggingface_hub"]
