@@ -399,17 +399,18 @@ export function StatementOutput() {
           </PopoverContent>
         </Popover>
 
-        {/* Its own left-aligned line: hung off the right edge it read as a
-            dangling leftover of the export row rather than a quiet extra. */}
-        <CreditBadge className="basis-full flex items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors" />
-        {/* Here, not only on /about: this is where someone takes the statement to their manuscript. */}
+        {/* Here, not only on /about: this is where someone takes the statement to their manuscript.
+            Primary like other links, since it goes to a page; the badge below opens a popover. */}
         <a
           href="/about#plugins"
-          className="-mt-1 basis-full flex items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors"
+          className="basis-full flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
         >
           <Puzzle className="h-[18px] w-[18px]" aria-hidden="true" />
           {t("statementPlugins")}
         </a>
+        {/* Its own left-aligned line: hung off the right edge it read as a
+            dangling leftover of the export row rather than a quiet extra. */}
+        <CreditBadge className="-mt-1 basis-full flex items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors" />
       </div>
     </div>
   );
