@@ -344,6 +344,11 @@ test.describe("screen-reader view (accessibility tree)", () => {
           - heading "About CRediT Matrix" [level=2]
           - term: Version
           - heading "Cite CRediT Matrix" [level=3]
+          - radiogroup "Citation format":
+            - radio "APA" [checked]
+            - radio "BibTeX"
+            - radio "CSL-JSON"
+          - heading "Plugins for writing tools" [level=3]
           - heading "Acknowledgements" [level=3]
           - heading "Privacy" [level=3]
           - heading "Accessibility" [level=3]

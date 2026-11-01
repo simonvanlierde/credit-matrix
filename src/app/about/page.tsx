@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { AboutPage } from "@/components/AboutPage";
 import { ReadingPage } from "@/components/ReadingPage";
-// Server component: only the version string crosses into the client bundle.
+import { citations } from "@/lib/citation";
+import codemeta from "../../../codemeta.json";
+// Server component: only the version string and the citation texts cross into the client bundle.
 import packageJson from "../../../package.json";
 
 export const metadata: Metadata = {
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 export default function About() {
   return (
     <ReadingPage>
-      <AboutPage version={packageJson.version} />
+      <AboutPage version={packageJson.version} citations={citations(codemeta)} />
     </ReadingPage>
   );
 }

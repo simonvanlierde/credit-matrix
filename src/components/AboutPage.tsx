@@ -1,7 +1,13 @@
 "use client";
 
+import { Check, Copy, Download } from "lucide-react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { LicenseLink } from "@/components/ui/license-link";
+import { SegmentedControl } from "@/components/ui/segmented";
+import { CITATION_FORMATS, type CitationFormat } from "@/lib/citation";
+import { useCopyStatus } from "@/lib/use-copy-status";
+import { cn, download } from "@/lib/utils";
 
 const REPO = "https://github.com/simonvanlierde/credit-matrix";
 // The concept DOI from CITATION.cff: it resolves to every version, so it never changes on release.
@@ -18,8 +24,60 @@ const PLUGINS = [
   { name: "Sphinx", href: `${INTEGRATIONS}/sphinx#readme`, code: ".. credit-statement::" },
 ];
 
+const BUTTON =
+  "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant px-3 text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary";
+
+/** The citation in the format the reader picks, to copy or download. Built at build time from codemeta.json. */
+function CitationBox({ citations }: { citations: Record<CitationFormat, string> }) {
+  const t = useTranslations();
+  const [format, setFormat] = useState<CitationFormat>("apa");
+  const [status, copy] = useCopyStatus({ copied: t("annCitationCopied") });
+  const { filename, type } = CITATION_FORMATS[format];
+  return (
+    <div className="my-5 space-y-3">
+      <SegmentedControl
+        ariaLabel={t("aboutCiteFormat")}
+        size="sm"
+        value={format}
+        onChange={setFormat}
+        options={(Object.keys(CITATION_FORMATS) as CitationFormat[]).map((value) => ({
+          value,
+          label: CITATION_FORMATS[value].label,
+        }))}
+      />
+      {/* APA is a sentence to paste into a reference list; the other two are files. */}
+      <pre
+        className={cn(
+          "whitespace-pre-wrap break-words rounded-lg bg-surface-container-low p-4 leading-relaxed text-on-surface",
+          format === "apa" ? "font-sans text-sm" : "font-mono text-xs",
+        )}
+      >
+        {citations[format]}
+      </pre>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => void copy(citations[format])} className={BUTTON}>
+          {status === "copied" ? (
+            <Check className="size-4 text-primary" aria-hidden="true" />
+          ) : (
+            <Copy className="size-4" aria-hidden="true" />
+          )}
+          {status === "copied" ? t("copied") : status === "error" ? t("copyFailedMessage") : t("copy")}
+        </button>
+        <button
+          type="button"
+          onClick={() => download(new Blob([citations[format]], { type }), filename)}
+          className={BUTTON}
+        >
+          <Download className="size-4" aria-hidden="true" />
+          {t("download")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /** What the app is, how to cite it, whom it thanks, and what it sends where. */
-export function AboutPage({ version }: { version: string }) {
+export function AboutPage({ version, citations }: { version: string; citations: Record<CitationFormat, string> }) {
   const t = useTranslations();
   return (
     <article className="document">
@@ -49,9 +107,11 @@ export function AboutPage({ version }: { version: string }) {
       <p>
         {t("aboutCite")} <a href={CONCEPT_DOI}>{CONCEPT_DOI}</a>
       </p>
+      <CitationBox citations={citations} />
       <p>
         {t.rich("aboutCiteMetadata", {
           link: (chunks) => <a href={`${REPO}/blob/main/CITATION.cff`}>{chunks}</a>,
+          citesync: (chunks) => <a href="https://simonvanlierde.com/citesync/">{chunks}</a>,
         })}
       </p>
 

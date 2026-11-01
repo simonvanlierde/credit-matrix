@@ -137,7 +137,10 @@ test.describe("Accessibility (axe-core)", () => {
     const dialog = page.locator("dialog#getting-started");
     await expect(dialog.getByRole("link", { name: "About this app" })).toHaveAttribute("href", "/about");
     await dialog.getByRole("button", { name: "Load sample data" }).click();
-    await expect(page.getByRole("link", { name: /Use a plugin/ })).toHaveAttribute("href", "/about#plugins");
+    await expect(page.getByRole("link", { name: /Plugins for Quarto, MyST, Typst and more/ })).toHaveAttribute(
+      "href",
+      "/about#plugins",
+    );
   });
 
   test("dark mode (loaded state) has no detectable violations", async ({ page }) => {
