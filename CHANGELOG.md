@@ -13,6 +13,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   The About menu and the Statement tab link to that list.
 - The site has a sitemap, canonical page addresses and structured data, so search engines can
   list the app and the census.
+- The [census counts](https://credit.duinlab.nl/data/census.json) are dedicated to the public domain
+  under CC0, stated in the file and in the census page's metadata.
 
 ### Changed
 

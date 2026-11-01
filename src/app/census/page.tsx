@@ -22,6 +22,7 @@ const JSON_LD = {
   description: metadata.description,
   url: "https://credit.duinlab.nl/census",
   version: data.dataset_version,
+  license: data.license,
   creator: { "@type": "Person", name: "Simon van Lierde", url: "https://simonvanlierde.com" },
   isBasedOn: "https://europepmc.org",
   distribution: {
