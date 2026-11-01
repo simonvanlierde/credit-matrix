@@ -1,0 +1,4 @@
+source = "CITATION.cff"
+files = ["CITATION.cff", "codemeta.json"]
+manifests = ["src/core/package.json"]
+write-manifests = ["version"]

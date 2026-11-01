@@ -81,6 +81,23 @@ days after a release before it does (`minimumReleaseAge` in `renovate.json5`), s
 has time to be pulled. It merges minor and patch updates once every check passes; majors wait for
 me. The census in `census/` follows the same rule through uv's `exclude-newer = "7 days"`.
 
+## Releases
+
+Add a dated changelog entry before running `pnpm version`. Its lifecycle script takes the
+version from the root package and the date from that entry. It runs `citesync==0.2.0` through
+`uvx` to update CITATION.cff, codemeta.json and the published `src/core/package.json`.
+The first run needs access to the Python package index; later runs can use uv's cache.
+
+[citesync.toml](citesync.toml) lists those files and permits only version writes to the package.
+The release script supplies a temporary source with only version and date, so it does not
+replace names, roles or other metadata. It still updates Quarto's extension version itself.
+`citesync check` checks the citation files against CITATION.cff and the published package;
+the private root package supplies the release version and is not a citation target.
+
+A metadata error stops the script before staging files or updating Quarto. Some citation or
+package version fields may already have changed. Fix the reported file, then run `pnpm run version`
+to finish syncing the current version without another version bump.
+
 ## Testing
 
 - **Unit (Vitest)**: two projects. `core` runs `src/core` under Node and checks the built package:

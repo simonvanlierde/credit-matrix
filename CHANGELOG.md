@@ -17,6 +17,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- [Release metadata updates](CONTRIBUTING.md#releases) use citesync to keep the citation files
+  and published package version in step while preserving contributor roles and other metadata.
+
 - The [MyST plugin](integrations/myst/README.md) now uses the `credit-matrix` package for role names
   and statement wording. Install `credit-matrix` alongside `yaml` when upgrading the plugin.
 
