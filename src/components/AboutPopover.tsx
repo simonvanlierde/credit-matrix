@@ -5,12 +5,8 @@ import { useTranslations } from "use-intl";
 import { AboutPanel } from "@/components/AboutPanel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-/**
- * The labelled About link. `container` targets the portal at an open modal
- * dialog: the top layer makes the rest of the document inert, so a panel
- * portalled to <body> from inside a dialog would render unclickable.
- */
-export function AboutPopover({ version, container }: { version: string; container?: HTMLElement | null }) {
+/** The labelled About link in the header nav. */
+export function AboutPopover({ version }: { version: string }) {
   const t = useTranslations();
   return (
     <Popover>
@@ -27,7 +23,6 @@ export function AboutPopover({ version, container }: { version: string; containe
       <PopoverContent
         align="start"
         aria-label={t("aboutApp")}
-        container={container}
         className="w-[22rem] max-w-[calc(100vw-1.5rem)] space-y-3 text-sm text-on-surface-variant"
       >
         <AboutPanel version={version} />

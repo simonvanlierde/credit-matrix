@@ -137,7 +137,8 @@ export function CensusDashboard({ data }: { data: CensusData }) {
     <div data-census-page className="desk:relative desk:h-full desk:overflow-y-auto">
       <article className="mx-auto max-w-5xl space-y-10 px-4 pt-6 pb-16 sm:px-8">
         <header className="space-y-5">
-          <a href="/" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+          {/* From lg the header's lockup links home; below it the lockup opens the menu. */}
+          <a href="/" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline lg:hidden">
             <ArrowLeft className="size-4" aria-hidden="true" />
             {t("censusBack")}
           </a>

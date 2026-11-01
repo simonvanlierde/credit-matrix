@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Settings2, TriangleAlert } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { CreditBadge } from "@/components/ui/credit-badge";
@@ -399,9 +399,18 @@ export function StatementOutput() {
           </PopoverContent>
         </Popover>
 
+        {/* Here, not only on /about: this is where someone takes the statement to their manuscript.
+            Primary like other links, since it goes to a page; the badge below opens a popover. */}
+        <a
+          href="/about#plugins"
+          className="basis-full flex min-h-6 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+        >
+          <Puzzle className="h-[18px] w-[18px]" aria-hidden="true" />
+          {t("statementPlugins")}
+        </a>
         {/* Its own left-aligned line: hung off the right edge it read as a
             dangling leftover of the export row rather than a quiet extra. */}
-        <CreditBadge className="basis-full flex items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors" />
+        <CreditBadge className="basis-full flex min-h-6 items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors" />
       </div>
     </div>
   );

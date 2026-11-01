@@ -29,7 +29,7 @@ test.describe("About page", () => {
     expect(conceptDoi).toBeTruthy();
     await expect(article.getByRole("link", { name: `https://doi.org/${conceptDoi}` })).toBeVisible();
     await expect(article.getByRole("link", { name: "Quarto" })).toHaveAttribute("href", /integrations\/quarto/);
-    await expect(article.getByRole("link", { name: "citesync" })).toHaveAttribute(
+    await expect(article.getByRole("link", { name: "citesync" }).first()).toHaveAttribute(
       "href",
       "https://simonvanlierde.com/citesync/",
     );
@@ -40,6 +40,25 @@ test.describe("About page", () => {
     );
     // The page holds no draft, so the header offers no draft actions.
     await expect(page.getByRole("button", { name: "Import" })).toBeHidden();
+  });
+
+  test("shows the citation in the format picked, built from the release metadata", async ({ page }) => {
+    await page.goto("/about");
+    const formats = page.getByRole("radiogroup", { name: "Citation format" });
+    await expect(page.locator("article pre")).toContainText("[Computer software]");
+    await formats.getByRole("radio", { name: "BibTeX" }).click();
+    await expect(page.locator("article pre")).toContainText("@misc{credit-matrix,");
+    const downloaded = page.waitForEvent("download");
+    await page.locator("article").getByRole("button", { name: "Download" }).click();
+    expect((await downloaded).suggestedFilename()).toBe("credit-matrix.bib");
+  });
+
+  test("the way home is the header lockup on a desktop and a back link on a phone", async ({ page }) => {
+    await page.goto("/about");
+    await expect(page.getByRole("banner").getByRole("link", { name: "CRediT Matrix" })).toHaveAttribute("href", "/");
+    await expect(page.getByRole("link", { name: "Back to CRediT Matrix" })).toBeHidden();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole("link", { name: "Back to CRediT Matrix" })).toBeVisible();
   });
 
   // The welcome modal exists only on the main page, so from here "How it works"
