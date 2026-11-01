@@ -10,7 +10,6 @@ import hashlib
 import json
 import os
 import subprocess
-import warnings
 from collections.abc import Generator, Iterable
 from pathlib import Path
 from typing import Any
@@ -91,6 +90,9 @@ def track_energy() -> Generator[dict[str, Any]]:
         )
         tracker.start()
     except Exception as err:  # ImportError, or a sensor that cannot be opened
+        if tracker is not None:
+            with contextlib.suppress(Exception):
+                tracker.stop()
         tracker = None
         energy["reason"] = f"{type(err).__name__}: {err}"
     try:
@@ -143,16 +145,20 @@ class Tracker:
         """Log `path` as a run input. MLflow keeps 36 characters of a digest, so the full SHA-256 is a param too."""
         if not self._m:
             return
-        from mlflow.data.dataset_source_registry import resolve_dataset_source
-        from mlflow.data.meta_dataset import MetaDataset
+        from mlflow.entities import Dataset, DatasetInput, InputTag
+        from mlflow.tracking import MlflowClient
 
         digest = sha256(path)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")  # a local file matches two source types; either records the URI
-            source = resolve_dataset_source(path.resolve().as_uri())
-        # ty reads MetaDataset as abstract, though it instantiates; Any keeps the check passing with and without mlflow.
-        meta_dataset: Any = MetaDataset
-        self._m.log_input(meta_dataset(source, name=path.name, digest=digest[:36]), context=context)
+        dataset = Dataset(
+            name=path.name,
+            digest=digest[:36],
+            source_type="local",
+            source=json.dumps({"uri": path.resolve().as_uri()}),
+        )
+        MlflowClient().log_inputs(
+            self._m.active_run().info.run_id,
+            datasets=[DatasetInput(dataset, tags=[InputTag("mlflow.data.context", context)])],
+        )
         self._m.log_param(f"sha256.{path.name}", digest)
 
     def epochs(self, log: Path) -> None:

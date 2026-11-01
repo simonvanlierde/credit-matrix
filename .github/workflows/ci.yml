@@ -167,10 +167,12 @@ jobs:
 
       - name: Lint, typecheck, test
         run: |
-          uv run --locked ruff format --check .
-          uv run --locked ruff check .
-          uv run --locked ty check
-          uv run --locked pytest -q
+          uv sync --locked --group tracking
+          uv run --no-sync ruff format --check .
+          uv run --no-sync ruff check .
+          uv run --no-sync ty check
+          uv run --no-sync python -c "import mlflow, sqlalchemy, alembic"
+          uv run --no-sync pytest -q
 
   # One leg per browser, in parallel: the three together take about four times as long as Chromium
   # alone. The Chromium leg keeps the plain job name, which the branch ruleset requires.

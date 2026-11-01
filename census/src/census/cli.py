@@ -354,11 +354,8 @@ def cmd_model_train(args: argparse.Namespace) -> None:
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
     config = encoder.Config(**overrides)
     with runinfo.tracking(DATA / "mlflow.db", f"census-{args.snapshot}", args.name, "train") as t:
-        base = runinfo.base_model(config.model, config.revision)
         t.params(
             {f"config.{k}": v for k, v in asdict(config).items()}
-            | {"base_model.repo": base["repo"], "base_model.revision": base["revision"]}
-            | {"base_model.weights_sha256": base["weights_sha256"]}
             | {
                 "split.held_out": f"1 in {round(1 / modelset.HELD_OUT_SHARE)} statement groups, by seeded hash",
                 "split.held_out_seed": modelset.SPLIT_SEED,
@@ -367,12 +364,16 @@ def cmd_model_train(args: argparse.Namespace) -> None:
         )
         for path in sorted(dataset.glob("*.jsonl")):
             t.dataset(path, "held_out" if path.name == "held_out.jsonl" else "train")
-        with runinfo.track_energy() as energy:
-            best = encoder.train(config, dataset, run)
+        try:
+            with runinfo.track_energy() as energy:
+                best = encoder.train(config, dataset, run)
+        finally:
+            t.energy(energy)
+        base = runinfo.base_model(config.model, config.revision)
+        t.params({f"base_model.{k}": v for k, v in base.items()})
         t.params({"weights_sha256": runinfo.sha256(run / "checkpoint" / "model.safetensors")})
         t.epochs(run / "metrics.jsonl")
         t.metrics({f"best_{k}": v for k, v in best.items()})
-        t.energy(energy)
     print(f"best epoch {best['epoch']}: dev F1 {best['f1']} at threshold {best['threshold']}; model in {run}")
     print(f"predict with `census model predict --name {args.name}`")
 
@@ -388,39 +389,36 @@ def cmd_model_predict(args: argparse.Namespace) -> None:
     start = time.monotonic()
     if args.corpus:
         out = _corpus_dir(args)
-        with runinfo.tracking(DATA / "mlflow.db", f"census-{args.snapshot}", f"predict-{args.name}", "predict") as t:
-            with runinfo.track_energy() as energy, store.connect(_db(args), read_only=True) as con:
-                total = modelset.count_free_text(con, args.limit)
-                chunks = modelset.free_text_chunks(con, args.chunk or 20_000, args.limit)
-                n = encoder.predict_corpus(run, chunks, out, args.device, total)
-            _log_predict(t, run, args, out.name, energy, n)
-        print(f"{n} articles in {time.monotonic() - start:.0f} s into {out}; compare with `census model compare`")
-        return
-    items, name = _items(args)
-    out = _model_dir(args) / "predictions" / f"encoder-{args.name}-{name}.jsonl"
+    else:
+        items, name = _items(args)
+        out = _model_dir(args) / "predictions" / f"encoder-{args.name}-{name}.jsonl"
     with runinfo.tracking(DATA / "mlflow.db", f"census-{args.snapshot}", f"predict-{args.name}", "predict") as t:
-        with runinfo.track_energy() as energy:
-            n = encoder.predict(run, items, out, args.device)
-        _log_predict(t, run, args, out.name, energy, n, runinfo.sha256(out))
-    print(f"{n} articles in {time.monotonic() - start:.0f} s; score with `census model score {out}`")
-
-
-def _log_predict(
-    t: runinfo.Tracker, run: Path, args: argparse.Namespace, output: str, energy: dict, n: int, out_sha=None
-):
-    """The prediction's inputs and result; `weights_sha256` ties it to the train run that made the model."""
-    t.params(
-        {
-            "run": args.name,
-            "output": output,
-            "device": args.device,
-            "limit": args.limit,
-            "weights_sha256": runinfo.sha256(run / "checkpoint" / "model.safetensors"),
-            "output_sha256": out_sha,
-        }
-    )
-    t.metrics({"articles": n})
-    t.energy(energy)
+        try:
+            with runinfo.track_energy() as energy:
+                if args.corpus:
+                    with store.connect(_db(args), read_only=True) as con:
+                        total = modelset.count_free_text(con, args.limit)
+                        chunks = modelset.free_text_chunks(con, args.chunk or 20_000, args.limit)
+                        n = encoder.predict_corpus(run, chunks, out, args.device, total)
+                else:
+                    n = encoder.predict(run, items, out, args.device)
+        finally:
+            t.energy(energy)
+        t.params(
+            {
+                "run": args.name,
+                "output": out.name,
+                "device": args.device,
+                "limit": args.limit,
+                "weights_sha256": runinfo.sha256(run / "checkpoint" / "model.safetensors"),
+                "output_sha256": None if args.corpus else runinfo.sha256(out),
+            }
+        )
+        t.metrics({"articles": n})
+    if args.corpus:
+        print(f"{n} articles in {time.monotonic() - start:.0f} s into {out}; compare with `census model compare`")
+    else:
+        print(f"{n} articles in {time.monotonic() - start:.0f} s; score with `census model score {out}`")
 
 
 def _corpus_dir(args: argparse.Namespace) -> Path:

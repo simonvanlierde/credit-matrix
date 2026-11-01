@@ -346,6 +346,11 @@ dev = [
     { name = "ty" },
     { name = "types-lxml" },
 ]
+tracking = [
+    { name = "alembic" },
+    { name = "mlflow-skinny" },
+    { name = "sqlalchemy" },
+]
 train = [
     { name = "alembic" },
     { name = "codecarbon" },
@@ -374,6 +379,11 @@ dev = [
     { name = "ruff", specifier = ">=0.17" },
     { name = "ty", specifier = ">=0.0.86" },
     { name = "types-lxml", specifier = ">=2026.2.16" },
+]
+tracking = [
+    { name = "alembic", specifier = ">=1.16" },
+    { name = "mlflow-skinny", specifier = ">=3.17" },
+    { name = "sqlalchemy", specifier = ">=2" },
 ]
 train = [
     { name = "alembic", specifier = ">=1.16" },

@@ -1,3 +1,4 @@
+import contextlib
 import hashlib
 import json
 import sys
@@ -21,7 +22,7 @@ def test_energy_says_untracked_when_codecarbon_is_missing(monkeypatch):
     assert energy["tracked"] is False and "codecarbon" in energy["reason"]
 
 
-def _fake_codecarbon(monkeypatch, hardware):
+def _fake_codecarbon(monkeypatch, hardware, fail=None):
     seen: dict = {}
 
     class Tracker:
@@ -39,8 +40,14 @@ def _fake_codecarbon(monkeypatch, hardware):
         def __init__(self, **kwargs):
             seen.update(kwargs)
 
-        def start(self): ...
-        def stop(self): ...
+        def start(self):
+            if fail == "start":
+                raise RuntimeError("sensor failed")
+
+        def stop(self):
+            seen["stopped"] = True
+            if fail == "stop":
+                raise RuntimeError("sensor failed")
 
     monkeypatch.setitem(sys.modules, "codecarbon", types.SimpleNamespace(OfflineEmissionsTracker=Tracker))
     return seen
@@ -111,6 +118,8 @@ def test_tracking_records_a_run_with_provenance(mlflow_store, tmp_path, monkeypa
     assert run.data.params["sha256.train.jsonl"] == hashlib.sha256(b"train\n").hexdigest()
     (ds,) = run.inputs.dataset_inputs
     assert ds.dataset.name == "train.jsonl" and hashlib.sha256(b"train\n").hexdigest().startswith(ds.dataset.digest)
+    assert ds.dataset.source_type == "local" and json.loads(ds.dataset.source) == {"uri": data.as_uri()}
+    assert {tag.key: tag.value for tag in ds.tags} == {"mlflow.data.context": "train"}
     assert run.data.metrics["best_f1"] == 0.5 and run.data.metrics["energy_kwh"] == 0.5
     tags = run.data.tags
     assert len(tags["mlflow.source.git.commit"]) == 40 and tags["git_dirty"] in ("True", "False")
@@ -166,17 +175,29 @@ def test_epoch_metrics_come_from_the_training_log(mlflow_store, tmp_path):
     assert [(m.step, m.value) for m in f1] == [(1, 0.9), (2, 0.7)]
 
 
-def test_cli_train_and_predict_are_tracked(mlflow_store, tmp_path, monkeypatch):
+@pytest.mark.parametrize("corpus", [False, True])
+def test_cli_train_and_predict_are_tracked(mlflow_store, tmp_path, monkeypatch, corpus):
     from census import cli, encoder
 
     monkeypatch.setattr(cli, "DATA", tmp_path)
-    monkeypatch.setattr(runinfo, "base_model", lambda repo, rev: {"repo": repo, "revision": rev, "weights_sha256": "w"})
+    base_weights = tmp_path / "base.safetensors"
+
+    def cached_model(repo, rev):
+        return {
+            "repo": repo,
+            "revision": rev,
+            "weights_sha256": runinfo.sha256(base_weights) if base_weights.exists() else None,
+        }
+
+    monkeypatch.setattr(runinfo, "base_model", cached_model)
+    (tmp_path / "s.duckdb").touch()
     snap = tmp_path / "model" / "s"
     (snap / "dataset").mkdir(parents=True)
     (snap / "dataset" / "train.jsonl").write_bytes(b"train\n")
     (snap / "dataset" / "held_out.jsonl").write_bytes(b'{"pmcid": "PMC1"}\n')
 
     def fake_train(config, dataset, run):
+        base_weights.write_bytes(b"base weights")
         (run / "checkpoint").mkdir(parents=True)
         (run / "checkpoint" / "model.safetensors").write_bytes(b"weights")
         (run / "metrics.jsonl").write_text(json.dumps({"epoch": 1, "seconds": 9, "dev": {"0.4": {"f1": 0.5}}}) + "\n")
@@ -188,11 +209,20 @@ def test_cli_train_and_predict_are_tracked(mlflow_store, tmp_path, monkeypatch):
         out.write_text("{}\n")
         return 1
 
+    def fake_predict_corpus(run, chunks, out, device, total):
+        assert list(chunks) == [[{"pmcid": "PMC1"}]] and total == 1
+        out.mkdir(parents=True)
+        return 1
+
+    monkeypatch.setattr(encoder, "predict_corpus", fake_predict_corpus)
+    monkeypatch.setattr(cli.store, "connect", lambda *a, **kw: contextlib.nullcontext(None))
+    monkeypatch.setattr(cli.modelset, "count_free_text", lambda con, limit: 1)
+    monkeypatch.setattr(cli.modelset, "free_text_chunks", lambda con, chunk, limit: [[{"pmcid": "PMC1"}]])
     monkeypatch.setattr(encoder, "train", fake_train)
     monkeypatch.setattr(encoder, "predict", fake_predict)
     monkeypatch.setitem(sys.modules, "codecarbon", None)
     assert cli.main(["model", "train", "--snapshot", "s", "--name", "r", "--seed", "5"]) == 0
-    assert cli.main(["model", "predict", "--snapshot", "s", "--name", "r"]) == 0
+    assert cli.main(["model", "predict", "--snapshot", "s", "--name", "r", *(["--corpus"] if corpus else [])]) == 0
     train, predict = sorted(
         mlflow_store.search_runs([mlflow_store.get_experiment_by_name("census-s").experiment_id]),
         key=lambda r: r.data.tags["kind"],
@@ -201,6 +231,7 @@ def test_cli_train_and_predict_are_tracked(mlflow_store, tmp_path, monkeypatch):
     weights = hashlib.sha256(b"weights").hexdigest()
     assert train.data.params["config.seed"] == "5"
     assert train.data.params["base_model.repo"] == "answerdotai/ModernBERT-base"
+    assert train.data.params["base_model.weights_sha256"] == hashlib.sha256(b"base weights").hexdigest()
     assert train.data.params["weights_sha256"] == weights
     assert train.data.params["sha256.train.jsonl"] == hashlib.sha256(b"train\n").hexdigest()
     assert train.data.params["split.held_out_seed"]
@@ -208,3 +239,44 @@ def test_cli_train_and_predict_are_tracked(mlflow_store, tmp_path, monkeypatch):
     assert train.data.tags["energy_tracked"] == "False"
     assert predict.data.tags["kind"] == "predict" and predict.data.params["weights_sha256"] == weights
     assert predict.data.metrics["articles"] == 1
+    assert predict.data.params["output"] == ("encoder-r-corpus" if corpus else "encoder-r-held_out.jsonl")
+    assert predict.data.params["output_sha256"] == ("None" if corpus else hashlib.sha256(b"{}\n").hexdigest())
+
+
+@pytest.mark.parametrize("fail", ["start", "stop"])
+def test_energy_failure_still_cleans_up_and_preserves_job_error(monkeypatch, fail):
+    seen = _fake_codecarbon(monkeypatch, [], fail=fail)
+    with pytest.raises(ValueError, match="training failed"), runinfo.track_energy() as energy:
+        raise ValueError("training failed")
+    assert seen["stopped"]
+    assert energy["tracked"] is False and "sensor failed" in energy["reason"]
+
+
+@pytest.mark.parametrize("kind", ["train", "predict"])
+def test_failed_command_records_energy(mlflow_store, tmp_path, monkeypatch, kind):
+    from census import cli, encoder
+
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    monkeypatch.setattr(
+        runinfo, "base_model", lambda repo, rev: {"repo": repo, "revision": rev, "weights_sha256": None}
+    )
+    dataset = tmp_path / "model" / "s" / "dataset"
+    dataset.mkdir(parents=True)
+    (dataset / "train.jsonl").write_text("{}\n")
+    (dataset / "held_out.jsonl").write_text("{}\n")
+    if kind == "predict":
+        run = dataset.parent / "runs" / "r"
+        (run / "checkpoint").mkdir(parents=True)
+        (run / "checkpoint" / "model.safetensors").write_bytes(b"weights")
+        (run / "best.json").write_text("{}")
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("training failed")
+
+    monkeypatch.setattr(encoder, kind, fail)
+    _fake_codecarbon(monkeypatch, ["CPU(Intel Rapl)"])
+    with pytest.raises(RuntimeError, match="training failed"):
+        cli.main(["model", kind, "--snapshot", "s", "--name", "r"])
+    run = _only_run(mlflow_store, "census-s")
+    assert run.info.status == "FAILED"
+    assert run.data.metrics["energy_kwh"] == 0.5

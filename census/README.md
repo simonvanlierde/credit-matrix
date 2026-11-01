@@ -322,8 +322,10 @@ stay in the run directory. Energy comes from CodeCarbon in offline mode (country
 grid average, power sampled every second): kWh for the CPU, GPU and memory as metrics, and tags that say
 how each was got. The CPU is `rapl` when the host lets CodeCarbon read `/sys/class/powercap`, else an
 `estimate` from the chip's TDP; the GPU is `nvml`; memory is always an `estimate`. Without CodeCarbon the
-run is tagged `energy_tracked=False`. Without MLflow (it is in the `train` group) the command still runs
-and says tracking was skipped. To browse the runs:
+run is tagged `energy_tracked=False`. Without MLflow the command still runs and says tracking was skipped.
+MLflow is in the `train` group; `uv sync --group tracking` installs it without the training stack.
+Failed runs retain their energy figures when CodeCarbon can measure them. Tracking errors from an installed
+MLflow store stop the command. To browse the runs:
 
 ```sh
 uvx mlflow ui --backend-store-uri sqlite:///data/mlflow.db

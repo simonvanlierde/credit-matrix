@@ -26,11 +26,14 @@ dev = [
   "ty>=0.0.86",
   "types-lxml>=2026.2.16",
 ]
-train = [
+tracking = [
   "alembic>=1.16",
-  "codecarbon>=3.3.2",
   "mlflow-skinny>=3.17",
   "sqlalchemy>=2",
+]
+train = [
+  { include-group = "tracking" },
+  "codecarbon>=3.3.2",
   "torch>=2.14",
   "transformers>=5.20",
 ]
