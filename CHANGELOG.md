@@ -17,6 +17,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The [CRediT census](https://credit.duinlab.nl/census) link shows in the header at every width,
   and the Published practice tab links to it.
+- The [Typst package](https://github.com/simonvanlierde/credit-matrix/tree/main/integrations/typst) declares
+  its role translations as CC BY 4.0 next to the MIT code, ready for Typst Universe.
 
 ## [0.10.0] - 2026-11-01
 

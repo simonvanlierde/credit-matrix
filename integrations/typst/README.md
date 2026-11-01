@@ -7,22 +7,16 @@ the app, export them as JSON and print them in your paper.
 
 ## Install
 
-Once the package is on Typst Universe:
-
 ```typ
 #import "@preview/credit-matrix:0.1.0": *
 ```
 
-Until then, copy this folder (`lib.typ`, `translations.json`, `typst.toml`) into your project and
-import `lib.typ`:
+To work from the repository instead, copy this folder (`lib.typ`, `translations.json`,
+`typst.toml`) into your project and import `lib.typ`:
 
 ```typ
 #import "credit-matrix/lib.typ": *
 ```
-
-Or install it as a local package by copying the folder to
-`{data-dir}/typst/packages/local/credit-matrix/0.1.0/` and importing
-`@local/credit-matrix:0.1.0` ([where `{data-dir}` is](https://github.com/typst/packages#local-packages)).
 
 Needs Typst 0.14 or later.
 
@@ -30,8 +24,8 @@ Needs Typst 0.14 or later.
 
 ```typ
 #let team = (
-  (name: "Jane A. Smith", roles: (conceptualization: "lead", software: "supporting", writing-original-draft: true)),
-  (name: "Bob White", roles: (investigation: true, formal-analysis: "equal", writing-review-editing: true)),
+  (name: "Marie Skłodowska-Curie", roles: (conceptualization: "lead", software: "supporting", writing-original-draft: true)),
+  (name: "Antonie van Leeuwenhoek", roles: (investigation: true, formal-analysis: "equal", writing-review-editing: true)),
 )
 
 #credit-statement(team, levels: true)
@@ -39,8 +33,8 @@ Needs Typst 0.14 or later.
 
 renders as:
 
-> **CRediT: Jane A. Smith**: Conceptualization, Software (Supporting), Writing – original draft;
-> **Bob White**: Formal analysis (Equal), Investigation, Writing – review & editing
+> **CRediT: Marie Skłodowska-Curie**: Conceptualization, Software (Supporting), Writing – original draft;
+> **Antonie van Leeuwenhoek**: Formal analysis (Equal), Investigation, Writing – review & editing
 
 ![The statement, table and heatmap of examples/basic.typ](examples/basic.png)
 
@@ -72,7 +66,7 @@ You can also pass the app's own export: Export data, JSON, then
 
 - `credit-statement(contributors, format: "by-author", levels: false, lang: auto)`: the statement,
   one paragraph for the authors, one for the acknowledged contributors and one per note. `format`
-  is `"by-author"` (Jane: Software, Validation) or `"by-role"` (Software: Jane, Bob). With
+  is `"by-author"` (Marie: Software, Validation) or `"by-role"` (Software: Marie, Antonie). With
   `levels: true`, Equal and Supporting are shown after each role or name; Lead is not.
 - `credit-statement-text(..)`: the same statement as a plain string, with the same arguments. Call
   it inside `context` when `lang` is `auto`.
@@ -105,3 +99,10 @@ tagged PDF, put the table in a figure with a caption, as Typst 0.15 cannot mark 
 ```typ
 #figure(credit-table(team), caption: [Contributions by role.])
 ```
+
+## License
+
+The code is [MIT](LICENSE). The role names in `translations.json` come from the community
+[credit-translation](https://github.com/contributorshipcollaboration/credit-translation) project
+under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the translators are listed in
+[CREDITS.md](https://github.com/simonvanlierde/credit-matrix/blob/main/src/core/credit-i18n/translations/CREDITS.md).
