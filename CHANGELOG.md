@@ -22,6 +22,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and the Published practice tab links to it.
 - The welcome panel's About link opens the [About page](https://credit.duinlab.nl/about) instead of
   a panel over the welcome text.
+- On a desktop the header's CRediT Matrix logo links home; the back link on other pages shows only on
+  smaller screens, where the logo opens the menu. The About and accessibility pages are as wide as
+  the census page.
 
 ## [0.10.0] - 2026-11-01
 

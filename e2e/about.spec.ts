@@ -42,6 +42,14 @@ test.describe("About page", () => {
     await expect(page.getByRole("button", { name: "Import" })).toBeHidden();
   });
 
+  test("the way home is the header lockup on a desktop and a back link on a phone", async ({ page }) => {
+    await page.goto("/about");
+    await expect(page.getByRole("banner").getByRole("link", { name: "CRediT Matrix" })).toHaveAttribute("href", "/");
+    await expect(page.getByRole("link", { name: "Back to CRediT Matrix" })).toBeHidden();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole("link", { name: "Back to CRediT Matrix" })).toBeVisible();
+  });
+
   // The welcome modal exists only on the main page, so from here "How it works"
   // has to take the visitor there and open it, in the nav and in the brand menu.
   for (const { label, width, open } of [

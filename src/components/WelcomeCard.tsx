@@ -182,30 +182,30 @@ export function WelcomeCard() {
               </button>
             </>
           )}
-          <span className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:ml-auto">
-            {/* The one thing this card never says: what the app itself is, and
-                what it is built on. */}
-            {/* A page, not a popover: a panel opened over this dialog covered its own steps. */}
-            <a
-              href="/about"
-              className="inline-flex items-center gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
-            >
-              <Info className="size-3.5" aria-hidden="true" />
-              {t("aboutApp")}
-            </a>
-            <ExternalLink
-              href="https://credit.niso.org"
-              className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
-            >
-              {t("fullCreditStandard")}
-            </ExternalLink>
-            <ExternalLink
-              href="https://doi.org/10.5281/zenodo.18421449"
-              className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
-            >
-              {t("creditRolesExamples")}
-            </ExternalLink>
-          </span>
+        </div>
+        {/* Its own row under a rule: beside the actions it wrapped at an arbitrary point. */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-outline-variant/40 pt-4">
+          {/* What the app itself is, and what it is built on. A page, not a popover: a panel opened
+              over this dialog covered its own steps. */}
+          <a
+            href="/about"
+            className="inline-flex items-center gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+          >
+            <Info className="size-3.5" aria-hidden="true" />
+            {t("aboutApp")}
+          </a>
+          <ExternalLink
+            href="https://credit.niso.org"
+            className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+          >
+            {t("fullCreditStandard")}
+          </ExternalLink>
+          <ExternalLink
+            href="https://doi.org/10.5281/zenodo.18421449"
+            className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+          >
+            {t("creditRolesExamples")}
+          </ExternalLink>
         </div>
       </div>
     </dialog>

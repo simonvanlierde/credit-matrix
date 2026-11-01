@@ -294,7 +294,6 @@ test.describe("screen-reader view (accessibility tree)", () => {
     const article = page.getByRole("article");
     await expect(article).toMatchAriaSnapshot(`
       - article:
-        - link "Back to CRediT Matrix"
         - heading "CRediT census" [level=2]
         - complementary "Preliminary figures"
         - heading "Adoption over time" [level=3]
@@ -341,7 +340,6 @@ test.describe("screen-reader view (accessibility tree)", () => {
         - heading "CRediT Matrix" [level=1]
         - navigation
       - main:
-        - link "Back to CRediT Matrix"
         - article:
           - heading "About CRediT Matrix" [level=2]
           - term: Version
