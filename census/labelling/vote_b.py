@@ -1,7 +1,7 @@
 """Majority vote over three definition-B labellers: vote_b.py NAME.
 
 Reads oa-2026-10-NAME.csv and NAME-parts/opus-{a,b,c}-*.jsonl (chunks). Two labels agree when they give the
-same (author, role, evidence) triples, the same degrees and the same pledges; quotes and mentions
+same (author, role) pairs, the same degrees and the same pledges; quotes, mentions and evidence
 may differ. Prints pairwise exact agreement on that key and on the general view alone, split by
 the stratum in oa-2026-10-NAME-key.csv when there is one. Writes NAME-splits.jsonl (rows with no
 majority, all three labels) and, once NAME-adjudicated.jsonl covers every split, NAME-gold.jsonl."""
@@ -29,14 +29,11 @@ def load(*paths: Path) -> dict[str, list]:
 
 
 def key(label: list) -> tuple:
-    triples = {
-        (n, labels.ROLE_NAMES[r["role"]], r["evidence"])
-        for a in label
-        for r in a.get("roles", [])
-        for n in a["authors"]
-    }
+    # Evidence is left out: the pilot's labellers split on named/worded/inferred far more than on the
+    # roles themselves, so it is recorded but neither voted on nor trained on.
+    pairs = {(n, labels.ROLE_NAMES[r["role"]]) for a in label for r in a.get("roles", []) for n in a["authors"]}
     pledged = {n for a in label if "pledge" in a for n in a["authors"]}
-    return frozenset(triples), frozenset(labels.label_degrees(label).items()), frozenset(pledged)
+    return frozenset(pairs), frozenset(labels.label_degrees(label).items()), frozenset(pledged)
 
 
 parts = {w: load(*sorted((LAB / f"{NAME}-parts").glob(f"opus-{w}-*.jsonl"))) for w in "abc"}

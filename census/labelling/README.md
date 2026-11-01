@@ -66,7 +66,9 @@ labellers gave in full. Only the rows with three different labels go to the adju
 
 Run the pilot before a full labelling run. It passes when two things hold:
 
-1. Exact agreement between labellers is at least 0.80 on the narrative rows.
+1. Exact agreement between labellers is at least 0.80 on the narrative rows. Exact means the same
+   author-role pairs, degrees and pledges. Evidence is recorded but not compared, and the model does not
+   train on it: in the first pilot, labellers split on it far more often than on the roles.
 2. The project owner checks 40 rows by hand and marks at least 34 of them right.
 
 ## Where the examples live

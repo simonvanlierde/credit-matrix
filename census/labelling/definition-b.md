@@ -34,6 +34,9 @@ A **pledge assertion**: `{"quote": "...", "mentions": ["All authors"], "authors"
 
 ## Evidence
 
+Evidence is recorded for every role and degree, but the vote does not compare it and the model
+does not train on it. Give your best reading and move on.
+
 For a role:
 
 - `named`: the CRediT name or a near form ("Conceptualization", "developed the methodology",
@@ -65,7 +68,7 @@ For a degree:
 | Narrative wording | Role |
 |---|---|
 | conceived, came up with the idea, formulated the hypothesis, "concept" | conceptualization |
-| designed the study or experiments, developed the protocol, study design | methodology |
+| designed the study or experiments, developed the protocol, study design, planned the study or research | methodology |
 | performed the experiments, collected or acquired the data, fieldwork, searched or reviewed the literature, screened studies | investigation |
 | analysed or interpreted the data, statistics, "interpreted the results" alone | formal analysis |
 | managed, cleaned, curated or organised the data | data curation |
@@ -73,10 +76,10 @@ For a degree:
 | revised, edited, commented on, reviewed, critically reviewed or critically revised the manuscript | writing - review & editing |
 | supervised, led the team, oversaw, PI | supervision |
 | obtained or secured funding | funding acquisition |
-| provided samples, patients, reagents, equipment or compute | resources |
+| provided samples, patients, reagents, equipment or compute, "technical or material support" | resources |
 | made the figures | visualization |
 | wrote the code, built the pipeline, developed software | software |
-| recruited participants, coordinated the project, project management | project administration |
+| recruited or selected participants or patients, coordinated or organized the project, the fieldwork, data collection or the writing process, project management, "administrative support" | project administration |
 | verified, replicated, did pilot tests, ensured methodological rigor, assessed the quality of included studies | validation |
 
 House rules on top of NISO:
@@ -88,6 +91,16 @@ House rules on top of NISO:
   made figures.
 - Map only what the statement says. A role a sentence does not name or describe is left out, even
   if it seems likely.
+- Supervising, guiding or overseeing a task is supervision, not the task: "guided N.H. in the
+  statistical analysis" and "supervised the validation study" give supervision only.
+- Obtaining or collecting samples within the study is investigation ("obtained the samples from the
+  recruited patients"); providing or supplying them is resources.
+- Planning the manuscript is writing, not methodology: "contributed to the ideation, planning and
+  drafting of the manuscript" gives original draft.
+- "Wrote the manuscript with input from all authors" (or "with contributions from all authors", "all
+  authors contributed to the text / to the final version") gives the other authors review & editing.
+- When a statement gives examples in brackets ("technical support (constructing databases)"), map
+  the examples, and the category word only when it maps on its own.
 
 ## No role
 
@@ -95,6 +108,10 @@ House rules on top of NISO:
   (approval wording).
 - "All authors contributed to the article / to the work / to this study" with no task named.
 - "Agrees to be accountable for all aspects of the work".
+- "Discussed the results", "participated in the discussion" on its own: discussing is not analysis.
+  "Discussed and interpreted the results" still gives formal analysis.
+- Either-or lists said of everyone: "all authors participated in the planning, execution, or
+  analysis of the study" says no one did any one of them.
 - Clinical or other non-research tasks: "primary physician", "contributed clinical input".
 - People who are not in the author list (acknowledged people, consortia) get nothing.
 
