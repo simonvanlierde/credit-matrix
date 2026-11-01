@@ -15,7 +15,7 @@ project:
     - name: Marie Curie
       roles: [Software, writing]
   plugins:
-    - https://unpkg.com/credit-matrix@0.10.0/dist/myst-plugin.mjs
+    - https://unpkg.com/credit-matrix@0.11.0/dist/myst-plugin.mjs
 ```
 
 To work offline, copy [credit-matrix.mjs](../myst/credit-matrix.mjs) into your book, run

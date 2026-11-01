@@ -12,6 +12,29 @@ const curie = createAuthor("Marie Skłodowska-Curie", {
 });
 
 describe("toLatexCredits", () => {
+  it("writes the whole file: header, macros once for a mixed team, then one line per author", () => {
+    const plain = createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 100 }] });
+    const split = createAuthor("van_Leeuwenhoek \r\n\n  Antonie", { contributions: [] });
+    expect(toLatexCredits([plain, split])).toBe(
+      [
+        "% CRediT contributions for the latex-credits package",
+        "% (https://github.com/Pseudomanifold/latex-credits). Put credits.sty next to your .tex file, then:",
+        "%   \\usepackage{credits}           % in the preamble; the option skipempty hides unused roles",
+        "%   \\insertcreditsgranular        % in the text: the role table, shaded by level",
+        "%   \\insertcreditsgranularstatement  % or: the statement as sentences",
+        "% Values run 0 to 1 in CRediT order. Lead is 1, equal 0.66, supporting 0.33.",
+        "% Acknowledgees are left out: the package lists authors only.",
+        "% Names outside Latin scripts need lualatex or xelatex with a suitable font.",
+        `% ${GENERATOR_NOTE}`,
+        "\\protected\\def\\crUS{\\_}\\protected\\def\\crDOLLAR{\\$}",
+        "\\protected\\def\\crTILDE{\\textasciitilde}\\protected\\def\\crCARET{\\textasciicircum}",
+        "\\protected\\def\\crBSLASH{\\textbackslash}",
+        "\\credit{Tu Youyou}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}",
+        "\\credit{van\\crUS{}Leeuwenhoek Antonie}{0,0,0,0,0,0,0,0,0,0,0,0,0,0}",
+      ].join("\n"),
+    );
+  });
+
   it("writes one granular \\credit line per author, 14 values in CRediT order", () => {
     const tex = toLatexCredits([curie]);
     expect(tex).toContain("\\credit{Marie Skłodowska-Curie}{1,0,0,0,0.66,0,0,0,0,0,0,0,0,0.33}");

@@ -1,6 +1,6 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
 # Each line: file status mutator -> replacement | original line, and why it is kept, for one left on purpose.
-# Score 90.81%: 2459 killed, 193 survived, 56 without coverage, 249 kept with a reason.
+# Score 90.79%: 2525 killed, 200 survived, 56 without coverage, 249 kept with a reason.
 src/core/export/crossref.ts Survived MethodExpression -> author.name | .map((author) => `  <!-- Left out: ${escapeXml(normalizeOrcid(author.name.trim()))} has no name yet.  # kept: equivalent: createAuthor stores the name trimmed
 src/core/export/crossref.ts Survived MethodExpression -> author.name | const surname = author.surname || author.name.trim();  # kept: equivalent: createAuthor stores the name trimmed
 src/core/export/crossref.ts Survived MethodExpression -> author.name | const unnamed = (author: Author) => ORCID_INPUT_REGEX.test(author.name.trim());  # kept: equivalent: createAuthor stores the name trimmed
@@ -32,6 +32,13 @@ src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const COLOR_TEXT_D
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | const FONT = "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif";  # kept: design constant: a test would only restate the font stack
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | format: "by-author",  # kept: equivalent: generateStatement treats any format but the by-role ones as by-author
 src/core/export/heatmap-svg.ts Survived StringLiteral -> "" | return lines.join("\n");  # kept: cosmetic: line breaks between SVG elements do not change the drawing
+src/core/export/latex-credits.ts Survived OptionalChaining -> author.contributions.find(c => c.role === role.name).score | const score = author.contributions.find((c) => c.role === role.name)?.score ?? 0;
+src/core/export/latex-credits.ts Survived Regex -> /\s[\r\n]+\s*/g | return s.replace(/\s*[\r\n]+\s*/g, " ").replace(/[\\&%$#_{}~^]/g, (c) => PROTECTED_SPECIALS[c] ?? `\
+src/core/export/latex-credits.ts Survived Regex -> /\s*[\r\n]\s*/g | return s.replace(/\s*[\r\n]+\s*/g, " ").replace(/[\\&%$#_{}~^]/g, (c) => PROTECTED_SPECIALS[c] ?? `\
+src/core/export/latex-credits.ts Survived Regex -> /\s*[\r\n]+\S*/g | return s.replace(/\s*[\r\n]+\s*/g, " ").replace(/[\\&%$#_{}~^]/g, (c) => PROTECTED_SPECIALS[c] ?? `\
+src/core/export/latex-credits.ts Survived Regex -> /\S*[\r\n]+\s*/g | return s.replace(/\s*[\r\n]+\s*/g, " ").replace(/[\\&%$#_{}~^]/g, (c) => PROTECTED_SPECIALS[c] ?? `\
+src/core/export/latex-credits.ts Survived Regex -> /\s*[\r\n]+\s/g | return s.replace(/\s*[\r\n]+\s*/g, " ").replace(/[\\&%$#_{}~^]/g, (c) => PROTECTED_SPECIALS[c] ?? `\
+src/core/export/latex-credits.ts Survived StringLiteral -> "" | return s.replace(/\s*[\r\n]+\s*/g, " ").replace(/[\\&%$#_{}~^]/g, (c) => PROTECTED_SPECIALS[c] ?? `\
 src/core/export/tenzing.ts NoCoverage ArrayDeclaration -> ["Stryker was here"] | const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(trimmed));  # kept: equivalent: parseCsvRecords always returns at least one record
 src/core/export/tenzing.ts NoCoverage StringLiteral -> "Stryker was here!" | const [first = "", ...middle] = given.split(/\s+/).filter(Boolean);  # kept: equivalent: givenNamesOf joins words with single spaces, so the split has no empty parts
 src/core/export/tenzing.ts Survived ArithmeticOperator -> a.index + b.index | .sort((a, b) => a.order - b.order || a.index - b.index);  # kept: equivalent: Array.prototype.sort is stable, so the index tie-break never decides

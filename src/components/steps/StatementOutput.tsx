@@ -45,7 +45,7 @@ const DATA_FORMATS: Record<
     mime: string;
   }
 > = {
-  // XML/JSON/CSV/tenzing/LaTeX are machine round-trip formats, kept in canonical English.
+  // XML/JSON/CSV/tenzing are machine round-trip formats and LaTeX feeds a package; all stay in English.
   // Only Markdown (a human-facing paste artifact) follows the output language.
   // XML, JSON and LaTeX are replaced per export in the component, which knows the
   // input mode and whether answers go in.

@@ -45,7 +45,9 @@ output:
 
 Where Pandoc's default template would print an author with roles as "true" (HTML, LaTeX/PDF,
 ConTeXt, ms and Word), the filter turns each author into a plain name. Templates that read
-`author.name`, such as R Markdown's, and JATS keep the full author data.
+`author.name`, such as R Markdown's, and JATS keep the full author data. This needs Pandoc 3;
+older versions leave the authors as they are.
+
 [`example.md`](example.md) is a complete manuscript to try.
 
 ## Metadata and placement

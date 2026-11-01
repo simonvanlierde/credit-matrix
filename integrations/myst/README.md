@@ -12,7 +12,7 @@ List the plugin by URL in `myst.yml`. It is one self-contained file: nothing els
 ```yaml
 project:
   plugins:
-    - https://unpkg.com/credit-matrix@0.10.0/dist/myst-plugin.mjs
+    - https://unpkg.com/credit-matrix@0.11.0/dist/myst-plugin.mjs
 ```
 
 MyST caches it in its build folder. The version in the URL is the package version, so
