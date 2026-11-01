@@ -174,6 +174,42 @@ jobs:
           uv run --no-sync python -c "import mlflow, sqlalchemy, alembic"
           uv run --no-sync pytest -q
 
+  # Trains two epochs of a tiny random ModernBERT and predicts with it, on CPU. The locked torch is the
+  # CUDA build (several GB), so the CPU wheel goes in over the locked environment instead.
+  census-train:
+    name: Census train smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: census
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.13.x"
+          working-directory: census
+          save-cache: ${{ github.event_name != 'pull_request' }}
+
+      - name: Install the CPU training stack
+        run: |
+          uv sync --locked
+          # The locked versions, so the job tests what training uses; ==2.14.1 also matches 2.14.1+cpu.
+          pins=$(uv export --locked --only-group train --no-hashes --no-header --no-emit-project |
+            grep -E '^(torch|transformers)==' | cut -d' ' -f1)
+          # shellcheck disable=SC2086 # one word per pin
+          uv pip install $pins \
+            --index-url https://download.pytorch.org/whl/cpu \
+            --extra-index-url https://pypi.org/simple --index-strategy unsafe-best-match
+          # The tests skip without torch: fail here instead of passing on nothing.
+          uv run --no-sync python -c "import torch, transformers"
+
+      - name: Train and predict
+        run: uv run --no-sync pytest -q tests/test_encoder.py -k "train or predict"
+
   # One leg per browser, in parallel: the three together take about four times as long as Chromium
   # alone. The Chromium leg keeps the plain job name, which the branch ruleset requires.
   e2e:
