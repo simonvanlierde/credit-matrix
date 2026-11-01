@@ -15,7 +15,7 @@ project:
     - https://unpkg.com/credit-matrix@0.10.0/dist/myst-plugin.mjs
 ```
 
-MyST downloads it once into its build cache. The version in the URL is the package version, so
+MyST caches it in its build folder. The version in the URL is the package version, so
 upgrading is a change of that number.
 
 To work offline or pin the file in your repository, copy
