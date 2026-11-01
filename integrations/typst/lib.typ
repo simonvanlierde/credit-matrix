@@ -143,7 +143,7 @@
   panic("credit-matrix: format must be \"by-role\" or \"by-author\", got " + repr(format))
 }
 
-/// The statement as plain text, the same as the app's: "CRediT: Jane Smith: Conceptualization; ...".
+/// The statement as plain text, the same as the app's: "CRediT: Marie Skłodowska-Curie: Conceptualization; ...".
 /// Needs context when `lang` is auto.
 #let credit-statement-text(contributors, format: "by-author", levels: false, lang: auto) = {
   _check-format(format)

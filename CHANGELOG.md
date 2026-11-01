@@ -22,6 +22,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The [CRediT census](https://credit.duinlab.nl/census) link shows in the header at every width,
   and the Published practice tab links to it.
+- The [Typst package](https://github.com/simonvanlierde/credit-matrix/tree/main/integrations/typst) declares
+  its role translations as CC BY 4.0 next to the MIT code, ready for Typst Universe.
 - The welcome panel's About link opens the [About page](https://credit.duinlab.nl/about) instead of
   a panel over the welcome text.
 - On a desktop the header's CRediT Matrix logo links home; the back link on other pages shows only on
