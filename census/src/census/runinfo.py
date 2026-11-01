@@ -29,12 +29,22 @@ def sha256(path: Path) -> str:
         return hashlib.file_digest(f, "sha256").hexdigest()
 
 
-def git_commit() -> str | None:
+def _git(*args: str) -> str | None:
     try:
-        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=PACKAGE, capture_output=True, text=True)
+        out = subprocess.run(["git", *args], cwd=PACKAGE, capture_output=True, text=True)
     except OSError:  # no git on this machine
         return None
     return out.stdout.strip() if out.returncode == 0 else None
+
+
+def git_commit() -> str | None:
+    return _git("rev-parse", "HEAD")
+
+
+def git_dirty() -> bool | None:
+    """True when tracked files under census/ differ from the commit, so the commit alone does not repeat the run."""
+    status = _git("status", "--porcelain", "--untracked-files=no", "--", ".")
+    return None if status is None else bool(status)
 
 
 def base_model(repo: str, revision: str | None) -> dict[str, Any]:
@@ -96,7 +106,8 @@ def track_energy() -> Generator[dict[str, Any]]:
                     country=COUNTRY,
                     grid="Our World in Data annual average",
                     sample_seconds=SAMPLE_SECONDS,
-                    **_method(tracker._conf.get("hardware", [])),
+                    # CodeCarbon keeps the hardware list in a private dict; a missing one reads as an estimate.
+                    **_method(getattr(tracker, "_conf", {}).get("hardware", [])),
                     codecarbon=data.codecarbon_version,
                     kwh=data.energy_consumed,
                     cpu_kwh=data.cpu_energy,
@@ -117,6 +128,7 @@ def write(path: Path, kind: str, **sections: Any) -> Path:
         "kind": kind,
         "written": datetime.now(UTC).isoformat(timespec="seconds"),
         "git_commit": git_commit(),
+        "git_dirty": git_dirty(),
         "uv_lock_sha256": sha256(lock) if lock.exists() else None,
         # Set by the job script that starts the container, e.g. from `docker inspect`.
         "image_digest": os.environ.get("CENSUS_IMAGE_DIGEST"),

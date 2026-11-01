@@ -11,6 +11,7 @@ def test_write_records_commit_lock_hash_and_sections(tmp_path):
     m = json.loads(path.read_text())
     assert m["kind"] == "train" and m["seed"] == 7
     assert m["git_commit"] and len(m["git_commit"]) == 40
+    assert isinstance(m["git_dirty"], bool)
     assert m["uv_lock_sha256"] == hashlib.sha256((runinfo.PACKAGE / "uv.lock").read_bytes()).hexdigest()
     assert m["energy"] == {"tracked": False}
 
