@@ -45,7 +45,8 @@ Commands:
       non-authors in contributor. Warns about local identities and omitted scores.
   convert <file> --to json|csv|jats|crossref|md|latex-credits [--yes-no] [--locale <code>]
       Print the contributions in another format. --yes-no marks the roles
-      as yes/no ticks: JATS then leaves out the lead/equal/supporting level.
+      as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
+      and latex-credits writes 1 or 0.
       --locale sets the language of the md role names.
       crossref prints the <contributors> block of a Crossref deposit (schema
       5.5.0), which has no levels.
@@ -259,8 +260,11 @@ export async function run(argv: string[]): Promise<string> {
             locale,
           );
         }
-        case "latex-credits":
-          return toLatexCredits(authors);
+        case "latex-credits": {
+          const tex = toLatexCredits(authors, { yesNo: values["yes-no"] });
+          if (!tex.includes("\\credit{")) throw new Error("No roles assigned yet: the latex-credits export is empty.");
+          return tex;
+        }
         default:
           throw new UsageError("convert needs --to json, csv, jats, crossref, md or latex-credits.");
       }

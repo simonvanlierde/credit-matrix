@@ -123,6 +123,20 @@ describe("credit-matrix statement", () => {
 });
 
 describe("credit-matrix convert", () => {
+  it("refuses a latex-credits export with no roles, which the package cannot compile", async () => {
+    const names = file("names.txt", "Jane Smith, Bob White");
+    await expect(run(["convert", names, "--to", "latex-credits"])).rejects.toThrow(
+      "No roles assigned yet: the latex-credits export is empty.",
+    );
+  });
+
+  it("writes latex-credits values as 1 or 0 with --yes-no", async () => {
+    const team = file("half.csv", "Name,Software\nJane Smith,50\n");
+    expect(await run(["convert", team, "--to", "latex-credits", "--yes-no"])).toContain(
+      "\\credit{Jane Smith}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}",
+    );
+  });
+
   it("writes each format, and reads its own JATS back without a browser", async () => {
     expect(await run(["convert", csv, "--to", "csv"])).toMatch(/^Name,ORCID/);
     expect(JSON.parse(await run(["convert", csv, "--to", "json"])).authors).toHaveLength(2);

@@ -1064,8 +1064,12 @@ export declare function fromJson(json: string): {
  * role's 0-100 score divided by 100, so lead, equal and supporting show as different
  * shades in `\insertcreditsgranular`. The package's plain role list has no levels.
  * Only authors are listed: the package has no place for acknowledgees.
+ * With `yesNo` (the Yes/No input mode) every role is 1 or 0.
+ * With no author roles there is no `\credit` line, only a comment: credits.sty fails on none.
  */
-export declare function toLatexCredits(authors: Author[]): string;
+export declare function toLatexCredits(authors: Author[], { yesNo }?: {
+  yesNo?: boolean;
+}): string;
 //#endregion
 //#region export/markdown.d.ts
 /**

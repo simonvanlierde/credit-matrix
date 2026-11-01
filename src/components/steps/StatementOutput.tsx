@@ -47,7 +47,7 @@ const DATA_FORMATS: Record<
 > = {
   // XML/JSON/CSV/tenzing/LaTeX are machine round-trip formats, kept in canonical English.
   // Only Markdown (a human-facing paste artifact) follows the output language.
-  // XML and JSON are replaced per export in the component, which knows the
+  // XML, JSON and LaTeX are replaced per export in the component, which knows the
   // input mode and whether answers go in.
   xml: {
     label: "XML (JATS4R)",
@@ -76,7 +76,7 @@ const DATA_FORMATS: Record<
   },
   latex: {
     label: "LaTeX (latex-credits)",
-    serialize: toLatexCredits,
+    serialize: (authors) => toLatexCredits(authors),
     filename: "credit-contributors.tex",
     mime: "application/x-tex;charset=utf-8",
   },
@@ -143,6 +143,7 @@ export function StatementOutput() {
   function serialize(dataFormat: DataFormat): string {
     if (dataFormat === "json") return toJson(authors, { asks, includeAnswers, selfId });
     if (dataFormat === "xml") return toJats4rXml(authors, { yesNo });
+    if (dataFormat === "latex") return toLatexCredits(authors, { yesNo });
     return DATA_FORMATS[dataFormat].serialize(authors, translateRole, translateUi, outputLanguage);
   }
 
