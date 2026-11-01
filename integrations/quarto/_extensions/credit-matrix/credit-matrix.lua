@@ -94,6 +94,15 @@ function Pandoc(doc)
   local para = statement(authors)
   if not para then return nil end
 
+  -- Pandoc's own templates print an author map as "true", so outside Quarto (which builds its own
+  -- title block) each author becomes just the name once the roles are read.
+  if not quarto and pandoc.utils.type(doc.meta.author) == "List" then
+    doc.meta.author = doc.meta.author:map(function(author)
+      if pandoc.utils.type(author) == "table" and author.name then return pandoc.Inlines(author_name(author)) end
+      return author
+    end)
+  end
+
   local options = doc.meta["credit-matrix"] or {}
   local heading = options.heading and stringify(options.heading) or DEFAULT_HEADING
   local placement = options.placement and stringify(options.placement) or "end"

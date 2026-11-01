@@ -35,7 +35,7 @@ The statement is added at the end of the document:
 
 The filter also works with Pandoc's other writers, including Word and LaTeX.
 
-In R Markdown, pass it to the HTML output:
+In R Markdown, pass it to the output format:
 
 ```yaml
 output:
@@ -43,8 +43,7 @@ output:
     pandoc_args: ["--lua-filter=credit-matrix.lua"]
 ```
 
-For `pdf_document`, give the authors as plain names: Pandoc's LaTeX template prints an author with
-roles as "true".
+The filter also turns each author back into a plain name, so Pandoc's title block prints the names.
 [`example.md`](example.md) is a complete manuscript to try.
 
 ## Metadata and placement

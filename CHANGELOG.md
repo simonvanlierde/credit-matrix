@@ -28,6 +28,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   smaller screens, where the logo opens the menu. The About and accessibility pages are as wide as
   the census page.
 
+### Fixed
+
+- The [Pandoc filter](https://github.com/simonvanlierde/credit-matrix/tree/main/integrations/pandoc) no longer
+  leaves "true" in a LaTeX or PDF title block where the author names belong.
+
 ## [0.10.0] - 2026-11-01
 
 When upgrading, read both `author` and `contributor` from the CodeMeta CLI output;
