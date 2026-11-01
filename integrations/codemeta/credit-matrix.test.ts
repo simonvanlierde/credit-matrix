@@ -6,9 +6,9 @@ import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { parse } from "yaml";
 
-// Includes the reviewed CodeMeta alias/non-ORCID fix, absent from citesync 0.2.0.
+// Includes CodeMeta identity fixes and the codemeta-drift 0.4.0 mapping pin.
 const citesync =
-  "citesync @ https://github.com/simonvanlierde/citesync/archive/1625b9fe1b0e9195367852a20366ca9867d0de80.tar.gz";
+  "citesync @ https://github.com/simonvanlierde/citesync/archive/2a95043eea6864c6692e23d96ea4d58782a0a950.tar.gz";
 const fixture = resolve("src/core/__tests__/fixtures/export-codemeta.json");
 const directories: string[] = [];
 const files = ["codemeta.json", "CITATION.cff", ".zenodo.json"];
