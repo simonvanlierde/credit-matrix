@@ -43,7 +43,9 @@ output:
     pandoc_args: ["--lua-filter=credit-matrix.lua"]
 ```
 
-The filter also turns each author back into a plain name, so Pandoc's title block prints the names.
+Where Pandoc's default template would print an author with roles as "true" (HTML, LaTeX/PDF,
+ConTeXt, ms and Word), the filter turns each author into a plain name. Templates that read
+`author.name`, such as R Markdown's, and JATS keep the full author data.
 [`example.md`](example.md) is a complete manuscript to try.
 
 ## Metadata and placement

@@ -149,3 +149,45 @@ def test_spelling_variants_and_unknown_roles():
         }
     )
     assert "Marie Curie: Visualization, Writing – review & editing." in result
+
+
+def test_jats_keeps_the_author_map():
+    result = render(
+        {
+            "title": "Paper",
+            "author": [
+                {
+                    "name": "Marie Skłodowska-Curie",
+                    "orcid": "0000-0002-1825-0097",
+                    "email": "marie@example.org",
+                    "roles": ["writing"],
+                }
+            ],
+        },
+        "# Methods\n\nBody.\n",
+        "jats",
+        "--standalone",
+    )
+    assert "0000-0002-1825-0097" in result
+
+
+def test_custom_template_keeps_the_author_map(tmp_path):
+    template = tmp_path / "authors.txt"
+    template.write_text("$for(author)$$author.name$|$author.affiliation$$endfor$\n$body$\n")
+    result = render(
+        {"author": [{"name": "Tu Youyou", "affiliation": "Example Lab", "roles": ["investigation"]}]},
+        "# Methods\n\nBody.\n",
+        "plain",
+        f"--template={template}",
+    )
+    assert "Tu Youyou|Example Lab" in result
+
+
+def test_single_author_map_prints_the_name():
+    result = render(
+        {"title": "Paper", "author": {"name": "Antonie van Leeuwenhoek", "roles": ["investigation"]}},
+        "# Methods\n\nBody.\n",
+        "latex",
+        "--standalone",
+    )
+    assert "\\author{Antonie van Leeuwenhoek}" in result

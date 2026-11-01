@@ -31,7 +31,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - The [Pandoc filter](https://github.com/simonvanlierde/credit-matrix/tree/main/integrations/pandoc) no longer
-  leaves "true" in a LaTeX or PDF title block where the author names belong.
+  leaves "true" where the author names belong: Pandoc's default HTML, LaTeX/PDF, ConTeXt, ms and Word
+  templates show the names, and custom templates and JATS keep the full author data.
 
 ## [0.10.0] - 2026-11-01
 

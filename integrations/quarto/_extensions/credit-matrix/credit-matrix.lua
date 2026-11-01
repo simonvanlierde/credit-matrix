@@ -88,6 +88,19 @@ local function statement(authors)
   return pandoc.Para(inlines)
 end
 
+-- True where the active template prints a plain author but not an author map's name: Pandoc's own
+-- HTML, LaTeX, ConTeXt and ms templates print the map as "true". JATS, Markdown and custom templates
+-- that read author.name or author.affiliation keep the full map.
+local function template_prints_plain_author()
+  local template = PANDOC_WRITER_OPTIONS.template
+  if not template then return FORMAT == "docx" end
+  local function shows(author)
+    local out = pandoc.layout.render(pandoc.template.apply(template, { title = "T", author = { author } }))
+    return out:find("CrMxProbe", 1, true) ~= nil
+  end
+  return FORMAT == "docx" or (shows("CrMxProbe") and not shows({ name = "CrMxProbe" }))
+end
+
 function Pandoc(doc)
   local authors = doc.meta.authors or doc.meta.author or {}
   if pandoc.utils.type(authors) ~= "List" then authors = { authors } end
@@ -96,8 +109,10 @@ function Pandoc(doc)
 
   -- Pandoc's own templates print an author map as "true", so outside Quarto (which builds its own
   -- title block) each author becomes just the name once the roles are read.
-  if not quarto and pandoc.utils.type(doc.meta.author) == "List" then
-    doc.meta.author = doc.meta.author:map(function(author)
+  if not quarto and doc.meta.author and template_prints_plain_author() then
+    local list = doc.meta.author
+    if pandoc.utils.type(list) ~= "List" then list = pandoc.List({ list }) end
+    doc.meta.author = list:map(function(author)
       if pandoc.utils.type(author) == "table" and author.name then return pandoc.Inlines(author_name(author)) end
       return author
     end)
