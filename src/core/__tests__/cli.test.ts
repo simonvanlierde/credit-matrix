@@ -78,6 +78,24 @@ describe("credit-matrix statement", () => {
     vi.restoreAllMocks();
   });
 
+  it.each(["Carberry Josiah Carberry", "CarberryJosiah Carberry", "Josiah Carberry Carberry"])(
+    "keeps structured given names in CodeMeta, JATS and Crossref: %s",
+    async (name) => {
+      const author = createAuthor(name, {
+        firstName: "Josiah",
+        middleName: "Carberry",
+        surname: "Carberry",
+        contributions: [{ role: "Software", score: 100 }],
+      });
+      const input = file("structured-names.json", toJson([author]));
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const codemeta = JSON.parse(await run(["statement", input, "--format", "codemeta"]));
+      expect(codemeta.author[0]).toMatchObject({ givenName: "Josiah Carberry", familyName: "Carberry" });
+      expect(await run(["convert", input, "--to", "jats"])).toContain("<given-names>Josiah Carberry</given-names>");
+      expect(await run(["convert", input, "--to", "crossref"])).toContain("<given_name>Josiah Carberry</given_name>");
+    },
+  );
+
   it("refuses a roster with no roles rather than print an empty statement", async () => {
     const names = file("names.txt", "Jane Smith, Bob White");
     await expect(run(["statement", names])).rejects.toThrow("No roles assigned yet: the statement is empty.");

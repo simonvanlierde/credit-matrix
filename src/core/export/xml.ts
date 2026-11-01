@@ -44,7 +44,7 @@ ${DOCTYPE}
  * The given-names half of the display name. The parsed parts keep only the
  * first, second and last token, so rebuilding from them drops the rest
  * ("María José García López" → "María José López"). Take the name minus its surname
- * instead.
+ * instead, unless complete stored parts describe a family-first name.
  */
 export function givenNamesOf(author: Author): string {
   // The suffix goes in its own element, whichever order the name is in.
@@ -56,6 +56,10 @@ export function givenNamesOf(author: Author): string {
   const { surname } = author;
   // A mononym or an ORCID placeholder: the whole name, so it re-imports as is.
   if (!surname) return name;
+  const givenNames = [author.firstName, author.middleName].filter(Boolean).join(" ");
+  // Complete family-first parts win when a given name also matches the surname.
+  if (author.firstName && wordsOf(name).replaceAll(" ", "") === wordsOf(`${surname} ${givenNames}`).replaceAll(" ", ""))
+    return givenNames;
   // Match whole words, as the parser cleaned them: "King Jr." ends in the surname "Jr",
   // and "Anna" does not end in the surname "na".
   const isSurname = (text: string) => text === surname || wordsOf(text) === wordsOf(surname);

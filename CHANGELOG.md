@@ -29,6 +29,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- [Structured family-first names](src/core/README.md#domain-model) keep their given-name order
+  in CodeMeta, JATS, Crossref and tenzing exports when a given name repeats the surname.
+
 - [Structured family-first names](src/core/README.md#domain-model) now keep their supplied name
   parts and initials when an imported roster is rebuilt, including CJK names without spaces.
 
