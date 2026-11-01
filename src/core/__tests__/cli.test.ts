@@ -65,14 +65,15 @@ describe("credit-matrix statement", () => {
     expect(await run(["statement", levels, "--levels"])).toBe("CRediT: Software: Jane Smith (Equal), Bob White");
   });
 
-  it("prints CodeMeta roles for authors with an ORCID iD, and warns once for each person left out", async () => {
+  it("prints linked CodeMeta people and roles, with explicit identity and score losses", async () => {
     const fixture = (name: string) => fileURLToPath(new URL(`fixtures/${name}`, import.meta.url));
     const err = vi.spyOn(process.stderr, "write").mockReturnValue(true);
     const output = await run(["statement", fixture("export-codemeta.json"), "--format", "codemeta"]);
     expect(JSON.parse(output)).toEqual(JSON.parse(readFileSync(fixture("export-codemeta.expected.json"), "utf8")));
     expect(err.mock.calls.join("")).toBe(
-      "credit-matrix: Ilse Marchetti is not an author, so their roles are left out.\n" +
-        "credit-matrix: Tomas Okafor has no ORCID iD, so their roles are left out.\n",
+      "credit-matrix: Antonie van Leeuwenhoek has no ORCID iD; their link identifies them only within this document.\n" +
+        "credit-matrix: Katherine Johnson has no ORCID iD; their link identifies them only within this document.\n" +
+        "credit-matrix: CodeMeta omits scores and contribution levels; keep the original roster JSON.\n",
     );
     vi.restoreAllMocks();
   });

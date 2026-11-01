@@ -17,6 +17,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Breaking:** [CodeMeta CLI output](src/core/README.md#codemeta-attribution) now contains linked
+  Person and Role records in `author` and `contributor`, replacing the role-only array. Keep both
+  lists when copying the output; people without ORCIDs use document-local links.
+
 - [Release metadata updates](CONTRIBUTING.md#releases) use citesync to keep the citation files
   and published package version in step while preserving contributor roles and other metadata.
 

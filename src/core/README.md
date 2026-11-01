@@ -33,7 +33,7 @@ Node 22 or later. Run it with `npx credit-matrix` without installing, or with
 
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
-npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 roles
+npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 people and roles
 npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref or md
 npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
 npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
@@ -47,11 +47,36 @@ Supporting after each contribution below Lead. `statement` exits with 1 when nob
 `convert --to md` takes `--locale` too, for the language of the role names.
 
 `statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
-or `codemeta`. `codemeta` prints a JSON array of CodeMeta 3.0 `Role` objects, one for each person and
-role with a score above zero: `roleName` is the role's `credit.niso.org` URL and `schema:author` the
-person's ORCID URL. Paste them into the `author` list of your `codemeta.json`, beside a `Person`
-whose `id` is that ORCID URL. Non-authors are left out, since that list is for authors. So are
-people without an ORCID iD. Each person left out gets one warning on standard error.
+or `codemeta`. See [CodeMeta attribution](#codemeta-attribution) for its output and limits.
+
+### CodeMeta attribution
+
+`credit-matrix statement draft.json --format codemeta` prints a CodeMeta 3.0 attribution
+fragment with `@context`, `author` and `contributor` fields. Each person with a score above zero
+gets a `Person` record and one linked `Role` per active CRediT role. Non-authors go in
+`contributor`. People with no active roles are absent. Names use the roster's structured fields;
+particles, suffixes and supplied family-first names are preserved.
+
+Merge these fields into the work's `codemeta.json`. The fragment has no software title, version
+or release information. It replaces the old CLI output, which was an array of author roles:
+use its `author` and `contributor` lists together, including their Person records.
+
+A Person's `id` is their canonical ORCID URL when supplied. Otherwise, a fragment such as
+`#credit-matrix-person-2` links their roles within this document. These local links use roster
+positions, change when the roster order changes, and are not ORCIDs or persistent identities.
+The CLI warns for each local link. Re-export the full attribution together instead of combining
+local links from separate exports.
+
+`Role.roleName` is the role's `credit.niso.org` URL. `schema:author` links each Role to its Person,
+including roles in `contributor`. Scores and contribution levels have no slot in this export;
+the CLI warns about that loss. Keep the native roster JSON for those values, equal contribution,
+correspondence and replies.
+
+The package also exports `toCodemeta(authors)`, returning `{ metadata, warnings }` without writing
+to standard error. The [citesync integration check](../../integrations/codemeta/README.md) runs
+the built CLI's output through the existing citation-file writer. CFF cannot carry a general
+contributor list or roles. Zenodo needs a separately chosen contributor type; a CRediT role does
+not supply one.
 
 `ask` prints a link that opens the contributor's own row in the web app (`--base-url` points it at
 another copy). `--contributor` takes an id, a full name, or a first name or surname only one person
