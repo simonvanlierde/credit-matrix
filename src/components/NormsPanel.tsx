@@ -56,10 +56,10 @@ export function NormsPanel() {
             <SelectValue placeholder={t("normsFieldPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            {fields.map(({ name, label }) => (
+            {fields.map(({ name, label: text }) => (
               // The span, not the item, carries lang: the trigger shows a copy of the item's text.
               <SelectItem key={name} value={name} className="text-sm">
-                {english(name)(label)}
+                {english(name)(text)}
               </SelectItem>
             ))}
           </SelectContent>
