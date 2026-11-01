@@ -15,11 +15,7 @@ BUNDLE = ROOT / "src/core/dist/myst-plugin.mjs"
 # The bundle is one file whatever the engine, so it needs only one real build.
 @pytest.mark.parametrize(
     ("command", "extension", "source"),
-    [
-        (command, extension, "file")
-        for command in ("myst", "jupyter-book")
-        for extension in ("md", "ipynb")
-    ]
+    [(command, extension, "file") for command in ("myst", "jupyter-book") for extension in ("md", "ipynb")]
     + [("myst", "md", "bundle")],
 )
 def test_real_document_build(tmp_path, command, extension, source):
