@@ -198,6 +198,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
         `
         - dialog "About this app":
           - link "About, citing and privacy"
+          - link "Plugins for writing tools"
           - link "Accessibility statement"
           - link "Source code on GitHub (opens in new tab)"
         `,
@@ -293,7 +294,6 @@ test.describe("screen-reader view (accessibility tree)", () => {
     const article = page.getByRole("article");
     await expect(article).toMatchAriaSnapshot(`
       - article:
-        - link "Back to CRediT Matrix"
         - heading "CRediT census" [level=2]
         - complementary "Preliminary figures"
         - heading "Adoption over time" [level=3]
@@ -340,11 +340,15 @@ test.describe("screen-reader view (accessibility tree)", () => {
         - heading "CRediT Matrix" [level=1]
         - navigation
       - main:
-        - link "Back to CRediT Matrix"
         - article:
           - heading "About CRediT Matrix" [level=2]
           - term: Version
           - heading "Cite CRediT Matrix" [level=3]
+          - radiogroup "Citation format":
+            - radio "APA" [checked]
+            - radio "BibTeX"
+            - radio "CSL-JSON"
+          - heading "Plugins for writing tools" [level=3]
           - heading "Acknowledgements" [level=3]
           - heading "Privacy" [level=3]
           - heading "Accessibility" [level=3]

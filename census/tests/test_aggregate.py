@@ -69,6 +69,7 @@ def test_aggregate_counts_without_names(db, tmp_path):
     data = json.loads(text)
     assert data["snapshot"] == "t" and data["complete"] is False and data["fields"] == []
     assert {"dataset_version", "code_commit", "openalex_sources"} <= data.keys()
+    assert data["license"] == "https://creativecommons.org/publicdomain/zero/1.0/"
     assert [row["year"] for row in data["years"]] == [2023, 2024, 2025]
     # Four roles over the three authors with roles in PMC1.
     assert data["years"][0] == {"year": 2023, "articles": 2, "with_roles": 1, "roles_per_author": 1.33}

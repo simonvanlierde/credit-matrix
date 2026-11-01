@@ -1,9 +1,8 @@
 "use client";
 
-import { Files, Fingerprint, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
+import { Files, Fingerprint, Info, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
-import { AboutPopover } from "@/components/AboutPopover";
 import { ExternalLink } from "@/components/ui/external-link";
 import { StepNumber } from "@/components/ui/step-number";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
@@ -43,7 +42,7 @@ const STEPS = [
  * showModal()>` gives the focus trap, Escape handling, backdrop, and inert
  * background for free, from the same primitive ImportModal uses.
  */
-export function WelcomeCard({ version }: { version: string }) {
+export function WelcomeCard() {
   const welcomeOpen = useContributionStore((s) => s.welcomeOpen);
   const closeWelcome = useContributionStore((s) => s.closeWelcome);
   const loadSample = useContributionStore((s) => s.loadSample);
@@ -54,11 +53,7 @@ export function WelcomeCard({ version }: { version: string }) {
   // flags aren't known until HeaderActions triggers rehydration. Gate on that,
   // then auto-open exactly once for a first-time visitor.
   const hydrated = useHydrated();
-  // State, not a ref: the About panel portals into the dialog rather than
-  // <body>, because showModal() puts this element in the top layer and makes
-  // the rest of the document inert, so a panel outside it would render but
-  // never take a click. The portal target has to reach render, so the element
-  // has to be state.
+  // State, not a ref, so useModalDialog's effect runs again once the element mounts.
   const [dialogEl, setDialogEl] = useState<HTMLDialogElement | null>(null);
   useEffect(() => {
     if (!hydrated) return;
@@ -187,23 +182,30 @@ export function WelcomeCard({ version }: { version: string }) {
               </button>
             </>
           )}
-          <span className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:ml-auto">
-            {/* The one thing this card never says: what the app itself is, and
-                what it is built on. */}
-            <AboutPopover version={version} container={dialogEl} />
-            <ExternalLink
-              href="https://credit.niso.org"
-              className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
-            >
-              {t("fullCreditStandard")}
-            </ExternalLink>
-            <ExternalLink
-              href="https://doi.org/10.5281/zenodo.18421449"
-              className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
-            >
-              {t("creditRolesExamples")}
-            </ExternalLink>
-          </span>
+        </div>
+        {/* Its own row under a rule: beside the actions it wrapped at an arbitrary point. */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-outline-variant/40 pt-4">
+          {/* What the app itself is, and what it is built on. A page, not a popover: a panel opened
+              over this dialog covered its own steps. */}
+          <a
+            href="/about"
+            className="inline-flex items-center gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+          >
+            <Info className="size-3.5" aria-hidden="true" />
+            {t("aboutApp")}
+          </a>
+          <ExternalLink
+            href="https://credit.niso.org"
+            className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+          >
+            {t("fullCreditStandard")}
+          </ExternalLink>
+          <ExternalLink
+            href="https://doi.org/10.5281/zenodo.18421449"
+            className="gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+          >
+            {t("creditRolesExamples")}
+          </ExternalLink>
         </div>
       </div>
     </dialog>

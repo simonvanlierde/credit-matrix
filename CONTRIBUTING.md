@@ -93,6 +93,8 @@ The release script supplies a temporary source with only version and date, so it
 replace names, roles or other metadata. It still updates Quarto's extension version itself.
 `citesync check` checks the citation files against CITATION.cff and the published package;
 the private root package supplies the release version and is not a citation target.
+`scripts/sync-citation.sh` also rewrites the unpkg version in `integrations/myst/README.md` and
+`integrations/jupyter-book/README.md`.
 
 A metadata error stops the script before staging files or updating Quarto. Some citation or
 package version fields may already have changed. Fix the reported file, then run `pnpm run version`
@@ -134,8 +136,10 @@ is published. Later metadata edits do not update that archived version.
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
 - **Document integrations**: `pnpm test:integrations` runs real Pandoc, Sphinx, MyST and Jupyter
-  Book builds. It needs uv and the workspace package built (`pnpm --filter credit-matrix build`).
+  Book builds. It needs uv, and it builds the workspace package first.
   Python tools and Pandoc are locked in `integrations/uv.lock`; the two book CLIs are devDependencies.
+  The MyST plugin ships in the npm package as `dist/myst-plugin.mjs`, built by
+  `src/core/tsdown.config.ts`.
   `pnpm verify` includes these builds and checks the Python extension and tests with Ruff and ty.
 - **Quarto**: the rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto`
   on your `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
@@ -203,4 +207,5 @@ The `dco` workflow fails any pull request with a commit that lacks it; commits b
 [GOVERNANCE.md](GOVERNANCE.md) says who decides, who has access, and what happens if the
 maintainer stops.
 
-Deploys and rollback are in [docs/deploy.md](docs/deploy.md).
+Deploys and rollback are in [docs/deploy.md](docs/deploy.md). What the site tells search engines,
+and what to check when you add a page, is in [docs/seo.md](docs/seo.md).

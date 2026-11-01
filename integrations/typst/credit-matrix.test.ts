@@ -96,8 +96,12 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
       return a;
     };
     const authors = [
-      author("Jane A. Smith", { Conceptualization: 100, Software: 33, "Writing – original draft": 100 }),
-      author("Bob White", { Investigation: 100, "Formal analysis": 66, "Writing – review & editing": 100 }),
+      author("Marie Skłodowska-Curie", { Conceptualization: 100, Software: 33, "Writing – original draft": 100 }),
+      author("Antonie van Leeuwenhoek", {
+        Investigation: 100,
+        "Formal analysis": 66,
+        "Writing – review & editing": 100,
+      }),
     ];
     const run = typst("eval", "--root", ".", "--in", "examples/basic.typ", "query(<credit-statement>).first().value");
     expect(run.status, run.stderr).toBe(0);

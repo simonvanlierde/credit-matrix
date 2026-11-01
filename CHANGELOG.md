@@ -11,15 +11,36 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Export the grid as input for the [latex-credits](https://github.com/Pseudomanifold/latex-credits) LaTeX
   package, from the Export data menu or with `credit-matrix convert --to latex-credits`. Lead, equal
   and supporting show as shades. See the [package docs](src/core/README.md#import--export).
+- The [MyST plugin](integrations/myst/README.md) installs by URL: list
+  `https://unpkg.com/credit-matrix@<version>/dist/myst-plugin.mjs` under `plugins` in `myst.yml`.
+  The npm package ships it as one file, so there is nothing to copy or install.
 - The [About page](https://credit.duinlab.nl/about#plugins) lists the plugins for MyST, Jupyter
   Book, Quarto, Pandoc, Typst and Sphinx, and links citesync and codemeta-drift for software metadata.
+  The About menu and the Statement tab link to that list.
+- The [About page](https://credit.duinlab.nl/about) shows how to cite CRediT Matrix in APA, BibTeX or CSL-JSON, to copy or download, built
+  from the release metadata.
 - The site has a sitemap, canonical page addresses and structured data, so search engines can
   list the app and the census.
+- The [census counts](https://credit.duinlab.nl/data/census.json) are dedicated to the public domain
+  under CC0.
 
 ### Changed
 
 - The [CRediT census](https://credit.duinlab.nl/census) link shows in the header at every width,
   and the Published practice tab links to it.
+- The [Typst package](https://github.com/simonvanlierde/credit-matrix/tree/main/integrations/typst) declares
+  its role translations as CC BY 4.0 next to the MIT code, ready for Typst Universe.
+- The welcome panel's About link opens the [About page](https://credit.duinlab.nl/about) instead of
+  a panel over the welcome text.
+- On a desktop the header's CRediT Matrix logo links home; the back link on other pages shows only on
+  smaller screens, where the logo opens the menu. The About and accessibility pages are as wide as
+  the census page.
+
+### Fixed
+
+- The [Pandoc filter](https://github.com/simonvanlierde/credit-matrix/tree/main/integrations/pandoc) no longer
+  leaves "true" where the author names belong: Pandoc's default HTML, LaTeX/PDF, ConTeXt, ms and Word
+  templates show the names, and custom templates and JATS keep the full author data.
 
 ## [0.10.0] - 2026-11-01
 

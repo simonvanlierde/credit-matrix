@@ -9,10 +9,23 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 
 
-@pytest.mark.parametrize("command", ["myst", "jupyter-book"])
-@pytest.mark.parametrize("extension", ["md", "ipynb"])
-def test_real_document_build(tmp_path, command, extension):
+BUNDLE = ROOT / "src/core/dist/myst-plugin.mjs"
+
+
+# The bundle is one file whatever the engine, so it needs only one real build.
+@pytest.mark.parametrize(
+    ("command", "extension", "source"),
+    [(command, extension, "file") for command in ("myst", "jupyter-book") for extension in ("md", "ipynb")]
+    + [("myst", "md", "bundle")],
+)
+def test_real_document_build(tmp_path, command, extension, source):
     plugin = ROOT / "integrations/myst/credit-matrix.mjs"
+    if source == "bundle":
+        # A user's project has no credit-matrix or yaml: the bundle is the only file.
+        assert BUNDLE.exists(), "run `pnpm --filter credit-matrix build` first"
+        plugin = tmp_path / "plugins" / "credit-matrix.mjs"
+        plugin.parent.mkdir()
+        plugin.write_bytes(BUNDLE.read_bytes())
     (tmp_path / "myst.yml").write_text(
         "version: 1\nproject:\n  title: Example Lab\n  authors:\n"
         "    - name: Marie Curie\n      roles: [Software, writing]\n"

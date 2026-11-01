@@ -20,7 +20,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "check:integrations": "uv run --frozen --project integrations ruff check integrations/sphinx integrations/tests && uv run --frozen --project integrations ruff format --check integrations/sphinx integrations/tests && uv run --frozen --project integrations ty check integrations/sphinx integrations/tests",
-    "test:integrations": "uv run --frozen --project integrations pytest integrations/tests",
+    "test:integrations": "pnpm --filter credit-matrix build && uv run --frozen --project integrations pytest integrations/tests",
     "test:e2e": "playwright test",
     "validate:jats": "bash scripts/validate-jats.sh",
     "validate:crossref": "bash scripts/validate-crossref.sh",
