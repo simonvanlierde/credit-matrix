@@ -8,7 +8,7 @@ the app, export them as JSON and print them in your paper.
 ## Install
 
 ```typ
-#import "@preview/credit-matrix:0.1.0": *
+#import "@preview/credit-matrix:0.11.0": *
 ```
 
 To work from the repository instead, copy this folder (`lib.typ`, `translations.json`,
