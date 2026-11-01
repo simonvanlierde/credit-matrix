@@ -195,7 +195,11 @@ jobs:
       - name: Install the CPU training stack
         run: |
           uv sync --locked
-          uv pip install "torch>=2.14" "transformers>=5.20" \
+          # The locked versions, so the job tests what training uses; ==2.14.1 also matches 2.14.1+cpu.
+          pins=$(uv export --locked --only-group train --no-hashes --no-header --no-emit-project |
+            grep -E '^(torch|transformers)==' | cut -d' ' -f1)
+          # shellcheck disable=SC2086 # one word per pin
+          uv pip install $pins \
             --index-url https://download.pytorch.org/whl/cpu \
             --extra-index-url https://pypi.org/simple --index-strategy unsafe-best-match
           # The tests skip without torch: fail here instead of passing on nothing.
