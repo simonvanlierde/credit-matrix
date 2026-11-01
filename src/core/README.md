@@ -69,6 +69,11 @@ CRediT role.
 Particles such as `van`, `de la` or `bin`, in any case, stay with the surname: "Anne van der Berg"
 and "van der Berg, Anne" both have surname `van der Berg`. Initials skip them, so both are `AB`.
 
+When an importer already knows the name parts, pass `firstName`, `middleName` and `surname`
+to `createAuthor`. `normalizeRoster` preserves parts that spell the full name, including
+family-first names with or without spaces. It does not infer family order from a display name.
+The [shared name cases](../../conformance/names/README.md) record this contract.
+
 `contributorType` is either `author` or `non-author`. A statement can put non-author contributors
 on a separate `Acknowledgements:` line. The JATS4R export writes the value as `contrib-type`.
 

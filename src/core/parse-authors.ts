@@ -297,7 +297,8 @@ function isSameAuthor(a: Author, b: Author): boolean {
  *
  * Parts fit when, word for word, the name opens with the first name, closes
  * with the surname, and the middle name opens what lies between. Without a
- * surname the first and middle names must be the whole name.
+ * surname the first and middle names must be the whole name. Explicit family-first
+ * parts also fit when they spell the whole name, with or without spaces.
  */
 function consistentNameParts(author: Author): Pick<Author, "firstName" | "middleName" | "surname"> | undefined {
   const { name, firstName, middleName, surname } = author;
@@ -324,7 +325,8 @@ function consistentNameParts(author: Author): Pick<Author, "firstName" | "middle
     opens([...all].reverse(), [...last].reverse()) &&
     opens(between, middle) &&
     (last.length > 0 || between.length === middle.length);
-  return fits ? { firstName, middleName, surname } : undefined;
+  const familyFirst = first.length > 0 && last.length > 0 && named.join("") === [...last, ...first, ...middle].join("");
+  return fits || familyFirst ? { firstName, middleName, surname } : undefined;
 }
 
 /**

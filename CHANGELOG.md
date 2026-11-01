@@ -20,6 +20,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The [MyST plugin](integrations/myst/README.md) now uses the `credit-matrix` package for role names
   and statement wording. Install `credit-matrix` alongside `yaml` when upgrading the plugin.
 
+### Fixed
+
+- [Structured family-first names](src/core/README.md#domain-model) now keep their supplied name
+  parts and initials when an imported roster is rebuilt, including CJK names without spaces.
+
 ## [0.9.0] - 2026-10-30
 
 Upgrading the `credit-matrix` package: it needs Node 22 or later, and `detectFormat` can now
