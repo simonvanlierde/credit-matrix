@@ -71,11 +71,11 @@ def test_energy_flags_rapl_when_codecarbon_reads_it(monkeypatch):
 
 @pytest.fixture
 def mlflow_store(tmp_path, monkeypatch):
-    """A throwaway SQLite store; returns a client that reads it back."""
+    """An isolated SQLite store in memory; the default-store test covers disk persistence."""
     pytest.importorskip("mlflow")
     from mlflow.tracking import MlflowClient
 
-    uri = f"sqlite:///{tmp_path / 'tracking.db'}"
+    uri = f"sqlite:///file:{tmp_path / 'tracking'}?mode=memory&cache=shared&uri=true"
     monkeypatch.setenv("MLFLOW_TRACKING_URI", uri)
     monkeypatch.setenv("MLFLOW_DISABLE_AGENT_HINT", "1")
     monkeypatch.chdir(tmp_path)  # an artifact root, if MLflow wants one, lands here
