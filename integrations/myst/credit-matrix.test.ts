@@ -1,5 +1,5 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the plugin reads front matter from disk.
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -87,5 +87,14 @@ describe("MyST plugin", () => {
       "Marie Curie: Conceptualization, Software, Writing – original draft; " +
         "Albert Einstein: Formal analysis, Investigation, Writing – review & editing.",
     );
+  });
+
+  it("names the published version in the READMEs' plugin URL", () => {
+    const { version } = JSON.parse(readFileSync(new URL("../../src/core/package.json", import.meta.url), "utf8"));
+    for (const readme of ["README.md", "../jupyter-book/README.md"]) {
+      expect(readFileSync(new URL(readme, import.meta.url), "utf8")).toContain(
+        `https://unpkg.com/credit-matrix@${version}/dist/myst-plugin.mjs`,
+      );
+    }
   });
 });

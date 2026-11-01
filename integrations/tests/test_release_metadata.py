@@ -66,6 +66,10 @@ def release(tmp_path, monkeypatch):
     extension = tmp_path / "integrations/quarto/_extensions/credit-matrix/_extension.yml"
     extension.parent.mkdir(parents=True)
     extension.write_text("title: CRediT Matrix\nversion: 0.9.0\ncontributes:\n  filters: [credit-matrix.lua]\n")
+    for name in ("myst", "jupyter-book"):
+        readme = tmp_path / f"integrations/{name}/README.md"
+        readme.parent.mkdir(parents=True)
+        readme.write_text("- https://unpkg.com/credit-matrix@0.9.0/dist/myst-plugin.mjs\n")
     return tmp_path, metadata
 
 
@@ -86,12 +90,15 @@ def test_release_sync_preserves_metadata_and_is_idempotent(release):
     assert 'date-released: "2026-11-01"' in citation
     assert '# Keep this explanation.\nmessage: "Please cite the software."' in citation
     assert "version: 1.2.3\n" in (root / "integrations/quarto/_extensions/credit-matrix/_extension.yml").read_text()
+    for name in ("myst", "jupyter-book"):
+        assert "credit-matrix@1.2.3/dist/myst-plugin.mjs" in (root / f"integrations/{name}/README.md").read_text()
     assert json.loads((root / "package.json").read_text())["version"] == "1.2.3"
     files = [
         "CITATION.cff",
         "codemeta.json",
         "src/core/package.json",
         "integrations/quarto/_extensions/credit-matrix/_extension.yml",
+        "integrations/myst/README.md",
     ]
     snapshot = {name: (root / name).read_bytes() for name in files}
     result = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=60)

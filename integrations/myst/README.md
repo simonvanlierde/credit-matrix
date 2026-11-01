@@ -7,15 +7,20 @@ statement.
 
 ## Install
 
-1. Copy [`credit-matrix.mjs`](credit-matrix.mjs) into your project.
-2. Install the statement package and YAML parser next to it: `pnpm add credit-matrix yaml`.
-3. List it in `myst.yml`:
+List the plugin by URL in `myst.yml`. It is one self-contained file: nothing else to install.
 
-   ```yaml
-   project:
-     plugins:
-       - credit-matrix.mjs
-   ```
+```yaml
+project:
+  plugins:
+    - https://unpkg.com/credit-matrix@0.10.0/dist/myst-plugin.mjs
+```
+
+MyST caches it in its build folder. The version in the URL is the package version, so
+upgrading is a change of that number.
+
+To work offline or pin the file in your repository, copy
+[`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix yaml`
+next to it, and list `credit-matrix.mjs` under `plugins` instead.
 
 Tested with mystmd 1.12 and [Jupyter Book 2.1](../jupyter-book/README.md).
 
