@@ -203,4 +203,5 @@ The `dco` workflow fails any pull request with a commit that lacks it; commits b
 [GOVERNANCE.md](GOVERNANCE.md) says who decides, who has access, and what happens if the
 maintainer stops.
 
-Deploys and rollback are in [docs/deploy.md](docs/deploy.md).
+Deploys and rollback are in [docs/deploy.md](docs/deploy.md). What the site tells search engines,
+and what to check when you add a page, is in [docs/seo.md](docs/seo.md).
