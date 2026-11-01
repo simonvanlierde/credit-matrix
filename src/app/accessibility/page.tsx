@@ -7,6 +7,7 @@ import { ReadingPage } from "@/components/ReadingPage";
 export const metadata: Metadata = {
   title: "Accessibility statement · CRediT Matrix",
   description: "What we check, the problems we know about, and how to report a barrier in CRediT Matrix.",
+  alternates: { canonical: "/accessibility" },
 };
 
 /** GitHub's heading anchors, so a link to a section works on GitHub and on the site alike. */

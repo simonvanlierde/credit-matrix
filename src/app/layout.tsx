@@ -31,12 +31,14 @@ const PRELOADED_FONTS = [
   "/fonts/newsreader-italic-latin.woff2",
 ];
 
-const description = "Draft CRediT contribution statements for scholarly publications.";
+const description =
+  "Assign the 14 CRediT roles in a contribution matrix, export the author statement in nine languages, and download the contribution heatmap. Open source; your contribution data stays in your browser.";
 
 export const metadata: Metadata = {
   // The social card needs absolute URLs; Next resolves them against this.
   metadataBase: new URL("https://credit.duinlab.nl"),
-  title: "CRediT Matrix",
+  // The pages set their own titles; this one is the home page's, worded the way people search for it.
+  title: "CRediT Matrix · CRediT author statement generator",
   description,
   // og/twitter title and description inherit from the top-level fields.
   openGraph: {

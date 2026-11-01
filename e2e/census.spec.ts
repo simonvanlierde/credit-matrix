@@ -7,16 +7,28 @@ test.describe("CRediT census page", () => {
     await asReturningVisitor(page);
   });
 
-  test("is linked from the header and About, and shows the counts with their provenance", async ({ page }) => {
+  test("is linked from the header at every width and from the Published practice tab", async ({ page }) => {
+    // Below lg the brand menu carries it as a row.
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
-    // The header link shows from xl; the default 1280 px viewport is xl.
-    await expect(page.getByRole("banner").getByRole("link", { name: "CRediT census" })).toHaveAttribute(
+    await page.getByRole("heading", { name: "CRediT Matrix" }).getByRole("button").click();
+    await expect(page.getByRole("dialog").getByRole("link", { name: "CRediT census", exact: true })).toHaveAttribute(
       "href",
       "/census",
     );
-    await page.getByRole("button", { name: "About this app" }).click();
+    // At lg the nav shows the icon alone; the name stays for screen readers.
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.keyboard.press("Escape");
+    const navLink = page.getByRole("banner").getByRole("link", { name: "CRediT census" });
+    await expect(navLink).toBeVisible();
+    await expect(navLink.getByText("CRediT census")).toHaveClass(/sr-only/);
+    // From xl the name shows.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(navLink.getByText("CRediT census")).toBeVisible();
+
+    await page.getByRole("tab", { name: "Published practice" }).click();
     await page
-      .getByRole("dialog")
+      .getByRole("tabpanel", { name: "Published practice" })
       .getByRole("link", { name: /CRediT census/ })
       .click();
     await expect(page).toHaveURL(/\/census\/?$/);

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronRight, HelpCircle } from "lucide-react";
+import { ChartLine, ChevronDown, ChevronRight, HelpCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -10,10 +10,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useContributionStore } from "@/store/contribution-store";
 
 /**
- * Below `lg` the header has no room left for the "How it works" and "About"
+ * Below `lg` the header has no room left for the "How it works", "About" and census
  * links: the controls alone are already ~440px once they carry labels. The lockup is the
  * one element up there with nothing to do, so it becomes their trigger —
- * tapping the product name opens what the product is and how it works.
+ * tapping the product name opens what the product is, how it works, and what
+ * published papers do.
  *
  * The chevron is what earns that: without it the lockup reads as a title, and a
  * title nobody taps hides the two links just as well as the old `hidden md:flex`
@@ -26,7 +27,7 @@ export function BrandMenu({ version }: { version: string }) {
   const welcomeOpen = useContributionStore((s) => s.welcomeOpen);
   const onMainPage = usePathname() === "/";
   const t = useTranslations();
-  const howItWorksClass =
+  const rowClass =
     "touch-target flex w-full items-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-low px-3 text-left font-semibold text-on-surface transition-colors hover:border-primary hover:bg-surface-container hover:text-primary";
   const howItWorksLabel = (
     <>
@@ -56,26 +57,34 @@ export function BrandMenu({ version }: { version: string }) {
             text with an icon reads as a heading, not as the thing to tap. */}
         {/* The welcome modal lives on the main page only; elsewhere this
             links there and WelcomeCard opens it from the hash. */}
-        {onMainPage ? (
-          <button
-            type="button"
-            aria-expanded={welcomeOpen}
-            aria-controls="getting-started"
-            onClick={() => {
-              // Close first: the welcome dialog is modal, and a popover left open
-              // behind it would sit in the inert layer with no way back to it.
-              setOpen(false);
-              openWelcome();
-            }}
-            className={howItWorksClass}
-          >
-            {howItWorksLabel}
-          </button>
-        ) : (
-          <a href="/#getting-started" className={howItWorksClass}>
-            {howItWorksLabel}
+        {/* The two destinations sit together, closer than the About section below them. */}
+        <div className="space-y-2">
+          {onMainPage ? (
+            <button
+              type="button"
+              aria-expanded={welcomeOpen}
+              aria-controls="getting-started"
+              onClick={() => {
+                // Close first: the welcome dialog is modal, and a popover left open
+                // behind it would sit in the inert layer with no way back to it.
+                setOpen(false);
+                openWelcome();
+              }}
+              className={rowClass}
+            >
+              {howItWorksLabel}
+            </button>
+          ) : (
+            <a href="/#getting-started" className={rowClass}>
+              {howItWorksLabel}
+            </a>
+          )}
+          <a href="/census" className={rowClass}>
+            <ChartLine className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            {t("censusTitle")}
+            <ChevronRight className="ml-auto size-4 shrink-0 text-on-surface-variant" aria-hidden="true" />
           </a>
-        )}
+        </div>
         <div className="space-y-3 border-t border-outline-variant/30 pt-3">
           <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t("about")}</p>
           <AboutPanel version={version} />

@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- The [About page](https://credit.duinlab.nl/about#plugins) lists the plugins for MyST, Jupyter
+  Book, Quarto, Pandoc, Typst and Sphinx, and links citesync and codemeta-drift for software metadata.
+- The site has a sitemap, canonical page addresses and structured data, so search engines can
+  list the app and the census.
+
+### Changed
+
+- The [CRediT census](https://credit.duinlab.nl/census) link shows in the header at every width,
+  and the Published practice tab links to it.
+
 ## [0.10.0] - 2026-11-01
 
 When upgrading, read both `author` and `contributor` from the CodeMeta CLI output;

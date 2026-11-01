@@ -7,6 +7,7 @@ import packageJson from "../../../package.json";
 export const metadata: Metadata = {
   title: "About · CRediT Matrix",
   description: "What CRediT Matrix is, how to cite it, whom it thanks, and what it sends where.",
+  alternates: { canonical: "/about" },
 };
 
 export default function About() {

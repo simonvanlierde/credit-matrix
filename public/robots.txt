@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://credit.duinlab.nl/sitemap.xml
