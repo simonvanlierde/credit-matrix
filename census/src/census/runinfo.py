@@ -1,7 +1,8 @@
-"""The run manifest: what a training or prediction run needs to be repeated and its energy checked.
+"""Run tracking: what a training or prediction run needs to be repeated and its energy checked, recorded in MLflow.
 
 Imports neither torch nor transformers, so it works (and is tested) without the `train` dependency group.
-CodeCarbon is optional too: without it, or when it fails, the manifest says the energy was not tracked.
+MLflow and CodeCarbon are optional too: without MLflow the run goes untracked and says so; without CodeCarbon
+or when it fails, the energy is recorded as not tracked.
 """
 
 import contextlib
@@ -9,9 +10,8 @@ import hashlib
 import json
 import os
 import subprocess
-import sys
+import warnings
 from collections.abc import Generator, Iterable
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -121,20 +121,85 @@ def track_energy() -> Generator[dict[str, Any]]:
                 energy.update(tracked=False, reason=f"{type(err).__name__}: {err}")
 
 
-def write(path: Path, kind: str, **sections: Any) -> Path:
-    """Write `path` with the facts every run shares plus `sections`; returns `path`."""
+class Tracker:
+    """Writes to the open MLflow run; every method does nothing when MLflow is not installed."""
+
+    def __init__(self, mlflow: Any = None):
+        self._m = mlflow
+
+    def params(self, params: dict[str, Any]) -> None:
+        if self._m:
+            self._m.log_params(params)
+
+    def tags(self, tags: dict[str, Any]) -> None:
+        if self._m:
+            self._m.set_tags({k: v for k, v in tags.items() if v is not None})
+
+    def metrics(self, metrics: dict[str, float], step: int | None = None) -> None:
+        if self._m:
+            self._m.log_metrics(metrics, step=step)
+
+    def dataset(self, path: Path, context: str) -> None:
+        """Log `path` as a run input. MLflow keeps 36 characters of a digest, so the full SHA-256 is a param too."""
+        if not self._m:
+            return
+        from mlflow.data.dataset_source_registry import resolve_dataset_source
+        from mlflow.data.meta_dataset import MetaDataset
+
+        digest = sha256(path)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # a local file matches two source types; either records the URI
+            source = resolve_dataset_source(path.resolve().as_uri())
+        self._m.log_input(MetaDataset(source, name=path.name, digest=digest[:36]), context=context)  # ty: ignore[call-non-callable]
+        self._m.log_param(f"sha256.{path.name}", digest)
+
+    def epochs(self, log: Path) -> None:
+        """The dev F1 at the best threshold and the elapsed seconds after each epoch of `log` (metrics.jsonl)."""
+        for line in log.read_text(encoding="utf-8").splitlines():
+            record = json.loads(line)
+            if "epoch" in record:
+                f1 = max(row["f1"] for row in record["dev"].values())
+                self.metrics({"dev_f1": f1, "seconds": record["seconds"]}, step=record["epoch"])
+
+    def energy(self, energy: dict[str, Any]) -> None:
+        """kWh by component as metrics; how each figure was got, and why not, as tags."""
+        tracked = energy.get("tracked")
+        self.tags({"energy_tracked": tracked, "energy_reason": energy.get("reason")})
+        if not tracked:
+            return
+        self.tags({f"energy_{k}": energy[k] for k in ("cpu_method", "gpu_method", "ram_method", "country", "grid")})
+        self.metrics(
+            {
+                f"energy_{k}": energy[k]
+                for k in ("kwh", "cpu_kwh", "gpu_kwh", "ram_kwh", "co2e_kg", "seconds")
+                if energy[k] is not None
+            }
+        )
+
+
+@contextlib.contextmanager
+def tracking(db: Path, experiment: str, name: str, kind: str) -> Generator[Tracker]:
+    """Open an MLflow run `name` in `experiment`, tagged with the facts every run shares. The store is
+    MLFLOW_TRACKING_URI, else the SQLite file `db`. An exception in the block marks the run failed."""
+    try:
+        import mlflow
+    except ImportError:
+        print("MLflow is not installed; tracking skipped (`uv sync --group train` adds it)")
+        yield Tracker()
+        return
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{db}")
+    mlflow.set_experiment(experiment)
     lock = PACKAGE / "uv.lock"
-    manifest = {
-        "kind": kind,
-        "written": datetime.now(UTC).isoformat(timespec="seconds"),
-        "git_commit": git_commit(),
-        "git_dirty": git_dirty(),
-        "uv_lock_sha256": sha256(lock) if lock.exists() else None,
-        # Set by the job script that starts the container, e.g. from `docker inspect`.
-        "image_digest": os.environ.get("CENSUS_IMAGE_DIGEST"),
-        "python": sys.version.split()[0],
-        **sections,
-    }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    return path
+    with mlflow.start_run(run_name=name):
+        tracker = Tracker(mlflow)
+        tracker.tags(
+            {
+                "kind": kind,
+                "mlflow.source.git.commit": git_commit(),
+                "git_dirty": git_dirty(),
+                "uv_lock_sha256": sha256(lock) if lock.exists() else None,
+                # Set by the job script that starts the container, e.g. from `docker inspect`.
+                "image_digest": os.environ.get("CENSUS_IMAGE_DIGEST"),
+            }
+        )
+        yield tracker
