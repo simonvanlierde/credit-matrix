@@ -136,7 +136,7 @@ is published. Later metadata edits do not update that archived version.
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
 - **Document integrations**: `pnpm test:integrations` runs real Pandoc, Sphinx, MyST and Jupyter
-  Book builds. It needs uv and the workspace package built (`pnpm --filter credit-matrix build`).
+  Book builds. It needs uv, and it builds the workspace package first.
   Python tools and Pandoc are locked in `integrations/uv.lock`; the two book CLIs are devDependencies.
   The MyST plugin ships in the npm package as `dist/myst-plugin.mjs`, built by
   `src/core/tsdown.config.ts`.
