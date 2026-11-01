@@ -57,7 +57,7 @@
   "devDependencies": {
     "linkedom": "0.18.14",
     "rolldown": "1.2.15",
-    "tsdown": "0.23.2",
+    "tsdown": "0.23.0",
     "yaml": "2.9.1"
   }
 }

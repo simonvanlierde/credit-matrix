@@ -1,5 +1,4 @@
 // element.d.ts
-//#region element.d.ts
 /**
  * `<credit-matrix src="contributions.json" format="by-author" locale="fr">`:
  * the CRediT statement and contribution heatmap for a CRediT Matrix JSON
@@ -15,14 +14,12 @@ export declare class CreditMatrixElement extends HTMLElement {
   /** Render again, downloading `src` afresh. */
   render(): Promise<void>;
 }
-//#endregion
 // i18n.d.ts
 import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog } from "./ui-strings.js";
 export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode };
 // index.d.ts
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";
-//#region author.d.ts
 /**
  * A contribution is a 0–100 integer score for one CRediT role.
  *
@@ -109,8 +106,6 @@ type ContributorType = Author["contributorType"];
  */
 type ContributionLevel = "none" | "supporting" | "equal" | "lead";
 export declare function scoreToLevel(score: number): ContributionLevel;
-//#endregion
-//#region credit-roles.d.ts
 /**
  * The 14 CRediT (Contributor Roles Taxonomy) roles as defined by NISO.
  * https://credit.niso.org/
@@ -196,8 +191,6 @@ export declare const CREDIT_ROLES: readonly [{
 type CreditRoleName = (typeof CREDIT_ROLES)[number]["name"];
 /** Lookup a role by name. Throws if the name is not a valid CRediT role. */
 export declare function getRoleByName(name: string): (typeof CREDIT_ROLES)[number];
-//#endregion
-//#region orcid-proof.d.ts
 /** What a verified reply keeps: who signed in, and the evidence to check it again. */
 declare const OrcidProofSchema: z.ZodMiniObject<{
   orcid: z.ZodMiniString<string>;
@@ -227,8 +220,6 @@ export declare function verifyOrcidToken(token: string, { payload, keys, now }: 
   keys: readonly OrcidKey[];
   now?: number;
 }): Promise<OrcidProof | null>;
-//#endregion
-//#region ask.d.ts
 /** What a reply answers: each role, and the two markers outside CRediT. */
 type Target = CreditRoleName | "equalContribution" | "corresponding";
 type Choice = "theirs" | "mine";
@@ -927,8 +918,6 @@ export declare function importAnswers(current: readonly Author[], incoming: read
   asks: Record<string, Ask> | undefined;
   selfId: string | undefined;
 };
-//#endregion
-//#region export/codemeta.d.ts
 interface CodemetaPerson {
   type: "Person";
   id: string;
@@ -958,8 +947,6 @@ export declare function toCodemeta(authors: Author[]): {
   metadata: CodemetaAttribution;
   warnings: string[];
 };
-//#endregion
-//#region export/crossref.d.ts
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
  * later), for a publisher to paste into the work's record. Each person gets a
@@ -972,12 +959,8 @@ export declare function toCodemeta(authors: Author[]): {
  * after its ORCID iD has no name to deposit, so it is left out with a comment.
  */
 export declare function toCrossrefContributors(authors: Author[]): string;
-//#endregion
-//#region export/csv.d.ts
 export declare function toCsv(authors: Author[]): string;
 export declare function fromCsv(csv: string): Author[];
-//#endregion
-//#region export/heatmap-svg.d.ts
 interface HeatmapSvgOptions {
   /** Base hue for the heatmap; defaults to the app accent. */
   monoColor?: string;
@@ -1030,8 +1013,6 @@ export declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgO
  * who did what. Assistive technology reads both and nothing draws them.
  */
 export declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string;
-//#endregion
-//#region export/json.d.ts
 /** Thrown by `fromJson` for an export stamped by a newer build. */
 export declare class NewerVersionError extends Error {
   constructor(version: number);
@@ -1056,8 +1037,6 @@ export declare function fromJson(json: string): {
   asks?: Record<string, Ask>;
   selfId?: string;
 };
-//#endregion
-//#region export/latex-credits.d.ts
 /**
  * A draft as input for the latex-credits package (github.com/Pseudomanifold/latex-credits).
  * Each author becomes one granular `\credit` line: 14 values in CRediT order, each the
@@ -1070,8 +1049,6 @@ export declare function fromJson(json: string): {
 export declare function toLatexCredits(authors: Author[], { yesNo }?: {
   yesNo?: boolean;
 }): string;
-//#endregion
-//#region export/markdown.d.ts
 /**
  * Render the contributions as a Markdown table (Contributor → CRediT roles),
  * suitable for pasting into a README, GitHub issue, or manuscript draft.
@@ -1080,8 +1057,6 @@ export declare function toLatexCredits(authors: Author[], { yesNo }?: {
  * with their level, matching the statement's `showLevels` behaviour.
  */
 export declare function toMarkdown(authors: Author[], translateRole?: RoleTranslator, translateUi?: UiTranslator, locale?: string): string;
-//#endregion
-//#region export/tenzing.d.ts
 /**
  * A draft as a tenzing contributor spreadsheet (CSV). tenzing records a role as
  * done or not, so any score above 0 becomes TRUE, and it has no column for equal
@@ -1098,8 +1073,6 @@ export declare function toTenzing(authors: Author[]): string;
 /** True for a header row that looks like a tenzing contributor spreadsheet. */
 export declare function isTenzing(text: string): boolean;
 export declare function fromTenzing(text: string): Author[];
-//#endregion
-//#region export/xml.d.ts
 /**
  * Serialize authors to a JATS4R-compliant XML string.
  * Output mirrors the format produced by the original Python app.
@@ -1110,8 +1083,6 @@ export declare function fromTenzing(text: string): Author[];
 export declare function toJats4rXml(authors: Author[], { yesNo }?: {
   yesNo?: boolean;
 }): string;
-//#endregion
-//#region export/xml-import.d.ts
 /** The part of a DOM element the importer reads. Browser and linkedom elements both fit. */
 interface XmlElement {
   readonly textContent: string | null;
@@ -1131,8 +1102,6 @@ interface XmlParser {
 export declare function fromJats4rXml(xmlString: string, { parser }?: {
   parser?: XmlParser;
 }): Author[];
-//#endregion
-//#region generate-statement.d.ts
 export declare const STATEMENT_FORMATS: readonly ["by-role", "by-role-short", "by-author", "by-author-short"];
 type StatementFormat = (typeof STATEMENT_FORMATS)[number];
 interface StatementOptions {
@@ -1197,8 +1166,6 @@ interface StatementOptions {
  *   "CRediT: JAS: Conceptualization, Data curation; BW: Investigation; ..."
  */
 export declare function generateStatement(authors: Author[], options: StatementOptions): string;
-//#endregion
-//#region import.d.ts
 type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "statement" | "names" | "unknown";
 /** Guess what pasted or loaded text is, from its shape alone. */
 export declare function detectFormat(text: string): DetectedFormat;
@@ -1220,8 +1187,6 @@ interface Imported {
 export declare function importAny(text: string, { parser }?: {
   parser?: XmlParser;
 }): Promise<Imported>;
-//#endregion
-//#region parse-authors.d.ts
 /**
  * Given a list of raw name strings, parse them and assign unique initials.
  *
@@ -1261,8 +1226,6 @@ export declare function normalizeRoster(authors: Author[]): Author[];
  * Empty lines / entries are ignored.
  */
 export declare function parseAuthorText(text: string): Author[];
-//#endregion
-//#region share-payload.d.ts
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 interface ShareData {
   authors: Author[];
@@ -1302,8 +1265,6 @@ interface SharePayloadInput {
   /** The co-author's ORCID id_token, issued for this payload without it. Only meaningful with `reply`. */
   idToken?: string;
 }
-//#endregion
-//#region share-link.d.ts
 /**
  * Encode the v2 payload (authors plus the title/claim/source-draft/reply
  * envelope), deflate-compressed, as a `#s=…` fragment appended to `baseUrl`.
@@ -1319,8 +1280,6 @@ export declare function encodeShareHash(input: SharePayloadInput, baseUrl?: stri
  * crashing.
  */
 export declare function decodeShareHash(hash: string): Promise<ShareData | null>;
-//#endregion
-//#region statement.d.ts
 /** An author as the parser needs it: given names and surname, as separate strings. */
 interface StatementAuthor {
   given: string;
@@ -1368,10 +1327,8 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-//#endregion
 export type { Ask, AskEvent, AskState, Author, Choice, CodemetaAttribution, CodemetaPerson, CodemetaRole, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, OrcidKey, OrcidProof, Outcome, ParsedStatement, Patch, Reply, Review, ShareData, SharePayloadInput, StatementAuthor, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
 // lookup.d.ts
-//#region doi-lookup.d.ts
 /**
  * Stable machine-readable failure codes.
  *
@@ -1418,8 +1375,6 @@ export declare function normalizeDoi(doi: string): string;
  * reliable service than the anonymous pool.
  */
 export declare function lookupDoiWork(doi: string, fetcher?: typeof fetch, mailto?: string): Promise<DoiLookupResult>;
-//#endregion
-//#region orcid-lookup.d.ts
 /**
  * Stable machine-readable failure codes.
  *
@@ -1442,10 +1397,8 @@ type OrcidLookupResult = {
 };
 /** Validate an ORCID iD and resolve its public name through an injected fetcher. */
 export declare function lookupOrcidPerson(id: string, fetcher?: typeof fetch): Promise<OrcidLookupResult>;
-//#endregion
 export type { DoiAuthor, DoiErrorCode, DoiLookupResult, OrcidErrorCode, OrcidLookupResult };
 // ui-strings.d.ts
-//#region credit-i18n/index.d.ts
 /**
  * Localized CRediT role names/descriptions, sourced from the community
  * credit-translation repo and keyed by the canonical NISO role URL:
@@ -1530,8 +1483,6 @@ declare function makeRoleTranslator(catalog: RoleCatalog | null | undefined): Ro
 declare function makeRoleDescriber(catalog: RoleCatalog | null | undefined, fallback: RoleDescriber): RoleDescriber;
 /** Identity role translator (no catalog): the canonical English default. */
 declare const DEFAULT_ROLE_TRANSLATOR: RoleTranslator;
-//#endregion
-//#region credit-i18n/ui-strings.d.ts
 /**
  * UI-string translations: the non-role strings in human-facing output
  * (statement + heatmap): "Acknowledgements", the contribution-level labels, the
@@ -1555,5 +1506,4 @@ declare function loadUiCatalog(locale: string): Promise<UiCatalog | null>;
 declare function makeUiTranslator(catalog: Partial<UiCatalog> | null | undefined): UiTranslator;
 /** Canonical English UI translator (no catalog): the default for all consumers. */
 declare const DEFAULT_UI_TRANSLATOR: UiTranslator;
-//#endregion
 export { normalizeLocaleCode as _, loadUiCatalog as a, DEFAULT_ROLE_TRANSLATOR as c, RoleDescriber as d, RoleTranslator as f, makeRoleTranslator as g, makeRoleDescriber as h, UiTranslator as i, LocaleCode as l, loadRoleCatalog as m, UiCatalog as n, makeUiTranslator as o, hasCatalog as p, UiKey as r, AVAILABLE_LOCALES as s, DEFAULT_UI_TRANSLATOR as t, RoleCatalog as u };
