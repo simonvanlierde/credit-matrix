@@ -7,7 +7,7 @@ settings:
 overrides:
   nanoid: ^3.3.18
   postcss: ^8.5.23
-  miniflare>undici: 7.30.1
+  miniflare>undici: 8.12.3
   typed-rest-client>qs: ^6.16.0
 
 importers:
@@ -3464,10 +3464,6 @@ packages:
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
-  undici@7.30.1:
-    resolution: {integrity: sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==}
-    engines: {node: '>=20.18.1'}
-
   undici@8.12.3:
     resolution: {integrity: sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==}
     engines: {node: '>=22.19.0'}
@@ -6103,7 +6099,7 @@ snapshots:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.35.5(@types/node@26.6.5)
-      undici: 7.30.1
+      undici: 8.12.3
       workerd: 1.20261019.1
       ws: 8.21.0
       youch: 4.1.0-beta.10
@@ -6579,8 +6575,6 @@ snapshots:
   underscore@1.13.8: {}
 
   undici-types@8.9.0: {}
-
-  undici@7.30.1: {}
 
   undici@8.12.3: {}
 

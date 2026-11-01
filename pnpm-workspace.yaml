@@ -1,4 +1,3 @@
-# The app at the root, and the published `credit-matrix` package in src/core.
 packages:
   - src/core
 
@@ -15,7 +14,7 @@ overrides:
   postcss: "^8.5.23"
   # miniflare (via wrangler) pins undici 7.29.1, which has three advisories
   # (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, GHSA-xjj6-f33q-929c). Drop once wrangler moves it.
-  "miniflare>undici": "7.30.1"
+  "miniflare>undici": "8.12.3"
   # typed-rest-client 2.3.x (via @stryker-mutator/core, which pins ~2.3.0) pins qs 6.15.1, which has
   # three advisories (GHSA-4mjr-xmp4-gh2g, GHSA-q8mj-m7cp-5q26, GHSA-x5fp-wj9c-mxmx). Drop once
   # stryker moves to typed-rest-client 3.
