@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Export the grid as input for the [latex-credits](https://github.com/Pseudomanifold/latex-credits) LaTeX
+  package, from the Export data menu or with `credit-matrix convert --to latex-credits`. Lead, equal
+  and supporting show as shades. See the [package docs](src/core/README.md#import--export).
 - The [MyST plugin](integrations/myst/README.md) installs by URL: list
   `https://unpkg.com/credit-matrix@<version>/dist/myst-plugin.mjs` under `plugins` in `myst.yml`.
   The npm package ships it as one file, so there is nothing to copy or install.

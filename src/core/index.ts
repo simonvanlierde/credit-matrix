@@ -35,6 +35,7 @@ export { fromCsv, toCsv } from "./export/csv";
 export type { HeatmapSvgOptions } from "./export/heatmap-svg";
 export { buildHeatmapSvg, heatmapDescription } from "./export/heatmap-svg";
 export { fromJson, NewerVersionError, toJson } from "./export/json";
+export { toLatexCredits } from "./export/latex-credits";
 export { toMarkdown } from "./export/markdown";
 export { fromTenzing, isTenzing, toTenzing } from "./export/tenzing";
 export { toJats4rXml } from "./export/xml";

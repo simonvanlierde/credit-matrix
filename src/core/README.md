@@ -34,7 +34,7 @@ Node 22 or later. Run it with `npx credit-matrix` without installing, or with
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
 npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 people and roles
-npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref or md
+npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref, md or latex-credits
 npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
 npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
 npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
@@ -148,6 +148,7 @@ Only non-zero contributions appear in statements.
 | JSON        | `toJson`          | `fromJson`                          |
 | Markdown    | `toMarkdown`      | —                                   |
 | tenzing CSV | `toTenzing`       | `fromTenzing`                       |
+| LaTeX ([latex-credits](https://github.com/Pseudomanifold/latex-credits)) | `toLatexCredits` | — |
 | Crossref 5.5 `<contributors>` | `toCrossrefContributors` | — |
 | Heatmap SVG | `buildHeatmapSvg` | —                                   |
 
@@ -164,6 +165,9 @@ Rows without a usable name are skipped.
 any score above 0 becomes `TRUE`, and equal contribution is not kept. Rows run in byline order:
 authors in draft order, then acknowledgees, numbered on from the authors. Affiliations, email,
 funding and declarations are left empty for the team.
+
+`toLatexCredits` writes one granular `\credit` line per author, with each score as a fraction of 1,
+so `\insertcreditsgranular` shades lead, equal and supporting differently. Acknowledgees are left out.
 
 `fromJats4rXml(xml, { parser })` reads XML with `parser`, which defaults to the global `DOMParser`.
 In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:
@@ -264,7 +268,7 @@ holds its exact shape. By entry point:
   - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
   - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
-    `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`,
+    `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
     `toMarkdown`, `toCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
     `importAny`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,

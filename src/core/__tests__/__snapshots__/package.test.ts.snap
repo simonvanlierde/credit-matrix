@@ -47,6 +47,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "toCsv",
     "toJats4rXml",
     "toJson",
+    "toLatexCredits",
     "toMarkdown",
     "toTenzing",
     "verifyOrcidToken",
