@@ -150,7 +150,9 @@ class Tracker:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # a local file matches two source types; either records the URI
             source = resolve_dataset_source(path.resolve().as_uri())
-        self._m.log_input(MetaDataset(source, name=path.name, digest=digest[:36]), context=context)  # ty: ignore[call-non-callable]
+        # ty reads MetaDataset as abstract, though it instantiates; Any keeps the check passing with and without mlflow.
+        meta_dataset: Any = MetaDataset
+        self._m.log_input(meta_dataset(source, name=path.name, digest=digest[:36]), context=context)
         self._m.log_param(f"sha256.{path.name}", digest)
 
     def epochs(self, log: Path) -> None:
