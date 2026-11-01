@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ClaimGate } from "@/components/CoauthorPage";
 import { Inspector } from "@/components/Inspector";
 import { LabelledSection } from "@/components/LabelledSection";
@@ -7,12 +8,38 @@ import { WelcomeCard } from "@/components/WelcomeCard";
 // Server component: only the version string crosses into the client bundle.
 import packageJson from "../../package.json";
 
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+// Structured data for search engines: what the app is, so a result can show it as software.
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "CRediT Matrix",
+  url: "https://credit.duinlab.nl/",
+  applicationCategory: "ReferenceApplication",
+  operatingSystem: "Any (web browser)",
+  isAccessibleForFree: true,
+  license: "https://opensource.org/licenses/MIT",
+  softwareVersion: packageJson.version,
+  sameAs: "https://github.com/simonvanlierde/credit-matrix",
+  author: { "@type": "Person", name: "Simon van Lierde", url: "https://simonvanlierde.com" },
+};
+
 export default function HomePage() {
   return (
-    <ClaimGate>
-      <div className="desk:flex desk:h-full desk:flex-col">
-        <WelcomeCard version={packageJson.version} />
-        {/* The workspace: the roster as a slim rail, the grid as the canvas, and
+    <>
+      {/* Outside ClaimGate, which swaps its children for the co-author page. */}
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: a constant built at build time, no user input
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
+      <ClaimGate>
+        <div className="desk:flex desk:h-full desk:flex-col">
+          <WelcomeCard version={packageJson.version} />
+          {/* The workspace: the roster as a slim rail, the grid as the canvas, and
           the inspector (statement, team, review) on the right. Below xl they
           stack in that order and the page scrolls. The grid column takes all
           the width the two side columns leave, so a big roster gets the
@@ -20,31 +47,32 @@ export default function HomePage() {
 
           `desk` additionally locks the row to the viewport height; each pane
           scrolls its own content from there. */}
-        <div className="flex flex-col xl:grid xl:grid-cols-[auto_minmax(0,1fr)_26rem] 2xl:grid-cols-[auto_minmax(0,1fr)_30rem] desk:min-h-0 desk:flex-1 desk:overflow-hidden">
-          <LabelledSection
-            labelKey="stepContributors"
-            className="min-w-0 border-b border-outline-variant/40 bg-surface-bright xl:border-b-0 xl:border-r desk:min-h-0"
-          >
-            <AuthorList />
-          </LabelledSection>
+          <div className="flex flex-col xl:grid xl:grid-cols-[auto_minmax(0,1fr)_26rem] 2xl:grid-cols-[auto_minmax(0,1fr)_30rem] desk:min-h-0 desk:flex-1 desk:overflow-hidden">
+            <LabelledSection
+              labelKey="stepContributors"
+              className="min-w-0 border-b border-outline-variant/40 bg-surface-bright xl:border-b-0 xl:border-r desk:min-h-0"
+            >
+              <AuthorList />
+            </LabelledSection>
 
-          <LabelledSection
-            id="grid"
-            labelKey="a11yContributionGrid"
-            className="min-w-0 scroll-mt-16 bg-surface-bright desk:min-h-0"
-          >
-            <ContributionGrid />
-          </LabelledSection>
+            <LabelledSection
+              id="grid"
+              labelKey="a11yContributionGrid"
+              className="min-w-0 scroll-mt-16 bg-surface-bright desk:min-h-0"
+            >
+              <ContributionGrid />
+            </LabelledSection>
 
-          <LabelledSection
-            id="inspector"
-            labelKey="a11yInspector"
-            className="min-w-0 scroll-mt-16 border-t border-outline-variant/40 bg-surface-bright xl:border-t-0 xl:border-l desk:min-h-0"
-          >
-            <Inspector />
-          </LabelledSection>
+            <LabelledSection
+              id="inspector"
+              labelKey="a11yInspector"
+              className="min-w-0 scroll-mt-16 border-t border-outline-variant/40 bg-surface-bright xl:border-t-0 xl:border-l desk:min-h-0"
+            >
+              <Inspector />
+            </LabelledSection>
+          </div>
         </div>
-      </div>
-    </ClaimGate>
+      </ClaimGate>
+    </>
   );
 }

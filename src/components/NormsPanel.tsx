@@ -1,6 +1,6 @@
 "use client";
 
-import { Info } from "lucide-react";
+import { ChartLine, Info } from "lucide-react";
 import { type ReactNode, useId } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -177,6 +177,13 @@ export function NormsPanel() {
           {field ? t.rich("normsFieldGone", { field: label(field), name: english(field) }) : t("normsEmpty")}
         </p>
       )}
+      {/* The census page holds every field and year; this tab shows one field at a time. */}
+      <p className="border-t border-outline-variant/30 pt-3">
+        <a href="/census" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+          <ChartLine className="size-3.5 shrink-0" aria-hidden="true" />
+          {t("censusAboutLink")}
+        </a>
+      </p>
     </div>
   );
 }

@@ -21,12 +21,18 @@ test.describe("About page", () => {
     await expect(article.getByRole("heading", { level: 2 })).toHaveText("About CRediT Matrix");
     await expect(article.getByRole("heading", { level: 3 })).toHaveText([
       "Cite CRediT Matrix",
+      "Plugins for writing tools",
       "Acknowledgements",
       "Privacy",
       "Accessibility",
     ]);
     expect(conceptDoi).toBeTruthy();
     await expect(article.getByRole("link", { name: `https://doi.org/${conceptDoi}` })).toBeVisible();
+    await expect(article.getByRole("link", { name: "Quarto" })).toHaveAttribute("href", /integrations\/quarto/);
+    await expect(article.getByRole("link", { name: "citesync" })).toHaveAttribute(
+      "href",
+      "https://simonvanlierde.com/citesync/",
+    );
     await expect(page.locator("#privacy + p")).toContainText("Nothing else leaves your browser");
     await expect(article.getByRole("link", { name: "accessibility statement" })).toHaveAttribute(
       "href",

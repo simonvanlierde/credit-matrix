@@ -1,6 +1,6 @@
 "use client";
 
-import { Accessibility, BookOpen, ChartLine, Code } from "lucide-react";
+import { Accessibility, BookOpen, Code } from "lucide-react";
 import { useTranslations } from "use-intl";
 import { PRODUCT_NAME } from "@/components/BrandMark";
 import { ExternalLink } from "@/components/ui/external-link";
@@ -31,10 +31,6 @@ export function AboutPanel({ version }: { version: string }) {
       <a href="/accessibility" className="flex items-center gap-1.5 font-medium text-primary hover:underline">
         <Accessibility className="size-4" aria-hidden="true" />
         {t("accessibilityStatement")}
-      </a>
-      <a href="/census" className="flex items-center gap-1.5 font-medium text-primary hover:underline">
-        <ChartLine className="size-4" aria-hidden="true" />
-        {t("censusAboutLink")}
       </a>
       <ExternalLink
         href="https://github.com/simonvanlierde/credit-matrix"

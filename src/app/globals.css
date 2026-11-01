@@ -258,7 +258,8 @@ body:has([data-census-page], [data-reading-page]) {
   & :is(p, ul, dl) + :is(p, ul, dl) {
     margin-top: 0.75rem;
   }
-  & p + dl {
+  & p + dl,
+  & dl + p {
     margin-top: 1.5rem;
   }
   & ul {
