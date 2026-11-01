@@ -6,11 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-01
+
 ### Added
 
 - Export the grid as input for the [latex-credits](https://github.com/Pseudomanifold/latex-credits) LaTeX
   package, from the Export data menu or with `credit-matrix convert --to latex-credits`. Lead, equal
-  and supporting show as shades. See the [package docs](src/core/README.md#import--export).
+  and supporting show as shades. The package exports it as `toLatexCredits`. See the
+  [package docs](src/core/README.md#import--export).
 - The [MyST plugin](integrations/myst/README.md) installs by URL: list
   `https://unpkg.com/credit-matrix@<version>/dist/myst-plugin.mjs` under `plugins` in `myst.yml`.
   The npm package ships it as one file, so there is nothing to copy or install.
@@ -40,7 +43,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The [Pandoc filter](https://github.com/simonvanlierde/credit-matrix/tree/main/integrations/pandoc) no longer
   leaves "true" where the author names belong: Pandoc's default HTML, LaTeX/PDF, ConTeXt, ms and Word
-  templates show the names, and custom templates and JATS keep the full author data.
+  templates show the names, and templates that read `author.name`, and JATS, keep the full author data.
 
 ## [0.10.0] - 2026-11-01
 
@@ -675,7 +678,8 @@ Persisted local drafts migrate automatically.
   contribution heatmap, JATS4R XML / CSV / JSON / Markdown exports, ORCID lookup,
   share links, and a framework-agnostic `@credit-generator/core` domain package.
 
-[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.0...v0.8.1

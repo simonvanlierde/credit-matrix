@@ -94,6 +94,8 @@ end
 local function template_prints_plain_author()
   local template = PANDOC_WRITER_OPTIONS.template
   if not template then return FORMAT == "docx" end
+  -- pandoc.template.apply is Pandoc 3; older versions keep the author maps as they are.
+  if not pandoc.template.apply then return false end
   local function shows(author)
     local out = pandoc.layout.render(pandoc.template.apply(template, { title = "T", author = { author } }))
     return out:find("CrMxProbe", 1, true) ~= nil
