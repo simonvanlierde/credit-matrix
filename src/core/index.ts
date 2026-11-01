@@ -28,6 +28,8 @@ export type { Author, Contribution, ContributionLevel, ContributorType } from ".
 export { AuthorSchema, ContributionSchema, isValidOrcid, normalizeOrcid, scoreToLevel } from "./author";
 export type { CreditRoleName } from "./credit-roles";
 export { CREDIT_ROLES, getRoleByName } from "./credit-roles";
+export type { CodemetaAttribution, CodemetaPerson, CodemetaRole } from "./export/codemeta";
+export { toCodemeta } from "./export/codemeta";
 export { toCrossrefContributors } from "./export/crossref";
 export { fromCsv, toCsv } from "./export/csv";
 export type { HeatmapSvgOptions } from "./export/heatmap-svg";

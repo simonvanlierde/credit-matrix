@@ -17,7 +17,7 @@ import {
   normalizeLocaleCode,
 } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
-import { toCodemetaRoles } from "./export/codemeta";
+import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
 import { toJson } from "./export/json";
@@ -40,8 +40,8 @@ Commands:
   statement <file> [--format ${[...STATEMENT_FORMATS, "codemeta"].join("|")}] [--locale <code>] [--levels]
       Print the CRediT statement. --levels adds Equal or Supporting after
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
-      --format codemeta prints CodeMeta 3.0 Role objects instead, one per
-      role, for authors with an ORCID iD, and warns about each person left out.
+      --format codemeta prints linked CodeMeta 3.0 people and roles, with
+      non-authors in contributor. Warns about local identities and omitted scores.
   convert <file> --to json|csv|jats|crossref|md [--yes-no] [--locale <code>]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level.
@@ -219,14 +219,11 @@ export async function run(argv: string[]): Promise<string> {
     case "statement": {
       const format = values.format;
       if (format === "codemeta") {
-        const { roles, skipped } = toCodemetaRoles(authors);
-        if (roles.length === 0 && skipped.length === 0)
+        const { metadata, warnings } = toCodemeta(authors);
+        if (metadata.author.length === 0 && metadata.contributor.length === 0)
           throw new Error("No roles assigned yet: the statement is empty.");
-        for (const { author, reason } of skipped) {
-          const why = reason === "non-author" ? "is not an author" : "has no ORCID iD";
-          process.stderr.write(`credit-matrix: ${author.name} ${why}, so their roles are left out.\n`);
-        }
-        return JSON.stringify(roles, null, 2);
+        for (const warning of warnings) process.stderr.write(`credit-matrix: ${warning}\n`);
+        return JSON.stringify(metadata, null, 2);
       }
       if (!isStatementFormat(format)) throw new UsageError(`Unknown format: ${format}`);
       const locale = requireLocale(values.locale);

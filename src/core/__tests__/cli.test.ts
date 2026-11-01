@@ -65,17 +65,36 @@ describe("credit-matrix statement", () => {
     expect(await run(["statement", levels, "--levels"])).toBe("CRediT: Software: Jane Smith (Equal), Bob White");
   });
 
-  it("prints CodeMeta roles for authors with an ORCID iD, and warns once for each person left out", async () => {
+  it("prints linked CodeMeta people and roles, with explicit identity and score losses", async () => {
     const fixture = (name: string) => fileURLToPath(new URL(`fixtures/${name}`, import.meta.url));
     const err = vi.spyOn(process.stderr, "write").mockReturnValue(true);
     const output = await run(["statement", fixture("export-codemeta.json"), "--format", "codemeta"]);
     expect(JSON.parse(output)).toEqual(JSON.parse(readFileSync(fixture("export-codemeta.expected.json"), "utf8")));
     expect(err.mock.calls.join("")).toBe(
-      "credit-matrix: Ilse Marchetti is not an author, so their roles are left out.\n" +
-        "credit-matrix: Tomas Okafor has no ORCID iD, so their roles are left out.\n",
+      "credit-matrix: Antonie van Leeuwenhoek has no ORCID iD; their link identifies them only within this document.\n" +
+        "credit-matrix: Katherine Johnson has no ORCID iD; their link identifies them only within this document.\n" +
+        "credit-matrix: CodeMeta omits scores and contribution levels; keep the original roster JSON.\n",
     );
     vi.restoreAllMocks();
   });
+
+  it.each(["Carberry Josiah Carberry", "CarberryJosiah Carberry", "Josiah Carberry Carberry"])(
+    "keeps structured given names in CodeMeta, JATS and Crossref: %s",
+    async (name) => {
+      const author = createAuthor(name, {
+        firstName: "Josiah",
+        middleName: "Carberry",
+        surname: "Carberry",
+        contributions: [{ role: "Software", score: 100 }],
+      });
+      const input = file("structured-names.json", toJson([author]));
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const codemeta = JSON.parse(await run(["statement", input, "--format", "codemeta"]));
+      expect(codemeta.author[0]).toMatchObject({ givenName: "Josiah Carberry", familyName: "Carberry" });
+      expect(await run(["convert", input, "--to", "jats"])).toContain("<given-names>Josiah Carberry</given-names>");
+      expect(await run(["convert", input, "--to", "crossref"])).toContain("<given_name>Josiah Carberry</given_name>");
+    },
+  );
 
   it("refuses a roster with no roles rather than print an empty statement", async () => {
     const names = file("names.txt", "Jane Smith, Bob White");

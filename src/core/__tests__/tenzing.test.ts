@@ -24,6 +24,20 @@ const ANA_ROLES = [
   "Writing – review & editing:100",
 ];
 
+it("keeps complete family-first given names when the last given name repeats the surname", () => {
+  const author = createAuthor("Carberry Josiah Carberry", {
+    firstName: "Josiah",
+    middleName: "Carberry",
+    surname: "Carberry",
+    contributions: [{ role: "Software", score: 100 }],
+  });
+  expect(fromTenzing(toTenzing([author]))[0]).toMatchObject({
+    firstName: "Josiah",
+    middleName: "Carberry",
+    surname: "Carberry",
+  });
+});
+
 describe("fromTenzing", () => {
   it("skips a row with no usable name and keeps the rest", () => {
     const authors = fromTenzing("Firstname,Surname,Conceptualization\nAna,Lee,TRUE\n--,--,TRUE\nBo,Kim,FALSE");

@@ -928,6 +928,37 @@ export declare function importAnswers(current: readonly Author[], incoming: read
   selfId: string | undefined;
 };
 //#endregion
+//#region export/codemeta.d.ts
+interface CodemetaPerson {
+  type: "Person";
+  id: string;
+  name: string;
+  givenName?: string;
+  familyName?: string;
+}
+/** A CodeMeta 3.0 Role linked to a Person in the same attribution fragment. */
+interface CodemetaRole {
+  type: "Role";
+  "schema:author": string;
+  roleName: string;
+}
+interface CodemetaAttribution {
+  "@context": "https://w3id.org/codemeta/3.0";
+  author: (CodemetaPerson | CodemetaRole)[];
+  contributor: (CodemetaPerson | CodemetaRole)[];
+}
+/**
+ * Export people with active contributions and their linked CRediT roles.
+ * Non-authors go in contributor. Without an ORCID, a roster-position fragment
+ * links the person only within this document; it is not a persistent identity.
+ * Merge the returned fields into the work's CodeMeta record. Keep native JSON
+ * for scores, contribution levels, equal contribution and correspondence.
+ */
+export declare function toCodemeta(authors: Author[]): {
+  metadata: CodemetaAttribution;
+  warnings: string[];
+};
+//#endregion
 //#region export/crossref.d.ts
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
@@ -1324,7 +1355,7 @@ export declare function namesCredit(text: string): boolean;
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
 //#endregion
-export type { Ask, AskEvent, AskState, Author, Choice, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, OrcidKey, OrcidProof, Outcome, ParsedStatement, Patch, Reply, Review, ShareData, SharePayloadInput, StatementAuthor, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
+export type { Ask, AskEvent, AskState, Author, Choice, CodemetaAttribution, CodemetaPerson, CodemetaRole, Contribution, ContributionLevel, ContributorType, CreditRoleName, Decision, DetectedFormat, Difference, HeatmapSvgOptions, Imported, Level, OrcidKey, OrcidProof, Outcome, ParsedStatement, Patch, Reply, Review, ShareData, SharePayloadInput, StatementAuthor, StatementFormat, StatementOptions, Target, XmlElement, XmlParser };
 // lookup.d.ts
 //#region doi-lookup.d.ts
 /**
