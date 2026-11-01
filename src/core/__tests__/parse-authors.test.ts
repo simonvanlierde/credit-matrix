@@ -14,6 +14,14 @@ import {
 } from "../parse-authors";
 
 describe("parseNameParts", () => {
+  it("keeps all name tokens when extra commas do not form one inverted name", () => {
+    expect(parseNameParts("Carberry, Josiah, Curie")).toEqual({
+      firstName: "Carberry",
+      middleName: "Josiah",
+      surname: "Curie",
+    });
+  });
+
   it("parses a three-part name", () => {
     expect(parseNameParts("Jane A Smith")).toEqual({
       firstName: "Jane",

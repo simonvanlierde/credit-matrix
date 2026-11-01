@@ -6,11 +6,8 @@ changes are in the [changelog](../CHANGELOG.md).
 
 ## Now
 
-- **Release 0.9.0.** The [changelog](../CHANGELOG.md) lists what it brings, among them pasting an
-  existing statement into Import, ORCID sign-in for co-authors, the Published practice tab and
-  the CRediT census page, tenzing CSV and Crossref exports, linked CodeMeta people and roles from the CLI, and the fixes from a
-  WCAG 2.2 self-assessment. It also carries the breaking `DetectedFormat` change in the
-  `credit-matrix` package.
+- **Release 0.10.0.** The [changelog](../CHANGELOG.md) covers linked CodeMeta attribution,
+  Pandoc, Sphinx and Jupyter Book 2 integrations, shared MyST wording and structured-name fixes.
 - **Validate the census parser.** Score the parser that reads roles from published papers against
   labels that language models wrote and a person checks, so the census and the Published practice
   tab can drop their "preliminary" note. The
