@@ -14,7 +14,6 @@ import json
 import math
 import random
 import re
-import subprocess
 import sys
 import time
 from collections import defaultdict
@@ -23,7 +22,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from census import labels
+from census import labels, runinfo
 from census.modelset import Pairs, read_jsonl
 from census.roles import ROLE_PATTERNS
 
@@ -217,14 +216,6 @@ def _log(log: Path, record: dict[str, Any]) -> None:
         f.write(json.dumps(record) + "\n")
 
 
-def _git_commit() -> str | None:
-    try:
-        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=Path(__file__).parent, capture_output=True, text=True)
-    except OSError:  # no git on this machine
-        return None
-    return out.stdout.strip() if out.returncode == 0 else None
-
-
 def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     """Fine-tune on a subsample of `dataset/train.jsonl`, scoring dev after each epoch. Writes config.json,
     metrics.jsonl (a first line with the git commit, the data's hash, library versions and example counts,
@@ -256,7 +247,7 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     _log(
         log,
         {
-            "git_commit": _git_commit(),
+            "git_commit": runinfo.git_commit(),
             "train_jsonl_sha256": train_sha256,
             "torch": torch.__version__,
             "transformers": transformers.__version__,

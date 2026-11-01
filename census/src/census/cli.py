@@ -14,9 +14,24 @@ import re
 import sys
 import time
 from collections.abc import Iterator
+from dataclasses import asdict
 from pathlib import Path
 
-from census import aggregate, bulk, export, fields, labels, modelset, net, norms, pipeline, pmc_s3, snapshot, store
+from census import (
+    aggregate,
+    bulk,
+    export,
+    fields,
+    labels,
+    modelset,
+    net,
+    norms,
+    pipeline,
+    pmc_s3,
+    runinfo,
+    snapshot,
+    store,
+)
 from census.reports import REPORTS
 
 ROOT = Path(__file__).resolve().parents[2]  # census/, so commands work from any directory
@@ -337,7 +352,28 @@ def cmd_model_train(args: argparse.Namespace) -> None:
         "device",
     )
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
-    best = encoder.train(encoder.Config(**overrides), dataset, run)
+    config = encoder.Config(**overrides)
+    with runinfo.tracking(DATA / "mlflow.db", f"census-{args.snapshot}", args.name, "train") as t:
+        t.params(
+            {f"config.{k}": v for k, v in asdict(config).items()}
+            | {
+                "split.held_out": f"1 in {round(1 / modelset.HELD_OUT_SHARE)} statement groups, by seeded hash",
+                "split.held_out_seed": modelset.SPLIT_SEED,
+                "split.dev": f"1 statement group in {config.dev_every}, carved from train",
+            }
+        )
+        for path in sorted(dataset.glob("*.jsonl")):
+            t.dataset(path, "held_out" if path.name == "held_out.jsonl" else "train")
+        try:
+            with runinfo.track_energy() as energy:
+                best = encoder.train(config, dataset, run)
+        finally:
+            t.energy(energy)
+        base = runinfo.base_model(config.model, config.revision)
+        t.params({f"base_model.{k}": v for k, v in base.items()})
+        t.params({"weights_sha256": runinfo.sha256(run / "checkpoint" / "model.safetensors")})
+        t.epochs(run / "metrics.jsonl")
+        t.metrics({f"best_{k}": v for k, v in best.items()})
     print(f"best epoch {best['epoch']}: dev F1 {best['f1']} at threshold {best['threshold']}; model in {run}")
     print(f"predict with `census model predict --name {args.name}`")
 
@@ -353,16 +389,36 @@ def cmd_model_predict(args: argparse.Namespace) -> None:
     start = time.monotonic()
     if args.corpus:
         out = _corpus_dir(args)
-        with store.connect(_db(args), read_only=True) as con:
-            total = modelset.count_free_text(con, args.limit)
-            chunks = modelset.free_text_chunks(con, args.chunk or 20_000, args.limit)
-            n = encoder.predict_corpus(run, chunks, out, args.device, total)
+    else:
+        items, name = _items(args)
+        out = _model_dir(args) / "predictions" / f"encoder-{args.name}-{name}.jsonl"
+    with runinfo.tracking(DATA / "mlflow.db", f"census-{args.snapshot}", f"predict-{args.name}", "predict") as t:
+        try:
+            with runinfo.track_energy() as energy:
+                if args.corpus:
+                    with store.connect(_db(args), read_only=True) as con:
+                        total = modelset.count_free_text(con, args.limit)
+                        chunks = modelset.free_text_chunks(con, args.chunk or 20_000, args.limit)
+                        n = encoder.predict_corpus(run, chunks, out, args.device, total)
+                else:
+                    n = encoder.predict(run, items, out, args.device)
+        finally:
+            t.energy(energy)
+        t.params(
+            {
+                "run": args.name,
+                "output": out.name,
+                "device": args.device,
+                "limit": args.limit,
+                "weights_sha256": runinfo.sha256(run / "checkpoint" / "model.safetensors"),
+                "output_sha256": None if args.corpus else runinfo.sha256(out),
+            }
+        )
+        t.metrics({"articles": n})
+    if args.corpus:
         print(f"{n} articles in {time.monotonic() - start:.0f} s into {out}; compare with `census model compare`")
-        return
-    items, name = _items(args)
-    out = _model_dir(args) / "predictions" / f"encoder-{args.name}-{name}.jsonl"
-    n = encoder.predict(run, items, out, args.device)
-    print(f"{n} articles in {time.monotonic() - start:.0f} s; score with `census model score {out}`")
+    else:
+        print(f"{n} articles in {time.monotonic() - start:.0f} s; score with `census model score {out}`")
 
 
 def _corpus_dir(args: argparse.Namespace) -> Path:

@@ -26,7 +26,14 @@ dev = [
   "ty>=0.0.86",
   "types-lxml>=2026.2.16",
 ]
+tracking = [
+  "alembic>=1.16",
+  "mlflow-skinny>=3.17",
+  "sqlalchemy>=2",
+]
 train = [
+  { include-group = "tracking" },
+  "codecarbon>=3.3.2",
   "torch>=2.14",
   "transformers>=5.20",
 ]
@@ -60,4 +67,4 @@ module-name = "census"
 
 [tool.ty.analysis]
 # CI type-checks without the `train` and `browser` groups: torch's wheels are too large to install there.
-allowed-unresolved-imports = ["torch", "transformers", "tokenizers", "onnx", "onnxruntime.**"]
+allowed-unresolved-imports = ["torch", "transformers", "tokenizers", "onnx", "onnxruntime.**", "codecarbon", "huggingface_hub", "mlflow", "mlflow.**"]

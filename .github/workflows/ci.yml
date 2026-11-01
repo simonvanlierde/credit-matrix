@@ -167,10 +167,12 @@ jobs:
 
       - name: Lint, typecheck, test
         run: |
-          uv run --locked ruff format --check .
-          uv run --locked ruff check .
-          uv run --locked ty check
-          uv run --locked pytest -q
+          uv sync --locked --group tracking
+          uv run --no-sync ruff format --check .
+          uv run --no-sync ruff check .
+          uv run --no-sync ty check
+          uv run --no-sync python -c "import mlflow, sqlalchemy, alembic"
+          uv run --no-sync pytest -q
 
   # Trains two epochs of a tiny random ModernBERT and predicts with it, on CPU. The locked torch is the
   # CUDA build (several GB), so the CPU wheel goes in over the locked environment instead.
