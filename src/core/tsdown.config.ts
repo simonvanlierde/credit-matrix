@@ -1,3 +1,5 @@
+// biome-ignore-all lint/correctness/noNodejsModules: the build config runs in Node.
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "tsdown";
 
 // No hashes in file names: the type snapshot test compares dist/*.d.ts by name.
@@ -24,6 +26,19 @@ export default defineConfig([
     dts: false,
     hash: false,
     fixedExtension: false,
+    clean: false,
+  },
+  {
+    // The MyST plugin as one file: MyST runs a plugin from a URL out of its own cache, where bare
+    // imports fail. The package and yaml are bundled in; the source is used so the builds stay independent.
+    entry: { "myst-plugin": "../../integrations/myst/credit-matrix.mjs" },
+    alias: { "credit-matrix": fileURLToPath(new URL("index.ts", import.meta.url)) },
+    deps: { alwaysBundle: ["yaml", /^yaml\//, "zod", /^zod\//] },
+    outputOptions: { codeSplitting: false, entryFileNames: "[name].mjs" },
+    minify: true,
+    platform: "node",
+    dts: false,
+    hash: false,
     clean: false,
   },
 ]);

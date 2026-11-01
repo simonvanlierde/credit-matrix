@@ -5,20 +5,21 @@ directly; there is no second plugin to copy or configure.
 
 ## Install
 
-1. Copy [credit-matrix.mjs](../myst/credit-matrix.mjs) into your book.
-2. Install its dependencies: `pnpm add credit-matrix yaml`.
-3. Add it to `myst.yml`:
+Add the plugin by URL to `myst.yml`. It is one self-contained file: nothing else to install.
 
-   ```yaml
-   version: 1
-   project:
-     title: Example Lab handbook
-     authors:
-       - name: Marie Curie
-         roles: [Software, writing]
-     plugins:
-       - credit-matrix.mjs
-   ```
+```yaml
+version: 1
+project:
+  title: Example Lab handbook
+  authors:
+    - name: Marie Curie
+      roles: [Software, writing]
+  plugins:
+    - https://unpkg.com/credit-matrix@0.10.0/dist/myst-plugin.mjs
+```
+
+To work offline, copy [credit-matrix.mjs](../myst/credit-matrix.mjs) into your book, run
+`pnpm add credit-matrix yaml`, and list `credit-matrix.mjs` under `plugins` instead.
 
 ## Use
 

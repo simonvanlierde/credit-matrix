@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The [MyST plugin](integrations/myst/README.md) installs by URL: list
+  `https://unpkg.com/credit-matrix@<version>/dist/myst-plugin.mjs` under `plugins` in `myst.yml`.
+  The npm package ships it as one file, so there is nothing to copy or install.
 - The [About page](https://credit.duinlab.nl/about#plugins) lists the plugins for MyST, Jupyter
   Book, Quarto, Pandoc, Typst and Sphinx, and links citesync and codemeta-drift for software metadata.
 - The site has a sitemap, canonical page addresses and structured data, so search engines can
