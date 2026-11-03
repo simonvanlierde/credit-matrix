@@ -34,7 +34,7 @@ On pull requests, the `preview` job deploys the build as its own Worker, `credit
 (from `wrangler.preview.jsonc`), and writes its `workers.dev` address to the job summary. That is the
 only address: the config sets `preview_urls: false`. A preview is live only while its PR is open and
 not a draft: a draft gets none, and the job re-reads the PR just before it deploys. The job runs in the
-`preview` environment with its own secrets, and skips on fork PRs and when the token is missing.
+`preview` environment with its own secrets, and skips on fork PRs, bot PRs such as Renovate's, and when the token is missing.
 Previews are public and send `X-Robots-Tag: noindex`.
 
 `preview-retire.yml` runs when a PR closes, merges or turns draft. It deletes the PR's Worker

@@ -368,7 +368,8 @@ jobs:
   # skip with a notice, as does a run without the secret.
   preview:
     name: Preview
-    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    # Bot pull requests (Renovate) get no preview, so their code never sees the token.
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft && !endsWith(github.event.pull_request.user.login, '[bot]')
     # Shares preview-retire.yml's group, so a retire waits for a deploy in flight.
     concurrency:
       group: preview-${{ github.event.pull_request.number }}
