@@ -56,7 +56,7 @@ jobs:
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
           PRS: ${{ github.event.pull_request.number || inputs.prs }}
-        run: |
+        run: |-
           set -o pipefail
           failed=0
           names=""
@@ -70,7 +70,13 @@ jobs:
               | jq -r '.result[].id') || { echo "::error::Could not list the account's Workers."; exit 1; }
             for name in $(grep -E '^credit-matrix-pr-[0-9]+$' <<< "$all" || true); do
               n=${name#credit-matrix-pr-}
-              [ "$(gh api "repos/$REPO/pulls/$n" --jq '.state, .draft' | paste -sd' ')" = "open false" ] || PRS="$PRS $n"
+              # Delete only on a confirmed state: a failed read keeps the preview.
+              if ! state=$(gh api "repos/$REPO/pulls/$n" --jq '.state, .draft' | paste -sd' '); then
+                echo "::warning::Could not read PR $n, so its preview stays for now."
+                failed=1
+                continue
+              fi
+              [ "$state" = "open false" ] || PRS="$PRS $n"
             done
             # The Worker the alias design created; its version URL still serves a build.
             if grep -qx 'credit-matrix-preview' <<< "$all"; then names="credit-matrix-preview"; fi
