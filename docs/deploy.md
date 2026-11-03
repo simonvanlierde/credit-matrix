@@ -40,7 +40,7 @@ Previews are public and send `X-Robots-Tag: noindex`.
 `preview-retire.yml` runs when a PR closes or turns draft. It deletes the PR's Worker, then fetches
 the address and fails unless it stops serving the build. A daily run lists the account's
 `credit-matrix-pr-<number>` Workers and deletes each whose PR is not open and ready, and the old
-`credit-matrix-preview` Worker. Run it by hand with PR numbers to retire a preview now. Production
+`credit-matrix-preview` Worker. Run it by hand with PR numbers to retire those previews now, or with none to run the sweep. Production
 also sets `preview_urls: false`, so its versions get no preview URL.
 
 ## Roll back

@@ -4,7 +4,8 @@ name: Retire preview
 # deleting the Worker. The job then fetches the address and fails unless it has stopped
 # serving the build. A daily run lists the account's preview Workers and deletes each one
 # whose pull request is not open and ready, which also covers events that never ran. Run
-# it by hand with a list of pull request numbers to retire previews now.
+# it by hand with a list of pull request numbers to retire those previews now, or with the
+# list empty to run the sweep.
 on:
   pull_request:
     types: [closed, converted_to_draft]
@@ -13,8 +14,8 @@ on:
   workflow_dispatch:
     inputs:
       prs:
-        description: PR numbers to retire, separated by spaces
-        required: true
+        description: PR numbers to retire, separated by spaces. Leave empty to run the daily sweep.
+        required: false
 
 permissions:
   contents: read
@@ -59,14 +60,14 @@ jobs:
           set -o pipefail
           failed=0
           names=""
-          if [ "$EVENT" = schedule ]; then
+          if [ "$EVENT" = schedule ] || [ -z "$PRS" ]; then
             # Every preview Worker whose PR is not open and ready. The PR is read again
             # here, just before the delete, so a PR that became ready since the list
             # was made keeps its preview.
             PRS=""
             all=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
               "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" \
-              | jq -r '.result[].id')
+              | jq -r '.result[].id') || { echo "::error::Could not list the account's Workers."; exit 1; }
             for name in $(grep -E '^credit-matrix-pr-[0-9]+$' <<< "$all" || true); do
               n=${name#credit-matrix-pr-}
               [ "$(gh api "repos/$REPO/pulls/$n" --jq '.state, .draft' | paste -sd' ')" = "open false" ] || PRS="$PRS $n"
