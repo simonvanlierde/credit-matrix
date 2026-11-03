@@ -265,9 +265,12 @@ test.describe("screen-reader view (accessibility tree)", () => {
     const coauthorContext = await browser.newContext();
     const coauthor = await coauthorContext.newPage();
     await coauthor.goto(askUrl);
+    await expect(coauthor.getByRole("banner")).toMatchAriaSnapshot(`
+      - banner:
+        - button "Language settings"
+    `);
     await expect(coauthor.getByRole("main")).toMatchAriaSnapshot(`
       - main:
-        - button "Language settings"
         - heading "What did you do on this paper?" [level=1]
         - heading "Your roles" [level=2]
         - list "Your roles":
@@ -377,6 +380,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
     await openElementHost(page);
     await expect(page.locator("credit-matrix")).toMatchAriaSnapshot(`
       - figure:
+        - img "Beitragsheatmap"
         - table "Beitragsheatmap":
           - rowgroup:
             - row:
@@ -408,6 +412,18 @@ test.describe("screen-reader view (live announcements)", () => {
     expect((await announcements(page)).slice(from).map((a) => a.text)).toEqual([
       "Validation for Ada Lovelace: Supporting",
     ]);
+  });
+
+  test("a new statement note is announced once", async ({ page }) => {
+    await loadSample(page);
+    const from = (await announcements(page)).length;
+    const add = page.getByLabel("New author names or ORCID iD");
+    await add.fill("Grace Hopper");
+    await add.press("Enter");
+    await expect(page.getByText("Grace Hopper has no assigned CRediT roles.")).toBeVisible();
+    await page.waitForTimeout(300);
+    const said = (await announcements(page)).slice(from).filter((a) => /note|Grace Hopper has no/.test(a.text));
+    expect(said).toEqual([{ text: "1 note to review", inserted: false }]);
   });
 
   test("removing a contributor is announced once, in a region that was already there", async ({ page }) => {

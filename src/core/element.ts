@@ -198,8 +198,10 @@ export class CreditMatrixElement extends HTMLElement {
     // Scrolls rather than shrinks on a narrow page, so the labels keep their size.
     const scroll = document.createElement("div");
     scroll.className = "scroll";
+    // Focusable so a keyboard can scroll it. An image, not a group: its drawing is hidden from
+    // screen readers, so a group would be read as empty.
     scroll.tabIndex = 0;
-    scroll.setAttribute("role", "group");
+    scroll.setAttribute("role", "img");
     scroll.setAttribute("aria-label", translateUi("heatmapTitle"));
     // buildHeatmapSvg escapes every name and role it writes. The table below carries its content for screen readers.
     scroll.innerHTML = buildHeatmapSvg(authors, { translateRole, translateUi });

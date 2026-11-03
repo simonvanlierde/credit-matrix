@@ -3,6 +3,7 @@
 import { BadgeCheck, Check, ChevronDown, CircleCheck, Send } from "lucide-react";
 import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -52,6 +53,21 @@ export function ClaimGate({ children }: { children: ReactNode }) {
       : null,
   );
   return askKey ? <CoauthorPage key={askKey} /> : children;
+}
+
+/**
+ * The page's own top row, as the banner landmark: rendered into the layout's slot
+ * before <main>, since the app header is hidden here. The page only renders in the
+ * browser (the ask lives in the store), so the slot is there on the first render.
+ */
+function PageBanner({ children }: { children: ReactNode }) {
+  const [slot] = useState(() => document.getElementById("page-banner"));
+  const row = (
+    <div className="mx-auto flex w-full max-w-[40rem] items-center justify-between gap-2 px-4 pt-5 sm:px-6 sm:pt-8">
+      {children}
+    </div>
+  );
+  return slot ? createPortal(<header>{row}</header>, slot) : row;
 }
 
 /**
@@ -204,14 +220,14 @@ function CoauthorPage() {
 
   return (
     <div data-coauthor-page className="mx-auto w-full max-w-[40rem]">
-      <div className="flex flex-col gap-3 px-4 pt-5 sm:px-6 sm:pt-8">
-        <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 text-xs text-on-surface-variant">
-            <BrandMark className="size-[1.15rem] shrink-0" />
-            {PRODUCT_NAME}
-          </span>
-          <LanguageSelector />
-        </div>
+      <PageBanner>
+        <span className="flex items-center gap-2 text-xs text-on-surface-variant">
+          <BrandMark className="size-[1.15rem] shrink-0" />
+          {PRODUCT_NAME}
+        </span>
+        <LanguageSelector />
+      </PageBanner>
+      <div className="flex flex-col gap-3 px-4 pt-3 sm:px-6">
         <h1
           ref={headingRef}
           tabIndex={-1}

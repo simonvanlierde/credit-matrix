@@ -287,14 +287,14 @@ export function StatementOutput() {
         )}
       </section>
 
-      {/* Validation notices: a live region so changes are announced as authors edit. */}
+      {/* Validation notices. Not a live region: the readiness chip above already says
+          how many there are, and a list that arrived with its text was read a second time. */}
       {issues.length > 0 && (
         <ul
           // biome-ignore lint/a11y/noNoninteractiveTabindex: same as the statement pane; the bounded notes list scrolls and holds no focusable content.
           tabIndex={0}
           className="relative z-10 flex max-h-40 flex-col gap-1.5 overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label={t("a11yStatementNotes")}
-          aria-live="polite"
         >
           {issues.map((issue) => {
             const text =

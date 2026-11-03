@@ -131,6 +131,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 needs it and to symmetric gutters when it does not. */}
             {/* The save-failure notice sits in flow above the page, so on a
                 height-locked desk it shortens the workspace rather than covering it. */}
+            {/* A page that hides the app header puts its own <header> here: inside <main> a
+                header is no banner landmark. */}
+            <div id="page-banner" />
             <main
               id="main-content"
               tabIndex={-1}

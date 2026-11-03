@@ -56,7 +56,7 @@ N/A: the page has no content the criterion applies to.
 | 1.2.3 Audio Description or Media Alternative (Prerecorded) | A | N/A | No audio or video. |
 | 1.2.4 Captions (Live) | AA | N/A | No audio or video. |
 | 1.2.5 Audio Description (Prerecorded) | AA | N/A | No audio or video. |
-| 1.3.1 Info and Relationships | A | Pass | Landmarks, headings, real tables with header cells, lists, tabs and radio groups in the accessibility tree, the same in Chromium, Firefox and WebKit. Fixed: the co-author page's 14 role names were not headings, and each initials badge was read as well as the name beside it. `e2e/screen-reader.spec.ts` checks both. Screen-reader check still to do. |
+| 1.3.1 Info and Relationships | A | Pass | Landmarks, headings, real tables with header cells, lists, tabs and radio groups in the accessibility tree, the same in Chromium, Firefox and WebKit. Fixed: the co-author page's 14 role names were not headings, and each initials badge was read as well as the name beside it. Fixed: the co-author page had no banner landmark; its brand and language row is now one. `e2e/screen-reader.spec.ts` checks all three. Screen-reader check still to do. |
 | 1.3.2 Meaningful Sequence | A | Pass | The accessibility tree of each sampled surface follows the visual order (`e2e/screen-reader.spec.ts`); no positive `tabindex`. |
 | 1.3.3 Sensory Characteristics | A | Pass | Instructions name controls by their text. |
 | 1.3.4 Orientation | AA | Pass | No orientation lock in the CSS, scripts or web manifest. |
@@ -118,8 +118,8 @@ N/A: the page has no content the criterion applies to.
 
 | Criterion | Level | Result | Evidence |
 | --- | --- | --- | --- |
-| 4.1.2 Name, Role, Value | A | Pass | Fixed: popover panels were dialogs without a name. `e2e/a11y.spec.ts` now runs axe's `aria-dialog-name` rule on them. Each popover's button reports it open, and focus returns to it on Escape; each grid cell names its level, and radios, tabs and switches report their state (`e2e/screen-reader.spec.ts`, also in Firefox and WebKit). Screen-reader check still to do. |
-| 4.1.3 Status Messages | AA | Pass | Fixed: picking a file in the import dialog announced nothing; `e2e/input-errors.spec.ts` checks it. Fixed: the Undo strip appeared with its text already in it, which many screen readers miss, and removing a contributor relied on it alone; a bulk change was said twice; and every grid change also read out the statement's counts. Each message now goes once through a live region that is already on the page, which `e2e/screen-reader.spec.ts` checks from a log of every live-region change. Screen-reader check still to do. |
+| 4.1.2 Name, Role, Value | A | Pass | Fixed: popover panels were dialogs without a name. Fixed: the web element's scroll box, which takes focus so a keyboard can scroll the heatmap, was an empty group to a screen reader; it is now a named image. `e2e/a11y.spec.ts` now runs axe's `aria-dialog-name` rule on them. Each popover's button reports it open, and focus returns to it on Escape; each grid cell names its level, and radios, tabs and switches report their state (`e2e/screen-reader.spec.ts`, also in Firefox and WebKit). Screen-reader check still to do. |
+| 4.1.3 Status Messages | AA | Pass | Fixed: picking a file in the import dialog announced nothing; `e2e/input-errors.spec.ts` checks it. Fixed: the Undo strip appeared with its text already in it, which many screen readers miss, and removing a contributor relied on it alone; a bulk change was said twice; every grid change also read out the statement's counts; and the first statement note was read in the count and again in its list. Each message now goes once through a live region that is already on the page, which `e2e/screen-reader.spec.ts` checks from a log of every live-region change. Screen-reader check still to do. |
 
 WCAG 2.2 removed 4.1.1 Parsing, so it is not listed.
 
