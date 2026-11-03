@@ -1,0 +1,19 @@
+// PR previews only: CI's preview job uploads each pull request's build as a version of
+// this Worker, at a stable pr-<number> address, and preview-retire.yml points the address
+// at a "preview closed" page when the pull request closes or turns draft. Production is
+// wrangler.jsonc. See docs/deploy.md for the one-time setup.
+//
+// To rename, rename the Worker in the Cloudflare dashboard first: a preview under a new
+// name creates a new Worker, which then blocks the rename.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "credit-matrix-preview",
+  "compatibility_date": "2026-07-06",
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "404-page"
+  },
+  // Preview URLs need both.
+  "preview_urls": true,
+  "workers_dev": true
+}

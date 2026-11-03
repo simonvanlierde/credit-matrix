@@ -1,0 +1,119 @@
+name: Retire preview
+
+# Wrangler cannot delete a preview alias (a deleted preview keeps serving: workers-sdk
+# #15945 and #16495), so a pull request that closes or turns draft gets its alias pointed
+# at a short "preview closed" page instead. The job then fetches the alias and fails
+# unless it serves that page. A daily run covers events that never ran: it retires every
+# pull request that is closed or a draft and changed in the last three days. Run it by
+# hand with a list of pull request numbers to retire older previews.
+on:
+  pull_request:
+    types: [closed, converted_to_draft]
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      prs:
+        description: PR numbers to retire, separated by spaces
+        required: true
+
+permissions:
+  contents: read
+
+# Shares ci.yml's preview group, so a retire waits for an upload in flight.
+concurrency:
+  group: preview-${{ github.event.pull_request.number || github.run_id }}
+
+jobs:
+  retire:
+    name: Retire
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: preview
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read # for the daily run to list closed and draft PRs
+    steps:
+      - name: Check credentials
+        id: gate
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::Nothing to retire: CLOUDFLARE_API_TOKEN is not set."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - if: steps.gate.outputs.run == 'true'
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          node-version-file: .node-version
+          cache: false
+          install: false
+
+      - if: steps.gate.outputs.run == 'true'
+        name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - if: steps.gate.outputs.run == 'true'
+        name: Point each alias at the closed page
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          PRS: ${{ github.event.pull_request.number || inputs.prs }}
+        # pipefail: the default shell takes the pipe's status from tee.
+        run: |
+          set -o pipefail
+          if [ "$EVENT" = schedule ]; then
+            PRS=$(gh api "repos/$REPO/pulls?state=all&sort=updated&direction=desc&per_page=50" \
+              --jq '.[] | select(.state == "closed" or .draft) | select(.updated_at > (now - 259200 | todate)) | .number')
+          fi
+          mkdir retired
+          printf '/*\n  X-Robots-Tag: noindex\n' > retired/_headers
+          echo '<!doctype html><title>Preview closed</title><p>This pull request preview is closed. See <a href="https://credit.duinlab.nl">credit.duinlab.nl</a>.</p>' > retired/index.html
+          cp retired/index.html retired/404.html
+          failed=0
+          for pr in $PRS; do
+            case "$pr" in *[!0-9]*|'') echo "::error::Not a PR number: $pr"; exit 1 ;; esac
+            # A pull request that never had a preview has no alias, and may have no Worker.
+            if ! pnpm exec wrangler versions upload --config wrangler.preview.jsonc --assets retired \
+              --preview-alias "pr-$pr" --message "PR $pr closed" 2>&1 | tee upload.log; then
+              grep -q 'does not yet exist' upload.log || exit 1
+              echo "::notice::No preview Worker yet, so pr-$pr has no preview to retire."
+              continue
+            fi
+            url=$(grep 'Version Preview Alias URL:' upload.log | grep -Eo 'https://[^ ]+' || true)
+            if [ -z "$url" ]; then
+              echo "::error::pr-$pr: wrangler printed no alias URL, so takedown is unverified."
+              failed=1
+              continue
+            fi
+            # A new version takes a moment to reach every edge: retry with backoff.
+            ok=false
+            for wait in 5 10 20 40 60; do
+              if curl -fsS -D headers.txt -o body.html "$url" 2>/dev/null \
+                && grep -q 'Preview closed' body.html && grep -qi '^x-robots-tag: noindex' headers.txt; then
+                ok=true
+                break
+              fi
+              sleep "$wait"
+            done
+            if [ "$ok" = true ]; then
+              echo "Retired pr-$pr: $url serves the closed page" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::error::pr-$pr: $url still does not serve the closed page."
+              failed=1
+            fi
+          done
+          exit "$failed"

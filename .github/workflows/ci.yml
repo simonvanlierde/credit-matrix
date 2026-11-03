@@ -8,6 +8,9 @@ on:
   # Every PR, not only those into main: a stacked PR otherwise runs no checks
   # until its base merges.
   pull_request:
+    # The default types plus ready_for_review: a draft gets no preview, so marking
+    # it ready is what starts one.
+    types: [opened, synchronize, reopened, ready_for_review]
   # Main only, so a PR branch runs once (via pull_request), not twice. The
   # push run keeps the README badge on main's latest commit.
   push:
@@ -361,16 +364,27 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # Preview of a PR's build as a Worker version (not live). Needs the token
-  # secret, which fork PRs never get, so both cases skip with a notice.
-  # The secrets live in the `preview` environment, apart from production's.
+  # Preview of a PR's build at a pr-<number> address on a separate preview Worker
+  # (wrangler.preview.jsonc). A preview is live only while its PR is open and not a
+  # draft: a draft gets none, and preview-retire.yml takes it down when the PR closes
+  # or turns draft. Needs the token secret, which fork PRs never get, so both cases
+  # skip with a notice. The secrets live in the `preview` environment, apart from
+  # production's.
   preview:
     name: Preview
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    # Shares preview-retire.yml's group, so a retire waits for an upload in flight.
+    concurrency:
+      group: preview-${{ github.event.pull_request.number }}
     runs-on: ubuntu-latest
-    environment: preview
+    environment:
+      name: preview
+      url: ${{ steps.upload.outputs.url }}
     timeout-minutes: 10
     needs: [build]
+    permissions:
+      contents: read
+      pull-requests: read # to re-read the PR's state before the upload
     steps:
       - name: Check credentials
         id: gate
@@ -407,23 +421,42 @@ jobs:
           name: out
           path: out
 
+      # Search engines should index the production site, not the preview copies. This
+      # appends to the build's own _headers, which keeps its security headers.
+      - if: steps.gate.outputs.run == 'true'
+        run: |
+          printf '\n/*\n  X-Robots-Tag: noindex\n' >> out/_headers
+
       - if: steps.gate.outputs.run == 'true'
         name: Upload Worker version
+        id: upload
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          MESSAGE: PR ${{ github.event.pull_request.number }} at ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
         # pipefail: the default shell takes the pipe's status from tee, so a
         # refused upload would otherwise pass.
         run: |
           set -o pipefail
-          pnpm exec wrangler versions upload --message "$MESSAGE" | tee upload.log
-          {
-            echo "### Preview"
-            # The URL itself has no "preview" in it, so match wrangler's label.
-            url=$(grep 'Version Preview URL:' upload.log | grep -Eo 'https://[^ ]+' || true)
-            if [ -n "$url" ]; then echo "$url"; else echo "Version uploaded, but wrangler printed no preview URL. Check preview_urls and workers_dev in wrangler.jsonc."; fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          # The event may be minutes old. Read the PR now, so a late upload cannot
+          # bring back the preview of a PR that has closed or turned draft since.
+          state=$(gh api "repos/$REPO/pulls/$PR" --jq '.state, .draft' | paste -sd' ')
+          if [ "$state" != "open false" ]; then
+            echo "::notice::Preview skipped: PR $PR is no longer open and ready ($state)."
+            exit 0
+          fi
+          pnpm exec wrangler versions upload --config wrangler.preview.jsonc \
+            --preview-alias "pr-$PR" --message "PR $PR at $SHA" 2>&1 | tee upload.log
+          url=$(grep 'Version Preview Alias URL:' upload.log | grep -Eo 'https://[^ ]+' || true)
+          if [ -z "$url" ]; then
+            echo "::error::Version uploaded, but wrangler printed no alias URL. Check preview_urls and workers_dev in wrangler.preview.jsonc."
+            exit 1
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "### Preview: $url" >> "$GITHUB_STEP_SUMMARY"
 
   # Provenance for the exact files the deploy job ships. Kept apart from
   # deploy so the OIDC token never sits in a job that runs project code.

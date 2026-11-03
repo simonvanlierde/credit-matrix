@@ -30,10 +30,19 @@ deployed files are the ones that were built and tested, and runs `wrangler deplo
 The repository itself holds no Cloudflare secrets. If `CLOUDFLARE_API_TOKEN` is
 missing, the deploy step prints a notice and the job still passes.
 
-On pull requests, the `preview` job uploads the build as a Worker version with
-`wrangler versions upload` and writes the preview URL to the job summary. It runs in the `preview`
-environment with its own secrets, and skips on fork PRs and when the token is missing. `wrangler.jsonc`
-turns Preview URLs on with `preview_urls` and `workers_dev`.
+On pull requests, the `preview` job uploads the build to a separate Worker, `credit-matrix-preview`
+(`wrangler.preview.jsonc`), at one `pr-<number>` address per pull request, and writes the URL to the job
+summary. A preview is live only while its PR is open and not a draft: a draft gets none, and the job
+re-reads the PR just before it uploads. The job runs in the `preview` environment with its own secrets,
+and skips on fork PRs and when the token is missing. Previews are public and send `X-Robots-Tag: noindex`.
+
+`preview-retire.yml` runs when a PR closes or turns draft, and daily as a backstop. Wrangler cannot
+delete a preview alias, so it uploads a "preview closed" page to the alias, fetches the alias, and fails
+unless that page comes back. Run it by hand with PR numbers to retire older previews. Production sets
+`preview_urls: false`, so versions of the production Worker get no preview URL.
+
+One-time setup: the preview Worker must exist before the first upload. Create it from a build with
+`pnpm build && pnpm exec wrangler deploy -c wrangler.preview.jsonc`.
 
 ## Roll back
 
