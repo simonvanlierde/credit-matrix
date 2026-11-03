@@ -37,11 +37,19 @@ not a draft: a draft gets none, and the job re-reads the PR just before it deplo
 `preview` environment with its own secrets, and skips on fork PRs and when the token is missing.
 Previews are public and send `X-Robots-Tag: noindex`.
 
-`preview-retire.yml` runs when a PR closes or turns draft. It deletes the PR's Worker, then fetches
-the address and fails unless it stops serving the build. A daily run lists the account's
-`credit-matrix-pr-<number>` Workers and deletes each whose PR is not open and ready, and the old
-`credit-matrix-preview` Worker. Run it by hand with PR numbers to retire those previews now, or with none to run the sweep. Production
-also sets `preview_urls: false`, so its versions get no preview URL.
+`preview-retire.yml` runs when a PR closes, merges or turns draft. It deletes the PR's Worker
+through the Cloudflare API, then fetches the address and fails unless it answers 404, which shows the
+Worker is gone. A daily run lists the account's `credit-matrix-pr-<number>` Workers and deletes each
+whose PR is not open and ready, plus the old shared `credit-matrix-preview` Worker. When it cannot
+read a PR, it keeps that Worker and fails. The shell is in `.github/scripts/preview-retire.sh`, a
+copy of the project-templates script, which is tested there.
+
+To retire previews by hand, run `preview-retire.yml` from the Actions tab. Give it PR numbers to
+retire those previews now, or leave the list empty to run the sweep.
+
+The token needs one permission, Account > Workers Scripts: Edit, and the account needs a
+`workers.dev` subdomain. Production also sets `preview_urls: false`, so its versions get no preview
+URL.
 
 ## Roll back
 

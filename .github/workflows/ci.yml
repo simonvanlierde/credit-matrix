@@ -364,16 +364,12 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # Preview of a PR's build on its own Worker, credit-matrix-pr-<number>
-  # (wrangler.preview.jsonc). A preview is live only while its PR is open and not a
-  # draft: a draft gets none, and preview-retire.yml takes it down when the PR closes
-  # or turns draft. Needs the token secret, which fork PRs never get, so both cases
-  # skip with a notice. The secrets live in the `preview` environment, apart from
-  # production's.
+  # docs/deploy.md has the preview lifecycle. Fork PRs never get the token, so they
+  # skip with a notice, as does a run without the secret.
   preview:
     name: Preview
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft
-    # Shares preview-retire.yml's group, so a retire waits for an upload in flight.
+    # Shares preview-retire.yml's group, so a retire waits for a deploy in flight.
     concurrency:
       group: preview-${{ github.event.pull_request.number }}
     runs-on: ubuntu-latest
@@ -384,7 +380,7 @@ jobs:
     needs: [build]
     permissions:
       contents: read
-      pull-requests: read # to re-read the PR's state before the upload
+      pull-requests: read # to re-read the PR's state before the deploy
     steps:
       - name: Check credentials
         id: gate
@@ -443,7 +439,7 @@ jobs:
           set -o pipefail
           # The event may be minutes old. Read the PR now, so a late upload cannot
           # bring back the preview of a PR that has closed or turned draft since.
-          state=$(gh api "repos/$REPO/pulls/$PR" --jq '.state, .draft' | paste -sd' ')
+          state=$(gh api "repos/$REPO/pulls/$PR" --jq '.state + " " + (.draft|tostring)')
           if [ "$state" != "open false" ]; then
             echo "::notice::Preview skipped: PR $PR is no longer open and ready ($state)."
             exit 0

@@ -1,7 +1,5 @@
-// PR previews only: CI's preview job deploys each pull request's build as its own Worker,
-// credit-matrix-pr-<number> (the name is passed with --name), and preview-retire.yml deletes
-// that Worker when the pull request closes or turns draft. Production is wrangler.jsonc.
-// See docs/deploy.md.
+// PR previews only. CI always deploys this file with --name credit-matrix-pr-<number>,
+// so the name below is never used. Production is wrangler.jsonc.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "credit-matrix-preview",
@@ -10,8 +8,8 @@
     "directory": "./out",
     "not_found_handling": "404-page"
   },
-  // Off: a version URL cannot be switched off apart from the Worker's own address, so a
-  // preview has one address only, and it goes away when the Worker is deleted.
+  // Off, so the workers.dev address is the Worker's only one, and the retire job can
+  // check that one address after the delete.
   "preview_urls": false,
   "workers_dev": true
 }
