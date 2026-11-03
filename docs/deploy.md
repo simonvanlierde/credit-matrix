@@ -30,18 +30,18 @@ deployed files are the ones that were built and tested, and runs `wrangler deplo
 The repository itself holds no Cloudflare secrets. If `CLOUDFLARE_API_TOKEN` is
 missing, the deploy step prints a notice and the job still passes.
 
-On pull requests, the `preview` job uploads the build to a separate Worker, `credit-matrix-preview`
-(`wrangler.preview.jsonc`), at one `pr-<number>` address per pull request, and writes the URL to the job
-summary. A preview is live only while its PR is open and not a draft: a draft gets none, and the job
-re-reads the PR just before it uploads. The job runs in the `preview` environment with its own secrets,
-and skips on fork PRs and when the token is missing. Previews are public and send `X-Robots-Tag: noindex`.
+On pull requests, the `preview` job deploys the build as its own Worker, `credit-matrix-pr-<number>`
+(from `wrangler.preview.jsonc`), and writes its `workers.dev` address to the job summary. That is the
+only address: the config sets `preview_urls: false`. A preview is live only while its PR is open and
+not a draft: a draft gets none, and the job re-reads the PR just before it deploys. The job runs in the
+`preview` environment with its own secrets, and skips on fork PRs and when the token is missing.
+Previews are public and send `X-Robots-Tag: noindex`.
 
-`preview-retire.yml` runs when a PR closes or turns draft, and daily as a backstop. Wrangler cannot
-delete a preview alias, so it uploads a "preview closed" page to the alias, fetches the alias, and fails
-unless that page comes back. Run it by hand with PR numbers to retire older previews. Production sets
-`preview_urls: false`, so versions of the production Worker get no preview URL.
-
-The first preview creates the preview Worker, with a placeholder page at its own address.
+`preview-retire.yml` runs when a PR closes or turns draft. It deletes the PR's Worker, then fetches
+the address and fails unless it stops serving the build. A daily run lists the account's
+`credit-matrix-pr-<number>` Workers and deletes each whose PR is not open and ready, and the old
+`credit-matrix-preview` Worker. Run it by hand with PR numbers to retire a preview now. Production
+also sets `preview_urls: false`, so its versions get no preview URL.
 
 ## Roll back
 

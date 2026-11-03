@@ -1,11 +1,10 @@
 name: Retire preview
 
-# Wrangler cannot delete a preview alias (a deleted preview keeps serving: workers-sdk
-# #15945 and #16495), so a pull request that closes or turns draft gets its alias pointed
-# at a short "preview closed" page instead. The job then fetches the alias and fails
-# unless it serves that page. A daily run covers events that never ran: it retires every
-# pull request that is closed or a draft and changed in the last three days. Run it by
-# hand with a list of pull request numbers to retire older previews.
+# A preview is a Worker of its own, credit-matrix-pr-<number>, so retiring it means
+# deleting the Worker. The job then fetches the address and fails unless it has stopped
+# serving the build. A daily run lists the account's preview Workers and deletes each one
+# whose pull request is not open and ready, which also covers events that never ran. Run
+# it by hand with a list of pull request numbers to retire previews now.
 on:
   pull_request:
     types: [closed, converted_to_draft]
@@ -20,7 +19,7 @@ on:
 permissions:
   contents: read
 
-# Shares ci.yml's preview group, so a retire waits for an upload in flight.
+# Shares ci.yml's preview group, so a retire waits for a deploy in flight.
 concurrency:
   group: preview-${{ github.event.pull_request.number || github.run_id }}
 
@@ -33,7 +32,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      pull-requests: read # for the daily run to list closed and draft PRs
+      pull-requests: read # to re-read each PR's state before the sweep deletes its Worker
     steps:
       - name: Check credentials
         id: gate
@@ -64,7 +63,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - if: steps.gate.outputs.run == 'true'
-        name: Point each alias at the closed page
+        name: Delete the preview Workers
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -75,45 +74,55 @@ jobs:
         # pipefail: the default shell takes the pipe's status from tee.
         run: |
           set -o pipefail
-          if [ "$EVENT" = schedule ]; then
-            PRS=$(gh api "repos/$REPO/pulls?state=all&sort=updated&direction=desc&per_page=50" \
-              --jq '.[] | select(.state == "closed" or .draft) | select(.updated_at > (now - 259200 | todate)) | .number')
-          fi
-          mkdir retired
-          printf '/*\n  X-Robots-Tag: noindex\n' > retired/_headers
-          echo '<!doctype html><title>Preview closed</title><p>This pull request preview is closed. See <a href="https://credit.duinlab.nl">credit.duinlab.nl</a>.</p>' > retired/index.html
-          cp retired/index.html retired/404.html
           failed=0
+          names=""
+          if [ "$EVENT" = schedule ]; then
+            # Every preview Worker whose PR is not open and ready. The PR is read again
+            # here, just before the delete, so a PR that became ready since the list
+            # was made keeps its preview.
+            PRS=""
+            all=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" \
+              | jq -r '.result[].id')
+            for name in $(grep -E '^credit-matrix-pr-[0-9]+$' <<< "$all" || true); do
+              n=${name#credit-matrix-pr-}
+              [ "$(gh api "repos/$REPO/pulls/$n" --jq '.state, .draft' | paste -sd' ')" = "open false" ] || PRS="$PRS $n"
+            done
+            # The Worker the alias design created; its version URL still serves a build.
+            if grep -qx 'credit-matrix-preview' <<< "$all"; then names="credit-matrix-preview"; fi
+          fi
           for pr in $PRS; do
             case "$pr" in *[!0-9]*|'') echo "::error::Not a PR number: $pr"; exit 1 ;; esac
-            # A pull request that never had a preview has no alias, and may have no Worker.
-            if ! pnpm exec wrangler versions upload --config wrangler.preview.jsonc --assets retired \
-              --preview-alias "pr-$pr" --message "PR $pr closed" 2>&1 | tee upload.log; then
-              grep -q 'does not yet exist' upload.log || exit 1
-              echo "::notice::No preview Worker yet, so pr-$pr has no preview to retire."
-              continue
+            names="$names credit-matrix-pr-$pr"
+          done
+          for name in $names; do
+            # A pull request that never had a preview has no Worker: not an error.
+            if ! pnpm exec wrangler delete "$name" --force 2>&1 | tee delete.log; then
+              grep -Eqi 'not found|does not exist|10007' delete.log || { echo "::error::Could not delete $name."; failed=1; continue; }
+              echo "::notice::$name does not exist, so there is nothing to retire."
             fi
-            url=$(grep 'Version Preview Alias URL:' upload.log | grep -Eo 'https://[^ ]+' || true)
-            if [ -z "$url" ]; then
-              echo "::error::pr-$pr: wrangler printed no alias URL, so takedown is unverified."
+            # Look the address up again from the account, so the check does not depend on wrangler's text.
+            sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
+              | jq -r '.result.subdomain')
+            if [ -z "$sub" ] || [ "$sub" = null ]; then
+              echo "::error::Could not read the account's workers.dev subdomain, so takedown of $name is unverified."
               failed=1
               continue
             fi
-            # A new version takes a moment to reach every edge: retry with backoff.
-            ok=false
+            url="https://$name.$sub.workers.dev"
+            # The delete takes a moment to reach every edge: retry with backoff.
+            code=000
             for wait in 5 10 20 40 60; do
-              if curl -fsS -D headers.txt -o body.html "$url" 2>/dev/null \
-                && grep -q 'Preview closed' body.html && grep -qi '^x-robots-tag: noindex' headers.txt; then
-                ok=true
-                break
-              fi
+              code=$(curl -sS -o /dev/null -w '%{http_code}' "$url" || true)
+              [ "$code" != 200 ] && break
               sleep "$wait"
             done
-            if [ "$ok" = true ]; then
-              echo "Retired pr-$pr: $url serves the closed page" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "::error::pr-$pr: $url still does not serve the closed page."
+            if [ "$code" = 200 ]; then
+              echo "::error::$url still serves the build after the delete."
               failed=1
+            else
+              echo "Retired $name: $url answers HTTP $code" >> "$GITHUB_STEP_SUMMARY"
             fi
           done
           exit "$failed"

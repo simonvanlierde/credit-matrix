@@ -364,7 +364,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # Preview of a PR's build at a pr-<number> address on a separate preview Worker
+  # Preview of a PR's build on its own Worker, credit-matrix-pr-<number>
   # (wrangler.preview.jsonc). A preview is live only while its PR is open and not a
   # draft: a draft gets none, and preview-retire.yml takes it down when the PR closes
   # or turns draft. Needs the token secret, which fork PRs never get, so both cases
@@ -428,7 +428,7 @@ jobs:
           printf '\n/*\n  X-Robots-Tag: noindex\n' >> out/_headers
 
       - if: steps.gate.outputs.run == 'true'
-        name: Upload Worker version
+        name: Deploy preview Worker
         id: upload
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -448,23 +448,11 @@ jobs:
             echo "::notice::Preview skipped: PR $PR is no longer open and ready ($state)."
             exit 0
           fi
-          upload() {
-            pnpm exec wrangler versions upload --config wrangler.preview.jsonc \
-              --preview-alias "pr-$PR" --message "PR $PR at $SHA" 2>&1 | tee upload.log
-          }
-          if ! upload; then
-            # Only an existing Worker takes versions. Create it once with a
-            # placeholder page, so its own workers.dev address never serves a PR.
-            grep -q 'does not yet exist' upload.log || exit 1
-            mkdir placeholder
-            cp out/_headers placeholder/
-            echo 'Pull request previews of this project live at pr-NUMBER addresses.' > placeholder/index.html
-            pnpm exec wrangler deploy --config wrangler.preview.jsonc --assets placeholder
-            upload
-          fi
-          url=$(grep 'Version Preview Alias URL:' upload.log | grep -Eo 'https://[^ ]+' || true)
+          pnpm exec wrangler deploy --config wrangler.preview.jsonc \
+            --name "credit-matrix-pr-$PR" --message "PR $PR at $SHA" 2>&1 | tee deploy.log
+          url=$(grep -Eo 'https://[^ ]+\.workers\.dev' deploy.log | head -n 1 || true)
           if [ -z "$url" ]; then
-            echo "::error::Version uploaded, but wrangler printed no alias URL. Check preview_urls and workers_dev in wrangler.preview.jsonc."
+            echo "::error::Deployed, but wrangler printed no workers.dev address. Check workers_dev in wrangler.preview.jsonc."
             exit 1
           fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
