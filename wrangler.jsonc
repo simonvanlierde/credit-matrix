@@ -11,9 +11,8 @@
     "not_found_handling": "404-page"
   },
   "compatibility_date": "2026-07-06",
-  // To rename, rename the Worker in the Cloudflare dashboard first. The PR
-  // preview job (`wrangler versions upload`) creates an empty Worker under any
-  // name that does not exist yet, which then blocks the dashboard rename.
+  // To rename, rename the Worker in the Cloudflare dashboard first: a
+  // deploy under a new name creates a new Worker, which then blocks the rename.
   "name": "credit-matrix",
   // Bound to a Custom Domain
   "routes": [
@@ -22,8 +21,8 @@
       "custom_domain": true
     }
   ],
-  // Preview URLs (the PR preview job) need both, and they turn on the
-  // credit-matrix.<account>.workers.dev address as well.
-  "preview_urls": true,
+  // PR previews live on their own Worker (wrangler.preview.jsonc). Off here, so a
+  // version of this Worker never gets a public preview URL of its own.
+  "preview_urls": false,
   "workers_dev": true
 }

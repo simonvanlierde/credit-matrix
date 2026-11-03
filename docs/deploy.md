@@ -30,10 +30,26 @@ deployed files are the ones that were built and tested, and runs `wrangler deplo
 The repository itself holds no Cloudflare secrets. If `CLOUDFLARE_API_TOKEN` is
 missing, the deploy step prints a notice and the job still passes.
 
-On pull requests, the `preview` job uploads the build as a Worker version with
-`wrangler versions upload` and writes the preview URL to the job summary. It runs in the `preview`
-environment with its own secrets, and skips on fork PRs and when the token is missing. `wrangler.jsonc`
-turns Preview URLs on with `preview_urls` and `workers_dev`.
+On pull requests, the `preview` job deploys the build as its own Worker, `credit-matrix-pr-<number>`
+(from `wrangler.preview.jsonc`), and writes its `workers.dev` address to the job summary. That is the
+only address: the config sets `preview_urls: false`. A preview is live only while its PR is open and
+not a draft: a draft gets none, and the job re-reads the PR just before it deploys. The job runs in the
+`preview` environment with its own secrets, and skips on fork PRs, bot PRs such as Renovate's, and when the token is missing.
+Previews are public and send `X-Robots-Tag: noindex`.
+
+`preview-retire.yml` runs when a PR closes, merges or turns draft. It deletes the PR's Worker
+through the Cloudflare API, then fetches the address and fails unless it answers 404, which shows the
+Worker is gone. A daily run lists the account's `credit-matrix-pr-<number>` Workers and deletes each
+whose PR is not open and ready, plus the old shared `credit-matrix-preview` Worker. When it cannot
+read a PR, it keeps that Worker and fails. The shell is in `.github/scripts/preview-retire.sh`, a
+copy of the project-templates script, which is tested there.
+
+To retire previews by hand, run `preview-retire.yml` from the Actions tab. Give it PR numbers to
+retire those previews now, or leave the list empty to run the sweep.
+
+The token needs one permission, Account > Workers Scripts: Edit, and the account needs a
+`workers.dev` subdomain. Production also sets `preview_urls: false`, so its versions get no preview
+URL.
 
 ## Roll back
 

@@ -1,0 +1,15 @@
+// PR previews only. CI always deploys this file with --name credit-matrix-pr-<number>,
+// so the name below is never used. Production is wrangler.jsonc.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "credit-matrix-preview",
+  "compatibility_date": "2026-07-06",
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "404-page"
+  },
+  // Off, so the workers.dev address is the Worker's only one, and the retire job can
+  // check that one address after the delete.
+  "preview_urls": false,
+  "workers_dev": true
+}
