@@ -47,22 +47,6 @@ jobs:
           fi
 
       - if: steps.gate.outputs.run == 'true'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - if: steps.gate.outputs.run == 'true'
-        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
-        with:
-          node-version-file: .node-version
-          cache: false
-          install: false
-
-      - if: steps.gate.outputs.run == 'true'
-        name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - if: steps.gate.outputs.run == 'true'
         name: Delete the preview Workers
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -71,7 +55,6 @@ jobs:
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
           PRS: ${{ github.event.pull_request.number || inputs.prs }}
-        # pipefail: the default shell takes the pipe's status from tee.
         run: |
           set -o pipefail
           failed=0
@@ -96,12 +79,18 @@ jobs:
             names="$names credit-matrix-pr-$pr"
           done
           for name in $names; do
-            # A pull request that never had a preview has no Worker: not an error.
-            if ! pnpm exec wrangler delete "$name" --force 2>&1 | tee delete.log; then
-              grep -Eqi 'not found|does not exist|10007' delete.log || { echo "::error::Could not delete $name."; failed=1; continue; }
-              echo "::notice::$name does not exist, so there is nothing to retire."
-            fi
-            # Look the address up again from the account, so the check does not depend on wrangler's text.
+            # The API rather than `wrangler delete`: that also lists KV namespaces, which the
+            # token has no right to read. A pull request that never had a preview has no
+            # Worker, and the API answers 404: not an error.
+            status=$(curl -sS -o delete.json -w '%{http_code}' -X DELETE \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$name?force=true" || true)
+            case "$status" in
+              200) echo "Deleted $name." ;;
+              404) echo "::notice::$name does not exist, so there is nothing to retire." ;;
+              *) echo "::error::Could not delete $name (HTTP $status): $(cat delete.json)"; failed=1; continue ;;
+            esac
+            # The address is the Worker's name plus the account's workers.dev subdomain.
             sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
               "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
               | jq -r '.result.subdomain')
