@@ -41,8 +41,7 @@ delete a preview alias, so it uploads a "preview closed" page to the alias, fetc
 unless that page comes back. Run it by hand with PR numbers to retire older previews. Production sets
 `preview_urls: false`, so versions of the production Worker get no preview URL.
 
-One-time setup: the preview Worker must exist before the first upload. Create it from a build with
-`pnpm build && pnpm exec wrangler deploy -c wrangler.preview.jsonc`.
+The first preview creates the preview Worker, with a placeholder page at its own address.
 
 ## Roll back
 

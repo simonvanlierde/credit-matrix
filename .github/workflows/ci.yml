@@ -448,8 +448,20 @@ jobs:
             echo "::notice::Preview skipped: PR $PR is no longer open and ready ($state)."
             exit 0
           fi
-          pnpm exec wrangler versions upload --config wrangler.preview.jsonc \
-            --preview-alias "pr-$PR" --message "PR $PR at $SHA" 2>&1 | tee upload.log
+          upload() {
+            pnpm exec wrangler versions upload --config wrangler.preview.jsonc \
+              --preview-alias "pr-$PR" --message "PR $PR at $SHA" 2>&1 | tee upload.log
+          }
+          if ! upload; then
+            # Only an existing Worker takes versions. Create it once with a
+            # placeholder page, so its own workers.dev address never serves a PR.
+            grep -q 'does not yet exist' upload.log || exit 1
+            mkdir placeholder
+            cp out/_headers placeholder/
+            echo 'Pull request previews of this project live at pr-NUMBER addresses.' > placeholder/index.html
+            pnpm exec wrangler deploy --config wrangler.preview.jsonc --assets placeholder
+            upload
+          fi
           url=$(grep 'Version Preview Alias URL:' upload.log | grep -Eo 'https://[^ ]+' || true)
           if [ -z "$url" ]; then
             echo "::error::Version uploaded, but wrangler printed no alias URL. Check preview_urls and workers_dev in wrangler.preview.jsonc."
