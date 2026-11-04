@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Import reads the Crossref `<contributors>` block the app exports, in the import box and with
+  `importAny`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
+  has no contribution levels, so every listed role comes back as lead.
 - `importAnswers` sets `provenance.signedElsewhere` when a sign-in was given for a row with another
   id, name or iD; Review shows it as a warning, not as verified.
 - Review shows the paper title a verified ORCID sign-in was given for when it differs from the

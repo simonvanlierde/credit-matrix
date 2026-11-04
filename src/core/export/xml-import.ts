@@ -25,20 +25,7 @@ export interface XmlParser {
  * `DOMParser`; pass one where there is none, such as linkedom's in Node.
  */
 export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParser } = {}): Author[] {
-  // JATS4R exports never declare entities. Browsers expand them and linkedom does not, so the app
-  // and the CLI would read different names, and a nested expansion can freeze the tab.
-  if (/<!ENTITY/i.test(xmlString)) {
-    throw new Error("XML parse error: entity declarations are not supported.");
-  }
-  if (!parser && typeof DOMParser === "undefined") {
-    throw new Error("fromJats4rXml needs a DOMParser: pass { parser } where there is no global one.");
-  }
-  const doc = (parser ?? new DOMParser()).parseFromString(xmlString, "application/xml");
-
-  const parseError = doc.querySelector("parsererror");
-  if (parseError) {
-    throw new Error(`XML parse error: ${parseError.textContent?.trim() ?? "invalid XML"}`);
-  }
+  const doc = parseXml(xmlString, parser, "fromJats4rXml");
 
   const roleNameByUrl = new Map<string, string>(CREDIT_ROLES.map((r) => [normalizeRoleUrl(r.url), r.name]));
 
@@ -124,6 +111,26 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   });
 
   return deduplicateAuthorInitials(authors);
+}
+
+/**
+ * Parse untrusted XML text. Both exporters write plain documents with no entities. Browsers expand
+ * them and linkedom does not, so the app and the CLI would read different names, and a nested
+ * expansion can freeze the tab.
+ */
+export function parseXml(xmlString: string, parser: XmlParser | undefined, caller: string) {
+  if (/<!(ENTITY|ATTLIST)/i.test(xmlString)) {
+    throw new Error("XML parse error: entity and attribute-list declarations are not supported.");
+  }
+  if (!parser && typeof DOMParser === "undefined") {
+    throw new Error(`${caller} needs a DOMParser: pass { parser } where there is no global one.`);
+  }
+  const doc = (parser ?? new DOMParser()).parseFromString(xmlString, "application/xml");
+  const parseError = doc.querySelector("parsererror");
+  if (parseError) {
+    throw new Error(`XML parse error: ${parseError.textContent?.trim() ?? "invalid XML"}`);
+  }
+  return doc;
 }
 
 /** Compare role URLs regardless of scheme, case and trailing slash. */
