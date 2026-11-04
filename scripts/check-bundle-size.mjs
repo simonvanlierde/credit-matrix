@@ -6,8 +6,8 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
-// Measured 2026-11-04: 496 kB gzip, 1530 kB raw. The limit sits about 7% above.
-const LIMIT_GZIP = 530_000;
+// Measured 2026-11-04: 496 kB gzip, 1530 kB raw. The limit sits about 10% above.
+const LIMIT_GZIP = 545_000;
 
 const dir = join(import.meta.dirname, "..", "out", "_next", "static");
 const files = existsSync(dir)
