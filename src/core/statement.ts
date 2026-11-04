@@ -270,12 +270,22 @@ export function resolveInitials(token: string, authors: readonly StatementAuthor
   return hits.length === 1 ? (hits[0] ?? null) : null;
 }
 
+const partsCache = new WeakMap<StatementAuthor, ReturnType<typeof nameParts>>();
+function cachedParts(author: StatementAuthor): ReturnType<typeof nameParts> {
+  let parts = partsCache.get(author);
+  if (!parts) {
+    parts = nameParts(author);
+    partsCache.set(author, parts);
+  }
+  return parts;
+}
+
 /** Every author the first order that fits any author finds for `token`; see {@link resolveInitials}. */
 function initialsCandidates(token: string, authors: readonly StatementAuthor[]): number[] {
   const chunks = chunksOf(token);
   if (chunks.length === 0) return [];
   const letters = chunks.join("");
-  const parts = authors.map(nameParts);
+  const parts = authors.map(cachedParts);
   const tiers: ((g: Parts, s: Parts, w: Parts, c: Parts) => boolean)[] = [
     (g, s) => fits(chunks, [...g, ...s]),
     (g, s) => fits(chunks, [...s, ...g]),
@@ -293,7 +303,7 @@ function initialsCandidates(token: string, authors: readonly StatementAuthor[]):
 }
 
 /** `text` with each (start, end) range, in order and apart, replaced by spaces: one pass, one copy. */
-function maskRanges(text: string, ranges: readonly (readonly [number, number])[]): string {
+function maskRanges(text: string, ranges: readonly (readonly [number, number, ...unknown[]])[]): string {
   if (ranges.length === 0) return text;
   let out = "";
   let at = 0;
@@ -347,6 +357,7 @@ function bounded(text: string, start: number, end: number): boolean {
 
 /** Start of each occurrence of `needle` in `hay` bounded in `text`, left to right without overlaps. */
 function find(hay: string, needle: string, text: string): number[] {
+  if (!needle) return []; // a blank name cleans to "", which matches at every offset
   const found: number[] = [];
   let start = hay.indexOf(needle);
   while (start >= 0) {
@@ -448,10 +459,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
   };
   const mentions: Mention[] = findRoles(text).map(([s, e, slug]) => [s, e, "R", slug]);
   // Mask roles so their capitals ("Writing") are not read as initials.
-  text = maskRanges(
-    text,
-    mentions.map(([start, end]) => [start, end]),
-  );
+  text = maskRanges(text, mentions);
 
   // Each spelling maps to every author it fits; one two authors share stays unresolved. Longest first,
   // and "Surname, Given" forms last, so they cannot take a name out of a list: "Ann Lee, Bo Wu".

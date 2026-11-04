@@ -11,6 +11,7 @@ import {
   type StatementAuthor,
   statementAuthor,
 } from "../statement";
+import { BY_AUTHOR, BY_ROLE } from "./statement-fixtures";
 
 const SLUG = new Map(CREDIT_ROLES.map((role) => [role.name, role.url.split("/").at(-2) ?? ""]));
 const author = (given: string, surname: string): StatementAuthor => ({ given, surname });
@@ -447,6 +448,8 @@ describe("size", () => {
     ["line breaks", (n: number) => `AB: conceptualization.${"\n".repeat(n)}x`],
     ["unknown initials", (n: number) => `${"XY, ".repeat(n / 4)}: conceptualization`],
     ["names and roles", (n: number) => "Ann Bell: conceptualization; ".repeat(n / 29)],
+    ["author-first initials", () => BY_AUTHOR],
+    ["role-first initials", () => BY_ROLE],
   ])("reads %s up to the cap in well under a second", (_, make) => {
     const text = make(MAX_STATEMENT_LENGTH - 100);
     const start = performance.now();
@@ -454,6 +457,39 @@ describe("size", () => {
     parseStatement(text, THREE);
     expect(performance.now() - start).toBeLessThan(500);
   });
+});
+
+describe("name hits next to initials", () => {
+  const ANN: [number, string][] = [[0, "conceptualization"]];
+  const offsets = (prefix: string) =>
+    Array.from({ length: 10 }, (_, k) => `${",".repeat(k)}${prefix}Ann Bell: conceptualization`);
+  // Expected values are what the parser returned before the fast path for hits.
+  it.each([
+    ["after an initial and a dot, at offsets 0 to 9", offsets("A. "), ANN, []],
+    ["after an initial, dot and dash, at offsets 0 to 9", offsets("A.- "), [], ["A. - Ann"]],
+    ["after an astral initial", ["𝐀. Ann Bell: conceptualization"], ANN, []],
+    ["after an astral initial and dash", ["𝐀.- Ann Bell: conceptualization"], [], ["𝐀. - Ann"]],
+    ["twice in a row", ["Ann Bell, Ann Bell: conceptualization"], ANN, []],
+    [
+      "right after a role",
+      ["Conceptualization, Ann Bell; methodology, Carl Dunn"],
+      [
+        [0, "conceptualization"],
+        [1, "methodology"],
+      ],
+      [],
+    ],
+  ])("reads a name hit %s", (_, texts, pairs, unresolved) => {
+    for (const text of texts) expect(run(text, THREE)).toEqual({ pairs, unresolved });
+  });
+});
+
+describe("empty name needles", () => {
+  it("skips an author whose surname is blank", () => {
+    expect(parseStatement("Ann Bell: conceptualization", [author("", " ")])).toEqual(
+      parseStatement("Ann Bell: conceptualization", []),
+    );
+  }, 1000);
 });
 
 describe("resolveInitials with particles and double surnames", () => {

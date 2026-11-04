@@ -1,21 +1,19 @@
 import { describe, test } from "vitest";
+import { FIXTURE_AUTHORS as AUTHORS, BY_AUTHOR, BY_ROLE } from "../__tests__/statement-fixtures";
 import { MAX_STATEMENT_LENGTH, parseStatement, type StatementAuthor } from "../statement";
 
-const AUTHORS: StatementAuthor[] = [
-  { given: "Ann", surname: "Bell" },
-  { given: "Chen", surname: "Dai" },
-  { given: "Eva", surname: "Fox" },
-  { given: "Li-Jun", surname: "Zhao" },
-  { given: "Nils", surname: "Zandvoort" },
-];
-
-const atLimit = (unit: string) =>
-  unit.repeat(Math.ceil(MAX_STATEMENT_LENGTH / unit.length)).slice(0, MAX_STATEMENT_LENGTH);
-
-// The author-first and role-first layouts, at the longest statement the parser accepts. It once took
-// quadratic time on input like this.
-const BY_AUTHOR = atLimit("Ann Bell, AB: conceptualization; CD, LJZ: writing - original draft; ");
-const BY_ROLE = atLimit("Conceptualization, A.B. and C.D.; Methodology, E.F. and L.-J.Z.; ");
+// 200 authors, and a statement of distinct initials-like tokens: each one scans every author.
+const MANY: StatementAuthor[] = Array.from({ length: 200 }, (_, i) => ({
+  given: `Given${i}`,
+  surname: `Family${i}`,
+}));
+const MANY_INITIALS = Array.from(
+  { length: 4000 },
+  (_, i) =>
+    `${String.fromCharCode(65 + (i % 26))}${String.fromCharCode(65 + (Math.floor(i / 26) % 26))}${i % 7 ? "" : "Z"}`,
+)
+  .join(", ")
+  .slice(0, MAX_STATEMENT_LENGTH);
 
 describe("parseStatement at the length limit", () => {
   test("by author and by role", async ({ bench }) => {
@@ -25,6 +23,9 @@ describe("parseStatement at the length limit", () => {
       }),
       bench("by role", () => {
         parseStatement(BY_ROLE, AUTHORS);
+      }),
+      bench("200 authors, many initials", () => {
+        parseStatement(MANY_INITIALS, MANY);
       }),
     );
   });
