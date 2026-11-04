@@ -295,6 +295,7 @@
   "contributorTypeSetNonAuthor": "Als Mitwirkende:n ohne Autorenschaft markieren",
   "errImportFailed": "Die Mitwirkenden konnten nicht importiert werden. Prüfen Sie die Daten und versuchen Sie es erneut.",
   "errImportNewerVersion": "Diese Datei stammt aus einer neueren Version von CRediT Matrix. Laden Sie die Seite neu, um zu aktualisieren, und versuchen Sie es dann erneut.",
+  "errImportRepeatedId": "Diese Datei führt dieselbe Mitwirkenden-ID zweimal auf, daher wurde sie nicht importiert.",
   "errHeatmapExport": "Die Heatmap konnte nicht als {format} exportiert werden.",
   "errStorageFull": "Der Browserspeicher ist voll, daher werden Änderungen nicht gespeichert. Exportieren Sie diesen Entwurf oder löschen Sie einen, den Sie nicht mehr brauchen.",
   "errStorageBlocked": "Dieser Browser blockiert den Speicher für diese Website, daher werden Änderungen nicht gespeichert. Erlauben Sie Websitedaten oder exportieren Sie vor dem Schließen des Tabs.",

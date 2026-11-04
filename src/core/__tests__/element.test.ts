@@ -77,6 +77,13 @@ describe("<credit-matrix>", () => {
     );
   });
 
+  it("says so when the inline data repeats a contributor id", async () => {
+    const jane = createAuthor("Jane Smith");
+    const twice = JSON.stringify({ version: 1, authors: [jane, jane] });
+    const root = await mount(`<credit-matrix><script type="application/json">${twice}</script></credit-matrix>`);
+    expect(root.querySelector("[role=alert]")?.textContent).toBe("The JSON in this element repeats a contributor id.");
+  });
+
   it("says so when the src cannot be fetched or there is no data at all", async () => {
     vi.stubGlobal(
       "fetch",

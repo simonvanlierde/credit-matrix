@@ -10,6 +10,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "ContributionSchema",
     "MAX_STATEMENT_LENGTH",
     "NewerVersionError",
+    "RepeatedIdError",
     "STATEMENT_FORMATS",
     "applyPatch",
     "askStep",

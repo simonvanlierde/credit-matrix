@@ -21,7 +21,7 @@ import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
 import { buildHeatmapSvg } from "./export/heatmap-svg";
-import { toJson } from "./export/json";
+import { RepeatedIdError, toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
 import { toMarkdown } from "./export/markdown";
 import { toTenzing } from "./export/tenzing";
@@ -220,6 +220,8 @@ export async function run(argv: string[]): Promise<string> {
   if (!file) throw new UsageError(`${command} needs a file.`);
 
   const imported = await importAny(await read(file), { parser }).catch((error: unknown) => {
+    if (error instanceof RepeatedIdError)
+      throw new Error(`${file === "-" ? "The input" : file} repeats a contributor id.`);
     throw error instanceof z.core.$ZodError ? new Error(describeZodError(error, file)) : error;
   });
   const authors = normalizeRoster(imported.authors);

@@ -261,6 +261,12 @@ describe("credit-matrix usage", () => {
     await expect(run(["statement", file("list.json", "[]")])).rejects.toThrow(/Check the top level\.$/);
   });
 
+  it("says plainly that a file repeats a contributor id", async () => {
+    const jane = createAuthor("Jane Smith");
+    const twice = file("twice.json", JSON.stringify({ version: 1, authors: [jane, jane] }));
+    await expect(run(["statement", twice])).rejects.toThrow(`${twice} repeats a contributor id.`);
+  });
+
   it("passes other import errors through unchanged", async () => {
     const newer = file("newer.json", '{"version": 99, "authors": []}');
     await expect(run(["statement", newer])).rejects.toBeInstanceOf(NewerVersionError);
@@ -336,6 +342,16 @@ describe("credit-matrix as a program", () => {
     const { out, err } = await launch("statement", file("cut.xml", xml.slice(0, xml.indexOf("</contrib>"))));
     expect(out).toBe("");
     expect(err).toMatch(/^credit-matrix: XML parse error/);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("prints that a file repeats a contributor id, and exits 1", async () => {
+    const jane = createAuthor("Jane Smith");
+    const { err } = await launch(
+      "statement",
+      file("twice2.json", JSON.stringify({ version: 1, authors: [jane, jane] })),
+    );
+    expect(err).toMatch(/^credit-matrix: \S*twice2\.json repeats a contributor id\.\n$/);
     expect(process.exitCode).toBe(1);
   });
 

@@ -210,8 +210,8 @@ const { assignments, unresolved } = parseStatement(
 (unless `includeAnswers` is `false`), and `selfId`, the contributor who made the file. Both are
 optional, so older files still load. `fromJson` returns `{ authors, asks?, selfId? }`. It throws a
 `NewerVersionError` for a file whose `version` is higher than the one this build writes
-(`JSON_EXPORT_VERSION` in `export/json.ts`). It throws a `ZodError` for any other data that does
-not match.
+(`JSON_EXPORT_VERSION` in `export/json.ts`). It throws a `RepeatedIdError` for a file that repeats a
+contributor id, and a `ZodError` for any other data that does not match.
 
 ## Asks and review
 
@@ -274,7 +274,7 @@ holds its exact shape. By entry point:
   - Roles: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
   - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
   - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
-  - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
+  - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
     `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
     `importAny`, `DetectedFormat`, `Imported`

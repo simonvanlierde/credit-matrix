@@ -295,6 +295,7 @@
   "contributorTypeSetNonAuthor": "Marcar como pessoa contribuidora não autora",
   "errImportFailed": "A importação falhou. Verifique o ficheiro e tente novamente.",
   "errImportNewerVersion": "Este ficheiro foi criado com uma versão mais recente do CRediT Matrix. Recarregue a página para atualizar e tente novamente.",
+  "errImportRepeatedId": "Este ficheiro inclui o mesmo identificador de colaborador duas vezes, por isso não foi importado.",
   "errHeatmapExport": "Não foi possível exportar o mapa de calor em formato {format}.",
   "errStorageFull": "O armazenamento do navegador está cheio, por isso as alterações não são guardadas. Exporte este rascunho ou elimine um de que já não precise.",
   "errStorageBlocked": "Este navegador bloqueia o armazenamento para este site, por isso as alterações não são guardadas. Permita os dados do site ou exporte antes de fechar o separador.",
