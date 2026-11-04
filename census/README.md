@@ -335,8 +335,9 @@ The UI listens on 127.0.0.1:5000 only. Runs made before tracking existed come in
 `uv run --group tracking census model backfill`, which reads every directory in
 `data/model/<snapshot>/runs/` (config as params, the manifest line of `metrics.jsonl` as `manifest.*`
 tags, the dev F1 per epoch, and the best epoch's scores as `best_*` metrics). A run is tagged
-`run_dir`, so a rerun adds only new directories. Runs that stopped before `best.json` are listed
-with `finished=False` and no scores. Every run's dev set is 2,000 articles (`config.dev_articles`). To
+`run_dir`, so a rerun adds only new directories. Runs that logged fewer epochs than `config.epochs` are
+tagged `finished=False`. Dev sets differ between runs (the open-licence runs have 299 articles), so when
+comparing `best_f1` check `manifest.dev_articles`. To
 compare dev F1 across configs, open the experiment `census-oa-2026-10`, tick all runs, press Compare, and
 pick the parallel-coordinates or scatter plot with `config.model`, `config.learning_rate`,
 `config.epochs` or `config.batch_size` against the metric `best_f1`. Or sort the run table by `best_f1`.

@@ -1,6 +1,7 @@
 import contextlib
 import hashlib
 import json
+import os
 import sys
 import types
 
@@ -282,10 +283,10 @@ def test_failed_command_records_energy(mlflow_store, tmp_path, monkeypatch, kind
     assert run.data.metrics["energy_kwh"] == 0.5
 
 
-def _write_run(runs, name, finished=True):
+def _write_run(runs, name, finished=True, epochs=1):
     run = runs / name
     run.mkdir(parents=True)
-    (run / "config.json").write_text(json.dumps({"model": "m", "epochs": 2, "dev_articles": 2000}))
+    (run / "config.json").write_text(json.dumps({"model": "m", "epochs": epochs, "dev_articles": 2000}))
     dev = {"0.3": {"f1": 0.8}, "0.5": {"f1": 0.9}}
     log = [
         {"git_commit": "a" * 40, "train_articles": 10},
@@ -300,7 +301,7 @@ def _write_run(runs, name, finished=True):
 def test_backfill_records_old_runs_once(mlflow_store, tmp_path):
     runs = tmp_path / "runs"
     _write_run(runs, "done")
-    _write_run(runs, "stopped", finished=False)
+    _write_run(runs, "stopped", finished=False, epochs=2)
     (runs / "not-a-run").mkdir()
     assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (2, 0)
     assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (0, 2)  # a rerun adds nothing
@@ -313,3 +314,56 @@ def test_backfill_records_old_runs_once(mlflow_store, tmp_path):
     assert done.data.tags["mlflow.source.git.commit"] == "a" * 40
     assert done.data.tags["manifest.train_articles"] == "10" and done.data.tags["finished"] == "True"
     assert "best_f1" not in stopped.data.metrics and stopped.data.tags["finished"] == "False"
+
+
+def test_backfill_skips_a_live_tracked_run(mlflow_store, tmp_path, monkeypatch):
+    runs = tmp_path / "runs"
+    _write_run(runs, "live")
+    with runinfo.tracking(tmp_path / "unused.db", "census-s", "live", "train"):
+        pass
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (0, 1)
+
+
+def test_cli_train_tags_run_dir(mlflow_store, tmp_path, monkeypatch):
+    from census import cli, encoder
+
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    monkeypatch.setattr(runinfo, "base_model", lambda repo, rev: {"repo": repo, "revision": rev})
+    dataset = tmp_path / "model" / "s" / "dataset"
+    dataset.mkdir(parents=True)
+    (dataset / "train.jsonl").write_text("{}\n")
+
+    def train(config, data, run):
+        _write_run(run.parent, run.name)
+        (run / "checkpoint").mkdir()
+        (run / "checkpoint" / "model.safetensors").write_bytes(b"w")
+        return {"epoch": 1, "threshold": 0.5, "f1": 0.9}
+
+    monkeypatch.setattr(encoder, "train", train)
+    _fake_codecarbon(monkeypatch, ["CPU(Intel Rapl)"])
+    cli.main(["model", "train", "--snapshot", "s", "--name", "r"])
+    assert _only_run(mlflow_store, "census-s").data.tags["run_dir"] == "r"
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", dataset.parent / "runs") == (0, 1)
+
+
+def test_backfill_retries_a_bad_run_dir(mlflow_store, tmp_path, capsys):
+    runs = tmp_path / "runs"
+    _write_run(runs, "ok")
+    _write_run(runs, "cut")
+    log = runs / "cut" / "metrics.jsonl"
+    log.write_text(log.read_text()[:-20])  # a last line cut short
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (1, 0)
+    assert "skipped cut" in capsys.readouterr().err
+    _write_run(runs.parent / "fixed", "cut")
+    (runs / "cut" / "metrics.jsonl").write_text((runs.parent / "fixed" / "cut" / "metrics.jsonl").read_text())
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (1, 1)
+
+
+def test_backfill_finished_counts_epochs(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    _write_run(runs, "part", epochs=3)  # one of three epochs, with a best.json
+    os.utime(runs / "part" / "config.json", (1_700_000_000, 1_700_000_000))
+    runinfo.backfill(tmp_path / "unused.db", "census-s", runs)
+    (exp,) = [e for e in mlflow_store.search_experiments() if e.name == "census-s"]
+    (run,) = mlflow_store.search_runs([exp.experiment_id])
+    assert run.data.tags["finished"] == "False" and run.info.start_time == 1_700_000_000_000
