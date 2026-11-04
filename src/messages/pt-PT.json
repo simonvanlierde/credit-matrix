@@ -169,7 +169,7 @@
   "reviewOrcidVerified": "Verificado pelo ORCID como {who}, sessão iniciada em {date}.",
   "reviewOrcidOtherId": "Este não é o iD da linha.",
   "reviewOrcidNoRowId": "Esta linha não tem um iD ORCID para comparar.",
-  "reviewOrcidSignedElsewhere": "Não verificado para esta linha: {who} iniciou sessão com o ORCID em {date}, mas noutro rascunho ou para uma linha com outro nome ou iD.",
+  "reviewOrcidSignedElsewhere": "Não verificado para esta linha: {who} iniciou sessão com o ORCID em {date} para uma linha com outro nome ou iD.",
   "coauthorNotSent": "Ainda não enviado.",
   "coauthorCopyInstead": "Copiar antes a ligação",
   "coauthorShareTitle": "Papéis CRediT de {name}",

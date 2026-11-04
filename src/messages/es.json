@@ -169,7 +169,7 @@
   "reviewOrcidVerified": "Verificado por ORCID como {who}, sesión iniciada el {date}.",
   "reviewOrcidOtherId": "Este no es el iD de la fila.",
   "reviewOrcidNoRowId": "Esta fila no tiene un iD de ORCID con el que comparar.",
-  "reviewOrcidSignedElsewhere": "No verificado para esta fila: {who} inició sesión con ORCID el {date}, pero en otro borrador o para una fila con otro nombre o iD.",
+  "reviewOrcidSignedElsewhere": "No verificado para esta fila: {who} inició sesión con ORCID el {date} para una fila con otro nombre o iD.",
   "coauthorNotSent": "Aún no se ha enviado.",
   "coauthorCopyInstead": "Copiar el enlace en su lugar",
   "coauthorShareTitle": "Roles CRediT de {name}",

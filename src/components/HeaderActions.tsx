@@ -347,9 +347,9 @@ export function HeaderActions() {
   function handleImport({ authors: importedAuthors, title: importedTitle, asks, selfId }: PendingImport) {
     // Errors surface in ImportModal, which keeps the dialog open on failure.
     // Re-imported contributors keep their ids, so their open asks still match.
-    const { authors: current, asks: held, activeDraftId } = useContributionStore.getState();
+    const { authors: current, asks: held } = useContributionStore.getState();
     const mapped = keepKnownIds(current, importedAuthors);
-    const answers = importAnswers(current, importedAuthors, mapped, held, { asks, selfId }, activeDraftId);
+    const answers = importAnswers(current, importedAuthors, mapped, held, { asks, selfId });
     loadAuthors(mapped, answers.asks, answers.selfId);
     // Only the DOI path carries a title. Guard on it rather than on emptiness,
     // so a record with no title still clears a stale one from the last import.

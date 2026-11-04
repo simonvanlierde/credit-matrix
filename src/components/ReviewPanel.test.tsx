@@ -97,7 +97,7 @@ it("does not show a sign-in an offline import could not check as verified", () =
   expect(container.querySelector("[data-orcid-verified]")).toBeNull();
 });
 
-it("shows a sign-in given in another draft or for another row as a warning, not as verified", () => {
+it("shows a sign-in given for another row as a warning, not as verified", () => {
   act(() => {
     useContributionStore.getState().createDraft();
     useContributionStore.getState().addAuthor("Bob White", TEST_ORCID);
