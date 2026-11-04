@@ -19,6 +19,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
+- `credit-matrix convert --to tenzing` and `--to svg` print the Tenzing table and the contribution
+  heatmap. `--to svg` takes `--locale` and `--yes-no`.
+- The `<credit-matrix>` element takes a `levels` attribute, which marks Equal and Supporting
+  contributions in the statement. The heatmap always shows the levels.
 
 ## [0.11.0] - 2026-11-01
 

@@ -1,6 +1,7 @@
 import contextlib
 import hashlib
 import json
+import os
 import sys
 import types
 
@@ -280,3 +281,158 @@ def test_failed_command_records_energy(mlflow_store, tmp_path, monkeypatch, kind
     run = _only_run(mlflow_store, "census-s")
     assert run.info.status == "FAILED"
     assert run.data.metrics["energy_kwh"] == 0.5
+
+
+def _write_run(runs, name, finished=True, epochs=1):
+    run = runs / name
+    run.mkdir(parents=True)
+    (run / "config.json").write_text(json.dumps({"model": "m", "epochs": epochs, "dev_articles": 2000}))
+    dev = {"0.3": {"f1": 0.8}, "0.5": {"f1": 0.9}}
+    log = [
+        {"git_commit": "a" * 40, "train_articles": 10},
+        {"step": 1, "of": 2, "loss": 0.5, "seconds": 1},
+        {"epoch": 1, "seconds": 5, "dev": dev},
+    ]
+    (run / "metrics.jsonl").write_text("\n".join(json.dumps(r) for r in log) + "\n")
+    if finished:
+        (run / "best.json").write_text(json.dumps({"epoch": 1, "threshold": 0.5, "f1": 0.9}))
+
+
+def test_backfill_records_old_runs_once(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    _write_run(runs, "done")
+    _write_run(runs, "stopped", finished=False, epochs=2)
+    (runs / "not-a-run").mkdir()
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (2, 0)
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (0, 2)  # a rerun adds nothing
+    (exp,) = [e for e in mlflow_store.search_experiments() if e.name == "census-s"]
+    found = {r.data.tags["run_dir"]: r for r in mlflow_store.search_runs([exp.experiment_id])}
+    assert set(found) == {"done", "stopped"}
+    done, stopped = found["done"], found["stopped"]
+    assert done.data.params["config.dev_articles"] == "2000"
+    assert done.data.metrics["best_f1"] == 0.9 and done.data.metrics["dev_f1"] == 0.9
+    history = mlflow_store.get_metric_history(done.info.run_id, "dev_f1")
+    assert [(m.step, m.value) for m in history] == [(1, 0.9)]
+    assert done.data.tags["mlflow.source.git.commit"] == "a" * 40
+    assert done.data.tags["manifest.train_articles"] == "10" and done.data.tags["finished"] == "True"
+    assert "best_f1" not in stopped.data.metrics and stopped.data.tags["finished"] == "False"
+
+
+def test_backfill_skips_a_live_tracked_run(mlflow_store, tmp_path, monkeypatch):
+    runs = tmp_path / "runs"
+    _write_run(runs, "live")
+    with runinfo.tracking(tmp_path / "unused.db", "census-s", "live", "train"):
+        pass
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (0, 1)
+
+
+def test_cli_train_tags_run_dir(mlflow_store, tmp_path, monkeypatch):
+    from census import cli, encoder
+
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    monkeypatch.setattr(runinfo, "base_model", lambda repo, rev: {"repo": repo, "revision": rev})
+    dataset = tmp_path / "model" / "s" / "dataset"
+    dataset.mkdir(parents=True)
+    (dataset / "train.jsonl").write_text("{}\n")
+
+    def train(config, data, run):
+        _write_run(run.parent, run.name)
+        (run / "checkpoint").mkdir()
+        (run / "checkpoint" / "model.safetensors").write_bytes(b"w")
+        return {"epoch": 1, "threshold": 0.5, "f1": 0.9}
+
+    monkeypatch.setattr(encoder, "train", train)
+    _fake_codecarbon(monkeypatch, ["CPU(Intel Rapl)"])
+    cli.main(["model", "train", "--snapshot", "s", "--name", "r"])
+    assert _only_run(mlflow_store, "census-s").data.tags["run_dir"] == "r"
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", dataset.parent / "runs") == (0, 1)
+
+
+def test_backfill_retries_a_bad_run_dir(mlflow_store, tmp_path, capsys):
+    runs = tmp_path / "runs"
+    _write_run(runs, "ok")
+    _write_run(runs, "cut")
+    log = runs / "cut" / "metrics.jsonl"
+    log.write_text(log.read_text()[:-20])  # a last line cut short
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (1, 0)
+    assert "skipped cut" in capsys.readouterr().err
+    _write_run(runs.parent / "fixed", "cut")
+    (runs / "cut" / "metrics.jsonl").write_text((runs.parent / "fixed" / "cut" / "metrics.jsonl").read_text())
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (1, 1)
+
+
+def test_backfill_finished_counts_epochs(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    _write_run(runs, "part", epochs=3)  # one of three epochs, with a best.json
+    os.utime(runs / "part" / "config.json", (1_700_000_000, 1_700_000_000))
+    runinfo.backfill(tmp_path / "unused.db", "census-s", runs)
+    (exp,) = [e for e in mlflow_store.search_experiments() if e.name == "census-s"]
+    (run,) = mlflow_store.search_runs([exp.experiment_id])
+    assert run.data.tags["finished"] == "False" and run.info.start_time == 1_700_000_000_000
+
+
+def test_backfill_leaves_live_runs_that_did_not_finish(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    exp_id = mlflow_store.create_experiment("census-s")
+    for name, status in (("running", None), ("failed", "FAILED"), ("killed", "KILLED")):
+        _write_run(runs, name)
+        run = mlflow_store.create_run(exp_id, run_name=name, tags={"run_dir": name})
+        if status:
+            mlflow_store.set_terminated(run.info.run_id, status)
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (0, 3)
+    assert len(mlflow_store.search_runs([exp_id])) == 3
+
+
+def test_backfill_replaces_a_failed_import(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    _write_run(runs, "r")
+    exp_id = mlflow_store.create_experiment("census-s")
+    old = mlflow_store.create_run(exp_id, run_name="r", tags={"run_dir": "r", "backfilled": "True"}).info.run_id
+    mlflow_store.set_terminated(old, "FAILED")
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (1, 0)
+    assert mlflow_store.get_run(old).info.lifecycle_stage == "deleted"
+    (new,) = mlflow_store.search_runs([exp_id])
+    assert new.info.run_id != old and new.info.status == "FINISHED"
+
+
+def test_backfill_skips_a_run_mlflow_refuses(mlflow_store, tmp_path, capsys):
+    runs = tmp_path / "runs"
+    _write_run(runs, "a-bad")
+    (runs / "a-bad" / "best.json").write_text(json.dumps({"f1": "x"}))
+    _write_run(runs, "b-ok")
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (1, 0)
+    assert "skipped a-bad: " in capsys.readouterr().err
+
+
+def test_backfill_ends_a_run_at_its_last_file(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    _write_run(runs, "old")
+    for f in (runs / "old").iterdir():
+        os.utime(f, (1_700_000_000, 1_700_000_000))
+    os.utime(runs / "old" / "best.json", (1_700_003_600, 1_700_003_600))
+    runinfo.backfill(tmp_path / "unused.db", "census-s", runs)
+    run = _only_run(mlflow_store, "census-s")
+    assert run.info.start_time == 1_700_000_000_000 and run.info.end_time == 1_700_003_600_000
+    assert run.info.end_time - run.info.start_time < 86_400_000
+
+
+def test_cli_backfill(mlflow_store, tmp_path, monkeypatch, capsys):
+    from census import cli
+
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    assert cli.main(["model", "backfill", "--snapshot", "s"]) == 1
+    assert "no run directories" in capsys.readouterr().err
+    _write_run(tmp_path / "model" / "s" / "runs", "r")
+    assert cli.main(["model", "backfill", "--snapshot", "s"]) == 0
+    assert "1 runs added to MLflow, 0 already there" in capsys.readouterr().out
+
+
+def test_readme_ui_matches_the_locked_client():
+    import re
+    import tomllib
+
+    readme = (runinfo.PACKAGE / "README.md").read_text(encoding="utf-8")
+    (ui,) = set(re.findall(r"mlflow==([\w.]+)", readme))
+    lock = tomllib.loads((runinfo.PACKAGE / "uv.lock").read_text(encoding="utf-8"))
+    (client,) = [p["version"] for p in lock["package"] if p["name"] == "mlflow-skinny"]
+    assert ui == client

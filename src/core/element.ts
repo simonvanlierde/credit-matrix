@@ -94,12 +94,12 @@ function levelTable(authors: Author[], translateRole: (name: string) => string, 
 }
 
 /**
- * `<credit-matrix src="contributions.json" format="by-author" locale="fr">`:
+ * `<credit-matrix src="contributions.json" format="by-author" locale="fr" levels>`:
  * the CRediT statement and contribution heatmap for a CRediT Matrix JSON
  * export, read from `src` or from a `<script type="application/json">` child.
  */
 export class CreditMatrixElement extends HTMLElement {
-  static observedAttributes = ["src", "format", "locale"];
+  static observedAttributes = ["src", "format", "locale", "levels"];
   /** Bumped per render, so a slow fetch or catalog load for an old render never overwrites a newer one. */
   #render = 0;
   /**
@@ -193,6 +193,7 @@ export class CreditMatrixElement extends HTMLElement {
     const asked = this.getAttribute("format") as StatementFormat;
     const format = STATEMENT_FORMATS.includes(asked) ? asked : "by-role";
 
+    const showLevels = this.hasAttribute("levels");
     const figure = document.createElement("figure");
     figure.lang = locale;
     // Scrolls rather than shrinks on a narrow page, so the labels keep their size.
@@ -204,10 +205,12 @@ export class CreditMatrixElement extends HTMLElement {
     scroll.setAttribute("role", "img");
     scroll.setAttribute("aria-label", translateUi("heatmapTitle"));
     // buildHeatmapSvg escapes every name and role it writes. The table below carries its content for screen readers.
-    scroll.innerHTML = buildHeatmapSvg(authors, { translateRole, translateUi });
+    scroll.innerHTML = buildHeatmapSvg(authors, { locale, translateRole, translateUi });
     scroll.firstElementChild?.setAttribute("aria-hidden", "true");
     figure.append(scroll, levelTable(authors, translateRole, translateUi));
-    for (const line of generateStatement(authors, { format, locale, translateRole, translateUi }).split("\n")) {
+    for (const line of generateStatement(authors, { format, locale, showLevels, translateRole, translateUi }).split(
+      "\n",
+    )) {
       const p = document.createElement("p");
       p.textContent = line;
       figure.append(p);

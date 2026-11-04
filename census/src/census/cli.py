@@ -378,6 +378,17 @@ def cmd_model_train(args: argparse.Namespace) -> None:
     print(f"predict with `census model predict --name {args.name}`")
 
 
+def cmd_model_backfill(args: argparse.Namespace) -> None:
+    runs = _model_dir(args) / "runs"
+    if not runs.is_dir():
+        raise Failure(f"no run directories in {runs}")
+    try:
+        added, already = runinfo.backfill(DATA / "mlflow.db", f"census-{args.snapshot}", runs)
+    except RuntimeError as error:
+        raise Failure(str(error)) from None
+    print(f"{added} runs added to MLflow, {already} already there")
+
+
 def cmd_model_predict(args: argparse.Namespace) -> None:
     from census import encoder
 
@@ -585,6 +596,10 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--open-licence-only", action="store_true", help="train and dev only on CC BY and CC0 articles")
     cmd.add_argument("--device", help="cuda or cpu (default: cuda)")
     cmd.set_defaults(func=cmd_model_train)
+    cmd = model_sub.add_parser(
+        "backfill", parents=[snap], help="record the training runs in data/model/<snapshot>/runs/ in MLflow"
+    )
+    cmd.set_defaults(func=cmd_model_backfill)
     cmd = model_sub.add_parser("predict", parents=[snap, db], help="predict with a trained encoder run")
     cmd.add_argument("--name", required=True, help="the run's directory name")
     cmd.add_argument("--device", default="cuda", help="cuda or cpu (default: cuda)")
