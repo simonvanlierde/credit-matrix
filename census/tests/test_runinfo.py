@@ -280,3 +280,36 @@ def test_failed_command_records_energy(mlflow_store, tmp_path, monkeypatch, kind
     run = _only_run(mlflow_store, "census-s")
     assert run.info.status == "FAILED"
     assert run.data.metrics["energy_kwh"] == 0.5
+
+
+def _write_run(runs, name, finished=True):
+    run = runs / name
+    run.mkdir(parents=True)
+    (run / "config.json").write_text(json.dumps({"model": "m", "epochs": 2, "dev_articles": 2000}))
+    dev = {"0.3": {"f1": 0.8}, "0.5": {"f1": 0.9}}
+    log = [
+        {"git_commit": "a" * 40, "train_articles": 10},
+        {"step": 1, "of": 2, "loss": 0.5, "seconds": 1},
+        {"epoch": 1, "seconds": 5, "dev": dev},
+    ]
+    (run / "metrics.jsonl").write_text("\n".join(json.dumps(r) for r in log) + "\n")
+    if finished:
+        (run / "best.json").write_text(json.dumps({"epoch": 1, "threshold": 0.5, "f1": 0.9}))
+
+
+def test_backfill_records_old_runs_once(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    _write_run(runs, "done")
+    _write_run(runs, "stopped", finished=False)
+    (runs / "not-a-run").mkdir()
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (2, 0)
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (0, 2)  # a rerun adds nothing
+    (exp,) = [e for e in mlflow_store.search_experiments() if e.name == "census-s"]
+    found = {r.data.tags["run_dir"]: r for r in mlflow_store.search_runs([exp.experiment_id])}
+    assert set(found) == {"done", "stopped"}
+    done, stopped = found["done"], found["stopped"]
+    assert done.data.params["config.dev_articles"] == "2000"
+    assert done.data.metrics["best_f1"] == 0.9 and done.data.metrics["dev_f1"] == 0.9
+    assert done.data.tags["mlflow.source.git.commit"] == "a" * 40
+    assert done.data.tags["manifest.train_articles"] == "10" and done.data.tags["finished"] == "True"
+    assert "best_f1" not in stopped.data.metrics and stopped.data.tags["finished"] == "False"

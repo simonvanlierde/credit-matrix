@@ -328,8 +328,18 @@ Failed runs retain their energy figures when CodeCarbon can measure them. Tracki
 MLflow store stop the command. To browse the runs:
 
 ```sh
-uvx mlflow ui --backend-store-uri sqlite:///data/mlflow.db
+uvx mlflow ui --backend-store-uri sqlite:///data/mlflow.db --host 127.0.0.1
 ```
+
+The UI listens on 127.0.0.1:5000 only. Runs made before tracking existed come in with
+`uv run --group tracking census model backfill`, which reads every directory in
+`data/model/<snapshot>/runs/` (config as params, the manifest line of `metrics.jsonl` as `manifest.*`
+tags, the dev F1 per epoch, and the best epoch's scores as `best_*` metrics). A run is tagged
+`run_dir`, so a rerun adds only new directories. Runs that stopped before `best.json` are listed
+with `finished=False` and no scores. Every run's dev set is 2,000 articles (`config.dev_articles`). To
+compare dev F1 across configs, open the experiment `census-oa-2026-10`, tick all runs, press Compare, and
+pick the parallel-coordinates or scatter plot with `config.model`, `config.learning_rate`,
+`config.epochs` or `config.batch_size` against the metric `best_f1`. Or sort the run table by `best_f1`.
 
 On `oa-2026-10`, the first run (814,249 examples, 2 epochs at batch 32, learning rate 5e-5) took 84
 minutes on one 24 GB GPU and used 12.7 GB of its memory; predicting the held-out set took under 4

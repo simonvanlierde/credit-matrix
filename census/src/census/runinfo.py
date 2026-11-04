@@ -163,7 +163,10 @@ class Tracker:
 
     def epochs(self, log: Path) -> None:
         """The dev F1 at the best threshold and the elapsed seconds after each epoch of `log` (metrics.jsonl)."""
-        for line in log.read_text(encoding="utf-8").splitlines():
+        self.epochs_from(log.read_text(encoding="utf-8").splitlines())
+
+    def epochs_from(self, lines: list[str]) -> None:
+        for line in lines:
             record = json.loads(line)
             if "epoch" in record:
                 f1 = max(row["f1"] for row in record["dev"].values())
@@ -186,9 +189,10 @@ class Tracker:
 
 
 @contextlib.contextmanager
-def tracking(db: Path, experiment: str, name: str, kind: str) -> Generator[Tracker]:
+def tracking(db: Path, experiment: str, name: str, kind: str, current: bool = True) -> Generator[Tracker]:
     """Open an MLflow run `name` in `experiment`, tagged with the facts every run shares. The store is
-    MLFLOW_TRACKING_URI, else the SQLite file `db`. An exception in the block marks the run failed."""
+    MLFLOW_TRACKING_URI, else the SQLite file `db`. An exception in the block marks the run failed.
+    `current=False` leaves out the facts about this checkout, for a run that happened earlier."""
     try:
         import mlflow
     except ImportError:
@@ -200,14 +204,58 @@ def tracking(db: Path, experiment: str, name: str, kind: str) -> Generator[Track
     lock = PACKAGE / "uv.lock"
     with mlflow.start_run(run_name=name):
         tracker = Tracker(mlflow)
-        tracker.tags(
-            {
-                "kind": kind,
-                "mlflow.source.git.commit": git_commit(),
-                "git_dirty": git_dirty(),
-                "uv_lock_sha256": sha256(lock) if lock.exists() else None,
-                # Set by the job script that starts the container, e.g. from `docker inspect`.
-                "image_digest": os.environ.get("CENSUS_IMAGE_DIGEST"),
-            }
-        )
+        tracker.tags({"kind": kind})
+        if current:
+            tracker.tags(
+                {
+                    "mlflow.source.git.commit": git_commit(),
+                    "git_dirty": git_dirty(),
+                    "uv_lock_sha256": sha256(lock) if lock.exists() else None,
+                    # Set by the job script that starts the container, e.g. from `docker inspect`.
+                    "image_digest": os.environ.get("CENSUS_IMAGE_DIGEST"),
+                }
+            )
         yield tracker
+
+
+def backfill(db: Path, experiment: str, runs: Path) -> tuple[int, int]:
+    """Record every training run directory under `runs` that the store does not hold yet, and return
+    (added, already there). A run is told apart by its directory name, the tag `run_dir`. Each holds
+    `config.json` (params), `metrics.jsonl` (a manifest line, then loss and per-epoch dev scores) and
+    `best.json` (the best epoch's scores; missing when the run did not finish)."""
+    try:
+        import mlflow
+    except ImportError:
+        raise RuntimeError("MLflow is not installed; `uv sync --group tracking` adds it") from None
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{db}")
+    exp = mlflow.set_experiment(experiment)
+    known = {
+        r.data.tags["run_dir"]
+        for r in mlflow.MlflowClient().search_runs([exp.experiment_id], max_results=50_000)
+        if "run_dir" in r.data.tags
+    }
+    added = 0
+    for run in sorted(p for p in runs.iterdir() if (p / "config.json").exists()):
+        if run.name in known:
+            continue
+        config = json.loads((run / "config.json").read_text(encoding="utf-8"))
+        log = run / "metrics.jsonl"
+        lines = log.read_text(encoding="utf-8").splitlines() if log.exists() else []
+        manifest = json.loads(lines[0]) if lines and "step" not in lines[0] and "epoch" not in lines[0] else {}
+        best = json.loads((run / "best.json").read_text(encoding="utf-8")) if (run / "best.json").exists() else None
+        with tracking(db, experiment, run.name, "train", current=False) as t:
+            t.params({f"config.{k}": v for k, v in config.items()})
+            t.tags(
+                {
+                    "run_dir": run.name,
+                    "backfilled": True,
+                    "finished": best is not None,
+                    "mlflow.source.git.commit": manifest.get("git_commit"),
+                    **{f"manifest.{k}": v for k, v in manifest.items() if k != "git_commit"},
+                }
+            )
+            t.epochs_from(lines)
+            if best:
+                t.metrics({f"best_{k}": v for k, v in best.items()})
+        added += 1
+    return added, len(known)
