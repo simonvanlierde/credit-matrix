@@ -205,7 +205,7 @@ export class CreditMatrixElement extends HTMLElement {
     scroll.setAttribute("role", "img");
     scroll.setAttribute("aria-label", translateUi("heatmapTitle"));
     // buildHeatmapSvg escapes every name and role it writes. The table below carries its content for screen readers.
-    scroll.innerHTML = buildHeatmapSvg(authors, { translateRole, translateUi, showLevels });
+    scroll.innerHTML = buildHeatmapSvg(authors, { translateRole, translateUi });
     scroll.firstElementChild?.setAttribute("aria-hidden", "true");
     figure.append(scroll, levelTable(authors, translateRole, translateUi));
     for (const line of generateStatement(authors, { format, locale, showLevels, translateRole, translateUi }).split(

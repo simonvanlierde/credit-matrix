@@ -162,7 +162,10 @@ describe("credit-matrix convert", () => {
     expect(svg).toMatch(/^<svg /);
     expect(svg).toContain("Jane Smith");
     expect(await run(["convert", csv, "--to", "svg", "--locale", "fr"])).toContain("Logiciel");
-    expect(await run(["convert", csv, "--to", "svg", "--yes-no"])).not.toBe(svg);
+    const flat = await run(["convert", csv, "--to", "svg", "--yes-no"]);
+    expect(flat).toContain("Contributed");
+    expect(flat).not.toContain("Equal");
+    expect(flat).not.toContain("Supporting");
   });
 
   it("writes Markdown in the --locale language", async () => {

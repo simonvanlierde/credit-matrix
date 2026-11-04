@@ -4,9 +4,9 @@
 // Raise a limit on purpose, in the same commit as the change that needs it.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { brotliCompressSync, gzipSync } from "node:zlib";
+import { gzipSync } from "node:zlib";
 
-// Measured 2026-11-04: 496 kB gzip, 1530 kB raw. Limits sit about 7% above.
+// Measured 2026-11-04: 496 kB gzip, 1530 kB raw. The limit sits about 7% above.
 const LIMIT_GZIP = 530_000;
 
 const dir = join(import.meta.dirname, "..", "out", "_next", "static");
@@ -19,10 +19,9 @@ if (files.length === 0) {
 }
 const sum = (fn) => files.reduce((n, b) => n + fn(b), 0);
 const gzip = sum((b) => gzipSync(b, { level: 9 }).length);
-const brotli = sum((b) => brotliCompressSync(b).length);
 const kb = (n) => `${(n / 1000).toFixed(1)} kB`;
 console.log(
-  `check-bundle-size: ${files.length} files, ${kb(sum((b) => b.length))} raw, ${kb(gzip)} gzip, ${kb(brotli)} brotli (gzip limit ${kb(LIMIT_GZIP)})`,
+  `check-bundle-size: ${files.length} files, ${kb(sum((b) => b.length))} raw, ${kb(gzip)} gzip (gzip limit ${kb(LIMIT_GZIP)})`,
 );
 if (gzip > LIMIT_GZIP) {
   console.error("check-bundle-size: over the gzip budget. Trim the bundle, or raise LIMIT_GZIP with a reason.");
