@@ -24,6 +24,7 @@
     "test:e2e": "playwright test",
     "validate:jats": "bash scripts/validate-jats.sh",
     "validate:crossref": "bash scripts/validate-crossref.sh",
+    "check:bundle": "node scripts/check-bundle-size.mjs",
     "clean": "rm -rf .next out",
     "version": "bash scripts/sync-citation.sh",
     "prepare": "lefthook install || true",

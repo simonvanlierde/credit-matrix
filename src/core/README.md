@@ -34,9 +34,10 @@ Node 22 or later. Run it with `npx credit-matrix` without installing, or with
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
 npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 people and roles
-npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref, md or latex-credits
+npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref, md, latex-credits, tenzing or svg
 npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
 npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
+npx credit-matrix convert team.csv --to svg > heatmap.svg  # the heatmap; --locale sets its language
 npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
 npx credit-matrix --help                           # or --version
 ```
@@ -44,7 +45,8 @@ npx credit-matrix --help                           # or --version
 Each command reads a file, or `-` for standard input, in any format `importAny` reads. Spreadsheet
 files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement --levels` adds Equal or
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
-`convert --to md` takes `--locale` too, for the language of the role names.
+`convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
+takes `--yes-no` for flat cells with no levels.
 
 `statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
 or `codemeta`. See [CodeMeta attribution](#codemeta-attribution) for its output and limits.
