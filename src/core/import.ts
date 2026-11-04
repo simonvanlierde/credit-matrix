@@ -1,5 +1,6 @@
 import type { Ask } from "./ask";
 import type { Author } from "./author";
+import { fromCrossrefContributors, isCrossrefContributors } from "./export/crossref";
 import { fromCsv, headerCells } from "./export/csv";
 import { fromJson } from "./export/json";
 import { fromTenzing, isTenzing } from "./export/tenzing";
@@ -8,7 +9,16 @@ import { parseAuthorText } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
 import { readsAsStatement } from "./statement";
 
-export type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "statement" | "names" | "unknown";
+export type DetectedFormat =
+  | "link"
+  | "csv"
+  | "tenzing"
+  | "json"
+  | "xml"
+  | "crossref"
+  | "statement"
+  | "names"
+  | "unknown";
 
 /** Guess what pasted or loaded text is, from its shape alone. */
 export function detectFormat(text: string): DetectedFormat {
@@ -16,6 +26,7 @@ export function detectFormat(text: string): DetectedFormat {
   // A share link, most usefully one a co-author sent back with their own roles.
   // `encodeShareHash` without a base URL gives the bare `#s=…` hash.
   if (/^https?:\/\/\S+#s=/.test(trimmed) || /^#s=[\w-]+$/.test(trimmed)) return "link";
+  if (isCrossrefContributors(trimmed)) return "crossref";
   if (trimmed.startsWith("<")) return "xml";
   // JSON must be checked before the CSV heuristic: a toJson() payload contains
   // both a comma and a "name" field, so the CSV check would misclassify it.
@@ -69,6 +80,8 @@ export async function importAny(text: string, { parser }: { parser?: XmlParser }
       return { format, authors: fromTenzing(trimmed) };
     case "xml":
       return { format, authors: fromJats4rXml(trimmed, { parser }) };
+    case "crossref":
+      return { format, authors: fromCrossrefContributors(trimmed, { parser }) };
     case "names":
       return { format, authors: parseAuthorText(trimmed) };
     case "statement":

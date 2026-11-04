@@ -198,6 +198,7 @@ const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link" | "s
   csv: "errImportNoCsvRows",
   tenzing: "errImportNoCsvRows",
   xml: "errImportNoXmlContribs",
+  crossref: "errImportNoXmlContribs",
   names: "errImportNoNames",
 };
 
@@ -208,6 +209,7 @@ const FORMAT_LABEL: Record<Exclude<DetectedFormat, "unknown">, (t: ReturnType<ty
   json: (t) => t("formatJsonExport"),
   statement: (t) => t("formatStatement"),
   xml: () => "JATS4R XML",
+  crossref: () => "Crossref XML",
   csv: () => "CSV",
   tenzing: () => "tenzing",
 };
