@@ -73,7 +73,7 @@ comments when one gets slower or faster than on main.
 ## Dependencies
 
 I add a dependency only when it saves real work, is maintained, and has a license compatible with
-MIT. The browser bundle stays small, so prefer the platform or a few lines of code over a new
+MIT. The browser bundle stays small (`pnpm check:bundle` fails past the gzip budget after a build), so prefer the platform or a few lines of code over a new
 package. `pnpm-lock.yaml` pins every version; commit it with any change to `package.json`. CI
 installs with `--frozen-lockfile`, so a stale lockfile fails. pnpm refuses releases younger than 3 days
 (`minimumReleaseAge` in `pnpm-workspace.yaml`). Renovate proposes updates once a month and waits 7

@@ -350,6 +350,10 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # The app's JavaScript stays under the gzip budget in scripts/check-bundle-size.mjs.
+      - name: Check bundle size
+        run: pnpm check:bundle
+
       # The deploy job ships this exact out/, so a bad route or assets path in
       # wrangler.jsonc is caught here first. The dry run needs no credentials.
       - name: Validate Worker config
