@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { expect, it } from "vitest";
 import { TEST_ORCID } from "@/core/__tests__/orcid-test-issuer";
+import { toSharePayload } from "@/core/share-payload";
 import en from "@/messages/en.json";
 import { useContributionStore } from "@/store/contribution-store";
 import { ReviewPanel } from "./ReviewPanel";
@@ -124,4 +125,44 @@ it("shows a sign-in given for another row as a warning, not as verified", () => 
   expect(screen.getByText(/^Not verified for this row: Bob White \(/)).toBeTruthy();
   expect(container.querySelector("[data-orcid-verified]")).toBeNull();
   expect(screen.queryByText("Verified by ORCID", { exact: false })).toBeNull();
+});
+
+it("shows the paper title a verified sign-in was given for only when it differs from the draft's", () => {
+  act(() => {
+    useContributionStore.getState().createDraft();
+    useContributionStore.getState().setTitle("Sea otters");
+    useContributionStore.getState().addAuthor("Bob White", TEST_ORCID);
+  });
+  const bob = useContributionStore.getState().authors[0];
+  if (!bob) throw new Error("expected Bob");
+  const payload = toSharePayload({
+    authors: [bob],
+    title: "Kelp forests",
+    claimId: bob.id,
+    sourceDraftId: "d",
+    reply: true,
+  });
+  const orcid = { orcid: TEST_ORCID, name: "Bob White", issuedAt: 1, token: "t", payload };
+  const reply = {
+    contributions: [{ role: "Investigation" as const, score: 100 }],
+    equalContribution: false,
+    corresponding: false,
+    sentAt: 1,
+    receivedAt: 2,
+    provenance: { orcid },
+    decisions: {},
+  };
+  act(() => useContributionStore.getState().loadAuthors([bob], { [bob.id]: { sentAt: 1, prefilled: true, reply } }));
+
+  const { container } = render(
+    <IntlProvider locale="en" messages={en}>
+      <ReviewPanel />
+    </IntlProvider>,
+  );
+  expect(container.querySelector("[data-orcid-verified]")).toBeTruthy();
+  expect(screen.getByText("Signed for “Kelp forests”.")).toBeTruthy();
+
+  act(() => useContributionStore.getState().setTitle("Kelp forests"));
+  expect(container.querySelector("[data-orcid-verified]")).toBeTruthy();
+  expect(container.querySelector("[data-orcid-signed-for]")).toBeNull();
 });

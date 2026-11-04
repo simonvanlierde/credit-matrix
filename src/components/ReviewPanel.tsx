@@ -21,6 +21,7 @@ import {
   settledAt,
   type Target,
 } from "@/core";
+import { signedForTitle } from "@/core/ask";
 import { LEVEL_SCORE } from "@/core/author";
 import { heatCellColor, onColor } from "@/core/contributor-color";
 import { announce } from "@/lib/announce";
@@ -72,6 +73,7 @@ export function ReviewPanel() {
   const authors = useContributionStore((s) => s.authors);
   const asks = useContributionStore((s) => s.asks);
   const selfId = useContributionStore((s) => s.selfId);
+  const draftTitle = useContributionStore((s) => s.title);
   const reviewFocus = useContributionStore((s) => s.reviewFocus);
   const tab = useContributionStore((s) => s.inspectorTab);
   const monoColor = useContributionStore((s) => s.heatmapMonoColor);
@@ -235,6 +237,7 @@ export function ReviewPanel() {
         const otherId =
           signIn && [author.orcid, reply.provenance?.replacedOrcid].some((orcid) => orcid && orcid !== signIn.orcid);
         const noRowId = signIn && !author.orcid && !reply.provenance?.replacedOrcid;
+        const signedFor = signIn && !reply.provenance?.signedElsewhere ? signedForTitle(signIn, draftTitle) : null;
         return (
           <section key={author.id} aria-labelledby={headingId} className="flex flex-col gap-2">
             <div className="flex items-start justify-between gap-3">
@@ -274,6 +277,11 @@ export function ReviewPanel() {
                         </span>
                       )}
                     </span>
+                  </p>
+                )}
+                {signedFor && (
+                  <p className="mt-0.5 pl-4.5 text-xs text-on-surface-variant" data-orcid-signed-for="">
+                    {t("reviewOrcidSignedFor", { title: signedFor })}
                   </p>
                 )}
               </div>

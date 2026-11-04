@@ -169,6 +169,7 @@
   "reviewOrcidVerified": "Verified by ORCID as {who}, signed in {date}.",
   "reviewOrcidOtherId": "This is not the iD on the row.",
   "reviewOrcidNoRowId": "This row has no ORCID iD to compare with.",
+  "reviewOrcidSignedFor": "Signed for “{title}”.",
   "reviewOrcidSignedElsewhere": "Not verified for this row: {who} signed in with ORCID on {date} for a row with another name or iD.",
   "coauthorNotSent": "Not sent yet.",
   "coauthorCopyInstead": "Copy the link instead",

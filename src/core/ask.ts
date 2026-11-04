@@ -560,3 +560,20 @@ function signedHere(proof: OrcidProof, fileRow: Author, landing: Author): boolea
     return false;
   }
 }
+
+/**
+ * The paper title a sign-in was given for, when it differs from `draftTitle`
+ * after trimming and squashing whitespace. Null when the payload cannot be
+ * read or carries no title. Exports carry no draft id, so this is how Review
+ * shows a true sign-in copied in from another draft.
+ */
+export function signedForTitle(proof: OrcidProof, draftTitle: string): string | null {
+  const squash = (text: string) => text.trim().replace(/\s+/g, " ");
+  let signed: string;
+  try {
+    signed = squash(fromSharePayload(proof.payload).title);
+  } catch {
+    return null;
+  }
+  return signed && signed !== squash(draftTitle) ? signed : null;
+}

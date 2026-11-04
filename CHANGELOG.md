@@ -10,6 +10,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `importAnswers` sets `provenance.signedElsewhere` when a sign-in was given for a row with another
   id, name or iD; Review shows it as a warning, not as verified.
+- Review shows the paper title a verified ORCID sign-in was given for when it differs from the
+  draft's title.
 
 ### Changed
 
