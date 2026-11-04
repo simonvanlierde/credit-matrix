@@ -332,7 +332,7 @@ function nameVariants(author: StatementAuthor): [Set<string>, Set<string>] {
   const dotted = hyphened.map((h) => `${h.replaceAll("-", ".-")}.`).join("");
   const forms = [initials, `${[...initials].join(".")}.`, hyphened.join(""), dotted];
   const short = forms
-    .filter((f) => f.replace(/^\.+|\.+$/g, ""))
+    .filter((f) => /[^.]/.test(f))
     .flatMap((f) => [`${surname} ${f}`, `${surname}, ${f}`, `${f} ${surname}`]);
   return [new Set(names.map(clean)), new Set(short.map(clean))];
 }
