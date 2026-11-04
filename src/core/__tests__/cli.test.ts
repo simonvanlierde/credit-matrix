@@ -157,7 +157,9 @@ describe("credit-matrix convert", () => {
   });
 
   it("writes Tenzing and the heatmap SVG", async () => {
-    expect(await run(["convert", csv, "--to", "tenzing"])).toMatch(/^Author\/Acknowledgee,/);
+    const tenzing = await run(["convert", csv, "--to", "tenzing"]);
+    expect(tenzing).toMatch(/^Author\/Acknowledgee,/);
+    expect(tenzing).toContain("Author,1,Jane,,Smith,");
     const svg = await run(["convert", csv, "--to", "svg"]);
     expect(svg).toMatch(/^<svg /);
     expect(svg).toContain("Jane Smith");

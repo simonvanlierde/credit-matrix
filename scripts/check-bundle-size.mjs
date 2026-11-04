@@ -2,7 +2,7 @@
 // route's chunks together) outgrows its budget. Sizes are the sum of each
 // file compressed alone, as a static host serves them. Run after `pnpm build`.
 // Raise a limit on purpose, in the same commit as the change that needs it.
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
@@ -10,9 +10,11 @@ import { gzipSync } from "node:zlib";
 const LIMIT_GZIP = 530_000;
 
 const dir = join(import.meta.dirname, "..", "out", "_next", "static");
-const files = readdirSync(dir, { recursive: true, encoding: "utf8" })
-  .filter((f) => f.endsWith(".js"))
-  .map((f) => readFileSync(join(dir, f)));
+const files = existsSync(dir)
+  ? readdirSync(dir, { recursive: true, encoding: "utf8" })
+      .filter((f) => f.endsWith(".js"))
+      .map((f) => readFileSync(join(dir, f)))
+  : [];
 if (files.length === 0) {
   console.error(`check-bundle-size: no .js files in ${dir}. Run 'pnpm build' first.`);
   process.exit(1);
