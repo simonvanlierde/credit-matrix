@@ -8,7 +8,7 @@ import {
 } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator, type UiTranslator } from "./credit-i18n/ui-strings";
 import { buildHeatmapSvg } from "./export/heatmap-svg";
-import { fromJson } from "./export/json";
+import { fromJson, RepeatedIdError } from "./export/json";
 import { generateStatement, STATEMENT_FORMATS, type StatementFormat } from "./generate-statement";
 import { normalizeRoster } from "./parse-authors";
 
@@ -173,7 +173,10 @@ export class CreditMatrixElement extends HTMLElement {
         : (this.querySelector('script[type="application/json"]')?.textContent ?? "");
       try {
         authors = normalizeRoster(fromJson(json).authors);
-      } catch {
+      } catch (error) {
+        if (error instanceof RepeatedIdError) {
+          throw new Error(`${src || "The JSON in this element"} repeats a contributor id.`);
+        }
         throw new Error(
           src ? `${src} is not a CRediT Matrix export.` : "The JSON in this element is not a CRediT Matrix export.",
         );

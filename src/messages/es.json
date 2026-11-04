@@ -295,6 +295,7 @@
   "contributorTypeSetNonAuthor": "Marcar como contribuyente no autor",
   "errImportFailed": "No se pudieron importar los contribuyentes. Compruebe los datos e inténtelo de nuevo.",
   "errImportNewerVersion": "Este archivo se creó con una versión más reciente de CRediT Matrix. Recargue la página para actualizarla e inténtelo de nuevo.",
+  "errImportRepeatedId": "Este archivo incluye el mismo identificador de colaborador dos veces, por lo que no se importó.",
   "errHeatmapExport": "No se pudo exportar el mapa de calor como {format}.",
   "errStorageFull": "El almacenamiento del navegador está lleno, así que los cambios no se guardan. Exporte este borrador o elimine uno que ya no necesite.",
   "errStorageBlocked": "Este navegador bloquea el almacenamiento para este sitio, así que los cambios no se guardan. Permita los datos del sitio o exporte antes de cerrar la pestaña.",

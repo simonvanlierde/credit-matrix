@@ -295,6 +295,7 @@
   "contributorTypeSetNonAuthor": "Markeren als niet-auteur",
   "errImportFailed": "Importeren mislukt. Controleer het bestand en probeer het opnieuw.",
   "errImportNewerVersion": "Dit bestand is gemaakt met een nieuwere versie van CRediT Matrix. Laad de pagina opnieuw om bij te werken en probeer het dan nog eens.",
+  "errImportRepeatedId": "Dit bestand bevat dezelfde bijdrager-id twee keer, dus het is niet geïmporteerd.",
   "errHeatmapExport": "De heatmap kan niet als {format} worden geëxporteerd.",
   "errStorageFull": "De browseropslag is vol, dus wijzigingen worden niet opgeslagen. Exporteer dit concept of verwijder er een dat u niet meer nodig hebt.",
   "errStorageBlocked": "Deze browser blokkeert opslag voor deze site, dus wijzigingen worden niet opgeslagen. Sta sitegegevens toe of exporteer voordat u het tabblad sluit.",

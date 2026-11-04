@@ -24,6 +24,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 
+### Fixed
+
+- Import says plainly when a file repeats a contributor id: the import box shows its own message
+  in every language, the CLI and the `<credit-matrix>` element say so in English. `fromJson`
+  throws the new `RepeatedIdError` for it.
+
 ## [0.11.0] - 2026-11-01
 
 ### Added

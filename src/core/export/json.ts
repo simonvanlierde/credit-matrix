@@ -7,6 +7,8 @@ import { AuthorSchema, MAX_AUTHORS } from "../author";
 /** The export format version this build writes and reads. */
 export const JSON_EXPORT_VERSION = 1;
 
+const REPEATED_ID_MESSAGE = "duplicate contributor ids";
+
 const ExportSchema = /* @__PURE__ */ (() =>
   z.object({
     version: z.literal(JSON_EXPORT_VERSION),
@@ -14,7 +16,7 @@ const ExportSchema = /* @__PURE__ */ (() =>
       z.maxLength(MAX_AUTHORS),
       // Answers and sign-ins are keyed by row id, so a repeated id is ambiguous.
       z.refine((authors) => new Set(authors.map((author) => author.id)).size === authors.length, {
-        message: "duplicate contributor ids",
+        message: REPEATED_ID_MESSAGE,
       }),
     ),
     /** Asks and co-author answers by contributor id. Optional, so files from before them still load. */
@@ -28,6 +30,14 @@ export class NewerVersionError extends Error {
   constructor(version: number) {
     super(`JSON export version ${version} is newer than ${JSON_EXPORT_VERSION}`);
     this.name = "NewerVersionError";
+  }
+}
+
+/** Thrown by `fromJson` for a file that lists the same contributor id twice. */
+export class RepeatedIdError extends Error {
+  constructor() {
+    super(REPEATED_ID_MESSAGE);
+    this.name = "RepeatedIdError";
   }
 }
 
@@ -58,13 +68,19 @@ export function toJson(
 
 /**
  * Parse a JSON string previously produced by `toJson()`.
- * Throws a NewerVersionError for a newer build's export, and a ZodError for
- * any other data that doesn't match the expected shape.
+ * Throws a NewerVersionError for a newer build's export, a RepeatedIdError for
+ * a file that repeats a contributor id, and a ZodError for any other data that doesn't match the expected shape.
  */
 export function fromJson(json: string): { authors: Author[]; asks?: Record<string, Ask>; selfId?: string } {
   const data: unknown = JSON.parse(json);
   const version = (data as { version?: unknown } | null)?.version;
   if (typeof version === "number" && version > JSON_EXPORT_VERSION) throw new NewerVersionError(version);
-  const { authors, asks, selfId } = ExportSchema.parse(data);
+  const result = ExportSchema.safeParse(data);
+  if (!result.success) {
+    throw result.error.issues.some((issue) => issue.message === REPEATED_ID_MESSAGE)
+      ? new RepeatedIdError()
+      : result.error;
+  }
+  const { authors, asks, selfId } = result.data;
   return { authors, ...(asks ? { asks } : {}), ...(selfId ? { selfId } : {}) };
 }

@@ -295,6 +295,7 @@
   "contributorTypeSetNonAuthor": "Contrassegna come contributore non autore",
   "errImportFailed": "Importazione non riuscita. Controlla il file e riprova.",
   "errImportNewerVersion": "Questo file è stato creato con una versione più recente di CRediT Matrix. Ricarica la pagina per aggiornarla, poi riprova.",
+  "errImportRepeatedId": "Questo file contiene due volte lo stesso ID di collaboratore, quindi non è stato importato.",
   "errHeatmapExport": "Impossibile esportare la heatmap in formato {format}.",
   "errStorageFull": "Lo spazio del browser è esaurito, quindi le modifiche non vengono salvate. Esporta questa bozza o eliminane una che non ti serve più.",
   "errStorageBlocked": "Questo browser blocca l'archiviazione per questo sito, quindi le modifiche non vengono salvate. Consenti i dati del sito o esporta prima di chiudere la scheda.",

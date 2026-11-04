@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import * as z from "zod/mini";
 import { MAX_AUTHORS } from "../author";
-import { fromJson, NewerVersionError, toJson } from "../export/json";
+import { fromJson, NewerVersionError, RepeatedIdError, toJson } from "../export/json";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml } from "../export/xml-import";
-import { parseAuthorText } from "../parse-authors";
+import { createAuthor, parseAuthorText } from "../parse-authors";
 
 describe("round-trip exports", () => {
   it("XML round-trip preserves names, initials, contributions, and ORCID", () => {
@@ -84,6 +84,14 @@ describe("round-trip exports", () => {
     expect(() => fromJson("[]")).not.toThrow(NewerVersionError);
     expect(() => fromJson("null")).not.toThrow(NewerVersionError);
     expect(fromJson('{"version": 1, "authors": []}')).toEqual({ authors: [] });
+  });
+
+  it("throws a RepeatedIdError for a file that repeats a contributor id", () => {
+    const jane = createAuthor("Jane Smith");
+    const file = JSON.stringify({ version: 1, authors: [jane, { ...jane, name: "Bob White" }] });
+    expect(() => fromJson(file)).toThrow(RepeatedIdError);
+    expect(() => fromJson(file)).toThrow("duplicate contributor ids");
+    expect(() => fromJson('{"version": 1, "authors": [{"name": 5}]}')).not.toThrow(RepeatedIdError);
   });
 
   it("names the newer version and its own in the error", () => {

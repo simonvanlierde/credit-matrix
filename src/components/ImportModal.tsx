@@ -16,6 +16,7 @@ import {
   NewerVersionError,
   namesCredit,
   parseStatement,
+  RepeatedIdError,
   statementAuthor,
 } from "@/core";
 import { recheckSignIns } from "@/core/ask";
@@ -408,8 +409,16 @@ export function ImportModal({
       if (!current()) return;
       stageImport(parsed);
     } catch (failure) {
-      // A newer build's export is said plainly, not as a validation failure.
-      showError(t(failure instanceof NewerVersionError ? "errImportNewerVersion" : "errImportFailed"));
+      // A newer build's export, or one that repeats an id, is said plainly, not as a validation failure.
+      showError(
+        t(
+          failure instanceof NewerVersionError
+            ? "errImportNewerVersion"
+            : failure instanceof RepeatedIdError
+              ? "errImportRepeatedId"
+              : "errImportFailed",
+        ),
+      );
     } finally {
       // After a close, the flag belongs to whatever the reopened dialog started.
       if (current()) setImporting(false);

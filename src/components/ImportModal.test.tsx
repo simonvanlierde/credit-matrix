@@ -219,6 +219,20 @@ describe("a JSON export from a newer version", () => {
   });
 });
 
+describe("a JSON export that repeats a contributor id", () => {
+  it("says so, instead of the catch-all failure", async () => {
+    const { onImport } = renderModal(0);
+    const jane = createAuthor("Jane Smith");
+    fireEvent.change(screen.getByLabelText(en.pasteRawData), {
+      target: { value: JSON.stringify({ version: 1, authors: [jane, jane] }) },
+    });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+
+    expect(screen.getByText(en.errImportRepeatedId)).toBeTruthy();
+    expect(onImport).not.toHaveBeenCalled();
+  });
+});
+
 describe("accessibility and drops", () => {
   it("ties the form error to the textarea", async () => {
     renderModal(0);

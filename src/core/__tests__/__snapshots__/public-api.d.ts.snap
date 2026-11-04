@@ -1052,6 +1052,10 @@ export declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOpti
 export declare class NewerVersionError extends Error {
   constructor(version: number);
 }
+/** Thrown by `fromJson` for a file that lists the same contributor id twice. */
+export declare class RepeatedIdError extends Error {
+  constructor();
+}
 /**
  * Serialize authors to a JSON string (pretty-printed). Asks and their answers
  * go in by default; `includeAnswers: false` leaves them out. `selfId` goes in
@@ -1065,8 +1069,8 @@ export declare function toJson(authors: Author[], { asks, includeAnswers, selfId
 }): string;
 /**
  * Parse a JSON string previously produced by `toJson()`.
- * Throws a NewerVersionError for a newer build's export, and a ZodError for
- * any other data that doesn't match the expected shape.
+ * Throws a NewerVersionError for a newer build's export, a RepeatedIdError for
+ * a file that repeats a contributor id, and a ZodError for any other data that doesn't match the expected shape.
  */
 export declare function fromJson(json: string): {
   authors: Author[];
