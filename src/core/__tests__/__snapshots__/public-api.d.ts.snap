@@ -285,6 +285,7 @@ declare const ReplySchema: z.ZodMiniObject<{
       token: z.ZodMiniString<string>;
       payload: z.ZodMiniString<string>;
     }, z.core.$loose>>;
+    signedElsewhere: z.ZodMiniOptional<z.ZodMiniLiteral<true>>;
   }, z.core.$loose>>>;
   decisions: z.ZodMiniObject<{
     Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
@@ -558,6 +559,7 @@ export declare const AskSchema: z.ZodMiniObject<{
         token: z.ZodMiniString<string>;
         payload: z.ZodMiniString<string>;
       }, z.core.$loose>>;
+      signedElsewhere: z.ZodMiniOptional<z.ZodMiniLiteral<true>>;
     }, z.core.$loose>>>;
     decisions: z.ZodMiniObject<{
       Conceptualization: z.ZodMiniOptional<z.ZodMiniObject<{
@@ -888,7 +890,8 @@ export declare function askStep(state: AskState, event: AskEvent): {
  * sign-in stays only when its token verifies (see `orcid-proof.ts`), it signed
  * a reply to this contributor, and its row there holds the same answer as the
  * stored reply; the draft id is not compared, because an export does not keep
- * it. A failing sign-in is dropped, the answer stays. `keys` is called only
+ * it. `importAnswers` later compares the row's name and iD with the row the
+ * answer lands on. A failing sign-in is dropped, the answer stays. `keys` is called only
  * when some reply carries a sign-in; null from it moves every sign-in to
  * `provenance.uncheckedOrcid`, so a later check can still verify it.
  */
@@ -909,7 +912,10 @@ export declare function applyPatch(state: AskState, patch: Patch): AskState;
  * replaces the held one for the row it matched, and answers for rows that
  * matched nobody are dropped. Held answers for matched rows the file has none
  * for are kept. `selfId` follows the same rule. `asks` is undefined when the
- * file carries none, and `selfId` when it does not survive.
+ * file carries none, and `selfId` when it does not survive. A filed answer's
+ * checked sign-in gets `provenance.signedElsewhere` when it was given for
+ * another row id than the file row's, or another name or iD than the row it
+ * lands on.
  */
 export declare function importAnswers(current: readonly Author[], incoming: readonly Author[], mapped: readonly Author[], held: Readonly<Record<string, Ask>>, fromFile: {
   asks?: Readonly<Record<string, Ask>>;
@@ -1049,7 +1055,8 @@ export declare class NewerVersionError extends Error {
 /**
  * Serialize authors to a JSON string (pretty-printed). Asks and their answers
  * go in by default; `includeAnswers: false` leaves them out. `selfId` goes in
- * while it names a contributor in the file.
+ * while it names a contributor in the file. Throws a ZodError when two authors
+ * share an id.
  */
 export declare function toJson(authors: Author[], { asks, includeAnswers, selfId }?: {
   asks?: Readonly<Record<string, Ask>>;

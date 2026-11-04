@@ -169,6 +169,8 @@
   "reviewOrcidVerified": "Von ORCID verifiziert als {who}, angemeldet am {date}.",
   "reviewOrcidOtherId": "Das ist nicht die iD in dieser Zeile.",
   "reviewOrcidNoRowId": "Diese Zeile hat keine ORCID-iD zum Vergleich.",
+  "reviewOrcidSignedFor": "Anmeldung für „{title}“.",
+  "reviewOrcidSignedElsewhere": "Für diese Zeile nicht verifiziert: {who} hat sich am {date} mit ORCID für eine Zeile mit anderem Namen oder anderer iD angemeldet.",
   "coauthorNotSent": "Noch nicht gesendet.",
   "coauthorCopyInstead": "Stattdessen den Link kopieren",
   "coauthorShareTitle": "CRediT-Rollen von {name}",

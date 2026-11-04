@@ -51,6 +51,8 @@ const ReplySchema = /* @__PURE__ */ (() =>
           replacedOrcid: z.optional(z.string()),
           /** A sign-in ORCID could not be reached to check on import; `orcid` only ever holds a checked one. */
           uncheckedOrcid: z.optional(OrcidProofSchema),
+          /** Set on import when `orcid` was given for a row with another id, name or iD. */
+          signedElsewhere: z.optional(z.literal(true)),
         }),
       ),
       undefined,
@@ -372,7 +374,8 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
  * sign-in stays only when its token verifies (see `orcid-proof.ts`), it signed
  * a reply to this contributor, and its row there holds the same answer as the
  * stored reply; the draft id is not compared, because an export does not keep
- * it. A failing sign-in is dropped, the answer stays. `keys` is called only
+ * it. `importAnswers` later compares the row's name and iD with the row the
+ * answer lands on. A failing sign-in is dropped, the answer stays. `keys` is called only
  * when some reply carries a sign-in; null from it moves every sign-in to
  * `provenance.uncheckedOrcid`, so a later check can still verify it.
  */
@@ -497,7 +500,10 @@ function rederiveInitials(authors: readonly Author[]): Author[] {
  * replaces the held one for the row it matched, and answers for rows that
  * matched nobody are dropped. Held answers for matched rows the file has none
  * for are kept. `selfId` follows the same rule. `asks` is undefined when the
- * file carries none, and `selfId` when it does not survive.
+ * file carries none, and `selfId` when it does not survive. A filed answer's
+ * checked sign-in gets `provenance.signedElsewhere` when it was given for
+ * another row id than the file row's, or another name or iD than the row it
+ * lands on.
  */
 export function importAnswers(
   current: readonly Author[],
@@ -512,16 +518,62 @@ export function importAnswers(
   let asks: Record<string, Ask> | undefined;
   if (fileAsks) {
     const found: Record<string, Ask> = {};
+    const seen = new Set<string>();
     incoming.forEach((author, index) => {
-      const id = mapped[index]?.id;
-      if (!id) return;
+      const landing = mapped[index];
+      // normalizeRoster gives a repeated id to its first row only, so that row decides.
+      if (!landing || seen.has(landing.id)) return;
+      const id = landing.id;
+      seen.add(id);
       const filed = Object.hasOwn(fileAsks, author.id) ? fileAsks[author.id] : undefined;
       const kept = Object.hasOwn(held, id) ? held[id] : undefined;
-      const ask = filed && matched(id) ? filed : kept;
+      const ask = filed && matched(id) ? flagSignIn(filed, author, landing) : kept;
       if (ask) found[id] = ask;
     });
     asks = found;
   }
   const selfId = mapped[incoming.findIndex((author) => author.id === fromFile.selfId)]?.id;
   return { asks, selfId: selfId && matched(selfId) ? selfId : undefined };
+}
+
+/** The filed ask with `signedElsewhere` worked out again for the file row and the row it lands on. */
+function flagSignIn(ask: Ask, fileRow: Author, landing: Author): Ask {
+  const provenance = ask.reply?.provenance;
+  if (!(ask.reply && provenance)) return ask;
+  const { signedElsewhere: _, ...rest } = provenance;
+  const elsewhere = rest.orcid !== undefined && !signedHere(rest.orcid, fileRow, landing);
+  return { ...ask, reply: { ...ask.reply, provenance: elsewhere ? { ...rest, signedElsewhere: true } : rest } };
+}
+
+/**
+ * Whether a sign-in was given for the file row's id, with the landing row's name
+ * and iD. The id is the file's, because `keepKnownIds` may give the landing row
+ * another one. The draft id is not compared: an honest export restored
+ * elsewhere opens a new draft.
+ */
+function signedHere(proof: OrcidProof, fileRow: Author, landing: Author): boolean {
+  try {
+    const shared = fromSharePayload(proof.payload);
+    const row = shared.authors.find((author) => author.id === shared.claimId);
+    return row !== undefined && row.id === fileRow.id && row.name === landing.name && row.orcid === landing.orcid;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The paper title a sign-in was given for, when it differs from `draftTitle`
+ * after trimming and squashing whitespace. Null when the payload cannot be
+ * read or carries no title. Exports carry no draft id, so this is how Review
+ * shows a true sign-in copied in from another draft.
+ */
+export function signedForTitle(proof: OrcidProof, draftTitle: string): string | null {
+  const squash = (text: string) => text.trim().replace(/\s+/g, " ");
+  let signed: string;
+  try {
+    signed = squash(fromSharePayload(proof.payload).title);
+  } catch {
+    return null;
+  }
+  return signed && signed !== squash(draftTitle) ? signed : null;
 }

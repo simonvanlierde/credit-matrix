@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Ask, AskState, Choice, Target } from "../ask";
-import { ASK_TARGETS, applyPatch, askStep, importAnswers, review, settledAt } from "../ask";
+import { ASK_TARGETS, applyPatch, askStep, importAnswers, review, settledAt, signedForTitle } from "../ask";
 import type { Author } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromJson, toJson } from "../export/json";
 import { keepKnownIds } from "../merge-row";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
+import { toSharePayload } from "../share-payload";
 
 /** Small seeded generator (Park–Miller), so a failing case reruns the same. */
 function rng(seed: number) {
@@ -562,5 +563,37 @@ describe("asks in JSON", () => {
     expect(importAnswers([ada], incoming, mapped, {}, { selfId: "nobody" }).selfId).toBeUndefined();
     expect(importAnswers([ada], incoming, mapped, {}, {}).selfId).toBeUndefined();
     expect(importAnswers([], incoming, incoming, {}, { selfId: "file-grace" }).selfId).toBe("file-grace");
+  });
+});
+
+describe("signedForTitle", () => {
+  const proof = (title?: string) => ({
+    orcid: "0000-0002-1825-0097",
+    name: "Bob White",
+    issuedAt: 1,
+    token: "t",
+    payload: toSharePayload({
+      authors: [createAuthor("Bob White", { id: "b" })],
+      title,
+      claimId: "b",
+      sourceDraftId: "d",
+      reply: true,
+    }),
+  });
+
+  it("is null when the sign-in was given for the draft's title", () => {
+    expect(signedForTitle(proof("Kelp  forests"), " Kelp forests ")).toBeNull();
+  });
+
+  it("gives the signed title when it differs from the draft's", () => {
+    expect(signedForTitle(proof("Kelp forests"), "Sea otters")).toBe("Kelp forests");
+  });
+
+  it("is null when the signed payload has no title", () => {
+    expect(signedForTitle(proof(), "Sea otters")).toBeNull();
+  });
+
+  it("is null when the payload cannot be read", () => {
+    expect(signedForTitle({ ...proof("Kelp forests"), payload: "not json" }, "Sea otters")).toBeNull();
   });
 });

@@ -11,7 +11,7 @@ import {
   replyNonce,
   verifyOrcidToken,
 } from "../orcid-proof";
-import { createAuthor } from "../parse-authors";
+import { createAuthor, normalizeRoster } from "../parse-authors";
 import { decodeShareHash, encodeShareHash, toBase64Url } from "../share-link";
 import { type SharePayloadInput, toSharePayload } from "../share-payload";
 import { TEST_ORCID as ORCID, testIssuer } from "./orcid-test-issuer";
@@ -292,6 +292,91 @@ describe("a signed reply in the ask record", () => {
       expect(
         (await recheckSignIns(fromJson(JSON.stringify(moved)).asks ?? {}, keys)).ann?.reply?.provenance,
       ).toBeUndefined();
+    });
+
+    describe("compared with the row it lands on", () => {
+      // An import into an empty draft: the file's rows are the rows the answers land on.
+      async function landed(file: { authors: Author[] }) {
+        const { authors, asks } = fromJson(JSON.stringify(file));
+        const checked = await recheckSignIns(asks ?? {}, keys);
+        return importAnswers([], authors, authors, {}, { asks: checked }).asks?.bob?.reply?.provenance;
+      }
+
+      it("does not warn on the row the sign-in was given for", async () => {
+        const file = await imported();
+        // A flag the file brings is worked out again, not trusted.
+        file.asks.bob.reply.provenance.signedElsewhere = true;
+        const provenance = await landed(file);
+        expect(provenance?.orcid).toMatchObject({ orcid: ORCID });
+        expect(provenance).not.toHaveProperty("signedElsewhere");
+      });
+
+      it("warns when the row with the signed id has another name", async () => {
+        const file = await imported();
+        file.authors[0].name = "Ann Lee";
+        expect(await landed(file)).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+      });
+
+      it("warns when the row with the signed id has another iD", async () => {
+        const file = await imported();
+        file.authors[0].orcid = "0000-0001-5109-3700";
+        expect(await landed(file)).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+      });
+
+      it("does not warn when the draft holds the same person under another id", async () => {
+        const { authors, asks } = fromJson(JSON.stringify(await imported()));
+        const checked = await recheckSignIns(asks ?? {}, keys);
+        const current = [createAuthor("Bob White", { id: "b2" })];
+        const mapped = keepKnownIds(current, authors);
+        expect(mapped[0]?.id).toBe("b2");
+        const provenance = importAnswers(current, authors, mapped, {}, { asks: checked }).asks?.b2?.reply?.provenance;
+        expect(provenance?.orcid).toMatchObject({ orcid: ORCID });
+        expect(provenance).not.toHaveProperty("signedElsewhere");
+      });
+
+      // Straight into importAnswers, without the recheck that would drop these sign-ins first.
+      const unchecked = (file: unknown) => {
+        const { authors, asks } = fromJson(JSON.stringify(file));
+        return importAnswers([], authors, authors, {}, { asks }).asks;
+      };
+
+      it("warns when the sign-in was given for another row id, with the same name and iD", async () => {
+        const file = await imported();
+        file.authors[0].id = "ann";
+        file.asks = { ann: file.asks.bob };
+        expect(unchecked(file)?.ann?.reply?.provenance).toMatchObject({
+          orcid: { orcid: ORCID },
+          signedElsewhere: true,
+        });
+      });
+
+      it("warns when the sign-in's payload cannot be read", async () => {
+        const file = await imported();
+        file.asks.bob.reply.provenance.orcid.payload = "not a payload";
+        expect(unchecked(file)?.bob?.reply?.provenance).toMatchObject({ signedElsewhere: true });
+      });
+
+      // A second row with the signed id must not vouch for the first, which keeps the id.
+      const withImpostor = async () => {
+        const file = await imported();
+        file.authors.unshift({ ...file.authors[0], name: "Mallory Evil", firstName: "Mallory", surname: "Evil" });
+        return file;
+      };
+
+      it("refuses a file that repeats a row id", async () => {
+        const file = await withImpostor();
+        expect(() => fromJson(JSON.stringify(file))).toThrow("duplicate contributor ids");
+      });
+
+      it("judges a repeated id by the first row with it, which is the row that keeps it", async () => {
+        const file = await withImpostor();
+        const checked = await recheckSignIns(file.asks, keys);
+        const current = [createAuthor("Bob White", { id: "bob" })];
+        const incoming = file.authors as Author[];
+        const out = importAnswers(current, incoming, incoming, {}, { asks: checked });
+        expect(normalizeRoster(incoming)[0]).toMatchObject({ id: "bob", name: "Mallory Evil" });
+        expect(out.asks?.bob?.reply?.provenance).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+      });
     });
 
     it("keeps a sign-in unchecked when ORCID's keys cannot be fetched, and fetches none when there is nothing to check", async () => {

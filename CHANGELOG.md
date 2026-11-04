@@ -15,6 +15,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   heatmap. `--to svg` takes `--locale` and `--yes-no`.
 - The `<credit-matrix>` element takes a `levels` attribute, which marks Equal and Supporting
   contributions in the statement. The heatmap always shows the levels.
+- `importAnswers` sets `provenance.signedElsewhere` when a sign-in was given for a row with another
+  id, name or iD; Review shows it as a warning, not as verified.
+- Review shows the paper title a verified ORCID sign-in was given for when it differs from the
+  draft's title.
+
+### Changed
+
+- `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 
 ## [0.11.0] - 2026-11-01
 
