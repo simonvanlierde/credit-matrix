@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import { type AskState, applyPatch, askStep, importAnswers, recheckSignIns } from "../ask";
 import type { Author } from "../author";
 import { fromJson, toJson } from "../export/json";
-import { keepKnownIds } from "../merge-row";
 import {
   fetchOrcidKeys,
   ORCID_CLIENT_ID,
@@ -292,6 +291,41 @@ describe("a signed reply in the ask record", () => {
       expect(
         (await recheckSignIns(fromJson(JSON.stringify(moved)).asks ?? {}, keys)).ann?.reply?.provenance,
       ).toBeUndefined();
+    });
+
+    describe("compared with the row it lands on", () => {
+      // An import into an empty draft: the file's rows are the rows the answers land on.
+      async function landed(file: { authors: Author[] }, draftId = "draft-1") {
+        const { authors, asks } = fromJson(JSON.stringify(file));
+        const checked = await recheckSignIns(asks ?? {}, keys);
+        return importAnswers([], authors, authors, {}, { asks: checked }, draftId).asks?.bob?.reply?.provenance;
+      }
+
+      it("does not warn on the draft and row the sign-in was given for", async () => {
+        const file = await imported();
+        // A flag the file brings is worked out again, not trusted.
+        file.asks.bob.reply.provenance.signedElsewhere = true;
+        const provenance = await landed(file);
+        expect(provenance?.orcid).toMatchObject({ orcid: ORCID });
+        expect(provenance).not.toHaveProperty("signedElsewhere");
+      });
+
+      it("warns, and keeps the sign-in, when it was given in another draft", async () => {
+        const provenance = await landed(await imported(), "draft-2");
+        expect(provenance).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+      });
+
+      it("warns when the row with the signed id has another name", async () => {
+        const file = await imported();
+        file.authors[0].name = "Ann Lee";
+        expect(await landed(file)).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+      });
+
+      it("warns when the row with the signed id has another iD", async () => {
+        const file = await imported();
+        file.authors[0].orcid = "0000-0001-5109-3700";
+        expect(await landed(file)).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+      });
     });
 
     it("keeps a sign-in unchecked when ORCID's keys cannot be fetched, and fetches none when there is nothing to check", async () => {

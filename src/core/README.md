@@ -229,9 +229,10 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
   and never change it in place.
 - `settledAt(reply)`: when an answer was settled. That is its last decision, or when it arrived if
   nothing needed a decision.
-- `importAnswers(current, incoming, mapped, held, { asks, selfId })`: moves a JSON file's answers
-  and `selfId` over to the ids that `keepKnownIds` gave the imported rows. When you import into a
-  draft that already has contributors, only rows that matched one of them keep their answers.
+- `importAnswers(current, incoming, mapped, held, { asks, selfId }, draftId)`: moves a JSON file's
+  answers and `selfId` over to the ids that `keepKnownIds` gave the imported rows. When you import
+  into a draft that already has contributors, only rows that matched one of them keep their answers.
+  `draftId` is the draft the answers land in.
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
 - `AskSchema` validates stored and imported asks.
 
@@ -243,6 +244,9 @@ it keeps the iD the ask went to as `provenance.replacedOrcid`, and later replies
 you show any sign-in as verified. `provenance.orcid` then holds only checked sign-ins: when ORCID
 cannot be reached, each one moves to `provenance.uncheckedOrcid`, which you should not show as
 verified, and a later check can still verify it. A sign-in counts only on the row id it signed for.
+`importAnswers` then compares each sign-in with the row it lands on: when it was given in another
+draft, or for a row with another id, name or iD, it sets `provenance.signedElsewhere`, which you
+should show as a warning beside the sign-in.
 To check a reply link's sign-in yourself, pass it to `verifyOrcidToken` with the keys from
 `fetchOrcidKeys()`.
 

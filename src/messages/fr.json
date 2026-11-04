@@ -169,6 +169,7 @@
   "reviewOrcidVerified": "Vérifié par ORCID en tant que {who}, connexion le {date}.",
   "reviewOrcidOtherId": "Ce n’est pas l’iD de la ligne.",
   "reviewOrcidNoRowId": "Cette ligne n’a pas d’iD ORCID à comparer.",
+  "reviewOrcidSignedElsewhere": "Cette connexion a eu lieu dans un autre brouillon, ou pour une ligne avec un autre nom ou iD.",
   "coauthorNotSent": "Pas encore envoyé.",
   "coauthorCopyInstead": "Copier plutôt le lien",
   "coauthorShareTitle": "Rôles CRediT de {name}",

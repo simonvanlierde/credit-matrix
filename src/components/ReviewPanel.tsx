@@ -256,6 +256,9 @@ export function ReviewPanel() {
                         date: format.dateTime(signIn.issuedAt, { dateStyle: "medium" }),
                       })}
                       {otherId && <span data-orcid-other-id=""> {t("reviewOrcidOtherId")}</span>}
+                      {reply.provenance?.signedElsewhere && (
+                        <span data-orcid-signed-elsewhere=""> {t("reviewOrcidSignedElsewhere")}</span>
+                      )}
                       {noRowId && (
                         <span data-orcid-no-row-id="" className="text-on-surface-variant">
                           {" "}

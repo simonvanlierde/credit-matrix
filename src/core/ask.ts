@@ -51,6 +51,8 @@ const ReplySchema = /* @__PURE__ */ (() =>
           replacedOrcid: z.optional(z.string()),
           /** A sign-in ORCID could not be reached to check on import; `orcid` only ever holds a checked one. */
           uncheckedOrcid: z.optional(OrcidProofSchema),
+          /** Set on import when `orcid` was given in another draft, or for a row with another id, name or iD. */
+          signedElsewhere: z.optional(z.literal(true)),
         }),
       ),
       undefined,
@@ -371,8 +373,9 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
  * Check every reply's ORCID sign-in again, as an imported file needs. A
  * sign-in stays only when its token verifies (see `orcid-proof.ts`), it signed
  * a reply to this contributor, and its row there holds the same answer as the
- * stored reply; the draft id is not compared, because an export does not keep
- * it. A failing sign-in is dropped, the answer stays. `keys` is called only
+ * stored reply. The draft and the row's name and iD are compared later, by
+ * `importAnswers`, against the row the answer lands on: an export keeps no
+ * draft id. A failing sign-in is dropped, the answer stays. `keys` is called only
  * when some reply carries a sign-in; null from it moves every sign-in to
  * `provenance.uncheckedOrcid`, so a later check can still verify it.
  */
@@ -497,7 +500,9 @@ function rederiveInitials(authors: readonly Author[]): Author[] {
  * replaces the held one for the row it matched, and answers for rows that
  * matched nobody are dropped. Held answers for matched rows the file has none
  * for are kept. `selfId` follows the same rule. `asks` is undefined when the
- * file carries none, and `selfId` when it does not survive.
+ * file carries none, and `selfId` when it does not survive. A filed answer's
+ * checked sign-in that was given in a draft other than `draftId`, or for a
+ * row other than the one it lands on, gets `provenance.signedElsewhere`.
  */
 export function importAnswers(
   current: readonly Author[],
@@ -505,6 +510,7 @@ export function importAnswers(
   mapped: readonly Author[],
   held: Readonly<Record<string, Ask>>,
   fromFile: { asks?: Readonly<Record<string, Ask>>; selfId?: string },
+  draftId: string,
 ): { asks: Record<string, Ask> | undefined; selfId: string | undefined } {
   const known = new Set(current.map((author) => author.id));
   const matched = (id: string) => known.size === 0 || known.has(id);
@@ -517,11 +523,38 @@ export function importAnswers(
       if (!id) return;
       const filed = Object.hasOwn(fileAsks, author.id) ? fileAsks[author.id] : undefined;
       const kept = Object.hasOwn(held, id) ? held[id] : undefined;
-      const ask = filed && matched(id) ? filed : kept;
+      const landing = mapped[index] as Author;
+      const ask = filed && matched(id) ? flagSignIn(filed, landing, draftId) : kept;
       if (ask) found[id] = ask;
     });
     asks = found;
   }
   const selfId = mapped[incoming.findIndex((author) => author.id === fromFile.selfId)]?.id;
   return { asks, selfId: selfId && matched(selfId) ? selfId : undefined };
+}
+
+/** The filed ask with `signedElsewhere` worked out again for the row and draft it lands on. */
+function flagSignIn(ask: Ask, landing: Author, draftId: string): Ask {
+  const provenance = ask.reply?.provenance;
+  if (!(ask.reply && provenance)) return ask;
+  const { signedElsewhere: _, ...rest } = provenance;
+  const elsewhere = rest.orcid !== undefined && !signedHere(rest.orcid, landing, draftId);
+  return { ...ask, reply: { ...ask.reply, provenance: elsewhere ? { ...rest, signedElsewhere: true } : rest } };
+}
+
+/** Whether a sign-in was given in this draft, for this row id, with this row's name and iD. */
+function signedHere(proof: OrcidProof, landing: Author, draftId: string): boolean {
+  try {
+    const shared = fromSharePayload(proof.payload);
+    const row = shared.authors.find((author) => author.id === shared.claimId);
+    return (
+      row !== undefined &&
+      shared.sourceDraftId === draftId &&
+      row.id === landing.id &&
+      row.name === landing.name &&
+      row.orcid === landing.orcid
+    );
+  } catch {
+    return false;
+  }
 }

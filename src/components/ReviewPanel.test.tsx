@@ -96,3 +96,30 @@ it("does not show a sign-in an offline import could not check as verified", () =
   expect(screen.getByRole("heading", { name: "Bob White" })).toBeTruthy();
   expect(container.querySelector("[data-orcid-verified]")).toBeNull();
 });
+
+it("warns when an imported sign-in was given in another draft or for another row", () => {
+  act(() => {
+    useContributionStore.getState().createDraft();
+    useContributionStore.getState().addAuthor("Bob White", TEST_ORCID);
+  });
+  const bob = useContributionStore.getState().authors[0];
+  if (!bob) throw new Error("expected Bob");
+  const orcid = { orcid: TEST_ORCID, name: "Bob White", issuedAt: 1, token: "t", payload: "p" };
+  const reply = {
+    contributions: [{ role: "Investigation" as const, score: 100 }],
+    equalContribution: false,
+    corresponding: false,
+    sentAt: 1,
+    receivedAt: 2,
+    provenance: { orcid, signedElsewhere: true as const },
+    decisions: {},
+  };
+  act(() => useContributionStore.getState().loadAuthors([bob], { [bob.id]: { sentAt: 1, prefilled: true, reply } }));
+
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <ReviewPanel />
+    </IntlProvider>,
+  );
+  expect(screen.getByText(en.reviewOrcidSignedElsewhere)).toBeTruthy();
+});

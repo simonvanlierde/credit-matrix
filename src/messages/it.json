@@ -169,6 +169,7 @@
   "reviewOrcidVerified": "Verificato da ORCID come {who}, accesso il {date}.",
   "reviewOrcidOtherId": "Non è l’iD della riga.",
   "reviewOrcidNoRowId": "Questa riga non ha un iD ORCID con cui confrontarlo.",
+  "reviewOrcidSignedElsewhere": "Questo accesso è avvenuto in un’altra bozza, o per una riga con un altro nome o iD.",
   "coauthorNotSent": "Non ancora inviato.",
   "coauthorCopyInstead": "Copia invece il link",
   "coauthorShareTitle": "Ruoli CRediT di {name}",

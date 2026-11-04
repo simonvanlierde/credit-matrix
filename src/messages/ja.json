@@ -169,6 +169,7 @@
   "reviewOrcidVerified": "ORCIDにより{who}として検証済み（{date}にサインイン）。",
   "reviewOrcidOtherId": "この行のiDとは異なります。",
   "reviewOrcidNoRowId": "この行には比較するORCID iDがありません。",
+  "reviewOrcidSignedElsewhere": "このサインインは別の下書き、または名前かiDが異なる行に対して行われました。",
   "coauthorNotSent": "まだ送信されていません。",
   "coauthorCopyInstead": "代わりにリンクをコピー",
   "coauthorShareTitle": "{name}のCRediT役割",
