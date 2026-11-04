@@ -383,10 +383,10 @@ def cmd_model_backfill(args: argparse.Namespace) -> None:
     if not runs.is_dir():
         raise Failure(f"no run directories in {runs}")
     try:
-        added, known = runinfo.backfill(DATA / "mlflow.db", f"census-{args.snapshot}", runs)
+        added, already = runinfo.backfill(DATA / "mlflow.db", f"census-{args.snapshot}", runs)
     except RuntimeError as error:
         raise Failure(str(error)) from None
-    print(f"{added} runs added to MLflow, {known} already there")
+    print(f"{added} runs added to MLflow, {already} already there")
 
 
 def cmd_model_predict(args: argparse.Namespace) -> None:

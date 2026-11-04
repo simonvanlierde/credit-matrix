@@ -213,12 +213,11 @@ def tracking(
         yield Tracker()
         return
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{db}")
-    mlflow.set_experiment(experiment)
+    exp = mlflow.set_experiment(experiment)
     lock = PACKAGE / "uv.lock"
     # start_run cannot set a start time; a run created with one and then resumed keeps it.
     run_id = None
     if start_time is not None:
-        exp = mlflow.set_experiment(experiment)
         run_id = mlflow.MlflowClient().create_run(exp.experiment_id, start_time, run_name=name).info.run_id
     with mlflow.start_run(run_id=run_id, run_name=None if run_id else name):
         tracker = Tracker(mlflow)
@@ -236,8 +235,9 @@ def tracking(
         yield tracker
 
 
-def _read_run(run: Path) -> tuple[dict[str, Any], dict[str, Any], list, bool, dict[str, Any] | None, int]:
-    """Parse a run directory fully: (config, manifest, epoch points, finished, start ms). Raises on bad files."""
+def _read_run(run: Path) -> tuple[dict[str, Any], dict[str, Any], list, bool, dict[str, Any] | None, int, int]:
+    """Parse a run directory fully: (config, manifest, epoch points, finished, best scores or None, start ms,
+    end ms). Start and end are the oldest and newest file times. Raises on bad files."""
     config = json.loads((run / "config.json").read_text(encoding="utf-8"))
     log = run / "metrics.jsonl"
     lines = log.read_text(encoding="utf-8").splitlines() if log.exists() else []
@@ -248,8 +248,8 @@ def _read_run(run: Path) -> tuple[dict[str, Any], dict[str, Any], list, bool, di
     best = json.loads(best_file.read_text(encoding="utf-8")) if best_file.exists() else None
     # best.json appears after the first improving epoch, so only the epoch count says the run ended.
     finished = len(points) >= config["epochs"]
-    start = min(f.stat().st_mtime for f in run.iterdir() if f.is_file())
-    return config, manifest, points, finished, best, int(start * 1000)
+    times = [f.stat().st_mtime for f in run.iterdir() if f.is_file()]
+    return config, manifest, points, finished, best, int(min(times) * 1000), int(max(times) * 1000)
 
 
 def backfill(db: Path, experiment: str, runs: Path) -> tuple[int, int]:
@@ -257,39 +257,54 @@ def backfill(db: Path, experiment: str, runs: Path) -> tuple[int, int]:
     (added, already there). A run is told apart by its directory name, the tag `run_dir`. Each holds
     `config.json` (params), `metrics.jsonl` (a manifest line, then loss and per-epoch dev scores) and
     `best.json` (the best epoch's scores). A run is `finished` when it logged all `epochs` epochs.
-    A directory that cannot be parsed is reported on stderr and left out, to be retried next time."""
+    A run tracked live counts whatever its status; a backfilled one only once FINISHED, and one that is not
+    (an import that failed) is deleted and imported again. A directory that cannot be parsed or recorded is
+    reported on stderr and left out, to be retried next time."""
     try:
         import mlflow
     except ImportError:
         raise RuntimeError("MLflow is not installed; `uv sync --group tracking` adds it") from None
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{db}")
     exp = mlflow.set_experiment(experiment)
-    known = {
-        r.data.tags["run_dir"]
-        for r in mlflow.MlflowClient().search_runs([exp.experiment_id], max_results=50_000)
-        if "run_dir" in r.data.tags and r.info.status == "FINISHED"
-    }
-    added = 0
+    client = mlflow.MlflowClient()
+    known = set()
+    for r in client.search_runs([exp.experiment_id], max_results=50_000):
+        if "run_dir" not in r.data.tags:
+            continue
+        if r.data.tags.get("backfilled") == "True" and r.info.status != "FINISHED":
+            client.delete_run(r.info.run_id)
+        else:
+            known.add(r.data.tags["run_dir"])
+    added = already = 0
     for run in sorted(p for p in runs.iterdir() if (p / "config.json").exists()):
         if run.name in known:
+            already += 1
             continue
         try:
-            config, manifest, points, finished, best, start = _read_run(run)
+            config, manifest, points, finished, best, start, end = _read_run(run)
         except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
             print(f"skipped {run.name}: {type(error).__name__}: {error}", file=sys.stderr)
             continue
-        with tracking(db, experiment, run.name, "train", current=False, start_time=start) as t:
-            t.params({f"config.{k}": v for k, v in config.items()})
-            t.tags(
-                {
-                    "backfilled": True,
-                    "finished": finished,
-                    "mlflow.source.git.commit": manifest.get("git_commit"),
-                    **{f"manifest.{k}": v for k, v in manifest.items() if k != "git_commit"},
-                }
-            )
-            t.epochs_from(points)
-            if best:
-                t.metrics({f"best_{k}": v for k, v in best.items()})
+        try:
+            with tracking(db, experiment, run.name, "train", current=False, start_time=start) as t:
+                active = mlflow.active_run()
+                assert active is not None  # tracking() opened it
+                run_id = active.info.run_id
+                t.params({f"config.{k}": v for k, v in config.items()})
+                t.tags(
+                    {
+                        "backfilled": True,
+                        "finished": finished,
+                        "mlflow.source.git.commit": manifest.get("git_commit"),
+                        **{f"manifest.{k}": v for k, v in manifest.items() if k != "git_commit"},
+                    }
+                )
+                t.epochs_from(points)
+                if best:
+                    t.metrics({f"best_{k}": v for k, v in best.items()})
+        except Exception as error:  # the store refused a value; the run is left FAILED and replaced next time
+            print(f"skipped {run.name}: {type(error).__name__}: {error}", file=sys.stderr)
+            continue
+        client.set_terminated(run_id, end_time=end)
         added += 1
-    return added, len(known)
+    return added, already

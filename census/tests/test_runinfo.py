@@ -311,6 +311,8 @@ def test_backfill_records_old_runs_once(mlflow_store, tmp_path):
     done, stopped = found["done"], found["stopped"]
     assert done.data.params["config.dev_articles"] == "2000"
     assert done.data.metrics["best_f1"] == 0.9 and done.data.metrics["dev_f1"] == 0.9
+    history = mlflow_store.get_metric_history(done.info.run_id, "dev_f1")
+    assert [(m.step, m.value) for m in history] == [(1, 0.9)]
     assert done.data.tags["mlflow.source.git.commit"] == "a" * 40
     assert done.data.tags["manifest.train_articles"] == "10" and done.data.tags["finished"] == "True"
     assert "best_f1" not in stopped.data.metrics and stopped.data.tags["finished"] == "False"
@@ -367,3 +369,70 @@ def test_backfill_finished_counts_epochs(mlflow_store, tmp_path):
     (exp,) = [e for e in mlflow_store.search_experiments() if e.name == "census-s"]
     (run,) = mlflow_store.search_runs([exp.experiment_id])
     assert run.data.tags["finished"] == "False" and run.info.start_time == 1_700_000_000_000
+
+
+def test_backfill_leaves_live_runs_that_did_not_finish(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    exp_id = mlflow_store.create_experiment("census-s")
+    for name, status in (("running", None), ("failed", "FAILED"), ("killed", "KILLED")):
+        _write_run(runs, name)
+        run = mlflow_store.create_run(exp_id, run_name=name, tags={"run_dir": name})
+        if status:
+            mlflow_store.set_terminated(run.info.run_id, status)
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (0, 3)
+    assert len(mlflow_store.search_runs([exp_id])) == 3
+
+
+def test_backfill_replaces_a_failed_import(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    _write_run(runs, "r")
+    exp_id = mlflow_store.create_experiment("census-s")
+    old = mlflow_store.create_run(exp_id, run_name="r", tags={"run_dir": "r", "backfilled": "True"}).info.run_id
+    mlflow_store.set_terminated(old, "FAILED")
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (1, 0)
+    assert mlflow_store.get_run(old).info.lifecycle_stage == "deleted"
+    (new,) = mlflow_store.search_runs([exp_id])
+    assert new.info.run_id != old and new.info.status == "FINISHED"
+
+
+def test_backfill_skips_a_run_mlflow_refuses(mlflow_store, tmp_path, capsys):
+    runs = tmp_path / "runs"
+    _write_run(runs, "a-bad")
+    (runs / "a-bad" / "best.json").write_text(json.dumps({"f1": "x"}))
+    _write_run(runs, "b-ok")
+    assert runinfo.backfill(tmp_path / "unused.db", "census-s", runs) == (1, 0)
+    assert "skipped a-bad: " in capsys.readouterr().err
+
+
+def test_backfill_ends_a_run_at_its_last_file(mlflow_store, tmp_path):
+    runs = tmp_path / "runs"
+    _write_run(runs, "old")
+    for f in (runs / "old").iterdir():
+        os.utime(f, (1_700_000_000, 1_700_000_000))
+    os.utime(runs / "old" / "best.json", (1_700_003_600, 1_700_003_600))
+    runinfo.backfill(tmp_path / "unused.db", "census-s", runs)
+    run = _only_run(mlflow_store, "census-s")
+    assert run.info.start_time == 1_700_000_000_000 and run.info.end_time == 1_700_003_600_000
+    assert run.info.end_time - run.info.start_time < 86_400_000
+
+
+def test_cli_backfill(mlflow_store, tmp_path, monkeypatch, capsys):
+    from census import cli
+
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    assert cli.main(["model", "backfill", "--snapshot", "s"]) == 1
+    assert "no run directories" in capsys.readouterr().err
+    _write_run(tmp_path / "model" / "s" / "runs", "r")
+    assert cli.main(["model", "backfill", "--snapshot", "s"]) == 0
+    assert "1 runs added to MLflow, 0 already there" in capsys.readouterr().out
+
+
+def test_readme_ui_matches_the_locked_client():
+    import re
+    import tomllib
+
+    readme = (runinfo.PACKAGE / "README.md").read_text(encoding="utf-8")
+    (ui,) = set(re.findall(r"mlflow==([\w.]+)", readme))
+    lock = tomllib.loads((runinfo.PACKAGE / "uv.lock").read_text(encoding="utf-8"))
+    (client,) = [p["version"] for p in lock["package"] if p["name"] == "mlflow-skinny"]
+    assert ui == client
