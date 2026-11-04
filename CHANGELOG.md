@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `credit-matrix convert --to tenzing` and `--to svg` print the Tenzing table and the contribution
+  heatmap. `--to svg` takes `--locale` and `--yes-no`.
+- The `<credit-matrix>` element takes a `levels` attribute, which marks Equal and Supporting
+  contributions in the heatmap and the statement.
+
 ## [0.11.0] - 2026-11-01
 
 ### Added

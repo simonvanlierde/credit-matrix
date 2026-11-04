@@ -42,6 +42,15 @@ describe("<credit-matrix>", () => {
     }
   });
 
+  it("marks non-lead contributions with their level when levels is set", async () => {
+    const half = toJson([createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 50 }] })]);
+    const inline = `<script type="application/json">${half}</script>`;
+    const plain = await mount(`<credit-matrix>${inline}</credit-matrix>`);
+    expect(plain.querySelector("p")?.textContent).toBe("CRediT: Software: Jane Smith");
+    const levels = await mount(`<credit-matrix levels>${inline}</credit-matrix>`);
+    expect(levels.querySelector("p")?.textContent).toBe("CRediT: Software: Jane Smith (Equal)");
+  });
+
   it("says so when the inline data is not an export", async () => {
     const root = await mount("<credit-matrix><script type='application/json'>{</script></credit-matrix>");
     expect(root.querySelector("[role=alert]")?.textContent).toBe(

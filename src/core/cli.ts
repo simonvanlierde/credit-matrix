@@ -20,9 +20,11 @@ import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
 import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
+import { buildHeatmapSvg } from "./export/heatmap-svg";
 import { toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
 import { toMarkdown } from "./export/markdown";
+import { toTenzing } from "./export/tenzing";
 import { toJats4rXml } from "./export/xml";
 import type { XmlParser } from "./export/xml-import";
 import { generateStatement, STATEMENT_FORMATS, type StatementFormat } from "./generate-statement";
@@ -43,15 +45,18 @@ Commands:
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
       --format codemeta prints linked CodeMeta 3.0 people and roles, with
       non-authors in contributor. Warns about local identities and omitted scores.
-  convert <file> --to json|csv|jats|crossref|md|latex-credits [--yes-no] [--locale <code>]
+  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg [--yes-no] [--locale <code>]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
       and latex-credits writes 1 or 0.
-      --locale sets the language of the md role names.
+      --locale sets the language of the md role names and the svg labels.
       crossref prints the <contributors> block of a Crossref deposit (schema
       5.5.0), which has no levels.
       latex-credits prints \\credit lines for the latex-credits LaTeX package,
       with the levels as shades. It lists authors only.
+      tenzing prints the contributions as a Tenzing-style CSV table.
+      svg prints the contribution heatmap as an SVG image; --yes-no draws
+      flat cells with no levels.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
       Print a link that asks one contributor to check their roles,
       or with --blank, to fill them in from scratch.
@@ -265,8 +270,19 @@ export async function run(argv: string[]): Promise<string> {
           if (!tex.includes("\\credit{")) throw new Error("No roles assigned yet: the latex-credits export is empty.");
           return tex;
         }
+        case "tenzing":
+          return toTenzing(authors);
+        case "svg": {
+          const locale = requireLocale(values.locale);
+          return buildHeatmapSvg(authors, {
+            locale,
+            showLevels: !values["yes-no"],
+            translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
+            translateUi: makeUiTranslator(await loadUiCatalog(locale)),
+          });
+        }
         default:
-          throw new UsageError("convert needs --to json, csv, jats, crossref, md or latex-credits.");
+          throw new UsageError("convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing or svg.");
       }
     case "ask": {
       const wanted = values.contributor?.trim();

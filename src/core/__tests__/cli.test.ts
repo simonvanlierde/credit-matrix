@@ -156,6 +156,15 @@ describe("credit-matrix convert", () => {
     expect(await run(["statement", file("ticks.xml", xml)])).toBe(await run(["statement", ticks]));
   });
 
+  it("writes Tenzing and the heatmap SVG", async () => {
+    expect(await run(["convert", csv, "--to", "tenzing"])).toMatch(/^Author\/Acknowledgee,/);
+    const svg = await run(["convert", csv, "--to", "svg"]);
+    expect(svg).toMatch(/^<svg /);
+    expect(svg).toContain("Jane Smith");
+    expect(await run(["convert", csv, "--to", "svg", "--locale", "fr"])).toContain("Logiciel");
+    expect(await run(["convert", csv, "--to", "svg", "--yes-no"])).not.toBe(svg);
+  });
+
   it("writes Markdown in the --locale language", async () => {
     const md = await run(["convert", csv, "--to", "md", "--locale", "fr"]);
     expect(md).toContain("| Jane Smith | Conceptualisation");
@@ -164,7 +173,9 @@ describe("credit-matrix convert", () => {
   });
 
   it("needs --to", async () => {
-    await expect(run(["convert", csv])).rejects.toThrow(/--to json, csv, jats, crossref, md or latex-credits/);
+    await expect(run(["convert", csv])).rejects.toThrow(
+      /--to json, csv, jats, crossref, md, latex-credits, tenzing or svg/,
+    );
   });
 });
 
@@ -304,7 +315,7 @@ describe("credit-matrix as a program", () => {
     const { out, err } = await launch("convert", csv);
     expect(out).toBe("");
     expect(err).toBe(
-      "credit-matrix: convert needs --to json, csv, jats, crossref, md or latex-credits.\nRun 'credit-matrix --help' for usage.\n",
+      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing or svg.\nRun 'credit-matrix --help' for usage.\n",
     );
     expect(process.exitCode).toBe(2);
   });

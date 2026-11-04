@@ -1,6 +1,6 @@
 // element.d.ts
 /**
- * `<credit-matrix src="contributions.json" format="by-author" locale="fr">`:
+ * `<credit-matrix src="contributions.json" format="by-author" locale="fr" levels>`:
  * the CRediT statement and contribution heatmap for a CRediT Matrix JSON
  * export, read from `src` or from a `<script type="application/json">` child.
  */
