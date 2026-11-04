@@ -1,9 +1,11 @@
-import type { Author } from "../author";
-import { activeContributions, normalizeOrcid, ORCID_INPUT_REGEX } from "../author";
-import { getRoleByName } from "../credit-roles";
+import type { Author, Contribution } from "../author";
+import { activeContributions, isValidOrcid, normalizeOrcid, ORCID_INPUT_REGEX } from "../author";
+import { CREDIT_ROLES, getRoleByName } from "../credit-roles";
+import { cleanNamePart, createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 import { givenNamesOf, suffixOf } from "./xml";
+import { parseXml, type XmlParser } from "./xml-import";
 
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
@@ -45,12 +47,77 @@ function personToXml(author: Author, first: boolean): string {
     `<role vocab="crossref" type="${author.contributorType === "non-author" ? "other" : "author"}"/>`,
     ...(author.corresponding ? ['<role vocab="crossref" type="corresponding-author"/>'] : []),
     // Crossref's CRediT values are the slugs of the credit.niso.org role URLs.
-    ...activeContributions(author).map(
-      (c) => `<role vocab="credit" type="${getRoleByName(c.role).url.split("/").at(-2)}"/>`,
-    ),
+    ...activeContributions(author).map((c) => `<role vocab="credit" type="${creditSlug(getRoleByName(c.role).url)}"/>`),
     ...(author.orcid ? [`<ORCID>https://orcid.org/${escapeXml(normalizeOrcid(author.orcid))}</ORCID>`] : []),
   ];
   return `  <person_name sequence="${first ? "first" : "additional"}">
 ${lines.map((line) => `    ${line}`).join("\n")}
   </person_name>`;
+}
+
+/** The slug Crossref uses for a CRediT role: the last path part of its credit.niso.org URL. */
+const creditSlug = (url: string) => url.split("/").at(-2);
+
+/** Whether text opens with a Crossref `<contributors>` block, after any BOM, XML declaration and comments. */
+export function isCrossrefContributors(text: string): boolean {
+  // Plain indexOf steps, not one regex: comment bodies cannot cross `-->`, so matching stays linear.
+  let rest = text.replace(/^\uFEFF/, "").trim();
+  if (rest.startsWith("<?xml")) {
+    const end = rest.indexOf("?>");
+    if (end < 0) return false;
+    rest = rest.slice(end + 2).trimStart();
+  }
+  while (rest.startsWith("<!--")) {
+    const end = rest.indexOf("-->", 4);
+    if (end < 0) return false;
+    rest = rest.slice(end + 3).trimStart();
+  }
+  return /^<contributors[\s/>]/.test(rest);
+}
+
+const squash = (text: string | null | undefined) => (text ?? "").replace(/\s+/g, " ").trim();
+
+/**
+ * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
+ * The block holds no contribution levels, so every listed CRediT role comes back as lead.
+ * The display name is rebuilt as given name + surname + suffix, as `fromJats4rXml` does,
+ * so a family-first name such as "Smith, Jane" comes back as "Jane Smith".
+ * Same safety rules and `parser` as `fromJats4rXml`.
+ */
+export function fromCrossrefContributors(xml: string, { parser }: { parser?: XmlParser } = {}): Author[] {
+  const doc = parseXml(xml, parser, "fromCrossrefContributors");
+  const authors = Array.from(doc.querySelectorAll("person_name")).flatMap((person) => {
+    // Mirrors the JATS reader skipping nested contribs: a wrapper's own text would repeat its members, and the scan is quadratic.
+    if (person.querySelector("person_name")) return [];
+    const given = squash(person.querySelector("given_name")?.textContent);
+    const surname = squash(person.querySelector("surname")?.textContent);
+    const suffix = squash(person.querySelector("suffix")?.textContent);
+    const displayName = [given, surname, suffix].filter(Boolean).join(" ");
+    if (!displayName) return [];
+    const roles = Array.from(person.querySelectorAll("role"));
+    const typesOf = (vocab: string) =>
+      roles.filter((r) => r.getAttribute("vocab") === vocab).map((r) => r.getAttribute("type") ?? "");
+    const crossref = typesOf("crossref");
+    const credited = new Set(typesOf("credit"));
+    const contributions: Contribution[] = CREDIT_ROLES.map((r) => ({
+      role: r.name,
+      score: credited.has(creditSlug(r.url) ?? "") ? 100 : 0,
+    }));
+    const givenParts = cleanNamePart(given).split(/\s+/).filter(Boolean);
+    const orcid = normalizeOrcid(squash(person.querySelector("ORCID")?.textContent));
+    try {
+      return [
+        createAuthor(displayName, {
+          contributions,
+          contributorType: crossref.includes("other") && !crossref.includes("author") ? "non-author" : "author",
+          corresponding: crossref.includes("corresponding-author"),
+          ...(given && surname ? { firstName: givenParts[0], middleName: givenParts[1] ?? "", surname } : {}),
+          ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),
+        }),
+      ];
+    } catch {
+      return [];
+    }
+  });
+  return deduplicateAuthorInitials(authors);
 }

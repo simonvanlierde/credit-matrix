@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Import reads the Crossref `<contributors>` block the app exports, in the import box and with
+  `importAny`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
+  has no contribution levels, so every listed role comes back as lead.
+
 ## [0.11.0] - 2026-11-01
 
 ### Added

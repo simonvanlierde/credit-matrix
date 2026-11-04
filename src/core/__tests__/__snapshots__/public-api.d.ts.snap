@@ -947,6 +947,25 @@ export declare function toCodemeta(authors: Author[]): {
   metadata: CodemetaAttribution;
   warnings: string[];
 };
+/** The part of a DOM element the importer reads. Browser and linkedom elements both fit. */
+interface XmlElement {
+  readonly textContent: string | null;
+  getAttribute(name: string): string | null;
+  querySelector(selectors: string): XmlElement | null;
+  querySelectorAll(selectors: string): ArrayLike<XmlElement>;
+}
+/** A `DOMParser`: the browser's own, or linkedom's in Node. */
+interface XmlParser {
+  parseFromString(xml: string, type: "application/xml"): Pick<XmlElement, "querySelector" | "querySelectorAll">;
+}
+/**
+ * Parse a JATS4R XML string (as produced by `toJats4rXml()` or the original
+ * Python app) back into an Author array. `parser` defaults to the global
+ * `DOMParser`; pass one where there is none, such as linkedom's in Node.
+ */
+export declare function fromJats4rXml(xmlString: string, { parser }?: {
+  parser?: XmlParser;
+}): Author[];
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
  * later), for a publisher to paste into the work's record. Each person gets a
@@ -959,6 +978,16 @@ export declare function toCodemeta(authors: Author[]): {
  * after its ORCID iD has no name to deposit, so it is left out with a comment.
  */
 export declare function toCrossrefContributors(authors: Author[]): string;
+/**
+ * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
+ * The block holds no contribution levels, so every listed CRediT role comes back as lead.
+ * The display name is rebuilt as given name + surname + suffix, as `fromJats4rXml` does,
+ * so a family-first name such as "Smith, Jane" comes back as "Jane Smith".
+ * Same safety rules and `parser` as `fromJats4rXml`.
+ */
+export declare function fromCrossrefContributors(xml: string, { parser }?: {
+  parser?: XmlParser;
+}): Author[];
 export declare function toCsv(authors: Author[]): string;
 export declare function fromCsv(csv: string): Author[];
 interface HeatmapSvgOptions {
@@ -1083,25 +1112,6 @@ export declare function fromTenzing(text: string): Author[];
 export declare function toJats4rXml(authors: Author[], { yesNo }?: {
   yesNo?: boolean;
 }): string;
-/** The part of a DOM element the importer reads. Browser and linkedom elements both fit. */
-interface XmlElement {
-  readonly textContent: string | null;
-  getAttribute(name: string): string | null;
-  querySelector(selectors: string): XmlElement | null;
-  querySelectorAll(selectors: string): ArrayLike<XmlElement>;
-}
-/** A `DOMParser`: the browser's own, or linkedom's in Node. */
-interface XmlParser {
-  parseFromString(xml: string, type: "application/xml"): Pick<XmlElement, "querySelector" | "querySelectorAll">;
-}
-/**
- * Parse a JATS4R XML string (as produced by `toJats4rXml()` or the original
- * Python app) back into an Author array. `parser` defaults to the global
- * `DOMParser`; pass one where there is none, such as linkedom's in Node.
- */
-export declare function fromJats4rXml(xmlString: string, { parser }?: {
-  parser?: XmlParser;
-}): Author[];
 export declare const STATEMENT_FORMATS: readonly ["by-role", "by-role-short", "by-author", "by-author-short"];
 type StatementFormat = (typeof STATEMENT_FORMATS)[number];
 interface StatementOptions {
@@ -1166,7 +1176,7 @@ interface StatementOptions {
  *   "CRediT: JAS: Conceptualization, Data curation; BW: Investigation; ..."
  */
 export declare function generateStatement(authors: Author[], options: StatementOptions): string;
-type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "statement" | "names" | "unknown";
+type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "xml" | "crossref" | "statement" | "names" | "unknown";
 /** Guess what pasted or loaded text is, from its shape alone. */
 export declare function detectFormat(text: string): DetectedFormat;
 /** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */

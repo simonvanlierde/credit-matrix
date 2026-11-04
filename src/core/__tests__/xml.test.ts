@@ -161,8 +161,14 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
         `<!ENTITY x "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">]><article>${contrib}</article>`,
     ],
     ["a lower-case declaration", `<!DOCTYPE article [<!entity x "Smith">]><article>${contrib}</article>`],
+    [
+      "an attribute-list declaration",
+      `<!DOCTYPE article [<!ATTLIST contrib x CDATA "y">]><article>${contrib}</article>`,
+    ],
   ])("refuses %s", (_, xml) => {
-    expect(() => fromJats4rXml(xml)).toThrow(/^XML parse error: entity declarations are not supported/);
+    expect(() => fromJats4rXml(xml)).toThrow(
+      /^XML parse error: entity and attribute-list declarations are not supported/,
+    );
   });
 });
 
