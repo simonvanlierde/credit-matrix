@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import subprocess
+import sys
 from collections.abc import Generator, Iterable
 from pathlib import Path
 from typing import Any
@@ -163,11 +164,11 @@ class Tracker:
 
     def epochs(self, log: Path) -> None:
         """The dev F1 at the best threshold and the elapsed seconds after each epoch of `log` (metrics.jsonl)."""
-        for line in log.read_text(encoding="utf-8").splitlines():
-            record = json.loads(line)
-            if "epoch" in record:
-                f1 = max(row["f1"] for row in record["dev"].values())
-                self.metrics({"dev_f1": f1, "seconds": record["seconds"]}, step=record["epoch"])
+        self.epochs_from(epoch_points(log.read_text(encoding="utf-8").splitlines()))
+
+    def epochs_from(self, points: list[tuple[dict[str, float], int]]) -> None:
+        for metrics, step in points:
+            self.metrics(metrics, step=step)
 
     def energy(self, energy: dict[str, Any]) -> None:
         """kWh by component as metrics; how each figure was got, and why not, as tags."""
@@ -185,29 +186,125 @@ class Tracker:
         )
 
 
+def epoch_points(lines: list[str]) -> list[tuple[dict[str, float], int]]:
+    """(metrics, epoch) for each epoch line of a metrics.jsonl; raises on a line that is not valid."""
+    points = []
+    for line in lines:
+        record = json.loads(line)
+        if "epoch" in record:
+            f1 = max(row["f1"] for row in record["dev"].values())
+            points.append(({"dev_f1": f1, "seconds": record["seconds"]}, record["epoch"]))
+    return points
+
+
 @contextlib.contextmanager
-def tracking(db: Path, experiment: str, name: str, kind: str) -> Generator[Tracker]:
+def tracking(
+    db: Path, experiment: str, name: str, kind: str, current: bool = True, start_time: int | None = None
+) -> Generator[Tracker]:
     """Open an MLflow run `name` in `experiment`, tagged with the facts every run shares. The store is
-    MLFLOW_TRACKING_URI, else the SQLite file `db`. An exception in the block marks the run failed."""
+    MLFLOW_TRACKING_URI, else the SQLite file `db`. An exception in the block marks the run failed.
+    `current=False` leaves out the facts about this checkout, for a run that happened earlier, and
+    `start_time` (epoch milliseconds) says when it started. A train run is tagged `run_dir` with its
+    name, which is its directory name, so `backfill` knows it is already there."""
     try:
         import mlflow
     except ImportError:
-        print("MLflow is not installed; tracking skipped (`uv sync --group train` adds it)")
+        print("MLflow is not installed; tracking skipped (`uv sync --group tracking` adds it)")
         yield Tracker()
         return
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{db}")
-    mlflow.set_experiment(experiment)
+    exp = mlflow.set_experiment(experiment)
     lock = PACKAGE / "uv.lock"
-    with mlflow.start_run(run_name=name):
+    # start_run cannot set a start time; a run created with one and then resumed keeps it.
+    run_id = None
+    if start_time is not None:
+        run_id = mlflow.MlflowClient().create_run(exp.experiment_id, start_time, run_name=name).info.run_id
+    with mlflow.start_run(run_id=run_id, run_name=None if run_id else name):
         tracker = Tracker(mlflow)
-        tracker.tags(
-            {
-                "kind": kind,
-                "mlflow.source.git.commit": git_commit(),
-                "git_dirty": git_dirty(),
-                "uv_lock_sha256": sha256(lock) if lock.exists() else None,
-                # Set by the job script that starts the container, e.g. from `docker inspect`.
-                "image_digest": os.environ.get("CENSUS_IMAGE_DIGEST"),
-            }
-        )
+        tracker.tags({"kind": kind, "run_dir": name if kind == "train" else None})
+        if current:
+            tracker.tags(
+                {
+                    "mlflow.source.git.commit": git_commit(),
+                    "git_dirty": git_dirty(),
+                    "uv_lock_sha256": sha256(lock) if lock.exists() else None,
+                    # Set by the job script that starts the container, e.g. from `docker inspect`.
+                    "image_digest": os.environ.get("CENSUS_IMAGE_DIGEST"),
+                }
+            )
         yield tracker
+
+
+def _read_run(run: Path) -> tuple[dict[str, Any], dict[str, Any], list, bool, dict[str, Any] | None, int, int]:
+    """Parse a run directory fully: (config, manifest, epoch points, finished, best scores or None, start ms,
+    end ms). Start and end are the oldest and newest file times. Raises on bad files."""
+    config = json.loads((run / "config.json").read_text(encoding="utf-8"))
+    log = run / "metrics.jsonl"
+    lines = log.read_text(encoding="utf-8").splitlines() if log.exists() else []
+    first = json.loads(lines[0]) if lines else {}
+    manifest = {} if "step" in first or "epoch" in first else first
+    points = epoch_points(lines)
+    best_file = run / "best.json"
+    best = json.loads(best_file.read_text(encoding="utf-8")) if best_file.exists() else None
+    # best.json appears after the first improving epoch, so only the epoch count says the run ended.
+    finished = len(points) >= config["epochs"]
+    times = [f.stat().st_mtime for f in run.iterdir() if f.is_file()]
+    return config, manifest, points, finished, best, int(min(times) * 1000), int(max(times) * 1000)
+
+
+def backfill(db: Path, experiment: str, runs: Path) -> tuple[int, int]:
+    """Record every training run directory under `runs` that the store does not hold yet, and return
+    (added, already there). A run is told apart by its directory name, the tag `run_dir`. Each holds
+    `config.json` (params), `metrics.jsonl` (a manifest line, then loss and per-epoch dev scores) and
+    `best.json` (the best epoch's scores). A run is `finished` when it logged all `epochs` epochs.
+    A run tracked live counts whatever its status; a backfilled one only once FINISHED, and one that is not
+    (an import that failed) is deleted and imported again. A directory that cannot be parsed or recorded is
+    reported on stderr and left out, to be retried next time."""
+    try:
+        import mlflow
+    except ImportError:
+        raise RuntimeError("MLflow is not installed; `uv sync --group tracking` adds it") from None
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{db}")
+    exp = mlflow.set_experiment(experiment)
+    client = mlflow.MlflowClient()
+    known = set()
+    for r in client.search_runs([exp.experiment_id], max_results=50_000):
+        if "run_dir" not in r.data.tags:
+            continue
+        if r.data.tags.get("backfilled") == "True" and r.info.status != "FINISHED":
+            client.delete_run(r.info.run_id)
+        else:
+            known.add(r.data.tags["run_dir"])
+    added = already = 0
+    for run in sorted(p for p in runs.iterdir() if (p / "config.json").exists()):
+        if run.name in known:
+            already += 1
+            continue
+        try:
+            config, manifest, points, finished, best, start, end = _read_run(run)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+            print(f"skipped {run.name}: {type(error).__name__}: {error}", file=sys.stderr)
+            continue
+        try:
+            with tracking(db, experiment, run.name, "train", current=False, start_time=start) as t:
+                active = mlflow.active_run()
+                assert active is not None  # tracking() opened it
+                run_id = active.info.run_id
+                t.params({f"config.{k}": v for k, v in config.items()})
+                t.tags(
+                    {
+                        "backfilled": True,
+                        "finished": finished,
+                        "mlflow.source.git.commit": manifest.get("git_commit"),
+                        **{f"manifest.{k}": v for k, v in manifest.items() if k != "git_commit"},
+                    }
+                )
+                t.epochs_from(points)
+                if best:
+                    t.metrics({f"best_{k}": v for k, v in best.items()})
+        except Exception as error:  # the store refused a value; the run is left FAILED and replaced next time
+            print(f"skipped {run.name}: {type(error).__name__}: {error}", file=sys.stderr)
+            continue
+        client.set_terminated(run_id, end_time=end)
+        added += 1
+    return added, already
