@@ -40,24 +40,6 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     // and reading the group would pick up the first member's name again.
     if (contrib.querySelector("contrib")) return [];
 
-    const givenNamesEl = contrib.querySelector("given-names");
-    const surnameEl = contrib.querySelector("surname");
-
-    // Pretty-printed XML can leave line breaks and indentation inside a name.
-    const givenNames = (givenNamesEl?.textContent ?? "").replace(/\s+/g, " ").trim();
-    const surname = (surnameEl?.textContent ?? "").replace(/\s+/g, " ").trim();
-    const suffix = (contrib.querySelector("suffix")?.textContent ?? "").replace(/\s+/g, " ").trim();
-
-    const displayName = [givenNames, surname, suffix].filter(Boolean).join(" ");
-    // Split given names the same way `parseNameParts` does for its comma branch:
-    // first token is the first name, the second (if any) is the middle name.
-    const givenParts = cleanNamePart(givenNames).split(/\s+/).filter(Boolean);
-    const givenFirst = givenParts[0] ?? "";
-    const givenMiddle = givenParts[1] ?? "";
-    // Skip nameless contribs (e.g. a <collab> group, or a malformed entry)
-    // rather than throwing and discarding every other valid author.
-    if (!displayName) return [];
-
     // Parse role elements. The `vocab-term-identifier` URL is authoritative; then
     // `vocab-term`, then the text content, read whatever their case or dash
     // ("Writing - original draft").
@@ -79,35 +61,23 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
       score: scoreByRole.get(r.name) ?? 0,
     }));
 
-    // The iD is a full URI (JATS4R) or bare (older exports); state keeps it bare.
-    // biome-ignore lint/security/noSecrets: this is a CSS attribute selector, not a credential.
-    const orcidEl = contrib.querySelector('contrib-id[contrib-id-type="orcid"]');
-    const orcid = normalizeOrcid(orcidEl?.textContent?.trim() ?? "");
     const contributorType = contribType === "contributor" ? "non-author" : "author";
     // JATS spells both markers "yes"; anything else, including absence, is no.
     const equalContribution = contrib.getAttribute("equal-contrib") === "yes";
     const corresponding = contrib.getAttribute("corresp") === "yes";
 
-    // Skip a rejected contrib (e.g. a name with no letters) rather than
-    // aborting the whole import.
-    try {
-      return [
-        createAuthor(displayName, {
-          contributions,
-          contributorType,
-          equalContribution,
-          corresponding,
-          // JATS already separates the parts, so hand them over instead of
-          // letting the parser re-split `displayName`, which would read a double
-          // surname ("García López") back as middle name "García" + surname "López".
-          ...(givenNames && surname ? { firstName: givenFirst, middleName: givenMiddle, surname } : {}),
-          // Drop an unparseable ORCID rather than aborting the whole import.
-          ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),
-        }),
-      ];
-    } catch {
-      return [];
-    }
+    const person = readPerson(
+      {
+        given: contrib.querySelector("given-names")?.textContent,
+        surname: contrib.querySelector("surname")?.textContent,
+        suffix: contrib.querySelector("suffix")?.textContent,
+        // The iD is a full URI (JATS4R) or bare (older exports); state keeps it bare.
+        // biome-ignore lint/security/noSecrets: this is a CSS attribute selector, not a credential.
+        orcid: contrib.querySelector('contrib-id[contrib-id-type="orcid"]')?.textContent,
+      },
+      { contributions, contributorType, equalContribution, corresponding },
+    );
+    return person ? [person] : [];
   });
 
   return deduplicateAuthorInitials(authors);
@@ -140,4 +110,33 @@ function normalizeRoleUrl(url: string): string {
     .toLowerCase()
     .replace(/^https?:\/\//, "")
     .replace(/\/+$/, "");
+}
+
+const squash = (text: string | null | undefined) => (text ?? "").replace(/\s+/g, " ").trim();
+
+/**
+ * Build one author from the name and ORCID text a reader found. Squashes the whitespace pretty-printed
+ * XML leaves in a name, hands the parts over pre-split so a double surname survives, and drops an
+ * unparseable ORCID. Returns null for a nameless or rejected entry, so one bad person never aborts the import.
+ */
+export function readPerson(
+  text: { given?: string | null; surname?: string | null; suffix?: string | null; orcid?: string | null },
+  overrides: Partial<Pick<Author, "contributions" | "contributorType" | "equalContribution" | "corresponding">>,
+): Author | null {
+  const given = squash(text.given);
+  const surname = squash(text.surname);
+  const displayName = [given, surname, squash(text.suffix)].filter(Boolean).join(" ");
+  if (!displayName) return null;
+  // Same split as `parseNameParts` makes for its comma branch: first token first name, second middle name.
+  const [first = "", middle = ""] = cleanNamePart(given).split(/\s+/).filter(Boolean);
+  const orcid = normalizeOrcid(squash(text.orcid));
+  try {
+    return createAuthor(displayName, {
+      ...overrides,
+      ...(given && surname ? { firstName: first, middleName: middle, surname } : {}),
+      ...(orcid && isValidOrcid(orcid) ? { orcid } : {}),
+    });
+  } catch {
+    return null;
+  }
 }

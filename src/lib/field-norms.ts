@@ -1,4 +1,5 @@
 import { type Author, CREDIT_ROLES, type CreditRoleName } from "@/core";
+import { creditSlug } from "@/core/credit-roles";
 import data from "@/data/field-norms.json";
 
 /** Where an author sits in the byline, as the census counts it. */
@@ -63,7 +64,7 @@ export function normRows(field: string | null, norms: FieldNorms = NORMS): NormR
   const entry = field ? norms.fields[field] : undefined;
   if (!entry) return null;
   return CREDIT_ROLES.map((role) => {
-    const slug = role.url.split("/").at(-2) ?? "";
+    const slug = creditSlug(role.url);
     const column = norms.roles.indexOf(slug);
     const shares = Object.fromEntries(
       POSITIONS.map((position) => [position, entry.shares[position]?.[column] ?? null]),

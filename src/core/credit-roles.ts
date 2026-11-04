@@ -135,3 +135,6 @@ export function roleNamed(text: string): CreditRoleName | undefined {
   const wanted = headerKey(text);
   return CREDIT_ROLES.find((role) => headerKey(role.name) === wanted)?.name;
 }
+
+/** The role's slug in its CRediT URL ("conceptualization" for ".../conceptualization/"). */
+export const creditSlug = (url: string): string => url.split("/").at(-2) ?? "";

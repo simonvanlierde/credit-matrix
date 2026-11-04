@@ -2,6 +2,7 @@ import { act, render, screen, within } from "@testing-library/react";
 import { IntlProvider } from "use-intl";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
+import { creditSlug } from "@/core/credit-roles";
 import { type FieldNorms, NORM_FIELDS, NORMS, normRows, positionOf, selfPosition } from "@/lib/field-norms";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
@@ -80,7 +81,7 @@ describe("normRows", () => {
       }
     }
     // A renamed slug on either side would leave a row of dashes.
-    expect(NORMS.roles).toEqual(CREDIT_ROLES.map((role) => role.url.split("/").at(-2)));
+    expect(NORMS.roles).toEqual(CREDIT_ROLES.map((role) => creditSlug(role.url)));
   });
 });
 

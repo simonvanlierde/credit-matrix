@@ -1,7 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; the corpus is a file on disk
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES } from "../credit-roles";
+import { CREDIT_ROLES, creditSlug } from "../credit-roles";
 import {
   MAX_STATEMENT_LENGTH,
   namesCredit,
@@ -13,7 +13,7 @@ import {
 } from "../statement";
 import { BY_AUTHOR, BY_ROLE } from "./statement-fixtures";
 
-const SLUG = new Map(CREDIT_ROLES.map((role) => [role.name, role.url.split("/").at(-2) ?? ""]));
+const SLUG = new Map(CREDIT_ROLES.map((role) => [role.name, creditSlug(role.url)]));
 const author = (given: string, surname: string): StatementAuthor => ({ given, surname });
 
 /** The parse as the census tests write it: sorted [index, slug] pairs and the unresolved tokens. */

@@ -16,7 +16,7 @@
  * Initials that fit no author, or several, are reported, never guessed.
  */
 import type { Author } from "./author";
-import { CREDIT_ROLES, type CreditRoleName } from "./credit-roles";
+import { CREDIT_ROLES, type CreditRoleName, creditSlug } from "./credit-roles";
 
 /** An author as the parser needs it: given names and surname, as separate strings. */
 export interface StatementAuthor {
@@ -87,7 +87,7 @@ const ROLE_RE = new RegExp(
     .join("|"),
   "giu",
 );
-const ROLE_BY_SLUG = new Map(CREDIT_ROLES.map((role) => [role.url.split("/").at(-2), role.name]));
+const ROLE_BY_SLUG = new Map(CREDIT_ROLES.map((role) => [creditSlug(role.url), role.name]));
 
 // Terms prose rarely uses. "Supervision", "software" or "investigation" alone turn up in narrative
 // statements ("under the supervision of NS") and ICMJE lists, which are not CRediT.
@@ -588,7 +588,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
     assignments: [...assignments]
       .map((pair) => {
         const [i, slug] = pair.split(" ");
-        return { author: Number(i), role: ROLE_BY_SLUG.get(slug) as CreditRoleName };
+        return { author: Number(i), role: ROLE_BY_SLUG.get(slug ?? "") as CreditRoleName };
       })
       .sort((a, b) => a.author - b.author || roleOrder(a.role) - roleOrder(b.role)),
     unresolved,
