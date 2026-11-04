@@ -245,6 +245,7 @@
   "errImportNoCsvRows": "CSV に貢献者の行が見つかりませんでした。",
   "errImportNoJsonContributors": "その JSON エクスポートには貢献者が含まれていません。",
   "errImportNoXmlContribs": "XML に <contrib> 要素が見つかりませんでした。",
+  "errImportNoCrossrefContribs": "Crossref XML に <person_name> を含む <contributors> ブロックが見つかりませんでした。",
   "aboutTagline": "CRediT の著者貢献を作成し、グリッドを貢献ヒートマップとしてエクスポートできます。",
   "aboutInspiredBy": "着想のもとになったオリジナル版：",
   "aboutOutputTranslations": "出力の翻訳提供：",

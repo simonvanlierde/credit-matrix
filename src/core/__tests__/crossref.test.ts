@@ -3,7 +3,7 @@ import { writeFileSync } from "node:fs";
 import process from "node:process";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES } from "../credit-roles";
-import { fromCrossrefContributors, toCrossrefContributors } from "../export/crossref";
+import { fromCrossrefContributors, isCrossrefContributors, toCrossrefContributors } from "../export/crossref";
 import { detectFormat, importAny } from "../import";
 import { createAuthor } from "../parse-authors";
 
@@ -167,5 +167,32 @@ describe("fromCrossrefContributors", () => {
         '<contributors><person_name><role vocab="crossref" type="author"/></person_name></contributors>',
       ),
     ).toEqual([]);
+  });
+});
+
+describe("isCrossrefContributors", () => {
+  it("stays fast on runs of empty comments", () => {
+    for (const n of [30, 5000]) {
+      const start = performance.now();
+      expect(isCrossrefContributors(`${"<!---->".repeat(n)}<x/>`)).toBe(false);
+      expect(isCrossrefContributors(`${"<!---->".repeat(n)}<contributors>`)).toBe(true);
+      expect(performance.now() - start).toBeLessThan(100);
+    }
+  });
+
+  it("accepts a BOM, a declaration, comments and a self-closing root", () => {
+    expect(isCrossrefContributors('\uFEFF<?xml version="1.0"?>\n<!-- a -->\n<!-- b -->\n<contributors/>')).toBe(true);
+    expect(isCrossrefContributors("<contributorsX>")).toBe(false);
+  });
+});
+
+describe("fromCrossrefContributors display name", () => {
+  it("rebuilds the name as given + surname + suffix", () => {
+    const xml =
+      "<contributors><person_name><given_name>Jane</given_name><surname>Smith</surname><suffix>Jr</suffix></person_name></contributors>";
+    expect(fromCrossrefContributors(xml).map((a) => a.name)).toEqual(["Jane Smith Jr"]);
+    // A family-first name ("Smith, Jane") comes back given-first, as fromJats4rXml does.
+    const author = createAuthor("Smith, Jane");
+    expect(fromCrossrefContributors(toCrossrefContributors([author])).map((a) => a.name)).toEqual(["Jane Smith"]);
   });
 });

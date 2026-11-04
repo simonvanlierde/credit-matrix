@@ -198,7 +198,7 @@ const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link" | "s
   csv: "errImportNoCsvRows",
   tenzing: "errImportNoCsvRows",
   xml: "errImportNoXmlContribs",
-  crossref: "errImportNoXmlContribs",
+  crossref: "errImportNoCrossrefContribs",
   names: "errImportNoNames",
 };
 

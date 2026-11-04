@@ -245,6 +245,7 @@
   "errImportNoCsvRows": "Não foram encontradas linhas de contribuidores no CSV.",
   "errImportNoJsonContributors": "Essa exportação JSON não contém contribuidores.",
   "errImportNoXmlContribs": "Não foram encontrados elementos <contrib> no XML.",
+  "errImportNoCrossrefContribs": "Não foi encontrado nenhum bloco <contributors> com <person_name> no XML do Crossref.",
   "aboutTagline": "Redigir declarações de contribuição CRediT e exportar a grelha como um mapa de calor de contribuições.",
   "aboutInspiredBy": "Inspirado no original",
   "aboutOutputTranslations": "Traduções dos textos gerados por",

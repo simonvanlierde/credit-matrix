@@ -245,6 +245,7 @@
   "errImportNoCsvRows": "Aucune ligne de contributeur trouvée dans le CSV.",
   "errImportNoJsonContributors": "Cet export JSON ne contient aucun contributeur.",
   "errImportNoXmlContribs": "Aucun élément <contrib> trouvé dans le XML.",
+  "errImportNoCrossrefContribs": "Aucun bloc <contributors> avec <person_name> trouvé dans le XML Crossref.",
   "aboutTagline": "Rédigez des déclarations de contribution CRediT et exportez la grille sous forme de heatmap des contributions.",
   "aboutInspiredBy": "Inspiré du projet original",
   "aboutOutputTranslations": "Traductions de la sortie par",

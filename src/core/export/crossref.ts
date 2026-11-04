@@ -58,9 +58,21 @@ ${lines.map((line) => `    ${line}`).join("\n")}
 /** The slug Crossref uses for a CRediT role: the last path part of its credit.niso.org URL. */
 const creditSlug = (url: string) => url.split("/").at(-2);
 
-/** Whether text opens with a Crossref `<contributors>` block, after any leading comments. */
+/** Whether text opens with a Crossref `<contributors>` block, after any BOM, XML declaration and comments. */
 export function isCrossrefContributors(text: string): boolean {
-  return /^(?:<\?xml[^>]*\?>\s*)?(?:<!--[\s\S]*?-->\s*)*<contributors[\s>]/.test(text.trim());
+  // Plain indexOf steps, not one regex: comment bodies cannot cross `-->`, so matching stays linear.
+  let rest = text.replace(/^\uFEFF/, "").trim();
+  if (rest.startsWith("<?xml")) {
+    const end = rest.indexOf("?>");
+    if (end < 0) return false;
+    rest = rest.slice(end + 2).trimStart();
+  }
+  while (rest.startsWith("<!--")) {
+    const end = rest.indexOf("-->", 4);
+    if (end < 0) return false;
+    rest = rest.slice(end + 3).trimStart();
+  }
+  return /^<contributors[\s/>]/.test(rest);
 }
 
 const squash = (text: string | null | undefined) => (text ?? "").replace(/\s+/g, " ").trim();
@@ -68,11 +80,12 @@ const squash = (text: string | null | undefined) => (text ?? "").replace(/\s+/g,
 /**
  * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
  * The block holds no contribution levels, so every listed CRediT role comes back as lead.
+ * The display name is rebuilt as given name + surname + suffix, as `fromJats4rXml` does,
+ * so a family-first name such as "Smith, Jane" comes back as "Jane Smith".
  * Same safety rules and `parser` as `fromJats4rXml`.
  */
 export function fromCrossrefContributors(xml: string, { parser }: { parser?: XmlParser } = {}): Author[] {
   const doc = parseXml(xml, parser, "fromCrossrefContributors");
-  const roleBySlug = new Map(CREDIT_ROLES.map((r) => [creditSlug(r.url), r.name]));
   const authors = Array.from(doc.querySelectorAll("person_name")).flatMap((person) => {
     const given = squash(person.querySelector("given_name")?.textContent);
     const surname = squash(person.querySelector("surname")?.textContent);

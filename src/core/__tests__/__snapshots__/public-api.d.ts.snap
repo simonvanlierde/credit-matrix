@@ -981,6 +981,8 @@ export declare function toCrossrefContributors(authors: Author[]): string;
 /**
  * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
  * The block holds no contribution levels, so every listed CRediT role comes back as lead.
+ * The display name is rebuilt as given name + surname + suffix, as `fromJats4rXml` does,
+ * so a family-first name such as "Smith, Jane" comes back as "Jane Smith".
  * Same safety rules and `parser` as `fromJats4rXml`.
  */
 export declare function fromCrossrefContributors(xml: string, { parser }?: {

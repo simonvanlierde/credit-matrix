@@ -245,6 +245,7 @@
   "errImportNoCsvRows": "Keine Zeilen mit Mitwirkenden in der CSV gefunden.",
   "errImportNoJsonContributors": "Dieser JSON-Export enthält keine Mitwirkenden.",
   "errImportNoXmlContribs": "Keine <contrib>-Elemente in der XML gefunden.",
+  "errImportNoCrossrefContribs": "Im Crossref-XML wurde kein <contributors>-Block mit <person_name> gefunden.",
   "aboutTagline": "Erstellen Sie CRediT-Beitragserklärungen und exportieren Sie das Raster als Beitrags-Heatmap.",
   "aboutInspiredBy": "Inspiriert vom ursprünglichen Projekt",
   "aboutOutputTranslations": "Übersetzungen der Ausgabe von",

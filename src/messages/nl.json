@@ -245,6 +245,7 @@
   "errImportNoCsvRows": "Geen rijen met bijdragers gevonden in de CSV.",
   "errImportNoJsonContributors": "Deze JSON-export bevat geen bijdragers.",
   "errImportNoXmlContribs": "Geen <contrib>-elementen gevonden in de XML.",
+  "errImportNoCrossrefContribs": "Geen <contributors>-blok met <person_name> gevonden in de Crossref-XML.",
   "aboutTagline": "Stel CRediT-bijdrageverklaringen op en exporteer het raster als bijdrage-heatmap.",
   "aboutInspiredBy": "Geïnspireerd op het oorspronkelijke project",
   "aboutOutputTranslations": "Uitvoervertalingen door",

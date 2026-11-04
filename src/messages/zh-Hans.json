@@ -245,6 +245,7 @@
   "errImportNoCsvRows": "在该 CSV 中未找到贡献者行。",
   "errImportNoJsonContributors": "该 JSON 导出文件中不包含任何贡献者。",
   "errImportNoXmlContribs": "在该 XML 中未找到 <contrib> 元素。",
+  "errImportNoCrossrefContribs": "在 Crossref XML 中未找到包含 <person_name> 的 <contributors> 块。",
   "aboutTagline": "撰写 CRediT 贡献声明，并将网格导出为贡献热图。",
   "aboutInspiredBy": "灵感来自最初的",
   "aboutOutputTranslations": "输出内容的翻译来自",
