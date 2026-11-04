@@ -119,8 +119,8 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
  * expansion can freeze the tab.
  */
 export function parseXml(xmlString: string, parser: XmlParser | undefined, caller: string) {
-  if (/<!ENTITY/i.test(xmlString)) {
-    throw new Error("XML parse error: entity declarations are not supported.");
+  if (/<!(ENTITY|ATTLIST)/i.test(xmlString)) {
+    throw new Error("XML parse error: entity and attribute-list declarations are not supported.");
   }
   if (!parser && typeof DOMParser === "undefined") {
     throw new Error(`${caller} needs a DOMParser: pass { parser } where there is no global one.`);

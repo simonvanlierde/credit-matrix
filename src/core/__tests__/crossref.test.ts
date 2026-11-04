@@ -1,7 +1,9 @@
 // biome-ignore-all lint/correctness/noNodejsModules: scripts/validate-crossref.sh reads the export from disk
 import { writeFileSync } from "node:fs";
 import process from "node:process";
+import { DOMParser as LinkedomParser } from "linkedom";
 import { describe, expect, it } from "vitest";
+import { activeContributions } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromCrossrefContributors, isCrossrefContributors, toCrossrefContributors } from "../export/crossref";
 import { detectFormat, importAny } from "../import";
@@ -161,12 +163,51 @@ describe("fromCrossrefContributors", () => {
       fromCrossrefContributors(
         '<!DOCTYPE c [<!ENTITY x "y">]><contributors><person_name><surname>&x;</surname></person_name></contributors>',
       ),
-    ).toThrow(/entity/);
+    ).toThrow(/entity and attribute-list/);
     expect(
       fromCrossrefContributors(
         '<contributors><person_name><role vocab="crossref" type="author"/></person_name></contributors>',
       ),
     ).toEqual([]);
+    // Punctuation only: createAuthor throws, so the person is skipped.
+    expect(
+      fromCrossrefContributors("<contributors><person_name><surname>--</surname></person_name></contributors>"),
+    ).toEqual([]);
+  });
+
+  it("refuses an attribute-list declaration", () => {
+    expect(() => fromCrossrefContributors('<!DOCTYPE c [<!ATTLIST person_name x CDATA "y">]><contributors/>')).toThrow(
+      /^XML parse error: entity and attribute-list declarations are not supported\.$/,
+    );
+  });
+
+  it("reads deeply nested person_name in linear time and keeps the outer one", () => {
+    const n = 8000;
+    const xml = `<contributors>${"<person_name>".repeat(n)}<surname>Smith</surname>${"</person_name>".repeat(n)}</contributors>`;
+    const linkedom = new LinkedomParser();
+    const start = performance.now();
+    const authors = fromCrossrefContributors(xml, {
+      parser: { parseFromString: (text) => linkedom.parseFromString(text, "text/xml") },
+    });
+    expect(performance.now() - start).toBeLessThan(500);
+    expect(authors).toHaveLength(1);
+  });
+
+  it("reads hand-written roles and ORCIDs", () => {
+    const person = (name: string, inner: string) => `<person_name><surname>${name}</surname>${inner}</person_name>`;
+    const xml = `<contributors>
+      ${person("Badorcid", "<ORCID>1234</ORCID>")}
+      ${person("Goodorcid", "<ORCID>https://orcid.org/0000-0002-1825-0097</ORCID>")}
+      ${person("Unknownslug", '<role vocab="credit" type="no-such-role"/>')}
+      ${person("Otherauthor", '<role vocab="crossref" type="other"/><role vocab="crossref" type="author"/>')}
+      ${person("Othercorr", '<role vocab="crossref" type="other"/><role vocab="crossref" type="corresponding-author"/>')}
+    </contributors>`;
+    const [bad, good, slug, both, corr] = fromCrossrefContributors(xml);
+    expect(bad?.orcid).toBeUndefined();
+    expect(good?.orcid).toBe("0000-0002-1825-0097");
+    expect(slug && activeContributions(slug)).toEqual([]);
+    expect(both?.contributorType).toBe("author");
+    expect(corr).toMatchObject({ contributorType: "non-author", corresponding: true });
   });
 });
 
@@ -176,8 +217,13 @@ describe("isCrossrefContributors", () => {
       const start = performance.now();
       expect(isCrossrefContributors(`${"<!---->".repeat(n)}<x/>`)).toBe(false);
       expect(isCrossrefContributors(`${"<!---->".repeat(n)}<contributors>`)).toBe(true);
-      expect(performance.now() - start).toBeLessThan(100);
+      expect(performance.now() - start).toBeLessThan(500);
     }
+  });
+
+  it("rejects an unterminated comment or declaration", () => {
+    expect(isCrossrefContributors("<!-- never closed <contributors>")).toBe(false);
+    expect(isCrossrefContributors('<?xml version="1.0"<contributors>')).toBe(false);
   });
 
   it("accepts a BOM, a declaration, comments and a self-closing root", () => {

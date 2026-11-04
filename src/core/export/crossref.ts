@@ -87,6 +87,8 @@ const squash = (text: string | null | undefined) => (text ?? "").replace(/\s+/g,
 export function fromCrossrefContributors(xml: string, { parser }: { parser?: XmlParser } = {}): Author[] {
   const doc = parseXml(xml, parser, "fromCrossrefContributors");
   const authors = Array.from(doc.querySelectorAll("person_name")).flatMap((person) => {
+    // Mirrors the JATS reader skipping nested contribs: a wrapper's own text would repeat its members, and the scan is quadratic.
+    if (person.querySelector("person_name")) return [];
     const given = squash(person.querySelector("given_name")?.textContent);
     const surname = squash(person.querySelector("surname")?.textContent);
     const suffix = squash(person.querySelector("suffix")?.textContent);
