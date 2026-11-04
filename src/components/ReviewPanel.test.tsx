@@ -97,7 +97,7 @@ it("does not show a sign-in an offline import could not check as verified", () =
   expect(container.querySelector("[data-orcid-verified]")).toBeNull();
 });
 
-it("warns when an imported sign-in was given in another draft or for another row", () => {
+it("shows a sign-in given in another draft or for another row as a warning, not as verified", () => {
   act(() => {
     useContributionStore.getState().createDraft();
     useContributionStore.getState().addAuthor("Bob White", TEST_ORCID);
@@ -116,10 +116,12 @@ it("warns when an imported sign-in was given in another draft or for another row
   };
   act(() => useContributionStore.getState().loadAuthors([bob], { [bob.id]: { sentAt: 1, prefilled: true, reply } }));
 
-  render(
+  const { container } = render(
     <IntlProvider locale="en" messages={en}>
       <ReviewPanel />
     </IntlProvider>,
   );
-  expect(screen.getByText(en.reviewOrcidSignedElsewhere)).toBeTruthy();
+  expect(screen.getByText(/^Not verified for this row: Bob White \(/)).toBeTruthy();
+  expect(container.querySelector("[data-orcid-verified]")).toBeNull();
+  expect(screen.queryByText("Verified by ORCID", { exact: false })).toBeNull();
 });

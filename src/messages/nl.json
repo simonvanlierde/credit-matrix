@@ -169,7 +169,7 @@
   "reviewOrcidVerified": "Geverifieerd door ORCID als {who}, ingelogd op {date}.",
   "reviewOrcidOtherId": "Dit is niet de iD in de rij.",
   "reviewOrcidNoRowId": "Deze rij heeft geen ORCID iD om mee te vergelijken.",
-  "reviewOrcidSignedElsewhere": "Deze login is gedaan in een ander concept, of voor een rij met een andere naam of iD.",
+  "reviewOrcidSignedElsewhere": "Niet geverifieerd voor deze rij: {who} logde op {date} in met ORCID, maar in een ander concept of voor een rij met een andere naam of iD.",
   "coauthorNotSent": "Nog niet verstuurd.",
   "coauthorCopyInstead": "Kopieer liever de link",
   "coauthorShareTitle": "CRediT-rollen van {name}",

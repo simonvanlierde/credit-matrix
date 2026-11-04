@@ -518,9 +518,12 @@ export function importAnswers(
   let asks: Record<string, Ask> | undefined;
   if (fileAsks) {
     const found: Record<string, Ask> = {};
+    const seen = new Set<string>();
     incoming.forEach((author, index) => {
       const id = mapped[index]?.id;
-      if (!id) return;
+      // normalizeRoster gives a repeated id to its first row only, so that row decides.
+      if (!id || seen.has(id)) return;
+      seen.add(id);
       const filed = Object.hasOwn(fileAsks, author.id) ? fileAsks[author.id] : undefined;
       const kept = Object.hasOwn(held, id) ? held[id] : undefined;
       const landing = mapped[index] as Author;

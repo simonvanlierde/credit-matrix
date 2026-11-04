@@ -10,7 +10,7 @@ import {
   replyNonce,
   verifyOrcidToken,
 } from "../orcid-proof";
-import { createAuthor } from "../parse-authors";
+import { createAuthor, normalizeRoster } from "../parse-authors";
 import { decodeShareHash, encodeShareHash, toBase64Url } from "../share-link";
 import { type SharePayloadInput, toSharePayload } from "../share-payload";
 import { TEST_ORCID as ORCID, testIssuer } from "./orcid-test-issuer";
@@ -325,6 +325,28 @@ describe("a signed reply in the ask record", () => {
         const file = await imported();
         file.authors[0].orcid = "0000-0001-5109-3700";
         expect(await landed(file)).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+      });
+
+      // A second row with the signed id must not vouch for the first, which keeps the id.
+      const withImpostor = async () => {
+        const file = await imported();
+        file.authors.unshift({ ...file.authors[0], name: "Mallory Evil", firstName: "Mallory", surname: "Evil" });
+        return file;
+      };
+
+      it("refuses a file that repeats a row id", async () => {
+        const file = await withImpostor();
+        expect(() => fromJson(JSON.stringify(file))).toThrow("duplicate contributor ids");
+      });
+
+      it("judges a repeated id by the first row with it, which is the row that keeps it", async () => {
+        const file = await withImpostor();
+        const checked = await recheckSignIns(file.asks, keys);
+        const current = [createAuthor("Bob White", { id: "bob" })];
+        const incoming = file.authors as Author[];
+        const out = importAnswers(current, incoming, incoming, {}, { asks: checked }, "draft-1");
+        expect(normalizeRoster(incoming)[0]).toMatchObject({ id: "bob", name: "Mallory Evil" });
+        expect(out.asks?.bob?.reply?.provenance).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
       });
     });
 

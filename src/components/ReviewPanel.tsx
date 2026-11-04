@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BadgeCheck, Check, MessagesSquare } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, CircleAlert, MessagesSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -247,7 +247,18 @@ export function ReviewPanel() {
                   {author.name}
                 </h3>
                 <p className="text-xs text-on-surface-variant">{meta}</p>
-                {signIn && (
+                {signIn && reply.provenance?.signedElsewhere && (
+                  <p className="mt-0.5 flex items-start gap-1 text-xs text-error" data-orcid-signed-elsewhere="">
+                    <CircleAlert className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      {t("reviewOrcidSignedElsewhere", {
+                        who: signIn.name ? `${signIn.name} (${signIn.orcid})` : signIn.orcid,
+                        date: format.dateTime(signIn.issuedAt, { dateStyle: "medium" }),
+                      })}
+                    </span>
+                  </p>
+                )}
+                {signIn && !reply.provenance?.signedElsewhere && (
                   <p className="mt-0.5 flex items-start gap-1 text-xs text-on-surface" data-orcid-verified="">
                     <BadgeCheck className="mt-px size-3.5 shrink-0 text-primary" aria-hidden="true" />
                     <span>
@@ -256,9 +267,6 @@ export function ReviewPanel() {
                         date: format.dateTime(signIn.issuedAt, { dateStyle: "medium" }),
                       })}
                       {otherId && <span data-orcid-other-id=""> {t("reviewOrcidOtherId")}</span>}
-                      {reply.provenance?.signedElsewhere && (
-                        <span data-orcid-signed-elsewhere=""> {t("reviewOrcidSignedElsewhere")}</span>
-                      )}
                       {noRowId && (
                         <span data-orcid-no-row-id="" className="text-on-surface-variant">
                           {" "}

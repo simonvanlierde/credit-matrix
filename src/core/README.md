@@ -246,7 +246,8 @@ cannot be reached, each one moves to `provenance.uncheckedOrcid`, which you shou
 verified, and a later check can still verify it. A sign-in counts only on the row id it signed for.
 `importAnswers` then compares each sign-in with the row it lands on: when it was given in another
 draft, or for a row with another id, name or iD, it sets `provenance.signedElsewhere`, which you
-should show as a warning beside the sign-in.
+should show as a warning instead of as verified. An export carries no draft id, so an honest file
+restored into another draft warns too. `fromJson` refuses a file that repeats a row id.
 To check a reply link's sign-in yourself, pass it to `verifyOrcidToken` with the keys from
 `fetchOrcidKeys()`.
 
