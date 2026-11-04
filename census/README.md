@@ -328,11 +328,12 @@ Failed runs retain their energy figures when CodeCarbon can measure them. Tracki
 MLflow store stop the command. To browse the runs:
 
 ```sh
-uvx --from 'mlflow==3.17.2' mlflow ui --backend-store-uri sqlite:///data/mlflow.db --host 127.0.0.1
+uvx --python 3.14 --from 'mlflow==3.17.2' mlflow ui --backend-store-uri sqlite:///data/mlflow.db --host 127.0.0.1
 ```
 
-The UI listens on 127.0.0.1:5000 only. Keep this version equal to `mlflow-skinny` in `uv.lock`: a newer UI
-migrates the store, and the locked client then refuses it. Runs made before tracking existed come in with
+The UI listens on 127.0.0.1:5000 only. Without `--python 3.14`, uvx picks the newest Python, where pyarrow
+has no wheel yet. Keep the version equal to `mlflow-skinny` in `uv.lock`: a newer UI migrates the store,
+and the locked client then refuses it. Runs made before tracking existed come in with
 `uv run --group tracking census model backfill`, which reads every directory in
 `data/model/<snapshot>/runs/` (config as params, the manifest line of `metrics.jsonl` as `manifest.*`
 tags, the dev F1 per epoch, and the best epoch's scores as `best_*` metrics). A run is tagged
