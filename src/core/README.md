@@ -11,7 +11,7 @@ npm install credit-matrix
 ```ts
 import { generateStatement, importAny, toJats4rXml } from "credit-matrix";
 
-const { authors } = await importAny(csvText); // JSON, CSV, JATS4R XML, a share link or names
+const { authors } = await importAny(csvText); // JSON, CSV, JATS4R or Crossref XML, a share link or names
 generateStatement(authors, { format: "by-role" }); // "CRediT: Conceptualization: Jane Smith; …"
 toJats4rXml(authors);
 ```
@@ -151,7 +151,7 @@ Only non-zero contributions appear in statements.
 | Markdown    | `toMarkdown`      | —                                   |
 | tenzing CSV | `toTenzing`       | `fromTenzing`                       |
 | LaTeX ([latex-credits](https://github.com/Pseudomanifold/latex-credits)) | `toLatexCredits` | — |
-| Crossref 5.5 `<contributors>` | `toCrossrefContributors` | — |
+| Crossref 5.5 `<contributors>` | `toCrossrefContributors` | `fromCrossrefContributors` |
 | Heatmap SVG | `buildHeatmapSvg` | —                                   |
 
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
@@ -171,7 +171,7 @@ funding and declarations are left empty for the team.
 `toLatexCredits` writes one granular `\credit` line per author, with each score as a fraction of 1,
 so `\insertcreditsgranular` shades lead, equal and supporting differently. Acknowledgees are left out.
 
-`fromJats4rXml(xml, { parser })` reads XML with `parser`, which defaults to the global `DOMParser`.
+`fromJats4rXml(xml, { parser })` and `fromCrossrefContributors` read XML with `parser`, which defaults to the global `DOMParser`.
 In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:
 
 ```ts
@@ -271,7 +271,7 @@ holds its exact shape. By entry point:
   - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
-    `toMarkdown`, `toCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
+    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
     `importAny`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`

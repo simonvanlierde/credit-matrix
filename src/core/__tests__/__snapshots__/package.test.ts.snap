@@ -19,6 +19,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "detectFormat",
     "encodeShareHash",
     "fetchOrcidKeys",
+    "fromCrossrefContributors",
     "fromCsv",
     "fromJats4rXml",
     "fromJson",
