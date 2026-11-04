@@ -11,6 +11,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Import reads the Crossref `<contributors>` block the app exports, in the import box and with
   `importAny`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
   has no contribution levels, so every listed role comes back as lead.
+- `credit-matrix convert --to tenzing` and `--to svg` print the Tenzing table and the contribution
+  heatmap. `--to svg` takes `--locale` and `--yes-no`.
+- The `<credit-matrix>` element takes a `levels` attribute, which marks Equal and Supporting
+  contributions in the statement. The heatmap always shows the levels.
 - `importAnswers` sets `provenance.signedElsewhere` when a sign-in was given for a row with another
   id, name or iD; Review shows it as a warning, not as verified.
 - Review shows the paper title a verified ORCID sign-in was given for when it differs from the
@@ -19,10 +23,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
-- `credit-matrix convert --to tenzing` and `--to svg` print the Tenzing table and the contribution
-  heatmap. `--to svg` takes `--locale` and `--yes-no`.
-- The `<credit-matrix>` element takes a `levels` attribute, which marks Equal and Supporting
-  contributions in the statement. The heatmap always shows the levels.
 
 ## [0.11.0] - 2026-11-01
 
