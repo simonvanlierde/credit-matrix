@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `importAnswers` sets `provenance.signedElsewhere` when a sign-in was given for a row with another
+  id, name or iD; Review shows it as a warning, not as verified.
+
+### Changed
+
+- `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
+
 ## [0.11.0] - 2026-11-01
 
 ### Added

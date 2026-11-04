@@ -913,8 +913,9 @@ export declare function applyPatch(state: AskState, patch: Patch): AskState;
  * matched nobody are dropped. Held answers for matched rows the file has none
  * for are kept. `selfId` follows the same rule. `asks` is undefined when the
  * file carries none, and `selfId` when it does not survive. A filed answer's
- * checked sign-in that was given for a row with another id, name or iD than
- * the one it lands on gets `provenance.signedElsewhere`.
+ * checked sign-in gets `provenance.signedElsewhere` when it was given for
+ * another row id than the file row's, or another name or iD than the row it
+ * lands on.
  */
 export declare function importAnswers(current: readonly Author[], incoming: readonly Author[], mapped: readonly Author[], held: Readonly<Record<string, Ask>>, fromFile: {
   asks?: Readonly<Record<string, Ask>>;
@@ -1025,7 +1026,8 @@ export declare class NewerVersionError extends Error {
 /**
  * Serialize authors to a JSON string (pretty-printed). Asks and their answers
  * go in by default; `includeAnswers: false` leaves them out. `selfId` goes in
- * while it names a contributor in the file.
+ * while it names a contributor in the file. Throws a ZodError when two authors
+ * share an id.
  */
 export declare function toJson(authors: Author[], { asks, includeAnswers, selfId }?: {
   asks?: Readonly<Record<string, Ask>>;

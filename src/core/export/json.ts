@@ -34,7 +34,8 @@ export class NewerVersionError extends Error {
 /**
  * Serialize authors to a JSON string (pretty-printed). Asks and their answers
  * go in by default; `includeAnswers: false` leaves them out. `selfId` goes in
- * while it names a contributor in the file.
+ * while it names a contributor in the file. Throws a ZodError when two authors
+ * share an id.
  */
 export function toJson(
   authors: Author[],

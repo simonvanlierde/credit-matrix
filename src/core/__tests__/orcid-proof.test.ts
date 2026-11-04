@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { type AskState, applyPatch, askStep, importAnswers, recheckSignIns } from "../ask";
 import type { Author } from "../author";
 import { fromJson, toJson } from "../export/json";
+import { keepKnownIds } from "../merge-row";
 import {
   fetchOrcidKeys,
   ORCID_CLIENT_ID,
@@ -320,6 +321,39 @@ describe("a signed reply in the ask record", () => {
         const file = await imported();
         file.authors[0].orcid = "0000-0001-5109-3700";
         expect(await landed(file)).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+      });
+
+      it("does not warn when the draft holds the same person under another id", async () => {
+        const { authors, asks } = fromJson(JSON.stringify(await imported()));
+        const checked = await recheckSignIns(asks ?? {}, keys);
+        const current = [createAuthor("Bob White", { id: "b2" })];
+        const mapped = keepKnownIds(current, authors);
+        expect(mapped[0]?.id).toBe("b2");
+        const provenance = importAnswers(current, authors, mapped, {}, { asks: checked }).asks?.b2?.reply?.provenance;
+        expect(provenance?.orcid).toMatchObject({ orcid: ORCID });
+        expect(provenance).not.toHaveProperty("signedElsewhere");
+      });
+
+      // Straight into importAnswers, without the recheck that would drop these sign-ins first.
+      const unchecked = (file: unknown) => {
+        const { authors, asks } = fromJson(JSON.stringify(file));
+        return importAnswers([], authors, authors, {}, { asks }).asks;
+      };
+
+      it("warns when the sign-in was given for another row id, with the same name and iD", async () => {
+        const file = await imported();
+        file.authors[0].id = "ann";
+        file.asks = { ann: file.asks.bob };
+        expect(unchecked(file)?.ann?.reply?.provenance).toMatchObject({
+          orcid: { orcid: ORCID },
+          signedElsewhere: true,
+        });
+      });
+
+      it("warns when the sign-in's payload cannot be read", async () => {
+        const file = await imported();
+        file.asks.bob.reply.provenance.orcid.payload = "not a payload";
+        expect(unchecked(file)?.bob?.reply?.provenance).toMatchObject({ signedElsewhere: true });
       });
 
       // A second row with the signed id must not vouch for the first, which keeps the id.

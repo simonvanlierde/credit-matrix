@@ -501,8 +501,9 @@ function rederiveInitials(authors: readonly Author[]): Author[] {
  * matched nobody are dropped. Held answers for matched rows the file has none
  * for are kept. `selfId` follows the same rule. `asks` is undefined when the
  * file carries none, and `selfId` when it does not survive. A filed answer's
- * checked sign-in that was given for a row with another id, name or iD than
- * the one it lands on gets `provenance.signedElsewhere`.
+ * checked sign-in gets `provenance.signedElsewhere` when it was given for
+ * another row id than the file row's, or another name or iD than the row it
+ * lands on.
  */
 export function importAnswers(
   current: readonly Author[],
@@ -519,14 +520,14 @@ export function importAnswers(
     const found: Record<string, Ask> = {};
     const seen = new Set<string>();
     incoming.forEach((author, index) => {
-      const id = mapped[index]?.id;
+      const landing = mapped[index];
       // normalizeRoster gives a repeated id to its first row only, so that row decides.
-      if (!id || seen.has(id)) return;
+      if (!landing || seen.has(landing.id)) return;
+      const id = landing.id;
       seen.add(id);
       const filed = Object.hasOwn(fileAsks, author.id) ? fileAsks[author.id] : undefined;
       const kept = Object.hasOwn(held, id) ? held[id] : undefined;
-      const landing = mapped[index] as Author;
-      const ask = filed && matched(id) ? flagSignIn(filed, landing) : kept;
+      const ask = filed && matched(id) ? flagSignIn(filed, author, landing) : kept;
       if (ask) found[id] = ask;
     });
     asks = found;
@@ -535,24 +536,26 @@ export function importAnswers(
   return { asks, selfId: selfId && matched(selfId) ? selfId : undefined };
 }
 
-/** The filed ask with `signedElsewhere` worked out again for the row it lands on. */
-function flagSignIn(ask: Ask, landing: Author): Ask {
+/** The filed ask with `signedElsewhere` worked out again for the file row and the row it lands on. */
+function flagSignIn(ask: Ask, fileRow: Author, landing: Author): Ask {
   const provenance = ask.reply?.provenance;
   if (!(ask.reply && provenance)) return ask;
   const { signedElsewhere: _, ...rest } = provenance;
-  const elsewhere = rest.orcid !== undefined && !signedHere(rest.orcid, landing);
+  const elsewhere = rest.orcid !== undefined && !signedHere(rest.orcid, fileRow, landing);
   return { ...ask, reply: { ...ask.reply, provenance: elsewhere ? { ...rest, signedElsewhere: true } : rest } };
 }
 
 /**
- * Whether a sign-in was given for this row id, with this row's name and iD. The
- * draft id is not compared: an honest export restored elsewhere opens a new draft.
+ * Whether a sign-in was given for the file row's id, with the landing row's name
+ * and iD. The id is the file's, because `keepKnownIds` may give the landing row
+ * another one. The draft id is not compared: an honest export restored
+ * elsewhere opens a new draft.
  */
-function signedHere(proof: OrcidProof, landing: Author): boolean {
+function signedHere(proof: OrcidProof, fileRow: Author, landing: Author): boolean {
   try {
     const shared = fromSharePayload(proof.payload);
     const row = shared.authors.find((author) => author.id === shared.claimId);
-    return row !== undefined && row.id === landing.id && row.name === landing.name && row.orcid === landing.orcid;
+    return row !== undefined && row.id === fileRow.id && row.name === landing.name && row.orcid === landing.orcid;
   } catch {
     return false;
   }
