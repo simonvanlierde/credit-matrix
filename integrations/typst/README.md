@@ -7,7 +7,7 @@ the app, export them as JSON and print them in your paper.
 
 ## Install
 
-Once the package is on Typst Universe:
+Import it from [Typst Universe](https://typst.app/universe/package/credit-matrix):
 
 ```typ
 #import "@preview/credit-matrix:0.11.0": *

@@ -6,8 +6,8 @@ changes are in the [changelog](../CHANGELOG.md).
 
 ## Now
 
-- **List the plugins where people look for them.** The Typst package on Typst Universe, and the
-  Pandoc filter in the community filter list. 0.11.0 shipped the files for both.
+- **List the Pandoc filter where people look for it**, in the community filter list. The Typst
+  package is on Typst Universe since 0.11.0.
 - **Validate the census parser.** Score the parser that reads roles from published papers against
   labels that language models wrote and a person checks, so the census and the Published practice
   tab can drop their "preliminary" note. The
