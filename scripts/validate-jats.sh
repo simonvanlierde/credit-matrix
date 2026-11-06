@@ -42,6 +42,9 @@ rules=$j4r/jats-schematrons-0.0.17/schematrons/1.0
 # The rules load credit-roles.xml with document(), relative to the compiled
 # stylesheet, so it has to sit next to them.
 compiled=$rules/jats4r.compiled.xsl
+# Saxon compiles an XSLT source on every run, about 13 s per file in CI. The SEF is exported once
+# and loads fast: all 9 files take 15 s.
+sef=$rules/jats4r.sef.json
 if [[ ! -f $compiled ]]; then
 	mkdir -p "$j4r"
 	fetch https://github.com/jats4r/jats-schematrons/archive/refs/tags/v0.0.17.tar.gz \
@@ -52,6 +55,7 @@ if [[ ! -f $compiled ]]; then
 	unzip -q -o "$j4r/schxslt2.zip" -d "$j4r"
 	pnpm exec xslt3 -xsl:"$j4r/schxslt2-1.11.2/transpile.xsl" -s:"$rules/jats4r.sch" -o:"$compiled"
 fi
+[[ -f $sef ]] || pnpm exec xslt3 -xsl:"$compiled" -export:"$sef" -nogo
 
 # Two findings are expected and accepted:
 #  - permissions-errors asks for <permissions>. The export carries contributor
@@ -64,7 +68,7 @@ findings+='[not(@patternId="permissions-errors" and @test="permissions")]'
 findings+='[not(@patternId="credit-errors" and contains(., "in this case Formal Analysis"))]'
 report=$j4r/report.svrl
 for file in "${files[@]}"; do
-	pnpm exec xslt3 -xsl:"$compiled" -s:"$file" -o:"$report"
+	pnpm exec xslt3 -xsl:"$sef" -s:"$file" -o:"$report"
 	if [[ $("${XMLLINT:-xmllint}" --xpath "count($findings)" "$report") != 0 ]]; then
 		echo "$file breaks JATS4R rules (full report: $report):" >&2
 		"${XMLLINT:-xmllint}" --xpath "$findings" "$report" >&2

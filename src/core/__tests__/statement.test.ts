@@ -36,6 +36,7 @@ interface CorpusCase {
 
 // The census parser's own regression corpus: real CC BY statements and what the Python parser
 // returned for each. The port must return exactly the same.
+// CI's changes job runs this on a census-only PR that touches the corpus or the parser.
 const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
   .split("\n")
   .filter(Boolean)

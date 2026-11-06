@@ -2,8 +2,9 @@ name: CI
 
 # Caches are saved only off pull requests (main push, dispatch): an entry a PR saves is
 # visible to that PR alone, and a full cache quota evicts the main entries every PR restores.
-# So PRs restore the caches below but never write one; pnpm/setup has no restore-only mode,
-# so a PR installs from the registry.
+# So PRs restore the caches below but never write one. pnpm/setup keys its store on the run id,
+# so only the check job saves it: one save per job would add a 294 MB entry each. The e2e
+# container installs without it: its store path differs, and pnpm can't hard-link from it there.
 on:
   # Every PR, not only those into main: a stacked PR otherwise runs no checks
   # until its base merges.
@@ -15,19 +16,76 @@ on:
   # push run keeps the README badge on main's latest commit.
   push:
     branches: [main]
+  # Weekly, for the Firefox and WebKit legs that pull requests skip.
+  schedule:
+    - cron: "23 4 * * 1" # Mondays, 04:23 UTC
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# A newer push supersedes a PR run, but a run on main may be mid-deploy.
+# A newer push supersedes a PR run, but a run on main may be mid-deploy. The weekly run gets a
+# group of its own: a queued run replaces a pending one in its group, and the weekly run never
+# deploys.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'schedule' && 'weekly' || 'run' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  # Which parts a pull request touches. Web jobs skip on a census-only PR, census jobs on a PR
+  # that touches neither census/ nor a workflow. Pushes and schedules run everything, and the
+  # jobs below also run when this job fails or reports nothing. It also reads the Playwright
+  # version for the e2e container.
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read # to list the pull request's files
+    outputs:
+      web: ${{ steps.files.outputs.web }}
+      census: ${{ steps.files.outputs.census }}
+      playwright: ${{ steps.playwright.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: pnpm-lock.yaml
+          sparse-checkout-cone-mode: false
+
+      # The e2e container's tag must match the locked @playwright/test exactly.
+      - id: playwright
+        run: |
+          version=$(grep -oPm1 "^  '@playwright/test@\K[0-9.]+(?=':)" pnpm-lock.yaml)
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+
+      - id: files
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # A renamed file counts at its old path too, so a move out of a part runs its checks.
+          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)')
+          web=false census=false
+          grep -qv '^census/' <<<"$files" && web=true
+          grep -qE '^(census/|\.github/workflows/)' <<<"$files" && census=true
+          # Tests that read the other part's files: src/core/__tests__/statement.test.ts reads
+          # the parser parity corpus, census/tests/test_jats.py reads the CRediT slugs.
+          grep -qE '^census/(tests/corpus\.jsonl|src/census/(statement|roles)\.py)$' <<<"$files" && web=true
+          grep -qx 'src/core/credit-roles.ts' <<<"$files" && census=true
+          echo "web=$web" >>"$GITHUB_OUTPUT"
+          echo "census=$census" >>"$GITHUB_OUTPUT"
+          echo "web=$web census=$census"
+
   check:
     name: Check
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -38,7 +96,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: ${{ github.event_name != 'pull_request' }}
           install: false
 
       - name: Install dependencies
@@ -118,6 +177,8 @@ jobs:
   # CLI on the oldest supported line and the previous LTS.
   cli-node:
     name: CLI on Node ${{ matrix.node }}
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -131,7 +192,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - name: Build the package
@@ -152,6 +214,8 @@ jobs:
 
   census:
     name: Census
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.census != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -181,6 +245,8 @@ jobs:
   # CUDA build (several GB), so the CPU wheel goes in over the locked environment instead.
   census-train:
     name: Census train smoke test
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.census != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -213,16 +279,25 @@ jobs:
       - name: Train and predict
         run: uv run --no-sync pytest -q tests/test_encoder.py -k "train or predict"
 
-  # One leg per browser, in parallel: the three together take about four times as long as Chromium
-  # alone. The Chromium leg keeps the plain job name, which the branch ruleset requires.
+  # One leg per browser, in parallel. Pull requests run Chromium only: Firefox and WebKit took
+  # 65% of a PR's runner minutes. Pushes to main and the weekly run test all three, and the
+  # deploy waits on them. The e2e-result job reports the check the ruleset requires.
   e2e:
-    name: ${{ matrix.browser == 'chromium' && 'E2E and accessibility' || format('E2E and accessibility ({0})', matrix.browser) }}
+    name: E2E (${{ matrix.browser }})
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # The browsers and their system libraries come with the image. Installing WebKit's with apt
+    # on the runner stalled past the job timeout three times in a week. The runner's uid, as in
+    # Playwright's CI docs, so the job runs as the user that owns the workspace.
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.changes.outputs.playwright }}-noble # zizmor: ignore[unpinned-images] the tag comes from the lockfile
+      options: --user 1001
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: ${{ fromJSON(github.event_name == 'pull_request' && '["chromium"]' || '["chromium","firefox","webkit"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -231,31 +306,10 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
           install: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      # The browser download is ~130MB and never varies for a given Playwright
-      # version, so key the cache on the lockfile and the browser. `--with-deps` still runs on a
-      # hit: the apt system libraries live outside this path.
-      - name: Cache Playwright browsers (restore only on a pull request)
-        if: github.event_name == 'pull_request'
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Cache Playwright browsers
-        if: github.event_name != 'pull_request'
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Install Playwright ${{ matrix.browser }}
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       # This job builds the app before the tests run (see playwright.config.ts),
       # so it wants the same incremental cache the build job keeps.
@@ -293,7 +347,8 @@ jobs:
       - name: Run Playwright suite
         env:
           CI: true
-        run: pnpm exec playwright test --project=${{ matrix.browser }}
+          BROWSER: ${{ matrix.browser }}
+        run: pnpm exec playwright test --project="$BROWSER"
 
       # trace: "on-first-retry" is already set, so failures produce traces;
       # without this step they were thrown away and every red run had to be
@@ -305,11 +360,29 @@ jobs:
           name: playwright-traces-${{ matrix.browser }}
           path: test-results
 
+  # The check the ruleset requires. A matrix job skipped by its `if` (a census-only PR) reports
+  # no leg under any expanded name, so a required leg would wait forever. Skipped passes here;
+  # a failed or cancelled leg fails.
+  e2e-result:
+    name: E2E and accessibility
+    needs: [e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULT: ${{ needs.e2e.result }}
+        run: |
+          echo "e2e: $RESULT"
+          [[ $RESULT == success || $RESULT == skipped ]]
+
+
   build:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [check]
+    if: ${{ !cancelled() && needs.check.result == 'success' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -318,7 +391,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - name: Install dependencies
@@ -373,7 +447,7 @@ jobs:
   preview:
     name: Preview
     # Bot pull requests (Renovate) get no preview, so their code never sees the token.
-    if: github.event_name == 'pull_request' && !github.event.pull_request.draft && !endsWith(github.event.pull_request.user.login, '[bot]')
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.event_name == 'pull_request' && !github.event.pull_request.draft && !endsWith(github.event.pull_request.user.login, '[bot]') }}
     # Shares preview-retire.yml's group, so a retire waits for a deploy in flight.
     concurrency:
       group: preview-${{ github.event.pull_request.number }}
@@ -409,7 +483,8 @@ jobs:
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - if: steps.gate.outputs.run == 'true'
@@ -463,7 +538,9 @@ jobs:
   # deploy so the OIDC token never sits in a job that runs project code.
   attest:
     name: Attest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # The explicit results: by default a failed changes job would skip this job, though the
+    # jobs it feeds run anyway.
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [build]
@@ -488,7 +565,10 @@ jobs:
   # The secrets live in the `production` environment, limited to main.
   deploy:
     name: Deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && needs.check.result == 'success' && needs.e2e.result == 'success'
+      && needs.build.result == 'success' && needs.attest.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [check, e2e, build, attest]
@@ -505,7 +585,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - name: Install dependencies

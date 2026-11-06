@@ -107,7 +107,8 @@ statement or an export in another format, email us and we'll send it.
   fails when this page loses a section, claims full conformance, loses its email contact,
   or goes more than 400 days without a review.
 
-All of this runs on every pull request and every push to main. Automated tools find only part of
+Chromium runs all of this on every pull request that changes the app, and all three browsers
+run it on every push to main and weekly. Automated tools find only part of
 the problems a person can run into, so a passing run does not mean there are none.
 
 Not checked yet: nobody who relies on a screen reader, switch access or voice control has tested
@@ -134,8 +135,9 @@ are in English, and marked as English.
 ## Tested with
 
 - Chromium, Firefox and WebKit, the engine Safari uses, in Playwright's desktop profiles, with
-  axe-core, on every pull request: the axe scans, this statement, the about page, the
-  accessibility tree and the main workflows. Firefox and WebKit have no clipboard permissions, so
+  axe-core: Chromium on every pull request, all three on every push to `main` and weekly. They
+  cover the axe scans, this statement, the about page, the accessibility tree and the main
+  workflows. Firefox and WebKit have no clipboard permissions, so
   the workflow tests that read the clipboard run there against a clipboard kept in the page.
   They don't check the browser's own clipboard.
 

@@ -49,10 +49,10 @@ Before the first e2e run, install the browsers: `pnpm exec playwright install ch
 `pnpm validate:jats` downloads the JATS4R rules and SchXslt2 into `.cache/` and compiles them,
 which takes about 1.5 minutes. Later runs reuse the cache.
 
-CI runs `pnpm verify`, `pnpm validate:jats`, `pnpm validate:crossref`, the full Playwright suite (with the axe scans) in
-Chromium, Firefox and WebKit, and a
-static export build on every pull request and every push to `main`. It deploys `main` only when all
-of them pass. If you change the domain logic, add or update tests in `src/core/__tests__`.
+CI runs `pnpm verify`, `pnpm validate:jats`, `pnpm validate:crossref`, the full Playwright suite (with the axe scans)
+and a static export build. Pull requests run the Playwright suite in Chromium; pushes to `main` and a
+weekly run add Firefox and WebKit. A pull request that changes only `census/` skips the web jobs. CI
+deploys `main` only when all of them pass. If you change the domain logic, add or update tests in `src/core/__tests__`.
 
 The CRediT census in `census/` is a Python project with its own checks, which `pnpm verify` does
 not run. It needs [uv](https://docs.astral.sh/uv/); the pre-push hook runs these when census files
@@ -67,7 +67,7 @@ in what it reads fails a test. After a change you meant to make, review the diff
 expected output with `CENSUS_UPDATE_CORPUS=1 uv run pytest -q tests/test_corpus.py`.
 
 `census/tests/test_benchmarks.py` times the parser on that corpus and on two JATS articles. A plain
-`pytest` runs each once; on every pull request [CodSpeed](https://codspeed.io) measures them and
+`pytest` runs each once; on pull requests that touch `census/` or `src/core/`, [CodSpeed](https://codspeed.io) measures them and
 comments when one gets slower or faster than on main.
 
 ## Dependencies
@@ -77,9 +77,9 @@ MIT. The browser bundle stays small (`pnpm check:bundle` fails past the gzip bud
 so prefer the platform or a few lines of code over a new package. `pnpm-lock.yaml` pins every
 version; commit it with any change to `package.json`. CI installs with `--frozen-lockfile`, so a
 stale lockfile fails. pnpm refuses releases younger than 3 days (`minimumReleaseAge` in
-`pnpm-workspace.yaml`). Renovate proposes updates once a month and waits 7 days after a release
+`pnpm-workspace.yaml`). Renovate proposes updates every Monday and waits 7 days after a release
 before it does (`minimumReleaseAge` in `renovate.json5`), so a hijacked release has time to be
-pulled. It merges minor and patch updates once every check passes; majors wait for me. The census in
+pulled. It merges minor and patch updates once every check passes; majors and GitHub Actions updates wait for me. The census in
 `census/` follows the same rule through uv's `exclude-newer = "7 days"`.
 
 ## Releases
