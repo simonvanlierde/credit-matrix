@@ -1,7 +1,16 @@
 name: CodSpeed
 
 on:
+  # Only pull requests that can move a benchmark. Pushes to main always run: a pull request
+  # is compared with its base commit, which needs a result of its own.
   pull_request:
+    paths:
+      - "census/**"
+      - "src/core/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "vitest.bench.config.mts"
+      - ".github/workflows/codspeed.yml"
   push:
     branches: [main]
   # Lets CodSpeed trigger backtest runs to build initial history.
