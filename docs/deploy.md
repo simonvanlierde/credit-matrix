@@ -81,9 +81,9 @@ that built it. On npmjs.com, the trusted publisher may publish but not move dist
 package refuses access tokens, so a version comes from this workflow or from the owner's own
 two-factor login.
 
-Check what would be published with `cd src/core && npm pack --dry-run`. On every pull request, the
-CI `check` job builds the package and tests the files it publishes, its export list, public types
-and CLI (`src/core/__tests__/package.test.ts`).
+Check what would be published with `cd src/core && npm pack --dry-run`. On every pull request
+outside `census/`, the CI `check` job builds the package and tests the files it publishes, its
+export list, public types and CLI (`src/core/__tests__/package.test.ts`).
 
 The package build is repeatable: two builds from the same commit give byte-identical tarballs.
 Check with `cd src/core && npm pack --pack-destination /tmp/a && npm pack --pack-destination /tmp/b && cmp /tmp/a/*.tgz /tmp/b/*.tgz`.
