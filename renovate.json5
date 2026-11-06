@@ -17,7 +17,7 @@
   platformAutomerge: false,
 
   // A lock refresh has no release date, so the week's wait would hold it back for good.
-  // pnpm's minimumReleaseAge and census/'s uv exclude-newer keep the week instead.
+  // pnpm's 3-day minimumReleaseAge and census/'s uv exclude-newer keep fresh releases out instead.
   lockFileMaintenance: {
     enabled: true,
     schedule: ["on monday"],
@@ -26,7 +26,8 @@
   },
 
   packageRules: [
-    // Actions run only after the merge in the release workflow, so CI cannot test them first.
+    // Actions updates wait for a person: the release and deploy steps that use them run only
+    // after the merge.
     { matchManagers: ["github-actions"], groupName: "actions" },
     // Runtime minor and patch bumps in one PR, dev tooling in another, so a risky bump is not
     // buried in lint-tool churn. Both merge themselves.

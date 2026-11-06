@@ -3,7 +3,8 @@ name: CI
 # Caches are saved only off pull requests (main push, dispatch): an entry a PR saves is
 # visible to that PR alone, and a full cache quota evicts the main entries every PR restores.
 # So PRs restore the caches below but never write one. pnpm/setup keys its store on the run id,
-# so only the check job saves it: one save per job would add a 294 MB entry each.
+# so only the check job saves it: one save per job would add a 294 MB entry each. The e2e
+# container installs without it: its store path differs, and pnpm can't hard-link from it there.
 on:
   # Every PR, not only those into main: a stacked PR otherwise runs no checks
   # until its base merges.
@@ -23,9 +24,11 @@ on:
 permissions:
   contents: read
 
-# A newer push supersedes a PR run, but a run on main may be mid-deploy.
+# A newer push supersedes a PR run, but a run on main may be mid-deploy. The weekly run gets a
+# group of its own: a queued run replaces a pending one in its group, and the weekly run never
+# deploys.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'schedule' && 'weekly' || 'run' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -38,6 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      contents: read
       pull-requests: read # to list the pull request's files
     outputs:
       web: ${{ steps.files.outputs.web }}
@@ -64,10 +68,16 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')
+          # A renamed file counts at its old path too, so a move out of a part runs its checks.
+          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)')
           web=false census=false
           grep -qv '^census/' <<<"$files" && web=true
           grep -qE '^(census/|\.github/workflows/)' <<<"$files" && census=true
+          # Tests that read the other part's files: src/core/__tests__/statement.test.ts reads
+          # the parser parity corpus, census/tests/test_jats.py reads the CRediT slugs.
+          grep -qE '^census/(tests/corpus\.jsonl|src/census/(statement|roles)\.py)$' <<<"$files" && web=true
+          grep -qx 'src/core/credit-roles.ts' <<<"$files" && census=true
           echo "web=$web" >>"$GITHUB_OUTPUT"
           echo "census=$census" >>"$GITHUB_OUTPUT"
           echo "web=$web census=$census"
@@ -271,9 +281,9 @@ jobs:
 
   # One leg per browser, in parallel. Pull requests run Chromium only: Firefox and WebKit took
   # 65% of a PR's runner minutes. Pushes to main and the weekly run test all three, and the
-  # deploy waits on them. The Chromium leg keeps the plain job name, which the ruleset requires.
+  # deploy waits on them. The e2e-result job reports the check the ruleset requires.
   e2e:
-    name: ${{ matrix.browser == 'chromium' && 'E2E and accessibility' || format('E2E and accessibility ({0})', matrix.browser) }}
+    name: E2E (${{ matrix.browser }})
     needs: [changes]
     if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
@@ -296,8 +306,6 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: true
-          save-cache: false
           install: false
 
       - name: Install dependencies
@@ -351,6 +359,23 @@ jobs:
         with:
           name: playwright-traces-${{ matrix.browser }}
           path: test-results
+
+  # The check the ruleset requires. A matrix job skipped by its `if` (a census-only PR) reports
+  # no leg under any expanded name, so a required leg would wait forever. Skipped passes here;
+  # a failed or cancelled leg fails.
+  e2e-result:
+    name: E2E and accessibility
+    needs: [e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULT: ${{ needs.e2e.result }}
+        run: |
+          echo "e2e: $RESULT"
+          [[ $RESULT == success || $RESULT == skipped ]]
+
 
   build:
     name: Build
@@ -513,7 +538,8 @@ jobs:
   # deploy so the OIDC token never sits in a job that runs project code.
   attest:
     name: Attest
-    # The explicit results: the skipped changes job would otherwise skip this job on main.
+    # The explicit results: by default a failed changes job would skip this job, though the
+    # jobs it feeds run anyway.
     if: ${{ !cancelled() && needs.build.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10

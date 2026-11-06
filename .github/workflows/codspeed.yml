@@ -1,14 +1,16 @@
 name: CodSpeed
 
 on:
-  # Only pull requests that can move a benchmark. Pushes to main always run: a pull request
-  # is compared with its base commit, which needs a result of its own.
+  # Only pull requests that can move a benchmark. Pushes to main always run, so the newest main
+  # commit, which CodSpeed compares a pull request with, has a result.
   pull_request:
     paths:
       - "census/**"
       - "src/core/**"
       - "package.json"
       - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".node-version"
       - "vitest.bench.config.mts"
       - ".github/workflows/codspeed.yml"
   push:

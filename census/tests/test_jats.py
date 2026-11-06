@@ -10,6 +10,7 @@ from census.roles import ROLE_PATTERNS
 
 
 def test_role_slugs_match_the_app():
+    # CI's changes job runs the census tests on a PR that touches only this file.
     ts = (Path(__file__).parents[2] / "src/core/credit-roles.ts").read_text()
     assert set(re.findall(r"contributor-roles/([a-z-]+)/", ts)) == set(ROLE_PATTERNS)
 

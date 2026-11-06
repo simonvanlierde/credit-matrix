@@ -67,7 +67,7 @@ in what it reads fails a test. After a change you meant to make, review the diff
 expected output with `CENSUS_UPDATE_CORPUS=1 uv run pytest -q tests/test_corpus.py`.
 
 `census/tests/test_benchmarks.py` times the parser on that corpus and on two JATS articles. A plain
-`pytest` runs each once; on every pull request [CodSpeed](https://codspeed.io) measures them and
+`pytest` runs each once; on pull requests that touch `census/` or `src/core/`, [CodSpeed](https://codspeed.io) measures them and
 comments when one gets slower or faster than on main.
 
 ## Dependencies
