@@ -2,8 +2,8 @@ name: CI
 
 # Caches are saved only off pull requests (main push, dispatch): an entry a PR saves is
 # visible to that PR alone, and a full cache quota evicts the main entries every PR restores.
-# So PRs restore the caches below but never write one; pnpm/setup has no restore-only mode,
-# so a PR installs from the registry.
+# So PRs restore the caches below but never write one. pnpm/setup keys its store on the run id,
+# so only the check job saves it: one save per job would add a 294 MB entry each.
 on:
   # Every PR, not only those into main: a stacked PR otherwise runs no checks
   # until its base merges.
@@ -38,7 +38,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: ${{ github.event_name != 'pull_request' }}
           install: false
 
       - name: Install dependencies
@@ -131,7 +132,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - name: Build the package
@@ -231,7 +233,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - name: Install dependencies
@@ -318,7 +321,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - name: Install dependencies
@@ -409,7 +413,8 @@ jobs:
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - if: steps.gate.outputs.run == 'true'
@@ -505,7 +510,8 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           node-version-file: .node-version
-          cache: ${{ github.event_name != 'pull_request' }}
+          cache: true
+          save-cache: false
           install: false
 
       - name: Install dependencies
