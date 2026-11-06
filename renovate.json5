@@ -1,34 +1,46 @@
+// Follows project-templates' Renovate config. Minor and patch updates and the weekly relock
+// merge themselves once the week's wait is over and every check on the branch has passed.
+// Majors and the actions group stay for a person to merge.
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: [
-    // Digest pins for actions and config-migration PRs.
-    "config:best-practices",
-    ":semanticCommits",
-    "schedule:monthly",
-    // Minor and patch in one PR. Majors stay separate.
-    "group:allNonMajor",
-  ],
-  // The npm preset's 3-day wait would beat the 7-day minimumReleaseAge below.
-  ignorePresets: ["security:minimumReleaseAgeNpm"],
+  // config:recommended, not config:best-practices: its :pinDevDependencies opens pin PRs that
+  // the lockfile already makes redundant, and a pin to a week-old version rarely clears the
+  // wait below before a newer one comes out.
+  extends: ["config:recommended", ":semanticCommits"],
+  schedule: ["before 9am on monday"],
 
   // A week gives a hijacked release time to be yanked.
   minimumReleaseAge: "7 days",
 
-  // A lock refresh has no release date, so minimumReleaseAge would hold it at
-  // renovate/stability-days for good. pnpm's minimumReleaseAge and census/'s uv exclude-newer keep releases younger than a
-  // week out of the refresh instead.
-  lockFileMaintenance: { minimumReleaseAge: null },
-
-  // Renovate merges once every check on the branch passes. GitHub's own
-  // auto-merge would merge straight away, since main requires no checks. A merge
-  // by the Renovate app is a push to main like any other, so it deploys.
+  // Renovate merges the PR itself. GitHub's own auto-merge may not use the ruleset bypass,
+  // and would then wait for an approval.
   platformAutomerge: false,
 
+  // A lock refresh has no release date, so the week's wait would hold it back for good.
+  // pnpm's minimumReleaseAge and census/'s uv exclude-newer keep the week instead.
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["on monday"],
+    minimumReleaseAge: null,
+    automerge: true,
+  },
+
   packageRules: [
-    // Majors stay manual.
+    // Actions run only after the merge in the release workflow, so CI cannot test them first.
+    { matchManagers: ["github-actions"], groupName: "actions" },
+    // Runtime minor and patch bumps in one PR, dev tooling in another, so a risky bump is not
+    // buried in lint-tool churn. Both merge themselves.
     {
-      matchUpdateTypes: ["minor", "patch", "pin", "digest"],
+      matchManagers: ["npm", "pep621"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "runtime",
       automerge: true,
+    },
+    {
+      matchManagers: ["npm", "pep621"],
+      matchDepTypes: ["dependency-groups", "devDependencies"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "dev tooling",
     },
     // tsdown 0.23.1 and later build declarations with TypeScript's classic API, which TypeScript 7
     // no longer has. The way out is isolatedDeclarations, which needs explicit types on the zod schemas.
