@@ -42,7 +42,8 @@ rules=$j4r/jats-schematrons-0.0.17/schematrons/1.0
 # The rules load credit-roles.xml with document(), relative to the compiled
 # stylesheet, so it has to sit next to them.
 compiled=$rules/jats4r.compiled.xsl
-# Saxon compiles the XSLT on every run, about 10 s per file; the exported SEF loads in about 1 s.
+# Saxon compiles an XSLT source on every run, about 13 s per file in CI. The SEF is exported once
+# and loads fast: all 9 files take 15 s.
 sef=$rules/jats4r.sef.json
 if [[ ! -f $compiled ]]; then
 	mkdir -p "$j4r"

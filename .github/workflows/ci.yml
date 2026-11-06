@@ -30,11 +30,11 @@ concurrency:
 
 jobs:
   # Which parts a pull request touches. Web jobs skip on a census-only PR, census jobs on a PR
-  # that touches neither census/ nor a workflow. Pushes and schedules run everything: the
-  # jobs below run whenever this job is skipped, fails or reports nothing.
+  # that touches neither census/ nor a workflow. Pushes and schedules run everything, and the
+  # jobs below also run when this job fails or reports nothing. It also reads the Playwright
+  # version for the e2e container.
   changes:
     name: Changes
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -42,8 +42,22 @@ jobs:
     outputs:
       web: ${{ steps.files.outputs.web }}
       census: ${{ steps.files.outputs.census }}
+      playwright: ${{ steps.playwright.outputs.version }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: pnpm-lock.yaml
+          sparse-checkout-cone-mode: false
+
+      # The e2e container's tag must match the locked @playwright/test exactly.
+      - id: playwright
+        run: |
+          version=$(grep -oPm1 "^  '@playwright/test@\K[0-9.]+(?=':)" pnpm-lock.yaml)
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+
       - id: files
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -264,6 +278,12 @@ jobs:
     if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # The browsers and their system libraries come with the image. Installing WebKit's with apt
+    # on the runner stalled past the job timeout three times in a week. The runner's uid, as in
+    # Playwright's CI docs, so the job runs as the user that owns the workspace.
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.changes.outputs.playwright }}-noble # zizmor: ignore[unpinned-images] the tag comes from the lockfile
+      options: --user 1001
     strategy:
       fail-fast: false
       matrix:
@@ -282,28 +302,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      # The browser download is ~130MB and never varies for a given Playwright
-      # version, so key the cache on the lockfile and the browser. `--with-deps` still runs on a
-      # hit: the apt system libraries live outside this path.
-      - name: Cache Playwright browsers (restore only on a pull request)
-        if: github.event_name == 'pull_request'
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Cache Playwright browsers
-        if: github.event_name != 'pull_request'
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Install Playwright ${{ matrix.browser }}
-        env:
-          BROWSER: ${{ matrix.browser }}
-        run: pnpm exec playwright install --with-deps "$BROWSER"
 
       # This job builds the app before the tests run (see playwright.config.ts),
       # so it wants the same incremental cache the build job keeps.
