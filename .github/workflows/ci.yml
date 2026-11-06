@@ -15,6 +15,9 @@ on:
   # push run keeps the README badge on main's latest commit.
   push:
     branches: [main]
+  # Weekly, for the Firefox and WebKit legs that pull requests skip.
+  schedule:
+    - cron: "23 4 * * 1" # Mondays, 04:23 UTC
   workflow_dispatch:
 
 permissions:
@@ -26,8 +29,39 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  # Which parts a pull request touches. Web jobs skip on a census-only PR, census jobs on a PR
+  # that touches neither census/ nor a workflow. Pushes and schedules run everything: the
+  # jobs below run whenever this job is skipped, fails or reports nothing.
+  changes:
+    name: Changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read # to list the pull request's files
+    outputs:
+      web: ${{ steps.files.outputs.web }}
+      census: ${{ steps.files.outputs.census }}
+    steps:
+      - id: files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')
+          web=false census=false
+          grep -qv '^census/' <<<"$files" && web=true
+          grep -qE '^(census/|\.github/workflows/)' <<<"$files" && census=true
+          echo "web=$web" >>"$GITHUB_OUTPUT"
+          echo "census=$census" >>"$GITHUB_OUTPUT"
+          echo "web=$web census=$census"
+
   check:
     name: Check
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -119,6 +153,8 @@ jobs:
   # CLI on the oldest supported line and the previous LTS.
   cli-node:
     name: CLI on Node ${{ matrix.node }}
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -154,6 +190,8 @@ jobs:
 
   census:
     name: Census
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.census != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -183,6 +221,8 @@ jobs:
   # CUDA build (several GB), so the CPU wheel goes in over the locked environment instead.
   census-train:
     name: Census train smoke test
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.census != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -215,16 +255,19 @@ jobs:
       - name: Train and predict
         run: uv run --no-sync pytest -q tests/test_encoder.py -k "train or predict"
 
-  # One leg per browser, in parallel: the three together take about four times as long as Chromium
-  # alone. The Chromium leg keeps the plain job name, which the branch ruleset requires.
+  # One leg per browser, in parallel. Pull requests run Chromium only: Firefox and WebKit took
+  # 65% of a PR's runner minutes. Pushes to main and the weekly run test all three, and the
+  # deploy waits on them. The Chromium leg keeps the plain job name, which the ruleset requires.
   e2e:
     name: ${{ matrix.browser == 'chromium' && 'E2E and accessibility' || format('E2E and accessibility ({0})', matrix.browser) }}
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: ${{ fromJSON(github.event_name == 'pull_request' && '["chromium"]' || '["chromium","firefox","webkit"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -258,7 +301,9 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright ${{ matrix.browser }}
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps "$BROWSER"
 
       # This job builds the app before the tests run (see playwright.config.ts),
       # so it wants the same incremental cache the build job keeps.
@@ -296,7 +341,8 @@ jobs:
       - name: Run Playwright suite
         env:
           CI: true
-        run: pnpm exec playwright test --project=${{ matrix.browser }}
+          BROWSER: ${{ matrix.browser }}
+        run: pnpm exec playwright test --project="$BROWSER"
 
       # trace: "on-first-retry" is already set, so failures produce traces;
       # without this step they were thrown away and every red run had to be
@@ -313,6 +359,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [check]
+    if: ${{ !cancelled() && needs.check.result == 'success' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -377,7 +424,7 @@ jobs:
   preview:
     name: Preview
     # Bot pull requests (Renovate) get no preview, so their code never sees the token.
-    if: github.event_name == 'pull_request' && !github.event.pull_request.draft && !endsWith(github.event.pull_request.user.login, '[bot]')
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.event_name == 'pull_request' && !github.event.pull_request.draft && !endsWith(github.event.pull_request.user.login, '[bot]') }}
     # Shares preview-retire.yml's group, so a retire waits for a deploy in flight.
     concurrency:
       group: preview-${{ github.event.pull_request.number }}
@@ -468,7 +515,8 @@ jobs:
   # deploy so the OIDC token never sits in a job that runs project code.
   attest:
     name: Attest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # The explicit results: the skipped changes job would otherwise skip this job on main.
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [build]
@@ -493,7 +541,10 @@ jobs:
   # The secrets live in the `production` environment, limited to main.
   deploy:
     name: Deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && needs.check.result == 'success' && needs.e2e.result == 'success'
+      && needs.build.result == 'success' && needs.attest.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [check, e2e, build, attest]
