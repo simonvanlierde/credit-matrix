@@ -134,8 +134,9 @@ are in English, and marked as English.
 ## Tested with
 
 - Chromium, Firefox and WebKit, the engine Safari uses, in Playwright's desktop profiles, with
-  axe-core, on every pull request: the axe scans, this statement, the about page, the
-  accessibility tree and the main workflows. Firefox and WebKit have no clipboard permissions, so
+  axe-core: Chromium on every pull request, all three on every push to `main` and weekly. They
+  cover the axe scans, this statement, the about page, the accessibility tree and the main
+  workflows. Firefox and WebKit have no clipboard permissions, so
   the workflow tests that read the clipboard run there against a clipboard kept in the page.
   They don't check the browser's own clipboard.
 
