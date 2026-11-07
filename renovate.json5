@@ -5,8 +5,9 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   // config:recommended, not config:best-practices: its :pinDevDependencies opens pin PRs that
   // the lockfile already makes redundant, and a pin to a week-old version rarely clears the
-  // wait below before a newer one comes out.
-  extends: ["config:recommended", ":semanticCommits"],
+  // wait below before a newer one comes out. Its two presets worth having are added by name: a
+  // PR when this config uses a deprecated option, and a dashboard note on abandoned packages.
+  extends: ["config:recommended", ":semanticCommits", ":configMigration", "abandonments:recommended"],
   schedule: ["before 9am on monday"],
 
   // A week gives a hijacked release time to be yanked.
@@ -26,13 +27,9 @@
   },
 
   packageRules: [
-    // Actions updates wait for a person: the release and deploy steps that use them run only
-    // after the merge.
-    { matchManagers: ["github-actions"], groupName: "actions" },
-    // Runtime minor and patch bumps in one PR, dev tooling in another, so a risky bump is not
-    // buried in lint-tool churn. Both merge themselves.
+    // Minor and patch bumps from every manager in one PR (.node-version included), dev tooling
+    // in another, so a risky bump is not buried in lint-tool churn. Both merge themselves.
     {
-      matchManagers: ["npm", "pep621"],
       matchUpdateTypes: ["minor", "patch"],
       groupName: "runtime",
       automerge: true,
@@ -43,6 +40,9 @@
       matchUpdateTypes: ["minor", "patch"],
       groupName: "dev tooling",
     },
+    // Actions updates wait for a person: the release and deploy steps that use them run only
+    // after the merge. After the runtime rule, so it wins for actions.
+    { matchManagers: ["github-actions"], groupName: "actions", automerge: false },
     // tsdown 0.23.1 and later build declarations with TypeScript's classic API, which TypeScript 7
     // no longer has. The way out is isolatedDeclarations, which needs explicit types on the zod schemas.
     {
