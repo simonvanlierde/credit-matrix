@@ -29,7 +29,7 @@
     "version": "bash scripts/sync-citation.sh",
     "prepare": "lefthook install || true",
     "mutation": "stryker run && node scripts/mutation-baseline.mjs",
-    "bench": "vitest bench --run --config vitest.bench.config.mts",
+    "bench": "pnpm i18n:compile && vitest bench --run --config vitest.bench.config.mts",
     "i18n:compile": "node scripts/compile-catalogs.mjs"
   },
   "dependencies": {
