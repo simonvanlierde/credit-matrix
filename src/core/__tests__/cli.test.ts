@@ -375,3 +375,29 @@ describe("credit-matrix as a program", () => {
     expect(process.exitCode).toBe(1);
   });
 });
+
+it("passes figure options through the SVG conversion", async () => {
+  const svg = await run([
+    "convert",
+    csv,
+    "--to",
+    "svg",
+    "--shape",
+    "circle",
+    "--size",
+    "30",
+    "--palette",
+    "green",
+    "--legend",
+    "false",
+    "--horizontal",
+    "--labels",
+    "short",
+    "--skipempty",
+    "false",
+  ]);
+  expect(svg).toContain('width="30" height="30" rx="15"');
+  expect(svg).toContain(">1 Conceptualiz…<");
+  expect(svg).not.toContain(">Supporting<");
+  await expect(run(["convert", csv, "--to", "svg", "--legend", "maybe"])).rejects.toThrow("true or false");
+});

@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
+import { useTranslations } from "@/lib/translations";
 
 /**
  * The frame of a page to read (about, accessibility statement): a way back to

@@ -85,8 +85,9 @@ pulled. It merges minor and patch updates once every check passes; majors and Gi
 ## Releases
 
 Add a dated changelog entry before running `pnpm version`. Its lifecycle script takes the
-version from the root package and the date from that entry. It runs `citesync==0.2.0` through
-`uvx` to update CITATION.cff, codemeta.json and the published `src/core/package.json`.
+version from the root package and the date from that entry. It runs `citesync==0.4.0` through
+`uvx` to update CITATION.cff, codemeta.json, the three committed citation exports and the
+published `src/core/package.json`.
 The first run needs access to the Python package index; later runs can use uv's cache.
 
 [citesync.toml](citesync.toml) lists those files and permits only version writes to the package.
@@ -104,10 +105,16 @@ to finish syncing the current version without another version bump.
 Before tagging, review the whole change since the previous tag, then run `pnpm verify`,
 `pnpm mutation`, `pnpm validate:jats` and `pnpm validate:crossref`. Check the citation abstract,
 title and keywords against the README and GitHub About text. Merge the release PR before
-creating its version tag on main; the tag starts the npm publishing workflow described in
+creating its signed version tag on main; the tag starts the npm publishing workflow described in
 [deployment](docs/deploy.md#the-npm-package).
 
-After npm publishing succeeds, publish the matching GitHub release for the Zenodo archive.
+Use `git tag -s v<version> -m "v<version>"` with your configured signing key, then check it with
+`git verify-tag v<version>` before pushing the tag. Do not create release tags through GitHub's web interface.
+
+After npm publishing succeeds, the workflow prepares a draft GitHub release with the npm tarball,
+its provenance bundle and an attested CycloneDX SBOM. Review the draft's notes and assets, then
+publish it for the Zenodo archive. Enable immutable releases in the repository's
+**Settings → General → Releases** before the next release: published assets and tags then cannot change.
 Zenodo copies `.zenodo.json`, or `CITATION.cff` when that file is absent, when the GitHub release
 is published. Later metadata edits do not update that archived version.
 
@@ -159,30 +166,28 @@ is published. Later metadata edits do not update that archived version.
 
 ## Translating
 
-The app has nine languages. Where a translation lives depends on the text, in one of three places.
+The app has nine languages, stored as Lingui PO catalogs.
 
 | What | File | Notes |
 | --- | --- | --- |
-| Interface text (buttons, labels, dialogs) | `src/messages/<locale>.json` | ICU messages. `en.json` is the source. |
-| Statement and heatmap text ("Acknowledgements", contribution levels, empty-state line) | `src/core/credit-i18n/ui/<locale>.json` | Holds only overrides. A missing key falls back to English. |
-| CRediT role names and descriptions | `src/core/credit-i18n/translations/<locale>.json` | Vendored from [contributorshipcollaboration/credit-translation](https://github.com/contributorshipcollaboration/credit-translation). Do not edit it here. Fix the role name upstream, then refresh with `node scripts/fetch-credit-translations.mjs` and review the diff. |
+| Interface text | `src/locales/<locale>/messages.po` | ICU messages; the English catalog defines the keys. |
+| Statement, heatmap, and role text | `src/core/credit-i18n/locales/<locale>/messages.po` | `output.` keys hold labels and prose; role keys use the canonical NISO URL. |
 
-Locale codes are BCP 47 tags, such as `pt-PT` and `zh-Hans`.
+Edit PO files, then run `pnpm i18n:compile`. It compiles the catalogs and regenerates typed interface keys.
+Generated `messages.ts` files are ignored. Missing translations fail compilation.
 
-**Add a language**
+Role names and descriptions come from [credit-translation](https://github.com/contributorshipcollaboration/credit-translation).
+Fix those upstream, then run `node scripts/fetch-credit-translations.mjs` and review the diff.
+Attribution stays in `src/core/credit-i18n/translations/CREDITS.md`.
 
-1. Add `{ code, name }` to `AVAILABLE_LOCALES` in `src/core/credit-i18n/index.ts`. The name is the
-   language's own name for itself.
-2. Add `src/messages/<code>.json` with every key from `en.json`.
-3. Add `src/core/credit-i18n/ui/<code>.json`, copying the keys from an existing locale.
-4. Add the locale to `LOCALES` in `scripts/fetch-credit-translations.mjs` and run the script, then
-   add both new files to the import maps in `credit-i18n/index.ts` and `credit-i18n/ui-strings.ts`. This
-   only works if upstream already has that language. If it does not, translate the roles upstream
-   first.
+To add a language:
 
-`pnpm exec playwright test e2e/messages.spec.ts` checks the catalogs: a language in the picker with
-no catalog files, keys that differ from English, broken ICU syntax, or a missing placeholder fails
-it.
+1. Add its BCP 47 code and native name to `AVAILABLE_LOCALES` and `lingui.config.ts`.
+2. Copy both English PO catalogs into the new locale directories and translate their entries.
+3. Add the core catalog import to `src/core/credit-i18n/catalogs.ts`.
+4. Run `pnpm i18n:compile`, then `pnpm exec playwright test e2e/messages.spec.ts`.
+
+The catalog tests check key parity, blank entries, product names, ICU braces, and placeholders.
 
 To report a wrong or missing translation without a PR, use the translation issue form.
 

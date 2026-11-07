@@ -68,8 +68,7 @@ export default defineConfig({
       },
     ],
   },
-  // The app's tsconfig sets `jsx: preserve` for Next's own compiler, so the
-  // test build has to be told how to handle JSX itself.
+  // Match the application's automatic JSX runtime in tests.
   oxc: { jsx: { runtime: "automatic" } },
   resolve: {
     // `@/core` is the package's source, not the directory's package.json, which points at dist.

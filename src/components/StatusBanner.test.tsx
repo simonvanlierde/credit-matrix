@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { StrictMode } from "react";
-import { IntlProvider } from "use-intl";
 import { expect, it, vi } from "vitest";
-import en from "@/messages/en.json";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { dismissStatus, StatusBanner, showStatus } from "./StatusBanner";
 
 it("shows its actions in order before Dismiss, and each one runs and leaves", () => {

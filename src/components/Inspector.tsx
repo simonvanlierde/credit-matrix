@@ -1,11 +1,11 @@
 "use client";
 
 import { type KeyboardEvent, type ReactNode, useRef } from "react";
-import { useTranslations } from "use-intl";
 import { NormsPanel } from "@/components/NormsPanel";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatementOutput } from "@/components/steps/StatementOutput";
 import { TeamPanel } from "@/components/TeamPanel";
+import { useTranslations } from "@/lib/translations";
 import { type InspectorTab, useAskSummary, useContributionStore } from "@/store/contribution-store";
 
 const TABS: InspectorTab[] = ["statement", "team", "review", "norms"];

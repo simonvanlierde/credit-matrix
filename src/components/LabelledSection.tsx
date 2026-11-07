@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
-import type { Messages } from "@/lib/intl";
+import { useTranslations } from "@/lib/translations";
+import type { MessageKey } from "@/locales/keys";
 
 /**
  * A landmark `<section>` whose accessible name is translated.
@@ -19,7 +19,7 @@ export function LabelledSection({
   className,
   children,
 }: {
-  labelKey: keyof Messages;
+  labelKey: MessageKey;
   id?: string;
   className?: string;
   children: ReactNode;

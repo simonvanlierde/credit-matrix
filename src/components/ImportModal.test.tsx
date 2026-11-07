@@ -1,12 +1,15 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { type Author, createAuthor, toJson } from "@/core";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import { fetchOrcidKeys, type OrcidKey } from "@/core/orcid-proof";
-import en from "@/messages/en.json";
+import { convertCitation } from "@/lib/citation-import";
+import { english } from "@/lib/test-messages";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { ImportModal } from "./ImportModal";
 
+vi.mock("@/lib/citation-import", () => ({ convertCitation: vi.fn() }));
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
 vi.mock("@/core/orcid-proof", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/core/orcid-proof")>()),
@@ -60,7 +63,7 @@ function renderModal(
       />
     </IntlProvider>,
   );
-  const input = screen.getByLabelText(en.importFromDoi);
+  const input = screen.getByLabelText(english.importFromDoi);
   fireEvent.change(input, { target: { value: DOI } });
   return { ...view, onImport, onApplyStatement, input };
 }
@@ -69,7 +72,7 @@ describe("DOI lookup", () => {
   it("drops a result that lands after the dialog closed", async () => {
     const resolve = deferLookup();
     const { container, onImport } = renderModal(0);
-    fireEvent.click(screen.getByRole("button", { name: en.doiLookUp }));
+    fireEvent.click(screen.getByRole("button", { name: english.doiLookUp }));
 
     const dialog = container.ownerDocument.querySelector("dialog");
     act(() => {
@@ -83,14 +86,14 @@ describe("DOI lookup", () => {
   it("does not stage a replace confirmation in a dialog that closed", async () => {
     const resolve = deferLookup();
     const { container } = renderModal(3);
-    fireEvent.click(screen.getByRole("button", { name: en.doiLookUp }));
+    fireEvent.click(screen.getByRole("button", { name: english.doiLookUp }));
 
     act(() => {
       container.ownerDocument.querySelector("dialog")?.dispatchEvent(new Event("close"));
     });
     await resolve(WORK);
 
-    expect(screen.queryByText(en.replaceWorkspaceTitle)).toBeNull();
+    expect(screen.queryByText(english.replaceWorkspaceTitle)).toBeNull();
   });
 
   it("ignores Enter while a lookup is already running", async () => {
@@ -107,12 +110,12 @@ describe("DOI lookup", () => {
     const resolve = deferLookup();
     const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
     renderModal(0);
-    fireEvent.click(screen.getByRole("button", { name: en.doiLookUp }));
+    fireEvent.click(screen.getByRole("button", { name: english.doiLookUp }));
 
     onLine.mockReturnValue(false);
     await resolve({ ok: false, status: 502, code: "UNAVAILABLE", error: "" });
 
-    expect(screen.getByText(en.errDoiOFFLINE)).toBeTruthy();
+    expect(screen.getByText(english.errDoiOFFLINE)).toBeTruthy();
   });
 });
 
@@ -121,8 +124,8 @@ describe("a pasted share link", () => {
     const { promise, resolve } = Promise.withResolvers<null>();
     const onLink = vi.fn(() => promise);
     renderModal(0, onLink);
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: "#s=abc" } });
-    const button = screen.getByRole("button", { name: en.importData });
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "#s=abc" } });
+    const button = screen.getByRole("button", { name: english.importData });
     fireEvent.click(button);
     fireEvent.click(button);
 
@@ -148,23 +151,23 @@ describe("closing the dialog while ORCID's keys load", () => {
     const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
     vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
     const { onImport } = renderModal(existing);
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: signedFile() } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
     expect(fetchOrcidKeys).toHaveBeenCalled();
     close();
     await act(async () => resolve(null));
 
     expect(onImport).not.toHaveBeenCalled();
-    expect(screen.queryByText(en.replaceWorkspaceTitle)).toBeNull();
+    expect(screen.queryByText(english.replaceWorkspaceTitle)).toBeNull();
   });
 
   it("keeps a DOI lookup and an import from running at once, so neither lands over the other", async () => {
     const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
     vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
     renderModal(0);
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
-    expect((screen.getByRole("button", { name: en.doiLookUp }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: signedFile() } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    expect((screen.getByRole("button", { name: english.doiLookUp }) as HTMLButtonElement).disabled).toBe(true);
     await act(async () => resolve(null));
   });
 
@@ -172,11 +175,11 @@ describe("closing the dialog while ORCID's keys load", () => {
     const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
     vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
     renderModal(0);
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: signedFile() } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
     close();
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
-    expect((screen.getByRole("button", { name: en.importData }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: signedFile() } });
+    expect((screen.getByRole("button", { name: english.importData }) as HTMLButtonElement).disabled).toBe(false);
     await act(async () => resolve(null));
   });
 
@@ -184,8 +187,8 @@ describe("closing the dialog while ORCID's keys load", () => {
     const { promise, resolve } = Promise.withResolvers<OrcidKey[] | null>();
     vi.mocked(fetchOrcidKeys).mockReturnValue(promise);
     const { onImport, unmount } = renderModal(0);
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: signedFile() } });
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: signedFile() } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
     unmount();
     await act(async () => resolve(null));
 
@@ -196,8 +199,8 @@ describe("closing the dialog while ORCID's keys load", () => {
     const { promise, resolve } = Promise.withResolvers<null>();
     const onLink = vi.fn((_url: string, _current: () => boolean) => promise);
     renderModal(0, onLink);
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value: "#s=abc" } });
-    fireEvent.click(screen.getByRole("button", { name: en.importData }));
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "#s=abc" } });
+    fireEvent.click(screen.getByRole("button", { name: english.importData }));
     const current = onLink.mock.calls[0]?.[1];
     expect(current?.()).toBe(true);
     close();
@@ -209,12 +212,12 @@ describe("closing the dialog while ORCID's keys load", () => {
 describe("a JSON export from a newer version", () => {
   it("says so, instead of failing validation", async () => {
     const { onImport } = renderModal(0);
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), {
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), {
       target: { value: JSON.stringify({ version: 2, authors: [{ name: "Jane Smith", future: true }] }) },
     });
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
 
-    expect(screen.getByText(en.errImportNewerVersion)).toBeTruthy();
+    expect(screen.getByText(english.errImportNewerVersion)).toBeTruthy();
     expect(onImport).not.toHaveBeenCalled();
   });
 });
@@ -223,12 +226,12 @@ describe("a JSON export that repeats a contributor id", () => {
   it("says so, instead of the catch-all failure", async () => {
     const { onImport } = renderModal(0);
     const jane = createAuthor("Jane Smith");
-    fireEvent.change(screen.getByLabelText(en.pasteRawData), {
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), {
       target: { value: JSON.stringify({ version: 1, authors: [jane, jane] }) },
     });
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
 
-    expect(screen.getByText(en.errImportRepeatedId)).toBeTruthy();
+    expect(screen.getByText(english.errImportRepeatedId)).toBeTruthy();
     expect(onImport).not.toHaveBeenCalled();
   });
 });
@@ -236,25 +239,25 @@ describe("a JSON export that repeats a contributor id", () => {
 describe("accessibility and drops", () => {
   it("ties the form error to the textarea", async () => {
     renderModal(0);
-    const text = screen.getByLabelText(en.pasteRawData);
+    const text = screen.getByLabelText(english.pasteRawData);
     fireEvent.change(text, { target: { value: JSON.stringify({ version: 2, authors: [] }) } });
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: en.importData })));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
 
     expect(text.getAttribute("aria-invalid")).toBe("true");
     const id = text.getAttribute("aria-describedby") ?? "";
-    expect(document.getElementById(id)?.textContent).toBe(en.errImportNewerVersion);
+    expect(document.getElementById(id)?.textContent).toBe(english.errImportNewerVersion);
   });
 
   it("ties the DOI hint and error to the DOI input", () => {
     const { input } = renderModal(0);
     const id = input.getAttribute("aria-describedby") ?? "";
-    expect(document.getElementById(id)?.textContent).toBe(en.doiHint);
+    expect(document.getElementById(id)?.textContent).toBe(english.doiHint);
     expect(input.getAttribute("aria-invalid")).toBeNull();
 
     fireEvent.change(input, { target: { value: "nope" } });
-    fireEvent.click(screen.getByRole("button", { name: en.doiLookUp }));
+    fireEvent.click(screen.getByRole("button", { name: english.doiLookUp }));
     expect(input.getAttribute("aria-invalid")).toBe("true");
-    expect(document.getElementById(id)?.textContent).toBe(en.errDoiINVALID_DOI);
+    expect(document.getElementById(id)?.textContent).toBe(english.errDoiINVALID_DOI);
   });
 
   it("stops a file dropped outside the zone from navigating away", () => {
@@ -269,13 +272,13 @@ describe("accessibility and drops", () => {
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["Jane Smith"], "authors.csv");
     await act(async () => fireEvent.change(input, { target: { files: [file] } }));
-    expect(screen.getByText(en.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
+    expect(screen.getByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
   });
 });
 
 describe("a pasted CRediT statement", () => {
-  const paste = (value: string) => fireEvent.change(screen.getByLabelText(en.pasteRawData), { target: { value } });
-  const review = () => act(async () => fireEvent.click(screen.getByRole("button", { name: en.statementReview })));
+  const paste = (value: string) => fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value } });
+  const review = () => act(async () => fireEvent.click(screen.getByRole("button", { name: english.statementReview })));
   const roster = () => [
     createAuthor("Ann Bell", { contributions: [{ role: "Software", score: 33 }] }),
     createAuthor("Carl Dunn"),
@@ -295,7 +298,7 @@ describe("a pasted CRediT statement", () => {
     renderModal(0);
     paste("AB: conceptualization.");
     await review();
-    expect(screen.getByText(en.errStatementNoContributors)).toBeTruthy();
+    expect(screen.getByText(english.errStatementNoContributors)).toBeTruthy();
   });
 
   it("shows what matched and what did not, and applies only on request", async () => {
@@ -303,7 +306,7 @@ describe("a pasted CRediT statement", () => {
     paste("AB: conceptualization, software, review & editing. YL: data curation.");
     await review();
 
-    const heading = screen.getByRole("heading", { name: en.statementReviewTitle });
+    const heading = screen.getByRole("heading", { name: english.statementReviewTitle });
     expect(heading).toBe(document.activeElement);
     expect(document.getElementById(heading.getAttribute("aria-describedby") ?? "")?.textContent).toBe(
       "2 roles to add for 1 contributor. Roles already in the grid stay as they are.",
@@ -314,12 +317,12 @@ describe("a pasted CRediT statement", () => {
     expect(screen.queryByText("Carl Dunn")).toBeNull();
     expect(noRolesLine()).toBe("No roles found for: Carl Dunn, Yibo Lu (could be YL), Yang Lin (could be YL)");
     // An ambiguous token gets a picker that leaves its roles out until someone is chosen.
-    expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(en.statementLeaveOut);
+    expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(english.statementLeaveOut);
     // The review's Apply is the only primary action on screen.
-    expect(screen.queryByRole("button", { name: en.statementReview })).toBeNull();
+    expect(screen.queryByRole("button", { name: english.statementReview })).toBeNull();
     expect(onApplyStatement).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     const [next, added, level] = onApplyStatement.mock.calls[0] ?? [];
     expect([added, level]).toEqual([2, undefined]);
     const scores = next[0].contributions.filter((c: { score: number }) => c.score > 0);
@@ -343,7 +346,7 @@ describe("a pasted CRediT statement", () => {
     expect(listOf("Yang Lin")).toBe("Data curation, Software");
     expect(screen.queryByText("Yibo Lu")).toBeNull();
     expect(noRolesLine()).toBe("No roles found for: Carl Dunn, Yibo Lu (could be YL)");
-    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     const [next, added] = onApplyStatement.mock.calls[0] ?? [];
     expect(added).toBe(3);
     const roles = (author: Author) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
@@ -357,9 +360,9 @@ describe("a pasted CRediT statement", () => {
     await review();
     await pick("YL", "Yibo Lu");
     expect(listOf("Yibo Lu")).toBe("Data curation");
-    await pick("YL", en.statementLeaveOut);
+    await pick("YL", english.statementLeaveOut);
     expect(noRolesLine()).toContain("Yibo Lu (could be YL)");
-    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     const [next, added] = onApplyStatement.mock.calls[0] ?? [];
     expect(added).toBe(1);
     expect(next[2].contributions.every((c: { score: number }) => c.score === 0)).toBe(true);
@@ -372,7 +375,7 @@ describe("a pasted CRediT statement", () => {
     await pick("YL", "Yibo Lu");
     paste("AB: conceptualization. YL: data curation. ");
     await review();
-    expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(en.statementLeaveOut);
+    expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(english.statementLeaveOut);
     expect(noRolesLine()).toContain("Yibo Lu (could be YL)");
   });
 
@@ -385,7 +388,7 @@ describe("a pasted CRediT statement", () => {
       screen.getByText("1 role to add as Equal for 1 contributor. Roles already in the grid stay as they are."),
     ).toBeTruthy();
     expect(screen.getByText("XY: no contributor — left out: Funding acquisition")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     const [next, added, level] = onApplyStatement.mock.calls[0] ?? [];
     expect([added, level]).toEqual([1, "Equal"]);
     expect(next[1].contributions.find((c: { role: string }) => c.role === "Conceptualization").score).toBe(66);
@@ -399,7 +402,7 @@ describe("a pasted CRediT statement", () => {
     await review();
     expect(listOf("Ann Bell")).toBe("Conceptualization");
     expect(listOf("Carl Dunn")).toBe("Writing – original draft");
-    fireEvent.click(screen.getByRole("button", { name: en.statementApply }));
+    fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     expect(onApplyStatement.mock.calls[0]?.[1]).toBe(2);
   });
 
@@ -428,21 +431,76 @@ describe("a pasted CRediT statement", () => {
     renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
     paste("XY: conceptualization.");
     await review();
-    expect(screen.getByText(en.errStatementNoRoles)).toBeTruthy();
+    expect(screen.getByText(english.errStatementNoRoles)).toBeTruthy();
   });
 
   it("explains that prose is not read, and never offers to replace the workspace", async () => {
     renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
     paste("A.B. conceived the study. A.B. wrote the paper and analysed the data.");
     await review();
-    expect(screen.getByText(`${en.errStatementNoRoles} ${en.statementOnlyCredit}`)).toBeTruthy();
-    expect(screen.queryByText(en.replaceWorkspaceTitle)).toBeNull();
+    expect(screen.getByText(`${english.errStatementNoRoles} ${english.statementOnlyCredit}`)).toBeTruthy();
+    expect(screen.queryByText(english.replaceWorkspaceTitle)).toBeNull();
   });
 
   it("refuses a statement over the length cap", async () => {
     renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
     paste(`AB: conceptualization. ${"x".repeat(50_000)}`);
     await review();
-    expect(screen.getByText(en.errStatementTooLong.replace("{limit}", "50,000"))).toBeTruthy();
+    expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "50,000"))).toBeTruthy();
+  });
+});
+
+describe("deposited DOI roles", () => {
+  it("marks and previews imported roles, and waits for confirmation", async () => {
+    vi.mocked(lookupDoiWork).mockResolvedValue({
+      ok: true,
+      title: "A paper",
+      authors: [{ name: "Tu Youyou", roles: ["Software"] }],
+    });
+    const { onImport } = renderModal();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.doiLookUp })));
+    expect(onImport).not.toHaveBeenCalled();
+    expect(screen.getByText(english.doiRolesImported)).toBeTruthy();
+    expect(screen.getByText("Tu Youyou: Software")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: english.doiConfirm }));
+    expect(onImport.mock.calls[0]?.[0].authors[0].contributions).toContainEqual({ role: "Software", score: 100 });
+  });
+
+  it("says when roles are absent, and imports an empty matrix after confirmation", async () => {
+    vi.mocked(lookupDoiWork).mockResolvedValue(WORK);
+    const { onImport } = renderModal();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.doiLookUp })));
+    expect(screen.getByText(english.doiNoRoles)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: english.doiConfirm }));
+    expect(onImport.mock.calls[0]?.[0].authors[0].contributions.every((c: { score: number }) => c.score === 0)).toBe(
+      true,
+    );
+  });
+});
+
+describe("a citation converter completing after close", () => {
+  it.each(["failure", "empty"])("ignores the stale %s result", async (outcome) => {
+    const { promise, resolve, reject } = Promise.withResolvers<string>();
+    vi.mocked(convertCitation).mockReturnValue(promise);
+    const { container, input, onImport } = renderModal();
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), {
+      target: { value: "cff-version: 1.2.0\ntitle: Example" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: english.importData }));
+    expect(screen.getByText(english.citationConverting)).toBeTruthy();
+    act(() => {
+      container.ownerDocument.querySelector("dialog")?.dispatchEvent(new Event("close"));
+    });
+    fireEvent.change(input, { target: { value: "invalid" } });
+    fireEvent.click(screen.getByRole("button", { name: english.doiLookUp }));
+    await act(async () => {
+      if (outcome === "failure") reject(new Error("No runtime"));
+      else resolve(JSON.stringify({ author: [] }));
+      await Promise.resolve();
+    });
+    expect(screen.getByText(english.errDoiINVALID_DOI)).toBeTruthy();
+    expect(screen.queryByText(english.errCitationConverter)).toBeNull();
+    expect(screen.queryByText(english.errImportNoCitationAuthors)).toBeNull();
+    expect(onImport).not.toHaveBeenCalled();
   });
 });

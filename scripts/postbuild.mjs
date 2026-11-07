@@ -7,14 +7,14 @@
 //   that still allows inline script; the browser enforces both policies, so a
 //   script runs only if both allow it. The hashes live in the page, not the
 //   header, because one header line holding every page's hashes outgrows
-//   Cloudflare's 2000-character limit. Next's inline bootstrap is fixed at
+//   Cloudflare's 2000-character limit. The inline theme bootstrap is fixed at
 //   build time, which is what makes hashes possible here; a nonce would need
 //   a server.
 // - Service worker: stamps the build id into its cache name, so a new version
 //   drops the previous build's chunks when it activates, and checks that its
 //   page list names every exported page, so each one works offline.
 //
-// Runs after `next build` (see the `build` script); fails the build rather
+// Runs after `vite build` (see the `build` script); fails the build rather
 // than ship a page whose own scripts the CSP would block, a page without its
 // CSP, or a _headers file Cloudflare would refuse.
 
@@ -28,7 +28,7 @@ import { join } from "node:path";
 const OUT = "out";
 const INLINE_SCRIPT = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
 // The page's first element after the charset, so it covers every script.
-const HEAD_START = /<head>(<meta charSet="utf-8"\/>)?/;
+const HEAD_START = /<head>/;
 // Cloudflare refuses a _headers file with a longer line (error 100324).
 const MAX_HEADER_LINE = 2000;
 const sha256 = (text) => createHash("sha256").update(text).digest("base64");
@@ -73,6 +73,16 @@ if (missing.length > 0) throw new Error(`postbuild: ${swPath} PAGES lacks ${miss
 const buildId = sha256(await readFile(join(OUT, "index.html")))
   .replace(/[^A-Za-z0-9]/g, "")
   .slice(0, 12);
-await writeFile(swPath, sw.replace(placeholder, `"credit-matrix-${buildId}"`));
+const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
+  .filter((file) => /\.(?:js|css)$/.test(file))
+  .map((file) => `/assets/${file}`)
+  .sort();
+if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");
+await writeFile(
+  swPath,
+  sw
+    .replace(placeholder, `"credit-matrix-${buildId}"`)
+    .replace("const ASSETS = [];", `const ASSETS = ${JSON.stringify(assets)};`),
+);
 
 console.log(`postbuild: CSP script hashes per page: ${counts.join(", ")}; service worker cache ${buildId}`);

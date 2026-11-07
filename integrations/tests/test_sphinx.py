@@ -125,3 +125,17 @@ def test_unicode_output_under_non_utf8_locale(tmp_path, project):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Analyse formelle" in (output / "index.html").read_text(encoding="utf-8")
+
+
+def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
+    app, warnings, _ = project(
+        ".. credit-heatmap:: contributors.json\n   :shape: circle\n   :size: 30\n   :legend: false\n"
+    )
+    app.build()
+    assert not warnings.getvalue()
+    html = (tmp_path / "html/index.html").read_text(encoding="utf-8")
+    assert 'alt="CRediT: Marie Curie:' in html
+    image = next((tmp_path / "html/_images").glob("*.svg"))
+    svg = image.read_text(encoding="utf-8")
+    assert 'width="30" height="30" rx="15"' in svg
+    assert ">Supporting<" not in svg

@@ -16,11 +16,11 @@
  * activating a new version drops the previous build's chunks instead of
  * letting them pile up.
  *
- * NOTE: lazy chunks the page does not reference (a locale, a modal) are cached
- * only once loaded online. Precache the build manifest if that ceiling bites.
  */
 
 const CACHE = "credit-matrix-BUILD_ID";
+// Stamped by postbuild so lazy pages and languages also work on their first offline visit.
+const ASSETS = [];
 
 // Every exported page; scripts/postbuild.mjs fails the build when one is missing.
 const PAGES = ["/", "/about", "/accessibility", "/census"];
@@ -60,11 +60,12 @@ async function precache() {
   // one across two script chunks (`/fonts/newsreader-ital"])`). Take only
   // URLs that end in a file extension, or one cut-off URL fails addAll and
   // with it the install.
-  const assets = new Set(
-    pages.flatMap(
-      ([, , html]) => html.match(/\/(?:_next\/static|fonts)\/[^"'\s)\\]+\.(?:js|css|woff2)(?=["'\s)\\])/g) ?? [],
+  const assets = new Set([
+    ...ASSETS,
+    ...pages.flatMap(
+      ([, , html]) => html.match(/\/(?:assets|fonts)\/[^"'\s)\\]+\.(?:js|css|woff2)(?=["'\s)\\])/g) ?? [],
     ),
-  );
+  ]);
   await cache.addAll([...assets]);
   await Promise.all(pages.map(([path, page]) => cache.put(path, page)));
 }
@@ -107,11 +108,11 @@ async function handleNavigation(request) {
 async function handleAsset(request, event) {
   const cached = await caches.match(request);
   if (cached) {
-    // /_next/static/ URLs are content-hashed and /fonts/ files are renamed
+    // /assets/ URLs are content-hashed and /fonts/ files are renamed
     // rather than changed, so their cached copy is the final word; only other
     // assets (favicon, manifest) can change in place. waitUntil keeps the
     // worker alive until the refresh lands.
-    if (!/^\/(?:_next\/static|fonts)\//.test(new URL(request.url).pathname)) event.waitUntil(refresh(request));
+    if (!/^\/(?:assets|fonts)\//.test(new URL(request.url).pathname)) event.waitUntil(refresh(request));
     return cached;
   }
   return fetch(request).then(async (response) => {

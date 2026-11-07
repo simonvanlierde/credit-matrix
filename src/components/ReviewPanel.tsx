@@ -3,7 +3,6 @@
 import { ArrowRight, BadgeCheck, Check, CircleAlert, MessagesSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
-import { useFormatter, useTranslations } from "use-intl";
 import { daysSince, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/ask-panel-shared";
 import { LevelMark } from "@/components/ui/level-mark";
 import {
@@ -26,6 +25,7 @@ import { LEVEL_SCORE } from "@/core/author";
 import { heatCellColor, onColor } from "@/core/contributor-color";
 import { announce } from "@/lib/announce";
 import { copyAskMessage } from "@/lib/ask-message";
+import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useContributionStore } from "@/store/contribution-store";
 

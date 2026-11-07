@@ -18,10 +18,18 @@ systems: JATS4R XML, a Crossref `<contributors>` block, CSV, a tenzing spreadshe
 Markdown, and input for the latex-credits LaTeX package.
 
 Each co-author can check their own row through a link, and everything runs in your browser: only
-the ORCID and DOI lookups and the fetch of ORCID's public keys leave it. CRediT Matrix is an
+the ORCID and DOI lookups and the fetch of ORCID's public keys send identifiers out. Citation-file
+imports download a Python runtime from jsDelivr and run citesync locally; your file stays in the browser. CRediT Matrix is an
 independent project. It is not affiliated with or endorsed by NISO.
 
 **Try it:** [credit.duinlab.nl](https://credit.duinlab.nl)
+
+Cloudflare's server-side analytics estimated **5,330 page views** for `credit.duinlab.nl`
+from 8 October through 6 November 2026 (UTC), queried on 7 November. This counts successful
+HTML responses, including bots and repeat loads; it does not count people or saved drafts.
+The sampled GraphQL `httpRequestsAdaptiveGroups` query filtered this hostname, `requestSource: "eyeball"`,
+`edgeResponseContentTypeName: "html"` and HTTP status 200–299, following
+[Cloudflare's page-view definition](https://developers.cloudflare.com/analytics/account-and-zone-analytics/zone-analytics/).
 
 ![The CRediT Matrix workspace with sample data: a contributor rail on the left, the contribution grid as the main canvas with a strip above it counting answered co-authors, and an inspector on the right with Statement, Team and Review tabs. The Team tab is open and lists each contributor as not asked yet, with a Copy message button per person and an Ask everyone not yet asked button](docs/screenshots/hero.png)
 

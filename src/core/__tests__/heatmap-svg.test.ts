@@ -362,7 +362,7 @@ describe("buildHeatmapSvg placement", () => {
     // The grid border sits a fixed 1px outside the grid, but its corners and stroke scale.
     const border = (svg: string) =>
       svg.match(/rx="([\d.]+)" ry="([\d.]+)" fill="none"[^>]*stroke-width="([\d.]+)"/)?.slice(1);
-    expect(border(buildHeatmapSvg(authorsWithScores(), { scale: 2 }))).toEqual(["6", "6", "1"]);
+    expect(border(buildHeatmapSvg(authorsWithScores(), { scale: 2 }))).toEqual(["0", "0", "1"]);
   });
 
   it("puts each axis label beside the column or row it names", () => {

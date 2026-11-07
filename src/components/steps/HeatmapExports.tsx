@@ -2,11 +2,11 @@
 
 import { ChevronDown, Copy, Download } from "lucide-react";
 import { useState } from "react";
-import { useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Author, buildHeatmapSvg, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
 import { withPngText } from "@/lib/png-text";
+import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { download as downloadBlob } from "@/lib/utils";

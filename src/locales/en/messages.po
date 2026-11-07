@@ -1,0 +1,2090 @@
+msgid ""
+msgstr ""
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. js-lingui-explicit-id
+msgid "stepContributors"
+msgstr "Contributors"
+
+#. js-lingui-explicit-id
+msgid "stepContributions"
+msgstr "Contributions"
+
+#. js-lingui-explicit-id
+msgid "stepStatement"
+msgstr "Statement"
+
+#. js-lingui-explicit-id
+msgid "addContributor"
+msgstr "New author names or ORCID iD"
+
+#. js-lingui-explicit-id
+msgid "addPlaceholder"
+msgstr "Add names or an ORCID iD…"
+
+#. js-lingui-explicit-id
+msgid "addButton"
+msgstr "Add"
+
+#. js-lingui-explicit-id
+msgid "nameLabel"
+msgstr "Name or ORCID iD"
+
+#. js-lingui-explicit-id
+msgid "removeContributor"
+msgstr "Remove"
+
+#. js-lingui-explicit-id
+msgid "reorderContributor"
+msgstr "Reorder"
+
+#. js-lingui-explicit-id
+msgid "undo"
+msgstr "Undo"
+
+#. js-lingui-explicit-id
+msgid "cancel"
+msgstr "Cancel"
+
+#. js-lingui-explicit-id
+msgid "skipToContent"
+msgstr "Skip to content"
+
+#. js-lingui-explicit-id
+msgid "noContributorsYet"
+msgstr "No contributors yet."
+
+#. js-lingui-explicit-id
+msgid "loadSample"
+msgstr "Load sample data"
+
+#. js-lingui-explicit-id
+msgid "sampleNames"
+msgstr "Ada Lovelace\nRosalind E. Franklin\nAlan M. Turing"
+
+#. js-lingui-explicit-id
+msgid "assignmentMode"
+msgstr "Role assignment mode"
+
+#. js-lingui-explicit-id
+msgid "modeYesNo"
+msgstr "Yes / no"
+
+#. js-lingui-explicit-id
+msgid "modeLevels"
+msgstr "Levels"
+
+#. js-lingui-explicit-id
+msgid "bulkAssign"
+msgstr "Bulk assign"
+
+#. js-lingui-explicit-id
+msgid "heatmapOptions"
+msgstr "Heatmap options"
+
+#. js-lingui-explicit-id
+msgid "statementOptions"
+msgstr "Statement options"
+
+#. js-lingui-explicit-id
+msgid "gridColor"
+msgstr "Heatmap color"
+
+#. js-lingui-explicit-id
+msgid "transpose"
+msgstr "Transpose"
+
+#. js-lingui-explicit-id
+msgid "useInitials"
+msgstr "Use initials"
+
+#. js-lingui-explicit-id
+msgid "roleColumn"
+msgstr "Role"
+
+#. js-lingui-explicit-id
+msgid "contributorColumn"
+msgstr "Contributor"
+
+#. js-lingui-explicit-id
+msgid "groupByRole"
+msgstr "By role"
+
+#. js-lingui-explicit-id
+msgid "groupByAuthor"
+msgstr "By author"
+
+#. js-lingui-explicit-id
+msgid "showLevels"
+msgstr "Show levels"
+
+#. js-lingui-explicit-id
+msgid "copyStatement"
+msgstr "Copy statement"
+
+#. js-lingui-explicit-id
+msgid "exportData"
+msgstr "Export data"
+
+#. js-lingui-explicit-id
+msgid "download"
+msgstr "Download"
+
+#. js-lingui-explicit-id
+msgid "copy"
+msgstr "Copy"
+
+#. js-lingui-explicit-id
+msgid "copied"
+msgstr "Copied"
+
+#. js-lingui-explicit-id
+msgid "import"
+msgstr "Import"
+
+#. js-lingui-explicit-id
+msgid "share"
+msgstr "Share"
+
+#. js-lingui-explicit-id
+msgid "howItWorks"
+msgstr "How it works"
+
+#. js-lingui-explicit-id
+msgid "aboutApp"
+msgstr "About this app"
+
+#. js-lingui-explicit-id
+msgid "interfaceLanguage"
+msgstr "Interface language"
+
+#. js-lingui-explicit-id
+msgid "outputLanguage"
+msgstr "Output language"
+
+#. js-lingui-explicit-id
+msgid "toggleTheme"
+msgstr "Toggle theme"
+
+#. js-lingui-explicit-id
+msgid "contributorTypeAuthor"
+msgstr "Author"
+
+#. js-lingui-explicit-id
+msgid "contributorTypeNonAuthor"
+msgstr "Non-author"
+
+#. js-lingui-explicit-id
+msgid "addOrcid"
+msgstr "Add ORCID iD"
+
+#. js-lingui-explicit-id
+msgid "lookupOrcidName"
+msgstr "Look up name from ORCID"
+
+#. js-lingui-explicit-id
+msgid "lookingUp"
+msgstr "Looking up…"
+
+#. js-lingui-explicit-id
+msgid "nameUpdated"
+msgstr "Name updated"
+
+#. js-lingui-explicit-id
+msgid "removeOrcid"
+msgstr "Remove ORCID iD"
+
+#. js-lingui-explicit-id
+msgid "gridEmptyHint"
+msgstr "Add contributors to start assigning the 14 CRediT roles in this grid."
+
+#. js-lingui-explicit-id
+msgid "bulkAssignLevel"
+msgstr "Level to assign"
+
+#. js-lingui-explicit-id
+msgid "bulkOneContributor"
+msgstr "One contributor"
+
+#. js-lingui-explicit-id
+msgid "bulkOneRole"
+msgstr "One role"
+
+#. js-lingui-explicit-id
+msgid "bulkAssignAll"
+msgstr "Assign every role"
+
+#. js-lingui-explicit-id
+msgid "bulkClearAll"
+msgstr "Clear every role"
+
+#. js-lingui-explicit-id
+msgid "bulkAssignToAll"
+msgstr "Assign to everyone"
+
+#. js-lingui-explicit-id
+msgid "bulkClearRole"
+msgstr "Clear for everyone"
+
+#. js-lingui-explicit-id
+msgid "bulkChangeApplied"
+msgstr "Bulk change applied."
+
+#. js-lingui-explicit-id
+msgid "annBulkUndone"
+msgstr "Bulk change undone."
+
+#. js-lingui-explicit-id
+msgid "contributorToAssign"
+msgstr "Contributor to assign"
+
+#. js-lingui-explicit-id
+msgid "colorLabel"
+msgstr "Color"
+
+#. js-lingui-explicit-id
+msgid "transposeHint"
+msgstr "Swap the row and column axes"
+
+#. js-lingui-explicit-id
+msgid "legendLevel"
+msgstr "Level"
+
+#. js-lingui-explicit-id
+msgid "legendKey"
+msgstr "Key"
+
+#. js-lingui-explicit-id
+msgid "levelHint"
+msgstr "Select to cycle · Right-click or 0–3 sets a level."
+
+#. js-lingui-explicit-id
+msgid "heatmapLabel"
+msgstr "Heatmap"
+
+#. js-lingui-explicit-id
+msgid "copyHeatmapHint"
+msgstr "Copy the heatmap as a PNG image"
+
+#. js-lingui-explicit-id
+msgid "fullDefinition"
+msgstr "Full definition"
+
+#. js-lingui-explicit-id
+msgid "copyFailedMessage"
+msgstr "Copy failed"
+
+#. js-lingui-explicit-id
+msgid "linkCopied"
+msgstr "Link copied"
+
+#. js-lingui-explicit-id
+msgid "importTitle"
+msgstr "Import contributors"
+
+#. js-lingui-explicit-id
+msgid "importData"
+msgstr "Import data"
+
+#. js-lingui-explicit-id
+msgid "close"
+msgstr "Close"
+
+#. js-lingui-explicit-id
+msgid "browseFiles"
+msgstr "Browse files"
+
+#. js-lingui-explicit-id
+msgid "dragDropFile"
+msgstr "Drag and drop a file here"
+
+#. js-lingui-explicit-id
+msgid "acceptedFileTypes"
+msgstr "Accepts .csv, .tsv, .json, or .xml"
+
+#. js-lingui-explicit-id
+msgid "fileLoaded"
+msgstr "Loaded from {name}"
+
+#. js-lingui-explicit-id
+msgid "pasteRawData"
+msgstr "Paste raw data"
+
+#. js-lingui-explicit-id
+msgid "replaceWorkspaceTitle"
+msgstr "Replace the current workspace?"
+
+#. js-lingui-explicit-id
+msgid "replaceWorkspace"
+msgstr "Replace workspace"
+
+#. js-lingui-explicit-id
+msgid "keepCurrentWork"
+msgstr "Keep current work"
+
+#. js-lingui-explicit-id
+msgid "welcomeStepContributors"
+msgstr "Add contributors"
+
+#. js-lingui-explicit-id
+msgid "welcomeStepRoles"
+msgstr "Assign roles"
+
+#. js-lingui-explicit-id
+msgid "welcomeStepExport"
+msgstr "Review & export"
+
+#. js-lingui-explicit-id
+msgid "gotIt"
+msgstr "Got it"
+
+#. js-lingui-explicit-id
+msgid "startFresh"
+msgstr "Start fresh"
+
+#. js-lingui-explicit-id
+msgid "removedContributor"
+msgstr "Removed {name}"
+
+#. js-lingui-explicit-id
+msgid "contributorCount"
+msgstr "{count, plural, =0 {No contributors} one {# contributor} other {# contributors}}"
+
+#. js-lingui-explicit-id
+msgid "annContributorRestored"
+msgstr "{name} restored."
+
+#. js-lingui-explicit-id
+msgid "annNameFromOrcid"
+msgstr "Name updated from ORCID: {name}"
+
+#. js-lingui-explicit-id
+msgid "annStatementCopied"
+msgstr "Statement copied to clipboard"
+
+#. js-lingui-explicit-id
+msgid "annLinkCopied"
+msgstr "Link copied to clipboard"
+
+#. js-lingui-explicit-id
+msgid "annHeatmapCopied"
+msgstr "Heatmap PNG copied to clipboard"
+
+#. js-lingui-explicit-id
+msgid "annBadgeCopied"
+msgstr "Badge PNG copied to clipboard"
+
+#. js-lingui-explicit-id
+msgid "annCopyFailed"
+msgstr "Copy failed. Try again."
+
+#. js-lingui-explicit-id
+msgid "dndPickedUp"
+msgstr "Picked up contributor {name}."
+
+#. js-lingui-explicit-id
+msgid "dndOver"
+msgstr "Contributor {name} is over {target}."
+
+#. js-lingui-explicit-id
+msgid "dndDropped"
+msgstr "Contributor {name} was dropped onto {target}."
+
+#. js-lingui-explicit-id
+msgid "dndCancelled"
+msgstr "Reorder of {name} was cancelled."
+
+#. js-lingui-explicit-id
+msgid "errNameNoLetter"
+msgstr "That doesn't look like a name. It needs at least one letter."
+
+#. js-lingui-explicit-id
+msgid "errNameTooLong"
+msgstr "That name is too long. Use 500 characters or fewer."
+
+#. js-lingui-explicit-id
+msgid "errFileTooLarge"
+msgstr "That file is too large. Choose a file smaller than {limit}."
+
+#. js-lingui-explicit-id
+msgid "errFileUnreadable"
+msgstr "Could not read that file. Check the file and try again."
+
+#. js-lingui-explicit-id
+msgid "errImportTooLarge"
+msgstr "That import is too large. Paste less than {limit} of data."
+
+#. js-lingui-explicit-id
+msgid "errTooManyContributors"
+msgstr "That import has too many contributors. The limit is {limit}."
+
+#. js-lingui-explicit-id
+msgid "errShareTooLarge"
+msgstr "This draft is too large to share as a link. Export it as JSON instead."
+
+#. js-lingui-explicit-id
+msgid "errShareUnsupported"
+msgstr "This browser can't build share links. Export the draft as JSON instead."
+
+#. js-lingui-explicit-id
+msgid "errShareLinkBroken"
+msgstr "That shared link could not be opened. Your own draft was kept."
+
+#. js-lingui-explicit-id
+msgid "errAtContributorLimit"
+msgstr "A draft holds at most {limit} contributors. Remove one to add another."
+
+#. js-lingui-explicit-id
+msgid "errOrcidChecksum"
+msgstr "That ORCID iD has an invalid checksum. Check the digits and try again."
+
+#. js-lingui-explicit-id
+msgid "errOffline"
+msgstr "You are offline, so ORCID lookups are unavailable. Type the name instead."
+
+#. js-lingui-explicit-id
+msgid "errOrcidINVALID_ID"
+msgstr "That is not a valid ORCID iD. Check the digits and try again."
+
+#. js-lingui-explicit-id
+msgid "errOrcidNOT_FOUND"
+msgstr "No ORCID record matches that iD."
+
+#. js-lingui-explicit-id
+msgid "errOrcidUNAVAILABLE"
+msgstr "The ORCID service is unavailable. Try again shortly, or type the name."
+
+#. js-lingui-explicit-id
+msgid "importFromDoi"
+msgstr "Import from a DOI"
+
+#. js-lingui-explicit-id
+msgid "structuredFileUpload"
+msgstr "Structured file upload"
+
+#. js-lingui-explicit-id
+msgid "doiPlaceholder"
+msgstr "10.1038/s41586-020-2649-2"
+
+#. js-lingui-explicit-id
+msgid "doiLookUp"
+msgstr "Look up"
+
+#. js-lingui-explicit-id
+msgid "doiLookingUp"
+msgstr "Looking up…"
+
+#. js-lingui-explicit-id
+msgid "doiHint"
+msgstr "Fills in contributors, ORCID iDs and the title. Deposited CRediT roles are shown for confirmation."
+
+#. js-lingui-explicit-id
+msgid "errDoiINVALID_DOI"
+msgstr "That is not a valid DOI. It should look like 10.1234/abcde."
+
+#. js-lingui-explicit-id
+msgid "errDoiNOT_FOUND"
+msgstr "No published record matches that DOI."
+
+#. js-lingui-explicit-id
+msgid "errDoiNO_AUTHORS"
+msgstr "That record lists no contributors, so there is nothing to import."
+
+#. js-lingui-explicit-id
+msgid "errDoiTOO_MANY_AUTHORS"
+msgstr "That record lists more contributors than a draft can hold."
+
+#. js-lingui-explicit-id
+msgid "errDoiUNAVAILABLE"
+msgstr "The Crossref service is unavailable. Try again shortly, or paste the author list."
+
+#. js-lingui-explicit-id
+msgid "errDoiOFFLINE"
+msgstr "You are offline, so DOI lookups are unavailable. Paste the author list instead."
+
+#. js-lingui-explicit-id
+msgid "equalContributionShort"
+msgstr "Equal"
+
+#. js-lingui-explicit-id
+msgid "correspondingShort"
+msgstr "Corresponding"
+
+#. js-lingui-explicit-id
+msgid "equalContributionSet"
+msgstr "Mark as sharing first authorship"
+
+#. js-lingui-explicit-id
+msgid "equalContributionUnset"
+msgstr "Remove shared first authorship"
+
+#. js-lingui-explicit-id
+msgid "correspondingSet"
+msgstr "Mark as a corresponding author"
+
+#. js-lingui-explicit-id
+msgid "correspondingUnset"
+msgstr "Remove corresponding author"
+
+#. js-lingui-explicit-id
+msgid "drafts"
+msgstr "Drafts"
+
+#. js-lingui-explicit-id
+msgid "draftsHint"
+msgstr "Each draft is one paper. They stay in this browser."
+
+#. js-lingui-explicit-id
+msgid "untitledDraft"
+msgstr "Untitled draft"
+
+#. js-lingui-explicit-id
+msgid "newDraft"
+msgstr "New draft"
+
+#. js-lingui-explicit-id
+msgid "draftTitleLabel"
+msgstr "Draft title"
+
+#. js-lingui-explicit-id
+msgid "duplicateDraft"
+msgstr "Duplicate"
+
+#. js-lingui-explicit-id
+msgid "deleteDraft"
+msgstr "Delete"
+
+#. js-lingui-explicit-id
+msgid "confirmDeleteDraft"
+msgstr "Delete this draft?"
+
+#. js-lingui-explicit-id
+msgid "draftLimitReached"
+msgstr "You can keep {count} drafts at once. Delete one first."
+
+#. js-lingui-explicit-id
+msgid "draftCreated"
+msgstr "Started a new draft."
+
+#. js-lingui-explicit-id
+msgid "draftDuplicated"
+msgstr "Duplicated the draft."
+
+#. js-lingui-explicit-id
+msgid "draftDeleted"
+msgstr "Deleted the draft."
+
+#. js-lingui-explicit-id
+msgid "deleteAllDrafts"
+msgstr "Delete all drafts"
+
+#. js-lingui-explicit-id
+msgid "confirmDeleteAllDrafts"
+msgstr "Delete every draft in this browser? This cannot be undone."
+
+#. js-lingui-explicit-id
+msgid "allDraftsDeleted"
+msgstr "Deleted all drafts."
+
+#. js-lingui-explicit-id
+msgid "draftUpdatedElsewhere"
+msgstr "This draft was updated in another tab."
+
+#. js-lingui-explicit-id
+msgid "switchToDraft"
+msgstr "Switch to {title}"
+
+#. js-lingui-explicit-id
+msgid "coauthorPrefilled"
+msgstr "What is ticked is the guess of the person who asked. Change anything that's wrong."
+
+#. js-lingui-explicit-id
+msgid "coauthorHeading"
+msgstr "<work>{title}</work>: what did you do?"
+
+#. js-lingui-explicit-id
+msgid "coauthorHeadingUntitled"
+msgstr "What did you do on this paper?"
+
+#. js-lingui-explicit-id
+msgid "coauthorAnsweringAs"
+msgstr "Answering as <b>{name}</b>. Your name and ORCID iD travel back in the link you send."
+
+#. js-lingui-explicit-id
+msgid "coauthorBlankHint"
+msgstr "Pick a level for each role you took on and leave the rest at {none}. It takes about two minutes."
+
+#. js-lingui-explicit-id
+msgid "coauthorBlankHintYesNo"
+msgstr "Pick {contributed} for each role you took on and leave the rest at {none}. It takes about two minutes."
+
+#. js-lingui-explicit-id
+msgid "coauthorRoles"
+msgstr "Your roles"
+
+#. js-lingui-explicit-id
+msgid "coauthorFirstAuthor"
+msgstr "I share first authorship"
+
+#. js-lingui-explicit-id
+msgid "coauthorCorresponding"
+msgstr "I am a corresponding author"
+
+#. js-lingui-explicit-id
+msgid "coauthorDetails"
+msgstr "Your details"
+
+#. js-lingui-explicit-id
+msgid "coauthorDetailsHint"
+msgstr "Correct your name or ORCID iD here if the person who asked got them wrong."
+
+#. js-lingui-explicit-id
+msgid "coauthorName"
+msgstr "Name"
+
+#. js-lingui-explicit-id
+msgid "coauthorSend"
+msgstr "Send back"
+
+#. js-lingui-explicit-id
+msgid "coauthorMarked"
+msgstr "{count} of {total} roles marked"
+
+#. js-lingui-explicit-id
+msgid "coauthorOrcidSignIn"
+msgstr "Sign in with ORCID"
+
+#. js-lingui-explicit-id
+msgid "coauthorOrcidHint"
+msgstr "Optional: sign in with ORCID and your answer arrives marked as verified. The sign-in travels in the link you send back and is kept with your answer, also in JSON exports. It carries the name on your ORCID record."
+
+#. js-lingui-explicit-id
+msgid "coauthorOrcidChanged"
+msgstr "You changed your answer after signing in. Sign in again to verify this answer."
+
+#. js-lingui-explicit-id
+msgid "coauthorOrcidSigned"
+msgstr "Signed in with ORCID as {who}. Your answer will arrive marked as verified."
+
+#. js-lingui-explicit-id
+msgid "coauthorOrcidFailed"
+msgstr "The ORCID sign-in did not finish. You can still send your answer without it."
+
+#. js-lingui-explicit-id
+msgid "reviewOrcidVerified"
+msgstr "Verified by ORCID as {who}, signed in {date}."
+
+#. js-lingui-explicit-id
+msgid "reviewOrcidOtherId"
+msgstr "This is not the iD on the row."
+
+#. js-lingui-explicit-id
+msgid "reviewOrcidNoRowId"
+msgstr "This row has no ORCID iD to compare with."
+
+#. js-lingui-explicit-id
+msgid "reviewOrcidSignedFor"
+msgstr "Signed for “{title}”."
+
+#. js-lingui-explicit-id
+msgid "reviewOrcidSignedElsewhere"
+msgstr "Not verified for this row: {who} signed in with ORCID on {date} for a row with another name or iD."
+
+#. js-lingui-explicit-id
+msgid "coauthorNotSent"
+msgstr "Not sent yet."
+
+#. js-lingui-explicit-id
+msgid "coauthorCopyInstead"
+msgstr "Copy the link instead"
+
+#. js-lingui-explicit-id
+msgid "coauthorShareTitle"
+msgstr "{name}'s CRediT roles"
+
+#. js-lingui-explicit-id
+msgid "coauthorSentTitle"
+msgstr "Sent. You can close this page."
+
+#. js-lingui-explicit-id
+msgid "coauthorCopiedTitle"
+msgstr "Link copied. Paste it into your reply, then close this page."
+
+#. js-lingui-explicit-id
+msgid "coauthorSentBody"
+msgstr "The person who asked sees your answer next to their draft. If they ask again, open the new link: it replaces this answer."
+
+#. js-lingui-explicit-id
+msgid "coauthorChange"
+msgstr "Change my answer"
+
+#. js-lingui-explicit-id
+msgid "claimUnlock"
+msgstr "Keep as an ordinary draft"
+
+#. js-lingui-explicit-id
+msgid "annClaimUnlocked"
+msgstr "This is now an ordinary draft. Every row can be edited."
+
+#. js-lingui-explicit-id
+msgid "claimLockedHint"
+msgstr "You're answering a request, so only your own row is editable."
+
+#. js-lingui-explicit-id
+msgid "claimResumed"
+msgstr "Picked up where you left off on this request."
+
+#. js-lingui-explicit-id
+msgid "claimRequestUpdated"
+msgstr "The request was updated. Your earlier answers were replaced."
+
+#. js-lingui-explicit-id
+msgid "claimLockedDraft"
+msgstr "Locked: answering a request"
+
+#. js-lingui-explicit-id
+msgid "requestLinkOwn"
+msgstr "This is the request link you built for {name}."
+
+#. js-lingui-explicit-id
+msgid "askBlank"
+msgstr "Ask {name} what they did"
+
+#. js-lingui-explicit-id
+msgid "askPrefilled"
+msgstr "Ask {name} to check your guess"
+
+#. js-lingui-explicit-id
+msgid "askLinkHint"
+msgstr "The link carries the title, this person's name and iD."
+
+#. js-lingui-explicit-id
+msgid "ask"
+msgstr "Ask"
+
+#. js-lingui-explicit-id
+msgid "claimedRowBadge"
+msgstr "Your row"
+
+#. js-lingui-explicit-id
+msgid "askCopied"
+msgstr "Link copied"
+
+#. js-lingui-explicit-id
+msgid "askedChip"
+msgstr "Asked"
+
+#. js-lingui-explicit-id
+msgid "askedChipTitle"
+msgstr "Asked to fill in their row. Clears when the reply lands."
+
+#. js-lingui-explicit-id
+msgid "mergedRowBadge"
+msgstr "Updated"
+
+#. js-lingui-explicit-id
+msgid "mergedRowBadgeTitle"
+msgstr "Filled in from the reply you just opened."
+
+#. js-lingui-explicit-id
+msgid "activeDraft"
+msgstr "Open"
+
+#. js-lingui-explicit-id
+msgid "askContributorCopied"
+msgstr "Link copied. Send it to {name}."
+
+#. js-lingui-explicit-id
+msgid "mergeUnmatched"
+msgstr "That reply is for someone who is not in this draft, so nothing was merged."
+
+#. js-lingui-explicit-id
+msgid "askReplyDiffers"
+msgstr "{name}'s answer arrived: {count, plural, one {# difference} other {# differences}}."
+
+#. js-lingui-explicit-id
+msgid "askReplyMatches"
+msgstr "{name}'s answer matches yours."
+
+#. js-lingui-explicit-id
+msgid "askReplyStale"
+msgstr "This answer from {name} is older than the one you have, so it was not used."
+
+#. js-lingui-explicit-id
+msgid "askReplyDuplicate"
+msgstr "You already have this answer from {name}."
+
+#. js-lingui-explicit-id
+msgid "annMergeUndone"
+msgstr "Merge undone."
+
+#. js-lingui-explicit-id
+msgid "welcomeIntro"
+msgstr "Draft a manuscript-ready contribution statement in three steps."
+
+#. js-lingui-explicit-id
+msgid "about"
+msgstr "About"
+
+#. js-lingui-explicit-id
+msgid "statusReady"
+msgstr "Ready to export"
+
+#. js-lingui-explicit-id
+msgid "statusNotes"
+msgstr "{count, plural, one {# note to review} other {# notes to review}}"
+
+#. js-lingui-explicit-id
+msgid "statusDismiss"
+msgstr "Dismiss"
+
+#. js-lingui-explicit-id
+msgid "rolesUsed"
+msgstr "{used} of {total} roles used"
+
+#. js-lingui-explicit-id
+msgid "shareWarningTitle"
+msgstr "This link carries your data"
+
+#. js-lingui-explicit-id
+msgid "shareWarningBody"
+msgstr "Anyone with this link can read every contributor name, ORCID iD, contributor type, and role assignment."
+
+#. js-lingui-explicit-id
+msgid "noContributorsHint"
+msgstr "Paste a DOI or an ORCID iD below, type a name, or use <b>Import</b> in the header."
+
+#. js-lingui-explicit-id
+msgid "a11yContributionGrid"
+msgstr "Contribution grid"
+
+#. js-lingui-explicit-id
+msgid "a11yGeneratedStatement"
+msgstr "Generated statement"
+
+#. js-lingui-explicit-id
+msgid "a11yStatementNotes"
+msgstr "Statement notes"
+
+#. js-lingui-explicit-id
+msgid "a11yBulkContributor"
+msgstr "Contributor for bulk assignment"
+
+#. js-lingui-explicit-id
+msgid "a11yBulkRole"
+msgstr "Role for bulk assignment"
+
+#. js-lingui-explicit-id
+msgid "a11yExportFormat"
+msgstr "Export format"
+
+#. js-lingui-explicit-id
+msgid "a11yOrcidInput"
+msgstr "ORCID iD"
+
+#. js-lingui-explicit-id
+msgid "a11yOrcidHint"
+msgstr "Type an ORCID iD, or paste one as an iD or an orcid.org URL"
+
+#. js-lingui-explicit-id
+msgid "a11yDismissWelcome"
+msgstr "Dismiss getting started"
+
+#. js-lingui-explicit-id
+msgid "a11yShareLink"
+msgstr "Share a link containing all contributor data"
+
+#. js-lingui-explicit-id
+msgid "a11yUploadFile"
+msgstr "Upload CSV, TSV, JSON, or XML file"
+
+#. js-lingui-explicit-id
+msgid "a11yUseInitials"
+msgstr "Use initials instead of names"
+
+#. js-lingui-explicit-id
+msgid "a11yShowLevels"
+msgstr "Show levels: annotate roles with contribution levels"
+
+#. js-lingui-explicit-id
+msgid "a11ySeparateAcks"
+msgstr "Separate acknowledgements: credit non-author contributors on their own line"
+
+#. js-lingui-explicit-id
+msgid "customColor"
+msgstr "Custom"
+
+#. js-lingui-explicit-id
+msgid "copyDataLink"
+msgstr "Copy data link"
+
+#. js-lingui-explicit-id
+msgid "fullCreditStandard"
+msgstr "Full CRediT standard"
+
+#. js-lingui-explicit-id
+msgid "creditRolesExamples"
+msgstr "CRediT Roles & Examples"
+
+#. js-lingui-explicit-id
+msgid "sourceOnGitHub"
+msgstr "Source code on GitHub"
+
+#. js-lingui-explicit-id
+msgid "opensInNewTab"
+msgstr "(opens in new tab)"
+
+#. js-lingui-explicit-id
+msgid "acknowledgements"
+msgstr "Acknowledgements"
+
+#. js-lingui-explicit-id
+msgid "aboutTaxonomy"
+msgstr "CRediT is an ANSI/NISO standard (<cc>CC BY 4.0</cc>). This project is independent of NISO and not endorsed by it."
+
+#. js-lingui-explicit-id
+msgid "aboutPrivacy"
+msgstr "Looking up an ORCID iD sends it to pub.orcid.org from your browser. Looking up a DOI sends it to api.crossref.org, together with this site's contact address, and to api.datacite.org if Crossref has no record. Cloudflare, which hosts this site, counts page requests on its own servers, in aggregate, with no script or cookie in your browser. Importing CITATION.cff or .zenodo.json downloads the citesync converter and a Python runtime from cdn.jsdelivr.net; the file is processed in your browser and is never uploaded. Nothing else leaves your browser: drafts stay in its local storage. Asks to co-authors and their answers are kept only in this browser, and go into JSON exports unless you untick that option. Sending a reply hands its link, with that person's name and iD, to the app you choose. Signing in with ORCID on an answer takes the co-author to orcid.org and back; the sign-in then travels inside the reply link and is kept with the answer, also in JSON exports. It carries the name on the co-author's ORCID record. Opening a signed answer, or importing a JSON file with one, fetches ORCID's public keys from orcid.org to check it."
+
+#. js-lingui-explicit-id
+msgid "accessibilityStatement"
+msgstr "Accessibility statement"
+
+#. js-lingui-explicit-id
+msgid "getCreditBadge"
+msgstr "Get the CRediT badge"
+
+#. js-lingui-explicit-id
+msgid "creditBadge"
+msgstr "CRediT badge"
+
+#. js-lingui-explicit-id
+msgid "copiedHtml"
+msgstr "Copied HTML"
+
+#. js-lingui-explicit-id
+msgid "copiedPng"
+msgstr "Copied PNG"
+
+#. js-lingui-explicit-id
+msgid "annBadgeHtmlCopied"
+msgstr "Badge HTML copied to clipboard"
+
+#. js-lingui-explicit-id
+msgid "importAuthorList"
+msgstr "Author name list"
+
+#. js-lingui-explicit-id
+msgid "importPlaceholder"
+msgstr "{names}\n\nor a .csv / .tsv / .json / .xml / .cff export, or a link sent back to you"
+
+#. js-lingui-explicit-id
+msgid "errImportNoNames"
+msgstr "No author names found. Enter one name per line."
+
+#. js-lingui-explicit-id
+msgid "errImportNoCsvRows"
+msgstr "No contributor rows found in the CSV."
+
+#. js-lingui-explicit-id
+msgid "errImportNoJsonContributors"
+msgstr "That JSON export contains no contributors."
+
+#. js-lingui-explicit-id
+msgid "errImportNoXmlContribs"
+msgstr "No <contrib> elements found in the XML."
+
+#. js-lingui-explicit-id
+msgid "errImportNoCrossrefContribs"
+msgstr "No <contributors> block with a <person_name> found in the Crossref XML."
+
+#. js-lingui-explicit-id
+msgid "aboutTagline"
+msgstr "Draft CRediT contribution statements, and export the grid as a contribution heatmap."
+
+#. js-lingui-explicit-id
+msgid "aboutInspiredBy"
+msgstr "Inspired by the original"
+
+#. js-lingui-explicit-id
+msgid "aboutOutputTranslations"
+msgstr "Output translations by"
+
+#. js-lingui-explicit-id
+msgid "aboutPageTitle"
+msgstr "About CRediT Matrix"
+
+#. js-lingui-explicit-id
+msgid "aboutPageLink"
+msgstr "About, citing and privacy"
+
+#. js-lingui-explicit-id
+msgid "aboutVersion"
+msgstr "Version"
+
+#. js-lingui-explicit-id
+msgid "aboutLicense"
+msgstr "License"
+
+#. js-lingui-explicit-id
+msgid "aboutSource"
+msgstr "Source code"
+
+#. js-lingui-explicit-id
+msgid "aboutAuthor"
+msgstr "Author"
+
+#. js-lingui-explicit-id
+msgid "aboutCiteTitle"
+msgstr "Cite CRediT Matrix"
+
+#. js-lingui-explicit-id
+msgid "aboutCite"
+msgstr "If you used CRediT Matrix for a paper, cite it by its concept DOI, which always resolves to the latest version:"
+
+#. js-lingui-explicit-id
+msgid "aboutCiteMetadata"
+msgstr "These come from the repository's <link>CITATION.cff</link>. <citesync>citesync</citesync> keeps it in step with each release, and its playground makes the same file for your own software."
+
+#. js-lingui-explicit-id
+msgid "aboutCiteFormat"
+msgstr "Citation format"
+
+#. js-lingui-explicit-id
+msgid "annCitationCopied"
+msgstr "Citation copied"
+
+#. js-lingui-explicit-id
+msgid "aboutPluginsTitle"
+msgstr "Plugins for writing tools"
+
+#. js-lingui-explicit-id
+msgid "aboutPlugins"
+msgstr "Write the statement where you write the paper. These plugins add it to your document, from the roles in its author list or from a file exported here. Each name links to its setup guide."
+
+#. js-lingui-explicit-id
+msgid "aboutPluginsSoftware"
+msgstr "For software, the <cli>command-line tool</cli> also writes people and roles as CodeMeta. <citesync>citesync</citesync> turns that metadata into CITATION.cff and Zenodo files, and <drift>codemeta-drift</drift> checks a CodeMeta file for consistency."
+
+#. js-lingui-explicit-id
+msgid "statementPlugins"
+msgstr "Plugins for Quarto, MyST, Typst and more"
+
+#. js-lingui-explicit-id
+msgid "privacy"
+msgstr "Privacy"
+
+#. js-lingui-explicit-id
+msgid "accessibility"
+msgstr "Accessibility"
+
+#. js-lingui-explicit-id
+msgid "aboutAccessibility"
+msgstr "The <link>accessibility statement</link> says what we check, which problems we know about, and how to report one."
+
+#. js-lingui-explicit-id
+msgid "detectedFormat"
+msgstr "Detected: {format}"
+
+#. js-lingui-explicit-id
+msgid "mergeWrongDraft"
+msgstr "That reply belongs to a draft that is not in this browser, so nothing was changed."
+
+#. js-lingui-explicit-id
+msgid "sharedDraftOpened"
+msgstr "Opened the shared draft beside your own work."
+
+#. js-lingui-explicit-id
+msgid "sharedDraftLoaded"
+msgstr "Opened the shared draft."
+
+#. js-lingui-explicit-id
+msgid "a11yInvalidOrcid"
+msgstr "Invalid ORCID iD"
+
+#. js-lingui-explicit-id
+msgid "a11yRoleAssignment"
+msgstr "{role} for {name}: {level}"
+
+#. js-lingui-explicit-id
+msgid "a11yRolesForContributor"
+msgstr "Roles for {name}"
+
+#. js-lingui-explicit-id
+msgid "a11ySetColor"
+msgstr "Set color {color}"
+
+#. js-lingui-explicit-id
+msgid "a11yStatementGrouping"
+msgstr "Statement grouping"
+
+#. js-lingui-explicit-id
+msgid "annContributorsAdded"
+msgstr "{count, plural, one {Added # contributor.} other {Added # contributors.}}"
+
+#. js-lingui-explicit-id
+msgid "annEntriesSkippedNoName"
+msgstr "{count, plural, one {Skipped # entry with no name} other {Skipped # entries with no name}} ({entries})."
+
+#. js-lingui-explicit-id
+msgid "annOrcidChecksumsSkipped"
+msgstr "{count, plural, one {Skipped # ORCID iD with an invalid check digit} other {Skipped # ORCID iDs with an invalid check digit}} ({ids})."
+
+#. js-lingui-explicit-id
+msgid "annOrcidLookupsFailed"
+msgstr "Could not look up {count, plural, one {# ORCID iD} other {# ORCID iDs}} ({ids}). Those rows are named after their iD; rename them manually."
+
+#. js-lingui-explicit-id
+msgid "annContributorsSkippedLimit"
+msgstr "{count, plural, one {Skipped # contributor} other {Skipped # contributors}}: a draft holds at most {limit}."
+
+#. js-lingui-explicit-id
+msgid "annCopiedToClipboard"
+msgstr "Copied to clipboard"
+
+#. js-lingui-explicit-id
+msgid "annExportDataCopied"
+msgstr "Export data copied to clipboard"
+
+#. js-lingui-explicit-id
+msgid "badgeIntro"
+msgstr "Add this badge to your article to show that it uses the taxonomy."
+
+#. js-lingui-explicit-id
+msgid "copyHtml"
+msgstr "Copy HTML"
+
+#. js-lingui-explicit-id
+msgid "copyPng"
+msgstr "Copy PNG"
+
+#. js-lingui-explicit-id
+msgid "downloadPng"
+msgstr "Download PNG"
+
+#. js-lingui-explicit-id
+msgid "switchToDarkTheme"
+msgstr "Switch to dark mode"
+
+#. js-lingui-explicit-id
+msgid "switchToLightTheme"
+msgstr "Switch to light mode"
+
+#. js-lingui-explicit-id
+msgid "contributorTypeSetAuthor"
+msgstr "Mark as an author"
+
+#. js-lingui-explicit-id
+msgid "contributorTypeSetNonAuthor"
+msgstr "Mark as a non-author contributor"
+
+#. js-lingui-explicit-id
+msgid "errImportFailed"
+msgstr "Could not import those contributors. Check the data and try again."
+
+#. js-lingui-explicit-id
+msgid "errImportNewerVersion"
+msgstr "This file was made by a newer version of CRediT Matrix. Reload the page to update, then try again."
+
+#. js-lingui-explicit-id
+msgid "errImportRepeatedId"
+msgstr "This file lists the same contributor id twice, so it was not imported."
+
+#. js-lingui-explicit-id
+msgid "errHeatmapExport"
+msgstr "Could not export the heatmap as {format}."
+
+#. js-lingui-explicit-id
+msgid "errStorageFull"
+msgstr "Browser storage is full, so changes are not saved. Export this draft, or delete one you no longer need."
+
+#. js-lingui-explicit-id
+msgid "errStorageBlocked"
+msgstr "This browser blocks storage for this site, so changes are not saved. Allow site data, or export before you close the tab."
+
+#. js-lingui-explicit-id
+msgid "errNewerVersionSaved"
+msgstr "A newer version of CRediT Matrix saved your drafts in another tab. Reload this page: changes made here are not saved."
+
+#. js-lingui-explicit-id
+msgid "formatShareLink"
+msgstr "Share link"
+
+#. js-lingui-explicit-id
+msgid "formatJsonExport"
+msgstr "JSON export"
+
+#. js-lingui-explicit-id
+msgid "replaceWorkspaceBody"
+msgstr "Importing {incoming, plural, one {# contributor} other {# contributors}} will replace {existing, plural, one {the # contributor} other {the # contributors}} already in this workspace. This cannot be undone."
+
+#. js-lingui-explicit-id
+msgid "statementEmptyHint"
+msgstr "No contributions assigned yet. Select cells in the grid to assign roles."
+
+#. js-lingui-explicit-id
+msgid "separateAcknowledgements"
+msgstr "Separate acknowledgements"
+
+#. js-lingui-explicit-id
+msgid "validationAuthorNoRoles"
+msgstr "{name} has no assigned CRediT roles."
+
+#. js-lingui-explicit-id
+msgid "validationRoleUnassigned"
+msgstr "No contributor is assigned “{role}”."
+
+#. js-lingui-explicit-id
+msgid "welcomeBodyContributors"
+msgstr "Paste a DOI to fill the whole list from the published record, or type names yourself. An ORCID iD fills a name in for you."
+
+#. js-lingui-explicit-id
+msgid "welcomeBodyRoles"
+msgstr "Select cells in the grid to mark which of the 14 CRediT roles each contributor took on."
+
+#. js-lingui-explicit-id
+msgid "welcomeBodyExport"
+msgstr "The statement updates as you go. Copy it, or download the heatmap, XML, CSV, JSON, or Markdown."
+
+#. js-lingui-explicit-id
+msgid "welcomeDraftsTitle"
+msgstr "One draft per paper"
+
+#. js-lingui-explicit-id
+msgid "welcomeDraftsBody"
+msgstr "Writing more than one paper? Switch drafts from the header; each is kept separately in this browser."
+
+#. js-lingui-explicit-id
+msgid "welcomeAskTitle"
+msgstr "Ask co-authors directly"
+
+#. js-lingui-explicit-id
+msgid "welcomeAskBody"
+msgstr "Copy a link from a contributor's row menu and send it to them. When their link comes back, open it: the answer is kept beside their row, and you settle any differences in the Review tab."
+
+#. js-lingui-explicit-id
+msgid "importDescription"
+msgstr "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R or Crossref XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too. Paste an author contribution statement to fill in the roles of the contributors already here. CITATION.cff, codemeta.json and .zenodo.json import author names and ORCID iDs, leaving roles empty."
+
+#. js-lingui-explicit-id
+msgid "contributorActions"
+msgstr "Actions for {name}"
+
+#. js-lingui-explicit-id
+msgid "colorBlue"
+msgstr "Blue"
+
+#. js-lingui-explicit-id
+msgid "colorOrange"
+msgstr "Orange"
+
+#. js-lingui-explicit-id
+msgid "colorBluishGreen"
+msgstr "Bluish green"
+
+#. js-lingui-explicit-id
+msgid "colorReddishPurple"
+msgstr "Reddish purple"
+
+#. js-lingui-explicit-id
+msgid "colorVermilion"
+msgstr "Vermilion"
+
+#. js-lingui-explicit-id
+msgid "colorSkyBlue"
+msgstr "Sky blue"
+
+#. js-lingui-explicit-id
+msgid "colorYellow"
+msgstr "Yellow"
+
+#. js-lingui-explicit-id
+msgid "colorDarkGray"
+msgstr "Dark gray"
+
+#. js-lingui-explicit-id
+msgid "languageSettings"
+msgstr "Language settings"
+
+#. js-lingui-explicit-id
+msgid "stripOpenTeam"
+msgstr "Ask co-authors"
+
+#. js-lingui-explicit-id
+msgid "teamYou"
+msgstr "You"
+
+#. js-lingui-explicit-id
+msgid "teamNotAsked"
+msgstr "Not asked yet"
+
+#. js-lingui-explicit-id
+msgid "toggleKeysHint"
+msgstr "Select to toggle · Arrow keys move, 1 or 0 sets a role."
+
+#. js-lingui-explicit-id
+msgid "downloadSvg"
+msgstr "Download SVG"
+
+#. js-lingui-explicit-id
+msgid "copyFormat"
+msgstr "Copy {format}"
+
+#. js-lingui-explicit-id
+msgid "downloadFormat"
+msgstr "Download {format}"
+
+#. js-lingui-explicit-id
+msgid "a11yInspector"
+msgstr "Statement, team, review and published practice"
+
+#. js-lingui-explicit-id
+msgid "tabTeam"
+msgstr "Team"
+
+#. js-lingui-explicit-id
+msgid "tabReview"
+msgstr "Review"
+
+#. js-lingui-explicit-id
+msgid "tabNorms"
+msgstr "Published practice"
+
+#. js-lingui-explicit-id
+msgid "normsIntro"
+msgstr "How often published papers in a field give each role, by author position. This is context, not advice: what is common elsewhere says nothing about what your co-authors did."
+
+#. js-lingui-explicit-id
+msgid "normsField"
+msgstr "Your field"
+
+#. js-lingui-explicit-id
+msgid "normsFieldPlaceholder"
+msgstr "Choose a field"
+
+#. js-lingui-explicit-id
+msgid "normsEmpty"
+msgstr "Choose your field to see the shares. The app does not know your paper's field, and nothing here changes your grid."
+
+#. js-lingui-explicit-id
+msgid "normsFieldGone"
+msgstr "Your saved field, <name>{field}</name>, has no data in this snapshot. Choose a field to see the shares."
+
+#. js-lingui-explicit-id
+msgid "normsCoverage"
+msgstr "{articles, number} open-access research articles in <name>{field}</name> with CRediT roles, from Europe PMC files of {date}. Shares count authors with at least one role."
+
+#. js-lingui-explicit-id
+msgid "normsUnvalidated"
+msgstr "Roles were read automatically and not checked by hand: on {tagged, number} papers whose publishers also tag the roles, the parser matches the tags at an F1 score of {f1} (1 is perfect)."
+
+#. js-lingui-explicit-id
+msgid "normsYourPosition"
+msgstr "Your position in this draft: {position, select, single {sole} first {first} middle {middle} other {last}} author."
+
+#. js-lingui-explicit-id
+msgid "normsNonAuthor"
+msgstr "You are a non-author in this draft, so no column is marked: the shares count authors only."
+
+#. js-lingui-explicit-id
+msgid "normsNoSelf"
+msgstr "To mark your position, choose “This is me” on your row in the contributor list."
+
+#. js-lingui-explicit-id
+msgid "normsCaption"
+msgstr "Share of authors given each role, by author position"
+
+#. js-lingui-explicit-id
+msgid "normsRole"
+msgstr "Role"
+
+#. js-lingui-explicit-id
+msgid "normsPosition"
+msgstr "{position, select, single {Sole} first {First} middle {Middle} other {Last}}"
+
+#. js-lingui-explicit-id
+msgid "normsTooFew"
+msgstr "Too few authors to say"
+
+#. js-lingui-explicit-id
+msgid "normsFootnote"
+msgstr "Fields with fewer than {minArticles, number} such articles are not listed, and a position with fewer than {minAuthors, number} authors shows a dash. Fields are per journal, from OpenAlex. Source: CRediT census {snapshot}, dataset {version}."
+
+#. js-lingui-explicit-id
+msgid "reviewEmptyTitle"
+msgstr "Answers from co-authors appear here"
+
+#. js-lingui-explicit-id
+msgid "reviewEmptyBody"
+msgstr "When a co-author sends their link back, open it, and their answer shows up here beside your draft."
+
+#. js-lingui-explicit-id
+msgid "teamEmpty"
+msgstr "Add contributors first, then ask each of them what they did."
+
+#. js-lingui-explicit-id
+msgid "teamMessage"
+msgstr "Hi {name},\n\nI am preparing the CRediT contribution statement for {work}. Could you open this link, mark the roles you took on, and send the link back to me?\n\n{link}\n\nThe link carries the title, your name and your iD. Nothing is stored on a server."
+
+#. js-lingui-explicit-id
+msgid "teamMessageWork"
+msgstr "“{title}”"
+
+#. js-lingui-explicit-id
+msgid "teamMessageNoTitle"
+msgstr "our manuscript"
+
+#. js-lingui-explicit-id
+msgid "teamMessageCopied"
+msgstr "Message for {name} copied. Paste it into an email."
+
+#. js-lingui-explicit-id
+msgid "teamAskAllDone"
+msgstr "{count, plural, one {# message copied.} other {All # messages copied.}}"
+
+#. js-lingui-explicit-id
+msgid "teamAskNext"
+msgstr "Copy next: {name} ({index} of {total})"
+
+#. js-lingui-explicit-id
+msgid "teamAskAll"
+msgstr "Ask everyone not yet asked ({count})"
+
+#. js-lingui-explicit-id
+msgid "teamAskAllHint"
+msgstr "Copies one message per person. Paste each into an email before copying the next."
+
+#. js-lingui-explicit-id
+msgid "teamPrivacy"
+msgstr "Each link carries the paper title and that person's name and iD. Nothing is stored on a server: the answer comes back the way you send it."
+
+#. js-lingui-explicit-id
+msgid "teamCopyMessageFor"
+msgstr "Copy message for {name}"
+
+#. js-lingui-explicit-id
+msgid "teamCopyMessage"
+msgstr "Copy message"
+
+#. js-lingui-explicit-id
+msgid "expandContributors"
+msgstr "Expand contributor list"
+
+#. js-lingui-explicit-id
+msgid "collapseContributors"
+msgstr "Collapse contributor list"
+
+#. js-lingui-explicit-id
+msgid "moveUp"
+msgstr "Move up"
+
+#. js-lingui-explicit-id
+msgid "moveDown"
+msgstr "Move down"
+
+#. js-lingui-explicit-id
+msgid "annMoved"
+msgstr "{name} moved to position {position} of {total}."
+
+#. js-lingui-explicit-id
+msgid "skipToGrid"
+msgstr "Skip to grid"
+
+#. js-lingui-explicit-id
+msgid "skipToStatement"
+msgstr "Skip to statement"
+
+#. js-lingui-explicit-id
+msgid "stripAnswered"
+msgstr "{answered} of {total} answered"
+
+#. js-lingui-explicit-id
+msgid "stripDiffer"
+msgstr "{count, plural, one {# answer differs} other {# answers differ}}"
+
+#. js-lingui-explicit-id
+msgid "reviewAction"
+msgstr "Review"
+
+#. js-lingui-explicit-id
+msgid "tabReviewOpen"
+msgstr "{count, plural, one {# open difference} other {# open differences}}"
+
+#. js-lingui-explicit-id
+msgid "statementDiffers"
+msgstr "{count, plural, one {# contribution still differs.} other {# contributions still differ.}} This statement uses your version."
+
+#. js-lingui-explicit-id
+msgid "exportIncludesAnswers"
+msgstr "Include co-author answers and ask history ({count})"
+
+#. js-lingui-explicit-id
+msgid "thisIsMe"
+msgstr "This is me"
+
+#. js-lingui-explicit-id
+msgid "thisIsNotMe"
+msgstr "This is not me"
+
+#. js-lingui-explicit-id
+msgid "teamSettledOn"
+msgstr "Settled on {date}"
+
+#. js-lingui-explicit-id
+msgid "teamStatusAnswered"
+msgstr "{days, plural, =0 {Answered today} =1 {Answered yesterday} other {Answered # days ago}} · {count} to review"
+
+#. js-lingui-explicit-id
+msgid "teamStatusAsked"
+msgstr "{days, plural, =0 {Asked today} =1 {Asked yesterday} other {Asked # days ago}} · {kind, select, prefilled {your guess} other {blank}}"
+
+#. js-lingui-explicit-id
+msgid "reviewAnsweredMeta"
+msgstr "{days, plural, =0 {Answered today} =1 {Answered yesterday} other {Answered # days ago}} · {kind, select, prefilled {your guess} other {blank}}"
+
+#. js-lingui-explicit-id
+msgid "teamReviewFor"
+msgstr "Review {name}'s answer"
+
+#. js-lingui-explicit-id
+msgid "markerSharedFirst"
+msgstr "Shared first authorship"
+
+#. js-lingui-explicit-id
+msgid "markerCorresponding"
+msgstr "Corresponding author"
+
+#. js-lingui-explicit-id
+msgid "markerYes"
+msgstr "Yes"
+
+#. js-lingui-explicit-id
+msgid "markerNo"
+msgstr "No"
+
+#. js-lingui-explicit-id
+msgid "reviewKindAdded"
+msgstr "Added a role"
+
+#. js-lingui-explicit-id
+msgid "reviewKindMarked"
+msgstr "Marked this"
+
+#. js-lingui-explicit-id
+msgid "reviewKindDropped"
+msgstr "Left this out"
+
+#. js-lingui-explicit-id
+msgid "reviewKindLevel"
+msgstr "Different level"
+
+#. js-lingui-explicit-id
+msgid "reviewUseTheirs"
+msgstr "Use {name}'s"
+
+#. js-lingui-explicit-id
+msgid "reviewKeepYours"
+msgstr "Keep yours"
+
+#. js-lingui-explicit-id
+msgid "reviewAskAbout"
+msgstr "Ask {name} about this"
+
+#. js-lingui-explicit-id
+msgid "reviewUseTheirsRole"
+msgstr "Use {name}'s: {role}"
+
+#. js-lingui-explicit-id
+msgid "reviewKeepYoursRole"
+msgstr "Keep yours: {role}"
+
+#. js-lingui-explicit-id
+msgid "undoRole"
+msgstr "Undo: {role}"
+
+#. js-lingui-explicit-id
+msgid "reviewAskAboutRole"
+msgstr "{copied, select, true {Copied. Ask {name} about this: {role}} other {Ask {name} about this: {role}}}"
+
+#. js-lingui-explicit-id
+msgid "reviewUseAll"
+msgstr "Use all of {name}'s"
+
+#. js-lingui-explicit-id
+msgid "reviewUsedTheirs"
+msgstr "Used {name}'s answer"
+
+#. js-lingui-explicit-id
+msgid "reviewKeptYours"
+msgstr "Kept yours"
+
+#. js-lingui-explicit-id
+msgid "annReviewUsed"
+msgstr "Used {name}'s answer for {role}."
+
+#. js-lingui-explicit-id
+msgid "annReviewKept"
+msgstr "Kept yours for {role}."
+
+#. js-lingui-explicit-id
+msgid "annReviewUsedAll"
+msgstr "Used all of {name}'s answers."
+
+#. js-lingui-explicit-id
+msgid "annReviewUndone"
+msgstr "Choice undone."
+
+#. js-lingui-explicit-id
+msgid "reviewAllSettledTitle"
+msgstr "Everything is settled."
+
+#. js-lingui-explicit-id
+msgid "reviewAllSettledBody"
+msgstr "Every answer that differed has a decision, and the statement shows the result."
+
+#. js-lingui-explicit-id
+msgid "cellTheySay"
+msgstr "{name} says {level}"
+
+#. js-lingui-explicit-id
+msgid "columnOpenDifferences"
+msgstr "{name}: {count, plural, one {# open difference} other {# open differences}}"
+
+#. js-lingui-explicit-id
+msgid "columnSettled"
+msgstr "Settled"
+
+#. js-lingui-explicit-id
+msgid "legendDiffers"
+msgstr "A co-author answered differently"
+
+#. js-lingui-explicit-id
+msgid "reviewAskMessage"
+msgstr "Hi {name},\n\nI am finishing the CRediT contribution statement for {work}. Our answers differ on {role}. Could you open this link, check your row, and send the link back to me?\n\n{link}\n\nThe link carries the title, your name and your iD. Nothing is stored on a server."
+
+#. js-lingui-explicit-id
+msgid "formatStatement"
+msgstr "CRediT statement"
+
+#. js-lingui-explicit-id
+msgid "statementReview"
+msgstr "Review roles"
+
+#. js-lingui-explicit-id
+msgid "statementReviewTitle"
+msgstr "Roles found in the statement"
+
+#. js-lingui-explicit-id
+msgid "statementReviewSummary"
+msgstr "{added, plural, one {# role} other {# roles}} to add for {people, plural, one {# contributor} other {# contributors}}. Roles already in the grid stay as they are."
+
+#. js-lingui-explicit-id
+msgid "statementNothingNew"
+msgstr "Every role found is already in the grid."
+
+#. js-lingui-explicit-id
+msgid "statementNoRolesFor"
+msgstr "No roles found for: {names}"
+
+#. js-lingui-explicit-id
+msgid "statementCouldBe"
+msgstr "(could be {token})"
+
+#. js-lingui-explicit-id
+msgid "statementUnresolvedBody"
+msgstr "These names or initials fit no contributor in this draft, or more than one. Their roles are left out unless you choose who is meant. Set the rest in the grid after applying."
+
+#. js-lingui-explicit-id
+msgid "statementLeaveOut"
+msgstr "Leave out"
+
+#. js-lingui-explicit-id
+msgid "statementReviewSummaryLevel"
+msgstr "{added, plural, one {# role} other {# roles}} to add as {level} for {people, plural, one {# contributor} other {# contributors}}. Roles already in the grid stay as they are."
+
+#. js-lingui-explicit-id
+msgid "statementRoleAlreadySet"
+msgstr "{role} (already set)"
+
+#. js-lingui-explicit-id
+msgid "statementUnmatchedTitle"
+msgstr "Not matched"
+
+#. js-lingui-explicit-id
+msgid "statementUnmatchedAmbiguous"
+msgstr "{token}: could be {names}"
+
+#. js-lingui-explicit-id
+msgid "statementUnmatchedNone"
+msgstr "{token}: no contributor"
+
+#. js-lingui-explicit-id
+msgid "statementLeftOut"
+msgstr "{who} — left out: {roles}"
+
+#. js-lingui-explicit-id
+msgid "statementAppliedLevel"
+msgstr "{count, plural, one {# role} other {# roles}} added from the statement as {level}."
+
+#. js-lingui-explicit-id
+msgid "statementUndoStale"
+msgstr "Nothing undone: the draft changed after the roles were added. Change them in the grid instead."
+
+#. js-lingui-explicit-id
+msgid "statementOnlyCredit"
+msgstr "Only CRediT role names are read, such as Conceptualization or Writing – original draft, not sentences about who did what."
+
+#. js-lingui-explicit-id
+msgid "errStatementTooLong"
+msgstr "This text is longer than {limit} characters. Paste the contribution statement on its own."
+
+#. js-lingui-explicit-id
+msgid "statementBack"
+msgstr "Back"
+
+#. js-lingui-explicit-id
+msgid "statementApply"
+msgstr "Apply roles"
+
+#. js-lingui-explicit-id
+msgid "statementApplied"
+msgstr "{count, plural, one {# role} other {# roles}} added from the statement."
+
+#. js-lingui-explicit-id
+msgid "errStatementNoContributors"
+msgstr "Add the contributors first, then paste the statement: it is matched to the names already in this draft."
+
+#. js-lingui-explicit-id
+msgid "errStatementNoRoles"
+msgstr "No CRediT roles could be matched to the contributors in this draft. Check that the statement names them as the draft does, by name or initials."
+
+#. js-lingui-explicit-id
+msgid "censusAboutLink"
+msgstr "CRediT census: how papers use CRediT"
+
+#. js-lingui-explicit-id
+msgid "censusBack"
+msgstr "Back to CRediT Matrix"
+
+#. js-lingui-explicit-id
+msgid "censusTitle"
+msgstr "CRediT census"
+
+#. js-lingui-explicit-id
+msgid "censusHeadline"
+msgstr "In {year}, {share} of open-access research articles in Europe PMC gave CRediT roles for at least one author."
+
+#. js-lingui-explicit-id
+msgid "censusLead"
+msgstr "How published papers use CRediT, the Contributor Roles Taxonomy. The roles are read from the markup and contribution statements of {articles} open-access articles in Europe PMC."
+
+#. js-lingui-explicit-id
+msgid "censusPreliminaryTitle"
+msgstr "Preliminary figures"
+
+#. js-lingui-explicit-id
+msgid "censusPreliminary"
+msgstr "I haven't checked the parser against hand labels yet, so treat these numbers as a first look. Where {articles} articles both tag their roles and print a statement, the parser's reading of the statement matches the tags with an F1 score of {f1} (1 means every role found and none wrong). But {share} of those articles are from MDPI and Frontiers, and nobody has checked the tags themselves either."
+
+#. js-lingui-explicit-id
+msgid "censusPreliminaryUnscored"
+msgstr "I haven't checked the parser against hand labels yet, so treat these numbers as a first look."
+
+#. js-lingui-explicit-id
+msgid "censusIncomplete"
+msgstr "This snapshot is incomplete: some source files were not read, or some journals have no field yet."
+
+#. js-lingui-explicit-id
+msgid "censusAdoptionTitle"
+msgstr "Adoption over time"
+
+#. js-lingui-explicit-id
+msgid "censusAdoptionCaption"
+msgstr "Share of research articles with CRediT roles for at least one author, by publication year. {year} is still being published, so its stretch of the line is dashed."
+
+#. js-lingui-explicit-id
+msgid "censusRolesPerAuthorTitle"
+msgstr "Roles per author"
+
+#. js-lingui-explicit-id
+msgid "censusRolesPerAuthorCaption"
+msgstr "Average number of roles per author, counting only authors with at least one role, by publication year."
+
+#. js-lingui-explicit-id
+msgid "censusShowTable"
+msgstr "Show as a table"
+
+#. js-lingui-explicit-id
+msgid "censusPartial"
+msgstr "(partial)"
+
+#. js-lingui-explicit-id
+msgid "censusTableLabel"
+msgstr "{chart}, as a table"
+
+#. js-lingui-explicit-id
+msgid "censusTrend"
+msgstr "{from} in {first} and {to} in {last}, with a high of {max} in {maxYear}."
+
+#. js-lingui-explicit-id
+msgid "censusYear"
+msgstr "Year"
+
+#. js-lingui-explicit-id
+msgid "censusResearchArticles"
+msgstr "Research articles"
+
+#. js-lingui-explicit-id
+msgid "censusWithRoles"
+msgstr "With roles"
+
+#. js-lingui-explicit-id
+msgid "censusShare"
+msgstr "Share"
+
+#. js-lingui-explicit-id
+msgid "censusStylesTitle"
+msgstr "How roles are marked up"
+
+#. js-lingui-explicit-id
+msgid "censusStylesCaption"
+msgstr "Share of research articles per year, by where their roles were read from. Each article counts once, under the first of the four below that it uses. All four charts use the same scale. {year} is still being published, so its stretch is dashed."
+
+#. js-lingui-explicit-id
+msgid "censusStyleJats4r"
+msgstr "JATS4R role tags"
+
+#. js-lingui-explicit-id
+msgid "censusStyleJats4rNote"
+msgstr "Each author's roles tagged with the CRediT vocabulary, following JATS4R, the group that recommends how journal articles are tagged"
+
+#. js-lingui-explicit-id
+msgid "censusStylePlosUri"
+msgstr "Role URL tags"
+
+#. js-lingui-explicit-id
+msgid "censusStylePlosUriNote"
+msgstr "Each author's roles tagged with a CRediT web address, as PLOS does"
+
+#. js-lingui-explicit-id
+msgid "censusStyleStatement"
+msgstr "Contribution statement"
+
+#. js-lingui-explicit-id
+msgid "censusStyleStatementNote"
+msgstr "One paragraph naming authors by initials or name"
+
+#. js-lingui-explicit-id
+msgid "censusStyleContribText"
+msgstr "Text per author"
+
+#. js-lingui-explicit-id
+msgid "censusStyleContribTextNote"
+msgstr "Free text beside each author, such as a role list or a footnote"
+
+#. js-lingui-explicit-id
+msgid "censusFieldsTitle"
+msgstr "By field"
+
+#. js-lingui-explicit-id
+msgid "censusFieldsCaption"
+msgstr "Share of research articles from {year} with CRediT roles, by the journal's field in OpenAlex, an open index of scholarly works. Fields are per journal, not per article. Europe PMC is biomedical by design, so other fields are thinly covered. Fields with fewer than 1,000 articles are left out."
+
+#. js-lingui-explicit-id
+msgid "censusFieldAgriculturalAndBiologicalSciences"
+msgstr "Agricultural and Biological Sciences"
+
+#. js-lingui-explicit-id
+msgid "censusFieldBiochemistryGeneticsAndMolecularBiology"
+msgstr "Biochemistry, Genetics and Molecular Biology"
+
+#. js-lingui-explicit-id
+msgid "censusFieldChemistry"
+msgstr "Chemistry"
+
+#. js-lingui-explicit-id
+msgid "censusFieldComputerScience"
+msgstr "Computer Science"
+
+#. js-lingui-explicit-id
+msgid "censusFieldDentistry"
+msgstr "Dentistry"
+
+#. js-lingui-explicit-id
+msgid "censusFieldEconomicsEconometricsAndFinance"
+msgstr "Economics, Econometrics and Finance"
+
+#. js-lingui-explicit-id
+msgid "censusFieldEngineering"
+msgstr "Engineering"
+
+#. js-lingui-explicit-id
+msgid "censusFieldEnvironmentalScience"
+msgstr "Environmental Science"
+
+#. js-lingui-explicit-id
+msgid "censusFieldHealthProfessions"
+msgstr "Health Professions"
+
+#. js-lingui-explicit-id
+msgid "censusFieldImmunologyAndMicrobiology"
+msgstr "Immunology and Microbiology"
+
+#. js-lingui-explicit-id
+msgid "censusFieldMaterialsScience"
+msgstr "Materials Science"
+
+#. js-lingui-explicit-id
+msgid "censusFieldMathematics"
+msgstr "Mathematics"
+
+#. js-lingui-explicit-id
+msgid "censusFieldMedicine"
+msgstr "Medicine"
+
+#. js-lingui-explicit-id
+msgid "censusFieldMultidisciplinary"
+msgstr "Multidisciplinary"
+
+#. js-lingui-explicit-id
+msgid "censusFieldNeuroscience"
+msgstr "Neuroscience"
+
+#. js-lingui-explicit-id
+msgid "censusFieldPhysicsAndAstronomy"
+msgstr "Physics and Astronomy"
+
+#. js-lingui-explicit-id
+msgid "censusFieldPsychology"
+msgstr "Psychology"
+
+#. js-lingui-explicit-id
+msgid "censusFieldSocialSciences"
+msgstr "Social Sciences"
+
+#. js-lingui-explicit-id
+msgid "censusPublishersTitle"
+msgstr "By publisher"
+
+#. js-lingui-explicit-id
+msgid "censusPublishersCaption"
+msgstr "Share of research articles from {year} with CRediT roles, for the {count} publishers with the most research articles in Europe PMC's open-access subset that year. Publisher names are as the articles give them."
+
+#. js-lingui-explicit-id
+msgid "censusOfArticles"
+msgstr "of {count, plural, one {# article} other {# articles}}"
+
+#. js-lingui-explicit-id
+msgid "censusRolesTitle"
+msgstr "Roles by place in the byline"
+
+#. js-lingui-explicit-id
+msgid "censusRolesCaption"
+msgstr "For each role, the share of authors with at least one role who hold it. Only articles with roles and three or more authors count."
+
+#. js-lingui-explicit-id
+msgid "censusRole"
+msgstr "Role"
+
+#. js-lingui-explicit-id
+msgid "censusPlaceAll"
+msgstr "All authors"
+
+#. js-lingui-explicit-id
+msgid "censusPlaceFirst"
+msgstr "First author"
+
+#. js-lingui-explicit-id
+msgid "censusPlaceMiddle"
+msgstr "Middle authors"
+
+#. js-lingui-explicit-id
+msgid "censusPlaceLast"
+msgstr "Last author"
+
+#. js-lingui-explicit-id
+msgid "censusAboutTitle"
+msgstr "About these data"
+
+#. js-lingui-explicit-id
+msgid "censusMethod"
+msgstr "Counts cover research articles only, preprint servers included (Cold Spring Harbor Laboratory Preprints, arXiv). Groups with fewer than 1,000 articles are left out, and the years start at the first year with 1,000 articles with roles."
+
+#. js-lingui-explicit-id
+msgid "censusSnapshot"
+msgstr "Snapshot"
+
+#. js-lingui-explicit-id
+msgid "censusDatasetVersion"
+msgstr "Dataset version"
+
+#. js-lingui-explicit-id
+msgid "censusCodeCommit"
+msgstr "Code commit"
+
+#. js-lingui-explicit-id
+msgid "censusParser"
+msgstr "Parser version"
+
+#. js-lingui-explicit-id
+msgid "censusOpenAlex"
+msgstr "OpenAlex sources"
+
+#. js-lingui-explicit-id
+msgid "censusDownload"
+msgstr "Download the counts (JSON)"
+
+#. js-lingui-explicit-id
+msgid "censusHowTitle"
+msgstr "How the census reads statements"
+
+#. js-lingui-explicit-id
+msgid "censusHowRules"
+msgstr "A rule parser reads each article. Where the publisher tags each author's roles in the JATS XML, it takes the tags. Otherwise it reads the free-text statement clause by clause and pairs authors with roles. Only CRediT wording counts, so \"A.B. conceived the study\" gives no roles."
+
+#. js-lingui-explicit-id
+msgid "censusHowModel"
+msgstr "A fine-tuned encoder, Ettin-68M, also reads every free-text statement. It is the census's browser model, made to run in a web browser. It finds more of the tagged roles than the rules do, at about the same precision, but it also gives roles to narrative statements that name none. The counts on this page come from the rule parser alone."
+
+#. js-lingui-explicit-id
+msgid "censusHowCaveat"
+msgstr "Both are scored against the roles publishers tag, and those tags are not gold. A tag can name a role the statement never gives. On 200 MDPI articles where the rule parser and the tags disagree, a language model judged the tags wrong on 192 and the parser alone wrong on 6. So an F1 score against the tags measures agreement with them, and it understates accuracy, most on MDPI."
+
+#. js-lingui-explicit-id
+msgid "censusHowCode"
+msgstr "The census code"
+
+#. js-lingui-explicit-id
+msgid "censusHowModelCard"
+msgstr "The model card"
+
+#. js-lingui-explicit-id
+msgid "doiRolesImported"
+msgstr "Imported CRediT roles. Check these assignments before applying them; the record supplies no contribution levels."
+
+#. js-lingui-explicit-id
+msgid "doiNoRoles"
+msgstr "This record has no deposited CRediT roles. The contribution matrix will stay empty."
+
+#. js-lingui-explicit-id
+msgid "doiConfirm"
+msgstr "Confirm DOI import"
+
+#. js-lingui-explicit-id
+msgid "errCitationConverter"
+msgstr "The citation converter could not finish. Your file is still here. Try again online, or convert it in the citesync playground."
+
+#. js-lingui-explicit-id
+msgid "citationPlayground"
+msgstr "Open citesync playground"
+
+#. js-lingui-explicit-id
+msgid "errImportNoCitationAuthors"
+msgstr "This citation file lists no authors."
+
+#. js-lingui-explicit-id
+msgid "citationConverting"
+msgstr "Reading citation file… The converter may need to download first."

@@ -57,3 +57,7 @@ to make them fail the build.
 pnpm --filter credit-matrix build
 uv run --project integrations sphinx-build -W -b html integrations/sphinx/example integrations/_build/sphinx
 ```
+
+## Contribution heatmap
+
+See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.

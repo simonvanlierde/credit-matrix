@@ -1,7 +1,7 @@
 "use client";
 
 import { ChartLine } from "lucide-react";
-import { useTranslations } from "use-intl";
+import { useTranslations } from "@/lib/translations";
 
 /**
  * The census page from the header nav. At lg the nav is nearly full, so it is the icon alone, with

@@ -2,12 +2,12 @@
 
 import { ArrowLeft, Info } from "lucide-react";
 import type { ReactNode } from "react";
-import { useFormatter, useTranslations } from "use-intl";
 import { BarList, LineChart, type Point, TableToggle } from "@/components/census/charts";
 import { ExternalLink } from "@/components/ui/external-link";
 import { IN_TEXT_LINK } from "@/components/ui/license-link";
 import { CREDIT_ROLES } from "@/core";
 import { fieldKey } from "@/lib/field-names";
+import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import type censusJson from "../../../public/data/census.json";
 

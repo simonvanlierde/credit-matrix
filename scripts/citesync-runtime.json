@@ -1,0 +1,25 @@
+{
+  "version": "0.4.0",
+  "wheels": [
+    {
+      "name": "citesync-0.4.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/87/9b/e96dd61a1f3f999d639bbccb8043ddc6e4ab23c6f4246ebdfa5d76479e76/citesync-0.4.0-py3-none-any.whl",
+      "sha256": "ce03f0a4f45d4befefb7c2db5967446ef9e84bda35e11ee335227216e483153e"
+    },
+    {
+      "name": "packaging-26.3-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+    },
+    {
+      "name": "ruamel_yaml-0.19.1-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/b8/0c/51f6841f1d84f404f92463fc2b1ba0da357ca1e3db6b7fbda26956c3b82a/ruamel_yaml-0.19.1-py3-none-any.whl",
+      "sha256": "27592957fedf6e0b62f281e96effd28043345e0e66001f97683aa9a40c667c93"
+    },
+    {
+      "name": "tomlkit-0.15.2-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/da/46/7d84138a60a8bd796825b2d38ebe92d0d16501ca57d501b7c5d677401bbc/tomlkit-0.15.2-py3-none-any.whl",
+      "sha256": "05562412163a3037b94497385fb7f9204c637bc605af7a48199e41cf2272f437"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
 "use client";
 
-import { useTranslations } from "use-intl";
 import { ExternalLink } from "@/components/ui/external-link";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { CREDIT_ROLES } from "@/core";
 import type { RoleDescriber, RoleTranslator } from "@/core/i18n";
+import { useTranslations } from "@/lib/translations";
 
 /**
  * A role's name as a button that opens its short description, with a link to

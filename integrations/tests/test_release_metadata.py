@@ -102,6 +102,9 @@ def test_release_sync_preserves_metadata_and_is_idempotent(release):
     files = [
         "CITATION.cff",
         "codemeta.json",
+        "CITATION.bib",
+        "citation.apa.txt",
+        "citation.csl.json",
         "src/core/package.json",
         "integrations/quarto/_extensions/credit-matrix/_extension.yml",
         "integrations/myst/README.md",
@@ -115,7 +118,7 @@ def test_release_sync_preserves_metadata_and_is_idempotent(release):
     assert {name: (root / name).read_bytes() for name in files} == snapshot
     assert not list((root / ".cache").glob("release-metadata.*"))
     result = subprocess.run(
-        ["uvx", "--from", "citesync==0.2.0", "citesync", "check", "--root", str(root)],
+        ["uvx", "--from", "citesync==0.4.0", "citesync", "check", "--root", str(root)],
         capture_output=True,
         text=True,
         timeout=60,

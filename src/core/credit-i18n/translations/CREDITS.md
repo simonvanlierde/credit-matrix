@@ -4,8 +4,8 @@ Role-name/description translations vendored here are from the community
 [credit-translation](https://github.com/contributorshipcollaboration/credit-translation)
 project, each licensed **[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)**.
 
-**Modifications:** each source `translations/<lang>.json` was pruned to
-`metadata` (languageName + translators) and `translations` only. The Portuguese
+**Modifications:** role names and descriptions were converted from upstream JSON
+to Lingui PO catalogs. The Portuguese
 catalog was adapted from Brazilian Portuguese to Portuguese as used in Portugal
 so it matches the interface locale offered by this app.
 

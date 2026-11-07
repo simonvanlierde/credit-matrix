@@ -1,16 +1,8 @@
-/**
- * UI-string translations: the non-role strings in human-facing output
- * (statement + heatmap): "Acknowledgements", the contribution-level labels, the
- * heatmap's accessible name, and the empty-state line.
- *
- * Mirrors the role-catalog setup (one lazy-loaded JSON per locale, code-split by
- * the bundler) so the live UI and exports share one mechanism and this can grow
- * to cover the whole app. English is the canonical source and the per-key
- * fallback; per-locale catalogs in ./ui/ hold only the overrides. Our strings,
- * not the community role repo's, hence a separate directory.
- */
-
-import { hasCatalog, type LocaleCode } from "./index";
+import { setupI18n } from "@lingui/core";
+import { loadCatalog } from "./catalogs";
+import { hasCatalog } from "./index";
+import { messages } from "./locales/en/messages";
+/** Non-role strings in statements and human-facing exports, from Lingui PO catalogs. */
 
 export type UiKey =
   | "acknowledgements"
@@ -44,48 +36,24 @@ export function fillTemplate(template: string, vars: Record<string, string>): st
 export type UiCatalog = Record<UiKey, string>;
 
 /** Canonical English: the source text and the fallback for any missing entry. */
-const EN_UI: Record<UiKey, string> = {
-  acknowledgements: "Acknowledgements",
-  lead: "Lead",
-  equal: "Equal",
-  supporting: "Supporting",
-  none: "None",
-  contributed: "Contributed",
-  emptyState: "No contributions assigned yet.",
-  // Accessible name for the exported heatmap SVG; nothing draws it.
-  heatmapTitle: "Contribution heatmap",
-  // `{names}` is substituted with the marked contributors.
-  equalContributionNote: "{names} contributed equally to this work.",
-  correspondenceNote: "Correspondence: {names}.",
-  // Between a label and what it lists ("Role: names"); CJK locales use "：".
-  labelSeparator: ": ",
-  nameListSeparator: ", ",
-  // Joins the segments of a statement ("Role: names; Role: names"). Its own
-  // key because CJK locales use full-width punctuation ("；"), and mixing
-  // ASCII separators into a ja/zh statement reads as a typo.
-  segmentSeparator: "; ",
-  // How a non-lead level annotates its label; CJK locales use full-width
-  // parentheses.
-  levelAnnotation: "{label} ({level})",
-};
+const english = setupI18n({ locale: "en", messages: { en: messages } });
+const EN_UI = Object.fromEntries(
+  Object.keys(messages)
+    .filter((key) => key.startsWith("output."))
+    .map((key) => [key.slice(7), english._(key, { names: "{names}", label: "{label}", level: "{level}" })]),
+) as UiCatalog;
 
 /** Load a locale's UI catalog. Returns null for `en` or any unknown locale (→ English). */
 export async function loadUiCatalog(locale: string): Promise<UiCatalog | null> {
   if (!hasCatalog(locale)) return null;
-  return (await UI_CATALOGS[locale]()).default;
+  const i18n = await loadCatalog(locale);
+  return Object.fromEntries(
+    Object.keys(EN_UI).map((key) => [
+      key,
+      i18n._(`output.${key}`, { names: "{names}", label: "{label}", level: "{level}" }),
+    ]),
+  ) as UiCatalog;
 }
-
-/** One import() per file, as for the role catalogs in ./index. */
-const UI_CATALOGS: Record<Exclude<LocaleCode, "en">, () => Promise<{ default: UiCatalog }>> = {
-  fr: () => import("./ui/fr.json"),
-  de: () => import("./ui/de.json"),
-  es: () => import("./ui/es.json"),
-  it: () => import("./ui/it.json"),
-  "pt-PT": () => import("./ui/pt-PT.json"),
-  nl: () => import("./ui/nl.json"),
-  "zh-Hans": () => import("./ui/zh-Hans.json"),
-  ja: () => import("./ui/ja.json"),
-};
 
 /**
  * Build a UI-string translator from a catalog. A missing catalog uses English.

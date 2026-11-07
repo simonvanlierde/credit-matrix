@@ -1,0 +1,13 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "Example Research Tool",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Antonie",
+      "familyName": "van Leeuwenhoek",
+      "@id": "https://orcid.org/0000-0002-1825-0097"
+    }
+  ]
+}

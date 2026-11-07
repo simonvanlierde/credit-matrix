@@ -2,8 +2,8 @@
 
 import { CircleAlert } from "lucide-react";
 import { useEffect } from "react";
-import { useTranslations } from "use-intl";
 import { showStatus } from "@/components/StatusBanner";
+import { useTranslations } from "@/lib/translations";
 import { ensureHydrated, followOtherTab, useContributionStore } from "@/store/contribution-store";
 
 /**

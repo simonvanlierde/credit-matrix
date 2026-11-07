@@ -2,7 +2,6 @@
 
 import { Check, CircleAlert, Link2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
@@ -13,6 +12,7 @@ import { keepKnownIds } from "@/core/merge-row";
 import { announce } from "@/lib/announce";
 import { discardOrcidReturn, isOrcidReturn, verifyIncoming } from "@/lib/orcid-sign-in";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
+import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import {
   type DraftClaim,
@@ -79,10 +79,7 @@ export function HeaderActions() {
       decodedOnMount.current = true;
       void handlerRef.current(window.location.hash);
     }
-    // The link comes from the event, not the address bar. Stripping the last
-    // link's hash makes Next.js sync its router to that URL in a transition,
-    // and that write can land after the next hash navigation and erase it
-    // before this event runs.
+    // Read this navigation's hash, even if another event has changed the address bar.
     const onHashChange = (event: HashChangeEvent) => void handlerRef.current(new URL(event.newURL).hash);
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);

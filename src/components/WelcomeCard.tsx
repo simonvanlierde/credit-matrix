@@ -2,10 +2,10 @@
 
 import { Files, Fingerprint, Info, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTranslations } from "use-intl";
 import { ExternalLink } from "@/components/ui/external-link";
 import { StepNumber } from "@/components/ui/step-number";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
+import { useTranslations } from "@/lib/translations";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useContributionStore } from "@/store/contribution-store";
 

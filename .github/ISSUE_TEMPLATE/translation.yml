@@ -19,7 +19,7 @@ body:
     id: location
     attributes:
       label: String key or screen
-      description: The key in src/messages/<locale>.json, or where you see the text in the app.
+      description: The key in src/locales/<locale>/messages.po, or where you see the text in the app.
     validations:
       required: true
   - type: textarea

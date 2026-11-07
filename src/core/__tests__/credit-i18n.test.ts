@@ -41,9 +41,9 @@ const CATALOG_LOCALES = AVAILABLE_LOCALES.map(({ code }) => code).filter((code) 
 // The loaders import `<dir>/${code}.json` by name, so a missing or misnamed
 // file only shows up at runtime, as an English fallback.
 describe("shipped catalogs", () => {
-  const dirs = ["src/messages", "src/core/credit-i18n/ui", "src/core/credit-i18n/translations"];
+  const dirs = ["src/locales", "src/core/credit-i18n/locales"];
   it.each(dirs)("%s has a file for every locale the language picker offers", (dir) => {
-    const missing = CATALOG_LOCALES.filter((code) => !existsSync(path.join(process.cwd(), dir, `${code}.json`)));
+    const missing = CATALOG_LOCALES.filter((code) => !existsSync(path.join(process.cwd(), dir, code, "messages.po")));
     expect(missing).toEqual([]);
   });
 });

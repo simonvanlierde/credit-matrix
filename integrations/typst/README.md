@@ -75,7 +75,7 @@ You can also pass the app's own export: Export data, JSON, then
 - `credit-table(contributors, levels: true, lang: auto, marks: auto)`: a table with a row per role
   and a column per person. A cell shows the level, or a check mark with `levels: false`. Pass
   `marks: (lead: [L], equal: [E], supporting: [S])` for marks of your own.
-- `credit-heatmap(contributors, levels: true, lang: auto, color: rgb("#1f4e79"), cell: 14pt,
+- `credit-heatmap(contributors, levels: true, lang: auto, color: auto, cell: 14pt,
   gap: 1.5pt, ..)`: the app's heatmap, as a figure. Other named arguments, such as `caption`, go
   to `figure`. Its alt text is the statement, so a screen reader in a tagged PDF reads who did
   what.
@@ -108,3 +108,7 @@ The code is [MIT](LICENSE). The role names in `translations.json` come from the 
 [credit-translation](https://github.com/contributorshipcollaboration/credit-translation) project
 under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the translators are listed in
 [CREDITS.md](https://github.com/simonvanlierde/credit-matrix/blob/main/src/core/credit-i18n/translations/CREDITS.md).
+
+## Contribution heatmap options
+
+See [figure options and examples](../heatmap.md) for palettes, shapes, sizing, labels and orientation.

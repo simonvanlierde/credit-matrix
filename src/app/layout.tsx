@@ -1,6 +1,4 @@
-import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "next-themes";
-import { preload } from "react-dom";
 import { AboutPopover } from "@/components/AboutPopover";
 import { Lockup } from "@/components/BrandMark";
 import { BrandMenu } from "@/components/BrandMenu";
@@ -15,139 +13,78 @@ import { StatusBanner } from "@/components/StatusBanner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Announcer } from "@/lib/announce";
 import { AppIntlProvider } from "@/lib/intl";
-import { PERSIST_KEY } from "@/store/persist-meta";
-// Server component: the manifest is read at build time and never bundled for the
-// client: only the version string is passed down to AboutPopover.
 import packageJson from "../../package.json";
 import "./fonts.css";
 import "./globals.css";
 
-// The latin subsets of each face the first paint uses; see fonts.css.
-const PRELOADED_FONTS = [
-  "/fonts/plex-sans-latin.woff2",
-  "/fonts/plex-mono-400-latin.woff2",
-  "/fonts/plex-mono-500-latin.woff2",
-  "/fonts/newsreader-latin.woff2",
-  "/fonts/newsreader-italic-latin.woff2",
-];
-
-const description =
-  "Assign the 14 CRediT roles in a contribution matrix, export the author statement in nine languages, and download the contribution heatmap. Open source; your contribution data stays in your browser.";
-
-export const metadata: Metadata = {
-  // The social card needs absolute URLs; Next resolves them against this.
-  metadataBase: new URL("https://credit.duinlab.nl"),
-  // The pages set their own titles; this one is the home page's, worded the way people search for it.
-  title: "CRediT Matrix · CRediT author statement generator",
-  description,
-  // og/twitter title and description inherit from the top-level fields.
-  openGraph: {
-    type: "website",
-    siteName: "CRediT Matrix",
-  },
-  twitter: {
-    card: "summary_large_image",
-  },
-};
-
-/** Colors the browser chrome to match the theme the page will actually paint. */
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafaf9" },
-    { media: "(prefers-color-scheme: dark)", color: "#16181c" },
-  ],
-};
-
-/**
- * Declare the saved interface language before first paint.
- *
- * The page is prerendered once as `en`, and AppIntlProvider only corrects the
- * attribute after hydration. Reading a locale cookie here instead would make
- * every route dynamic (a per-request render on the Worker, not the static
- * shell). This reads the persisted store directly instead. The provider still
- * has the final word once the catalog loads.
- */
-const LANG_SCRIPT = `try{var l=JSON.parse(localStorage.getItem(${JSON.stringify(PERSIST_KEY)})).state.uiLocale;if(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(l))document.documentElement.lang=l}catch(e){}`;
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // React emits each as one <link rel="preload"> in <head>; a literal <link>
-  // there is hoisted *and* kept, so it would ship twice.
-  for (const href of PRELOADED_FONTS) preload(href, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, no user input */}
-        <script dangerouslySetInnerHTML={{ __html: LANG_SCRIPT }} />
-      </head>
-      <body className="min-h-screen bg-surface text-on-surface">
-        <AppIntlProvider>
-          {/* Follows the OS on first visit; the header toggle's choice then persists. */}
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <SkipLink />
-            {/* pr compensates the scrollbar width modal primitives remove on open; the fixed
+    <AppIntlProvider>
+      {/* Follows the OS on first visit; the header toggle's choice then persists. */}
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <SkipLink />
+        {/* pr compensates the scrollbar width modal primitives remove on open; the fixed
               header escapes the body padding that keeps <main> from reflowing. */}
-            <header
-              data-app-header
-              className="fixed top-0 w-full z-50 bg-surface-bright/80 backdrop-blur-md border-b border-outline-variant/20 pr-[var(--removed-body-scroll-bar-size,0px)]"
-            >
-              <div className="mx-auto flex h-13 items-center justify-between gap-2 px-3 sm:px-8">
-                {/* Brand */}
-                <div className="flex items-center gap-8">
-                  <h1 className="flex items-center text-primary">
-                    {/* Below lg the lockup is the trigger for the two links the
+        <header
+          data-app-header
+          className="fixed top-0 w-full z-50 bg-surface-bright/80 backdrop-blur-md border-b border-outline-variant/20 pr-[var(--removed-body-scroll-bar-size,0px)]"
+        >
+          <div className="mx-auto flex h-13 items-center justify-between gap-2 px-3 sm:px-8">
+            {/* Brand */}
+            <div className="flex items-center gap-8">
+              <h1 className="flex items-center text-primary">
+                {/* Below lg the lockup is the trigger for the two links the
                         nav has no room for; from lg it is the plain lockup and
                         the nav carries them itself. Exactly one is ever shown.
                         The boundary is lg, not md: at md the lockup, the nav and
                         the labelled actions together overrun the row, and the
                         wordmark used to absorb it by wrapping out of the header. */}
-                    <BrandMenu version={packageJson.version} />
-                    {/* The lockup goes home, as a site's logo does; below lg it opens the menu instead. */}
-                    <a href="/" className="hidden shrink-0 items-center gap-2.5 rounded-lg lg:flex">
-                      <Lockup />
-                    </a>
-                  </h1>
-                  <nav className="hidden lg:flex gap-6 items-center">
-                    <HowItWorks />
-                    <AboutPopover version={packageJson.version} />
-                    <CensusLink />
-                  </nav>
-                </div>
+                <BrandMenu version={packageJson.version} />
+                {/* The lockup goes home, as a site's logo does; below lg it opens the menu instead. */}
+                <a href="/" className="hidden shrink-0 items-center gap-2.5 rounded-lg lg:flex">
+                  <Lockup />
+                </a>
+              </h1>
+              <nav className="hidden lg:flex gap-6 items-center">
+                <HowItWorks />
+                <AboutPopover version={packageJson.version} />
+                <CensusLink />
+              </nav>
+            </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <LanguageSelector />
-                  <ThemeToggle />
-                  <HeaderActions />
-                </div>
-              </div>
-            </header>
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <LanguageSelector />
+              <ThemeToggle />
+              <HeaderActions />
+            </div>
+          </div>
+        </header>
 
-            {/* On a desktop-sized window the workspace is height-locked to the viewport
+        {/* On a desktop-sized window the workspace is height-locked to the viewport
               (see the `desk` variant): the page itself never scrolls, and each of the
               three panes scrolls its own content. Narrow, short, or zoomed viewports
               keep ordinary document flow. */}
-            {/* No page cap: the workflow row sizes itself to its content and
+        {/* No page cap: the workflow row sizes itself to its content and
                 centers, so a big monitor goes to the matrix when the roster
                 needs it and to symmetric gutters when it does not. */}
-            {/* The save-failure notice sits in flow above the page, so on a
+        {/* The save-failure notice sits in flow above the page, so on a
                 height-locked desk it shortens the workspace rather than covering it. */}
-            {/* A page that hides the app header puts its own <header> here: inside <main> a
+        {/* A page that hides the app header puts its own <header> here: inside <main> a
                 header is no banner landmark. */}
-            <div id="page-banner" />
-            <main
-              id="main-content"
-              tabIndex={-1}
-              className="mx-auto outline-none pt-13 desk:flex desk:h-dvh desk:flex-col desk:overflow-hidden"
-            >
-              <PersistenceStatus />
-              <div className="desk:min-h-0 desk:flex-1">{children}</div>
-            </main>
-            <Announcer />
-            <StatusBanner />
-            <ServiceWorkerRegistrar />
-          </ThemeProvider>
-        </AppIntlProvider>
-      </body>
-    </html>
+        <div id="page-banner" />
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto outline-none pt-13 desk:flex desk:h-dvh desk:flex-col desk:overflow-hidden"
+        >
+          <PersistenceStatus />
+          <div className="desk:min-h-0 desk:flex-1">{children}</div>
+        </main>
+        <Announcer />
+        <StatusBanner />
+        <ServiceWorkerRegistrar />
+      </ThemeProvider>
+    </AppIntlProvider>
   );
 }

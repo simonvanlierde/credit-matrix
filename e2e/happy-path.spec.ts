@@ -147,6 +147,10 @@ test.describe("Happy path UI flows", () => {
     await page.getByRole("button", { name: "Import" }).click();
     await page.locator("#import-doi").fill("10.1038/s41586-020-2649-2");
     await page.getByRole("button", { name: "Look up" }).click();
+    await expect(
+      page.getByText("This record has no deposited CRediT roles. The contribution matrix will stay empty."),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Confirm DOI import" }).click();
 
     const names = page.getByLabel("Name or ORCID iD", { exact: true });
     await expect(names).toHaveCount(2);
@@ -183,6 +187,10 @@ test.describe("Happy path UI flows", () => {
     await page.getByRole("button", { name: "Import" }).click();
     await page.locator("#import-doi").fill("10.48550/arXiv.1706.03762");
     await page.getByRole("button", { name: "Look up" }).click();
+    await expect(
+      page.getByText("This record has no deposited CRediT roles. The contribution matrix will stay empty."),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Confirm DOI import" }).click();
 
     const names = page.getByLabel("Name or ORCID iD", { exact: true });
     await expect(names).toHaveCount(2);

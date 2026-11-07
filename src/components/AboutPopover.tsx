@@ -1,9 +1,9 @@
 "use client";
 
 import { Info } from "lucide-react";
-import { useTranslations } from "use-intl";
 import { AboutPanel } from "@/components/AboutPanel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useTranslations } from "@/lib/translations";
 
 /** The labelled About link in the header nav. */
 export function AboutPopover({ version }: { version: string }) {

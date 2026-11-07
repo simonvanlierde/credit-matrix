@@ -1,9 +1,9 @@
 "use client";
 
 import { Accessibility, BookOpen, Code, Puzzle } from "lucide-react";
-import { useTranslations } from "use-intl";
 import { PRODUCT_NAME } from "@/components/BrandMark";
 import { ExternalLink } from "@/components/ui/external-link";
+import { useTranslations } from "@/lib/translations";
 
 /**
  * A short card on what the app is, linking to the pages that say more: the

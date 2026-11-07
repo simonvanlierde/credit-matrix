@@ -2,12 +2,12 @@
 
 import { Check, Copy, Send } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useFormatter, useTranslations } from "use-intl";
 import { daysSince, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/ask-panel-shared";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { type Author, review, settledAt } from "@/core";
 import { announce } from "@/lib/announce";
 import { copyAskMessage } from "@/lib/ask-message";
+import { useFormatter, useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useContributionStore } from "@/store/contribution-store";
 

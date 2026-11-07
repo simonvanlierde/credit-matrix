@@ -2,9 +2,9 @@
 
 import { Check, ChevronDown, Copy, FilePlus2, Files, Lock, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { announce } from "@/lib/announce";
+import { useTranslations } from "@/lib/translations";
 import { type DraftClaim, MAX_DRAFTS, useContributionStore } from "@/store/contribution-store";
 
 /** Only what a row shows. The rest of a draft is nobody's business here. */

@@ -4,9 +4,10 @@ name: Release package
 # npm trusted publishing: npm checks this workflow's GitHub OIDC token, so
 # there is no npm token to store or leak. docs/deploy.md has the one-time setup.
 #
-# Two jobs: `build` installs and runs project code with read-only rights and
+# `build` installs and runs project code with read-only rights and
 # packs the tarball; `publish` holds the OIDC token, runs in the `npm-release`
-# environment (limited to v* tags) and only uploads that tarball.
+# environment (limited to v* tags) and only uploads that tarball. `release`
+# attests the same archive and prepares a draft for the owner to publish.
 on:
   push:
     tags: ["v*"]
@@ -81,6 +82,19 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Generate the package SBOM
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        # Include build dependencies: the CLI and MyST plugin bundle some of them.
+        run: pnpm --filter credit-matrix sbom --sbom-format cyclonedx --sbom-spec-version 1.6 --out "$TARBALL.cdx.json"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sbom
+          path: ${{ steps.pack.outputs.tarball }}.cdx.json
+          if-no-files-found: error
+          retention-days: 7
+
   publish:
     name: Publish to npm
     needs: [build]
@@ -122,3 +136,50 @@ jobs:
         env:
           TARBALL: ${{ needs.build.outputs.tarball }}
         run: npm publish "./$TARBALL" --provenance --access public
+
+  release:
+    name: Prepare the GitHub release
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: sbom
+
+      - name: Attest the package
+        id: provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: ${{ needs.build.outputs.tarball }}
+
+      - name: Attest the SBOM
+        id: sbom
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: ${{ needs.build.outputs.tarball }}
+          sbom-path: ${{ needs.build.outputs.tarball }}.cdx.json
+
+      - name: Verify and attach the release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TARBALL: ${{ needs.build.outputs.tarball }}
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM_BUNDLE: ${{ steps.sbom.outputs.bundle-path }}
+        run: |-
+          gh attestation verify "$TARBALL" --repo "$GH_REPO"
+          gh attestation verify "$TARBALL" --repo "$GH_REPO" --predicate-type https://cyclonedx.org/bom
+          cp "$PROVENANCE_BUNDLE" "$TARBALL.intoto.jsonl"
+          cp "$SBOM_BUNDLE" "$TARBALL.cdx.json.intoto.jsonl"
+          gh release create "$GITHUB_REF_NAME" --verify-tag --draft --generate-notes \
+            "$TARBALL" "$TARBALL.intoto.jsonl" "$TARBALL.cdx.json" "$TARBALL.cdx.json.intoto.jsonl"

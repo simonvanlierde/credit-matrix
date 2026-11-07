@@ -38,3 +38,10 @@ src/core/LICENSE
 # StrykerJS sandboxes and reports (pnpm mutation)
 /.stryker-tmp
 /reports
+
+# Temporary Vite server build for static prerendering
+.vite-ssr
+src/**/locales/*/messages.ts
+
+# Pinned citation converter wheels, downloaded by the build.
+/public/citesync/

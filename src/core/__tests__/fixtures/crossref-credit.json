@@ -1,0 +1,70 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [[2026, 10, 28]],
+      "date-time": "2026-10-28T16:38:38Z",
+      "timestamp": 1793205518492,
+      "version": "4.5.0"
+    },
+    "reference-count": 0,
+    "publisher": "Test accounts",
+    "issue": "1",
+    "content-domain": { "domain": [], "crossmark-restriction": false },
+    "short-container-title": ["CA"],
+    "accepted": { "date-parts": [[2026, 10, 15]] },
+    "DOI": "10.32013\/cats_deserve_equal_pay",
+    "type": "journal-article",
+    "created": { "date-parts": [[2026, 9, 18]], "date-time": "2026-09-18T14:09:21Z", "timestamp": 1789740561000 },
+    "source": "Crossref",
+    "is-referenced-by-count": 0,
+    "title": ["Cats Deserve Equal Pay"],
+    "prefix": "10.5555",
+    "author": [
+      {
+        "given": "Oliver",
+        "family": "de Place",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "id": [
+              { "id": "https:\/\/ror.org\/02twcfp32", "id-type": "ROR", "asserted-by": "publisher" },
+              { "id": "https:\/\/www.isni.org\/0000000405062673", "id-type": "ISNI", "asserted-by": "publisher" },
+              {
+                "id": "https:\/\/www.wikidata.org\/entity\/Q5188229",
+                "id-type": "wikidata",
+                "asserted-by": "publisher"
+              }
+            ],
+            "department": ["Feline Outreach"]
+          }
+        ],
+        "role": [
+          { "vocabulary": "crossref", "role": "author" },
+          { "role": "corresponding-author", "vocabulary": "crossref" },
+          { "role": "project-administration", "vocabulary": "credit" }
+        ]
+      }
+    ],
+    "member": "7822",
+    "published-online": { "date-parts": [[2026, 11, 1]] },
+    "container-title": ["Cats Attack"],
+    "original-title": [],
+    "language": "eng",
+    "deposited": { "date-parts": [[2026, 10, 28]], "date-time": "2026-10-28T16:26:57Z", "timestamp": 1793204817000 },
+    "score": 1,
+    "resource": { "primary": { "URL": "https:\/\/commons.wikimedia.org\/wiki\/File:Cat_looking_surprised.jpg" } },
+    "subtitle": [],
+    "short-title": [],
+    "issued": { "date-parts": [[2026, 11, 1]] },
+    "references-count": 0,
+    "journal-issue": { "issue": "1", "published-online": { "date-parts": [[2026, 10, 4]] } },
+    "URL": "https:\/\/doi.org\/10.32013\/cats_deserve_equal_pay",
+    "relation": {},
+    "subject": [],
+    "published": { "date-parts": [[2026, 11, 1]] },
+    "article-number": "cat-123"
+  }
+}

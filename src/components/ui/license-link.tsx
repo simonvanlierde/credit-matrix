@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "use-intl";
+import { useTranslations } from "@/lib/translations";
 
 /**
  * The CC BY 4.0 deed. Attribution under that license asks for a link to the

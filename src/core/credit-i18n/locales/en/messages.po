@@ -1,0 +1,174 @@
+msgid ""
+msgstr ""
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. js-lingui-explicit-id
+msgid "output.acknowledgements"
+msgstr "Acknowledgements"
+
+#. js-lingui-explicit-id
+msgid "output.lead"
+msgstr "Lead"
+
+#. js-lingui-explicit-id
+msgid "output.equal"
+msgstr "Equal"
+
+#. js-lingui-explicit-id
+msgid "output.supporting"
+msgstr "Supporting"
+
+#. js-lingui-explicit-id
+msgid "output.none"
+msgstr "None"
+
+#. js-lingui-explicit-id
+msgid "output.contributed"
+msgstr "Contributed"
+
+#. js-lingui-explicit-id
+msgid "output.emptyState"
+msgstr "No contributions assigned yet."
+
+#. js-lingui-explicit-id
+msgid "output.heatmapTitle"
+msgstr "Contribution heatmap"
+
+#. js-lingui-explicit-id
+msgid "output.equalContributionNote"
+msgstr "{names} contributed equally to this work."
+
+#. js-lingui-explicit-id
+msgid "output.correspondenceNote"
+msgstr "Correspondence: {names}."
+
+#. js-lingui-explicit-id
+msgid "output.labelSeparator"
+msgstr ": "
+
+#. js-lingui-explicit-id
+msgid "output.nameListSeparator"
+msgstr ", "
+
+#. js-lingui-explicit-id
+msgid "output.segmentSeparator"
+msgstr "; "
+
+#. js-lingui-explicit-id
+msgid "output.levelAnnotation"
+msgstr "{label} ({level})"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/conceptualization/name"
+msgstr "Conceptualization"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/conceptualization/description"
+msgstr "Ideas; formulation or evolution of overarching research goals and aims."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/data-curation/name"
+msgstr "Data curation"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/data-curation/description"
+msgstr "Management activities to annotate (produce metadata), scrub data and maintain research data (including software code, where it is necessary for interpreting the data itself) for initial use and later re-use."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/formal-analysis/name"
+msgstr "Formal analysis"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/formal-analysis/description"
+msgstr "Application of statistical, mathematical, computational, or other formal techniques to analyze or synthesize study data."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/funding-acquisition/name"
+msgstr "Funding acquisition"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/funding-acquisition/description"
+msgstr "Acquisition of the financial support for the project leading to this publication."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/investigation/name"
+msgstr "Investigation"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/investigation/description"
+msgstr "Conducting a research and investigation process, specifically performing the experiments, or data/evidence collection."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/methodology/name"
+msgstr "Methodology"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/methodology/description"
+msgstr "Development or design of methodology; creation of models."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/project-administration/name"
+msgstr "Project administration"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/project-administration/description"
+msgstr "Management and coordination responsibility for the research activity planning and execution."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/resources/name"
+msgstr "Resources"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/resources/description"
+msgstr "Provision of study materials, reagents, materials, patients, laboratory samples, animals, instrumentation, computing resources, or other analysis tools."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/software/name"
+msgstr "Software"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/software/description"
+msgstr "Programming, software development; designing computer programs; implementation of the computer code and supporting algorithms; testing of existing code components."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/supervision/name"
+msgstr "Supervision"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/supervision/description"
+msgstr "Oversight and leadership responsibility for the research activity planning and execution, including mentorship external to the core team."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/validation/name"
+msgstr "Validation"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/validation/description"
+msgstr "Verification, whether as a part of the activity or separate, of the overall replication/reproducibility of results/experiments and other research outputs."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/visualization/name"
+msgstr "Visualization"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/visualization/description"
+msgstr "Preparation, creation and/or presentation of the published work, specifically visualization/data presentation."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/writing-original-draft/name"
+msgstr "Writing \\u2013 original draft"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/writing-original-draft/description"
+msgstr "Preparation, creation and/or presentation of the published work, specifically writing the initial draft (including substantive translation)."
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/writing-review-editing/name"
+msgstr "Writing \\u2013 review & editing"
+
+#. js-lingui-explicit-id
+msgid "https://credit.niso.org/contributor-roles/writing-review-editing/description"
+msgstr "Preparation, creation and/or presentation of the published work by those from the original research group, specifically critical review, commentary or revision \\u2013 including pre- or post-publication stages."

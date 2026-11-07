@@ -1,7 +1,7 @@
-import type { useTranslations } from "use-intl";
 import type { Author } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
+import type { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
 
 /**

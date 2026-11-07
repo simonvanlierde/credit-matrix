@@ -36,8 +36,9 @@ jobs, and the outside services. Attacks that need the user's device are out of
 | Static host (Cloudflare) | Built files, headers in [`_headers`](../public/_headers) | Trusted to serve what CI built. Runs no code of ours |
 | ORCID | An iD out, a name back; sign-in; public signing keys | Schema-checked ([`orcid-lookup.ts`](../src/core/orcid-lookup.ts), [`orcid-proof.ts`](../src/core/orcid-proof.ts)) |
 | Crossref, DataCite | A DOI out, metadata back | Schema-checked ([`doi-lookup.ts`](../src/core/doi-lookup.ts)) |
+| Citation converter | Runtime from jsDelivr, checksum-pinned Python wheels from this site; no file uploaded | Lazy, isolated worker with its own CSP ([`citation-import.ts`](../src/lib/citation-import.ts), [`citesync-worker.js`](../public/citesync-worker.js)) |
 | Share and reply links | A draft or one row from someone else | Untrusted (T7, T8) |
-| Imported files, pasted text | JATS XML, JSON, CSV, tenzing, name lists, statements | Untrusted ([`import.ts`](../src/core/import.ts), T4 to T6) |
+| Imported files, pasted text | JATS XML, JSON, CSV, tenzing, citation metadata, name lists, statements | Untrusted ([`import.ts`](../src/core/import.ts), T4 to T6) |
 | npm consumers | Users of the package or web element | They trust us. The element fetches any `src` the page gives it ([`element.ts`](../src/core/element.ts)) |
 | Census inputs (PMC, Europe PMC, OpenAlex) | Article XML, journal fields | Untrusted (T14) |
 | GitHub Actions, npm, Renovate | Code, dependencies, the release | Trusted with pins and narrow rights (T10 to T12) |
@@ -45,7 +46,7 @@ jobs, and the outside services. Attacks that need the user's device are out of
 ## Secure design principles
 
 - **Economy of mechanism.** No server, accounts or database (ADR 0002, ADR 0003). `src/core` has
-  one runtime dependency, `zod` ([architecture](architecture.md)).
+  `zod` for validation and Lingui for translation ([architecture](architecture.md)).
 - **Minimal attack surface.** No code runs per request. `connect-src` allows five outside hosts
   ([`_headers`](../public/_headers)).
 - **Fail-safe defaults.** Bad links open the normal app (T7), bad proofs are dropped (T9), and the
@@ -74,8 +75,8 @@ jobs, and the outside services. Attacks that need the user's device are out of
 | T8 | Reply overwrites the lead's data | An ask link carries only one co-author's row. A reply sits beside the lead's row until settled by hand in Review | [`share-payload.ts`](../src/core/share-payload.ts), [ADR 0002](adr/0002-no-accounts-or-server-side-storage.md) |
 | T9 | Forged ORCID proof | `nonce` is the SHA-256 of the reply payload. RS256 against ORCID's key set over HTTPS, issuer `https://orcid.org`, audience includes our client id. Random `state` in `sessionStorage`. The lead re-checks on arrival and on import, and keeps a proof only for the row id it signed and that answer. Review warns on a different iD. A failed check drops the proof; when ORCID's keys cannot be fetched it is kept apart, as unchecked, and not shown. On import, the signed row id, name and iD are compared with the row the answer lands on; any difference keeps the proof and shows it in Review as a warning, not as verified. A file that repeats a row id is refused. Threat model: the lead trusts the channel a reply arrives by (email, Slack), and the sign-in proves the iD and the answers. A copied file can carry a true sign-in into another draft, because exports carry no draft id; Review then shows the title the sign-in was given for when it differs from the draft's. Nothing outside the app relies on the mark (the Crossref export never sets `authenticated`) | [`orcid-proof.ts`](../src/core/orcid-proof.ts), [`orcid-sign-in.ts`](../src/lib/orcid-sign-in.ts), [`ask.ts`](../src/core/ask.ts), [`ReviewPanel.tsx`](../src/components/ReviewPanel.tsx) |
 | T10 | Hijacked dependency or action | Frozen `pnpm-lock.yaml` and `census/uv.lock`. pnpm refuses releases under 3 days old; Renovate and uv wait 7 days. Actions pinned by digest | [`ci.yml`](../.github/workflows/ci.yml), [`pnpm-workspace.yaml`](../pnpm-workspace.yaml), [`renovate.json5`](../renovate.json5), [`pyproject.toml`](../census/pyproject.toml) |
-| T11 | Stolen CI credentials | Default `contents: read`. Four jobs can request OIDC: `attest`, `publish` and Scorecard run no project code; CodSpeed does (residual risk). Forks get no token and no Cloudflare secrets | [`codspeed.yml`](../.github/workflows/codspeed.yml), [`scorecard.yml`](../.github/workflows/scorecard.yml), [deploy](deploy.md) |
-| T12 | Tampered build or release | Provenance attested for each deployed file. npm trusted publishing with `--provenance`, no stored token. Scorecard runs | [`release-core.yml`](../.github/workflows/release-core.yml), [`scorecard.yml`](../.github/workflows/scorecard.yml) |
+| T11 | Stolen CI credentials | Default `contents: read`. Five jobs can request OIDC: `attest`, `publish`, `release` and Scorecard run no project code; CodSpeed does (residual risk). Forks get no token and no Cloudflare secrets | [`codspeed.yml`](../.github/workflows/codspeed.yml), [`scorecard.yml`](../.github/workflows/scorecard.yml), [deploy](deploy.md) |
+| T12 | Tampered build or release | Provenance attested for each deployed file and release tarball. Release drafts include the tarball, its provenance bundle and an attested SBOM. npm trusted publishing with `--provenance`, no stored token. Scorecard runs | [`release-core.yml`](../.github/workflows/release-core.yml), [`scorecard.yml`](../.github/workflows/scorecard.yml) |
 | T13 | Data leaving the browser | No Worker code. Lookups send only the typed iD or DOI. Links use the fragment, cleared once read | [`HeaderActions.tsx`](../src/components/HeaderActions.tsx), [`_headers`](../public/_headers) |
 | T14 | Hostile census XML | lxml with `resolve_entities=False`, `no_network=True`, no comments or processing instructions. Bulk files checked against committed SHA-256 hashes. Output reaches the app only as a committed JSON file of counts and shares, no names | [`jats.py`](../census/src/census/jats.py), [`rows.py`](../census/src/census/rows.py), [`bulk.py`](../census/src/census/bulk.py), [`field-norms.ts`](../src/lib/field-norms.ts) |
 
@@ -98,7 +99,7 @@ jobs, and the outside services. Attacks that need the user's device are out of
 - **No expiry check on the lead's side.** The token lives ten minutes, so a signed reply can be
   replayed, but only with the exact answer it signed.
 - **`style-src 'unsafe-inline'`** stays for React style attributes, so injected markup could style.
-- **No CSP under `next dev`.** CI runs E2E against `wrangler dev`, which applies it.
+- **No CSP under `vite`.** CI runs E2E against `wrangler dev`, which applies it.
 - **Links are bearer secrets and drafts are unencrypted**
   ([SECURITY.md](../SECURITY.md#security-model)). Nothing expires a link.
 - **Outside services.** No rate limiting of our own; lookups count against each visitor's limits.

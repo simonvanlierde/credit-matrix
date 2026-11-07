@@ -1,15 +1,18 @@
-// Fails when the JavaScript the web app ships (out/_next/static/**/*.js, every
+// biome-ignore-all lint/correctness/noNodejsModules: Node build check.
+// biome-ignore-all lint/suspicious/noConsole: build diagnostics.
+// Fails when the JavaScript the web app ships (out/assets/**/*.js, every
 // route's chunks together) outgrows its budget. Sizes are the sum of each
 // file compressed alone, as a static host serves them. Run after `pnpm build`.
 // Raise a limit on purpose, in the same commit as the change that needs it.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import process from "node:process";
 import { gzipSync } from "node:zlib";
 
 // Measured 2026-11-04: 496 kB gzip, 1530 kB raw. The limit sits about 10% above.
 const LIMIT_GZIP = 545_000;
 
-const dir = join(import.meta.dirname, "..", "out", "_next", "static");
+const dir = join(import.meta.dirname, "..", "out", "assets");
 const files = existsSync(dir)
   ? readdirSync(dir, { recursive: true, encoding: "utf8" })
       .filter((f) => f.endsWith(".js"))

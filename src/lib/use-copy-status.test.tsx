@@ -1,9 +1,9 @@
 import { renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { act } from "react";
-import { IntlProvider } from "use-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import en from "@/messages/en.json";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { announce } from "./announce";
 import { useCopyStatus } from "./use-copy-status";
 

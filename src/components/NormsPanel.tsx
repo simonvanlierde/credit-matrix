@@ -2,10 +2,10 @@
 
 import { ChartLine, Info } from "lucide-react";
 import { type ReactNode, useId } from "react";
-import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fieldKey } from "@/lib/field-names";
 import { NORM_FIELDS, NORMS, normRows, POSITIONS, selfPosition } from "@/lib/field-norms";
+import { useFormatter, useLocale, useTranslations } from "@/lib/translations";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { cn } from "@/lib/utils";
 import { useContributionStore } from "@/store/contribution-store";

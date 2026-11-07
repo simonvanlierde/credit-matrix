@@ -7,7 +7,11 @@ import { defineConfig } from "tsdown";
 export default defineConfig([
   {
     entry: { index: "index.ts", lookup: "lookup.ts", i18n: "i18n.ts", element: "element.ts" },
+    // The browser element loads these modules directly, without an import map for Lingui.
+    deps: { alwaysBundle: [/^@lingui\//] },
     platform: "neutral",
+    env: { NODE_ENV: "production" },
+    inputOptions: { resolve: { mainFields: ["module", "main"] } },
     dts: true,
     tsconfig: "tsconfig.build.json",
     hash: false,
@@ -33,7 +37,8 @@ export default defineConfig([
     // imports fail. The package and yaml are bundled in; the source is used so the builds stay independent.
     entry: { "myst-plugin": "../../integrations/myst/credit-matrix.mjs" },
     alias: { "credit-matrix": fileURLToPath(new URL("index.ts", import.meta.url)) },
-    deps: { alwaysBundle: ["yaml", /^yaml\//, "zod", /^zod\//] },
+    deps: { alwaysBundle: ["yaml", /^yaml\//, "zod", /^zod\//, /^@lingui\//] },
+    env: { NODE_ENV: "production" },
     outputOptions: { codeSplitting: false, entryFileNames: "[name].mjs" },
     minify: true,
     platform: "node",

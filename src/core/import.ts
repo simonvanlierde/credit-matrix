@@ -1,11 +1,12 @@
 import type { Ask } from "./ask";
 import type { Author } from "./author";
+import { isValidOrcid, MAX_AUTHORS, MAX_IMPORT_BYTES, normalizeOrcid } from "./author";
 import { fromCrossrefContributors, isCrossrefContributors } from "./export/crossref";
 import { fromCsv, headerCells } from "./export/csv";
 import { fromJson } from "./export/json";
 import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
-import { parseAuthorText } from "./parse-authors";
+import { createAuthor, deduplicateAuthorInitials, parseAuthorText } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
 import { readsAsStatement } from "./statement";
 
@@ -14,6 +15,9 @@ export type DetectedFormat =
   | "csv"
   | "tenzing"
   | "json"
+  | "codemeta"
+  | "cff"
+  | "zenodo"
   | "xml"
   | "crossref"
   | "statement"
@@ -23,6 +27,7 @@ export type DetectedFormat =
 /** Guess what pasted or loaded text is, from its shape alone. */
 export function detectFormat(text: string): DetectedFormat {
   const trimmed = text.trim();
+  if (/^cff-version\s*:/m.test(trimmed)) return "cff";
   // A share link, most usefully one a co-author sent back with their own roles.
   // `encodeShareHash` without a base URL gives the bare `#s=…` hash.
   if (/^https?:\/\/\S+#s=/.test(trimmed) || /^#s=[\w-]+$/.test(trimmed)) return "link";
@@ -32,7 +37,12 @@ export function detectFormat(text: string): DetectedFormat {
   // both a comma and a "name" field, so the CSV check would misclassify it.
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     try {
-      JSON.parse(trimmed);
+      const data = JSON.parse(trimmed);
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        if (Array.isArray(data.creators)) return "zenodo";
+        if (JSON.stringify(data["@context"] ?? "").includes("codemeta") || data["@type"] === "SoftwareSourceCode")
+          return "codemeta";
+      }
       return "json";
     } catch {
       /* fall through */
@@ -63,10 +73,28 @@ export interface Imported {
  * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
  * `authors` means the format was right but held nobody.
  */
-export async function importAny(text: string, { parser }: { parser?: XmlParser } = {}): Promise<Imported> {
+export async function importAny(
+  text: string,
+  {
+    parser,
+    convertCitation,
+  }: {
+    parser?: XmlParser;
+    /** Convert CFF or Zenodo metadata to CodeMeta through citesync. */
+    convertCitation?: (text: string, format: "cff" | "zenodo") => Promise<string>;
+  } = {},
+): Promise<Imported> {
+  if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES) throw new Error("Use a file smaller than 1 MB.");
   const trimmed = text.trim();
   const format = detectFormat(trimmed);
   switch (format) {
+    case "cff":
+    case "zenodo": {
+      if (!convertCitation) throw new Error("This citation format needs the citesync converter.");
+      return { format, authors: fromCodemeta(await convertCitation(trimmed, format)) };
+    }
+    case "codemeta":
+      return { format, authors: fromCodemeta(trimmed) };
     case "link": {
       const shared = await decodeShareHash(trimmed.slice(trimmed.indexOf("#")));
       if (!shared) throw new Error("The link is not a CRediT Matrix share link this version can read.");
@@ -89,4 +117,48 @@ export async function importAny(text: string, { parser }: { parser?: XmlParser }
     default:
       throw new Error("Nothing to import.");
   }
+}
+
+/** Citation metadata supplies names and ORCIDs, never contribution scores. */
+function fromCodemeta(text: string): Author[] {
+  if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES) throw new Error("Use a file smaller than 1 MB.");
+  const data = JSON.parse(text);
+  const entries: unknown[] = Array.isArray(data?.author) ? data.author : data?.author ? [data.author] : [];
+  const people = entries.filter(
+    (entry) =>
+      !entry ||
+      typeof entry !== "object" ||
+      ((entry as Record<string, unknown>)["@type"] ?? (entry as Record<string, unknown>).type) !== "Role",
+  );
+  if (people.length > MAX_AUTHORS) throw new Error("Too many contributors.");
+  return deduplicateAuthorInitials(
+    people.flatMap((entry) => {
+      if (!entry || typeof entry !== "object") return [];
+      const person = entry as Record<string, unknown>;
+      const name =
+        typeof person.name === "string"
+          ? person.name.trim()
+          : [person.givenName, person.familyName]
+              .filter((part) => typeof part === "string")
+              .join(" ")
+              .trim();
+      if (!name) return [];
+      const id = person["@id"] ?? person.id;
+      const organization = (person["@type"] ?? person.type) === "Organization";
+      const orcid = !organization && typeof id === "string" && isValidOrcid(id) ? normalizeOrcid(id) : undefined;
+      const given = typeof person.givenName === "string" ? person.givenName.trim().split(/\s+/) : [];
+      return [
+        createAuthor(name, {
+          ...(orcid ? { orcid } : {}),
+          ...(!organization && (typeof person.givenName === "string" || typeof person.familyName === "string")
+            ? {
+                firstName: given[0] ?? "",
+                middleName: given.slice(1).join(" "),
+                surname: typeof person.familyName === "string" ? person.familyName : "",
+              }
+            : {}),
+        }),
+      ];
+    }),
+  );
 }
