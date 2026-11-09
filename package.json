@@ -70,7 +70,7 @@
     "jsdom": "^30.1.1",
     "jupyter-book": "^2.1.7",
     "lefthook": "^2.1.16",
-    "marked": "18.1.1",
+    "marked": "18.1.2",
     "mystmd": "^1.12.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
