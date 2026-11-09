@@ -135,6 +135,10 @@ Requirements", "all authors made substantial contributions to conception and des
 data, or analysis and interpretation; drafted or revised...; gave final approval" said of everyone
 at once. A pledge gets `"pledge": "icmje"`, no roles.
 
+The author count decides ICMJE-criteria wording said of all authors at once: with more than 3
+authors it is a pledge, and with 3 or fewer it maps to worded roles for every author. With few
+authors, each one doing every task is plausible.
+
 ICMJE wording attached to a named person ("KLR contributed to conception and design, acquisition of
 data...") is a description, not a pledge: map it to worded roles.
 
