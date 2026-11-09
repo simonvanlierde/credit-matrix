@@ -85,8 +85,8 @@ pulled. It merges minor and patch updates once every check passes; majors and Gi
 ## Releases
 
 Add a dated changelog entry before running `pnpm version`. Its lifecycle script takes the
-version from the root package and the date from that entry. It runs `citesync==0.2.0` through
-`uvx` to update CITATION.cff, codemeta.json and the published `src/core/package.json`.
+version from the root package and the date from that entry. It runs `citesync==0.4.0` through
+`uvx` to update CITATION.cff, codemeta.json, schema.jsonld and the published `src/core/package.json`.
 The first run needs access to the Python package index; later runs can use uv's cache.
 
 [citesync.toml](citesync.toml) lists those files and permits only version writes to the package.

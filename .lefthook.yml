@@ -7,8 +7,8 @@ pre-commit:
             stage_fixed: true
         citesync:
             # The citation files and package manifests must agree (CITATION.cff is the source).
-            glob: "{CITATION.cff,codemeta.json,.zenodo.json,package.json}"
-            run: uvx citesync@0.1.0 check
+            glob: "{CITATION.cff,codemeta.json,schema.jsonld,.zenodo.json,package.json}"
+            run: uvx citesync@0.4.0 check
 prepare-commit-msg:
     commands:
         sign-off:
