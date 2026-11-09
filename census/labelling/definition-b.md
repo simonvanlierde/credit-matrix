@@ -100,6 +100,11 @@ House rules on top of NISO:
   drafting of the manuscript" gives original draft.
 - "Wrote the manuscript with input from all authors" (or "with contributions from all authors", "all
   authors contributed to the text / to the final version") gives the other authors review & editing.
+- A heading that lists tasks with "or" followed by named authors ("Acquisition, analysis, or
+  interpretation of data: A, B") gives each named author every listed task. The either-or rule
+  under "No role" covers only a sentence said of everyone.
+- Suggesting or advising on a task gives that task with a worded `supporting` degree: "provided
+  constructive suggestions for data visualization" gives visualization (supporting).
 - When a statement gives examples in brackets ("technical support (constructing databases)"), map
   the examples, and the category word only when it maps on its own.
 
