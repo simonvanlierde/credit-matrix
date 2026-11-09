@@ -5,2086 +5,1565 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. js-lingui-explicit-id
 msgid "stepContributors"
 msgstr "Bijdragers"
 
-#. js-lingui-explicit-id
 msgid "stepContributions"
 msgstr "Bijdragen"
 
-#. js-lingui-explicit-id
 msgid "stepStatement"
 msgstr "Verklaring"
 
-#. js-lingui-explicit-id
 msgid "addContributor"
 msgstr "Nieuwe auteursnamen of ORCID iD"
 
-#. js-lingui-explicit-id
 msgid "addPlaceholder"
 msgstr "Voeg namen of een ORCID iD toe…"
 
-#. js-lingui-explicit-id
 msgid "addButton"
 msgstr "Toevoegen"
 
-#. js-lingui-explicit-id
 msgid "nameLabel"
 msgstr "Naam of ORCID iD"
 
-#. js-lingui-explicit-id
 msgid "removeContributor"
 msgstr "Verwijderen"
 
-#. js-lingui-explicit-id
 msgid "reorderContributor"
 msgstr "Verplaatsen"
 
-#. js-lingui-explicit-id
 msgid "undo"
 msgstr "Ongedaan maken"
 
-#. js-lingui-explicit-id
 msgid "cancel"
 msgstr "Annuleren"
 
-#. js-lingui-explicit-id
 msgid "skipToContent"
 msgstr "Naar de inhoud"
 
-#. js-lingui-explicit-id
 msgid "noContributorsYet"
 msgstr "Nog geen bijdragers."
 
-#. js-lingui-explicit-id
 msgid "loadSample"
 msgstr "Voorbeeldgegevens laden"
 
-#. js-lingui-explicit-id
 msgid "sampleNames"
 msgstr "Christiaan Huygens\nJohanna Westerdijk\nJan Ingenhousz"
 
-#. js-lingui-explicit-id
 msgid "assignmentMode"
 msgstr "Rollentoewijzing"
 
-#. js-lingui-explicit-id
 msgid "modeYesNo"
 msgstr "Ja / nee"
 
-#. js-lingui-explicit-id
 msgid "modeLevels"
 msgstr "Niveaus"
 
-#. js-lingui-explicit-id
 msgid "bulkAssign"
 msgstr "Bulk toewijzen"
 
-#. js-lingui-explicit-id
 msgid "heatmapOptions"
 msgstr "Heatmap-opties"
 
-#. js-lingui-explicit-id
 msgid "statementOptions"
 msgstr "Verklaringsopties"
 
-#. js-lingui-explicit-id
 msgid "gridColor"
 msgstr "Heatmapkleur"
 
-#. js-lingui-explicit-id
 msgid "transpose"
 msgstr "Transponeren"
 
-#. js-lingui-explicit-id
 msgid "useInitials"
 msgstr "Initialen gebruiken"
 
-#. js-lingui-explicit-id
 msgid "roleColumn"
 msgstr "Rol"
 
-#. js-lingui-explicit-id
 msgid "contributorColumn"
 msgstr "Bijdrager"
 
-#. js-lingui-explicit-id
 msgid "groupByRole"
 msgstr "Op rol"
 
-#. js-lingui-explicit-id
 msgid "groupByAuthor"
 msgstr "Op auteur"
 
-#. js-lingui-explicit-id
 msgid "showLevels"
 msgstr "Niveaus tonen"
 
-#. js-lingui-explicit-id
 msgid "copyStatement"
 msgstr "Verklaring kopiëren"
 
-#. js-lingui-explicit-id
 msgid "exportData"
 msgstr "Gegevens exporteren"
 
-#. js-lingui-explicit-id
 msgid "download"
 msgstr "Downloaden"
 
-#. js-lingui-explicit-id
 msgid "copy"
 msgstr "Kopiëren"
 
-#. js-lingui-explicit-id
 msgid "copied"
 msgstr "Gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "import"
 msgstr "Importeren"
 
-#. js-lingui-explicit-id
 msgid "share"
 msgstr "Delen"
 
-#. js-lingui-explicit-id
 msgid "howItWorks"
 msgstr "Hoe het werkt"
 
-#. js-lingui-explicit-id
 msgid "aboutApp"
 msgstr "Over deze app"
 
-#. js-lingui-explicit-id
 msgid "interfaceLanguage"
 msgstr "Interfacetaal"
 
-#. js-lingui-explicit-id
 msgid "outputLanguage"
 msgstr "Uitvoertaal"
 
-#. js-lingui-explicit-id
 msgid "toggleTheme"
 msgstr "Thema wisselen"
 
-#. js-lingui-explicit-id
 msgid "contributorTypeAuthor"
 msgstr "Auteur"
 
-#. js-lingui-explicit-id
 msgid "contributorTypeNonAuthor"
 msgstr "Niet-auteur"
 
-#. js-lingui-explicit-id
 msgid "addOrcid"
 msgstr "ORCID iD toevoegen"
 
-#. js-lingui-explicit-id
 msgid "lookupOrcidName"
 msgstr "Naam opzoeken via ORCID"
 
-#. js-lingui-explicit-id
 msgid "lookingUp"
 msgstr "Bezig met opzoeken…"
 
-#. js-lingui-explicit-id
 msgid "nameUpdated"
 msgstr "Naam bijgewerkt"
 
-#. js-lingui-explicit-id
 msgid "removeOrcid"
 msgstr "ORCID iD verwijderen"
 
-#. js-lingui-explicit-id
 msgid "gridEmptyHint"
 msgstr "Voeg bijdragers toe om in dit raster de 14 CRediT-rollen toe te wijzen."
 
-#. js-lingui-explicit-id
 msgid "bulkAssignLevel"
 msgstr "Toe te wijzen niveau"
 
-#. js-lingui-explicit-id
 msgid "bulkOneContributor"
 msgstr "Eén bijdrager"
 
-#. js-lingui-explicit-id
 msgid "bulkOneRole"
 msgstr "Eén rol"
 
-#. js-lingui-explicit-id
 msgid "bulkAssignAll"
 msgstr "Alle rollen toewijzen"
 
-#. js-lingui-explicit-id
 msgid "bulkClearAll"
 msgstr "Alle rollen wissen"
 
-#. js-lingui-explicit-id
 msgid "bulkAssignToAll"
 msgstr "Aan iedereen toewijzen"
 
-#. js-lingui-explicit-id
 msgid "bulkClearRole"
 msgstr "Voor iedereen wissen"
 
-#. js-lingui-explicit-id
 msgid "bulkChangeApplied"
 msgstr "Bulkwijziging toegepast."
 
-#. js-lingui-explicit-id
 msgid "annBulkUndone"
 msgstr "Bulkwijziging ongedaan gemaakt."
 
-#. js-lingui-explicit-id
 msgid "contributorToAssign"
 msgstr "Toe te wijzen bijdrager"
 
-#. js-lingui-explicit-id
 msgid "colorLabel"
 msgstr "Kleur"
 
-#. js-lingui-explicit-id
 msgid "transposeHint"
 msgstr "Wissel de rij- en kolomassen om"
 
-#. js-lingui-explicit-id
 msgid "legendLevel"
 msgstr "Niveau"
 
-#. js-lingui-explicit-id
 msgid "legendKey"
 msgstr "Legenda"
 
-#. js-lingui-explicit-id
 msgid "levelHint"
 msgstr "Selecteer om te wisselen · Rechtsklik of 0–3 stelt een niveau in."
 
-#. js-lingui-explicit-id
 msgid "heatmapLabel"
 msgstr "Heatmap"
 
-#. js-lingui-explicit-id
 msgid "copyHeatmapHint"
 msgstr "De heatmap als PNG-afbeelding kopiëren"
 
-#. js-lingui-explicit-id
 msgid "fullDefinition"
 msgstr "Volledige definitie"
 
-#. js-lingui-explicit-id
 msgid "copyFailedMessage"
 msgstr "Kopiëren mislukt"
 
-#. js-lingui-explicit-id
 msgid "linkCopied"
 msgstr "Link gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "importTitle"
 msgstr "Bijdragers importeren"
 
-#. js-lingui-explicit-id
 msgid "importData"
 msgstr "Gegevens importeren"
 
-#. js-lingui-explicit-id
 msgid "close"
 msgstr "Sluiten"
 
-#. js-lingui-explicit-id
 msgid "browseFiles"
 msgstr "Bestanden kiezen"
 
-#. js-lingui-explicit-id
 msgid "dragDropFile"
 msgstr "Sleep een bestand hierheen"
 
-#. js-lingui-explicit-id
 msgid "acceptedFileTypes"
 msgstr "Accepteert .csv, .tsv, .json of .xml"
 
-#. js-lingui-explicit-id
 msgid "fileLoaded"
 msgstr "Geladen uit {name}"
 
-#. js-lingui-explicit-id
 msgid "pasteRawData"
 msgstr "Ruwe gegevens plakken"
 
-#. js-lingui-explicit-id
 msgid "replaceWorkspaceTitle"
 msgstr "Huidige werkruimte vervangen?"
 
-#. js-lingui-explicit-id
 msgid "replaceWorkspace"
 msgstr "Werkruimte vervangen"
 
-#. js-lingui-explicit-id
 msgid "keepCurrentWork"
 msgstr "Huidig werk behouden"
 
-#. js-lingui-explicit-id
 msgid "welcomeStepContributors"
 msgstr "Bijdragers toevoegen"
 
-#. js-lingui-explicit-id
 msgid "welcomeStepRoles"
 msgstr "Rollen toewijzen"
 
-#. js-lingui-explicit-id
 msgid "welcomeStepExport"
 msgstr "Controleren en exporteren"
 
-#. js-lingui-explicit-id
 msgid "gotIt"
 msgstr "Begrepen"
 
-#. js-lingui-explicit-id
 msgid "startFresh"
 msgstr "Opnieuw beginnen"
 
-#. js-lingui-explicit-id
 msgid "removedContributor"
 msgstr "{name} verwijderd"
 
-#. js-lingui-explicit-id
 msgid "contributorCount"
 msgstr "{count, plural, =0 {Geen bijdragers} one {# bijdrager} other {# bijdragers}}"
 
-#. js-lingui-explicit-id
 msgid "annContributorRestored"
 msgstr "{name} hersteld."
 
-#. js-lingui-explicit-id
 msgid "annNameFromOrcid"
 msgstr "Naam bijgewerkt via ORCID: {name}"
 
-#. js-lingui-explicit-id
 msgid "annStatementCopied"
 msgstr "Verklaring naar het klembord gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "annLinkCopied"
 msgstr "Link naar het klembord gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "annHeatmapCopied"
 msgstr "Heatmap-PNG naar het klembord gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "annBadgeCopied"
 msgstr "Badge-PNG naar het klembord gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "annCopyFailed"
 msgstr "Kopiëren mislukt. Probeer het opnieuw."
 
-#. js-lingui-explicit-id
 msgid "dndPickedUp"
 msgstr "Bijdrager {name} opgepakt."
 
-#. js-lingui-explicit-id
 msgid "dndOver"
 msgstr "Bijdrager {name} bevindt zich boven {target}."
 
-#. js-lingui-explicit-id
 msgid "dndDropped"
 msgstr "Bijdrager {name} is op {target} neergezet."
 
-#. js-lingui-explicit-id
 msgid "dndCancelled"
 msgstr "Verplaatsen van {name} is geannuleerd."
 
-#. js-lingui-explicit-id
 msgid "errNameNoLetter"
 msgstr "Dit lijkt niet op een naam. Er is minstens één letter nodig."
 
-#. js-lingui-explicit-id
 msgid "errNameTooLong"
 msgstr "Deze naam is te lang. Gebruik maximaal 500 tekens."
 
-#. js-lingui-explicit-id
 msgid "errFileTooLarge"
 msgstr "Dit bestand is te groot. Kies een bestand kleiner dan {limit}."
 
-#. js-lingui-explicit-id
 msgid "errFileUnreadable"
 msgstr "Kan het bestand niet lezen. Controleer het bestand en probeer het opnieuw."
 
-#. js-lingui-explicit-id
 msgid "errImportTooLarge"
 msgstr "Deze import is te groot. Plak minder dan {limit} aan gegevens."
 
-#. js-lingui-explicit-id
 msgid "errTooManyContributors"
 msgstr "Deze import bevat te veel bijdragers. De limiet is {limit}."
 
-#. js-lingui-explicit-id
 msgid "errShareTooLarge"
 msgstr "Dit concept is te groot om als link te delen. Exporteer het in plaats daarvan als JSON."
 
-#. js-lingui-explicit-id
 msgid "errShareUnsupported"
 msgstr "Deze browser kan geen deellinks maken. Exporteer het concept als JSON."
 
-#. js-lingui-explicit-id
 msgid "errShareLinkBroken"
 msgstr "Deze gedeelde link kon niet worden geopend. Uw eigen concept is behouden."
 
-#. js-lingui-explicit-id
 msgid "errAtContributorLimit"
 msgstr "Een concept bevat maximaal {limit} bijdragers. Verwijder er een om een nieuwe toe te voegen."
 
-#. js-lingui-explicit-id
 msgid "errOrcidChecksum"
 msgstr "Deze ORCID iD heeft een ongeldige controlesom. Controleer de cijfers en probeer het opnieuw."
 
-#. js-lingui-explicit-id
 msgid "errOffline"
 msgstr "U bent offline, daarom zijn ORCID-opzoekingen niet beschikbaar. Typ de naam in plaats daarvan."
 
-#. js-lingui-explicit-id
 msgid "errOrcidINVALID_ID"
 msgstr "Dit is geen geldige ORCID iD. Controleer de cijfers en probeer het opnieuw."
 
-#. js-lingui-explicit-id
 msgid "errOrcidNOT_FOUND"
 msgstr "Geen ORCID-record komt overeen met deze iD."
 
-#. js-lingui-explicit-id
 msgid "errOrcidUNAVAILABLE"
 msgstr "De ORCID-service is niet beschikbaar. Probeer het zo meteen opnieuw of typ de naam."
 
-#. js-lingui-explicit-id
 msgid "importFromDoi"
 msgstr "Importeren vanuit een DOI"
 
-#. js-lingui-explicit-id
 msgid "structuredFileUpload"
 msgstr "Gestructureerd bestand uploaden"
 
-#. js-lingui-explicit-id
 msgid "doiPlaceholder"
 msgstr "10.1038/s41586-020-2649-2"
 
-#. js-lingui-explicit-id
 msgid "doiLookUp"
 msgstr "Opzoeken"
 
-#. js-lingui-explicit-id
 msgid "doiLookingUp"
 msgstr "Bezig met opzoeken…"
 
-#. js-lingui-explicit-id
 msgid "doiHint"
 msgstr "Fills in contributors, ORCID iDs and the title. Deposited CRediT roles are shown for confirmation."
 
-#. js-lingui-explicit-id
 msgid "errDoiINVALID_DOI"
 msgstr "Dit is geen geldige DOI. Deze moet eruitzien als 10.1234/abcde."
 
-#. js-lingui-explicit-id
 msgid "errDoiNOT_FOUND"
 msgstr "Geen gepubliceerd record komt overeen met deze DOI."
 
-#. js-lingui-explicit-id
 msgid "errDoiNO_AUTHORS"
 msgstr "Dit record vermeldt geen bijdragers, dus er valt niets te importeren."
 
-#. js-lingui-explicit-id
 msgid "errDoiTOO_MANY_AUTHORS"
 msgstr "Dit record vermeldt meer bijdragers dan een concept kan bevatten."
 
-#. js-lingui-explicit-id
 msgid "errDoiUNAVAILABLE"
 msgstr "De Crossref-service is niet beschikbaar. Probeer het zo meteen opnieuw of plak de auteurslijst."
 
-#. js-lingui-explicit-id
 msgid "errDoiOFFLINE"
 msgstr "U bent offline, daarom zijn DOI-opzoekingen niet beschikbaar. Plak in plaats daarvan de auteurslijst."
 
-#. js-lingui-explicit-id
 msgid "equalContributionShort"
 msgstr "Gedeeld eerste auteur"
 
-#. js-lingui-explicit-id
 msgid "correspondingShort"
 msgstr "Corresponderende auteur"
 
-#. js-lingui-explicit-id
 msgid "equalContributionSet"
 msgstr "Markeren als gedeeld eerste auteurschap"
 
-#. js-lingui-explicit-id
 msgid "equalContributionUnset"
 msgstr "Gedeeld eerste auteurschap verwijderen"
 
-#. js-lingui-explicit-id
 msgid "correspondingSet"
 msgstr "Markeren als corresponderende auteur"
 
-#. js-lingui-explicit-id
 msgid "correspondingUnset"
 msgstr "Corresponderende auteur verwijderen"
 
-#. js-lingui-explicit-id
 msgid "drafts"
 msgstr "Concepten"
 
-#. js-lingui-explicit-id
 msgid "draftsHint"
 msgstr "Elk concept is één artikel. Ze blijven in deze browser."
 
-#. js-lingui-explicit-id
 msgid "untitledDraft"
 msgstr "Naamloos concept"
 
-#. js-lingui-explicit-id
 msgid "newDraft"
 msgstr "Nieuw concept"
 
-#. js-lingui-explicit-id
 msgid "draftTitleLabel"
 msgstr "Titel van het concept"
 
-#. js-lingui-explicit-id
 msgid "duplicateDraft"
 msgstr "Dupliceren"
 
-#. js-lingui-explicit-id
 msgid "deleteDraft"
 msgstr "Verwijderen"
 
-#. js-lingui-explicit-id
 msgid "confirmDeleteDraft"
 msgstr "Dit concept verwijderen?"
 
-#. js-lingui-explicit-id
 msgid "draftLimitReached"
 msgstr "U kunt {count} concepten tegelijk bewaren. Verwijder er eerst één."
 
-#. js-lingui-explicit-id
 msgid "draftCreated"
 msgstr "Nieuw concept begonnen."
 
-#. js-lingui-explicit-id
 msgid "draftDuplicated"
 msgstr "Concept gedupliceerd."
 
-#. js-lingui-explicit-id
 msgid "draftDeleted"
 msgstr "Concept verwijderd."
 
-#. js-lingui-explicit-id
 msgid "deleteAllDrafts"
 msgstr "Alle concepten verwijderen"
 
-#. js-lingui-explicit-id
 msgid "confirmDeleteAllDrafts"
 msgstr "Alle concepten in deze browser verwijderen? Dit kan niet ongedaan worden gemaakt."
 
-#. js-lingui-explicit-id
 msgid "allDraftsDeleted"
 msgstr "Alle concepten verwijderd."
 
-#. js-lingui-explicit-id
 msgid "draftUpdatedElsewhere"
 msgstr "Dit concept is in een ander tabblad bijgewerkt."
 
-#. js-lingui-explicit-id
 msgid "switchToDraft"
 msgstr "Overschakelen naar {title}"
 
-#. js-lingui-explicit-id
 msgid "coauthorPrefilled"
 msgstr "Wat is aangevinkt, is de inschatting van wie het vraagt. Pas aan wat niet klopt."
 
-#. js-lingui-explicit-id
 msgid "coauthorHeading"
 msgstr "<work>{title}</work>: wat heeft u gedaan?"
 
-#. js-lingui-explicit-id
 msgid "coauthorHeadingUntitled"
 msgstr "Wat heeft u aan dit artikel gedaan?"
 
-#. js-lingui-explicit-id
 msgid "coauthorAnsweringAs"
 msgstr "U antwoordt als <b>{name}</b>. Uw naam en ORCID iD gaan mee terug in de link die u stuurt."
 
-#. js-lingui-explicit-id
 msgid "coauthorBlankHint"
 msgstr "Kies een niveau voor elke rol die u op zich nam en laat de rest op {none}. Het kost ongeveer twee minuten."
 
-#. js-lingui-explicit-id
 msgid "coauthorBlankHintYesNo"
 msgstr "Kies {contributed} voor elke rol die u op zich nam en laat de rest op {none}. Het kost ongeveer twee minuten."
 
-#. js-lingui-explicit-id
 msgid "coauthorRoles"
 msgstr "Uw rollen"
 
-#. js-lingui-explicit-id
 msgid "coauthorFirstAuthor"
 msgstr "Ik deel het eerste auteurschap"
 
-#. js-lingui-explicit-id
 msgid "coauthorCorresponding"
 msgstr "Ik ben corresponderend auteur"
 
-#. js-lingui-explicit-id
 msgid "coauthorDetails"
 msgstr "Uw gegevens"
 
-#. js-lingui-explicit-id
 msgid "coauthorDetailsHint"
 msgstr "Corrigeer hier uw naam of ORCID iD als degene die het vraagt ze verkeerd heeft."
 
-#. js-lingui-explicit-id
 msgid "coauthorName"
 msgstr "Naam"
 
-#. js-lingui-explicit-id
 msgid "coauthorSend"
 msgstr "Terugsturen"
 
-#. js-lingui-explicit-id
 msgid "coauthorMarked"
 msgstr "{count} van {total} rollen gemarkeerd"
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidSignIn"
 msgstr "Inloggen met ORCID"
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidHint"
 msgstr "Optioneel: log in met ORCID, dan komt uw antwoord aan als geverifieerd. De inlog reist mee in de link die u terugstuurt en blijft bij uw antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit uw ORCID-record."
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidChanged"
 msgstr "U hebt uw antwoord na het inloggen gewijzigd. Log opnieuw in om dit antwoord te verifiëren."
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidSigned"
 msgstr "Ingelogd met ORCID als {who}. Uw antwoord komt aan als geverifieerd."
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidFailed"
 msgstr "Het inloggen met ORCID is niet afgerond. U kunt uw antwoord ook zonder versturen."
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidVerified"
 msgstr "Geverifieerd door ORCID als {who}, ingelogd op {date}."
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidOtherId"
 msgstr "Dit is niet de iD in de rij."
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidNoRowId"
 msgstr "Deze rij heeft geen ORCID iD om mee te vergelijken."
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidSignedFor"
 msgstr "Ingelogd voor ‘{title}’."
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidSignedElsewhere"
 msgstr "Niet geverifieerd voor deze rij: {who} logde op {date} in met ORCID voor een rij met een andere naam of iD."
 
-#. js-lingui-explicit-id
 msgid "coauthorNotSent"
 msgstr "Nog niet verstuurd."
 
-#. js-lingui-explicit-id
 msgid "coauthorCopyInstead"
 msgstr "Kopieer liever de link"
 
-#. js-lingui-explicit-id
 msgid "coauthorShareTitle"
 msgstr "CRediT-rollen van {name}"
 
-#. js-lingui-explicit-id
 msgid "coauthorSentTitle"
 msgstr "Verstuurd. U kunt deze pagina sluiten."
 
-#. js-lingui-explicit-id
 msgid "coauthorCopiedTitle"
 msgstr "Link gekopieerd. Plak hem in uw antwoord en sluit daarna deze pagina."
 
-#. js-lingui-explicit-id
 msgid "coauthorSentBody"
 msgstr "Degene die het vroeg ziet uw antwoord naast het eigen concept. Vraagt die het opnieuw, open dan de nieuwe link: die vervangt dit antwoord."
 
-#. js-lingui-explicit-id
 msgid "coauthorChange"
 msgstr "Mijn antwoord wijzigen"
 
-#. js-lingui-explicit-id
 msgid "claimUnlock"
 msgstr "Behouden als gewoon concept"
 
-#. js-lingui-explicit-id
 msgid "annClaimUnlocked"
 msgstr "Dit is nu een gewoon concept. Alle rijen zijn bewerkbaar."
 
-#. js-lingui-explicit-id
 msgid "claimLockedHint"
 msgstr "U beantwoordt een verzoek, dus alleen uw eigen rij is bewerkbaar."
 
-#. js-lingui-explicit-id
 msgid "claimResumed"
 msgstr "Verdergegaan waar u bij dit verzoek was gebleven."
 
-#. js-lingui-explicit-id
 msgid "claimRequestUpdated"
 msgstr "Het verzoek is bijgewerkt. Uw eerdere antwoorden zijn vervangen."
 
-#. js-lingui-explicit-id
 msgid "claimLockedDraft"
 msgstr "Vergrendeld: beantwoordt een verzoek"
 
-#. js-lingui-explicit-id
 msgid "requestLinkOwn"
 msgstr "Dit is de verzoeklink die u voor {name} hebt gemaakt."
 
-#. js-lingui-explicit-id
 msgid "askBlank"
 msgstr "{name} vragen wat diegene heeft gedaan"
 
-#. js-lingui-explicit-id
 msgid "askPrefilled"
 msgstr "{name} vragen uw inschatting te controleren"
 
-#. js-lingui-explicit-id
 msgid "askLinkHint"
 msgstr "De link bevat de titel en de naam en iD van deze persoon."
 
-#. js-lingui-explicit-id
 msgid "ask"
 msgstr "Vragen"
 
-#. js-lingui-explicit-id
 msgid "claimedRowBadge"
 msgstr "Uw rij"
 
-#. js-lingui-explicit-id
 msgid "askCopied"
 msgstr "Link gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "askedChip"
 msgstr "Gevraagd"
 
-#. js-lingui-explicit-id
 msgid "askedChipTitle"
 msgstr "Gevraagd de eigen rij in te vullen. Verdwijnt zodra het antwoord binnenkomt."
 
-#. js-lingui-explicit-id
 msgid "mergedRowBadge"
 msgstr "Bijgewerkt"
 
-#. js-lingui-explicit-id
 msgid "mergedRowBadgeTitle"
 msgstr "Ingevuld uit het zojuist geopende antwoord."
 
-#. js-lingui-explicit-id
 msgid "activeDraft"
 msgstr "Geopend"
 
-#. js-lingui-explicit-id
 msgid "askContributorCopied"
 msgstr "Link gekopieerd. Stuur hem naar {name}."
 
-#. js-lingui-explicit-id
 msgid "mergeUnmatched"
 msgstr "Dat antwoord is van iemand die niet in dit concept staat, dus er is niets overgenomen."
 
-#. js-lingui-explicit-id
 msgid "askReplyDiffers"
 msgstr "Het antwoord van {name} is binnen: {count, plural, one {# verschil} other {# verschillen}}."
 
-#. js-lingui-explicit-id
 msgid "askReplyMatches"
 msgstr "Het antwoord van {name} komt overeen met het uwe."
 
-#. js-lingui-explicit-id
 msgid "askReplyStale"
 msgstr "Dit antwoord van {name} is ouder dan het antwoord dat u al hebt, dus het is niet gebruikt."
 
-#. js-lingui-explicit-id
 msgid "askReplyDuplicate"
 msgstr "U hebt dit antwoord van {name} al."
 
-#. js-lingui-explicit-id
 msgid "annMergeUndone"
 msgstr "Samenvoeging ongedaan gemaakt."
 
-#. js-lingui-explicit-id
 msgid "welcomeIntro"
 msgstr "Stel in drie stappen een publicatieklare bijdrageverklaring op."
 
-#. js-lingui-explicit-id
 msgid "about"
 msgstr "Over"
 
-#. js-lingui-explicit-id
 msgid "statusReady"
 msgstr "Klaar om te exporteren"
 
-#. js-lingui-explicit-id
 msgid "statusNotes"
 msgstr "{count, plural, one {# aandachtspunt} other {# aandachtspunten}}"
 
-#. js-lingui-explicit-id
 msgid "statusDismiss"
 msgstr "Sluiten"
 
-#. js-lingui-explicit-id
 msgid "rolesUsed"
 msgstr "{used} van {total} rollen gebruikt"
 
-#. js-lingui-explicit-id
 msgid "shareWarningTitle"
 msgstr "Deze link bevat uw gegevens"
 
-#. js-lingui-explicit-id
 msgid "shareWarningBody"
 msgstr "Iedereen met deze link kan elke naam, ORCID iD, bijdragerstype en roltoewijzing lezen."
 
-#. js-lingui-explicit-id
 msgid "noContributorsHint"
 msgstr "Plak hieronder een DOI of een ORCID iD, typ een naam, of gebruik <b>Importeren</b> in de koptekst."
 
-#. js-lingui-explicit-id
 msgid "a11yContributionGrid"
 msgstr "Bijdrageraster"
 
-#. js-lingui-explicit-id
 msgid "a11yGeneratedStatement"
 msgstr "Gegenereerde bijdrageverklaring"
 
-#. js-lingui-explicit-id
 msgid "a11yStatementNotes"
 msgstr "Aandachtspunten bij de bijdrageverklaring"
 
-#. js-lingui-explicit-id
 msgid "a11yBulkContributor"
 msgstr "Bijdrager voor de bulktoewijzing"
 
-#. js-lingui-explicit-id
 msgid "a11yBulkRole"
 msgstr "Rol voor de bulktoewijzing"
 
-#. js-lingui-explicit-id
 msgid "a11yExportFormat"
 msgstr "Exportformaat"
 
-#. js-lingui-explicit-id
 msgid "a11yOrcidInput"
 msgstr "ORCID iD"
 
-#. js-lingui-explicit-id
 msgid "a11yOrcidHint"
 msgstr "Typ een ORCID iD, of plak er een als iD of als orcid.org-URL"
 
-#. js-lingui-explicit-id
 msgid "a11yDismissWelcome"
 msgstr "Introductie sluiten"
 
-#. js-lingui-explicit-id
 msgid "a11yShareLink"
 msgstr "Een link delen die alle gegevens van bijdragers bevat"
 
-#. js-lingui-explicit-id
 msgid "a11yUploadFile"
 msgstr "CSV-, TSV-, JSON- of XML-bestand uploaden"
 
-#. js-lingui-explicit-id
 msgid "a11yUseInitials"
 msgstr "Initialen gebruiken in plaats van namen"
 
-#. js-lingui-explicit-id
 msgid "a11yShowLevels"
 msgstr "Niveaus tonen: rollen voorzien van bijdrageniveaus"
 
-#. js-lingui-explicit-id
 msgid "a11ySeparateAcks"
 msgstr "Dankbetuigingen scheiden: bijdragers die geen auteur zijn op een eigen regel vermelden"
 
-#. js-lingui-explicit-id
 msgid "customColor"
 msgstr "Aangepast"
 
-#. js-lingui-explicit-id
 msgid "copyDataLink"
 msgstr "Gegevenslink kopiëren"
 
-#. js-lingui-explicit-id
 msgid "fullCreditStandard"
 msgstr "Volledige CRediT-standaard"
 
-#. js-lingui-explicit-id
 msgid "creditRolesExamples"
 msgstr "CRediT-rollen en voorbeelden"
 
-#. js-lingui-explicit-id
 msgid "sourceOnGitHub"
 msgstr "Broncode op GitHub"
 
-#. js-lingui-explicit-id
 msgid "opensInNewTab"
 msgstr "(opent in een nieuw tabblad)"
 
-#. js-lingui-explicit-id
 msgid "acknowledgements"
 msgstr "Met dank aan"
 
-#. js-lingui-explicit-id
 msgid "aboutTaxonomy"
 msgstr "CRediT is een ANSI/NISO-standaard (<cc>CC BY 4.0</cc>). Dit project staat los van NISO en is niet door NISO onderschreven."
 
-#. js-lingui-explicit-id
 msgid "aboutPrivacy"
 msgstr "Looking up an ORCID iD sends it to pub.orcid.org from your browser. Looking up a DOI sends it to api.crossref.org, together with this site's contact address, and to api.datacite.org if Crossref has no record. Cloudflare, which hosts this site, counts page requests on its own servers, in aggregate, with no script or cookie in your browser. Importing CITATION.cff or .zenodo.json downloads the citesync converter and a Python runtime from cdn.jsdelivr.net; the file is processed in your browser and is never uploaded. Nothing else leaves your browser: drafts stay in its local storage. Asks to co-authors and their answers are kept only in this browser, and go into JSON exports unless you untick that option. Sending a reply hands its link, with that person's name and iD, to the app you choose. Signing in with ORCID on an answer takes the co-author to orcid.org and back; the sign-in then travels inside the reply link and is kept with the answer, also in JSON exports. It carries the name on the co-author's ORCID record. Opening a signed answer, or importing a JSON file with one, fetches ORCID's public keys from orcid.org to check it."
 
-#. js-lingui-explicit-id
 msgid "accessibilityStatement"
 msgstr "Toegankelijkheidsverklaring"
 
-#. js-lingui-explicit-id
 msgid "getCreditBadge"
 msgstr "CRediT-badge ophalen"
 
-#. js-lingui-explicit-id
 msgid "creditBadge"
 msgstr "CRediT-badge"
 
-#. js-lingui-explicit-id
 msgid "copiedHtml"
 msgstr "HTML gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "copiedPng"
 msgstr "PNG gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "annBadgeHtmlCopied"
 msgstr "Badge-HTML naar het klembord gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "importAuthorList"
 msgstr "Lijst met auteursnamen"
 
-#. js-lingui-explicit-id
 msgid "importPlaceholder"
 msgstr "{names}\n\nor a .csv / .tsv / .json / .xml / .cff export, or a link sent back to you"
 
-#. js-lingui-explicit-id
 msgid "errImportNoNames"
 msgstr "Geen auteursnamen gevonden. Voer één naam per regel in."
 
-#. js-lingui-explicit-id
 msgid "errImportNoCsvRows"
 msgstr "Geen rijen met bijdragers gevonden in de CSV."
 
-#. js-lingui-explicit-id
 msgid "errImportNoJsonContributors"
 msgstr "Deze JSON-export bevat geen bijdragers."
 
-#. js-lingui-explicit-id
 msgid "errImportNoXmlContribs"
 msgstr "Geen <contrib>-elementen gevonden in de XML."
 
-#. js-lingui-explicit-id
 msgid "errImportNoCrossrefContribs"
 msgstr "Geen <contributors>-blok met <person_name> gevonden in de Crossref-XML."
 
-#. js-lingui-explicit-id
 msgid "aboutTagline"
 msgstr "Stel CRediT-bijdrageverklaringen op en exporteer het raster als bijdrage-heatmap."
 
-#. js-lingui-explicit-id
 msgid "aboutInspiredBy"
 msgstr "Geïnspireerd op het oorspronkelijke project"
 
-#. js-lingui-explicit-id
 msgid "aboutOutputTranslations"
 msgstr "Uitvoervertalingen door"
 
-#. js-lingui-explicit-id
 msgid "aboutPageTitle"
 msgstr "Over CRediT Matrix"
 
-#. js-lingui-explicit-id
 msgid "aboutPageLink"
 msgstr "Over, citeren en privacy"
 
-#. js-lingui-explicit-id
 msgid "aboutVersion"
 msgstr "Versie"
 
-#. js-lingui-explicit-id
 msgid "aboutLicense"
 msgstr "Licentie"
 
-#. js-lingui-explicit-id
 msgid "aboutSource"
 msgstr "Broncode"
 
-#. js-lingui-explicit-id
 msgid "aboutAuthor"
 msgstr "Auteur"
 
-#. js-lingui-explicit-id
 msgid "aboutCiteTitle"
 msgstr "CRediT Matrix citeren"
 
-#. js-lingui-explicit-id
 msgid "aboutCite"
 msgstr "Heeft u CRediT Matrix voor een artikel gebruikt, citeer het dan met de concept-DOI, die altijd naar de nieuwste versie verwijst:"
 
-#. js-lingui-explicit-id
 msgid "aboutCiteMetadata"
 msgstr "Deze komen uit het <link>CITATION.cff</link>-bestand van de repository. <citesync>citesync</citesync> houdt het bij elke release bij, en de playground ervan maakt hetzelfde bestand voor uw eigen software."
 
-#. js-lingui-explicit-id
 msgid "aboutCiteFormat"
 msgstr "Citatieformaat"
 
-#. js-lingui-explicit-id
 msgid "annCitationCopied"
 msgstr "Citatie gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "aboutPluginsTitle"
 msgstr "Plug-ins voor schrijftools"
 
-#. js-lingui-explicit-id
 msgid "aboutPlugins"
 msgstr "Schrijf de verklaring waar u het artikel schrijft. Deze plug-ins zetten hem in uw document, uit de rollen in de auteurslijst of uit een bestand dat u hier exporteert. Elke naam linkt naar de installatiegids."
 
-#. js-lingui-explicit-id
 msgid "aboutPluginsSoftware"
 msgstr "Voor software schrijft de <cli>opdrachtregeltool</cli> personen en rollen ook als CodeMeta. <citesync>citesync</citesync> maakt van die metadata CITATION.cff- en Zenodo-bestanden, en <drift>codemeta-drift</drift> controleert of een CodeMeta-bestand consistent is."
 
-#. js-lingui-explicit-id
 msgid "statementPlugins"
 msgstr "Plug-ins voor Quarto, MyST, Typst en meer"
 
-#. js-lingui-explicit-id
 msgid "privacy"
 msgstr "Privacy"
 
-#. js-lingui-explicit-id
 msgid "accessibility"
 msgstr "Toegankelijkheid"
 
-#. js-lingui-explicit-id
 msgid "aboutAccessibility"
 msgstr "De <link>toegankelijkheidsverklaring</link> zegt wat we controleren, welke problemen we kennen en hoe u er een meldt."
 
-#. js-lingui-explicit-id
 msgid "detectedFormat"
 msgstr "Gedetecteerd: {format}"
 
-#. js-lingui-explicit-id
 msgid "mergeWrongDraft"
 msgstr "Dat antwoord hoort bij een concept dat niet in deze browser staat, dus er is niets gewijzigd."
 
-#. js-lingui-explicit-id
 msgid "sharedDraftOpened"
 msgstr "Het gedeelde concept is naast uw eigen werk geopend."
 
-#. js-lingui-explicit-id
 msgid "sharedDraftLoaded"
 msgstr "Gedeeld concept geopend."
 
-#. js-lingui-explicit-id
 msgid "a11yInvalidOrcid"
 msgstr "Ongeldige ORCID iD"
 
-#. js-lingui-explicit-id
 msgid "a11yRoleAssignment"
 msgstr "{role} voor {name}: {level}"
 
-#. js-lingui-explicit-id
 msgid "a11yRolesForContributor"
 msgstr "Rollen van {name}"
 
-#. js-lingui-explicit-id
 msgid "a11ySetColor"
 msgstr "Kleur {color} instellen"
 
-#. js-lingui-explicit-id
 msgid "a11yStatementGrouping"
 msgstr "Groepering van de verklaring"
 
-#. js-lingui-explicit-id
 msgid "annContributorsAdded"
 msgstr "{count, plural, one {# bijdrager toegevoegd.} other {# bijdragers toegevoegd.}}"
 
-#. js-lingui-explicit-id
 msgid "annEntriesSkippedNoName"
 msgstr "{count, plural, one {# vermelding zonder naam overgeslagen} other {# vermeldingen zonder naam overgeslagen}} ({entries})."
 
-#. js-lingui-explicit-id
 msgid "annOrcidChecksumsSkipped"
 msgstr "{count, plural, one {# ORCID iD met een ongeldig controlegetal overgeslagen} other {# ORCID iD’s met ongeldige controlegetallen overgeslagen}} ({ids})."
 
-#. js-lingui-explicit-id
 msgid "annOrcidLookupsFailed"
 msgstr "Opzoeken van {count, plural, one {# ORCID iD} other {# ORCID iD’s}} mislukt ({ids}). De rijen behouden de iD als naam; hernoem ze handmatig."
 
-#. js-lingui-explicit-id
 msgid "annContributorsSkippedLimit"
 msgstr "{count, plural, one {# bijdrager overgeslagen} other {# bijdragers overgeslagen}}: een concept bevat maximaal {limit} bijdragers."
 
-#. js-lingui-explicit-id
 msgid "annCopiedToClipboard"
 msgstr "Gekopieerd naar het klembord"
 
-#. js-lingui-explicit-id
 msgid "annExportDataCopied"
 msgstr "Exportgegevens naar het klembord gekopieerd"
 
-#. js-lingui-explicit-id
 msgid "badgeIntro"
 msgstr "Voeg deze badge toe aan uw artikel of projectpagina."
 
-#. js-lingui-explicit-id
 msgid "copyHtml"
 msgstr "HTML kopiëren"
 
-#. js-lingui-explicit-id
 msgid "copyPng"
 msgstr "PNG kopiëren"
 
-#. js-lingui-explicit-id
 msgid "downloadPng"
 msgstr "PNG downloaden"
 
-#. js-lingui-explicit-id
 msgid "switchToDarkTheme"
 msgstr "Overschakelen naar donker thema"
 
-#. js-lingui-explicit-id
 msgid "switchToLightTheme"
 msgstr "Overschakelen naar licht thema"
 
-#. js-lingui-explicit-id
 msgid "contributorTypeSetAuthor"
 msgstr "Markeren als auteur"
 
-#. js-lingui-explicit-id
 msgid "contributorTypeSetNonAuthor"
 msgstr "Markeren als niet-auteur"
 
-#. js-lingui-explicit-id
 msgid "errImportFailed"
 msgstr "Importeren mislukt. Controleer het bestand en probeer het opnieuw."
 
-#. js-lingui-explicit-id
 msgid "errImportNewerVersion"
 msgstr "Dit bestand is gemaakt met een nieuwere versie van CRediT Matrix. Laad de pagina opnieuw om bij te werken en probeer het dan nog eens."
 
-#. js-lingui-explicit-id
 msgid "errImportRepeatedId"
 msgstr "Dit bestand bevat dezelfde bijdrager-id twee keer, dus het is niet geïmporteerd."
 
-#. js-lingui-explicit-id
 msgid "errHeatmapExport"
 msgstr "De heatmap kan niet als {format} worden geëxporteerd."
 
-#. js-lingui-explicit-id
 msgid "errStorageFull"
 msgstr "De browseropslag is vol, dus wijzigingen worden niet opgeslagen. Exporteer dit concept of verwijder er een dat u niet meer nodig hebt."
 
-#. js-lingui-explicit-id
 msgid "errStorageBlocked"
 msgstr "Deze browser blokkeert opslag voor deze site, dus wijzigingen worden niet opgeslagen. Sta sitegegevens toe of exporteer voordat u het tabblad sluit."
 
-#. js-lingui-explicit-id
 msgid "errNewerVersionSaved"
 msgstr "Een nieuwere versie van CRediT Matrix heeft uw concepten in een ander tabblad opgeslagen. Laad deze pagina opnieuw: wijzigingen hier worden niet opgeslagen."
 
-#. js-lingui-explicit-id
 msgid "formatShareLink"
 msgstr "Gedeelde link"
 
-#. js-lingui-explicit-id
 msgid "formatJsonExport"
 msgstr "JSON-export"
 
-#. js-lingui-explicit-id
 msgid "replaceWorkspaceBody"
 msgstr "Deze import bevat {incoming, plural, one {# bijdrager} other {# bijdragers}}. Daarmee {existing, plural, one {wordt de huidige # bijdrager} other {worden de huidige # bijdragers}} vervangen. Dit kan niet ongedaan worden gemaakt."
 
-#. js-lingui-explicit-id
 msgid "statementEmptyHint"
 msgstr "Nog geen bijdragen toegewezen. Selecteer cellen in het raster om rollen toe te wijzen."
 
-#. js-lingui-explicit-id
 msgid "separateAcknowledgements"
 msgstr "Dankbetuigingen afzonderlijk vermelden"
 
-#. js-lingui-explicit-id
 msgid "validationAuthorNoRoles"
 msgstr "Aan {name} zijn geen CRediT-rollen toegewezen."
 
-#. js-lingui-explicit-id
 msgid "validationRoleUnassigned"
 msgstr "De rol ‘{role}’ is aan geen enkele bijdrager toegewezen."
 
-#. js-lingui-explicit-id
 msgid "welcomeBodyContributors"
 msgstr "Plak een DOI om de hele lijst uit het gepubliceerde record over te nemen, of typ de namen zelf. Een ORCID iD vult de naam voor u in."
 
-#. js-lingui-explicit-id
 msgid "welcomeBodyRoles"
 msgstr "Selecteer cellen in het raster om aan te geven welke van de 14 CRediT-rollen elke bijdrager heeft vervuld."
 
-#. js-lingui-explicit-id
 msgid "welcomeBodyExport"
 msgstr "De verklaring werkt zichzelf bij terwijl u werkt. Kopieer hem, of download de heatmap, XML, CSV, JSON of Markdown."
 
-#. js-lingui-explicit-id
 msgid "welcomeDraftsTitle"
 msgstr "Eén concept per artikel"
 
-#. js-lingui-explicit-id
 msgid "welcomeDraftsBody"
 msgstr "Meer dan één artikel? Wissel van concept via de koptekst; elk wordt apart in deze browser bewaard."
 
-#. js-lingui-explicit-id
 msgid "welcomeAskTitle"
 msgstr "Vraag co-auteurs rechtstreeks"
 
-#. js-lingui-explicit-id
 msgid "welcomeAskBody"
 msgstr "Kopieer een link uit het rijmenu van een persoon en stuur die naar hen. Komt de link terug, open die dan: het antwoord wordt naast de rij van die persoon bewaard en verschillen handelt u af op het tabblad Controle."
 
-#. js-lingui-explicit-id
 msgid "importDescription"
 msgstr "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R or Crossref XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too. Paste an author contribution statement to fill in the roles of the contributors already here. CITATION.cff, codemeta.json and .zenodo.json import author names and ORCID iDs, leaving roles empty."
 
-#. js-lingui-explicit-id
 msgid "contributorActions"
 msgstr "Acties voor {name}"
 
-#. js-lingui-explicit-id
 msgid "colorBlue"
 msgstr "Blauw"
 
-#. js-lingui-explicit-id
 msgid "colorOrange"
 msgstr "Oranje"
 
-#. js-lingui-explicit-id
 msgid "colorBluishGreen"
 msgstr "Blauwgroen"
 
-#. js-lingui-explicit-id
 msgid "colorReddishPurple"
 msgstr "Roodpaars"
 
-#. js-lingui-explicit-id
 msgid "colorVermilion"
 msgstr "Vermiljoen"
 
-#. js-lingui-explicit-id
 msgid "colorSkyBlue"
 msgstr "Hemelsblauw"
 
-#. js-lingui-explicit-id
 msgid "colorYellow"
 msgstr "Geel"
 
-#. js-lingui-explicit-id
 msgid "colorDarkGray"
 msgstr "Donkergrijs"
 
-#. js-lingui-explicit-id
 msgid "languageSettings"
 msgstr "Taalinstellingen"
 
-#. js-lingui-explicit-id
 msgid "stripOpenTeam"
 msgstr "Coauteurs vragen"
 
-#. js-lingui-explicit-id
 msgid "teamYou"
 msgstr "U"
 
-#. js-lingui-explicit-id
 msgid "teamNotAsked"
 msgstr "Nog niet gevraagd"
 
-#. js-lingui-explicit-id
 msgid "toggleKeysHint"
 msgstr "Selecteer om te wisselen · Pijltjestoetsen verplaatsen, 1 of 0 zet een rol."
 
-#. js-lingui-explicit-id
 msgid "downloadSvg"
 msgstr "SVG downloaden"
 
-#. js-lingui-explicit-id
 msgid "copyFormat"
 msgstr "{format} kopiëren"
 
-#. js-lingui-explicit-id
 msgid "downloadFormat"
 msgstr "{format} downloaden"
 
-#. js-lingui-explicit-id
 msgid "a11yInspector"
 msgstr "Verklaring, team, controle en publicatiepraktijk"
 
-#. js-lingui-explicit-id
 msgid "tabTeam"
 msgstr "Team"
 
-#. js-lingui-explicit-id
 msgid "tabReview"
 msgstr "Controle"
 
-#. js-lingui-explicit-id
 msgid "tabNorms"
 msgstr "Publicatiepraktijk"
 
-#. js-lingui-explicit-id
 msgid "normsIntro"
 msgstr "Hoe vaak gepubliceerde artikelen in een vakgebied elke rol toekennen, per auteurspositie. Dit is context, geen advies: wat elders gebruikelijk is, zegt niets over wat je coauteurs deden."
 
-#. js-lingui-explicit-id
 msgid "normsField"
 msgstr "Je vakgebied"
 
-#. js-lingui-explicit-id
 msgid "normsFieldPlaceholder"
 msgstr "Kies een vakgebied"
 
-#. js-lingui-explicit-id
 msgid "normsEmpty"
 msgstr "Kies je vakgebied om de aandelen te zien. De app weet niet in welk vakgebied je artikel valt, en niets hier verandert je matrix."
 
-#. js-lingui-explicit-id
 msgid "normsFieldGone"
 msgstr "Je opgeslagen vakgebied, <name>{field}</name>, heeft geen gegevens in deze momentopname. Kies een vakgebied om de aandelen te zien."
 
-#. js-lingui-explicit-id
 msgid "normsCoverage"
 msgstr "{articles, number} open-access onderzoeksartikelen in <name>{field}</name> met CRediT-rollen, uit Europe PMC-bestanden van {date}. Alleen auteurs met minstens één rol tellen mee."
 
-#. js-lingui-explicit-id
 msgid "normsUnvalidated"
 msgstr "De rollen zijn automatisch gelezen en niet met de hand gecontroleerd: in {tagged, number} artikelen waarvan de uitgever de rollen ook tagt, komt de parser met een F1-score van {f1} overeen met die tags (1 is perfect)."
 
-#. js-lingui-explicit-id
 msgid "normsYourPosition"
 msgstr "Je positie in dit concept: {position, select, single {enige auteur} first {eerste auteur} middle {middelste auteur} other {laatste auteur}}."
 
-#. js-lingui-explicit-id
 msgid "normsNonAuthor"
 msgstr "Je staat in dit concept als niet-auteur, dus er is geen kolom gemarkeerd: de aandelen tellen alleen auteurs."
 
-#. js-lingui-explicit-id
 msgid "normsNoSelf"
 msgstr "Kies „Dit ben ik” op je eigen rij in de lijst met bijdragers om je positie te markeren."
 
-#. js-lingui-explicit-id
 msgid "normsCaption"
 msgstr "Aandeel auteurs met elke rol, per auteurspositie"
 
-#. js-lingui-explicit-id
 msgid "normsRole"
 msgstr "Rol"
 
-#. js-lingui-explicit-id
 msgid "normsPosition"
 msgstr "{position, select, single {Enige} first {Eerste} middle {Midden} other {Laatste}}"
 
-#. js-lingui-explicit-id
 msgid "normsTooFew"
 msgstr "Te weinig auteurs om iets te zeggen"
 
-#. js-lingui-explicit-id
 msgid "normsFootnote"
 msgstr "Vakgebieden met minder dan {minArticles, number} van zulke artikelen staan er niet bij, en een positie met minder dan {minAuthors, number} auteurs toont een streepje. Vakgebieden gelden per tijdschrift, volgens OpenAlex. Bron: CRediT-census {snapshot}, dataset {version}."
 
-#. js-lingui-explicit-id
 msgid "reviewEmptyTitle"
 msgstr "Antwoorden van coauteurs verschijnen hier"
 
-#. js-lingui-explicit-id
 msgid "reviewEmptyBody"
 msgstr "Stuurt een coauteur de link terug, open die dan: het antwoord verschijnt hier naast uw concept."
 
-#. js-lingui-explicit-id
 msgid "teamEmpty"
 msgstr "Voeg eerst bijdragers toe en vraag ze daarna elk wat ze hebben gedaan."
 
-#. js-lingui-explicit-id
 msgid "teamMessage"
 msgstr "Hoi {name},\n\nIk stel de CRediT-bijdrageverklaring op voor {work}. Wil je deze link openen, de rollen aanvinken die je hebt vervuld en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, je naam en je iD. Er wordt niets op een server opgeslagen."
 
-#. js-lingui-explicit-id
 msgid "teamMessageWork"
 msgstr "‘{title}’"
 
-#. js-lingui-explicit-id
 msgid "teamMessageNoTitle"
 msgstr "ons manuscript"
 
-#. js-lingui-explicit-id
 msgid "teamMessageCopied"
 msgstr "Bericht voor {name} gekopieerd. Plak het in een e-mail."
 
-#. js-lingui-explicit-id
 msgid "teamAskAllDone"
 msgstr "{count, plural, one {# bericht gekopieerd.} other {Alle # berichten gekopieerd.}}"
 
-#. js-lingui-explicit-id
 msgid "teamAskNext"
 msgstr "Volgende kopiëren: {name} ({index} van {total})"
 
-#. js-lingui-explicit-id
 msgid "teamAskAll"
 msgstr "Iedereen vragen die nog niet is gevraagd ({count})"
 
-#. js-lingui-explicit-id
 msgid "teamAskAllHint"
 msgstr "Kopieert één bericht per persoon. Plak elk bericht in een e-mail voordat u het volgende kopieert."
 
-#. js-lingui-explicit-id
 msgid "teamPrivacy"
 msgstr "Elke link bevat de titel van het artikel en de naam en iD van die persoon. Er wordt niets op een server opgeslagen: het antwoord komt terug zoals u het verstuurt."
 
-#. js-lingui-explicit-id
 msgid "teamCopyMessageFor"
 msgstr "Bericht kopiëren voor {name}"
 
-#. js-lingui-explicit-id
 msgid "teamCopyMessage"
 msgstr "Bericht kopiëren"
 
-#. js-lingui-explicit-id
 msgid "expandContributors"
 msgstr "Lijst met bijdragers uitklappen"
 
-#. js-lingui-explicit-id
 msgid "collapseContributors"
 msgstr "Lijst met bijdragers inklappen"
 
-#. js-lingui-explicit-id
 msgid "moveUp"
 msgstr "Omhoog"
 
-#. js-lingui-explicit-id
 msgid "moveDown"
 msgstr "Omlaag"
 
-#. js-lingui-explicit-id
 msgid "annMoved"
 msgstr "{name} verplaatst naar positie {position} van {total}."
 
-#. js-lingui-explicit-id
 msgid "skipToGrid"
 msgstr "Naar het raster"
 
-#. js-lingui-explicit-id
 msgid "skipToStatement"
 msgstr "Naar de verklaring"
 
-#. js-lingui-explicit-id
 msgid "stripAnswered"
 msgstr "{answered} van {total} beantwoord"
 
-#. js-lingui-explicit-id
 msgid "stripDiffer"
 msgstr "{count, plural, one {# antwoord wijkt af} other {# antwoorden wijken af}}"
 
-#. js-lingui-explicit-id
 msgid "reviewAction"
 msgstr "Controleren"
 
-#. js-lingui-explicit-id
 msgid "tabReviewOpen"
 msgstr "{count, plural, one {# open verschil} other {# open verschillen}}"
 
-#. js-lingui-explicit-id
 msgid "statementDiffers"
 msgstr "{count, plural, one {# bijdrage wijkt nog af.} other {# bijdragen wijken nog af.}} Deze verklaring gebruikt uw versie."
 
-#. js-lingui-explicit-id
 msgid "exportIncludesAnswers"
 msgstr "Antwoorden van coauteurs en vraaggeschiedenis meenemen ({count})"
 
-#. js-lingui-explicit-id
 msgid "thisIsMe"
 msgstr "Dit ben ik"
 
-#. js-lingui-explicit-id
 msgid "thisIsNotMe"
 msgstr "Dit ben ik niet"
 
-#. js-lingui-explicit-id
 msgid "teamSettledOn"
 msgstr "Afgerond op {date}"
 
-#. js-lingui-explicit-id
 msgid "teamStatusAnswered"
 msgstr "{days, plural, =0 {Vandaag geantwoord} =1 {Gisteren geantwoord} other {# dagen geleden geantwoord}} · {count} te controleren"
 
-#. js-lingui-explicit-id
 msgid "teamStatusAsked"
 msgstr "{days, plural, =0 {Vandaag gevraagd} =1 {Gisteren gevraagd} other {# dagen geleden gevraagd}} · {kind, select, prefilled {uw inschatting} other {leeg}}"
 
-#. js-lingui-explicit-id
 msgid "reviewAnsweredMeta"
 msgstr "{days, plural, =0 {Vandaag geantwoord} =1 {Gisteren geantwoord} other {# dagen geleden geantwoord}} · {kind, select, prefilled {uw inschatting} other {leeg}}"
 
-#. js-lingui-explicit-id
 msgid "teamReviewFor"
 msgstr "Antwoord van {name} controleren"
 
-#. js-lingui-explicit-id
 msgid "markerSharedFirst"
 msgstr "Gedeeld eerste auteurschap"
 
-#. js-lingui-explicit-id
 msgid "markerCorresponding"
 msgstr "Corresponderend auteur"
 
-#. js-lingui-explicit-id
 msgid "markerYes"
 msgstr "Ja"
 
-#. js-lingui-explicit-id
 msgid "markerNo"
 msgstr "Nee"
 
-#. js-lingui-explicit-id
 msgid "reviewKindAdded"
 msgstr "Rol toegevoegd"
 
-#. js-lingui-explicit-id
 msgid "reviewKindMarked"
 msgstr "Aangevinkt"
 
-#. js-lingui-explicit-id
 msgid "reviewKindDropped"
 msgstr "Weggelaten"
 
-#. js-lingui-explicit-id
 msgid "reviewKindLevel"
 msgstr "Ander niveau"
 
-#. js-lingui-explicit-id
 msgid "reviewUseTheirs"
 msgstr "Die van {name} gebruiken"
 
-#. js-lingui-explicit-id
 msgid "reviewKeepYours"
 msgstr "Uw versie houden"
 
-#. js-lingui-explicit-id
 msgid "reviewAskAbout"
 msgstr "{name} hierover vragen"
 
-#. js-lingui-explicit-id
 msgid "reviewUseTheirsRole"
 msgstr "Die van {name} gebruiken: {role}"
 
-#. js-lingui-explicit-id
 msgid "reviewKeepYoursRole"
 msgstr "Uw versie houden: {role}"
 
-#. js-lingui-explicit-id
 msgid "undoRole"
 msgstr "Ongedaan maken: {role}"
 
-#. js-lingui-explicit-id
 msgid "reviewAskAboutRole"
 msgstr "{copied, select, true {Gekopieerd. {name} hierover vragen: {role}} other {{name} hierover vragen: {role}}}"
 
-#. js-lingui-explicit-id
 msgid "reviewUseAll"
 msgstr "Alles van {name} gebruiken"
 
-#. js-lingui-explicit-id
 msgid "reviewUsedTheirs"
 msgstr "Antwoord van {name} gebruikt"
 
-#. js-lingui-explicit-id
 msgid "reviewKeptYours"
 msgstr "Uw versie gehouden"
 
-#. js-lingui-explicit-id
 msgid "annReviewUsed"
 msgstr "Antwoord van {name} gebruikt voor {role}."
 
-#. js-lingui-explicit-id
 msgid "annReviewKept"
 msgstr "Uw versie gehouden voor {role}."
 
-#. js-lingui-explicit-id
 msgid "annReviewUsedAll"
 msgstr "Alle antwoorden van {name} gebruikt."
 
-#. js-lingui-explicit-id
 msgid "annReviewUndone"
 msgstr "Keuze ongedaan gemaakt."
 
-#. js-lingui-explicit-id
 msgid "reviewAllSettledTitle"
 msgstr "Alles is afgerond."
 
-#. js-lingui-explicit-id
 msgid "reviewAllSettledBody"
 msgstr "Elk afwijkend antwoord heeft een besluit, en de verklaring laat het resultaat zien."
 
-#. js-lingui-explicit-id
 msgid "cellTheySay"
 msgstr "{name} zegt {level}"
 
-#. js-lingui-explicit-id
 msgid "columnOpenDifferences"
 msgstr "{name}: {count, plural, one {# open verschil} other {# open verschillen}}"
 
-#. js-lingui-explicit-id
 msgid "columnSettled"
 msgstr "Afgerond"
 
-#. js-lingui-explicit-id
 msgid "legendDiffers"
 msgstr "Een coauteur antwoordde anders"
 
-#. js-lingui-explicit-id
 msgid "reviewAskMessage"
 msgstr "Hoi {name},\n\nIk rond de CRediT-bijdrageverklaring voor {work} af. Onze antwoorden verschillen bij {role}. Wil je deze link openen, je rij nakijken en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, je naam en je iD. Er wordt niets op een server opgeslagen."
 
-#. js-lingui-explicit-id
 msgid "formatStatement"
 msgstr "CRediT-verklaring"
 
-#. js-lingui-explicit-id
 msgid "statementReview"
 msgstr "Rollen bekijken"
 
-#. js-lingui-explicit-id
 msgid "statementReviewTitle"
 msgstr "Rollen gevonden in de verklaring"
 
-#. js-lingui-explicit-id
 msgid "statementReviewSummary"
 msgstr "{added, plural, one {# rol} other {# rollen}} toe te voegen voor {people, plural, one {# bijdrager} other {# bijdragers}}. Rollen die al in de tabel staan, blijven zoals ze zijn."
 
-#. js-lingui-explicit-id
 msgid "statementNothingNew"
 msgstr "Alle gevonden rollen staan al in de tabel."
 
-#. js-lingui-explicit-id
 msgid "statementNoRolesFor"
 msgstr "Geen rollen gevonden voor: {names}"
 
-#. js-lingui-explicit-id
 msgid "statementCouldBe"
 msgstr "(kan {token} zijn)"
 
-#. js-lingui-explicit-id
 msgid "statementUnresolvedBody"
 msgstr "Deze namen of initialen passen bij geen enkele bijdrager in dit concept, of bij meer dan één. Hun rollen worden overgeslagen, tenzij u kiest wie er bedoeld is. Zet de rest na het toepassen in de tabel."
 
-#. js-lingui-explicit-id
 msgid "statementLeaveOut"
 msgstr "Overslaan"
 
-#. js-lingui-explicit-id
 msgid "statementReviewSummaryLevel"
 msgstr "{added, plural, one {# rol} other {# rollen}} toe te voegen als {level} voor {people, plural, one {# bijdrager} other {# bijdragers}}. Rollen die al in het raster staan, blijven zoals ze zijn."
 
-#. js-lingui-explicit-id
 msgid "statementRoleAlreadySet"
 msgstr "{role} (al ingevuld)"
 
-#. js-lingui-explicit-id
 msgid "statementUnmatchedTitle"
 msgstr "Niet gekoppeld"
 
-#. js-lingui-explicit-id
 msgid "statementUnmatchedAmbiguous"
 msgstr "{token}: kan {names} zijn"
 
-#. js-lingui-explicit-id
 msgid "statementUnmatchedNone"
 msgstr "{token}: geen bijdrager"
 
-#. js-lingui-explicit-id
 msgid "statementLeftOut"
 msgstr "{who} — weggelaten: {roles}"
 
-#. js-lingui-explicit-id
 msgid "statementAppliedLevel"
 msgstr "{count, plural, one {# rol} other {# rollen}} uit de verklaring toegevoegd als {level}."
 
-#. js-lingui-explicit-id
 msgid "statementUndoStale"
 msgstr "Niets ongedaan gemaakt: het concept is veranderd nadat de rollen zijn toegevoegd. Pas ze in het raster aan."
 
-#. js-lingui-explicit-id
 msgid "statementOnlyCredit"
 msgstr "Alleen CRediT-rolnamen worden gelezen, zoals Conceptualization of Writing – original draft, geen zinnen over wie wat deed."
 
-#. js-lingui-explicit-id
 msgid "errStatementTooLong"
 msgstr "Deze tekst is langer dan {limit} tekens. Plak alleen de bijdrageverklaring."
 
-#. js-lingui-explicit-id
 msgid "statementBack"
 msgstr "Terug"
 
-#. js-lingui-explicit-id
 msgid "statementApply"
 msgstr "Rollen toepassen"
 
-#. js-lingui-explicit-id
 msgid "statementApplied"
 msgstr "{count, plural, one {# rol} other {# rollen}} toegevoegd uit de verklaring."
 
-#. js-lingui-explicit-id
 msgid "errStatementNoContributors"
 msgstr "Voeg eerst de bijdragers toe en plak dan de verklaring: die wordt vergeleken met de namen die al in dit concept staan."
 
-#. js-lingui-explicit-id
 msgid "errStatementNoRoles"
 msgstr "Er kon geen CRediT-rol aan de bijdragers in dit concept worden gekoppeld. Controleer of de verklaring hen noemt zoals het concept doet, met naam of initialen."
 
-#. js-lingui-explicit-id
 msgid "censusAboutLink"
 msgstr "CRediT-census: hoe artikelen CRediT gebruiken"
 
-#. js-lingui-explicit-id
 msgid "censusBack"
 msgstr "Terug naar CRediT Matrix"
 
-#. js-lingui-explicit-id
 msgid "censusTitle"
 msgstr "CRediT-census"
 
-#. js-lingui-explicit-id
 msgid "censusHeadline"
 msgstr "In {year} gaf {share} van de open-access-onderzoeksartikelen in Europe PMC CRediT-rollen voor ten minste één auteur."
 
-#. js-lingui-explicit-id
 msgid "censusLead"
 msgstr "Hoe gepubliceerde artikelen CRediT gebruiken, de Contributor Roles Taxonomy, gelezen uit de opmaak en bijdrageverklaringen van {articles} open-access-artikelen in Europe PMC."
 
-#. js-lingui-explicit-id
 msgid "censusPreliminaryTitle"
 msgstr "Voorlopige cijfers"
 
-#. js-lingui-explicit-id
 msgid "censusPreliminary"
 msgstr "Ik heb de parser nog niet met handmatige labels gecontroleerd, dus zie deze cijfers als een eerste indruk. Op {articles} artikelen die hun rollen taggen én een verklaring afdrukken, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout). Maar {share} van die artikelen komt van MDPI en Frontiers, en ook de tags zelf heeft niemand gecontroleerd."
 
-#. js-lingui-explicit-id
 msgid "censusPreliminaryUnscored"
 msgstr "Ik heb de parser nog niet met handmatige labels gecontroleerd, dus zie deze cijfers als een eerste indruk."
 
-#. js-lingui-explicit-id
 msgid "censusIncomplete"
 msgstr "Deze momentopname is onvolledig: sommige bronbestanden zijn niet gelezen, of tijdschriften hebben nog geen vakgebied."
 
-#. js-lingui-explicit-id
 msgid "censusAdoptionTitle"
 msgstr "Gebruik door de tijd"
 
-#. js-lingui-explicit-id
 msgid "censusAdoptionCaption"
 msgstr "Aandeel onderzoeksartikelen met CRediT-rollen voor ten minste één auteur, per publicatiejaar. {year} wordt nog gepubliceerd, dus dat stuk van de lijn is gestippeld."
 
-#. js-lingui-explicit-id
 msgid "censusRolesPerAuthorTitle"
 msgstr "Rollen per auteur"
 
-#. js-lingui-explicit-id
 msgid "censusRolesPerAuthorCaption"
 msgstr "Gemiddeld aantal rollen van een auteur die er minstens één heeft, per publicatiejaar."
 
-#. js-lingui-explicit-id
 msgid "censusShowTable"
 msgstr "Als tabel tonen"
 
-#. js-lingui-explicit-id
 msgid "censusPartial"
 msgstr "(onvolledig)"
 
-#. js-lingui-explicit-id
 msgid "censusTableLabel"
 msgstr "{chart} als tabel"
 
-#. js-lingui-explicit-id
 msgid "censusTrend"
 msgstr "{from} in {first} en {to} in {last}, met een hoogtepunt van {max} in {maxYear}."
 
-#. js-lingui-explicit-id
 msgid "censusYear"
 msgstr "Jaar"
 
-#. js-lingui-explicit-id
 msgid "censusResearchArticles"
 msgstr "Onderzoeksartikelen"
 
-#. js-lingui-explicit-id
 msgid "censusWithRoles"
 msgstr "Met rollen"
 
-#. js-lingui-explicit-id
 msgid "censusShare"
 msgstr "Aandeel"
 
-#. js-lingui-explicit-id
 msgid "censusStylesTitle"
 msgstr "Hoe rollen zijn opgemaakt"
 
-#. js-lingui-explicit-id
 msgid "censusStylesCaption"
 msgstr "Aandeel onderzoeksartikelen per jaar, naar waar hun rollen uit zijn gelezen. Elk artikel telt één keer, onder de eerste van de vier hieronder die het gebruikt. Alle vier gebruiken dezelfde schaal. {year} wordt nog gepubliceerd, dus dat stuk is gestippeld."
 
-#. js-lingui-explicit-id
 msgid "censusStyleJats4r"
 msgstr "JATS4R-roltags"
 
-#. js-lingui-explicit-id
 msgid "censusStyleJats4rNote"
 msgstr "De rollen van elke auteur getagd met het CRediT-vocabulaire, zoals JATS4R aanbeveelt, de groep die vastlegt hoe tijdschriftartikelen worden getagd"
 
-#. js-lingui-explicit-id
 msgid "censusStylePlosUri"
 msgstr "Rol-URL-tags"
 
-#. js-lingui-explicit-id
 msgid "censusStylePlosUriNote"
 msgstr "De rollen van elke auteur getagd met een CRediT-webadres, zoals PLOS doet"
 
-#. js-lingui-explicit-id
 msgid "censusStyleStatement"
 msgstr "Bijdrageverklaring"
 
-#. js-lingui-explicit-id
 msgid "censusStyleStatementNote"
 msgstr "Eén alinea die auteurs bij initialen of naam noemt"
 
-#. js-lingui-explicit-id
 msgid "censusStyleContribText"
 msgstr "Tekst per auteur"
 
-#. js-lingui-explicit-id
 msgid "censusStyleContribTextNote"
 msgstr "Vrije tekst bij elke auteur, zoals een rollenlijst of een voetnoot"
 
-#. js-lingui-explicit-id
 msgid "censusFieldsTitle"
 msgstr "Per vakgebied"
 
-#. js-lingui-explicit-id
 msgid "censusFieldsCaption"
 msgstr "Aandeel onderzoeksartikelen uit {year} met CRediT-rollen, naar het vakgebied van het tijdschrift in OpenAlex, een open index van wetenschappelijk werk. Vakgebieden gelden per tijdschrift, niet per artikel. Europe PMC is van opzet biomedisch, dus andere vakgebieden zijn dun vertegenwoordigd. Vakgebieden met minder dan 1.000 artikelen zijn weggelaten."
 
-#. js-lingui-explicit-id
 msgid "censusFieldAgriculturalAndBiologicalSciences"
 msgstr "Landbouw- en biowetenschappen"
 
-#. js-lingui-explicit-id
 msgid "censusFieldBiochemistryGeneticsAndMolecularBiology"
 msgstr "Biochemie, genetica en moleculaire biologie"
 
-#. js-lingui-explicit-id
 msgid "censusFieldChemistry"
 msgstr "Scheikunde"
 
-#. js-lingui-explicit-id
 msgid "censusFieldComputerScience"
 msgstr "Informatica"
 
-#. js-lingui-explicit-id
 msgid "censusFieldDentistry"
 msgstr "Tandheelkunde"
 
-#. js-lingui-explicit-id
 msgid "censusFieldEconomicsEconometricsAndFinance"
 msgstr "Economie, econometrie en financiën"
 
-#. js-lingui-explicit-id
 msgid "censusFieldEngineering"
 msgstr "Techniek"
 
-#. js-lingui-explicit-id
 msgid "censusFieldEnvironmentalScience"
 msgstr "Milieuwetenschappen"
 
-#. js-lingui-explicit-id
 msgid "censusFieldHealthProfessions"
 msgstr "Zorgberoepen"
 
-#. js-lingui-explicit-id
 msgid "censusFieldImmunologyAndMicrobiology"
 msgstr "Immunologie en microbiologie"
 
-#. js-lingui-explicit-id
 msgid "censusFieldMaterialsScience"
 msgstr "Materiaalkunde"
 
-#. js-lingui-explicit-id
 msgid "censusFieldMathematics"
 msgstr "Wiskunde"
 
-#. js-lingui-explicit-id
 msgid "censusFieldMedicine"
 msgstr "Geneeskunde"
 
-#. js-lingui-explicit-id
 msgid "censusFieldMultidisciplinary"
 msgstr "Multidisciplinair"
 
-#. js-lingui-explicit-id
 msgid "censusFieldNeuroscience"
 msgstr "Neurowetenschappen"
 
-#. js-lingui-explicit-id
 msgid "censusFieldPhysicsAndAstronomy"
 msgstr "Natuur- en sterrenkunde"
 
-#. js-lingui-explicit-id
 msgid "censusFieldPsychology"
 msgstr "Psychologie"
 
-#. js-lingui-explicit-id
 msgid "censusFieldSocialSciences"
 msgstr "Sociale wetenschappen"
 
-#. js-lingui-explicit-id
 msgid "censusPublishersTitle"
 msgstr "Per uitgever"
 
-#. js-lingui-explicit-id
 msgid "censusPublishersCaption"
 msgstr "Aandeel onderzoeksartikelen uit {year} met CRediT-rollen, binnen de open-access-collectie van Europe PMC, voor de {count} uitgevers met daar de meeste onderzoeksartikelen dat jaar, genoemd zoals de artikelen ze noemen."
 
-#. js-lingui-explicit-id
 msgid "censusOfArticles"
 msgstr "van {count, plural, one {# artikel} other {# artikelen}}"
 
-#. js-lingui-explicit-id
 msgid "censusRolesTitle"
 msgstr "Rollen naar plaats in de auteurslijst"
 
-#. js-lingui-explicit-id
 msgid "censusRolesCaption"
 msgstr "Aandeel van de auteurs met ten minste één rol dat elke rol heeft, in artikelen met rollen en drie of meer auteurs."
 
-#. js-lingui-explicit-id
 msgid "censusRole"
 msgstr "Rol"
 
-#. js-lingui-explicit-id
 msgid "censusPlaceAll"
 msgstr "Alle auteurs"
 
-#. js-lingui-explicit-id
 msgid "censusPlaceFirst"
 msgstr "Eerste auteur"
 
-#. js-lingui-explicit-id
 msgid "censusPlaceMiddle"
 msgstr "Middelste auteurs"
 
-#. js-lingui-explicit-id
 msgid "censusPlaceLast"
 msgstr "Laatste auteur"
 
-#. js-lingui-explicit-id
 msgid "censusAboutTitle"
 msgstr "Over deze gegevens"
 
-#. js-lingui-explicit-id
 msgid "censusMethod"
 msgstr "De tellingen gaan alleen over onderzoeksartikelen, preprintservers inbegrepen (Cold Spring Harbor Laboratory Preprints, arXiv). Groepen met minder dan 1.000 artikelen zijn weggelaten, en de jaren beginnen bij het eerste met 1.000 artikelen met rollen."
 
-#. js-lingui-explicit-id
 msgid "censusSnapshot"
 msgstr "Momentopname"
 
-#. js-lingui-explicit-id
 msgid "censusDatasetVersion"
 msgstr "Versie van de dataset"
 
-#. js-lingui-explicit-id
 msgid "censusCodeCommit"
 msgstr "Code-commit"
 
-#. js-lingui-explicit-id
 msgid "censusParser"
 msgstr "Parserversie"
 
-#. js-lingui-explicit-id
 msgid "censusOpenAlex"
 msgstr "OpenAlex-bronnen"
 
-#. js-lingui-explicit-id
 msgid "censusDownload"
 msgstr "De tellingen downloaden (JSON)"
 
-#. js-lingui-explicit-id
 msgid "censusHowTitle"
 msgstr "Hoe de census verklaringen leest"
 
-#. js-lingui-explicit-id
 msgid "censusHowRules"
 msgstr "Een parser met regels leest elk artikel. Waar de uitgever de rollen van elke auteur in de JATS-XML tagt, neemt hij de tags over. Anders leest hij de verklaring in vrije tekst, zinsdeel voor zinsdeel, en koppelt auteurs aan rollen. Alleen CRediT-termen tellen, dus „A.B. conceived the study” levert geen rollen op."
 
-#. js-lingui-explicit-id
 msgid "censusHowModel"
 msgstr "Een fijngestemde encoder, Ettin-68M, leest ook elke verklaring in vrije tekst. Het is het browsermodel van de census, gemaakt om in een webbrowser te draaien. Hij vindt meer van de getagde rollen dan de regels, bij ongeveer dezelfde precisie, maar hij geeft ook rollen aan verhalende verklaringen die er geen noemen. De tellingen op deze pagina komen alleen van de regelparser."
 
-#. js-lingui-explicit-id
 msgid "censusHowCaveat"
 msgstr "Beide worden gemeten aan de rollen die uitgevers taggen, en die tags zijn geen gecontroleerde standaard. Een tag kan een rol noemen die de verklaring nergens geeft. Bij 200 MDPI-artikelen waar de regelparser en de tags verschillen, oordeelde een taalmodel dat de tags 192 keer fout waren en de parser alleen 6 keer. Een F1-score tegen de tags meet dus de overeenkomst ermee, en onderschat de nauwkeurigheid, het meest bij MDPI."
 
-#. js-lingui-explicit-id
 msgid "censusHowCode"
 msgstr "De code van de census"
 
-#. js-lingui-explicit-id
 msgid "censusHowModelCard"
 msgstr "De modelkaart"
 
-#. js-lingui-explicit-id
 msgid "doiRolesImported"
 msgstr "Imported CRediT roles. Check these assignments before applying them; the record supplies no contribution levels."
 
-#. js-lingui-explicit-id
 msgid "doiNoRoles"
 msgstr "This record has no deposited CRediT roles. The contribution matrix will stay empty."
 
-#. js-lingui-explicit-id
 msgid "doiConfirm"
 msgstr "Confirm DOI import"
 
-#. js-lingui-explicit-id
 msgid "errCitationConverter"
 msgstr "The citation converter could not finish. Your file is still here. Try again online, or convert it in the citesync playground."
 
-#. js-lingui-explicit-id
 msgid "citationPlayground"
 msgstr "Open citesync playground"
 
-#. js-lingui-explicit-id
 msgid "errImportNoCitationAuthors"
 msgstr "This citation file lists no authors."
 
-#. js-lingui-explicit-id
 msgid "citationConverting"
 msgstr "Reading citation file… The converter may need to download first."

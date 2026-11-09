@@ -5,2086 +5,1565 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. js-lingui-explicit-id
 msgid "stepContributors"
 msgstr "貢献者"
 
-#. js-lingui-explicit-id
 msgid "stepContributions"
 msgstr "役割の割り当て"
 
-#. js-lingui-explicit-id
 msgid "stepStatement"
 msgstr "著者貢献"
 
-#. js-lingui-explicit-id
 msgid "addContributor"
 msgstr "新しい著者名または ORCID iD"
 
-#. js-lingui-explicit-id
 msgid "addPlaceholder"
 msgstr "氏名または ORCID iD を追加…"
 
-#. js-lingui-explicit-id
 msgid "addButton"
 msgstr "追加"
 
-#. js-lingui-explicit-id
 msgid "nameLabel"
 msgstr "氏名または ORCID iD"
 
-#. js-lingui-explicit-id
 msgid "removeContributor"
 msgstr "削除"
 
-#. js-lingui-explicit-id
 msgid "reorderContributor"
 msgstr "並べ替え"
 
-#. js-lingui-explicit-id
 msgid "undo"
 msgstr "元に戻す"
 
-#. js-lingui-explicit-id
 msgid "cancel"
 msgstr "キャンセル"
 
-#. js-lingui-explicit-id
 msgid "skipToContent"
 msgstr "コンテンツへスキップ"
 
-#. js-lingui-explicit-id
 msgid "noContributorsYet"
 msgstr "貢献者はまだいません。"
 
-#. js-lingui-explicit-id
 msgid "loadSample"
 msgstr "サンプルデータを読み込む"
 
-#. js-lingui-explicit-id
 msgid "sampleNames"
 msgstr "Hideki Yukawa\nMichiyo Tsujimura\nShinya Yamanaka"
 
-#. js-lingui-explicit-id
 msgid "assignmentMode"
 msgstr "役割の割り当てモード"
 
-#. js-lingui-explicit-id
 msgid "modeYesNo"
 msgstr "はい／いいえ"
 
-#. js-lingui-explicit-id
 msgid "modeLevels"
 msgstr "レベル"
 
-#. js-lingui-explicit-id
 msgid "bulkAssign"
 msgstr "一括割り当て"
 
-#. js-lingui-explicit-id
 msgid "heatmapOptions"
 msgstr "ヒートマップの設定"
 
-#. js-lingui-explicit-id
 msgid "statementOptions"
 msgstr "著者貢献文の設定"
 
-#. js-lingui-explicit-id
 msgid "gridColor"
 msgstr "ヒートマップの色"
 
-#. js-lingui-explicit-id
 msgid "transpose"
 msgstr "転置"
 
-#. js-lingui-explicit-id
 msgid "useInitials"
 msgstr "イニシャルを使う"
 
-#. js-lingui-explicit-id
 msgid "roleColumn"
 msgstr "役割"
 
-#. js-lingui-explicit-id
 msgid "contributorColumn"
 msgstr "貢献者"
 
-#. js-lingui-explicit-id
 msgid "groupByRole"
 msgstr "役割別"
 
-#. js-lingui-explicit-id
 msgid "groupByAuthor"
 msgstr "著者別"
 
-#. js-lingui-explicit-id
 msgid "showLevels"
 msgstr "レベルを表示"
 
-#. js-lingui-explicit-id
 msgid "copyStatement"
 msgstr "著者貢献をコピー"
 
-#. js-lingui-explicit-id
 msgid "exportData"
 msgstr "データをエクスポート"
 
-#. js-lingui-explicit-id
 msgid "download"
 msgstr "ダウンロード"
 
-#. js-lingui-explicit-id
 msgid "copy"
 msgstr "コピー"
 
-#. js-lingui-explicit-id
 msgid "copied"
 msgstr "コピーしました"
 
-#. js-lingui-explicit-id
 msgid "import"
 msgstr "インポート"
 
-#. js-lingui-explicit-id
 msgid "share"
 msgstr "共有"
 
-#. js-lingui-explicit-id
 msgid "howItWorks"
 msgstr "使い方"
 
-#. js-lingui-explicit-id
 msgid "aboutApp"
 msgstr "このアプリについて"
 
-#. js-lingui-explicit-id
 msgid "interfaceLanguage"
 msgstr "表示言語"
 
-#. js-lingui-explicit-id
 msgid "outputLanguage"
 msgstr "出力言語"
 
-#. js-lingui-explicit-id
 msgid "toggleTheme"
 msgstr "テーマを切り替える"
 
-#. js-lingui-explicit-id
 msgid "contributorTypeAuthor"
 msgstr "著者"
 
-#. js-lingui-explicit-id
 msgid "contributorTypeNonAuthor"
 msgstr "著者以外"
 
-#. js-lingui-explicit-id
 msgid "addOrcid"
 msgstr "ORCID iD を追加"
 
-#. js-lingui-explicit-id
 msgid "lookupOrcidName"
 msgstr "ORCID から氏名を取得"
 
-#. js-lingui-explicit-id
 msgid "lookingUp"
 msgstr "取得中…"
 
-#. js-lingui-explicit-id
 msgid "nameUpdated"
 msgstr "氏名を更新しました"
 
-#. js-lingui-explicit-id
 msgid "removeOrcid"
 msgstr "ORCID iD を削除"
 
-#. js-lingui-explicit-id
 msgid "gridEmptyHint"
 msgstr "貢献者を追加すると、このグリッドで 14 種類の CRediT 役割を割り当てられます。"
 
-#. js-lingui-explicit-id
 msgid "bulkAssignLevel"
 msgstr "割り当てるレベル"
 
-#. js-lingui-explicit-id
 msgid "bulkOneContributor"
 msgstr "貢献者単位"
 
-#. js-lingui-explicit-id
 msgid "bulkOneRole"
 msgstr "役割単位"
 
-#. js-lingui-explicit-id
 msgid "bulkAssignAll"
 msgstr "すべての役割を割り当て"
 
-#. js-lingui-explicit-id
 msgid "bulkClearAll"
 msgstr "すべての役割を解除"
 
-#. js-lingui-explicit-id
 msgid "bulkAssignToAll"
 msgstr "全員に割り当て"
 
-#. js-lingui-explicit-id
 msgid "bulkClearRole"
 msgstr "全員から解除"
 
-#. js-lingui-explicit-id
 msgid "bulkChangeApplied"
 msgstr "一括変更を適用しました。"
 
-#. js-lingui-explicit-id
 msgid "annBulkUndone"
 msgstr "一括変更を元に戻しました。"
 
-#. js-lingui-explicit-id
 msgid "contributorToAssign"
 msgstr "割り当てる貢献者"
 
-#. js-lingui-explicit-id
 msgid "colorLabel"
 msgstr "色"
 
-#. js-lingui-explicit-id
 msgid "transposeHint"
 msgstr "行と列の軸を入れ替えます"
 
-#. js-lingui-explicit-id
 msgid "legendLevel"
 msgstr "レベル"
 
-#. js-lingui-explicit-id
 msgid "legendKey"
 msgstr "凡例"
 
-#. js-lingui-explicit-id
 msgid "levelHint"
 msgstr "選択で切り替え・右クリックまたは0–3でレベルを設定。"
 
-#. js-lingui-explicit-id
 msgid "heatmapLabel"
 msgstr "ヒートマップ"
 
-#. js-lingui-explicit-id
 msgid "copyHeatmapHint"
 msgstr "ヒートマップを PNG 画像としてコピーします"
 
-#. js-lingui-explicit-id
 msgid "fullDefinition"
 msgstr "定義の全文"
 
-#. js-lingui-explicit-id
 msgid "copyFailedMessage"
 msgstr "コピーに失敗しました"
 
-#. js-lingui-explicit-id
 msgid "linkCopied"
 msgstr "リンクをコピーしました"
 
-#. js-lingui-explicit-id
 msgid "importTitle"
 msgstr "貢献者をインポート"
 
-#. js-lingui-explicit-id
 msgid "importData"
 msgstr "データをインポート"
 
-#. js-lingui-explicit-id
 msgid "close"
 msgstr "閉じる"
 
-#. js-lingui-explicit-id
 msgid "browseFiles"
 msgstr "ファイルを選択"
 
-#. js-lingui-explicit-id
 msgid "dragDropFile"
 msgstr "ここにファイルをドラッグ＆ドロップ"
 
-#. js-lingui-explicit-id
 msgid "acceptedFileTypes"
 msgstr ".csv、.tsv、.json、.xml に対応しています"
 
-#. js-lingui-explicit-id
 msgid "fileLoaded"
 msgstr "{name} から読み込みました"
 
-#. js-lingui-explicit-id
 msgid "pasteRawData"
 msgstr "データを貼り付け"
 
-#. js-lingui-explicit-id
 msgid "replaceWorkspaceTitle"
 msgstr "現在のワークスペースを置き換えますか？"
 
-#. js-lingui-explicit-id
 msgid "replaceWorkspace"
 msgstr "置き換える"
 
-#. js-lingui-explicit-id
 msgid "keepCurrentWork"
 msgstr "現在の内容を保持"
 
-#. js-lingui-explicit-id
 msgid "welcomeStepContributors"
 msgstr "貢献者を追加"
 
-#. js-lingui-explicit-id
 msgid "welcomeStepRoles"
 msgstr "役割を割り当て"
 
-#. js-lingui-explicit-id
 msgid "welcomeStepExport"
 msgstr "確認してエクスポート"
 
-#. js-lingui-explicit-id
 msgid "gotIt"
 msgstr "わかりました"
 
-#. js-lingui-explicit-id
 msgid "startFresh"
 msgstr "最初から始める"
 
-#. js-lingui-explicit-id
 msgid "removedContributor"
 msgstr "{name} を削除しました"
 
-#. js-lingui-explicit-id
 msgid "contributorCount"
 msgstr "{count, plural, =0 {貢献者なし} other {貢献者 # 名}}"
 
-#. js-lingui-explicit-id
 msgid "annContributorRestored"
 msgstr "{name} を元に戻しました。"
 
-#. js-lingui-explicit-id
 msgid "annNameFromOrcid"
 msgstr "ORCID から氏名を更新しました：{name}"
 
-#. js-lingui-explicit-id
 msgid "annStatementCopied"
 msgstr "著者貢献をクリップボードにコピーしました"
 
-#. js-lingui-explicit-id
 msgid "annLinkCopied"
 msgstr "リンクをクリップボードにコピーしました"
 
-#. js-lingui-explicit-id
 msgid "annHeatmapCopied"
 msgstr "ヒートマップの PNG をクリップボードにコピーしました"
 
-#. js-lingui-explicit-id
 msgid "annBadgeCopied"
 msgstr "バッジの PNG をクリップボードにコピーしました"
 
-#. js-lingui-explicit-id
 msgid "annCopyFailed"
 msgstr "コピーできませんでした。もう一度お試しください。"
 
-#. js-lingui-explicit-id
 msgid "dndPickedUp"
 msgstr "貢献者 {name} のドラッグを開始しました。"
 
-#. js-lingui-explicit-id
 msgid "dndOver"
 msgstr "貢献者 {name} が {target} の上にあります。"
 
-#. js-lingui-explicit-id
 msgid "dndDropped"
 msgstr "貢献者 {name} を {target} にドロップしました。"
 
-#. js-lingui-explicit-id
 msgid "dndCancelled"
 msgstr "{name} の並べ替えをキャンセルしました。"
 
-#. js-lingui-explicit-id
 msgid "errNameNoLetter"
 msgstr "氏名として認識できません。文字を 1 つ以上含めてください。"
 
-#. js-lingui-explicit-id
 msgid "errNameTooLong"
 msgstr "氏名が長すぎます。500 文字以内で入力してください。"
 
-#. js-lingui-explicit-id
 msgid "errFileTooLarge"
 msgstr "ファイルが大きすぎます。{limit} 未満のファイルを選んでください。"
 
-#. js-lingui-explicit-id
 msgid "errFileUnreadable"
 msgstr "ファイルを読み取れませんでした。ファイルを確認してもう一度お試しください。"
 
-#. js-lingui-explicit-id
 msgid "errImportTooLarge"
 msgstr "インポートするデータが大きすぎます。{limit} 未満のデータを貼り付けてください。"
 
-#. js-lingui-explicit-id
 msgid "errTooManyContributors"
 msgstr "インポートに含まれる貢献者が多すぎます。上限は {limit} です。"
 
-#. js-lingui-explicit-id
 msgid "errShareTooLarge"
 msgstr "この下書きはリンクで共有するには大きすぎます。代わりに JSON としてエクスポートしてください。"
 
-#. js-lingui-explicit-id
 msgid "errShareUnsupported"
 msgstr "このブラウザーでは共有リンクを作成できません。代わりに下書きをJSONとしてエクスポートしてください。"
 
-#. js-lingui-explicit-id
 msgid "errShareLinkBroken"
 msgstr "その共有リンクは開けませんでした。お使いの下書きはそのまま保持されています。"
 
-#. js-lingui-explicit-id
 msgid "errAtContributorLimit"
 msgstr "1 つの下書きに登録できる貢献者は最大 {limit} 名です。追加するには、いずれかを削除してください。"
 
-#. js-lingui-explicit-id
 msgid "errOrcidChecksum"
 msgstr "この ORCID iD はチェックサムが正しくありません。数字を確認して、もう一度お試しください。"
 
-#. js-lingui-explicit-id
 msgid "errOffline"
 msgstr "オフラインのため、ORCID の検索は利用できません。氏名を直接入力してください。"
 
-#. js-lingui-explicit-id
 msgid "errOrcidINVALID_ID"
 msgstr "有効な ORCID iD ではありません。数字を確認して、もう一度お試しください。"
 
-#. js-lingui-explicit-id
 msgid "errOrcidNOT_FOUND"
 msgstr "その iD に一致する ORCID レコードは見つかりませんでした。"
 
-#. js-lingui-explicit-id
 msgid "errOrcidUNAVAILABLE"
 msgstr "ORCID のサービスを利用できません。しばらくしてからもう一度お試しいただくか、氏名を直接入力してください。"
 
-#. js-lingui-explicit-id
 msgid "importFromDoi"
 msgstr "DOI からインポート"
 
-#. js-lingui-explicit-id
 msgid "structuredFileUpload"
 msgstr "構造化ファイルのアップロード"
 
-#. js-lingui-explicit-id
 msgid "doiPlaceholder"
 msgstr "10.1038/s41586-020-2649-2"
 
-#. js-lingui-explicit-id
 msgid "doiLookUp"
 msgstr "取得"
 
-#. js-lingui-explicit-id
 msgid "doiLookingUp"
 msgstr "取得中…"
 
-#. js-lingui-explicit-id
 msgid "doiHint"
 msgstr "Fills in contributors, ORCID iDs and the title. Deposited CRediT roles are shown for confirmation."
 
-#. js-lingui-explicit-id
 msgid "errDoiINVALID_DOI"
 msgstr "有効な DOI ではありません。10.1234/abcde のような形式で入力してください。"
 
-#. js-lingui-explicit-id
 msgid "errDoiNOT_FOUND"
 msgstr "その DOI に一致する公開レコードは見つかりませんでした。"
 
-#. js-lingui-explicit-id
 msgid "errDoiNO_AUTHORS"
 msgstr "そのレコードには貢献者が登録されていないため、インポートできる情報がありません。"
 
-#. js-lingui-explicit-id
 msgid "errDoiTOO_MANY_AUTHORS"
 msgstr "そのレコードには、1 つの下書きに登録できる数を超える貢献者が含まれています。"
 
-#. js-lingui-explicit-id
 msgid "errDoiUNAVAILABLE"
 msgstr "Crossref のサービスを利用できません。しばらくしてからもう一度お試しいただくか、著者リストを貼り付けてください。"
 
-#. js-lingui-explicit-id
 msgid "errDoiOFFLINE"
 msgstr "オフラインのため、DOI の検索は利用できません。代わりに著者リストを貼り付けてください。"
 
-#. js-lingui-explicit-id
 msgid "equalContributionShort"
 msgstr "共同筆頭著者"
 
-#. js-lingui-explicit-id
 msgid "correspondingShort"
 msgstr "責任著者"
 
-#. js-lingui-explicit-id
 msgid "equalContributionSet"
 msgstr "共同筆頭著者として設定"
 
-#. js-lingui-explicit-id
 msgid "equalContributionUnset"
 msgstr "共同筆頭著者を解除"
 
-#. js-lingui-explicit-id
 msgid "correspondingSet"
 msgstr "連絡著者として設定"
 
-#. js-lingui-explicit-id
 msgid "correspondingUnset"
 msgstr "連絡著者を解除"
 
-#. js-lingui-explicit-id
 msgid "drafts"
 msgstr "下書き"
 
-#. js-lingui-explicit-id
 msgid "draftsHint"
 msgstr "下書きは論文ごとに 1 件です。このブラウザーに保存されます。"
 
-#. js-lingui-explicit-id
 msgid "untitledDraft"
 msgstr "無題の下書き"
 
-#. js-lingui-explicit-id
 msgid "newDraft"
 msgstr "新しい下書き"
 
-#. js-lingui-explicit-id
 msgid "draftTitleLabel"
 msgstr "下書きのタイトル"
 
-#. js-lingui-explicit-id
 msgid "duplicateDraft"
 msgstr "複製"
 
-#. js-lingui-explicit-id
 msgid "deleteDraft"
 msgstr "削除"
 
-#. js-lingui-explicit-id
 msgid "confirmDeleteDraft"
 msgstr "この下書きを削除しますか？"
 
-#. js-lingui-explicit-id
 msgid "draftLimitReached"
 msgstr "下書きは同時に {count} 件まで保存できます。まず 1 件削除してください。"
 
-#. js-lingui-explicit-id
 msgid "draftCreated"
 msgstr "新しい下書きを作成しました。"
 
-#. js-lingui-explicit-id
 msgid "draftDuplicated"
 msgstr "下書きを複製しました。"
 
-#. js-lingui-explicit-id
 msgid "draftDeleted"
 msgstr "下書きを削除しました。"
 
-#. js-lingui-explicit-id
 msgid "deleteAllDrafts"
 msgstr "すべての下書きを削除"
 
-#. js-lingui-explicit-id
 msgid "confirmDeleteAllDrafts"
 msgstr "このブラウザのすべての下書きを削除しますか？元に戻せません。"
 
-#. js-lingui-explicit-id
 msgid "allDraftsDeleted"
 msgstr "すべての下書きを削除しました。"
 
-#. js-lingui-explicit-id
 msgid "draftUpdatedElsewhere"
 msgstr "この下書きは別のタブで更新されました。"
 
-#. js-lingui-explicit-id
 msgid "switchToDraft"
 msgstr "{title} に切り替える"
 
-#. js-lingui-explicit-id
 msgid "coauthorPrefilled"
 msgstr "チェックは依頼者による推定です。違っている箇所を修正してください。"
 
-#. js-lingui-explicit-id
 msgid "coauthorHeading"
 msgstr "<work>{title}</work>：あなたは何をしましたか？"
 
-#. js-lingui-explicit-id
 msgid "coauthorHeadingUntitled"
 msgstr "この論文であなたは何をしましたか？"
 
-#. js-lingui-explicit-id
 msgid "coauthorAnsweringAs"
 msgstr "<b>{name}</b>として回答しています。あなたの名前とORCID iDは、送り返すリンクに含まれます。"
 
-#. js-lingui-explicit-id
 msgid "coauthorBlankHint"
 msgstr "担当した役割ごとにレベルを選び、残りは{none}のままにしてください。2分ほどで終わります。"
 
-#. js-lingui-explicit-id
 msgid "coauthorBlankHintYesNo"
 msgstr "担当した役割には{contributed}を選び、残りは{none}のままにしてください。2分ほどで終わります。"
 
-#. js-lingui-explicit-id
 msgid "coauthorRoles"
 msgstr "あなたの役割"
 
-#. js-lingui-explicit-id
 msgid "coauthorFirstAuthor"
 msgstr "筆頭著者を共有している"
 
-#. js-lingui-explicit-id
 msgid "coauthorCorresponding"
 msgstr "責任著者である"
 
-#. js-lingui-explicit-id
 msgid "coauthorDetails"
 msgstr "あなたの情報"
 
-#. js-lingui-explicit-id
 msgid "coauthorDetailsHint"
 msgstr "依頼者の記載が間違っている場合は、ここで名前やORCID iDを修正してください。"
 
-#. js-lingui-explicit-id
 msgid "coauthorName"
 msgstr "名前"
 
-#. js-lingui-explicit-id
 msgid "coauthorSend"
 msgstr "送り返す"
 
-#. js-lingui-explicit-id
 msgid "coauthorMarked"
 msgstr "{total}件中{count}件の役割を選択済み"
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidSignIn"
 msgstr "ORCIDでサインイン"
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidHint"
 msgstr "任意：ORCIDでサインインすると、回答は検証済みとして届きます。サインイン情報は送り返すリンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。ORCID レコードに登録された名前も含まれます。"
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidChanged"
 msgstr "サインイン後に回答を変更しました。この回答を検証するには、もう一度サインインしてください。"
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidSigned"
 msgstr "{who}としてORCIDでサインインしました。回答は検証済みとして届きます。"
 
-#. js-lingui-explicit-id
 msgid "coauthorOrcidFailed"
 msgstr "ORCIDのサインインが完了しませんでした。サインインなしでも回答を送れます。"
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidVerified"
 msgstr "ORCIDにより{who}として検証済み（{date}にサインイン）。"
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidOtherId"
 msgstr "この行のiDとは異なります。"
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidNoRowId"
 msgstr "この行には比較するORCID iDがありません。"
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidSignedFor"
 msgstr "『{title}』へのサインインです。"
 
-#. js-lingui-explicit-id
 msgid "reviewOrcidSignedElsewhere"
 msgstr "この行では未検証：{who}は{date}に、名前またはiDが異なる行に対してORCIDでサインインしました。"
 
-#. js-lingui-explicit-id
 msgid "coauthorNotSent"
 msgstr "まだ送信されていません。"
 
-#. js-lingui-explicit-id
 msgid "coauthorCopyInstead"
 msgstr "代わりにリンクをコピー"
 
-#. js-lingui-explicit-id
 msgid "coauthorShareTitle"
 msgstr "{name}のCRediT役割"
 
-#. js-lingui-explicit-id
 msgid "coauthorSentTitle"
 msgstr "送信しました。このページは閉じてかまいません。"
 
-#. js-lingui-explicit-id
 msgid "coauthorCopiedTitle"
 msgstr "リンクをコピーしました。返信に貼り付けてから、このページを閉じてください。"
 
-#. js-lingui-explicit-id
 msgid "coauthorSentBody"
 msgstr "依頼者は下書きの横であなたの回答を確認できます。再度依頼された場合は新しいリンクを開いてください。この回答が置き換えられます。"
 
-#. js-lingui-explicit-id
 msgid "coauthorChange"
 msgstr "回答を変更"
 
-#. js-lingui-explicit-id
 msgid "claimUnlock"
 msgstr "通常の下書きとして保持"
 
-#. js-lingui-explicit-id
 msgid "annClaimUnlocked"
 msgstr "通常の下書きになりました。すべての行を編集できます。"
 
-#. js-lingui-explicit-id
 msgid "claimLockedHint"
 msgstr "依頼に回答中です。編集できるのは自分の行だけです。"
 
-#. js-lingui-explicit-id
 msgid "claimResumed"
 msgstr "この依頼の続きから再開しました。"
 
-#. js-lingui-explicit-id
 msgid "claimRequestUpdated"
 msgstr "依頼が更新されました。以前の回答は置き換えられました。"
 
-#. js-lingui-explicit-id
 msgid "claimLockedDraft"
 msgstr "ロック中: 依頼に回答しています"
 
-#. js-lingui-explicit-id
 msgid "requestLinkOwn"
 msgstr "これは{name}さん宛てに作成した依頼リンクです。"
 
-#. js-lingui-explicit-id
 msgid "askBlank"
 msgstr "{name} さんに担当内容を尋ねる"
 
-#. js-lingui-explicit-id
 msgid "askPrefilled"
 msgstr "{name} さんに推定内容の確認を依頼する"
 
-#. js-lingui-explicit-id
 msgid "askLinkHint"
 msgstr "このリンクには、タイトルと、この人の氏名と iD が含まれます。"
 
-#. js-lingui-explicit-id
 msgid "ask"
 msgstr "依頼"
 
-#. js-lingui-explicit-id
 msgid "claimedRowBadge"
 msgstr "あなたの行"
 
-#. js-lingui-explicit-id
 msgid "askCopied"
 msgstr "リンクをコピーしました"
 
-#. js-lingui-explicit-id
 msgid "askedChip"
 msgstr "依頼済み"
 
-#. js-lingui-explicit-id
 msgid "askedChipTitle"
 msgstr "自分の行の記入を依頼済み。返信が届くと消えます。"
 
-#. js-lingui-explicit-id
 msgid "mergedRowBadge"
 msgstr "更新済み"
 
-#. js-lingui-explicit-id
 msgid "mergedRowBadgeTitle"
 msgstr "開いたばかりの返信から反映されました。"
 
-#. js-lingui-explicit-id
 msgid "activeDraft"
 msgstr "編集中"
 
-#. js-lingui-explicit-id
 msgid "askContributorCopied"
 msgstr "リンクをコピーしました。{name} さんに送ってください。"
 
-#. js-lingui-explicit-id
 msgid "mergeUnmatched"
 msgstr "この返信の対象者はこの下書きにいないため、何も取り込まれませんでした。"
 
-#. js-lingui-explicit-id
 msgid "askReplyDiffers"
 msgstr "{name}さんの回答が届きました：相違点 {count} 件。"
 
-#. js-lingui-explicit-id
 msgid "askReplyMatches"
 msgstr "{name}さんの回答はあなたの入力と一致しています。"
 
-#. js-lingui-explicit-id
 msgid "askReplyStale"
 msgstr "{name}さんのこの回答は、すでにある回答より古いため使用しませんでした。"
 
-#. js-lingui-explicit-id
 msgid "askReplyDuplicate"
 msgstr "{name}さんのこの回答はすでに受け取っています。"
 
-#. js-lingui-explicit-id
 msgid "annMergeUndone"
 msgstr "統合を元に戻しました。"
 
-#. js-lingui-explicit-id
 msgid "welcomeIntro"
 msgstr "3 つのステップで、投稿原稿にそのまま使える著者貢献をまとめます。"
 
-#. js-lingui-explicit-id
 msgid "about"
 msgstr "概要"
 
-#. js-lingui-explicit-id
 msgid "statusReady"
 msgstr "エクスポート可能"
 
-#. js-lingui-explicit-id
 msgid "statusNotes"
 msgstr "{count, plural, other {確認事項 # 件}}"
 
-#. js-lingui-explicit-id
 msgid "statusDismiss"
 msgstr "閉じる"
 
-#. js-lingui-explicit-id
 msgid "rolesUsed"
 msgstr "{total} 種類中 {used} 種類を使用"
 
-#. js-lingui-explicit-id
 msgid "shareWarningTitle"
 msgstr "このリンクにはデータが含まれます"
 
-#. js-lingui-explicit-id
 msgid "shareWarningBody"
 msgstr "このリンクを知っている人は、氏名、ORCID iD、貢献者の種別、役割の割り当てをすべて閲覧できます。"
 
-#. js-lingui-explicit-id
 msgid "noContributorsHint"
 msgstr "下に DOI または ORCID iD を貼り付けるか、名前を入力するか、ヘッダーの<b>インポート</b>をお使いください。"
 
-#. js-lingui-explicit-id
 msgid "a11yContributionGrid"
 msgstr "貢献グリッド"
 
-#. js-lingui-explicit-id
 msgid "a11yGeneratedStatement"
 msgstr "生成された著者貢献"
 
-#. js-lingui-explicit-id
 msgid "a11yStatementNotes"
 msgstr "著者貢献に関する確認事項"
 
-#. js-lingui-explicit-id
 msgid "a11yBulkContributor"
 msgstr "一括割り当ての対象となる貢献者"
 
-#. js-lingui-explicit-id
 msgid "a11yBulkRole"
 msgstr "一括割り当ての対象となる役割"
 
-#. js-lingui-explicit-id
 msgid "a11yExportFormat"
 msgstr "エクスポート形式"
 
-#. js-lingui-explicit-id
 msgid "a11yOrcidInput"
 msgstr "ORCID iD"
 
-#. js-lingui-explicit-id
 msgid "a11yOrcidHint"
 msgstr "ORCID iD を入力するか、iD または orcid.org の URL として貼り付けてください"
 
-#. js-lingui-explicit-id
 msgid "a11yDismissWelcome"
 msgstr "はじめにの案内を閉じる"
 
-#. js-lingui-explicit-id
 msgid "a11yShareLink"
 msgstr "すべての貢献者データを含むリンクを共有します"
 
-#. js-lingui-explicit-id
 msgid "a11yUploadFile"
 msgstr "CSV、TSV、JSON、XML ファイルをアップロード"
 
-#. js-lingui-explicit-id
 msgid "a11yUseInitials"
 msgstr "氏名の代わりにイニシャルを使う"
 
-#. js-lingui-explicit-id
 msgid "a11yShowLevels"
 msgstr "レベルを表示：役割に貢献レベルを併記します"
 
-#. js-lingui-explicit-id
 msgid "a11ySeparateAcks"
 msgstr "謝辞を分ける：著者以外の貢献者を別の行に記載します"
 
-#. js-lingui-explicit-id
 msgid "customColor"
 msgstr "その他"
 
-#. js-lingui-explicit-id
 msgid "copyDataLink"
 msgstr "データリンクをコピー"
 
-#. js-lingui-explicit-id
 msgid "fullCreditStandard"
 msgstr "CRediT 標準の全文"
 
-#. js-lingui-explicit-id
 msgid "creditRolesExamples"
 msgstr "CRediT の役割と例"
 
-#. js-lingui-explicit-id
 msgid "sourceOnGitHub"
 msgstr "GitHub のソースコード"
 
-#. js-lingui-explicit-id
 msgid "opensInNewTab"
 msgstr "（新しいタブで開きます）"
 
-#. js-lingui-explicit-id
 msgid "acknowledgements"
 msgstr "謝辞"
 
-#. js-lingui-explicit-id
 msgid "aboutTaxonomy"
 msgstr "CRediT は ANSI/NISO 標準（<cc>CC BY 4.0</cc>）です。本プロジェクトは NISO から独立しており、NISO の承認を受けたものではありません。"
 
-#. js-lingui-explicit-id
 msgid "aboutPrivacy"
 msgstr "Looking up an ORCID iD sends it to pub.orcid.org from your browser. Looking up a DOI sends it to api.crossref.org, together with this site's contact address, and to api.datacite.org if Crossref has no record. Cloudflare, which hosts this site, counts page requests on its own servers, in aggregate, with no script or cookie in your browser. Importing CITATION.cff or .zenodo.json downloads the citesync converter and a Python runtime from cdn.jsdelivr.net; the file is processed in your browser and is never uploaded. Nothing else leaves your browser: drafts stay in its local storage. Asks to co-authors and their answers are kept only in this browser, and go into JSON exports unless you untick that option. Sending a reply hands its link, with that person's name and iD, to the app you choose. Signing in with ORCID on an answer takes the co-author to orcid.org and back; the sign-in then travels inside the reply link and is kept with the answer, also in JSON exports. It carries the name on the co-author's ORCID record. Opening a signed answer, or importing a JSON file with one, fetches ORCID's public keys from orcid.org to check it."
 
-#. js-lingui-explicit-id
 msgid "accessibilityStatement"
 msgstr "アクセシビリティ方針"
 
-#. js-lingui-explicit-id
 msgid "getCreditBadge"
 msgstr "CRediT バッジを入手"
 
-#. js-lingui-explicit-id
 msgid "creditBadge"
 msgstr "CRediT バッジ"
 
-#. js-lingui-explicit-id
 msgid "copiedHtml"
 msgstr "HTML をコピーしました"
 
-#. js-lingui-explicit-id
 msgid "copiedPng"
 msgstr "PNG をコピーしました"
 
-#. js-lingui-explicit-id
 msgid "annBadgeHtmlCopied"
 msgstr "バッジの HTML をクリップボードにコピーしました"
 
-#. js-lingui-explicit-id
 msgid "importAuthorList"
 msgstr "著者名リスト"
 
-#. js-lingui-explicit-id
 msgid "importPlaceholder"
 msgstr "{names}\n\nor a .csv / .tsv / .json / .xml / .cff export, or a link sent back to you"
 
-#. js-lingui-explicit-id
 msgid "errImportNoNames"
 msgstr "著者名が見つかりませんでした。1 行に 1 名ずつ入力してください。"
 
-#. js-lingui-explicit-id
 msgid "errImportNoCsvRows"
 msgstr "CSV に貢献者の行が見つかりませんでした。"
 
-#. js-lingui-explicit-id
 msgid "errImportNoJsonContributors"
 msgstr "その JSON エクスポートには貢献者が含まれていません。"
 
-#. js-lingui-explicit-id
 msgid "errImportNoXmlContribs"
 msgstr "XML に <contrib> 要素が見つかりませんでした。"
 
-#. js-lingui-explicit-id
 msgid "errImportNoCrossrefContribs"
 msgstr "Crossref XML に <person_name> を含む <contributors> ブロックが見つかりませんでした。"
 
-#. js-lingui-explicit-id
 msgid "aboutTagline"
 msgstr "CRediT の著者貢献を作成し、グリッドを貢献ヒートマップとしてエクスポートできます。"
 
-#. js-lingui-explicit-id
 msgid "aboutInspiredBy"
 msgstr "着想のもとになったオリジナル版："
 
-#. js-lingui-explicit-id
 msgid "aboutOutputTranslations"
 msgstr "出力の翻訳提供："
 
-#. js-lingui-explicit-id
 msgid "aboutPageTitle"
 msgstr "CRediT Matrix について"
 
-#. js-lingui-explicit-id
 msgid "aboutPageLink"
 msgstr "概要・引用・プライバシー"
 
-#. js-lingui-explicit-id
 msgid "aboutVersion"
 msgstr "バージョン"
 
-#. js-lingui-explicit-id
 msgid "aboutLicense"
 msgstr "ライセンス"
 
-#. js-lingui-explicit-id
 msgid "aboutSource"
 msgstr "ソースコード"
 
-#. js-lingui-explicit-id
 msgid "aboutAuthor"
 msgstr "作者"
 
-#. js-lingui-explicit-id
 msgid "aboutCiteTitle"
 msgstr "CRediT Matrix の引用"
 
-#. js-lingui-explicit-id
 msgid "aboutCite"
 msgstr "論文で CRediT Matrix を使用した場合は、常に最新版を指すコンセプト DOI で引用してください："
 
-#. js-lingui-explicit-id
 msgid "aboutCiteMetadata"
 msgstr "これらはリポジトリの <link>CITATION.cff</link> から作成しています。<citesync>citesync</citesync> がリリースごとにこのファイルを最新に保ち、そのプレイグラウンドではご自身のソフトウェア用に同じファイルを作れます。"
 
-#. js-lingui-explicit-id
 msgid "aboutCiteFormat"
 msgstr "引用形式"
 
-#. js-lingui-explicit-id
 msgid "annCitationCopied"
 msgstr "引用をコピーしました"
 
-#. js-lingui-explicit-id
 msgid "aboutPluginsTitle"
 msgstr "執筆ツール用プラグイン"
 
-#. js-lingui-explicit-id
 msgid "aboutPlugins"
 msgstr "論文を書く場所で、そのまま声明も書けます。これらのプラグインは、著者リストのロール、またはここからエクスポートしたファイルをもとに、文書に声明を追加します。各名前から設定ガイドを開けます。"
 
-#. js-lingui-explicit-id
 msgid "aboutPluginsSoftware"
 msgstr "ソフトウェア向けには、<cli>コマンドラインツール</cli>が人とロールを CodeMeta 形式でも出力します。<citesync>citesync</citesync> はそのメタデータから CITATION.cff と Zenodo のファイルを作成し、<drift>codemeta-drift</drift> は CodeMeta ファイルの整合性を確認します。"
 
-#. js-lingui-explicit-id
 msgid "statementPlugins"
 msgstr "Quarto・MyST・Typst などのプラグイン"
 
-#. js-lingui-explicit-id
 msgid "privacy"
 msgstr "プライバシー"
 
-#. js-lingui-explicit-id
 msgid "accessibility"
 msgstr "アクセシビリティ"
 
-#. js-lingui-explicit-id
 msgid "aboutAccessibility"
 msgstr "確認している内容、既知の問題、問題の報告方法は<link>アクセシビリティ方針</link>に記載しています。"
 
-#. js-lingui-explicit-id
 msgid "detectedFormat"
 msgstr "検出された形式：{format}"
 
-#. js-lingui-explicit-id
 msgid "mergeWrongDraft"
 msgstr "この返信はこのブラウザーにない下書きのものであるため、何も変更されませんでした。"
 
-#. js-lingui-explicit-id
 msgid "sharedDraftOpened"
 msgstr "共有された下書きを、作業中の下書きとは別に開きました。"
 
-#. js-lingui-explicit-id
 msgid "sharedDraftLoaded"
 msgstr "共有された下書きを開きました。"
 
-#. js-lingui-explicit-id
 msgid "a11yInvalidOrcid"
 msgstr "無効なORCID iD"
 
-#. js-lingui-explicit-id
 msgid "a11yRoleAssignment"
 msgstr "{name}の{role}：{level}"
 
-#. js-lingui-explicit-id
 msgid "a11yRolesForContributor"
 msgstr "{name}の役割"
 
-#. js-lingui-explicit-id
 msgid "a11ySetColor"
 msgstr "色{color}を設定"
 
-#. js-lingui-explicit-id
 msgid "a11yStatementGrouping"
 msgstr "ステートメントのグループ化"
 
-#. js-lingui-explicit-id
 msgid "annContributorsAdded"
 msgstr "{count}名の貢献者を追加しました。"
 
-#. js-lingui-explicit-id
 msgid "annEntriesSkippedNoName"
 msgstr "名前のない項目を{count}件スキップしました（{entries}）。"
 
-#. js-lingui-explicit-id
 msgid "annOrcidChecksumsSkipped"
 msgstr "チェックディジットが無効なORCID iDを{count}件スキップしました（{ids}）。"
 
-#. js-lingui-explicit-id
 msgid "annOrcidLookupsFailed"
 msgstr "{count}件のORCID iDを検索できませんでした（{ids}）。該当する行ではiDを名前として使用しています。手動で名前を変更してください。"
 
-#. js-lingui-explicit-id
 msgid "annContributorsSkippedLimit"
 msgstr "上限が{limit}名のため、{count}名の貢献者をスキップしました。"
 
-#. js-lingui-explicit-id
 msgid "annCopiedToClipboard"
 msgstr "クリップボードにコピーしました"
 
-#. js-lingui-explicit-id
 msgid "annExportDataCopied"
 msgstr "エクスポートデータをクリップボードにコピーしました"
 
-#. js-lingui-explicit-id
 msgid "badgeIntro"
 msgstr "このバッジを論文またはプロジェクトページに追加できます。"
 
-#. js-lingui-explicit-id
 msgid "copyHtml"
 msgstr "HTMLをコピー"
 
-#. js-lingui-explicit-id
 msgid "copyPng"
 msgstr "PNGをコピー"
 
-#. js-lingui-explicit-id
 msgid "downloadPng"
 msgstr "PNGをダウンロード"
 
-#. js-lingui-explicit-id
 msgid "switchToDarkTheme"
 msgstr "ダークテーマに切り替える"
 
-#. js-lingui-explicit-id
 msgid "switchToLightTheme"
 msgstr "ライトテーマに切り替える"
 
-#. js-lingui-explicit-id
 msgid "contributorTypeSetAuthor"
 msgstr "著者に設定"
 
-#. js-lingui-explicit-id
 msgid "contributorTypeSetNonAuthor"
 msgstr "著者以外の貢献者に設定"
 
-#. js-lingui-explicit-id
 msgid "errImportFailed"
 msgstr "インポートできませんでした。ファイルを確認して、もう一度お試しください。"
 
-#. js-lingui-explicit-id
 msgid "errImportNewerVersion"
 msgstr "このファイルは CRediT Matrix の新しいバージョンで作成されました。ページを再読み込みして更新してから、もう一度お試しください。"
 
-#. js-lingui-explicit-id
 msgid "errImportRepeatedId"
 msgstr "このファイルには同じ貢献者 ID が 2 回含まれているため、インポートされませんでした。"
 
-#. js-lingui-explicit-id
 msgid "errHeatmapExport"
 msgstr "ヒートマップを{format}形式でエクスポートできませんでした。"
 
-#. js-lingui-explicit-id
 msgid "errStorageFull"
 msgstr "ブラウザーの保存領域がいっぱいのため、変更は保存されません。この下書きをエクスポートするか、不要な下書きを削除してください。"
 
-#. js-lingui-explicit-id
 msgid "errStorageBlocked"
 msgstr "このブラウザーがこのサイトの保存領域をブロックしているため、変更は保存されません。サイトデータを許可するか、タブを閉じる前にエクスポートしてください。"
 
-#. js-lingui-explicit-id
 msgid "errNewerVersionSaved"
 msgstr "CRediT Matrix の新しいバージョンが別のタブで下書きを保存しました。このページを再読み込みしてください。ここでの変更は保存されません。"
 
-#. js-lingui-explicit-id
 msgid "formatShareLink"
 msgstr "共有リンク"
 
-#. js-lingui-explicit-id
 msgid "formatJsonExport"
 msgstr "JSONエクスポート"
 
-#. js-lingui-explicit-id
 msgid "replaceWorkspaceBody"
 msgstr "このインポートには{incoming}名の貢献者が含まれています。現在の{existing}名の貢献者を置き換えます。この操作は元に戻せません。"
 
-#. js-lingui-explicit-id
 msgid "statementEmptyHint"
 msgstr "まだ貢献が割り当てられていません。グリッドのセルを選択して役割を割り当ててください。"
 
-#. js-lingui-explicit-id
 msgid "separateAcknowledgements"
 msgstr "謝辞を分ける"
 
-#. js-lingui-explicit-id
 msgid "validationAuthorNoRoles"
 msgstr "{name}にはCRediT役割が割り当てられていません。"
 
-#. js-lingui-explicit-id
 msgid "validationRoleUnassigned"
 msgstr "役割「{role}」はどの貢献者にも割り当てられていません。"
 
-#. js-lingui-explicit-id
 msgid "welcomeBodyContributors"
 msgstr "DOI を貼り付けると公開レコードから一覧をまとめて取り込めます。名前を直接入力しても、ORCID iD から名前を補完してもかまいません。"
 
-#. js-lingui-explicit-id
 msgid "welcomeBodyRoles"
 msgstr "グリッドのセルを選択して、各貢献者が担当した CRediT の 14 種類の役割を指定します。"
 
-#. js-lingui-explicit-id
 msgid "welcomeBodyExport"
 msgstr "記述文は入力に合わせて更新されます。コピーするか、ヒートマップ・XML・CSV・JSON・Markdown をダウンロードしてください。"
 
-#. js-lingui-explicit-id
 msgid "welcomeDraftsTitle"
 msgstr "論文ごとに1つの下書き"
 
-#. js-lingui-explicit-id
 msgid "welcomeDraftsBody"
 msgstr "複数の論文を執筆中ですか？ヘッダーから下書きを切り替えられます。各下書きはこのブラウザに個別に保存されます。"
 
-#. js-lingui-explicit-id
 msgid "welcomeAskTitle"
 msgstr "共著者に直接依頼"
 
-#. js-lingui-explicit-id
 msgid "welcomeAskBody"
 msgstr "貢献者の行メニューからリンクをコピーして本人に送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。"
 
-#. js-lingui-explicit-id
 msgid "importDescription"
 msgstr "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R or Crossref XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too. Paste an author contribution statement to fill in the roles of the contributors already here. CITATION.cff, codemeta.json and .zenodo.json import author names and ORCID iDs, leaving roles empty."
 
-#. js-lingui-explicit-id
 msgid "contributorActions"
 msgstr "{name} に対する操作"
 
-#. js-lingui-explicit-id
 msgid "colorBlue"
 msgstr "青"
 
-#. js-lingui-explicit-id
 msgid "colorOrange"
 msgstr "オレンジ"
 
-#. js-lingui-explicit-id
 msgid "colorBluishGreen"
 msgstr "青緑"
 
-#. js-lingui-explicit-id
 msgid "colorReddishPurple"
 msgstr "赤紫"
 
-#. js-lingui-explicit-id
 msgid "colorVermilion"
 msgstr "朱色"
 
-#. js-lingui-explicit-id
 msgid "colorSkyBlue"
 msgstr "スカイブルー"
 
-#. js-lingui-explicit-id
 msgid "colorYellow"
 msgstr "黄色"
 
-#. js-lingui-explicit-id
 msgid "colorDarkGray"
 msgstr "ダークグレー"
 
-#. js-lingui-explicit-id
 msgid "languageSettings"
 msgstr "言語設定"
 
-#. js-lingui-explicit-id
 msgid "stripOpenTeam"
 msgstr "共著者に依頼"
 
-#. js-lingui-explicit-id
 msgid "teamYou"
 msgstr "あなた"
 
-#. js-lingui-explicit-id
 msgid "teamNotAsked"
 msgstr "未依頼"
 
-#. js-lingui-explicit-id
 msgid "toggleKeysHint"
 msgstr "選択で切り替え · 矢印キーで移動、1 または 0 で役割を設定。"
 
-#. js-lingui-explicit-id
 msgid "downloadSvg"
 msgstr "SVG をダウンロード"
 
-#. js-lingui-explicit-id
 msgid "copyFormat"
 msgstr "{format} をコピー"
 
-#. js-lingui-explicit-id
 msgid "downloadFormat"
 msgstr "{format} をダウンロード"
 
-#. js-lingui-explicit-id
 msgid "a11yInspector"
 msgstr "声明・チーム・確認・出版論文の傾向"
 
-#. js-lingui-explicit-id
 msgid "tabTeam"
 msgstr "チーム"
 
-#. js-lingui-explicit-id
 msgid "tabReview"
 msgstr "確認"
 
-#. js-lingui-explicit-id
 msgid "tabNorms"
 msgstr "出版論文の傾向"
 
-#. js-lingui-explicit-id
 msgid "normsIntro"
 msgstr "ある分野の出版論文で、各ロールが著者の順番ごとにどれくらい付けられているかを示します。これは参考情報であり、助言ではありません。他の論文での一般的な傾向は、共著者が実際に何をしたかとは関係ありません。"
 
-#. js-lingui-explicit-id
 msgid "normsField"
 msgstr "あなたの分野"
 
-#. js-lingui-explicit-id
 msgid "normsFieldPlaceholder"
 msgstr "分野を選択"
 
-#. js-lingui-explicit-id
 msgid "normsEmpty"
 msgstr "分野を選ぶと割合が表示されます。アプリは論文の分野を知らず、ここでの操作がマトリックスを変えることはありません。"
 
-#. js-lingui-explicit-id
 msgid "normsFieldGone"
 msgstr "保存した分野「<name>{field}</name>」は、このスナップショットにデータがありません。分野を選ぶと割合が表示されます。"
 
-#. js-lingui-explicit-id
 msgid "normsCoverage"
 msgstr "<name>{field}</name>の CRediT ロール付きオープンアクセス研究論文 {articles, number} 件({date} 時点の Europe PMC ファイルより)。少なくとも 1 つのロールを持つ著者のみを数えています。"
 
-#. js-lingui-explicit-id
 msgid "normsUnvalidated"
 msgstr "ロールは自動で読み取ったもので人の手では確認しておらず、出版社もロールをタグ付けしている {tagged, number} 件の論文でのパーサーとタグの一致度は F1 スコア {f1}（1 が完全一致）です。"
 
-#. js-lingui-explicit-id
 msgid "normsYourPosition"
 msgstr "この下書きでのあなたの順番：{position, select, single {単独著者} first {筆頭著者} middle {中間の著者} other {最終著者}}。"
 
-#. js-lingui-explicit-id
 msgid "normsNonAuthor"
 msgstr "この下書きではあなたは著者以外のため、列に印は付きません。割合は著者のみを数えています。"
 
-#. js-lingui-explicit-id
 msgid "normsNoSelf"
 msgstr "自分の順番に印を付けるには、貢献者リストの自分の行で「これは自分です」を選んでください。"
 
-#. js-lingui-explicit-id
 msgid "normsCaption"
 msgstr "各ロールを持つ著者の割合(著者の順番別)"
 
-#. js-lingui-explicit-id
 msgid "normsRole"
 msgstr "ロール"
 
-#. js-lingui-explicit-id
 msgid "normsPosition"
 msgstr "{position, select, single {単独} first {筆頭} middle {中間} other {最終}}"
 
-#. js-lingui-explicit-id
 msgid "normsTooFew"
 msgstr "著者が少なすぎて判断できません"
 
-#. js-lingui-explicit-id
 msgid "normsFootnote"
 msgstr "該当論文が {minArticles, number} 件未満の分野は表示せず、著者が {minAuthors, number} 人未満の順番はダッシュで示します。分野は OpenAlex による雑誌単位の分類です。出典:CRediT センサス {snapshot}、データセット {version}。"
 
-#. js-lingui-explicit-id
 msgid "reviewEmptyTitle"
 msgstr "共著者からの回答はここに表示されます"
 
-#. js-lingui-explicit-id
 msgid "reviewEmptyBody"
 msgstr "共著者からリンクが返ってきたら開いてください。回答が下書きと並んでここに表示されます。"
 
-#. js-lingui-explicit-id
 msgid "teamEmpty"
 msgstr "まず貢献者を追加し、それぞれに何をしたかを尋ねてください。"
 
-#. js-lingui-explicit-id
 msgid "teamMessage"
 msgstr "{name} 様\n\n{work}の CRediT 貢献声明を準備しています。このリンクを開いて担当した役割にチェックを付け、リンクを返送していただけますか。\n\n{link}\n\nリンクにはタイトル、お名前、iD が含まれます。サーバーには何も保存されません。"
 
-#. js-lingui-explicit-id
 msgid "teamMessageWork"
 msgstr "『{title}』"
 
-#. js-lingui-explicit-id
 msgid "teamMessageNoTitle"
 msgstr "私たちの原稿"
 
-#. js-lingui-explicit-id
 msgid "teamMessageCopied"
 msgstr "{name} 宛てのメッセージをコピーしました。メールに貼り付けてください。"
 
-#. js-lingui-explicit-id
 msgid "teamAskAllDone"
 msgstr "{count, plural, other {# 件のメッセージをすべてコピーしました。}}"
 
-#. js-lingui-explicit-id
 msgid "teamAskNext"
 msgstr "次をコピー: {name}（{total}件中{index}件目）"
 
-#. js-lingui-explicit-id
 msgid "teamAskAll"
 msgstr "未依頼の全員に依頼（{count}）"
 
-#. js-lingui-explicit-id
 msgid "teamAskAllHint"
 msgstr "1人につき1通のメッセージをコピーします。次をコピーする前に、それぞれをメールに貼り付けてください。"
 
-#. js-lingui-explicit-id
 msgid "teamPrivacy"
 msgstr "各リンクには論文のタイトルと、その人の名前と iD が含まれます。サーバーには何も保存されません。回答は送ったのと同じ方法で戻ってきます。"
 
-#. js-lingui-explicit-id
 msgid "teamCopyMessageFor"
 msgstr "メッセージをコピー（{name} 宛て）"
 
-#. js-lingui-explicit-id
 msgid "teamCopyMessage"
 msgstr "メッセージをコピー"
 
-#. js-lingui-explicit-id
 msgid "expandContributors"
 msgstr "貢献者リストを展開"
 
-#. js-lingui-explicit-id
 msgid "collapseContributors"
 msgstr "貢献者リストを折りたたむ"
 
-#. js-lingui-explicit-id
 msgid "moveUp"
 msgstr "上へ移動"
 
-#. js-lingui-explicit-id
 msgid "moveDown"
 msgstr "下へ移動"
 
-#. js-lingui-explicit-id
 msgid "annMoved"
 msgstr "{name} を {total} 人中 {position} 番目に移動しました。"
 
-#. js-lingui-explicit-id
 msgid "skipToGrid"
 msgstr "グリッドへスキップ"
 
-#. js-lingui-explicit-id
 msgid "skipToStatement"
 msgstr "声明へスキップ"
 
-#. js-lingui-explicit-id
 msgid "stripAnswered"
 msgstr "{total} 人中 {answered} 人が回答"
 
-#. js-lingui-explicit-id
 msgid "stripDiffer"
 msgstr "{count, plural, other {# 件の回答が異なります}}"
 
-#. js-lingui-explicit-id
 msgid "reviewAction"
 msgstr "確認する"
 
-#. js-lingui-explicit-id
 msgid "tabReviewOpen"
 msgstr "{count, plural, other {未確定の相違 # 件}}"
 
-#. js-lingui-explicit-id
 msgid "statementDiffers"
 msgstr "{count, plural, other {# 件の貢献がまだ異なります。}}この声明はあなたの版を使っています。"
 
-#. js-lingui-explicit-id
 msgid "exportIncludesAnswers"
 msgstr "共著者の回答と依頼履歴を含める（{count}）"
 
-#. js-lingui-explicit-id
 msgid "thisIsMe"
 msgstr "これは自分です"
 
-#. js-lingui-explicit-id
 msgid "thisIsNotMe"
 msgstr "これは自分ではありません"
 
-#. js-lingui-explicit-id
 msgid "teamSettledOn"
 msgstr "{date} に確定"
 
-#. js-lingui-explicit-id
 msgid "teamStatusAnswered"
 msgstr "{days, plural, =0 {今日回答あり} =1 {昨日回答あり} other {# 日前に回答あり}}・確認待ち {count} 件"
 
-#. js-lingui-explicit-id
 msgid "teamStatusAsked"
 msgstr "{days, plural, =0 {今日依頼済み} =1 {昨日依頼済み} other {# 日前に依頼済み}}・{kind, select, prefilled {あなたの推測} other {空欄}}"
 
-#. js-lingui-explicit-id
 msgid "reviewAnsweredMeta"
 msgstr "{days, plural, =0 {今日回答あり} =1 {昨日回答あり} other {# 日前に回答あり}}・{kind, select, prefilled {あなたの推測} other {空欄}}"
 
-#. js-lingui-explicit-id
 msgid "teamReviewFor"
 msgstr "{name} さんの回答を確認する"
 
-#. js-lingui-explicit-id
 msgid "markerSharedFirst"
 msgstr "筆頭著者を共有"
 
-#. js-lingui-explicit-id
 msgid "markerCorresponding"
 msgstr "責任著者"
 
-#. js-lingui-explicit-id
 msgid "markerYes"
 msgstr "はい"
 
-#. js-lingui-explicit-id
 msgid "markerNo"
 msgstr "いいえ"
 
-#. js-lingui-explicit-id
 msgid "reviewKindAdded"
 msgstr "役割を追加"
 
-#. js-lingui-explicit-id
 msgid "reviewKindMarked"
 msgstr "印を付けた"
 
-#. js-lingui-explicit-id
 msgid "reviewKindDropped"
 msgstr "外した"
 
-#. js-lingui-explicit-id
 msgid "reviewKindLevel"
 msgstr "程度が異なる"
 
-#. js-lingui-explicit-id
 msgid "reviewUseTheirs"
 msgstr "{name} さんの回答を使う"
 
-#. js-lingui-explicit-id
 msgid "reviewKeepYours"
 msgstr "自分の回答を残す"
 
-#. js-lingui-explicit-id
 msgid "reviewAskAbout"
 msgstr "{name} さんに確認する"
 
-#. js-lingui-explicit-id
 msgid "reviewUseTheirsRole"
 msgstr "{name} さんの回答を使う：{role}"
 
-#. js-lingui-explicit-id
 msgid "reviewKeepYoursRole"
 msgstr "自分の回答を残す：{role}"
 
-#. js-lingui-explicit-id
 msgid "undoRole"
 msgstr "元に戻す：{role}"
 
-#. js-lingui-explicit-id
 msgid "reviewAskAboutRole"
 msgstr "{copied, select, true {コピーしました。{name} さんに確認する：{role}} other {{name} さんに確認する：{role}}}"
 
-#. js-lingui-explicit-id
 msgid "reviewUseAll"
 msgstr "{name} さんの回答をすべて使う"
 
-#. js-lingui-explicit-id
 msgid "reviewUsedTheirs"
 msgstr "{name} さんの回答を使用"
 
-#. js-lingui-explicit-id
 msgid "reviewKeptYours"
 msgstr "自分の回答を維持"
 
-#. js-lingui-explicit-id
 msgid "annReviewUsed"
 msgstr "{role}：{name} さんの回答を使いました。"
 
-#. js-lingui-explicit-id
 msgid "annReviewKept"
 msgstr "{role}：自分の回答を残しました。"
 
-#. js-lingui-explicit-id
 msgid "annReviewUsedAll"
 msgstr "{name} さんの回答をすべて使いました。"
 
-#. js-lingui-explicit-id
 msgid "annReviewUndone"
 msgstr "選択を取り消しました。"
 
-#. js-lingui-explicit-id
 msgid "reviewAllSettledTitle"
 msgstr "すべて確定しました。"
 
-#. js-lingui-explicit-id
 msgid "reviewAllSettledBody"
 msgstr "異なる回答にはすべて判断が下され、声明にその結果が反映されています。"
 
-#. js-lingui-explicit-id
 msgid "cellTheySay"
 msgstr "{name} さんの回答：{level}"
 
-#. js-lingui-explicit-id
 msgid "columnOpenDifferences"
 msgstr "{name}：{count, plural, other {未確定の相違 # 件}}"
 
-#. js-lingui-explicit-id
 msgid "columnSettled"
 msgstr "確定"
 
-#. js-lingui-explicit-id
 msgid "legendDiffers"
 msgstr "共著者の回答が異なる"
 
-#. js-lingui-explicit-id
 msgid "reviewAskMessage"
 msgstr "{name} 様\n\n{work}の CRediT 貢献声明を仕上げています。{role}について私たちの回答が異なります。このリンクを開いてご自身の行を確認し、リンクを返送していただけますか。\n\n{link}\n\nリンクにはタイトル、お名前、iD が含まれます。サーバーには何も保存されません。"
 
-#. js-lingui-explicit-id
 msgid "formatStatement"
 msgstr "CRediT 声明"
 
-#. js-lingui-explicit-id
 msgid "statementReview"
 msgstr "役割を確認"
 
-#. js-lingui-explicit-id
 msgid "statementReviewTitle"
 msgstr "声明から見つかった役割"
 
-#. js-lingui-explicit-id
 msgid "statementReviewSummary"
 msgstr "{people} 人の貢献者に {added} 件の役割を追加します。表にすでにある役割はそのままです。"
 
-#. js-lingui-explicit-id
 msgid "statementNothingNew"
 msgstr "見つかった役割はすべて表にあります。"
 
-#. js-lingui-explicit-id
 msgid "statementNoRolesFor"
 msgstr "役割が見つからなかった人: {names}"
 
-#. js-lingui-explicit-id
 msgid "statementCouldBe"
 msgstr "({token} の可能性あり)"
 
-#. js-lingui-explicit-id
 msgid "statementUnresolvedBody"
 msgstr "これらの名前やイニシャルは、この下書きの貢献者のだれにも一致しないか、複数に一致します。だれを指すかを選ばない限り、その役割は含めません。残りは適用した後に表で設定してください。"
 
-#. js-lingui-explicit-id
 msgid "statementLeaveOut"
 msgstr "含めない"
 
-#. js-lingui-explicit-id
 msgid "statementReviewSummaryLevel"
 msgstr "{people, plural, other {#人}}の貢献者に{added, plural, other {#件}}のロールを{level}として追加します。グリッドに既にあるロールはそのままです。"
 
-#. js-lingui-explicit-id
 msgid "statementRoleAlreadySet"
 msgstr "{role}（設定済み）"
 
-#. js-lingui-explicit-id
 msgid "statementUnmatchedTitle"
 msgstr "一致しなかったもの"
 
-#. js-lingui-explicit-id
 msgid "statementUnmatchedAmbiguous"
 msgstr "{token}：{names}のいずれか"
 
-#. js-lingui-explicit-id
 msgid "statementUnmatchedNone"
 msgstr "{token}：該当する貢献者なし"
 
-#. js-lingui-explicit-id
 msgid "statementLeftOut"
 msgstr "{who} — 除外：{roles}"
 
-#. js-lingui-explicit-id
 msgid "statementAppliedLevel"
 msgstr "記述から{count, plural, other {#件}}のロールを{level}として追加しました。"
 
-#. js-lingui-explicit-id
 msgid "statementUndoStale"
 msgstr "元に戻していません：ロールの追加後に下書きが変更されました。グリッドで変更してください。"
 
-#. js-lingui-explicit-id
 msgid "statementOnlyCredit"
 msgstr "読み取るのは Conceptualization や Writing – original draft などの CRediT ロール名だけで、誰が何をしたかを述べる文は読み取りません。"
 
-#. js-lingui-explicit-id
 msgid "errStatementTooLong"
 msgstr "このテキストは{limit}文字を超えています。貢献の記述だけを貼り付けてください。"
 
-#. js-lingui-explicit-id
 msgid "statementBack"
 msgstr "戻る"
 
-#. js-lingui-explicit-id
 msgid "statementApply"
 msgstr "役割を適用"
 
-#. js-lingui-explicit-id
 msgid "statementApplied"
 msgstr "声明から {count} 件の役割を追加しました。"
 
-#. js-lingui-explicit-id
 msgid "errStatementNoContributors"
 msgstr "先に貢献者を追加してから声明を貼り付けてください。声明はこの下書きにある名前と照合されます。"
 
-#. js-lingui-explicit-id
 msgid "errStatementNoRoles"
 msgstr "この下書きの貢献者に CRediT の役割を一つも対応づけられませんでした。声明が下書きと同じ名前かイニシャルで記載しているか確認してください。"
 
-#. js-lingui-explicit-id
 msgid "censusAboutLink"
 msgstr "CRediT センサス：論文における CRediT の使われ方"
 
-#. js-lingui-explicit-id
 msgid "censusBack"
 msgstr "CRediT Matrix に戻る"
 
-#. js-lingui-explicit-id
 msgid "censusTitle"
 msgstr "CRediT センサス"
 
-#. js-lingui-explicit-id
 msgid "censusHeadline"
 msgstr "{year} 年には、Europe PMC のオープンアクセス研究論文の {share} が少なくとも 1 人の著者に CRediT ロールを記載していました。"
 
-#. js-lingui-explicit-id
 msgid "censusLead"
 msgstr "公開された論文が CRediT（Contributor Roles Taxonomy）をどう使っているかを、Europe PMC のオープンアクセス論文 {articles} 件のマークアップと貢献声明から読み取りました。"
 
-#. js-lingui-explicit-id
 msgid "censusPreliminaryTitle"
 msgstr "暫定的な数値"
 
-#. js-lingui-explicit-id
 msgid "censusPreliminary"
 msgstr "このパーサーはまだ人手のラベルで検証していないため、数値は暫定的な目安としてご覧ください。ロールをタグ付けし、かつ貢献声明も掲載している {articles} 件の論文では、パーサーによる声明の読み取りとタグとの一致は F1 スコアで {f1} です（1 はすべてのロールを見つけ、誤りがないことを意味します）。ただし、そのうち {share} は MDPI と Frontiers の論文で、タグ自体も誰も検証していません。"
 
-#. js-lingui-explicit-id
 msgid "censusPreliminaryUnscored"
 msgstr "このパーサーはまだ人手のラベルで検証していないため、数値は暫定的な目安としてご覧ください。"
 
-#. js-lingui-explicit-id
 msgid "censusIncomplete"
 msgstr "このスナップショットは不完全です。一部のソースファイルが読み込まれていないか、分野が未設定のジャーナルがあります。"
 
-#. js-lingui-explicit-id
 msgid "censusAdoptionTitle"
 msgstr "採用の推移"
 
-#. js-lingui-explicit-id
 msgid "censusAdoptionCaption"
 msgstr "少なくとも 1 人の著者に CRediT ロールがある研究論文の割合（出版年別）。{year} 年の論文はまだ出版が続いているため、その区間は破線です。"
 
-#. js-lingui-explicit-id
 msgid "censusRolesPerAuthorTitle"
 msgstr "著者あたりのロール数"
 
-#. js-lingui-explicit-id
 msgid "censusRolesPerAuthorCaption"
 msgstr "ロールを持つ著者 1 人あたりの平均ロール数（出版年別）。"
 
-#. js-lingui-explicit-id
 msgid "censusShowTable"
 msgstr "表で表示"
 
-#. js-lingui-explicit-id
 msgid "censusPartial"
 msgstr "（途中）"
 
-#. js-lingui-explicit-id
 msgid "censusTableLabel"
 msgstr "{chart}（表）"
 
-#. js-lingui-explicit-id
 msgid "censusTrend"
 msgstr "{first} 年は {from}、{last} 年は {to}。最高は {maxYear} 年の {max}。"
 
-#. js-lingui-explicit-id
 msgid "censusYear"
 msgstr "年"
 
-#. js-lingui-explicit-id
 msgid "censusResearchArticles"
 msgstr "研究論文"
 
-#. js-lingui-explicit-id
 msgid "censusWithRoles"
 msgstr "ロールあり"
 
-#. js-lingui-explicit-id
 msgid "censusShare"
 msgstr "割合"
 
-#. js-lingui-explicit-id
 msgid "censusStylesTitle"
 msgstr "ロールの記載形式"
 
-#. js-lingui-explicit-id
 msgid "censusStylesCaption"
 msgstr "年ごとの研究論文の割合を、ロールを読み取った箇所別に示します。各論文は、下の 4 つのうち最初に当てはまるもので 1 回だけ数えます。4 つとも同じ目盛りです。{year} 年はまだ出版が続いているため、その区間は破線です。"
 
-#. js-lingui-explicit-id
 msgid "censusStyleJats4r"
 msgstr "JATS4R ロールタグ"
 
-#. js-lingui-explicit-id
 msgid "censusStyleJats4rNote"
 msgstr "JATS4R（学術誌論文のタグ付け方法を定めるグループ）の推奨どおり、各著者のロールを CRediT 語彙でタグ付け"
 
-#. js-lingui-explicit-id
 msgid "censusStylePlosUri"
 msgstr "ロール URL タグ"
 
-#. js-lingui-explicit-id
 msgid "censusStylePlosUriNote"
 msgstr "PLOS のように、各著者のロールを CRediT のウェブアドレスでタグ付け"
 
-#. js-lingui-explicit-id
 msgid "censusStyleStatement"
 msgstr "貢献声明"
 
-#. js-lingui-explicit-id
 msgid "censusStyleStatementNote"
 msgstr "著者をイニシャルまたは氏名で示す 1 段落"
 
-#. js-lingui-explicit-id
 msgid "censusStyleContribText"
 msgstr "著者ごとのテキスト"
 
-#. js-lingui-explicit-id
 msgid "censusStyleContribTextNote"
 msgstr "各著者の横にある自由記述（ロールの一覧や脚注など）"
 
-#. js-lingui-explicit-id
 msgid "censusFieldsTitle"
 msgstr "分野別"
 
-#. js-lingui-explicit-id
 msgid "censusFieldsCaption"
 msgstr "{year} 年の研究論文のうち CRediT ロールがあるものの割合（学術文献のオープンな索引である OpenAlex におけるジャーナルの分野別）。分野は論文ごとではなくジャーナルごとです。Europe PMC はもともと生物医学中心のため、他の分野は少数です。論文が 1,000 件未満の分野は除外しています。"
 
-#. js-lingui-explicit-id
 msgid "censusFieldAgriculturalAndBiologicalSciences"
 msgstr "農学・生物科学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldBiochemistryGeneticsAndMolecularBiology"
 msgstr "生化学・遺伝学・分子生物学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldChemistry"
 msgstr "化学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldComputerScience"
 msgstr "コンピュータ科学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldDentistry"
 msgstr "歯学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldEconomicsEconometricsAndFinance"
 msgstr "経済学・計量経済学・金融"
 
-#. js-lingui-explicit-id
 msgid "censusFieldEngineering"
 msgstr "工学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldEnvironmentalScience"
 msgstr "環境科学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldHealthProfessions"
 msgstr "医療専門職"
 
-#. js-lingui-explicit-id
 msgid "censusFieldImmunologyAndMicrobiology"
 msgstr "免疫学・微生物学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldMaterialsScience"
 msgstr "材料科学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldMathematics"
 msgstr "数学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldMedicine"
 msgstr "医学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldMultidisciplinary"
 msgstr "学際"
 
-#. js-lingui-explicit-id
 msgid "censusFieldNeuroscience"
 msgstr "神経科学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldPhysicsAndAstronomy"
 msgstr "物理学・天文学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldPsychology"
 msgstr "心理学"
 
-#. js-lingui-explicit-id
 msgid "censusFieldSocialSciences"
 msgstr "社会科学"
 
-#. js-lingui-explicit-id
 msgid "censusPublishersTitle"
 msgstr "出版社別"
 
-#. js-lingui-explicit-id
 msgid "censusPublishersCaption"
 msgstr "Europe PMC のオープンアクセス論文のうち、{year} 年の研究論文で CRediT ロールがあるものの割合。その年の研究論文が最も多い {count} 社を、論文に記載された名称で示します。"
 
-#. js-lingui-explicit-id
 msgid "censusOfArticles"
 msgstr "{count, plural, other {（全 # 件）}}"
 
-#. js-lingui-explicit-id
 msgid "censusRolesTitle"
 msgstr "著者順位別のロール"
 
-#. js-lingui-explicit-id
 msgid "censusRolesCaption"
 msgstr "ロールを 1 つ以上持つ著者のうち、各ロールを担う著者の割合。ロールがあり著者が 3 人以上の論文が対象です。"
 
-#. js-lingui-explicit-id
 msgid "censusRole"
 msgstr "ロール"
 
-#. js-lingui-explicit-id
 msgid "censusPlaceAll"
 msgstr "全著者"
 
-#. js-lingui-explicit-id
 msgid "censusPlaceFirst"
 msgstr "筆頭著者"
 
-#. js-lingui-explicit-id
 msgid "censusPlaceMiddle"
 msgstr "中間の著者"
 
-#. js-lingui-explicit-id
 msgid "censusPlaceLast"
 msgstr "最終著者"
 
-#. js-lingui-explicit-id
 msgid "censusAboutTitle"
 msgstr "このデータについて"
 
-#. js-lingui-explicit-id
 msgid "censusMethod"
 msgstr "集計対象は研究論文のみで、プレプリントサーバー（Cold Spring Harbor Laboratory Preprints, arXiv）も含みます。論文が 1,000 件未満のグループは除外し、年はロールのある論文が初めて 1,000 件に達した年から始めています。"
 
-#. js-lingui-explicit-id
 msgid "censusSnapshot"
 msgstr "スナップショット"
 
-#. js-lingui-explicit-id
 msgid "censusDatasetVersion"
 msgstr "データセットのバージョン"
 
-#. js-lingui-explicit-id
 msgid "censusCodeCommit"
 msgstr "コードのコミット"
 
-#. js-lingui-explicit-id
 msgid "censusParser"
 msgstr "パーサーのバージョン"
 
-#. js-lingui-explicit-id
 msgid "censusOpenAlex"
 msgstr "OpenAlex ソース"
 
-#. js-lingui-explicit-id
 msgid "censusDownload"
 msgstr "集計をダウンロード（JSON）"
 
-#. js-lingui-explicit-id
 msgid "censusHowTitle"
 msgstr "センサスが貢献声明を読み取る仕組み"
 
-#. js-lingui-explicit-id
 msgid "censusHowRules"
 msgstr "各論文はルールベースのパーサーが読み取ります。出版社が JATS XML で著者ごとのロールをタグ付けしている場合は、そのタグを使います。そうでない場合は、自由記述の声明を節ごとに読み、著者とロールを対応づけます。数えるのは CRediT の用語だけなので、「A.B. conceived the study」からはロールを読み取りません。"
 
-#. js-lingui-explicit-id
 msgid "censusHowModel"
 msgstr "ファインチューニングしたエンコーダー Ettin-68M も、自由記述の声明をすべて読み取ります。これはセンサスのブラウザー用モデルで、ウェブブラウザーで動くように作られています。精度はほぼ同じまま、ルールよりも多くのタグ付きロールを見つけますが、ロールを挙げていない叙述的な声明にもロールを付けてしまいます。このページの件数は、ルールベースのパーサーだけによるものです。"
 
-#. js-lingui-explicit-id
 msgid "censusHowCaveat"
 msgstr "どちらも出版社がタグ付けしたロールを基準に評価していますが、このタグは正解データではありません。タグが、声明に書かれていないロールを挙げていることもあります。ルールベースのパーサーとタグが食い違う MDPI の論文 200 件を言語モデルで判定したところ、タグが誤りだったのが 192 件、パーサーだけが誤りだったのが 6 件でした。そのため、タグに対する F1 スコアはタグとの一致度であり、実際の正確さを低く見積もります。MDPI では特にそうです。"
 
-#. js-lingui-explicit-id
 msgid "censusHowCode"
 msgstr "センサスのコード"
 
-#. js-lingui-explicit-id
 msgid "censusHowModelCard"
 msgstr "モデルカード"
 
-#. js-lingui-explicit-id
 msgid "doiRolesImported"
 msgstr "Imported CRediT roles. Check these assignments before applying them; the record supplies no contribution levels."
 
-#. js-lingui-explicit-id
 msgid "doiNoRoles"
 msgstr "This record has no deposited CRediT roles. The contribution matrix will stay empty."
 
-#. js-lingui-explicit-id
 msgid "doiConfirm"
 msgstr "Confirm DOI import"
 
-#. js-lingui-explicit-id
 msgid "errCitationConverter"
 msgstr "The citation converter could not finish. Your file is still here. Try again online, or convert it in the citesync playground."
 
-#. js-lingui-explicit-id
 msgid "citationPlayground"
 msgstr "Open citesync playground"
 
-#. js-lingui-explicit-id
 msgid "errImportNoCitationAuthors"
 msgstr "This citation file lists no authors."
 
-#. js-lingui-explicit-id
 msgid "citationConverting"
 msgstr "Reading citation file… The converter may need to download first."

@@ -5,170 +5,128 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. js-lingui-explicit-id
 msgid "output.acknowledgements"
 msgstr "致谢"
 
-#. js-lingui-explicit-id
 msgid "output.lead"
 msgstr "主导"
 
-#. js-lingui-explicit-id
 msgid "output.equal"
 msgstr "同等"
 
-#. js-lingui-explicit-id
 msgid "output.supporting"
 msgstr "辅助"
 
-#. js-lingui-explicit-id
 msgid "output.none"
 msgstr "无"
 
-#. js-lingui-explicit-id
 msgid "output.contributed"
 msgstr "有贡献"
 
-#. js-lingui-explicit-id
 msgid "output.emptyState"
 msgstr "尚未分配贡献。"
 
-#. js-lingui-explicit-id
 msgid "output.heatmapTitle"
 msgstr "贡献热力图"
 
-#. js-lingui-explicit-id
 msgid "output.equalContributionNote"
 msgstr "{names}对本项工作贡献相同。"
 
-#. js-lingui-explicit-id
 msgid "output.correspondenceNote"
 msgstr "通讯作者：{names}。"
 
-#. js-lingui-explicit-id
 msgid "output.labelSeparator"
 msgstr "："
 
-#. js-lingui-explicit-id
 msgid "output.nameListSeparator"
 msgstr "、"
 
-#. js-lingui-explicit-id
 msgid "output.segmentSeparator"
 msgstr "；"
 
-#. js-lingui-explicit-id
 msgid "output.levelAnnotation"
 msgstr "{label}（{level}）"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/conceptualization/name"
 msgstr "概念化"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/conceptualization/description"
 msgstr "科研想法；总体研究目标和目的的制定或迭代。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/data-curation/name"
 msgstr "数据管理"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/data-curation/description"
 msgstr "注释（生成元数据）、清洗数据和维护研究数据（包括用于数据解读的必要性软件代码）的管理活动，以便初步使用和后续重复使用。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/formal-analysis/name"
 msgstr "正式分析"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/formal-analysis/description"
 msgstr "应用统计学、数学、计算机或其他正式技术来分析或综合研究数据。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/funding-acquisition/name"
 msgstr "基金获取"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/funding-acquisition/description"
 msgstr "为本項目爭取基金支持。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/investigation/name"
 msgstr "做研究"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/investigation/description"
 msgstr "开展研究和探索过程，特别是开展实验或数据/证据收集。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/methodology/name"
 msgstr "方法学"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/methodology/description"
 msgstr "开发或设计方法；构建模型。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/project-administration/name"
 msgstr "项目管理"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/project-administration/description"
 msgstr "管理和协调研究活动的规划和执行。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/resources/name"
 msgstr "资源供给"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/resources/description"
 msgstr "提供研究材料、试剂、材料、患者、实验室样本、动物、仪器、计算资源或其他分析工具。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/software/name"
 msgstr "软件"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/software/description"
 msgstr "编程、软件开发；设计计算机程序；植入计算机代码和支持算法；测试现有代码组件。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/supervision/name"
 msgstr "指导"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/supervision/description"
 msgstr "指导和领导研究活动的规划和执行，包括对核心团队的外部指导。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/validation/name"
 msgstr "验证"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/validation/description"
 msgstr "对成果/实验成果 (无论是作为独立的研究活动还是其中一部分) 和其他研究成果的整体复制/再现性进行核查。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/visualization/name"
 msgstr "可视化"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/visualization/description"
 msgstr "准备、创建和/或展示已发表的出版作品，特别是可视化/数据展示。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/writing-original-draft/name"
 msgstr "撰写 - 原始草稿"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/writing-original-draft/description"
 msgstr "准备、创作和/或介绍出版作品，特别是撰写初稿（包括实质性翻译）。"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/writing-review-editing/name"
 msgstr "撰写 - 评论和编辑"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/writing-review-editing/description"
 msgstr "原研究小组成员对现有工作的关键审阅、评述或修订（包括出版前及出版后的阶段）。"

@@ -5,170 +5,128 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. js-lingui-explicit-id
 msgid "output.acknowledgements"
 msgstr "謝辞"
 
-#. js-lingui-explicit-id
 msgid "output.lead"
 msgstr "主導"
 
-#. js-lingui-explicit-id
 msgid "output.equal"
 msgstr "同等"
 
-#. js-lingui-explicit-id
 msgid "output.supporting"
 msgstr "補助"
 
-#. js-lingui-explicit-id
 msgid "output.none"
 msgstr "なし"
 
-#. js-lingui-explicit-id
 msgid "output.contributed"
 msgstr "貢献あり"
 
-#. js-lingui-explicit-id
 msgid "output.emptyState"
 msgstr "まだ貢献が割り当てられていません。"
 
-#. js-lingui-explicit-id
 msgid "output.heatmapTitle"
 msgstr "貢献ヒートマップ"
 
-#. js-lingui-explicit-id
 msgid "output.equalContributionNote"
 msgstr "{names}は本研究に同等に貢献しました。"
 
-#. js-lingui-explicit-id
 msgid "output.correspondenceNote"
 msgstr "責任著者：{names}。"
 
-#. js-lingui-explicit-id
 msgid "output.labelSeparator"
 msgstr "："
 
-#. js-lingui-explicit-id
 msgid "output.nameListSeparator"
 msgstr "、"
 
-#. js-lingui-explicit-id
 msgid "output.segmentSeparator"
 msgstr "；"
 
-#. js-lingui-explicit-id
 msgid "output.levelAnnotation"
 msgstr "{label}（{level}）"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/conceptualization/name"
 msgstr "研究の立案"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/conceptualization/description"
 msgstr "アイデア，研究全体の目標および目的の策定や展開．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/data-curation/name"
 msgstr "データ収集・整理"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/data-curation/description"
 msgstr "最初およびその後の再使用のために，データに注釈を加える（メタデータの生成），データを整理する，研究データ（データ自体を解釈するのに必要なソフトウェアコードを含む）を維持するといった管理活動．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/formal-analysis/name"
 msgstr "正式な解析の実施"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/formal-analysis/description"
 msgstr "統計的，数学的，またはその他の正式な手法に基づいた，コンピュータ利用を含む研究データの分析や統合．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/funding-acquisition/name"
 msgstr "研究資金の調達"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/funding-acquisition/description"
 msgstr "本出版物につながる研究プロジェクトを実行するための金銭的サポートの獲得．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/investigation/name"
 msgstr "調査・検証"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/investigation/description"
 msgstr "研究および調査／検証プロセスの実施，特に，実験の実施あるいはデータやエビデンスの収集．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/methodology/name"
 msgstr "研究方法"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/methodology/description"
 msgstr "研究方法の開発または設計，あるいはモデルの作成（モデルの作成：複雑な現象や直接観察することが難しい現象を理解するために使用できる概念的な枠組みなどを開発すること）．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/project-administration/name"
 msgstr "研究プロジェクトの管理"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/project-administration/description"
 msgstr "研究活動の計画と実行に対する管理と調整の責任．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/resources/name"
 msgstr "研究を行う上で必要な諸要素"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/resources/description"
 msgstr "研究素材，試薬，材料，患者， 実験用試料，動物，機器，計算リソース，あるいはその他分析ツールの調達．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/software/name"
 msgstr "研究に使うソフトウェア関連"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/software/description"
 msgstr "プログラミングやソフトウェアの開発，コンピュータプログラムの設計，コード／アルゴリズムの実装，または既存コードに含まれる構成要素のテスト．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/supervision/name"
 msgstr "研究の監督"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/supervision/description"
 msgstr "中心となる研究チーム以外への指導を含む，研究活動の計画と実行に関する監督および主導の責任．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/validation/name"
 msgstr "研究の検証"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/validation/description"
 msgstr "研究プロジェクトの一環であるか否かを問わず，結果／実験およびその他研究成果の全体的な再現性／再現可能性の検証．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/visualization/name"
 msgstr "研究の可視化"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/visualization/description"
 msgstr "出版物の準備，作成，および/または発表，特に研究の視覚化／データの提示．"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/writing-original-draft/name"
 msgstr "執筆 – 草稿作成"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/writing-original-draft/description"
 msgstr "出版物の準備，作成，および/または発表，特に初稿の執筆（翻訳作業も含む）."
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/writing-review-editing/name"
 msgstr "執筆 – レビューおよび校閲"
 
-#. js-lingui-explicit-id
 msgid "https://credit.niso.org/contributor-roles/writing-review-editing/description"
 msgstr "オリジナルの研究グループによる出版物の準備，作成，および／または発表，特に批判的なレビュー，コメントおよび改訂（出版前または出版後の段階を含む）．"

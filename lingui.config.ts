@@ -8,6 +8,6 @@ export default defineConfig({
     { path: "src/locales/{locale}/messages", include: ["src/components", "src/lib"] },
     { path: "src/core/credit-i18n/locales/{locale}/messages", include: ["src/core"] },
   ],
-  format: formatter({ origins: false }),
+  format: formatter({ origins: false, explicitIdAsDefault: true }),
   compileNamespace: "es",
 });

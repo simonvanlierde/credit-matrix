@@ -48,7 +48,7 @@ for (const [code, stem] of Object.entries(LOCALES)) {
   const translators = full.metadata?.translators ?? [];
   const filename = join(outDir, "..", "locales", code, "messages.po");
   const existing = await readFile(filename, "utf8");
-  const format = formatter({ origins: false });
+  const format = formatter({ origins: false, explicitIdAsDefault: true });
   const context = { locale: code, sourceLocale: "en", filename };
   const catalog = await format.parse(existing, context);
   for (const [url, role] of Object.entries(full.translations)) {

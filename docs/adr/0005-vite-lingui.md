@@ -17,13 +17,15 @@ resulting `out/` directory through the existing Cloudflare static-assets deploym
 precaches the app's routes and language chunks, including routes the visitor has not opened yet.
 
 Store interface and output translations in separate Lingui PO catalogs. Compile them before builds
-and tests. The published package retains its translation interfaces, backed by those compiled catalogs.
+and tests. All messages use explicit IDs, configured once for both catalogs. The published package
+retains its translation interfaces, backed by those compiled catalogs.
 Browser-element and standalone MyST bundles include the translation runtime they need.
 
 ## Consequences
 
 Public routes, page metadata and persisted draft formats remain stable. The build includes a small
-prerender step and a catalog compiler. Generated TypeScript catalogs are ignored; contributors edit PO files.
+prerender step and a catalog compiler. Generated TypeScript catalogs and message-key types are ignored;
+contributors edit PO files.
 
 Citation-file imports use citesync in a worker only when requested. The worker's response has a separate
 CSP that permits the pinned Pyodide runtime from jsDelivr. Pages retain their own restricted script

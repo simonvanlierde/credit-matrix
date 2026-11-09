@@ -42,6 +42,7 @@ src/core/LICENSE
 # Temporary Vite server build for static prerendering
 .vite-ssr
 src/**/locales/*/messages.ts
+src/locales/keys.ts
 
 # Pinned citation converter wheels, downloaded by the build.
 /public/citesync/
