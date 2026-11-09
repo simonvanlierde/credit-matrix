@@ -105,8 +105,8 @@ export declare class CreditMatrixElement extends HTMLElement {
 import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog } from "./ui-strings.js";
 export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode };
 // index.d.ts
-import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import { n as CreditRoleName, r as getRoleByName, t as CREDIT_ROLES } from "./credit-roles.js";
+import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";
 /**
  * A contribution is a 0–100 integer score for one CRediT role.
