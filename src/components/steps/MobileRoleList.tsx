@@ -8,6 +8,7 @@ import { heatCellColor, onColor } from "@/core/contributor-color";
 import { useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { useContributionStore } from "@/store/contribution-store";
 import { RoleInfo } from "./RoleInfo";
 
 /**
@@ -76,8 +77,10 @@ export function MobileRoleList({
         </Select>
         {/* On a phone the statement is a screen and more below this list, so the
           picked person's live line rides with the picker and links down to the rest. */}
+        {/* biome-ignore lint/a11y/useValidAnchor: select the destination tab before native fragment navigation. */}
         <a
           href="#inspector"
+          onClick={() => useContributionStore.getState().setInspectorTab("statement")}
           className="mt-2 flex min-h-11 items-center gap-3 rounded-sm border border-outline-variant bg-surface-bright px-3 py-1.5 text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
         >
           <span
