@@ -360,7 +360,7 @@ msgid "doiLookingUp"
 msgstr "Buscando…"
 
 msgid "doiHint"
-msgstr "Fills in contributors, ORCID iDs and the title. Deposited CRediT roles are shown for confirmation."
+msgstr "Rellena la lista de contribuyentes, sus iD de ORCID y el título. Los roles de CRediT depositados se muestran para su confirmación."
 
 msgid "errDoiINVALID_DOI"
 msgstr "Ese DOI no es válido. Debería tener el formato 10.1234/abcde."
@@ -674,9 +674,6 @@ msgstr "Cerrar la introducción"
 msgid "a11yShareLink"
 msgstr "Compartir un enlace que contiene todos los datos de los contribuyentes"
 
-msgid "a11yUploadFile"
-msgstr "Subir un archivo CSV, TSV, JSON o XML"
-
 msgid "a11yUseInitials"
 msgstr "Usar iniciales en lugar de nombres"
 
@@ -711,7 +708,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT es un estándar ANSI/NISO (<cc>CC BY 4.0</cc>). Este proyecto es independiente de NISO y no cuenta con su respaldo."
 
 msgid "aboutPrivacy"
-msgstr "Looking up an ORCID iD sends it to pub.orcid.org from your browser. Looking up a DOI sends it to api.crossref.org, together with this site's contact address, and to api.datacite.org if Crossref has no record. Cloudflare, which hosts this site, counts page requests on its own servers, in aggregate, with no script or cookie in your browser. Importing CITATION.cff or .zenodo.json downloads the citesync converter and a Python runtime from cdn.jsdelivr.net; the file is processed in your browser and is never uploaded. Nothing else leaves your browser: drafts stay in its local storage. Asks to co-authors and their answers are kept only in this browser, and go into JSON exports unless you untick that option. Sending a reply hands its link, with that person's name and iD, to the app you choose. Signing in with ORCID on an answer takes the co-author to orcid.org and back; the sign-in then travels inside the reply link and is kept with the answer, also in JSON exports. It carries the name on the co-author's ORCID record. Opening a signed answer, or importing a JSON file with one, fetches ORCID's public keys from orcid.org to check it."
+msgstr "Al buscar un ORCID iD, tu navegador lo envía a pub.orcid.org. Al buscar un DOI, lo envía a api.crossref.org junto con la dirección de contacto de este sitio, y a api.datacite.org si Crossref no lo tiene. Cloudflare, que aloja este sitio, cuenta las solicitudes de páginas en sus propios servidores, de forma agregada, sin ningún script ni cookie en tu navegador. Al importar CITATION.cff o .zenodo.json se cargan desde este sitio el conversor citesync y un entorno de ejecución de Python; el archivo se procesa en tu navegador y nunca se sube. Nada más sale de tu navegador: los borradores se quedan en su almacenamiento local. Las consultas a coautores y sus respuestas se guardan solo en este navegador y se incluyen en las exportaciones JSON salvo que desmarques esa opción. Al enviar una respuesta, su enlace, con el nombre y el iD de esa persona, pasa a la aplicación que elijas. Iniciar sesión con ORCID en una respuesta lleva a la persona a orcid.org y de vuelta; después, el inicio de sesión viaja dentro del enlace de respuesta y se guarda con la respuesta, también en las exportaciones JSON. Incluye el nombre que figura en el registro ORCID de esa persona. Al abrir una respuesta firmada, o al importar un JSON que la contenga, se descargan las claves públicas de ORCID desde orcid.org para comprobarla."
 
 msgid "accessibilityStatement"
 msgstr "Declaración de accesibilidad"
@@ -735,7 +732,7 @@ msgid "importAuthorList"
 msgstr "Lista de nombres de autores"
 
 msgid "importPlaceholder"
-msgstr "{names}\n\nor a .csv / .tsv / .json / .xml / .cff export, or a link sent back to you"
+msgstr "{names}\n\no una exportación .csv / .tsv / .json / .xml / .cff, o un enlace que le hayan devuelto"
 
 msgid "errImportNoNames"
 msgstr "No se han encontrado nombres de autores. Introducir un nombre por línea."
@@ -951,7 +948,7 @@ msgid "welcomeAskBody"
 msgstr "Copie un enlace desde el menú de la fila de una persona y envíeselo. Cuando le devuelvan el enlace, ábralo: la respuesta se guarda junto a su fila y las diferencias se resuelven en la pestaña Revisión."
 
 msgid "importDescription"
-msgstr "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R or Crossref XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too. Paste an author contribution statement to fill in the roles of the contributors already here. CITATION.cff, codemeta.json and .zenodo.json import author names and ORCID iDs, leaving roles empty."
+msgstr "Empiece por un DOI, pegue nombres o un enlace que le hayan devuelto, o suba un archivo CSV, JSON, JATS4R XML o Crossref XML. JSON y XML también restauran las contribuciones, con sus niveles si el archivo los incluye. También sirve una hoja de cálculo de tenzing (CSV o TSV). Pegue una declaración de contribución de autores para completar las funciones de los colaboradores que ya están aquí. CITATION.cff, codemeta.json y .zenodo.json importan los nombres de autores y los iD de ORCID; las funciones quedan vacías."
 
 msgid "contributorActions"
 msgstr "Acciones para {name}"
@@ -1548,22 +1545,22 @@ msgid "censusHowModelCard"
 msgstr "La ficha del modelo"
 
 msgid "doiRolesImported"
-msgstr "Imported CRediT roles. Check these assignments before applying them; the record supplies no contribution levels."
+msgstr "Roles de CRediT importados. Revise estas asignaciones antes de aplicarlas; el registro no incluye niveles de contribución."
 
 msgid "doiNoRoles"
-msgstr "This record has no deposited CRediT roles. The contribution matrix will stay empty."
+msgstr "Este registro no tiene roles de CRediT depositados. La matriz de contribuciones quedará vacía."
 
 msgid "doiConfirm"
-msgstr "Confirm DOI import"
+msgstr "Confirmar la importación del DOI"
 
 msgid "errCitationConverter"
-msgstr "The citation converter could not finish. Your file is still here. Try again online, or convert it in the citesync playground."
+msgstr "El conversor de citas no pudo terminar. Su archivo sigue aquí. Inténtelo de nuevo con conexión, o conviértalo en el playground de citesync."
 
 msgid "citationPlayground"
-msgstr "Open citesync playground"
+msgstr "Abrir el playground de citesync"
 
 msgid "errImportNoCitationAuthors"
-msgstr "This citation file lists no authors."
+msgstr "Este archivo de citas no incluye autores."
 
 msgid "citationConverting"
-msgstr "Reading citation file… The converter may need to download first."
+msgstr "Leyendo el archivo de citas… Puede que el conversor tenga que descargarse primero."

@@ -70,6 +70,33 @@ test.describe("interface messages", () => {
     }
   });
 
+  test("translates every string except the listed untranslatables", () => {
+    // Identical to English is legitimate only for these: cognates, brand and
+    // format names, or an identifier. Anything else is untranslated prose
+    // that a missing-key check cannot see. Value: the locales where it applies.
+    const SAME_AS_ENGLISH: Record<string, string[]> = {
+      doiPlaceholder: ["*"], // an example DOI
+      a11yOrcidInput: ["*"], // "ORCID iD" is the registry's name for it
+      heatmapLabel: ["de", "fr", "it", "nl"], // loanword in use
+      download: ["de"],
+      coauthorName: ["de"],
+      aboutVersion: ["de", "fr"],
+      colorOrange: ["de", "fr"],
+      colorLabel: ["es"],
+      tabTeam: ["de", "it", "nl"],
+      stepContributions: ["fr"],
+      privacy: ["it", "nl"],
+      markerNo: ["es", "it"],
+    };
+    for (const locale of TRANSLATED) {
+      const same = Object.entries(read(locale))
+        .filter(([key, value]) => value === EN[key])
+        .map(([key]) => key)
+        .filter((key) => !(SAME_AS_ENGLISH[key] ?? []).some((l) => l === "*" || l === locale));
+      expect(same, `${locale}/messages.po still has English text for these keys`).toEqual([]);
+    }
+  });
+
   test("never ships an empty string, which would render as a blank control", () => {
     for (const locale of LOCALES) {
       const blank = Object.entries(read(locale))
@@ -157,7 +184,7 @@ test.describe("rendering a non-English locale", () => {
     // is best-effort; extend it when a new key family appears.
     await seed(page, "nl", "nl");
     await page.goto("/");
-    // Ignore script contents when checking visible interface text.
+    // textContent also covers sr-only text; any inline script is part of it, and carries no such keys.
     const visible = await page.locator("body").textContent();
     // A raw key leaking into the page is the failure this guards against.
     expect(visible).not.toMatch(/\b(a11y|ann|err|dnd|step|bulk)[A-Z]\w+/);

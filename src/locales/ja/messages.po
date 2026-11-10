@@ -360,7 +360,7 @@ msgid "doiLookingUp"
 msgstr "取得中…"
 
 msgid "doiHint"
-msgstr "Fills in contributors, ORCID iDs and the title. Deposited CRediT roles are shown for confirmation."
+msgstr "貢献者リスト、各自の ORCID iD、タイトルを自動で入力します。登録済みの CRediT の役割は、確認用に表示されます。"
 
 msgid "errDoiINVALID_DOI"
 msgstr "有効な DOI ではありません。10.1234/abcde のような形式で入力してください。"
@@ -674,9 +674,6 @@ msgstr "はじめにの案内を閉じる"
 msgid "a11yShareLink"
 msgstr "すべての貢献者データを含むリンクを共有します"
 
-msgid "a11yUploadFile"
-msgstr "CSV、TSV、JSON、XML ファイルをアップロード"
-
 msgid "a11yUseInitials"
 msgstr "氏名の代わりにイニシャルを使う"
 
@@ -711,7 +708,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT は ANSI/NISO 標準（<cc>CC BY 4.0</cc>）です。本プロジェクトは NISO から独立しており、NISO の承認を受けたものではありません。"
 
 msgid "aboutPrivacy"
-msgstr "Looking up an ORCID iD sends it to pub.orcid.org from your browser. Looking up a DOI sends it to api.crossref.org, together with this site's contact address, and to api.datacite.org if Crossref has no record. Cloudflare, which hosts this site, counts page requests on its own servers, in aggregate, with no script or cookie in your browser. Importing CITATION.cff or .zenodo.json downloads the citesync converter and a Python runtime from cdn.jsdelivr.net; the file is processed in your browser and is never uploaded. Nothing else leaves your browser: drafts stay in its local storage. Asks to co-authors and their answers are kept only in this browser, and go into JSON exports unless you untick that option. Sending a reply hands its link, with that person's name and iD, to the app you choose. Signing in with ORCID on an answer takes the co-author to orcid.org and back; the sign-in then travels inside the reply link and is kept with the answer, also in JSON exports. It carries the name on the co-author's ORCID record. Opening a signed answer, or importing a JSON file with one, fetches ORCID's public keys from orcid.org to check it."
+msgstr "ORCID iD を検索すると、ブラウザーから pub.orcid.org に送信されます。DOI を検索すると、このサイトの連絡先アドレスとともに api.crossref.org に、Crossref に記録がない場合は api.datacite.org にも送信されます。このサイトをホストする Cloudflare は、ページへのリクエスト数を自社のサーバー上で集計値としてのみ数えます。ブラウザーではスクリプトも Cookie も使いません。CITATION.cff や .zenodo.json をインポートすると、このサイトから citesync コンバーターと Python ランタイムが読み込まれます。ファイルはブラウザー内で処理され、アップロードされることはありません。それ以外はブラウザーの外に出ません。下書きはローカルストレージにのみ保存されます。共著者への依頼と回答はこのブラウザーにのみ保存され、チェックを外さない限り JSON エクスポートに含まれます。回答を送信すると、その人の名前と iD を含むリンクが、選択したアプリに渡されます。回答でORCIDにサインインすると、共著者はorcid.orgに移動してから戻ります。サインイン情報はその後、返信リンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。これには共著者の ORCID レコードに登録された名前が含まれます。サインイン付きの回答を開くか、それを含む JSON をインポートすると、確認のためにorcid.orgからORCIDの公開鍵を取得します。"
 
 msgid "accessibilityStatement"
 msgstr "アクセシビリティ方針"
@@ -735,7 +732,7 @@ msgid "importAuthorList"
 msgstr "著者名リスト"
 
 msgid "importPlaceholder"
-msgstr "{names}\n\nor a .csv / .tsv / .json / .xml / .cff export, or a link sent back to you"
+msgstr "{names}\n\nまたは .csv / .tsv / .json / .xml / .cff のエクスポート、あるいは送り返されたリンク"
 
 msgid "errImportNoNames"
 msgstr "著者名が見つかりませんでした。1 行に 1 名ずつ入力してください。"
@@ -951,7 +948,7 @@ msgid "welcomeAskBody"
 msgstr "貢献者の行メニューからリンクをコピーして本人に送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。"
 
 msgid "importDescription"
-msgstr "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R or Crossref XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too. Paste an author contribution statement to fill in the roles of the contributors already here. CITATION.cff, codemeta.json and .zenodo.json import author names and ORCID iDs, leaving roles empty."
+msgstr "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML・Crossref XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。著者貢献声明を貼り付けると、ここにいる貢献者の役割を埋められます。CITATION.cff、codemeta.json、.zenodo.json からは著者名と ORCID iD がインポートされ、役割は空のままになります。"
 
 msgid "contributorActions"
 msgstr "{name} に対する操作"
@@ -1548,22 +1545,22 @@ msgid "censusHowModelCard"
 msgstr "モデルカード"
 
 msgid "doiRolesImported"
-msgstr "Imported CRediT roles. Check these assignments before applying them; the record supplies no contribution levels."
+msgstr "CRediT の役割をインポートしました。適用する前にこれらの割り当てを確認してください。このレコードには貢献レベルの情報がありません。"
 
 msgid "doiNoRoles"
-msgstr "This record has no deposited CRediT roles. The contribution matrix will stay empty."
+msgstr "このレコードには登録済みの CRediT の役割がありません。貢献マトリクスは空のままになります。"
 
 msgid "doiConfirm"
-msgstr "Confirm DOI import"
+msgstr "DOI のインポートを確認"
 
 msgid "errCitationConverter"
-msgstr "The citation converter could not finish. Your file is still here. Try again online, or convert it in the citesync playground."
+msgstr "引用コンバーターを完了できませんでした。ファイルはそのまま残っています。オンラインでもう一度試すか、citesync プレイグラウンドで変換してください。"
 
 msgid "citationPlayground"
-msgstr "Open citesync playground"
+msgstr "citesync プレイグラウンドを開く"
 
 msgid "errImportNoCitationAuthors"
-msgstr "This citation file lists no authors."
+msgstr "この引用ファイルには著者が記載されていません。"
 
 msgid "citationConverting"
-msgstr "Reading citation file… The converter may need to download first."
+msgstr "引用ファイルを読み込み中… 先にコンバーターのダウンロードが必要な場合があります。"
