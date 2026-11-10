@@ -943,6 +943,21 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: /Conceptualization for Ada Lovelace/ })).toBeHidden();
   });
 
+  test("gives the phone contributor picker a touch-size target and a body-size name", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    const picker = page.getByRole("combobox", { name: "Contributor to assign" });
+    expect((await picker.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    expect(await picker.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+    // The initials chip ties the picker to the grid's column headers.
+    await expect(picker.getByText("AL", { exact: true })).toBeVisible();
+    await picker.click();
+    const option = page.getByRole("option", { name: /Rosalind E\. Franklin/ });
+    // Polled: the list scales in, so its first frames measure short.
+    await expect.poll(async () => (await option.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  });
+
   test("keeps the phone contributor picker in view while the role list scrolls", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
