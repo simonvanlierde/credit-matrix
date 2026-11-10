@@ -1739,6 +1739,12 @@ msgstr "Un solo color"
 msgid "figurePerContributor"
 msgstr "Por contribuyente"
 
+msgid "downloadPdf"
+msgstr "Descargar PDF"
+
+msgid "errFigureGlyphs"
+msgstr "Las fuentes de la figura no pueden mostrar estos caracteres: {characters}."
+
 msgid "heatmapLegendPosition"
 msgstr "Leyenda"
 

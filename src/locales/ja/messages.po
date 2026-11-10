@@ -1739,6 +1739,12 @@ msgstr "単色"
 msgid "figurePerContributor"
 msgstr "貢献者ごと"
 
+msgid "downloadPdf"
+msgstr "PDFをダウンロード"
+
+msgid "errFigureGlyphs"
+msgstr "図のフォントでは次の文字を表示できません: {characters}。"
+
 msgid "heatmapLegendPosition"
 msgstr "凡例"
 

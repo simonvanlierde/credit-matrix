@@ -1739,6 +1739,12 @@ msgstr "Eén kleur"
 msgid "figurePerContributor"
 msgstr "Per bijdrager"
 
+msgid "downloadPdf"
+msgstr "PDF downloaden"
+
+msgid "errFigureGlyphs"
+msgstr "De lettertypen van de figuur kunnen deze tekens niet weergeven: {characters}."
+
 msgid "heatmapLegendPosition"
 msgstr "Legenda"
 

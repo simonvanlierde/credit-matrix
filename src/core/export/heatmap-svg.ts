@@ -95,6 +95,10 @@ export interface HeatmapSvgOptions {
    * reader reads `<title>` and `<desc>` in that language.
    */
   locale?: string;
+  /** Measure a label in SVG pixels at the given font size, before scale. */
+  measureText?: (label: string, fontSize: number) => number;
+  /** Measure a label's line height in SVG pixels at the given font size, before scale. */
+  measureTextHeight?: (label: string, fontSize: number) => number;
 }
 
 /**
@@ -196,16 +200,22 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const CJK_CHAR = /[\u1100-\u11FF\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF]/;
   const labelUnits = (label: string): number =>
     [...label].reduce((units, char) => units + (CJK_CHAR.test(char) ? 1.6 : 1), 0);
-  const textW = (label: string, labelSize: number): number => labelUnits(label) * labelSize * CHAR_EM * scale;
+  const textW = (label: string, labelSize: number): number =>
+    (opts?.measureText?.(label, labelSize) ?? labelUnits(label) * labelSize * CHAR_EM) * scale;
+  const textH = (label: string, labelSize: number): number =>
+    opts?.measureTextHeight?.(label, labelSize) ?? labelSize * 1.2;
   // Conservative glyph bounds prevent wide capitals and rotated ascenders from clipping.
   const safeTextW = (label: string, labelSize: number): number =>
-    [...label].reduce(
-      (width, char) =>
-        width + (CJK_CHAR.test(char) || /[MWmw@%&]/u.test(char) ? 1 : /\p{Lu}/u.test(char) ? 0.8 : CHAR_EM),
-      0,
-    ) *
-    labelSize *
-    scale;
+    Math.max(
+      textW(label, labelSize),
+      [...label].reduce(
+        (width, char) =>
+          width + (CJK_CHAR.test(char) || /[MWmw@%&]/u.test(char) ? 1 : /\p{Lu}/u.test(char) ? 0.8 : CHAR_EM),
+        0,
+      ) *
+        labelSize *
+        scale,
+    );
 
   // Nothing to show: render a small placeholder rather than a 0-row grid.
   if (roles.length === 0 || authors.length === 0) {
@@ -246,15 +256,17 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   };
 
   const CELL_S = size * scale;
-  // A 45° header needs sqrt(2) times its line height between columns.
-  const COL_GAP_S = Math.max(GAP, fontTop * 1.2 * Math.SQRT2 - size) * scale;
-  const ROW_GAP_S = Math.max(GAP, fontLeft * 1.2 - size) * scale;
   const LABEL_GAP_S = LABEL_GAP * scale;
 
   // Top labels (rotated -45°): author labels when normal, role names when transposed.
   const topLabels = transpose ? roles.map((r) => roleLabel(r.name)) : authors.map((_, ai) => authorLabel(ai));
   // Left labels (horizontal, right-aligned): roles when normal, authors when transposed.
   const leftLabels = transpose ? authors.map((_, ai) => authorLabel(ai)) : roles.map((r) => roleLabel(r.name));
+  // A 45° header needs sqrt(2) times its actual line height between columns.
+  const topHeight = Math.max(...topLabels.map((label) => textH(label, fontTop)));
+  const leftHeight = Math.max(...leftLabels.map((label) => textH(label, fontLeft)));
+  const COL_GAP_S = Math.max(GAP, topHeight * Math.SQRT2 - size) * scale;
+  const ROW_GAP_S = Math.max(GAP, leftHeight - size) * scale;
 
   const topLabelWs = topLabels.map((l) => textW(l, fontTop));
   const maxTopW = Math.max(0, ...topLabelWs);
@@ -265,7 +277,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   // full length to the left.
   const safeTopReach = Math.max(
     0,
-    ...topLabels.map((label) => (safeTextW(label, fontTop) + fontTop * 1.2 * scale) * DIAG),
+    ...topLabels.map((label) => (safeTextW(label, fontTop) + textH(label, fontTop) * scale) * DIAG),
   );
   const topBand = Math.max(maxTopW * DIAG + LABEL_GAP_S, safeTopReach + LABEL_GAP_S - PAD_S);
   const safeLeftW = Math.max(0, ...leftLabels.map((label) => safeTextW(label, fontLeft)));
@@ -275,7 +287,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
     0,
     ...topLabels.map((label, i) => {
       const remaining = (topLabels.length - 1 - i) * (CELL_S + COL_GAP_S);
-      const safeW = safeTextW(label, fontTop) + fontTop * 1.2 * scale;
+      const safeW = safeTextW(label, fontTop) + textH(label, fontTop) * scale;
       return Math.max((topLabelWs[i] ?? 0) * DIAG, safeW * DIAG - PAD_S) - CELL_S / 2 - remaining;
     }),
   );
@@ -323,8 +335,9 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   }
   // Align the keys into columns, so a wrapped legend reads as one block rather
   // than as independently centred rows.
-  const legendRowH = Math.max(LEGEND_ROW_H, fontLegend + 6) * scale;
-  const swatchHeight = Math.max(SWATCH_S, fontLegend * 1.2 * scale);
+  const legendTextH = Math.max(...levelKey.map(({ label }) => textH(label, fontLegend)));
+  const legendRowH = Math.max(LEGEND_ROW_H, fontLegend + 6, opts?.measureTextHeight ? legendTextH + 6 : 0) * scale;
+  const swatchHeight = Math.max(SWATCH_S, legendTextH * scale);
   const bottomLegendCols = Math.max(...legendRows.map((row) => row.length));
   const bottomLegendW =
     Array.from({ length: bottomLegendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]?.w ?? 0))).reduce(

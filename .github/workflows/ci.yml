@@ -122,6 +122,8 @@ jobs:
           version: "0.13.x"
           save-cache: ${{ github.event_name != 'pull_request' }}
 
+      - name: Install PDF inspection tools
+        run: sudo apt-get update -q && sudo apt-get install -yq poppler-utils
       # `verify` is the pre-push gate: lint, types, unit tests and document builds.
       # The coverage output feeds Codecov below.
       - name: Lint, typecheck, test
@@ -378,7 +380,6 @@ jobs:
         run: |
           echo "e2e: $RESULT"
           [[ $RESULT == success || $RESULT == skipped ]]
-
 
   build:
     name: Build

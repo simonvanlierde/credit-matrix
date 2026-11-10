@@ -1,6 +1,7 @@
 """Document languages reach statements and figures through the installed engines."""
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from xml.etree import ElementTree
@@ -58,6 +59,8 @@ def test_document_language(tmp_path, lang, locale, heading, engine):
         # Copy only the published bundle: no dependency can be resolved from this project.
         plugin = tmp_path / "plugin.mjs"
         plugin.write_bytes((ROOT / "src/core/dist/myst-plugin.mjs").read_bytes())
+        # Away from its package files, the bundle fetches fonts from the release, here a local copy.
+        fonts = {"CREDIT_MATRIX_FIGURE_FONTS": (ROOT / "src/core/dist/figure-fonts").as_uri() + "/"}
         (tmp_path / "myst.yml").write_text(
             "version: 1\nproject:\n  title: Example\n  lang: en\n  plugins:\n    - " + str(plugin) + "\n",
             encoding="utf-8",
@@ -79,6 +82,7 @@ def test_document_language(tmp_path, lang, locale, heading, engine):
                 "statement.md",
             ],
             cwd=tmp_path,
+            env={**os.environ, **fonts},
             capture_output=True,
             text=True,
             timeout=60,

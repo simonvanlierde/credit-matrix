@@ -1739,6 +1739,12 @@ msgstr "单一颜色"
 msgid "figurePerContributor"
 msgstr "按贡献者"
 
+msgid "downloadPdf"
+msgstr "下载 PDF"
+
+msgid "errFigureGlyphs"
+msgstr "图表字体无法显示以下字符：{characters}。"
+
 msgid "heatmapLegendPosition"
 msgstr "图例"
 

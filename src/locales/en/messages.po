@@ -1739,6 +1739,12 @@ msgstr "One color"
 msgid "figurePerContributor"
 msgstr "Per contributor"
 
+msgid "downloadPdf"
+msgstr "Download PDF"
+
+msgid "errFigureGlyphs"
+msgstr "The figure fonts cannot display these characters: {characters}."
+
 msgid "heatmapLegendPosition"
 msgstr "Legend"
 

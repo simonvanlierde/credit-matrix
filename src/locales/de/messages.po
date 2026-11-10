@@ -1739,6 +1739,12 @@ msgstr "Eine Farbe"
 msgid "figurePerContributor"
 msgstr "Je Mitwirkende"
 
+msgid "downloadPdf"
+msgstr "PDF herunterladen"
+
+msgid "errFigureGlyphs"
+msgstr "Die Abbildungsschriften können diese Zeichen nicht darstellen: {characters}."
+
 msgid "heatmapLegendPosition"
 msgstr "Legende"
 

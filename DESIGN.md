@@ -144,10 +144,11 @@ replace the preview until the person closes them; desktop shows both side by sid
 Keep export recipes behind a disclosure in Figure settings. Show a selectable snippet and copy
 action for the chosen document tool, with any differences from the preview beside the snippet.
 
-PNG width and resolution determine its pixel dimensions and print-density metadata. Show the
-resulting dimensions, flag labels that would print very small, and keep SVG available when a PNG
-would exceed the raster size limit. SVG retains its scalable geometry. Use portable sans-serif or
-serif font stacks, with the installed font determining the exact glyphs.
+The requested width sets the PDF page size and, with resolution, PNG pixel dimensions and
+print-density metadata. Show the resulting dimensions, flag labels that would print very small,
+and keep SVG available when a PNG would exceed the raster size limit. SVG and PDF retain vector
+geometry and embed the selected sans or serif fonts. See the [figure font guide](integrations/figures/README.md)
+for receiving-editor limits.
 
 Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the ring
 around the cell a Review line points at, and the ring that fades off a cell when you settle a

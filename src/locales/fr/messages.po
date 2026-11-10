@@ -1739,6 +1739,12 @@ msgstr "Une seule couleur"
 msgid "figurePerContributor"
 msgstr "Par contributeur"
 
+msgid "downloadPdf"
+msgstr "Télécharger le PDF"
+
+msgid "errFigureGlyphs"
+msgstr "Les polices de la figure ne peuvent pas afficher ces caractères : {characters}."
+
 msgid "heatmapLegendPosition"
 msgstr "Légende"
 

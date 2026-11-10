@@ -148,8 +148,8 @@ def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
     assert 'width="30" height="30" rx="15"' in svg
     assert ">Supporting<" not in svg
     assert 'font-size="21"' in svg
-    assert ">Marie Curie</text>" in svg
-    assert "Georgia, 'Times New Roman', serif" in svg
+    assert ">Marie Curie</tspan>" in svg
+    assert "Noto Serif" in svg
 
 
 @pytest.mark.parametrize("position", ["auto", "right", "bottom"])
