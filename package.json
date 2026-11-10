@@ -59,7 +59,7 @@
     "@commitlint/config-conventional": "^21.2.3",
     "@lingui/cli": "6.12.0",
     "@lingui/format-po": "6.12.0",
-    "@playwright/test": "^1.63.0",
+    "@playwright/test": "1.64.1",
     "@stryker-mutator/core": "10.1.1",
     "@stryker-mutator/vitest-runner": "10.1.1",
     "@tailwindcss/postcss": "^4.3.3",
