@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { asReturningVisitor } from "./helpers";
+import { asReturningVisitor, seedStorage } from "./helpers";
 
 const ORCID = "0000-0002-1825-0097";
 const PERSON_URL = `https://pub.orcid.org/v3.0/${ORCID}/person`;
@@ -97,4 +97,60 @@ test.describe("the contributor list", () => {
     expect((await statusText(page)).join(" ")).not.toContain("at most 200 contributors");
     await expect(page.getByRole("button", { name: "Remove Bob Jones" })).toHaveCount(1);
   });
+});
+
+test.describe("the first step", () => {
+  test("Start fresh lands in the add field, right under the empty-state line", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Start fresh" }).click();
+    await expect(addField(page)).toBeFocused();
+    const hint = await page.getByText("No contributors yet.").boundingBox();
+    const field = await addField(page).boundingBox();
+    if (!hint || !field) throw new Error("expected the hint and the field on screen");
+    // "below" in the hint means the next thing down, not the bottom of the rail.
+    expect(field.y - (hint.y + hint.height)).toBeLessThan(120);
+  });
+
+  test("the add field stays at the foot of a filled list", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await asReturningVisitor(page);
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    const last = await page
+      .getByRole("button", { name: /^Remove / })
+      .last()
+      .boundingBox();
+    const field = await addField(page).boundingBox();
+    expect((field?.y ?? 0) - (last?.y ?? 0)).toBeGreaterThan(300);
+  });
+
+  test("an empty Add button mutes its text and outline instead of fading", async ({ page }) => {
+    await asReturningVisitor(page);
+    await page.goto("/");
+    const button = page.getByRole("button", { name: "Add", exact: true });
+    await expect(button).toBeDisabled();
+    expect(await button.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+  });
+
+  for (const locale of ["en", "fr", "de", "es", "it", "pt-PT", "nl", "zh-Hans", "ja"]) {
+    test(`the add field's placeholder fits the rail in ${locale}`, async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await seedStorage(page, { authors: [], welcomeSeen: true, uiLocale: locale });
+      await page.goto("/");
+      await expect(page.locator("html")).toHaveAttribute("lang", locale);
+      const input = page.locator("#add-contributor");
+      await expect(input).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const overflow = await input.evaluate((el: HTMLInputElement) => {
+        const style = getComputedStyle(el);
+        const context = document.createElement("canvas").getContext("2d");
+        if (!context) throw new Error("no canvas");
+        context.font = style.font;
+        const room = el.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight);
+        return context.measureText(el.placeholder).width - room;
+      });
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  }
 });

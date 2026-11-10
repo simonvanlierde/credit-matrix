@@ -35,6 +35,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- With no contributors yet, the add field sits right under the empty-state line instead of at the
+  foot of the rail, and "Start fresh" puts the cursor in it. Its placeholder says it takes names, a
+  DOI or an ORCID iD, and a disabled Add button is muted instead of faded.
+
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 - Heatmaps look different by default: square cells with a thin gray rule on white, where cells
   were rounded on off-white. `shape: "rounded"` brings back the rounded cells.

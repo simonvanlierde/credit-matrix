@@ -308,7 +308,13 @@ export function AuthorList() {
           {/* A real list, so assistive tech announces the item count and each
               row's position; the ordering a sighted user reads straight off
               the layout. Tailwind's preflight already strips the markers. */}
-          <ul ref={listRef} className="space-y-1 desk:min-h-0 desk:flex-1 desk:overflow-y-auto">
+          {/* Only a filled list takes the rail's spare height: empty, it would
+              push the add field to the foot of the rail, far from the
+              empty-state line that points at it. */}
+          <ul
+            ref={listRef}
+            className={`space-y-1 desk:min-h-0 desk:overflow-y-auto ${authors.length > 0 ? "desk:flex-1" : ""}`}
+          >
             {authors.map((author, index) => (
               <AuthorRow key={author.id} index={index} onRemove={handleRemove} enter={settled} />
             ))}
@@ -334,9 +340,11 @@ export function AuthorList() {
       )}
 
       {!locked && (
-        <div className="mt-3 flex gap-2 items-center">
+        // Wraps in the narrow desktop rail, so the placeholder gets the whole width.
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <input
             ref={addInputRef}
+            id="add-contributor"
             type="text"
             maxLength={MAX_AUTHOR_NAME_LENGTH}
             value={newName}
@@ -351,13 +359,13 @@ export function AuthorList() {
             aria-describedby={addError !== null ? addErrorId : undefined}
             placeholder={t("addPlaceholder")}
             aria-label={t("addContributor")}
-            className="flex-1 min-w-0 text-ellipsis bg-surface-container-low border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none px-3 py-2 text-sm rounded-t text-on-surface placeholder:text-on-surface-variant transition-colors"
+            className="min-w-56 flex-1 text-ellipsis bg-surface-container-low border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none px-3 py-2 text-sm rounded-t text-on-surface placeholder:text-on-surface-variant transition-colors"
           />
           <button
             type="button"
             onClick={() => void handleAdd()}
             disabled={!newName.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-primary hover:text-on-primary hover:bg-primary border border-primary/30 hover:border-primary rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="ml-auto flex items-center gap-1.5 rounded-lg border border-primary/30 px-4 py-2 text-sm font-medium text-primary transition-colors enabled:hover:border-primary enabled:hover:bg-primary enabled:hover:text-on-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60"
           >
             <PlusCircle className="h-4 w-4" />
             {t("addButton")}
