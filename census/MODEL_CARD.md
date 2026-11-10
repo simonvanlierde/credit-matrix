@@ -210,7 +210,8 @@ The label set is 160 articles whose roles were read from free text, drawn per st
 where they differed. A person checked a random sample of 20 rows and agreed with every label. Rows
 are weighted by their stratum's article count. With 30 to 100 articles per style, the intervals are
 wide. The table is scored on the adjudicated
-labels (`oa-2026-10-set-opus-adj-defb.csv`).
+labels (`oa-2026-10-set-opus-adj-defb.csv`). Later label sets use a gated three-labeller vote,
+described in [labelling/README.md](labelling/README.md).
 
 | | statement_text F1 (100) | contrib_text F1 (30) | articles without roles, exact (30) |
 | --- | --- | --- | --- |
