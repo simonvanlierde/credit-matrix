@@ -178,7 +178,7 @@ export function HeatmapExports({
         align="end"
         collisionPadding={8}
         aria-label={t("heatmapLabel")}
-        className={`grid max-h-[var(--radix-popover-content-available-height)] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-y-auto p-3 ${settingsOpen ? "w-[48rem]" : "w-[32rem]"}`}
+        className={`grid max-h-[var(--radix-popover-content-available-height)] max-w-[calc(100vw-2rem)] gap-3 overflow-y-auto p-3 ${settingsOpen ? "w-[48rem]" : "w-[32rem]"}`}
       >
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <p lang={outputLanguage} className="text-sm font-semibold text-on-surface">
@@ -220,7 +220,7 @@ export function HeatmapExports({
             </p>
           )}
         </div>
-        <div className="min-h-0 overflow-auto">
+        <div>
           <div className={`grid min-w-0 gap-3 ${settingsOpen ? "sm:grid-cols-[minmax(0,1fr)_15rem]" : ""}`}>
             {preview && (
               <section
