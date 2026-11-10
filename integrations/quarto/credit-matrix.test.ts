@@ -1,10 +1,12 @@
 // biome-ignore-all lint/correctness/noNodejsModules: runs Quarto from Node when it is installed.
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import { CREDIT_ROLES, createAuthor, generateStatement, toQuarto } from "@/core";
 
 // What the filter renders for example.qmd, without the Markdown bold around each name.
 const EXPECTED =
@@ -39,6 +41,24 @@ it("keeps the Lua role list in step with the core role names", () => {
 const hasQuarto = spawnSync("quarto", ["--version"]).status === 0;
 
 describe.skipIf(!hasQuarto && !process.env.CI)("Quarto filter, rendered", () => {
+  it("renders exported YAML with the app's contribution levels", () => {
+    expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
+    const authors = [author("Lin Wei", { Software: 33, "Formal analysis": 66 })];
+    const dir = mkdtempSync(join(tmpdir(), "credit-quarto-export-"));
+    const filter = fileURLToPath(new URL("_extensions/credit-matrix/credit-matrix.lua", import.meta.url));
+    writeFileSync(
+      join(dir, "paper.qmd"),
+      `---\n${toQuarto(authors)}filters: [${JSON.stringify(filter)}]\n---\n\n# Methods\n`,
+    );
+    const result = spawnSync("quarto", ["render", "paper.qmd", "--to", "gfm", "-o", "-"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    expect(result.status, result.stderr).toBe(0);
+    const expected = generateStatement(authors, { format: "by-author", showLevels: true }).replace(/^CRediT: /, "");
+    expect(result.stdout.replaceAll("**", "").replace(/\s+/g, " ")).toContain(`${expected}.`);
+  });
+
   it("renders the statement into example.qmd", () => {
     expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
     const dir = fileURLToPath(new URL(".", import.meta.url));

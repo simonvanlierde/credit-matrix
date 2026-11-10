@@ -21,6 +21,17 @@ function file(name: string, text: string): string {
 
 const csv = file("team.csv", "Name,Conceptualization,Software\nJane Smith,100,66\nBob White,,100\n");
 
+it("exports manuscript YAML with levels only where the schema supports them", async () => {
+  const quarto = await run(["convert", csv, "--to", "quarto"]);
+  expect(quarto).toContain("author:\n");
+  expect(quarto).toContain('"Software": equal');
+  expect(await run(["convert", csv, "--to", "quarto", "--yes-no"])).not.toContain(": equal");
+  const myst = await run(["convert", csv, "--to", "myst"]);
+  expect(myst).toContain("authors:\n");
+  expect(myst).toContain("MyST omits contribution levels");
+  expect(myst).not.toContain(": equal");
+});
+
 describe("credit-matrix statement", () => {
   it("prints the by-role statement by default", async () => {
     expect(await run(["statement", csv])).toBe(
@@ -187,7 +198,7 @@ describe("credit-matrix convert", () => {
 
   it("needs --to", async () => {
     await expect(run(["convert", csv])).rejects.toThrow(
-      /--to json, csv, jats, crossref, md, latex-credits, tenzing or svg/,
+      /--to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto or myst/,
     );
   });
 });
@@ -334,7 +345,7 @@ describe("credit-matrix as a program", () => {
     const { out, err } = await launch("convert", csv);
     expect(out).toBe("");
     expect(err).toBe(
-      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing or svg.\nRun 'credit-matrix --help' for usage.\n",
+      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto or myst.\nRun 'credit-matrix --help' for usage.\n",
     );
     expect(process.exitCode).toBe(2);
   });

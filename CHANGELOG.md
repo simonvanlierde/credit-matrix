@@ -8,6 +8,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Copy or download Quarto/Pandoc and MyST/Jupyter Book author YAML from Export data.
+  The CLI has `convert --to quarto` and `--to myst`; the package exports `toQuarto` and `toMyst`.
+  Quarto keeps contribution levels, MyST omits them, and both leave non-authors out of the byline.
+
 - Import reads the Crossref `<contributors>` block the app exports, in the import box and with
   `importAny`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
   has no contribution levels, so every listed role comes back as lead.

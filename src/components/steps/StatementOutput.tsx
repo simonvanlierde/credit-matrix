@@ -5,7 +5,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Switch } from "@/components/ui/switch";
 import {
-  type Author,
   CREDIT_ROLES,
   generateStatement,
   type StatementFormat,
@@ -15,10 +14,11 @@ import {
   toJson,
   toLatexCredits,
   toMarkdown,
+  toMyst,
+  toQuarto,
   toTenzing,
 } from "@/core";
 import { isAllBinary, rolesWithContributions } from "@/core/author";
-import type { RoleTranslator, UiTranslator } from "@/core/i18n";
 import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
 import { useTranslations } from "@/lib/translations";
@@ -28,7 +28,7 @@ import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-type DataFormat = "xml" | "crossref" | "json" | "csv" | "tenzing" | "markdown" | "latex";
+type DataFormat = "xml" | "crossref" | "json" | "csv" | "tenzing" | "markdown" | "latex" | "quarto" | "myst";
 
 const EXPORT_ITEM_BUTTON =
   "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
@@ -38,52 +38,43 @@ const DATA_FORMATS: Record<
   DataFormat,
   {
     label: string;
-    serialize: (authors: Author[], translateRole: RoleTranslator, translateUi: UiTranslator, locale: string) => string;
     filename: string;
     mime: string;
   }
 > = {
-  // XML/JSON/CSV/tenzing are machine round-trip formats and LaTeX feeds a package; all stay in English.
-  // Only Markdown (a human-facing paste artifact) follows the output language.
-  // XML, JSON and LaTeX are replaced per export in the component, which knows the
-  // input mode and whether answers go in.
   xml: {
     label: "XML (JATS4R)",
-    serialize: (authors) => toJats4rXml(authors),
     filename: "credit-contributors.xml",
     mime: "application/xml",
   },
   crossref: {
     label: "XML (Crossref)",
-    serialize: toCrossrefContributors,
     filename: "crossref-contributors.xml",
     mime: "application/xml",
   },
   json: {
     label: "JSON",
-    serialize: (authors) => toJson(authors),
     filename: "credit_result.json",
     mime: "application/json",
   },
-  csv: { label: "CSV", serialize: toCsv, filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
+  csv: { label: "CSV", filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
   tenzing: {
     label: "tenzing CSV",
-    serialize: toTenzing,
     filename: "tenzing-contributors.csv",
     mime: "text/csv;charset=utf-8",
   },
   latex: {
     label: "LaTeX (latex-credits)",
-    serialize: (authors) => toLatexCredits(authors),
     filename: "credit-contributors.tex",
     mime: "application/x-tex;charset=utf-8",
   },
   markdown: {
     label: "Markdown",
-    serialize: toMarkdown,
     filename: "credit-contributors.md",
     mime: "text/markdown;charset=utf-8",
   },
+  quarto: { label: "Quarto YAML", filename: "credit-quarto.yml", mime: "application/yaml;charset=utf-8" },
+  myst: { label: "MyST YAML", filename: "credit-myst.yml", mime: "application/yaml;charset=utf-8" },
 };
 
 export function StatementOutput() {
@@ -139,10 +130,26 @@ export function StatementOutput() {
   const hasNonAuthors = authors.some((author) => author.contributorType === "non-author");
 
   function serialize(dataFormat: DataFormat): string {
-    if (dataFormat === "json") return toJson(authors, { asks, includeAnswers, selfId });
-    if (dataFormat === "xml") return toJats4rXml(authors, { yesNo });
-    if (dataFormat === "latex") return toLatexCredits(authors, { yesNo });
-    return DATA_FORMATS[dataFormat].serialize(authors, translateRole, translateUi, outputLanguage);
+    switch (dataFormat) {
+      case "json":
+        return toJson(authors, { asks, includeAnswers, selfId });
+      case "xml":
+        return toJats4rXml(authors, { yesNo });
+      case "latex":
+        return toLatexCredits(authors, { yesNo });
+      case "quarto":
+        return toQuarto(authors, { yesNo });
+      case "myst":
+        return toMyst(authors);
+      case "crossref":
+        return toCrossrefContributors(authors);
+      case "csv":
+        return toCsv(authors);
+      case "tenzing":
+        return toTenzing(authors);
+      case "markdown":
+        return toMarkdown(authors, translateRole, translateUi, outputLanguage);
+    }
   }
 
   function downloadData(dataFormat: DataFormat) {
