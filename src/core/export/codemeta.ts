@@ -32,8 +32,16 @@ export interface CodemetaAttribution {
  * for scores, contribution levels, equal contribution and correspondence.
  */
 export function toCodemeta(authors: Author[]): { metadata: CodemetaAttribution; warnings: string[] } {
-  const metadata: CodemetaAttribution = {
-    "@context": "https://w3id.org/codemeta/3.0",
+  const { metadata, warnings } = buildAttribution(authors);
+  if (metadata.author.length || metadata.contributor.length) {
+    warnings.push("CodeMeta omits scores and contribution levels; keep the original roster JSON.");
+  }
+  return { metadata: { "@context": "https://w3id.org/codemeta/3.0", ...metadata }, warnings };
+}
+
+/** Shared people and Role construction for the two linked-data exports. */
+export function buildAttribution(authors: Author[]) {
+  const metadata: Pick<CodemetaAttribution, "author" | "contributor"> = {
     author: [],
     contributor: [],
   };
@@ -62,9 +70,6 @@ export function toCodemeta(authors: Author[]): { metadata: CodemetaAttribution; 
     for (const contribution of active) {
       entries.push({ type: "Role", "schema:author": id, roleName: getRoleByName(contribution.role).url });
     }
-  }
-  if (metadata.author.length || metadata.contributor.length) {
-    warnings.push("CodeMeta omits scores and contribution levels; keep the original roster JSON.");
   }
   return { metadata, warnings };
 }

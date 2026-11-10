@@ -36,7 +36,10 @@ export default defineConfig([
     // The MyST plugin as one file: MyST runs a plugin from a URL out of its own cache, where bare
     // imports fail. The package and yaml are bundled in; the source is used so the builds stay independent.
     entry: { "myst-plugin": "../../integrations/myst/credit-matrix.mjs" },
-    alias: { "credit-matrix": fileURLToPath(new URL("index.ts", import.meta.url)) },
+    alias: {
+      "credit-matrix/i18n": fileURLToPath(new URL("i18n.ts", import.meta.url)),
+      "credit-matrix": fileURLToPath(new URL("index.ts", import.meta.url)),
+    },
     deps: { alwaysBundle: ["yaml", /^yaml\//, "zod", /^zod\//, /^@lingui\//] },
     env: { NODE_ENV: "production" },
     outputOptions: { codeSplitting: false, entryFileNames: "[name].mjs" },

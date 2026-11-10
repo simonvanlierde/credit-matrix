@@ -37,6 +37,8 @@ export { buildHeatmapSvg, heatmapDescription } from "./export/heatmap-svg";
 export { fromJson, NewerVersionError, RepeatedIdError, toJson } from "./export/json";
 export { toLatexCredits } from "./export/latex-credits";
 export { toMarkdown } from "./export/markdown";
+export type { RoCrateAttributionFragment } from "./export/ro-crate";
+export { toRoCrateFragment } from "./export/ro-crate";
 export { fromTenzing, isTenzing, toTenzing } from "./export/tenzing";
 export { toJats4rXml } from "./export/xml";
 export type { XmlElement, XmlParser } from "./export/xml-import";

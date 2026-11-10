@@ -1564,3 +1564,6 @@ msgstr "この引用ファイルには著者が記載されていません。"
 
 msgid "citationConverting"
 msgstr "引用ファイルを読み込み中… 先にコンバーターのダウンロードが必要な場合があります。"
+
+msgid "exportRoCrateFragment"
+msgstr "RO-Crate フラグメント"

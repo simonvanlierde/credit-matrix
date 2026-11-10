@@ -8,6 +8,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- [Quarto/Pandoc](integrations/quarto/README.md#document-language) and
+  [MyST/Jupyter Book](integrations/myst/README.md#document-language) statements and heatmaps follow
+  the document's `lang`, using the app's nine languages. Quarto also translates the default heading.
+- `credit-matrix/i18n` exports `resolveLocaleTag` for selecting an available language from a regional tag.
+- Export an [RO-Crate 1.2 attribution fragment](integrations/ro-crate/README.md) from the app,
+  `credit-matrix convert --to ro-crate` or `toRoCrateFragment`. Merge its people and CRediT roles into existing package metadata.
 - Import reads the Crossref `<contributors>` block the app exports, in the import box and with
   `importAny`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
   has no contribution levels, so every listed role comes back as lead.

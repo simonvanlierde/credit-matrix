@@ -62,6 +62,9 @@ Set `credit-matrix.heading` to change the heading and `credit-matrix.placement` 
 put it before the body. An empty `::: {#credit-statement}` div places it at that point instead.
 The heading takes the level of the document's first heading.
 
+Set `lang` in the front matter to translate the role names, levels, separators and default heading.
+The [Quarto guide](../quarto/README.md#document-language) lists supported languages and fallback rules.
+
 ## Contribution heatmap
 
 Set `credit-matrix.heatmap: true` to add a figure through the package CLI.
@@ -69,7 +72,7 @@ See [figure options and examples](../heatmap.md) for setup and all rendering opt
 
 ## Limits
 
-- English, by author, with contribution levels. For other languages or formats, use the
+- By author, with contribution levels. For other formats, use the
   [package CLI](../../src/core/README.md).
 - Roles must be in the front matter; the filter does not infer them from prose.
 - This filter credits authors. It does not create a separate acknowledgements section.

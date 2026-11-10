@@ -1564,3 +1564,6 @@ msgstr "Diese Zitationsdatei nennt keine Autoren."
 
 msgid "citationConverting"
 msgstr "Zitationsdatei wird gelesen … Der Konverter muss möglicherweise erst heruntergeladen werden."
+
+msgid "exportRoCrateFragment"
+msgstr "RO-Crate-Fragment"

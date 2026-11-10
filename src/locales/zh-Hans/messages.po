@@ -1564,3 +1564,6 @@ msgstr "此引用文件未列出作者。"
 
 msgid "citationConverting"
 msgstr "正在读取引用文件… 可能需要先下载转换器。"
+
+msgid "exportRoCrateFragment"
+msgstr "RO-Crate 片段"

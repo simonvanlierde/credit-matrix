@@ -51,6 +51,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "toJson",
     "toLatexCredits",
     "toMarkdown",
+    "toRoCrateFragment",
     "toTenzing",
     "verifyOrcidToken",
   ],
@@ -65,6 +66,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "makeRoleTranslator",
     "makeUiTranslator",
     "normalizeLocaleCode",
+    "resolveLocaleTag",
   ],
   "./lookup": [
     "DOI_INPUT_REGEX",

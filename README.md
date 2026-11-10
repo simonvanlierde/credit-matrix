@@ -16,6 +16,7 @@ called *CRediT Generator*. Add your contributors, give each of them their roles,
 statement for the manuscript, a **contribution heatmap** figure, or files for journal submission
 systems: JATS4R XML, a Crossref `<contributors>` block, CSV, a tenzing spreadsheet, JSON,
 Markdown, and input for the latex-credits LaTeX package.
+An [RO-Crate attribution fragment](integrations/ro-crate/README.md) supplies people and CRediT roles for existing research packages.
 
 Each co-author can check their own row through a link, and everything runs in your browser: only
 the ORCID and DOI lookups and the fetch of ORCID's public keys send identifiers out. Citation-file

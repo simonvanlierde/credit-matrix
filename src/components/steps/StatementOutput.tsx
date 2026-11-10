@@ -15,6 +15,7 @@ import {
   toJson,
   toLatexCredits,
   toMarkdown,
+  toRoCrateFragment,
   toTenzing,
 } from "@/core";
 import { isAllBinary, rolesWithContributions } from "@/core/author";
@@ -28,7 +29,7 @@ import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-type DataFormat = "xml" | "crossref" | "json" | "csv" | "tenzing" | "markdown" | "latex";
+type DataFormat = "xml" | "crossref" | "json" | "csv" | "tenzing" | "markdown" | "latex" | "ro-crate";
 
 const EXPORT_ITEM_BUTTON =
   "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
@@ -83,6 +84,12 @@ const DATA_FORMATS: Record<
     serialize: toMarkdown,
     filename: "credit-contributors.md",
     mime: "text/markdown;charset=utf-8",
+  },
+  "ro-crate": {
+    label: "RO-Crate",
+    serialize: (authors) => JSON.stringify(toRoCrateFragment(authors).metadata, null, 2),
+    filename: "credit-ro-crate-fragment.json",
+    mime: "application/ld+json",
   },
 };
 
@@ -352,7 +359,7 @@ export function StatementOutput() {
           <PopoverContent align="start" aria-label={t("exportData")} className="w-72 max-w-[calc(100vw-2rem)] p-1">
             <ul aria-label={t("a11yExportFormat")} className="grid">
               {(Object.keys(DATA_FORMATS) as DataFormat[]).map((value) => {
-                const { label } = DATA_FORMATS[value];
+                const label = value === "ro-crate" ? t("exportRoCrateFragment") : DATA_FORMATS[value].label;
                 const copiedThis = copiedFormat === value && dataCopyStatus !== "idle";
                 return (
                   <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">

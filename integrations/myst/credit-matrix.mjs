@@ -7,7 +7,30 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { buildHeatmapSvg, CREDIT_ROLES, createAuthor, generateStatement, heatmapDescription } from "credit-matrix";
+import {
+  AVAILABLE_LOCALES,
+  DEFAULT_UI_TRANSLATOR,
+  loadRoleCatalog,
+  loadUiCatalog,
+  makeRoleTranslator,
+  makeUiTranslator,
+  resolveLocaleTag,
+} from "credit-matrix/i18n";
 import { parse } from "yaml";
+
+// Directives run synchronously; load the catalogs once while MyST imports the plugin.
+const TRANSLATORS = Object.fromEntries(
+  await Promise.all(
+    AVAILABLE_LOCALES.map(async ({ code }) => [
+      code,
+      {
+        locale: code,
+        translateRole: makeRoleTranslator(await loadRoleCatalog(code)),
+        translateUi: makeUiTranslator(await loadUiCatalog(code)),
+      },
+    ]),
+  ),
+);
 
 // The aliases MyST accepts (its `credit-roles` package), so a page that builds also renders.
 const ALIASES = {
@@ -59,13 +82,14 @@ export function statementEntries(authors) {
 }
 
 /** mdast for the statement: "**Name**: Role, Role; **Name**: Role." */
-export function statementNode(authors) {
+export function statementNode(authors, options = {}) {
   const entries = statementEntries(authors);
   if (entries.length === 0) return [];
+  const ui = options.translateUi ?? DEFAULT_UI_TRANSLATOR;
   const children = entries.flatMap((author, i) => {
-    const statement = generateStatement([author], { format: "by-author" });
+    const statement = generateStatement([author], { format: "by-author", ...options });
     return [
-      ...(i > 0 ? [{ type: "text", value: "; " }] : []),
+      ...(i > 0 ? [{ type: "text", value: ui("segmentSeparator") }] : []),
       { type: "strong", children: [{ type: "text", value: author.name }] },
       { type: "text", value: statement.slice(`CRediT: ${author.name}`.length) },
     ];
@@ -97,11 +121,16 @@ export function authorsFor(file) {
   return page.authors ?? page.author ?? projectConfig(file).authors ?? [];
 }
 
+function translationsFor(file) {
+  const page = file.endsWith(".md") ? readFrontmatter(file) : {};
+  return TRANSLATORS[resolveLocaleTag(page.lang ?? projectConfig(file).lang) ?? "en"];
+}
+
 const creditStatement = {
   name: "credit-statement",
   doc: "A CRediT authorship statement built from the authors' `roles`.",
   run(_data, vfile) {
-    return vfile?.path ? statementNode(authorsFor(vfile.path)) : [];
+    return vfile?.path ? statementNode(authorsFor(vfile.path), translationsFor(vfile.path)) : [];
   },
 };
 
@@ -116,7 +145,7 @@ const creditHeatmap = {
   run(data, vfile) {
     if (!vfile?.path) return [];
     const entries = statementEntries(authorsFor(vfile.path));
-    const options = { levels: false, acronyms: false, ...data.options };
+    const options = { levels: false, acronyms: false, ...translationsFor(vfile.path), ...data.options };
     const svg = buildHeatmapSvg(entries, options);
     const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
     const dir = join(dirname(vfile.path), "_credit_matrix");

@@ -1564,3 +1564,6 @@ msgstr "This citation file lists no authors."
 
 msgid "citationConverting"
 msgstr "Reading citation file… The converter may need to download first."
+
+msgid "exportRoCrateFragment"
+msgstr "RO-Crate fragment"

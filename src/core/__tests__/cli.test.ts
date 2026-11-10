@@ -22,6 +22,13 @@ function file(name: string, text: string): string {
 const csv = file("team.csv", "Name,Conceptualization,Software\nJane Smith,100,66\nBob White,,100\n");
 
 describe("credit-matrix statement", () => {
+  it("prints an RO-Crate attribution fragment and its limits", async () => {
+    const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    const metadata = JSON.parse(await run(["convert", csv, "--to", "ro-crate"]));
+    expect(metadata["@context"]).toBe("https://w3id.org/ro/crate/1.2/context");
+    expect(metadata["@graph"][0]["@id"]).toBe("./");
+    expect(stderr.mock.calls.flat().join(" ")).toContain("not a standalone RO-Crate");
+  });
   it("prints the by-role statement by default", async () => {
     expect(await run(["statement", csv])).toBe(
       "CRediT: Conceptualization: Jane Smith; Software: Jane Smith, Bob White",
@@ -187,7 +194,7 @@ describe("credit-matrix convert", () => {
 
   it("needs --to", async () => {
     await expect(run(["convert", csv])).rejects.toThrow(
-      /--to json, csv, jats, crossref, md, latex-credits, tenzing or svg/,
+      /--to json, csv, jats, crossref, md, latex-credits, tenzing, svg or ro-crate/,
     );
   });
 });
@@ -334,7 +341,7 @@ describe("credit-matrix as a program", () => {
     const { out, err } = await launch("convert", csv);
     expect(out).toBe("");
     expect(err).toBe(
-      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing or svg.\nRun 'credit-matrix --help' for usage.\n",
+      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg or ro-crate.\nRun 'credit-matrix --help' for usage.\n",
     );
     expect(process.exitCode).toBe(2);
   });

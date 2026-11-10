@@ -1564,3 +1564,6 @@ msgstr "Este archivo de citas no incluye autores."
 
 msgid "citationConverting"
 msgstr "Leyendo el archivo de citas… Puede que el conversor tenga que descargarse primero."
+
+msgid "exportRoCrateFragment"
+msgstr "Fragmento RO-Crate"
