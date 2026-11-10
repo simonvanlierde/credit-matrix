@@ -47,8 +47,8 @@ jobs, and the outside services. Attacks that need the user's device are out of
 
 - **Economy of mechanism.** No server, accounts or database (ADR 0002, ADR 0003). `src/core` has
   `zod` for validation and Lingui for translation ([architecture](architecture.md)).
-- **Minimal attack surface.** No code runs per request. `connect-src` allows five outside hosts
-  ([`_headers`](../public/_headers)).
+- **Minimal attack surface.** No code runs per request. `connect-src` allows only pub.orcid.org,
+  orcid.org, api.crossref.org and api.datacite.org ([`_headers`](../public/_headers)).
 - **Fail-safe defaults.** Bad links open the normal app (T7), bad proofs are dropped (T9), and the
   build fails rather than ship a wrong CSP (T2).
 - **Least privilege.** CI starts at `contents: read` and only the jobs that need OIDC or secrets get
