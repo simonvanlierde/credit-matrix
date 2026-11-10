@@ -8,6 +8,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- New entry point `credit-matrix/figures` exports `createFigureRenderer` for PDF and
+  font-embedded SVG output, and `FigureFontError` for a missing font or an unsupported character.
 - The grid colours each contributor in their own hue, shared by their chip, column, cells and
   statement phrase; turn it off under the grid's display options. Heatmap exports stay one colour
   unless you pick *Per contributor* under Figure settings. `buildHeatmapSvg` takes the same choice
@@ -109,8 +111,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   CodeMeta JSON, where it used to return `"xml"` and `"json"`. Update any `switch` on its result.
 - `buildHeatmapSvg` throws `HeatmapOptionError` for a colour that is not a hex colour or a size
   outside its range. Catch it where you pass user-supplied options.
-- New entry point `credit-matrix/figures` exports `createFigureRenderer` for PDF and
-  font-embedded SVG output, and `FigureFontError` for a missing font or an unsupported character.
 - The npm package is about 24 MiB packed (a 25.9 MB tarball), because it bundles the figure fonts.
 - The Sphinx extension reports a failed statement as "CRediT rendering failed".
 - The import box leads with paste and upload, with the DOI lookup below as the other route. Its
