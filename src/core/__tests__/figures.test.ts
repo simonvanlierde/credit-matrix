@@ -291,7 +291,7 @@ describe("portable figures", () => {
       const label = svg
         .match(/<text x="([\d.]+)" y="([\d.]+)"[^>]*>((?:<tspan[^>]*>[^<]*<\/tspan>)+)<\/text>/g)
         ?.map((text) => text.match(/<text x="([\d.]+)" y="([\d.]+)"[^>]*>(.*)<\/text>/))
-        .find((match) => match?.[3]?.replace(/<[^>]+>/g, "") === name);
+        .find((match) => [...(match?.[3] ?? "").matchAll(/>([^<]*)</g)].map(([, run]) => run).join("") === name);
       expect(label).toBeDefined();
       skip(!POPPLER, NO_POPPLER);
       const directory = mkdtempSync(join(tmpdir(), "credit-glyph-ink-"));
