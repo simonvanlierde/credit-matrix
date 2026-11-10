@@ -1,0 +1,68 @@
+name: Mutation
+
+# Mutation testing of the src/core import and export code (stryker.config.mjs), weekly and
+# from the Actions tab with "Run workflow". A pull request runs it only when it changes this
+# setup: the score moves with the tests over time, not with each change. The job fails when the
+# surviving mutants differ from test/mutation-baseline.txt, either way: a new survivor, or a
+# listed one that a test now kills.
+# Run `pnpm mutation` locally and commit the rewritten list to clear it.
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/mutation.yml"
+      - "stryker.config.mjs"
+      - "vitest.mutation.config.ts"
+      - "scripts/mutation-baseline.mjs"
+  schedule:
+    - cron: "41 5 * * 1" # Mondays, 05:41 UTC, after the weekly CI run
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  core:
+    name: Mutation (TypeScript core)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          node-version-file: .node-version
+          cache: true
+          save-cache: false
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The config's 8 workers suit a local machine; a hosted runner has 4 cores.
+      - name: Run Stryker
+        run: pnpm exec stryker run --concurrency 4
+
+      - name: Compare survivors with the baseline
+        run: |
+          node scripts/mutation-baseline.mjs
+          {
+            echo '### Mutation score'
+            grep -m1 '^# Score' test/mutation-baseline.txt || true
+            echo '```diff'
+            git diff test/mutation-baseline.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          git diff --exit-code test/mutation-baseline.txt
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 30
