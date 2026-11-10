@@ -60,10 +60,15 @@ External font URLs cannot load in some SVG image contexts, so these exports
 include the font bytes in the asset. See
 [SVG image restrictions](https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/SVG_as_an_image).
 
-Browser support does not establish support in Illustrator, Inkscape, Office or
-a journal's converter. Check the imported figure's labels before submission.
-Prefer PDF if the receiving tool substitutes the SVG fonts. Installing the
-original fonts can help when you need to edit the text in a desktop application.
+Inkscape 1.2.2 and 1.4 ignore the SVG's embedded `@font-face` fonts. Install the
+bundled fonts before importing SVG for editing; this preserves Unicode labels.
+PDF remains portable for viewing or placing in a document. Inkscape's PDF import
+can turn text into outlines when its fonts are unavailable. Even with the fonts
+installed, PDF import changed the uncomposed accent in `q́`; SVG import preserved it.
+Use SVG with installed fonts when editing labels.
+
+Illustrator, Office and journal converters have not been tested. Check imported
+labels before submission.
 
 Native Typst figures use the document's font selection and Typst's fallback.
 To choose these fonts, supply them to Typst and set a matching font stack, for

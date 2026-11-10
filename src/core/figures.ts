@@ -49,7 +49,7 @@ async function readFont(url: URL): Promise<Uint8Array> {
 }
 
 function attributes(source: string): Record<string, string> {
-  return Object.fromEntries([...source.matchAll(/([\w:-]+)="([^"]*)"/g)].map((match) => [match[1], match[2]]));
+  return Object.fromEntries([...source.matchAll(/(?:^|\s)([\w:-]+)="([^"]*)"/g)].map((match) => [match[1], match[2]]));
 }
 
 function unescapeXml(text: string): string {
@@ -89,7 +89,7 @@ function color(hex: string | undefined) {
  */
 export async function createFigureRenderer(): Promise<FigureRenderer> {
   const sources = [
-    ["Credit Figure Sans", new URL("./figure-fonts/NotoSans-Regular.ttf", import.meta.url)],
+    ["Noto Sans", new URL("./figure-fonts/NotoSans-Regular.ttf", import.meta.url)],
     ["Credit Figure JP", new URL("./figure-fonts/CreditFigureJP.ttf", import.meta.url)],
     ["Credit Figure SC", new URL("./figure-fonts/CreditFigureSC.ttf", import.meta.url)],
   ] as const;
@@ -159,8 +159,8 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
       const pageHeight = Number(root.height);
       const document = await PDFDocument.create();
       document.registerFontkit(fontkit);
-      document.setTitle(unescapeXml(svg.match(/<title>(.*?)<\/title>/s)?.[1] ?? "Contribution heatmap"));
-      document.setSubject(unescapeXml(svg.match(/<desc>(.*?)<\/desc>/s)?.[1] ?? ""));
+      document.setTitle(unescapeXml(svg.match(/<title>([^<]*)<\/title>/)?.[1] ?? "Contribution heatmap"));
+      document.setSubject(unescapeXml(svg.match(/<desc>([^<]*)<\/desc>/)?.[1] ?? ""));
       if (options?.locale) document.catalog.set(PDFName.of("Lang"), PDFString.of(options.locale));
       const page = document.addPage([pageWidth, pageHeight]);
       const embedded = new Map<FigureFont, PDFFont>();

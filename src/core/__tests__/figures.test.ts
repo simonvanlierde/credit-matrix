@@ -25,6 +25,26 @@ describe("portable figures", () => {
     renderer = await createFigureRenderer();
   });
 
+  it("uses the embedded font's actual family name for editable SVG", () => {
+    const svg = renderer.svg(team());
+    expect(svg).toContain('font-family="Noto Sans"');
+    expect(svg).not.toContain("Credit Figure Sans");
+  });
+
+  it("retains XML-like title and description text in PDF metadata", async () => {
+    const title = "<title>a\n".repeat(40);
+    const name = `${"-".repeat(100)}${"<desc>a".repeat(40)}`;
+    const author = createAuthor(name);
+    for (const contribution of author.contributions) contribution.score = 100;
+    const translateUi = makeUiTranslator(null);
+    const bytes = await renderer.pdf([author], {
+      translateUi: (key) => (key === "heatmapTitle" ? title : translateUi(key)),
+    });
+    const document = await PDFDocument.load(bytes);
+    expect(document.getTitle()).toBe(title);
+    expect(document.getSubject()).toContain(name);
+  });
+
   it.each(AVAILABLE_LOCALES)("embeds standalone fonts and retains readable text in $code SVG", async ({ code }) => {
     const svg = renderer.svg(team(), {
       locale: code,
