@@ -1,5 +1,5 @@
 import { Files, Fingerprint, Info, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink } from "@/components/ui/external-link";
 import { StepNumber } from "@/components/ui/step-number";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
@@ -53,6 +53,8 @@ export function WelcomeCard() {
   const hydrated = useHydrated();
   // State, not a ref, so useModalDialog's effect runs again once the element mounts.
   const [dialogEl, setDialogEl] = useState<HTMLDialogElement | null>(null);
+  // Set by "Start fresh": its next step is typing the first name.
+  const startFresh = useRef(false);
   useEffect(() => {
     if (!hydrated) return;
     const state = useContributionStore.getState();
@@ -85,9 +87,12 @@ export function WelcomeCard() {
         // Opened on arrival, the dialog has no opener to give focus back to, so
         // focus would stay inside it and then drop to <body>.
         const focused = document.activeElement;
-        if (!focused || focused === document.body || event.currentTarget.contains(focused)) {
-          document.getElementById("main-content")?.focus();
-        }
+        const dropped = !focused || focused === document.body || event.currentTarget.contains(focused);
+        const addField = startFresh.current ? document.getElementById("add-contributor") : null;
+        startFresh.current = false;
+        // The add field is absent on a locked draft, so fall back to the workspace.
+        if (addField) addField.focus();
+        else if (dropped) document.getElementById("main-content")?.focus();
       }}
       {...closeOnBackdrop}
       className="m-auto w-full max-w-3xl max-h-[90dvh] overflow-y-auto rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
@@ -173,7 +178,10 @@ export function WelcomeCard() {
               </button>
               <button
                 type="button"
-                onClick={closeWelcome}
+                onClick={() => {
+                  startFresh.current = true;
+                  closeWelcome();
+                }}
                 className="text-sm font-medium text-on-surface-variant transition-colors hover:text-primary"
               >
                 {t("startFresh")}

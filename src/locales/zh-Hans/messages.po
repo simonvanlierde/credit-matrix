@@ -18,7 +18,7 @@ msgid "addContributor"
 msgstr "新的作者姓名或 ORCID iD"
 
 msgid "addPlaceholder"
-msgstr "添加姓名或 ORCID iD…"
+msgstr "姓名、DOI 或 ORCID iD"
 
 msgid "addButton"
 msgstr "添加"
