@@ -35,6 +35,11 @@ Use these names in every plugin. The JavaScript `buildHeatmapSvg` function uses 
 | `horizontal` | `true`, `false`: contributors in rows | `false` |
 | `skipempty` | `true`, `false`: omit roles nobody holds | `true` |
 
+The app and the JavaScript `buildHeatmapSvg` function also take `colorBy`: `"color"` (the
+default) draws the figure in one hue, and `"contributor"` gives each of up to eight contributors
+their own hue, with the level key in neutral gray. Past eight contributors it falls back to one
+hue. The plugins and the CLI draw one hue only.
+
 `color` overrides the palette. The palettes use blue `#1f4e79`, green `#00724c`, or gray `#404040`.
 Supporting, Equal and Lead mix 40%, 70% and 100% of that hue with white. These are contribution
 levels, not continuous measurements of effort.

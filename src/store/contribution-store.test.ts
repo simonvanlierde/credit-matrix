@@ -1655,6 +1655,8 @@ describe("contribution store", () => {
         (merge?.({ activeDraftId: "d1", drafts: { d1 } }, initial) as typeof initial | undefined)?.colorByContributor;
       expect(load({ heatmapMonoColor: "#009e73" })).toBe(false);
       expect(load({})).toBe(true);
+      // A damaged colour is repaired to the default, so it counts as untouched.
+      expect(load({ heatmapMonoColor: "red;" })).toBe(true);
       expect(load({ heatmapMonoColor: "#009e73", colorByContributor: true })).toBe(true);
     });
 

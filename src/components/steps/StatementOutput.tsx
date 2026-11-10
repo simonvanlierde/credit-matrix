@@ -1,4 +1,5 @@
 import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,6 +23,7 @@ import {
   toTenzing,
 } from "@/core";
 import { isAllBinary, rolesWithContributions } from "@/core/author";
+import { linkMarkColor } from "@/core/contributor-color";
 import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
 import { useTranslations } from "@/lib/translations";
@@ -105,7 +107,9 @@ export function StatementOutput() {
   const statementLink = useContributionStore((s) => s.statementLink);
   const setStatementLink = useContributionStore((s) => s.setStatementLink);
   // The linked phrase takes its contributor's hue, matching their cell.
-  const linkHue = useContributorHue(statementLink?.contributorId);
+  const contributorHue = useContributorHue(statementLink?.contributorId);
+  const dark = useTheme().resolvedTheme === "dark";
+  const linkHue = contributorHue ? linkMarkColor(contributorHue, dark) : null;
   const openDifferences = useAskSummary().open;
   // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
   const [includeAnswers, setIncludeAnswers] = useState(true);

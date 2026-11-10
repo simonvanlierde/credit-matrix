@@ -87,6 +87,15 @@ export function heatCellColor(hue: string, score: number, dark = false): string 
   return hslHex(h, Math.min(s, 0.65), DARK_TIER_LIGHTNESS[tier] ?? 0.5);
 }
 
+/**
+ * The colour that marks a contributor's linked cell and phrase. The palette is
+ * tuned for white initials, so on the dark page it is too dark to mark with;
+ * there the mark uses the hue's lead tier from the dark ramp instead.
+ */
+export function linkMarkColor(hue: string, dark: boolean): string {
+  return dark ? heatCellColor(hue, 100, true) : hue;
+}
+
 /** Hue (0–1), saturation and lightness of a hex color. */
 function hsl(hex: string): [number, number, number] {
   const [r, g, b] = rgb(hex).map((c) => c / 255) as [number, number, number];

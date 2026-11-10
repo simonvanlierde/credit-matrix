@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { UndoBar } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
-import { contributorHues, heatCellColor, onColor } from "@/core/contributor-color";
+import { CONTRIBUTOR_HUES, contributorHues, heatCellColor, linkMarkColor, onColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useLocale, useTranslations } from "@/lib/translations";
@@ -346,6 +346,7 @@ export function ContributionGrid() {
       graded={graded}
       dark={dark}
       monoColor={hueOf(author)}
+      perPerson={hues !== null}
       language={`${interfaceRoleLanguage}:${messagesLocale}`}
     />
   );
@@ -492,7 +493,12 @@ export function ContributionGrid() {
                       {t("colorLabel")}
                       <span
                         className="h-3 w-3 rounded-full border border-outline-variant/50"
-                        style={{ backgroundColor: heatmapMonoColor }}
+                        // Per-person hues on: picking a colour switches to one hue, so show what is drawn now.
+                        style={{
+                          background: hues
+                            ? `conic-gradient(${CONTRIBUTOR_HUES.slice(0, 4).join(", ")})`
+                            : heatmapMonoColor,
+                        }}
                       />
                     </button>
                   }
@@ -815,6 +821,7 @@ const GridCell = memo(function GridCellInner({
   graded,
   dark,
   monoColor,
+  perPerson,
 }: {
   api: RefObject<CellApi>;
   author: Author;
@@ -835,6 +842,8 @@ const GridCell = memo(function GridCellInner({
   graded: boolean;
   dark: boolean;
   monoColor: string;
+  /** Per-person hues are on: the linked mark is in this person's hue, not primary. */
+  perPerson: boolean;
   language: string;
 }) {
   const score = author.contributions[roleIndex]?.score ?? 0;
@@ -893,7 +902,13 @@ const GridCell = memo(function GridCellInner({
                 ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
                 : ""
         } ${settling ? "cell-settle" : ""}`}
-        style={{ backgroundColor: fill ?? "transparent", "--cell-hue": monoColor } as React.CSSProperties}
+        style={
+          {
+            backgroundColor: fill ?? "transparent",
+            // Without per-person hues the phrase is marked in primary, so the cell matches it.
+            "--cell-hue": perPerson ? linkMarkColor(monoColor, dark) : "var(--color-primary)",
+          } as React.CSSProperties
+        }
       >
         {!fill && <span aria-hidden="true" data-empty-dot className="size-[3px] rounded-full bg-outline-strong" />}
         {fill && (

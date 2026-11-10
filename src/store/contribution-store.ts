@@ -434,6 +434,8 @@ function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
  * this build does not know are kept: a newer build's fields must survive an
  * older tab's save.
  */
+const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
 function repairSingleDraft(value: unknown, id: string): Draft {
   const { asked, ...raw } = (isRecord(value) ? value : {}) as Partial<Draft> & { asked?: unknown };
   return {
@@ -444,14 +446,15 @@ function repairSingleDraft(value: unknown, id: string): Draft {
     inputMode: raw.inputMode === "levels" ? "levels" : "toggle",
     // The page tint mixes this into its background, so a damaged value would blank the page.
     heatmapMonoColor:
-      typeof raw.heatmapMonoColor === "string" && /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw.heatmapMonoColor)
+      typeof raw.heatmapMonoColor === "string" && HEX_COLOR.test(raw.heatmapMonoColor)
         ? raw.heatmapMonoColor
         : DEFAULT_MONO_COLOR,
     // A draft saved before this field kept the hue someone picked, so only an untouched one colours per person.
     colorByContributor:
       typeof raw.colorByContributor === "boolean"
         ? raw.colorByContributor
-        : (raw.heatmapMonoColor ?? DEFAULT_MONO_COLOR) === DEFAULT_MONO_COLOR,
+        : !(typeof raw.heatmapMonoColor === "string" && HEX_COLOR.test(raw.heatmapMonoColor)) ||
+          raw.heatmapMonoColor === DEFAULT_MONO_COLOR,
     heatmapSettings: repairHeatmapSettings(raw.heatmapSettings),
     outputLocale: normalizeLocaleCode(raw.outputLocale),
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
