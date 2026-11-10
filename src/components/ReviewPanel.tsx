@@ -77,7 +77,7 @@ export function ReviewPanel() {
   const monoColor = useContributionStore((s) => s.heatmapMonoColor);
   const colorByContributor = useContributionStore((s) => s.colorByContributor);
   // The same hue the person's grid column uses.
-  const hues = colorByContributor ? contributorHues(authors.length, monoColor) : null;
+  const hues = colorByContributor ? contributorHues(authors.length) : null;
   const hueFor = (authorId: string) => hues?.[authors.findIndex((a) => a.id === authorId)] ?? monoColor;
   const levels = useContributionStore((s) => s.inputMode === "levels");
   const dark = useTheme().resolvedTheme === "dark";

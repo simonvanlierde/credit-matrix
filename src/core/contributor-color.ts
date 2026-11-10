@@ -41,11 +41,11 @@ export const CONTRIBUTOR_HUES = [
 ] as const;
 
 /**
- * Each contributor's hue, in list order. Past the palette's eight hues two
- * people would share a colour, so a longer list falls back to `mono` for all.
+ * Each contributor's hue, in list order, or null past the palette's eight
+ * hues, where two people would share a colour and the view uses one hue.
  */
-export function contributorHues(count: number, mono: string): string[] {
-  return count <= CONTRIBUTOR_HUES.length ? CONTRIBUTOR_HUES.slice(0, count) : Array(count).fill(mono);
+export function contributorHues(count: number): string[] | null {
+  return count <= CONTRIBUTOR_HUES.length ? CONTRIBUTOR_HUES.slice(0, count) : null;
 }
 
 const NONE_FILL = "#ececea";

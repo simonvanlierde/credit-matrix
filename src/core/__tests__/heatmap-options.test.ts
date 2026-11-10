@@ -45,6 +45,14 @@ describe("heatmap figure options", () => {
     expect(byPerson).toContain('fill="#404040"');
     expect(() => buildHeatmapSvg(pair, { colorBy: "rainbow" as "color" })).toThrow("colorBy");
   });
+  it("draws everyone and the key in one hue past the palette's eight people", () => {
+    const many = Array.from({ length: CONTRIBUTOR_HUES.length + 1 }, (_, i) =>
+      createAuthor(`Person ${i + 1}`, { contributions: [{ role: "Software", score: 100 }] }),
+    );
+    const svg = buildHeatmapSvg(many, { colorBy: "contributor" });
+    expect(svg).toBe(buildHeatmapSvg(many));
+    expect(svg).not.toContain('fill="#404040"');
+  });
   it("rejects invalid options before drawing invalid SVG", () => {
     for (const size of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(() => buildHeatmapSvg(authors, { size })).toThrow("size");

@@ -131,8 +131,8 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
     throw new HeatmapOptionError("Heatmap color must be a three- or six-digit hex color.");
   const colorBy = opts?.colorBy ?? "color";
   if (!["color", "contributor"].includes(colorBy)) throw new HeatmapOptionError("Unknown heatmap colorBy.");
-  const authorHues = colorBy === "contributor" ? contributorHues(authors.length, monoColor) : null;
-  const perAuthor = authorHues?.some((hue) => hue !== monoColor) ?? false;
+  const authorHues = colorBy === "contributor" ? contributorHues(authors.length) : null;
+  const perAuthor = authorHues !== null;
   // One colour per person makes the fill strength the only level cue, so the key shows it in a neutral.
   const legendHue = perAuthor ? LEGEND_NEUTRAL : monoColor;
   const size = opts?.size ?? CELL;

@@ -135,10 +135,8 @@ describe("contributor hues", () => {
   });
 
   it("give each person their own hue, and one shared hue past the palette", () => {
-    expect(contributorHues(3, "#123456")).toEqual(CONTRIBUTOR_HUES.slice(0, 3));
-    expect(new Set(contributorHues(CONTRIBUTOR_HUES.length, "#123456")).size).toBe(CONTRIBUTOR_HUES.length);
-    expect(contributorHues(CONTRIBUTOR_HUES.length + 1, "#123456")).toEqual(
-      Array(CONTRIBUTOR_HUES.length + 1).fill("#123456"),
-    );
+    expect(contributorHues(3)).toEqual(CONTRIBUTOR_HUES.slice(0, 3));
+    expect(new Set(contributorHues(CONTRIBUTOR_HUES.length)).size).toBe(CONTRIBUTOR_HUES.length);
+    expect(contributorHues(CONTRIBUTOR_HUES.length + 1)).toBeNull();
   });
 });

@@ -113,7 +113,8 @@ it. The eight hues in `CONTRIBUTOR_HUES` (`src/core/contributor-color.ts`) diffe
 lightness, and each carries white initials at 4.5:1 or more. A person is also named by their column,
 so colour is never the only cue. Past eight contributors two people would share a hue, so the grid
 falls back to the draft's one hue. Choosing a heatmap colour also switches to one hue, because that
-is what the person asked to see. Colour by contributor is a display option beside the heatmap colour.
+is what the person asked to see. Colour by contributor is a display option, saved per draft beside the
+heatmap colour.
 
 Ink blue does not reach a 3:1 contrast against muted paper text, so a link inside a sentence is
 underlined as well as colored. A link on a line of its own may stay plain until hovered.

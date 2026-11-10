@@ -302,7 +302,7 @@ export function ContributionGrid() {
   };
   const namedHeaders = !acronyms && authors.length <= MAX_NAMED_COLUMNS;
   // Each person's hue, by list position; one hue for all when the view says so.
-  const hues = colorByContributor ? contributorHues(authors.length, heatmapMonoColor) : null;
+  const hues = colorByContributor ? contributorHues(authors.length) : null;
   const hueOf = (author: Author) => hues?.[authors.indexOf(author)] ?? heatmapMonoColor;
 
   cellApi.current = {

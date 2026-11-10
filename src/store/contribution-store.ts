@@ -55,6 +55,8 @@ export interface Draft {
   authors: Author[];
   inputMode: InputMode;
   heatmapMonoColor: string;
+  /** Colour the grid per contributor instead of in `heatmapMonoColor`. */
+  colorByContributor: boolean;
   outputLocale: LocaleCode;
   /** Last write, in epoch milliseconds. Orders the picker. */
   updatedAt: number;
@@ -158,9 +160,8 @@ interface ContributionState {
   inspectorTab: InspectorTab;
   /**
    * Colour the grid, chips and statement links per contributor rather than in
-   * the draft's one hue. A view preference, not part of a draft or a figure.
-   * shortcut: not persisted, so turning it off lasts until a reload; add it to
-   * PersistedState if people keep switching it off.
+   * the draft's one hue. Kept per draft, beside the hue it replaces; figures
+   * have their own option.
    */
   colorByContributor: boolean;
   /**
@@ -292,6 +293,7 @@ function liveDraft(state: ContributionState): Draft {
     authors: state.authors,
     inputMode: state.inputMode,
     heatmapMonoColor: state.heatmapMonoColor,
+    colorByContributor: state.colorByContributor,
     outputLocale: state.outputLocale,
     updatedAt: Date.now(),
     claim: state.claim,
@@ -307,6 +309,7 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.authors = draft.authors;
   state.inputMode = draft.inputMode;
   state.heatmapMonoColor = draft.heatmapMonoColor;
+  state.colorByContributor = draft.colorByContributor;
   state.outputLocale = draft.outputLocale;
   state.claim = draft.claim;
   state.asks = draft.asks;
@@ -327,6 +330,7 @@ function emptyDraft(title = ""): Draft {
     authors: [],
     inputMode: "toggle",
     heatmapMonoColor: DEFAULT_MONO_COLOR,
+    colorByContributor: true,
     outputLocale: "en",
     updatedAt: Date.now(),
     claim: null,
@@ -431,7 +435,16 @@ function repairSingleDraft(value: unknown, id: string): Draft {
     title: typeof raw.title === "string" ? raw.title.slice(0, MAX_TITLE_LENGTH) : "",
     authors: repairAuthors(raw.authors),
     inputMode: raw.inputMode === "levels" ? "levels" : "toggle",
-    heatmapMonoColor: typeof raw.heatmapMonoColor === "string" ? raw.heatmapMonoColor : DEFAULT_MONO_COLOR,
+    // The page tint mixes this into its background, so a damaged value would blank the page.
+    heatmapMonoColor:
+      typeof raw.heatmapMonoColor === "string" && /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw.heatmapMonoColor)
+        ? raw.heatmapMonoColor
+        : DEFAULT_MONO_COLOR,
+    // A draft saved before this field kept the hue someone picked, so only an untouched one colours per person.
+    colorByContributor:
+      typeof raw.colorByContributor === "boolean"
+        ? raw.colorByContributor
+        : (raw.heatmapMonoColor ?? DEFAULT_MONO_COLOR) === DEFAULT_MONO_COLOR,
     outputLocale: normalizeLocaleCode(raw.outputLocale),
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
     claim: isDraftClaim(raw.claim) ? raw.claim : null,
@@ -1323,6 +1336,7 @@ export const useContributionStore = create<ContributionState>()(
           state.title = "";
           state.inputMode = "toggle";
           state.heatmapMonoColor = DEFAULT_MONO_COLOR;
+          state.colorByContributor = true;
           state.outputLocale = "en";
           state.asks = {};
           state.selfId = null;
