@@ -23,8 +23,19 @@ export default {
     "src/core/parse-authors.ts",
     "src/core/statement.ts",
   ],
-  // The statement tests read the census corpus, so census/tests stays in the sandbox.
-  ignorePatterns: ["census/*", "!census/tests", "e2e", "docs", "public", "integrations", "coverage", "reports"],
+  // The statement tests read the census corpus, and the heatmap option tests read the Typst
+  // library, so census/tests and integrations/typst stay in the sandbox.
+  ignorePatterns: [
+    "census/*",
+    "!census/tests",
+    "integrations/*",
+    "!integrations/typst",
+    "e2e",
+    "docs",
+    "public",
+    "coverage",
+    "reports",
+  ],
   reporters: ["clear-text", "progress", "json", "html"],
   jsonReporter: { fileName: "reports/mutation/mutation.json" },
   htmlReporter: { fileName: "reports/mutation/mutation.html" },
