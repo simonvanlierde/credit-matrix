@@ -55,8 +55,13 @@ export function WelcomeCard() {
   const [dialogEl, setDialogEl] = useState<HTMLDialogElement | null>(null);
   // Set by "Start fresh": its next step is typing the first name.
   const startFresh = useRef(false);
+  // False until the first-run decision below is made. The prerendered card is visible from the
+  // first paint (data-first-run, see globals.css) and stays so until it is closed or declined, so
+  // it never blinks out between the prerendered look and showModal(). A returning visitor's is
+  // hidden by the inline script in index.html.
+  const [decided, setDecided] = useState(false);
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !dialogEl) return;
     const state = useContributionStore.getState();
     // A link arrival brings its own onboarding (a claim opens the co-author
     // page, even after a reload), so the welcome must not land on top of
@@ -68,19 +73,21 @@ export function WelcomeCard() {
     // once read, so a reload after closing the card does not open it again.
     const askedFor = window.location.hash === "#getting-started";
     if (askedFor) window.history.replaceState(null, "", window.location.pathname + window.location.search);
-    if (askedFor || !(state.welcomeSeen || arrivedOnShareLink || state.claim)) state.openWelcome();
-  }, [hydrated]);
+    if (askedFor || !(state.welcomeSeen || arrivedOnShareLink || state.claim)) {
+      state.openWelcome();
+    }
+    setDecided(true);
+  }, [hydrated, dialogEl]);
 
   // Drive the native dialog from the store flag, so the header's "How it works"
   // and the first-run auto-open share one code path.
   useModalDialog(dialogEl, welcomeOpen);
 
-  if (!hydrated) return null;
-
   return (
     <dialog
       ref={setDialogEl}
       id="getting-started"
+      data-first-run={decided && !welcomeOpen ? undefined : ""}
       aria-labelledby="getting-started-title"
       onClose={(event) => {
         closeWelcome();

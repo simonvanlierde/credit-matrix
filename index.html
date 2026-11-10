@@ -6,6 +6,18 @@
     <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)" />
     <title>CRediT Matrix · CRediT author statement generator</title>
+    <!-- A returning visitor (or a share link) never sees the prerendered first-run card: decided before first paint. Keep in step with WelcomeCard. -->
+    <script>
+      "use strict";
+      try {
+        const saved = JSON.parse(localStorage.getItem("credit-generator-state"));
+        if (saved?.state?.welcomeSeen === true || location.hash.startsWith("#s="))
+          document.documentElement.setAttribute("data-welcome-skip", "");
+      } catch {
+        // Storage blocked or unreadable: the store treats it as a first visit too.
+      }
+    </script>
+    <noscript><style>dialog[data-first-run]{display:none}</style></noscript>
     <!--metadata-->
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-icon.png" />
