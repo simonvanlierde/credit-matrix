@@ -1600,3 +1600,6 @@ msgstr "Este ficheiro de citação não indica autores."
 
 msgid "citationConverting"
 msgstr "A ler o ficheiro de citação… Pode ser necessário transferir primeiro o conversor."
+
+msgid "exportRoCrateFragment"
+msgstr "Fragmento RO-Crate"

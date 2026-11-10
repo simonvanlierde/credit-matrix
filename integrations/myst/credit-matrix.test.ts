@@ -5,7 +5,15 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
-import plugin, { authorsFor, normalizeRole, statementNode } from "./credit-matrix.mjs";
+import {
+  AVAILABLE_LOCALES,
+  loadRoleCatalog,
+  loadUiCatalog,
+  makeRoleTranslator,
+  makeUiTranslator,
+  resolveLocaleTag,
+} from "@/core/i18n";
+import plugin, { authorsFor, normalizeRole, statementEntries, statementNode } from "./credit-matrix.mjs";
 
 type Node = { type: string; value?: string; children?: Node[] };
 const text = (nodes: Node[]): string => nodes.map((n) => n.value ?? text(n.children ?? [])).join("");
@@ -87,6 +95,49 @@ describe("MyST plugin", () => {
       "Marie Curie: Conceptualization, Software, Writing – original draft; " +
         "Albert Einstein: Formal analysis, Investigation, Writing – review & editing.",
     );
+  });
+
+  it.each([
+    ...AVAILABLE_LOCALES.map(({ code }) => code),
+    "fr-CA",
+    "de-DE",
+    "pt-BR",
+    "zh-CN",
+    "zh-TW",
+    "zh-Hant",
+    "zh-HK",
+    "zh-Hans-TW",
+    "unknown",
+  ])("uses page language %s with the core's locale fallback", async (lang) => {
+    const dir = mkdtempSync(join(tmpdir(), "credit-myst-language-"));
+    const page = join(dir, "index.md");
+    writeFileSync(join(dir, "myst.yml"), "project:\n  lang: de\n");
+    writeFileSync(
+      page,
+      `---\nlang: ${lang}\nauthors:\n  - name: Lin Wei\n    roles: [Software, Validation]\n  - name: Eva Novak\n    roles: [Software]\n---\n`,
+    );
+    const locale = resolveLocaleTag(lang) ?? "en";
+    const options = {
+      format: "by-author" as const,
+      locale,
+      translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
+      translateUi: makeUiTranslator(await loadUiCatalog(locale)),
+    };
+    const expected = generateStatement(statementEntries(authorsFor(page)), options).replace(/^CRediT: /, "");
+    expect(text(plugin.directives[0].run({}, { path: page }))).toBe(`${expected}.`);
+  });
+
+  it("inherits project language for Markdown and notebooks", () => {
+    const dir = mkdtempSync(join(tmpdir(), "credit-myst-project-language-"));
+    writeFileSync(
+      join(dir, "myst.yml"),
+      "project:\n  lang: fr\n  authors:\n    - name: Lin Wei\n      roles: [Software]\n",
+    );
+    for (const extension of ["md", "ipynb"]) {
+      const page = join(dir, `index.${extension}`);
+      writeFileSync(page, "# Contributors\n");
+      expect(text(plugin.directives[0].run({}, { path: page }))).toBe("Lin Wei\u00a0: Logiciel(s).");
+    }
   });
 
   it("names the published version in the READMEs' plugin URL", () => {

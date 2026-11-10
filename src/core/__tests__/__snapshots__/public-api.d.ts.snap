@@ -102,8 +102,8 @@ export declare class CreditMatrixElement extends HTMLElement {
   render(): Promise<void>;
 }
 // i18n.d.ts
-import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog } from "./ui-strings.js";
-export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode };
+import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog, v as resolveLocaleTag } from "./ui-strings.js";
+export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode, resolveLocaleTag };
 // index.d.ts
 import { n as CreditRoleName, r as getRoleByName, t as CREDIT_ROLES } from "./credit-roles.js";
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
@@ -1131,6 +1131,23 @@ export declare function toLatexCredits(authors: Author[], { yesNo }?: {
  * with their level, matching the statement's `showLevels` behaviour.
  */
 export declare function toMarkdown(authors: Author[], translateRole?: RoleTranslator, translateUi?: UiTranslator, locale?: string): string;
+interface Reference {
+  "@id": string;
+}
+interface RoCrateAttributionFragment {
+  "@context": "https://w3id.org/ro/crate/1.2/context";
+  "@graph": (Reference & Record<string, unknown>)[];
+}
+/**
+ * People, CRediT Role entities and links for an existing RO-Crate 1.2 root.
+ * Merge the ./ entry into the crate's root and append the other graph entries,
+ * reconciling existing identifiers. This fragment is not a standalone crate.
+ * No package title, publication date, licence or workflow claims are invented.
+ */
+export declare function toRoCrateFragment(authors: Author[]): {
+  metadata: RoCrateAttributionFragment;
+  warnings: string[];
+};
 /**
  * A draft as a tenzing contributor spreadsheet (CSV). tenzing records a role as
  * done or not, so any score above 0 becomes TRUE, and it has no column for equal
@@ -1405,7 +1422,7 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-export { type Ask, type AskEvent, type AskState, type Author, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, getRoleByName };
+export { type Ask, type AskEvent, type AskState, type Author, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, getRoleByName };
 // lookup.d.ts
 import { n as CreditRoleName } from "./credit-roles.js";
 /**
@@ -1548,6 +1565,12 @@ declare function hasCatalog(locale: string): locale is Exclude<LocaleCode, "en">
  * explicit. Keep those drafts readable while all new state uses BCP 47 tags.
  */
 declare function normalizeLocaleCode(locale: unknown): LocaleCode;
+/**
+ * An offered locale for a BCP 47 or Sphinx-style tag ("de-DE" → "de", "pt-BR" → "pt-PT",
+ * "zh-CN" → "zh-Hans"); null when neither the tag nor its language is offered. Traditional
+ * Chinese (zh-Hant, zh-TW, zh-HK, zh-MO) has no catalog and gives "en", never Simplified.
+ */
+declare function resolveLocaleTag(tag: string | null | undefined): LocaleCode | null;
 /** Load a locale's role catalog. Returns null for `en` or any unknown locale (→ identity translator). */
 declare function loadRoleCatalog(locale: string): Promise<RoleCatalog | null>;
 /** Maps a canonical English role name to its localized description. */
@@ -1577,4 +1600,4 @@ declare function loadUiCatalog(locale: string): Promise<UiCatalog | null>;
 declare function makeUiTranslator(catalog: Partial<UiCatalog> | null | undefined): UiTranslator;
 /** Canonical English UI translator (no catalog): the default for all consumers. */
 declare const DEFAULT_UI_TRANSLATOR: UiTranslator;
-export { normalizeLocaleCode as _, loadUiCatalog as a, DEFAULT_ROLE_TRANSLATOR as c, RoleDescriber as d, RoleTranslator as f, makeRoleTranslator as g, makeRoleDescriber as h, UiTranslator as i, LocaleCode as l, loadRoleCatalog as m, UiCatalog as n, makeUiTranslator as o, hasCatalog as p, UiKey as r, AVAILABLE_LOCALES as s, DEFAULT_UI_TRANSLATOR as t, RoleCatalog as u };
+export { normalizeLocaleCode as _, loadUiCatalog as a, DEFAULT_ROLE_TRANSLATOR as c, RoleDescriber as d, RoleTranslator as f, makeRoleTranslator as g, makeRoleDescriber as h, UiTranslator as i, LocaleCode as l, loadRoleCatalog as m, UiCatalog as n, makeUiTranslator as o, hasCatalog as p, UiKey as r, AVAILABLE_LOCALES as s, DEFAULT_UI_TRANSLATOR as t, RoleCatalog as u, resolveLocaleTag as v };

@@ -55,6 +55,16 @@ the first heading in the document and is unnumbered. References still come after
 
 [`example.qmd`](example.qmd) is a complete document.
 
+## Document language
+
+Set `lang` in the document's front matter, for example `lang: fr-CA` or `lang: ja`.
+Role names, contribution levels, separators and the default heading follow that language.
+The filter uses the app's nine language catalogs: English, French, German, Spanish, Italian,
+Portuguese (Portugal), Dutch, Simplified Chinese and Japanese. Regional tags select the available
+language; unsupported languages and Traditional Chinese fall back to English.
+Your own `credit-matrix.heading` still wins. Heatmap labels follow the document language too;
+`credit-matrix.locale` overrides the figure language.
+
 ## Options
 
 ```yaml
@@ -77,11 +87,6 @@ See [figure options and examples](../heatmap.md) for setup and all rendering opt
 
 ## Limitations
 
-- English only. The filter ignores the document's `lang`: role names, separators and the default
-  heading are always English. Set `heading` for a different title. For the statement in another
-  language, run `credit-matrix statement file.json --locale fr` from the package CLI and paste
-  the result. The [app](https://github.com/simonvanlierde/credit-matrix) and the
-  `credit-matrix` package also write the statement in eight other languages.
 - One format: by author, with levels. The app also writes by role and with initials.
 - Contributors who are not authors (acknowledgements) are not handled: Quarto has no field for
   them.

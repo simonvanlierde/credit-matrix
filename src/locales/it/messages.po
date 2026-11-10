@@ -1600,3 +1600,6 @@ msgstr "Questo file di citazione non elenca autori."
 
 msgid "citationConverting"
 msgstr "Lettura del file di citazione… Il convertitore potrebbe dover essere scaricato prima."
+
+msgid "exportRoCrateFragment"
+msgstr "Frammento RO-Crate"

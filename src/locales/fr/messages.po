@@ -1600,3 +1600,6 @@ msgstr "Ce fichier de citation ne mentionne aucun auteur."
 
 msgid "citationConverting"
 msgstr "Lecture du fichier de citation… Le convertisseur doit peut-être d'abord être téléchargé."
+
+msgid "exportRoCrateFragment"
+msgstr "Fragment RO-Crate"

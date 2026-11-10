@@ -159,8 +159,9 @@ points at the `v<version>` tag instead of `main`.
   `pnpm verify` includes these builds and checks the Python extension and tests with Ruff and ty.
 - **Quarto**: the rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto`
   on your `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
-- **Typst**: `integrations/typst/translations.json` is generated from the app's catalogs. After
-  changing them, run `pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs`.
+- **Typst and Quarto**: generated translations come from the app's catalogs. After changing them, run
+  `pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs && node scripts/build-quarto-translations.mjs`.
+  The Quarto test checks every generated role name, label and heading against its source catalog.
   The Typst test (`integrations/typst/credit-matrix.test.ts`) fails when the file is stale. With
   `typst` on your `PATH` it also compiles the examples and checks the statement text against the
   app's; it is skipped without Typst, and CI installs it.

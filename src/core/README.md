@@ -34,10 +34,11 @@ Node 22.19 or later. Run it with `npx credit-matrix` without installing, or with
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
 npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 people and roles
-npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref, md, latex-credits, tenzing or svg
+npx credit-matrix convert paper.xml --to json      # convert a JATS4R file to native JSON
 npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
 npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
 npx credit-matrix convert team.csv --to svg > heatmap.svg  # the heatmap; --locale sets its language
+npx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
 npx credit-matrix convert team.csv --to quarto > authors.yml  # Quarto/Pandoc author metadata, with levels
 npx credit-matrix convert team.csv --to myst > authors.yml    # MyST/Jupyter Book author metadata, without levels
 npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
@@ -53,6 +54,14 @@ takes `--yes-no` for flat cells with no levels.
 
 `statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
 or `codemeta`. See [CodeMeta attribution](#codemeta-attribution) for its output and limits.
+
+### RO-Crate attribution
+
+`credit-matrix convert draft.json --to ro-crate` exports people and linked CRediT roles for an existing RO-Crate 1.2 package.
+`toRoCrateFragment(authors)` returns `{ metadata, warnings }` with the same fragment.
+It includes proposed root links but no package title, date or licence, so it is not a standalone crate.
+See [merging and validating the fragment](../../integrations/ro-crate/README.md).
+Keep native JSON for scores and replies.
 
 ### CodeMeta attribution
 
@@ -313,7 +322,7 @@ holds its exact shape. By entry point:
     `Decision`, `Difference`, `Level`, `Outcome`, `OrcidKey`, `OrcidProof`, `Patch`, `Reply`, `Review`, `Target`
 - `credit-matrix/lookup`: `lookupOrcidPerson`, `lookupDoiWork`, `normalizeDoi`, `DOI_INPUT_REGEX`,
   and the types `OrcidLookupResult`, `OrcidErrorCode`, `DoiLookupResult`, `DoiErrorCode`, `DoiAuthor`
-- `credit-matrix/i18n`: `AVAILABLE_LOCALES`, `normalizeLocaleCode`, `hasCatalog`,
+- `credit-matrix/i18n`: `AVAILABLE_LOCALES`, `normalizeLocaleCode`, `resolveLocaleTag`, `hasCatalog`,
   `loadRoleCatalog`, `makeRoleTranslator`, `makeRoleDescriber`, `DEFAULT_ROLE_TRANSLATOR`,
   `loadUiCatalog`, `makeUiTranslator`, `DEFAULT_UI_TRANSLATOR`, and the types `LocaleCode`,
   `RoleCatalog`, `RoleDescriber`, `RoleTranslator`, `UiCatalog`, `UiKey`, `UiTranslator`

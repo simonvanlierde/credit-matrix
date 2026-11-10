@@ -1600,3 +1600,6 @@ msgstr "Dit citatiebestand vermeldt geen auteurs."
 
 msgid "citationConverting"
 msgstr "Citatiebestand wordt gelezen… De converter moet mogelijk eerst worden gedownload."
+
+msgid "exportRoCrateFragment"
+msgstr "RO-Crate-fragment"

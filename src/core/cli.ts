@@ -25,6 +25,7 @@ import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./e
 import { RepeatedIdError, toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
 import { toMarkdown } from "./export/markdown";
+import { toRoCrateFragment } from "./export/ro-crate";
 import { toTenzing } from "./export/tenzing";
 import { toJats4rXml } from "./export/xml";
 import type { XmlParser } from "./export/xml-import";
@@ -46,7 +47,7 @@ Commands:
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
       --format codemeta prints linked CodeMeta 3.0 people and roles, with
       non-authors in contributor. Warns about local identities and omitted scores.
-  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg|quarto|myst [--yes-no] [--locale <code>]
+  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg|quarto|myst|ro-crate [--yes-no] [--locale <code>]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
       and latex-credits writes 1 or 0.
@@ -63,6 +64,8 @@ Commands:
       --color '#1f4e79' --palette blue|green|gray --shape square|rounded|circle
       --size 22 --legend true|false --labels full|short --horizontal
       --skipempty true|false. Color overrides palette; size is in pixels.
+      ro-crate prints an RO-Crate 1.2 attribution fragment. Merge its people,
+      roles and root links into existing package metadata; it is not a complete crate.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
       Print a link that asks one contributor to check their roles,
       or with --blank, to fill them in from scratch.
@@ -278,6 +281,11 @@ export async function run(argv: string[]): Promise<string> {
         }
         case "tenzing":
           return toTenzing(authors);
+        case "ro-crate": {
+          const { metadata, warnings } = toRoCrateFragment(authors);
+          for (const warning of warnings) process.stderr.write(`credit-matrix: ${warning}\n`);
+          return JSON.stringify(metadata, null, 2);
+        }
         case "quarto":
           return toQuarto(authors, { yesNo: values["yes-no"] });
         case "myst":
@@ -304,7 +312,7 @@ export async function run(argv: string[]): Promise<string> {
         }
         default:
           throw new UsageError(
-            "convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto or myst.",
+            "convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate.",
           );
       }
     case "ask": {
