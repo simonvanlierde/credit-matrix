@@ -380,9 +380,6 @@ msgstr "ORCID のサービスを利用できません。しばらくしてから
 msgid "importFromDoi"
 msgstr "DOI からインポート"
 
-msgid "structuredFileUpload"
-msgstr "構造化ファイルのアップロード"
-
 msgid "doiPlaceholder"
 msgstr "例：10.1234/abcde"
 

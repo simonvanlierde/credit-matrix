@@ -380,9 +380,6 @@ msgstr "ORCID 服务暂时不可用。请稍后重试，或直接输入姓名。
 msgid "importFromDoi"
 msgstr "从 DOI 导入"
 
-msgid "structuredFileUpload"
-msgstr "上传结构化文件"
-
 msgid "doiPlaceholder"
 msgstr "例如：10.1234/abcde"
 

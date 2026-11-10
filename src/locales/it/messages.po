@@ -380,9 +380,6 @@ msgstr "Il servizio ORCID non è disponibile. Riprovare a breve oppure digitare 
 msgid "importFromDoi"
 msgstr "Importa da un DOI"
 
-msgid "structuredFileUpload"
-msgstr "Carica un file strutturato"
-
 msgid "doiPlaceholder"
 msgstr "ad es. 10.1234/abcde"
 

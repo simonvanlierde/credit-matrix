@@ -380,9 +380,6 @@ msgstr "De ORCID-service is niet beschikbaar. Probeer het zo meteen opnieuw of t
 msgid "importFromDoi"
 msgstr "Importeren vanuit een DOI"
 
-msgid "structuredFileUpload"
-msgstr "Gestructureerd bestand uploaden"
-
 msgid "doiPlaceholder"
 msgstr "bijv. 10.1234/abcde"
 
