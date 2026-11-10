@@ -980,6 +980,9 @@ msgstr "Grigio scuro"
 msgid "languageSettings"
 msgstr "Impostazioni della lingua"
 
+msgid "stripEveryoneAgreed"
+msgstr "Tutti d’accordo"
+
 msgid "stripOpenTeam"
 msgstr "Chiedi ai coautori"
 

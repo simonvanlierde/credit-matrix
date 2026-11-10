@@ -980,6 +980,9 @@ msgstr "ダークグレー"
 msgid "languageSettings"
 msgstr "言語設定"
 
+msgid "stripEveryoneAgreed"
+msgstr "全員が合意しました"
+
 msgid "stripOpenTeam"
 msgstr "共著者に依頼"
 

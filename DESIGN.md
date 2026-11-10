@@ -240,7 +240,14 @@ dash for not asked, a clock for asked, a count of open differences that opens Re
 check for settled, or "You" for your own column. The role name itself opens the role's description,
 so there are no separate info buttons. Role names are not in the tab order. Instead you reach them
 with the grid's arrow keys, so the whole matrix is one tab stop. The key hint under the legend is
-always visible.
+always visible where there is a mouse or trackpad, and hidden under `pointer: coarse`, where there
+are no keys to press; it stays the grid's accessible description either way.
+
+Pointing at a cell, or focusing it, marks its phrase in the statement with a `<mark>` that is
+underlined as well as tinted, and pointing at a phrase rings its cell in primary. Nothing moves and
+nothing is announced. The status strip counts answers only once someone has been asked; when every
+asked co-author has answered and nothing is left to review, the count becomes the double check and
+"Everyone agreed".
 
 ## Do and don't
 
