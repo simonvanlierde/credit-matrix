@@ -323,3 +323,24 @@ for (const width of [1440, 320]) {
     expect((await scan(page)).violations).toEqual([]);
   });
 }
+
+test("reports the smallest exported text at final print size, including the legend", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  await page.getByRole("spinbutton", { name: "Width (mm)", exact: true }).fill("40");
+  await page.keyboard.press("Tab");
+  const source = await page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img").getAttribute("src");
+  const svg = decodeURIComponent(source?.split(",").slice(1).join(",") ?? "");
+  const points = await page.evaluate((text) => {
+    const root = new DOMParser().parseFromString(text, "image/svg+xml").documentElement;
+    const sizes = [...root.querySelectorAll("text")].map((node) => Number(node.getAttribute("font-size")));
+    return (Math.min(...sizes) * 40 * 72) / (Number(root.getAttribute("width")) * 25.4);
+  }, svg);
+  await expect(
+    page.getByText(
+      `Labels would print at about ${new Intl.NumberFormat("en", { maximumFractionDigits: 1 }).format(points)} pt. Increase the width or transpose the figure for readable print.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
+});

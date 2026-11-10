@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Author, buildHeatmapSvg, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
+import { heatmapPrintSize, svgDimensions } from "@/lib/heatmap-print";
 import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { withPngResolution, withPngText } from "@/lib/png-text";
 import { useFormatter, useTranslations } from "@/lib/translations";
@@ -15,12 +16,6 @@ import { HeatmapFigureSettings } from "./HeatmapFigureSettings";
 import { HeatmapRecipe } from "./HeatmapRecipe";
 
 type ExportFormat = "svg" | "png";
-
-function svgDimensions(svg: string) {
-  const dimensions = svg.match(/width="([\d.]+)" height="([\d.]+)"/);
-  if (!dimensions) throw new Error("SVG dimensions missing");
-  return { width: Number(dimensions[1]), height: Number(dimensions[2]) };
-}
 
 function pngDimensions(svg: string, widthMm: number, dpi: number) {
   const dimensions = svgDimensions(svg);
@@ -126,9 +121,7 @@ export function HeatmapExports({
   }
   const dimensions = preview ? pngDimensions(preview, settings.pngWidthMm, settings.pngDpi) : null;
   const pngTooLarge = dimensions ? oversizedPng(dimensions) : false;
-  const printFontSize = preview
-    ? (((settings.fontSize * settings.pngWidthMm) / svgDimensions(preview).width) * 72) / 25.4
-    : null;
+  const printFontSize = preview ? heatmapPrintSize(preview, settings.pngWidthMm).minFontPt : null;
 
   function fail(format: ExportFormat) {
     const message = t("errHeatmapExport", { format: format.toUpperCase() });

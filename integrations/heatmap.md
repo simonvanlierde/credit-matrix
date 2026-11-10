@@ -163,3 +163,23 @@ The JavaScript API calls this option `acronyms`. Text alternatives always retain
 MyST and Typst fall back to full names when initials would identify more than one contributor.
 Typst preserves unspaced names and otherwise takes the first grapheme of each word.
 Its name parsing can differ from JavaScript. Set each contributor's `initials` explicitly to align Typst labels with the app.
+
+## Final-size readability checks
+
+The browser test suite includes `e2e/heatmap-print.spec.ts`. It renders small teams and long
+contributor names in all nine output languages, using both font stacks. Reference figures fit
+within 89 mm or 183 mm columns and a 170 mm height; the test reduces width when height requires it.
+These are reference bounds from the [Nature figure guide](https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/), not universal journal requirements.
+
+Tests require at least 5 pt for the smallest text, including the legend. They measure actual browser
+text bounds for clipping and overlap, check 4.5:1 text contrast and 3:1 contribution-mark contrast,
+and save SVG, rendered PNG and physical-size measurements under `test-results/`.
+The existing CI Playwright job runs them on Chromium for PRs and all three engines on main and weekly.
+
+Run locally with `pnpm exec playwright test e2e/heatmap-print.spec.ts`. A dense-team regression
+also confirms that a valid figure can be too small at column width, or too tall after transposition.
+The app's small-print advisory uses the actual smallest exported text rather than the selected
+nominal font size. Increasing PNG DPI does not increase the printed text size.
+
+These checks cover the reference fixtures and installed browser fonts. They do not replace checking
+the final manuscript, a native reader's review, a physical printed proof, or the publisher's font rules.
