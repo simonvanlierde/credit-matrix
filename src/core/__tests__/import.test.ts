@@ -14,6 +14,14 @@ const roster = () => [
 ];
 
 describe("detectFormat", () => {
+  it("treats a cut-off JSON export as JSON, so importing it fails instead of reading lines as names", async () => {
+    const broken = '{"version": 1,\n "authors": [ {"name": "Ada Lovelace",\n "contributions": [ }';
+    for (const text of [broken, '[{"name": "Ada Lovelace",\n{"name": "Alan Turing"']) {
+      expect(detectFormat(text)).toBe("json");
+      await expect(importAny(text)).rejects.toThrow();
+    }
+  });
+
   it("reads a comma list of names containing 'name' as names, not CSV", () => {
     expect(detectFormat("Anne Namer, Bob Smith")).toBe("names");
   });
