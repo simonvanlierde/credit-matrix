@@ -38,6 +38,21 @@ test.describe("Offline", () => {
     await expect(page).toHaveTitle("Accessibility statement · CRediT Matrix");
   });
 
+  test("an unvisited page and language stay interactive offline", async ({ page, context }) => {
+    test.skip(!process.env.CI, "needs the production build; CI runs one");
+    await page.goto("/");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await context.setOffline(true);
+    await page.goto("/about");
+    const bibtex = page.getByRole("radio", { name: "BibTeX" });
+    await bibtex.click();
+    await expect(bibtex).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("button", { name: "Language settings" }).click();
+    await page.getByRole("combobox", { name: "Interface language" }).click();
+    await page.getByRole("option", { name: "Nederlands" }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "nl");
+  });
+
   test("the manifest is served and installable", async ({ request }) => {
     const res = await request.get("/manifest.webmanifest");
     expect(res.ok()).toBe(true);

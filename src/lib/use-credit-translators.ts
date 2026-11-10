@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { getRoleByName } from "@/core";
 import {
@@ -71,7 +69,7 @@ interface LoadedTranslators extends CreditTranslators {
  * Kept as one hook rather than one per field so the common case (both languages
  * the same) fetches the catalog once instead of twice.
  *
- * Interface strings are not here: those are use-intl's `useTranslations`, which
+ * Interface strings are not here: those are Lingui's `useTranslations`, which
  * every component already uses and which needs no catalog of its own.
  */
 export function useCreditTranslators(): CreditTranslators {

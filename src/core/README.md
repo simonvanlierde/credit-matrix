@@ -2,7 +2,7 @@
 
 [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) statements and exports, as the
 [CRediT Matrix](https://credit.duinlab.nl) web app runs them in the browser. It is an ESM package
-with types, with no tie to React or Next.js, and its one runtime dependency is `zod`.
+with types, with no tie to React or Next.js, and runtime dependencies `zod` and `@lingui/core`.
 
 ```bash
 npm install credit-matrix
@@ -11,7 +11,7 @@ npm install credit-matrix
 ```ts
 import { generateStatement, importAny, toJats4rXml } from "credit-matrix";
 
-const { authors } = await importAny(csvText); // JSON, CSV, JATS4R or Crossref XML, a share link or names
+const { authors } = await importAny(csvText); // JSON, CodeMeta, CSV, JATS4R or Crossref XML, a share link or names
 generateStatement(authors, { format: "by-role" }); // "CRediT: Conceptualization: Jane Smith; …"
 toJats4rXml(authors);
 ```
@@ -28,7 +28,7 @@ toJats4rXml(authors);
 ## CLI
 
 The package also installs a `credit-matrix` command: the CLI, with an XML parser bundled. It needs
-Node 22 or later. Run it with `npx credit-matrix` without installing, or with
+Node 22.19 or later. Run it with `npx credit-matrix` without installing, or with
 `node src/core/dist/cli.js` from a clone after `pnpm --filter credit-matrix build`.
 
 ```bash
@@ -47,6 +47,7 @@ files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement -
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
 `convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
 takes `--yes-no` for flat cells with no levels.
+`--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN` simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and gives English.
 
 `statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
 or `codemeta`. See [CodeMeta attribution](#codemeta-attribution) for its output and limits.
@@ -158,6 +159,9 @@ Only non-zero contributions appear in statements.
 assets.
 Its `<desc>` is the by-author contribution statement, so a screen reader hears who did what;
 `heatmapDescription` returns that text, for an image's alt text or a PNG's Description field.
+
+The [figure options guide](../../integrations/heatmap.md) covers palettes, shapes, cell size, legends,
+short labels and orientation for the JavaScript API, CLI and document plugins.
 
 `fromCsv` needs a `Name` column. Other headers and role names match whatever their case or kind of
 dash. A score cell is a number from 0 to 100 or a level word (`None`, `Supporting`, `Equal`, `Lead`).
@@ -305,3 +309,17 @@ pnpm --filter credit-matrix build  # dist/, as published
 The core tests run under Node, with linkedom standing in for `DOMParser`. See
 [CONTRIBUTING.md](https://github.com/simonvanlierde/credit-matrix/blob/main/CONTRIBUTING.md#testing)
 for the package checks and how to update the type snapshot.
+
+### Citation-file imports
+
+`importAny` reads CodeMeta author names and ORCID iDs directly, leaving contribution roles empty.
+CITATION.cff and .zenodo.json need an injected `convertCitation(text, format)` callback that returns
+CodeMeta JSON from citesync. The web app supplies this through a lazy worker running citesync 0.4.0.
+It loads a pinned Pyodide runtime and checksum-verified Python wheels, both from the web app's own site.
+The file stays in the browser. A failed download leaves it available to retry or convert in the
+[citesync playground](https://simonvanlierde.com/citesync/). CodeMeta imports work offline; citation
+imports do after one online use.
+
+`lookupDoiWork` returns optional `roles` on each contributor when Crossref deposits them with the
+CRediT vocabulary. DataCite contributor types are not CRediT roles. The app previews deposited roles
+and asks for confirmation before applying them; absent roles leave the matrix empty.

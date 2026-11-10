@@ -19,10 +19,36 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   id, name or iD; Review shows it as a warning, not as verified.
 - Review shows the paper title a verified ORCID sign-in was given for when it differs from the
   draft's title.
+- The import box reads `CITATION.cff` and `.zenodo.json` through citesync, in your browser. The
+  converter is served from this site and works offline after its first use with that release.
+  `importAny` takes a `convertCitation` callback for these formats, and `DetectedFormat` gains
+  `codemeta`, `cff` and `zenodo`. The CLI asks you to convert them to `codemeta.json` first.
+- CodeMeta import keeps the non-authors listed under `contributor`, unless they are already
+  listed as authors, and skips a person whose name it cannot use instead of refusing the whole file.
+- A DOI lookup previews the CRediT roles the publisher deposited and adds them after you confirm.
+  `DoiAuthor` gains `roles`.
+- Heatmap figures take the same options everywhere: `color`, `palette`, `shape`, `size`,
+  `legend`, `labels`, `levels`, `horizontal` and `skipempty`. They work in `buildHeatmapSvg`,
+  `credit-matrix convert --to svg`, the new MyST and Sphinx `credit-heatmap` directives, the
+  Quarto and Pandoc `heatmap` key, and Typst's `credit-heatmap`. See
+  [heatmap figures](integrations/heatmap.md).
 
 ### Changed
 
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
+- Heatmaps look different by default: square cells with a thin gray rule on white, where cells
+  were rounded on off-white. `shape: "rounded"` brings back the rounded cells.
+- The package needs Node 22.19 or later, because its new runtime dependency `@lingui/core`
+  does.
+- The CLI, the Sphinx extension and Typst render Traditional Chinese (`zh-TW`, `zh-HK`,
+  `zh-Hant`) in English instead of Simplified Chinese. The `<credit-matrix>` element now maps
+  `pt-BR` to Portuguese and `zh-CN` to Simplified Chinese, as the CLI already did.
+- The Sphinx extension reports a failed statement as "CRediT rendering failed".
+
+### Deprecated
+
+- The `buildHeatmapSvg` options `monoColor`, `transpose` and `showLevels`. Use `color`,
+  `horizontal` and `levels`.
 
 ### Fixed
 

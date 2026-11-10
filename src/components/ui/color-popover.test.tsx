@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { expect, it, vi } from "vitest";
-import en from "@/messages/en.json";
+import { english } from "@/lib/test-messages";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { ColorPopover } from "./color-popover";
 
 it("passes on the custom color when it is committed, not on every drag step", () => {
@@ -12,7 +13,7 @@ it("passes on the custom color when it is committed, not on every drag step", ()
     </IntlProvider>,
   );
   fireEvent.click(screen.getByRole("button", { name: "Open" }));
-  const input = screen.getByLabelText(en.customColor);
+  const input = screen.getByLabelText(english.customColor);
 
   fireEvent.input(input, { target: { value: "#111111" } });
   fireEvent.input(input, { target: { value: "#123456" } });
@@ -30,12 +31,12 @@ it("passes on the last custom color when the popover closes before the picker co
     </IntlProvider>,
   );
   fireEvent.click(screen.getByRole("button", { name: "Open" }));
-  const input = screen.getByLabelText(en.customColor);
+  const input = screen.getByLabelText(english.customColor);
 
   fireEvent.input(input, { target: { value: "#111111" } });
   fireEvent.input(input, { target: { value: "#123456" } });
   fireEvent.keyDown(input, { key: "Escape" });
 
-  expect(screen.queryByLabelText(en.customColor)).toBeNull();
+  expect(screen.queryByLabelText(english.customColor)).toBeNull();
   expect(onChange.mock.calls).toEqual([["#123456"]]);
 });

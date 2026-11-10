@@ -1,6 +1,6 @@
 # 3. Static export, lookups from the browser
 
-- Status: accepted
+- Status: accepted; the Next.js build is superseded by [ADR 0005](0005-vite-lingui.md)
 - Date: 2026-09-30
 - Supersedes: the `/api/orcid` and `/api/doi` proxies and the OpenNext deployment in
   [ADR 0001](0001-client-side-architecture.md)

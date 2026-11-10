@@ -110,7 +110,7 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
     await stubOrcid(fresh, issuer);
     await fresh.goto("/");
     await fresh.getByRole("button", { name: "Import" }).click();
-    await fresh.getByLabel("Upload CSV, TSV, JSON, or XML file").setInputFiles({ ...file, buffer });
+    await fresh.locator("dialog input[type=file]").setInputFiles({ ...file, buffer });
     await fresh.getByRole("button", { name: "Import data" }).click();
     await fresh.getByRole("tab", { name: /^Review/ }).click();
     return fresh;

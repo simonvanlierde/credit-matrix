@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useFormatter, useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { isValidOrcid } from "@/core";
 import { hasContributions, MAX_AUTHORS } from "@/core/author";
 import { splitNameList } from "@/core/parse-authors";
 import { announce } from "@/lib/announce";
+import { useFormatter, useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
 import { detectOrcid, fetchOrcidName, nameBesideOrcid, orcidErrorText } from "./orcid";
 

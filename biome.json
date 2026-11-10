@@ -9,14 +9,17 @@
     "lineWidth": 120
   },
   "markdown": {
-    "formatter": { "enabled": false }
+    "formatter": {
+      "enabled": false
+    }
   },
   "yaml": {
-    "formatter": { "enabled": false }
+    "formatter": {
+      "enabled": false
+    }
   },
   "linter": {
     "domains": {
-      "next": "recommended",
       "playwright": "recommended",
       "project": "recommended",
       "react": "recommended",
@@ -80,6 +83,12 @@
             "noSecrets": "off"
           }
         }
+      }
+    },
+    {
+      "includes": ["citation.csl.json"],
+      "formatter": {
+        "enabled": false
       }
     }
   ],

@@ -1,8 +1,6 @@
-"use client";
-
 import { ExternalLink as ExternalLinkIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
+import { useTranslations } from "@/lib/translations";
 import { cn } from "@/lib/utils";
 
 /** A link that opens in a new tab, with the glyph and the screen-reader note saying so. */

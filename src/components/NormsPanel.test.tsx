@@ -1,11 +1,12 @@
 import { act, render, screen, within } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
 import { creditSlug } from "@/core/credit-roles";
 import { type FieldNorms, NORM_FIELDS, NORMS, normRows, positionOf, selfPosition } from "@/lib/field-norms";
-import en from "@/messages/en.json";
-import fr from "@/messages/fr.json";
+import { english } from "@/lib/test-messages";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
+import { messages as fr } from "@/locales/fr/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { NormsPanel } from "./NormsPanel";
 
@@ -88,7 +89,7 @@ describe("normRows", () => {
 describe("NormsPanel", () => {
   function renderPanel(locale = "en", messages: typeof en = en) {
     render(
-      <IntlProvider locale={locale} messages={messages} timeZone="UTC">
+      <IntlProvider locale={locale} messages={messages}>
         <NormsPanel />
       </IntlProvider>,
     );
@@ -107,7 +108,7 @@ describe("NormsPanel", () => {
     const before = useContributionStore.getState().authors;
     renderPanel();
 
-    const table = screen.getByRole("table", { name: en.normsCaption });
+    const table = screen.getByRole("table", { name: english.normsCaption });
     expect(within(table).getAllByRole("row")).toHaveLength(15);
     expect(within(table).getByRole("columnheader", { name: /Last\s*You/ })).toBeTruthy();
     expect(screen.getByText("Your position in this draft: last author.")).toBeTruthy();
@@ -143,14 +144,14 @@ describe("NormsPanel", () => {
       store.setNormsField(NORM_FIELDS[0] ?? "");
     });
     renderPanel();
-    expect(screen.getByText(en.normsNonAuthor)).toBeTruthy();
-    expect(screen.queryByText(en.teamYou)).toBeNull();
+    expect(screen.getByText(english.normsNonAuthor)).toBeTruthy();
+    expect(screen.queryByText(english.teamYou)).toBeNull();
   });
 
   it("asks for a field when none is picked", () => {
     act(() => useContributionStore.getState().setNormsField(null));
     renderPanel();
-    expect(screen.getByText(en.normsEmpty)).toBeTruthy();
+    expect(screen.getByText(english.normsEmpty)).toBeTruthy();
     expect(screen.queryByRole("table")).toBeNull();
   });
 

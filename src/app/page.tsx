@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { ClaimGate } from "@/components/CoauthorPage";
 import { Inspector } from "@/components/Inspector";
 import { LabelledSection } from "@/components/LabelledSection";
@@ -8,7 +7,7 @@ import { WelcomeCard } from "@/components/WelcomeCard";
 import { authors } from "@/lib/json-ld";
 import codemeta from "../../codemeta.json";
 
-export const metadata: Metadata = {
+export const metadata = {
   alternates: { canonical: "/" },
 };
 

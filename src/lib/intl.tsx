@@ -1,28 +1,12 @@
-"use client";
-
+import type { Messages } from "@lingui/core";
 import { type ReactNode, useEffect, useState } from "react";
-import { IntlProvider } from "use-intl";
 import { hasCatalog, type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
 import { reloadForNewBuild } from "@/lib/reload-for-new-build";
-import en from "@/messages/en.json";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 
-/**
- * Interface translation, on `use-intl`.
- *
- * The locale comes from the store, not the URL: it is a display preference that
- * belongs to the person, and it is deliberately independent of `outputLocale`
- * (someone may want a Dutch interface and an English statement). That is why
- * this is `use-intl` rather than its `next-intl` wrapper — the routing,
- * middleware, and server-message machinery has nothing to do here, and would
- * add native build dependencies for no gain.
- *
- * English is bundled as the source and the fallback. Other locales load lazily,
- * one chunk each, so only the selected language ships.
- */
-
-/** Messages are flat key → ICU string; English defines the shape. */
-export type Messages = typeof en;
+/** Interface language is a saved preference, independent of the statement language. */
 
 /**
  * The interface language a browser asks for: the first of its preferred
@@ -88,9 +72,9 @@ export function AppIntlProvider({ children }: { children: ReactNode }) {
       setLoaded({ requested: locale, effective: "en", messages: en });
       return;
     }
-    (import(`@/messages/${locale}.json`) as Promise<{ default: Messages }>)
+    (import(`../locales/${locale}/messages.ts`) as Promise<{ messages: Messages }>)
       .then((mod) => {
-        if (active) setLoaded({ requested: locale, effective: locale, messages: mod.default });
+        if (active) setLoaded({ requested: locale, effective: locale, messages: mod.messages });
       })
       .catch(() => {
         // A locale chunk failed to load: after a deploy, reload into the new
@@ -112,16 +96,7 @@ export function AppIntlProvider({ children }: { children: ReactNode }) {
   }, [current.effective]);
 
   return (
-    <IntlProvider
-      locale={current.effective}
-      messages={current.messages}
-      // Never blank a control: fall back to the English text, then the key.
-      getMessageFallback={({ key }) => (en as Record<string, string>)[key] ?? key}
-      onError={() => {
-        // use-intl logs missing keys to the console by default. The fallback
-        // above already renders something sensible, so stay quiet.
-      }}
-    >
+    <IntlProvider locale={current.effective} messages={current.messages}>
       {children}
     </IntlProvider>
   );

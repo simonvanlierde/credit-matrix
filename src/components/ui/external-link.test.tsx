@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { expect, it } from "vitest";
+import { IntlProvider } from "@/lib/translations";
 import { ExternalLink } from "./external-link";
 
 it("opens in a new tab and says so in its accessible name", () => {

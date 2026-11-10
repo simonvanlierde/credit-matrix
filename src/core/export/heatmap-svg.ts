@@ -32,18 +32,35 @@ const DIAG = Math.SQRT1_2;
 // Ink-on-paper neutrals (matching the UI identity)
 const COLOR_TEXT = "#16181c";
 const COLOR_TEXT_DIM = "#595c63";
-const COLOR_BG = "#fafaf9";
-const COLOR_BORDER = "#e4e4e1";
+const COLOR_BG = "#ffffff";
+const COLOR_BORDER = "#c9c9c5";
+
+export class HeatmapOptionError extends Error {}
 
 export interface HeatmapSvgOptions {
-  /** Base hue for the heatmap; defaults to the app accent. */
-  monoColor?: string;
-  /** Swap axes: authors down the left, roles across the top. */
-  transpose?: boolean;
+  /** Named sequential palette; color overrides its base hue. */
+  palette?: "blue" | "green" | "gray";
+  /** Base hue for the heatmap; defaults to the palette's. */
+  color?: string;
+  shape?: "square" | "rounded" | "circle";
+  /** Cell side in SVG pixels (Typst uses points). */
+  size?: number;
+  legend?: boolean;
+  /** Short labels pair the role number with twelve characters; the text alternative retains full names. */
+  labels?: "full" | "short";
   /**
    * Grade cell fills by contribution level. When false, fills are flat
    * (contributed/none) and the legend collapses to two keys. Defaults to true.
    */
+  levels?: boolean;
+  /** Swap axes: authors down the left, roles across the top. */
+  horizontal?: boolean;
+  skipempty?: boolean;
+  /** @deprecated Use `color`. */
+  monoColor?: string;
+  /** @deprecated Use `horizontal`. */
+  transpose?: boolean;
+  /** @deprecated Use `levels`. */
   showLevels?: boolean;
   /**
    * Label authors by their initials (true) or full names (false) on the axis.
@@ -72,7 +89,7 @@ export interface HeatmapSvgOptions {
 export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string {
   return generateStatement(authors, {
     format: "by-author",
-    showLevels: opts?.showLevels ?? true,
+    showLevels: opts?.levels ?? opts?.showLevels ?? true,
     translateRole: opts?.translateRole,
     translateUi: opts?.translateUi,
     locale: opts?.locale,
@@ -97,10 +114,21 @@ export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions):
  * who did what. Assistive technology reads both and nothing draws them.
  */
 export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string {
-  const transpose = !!opts?.transpose;
+  const transpose = opts?.horizontal ?? !!opts?.transpose;
   const scale = typeof opts?.scale === "number" ? Math.max(0.1, opts.scale) : 1;
-  const monoColor = opts?.monoColor ?? DEFAULT_MONO_COLOR;
-  const showLevels = opts?.showLevels ?? true;
+  const palettes = { blue: DEFAULT_MONO_COLOR, green: "#00724c", gray: "#404040" };
+  if (opts?.palette && !Object.hasOwn(palettes, opts.palette)) throw new HeatmapOptionError("Unknown heatmap palette.");
+  const monoColor = opts?.color ?? opts?.monoColor ?? palettes[opts?.palette ?? "blue"];
+  if (!/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(monoColor))
+    throw new HeatmapOptionError("Heatmap color must be a three- or six-digit hex color.");
+  const size = opts?.size ?? CELL;
+  if (!Number.isFinite(size) || size <= 0 || size > 256)
+    throw new HeatmapOptionError("Heatmap size must be between 0 and 256.");
+  const shape = opts?.shape ?? "square";
+  if (!["square", "rounded", "circle"].includes(shape)) throw new HeatmapOptionError("Unknown heatmap shape.");
+  if (opts?.labels && !["full", "short"].includes(opts.labels)) throw new HeatmapOptionError("Unknown heatmap labels.");
+  const radius = (side: number) => (shape === "circle" ? side / 2 : shape === "rounded" ? 3 * scale : 0);
+  const showLevels = opts?.levels ?? opts?.showLevels ?? true;
   const translateRole = opts?.translateRole ?? ((name: string) => name);
   const translateUi = opts?.translateUi ?? makeUiTranslator(null);
   const acronyms = opts?.acronyms ?? true;
@@ -110,12 +138,18 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
 
   // Only roles someone contributed to (matches the live chart).
   const activeRoleNames = new Set(rolesWithContributions(authors));
-  const roles = CREDIT_ROLES.filter((r) => activeRoleNames.has(r.name));
+  const roles = CREDIT_ROLES.filter((r) => opts?.skipempty === false || activeRoleNames.has(r.name));
+  const roleLabel = (name: string) => {
+    const label = translateRole(name);
+    return opts?.labels === "short"
+      ? `${CREDIT_ROLES.findIndex((r) => r.name === name) + 1} ${[...label].slice(0, 12).join("")}${[...label].length > 12 ? "…" : ""}`
+      : label;
+  };
 
   const PAD_S = PAD * scale;
 
   // Nothing to show: render a small placeholder rather than a 0-row grid.
-  if (roles.length === 0) {
+  if (roles.length === 0 || authors.length === 0) {
     const w = 320 * scale;
     const h = 56 * scale;
     return [
@@ -136,7 +170,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   // Flat mode collapses any contribution to full intensity.
   const fillScore = (score: number): number => (showLevels ? score : score > 0 ? 100 : 0);
 
-  const CELL_S = CELL * scale;
+  const CELL_S = size * scale;
   const GAP_S = GAP * scale;
   const LABEL_GAP_S = LABEL_GAP * scale;
 
@@ -154,9 +188,9 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const textW = (label: string, fontSize: number): number => labelUnits(label) * fontSize * CHAR_EM * scale;
 
   // Top labels (rotated -45°): author labels when normal, role names when transposed.
-  const topLabels = transpose ? roles.map((r) => translateRole(r.name)) : authors.map((_, ai) => authorLabel(ai));
+  const topLabels = transpose ? roles.map((r) => roleLabel(r.name)) : authors.map((_, ai) => authorLabel(ai));
   // Left labels (horizontal, right-aligned): roles when normal, authors when transposed.
-  const leftLabels = transpose ? authors.map((_, ai) => authorLabel(ai)) : roles.map((r) => translateRole(r.name));
+  const leftLabels = transpose ? authors.map((_, ai) => authorLabel(ai)) : roles.map((r) => roleLabel(r.name));
 
   const topLabelWs = topLabels.map((l) => textW(l, FONT_TOP));
   const maxTopW = Math.max(0, ...topLabelWs);
@@ -223,8 +257,8 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const legendTop = gridY + gridH + LEGEND_GAP * scale;
   const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
 
-  const totalW = PAD_S * 2 + Math.max(contentW, legendW);
-  const totalH = legendTop + legendH + PAD_S;
+  const totalW = PAD_S * 2 + Math.max(contentW, opts?.legend === false ? 0 : legendW);
+  const totalH = (opts?.legend === false ? gridY + gridH : legendTop + legendH) + PAD_S;
   const innerW = totalW - PAD_S * 2;
 
   const lines: string[] = [];
@@ -263,26 +297,26 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
       const ai = transpose ? r : c;
       const role = transpose ? roles[c] : roles[r];
       const score = scoreFor(authors[ai], role?.name ?? "");
-      const rx = 3 * scale;
+      const rx = radius(CELL_S);
       lines.push(
-        `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${heatCellColor(monoColor, fillScore(score))}"/>`,
+        `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${heatCellColor(monoColor, fillScore(score))}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
     }
   }
 
   // Grid border
   lines.push(
-    `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${3 * scale}" ry="${3 * scale}" fill="none" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
+    `<rect x="${gridX - 1}" y="${gridY - 1}" width="${gridW + 2}" height="${gridH + 2}" rx="${radius(CELL_S)}" ry="${radius(CELL_S)}" fill="none" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
   );
 
   // Legend: level keys, wrapped to the figure width and centred under it.
-  legendRows.forEach((row, rowIndex) => {
+  (opts?.legend === false ? [] : legendRows).forEach((row, rowIndex) => {
     const y = legendTop + rowIndex * LEGEND_ROW_H * scale;
     const blockX = PAD_S + (innerW - legendW) / 2;
     for (const [col, { label, score }] of row.entries()) {
       const lx = blockX + (colX[col] ?? 0);
       lines.push(
-        `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${2 * scale}" ry="${2 * scale}" fill="${heatCellColor(monoColor, score)}"/>`,
+        `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${radius(SWATCH_S)}" ry="${radius(SWATCH_S)}" fill="${heatCellColor(monoColor, score)}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
       lines.push(
         `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-size="${FONT_LEGEND * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(label)}</text>`,

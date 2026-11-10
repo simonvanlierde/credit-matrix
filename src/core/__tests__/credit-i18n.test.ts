@@ -11,6 +11,7 @@ import {
   makeRoleDescriber,
   makeRoleTranslator,
   normalizeLocaleCode,
+  resolveLocaleTag,
 } from "../credit-i18n/index";
 import {
   DEFAULT_UI_TRANSLATOR,
@@ -41,9 +42,9 @@ const CATALOG_LOCALES = AVAILABLE_LOCALES.map(({ code }) => code).filter((code) 
 // The loaders import `<dir>/${code}.json` by name, so a missing or misnamed
 // file only shows up at runtime, as an English fallback.
 describe("shipped catalogs", () => {
-  const dirs = ["src/messages", "src/core/credit-i18n/ui", "src/core/credit-i18n/translations"];
+  const dirs = ["src/locales", "src/core/credit-i18n/locales"];
   it.each(dirs)("%s has a file for every locale the language picker offers", (dir) => {
-    const missing = CATALOG_LOCALES.filter((code) => !existsSync(path.join(process.cwd(), dir, `${code}.json`)));
+    const missing = CATALOG_LOCALES.filter((code) => !existsSync(path.join(process.cwd(), dir, code, "messages.po")));
     expect(missing).toEqual([]);
   });
 });
@@ -109,6 +110,29 @@ describe("normalizeLocaleCode", () => {
   it("falls back to English for unsupported or malformed values", () => {
     expect(normalizeLocaleCode("xx")).toBe("en");
     expect(normalizeLocaleCode(null)).toBe("en");
+  });
+});
+
+describe("resolveLocaleTag", () => {
+  it.each([
+    ["pt-BR", "pt-PT"],
+    ["zh-CN", "zh-Hans"],
+    ["zh-Hans-CN", "zh-Hans"],
+    ["zh_Hans", "zh-Hans"],
+    ["de-DE", "de"],
+    ["en-GB", "en"],
+    ["zh-TW", "en"],
+    ["zh_TW", "en"],
+    ["zh-HK", "en"],
+    ["zh-MO", "en"],
+    ["zh-Hant", "en"],
+    ["zh-Hant-TW", "en"],
+    ["zh-Hans-TW", "zh-Hans"],
+    ["zh-Hans-HK", "zh-Hans"],
+    ["xx", null],
+    [null, null],
+  ])("%s gives %s", (tag, expected) => {
+    expect(resolveLocaleTag(tag)).toBe(expected);
   });
 });
 

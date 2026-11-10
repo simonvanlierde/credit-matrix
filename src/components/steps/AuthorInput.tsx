@@ -1,5 +1,3 @@
-"use client";
-
 import {
   type Announcements,
   closestCenter,
@@ -41,7 +39,6 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -50,6 +47,7 @@ import { type Author, review } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { announce } from "@/lib/announce";
 import { copyAskLink } from "@/lib/ask-message";
+import { useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useHydrated } from "@/lib/use-hydrated";

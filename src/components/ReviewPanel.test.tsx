@@ -1,9 +1,10 @@
 import { act, render, screen } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { expect, it } from "vitest";
 import { TEST_ORCID } from "@/core/__tests__/orcid-test-issuer";
 import { toSharePayload } from "@/core/share-payload";
-import en from "@/messages/en.json";
+import { english } from "@/lib/test-messages";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { ReviewPanel } from "./ReviewPanel";
 
@@ -36,8 +37,8 @@ it("warns when a signed reply put a different iD on the row than the one asked",
     </IntlProvider>,
   );
   expect(screen.getByText(`Verified by ORCID as Eve Other (${TEST_ORCID})`, { exact: false })).toBeTruthy();
-  expect(screen.getByText(en.reviewOrcidOtherId)).toBeTruthy();
-  expect(screen.queryByText(en.reviewOrcidNoRowId)).toBeNull();
+  expect(screen.getByText(english.reviewOrcidOtherId)).toBeTruthy();
+  expect(screen.queryByText(english.reviewOrcidNoRowId)).toBeNull();
 });
 
 it("notes a signed reply on a row with no iD to compare with", () => {
@@ -66,8 +67,8 @@ it("notes a signed reply on a row with no iD to compare with", () => {
     </IntlProvider>,
   );
   expect(screen.getByText(`Verified by ORCID as Bob White (${TEST_ORCID})`, { exact: false })).toBeTruthy();
-  expect(screen.getByText(en.reviewOrcidNoRowId)).toBeTruthy();
-  expect(screen.queryByText(en.reviewOrcidOtherId)).toBeNull();
+  expect(screen.getByText(english.reviewOrcidNoRowId)).toBeTruthy();
+  expect(screen.queryByText(english.reviewOrcidOtherId)).toBeNull();
 });
 
 it("does not show a sign-in an offline import could not check as verified", () => {

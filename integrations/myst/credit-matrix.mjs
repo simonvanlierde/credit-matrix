@@ -3,9 +3,10 @@
 // `roles` of the page's authors, or of the project's authors in myst.yml.
 // MyST roles carry no degree of contribution.
 
-import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { CREDIT_ROLES, createAuthor, generateStatement } from "credit-matrix";
+import { buildHeatmapSvg, CREDIT_ROLES, createAuthor, generateStatement, heatmapDescription } from "credit-matrix";
 import { parse } from "yaml";
 
 // The aliases MyST accepts (its `credit-roles` package), so a page that builds also renders.
@@ -104,7 +105,33 @@ const creditStatement = {
   },
 };
 
+const creditHeatmap = {
+  name: "credit-heatmap",
+  doc: "A contribution heatmap from the page's author roles.",
+  options: Object.fromEntries([
+    ...["color", "palette", "shape", "labels"].map((k) => [k, { type: String }]),
+    ["size", { type: Number }],
+    ...["legend", "levels", "horizontal", "skipempty"].map((k) => [k, { type: Boolean }]),
+  ]),
+  run(data, vfile) {
+    if (!vfile?.path) return [];
+    const entries = statementEntries(authorsFor(vfile.path));
+    const options = { levels: false, acronyms: false, ...data.options };
+    const svg = buildHeatmapSvg(entries, options);
+    const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
+    const dir = join(dirname(vfile.path), "_credit_matrix");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, name), svg);
+    return [
+      {
+        type: "paragraph",
+        children: [{ type: "image", url: `_credit_matrix/${name}`, alt: heatmapDescription(entries, options) }],
+      },
+    ];
+  },
+};
+
 export default {
   name: "CRediT statement",
-  directives: [creditStatement],
+  directives: [creditStatement, creditHeatmap],
 };

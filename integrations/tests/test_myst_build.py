@@ -32,7 +32,7 @@ def test_real_document_build(tmp_path, command, extension, source):
         f"  plugins:\n    - {plugin}\n",
         encoding="utf-8",
     )
-    text = "# Contributors\n\n:::{credit-statement}\n:::\n"
+    text = "# Contributors\n\n:::{credit-statement}\n:::\n\n:::{credit-heatmap}\n:shape: circle\n:size: 30\n:legend: false\n:::\n"
     if extension == "ipynb":
         text = json.dumps(
             {
@@ -64,3 +64,7 @@ def test_real_document_build(tmp_path, command, extension, source):
     assert result.returncode == 0, result.stdout + result.stderr
     statement = (tmp_path / "statement.md").read_text(encoding="utf-8")
     assert "**Marie Curie**: Software, Writing – original draft." in statement
+
+    image = next((tmp_path / "_credit_matrix").glob("*.svg"))
+    assert 'width="30" height="30" rx="15"' in image.read_text(encoding="utf-8")
+    assert "_credit_matrix/" in statement

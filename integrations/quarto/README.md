@@ -66,6 +66,11 @@ To put the statement somewhere else, leave an empty div where it should go:
 :::
 ```
 
+## Contribution heatmap
+
+Set `credit-matrix.heatmap: true` to add a figure through the package CLI.
+See [figure options and examples](../heatmap.md) for setup and all rendering options.
+
 ## Limitations
 
 - English only. The filter ignores the document's `lang`: role names, separators and the default

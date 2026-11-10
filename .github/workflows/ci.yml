@@ -166,6 +166,13 @@ jobs:
       - name: Validate the Crossref export against the Crossref schema 5.5.0
         run: pnpm validate:crossref
 
+      # The release lifecycle rewrites these files from package.json; a hand edit or a missed
+      # run shows as a diff. Staged by the script, so compare against HEAD.
+      - name: Check the citation files are in step with package.json
+        run: |
+          npm_package_version=$(jq -r .version package.json) bash scripts/sync-citation.sh
+          git diff --exit-code HEAD -- CITATION.cff codemeta.json CITATION.bib citation.csl.json citation.apa.txt
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
@@ -198,7 +205,7 @@ jobs:
 
       - name: Build the package
         run: |
-          pnpm install --frozen-lockfile --filter credit-matrix...
+          pnpm install --frozen-lockfile --filter credit-matrix... --include-workspace-root
           pnpm --filter credit-matrix build
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -311,25 +318,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # This job builds the app before the tests run (see playwright.config.ts),
-      # so it wants the same incremental cache the build job keeps.
-      - name: Cache Next.js build (restore only on a pull request)
+      # The pinned wheels and the copied Pyodide runtime (scripts/vendor-citesync.mjs), so a
+      # build downloads nothing from PyPI unless the manifest or the lockfile changes.
+      - name: Cache the citation converter (restore only on a pull request)
         if: github.event_name == 'pull_request'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', '!src/**/node_modules/**', '!src/core/dist/**', 'public/**', 'next.config.ts', 'postcss.config.mjs', 'tsconfig.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+          path: public/citesync
+          key: ${{ runner.os }}-citesync-${{ hashFiles('scripts/citesync-runtime.json', 'pnpm-lock.yaml') }}
 
-      - name: Cache Next.js build
+      - name: Cache the citation converter
         if: github.event_name != 'pull_request'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', '!src/**/node_modules/**', '!src/core/dist/**', 'public/**', 'next.config.ts', 'postcss.config.mjs', 'tsconfig.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+          path: public/citesync
+          key: ${{ runner.os }}-citesync-${{ hashFiles('scripts/citesync-runtime.json', 'pnpm-lock.yaml') }}
 
       # The whole Playwright suite gates every push/PR: the axe scans *and*
       # the critical-workflow specs (import, undo, ORCID lookup, persistence,
@@ -398,27 +401,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Persist Next.js' incremental build cache (.next/cache) across runs so
-      # rebuilds are faster. Keyed on lockfile + source; falls back to the last
-      # cache for the same deps when only source changed. hashFiles does not
-      # expand braces, so each input is its own pattern.
-      - name: Cache Next.js build (restore only on a pull request)
+      # The pinned wheels and the copied Pyodide runtime (scripts/vendor-citesync.mjs), so a
+      # build downloads nothing from PyPI unless the manifest or the lockfile changes.
+      - name: Cache the citation converter (restore only on a pull request)
         if: github.event_name == 'pull_request'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', '!src/**/node_modules/**', '!src/core/dist/**', 'public/**', 'next.config.ts', 'postcss.config.mjs', 'tsconfig.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+          path: public/citesync
+          key: ${{ runner.os }}-citesync-${{ hashFiles('scripts/citesync-runtime.json', 'pnpm-lock.yaml') }}
 
-      - name: Cache Next.js build
+      - name: Cache the citation converter
         if: github.event_name != 'pull_request'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', '!src/**/node_modules/**', '!src/core/dist/**', 'public/**', 'next.config.ts', 'postcss.config.mjs', 'tsconfig.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+          path: public/citesync
+          key: ${{ runner.os }}-citesync-${{ hashFiles('scripts/citesync-runtime.json', 'pnpm-lock.yaml') }}
 
       # The static export in out/ is exactly what Cloudflare serves.
       - name: Build

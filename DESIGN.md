@@ -98,7 +98,8 @@ The heatmap levels must stand out more from Supporting to Lead, in both themes. 
 fill mixes the chosen hue with white (40%, 70%, 100% of the hue). On a dark page that scale looks
 upside down, so dark mode keeps the hue and raises its lightness instead: 30%, 48% and 77% (for ink
 blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark marks on Lead. Exported heatmaps always use the
-light scale, because a figure goes onto a white page. `heatCellColor` in
+light scale on a white background, because a figure goes onto a manuscript page. Figure cells default
+to square corners and a thin neutral rule; the live editing controls retain their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
 
 Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the ring

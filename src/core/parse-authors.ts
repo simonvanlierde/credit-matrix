@@ -216,6 +216,8 @@ function normalizeContributions(contributions?: Contribution[]): Contribution[] 
  * Returns a new array of authors; the originals are left untouched.
  */
 export function deduplicateAuthorInitials(authors: Author[]): Author[] {
+  // The loop is quadratic when initials repeat; an oversized list is rejected by the caller anyway.
+  if (authors.length > MAX_AUTHORS) return authors;
   const existingInitials = new Set<string>();
 
   return authors.map((author) => {

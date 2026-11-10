@@ -1,0 +1,132 @@
+msgid ""
+msgstr ""
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "output.acknowledgements"
+msgstr "Dankbetuigingen"
+
+msgid "output.lead"
+msgstr "Leidend"
+
+msgid "output.equal"
+msgstr "Gelijk"
+
+msgid "output.supporting"
+msgstr "Ondersteunend"
+
+msgid "output.none"
+msgstr "Geen"
+
+msgid "output.contributed"
+msgstr "Bijgedragen"
+
+msgid "output.emptyState"
+msgstr "Nog geen bijdragen toegewezen."
+
+msgid "output.heatmapTitle"
+msgstr "Bijdrageheatmap"
+
+msgid "output.equalContributionNote"
+msgstr "{names} hebben in gelijke mate aan dit werk bijgedragen."
+
+msgid "output.correspondenceNote"
+msgstr "Correspondentie: {names}."
+
+msgid "output.labelSeparator"
+msgstr ": "
+
+msgid "output.nameListSeparator"
+msgstr ", "
+
+msgid "output.segmentSeparator"
+msgstr "; "
+
+msgid "output.levelAnnotation"
+msgstr "{label} ({level})"
+
+msgid "https://credit.niso.org/contributor-roles/conceptualization/name"
+msgstr "Conceptualisatie"
+
+msgid "https://credit.niso.org/contributor-roles/conceptualization/description"
+msgstr "Ideeën; formulering of evolutie van overkoepelende onderzoeksdoelen en -doelstellingen."
+
+msgid "https://credit.niso.org/contributor-roles/data-curation/name"
+msgstr "Datacuratie"
+
+msgid "https://credit.niso.org/contributor-roles/data-curation/description"
+msgstr "Beheersactiviteiten voor het annoteren (metadata produceren), het opschonen en het onderhouden van onderzoeksgegevens (inclusief softwarecode, waar dit nodig is voor het interpreteren van de gegevens zelf) voor initieel gebruik en later hergebruik."
+
+msgid "https://credit.niso.org/contributor-roles/formal-analysis/name"
+msgstr "Formele analyse"
+
+msgid "https://credit.niso.org/contributor-roles/formal-analysis/description"
+msgstr "Toepassing van statistische, wiskundige, computationele of andere formele technieken om studiegegevens te analyseren of te synthetiseren."
+
+msgid "https://credit.niso.org/contributor-roles/funding-acquisition/name"
+msgstr "Fondsenwerving"
+
+msgid "https://credit.niso.org/contributor-roles/funding-acquisition/description"
+msgstr "Verwerving van de financiële steun voor het project dat heeft geleid tot deze publicatie."
+
+msgid "https://credit.niso.org/contributor-roles/investigation/name"
+msgstr "Onderzoek"
+
+msgid "https://credit.niso.org/contributor-roles/investigation/description"
+msgstr "Uitvoeren van een onderzoeksproces, in het bijzonder het uitvoeren van de experimenten of het verzamelen van gegevens/bewijsmateriaal."
+
+msgid "https://credit.niso.org/contributor-roles/methodology/name"
+msgstr "Methodologie"
+
+msgid "https://credit.niso.org/contributor-roles/methodology/description"
+msgstr "De ontwikkeling of het ontwerp van de methodologie; het maken van modellen."
+
+msgid "https://credit.niso.org/contributor-roles/project-administration/name"
+msgstr "Projectadministratie"
+
+msgid "https://credit.niso.org/contributor-roles/project-administration/description"
+msgstr "Verantwoordelijk voor het beheer en de coördinatie van de planning en de uitvoering van onderzoeksactiviteiten."
+
+msgid "https://credit.niso.org/contributor-roles/resources/name"
+msgstr "Middelen"
+
+msgid "https://credit.niso.org/contributor-roles/resources/description"
+msgstr "Voorziening van studiematerialen, reagentia, materialen, patiënten, laboratoriummonsters, dieren, instrumentatie, computerbronnen of andere analyse-instrumenten."
+
+msgid "https://credit.niso.org/contributor-roles/software/name"
+msgstr "Software"
+
+msgid "https://credit.niso.org/contributor-roles/software/description"
+msgstr "Programmeren, softwareontwikkeling; ontwerpen van computerprogramma's; implementatie van de computercode en ondersteunende algoritmen; testen van bestaande codecomponenten."
+
+msgid "https://credit.niso.org/contributor-roles/supervision/name"
+msgstr "Supervisie"
+
+msgid "https://credit.niso.org/contributor-roles/supervision/description"
+msgstr "Verantwoordelijk voor het toezicht en het leiden van de planning en de uitvoering van onderzoeksactiviteiten, inclusief mentorschap buiten het kernteam."
+
+msgid "https://credit.niso.org/contributor-roles/validation/name"
+msgstr "Validatie"
+
+msgid "https://credit.niso.org/contributor-roles/validation/description"
+msgstr "Verificatie, al dan niet als onderdeel van de activiteit, van de algemene replicatie/herhaalbaarheid van resultaten/experimenten en andere onderzoeksresultaten."
+
+msgid "https://credit.niso.org/contributor-roles/visualization/name"
+msgstr "Visualisatie"
+
+msgid "https://credit.niso.org/contributor-roles/visualization/description"
+msgstr "Voorbereiding, creatie en/of presentatie van het gepubliceerde werk, in het bijzonder visualisatie/data presentatie."
+
+msgid "https://credit.niso.org/contributor-roles/writing-original-draft/name"
+msgstr "Schrijven – eerste versie"
+
+msgid "https://credit.niso.org/contributor-roles/writing-original-draft/description"
+msgstr "Voorbereiding, creatie en/of presentatie van het gepubliceerde werk, in het bijzonder het schrijven van de initiële versie (inclusief inhoudelijke vertaling)."
+
+msgid "https://credit.niso.org/contributor-roles/writing-review-editing/name"
+msgstr "Schrijven – review en bewerking"
+
+msgid "https://credit.niso.org/contributor-roles/writing-review-editing/description"
+msgstr "Voorbereiding, creatie en/of presentatie van het gepubliceerde werk door de leden van de oorspronkelijke onderzoeksgroep, in het bijzonder kritische beoordeling, commentaar of revisie – inclusief pre- of post-publicatiefasen."

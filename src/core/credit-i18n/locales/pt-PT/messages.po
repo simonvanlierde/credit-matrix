@@ -1,0 +1,132 @@
+msgid ""
+msgstr ""
+"Language: pt-PT\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "output.acknowledgements"
+msgstr "Agradecimentos"
+
+msgid "output.lead"
+msgstr "Principal"
+
+msgid "output.equal"
+msgstr "Igual"
+
+msgid "output.supporting"
+msgstr "De apoio"
+
+msgid "output.none"
+msgstr "Nenhum"
+
+msgid "output.contributed"
+msgstr "Contribuiu"
+
+msgid "output.emptyState"
+msgstr "Ainda não foram atribuídas contribuições."
+
+msgid "output.heatmapTitle"
+msgstr "Mapa de calor das contribuições"
+
+msgid "output.equalContributionNote"
+msgstr "{names} contribuíram de forma igual para este trabalho."
+
+msgid "output.correspondenceNote"
+msgstr "Correspondência: {names}."
+
+msgid "output.labelSeparator"
+msgstr ": "
+
+msgid "output.nameListSeparator"
+msgstr ", "
+
+msgid "output.segmentSeparator"
+msgstr "; "
+
+msgid "output.levelAnnotation"
+msgstr "{label} ({level})"
+
+msgid "https://credit.niso.org/contributor-roles/conceptualization/name"
+msgstr "Conceptualização"
+
+msgid "https://credit.niso.org/contributor-roles/conceptualization/description"
+msgstr "Ideias; formulação ou desenvolvimento geral de metas e objetivos."
+
+msgid "https://credit.niso.org/contributor-roles/data-curation/name"
+msgstr "Curadoria de dados"
+
+msgid "https://credit.niso.org/contributor-roles/data-curation/description"
+msgstr "Atividades de gestão para anotar (produzir metadados), depurar dados e manter dados de investigação (incluindo código de software, quando necessário para interpretar os dados) para utilização inicial e posterior reutilização."
+
+msgid "https://credit.niso.org/contributor-roles/formal-analysis/name"
+msgstr "Análise formal"
+
+msgid "https://credit.niso.org/contributor-roles/formal-analysis/description"
+msgstr "Aplicação de técnicas estatísticas, matemáticas, computacionais ou outras técnicas formais para analisar ou sintetizar os dados do estudo."
+
+msgid "https://credit.niso.org/contributor-roles/funding-acquisition/name"
+msgstr "Obtenção de financiamento"
+
+msgid "https://credit.niso.org/contributor-roles/funding-acquisition/description"
+msgstr "Obtenção de apoio financeiro para o projeto que deu origem a esta publicação."
+
+msgid "https://credit.niso.org/contributor-roles/investigation/name"
+msgstr "Investigação"
+
+msgid "https://credit.niso.org/contributor-roles/investigation/description"
+msgstr "Condução de um processo de investigação, especificamente a realização de experiências ou a recolha de dados ou provas."
+
+msgid "https://credit.niso.org/contributor-roles/methodology/name"
+msgstr "Metodologia"
+
+msgid "https://credit.niso.org/contributor-roles/methodology/description"
+msgstr "Desenvolvimento ou conceção da metodologia; criação de modelos."
+
+msgid "https://credit.niso.org/contributor-roles/project-administration/name"
+msgstr "Gestão do projeto"
+
+msgid "https://credit.niso.org/contributor-roles/project-administration/description"
+msgstr "Responsabilidade pela gestão e coordenação do planeamento e da execução da atividade de investigação."
+
+msgid "https://credit.niso.org/contributor-roles/resources/name"
+msgstr "Recursos"
+
+msgid "https://credit.niso.org/contributor-roles/resources/description"
+msgstr "Disponibilização de materiais de estudo, reagentes, materiais, pacientes, amostras de laboratório, animais, instrumentação, recursos computacionais ou outras ferramentas de análise."
+
+msgid "https://credit.niso.org/contributor-roles/software/name"
+msgstr "Software"
+
+msgid "https://credit.niso.org/contributor-roles/software/description"
+msgstr "Programação e desenvolvimento de software; conceção de programas informáticos; implementação de código e algoritmos de apoio; teste de componentes de código existentes."
+
+msgid "https://credit.niso.org/contributor-roles/supervision/name"
+msgstr "Supervisão"
+
+msgid "https://credit.niso.org/contributor-roles/supervision/description"
+msgstr "Responsabilidade de supervisão e liderança no planeamento e na execução da atividade de investigação, incluindo orientação externa à equipa principal."
+
+msgid "https://credit.niso.org/contributor-roles/validation/name"
+msgstr "Validação"
+
+msgid "https://credit.niso.org/contributor-roles/validation/description"
+msgstr "Verificação, no âmbito da atividade ou separadamente, da replicação ou reprodutibilidade global dos resultados, das experiências e de outros produtos da investigação."
+
+msgid "https://credit.niso.org/contributor-roles/visualization/name"
+msgstr "Visualização"
+
+msgid "https://credit.niso.org/contributor-roles/visualization/description"
+msgstr "Preparação, criação e/ou apresentação do trabalho publicado, especificamente a visualização ou apresentação dos dados."
+
+msgid "https://credit.niso.org/contributor-roles/writing-original-draft/name"
+msgstr "Redação – rascunho original"
+
+msgid "https://credit.niso.org/contributor-roles/writing-original-draft/description"
+msgstr "Preparação, criação e/ou apresentação do trabalho publicado, especificamente a redação do rascunho inicial (incluindo tradução substantiva)."
+
+msgid "https://credit.niso.org/contributor-roles/writing-review-editing/name"
+msgstr "Redação – revisão e edição"
+
+msgid "https://credit.niso.org/contributor-roles/writing-review-editing/description"
+msgstr "Preparação, criação e/ou apresentação do trabalho publicado pelos membros do grupo de investigação original, especificamente a revisão crítica ou o comentário, incluindo as fases anteriores ou posteriores à publicação."

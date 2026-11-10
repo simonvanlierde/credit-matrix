@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { expect, it, vi } from "vitest";
 import { copyAskMessage } from "@/lib/ask-message";
-import en from "@/messages/en.json";
+import { english } from "@/lib/test-messages";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { TeamPanel } from "./TeamPanel";
 
@@ -47,7 +48,7 @@ it("ends the queue when everyone left in it is removed", async () => {
     }
   });
 
-  expect(screen.queryByRole("button", { name: en.cancel })).toBeNull();
+  expect(screen.queryByRole("button", { name: english.cancel })).toBeNull();
   await act(async () => fireEvent.click(screen.getByRole("button", { name: /^Ask everyone/ })));
   expect(vi.mocked(copyAskMessage)).toHaveBeenCalledTimes(2);
 });

@@ -1,10 +1,8 @@
-// biome-ignore lint/correctness/noNodejsModules: read at build time; the page ships as static HTML.
-import { readFileSync } from "node:fs";
 import { Marked } from "marked";
-import type { Metadata } from "next";
 import { ReadingPage } from "@/components/ReadingPage";
+import source from "../../../docs/accessibility.md?raw";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Accessibility statement · CRediT Matrix",
   description: "What we check, the problems we know about, and how to report a barrier in CRediT Matrix.",
   alternates: { canonical: "/accessibility" },
@@ -34,7 +32,7 @@ const markdown = new Marked({
 });
 
 // docs/accessibility.md is the one copy: GitHub shows the file, and the build renders it here.
-const html = markdown.parse(readFileSync("docs/accessibility.md", "utf8"), {
+const html = markdown.parse(source, {
   async: false,
 });
 

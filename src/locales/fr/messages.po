@@ -1,0 +1,1566 @@
+msgid ""
+msgstr ""
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "stepContributors"
+msgstr "Contributeurs"
+
+msgid "stepContributions"
+msgstr "Contributions"
+
+msgid "stepStatement"
+msgstr "Déclaration"
+
+msgid "addContributor"
+msgstr "Nouveaux noms d'auteurs ou iD ORCID"
+
+msgid "addPlaceholder"
+msgstr "Ajoutez des noms ou un iD ORCID…"
+
+msgid "addButton"
+msgstr "Ajouter"
+
+msgid "nameLabel"
+msgstr "Nom ou iD ORCID"
+
+msgid "removeContributor"
+msgstr "Supprimer"
+
+msgid "reorderContributor"
+msgstr "Réordonner"
+
+msgid "undo"
+msgstr "Restaurer"
+
+msgid "cancel"
+msgstr "Annuler"
+
+msgid "skipToContent"
+msgstr "Aller au contenu"
+
+msgid "noContributorsYet"
+msgstr "Aucun contributeur pour l'instant."
+
+msgid "loadSample"
+msgstr "Charger des données d'exemple"
+
+msgid "sampleNames"
+msgstr "Marie Curie\nSophie Germain\nHenri Poincaré"
+
+msgid "assignmentMode"
+msgstr "Mode d'attribution des rôles"
+
+msgid "modeYesNo"
+msgstr "Oui / non"
+
+msgid "modeLevels"
+msgstr "Niveaux"
+
+msgid "bulkAssign"
+msgstr "Attribution groupée"
+
+msgid "heatmapOptions"
+msgstr "Options de la heatmap"
+
+msgid "statementOptions"
+msgstr "Options de la déclaration"
+
+msgid "gridColor"
+msgstr "Couleur de la heatmap"
+
+msgid "transpose"
+msgstr "Transposer"
+
+msgid "useInitials"
+msgstr "Utiliser les initiales"
+
+msgid "roleColumn"
+msgstr "Rôle"
+
+msgid "contributorColumn"
+msgstr "Contributeur"
+
+msgid "groupByRole"
+msgstr "Par rôle"
+
+msgid "groupByAuthor"
+msgstr "Par auteur"
+
+msgid "showLevels"
+msgstr "Afficher les niveaux"
+
+msgid "copyStatement"
+msgstr "Copier la déclaration"
+
+msgid "exportData"
+msgstr "Exporter les données"
+
+msgid "download"
+msgstr "Télécharger"
+
+msgid "copy"
+msgstr "Copier"
+
+msgid "copied"
+msgstr "Copié"
+
+msgid "import"
+msgstr "Importer"
+
+msgid "share"
+msgstr "Partager"
+
+msgid "howItWorks"
+msgstr "Comment ça marche"
+
+msgid "aboutApp"
+msgstr "À propos de cette application"
+
+msgid "interfaceLanguage"
+msgstr "Langue de l'interface"
+
+msgid "outputLanguage"
+msgstr "Langue de sortie"
+
+msgid "toggleTheme"
+msgstr "Changer de thème"
+
+msgid "contributorTypeAuthor"
+msgstr "Auteur"
+
+msgid "contributorTypeNonAuthor"
+msgstr "Non-auteur"
+
+msgid "addOrcid"
+msgstr "Ajouter un iD ORCID"
+
+msgid "lookupOrcidName"
+msgstr "Rechercher le nom via ORCID"
+
+msgid "lookingUp"
+msgstr "Recherche en cours…"
+
+msgid "nameUpdated"
+msgstr "Nom mis à jour"
+
+msgid "removeOrcid"
+msgstr "Supprimer l'iD ORCID"
+
+msgid "gridEmptyHint"
+msgstr "Ajoutez des contributeurs pour commencer à attribuer les 14 rôles CRediT dans cette grille."
+
+msgid "bulkAssignLevel"
+msgstr "Niveau à attribuer"
+
+msgid "bulkOneContributor"
+msgstr "Un contributeur"
+
+msgid "bulkOneRole"
+msgstr "Un rôle"
+
+msgid "bulkAssignAll"
+msgstr "Attribuer tous les rôles"
+
+msgid "bulkClearAll"
+msgstr "Effacer tous les rôles"
+
+msgid "bulkAssignToAll"
+msgstr "Attribuer à tous"
+
+msgid "bulkClearRole"
+msgstr "Effacer pour tous"
+
+msgid "bulkChangeApplied"
+msgstr "Modification groupée appliquée."
+
+msgid "annBulkUndone"
+msgstr "Modification groupée annulée."
+
+msgid "contributorToAssign"
+msgstr "Contributeur à attribuer"
+
+msgid "colorLabel"
+msgstr "Couleur"
+
+msgid "transposeHint"
+msgstr "Intervertir les axes des lignes et des colonnes"
+
+msgid "legendLevel"
+msgstr "Niveau"
+
+msgid "legendKey"
+msgstr "Légende"
+
+msgid "levelHint"
+msgstr "Sélectionnez pour faire défiler · Clic droit ou 0–3 définit un niveau."
+
+msgid "heatmapLabel"
+msgstr "Heatmap"
+
+msgid "copyHeatmapHint"
+msgstr "Copier la heatmap sous forme d'image PNG"
+
+msgid "fullDefinition"
+msgstr "Définition complète"
+
+msgid "copyFailedMessage"
+msgstr "Échec de la copie"
+
+msgid "linkCopied"
+msgstr "Lien copié"
+
+msgid "importTitle"
+msgstr "Importer des contributeurs"
+
+msgid "importData"
+msgstr "Importer des données"
+
+msgid "close"
+msgstr "Fermer"
+
+msgid "browseFiles"
+msgstr "Parcourir les fichiers"
+
+msgid "dragDropFile"
+msgstr "Glissez-déposez un fichier ici"
+
+msgid "acceptedFileTypes"
+msgstr "Accepte .csv, .tsv, .json ou .xml"
+
+msgid "fileLoaded"
+msgstr "Chargé depuis {name}"
+
+msgid "pasteRawData"
+msgstr "Coller des données brutes"
+
+msgid "replaceWorkspaceTitle"
+msgstr "Remplacer l'espace de travail actuel ?"
+
+msgid "replaceWorkspace"
+msgstr "Remplacer l'espace de travail"
+
+msgid "keepCurrentWork"
+msgstr "Conserver le travail actuel"
+
+msgid "welcomeStepContributors"
+msgstr "Ajouter des contributeurs"
+
+msgid "welcomeStepRoles"
+msgstr "Attribuer les rôles"
+
+msgid "welcomeStepExport"
+msgstr "Vérifier et exporter"
+
+msgid "gotIt"
+msgstr "J'ai compris"
+
+msgid "startFresh"
+msgstr "Recommencer"
+
+msgid "removedContributor"
+msgstr "{name} supprimé"
+
+msgid "contributorCount"
+msgstr "{count, plural, =0 {Aucun contributeur} one {# contributeur} other {# contributeurs}}"
+
+msgid "annContributorRestored"
+msgstr "{name} restauré."
+
+msgid "annNameFromOrcid"
+msgstr "Nom mis à jour depuis ORCID : {name}"
+
+msgid "annStatementCopied"
+msgstr "Déclaration copiée dans le presse-papiers"
+
+msgid "annLinkCopied"
+msgstr "Lien copié dans le presse-papiers"
+
+msgid "annHeatmapCopied"
+msgstr "PNG de la heatmap copié dans le presse-papiers"
+
+msgid "annBadgeCopied"
+msgstr "PNG du badge copié dans le presse-papiers"
+
+msgid "annCopyFailed"
+msgstr "Échec de la copie. Réessayez."
+
+msgid "dndPickedUp"
+msgstr "Contributeur {name} saisi."
+
+msgid "dndOver"
+msgstr "Le contributeur {name} se trouve au-dessus de {target}."
+
+msgid "dndDropped"
+msgstr "Le contributeur {name} a été déposé sur {target}."
+
+msgid "dndCancelled"
+msgstr "Le déplacement de {name} a été annulé."
+
+msgid "errNameNoLetter"
+msgstr "Cela ne ressemble pas à un nom. Il faut au moins une lettre."
+
+msgid "errNameTooLong"
+msgstr "Ce nom est trop long. Utilisez 500 caractères au maximum."
+
+msgid "errFileTooLarge"
+msgstr "Ce fichier est trop volumineux. Choisissez un fichier de moins de {limit}."
+
+msgid "errFileUnreadable"
+msgstr "Impossible de lire ce fichier. Vérifiez le fichier et réessayez."
+
+msgid "errImportTooLarge"
+msgstr "Cet import est trop volumineux. Collez moins de {limit} de données."
+
+msgid "errTooManyContributors"
+msgstr "Cet import contient trop de contributeurs. La limite est de {limit}."
+
+msgid "errShareTooLarge"
+msgstr "Ce brouillon est trop volumineux pour être partagé par lien. Exportez-le plutôt au format JSON."
+
+msgid "errShareUnsupported"
+msgstr "Ce navigateur ne peut pas créer de liens de partage. Exportez plutôt le brouillon en JSON."
+
+msgid "errShareLinkBroken"
+msgstr "Ce lien partagé n'a pas pu être ouvert. Votre propre brouillon a été conservé."
+
+msgid "errAtContributorLimit"
+msgstr "Un brouillon contient au maximum {limit} contributeurs. Supprimez-en un pour en ajouter un autre."
+
+msgid "errOrcidChecksum"
+msgstr "Cet iD ORCID a une somme de contrôle invalide. Vérifiez les chiffres et réessayez."
+
+msgid "errOffline"
+msgstr "Vous êtes hors ligne : les recherches ORCID sont indisponibles. Saisissez le nom manuellement."
+
+msgid "errOrcidINVALID_ID"
+msgstr "Cet iD ORCID n'est pas valide. Vérifiez les chiffres et réessayez."
+
+msgid "errOrcidNOT_FOUND"
+msgstr "Aucun enregistrement ORCID ne correspond à cet iD."
+
+msgid "errOrcidUNAVAILABLE"
+msgstr "Le service ORCID est indisponible. Réessayez dans un instant ou saisissez le nom."
+
+msgid "importFromDoi"
+msgstr "Importer depuis un DOI"
+
+msgid "structuredFileUpload"
+msgstr "Importer un fichier structuré"
+
+msgid "doiPlaceholder"
+msgstr "10.1038/s41586-020-2649-2"
+
+msgid "doiLookUp"
+msgstr "Rechercher"
+
+msgid "doiLookingUp"
+msgstr "Recherche en cours…"
+
+msgid "doiHint"
+msgstr "Remplit la liste des contributeurs, leurs iD ORCID et le titre. Les rôles CRediT déposés sont affichés pour confirmation."
+
+msgid "errDoiINVALID_DOI"
+msgstr "Ce n'est pas un DOI valide. Il doit ressembler à 10.1234/abcde."
+
+msgid "errDoiNOT_FOUND"
+msgstr "Aucun enregistrement publié ne correspond à ce DOI."
+
+msgid "errDoiNO_AUTHORS"
+msgstr "Cet enregistrement n'indique aucun contributeur ; il n'y a donc rien à importer."
+
+msgid "errDoiTOO_MANY_AUTHORS"
+msgstr "Cet enregistrement indique plus de contributeurs qu'un brouillon ne peut en contenir."
+
+msgid "errDoiUNAVAILABLE"
+msgstr "Le service Crossref est indisponible. Réessayez dans un instant ou collez la liste des auteurs."
+
+msgid "errDoiOFFLINE"
+msgstr "Vous êtes hors ligne : les recherches DOI sont indisponibles. Collez plutôt la liste des auteurs."
+
+msgid "equalContributionShort"
+msgstr "Co-premier auteur"
+
+msgid "correspondingShort"
+msgstr "Auteur correspondant"
+
+msgid "equalContributionSet"
+msgstr "Marquer comme premier auteur à parts égales"
+
+msgid "equalContributionUnset"
+msgstr "Retirer le premier auteur à parts égales"
+
+msgid "correspondingSet"
+msgstr "Marquer comme auteur correspondant"
+
+msgid "correspondingUnset"
+msgstr "Retirer l'auteur correspondant"
+
+msgid "drafts"
+msgstr "Brouillons"
+
+msgid "draftsHint"
+msgstr "Chaque brouillon correspond à un article. Ils restent dans ce navigateur."
+
+msgid "untitledDraft"
+msgstr "Brouillon sans titre"
+
+msgid "newDraft"
+msgstr "Nouveau brouillon"
+
+msgid "draftTitleLabel"
+msgstr "Titre du brouillon"
+
+msgid "duplicateDraft"
+msgstr "Dupliquer"
+
+msgid "deleteDraft"
+msgstr "Supprimer"
+
+msgid "confirmDeleteDraft"
+msgstr "Supprimer ce brouillon ?"
+
+msgid "draftLimitReached"
+msgstr "Vous pouvez conserver {count} brouillons à la fois. Supprimez-en un d'abord."
+
+msgid "draftCreated"
+msgstr "Nouveau brouillon commencé."
+
+msgid "draftDuplicated"
+msgstr "Brouillon dupliqué."
+
+msgid "draftDeleted"
+msgstr "Brouillon supprimé."
+
+msgid "deleteAllDrafts"
+msgstr "Supprimer tous les brouillons"
+
+msgid "confirmDeleteAllDrafts"
+msgstr "Supprimer tous les brouillons de ce navigateur ? Cette action est irréversible."
+
+msgid "allDraftsDeleted"
+msgstr "Tous les brouillons ont été supprimés."
+
+msgid "draftUpdatedElsewhere"
+msgstr "Ce brouillon a été modifié dans un autre onglet."
+
+msgid "switchToDraft"
+msgstr "Passer à {title}"
+
+msgid "coauthorPrefilled"
+msgstr "Les cases cochées sont la proposition de la personne qui demande. Corrigez ce qui est faux."
+
+msgid "coauthorHeading"
+msgstr "<work>{title}</work> : qu’avez-vous fait ?"
+
+msgid "coauthorHeadingUntitled"
+msgstr "Qu’avez-vous fait pour cet article ?"
+
+msgid "coauthorAnsweringAs"
+msgstr "Vous répondez en tant que <b>{name}</b>. Votre nom et votre ORCID iD repartent dans le lien que vous envoyez."
+
+msgid "coauthorBlankHint"
+msgstr "Choisissez un niveau pour chaque rôle que vous avez assumé et laissez le reste sur {none}. Cela prend environ deux minutes."
+
+msgid "coauthorBlankHintYesNo"
+msgstr "Choisissez {contributed} pour chaque rôle que vous avez assumé et laissez le reste sur {none}. Cela prend environ deux minutes."
+
+msgid "coauthorRoles"
+msgstr "Vos rôles"
+
+msgid "coauthorFirstAuthor"
+msgstr "Je partage la position de premier auteur"
+
+msgid "coauthorCorresponding"
+msgstr "Je suis auteur ou autrice correspondant(e)"
+
+msgid "coauthorDetails"
+msgstr "Vos informations"
+
+msgid "coauthorDetailsHint"
+msgstr "Corrigez ici votre nom ou votre ORCID iD si la personne qui demande s’est trompée."
+
+msgid "coauthorName"
+msgstr "Nom"
+
+msgid "coauthorSend"
+msgstr "Renvoyer"
+
+msgid "coauthorMarked"
+msgstr "{count} rôles marqués sur {total}"
+
+msgid "coauthorOrcidSignIn"
+msgstr "Se connecter avec ORCID"
+
+msgid "coauthorOrcidHint"
+msgstr "Facultatif : connectez-vous avec ORCID et votre réponse arrivera marquée comme vérifiée. La connexion voyage dans le lien que vous renvoyez et reste conservée avec votre réponse, y compris dans les exports JSON. Elle contient le nom figurant sur votre fiche ORCID."
+
+msgid "coauthorOrcidChanged"
+msgstr "Vous avez modifié votre réponse après la connexion. Reconnectez-vous pour vérifier cette réponse."
+
+msgid "coauthorOrcidSigned"
+msgstr "Connecté avec ORCID en tant que {who}. Votre réponse arrivera marquée comme vérifiée."
+
+msgid "coauthorOrcidFailed"
+msgstr "La connexion ORCID n’a pas abouti. Vous pouvez quand même envoyer votre réponse sans elle."
+
+msgid "reviewOrcidVerified"
+msgstr "Vérifié par ORCID en tant que {who}, connexion le {date}."
+
+msgid "reviewOrcidOtherId"
+msgstr "Ce n’est pas l’iD de la ligne."
+
+msgid "reviewOrcidNoRowId"
+msgstr "Cette ligne n’a pas d’iD ORCID à comparer."
+
+msgid "reviewOrcidSignedFor"
+msgstr "Connexion pour « {title} »."
+
+msgid "reviewOrcidSignedElsewhere"
+msgstr "Non vérifié pour cette ligne : {who}, connexion avec ORCID le {date}, pour une ligne avec un autre nom ou iD."
+
+msgid "coauthorNotSent"
+msgstr "Pas encore envoyé."
+
+msgid "coauthorCopyInstead"
+msgstr "Copier plutôt le lien"
+
+msgid "coauthorShareTitle"
+msgstr "Rôles CRediT de {name}"
+
+msgid "coauthorSentTitle"
+msgstr "Envoyé. Vous pouvez fermer cette page."
+
+msgid "coauthorCopiedTitle"
+msgstr "Lien copié. Collez-le dans votre réponse, puis fermez cette page."
+
+msgid "coauthorSentBody"
+msgstr "La personne qui demande voit votre réponse à côté de son brouillon. Si elle redemande, ouvrez le nouveau lien : il remplace cette réponse."
+
+msgid "coauthorChange"
+msgstr "Modifier ma réponse"
+
+msgid "claimUnlock"
+msgstr "Conserver comme brouillon ordinaire"
+
+msgid "annClaimUnlocked"
+msgstr "Ceci est désormais un brouillon ordinaire. Toutes les lignes sont modifiables."
+
+msgid "claimLockedHint"
+msgstr "Vous répondez à une demande, donc seule votre propre ligne est modifiable."
+
+msgid "claimResumed"
+msgstr "Reprise là où vous en étiez sur cette demande."
+
+msgid "claimRequestUpdated"
+msgstr "La demande a été mise à jour. Vos réponses précédentes ont été remplacées."
+
+msgid "claimLockedDraft"
+msgstr "Verrouillé : réponse à une demande"
+
+msgid "requestLinkOwn"
+msgstr "Ceci est le lien de demande que vous avez créé pour {name}."
+
+msgid "askBlank"
+msgstr "Demander à {name} ce qu’il ou elle a fait"
+
+msgid "askPrefilled"
+msgstr "Demander à {name} de vérifier votre proposition"
+
+msgid "askLinkHint"
+msgstr "Le lien contient le titre, ainsi que le nom et l’iD de cette personne."
+
+msgid "ask"
+msgstr "Demander"
+
+msgid "claimedRowBadge"
+msgstr "Votre ligne"
+
+msgid "askCopied"
+msgstr "Lien copié"
+
+msgid "askedChip"
+msgstr "Demandé"
+
+msgid "askedChipTitle"
+msgstr "Invité·e à remplir sa ligne. Disparaît à l'arrivée de la réponse."
+
+msgid "mergedRowBadge"
+msgstr "Mis à jour"
+
+msgid "mergedRowBadgeTitle"
+msgstr "Rempli à partir de la réponse que vous venez d'ouvrir."
+
+msgid "activeDraft"
+msgstr "Ouvert"
+
+msgid "askContributorCopied"
+msgstr "Lien copié. Envoyez-le à {name}."
+
+msgid "mergeUnmatched"
+msgstr "Cette réponse concerne une personne absente de ce brouillon ; rien n'a été intégré."
+
+msgid "askReplyDiffers"
+msgstr "La réponse de {name} est arrivée : {count, plural, one {# différence} other {# différences}}."
+
+msgid "askReplyMatches"
+msgstr "La réponse de {name} correspond à la vôtre."
+
+msgid "askReplyStale"
+msgstr "Cette réponse de {name} est plus ancienne que celle que vous avez déjà ; elle n'a pas été utilisée."
+
+msgid "askReplyDuplicate"
+msgstr "Vous avez déjà cette réponse de {name}."
+
+msgid "annMergeUndone"
+msgstr "Fusion annulée."
+
+msgid "welcomeIntro"
+msgstr "Rédigez une déclaration de contribution prête à soumettre, en trois étapes."
+
+msgid "about"
+msgstr "À propos"
+
+msgid "statusReady"
+msgstr "Prêt à exporter"
+
+msgid "statusNotes"
+msgstr "{count, plural, one {# point à vérifier} other {# points à vérifier}}"
+
+msgid "statusDismiss"
+msgstr "Fermer"
+
+msgid "rolesUsed"
+msgstr "{used} rôles sur {total} utilisés"
+
+msgid "shareWarningTitle"
+msgstr "Ce lien contient vos données"
+
+msgid "shareWarningBody"
+msgstr "Toute personne disposant de ce lien peut lire chaque nom, iD ORCID, type de contributeur et attribution de rôle."
+
+msgid "noContributorsHint"
+msgstr "Collez ci-dessous un DOI ou un identifiant ORCID, saisissez un nom, ou utilisez <b>Importer</b> dans l'en-tête."
+
+msgid "a11yContributionGrid"
+msgstr "Grille des contributions"
+
+msgid "a11yGeneratedStatement"
+msgstr "Déclaration de contribution générée"
+
+msgid "a11yStatementNotes"
+msgstr "Points à vérifier sur la déclaration"
+
+msgid "a11yBulkContributor"
+msgstr "Contributeur pour l'attribution groupée"
+
+msgid "a11yBulkRole"
+msgstr "Rôle pour l'attribution groupée"
+
+msgid "a11yExportFormat"
+msgstr "Format d'export"
+
+msgid "a11yOrcidInput"
+msgstr "ORCID iD"
+
+msgid "a11yOrcidHint"
+msgstr "Saisissez un iD ORCID, ou collez-en un sous forme d'iD ou d'URL orcid.org"
+
+msgid "a11yDismissWelcome"
+msgstr "Fermer l'introduction"
+
+msgid "a11yShareLink"
+msgstr "Partager un lien contenant toutes les données des contributeurs"
+
+msgid "a11yUseInitials"
+msgstr "Utiliser les initiales au lieu des noms"
+
+msgid "a11yShowLevels"
+msgstr "Afficher les niveaux : annoter les rôles avec les niveaux de contribution"
+
+msgid "a11ySeparateAcks"
+msgstr "Séparer les remerciements : mentionner les contributeurs non-auteurs sur une ligne distincte"
+
+msgid "customColor"
+msgstr "Personnalisée"
+
+msgid "copyDataLink"
+msgstr "Copier le lien de données"
+
+msgid "fullCreditStandard"
+msgstr "Norme CRediT complète"
+
+msgid "creditRolesExamples"
+msgstr "Rôles et exemples CRediT"
+
+msgid "sourceOnGitHub"
+msgstr "Code source sur GitHub"
+
+msgid "opensInNewTab"
+msgstr "(s'ouvre dans un nouvel onglet)"
+
+msgid "acknowledgements"
+msgstr "Remerciements"
+
+msgid "aboutTaxonomy"
+msgstr "CRediT est une norme ANSI/NISO (<cc>CC BY 4.0</cc>). Ce projet est indépendant de NISO et n'est pas approuvé par elle."
+
+msgid "aboutPrivacy"
+msgstr "La recherche d'un ORCID iD l'envoie depuis votre navigateur à pub.orcid.org. La recherche d'un DOI l'envoie à api.crossref.org, avec l'adresse de contact de ce site, puis à api.datacite.org si Crossref n'a pas de notice. Cloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur. L'import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d'exécution Python ; le fichier est traité dans votre navigateur et n'est jamais téléversé. Rien d'autre ne quitte votre navigateur : les brouillons restent dans son stockage local. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l'iD de cette personne, à l'application que vous choisissez. Se connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la connexion voyage ensuite dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
+
+msgid "accessibilityStatement"
+msgstr "Déclaration d'accessibilité"
+
+msgid "getCreditBadge"
+msgstr "Obtenir le badge CRediT"
+
+msgid "creditBadge"
+msgstr "Badge CRediT"
+
+msgid "copiedHtml"
+msgstr "HTML copié"
+
+msgid "copiedPng"
+msgstr "PNG copié"
+
+msgid "annBadgeHtmlCopied"
+msgstr "HTML du badge copié dans le presse-papiers"
+
+msgid "importAuthorList"
+msgstr "Liste de noms d'auteurs"
+
+msgid "importPlaceholder"
+msgstr "{names}\n\nou un export .csv / .tsv / .json / .xml / .cff, ou un lien qui vous a été renvoyé"
+
+msgid "errImportNoNames"
+msgstr "Aucun nom d'auteur trouvé. Saisissez un nom par ligne."
+
+msgid "errImportNoCsvRows"
+msgstr "Aucune ligne de contributeur trouvée dans le CSV."
+
+msgid "errImportNoJsonContributors"
+msgstr "Cet export JSON ne contient aucun contributeur."
+
+msgid "errImportNoXmlContribs"
+msgstr "Aucun élément <contrib> trouvé dans le XML."
+
+msgid "errImportNoCrossrefContribs"
+msgstr "Aucun bloc <contributors> avec <person_name> trouvé dans le XML Crossref."
+
+msgid "aboutTagline"
+msgstr "Rédigez des déclarations de contribution CRediT et exportez la grille sous forme de heatmap des contributions."
+
+msgid "aboutInspiredBy"
+msgstr "Inspiré du projet original"
+
+msgid "aboutOutputTranslations"
+msgstr "Traductions de la sortie par"
+
+msgid "aboutPageTitle"
+msgstr "À propos de CRediT Matrix"
+
+msgid "aboutPageLink"
+msgstr "À propos, citation et confidentialité"
+
+msgid "aboutVersion"
+msgstr "Version"
+
+msgid "aboutLicense"
+msgstr "Licence"
+
+msgid "aboutSource"
+msgstr "Code source"
+
+msgid "aboutAuthor"
+msgstr "Auteur"
+
+msgid "aboutCiteTitle"
+msgstr "Citer CRediT Matrix"
+
+msgid "aboutCite"
+msgstr "Si vous avez utilisé CRediT Matrix pour un article, citez-le avec son DOI de concept, qui renvoie toujours à la dernière version :"
+
+msgid "aboutCiteMetadata"
+msgstr "Elles proviennent du fichier <link>CITATION.cff</link> du dépôt. <citesync>citesync</citesync> le tient à jour à chaque version, et son bac à sable crée le même fichier pour votre propre logiciel."
+
+msgid "aboutCiteFormat"
+msgstr "Format de citation"
+
+msgid "annCitationCopied"
+msgstr "Citation copiée"
+
+msgid "aboutPluginsTitle"
+msgstr "Extensions pour vos outils d'écriture"
+
+msgid "aboutPlugins"
+msgstr "Rédigez la déclaration là où vous rédigez l'article. Ces extensions l'ajoutent à votre document, à partir des rôles de la liste des auteurs ou d'un fichier exporté ici. Chaque nom renvoie à son guide d'installation."
+
+msgid "aboutPluginsSoftware"
+msgstr "Pour les logiciels, l'<cli>outil en ligne de commande</cli> écrit aussi les personnes et leurs rôles au format CodeMeta. <citesync>citesync</citesync> transforme ces métadonnées en fichiers CITATION.cff et Zenodo, et <drift>codemeta-drift</drift> vérifie la cohérence d'un fichier CodeMeta."
+
+msgid "statementPlugins"
+msgstr "Extensions pour Quarto, MyST, Typst et plus"
+
+msgid "privacy"
+msgstr "Confidentialité"
+
+msgid "accessibility"
+msgstr "Accessibilité"
+
+msgid "aboutAccessibility"
+msgstr "La <link>déclaration d’accessibilité</link> indique ce que nous vérifions, les problèmes connus et comment en signaler un."
+
+msgid "detectedFormat"
+msgstr "Détecté : {format}"
+
+msgid "mergeWrongDraft"
+msgstr "Cette réponse concerne un brouillon absent de ce navigateur : rien n'a été modifié."
+
+msgid "sharedDraftOpened"
+msgstr "Le brouillon partagé a été ouvert à côté de votre travail."
+
+msgid "sharedDraftLoaded"
+msgstr "Brouillon partagé ouvert."
+
+msgid "a11yInvalidOrcid"
+msgstr "iD ORCID non valide"
+
+msgid "a11yRoleAssignment"
+msgstr "{role} pour {name} : {level}"
+
+msgid "a11yRolesForContributor"
+msgstr "Rôles de {name}"
+
+msgid "a11ySetColor"
+msgstr "Définir la couleur {color}"
+
+msgid "a11yStatementGrouping"
+msgstr "Regroupement de la déclaration"
+
+msgid "annContributorsAdded"
+msgstr "{count, plural, one {# contributeur ajouté.} other {# contributeurs ajoutés.}}"
+
+msgid "annEntriesSkippedNoName"
+msgstr "{count, plural, one {# entrée sans nom ignorée} other {# entrées sans nom ignorées}} ({entries})."
+
+msgid "annOrcidChecksumsSkipped"
+msgstr "{count, plural, one {# iD ORCID au chiffre de contrôle non valide ignoré} other {# iD ORCID aux chiffres de contrôle non valides ignorés}} ({ids})."
+
+msgid "annOrcidLookupsFailed"
+msgstr "{count, plural, one {Échec de la recherche pour # iD ORCID} other {Échec de la recherche pour # iD ORCID}} ({ids}). Les lignes correspondantes conservent l’iD comme nom ; renommez-les manuellement."
+
+msgid "annContributorsSkippedLimit"
+msgstr "{count, plural, one {# contributeur ignoré} other {# contributeurs ignorés}} : un brouillon accepte au maximum {limit} contributeurs."
+
+msgid "annCopiedToClipboard"
+msgstr "Copié dans le presse-papiers"
+
+msgid "annExportDataCopied"
+msgstr "Données d’export copiées dans le presse-papiers"
+
+msgid "badgeIntro"
+msgstr "Ajoutez ce badge à votre article ou à la page de votre projet."
+
+msgid "copyHtml"
+msgstr "Copier le HTML"
+
+msgid "copyPng"
+msgstr "Copier le PNG"
+
+msgid "downloadPng"
+msgstr "Télécharger le PNG"
+
+msgid "switchToDarkTheme"
+msgstr "Passer au thème sombre"
+
+msgid "switchToLightTheme"
+msgstr "Passer au thème clair"
+
+msgid "contributorTypeSetAuthor"
+msgstr "Marquer comme auteur"
+
+msgid "contributorTypeSetNonAuthor"
+msgstr "Marquer comme contributeur non-auteur"
+
+msgid "errImportFailed"
+msgstr "Échec de l’importation. Vérifiez le fichier et réessayez."
+
+msgid "errImportNewerVersion"
+msgstr "Ce fichier a été créé par une version plus récente de CRediT Matrix. Rechargez la page pour la mettre à jour, puis réessayez."
+
+msgid "errImportRepeatedId"
+msgstr "Ce fichier contient deux fois le même identifiant de contributeur, il n'a donc pas été importé."
+
+msgid "errHeatmapExport"
+msgstr "Impossible d’exporter la heatmap au format {format}."
+
+msgid "errStorageFull"
+msgstr "Le stockage du navigateur est plein, les modifications ne sont donc pas enregistrées. Exportez ce brouillon ou supprimez-en un dont vous n’avez plus besoin."
+
+msgid "errStorageBlocked"
+msgstr "Ce navigateur bloque le stockage pour ce site, les modifications ne sont donc pas enregistrées. Autorisez les données de site ou exportez avant de fermer l’onglet."
+
+msgid "errNewerVersionSaved"
+msgstr "Une version plus récente de CRediT Matrix a enregistré vos brouillons dans un autre onglet. Rechargez cette page : les modifications faites ici ne sont pas enregistrées."
+
+msgid "formatShareLink"
+msgstr "Lien partagé"
+
+msgid "formatJsonExport"
+msgstr "Export JSON"
+
+msgid "replaceWorkspaceBody"
+msgstr "Cette importation contient {incoming, plural, one {# contributeur} other {# contributeurs}}. Elle remplacera {existing, plural, one {le # contributeur actuel} other {les # contributeurs actuels}}. Cette action est irréversible."
+
+msgid "statementEmptyHint"
+msgstr "Aucune contribution attribuée pour l'instant. Sélectionnez des cellules dans la grille pour attribuer des rôles."
+
+msgid "separateAcknowledgements"
+msgstr "Séparer les remerciements"
+
+msgid "validationAuthorNoRoles"
+msgstr "Aucun rôle CRediT n’est attribué à {name}."
+
+msgid "validationRoleUnassigned"
+msgstr "Le rôle « {role} » n’est attribué à aucun contributeur."
+
+msgid "welcomeBodyContributors"
+msgstr "Collez un DOI pour remplir toute la liste à partir de la notice publiée, ou saisissez les noms vous-même. Un identifiant ORCID renseigne le nom pour vous."
+
+msgid "welcomeBodyRoles"
+msgstr "Sélectionnez des cellules dans la grille pour indiquer lesquels des 14 rôles CRediT chaque personne a assurés."
+
+msgid "welcomeBodyExport"
+msgstr "La déclaration se met à jour au fil de la saisie. Copiez-la, ou téléchargez la heatmap, le XML, le CSV, le JSON ou le Markdown."
+
+msgid "welcomeDraftsTitle"
+msgstr "Un brouillon par article"
+
+msgid "welcomeDraftsBody"
+msgstr "Plusieurs articles ? Changez de brouillon depuis l'en-tête ; chacun est conservé séparément dans ce navigateur."
+
+msgid "welcomeAskTitle"
+msgstr "Demandez directement aux co-auteurs"
+
+msgid "welcomeAskBody"
+msgstr "Copiez un lien depuis le menu de la ligne d'une personne et envoyez-le-lui. Quand le lien revient, ouvrez-le : la réponse est conservée à côté de sa ligne, et vous tranchez les écarts dans l'onglet Revue."
+
+msgid "importDescription"
+msgstr "Partez d'un DOI, collez des noms ou un lien qu'une personne vous a renvoyé, ou téléversez un fichier CSV, JSON, JATS4R XML ou Crossref XML. JSON et XML restaurent aussi les contributions, avec leurs niveaux si le fichier les contient. Une feuille de calcul tenzing (CSV ou TSV) fonctionne aussi. Collez une déclaration de contribution des auteurs pour remplir les rôles des contributeurs déjà présents. CITATION.cff, codemeta.json et .zenodo.json importent les noms des auteurs et les iD ORCID ; les rôles restent vides."
+
+msgid "contributorActions"
+msgstr "Actions pour {name}"
+
+msgid "colorBlue"
+msgstr "Bleu"
+
+msgid "colorOrange"
+msgstr "Orange"
+
+msgid "colorBluishGreen"
+msgstr "Vert bleuté"
+
+msgid "colorReddishPurple"
+msgstr "Violet rougeâtre"
+
+msgid "colorVermilion"
+msgstr "Vermillon"
+
+msgid "colorSkyBlue"
+msgstr "Bleu ciel"
+
+msgid "colorYellow"
+msgstr "Jaune"
+
+msgid "colorDarkGray"
+msgstr "Gris foncé"
+
+msgid "languageSettings"
+msgstr "Paramètres de langue"
+
+msgid "stripOpenTeam"
+msgstr "Solliciter les coauteurs"
+
+msgid "teamYou"
+msgstr "Vous"
+
+msgid "teamNotAsked"
+msgstr "Pas encore sollicité"
+
+msgid "toggleKeysHint"
+msgstr "Sélectionnez pour basculer · Les flèches déplacent, 1 ou 0 attribue un rôle."
+
+msgid "downloadSvg"
+msgstr "Télécharger en SVG"
+
+msgid "copyFormat"
+msgstr "Copier {format}"
+
+msgid "downloadFormat"
+msgstr "Télécharger {format}"
+
+msgid "a11yInspector"
+msgstr "Déclaration, équipe, revue et usages publiés"
+
+msgid "tabTeam"
+msgstr "Équipe"
+
+msgid "tabReview"
+msgstr "Revue"
+
+msgid "tabNorms"
+msgstr "Usages publiés"
+
+msgid "normsIntro"
+msgstr "La fréquence à laquelle les articles publiés d’un domaine attribuent chaque rôle, selon la position de l’auteur. C’est un contexte, pas un conseil : ce qui est courant ailleurs ne dit rien de ce qu’ont fait vos coauteurs."
+
+msgid "normsField"
+msgstr "Votre domaine"
+
+msgid "normsFieldPlaceholder"
+msgstr "Choisir un domaine"
+
+msgid "normsEmpty"
+msgstr "Choisissez votre domaine pour voir les proportions. L’application ne connaît pas le domaine de votre article, et rien ici ne modifie votre matrice."
+
+msgid "normsFieldGone"
+msgstr "Votre domaine enregistré, <name>{field}</name>, n’a pas de données dans cet instantané. Choisissez un domaine pour voir les parts."
+
+msgid "normsCoverage"
+msgstr "{articles, number} articles de recherche en libre accès en <name>{field}</name> avec des rôles CRediT, d’après les fichiers Europe PMC du {date}. Seuls les auteurs ayant au moins un rôle sont comptés."
+
+msgid "normsUnvalidated"
+msgstr "Les rôles ont été lus automatiquement et non vérifiés à la main : sur {tagged, number} articles dont l’éditeur balise aussi les rôles, l’analyseur concorde avec ces balises avec un score F1 de {f1} (1 est parfait)."
+
+msgid "normsYourPosition"
+msgstr "Votre position dans ce brouillon : {position, select, single {auteur unique} first {premier auteur} middle {auteur intermédiaire} other {dernier auteur}}."
+
+msgid "normsNonAuthor"
+msgstr "Vous êtes non-auteur dans ce brouillon, aucune colonne n’est donc mise en évidence : les parts ne comptent que les auteurs."
+
+msgid "normsNoSelf"
+msgstr "Pour marquer votre position, choisissez « C'est moi » sur votre ligne dans la liste des contributeurs."
+
+msgid "normsCaption"
+msgstr "Part des auteurs ayant chaque rôle, selon la position de l’auteur"
+
+msgid "normsRole"
+msgstr "Rôle"
+
+msgid "normsPosition"
+msgstr "{position, select, single {Seul} first {Premier} middle {Milieu} other {Dernier}}"
+
+msgid "normsTooFew"
+msgstr "Trop peu d’auteurs pour le dire"
+
+msgid "normsFootnote"
+msgstr "Les domaines de moins de {minArticles, number} articles de ce type ne sont pas listés, et une position de moins de {minAuthors, number} auteurs affiche un tiret. Les domaines sont attribués par revue, d’après OpenAlex. Source : recensement CRediT {snapshot}, jeu de données {version}."
+
+msgid "reviewEmptyTitle"
+msgstr "Les réponses des coauteurs apparaissent ici"
+
+msgid "reviewEmptyBody"
+msgstr "Quand un coauteur vous renvoie son lien, ouvrez-le : sa réponse s'affiche ici à côté de votre brouillon."
+
+msgid "teamEmpty"
+msgstr "Ajoutez d'abord les contributeurs, puis demandez à chacun ce qu'il a fait."
+
+msgid "teamMessage"
+msgstr "Bonjour {name},\n\nJe prépare la déclaration de contributions CRediT pour {work}. Pourriez-vous ouvrir ce lien, cocher les rôles que vous avez assurés et me renvoyer le lien ?\n\n{link}\n\nLe lien contient le titre, votre nom et votre iD. Rien n'est enregistré sur un serveur."
+
+msgid "teamMessageWork"
+msgstr "« {title} »"
+
+msgid "teamMessageNoTitle"
+msgstr "notre manuscrit"
+
+msgid "teamMessageCopied"
+msgstr "Message pour {name} copié. Collez-le dans un e-mail."
+
+msgid "teamAskAllDone"
+msgstr "{count, plural, one {# message copié.} other {Les # messages sont copiés.}}"
+
+msgid "teamAskNext"
+msgstr "Copier le suivant : {name} ({index} sur {total})"
+
+msgid "teamAskAll"
+msgstr "Solliciter tous ceux qui ne l'ont pas été ({count})"
+
+msgid "teamAskAllHint"
+msgstr "Copie un message par personne. Collez chacun dans un e-mail avant de copier le suivant."
+
+msgid "teamPrivacy"
+msgstr "Chaque lien contient le titre de l'article ainsi que le nom et l'iD de la personne. Rien n'est enregistré sur un serveur : la réponse revient par le même chemin que votre envoi."
+
+msgid "teamCopyMessageFor"
+msgstr "Copier le message pour {name}"
+
+msgid "teamCopyMessage"
+msgstr "Copier le message"
+
+msgid "expandContributors"
+msgstr "Déplier la liste des contributeurs"
+
+msgid "collapseContributors"
+msgstr "Replier la liste des contributeurs"
+
+msgid "moveUp"
+msgstr "Monter"
+
+msgid "moveDown"
+msgstr "Descendre"
+
+msgid "annMoved"
+msgstr "{name} déplacé en position {position} sur {total}."
+
+msgid "skipToGrid"
+msgstr "Aller à la grille"
+
+msgid "skipToStatement"
+msgstr "Aller à la déclaration"
+
+msgid "stripAnswered"
+msgstr "{answered} sur {total} ont répondu"
+
+msgid "stripDiffer"
+msgstr "{count, plural, one {# réponse diffère} other {# réponses diffèrent}}"
+
+msgid "reviewAction"
+msgstr "Examiner"
+
+msgid "tabReviewOpen"
+msgstr "{count, plural, one {# différence ouverte} other {# différences ouvertes}}"
+
+msgid "statementDiffers"
+msgstr "{count, plural, one {# contribution diffère encore.} other {# contributions diffèrent encore.}} Cette déclaration utilise votre version."
+
+msgid "exportIncludesAnswers"
+msgstr "Inclure les réponses des coauteurs et l'historique des demandes ({count})"
+
+msgid "thisIsMe"
+msgstr "C'est moi"
+
+msgid "thisIsNotMe"
+msgstr "Ce n'est pas moi"
+
+msgid "teamSettledOn"
+msgstr "Réglé le {date}"
+
+msgid "teamStatusAnswered"
+msgstr "{days, plural, =0 {A répondu aujourd'hui} =1 {A répondu hier} other {A répondu il y a # jours}} · {count} à examiner"
+
+msgid "teamStatusAsked"
+msgstr "{days, plural, =0 {Sollicité aujourd'hui} =1 {Sollicité hier} other {Sollicité il y a # jours}} · {kind, select, prefilled {votre estimation} other {vierge}}"
+
+msgid "reviewAnsweredMeta"
+msgstr "{days, plural, =0 {A répondu aujourd'hui} =1 {A répondu hier} other {A répondu il y a # jours}} · {kind, select, prefilled {votre estimation} other {vierge}}"
+
+msgid "teamReviewFor"
+msgstr "Examiner la réponse de {name}"
+
+msgid "markerSharedFirst"
+msgstr "Premier auteur à parts égales"
+
+msgid "markerCorresponding"
+msgstr "Auteur correspondant"
+
+msgid "markerYes"
+msgstr "Oui"
+
+msgid "markerNo"
+msgstr "Non"
+
+msgid "reviewKindAdded"
+msgstr "Rôle ajouté"
+
+msgid "reviewKindMarked"
+msgstr "Coché"
+
+msgid "reviewKindDropped"
+msgstr "Laissé de côté"
+
+msgid "reviewKindLevel"
+msgstr "Niveau différent"
+
+msgid "reviewUseTheirs"
+msgstr "Retenir celle de {name}"
+
+msgid "reviewKeepYours"
+msgstr "Garder la vôtre"
+
+msgid "reviewAskAbout"
+msgstr "Interroger {name} à ce sujet"
+
+msgid "reviewUseTheirsRole"
+msgstr "Retenir celle de {name} : {role}"
+
+msgid "reviewKeepYoursRole"
+msgstr "Garder la vôtre : {role}"
+
+msgid "undoRole"
+msgstr "Restaurer : {role}"
+
+msgid "reviewAskAboutRole"
+msgstr "{copied, select, true {Copié. Interroger {name} à ce sujet : {role}} other {Interroger {name} à ce sujet : {role}}}"
+
+msgid "reviewUseAll"
+msgstr "Tout retenir de {name}"
+
+msgid "reviewUsedTheirs"
+msgstr "Réponse de {name} retenue"
+
+msgid "reviewKeptYours"
+msgstr "Votre version conservée"
+
+msgid "annReviewUsed"
+msgstr "Réponse de {name} retenue : {role}."
+
+msgid "annReviewKept"
+msgstr "Votre version conservée : {role}."
+
+msgid "annReviewUsedAll"
+msgstr "Toutes les réponses de {name} retenues."
+
+msgid "annReviewUndone"
+msgstr "Choix annulé."
+
+msgid "reviewAllSettledTitle"
+msgstr "Tout est réglé."
+
+msgid "reviewAllSettledBody"
+msgstr "Chaque réponse divergente a reçu une décision, et la déclaration en montre le résultat."
+
+msgid "cellTheySay"
+msgstr "{name} indique {level}"
+
+msgid "columnOpenDifferences"
+msgstr "{name} : {count, plural, one {# différence ouverte} other {# différences ouvertes}}"
+
+msgid "columnSettled"
+msgstr "Réglé"
+
+msgid "legendDiffers"
+msgstr "Un coauteur a répondu différemment"
+
+msgid "reviewAskMessage"
+msgstr "Bonjour {name},\n\nJe finalise la déclaration de contributions CRediT pour {work}. Nos réponses diffèrent pour {role}. Pourriez-vous ouvrir ce lien, vérifier votre ligne et me renvoyer le lien ?\n\n{link}\n\nLe lien contient le titre, votre nom et votre iD. Rien n'est enregistré sur un serveur."
+
+msgid "formatStatement"
+msgstr "Déclaration CRediT"
+
+msgid "statementReview"
+msgstr "Vérifier les rôles"
+
+msgid "statementReviewTitle"
+msgstr "Rôles trouvés dans la déclaration"
+
+msgid "statementReviewSummary"
+msgstr "{added, plural, one {# rôle} other {# rôles}} à ajouter pour {people, plural, one {# contributeur} other {# contributeurs}}. Les rôles déjà présents dans la grille restent inchangés."
+
+msgid "statementNothingNew"
+msgstr "Tous les rôles trouvés sont déjà dans la grille."
+
+msgid "statementNoRolesFor"
+msgstr "Aucun rôle trouvé pour : {names}"
+
+msgid "statementCouldBe"
+msgstr "(pourrait être {token})"
+
+msgid "statementUnresolvedBody"
+msgstr "Ces noms ou initiales ne correspondent à aucun contributeur de ce brouillon, ou à plusieurs. Leurs rôles sont ignorés, sauf si vous choisissez la personne visée. Attribuez le reste dans la grille après l’application."
+
+msgid "statementLeaveOut"
+msgstr "Ignorer"
+
+msgid "statementReviewSummaryLevel"
+msgstr "{added, plural, one {# rôle} other {# rôles}} à ajouter comme {level} pour {people, plural, one {# contributeur} other {# contributeurs}}. Les rôles déjà dans la grille restent tels quels."
+
+msgid "statementRoleAlreadySet"
+msgstr "{role} (déjà attribué)"
+
+msgid "statementUnmatchedTitle"
+msgstr "Non associés"
+
+msgid "statementUnmatchedAmbiguous"
+msgstr "{token} : peut-être {names}"
+
+msgid "statementUnmatchedNone"
+msgstr "{token} : aucun contributeur"
+
+msgid "statementLeftOut"
+msgstr "{who} — laissé de côté : {roles}"
+
+msgid "statementAppliedLevel"
+msgstr "{count, plural, one {# rôle ajouté} other {# rôles ajoutés}} depuis la déclaration comme {level}."
+
+msgid "statementUndoStale"
+msgstr "Rien n’a été annulé : le brouillon a changé depuis l’ajout des rôles. Modifiez-les plutôt dans la grille."
+
+msgid "statementOnlyCredit"
+msgstr "Seuls les noms de rôles CRediT sont lus, comme Conceptualization ou Writing – original draft, pas les phrases sur qui a fait quoi."
+
+msgid "errStatementTooLong"
+msgstr "Ce texte dépasse {limit} caractères. Collez uniquement la déclaration de contributions."
+
+msgid "statementBack"
+msgstr "Retour"
+
+msgid "statementApply"
+msgstr "Appliquer les rôles"
+
+msgid "statementApplied"
+msgstr "{count, plural, one {# rôle ajouté} other {# rôles ajoutés}} depuis la déclaration."
+
+msgid "errStatementNoContributors"
+msgstr "Ajoutez d’abord les contributeurs, puis collez la déclaration : elle est comparée aux noms déjà présents dans ce brouillon."
+
+msgid "errStatementNoRoles"
+msgstr "Aucun rôle CRediT n’a pu être associé aux contributeurs de ce brouillon. Vérifiez que la déclaration les nomme comme le brouillon, par leur nom ou leurs initiales."
+
+msgid "censusAboutLink"
+msgstr "Recensement CRediT : l’usage de CRediT dans les articles"
+
+msgid "censusBack"
+msgstr "Retour à CRediT Matrix"
+
+msgid "censusTitle"
+msgstr "Recensement CRediT"
+
+msgid "censusHeadline"
+msgstr "En {year}, {share} des articles de recherche en accès ouvert dans Europe PMC indiquaient des rôles CRediT pour au moins un auteur."
+
+msgid "censusLead"
+msgstr "Comment les articles publiés utilisent CRediT, la Contributor Roles Taxonomy, d’après le balisage et les déclarations de contribution de {articles} articles en libre accès dans Europe PMC."
+
+msgid "censusPreliminaryTitle"
+msgstr "Chiffres provisoires"
+
+msgid "censusPreliminary"
+msgstr "Je n’ai pas encore vérifié l’analyseur par annotation manuelle : ces chiffres sont donc un premier aperçu. Sur {articles} articles qui balisent leurs rôles et impriment aussi une déclaration, la lecture de la déclaration par l’analyseur concorde avec les balises avec un score F1 de {f1} (1 signifie tous les rôles trouvés et aucun faux). Mais {share} de ces articles viennent de MDPI et Frontiers, et personne n’a vérifié les balises elles-mêmes non plus."
+
+msgid "censusPreliminaryUnscored"
+msgstr "Je n’ai pas encore vérifié l’analyseur par annotation manuelle : ces chiffres sont donc un premier aperçu."
+
+msgid "censusIncomplete"
+msgstr "Cet instantané est incomplet : certains fichiers sources n’ont pas été lus, ou des revues n’ont pas encore de domaine."
+
+msgid "censusAdoptionTitle"
+msgstr "Adoption au fil du temps"
+
+msgid "censusAdoptionCaption"
+msgstr "Part des articles de recherche avec des rôles CRediT pour au moins un auteur, par année de publication. {year} est encore en cours de publication, d’où son tronçon en pointillés."
+
+msgid "censusRolesPerAuthorTitle"
+msgstr "Rôles par auteur"
+
+msgid "censusRolesPerAuthorCaption"
+msgstr "Nombre moyen de rôles d’un auteur qui en a au moins un, par année de publication."
+
+msgid "censusShowTable"
+msgstr "Afficher sous forme de tableau"
+
+msgid "censusPartial"
+msgstr "(partielle)"
+
+msgid "censusTableLabel"
+msgstr "{chart}, sous forme de tableau"
+
+msgid "censusTrend"
+msgstr "{from} en {first} et {to} en {last}, avec un maximum de {max} en {maxYear}."
+
+msgid "censusYear"
+msgstr "Année"
+
+msgid "censusResearchArticles"
+msgstr "Articles de recherche"
+
+msgid "censusWithRoles"
+msgstr "Avec rôles"
+
+msgid "censusShare"
+msgstr "Part"
+
+msgid "censusStylesTitle"
+msgstr "Comment les rôles sont balisés"
+
+msgid "censusStylesCaption"
+msgstr "Part des articles de recherche par année, selon l’endroit d’où leurs rôles ont été lus. Chaque article compte une fois, sous la première des quatre formes ci-dessous qu’il utilise. Les quatre partagent la même échelle. {year} est encore en cours de publication, d’où son tronçon en pointillés."
+
+msgid "censusStyleJats4r"
+msgstr "Balises de rôle JATS4R"
+
+msgid "censusStyleJats4rNote"
+msgstr "Rôles de chaque auteur balisés avec le vocabulaire CRediT, comme le recommande JATS4R, le groupe qui fixe le balisage des articles de revue"
+
+msgid "censusStylePlosUri"
+msgstr "Balises d’URL de rôle"
+
+msgid "censusStylePlosUriNote"
+msgstr "Rôles de chaque auteur balisés avec une adresse web CRediT, comme chez PLOS"
+
+msgid "censusStyleStatement"
+msgstr "Déclaration de contribution"
+
+msgid "censusStyleStatementNote"
+msgstr "Un paragraphe qui nomme les auteurs par leurs initiales ou leur nom"
+
+msgid "censusStyleContribText"
+msgstr "Texte par auteur"
+
+msgid "censusStyleContribTextNote"
+msgstr "Texte libre à côté de chaque auteur, comme une liste de rôles ou une note"
+
+msgid "censusFieldsTitle"
+msgstr "Par domaine"
+
+msgid "censusFieldsCaption"
+msgstr "Part des articles de recherche de {year} avec des rôles CRediT, selon le domaine de la revue dans OpenAlex, un index ouvert des travaux scientifiques. Les domaines sont attribués par revue, non par article. Europe PMC est biomédical par construction ; les autres domaines y sont peu représentés. Les domaines de moins de 1 000 articles sont omis."
+
+msgid "censusFieldAgriculturalAndBiologicalSciences"
+msgstr "Sciences agricoles et biologiques"
+
+msgid "censusFieldBiochemistryGeneticsAndMolecularBiology"
+msgstr "Biochimie, génétique et biologie moléculaire"
+
+msgid "censusFieldChemistry"
+msgstr "Chimie"
+
+msgid "censusFieldComputerScience"
+msgstr "Informatique"
+
+msgid "censusFieldDentistry"
+msgstr "Odontologie"
+
+msgid "censusFieldEconomicsEconometricsAndFinance"
+msgstr "Économie, économétrie et finance"
+
+msgid "censusFieldEngineering"
+msgstr "Ingénierie"
+
+msgid "censusFieldEnvironmentalScience"
+msgstr "Sciences de l’environnement"
+
+msgid "censusFieldHealthProfessions"
+msgstr "Professions de santé"
+
+msgid "censusFieldImmunologyAndMicrobiology"
+msgstr "Immunologie et microbiologie"
+
+msgid "censusFieldMaterialsScience"
+msgstr "Science des matériaux"
+
+msgid "censusFieldMathematics"
+msgstr "Mathématiques"
+
+msgid "censusFieldMedicine"
+msgstr "Médecine"
+
+msgid "censusFieldMultidisciplinary"
+msgstr "Multidisciplinaire"
+
+msgid "censusFieldNeuroscience"
+msgstr "Neurosciences"
+
+msgid "censusFieldPhysicsAndAstronomy"
+msgstr "Physique et astronomie"
+
+msgid "censusFieldPsychology"
+msgstr "Psychologie"
+
+msgid "censusFieldSocialSciences"
+msgstr "Sciences sociales"
+
+msgid "censusPublishersTitle"
+msgstr "Par éditeur"
+
+msgid "censusPublishersCaption"
+msgstr "Part des articles de recherche de {year} avec des rôles CRediT, dans le sous-ensemble en accès ouvert d’Europe PMC, pour les {count} éditeurs y ayant le plus d’articles de recherche cette année-là, nommés comme dans les articles."
+
+msgid "censusOfArticles"
+msgstr "sur {count, plural, one {# article} other {# articles}}"
+
+msgid "censusRolesTitle"
+msgstr "Rôles selon la place dans la liste des auteurs"
+
+msgid "censusRolesCaption"
+msgstr "Part des auteurs ayant au moins un rôle qui tiennent chaque rôle, dans les articles avec rôles et au moins trois auteurs."
+
+msgid "censusRole"
+msgstr "Rôle"
+
+msgid "censusPlaceAll"
+msgstr "Tous les auteurs"
+
+msgid "censusPlaceFirst"
+msgstr "Premier auteur"
+
+msgid "censusPlaceMiddle"
+msgstr "Auteurs intermédiaires"
+
+msgid "censusPlaceLast"
+msgstr "Dernier auteur"
+
+msgid "censusAboutTitle"
+msgstr "À propos de ces données"
+
+msgid "censusMethod"
+msgstr "Les comptages ne portent que sur les articles de recherche, serveurs de prépublications compris (Cold Spring Harbor Laboratory Preprints, arXiv). Les groupes de moins de 1 000 articles sont omis, et les années commencent à la première comptant 1 000 articles avec rôles."
+
+msgid "censusSnapshot"
+msgstr "Instantané"
+
+msgid "censusDatasetVersion"
+msgstr "Version du jeu de données"
+
+msgid "censusCodeCommit"
+msgstr "Commit du code"
+
+msgid "censusParser"
+msgstr "Version de l'analyseur"
+
+msgid "censusOpenAlex"
+msgstr "Sources OpenAlex"
+
+msgid "censusDownload"
+msgstr "Télécharger les comptages (JSON)"
+
+msgid "censusHowTitle"
+msgstr "Comment le recensement lit les déclarations"
+
+msgid "censusHowRules"
+msgstr "Un analyseur à base de règles lit chaque article. Quand l’éditeur balise les rôles de chaque auteur dans le XML JATS, il prend les balises. Sinon, il lit la déclaration en texte libre, proposition par proposition, et associe auteurs et rôles. Seuls les termes CRediT comptent : « A.B. conceived the study » ne donne donc aucun rôle."
+
+msgid "censusHowModel"
+msgstr "Un encodeur affiné, Ettin-68M, lit aussi chaque déclaration en texte libre. C’est le modèle navigateur du recensement, conçu pour tourner dans un navigateur web. Il trouve plus de rôles balisés que les règles, avec une précision proche, mais il attribue aussi des rôles à des déclarations narratives qui n’en nomment aucun. Les chiffres de cette page viennent de l’analyseur à règles seul."
+
+msgid "censusHowCaveat"
+msgstr "Les deux sont évalués par rapport aux rôles que balisent les éditeurs, et ces balises ne sont pas une référence vérifiée. Une balise peut nommer un rôle que la déclaration ne donne jamais. Sur 200 articles MDPI où l’analyseur à règles et les balises divergent, un modèle de langage a jugé les balises fausses dans 192 cas et l’analyseur seul faux dans 6. Un score F1 par rapport aux balises mesure donc l’accord avec elles, et il sous-estime l’exactitude, surtout chez MDPI."
+
+msgid "censusHowCode"
+msgstr "Le code du recensement"
+
+msgid "censusHowModelCard"
+msgstr "La fiche du modèle"
+
+msgid "doiRolesImported"
+msgstr "Rôles CRediT importés. Vérifiez ces attributions avant de les appliquer ; la notice ne fournit aucun niveau de contribution."
+
+msgid "doiNoRoles"
+msgstr "Cette notice ne contient aucun rôle CRediT déposé. La matrice des contributions restera vide."
+
+msgid "doiConfirm"
+msgstr "Confirmer l'import du DOI"
+
+msgid "errCitationConverter"
+msgstr "Le convertisseur de citations n'a pas pu terminer. Votre fichier est toujours là. Réessayez en ligne, ou convertissez-le dans le playground de citesync."
+
+msgid "citationPlayground"
+msgstr "Ouvrir le playground de citesync"
+
+msgid "errImportNoCitationAuthors"
+msgstr "Ce fichier de citation ne mentionne aucun auteur."
+
+msgid "citationConverting"
+msgstr "Lecture du fichier de citation… Le convertisseur doit peut-être d'abord être téléchargé."

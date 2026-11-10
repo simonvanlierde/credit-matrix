@@ -1,7 +1,7 @@
-import type { useTranslations } from "use-intl";
 import { normalizeOrcid } from "@/core";
 import { ORCID_REGEX } from "@/core/author";
 import { lookupOrcidPerson } from "@/core/lookup";
+import type { useTranslations } from "@/lib/translations";
 
 const ORCID_EXTRACT_REGEX = /(\d{4}-\d{4}-\d{4}-\d{3}[0-9X])/i;
 

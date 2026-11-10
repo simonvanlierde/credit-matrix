@@ -1,14 +1,12 @@
-"use client";
-
 import { ListChecks } from "lucide-react";
 import { type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UNDO_WINDOW_MS } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES } from "@/core";
 import type { RoleTranslator, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
+import { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
 import { ICON_TOOL_BUTTON, LEVEL_KEY } from "./grid-shared";
 

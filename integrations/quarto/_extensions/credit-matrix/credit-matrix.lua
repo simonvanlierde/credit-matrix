@@ -44,7 +44,7 @@ local function author_name(author)
   return stringify(name or "")
 end
 
-local function role_labels(author)
+local function role_values(author)
   local roles = {}
   local function add(term, degree)
     if not term then return end
@@ -63,21 +63,26 @@ local function role_labels(author)
       for term, degree in pairs(role) do add(role_term(term), degree) end
     end
   end
+  return roles
+end
+
+local function role_labels(author, levels)
+  local roles = role_values(author)
   local labels = {}
   for _, term in ipairs(CREDIT_TERMS) do
     if roles[term] then
       local label = term:sub(1, 1):upper() .. term:sub(2)
-      local level = roles[term].level
+      local level = levels ~= false and roles[term].level or nil
       labels[#labels + 1] = level and (label .. " (" .. level .. ")") or label
     end
   end
   return labels
 end
 
-local function statement(authors)
+local function statement(authors, levels)
   local inlines = pandoc.List()
   for _, author in ipairs(authors or {}) do
-    local labels = role_labels(author)
+    local labels = role_labels(author, levels)
     if #labels > 0 then
       if #inlines > 0 then inlines:extend({ pandoc.Str(";"), pandoc.Space() }) end
       inlines:extend({ pandoc.Strong(pandoc.Str(author_name(author))), pandoc.Str(": " .. table.concat(labels, ", ")) })
@@ -86,6 +91,39 @@ local function statement(authors)
   if #inlines == 0 then return nil end
   inlines:insert(pandoc.Str("."))
   return pandoc.Para(inlines)
+end
+
+-- Figure generation shares the CLI renderer with the app and the other document plugins.
+local function heatmap(authors, options)
+  local command = options.command or { "credit-matrix" }
+  if pandoc.utils.type(command) ~= "List" then command = { command } end
+  local args = {}
+  for i = 2, #command do args[#args + 1] = stringify(command[i]) end
+  for _, arg in ipairs({ "convert", "-", "--to", "svg" }) do args[#args + 1] = arg end
+  for _, key in ipairs({ "color", "palette", "shape", "size", "legend", "labels", "skipempty", "locale" }) do
+    if options[key] ~= nil then
+      args[#args + 1] = "--" .. key
+      args[#args + 1] = stringify(options[key])
+    end
+  end
+  if options.horizontal == true then args[#args + 1] = "--horizontal" end
+  if options.levels == false then args[#args + 1] = "--yes-no" end
+  local function quote(value) return '"' .. value:gsub('"', '""') .. '"' end
+  local header = { "Name" }
+  for _, term in ipairs(CREDIT_TERMS) do header[#header + 1] = quote(term) end
+  local rows = { table.concat(header, ",") }
+  for _, author in ipairs(authors) do
+    local roles = role_values(author)
+    local row = { quote(author_name(author)) }
+    for _, term in ipairs(CREDIT_TERMS) do
+      row[#row + 1] = roles[term] and tostring(({ 33, 66, 100 })[roles[term].rank]) or "0"
+    end
+    rows[#rows + 1] = table.concat(row, ",")
+  end
+  local svg = pandoc.pipe(stringify(command[1]), args, table.concat(rows, "\n") .. "\n")
+  local name = "credit-heatmap-" .. pandoc.utils.sha1(svg) .. ".svg"
+  pandoc.mediabag.insert(name, "image/svg+xml", svg)
+  return pandoc.Para({ pandoc.Image({ pandoc.Str(stringify(statement(authors, options.levels))) }, name) })
 end
 
 -- True where the active template prints a plain author but not an author map's name: Pandoc's own
@@ -129,6 +167,7 @@ function Pandoc(doc)
     if block.t == "Header" then level = block.level break end
   end
   local section = pandoc.List({ pandoc.Header(level, heading, pandoc.Attr("credit-statement", { "unnumbered" })), para })
+  if options.heatmap == true then section:insert(heatmap(authors, options)) end
 
   -- A `::: {#credit-statement}` div marks the spot and wins over `placement`.
   local placed = false

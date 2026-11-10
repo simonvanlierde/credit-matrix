@@ -1,7 +1,7 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import messages from "@/messages/en.json";
+import { IntlProvider } from "@/lib/translations";
+import { messages } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { AuthorList } from "./AuthorInput";
 

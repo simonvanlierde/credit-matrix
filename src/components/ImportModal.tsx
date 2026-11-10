@@ -1,8 +1,5 @@
-"use client";
-
 import { CircleAlert, FileUp, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useFormatter, useTranslations } from "use-intl";
 import {
   type Ask,
   type Author,
@@ -25,11 +22,14 @@ import type { DoiLookupResult } from "@/core/lookup";
 import { DOI_INPUT_REGEX, lookupDoiWork, normalizeDoi } from "@/core/lookup";
 import { fetchOrcidKeys } from "@/core/orcid-proof";
 import { announce } from "@/lib/announce";
+import { ConverterUnavailableError, convertCitation } from "@/lib/citation-import";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
-import type { Messages } from "@/lib/intl";
+import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import type { MessageKey } from "@/locales/keys";
 import { MAX_DRAFTS } from "@/store/contribution-store";
 import { ASSIGNABLE_LEVELS, DEFAULT_BULK_LEVEL } from "./steps/BulkAssignMenu";
+import { ExternalLink } from "./ui/external-link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 /** Why a pasted share link could not be used, as a message key. */
@@ -150,6 +150,7 @@ const LEAVE_OUT = "leave-out";
 /** What a resolved import is waiting to write, once any replace is confirmed. */
 export interface PendingImport {
   authors: Author[];
+  doiNotice?: "doiRolesImported" | "doiNoRoles";
   /** Set only by the DOI path; the other importers carry no title. */
   title?: string;
   /** Co-author asks and answers, from a JSON export that has them. */
@@ -194,8 +195,11 @@ async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok:
 const MAX_IMPORT_MB = `${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB`;
 
 /** The "nothing found" message for each importable format. */
-const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link" | "statement">, keyof Messages> = {
+const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link" | "statement">, MessageKey> = {
   json: "errImportNoJsonContributors",
+  codemeta: "errImportNoCitationAuthors",
+  cff: "errImportNoCitationAuthors",
+  zenodo: "errImportNoCitationAuthors",
   csv: "errImportNoCsvRows",
   tenzing: "errImportNoCsvRows",
   xml: "errImportNoXmlContribs",
@@ -205,6 +209,9 @@ const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link" | "s
 
 /** Label shown beside the paste area; "JATS4R XML" and "CSV" are format names, not prose. */
 const FORMAT_LABEL: Record<Exclude<DetectedFormat, "unknown">, (t: ReturnType<typeof useTranslations>) => string> = {
+  codemeta: () => "CodeMeta",
+  cff: () => "CITATION.cff",
+  zenodo: () => ".zenodo.json",
   names: (t) => t("importAuthorList"),
   link: (t) => t("formatShareLink"),
   json: (t) => t("formatJsonExport"),
@@ -260,10 +267,13 @@ export function ImportModal({
   const request = useRef(0);
   // Bumped on close and unmount: an import that settles after either must not land.
   const closes = useRef(0);
+  // Ends the citation converter's worker when its import is no longer wanted.
+  const converting = useRef<AbortController | null>(null);
   useEffect(
     () => () => {
       closes.current += 1;
       request.current += 1;
+      converting.current?.abort();
     },
     [],
   );
@@ -352,6 +362,9 @@ export function ImportModal({
     if (format === "unknown") return;
     const started = closes.current;
     const current = () => started === closes.current;
+    converting.current?.abort();
+    const controller = new AbortController();
+    converting.current = controller;
     setImporting(true);
     try {
       if (new TextEncoder().encode(text).byteLength > MAX_IMPORT_BYTES) {
@@ -394,7 +407,10 @@ export function ImportModal({
         setReviewed({ statement, picks: {} });
         return;
       }
-      const parsed = await importAny(text);
+      const parsed = await importAny(text, {
+        convertCitation: (input, kind) => convertCitation(input, kind, controller.signal),
+      });
+      if (!current()) return;
       const { authors } = parsed;
       if (authors.length === 0) {
         showError(t(EMPTY_MESSAGE_KEYS[format]));
@@ -409,6 +425,12 @@ export function ImportModal({
       if (!current()) return;
       stageImport(parsed);
     } catch (failure) {
+      if (!current()) return;
+      // Only a converter that could not load fits the "try again online" message; a bad file falls through.
+      if (failure instanceof ConverterUnavailableError) {
+        showError(t("errCitationConverter"));
+        return;
+      }
       // A newer build's export, or one that repeats an id, is said plainly, not as a validation failure.
       showError(
         t(
@@ -427,7 +449,7 @@ export function ImportModal({
 
   /** Import straight away, or hold it behind the replace confirmation. */
   function stageImport(next: PendingImport) {
-    if (existingContributorCount > 0) {
+    if (existingContributorCount > 0 || next.doiNotice) {
       setPending(next);
       return;
     }
@@ -450,14 +472,15 @@ export function ImportModal({
       showError(t(DOI_ERROR_KEYS[result.code]), "doi");
       return;
     }
-    // Crossref names go through createAuthor like any other import, so the
-    // initials and the empty role row are built exactly as they are for a
-    // pasted list. Per entry, not around the whole map: one unusable entry
-    // (a name Crossref sends but createAuthor rejects) costs that row, not
-    // the other forty authors of the record.
+    // One unusable deposited name must not discard the other contributors.
     const authors = result.authors.flatMap((author) => {
       try {
-        return [createAuthor(author.name, author.orcid ? { orcid: author.orcid } : undefined)];
+        return [
+          createAuthor(author.name, {
+            ...(author.orcid ? { orcid: author.orcid } : {}),
+            contributions: (author.roles ?? []).map((role) => ({ role, score: 100 })),
+          }),
+        ];
       } catch {
         return [];
       }
@@ -466,7 +489,11 @@ export function ImportModal({
       showError(t("errImportFailed"), "doi");
       return;
     }
-    stageImport({ authors, title: result.title });
+    stageImport({
+      authors,
+      title: result.title,
+      doiNotice: result.authors.some((author) => author.roles?.length) ? "doiRolesImported" : "doiNoRoles",
+    });
   }
 
   function finishImport(next: PendingImport) {
@@ -498,6 +525,7 @@ export function ImportModal({
   }
 
   function handleClose() {
+    converting.current?.abort();
     request.current += 1;
     closes.current += 1;
     setDoiLoading(false);
@@ -589,13 +617,30 @@ export function ImportModal({
             </div>
             {/* One slot for both, floored at the hint's two lines: swapping a
                 one-line error in for the hint must not move the panels below. */}
-            <p
-              id="import-doi-note"
-              className={`mt-2 min-h-8 text-xs ${error?.where === "doi" ? "text-error" : "text-on-surface-variant"}`}
-            >
-              {error?.where === "doi" ? error.message : t("doiHint")}
-            </p>
+            {error?.where === "doi" ? (
+              <p id="import-doi-note" role="alert" className="mt-2 min-h-8 text-xs text-error">
+                {error.message}
+              </p>
+            ) : (
+              <p id="import-doi-note" className="mt-2 min-h-8 text-xs text-on-surface-variant">
+                {t("doiHint")}
+              </p>
+            )}
           </div>
+
+          {/* Always mounted: the layout's announcer is outside this modal dialog and inert while it is open. */}
+          <p role="status" className="text-sm text-on-surface-variant">
+            {importing && (format === "cff" || format === "zenodo")
+              ? t("citationConverting")
+              : doiLoading
+                ? t("doiLookingUp")
+                : null}
+          </p>
+          {(format === "cff" || format === "zenodo") && (
+            <ExternalLink className="text-sm text-primary underline" href="https://simonvanlierde.com/citesync/">
+              {t("citationPlayground")}
+            </ExternalLink>
+          )}
 
           {/* Drop zone */}
           <div>
@@ -629,10 +674,9 @@ export function ImportModal({
               <input
                 ref={fileRef}
                 type="file"
-                accept=".csv,.tsv,.json,.xml"
+                accept=".csv,.tsv,.json,.xml,.cff"
                 className="hidden"
                 onChange={handleFileInput}
-                aria-label={t("a11yUploadFile")}
               />
             </div>
           </div>
@@ -678,20 +722,40 @@ export function ImportModal({
           </div>
 
           {error?.where === "form" && (
-            <p id="import-form-error" className="text-sm text-error bg-error-container/30 rounded px-4 py-2">
+            <p
+              id="import-form-error"
+              role="alert"
+              className="text-sm text-error bg-error-container/30 rounded px-4 py-2"
+            >
               {error.message}
             </p>
           )}
 
           {pending && (
             <div role="alert" className="rounded-lg bg-error-container/30 p-4 text-sm text-on-surface">
-              <p className="font-semibold">{t("replaceWorkspaceTitle")}</p>
-              <p className="mt-1 text-on-surface-variant">
-                {t("replaceWorkspaceBody", {
-                  incoming: pending.authors.length,
-                  existing: existingContributorCount,
-                })}
-              </p>
+              <p className="font-semibold">{t(existingContributorCount ? "replaceWorkspaceTitle" : "doiConfirm")}</p>
+              {pending.doiNotice && <p className="mt-1">{t(pending.doiNotice)}</p>}
+              {pending.doiNotice === "doiRolesImported" && (
+                <ul className="mt-2 list-disc pl-5">
+                  {pending.authors.map((author) => (
+                    <li key={author.id}>
+                      {author.name}:{" "}
+                      {author.contributions
+                        .filter((c) => c.score > 0)
+                        .map((c) => translateInterfaceRole(c.role))
+                        .join(", ") || "—"}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {existingContributorCount > 0 && (
+                <p className="mt-1 text-on-surface-variant">
+                  {t("replaceWorkspaceBody", {
+                    incoming: pending.authors.length,
+                    existing: existingContributorCount,
+                  })}
+                </p>
+              )}
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   ref={keepRef}
@@ -699,14 +763,14 @@ export function ImportModal({
                   onClick={() => setPending(null)}
                   className="rounded-lg border border-outline-variant px-4 py-2 font-semibold text-on-surface-variant hover:border-primary hover:text-primary"
                 >
-                  {t("keepCurrentWork")}
+                  {t(existingContributorCount ? "keepCurrentWork" : "cancel")}
                 </button>
                 <button
                   type="button"
                   onClick={() => finishImport(pending)}
                   className="rounded-lg bg-error px-4 py-2 font-semibold text-on-error hover:opacity-90"
                 >
-                  {t("replaceWorkspace")}
+                  {t(existingContributorCount ? "replaceWorkspace" : "doiConfirm")}
                 </button>
               </div>
             </div>

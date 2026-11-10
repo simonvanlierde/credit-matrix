@@ -1,9 +1,9 @@
 import { Fingerprint, UserSearch, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { type Author, isValidOrcid, normalizeOrcid } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH } from "@/core/author";
 import { announce } from "@/lib/announce";
+import { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
 import { detectOrcid, fetchOrcidName, orcidErrorText } from "./orcid";
 

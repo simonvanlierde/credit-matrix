@@ -24,4 +24,4 @@ if [[ $v =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   V=$v perl -pi -e 's{(\@preview/credit-matrix:)[0-9.]+}{$1$ENV{V}}g' integrations/typst/README.md
   git add integrations/typst/typst.toml integrations/typst/README.md
 fi
-git add CITATION.cff codemeta.json schema.jsonld src/core/package.json integrations/quarto/_extensions/credit-matrix/_extension.yml integrations/myst/README.md integrations/jupyter-book/README.md
+git add CITATION.cff codemeta.json CITATION.bib citation.csl.json citation.apa.txt schema.jsonld src/core/package.json integrations/quarto/_extensions/credit-matrix/_extension.yml integrations/myst/README.md integrations/jupyter-book/README.md

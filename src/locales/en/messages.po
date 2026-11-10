@@ -1,0 +1,1566 @@
+msgid ""
+msgstr ""
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "stepContributors"
+msgstr "Contributors"
+
+msgid "stepContributions"
+msgstr "Contributions"
+
+msgid "stepStatement"
+msgstr "Statement"
+
+msgid "addContributor"
+msgstr "New author names or ORCID iD"
+
+msgid "addPlaceholder"
+msgstr "Add names or an ORCID iD…"
+
+msgid "addButton"
+msgstr "Add"
+
+msgid "nameLabel"
+msgstr "Name or ORCID iD"
+
+msgid "removeContributor"
+msgstr "Remove"
+
+msgid "reorderContributor"
+msgstr "Reorder"
+
+msgid "undo"
+msgstr "Undo"
+
+msgid "cancel"
+msgstr "Cancel"
+
+msgid "skipToContent"
+msgstr "Skip to content"
+
+msgid "noContributorsYet"
+msgstr "No contributors yet."
+
+msgid "loadSample"
+msgstr "Load sample data"
+
+msgid "sampleNames"
+msgstr "Ada Lovelace\nRosalind E. Franklin\nAlan M. Turing"
+
+msgid "assignmentMode"
+msgstr "Role assignment mode"
+
+msgid "modeYesNo"
+msgstr "Yes / no"
+
+msgid "modeLevels"
+msgstr "Levels"
+
+msgid "bulkAssign"
+msgstr "Bulk assign"
+
+msgid "heatmapOptions"
+msgstr "Heatmap options"
+
+msgid "statementOptions"
+msgstr "Statement options"
+
+msgid "gridColor"
+msgstr "Heatmap color"
+
+msgid "transpose"
+msgstr "Transpose"
+
+msgid "useInitials"
+msgstr "Use initials"
+
+msgid "roleColumn"
+msgstr "Role"
+
+msgid "contributorColumn"
+msgstr "Contributor"
+
+msgid "groupByRole"
+msgstr "By role"
+
+msgid "groupByAuthor"
+msgstr "By author"
+
+msgid "showLevels"
+msgstr "Show levels"
+
+msgid "copyStatement"
+msgstr "Copy statement"
+
+msgid "exportData"
+msgstr "Export data"
+
+msgid "download"
+msgstr "Download"
+
+msgid "copy"
+msgstr "Copy"
+
+msgid "copied"
+msgstr "Copied"
+
+msgid "import"
+msgstr "Import"
+
+msgid "share"
+msgstr "Share"
+
+msgid "howItWorks"
+msgstr "How it works"
+
+msgid "aboutApp"
+msgstr "About this app"
+
+msgid "interfaceLanguage"
+msgstr "Interface language"
+
+msgid "outputLanguage"
+msgstr "Output language"
+
+msgid "toggleTheme"
+msgstr "Toggle theme"
+
+msgid "contributorTypeAuthor"
+msgstr "Author"
+
+msgid "contributorTypeNonAuthor"
+msgstr "Non-author"
+
+msgid "addOrcid"
+msgstr "Add ORCID iD"
+
+msgid "lookupOrcidName"
+msgstr "Look up name from ORCID"
+
+msgid "lookingUp"
+msgstr "Looking up…"
+
+msgid "nameUpdated"
+msgstr "Name updated"
+
+msgid "removeOrcid"
+msgstr "Remove ORCID iD"
+
+msgid "gridEmptyHint"
+msgstr "Add contributors to start assigning the 14 CRediT roles in this grid."
+
+msgid "bulkAssignLevel"
+msgstr "Level to assign"
+
+msgid "bulkOneContributor"
+msgstr "One contributor"
+
+msgid "bulkOneRole"
+msgstr "One role"
+
+msgid "bulkAssignAll"
+msgstr "Assign every role"
+
+msgid "bulkClearAll"
+msgstr "Clear every role"
+
+msgid "bulkAssignToAll"
+msgstr "Assign to everyone"
+
+msgid "bulkClearRole"
+msgstr "Clear for everyone"
+
+msgid "bulkChangeApplied"
+msgstr "Bulk change applied."
+
+msgid "annBulkUndone"
+msgstr "Bulk change undone."
+
+msgid "contributorToAssign"
+msgstr "Contributor to assign"
+
+msgid "colorLabel"
+msgstr "Color"
+
+msgid "transposeHint"
+msgstr "Swap the row and column axes"
+
+msgid "legendLevel"
+msgstr "Level"
+
+msgid "legendKey"
+msgstr "Key"
+
+msgid "levelHint"
+msgstr "Select to cycle · Right-click or 0–3 sets a level."
+
+msgid "heatmapLabel"
+msgstr "Heatmap"
+
+msgid "copyHeatmapHint"
+msgstr "Copy the heatmap as a PNG image"
+
+msgid "fullDefinition"
+msgstr "Full definition"
+
+msgid "copyFailedMessage"
+msgstr "Copy failed"
+
+msgid "linkCopied"
+msgstr "Link copied"
+
+msgid "importTitle"
+msgstr "Import contributors"
+
+msgid "importData"
+msgstr "Import data"
+
+msgid "close"
+msgstr "Close"
+
+msgid "browseFiles"
+msgstr "Browse files"
+
+msgid "dragDropFile"
+msgstr "Drag and drop a file here"
+
+msgid "acceptedFileTypes"
+msgstr "Accepts .csv, .tsv, .json, or .xml"
+
+msgid "fileLoaded"
+msgstr "Loaded from {name}"
+
+msgid "pasteRawData"
+msgstr "Paste raw data"
+
+msgid "replaceWorkspaceTitle"
+msgstr "Replace the current workspace?"
+
+msgid "replaceWorkspace"
+msgstr "Replace workspace"
+
+msgid "keepCurrentWork"
+msgstr "Keep current work"
+
+msgid "welcomeStepContributors"
+msgstr "Add contributors"
+
+msgid "welcomeStepRoles"
+msgstr "Assign roles"
+
+msgid "welcomeStepExport"
+msgstr "Review & export"
+
+msgid "gotIt"
+msgstr "Got it"
+
+msgid "startFresh"
+msgstr "Start fresh"
+
+msgid "removedContributor"
+msgstr "Removed {name}"
+
+msgid "contributorCount"
+msgstr "{count, plural, =0 {No contributors} one {# contributor} other {# contributors}}"
+
+msgid "annContributorRestored"
+msgstr "{name} restored."
+
+msgid "annNameFromOrcid"
+msgstr "Name updated from ORCID: {name}"
+
+msgid "annStatementCopied"
+msgstr "Statement copied to clipboard"
+
+msgid "annLinkCopied"
+msgstr "Link copied to clipboard"
+
+msgid "annHeatmapCopied"
+msgstr "Heatmap PNG copied to clipboard"
+
+msgid "annBadgeCopied"
+msgstr "Badge PNG copied to clipboard"
+
+msgid "annCopyFailed"
+msgstr "Copy failed. Try again."
+
+msgid "dndPickedUp"
+msgstr "Picked up contributor {name}."
+
+msgid "dndOver"
+msgstr "Contributor {name} is over {target}."
+
+msgid "dndDropped"
+msgstr "Contributor {name} was dropped onto {target}."
+
+msgid "dndCancelled"
+msgstr "Reorder of {name} was cancelled."
+
+msgid "errNameNoLetter"
+msgstr "That doesn't look like a name. It needs at least one letter."
+
+msgid "errNameTooLong"
+msgstr "That name is too long. Use 500 characters or fewer."
+
+msgid "errFileTooLarge"
+msgstr "That file is too large. Choose a file smaller than {limit}."
+
+msgid "errFileUnreadable"
+msgstr "Could not read that file. Check the file and try again."
+
+msgid "errImportTooLarge"
+msgstr "That import is too large. Paste less than {limit} of data."
+
+msgid "errTooManyContributors"
+msgstr "That import has too many contributors. The limit is {limit}."
+
+msgid "errShareTooLarge"
+msgstr "This draft is too large to share as a link. Export it as JSON instead."
+
+msgid "errShareUnsupported"
+msgstr "This browser can't build share links. Export the draft as JSON instead."
+
+msgid "errShareLinkBroken"
+msgstr "That shared link could not be opened. Your own draft was kept."
+
+msgid "errAtContributorLimit"
+msgstr "A draft holds at most {limit} contributors. Remove one to add another."
+
+msgid "errOrcidChecksum"
+msgstr "That ORCID iD has an invalid checksum. Check the digits and try again."
+
+msgid "errOffline"
+msgstr "You are offline, so ORCID lookups are unavailable. Type the name instead."
+
+msgid "errOrcidINVALID_ID"
+msgstr "That is not a valid ORCID iD. Check the digits and try again."
+
+msgid "errOrcidNOT_FOUND"
+msgstr "No ORCID record matches that iD."
+
+msgid "errOrcidUNAVAILABLE"
+msgstr "The ORCID service is unavailable. Try again shortly, or type the name."
+
+msgid "importFromDoi"
+msgstr "Import from a DOI"
+
+msgid "structuredFileUpload"
+msgstr "Structured file upload"
+
+msgid "doiPlaceholder"
+msgstr "10.1038/s41586-020-2649-2"
+
+msgid "doiLookUp"
+msgstr "Look up"
+
+msgid "doiLookingUp"
+msgstr "Looking up…"
+
+msgid "doiHint"
+msgstr "Fills in contributors, ORCID iDs and the title. Deposited CRediT roles are shown for confirmation."
+
+msgid "errDoiINVALID_DOI"
+msgstr "That is not a valid DOI. It should look like 10.1234/abcde."
+
+msgid "errDoiNOT_FOUND"
+msgstr "No published record matches that DOI."
+
+msgid "errDoiNO_AUTHORS"
+msgstr "That record lists no contributors, so there is nothing to import."
+
+msgid "errDoiTOO_MANY_AUTHORS"
+msgstr "That record lists more contributors than a draft can hold."
+
+msgid "errDoiUNAVAILABLE"
+msgstr "The Crossref service is unavailable. Try again shortly, or paste the author list."
+
+msgid "errDoiOFFLINE"
+msgstr "You are offline, so DOI lookups are unavailable. Paste the author list instead."
+
+msgid "equalContributionShort"
+msgstr "Equal"
+
+msgid "correspondingShort"
+msgstr "Corresponding"
+
+msgid "equalContributionSet"
+msgstr "Mark as sharing first authorship"
+
+msgid "equalContributionUnset"
+msgstr "Remove shared first authorship"
+
+msgid "correspondingSet"
+msgstr "Mark as a corresponding author"
+
+msgid "correspondingUnset"
+msgstr "Remove corresponding author"
+
+msgid "drafts"
+msgstr "Drafts"
+
+msgid "draftsHint"
+msgstr "Each draft is one paper. They stay in this browser."
+
+msgid "untitledDraft"
+msgstr "Untitled draft"
+
+msgid "newDraft"
+msgstr "New draft"
+
+msgid "draftTitleLabel"
+msgstr "Draft title"
+
+msgid "duplicateDraft"
+msgstr "Duplicate"
+
+msgid "deleteDraft"
+msgstr "Delete"
+
+msgid "confirmDeleteDraft"
+msgstr "Delete this draft?"
+
+msgid "draftLimitReached"
+msgstr "You can keep {count} drafts at once. Delete one first."
+
+msgid "draftCreated"
+msgstr "Started a new draft."
+
+msgid "draftDuplicated"
+msgstr "Duplicated the draft."
+
+msgid "draftDeleted"
+msgstr "Deleted the draft."
+
+msgid "deleteAllDrafts"
+msgstr "Delete all drafts"
+
+msgid "confirmDeleteAllDrafts"
+msgstr "Delete every draft in this browser? This cannot be undone."
+
+msgid "allDraftsDeleted"
+msgstr "Deleted all drafts."
+
+msgid "draftUpdatedElsewhere"
+msgstr "This draft was updated in another tab."
+
+msgid "switchToDraft"
+msgstr "Switch to {title}"
+
+msgid "coauthorPrefilled"
+msgstr "What is ticked is the guess of the person who asked. Change anything that's wrong."
+
+msgid "coauthorHeading"
+msgstr "<work>{title}</work>: what did you do?"
+
+msgid "coauthorHeadingUntitled"
+msgstr "What did you do on this paper?"
+
+msgid "coauthorAnsweringAs"
+msgstr "Answering as <b>{name}</b>. Your name and ORCID iD travel back in the link you send."
+
+msgid "coauthorBlankHint"
+msgstr "Pick a level for each role you took on and leave the rest at {none}. It takes about two minutes."
+
+msgid "coauthorBlankHintYesNo"
+msgstr "Pick {contributed} for each role you took on and leave the rest at {none}. It takes about two minutes."
+
+msgid "coauthorRoles"
+msgstr "Your roles"
+
+msgid "coauthorFirstAuthor"
+msgstr "I share first authorship"
+
+msgid "coauthorCorresponding"
+msgstr "I am a corresponding author"
+
+msgid "coauthorDetails"
+msgstr "Your details"
+
+msgid "coauthorDetailsHint"
+msgstr "Correct your name or ORCID iD here if the person who asked got them wrong."
+
+msgid "coauthorName"
+msgstr "Name"
+
+msgid "coauthorSend"
+msgstr "Send back"
+
+msgid "coauthorMarked"
+msgstr "{count} of {total} roles marked"
+
+msgid "coauthorOrcidSignIn"
+msgstr "Sign in with ORCID"
+
+msgid "coauthorOrcidHint"
+msgstr "Optional: sign in with ORCID and your answer arrives marked as verified. The sign-in travels in the link you send back and is kept with your answer, also in JSON exports. It carries the name on your ORCID record."
+
+msgid "coauthorOrcidChanged"
+msgstr "You changed your answer after signing in. Sign in again to verify this answer."
+
+msgid "coauthorOrcidSigned"
+msgstr "Signed in with ORCID as {who}. Your answer will arrive marked as verified."
+
+msgid "coauthorOrcidFailed"
+msgstr "The ORCID sign-in did not finish. You can still send your answer without it."
+
+msgid "reviewOrcidVerified"
+msgstr "Verified by ORCID as {who}, signed in {date}."
+
+msgid "reviewOrcidOtherId"
+msgstr "This is not the iD on the row."
+
+msgid "reviewOrcidNoRowId"
+msgstr "This row has no ORCID iD to compare with."
+
+msgid "reviewOrcidSignedFor"
+msgstr "Signed for “{title}”."
+
+msgid "reviewOrcidSignedElsewhere"
+msgstr "Not verified for this row: {who} signed in with ORCID on {date} for a row with another name or iD."
+
+msgid "coauthorNotSent"
+msgstr "Not sent yet."
+
+msgid "coauthorCopyInstead"
+msgstr "Copy the link instead"
+
+msgid "coauthorShareTitle"
+msgstr "{name}'s CRediT roles"
+
+msgid "coauthorSentTitle"
+msgstr "Sent. You can close this page."
+
+msgid "coauthorCopiedTitle"
+msgstr "Link copied. Paste it into your reply, then close this page."
+
+msgid "coauthorSentBody"
+msgstr "The person who asked sees your answer next to their draft. If they ask again, open the new link: it replaces this answer."
+
+msgid "coauthorChange"
+msgstr "Change my answer"
+
+msgid "claimUnlock"
+msgstr "Keep as an ordinary draft"
+
+msgid "annClaimUnlocked"
+msgstr "This is now an ordinary draft. Every row can be edited."
+
+msgid "claimLockedHint"
+msgstr "You're answering a request, so only your own row is editable."
+
+msgid "claimResumed"
+msgstr "Picked up where you left off on this request."
+
+msgid "claimRequestUpdated"
+msgstr "The request was updated. Your earlier answers were replaced."
+
+msgid "claimLockedDraft"
+msgstr "Locked: answering a request"
+
+msgid "requestLinkOwn"
+msgstr "This is the request link you built for {name}."
+
+msgid "askBlank"
+msgstr "Ask {name} what they did"
+
+msgid "askPrefilled"
+msgstr "Ask {name} to check your guess"
+
+msgid "askLinkHint"
+msgstr "The link carries the title, this person's name and iD."
+
+msgid "ask"
+msgstr "Ask"
+
+msgid "claimedRowBadge"
+msgstr "Your row"
+
+msgid "askCopied"
+msgstr "Link copied"
+
+msgid "askedChip"
+msgstr "Asked"
+
+msgid "askedChipTitle"
+msgstr "Asked to fill in their row. Clears when the reply lands."
+
+msgid "mergedRowBadge"
+msgstr "Updated"
+
+msgid "mergedRowBadgeTitle"
+msgstr "Filled in from the reply you just opened."
+
+msgid "activeDraft"
+msgstr "Open"
+
+msgid "askContributorCopied"
+msgstr "Link copied. Send it to {name}."
+
+msgid "mergeUnmatched"
+msgstr "That reply is for someone who is not in this draft, so nothing was merged."
+
+msgid "askReplyDiffers"
+msgstr "{name}'s answer arrived: {count, plural, one {# difference} other {# differences}}."
+
+msgid "askReplyMatches"
+msgstr "{name}'s answer matches yours."
+
+msgid "askReplyStale"
+msgstr "This answer from {name} is older than the one you have, so it was not used."
+
+msgid "askReplyDuplicate"
+msgstr "You already have this answer from {name}."
+
+msgid "annMergeUndone"
+msgstr "Merge undone."
+
+msgid "welcomeIntro"
+msgstr "Draft a manuscript-ready contribution statement in three steps."
+
+msgid "about"
+msgstr "About"
+
+msgid "statusReady"
+msgstr "Ready to export"
+
+msgid "statusNotes"
+msgstr "{count, plural, one {# note to review} other {# notes to review}}"
+
+msgid "statusDismiss"
+msgstr "Dismiss"
+
+msgid "rolesUsed"
+msgstr "{used} of {total} roles used"
+
+msgid "shareWarningTitle"
+msgstr "This link carries your data"
+
+msgid "shareWarningBody"
+msgstr "Anyone with this link can read every contributor name, ORCID iD, contributor type, and role assignment."
+
+msgid "noContributorsHint"
+msgstr "Paste a DOI or an ORCID iD below, type a name, or use <b>Import</b> in the header."
+
+msgid "a11yContributionGrid"
+msgstr "Contribution grid"
+
+msgid "a11yGeneratedStatement"
+msgstr "Generated statement"
+
+msgid "a11yStatementNotes"
+msgstr "Statement notes"
+
+msgid "a11yBulkContributor"
+msgstr "Contributor for bulk assignment"
+
+msgid "a11yBulkRole"
+msgstr "Role for bulk assignment"
+
+msgid "a11yExportFormat"
+msgstr "Export format"
+
+msgid "a11yOrcidInput"
+msgstr "ORCID iD"
+
+msgid "a11yOrcidHint"
+msgstr "Type an ORCID iD, or paste one as an iD or an orcid.org URL"
+
+msgid "a11yDismissWelcome"
+msgstr "Dismiss getting started"
+
+msgid "a11yShareLink"
+msgstr "Share a link containing all contributor data"
+
+msgid "a11yUseInitials"
+msgstr "Use initials instead of names"
+
+msgid "a11yShowLevels"
+msgstr "Show levels: annotate roles with contribution levels"
+
+msgid "a11ySeparateAcks"
+msgstr "Separate acknowledgements: credit non-author contributors on their own line"
+
+msgid "customColor"
+msgstr "Custom"
+
+msgid "copyDataLink"
+msgstr "Copy data link"
+
+msgid "fullCreditStandard"
+msgstr "Full CRediT standard"
+
+msgid "creditRolesExamples"
+msgstr "CRediT Roles & Examples"
+
+msgid "sourceOnGitHub"
+msgstr "Source code on GitHub"
+
+msgid "opensInNewTab"
+msgstr "(opens in new tab)"
+
+msgid "acknowledgements"
+msgstr "Acknowledgements"
+
+msgid "aboutTaxonomy"
+msgstr "CRediT is an ANSI/NISO standard (<cc>CC BY 4.0</cc>). This project is independent of NISO and not endorsed by it."
+
+msgid "aboutPrivacy"
+msgstr "Looking up an ORCID iD sends it to pub.orcid.org from your browser. Looking up a DOI sends it to api.crossref.org, together with this site's contact address, and to api.datacite.org if Crossref has no record. Cloudflare, which hosts this site, counts page requests on its own servers, in aggregate, with no script or cookie in your browser. Importing CITATION.cff or .zenodo.json loads the citesync converter and a Python runtime from this site; the file is processed in your browser and is never uploaded. Nothing else leaves your browser: drafts stay in its local storage. Asks to co-authors and their answers are kept only in this browser, and go into JSON exports unless you untick that option. Sending a reply hands its link, with that person's name and iD, to the app you choose. Signing in with ORCID on an answer takes the co-author to orcid.org and back; the sign-in then travels inside the reply link and is kept with the answer, also in JSON exports. It carries the name on the co-author's ORCID record. Opening a signed answer, or importing a JSON file with one, fetches ORCID's public keys from orcid.org to check it."
+
+msgid "accessibilityStatement"
+msgstr "Accessibility statement"
+
+msgid "getCreditBadge"
+msgstr "Get the CRediT badge"
+
+msgid "creditBadge"
+msgstr "CRediT badge"
+
+msgid "copiedHtml"
+msgstr "Copied HTML"
+
+msgid "copiedPng"
+msgstr "Copied PNG"
+
+msgid "annBadgeHtmlCopied"
+msgstr "Badge HTML copied to clipboard"
+
+msgid "importAuthorList"
+msgstr "Author name list"
+
+msgid "importPlaceholder"
+msgstr "{names}\n\nor a .csv / .tsv / .json / .xml / .cff export, or a link sent back to you"
+
+msgid "errImportNoNames"
+msgstr "No author names found. Enter one name per line."
+
+msgid "errImportNoCsvRows"
+msgstr "No contributor rows found in the CSV."
+
+msgid "errImportNoJsonContributors"
+msgstr "That JSON export contains no contributors."
+
+msgid "errImportNoXmlContribs"
+msgstr "No <contrib> elements found in the XML."
+
+msgid "errImportNoCrossrefContribs"
+msgstr "No <contributors> block with a <person_name> found in the Crossref XML."
+
+msgid "aboutTagline"
+msgstr "Draft CRediT contribution statements, and export the grid as a contribution heatmap."
+
+msgid "aboutInspiredBy"
+msgstr "Inspired by the original"
+
+msgid "aboutOutputTranslations"
+msgstr "Output translations by"
+
+msgid "aboutPageTitle"
+msgstr "About CRediT Matrix"
+
+msgid "aboutPageLink"
+msgstr "About, citing and privacy"
+
+msgid "aboutVersion"
+msgstr "Version"
+
+msgid "aboutLicense"
+msgstr "License"
+
+msgid "aboutSource"
+msgstr "Source code"
+
+msgid "aboutAuthor"
+msgstr "Author"
+
+msgid "aboutCiteTitle"
+msgstr "Cite CRediT Matrix"
+
+msgid "aboutCite"
+msgstr "If you used CRediT Matrix for a paper, cite it by its concept DOI, which always resolves to the latest version:"
+
+msgid "aboutCiteMetadata"
+msgstr "These come from the repository's <link>CITATION.cff</link>. <citesync>citesync</citesync> keeps it in step with each release, and its playground makes the same file for your own software."
+
+msgid "aboutCiteFormat"
+msgstr "Citation format"
+
+msgid "annCitationCopied"
+msgstr "Citation copied"
+
+msgid "aboutPluginsTitle"
+msgstr "Plugins for writing tools"
+
+msgid "aboutPlugins"
+msgstr "Write the statement where you write the paper. These plugins add it to your document, from the roles in its author list or from a file exported here. Each name links to its setup guide."
+
+msgid "aboutPluginsSoftware"
+msgstr "For software, the <cli>command-line tool</cli> also writes people and roles as CodeMeta. <citesync>citesync</citesync> turns that metadata into CITATION.cff and Zenodo files, and <drift>codemeta-drift</drift> checks a CodeMeta file for consistency."
+
+msgid "statementPlugins"
+msgstr "Plugins for Quarto, MyST, Typst and more"
+
+msgid "privacy"
+msgstr "Privacy"
+
+msgid "accessibility"
+msgstr "Accessibility"
+
+msgid "aboutAccessibility"
+msgstr "The <link>accessibility statement</link> says what we check, which problems we know about, and how to report one."
+
+msgid "detectedFormat"
+msgstr "Detected: {format}"
+
+msgid "mergeWrongDraft"
+msgstr "That reply belongs to a draft that is not in this browser, so nothing was changed."
+
+msgid "sharedDraftOpened"
+msgstr "Opened the shared draft beside your own work."
+
+msgid "sharedDraftLoaded"
+msgstr "Opened the shared draft."
+
+msgid "a11yInvalidOrcid"
+msgstr "Invalid ORCID iD"
+
+msgid "a11yRoleAssignment"
+msgstr "{role} for {name}: {level}"
+
+msgid "a11yRolesForContributor"
+msgstr "Roles for {name}"
+
+msgid "a11ySetColor"
+msgstr "Set color {color}"
+
+msgid "a11yStatementGrouping"
+msgstr "Statement grouping"
+
+msgid "annContributorsAdded"
+msgstr "{count, plural, one {Added # contributor.} other {Added # contributors.}}"
+
+msgid "annEntriesSkippedNoName"
+msgstr "{count, plural, one {Skipped # entry with no name} other {Skipped # entries with no name}} ({entries})."
+
+msgid "annOrcidChecksumsSkipped"
+msgstr "{count, plural, one {Skipped # ORCID iD with an invalid check digit} other {Skipped # ORCID iDs with an invalid check digit}} ({ids})."
+
+msgid "annOrcidLookupsFailed"
+msgstr "Could not look up {count, plural, one {# ORCID iD} other {# ORCID iDs}} ({ids}). Those rows are named after their iD; rename them manually."
+
+msgid "annContributorsSkippedLimit"
+msgstr "{count, plural, one {Skipped # contributor} other {Skipped # contributors}}: a draft holds at most {limit}."
+
+msgid "annCopiedToClipboard"
+msgstr "Copied to clipboard"
+
+msgid "annExportDataCopied"
+msgstr "Export data copied to clipboard"
+
+msgid "badgeIntro"
+msgstr "Add this badge to your article to show that it uses the taxonomy."
+
+msgid "copyHtml"
+msgstr "Copy HTML"
+
+msgid "copyPng"
+msgstr "Copy PNG"
+
+msgid "downloadPng"
+msgstr "Download PNG"
+
+msgid "switchToDarkTheme"
+msgstr "Switch to dark mode"
+
+msgid "switchToLightTheme"
+msgstr "Switch to light mode"
+
+msgid "contributorTypeSetAuthor"
+msgstr "Mark as an author"
+
+msgid "contributorTypeSetNonAuthor"
+msgstr "Mark as a non-author contributor"
+
+msgid "errImportFailed"
+msgstr "Could not import those contributors. Check the data and try again."
+
+msgid "errImportNewerVersion"
+msgstr "This file was made by a newer version of CRediT Matrix. Reload the page to update, then try again."
+
+msgid "errImportRepeatedId"
+msgstr "This file lists the same contributor id twice, so it was not imported."
+
+msgid "errHeatmapExport"
+msgstr "Could not export the heatmap as {format}."
+
+msgid "errStorageFull"
+msgstr "Browser storage is full, so changes are not saved. Export this draft, or delete one you no longer need."
+
+msgid "errStorageBlocked"
+msgstr "This browser blocks storage for this site, so changes are not saved. Allow site data, or export before you close the tab."
+
+msgid "errNewerVersionSaved"
+msgstr "A newer version of CRediT Matrix saved your drafts in another tab. Reload this page: changes made here are not saved."
+
+msgid "formatShareLink"
+msgstr "Share link"
+
+msgid "formatJsonExport"
+msgstr "JSON export"
+
+msgid "replaceWorkspaceBody"
+msgstr "Importing {incoming, plural, one {# contributor} other {# contributors}} will replace {existing, plural, one {the # contributor} other {the # contributors}} already in this workspace. This cannot be undone."
+
+msgid "statementEmptyHint"
+msgstr "No contributions assigned yet. Select cells in the grid to assign roles."
+
+msgid "separateAcknowledgements"
+msgstr "Separate acknowledgements"
+
+msgid "validationAuthorNoRoles"
+msgstr "{name} has no assigned CRediT roles."
+
+msgid "validationRoleUnassigned"
+msgstr "No contributor is assigned “{role}”."
+
+msgid "welcomeBodyContributors"
+msgstr "Paste a DOI to fill the whole list from the published record, or type names yourself. An ORCID iD fills a name in for you."
+
+msgid "welcomeBodyRoles"
+msgstr "Select cells in the grid to mark which of the 14 CRediT roles each contributor took on."
+
+msgid "welcomeBodyExport"
+msgstr "The statement updates as you go. Copy it, or download the heatmap, XML, CSV, JSON, or Markdown."
+
+msgid "welcomeDraftsTitle"
+msgstr "One draft per paper"
+
+msgid "welcomeDraftsBody"
+msgstr "Writing more than one paper? Switch drafts from the header; each is kept separately in this browser."
+
+msgid "welcomeAskTitle"
+msgstr "Ask co-authors directly"
+
+msgid "welcomeAskBody"
+msgstr "Copy a link from a contributor's row menu and send it to them. When their link comes back, open it: the answer is kept beside their row, and you settle any differences in the Review tab."
+
+msgid "importDescription"
+msgstr "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R or Crossref XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too. Paste an author contribution statement to fill in the roles of the contributors already here. CITATION.cff, codemeta.json and .zenodo.json import author names and ORCID iDs, leaving roles empty."
+
+msgid "contributorActions"
+msgstr "Actions for {name}"
+
+msgid "colorBlue"
+msgstr "Blue"
+
+msgid "colorOrange"
+msgstr "Orange"
+
+msgid "colorBluishGreen"
+msgstr "Bluish green"
+
+msgid "colorReddishPurple"
+msgstr "Reddish purple"
+
+msgid "colorVermilion"
+msgstr "Vermilion"
+
+msgid "colorSkyBlue"
+msgstr "Sky blue"
+
+msgid "colorYellow"
+msgstr "Yellow"
+
+msgid "colorDarkGray"
+msgstr "Dark gray"
+
+msgid "languageSettings"
+msgstr "Language settings"
+
+msgid "stripOpenTeam"
+msgstr "Ask co-authors"
+
+msgid "teamYou"
+msgstr "You"
+
+msgid "teamNotAsked"
+msgstr "Not asked yet"
+
+msgid "toggleKeysHint"
+msgstr "Select to toggle · Arrow keys move, 1 or 0 sets a role."
+
+msgid "downloadSvg"
+msgstr "Download SVG"
+
+msgid "copyFormat"
+msgstr "Copy {format}"
+
+msgid "downloadFormat"
+msgstr "Download {format}"
+
+msgid "a11yInspector"
+msgstr "Statement, team, review and published practice"
+
+msgid "tabTeam"
+msgstr "Team"
+
+msgid "tabReview"
+msgstr "Review"
+
+msgid "tabNorms"
+msgstr "Published practice"
+
+msgid "normsIntro"
+msgstr "How often published papers in a field give each role, by author position. This is context, not advice: what is common elsewhere says nothing about what your co-authors did."
+
+msgid "normsField"
+msgstr "Your field"
+
+msgid "normsFieldPlaceholder"
+msgstr "Choose a field"
+
+msgid "normsEmpty"
+msgstr "Choose your field to see the shares. The app does not know your paper's field, and nothing here changes your grid."
+
+msgid "normsFieldGone"
+msgstr "Your saved field, <name>{field}</name>, has no data in this snapshot. Choose a field to see the shares."
+
+msgid "normsCoverage"
+msgstr "{articles, number} open-access research articles in <name>{field}</name> with CRediT roles, from Europe PMC files of {date}. Shares count authors with at least one role."
+
+msgid "normsUnvalidated"
+msgstr "Roles were read automatically and not checked by hand: on {tagged, number} papers whose publishers also tag the roles, the parser matches the tags at an F1 score of {f1} (1 is perfect)."
+
+msgid "normsYourPosition"
+msgstr "Your position in this draft: {position, select, single {sole} first {first} middle {middle} other {last}} author."
+
+msgid "normsNonAuthor"
+msgstr "You are a non-author in this draft, so no column is marked: the shares count authors only."
+
+msgid "normsNoSelf"
+msgstr "To mark your position, choose “This is me” on your row in the contributor list."
+
+msgid "normsCaption"
+msgstr "Share of authors given each role, by author position"
+
+msgid "normsRole"
+msgstr "Role"
+
+msgid "normsPosition"
+msgstr "{position, select, single {Sole} first {First} middle {Middle} other {Last}}"
+
+msgid "normsTooFew"
+msgstr "Too few authors to say"
+
+msgid "normsFootnote"
+msgstr "Fields with fewer than {minArticles, number} such articles are not listed, and a position with fewer than {minAuthors, number} authors shows a dash. Fields are per journal, from OpenAlex. Source: CRediT census {snapshot}, dataset {version}."
+
+msgid "reviewEmptyTitle"
+msgstr "Answers from co-authors appear here"
+
+msgid "reviewEmptyBody"
+msgstr "When a co-author sends their link back, open it, and their answer shows up here beside your draft."
+
+msgid "teamEmpty"
+msgstr "Add contributors first, then ask each of them what they did."
+
+msgid "teamMessage"
+msgstr "Hi {name},\n\nI am preparing the CRediT contribution statement for {work}. Could you open this link, mark the roles you took on, and send the link back to me?\n\n{link}\n\nThe link carries the title, your name and your iD. Nothing is stored on a server."
+
+msgid "teamMessageWork"
+msgstr "“{title}”"
+
+msgid "teamMessageNoTitle"
+msgstr "our manuscript"
+
+msgid "teamMessageCopied"
+msgstr "Message for {name} copied. Paste it into an email."
+
+msgid "teamAskAllDone"
+msgstr "{count, plural, one {# message copied.} other {All # messages copied.}}"
+
+msgid "teamAskNext"
+msgstr "Copy next: {name} ({index} of {total})"
+
+msgid "teamAskAll"
+msgstr "Ask everyone not yet asked ({count})"
+
+msgid "teamAskAllHint"
+msgstr "Copies one message per person. Paste each into an email before copying the next."
+
+msgid "teamPrivacy"
+msgstr "Each link carries the paper title and that person's name and iD. Nothing is stored on a server: the answer comes back the way you send it."
+
+msgid "teamCopyMessageFor"
+msgstr "Copy message for {name}"
+
+msgid "teamCopyMessage"
+msgstr "Copy message"
+
+msgid "expandContributors"
+msgstr "Expand contributor list"
+
+msgid "collapseContributors"
+msgstr "Collapse contributor list"
+
+msgid "moveUp"
+msgstr "Move up"
+
+msgid "moveDown"
+msgstr "Move down"
+
+msgid "annMoved"
+msgstr "{name} moved to position {position} of {total}."
+
+msgid "skipToGrid"
+msgstr "Skip to grid"
+
+msgid "skipToStatement"
+msgstr "Skip to statement"
+
+msgid "stripAnswered"
+msgstr "{answered} of {total} answered"
+
+msgid "stripDiffer"
+msgstr "{count, plural, one {# answer differs} other {# answers differ}}"
+
+msgid "reviewAction"
+msgstr "Review"
+
+msgid "tabReviewOpen"
+msgstr "{count, plural, one {# open difference} other {# open differences}}"
+
+msgid "statementDiffers"
+msgstr "{count, plural, one {# contribution still differs.} other {# contributions still differ.}} This statement uses your version."
+
+msgid "exportIncludesAnswers"
+msgstr "Include co-author answers and ask history ({count})"
+
+msgid "thisIsMe"
+msgstr "This is me"
+
+msgid "thisIsNotMe"
+msgstr "This is not me"
+
+msgid "teamSettledOn"
+msgstr "Settled on {date}"
+
+msgid "teamStatusAnswered"
+msgstr "{days, plural, =0 {Answered today} =1 {Answered yesterday} other {Answered # days ago}} · {count} to review"
+
+msgid "teamStatusAsked"
+msgstr "{days, plural, =0 {Asked today} =1 {Asked yesterday} other {Asked # days ago}} · {kind, select, prefilled {your guess} other {blank}}"
+
+msgid "reviewAnsweredMeta"
+msgstr "{days, plural, =0 {Answered today} =1 {Answered yesterday} other {Answered # days ago}} · {kind, select, prefilled {your guess} other {blank}}"
+
+msgid "teamReviewFor"
+msgstr "Review {name}'s answer"
+
+msgid "markerSharedFirst"
+msgstr "Shared first authorship"
+
+msgid "markerCorresponding"
+msgstr "Corresponding author"
+
+msgid "markerYes"
+msgstr "Yes"
+
+msgid "markerNo"
+msgstr "No"
+
+msgid "reviewKindAdded"
+msgstr "Added a role"
+
+msgid "reviewKindMarked"
+msgstr "Marked this"
+
+msgid "reviewKindDropped"
+msgstr "Left this out"
+
+msgid "reviewKindLevel"
+msgstr "Different level"
+
+msgid "reviewUseTheirs"
+msgstr "Use {name}'s"
+
+msgid "reviewKeepYours"
+msgstr "Keep yours"
+
+msgid "reviewAskAbout"
+msgstr "Ask {name} about this"
+
+msgid "reviewUseTheirsRole"
+msgstr "Use {name}'s: {role}"
+
+msgid "reviewKeepYoursRole"
+msgstr "Keep yours: {role}"
+
+msgid "undoRole"
+msgstr "Undo: {role}"
+
+msgid "reviewAskAboutRole"
+msgstr "{copied, select, true {Copied. Ask {name} about this: {role}} other {Ask {name} about this: {role}}}"
+
+msgid "reviewUseAll"
+msgstr "Use all of {name}'s"
+
+msgid "reviewUsedTheirs"
+msgstr "Used {name}'s answer"
+
+msgid "reviewKeptYours"
+msgstr "Kept yours"
+
+msgid "annReviewUsed"
+msgstr "Used {name}'s answer for {role}."
+
+msgid "annReviewKept"
+msgstr "Kept yours for {role}."
+
+msgid "annReviewUsedAll"
+msgstr "Used all of {name}'s answers."
+
+msgid "annReviewUndone"
+msgstr "Choice undone."
+
+msgid "reviewAllSettledTitle"
+msgstr "Everything is settled."
+
+msgid "reviewAllSettledBody"
+msgstr "Every answer that differed has a decision, and the statement shows the result."
+
+msgid "cellTheySay"
+msgstr "{name} says {level}"
+
+msgid "columnOpenDifferences"
+msgstr "{name}: {count, plural, one {# open difference} other {# open differences}}"
+
+msgid "columnSettled"
+msgstr "Settled"
+
+msgid "legendDiffers"
+msgstr "A co-author answered differently"
+
+msgid "reviewAskMessage"
+msgstr "Hi {name},\n\nI am finishing the CRediT contribution statement for {work}. Our answers differ on {role}. Could you open this link, check your row, and send the link back to me?\n\n{link}\n\nThe link carries the title, your name and your iD. Nothing is stored on a server."
+
+msgid "formatStatement"
+msgstr "CRediT statement"
+
+msgid "statementReview"
+msgstr "Review roles"
+
+msgid "statementReviewTitle"
+msgstr "Roles found in the statement"
+
+msgid "statementReviewSummary"
+msgstr "{added, plural, one {# role} other {# roles}} to add for {people, plural, one {# contributor} other {# contributors}}. Roles already in the grid stay as they are."
+
+msgid "statementNothingNew"
+msgstr "Every role found is already in the grid."
+
+msgid "statementNoRolesFor"
+msgstr "No roles found for: {names}"
+
+msgid "statementCouldBe"
+msgstr "(could be {token})"
+
+msgid "statementUnresolvedBody"
+msgstr "These names or initials fit no contributor in this draft, or more than one. Their roles are left out unless you choose who is meant. Set the rest in the grid after applying."
+
+msgid "statementLeaveOut"
+msgstr "Leave out"
+
+msgid "statementReviewSummaryLevel"
+msgstr "{added, plural, one {# role} other {# roles}} to add as {level} for {people, plural, one {# contributor} other {# contributors}}. Roles already in the grid stay as they are."
+
+msgid "statementRoleAlreadySet"
+msgstr "{role} (already set)"
+
+msgid "statementUnmatchedTitle"
+msgstr "Not matched"
+
+msgid "statementUnmatchedAmbiguous"
+msgstr "{token}: could be {names}"
+
+msgid "statementUnmatchedNone"
+msgstr "{token}: no contributor"
+
+msgid "statementLeftOut"
+msgstr "{who} — left out: {roles}"
+
+msgid "statementAppliedLevel"
+msgstr "{count, plural, one {# role} other {# roles}} added from the statement as {level}."
+
+msgid "statementUndoStale"
+msgstr "Nothing undone: the draft changed after the roles were added. Change them in the grid instead."
+
+msgid "statementOnlyCredit"
+msgstr "Only CRediT role names are read, such as Conceptualization or Writing – original draft, not sentences about who did what."
+
+msgid "errStatementTooLong"
+msgstr "This text is longer than {limit} characters. Paste the contribution statement on its own."
+
+msgid "statementBack"
+msgstr "Back"
+
+msgid "statementApply"
+msgstr "Apply roles"
+
+msgid "statementApplied"
+msgstr "{count, plural, one {# role} other {# roles}} added from the statement."
+
+msgid "errStatementNoContributors"
+msgstr "Add the contributors first, then paste the statement: it is matched to the names already in this draft."
+
+msgid "errStatementNoRoles"
+msgstr "No CRediT roles could be matched to the contributors in this draft. Check that the statement names them as the draft does, by name or initials."
+
+msgid "censusAboutLink"
+msgstr "CRediT census: how papers use CRediT"
+
+msgid "censusBack"
+msgstr "Back to CRediT Matrix"
+
+msgid "censusTitle"
+msgstr "CRediT census"
+
+msgid "censusHeadline"
+msgstr "In {year}, {share} of open-access research articles in Europe PMC gave CRediT roles for at least one author."
+
+msgid "censusLead"
+msgstr "How published papers use CRediT, the Contributor Roles Taxonomy. The roles are read from the markup and contribution statements of {articles} open-access articles in Europe PMC."
+
+msgid "censusPreliminaryTitle"
+msgstr "Preliminary figures"
+
+msgid "censusPreliminary"
+msgstr "I haven't checked the parser against hand labels yet, so treat these numbers as a first look. Where {articles} articles both tag their roles and print a statement, the parser's reading of the statement matches the tags with an F1 score of {f1} (1 means every role found and none wrong). But {share} of those articles are from MDPI and Frontiers, and nobody has checked the tags themselves either."
+
+msgid "censusPreliminaryUnscored"
+msgstr "I haven't checked the parser against hand labels yet, so treat these numbers as a first look."
+
+msgid "censusIncomplete"
+msgstr "This snapshot is incomplete: some source files were not read, or some journals have no field yet."
+
+msgid "censusAdoptionTitle"
+msgstr "Adoption over time"
+
+msgid "censusAdoptionCaption"
+msgstr "Share of research articles with CRediT roles for at least one author, by publication year. {year} is still being published, so its stretch of the line is dashed."
+
+msgid "censusRolesPerAuthorTitle"
+msgstr "Roles per author"
+
+msgid "censusRolesPerAuthorCaption"
+msgstr "Average number of roles per author, counting only authors with at least one role, by publication year."
+
+msgid "censusShowTable"
+msgstr "Show as a table"
+
+msgid "censusPartial"
+msgstr "(partial)"
+
+msgid "censusTableLabel"
+msgstr "{chart}, as a table"
+
+msgid "censusTrend"
+msgstr "{from} in {first} and {to} in {last}, with a high of {max} in {maxYear}."
+
+msgid "censusYear"
+msgstr "Year"
+
+msgid "censusResearchArticles"
+msgstr "Research articles"
+
+msgid "censusWithRoles"
+msgstr "With roles"
+
+msgid "censusShare"
+msgstr "Share"
+
+msgid "censusStylesTitle"
+msgstr "How roles are marked up"
+
+msgid "censusStylesCaption"
+msgstr "Share of research articles per year, by where their roles were read from. Each article counts once, under the first of the four below that it uses. All four charts use the same scale. {year} is still being published, so its stretch is dashed."
+
+msgid "censusStyleJats4r"
+msgstr "JATS4R role tags"
+
+msgid "censusStyleJats4rNote"
+msgstr "Each author's roles tagged with the CRediT vocabulary, following JATS4R, the group that recommends how journal articles are tagged"
+
+msgid "censusStylePlosUri"
+msgstr "Role URL tags"
+
+msgid "censusStylePlosUriNote"
+msgstr "Each author's roles tagged with a CRediT web address, as PLOS does"
+
+msgid "censusStyleStatement"
+msgstr "Contribution statement"
+
+msgid "censusStyleStatementNote"
+msgstr "One paragraph naming authors by initials or name"
+
+msgid "censusStyleContribText"
+msgstr "Text per author"
+
+msgid "censusStyleContribTextNote"
+msgstr "Free text beside each author, such as a role list or a footnote"
+
+msgid "censusFieldsTitle"
+msgstr "By field"
+
+msgid "censusFieldsCaption"
+msgstr "Share of research articles from {year} with CRediT roles, by the journal's field in OpenAlex, an open index of scholarly works. Fields are per journal, not per article. Europe PMC is biomedical by design, so other fields are thinly covered. Fields with fewer than 1,000 articles are left out."
+
+msgid "censusFieldAgriculturalAndBiologicalSciences"
+msgstr "Agricultural and Biological Sciences"
+
+msgid "censusFieldBiochemistryGeneticsAndMolecularBiology"
+msgstr "Biochemistry, Genetics and Molecular Biology"
+
+msgid "censusFieldChemistry"
+msgstr "Chemistry"
+
+msgid "censusFieldComputerScience"
+msgstr "Computer Science"
+
+msgid "censusFieldDentistry"
+msgstr "Dentistry"
+
+msgid "censusFieldEconomicsEconometricsAndFinance"
+msgstr "Economics, Econometrics and Finance"
+
+msgid "censusFieldEngineering"
+msgstr "Engineering"
+
+msgid "censusFieldEnvironmentalScience"
+msgstr "Environmental Science"
+
+msgid "censusFieldHealthProfessions"
+msgstr "Health Professions"
+
+msgid "censusFieldImmunologyAndMicrobiology"
+msgstr "Immunology and Microbiology"
+
+msgid "censusFieldMaterialsScience"
+msgstr "Materials Science"
+
+msgid "censusFieldMathematics"
+msgstr "Mathematics"
+
+msgid "censusFieldMedicine"
+msgstr "Medicine"
+
+msgid "censusFieldMultidisciplinary"
+msgstr "Multidisciplinary"
+
+msgid "censusFieldNeuroscience"
+msgstr "Neuroscience"
+
+msgid "censusFieldPhysicsAndAstronomy"
+msgstr "Physics and Astronomy"
+
+msgid "censusFieldPsychology"
+msgstr "Psychology"
+
+msgid "censusFieldSocialSciences"
+msgstr "Social Sciences"
+
+msgid "censusPublishersTitle"
+msgstr "By publisher"
+
+msgid "censusPublishersCaption"
+msgstr "Share of research articles from {year} with CRediT roles, for the {count} publishers with the most research articles in Europe PMC's open-access subset that year. Publisher names are as the articles give them."
+
+msgid "censusOfArticles"
+msgstr "of {count, plural, one {# article} other {# articles}}"
+
+msgid "censusRolesTitle"
+msgstr "Roles by place in the byline"
+
+msgid "censusRolesCaption"
+msgstr "For each role, the share of authors with at least one role who hold it. Only articles with roles and three or more authors count."
+
+msgid "censusRole"
+msgstr "Role"
+
+msgid "censusPlaceAll"
+msgstr "All authors"
+
+msgid "censusPlaceFirst"
+msgstr "First author"
+
+msgid "censusPlaceMiddle"
+msgstr "Middle authors"
+
+msgid "censusPlaceLast"
+msgstr "Last author"
+
+msgid "censusAboutTitle"
+msgstr "About these data"
+
+msgid "censusMethod"
+msgstr "Counts cover research articles only, preprint servers included (Cold Spring Harbor Laboratory Preprints, arXiv). Groups with fewer than 1,000 articles are left out, and the years start at the first year with 1,000 articles with roles."
+
+msgid "censusSnapshot"
+msgstr "Snapshot"
+
+msgid "censusDatasetVersion"
+msgstr "Dataset version"
+
+msgid "censusCodeCommit"
+msgstr "Code commit"
+
+msgid "censusParser"
+msgstr "Parser version"
+
+msgid "censusOpenAlex"
+msgstr "OpenAlex sources"
+
+msgid "censusDownload"
+msgstr "Download the counts (JSON)"
+
+msgid "censusHowTitle"
+msgstr "How the census reads statements"
+
+msgid "censusHowRules"
+msgstr "A rule parser reads each article. Where the publisher tags each author's roles in the JATS XML, it takes the tags. Otherwise it reads the free-text statement clause by clause and pairs authors with roles. Only CRediT wording counts, so \"A.B. conceived the study\" gives no roles."
+
+msgid "censusHowModel"
+msgstr "A fine-tuned encoder, Ettin-68M, also reads every free-text statement. It is the census's browser model, made to run in a web browser. It finds more of the tagged roles than the rules do, at about the same precision, but it also gives roles to narrative statements that name none. The counts on this page come from the rule parser alone."
+
+msgid "censusHowCaveat"
+msgstr "Both are scored against the roles publishers tag, and those tags are not gold. A tag can name a role the statement never gives. On 200 MDPI articles where the rule parser and the tags disagree, a language model judged the tags wrong on 192 and the parser alone wrong on 6. So an F1 score against the tags measures agreement with them, and it understates accuracy, most on MDPI."
+
+msgid "censusHowCode"
+msgstr "The census code"
+
+msgid "censusHowModelCard"
+msgstr "The model card"
+
+msgid "doiRolesImported"
+msgstr "Imported CRediT roles. Check these assignments before applying them; the record supplies no contribution levels."
+
+msgid "doiNoRoles"
+msgstr "This record has no deposited CRediT roles. The contribution matrix will stay empty."
+
+msgid "doiConfirm"
+msgstr "Confirm DOI import"
+
+msgid "errCitationConverter"
+msgstr "The citation converter could not finish. Your file is still here. Try again online, or convert it in the citesync playground."
+
+msgid "citationPlayground"
+msgstr "Open citesync playground"
+
+msgid "errImportNoCitationAuthors"
+msgstr "This citation file lists no authors."
+
+msgid "citationConverting"
+msgstr "Reading citation file… The converter may need to download first."
