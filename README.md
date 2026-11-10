@@ -46,7 +46,7 @@ Run it yourself (Node ≥ 26, pnpm ≥ 11):
 git clone https://github.com/simonvanlierde/credit-matrix
 cd credit-matrix
 pnpm install
-pnpm dev            # → http://localhost:3000
+pnpm dev            # → http://localhost:5173
 ```
 
 Or use the same logic elsewhere:
