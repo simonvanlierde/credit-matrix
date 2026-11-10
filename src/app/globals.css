@@ -133,6 +133,9 @@
   --font-headline: var(--font-headline);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
+
+  /* DESIGN.md's label tracking: uppercase section labels. */
+  --tracking-label: 0.08em;
 }
 
 body {

@@ -218,6 +218,42 @@ msgstr "导入贡献者"
 msgid "importData"
 msgstr "导入数据"
 
+msgid "importSummary"
+msgstr "粘贴或上传贡献者列表，或通过 DOI 查找。"
+
+msgid "importFormatsToggle"
+msgstr "支持哪些格式？"
+
+msgid "importOr"
+msgstr "或"
+
+msgid "importConverting"
+msgstr "转换中…"
+
+msgid "importImporting"
+msgstr "导入中…"
+
+msgid "importChoiceTitle"
+msgstr "添加到此草稿，还是替换它？"
+
+msgid "importAddNew"
+msgstr "添加 {count} 位新贡献者"
+
+msgid "importedContributors"
+msgstr "已导入 {count} 位贡献者。"
+
+msgid "importAddedContributors"
+msgstr "已向此草稿添加 {count} 位贡献者。"
+
+msgid "importUndoStale"
+msgstr "未撤销：导入后草稿已更改。请在表格中修改。"
+
+msgid "annImportUndone"
+msgstr "已撤销导入。"
+
+msgid "errImportXmlUnreadable"
+msgstr "无法读取该 XML。请检查文件是否完整。"
+
 msgid "close"
 msgstr "关闭"
 
@@ -228,16 +264,13 @@ msgid "dragDropFile"
 msgstr "将文件拖放到此处"
 
 msgid "acceptedFileTypes"
-msgstr "支持 .csv、.tsv、.json 或 .xml"
+msgstr "支持 {types}"
 
 msgid "fileLoaded"
 msgstr "已从 {name} 载入"
 
 msgid "pasteRawData"
 msgstr "粘贴原始数据"
-
-msgid "replaceWorkspaceTitle"
-msgstr "要替换当前工作区吗？"
 
 msgid "replaceWorkspace"
 msgstr "替换工作区"
@@ -351,7 +384,7 @@ msgid "structuredFileUpload"
 msgstr "上传结构化文件"
 
 msgid "doiPlaceholder"
-msgstr "10.1038/s41586-020-2649-2"
+msgstr "例如：10.1234/abcde"
 
 msgid "doiLookUp"
 msgstr "查询"
@@ -912,7 +945,7 @@ msgid "formatJsonExport"
 msgstr "JSON 导出"
 
 msgid "replaceWorkspaceBody"
-msgstr "本次导入包含 {incoming} 位贡献者，将替换当前的 {existing} 位贡献者。此操作无法撤销。"
+msgstr "本次导入包含 {incoming} 位贡献者，将替换当前的 {existing} 位贡献者。"
 
 msgid "statementEmptyHint"
 msgstr "尚未分配任何贡献。请选择网格中的单元格来分配角色。"

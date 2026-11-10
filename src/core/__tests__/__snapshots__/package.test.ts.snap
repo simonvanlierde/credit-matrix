@@ -12,6 +12,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "NewerVersionError",
     "RepeatedIdError",
     "STATEMENT_FORMATS",
+    "XmlParseError",
     "applyPatch",
     "askStep",
     "buildHeatmapSvg",

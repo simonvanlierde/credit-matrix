@@ -94,7 +94,7 @@ test.describe("Happy path UI flows", () => {
     await page.getByRole("button", { name: "Import" }).click();
     await page.locator("#import-text").fill("Marie Curie");
     await page.getByRole("button", { name: "Import data" }).click();
-    await expect(page.getByText("Replace the current workspace?", { exact: true })).toBeVisible();
+    await expect(page.getByText("Add to this draft or replace it?", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Replace workspace" }).click();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(1);
     await expect(page.getByLabel("Name or ORCID iD", { exact: true })).toHaveValue("Marie Curie");
@@ -300,9 +300,7 @@ test.describe("Happy path UI flows", () => {
 
     // The parser's own English text is no longer surfaced: the dialog reports a
     // localized failure instead, so this asserts the message people actually see.
-    await expect(
-      page.locator("dialog").getByText("Could not import those contributors.", { exact: false }),
-    ).toBeVisible();
+    await expect(page.locator("dialog").getByText("That XML could not be read.", { exact: false })).toBeVisible();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
     await expect(page.locator("#import-text")).toBeVisible();
   });
@@ -319,9 +317,7 @@ test.describe("Happy path UI flows", () => {
     });
     await page.getByRole("button", { name: "Import data" }).click();
 
-    await expect(
-      page.locator("dialog").getByText("Could not import those contributors.", { exact: false }),
-    ).toBeVisible();
+    await expect(page.locator("dialog").getByText("That XML could not be read.", { exact: false })).toBeVisible();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
   });
 

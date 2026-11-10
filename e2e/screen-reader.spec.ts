@@ -231,11 +231,13 @@ test.describe("screen-reader view (accessibility tree)", () => {
       - dialog "Import contributors":
         - heading "Import contributors" [level=2]
         - button "Close"
-        - textbox "Import from a DOI"
-        - button "Look up" [disabled]
-        - button "Browse files"
         - status
         - textbox "Paste raw data"
+        - button "Browse files"
+        - group: Which formats work?
+        - textbox "Import from a DOI"
+        - button "Look up" [disabled]
+        - status
         - button "Cancel"
         - button "Import data" [disabled]
     `);

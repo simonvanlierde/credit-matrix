@@ -83,6 +83,9 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   return deduplicateAuthorInitials(authors);
 }
 
+/** Text that is not well-formed XML, such as a truncated file. */
+export class XmlParseError extends Error {}
+
 /**
  * Parse untrusted XML text. Both exporters write plain documents with no entities. Browsers expand
  * them and linkedom does not, so the app and the CLI would read different names, and a nested
@@ -98,7 +101,7 @@ export function parseXml(xmlString: string, parser: XmlParser | undefined, calle
   const doc = (parser ?? new DOMParser()).parseFromString(xmlString, "application/xml");
   const parseError = doc.querySelector("parsererror");
   if (parseError) {
-    throw new Error(`XML parse error: ${parseError.textContent?.trim() ?? "invalid XML"}`);
+    throw new XmlParseError(`XML parse error: ${parseError.textContent?.trim() ?? "invalid XML"}`);
   }
   return doc;
 }

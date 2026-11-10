@@ -196,3 +196,52 @@ describe("Undo after a pasted statement", () => {
     expect(screen.getByText(english.statementUndoStale)).toBeTruthy();
   });
 });
+
+describe("importing over a draft", () => {
+  beforeAll(() => {
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+      this.open = false;
+    };
+  });
+
+  /** A draft holding Ann Bell, and the import dialog filled with `text` and submitted. */
+  async function importOver(text: string) {
+    render(
+      <IntlProvider locale="en" messages={en}>
+        <HeaderActions />
+        <StatusBanner />
+      </IntlProvider>,
+    );
+    await act(() => useContributionStore.persist.rehydrate());
+    act(() => {
+      useContributionStore.getState().createDraft();
+      useContributionStore.getState().addAuthor("Ann Bell");
+    });
+    const ann = useContributionStore.getState().authors[0];
+    fireEvent.click(screen.getByRole("button", { name: english.import }));
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: text } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    return ann;
+  }
+  const names = () => useContributionStore.getState().authors.map((author) => author.name);
+
+  it("replaces with an Undo that brings the draft back", async () => {
+    await importOver("Bo Chen");
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    expect(names()).toEqual(["Bo Chen"]);
+    expect(screen.getByText("Imported 1 contributor.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
+    expect(names()).toEqual(["Ann Bell"]);
+  });
+
+  it("adds only the new contributors and keeps the ones already here", async () => {
+    const ann = await importOver("Ann Bell\nBo Chen");
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 new" }));
+    expect(names()).toEqual(["Ann Bell", "Bo Chen"]);
+    expect(useContributionStore.getState().authors[0]?.id).toBe(ann?.id);
+    expect(screen.getByText("Added 1 contributor to this draft.")).toBeTruthy();
+  });
+});

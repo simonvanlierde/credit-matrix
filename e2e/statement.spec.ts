@@ -59,6 +59,8 @@ test("in a Levels draft, the level and the contributor behind shared initials ar
   await page.getByRole("button", { name: "Import", exact: true }).click();
   await page.locator("#import-text").fill("Mark Green\nMaria Garcia\nEva Mills");
   await page.getByRole("button", { name: "Import data" }).click();
+  // The import's outcome strip sits over the controls below it.
+  await page.getByRole("button", { name: "Dismiss" }).click();
   await page.getByRole("radio", { name: "Levels" }).click();
 
   await page.getByRole("button", { name: "Import", exact: true }).click();

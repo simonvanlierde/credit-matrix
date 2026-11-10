@@ -75,7 +75,6 @@ test.describe("interface messages", () => {
     // format names, or an identifier. Anything else is untranslated prose
     // that a missing-key check cannot see. Value: the locales where it applies.
     const SAME_AS_ENGLISH: Record<string, string[]> = {
-      doiPlaceholder: ["*"], // an example DOI
       a11yOrcidInput: ["*"], // "ORCID iD" is the registry's name for it
       heatmapLabel: ["de", "fr", "it", "nl"], // loanword in use
       download: ["de"],

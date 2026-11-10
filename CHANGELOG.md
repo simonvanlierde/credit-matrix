@@ -37,6 +37,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   contributor and role behind each phrase.
 - Once every co-author you asked has answered and nothing is left to review, the status strip says
   "Everyone agreed", and a screen reader hears it once.
+- Importing into a draft that already has contributors offers "Add N new" beside "Replace
+  workspace": it keeps the draft and adds only the people it lacks, matched by id, ORCID iD or
+  name.
+- Importing contributors from a file, a paste or a DOI ends with a message such as "Imported 2
+  contributors." and an Undo, which also takes back a replaced workspace.
 
 ### Changed
 
@@ -61,6 +66,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `zh-Hant`) in English instead of Simplified Chinese. The `<credit-matrix>` element now maps
   `pt-BR` to Portuguese and `zh-CN` to Simplified Chinese, as the CLI already did.
 - The Sphinx extension reports a failed statement as "CRediT rendering failed".
+- The import box leads with paste and upload, with the DOI lookup below as the other route. Its
+  description is one line, and the list of formats sits under "Which formats work?". Progress
+  shows beside the Import button, which reads "Converting…" or "Looking up…" with a spinner.
+- The import box's drop zone lists every file type the picker takes, `.cff` included, and hides
+  the drag-and-drop line on touch screens. Its border and the outline buttons stay visible in
+  dark mode, and the Close button is larger with the app's focus ring.
 
 ### Deprecated
 
@@ -72,6 +83,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Import says plainly when a file repeats a contributor id: the import box shows its own message
   in every language, the CLI and the `<credit-matrix>` element say so in English. `fromJson`
   throws the new `RepeatedIdError` for it.
+- Import says "That XML could not be read" for XML that is not well formed, such as a truncated
+  file, instead of the general failure message. The XML readers throw `XmlParseError` for it.
+- On a phone, the import box stays on screen when its confirmation takes focus. It used to scroll
+  away with the page.
 
 ## [0.11.0] - 2026-11-01
 

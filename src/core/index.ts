@@ -40,7 +40,7 @@ export { toMarkdown } from "./export/markdown";
 export { fromTenzing, isTenzing, toTenzing } from "./export/tenzing";
 export { toJats4rXml } from "./export/xml";
 export type { XmlElement, XmlParser } from "./export/xml-import";
-export { fromJats4rXml } from "./export/xml-import";
+export { fromJats4rXml, XmlParseError } from "./export/xml-import";
 export type { StatementCell, StatementFormat, StatementOptions, StatementSpan } from "./generate-statement";
 export { generateStatement, STATEMENT_FORMATS, statementSpans } from "./generate-statement";
 export type { DetectedFormat, Imported } from "./import";
