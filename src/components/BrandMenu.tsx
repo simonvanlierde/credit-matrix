@@ -1,5 +1,3 @@
-"use client";
-
 import { ChartLine, ChevronDown, ChevronRight, HelpCircle } from "lucide-react";
 import { useState } from "react";
 import { AboutPanel } from "@/components/AboutPanel";

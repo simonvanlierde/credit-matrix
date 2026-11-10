@@ -1,5 +1,3 @@
-"use client";
-
 import { type KeyboardEvent, type ReactNode, useRef } from "react";
 import { NormsPanel } from "@/components/NormsPanel";
 import { ReviewPanel } from "@/components/ReviewPanel";

@@ -1,5 +1,3 @@
-"use client";
-
 import { BadgeCheck, Check, Copy, Download, ImageDown } from "lucide-react";
 import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";

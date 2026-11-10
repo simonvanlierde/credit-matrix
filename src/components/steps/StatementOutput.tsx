@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";

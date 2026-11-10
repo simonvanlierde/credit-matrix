@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, Copy, Download } from "lucide-react";
 import { useState } from "react";
 import { LicenseLink } from "@/components/ui/license-link";

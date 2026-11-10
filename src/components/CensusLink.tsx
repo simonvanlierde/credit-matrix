@@ -1,5 +1,3 @@
-"use client";
-
 import { ChartLine } from "lucide-react";
 import { useTranslations } from "@/lib/translations";
 

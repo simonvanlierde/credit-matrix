@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowLeft, Info } from "lucide-react";
 import type { ReactNode } from "react";
 import { BarList, LineChart, type Point, TableToggle } from "@/components/census/charts";

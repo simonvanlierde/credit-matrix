@@ -1,5 +1,3 @@
-"use client";
-
 import { BadgeCheck, Check, ChevronDown, CircleCheck, Send } from "lucide-react";
 import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";

@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslations } from "@/lib/translations";

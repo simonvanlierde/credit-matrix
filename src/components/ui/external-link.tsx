@@ -1,5 +1,3 @@
-"use client";
-
 import { ExternalLink as ExternalLinkIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslations } from "@/lib/translations";

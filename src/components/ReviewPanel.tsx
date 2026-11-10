@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowRight, BadgeCheck, Check, CircleAlert, MessagesSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";

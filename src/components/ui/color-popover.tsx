@@ -1,5 +1,3 @@
-"use client";
-
 import { Check } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { OKABE_ITO, onColor } from "@/core/contributor-color";

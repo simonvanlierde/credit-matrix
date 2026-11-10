@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, CircleAlert, Link2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { DraftPicker } from "@/components/DraftPicker";

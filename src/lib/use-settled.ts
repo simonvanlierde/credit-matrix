@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { useHydrated } from "@/lib/use-hydrated";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import type { Messages } from "@lingui/core";
 import { type ReactNode, useEffect, useState } from "react";
 import { hasCatalog, type LocaleCode, normalizeLocaleCode } from "@/core/i18n";

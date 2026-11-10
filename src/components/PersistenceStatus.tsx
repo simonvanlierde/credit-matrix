@@ -1,5 +1,3 @@
-"use client";
-
 import { CircleAlert } from "lucide-react";
 import { useEffect } from "react";
 import { showStatus } from "@/components/StatusBanner";

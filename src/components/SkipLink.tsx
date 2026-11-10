@@ -1,5 +1,3 @@
-"use client";
-
 import { useTranslations } from "@/lib/translations";
 
 const LINK =

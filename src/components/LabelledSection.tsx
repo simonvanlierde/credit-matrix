@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { useTranslations } from "@/lib/translations";
 import type { MessageKey } from "@/locales/keys";

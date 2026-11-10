@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, CheckCheck, Clock, Columns3, Rows3, Settings2, UserPlus } from "lucide-react";
 import { useTheme } from "next-themes";
 import { memo, type ReactNode, type RefObject, useRef, useState } from "react";

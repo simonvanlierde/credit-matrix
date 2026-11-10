@@ -1,5 +1,3 @@
-"use client";
-
 import { ChartLine, Info } from "lucide-react";
 import { type ReactNode, useId } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Files, Fingerprint, Info, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ExternalLink } from "@/components/ui/external-link";

@@ -1,5 +1,3 @@
-"use client";
-
 import { ExternalLink } from "@/components/ui/external-link";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { CREDIT_ROLES } from "@/core";

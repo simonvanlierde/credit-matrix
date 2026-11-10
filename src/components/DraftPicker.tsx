@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, ChevronDown, Copy, FilePlus2, Files, Lock, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

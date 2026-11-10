@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, Copy, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { daysSince, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/ask-panel-shared";

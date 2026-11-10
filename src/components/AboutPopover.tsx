@@ -1,5 +1,3 @@
-"use client";
-
 import { Info } from "lucide-react";
 import { AboutPanel } from "@/components/AboutPanel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

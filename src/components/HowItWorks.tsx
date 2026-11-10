@@ -1,5 +1,3 @@
-"use client";
-
 import { HelpCircle } from "lucide-react";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";

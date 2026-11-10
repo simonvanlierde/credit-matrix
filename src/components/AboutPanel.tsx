@@ -1,5 +1,3 @@
-"use client";
-
 import { Accessibility, BookOpen, Code, Puzzle } from "lucide-react";
 import { PRODUCT_NAME } from "@/components/BrandMark";
 import { ExternalLink } from "@/components/ui/external-link";
