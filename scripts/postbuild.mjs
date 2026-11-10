@@ -102,11 +102,14 @@ const buildInputs = ["index.html", "citesync-worker.js", "citesync/runtime.json"
 const buildId = sha256(Buffer.concat(await Promise.all(buildInputs.map((file) => readFile(join(OUT, file))))))
   .replace(/[^A-Za-z0-9]/g, "")
   .slice(0, 12);
-// Figure fonts (tens of MB) stay out: the worker caches each one when an export first fetches it.
+// Of the figure fonts (about 40 MB), only the two Latin faces (about 1.2 MB) are precached, so a
+// Latin figure exports offline on first use; the worker caches the CJK faces when an export fetches them.
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
-  .filter((file) => /\.(?:js|css)$/.test(file))
+  .filter((file) => /\.(?:js|css)$|^Noto(?:Sans|Serif)-Regular-[\w-]+\.ttf$/.test(file))
   .map((file) => `/assets/${file}`)
   .sort();
+if (!assets.some((file) => file.includes("/NotoSans-Regular-")))
+  throw new Error("postbuild: the Latin figure font is not in the service worker precache");
 if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");
 await writeFile(
   swPath,

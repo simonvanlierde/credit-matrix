@@ -79,3 +79,20 @@ test("exports a PDF offline once an export has fetched its fonts", async ({ page
   await page.getByRole("button", { name: "Download PDF", exact: true }).click();
   expect((await offline).suggestedFilename()).toBe("credit-heatmap.pdf");
 });
+
+test("exports a Latin figure offline without an earlier export", async ({ page, context }) => {
+  test.skip(test.info().project.name !== "chromium", "One service-worker check covers the shared offline cache");
+  test.skip(!process.env.CI, "Requires the production build");
+  await asReturningVisitor(page);
+  await page.goto("/");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.getByRole("button", { name: "Load sample data" }).click();
+  await context.setOffline(true);
+  await page.reload();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  for (const format of ["SVG", "PDF"]) {
+    const pending = page.waitForEvent("download");
+    await page.getByRole("button", { name: `Download ${format}`, exact: true }).click();
+    expect((await pending).suggestedFilename()).toBe(`credit-heatmap.${format.toLowerCase()}`);
+  }
+});

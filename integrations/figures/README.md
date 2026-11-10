@@ -49,9 +49,10 @@ Han characters use the Simplified Chinese face, unless the output language is Ja
 the label contains kana. In Chinese output, punctuation beside Han text comes from the Chinese face.
 
 The font files ship with the package, and the CLI and JavaScript API read them from disk.
-The app fetches a face from its own site the first time an export needs it; its offline
-cache keeps that face, so later exports also work offline. A face never used online is
-not available offline. See
+The app's offline cache holds the two Latin faces from the first visit, so a Latin, Greek or
+Cyrillic figure exports offline at once. It fetches a Japanese or Chinese face the first time
+an export needs it and keeps it for offline use; one never used online is not available
+offline. See
 [font sources, checksums and licenses](../../src/core/figure-fonts/README.md).
 SVG and PDF include only the glyphs used in the figure: a Japanese or Chinese figure
 is about 35 kB in either format. The SVG subsets have no OpenType layout tables, so an
