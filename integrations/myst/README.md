@@ -17,8 +17,11 @@ project:
 
 MyST caches it in its build folder. The version in the URL is the package version, so
 upgrading is a change of that number.
-The plugin includes the figure fonts, which add about 23 MB to the download. It loads
-them when MyST imports the plugin so the heatmap directive can run synchronously.
+The plugin file is about 1.5 MB. The heatmap directive loads a figure font the first time a
+figure needs it: from `figure-fonts/` next to the plugin when present, otherwise from the
+same release on unpkg (0.6 MB for Latin text, 6-15 MB for a Japanese or Chinese face, per build).
+To build offline, download `dist/figure-fonts/` from the package and set
+`CREDIT_MATRIX_FIGURE_FONTS` to that folder's `file://` URL, ending in `/`.
 
 To work offline or pin the file in your repository, copy
 [`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix yaml`

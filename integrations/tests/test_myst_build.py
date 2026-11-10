@@ -1,6 +1,7 @@
 """Build the shared plugin through both document-engine entry points."""
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -20,9 +21,14 @@ BUNDLE = ROOT / "src/core/dist/myst-plugin.mjs"
 )
 def test_real_document_build(tmp_path, command, extension, source):
     plugin = ROOT / "integrations/myst/credit-matrix.mjs"
+    env = dict(os.environ)
     if source == "bundle":
         # A user's project has no credit-matrix or yaml: the bundle is the only file.
         assert BUNDLE.exists(), "run `pnpm --filter credit-matrix build` first"
+        # The fonts stay separate files, so the plugin download stays small.
+        assert BUNDLE.stat().st_size < 3_000_000
+        # Away from its package files, the bundle fetches fonts from the release, here a local copy.
+        env["CREDIT_MATRIX_FIGURE_FONTS"] = (BUNDLE.parent / "figure-fonts").as_uri() + "/"
         plugin = tmp_path / "plugins" / "credit-matrix.mjs"
         plugin.parent.mkdir()
         plugin.write_bytes(BUNDLE.read_bytes())
@@ -57,6 +63,7 @@ def test_real_document_build(tmp_path, command, extension, source):
             "statement.md",
         ],
         cwd=tmp_path,
+        env=env,
         capture_output=True,
         text=True,
         timeout=60,

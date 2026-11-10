@@ -1,6 +1,5 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the build config runs in Node.
 
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "tsdown";
 
@@ -37,25 +36,12 @@ export default defineConfig([
   {
     // The MyST plugin as one file: MyST runs a plugin from a URL out of its own cache, where bare
     // imports fail. The package and yaml are bundled in; the source is used so the builds stay independent.
+    // The fonts stay separate files in dist/figure-fonts/, loaded when a figure needs them.
     entry: { "myst-plugin": "../../integrations/myst/credit-matrix.mjs" },
-    plugins: [
-      {
-        name: "inline-myst-figure-fonts",
-        transform(source, id) {
-          if (!id.endsWith("/figures.ts")) return;
-          return source.replace(
-            /new URL\("\.\/figure-fonts\/([^"/]+)", import\.meta\.url\)/g,
-            (_match, file: string) => {
-              const bytes = readFileSync(new URL(`figure-fonts/${file}`, import.meta.url));
-              return `new URL("data:font/${file.endsWith(".ttf") ? "ttf" : "otf"};base64,${bytes.toString("base64")}")`;
-            },
-          );
-        },
-      },
-    ],
     alias: {
       "credit-matrix/i18n": fileURLToPath(new URL("i18n.ts", import.meta.url)),
       "credit-matrix/figures": fileURLToPath(new URL("figures.ts", import.meta.url)),
+      "credit-matrix/package.json": fileURLToPath(new URL("package.json", import.meta.url)),
       "credit-matrix": fileURLToPath(new URL("index.ts", import.meta.url)),
     },
     deps: { alwaysBundle: ["yaml", /^yaml\//, "zod", /^zod\//, /^@lingui\//, "pdf-lib", "@pdf-lib/fontkit"] },
