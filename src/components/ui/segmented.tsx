@@ -55,6 +55,8 @@ export function SegmentedControl<T extends string>({
             className={cn(
               "flex items-center justify-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
               size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-[13px]",
+              // The group clips overflow, so touch grows the option itself.
+              "pointer-coarse:min-h-11",
               active ? "bg-on-surface text-surface-bright" : "text-on-surface-variant hover:text-on-surface",
             )}
           >

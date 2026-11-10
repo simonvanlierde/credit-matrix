@@ -1,8 +1,9 @@
+import { ArrowDown } from "lucide-react";
 import { useState } from "react";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { LevelMark } from "@/components/ui/level-mark";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type Author, CREDIT_ROLES } from "@/core";
+import { type Author, CREDIT_ROLES, generateStatement } from "@/core";
 import { heatCellColor, onColor } from "@/core/contributor-color";
 import { useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
@@ -36,7 +37,8 @@ export function MobileRoleList({
   handleCellClick: (author: Author, roleIndex: number, score: number) => void;
 }) {
   const t = useTranslations();
-  const { translateInterfaceRole, describeRole, interfaceRoleLanguage } = useCreditTranslators();
+  const { translateInterfaceRole, describeRole, interfaceRoleLanguage, translateRole, translateUi, outputLanguage } =
+    useCreditTranslators();
   const { locked, editableAuthorId } = useClaimLock();
   const [selectedAuthorId, setSelectedAuthorId] = useState("");
 
@@ -72,6 +74,30 @@ export function MobileRoleList({
             ))}
           </SelectContent>
         </Select>
+        {/* On a phone the statement is a screen and more below this list, so the
+          picked person's live line rides with the picker and links down to the rest. */}
+        <a
+          href="#inspector"
+          className="mt-2 flex min-h-11 items-center gap-3 rounded-sm border border-outline-variant bg-surface-bright px-3 py-1.5 text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+        >
+          <span
+            lang={outputLanguage}
+            className="line-clamp-2 min-w-0 flex-1 font-headline text-sm leading-snug [overflow-wrap:anywhere]"
+          >
+            {generateStatement([selectedAuthor], {
+              format: "by-author",
+              showLevels: false,
+              translateRole,
+              translateUi,
+              locale: outputLanguage,
+              separateAcknowledgements: true,
+            }) || t("stepStatement")}
+          </span>
+          <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-primary">
+            {t("stepStatement")}
+            <ArrowDown className="size-3.5" aria-hidden="true" />
+          </span>
+        </a>
       </div>
       <ul
         className="divide-y divide-outline-variant/25"
@@ -114,6 +140,7 @@ export function MobileRoleList({
                 {score > 0 && (
                   <span
                     aria-hidden="true"
+                    data-level-fill
                     className="flex size-5 shrink-0 items-center justify-center rounded"
                     style={(() => {
                       const fill = heatCellColor(hueOf(selectedAuthor), graded ? score : 100, dark);

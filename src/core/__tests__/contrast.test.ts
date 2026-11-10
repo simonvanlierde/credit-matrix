@@ -7,11 +7,11 @@ import {
   contributorHues,
   DEFAULT_MONO_COLOR,
   heatCellColor,
-  linkMarkColor,
   OKABE_ITO,
   ON_COLOR_DARK,
   ON_COLOR_LIGHT,
   onColor,
+  pageMarkColor,
 } from "../contributor-color";
 
 /** The empty-cell fill, mirrored from contributor-color.ts. */
@@ -82,8 +82,8 @@ describe("heatCellColor tiers", () => {
 
   it("marks a linked cell and phrase at 3:1 on the page in both themes", () => {
     for (const hue of CONTRIBUTOR_HUES) {
-      expect(contrastRatio(linkMarkColor(hue, false), "#fffdf8"), `${hue} light`).toBeGreaterThanOrEqual(3);
-      expect(contrastRatio(linkMarkColor(hue, true), "#24221f"), `${hue} dark`).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(pageMarkColor(hue, false), "#fffdf8"), `${hue} light`).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(pageMarkColor(hue, true), "#24221f"), `${hue} dark`).toBeGreaterThanOrEqual(3);
     }
   });
 

@@ -3,9 +3,9 @@ import type { MouseEvent } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { closeOnBackdrop, useModalDialog } from "./dialog";
 
-/** jsdom has no showModal(), so stand in for the two calls the hook makes. */
+/** jsdom has no showModal(), so stand in for the two calls the hook makes on a real element. */
 function fakeDialog() {
-  const dialog = { open: false, showModal: vi.fn(), close: vi.fn() };
+  const dialog = Object.assign(document.createElement("div"), { open: false, showModal: vi.fn(), close: vi.fn() });
   dialog.showModal.mockImplementation(() => {
     dialog.open = true;
   });
@@ -31,6 +31,15 @@ describe("useModalDialog", () => {
 
     rerender({ open: false });
     expect(dialog.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("focuses the control marked data-autofocus once open", () => {
+    const dialog = fakeDialog();
+    dialog.innerHTML = '<button type="button">Close</button><button type="button" data-autofocus>Start</button>';
+    document.body.append(dialog);
+    renderHook(() => useModalDialog(dialog as unknown as HTMLDialogElement, true));
+    expect(document.activeElement?.textContent).toBe("Start");
+    dialog.remove();
   });
 
   it("does nothing before the dialog element exists", () => {

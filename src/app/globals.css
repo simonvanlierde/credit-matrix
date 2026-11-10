@@ -176,6 +176,22 @@ body {
 }
 
 /*
+ * A small control whose tap area grows to 44px on touch without changing its
+ * look: a centred transparent box, at least 2.75rem each way, catches the tap.
+ * Insets resolve against the control's own size, so a 24px chip gets -10px.
+ */
+@media (pointer: coarse) {
+  .hit-area {
+    position: relative;
+  }
+  .hit-area::after {
+    content: "";
+    position: absolute;
+    inset: min(0px, calc((100% - 2.75rem) / 2));
+  }
+}
+
+/*
  * A row action that keeps quiet until its row is hovered.
  *
  * Gated on a hover-capable pointer, not on width alone. A tablet or a touch
@@ -473,7 +489,7 @@ dialog[open]::backdrop {
 
 /* Settling a difference: the cell eases into its agreed level, and a flag ring
    fades off it, so the heatmap visibly becomes the record. Reduced motion keeps
-   only the fill step (see the carve-out below). */
+   only the fill step and a still ring (see the carve-outs below). */
 .contribution-cell.cell-settle {
   transition-duration: 600ms;
   animation: cell-settle 900ms var(--ease-out);
@@ -482,6 +498,25 @@ dialog[open]::backdrop {
 @keyframes cell-settle {
   from {
     box-shadow: 0 0 0 3px var(--color-flag);
+  }
+}
+
+/*
+ * Windows high contrast: forced colours drop every box-shadow, and with it the
+ * ring-based focus indicator and the card edges. Give focus a real outline,
+ * give cells an edge, and keep a filled cell's own colours, since its level
+ * mark is drawn in a colour contrast-checked against that fill.
+ */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px;
+  }
+  .contribution-cell {
+    border: 1px solid CanvasText;
+  }
+  [data-level-fill] {
+    forced-color-adjust: none;
   }
 }
 
@@ -504,5 +539,12 @@ dialog[open]::backdrop {
      confirmation that an assignment landed indistinguishable from a misfire. */
   .contribution-cell {
     transition-duration: 120ms !important;
+  }
+
+  /* The settled cell keeps its flag ring, still, for the same 900ms, then drops it:
+     the cue that a difference closed, without the fade. */
+  .contribution-cell.cell-settle {
+    animation-duration: 900ms !important;
+    animation-timing-function: steps(1, end) !important;
   }
 }

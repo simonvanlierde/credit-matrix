@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { UndoBar } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
-import { CONTRIBUTOR_HUES, contributorHues, heatCellColor, linkMarkColor, onColor } from "@/core/contributor-color";
+import { CONTRIBUTOR_HUES, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useLocale, useTranslations } from "@/lib/translations";
@@ -891,6 +891,7 @@ const GridCell = memo(function GridCellInner({
         // filled cells carry the grid; hover and focus draw the full target.
         // A linked cell (its phrase under the pointer) gets an ink edge and a
         // hard shadow in its contributor's hue, the same mark its phrase gets.
+        data-level-fill={fill ? "" : undefined}
         className={`contribution-cell flex h-7 w-full items-center justify-center rounded-sm transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
           frozen ? "cursor-not-allowed opacity-40" : "hover:ring-[1.5px] hover:ring-edge"
         } ${
@@ -906,7 +907,7 @@ const GridCell = memo(function GridCellInner({
           {
             backgroundColor: fill ?? "transparent",
             // Without per-person hues the phrase is marked in primary, so the cell matches it.
-            "--cell-hue": perPerson ? linkMarkColor(monoColor, dark) : "var(--color-primary)",
+            "--cell-hue": perPerson ? pageMarkColor(monoColor, dark) : "var(--color-primary)",
           } as React.CSSProperties
         }
       >

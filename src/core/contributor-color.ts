@@ -88,11 +88,11 @@ export function heatCellColor(hue: string, score: number, dark = false): string 
 }
 
 /**
- * The colour that marks a contributor's linked cell and phrase. The palette is
- * tuned for white initials, so on the dark page it is too dark to mark with;
- * there the mark uses the hue's lead tier from the dark ramp instead.
+ * A hue drawn straight on the page: a linked cell and phrase, or the brand mark.
+ * The palette is tuned for white initials, so on the dark page it is too dark to
+ * mark with; there the mark uses the hue's lead tier from the dark ramp instead.
  */
-export function linkMarkColor(hue: string, dark: boolean): string {
+export function pageMarkColor(hue: string, dark: boolean): string {
   return dark ? heatCellColor(hue, 100, true) : hue;
 }
 

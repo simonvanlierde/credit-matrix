@@ -65,7 +65,7 @@ test.describe("Happy path UI flows", () => {
     await expect(toggled).toHaveAttribute("aria-pressed", "true");
 
     // A statement is generated from the sample contributions.
-    await expect(page.getByText(/^CRediT:/)).toBeVisible();
+    await expect(page.getByRole("tabpanel", { name: "Statement" }).getByText(/^CRediT:/)).toBeVisible();
   });
 
   test("Clicking a grid cell toggles the contribution into the statement", async ({ page }) => {
@@ -79,7 +79,9 @@ test.describe("Happy path UI flows", () => {
     await expect(cell).toHaveAttribute("aria-pressed", "false");
     await cell.click();
     await expect(cell).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByText(/^CRediT:/)).toContainText("Data curation");
+    await expect(page.getByRole("tabpanel", { name: "Statement" }).getByText(/^CRediT:/)).toContainText(
+      "Data curation",
+    );
   });
 
   test("undoes contributor removal and confirms destructive imports", async ({ page }) => {

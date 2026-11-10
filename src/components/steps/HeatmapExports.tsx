@@ -251,6 +251,14 @@ export function HeatmapExports({
                   }}
                 />
                 <HeatmapRecipe settings={settings} language={outputLanguage} />
+                {/* On a phone the settings replace the preview, so give a visible way back to it. */}
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen(false)}
+                  className={`${TOOL_BUTTON} mt-3 min-h-11 w-full justify-center sm:hidden`}
+                >
+                  {t("statementBack")}
+                </button>
               </section>
             )}
           </div>

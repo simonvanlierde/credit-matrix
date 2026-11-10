@@ -159,6 +159,7 @@ export function WelcomeCard() {
             <button
               type="button"
               onClick={closeWelcome}
+              data-autofocus
               className="inline-flex items-center gap-2 rounded bg-primary shadow-press px-5 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
             >
               {t("gotIt")}
@@ -171,6 +172,7 @@ export function WelcomeCard() {
                   loadSample(t("sampleNames").split("\n"));
                   closeWelcome();
                 }}
+                data-autofocus
                 className="inline-flex items-center gap-2 rounded bg-primary shadow-press px-5 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
               >
                 <Sparkles className="h-4 w-4" />

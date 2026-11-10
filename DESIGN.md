@@ -159,7 +159,9 @@ Use Newsreader, with Georgia as the fallback, for the brand, section headings, a
 output. Keep manuscript text upright, and use italics only for short accents, such as the *Role*
 axis title. Use Atkinson Hyperlegible Next for controls and explanations, and Atkinson Hyperlegible
 Mono for contributor initials, counts and short data labels. Atkinson covers Latin scripts only;
-IBM Plex Sans and Mono stand behind it for Cyrillic, Greek and Vietnamese names.
+IBM Plex Sans and Mono stand behind it for Cyrillic, Greek and Vietnamese names. The
+`… Fallback` faces in `fonts.css` are local fonts with adjusted metrics, so text does not shift
+while the web fonts load; they are not part of the type scale.
 
 Write labels and headings in sentence case. Never set a label in letterspaced capitals: a section
 gets a Newsreader heading, a control group gets a short semibold label.
@@ -233,6 +235,10 @@ validation checks) a maximum height, so it can't push the workflow off the scree
 The first-run help sits over the workspace, not in a band of its own, which would take that
 height for good and shift the page when closed.
 
+On touch, every control takes a 44px tap. Grow a small control's tap area with the `hit-area`
+class rather than its size, so the desktop density stays. On a phone the picker for the
+contributor carries their live statement line, which links down to the full statement.
+
 ## Elevation and depth
 
 Elevation is a hard offset, never a blur: a card sits on the page like a paper cut-out. Use the
@@ -241,6 +247,10 @@ button on hover), `shadow-press` (2px in the ink edge, the primary button), `sha
 popovers and menus over the content) and `shadow-sheet` (5px, tinted ink blue, the statement: the
 result of the work). Pair a 1px ink edge (`edge`) with a hard shadow, never with a soft one. Lines
 inside a card stay thin and neutral (`rule`).
+
+Forced colours drop every shadow, so a surface that floats keeps a real 1px border, and focus
+falls back to a `Highlight` outline. Filled level marks keep their own colours there, since the
+mark is contrast-checked against its fill.
 
 ## Shapes
 

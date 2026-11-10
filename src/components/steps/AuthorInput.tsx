@@ -702,7 +702,7 @@ const AuthorRow = memo(function AuthorRowInner({
               {...attributes}
               {...listeners}
               aria-label={`${t("reorderContributor")} ${author.name}`}
-              className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-outline-strong transition-colors hover:text-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="hit-area flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-outline-strong transition-colors hover:text-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <GripVertical className="h-4 w-4" />
             </button>
@@ -754,7 +754,7 @@ const AuthorRow = memo(function AuthorRowInner({
                 onClick={() => setAuthorType(author.id, isNonAuthor ? "author" : "non-author")}
                 disabled={rowLocked}
                 title={isNonAuthor ? t("contributorTypeSetAuthor") : t("contributorTypeSetNonAuthor")}
-                className="inline-flex min-h-6 items-center gap-1 rounded-full bg-surface-container px-2 text-[11px] font-medium text-on-surface-variant hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+                className="hit-area inline-flex min-h-6 items-center gap-1 rounded-full bg-surface-container px-2 text-[11px] font-medium text-on-surface-variant hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isNonAuthor ? <UserMinus className="h-3 w-3" /> : <UserCheck className="h-3 w-3" />}
                 {isNonAuthor ? t("contributorTypeNonAuthor") : t("contributorTypeAuthor")}
