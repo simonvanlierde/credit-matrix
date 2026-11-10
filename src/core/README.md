@@ -203,12 +203,12 @@ const svg = figures.svg(authors, { acronyms: false });
 const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
 ```
 
-The app downloads and CLI use this renderer. It embeds regular Noto Sans fonts and measures labels
+The app downloads and CLI use this renderer. It embeds regular Noto Sans or Noto Serif fonts and measures labels
 with their actual widths. Unsupported glyphs raise `FigureFontError`; they never use installed fonts.
 See the [figure font guide](../../integrations/figures/README.md) for offline use, supported scripts
 and editor compatibility. The lightweight `buildHeatmapSvg` API keeps its system-font output.
 
-The [figure options guide](../../integrations/heatmap.md) covers palettes, shapes, cell size, legends,
+The [figure options guide](../../integrations/heatmap.md) covers palettes, shapes, cell size, fonts, legends,
 short labels and orientation for the JavaScript API, CLI and document plugins.
 
 `fromCsv` needs a `Name` column. Other headers and role names match whatever their case or kind of

@@ -5,11 +5,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 import { decodePDFRawStream, PDFDocument, PDFRawStream } from "pdf-lib";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { AVAILABLE_LOCALES, loadRoleCatalog, makeRoleTranslator } from "../credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "../credit-i18n/ui-strings";
+import * as heatmap from "../export/heatmap-svg";
 import { createFigureRenderer, FigureFontError } from "../figures";
 import { createAuthor } from "../parse-authors";
+
+const FONT_LOCALES = AVAILABLE_LOCALES.flatMap(({ code }) =>
+  (["sans", "serif"] as const).map((font) => ({ code, font })),
+);
 
 function team() {
   return ["Zoë & René <Smith>", "山田 太郎", "屠呦呦"].map((name) => {
@@ -45,22 +50,111 @@ describe("portable figures", () => {
     expect(document.getSubject()).toContain(name);
   });
 
-  it.each(AVAILABLE_LOCALES)("embeds standalone fonts and retains readable text in $code SVG", async ({ code }) => {
-    const svg = renderer.svg(team(), {
-      locale: code,
-      acronyms: false,
-      translateRole: makeRoleTranslator(await loadRoleCatalog(code)),
-      translateUi: makeUiTranslator(await loadUiCatalog(code)),
-    });
-    expect(svg).toMatch(/@font-face/);
-    expect(svg).toMatch(/data:font\/(?:ttf|otf);base64,/);
-    expect(svg).toContain("山田 太郎");
-    expect(svg).toContain("屠呦呦");
-    expect(svg).toContain("Zoë &amp; René &lt;Smith&gt;");
-    expect(svg).not.toContain("Helvetica");
-    expect(svg).not.toMatch(/<image|<path/);
-    expect(svg).toContain(`font-family="Credit Figure ${code === "zh-Hans" ? "SC" : "JP"}"`);
+  it("honors serif output in embedded SVG and PDF fonts", async () => {
+    const svg = renderer.svg(team(), { font: "serif", locale: "ja", acronyms: false });
+    expect(svg.includes('font-family="Noto Serif"')).toBe(true);
+    expect(svg.includes('font-family="Credit Figure Serif JP"')).toBe(true);
+    expect(svg.includes('font-family="Noto Sans"')).toBe(false);
+    const bytes = await renderer.pdf(team(), { font: "serif", locale: "ja", acronyms: false });
+    const fonts = execFileSync("pdffonts", ["-"], { input: bytes, encoding: "utf8" });
+    expect(fonts).toMatch(/NotoSerif/);
+    expect(fonts).toMatch(/CreditFigureSerifJP/);
   });
+
+  it("rejects unsupported vector primitives instead of dropping them", async () => {
+    const source = vi
+      .spyOn(heatmap, "buildHeatmapSvg")
+      .mockReturnValue('<svg width="100" height="100"><ellipse/></svg>');
+    try {
+      await expect(renderer.pdf([])).rejects.toThrow("Unsupported figure primitive: ellipse.");
+    } finally {
+      source.mockRestore();
+    }
+  });
+
+  it("uses a requested PDF print width and rejects invalid physical sizes", async () => {
+    const pdf = await PDFDocument.load(await renderer.pdf(team(), undefined, 85));
+    expect(pdf.getPages()[0]?.getWidth()).toBeCloseTo((85 * 72) / 25.4);
+    for (const width of [0, -1, Number.NaN, Number.POSITIVE_INFINITY])
+      await expect(renderer.pdf(team(), undefined, width)).rejects.toThrow(/width/i);
+  });
+
+  it.each([
+    { font: "sans" as const, names: ["É".repeat(20), "W".repeat(20)], emHeight: 1.362 },
+    { font: "serif" as const, names: ["É".repeat(20), "W".repeat(20)], emHeight: 1.362 },
+    { font: "sans" as const, names: ["山田".repeat(10), "屠呦呦".repeat(8)], emHeight: 1.2 },
+    { font: "serif" as const, names: ["山田".repeat(10), "屠呦呦".repeat(8)], emHeight: 1.437 },
+  ])("separates large $font labels using their font height ($emHeight em)", ({ font, names, emHeight }) => {
+    const authors = names.map((name) => createAuthor(name, { contributions: [{ role: "Software", score: 100 }] }));
+    const options = { font, fontSize: 32, size: 8, acronyms: false };
+    const top = [
+      ...renderer.svg(authors, options).matchAll(/<text transform="translate\(([\d.]+),[\d.]+\) rotate\(-45\)"/g),
+    ];
+    const perpendicular = (Number(top[1]?.[1]) - Number(top[0]?.[1])) / Math.SQRT2;
+    expect(perpendicular).toBeGreaterThan(Math.ceil((32 * 11 * emHeight) / 10.5));
+    const rows = [
+      ...renderer
+        .svg(authors, { ...options, horizontal: true })
+        .matchAll(/<text x="[\d.]+" y="([\d.]+)" text-anchor="end"/g),
+    ];
+    expect(Number(rows[1]?.[1]) - Number(rows[0]?.[1])).toBeGreaterThan(Math.ceil(32 * emHeight));
+  });
+
+  it.each([true, false])("retains visible publication marks in PDF when levels=%s", async (levels) => {
+    const authors = [createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] })];
+    const options = { levels, legendPosition: "right" as const };
+    const svg = renderer.svg(authors, { ...options, marks: true });
+    const cell = svg.match(/<rect x="([\d.]+)" y="([\d.]+)" width="22" height="22"/);
+    if (!cell) throw new Error("Expected one 22px heatmap cell");
+    const sampleX = Number(cell[1]) + (levels ? 11 : 22 * 0.5);
+    const sampleY = Number(cell[2]) + (levels ? 11 : 22 * 0.58);
+    const grayAtMark = async (marks: boolean) => {
+      const bytes = await renderer.pdf(authors, { ...options, marks });
+      const image = execFileSync("pdftoppm", ["-singlefile", "-r", "96", "-gray", "-"], { input: bytes });
+      const header = image
+        .subarray(0, 100)
+        .toString("ascii")
+        .match(/^P5\n(\d+) (\d+)\n255\n/);
+      if (!header) throw new Error("Expected a grayscale image");
+      const width = Number(header[1]);
+      return image[header[0].length + Math.round(sampleY) * width + Math.round(sampleX)] ?? 0;
+    };
+    expect(await grayAtMark(true)).toBeGreaterThan((await grayAtMark(false)) + 80);
+    if (!levels) {
+      const document = await PDFDocument.load(await renderer.pdf(authors, { ...options, marks: true }));
+      const contents = document.context
+        .enumerateIndirectObjects()
+        .flatMap(([, object]) =>
+          object instanceof PDFRawStream ? [Buffer.from(decodePDFRawStream(object).decode()).toString("latin1")] : [],
+        )
+        .join("\n");
+      expect(contents).toContain("1 J");
+      expect(contents).toContain("1 j");
+    }
+  });
+
+  it.each(FONT_LOCALES)(
+    "embeds standalone fonts and retains readable text in $font $code SVG",
+    async ({ code, font }) => {
+      const svg = renderer.svg(team(), {
+        locale: code,
+        font,
+        acronyms: false,
+        translateRole: makeRoleTranslator(await loadRoleCatalog(code)),
+        translateUi: makeUiTranslator(await loadUiCatalog(code)),
+      });
+      expect(svg).toMatch(/@font-face/);
+      expect(svg).toMatch(/data:font\/(?:ttf|otf);base64,/);
+      expect(svg).toContain("山田 太郎");
+      expect(svg).toContain("屠呦呦");
+      expect(svg).toContain("Zoë &amp; René &lt;Smith&gt;");
+      expect(svg).not.toContain("Helvetica");
+      expect(svg).not.toMatch(/<image|<path/);
+      expect(svg).toContain(
+        `font-family="Credit Figure ${font === "serif" ? "Serif " : ""}${code === "zh-Hans" ? "SC" : "JP"}"`,
+      );
+    },
+  );
 
   it("normalizes decomposed accents and rejects missing glyphs explicitly", async () => {
     const author = createAuthor("Rene\u0301");
@@ -175,10 +269,11 @@ describe("portable figures", () => {
       }
     },
   );
-  it.each(AVAILABLE_LOCALES)("retains the $code catalog's Unicode text in PDF", async ({ code }) => {
+  it.each(FONT_LOCALES)("retains the $font $code catalog's Unicode text in PDF", async ({ code, font }) => {
     const translateRole = makeRoleTranslator(await loadRoleCatalog(code));
     const bytes = await renderer.pdf(team(), {
       locale: code,
+      font,
       acronyms: false,
       translateRole,
       translateUi: makeUiTranslator(await loadUiCatalog(code)),

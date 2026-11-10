@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "图例"
 
 msgid "levelHint"
-msgstr "选择以切换·右键或 0–3 直接设定级别。"
+msgstr "选择以切换 · 方向键移动 · 右键或 0–3 直接设定级别。"
 
 msgid "heatmapLabel"
 msgstr "热图"
@@ -1601,6 +1601,126 @@ msgstr "此引用文件未列出作者。"
 msgid "citationConverting"
 msgstr "正在读取引用文件… 可能需要先下载转换器。"
 
+msgid "heatmapActualSize"
+msgstr "实际大小"
+
+msgid "heatmapFitWidth"
+msgstr "适应宽度"
+
+msgid "heatmapFigureSettings"
+msgstr "图形设置"
+
+msgid "heatmapLayout"
+msgstr "布局"
+
+msgid "heatmapOrientation"
+msgstr "方向"
+
+msgid "heatmapRolesInRows"
+msgstr "按行显示角色"
+
+msgid "heatmapContributorsInRows"
+msgstr "按行显示贡献者"
+
+msgid "heatmapRoleLabels"
+msgstr "角色标签"
+
+msgid "heatmapFullLabels"
+msgstr "完整标签"
+
+msgid "heatmapShortLabels"
+msgstr "简短标签"
+
+msgid "heatmapHideUnused"
+msgstr "省略未使用的角色"
+
+
+msgid "heatmapShowLevels"
+msgstr "显示贡献级别"
+
+msgid "heatmapLegendHint"
+msgstr "隐藏图例时，请在图注中解释各级别的含义。"
+
+msgid "heatmapBlue"
+msgstr "蓝色"
+
+msgid "heatmapGreen"
+msgstr "绿色"
+
+msgid "heatmapGray"
+msgstr "灰度"
+
+msgid "heatmapPaleColor"
+msgstr "此颜色下难以区分支持级贡献。请尝试更深的颜色。"
+
+msgid "heatmapAdvanced"
+msgstr "高级设置"
+
+msgid "heatmapFont"
+msgstr "字体"
+
+msgid "heatmapSans"
+msgstr "无衬线"
+
+msgid "heatmapSerif"
+msgstr "衬线"
+
+msgid "heatmapFontSize"
+msgstr "字号（px）"
+
+msgid "heatmapCellShape"
+msgstr "单元格形状"
+
+msgid "heatmapSquare"
+msgstr "方形"
+
+msgid "heatmapRounded"
+msgstr "圆角"
+
+msgid "heatmapCircle"
+msgstr "圆形"
+
+msgid "heatmapCellSize"
+msgstr "单元格大小（px）"
+
+msgid "heatmapPngSize"
+msgstr "PNG 尺寸"
+
+msgid "heatmapWidthMm"
+msgstr "宽度（mm）"
+
+msgid "heatmapResolution"
+msgstr "分辨率"
+
+msgid "heatmapSvgHint"
+msgstr "SVG 缩放后仍保持清晰；这些尺寸设置仅适用于 PNG。"
+
+msgid "heatmapReset"
+msgstr "恢复默认设置"
+
+msgid "heatmapPngTooLarge"
+msgstr "此 PNG 过大。请减小宽度或分辨率、交换坐标轴，或下载 SVG。"
+
+msgid "heatmapSmallPrint"
+msgstr "打印时标签约为 {size} pt。请增加宽度或交换坐标轴，以便清晰阅读。"
+
+msgid "heatmapRecipe"
+msgstr "导出配置代码"
+
+msgid "heatmapRecipeHint"
+msgstr "仅包含样式设置。请使用你的贡献者数据以及已安装的 CLI 或插件。不包含 PNG 尺寸和 DPI。"
+
+msgid "heatmapRecipeTarget"
+msgstr "使用于"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST 使用页面中的作者角色和语言，贡献仅区分有无。"
+
+msgid "heatmapRecipeTypst"
+msgstr "请使用 Typst 团队数据。字体度量和原生布局可能与 SVG 不同。"
+
+msgid "heatmapCopyRecipe"
+msgstr "复制导出配置代码"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate 片段"
 
@@ -1609,3 +1729,24 @@ msgstr "下载 PDF"
 
 msgid "errFigureGlyphs"
 msgstr "图表字体无法显示以下字符：{characters}。"
+
+msgid "heatmapLegendPosition"
+msgstr "图例"
+
+msgid "heatmapLegendAuto"
+msgstr "自动"
+
+msgid "heatmapLegendRight"
+msgstr "右侧"
+
+msgid "heatmapLegendBelow"
+msgstr "下方"
+
+msgid "heatmapLegendHidden"
+msgstr "隐藏"
+
+msgid "heatmapCellMarks"
+msgstr "显示贡献标记"
+
+msgid "heatmapMarksHint"
+msgstr "启用标记后，还可以通过标记区分贡献等级。"

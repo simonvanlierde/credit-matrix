@@ -51,7 +51,7 @@ Commands:
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
       and latex-credits writes 1 or 0.
-      --locale sets the language of the md role names and the svg labels.
+      --locale sets the language of the md role names and the figure labels.
       crossref prints the <contributors> block of a Crossref deposit (schema
       5.5.0), which has no levels.
       latex-credits prints \\credit lines for the latex-credits LaTeX package,
@@ -59,12 +59,15 @@ Commands:
       tenzing prints the contributions as a Tenzing-style CSV table.
       quarto and myst print author YAML with names, ORCID iDs and CRediT roles.
       quarto keeps levels unless --yes-no; myst omits them. Both list authors only.
-      svg and pdf embed Noto Sans fonts and retain text. PDF writes binary bytes
+      svg and pdf embed Noto Sans or Serif fonts and retain text. PDF writes binary bytes
       to standard output; redirect them to a .pdf file. --yes-no draws
-      flat cells with no levels. SVG figure options:
+      flat cells with no levels. SVG/PDF figure options:
       --color '#1f4e79' --palette blue|green|gray --shape square|rounded|circle
       --size 22 --legend true|false --labels full|short --horizontal
-      --skipempty true|false. Color overrides palette; size is in pixels.
+      --legend-position auto|right|bottom --marks true|false
+      --skipempty true|false --initials true|false --font sans|serif --font-size 6..32.
+      Color overrides palette; size and font-size are in pixels.
+      Legend position defaults to auto; marks default to false.
       ro-crate prints an RO-Crate 1.2 attribution fragment. Merge its people,
       roles and root links into existing package metadata; it is not a complete crate.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
@@ -203,7 +206,12 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
       palette: { type: "string" },
       shape: { type: "string" },
       size: { type: "string" },
+      "font-size": { type: "string" },
+      font: { type: "string" },
       legend: { type: "string", default: "true" },
+      "legend-position": { type: "string", default: "auto" },
+      marks: { type: "string", default: "false" },
+      initials: { type: "string", default: "true" },
       labels: { type: "string" },
       horizontal: { type: "boolean", default: false },
       skipempty: { type: "string", default: "true" },
@@ -293,9 +301,11 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
           return toMyst(authors);
         case "svg":
         case "pdf": {
-          for (const key of ["legend", "skipempty"] as const) {
+          for (const key of ["legend", "skipempty", "initials", "marks"] as const) {
             if (!["true", "false"].includes(values[key])) throw new UsageError(`--${key} must be true or false.`);
           }
+          if (!["auto", "right", "bottom"].includes(values["legend-position"]))
+            throw new UsageError("--legend-position must be auto, right or bottom.");
           const locale = requireLocale(values.locale);
           const { createFigureRenderer } = await import("./figures");
           const renderer = await createFigureRenderer();
@@ -306,7 +316,12 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
             palette: values.palette as HeatmapSvgOptions["palette"],
             shape: values.shape as HeatmapSvgOptions["shape"],
             size: values.size === undefined ? undefined : Number(values.size),
+            acronyms: values.initials === "true",
+            fontSize: values["font-size"] === undefined ? undefined : Number(values["font-size"]),
+            font: values.font as HeatmapSvgOptions["font"],
             legend: values.legend === "true",
+            legendPosition: values["legend-position"] as HeatmapSvgOptions["legendPosition"],
+            marks: values.marks === "true",
             labels: values.labels as HeatmapSvgOptions["labels"],
             horizontal: values.horizontal,
             skipempty: values.skipempty === "true",

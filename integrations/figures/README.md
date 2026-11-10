@@ -39,8 +39,8 @@ support.
 
 ## Fonts and offline use
 
-Portable exports use regular Noto Sans and the Credit Figure JP and SC faces,
-derived from Noto Sans JP and SC. The fonts cover all nine output languages.
+Portable exports use regular Noto Sans and Noto Serif, plus Credit Figure JP, SC, Serif JP and Serif SC,
+derived from the corresponding Noto Japanese and Simplified Chinese families. The fonts cover all nine output languages.
 Contributor names can contain characters outside
 these fonts; portable export reports unsupported characters instead of silently
 substituting installed fonts. Arabic, Hebrew and Devanagari are outside this set.

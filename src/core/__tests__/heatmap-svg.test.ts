@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
+import * as colors from "../contributor-color";
 import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
 import { makeUiTranslator } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES, type CreditRoleName } from "../credit-roles";
@@ -30,6 +31,88 @@ function expectedCellCount(authors: Author[]): number {
 }
 
 describe("buildHeatmapSvg", () => {
+  it("calculates mark contrast once per tier regardless of team size", () => {
+    const contrast = vi.spyOn(colors, "onColor");
+    try {
+      for (const count of [20, 200]) {
+        contrast.mockClear();
+        const authors = Array.from({ length: count }, (_, i) =>
+          createAuthor(`Given${i} Surname${i}`, {
+            contributions: CREDIT_ROLES.map((role, r) => ({ role: role.name, score: ((i + r) % 4) * 33 })),
+          }),
+        );
+        buildHeatmapSvg(authors, { marks: true });
+        expect(contrast.mock.calls.length).toBeLessThanOrEqual(4);
+      }
+    } finally {
+      contrast.mockRestore();
+    }
+  });
+  it("sizes label bands and legends for the selected typography", () => {
+    const authors = authorsWithScores();
+    const normal = buildHeatmapSvg(authors);
+    const large = buildHeatmapSvg(authors, { fontSize: 21, font: "serif" });
+    expect(large).toContain('font-size="22"');
+    expect(large).toContain('font-size="21"');
+    expect(large).toContain('font-size="20"');
+    expect(large).toContain("Georgia, 'Times New Roman', serif");
+    const width = (svg: string) => Number(/width="([\d.]+)"/.exec(svg)?.[1]);
+    expect(width(large)).toBeGreaterThan(width(normal));
+    expect(buildHeatmapSvg(authors, { fontSize: 10.5, font: "sans" })).toBe(normal);
+  });
+
+  it.each([0, 5.9, 32.1, Number.NaN, Number.POSITIVE_INFINITY])("rejects invalid font size %s", (fontSize) => {
+    expect(() => buildHeatmapSvg(authorsWithScores(), { fontSize })).toThrow("between 6 and 32");
+  });
+
+  it("keeps small cells apart when labels use large type", () => {
+    const authors = [createAuthor("É".repeat(20)), createAuthor("É".repeat(20))];
+    const svg = buildHeatmapSvg(authors, { size: 8, fontSize: 32, acronyms: false, legend: false, skipempty: false });
+    const cells = [...svg.matchAll(/<rect x="([\d.]+)" y="[\d.]+" width="8" height="8"/g)];
+    const pitch = Number(cells[1]?.[1]) - Number(cells[0]?.[1]);
+    // Rotated labels have a measured 37px line box at this font size.
+    expect(pitch * Math.SQRT1_2).toBeGreaterThanOrEqual(37);
+  });
+
+  it("expands the empty figure for large text and translated full-width glyphs", () => {
+    expect(buildHeatmapSvg([])).toContain('width="320" height="56"');
+    const large = buildHeatmapSvg([], { fontSize: 32 });
+    const dimensions = /width="([\d.]+)" height="([\d.]+)"/.exec(large);
+    expect(Number(dimensions?.[1])).toBeGreaterThanOrEqual(497);
+    expect(Number(dimensions?.[2])).toBeGreaterThan(56);
+    const cjk = buildHeatmapSvg([], {
+      fontSize: 32,
+      scale: 2,
+      translateUi: (key) => (key === "emptyState" ? "漢".repeat(50) : key),
+    });
+    expect(Number(/width="([\d.]+)"/.exec(cjk)?.[1])).toBeGreaterThan(3300);
+  });
+
+  it("rejects invalid font names and non-finite scales", () => {
+    expect(() => buildHeatmapSvg(authorsWithScores(), { font: "unknown" as "sans" })).toThrow("Unknown heatmap font");
+    expect(() => buildHeatmapSvg(authorsWithScores(), { scale: Number.NaN })).toThrow("scale must be finite");
+  });
+
+  it("identifies levels with one, two or three dots in both cells and legend", () => {
+    const authors = [33, 66, 100].map((score) =>
+      createAuthor(`Researcher ${score}`, { contributions: [{ role: "Software", score }] }),
+    );
+    const svg = buildHeatmapSvg(authors, { marks: true });
+    const marks = [...svg.matchAll(/<g[^>]*aria-hidden="true"[^>]*>(.*?)<\/g>/gs)];
+    expect(marks.map((mark) => (mark[1]?.match(/<circle /g) ?? []).length)).toEqual([1, 2, 3, 3, 2, 1]);
+    expect(buildHeatmapSvg(authors, { legend: false, marks: true }).match(/<circle /g)).toHaveLength(6);
+  });
+
+  it("uses a check for contributed cells and the flat legend, leaving empty cells unmarked", () => {
+    const authors = [
+      createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 33 }] }),
+      createAuthor("Bob White"),
+    ];
+    const svg = buildHeatmapSvg(authors, { levels: false, marks: true });
+    expect(svg.match(/<path /g)).toHaveLength(2);
+    expect(svg).not.toContain("<circle ");
+  });
+
   it("produces a self-contained SVG with role labels, initials, and legend (no title)", () => {
     const svg = buildHeatmapSvg(authorsWithScores());
     expect(svg.startsWith("<svg")).toBe(true);
@@ -424,5 +507,61 @@ describe("buildHeatmapSvg legend wrapping", () => {
     // Conceptualization (about 139px) fits "Lead, Equal" but not "Supporting, None": every row
     // must fit, so the keys still stack.
     expect(legendRows("Conceptualization")).toBe(4);
+  });
+});
+
+describe("publication heatmap presentation", () => {
+  const team = (count: number) =>
+    Array.from({ length: count }, (_, i) =>
+      createAuthor(`Researcher ${i + 1}`, {
+        contributions: CREDIT_ROLES.map((role, r) => ({ role: role.name, score: (((i + r) % 3) + 1) * 33 })),
+      }),
+    );
+  const swatches = (svg: string) =>
+    [...svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="14" height="14"/g)].map((match) => ({
+      x: Number(match[1]),
+      y: Number(match[2]),
+    }));
+
+  it("defaults to plain fills while retaining the level legend and text alternative", () => {
+    const svg = buildHeatmapSvg(team(3));
+    expect(svg).not.toContain("<g fill=");
+    expect(svg).not.toContain("<path ");
+    expect(svg).toContain(">Supporting<");
+    expect(svg).toContain("(Supporting)");
+  });
+
+  it("places a vertical key immediately beside the matrix when requested", () => {
+    const svg = buildHeatmapSvg(team(3), { legendPosition: "right" });
+    const keys = swatches(svg);
+    const cells = [...svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="22" height="22"/g)];
+    expect(keys).toHaveLength(4);
+    expect(new Set(keys.map((key) => key.x)).size).toBe(1);
+    expect(new Set(keys.map((key) => key.y)).size).toBe(4);
+    expect(keys[0]?.y).toBe(Number(cells[0]?.[2]));
+    expect(keys[0]?.x).toBeGreaterThan(Math.max(...cells.map((cell) => Number(cell[1]))) + 22);
+  });
+
+  it("uses right for a narrow tall matrix and bottom for a wide matrix", () => {
+    expect(buildHeatmapSvg(team(3))).toBe(buildHeatmapSvg(team(3), { legendPosition: "right" }));
+    expect(buildHeatmapSvg(team(20))).toBe(buildHeatmapSvg(team(20), { legendPosition: "bottom" }));
+  });
+
+  it("keeps auto below when long legend text would excessively widen a narrow matrix", () => {
+    const options = { translateUi: makeUiTranslator({ supporting: "Supporting contribution to this work" }) };
+    expect(buildHeatmapSvg(team(3), options)).toBe(buildHeatmapSvg(team(3), { ...options, legendPosition: "bottom" }));
+  });
+
+  it("hides either legend placement and keeps opt-in marks in cells", () => {
+    for (const legendPosition of ["right", "bottom"] as const) {
+      const svg = buildHeatmapSvg(team(3), { legendPosition, legend: false, marks: true });
+      expect(swatches(svg)).toHaveLength(0);
+      expect(svg).toContain("<g fill=");
+    }
+  });
+
+  it("rejects unsupported placement and non-boolean marks", () => {
+    expect(() => buildHeatmapSvg(team(3), { legendPosition: "top" as "right" })).toThrow(/legend position/);
+    expect(() => buildHeatmapSvg(team(3), { marks: "false" as unknown as boolean })).toThrow(/marks/);
   });
 });

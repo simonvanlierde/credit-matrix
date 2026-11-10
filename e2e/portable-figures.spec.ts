@@ -37,9 +37,8 @@ test("reports unsupported figure characters without substituting local fonts", a
   await names.press("Enter");
   await page.getByRole("button", { name: /^Software for أحمد:/ }).click();
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
-  await page.getByRole("button", { name: "Download PDF", exact: true }).click();
-  await expect(onScreen(page, /The figure fonts cannot display these characters:/)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Download PDF", exact: true })).toBeEnabled();
+  await expect(onScreen(page, /The figure fonts cannot display these characters:/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("button", { name: "Download PDF", exact: true })).toBeDisabled();
 });
 
 test("exports its first PDF after going offline", async ({ page, context }) => {

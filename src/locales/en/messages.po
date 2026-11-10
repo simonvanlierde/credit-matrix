@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Key"
 
 msgid "levelHint"
-msgstr "Select to cycle · Right-click or 0–3 sets a level."
+msgstr "Select to cycle · Arrow keys move · Right-click or 0–3 sets a level."
 
 msgid "heatmapLabel"
 msgstr "Heatmap"
@@ -1601,6 +1601,126 @@ msgstr "This citation file lists no authors."
 msgid "citationConverting"
 msgstr "Reading citation file… The converter may need to download first."
 
+msgid "heatmapActualSize"
+msgstr "Actual size"
+
+msgid "heatmapFitWidth"
+msgstr "Fit to width"
+
+msgid "heatmapFigureSettings"
+msgstr "Figure settings"
+
+msgid "heatmapLayout"
+msgstr "Layout"
+
+msgid "heatmapOrientation"
+msgstr "Orientation"
+
+msgid "heatmapRolesInRows"
+msgstr "Roles in rows"
+
+msgid "heatmapContributorsInRows"
+msgstr "Contributors in rows"
+
+msgid "heatmapRoleLabels"
+msgstr "Role labels"
+
+msgid "heatmapFullLabels"
+msgstr "Full labels"
+
+msgid "heatmapShortLabels"
+msgstr "Short labels"
+
+msgid "heatmapHideUnused"
+msgstr "Omit unused roles"
+
+
+msgid "heatmapShowLevels"
+msgstr "Show contribution levels"
+
+msgid "heatmapLegendHint"
+msgstr "Keep the level meanings in your caption when hiding the legend."
+
+msgid "heatmapBlue"
+msgstr "Blue"
+
+msgid "heatmapGreen"
+msgstr "Green"
+
+msgid "heatmapGray"
+msgstr "Grayscale"
+
+msgid "heatmapPaleColor"
+msgstr "Supporting is hard to distinguish in this color. Try a darker shade."
+
+msgid "heatmapAdvanced"
+msgstr "Advanced"
+
+msgid "heatmapFont"
+msgstr "Font"
+
+msgid "heatmapSans"
+msgstr "Sans serif"
+
+msgid "heatmapSerif"
+msgstr "Serif"
+
+msgid "heatmapFontSize"
+msgstr "Font size (px)"
+
+msgid "heatmapCellShape"
+msgstr "Cell shape"
+
+msgid "heatmapSquare"
+msgstr "Square"
+
+msgid "heatmapRounded"
+msgstr "Rounded"
+
+msgid "heatmapCircle"
+msgstr "Circle"
+
+msgid "heatmapCellSize"
+msgstr "Cell size (px)"
+
+msgid "heatmapPngSize"
+msgstr "PNG size"
+
+msgid "heatmapWidthMm"
+msgstr "Width (mm)"
+
+msgid "heatmapResolution"
+msgstr "Resolution"
+
+msgid "heatmapSvgHint"
+msgstr "SVG stays sharp when resized; these dimensions apply to PNG."
+
+msgid "heatmapReset"
+msgstr "Reset defaults"
+
+msgid "heatmapPngTooLarge"
+msgstr "This PNG would be too large. Reduce its width or resolution, transpose the figure, or download SVG."
+
+msgid "heatmapSmallPrint"
+msgstr "Labels would print at about {size} pt. Increase the width or transpose the figure for readable print."
+
+msgid "heatmapRecipe"
+msgstr "Export recipe"
+
+msgid "heatmapRecipeHint"
+msgstr "Style settings only. Use your contributor data and installed CLI or plugin. PNG size and DPI are not included."
+
+msgid "heatmapRecipeTarget"
+msgstr "Use in"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST uses the page’s author roles and language, with yes/no contributions."
+
+msgid "heatmapRecipeTypst"
+msgstr "Use your Typst team data. Font metrics and native layout can differ from SVG."
+
+msgid "heatmapCopyRecipe"
+msgstr "Copy export recipe"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate fragment"
 
@@ -1609,3 +1729,24 @@ msgstr "Download PDF"
 
 msgid "errFigureGlyphs"
 msgstr "The figure fonts cannot display these characters: {characters}."
+
+msgid "heatmapLegendPosition"
+msgstr "Legend"
+
+msgid "heatmapLegendAuto"
+msgstr "Automatic"
+
+msgid "heatmapLegendRight"
+msgstr "Right"
+
+msgid "heatmapLegendBelow"
+msgstr "Below"
+
+msgid "heatmapLegendHidden"
+msgstr "Hidden"
+
+msgid "heatmapCellMarks"
+msgstr "Show contribution marks"
+
+msgid "heatmapMarksHint"
+msgstr "Enable marks for an additional way to distinguish contribution levels."

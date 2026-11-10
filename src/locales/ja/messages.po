@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "凡例"
 
 msgid "levelHint"
-msgstr "選択で切り替え・右クリックまたは0–3でレベルを設定。"
+msgstr "選択で切り替え・矢印キーで移動・右クリックまたは0–3でレベルを設定。"
 
 msgid "heatmapLabel"
 msgstr "ヒートマップ"
@@ -1601,6 +1601,126 @@ msgstr "この引用ファイルには著者が記載されていません。"
 msgid "citationConverting"
 msgstr "引用ファイルを読み込み中… 先にコンバーターのダウンロードが必要な場合があります。"
 
+msgid "heatmapActualSize"
+msgstr "実寸表示"
+
+msgid "heatmapFitWidth"
+msgstr "幅に合わせる"
+
+msgid "heatmapFigureSettings"
+msgstr "図の設定"
+
+msgid "heatmapLayout"
+msgstr "レイアウト"
+
+msgid "heatmapOrientation"
+msgstr "向き"
+
+msgid "heatmapRolesInRows"
+msgstr "行に役割を表示"
+
+msgid "heatmapContributorsInRows"
+msgstr "行に貢献者を表示"
+
+msgid "heatmapRoleLabels"
+msgstr "役割ラベル"
+
+msgid "heatmapFullLabels"
+msgstr "完全なラベル"
+
+msgid "heatmapShortLabels"
+msgstr "短いラベル"
+
+msgid "heatmapHideUnused"
+msgstr "未使用の役割を省略"
+
+
+msgid "heatmapShowLevels"
+msgstr "貢献レベルを表示"
+
+msgid "heatmapLegendHint"
+msgstr "凡例を非表示にする場合は、図のキャプションでレベルを説明してください。"
+
+msgid "heatmapBlue"
+msgstr "青"
+
+msgid "heatmapGreen"
+msgstr "緑"
+
+msgid "heatmapGray"
+msgstr "グレースケール"
+
+msgid "heatmapPaleColor"
+msgstr "この色では補助的な貢献を区別しにくくなります。より暗い色を選んでください。"
+
+msgid "heatmapAdvanced"
+msgstr "詳細設定"
+
+msgid "heatmapFont"
+msgstr "フォント"
+
+msgid "heatmapSans"
+msgstr "サンセリフ"
+
+msgid "heatmapSerif"
+msgstr "セリフ"
+
+msgid "heatmapFontSize"
+msgstr "文字サイズ（px）"
+
+msgid "heatmapCellShape"
+msgstr "セルの形"
+
+msgid "heatmapSquare"
+msgstr "四角"
+
+msgid "heatmapRounded"
+msgstr "角丸"
+
+msgid "heatmapCircle"
+msgstr "円"
+
+msgid "heatmapCellSize"
+msgstr "セルサイズ（px）"
+
+msgid "heatmapPngSize"
+msgstr "PNGのサイズ"
+
+msgid "heatmapWidthMm"
+msgstr "幅（mm）"
+
+msgid "heatmapResolution"
+msgstr "解像度"
+
+msgid "heatmapSvgHint"
+msgstr "SVGは拡大縮小しても鮮明です。このサイズ設定はPNGに適用されます。"
+
+msgid "heatmapReset"
+msgstr "既定値に戻す"
+
+msgid "heatmapPngTooLarge"
+msgstr "PNGが大きすぎます。幅または解像度を下げるか、軸を入れ替えるか、SVGをダウンロードしてください。"
+
+msgid "heatmapSmallPrint"
+msgstr "印刷時のラベルは約{size}ptになります。読みやすくするには幅を広げるか、軸を入れ替えてください。"
+
+msgid "heatmapRecipe"
+msgstr "書き出し用コード"
+
+msgid "heatmapRecipeHint"
+msgstr "スタイル設定のみです。貢献者データとインストール済みの CLI またはプラグインを使用してください。PNG のサイズと DPI は含まれません。"
+
+msgid "heatmapRecipeTarget"
+msgstr "使用先"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST はページの著者ロールと言語を使用します。貢献は有無のみです。"
+
+msgid "heatmapRecipeTypst"
+msgstr "Typst のチームデータを使用してください。フォントの寸法やネイティブレイアウトは SVG と異なる場合があります。"
+
+msgid "heatmapCopyRecipe"
+msgstr "書き出し用コードをコピー"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate フラグメント"
 
@@ -1609,3 +1729,24 @@ msgstr "PDFをダウンロード"
 
 msgid "errFigureGlyphs"
 msgstr "図のフォントでは次の文字を表示できません: {characters}。"
+
+msgid "heatmapLegendPosition"
+msgstr "凡例"
+
+msgid "heatmapLegendAuto"
+msgstr "自動"
+
+msgid "heatmapLegendRight"
+msgstr "右側"
+
+msgid "heatmapLegendBelow"
+msgstr "下側"
+
+msgid "heatmapLegendHidden"
+msgstr "非表示"
+
+msgid "heatmapCellMarks"
+msgstr "貢献度の記号を表示"
+
+msgid "heatmapMarksHint"
+msgstr "記号を有効にすると、濃淡以外でも貢献度を区別できます。"

@@ -1,6 +1,6 @@
-import { Check } from "lucide-react";
 import { useState } from "react";
 import { InitialsChip } from "@/components/ui/initials-chip";
+import { LevelMark } from "@/components/ui/level-mark";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Author, CREDIT_ROLES } from "@/core";
 import { heatCellColor, onColor } from "@/core/contributor-color";
@@ -108,7 +108,7 @@ export function MobileRoleList({
                 {/* The label never sits on the dynamic fill: a mid-tone
                   preset has no 4.5:1 text companion at all, and the
                   palette is user-picked. The swatch carries the color;
-                  its check needs only the 3:1 non-text ratio, which
+                  its mark needs only the 3:1 non-text ratio, which
                   onColor guarantees. */}
                 {score > 0 && (
                   <span
@@ -119,7 +119,7 @@ export function MobileRoleList({
                       return { backgroundColor: fill, color: onColor(fill) };
                     })()}
                   >
-                    <Check className="size-3.5" strokeWidth={3} />
+                    <LevelMark score={score} graded={graded} color="currentColor" size="small" />
                   </span>
                 )}
                 {levelLabel(score)}

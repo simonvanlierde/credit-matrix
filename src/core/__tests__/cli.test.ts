@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { run as runCommand, USAGE } from "../cli";
 import { NewerVersionError, toJson } from "../export/json";
+import { createFigureRenderer } from "../figures";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash } from "../share-link";
 
@@ -427,6 +428,10 @@ it("passes figure options through the SVG conversion", async () => {
     "circle",
     "--size",
     "30",
+    "--font",
+    "serif",
+    "--font-size",
+    "21",
     "--palette",
     "green",
     "--legend",
@@ -439,6 +444,53 @@ it("passes figure options through the SVG conversion", async () => {
   ]);
   expect(svg).toContain('width="30" height="30" rx="15"');
   expect(svg).toContain(">1 Conceptualiz…<");
+  expect(svg).toContain('font-size="21"');
+  expect(svg).toContain("Noto Serif");
   expect(svg).not.toContain(">Supporting<");
   await expect(run(["convert", csv, "--to", "svg", "--legend", "maybe"])).rejects.toThrow("true or false");
+  await expect(run(["convert", csv, "--to", "svg", "--font-size", "NaN"])).rejects.toThrow("between 6 and 32");
+  await expect(run(["convert", csv, "--to", "svg", "--font", "arbitrary"])).rejects.toThrow("Unknown heatmap font");
+});
+
+it("selects full names or initials without shortening the text alternative", async () => {
+  const full = await run(["convert", csv, "--to", "svg", "--initials", "false"]);
+  const compact = await run(["convert", csv, "--to", "svg", "--initials", "true"]);
+  expect(full).toContain(">Jane Smith</tspan>");
+  expect(compact).toContain(">JS</tspan>");
+  expect(compact).toContain("Jane Smith: Conceptualization");
+  await expect(run(["convert", csv, "--to", "svg", "--initials", "maybe"])).rejects.toThrow("true or false");
+});
+
+it("forwards legend placement and optional marks while keeping publication defaults", async () => {
+  const authors = [createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 33 }] })];
+  const source = file("legend-options.json", toJson(authors));
+  for (const legendPosition of ["auto", "right", "bottom"] as const) {
+    for (const marks of [true, false]) {
+      const svg = await run([
+        "convert",
+        source,
+        "--to",
+        "svg",
+        "--legend-position",
+        legendPosition,
+        "--marks",
+        String(marks),
+      ]);
+      expect(svg).toBe((await createFigureRenderer()).svg(authors, { locale: "en", legendPosition, marks }));
+      expect(svg.includes('aria-hidden="true"')).toBe(marks);
+    }
+  }
+  const defaults = await run(["convert", source, "--to", "svg"]);
+  expect(defaults).toBe(
+    (await createFigureRenderer()).svg(authors, { locale: "en", legendPosition: "auto", marks: false }),
+  );
+  expect(defaults).not.toContain('aria-hidden="true"');
+  const hidden = await run(["convert", source, "--to", "svg", "--legend", "false", "--legend-position", "right"]);
+  expect(hidden).not.toContain(">Supporting</tspan>");
+  await expect(run(["convert", source, "--to", "svg", "--marks", "maybe"])).rejects.toThrow(
+    "--marks must be true or false",
+  );
+  await expect(run(["convert", source, "--to", "svg", "--legend-position", "left"])).rejects.toThrow(
+    "--legend-position must be auto, right or bottom",
+  );
 });

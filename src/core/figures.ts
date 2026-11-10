@@ -1,5 +1,19 @@
 import fontkit, { type Font } from "@pdf-lib/fontkit";
-import { degrees, drawText, PDFDocument, type PDFFont, PDFHexString, PDFName, PDFString, rgb } from "pdf-lib";
+import {
+  degrees,
+  drawText,
+  LineCapStyle,
+  LineJoinStyle,
+  PDFDocument,
+  type PDFFont,
+  PDFHexString,
+  PDFName,
+  PDFString,
+  popGraphicsState,
+  pushGraphicsState,
+  rgb,
+  setLineJoin,
+} from "pdf-lib";
 import type { Author } from "./author";
 import { escapeXml } from "./export/escape-xml";
 import { buildHeatmapSvg, type HeatmapSvgOptions } from "./export/heatmap-svg";
@@ -18,7 +32,8 @@ export class FigureFontError extends Error {
 
 export interface FigureRenderer {
   svg(authors: Author[], options?: HeatmapSvgOptions): string;
-  pdf(authors: Author[], options?: HeatmapSvgOptions): Promise<Uint8Array>;
+  /** Set a positive width in millimeters, or retain the SVG's natural print size. */
+  pdf(authors: Author[], options?: HeatmapSvgOptions, widthMm?: number): Promise<Uint8Array>;
 }
 
 interface FigureFont {
@@ -43,7 +58,8 @@ async function readFont(url: URL): Promise<Uint8Array> {
     const { readFile } = await import(/* @vite-ignore */ nodeFilesystem);
     return new Uint8Array(await readFile(url));
   }
-  const response = await fetch(url);
+  // The offline cache can fetch the same large font concurrently; bypass the browser HTTP-cache write race.
+  const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new Error(`Cannot load bundled figure font: ${response.status} ${url.pathname}`);
   return new Uint8Array(await response.arrayBuffer());
 }
@@ -92,6 +108,9 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
     ["Noto Sans", new URL("./figure-fonts/NotoSans-Regular.ttf", import.meta.url)],
     ["Credit Figure JP", new URL("./figure-fonts/CreditFigureJP.ttf", import.meta.url)],
     ["Credit Figure SC", new URL("./figure-fonts/CreditFigureSC.ttf", import.meta.url)],
+    ["Noto Serif", new URL("./figure-fonts/NotoSerif-Regular.ttf", import.meta.url)],
+    ["Credit Figure Serif JP", new URL("./figure-fonts/CreditFigureSerifJP.ttf", import.meta.url)],
+    ["Credit Figure Serif SC", new URL("./figure-fonts/CreditFigureSerifSC.ttf", import.meta.url)],
   ] as const;
   const fonts = await Promise.all(
     sources.map(async ([family, url]): Promise<FigureFont> => {
@@ -100,8 +119,11 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
     }),
   );
 
-  function textRuns(text: string, locale?: string): TextRun[] {
-    const ordered = locale?.toLowerCase().startsWith("zh") ? [fonts[0], fonts[2], fonts[1]] : fonts;
+  function textRuns(text: string, options?: HeatmapSvgOptions): TextRun[] {
+    const selected = options?.font === "serif" ? fonts.slice(3) : fonts.slice(0, 3);
+    const ordered = options?.locale?.toLowerCase().startsWith("zh")
+      ? [selected[0], selected[2], selected[1]]
+      : selected;
     const runs: TextRun[] = [];
     const missing = new Set<string>();
     for (const character of text.normalize("NFC")) {
@@ -122,7 +144,16 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
   function source(authors: Author[], options?: HeatmapSvgOptions): string {
     return buildHeatmapSvg(authors, {
       ...options,
-      measureText: (label, size) => textRuns(label, options?.locale).reduce((sum, run) => sum + width(run, size), 0),
+      measureText: (label, size) => textRuns(label, options).reduce((sum, run) => sum + width(run, size), 0),
+      measureTextHeight: (label, size) =>
+        Math.max(
+          size * 1.2,
+          ...textRuns(label, options).map(
+            ({ font }) =>
+              // Browsers round line metrics to pixels; retain a pixel of space after rounding.
+              Math.ceil(((font.font.ascent - font.font.descent + font.font.lineGap) * size) / font.font.unitsPerEm) + 1,
+          ),
+        ),
     });
   }
 
@@ -132,7 +163,7 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
       const svg = source(authors, options).replace(
         /<text\b([^>]*)>([^<]*)<\/text>/g,
         (_, attrs: string, text: string) => {
-          const runs = textRuns(unescapeXml(text), options?.locale);
+          const runs = textRuns(unescapeXml(text), options);
           const content = runs
             .map((run) => {
               used.add(run.font);
@@ -152,7 +183,9 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
       );
     },
 
-    async pdf(authors, options) {
+    async pdf(authors, options, widthMm) {
+      if (widthMm !== undefined && (!Number.isFinite(widthMm) || widthMm <= 0))
+        throw new RangeError("Figure width must be a positive finite number of millimeters.");
       const svg = source(authors, options);
       const root = attributes(svg.slice(0, svg.indexOf(">")));
       const pageWidth = Number(root.width);
@@ -164,13 +197,53 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
       if (options?.locale) document.catalog.set(PDFName.of("Lang"), PDFString.of(options.locale));
       const page = document.addPage([pageWidth, pageHeight]);
       const embedded = new Map<FigureFont, PDFFont>();
+      const groups: Record<string, string>[] = [];
+      const supported = new Set(["svg", "title", "desc", "rect", "text", "g", "circle", "path"]);
 
-      // Only this renderer's own rect/text markup reaches this parser, never caller-provided SVG.
-      for (const match of svg.matchAll(/<(rect|text)\b([^>]*?)(?:\/>|>([^<]*)<\/text>)/g)) {
-        const attrs = attributes(match[2] ?? "");
+      // Only the shared renderer's own markup reaches this parser, never caller-provided SVG.
+      for (const match of svg.matchAll(/<(\/?)([A-Za-z][A-Za-z0-9:-]*)(?=\s|\/?>)([^<>]*)>(?:([^<]*)<\/text>)?/g)) {
+        const tag = match[2] ?? "";
+        if (!supported.has(tag)) throw new Error(`Unsupported figure primitive: ${tag}.`);
+        if (match[1]) {
+          if (tag === "g") groups.pop();
+          continue;
+        }
+        const attrs = { ...groups.at(-1), ...attributes(match[3] ?? "") };
+        if (tag === "g") {
+          if (attrs.transform) throw new Error("Unsupported figure group transform.");
+          groups.push(attrs);
+          continue;
+        }
+        if (tag === "svg" || tag === "title" || tag === "desc") continue;
         const x = Number(attrs.x ?? 0);
         const y = Number(attrs.y ?? 0);
-        if (match[1] === "rect") {
+        if (tag === "circle") {
+          page.drawCircle({
+            x: Number(attrs.cx),
+            y: pageHeight - Number(attrs.cy),
+            size: Number(attrs.r),
+            color: color(attrs.fill),
+          });
+          continue;
+        }
+        if (tag === "path") {
+          if (!attrs.d) throw new Error("Figure path has no vector data.");
+          page.pushOperators(
+            pushGraphicsState(),
+            setLineJoin(attrs["stroke-linejoin"] === "round" ? LineJoinStyle.Round : LineJoinStyle.Miter),
+          );
+          page.drawSvgPath(attrs.d, {
+            x: 0,
+            y: pageHeight,
+            color: color(attrs.fill),
+            borderColor: color(attrs.stroke),
+            borderWidth: Number(attrs["stroke-width"] ?? 0),
+            borderLineCap: attrs["stroke-linecap"] === "round" ? LineCapStyle.Round : LineCapStyle.Butt,
+          });
+          page.pushOperators(popGraphicsState());
+          continue;
+        }
+        if (tag === "rect") {
           const w = Number(attrs.width);
           const h = Number(attrs.height);
           const r = Math.min(Number(attrs.rx ?? 0), w / 2, h / 2);
@@ -187,7 +260,7 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
           continue;
         }
 
-        const runs = textRuns(unescapeXml(match[3] ?? ""), options?.locale);
+        const runs = textRuns(unescapeXml(match[4] ?? ""), options);
         const size = Number(attrs["font-size"]);
         const transform = attrs.transform?.match(/^translate\(([^,]+),([^)]+)\) rotate\(([^)]+)\)$/);
         const originX = transform ? Number(transform[1]) : x;
@@ -254,8 +327,9 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
         }
       }
       // SVG pixels are 1/96 inch; PDF points are 1/72 inch. Keep their natural print sizes equal.
-      page.scaleContent(0.75, 0.75);
-      page.setSize(pageWidth * 0.75, pageHeight * 0.75);
+      const printScale = widthMm === undefined ? 0.75 : (widthMm * 72) / (25.4 * pageWidth);
+      page.scaleContent(printScale, printScale);
+      page.setSize(pageWidth * printScale, pageHeight * printScale);
       return document.save();
     },
   };
