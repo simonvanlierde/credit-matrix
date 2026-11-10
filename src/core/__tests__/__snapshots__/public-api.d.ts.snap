@@ -101,11 +101,24 @@ export declare class CreditMatrixElement extends HTMLElement {
   /** Render again, downloading `src` afresh. */
   render(): Promise<void>;
 }
-// i18n.d.ts
-import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog, v as resolveLocaleTag } from "./ui-strings.js";
-export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode, resolveLocaleTag };
-// index.d.ts
-import { n as CreditRoleName, r as getRoleByName, t as CREDIT_ROLES } from "./credit-roles.js";
+// figures.d.ts
+import { i as Author, t as HeatmapSvgOptions } from "./heatmap-svg.js";
+export declare class FigureFontError extends Error {
+  readonly characters: string;
+  readonly name = "FigureFontError";
+  constructor(characters: string);
+}
+export interface FigureRenderer {
+  svg(authors: Author[], options?: HeatmapSvgOptions): string;
+  pdf(authors: Author[], options?: HeatmapSvgOptions): Promise<Uint8Array>;
+}
+/**
+ * Load bundled Noto fonts once, then export figures offline with retained text.
+ * SVG embeds standalone fonts; PDF embeds the glyphs used by that figure. Editors
+ * can require the full fonts installed locally to change the PDF's text.
+ */
+export declare function createFigureRenderer(): Promise<FigureRenderer>;
+// heatmap-svg.d.ts
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";
 /**
@@ -122,7 +135,7 @@ import * as z from "zod/mini";
  * contribution levels without committing to a fixed tier count in
  * the data model: the UI input mode is a presentation concern only.
  */
-export declare const ContributionSchema: z.ZodMiniObject<{
+declare const ContributionSchema: z.ZodMiniObject<{
   role: z.ZodMiniEnum<{
     Conceptualization: "Conceptualization";
     "Data curation": "Data curation";
@@ -143,15 +156,15 @@ export declare const ContributionSchema: z.ZodMiniObject<{
 }, z.core.$strip>;
 type Contribution = z.infer<typeof ContributionSchema>;
 /** Return the canonical bare ORCID form used in state and exports. */
-export declare function normalizeOrcid(id: string): string;
+declare function normalizeOrcid(id: string): string;
 /**
  * Validate an ORCID iD fully: correct shape *and* a valid ISO 7064 MOD 11-2
  * check digit. The shape regexes alone accept checksum-invalid iDs (e.g. a
  * mistyped digit), which would then be exported as if verified.
  * Accepts the bare form or the orcid.org URL.
  */
-export declare function isValidOrcid(id: string): boolean;
-export declare const AuthorSchema: z.ZodMiniObject<{
+declare function isValidOrcid(id: string): boolean;
+declare const AuthorSchema: z.ZodMiniObject<{
   id: z.ZodMiniDefault<z.ZodMiniString<string>>;
   name: z.ZodMiniString<string>;
   firstName: z.ZodMiniString<string>;
@@ -193,7 +206,85 @@ type ContributorType = Author["contributorType"];
  * degree-of-contribution terms (lead / equal / supporting).
  */
 type ContributionLevel = "none" | "supporting" | "equal" | "lead";
-export declare function scoreToLevel(score: number): ContributionLevel;
+declare function scoreToLevel(score: number): ContributionLevel;
+interface HeatmapSvgOptions {
+  /** Named sequential palette; color overrides its base hue. */
+  palette?: "blue" | "green" | "gray";
+  /** Base hue for the heatmap; defaults to the palette's. */
+  color?: string;
+  shape?: "square" | "rounded" | "circle";
+  /** Cell side in SVG pixels (Typst uses points). */
+  size?: number;
+  legend?: boolean;
+  /** Short labels pair the role number with twelve characters; the text alternative retains full names. */
+  labels?: "full" | "short";
+  /**
+   * Grade cell fills by contribution level. When false, fills are flat
+   * (contributed/none) and the legend collapses to two keys. Defaults to true.
+   */
+  levels?: boolean;
+  /** Swap axes: authors down the left, roles across the top. */
+  horizontal?: boolean;
+  skipempty?: boolean;
+  /** @deprecated Use `color`. */
+  monoColor?: string;
+  /** @deprecated Use `horizontal`. */
+  transpose?: boolean;
+  /** @deprecated Use `levels`. */
+  showLevels?: boolean;
+  /**
+   * Label authors by their initials (true) or full names (false) on the axis.
+   * Defaults to true. The legend always uses initials badges.
+   */
+  acronyms?: boolean;
+  /** Scale all layout dimensions (min 0.1). */
+  scale?: number;
+  /** Localize displayed role names. Defaults to identity; lookups stay canonical English. */
+  translateRole?: RoleTranslator;
+  /** Localize the level legend and empty-state line. Defaults to English. */
+  translateUi?: UiTranslator;
+  /**
+   * BCP-47 locale of the `<desc>` statement's name lists. Defaults to "en".
+   * When set, it is also the root element's `xml:lang` and `lang`, so a screen
+   * reader reads `<title>` and `<desc>` in that language.
+   */
+  locale?: string;
+  /** Measure a label in SVG pixels at the given font size, before scale. */
+  measureText?: (label: string, fontSize: number) => number;
+}
+/**
+ * The heatmap's text alternative: the by-author contribution statement, in the
+ * same language and with the same levels as the figure. The SVG carries it as
+ * `<desc>`; a PNG export can carry it as a Description text chunk.
+ */
+declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string;
+/**
+ * Render a contribution heatmap as a self-contained SVG string.
+ *
+ * Pure and dependency-free. Runs in the browser (for live preview, SVG
+ * download, and canvas→PNG export) and in Node (for tests). The SVG uses
+ * system font stacks, so no font embedding is required.
+ *
+ * Every band is measured from the labels it actually carries, and the legend
+ * wraps to the figure's own width, so the canvas is the drawing's bounding box
+ * rather than a fixed frame around it: a two-author figure no longer inherits
+ * the width of a four-key legend. Roles that no author contributed to are
+ * omitted, matching the live chart. There is no *rendered* image title:
+ * captions belong to the embedding document. The `<title>` element is the
+ * accessible name for the `role="img"` graphic and `<desc>` its text
+ * alternative: the by-author contribution statement, so a screen reader hears
+ * who did what. Assistive technology reads both and nothing draws them.
+ */
+declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string;
+export { AuthorSchema as a, ContributionSchema as c, normalizeOrcid as d, scoreToLevel as f, Author as i, ContributorType as l, buildHeatmapSvg as n, Contribution as o, heatmapDescription as r, ContributionLevel as s, HeatmapSvgOptions as t, isValidOrcid as u };
+// i18n.d.ts
+import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog, v as resolveLocaleTag } from "./ui-strings.js";
+export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode, resolveLocaleTag };
+// index.d.ts
+import { a as AuthorSchema, c as ContributionSchema, d as normalizeOrcid, f as scoreToLevel, i as Author, l as ContributorType, n as buildHeatmapSvg, o as Contribution, r as heatmapDescription, s as ContributionLevel, t as HeatmapSvgOptions, u as isValidOrcid } from "./heatmap-svg.js";
+import { n as CreditRoleName, r as getRoleByName, t as CREDIT_ROLES } from "./credit-roles.js";
+import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
+import * as z from "zod/mini";
 /** What a verified reply keeps: who signed in, and the evidence to check it again. */
 declare const OrcidProofSchema: z.ZodMiniObject<{
   orcid: z.ZodMiniString<string>;
@@ -1015,73 +1106,6 @@ export declare function toQuarto(authors: Author[], { yesNo }?: {
  * MyST has no contribution levels. Non-authors are omitted, never added to the byline.
  */
 export declare function toMyst(authors: Author[]): string;
-interface HeatmapSvgOptions {
-  /** Named sequential palette; color overrides its base hue. */
-  palette?: "blue" | "green" | "gray";
-  /** Base hue for the heatmap; defaults to the palette's. */
-  color?: string;
-  shape?: "square" | "rounded" | "circle";
-  /** Cell side in SVG pixels (Typst uses points). */
-  size?: number;
-  legend?: boolean;
-  /** Short labels pair the role number with twelve characters; the text alternative retains full names. */
-  labels?: "full" | "short";
-  /**
-   * Grade cell fills by contribution level. When false, fills are flat
-   * (contributed/none) and the legend collapses to two keys. Defaults to true.
-   */
-  levels?: boolean;
-  /** Swap axes: authors down the left, roles across the top. */
-  horizontal?: boolean;
-  skipempty?: boolean;
-  /** @deprecated Use `color`. */
-  monoColor?: string;
-  /** @deprecated Use `horizontal`. */
-  transpose?: boolean;
-  /** @deprecated Use `levels`. */
-  showLevels?: boolean;
-  /**
-   * Label authors by their initials (true) or full names (false) on the axis.
-   * Defaults to true. The legend always uses initials badges.
-   */
-  acronyms?: boolean;
-  /** Scale all layout dimensions (min 0.1). */
-  scale?: number;
-  /** Localize displayed role names. Defaults to identity; lookups stay canonical English. */
-  translateRole?: RoleTranslator;
-  /** Localize the level legend and empty-state line. Defaults to English. */
-  translateUi?: UiTranslator;
-  /**
-   * BCP-47 locale of the `<desc>` statement's name lists. Defaults to "en".
-   * When set, it is also the root element's `xml:lang` and `lang`, so a screen
-   * reader reads `<title>` and `<desc>` in that language.
-   */
-  locale?: string;
-}
-/**
- * The heatmap's text alternative: the by-author contribution statement, in the
- * same language and with the same levels as the figure. The SVG carries it as
- * `<desc>`; a PNG export can carry it as a Description text chunk.
- */
-export declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string;
-/**
- * Render a contribution heatmap as a self-contained SVG string.
- *
- * Pure and dependency-free. Runs in the browser (for live preview, SVG
- * download, and canvas→PNG export) and in Node (for tests). The SVG uses
- * system font stacks, so no font embedding is required.
- *
- * Every band is measured from the labels it actually carries, and the legend
- * wraps to the figure's own width, so the canvas is the drawing's bounding box
- * rather than a fixed frame around it: a two-author figure no longer inherits
- * the width of a four-key legend. Roles that no author contributed to are
- * omitted, matching the live chart. There is no *rendered* image title:
- * captions belong to the embedding document. The `<title>` element is the
- * accessible name for the `role="img"` graphic and `<desc>` its text
- * alternative: the by-author contribution statement, so a screen reader hears
- * who did what. Assistive technology reads both and nothing draws them.
- */
-export declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string;
 /** Thrown by `fromJson` for an export stamped by a newer build. */
 export declare class NewerVersionError extends Error {
   constructor(version: number);
@@ -1422,7 +1446,7 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-export { type Ask, type AskEvent, type AskState, type Author, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, getRoleByName };
+export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isValidOrcid, normalizeOrcid, scoreToLevel };
 // lookup.d.ts
 import { n as CreditRoleName } from "./credit-roles.js";
 /**

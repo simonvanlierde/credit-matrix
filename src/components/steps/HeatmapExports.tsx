@@ -1,7 +1,7 @@
 import { ChevronDown, Copy, Download } from "lucide-react";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type Author, buildHeatmapSvg, heatmapDescription } from "@/core";
+import { type Author, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
 import { withPngText } from "@/lib/png-text";
 import { useTranslations } from "@/lib/translations";
@@ -10,7 +10,18 @@ import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { download as downloadBlob } from "@/lib/utils";
 import { MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 
-type ExportFormat = "svg" | "png";
+type ExportFormat = "svg" | "png" | "pdf";
+
+let figureRenderer: ReturnType<typeof import("@/core/figures").createFigureRenderer> | undefined;
+function renderer() {
+  figureRenderer ??= import("@/core/figures")
+    .then(({ createFigureRenderer }) => createFigureRenderer())
+    .catch((error) => {
+      figureRenderer = undefined;
+      throw error;
+    });
+  return figureRenderer;
+}
 
 /**
  * Rasterise an SVG string to a PNG Blob entirely in the browser, with no
@@ -76,11 +87,15 @@ export function HeatmapExports({
     translateUi,
     locale: outputLanguage,
   };
-  const renderSvg = () => buildHeatmapSvg(authors, svgOptions);
-  const renderPng = () => svgToPngBlob(renderSvg(), heatmapDescription(authors, svgOptions), outputLanguage);
+  const renderSvg = async () => (await renderer()).svg(authors, svgOptions);
+  const renderPng = async () =>
+    svgToPngBlob(await renderSvg(), heatmapDescription(authors, svgOptions), outputLanguage);
 
-  function fail(format: ExportFormat) {
-    const message = t("errHeatmapExport", { format: format.toUpperCase() });
+  function fail(format: ExportFormat, cause: unknown) {
+    const message =
+      cause instanceof Error && cause.name === "FigureFontError" && "characters" in cause
+        ? t("errFigureGlyphs", { characters: String(cause.characters) })
+        : t("errHeatmapExport", { format: format.toUpperCase() });
     setError(message);
     announce(message, { assertive: true });
   }
@@ -89,14 +104,18 @@ export function HeatmapExports({
     setLoading(format);
     setError(null);
     try {
-      const svg = renderSvg();
-      if (format === "svg") {
-        downloadBlob(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }), "credit-heatmap.svg");
+      if (format === "pdf") {
+        downloadBlob(
+          new Blob([new Uint8Array(await (await renderer()).pdf(authors, svgOptions))], { type: "application/pdf" }),
+          "credit-heatmap.pdf",
+        );
+      } else if (format === "svg") {
+        downloadBlob(new Blob([await renderSvg()], { type: "image/svg+xml;charset=utf-8" }), "credit-heatmap.svg");
       } else {
         downloadBlob(await renderPng(), "credit-heatmap.png");
       }
-    } catch {
-      fail(format);
+    } catch (cause) {
+      fail(format, cause);
     } finally {
       setLoading(null);
     }
@@ -138,7 +157,7 @@ export function HeatmapExports({
           <Copy className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
           {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyPng")}
         </button>
-        {(["svg", "png"] as ExportFormat[]).map((format) => (
+        {(["svg", "pdf", "png"] as ExportFormat[]).map((format) => (
           <button
             key={format}
             type="button"
@@ -147,7 +166,13 @@ export function HeatmapExports({
             className={MENU_ITEM}
           >
             <Download className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
-            {loading === format ? "…" : format === "svg" ? t("downloadSvg") : t("downloadPng")}
+            {loading === format
+              ? "…"
+              : format === "svg"
+                ? t("downloadSvg")
+                : format === "pdf"
+                  ? t("downloadPdf")
+                  : t("downloadPng")}
           </button>
         ))}
         {error && <p className="px-2 pt-1 pb-1.5 text-[11px] text-error">{error}</p>}

@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Download heatmaps as PDF with embedded fonts and selectable text. App, CLI and document-plugin
+  SVG exports also carry their fonts. See the [figure font guide](integrations/figures/README.md)
+  for coverage, offline use and editing limits.
 - [Quarto/Pandoc](integrations/quarto/README.md#document-language) and
   [MyST/Jupyter Book](integrations/myst/README.md#document-language) statements and heatmaps follow
   the document's `lang`, using the app's nine languages. Quarto also translates the default heading.

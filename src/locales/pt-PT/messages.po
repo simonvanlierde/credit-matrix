@@ -1603,3 +1603,9 @@ msgstr "A ler o ficheiro de citação… Pode ser necessário transferir primeir
 
 msgid "exportRoCrateFragment"
 msgstr "Fragmento RO-Crate"
+
+msgid "downloadPdf"
+msgstr "Descarregar PDF"
+
+msgid "errFigureGlyphs"
+msgstr "Os tipos de letra da figura não podem apresentar estes caracteres: {characters}."

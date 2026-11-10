@@ -66,5 +66,11 @@ def test_real_document_build(tmp_path, command, extension, source):
     assert "**Marie Curie**: Software, Writing – original draft." in statement
 
     image = next((tmp_path / "_credit_matrix").glob("*.svg"))
-    assert 'width="30" height="30" rx="15"' in image.read_text(encoding="utf-8")
+    svg = image.read_text(encoding="utf-8")
+    assert 'width="30" height="30" rx="15"' in svg
+    assert "@font-face" in svg
+    assert "base64," in svg
+    assert ">Marie Curie</tspan>" in svg
+    assert "<path" not in svg
+    assert "<image" not in svg
     assert "_credit_matrix/" in statement

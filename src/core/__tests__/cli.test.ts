@@ -6,7 +6,7 @@ import process from "node:process";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { run, USAGE } from "../cli";
+import { run as runCommand, USAGE } from "../cli";
 import { NewerVersionError, toJson } from "../export/json";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash } from "../share-link";
@@ -19,7 +19,22 @@ function file(name: string, text: string): string {
   return path;
 }
 
+async function run(argv: string[]): Promise<string> {
+  const output = await runCommand(argv);
+  if (typeof output !== "string") throw new Error("Expected textual CLI output");
+  return output;
+}
+
 const csv = file("team.csv", "Name,Conceptualization,Software\nJane Smith,100,66\nBob White,,100\n");
+
+it("exports a binary PDF with embedded figure fonts", async () => {
+  const bytes = await runCommand(["convert", csv, "--to", "pdf"]);
+  expect(bytes).toBeInstanceOf(Uint8Array);
+  expect(new TextDecoder().decode((bytes as Uint8Array).slice(0, 8))).toBe("%PDF-1.7");
+  const svg = await run(["convert", csv, "--to", "svg"]);
+  expect(svg).toContain("@font-face");
+  expect(svg).toContain("<text");
+});
 
 it("exports manuscript YAML with levels only where the schema supports them", async () => {
   const quarto = await run(["convert", csv, "--to", "quarto"]);
@@ -205,7 +220,7 @@ describe("credit-matrix convert", () => {
 
   it("needs --to", async () => {
     await expect(run(["convert", csv])).rejects.toThrow(
-      /--to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate/,
+      /--to json, csv, jats, crossref, md, latex-credits, tenzing, svg, pdf, quarto, myst or ro-crate/,
     );
   });
 });
@@ -352,7 +367,7 @@ describe("credit-matrix as a program", () => {
     const { out, err } = await launch("convert", csv);
     expect(out).toBe("");
     expect(err).toBe(
-      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate.\nRun 'credit-matrix --help' for usage.\n",
+      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, pdf, quarto, myst or ro-crate.\nRun 'credit-matrix --help' for usage.\n",
     );
     expect(process.exitCode).toBe(2);
   });

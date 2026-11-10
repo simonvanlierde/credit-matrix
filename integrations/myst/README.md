@@ -17,6 +17,8 @@ project:
 
 MyST caches it in its build folder. The version in the URL is the package version, so
 upgrading is a change of that number.
+The plugin includes the figure fonts, which add about 23 MB to the download. It loads
+them when MyST imports the plugin so the heatmap directive can run synchronously.
 
 To work offline or pin the file in your repository, copy
 [`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix yaml`
@@ -68,6 +70,8 @@ unsupported languages and Traditional Chinese fall back to English. Write your h
 ## Contribution heatmap
 
 See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
+Generated SVG assets contain embedded fonts and editable text. See
+[font portability and PDF export](../figures/README.md) for document-converter limits.
 
 ## Limitations
 

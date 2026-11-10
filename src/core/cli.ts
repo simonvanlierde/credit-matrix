@@ -21,7 +21,7 @@ import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
 import { toMyst, toQuarto } from "./export/frontmatter";
-import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
+import { HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
 import { RepeatedIdError, toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
 import { toMarkdown } from "./export/markdown";
@@ -47,7 +47,7 @@ Commands:
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
       --format codemeta prints linked CodeMeta 3.0 people and roles, with
       non-authors in contributor. Warns about local identities and omitted scores.
-  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg|quarto|myst|ro-crate [--yes-no] [--locale <code>]
+  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg|pdf|quarto|myst|ro-crate [--yes-no] [--locale <code>]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
       and latex-credits writes 1 or 0.
@@ -59,7 +59,8 @@ Commands:
       tenzing prints the contributions as a Tenzing-style CSV table.
       quarto and myst print author YAML with names, ORCID iDs and CRediT roles.
       quarto keeps levels unless --yes-no; myst omits them. Both list authors only.
-      svg prints the contribution heatmap as an SVG image; --yes-no draws
+      svg and pdf embed Noto Sans fonts and retain text. PDF writes binary bytes
+      to standard output; redirect them to a .pdf file. --yes-no draws
       flat cells with no levels. SVG figure options:
       --color '#1f4e79' --palette blue|green|gray --shape square|rounded|circle
       --size 22 --legend true|false --labels full|short --horizontal
@@ -190,7 +191,7 @@ function findContributor(authors: Author[], wanted: string): Author {
 }
 
 /** Run one command line (without `node` and the script) and return what to print. */
-export async function run(argv: string[]): Promise<string> {
+export async function run(argv: string[]): Promise<string | Uint8Array> {
   const { positionals, values } = parseArgs({
     args: argv,
     allowPositionals: true,
@@ -290,12 +291,15 @@ export async function run(argv: string[]): Promise<string> {
           return toQuarto(authors, { yesNo: values["yes-no"] });
         case "myst":
           return toMyst(authors);
-        case "svg": {
+        case "svg":
+        case "pdf": {
           for (const key of ["legend", "skipempty"] as const) {
             if (!["true", "false"].includes(values[key])) throw new UsageError(`--${key} must be true or false.`);
           }
           const locale = requireLocale(values.locale);
-          return buildHeatmapSvg(authors, {
+          const { createFigureRenderer } = await import("./figures");
+          const renderer = await createFigureRenderer();
+          const options: HeatmapSvgOptions = {
             locale,
             levels: !values["yes-no"],
             color: values.color,
@@ -308,11 +312,12 @@ export async function run(argv: string[]): Promise<string> {
             skipempty: values.skipempty === "true",
             translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
             translateUi: makeUiTranslator(await loadUiCatalog(locale)),
-          });
+          };
+          return values.to === "pdf" ? renderer.pdf(authors, options) : renderer.svg(authors, options);
         }
         default:
           throw new UsageError(
-            "convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate.",
+            "convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, pdf, quarto, myst or ro-crate.",
           );
       }
     case "ask": {
@@ -349,7 +354,7 @@ function describeZodError(error: z.core.$ZodError, file: string): string {
 // Only when run as a program (also through the npm bin symlink), not when a test imports run().
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   run(process.argv.slice(2)).then(
-    (output) => process.stdout.write(output.endsWith("\n") ? output : `${output}\n`),
+    (output) => process.stdout.write(typeof output === "string" && !output.endsWith("\n") ? `${output}\n` : output),
     (error: unknown) => {
       const usage =
         error instanceof UsageError ||

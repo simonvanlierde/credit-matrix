@@ -6,7 +6,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { buildHeatmapSvg, CREDIT_ROLES, createAuthor, generateStatement, heatmapDescription } from "credit-matrix";
+import { CREDIT_ROLES, createAuthor, generateStatement, heatmapDescription } from "credit-matrix";
+import { createFigureRenderer } from "credit-matrix/figures";
 import {
   AVAILABLE_LOCALES,
   DEFAULT_UI_TRANSLATOR,
@@ -31,6 +32,7 @@ const TRANSLATORS = Object.fromEntries(
     ]),
   ),
 );
+const figures = await createFigureRenderer();
 
 // The aliases MyST accepts (its `credit-roles` package), so a page that builds also renders.
 const ALIASES = {
@@ -146,7 +148,7 @@ const creditHeatmap = {
     if (!vfile?.path) return [];
     const entries = statementEntries(authorsFor(vfile.path));
     const options = { levels: false, acronyms: false, ...translationsFor(vfile.path), ...data.options };
-    const svg = buildHeatmapSvg(entries, options);
+    const svg = figures.svg(entries, options);
     const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
     const dir = join(dirname(vfile.path), "_credit_matrix");
     mkdirSync(dir, { recursive: true });

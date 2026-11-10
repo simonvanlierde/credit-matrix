@@ -1603,3 +1603,9 @@ msgstr "Reading citation file… The converter may need to download first."
 
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate fragment"
+
+msgid "downloadPdf"
+msgstr "Download PDF"
+
+msgid "errFigureGlyphs"
+msgstr "The figure fonts cannot display these characters: {characters}."

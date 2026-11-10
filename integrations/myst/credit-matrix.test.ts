@@ -160,6 +160,10 @@ it("builds a heatmap SVG asset with shared options and a text alternative", () =
   expect(nodes?.[0]?.children?.[0]?.alt).toContain("Tu Youyou: Software");
   const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
   expect(svg).toContain('width="30" height="30" rx="15"');
+  expect(svg).toContain("@font-face");
+  expect(svg).toContain("base64,");
+  expect(svg).toMatch(/<text\b[^>]*><tspan\b[^>]*>Tu Youyou<\/tspan><\/text>/);
+  expect(svg).not.toMatch(/<(?:image|path)\b/);
   expect(svg).not.toContain(">Supporting<");
 });
 
@@ -176,4 +180,29 @@ it("labels heatmap columns with each author's full name", () => {
   expect(svg).toContain(">Tu Youyou<");
   expect(svg).toContain(">Katherine Johnson<");
   expect(svg).not.toContain(">C<");
+});
+
+it.each([
+  ["ja", "山田太郎"],
+  ["zh-Hans", "张伟"],
+])("embeds fonts for a %s heatmap without converting contributor text", (lang, name) => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-fonts-"));
+  const path = join(dir, "index.md");
+  writeFileSync(path, `---\nlang: ${lang}\nauthors:\n  - name: ${name}\n    roles: [Software]\n---\n`);
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  const nodes = directive?.run({ options: {} }, { path });
+  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  expect(svg).toContain("@font-face");
+  expect(svg).toContain("base64,");
+  expect(svg).toContain(`>${name}</tspan>`);
+  expect(svg).toContain(`lang="${lang}"`);
+  expect(svg).not.toMatch(/<(?:image|path)\b/);
+});
+
+it("reports unsupported contributor glyphs instead of using a system fallback", () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-missing-font-"));
+  const path = join(dir, "index.md");
+  writeFileSync(path, "---\nauthors:\n  - name: مرحبا\n    roles: [Software]\n---\n");
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  expect(() => directive?.run({ options: {} }, { path })).toThrow(/glyph|font|character/i);
 });

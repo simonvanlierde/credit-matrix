@@ -1,0 +1,76 @@
+# Keep figure fonts with the figure
+
+Use the PDF download for a publication figure whose text must look the same on
+another computer. It embeds the glyphs it uses and retains selectable text and
+vector cells. SVG embeds fonts too, but desktop applications and document
+converters vary in their support for SVG web fonts.
+
+Neither format turns text into outlines or a raster image. An editor may still
+require the original fonts to change labels or add characters. Embedded PDF
+subsets contain the existing glyphs, not an installed font for further editing.
+
+## Choose an export
+
+| Surface | Embedded fonts | Text and limitations |
+| --- | --- | --- |
+| App SVG download | Yes | SVG text remains editable; the receiving tool must support embedded web fonts. |
+| App PDF download | Yes | Selectable text and vector shapes; editing support depends on the editor. |
+| App PNG download | Rendered into pixels | Fixed appearance; text is no longer editable or selectable. |
+| CLI `--to svg` or `--to pdf` | Yes | Same figure renderer as the app. |
+| MyST / Jupyter Book heatmap | Yes, in SVG | The document engine's image pipeline determines final rendering. |
+| Sphinx heatmap | Yes, in SVG | Conversion to a different image format can change font handling. |
+| Quarto / Pandoc heatmap | Yes, in SVG | HTML preserves the SVG asset; PDF and Word converters vary. |
+| Native Typst heatmap | Uses Typst's fonts | Independent native renderer; fonts follow the document configuration. |
+| JavaScript `buildHeatmapSvg` | No | Lightweight renderer with system font references. |
+
+The standalone JavaScript API is `createFigureRenderer` from
+`credit-matrix/figures`. Initialize it once, then call `svg(authors, options)` or
+`await pdf(authors, options)`. It uses the same options as `buildHeatmapSvg`.
+
+```sh
+credit-matrix convert team.json --to svg > heatmap.svg
+credit-matrix convert team.json --to pdf > heatmap.pdf
+```
+
+The document directives generate SVG assets. They do not select PDF automatically
+for PDF or Word manuscripts. If your converter ignores the embedded SVG fonts,
+export the PDF separately and include it through the document engine's image
+support.
+
+## Fonts and offline use
+
+Portable exports use regular Noto Sans and the Credit Figure JP and SC faces,
+derived from Noto Sans JP and SC. The fonts cover all nine output languages.
+Contributor names can contain characters outside
+these fonts; portable export reports unsupported characters instead of silently
+substituting installed fonts. Arabic, Hebrew and Devanagari are outside this set.
+
+The font files ship with the package. Export needs no font service or network
+request. The app includes them in its offline cache. See
+[font sources, checksums and licenses](../../src/core/figure-fonts/README.md).
+SVG includes complete font faces, so Japanese or Chinese SVG figures can be
+several megabytes. PDF includes only the glyphs used in the figure.
+The fonts use the SIL Open Font License 1.1; embedding does not change the
+figure's license.
+
+## Receiving applications
+
+Modern browsers support SVG fonts included through `@font-face` data URLs.
+External font URLs cannot load in some SVG image contexts, so these exports
+include the font bytes in the asset. See
+[SVG image restrictions](https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/SVG_as_an_image).
+
+Browser support does not establish support in Illustrator, Inkscape, Office or
+a journal's converter. Check the imported figure's labels before submission.
+Prefer PDF if the receiving tool substitutes the SVG fonts. Installing the
+original fonts can help when you need to edit the text in a desktop application.
+
+Native Typst figures use the document's font selection and Typst's fallback.
+To choose these fonts, supply them to Typst and set a matching font stack, for
+example `#set text(font: ("Noto Sans", "Credit Figure JP", "Credit Figure SC"))`.
+Typst's PDF and SVG exports have different text behavior: its SVG output
+[converts glyphs to shapes](https://typst.app/docs/reference/svg/).
+
+Keep the figure at its intended print size when checking readability. Embedded
+fonts do not enforce a journal's typeface, dimensions, minimum text size or
+submission rules; check the target publication's requirements.

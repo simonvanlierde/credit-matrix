@@ -103,7 +103,7 @@ const buildId = sha256(Buffer.concat(await Promise.all(buildInputs.map((file) =>
   .replace(/[^A-Za-z0-9]/g, "")
   .slice(0, 12);
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
-  .filter((file) => /\.(?:js|css)$/.test(file))
+  .filter((file) => /\.(?:js|css|otf|ttf)$/.test(file))
   .map((file) => `/assets/${file}`)
   .sort();
 if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");

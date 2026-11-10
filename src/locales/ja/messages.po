@@ -1603,3 +1603,9 @@ msgstr "引用ファイルを読み込み中… 先にコンバーターのダ�
 
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate フラグメント"
+
+msgid "downloadPdf"
+msgstr "PDFをダウンロード"
+
+msgid "errFigureGlyphs"
+msgstr "図のフォントでは次の文字を表示できません: {characters}。"

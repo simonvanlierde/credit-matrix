@@ -1603,3 +1603,9 @@ msgstr "Lettura del file di citazione… Il convertitore potrebbe dover essere s
 
 msgid "exportRoCrateFragment"
 msgstr "Frammento RO-Crate"
+
+msgid "downloadPdf"
+msgstr "Scarica PDF"
+
+msgid "errFigureGlyphs"
+msgstr "I caratteri della figura non possono visualizzare questi simboli: {characters}."

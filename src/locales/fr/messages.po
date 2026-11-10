@@ -1603,3 +1603,9 @@ msgstr "Lecture du fichier de citation… Le convertisseur doit peut-être d'abo
 
 msgid "exportRoCrateFragment"
 msgstr "Fragment RO-Crate"
+
+msgid "downloadPdf"
+msgstr "Télécharger le PDF"
+
+msgid "errFigureGlyphs"
+msgstr "Les polices de la figure ne peuvent pas afficher ces caractères : {characters}."

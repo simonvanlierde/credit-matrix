@@ -1603,3 +1603,9 @@ msgstr "Zitationsdatei wird gelesen … Der Konverter muss möglicherweise erst 
 
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate-Fragment"
+
+msgid "downloadPdf"
+msgstr "PDF herunterladen"
+
+msgid "errFigureGlyphs"
+msgstr "Die Abbildungsschriften können diese Zeichen nicht darstellen: {characters}."

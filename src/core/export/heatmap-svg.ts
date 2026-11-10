@@ -79,6 +79,8 @@ export interface HeatmapSvgOptions {
    * reader reads `<title>` and `<desc>` in that language.
    */
   locale?: string;
+  /** Measure a label in SVG pixels at the given font size, before scale. */
+  measureText?: (label: string, fontSize: number) => number;
 }
 
 /**
@@ -185,7 +187,8 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const CJK_CHAR = /[\u1100-\u11FF\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF]/;
   const labelUnits = (label: string): number =>
     [...label].reduce((units, char) => units + (CJK_CHAR.test(char) ? 1.6 : 1), 0);
-  const textW = (label: string, fontSize: number): number => labelUnits(label) * fontSize * CHAR_EM * scale;
+  const textW = (label: string, fontSize: number): number =>
+    (opts?.measureText?.(label, fontSize) ?? labelUnits(label) * fontSize * CHAR_EM) * scale;
 
   // Top labels (rotated -45°): author labels when normal, role names when transposed.
   const topLabels = transpose ? roles.map((r) => roleLabel(r.name)) : authors.map((_, ai) => authorLabel(ai));

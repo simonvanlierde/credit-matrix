@@ -1603,3 +1603,9 @@ msgstr "Leyendo el archivo de citas… Puede que el conversor tenga que descarga
 
 msgid "exportRoCrateFragment"
 msgstr "Fragmento RO-Crate"
+
+msgid "downloadPdf"
+msgstr "Descargar PDF"
+
+msgid "errFigureGlyphs"
+msgstr "Las fuentes de la figura no pueden mostrar estos caracteres: {characters}."
