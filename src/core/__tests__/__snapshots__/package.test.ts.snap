@@ -44,6 +44,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "scoreToLevel",
     "settledAt",
     "statementAuthor",
+    "statementSpans",
     "toCodemeta",
     "toCrossrefContributors",
     "toCsv",
