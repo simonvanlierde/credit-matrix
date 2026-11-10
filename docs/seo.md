@@ -8,9 +8,9 @@ page.
 - **Titles and descriptions.** Each page exports `metadata` from its `page.tsx`. The home page's
   title and description are in [`src/app/layout.tsx`](../src/app/layout.tsx), and the other pages
   inherit the social card from there.
-- **Canonical address.** Each page sets `alternates.canonical` to its own path. The layout sets
-  none, so a new page without one has no canonical link rather than a wrong one.
-- **Sitemap.** [`src/app/sitemap.ts`](../src/app/sitemap.ts) lists every page to index, and
+- **Canonical address.** [`scripts/prerender.mjs`](../scripts/prerender.mjs) writes each page's
+  canonical link from its path, in the list of paths it prerenders.
+- **Sitemap.** [`public/sitemap.xml`](../public/sitemap.xml) lists every page to index, and
   [`public/robots.txt`](../public/robots.txt) points to it.
 - **Structured data (JSON-LD).** The home page describes the app as a `WebApplication`, built from
   [`codemeta.json`](../codemeta.json) so its licence, version and authors match the release
@@ -19,7 +19,11 @@ page.
 
 ## When you add or change a page
 
-1. Add its path to `sitemap.ts` and give it a canonical path.
+1. Add its route to [`src/routes.ts`](../src/routes.ts), its path to the list in
+   `scripts/prerender.mjs` (which writes the canonical link), its URL to `public/sitemap.xml`, and
+   its path to `PAGES` in `public/sw.js`. `scripts/postbuild.mjs` fails the build when the routes,
+   the exported pages and the service worker's list disagree, or when a page lacks its canonical
+   link; it does not read the sitemap, so check that one yourself.
 2. Give every JSON-LD block a `license`. Search Console reports a missing licence as an issue on
    `Dataset` and software items, and it is easy to forget.
 3. Take facts in JSON-LD from a file the release already maintains (`codemeta.json`,
