@@ -11,6 +11,7 @@ import {
   makeRoleDescriber,
   makeRoleTranslator,
   normalizeLocaleCode,
+  resolveLocaleTag,
 } from "../credit-i18n/index";
 import {
   DEFAULT_UI_TRANSLATOR,
@@ -109,6 +110,29 @@ describe("normalizeLocaleCode", () => {
   it("falls back to English for unsupported or malformed values", () => {
     expect(normalizeLocaleCode("xx")).toBe("en");
     expect(normalizeLocaleCode(null)).toBe("en");
+  });
+});
+
+describe("resolveLocaleTag", () => {
+  it.each([
+    ["pt-BR", "pt-PT"],
+    ["zh-CN", "zh-Hans"],
+    ["zh-Hans-CN", "zh-Hans"],
+    ["zh_Hans", "zh-Hans"],
+    ["de-DE", "de"],
+    ["en-GB", "en"],
+    ["zh-TW", "en"],
+    ["zh_TW", "en"],
+    ["zh-HK", "en"],
+    ["zh-MO", "en"],
+    ["zh-Hant", "en"],
+    ["zh-Hant-TW", "en"],
+    ["zh-Hans-TW", "zh-Hans"],
+    ["zh-Hans-HK", "zh-Hans"],
+    ["xx", null],
+    [null, null],
+  ])("%s gives %s", (tag, expected) => {
+    expect(resolveLocaleTag(tag)).toBe(expected);
   });
 });
 

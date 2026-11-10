@@ -67,6 +67,14 @@ def test_levels_and_document_language(tmp_path, project):
     assert "Analyse formelle (Égal)" in html
 
 
+def test_traditional_chinese_falls_back_to_english(tmp_path, project):
+    app, warnings, _ = project(language="zh_TW")
+    app.build()
+    assert not warnings.getvalue()
+    html = (tmp_path / "html/index.html").read_text(encoding="utf-8")
+    assert "Conceptualization" in html
+
+
 @pytest.mark.parametrize(
     "directive,diagnostic",
     [

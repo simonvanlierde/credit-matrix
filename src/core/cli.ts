@@ -14,7 +14,7 @@ import {
   type LocaleCode,
   loadRoleCatalog,
   makeRoleTranslator,
-  normalizeLocaleCode,
+  resolveLocaleTag,
 } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
 import { toCodemeta } from "./export/codemeta";
@@ -103,18 +103,8 @@ function isStatementFormat(format: string): format is StatementFormat {
   return (STATEMENT_FORMATS as readonly string[]).includes(format);
 }
 
-/** A locale code, or its language alone ("de-DE" → "de", "pt-BR" → "pt-PT"); null when neither is offered. */
-function resolveLocale(code: string): LocaleCode | null {
-  for (const candidate of [code, code.split("-")[0]?.toLowerCase() ?? ""]) {
-    if (candidate === "en") return "en";
-    const locale = normalizeLocaleCode(candidate);
-    if (locale !== "en") return locale;
-  }
-  return null;
-}
-
 function requireLocale(candidate: string): LocaleCode {
-  const locale = resolveLocale(candidate);
+  const locale = resolveLocaleTag(candidate);
   if (locale) return locale;
   const codes = AVAILABLE_LOCALES.map((l) => l.code).join(", ");
   throw new UsageError(`Unknown locale: ${candidate}. Use one of ${codes}.`);
@@ -292,7 +282,7 @@ export async function run(argv: string[]): Promise<string> {
           const locale = requireLocale(values.locale);
           return buildHeatmapSvg(authors, {
             locale,
-            showLevels: !values["yes-no"],
+            levels: !values["yes-no"],
             color: values.color,
             palette: values.palette as HeatmapSvgOptions["palette"],
             shape: values.shape as HeatmapSvgOptions["shape"],

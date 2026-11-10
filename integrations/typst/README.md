@@ -87,7 +87,7 @@ Only roles someone holds are shown, in the CRediT order.
 `lang: auto` follows the document's `#set text(lang: ..)`. Role names come from the
 [community CRediT translations](https://github.com/contributorshipcollaboration/credit-translation)
 in English, French, German, Spanish, Italian, Portuguese (`pt`, Portugal), Dutch, Chinese (`zh`,
-simplified) and Japanese. Any other document language falls back to English; an explicit `lang`
+simplified) and Japanese. Traditional Chinese (`zh-Hant`, or `region: "TW"`, `"HK"`, `"MO"`) has no catalog and uses English. Any other document language falls back to English; an explicit `lang`
 the package lacks stops the build. The "CRediT:" prefix stays English, as in the app.
 
 Examples: [a document with inline roles](examples/basic.typ) and

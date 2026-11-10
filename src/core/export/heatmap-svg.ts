@@ -40,6 +40,7 @@ export class HeatmapOptionError extends Error {}
 export interface HeatmapSvgOptions {
   /** Named sequential palette; color overrides its base hue. */
   palette?: "blue" | "green" | "gray";
+  /** Base hue for the heatmap; defaults to the palette's. */
   color?: string;
   shape?: "square" | "rounded" | "circle";
   /** Cell side in SVG pixels (Typst uses points). */
@@ -47,17 +48,19 @@ export interface HeatmapSvgOptions {
   legend?: boolean;
   /** Short labels pair the role number with twelve characters; the text alternative retains full names. */
   labels?: "full" | "short";
-  levels?: boolean;
-  horizontal?: boolean;
-  skipempty?: boolean;
-  /** Base hue for the heatmap; defaults to the app accent. */
-  monoColor?: string;
-  /** Swap axes: authors down the left, roles across the top. */
-  transpose?: boolean;
   /**
    * Grade cell fills by contribution level. When false, fills are flat
    * (contributed/none) and the legend collapses to two keys. Defaults to true.
    */
+  levels?: boolean;
+  /** Swap axes: authors down the left, roles across the top. */
+  horizontal?: boolean;
+  skipempty?: boolean;
+  /** @deprecated Use `color`. */
+  monoColor?: string;
+  /** @deprecated Use `horizontal`. */
+  transpose?: boolean;
+  /** @deprecated Use `levels`. */
   showLevels?: boolean;
   /**
    * Label authors by their initials (true) or full names (false) on the axis.

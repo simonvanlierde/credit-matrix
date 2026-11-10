@@ -47,6 +47,7 @@ files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement -
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
 `convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
 takes `--yes-no` for flat cells with no levels.
+`--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN` simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and gives English.
 
 `statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
 or `codemeta`. See [CodeMeta attribution](#codemeta-attribution) for its output and limits.
@@ -314,9 +315,10 @@ for the package checks and how to update the type snapshot.
 `importAny` reads CodeMeta author names and ORCID iDs directly, leaving contribution roles empty.
 CITATION.cff and .zenodo.json need an injected `convertCitation(text, format)` callback that returns
 CodeMeta JSON from citesync. The web app supplies this through a lazy worker running citesync 0.4.0.
-It downloads a pinned Pyodide runtime from jsDelivr and checksum-verified Python wheels from this site.
+It loads a pinned Pyodide runtime and checksum-verified Python wheels, both from the web app's own site.
 The file stays in the browser. A failed download leaves it available to retry or convert in the
-[citesync playground](https://simonvanlierde.com/citesync/). CodeMeta imports work offline.
+[citesync playground](https://simonvanlierde.com/citesync/). CodeMeta imports work offline; citation
+imports do after one online use.
 
 `lookupDoiWork` returns optional `roles` on each contributor when Crossref deposits them with the
 CRediT vocabulary. DataCite contributor types are not CRediT roles. The app previews deposited roles

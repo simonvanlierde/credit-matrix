@@ -78,12 +78,19 @@
 }
 
 // The catalog for `lang`: auto takes the document's text.lang and falls back to English.
+// Typst keeps the region apart (text.region), so auto sees TW, HK and MO there: Traditional Chinese has no
+// catalog and must not get Simplified.
 #let _locale(lang) = {
   let wanted = if lang == auto { text.lang } else { lang }
   let base = wanted.split("-").first()
-  let code = if wanted in _data.locales { wanted } else if base == "pt" { "pt-PT" } else if base == "zh" {
-    "zh-Hans"
-  } else if base in _data.locales { base } else if lang == auto { "en" } else {
+  let subtags = wanted.split("-").slice(1).map(lower)
+  let traditional = base == "zh" and not subtags.contains("hans") and (
+    subtags.any(part => part in ("hant", "tw", "hk", "mo"))
+      or (lang == auto and text.region != none and upper(text.region) in ("TW", "HK", "MO"))
+  )
+  let code = if traditional { "en" } else if wanted in _data.locales { wanted } else if base == "pt" {
+    "pt-PT"
+  } else if base == "zh" { "zh-Hans" } else if base in _data.locales { base } else if lang == auto { "en" } else {
     panic("credit-matrix: no translations for lang \"" + lang + "\". Use one of: " + _data.locales.keys().join(", "))
   }
   _data.locales.at(code)
@@ -220,7 +227,9 @@
   let role-label(s) = {
     let label = loc.roles.at(s)
     if labels == "short" {
-      str(_slugs.position(x => x == s) + 1) + " " + label.slice(0, calc.min(12, label.len())) + if label.len() > 12 { "…" }
+      // clusters, not bytes: str.len/slice count UTF-8 bytes and would cut inside a character
+      let c = label.clusters()
+      str(_slugs.position(x => x == s) + 1) + " " + c.slice(0, calc.min(12, c.len())).join() + if c.len() > 12 { "…" }
     } else { label }
   }
   let fill(level) = if level == "none" { _none-fill } else {

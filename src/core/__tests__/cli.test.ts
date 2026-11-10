@@ -49,6 +49,9 @@ describe("credit-matrix statement", () => {
     expect(await run(["statement", csv, "--locale", "pt-BR"])).toBe(portuguese);
     const chinese = await run(["statement", csv, "--locale", "zh-Hans"]);
     expect(await run(["statement", csv, "--locale", "zh"])).toBe(chinese);
+    // Traditional Chinese has no catalog: English, not Simplified.
+    const english = await run(["statement", csv, "--locale", "en"]);
+    expect(await run(["statement", csv, "--locale", "zh-TW"])).toBe(english);
     expect(await run(["statement", csv, "--locale", "zh-CN"])).toBe(chinese);
     expect(chinese).not.toBe(await run(["statement", csv]));
   });
@@ -135,6 +138,11 @@ describe("credit-matrix convert", () => {
     expect(await run(["convert", team, "--to", "latex-credits", "--yes-no"])).toContain(
       "\\credit{Jane Smith}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}",
     );
+  });
+
+  it("tells a .cff input to convert to codemeta.json first", async () => {
+    const cff = file("CITATION.cff", "cff-version: 1.2.0\ntitle: Example\nauthors:\n  - name: Ana Lima\n");
+    await expect(run(["convert", cff, "--to", "csv"])).rejects.toThrow(/convert the file to codemeta\.json first/);
   });
 
   it("writes each format, and reads its own JATS back without a browser", async () => {

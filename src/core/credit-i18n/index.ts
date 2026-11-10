@@ -74,6 +74,26 @@ export function normalizeLocaleCode(locale: unknown): LocaleCode {
   return typeof locale === "string" && LOCALE_CODES.has(locale) ? (locale as LocaleCode) : "en";
 }
 
+/**
+ * An offered locale for a BCP 47 or Sphinx-style tag ("de-DE" → "de", "pt-BR" → "pt-PT",
+ * "zh-CN" → "zh-Hans"); null when neither the tag nor its language is offered. Traditional
+ * Chinese (zh-Hant, zh-TW, zh-HK, zh-MO) has no catalog and gives "en", never Simplified.
+ */
+export function resolveLocaleTag(tag: string | null | undefined): LocaleCode | null {
+  if (typeof tag !== "string") return null;
+  const parts = tag.replace(/_/g, "-").split("-");
+  const language = parts[0]?.toLowerCase() ?? "";
+  const subtags = parts.slice(1).map((part) => part.toLowerCase());
+  if (language === "zh" && subtags.includes("hans")) return "zh-Hans";
+  if (language === "zh" && subtags.some((part) => /^(hant|tw|hk|mo)$/.test(part))) return "en";
+  for (const candidate of [parts.join("-"), language]) {
+    if (candidate.toLowerCase() === "en") return "en";
+    const locale = normalizeLocaleCode(candidate);
+    if (locale !== "en") return locale;
+  }
+  return null;
+}
+
 /** Load a locale's role catalog. Returns null for `en` or any unknown locale (→ identity translator). */
 export async function loadRoleCatalog(locale: string): Promise<RoleCatalog | null> {
   if (!hasCatalog(locale)) return null;

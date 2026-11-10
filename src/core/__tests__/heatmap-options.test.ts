@@ -1,3 +1,5 @@
+// biome-ignore lint/correctness/noNodejsModules: the Typst palette copy is a file in the repo
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { contrastRatio, heatCellColor } from "../contributor-color";
 import { buildHeatmapSvg } from "../export/heatmap-svg";
@@ -41,4 +43,17 @@ it("keeps each palette sequential in grayscale", () => {
     const contrast = [0, 33, 66, 100].map((score) => contrastRatio(heatCellColor(hue, score), "#ffffff"));
     for (let i = 1; i < contrast.length; i++) expect(contrast[i]).toBeGreaterThan(contrast[i - 1] ?? 0);
   }
+});
+
+describe("shipped palettes", () => {
+  const palettes = { blue: "#1f4e79", green: "#00724c", gray: "#404040" } as const;
+  const typst = readFileSync(new URL("../../../integrations/typst/lib.typ", import.meta.url), "utf8");
+
+  it.each(Object.entries(palettes))("%s: the lowest level stays visible against an empty cell", (palette, hue) => {
+    const svg = buildHeatmapSvg(authors, { palette: palette as keyof typeof palettes });
+    const lowest = heatCellColor(hue, 33);
+    expect(svg).toContain(`fill="${lowest}"`);
+    expect(contrastRatio(lowest, "#ececea")).toBeGreaterThan(1.5);
+    expect(typst).toContain(`${palette}: rgb("${hue}")`);
+  });
 });

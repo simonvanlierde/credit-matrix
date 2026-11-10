@@ -94,6 +94,16 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     expect(svg).toContain('stroke="#c9c9c5"');
   });
 
+  it.each(["es", "ja", "de"])("cuts short role labels on characters, not bytes, for %s", (lang) => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    writeFileSync(
+      new URL(`out/short-${lang}.typ`, import.meta.url),
+      `#import "../lib.typ": *\n#credit-heatmap(((name: "Tu Youyou", roles: (software: "supporting")),), lang: "${lang}", labels: "short", skipempty: false)`,
+    );
+    const run = typst("compile", "--root", ".", `out/short-${lang}.typ`, `out/short-${lang}.svg`);
+    expect(run.status, run.stderr).toBe(0);
+  });
+
   it("writes the app's statement for its JSON export, in every format, level setting and language", async () => {
     const json = readFileSync(new URL("examples/team.json", import.meta.url), "utf8");
     const cases = ["en", "fr", "ja"].flatMap((lang) =>
@@ -139,14 +149,26 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     ["pt", "pt-PT"],
     ["zh", "zh-Hans"],
     ["ru", "en"], // no catalog: falls back to English
+    ['zh", region: "TW', "en"], // Traditional Chinese: English, not Simplified
+    ['zh", region: "CN', "zh-Hans"],
   ])("maps the document language %s to the %s catalog", async (docLang, locale) => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
-    const file = `out/lang-${docLang}.typ`;
+    const file = `out/lang-${docLang.replace(/\W+/g, "-")}.typ`;
     writeFileSync(
       new URL(file, import.meta.url),
       `#import "../lib.typ": *\n#set text(lang: "${docLang}")\n#credit-statement(((name: "Ana", roles: (conceptualization: true)),))`,
     );
     expect(autoStatement(file)).toBe(await appStatement1(["Ana"], locale, false));
+  });
+
+  it("keeps Simplified Chinese for zh-Hans-TW", async () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    const file = "out/lang-zh-Hans-TW.typ";
+    writeFileSync(
+      new URL(file, import.meta.url),
+      `#import "../lib.typ": *\n#credit-statement(((name: "Ana", roles: (conceptualization: true)),), lang: "zh-Hans-TW")`,
+    );
+    expect(autoStatement(file)).toBe(await appStatement1(["Ana"], "zh-Hans", false));
   });
 
   it("joins Spanish names like ICU, with e before an i sound", async () => {
