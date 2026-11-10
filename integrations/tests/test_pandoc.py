@@ -1,6 +1,7 @@
 """Exercise the standalone Lua filter through Pandoc's real metadata and writers."""
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -13,7 +14,13 @@ ROOT = Path(__file__).resolve().parents[2]
 FILTER = ROOT / "integrations/quarto/_extensions/credit-matrix/credit-matrix.lua"
 
 
-def render(metadata: dict, body: str = "# Methods\n\nBody.\n", writer: str = "plain", *args: str) -> str:
+CLI = ROOT / "src/core/dist/cli.js"
+LOCAL_CLI = {"CREDIT_MATRIX_COMMAND": f"node {CLI}"}
+
+
+def render(
+    metadata: dict, body: str = "# Methods\n\nBody.\n", writer: str = "plain", *args: str, env: dict | None = None
+) -> str:
     source = f"---\n{json.dumps(metadata, ensure_ascii=False)}\n---\n\n{body}"
     result = subprocess.run(
         [
@@ -28,6 +35,7 @@ def render(metadata: dict, body: str = "# Methods\n\nBody.\n", writer: str = "pl
         capture_output=True,
         text=True,
         check=True,
+        env={**os.environ, **(env or {})},
     )
     return result.stdout
 
@@ -199,7 +207,6 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
         "author": [{"name": "Tu Youyou", "roles": [{"software": "supporting"}]}],
         "credit-matrix": {
             "heatmap": True,
-            "command": ["node", str(ROOT / "src/core/dist/cli.js")],
             "shape": "circle",
             "size": 30,
             "font": "serif",
@@ -209,7 +216,7 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
             "levels": levels,
         },
     }
-    html = render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}")
+    html = render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}", env=LOCAL_CLI)
     expected = "Tu Youyou: Software (Supporting)." if levels else "Tu Youyou: Software."
     assert f'alt="{expected}"' in html
     svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
@@ -223,12 +230,12 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
 @pytest.mark.parametrize("position", ["auto", "right", "bottom"])
 @pytest.mark.parametrize("marks", [True, False])
 def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, position, marks):
-    cli = str(ROOT / "src/core/dist/cli.js")
+    cli = str(CLI)
     metadata = {
         "author": [{"name": "Tu Youyou", "roles": [{"software": "supporting"}]}],
-        "credit-matrix": {"heatmap": True, "command": ["node", cli], "legend-position": position, "marks": marks},
+        "credit-matrix": {"heatmap": True, "legend-position": position, "marks": marks},
     }
-    render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}")
+    render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}", env=LOCAL_CLI)
     svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
     expected = subprocess.run(
         ["node", cli, "convert", "-", "--to", "svg", "--legend-position", position, "--marks", str(marks).lower()],
@@ -240,3 +247,16 @@ def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, position
     )
     assert svg.strip() == expected.stdout.strip()
     assert ('aria-hidden="true"' in svg) == marks
+
+
+def test_heatmap_command_comes_from_the_environment_not_the_document(tmp_path):
+    metadata = {
+        "author": [{"name": "Tu Youyou", "roles": ["software"]}],
+        "credit-matrix": {"heatmap": True, "command": [False]},
+    }
+    html = render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}", env=LOCAL_CLI)
+    assert 'alt="Tu Youyou: Software."' in html
+    assert next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8").startswith("<svg")
+    with pytest.raises(subprocess.CalledProcessError) as error:
+        render(metadata, "# Methods\n", "html", env={"CREDIT_MATRIX_COMMAND": "credit-matrix-missing --flag"})
+    assert "credit-matrix-missing" in error.value.stderr

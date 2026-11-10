@@ -51,7 +51,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `legend`, `labels`, `levels`, `horizontal` and `skipempty`. They work in `buildHeatmapSvg`,
   `credit-matrix convert --to svg`, the new MyST and Sphinx `credit-heatmap` directives, the
   Quarto and Pandoc `heatmap` key, and Typst's `credit-heatmap`. See
-  [heatmap figures](integrations/heatmap.md).
+  [heatmap figures](integrations/heatmap.md). The Quarto and Pandoc filter runs `credit-matrix`
+  from `PATH`, or the command line in the `CREDIT_MATRIX_COMMAND` environment variable.
 - Pointing at a grid cell, or focusing it, marks its phrase in the statement, and pointing at a
   phrase rings its cell. `statementSpans` returns the plain-text statement as spans that name the
   contributor and role behind each phrase.
