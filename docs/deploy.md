@@ -83,6 +83,9 @@ With immutable releases enabled, publishing locks the tag and assets. If draft p
 after npm publishing succeeds, rerun only the failed job; rerunning the successful npm job would
 try to publish an existing version.
 
+The `release` job runs after `npm publish`. If it fails, re-run it within 7 days, while the
+tarball artifact is still retained, and delete any half-made draft release first.
+
 To verify a downloaded release tarball, run
 `gh attestation verify credit-matrix-<version>.tgz --repo simonvanlierde/credit-matrix`.
 Add `--predicate-type https://cyclonedx.org/bom` to verify its SBOM attestation.

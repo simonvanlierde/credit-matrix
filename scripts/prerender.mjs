@@ -14,11 +14,13 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
   const chunks = new Set();
   const preload = (key) => {
     const chunk = manifest[key];
-    if (!chunk || chunks.has(chunk.file)) return;
+    if (!chunk) throw new Error(`prerender: no manifest entry for ${key}`);
+    if (chunks.has(chunk.file)) return;
     chunks.add(chunk.file);
     for (const imported of chunk.imports ?? []) preload(imported);
   };
   preload(source);
+  if (chunks.size === 0) throw new Error(`prerender: no chunks for ${path} (${source})`);
   const preloads = [...chunks].map((file) => `<link rel="modulepreload" href="/${file}">`).join("");
   const title = metadata.title ?? "CRediT Matrix · CRediT author statement generator";
   const tags = `<meta name="description" content="${escapeAttribute(metadata.description ?? description)}"><link rel="canonical" href="https://credit.duinlab.nl${path}"><meta property="og:type" content="website"><meta property="og:site_name" content="CRediT Matrix"><meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(metadata.description ?? description)}"><meta property="og:url" content="https://credit.duinlab.nl${path}"><meta property="og:image" content="https://credit.duinlab.nl/opengraph-image.png"><meta property="og:image:alt" content="CRediT Matrix contribution statement generator"><meta name="twitter:card" content="summary_large_image">`;
@@ -32,5 +34,7 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
 }
 await writeFile(
   "out/404.html",
-  template.replace("<!--app-->", '<p>Page not found. <a href="/">Return to CRediT Matrix</a>.</p>'),
+  template
+    .replace(/<title>.*?<\/title>/, "<title>Page not found · CRediT Matrix</title>")
+    .replace("<!--app-->", '<p>Page not found. <a href="/">Return to CRediT Matrix</a>.</p>'),
 );

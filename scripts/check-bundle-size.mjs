@@ -9,8 +9,8 @@ import { join } from "node:path";
 import process from "node:process";
 import { gzipSync } from "node:zlib";
 
-// Measured 2026-11-04: 496 kB gzip, 1530 kB raw. The limit sits about 10% above.
-const LIMIT_GZIP = 545_000;
+// Measured 2026-11-09: 397 kB gzip, 1227 kB raw. The limit sits about 10% above.
+const LIMIT_GZIP = 437_000;
 
 const dir = join(import.meta.dirname, "..", "out", "assets");
 const files = existsSync(dir)
