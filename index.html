@@ -10,8 +10,9 @@
     <script>
       "use strict";
       try {
-        const saved = JSON.parse(localStorage.getItem("credit-generator-state"));
-        if (saved?.state?.welcomeSeen === true || location.hash.startsWith("#s="))
+        const state = JSON.parse(localStorage.getItem("credit-generator-state"))?.state;
+        const claim = state?.drafts?.[state.activeDraftId]?.claim;
+        if (state?.welcomeSeen === true || claim || location.hash.startsWith("#s="))
           document.documentElement.setAttribute("data-welcome-skip", "");
       } catch {
         // Storage blocked or unreadable: the store treats it as a first visit too.

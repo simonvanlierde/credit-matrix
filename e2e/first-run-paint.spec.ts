@@ -58,3 +58,17 @@ test("a share link does not paint the card either", async ({ page }) => {
   await page.waitForTimeout(800);
   expect(await cardSeen(page)).toBe(false);
 });
+
+test("a reload with a pending claim does not paint the card", async ({ page }) => {
+  const author = { id: "a1", name: "Ada Lovelace", roles: {} };
+  const claim = { contributorId: "a1", sourceDraftId: "src" };
+  await seedStorage(page, {
+    activeDraftId: "d1",
+    drafts: { d1: { id: "d1", title: "", authors: [author], inputMode: "toggle", updatedAt: 1, claim } },
+  });
+  await watchCard(page);
+  await page.goto("/");
+  await page.waitForTimeout(800);
+  expect(await cardSeen(page)).toBe(false);
+  await expect(page.locator("dialog#getting-started")).toBeHidden();
+});
