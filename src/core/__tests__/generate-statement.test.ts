@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeUiTranslator } from "../credit-i18n/ui-strings";
-import { generateStatement } from "../generate-statement";
+import { generateStatement, STATEMENT_FORMATS, statementSpans } from "../generate-statement";
 import { parseAuthorText } from "../parse-authors";
 
 function makeAuthors() {
@@ -222,5 +222,63 @@ describe("catalog-owned separators", () => {
 
     const withLevels = generateStatement(authors, { format: "by-author", showLevels: true, translateUi });
     expect(withLevels).toContain("（同等）");
+  });
+});
+
+describe("statementSpans", () => {
+  const marked = (authors: ReturnType<typeof makeAuthors>, format: (typeof STATEMENT_FORMATS)[number]) =>
+    statementSpans(authors, { format, showLevels: true }).flatMap((span) =>
+      span.cell ? [`${span.cell.authorId === authors[0]?.id ? "Jane" : "Bob"}/${span.cell.role}=${span.text}`] : [],
+    );
+
+  it("joins to exactly the plain-text statement, in every format and line layout", () => {
+    const authors = makeAuthors();
+    const bob = authors[1];
+    if (!bob) throw new Error("expected 2 authors");
+    bob.contributorType = "non-author";
+    bob.corresponding = true;
+    for (const format of STATEMENT_FORMATS) {
+      for (const showLevels of [false, true]) {
+        for (const separateAcknowledgements of [false, true]) {
+          const options = { format, showLevels, separateAcknowledgements };
+          const text = statementSpans(authors, options)
+            .map((span) => span.text)
+            .join("");
+          expect(text).toBe(generateStatement(authors, options));
+        }
+      }
+    }
+  });
+
+  it("marks each role phrase of a by-author statement with its contributor and role", () => {
+    expect(marked(makeAuthors(), "by-author")).toEqual([
+      "Jane/Conceptualization=Conceptualization",
+      "Jane/Software=Software (Equal)",
+      "Bob/Conceptualization=Conceptualization (Supporting)",
+      "Bob/Investigation=Investigation",
+    ]);
+  });
+
+  it("marks each name phrase of a by-role statement with its contributor and role", () => {
+    expect(marked(makeAuthors(), "by-role-short")).toEqual([
+      "Jane/Conceptualization=JS",
+      "Bob/Conceptualization=BW (Supporting)",
+      "Bob/Investigation=BW",
+      "Jane/Software=JS (Equal)",
+    ]);
+  });
+
+  it("marks nothing in the prefix, the labels or the notes", () => {
+    const authors = makeAuthors();
+    for (const author of authors) author.corresponding = true;
+    const spans = statementSpans(authors, { format: "by-author" });
+    const plain = spans.filter((span) => !span.cell).map((span) => span.text);
+    expect(plain).toContain("CRediT:");
+    expect(plain).toContain("Jane Smith");
+    expect(plain.at(-1)).toMatch(/Jane Smith and Bob White/);
+  });
+
+  it("has no spans when nobody has contributions", () => {
+    expect(statementSpans(parseAuthorText("Jane Smith"), { format: "by-role" })).toEqual([]);
   });
 });
