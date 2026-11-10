@@ -102,7 +102,12 @@ House rules on top of NISO:
 - Map only what the statement says. A role a sentence does not name or describe is left out, even
   if it seems likely.
 - Supervising, guiding or overseeing a task is supervision, not the task: "guided N.H. in the
-  statistical analysis" and "supervised the validation study" give supervision only.
+  statistical analysis" and "supervised the validation study" give supervision only. Advice,
+  expertise or feedback with no task named ("provided expertise and feedback") is supervision too,
+  with evidence `inferred`, as in the Cell Press CRediT example; feedback on the manuscript is
+  review & editing.
+- Testing or debugging code is software (NISO: "testing of existing code components"); checking
+  that results hold or reproduce is validation.
 - Obtaining or collecting samples and assessing participants within the study is investigation;
   recruiting the participants is project administration, and providing patients or samples from
   elsewhere is resources. "Recruited the patients, performed their clinical assessment, and obtained
@@ -114,8 +119,9 @@ House rules on top of NISO:
 - A heading that lists tasks with "or" followed by named authors ("Acquisition, analysis, or
   interpretation of data: A, B") gives each named author every listed task. The either-or rule
   under "No role" covers only a sentence said of everyone.
-- Suggesting or advising on a task gives that task with a worded `supporting` degree: "provided
-  constructive suggestions for data visualization" gives visualization (supporting).
+- Suggesting or advising on a named task gives that task with a worded `supporting` degree:
+  "provided constructive suggestions for data visualization" gives visualization (supporting). NISO
+  defines degrees only where several people share a role, so a degree for a lone adviser is ours.
 - When a statement gives examples in brackets ("technical support (constructing databases)"), map
   the examples, and the category word only when it maps on its own.
 
@@ -132,7 +138,8 @@ House rules on top of NISO:
   analysis of the study" says no one did any one of them.
 - Clinical or other non-research tasks: "primary physician", "contributed clinical input".
 - People who are not in the author list (acknowledged people, consortia) get nothing. A group
-  that is a numbered entry in the author list is an author: "all authors" includes it.
+  that is a numbered entry in the author list is an author: "all authors" includes it. CRediT
+  itself would tag acknowledged contributors too (Brand et al. 2015); this label covers authors only.
 
 "Reviewed the manuscript" on its own is review & editing; only "reviewed and approved" (or "read and
 approved") is approval wording. But "All authors have revised the manuscript", "all authors reviewed and edited", "All authors
