@@ -171,7 +171,7 @@ jobs:
       - name: Check the citation files are in step with package.json
         run: |
           npm_package_version=$(jq -r .version package.json) bash scripts/sync-citation.sh
-          git diff --exit-code HEAD -- CITATION.cff codemeta.json CITATION.bib citation.csl.json citation.apa.txt
+          git diff --exit-code HEAD -- CITATION.cff codemeta.json CITATION.bib citation.csl.json citation.apa.txt schema.jsonld
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
