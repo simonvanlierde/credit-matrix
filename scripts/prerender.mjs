@@ -6,6 +6,23 @@ const manifest = JSON.parse(await readFile("out/.vite/manifest.json", "utf8"));
 const template = await readFile("out/index.html", "utf8");
 const escapeAttribute = (text) =>
   String(text).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+// The prerendered page paints without script, so the scripts start downloading in a task after the HTML is parsed,
+// not beside the HTML, CSS and fonts that frame needs. The inserted script still delays the load event. On a slow link they compete
+// with that frame's bytes: before this, the scripts delayed the first-run card's paint by seconds.
+const deferScripts = (html) => {
+  const tags = [];
+  const rest = html.replace(/<link rel="modulepreload"[^>]*>|<script type="module"[^>]*><\/script>/g, (tag) => {
+    tags.push(tag);
+    return "";
+  });
+  if (!tags.some((tag) => tag.startsWith("<script"))) throw new Error("prerender: no module script to defer");
+  const urls = tags.map((tag) => [
+    tag.startsWith("<script") ? "script" : "link",
+    tag.match(/(?:href|src)="([^"]+)"/)[1],
+  ]);
+  const loader = `<script>setTimeout(()=>{for(const[k,u]of ${JSON.stringify(urls)}){const e=document.createElement(k);if(k==="script")e.type="module";else e.rel="modulepreload";e[k==="script"?"src":"href"]=u;document.head.append(e)}})</script>`;
+  return rest.replace("</body>", () => `${loader}</body>`);
+};
 const description =
   "Assign the 14 CRediT roles in a contribution matrix, export the author statement in nine languages, and download the contribution heatmap. Open source; your contribution data stays in your browser.";
 for (const path of ["/", "/about", "/census", "/accessibility"]) {
@@ -26,15 +43,19 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
   const tags = `<meta name="description" content="${escapeAttribute(metadata.description ?? description)}"><link rel="canonical" href="https://credit.duinlab.nl${path}"><meta property="og:type" content="website"><meta property="og:site_name" content="CRediT Matrix"><meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(metadata.description ?? description)}"><meta property="og:url" content="https://credit.duinlab.nl${path}"><meta property="og:image" content="https://credit.duinlab.nl/opengraph-image.png"><meta property="og:image:alt" content="CRediT Matrix contribution statement generator"><meta name="twitter:card" content="summary_large_image">`;
   await writeFile(
     `out/${path === "/" ? "index" : path.slice(1)}.html`,
-    template
-      .replace(/<title>.*?<\/title>/, `<title>${escapeAttribute(title)}</title>`)
-      .replace("<!--metadata-->", tags + preloads)
-      .replace("<!--app-->", () => html),
+    deferScripts(
+      template
+        .replace(/<title>.*?<\/title>/, `<title>${escapeAttribute(title)}</title>`)
+        .replace("<!--metadata-->", tags + preloads)
+        .replace("<!--app-->", () => html),
+    ),
   );
 }
 await writeFile(
   "out/404.html",
-  template
-    .replace(/<title>.*?<\/title>/, "<title>Page not found · CRediT Matrix</title>")
-    .replace("<!--app-->", '<p>Page not found. <a href="/">Return to CRediT Matrix</a>.</p>'),
+  deferScripts(
+    template
+      .replace(/<title>.*?<\/title>/, "<title>Page not found · CRediT Matrix</title>")
+      .replace("<!--app-->", '<p>Page not found. <a href="/">Return to CRediT Matrix</a>.</p>'),
+  ),
 );
