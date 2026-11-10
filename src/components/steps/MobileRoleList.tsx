@@ -16,7 +16,7 @@ import { RoleInfo } from "./RoleInfo";
 export function MobileRoleList({
   authors,
   graded,
-  heatmapMonoColor,
+  hueOf,
   dark,
   settled,
   isFrozen,
@@ -26,7 +26,8 @@ export function MobileRoleList({
 }: {
   authors: Author[];
   graded: boolean;
-  heatmapMonoColor: string;
+  /** The fill hue for a contributor: their own, or the draft's one hue. */
+  hueOf: (author: Author) => string;
   dark: boolean;
   settled: boolean;
   isFrozen: (authorId: string) => boolean;
@@ -50,7 +51,7 @@ export function MobileRoleList({
 
   return (
     <div className={`md:hidden ${settled ? "enter-fade" : ""}`} style={{ transitionDelay: "120ms" }}>
-      <div className="sticky top-13 z-20 -mx-1 mb-2 bg-surface-bright px-1 py-2">
+      <div className="sticky top-13 z-20 -mx-1 mb-2 bg-surface px-1 py-2">
         <label className="mb-1.5 block text-xs font-semibold text-on-surface" htmlFor="mobile-contributor">
           {t("contributorToAssign")}
         </label>
@@ -115,7 +116,7 @@ export function MobileRoleList({
                     aria-hidden="true"
                     className="flex size-5 shrink-0 items-center justify-center rounded"
                     style={(() => {
-                      const fill = heatCellColor(heatmapMonoColor, graded ? score : 100, dark);
+                      const fill = heatCellColor(hueOf(selectedAuthor), graded ? score : 100, dark);
                       return { backgroundColor: fill, color: onColor(fill) };
                     })()}
                   >

@@ -1603,3 +1603,15 @@ msgstr "Zitationsdatei wird gelesen … Der Konverter muss möglicherweise erst 
 
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate-Fragment"
+
+msgid "colorByContributor"
+msgstr "Nach Mitwirkenden einfärben"
+
+msgid "figureColor"
+msgstr "Farbe der Abbildung"
+
+msgid "figureOneColor"
+msgstr "Eine Farbe"
+
+msgid "figurePerContributor"
+msgstr "Je Mitwirkende"

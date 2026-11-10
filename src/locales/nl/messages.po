@@ -1603,3 +1603,15 @@ msgstr "Citatiebestand wordt gelezen… De converter moet mogelijk eerst worden 
 
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate-fragment"
+
+msgid "colorByContributor"
+msgstr "Kleur per bijdrager"
+
+msgid "figureColor"
+msgstr "Kleur van de figuur"
+
+msgid "figureOneColor"
+msgstr "Eén kleur"
+
+msgid "figurePerContributor"
+msgstr "Per bijdrager"

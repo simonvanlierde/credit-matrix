@@ -1,7 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: the Typst palette copy is a file in the repo
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { contrastRatio, heatCellColor } from "../contributor-color";
+import { CONTRIBUTOR_HUES, contrastRatio, heatCellColor } from "../contributor-color";
 import { buildHeatmapSvg } from "../export/heatmap-svg";
 import { createAuthor } from "../parse-authors";
 
@@ -29,6 +29,21 @@ describe("heatmap figure options", () => {
     expect(svg).not.toContain(">Supporting<");
     expect(svg).toContain(">1 Conceptualiz…<");
     expect(svg.match(/width="22" height="22"/g)).toHaveLength(14);
+  });
+  it("colours each author with their own hue only when asked, with a neutral key", () => {
+    const pair = [
+      createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 100 }] }),
+      createAuthor("Ada Lovelace", { contributions: [{ role: "Software", score: 100 }] }),
+    ];
+    const [first, second] = CONTRIBUTOR_HUES;
+    const byColor = buildHeatmapSvg(pair);
+    expect(byColor).not.toContain(`fill="${first}"`);
+    const byPerson = buildHeatmapSvg(pair, { colorBy: "contributor" });
+    expect(byPerson).toContain(`fill="${first}"`);
+    expect(byPerson).toContain(`fill="${second}"`);
+    // The key is the neutral ramp, not either person's hue.
+    expect(byPerson).toContain('fill="#404040"');
+    expect(() => buildHeatmapSvg(pair, { colorBy: "rainbow" as "color" })).toThrow("colorBy");
   });
   it("rejects invalid options before drawing invalid SVG", () => {
     for (const size of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {

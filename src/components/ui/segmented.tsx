@@ -37,7 +37,7 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={ariaLabel}
       onKeyDown={(event) => moveRadioSelection(event, options, selected, (next) => onChange(next.value))}
-      className={cn("inline-flex bg-surface-container-high p-1 rounded-lg gap-0.5", className)}
+      className={cn("inline-flex overflow-hidden rounded border border-edge bg-surface-bright", className)}
     >
       {options.map(({ value: optionValue, label, title }, index) => {
         const active = value === optionValue;
@@ -53,9 +53,9 @@ export function SegmentedControl<T extends string>({
             title={title}
             onClick={() => onChange(optionValue)}
             className={cn(
-              "flex items-center justify-center gap-1.5 rounded font-bold uppercase tracking-wider transition-all",
-              size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-xs",
-              active ? "bg-surface-bright text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface",
+              "flex items-center justify-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+              size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-[13px]",
+              active ? "bg-on-surface text-surface-bright" : "text-on-surface-variant hover:text-on-surface",
             )}
           >
             {label}

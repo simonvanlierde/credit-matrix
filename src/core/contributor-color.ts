@@ -23,6 +23,31 @@ export const OKABE_ITO = [
   "#404040",
 ] as const;
 
+/**
+ * One hue per contributor, by list position, for grids that colour each person
+ * (the app's default view, and an export option). Picked to stay apart by hue
+ * and lightness, and dark enough that white initials clear 4.5:1 on each. A
+ * person is also named by their column, so colour is never the only cue.
+ */
+export const CONTRIBUTOR_HUES = [
+  "#2a5fa8",
+  "#b4471a",
+  "#0f6e66",
+  "#7b4b94",
+  "#8a6d00",
+  "#a3366b",
+  "#3d7a2e",
+  "#4a5a6a",
+] as const;
+
+/**
+ * Each contributor's hue, in list order. Past the palette's eight hues two
+ * people would share a colour, so a longer list falls back to `mono` for all.
+ */
+export function contributorHues(count: number, mono: string): string[] {
+  return count <= CONTRIBUTOR_HUES.length ? CONTRIBUTOR_HUES.slice(0, count) : Array(count).fill(mono);
+}
+
 const NONE_FILL = "#ececea";
 const MIX_TOWARD = "#ffffff";
 

@@ -157,6 +157,13 @@ interface ContributionState {
   /** The open tab of the workspace inspector. UI state only: never persisted. */
   inspectorTab: InspectorTab;
   /**
+   * Colour the grid, chips and statement links per contributor rather than in
+   * the draft's one hue. A view preference, not part of a draft or a figure.
+   * shortcut: not persisted, so turning it off lasts until a reload; add it to
+   * PersistedState if people keep switching it off.
+   */
+  colorByContributor: boolean;
+  /**
    * Every draft *except* the live one, which is held in the top-level fields
    * above so no component has to reach through a map to read its authors.
    * Storage sees the normalized form: `partialize` folds the live fields back
@@ -219,6 +226,7 @@ interface ContributionState {
   openWelcome: () => void;
   closeWelcome: () => void;
   setInspectorTab: (tab: InspectorTab) => void;
+  setColorByContributor: (on: boolean) => void;
   setNormsField: (field: string | null) => void;
   reset: () => void;
 }
@@ -901,6 +909,7 @@ export const useContributionStore = create<ContributionState>()(
       normsField: null,
       welcomeOpen: false,
       inspectorTab: "statement",
+      colorByContributor: true,
       newerVersionBlocked: false,
       saveFailure: null,
       claim: null,
@@ -1260,6 +1269,8 @@ export const useContributionStore = create<ContributionState>()(
       setHeatmapMonoColor: (color) =>
         set((state) => {
           state.heatmapMonoColor = color;
+          // Picking one hue is asking to see it: per-person colours would hide the choice.
+          state.colorByContributor = false;
         }),
 
       setOutputLocale: (locale) =>
@@ -1289,6 +1300,11 @@ export const useContributionStore = create<ContributionState>()(
       setInspectorTab: (tab) =>
         set((state) => {
           state.inspectorTab = tab;
+        }),
+
+      setColorByContributor: (on) =>
+        set((state) => {
+          state.colorByContributor = on;
         }),
 
       setNormsField: (field) =>

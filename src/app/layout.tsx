@@ -10,6 +10,7 @@ import { PersistenceStatus } from "@/components/PersistenceStatus";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { SkipLink } from "@/components/SkipLink";
 import { StatusBanner } from "@/components/StatusBanner";
+import { ThemeHue } from "@/components/ThemeHue";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Announcer } from "@/lib/announce";
 import { AppIntlProvider } from "@/lib/intl";
@@ -22,12 +23,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <AppIntlProvider>
       {/* Follows the OS on first visit; the header toggle's choice then persists. */}
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeHue />
         <SkipLink />
         {/* pr compensates the scrollbar width modal primitives remove on open; the fixed
               header escapes the body padding that keeps <main> from reflowing. */}
         <header
           data-app-header
-          className="fixed top-0 w-full z-50 bg-surface-bright/80 backdrop-blur-md border-b border-outline-variant/20 pr-[var(--removed-body-scroll-bar-size,0px)]"
+          className="fixed top-0 w-full z-50 bg-surface border-b-[1.5px] border-edge pr-[var(--removed-body-scroll-bar-size,0px)]"
         >
           <div className="mx-auto flex h-13 items-center justify-between gap-2 px-3 sm:px-8">
             {/* Brand */}

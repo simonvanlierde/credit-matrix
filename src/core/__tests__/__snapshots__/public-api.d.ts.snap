@@ -1020,6 +1020,12 @@ interface HeatmapSvgOptions {
   palette?: "blue" | "green" | "gray";
   /** Base hue for the heatmap; defaults to the palette's. */
   color?: string;
+  /**
+   * "contributor" gives each author their own hue (as the app's grid does),
+   * with a neutral legend; past eight authors it falls back to one hue.
+   * Defaults to "color": one hue for the whole figure.
+   */
+  colorBy?: "color" | "contributor";
   shape?: "square" | "rounded" | "circle";
   /** Cell side in SVG pixels (Typst uses points). */
   size?: number;

@@ -1,6 +1,6 @@
 import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
-import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
+import { contributorHues, DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
 import type { RoleTranslator } from "../credit-i18n/index";
 import { makeUiTranslator, type UiTranslator } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../credit-roles";
@@ -34,6 +34,8 @@ const COLOR_TEXT = "#16181c";
 const COLOR_TEXT_DIM = "#595c63";
 const COLOR_BG = "#ffffff";
 const COLOR_BORDER = "#c9c9c5";
+/** The level key's hue when every author has their own (`colorBy: "contributor"`). */
+const LEGEND_NEUTRAL = "#404040";
 
 export class HeatmapOptionError extends Error {}
 
@@ -42,6 +44,12 @@ export interface HeatmapSvgOptions {
   palette?: "blue" | "green" | "gray";
   /** Base hue for the heatmap; defaults to the palette's. */
   color?: string;
+  /**
+   * "contributor" gives each author their own hue (as the app's grid does),
+   * with a neutral legend; past eight authors it falls back to one hue.
+   * Defaults to "color": one hue for the whole figure.
+   */
+  colorBy?: "color" | "contributor";
   shape?: "square" | "rounded" | "circle";
   /** Cell side in SVG pixels (Typst uses points). */
   size?: number;
@@ -121,6 +129,12 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const monoColor = opts?.color ?? opts?.monoColor ?? palettes[opts?.palette ?? "blue"];
   if (!/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(monoColor))
     throw new HeatmapOptionError("Heatmap color must be a three- or six-digit hex color.");
+  const colorBy = opts?.colorBy ?? "color";
+  if (!["color", "contributor"].includes(colorBy)) throw new HeatmapOptionError("Unknown heatmap colorBy.");
+  const authorHues = colorBy === "contributor" ? contributorHues(authors.length, monoColor) : null;
+  const perAuthor = authorHues?.some((hue) => hue !== monoColor) ?? false;
+  // One colour per person makes the fill strength the only level cue, so the key shows it in a neutral.
+  const legendHue = perAuthor ? LEGEND_NEUTRAL : monoColor;
   const size = opts?.size ?? CELL;
   if (!Number.isFinite(size) || size <= 0 || size > 256)
     throw new HeatmapOptionError("Heatmap size must be between 0 and 256.");
@@ -299,7 +313,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
       const score = scoreFor(authors[ai], role?.name ?? "");
       const rx = radius(CELL_S);
       lines.push(
-        `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${heatCellColor(monoColor, fillScore(score))}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
+        `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${heatCellColor(authorHues?.[ai] ?? monoColor, fillScore(score))}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
     }
   }
@@ -316,7 +330,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
     for (const [col, { label, score }] of row.entries()) {
       const lx = blockX + (colX[col] ?? 0);
       lines.push(
-        `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${radius(SWATCH_S)}" ry="${radius(SWATCH_S)}" fill="${heatCellColor(monoColor, score)}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
+        `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${radius(SWATCH_S)}" ry="${radius(SWATCH_S)}" fill="${heatCellColor(legendHue, score)}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
       lines.push(
         `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-size="${FONT_LEGEND * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(label)}</text>`,

@@ -93,6 +93,7 @@ releases are on Zenodo: [doi:10.5281/zenodo.21213659](https://doi.org/10.5281/ze
 
 ## License
 
-[MIT](LICENSE) © Simon van Lierde. The bundled fonts, IBM Plex and Newsreader, are under the SIL
-Open Font License: [IBM Plex](public/fonts/OFL-ibm-plex.txt),
-[Newsreader](public/fonts/OFL-newsreader.txt).
+[MIT](LICENSE) © Simon van Lierde. The bundled fonts, Atkinson Hyperlegible, IBM Plex and Newsreader,
+are under the SIL Open Font License: [Atkinson Hyperlegible Next](public/fonts/OFL-atkinson-hyperlegible-next.txt),
+[Atkinson Hyperlegible Mono](public/fonts/OFL-atkinson-hyperlegible-mono.txt),
+[IBM Plex](public/fonts/OFL-ibm-plex.txt), [Newsreader](public/fonts/OFL-newsreader.txt).

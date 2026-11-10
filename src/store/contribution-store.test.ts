@@ -55,6 +55,12 @@ describe("contribution store", () => {
     });
   });
 
+  it("colours by contributor until someone picks one heatmap colour", () => {
+    expect(store().colorByContributor).toBe(true);
+    store().setHeatmapMonoColor("#009e73");
+    expect(store().colorByContributor).toBe(false);
+  });
+
   describe("contributors", () => {
     it("returns the new id, and null for a name with nothing to parse", () => {
       const id = store().addAuthor("Jane Smith");

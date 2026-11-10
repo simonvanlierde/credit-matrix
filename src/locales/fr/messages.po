@@ -1603,3 +1603,15 @@ msgstr "Lecture du fichier de citation… Le convertisseur doit peut-être d'abo
 
 msgid "exportRoCrateFragment"
 msgstr "Fragment RO-Crate"
+
+msgid "colorByContributor"
+msgstr "Couleur par contributeur"
+
+msgid "figureColor"
+msgstr "Couleur de la figure"
+
+msgid "figureOneColor"
+msgstr "Une seule couleur"
+
+msgid "figurePerContributor"
+msgstr "Par contributeur"

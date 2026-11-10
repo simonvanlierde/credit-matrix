@@ -1603,3 +1603,15 @@ msgstr "A ler o ficheiro de citação… Pode ser necessário transferir primeir
 
 msgid "exportRoCrateFragment"
 msgstr "Fragmento RO-Crate"
+
+msgid "colorByContributor"
+msgstr "Cor por contribuidor"
+
+msgid "figureColor"
+msgstr "Cor da figura"
+
+msgid "figureOneColor"
+msgstr "Uma só cor"
+
+msgid "figurePerContributor"
+msgstr "Por contribuidor"

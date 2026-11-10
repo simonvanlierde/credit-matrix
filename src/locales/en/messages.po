@@ -1603,3 +1603,15 @@ msgstr "Reading citation file… The converter may need to download first."
 
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate fragment"
+
+msgid "colorByContributor"
+msgstr "Color by contributor"
+
+msgid "figureColor"
+msgstr "Figure color"
+
+msgid "figureOneColor"
+msgstr "One color"
+
+msgid "figurePerContributor"
+msgstr "Per contributor"

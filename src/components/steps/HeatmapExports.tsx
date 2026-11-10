@@ -1,6 +1,7 @@
 import { ChevronDown, Copy, Download } from "lucide-react";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SegmentedControl } from "@/components/ui/segmented";
 import { type Author, buildHeatmapSvg, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
 import { withPngText } from "@/lib/png-text";
@@ -62,6 +63,9 @@ export function HeatmapExports({
   const { translateRole, translateUi, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   const [loading, setLoading] = useState<ExportFormat | "copy" | null>(null);
+  // One colour by default: a figure goes onto a manuscript page, where it must
+  // read in greyscale print and in any journal's style. Per person is for slides.
+  const [colorBy, setColorBy] = useState<"color" | "contributor">("color");
   const [error, setError] = useState<string | null>(null);
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
@@ -70,6 +74,7 @@ export function HeatmapExports({
   const svgOptions = {
     horizontal: transpose,
     color: monoColor,
+    colorBy,
     levels: showLevels,
     acronyms,
     translateRole,
@@ -127,7 +132,20 @@ export function HeatmapExports({
         {t("heatmapLabel")}
         <ChevronDown className="size-3.5" aria-hidden="true" />
       </PopoverTrigger>
-      <PopoverContent align="end" aria-label={t("heatmapLabel")} className="grid w-56 gap-0.5 p-1">
+      <PopoverContent align="end" aria-label={t("heatmapLabel")} className="grid w-60 gap-0.5 p-1">
+        <div className="flex flex-col gap-1.5 px-2 pt-1.5 pb-2">
+          <span className="text-[13px] font-semibold text-on-surface">{t("figureColor")}</span>
+          <SegmentedControl
+            ariaLabel={t("figureColor")}
+            size="sm"
+            options={[
+              { value: "color", label: t("figureOneColor") },
+              { value: "contributor", label: t("figurePerContributor") },
+            ]}
+            value={colorBy}
+            onChange={setColorBy}
+          />
+        </div>
         <button
           type="button"
           disabled={loading !== null}

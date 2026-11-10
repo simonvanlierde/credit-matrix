@@ -212,11 +212,15 @@ export function AuthorList() {
 
   const header = (
     <div className="mb-3 flex items-center justify-between gap-2">
-      <h2
-        className={`text-xs font-semibold uppercase tracking-wider text-on-surface-variant ${collapsed ? "xl:sr-only" : ""}`}
-      >
+      <h2 className={`font-headline text-xl font-semibold text-on-surface ${collapsed ? "xl:sr-only" : ""}`}>
         {t("stepContributors")}
-        {authors.length > 0 && <span className="font-normal"> · {authors.length}</span>}
+        {authors.length > 0 && (
+          <>
+            {/* The middot is for the accessible name: "Contributors · 3", not "Contributors3". */}
+            <span className="sr-only"> · </span>
+            <span className="ml-2 font-mono text-[13px] font-normal text-on-surface-variant">{authors.length}</span>
+          </>
+        )}
       </h2>
       {/* The rail folds away on a desktop only; stacked, it is a section like any other. */}
       <button
@@ -289,7 +293,7 @@ export function AuthorList() {
             <button
               type="button"
               onClick={() => loadSample(t("sampleNames").split("\n"))}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary hover:text-on-primary hover:border-primary transition-colors"
+              className="mt-3 inline-flex items-center gap-1.5 rounded border border-edge bg-surface-bright px-4 py-2 text-sm font-medium text-primary transition-shadow hover:shadow-card"
             >
               <Sparkles className="h-4 w-4" />
               {t("loadSample")}
@@ -313,7 +317,7 @@ export function AuthorList() {
               empty-state line that points at it. */}
           <ul
             ref={listRef}
-            className={`space-y-1 desk:min-h-0 desk:overflow-y-auto ${authors.length > 0 ? "desk:flex-1" : ""}`}
+            className={`space-y-1 pr-0.5 pb-0.5 desk:min-h-0 desk:overflow-y-auto ${authors.length > 0 ? "desk:flex-1" : ""}`}
           >
             {authors.map((author, index) => (
               <AuthorRow key={author.id} index={index} onRemove={handleRemove} enter={settled} />
@@ -359,13 +363,13 @@ export function AuthorList() {
             aria-describedby={addError !== null ? addErrorId : undefined}
             placeholder={t("addPlaceholder")}
             aria-label={t("addContributor")}
-            className="min-w-56 flex-1 text-ellipsis bg-surface-container-low border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none px-3 py-2 text-sm rounded-t text-on-surface placeholder:text-on-surface-variant transition-colors"
+            className="min-w-56 flex-1 text-ellipsis rounded border border-edge bg-surface-bright px-3 py-2 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary"
           />
           <button
             type="button"
             onClick={() => void handleAdd()}
             disabled={!newName.trim()}
-            className="ml-auto flex items-center gap-1.5 rounded-lg border border-primary/30 px-4 py-2 text-sm font-medium text-primary transition-colors enabled:hover:border-primary enabled:hover:bg-primary enabled:hover:text-on-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60"
+            className="ml-auto flex items-center gap-1.5 rounded border border-edge bg-surface-bright px-4 py-2 text-sm font-medium text-primary transition-[color,box-shadow] enabled:hover:shadow-card disabled:cursor-not-allowed disabled:border-outline disabled:bg-transparent disabled:text-on-surface-variant/60"
           >
             <PlusCircle className="h-4 w-4" />
             {t("addButton")}
@@ -674,11 +678,11 @@ const AuthorRow = memo(function AuthorRowInner({
       // twelve-author list that still leaves them hunting, so the row says so
       // itself — tint, rule, and a worded badge, never colour alone.
       aria-current={isClaimed ? "true" : undefined}
-      className={`group rounded-lg border px-2 py-0.5 transition-colors duration-150 ${
+      className={`group rounded border px-2 py-0.5 transition-[border-color,box-shadow] duration-150 ${
         isClaimed || isRecentReply
-          ? "border-primary/40 bg-primary/5"
-          : "border-transparent hover:border-outline-variant/30 hover:bg-surface-container-low"
-      } ${isDragging ? "relative z-10 bg-surface shadow-md" : ""}`}
+          ? "border-primary bg-primary/5"
+          : "border-outline bg-surface-bright hover:border-edge hover:shadow-card"
+      } ${isDragging ? "relative z-10 border-edge shadow-float" : ""}`}
     >
       {/* The entrance lives on this wrapper, not on the row: @dnd-kit owns the
           sortable node's inline transform and transition, and an inline

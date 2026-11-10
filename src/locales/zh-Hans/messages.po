@@ -1603,3 +1603,15 @@ msgstr "正在读取引用文件… 可能需要先下载转换器。"
 
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate 片段"
+
+msgid "colorByContributor"
+msgstr "按贡献者着色"
+
+msgid "figureColor"
+msgstr "图的颜色"
+
+msgid "figureOneColor"
+msgstr "单一颜色"
+
+msgid "figurePerContributor"
+msgstr "按贡献者"

@@ -54,9 +54,7 @@ export function CreditBadge({ className }: { className?: string }) {
         </button>
       </PopoverTrigger>
       <PopoverContent aria-label={t("creditBadge")} className="w-72 p-4">
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-          {t("creditBadge")}
-        </p>
+        <p className="mb-3 font-headline text-base font-semibold text-on-surface">{t("creditBadge")}</p>
 
         {/* Live preview, exactly as the snippet renders it */}
         <a
@@ -76,7 +74,7 @@ export function CreditBadge({ className }: { className?: string }) {
           <button
             type="button"
             onClick={() => copyHtml(htmlSnippet())}
-            className="flex items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
+            className="flex items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 py-2 text-sm font-medium text-on-surface-variant transition-[color,box-shadow] hover:shadow-card hover:text-primary"
           >
             {htmlStatus === "copied" ? <Check className="h-[18px] w-[18px]" /> : <Copy className="h-[18px] w-[18px]" />}
             {htmlStatus === "copied"
@@ -88,7 +86,7 @@ export function CreditBadge({ className }: { className?: string }) {
           <button
             type="button"
             onClick={() => void copyPng()}
-            className="flex items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
+            className="flex items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 py-2 text-sm font-medium text-on-surface-variant transition-[color,box-shadow] hover:shadow-card hover:text-primary"
           >
             {pngStatus === "copied" ? (
               <Check className="h-[18px] w-[18px]" />
@@ -100,7 +98,7 @@ export function CreditBadge({ className }: { className?: string }) {
           <a
             href={BADGE_SRC}
             download="credit-badge.png"
-            className="flex items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
+            className="flex items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 py-2 text-sm font-medium text-on-surface-variant transition-[color,box-shadow] hover:shadow-card hover:text-primary"
           >
             <Download className="h-[18px] w-[18px]" />
             {t("downloadPng")}

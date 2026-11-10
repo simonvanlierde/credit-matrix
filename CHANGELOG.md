@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The grid colours each contributor in their own hue, shared by their chip, column, cells and
+  statement phrase; turn it off under the grid's display options. Heatmap exports stay one colour
+  unless you pick *Per contributor* in the heatmap menu. See [DESIGN.md](DESIGN.md#colors).
 - [Quarto/Pandoc](integrations/quarto/README.md#document-language) and
   [MyST/Jupyter Book](integrations/myst/README.md#document-language) statements and heatmaps follow
   the document's `lang`, using the app's nine languages. Quarto also translates the default heading.
@@ -55,6 +58,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,
+  sentence-case labels and Atkinson Hyperlegible for the interface. The panes share one page, empty
+  grid cells are a faint dot, and the level key is one scale bar. Exported figures stay on white.
 - With no contributors yet, the add field sits right under the empty-state line instead of at the
   foot of the rail, and "Start fresh" puts the cursor in it. Its placeholder says it takes names, a
   DOI or an ORCID iD, and a disabled Add button is muted instead of faded.

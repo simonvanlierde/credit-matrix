@@ -7,12 +7,14 @@ colors:
   ink-blue: "#1f4e79"
   ink-blue-hover: "#183f62"
   ink-blue-soft: "#d6e2ee"
-  paper: "#fafaf9"
-  paper-bright: "#ffffff"
-  paper-muted: "#f4f4f2"
-  graphite: "#16181c"
-  graphite-muted: "#595c63"
-  rule: "#c9c9c5"
+  # The page is paper tinted 3% toward the draft's heatmap colour (4% in dark mode).
+  paper: "#fbf8f1"
+  paper-bright: "#fffdf8"
+  paper-muted: "#f5f0e6"
+  graphite: "#1c1a17"
+  graphite-muted: "#5e584e"
+  rule: "#d6ccba"
+  edge: "#1c1a17"
   error: "#ba1a1a"
   flag: "#b45309"
 typography:
@@ -20,30 +22,35 @@ typography:
     fontFamily: "Newsreader, Georgia, serif"
     fontWeight: 600
     lineHeight: 1.2
+  manuscript:
+    # The statement: the text that goes into the paper, a step up from body.
+    fontFamily: "Newsreader, Georgia, serif"
+    fontSize: "1.0625rem"
+    fontWeight: 400
+    lineHeight: 1.625
   body:
-    fontFamily: "IBM Plex Sans, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, IBM Plex Sans, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.5
   label:
-    fontFamily: "IBM Plex Sans, system-ui, sans-serif"
-    fontSize: "0.75rem"
+    fontFamily: "Atkinson Hyperlegible Next, IBM Plex Sans, system-ui, sans-serif"
+    fontSize: "0.8125rem"
     fontWeight: 600
-    letterSpacing: "0.08em"
   micro:
-    fontFamily: "IBM Plex Sans, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, IBM Plex Sans, system-ui, sans-serif"
     fontSize: "0.625rem"
     fontWeight: 500
   caption:
-    fontFamily: "IBM Plex Sans, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, IBM Plex Sans, system-ui, sans-serif"
     fontSize: "0.6875rem"
     fontWeight: 500
   data:
-    fontFamily: "IBM Plex Sans, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, IBM Plex Sans, system-ui, sans-serif"
     fontSize: "0.8125rem"
     fontWeight: 500
   mono:
-    fontFamily: "IBM Plex Mono, ui-monospace, monospace"
+    fontFamily: "Atkinson Hyperlegible Mono, IBM Plex Mono, ui-monospace, monospace"
     fontSize: "0.75rem"
 rounded:
   sm: "2px"
@@ -59,20 +66,22 @@ components:
   button-primary:
     backgroundColor: "{colors.ink-blue}"
     textColor: "{colors.paper-bright}"
-    rounded: "{rounded.lg}"
+    rounded: "{rounded.md}"
     padding: "10px 20px"
   card:
     backgroundColor: "{colors.paper-bright}"
     textColor: "{colors.graphite}"
-    rounded: "{rounded.lg}"
+    rounded: "{rounded.md}"
     padding: "16px"
   contributor-chip:
-    # A 10% tint of ink-blue rather than the flat ink-blue-soft token, so the
-    # chip keeps its relationship to the chosen grid color. Height is fixed and
-    # the glyph is centred, so only the inline padding is specified.
+    # With colour by contributor, the chip is that person's hue with white
+    # initials. Otherwise it is a 10% tint of ink-blue, not the flat
+    # ink-blue-soft token, so it keeps its relationship to the chosen grid
+    # colour. Height is fixed and the glyph is centred, so only the inline
+    # padding is specified.
     backgroundColor: "{colors.ink-blue} @ 10%"
     textColor: "{colors.ink-blue}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.sm}"
     padding: "0 6px"
 ---
 
@@ -80,16 +89,31 @@ components:
 
 ## Overview
 
-The interface looks like a working document: scholarly, compact, and quiet. A book-like serif gives
-the manuscript output weight, and a sans-serif keeps the controls practical.
+The interface looks like a working document: scholarly, compact, and sure of itself. Warm paper,
+ink edges and a book-like serif give it the feel of a typeset page. The serif gives the manuscript
+output weight, and a hyperlegible sans-serif keeps the controls practical.
 
 This is a workspace, not a marketing page. Its character comes from the visible flow from the
 contributors, through the matrix, to the text for the manuscript.
 
 ## Colors
 
-Use warm paper neutrals throughout the interface. Reserve ink blue for primary actions, links,
-focus, and selected states. Use contributor colors only to identify data.
+Use warm paper neutrals throughout the interface. The page itself is paper tinted 3% toward the
+draft's heatmap colour (4% in dark mode), so it shifts to a faint sage when someone picks green and
+stays neutral for grey. The tint stops at those values because a custom colour can be anything, and
+the muted text must keep 4.5:1 on it. It is for the web interface only: an exported figure is always
+drawn on white. Cards and the statement sit on the page in brighter paper.
+
+Reserve ink blue for primary actions, links, focus, and selected states. Use contributor colors only
+to identify data.
+
+By default the grid colours each contributor in their own hue, by list position: their chip, the
+rule under their column name, their cells, and the mark on their phrase in the statement all share
+it. The eight hues in `CONTRIBUTOR_HUES` (`src/core/contributor-color.ts`) differ in hue and
+lightness, and each carries white initials at 4.5:1 or more. A person is also named by their column,
+so colour is never the only cue. Past eight contributors two people would share a hue, so the grid
+falls back to the draft's one hue. Choosing a heatmap colour also switches to one hue, because that
+is what the person asked to see. Colour by contributor is a display option beside the heatmap colour.
 
 Ink blue does not reach a 3:1 contrast against muted paper text, so a link inside a sentence is
 underlined as well as colored. A link on a line of its own may stay plain until hovered.
@@ -98,7 +122,10 @@ The heatmap levels must stand out more from Supporting to Lead, in both themes. 
 fill mixes the chosen hue with white (40%, 70%, 100% of the hue). On a dark page that scale looks
 upside down, so dark mode keeps the hue and raises its lightness instead: 30%, 48% and 77% (for ink
 blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark marks on Lead. Exported heatmaps always use the
-light scale on a white background, because a figure goes onto a manuscript page. Figure cells default
+light scale on a white background, because a figure goes onto a manuscript page. A figure uses one
+hue by default, since it must read in greyscale print and in any journal's style. *Per contributor*
+in the heatmap menu gives each person their hue for slides and posters, with the level key in a
+neutral grey. Figure cells default
 to square corners and a thin neutral rule; the live editing controls retain their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
 
@@ -109,8 +136,13 @@ difference. It is a mark, never a fill, and it always comes with a shape or text
 ## Typography
 
 Use Newsreader, with Georgia as the fallback, for the brand, section headings, and manuscript
-output. Keep manuscript text upright, and use italics only for short accents. Use IBM Plex Sans for
-controls and explanations. Use IBM Plex Mono for contributor initials and short data labels.
+output. Keep manuscript text upright, and use italics only for short accents, such as the *Role*
+axis title. Use Atkinson Hyperlegible Next for controls and explanations, and Atkinson Hyperlegible
+Mono for contributor initials, counts and short data labels. Atkinson covers Latin scripts only;
+IBM Plex Sans and Mono stand behind it for Cyrillic, Greek and Vietnamese names.
+
+Write labels and headings in sentence case. Never set a label in letterspaced capitals: a section
+gets a Newsreader heading, a control group gets a short semibold label.
 
 ## Brand
 
@@ -143,6 +175,11 @@ grid says what the draft is waiting for. It also holds the controls
 that change the whole grid (Yes/No vs Levels, bulk assign, display options, heatmap export). Below
 `xl` the same parts stack in that order: rail, strip, grid, inspector. On a phone the grid becomes a
 list of roles per contributor.
+
+The three panes share one page: no pane backgrounds and no rules between them on a wide screen. The
+contributor cards and the statement sit directly on the tinted page, so the matrix reads as the sheet
+they are cut from. Sticky table headers paint the page colour, so they stay opaque while the grid
+scrolls under them. Stacked below `xl`, a thin rule separates the parts.
 
 Never give the statement a full-width row. Its text is capped at 75ch, so in a wide column it wraps
 at half the width and leaves the rest empty. Keep the rail and the inspector at fixed widths, and
@@ -178,35 +215,41 @@ height for good and shift the page when closed.
 
 ## Elevation and depth
 
-Use paper surfaces in slightly different tones, and thin neutral lines. Give work cards a low
-shadow, and the generated result a slightly stronger one.
+Elevation is a hard offset, never a blur: a card sits on the page like a paper cut-out. Use the
+shadow tokens, which all have zero blur: `shadow-card` (2px, a contributor card on hover, a tool
+button on hover), `shadow-press` (2px in the ink edge, the primary button), `shadow-float` (4px,
+popovers and menus over the content) and `shadow-sheet` (5px, tinted ink blue, the statement: the
+result of the work). Pair a 1px ink edge (`edge`) with a hard shadow, never with a soft one. Lines
+inside a card stay thin and neutral (`rule`).
 
 ## Shapes
 
-Use 2–4px corners for document details and 8px corners for controls and cards. Use pill shapes
-only for status, segmented controls, switches, and identity markers.
+Corners are small: 2px for document details, chips and cells, 4px for controls, cards and
+popovers. The segmented control is square-cornered, with the selected option filled in graphite.
+Keep pill shapes for status, switches and small markers.
 
 ## Components
 
 ### Buttons
 
-Primary buttons use ink blue with bright paper text, and a darker opaque ink blue on hover
-(`ink-blue-hover`), never a translucent tint that lets the text fade. Secondary buttons use a quiet outline and a
-paper or transparent fill. Give every control a visible keyboard focus and a target of at least
+Primary buttons use ink blue with bright paper text and the press shadow, and a darker opaque ink
+blue on hover (`ink-blue-hover`), never a translucent tint that lets the text fade. Secondary
+buttons use the 1px ink edge on bright paper and lift with the card shadow on hover. Give every control a visible keyboard focus and a target of at least
 24px.
 
 Keep one primary action per view: Copy statement. The header actions (Share, Import) are secondary.
-A disabled button loses its fill and mutes its text and outline, so it never looks like a faded
-working primary button.
+A disabled button loses its fill and its shadow, and mutes its text and outline, so it never looks
+like a faded working primary button.
 
 ### Cards and containers
 
-Cards use bright paper, 8px corners, a thin outline, and a low shadow. Use spacing or a divider
-instead of a card inside a card.
+Cards use bright paper, 4px corners and a thin warm outline; on hover the outline turns to the ink
+edge and the card shadow appears. The statement is the one sheet: ink edge, 2px corners and the
+sheet shadow. Use spacing or a divider instead of a card inside a card.
 
 ### Inputs and fields
 
-Fields use bright or muted paper with quiet lines. Use a visible focus style. Keep error text and
+Fields use bright paper with the 1px ink edge. Use a visible focus style. Keep error text and
 inactive text readable, and say how to fix the problem.
 
 ### Navigation
@@ -234,6 +277,11 @@ and contributor labels visible while you scroll. Show each selected value with c
 accessible label, and in the exported data. Keep bulk assignment behind a toggle that you open
 first.
 
+An empty cell has no fill and no ring: a 3px dot in `outline-strong` (3:1 on the page) marks it, so
+the filled cells carry the grid. Hover and focus draw the whole target. The key under the grid is
+one joined scale from None to Lead, each step labelled under its swatch. With colour by contributor
+the scale is neutral, and while a cell or phrase is linked it redraws in that person's hue.
+
 Column headers show full names at 50°. They switch to initials past 20 columns, or when the person
 asks for initials. Under each name, a glyph with a spoken label says where that person stands: a
 dash for not asked, a clock for asked, a count of open differences that opens Review, a double
@@ -245,7 +293,9 @@ are no keys to press; it stays the grid's accessible description either way.
 
 Pointing at a cell with a mouse, or focusing it, marks its phrase in the statement: the phrase is
 underlined as well as tinted, on the same element it always renders, so a selection being dragged
-holds. Pointing at a phrase rings its cell in primary. Nothing moves and nothing is announced. The
+holds. Pointing at a phrase rings its cell. With colour by contributor, both marks are in that
+person's hue: the phrase tinted and underlined in it, and the cell given an ink edge and a hard
+shadow in it. Nothing moves and nothing is announced. The
 status strip counts answers only once someone has been asked; when every co-author but you has been
 asked and has answered, and nothing is left to review, the count becomes the double check and
 "Everyone agreed".
