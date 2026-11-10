@@ -38,6 +38,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - With no contributors yet, the add field sits right under the empty-state line instead of at the
   foot of the rail, and "Start fresh" puts the cursor in it. Its placeholder says it takes names, a
   DOI or an ORCID iD, and a disabled Add button is muted instead of faded.
+- On a phone, the "Contributor to assign" picker is 44px tall, with the name at body size beside
+  the contributor's initials.
 
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 - Heatmaps look different by default: square cells with a thin gray rule on white, where cells
