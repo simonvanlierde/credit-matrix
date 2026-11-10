@@ -102,6 +102,7 @@ def test_release_sync_preserves_metadata_and_is_idempotent(release):
     files = [
         "CITATION.cff",
         "codemeta.json",
+        "schema.jsonld",
         "CITATION.bib",
         "citation.apa.txt",
         "citation.csl.json",
