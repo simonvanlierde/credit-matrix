@@ -980,6 +980,9 @@ msgstr "Dunkelgrau"
 msgid "languageSettings"
 msgstr "Spracheinstellungen"
 
+msgid "stripEveryoneAgreed"
+msgstr "Alle sind sich einig"
+
 msgid "stripOpenTeam"
 msgstr "Mitautoren fragen"
 

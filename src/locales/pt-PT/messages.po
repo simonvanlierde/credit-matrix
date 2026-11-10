@@ -980,6 +980,9 @@ msgstr "Cinzento-escuro"
 msgid "languageSettings"
 msgstr "Definições de idioma"
 
+msgid "stripEveryoneAgreed"
+msgstr "Todos de acordo"
+
 msgid "stripOpenTeam"
 msgstr "Contactar coautores"
 

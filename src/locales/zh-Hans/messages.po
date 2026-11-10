@@ -980,6 +980,9 @@ msgstr "深灰色"
 msgid "languageSettings"
 msgstr "语言设置"
 
+msgid "stripEveryoneAgreed"
+msgstr "所有人均已达成一致"
+
 msgid "stripOpenTeam"
 msgstr "询问合著者"
 

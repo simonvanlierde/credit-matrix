@@ -980,6 +980,9 @@ msgstr "Donkergrijs"
 msgid "languageSettings"
 msgstr "Taalinstellingen"
 
+msgid "stripEveryoneAgreed"
+msgstr "Iedereen is het eens"
+
 msgid "stripOpenTeam"
 msgstr "Coauteurs vragen"
 

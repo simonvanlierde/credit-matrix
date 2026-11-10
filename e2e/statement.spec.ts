@@ -101,3 +101,36 @@ test("in a Levels draft, the level and the contributor behind shared initials ar
   await expect(page.getByRole("button", { name: "Conceptualization for Maria Garcia: Lead" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Conceptualization for Mark Green: None" })).toBeVisible();
 });
+
+test("hovering a cell marks its phrase in the statement, and hovering a phrase rings its cell", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const adder = page.getByLabel("New author names or ORCID iD");
+  await adder.fill("Jane Smith, Bob White");
+  await adder.press("Enter");
+  const janeConcept = page.getByRole("button", { name: /^Conceptualization for Jane Smith:/ });
+  const bobConcept = page.getByRole("button", { name: /^Conceptualization for Bob White:/ });
+  await janeConcept.click();
+  await bobConcept.click();
+
+  const statement = page.getByRole("region", { name: "Generated statement" });
+  const mark = statement.locator("mark");
+  await bobConcept.hover();
+  // Bob's Conceptualization, not Jane's: the role name appears in both their segments.
+  await expect(mark).toHaveCount(1);
+  await expect(mark).toHaveText("Conceptualization");
+  await expect(mark.locator("xpath=..")).toHaveAttribute("data-author", /.+/);
+  expect(await mark.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("underline");
+
+  await page.getByRole("radio", { name: "By role" }).click();
+  await page.getByRole("radio", { name: "Levels" }).click();
+  await janeConcept.hover();
+  await expect(mark).toHaveText("Jane Smith");
+
+  // And back: the phrase rings its cell.
+  await statement.getByText("Bob White").hover();
+  await expect(bobConcept).toHaveAttribute("data-linked", "true");
+  await expect(janeConcept).not.toHaveAttribute("data-linked", "true");
+  await page.mouse.move(0, 0);
+  await expect(mark).toHaveCount(0);
+});

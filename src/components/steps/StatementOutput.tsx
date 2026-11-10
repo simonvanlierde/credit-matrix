@@ -1,4 +1,4 @@
-import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2, TriangleAlert } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
 import { useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -7,8 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import {
   type Author,
   CREDIT_ROLES,
+  type CreditRoleName,
   generateStatement,
   type StatementFormat,
+  statementSpans,
   toCrossrefContributors,
   toCsv,
   toJats4rXml,
@@ -92,6 +94,8 @@ export function StatementOutput() {
   const selfId = useContributionStore((s) => s.selfId);
   const yesNo = useContributionStore((s) => s.inputMode === "toggle");
   const openReview = useContributionStore((s) => s.openReview);
+  const statementLink = useContributionStore((s) => s.statementLink);
+  const setStatementLink = useContributionStore((s) => s.setStatementLink);
   const openDifferences = useAskSummary().open;
   // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
   const [includeAnswers, setIncludeAnswers] = useState(true);
@@ -151,6 +155,11 @@ export function StatementOutput() {
     // A BOM makes Excel read the file as UTF-8, so non-ASCII names survive.
     const bom = dataFormat === "csv" || dataFormat === "tenzing" ? "﻿" : "";
     download(new Blob([bom, serialize(dataFormat)], { type: mime }), filename);
+  }
+
+  // Only the statement's own mark: a cell may have taken over before this leave event lands.
+  function clearPhraseLink() {
+    if (useContributionStore.getState().statementLink?.from === "phrase") setStatementLink(null);
   }
 
   function goToReview() {
@@ -271,12 +280,37 @@ export function StatementOutput() {
         {statement ? (
           <p
             key="statement"
+            // Pointer only: a keyboard marks the same phrase by focusing its cell in the grid.
+            onPointerOver={(event) => {
+              const phrase = (event.target as HTMLElement).closest<HTMLElement>("[data-role]");
+              const { author, role } = phrase?.dataset ?? {};
+              if (author && role)
+                setStatementLink({ contributorId: author, role: role as CreditRoleName, from: "phrase" });
+              else clearPhraseLink();
+            }}
+            onPointerLeave={clearPhraseLink}
             style={{ transitionDelay: "200ms" }}
             className={`max-w-[75ch] whitespace-pre-line [overflow-wrap:anywhere] text-base leading-relaxed text-on-surface ${
               settled ? "enter-fade" : ""
             }`}
           >
-            {statement}
+            {statementSpans(authors, statementOptions).map((span) => {
+              if (!span.cell) return span.text;
+              const { authorId, role } = span.cell;
+              const linked = statementLink?.contributorId === authorId && statementLink.role === role;
+              return (
+                <span key={`${authorId}:${role}`} data-author={authorId} data-role={role}>
+                  {linked ? (
+                    // Underlined as well as tinted, so the mark never rests on colour alone.
+                    <mark className="rounded-sm bg-primary/20 text-on-surface underline decoration-primary decoration-2 underline-offset-[3px] [box-decoration-break:clone]">
+                      {span.text}
+                    </mark>
+                  ) : (
+                    span.text
+                  )}
+                </span>
+              );
+            })}
           </p>
         ) : (
           <p key="placeholder" className="text-sm text-on-surface-variant not-italic">
@@ -286,7 +320,9 @@ export function StatementOutput() {
       </section>
 
       {/* Validation notices. Not a live region: the readiness chip above already says
-          how many there are, and a list that arrived with its text was read a second time. */}
+          how many there are, and a list that arrived with its text was read a second time.
+          All in the note style: none of them blocks copying or exporting, so a draft
+          still being filled in is not shown as an error. */}
       {issues.length > 0 && (
         <ul
           // biome-ignore lint/a11y/noNoninteractiveTabindex: same as the statement pane; the bounded notes list scrolls and holds no focusable content.
@@ -304,17 +340,9 @@ export function StatementOutput() {
                 // The id breaks ties: two contributors can share a name, and
                 // then code+text alone collides (a real duplicate-key error).
                 key={issue.code === "authorNoRoles" ? `${issue.code}-${issue.authorId}` : `${issue.code}-${issue.role}`}
-                className={`flex items-start gap-2 text-xs rounded px-3 py-2 ${
-                  issue.level === "warning"
-                    ? "bg-error-container/30 text-error"
-                    : "bg-surface-container-high text-on-surface-variant"
-                }`}
+                className="flex items-start gap-2 text-xs rounded px-3 py-2 bg-surface-container-high text-on-surface-variant"
               >
-                {issue.level === "warning" ? (
-                  <TriangleAlert className="h-4 w-4 shrink-0 mt-px" />
-                ) : (
-                  <Info className="h-4 w-4 shrink-0 mt-px" />
-                )}
+                <Info className="h-4 w-4 shrink-0 mt-px" aria-hidden="true" />
                 <span>{text}</span>
               </li>
             );

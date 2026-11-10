@@ -32,8 +32,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `credit-matrix convert --to svg`, the new MyST and Sphinx `credit-heatmap` directives, the
   Quarto and Pandoc `heatmap` key, and Typst's `credit-heatmap`. See
   [heatmap figures](integrations/heatmap.md).
+- Pointing at a grid cell, or focusing it, marks its phrase in the statement, and pointing at a
+  phrase rings its cell. `statementSpans` returns the plain-text statement as spans that name the
+  contributor and role behind each phrase.
+- Once every co-author you asked has answered and nothing is left to review, the status strip says
+  "Everyone agreed", and a screen reader hears it once.
 
 ### Changed
+
+- A contributor without roles is shown as a note, no longer in error red: no note stops you from
+  copying or exporting the statement.
+- The status strip counts answers only once you have asked someone. Before that it offers only
+  "Ask co-authors".
+- The key hint under the grid legend is hidden on touch screens. It still describes the grid to a
+  screen reader.
 
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 - Heatmaps look different by default: square cells with a thin gray rule on white, where cells
