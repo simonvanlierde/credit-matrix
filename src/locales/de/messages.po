@@ -1669,3 +1669,21 @@ msgstr "Diese PNG wäre zu groß. Verringern Sie Breite oder Auflösung, tausche
 
 msgid "heatmapSmallPrint"
 msgstr "Die Beschriftungen wären im Druck etwa {size} pt groß. Erhöhen Sie die Breite oder tauschen Sie die Achsen für lesbaren Text."
+
+msgid "heatmapRecipe"
+msgstr "Exportvorlage"
+
+msgid "heatmapRecipeHint"
+msgstr "Nur Stileinstellungen. Verwende deine Beitragsdaten und die installierte CLI oder Erweiterung. PNG-Größe und DPI sind nicht enthalten."
+
+msgid "heatmapRecipeTarget"
+msgstr "Verwenden in"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST verwendet die Autorenrollen der Seite mit Ja/Nein-Beiträgen und englischen Beschriftungen."
+
+msgid "heatmapRecipeTypst"
+msgstr "Verwende deine Typst-Teamdaten. Schriftmaße und natives Layout können von SVG abweichen."
+
+msgid "heatmapCopyRecipe"
+msgstr "Exportvorlage kopieren"

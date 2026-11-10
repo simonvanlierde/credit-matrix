@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor, fromJson, generateStatement, type StatementFormat } from "@/core";
 import * as i18n from "@/core/i18n";
+import { heatmapRecipe } from "@/lib/heatmap-recipe";
+import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { renderTypstTranslations } from "../../scripts/build-typst-translations.mjs";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
@@ -63,6 +65,17 @@ function autoStatement(file: string): string {
 const hasTypst = spawnSync("typst", ["--version"]).status === 0;
 
 describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
+  it("compiles the app's copied heatmap recipe", () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    const recipe = heatmapRecipe({ ...DEFAULT_HEATMAP_SETTINGS, font: "serif", horizontal: true }, "typst", "fr");
+    writeFileSync(
+      new URL("out/recipe.typ", import.meta.url),
+      `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Jane Smith", roles: (software: true)),)\n${recipe}`,
+    );
+    const result = typst("compile", "--root", ".", "out/recipe.typ", "out/recipe.svg");
+    expect(result.status, result.stderr).toBe(0);
+    expect(readFileSync(new URL("out/recipe.svg", import.meta.url), "utf8")).toContain("<svg");
+  });
   it("separates rotated large-font headers above small cells", () => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
     const width = (count: number) => {

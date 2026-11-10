@@ -284,3 +284,42 @@ test("keeps a damaged display preference from crashing the export panel", async 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Heatmap options", exact: true })).toBeVisible();
 });
+
+for (const width of [1440, 320]) {
+  test(`copies current figure recipes and keeps a manual fallback at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.evaluate(() => {
+      Object.defineProperty(navigator.clipboard, "writeText", {
+        configurable: true,
+        value: (text: string) => {
+          if (sessionStorage.getItem("refuseRecipeCopy")) return Promise.reject(new Error("Clipboard denied"));
+          sessionStorage.setItem("copiedRecipe", text);
+          return Promise.resolve();
+        },
+      });
+    });
+    await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+    await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+    await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+    await page.getByText("Export recipe", { exact: true }).click();
+    const recipe = page.getByRole("textbox", { name: "Export recipe", exact: true });
+    await expect(recipe).toBeVisible();
+    expect(await recipe.inputValue()).toContain("--color '#404040'");
+    await page.getByRole("button", { name: "Copy export recipe", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Copied", exact: true })).toBeVisible();
+    expect(await page.evaluate(() => sessionStorage.getItem("copiedRecipe"))).toBe(await recipe.inputValue());
+    await page.getByRole("combobox", { name: "Use in", exact: true }).click();
+    await page.getByRole("option", { name: "MyST / Jupyter Book", exact: true }).click();
+    await expect(recipe).toHaveValue(/:::\{credit-heatmap\}/);
+    await expect(page.getByText("MyST uses the page’s author roles", { exact: false })).toBeVisible();
+    await page.evaluate(() => sessionStorage.setItem("refuseRecipeCopy", "true"));
+    await page.getByRole("button", { name: "Copy export recipe", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Copy failed", exact: true })).toBeVisible();
+    await expect(recipe).toHaveValue(/:color: #404040/);
+    const bounds = await recipe.boundingBox();
+    if (!bounds) throw new Error("Recipe field not visible");
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+    expect((await scan(page)).violations).toEqual([]);
+  });
+}

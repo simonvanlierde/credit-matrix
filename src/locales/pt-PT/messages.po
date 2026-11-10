@@ -1669,3 +1669,21 @@ msgstr "Este PNG seria demasiado grande. Reduza a largura ou resolução, troque
 
 msgid "heatmapSmallPrint"
 msgstr "Os rótulos seriam impressos com cerca de {size} pt. Aumente a largura ou troque os eixos para facilitar a leitura."
+
+msgid "heatmapRecipe"
+msgstr "Receita de exportação"
+
+msgid "heatmapRecipeHint"
+msgstr "Apenas definições de estilo. Usa os teus dados de contribuição e a CLI ou o módulo instalado. O tamanho PNG e os DPI não estão incluídos."
+
+msgid "heatmapRecipeTarget"
+msgstr "Usar em"
+
+msgid "heatmapRecipeMyst"
+msgstr "O MyST usa as funções dos autores da página, com contribuições sim/não e etiquetas em inglês."
+
+msgid "heatmapRecipeTypst"
+msgstr "Usa os teus dados de equipa do Typst. As métricas das fontes e a disposição nativa podem diferir do SVG."
+
+msgid "heatmapCopyRecipe"
+msgstr "Copiar receita de exportação"

@@ -78,6 +78,8 @@ test.describe("interface messages", () => {
       doiPlaceholder: ["*"], // an example DOI
       a11yOrcidInput: ["*"], // "ORCID iD" is the registry's name for it
       heatmapLabel: ["de", "fr", "it", "nl"], // loanword in use
+      heatmapLayout: ["de"], // "Layout" is also used in German.
+      heatmapOrientation: ["fr"], // "Orientation" has the same spelling in French.
       download: ["de"],
       coauthorName: ["de"],
       aboutVersion: ["de", "fr"],

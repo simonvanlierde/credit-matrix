@@ -12,6 +12,7 @@ import { download as downloadBlob } from "@/lib/utils";
 import { useContributionStore } from "@/store/contribution-store";
 import { MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 import { HeatmapFigureSettings } from "./HeatmapFigureSettings";
+import { HeatmapRecipe } from "./HeatmapRecipe";
 
 type ExportFormat = "svg" | "png";
 
@@ -253,6 +254,7 @@ export function HeatmapExports({
                     setSettings(value);
                   }}
                 />
+                <HeatmapRecipe settings={settings} language={outputLanguage} />
               </section>
             )}
           </div>

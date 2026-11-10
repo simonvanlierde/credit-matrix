@@ -1669,3 +1669,21 @@ msgstr "Questo PNG sarebbe troppo grande. Riduci larghezza o risoluzione, scambi
 
 msgid "heatmapSmallPrint"
 msgstr "Le etichette verrebbero stampate a circa {size} pt. Aumenta la larghezza o scambia gli assi per renderle leggibili."
+
+msgid "heatmapRecipe"
+msgstr "Ricetta di esportazione"
+
+msgid "heatmapRecipeHint"
+msgstr "Solo impostazioni di stile. Usa i tuoi dati sui contributi e la CLI o il plugin installato. Dimensioni PNG e DPI non sono inclusi."
+
+msgid "heatmapRecipeTarget"
+msgstr "Usa in"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST usa i ruoli degli autori della pagina, con contributi sì/no ed etichette in inglese."
+
+msgid "heatmapRecipeTypst"
+msgstr "Usa i tuoi dati del gruppo Typst. Le metriche dei caratteri e il layout nativo possono differire da SVG."
+
+msgid "heatmapCopyRecipe"
+msgstr "Copia ricetta di esportazione"

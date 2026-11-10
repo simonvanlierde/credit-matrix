@@ -150,6 +150,11 @@ pass through to Typst's `figure` function.
 Palette, color, shape, cell size, typography, legend, role labels, orientation and empty-role filtering
 apply to SVG figures in the app, CLI and document plugins. Typst draws equivalent native figures.
 The app adds preview zoom, saved settings per draft, reset and PNG resolution controls.
+Under Figure settings, open Export recipe to copy a CLI command or a Sphinx, Quarto/Pandoc,
+MyST/Jupyter Book or Typst snippet. Recipes contain the current style settings and fixed data
+placeholders, without contributor names or PNG settings. Supply the contributor data and install
+the CLI or plugin first. MyST uses its page author roles and English labels, with yes/no contributions.
+Typst recipes convert CSS pixels to points; native layout and font metrics can differ from SVG.
 PNG width (40–300 mm) and resolution (150, 300 or 600 dpi) set its pixel dimensions and print metadata.
 SVG keeps its intrinsic vector dimensions; typography and cell spacing determine its layout.
 PNG download and image clipboard copy require a browser; the CLI and document plugins produce vector figures.

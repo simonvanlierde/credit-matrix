@@ -1669,3 +1669,21 @@ msgstr "This PNG would be too large. Reduce its width or resolution, transpose t
 
 msgid "heatmapSmallPrint"
 msgstr "Labels would print at about {size} pt. Increase the width or transpose the figure for readable print."
+
+msgid "heatmapRecipe"
+msgstr "Export recipe"
+
+msgid "heatmapRecipeHint"
+msgstr "Style settings only. Use your contributor data and installed CLI or plugin. PNG size and DPI are not included."
+
+msgid "heatmapRecipeTarget"
+msgstr "Use in"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST uses the page’s author roles, with yes/no contributions and English labels."
+
+msgid "heatmapRecipeTypst"
+msgstr "Use your Typst team data. Font metrics and native layout can differ from SVG."
+
+msgid "heatmapCopyRecipe"
+msgstr "Copy export recipe"

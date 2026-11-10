@@ -111,6 +111,8 @@ Figure settings belong beside that preview and are saved per draft, independentl
 display options and contribution values. Keep layout, labels, legend and colour together; put font
 and cell geometry under Advanced. Reset restores the figure defaults. On a narrow screen, settings
 replace the preview until the person closes them; desktop shows both side by side.
+Keep export recipes behind a disclosure in Figure settings. Show a selectable snippet and copy
+action for the chosen document tool, with any differences from the preview beside the snippet.
 
 PNG width and resolution determine its pixel dimensions and print-density metadata. Show the
 resulting dimensions, flag labels that would print very small, and keep SVG available when a PNG

@@ -1669,3 +1669,21 @@ msgstr "此 PNG 过大。请减小宽度或分辨率、交换坐标轴，或下�
 
 msgid "heatmapSmallPrint"
 msgstr "打印时标签约为 {size} pt。请增加宽度或交换坐标轴，以便清晰阅读。"
+
+msgid "heatmapRecipe"
+msgstr "导出配置代码"
+
+msgid "heatmapRecipeHint"
+msgstr "仅包含样式设置。请使用你的贡献者数据以及已安装的 CLI 或插件。不包含 PNG 尺寸和 DPI。"
+
+msgid "heatmapRecipeTarget"
+msgstr "使用于"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST 使用页面中的作者角色，贡献仅区分有无，标签为英文。"
+
+msgid "heatmapRecipeTypst"
+msgstr "请使用 Typst 团队数据。字体度量和原生布局可能与 SVG 不同。"
+
+msgid "heatmapCopyRecipe"
+msgstr "复制导出配置代码"

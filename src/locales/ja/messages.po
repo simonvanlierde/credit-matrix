@@ -1669,3 +1669,21 @@ msgstr "PNGが大きすぎます。幅または解像度を下げるか、軸を
 
 msgid "heatmapSmallPrint"
 msgstr "印刷時のラベルは約{size}ptになります。読みやすくするには幅を広げるか、軸を入れ替えてください。"
+
+msgid "heatmapRecipe"
+msgstr "書き出し用コード"
+
+msgid "heatmapRecipeHint"
+msgstr "スタイル設定のみです。貢献者データとインストール済みの CLI またはプラグインを使用してください。PNG のサイズと DPI は含まれません。"
+
+msgid "heatmapRecipeTarget"
+msgstr "使用先"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST はページの著者ロールを使用します。貢献は有無のみで、ラベルは英語です。"
+
+msgid "heatmapRecipeTypst"
+msgstr "Typst のチームデータを使用してください。フォントの寸法やネイティブレイアウトは SVG と異なる場合があります。"
+
+msgid "heatmapCopyRecipe"
+msgstr "書き出し用コードをコピー"

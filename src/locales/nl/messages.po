@@ -1669,3 +1669,21 @@ msgstr "Deze PNG zou te groot zijn. Verlaag de breedte of resolutie, wissel de a
 
 msgid "heatmapSmallPrint"
 msgstr "De labels worden ongeveer {size} pt groot op papier. Vergroot de breedte of wissel de assen om voor leesbare tekst."
+
+msgid "heatmapRecipe"
+msgstr "Exportrecept"
+
+msgid "heatmapRecipeHint"
+msgstr "Alleen stijlinstellingen. Gebruik je bijdragergegevens en de geïnstalleerde CLI of plug-in. PNG-formaat en DPI zijn niet inbegrepen."
+
+msgid "heatmapRecipeTarget"
+msgstr "Gebruiken in"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST gebruikt de auteursrollen van de pagina, met ja/nee-bijdragen en Engelse labels."
+
+msgid "heatmapRecipeTypst"
+msgstr "Gebruik je Typst-teamgegevens. Lettertypematen en de eigen lay-out kunnen afwijken van SVG."
+
+msgid "heatmapCopyRecipe"
+msgstr "Exportrecept kopiëren"

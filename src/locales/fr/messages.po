@@ -1669,3 +1669,21 @@ msgstr "Ce PNG serait trop grand. Réduisez sa largeur ou sa résolution, invers
 
 msgid "heatmapSmallPrint"
 msgstr "Les libellés mesureraient environ {size} pt à l’impression. Augmentez la largeur ou inversez les axes pour améliorer la lisibilité."
+
+msgid "heatmapRecipe"
+msgstr "Recette d’export"
+
+msgid "heatmapRecipeHint"
+msgstr "Paramètres de style uniquement. Utilisez vos données de contribution et la CLI ou le module installé. La taille PNG et les DPI sont exclus."
+
+msgid "heatmapRecipeTarget"
+msgstr "Utiliser dans"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST utilise les rôles des auteurs de la page, avec des contributions oui/non et des libellés anglais."
+
+msgid "heatmapRecipeTypst"
+msgstr "Utilisez vos données d’équipe Typst. Les métriques des polices et la mise en page native peuvent différer du SVG."
+
+msgid "heatmapCopyRecipe"
+msgstr "Copier la recette d’export"
