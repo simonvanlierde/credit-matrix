@@ -876,9 +876,21 @@ describe("contribution store", () => {
         });
         store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt: 2, at: 3 });
       }
-      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, answered: 2, open: 2 });
+      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, asked: 2, answered: 2, open: 2 });
       store().setSelfId(ana.id);
-      expect(askSummary(store().authors, store().asks, store().selfId)).toEqual({ total: 1, answered: 1, open: 1 });
+      expect(askSummary(store().authors, store().asks, store().selfId)).toEqual({
+        total: 1,
+        asked: 1,
+        answered: 1,
+        open: 1,
+      });
+    });
+
+    it("counts a co-author as asked before they answer", () => {
+      const { ben } = addTwo();
+      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, asked: 0, answered: 0, open: 0 });
+      store().applyAskStep(store().activeDraftId, { kind: "sent", contributorId: ben.id, prefilled: false, at: 1 });
+      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, asked: 1, answered: 0, open: 0 });
     });
 
     it("follows the row into a duplicate, and clears on reset", () => {

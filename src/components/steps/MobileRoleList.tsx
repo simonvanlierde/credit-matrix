@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { useState } from "react";
+import { InitialsChip } from "@/components/ui/initials-chip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Author, CREDIT_ROLES } from "@/core";
 import { heatCellColor, onColor } from "@/core/contributor-color";
@@ -54,13 +55,18 @@ export function MobileRoleList({
           {t("contributorToAssign")}
         </label>
         <Select value={selectedAuthor.id} onValueChange={setSelectedAuthorId}>
-          <SelectTrigger id="mobile-contributor" className="w-full" aria-label={t("contributorToAssign")}>
+          {/* Touch size: this picker decides whose roles the 44px buttons below change. */}
+          <SelectTrigger id="mobile-contributor" size="touch" className="w-full" aria-label={t("contributorToAssign")}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-(--radix-select-trigger-width)">
             {authors.map((author) => (
-              <SelectItem key={author.id} value={author.id}>
-                {author.name}
+              <SelectItem key={author.id} value={author.id} textValue={author.name} size="touch">
+                {/* Inside the item text, so the trigger shows the chip too. */}
+                <span className="flex min-w-0 items-center gap-2">
+                  <InitialsChip author={author} />
+                  <span className="truncate">{author.name}</span>
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -75,7 +81,7 @@ export function MobileRoleList({
           return (
             // The scroll margin sits on the focusable buttons: focus scrolling
             // uses the focused element's own, to clear the fixed header and the
-            // sticky contributor picker.
+            // sticky contributor picker (header 52px + picker 84px).
             <li key={role.name} className="flex min-h-14 items-center gap-2 py-1.5">
               <span className="flex min-w-0 flex-1 items-center">
                 <RoleInfo
@@ -83,7 +89,7 @@ export function MobileRoleList({
                   translateRole={translateInterfaceRole}
                   describeRole={describeRole}
                   language={interfaceRoleLanguage}
-                  className="scroll-mt-32 text-sm"
+                  className="scroll-mt-36 text-sm"
                 />
               </span>
               <button
@@ -95,7 +101,7 @@ export function MobileRoleList({
                 disabled={isFrozen(selectedAuthor.id)}
                 aria-label={assignmentLabel(selectedAuthor, roleIndex, score)}
                 onClick={() => handleCellClick(selectedAuthor, roleIndex, score)}
-                className={`contribution-cell scroll-mt-32 flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`contribution-cell scroll-mt-36 flex min-h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-xs font-semibold transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
                   score > 0 ? "text-on-surface shadow-sm" : "text-on-surface-variant"
                 }`}
               >

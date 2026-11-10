@@ -105,6 +105,9 @@ test("two co-authors answer the same draft, and each answer is settled on its ow
   await expect(lead.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
   await expect(lead.getByRole("button", { name: /^Software for Bob White: None/ })).toBeVisible();
   await expect(onScreen(lead, "Everything is settled.")).toBeVisible();
+  // Everyone asked has answered and nothing is left to review.
+  await expect(onScreen(lead, "Everyone agreed")).toBeVisible();
+  await expect(onScreen(lead, /answered$/)).toHaveCount(0);
 
   await lead.context().close();
 });

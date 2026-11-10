@@ -6,7 +6,7 @@ import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import { CREDIT_ROLES, createAuthor, generateStatement, toQuarto } from "@/core";
 import * as i18n from "@/core/i18n";
 import { renderQuartoTranslations } from "../../scripts/build-quarto-translations.mjs";
 
@@ -75,6 +75,24 @@ describe.skipIf(!hasQuarto && !process.env.CI)("Quarto filter, rendered", () => 
     }).replace(/^CRediT: /, "");
     expect(result.stdout).toContain(heading);
     expect(result.stdout.replaceAll("**", "")).toContain(`${expected}.`);
+  });
+
+  it("renders exported YAML with the app's contribution levels", () => {
+    expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
+    const authors = [author("Lin Wei", { Software: 33, "Formal analysis": 66 })];
+    const dir = mkdtempSync(join(tmpdir(), "credit-quarto-export-"));
+    const filter = fileURLToPath(new URL("_extensions/credit-matrix/credit-matrix.lua", import.meta.url));
+    writeFileSync(
+      join(dir, "paper.qmd"),
+      `---\n${toQuarto(authors)}filters: [${JSON.stringify(filter)}]\n---\n\n# Methods\n`,
+    );
+    const result = spawnSync("quarto", ["render", "paper.qmd", "--to", "gfm", "-o", "-"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    expect(result.status, result.stderr).toBe(0);
+    const expected = generateStatement(authors, { format: "by-author", showLevels: true }).replace(/^CRediT: /, "");
+    expect(result.stdout.replaceAll("**", "").replace(/\s+/g, " ")).toContain(`${expected}.`);
   });
 
   it("renders the statement into example.qmd", () => {

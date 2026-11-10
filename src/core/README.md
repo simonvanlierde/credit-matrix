@@ -34,11 +34,13 @@ Node 22.19 or later. Run it with `npx credit-matrix` without installing, or with
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
 npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 people and roles
-npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref, md, latex-credits, tenzing, svg or ro-crate
+npx credit-matrix convert paper.xml --to json      # convert a JATS4R file to native JSON
 npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
 npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
 npx credit-matrix convert team.csv --to svg > heatmap.svg  # the heatmap; --locale sets its language
 npx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
+npx credit-matrix convert team.csv --to quarto > authors.yml  # Quarto/Pandoc author metadata, with levels
+npx credit-matrix convert team.csv --to myst > authors.yml    # MyST/Jupyter Book author metadata, without levels
 npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
 npx credit-matrix --help                           # or --version
 ```
@@ -151,6 +153,11 @@ The options you'll most likely want:
 
 Only non-zero contributions appear in statements.
 
+`statementSpans(authors, options)` returns the same plain-text statement as a list of `{ text, cell? }`
+spans, where `cell` names the contributor id and role a phrase stands for (the role in a by-author
+statement, the name in a by-role one). Joined in order, the text is exactly `generateStatement`'s
+output, so a viewer can tie each phrase back to its cell.
+
 ## Import / export
 
 | Format      | Out               | In                                  |
@@ -159,10 +166,25 @@ Only non-zero contributions appear in statements.
 | CSV         | `toCsv`           | `fromCsv`                           |
 | JSON        | `toJson`          | `fromJson`                          |
 | Markdown    | `toMarkdown`      | —                                   |
+| Quarto/Pandoc YAML | `toQuarto` | — |
+| MyST/Jupyter Book YAML | `toMyst` | — |
 | tenzing CSV | `toTenzing`       | `fromTenzing`                       |
 | LaTeX ([latex-credits](https://github.com/Pseudomanifold/latex-credits)) | `toLatexCredits` | — |
 | Crossref 5.5 `<contributors>` | `toCrossrefContributors` | `fromCrossrefContributors` |
 | Heatmap SVG | `buildHeatmapSvg` | —                                   |
+
+`toQuarto(authors, { yesNo: false })` returns an `author:` YAML block with names, ORCID iDs and
+canonical CRediT roles with lead/equal/supporting degrees. Set `yesNo: true` to omit degrees.
+Paste it into Quarto or Pandoc manuscript front matter. `toMyst(authors)` returns `authors:` with
+ungraded roles; paste it into page front matter, or indent it under `project:` in `myst.yml`.
+The app offers both under Export data, with Copy and Download. They list authors only, including
+those with no roles yet. Acknowledge non-author contributors separately. Keep native JSON for
+exact scores, equal-contribution and corresponding-author markers, and coauthor replies.
+
+The [Quarto](https://quarto.org/docs/journals/authors.html#roles) schema supports contribution degrees;
+the [MyST](https://mystmd.org/guide/frontmatter#authors) schema has role names only.
+Use the [Quarto](../../integrations/quarto/README.md) or [MyST](../../integrations/myst/README.md)
+plugin to render a statement from these blocks.
 
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
 assets.
@@ -286,7 +308,8 @@ holds its exact shape. By entry point:
     `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`
   - Roles: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
   - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
-  - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
+  - Statements: `generateStatement`, `statementSpans`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`,
+    `StatementSpan`, `StatementCell`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
     `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,

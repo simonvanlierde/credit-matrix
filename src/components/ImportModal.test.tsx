@@ -96,7 +96,7 @@ describe("DOI lookup", () => {
     });
     await resolve(WORK);
 
-    expect(screen.queryByText(english.replaceWorkspaceTitle)).toBeNull();
+    expect(screen.queryByText(english.importChoiceTitle)).toBeNull();
   });
 
   it("ignores Enter while a lookup is already running", async () => {
@@ -161,7 +161,7 @@ describe("closing the dialog while ORCID's keys load", () => {
     await act(async () => resolve(null));
 
     expect(onImport).not.toHaveBeenCalled();
-    expect(screen.queryByText(english.replaceWorkspaceTitle)).toBeNull();
+    expect(screen.queryByText(english.importChoiceTitle)).toBeNull();
   });
 
   it("keeps a DOI lookup and an import from running at once, so neither lands over the other", async () => {
@@ -442,7 +442,7 @@ describe("a pasted CRediT statement", () => {
     paste("A.B. conceived the study. A.B. wrote the paper and analysed the data.");
     await review();
     expect(screen.getByText(`${english.errStatementNoRoles} ${english.statementOnlyCredit}`)).toBeTruthy();
-    expect(screen.queryByText(english.replaceWorkspaceTitle)).toBeNull();
+    expect(screen.queryByText(english.importChoiceTitle)).toBeNull();
   });
 
   it("refuses a statement over the length cap", async () => {
@@ -557,5 +557,45 @@ describe("citation converter", () => {
     expect(doiAlert.closest("dialog")).toBeTruthy();
     fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "cff-version: 1.2.0" } });
     vi.mocked(convertCitation).mockRejectedValue(new Error("x"));
+  });
+});
+
+describe("import progress and outcome", () => {
+  const paste = (value: string) => fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value } });
+
+  it("says Converting on the Import button and keeps the progress line beside it", () => {
+    vi.mocked(convertCitation).mockReturnValue(Promise.withResolvers<string>().promise);
+    renderModal();
+    paste("cff-version: 1.2.0\ntitle: Example");
+    fireEvent.click(screen.getByRole("button", { name: english.importData }));
+    const button = screen.getByRole("button", { name: english.importConverting });
+    expect(button.parentElement?.parentElement?.contains(screen.getByText(english.citationConverting))).toBe(true);
+  });
+
+  it("offers to add only the contributors the draft lacks, without a second Cancel", async () => {
+    const ann = createAuthor("Ann Bell");
+    const { onImport } = renderModal(1, undefined, { authors: [ann] });
+    paste("Ann Bell\nBo Chen");
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    expect(screen.getByText(english.importChoiceTitle)).toBeTruthy();
+    expect(screen.queryByText(/cannot be undone/)).toBeNull();
+    expect(screen.queryByRole("button", { name: english.cancel })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: english.importAddNew.replace("{count}", "1") }));
+    expect(onImport.mock.calls[0]?.[1]).toBe("add");
+  });
+
+  it("says plainly when XML cannot be read", async () => {
+    renderModal();
+    paste("<article><contrib-group><contrib>");
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    expect(screen.getByText(english.errImportXmlUnreadable)).toBeTruthy();
+  });
+
+  it("lists every file type the picker accepts", () => {
+    renderModal();
+    const accept = (document.querySelector('input[type="file"]') as HTMLInputElement).accept.split(",");
+    expect(accept).toContain(".cff");
+    const listed = screen.getByText(/^Accepts /).textContent ?? "";
+    for (const type of accept) expect(listed).toContain(type);
   });
 });

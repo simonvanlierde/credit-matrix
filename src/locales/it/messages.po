@@ -18,7 +18,7 @@ msgid "addContributor"
 msgstr "Nuovi nomi di autori o iD ORCID"
 
 msgid "addPlaceholder"
-msgstr "Aggiungi nomi o un iD ORCID…"
+msgstr "Nomi, un DOI o un iD ORCID"
 
 msgid "addButton"
 msgstr "Aggiungi"
@@ -218,6 +218,42 @@ msgstr "Importa contributori"
 msgid "importData"
 msgstr "Importa dati"
 
+msgid "importSummary"
+msgstr "Incolla o carica un elenco di contributori, oppure cercalo tramite DOI."
+
+msgid "importFormatsToggle"
+msgstr "Quali formati sono supportati?"
+
+msgid "importOr"
+msgstr "oppure"
+
+msgid "importConverting"
+msgstr "Conversione…"
+
+msgid "importImporting"
+msgstr "Importazione…"
+
+msgid "importChoiceTitle"
+msgstr "Aggiungere a questa bozza o sostituirla?"
+
+msgid "importAddNew"
+msgstr "Aggiungi {count, plural, one {# nuovo} other {# nuovi}}"
+
+msgid "importedContributors"
+msgstr "{count, plural, one {# contributore importato} other {# contributori importati}}."
+
+msgid "importAddedContributors"
+msgstr "{count, plural, one {# contributore aggiunto} other {# contributori aggiunti}} a questa bozza."
+
+msgid "importUndoStale"
+msgstr "Nulla è stato annullato: la bozza è cambiata dopo l’importazione. Modificala nella griglia."
+
+msgid "annImportUndone"
+msgstr "Importazione annullata."
+
+msgid "errImportXmlUnreadable"
+msgstr "Impossibile leggere questo XML. Controlla che il file sia completo."
+
 msgid "close"
 msgstr "Chiudi"
 
@@ -228,16 +264,13 @@ msgid "dragDropFile"
 msgstr "Trascinare e rilasciare un file qui"
 
 msgid "acceptedFileTypes"
-msgstr "Accetta .csv, .tsv, .json o .xml"
+msgstr "Accetta {types}"
 
 msgid "fileLoaded"
 msgstr "Caricato da {name}"
 
 msgid "pasteRawData"
 msgstr "Incolla dati grezzi"
-
-msgid "replaceWorkspaceTitle"
-msgstr "Sostituire l'area di lavoro attuale?"
 
 msgid "replaceWorkspace"
 msgstr "Sostituisci area di lavoro"
@@ -351,7 +384,7 @@ msgid "structuredFileUpload"
 msgstr "Carica un file strutturato"
 
 msgid "doiPlaceholder"
-msgstr "10.1038/s41586-020-2649-2"
+msgstr "ad es. 10.1234/abcde"
 
 msgid "doiLookUp"
 msgstr "Cerca"
@@ -912,7 +945,7 @@ msgid "formatJsonExport"
 msgstr "Esportazione JSON"
 
 msgid "replaceWorkspaceBody"
-msgstr "Questa importazione contiene {incoming, plural, one {# contributore} other {# contributori}}. Sostituirà {existing, plural, one {il # contributore attuale} other {i # contributori attuali}}. Questa azione non può essere annullata."
+msgstr "Questa importazione contiene {incoming, plural, one {# contributore} other {# contributori}}. Sostituirà {existing, plural, one {il # contributore attuale} other {i # contributori attuali}}."
 
 msgid "statementEmptyHint"
 msgstr "Nessun contributo ancora assegnato. Selezionare le celle della griglia per assegnare i ruoli."
@@ -979,6 +1012,9 @@ msgstr "Grigio scuro"
 
 msgid "languageSettings"
 msgstr "Impostazioni della lingua"
+
+msgid "stripEveryoneAgreed"
+msgstr "Tutti d’accordo"
 
 msgid "stripOpenTeam"
 msgstr "Chiedi ai coautori"
