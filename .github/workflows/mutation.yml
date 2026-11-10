@@ -44,6 +44,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # The core tests import the compiled message catalogs, which are build output, not in git.
+      - name: Compile message catalogs
+        run: pnpm i18n:compile
+
       # The config's 8 workers suit a local machine; a hosted runner has 4 cores.
       - name: Run Stryker
         run: pnpm exec stryker run --concurrency 4
