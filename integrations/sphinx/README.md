@@ -44,7 +44,7 @@ The export is read during the documentation build, not by the reader's browser.
 
 - `:format:` accepts `by-author` (default), `by-author-short`, `by-role` or `by-role-short`.
 - `:locale:` overrides Sphinx's `language`. The default is English when no language is set.
-  The CLI supports the app's nine languages and reports unsupported languages as build errors.
+  The CLI supports the app's nine languages and reports unsupported languages as build errors. Traditional Chinese (`zh_TW`, `zh_HK`, `zh_Hant`) has no catalog and uses English.
 - `:levels:` includes Equal and Supporting contribution levels.
 
 Names and statements are inserted as text. They are never interpreted as reStructuredText or HTML.
@@ -57,3 +57,7 @@ to make them fail the build.
 pnpm --filter credit-matrix build
 uv run --project integrations sphinx-build -W -b html integrations/sphinx/example integrations/_build/sphinx
 ```
+
+## Contribution heatmap
+
+See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.

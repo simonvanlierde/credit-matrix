@@ -1,0 +1,1566 @@
+msgid ""
+msgstr ""
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "stepContributors"
+msgstr "Bijdragers"
+
+msgid "stepContributions"
+msgstr "Bijdragen"
+
+msgid "stepStatement"
+msgstr "Verklaring"
+
+msgid "addContributor"
+msgstr "Nieuwe auteursnamen of ORCID iD"
+
+msgid "addPlaceholder"
+msgstr "Voeg namen of een ORCID iD toe…"
+
+msgid "addButton"
+msgstr "Toevoegen"
+
+msgid "nameLabel"
+msgstr "Naam of ORCID iD"
+
+msgid "removeContributor"
+msgstr "Verwijderen"
+
+msgid "reorderContributor"
+msgstr "Verplaatsen"
+
+msgid "undo"
+msgstr "Ongedaan maken"
+
+msgid "cancel"
+msgstr "Annuleren"
+
+msgid "skipToContent"
+msgstr "Naar de inhoud"
+
+msgid "noContributorsYet"
+msgstr "Nog geen bijdragers."
+
+msgid "loadSample"
+msgstr "Voorbeeldgegevens laden"
+
+msgid "sampleNames"
+msgstr "Christiaan Huygens\nJohanna Westerdijk\nJan Ingenhousz"
+
+msgid "assignmentMode"
+msgstr "Rollentoewijzing"
+
+msgid "modeYesNo"
+msgstr "Ja / nee"
+
+msgid "modeLevels"
+msgstr "Niveaus"
+
+msgid "bulkAssign"
+msgstr "Bulk toewijzen"
+
+msgid "heatmapOptions"
+msgstr "Heatmap-opties"
+
+msgid "statementOptions"
+msgstr "Verklaringsopties"
+
+msgid "gridColor"
+msgstr "Heatmapkleur"
+
+msgid "transpose"
+msgstr "Transponeren"
+
+msgid "useInitials"
+msgstr "Initialen gebruiken"
+
+msgid "roleColumn"
+msgstr "Rol"
+
+msgid "contributorColumn"
+msgstr "Bijdrager"
+
+msgid "groupByRole"
+msgstr "Op rol"
+
+msgid "groupByAuthor"
+msgstr "Op auteur"
+
+msgid "showLevels"
+msgstr "Niveaus tonen"
+
+msgid "copyStatement"
+msgstr "Verklaring kopiëren"
+
+msgid "exportData"
+msgstr "Gegevens exporteren"
+
+msgid "download"
+msgstr "Downloaden"
+
+msgid "copy"
+msgstr "Kopiëren"
+
+msgid "copied"
+msgstr "Gekopieerd"
+
+msgid "import"
+msgstr "Importeren"
+
+msgid "share"
+msgstr "Delen"
+
+msgid "howItWorks"
+msgstr "Hoe het werkt"
+
+msgid "aboutApp"
+msgstr "Over deze app"
+
+msgid "interfaceLanguage"
+msgstr "Interfacetaal"
+
+msgid "outputLanguage"
+msgstr "Uitvoertaal"
+
+msgid "toggleTheme"
+msgstr "Thema wisselen"
+
+msgid "contributorTypeAuthor"
+msgstr "Auteur"
+
+msgid "contributorTypeNonAuthor"
+msgstr "Niet-auteur"
+
+msgid "addOrcid"
+msgstr "ORCID iD toevoegen"
+
+msgid "lookupOrcidName"
+msgstr "Naam opzoeken via ORCID"
+
+msgid "lookingUp"
+msgstr "Bezig met opzoeken…"
+
+msgid "nameUpdated"
+msgstr "Naam bijgewerkt"
+
+msgid "removeOrcid"
+msgstr "ORCID iD verwijderen"
+
+msgid "gridEmptyHint"
+msgstr "Voeg bijdragers toe om in dit raster de 14 CRediT-rollen toe te wijzen."
+
+msgid "bulkAssignLevel"
+msgstr "Toe te wijzen niveau"
+
+msgid "bulkOneContributor"
+msgstr "Eén bijdrager"
+
+msgid "bulkOneRole"
+msgstr "Eén rol"
+
+msgid "bulkAssignAll"
+msgstr "Alle rollen toewijzen"
+
+msgid "bulkClearAll"
+msgstr "Alle rollen wissen"
+
+msgid "bulkAssignToAll"
+msgstr "Aan iedereen toewijzen"
+
+msgid "bulkClearRole"
+msgstr "Voor iedereen wissen"
+
+msgid "bulkChangeApplied"
+msgstr "Bulkwijziging toegepast."
+
+msgid "annBulkUndone"
+msgstr "Bulkwijziging ongedaan gemaakt."
+
+msgid "contributorToAssign"
+msgstr "Toe te wijzen bijdrager"
+
+msgid "colorLabel"
+msgstr "Kleur"
+
+msgid "transposeHint"
+msgstr "Wissel de rij- en kolomassen om"
+
+msgid "legendLevel"
+msgstr "Niveau"
+
+msgid "legendKey"
+msgstr "Legenda"
+
+msgid "levelHint"
+msgstr "Selecteer om te wisselen · Rechtsklik of 0–3 stelt een niveau in."
+
+msgid "heatmapLabel"
+msgstr "Heatmap"
+
+msgid "copyHeatmapHint"
+msgstr "De heatmap als PNG-afbeelding kopiëren"
+
+msgid "fullDefinition"
+msgstr "Volledige definitie"
+
+msgid "copyFailedMessage"
+msgstr "Kopiëren mislukt"
+
+msgid "linkCopied"
+msgstr "Link gekopieerd"
+
+msgid "importTitle"
+msgstr "Bijdragers importeren"
+
+msgid "importData"
+msgstr "Gegevens importeren"
+
+msgid "close"
+msgstr "Sluiten"
+
+msgid "browseFiles"
+msgstr "Bestanden kiezen"
+
+msgid "dragDropFile"
+msgstr "Sleep een bestand hierheen"
+
+msgid "acceptedFileTypes"
+msgstr "Accepteert .csv, .tsv, .json of .xml"
+
+msgid "fileLoaded"
+msgstr "Geladen uit {name}"
+
+msgid "pasteRawData"
+msgstr "Ruwe gegevens plakken"
+
+msgid "replaceWorkspaceTitle"
+msgstr "Huidige werkruimte vervangen?"
+
+msgid "replaceWorkspace"
+msgstr "Werkruimte vervangen"
+
+msgid "keepCurrentWork"
+msgstr "Huidig werk behouden"
+
+msgid "welcomeStepContributors"
+msgstr "Bijdragers toevoegen"
+
+msgid "welcomeStepRoles"
+msgstr "Rollen toewijzen"
+
+msgid "welcomeStepExport"
+msgstr "Controleren en exporteren"
+
+msgid "gotIt"
+msgstr "Begrepen"
+
+msgid "startFresh"
+msgstr "Opnieuw beginnen"
+
+msgid "removedContributor"
+msgstr "{name} verwijderd"
+
+msgid "contributorCount"
+msgstr "{count, plural, =0 {Geen bijdragers} one {# bijdrager} other {# bijdragers}}"
+
+msgid "annContributorRestored"
+msgstr "{name} hersteld."
+
+msgid "annNameFromOrcid"
+msgstr "Naam bijgewerkt via ORCID: {name}"
+
+msgid "annStatementCopied"
+msgstr "Verklaring naar het klembord gekopieerd"
+
+msgid "annLinkCopied"
+msgstr "Link naar het klembord gekopieerd"
+
+msgid "annHeatmapCopied"
+msgstr "Heatmap-PNG naar het klembord gekopieerd"
+
+msgid "annBadgeCopied"
+msgstr "Badge-PNG naar het klembord gekopieerd"
+
+msgid "annCopyFailed"
+msgstr "Kopiëren mislukt. Probeer het opnieuw."
+
+msgid "dndPickedUp"
+msgstr "Bijdrager {name} opgepakt."
+
+msgid "dndOver"
+msgstr "Bijdrager {name} bevindt zich boven {target}."
+
+msgid "dndDropped"
+msgstr "Bijdrager {name} is op {target} neergezet."
+
+msgid "dndCancelled"
+msgstr "Verplaatsen van {name} is geannuleerd."
+
+msgid "errNameNoLetter"
+msgstr "Dit lijkt niet op een naam. Er is minstens één letter nodig."
+
+msgid "errNameTooLong"
+msgstr "Deze naam is te lang. Gebruik maximaal 500 tekens."
+
+msgid "errFileTooLarge"
+msgstr "Dit bestand is te groot. Kies een bestand kleiner dan {limit}."
+
+msgid "errFileUnreadable"
+msgstr "Kan het bestand niet lezen. Controleer het bestand en probeer het opnieuw."
+
+msgid "errImportTooLarge"
+msgstr "Deze import is te groot. Plak minder dan {limit} aan gegevens."
+
+msgid "errTooManyContributors"
+msgstr "Deze import bevat te veel bijdragers. De limiet is {limit}."
+
+msgid "errShareTooLarge"
+msgstr "Dit concept is te groot om als link te delen. Exporteer het in plaats daarvan als JSON."
+
+msgid "errShareUnsupported"
+msgstr "Deze browser kan geen deellinks maken. Exporteer het concept als JSON."
+
+msgid "errShareLinkBroken"
+msgstr "Deze gedeelde link kon niet worden geopend. Uw eigen concept is behouden."
+
+msgid "errAtContributorLimit"
+msgstr "Een concept bevat maximaal {limit} bijdragers. Verwijder er een om een nieuwe toe te voegen."
+
+msgid "errOrcidChecksum"
+msgstr "Deze ORCID iD heeft een ongeldige controlesom. Controleer de cijfers en probeer het opnieuw."
+
+msgid "errOffline"
+msgstr "U bent offline, daarom zijn ORCID-opzoekingen niet beschikbaar. Typ de naam in plaats daarvan."
+
+msgid "errOrcidINVALID_ID"
+msgstr "Dit is geen geldige ORCID iD. Controleer de cijfers en probeer het opnieuw."
+
+msgid "errOrcidNOT_FOUND"
+msgstr "Geen ORCID-record komt overeen met deze iD."
+
+msgid "errOrcidUNAVAILABLE"
+msgstr "De ORCID-service is niet beschikbaar. Probeer het zo meteen opnieuw of typ de naam."
+
+msgid "importFromDoi"
+msgstr "Importeren vanuit een DOI"
+
+msgid "structuredFileUpload"
+msgstr "Gestructureerd bestand uploaden"
+
+msgid "doiPlaceholder"
+msgstr "10.1038/s41586-020-2649-2"
+
+msgid "doiLookUp"
+msgstr "Opzoeken"
+
+msgid "doiLookingUp"
+msgstr "Bezig met opzoeken…"
+
+msgid "doiHint"
+msgstr "Vult de lijst met bijdragers, hun ORCID iD's en de titel in. Gedeponeerde CRediT-rollen worden ter bevestiging getoond."
+
+msgid "errDoiINVALID_DOI"
+msgstr "Dit is geen geldige DOI. Deze moet eruitzien als 10.1234/abcde."
+
+msgid "errDoiNOT_FOUND"
+msgstr "Geen gepubliceerd record komt overeen met deze DOI."
+
+msgid "errDoiNO_AUTHORS"
+msgstr "Dit record vermeldt geen bijdragers, dus er valt niets te importeren."
+
+msgid "errDoiTOO_MANY_AUTHORS"
+msgstr "Dit record vermeldt meer bijdragers dan een concept kan bevatten."
+
+msgid "errDoiUNAVAILABLE"
+msgstr "De Crossref-service is niet beschikbaar. Probeer het zo meteen opnieuw of plak de auteurslijst."
+
+msgid "errDoiOFFLINE"
+msgstr "U bent offline, daarom zijn DOI-opzoekingen niet beschikbaar. Plak in plaats daarvan de auteurslijst."
+
+msgid "equalContributionShort"
+msgstr "Gedeeld eerste auteur"
+
+msgid "correspondingShort"
+msgstr "Corresponderende auteur"
+
+msgid "equalContributionSet"
+msgstr "Markeren als gedeeld eerste auteurschap"
+
+msgid "equalContributionUnset"
+msgstr "Gedeeld eerste auteurschap verwijderen"
+
+msgid "correspondingSet"
+msgstr "Markeren als corresponderende auteur"
+
+msgid "correspondingUnset"
+msgstr "Corresponderende auteur verwijderen"
+
+msgid "drafts"
+msgstr "Concepten"
+
+msgid "draftsHint"
+msgstr "Elk concept is één artikel. Ze blijven in deze browser."
+
+msgid "untitledDraft"
+msgstr "Naamloos concept"
+
+msgid "newDraft"
+msgstr "Nieuw concept"
+
+msgid "draftTitleLabel"
+msgstr "Titel van het concept"
+
+msgid "duplicateDraft"
+msgstr "Dupliceren"
+
+msgid "deleteDraft"
+msgstr "Verwijderen"
+
+msgid "confirmDeleteDraft"
+msgstr "Dit concept verwijderen?"
+
+msgid "draftLimitReached"
+msgstr "U kunt {count} concepten tegelijk bewaren. Verwijder er eerst één."
+
+msgid "draftCreated"
+msgstr "Nieuw concept begonnen."
+
+msgid "draftDuplicated"
+msgstr "Concept gedupliceerd."
+
+msgid "draftDeleted"
+msgstr "Concept verwijderd."
+
+msgid "deleteAllDrafts"
+msgstr "Alle concepten verwijderen"
+
+msgid "confirmDeleteAllDrafts"
+msgstr "Alle concepten in deze browser verwijderen? Dit kan niet ongedaan worden gemaakt."
+
+msgid "allDraftsDeleted"
+msgstr "Alle concepten verwijderd."
+
+msgid "draftUpdatedElsewhere"
+msgstr "Dit concept is in een ander tabblad bijgewerkt."
+
+msgid "switchToDraft"
+msgstr "Overschakelen naar {title}"
+
+msgid "coauthorPrefilled"
+msgstr "Wat is aangevinkt, is de inschatting van wie het vraagt. Pas aan wat niet klopt."
+
+msgid "coauthorHeading"
+msgstr "<work>{title}</work>: wat heeft u gedaan?"
+
+msgid "coauthorHeadingUntitled"
+msgstr "Wat heeft u aan dit artikel gedaan?"
+
+msgid "coauthorAnsweringAs"
+msgstr "U antwoordt als <b>{name}</b>. Uw naam en ORCID iD gaan mee terug in de link die u stuurt."
+
+msgid "coauthorBlankHint"
+msgstr "Kies een niveau voor elke rol die u op zich nam en laat de rest op {none}. Het kost ongeveer twee minuten."
+
+msgid "coauthorBlankHintYesNo"
+msgstr "Kies {contributed} voor elke rol die u op zich nam en laat de rest op {none}. Het kost ongeveer twee minuten."
+
+msgid "coauthorRoles"
+msgstr "Uw rollen"
+
+msgid "coauthorFirstAuthor"
+msgstr "Ik deel het eerste auteurschap"
+
+msgid "coauthorCorresponding"
+msgstr "Ik ben corresponderend auteur"
+
+msgid "coauthorDetails"
+msgstr "Uw gegevens"
+
+msgid "coauthorDetailsHint"
+msgstr "Corrigeer hier uw naam of ORCID iD als degene die het vraagt ze verkeerd heeft."
+
+msgid "coauthorName"
+msgstr "Naam"
+
+msgid "coauthorSend"
+msgstr "Terugsturen"
+
+msgid "coauthorMarked"
+msgstr "{count} van {total} rollen gemarkeerd"
+
+msgid "coauthorOrcidSignIn"
+msgstr "Inloggen met ORCID"
+
+msgid "coauthorOrcidHint"
+msgstr "Optioneel: log in met ORCID, dan komt uw antwoord aan als geverifieerd. De inlog reist mee in de link die u terugstuurt en blijft bij uw antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit uw ORCID-record."
+
+msgid "coauthorOrcidChanged"
+msgstr "U hebt uw antwoord na het inloggen gewijzigd. Log opnieuw in om dit antwoord te verifiëren."
+
+msgid "coauthorOrcidSigned"
+msgstr "Ingelogd met ORCID als {who}. Uw antwoord komt aan als geverifieerd."
+
+msgid "coauthorOrcidFailed"
+msgstr "Het inloggen met ORCID is niet afgerond. U kunt uw antwoord ook zonder versturen."
+
+msgid "reviewOrcidVerified"
+msgstr "Geverifieerd door ORCID als {who}, ingelogd op {date}."
+
+msgid "reviewOrcidOtherId"
+msgstr "Dit is niet de iD in de rij."
+
+msgid "reviewOrcidNoRowId"
+msgstr "Deze rij heeft geen ORCID iD om mee te vergelijken."
+
+msgid "reviewOrcidSignedFor"
+msgstr "Ingelogd voor ‘{title}’."
+
+msgid "reviewOrcidSignedElsewhere"
+msgstr "Niet geverifieerd voor deze rij: {who} logde op {date} in met ORCID voor een rij met een andere naam of iD."
+
+msgid "coauthorNotSent"
+msgstr "Nog niet verstuurd."
+
+msgid "coauthorCopyInstead"
+msgstr "Kopieer liever de link"
+
+msgid "coauthorShareTitle"
+msgstr "CRediT-rollen van {name}"
+
+msgid "coauthorSentTitle"
+msgstr "Verstuurd. U kunt deze pagina sluiten."
+
+msgid "coauthorCopiedTitle"
+msgstr "Link gekopieerd. Plak hem in uw antwoord en sluit daarna deze pagina."
+
+msgid "coauthorSentBody"
+msgstr "Degene die het vroeg ziet uw antwoord naast het eigen concept. Vraagt die het opnieuw, open dan de nieuwe link: die vervangt dit antwoord."
+
+msgid "coauthorChange"
+msgstr "Mijn antwoord wijzigen"
+
+msgid "claimUnlock"
+msgstr "Behouden als gewoon concept"
+
+msgid "annClaimUnlocked"
+msgstr "Dit is nu een gewoon concept. Alle rijen zijn bewerkbaar."
+
+msgid "claimLockedHint"
+msgstr "U beantwoordt een verzoek, dus alleen uw eigen rij is bewerkbaar."
+
+msgid "claimResumed"
+msgstr "Verdergegaan waar u bij dit verzoek was gebleven."
+
+msgid "claimRequestUpdated"
+msgstr "Het verzoek is bijgewerkt. Uw eerdere antwoorden zijn vervangen."
+
+msgid "claimLockedDraft"
+msgstr "Vergrendeld: beantwoordt een verzoek"
+
+msgid "requestLinkOwn"
+msgstr "Dit is de verzoeklink die u voor {name} hebt gemaakt."
+
+msgid "askBlank"
+msgstr "{name} vragen wat diegene heeft gedaan"
+
+msgid "askPrefilled"
+msgstr "{name} vragen uw inschatting te controleren"
+
+msgid "askLinkHint"
+msgstr "De link bevat de titel en de naam en iD van deze persoon."
+
+msgid "ask"
+msgstr "Vragen"
+
+msgid "claimedRowBadge"
+msgstr "Uw rij"
+
+msgid "askCopied"
+msgstr "Link gekopieerd"
+
+msgid "askedChip"
+msgstr "Gevraagd"
+
+msgid "askedChipTitle"
+msgstr "Gevraagd de eigen rij in te vullen. Verdwijnt zodra het antwoord binnenkomt."
+
+msgid "mergedRowBadge"
+msgstr "Bijgewerkt"
+
+msgid "mergedRowBadgeTitle"
+msgstr "Ingevuld uit het zojuist geopende antwoord."
+
+msgid "activeDraft"
+msgstr "Geopend"
+
+msgid "askContributorCopied"
+msgstr "Link gekopieerd. Stuur hem naar {name}."
+
+msgid "mergeUnmatched"
+msgstr "Dat antwoord is van iemand die niet in dit concept staat, dus er is niets overgenomen."
+
+msgid "askReplyDiffers"
+msgstr "Het antwoord van {name} is binnen: {count, plural, one {# verschil} other {# verschillen}}."
+
+msgid "askReplyMatches"
+msgstr "Het antwoord van {name} komt overeen met het uwe."
+
+msgid "askReplyStale"
+msgstr "Dit antwoord van {name} is ouder dan het antwoord dat u al hebt, dus het is niet gebruikt."
+
+msgid "askReplyDuplicate"
+msgstr "U hebt dit antwoord van {name} al."
+
+msgid "annMergeUndone"
+msgstr "Samenvoeging ongedaan gemaakt."
+
+msgid "welcomeIntro"
+msgstr "Stel in drie stappen een publicatieklare bijdrageverklaring op."
+
+msgid "about"
+msgstr "Over"
+
+msgid "statusReady"
+msgstr "Klaar om te exporteren"
+
+msgid "statusNotes"
+msgstr "{count, plural, one {# aandachtspunt} other {# aandachtspunten}}"
+
+msgid "statusDismiss"
+msgstr "Sluiten"
+
+msgid "rolesUsed"
+msgstr "{used} van {total} rollen gebruikt"
+
+msgid "shareWarningTitle"
+msgstr "Deze link bevat uw gegevens"
+
+msgid "shareWarningBody"
+msgstr "Iedereen met deze link kan elke naam, ORCID iD, bijdragerstype en roltoewijzing lezen."
+
+msgid "noContributorsHint"
+msgstr "Plak hieronder een DOI of een ORCID iD, typ een naam, of gebruik <b>Importeren</b> in de koptekst."
+
+msgid "a11yContributionGrid"
+msgstr "Bijdrageraster"
+
+msgid "a11yGeneratedStatement"
+msgstr "Gegenereerde bijdrageverklaring"
+
+msgid "a11yStatementNotes"
+msgstr "Aandachtspunten bij de bijdrageverklaring"
+
+msgid "a11yBulkContributor"
+msgstr "Bijdrager voor de bulktoewijzing"
+
+msgid "a11yBulkRole"
+msgstr "Rol voor de bulktoewijzing"
+
+msgid "a11yExportFormat"
+msgstr "Exportformaat"
+
+msgid "a11yOrcidInput"
+msgstr "ORCID iD"
+
+msgid "a11yOrcidHint"
+msgstr "Typ een ORCID iD, of plak er een als iD of als orcid.org-URL"
+
+msgid "a11yDismissWelcome"
+msgstr "Introductie sluiten"
+
+msgid "a11yShareLink"
+msgstr "Een link delen die alle gegevens van bijdragers bevat"
+
+msgid "a11yUseInitials"
+msgstr "Initialen gebruiken in plaats van namen"
+
+msgid "a11yShowLevels"
+msgstr "Niveaus tonen: rollen voorzien van bijdrageniveaus"
+
+msgid "a11ySeparateAcks"
+msgstr "Dankbetuigingen scheiden: bijdragers die geen auteur zijn op een eigen regel vermelden"
+
+msgid "customColor"
+msgstr "Aangepast"
+
+msgid "copyDataLink"
+msgstr "Gegevenslink kopiëren"
+
+msgid "fullCreditStandard"
+msgstr "Volledige CRediT-standaard"
+
+msgid "creditRolesExamples"
+msgstr "CRediT-rollen en voorbeelden"
+
+msgid "sourceOnGitHub"
+msgstr "Broncode op GitHub"
+
+msgid "opensInNewTab"
+msgstr "(opent in een nieuw tabblad)"
+
+msgid "acknowledgements"
+msgstr "Met dank aan"
+
+msgid "aboutTaxonomy"
+msgstr "CRediT is een ANSI/NISO-standaard (<cc>CC BY 4.0</cc>). Dit project staat los van NISO en is niet door NISO onderschreven."
+
+msgid "aboutPrivacy"
+msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent. Cloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser. Bij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload. Verder verlaat niets uw browser: concepten blijven in de lokale opslag. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest. Wie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; de inlog reist daarna mee in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
+
+msgid "accessibilityStatement"
+msgstr "Toegankelijkheidsverklaring"
+
+msgid "getCreditBadge"
+msgstr "CRediT-badge ophalen"
+
+msgid "creditBadge"
+msgstr "CRediT-badge"
+
+msgid "copiedHtml"
+msgstr "HTML gekopieerd"
+
+msgid "copiedPng"
+msgstr "PNG gekopieerd"
+
+msgid "annBadgeHtmlCopied"
+msgstr "Badge-HTML naar het klembord gekopieerd"
+
+msgid "importAuthorList"
+msgstr "Lijst met auteursnamen"
+
+msgid "importPlaceholder"
+msgstr "{names}\n\nof een .csv- / .tsv- / .json- / .xml- / .cff-export, of een aan u teruggestuurde link"
+
+msgid "errImportNoNames"
+msgstr "Geen auteursnamen gevonden. Voer één naam per regel in."
+
+msgid "errImportNoCsvRows"
+msgstr "Geen rijen met bijdragers gevonden in de CSV."
+
+msgid "errImportNoJsonContributors"
+msgstr "Deze JSON-export bevat geen bijdragers."
+
+msgid "errImportNoXmlContribs"
+msgstr "Geen <contrib>-elementen gevonden in de XML."
+
+msgid "errImportNoCrossrefContribs"
+msgstr "Geen <contributors>-blok met <person_name> gevonden in de Crossref-XML."
+
+msgid "aboutTagline"
+msgstr "Stel CRediT-bijdrageverklaringen op en exporteer het raster als bijdrage-heatmap."
+
+msgid "aboutInspiredBy"
+msgstr "Geïnspireerd op het oorspronkelijke project"
+
+msgid "aboutOutputTranslations"
+msgstr "Uitvoervertalingen door"
+
+msgid "aboutPageTitle"
+msgstr "Over CRediT Matrix"
+
+msgid "aboutPageLink"
+msgstr "Over, citeren en privacy"
+
+msgid "aboutVersion"
+msgstr "Versie"
+
+msgid "aboutLicense"
+msgstr "Licentie"
+
+msgid "aboutSource"
+msgstr "Broncode"
+
+msgid "aboutAuthor"
+msgstr "Auteur"
+
+msgid "aboutCiteTitle"
+msgstr "CRediT Matrix citeren"
+
+msgid "aboutCite"
+msgstr "Heeft u CRediT Matrix voor een artikel gebruikt, citeer het dan met de concept-DOI, die altijd naar de nieuwste versie verwijst:"
+
+msgid "aboutCiteMetadata"
+msgstr "Deze komen uit het <link>CITATION.cff</link>-bestand van de repository. <citesync>citesync</citesync> houdt het bij elke release bij, en de playground ervan maakt hetzelfde bestand voor uw eigen software."
+
+msgid "aboutCiteFormat"
+msgstr "Citatieformaat"
+
+msgid "annCitationCopied"
+msgstr "Citatie gekopieerd"
+
+msgid "aboutPluginsTitle"
+msgstr "Plug-ins voor schrijftools"
+
+msgid "aboutPlugins"
+msgstr "Schrijf de verklaring waar u het artikel schrijft. Deze plug-ins zetten hem in uw document, uit de rollen in de auteurslijst of uit een bestand dat u hier exporteert. Elke naam linkt naar de installatiegids."
+
+msgid "aboutPluginsSoftware"
+msgstr "Voor software schrijft de <cli>opdrachtregeltool</cli> personen en rollen ook als CodeMeta. <citesync>citesync</citesync> maakt van die metadata CITATION.cff- en Zenodo-bestanden, en <drift>codemeta-drift</drift> controleert of een CodeMeta-bestand consistent is."
+
+msgid "statementPlugins"
+msgstr "Plug-ins voor Quarto, MyST, Typst en meer"
+
+msgid "privacy"
+msgstr "Privacy"
+
+msgid "accessibility"
+msgstr "Toegankelijkheid"
+
+msgid "aboutAccessibility"
+msgstr "De <link>toegankelijkheidsverklaring</link> zegt wat we controleren, welke problemen we kennen en hoe u er een meldt."
+
+msgid "detectedFormat"
+msgstr "Gedetecteerd: {format}"
+
+msgid "mergeWrongDraft"
+msgstr "Dat antwoord hoort bij een concept dat niet in deze browser staat, dus er is niets gewijzigd."
+
+msgid "sharedDraftOpened"
+msgstr "Het gedeelde concept is naast uw eigen werk geopend."
+
+msgid "sharedDraftLoaded"
+msgstr "Gedeeld concept geopend."
+
+msgid "a11yInvalidOrcid"
+msgstr "Ongeldige ORCID iD"
+
+msgid "a11yRoleAssignment"
+msgstr "{role} voor {name}: {level}"
+
+msgid "a11yRolesForContributor"
+msgstr "Rollen van {name}"
+
+msgid "a11ySetColor"
+msgstr "Kleur {color} instellen"
+
+msgid "a11yStatementGrouping"
+msgstr "Groepering van de verklaring"
+
+msgid "annContributorsAdded"
+msgstr "{count, plural, one {# bijdrager toegevoegd.} other {# bijdragers toegevoegd.}}"
+
+msgid "annEntriesSkippedNoName"
+msgstr "{count, plural, one {# vermelding zonder naam overgeslagen} other {# vermeldingen zonder naam overgeslagen}} ({entries})."
+
+msgid "annOrcidChecksumsSkipped"
+msgstr "{count, plural, one {# ORCID iD met een ongeldig controlegetal overgeslagen} other {# ORCID iD’s met ongeldige controlegetallen overgeslagen}} ({ids})."
+
+msgid "annOrcidLookupsFailed"
+msgstr "Opzoeken van {count, plural, one {# ORCID iD} other {# ORCID iD’s}} mislukt ({ids}). De rijen behouden de iD als naam; hernoem ze handmatig."
+
+msgid "annContributorsSkippedLimit"
+msgstr "{count, plural, one {# bijdrager overgeslagen} other {# bijdragers overgeslagen}}: een concept bevat maximaal {limit} bijdragers."
+
+msgid "annCopiedToClipboard"
+msgstr "Gekopieerd naar het klembord"
+
+msgid "annExportDataCopied"
+msgstr "Exportgegevens naar het klembord gekopieerd"
+
+msgid "badgeIntro"
+msgstr "Voeg deze badge toe aan uw artikel of projectpagina."
+
+msgid "copyHtml"
+msgstr "HTML kopiëren"
+
+msgid "copyPng"
+msgstr "PNG kopiëren"
+
+msgid "downloadPng"
+msgstr "PNG downloaden"
+
+msgid "switchToDarkTheme"
+msgstr "Overschakelen naar donker thema"
+
+msgid "switchToLightTheme"
+msgstr "Overschakelen naar licht thema"
+
+msgid "contributorTypeSetAuthor"
+msgstr "Markeren als auteur"
+
+msgid "contributorTypeSetNonAuthor"
+msgstr "Markeren als niet-auteur"
+
+msgid "errImportFailed"
+msgstr "Importeren mislukt. Controleer het bestand en probeer het opnieuw."
+
+msgid "errImportNewerVersion"
+msgstr "Dit bestand is gemaakt met een nieuwere versie van CRediT Matrix. Laad de pagina opnieuw om bij te werken en probeer het dan nog eens."
+
+msgid "errImportRepeatedId"
+msgstr "Dit bestand bevat dezelfde bijdrager-id twee keer, dus het is niet geïmporteerd."
+
+msgid "errHeatmapExport"
+msgstr "De heatmap kan niet als {format} worden geëxporteerd."
+
+msgid "errStorageFull"
+msgstr "De browseropslag is vol, dus wijzigingen worden niet opgeslagen. Exporteer dit concept of verwijder er een dat u niet meer nodig hebt."
+
+msgid "errStorageBlocked"
+msgstr "Deze browser blokkeert opslag voor deze site, dus wijzigingen worden niet opgeslagen. Sta sitegegevens toe of exporteer voordat u het tabblad sluit."
+
+msgid "errNewerVersionSaved"
+msgstr "Een nieuwere versie van CRediT Matrix heeft uw concepten in een ander tabblad opgeslagen. Laad deze pagina opnieuw: wijzigingen hier worden niet opgeslagen."
+
+msgid "formatShareLink"
+msgstr "Gedeelde link"
+
+msgid "formatJsonExport"
+msgstr "JSON-export"
+
+msgid "replaceWorkspaceBody"
+msgstr "Deze import bevat {incoming, plural, one {# bijdrager} other {# bijdragers}}. Daarmee {existing, plural, one {wordt de huidige # bijdrager} other {worden de huidige # bijdragers}} vervangen. Dit kan niet ongedaan worden gemaakt."
+
+msgid "statementEmptyHint"
+msgstr "Nog geen bijdragen toegewezen. Selecteer cellen in het raster om rollen toe te wijzen."
+
+msgid "separateAcknowledgements"
+msgstr "Dankbetuigingen afzonderlijk vermelden"
+
+msgid "validationAuthorNoRoles"
+msgstr "Aan {name} zijn geen CRediT-rollen toegewezen."
+
+msgid "validationRoleUnassigned"
+msgstr "De rol ‘{role}’ is aan geen enkele bijdrager toegewezen."
+
+msgid "welcomeBodyContributors"
+msgstr "Plak een DOI om de hele lijst uit het gepubliceerde record over te nemen, of typ de namen zelf. Een ORCID iD vult de naam voor u in."
+
+msgid "welcomeBodyRoles"
+msgstr "Selecteer cellen in het raster om aan te geven welke van de 14 CRediT-rollen elke bijdrager heeft vervuld."
+
+msgid "welcomeBodyExport"
+msgstr "De verklaring werkt zichzelf bij terwijl u werkt. Kopieer hem, of download de heatmap, XML, CSV, JSON of Markdown."
+
+msgid "welcomeDraftsTitle"
+msgstr "Eén concept per artikel"
+
+msgid "welcomeDraftsBody"
+msgstr "Meer dan één artikel? Wissel van concept via de koptekst; elk wordt apart in deze browser bewaard."
+
+msgid "welcomeAskTitle"
+msgstr "Vraag co-auteurs rechtstreeks"
+
+msgid "welcomeAskBody"
+msgstr "Kopieer een link uit het rijmenu van een persoon en stuur die naar hen. Komt de link terug, open die dan: het antwoord wordt naast de rij van die persoon bewaard en verschillen handelt u af op het tabblad Controle."
+
+msgid "importDescription"
+msgstr "Begin met een DOI, plak namen of een teruggestuurde link, of upload een CSV-, JSON-, JATS4R-XML- of Crossref-XML-bestand. JSON en XML herstellen ook de bijdragen, met niveaus als het bestand die bevat. Een tenzing-spreadsheet (CSV of TSV) kan ook. Plak een verklaring over de bijdragen van auteurs om de rollen in te vullen van de bijdragers die er al staan. CITATION.cff, codemeta.json en .zenodo.json importeren auteursnamen en ORCID iD's; de rollen blijven leeg."
+
+msgid "contributorActions"
+msgstr "Acties voor {name}"
+
+msgid "colorBlue"
+msgstr "Blauw"
+
+msgid "colorOrange"
+msgstr "Oranje"
+
+msgid "colorBluishGreen"
+msgstr "Blauwgroen"
+
+msgid "colorReddishPurple"
+msgstr "Roodpaars"
+
+msgid "colorVermilion"
+msgstr "Vermiljoen"
+
+msgid "colorSkyBlue"
+msgstr "Hemelsblauw"
+
+msgid "colorYellow"
+msgstr "Geel"
+
+msgid "colorDarkGray"
+msgstr "Donkergrijs"
+
+msgid "languageSettings"
+msgstr "Taalinstellingen"
+
+msgid "stripOpenTeam"
+msgstr "Coauteurs vragen"
+
+msgid "teamYou"
+msgstr "U"
+
+msgid "teamNotAsked"
+msgstr "Nog niet gevraagd"
+
+msgid "toggleKeysHint"
+msgstr "Selecteer om te wisselen · Pijltjestoetsen verplaatsen, 1 of 0 zet een rol."
+
+msgid "downloadSvg"
+msgstr "SVG downloaden"
+
+msgid "copyFormat"
+msgstr "{format} kopiëren"
+
+msgid "downloadFormat"
+msgstr "{format} downloaden"
+
+msgid "a11yInspector"
+msgstr "Verklaring, team, controle en publicatiepraktijk"
+
+msgid "tabTeam"
+msgstr "Team"
+
+msgid "tabReview"
+msgstr "Controle"
+
+msgid "tabNorms"
+msgstr "Publicatiepraktijk"
+
+msgid "normsIntro"
+msgstr "Hoe vaak gepubliceerde artikelen in een vakgebied elke rol toekennen, per auteurspositie. Dit is context, geen advies: wat elders gebruikelijk is, zegt niets over wat je coauteurs deden."
+
+msgid "normsField"
+msgstr "Je vakgebied"
+
+msgid "normsFieldPlaceholder"
+msgstr "Kies een vakgebied"
+
+msgid "normsEmpty"
+msgstr "Kies je vakgebied om de aandelen te zien. De app weet niet in welk vakgebied je artikel valt, en niets hier verandert je matrix."
+
+msgid "normsFieldGone"
+msgstr "Je opgeslagen vakgebied, <name>{field}</name>, heeft geen gegevens in deze momentopname. Kies een vakgebied om de aandelen te zien."
+
+msgid "normsCoverage"
+msgstr "{articles, number} open-access onderzoeksartikelen in <name>{field}</name> met CRediT-rollen, uit Europe PMC-bestanden van {date}. Alleen auteurs met minstens één rol tellen mee."
+
+msgid "normsUnvalidated"
+msgstr "De rollen zijn automatisch gelezen en niet met de hand gecontroleerd: in {tagged, number} artikelen waarvan de uitgever de rollen ook tagt, komt de parser met een F1-score van {f1} overeen met die tags (1 is perfect)."
+
+msgid "normsYourPosition"
+msgstr "Je positie in dit concept: {position, select, single {enige auteur} first {eerste auteur} middle {middelste auteur} other {laatste auteur}}."
+
+msgid "normsNonAuthor"
+msgstr "Je staat in dit concept als niet-auteur, dus er is geen kolom gemarkeerd: de aandelen tellen alleen auteurs."
+
+msgid "normsNoSelf"
+msgstr "Kies „Dit ben ik” op je eigen rij in de lijst met bijdragers om je positie te markeren."
+
+msgid "normsCaption"
+msgstr "Aandeel auteurs met elke rol, per auteurspositie"
+
+msgid "normsRole"
+msgstr "Rol"
+
+msgid "normsPosition"
+msgstr "{position, select, single {Enige} first {Eerste} middle {Midden} other {Laatste}}"
+
+msgid "normsTooFew"
+msgstr "Te weinig auteurs om iets te zeggen"
+
+msgid "normsFootnote"
+msgstr "Vakgebieden met minder dan {minArticles, number} van zulke artikelen staan er niet bij, en een positie met minder dan {minAuthors, number} auteurs toont een streepje. Vakgebieden gelden per tijdschrift, volgens OpenAlex. Bron: CRediT-census {snapshot}, dataset {version}."
+
+msgid "reviewEmptyTitle"
+msgstr "Antwoorden van coauteurs verschijnen hier"
+
+msgid "reviewEmptyBody"
+msgstr "Stuurt een coauteur de link terug, open die dan: het antwoord verschijnt hier naast uw concept."
+
+msgid "teamEmpty"
+msgstr "Voeg eerst bijdragers toe en vraag ze daarna elk wat ze hebben gedaan."
+
+msgid "teamMessage"
+msgstr "Hoi {name},\n\nIk stel de CRediT-bijdrageverklaring op voor {work}. Wil je deze link openen, de rollen aanvinken die je hebt vervuld en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, je naam en je iD. Er wordt niets op een server opgeslagen."
+
+msgid "teamMessageWork"
+msgstr "‘{title}’"
+
+msgid "teamMessageNoTitle"
+msgstr "ons manuscript"
+
+msgid "teamMessageCopied"
+msgstr "Bericht voor {name} gekopieerd. Plak het in een e-mail."
+
+msgid "teamAskAllDone"
+msgstr "{count, plural, one {# bericht gekopieerd.} other {Alle # berichten gekopieerd.}}"
+
+msgid "teamAskNext"
+msgstr "Volgende kopiëren: {name} ({index} van {total})"
+
+msgid "teamAskAll"
+msgstr "Iedereen vragen die nog niet is gevraagd ({count})"
+
+msgid "teamAskAllHint"
+msgstr "Kopieert één bericht per persoon. Plak elk bericht in een e-mail voordat u het volgende kopieert."
+
+msgid "teamPrivacy"
+msgstr "Elke link bevat de titel van het artikel en de naam en iD van die persoon. Er wordt niets op een server opgeslagen: het antwoord komt terug zoals u het verstuurt."
+
+msgid "teamCopyMessageFor"
+msgstr "Bericht kopiëren voor {name}"
+
+msgid "teamCopyMessage"
+msgstr "Bericht kopiëren"
+
+msgid "expandContributors"
+msgstr "Lijst met bijdragers uitklappen"
+
+msgid "collapseContributors"
+msgstr "Lijst met bijdragers inklappen"
+
+msgid "moveUp"
+msgstr "Omhoog"
+
+msgid "moveDown"
+msgstr "Omlaag"
+
+msgid "annMoved"
+msgstr "{name} verplaatst naar positie {position} van {total}."
+
+msgid "skipToGrid"
+msgstr "Naar het raster"
+
+msgid "skipToStatement"
+msgstr "Naar de verklaring"
+
+msgid "stripAnswered"
+msgstr "{answered} van {total} beantwoord"
+
+msgid "stripDiffer"
+msgstr "{count, plural, one {# antwoord wijkt af} other {# antwoorden wijken af}}"
+
+msgid "reviewAction"
+msgstr "Controleren"
+
+msgid "tabReviewOpen"
+msgstr "{count, plural, one {# open verschil} other {# open verschillen}}"
+
+msgid "statementDiffers"
+msgstr "{count, plural, one {# bijdrage wijkt nog af.} other {# bijdragen wijken nog af.}} Deze verklaring gebruikt uw versie."
+
+msgid "exportIncludesAnswers"
+msgstr "Antwoorden van coauteurs en vraaggeschiedenis meenemen ({count})"
+
+msgid "thisIsMe"
+msgstr "Dit ben ik"
+
+msgid "thisIsNotMe"
+msgstr "Dit ben ik niet"
+
+msgid "teamSettledOn"
+msgstr "Afgerond op {date}"
+
+msgid "teamStatusAnswered"
+msgstr "{days, plural, =0 {Vandaag geantwoord} =1 {Gisteren geantwoord} other {# dagen geleden geantwoord}} · {count} te controleren"
+
+msgid "teamStatusAsked"
+msgstr "{days, plural, =0 {Vandaag gevraagd} =1 {Gisteren gevraagd} other {# dagen geleden gevraagd}} · {kind, select, prefilled {uw inschatting} other {leeg}}"
+
+msgid "reviewAnsweredMeta"
+msgstr "{days, plural, =0 {Vandaag geantwoord} =1 {Gisteren geantwoord} other {# dagen geleden geantwoord}} · {kind, select, prefilled {uw inschatting} other {leeg}}"
+
+msgid "teamReviewFor"
+msgstr "Antwoord van {name} controleren"
+
+msgid "markerSharedFirst"
+msgstr "Gedeeld eerste auteurschap"
+
+msgid "markerCorresponding"
+msgstr "Corresponderend auteur"
+
+msgid "markerYes"
+msgstr "Ja"
+
+msgid "markerNo"
+msgstr "Nee"
+
+msgid "reviewKindAdded"
+msgstr "Rol toegevoegd"
+
+msgid "reviewKindMarked"
+msgstr "Aangevinkt"
+
+msgid "reviewKindDropped"
+msgstr "Weggelaten"
+
+msgid "reviewKindLevel"
+msgstr "Ander niveau"
+
+msgid "reviewUseTheirs"
+msgstr "Die van {name} gebruiken"
+
+msgid "reviewKeepYours"
+msgstr "Uw versie houden"
+
+msgid "reviewAskAbout"
+msgstr "{name} hierover vragen"
+
+msgid "reviewUseTheirsRole"
+msgstr "Die van {name} gebruiken: {role}"
+
+msgid "reviewKeepYoursRole"
+msgstr "Uw versie houden: {role}"
+
+msgid "undoRole"
+msgstr "Ongedaan maken: {role}"
+
+msgid "reviewAskAboutRole"
+msgstr "{copied, select, true {Gekopieerd. {name} hierover vragen: {role}} other {{name} hierover vragen: {role}}}"
+
+msgid "reviewUseAll"
+msgstr "Alles van {name} gebruiken"
+
+msgid "reviewUsedTheirs"
+msgstr "Antwoord van {name} gebruikt"
+
+msgid "reviewKeptYours"
+msgstr "Uw versie gehouden"
+
+msgid "annReviewUsed"
+msgstr "Antwoord van {name} gebruikt voor {role}."
+
+msgid "annReviewKept"
+msgstr "Uw versie gehouden voor {role}."
+
+msgid "annReviewUsedAll"
+msgstr "Alle antwoorden van {name} gebruikt."
+
+msgid "annReviewUndone"
+msgstr "Keuze ongedaan gemaakt."
+
+msgid "reviewAllSettledTitle"
+msgstr "Alles is afgerond."
+
+msgid "reviewAllSettledBody"
+msgstr "Elk afwijkend antwoord heeft een besluit, en de verklaring laat het resultaat zien."
+
+msgid "cellTheySay"
+msgstr "{name} zegt {level}"
+
+msgid "columnOpenDifferences"
+msgstr "{name}: {count, plural, one {# open verschil} other {# open verschillen}}"
+
+msgid "columnSettled"
+msgstr "Afgerond"
+
+msgid "legendDiffers"
+msgstr "Een coauteur antwoordde anders"
+
+msgid "reviewAskMessage"
+msgstr "Hoi {name},\n\nIk rond de CRediT-bijdrageverklaring voor {work} af. Onze antwoorden verschillen bij {role}. Wil je deze link openen, je rij nakijken en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, je naam en je iD. Er wordt niets op een server opgeslagen."
+
+msgid "formatStatement"
+msgstr "CRediT-verklaring"
+
+msgid "statementReview"
+msgstr "Rollen bekijken"
+
+msgid "statementReviewTitle"
+msgstr "Rollen gevonden in de verklaring"
+
+msgid "statementReviewSummary"
+msgstr "{added, plural, one {# rol} other {# rollen}} toe te voegen voor {people, plural, one {# bijdrager} other {# bijdragers}}. Rollen die al in de tabel staan, blijven zoals ze zijn."
+
+msgid "statementNothingNew"
+msgstr "Alle gevonden rollen staan al in de tabel."
+
+msgid "statementNoRolesFor"
+msgstr "Geen rollen gevonden voor: {names}"
+
+msgid "statementCouldBe"
+msgstr "(kan {token} zijn)"
+
+msgid "statementUnresolvedBody"
+msgstr "Deze namen of initialen passen bij geen enkele bijdrager in dit concept, of bij meer dan één. Hun rollen worden overgeslagen, tenzij u kiest wie er bedoeld is. Zet de rest na het toepassen in de tabel."
+
+msgid "statementLeaveOut"
+msgstr "Overslaan"
+
+msgid "statementReviewSummaryLevel"
+msgstr "{added, plural, one {# rol} other {# rollen}} toe te voegen als {level} voor {people, plural, one {# bijdrager} other {# bijdragers}}. Rollen die al in het raster staan, blijven zoals ze zijn."
+
+msgid "statementRoleAlreadySet"
+msgstr "{role} (al ingevuld)"
+
+msgid "statementUnmatchedTitle"
+msgstr "Niet gekoppeld"
+
+msgid "statementUnmatchedAmbiguous"
+msgstr "{token}: kan {names} zijn"
+
+msgid "statementUnmatchedNone"
+msgstr "{token}: geen bijdrager"
+
+msgid "statementLeftOut"
+msgstr "{who} — weggelaten: {roles}"
+
+msgid "statementAppliedLevel"
+msgstr "{count, plural, one {# rol} other {# rollen}} uit de verklaring toegevoegd als {level}."
+
+msgid "statementUndoStale"
+msgstr "Niets ongedaan gemaakt: het concept is veranderd nadat de rollen zijn toegevoegd. Pas ze in het raster aan."
+
+msgid "statementOnlyCredit"
+msgstr "Alleen CRediT-rolnamen worden gelezen, zoals Conceptualization of Writing – original draft, geen zinnen over wie wat deed."
+
+msgid "errStatementTooLong"
+msgstr "Deze tekst is langer dan {limit} tekens. Plak alleen de bijdrageverklaring."
+
+msgid "statementBack"
+msgstr "Terug"
+
+msgid "statementApply"
+msgstr "Rollen toepassen"
+
+msgid "statementApplied"
+msgstr "{count, plural, one {# rol} other {# rollen}} toegevoegd uit de verklaring."
+
+msgid "errStatementNoContributors"
+msgstr "Voeg eerst de bijdragers toe en plak dan de verklaring: die wordt vergeleken met de namen die al in dit concept staan."
+
+msgid "errStatementNoRoles"
+msgstr "Er kon geen CRediT-rol aan de bijdragers in dit concept worden gekoppeld. Controleer of de verklaring hen noemt zoals het concept doet, met naam of initialen."
+
+msgid "censusAboutLink"
+msgstr "CRediT-census: hoe artikelen CRediT gebruiken"
+
+msgid "censusBack"
+msgstr "Terug naar CRediT Matrix"
+
+msgid "censusTitle"
+msgstr "CRediT-census"
+
+msgid "censusHeadline"
+msgstr "In {year} gaf {share} van de open-access-onderzoeksartikelen in Europe PMC CRediT-rollen voor ten minste één auteur."
+
+msgid "censusLead"
+msgstr "Hoe gepubliceerde artikelen CRediT gebruiken, de Contributor Roles Taxonomy, gelezen uit de opmaak en bijdrageverklaringen van {articles} open-access-artikelen in Europe PMC."
+
+msgid "censusPreliminaryTitle"
+msgstr "Voorlopige cijfers"
+
+msgid "censusPreliminary"
+msgstr "Ik heb de parser nog niet met handmatige labels gecontroleerd, dus zie deze cijfers als een eerste indruk. Op {articles} artikelen die hun rollen taggen én een verklaring afdrukken, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout). Maar {share} van die artikelen komt van MDPI en Frontiers, en ook de tags zelf heeft niemand gecontroleerd."
+
+msgid "censusPreliminaryUnscored"
+msgstr "Ik heb de parser nog niet met handmatige labels gecontroleerd, dus zie deze cijfers als een eerste indruk."
+
+msgid "censusIncomplete"
+msgstr "Deze momentopname is onvolledig: sommige bronbestanden zijn niet gelezen, of tijdschriften hebben nog geen vakgebied."
+
+msgid "censusAdoptionTitle"
+msgstr "Gebruik door de tijd"
+
+msgid "censusAdoptionCaption"
+msgstr "Aandeel onderzoeksartikelen met CRediT-rollen voor ten minste één auteur, per publicatiejaar. {year} wordt nog gepubliceerd, dus dat stuk van de lijn is gestippeld."
+
+msgid "censusRolesPerAuthorTitle"
+msgstr "Rollen per auteur"
+
+msgid "censusRolesPerAuthorCaption"
+msgstr "Gemiddeld aantal rollen van een auteur die er minstens één heeft, per publicatiejaar."
+
+msgid "censusShowTable"
+msgstr "Als tabel tonen"
+
+msgid "censusPartial"
+msgstr "(onvolledig)"
+
+msgid "censusTableLabel"
+msgstr "{chart} als tabel"
+
+msgid "censusTrend"
+msgstr "{from} in {first} en {to} in {last}, met een hoogtepunt van {max} in {maxYear}."
+
+msgid "censusYear"
+msgstr "Jaar"
+
+msgid "censusResearchArticles"
+msgstr "Onderzoeksartikelen"
+
+msgid "censusWithRoles"
+msgstr "Met rollen"
+
+msgid "censusShare"
+msgstr "Aandeel"
+
+msgid "censusStylesTitle"
+msgstr "Hoe rollen zijn opgemaakt"
+
+msgid "censusStylesCaption"
+msgstr "Aandeel onderzoeksartikelen per jaar, naar waar hun rollen uit zijn gelezen. Elk artikel telt één keer, onder de eerste van de vier hieronder die het gebruikt. Alle vier gebruiken dezelfde schaal. {year} wordt nog gepubliceerd, dus dat stuk is gestippeld."
+
+msgid "censusStyleJats4r"
+msgstr "JATS4R-roltags"
+
+msgid "censusStyleJats4rNote"
+msgstr "De rollen van elke auteur getagd met het CRediT-vocabulaire, zoals JATS4R aanbeveelt, de groep die vastlegt hoe tijdschriftartikelen worden getagd"
+
+msgid "censusStylePlosUri"
+msgstr "Rol-URL-tags"
+
+msgid "censusStylePlosUriNote"
+msgstr "De rollen van elke auteur getagd met een CRediT-webadres, zoals PLOS doet"
+
+msgid "censusStyleStatement"
+msgstr "Bijdrageverklaring"
+
+msgid "censusStyleStatementNote"
+msgstr "Eén alinea die auteurs bij initialen of naam noemt"
+
+msgid "censusStyleContribText"
+msgstr "Tekst per auteur"
+
+msgid "censusStyleContribTextNote"
+msgstr "Vrije tekst bij elke auteur, zoals een rollenlijst of een voetnoot"
+
+msgid "censusFieldsTitle"
+msgstr "Per vakgebied"
+
+msgid "censusFieldsCaption"
+msgstr "Aandeel onderzoeksartikelen uit {year} met CRediT-rollen, naar het vakgebied van het tijdschrift in OpenAlex, een open index van wetenschappelijk werk. Vakgebieden gelden per tijdschrift, niet per artikel. Europe PMC is van opzet biomedisch, dus andere vakgebieden zijn dun vertegenwoordigd. Vakgebieden met minder dan 1.000 artikelen zijn weggelaten."
+
+msgid "censusFieldAgriculturalAndBiologicalSciences"
+msgstr "Landbouw- en biowetenschappen"
+
+msgid "censusFieldBiochemistryGeneticsAndMolecularBiology"
+msgstr "Biochemie, genetica en moleculaire biologie"
+
+msgid "censusFieldChemistry"
+msgstr "Scheikunde"
+
+msgid "censusFieldComputerScience"
+msgstr "Informatica"
+
+msgid "censusFieldDentistry"
+msgstr "Tandheelkunde"
+
+msgid "censusFieldEconomicsEconometricsAndFinance"
+msgstr "Economie, econometrie en financiën"
+
+msgid "censusFieldEngineering"
+msgstr "Techniek"
+
+msgid "censusFieldEnvironmentalScience"
+msgstr "Milieuwetenschappen"
+
+msgid "censusFieldHealthProfessions"
+msgstr "Zorgberoepen"
+
+msgid "censusFieldImmunologyAndMicrobiology"
+msgstr "Immunologie en microbiologie"
+
+msgid "censusFieldMaterialsScience"
+msgstr "Materiaalkunde"
+
+msgid "censusFieldMathematics"
+msgstr "Wiskunde"
+
+msgid "censusFieldMedicine"
+msgstr "Geneeskunde"
+
+msgid "censusFieldMultidisciplinary"
+msgstr "Multidisciplinair"
+
+msgid "censusFieldNeuroscience"
+msgstr "Neurowetenschappen"
+
+msgid "censusFieldPhysicsAndAstronomy"
+msgstr "Natuur- en sterrenkunde"
+
+msgid "censusFieldPsychology"
+msgstr "Psychologie"
+
+msgid "censusFieldSocialSciences"
+msgstr "Sociale wetenschappen"
+
+msgid "censusPublishersTitle"
+msgstr "Per uitgever"
+
+msgid "censusPublishersCaption"
+msgstr "Aandeel onderzoeksartikelen uit {year} met CRediT-rollen, binnen de open-access-collectie van Europe PMC, voor de {count} uitgevers met daar de meeste onderzoeksartikelen dat jaar, genoemd zoals de artikelen ze noemen."
+
+msgid "censusOfArticles"
+msgstr "van {count, plural, one {# artikel} other {# artikelen}}"
+
+msgid "censusRolesTitle"
+msgstr "Rollen naar plaats in de auteurslijst"
+
+msgid "censusRolesCaption"
+msgstr "Aandeel van de auteurs met ten minste één rol dat elke rol heeft, in artikelen met rollen en drie of meer auteurs."
+
+msgid "censusRole"
+msgstr "Rol"
+
+msgid "censusPlaceAll"
+msgstr "Alle auteurs"
+
+msgid "censusPlaceFirst"
+msgstr "Eerste auteur"
+
+msgid "censusPlaceMiddle"
+msgstr "Middelste auteurs"
+
+msgid "censusPlaceLast"
+msgstr "Laatste auteur"
+
+msgid "censusAboutTitle"
+msgstr "Over deze gegevens"
+
+msgid "censusMethod"
+msgstr "De tellingen gaan alleen over onderzoeksartikelen, preprintservers inbegrepen (Cold Spring Harbor Laboratory Preprints, arXiv). Groepen met minder dan 1.000 artikelen zijn weggelaten, en de jaren beginnen bij het eerste met 1.000 artikelen met rollen."
+
+msgid "censusSnapshot"
+msgstr "Momentopname"
+
+msgid "censusDatasetVersion"
+msgstr "Versie van de dataset"
+
+msgid "censusCodeCommit"
+msgstr "Code-commit"
+
+msgid "censusParser"
+msgstr "Parserversie"
+
+msgid "censusOpenAlex"
+msgstr "OpenAlex-bronnen"
+
+msgid "censusDownload"
+msgstr "De tellingen downloaden (JSON)"
+
+msgid "censusHowTitle"
+msgstr "Hoe de census verklaringen leest"
+
+msgid "censusHowRules"
+msgstr "Een parser met regels leest elk artikel. Waar de uitgever de rollen van elke auteur in de JATS-XML tagt, neemt hij de tags over. Anders leest hij de verklaring in vrije tekst, zinsdeel voor zinsdeel, en koppelt auteurs aan rollen. Alleen CRediT-termen tellen, dus „A.B. conceived the study” levert geen rollen op."
+
+msgid "censusHowModel"
+msgstr "Een fijngestemde encoder, Ettin-68M, leest ook elke verklaring in vrije tekst. Het is het browsermodel van de census, gemaakt om in een webbrowser te draaien. Hij vindt meer van de getagde rollen dan de regels, bij ongeveer dezelfde precisie, maar hij geeft ook rollen aan verhalende verklaringen die er geen noemen. De tellingen op deze pagina komen alleen van de regelparser."
+
+msgid "censusHowCaveat"
+msgstr "Beide worden gemeten aan de rollen die uitgevers taggen, en die tags zijn geen gecontroleerde standaard. Een tag kan een rol noemen die de verklaring nergens geeft. Bij 200 MDPI-artikelen waar de regelparser en de tags verschillen, oordeelde een taalmodel dat de tags 192 keer fout waren en de parser alleen 6 keer. Een F1-score tegen de tags meet dus de overeenkomst ermee, en onderschat de nauwkeurigheid, het meest bij MDPI."
+
+msgid "censusHowCode"
+msgstr "De code van de census"
+
+msgid "censusHowModelCard"
+msgstr "De modelkaart"
+
+msgid "doiRolesImported"
+msgstr "CRediT-rollen geïmporteerd. Controleer deze toewijzingen voordat u ze toepast; het record bevat geen bijdrageniveaus."
+
+msgid "doiNoRoles"
+msgstr "Dit record bevat geen gedeponeerde CRediT-rollen. De bijdragenmatrix blijft leeg."
+
+msgid "doiConfirm"
+msgstr "DOI-import bevestigen"
+
+msgid "errCitationConverter"
+msgstr "De citatieconverter kon niet voltooien. Uw bestand staat er nog. Probeer het online opnieuw, of converteer het in de citesync-playground."
+
+msgid "citationPlayground"
+msgstr "citesync-playground openen"
+
+msgid "errImportNoCitationAuthors"
+msgstr "Dit citatiebestand vermeldt geen auteurs."
+
+msgid "citationConverting"
+msgstr "Citatiebestand wordt gelezen… De converter moet mogelijk eerst worden gedownload."

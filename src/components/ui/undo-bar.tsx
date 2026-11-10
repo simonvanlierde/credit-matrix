@@ -1,7 +1,5 @@
-"use client";
-
 import { useId, useLayoutEffect, useRef } from "react";
-import { useTranslations } from "use-intl";
+import { useTranslations } from "@/lib/translations";
 import { cn } from "@/lib/utils";
 
 /**

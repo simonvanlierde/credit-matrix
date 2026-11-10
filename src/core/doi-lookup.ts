@@ -1,5 +1,6 @@
 import * as z from "zod/mini";
 import { isValidOrcid, MAX_AUTHORS, normalizeOrcid } from "./author";
+import { CREDIT_ROLES, type CreditRoleName, creditSlug } from "./credit-roles";
 import { fetchUpstreamJson } from "./upstream-fetch";
 
 /**
@@ -32,6 +33,8 @@ export const DOI_INPUT_REGEX = /^(?:(?:https?:\/\/)?(?:www\.)?(?:dx\.)?doi\.org\
 export interface DoiAuthor {
   name: string;
   orcid?: string;
+  /** Deposited CRediT roles, with no inferred contribution level. Confirm before applying. */
+  roles?: CreditRoleName[];
 }
 
 export type DoiLookupResult =
@@ -54,6 +57,7 @@ const CrossrefWorkSchema = /* @__PURE__ */ (() =>
             family: z.optional(z.string()),
             name: z.optional(z.string()),
             ORCID: z.optional(z.string()),
+            role: z.optional(z.unknown()),
           }),
         ),
       ),
@@ -93,7 +97,7 @@ const DataCiteWorkSchema = /* @__PURE__ */ (() =>
   }))();
 
 /** The contributor shape both lookups are reduced to before reading. */
-type CrossrefAuthor = { given?: string; family?: string; name?: string; ORCID?: string };
+type CrossrefAuthor = { given?: string; family?: string; name?: string; ORCID?: string; role?: unknown };
 
 /** Build a failure carrying both the code and its English description. */
 function fail(status: 400 | 404 | 422 | 502, code: DoiErrorCode): DoiLookupResult {
@@ -200,5 +204,13 @@ function readAuthor(entry: CrossrefAuthor): DoiAuthor | null {
 
   // Crossref sends the URL form; `normalizeOrcid` already strips it.
   const orcid = entry.ORCID ? normalizeOrcid(entry.ORCID) : "";
-  return isValidOrcid(orcid) ? { name, orcid } : { name };
+  const deposited = new Set(
+    (Array.isArray(entry.role) ? entry.role : []).flatMap((role: unknown) => {
+      if (!role || typeof role !== "object" || !("vocabulary" in role) || role.vocabulary !== "credit") return [];
+      if (!("role" in role) || typeof role.role !== "string") return [];
+      return [role.role.replace("conceptualisation", "conceptualization").replace("visualisation", "visualization")];
+    }),
+  );
+  const roles = CREDIT_ROLES.filter((role) => deposited.has(creditSlug(role.url))).map((role) => role.name);
+  return { name, ...(isValidOrcid(orcid) ? { orcid } : {}), ...(roles.length ? { roles } : {}) };
 }

@@ -1,8 +1,6 @@
-"use client";
-
 import { HelpCircle } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useTranslations } from "use-intl";
+import { usePathname } from "@/lib/pathname";
+import { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
 
 /** Re-opens the welcome modal. Ephemeral: the re-open isn't persisted, so it

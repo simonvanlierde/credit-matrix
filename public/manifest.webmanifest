@@ -1,0 +1,22 @@
+{
+  "name": "CRediT Matrix",
+  "short_name": "CRediT",
+  "description": "Draft CRediT contribution statements for scholarly publications.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#1f4e79",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ]
+}

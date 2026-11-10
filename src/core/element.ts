@@ -1,11 +1,5 @@
 import { type Author, MAX_IMPORT_BYTES, rolesWithContributions, scoreToLevel } from "./author";
-import {
-  hasCatalog,
-  type LocaleCode,
-  loadRoleCatalog,
-  makeRoleTranslator,
-  normalizeLocaleCode,
-} from "./credit-i18n/index";
+import { type LocaleCode, loadRoleCatalog, makeRoleTranslator, resolveLocaleTag } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator, type UiTranslator } from "./credit-i18n/ui-strings";
 import { buildHeatmapSvg } from "./export/heatmap-svg";
 import { fromJson, RepeatedIdError } from "./export/json";
@@ -31,13 +25,10 @@ style + p { margin-top: 0; }
 class LoadError extends Error {}
 
 /**
- * An offered locale for a language tag. A regional tag such as `de-DE` falls
- * back to its language when that has a catalog; anything else is English.
+ * An offered locale for a language tag, English when none fits (see `resolveLocaleTag`).
  */
 function resolveLocale(tag: string | null | undefined): LocaleCode {
-  const exact = normalizeLocaleCode(tag);
-  const base = tag?.split("-")[0] ?? "";
-  return exact === "en" && hasCatalog(base) ? base : exact;
+  return resolveLocaleTag(tag) ?? "en";
 }
 
 async function fetchJson(src: string): Promise<string> {

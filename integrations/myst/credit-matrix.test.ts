@@ -98,3 +98,31 @@ describe("MyST plugin", () => {
     }
   });
 });
+
+it("builds a heatmap SVG asset with shared options and a text alternative", () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-heatmap-"));
+  const path = join(dir, "index.md");
+  writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  expect(directive, "heatmap directive is registered").toBeDefined();
+  const nodes = directive?.run({ options: { legend: false, size: 30, shape: "circle" } }, { path });
+  expect(nodes?.[0]?.children?.[0]?.alt).toContain("Tu Youyou: Software");
+  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  expect(svg).toContain('width="30" height="30" rx="15"');
+  expect(svg).not.toContain(">Supporting<");
+});
+
+it("labels heatmap columns with each author's full name", () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-names-"));
+  const path = join(dir, "index.md");
+  writeFileSync(
+    path,
+    "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n  - name: Katherine Johnson\n    roles: [Software]\n---\n",
+  );
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  const nodes = directive?.run({ options: {} }, { path });
+  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  expect(svg).toContain(">Tu Youyou<");
+  expect(svg).toContain(">Katherine Johnson<");
+  expect(svg).not.toContain(">C<");
+});

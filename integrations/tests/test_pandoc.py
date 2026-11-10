@@ -191,3 +191,24 @@ def test_single_author_map_prints_the_name():
         "--standalone",
     )
     assert "\\author{Antonie van Leeuwenhoek}" in result
+
+
+@pytest.mark.parametrize("levels", [True, False])
+def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, levels):
+    metadata = {
+        "author": [{"name": "Tu Youyou", "roles": [{"software": "supporting"}]}],
+        "credit-matrix": {
+            "heatmap": True,
+            "command": ["node", str(ROOT / "src/core/dist/cli.js")],
+            "shape": "circle",
+            "size": 30,
+            "legend": False,
+            "levels": levels,
+        },
+    }
+    html = render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}")
+    expected = "Tu Youyou: Software (Supporting)." if levels else "Tu Youyou: Software."
+    assert f'alt="{expected}"' in html
+    svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
+    assert 'width="30" height="30" rx="15"' in svg
+    assert ">Supporting<" not in svg

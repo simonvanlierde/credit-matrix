@@ -1,7 +1,5 @@
-"use client";
-
 import { BadgeCheck, Check, Copy, Download, ImageDown } from "lucide-react";
-import { useTranslations } from "use-intl";
+import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { LicenseLink } from "./license-link";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
@@ -67,9 +65,6 @@ export function CreditBadge({ className }: { className?: string }) {
           rel="noopener noreferrer"
           className="mb-3 flex flex-col items-center gap-2 rounded-md bg-surface-container-low p-4 transition-colors hover:bg-surface-container"
         >
-          {/* A plain img: the static export has no image optimizer, so next/image's
-              default loader would request a /_next/image URL that 404s. */}
-          {/* biome-ignore lint/performance/noImgElement: static export, nothing to optimize an 88px PNG with */}
           <img src={BADGE_SRC} alt={ALT} width={88} height={88} />
           <span className="text-[11px] text-on-surface-variant">credit.niso.org</span>
           <span className="sr-only">{t("opensInNewTab")}</span>

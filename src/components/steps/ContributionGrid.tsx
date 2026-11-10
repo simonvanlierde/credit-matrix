@@ -1,9 +1,6 @@
-"use client";
-
 import { Check, CheckCheck, Clock, Columns3, Rows3, Settings2, UserPlus } from "lucide-react";
 import { useTheme } from "next-themes";
 import { memo, type ReactNode, type RefObject, useRef, useState } from "react";
-import { useLocale, useTranslations } from "use-intl";
 import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
 import { InitialsChip } from "@/components/ui/initials-chip";
@@ -17,6 +14,7 @@ import { LEVEL_SCORE } from "@/core/author";
 import { heatCellColor, onColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
+import { useLocale, useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";

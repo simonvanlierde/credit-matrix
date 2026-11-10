@@ -1,0 +1,1566 @@
+msgid ""
+msgstr ""
+"Language: zh-Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "stepContributors"
+msgstr "贡献者"
+
+msgid "stepContributions"
+msgstr "贡献"
+
+msgid "stepStatement"
+msgstr "声明"
+
+msgid "addContributor"
+msgstr "新的作者姓名或 ORCID iD"
+
+msgid "addPlaceholder"
+msgstr "添加姓名或 ORCID iD…"
+
+msgid "addButton"
+msgstr "添加"
+
+msgid "nameLabel"
+msgstr "姓名或 ORCID iD"
+
+msgid "removeContributor"
+msgstr "移除"
+
+msgid "reorderContributor"
+msgstr "重新排序"
+
+msgid "undo"
+msgstr "撤销"
+
+msgid "cancel"
+msgstr "取消"
+
+msgid "skipToContent"
+msgstr "跳到内容"
+
+msgid "noContributorsYet"
+msgstr "尚无贡献者。"
+
+msgid "loadSample"
+msgstr "加载示例数据"
+
+msgid "sampleNames"
+msgstr "Youyou Tu\nXuesen Qian\nChien-Shiung Wu"
+
+msgid "assignmentMode"
+msgstr "角色分配模式"
+
+msgid "modeYesNo"
+msgstr "是／否"
+
+msgid "modeLevels"
+msgstr "等级"
+
+msgid "bulkAssign"
+msgstr "批量分配"
+
+msgid "heatmapOptions"
+msgstr "热图选项"
+
+msgid "statementOptions"
+msgstr "声明选项"
+
+msgid "gridColor"
+msgstr "热图颜色"
+
+msgid "transpose"
+msgstr "转置"
+
+msgid "useInitials"
+msgstr "使用姓名缩写"
+
+msgid "roleColumn"
+msgstr "角色"
+
+msgid "contributorColumn"
+msgstr "贡献者"
+
+msgid "groupByRole"
+msgstr "按角色"
+
+msgid "groupByAuthor"
+msgstr "按作者"
+
+msgid "showLevels"
+msgstr "显示等级"
+
+msgid "copyStatement"
+msgstr "复制声明"
+
+msgid "exportData"
+msgstr "导出数据"
+
+msgid "download"
+msgstr "下载"
+
+msgid "copy"
+msgstr "复制"
+
+msgid "copied"
+msgstr "已复制"
+
+msgid "import"
+msgstr "导入"
+
+msgid "share"
+msgstr "分享"
+
+msgid "howItWorks"
+msgstr "使用说明"
+
+msgid "aboutApp"
+msgstr "关于此应用"
+
+msgid "interfaceLanguage"
+msgstr "界面语言"
+
+msgid "outputLanguage"
+msgstr "输出语言"
+
+msgid "toggleTheme"
+msgstr "切换主题"
+
+msgid "contributorTypeAuthor"
+msgstr "作者"
+
+msgid "contributorTypeNonAuthor"
+msgstr "非作者"
+
+msgid "addOrcid"
+msgstr "添加 ORCID iD"
+
+msgid "lookupOrcidName"
+msgstr "从 ORCID 查询姓名"
+
+msgid "lookingUp"
+msgstr "查询中…"
+
+msgid "nameUpdated"
+msgstr "姓名已更新"
+
+msgid "removeOrcid"
+msgstr "移除 ORCID iD"
+
+msgid "gridEmptyHint"
+msgstr "添加贡献者后，即可在此网格中分配 14 种 CRediT 角色。"
+
+msgid "bulkAssignLevel"
+msgstr "要分配的等级"
+
+msgid "bulkOneContributor"
+msgstr "单个贡献者"
+
+msgid "bulkOneRole"
+msgstr "单个角色"
+
+msgid "bulkAssignAll"
+msgstr "分配所有角色"
+
+msgid "bulkClearAll"
+msgstr "清除所有角色"
+
+msgid "bulkAssignToAll"
+msgstr "分配给所有人"
+
+msgid "bulkClearRole"
+msgstr "为所有人清除"
+
+msgid "bulkChangeApplied"
+msgstr "已应用批量更改。"
+
+msgid "annBulkUndone"
+msgstr "已撤销批量更改。"
+
+msgid "contributorToAssign"
+msgstr "要分配的贡献者"
+
+msgid "colorLabel"
+msgstr "颜色"
+
+msgid "transposeHint"
+msgstr "交换行轴与列轴"
+
+msgid "legendLevel"
+msgstr "等级"
+
+msgid "legendKey"
+msgstr "图例"
+
+msgid "levelHint"
+msgstr "选择以切换·右键或 0–3 直接设定级别。"
+
+msgid "heatmapLabel"
+msgstr "热图"
+
+msgid "copyHeatmapHint"
+msgstr "将热图复制为 PNG 图像"
+
+msgid "fullDefinition"
+msgstr "完整定义"
+
+msgid "copyFailedMessage"
+msgstr "复制失败"
+
+msgid "linkCopied"
+msgstr "链接已复制"
+
+msgid "importTitle"
+msgstr "导入贡献者"
+
+msgid "importData"
+msgstr "导入数据"
+
+msgid "close"
+msgstr "关闭"
+
+msgid "browseFiles"
+msgstr "浏览文件"
+
+msgid "dragDropFile"
+msgstr "将文件拖放到此处"
+
+msgid "acceptedFileTypes"
+msgstr "支持 .csv、.tsv、.json 或 .xml"
+
+msgid "fileLoaded"
+msgstr "已从 {name} 载入"
+
+msgid "pasteRawData"
+msgstr "粘贴原始数据"
+
+msgid "replaceWorkspaceTitle"
+msgstr "要替换当前工作区吗？"
+
+msgid "replaceWorkspace"
+msgstr "替换工作区"
+
+msgid "keepCurrentWork"
+msgstr "保留当前内容"
+
+msgid "welcomeStepContributors"
+msgstr "添加贡献者"
+
+msgid "welcomeStepRoles"
+msgstr "分配角色"
+
+msgid "welcomeStepExport"
+msgstr "检查并导出"
+
+msgid "gotIt"
+msgstr "知道了"
+
+msgid "startFresh"
+msgstr "从空白开始"
+
+msgid "removedContributor"
+msgstr "已移除 {name}"
+
+msgid "contributorCount"
+msgstr "{count, plural, =0 {暂无贡献者} other {# 位贡献者}}"
+
+msgid "annContributorRestored"
+msgstr "已恢复 {name}。"
+
+msgid "annNameFromOrcid"
+msgstr "已从 ORCID 更新姓名：{name}"
+
+msgid "annStatementCopied"
+msgstr "声明已复制到剪贴板"
+
+msgid "annLinkCopied"
+msgstr "链接已复制到剪贴板"
+
+msgid "annHeatmapCopied"
+msgstr "热图 PNG 已复制到剪贴板"
+
+msgid "annBadgeCopied"
+msgstr "徽章 PNG 已复制到剪贴板"
+
+msgid "annCopyFailed"
+msgstr "复制失败。请重试。"
+
+msgid "dndPickedUp"
+msgstr "已开始拖动贡献者 {name}。"
+
+msgid "dndOver"
+msgstr "贡献者 {name} 位于 {target} 上方。"
+
+msgid "dndDropped"
+msgstr "贡献者 {name} 已放置到 {target}。"
+
+msgid "dndCancelled"
+msgstr "已取消对 {name} 的重新排序。"
+
+msgid "errNameNoLetter"
+msgstr "这看起来不像姓名，至少需要包含一个字母或汉字。"
+
+msgid "errNameTooLong"
+msgstr "该姓名过长。请使用不超过 500 个字符。"
+
+msgid "errFileTooLarge"
+msgstr "该文件过大。请选择小于 {limit} 的文件。"
+
+msgid "errFileUnreadable"
+msgstr "无法读取该文件。请检查文件后重试。"
+
+msgid "errImportTooLarge"
+msgstr "导入的内容过大。请粘贴少于 {limit} 的数据。"
+
+msgid "errTooManyContributors"
+msgstr "该导入包含的贡献者过多，上限为 {limit}。"
+
+msgid "errShareTooLarge"
+msgstr "此草稿过大，无法以链接形式分享。请改为导出为 JSON。"
+
+msgid "errShareUnsupported"
+msgstr "此浏览器无法创建分享链接。请改为将草稿导出为 JSON。"
+
+msgid "errShareLinkBroken"
+msgstr "无法打开该分享链接。您自己的草稿已保留。"
+
+msgid "errAtContributorLimit"
+msgstr "一份草稿最多可包含 {limit} 位贡献者。请先移除一位，再添加新的贡献者。"
+
+msgid "errOrcidChecksum"
+msgstr "该 ORCID iD 的校验位无效。请检查数字后重试。"
+
+msgid "errOffline"
+msgstr "您当前处于离线状态，无法使用 ORCID 查询。请直接输入姓名。"
+
+msgid "errOrcidINVALID_ID"
+msgstr "这不是有效的 ORCID iD。请检查数字后重试。"
+
+msgid "errOrcidNOT_FOUND"
+msgstr "没有与该 iD 匹配的 ORCID 记录。"
+
+msgid "errOrcidUNAVAILABLE"
+msgstr "ORCID 服务暂时不可用。请稍后重试，或直接输入姓名。"
+
+msgid "importFromDoi"
+msgstr "从 DOI 导入"
+
+msgid "structuredFileUpload"
+msgstr "上传结构化文件"
+
+msgid "doiPlaceholder"
+msgstr "10.1038/s41586-020-2649-2"
+
+msgid "doiLookUp"
+msgstr "查询"
+
+msgid "doiLookingUp"
+msgstr "查询中…"
+
+msgid "doiHint"
+msgstr "将自动填写贡献者列表、各自的 ORCID iD 以及标题。已登记的 CRediT 角色会显示出来供确认。"
+
+msgid "errDoiINVALID_DOI"
+msgstr "这不是有效的 DOI。其格式应类似于 10.1234/abcde。"
+
+msgid "errDoiNOT_FOUND"
+msgstr "没有与该 DOI 匹配的已发表记录。"
+
+msgid "errDoiNO_AUTHORS"
+msgstr "该记录未列出任何贡献者，因此没有可导入的内容。"
+
+msgid "errDoiTOO_MANY_AUTHORS"
+msgstr "该记录列出的贡献者数量超过了单份草稿的上限。"
+
+msgid "errDoiUNAVAILABLE"
+msgstr "Crossref 服务暂时不可用。请稍后重试，或粘贴作者列表。"
+
+msgid "errDoiOFFLINE"
+msgstr "您当前处于离线状态，无法使用 DOI 查询。请改为粘贴作者列表。"
+
+msgid "equalContributionShort"
+msgstr "共同第一作者"
+
+msgid "correspondingShort"
+msgstr "通讯作者"
+
+msgid "equalContributionSet"
+msgstr "标记为共同第一作者"
+
+msgid "equalContributionUnset"
+msgstr "取消共同第一作者"
+
+msgid "correspondingSet"
+msgstr "标记为通讯作者"
+
+msgid "correspondingUnset"
+msgstr "取消通讯作者"
+
+msgid "drafts"
+msgstr "草稿"
+
+msgid "draftsHint"
+msgstr "每份草稿对应一篇论文，仅保存在此浏览器中。"
+
+msgid "untitledDraft"
+msgstr "未命名草稿"
+
+msgid "newDraft"
+msgstr "新建草稿"
+
+msgid "draftTitleLabel"
+msgstr "草稿标题"
+
+msgid "duplicateDraft"
+msgstr "复制"
+
+msgid "deleteDraft"
+msgstr "删除"
+
+msgid "confirmDeleteDraft"
+msgstr "要删除这份草稿吗？"
+
+msgid "draftLimitReached"
+msgstr "最多可同时保存 {count} 份草稿，请先删除一份。"
+
+msgid "draftCreated"
+msgstr "已开始新的草稿。"
+
+msgid "draftDuplicated"
+msgstr "已复制草稿。"
+
+msgid "draftDeleted"
+msgstr "已删除草稿。"
+
+msgid "deleteAllDrafts"
+msgstr "删除所有草稿"
+
+msgid "confirmDeleteAllDrafts"
+msgstr "要删除此浏览器中的所有草稿吗？此操作无法撤销。"
+
+msgid "allDraftsDeleted"
+msgstr "已删除所有草稿。"
+
+msgid "draftUpdatedElsewhere"
+msgstr "此草稿已在另一个标签页中更新。"
+
+msgid "switchToDraft"
+msgstr "切换到 {title}"
+
+msgid "coauthorPrefilled"
+msgstr "已勾选的内容是发起人的推测。请修改不正确的地方。"
+
+msgid "coauthorHeading"
+msgstr "<work>{title}</work>：您做了什么？"
+
+msgid "coauthorHeadingUntitled"
+msgstr "您在这篇论文中做了什么？"
+
+msgid "coauthorAnsweringAs"
+msgstr "您正以<b>{name}</b>的身份回答。您的姓名和ORCID iD会随您发回的链接一起传回。"
+
+msgid "coauthorBlankHint"
+msgstr "请为您承担的每个角色选择一个级别，其余保持为{none}。大约需要两分钟。"
+
+msgid "coauthorBlankHintYesNo"
+msgstr "请为您承担的每个角色选择{contributed}，其余保持为{none}。大约需要两分钟。"
+
+msgid "coauthorRoles"
+msgstr "您的角色"
+
+msgid "coauthorFirstAuthor"
+msgstr "我共享第一作者身份"
+
+msgid "coauthorCorresponding"
+msgstr "我是通讯作者"
+
+msgid "coauthorDetails"
+msgstr "您的信息"
+
+msgid "coauthorDetailsHint"
+msgstr "如果发起人写错了您的姓名或ORCID iD，请在此更正。"
+
+msgid "coauthorName"
+msgstr "姓名"
+
+msgid "coauthorSend"
+msgstr "发回"
+
+msgid "coauthorMarked"
+msgstr "已标记{count}/{total}个角色"
+
+msgid "coauthorOrcidSignIn"
+msgstr "使用 ORCID 登录"
+
+msgid "coauthorOrcidHint"
+msgstr "可选：使用 ORCID 登录后，您的回答将标记为已验证。登录信息包含在您发回的链接中，并与您的回答一起保存，JSON 导出中也包括在内。它带有您 ORCID 记录上的姓名。"
+
+msgid "coauthorOrcidChanged"
+msgstr "您在登录后更改了回答。请重新登录以验证此回答。"
+
+msgid "coauthorOrcidSigned"
+msgstr "已使用 ORCID 登录为 {who}。您的回答将标记为已验证。"
+
+msgid "coauthorOrcidFailed"
+msgstr "ORCID 登录未完成。您仍可以不登录发送回答。"
+
+msgid "reviewOrcidVerified"
+msgstr "已由 ORCID 验证为 {who}，于 {date} 登录。"
+
+msgid "reviewOrcidOtherId"
+msgstr "这不是该行中的 iD。"
+
+msgid "reviewOrcidNoRowId"
+msgstr "该行没有可供比较的 ORCID iD。"
+
+msgid "reviewOrcidSignedFor"
+msgstr "此次登录针对《{title}》。"
+
+msgid "reviewOrcidSignedElsewhere"
+msgstr "该行未验证：{who} 于 {date} 使用 ORCID 登录，但针对的是姓名或 iD 不同的另一行。"
+
+msgid "coauthorNotSent"
+msgstr "尚未发送。"
+
+msgid "coauthorCopyInstead"
+msgstr "改为复制链接"
+
+msgid "coauthorShareTitle"
+msgstr "{name}的CRediT角色"
+
+msgid "coauthorSentTitle"
+msgstr "已发送。您可以关闭此页面。"
+
+msgid "coauthorCopiedTitle"
+msgstr "链接已复制。请将其粘贴到您的回复中，然后关闭此页面。"
+
+msgid "coauthorSentBody"
+msgstr "发起人会在其草稿旁看到您的回答。如果对方再次询问，请打开新链接：它会替换此回答。"
+
+msgid "coauthorChange"
+msgstr "修改我的回答"
+
+msgid "claimUnlock"
+msgstr "保留为普通草稿"
+
+msgid "annClaimUnlocked"
+msgstr "已变为普通草稿。所有行均可编辑。"
+
+msgid "claimLockedHint"
+msgstr "您正在回复请求，只能编辑自己的行。"
+
+msgid "claimResumed"
+msgstr "已从上次中断处继续此请求。"
+
+msgid "claimRequestUpdated"
+msgstr "请求已更新。您之前的回答已被替换。"
+
+msgid "claimLockedDraft"
+msgstr "已锁定：正在回复请求"
+
+msgid "requestLinkOwn"
+msgstr "这是您为 {name} 创建的请求链接。"
+
+msgid "askBlank"
+msgstr "询问 {name} 做了哪些工作"
+
+msgid "askPrefilled"
+msgstr "请 {name} 核对您的推测"
+
+msgid "askLinkHint"
+msgstr "该链接包含标题以及此人的姓名和 iD。"
+
+msgid "ask"
+msgstr "请求"
+
+msgid "claimedRowBadge"
+msgstr "您的行"
+
+msgid "askCopied"
+msgstr "链接已复制"
+
+msgid "askedChip"
+msgstr "已请求"
+
+msgid "askedChipTitle"
+msgstr "已请求填写其行；回复送达后消失。"
+
+msgid "mergedRowBadge"
+msgstr "已更新"
+
+msgid "mergedRowBadgeTitle"
+msgstr "已根据刚打开的回复填写。"
+
+msgid "activeDraft"
+msgstr "当前"
+
+msgid "askContributorCopied"
+msgstr "链接已复制，请发送给 {name}。"
+
+msgid "mergeUnmatched"
+msgstr "该回复的对象不在这份草稿中，因此未合并任何内容。"
+
+msgid "askReplyDiffers"
+msgstr "{name} 的回答已收到：{count} 处不同。"
+
+msgid "askReplyMatches"
+msgstr "{name} 的回答与您的一致。"
+
+msgid "askReplyStale"
+msgstr "{name} 的这份回答早于您已有的回答，因此未采用。"
+
+msgid "askReplyDuplicate"
+msgstr "您已收到 {name} 的这份回答。"
+
+msgid "annMergeUndone"
+msgstr "已撤销合并。"
+
+msgid "welcomeIntro"
+msgstr "通过三个步骤撰写可直接投稿的贡献声明。"
+
+msgid "about"
+msgstr "关于"
+
+msgid "statusReady"
+msgstr "可以导出"
+
+msgid "statusNotes"
+msgstr "{count, plural, other {# 条待确认}}"
+
+msgid "statusDismiss"
+msgstr "关闭"
+
+msgid "rolesUsed"
+msgstr "已使用 {total} 种角色中的 {used} 种"
+
+msgid "shareWarningTitle"
+msgstr "此链接包含您的数据"
+
+msgid "shareWarningBody"
+msgstr "任何拿到此链接的人都可以查看每位贡献者的姓名、ORCID iD、贡献者类型和角色分配。"
+
+msgid "noContributorsHint"
+msgstr "在下方粘贴 DOI 或 ORCID iD、输入姓名，或使用标题栏中的<b>导入</b>。"
+
+msgid "a11yContributionGrid"
+msgstr "贡献网格"
+
+msgid "a11yGeneratedStatement"
+msgstr "生成的贡献声明"
+
+msgid "a11yStatementNotes"
+msgstr "声明的待确认事项"
+
+msgid "a11yBulkContributor"
+msgstr "批量分配的目标贡献者"
+
+msgid "a11yBulkRole"
+msgstr "批量分配的目标角色"
+
+msgid "a11yExportFormat"
+msgstr "导出格式"
+
+msgid "a11yOrcidInput"
+msgstr "ORCID iD"
+
+msgid "a11yOrcidHint"
+msgstr "输入 ORCID iD，或以 iD 或 orcid.org 网址的形式粘贴"
+
+msgid "a11yDismissWelcome"
+msgstr "关闭新手引导"
+
+msgid "a11yShareLink"
+msgstr "分享包含全部贡献者数据的链接"
+
+msgid "a11yUseInitials"
+msgstr "使用姓名缩写代替全名"
+
+msgid "a11yShowLevels"
+msgstr "显示等级：为角色标注贡献等级"
+
+msgid "a11ySeparateAcks"
+msgstr "单独列出致谢：将非作者贡献者写在单独一行"
+
+msgid "customColor"
+msgstr "自定义"
+
+msgid "copyDataLink"
+msgstr "复制数据链接"
+
+msgid "fullCreditStandard"
+msgstr "完整的 CRediT 标准"
+
+msgid "creditRolesExamples"
+msgstr "CRediT 角色与示例"
+
+msgid "sourceOnGitHub"
+msgstr "GitHub 上的源代码"
+
+msgid "opensInNewTab"
+msgstr "（在新标签页中打开）"
+
+msgid "acknowledgements"
+msgstr "致谢"
+
+msgid "aboutTaxonomy"
+msgstr "CRediT 是 ANSI/NISO 标准（<cc>CC BY 4.0</cc>）。本项目独立于 NISO，未获 NISO 认可。"
+
+msgid "aboutPrivacy"
+msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在你的浏览器中运行脚本或设置 Cookie。导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在你的浏览器中处理，绝不会上传。除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录信息包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
+
+msgid "accessibilityStatement"
+msgstr "无障碍声明"
+
+msgid "getCreditBadge"
+msgstr "获取 CRediT 徽章"
+
+msgid "creditBadge"
+msgstr "CRediT 徽章"
+
+msgid "copiedHtml"
+msgstr "已复制 HTML"
+
+msgid "copiedPng"
+msgstr "已复制 PNG"
+
+msgid "annBadgeHtmlCopied"
+msgstr "徽章 HTML 已复制到剪贴板"
+
+msgid "importAuthorList"
+msgstr "作者姓名列表"
+
+msgid "importPlaceholder"
+msgstr "{names}\n\n或 .csv / .tsv / .json / .xml / .cff 导出文件，或别人回传给您的链接"
+
+msgid "errImportNoNames"
+msgstr "未找到作者姓名。请每行输入一个姓名。"
+
+msgid "errImportNoCsvRows"
+msgstr "在该 CSV 中未找到贡献者行。"
+
+msgid "errImportNoJsonContributors"
+msgstr "该 JSON 导出文件中不包含任何贡献者。"
+
+msgid "errImportNoXmlContribs"
+msgstr "在该 XML 中未找到 <contrib> 元素。"
+
+msgid "errImportNoCrossrefContribs"
+msgstr "在 Crossref XML 中未找到包含 <person_name> 的 <contributors> 块。"
+
+msgid "aboutTagline"
+msgstr "撰写 CRediT 贡献声明，并将网格导出为贡献热图。"
+
+msgid "aboutInspiredBy"
+msgstr "灵感来自最初的"
+
+msgid "aboutOutputTranslations"
+msgstr "输出内容的翻译来自"
+
+msgid "aboutPageTitle"
+msgstr "关于 CRediT Matrix"
+
+msgid "aboutPageLink"
+msgstr "关于、引用与隐私"
+
+msgid "aboutVersion"
+msgstr "版本"
+
+msgid "aboutLicense"
+msgstr "许可证"
+
+msgid "aboutSource"
+msgstr "源代码"
+
+msgid "aboutAuthor"
+msgstr "作者"
+
+msgid "aboutCiteTitle"
+msgstr "引用 CRediT Matrix"
+
+msgid "aboutCite"
+msgstr "如果您在论文中使用了 CRediT Matrix，请引用其概念 DOI，它始终指向最新版本："
+
+msgid "aboutCiteMetadata"
+msgstr "这些内容来自仓库的 <link>CITATION.cff</link> 文件。<citesync>citesync</citesync> 会在每次发布时保持它同步，它的在线工具也能为你自己的软件生成同样的文件。"
+
+msgid "aboutCiteFormat"
+msgstr "引用格式"
+
+msgid "annCitationCopied"
+msgstr "已复制引用"
+
+msgid "aboutPluginsTitle"
+msgstr "写作工具插件"
+
+msgid "aboutPlugins"
+msgstr "在撰写论文的地方直接写出声明。这些插件根据作者列表中的角色，或根据从这里导出的文件，把声明加入你的文档。每个名称都链接到相应的安装指南。"
+
+msgid "aboutPluginsSoftware"
+msgstr "对于软件，<cli>命令行工具</cli>还能以 CodeMeta 格式写出人员和角色。<citesync>citesync</citesync> 将这些元数据转换为 CITATION.cff 和 Zenodo 文件，<drift>codemeta-drift</drift> 检查 CodeMeta 文件的一致性。"
+
+msgid "statementPlugins"
+msgstr "适用于 Quarto、MyST、Typst 等的插件"
+
+msgid "privacy"
+msgstr "隐私"
+
+msgid "accessibility"
+msgstr "无障碍"
+
+msgid "aboutAccessibility"
+msgstr "<link>无障碍声明</link>说明了我们检查的内容、已知的问题以及如何报告问题。"
+
+msgid "detectedFormat"
+msgstr "已检测到的格式：{format}"
+
+msgid "mergeWrongDraft"
+msgstr "该回复属于不在此浏览器中的草稿，因此未做任何更改。"
+
+msgid "sharedDraftOpened"
+msgstr "已在您当前工作之外打开共享的草稿。"
+
+msgid "sharedDraftLoaded"
+msgstr "已打开共享的草稿。"
+
+msgid "a11yInvalidOrcid"
+msgstr "无效的 ORCID iD"
+
+msgid "a11yRoleAssignment"
+msgstr "{name}的{role}：{level}"
+
+msgid "a11yRolesForContributor"
+msgstr "{name}的角色"
+
+msgid "a11ySetColor"
+msgstr "设置颜色 {color}"
+
+msgid "a11yStatementGrouping"
+msgstr "声明分组方式"
+
+msgid "annContributorsAdded"
+msgstr "已添加 {count} 位贡献者。"
+
+msgid "annEntriesSkippedNoName"
+msgstr "已跳过 {count} 条没有姓名的记录（{entries}）。"
+
+msgid "annOrcidChecksumsSkipped"
+msgstr "已跳过 {count} 个校验位无效的 ORCID iD（{ids}）。"
+
+msgid "annOrcidLookupsFailed"
+msgstr "有 {count} 个 ORCID iD 查询失败（{ids}）。相关记录仍以 iD 作为姓名，请手动更改。"
+
+msgid "annContributorsSkippedLimit"
+msgstr "每份草稿最多容纳 {limit} 位贡献者，已跳过 {count} 位。"
+
+msgid "annCopiedToClipboard"
+msgstr "已复制到剪贴板"
+
+msgid "annExportDataCopied"
+msgstr "导出数据已复制到剪贴板"
+
+msgid "badgeIntro"
+msgstr "将此徽章添加到论文或项目页面中。"
+
+msgid "copyHtml"
+msgstr "复制 HTML"
+
+msgid "copyPng"
+msgstr "复制 PNG"
+
+msgid "downloadPng"
+msgstr "下载 PNG"
+
+msgid "switchToDarkTheme"
+msgstr "切换到深色主题"
+
+msgid "switchToLightTheme"
+msgstr "切换到浅色主题"
+
+msgid "contributorTypeSetAuthor"
+msgstr "标记为作者"
+
+msgid "contributorTypeSetNonAuthor"
+msgstr "标记为非作者贡献者"
+
+msgid "errImportFailed"
+msgstr "导入失败。请检查文件后重试。"
+
+msgid "errImportNewerVersion"
+msgstr "此文件由更新版本的 CRediT Matrix 创建。请重新加载页面以更新，然后重试。"
+
+msgid "errImportRepeatedId"
+msgstr "此文件两次列出了同一个贡献者 ID，因此未导入。"
+
+msgid "errHeatmapExport"
+msgstr "无法将贡献热图导出为 {format} 格式。"
+
+msgid "errStorageFull"
+msgstr "浏览器存储空间已满，更改不会被保存。请导出此草稿，或删除不再需要的草稿。"
+
+msgid "errStorageBlocked"
+msgstr "此浏览器阻止了本网站的存储，更改不会被保存。请允许网站数据，或在关闭标签页前导出。"
+
+msgid "errNewerVersionSaved"
+msgstr "更新版本的 CRediT Matrix 已在另一个标签页中保存了您的草稿。请重新加载此页面：在此处所做的更改不会被保存。"
+
+msgid "formatShareLink"
+msgstr "共享链接"
+
+msgid "formatJsonExport"
+msgstr "JSON 导出"
+
+msgid "replaceWorkspaceBody"
+msgstr "本次导入包含 {incoming} 位贡献者，将替换当前的 {existing} 位贡献者。此操作无法撤销。"
+
+msgid "statementEmptyHint"
+msgstr "尚未分配任何贡献。请选择网格中的单元格来分配角色。"
+
+msgid "separateAcknowledgements"
+msgstr "单列致谢"
+
+msgid "validationAuthorNoRoles"
+msgstr "尚未为{name}分配任何 CRediT 角色。"
+
+msgid "validationRoleUnassigned"
+msgstr "角色“{role}”尚未分配给任何贡献者。"
+
+msgid "welcomeBodyContributors"
+msgstr "粘贴 DOI 即可从已发表的记录中填入整份名单，也可以自行输入姓名。输入 ORCID iD 会自动补全姓名。"
+
+msgid "welcomeBodyRoles"
+msgstr "选择网格中的单元格，标记每位贡献者承担了 14 种 CRediT 角色中的哪几种。"
+
+msgid "welcomeBodyExport"
+msgstr "贡献声明会随着编辑实时更新。您可以复制它，或下载热图、XML、CSV、JSON 或 Markdown。"
+
+msgid "welcomeDraftsTitle"
+msgstr "每篇论文一份草稿"
+
+msgid "welcomeDraftsBody"
+msgstr "撰写多篇论文？在页眉中切换草稿；每份草稿单独保存在此浏览器中。"
+
+msgid "welcomeAskTitle"
+msgstr "直接邀请合著者"
+
+msgid "welcomeAskBody"
+msgstr "从贡献者行菜单复制链接并发送给对方。收到回传的链接后打开它：回复会保存在该贡献者的行旁边，差异在“核对”标签页中处理。"
+
+msgid "importDescription"
+msgstr "可以从 DOI 开始，粘贴姓名或合作者回传的链接，也可以上传 CSV、JSON、JATS4R XML 或 Crossref XML 文件。JSON 和 XML 还会恢复贡献，文件中含有等级时也会恢复等级。也可以导入 tenzing 电子表格（CSV 或 TSV）。粘贴作者贡献声明，即可为已有的贡献者填写角色。CITATION.cff、codemeta.json 和 .zenodo.json 会导入作者姓名和 ORCID iD，角色留空。"
+
+msgid "contributorActions"
+msgstr "针对 {name} 的操作"
+
+msgid "colorBlue"
+msgstr "蓝色"
+
+msgid "colorOrange"
+msgstr "橙色"
+
+msgid "colorBluishGreen"
+msgstr "蓝绿色"
+
+msgid "colorReddishPurple"
+msgstr "紫红色"
+
+msgid "colorVermilion"
+msgstr "朱红色"
+
+msgid "colorSkyBlue"
+msgstr "天蓝色"
+
+msgid "colorYellow"
+msgstr "黄色"
+
+msgid "colorDarkGray"
+msgstr "深灰色"
+
+msgid "languageSettings"
+msgstr "语言设置"
+
+msgid "stripOpenTeam"
+msgstr "询问合著者"
+
+msgid "teamYou"
+msgstr "你"
+
+msgid "teamNotAsked"
+msgstr "尚未询问"
+
+msgid "toggleKeysHint"
+msgstr "选择以切换 · 方向键移动，1 或 0 设置角色。"
+
+msgid "downloadSvg"
+msgstr "下载 SVG"
+
+msgid "copyFormat"
+msgstr "复制 {format}"
+
+msgid "downloadFormat"
+msgstr "下载 {format}"
+
+msgid "a11yInspector"
+msgstr "声明、团队、核对与已发表论文的做法"
+
+msgid "tabTeam"
+msgstr "团队"
+
+msgid "tabReview"
+msgstr "核对"
+
+msgid "tabNorms"
+msgstr "已发表论文的做法"
+
+msgid "normsIntro"
+msgstr "某一领域已发表论文中,各作者位次被赋予每种角色的频率。这只是背景信息,不是建议:其他论文中的常见做法与您的合著者实际做了什么无关。"
+
+msgid "normsField"
+msgstr "您的领域"
+
+msgid "normsFieldPlaceholder"
+msgstr "选择领域"
+
+msgid "normsEmpty"
+msgstr "选择您的领域即可查看比例。本应用不知道您论文的领域,这里的任何操作都不会改变您的矩阵。"
+
+msgid "normsFieldGone"
+msgstr "您保存的领域“<name>{field}</name>”在此快照中没有数据。请选择一个领域以查看比例。"
+
+msgid "normsCoverage"
+msgstr "<name>{field}</name>领域带有 CRediT 角色的开放获取研究论文 {articles, number} 篇,来自 {date} 的 Europe PMC 文件。仅统计至少有一种角色的作者。"
+
+msgid "normsUnvalidated"
+msgstr "角色由程序自动读取，未经人工核查；在出版商同时标注角色的 {tagged, number} 篇论文中，解析器与标注的一致程度为 F1 分数 {f1}（1 为完全一致）。"
+
+msgid "normsYourPosition"
+msgstr "您在此草稿中的位次：{position, select, single {唯一作者} first {第一作者} middle {中间作者} other {最后作者}}。"
+
+msgid "normsNonAuthor"
+msgstr "您在此草稿中是非作者，因此不标出任何一列：比例只统计作者。"
+
+msgid "normsNoSelf"
+msgstr "要标出您的位次,请在贡献者列表中您的那一行选择“这是我”。"
+
+msgid "normsCaption"
+msgstr "按作者位次统计的各角色作者比例"
+
+msgid "normsRole"
+msgstr "角色"
+
+msgid "normsPosition"
+msgstr "{position, select, single {唯一} first {第一} middle {中间} other {最后}}"
+
+msgid "normsTooFew"
+msgstr "作者太少,无法判断"
+
+msgid "normsFootnote"
+msgstr "此类论文少于 {minArticles, number} 篇的领域不列出,作者少于 {minAuthors, number} 人的位次显示为短横线。领域按期刊划分,来自 OpenAlex。来源:CRediT 普查 {snapshot},数据集 {version}。"
+
+msgid "reviewEmptyTitle"
+msgstr "合著者的回答会显示在这里"
+
+msgid "reviewEmptyBody"
+msgstr "合著者发回链接后，打开它，他们的回答会显示在这里，与你的草稿并列。"
+
+msgid "teamEmpty"
+msgstr "先添加贡献者，再逐一询问他们做了什么。"
+
+msgid "teamMessage"
+msgstr "{name}，你好：\n\n我正在为{work}准备 CRediT 贡献声明。能否打开此链接，勾选你承担的角色，然后把链接发回给我？\n\n{link}\n\n链接包含标题、你的姓名和 iD。服务器上不会保存任何内容。"
+
+msgid "teamMessageWork"
+msgstr "《{title}》"
+
+msgid "teamMessageNoTitle"
+msgstr "我们的稿件"
+
+msgid "teamMessageCopied"
+msgstr "已复制给 {name} 的消息。请粘贴到邮件中。"
+
+msgid "teamAskAllDone"
+msgstr "{count, plural, other {已复制全部 # 条消息。}}"
+
+msgid "teamAskNext"
+msgstr "复制下一条：{name}（第 {index}/{total} 条）"
+
+msgid "teamAskAll"
+msgstr "询问所有尚未询问的人（{count}）"
+
+msgid "teamAskAllHint"
+msgstr "每人复制一条消息。复制下一条之前，请先把当前这条粘贴到邮件中。"
+
+msgid "teamPrivacy"
+msgstr "每个链接包含论文标题以及该成员的姓名和 iD。服务器上不会保存任何内容：回答会沿着你发送的方式返回。"
+
+msgid "teamCopyMessageFor"
+msgstr "复制消息（给 {name}）"
+
+msgid "teamCopyMessage"
+msgstr "复制消息"
+
+msgid "expandContributors"
+msgstr "展开贡献者列表"
+
+msgid "collapseContributors"
+msgstr "收起贡献者列表"
+
+msgid "moveUp"
+msgstr "上移"
+
+msgid "moveDown"
+msgstr "下移"
+
+msgid "annMoved"
+msgstr "已将 {name} 移到第 {position} 位（共 {total} 位）。"
+
+msgid "skipToGrid"
+msgstr "跳到网格"
+
+msgid "skipToStatement"
+msgstr "跳到声明"
+
+msgid "stripAnswered"
+msgstr "{total} 人中 {answered} 人已回复"
+
+msgid "stripDiffer"
+msgstr "{count, plural, other {# 条回复不同}}"
+
+msgid "reviewAction"
+msgstr "核对"
+
+msgid "tabReviewOpen"
+msgstr "{count, plural, other {# 处未定差异}}"
+
+msgid "statementDiffers"
+msgstr "{count, plural, other {仍有 # 项贡献不同。}}此声明使用你的版本。"
+
+msgid "exportIncludesAnswers"
+msgstr "包含合著者的回复和询问记录（{count}）"
+
+msgid "thisIsMe"
+msgstr "这是我"
+
+msgid "thisIsNotMe"
+msgstr "这不是我"
+
+msgid "teamSettledOn"
+msgstr "{date} 已确定"
+
+msgid "teamStatusAnswered"
+msgstr "{days, plural, =0 {今天已回复} =1 {昨天已回复} other {# 天前已回复}}·{count} 处待核对"
+
+msgid "teamStatusAsked"
+msgstr "{days, plural, =0 {今天已询问} =1 {昨天已询问} other {# 天前已询问}}·{kind, select, prefilled {你的推测} other {空白}}"
+
+msgid "reviewAnsweredMeta"
+msgstr "{days, plural, =0 {今天已回复} =1 {昨天已回复} other {# 天前已回复}}·{kind, select, prefilled {你的推测} other {空白}}"
+
+msgid "teamReviewFor"
+msgstr "核对 {name} 的回复"
+
+msgid "markerSharedFirst"
+msgstr "共同第一作者"
+
+msgid "markerCorresponding"
+msgstr "通讯作者"
+
+msgid "markerYes"
+msgstr "是"
+
+msgid "markerNo"
+msgstr "否"
+
+msgid "reviewKindAdded"
+msgstr "增加了角色"
+
+msgid "reviewKindMarked"
+msgstr "勾选了此项"
+
+msgid "reviewKindDropped"
+msgstr "未勾选"
+
+msgid "reviewKindLevel"
+msgstr "程度不同"
+
+msgid "reviewUseTheirs"
+msgstr "采用 {name} 的"
+
+msgid "reviewKeepYours"
+msgstr "保留你的"
+
+msgid "reviewAskAbout"
+msgstr "就此询问 {name}"
+
+msgid "reviewUseTheirsRole"
+msgstr "采用 {name} 的：{role}"
+
+msgid "reviewKeepYoursRole"
+msgstr "保留你的：{role}"
+
+msgid "undoRole"
+msgstr "撤销：{role}"
+
+msgid "reviewAskAboutRole"
+msgstr "{copied, select, true {已复制。就此询问 {name}：{role}} other {就此询问 {name}：{role}}}"
+
+msgid "reviewUseAll"
+msgstr "全部采用 {name} 的"
+
+msgid "reviewUsedTheirs"
+msgstr "已采用 {name} 的回复"
+
+msgid "reviewKeptYours"
+msgstr "已保留你的"
+
+msgid "annReviewUsed"
+msgstr "{role}：已采用 {name} 的回复。"
+
+msgid "annReviewKept"
+msgstr "{role}：已保留你的。"
+
+msgid "annReviewUsedAll"
+msgstr "已全部采用 {name} 的回复。"
+
+msgid "annReviewUndone"
+msgstr "已撤销选择。"
+
+msgid "reviewAllSettledTitle"
+msgstr "全部已确定。"
+
+msgid "reviewAllSettledBody"
+msgstr "每条不同的回复都已有决定，声明显示了结果。"
+
+msgid "cellTheySay"
+msgstr "{name} 回复：{level}"
+
+msgid "columnOpenDifferences"
+msgstr "{name}：{count, plural, other {# 处未定差异}}"
+
+msgid "columnSettled"
+msgstr "已确定"
+
+msgid "legendDiffers"
+msgstr "合著者的回复不同"
+
+msgid "reviewAskMessage"
+msgstr "{name}，你好：\n\n我正在完成{work}的 CRediT 贡献声明。我们在“{role}”上的回复不同。能否打开此链接，核对你的那一行，然后把链接发回给我？\n\n{link}\n\n链接包含标题、你的姓名和 iD。服务器上不会保存任何内容。"
+
+msgid "formatStatement"
+msgstr "CRediT 声明"
+
+msgid "statementReview"
+msgstr "核对角色"
+
+msgid "statementReviewTitle"
+msgstr "在声明中找到的角色"
+
+msgid "statementReviewSummary"
+msgstr "将为 {people} 位贡献者添加 {added} 个角色。表格中已有的角色保持不变。"
+
+msgid "statementNothingNew"
+msgstr "找到的角色都已在表格中。"
+
+msgid "statementNoRolesFor"
+msgstr "未找到角色的贡献者:{names}"
+
+msgid "statementCouldBe"
+msgstr "(可能是 {token})"
+
+msgid "statementUnresolvedBody"
+msgstr "这些姓名或缩写与本草稿中的任何贡献者都不匹配，或与多位匹配。除非您选择所指的人，否则会略过其角色。其余角色请在应用后在表格中设置。"
+
+msgid "statementLeaveOut"
+msgstr "略过"
+
+msgid "statementReviewSummaryLevel"
+msgstr "将为 {people, plural, other {# 位贡献者}}以{level}添加 {added, plural, other {# 个角色}}。表格中已有的角色保持不变。"
+
+msgid "statementRoleAlreadySet"
+msgstr "{role}（已设置）"
+
+msgid "statementUnmatchedTitle"
+msgstr "未匹配"
+
+msgid "statementUnmatchedAmbiguous"
+msgstr "{token}：可能是{names}"
+
+msgid "statementUnmatchedNone"
+msgstr "{token}：没有对应的贡献者"
+
+msgid "statementLeftOut"
+msgstr "{who} — 未加入：{roles}"
+
+msgid "statementAppliedLevel"
+msgstr "已从声明中以{level}添加 {count, plural, other {# 个角色}}。"
+
+msgid "statementUndoStale"
+msgstr "未撤销：添加角色后草稿已更改。请在表格中修改。"
+
+msgid "statementOnlyCredit"
+msgstr "只读取 CRediT 角色名称，例如 Conceptualization 或 Writing – original draft，不读取描述谁做了什么的句子。"
+
+msgid "errStatementTooLong"
+msgstr "此文本超过 {limit} 个字符。请只粘贴贡献声明。"
+
+msgid "statementBack"
+msgstr "返回"
+
+msgid "statementApply"
+msgstr "应用角色"
+
+msgid "statementApplied"
+msgstr "已从声明中添加 {count} 个角色。"
+
+msgid "errStatementNoContributors"
+msgstr "请先添加贡献者，再粘贴声明：声明会与本草稿中已有的姓名进行匹配。"
+
+msgid "errStatementNoRoles"
+msgstr "无法将任何 CRediT 角色匹配到本草稿的贡献者。请检查声明是否以与草稿相同的姓名或缩写称呼他们。"
+
+msgid "censusAboutLink"
+msgstr "CRediT 普查：论文如何使用 CRediT"
+
+msgid "censusBack"
+msgstr "返回 CRediT Matrix"
+
+msgid "censusTitle"
+msgstr "CRediT 普查"
+
+msgid "censusHeadline"
+msgstr "{year} 年，Europe PMC 中 {share} 的开放获取研究论文为至少一位作者标明了 CRediT 角色。"
+
+msgid "censusLead"
+msgstr "已发表论文如何使用 CRediT（贡献者角色分类法），数据读取自 Europe PMC 中 {articles} 篇开放获取论文的标记和贡献声明。"
+
+msgid "censusPreliminaryTitle"
+msgstr "初步数据"
+
+msgid "censusPreliminary"
+msgstr "我还没有用人工标注检验这个解析器，所以这些数字只是初步参考。在 {articles} 篇既标注了角色、又印有贡献声明的文章中，解析器对声明的解读与标注的一致程度为 F1 值 {f1}（1 表示找到所有角色且没有错误）。但其中 {share} 来自 MDPI 和 Frontiers，而且这些标注本身也没有人核查过。"
+
+msgid "censusPreliminaryUnscored"
+msgstr "我还没有用人工标注检验这个解析器，所以这些数字只是初步参考。"
+
+msgid "censusIncomplete"
+msgstr "此快照不完整：部分源文件未读取，或有期刊尚无学科领域。"
+
+msgid "censusAdoptionTitle"
+msgstr "随时间的采用情况"
+
+msgid "censusAdoptionCaption"
+msgstr "为至少一位作者标明 CRediT 角色的研究论文所占比例，按出版年份。{year} 年的论文仍在陆续发表，因此该段以虚线表示。"
+
+msgid "censusRolesPerAuthorTitle"
+msgstr "每位作者的角色数"
+
+msgid "censusRolesPerAuthorCaption"
+msgstr "拥有角色的作者平均担任的角色数，按出版年份。"
+
+msgid "censusShowTable"
+msgstr "以表格显示"
+
+msgid "censusPartial"
+msgstr "（不完整）"
+
+msgid "censusTableLabel"
+msgstr "{chart}（表格）"
+
+msgid "censusTrend"
+msgstr "{first} 年为 {from}，{last} 年为 {to}，最高为 {maxYear} 年的 {max}。"
+
+msgid "censusYear"
+msgstr "年份"
+
+msgid "censusResearchArticles"
+msgstr "研究论文"
+
+msgid "censusWithRoles"
+msgstr "有角色"
+
+msgid "censusShare"
+msgstr "比例"
+
+msgid "censusStylesTitle"
+msgstr "角色的标记方式"
+
+msgid "censusStylesCaption"
+msgstr "每年研究论文的比例，按角色读取的来源区分。每篇论文只计一次，归入下列四种中它最先符合的一种。四幅图使用同一刻度。{year} 年的论文仍在陆续发表，因此该段以虚线表示。"
+
+msgid "censusStyleJats4r"
+msgstr "JATS4R 角色标记"
+
+msgid "censusStyleJats4rNote"
+msgstr "按 JATS4R（制定期刊论文标记方式的小组）的建议，用 CRediT 词表标记每位作者的角色"
+
+msgid "censusStylePlosUri"
+msgstr "角色网址标记"
+
+msgid "censusStylePlosUriNote"
+msgstr "像 PLOS 那样，用 CRediT 网址标记每位作者的角色"
+
+msgid "censusStyleStatement"
+msgstr "贡献声明"
+
+msgid "censusStyleStatementNote"
+msgstr "以姓名缩写或姓名提及作者的一段文字"
+
+msgid "censusStyleContribText"
+msgstr "逐作者文本"
+
+msgid "censusStyleContribTextNote"
+msgstr "每位作者旁的自由文本，如角色列表或脚注"
+
+msgid "censusFieldsTitle"
+msgstr "按学科领域"
+
+msgid "censusFieldsCaption"
+msgstr "{year} 年标明 CRediT 角色的研究论文比例，按期刊在 OpenAlex（一个开放的学术作品索引）中的学科领域。学科领域按期刊划分，而非按论文。Europe PMC 本身以生物医学为主，其他领域覆盖较少。少于 1,000 篇论文的领域未列出。"
+
+msgid "censusFieldAgriculturalAndBiologicalSciences"
+msgstr "农业与生物科学"
+
+msgid "censusFieldBiochemistryGeneticsAndMolecularBiology"
+msgstr "生物化学、遗传学与分子生物学"
+
+msgid "censusFieldChemistry"
+msgstr "化学"
+
+msgid "censusFieldComputerScience"
+msgstr "计算机科学"
+
+msgid "censusFieldDentistry"
+msgstr "牙医学"
+
+msgid "censusFieldEconomicsEconometricsAndFinance"
+msgstr "经济学、计量经济学与金融"
+
+msgid "censusFieldEngineering"
+msgstr "工程学"
+
+msgid "censusFieldEnvironmentalScience"
+msgstr "环境科学"
+
+msgid "censusFieldHealthProfessions"
+msgstr "卫生专业"
+
+msgid "censusFieldImmunologyAndMicrobiology"
+msgstr "免疫学与微生物学"
+
+msgid "censusFieldMaterialsScience"
+msgstr "材料科学"
+
+msgid "censusFieldMathematics"
+msgstr "数学"
+
+msgid "censusFieldMedicine"
+msgstr "医学"
+
+msgid "censusFieldMultidisciplinary"
+msgstr "多学科"
+
+msgid "censusFieldNeuroscience"
+msgstr "神经科学"
+
+msgid "censusFieldPhysicsAndAstronomy"
+msgstr "物理学与天文学"
+
+msgid "censusFieldPsychology"
+msgstr "心理学"
+
+msgid "censusFieldSocialSciences"
+msgstr "社会科学"
+
+msgid "censusPublishersTitle"
+msgstr "按出版商"
+
+msgid "censusPublishersCaption"
+msgstr "在 Europe PMC 的开放获取论文中，{year} 年标明 CRediT 角色的研究论文比例，列出当年研究论文最多的 {count} 家出版商，名称按论文所写。"
+
+msgid "censusOfArticles"
+msgstr "共 {count, plural, other {# 篇}}"
+
+msgid "censusRolesTitle"
+msgstr "按署名位置的角色"
+
+msgid "censusRolesCaption"
+msgstr "在至少有一个角色的作者中，担任各角色的作者比例，范围为有角色且作者不少于三人的论文。"
+
+msgid "censusRole"
+msgstr "角色"
+
+msgid "censusPlaceAll"
+msgstr "全部作者"
+
+msgid "censusPlaceFirst"
+msgstr "第一作者"
+
+msgid "censusPlaceMiddle"
+msgstr "中间作者"
+
+msgid "censusPlaceLast"
+msgstr "末位作者"
+
+msgid "censusAboutTitle"
+msgstr "关于这些数据"
+
+msgid "censusMethod"
+msgstr "统计仅涵盖研究论文，包括预印本服务器（Cold Spring Harbor Laboratory Preprints, arXiv）。少于 1,000 篇论文的分组未列出，年份从有角色论文首次达到 1,000 篇的那一年开始。"
+
+msgid "censusSnapshot"
+msgstr "快照"
+
+msgid "censusDatasetVersion"
+msgstr "数据集版本"
+
+msgid "censusCodeCommit"
+msgstr "代码提交"
+
+msgid "censusParser"
+msgstr "解析器版本"
+
+msgid "censusOpenAlex"
+msgstr "OpenAlex 来源"
+
+msgid "censusDownload"
+msgstr "下载统计数据（JSON）"
+
+msgid "censusHowTitle"
+msgstr "普查如何读取贡献声明"
+
+msgid "censusHowRules"
+msgstr "每篇文章由基于规则的解析器读取。如果出版商在 JATS XML 中为每位作者标注了角色，就直接采用这些标注。否则，它会逐个分句读取自由文本声明，把作者与角色对应起来。只有 CRediT 用语才算数，所以“A.B. conceived the study”不会得出任何角色。"
+
+msgid "censusHowModel"
+msgstr "一个经过微调的编码器 Ettin-68M 也会读取每一份自由文本声明。它是普查的浏览器模型，专为在网页浏览器中运行而做。它比规则找到更多已标注的角色，精确率大致相同，但它也会给没有列出角色的叙述性声明分配角色。本页的计数只来自规则解析器。"
+
+msgid "censusHowCaveat"
+msgstr "两者都以出版商标注的角色为基准评分，而这些标注并不是金标准。标注可能列出声明中从未提到的角色。在规则解析器与标注不一致的 200 篇 MDPI 文章中，一个语言模型判断其中 192 篇是标注错了，仅 6 篇是解析器错了。因此，相对于标注的 F1 值衡量的是与标注的一致程度，会低估实际准确度，在 MDPI 上尤其如此。"
+
+msgid "censusHowCode"
+msgstr "普查代码"
+
+msgid "censusHowModelCard"
+msgstr "模型卡"
+
+msgid "doiRolesImported"
+msgstr "已导入 CRediT 角色。应用前请核对这些分配；该记录未提供贡献等级。"
+
+msgid "doiNoRoles"
+msgstr "该记录没有已登记的 CRediT 角色。贡献矩阵将保持为空。"
+
+msgid "doiConfirm"
+msgstr "确认导入 DOI"
+
+msgid "errCitationConverter"
+msgstr "引用转换器未能完成。你的文件仍在这里。请联网后重试，或在 citesync 演练场中转换。"
+
+msgid "citationPlayground"
+msgstr "打开 citesync 演练场"
+
+msgid "errImportNoCitationAuthors"
+msgstr "此引用文件未列出作者。"
+
+msgid "citationConverting"
+msgstr "正在读取引用文件… 可能需要先下载转换器。"

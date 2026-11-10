@@ -9,5 +9,5 @@
 ## Checklist
 
 - [ ] Tests added or updated for any change to domain logic (`src/core`)
-- [ ] Translation: new or changed UI strings are in every `src/messages/*.json` (`pnpm exec playwright test e2e/messages.spec.ts` passes), or this PR touches no strings
+- [ ] Translation: new or changed UI strings are in every `src/locales/*/messages.po` (`pnpm exec playwright test e2e/messages.spec.ts` passes), or this PR touches no strings
 - [ ] `CHANGELOG.md` updated under `[Unreleased]` for user-visible changes

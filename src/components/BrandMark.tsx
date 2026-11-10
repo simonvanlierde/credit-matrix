@@ -1,5 +1,3 @@
-"use client";
-
 import { useContributionStore } from "@/store/contribution-store";
 
 /**

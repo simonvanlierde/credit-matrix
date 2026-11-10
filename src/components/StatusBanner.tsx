@@ -1,10 +1,8 @@
-"use client";
-
 import { CircleAlert, CircleCheck, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { UNDO_WINDOW_MS } from "@/components/ui/undo-bar";
 import { announce } from "@/lib/announce";
+import { useTranslations } from "@/lib/translations";
 
 export interface Status {
   kind: "success" | "error";

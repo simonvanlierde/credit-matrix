@@ -1,8 +1,5 @@
-"use client";
-
 import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
-import { useTranslations } from "use-intl";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
@@ -24,6 +21,7 @@ import { isAllBinary, rolesWithContributions } from "@/core/author";
 import type { RoleTranslator, UiTranslator } from "@/core/i18n";
 import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
+import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";

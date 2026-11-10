@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { moveRadioSelection } from "@/lib/roving-radio";
 import { cn } from "@/lib/utils";

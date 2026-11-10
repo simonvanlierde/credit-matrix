@@ -4,26 +4,29 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import process from "node:process";
+import { parsePoFile } from "@lingui/format-po";
 import { expect, type Page, test } from "@playwright/test";
 import { seedStorage } from "./helpers";
 
 /**
- * Interface messages live in the app (`src/messages`), not in core: they are
+ * Interface messages live in the app (`src/locales`), not in core: they are
  * chrome, not domain logic, and core stays dependency-free.
  *
  * These guard the failure modes the catalogs actually have — a locale the
  * picker offers but cannot load, a key left behind by a rename, a translated
  * proper noun, malformed ICU, and a dropped placeholder.
  */
-const MESSAGES_DIR = path.join(process.cwd(), "src", "messages");
+const MESSAGES_DIR = path.join(process.cwd(), "src", "locales");
 
 const read = (locale: string): Record<string, string> =>
-  JSON.parse(readFileSync(path.join(MESSAGES_DIR, `${locale}.json`), "utf8"));
+  Object.fromEntries(
+    parsePoFile(readFileSync(path.join(MESSAGES_DIR, locale, "messages.po"), "utf8"))
+      .items.filter(({ obsolete }) => !obsolete)
+      .map(({ msgid, msgstr }) => [msgid, msgstr[0] ?? ""]),
+  );
 
 const EN = read("en");
-const LOCALES = readdirSync(MESSAGES_DIR)
-  .filter((f: string) => f.endsWith(".json"))
-  .map((f: string) => f.replace(".json", ""));
+const LOCALES = readdirSync(MESSAGES_DIR).filter((f: string) => !f.includes("."));
 const TRANSLATED = LOCALES.filter((l: string) => l !== "en");
 
 /**
@@ -55,15 +58,42 @@ test.describe("interface messages", () => {
    * Extra keys are a rename that rotted. Missing keys are subtler: they fall
    * back to English, so the app still works and nobody notices one corner of
    * the interface quietly staying English. Enforcing both means adding a
-   * string to en.json is a visible, deliberate translation task.
+   * string to en/messages.po is a visible, deliberate translation task.
    */
   test("matches English key for key, in both directions", () => {
     for (const locale of TRANSLATED) {
       const keys = Object.keys(read(locale));
       const unknown = keys.filter((key) => !(key in EN));
       const missing = Object.keys(EN).filter((key) => !keys.includes(key));
-      expect(unknown, `${locale}.json has keys absent from en.json`).toEqual([]);
-      expect(missing, `${locale}.json is missing keys that en.json defines`).toEqual([]);
+      expect(unknown, `${locale}/messages.po has keys absent from en/messages.po`).toEqual([]);
+      expect(missing, `${locale}/messages.po is missing keys that en/messages.po defines`).toEqual([]);
+    }
+  });
+
+  test("translates every string except the listed untranslatables", () => {
+    // Identical to English is legitimate only for these: cognates, brand and
+    // format names, or an identifier. Anything else is untranslated prose
+    // that a missing-key check cannot see. Value: the locales where it applies.
+    const SAME_AS_ENGLISH: Record<string, string[]> = {
+      doiPlaceholder: ["*"], // an example DOI
+      a11yOrcidInput: ["*"], // "ORCID iD" is the registry's name for it
+      heatmapLabel: ["de", "fr", "it", "nl"], // loanword in use
+      download: ["de"],
+      coauthorName: ["de"],
+      aboutVersion: ["de", "fr"],
+      colorOrange: ["de", "fr"],
+      colorLabel: ["es"],
+      tabTeam: ["de", "it", "nl"],
+      stepContributions: ["fr"],
+      privacy: ["it", "nl"],
+      markerNo: ["es", "it"],
+    };
+    for (const locale of TRANSLATED) {
+      const same = Object.entries(read(locale))
+        .filter(([key, value]) => value === EN[key])
+        .map(([key]) => key)
+        .filter((key) => !(SAME_AS_ENGLISH[key] ?? []).some((l) => l === "*" || l === locale));
+      expect(same, `${locale}/messages.po still has English text for these keys`).toEqual([]);
     }
   });
 
@@ -72,7 +102,7 @@ test.describe("interface messages", () => {
       const blank = Object.entries(read(locale))
         .filter(([, value]) => value.trim() === "")
         .map(([key]) => key);
-      expect(blank, `${locale}.json has blank values`).toEqual([]);
+      expect(blank, `${locale}/messages.po has blank values`).toEqual([]);
     }
   });
 
@@ -154,9 +184,8 @@ test.describe("rendering a non-English locale", () => {
     // is best-effort; extend it when a new key family appears.
     await seed(page, "nl", "nl");
     await page.goto("/");
-    // innerText, not textContent: the latter includes Next's inlined script
-    // payload, whose minified identifiers look exactly like message keys.
-    const visible = await page.locator("body").innerText();
+    // textContent also covers sr-only text; any inline script is part of it, and carries no such keys.
+    const visible = await page.locator("body").textContent();
     // A raw key leaking into the page is the failure this guards against.
     expect(visible).not.toMatch(/\b(a11y|ann|err|dnd|step|bulk)[A-Z]\w+/);
   });

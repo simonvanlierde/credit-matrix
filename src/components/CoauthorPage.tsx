@@ -1,10 +1,7 @@
-"use client";
-
 import { BadgeCheck, Check, ChevronDown, CircleCheck, Send } from "lucide-react";
 import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useTranslations } from "use-intl";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +13,7 @@ import { announce } from "@/lib/announce";
 import { startOrcidSignIn, takeOrcidReturn } from "@/lib/orcid-sign-in";
 import { moveRadioSelection } from "@/lib/roving-radio";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
+import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { cn } from "@/lib/utils";

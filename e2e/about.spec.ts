@@ -47,7 +47,7 @@ test.describe("About page", () => {
     const formats = page.getByRole("radiogroup", { name: "Citation format" });
     await expect(page.locator("article pre")).toContainText("[Computer software]");
     await formats.getByRole("radio", { name: "BibTeX" }).click();
-    await expect(page.locator("article pre")).toContainText("@misc{credit-matrix,");
+    await expect(page.locator("article pre")).toContainText("@software{credit-matrix,");
     const downloaded = page.waitForEvent("download");
     await page.locator("article").getByRole("button", { name: "Download" }).click();
     expect((await downloaded).suggestedFilename()).toBe("credit-matrix.bib");

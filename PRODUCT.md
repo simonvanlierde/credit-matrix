@@ -35,8 +35,8 @@ and can be shared as a URL or imported from a file.
 ## Constraints
 
 - Keep contribution data in the browser. The ORCID and DOI lookups and the ORCID sign-in on a
-  co-author's reply are the only calls that leave it, and they go straight to ORCID, Crossref and
-  DataCite.
+  co-author's reply go straight to ORCID, Crossref and DataCite. Citation-file imports download
+  the citesync converter and a Python runtime; the file is processed locally and never uploaded.
 - Protect scientific accuracy, privacy, accessibility, and translations. Data you export and import
   back must come back the same.
 

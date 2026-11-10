@@ -2,3 +2,4 @@ source = "CITATION.cff"
 files = ["CITATION.cff", "codemeta.json"]
 manifests = ["src/core/package.json"]
 write-manifests = ["version"]
+exports = ["CITATION.bib", "citation.csl.json", "citation.apa.txt"]

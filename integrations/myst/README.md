@@ -53,6 +53,10 @@ names, spellings and aliases follow MyST (`writing`, `editing`, `review`, `analy
 
 [`example/`](example) is a complete project: run `myst build --site` in it.
 
+## Contribution heatmap
+
+See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
+
 ## Limitations
 
 - MyST passes plugins no front matter, so the plugin reads `myst.yml` and the page's own Markdown

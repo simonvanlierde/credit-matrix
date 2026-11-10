@@ -2,7 +2,7 @@
 
 ## Self-hosting
 
-`pnpm build` builds the `credit-matrix` package, runs `next build`, then
+`pnpm build` builds the `credit-matrix` package, compiles the Lingui catalogs, runs the Vite client and prerender builds, then
 [`scripts/postbuild.mjs`](../scripts/postbuild.mjs), which gives each exported page a `<meta>` CSP
 listing the hashes of that page's inline scripts and names the service worker's cache after the
 build. The result is a static export in `out/` that any static host can serve. The response
@@ -65,7 +65,7 @@ A rollback by CLI or dashboard lasts only until the next push to `main` deploys 
 ## The npm package
 
 Pushing a `v*` tag publishes `src/core` as the [`credit-matrix`](../src/core/README.md) npm package,
-through `.github/workflows/release-core.yml`. It runs in two jobs:
+through `.github/workflows/release-core.yml`. It runs in three jobs:
 
 1. `build`, with read-only rights: checks that the tagged commit is on `main` and that the tag
    matches the version in `src/core/package.json` (`pnpm version` keeps it in step with the
@@ -74,6 +74,21 @@ through `.github/workflows/release-core.yml`. It runs in two jobs:
    only the owner create them): downloads that tarball, checks npm is 11.5.1 or
    later, and runs `npm publish <tarball> --provenance --access public`. It installs nothing and
    runs no project code, so the token it holds never meets a dependency's install script.
+3. `release`, after npm publishing succeeds: attests the same tarball with `actions/attest`,
+   verifies its provenance and SBOM, and creates a draft GitHub release. It attaches the tarball,
+   `<tarball>.intoto.jsonl`, `<tarball>.cdx.json` and the SBOM's attestation bundle. It runs no
+   project code. The owner reviews the notes and publishes the draft after all assets are present.
+
+With immutable releases enabled, publishing locks the tag and assets. If draft preparation fails
+after npm publishing succeeds, rerun only the failed job; rerunning the successful npm job would
+try to publish an existing version.
+
+The `release` job runs after `npm publish`. If it fails, re-run it within 7 days, while the
+tarball artifact is still retained, and delete any half-made draft release first.
+
+To verify a downloaded release tarball, run
+`gh attestation verify credit-matrix-<version>.tgz --repo simonvanlierde/credit-matrix`.
+Add `--predicate-type https://cyclonedx.org/bom` to verify its SBOM attestation.
 
 It uses npm trusted publishing: npm accepts the workflow's GitHub OIDC token instead of an access
 token, so no `NPM_TOKEN` secret exists, and the package page links each version to the workflow run

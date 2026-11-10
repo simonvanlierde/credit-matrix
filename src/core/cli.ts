@@ -14,13 +14,13 @@ import {
   type LocaleCode,
   loadRoleCatalog,
   makeRoleTranslator,
-  normalizeLocaleCode,
+  resolveLocaleTag,
 } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
 import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
-import { buildHeatmapSvg } from "./export/heatmap-svg";
+import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
 import { RepeatedIdError, toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
 import { toMarkdown } from "./export/markdown";
@@ -56,7 +56,10 @@ Commands:
       with the levels as shades. It lists authors only.
       tenzing prints the contributions as a Tenzing-style CSV table.
       svg prints the contribution heatmap as an SVG image; --yes-no draws
-      flat cells with no levels.
+      flat cells with no levels. SVG figure options:
+      --color '#1f4e79' --palette blue|green|gray --shape square|rounded|circle
+      --size 22 --legend true|false --labels full|short --horizontal
+      --skipempty true|false. Color overrides palette; size is in pixels.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
       Print a link that asks one contributor to check their roles,
       or with --blank, to fill them in from scratch.
@@ -100,18 +103,8 @@ function isStatementFormat(format: string): format is StatementFormat {
   return (STATEMENT_FORMATS as readonly string[]).includes(format);
 }
 
-/** A locale code, or its language alone ("de-DE" → "de", "pt-BR" → "pt-PT"); null when neither is offered. */
-function resolveLocale(code: string): LocaleCode | null {
-  for (const candidate of [code, code.split("-")[0]?.toLowerCase() ?? ""]) {
-    if (candidate === "en") return "en";
-    const locale = normalizeLocaleCode(candidate);
-    if (locale !== "en") return locale;
-  }
-  return null;
-}
-
 function requireLocale(candidate: string): LocaleCode {
-  const locale = resolveLocale(candidate);
+  const locale = resolveLocaleTag(candidate);
   if (locale) return locale;
   const codes = AVAILABLE_LOCALES.map((l) => l.code).join(", ");
   throw new UsageError(`Unknown locale: ${candidate}. Use one of ${codes}.`);
@@ -199,6 +192,14 @@ export async function run(argv: string[]): Promise<string> {
       format: { type: "string", default: "by-role" },
       locale: { type: "string", default: "en" },
       to: { type: "string" },
+      color: { type: "string" },
+      palette: { type: "string" },
+      shape: { type: "string" },
+      size: { type: "string" },
+      legend: { type: "string", default: "true" },
+      labels: { type: "string" },
+      horizontal: { type: "boolean", default: false },
+      skipempty: { type: "string", default: "true" },
       contributor: { type: "string" },
       blank: { type: "boolean", default: false },
       "base-url": { type: "string", default: DEFAULT_BASE_URL },
@@ -275,10 +276,21 @@ export async function run(argv: string[]): Promise<string> {
         case "tenzing":
           return toTenzing(authors);
         case "svg": {
+          for (const key of ["legend", "skipempty"] as const) {
+            if (!["true", "false"].includes(values[key])) throw new UsageError(`--${key} must be true or false.`);
+          }
           const locale = requireLocale(values.locale);
           return buildHeatmapSvg(authors, {
             locale,
-            showLevels: !values["yes-no"],
+            levels: !values["yes-no"],
+            color: values.color,
+            palette: values.palette as HeatmapSvgOptions["palette"],
+            shape: values.shape as HeatmapSvgOptions["shape"],
+            size: values.size === undefined ? undefined : Number(values.size),
+            legend: values.legend === "true",
+            labels: values.labels as HeatmapSvgOptions["labels"],
+            horizontal: values.horizontal,
+            skipempty: values.skipempty === "true",
             translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
             translateUi: makeUiTranslator(await loadUiCatalog(locale)),
           });
@@ -322,7 +334,10 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
   run(process.argv.slice(2)).then(
     (output) => process.stdout.write(output.endsWith("\n") ? output : `${output}\n`),
     (error: unknown) => {
-      const usage = error instanceof UsageError || (error as { code?: string }).code?.startsWith("ERR_PARSE_ARGS");
+      const usage =
+        error instanceof UsageError ||
+        error instanceof HeatmapOptionError ||
+        (error as { code?: string }).code?.startsWith("ERR_PARSE_ARGS");
       const hint = usage ? "Run 'credit-matrix --help' for usage.\n" : "";
       process.stderr.write(`credit-matrix: ${(error as Error).message}\n${hint}`);
       process.exitCode = usage ? 2 : 1;

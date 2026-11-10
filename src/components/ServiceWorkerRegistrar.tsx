@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect } from "react";
 
 /**
@@ -10,7 +8,7 @@ import { useEffect } from "react";
  */
 export function ServiceWorkerRegistrar() {
   useEffect(() => {
-    // biome-ignore lint/correctness/noProcessGlobal: Next inlines process.env.NODE_ENV at build time; there is no node:process in the browser.
+    // biome-ignore lint/correctness/noProcessGlobal: Vite replaces process.env.NODE_ENV at build time; there is no node:process in the browser.
     if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
     // A failed registration (private mode, an unsupported context) costs the
     // app nothing but offline support, so it stays quiet.

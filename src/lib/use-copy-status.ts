@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { announce } from "@/lib/announce";
+import { useTranslations } from "@/lib/translations";
 
 export type CopyStatus = "idle" | "copied" | "error";
 

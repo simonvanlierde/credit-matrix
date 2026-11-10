@@ -1,7 +1,8 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { beforeEach, expect, it, vi } from "vitest";
-import en from "@/messages/en.json";
+import { english } from "@/lib/test-messages";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { PERSIST_KEY } from "@/store/persist-meta";
 import { PersistenceStatus } from "./PersistenceStatus";
@@ -37,14 +38,14 @@ it("keeps saying saving stopped when another status shows", async () => {
   refusing(new DOMException("full", "QuotaExceededError"), () => useContributionStore.getState().setTitle("Lost"));
   act(() => showStatus({ kind: "success", message: "Link copied." }));
 
-  expect(screen.getByRole("alert").textContent).toBe(en.errStorageFull);
+  expect(screen.getByRole("alert").textContent).toBe(english.errStorageFull);
   expect(screen.getByText("Link copied.")).toBeTruthy();
 });
 
 it("says the browser blocks storage when that is why saving stopped, and leaves once saving works", async () => {
   await renderStatus();
   refusing(new DOMException("insecure", "SecurityError"), () => useContributionStore.getState().setTitle("Lost"));
-  expect(screen.getByRole("alert").textContent).toBe(en.errStorageBlocked);
+  expect(screen.getByRole("alert").textContent).toBe(english.errStorageBlocked);
 
   act(() => useContributionStore.getState().setTitle("Saved"));
   expect(screen.getByRole("alert").textContent).toBe("");
@@ -62,7 +63,7 @@ it("restores the saved drafts and follows another tab's saves", async () => {
   });
 
   expect(useContributionStore.getState().title).toBe("Edited there");
-  expect(screen.getByText(en.draftUpdatedElsewhere)).toBeTruthy();
+  expect(screen.getByText(english.draftUpdatedElsewhere)).toBeTruthy();
 });
 
 it("keeps saying a newer version took over when another status shows", async () => {
@@ -70,5 +71,5 @@ it("keeps saying a newer version took over when another status shows", async () 
   act(() => useContributionStore.setState({ newerVersionBlocked: true }));
   act(() => showStatus({ kind: "success", message: "Link copied." }));
 
-  expect(screen.getByRole("alert").textContent).toBe(en.errNewerVersionSaved);
+  expect(screen.getByRole("alert").textContent).toBe(english.errNewerVersionSaved);
 });

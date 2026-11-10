@@ -1,0 +1,1566 @@
+msgid ""
+msgstr ""
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "stepContributors"
+msgstr "貢献者"
+
+msgid "stepContributions"
+msgstr "役割の割り当て"
+
+msgid "stepStatement"
+msgstr "著者貢献"
+
+msgid "addContributor"
+msgstr "新しい著者名または ORCID iD"
+
+msgid "addPlaceholder"
+msgstr "氏名または ORCID iD を追加…"
+
+msgid "addButton"
+msgstr "追加"
+
+msgid "nameLabel"
+msgstr "氏名または ORCID iD"
+
+msgid "removeContributor"
+msgstr "削除"
+
+msgid "reorderContributor"
+msgstr "並べ替え"
+
+msgid "undo"
+msgstr "元に戻す"
+
+msgid "cancel"
+msgstr "キャンセル"
+
+msgid "skipToContent"
+msgstr "コンテンツへスキップ"
+
+msgid "noContributorsYet"
+msgstr "貢献者はまだいません。"
+
+msgid "loadSample"
+msgstr "サンプルデータを読み込む"
+
+msgid "sampleNames"
+msgstr "Hideki Yukawa\nMichiyo Tsujimura\nShinya Yamanaka"
+
+msgid "assignmentMode"
+msgstr "役割の割り当てモード"
+
+msgid "modeYesNo"
+msgstr "はい／いいえ"
+
+msgid "modeLevels"
+msgstr "レベル"
+
+msgid "bulkAssign"
+msgstr "一括割り当て"
+
+msgid "heatmapOptions"
+msgstr "ヒートマップの設定"
+
+msgid "statementOptions"
+msgstr "著者貢献文の設定"
+
+msgid "gridColor"
+msgstr "ヒートマップの色"
+
+msgid "transpose"
+msgstr "転置"
+
+msgid "useInitials"
+msgstr "イニシャルを使う"
+
+msgid "roleColumn"
+msgstr "役割"
+
+msgid "contributorColumn"
+msgstr "貢献者"
+
+msgid "groupByRole"
+msgstr "役割別"
+
+msgid "groupByAuthor"
+msgstr "著者別"
+
+msgid "showLevels"
+msgstr "レベルを表示"
+
+msgid "copyStatement"
+msgstr "著者貢献をコピー"
+
+msgid "exportData"
+msgstr "データをエクスポート"
+
+msgid "download"
+msgstr "ダウンロード"
+
+msgid "copy"
+msgstr "コピー"
+
+msgid "copied"
+msgstr "コピーしました"
+
+msgid "import"
+msgstr "インポート"
+
+msgid "share"
+msgstr "共有"
+
+msgid "howItWorks"
+msgstr "使い方"
+
+msgid "aboutApp"
+msgstr "このアプリについて"
+
+msgid "interfaceLanguage"
+msgstr "表示言語"
+
+msgid "outputLanguage"
+msgstr "出力言語"
+
+msgid "toggleTheme"
+msgstr "テーマを切り替える"
+
+msgid "contributorTypeAuthor"
+msgstr "著者"
+
+msgid "contributorTypeNonAuthor"
+msgstr "著者以外"
+
+msgid "addOrcid"
+msgstr "ORCID iD を追加"
+
+msgid "lookupOrcidName"
+msgstr "ORCID から氏名を取得"
+
+msgid "lookingUp"
+msgstr "取得中…"
+
+msgid "nameUpdated"
+msgstr "氏名を更新しました"
+
+msgid "removeOrcid"
+msgstr "ORCID iD を削除"
+
+msgid "gridEmptyHint"
+msgstr "貢献者を追加すると、このグリッドで 14 種類の CRediT 役割を割り当てられます。"
+
+msgid "bulkAssignLevel"
+msgstr "割り当てるレベル"
+
+msgid "bulkOneContributor"
+msgstr "貢献者単位"
+
+msgid "bulkOneRole"
+msgstr "役割単位"
+
+msgid "bulkAssignAll"
+msgstr "すべての役割を割り当て"
+
+msgid "bulkClearAll"
+msgstr "すべての役割を解除"
+
+msgid "bulkAssignToAll"
+msgstr "全員に割り当て"
+
+msgid "bulkClearRole"
+msgstr "全員から解除"
+
+msgid "bulkChangeApplied"
+msgstr "一括変更を適用しました。"
+
+msgid "annBulkUndone"
+msgstr "一括変更を元に戻しました。"
+
+msgid "contributorToAssign"
+msgstr "割り当てる貢献者"
+
+msgid "colorLabel"
+msgstr "色"
+
+msgid "transposeHint"
+msgstr "行と列の軸を入れ替えます"
+
+msgid "legendLevel"
+msgstr "レベル"
+
+msgid "legendKey"
+msgstr "凡例"
+
+msgid "levelHint"
+msgstr "選択で切り替え・右クリックまたは0–3でレベルを設定。"
+
+msgid "heatmapLabel"
+msgstr "ヒートマップ"
+
+msgid "copyHeatmapHint"
+msgstr "ヒートマップを PNG 画像としてコピーします"
+
+msgid "fullDefinition"
+msgstr "定義の全文"
+
+msgid "copyFailedMessage"
+msgstr "コピーに失敗しました"
+
+msgid "linkCopied"
+msgstr "リンクをコピーしました"
+
+msgid "importTitle"
+msgstr "貢献者をインポート"
+
+msgid "importData"
+msgstr "データをインポート"
+
+msgid "close"
+msgstr "閉じる"
+
+msgid "browseFiles"
+msgstr "ファイルを選択"
+
+msgid "dragDropFile"
+msgstr "ここにファイルをドラッグ＆ドロップ"
+
+msgid "acceptedFileTypes"
+msgstr ".csv、.tsv、.json、.xml に対応しています"
+
+msgid "fileLoaded"
+msgstr "{name} から読み込みました"
+
+msgid "pasteRawData"
+msgstr "データを貼り付け"
+
+msgid "replaceWorkspaceTitle"
+msgstr "現在のワークスペースを置き換えますか？"
+
+msgid "replaceWorkspace"
+msgstr "置き換える"
+
+msgid "keepCurrentWork"
+msgstr "現在の内容を保持"
+
+msgid "welcomeStepContributors"
+msgstr "貢献者を追加"
+
+msgid "welcomeStepRoles"
+msgstr "役割を割り当て"
+
+msgid "welcomeStepExport"
+msgstr "確認してエクスポート"
+
+msgid "gotIt"
+msgstr "わかりました"
+
+msgid "startFresh"
+msgstr "最初から始める"
+
+msgid "removedContributor"
+msgstr "{name} を削除しました"
+
+msgid "contributorCount"
+msgstr "{count, plural, =0 {貢献者なし} other {貢献者 # 名}}"
+
+msgid "annContributorRestored"
+msgstr "{name} を元に戻しました。"
+
+msgid "annNameFromOrcid"
+msgstr "ORCID から氏名を更新しました：{name}"
+
+msgid "annStatementCopied"
+msgstr "著者貢献をクリップボードにコピーしました"
+
+msgid "annLinkCopied"
+msgstr "リンクをクリップボードにコピーしました"
+
+msgid "annHeatmapCopied"
+msgstr "ヒートマップの PNG をクリップボードにコピーしました"
+
+msgid "annBadgeCopied"
+msgstr "バッジの PNG をクリップボードにコピーしました"
+
+msgid "annCopyFailed"
+msgstr "コピーできませんでした。もう一度お試しください。"
+
+msgid "dndPickedUp"
+msgstr "貢献者 {name} のドラッグを開始しました。"
+
+msgid "dndOver"
+msgstr "貢献者 {name} が {target} の上にあります。"
+
+msgid "dndDropped"
+msgstr "貢献者 {name} を {target} にドロップしました。"
+
+msgid "dndCancelled"
+msgstr "{name} の並べ替えをキャンセルしました。"
+
+msgid "errNameNoLetter"
+msgstr "氏名として認識できません。文字を 1 つ以上含めてください。"
+
+msgid "errNameTooLong"
+msgstr "氏名が長すぎます。500 文字以内で入力してください。"
+
+msgid "errFileTooLarge"
+msgstr "ファイルが大きすぎます。{limit} 未満のファイルを選んでください。"
+
+msgid "errFileUnreadable"
+msgstr "ファイルを読み取れませんでした。ファイルを確認してもう一度お試しください。"
+
+msgid "errImportTooLarge"
+msgstr "インポートするデータが大きすぎます。{limit} 未満のデータを貼り付けてください。"
+
+msgid "errTooManyContributors"
+msgstr "インポートに含まれる貢献者が多すぎます。上限は {limit} です。"
+
+msgid "errShareTooLarge"
+msgstr "この下書きはリンクで共有するには大きすぎます。代わりに JSON としてエクスポートしてください。"
+
+msgid "errShareUnsupported"
+msgstr "このブラウザーでは共有リンクを作成できません。代わりに下書きをJSONとしてエクスポートしてください。"
+
+msgid "errShareLinkBroken"
+msgstr "その共有リンクは開けませんでした。お使いの下書きはそのまま保持されています。"
+
+msgid "errAtContributorLimit"
+msgstr "1 つの下書きに登録できる貢献者は最大 {limit} 名です。追加するには、いずれかを削除してください。"
+
+msgid "errOrcidChecksum"
+msgstr "この ORCID iD はチェックサムが正しくありません。数字を確認して、もう一度お試しください。"
+
+msgid "errOffline"
+msgstr "オフラインのため、ORCID の検索は利用できません。氏名を直接入力してください。"
+
+msgid "errOrcidINVALID_ID"
+msgstr "有効な ORCID iD ではありません。数字を確認して、もう一度お試しください。"
+
+msgid "errOrcidNOT_FOUND"
+msgstr "その iD に一致する ORCID レコードは見つかりませんでした。"
+
+msgid "errOrcidUNAVAILABLE"
+msgstr "ORCID のサービスを利用できません。しばらくしてからもう一度お試しいただくか、氏名を直接入力してください。"
+
+msgid "importFromDoi"
+msgstr "DOI からインポート"
+
+msgid "structuredFileUpload"
+msgstr "構造化ファイルのアップロード"
+
+msgid "doiPlaceholder"
+msgstr "10.1038/s41586-020-2649-2"
+
+msgid "doiLookUp"
+msgstr "取得"
+
+msgid "doiLookingUp"
+msgstr "取得中…"
+
+msgid "doiHint"
+msgstr "貢献者リスト、各自の ORCID iD、タイトルを自動で入力します。登録済みの CRediT の役割は、確認用に表示されます。"
+
+msgid "errDoiINVALID_DOI"
+msgstr "有効な DOI ではありません。10.1234/abcde のような形式で入力してください。"
+
+msgid "errDoiNOT_FOUND"
+msgstr "その DOI に一致する公開レコードは見つかりませんでした。"
+
+msgid "errDoiNO_AUTHORS"
+msgstr "そのレコードには貢献者が登録されていないため、インポートできる情報がありません。"
+
+msgid "errDoiTOO_MANY_AUTHORS"
+msgstr "そのレコードには、1 つの下書きに登録できる数を超える貢献者が含まれています。"
+
+msgid "errDoiUNAVAILABLE"
+msgstr "Crossref のサービスを利用できません。しばらくしてからもう一度お試しいただくか、著者リストを貼り付けてください。"
+
+msgid "errDoiOFFLINE"
+msgstr "オフラインのため、DOI の検索は利用できません。代わりに著者リストを貼り付けてください。"
+
+msgid "equalContributionShort"
+msgstr "共同筆頭著者"
+
+msgid "correspondingShort"
+msgstr "責任著者"
+
+msgid "equalContributionSet"
+msgstr "共同筆頭著者として設定"
+
+msgid "equalContributionUnset"
+msgstr "共同筆頭著者を解除"
+
+msgid "correspondingSet"
+msgstr "連絡著者として設定"
+
+msgid "correspondingUnset"
+msgstr "連絡著者を解除"
+
+msgid "drafts"
+msgstr "下書き"
+
+msgid "draftsHint"
+msgstr "下書きは論文ごとに 1 件です。このブラウザーに保存されます。"
+
+msgid "untitledDraft"
+msgstr "無題の下書き"
+
+msgid "newDraft"
+msgstr "新しい下書き"
+
+msgid "draftTitleLabel"
+msgstr "下書きのタイトル"
+
+msgid "duplicateDraft"
+msgstr "複製"
+
+msgid "deleteDraft"
+msgstr "削除"
+
+msgid "confirmDeleteDraft"
+msgstr "この下書きを削除しますか？"
+
+msgid "draftLimitReached"
+msgstr "下書きは同時に {count} 件まで保存できます。まず 1 件削除してください。"
+
+msgid "draftCreated"
+msgstr "新しい下書きを作成しました。"
+
+msgid "draftDuplicated"
+msgstr "下書きを複製しました。"
+
+msgid "draftDeleted"
+msgstr "下書きを削除しました。"
+
+msgid "deleteAllDrafts"
+msgstr "すべての下書きを削除"
+
+msgid "confirmDeleteAllDrafts"
+msgstr "このブラウザのすべての下書きを削除しますか？元に戻せません。"
+
+msgid "allDraftsDeleted"
+msgstr "すべての下書きを削除しました。"
+
+msgid "draftUpdatedElsewhere"
+msgstr "この下書きは別のタブで更新されました。"
+
+msgid "switchToDraft"
+msgstr "{title} に切り替える"
+
+msgid "coauthorPrefilled"
+msgstr "チェックは依頼者による推定です。違っている箇所を修正してください。"
+
+msgid "coauthorHeading"
+msgstr "<work>{title}</work>：あなたは何をしましたか？"
+
+msgid "coauthorHeadingUntitled"
+msgstr "この論文であなたは何をしましたか？"
+
+msgid "coauthorAnsweringAs"
+msgstr "<b>{name}</b>として回答しています。あなたの名前とORCID iDは、送り返すリンクに含まれます。"
+
+msgid "coauthorBlankHint"
+msgstr "担当した役割ごとにレベルを選び、残りは{none}のままにしてください。2分ほどで終わります。"
+
+msgid "coauthorBlankHintYesNo"
+msgstr "担当した役割には{contributed}を選び、残りは{none}のままにしてください。2分ほどで終わります。"
+
+msgid "coauthorRoles"
+msgstr "あなたの役割"
+
+msgid "coauthorFirstAuthor"
+msgstr "筆頭著者を共有している"
+
+msgid "coauthorCorresponding"
+msgstr "責任著者である"
+
+msgid "coauthorDetails"
+msgstr "あなたの情報"
+
+msgid "coauthorDetailsHint"
+msgstr "依頼者の記載が間違っている場合は、ここで名前やORCID iDを修正してください。"
+
+msgid "coauthorName"
+msgstr "名前"
+
+msgid "coauthorSend"
+msgstr "送り返す"
+
+msgid "coauthorMarked"
+msgstr "{total}件中{count}件の役割を選択済み"
+
+msgid "coauthorOrcidSignIn"
+msgstr "ORCIDでサインイン"
+
+msgid "coauthorOrcidHint"
+msgstr "任意：ORCIDでサインインすると、回答は検証済みとして届きます。サインイン情報は送り返すリンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。ORCID レコードに登録された名前も含まれます。"
+
+msgid "coauthorOrcidChanged"
+msgstr "サインイン後に回答を変更しました。この回答を検証するには、もう一度サインインしてください。"
+
+msgid "coauthorOrcidSigned"
+msgstr "{who}としてORCIDでサインインしました。回答は検証済みとして届きます。"
+
+msgid "coauthorOrcidFailed"
+msgstr "ORCIDのサインインが完了しませんでした。サインインなしでも回答を送れます。"
+
+msgid "reviewOrcidVerified"
+msgstr "ORCIDにより{who}として検証済み（{date}にサインイン）。"
+
+msgid "reviewOrcidOtherId"
+msgstr "この行のiDとは異なります。"
+
+msgid "reviewOrcidNoRowId"
+msgstr "この行には比較するORCID iDがありません。"
+
+msgid "reviewOrcidSignedFor"
+msgstr "『{title}』へのサインインです。"
+
+msgid "reviewOrcidSignedElsewhere"
+msgstr "この行では未検証：{who}は{date}に、名前またはiDが異なる行に対してORCIDでサインインしました。"
+
+msgid "coauthorNotSent"
+msgstr "まだ送信されていません。"
+
+msgid "coauthorCopyInstead"
+msgstr "代わりにリンクをコピー"
+
+msgid "coauthorShareTitle"
+msgstr "{name}のCRediT役割"
+
+msgid "coauthorSentTitle"
+msgstr "送信しました。このページは閉じてかまいません。"
+
+msgid "coauthorCopiedTitle"
+msgstr "リンクをコピーしました。返信に貼り付けてから、このページを閉じてください。"
+
+msgid "coauthorSentBody"
+msgstr "依頼者は下書きの横であなたの回答を確認できます。再度依頼された場合は新しいリンクを開いてください。この回答が置き換えられます。"
+
+msgid "coauthorChange"
+msgstr "回答を変更"
+
+msgid "claimUnlock"
+msgstr "通常の下書きとして保持"
+
+msgid "annClaimUnlocked"
+msgstr "通常の下書きになりました。すべての行を編集できます。"
+
+msgid "claimLockedHint"
+msgstr "依頼に回答中です。編集できるのは自分の行だけです。"
+
+msgid "claimResumed"
+msgstr "この依頼の続きから再開しました。"
+
+msgid "claimRequestUpdated"
+msgstr "依頼が更新されました。以前の回答は置き換えられました。"
+
+msgid "claimLockedDraft"
+msgstr "ロック中: 依頼に回答しています"
+
+msgid "requestLinkOwn"
+msgstr "これは{name}さん宛てに作成した依頼リンクです。"
+
+msgid "askBlank"
+msgstr "{name} さんに担当内容を尋ねる"
+
+msgid "askPrefilled"
+msgstr "{name} さんに推定内容の確認を依頼する"
+
+msgid "askLinkHint"
+msgstr "このリンクには、タイトルと、この人の氏名と iD が含まれます。"
+
+msgid "ask"
+msgstr "依頼"
+
+msgid "claimedRowBadge"
+msgstr "あなたの行"
+
+msgid "askCopied"
+msgstr "リンクをコピーしました"
+
+msgid "askedChip"
+msgstr "依頼済み"
+
+msgid "askedChipTitle"
+msgstr "自分の行の記入を依頼済み。返信が届くと消えます。"
+
+msgid "mergedRowBadge"
+msgstr "更新済み"
+
+msgid "mergedRowBadgeTitle"
+msgstr "開いたばかりの返信から反映されました。"
+
+msgid "activeDraft"
+msgstr "編集中"
+
+msgid "askContributorCopied"
+msgstr "リンクをコピーしました。{name} さんに送ってください。"
+
+msgid "mergeUnmatched"
+msgstr "この返信の対象者はこの下書きにいないため、何も取り込まれませんでした。"
+
+msgid "askReplyDiffers"
+msgstr "{name}さんの回答が届きました：相違点 {count} 件。"
+
+msgid "askReplyMatches"
+msgstr "{name}さんの回答はあなたの入力と一致しています。"
+
+msgid "askReplyStale"
+msgstr "{name}さんのこの回答は、すでにある回答より古いため使用しませんでした。"
+
+msgid "askReplyDuplicate"
+msgstr "{name}さんのこの回答はすでに受け取っています。"
+
+msgid "annMergeUndone"
+msgstr "統合を元に戻しました。"
+
+msgid "welcomeIntro"
+msgstr "3 つのステップで、投稿原稿にそのまま使える著者貢献をまとめます。"
+
+msgid "about"
+msgstr "概要"
+
+msgid "statusReady"
+msgstr "エクスポート可能"
+
+msgid "statusNotes"
+msgstr "{count, plural, other {確認事項 # 件}}"
+
+msgid "statusDismiss"
+msgstr "閉じる"
+
+msgid "rolesUsed"
+msgstr "{total} 種類中 {used} 種類を使用"
+
+msgid "shareWarningTitle"
+msgstr "このリンクにはデータが含まれます"
+
+msgid "shareWarningBody"
+msgstr "このリンクを知っている人は、氏名、ORCID iD、貢献者の種別、役割の割り当てをすべて閲覧できます。"
+
+msgid "noContributorsHint"
+msgstr "下に DOI または ORCID iD を貼り付けるか、名前を入力するか、ヘッダーの<b>インポート</b>をお使いください。"
+
+msgid "a11yContributionGrid"
+msgstr "貢献グリッド"
+
+msgid "a11yGeneratedStatement"
+msgstr "生成された著者貢献"
+
+msgid "a11yStatementNotes"
+msgstr "著者貢献に関する確認事項"
+
+msgid "a11yBulkContributor"
+msgstr "一括割り当ての対象となる貢献者"
+
+msgid "a11yBulkRole"
+msgstr "一括割り当ての対象となる役割"
+
+msgid "a11yExportFormat"
+msgstr "エクスポート形式"
+
+msgid "a11yOrcidInput"
+msgstr "ORCID iD"
+
+msgid "a11yOrcidHint"
+msgstr "ORCID iD を入力するか、iD または orcid.org の URL として貼り付けてください"
+
+msgid "a11yDismissWelcome"
+msgstr "はじめにの案内を閉じる"
+
+msgid "a11yShareLink"
+msgstr "すべての貢献者データを含むリンクを共有します"
+
+msgid "a11yUseInitials"
+msgstr "氏名の代わりにイニシャルを使う"
+
+msgid "a11yShowLevels"
+msgstr "レベルを表示：役割に貢献レベルを併記します"
+
+msgid "a11ySeparateAcks"
+msgstr "謝辞を分ける：著者以外の貢献者を別の行に記載します"
+
+msgid "customColor"
+msgstr "その他"
+
+msgid "copyDataLink"
+msgstr "データリンクをコピー"
+
+msgid "fullCreditStandard"
+msgstr "CRediT 標準の全文"
+
+msgid "creditRolesExamples"
+msgstr "CRediT の役割と例"
+
+msgid "sourceOnGitHub"
+msgstr "GitHub のソースコード"
+
+msgid "opensInNewTab"
+msgstr "（新しいタブで開きます）"
+
+msgid "acknowledgements"
+msgstr "謝辞"
+
+msgid "aboutTaxonomy"
+msgstr "CRediT は ANSI/NISO 標準（<cc>CC BY 4.0</cc>）です。本プロジェクトは NISO から独立しており、NISO の承認を受けたものではありません。"
+
+msgid "aboutPrivacy"
+msgstr "ORCID iD を検索すると、ブラウザーから pub.orcid.org に送信されます。DOI を検索すると、このサイトの連絡先アドレスとともに api.crossref.org に、Crossref に記録がない場合は api.datacite.org にも送信されます。このサイトをホストする Cloudflare は、ページへのリクエスト数を自社のサーバー上で集計値としてのみ数えます。ブラウザーではスクリプトも Cookie も使いません。CITATION.cff や .zenodo.json をインポートすると、このサイトから citesync コンバーターと Python ランタイムが読み込まれます。ファイルはブラウザー内で処理され、アップロードされることはありません。それ以外はブラウザーの外に出ません。下書きはローカルストレージにのみ保存されます。共著者への依頼と回答はこのブラウザーにのみ保存され、チェックを外さない限り JSON エクスポートに含まれます。回答を送信すると、その人の名前と iD を含むリンクが、選択したアプリに渡されます。回答でORCIDにサインインすると、共著者はorcid.orgに移動してから戻ります。サインイン情報はその後、返信リンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。これには共著者の ORCID レコードに登録された名前が含まれます。サインイン付きの回答を開くか、それを含む JSON をインポートすると、確認のためにorcid.orgからORCIDの公開鍵を取得します。"
+
+msgid "accessibilityStatement"
+msgstr "アクセシビリティ方針"
+
+msgid "getCreditBadge"
+msgstr "CRediT バッジを入手"
+
+msgid "creditBadge"
+msgstr "CRediT バッジ"
+
+msgid "copiedHtml"
+msgstr "HTML をコピーしました"
+
+msgid "copiedPng"
+msgstr "PNG をコピーしました"
+
+msgid "annBadgeHtmlCopied"
+msgstr "バッジの HTML をクリップボードにコピーしました"
+
+msgid "importAuthorList"
+msgstr "著者名リスト"
+
+msgid "importPlaceholder"
+msgstr "{names}\n\nまたは .csv / .tsv / .json / .xml / .cff のエクスポート、あるいは送り返されたリンク"
+
+msgid "errImportNoNames"
+msgstr "著者名が見つかりませんでした。1 行に 1 名ずつ入力してください。"
+
+msgid "errImportNoCsvRows"
+msgstr "CSV に貢献者の行が見つかりませんでした。"
+
+msgid "errImportNoJsonContributors"
+msgstr "その JSON エクスポートには貢献者が含まれていません。"
+
+msgid "errImportNoXmlContribs"
+msgstr "XML に <contrib> 要素が見つかりませんでした。"
+
+msgid "errImportNoCrossrefContribs"
+msgstr "Crossref XML に <person_name> を含む <contributors> ブロックが見つかりませんでした。"
+
+msgid "aboutTagline"
+msgstr "CRediT の著者貢献を作成し、グリッドを貢献ヒートマップとしてエクスポートできます。"
+
+msgid "aboutInspiredBy"
+msgstr "着想のもとになったオリジナル版："
+
+msgid "aboutOutputTranslations"
+msgstr "出力の翻訳提供："
+
+msgid "aboutPageTitle"
+msgstr "CRediT Matrix について"
+
+msgid "aboutPageLink"
+msgstr "概要・引用・プライバシー"
+
+msgid "aboutVersion"
+msgstr "バージョン"
+
+msgid "aboutLicense"
+msgstr "ライセンス"
+
+msgid "aboutSource"
+msgstr "ソースコード"
+
+msgid "aboutAuthor"
+msgstr "作者"
+
+msgid "aboutCiteTitle"
+msgstr "CRediT Matrix の引用"
+
+msgid "aboutCite"
+msgstr "論文で CRediT Matrix を使用した場合は、常に最新版を指すコンセプト DOI で引用してください："
+
+msgid "aboutCiteMetadata"
+msgstr "これらはリポジトリの <link>CITATION.cff</link> から作成しています。<citesync>citesync</citesync> がリリースごとにこのファイルを最新に保ち、そのプレイグラウンドではご自身のソフトウェア用に同じファイルを作れます。"
+
+msgid "aboutCiteFormat"
+msgstr "引用形式"
+
+msgid "annCitationCopied"
+msgstr "引用をコピーしました"
+
+msgid "aboutPluginsTitle"
+msgstr "執筆ツール用プラグイン"
+
+msgid "aboutPlugins"
+msgstr "論文を書く場所で、そのまま声明も書けます。これらのプラグインは、著者リストのロール、またはここからエクスポートしたファイルをもとに、文書に声明を追加します。各名前から設定ガイドを開けます。"
+
+msgid "aboutPluginsSoftware"
+msgstr "ソフトウェア向けには、<cli>コマンドラインツール</cli>が人とロールを CodeMeta 形式でも出力します。<citesync>citesync</citesync> はそのメタデータから CITATION.cff と Zenodo のファイルを作成し、<drift>codemeta-drift</drift> は CodeMeta ファイルの整合性を確認します。"
+
+msgid "statementPlugins"
+msgstr "Quarto・MyST・Typst などのプラグイン"
+
+msgid "privacy"
+msgstr "プライバシー"
+
+msgid "accessibility"
+msgstr "アクセシビリティ"
+
+msgid "aboutAccessibility"
+msgstr "確認している内容、既知の問題、問題の報告方法は<link>アクセシビリティ方針</link>に記載しています。"
+
+msgid "detectedFormat"
+msgstr "検出された形式：{format}"
+
+msgid "mergeWrongDraft"
+msgstr "この返信はこのブラウザーにない下書きのものであるため、何も変更されませんでした。"
+
+msgid "sharedDraftOpened"
+msgstr "共有された下書きを、作業中の下書きとは別に開きました。"
+
+msgid "sharedDraftLoaded"
+msgstr "共有された下書きを開きました。"
+
+msgid "a11yInvalidOrcid"
+msgstr "無効なORCID iD"
+
+msgid "a11yRoleAssignment"
+msgstr "{name}の{role}：{level}"
+
+msgid "a11yRolesForContributor"
+msgstr "{name}の役割"
+
+msgid "a11ySetColor"
+msgstr "色{color}を設定"
+
+msgid "a11yStatementGrouping"
+msgstr "ステートメントのグループ化"
+
+msgid "annContributorsAdded"
+msgstr "{count}名の貢献者を追加しました。"
+
+msgid "annEntriesSkippedNoName"
+msgstr "名前のない項目を{count}件スキップしました（{entries}）。"
+
+msgid "annOrcidChecksumsSkipped"
+msgstr "チェックディジットが無効なORCID iDを{count}件スキップしました（{ids}）。"
+
+msgid "annOrcidLookupsFailed"
+msgstr "{count}件のORCID iDを検索できませんでした（{ids}）。該当する行ではiDを名前として使用しています。手動で名前を変更してください。"
+
+msgid "annContributorsSkippedLimit"
+msgstr "上限が{limit}名のため、{count}名の貢献者をスキップしました。"
+
+msgid "annCopiedToClipboard"
+msgstr "クリップボードにコピーしました"
+
+msgid "annExportDataCopied"
+msgstr "エクスポートデータをクリップボードにコピーしました"
+
+msgid "badgeIntro"
+msgstr "このバッジを論文またはプロジェクトページに追加できます。"
+
+msgid "copyHtml"
+msgstr "HTMLをコピー"
+
+msgid "copyPng"
+msgstr "PNGをコピー"
+
+msgid "downloadPng"
+msgstr "PNGをダウンロード"
+
+msgid "switchToDarkTheme"
+msgstr "ダークテーマに切り替える"
+
+msgid "switchToLightTheme"
+msgstr "ライトテーマに切り替える"
+
+msgid "contributorTypeSetAuthor"
+msgstr "著者に設定"
+
+msgid "contributorTypeSetNonAuthor"
+msgstr "著者以外の貢献者に設定"
+
+msgid "errImportFailed"
+msgstr "インポートできませんでした。ファイルを確認して、もう一度お試しください。"
+
+msgid "errImportNewerVersion"
+msgstr "このファイルは CRediT Matrix の新しいバージョンで作成されました。ページを再読み込みして更新してから、もう一度お試しください。"
+
+msgid "errImportRepeatedId"
+msgstr "このファイルには同じ貢献者 ID が 2 回含まれているため、インポートされませんでした。"
+
+msgid "errHeatmapExport"
+msgstr "ヒートマップを{format}形式でエクスポートできませんでした。"
+
+msgid "errStorageFull"
+msgstr "ブラウザーの保存領域がいっぱいのため、変更は保存されません。この下書きをエクスポートするか、不要な下書きを削除してください。"
+
+msgid "errStorageBlocked"
+msgstr "このブラウザーがこのサイトの保存領域をブロックしているため、変更は保存されません。サイトデータを許可するか、タブを閉じる前にエクスポートしてください。"
+
+msgid "errNewerVersionSaved"
+msgstr "CRediT Matrix の新しいバージョンが別のタブで下書きを保存しました。このページを再読み込みしてください。ここでの変更は保存されません。"
+
+msgid "formatShareLink"
+msgstr "共有リンク"
+
+msgid "formatJsonExport"
+msgstr "JSONエクスポート"
+
+msgid "replaceWorkspaceBody"
+msgstr "このインポートには{incoming}名の貢献者が含まれています。現在の{existing}名の貢献者を置き換えます。この操作は元に戻せません。"
+
+msgid "statementEmptyHint"
+msgstr "まだ貢献が割り当てられていません。グリッドのセルを選択して役割を割り当ててください。"
+
+msgid "separateAcknowledgements"
+msgstr "謝辞を分ける"
+
+msgid "validationAuthorNoRoles"
+msgstr "{name}にはCRediT役割が割り当てられていません。"
+
+msgid "validationRoleUnassigned"
+msgstr "役割「{role}」はどの貢献者にも割り当てられていません。"
+
+msgid "welcomeBodyContributors"
+msgstr "DOI を貼り付けると公開レコードから一覧をまとめて取り込めます。名前を直接入力しても、ORCID iD から名前を補完してもかまいません。"
+
+msgid "welcomeBodyRoles"
+msgstr "グリッドのセルを選択して、各貢献者が担当した CRediT の 14 種類の役割を指定します。"
+
+msgid "welcomeBodyExport"
+msgstr "記述文は入力に合わせて更新されます。コピーするか、ヒートマップ・XML・CSV・JSON・Markdown をダウンロードしてください。"
+
+msgid "welcomeDraftsTitle"
+msgstr "論文ごとに1つの下書き"
+
+msgid "welcomeDraftsBody"
+msgstr "複数の論文を執筆中ですか？ヘッダーから下書きを切り替えられます。各下書きはこのブラウザに個別に保存されます。"
+
+msgid "welcomeAskTitle"
+msgstr "共著者に直接依頼"
+
+msgid "welcomeAskBody"
+msgstr "貢献者の行メニューからリンクをコピーして本人に送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。"
+
+msgid "importDescription"
+msgstr "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML・Crossref XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。著者貢献声明を貼り付けると、ここにいる貢献者の役割を埋められます。CITATION.cff、codemeta.json、.zenodo.json からは著者名と ORCID iD がインポートされ、役割は空のままになります。"
+
+msgid "contributorActions"
+msgstr "{name} に対する操作"
+
+msgid "colorBlue"
+msgstr "青"
+
+msgid "colorOrange"
+msgstr "オレンジ"
+
+msgid "colorBluishGreen"
+msgstr "青緑"
+
+msgid "colorReddishPurple"
+msgstr "赤紫"
+
+msgid "colorVermilion"
+msgstr "朱色"
+
+msgid "colorSkyBlue"
+msgstr "スカイブルー"
+
+msgid "colorYellow"
+msgstr "黄色"
+
+msgid "colorDarkGray"
+msgstr "ダークグレー"
+
+msgid "languageSettings"
+msgstr "言語設定"
+
+msgid "stripOpenTeam"
+msgstr "共著者に依頼"
+
+msgid "teamYou"
+msgstr "あなた"
+
+msgid "teamNotAsked"
+msgstr "未依頼"
+
+msgid "toggleKeysHint"
+msgstr "選択で切り替え · 矢印キーで移動、1 または 0 で役割を設定。"
+
+msgid "downloadSvg"
+msgstr "SVG をダウンロード"
+
+msgid "copyFormat"
+msgstr "{format} をコピー"
+
+msgid "downloadFormat"
+msgstr "{format} をダウンロード"
+
+msgid "a11yInspector"
+msgstr "声明・チーム・確認・出版論文の傾向"
+
+msgid "tabTeam"
+msgstr "チーム"
+
+msgid "tabReview"
+msgstr "確認"
+
+msgid "tabNorms"
+msgstr "出版論文の傾向"
+
+msgid "normsIntro"
+msgstr "ある分野の出版論文で、各ロールが著者の順番ごとにどれくらい付けられているかを示します。これは参考情報であり、助言ではありません。他の論文での一般的な傾向は、共著者が実際に何をしたかとは関係ありません。"
+
+msgid "normsField"
+msgstr "あなたの分野"
+
+msgid "normsFieldPlaceholder"
+msgstr "分野を選択"
+
+msgid "normsEmpty"
+msgstr "分野を選ぶと割合が表示されます。アプリは論文の分野を知らず、ここでの操作がマトリックスを変えることはありません。"
+
+msgid "normsFieldGone"
+msgstr "保存した分野「<name>{field}</name>」は、このスナップショットにデータがありません。分野を選ぶと割合が表示されます。"
+
+msgid "normsCoverage"
+msgstr "<name>{field}</name>の CRediT ロール付きオープンアクセス研究論文 {articles, number} 件({date} 時点の Europe PMC ファイルより)。少なくとも 1 つのロールを持つ著者のみを数えています。"
+
+msgid "normsUnvalidated"
+msgstr "ロールは自動で読み取ったもので人の手では確認しておらず、出版社もロールをタグ付けしている {tagged, number} 件の論文でのパーサーとタグの一致度は F1 スコア {f1}（1 が完全一致）です。"
+
+msgid "normsYourPosition"
+msgstr "この下書きでのあなたの順番：{position, select, single {単独著者} first {筆頭著者} middle {中間の著者} other {最終著者}}。"
+
+msgid "normsNonAuthor"
+msgstr "この下書きではあなたは著者以外のため、列に印は付きません。割合は著者のみを数えています。"
+
+msgid "normsNoSelf"
+msgstr "自分の順番に印を付けるには、貢献者リストの自分の行で「これは自分です」を選んでください。"
+
+msgid "normsCaption"
+msgstr "各ロールを持つ著者の割合(著者の順番別)"
+
+msgid "normsRole"
+msgstr "ロール"
+
+msgid "normsPosition"
+msgstr "{position, select, single {単独} first {筆頭} middle {中間} other {最終}}"
+
+msgid "normsTooFew"
+msgstr "著者が少なすぎて判断できません"
+
+msgid "normsFootnote"
+msgstr "該当論文が {minArticles, number} 件未満の分野は表示せず、著者が {minAuthors, number} 人未満の順番はダッシュで示します。分野は OpenAlex による雑誌単位の分類です。出典:CRediT センサス {snapshot}、データセット {version}。"
+
+msgid "reviewEmptyTitle"
+msgstr "共著者からの回答はここに表示されます"
+
+msgid "reviewEmptyBody"
+msgstr "共著者からリンクが返ってきたら開いてください。回答が下書きと並んでここに表示されます。"
+
+msgid "teamEmpty"
+msgstr "まず貢献者を追加し、それぞれに何をしたかを尋ねてください。"
+
+msgid "teamMessage"
+msgstr "{name} 様\n\n{work}の CRediT 貢献声明を準備しています。このリンクを開いて担当した役割にチェックを付け、リンクを返送していただけますか。\n\n{link}\n\nリンクにはタイトル、お名前、iD が含まれます。サーバーには何も保存されません。"
+
+msgid "teamMessageWork"
+msgstr "『{title}』"
+
+msgid "teamMessageNoTitle"
+msgstr "私たちの原稿"
+
+msgid "teamMessageCopied"
+msgstr "{name} 宛てのメッセージをコピーしました。メールに貼り付けてください。"
+
+msgid "teamAskAllDone"
+msgstr "{count, plural, other {# 件のメッセージをすべてコピーしました。}}"
+
+msgid "teamAskNext"
+msgstr "次をコピー: {name}（{total}件中{index}件目）"
+
+msgid "teamAskAll"
+msgstr "未依頼の全員に依頼（{count}）"
+
+msgid "teamAskAllHint"
+msgstr "1人につき1通のメッセージをコピーします。次をコピーする前に、それぞれをメールに貼り付けてください。"
+
+msgid "teamPrivacy"
+msgstr "各リンクには論文のタイトルと、その人の名前と iD が含まれます。サーバーには何も保存されません。回答は送ったのと同じ方法で戻ってきます。"
+
+msgid "teamCopyMessageFor"
+msgstr "メッセージをコピー（{name} 宛て）"
+
+msgid "teamCopyMessage"
+msgstr "メッセージをコピー"
+
+msgid "expandContributors"
+msgstr "貢献者リストを展開"
+
+msgid "collapseContributors"
+msgstr "貢献者リストを折りたたむ"
+
+msgid "moveUp"
+msgstr "上へ移動"
+
+msgid "moveDown"
+msgstr "下へ移動"
+
+msgid "annMoved"
+msgstr "{name} を {total} 人中 {position} 番目に移動しました。"
+
+msgid "skipToGrid"
+msgstr "グリッドへスキップ"
+
+msgid "skipToStatement"
+msgstr "声明へスキップ"
+
+msgid "stripAnswered"
+msgstr "{total} 人中 {answered} 人が回答"
+
+msgid "stripDiffer"
+msgstr "{count, plural, other {# 件の回答が異なります}}"
+
+msgid "reviewAction"
+msgstr "確認する"
+
+msgid "tabReviewOpen"
+msgstr "{count, plural, other {未確定の相違 # 件}}"
+
+msgid "statementDiffers"
+msgstr "{count, plural, other {# 件の貢献がまだ異なります。}}この声明はあなたの版を使っています。"
+
+msgid "exportIncludesAnswers"
+msgstr "共著者の回答と依頼履歴を含める（{count}）"
+
+msgid "thisIsMe"
+msgstr "これは自分です"
+
+msgid "thisIsNotMe"
+msgstr "これは自分ではありません"
+
+msgid "teamSettledOn"
+msgstr "{date} に確定"
+
+msgid "teamStatusAnswered"
+msgstr "{days, plural, =0 {今日回答あり} =1 {昨日回答あり} other {# 日前に回答あり}}・確認待ち {count} 件"
+
+msgid "teamStatusAsked"
+msgstr "{days, plural, =0 {今日依頼済み} =1 {昨日依頼済み} other {# 日前に依頼済み}}・{kind, select, prefilled {あなたの推測} other {空欄}}"
+
+msgid "reviewAnsweredMeta"
+msgstr "{days, plural, =0 {今日回答あり} =1 {昨日回答あり} other {# 日前に回答あり}}・{kind, select, prefilled {あなたの推測} other {空欄}}"
+
+msgid "teamReviewFor"
+msgstr "{name} さんの回答を確認する"
+
+msgid "markerSharedFirst"
+msgstr "筆頭著者を共有"
+
+msgid "markerCorresponding"
+msgstr "責任著者"
+
+msgid "markerYes"
+msgstr "はい"
+
+msgid "markerNo"
+msgstr "いいえ"
+
+msgid "reviewKindAdded"
+msgstr "役割を追加"
+
+msgid "reviewKindMarked"
+msgstr "印を付けた"
+
+msgid "reviewKindDropped"
+msgstr "外した"
+
+msgid "reviewKindLevel"
+msgstr "程度が異なる"
+
+msgid "reviewUseTheirs"
+msgstr "{name} さんの回答を使う"
+
+msgid "reviewKeepYours"
+msgstr "自分の回答を残す"
+
+msgid "reviewAskAbout"
+msgstr "{name} さんに確認する"
+
+msgid "reviewUseTheirsRole"
+msgstr "{name} さんの回答を使う：{role}"
+
+msgid "reviewKeepYoursRole"
+msgstr "自分の回答を残す：{role}"
+
+msgid "undoRole"
+msgstr "元に戻す：{role}"
+
+msgid "reviewAskAboutRole"
+msgstr "{copied, select, true {コピーしました。{name} さんに確認する：{role}} other {{name} さんに確認する：{role}}}"
+
+msgid "reviewUseAll"
+msgstr "{name} さんの回答をすべて使う"
+
+msgid "reviewUsedTheirs"
+msgstr "{name} さんの回答を使用"
+
+msgid "reviewKeptYours"
+msgstr "自分の回答を維持"
+
+msgid "annReviewUsed"
+msgstr "{role}：{name} さんの回答を使いました。"
+
+msgid "annReviewKept"
+msgstr "{role}：自分の回答を残しました。"
+
+msgid "annReviewUsedAll"
+msgstr "{name} さんの回答をすべて使いました。"
+
+msgid "annReviewUndone"
+msgstr "選択を取り消しました。"
+
+msgid "reviewAllSettledTitle"
+msgstr "すべて確定しました。"
+
+msgid "reviewAllSettledBody"
+msgstr "異なる回答にはすべて判断が下され、声明にその結果が反映されています。"
+
+msgid "cellTheySay"
+msgstr "{name} さんの回答：{level}"
+
+msgid "columnOpenDifferences"
+msgstr "{name}：{count, plural, other {未確定の相違 # 件}}"
+
+msgid "columnSettled"
+msgstr "確定"
+
+msgid "legendDiffers"
+msgstr "共著者の回答が異なる"
+
+msgid "reviewAskMessage"
+msgstr "{name} 様\n\n{work}の CRediT 貢献声明を仕上げています。{role}について私たちの回答が異なります。このリンクを開いてご自身の行を確認し、リンクを返送していただけますか。\n\n{link}\n\nリンクにはタイトル、お名前、iD が含まれます。サーバーには何も保存されません。"
+
+msgid "formatStatement"
+msgstr "CRediT 声明"
+
+msgid "statementReview"
+msgstr "役割を確認"
+
+msgid "statementReviewTitle"
+msgstr "声明から見つかった役割"
+
+msgid "statementReviewSummary"
+msgstr "{people} 人の貢献者に {added} 件の役割を追加します。表にすでにある役割はそのままです。"
+
+msgid "statementNothingNew"
+msgstr "見つかった役割はすべて表にあります。"
+
+msgid "statementNoRolesFor"
+msgstr "役割が見つからなかった人: {names}"
+
+msgid "statementCouldBe"
+msgstr "({token} の可能性あり)"
+
+msgid "statementUnresolvedBody"
+msgstr "これらの名前やイニシャルは、この下書きの貢献者のだれにも一致しないか、複数に一致します。だれを指すかを選ばない限り、その役割は含めません。残りは適用した後に表で設定してください。"
+
+msgid "statementLeaveOut"
+msgstr "含めない"
+
+msgid "statementReviewSummaryLevel"
+msgstr "{people, plural, other {#人}}の貢献者に{added, plural, other {#件}}のロールを{level}として追加します。グリッドに既にあるロールはそのままです。"
+
+msgid "statementRoleAlreadySet"
+msgstr "{role}（設定済み）"
+
+msgid "statementUnmatchedTitle"
+msgstr "一致しなかったもの"
+
+msgid "statementUnmatchedAmbiguous"
+msgstr "{token}：{names}のいずれか"
+
+msgid "statementUnmatchedNone"
+msgstr "{token}：該当する貢献者なし"
+
+msgid "statementLeftOut"
+msgstr "{who} — 除外：{roles}"
+
+msgid "statementAppliedLevel"
+msgstr "記述から{count, plural, other {#件}}のロールを{level}として追加しました。"
+
+msgid "statementUndoStale"
+msgstr "元に戻していません：ロールの追加後に下書きが変更されました。グリッドで変更してください。"
+
+msgid "statementOnlyCredit"
+msgstr "読み取るのは Conceptualization や Writing – original draft などの CRediT ロール名だけで、誰が何をしたかを述べる文は読み取りません。"
+
+msgid "errStatementTooLong"
+msgstr "このテキストは{limit}文字を超えています。貢献の記述だけを貼り付けてください。"
+
+msgid "statementBack"
+msgstr "戻る"
+
+msgid "statementApply"
+msgstr "役割を適用"
+
+msgid "statementApplied"
+msgstr "声明から {count} 件の役割を追加しました。"
+
+msgid "errStatementNoContributors"
+msgstr "先に貢献者を追加してから声明を貼り付けてください。声明はこの下書きにある名前と照合されます。"
+
+msgid "errStatementNoRoles"
+msgstr "この下書きの貢献者に CRediT の役割を一つも対応づけられませんでした。声明が下書きと同じ名前かイニシャルで記載しているか確認してください。"
+
+msgid "censusAboutLink"
+msgstr "CRediT センサス：論文における CRediT の使われ方"
+
+msgid "censusBack"
+msgstr "CRediT Matrix に戻る"
+
+msgid "censusTitle"
+msgstr "CRediT センサス"
+
+msgid "censusHeadline"
+msgstr "{year} 年には、Europe PMC のオープンアクセス研究論文の {share} が少なくとも 1 人の著者に CRediT ロールを記載していました。"
+
+msgid "censusLead"
+msgstr "公開された論文が CRediT（Contributor Roles Taxonomy）をどう使っているかを、Europe PMC のオープンアクセス論文 {articles} 件のマークアップと貢献声明から読み取りました。"
+
+msgid "censusPreliminaryTitle"
+msgstr "暫定的な数値"
+
+msgid "censusPreliminary"
+msgstr "このパーサーはまだ人手のラベルで検証していないため、数値は暫定的な目安としてご覧ください。ロールをタグ付けし、かつ貢献声明も掲載している {articles} 件の論文では、パーサーによる声明の読み取りとタグとの一致は F1 スコアで {f1} です（1 はすべてのロールを見つけ、誤りがないことを意味します）。ただし、そのうち {share} は MDPI と Frontiers の論文で、タグ自体も誰も検証していません。"
+
+msgid "censusPreliminaryUnscored"
+msgstr "このパーサーはまだ人手のラベルで検証していないため、数値は暫定的な目安としてご覧ください。"
+
+msgid "censusIncomplete"
+msgstr "このスナップショットは不完全です。一部のソースファイルが読み込まれていないか、分野が未設定のジャーナルがあります。"
+
+msgid "censusAdoptionTitle"
+msgstr "採用の推移"
+
+msgid "censusAdoptionCaption"
+msgstr "少なくとも 1 人の著者に CRediT ロールがある研究論文の割合（出版年別）。{year} 年の論文はまだ出版が続いているため、その区間は破線です。"
+
+msgid "censusRolesPerAuthorTitle"
+msgstr "著者あたりのロール数"
+
+msgid "censusRolesPerAuthorCaption"
+msgstr "ロールを持つ著者 1 人あたりの平均ロール数（出版年別）。"
+
+msgid "censusShowTable"
+msgstr "表で表示"
+
+msgid "censusPartial"
+msgstr "（途中）"
+
+msgid "censusTableLabel"
+msgstr "{chart}（表）"
+
+msgid "censusTrend"
+msgstr "{first} 年は {from}、{last} 年は {to}。最高は {maxYear} 年の {max}。"
+
+msgid "censusYear"
+msgstr "年"
+
+msgid "censusResearchArticles"
+msgstr "研究論文"
+
+msgid "censusWithRoles"
+msgstr "ロールあり"
+
+msgid "censusShare"
+msgstr "割合"
+
+msgid "censusStylesTitle"
+msgstr "ロールの記載形式"
+
+msgid "censusStylesCaption"
+msgstr "年ごとの研究論文の割合を、ロールを読み取った箇所別に示します。各論文は、下の 4 つのうち最初に当てはまるもので 1 回だけ数えます。4 つとも同じ目盛りです。{year} 年はまだ出版が続いているため、その区間は破線です。"
+
+msgid "censusStyleJats4r"
+msgstr "JATS4R ロールタグ"
+
+msgid "censusStyleJats4rNote"
+msgstr "JATS4R（学術誌論文のタグ付け方法を定めるグループ）の推奨どおり、各著者のロールを CRediT 語彙でタグ付け"
+
+msgid "censusStylePlosUri"
+msgstr "ロール URL タグ"
+
+msgid "censusStylePlosUriNote"
+msgstr "PLOS のように、各著者のロールを CRediT のウェブアドレスでタグ付け"
+
+msgid "censusStyleStatement"
+msgstr "貢献声明"
+
+msgid "censusStyleStatementNote"
+msgstr "著者をイニシャルまたは氏名で示す 1 段落"
+
+msgid "censusStyleContribText"
+msgstr "著者ごとのテキスト"
+
+msgid "censusStyleContribTextNote"
+msgstr "各著者の横にある自由記述（ロールの一覧や脚注など）"
+
+msgid "censusFieldsTitle"
+msgstr "分野別"
+
+msgid "censusFieldsCaption"
+msgstr "{year} 年の研究論文のうち CRediT ロールがあるものの割合（学術文献のオープンな索引である OpenAlex におけるジャーナルの分野別）。分野は論文ごとではなくジャーナルごとです。Europe PMC はもともと生物医学中心のため、他の分野は少数です。論文が 1,000 件未満の分野は除外しています。"
+
+msgid "censusFieldAgriculturalAndBiologicalSciences"
+msgstr "農学・生物科学"
+
+msgid "censusFieldBiochemistryGeneticsAndMolecularBiology"
+msgstr "生化学・遺伝学・分子生物学"
+
+msgid "censusFieldChemistry"
+msgstr "化学"
+
+msgid "censusFieldComputerScience"
+msgstr "コンピュータ科学"
+
+msgid "censusFieldDentistry"
+msgstr "歯学"
+
+msgid "censusFieldEconomicsEconometricsAndFinance"
+msgstr "経済学・計量経済学・金融"
+
+msgid "censusFieldEngineering"
+msgstr "工学"
+
+msgid "censusFieldEnvironmentalScience"
+msgstr "環境科学"
+
+msgid "censusFieldHealthProfessions"
+msgstr "医療専門職"
+
+msgid "censusFieldImmunologyAndMicrobiology"
+msgstr "免疫学・微生物学"
+
+msgid "censusFieldMaterialsScience"
+msgstr "材料科学"
+
+msgid "censusFieldMathematics"
+msgstr "数学"
+
+msgid "censusFieldMedicine"
+msgstr "医学"
+
+msgid "censusFieldMultidisciplinary"
+msgstr "学際"
+
+msgid "censusFieldNeuroscience"
+msgstr "神経科学"
+
+msgid "censusFieldPhysicsAndAstronomy"
+msgstr "物理学・天文学"
+
+msgid "censusFieldPsychology"
+msgstr "心理学"
+
+msgid "censusFieldSocialSciences"
+msgstr "社会科学"
+
+msgid "censusPublishersTitle"
+msgstr "出版社別"
+
+msgid "censusPublishersCaption"
+msgstr "Europe PMC のオープンアクセス論文のうち、{year} 年の研究論文で CRediT ロールがあるものの割合。その年の研究論文が最も多い {count} 社を、論文に記載された名称で示します。"
+
+msgid "censusOfArticles"
+msgstr "{count, plural, other {（全 # 件）}}"
+
+msgid "censusRolesTitle"
+msgstr "著者順位別のロール"
+
+msgid "censusRolesCaption"
+msgstr "ロールを 1 つ以上持つ著者のうち、各ロールを担う著者の割合。ロールがあり著者が 3 人以上の論文が対象です。"
+
+msgid "censusRole"
+msgstr "ロール"
+
+msgid "censusPlaceAll"
+msgstr "全著者"
+
+msgid "censusPlaceFirst"
+msgstr "筆頭著者"
+
+msgid "censusPlaceMiddle"
+msgstr "中間の著者"
+
+msgid "censusPlaceLast"
+msgstr "最終著者"
+
+msgid "censusAboutTitle"
+msgstr "このデータについて"
+
+msgid "censusMethod"
+msgstr "集計対象は研究論文のみで、プレプリントサーバー（Cold Spring Harbor Laboratory Preprints, arXiv）も含みます。論文が 1,000 件未満のグループは除外し、年はロールのある論文が初めて 1,000 件に達した年から始めています。"
+
+msgid "censusSnapshot"
+msgstr "スナップショット"
+
+msgid "censusDatasetVersion"
+msgstr "データセットのバージョン"
+
+msgid "censusCodeCommit"
+msgstr "コードのコミット"
+
+msgid "censusParser"
+msgstr "パーサーのバージョン"
+
+msgid "censusOpenAlex"
+msgstr "OpenAlex ソース"
+
+msgid "censusDownload"
+msgstr "集計をダウンロード（JSON）"
+
+msgid "censusHowTitle"
+msgstr "センサスが貢献声明を読み取る仕組み"
+
+msgid "censusHowRules"
+msgstr "各論文はルールベースのパーサーが読み取ります。出版社が JATS XML で著者ごとのロールをタグ付けしている場合は、そのタグを使います。そうでない場合は、自由記述の声明を節ごとに読み、著者とロールを対応づけます。数えるのは CRediT の用語だけなので、「A.B. conceived the study」からはロールを読み取りません。"
+
+msgid "censusHowModel"
+msgstr "ファインチューニングしたエンコーダー Ettin-68M も、自由記述の声明をすべて読み取ります。これはセンサスのブラウザー用モデルで、ウェブブラウザーで動くように作られています。精度はほぼ同じまま、ルールよりも多くのタグ付きロールを見つけますが、ロールを挙げていない叙述的な声明にもロールを付けてしまいます。このページの件数は、ルールベースのパーサーだけによるものです。"
+
+msgid "censusHowCaveat"
+msgstr "どちらも出版社がタグ付けしたロールを基準に評価していますが、このタグは正解データではありません。タグが、声明に書かれていないロールを挙げていることもあります。ルールベースのパーサーとタグが食い違う MDPI の論文 200 件を言語モデルで判定したところ、タグが誤りだったのが 192 件、パーサーだけが誤りだったのが 6 件でした。そのため、タグに対する F1 スコアはタグとの一致度であり、実際の正確さを低く見積もります。MDPI では特にそうです。"
+
+msgid "censusHowCode"
+msgstr "センサスのコード"
+
+msgid "censusHowModelCard"
+msgstr "モデルカード"
+
+msgid "doiRolesImported"
+msgstr "CRediT の役割をインポートしました。適用する前にこれらの割り当てを確認してください。このレコードには貢献レベルの情報がありません。"
+
+msgid "doiNoRoles"
+msgstr "このレコードには登録済みの CRediT の役割がありません。貢献マトリクスは空のままになります。"
+
+msgid "doiConfirm"
+msgstr "DOI のインポートを確認"
+
+msgid "errCitationConverter"
+msgstr "引用コンバーターを完了できませんでした。ファイルはそのまま残っています。オンラインでもう一度試すか、citesync プレイグラウンドで変換してください。"
+
+msgid "citationPlayground"
+msgstr "citesync プレイグラウンドを開く"
+
+msgid "errImportNoCitationAuthors"
+msgstr "この引用ファイルには著者が記載されていません。"
+
+msgid "citationConverting"
+msgstr "引用ファイルを読み込み中… 先にコンバーターのダウンロードが必要な場合があります。"

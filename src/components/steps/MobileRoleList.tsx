@@ -1,11 +1,9 @@
-"use client";
-
 import { Check } from "lucide-react";
 import { useState } from "react";
-import { useTranslations } from "use-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Author, CREDIT_ROLES } from "@/core";
 import { heatCellColor, onColor } from "@/core/contributor-color";
+import { useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { RoleInfo } from "./RoleInfo";

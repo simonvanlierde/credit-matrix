@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { IntlProvider } from "use-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type Ask, createAuthor, decodeShareHash } from "@/core";
 import { lookupOrcidPerson, type OrcidLookupResult } from "@/core/lookup";
 import { announce } from "@/lib/announce";
-import en from "@/messages/en.json";
+import { english } from "@/lib/test-messages";
+import { IntlProvider } from "@/lib/translations";
+import { messages as en } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { AuthorList } from "./AuthorInput";
 
@@ -45,7 +46,7 @@ function renderList() {
 }
 
 const authors = () => useContributionStore.getState().authors;
-const addField = () => screen.getByLabelText<HTMLInputElement>(en.addContributor);
+const addField = () => screen.getByLabelText<HTMLInputElement>(english.addContributor);
 
 function addById(orcid: string) {
   fireEvent.change(addField(), { target: { value: orcid } });
@@ -126,7 +127,7 @@ describe("adding a contributor by ORCID iD", () => {
     onLine.mockReturnValue(false);
     await resolve(ALICE, UNAVAILABLE);
 
-    expect(screen.getByText(en.errOffline)).toBeTruthy();
+    expect(screen.getByText(english.errOffline)).toBeTruthy();
   });
 });
 
@@ -205,8 +206,8 @@ describe("a row's ORCID lookup", () => {
     useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ALICE })] });
     renderList();
 
-    fireEvent.click(screen.getByRole("button", { name: en.lookupOrcidName }));
-    fireEvent.paste(screen.getByLabelText(en.nameLabel), { clipboardData: { getData: () => BOB } });
+    fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
+    fireEvent.paste(screen.getByLabelText(english.nameLabel), { clipboardData: { getData: () => BOB } });
     await resolve(BOB, found("Bob Smith"));
     await resolve(ALICE, found("Alice Carberry"));
 
@@ -218,11 +219,11 @@ describe("a row's ORCID lookup", () => {
     useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ALICE })] });
     renderList();
 
-    fireEvent.click(screen.getByRole("button", { name: en.lookupOrcidName }));
+    fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
     await resolve(ALICE, found("x".repeat(600)));
 
     expect(authors()[0]?.name).toBe("Someone");
-    expect(announce).toHaveBeenCalledWith(en.errNameTooLong, { assertive: true });
+    expect(announce).toHaveBeenCalledWith(english.errNameTooLong, { assertive: true });
     expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("x".repeat(600)));
   });
 });
@@ -318,7 +319,7 @@ describe("undoing a removal", () => {
     fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
     expect(useContributionStore.getState().asks).toEqual({});
 
-    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
     expect(useContributionStore.getState().asks).toEqual({ [ann.id]: ask });
   });
 
@@ -329,7 +330,7 @@ describe("undoing a removal", () => {
     fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
     expect(useContributionStore.getState().selfId).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
     expect(useContributionStore.getState().selfId).toBe(ann.id);
   });
 
@@ -341,9 +342,9 @@ describe("undoing a removal", () => {
     // The grid's bulk Undo puts the whole roster back first.
     act(() => useContributionStore.getState().loadAuthors([ann]));
 
-    fireEvent.click(screen.getByRole("button", { name: en.undo }));
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
     expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("at most"), expect.anything());
-    expect(screen.queryByRole("button", { name: en.undo })).toBeNull();
+    expect(screen.queryByRole("button", { name: english.undo })).toBeNull();
     expect(authors()).toHaveLength(1);
   });
 
@@ -351,11 +352,11 @@ describe("undoing a removal", () => {
     useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
     renderList();
     fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
-    expect(screen.getByRole("button", { name: en.undo })).toBeTruthy();
+    expect(screen.getByRole("button", { name: english.undo })).toBeTruthy();
 
     act(() => useContributionStore.getState()[clear]());
 
-    expect(screen.queryByRole("button", { name: en.undo })).toBeNull();
+    expect(screen.queryByRole("button", { name: english.undo })).toBeNull();
     expect(authors()).toEqual([]);
   });
 });
@@ -367,14 +368,14 @@ describe("editing a contributor's name", () => {
       "a row's lookup",
       () => {
         act(() => useContributionStore.setState({ authors: [createAuthor(ALICE, { orcid: ALICE })] }));
-        fireEvent.click(screen.getByRole("button", { name: en.lookupOrcidName }));
+        fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
       },
     ],
   ])("keeps what the user is typing when %s lands, and commits it on leaving", async (_, startLookup) => {
     const resolve = deferLookups();
     renderList();
     startLookup();
-    const field = screen.getByLabelText<HTMLInputElement>(en.nameLabel);
+    const field = screen.getByLabelText<HTMLInputElement>(english.nameLabel);
     field.focus();
     fireEvent.change(field, { target: { value: `${ALICE} typed` } });
 
@@ -388,7 +389,7 @@ describe("editing a contributor's name", () => {
   it("discards the edit on Escape, also when the field is left afterwards", () => {
     useContributionStore.setState({ authors: [createAuthor("Alice Smith")] });
     renderList();
-    const field = screen.getByLabelText<HTMLInputElement>(en.nameLabel);
+    const field = screen.getByLabelText<HTMLInputElement>(english.nameLabel);
     field.focus();
     fireEvent.change(field, { target: { value: "Zed Typo" } });
     fireEvent.keyDown(field, { key: "Escape" });
@@ -405,7 +406,7 @@ describe("moving a contributor from the menu", () => {
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Actions for Ben Okoro" }));
 
-    const moveUp = screen.getByRole("button", { name: en.moveUp });
+    const moveUp = screen.getByRole("button", { name: english.moveUp });
     moveUp.focus();
     fireEvent.click(moveUp);
     expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);

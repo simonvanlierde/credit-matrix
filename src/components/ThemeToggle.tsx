@@ -1,9 +1,7 @@
-"use client";
-
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useTranslations } from "@/lib/translations";
 
 /**
  * Light/dark toggle for the header. Renders nothing until mounted so server and

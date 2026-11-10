@@ -1,9 +1,7 @@
-"use client";
-
 import { Check } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
-import { useTranslations } from "use-intl";
 import { OKABE_ITO, onColor } from "@/core/contributor-color";
+import { useTranslations } from "@/lib/translations";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 /**

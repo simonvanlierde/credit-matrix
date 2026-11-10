@@ -1,11 +1,11 @@
 # Architecture
 
-It's all TypeScript: one Next.js app, built as a static export, with the logic that doesn't depend
+It's all TypeScript: one React app, built with Vite and prerendered to static HTML, with the logic that doesn't depend
 on React or Next.js in `src/core`. There is no server code.
 
 | Layer | Choice | Why |
 |---|---|---|
-| Frontend | Next.js 16 (App Router) | Static export on Cloudflare, no server code |
+| Frontend | React 19 + Vite 8 | Static export on Cloudflare, no server code |
 | Styling | Tailwind CSS v4 | Design tokens via `@theme`; no runtime CSS |
 | State | Zustand + immer + persist | Survives a refresh via localStorage |
 | Validation | Zod | Schema checks at trust boundaries |
@@ -14,7 +14,7 @@ on React or Next.js in `src/core`. There is no server code.
 
 ```text
 Browser
-  └─ Next.js app  (repo root, App Router)
+  └─ React app  (repo root, Vite)
        ├─ React UI + Zustand store (persisted to localStorage)
        ├─ src/core   ← all domain logic, runs in the browser
        │     statements · JATS4R XML · Crossref XML · CSV · tenzing CSV · JSON · Markdown · latex-credits · heatmap SVG · validation
@@ -26,7 +26,7 @@ Browser
 ## `src/core`
 
 [`src/core`](../src/core/README.md) holds the domain logic (statements, exports, validation, heatmap
-SVG) as plain TypeScript with no side effects, and `zod` is its only runtime dependency. It is
+SVG) as plain TypeScript with no side effects, with `zod` for validation and Lingui for translation. It is
 published as the `credit-matrix` npm package, with a CLI (`cli.ts`) and a web element
 (`element.ts`). Apart from the CLI, it uses no React, Next.js or Node APIs when it's imported. Biome
 refuses imports there of React, Next.js, `@/`, or relative paths that leave `src/core`. Most changes
@@ -44,7 +44,13 @@ The ORCID and DOI lookups call the public APIs of ORCID, Crossref and DataCite s
 browser. DataCite is only asked about DOIs that Crossref does not hold, such as arXiv and Zenodo
 records. All three send CORS headers that let the browser call them. The Content Security Policy
 (CSP) in [`public/_headers`](../public/_headers) allows exactly those origins, plus `orcid.org`, whose
-public keys check a co-author's ORCID sign-in on a reply.
+public keys check a co-author's ORCID sign-in on a reply. Citation files in CFF or Zenodo format
+are converted locally by a lazy citesync worker. The build copies the pinned Pyodide runtime from
+`node_modules/pyodide` into `/citesync/pyodide/` and downloads checksum-verified Python wheels
+(`scripts/vendor-citesync.mjs`); the worker's CSP allows only this site. The service worker caches the
+runtime on first use, so later citation imports work offline until the next deploy; the build id
+hashes the runtime files, so a new converter never mixes with a cached old one. CodeMeta imports
+need no runtime and work offline.
 
 ## No accounts, no server-side storage
 

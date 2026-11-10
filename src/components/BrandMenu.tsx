@@ -1,12 +1,10 @@
-"use client";
-
 import { ChartLine, ChevronDown, ChevronRight, HelpCircle } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useTranslations } from "use-intl";
 import { AboutPanel } from "@/components/AboutPanel";
 import { Lockup, PRODUCT_NAME } from "@/components/BrandMark";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { usePathname } from "@/lib/pathname";
+import { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
 
 /**

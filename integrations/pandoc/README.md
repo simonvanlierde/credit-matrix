@@ -62,6 +62,11 @@ Set `credit-matrix.heading` to change the heading and `credit-matrix.placement` 
 put it before the body. An empty `::: {#credit-statement}` div places it at that point instead.
 The heading takes the level of the document's first heading.
 
+## Contribution heatmap
+
+Set `credit-matrix.heatmap: true` to add a figure through the package CLI.
+See [figure options and examples](../heatmap.md) for setup and all rendering options.
+
 ## Limits
 
 - English, by author, with contribution levels. For other languages or formats, use the

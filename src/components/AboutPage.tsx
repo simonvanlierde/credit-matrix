@@ -1,11 +1,9 @@
-"use client";
-
 import { Check, Copy, Download } from "lucide-react";
 import { useState } from "react";
-import { useTranslations } from "use-intl";
 import { LicenseLink } from "@/components/ui/license-link";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { CITATION_FORMATS, type CitationFormat } from "@/lib/citation";
+import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { cn, download } from "@/lib/utils";
 
@@ -27,7 +25,7 @@ const PLUGINS = [
 const BUTTON =
   "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant px-3 text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary";
 
-/** The citation in the format the reader picks, to copy or download. Built at build time from codemeta.json. */
+/** The citation in the format the reader picks, to copy or download. Read from committed citesync exports at build time. */
 function CitationBox({ citations }: { citations: Record<CitationFormat, string> }) {
   const t = useTranslations();
   const [format, setFormat] = useState<CitationFormat>("apa");
