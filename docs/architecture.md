@@ -9,7 +9,7 @@ on React or Next.js in `src/core`. There is no server code.
 | Styling | Tailwind CSS v4 | Design tokens via `@theme`; no runtime CSS |
 | State | Zustand + immer + persist | Survives a refresh via localStorage |
 | Validation | Zod | Schema checks at trust boundaries |
-| Heatmap | Hand-crafted SVG (`core`) | One SVG source feeds both download and canvas PNG |
+| Heatmap | SVG and embedded-font renderer (`core`) | One SVG source feeds SVG, PDF and canvas PNG exports |
 | Offline | Service worker + manifest | Precaches the app's own files under a per-build cache name |
 
 ```text
@@ -17,7 +17,7 @@ Browser
   └─ React app  (repo root, Vite)
        ├─ React UI + Zustand store (persisted to localStorage)
        ├─ src/core   ← all domain logic, runs in the browser
-       │     statements · JATS4R XML · Crossref XML · CSV · tenzing CSV · JSON · Markdown · latex-credits · heatmap SVG · validation
+       │     statements · JATS4R XML · Crossref XML · CSV · tenzing CSV · JSON · Markdown · latex-credits · heatmap SVG/PDF · validation
        ├─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org · api.datacite.org
        └─ ORCID sign-in on replies ──→ orcid.org (sign-in page, public keys)
                                      ← the only calls that leave the browser
@@ -26,12 +26,13 @@ Browser
 ## `src/core`
 
 [`src/core`](../src/core/README.md) holds the domain logic (statements, exports, validation, heatmap
-SVG) as plain TypeScript with no side effects, with `zod` for validation and Lingui for translation. It is
+SVG/PDF) as plain TypeScript with no side effects, with `zod` for validation and Lingui for translation. It is
 published as the `credit-matrix` npm package, with a CLI (`cli.ts`) and a web element
 (`element.ts`). Apart from the CLI, it uses no React, Next.js or Node APIs when it's imported. Biome
 refuses imports there of React, Next.js, `@/`, or relative paths that leave `src/core`. Most changes
 and most tests go here. XML import uses the browser's own `DOMParser`, and the PNG is drawn from the
-heatmap SVG onto a `<canvas>`.
+heatmap SVG onto a `<canvas>`. [`figures.ts`](../src/core/figures.ts) embeds fonts in SVG and PDF;
+the [figure font guide](../integrations/figures/README.md) describes coverage and offline use.
 
 Each contribution stores a 0–100 integer `score`, not a yes/no value, so the UI can switch between
 yes/no and levels without changing what is stored. The

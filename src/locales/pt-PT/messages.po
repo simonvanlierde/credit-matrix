@@ -1719,10 +1719,25 @@ msgstr "O MyST usa as funções dos autores e o idioma da página, com contribui
 msgid "heatmapRecipeTypst"
 msgstr "Usa os teus dados de equipa do Typst. As métricas das fontes e a disposição nativa podem diferir do SVG."
 
+msgid "heatmapRecipeOneColor"
+msgstr "As receitas usam uma só cor. As cores por contribuidor só existem no SVG, no PNG e no PDF da aplicação."
+
 msgid "heatmapCopyRecipe"
 msgstr "Copiar receita de exportação"
 msgid "exportRoCrateFragment"
 msgstr "Fragmento RO-Crate"
+
+msgid "colorByContributor"
+msgstr "Cor por contribuidor"
+
+msgid "figureColor"
+msgstr "Cor da figura"
+
+msgid "figureOneColor"
+msgstr "Uma só cor"
+
+msgid "figurePerContributor"
+msgstr "Por contribuidor"
 
 msgid "downloadPdf"
 msgstr "Descarregar PDF"

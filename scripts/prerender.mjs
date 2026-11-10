@@ -38,7 +38,11 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
   };
   preload(source);
   if (chunks.size === 0) throw new Error(`prerender: no chunks for ${path} (${source})`);
-  const preloads = [...chunks].map((file) => `<link rel="modulepreload" href="/${file}">`).join("");
+  // Vite already preloads the entry's static imports in the template; list only the rest.
+  const preloads = [...chunks]
+    .filter((file) => !template.includes(`href="/${file}"`))
+    .map((file) => `<link rel="modulepreload" href="/${file}">`)
+    .join("");
   const title = metadata.title ?? "CRediT Matrix · CRediT author statement generator";
   const tags = `<meta name="description" content="${escapeAttribute(metadata.description ?? description)}"><link rel="canonical" href="https://credit.duinlab.nl${path}"><meta property="og:type" content="website"><meta property="og:site_name" content="CRediT Matrix"><meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(metadata.description ?? description)}"><meta property="og:url" content="https://credit.duinlab.nl${path}"><meta property="og:image" content="https://credit.duinlab.nl/opengraph-image.png"><meta property="og:image:alt" content="CRediT Matrix contribution statement generator"><meta name="twitter:card" content="summary_large_image">`;
   await writeFile(

@@ -40,7 +40,7 @@ export function ColorPopover({
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent aria-label={label} className="w-56">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{label}</p>
+        <p className="mb-2 text-[13px] font-semibold text-on-surface">{label}</p>
         <div className="grid grid-cols-8 gap-1.5">
           {OKABE_ITO.map((hex) => {
             const selected = hex.toLowerCase() === value.toLowerCase();

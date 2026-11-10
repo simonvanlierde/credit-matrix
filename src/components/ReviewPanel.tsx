@@ -20,7 +20,7 @@ import {
 } from "@/core";
 import { signedForTitle } from "@/core/ask";
 import { LEVEL_SCORE } from "@/core/author";
-import { heatCellColor, onColor } from "@/core/contributor-color";
+import { contributorHues, heatCellColor, onColor } from "@/core/contributor-color";
 import { announce } from "@/lib/announce";
 import { copyAskMessage } from "@/lib/ask-message";
 import { useFormatter, useTranslations } from "@/lib/translations";
@@ -75,6 +75,10 @@ export function ReviewPanel() {
   const reviewFocus = useContributionStore((s) => s.reviewFocus);
   const tab = useContributionStore((s) => s.inspectorTab);
   const monoColor = useContributionStore((s) => s.heatmapMonoColor);
+  const colorByContributor = useContributionStore((s) => s.colorByContributor);
+  // The same hue the person's grid column uses.
+  const hues = colorByContributor ? contributorHues(authors.length) : null;
+  const hueFor = (authorId: string) => hues?.[authors.findIndex((a) => a.id === authorId)] ?? monoColor;
   const levels = useContributionStore((s) => s.inputMode === "levels");
   const dark = useTheme().resolvedTheme === "dark";
   const { translateInterfaceRole, translateInterfaceUi } = useCreditTranslators();
@@ -344,17 +348,27 @@ export function ReviewPanel() {
 
                       {line.state === "used" ? (
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-on-surface">
-                          <LevelChip level={line.level} graded={levels} monoColor={monoColor} dark={dark} />
+                          <LevelChip level={line.level} graded={levels} monoColor={hueFor(author.id)} dark={dark} />
                           {levelName(line.level, levels)}
                         </div>
                       ) : (
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-on-surface">
                           <span className="text-on-surface-variant">{t("teamYou")}</span>
-                          <LevelChip level={line.difference.mine} graded={graded} monoColor={monoColor} dark={dark} />
+                          <LevelChip
+                            level={line.difference.mine}
+                            graded={graded}
+                            monoColor={hueFor(author.id)}
+                            dark={dark}
+                          />
                           {levelName(line.difference.mine, graded)}
                           <ArrowRight className="size-3.5 text-on-surface-variant" aria-hidden="true" />
                           <span className="text-on-surface-variant">{name}</span>
-                          <LevelChip level={line.difference.theirs} graded={graded} monoColor={monoColor} dark={dark} />
+                          <LevelChip
+                            level={line.difference.theirs}
+                            graded={graded}
+                            monoColor={hueFor(author.id)}
+                            dark={dark}
+                          />
                           {levelName(line.difference.theirs, graded)}
                         </div>
                       )}

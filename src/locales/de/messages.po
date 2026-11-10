@@ -1719,10 +1719,25 @@ msgstr "MyST verwendet die Autorenrollen und Sprache der Seite mit Ja/Nein-Beitr
 msgid "heatmapRecipeTypst"
 msgstr "Verwende deine Typst-Teamdaten. Schriftmaße und natives Layout können von SVG abweichen."
 
+msgid "heatmapRecipeOneColor"
+msgstr "Rezepte zeichnen eine Farbe. Farben je Mitwirkende gibt es nur im SVG, PNG und PDF der App."
+
 msgid "heatmapCopyRecipe"
 msgstr "Exportvorlage kopieren"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate-Fragment"
+
+msgid "colorByContributor"
+msgstr "Nach Mitwirkenden einfärben"
+
+msgid "figureColor"
+msgstr "Farbe der Abbildung"
+
+msgid "figureOneColor"
+msgstr "Eine Farbe"
+
+msgid "figurePerContributor"
+msgstr "Je Mitwirkende"
 
 msgid "downloadPdf"
 msgstr "PDF herunterladen"

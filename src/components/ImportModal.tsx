@@ -555,9 +555,9 @@ export function ImportModal({
 
   const citation = format === "cff" || format === "zenodo";
   const busy = importing || doiLoading;
-  const label = "block text-xs uppercase tracking-label font-semibold text-on-surface-variant";
+  const label = "block text-[13px] font-semibold text-on-surface";
   const secondary =
-    "rounded-lg border border-outline-strong px-4 py-2 font-semibold text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+    "rounded-lg border border-outline-strong px-4 py-2 font-semibold text-on-surface-variant transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
   // Only asked once the draft has contributors; the DOI preview on an empty draft just confirms.
   const addable = pending && existingContributorCount > 0 ? newContributors(draftAuthors, pending.authors).length : 0;
 
@@ -572,7 +572,7 @@ export function ImportModal({
       {...closeOnBackdrop}
       onDragOver={swallowDrag}
       onDrop={swallowDrag}
-      className="m-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
+      className="m-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden rounded border border-edge bg-surface-bright p-0 text-on-surface shadow-sheet backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
     >
       <div>
         <div className="py-4 pl-8 pr-14 border-b border-outline-variant/10 bg-surface-container-low">
@@ -630,7 +630,7 @@ export function ImportModal({
               }}
               placeholder={t("importPlaceholder", { names: t("sampleNames") })}
               rows={6}
-              className="w-full bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono p-4 text-on-surface placeholder:text-on-surface-variant rounded-t resize-none transition-colors"
+              className="w-full rounded border border-edge bg-surface-bright focus:ring-2 focus:ring-primary outline-none text-sm font-mono p-4 text-on-surface placeholder:text-on-surface-variant resize-none transition-shadow"
             />
             {citation && (
               <ExternalLink
@@ -728,7 +728,7 @@ export function ImportModal({
                   }
                 }}
                 placeholder={t("doiPlaceholder")}
-                className="flex-1 min-w-0 bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono placeholder:font-sans px-4 py-2 text-on-surface placeholder:text-on-surface-variant rounded-t transition-colors"
+                className="flex-1 min-w-0 rounded border border-edge bg-surface-bright focus:ring-2 focus:ring-primary outline-none text-sm font-mono placeholder:font-sans px-4 py-2 text-on-surface placeholder:text-on-surface-variant transition-shadow"
               />
               <button
                 type="button"
@@ -796,7 +796,7 @@ export function ImportModal({
                       type="button"
                       onClick={() => finishImport(pending, "add")}
                       disabled={addable === 0}
-                      className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-on-surface-variant disabled:ring-1 disabled:ring-outline-variant"
+                      className="rounded bg-primary shadow-press px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-on-surface-variant disabled:ring-1 disabled:ring-outline-variant"
                     >
                       {t("importAddNew", { count: addable })}
                     </button>
@@ -805,7 +805,7 @@ export function ImportModal({
                   <button
                     type="button"
                     onClick={() => finishImport(pending, "replace")}
-                    className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="rounded bg-primary shadow-press px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     {t("doiConfirm")}
                   </button>
@@ -974,7 +974,7 @@ export function ImportModal({
                     backedOut.current = true;
                     setReviewed(null);
                   }}
-                  className="rounded-lg border border-outline-variant px-4 py-2 font-semibold text-on-surface-variant hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="rounded border border-edge bg-surface-bright px-4 py-2 font-semibold text-on-surface-variant hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {t("statementBack")}
                 </button>
@@ -982,7 +982,7 @@ export function ImportModal({
                   type="button"
                   onClick={() => applyStatement(review)}
                   disabled={review.added === 0}
-                  className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded bg-primary shadow-press px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {t("statementApply")}
                 </button>

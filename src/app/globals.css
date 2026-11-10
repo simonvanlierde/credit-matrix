@@ -18,21 +18,35 @@
   --color-primary-hover: #183f62; /* opaque, under on-primary text on hover */
   --color-on-primary: #ffffff;
 
-  /* --- Neutrals (ink on paper) --- */
-  --color-surface: #fafaf9;
-  --color-surface-bright: #ffffff;
-  --color-surface-container-low: #f4f4f2;
-  --color-surface-container: #efefed;
-  --color-surface-container-high: #ececea;
-  --color-surface-container-highest: #e4e4e1;
-  --color-on-surface: #16181c;
-  --color-on-surface-variant: #595c63;
+  /* --- The chosen heatmap colour. ThemeHue sets it from the open draft; this is
+     the default before the store loads. It tints the page only, never a figure. --- */
+  --color-theme: #1f4e79;
 
-  --color-outline: #c9c9c5;
-  --color-outline-variant: #e4e4e1;
-  --color-outline-strong: #7c7c78; /* 3:1 on every surface: field edges, icon-only controls */
+  /* --- Neutrals (ink on warm paper) --- */
+  --color-paper: #fbf8f1;
+  /* The page: paper with 3% of the theme colour. Capped there because a custom
+     colour can be anything, and the muted text must keep 4.5:1 on it. */
+  --color-surface: color-mix(in oklab, var(--color-theme) 3%, var(--color-paper));
+  --color-surface-bright: #fffdf8; /* cards and the statement page, on the tinted page */
+  --color-surface-container-low: #f5f0e6;
+  --color-surface-container: #efe9dd;
+  --color-surface-container-high: #ebe4d6;
+  --color-surface-container-highest: #e3dbcb;
+  --color-on-surface: #1c1a17;
+  --color-on-surface-variant: #5e584e;
 
-  --color-background: #fafaf9;
+  --color-outline: #d6ccba;
+  --color-outline-variant: #e6dfd2;
+  --color-outline-strong: #857d70; /* 3:1 on every surface: field edges, icon-only controls */
+  /* The ink edge: the 1px line around cards, fields and tool buttons. */
+  --color-edge: #1c1a17;
+  /* Elevation is a hard offset, never a blur: cards sit on the page like paper cut-outs. */
+  --shadow-card: 2px 2px 0 rgb(28 26 23 / 0.13);
+  --shadow-sheet: 5px 5px 0 color-mix(in oklab, var(--color-primary) 22%, transparent);
+  --shadow-float: 4px 4px 0 rgb(28 26 23 / 0.18); /* popovers and menus, over the content */
+  --shadow-press: 2px 2px 0 var(--color-edge); /* primary buttons: the one action per view */
+
+  --color-background: var(--color-surface);
 
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
@@ -44,8 +58,8 @@
 
   /* --- Typography --- */
   --font-headline: var(--font-newsreader), Georgia, serif;
-  --font-body: var(--font-plex-sans), system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-body: var(--font-ui-sans), system-ui, sans-serif;
+  --font-mono: var(--font-ui-mono), ui-monospace, monospace;
 }
 
 /*
@@ -59,20 +73,25 @@
   --color-primary-hover: #8fadc9;
   --color-on-primary: #16181c;
 
-  --color-surface: #16181c;
-  --color-surface-bright: #2a2c30;
-  --color-surface-container-low: #1a1c20;
-  --color-surface-container: #1e2024;
-  --color-surface-container-high: #25272b;
-  --color-surface-container-highest: #303236;
-  --color-on-surface: #e4e4e1;
-  --color-on-surface-variant: #c9c9c5;
+  --color-paper: #161513;
+  --color-surface: color-mix(in oklab, var(--color-theme) 4%, var(--color-paper));
+  --color-surface-bright: #24221f;
+  --color-surface-container-low: #1b1a17;
+  --color-surface-container: #201e1b;
+  --color-surface-container-high: #292723;
+  --color-surface-container-highest: #34312c;
+  --color-on-surface: #ebe6dc;
+  --color-on-surface-variant: #c9c1b3;
 
-  --color-outline: #45474b;
-  --color-outline-variant: #2e3034;
-  --color-outline-strong: #7a7d83;
+  --color-outline: #4a463f;
+  --color-outline-variant: #2f2c28;
+  --color-outline-strong: #857e72;
+  --color-edge: #857e72;
+  --shadow-card: 2px 2px 0 rgb(0 0 0 / 0.45);
+  --shadow-sheet: 5px 5px 0 color-mix(in oklab, var(--color-primary) 18%, transparent);
+  --shadow-float: 4px 4px 0 rgb(0 0 0 / 0.55);
 
-  --color-background: #16181c;
+  --color-background: var(--color-surface);
 
   --color-error: #ffb4ab;
   --color-error-container: #93000a;
@@ -121,6 +140,7 @@
   --color-outline: var(--color-outline);
   --color-outline-variant: var(--color-outline-variant);
   --color-outline-strong: var(--color-outline-strong);
+  --color-edge: var(--color-edge);
 
   --color-background: var(--color-background);
 
@@ -134,8 +154,10 @@
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
 
-  /* DESIGN.md's label tracking: uppercase section labels. */
-  --tracking-label: 0.08em;
+  --shadow-card: var(--shadow-card);
+  --shadow-sheet: var(--shadow-sheet);
+  --shadow-float: var(--shadow-float);
+  --shadow-press: var(--shadow-press);
 }
 
 body {
@@ -150,6 +172,22 @@ body {
   .touch-target {
     min-height: 2.75rem;
     min-width: 2.75rem;
+  }
+}
+
+/*
+ * A small control whose tap area grows to 44px on touch without changing its
+ * look: a centred transparent box, at least 2.75rem each way, catches the tap.
+ * Insets resolve against the control's own size, so a 24px chip gets -10px.
+ */
+@media (pointer: coarse) {
+  .hit-area {
+    position: relative;
+  }
+  .hit-area::after {
+    content: "";
+    position: absolute;
+    inset: min(0px, calc((100% - 2.75rem) / 2));
   }
 }
 
@@ -180,6 +218,13 @@ html,
 body {
   max-width: 100%;
   overflow-x: clip;
+}
+
+/* A disabled primary button loses its press shadow along with its fill, so it
+   never reads as a working one (DESIGN.md, Buttons). */
+.shadow-press:disabled,
+.shadow-press[aria-disabled="true"] {
+  box-shadow: none;
 }
 
 /* The header is fixed, so anything focus scrolls into view would otherwise
@@ -463,7 +508,7 @@ html[data-welcome-skip] dialog[data-first-run] {
 
 /* Settling a difference: the cell eases into its agreed level, and a flag ring
    fades off it, so the heatmap visibly becomes the record. Reduced motion keeps
-   only the fill step (see the carve-out below). */
+   only the fill step and a still ring (see the carve-outs below). */
 .contribution-cell.cell-settle {
   transition-duration: 600ms;
   animation: cell-settle 900ms var(--ease-out);
@@ -472,6 +517,25 @@ html[data-welcome-skip] dialog[data-first-run] {
 @keyframes cell-settle {
   from {
     box-shadow: 0 0 0 3px var(--color-flag);
+  }
+}
+
+/*
+ * Windows high contrast: forced colours drop every box-shadow, and with it the
+ * ring-based focus indicator and the card edges. Give focus a real outline,
+ * give cells an edge, and keep a filled cell's own colours, since its level
+ * mark is drawn in a colour contrast-checked against that fill.
+ */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px;
+  }
+  .contribution-cell {
+    border: 1px solid CanvasText;
+  }
+  [data-level-fill] {
+    forced-color-adjust: none;
   }
 }
 
@@ -494,5 +558,12 @@ html[data-welcome-skip] dialog[data-first-run] {
      confirmation that an assignment landed indistinguishable from a misfire. */
   .contribution-cell {
     transition-duration: 120ms !important;
+  }
+
+  /* The settled cell keeps its flag ring, still, for the same 900ms, then drops it:
+     the cue that a difference closed, without the fade. */
+  .contribution-cell.cell-settle {
+    animation-duration: 900ms !important;
+    animation-timing-function: steps(1, end) !important;
   }
 }

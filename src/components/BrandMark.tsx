@@ -1,3 +1,5 @@
+import { useTheme } from "next-themes";
+import { pageMarkColor } from "@/core/contributor-color";
 import { useContributionStore } from "@/store/contribution-store";
 
 /**
@@ -15,11 +17,13 @@ import { useContributionStore } from "@/store/contribution-store";
  */
 export function BrandMark({ className }: { className?: string }) {
   const monoColor = useContributionStore((state) => state.heatmapMonoColor);
+  // The raw hue and its faded tiers vanish on the dark header; use its dark-ramp lead.
+  const dark = useTheme().resolvedTheme === "dark";
   return (
     <svg
       viewBox="0 0 32 32"
       className={className}
-      style={{ color: monoColor, transition: "color 200ms ease-out" }}
+      style={{ color: pageMarkColor(monoColor, dark), transition: "color 200ms ease-out" }}
       aria-hidden="true"
       focusable="false"
     >

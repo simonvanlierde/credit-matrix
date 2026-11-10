@@ -23,7 +23,7 @@ const PLUGINS = [
 ];
 
 const BUTTON =
-  "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant px-3 text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary";
+  "inline-flex min-h-9 items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary";
 
 /** The citation in the format the reader picks, to copy or download. Read from committed citesync exports at build time. */
 function CitationBox({ citations }: { citations: Record<CitationFormat, string> }) {

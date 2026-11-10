@@ -45,6 +45,7 @@ export function HeatmapRecipe({ settings, language }: { settings: HeatmapFigureS
             ))}
           </SelectContent>
         </Select>
+        {settings.colorBy === "contributor" && <p className="text-on-surface-variant">{t("heatmapRecipeOneColor")}</p>}
         {target === "myst" && <p className="text-on-surface-variant">{t("heatmapRecipeMyst")}</p>}
         {target === "typst" && <p className="text-on-surface-variant">{t("heatmapRecipeTypst")}</p>}
         <textarea
