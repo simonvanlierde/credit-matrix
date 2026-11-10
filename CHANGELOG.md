@@ -69,6 +69,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   DOI or an ORCID iD, and a disabled Add button is muted instead of faded.
 - On a phone, the "Contributor to assign" picker is 44px tall, with the name at body size beside
   the contributor's initials.
+- On a phone, the picker also shows that contributor's statement line, which links down to the
+  full statement, and Figure settings end in a Back button to the preview.
+- On a desktop the grid starts at the pane's left edge, under its toolbar and beside its key, and
+  the heatmap preview shows the whole figure. Actual size still scrolls.
 - A contributor without roles is shown as a note, no longer in error red: no note stops you from
   copying or exporting the statement.
 - The status strip counts answers only once you have asked someone. Before that it offers only
@@ -102,6 +106,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- With Windows high contrast (forced colours) on, focus has a visible outline, cells keep their
+  edges, a Lead cell keeps its three dots, and the selected side of a choice such as Yes / no or
+  Levels stays visible. On a touch screen the small controls take a 44px tap.
 - A cut-off or damaged JSON export no longer imports its lines as contributor names; the import
   fails with the usual message instead.
 - Import says plainly when a file repeats a contributor id: the import box shows its own message
