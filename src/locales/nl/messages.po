@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Legenda"
 
 msgid "levelHint"
-msgstr "Selecteer om te wisselen · Rechtsklik of 0–3 stelt een niveau in."
+msgstr "Selecteer om te wisselen · Pijltjestoetsen om te bewegen · Rechtsklik of 0–3 stelt een niveau in."
 
 msgid "heatmapLabel"
 msgstr "Heatmap"
@@ -1601,5 +1601,147 @@ msgstr "Dit citatiebestand vermeldt geen auteurs."
 msgid "citationConverting"
 msgstr "Citatiebestand wordt gelezen… De converter moet mogelijk eerst worden gedownload."
 
+msgid "heatmapActualSize"
+msgstr "Werkelijke grootte"
+
+msgid "heatmapFitWidth"
+msgstr "Aan breedte aanpassen"
+
+msgid "heatmapFigureSettings"
+msgstr "Figuurinstellingen"
+
+msgid "heatmapLayout"
+msgstr "Indeling"
+
+msgid "heatmapOrientation"
+msgstr "Oriëntatie"
+
+msgid "heatmapRolesInRows"
+msgstr "Rollen in rijen"
+
+msgid "heatmapContributorsInRows"
+msgstr "Bijdragers in rijen"
+
+msgid "heatmapRoleLabels"
+msgstr "Rollabels"
+
+msgid "heatmapFullLabels"
+msgstr "Volledige labels"
+
+msgid "heatmapShortLabels"
+msgstr "Korte labels"
+
+msgid "heatmapHideUnused"
+msgstr "Ongebruikte rollen weglaten"
+
+
+msgid "heatmapShowLevels"
+msgstr "Bijdrageniveaus tonen"
+
+msgid "heatmapLegendHint"
+msgstr "Leg de niveaus uit in het bijschrift als u de legenda verbergt."
+
+msgid "heatmapBlue"
+msgstr "Blauw"
+
+msgid "heatmapGreen"
+msgstr "Groen"
+
+msgid "heatmapGray"
+msgstr "Grijstinten"
+
+msgid "heatmapPaleColor"
+msgstr "Ondersteunend is moeilijk te onderscheiden in deze kleur. Kies een donkerdere tint."
+
+msgid "heatmapAdvanced"
+msgstr "Geavanceerd"
+
+msgid "heatmapFont"
+msgstr "Lettertype"
+
+msgid "heatmapSans"
+msgstr "Schreefloos"
+
+msgid "heatmapSerif"
+msgstr "Met schreef"
+
+msgid "heatmapFontSize"
+msgstr "Lettergrootte (px)"
+
+msgid "heatmapCellShape"
+msgstr "Celvorm"
+
+msgid "heatmapSquare"
+msgstr "Vierkant"
+
+msgid "heatmapRounded"
+msgstr "Afgerond"
+
+msgid "heatmapCircle"
+msgstr "Cirkel"
+
+msgid "heatmapCellSize"
+msgstr "Celgrootte (px)"
+
+msgid "heatmapPngSize"
+msgstr "PNG-formaat"
+
+msgid "heatmapWidthMm"
+msgstr "Breedte (mm)"
+
+msgid "heatmapResolution"
+msgstr "Resolutie"
+
+msgid "heatmapSvgHint"
+msgstr "SVG blijft scherp bij schalen; deze afmetingen gelden voor PNG."
+
+msgid "heatmapReset"
+msgstr "Standaardinstellingen herstellen"
+
+msgid "heatmapPngTooLarge"
+msgstr "Deze PNG zou te groot zijn. Verlaag de breedte of resolutie, wissel de assen om of download SVG."
+
+msgid "heatmapSmallPrint"
+msgstr "De labels worden ongeveer {size} pt groot op papier. Vergroot de breedte of wissel de assen om voor leesbare tekst."
+
+msgid "heatmapRecipe"
+msgstr "Exportrecept"
+
+msgid "heatmapRecipeHint"
+msgstr "Alleen stijlinstellingen. Gebruik je bijdragergegevens en de geïnstalleerde CLI of plug-in. PNG-formaat en DPI zijn niet inbegrepen."
+
+msgid "heatmapRecipeTarget"
+msgstr "Gebruiken in"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST gebruikt de auteursrollen en taal van de pagina, met ja/nee-bijdragen."
+
+msgid "heatmapRecipeTypst"
+msgstr "Gebruik je Typst-teamgegevens. Lettertypematen en de eigen lay-out kunnen afwijken van SVG."
+
+msgid "heatmapCopyRecipe"
+msgstr "Exportrecept kopiëren"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate-fragment"
+
+
+msgid "heatmapLegendPosition"
+msgstr "Legenda"
+
+msgid "heatmapLegendAuto"
+msgstr "Automatisch"
+
+msgid "heatmapLegendRight"
+msgstr "Rechts"
+
+msgid "heatmapLegendBelow"
+msgstr "Onder"
+
+msgid "heatmapLegendHidden"
+msgstr "Verborgen"
+
+msgid "heatmapCellMarks"
+msgstr "Bijdragemarkeringen tonen"
+
+msgid "heatmapMarksHint"
+msgstr "Schakel markeringen in om de bijdrageniveaus ook op een andere manier te onderscheiden."

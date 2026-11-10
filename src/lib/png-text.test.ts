@@ -1,6 +1,6 @@
 import { crc32, deflateSync, inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import { withPngText } from "./png-text";
+import { withPngResolution, withPngText } from "./png-text";
 
 /** A valid 1×1 grey PNG built from parts, so the test needs no fixture file. */
 function onePixelPng(): Uint8Array<ArrayBuffer> {
@@ -64,5 +64,45 @@ describe("withPngText", () => {
   it("leaves anything that is not a PNG alone", () => {
     const junk = new Uint8Array([1, 2, 3]);
     expect(withPngText(junk, "Description", "x")).toBe(junk);
+  });
+});
+
+describe("withPngResolution", () => {
+  it("sets physical resolution without changing image data or its text alternative", () => {
+    const original = withPngText(onePixelPng(), "Description", "Researcher: Software");
+    const out = chunks(withPngResolution(original, 300));
+    const data = out.find(([type]) => type === "pHYs")?.[1];
+    expect(data?.readUInt32BE(0)).toBe(11811);
+    expect(data?.readUInt32BE(4)).toBe(11811);
+    expect(data?.[8]).toBe(1);
+    expect(out.find(([type]) => type === "iTXt")?.[1]).toEqual(chunks(original).find(([type]) => type === "iTXt")?.[1]);
+    expect(inflateSync(out.find(([type]) => type === "IDAT")?.[1] ?? Buffer.alloc(0))).toEqual(Buffer.from([0, 128]));
+  });
+
+  it("replaces a browser's existing resolution instead of writing conflicting chunks", () => {
+    const out = chunks(withPngResolution(withPngResolution(onePixelPng(), 96), 600));
+    const resolutions = out.filter(([type]) => type === "pHYs");
+    expect(resolutions).toHaveLength(1);
+    expect(resolutions[0]?.[1].readUInt32BE(0)).toBe(23622);
+  });
+
+  it("rejects invalid resolution and leaves non-PNG data untouched", () => {
+    for (const dpi of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, 2401]) {
+      expect(() => withPngResolution(onePixelPng(), dpi)).toThrow(RangeError);
+    }
+    const junk = new Uint8Array([1, 2, 3]);
+    expect(withPngResolution(junk, 300)).toBe(junk);
+  });
+
+  it("leaves truncated chunks and a fake PNG header untouched", () => {
+    const png = onePixelPng();
+    for (const cut of [38, png.length - 1]) {
+      const truncated = png.slice(0, cut);
+      expect(withPngResolution(truncated, 300)).toBe(truncated);
+    }
+    const fake = new Uint8Array(33);
+    fake.set(new TextEncoder().encode("IHDR"), 12);
+    expect(withPngResolution(fake, 300)).toBe(fake);
+    expect(withPngText(fake, "Description", "x")).toBe(fake);
   });
 });

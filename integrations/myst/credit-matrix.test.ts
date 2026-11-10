@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import { buildHeatmapSvg, CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
 import {
   AVAILABLE_LOCALES,
   loadRoleCatalog,
@@ -156,11 +156,16 @@ it("builds a heatmap SVG asset with shared options and a text alternative", () =
   writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
   const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
   expect(directive, "heatmap directive is registered").toBeDefined();
-  const nodes = directive?.run({ options: { legend: false, size: 30, shape: "circle" } }, { path });
+  const nodes = directive?.run(
+    { options: { legend: false, size: 30, shape: "circle", font: "serif", "font-size": 21 } },
+    { path },
+  );
   expect(nodes?.[0]?.children?.[0]?.alt).toContain("Tu Youyou: Software");
   const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
   expect(svg).toContain('width="30" height="30" rx="15"');
   expect(svg).not.toContain(">Supporting<");
+  expect(svg).toContain('font-size="21"');
+  expect(svg).toContain("Georgia, 'Times New Roman', serif");
 });
 
 it("labels heatmap columns with each author's full name", () => {
@@ -176,4 +181,48 @@ it("labels heatmap columns with each author's full name", () => {
   expect(svg).toContain(">Tu Youyou<");
   expect(svg).toContain(">Katherine Johnson<");
   expect(svg).not.toContain(">C<");
+});
+
+it("forwards legend placement and marks without changing MyST publication defaults", () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-legend-"));
+  const path = join(dir, "index.md");
+  const people = [{ name: "Tu Youyou", roles: ["Software"] }];
+  writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  expect(directive?.options).toHaveProperty("legend-position");
+  expect(directive?.options).toHaveProperty("marks");
+  for (const legendPosition of ["auto", "right", "bottom"] as const) {
+    for (const marks of [true, false]) {
+      const nodes = directive?.run({ options: { "legend-position": legendPosition, marks } }, { path });
+      const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+      expect(svg).toBe(
+        buildHeatmapSvg(statementEntries(people), {
+          levels: false,
+          acronyms: false,
+          locale: "en",
+          legendPosition,
+          marks,
+        }),
+      );
+      expect(svg.includes('aria-hidden="true"')).toBe(marks);
+    }
+  }
+  const nodes = directive?.run({ options: {} }, { path });
+  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  expect(svg).not.toContain('aria-hidden="true"');
+});
+
+it("derives distinct initials and preserves ambiguous or nonletter labels", () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-initials-"));
+  const path = join(dir, "index.md");
+  writeFileSync(
+    path,
+    '---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n  - name: 王小明\n    roles: [Software]\n  - name: Anne Smith\n    roles: [Software]\n  - name: Albert Smith\n    roles: [Software]\n  - id: "1234"\n    roles: [Software]\n---\n',
+  );
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  const nodes = directive?.run({ options: { initials: true } }, { path });
+  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  for (const label of ["TY", "王小明", "Anne Smith", "Albert Smith", "1234"]) expect(svg).toContain(`>${label}</text>`);
+  expect(svg).not.toContain(">C</text>");
+  expect(nodes?.[0]?.children?.[0]?.alt).toContain("Tu Youyou");
 });

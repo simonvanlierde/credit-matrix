@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Légende"
 
 msgid "levelHint"
-msgstr "Sélectionnez pour faire défiler · Clic droit ou 0–3 définit un niveau."
+msgstr "Sélectionnez pour faire défiler · Flèches pour naviguer · Clic droit ou 0–3 définit un niveau."
 
 msgid "heatmapLabel"
 msgstr "Heatmap"
@@ -1601,5 +1601,147 @@ msgstr "Ce fichier de citation ne mentionne aucun auteur."
 msgid "citationConverting"
 msgstr "Lecture du fichier de citation… Le convertisseur doit peut-être d'abord être téléchargé."
 
+msgid "heatmapActualSize"
+msgstr "Taille réelle"
+
+msgid "heatmapFitWidth"
+msgstr "Ajuster à la largeur"
+
+msgid "heatmapFigureSettings"
+msgstr "Paramètres de la figure"
+
+msgid "heatmapLayout"
+msgstr "Disposition"
+
+msgid "heatmapOrientation"
+msgstr "Orientation"
+
+msgid "heatmapRolesInRows"
+msgstr "Rôles en lignes"
+
+msgid "heatmapContributorsInRows"
+msgstr "Contributeurs en lignes"
+
+msgid "heatmapRoleLabels"
+msgstr "Libellés des rôles"
+
+msgid "heatmapFullLabels"
+msgstr "Libellés complets"
+
+msgid "heatmapShortLabels"
+msgstr "Libellés courts"
+
+msgid "heatmapHideUnused"
+msgstr "Omettre les rôles inutilisés"
+
+
+msgid "heatmapShowLevels"
+msgstr "Afficher les niveaux de contribution"
+
+msgid "heatmapLegendHint"
+msgstr "Expliquez les niveaux dans la légende du manuscrit si vous masquez celle de la figure."
+
+msgid "heatmapBlue"
+msgstr "Bleu"
+
+msgid "heatmapGreen"
+msgstr "Vert"
+
+msgid "heatmapGray"
+msgstr "Niveaux de gris"
+
+msgid "heatmapPaleColor"
+msgstr "Le niveau de soutien se distingue mal avec cette couleur. Choisissez une teinte plus sombre."
+
+msgid "heatmapAdvanced"
+msgstr "Avancé"
+
+msgid "heatmapFont"
+msgstr "Police"
+
+msgid "heatmapSans"
+msgstr "Sans empattement"
+
+msgid "heatmapSerif"
+msgstr "Avec empattement"
+
+msgid "heatmapFontSize"
+msgstr "Taille du texte (px)"
+
+msgid "heatmapCellShape"
+msgstr "Forme des cellules"
+
+msgid "heatmapSquare"
+msgstr "Carré"
+
+msgid "heatmapRounded"
+msgstr "Arrondi"
+
+msgid "heatmapCircle"
+msgstr "Cercle"
+
+msgid "heatmapCellSize"
+msgstr "Taille des cellules (px)"
+
+msgid "heatmapPngSize"
+msgstr "Taille du PNG"
+
+msgid "heatmapWidthMm"
+msgstr "Largeur (mm)"
+
+msgid "heatmapResolution"
+msgstr "Résolution"
+
+msgid "heatmapSvgHint"
+msgstr "Le SVG reste net après redimensionnement ; ces dimensions concernent le PNG."
+
+msgid "heatmapReset"
+msgstr "Rétablir les valeurs par défaut"
+
+msgid "heatmapPngTooLarge"
+msgstr "Ce PNG serait trop grand. Réduisez sa largeur ou sa résolution, inversez les axes ou téléchargez le SVG."
+
+msgid "heatmapSmallPrint"
+msgstr "Les libellés mesureraient environ {size} pt à l’impression. Augmentez la largeur ou inversez les axes pour améliorer la lisibilité."
+
+msgid "heatmapRecipe"
+msgstr "Recette d’export"
+
+msgid "heatmapRecipeHint"
+msgstr "Paramètres de style uniquement. Utilisez vos données de contribution et la CLI ou le module installé. La taille PNG et les DPI sont exclus."
+
+msgid "heatmapRecipeTarget"
+msgstr "Utiliser dans"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST utilise les rôles des auteurs et la langue de la page, avec des contributions oui/non."
+
+msgid "heatmapRecipeTypst"
+msgstr "Utilisez vos données d’équipe Typst. Les métriques des polices et la mise en page native peuvent différer du SVG."
+
+msgid "heatmapCopyRecipe"
+msgstr "Copier la recette d’export"
 msgid "exportRoCrateFragment"
 msgstr "Fragment RO-Crate"
+
+
+msgid "heatmapLegendPosition"
+msgstr "Légende"
+
+msgid "heatmapLegendAuto"
+msgstr "Automatique"
+
+msgid "heatmapLegendRight"
+msgstr "À droite"
+
+msgid "heatmapLegendBelow"
+msgstr "En dessous"
+
+msgid "heatmapLegendHidden"
+msgstr "Masquée"
+
+msgid "heatmapCellMarks"
+msgstr "Afficher les marques de contribution"
+
+msgid "heatmapMarksHint"
+msgstr "Activez les marques pour distinguer les niveaux de contribution autrement que par les nuances."
