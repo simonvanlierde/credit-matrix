@@ -34,7 +34,7 @@ export { fromCrossrefContributors, toCrossrefContributors } from "./export/cross
 export { fromCsv, toCsv } from "./export/csv";
 export { toMyst, toQuarto } from "./export/frontmatter";
 export type { HeatmapSvgOptions } from "./export/heatmap-svg";
-export { buildHeatmapSvg, heatmapDescription } from "./export/heatmap-svg";
+export { buildHeatmapSvg, HeatmapOptionError, heatmapDescription } from "./export/heatmap-svg";
 export { fromJson, NewerVersionError, RepeatedIdError, toJson } from "./export/json";
 export { toLatexCredits } from "./export/latex-credits";
 export { toMarkdown } from "./export/markdown";
