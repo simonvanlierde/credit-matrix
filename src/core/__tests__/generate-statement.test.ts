@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { makeUiTranslator } from "../credit-i18n/ui-strings";
+import { AVAILABLE_LOCALES, loadRoleCatalog, makeRoleTranslator } from "../credit-i18n/index";
+import { loadUiCatalog, makeUiTranslator } from "../credit-i18n/ui-strings";
 import { generateStatement, STATEMENT_FORMATS, statementSpans } from "../generate-statement";
 import { parseAuthorText } from "../parse-authors";
 
@@ -231,24 +232,30 @@ describe("statementSpans", () => {
       span.cell ? [`${span.cell.authorId === authors[0]?.id ? "Jane" : "Bob"}/${span.cell.role}=${span.text}`] : [],
     );
 
-  it("joins to exactly the plain-text statement, in every format and line layout", () => {
-    const authors = makeAuthors();
-    const bob = authors[1];
-    if (!bob) throw new Error("expected 2 authors");
-    bob.contributorType = "non-author";
-    bob.corresponding = true;
-    for (const format of STATEMENT_FORMATS) {
-      for (const showLevels of [false, true]) {
-        for (const separateAcknowledgements of [false, true]) {
-          const options = { format, showLevels, separateAcknowledgements };
-          const text = statementSpans(authors, options)
-            .map((span) => span.text)
-            .join("");
-          expect(text).toBe(generateStatement(authors, options));
+  it.each(AVAILABLE_LOCALES)(
+    "matches plain text and HTML in every format and line layout ($code)",
+    async ({ code }) => {
+      const authors = makeAuthors();
+      const bob = authors[1];
+      if (!bob) throw new Error("expected 2 authors");
+      bob.contributorType = "non-author";
+      bob.corresponding = true;
+      const translateRole = makeRoleTranslator(await loadRoleCatalog(code));
+      const translateUi = makeUiTranslator(await loadUiCatalog(code));
+      for (const format of STATEMENT_FORMATS) {
+        for (const showLevels of [false, true]) {
+          for (const separateAcknowledgements of [false, true]) {
+            const options = { format, showLevels, separateAcknowledgements, translateRole, translateUi, locale: code };
+            const text = statementSpans(authors, options)
+              .map((span) => span.text)
+              .join("");
+            expect(text).toBe(generateStatement(authors, options));
+            expect(stripTags(generateStatement(authors, { ...options, asHtml: true }))).toBe(text);
+          }
         }
       }
-    }
-  });
+    },
+  );
 
   it("marks each role phrase of a by-author statement with its contributor and role", () => {
     expect(marked(makeAuthors(), "by-author")).toEqual([

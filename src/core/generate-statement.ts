@@ -49,17 +49,6 @@ export interface StatementOptions {
   asHtml?: boolean;
 }
 
-/**
- * One run of statement text. `cell` marks the phrase that stands for one
- * contributor's role: the role in a by-author statement, the name in a by-role
- * one. `strong` marks the prefix and each leading label, bold in the HTML form.
- */
-interface Part {
-  text: string;
-  strong?: boolean;
-  cell?: StatementCell;
-}
-
 /** The contributor and role a statement phrase stands for. */
 export interface StatementCell {
   authorId: string;
@@ -76,6 +65,14 @@ export interface StatementSpan {
   cell?: StatementCell;
 }
 
+/** Render strings directly; allocate contributor metadata only for interactive spans. */
+interface Formatter<T extends string | StatementSpan[]> {
+  text: (value: string) => T;
+  strong: (value: string) => T;
+  cell: (value: string, authorId: string, role: CreditRoleName) => T;
+  join: (items: T[], separator: string) => T;
+}
+
 /**
  * Escape element text. Deliberately not `escapeXml`: that turns an apostrophe
  * into `&apos;`, which some word processors render literally, and apostrophes
@@ -87,6 +84,34 @@ function escapeHtml(value: string): string {
 
 /** Blank line between the CRediT, Acknowledgements and note lines in plain text. */
 const LINE_BREAK = "\n\n";
+
+const TEXT_FORMATTER: Formatter<string> = {
+  text: (value) => value,
+  strong: (value) => value,
+  cell: (value) => value,
+  join: (items, separator) => items.join(separator),
+};
+
+const HTML_FORMATTER: Formatter<string> = {
+  text: escapeHtml,
+  strong: (value) => `<strong>${escapeHtml(value)}</strong>`,
+  cell: escapeHtml,
+  join: (items, separator) => items.join(escapeHtml(separator)),
+};
+
+const SPAN_FORMATTER: Formatter<StatementSpan[]> = {
+  text: (text) => [{ text }],
+  strong: (text) => [{ text }],
+  cell: (text, authorId, role) => [{ text, cell: { authorId, role } }],
+  join: (items, separator) => {
+    const spans: StatementSpan[] = [];
+    for (const item of items) {
+      if (separator && spans.length > 0) spans.push({ text: separator });
+      spans.push(...item);
+    }
+    return spans;
+  },
+};
 
 /**
  * Generate a CRediT author statement.
@@ -111,10 +136,10 @@ const LINE_BREAK = "\n\n";
  *   "CRediT: JAS: Conceptualization, Data curation; BW: Investigation; ..."
  */
 export function generateStatement(authors: Author[], options: StatementOptions): string {
-  const lines = statementLines(authors, options);
-  if (!options.asHtml) return lines.map(joinText).join(LINE_BREAK);
-  const html = (part: Part) => (part.strong ? `<strong>${escapeHtml(part.text)}</strong>` : escapeHtml(part.text));
-  return lines.map((line) => `<p>${line.map(html).join("")}</p>`).join("");
+  if (!options.asHtml) return statementLines(authors, options, TEXT_FORMATTER).join(LINE_BREAK);
+  return statementLines(authors, options, HTML_FORMATTER)
+    .map((line) => `<p>${line}</p>`)
+    .join("");
 }
 
 /**
@@ -124,18 +149,15 @@ export function generateStatement(authors: Author[], options: StatementOptions):
  * order is exactly its plain-text output; no spans when that is empty.
  */
 export function statementSpans(authors: Author[], options: StatementOptions): StatementSpan[] {
-  const spans: StatementSpan[] = [];
-  statementLines(authors, options).forEach((line, index) => {
-    if (index > 0) spans.push({ text: LINE_BREAK });
-    for (const { text, cell } of line) spans.push(cell ? { text, cell } : { text });
-  });
-  return spans;
+  return SPAN_FORMATTER.join(statementLines(authors, options, SPAN_FORMATTER), LINE_BREAK);
 }
 
-const joinText = (parts: Part[]) => parts.map((part) => part.text).join("");
-
 /** The statement's lines (CRediT, Acknowledgements, then the notes); none when nobody contributed. */
-function statementLines(authors: Author[], options: StatementOptions): Part[][] {
+function statementLines<T extends string | StatementSpan[]>(
+  authors: Author[],
+  options: StatementOptions,
+  fmt: Formatter<T>,
+): T[] {
   const {
     format,
     showLevels = false,
@@ -147,16 +169,16 @@ function statementLines(authors: Author[], options: StatementOptions): Part[][] 
   const useInitials = format === "by-author-short" || format === "by-role-short";
   const byRole = format === "by-role" || format === "by-role-short";
 
-  const body = (people: Author[]): Part[] =>
+  const body = (people: Author[]): T =>
     byRole
-      ? generateByRole(people, useInitials, showLevels, translateRole, translateUi)
-      : generateByAuthor(people, useInitials, showLevels, translateRole, translateUi);
-  const line = (prefix: string, parts: Part[]): Part[] => [{ text: prefix, strong: true }, { text: " " }, ...parts];
+      ? generateByRole(people, useInitials, showLevels, translateRole, translateUi, fmt)
+      : generateByAuthor(people, useInitials, showLevels, translateRole, translateUi, fmt);
+  const line = (prefix: string, content: T): T => fmt.join([fmt.strong(prefix), fmt.text(" "), content], "");
 
   // Combined: everyone (authors and non-authors) on one CRediT line.
   // The marker notes are appended to whichever lines the statement produces,
   // and suppressed entirely when there is no statement to annotate.
-  const notes = markerNotes(authors, { useInitials, translateUi, locale }).map((text) => [{ text }]);
+  const notes = markerNotes(authors, { useInitials, translateUi, locale }).map(fmt.text);
 
   if (!separateAcknowledgements) {
     const allBody = body(authors);
@@ -167,7 +189,7 @@ function statementLines(authors: Author[], options: StatementOptions): Part[][] 
   const namedAuthors = authors.filter((a) => a.contributorType !== "non-author");
   const nonAuthors = authors.filter((a) => a.contributorType === "non-author");
 
-  const lines: Part[][] = [];
+  const lines: T[] = [];
   const creditBody = body(namedAuthors);
   if (creditBody.length > 0) lines.push(line("CRediT:", creditBody));
   const ackBody = body(nonAuthors);
@@ -185,33 +207,24 @@ export function withLevel(label: string, score: number, translateUi: UiTranslato
   return fillTemplate(translateUi("levelAnnotation"), { label, level: levelLabel });
 }
 
-/** `items` with `separator` runs between them. */
-function interleave(items: Part[][], separator: string): Part[] {
-  return items.flatMap((item, index) => (index === 0 ? item : [{ text: separator }, ...item]));
-}
-
 /** Body of a by-role statement (no `CRediT:`/`Acknowledgements:` prefix); empty if nobody contributed. */
-function generateByRole(
+function generateByRole<T extends string | StatementSpan[]>(
   authors: Author[],
   useInitials: boolean,
   showLevels: boolean,
   translateRole: RoleTranslator,
   translateUi: UiTranslator,
-): Part[] {
+  fmt: Formatter<T>,
+): T {
   // Collect contributor labels per role, in author order. Keyed on the
   // canonical English role; localized only when emitting the line.
-  const roleMap = new Map<string, Part[][]>();
+  const roleMap = new Map<string, T[]>();
 
   for (const author of authors) {
     const label = contributorLabel(author, useInitials);
     for (const contrib of activeContributions(author)) {
       const list = roleMap.get(contrib.role) ?? [];
-      list.push([
-        {
-          text: showLevels ? withLevel(label, contrib.score, translateUi) : label,
-          cell: { authorId: author.id, role: contrib.role },
-        },
-      ]);
+      list.push(fmt.cell(showLevels ? withLevel(label, contrib.score, translateUi) : label, author.id, contrib.role));
       roleMap.set(contrib.role, list);
     }
   }
@@ -221,42 +234,54 @@ function generateByRole(
   // The list and segment separators are catalog-owned: the marker notes
   // already join with them, and a ja/zh statement must not mix ASCII "," and
   // ";" into otherwise full-width punctuation.
-  const segments = CREDIT_ROLES.filter((r) => roleMap.has(r.name)).map((r) => [
-    { text: translateRole(r.name), strong: true },
-    { text: translateUi("labelSeparator") },
-    ...interleave(roleMap.get(r.name) ?? [], translateUi("nameListSeparator")),
-  ]);
+  const segments = CREDIT_ROLES.filter((r) => roleMap.has(r.name)).map((r) =>
+    fmt.join(
+      [
+        fmt.strong(translateRole(r.name)),
+        fmt.text(translateUi("labelSeparator")),
+        fmt.join(roleMap.get(r.name) ?? [], translateUi("nameListSeparator")),
+      ],
+      "",
+    ),
+  );
 
-  return interleave(segments, translateUi("segmentSeparator"));
+  return fmt.join(segments, translateUi("segmentSeparator"));
 }
 
 /** Body of a by-author statement (no `CRediT:`/`Acknowledgements:` prefix); empty if nobody contributed. */
-function generateByAuthor(
+function generateByAuthor<T extends string | StatementSpan[]>(
   authors: Author[],
   useInitials: boolean,
   showLevels: boolean,
   translateRole: RoleTranslator,
   translateUi: UiTranslator,
-): Part[] {
-  const segments: Part[][] = [];
+  fmt: Formatter<T>,
+): T {
+  const segments: T[] = [];
 
   for (const author of authors) {
     const active = activeContributions(author);
     if (active.length === 0) continue;
 
-    const roles = active.map((c) => [
-      {
-        text: showLevels ? withLevel(translateRole(c.role), c.score, translateUi) : translateRole(c.role),
-        cell: { authorId: author.id, role: c.role },
-      },
-    ]);
+    const roles = active.map((c) =>
+      fmt.cell(
+        showLevels ? withLevel(translateRole(c.role), c.score, translateUi) : translateRole(c.role),
+        author.id,
+        c.role,
+      ),
+    );
 
-    segments.push([
-      { text: contributorLabel(author, useInitials), strong: true },
-      { text: translateUi("labelSeparator") },
-      ...interleave(roles, translateUi("nameListSeparator")),
-    ]);
+    segments.push(
+      fmt.join(
+        [
+          fmt.strong(contributorLabel(author, useInitials)),
+          fmt.text(translateUi("labelSeparator")),
+          fmt.join(roles, translateUi("nameListSeparator")),
+        ],
+        "",
+      ),
+    );
   }
 
-  return interleave(segments, translateUi("segmentSeparator"));
+  return fmt.join(segments, translateUi("segmentSeparator"));
 }
