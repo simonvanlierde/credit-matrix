@@ -1,6 +1,9 @@
-const runtimeURL = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
+// Vendored by scripts/vendor-citesync.mjs; postbuild refuses any other origin in this file.
+const runtimeURL = "/citesync/pyodide/";
 
 self.onmessage = async ({ data }) => {
+  // Failures before Python runs mean the converter itself is unavailable, not that the file is bad.
+  let running = false;
   try {
     const [{ loadPyodide }, manifest] = await Promise.all([
       import(`${runtimeURL}pyodide.mjs`),
@@ -29,6 +32,7 @@ self.onmessage = async ({ data }) => {
     for (const { name, bytes } of wheels) python.FS.writeFile(`/tmp/${name}`, bytes);
     python.globals.set("wheel_names_json", JSON.stringify(wheels.map(({ name }) => name)));
     python.globals.set("request_json", JSON.stringify(data));
+    running = true;
     const result = await python.runPythonAsync(`
 import json, zipfile, sys
 from pathlib import Path
@@ -43,6 +47,6 @@ json.dumps(generate(json.loads(request_json)))
 `);
     self.postMessage({ codemeta: JSON.parse(result).files["codemeta.json"] });
   } catch (error) {
-    self.postMessage({ error: error instanceof Error ? error.message : "Conversion failed." });
+    self.postMessage({ error: error instanceof Error ? error.message : "Conversion failed.", unavailable: !running });
   }
 };

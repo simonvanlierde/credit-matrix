@@ -28,5 +28,6 @@ prerender step and a catalog compiler. Generated TypeScript catalogs and message
 contributors edit PO files.
 
 Citation-file imports use citesync in a worker only when requested. The worker's response has a separate
-CSP that permits the pinned Pyodide runtime from jsDelivr. Pages retain their own restricted script
-policy. Input files remain in the browser; direct CodeMeta imports work offline.
+CSP that permits WebAssembly; the pinned Pyodide runtime is served from this site, so it names no other
+origin. Pages retain their own restricted script policy. Input files remain in the browser; direct
+CodeMeta imports work offline, and citation imports do after their first online use.

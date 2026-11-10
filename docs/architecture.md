@@ -45,9 +45,12 @@ browser. DataCite is only asked about DOIs that Crossref does not hold, such as 
 records. All three send CORS headers that let the browser call them. The Content Security Policy
 (CSP) in [`public/_headers`](../public/_headers) allows exactly those origins, plus `orcid.org`, whose
 public keys check a co-author's ORCID sign-in on a reply. Citation files in CFF or Zenodo format
-are converted locally by a lazy citesync worker. Only that worker's CSP permits the pinned Pyodide
-runtime from jsDelivr; Python wheels are checksum-verified and served from this site.
-CodeMeta imports need no runtime download and work offline.
+are converted locally by a lazy citesync worker. The build copies the pinned Pyodide runtime from
+`node_modules/pyodide` into `/citesync/pyodide/` and downloads checksum-verified Python wheels
+(`scripts/vendor-citesync.mjs`); the worker's CSP allows only this site. The service worker caches the
+runtime on first use, so later citation imports work offline until the next deploy; the build id
+hashes the runtime files, so a new converter never mixes with a cached old one. CodeMeta imports
+need no runtime and work offline.
 
 ## No accounts, no server-side storage
 

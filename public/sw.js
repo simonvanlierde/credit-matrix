@@ -2,7 +2,10 @@
  * Offline support.
  *
  * Everything except the ORCID and DOI lookups works without a network, so the
- * app only needs its own files back.
+ * app only needs its own files back. The citation converter's runtime under
+ * /citesync/ (about 13 MB) is not precached: the first CITATION.cff or
+ * .zenodo.json import fetches it through the same-origin rule below, and later
+ * imports with the same build run offline.
  *
  * - install: precache every page and every asset they reference, so a new
  *   version is complete offline before it takes over
@@ -108,11 +111,12 @@ async function handleNavigation(request) {
 async function handleAsset(request, event) {
   const cached = await caches.match(request);
   if (cached) {
-    // /assets/ URLs are content-hashed and /fonts/ files are renamed
-    // rather than changed, so their cached copy is the final word; only other
+    // /assets/ URLs are content-hashed, /fonts/ files are renamed rather than
+    // changed, and a /citesync/ change gives a new build id (postbuild hashes
+    // the runtime), so their cached copy is the final word; only other
     // assets (favicon, manifest) can change in place. waitUntil keeps the
     // worker alive until the refresh lands.
-    if (!/^\/(?:assets|fonts)\//.test(new URL(request.url).pathname)) event.waitUntil(refresh(request));
+    if (!/^\/(?:assets|fonts|citesync)\//.test(new URL(request.url).pathname)) event.waitUntil(refresh(request));
     return cached;
   }
   return fetch(request).then(async (response) => {

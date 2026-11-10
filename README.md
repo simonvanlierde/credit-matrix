@@ -19,7 +19,7 @@ Markdown, and input for the latex-credits LaTeX package.
 
 Each co-author can check their own row through a link, and everything runs in your browser: only
 the ORCID and DOI lookups and the fetch of ORCID's public keys send identifiers out. Citation-file
-imports download a Python runtime from jsDelivr and run citesync locally; your file stays in the browser. CRediT Matrix is an
+imports load a Python runtime from this site and run citesync locally; your file stays in the browser. CRediT Matrix is an
 independent project. It is not affiliated with or endorsed by NISO.
 
 **Try it:** [credit.duinlab.nl](https://credit.duinlab.nl)

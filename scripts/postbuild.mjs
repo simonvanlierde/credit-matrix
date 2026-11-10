@@ -16,7 +16,8 @@
 //
 // Runs after `vite build` (see the `build` script); fails the build rather
 // than ship a page whose own scripts the CSP would block, a page without its
-// CSP, or a _headers file Cloudflare would refuse.
+// CSP, a _headers file Cloudflare would refuse, or a citation worker that loads
+// code from another origin.
 
 // biome-ignore-all lint/correctness/noNodejsModules: Node build script, not client code.
 // biome-ignore-all lint/suspicious/noConsole: console is the script's progress output.
@@ -56,6 +57,12 @@ const tooLong = headers.split("\n").findIndex((line) => line.length > MAX_HEADER
 if (tooLong !== -1)
   throw new Error(`postbuild: ${headersPath} line ${tooLong + 1} is over ${MAX_HEADER_LINE} characters`);
 
+// The worker's CSP allows only 'self', and a third-party runtime could write into the
+// service worker's cache, so the worker must load everything from this site.
+const workerPath = join(OUT, "citesync-worker.js");
+if ((await readFile(workerPath, "utf8")).includes("https://"))
+  throw new Error(`postbuild: ${workerPath} names an https:// origin; serve its files from /citesync/`);
+
 const swPath = join(OUT, "sw.js");
 const sw = await readFile(swPath, "utf8");
 const placeholder = '"credit-matrix-BUILD_ID"';
@@ -68,9 +75,31 @@ const exported = pages
   .map((page) => (page === "index.html" ? "/" : `/${page.replace(/\.html$/, "")}`));
 const missing = exported.filter((path) => !swPages.includes(path));
 if (missing.length > 0) throw new Error(`postbuild: ${swPath} PAGES lacks ${missing.join(", ")}`);
-// The page references every hashed chunk, so its digest changes exactly when
-// the build does.
-const buildId = sha256(await readFile(join(OUT, "index.html")))
+// src/routes.ts is the router's list; the prerendered pages and the service worker must match it.
+const routePaths = [...(await readFile("src/routes.ts", "utf8")).matchAll(/^\s+"(\/[^"]*)":/gm)].map(
+  ([, path]) => path,
+);
+const sameSet = (a, b) => a.length === b.length && a.every((path) => b.includes(path));
+if (!sameSet(routePaths, exported))
+  throw new Error(`postbuild: src/routes.ts has ${routePaths}, out/ exports ${exported}`);
+if (!sameSet(routePaths, swPages))
+  throw new Error(`postbuild: src/routes.ts has ${routePaths}, ${swPath} PAGES has ${swPages}`);
+// Each prerendered page carries its own head tags and the preloads for its chunks.
+for (const path of exported) {
+  const html = await readFile(join(OUT, path === "/" ? "index.html" : `${path.slice(1)}.html`), "utf8");
+  const title = html.match(/<title>(.*?)<\/title>/)?.[1];
+  const problems = [
+    !title && "title",
+    !/<meta name="description" content="[^"]+">/.test(html) && "meta description",
+    !html.includes(`<link rel="canonical" href="https://credit.duinlab.nl${path}">`) && "canonical link",
+    !html.includes('<link rel="modulepreload"') && "modulepreload",
+  ].filter(Boolean);
+  if (problems.length > 0) throw new Error(`postbuild: ${path} lacks ${problems.join(", ")}`);
+}
+// The page references every hashed chunk, and the converter files name its
+// runtime, so the digest changes exactly when the build does.
+const buildInputs = ["index.html", "citesync-worker.js", "citesync/runtime.json", "citesync/pyodide/pyodide-lock.json"];
+const buildId = sha256(Buffer.concat(await Promise.all(buildInputs.map((file) => readFile(join(OUT, file))))))
   .replace(/[^A-Za-z0-9]/g, "")
   .slice(0, 12);
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))

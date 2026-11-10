@@ -8,7 +8,7 @@
     "node": ">=26"
   },
   "scripts": {
-    "dev": "pnpm i18n:compile && vite --host",
+    "dev": "pnpm i18n:compile && node scripts/vendor-citesync.mjs && vite --host",
     "build": "pnpm i18n:compile && pnpm --filter credit-matrix build && node scripts/vendor-citesync.mjs && vite build && vite build --ssr src/entry-server.tsx --outDir .vite-ssr && node scripts/prerender.mjs && node scripts/postbuild.mjs",
     "start": "wrangler dev",
     "preview": "pnpm build && wrangler dev",
@@ -76,6 +76,7 @@
     "lefthook": "^2.1.16",
     "marked": "18.1.2",
     "mystmd": "^1.12.0",
+    "pyodide": "314.0.7",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "8.3.5",

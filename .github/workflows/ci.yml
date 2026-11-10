@@ -166,6 +166,13 @@ jobs:
       - name: Validate the Crossref export against the Crossref schema 5.5.0
         run: pnpm validate:crossref
 
+      # The release lifecycle rewrites these files from package.json; a hand edit or a missed
+      # run shows as a diff. Staged by the script, so compare against HEAD.
+      - name: Check the citation files are in step with package.json
+        run: |
+          npm_package_version=$(jq -r .version package.json) bash scripts/sync-citation.sh
+          git diff --exit-code HEAD -- CITATION.cff codemeta.json CITATION.bib citation.csl.json citation.apa.txt
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
@@ -311,6 +318,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # The pinned wheels and the copied Pyodide runtime (scripts/vendor-citesync.mjs), so a
+      # build downloads nothing from PyPI unless the manifest or the lockfile changes.
+      - name: Cache the citation converter (restore only on a pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: public/citesync
+          key: ${{ runner.os }}-citesync-${{ hashFiles('scripts/citesync-runtime.json', 'pnpm-lock.yaml') }}
+
+      - name: Cache the citation converter
+        if: github.event_name != 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: public/citesync
+          key: ${{ runner.os }}-citesync-${{ hashFiles('scripts/citesync-runtime.json', 'pnpm-lock.yaml') }}
+
       # The whole Playwright suite gates every push/PR: the axe scans *and*
       # the critical-workflow specs (import, undo, ORCID lookup, persistence,
       # bulk assign, export). Running only a subset here once let a regression
@@ -377,6 +400,22 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # The pinned wheels and the copied Pyodide runtime (scripts/vendor-citesync.mjs), so a
+      # build downloads nothing from PyPI unless the manifest or the lockfile changes.
+      - name: Cache the citation converter (restore only on a pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: public/citesync
+          key: ${{ runner.os }}-citesync-${{ hashFiles('scripts/citesync-runtime.json', 'pnpm-lock.yaml') }}
+
+      - name: Cache the citation converter
+        if: github.event_name != 'pull_request'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: public/citesync
+          key: ${{ runner.os }}-citesync-${{ hashFiles('scripts/citesync-runtime.json', 'pnpm-lock.yaml') }}
 
       # The static export in out/ is exactly what Cloudflare serves.
       - name: Build
