@@ -1745,6 +1745,9 @@ msgstr "Descarregar PDF"
 msgid "errFigureGlyphs"
 msgstr "Os tipos de letra da figura não podem apresentar estes caracteres: {characters}."
 
+msgid "heatmapSystemFonts"
+msgstr "O PDF tem de os incorporar, por isso não está disponível. SVG e PNG desenham-nos com os tipos de letra instalados; o SVG pode ter outro aspeto noutro computador."
+
 msgid "heatmapLegendPosition"
 msgstr "Legenda"
 

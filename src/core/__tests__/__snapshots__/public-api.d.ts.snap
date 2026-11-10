@@ -108,8 +108,16 @@ export declare class FigureFontError extends Error {
   readonly name = "FigureFontError";
   constructor(characters: string);
 }
+export interface FigureSvgOptions extends HeatmapSvgOptions {
+  /**
+   * What SVG does with a character the bundled faces cannot draw: `"error"` (the default) throws
+   * `FigureFontError`; `"system"` draws that run in the system font stack `buildHeatmapSvg` uses,
+   * so its look then depends on the viewer's installed fonts.
+   */
+  fallback?: "system" | "error";
+}
 export interface FigureRenderer {
-  svg(authors: Author[], options?: HeatmapSvgOptions): Promise<string>;
+  svg(authors: Author[], options?: FigureSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
   pdf(authors: Author[], options?: HeatmapSvgOptions, widthMm?: number): Promise<Uint8Array>;
 }

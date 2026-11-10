@@ -1745,6 +1745,9 @@ msgstr "PDF downloaden"
 msgid "errFigureGlyphs"
 msgstr "De lettertypen van de figuur kunnen deze tekens niet weergeven: {characters}."
 
+msgid "heatmapSystemFonts"
+msgstr "PDF moet ze insluiten en is daarom niet beschikbaar. SVG en PNG tekenen ze met de geïnstalleerde lettertypen; de SVG kan er op een andere computer anders uitzien."
+
 msgid "heatmapLegendPosition"
 msgstr "Legenda"
 

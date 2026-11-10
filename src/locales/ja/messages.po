@@ -1745,6 +1745,9 @@ msgstr "PDFをダウンロード"
 msgid "errFigureGlyphs"
 msgstr "図のフォントでは次の文字を表示できません: {characters}。"
 
+msgid "heatmapSystemFonts"
+msgstr "PDFにはこれらの文字を埋め込む必要があるため、利用できません。SVGとPNGはインストール済みのフォントで描画します。SVGは別のコンピューターでは見た目が変わる場合があります。"
+
 msgid "heatmapLegendPosition"
 msgstr "凡例"
 

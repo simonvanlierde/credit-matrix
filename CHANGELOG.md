@@ -95,8 +95,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Breaking:** the package needs Node 22.19 or later, because its new runtime dependency `@lingui/core`
   does.
 - A contributor whose name or initials use a script the figure fonts lack (Hangul, Thai, Arabic,
-  Hebrew, Devanagari, emoji) cannot export the heatmap: the export reports the unsupported
-  characters instead of substituting another font.
+  Hebrew, Devanagari, emoji) cannot download the heatmap as PDF; the app names the characters.
+  Its preview, SVG and PNG draw them in system fonts, as 0.11.0 did, so that SVG can look different
+  on another computer. The CLI and document plugins stop with `FigureFontError`;
+  `createFigureRenderer().svg()` takes `fallback: "system"` for the app's behaviour.
 - The CLI, the Sphinx extension and Typst render Traditional Chinese (`zh-TW`, `zh-HK`,
   `zh-Hant`) in English instead of Simplified Chinese. The `<credit-matrix>` element now maps
   `pt-BR` to Portuguese and `zh-CN` to Simplified Chinese, as the CLI already did.

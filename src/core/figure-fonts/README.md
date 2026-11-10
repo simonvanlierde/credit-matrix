@@ -35,6 +35,7 @@ catalogs. They retain characters needed for contributor names beyond those catal
 All nine output catalogs fit within these fonts. Arbitrary names can use scripts
 or rare characters outside their coverage. Export then stops with a `FigureFontError`
 that names the missing characters; the CLI and the MyST plugin print it as one line.
+The app turns off only its PDF download and draws the SVG and PNG in system fonts.
 This set does not cover Arabic, Hebrew or Devanagari.
 
 ## Rebuild the fonts

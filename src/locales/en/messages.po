@@ -1745,6 +1745,9 @@ msgstr "Download PDF"
 msgid "errFigureGlyphs"
 msgstr "The figure fonts cannot display these characters: {characters}."
 
+msgid "heatmapSystemFonts"
+msgstr "PDF needs them embedded, so it is unavailable. SVG and PNG draw them with the installed fonts; the SVG can look different on another computer."
+
 msgid "heatmapLegendPosition"
 msgstr "Legend"
 

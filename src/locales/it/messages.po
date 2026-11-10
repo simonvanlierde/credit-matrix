@@ -1745,6 +1745,9 @@ msgstr "Scarica PDF"
 msgid "errFigureGlyphs"
 msgstr "I caratteri della figura non possono visualizzare questi simboli: {characters}."
 
+msgid "heatmapSystemFonts"
+msgstr "Il PDF deve incorporarli, quindi non è disponibile. SVG e PNG li disegnano con i font installati; l’SVG può apparire diverso su un altro computer."
+
 msgid "heatmapLegendPosition"
 msgstr "Legenda"
 

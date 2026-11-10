@@ -25,7 +25,8 @@ subsets contain the existing glyphs, not an installed font for further editing.
 
 The standalone JavaScript API is `createFigureRenderer` from
 `credit-matrix/figures`. Create it once, then call `await svg(authors, options)` or
-`await pdf(authors, options)`. It uses the same options as `buildHeatmapSvg`. It loads
+`await pdf(authors, options)`. It uses the same options as `buildHeatmapSvg`; `svg()` also
+takes `fallback` (see [Fonts and offline use](#fonts-and-offline-use)). It loads
 each font face the first time a figure's text needs it and keeps it for later figures.
 
 ```sh
@@ -43,8 +44,12 @@ support.
 Portable exports use regular Noto Sans and Noto Serif, plus Credit Figure JP, SC, Serif JP and Serif SC,
 derived from the corresponding Noto Japanese and Simplified Chinese families. The fonts cover all nine output languages.
 Contributor names can contain characters outside
-these fonts; portable export reports unsupported characters instead of silently
-substituting installed fonts. Hangul, Thai, Arabic, Hebrew, Devanagari and emoji are outside this set.
+these fonts. Hangul, Thai, Arabic, Hebrew, Devanagari and emoji are outside this set.
+For such a name, the app names the characters and turns off the PDF download, since PDF
+must embed every glyph. Its preview, SVG and PNG draw those characters in the system font
+stack instead, so the SVG depends on the viewer's installed fonts and can look different on
+another computer. The CLI and the document plugins stop with `FigureFontError`. A JavaScript
+caller gets the same error, or passes `fallback: "system"` to `svg()` for the app's behaviour.
 Han characters use the Simplified Chinese face, unless the output language is Japanese or
 the label contains kana. In Chinese output, punctuation beside Han text comes from the Chinese face.
 
