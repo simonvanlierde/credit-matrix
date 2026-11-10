@@ -41,18 +41,41 @@ test("reports unsupported figure characters without substituting local fonts", a
   await expect(page.getByRole("button", { name: "Download PDF", exact: true })).toBeDisabled();
 });
 
-test("exports its first PDF after going offline", async ({ page, context }) => {
+test("fetches only the figure font faces a Latin figure needs", async ({ page }) => {
+  const fonts = new Set<string>();
+  page.on("request", (request) => {
+    const file = new URL(request.url()).pathname.match(/\/(NotoS[a-z]+-Regular|CreditFigure[A-Za-z]+)[^/]*\.ttf$/)?.[1];
+    if (file) fonts.add(file);
+  });
+  await asReturningVisitor(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load sample data" }).click();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  for (const format of ["SVG", "PDF"]) {
+    const pending = page.waitForEvent("download");
+    await page.getByRole("button", { name: `Download ${format}`, exact: true }).click();
+    await pending;
+  }
+  expect([...fonts]).toEqual(["NotoSans-Regular"]);
+});
+
+test("exports a PDF offline once an export has fetched its fonts", async ({ page, context }) => {
   test.skip(test.info().project.name !== "chromium", "One service-worker check covers the shared offline cache");
   test.skip(!process.env.CI, "Requires the production build");
   await asReturningVisitor(page);
   await page.goto("/");
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();
-  await context.setOffline(true);
-  await page.reload();
   await page.getByRole("button", { name: "Load sample data" }).click();
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
-  const pending = page.waitForEvent("download");
+  const online = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download PDF", exact: true }).click();
-  expect((await pending).suggestedFilename()).toBe("credit-heatmap.pdf");
+  await online;
+  await context.setOffline(true);
+  // The draft persists, so the reloaded page opens on the same figure.
+  await page.reload();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  const offline = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download PDF", exact: true }).click();
+  expect((await offline).suggestedFilename()).toBe("credit-heatmap.pdf");
 });

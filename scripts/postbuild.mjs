@@ -102,8 +102,9 @@ const buildInputs = ["index.html", "citesync-worker.js", "citesync/runtime.json"
 const buildId = sha256(Buffer.concat(await Promise.all(buildInputs.map((file) => readFile(join(OUT, file))))))
   .replace(/[^A-Za-z0-9]/g, "")
   .slice(0, 12);
+// Figure fonts (tens of MB) stay out: the worker caches each one when an export first fetches it.
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
-  .filter((file) => /\.(?:js|css|otf|ttf)$/.test(file))
+  .filter((file) => /\.(?:js|css)$/.test(file))
   .map((file) => `/assets/${file}`)
   .sort();
 if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");

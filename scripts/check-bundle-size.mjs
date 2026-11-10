@@ -1,7 +1,8 @@
 // biome-ignore-all lint/correctness/noNodejsModules: Node build check.
 // biome-ignore-all lint/suspicious/noConsole: build diagnostics.
-// Fails when the app or its separately loaded figure exporter outgrows its budget. Sizes are the sum of each
-// file compressed alone, as a static host serves them. Run after `pnpm build`.
+// Fails when the app or its separately loaded figure exporter outgrows its budget, or when the service worker's
+// install precache grows (a figure font in it costs every first visit megabytes). Script sizes are the sum of
+// each file compressed alone, as a static host serves them; the precache is raw bytes. Run after `pnpm build`.
 // Raise a limit on purpose, in the same commit as the change that needs it.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -12,6 +13,8 @@ import { gzipSync } from "node:zlib";
 const LIMIT_GZIP = 437_000;
 // Embedded-font PDF generation is loaded on export; keep its cost separate from editing.
 const FIGURE_LIMIT_GZIP = 555_000;
+// Measured 2026-11-10: 2.51 MB of scripts and styles, no fonts. A single figure font is 0.57-14.9 MB.
+const PRECACHE_LIMIT = 2_800_000;
 
 const dir = join(import.meta.dirname, "..", "out", "assets");
 const files = existsSync(dir)
@@ -34,4 +37,23 @@ for (const [label, limit, group] of [
     console.error(`check-bundle-size: ${label} is missing or over its gzip budget.`);
     process.exit(1);
   }
+}
+
+const sw = existsSync(join(dir, "..", "sw.js")) ? readFileSync(join(dir, "..", "sw.js"), "utf8") : "";
+const precached = JSON.parse(sw.match(/const ASSETS = (\[.*?\]);/)?.[1] ?? "null");
+if (!precached) {
+  console.error("check-bundle-size: no stamped ASSETS list in out/sw.js. Run 'pnpm build' first.");
+  process.exit(1);
+}
+const sizes = precached.map((path) => ({ path, bytes: readFileSync(join(dir, "..", path)).length }));
+const total = sizes.reduce((n, { bytes }) => n + bytes, 0);
+const fonts = sizes.filter(({ path }) => /\.(?:ttf|otf|woff2?)$/.test(path));
+const fontBytes = fonts.reduce((n, { bytes }) => n + bytes, 0);
+console.log(
+  `check-bundle-size: install precache: ${kb(total)} raw, fonts ${kb(fontBytes)} (limit ${kb(PRECACHE_LIMIT)})`,
+);
+if (total > PRECACHE_LIMIT) {
+  const named = fonts.length ? `; fonts: ${fonts.map(({ path }) => path).join(", ")}` : "";
+  console.error(`check-bundle-size: the service worker precache is over its budget${named}.`);
+  process.exit(1);
 }
