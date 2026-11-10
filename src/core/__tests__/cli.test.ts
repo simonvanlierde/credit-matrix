@@ -37,6 +37,14 @@ it("exports a binary PDF with embedded figure fonts", async () => {
   expect(svg).toContain("<text");
 });
 
+it("names the characters the figure fonts cannot draw, in one line", async () => {
+  const source = file("unsupported-script.csv", "Name,Software\nحسن,100\n");
+  for (const to of ["svg", "pdf"])
+    await expect(runCommand(["convert", source, "--to", to])).rejects.toThrow(
+      /^The figure fonts cannot draw ح \(U\+062D\)[^\n]*\. [^\n]+$/u,
+    );
+});
+
 it("exports manuscript YAML with levels only where the schema supports them", async () => {
   const quarto = await run(["convert", csv, "--to", "quarto"]);
   expect(quarto).toContain("author:\n");
@@ -476,13 +484,13 @@ it("forwards legend placement and optional marks while keeping publication defau
         "--marks",
         String(marks),
       ]);
-      expect(svg).toBe((await createFigureRenderer()).svg(authors, { locale: "en", legendPosition, marks }));
+      expect(svg).toBe(await createFigureRenderer().svg(authors, { locale: "en", legendPosition, marks }));
       expect(svg.includes('aria-hidden="true"')).toBe(marks);
     }
   }
   const defaults = await run(["convert", source, "--to", "svg"]);
   expect(defaults).toBe(
-    (await createFigureRenderer()).svg(authors, { locale: "en", legendPosition: "auto", marks: false }),
+    await createFigureRenderer().svg(authors, { locale: "en", legendPosition: "auto", marks: false }),
   );
   expect(defaults).not.toContain('aria-hidden="true"');
   const hidden = await run(["convert", source, "--to", "svg", "--legend", "false", "--legend-position", "right"]);

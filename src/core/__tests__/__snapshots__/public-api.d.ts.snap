@@ -109,16 +109,23 @@ export declare class FigureFontError extends Error {
   constructor(characters: string);
 }
 export interface FigureRenderer {
-  svg(authors: Author[], options?: HeatmapSvgOptions): string;
+  svg(authors: Author[], options?: HeatmapSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
   pdf(authors: Author[], options?: HeatmapSvgOptions, widthMm?: number): Promise<Uint8Array>;
 }
+export interface FigureRendererOptions {
+  /**
+   * Folder URL to fetch the font files from when the module's own `figure-fonts/` copies cannot be read,
+   * for a bundle that runs away from its package files.
+   */
+  fontFallback?: string | URL;
+}
 /**
- * Load bundled Noto fonts once, then export figures offline with retained text.
- * SVG embeds standalone fonts; PDF embeds the glyphs used by that figure. Editors
- * can require the full fonts installed locally to change the PDF's text.
+ * Export figures with retained text and bundled Noto fonts. Each face loads on the first figure whose text
+ * needs it. SVG and PDF embed only the glyphs that figure uses; editors can require the full fonts
+ * installed locally to change its text.
  */
-export declare function createFigureRenderer(): Promise<FigureRenderer>;
+export declare function createFigureRenderer(rendererOptions?: FigureRendererOptions): FigureRenderer;
 // heatmap-svg.d.ts
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";

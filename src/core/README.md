@@ -193,13 +193,14 @@ assets.
 Its `<desc>` is the by-author contribution statement, so a screen reader hears who did what;
 `heatmapDescription` returns that text, for an image's alt text or a PNG's Description field.
 
-For embedded fonts, use the separate `credit-matrix/figures` entry. Initialize its renderer once:
+For embedded fonts, use the separate `credit-matrix/figures` entry. Create its renderer once; it loads
+each font face when a figure first needs it:
 
 ```ts
 import { createFigureRenderer } from "credit-matrix/figures";
 
-const figures = await createFigureRenderer();
-const svg = figures.svg(authors, { acronyms: false });
+const figures = createFigureRenderer();
+const svg = await figures.svg(authors, { acronyms: false });
 const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
 ```
 

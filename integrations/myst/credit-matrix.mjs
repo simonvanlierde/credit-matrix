@@ -6,6 +6,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import process from "node:process";
 import { CREDIT_ROLES, createAuthor, generateStatement, heatmapDescription } from "credit-matrix";
 import { createFigureRenderer } from "credit-matrix/figures";
 import {
@@ -17,6 +18,7 @@ import {
   makeUiTranslator,
   resolveLocaleTag,
 } from "credit-matrix/i18n";
+import packageJson from "credit-matrix/package.json" with { type: "json" };
 import { parse } from "yaml";
 
 // Directives run synchronously; load the catalogs once while MyST imports the plugin.
@@ -32,7 +34,13 @@ const TRANSLATORS = Object.fromEntries(
     ]),
   ),
 );
-const figures = await createFigureRenderer();
+// MyST runs a plugin listed by URL from a copy in its build cache, away from the package's font
+// files, so that copy fetches the faces a figure needs from the same release.
+const figures = createFigureRenderer({
+  fontFallback:
+    process.env.CREDIT_MATRIX_FIGURE_FONTS ??
+    `https://unpkg.com/credit-matrix@${packageJson.version}/dist/figure-fonts/`,
+});
 
 // The aliases MyST accepts (its `credit-roles` package), so a page that builds also renders.
 const ALIASES = {
@@ -147,34 +155,77 @@ const creditHeatmap = {
   ]),
   run(data, vfile) {
     if (!vfile?.path) return [];
-    const entries = statementEntries(authorsFor(vfile.path));
-    if (data.options?.initials) {
-      const labels = entries.map((entry) =>
-        /\p{L}/u.test(entry.name) ? createAuthor(entry.name).initials : entry.name,
-      );
-      entries.forEach((entry, i) => {
-        entry.initials = labels.filter((label) => label === labels[i]).length === 1 ? labels[i] : entry.name;
-      });
-    }
-    const options = { levels: false, acronyms: false, ...translationsFor(vfile.path), ...data.options };
-    options.fontSize = options["font-size"];
-    options.legendPosition = options["legend-position"];
-    options.acronyms = options.initials ?? false;
-    const svg = figures.svg(entries, options);
-    const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
-    const dir = join(dirname(vfile.path), "_credit_matrix");
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, name), svg);
+    const { entries, options } = heatmapFigure(vfile.path, data.options);
+    // Directives run synchronously and fonts load asynchronously: renderHeatmaps draws the figure.
+    const figure = { path: vfile.path, options: data.options ?? {} };
     return [
       {
         type: "paragraph",
-        children: [{ type: "image", url: `_credit_matrix/${name}`, alt: heatmapDescription(entries, options) }],
+        children: [{ type: "image", url: "", alt: heatmapDescription(entries, options), creditHeatmap: figure }],
       },
     ];
+  },
+};
+
+/** The heatmap's authors and renderer options for one directive on one page. */
+function heatmapFigure(path, directiveOptions = {}) {
+  const entries = statementEntries(authorsFor(path));
+  if (directiveOptions.initials) {
+    const labels = entries.map((entry) => (/\p{L}/u.test(entry.name) ? createAuthor(entry.name).initials : entry.name));
+    entries.forEach((entry, i) => {
+      entry.initials = labels.filter((label) => label === labels[i]).length === 1 ? labels[i] : entry.name;
+    });
+  }
+  const options = { levels: false, acronyms: false, ...translationsFor(path), ...directiveOptions };
+  options.fontSize = options["font-size"];
+  options.legendPosition = options["legend-position"];
+  options.acronyms = options.initials ?? false;
+  return { entries, options };
+}
+
+/** Write a heatmap's SVG next to its page and point its image at it; false when it cannot be drawn. */
+async function renderHeatmap(node, vfile) {
+  const { path, options: directiveOptions } = node.creditHeatmap;
+  delete node.creditHeatmap;
+  const { entries, options } = heatmapFigure(path, directiveOptions);
+  let svg;
+  try {
+    svg = await figures.svg(entries, options);
+  } catch (error) {
+    // MyST prints a thrown transform error without its page; a file message names the page.
+    vfile.message(`credit-heatmap: ${error.message}`, node).fatal = true;
+    return false;
+  }
+  const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
+  const dir = join(dirname(path), "_credit_matrix");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, name), svg);
+  node.url = `_credit_matrix/${name}`;
+  return true;
+}
+
+const renderHeatmaps = {
+  name: "credit-heatmap-render",
+  doc: "Draws the figures that credit-heatmap directives placed on the page.",
+  stage: "document",
+  plugin: () => async (tree, vfile) => {
+    const pending = [];
+    const visit = (node) => {
+      for (const child of node.children ?? []) {
+        if (child.creditHeatmap)
+          pending.push(
+            renderHeatmap(child, vfile).then((drawn) => drawn || node.children.splice(node.children.indexOf(child), 1)),
+          );
+        else visit(child);
+      }
+    };
+    visit(tree);
+    await Promise.all(pending);
   },
 };
 
 export default {
   name: "CRediT statement",
   directives: [creditStatement, creditHeatmap],
+  transforms: [renderHeatmaps],
 };

@@ -308,7 +308,7 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
             throw new UsageError("--legend-position must be auto, right or bottom.");
           const locale = requireLocale(values.locale);
           const { createFigureRenderer } = await import("./figures");
-          const renderer = await createFigureRenderer();
+          const renderer = createFigureRenderer();
           const options: HeatmapSvgOptions = {
             locale,
             levels: !values["yes-no"],

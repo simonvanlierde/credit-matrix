@@ -33,7 +33,8 @@ Simplified Chinese face for Chinese labels.
 The CJK sources are upstream regional subsets, not subsets of the translation
 catalogs. They retain characters needed for contributor names beyond those catalogs.
 All nine output catalogs fit within these fonts. Arbitrary names can use scripts
-or rare characters outside their coverage; check glyph coverage before export.
+or rare characters outside their coverage. Export then stops with a `FigureFontError`
+that names the missing characters; the CLI and the MyST plugin print it as one line.
 This set does not cover Arabic, Hebrew or Devanagari.
 
 ## Rebuild the fonts
@@ -86,8 +87,8 @@ PY
 
 Copy the outputs into this directory after checking their hashes. Keep the
 four-byte glyph alignment: the PDF subsetter's short location table truncates
-odd glyph offsets, which can silently drop later glyphs. The renderer embeds
-complete faces in SVG and subsets their glyphs in PDF.
+odd glyph offsets, which can silently drop later glyphs. The renderer subsets
+the glyphs a figure uses, in SVG and in PDF.
 
 ## Redistribution
 

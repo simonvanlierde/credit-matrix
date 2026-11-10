@@ -24,8 +24,9 @@ subsets contain the existing glyphs, not an installed font for further editing.
 | JavaScript `buildHeatmapSvg` | No | Lightweight renderer with system font references. |
 
 The standalone JavaScript API is `createFigureRenderer` from
-`credit-matrix/figures`. Initialize it once, then call `svg(authors, options)` or
-`await pdf(authors, options)`. It uses the same options as `buildHeatmapSvg`.
+`credit-matrix/figures`. Create it once, then call `await svg(authors, options)` or
+`await pdf(authors, options)`. It uses the same options as `buildHeatmapSvg`. It loads
+each font face the first time a figure's text needs it and keeps it for later figures.
 
 ```sh
 credit-matrix convert team.json --to svg > heatmap.svg
@@ -44,12 +45,17 @@ derived from the corresponding Noto Japanese and Simplified Chinese families. Th
 Contributor names can contain characters outside
 these fonts; portable export reports unsupported characters instead of silently
 substituting installed fonts. Arabic, Hebrew and Devanagari are outside this set.
+Han characters use the Simplified Chinese face, unless the output language is Japanese or
+the label contains kana. In Chinese output, punctuation beside Han text comes from the Chinese face.
 
-The font files ship with the package. Export needs no font service or network
-request. The app includes them in its offline cache. See
+The font files ship with the package, and the CLI and JavaScript API read them from disk.
+The app fetches a face from its own site the first time an export needs it; its offline
+cache keeps that face, so later exports also work offline. A face never used online is
+not available offline. See
 [font sources, checksums and licenses](../../src/core/figure-fonts/README.md).
-SVG includes complete font faces, so Japanese or Chinese SVG figures can be
-several megabytes. PDF includes only the glyphs used in the figure.
+SVG and PDF include only the glyphs used in the figure: a Japanese or Chinese figure
+is about 35 kB in either format. The SVG subsets have no OpenType layout tables, so an
+uncomposed combining accent can sit less precisely in SVG than in PDF.
 The fonts use the SIL Open Font License 1.1; embedding does not change the
 figure's license.
 

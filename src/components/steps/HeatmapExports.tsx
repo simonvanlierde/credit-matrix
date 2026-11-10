@@ -17,7 +17,8 @@ import { HeatmapRecipe } from "./HeatmapRecipe";
 
 type ExportFormat = "svg" | "png" | "pdf";
 
-let figureRenderer: ReturnType<typeof import("@/core/figures").createFigureRenderer> | undefined;
+// One renderer keeps each loaded face; it fetches a face only when a figure's text first needs it.
+let figureRenderer: Promise<import("@/core/figures").FigureRenderer> | undefined;
 function renderer() {
   figureRenderer ??= import("@/core/figures")
     .then(({ createFigureRenderer }) => createFigureRenderer())
@@ -96,24 +97,6 @@ export function HeatmapExports({
   const [actualSize, setActualSize] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [copySource, setCopySource] = useState<{ svg: string; widthMm: number; dpi: number } | null>(null);
-  const [figures, setFigures] = useState<Awaited<ReturnType<typeof renderer>> | null>(null);
-  const [fontLoadFailed, setFontLoadFailed] = useState(false);
-  useEffect(() => {
-    if (!open || figures) return;
-    let active = true;
-    setFontLoadFailed(false);
-    void renderer().then(
-      (value) => {
-        if (active) setFigures(value);
-      },
-      () => {
-        if (active) setFontLoadFailed(true);
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [open, figures]);
   const storedSettings = useContributionStore((s) => s.heatmapSettings);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
   const settings = useMemo(
@@ -149,17 +132,33 @@ export function HeatmapExports({
       settings.pngWidthMm,
       settings.pngDpi,
     );
-  const { preview, previewCause } = useMemo(() => {
-    try {
-      return { preview: open && figures ? figures.svg(authors, svgOptions) : "", previewCause: null };
-    } catch (cause) {
-      return { preview: "", previewCause: cause };
-    }
-  }, [open, figures, authors, svgOptions]);
+  const [{ preview, previewCause, rendering }, setPreview] = useState<{
+    preview: string;
+    previewCause: unknown;
+    rendering: boolean;
+  }>({ preview: "", previewCause: null, rendering: true });
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    setPreview((current) => ({ ...current, rendering: true }));
+    renderer()
+      .then((figures) => figures.svg(authors, svgOptions))
+      .then(
+        (svg) => {
+          if (active) setPreview({ preview: svg, previewCause: null, rendering: false });
+        },
+        (cause: unknown) => {
+          if (active) setPreview({ preview: "", previewCause: cause, rendering: false });
+        },
+      );
+    return () => {
+      active = false;
+    };
+  }, [open, authors, svgOptions]);
   const previewError =
     previewCause instanceof Error && previewCause.name === "FigureFontError" && "characters" in previewCause
       ? t("errFigureGlyphs", { characters: String(previewCause.characters) })
-      : previewCause || fontLoadFailed
+      : previewCause
         ? t("errHeatmapExport", { format: "SVG" })
         : null;
   const dimensions = preview ? pngDimensions(preview, settings.pngWidthMm, settings.pngDpi) : null;
@@ -231,7 +230,7 @@ export function HeatmapExports({
         align="end"
         collisionPadding={8}
         aria-label={t("heatmapLabel")}
-        aria-busy={!figures && !fontLoadFailed}
+        aria-busy={rendering && !preview}
         className={`grid max-h-[var(--radix-popover-content-available-height)] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-y-auto p-3 ${settingsOpen ? "w-[48rem]" : "w-[32rem]"}`}
       >
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -274,7 +273,7 @@ export function HeatmapExports({
             </p>
           )}
         </div>
-        {!figures && !fontLoadFailed && (
+        {rendering && !preview && (
           <p role="status" className="text-sm text-on-surface-variant">
             …
           </p>

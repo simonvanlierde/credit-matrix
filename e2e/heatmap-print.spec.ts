@@ -10,7 +10,7 @@ import { CREDIT_ROLES } from "../src/core/credit-roles";
 let figures: FigureRenderer;
 test.beforeAll(async () => {
   const { createFigureRenderer } = await import("credit-matrix/figures");
-  figures = await createFigureRenderer();
+  figures = createFigureRenderer();
 });
 
 import { createAuthor } from "../src/core/parse-authors";
@@ -33,7 +33,7 @@ for (const { code } of AVAILABLE_LOCALES) {
             contributions: CREDIT_ROLES.map((role, r) => ({ role: role.name, score: ((i + r) % 4) * 33 })),
           }),
         );
-        const svg = figures.svg(authors, {
+        const svg = await figures.svg(authors, {
           font,
           acronyms: false,
           horizontal: scenario.horizontal,
@@ -177,13 +177,13 @@ for (const { code } of AVAILABLE_LOCALES) {
   }
 }
 
-test("a dense team remains valid but cannot be called readable at single-column width", () => {
+test("a dense team remains valid but cannot be called readable at single-column width", async () => {
   const authors = Array.from({ length: 100 }, (_, i) =>
     createAuthor(`Researcher ${i + 1}`, {
       contributions: [{ role: "Software", score: 100 }],
     }),
   );
-  expect(heatmapPrintSize(figures.svg(authors), 89).minFontPt).toBeLessThan(5);
-  expect(heatmapPrintSize(figures.svg(authors, { horizontal: true }), 183).minFontPt).toBeGreaterThanOrEqual(5);
-  expect(heatmapPrintSize(figures.svg(authors, { horizontal: true }), 183).heightMm).toBeGreaterThan(170);
+  expect(heatmapPrintSize(await figures.svg(authors), 89).minFontPt).toBeLessThan(5);
+  expect(heatmapPrintSize(await figures.svg(authors, { horizontal: true }), 183).minFontPt).toBeGreaterThanOrEqual(5);
+  expect(heatmapPrintSize(await figures.svg(authors, { horizontal: true }), 183).heightMm).toBeGreaterThan(170);
 });

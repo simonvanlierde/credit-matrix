@@ -44,14 +44,14 @@ describe("heatmap recipes", () => {
     expect(typeof actual).toBe("string");
     if (typeof actual !== "string") throw new Error("Expected SVG text");
     expect(actual.trim()).toBe(
-      (await createFigureRenderer())
-        .svg(authors, {
+      (
+        await createFigureRenderer().svg(authors, {
           ...value,
           locale: "fr",
           translateRole: makeRoleTranslator(await loadRoleCatalog("fr")),
           translateUi: makeUiTranslator(await loadUiCatalog("fr")),
         })
-        .trim(),
+      ).trim(),
     );
   });
 

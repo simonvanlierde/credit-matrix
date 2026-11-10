@@ -81,22 +81,28 @@ test("changes legend placement and opts into marks in the actual export", async 
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   const image = page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img");
   const source = async () => decodeURIComponent((await image.getAttribute("src"))?.split(",").slice(1).join(",") ?? "");
+  // The preview redraws asynchronously, after its fonts are subset: wait until it shows what a fresh export
+  // with the current settings downloads.
+  const exported = async () => {
+    const downloaded = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download SVG", exact: true }).click();
+    const path = await (await downloaded).path();
+    if (!path) throw new Error("Expected SVG download");
+    const svg = await readFile(path, "utf8");
+    await expect.poll(source).toBe(svg);
+    return svg;
+  };
   const figures: string[] = [];
   for (const name of ["Right", "Below"]) {
     await page.getByRole("combobox", { name: "Legend", exact: true }).click();
     await page.getByRole("option", { name, exact: true }).click();
-    figures.push(await source());
+    figures.push(await exported());
   }
   expect(figures[0]).not.toBe(figures[1]);
   expect(figures[1]).not.toContain("<circle ");
   await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
-  const marked = await source();
+  const marked = await exported();
   expect(marked).toContain("<circle ");
-  const downloaded = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download SVG", exact: true }).click();
-  const path = await (await downloaded).path();
-  if (!path) throw new Error("Expected SVG download");
-  expect(await readFile(path, "utf8")).toBe(marked);
 });
 
 test("clears copied-image status when the figure or PNG dimensions change", async ({ page }) => {
@@ -108,9 +114,12 @@ test("clears copied-image status when the figure or PNG dimensions change", asyn
   });
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  const copy = page.getByRole("button", { name: "Copy PNG", exact: true });
+  // The font subsetter schedules work on timers it captures when the exporter loads, so let it load
+  // before the clock is frozen.
+  await expect(copy).toBeEnabled({ timeout: 15_000 });
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 60_000));
-  const copy = page.getByRole("button", { name: "Copy PNG", exact: true });
   const copied = page.getByRole("button", { name: "Copied", exact: true });
   await copy.click();
   await expect(copied).toBeVisible();

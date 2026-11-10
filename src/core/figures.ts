@@ -23,29 +23,83 @@ export class FigureFontError extends Error {
 
   constructor(readonly characters: string) {
     super(
-      `Bundled figure fonts do not contain: ${[...characters]
-        .map((character) => `${character} (U+${character.codePointAt(0)?.toString(16).toUpperCase()})`)
-        .join(", ")}.`,
+      `The figure fonts cannot draw ${[...characters]
+        .map((character) => `${character} (U+${character.codePointAt(0)?.toString(16).toUpperCase().padStart(4, "0")})`)
+        .join(", ")}. Change these characters in the names or labels.`,
     );
   }
 }
 
 export interface FigureRenderer {
-  svg(authors: Author[], options?: HeatmapSvgOptions): string;
+  svg(authors: Author[], options?: HeatmapSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
   pdf(authors: Author[], options?: HeatmapSvgOptions, widthMm?: number): Promise<Uint8Array>;
+}
+
+export interface FigureRendererOptions {
+  /**
+   * Folder URL to fetch the font files from when the module's own `figure-fonts/` copies cannot be read,
+   * for a bundle that runs away from its package files.
+   */
+  fontFallback?: string | URL;
+}
+
+interface FontSource {
+  family: string;
+  file: string;
+  url: URL;
 }
 
 interface FigureFont {
   family: string;
   bytes: Uint8Array;
   font: Font;
-  uri?: string;
 }
 
 interface TextRun {
   text: string;
   font: FigureFont;
+}
+
+// Literal URLs, so bundlers emit each font as its own file. Order: sans Latin, JP, SC, then the serif three.
+const SOURCES: FontSource[] = [
+  {
+    family: "Noto Sans",
+    file: "NotoSans-Regular.ttf",
+    url: new URL("./figure-fonts/NotoSans-Regular.ttf", import.meta.url),
+  },
+  {
+    family: "Credit Figure JP",
+    file: "CreditFigureJP.ttf",
+    url: new URL("./figure-fonts/CreditFigureJP.ttf", import.meta.url),
+  },
+  {
+    family: "Credit Figure SC",
+    file: "CreditFigureSC.ttf",
+    url: new URL("./figure-fonts/CreditFigureSC.ttf", import.meta.url),
+  },
+  {
+    family: "Noto Serif",
+    file: "NotoSerif-Regular.ttf",
+    url: new URL("./figure-fonts/NotoSerif-Regular.ttf", import.meta.url),
+  },
+  {
+    family: "Credit Figure Serif JP",
+    file: "CreditFigureSerifJP.ttf",
+    url: new URL("./figure-fonts/CreditFigureSerifJP.ttf", import.meta.url),
+  },
+  {
+    family: "Credit Figure Serif SC",
+    file: "CreditFigureSerifSC.ttf",
+    url: new URL("./figure-fonts/CreditFigureSerifSC.ttf", import.meta.url),
+  },
+];
+
+/** Thrown while laying out text that needs a face not yet loaded; the caller loads it and lays out again. */
+class UnloadedFace extends Error {
+  constructor(readonly source: FontSource) {
+    super(`Figure font ${source.family} is not loaded.`);
+  }
 }
 
 // PDF text positioning uses glyph advances, so disable optional kerning and ligatures in both formats.
@@ -58,8 +112,7 @@ async function readFont(url: URL): Promise<Uint8Array> {
     const { readFile } = await import(/* @vite-ignore */ nodeFilesystem);
     return new Uint8Array(await readFile(url));
   }
-  // The offline cache can fetch the same large font concurrently; bypass the browser HTTP-cache write race.
-  const response = await fetch(url, { cache: "no-store" });
+  const response = await fetch(url);
   if (!response.ok) throw new Error(`Cannot load bundled figure font: ${response.status} ${url.pathname}`);
   return new Uint8Array(await response.arrayBuffer());
 }
@@ -80,14 +133,152 @@ function width(run: TextRun, size: number): number {
   );
 }
 
-function fontUri(font: FigureFont): string {
-  if (!font.uri) {
-    let binary = "";
-    for (let index = 0; index < font.bytes.length; index += 32768)
-      binary += String.fromCharCode(...font.bytes.subarray(index, index + 32768));
-    font.uri = `data:font/ttf;base64,${btoa(binary)}`;
+function base64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 32768)
+    binary += String.fromCharCode(...bytes.subarray(index, index + 32768));
+  return btoa(binary);
+}
+
+function checksum(bytes: Uint8Array): number {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let sum = 0;
+  for (let offset = 0; offset < bytes.length; offset += 4) sum = (sum + view.getUint32(offset)) % 2 ** 32;
+  return sum;
+}
+
+/** Read an OpenType file's tables by tag. */
+function sfntTables(bytes: Uint8Array): Map<string, Uint8Array> {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const tables = new Map<string, Uint8Array>();
+  for (let index = 0; index < view.getUint16(4); index++) {
+    const record = 12 + index * 16;
+    const tag = String.fromCharCode(...bytes.subarray(record, record + 4));
+    const offset = view.getUint32(record + 8);
+    tables.set(tag, bytes.subarray(offset, offset + view.getUint32(record + 12)));
   }
-  return font.uri;
+  return tables;
+}
+
+/** Write a TrueType file from its tables, with the checksums browsers' font sanitizers verify. */
+function sfnt(tables: Map<string, Uint8Array>): Uint8Array {
+  const tags = [...tables.keys()].sort();
+  const padded = tags.map((tag) => {
+    const table = tables.get(tag) ?? new Uint8Array();
+    const copy = new Uint8Array(Math.ceil(table.length / 4) * 4);
+    copy.set(table);
+    if (tag === "head") copy.fill(0, 8, 12);
+    return copy;
+  });
+  const header = 12 + tags.length * 16;
+  const bytes = new Uint8Array(header + padded.reduce((sum, table) => sum + table.length, 0));
+  const view = new DataView(bytes.buffer);
+  const power = 2 ** Math.floor(Math.log2(tags.length));
+  view.setUint32(0, 0x00010000);
+  view.setUint16(4, tags.length);
+  view.setUint16(6, power * 16);
+  view.setUint16(8, Math.log2(power));
+  view.setUint16(10, tags.length * 16 - power * 16);
+  let offset = header;
+  let headOffset = 0;
+  for (const [index, tag] of tags.entries()) {
+    const table = padded[index] ?? new Uint8Array();
+    const record = 12 + index * 16;
+    for (let char = 0; char < 4; char++) bytes[record + char] = tag.charCodeAt(char);
+    view.setUint32(record + 4, checksum(table));
+    view.setUint32(record + 8, offset);
+    view.setUint32(record + 12, tables.get(tag)?.length ?? 0);
+    bytes.set(table, offset);
+    if (tag === "head") headOffset = offset;
+    offset += table.length;
+  }
+  view.setUint32(headOffset + 8, (0xb1b0afba - checksum(bytes) + 2 ** 32) % 2 ** 32);
+  return bytes;
+}
+
+/** A cmap with a BMP format 4 and a full format 12 subtable, mapping each code point to its subset glyph. */
+function cmap(glyphs: Map<number, number>): Uint8Array {
+  const points = [...glyphs.keys()].sort((a, b) => a - b);
+  const bmp = [...points.filter((point) => point < 0xffff), 0xffff];
+  const format4 = new DataView(new ArrayBuffer(16 + bmp.length * 8));
+  const segments = bmp.length;
+  const power = 2 ** Math.floor(Math.log2(segments));
+  format4.setUint16(0, 4);
+  format4.setUint16(2, format4.byteLength);
+  format4.setUint16(6, segments * 2);
+  format4.setUint16(8, power * 2);
+  format4.setUint16(10, Math.log2(power));
+  format4.setUint16(12, segments * 2 - power * 2);
+  for (const [index, point] of bmp.entries()) {
+    format4.setUint16(14 + index * 2, point);
+    format4.setUint16(16 + segments * 2 + index * 2, point);
+    format4.setUint16(16 + segments * 4 + index * 2, ((glyphs.get(point) ?? 0) - point + 0x10000) % 0x10000);
+  }
+  // The final 0xFFFF segment maps to glyph 0, as the format requires.
+  format4.setUint16(16 + segments * 4 + (segments - 1) * 2, 1);
+  const format12 = new DataView(new ArrayBuffer(16 + points.length * 12));
+  format12.setUint16(0, 12);
+  format12.setUint32(4, format12.byteLength);
+  format12.setUint32(12, points.length);
+  for (const [index, point] of points.entries()) {
+    format12.setUint32(16 + index * 12, point);
+    format12.setUint32(20 + index * 12, point);
+    format12.setUint32(24 + index * 12, glyphs.get(point) ?? 0);
+  }
+  const table = new Uint8Array(20 + format4.byteLength + format12.byteLength);
+  const view = new DataView(table.buffer);
+  view.setUint16(2, 2);
+  view.setUint16(4, 3);
+  view.setUint16(6, 1);
+  view.setUint32(8, 20);
+  view.setUint16(12, 3);
+  view.setUint16(14, 10);
+  view.setUint32(16, 20 + format4.byteLength);
+  table.set(new Uint8Array(format4.buffer), 20);
+  table.set(new Uint8Array(format12.buffer), 20 + format4.byteLength);
+  return table;
+}
+
+/**
+ * A standalone font holding only these characters' glyphs, from the subsetter that also feeds the PDF.
+ * NOTE: the subset has no GSUB or GPOS, so a browser places an uncomposed combining mark without its anchor.
+ */
+async function webFont(face: FigureFont, characters: Set<string>): Promise<Uint8Array> {
+  const subset = face.font.createSubset();
+  const glyphs = new Map<number, number>();
+  for (const character of characters) {
+    const point = character.codePointAt(0) ?? 0;
+    glyphs.set(point, subset.includeGlyph(face.font.glyphForCodePoint(point)));
+  }
+  const encoded = await new Promise<Uint8Array>((resolve) => {
+    const parts: Uint8Array[] = [];
+    subset
+      .encodeStream()
+      .on("data", (part: Uint8Array) => parts.push(part))
+      .on("end", () => {
+        const bytes = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+        let offset = 0;
+        for (const part of parts) {
+          bytes.set(part, offset);
+          offset += part.length;
+        }
+        resolve(bytes);
+      });
+  });
+  // The PDF subsetter writes only the tables a PDF reads; a web font also needs these four.
+  const original = sfntTables(face.bytes);
+  const tables = sfntTables(encoded);
+  tables.set("cmap", cmap(glyphs));
+  for (const tag of ["OS/2", "name"]) {
+    const table = original.get(tag);
+    if (table) tables.set(tag, table);
+  }
+  // post version 3 names no glyphs, so it stays valid for the renumbered subset.
+  const post = new Uint8Array(32);
+  post.set((original.get("post") ?? new Uint8Array(32)).subarray(0, 32));
+  new DataView(post.buffer).setUint32(0, 0x00030000);
+  tables.set("post", post);
+  return sfnt(tables);
 }
 
 function color(hex: string | undefined) {
@@ -99,36 +290,79 @@ function color(hex: string | undefined) {
 }
 
 /**
- * Load bundled Noto fonts once, then export figures offline with retained text.
- * SVG embeds standalone fonts; PDF embeds the glyphs used by that figure. Editors
- * can require the full fonts installed locally to change the PDF's text.
+ * Export figures with retained text and bundled Noto fonts. Each face loads on the first figure whose text
+ * needs it. SVG and PDF embed only the glyphs that figure uses; editors can require the full fonts
+ * installed locally to change its text.
  */
-export async function createFigureRenderer(): Promise<FigureRenderer> {
-  const sources = [
-    ["Noto Sans", new URL("./figure-fonts/NotoSans-Regular.ttf", import.meta.url)],
-    ["Credit Figure JP", new URL("./figure-fonts/CreditFigureJP.ttf", import.meta.url)],
-    ["Credit Figure SC", new URL("./figure-fonts/CreditFigureSC.ttf", import.meta.url)],
-    ["Noto Serif", new URL("./figure-fonts/NotoSerif-Regular.ttf", import.meta.url)],
-    ["Credit Figure Serif JP", new URL("./figure-fonts/CreditFigureSerifJP.ttf", import.meta.url)],
-    ["Credit Figure Serif SC", new URL("./figure-fonts/CreditFigureSerifSC.ttf", import.meta.url)],
-  ] as const;
-  const fonts = await Promise.all(
-    sources.map(async ([family, url]): Promise<FigureFont> => {
-      const bytes = await readFont(url);
-      return { family, bytes, font: fontkit.create(bytes) };
-    }),
-  );
+export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}): FigureRenderer {
+  const loaded = new Map<FontSource, FigureFont>();
+  const loading = new Map<FontSource, Promise<void>>();
+
+  function load(source: FontSource): Promise<void> {
+    let pending = loading.get(source);
+    if (!pending) {
+      const { fontFallback } = rendererOptions;
+      pending = readFont(source.url)
+        .catch((error: unknown) => {
+          if (!fontFallback) throw error;
+          return readFont(new URL(source.file, fontFallback));
+        })
+        .then((bytes) => {
+          loaded.set(source, { family: source.family, bytes, font: fontkit.create(bytes) });
+        })
+        .catch((error: unknown) => {
+          // A failed download can be retried by the next export.
+          loading.delete(source);
+          throw error;
+        });
+      loading.set(source, pending);
+    }
+    return pending;
+  }
+
+  /** Run a layout, loading each face it asks for, until every face its text needs is in memory. */
+  async function withFaces<T>(layout: () => T): Promise<T> {
+    for (;;) {
+      try {
+        return layout();
+      } catch (error) {
+        if (!(error instanceof UnloadedFace)) throw error;
+        await load(error.source);
+      }
+    }
+  }
+
+  function face(source: FontSource | undefined): FigureFont {
+    if (!source) throw new Error("Missing figure font source.");
+    const font = loaded.get(source);
+    if (!font) throw new UnloadedFace(source);
+    return font;
+  }
 
   function textRuns(text: string, options?: HeatmapSvgOptions): TextRun[] {
-    const selected = options?.font === "serif" ? fonts.slice(3) : fonts.slice(0, 3);
-    const ordered = options?.locale?.toLowerCase().startsWith("zh")
-      ? [selected[0], selected[2], selected[1]]
-      : selected;
+    const [latin, japanese, chinese] = options?.font === "serif" ? SOURCES.slice(3) : SOURCES.slice(0, 3);
+    const locale = options?.locale?.toLowerCase() ?? "";
+    const normalized = text.normalize("NFC");
+    // Han is shared by Japanese and Chinese: kana or a Japanese locale selects Japanese glyph forms.
+    const cjk =
+      /^ja\b/.test(locale) || /[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(normalized)
+        ? [japanese, chinese]
+        : [chinese, japanese];
+    // Chinese typesets quotes, dashes and ellipses beside Han at full width, as its own face draws them.
+    const cjkPunctuation = /^zh\b/.test(locale) && /\p{Script=Han}/u.test(normalized);
     const runs: TextRun[] = [];
     const missing = new Set<string>();
-    for (const character of text.normalize("NFC")) {
+    for (const character of normalized) {
       const codePoint = character.codePointAt(0) ?? 0;
-      const font = ordered.find((candidate) => candidate?.font.hasGlyphForCodePoint(codePoint));
+      const order = cjkPunctuation && codePoint > 0x7f && /\p{P}/u.test(character) ? [...cjk, latin] : [latin, ...cjk];
+      let font: FigureFont | undefined;
+      // In order, so a face loads only when every face before it lacks the character.
+      for (const source of order) {
+        const candidate = face(source);
+        if (!candidate.font.hasGlyphForCodePoint(codePoint)) continue;
+        font = candidate;
+        break;
+      }
       if (!font) {
         missing.add(character);
         continue;
@@ -141,7 +375,7 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
     return runs;
   }
 
-  function source(authors: Author[], options?: HeatmapSvgOptions): string {
+  function layoutSvg(authors: Author[], options?: HeatmapSvgOptions): string {
     return buildHeatmapSvg(authors, {
       ...options,
       measureText: (label, size) => textRuns(label, options).reduce((sum, run) => sum + width(run, size), 0),
@@ -158,39 +392,53 @@ export async function createFigureRenderer(): Promise<FigureRenderer> {
   }
 
   return {
-    svg(authors, options) {
-      const used = new Set<FigureFont>();
-      const svg = source(authors, options).replace(
-        /<text\b([^>]*)>([^<]*)<\/text>/g,
-        (_, attrs: string, text: string) => {
-          const runs = textRuns(unescapeXml(text), options);
-          const content = runs
-            .map((run) => {
-              used.add(run.font);
-              return `<tspan font-family="${run.font.family}">${escapeXml(run.text)}</tspan>`;
-            })
-            .join("");
-          const ownAttrs = attrs.replace(/ font-family="[^"]*"/, "").replace(/ font-weight="[^"]*"/, "");
-          return `<text${ownAttrs} xml:space="preserve">${content}</text>`;
-        },
+    async svg(authors, options) {
+      const used = new Map<FigureFont, Set<string>>();
+      const svg = await withFaces(() => {
+        used.clear();
+        return layoutSvg(authors, options).replace(
+          /<text\b([^>]*)>([^<]*)<\/text>/g,
+          (_, attrs: string, text: string) => {
+            const content = textRuns(unescapeXml(text), options)
+              .map((run) => {
+                const characters = used.get(run.font) ?? new Set<string>();
+                for (const character of run.text) characters.add(character);
+                used.set(run.font, characters);
+                return `<tspan font-family="${run.font.family}">${escapeXml(run.text)}</tspan>`;
+              })
+              .join("");
+            const ownAttrs = attrs.replace(/ font-family="[^"]*"/, "").replace(/ font-weight="[^"]*"/, "");
+            return `<text${ownAttrs} xml:space="preserve">${content}</text>`;
+          },
+        );
+      });
+      const faces = await Promise.all(
+        [...used].map(
+          async ([font, characters]) =>
+            `@font-face{font-family:'${font.family}';src:url('data:font/ttf;base64,${base64(await webFont(font, characters))}');font-weight:400}`,
+        ),
       );
-      const style = [...used]
-        .map((font) => `@font-face{font-family:'${font.family}';src:url('${fontUri(font)}');font-weight:400}`)
-        .join("");
       return svg.replace(
         /(<svg\b[^>]*>)/,
-        `$1\n<style>${style}text{font-kerning:none;font-variant-ligatures:none}</style>`,
+        `$1\n<style>${faces.join("")}text{font-kerning:none;font-variant-ligatures:none}</style>`,
       );
     },
 
     async pdf(authors, options, widthMm) {
       if (widthMm !== undefined && (!Number.isFinite(widthMm) || widthMm <= 0))
         throw new RangeError("Figure width must be a positive finite number of millimeters.");
-      const svg = source(authors, options);
+      const svg = await withFaces(() => {
+        const layout = layoutSvg(authors, options);
+        for (const [, text] of layout.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g))
+          textRuns(unescapeXml(text ?? ""), options);
+        return layout;
+      });
       const root = attributes(svg.slice(0, svg.indexOf(">")));
       const pageWidth = Number(root.width);
       const pageHeight = Number(root.height);
-      const document = await PDFDocument.create();
+      // Without pdf-lib's own producer and current dates, the same figure gives the same bytes.
+      const document = await PDFDocument.create({ updateMetadata: false });
+      document.setProducer("CRediT Matrix");
       document.registerFontkit(fontkit);
       document.setTitle(unescapeXml(svg.match(/<title>([^<]*)<\/title>/)?.[1] ?? "Contribution heatmap"));
       document.setSubject(unescapeXml(svg.match(/<desc>([^<]*)<\/desc>/)?.[1] ?? ""));
