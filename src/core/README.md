@@ -38,6 +38,8 @@ npx credit-matrix convert paper.xml --to json      # json, csv, jats, crossref, 
 npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
 npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
 npx credit-matrix convert team.csv --to svg > heatmap.svg  # the heatmap; --locale sets its language
+npx credit-matrix convert team.csv --to quarto > authors.yml  # Quarto/Pandoc author metadata, with levels
+npx credit-matrix convert team.csv --to myst > authors.yml    # MyST/Jupyter Book author metadata, without levels
 npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
 npx credit-matrix --help                           # or --version
 ```
@@ -150,10 +152,25 @@ Only non-zero contributions appear in statements.
 | CSV         | `toCsv`           | `fromCsv`                           |
 | JSON        | `toJson`          | `fromJson`                          |
 | Markdown    | `toMarkdown`      | —                                   |
+| Quarto/Pandoc YAML | `toQuarto` | — |
+| MyST/Jupyter Book YAML | `toMyst` | — |
 | tenzing CSV | `toTenzing`       | `fromTenzing`                       |
 | LaTeX ([latex-credits](https://github.com/Pseudomanifold/latex-credits)) | `toLatexCredits` | — |
 | Crossref 5.5 `<contributors>` | `toCrossrefContributors` | `fromCrossrefContributors` |
 | Heatmap SVG | `buildHeatmapSvg` | —                                   |
+
+`toQuarto(authors, { yesNo: false })` returns an `author:` YAML block with names, ORCID iDs and
+canonical CRediT roles with lead/equal/supporting degrees. Set `yesNo: true` to omit degrees.
+Paste it into Quarto or Pandoc manuscript front matter. `toMyst(authors)` returns `authors:` with
+ungraded roles; paste it into page front matter, or indent it under `project:` in `myst.yml`.
+The app offers both under Export data, with Copy and Download. They list authors only, including
+those with no roles yet. Acknowledge non-author contributors separately. Keep native JSON for
+exact scores, equal-contribution and corresponding-author markers, and coauthor replies.
+
+The [Quarto](https://quarto.org/docs/journals/authors.html#roles) schema supports contribution degrees;
+the [MyST](https://mystmd.org/guide/frontmatter#authors) schema has role names only.
+Use the [Quarto](../../integrations/quarto/README.md) or [MyST](../../integrations/myst/README.md)
+plugin to render a statement from these blocks.
 
 `buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
 assets.

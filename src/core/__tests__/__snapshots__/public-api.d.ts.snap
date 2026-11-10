@@ -999,6 +999,18 @@ export declare function fromCrossrefContributors(xml: string, { parser }?: {
 }): Author[];
 export declare function toCsv(authors: Author[]): string;
 export declare function fromCsv(csv: string): Author[];
+/**
+ * YAML for Quarto/Pandoc's `author` field, with canonical CRediT names and levels.
+ * `yesNo` writes role names without degrees. Non-authors are omitted, never added to the byline.
+ */
+export declare function toQuarto(authors: Author[], { yesNo }?: {
+  yesNo?: boolean;
+}): string;
+/**
+ * YAML for MyST's `authors` field. Paste under `project` in myst.yml or into page front matter.
+ * MyST has no contribution levels. Non-authors are omitted, never added to the byline.
+ */
+export declare function toMyst(authors: Author[]): string;
 interface HeatmapSvgOptions {
   /** Named sequential palette; color overrides its base hue. */
   palette?: "blue" | "green" | "gray";

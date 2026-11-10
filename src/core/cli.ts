@@ -20,6 +20,7 @@ import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
 import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
+import { toMyst, toQuarto } from "./export/frontmatter";
 import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
 import { RepeatedIdError, toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
@@ -45,7 +46,7 @@ Commands:
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
       --format codemeta prints linked CodeMeta 3.0 people and roles, with
       non-authors in contributor. Warns about local identities and omitted scores.
-  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg [--yes-no] [--locale <code>]
+  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg|quarto|myst [--yes-no] [--locale <code>]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
       and latex-credits writes 1 or 0.
@@ -55,6 +56,8 @@ Commands:
       latex-credits prints \\credit lines for the latex-credits LaTeX package,
       with the levels as shades. It lists authors only.
       tenzing prints the contributions as a Tenzing-style CSV table.
+      quarto and myst print author YAML with names, ORCID iDs and CRediT roles.
+      quarto keeps levels unless --yes-no; myst omits them. Both list authors only.
       svg prints the contribution heatmap as an SVG image; --yes-no draws
       flat cells with no levels. SVG figure options:
       --color '#1f4e79' --palette blue|green|gray --shape square|rounded|circle
@@ -275,6 +278,10 @@ export async function run(argv: string[]): Promise<string> {
         }
         case "tenzing":
           return toTenzing(authors);
+        case "quarto":
+          return toQuarto(authors, { yesNo: values["yes-no"] });
+        case "myst":
+          return toMyst(authors);
         case "svg": {
           for (const key of ["legend", "skipempty"] as const) {
             if (!["true", "false"].includes(values[key])) throw new UsageError(`--${key} must be true or false.`);
@@ -296,7 +303,9 @@ export async function run(argv: string[]): Promise<string> {
           });
         }
         default:
-          throw new UsageError("convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing or svg.");
+          throw new UsageError(
+            "convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto or myst.",
+          );
       }
     case "ask": {
       const wanted = values.contributor?.trim();

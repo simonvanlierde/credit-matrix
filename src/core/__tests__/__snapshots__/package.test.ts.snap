@@ -51,6 +51,8 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "toJson",
     "toLatexCredits",
     "toMarkdown",
+    "toMyst",
+    "toQuarto",
     "toTenzing",
     "verifyOrcidToken",
   ],

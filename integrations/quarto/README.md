@@ -21,6 +21,10 @@ For plain Pandoc, use the same Lua file as described in the [Pandoc guide](../pa
 
 ## Use
 
+In the app, choose **Quarto YAML** under Export data to copy or download the author block.
+The CLI equivalent is `credit-matrix convert team.json --to quarto`. Paste the block into your
+manuscript's front matter, alongside `filters`. It keeps contribution levels; `--yes-no` omits them.
+
 ```yaml
 ---
 title: My paper
