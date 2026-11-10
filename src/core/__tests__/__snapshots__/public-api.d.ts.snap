@@ -975,6 +975,10 @@ interface XmlParser {
 export declare function fromJats4rXml(xmlString: string, { parser }?: {
   parser?: XmlParser;
 }): Author[];
+/** Text that is not well-formed XML, such as a truncated file. */
+export declare class XmlParseError extends Error {
+  name: string;
+}
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
  * later), for a publisher to paste into the work's record. Each person gets a
@@ -1194,6 +1198,20 @@ interface StatementOptions {
    */
   asHtml?: boolean;
 }
+/** The contributor and role a statement phrase stands for. */
+interface StatementCell {
+  authorId: string;
+  role: CreditRoleName;
+}
+/**
+ * A run of statement text, with the contributor and role it stands for when it
+ * is one. Joined in order, the spans' text is exactly `generateStatement`'s
+ * plain-text output.
+ */
+interface StatementSpan {
+  text: string;
+  cell?: StatementCell;
+}
 /**
  * Generate a CRediT author statement.
  *
@@ -1217,6 +1235,13 @@ interface StatementOptions {
  *   "CRediT: JAS: Conceptualization, Data curation; BW: Investigation; ..."
  */
 export declare function generateStatement(authors: Author[], options: StatementOptions): string;
+/**
+ * The plain-text statement as spans, so a viewer can tie each phrase back to
+ * the contributor and role it stands for. Takes the same options as
+ * `generateStatement` (`asHtml` is ignored), and the spans' text joined in
+ * order is exactly its plain-text output; no spans when that is empty.
+ */
+export declare function statementSpans(authors: Author[], options: StatementOptions): StatementSpan[];
 type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "codemeta" | "cff" | "zenodo" | "xml" | "crossref" | "statement" | "names" | "unknown";
 /** Guess what pasted or loaded text is, from its shape alone. */
 export declare function detectFormat(text: string): DetectedFormat;
@@ -1380,7 +1405,7 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-export { type Ask, type AskEvent, type AskState, type Author, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementFormat, type StatementOptions, type Target, type XmlElement, type XmlParser, getRoleByName };
+export { type Ask, type AskEvent, type AskState, type Author, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, getRoleByName };
 // lookup.d.ts
 import { n as CreditRoleName } from "./credit-roles.js";
 /**

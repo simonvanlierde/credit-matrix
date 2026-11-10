@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { escapeXml } from "../export/escape-xml";
 import { toJats4rXml } from "../export/xml";
-import { fromJats4rXml } from "../export/xml-import";
+import { fromJats4rXml, XmlParseError } from "../export/xml-import";
 import { createAuthor, normalizeRoster, parseAuthorText } from "../parse-authors";
 
 // `fromJats4rXml` defaults to the global DOMParser, native in the browser and
@@ -120,6 +120,11 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     expect(() => fromJats4rXml("<article><contrib>", { parser })).toThrow(
       "XML parse error: error on line 1 at column 9",
     );
+    // Named, so a caller logging `error.name` can tell it from any other Error.
+    expect(() => fromJats4rXml("<article><contrib>", { parser })).toThrow(
+      expect.objectContaining({ name: "XmlParseError" }),
+    );
+    expect(new XmlParseError("x")).toBeInstanceOf(Error);
   });
 
   it("reports a custom parser's empty error element and skips a role with no text", () => {

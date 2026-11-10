@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { keepKnownIds } from "../merge-row";
+import { keepKnownIds, newContributors } from "../merge-row";
 import { createAuthor } from "../parse-authors";
 
 const JANE_ORCID = "0000-0002-1825-0097";
@@ -57,5 +57,46 @@ describe("keepKnownIds", () => {
     const result = keepKnownIds(current, [createAuthor("Bob White"), bob]);
     expect(result[1]?.id).toBe(bob.id);
     expect(result[0]?.id).not.toBe(bob.id);
+  });
+});
+
+describe("newContributors", () => {
+  const names = (authors: { name: string }[]) => authors.map((author) => author.name);
+
+  it("adds nobody for a person the file lists twice who is already here", () => {
+    expect(newContributors(draft(), [createAuthor("Bob White"), createAuthor("bob white")])).toEqual([]);
+    expect(
+      newContributors(draft(), [
+        createAuthor("J. Smith", { orcid: JANE_ORCID }),
+        createAuthor("Jane", { orcid: JANE_ORCID }),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("adds a same-name person whose ORCID iD differs from the one here", () => {
+    const other = createAuthor("Jane A. Smith", { orcid: "0000-0001-5109-3700" });
+    expect(newContributors(draft(), [other])).toEqual([other]);
+  });
+
+  it("matches by name when either side has no ORCID iD", () => {
+    expect(newContributors(draft(), [createAuthor("jane a. smith")])).toEqual([]);
+    expect(newContributors(draft(), [createAuthor("Bob White", { orcid: "0000-0001-5109-3700" })])).toEqual([]);
+  });
+
+  it("adds a newcomer the file lists twice once", () => {
+    const added = newContributors(draft(), [
+      createAuthor("Dan Evans"),
+      createAuthor("dan  evans"),
+      createAuthor("Eve Fox", { orcid: "0000-0001-5109-3700" }),
+      createAuthor("E. Fox", { orcid: "0000-0001-5109-3700" }),
+    ]);
+    expect(names(added)).toEqual(["Dan Evans", "Eve Fox"]);
+  });
+
+  it("drops a row whose id is already here", () => {
+    const current = draft();
+    const [bob] = current.slice(1);
+    if (!bob) throw new Error("expected Bob");
+    expect(newContributors(current, [{ ...bob, name: "Robert White" }])).toEqual([]);
   });
 });

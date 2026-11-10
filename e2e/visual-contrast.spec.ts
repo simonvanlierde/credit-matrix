@@ -75,7 +75,7 @@ for (const theme of themes) {
 
     test("placeholders reach 4.5:1", async ({ page }) => {
       await page.goto("/");
-      const fields = [page.locator("#work-title"), page.getByPlaceholder(/Add names/)];
+      const fields = [page.locator("#work-title"), page.locator("#add-contributor")];
       await page.getByRole("button", { name: "Import" }).click();
       fields.push(page.locator("#import-text"), page.locator("#import-doi"));
       await settleMotion(page);
@@ -96,7 +96,7 @@ for (const theme of themes) {
       const gripFg = await flatten(page, [...(await backdrop(grip, true)), await style(grip, "color")]);
       expect(ratio(gripFg, gripBg), "grip icon").toBeGreaterThanOrEqual(3);
 
-      const edges = [page.locator("#work-title"), page.getByPlaceholder(/Add names/)];
+      const edges = [page.locator("#work-title"), page.locator("#add-contributor")];
       await page.getByRole("button", { name: "Import" }).click();
       edges.push(page.locator("#import-text"), page.locator("#import-doi"));
       await settleMotion(page);

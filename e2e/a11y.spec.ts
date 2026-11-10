@@ -92,6 +92,8 @@ test.describe("Accessibility (axe-core)", () => {
     await page.getByRole("button", { name: "Import" }).click();
     await page.locator("#import-text").fill("Jane Smith\nBob White");
     await page.getByRole("button", { name: "Import data" }).click();
+    // The import's outcome strip sits over the controls below it.
+    await page.getByRole("button", { name: "Dismiss" }).click();
     const panel = page.locator("[data-radix-popper-content-wrapper] [role=dialog]");
     for (const name of [
       "About this app",

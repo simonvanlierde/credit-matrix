@@ -1,12 +1,12 @@
 import { Check, CircleAlert, Link2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { DraftPicker } from "@/components/DraftPicker";
-import { ImportModal, type LinkFailure, type PendingImport } from "@/components/ImportModal";
+import { ImportModal, type ImportMode, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Author, decodeShareHash, importAnswers, type OrcidProof, type ShareData } from "@/core";
 import { isAllBinary } from "@/core/author";
-import { keepKnownIds } from "@/core/merge-row";
+import { keepKnownIds, newContributors } from "@/core/merge-row";
 import { announce } from "@/lib/announce";
 import { discardOrcidReturn, isOrcidReturn, verifyIncoming } from "@/lib/orcid-sign-in";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
@@ -56,6 +56,7 @@ export function HeaderActions() {
   const applyAskPatch = useContributionStore((s) => s.applyAskPatch);
   const setRecentReply = useContributionStore((s) => s.setRecentReply);
   const openReview = useContributionStore((s) => s.openReview);
+  const setSelfId = useContributionStore((s) => s.setSelfId);
   const decodedOnMount = useRef(false);
   // Counts arrivals, so only the newest reply's strip takes the row mark down when it leaves.
   const replyReceipt = useRef(0);
@@ -339,16 +340,65 @@ export function HeaderActions() {
     return occupied ? "occupied" : "fresh";
   }
 
-  function handleImport({ authors: importedAuthors, title: importedTitle, asks, selfId }: PendingImport) {
-    // Errors surface in ImportModal, which keeps the dialog open on failure.
-    // Re-imported contributors keep their ids, so their open asks still match.
-    const { authors: current, asks: held } = useContributionStore.getState();
-    const mapped = keepKnownIds(current, importedAuthors);
-    const answers = importAnswers(current, importedAuthors, mapped, held, { asks, selfId });
-    loadAuthors(mapped, answers.asks, answers.selfId);
-    // Only the DOI path carries a title. Guard on it rather than on emptiness,
-    // so a record with no title still clears a stale one from the last import.
-    if (importedTitle !== undefined) setTitle(importedTitle);
+  /**
+   * Write an import, then confirm it with Undo. Undo restores the draft only while the roster, its
+   * asks, the "you" mark and the title are still the ones this wrote: an ask sent or a title edited
+   * since would be thrown away with it. Errors surface in ImportModal, which keeps the dialog open
+   * on failure.
+   */
+  function handleImport(
+    { authors: importedAuthors, title: importedTitle, asks, selfId }: PendingImport,
+    mode: ImportMode,
+  ) {
+    const before = useContributionStore.getState();
+    const { authors: current, asks: held } = before;
+    let count: number;
+    if (mode === "add") {
+      // Rows already here stay as they are, with their asks; only the contributors the draft lacks join,
+      // with the file's answers for them, checked as a replace checks them.
+      const added = newContributors(current, importedAuthors);
+      const answers = asks ? importAnswers([], added, added, {}, { asks }).asks : undefined;
+      loadAuthors([...current, ...added], answers ? { ...held, ...answers } : undefined);
+      count = added.length;
+    } else {
+      // Re-imported contributors keep their ids, so their open asks still match.
+      const mapped = keepKnownIds(current, importedAuthors);
+      const answers = importAnswers(current, importedAuthors, mapped, held, { asks, selfId });
+      loadAuthors(mapped, answers.asks, answers.selfId);
+      // Only the DOI path carries a title. Guard on it rather than on emptiness,
+      // so a record with no title still clears a stale one from the last import.
+      if (importedTitle !== undefined) setTitle(importedTitle);
+      count = useContributionStore.getState().authors.length;
+    }
+    const applied = useContributionStore.getState();
+    const unchanged = () => {
+      const now = useContributionStore.getState();
+      return (
+        now.authors === applied.authors &&
+        now.asks === applied.asks &&
+        now.selfId === applied.selfId &&
+        now.title === applied.title
+      );
+    };
+    showStatus({
+      kind: "success",
+      message: t(mode === "add" ? "importAddedContributors" : "importedContributors", { count }),
+      actions: [
+        {
+          label: t("undo"),
+          onAct: () => {
+            if (!unchanged()) {
+              showStatus({ kind: "error", message: t("importUndoStale") });
+              return;
+            }
+            loadAuthors(before.authors, before.asks);
+            setSelfId(before.selfId);
+            setTitle(before.title);
+            announce(t("annImportUndone"));
+          },
+        },
+      ],
+    });
   }
 
   /**

@@ -3,6 +3,7 @@ import { CREDIT_ROLES } from "../credit-roles";
 import { fromCsv, toCsv } from "../export/csv";
 import { buildHeatmapSvg } from "../export/heatmap-svg";
 import { toJats4rXml } from "../export/xml";
+import { generateStatement, statementSpans } from "../generate-statement";
 import { createAuthor } from "../parse-authors";
 
 const AUTHORS = Array.from({ length: 200 }, (_, i) =>
@@ -12,6 +13,17 @@ const AUTHORS = Array.from({ length: 200 }, (_, i) =>
 );
 
 describe("200 contributors", () => {
+  test("statements", async ({ bench }) => {
+    await bench.compare(
+      bench("plain text", () => {
+        generateStatement(AUTHORS, { format: "by-author", showLevels: true });
+      }),
+      bench("interactive spans", () => {
+        statementSpans(AUTHORS, { format: "by-author", showLevels: true });
+      }),
+    );
+  });
+
   test("exports", async ({ bench }) => {
     await bench.compare(
       bench("CSV round trip", () => {

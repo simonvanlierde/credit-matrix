@@ -36,9 +36,35 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `credit-matrix convert --to svg`, the new MyST and Sphinx `credit-heatmap` directives, the
   Quarto and Pandoc `heatmap` key, and Typst's `credit-heatmap`. See
   [heatmap figures](integrations/heatmap.md).
+- Pointing at a grid cell, or focusing it, marks its phrase in the statement, and pointing at a
+  phrase rings its cell. `statementSpans` returns the plain-text statement as spans that name the
+  contributor and role behind each phrase.
+- Once every co-author but you has been asked and has answered, and nothing is left to review, the
+  status strip says "Everyone agreed", and a screen reader hears it once.
+- Importing into a draft that already has contributors offers "Add N new" beside "Replace
+  workspace": it keeps the draft and adds only the people it lacks, matched by id, ORCID iD or
+  name, with the file's co-author answers for them. A person the file lists twice joins once, and
+  someone with the same name but another ORCID iD joins as a new contributor.
+- Importing contributors from a file, a paste or a DOI ends with a message such as "Imported 2
+  contributors." and an Undo, which also takes back a replaced workspace.
 
 ### Changed
 
+- With no contributors yet, the add field sits right under the empty-state line instead of at the
+  foot of the rail, and "Start fresh" puts the cursor in it. Its placeholder says it takes names, a
+  DOI or an ORCID iD, and a disabled Add button is muted instead of faded.
+- On a phone, the "Contributor to assign" picker is 44px tall, with the name at body size beside
+  the contributor's initials.
+- A contributor without roles is shown as a note, no longer in error red: no note stops you from
+  copying or exporting the statement.
+- The status strip counts answers only once you have asked someone. Before that it offers only
+  "Ask co-authors".
+- The key hint under the grid legend is hidden on touch screens. It still describes the grid to a
+  screen reader.
+- `generateStatement` with `asHtml` escapes the catalog's separators, which it used to insert raw.
+  This only changes the output of a custom `translateUi` whose separators contain `&`, `<`, `>` or
+  `"`.
+- `XmlParseError` has its own `name`, `"XmlParseError"`, instead of `"Error"`.
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 - Heatmaps look different by default: square cells with a thin gray rule on white, where cells
   were rounded on off-white. `shape: "rounded"` brings back the rounded cells.
@@ -48,6 +74,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `zh-Hant`) in English instead of Simplified Chinese. The `<credit-matrix>` element now maps
   `pt-BR` to Portuguese and `zh-CN` to Simplified Chinese, as the CLI already did.
 - The Sphinx extension reports a failed statement as "CRediT rendering failed".
+- The import box leads with paste and upload, with the DOI lookup below as the other route. Its
+  description is one line, and the list of formats sits under "Which formats work?". Progress
+  shows beside the Import button, which reads "Converting…" or "Looking up…" with a spinner.
+- The import box's drop zone lists every file type the picker takes, `.cff` included, and hides
+  the drag-and-drop line on touch screens. Its border and the outline buttons stay visible in
+  dark mode, and the Close button is larger with the app's focus ring.
 
 ### Deprecated
 
@@ -61,6 +93,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Import says plainly when a file repeats a contributor id: the import box shows its own message
   in every language, the CLI and the `<credit-matrix>` element say so in English. `fromJson`
   throws the new `RepeatedIdError` for it.
+- Import says "That XML could not be read" for XML that is not well formed, such as a truncated
+  file, instead of the general failure message. The XML readers throw `XmlParseError` for it.
+- On a phone, the import box stays on screen when its confirmation takes focus. It used to scroll
+  away with the page.
 
 ## [0.11.0] - 2026-11-01
 

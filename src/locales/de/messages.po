@@ -18,7 +18,7 @@ msgid "addContributor"
 msgstr "Neue Autorennamen oder ORCID iD"
 
 msgid "addPlaceholder"
-msgstr "Namen oder eine ORCID iD hinzufügen…"
+msgstr "Namen, eine DOI oder ORCID iD"
 
 msgid "addButton"
 msgstr "Hinzufügen"
@@ -218,6 +218,42 @@ msgstr "Mitwirkende importieren"
 msgid "importData"
 msgstr "Daten importieren"
 
+msgid "importSummary"
+msgstr "Fügen Sie eine Liste von Mitwirkenden ein, laden Sie eine hoch oder suchen Sie sie über einen DOI."
+
+msgid "importFormatsToggle"
+msgstr "Welche Formate funktionieren?"
+
+msgid "importOr"
+msgstr "oder"
+
+msgid "importConverting"
+msgstr "Wird konvertiert…"
+
+msgid "importImporting"
+msgstr "Wird importiert…"
+
+msgid "importChoiceTitle"
+msgstr "Zu diesem Entwurf hinzufügen oder ihn ersetzen?"
+
+msgid "importAddNew"
+msgstr "{count} neue hinzufügen"
+
+msgid "importedContributors"
+msgstr "{count, plural, one {# mitwirkende Person} other {# mitwirkende Personen}} importiert."
+
+msgid "importAddedContributors"
+msgstr "{count, plural, one {# mitwirkende Person} other {# mitwirkende Personen}} zu diesem Entwurf hinzugefügt."
+
+msgid "importUndoStale"
+msgstr "Nichts rückgängig gemacht: Der Entwurf hat sich seit dem Import geändert. Ändern Sie ihn stattdessen in der Tabelle."
+
+msgid "annImportUndone"
+msgstr "Import rückgängig gemacht."
+
+msgid "errImportXmlUnreadable"
+msgstr "Dieses XML konnte nicht gelesen werden. Prüfen Sie, ob die Datei vollständig ist."
+
 msgid "close"
 msgstr "Schließen"
 
@@ -228,16 +264,13 @@ msgid "dragDropFile"
 msgstr "Datei hierher ziehen und ablegen"
 
 msgid "acceptedFileTypes"
-msgstr "Akzeptiert .csv, .tsv, .json oder .xml"
+msgstr "Akzeptiert {types}"
 
 msgid "fileLoaded"
 msgstr "Aus {name} geladen"
 
 msgid "pasteRawData"
 msgstr "Rohdaten einfügen"
-
-msgid "replaceWorkspaceTitle"
-msgstr "Aktuellen Arbeitsbereich ersetzen?"
 
 msgid "replaceWorkspace"
 msgstr "Arbeitsbereich ersetzen"
@@ -351,7 +384,7 @@ msgid "structuredFileUpload"
 msgstr "Strukturierte Datei hochladen"
 
 msgid "doiPlaceholder"
-msgstr "10.1038/s41586-020-2649-2"
+msgstr "z. B. 10.1234/abcde"
 
 msgid "doiLookUp"
 msgstr "Suchen"
@@ -912,7 +945,7 @@ msgid "formatJsonExport"
 msgstr "JSON-Export"
 
 msgid "replaceWorkspaceBody"
-msgstr "Der Import von {incoming, plural, one {# mitwirkenden Person} other {# mitwirkenden Personen}} ersetzt {existing, plural, one {die # Person} other {die # Personen}} in diesem Arbeitsbereich. Dies kann nicht rückgängig gemacht werden."
+msgstr "Der Import von {incoming, plural, one {# mitwirkenden Person} other {# mitwirkenden Personen}} ersetzt {existing, plural, one {die # Person} other {die # Personen}} in diesem Arbeitsbereich."
 
 msgid "statementEmptyHint"
 msgstr "Noch keine Beiträge zugewiesen. Wählen Sie Zellen im Raster aus, um Rollen zuzuweisen."
@@ -979,6 +1012,9 @@ msgstr "Dunkelgrau"
 
 msgid "languageSettings"
 msgstr "Spracheinstellungen"
+
+msgid "stripEveryoneAgreed"
+msgstr "Alle sind sich einig"
 
 msgid "stripOpenTeam"
 msgstr "Mitautoren fragen"

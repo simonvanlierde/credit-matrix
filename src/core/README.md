@@ -144,6 +144,11 @@ The options you'll most likely want:
 
 Only non-zero contributions appear in statements.
 
+`statementSpans(authors, options)` returns the same plain-text statement as a list of `{ text, cell? }`
+spans, where `cell` names the contributor id and role a phrase stands for (the role in a by-author
+statement, the name in a by-role one). Joined in order, the text is exactly `generateStatement`'s
+output, so a viewer can tie each phrase back to its cell.
+
 ## Import / export
 
 | Format      | Out               | In                                  |
@@ -294,7 +299,8 @@ holds its exact shape. By entry point:
     `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`
   - Roles: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
   - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
-  - Statements: `generateStatement`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`
+  - Statements: `generateStatement`, `statementSpans`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`,
+    `StatementSpan`, `StatementCell`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
     `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,

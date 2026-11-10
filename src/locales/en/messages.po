@@ -18,7 +18,7 @@ msgid "addContributor"
 msgstr "New author names or ORCID iD"
 
 msgid "addPlaceholder"
-msgstr "Add names or an ORCID iD…"
+msgstr "Names, a DOI or an ORCID iD"
 
 msgid "addButton"
 msgstr "Add"
@@ -218,6 +218,42 @@ msgstr "Import contributors"
 msgid "importData"
 msgstr "Import data"
 
+msgid "importSummary"
+msgstr "Paste or upload a contributor list, or look one up by DOI."
+
+msgid "importFormatsToggle"
+msgstr "Which formats work?"
+
+msgid "importOr"
+msgstr "or"
+
+msgid "importConverting"
+msgstr "Converting…"
+
+msgid "importImporting"
+msgstr "Importing…"
+
+msgid "importChoiceTitle"
+msgstr "Add to this draft or replace it?"
+
+msgid "importAddNew"
+msgstr "Add {count} new"
+
+msgid "importedContributors"
+msgstr "Imported {count, plural, one {# contributor} other {# contributors}}."
+
+msgid "importAddedContributors"
+msgstr "Added {count, plural, one {# contributor} other {# contributors}} to this draft."
+
+msgid "importUndoStale"
+msgstr "Nothing undone: the draft changed after the import. Change it in the grid instead."
+
+msgid "annImportUndone"
+msgstr "Import undone."
+
+msgid "errImportXmlUnreadable"
+msgstr "That XML could not be read. Check that the file is complete."
+
 msgid "close"
 msgstr "Close"
 
@@ -228,16 +264,13 @@ msgid "dragDropFile"
 msgstr "Drag and drop a file here"
 
 msgid "acceptedFileTypes"
-msgstr "Accepts .csv, .tsv, .json, or .xml"
+msgstr "Accepts {types}"
 
 msgid "fileLoaded"
 msgstr "Loaded from {name}"
 
 msgid "pasteRawData"
 msgstr "Paste raw data"
-
-msgid "replaceWorkspaceTitle"
-msgstr "Replace the current workspace?"
 
 msgid "replaceWorkspace"
 msgstr "Replace workspace"
@@ -351,7 +384,7 @@ msgid "structuredFileUpload"
 msgstr "Structured file upload"
 
 msgid "doiPlaceholder"
-msgstr "10.1038/s41586-020-2649-2"
+msgstr "e.g. 10.1234/abcde"
 
 msgid "doiLookUp"
 msgstr "Look up"
@@ -912,7 +945,7 @@ msgid "formatJsonExport"
 msgstr "JSON export"
 
 msgid "replaceWorkspaceBody"
-msgstr "Importing {incoming, plural, one {# contributor} other {# contributors}} will replace {existing, plural, one {the # contributor} other {the # contributors}} already in this workspace. This cannot be undone."
+msgstr "Importing {incoming, plural, one {# contributor} other {# contributors}} will replace {existing, plural, one {the # contributor} other {the # contributors}} already in this workspace."
 
 msgid "statementEmptyHint"
 msgstr "No contributions assigned yet. Select cells in the grid to assign roles."
@@ -979,6 +1012,9 @@ msgstr "Dark gray"
 
 msgid "languageSettings"
 msgstr "Language settings"
+
+msgid "stripEveryoneAgreed"
+msgstr "Everyone agreed"
 
 msgid "stripOpenTeam"
 msgstr "Ask co-authors"

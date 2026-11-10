@@ -18,7 +18,7 @@ msgid "addContributor"
 msgstr "Novos nomes de autores ou iD ORCID"
 
 msgid "addPlaceholder"
-msgstr "Adicione nomes ou um iD ORCID…"
+msgstr "Nomes, um DOI ou um iD ORCID"
 
 msgid "addButton"
 msgstr "Adicionar"
@@ -218,6 +218,42 @@ msgstr "Importar contribuidores"
 msgid "importData"
 msgstr "Importar dados"
 
+msgid "importSummary"
+msgstr "Cole ou carregue uma lista de pessoas contribuidoras, ou procure-a por DOI."
+
+msgid "importFormatsToggle"
+msgstr "Que formatos são aceites?"
+
+msgid "importOr"
+msgstr "ou"
+
+msgid "importConverting"
+msgstr "A converter…"
+
+msgid "importImporting"
+msgstr "A importar…"
+
+msgid "importChoiceTitle"
+msgstr "Adicionar a este rascunho ou substituí-lo?"
+
+msgid "importAddNew"
+msgstr "Adicionar {count, plural, one {# nova} other {# novas}}"
+
+msgid "importedContributors"
+msgstr "{count, plural, one {# pessoa contribuidora importada} other {# pessoas contribuidoras importadas}}."
+
+msgid "importAddedContributors"
+msgstr "{count, plural, one {# pessoa contribuidora adicionada} other {# pessoas contribuidoras adicionadas}} a este rascunho."
+
+msgid "importUndoStale"
+msgstr "Nada foi anulado: o rascunho mudou depois da importação. Altere-o na grelha."
+
+msgid "annImportUndone"
+msgstr "Importação anulada."
+
+msgid "errImportXmlUnreadable"
+msgstr "Não foi possível ler esse XML. Verifique se o ficheiro está completo."
+
 msgid "close"
 msgstr "Fechar"
 
@@ -228,16 +264,13 @@ msgid "dragDropFile"
 msgstr "Arrastar e largar um ficheiro aqui"
 
 msgid "acceptedFileTypes"
-msgstr "Aceita .csv, .tsv, .json ou .xml"
+msgstr "Aceita {types}"
 
 msgid "fileLoaded"
 msgstr "Carregado de {name}"
 
 msgid "pasteRawData"
 msgstr "Colar dados em bruto"
-
-msgid "replaceWorkspaceTitle"
-msgstr "Substituir a área de trabalho atual?"
 
 msgid "replaceWorkspace"
 msgstr "Substituir área de trabalho"
@@ -351,7 +384,7 @@ msgid "structuredFileUpload"
 msgstr "Carregar um ficheiro estruturado"
 
 msgid "doiPlaceholder"
-msgstr "10.1038/s41586-020-2649-2"
+msgstr "p. ex., 10.1234/abcde"
 
 msgid "doiLookUp"
 msgstr "Procurar"
@@ -912,7 +945,7 @@ msgid "formatJsonExport"
 msgstr "Exportação JSON"
 
 msgid "replaceWorkspaceBody"
-msgstr "Esta importação contém {incoming, plural, one {# pessoa contribuidora} other {# pessoas contribuidoras}}. Irá substituir {existing, plural, one {a # pessoa contribuidora atual} other {as # pessoas contribuidoras atuais}}. Esta ação não pode ser anulada."
+msgstr "Esta importação contém {incoming, plural, one {# pessoa contribuidora} other {# pessoas contribuidoras}}. Irá substituir {existing, plural, one {a # pessoa contribuidora atual} other {as # pessoas contribuidoras atuais}}."
 
 msgid "statementEmptyHint"
 msgstr "Ainda não foram atribuídas contribuições. Selecione células da grelha para atribuir papéis."
@@ -979,6 +1012,9 @@ msgstr "Cinzento-escuro"
 
 msgid "languageSettings"
 msgstr "Definições de idioma"
+
+msgid "stripEveryoneAgreed"
+msgstr "Todos de acordo"
 
 msgid "stripOpenTeam"
 msgstr "Contactar coautores"

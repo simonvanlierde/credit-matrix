@@ -359,7 +359,8 @@ test("the Team tab copies one email-ready ask per person, in sequence", async ({
   const adder = page.getByLabel("New author names or ORCID iD");
   await adder.fill("Jane Smith, Bob White");
   await adder.press("Enter");
-  await expect(page.getByText("0 of 2 answered")).toBeVisible();
+  // Nobody is asked yet, so the strip has nothing to count, only the way to ask.
+  await expect(page.getByText(/answered$/)).toHaveCount(0);
 
   // The status strip leads to the Team tab.
   await page.getByRole("button", { name: "Ask co-authors" }).click();
