@@ -48,7 +48,7 @@ describe("workspace view state", () => {
 
   it("counts answers and open differences for the hook", () => {
     const { result: summary } = renderHook(() => useAskSummary());
-    expect(summary.current).toEqual({ total: 0, answered: 0, open: 0 });
+    expect(summary.current).toEqual({ total: 0, asked: 0, answered: 0, open: 0 });
 
     act(() => store().loadAuthors([createAuthor("Jane Smith"), createAuthor("Bob White")]));
     expect(summary.current.total).toBe(2);

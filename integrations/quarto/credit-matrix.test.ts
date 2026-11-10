@@ -1,10 +1,14 @@
 // biome-ignore-all lint/correctness/noNodejsModules: runs Quarto from Node when it is installed.
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import { CREDIT_ROLES, createAuthor, generateStatement, toQuarto } from "@/core";
+import * as i18n from "@/core/i18n";
+import { renderQuartoTranslations } from "../../scripts/build-quarto-translations.mjs";
 
 // What the filter renders for example.qmd, without the Markdown bold around each name.
 const EXPECTED =
@@ -35,10 +39,62 @@ it("keeps the Lua role list in step with the core role names", () => {
   expect(terms).toEqual(CREDIT_ROLES.map((r: { name: string }) => r.name.toLowerCase()));
 });
 
+it("keeps every Lua translation in step with the core and app catalogs", async () => {
+  const lua = readFileSync(new URL("_extensions/credit-matrix/credit-matrix.lua", import.meta.url), "utf8");
+  expect(lua.match(/-- BEGIN GENERATED TRANSLATIONS[\s\S]*?-- END GENERATED TRANSLATIONS/)?.[0]).toBe(
+    await renderQuartoTranslations(i18n, CREDIT_ROLES),
+  );
+});
+
 // Locally the rendered test is skipped without Quarto; in CI a missing Quarto fails it.
 const hasQuarto = spawnSync("quarto", ["--version"]).status === 0;
 
 describe.skipIf(!hasQuarto && !process.env.CI)("Quarto filter, rendered", () => {
+  it.each([
+    ["fr-CA", "fr", "Déclaration CRediT"],
+    ["ja-JP", "ja", "CRediT 声明"],
+  ])("uses document language %s for roles, levels and heading", async (lang, locale, heading) => {
+    expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
+    const dir = mkdtempSync(join(tmpdir(), "credit-quarto-language-"));
+    const filter = fileURLToPath(new URL("_extensions/credit-matrix/credit-matrix.lua", import.meta.url));
+    writeFileSync(
+      join(dir, "paper.qmd"),
+      `---\nlang: ${lang}\nauthor:\n  - name: Lin Wei\n    roles: [software: supporting, validation: equal]\nfilters: [${JSON.stringify(filter)}]\n---\n\n# Methods\n`,
+    );
+    const result = spawnSync("quarto", ["render", "paper.qmd", "--to", "gfm", "-o", "-"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    expect(result.status, result.stderr).toBe(0);
+    const expected = generateStatement([author("Lin Wei", { Software: 33, Validation: 66 })], {
+      format: "by-author",
+      showLevels: true,
+      locale,
+      translateRole: i18n.makeRoleTranslator(await i18n.loadRoleCatalog(locale)),
+      translateUi: i18n.makeUiTranslator(await i18n.loadUiCatalog(locale)),
+    }).replace(/^CRediT: /, "");
+    expect(result.stdout).toContain(heading);
+    expect(result.stdout.replaceAll("**", "")).toContain(`${expected}.`);
+  });
+
+  it("renders exported YAML with the app's contribution levels", () => {
+    expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
+    const authors = [author("Lin Wei", { Software: 33, "Formal analysis": 66 })];
+    const dir = mkdtempSync(join(tmpdir(), "credit-quarto-export-"));
+    const filter = fileURLToPath(new URL("_extensions/credit-matrix/credit-matrix.lua", import.meta.url));
+    writeFileSync(
+      join(dir, "paper.qmd"),
+      `---\n${toQuarto(authors)}filters: [${JSON.stringify(filter)}]\n---\n\n# Methods\n`,
+    );
+    const result = spawnSync("quarto", ["render", "paper.qmd", "--to", "gfm", "-o", "-"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    expect(result.status, result.stderr).toBe(0);
+    const expected = generateStatement(authors, { format: "by-author", showLevels: true }).replace(/^CRediT: /, "");
+    expect(result.stdout.replaceAll("**", "").replace(/\s+/g, " ")).toContain(`${expected}.`);
+  });
+
   it("renders the statement into example.qmd", () => {
     expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
     const dir = fileURLToPath(new URL(".", import.meta.url));

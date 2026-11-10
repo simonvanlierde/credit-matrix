@@ -16,6 +16,8 @@ export function heatmapRecipe(settings: HeatmapFigureSettings, target: HeatmapRe
     "font-size": s.fontSize,
     initials: s.acronyms,
     legend: s.legend,
+    "legend-position": s.legendPosition,
+    marks: s.marks,
     labels: s.labels,
     levels: s.levels,
     horizontal: s.horizontal,

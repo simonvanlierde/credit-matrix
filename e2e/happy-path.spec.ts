@@ -94,7 +94,7 @@ test.describe("Happy path UI flows", () => {
     await page.getByRole("button", { name: "Import" }).click();
     await page.locator("#import-text").fill("Marie Curie");
     await page.getByRole("button", { name: "Import data" }).click();
-    await expect(page.getByText("Replace the current workspace?", { exact: true })).toBeVisible();
+    await expect(page.getByText("Add to this draft or replace it?", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Replace workspace" }).click();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(1);
     await expect(page.getByLabel("Name or ORCID iD", { exact: true })).toHaveValue("Marie Curie");
@@ -300,9 +300,7 @@ test.describe("Happy path UI flows", () => {
 
     // The parser's own English text is no longer surfaced: the dialog reports a
     // localized failure instead, so this asserts the message people actually see.
-    await expect(
-      page.locator("dialog").getByText("Could not import those contributors.", { exact: false }),
-    ).toBeVisible();
+    await expect(page.locator("dialog").getByText("That XML could not be read.", { exact: false })).toBeVisible();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
     await expect(page.locator("#import-text")).toBeVisible();
   });
@@ -319,9 +317,7 @@ test.describe("Happy path UI flows", () => {
     });
     await page.getByRole("button", { name: "Import data" }).click();
 
-    await expect(
-      page.locator("dialog").getByText("Could not import those contributors.", { exact: false }),
-    ).toBeVisible();
+    await expect(page.locator("dialog").getByText("That XML could not be read.", { exact: false })).toBeVisible();
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
   });
 
@@ -941,6 +937,43 @@ test.describe("Happy path UI flows", () => {
     await page.getByRole("option", { name: "Rosalind E. Franklin" }).click();
     await expect(page.getByRole("button", { name: "Conceptualization for Rosalind E. Franklin: None" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Conceptualization for Ada Lovelace/ })).toBeHidden();
+  });
+
+  test("gives the phone contributor picker a touch-size target and a body-size name", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load sample data" }).click();
+    const picker = page.getByRole("combobox", { name: "Contributor to assign" });
+    expect((await picker.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    expect(await picker.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+    // The initials chip ties the picker to the grid's column headers.
+    await expect(picker.getByText("AL", { exact: true })).toBeVisible();
+    await picker.click();
+    const option = page.getByRole("option", { name: /Rosalind E\. Franklin/ });
+    // Polled: the list scales in, so its first frames measure short.
+    await expect.poll(async () => (await option.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  });
+
+  test("keeps a long phone contributor list on screen, down to its last name", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 600 });
+    await page.goto("/");
+    const names =
+      "Ada Abel, Ben Bell, Cy Cole, Di Dunn, Ed Earl, Flo Ford, Gus Gray, Hal Hunt, Ivy Iles, Jo Judd, Kit Kane, Lu Lord, Mo Moss, Ned Nash, Oz Orr, Pia Pike";
+    const adder = page.getByLabel("New author names or ORCID iD");
+    await adder.fill(names);
+    await adder.press("Enter");
+    const picker = page.getByRole("combobox", { name: "Contributor to assign" });
+    await picker.click();
+    const list = page.getByRole("listbox");
+    // Polled: the list scales in, so its first frames measure short.
+    await expect.poll(async () => (await list.boundingBox())?.height).toBeGreaterThan(100);
+    const box = await list.boundingBox();
+    expect(box?.y).toBeGreaterThanOrEqual(0);
+    expect((box?.y ?? 0) + (box?.height ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(600);
+    const last = page.getByRole("option", { name: "Pia Pike" });
+    await last.scrollIntoViewIfNeeded();
+    await last.click();
+    await expect(page.getByRole("button", { name: "Conceptualization for Pia Pike: None" })).toBeVisible();
   });
 
   test("keeps the phone contributor picker in view while the role list scrolls", async ({ page }) => {

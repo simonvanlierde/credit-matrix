@@ -7,6 +7,7 @@ import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { run, USAGE } from "../cli";
+import { buildHeatmapSvg } from "../export/heatmap-svg";
 import { NewerVersionError, toJson } from "../export/json";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash } from "../share-link";
@@ -21,7 +22,25 @@ function file(name: string, text: string): string {
 
 const csv = file("team.csv", "Name,Conceptualization,Software\nJane Smith,100,66\nBob White,,100\n");
 
+it("exports manuscript YAML with levels only where the schema supports them", async () => {
+  const quarto = await run(["convert", csv, "--to", "quarto"]);
+  expect(quarto).toContain("author:\n");
+  expect(quarto).toContain('"Software": equal');
+  expect(await run(["convert", csv, "--to", "quarto", "--yes-no"])).not.toContain(": equal");
+  const myst = await run(["convert", csv, "--to", "myst"]);
+  expect(myst).toContain("authors:\n");
+  expect(myst).toContain("MyST omits contribution levels");
+  expect(myst).not.toContain(": equal");
+});
+
 describe("credit-matrix statement", () => {
+  it("prints an RO-Crate attribution fragment and its limits", async () => {
+    const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    const metadata = JSON.parse(await run(["convert", csv, "--to", "ro-crate"]));
+    expect(metadata["@context"]).toBe("https://w3id.org/ro/crate/1.2/context");
+    expect(metadata["@graph"][0]["@id"]).toBe("./");
+    expect(stderr.mock.calls.flat().join(" ")).toContain("not a standalone RO-Crate");
+  });
   it("prints the by-role statement by default", async () => {
     expect(await run(["statement", csv])).toBe(
       "CRediT: Conceptualization: Jane Smith; Software: Jane Smith, Bob White",
@@ -187,7 +206,7 @@ describe("credit-matrix convert", () => {
 
   it("needs --to", async () => {
     await expect(run(["convert", csv])).rejects.toThrow(
-      /--to json, csv, jats, crossref, md, latex-credits, tenzing or svg/,
+      /--to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate/,
     );
   });
 });
@@ -334,7 +353,7 @@ describe("credit-matrix as a program", () => {
     const { out, err } = await launch("convert", csv);
     expect(out).toBe("");
     expect(err).toBe(
-      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing or svg.\nRun 'credit-matrix --help' for usage.\n",
+      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate.\nRun 'credit-matrix --help' for usage.\n",
     );
     expect(process.exitCode).toBe(2);
   });
@@ -425,4 +444,36 @@ it("selects full names or initials without shortening the text alternative", asy
   expect(compact).toContain(">JS</text>");
   expect(compact).toContain("Jane Smith: Conceptualization");
   await expect(run(["convert", csv, "--to", "svg", "--initials", "maybe"])).rejects.toThrow("true or false");
+});
+
+it("forwards legend placement and optional marks while keeping publication defaults", async () => {
+  const authors = [createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 33 }] })];
+  const source = file("legend-options.json", toJson(authors));
+  for (const legendPosition of ["auto", "right", "bottom"] as const) {
+    for (const marks of [true, false]) {
+      const svg = await run([
+        "convert",
+        source,
+        "--to",
+        "svg",
+        "--legend-position",
+        legendPosition,
+        "--marks",
+        String(marks),
+      ]);
+      expect(svg).toBe(buildHeatmapSvg(authors, { locale: "en", legendPosition, marks }));
+      expect(svg.includes('aria-hidden="true"')).toBe(marks);
+    }
+  }
+  const defaults = await run(["convert", source, "--to", "svg"]);
+  expect(defaults).toBe(buildHeatmapSvg(authors, { locale: "en", legendPosition: "auto", marks: false }));
+  expect(defaults).not.toContain('aria-hidden="true"');
+  const hidden = await run(["convert", source, "--to", "svg", "--legend", "false", "--legend-position", "right"]);
+  expect(hidden).not.toContain(">Supporting</text>");
+  await expect(run(["convert", source, "--to", "svg", "--marks", "maybe"])).rejects.toThrow(
+    "--marks must be true or false",
+  );
+  await expect(run(["convert", source, "--to", "svg", "--legend-position", "left"])).rejects.toThrow(
+    "--legend-position must be auto, right or bottom",
+  );
 });

@@ -102,9 +102,11 @@ light scale on a white background, because a figure goes onto a manuscript page.
 to square corners and a thin neutral rule; the live editing controls retain their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
 
-The editor and SVG/PNG figures use one, two and three dots for Supporting, Equal and Lead, and a
-check in yes/no mode. Repeat those marks in the legend, so the level never depends on colour alone.
-Keep the grid's key directly after the table. The heatmap export popover previews the actual figure
+The editor uses one, two and three dots for Supporting, Equal and Lead, and a check in yes/no mode.
+Publication figures omit these marks by default to keep the matrix quiet. Optional marks repeat
+in the cells and legend as an additional way to distinguish levels. Keep the editor's key directly
+after the table. Figure legends use a vertical key beside tall narrow grids when it fits without
+excessive width, otherwise a wrapped key below. Allow Right, Below and Hidden overrides. The heatmap export popover previews the actual figure
 on white paper, with fit-to-width and actual-size views and the PNG pixel dimensions.
 
 Figure settings belong beside that preview and are saved per draft, independently of the editor's
@@ -257,7 +259,15 @@ dash for not asked, a clock for asked, a count of open differences that opens Re
 check for settled, or "You" for your own column. The role name itself opens the role's description,
 so there are no separate info buttons. Role names are not in the tab order. Instead you reach them
 with the grid's arrow keys, so the whole matrix is one tab stop. The key hint under the legend is
-always visible.
+always visible where there is a mouse or trackpad, and hidden under `pointer: coarse`, where there
+are no keys to press; it stays the grid's accessible description either way.
+
+Pointing at a cell with a mouse, or focusing it, marks its phrase in the statement: the phrase is
+underlined as well as tinted, on the same element it always renders, so a selection being dragged
+holds. Pointing at a phrase rings its cell in primary. Nothing moves and nothing is announced. The
+status strip counts answers only once someone has been asked; when every co-author but you has been
+asked and has answered, and nothing is left to review, the count becomes the double check and
+"Everyone agreed".
 
 ## Do and don't
 

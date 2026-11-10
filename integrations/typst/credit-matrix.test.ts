@@ -65,6 +65,62 @@ function autoStatement(file: string): string {
 const hasTypst = spawnSync("typst", ["--version"]).status === 0;
 
 describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
+  it.each([true, false])("keeps publication figures free of cell marks with levels=%s unless requested", (levels) => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    writeFileSync(
+      new URL("out/without-marks.typ", import.meta.url),
+      `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#credit-heatmap(((name: "Tu Youyou", roles: (software: "supporting")),), levels: ${levels})`,
+    );
+    const result = typst("compile", "--root", ".", "out/without-marks.typ", "out/without-marks.svg");
+    expect(result.status, result.stderr).toBe(0);
+    const svg = readFileSync(new URL("out/without-marks.svg", import.meta.url), "utf8");
+    expect(svg).not.toMatch(/<path fill="#[a-f0-9]+"[^>]+d="M 0 0m /);
+    expect(svg).not.toMatch(/<use[^>]+fill="#ffffff"/);
+  });
+
+  it.each([
+    ["marks: 1", "marks must be true or false"],
+    ['legend-position: "sideways"', "legend-position must be auto, right or bottom"],
+  ])("rejects invalid figure controls: %s", (option, message) => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    writeFileSync(
+      new URL("out/invalid-control.typ", import.meta.url),
+      `#import "../lib.typ": *\n#credit-heatmap((), ${option})`,
+    );
+    const result = typst("compile", "--root", ".", "out/invalid-control.typ", "out/invalid-control.svg");
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(message);
+  });
+
+  it("places a compact key beside tall matrices and below wide matrices", () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    const dimensions = (count: number, position: string, legend = true) => {
+      const people = Array.from(
+        { length: count },
+        (_, i) => `(name: "Marie Skłodowska-Curie ${i}", roles: (software: true))`,
+      ).join(",");
+      writeFileSync(
+        new URL("out/legend-position.typ", import.meta.url),
+        `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#credit-heatmap((${people},), skipempty: false, legend-position: "${position}", legend: ${legend})`,
+      );
+      const run = typst("compile", "--root", ".", "out/legend-position.typ", "out/legend-position.svg");
+      expect(run.status, run.stderr).toBe(0);
+      return (
+        /viewBox="0 0 ([\d.]+) ([\d.]+)"/
+          .exec(readFileSync(new URL("out/legend-position.svg", import.meta.url), "utf8"))
+          ?.slice(1)
+          .map(Number) ?? []
+      );
+    };
+    const below = dimensions(2, "bottom");
+    const right = dimensions(2, "right");
+    expect(right[0]).toBeGreaterThan(below[0] ?? 0);
+    expect(right[1]).toBeLessThan(below[1] ?? 0);
+    expect(dimensions(2, "auto")).toEqual(right);
+    expect(dimensions(16, "auto")).toEqual(dimensions(16, "bottom"));
+    expect(dimensions(2, "right", false)).toEqual(dimensions(2, "bottom", false));
+  });
+
   it("compiles the app's copied heatmap recipe", () => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
     const recipe = heatmapRecipe({ ...DEFAULT_HEATMAP_SETTINGS, font: "serif", horizontal: true }, "typst", "fr");
@@ -122,7 +178,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
     writeFileSync(
       new URL("out/typography.typ", import.meta.url),
-      '#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Tu Youyou", roles: (software: "supporting", methodology: "equal", conceptualization: "lead")),)\n#credit-heatmap(team, font: "serif", font-size: 12pt)\n#credit-heatmap(team, levels: false, color: rgb("#f0e442"))\n#credit-heatmap(team, levels: false)',
+      '#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Tu Youyou", roles: (software: "supporting", methodology: "equal", conceptualization: "lead")),)\n#credit-heatmap(team, font: "serif", font-size: 12pt, marks: true)\n#credit-heatmap(team, levels: false, color: rgb("#f0e442"), marks: true)\n#credit-heatmap(team, levels: false, marks: true)',
     );
     const run = typst("compile", "--root", ".", "out/typography.typ", "out/typography.svg");
     expect(run.status, run.stderr).toBe(0);

@@ -118,6 +118,14 @@ publish it for the Zenodo archive. Enable immutable releases in the repository's
 Zenodo copies `.zenodo.json`, or `CITATION.cff` when that file is absent, when the GitHub release
 is published. Later metadata edits do not update that archived version.
 
+The Typst package goes to [Typst Universe](https://typst.app/universe/package/credit-matrix)
+through a PR to [typst/packages](https://github.com/typst/packages), only for a plain
+`major.minor.patch` version (the release script leaves `typst.toml` alone for a pre-release).
+Copy `integrations/typst` to `packages/preview/credit-matrix/<version>/` there, without
+`credit-matrix.test.ts` and `out/`, and make two changes in the copy: the examples import
+`@preview/credit-matrix:<version>` instead of `../lib.typ`, and the README's CREDITS.md link
+points at the `v<version>` tag instead of `main`.
+
 ## Testing
 
 - **Unit (Vitest)**: two projects. `core` runs `src/core` under Node and checks the built package:
@@ -151,8 +159,9 @@ is published. Later metadata edits do not update that archived version.
   `pnpm verify` includes these builds and checks the Python extension and tests with Ruff and ty.
 - **Quarto**: the rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto`
   on your `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
-- **Typst**: `integrations/typst/translations.json` is generated from the app's catalogs. After
-  changing them, run `pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs`.
+- **Typst and Quarto**: generated translations come from the app's catalogs. After changing them, run
+  `pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs && node scripts/build-quarto-translations.mjs`.
+  The Quarto test checks every generated role name, label and heading against its source catalog.
   The Typst test (`integrations/typst/credit-matrix.test.ts`) fails when the file is stale. With
   `typst` on your `PATH` it also compiles the examples and checks the statement text against the
   app's; it is skipped without Typst, and CI installs it.

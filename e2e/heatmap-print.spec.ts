@@ -10,8 +10,8 @@ import { createAuthor } from "../src/core/parse-authors";
 import { heatmapPrintSize } from "../src/lib/heatmap-print";
 
 const scenarios = [
-  { name: "single-column", widthMm: 89, count: 3, horizontal: false },
-  { name: "double-column-long-names", widthMm: 183, count: 12, horizontal: true },
+  { name: "single-column", widthMm: 89, count: 3, horizontal: false, marks: false },
+  { name: "double-column-long-names", widthMm: 183, count: 12, horizontal: true, marks: true },
 ];
 
 for (const { code } of AVAILABLE_LOCALES) {
@@ -29,6 +29,7 @@ for (const { code } of AVAILABLE_LOCALES) {
           font,
           acronyms: false,
           horizontal: scenario.horizontal,
+          marks: scenario.marks,
           locale: code,
           translateRole: makeRoleTranslator(await loadRoleCatalog(code)),
           translateUi: makeUiTranslator(await loadUiCatalog(code)),
@@ -160,7 +161,8 @@ for (const { code } of AVAILABLE_LOCALES) {
         expect(measured.renderedWidthPx).toBeCloseTo((widthMm / 25.4) * 96, 1);
         expect(measured.minRenderedFontPt).toBeCloseTo(metrics.minFontPt, 2);
         for (const color of measured.textColors) expect(contrastRatio(color, "#ffffff")).toBeGreaterThanOrEqual(4.5);
-        expect(measured.marks.length).toBeGreaterThan(0);
+        if (scenario.marks) expect(measured.marks.length).toBeGreaterThan(0);
+        else expect(measured.marks).toEqual([]);
         for (const mark of measured.marks) expect(contrastRatio(mark.ink, mark.fill)).toBeGreaterThanOrEqual(3);
       });
     }

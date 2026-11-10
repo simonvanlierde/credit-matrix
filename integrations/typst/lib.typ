@@ -209,6 +209,8 @@
   font: "sans",
   font-size: 7.5pt,
   legend: true,
+  legend-position: "auto",
+  marks: false,
   labels: "full",
   horizontal: false,
   initials: false,
@@ -221,6 +223,8 @@
   assert(palette in palettes, message: "credit-matrix: unknown palette")
   assert(shape in ("square", "rounded", "circle"), message: "credit-matrix: unknown shape")
   assert(labels in ("full", "short"), message: "credit-matrix: labels must be full or short")
+  assert(type(marks) == bool, message: "credit-matrix: marks must be true or false")
+  assert(legend-position in ("auto", "right", "bottom"), message: "credit-matrix: legend-position must be auto, right or bottom")
   assert(font in ("sans", "serif"), message: "credit-matrix: font must be sans or serif")
   assert(font-size >= 4.5pt and font-size <= 24pt, message: "credit-matrix: font-size must be between 4.5pt and 24pt")
   set text(font: if font == "serif" { ("Libertinus Serif", "Times New Roman") } else { ("IBM Plex Sans", "DejaVu Sans", "Arial", "DejaVu Sans Mono") })
@@ -257,7 +261,7 @@
     let ink = if (l + 0.05) / (luminance(_ink) + 0.05) >= 1.05 / (l + 0.05) { _ink } else { rgb("#ffffff") }
     box(width: side, height: side)[
       #place(top + left, rect(width: side, height: side, radius: radius(side), fill: background, stroke: 0.35pt + rgb("#c9c9c5")))
-      #if level != "none" {
+      #if marks and level != "none" {
         if levels {
           let dots = (supporting: 1, equal: 2, lead: 3).at(level)
           for i in range(dots) {
@@ -313,7 +317,20 @@
       let key = keys.map(k => box[#box(baseline: 25%, swatch(if k == "contributed" { "lead" } else { k }, side: 10pt)) #text(
         size: font-size, fill: _ink-dim, loc.ui.at(k),
       )])
-      stack(spacing: 10pt, grid-figure, align(center, key.join(h(10pt))))
+      let right-key = stack(spacing: 6pt, ..key)
+      let bottom = stack(spacing: 10pt, grid-figure, align(center, key.join(h(10pt))))
+      let right = stack(dir: ltr, spacing: 12pt, grid-figure, pad(top: climb + 6pt, right-key))
+      let bottom-bounds = measure(bottom)
+      let right-bounds = measure(right)
+      let grid-width = cols * (cell + column-gap) - column-gap
+      let grid-height = measure(grid-figure).height - climb - 6pt
+      let use-right = legend-position == "right" or (
+        legend-position == "auto" and grid-height >= grid-width * 1.5
+          and right-bounds.width <= bottom-bounds.width * 1.35
+          and right-bounds.width <= font-size * 48
+          and right-bounds.height <= bottom-bounds.height
+      )
+      if use-right { right } else { bottom }
     } else { grid-figure }
   }
   figure(

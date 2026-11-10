@@ -5,6 +5,8 @@ export interface HeatmapFigureSettings {
   labels: "full" | "short";
   skipempty: boolean;
   legend: boolean;
+  legendPosition: "auto" | "right" | "bottom";
+  marks: boolean;
   shape: "square" | "rounded" | "circle";
   size: number;
   fontSize: number;
@@ -21,6 +23,8 @@ export const DEFAULT_HEATMAP_SETTINGS: HeatmapFigureSettings = {
   labels: "full",
   skipempty: true,
   legend: true,
+  legendPosition: "auto",
+  marks: false,
   shape: "square",
   size: 22,
   fontSize: 10.5,
@@ -41,7 +45,7 @@ export function repairHeatmapSettings(input: unknown): HeatmapFigureSettings | n
       ? candidate
       : defaults[key];
   };
-  const boolean = (key: "horizontal" | "acronyms" | "skipempty" | "legend" | "levels"): boolean =>
+  const boolean = (key: "horizontal" | "acronyms" | "skipempty" | "legend" | "levels" | "marks"): boolean =>
     typeof value[key] === "boolean" ? value[key] : defaults[key];
   return {
     color:
@@ -53,6 +57,11 @@ export function repairHeatmapSettings(input: unknown): HeatmapFigureSettings | n
     labels: value.labels === "short" ? "short" : defaults.labels,
     skipempty: boolean("skipempty"),
     legend: boolean("legend"),
+    legendPosition:
+      value.legendPosition === "right" || value.legendPosition === "bottom"
+        ? value.legendPosition
+        : defaults.legendPosition,
+    marks: boolean("marks"),
     shape: value.shape === "rounded" || value.shape === "circle" ? value.shape : defaults.shape,
     size: number("size", 8, 48),
     fontSize: number("fontSize", 6, 32),

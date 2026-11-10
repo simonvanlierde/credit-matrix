@@ -20,10 +20,12 @@ import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
 import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
+import { toMyst, toQuarto } from "./export/frontmatter";
 import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
 import { RepeatedIdError, toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
 import { toMarkdown } from "./export/markdown";
+import { toRoCrateFragment } from "./export/ro-crate";
 import { toTenzing } from "./export/tenzing";
 import { toJats4rXml } from "./export/xml";
 import type { XmlParser } from "./export/xml-import";
@@ -45,7 +47,7 @@ Commands:
       each contribution below Lead. Locales: ${AVAILABLE_LOCALES.map((l) => l.code).join(", ")}.
       --format codemeta prints linked CodeMeta 3.0 people and roles, with
       non-authors in contributor. Warns about local identities and omitted scores.
-  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg [--yes-no] [--locale <code>]
+  convert <file> --to json|csv|jats|crossref|md|latex-credits|tenzing|svg|quarto|myst|ro-crate [--yes-no] [--locale <code>]
       Print the contributions in another format. --yes-no marks the roles
       as yes/no ticks: JATS then leaves out the lead/equal/supporting level,
       and latex-credits writes 1 or 0.
@@ -55,12 +57,18 @@ Commands:
       latex-credits prints \\credit lines for the latex-credits LaTeX package,
       with the levels as shades. It lists authors only.
       tenzing prints the contributions as a Tenzing-style CSV table.
+      quarto and myst print author YAML with names, ORCID iDs and CRediT roles.
+      quarto keeps levels unless --yes-no; myst omits them. Both list authors only.
       svg prints the contribution heatmap as an SVG image; --yes-no draws
       flat cells with no levels. SVG figure options:
       --color '#1f4e79' --palette blue|green|gray --shape square|rounded|circle
       --size 22 --legend true|false --labels full|short --horizontal
+      --legend-position auto|right|bottom --marks true|false
       --skipempty true|false --initials true|false --font sans|serif --font-size 6..32.
       Color overrides palette; size and font-size are in pixels.
+      Legend position defaults to auto; marks default to false.
+      ro-crate prints an RO-Crate 1.2 attribution fragment. Merge its people,
+      roles and root links into existing package metadata; it is not a complete crate.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
       Print a link that asks one contributor to check their roles,
       or with --blank, to fill them in from scratch.
@@ -200,6 +208,8 @@ export async function run(argv: string[]): Promise<string> {
       "font-size": { type: "string" },
       font: { type: "string" },
       legend: { type: "string", default: "true" },
+      "legend-position": { type: "string", default: "auto" },
+      marks: { type: "string", default: "false" },
       initials: { type: "string", default: "true" },
       labels: { type: "string" },
       horizontal: { type: "boolean", default: false },
@@ -279,10 +289,21 @@ export async function run(argv: string[]): Promise<string> {
         }
         case "tenzing":
           return toTenzing(authors);
+        case "ro-crate": {
+          const { metadata, warnings } = toRoCrateFragment(authors);
+          for (const warning of warnings) process.stderr.write(`credit-matrix: ${warning}\n`);
+          return JSON.stringify(metadata, null, 2);
+        }
+        case "quarto":
+          return toQuarto(authors, { yesNo: values["yes-no"] });
+        case "myst":
+          return toMyst(authors);
         case "svg": {
-          for (const key of ["legend", "skipempty", "initials"] as const) {
+          for (const key of ["legend", "skipempty", "initials", "marks"] as const) {
             if (!["true", "false"].includes(values[key])) throw new UsageError(`--${key} must be true or false.`);
           }
+          if (!["auto", "right", "bottom"].includes(values["legend-position"]))
+            throw new UsageError("--legend-position must be auto, right or bottom.");
           const locale = requireLocale(values.locale);
           return buildHeatmapSvg(authors, {
             locale,
@@ -295,6 +316,8 @@ export async function run(argv: string[]): Promise<string> {
             fontSize: values["font-size"] === undefined ? undefined : Number(values["font-size"]),
             font: values.font as HeatmapSvgOptions["font"],
             legend: values.legend === "true",
+            legendPosition: values["legend-position"] as HeatmapSvgOptions["legendPosition"],
+            marks: values.marks === "true",
             labels: values.labels as HeatmapSvgOptions["labels"],
             horizontal: values.horizontal,
             skipempty: values.skipempty === "true",
@@ -303,7 +326,9 @@ export async function run(argv: string[]): Promise<string> {
           });
         }
         default:
-          throw new UsageError("convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing or svg.");
+          throw new UsageError(
+            "convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate.",
+          );
       }
     case "ask": {
       const wanted = values.contributor?.trim();

@@ -19,7 +19,7 @@ test("previews the exact SVG and reports the downloaded PNG dimensions", async (
   await expect(image).toBeVisible();
   const source = await image.getAttribute("src");
   const svg = decodeURIComponent(source?.split(",").slice(1).join(",") ?? "");
-  expect(svg).toContain("<circle ");
+  expect(svg).not.toContain("<circle ");
   const svgDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download SVG", exact: true }).click();
   const svgPath = await (await svgDownload).path();
@@ -46,7 +46,9 @@ test("saves figure styling independently from the editable contribution grid", a
   const assignments = await cells.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-  await page.getByRole("switch", { name: "Show legend", exact: true }).click();
+  await page.getByRole("combobox", { name: "Legend", exact: true }).click();
+  await page.getByRole("option", { name: "Hidden", exact: true }).click();
+  await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
   await page.getByRole("button", { name: "Grayscale", exact: true }).click();
   await page.getByText("Advanced", { exact: true }).click();
   await page.getByRole("combobox", { name: "Font", exact: true }).click();
@@ -66,10 +68,35 @@ test("saves figure styling independently from the editable contribution grid", a
   expect(svg).toContain('rx="11"');
   expect(svg).not.toContain(">Lead<");
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-  await expect(page.getByRole("switch", { name: "Show legend", exact: true })).not.toBeChecked();
+  await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toHaveText("Hidden");
+  await expect(page.getByRole("switch", { name: "Show contribution marks", exact: true })).toBeChecked();
   await page.getByRole("button", { name: "Reset defaults", exact: true }).click();
-  await expect(page.getByRole("switch", { name: "Show legend", exact: true })).toBeChecked();
+  await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toHaveText("Automatic");
+  await expect(page.getByRole("switch", { name: "Show contribution marks", exact: true })).not.toBeChecked();
   await expect(page.getByRole("spinbutton", { name: "Width (mm)", exact: true })).toHaveValue("85");
+});
+
+test("changes legend placement and opts into marks in the actual export", async ({ page }) => {
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  const image = page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img");
+  const source = async () => decodeURIComponent((await image.getAttribute("src"))?.split(",").slice(1).join(",") ?? "");
+  const figures: string[] = [];
+  for (const name of ["Right", "Below"]) {
+    await page.getByRole("combobox", { name: "Legend", exact: true }).click();
+    await page.getByRole("option", { name, exact: true }).click();
+    figures.push(await source());
+  }
+  expect(figures[0]).not.toBe(figures[1]);
+  expect(figures[1]).not.toContain("<circle ");
+  await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
+  const marked = await source();
+  expect(marked).toContain("<circle ");
+  const downloaded = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download SVG", exact: true }).click();
+  const path = await (await downloaded).path();
+  if (!path) throw new Error("Expected SVG download");
+  expect(await readFile(path, "utf8")).toBe(marked);
 });
 
 test("writes requested PNG width and print resolution into the downloaded file", async ({ page }) => {
@@ -234,31 +261,34 @@ test("keeps large rotated labels separated and inside the exported canvas", asyn
   }
 });
 
-for (const theme of ["light", "dark"] as const) {
-  test(`the ${theme} phone preview fits the viewport and has no detectable accessibility violations`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 320, height: 700 });
-    await page.emulateMedia({ colorScheme: theme });
-    await expect(page.getByText(/Select to cycle/)).toBeHidden();
-    await page.getByRole("button", { name: "Heatmap", exact: true }).click();
-    const preview = page.getByRole("region", { name: "Contribution heatmap" });
-    await expect(preview.getByRole("img")).toBeVisible();
-    const panel = page.getByRole("dialog", { name: "Heatmap", exact: true });
-    const bounds = await panel.boundingBox();
-    if (!bounds) throw new Error("Expected heatmap panel");
-    expect(bounds.x).toBeGreaterThanOrEqual(0);
-    expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
-    expect(bounds.y + bounds.height).toBeLessThanOrEqual(700);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
-    expect((await scan(page)).violations).toEqual([]);
-    await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-    await expect(page.getByRole("combobox", { name: "Orientation", exact: true })).toBeInViewport();
-    expect((await scan(page)).violations).toEqual([]);
-    await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-    await expect(preview.getByRole("img")).toBeVisible();
-  });
-}
+test.describe("touch-screen previews", () => {
+  test.use({ hasTouch: true });
+  for (const theme of ["light", "dark"] as const) {
+    test(`the ${theme} phone preview fits the viewport and has no detectable accessibility violations`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 320, height: 700 });
+      await page.emulateMedia({ colorScheme: theme });
+      await expect(page.getByText(/Select to cycle/)).toBeHidden();
+      await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+      const preview = page.getByRole("region", { name: "Contribution heatmap" });
+      await expect(preview.getByRole("img")).toBeVisible();
+      const panel = page.getByRole("dialog", { name: "Heatmap", exact: true });
+      const bounds = await panel.boundingBox();
+      if (!bounds) throw new Error("Expected heatmap panel");
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(700);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+      expect((await scan(page)).violations).toEqual([]);
+      await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+      await expect(page.getByRole("combobox", { name: "Orientation", exact: true })).toBeInViewport();
+      expect((await scan(page)).violations).toEqual([]);
+      await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+      await expect(preview.getByRole("img")).toBeVisible();
+    });
+  }
+});
 
 test("keeps a damaged display preference from crashing the export panel", async ({ page }) => {
   await seedStorage(

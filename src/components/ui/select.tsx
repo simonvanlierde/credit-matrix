@@ -5,18 +5,24 @@ import { cn } from "@/lib/utils";
 export const Select = SelectPrimitive.Root;
 export const SelectValue = SelectPrimitive.Value;
 
+/** `touch` is a 44px target with body-size text, for a select that leads a phone layout. */
+type SelectSize = "default" | "touch";
+
 export function SelectTrigger({
   className,
   children,
+  size = "default",
   ref,
   ...props
-}: React.ComponentPropsWithRef<typeof SelectPrimitive.Trigger>) {
+}: React.ComponentPropsWithRef<typeof SelectPrimitive.Trigger> & { size?: SelectSize }) {
   return (
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
         "flex min-w-0 items-center justify-between gap-1 rounded border border-outline-variant bg-surface-bright [&>span]:truncate",
-        "px-2 py-1 text-xs text-on-surface",
+        size === "touch"
+          ? "min-h-11 rounded-lg border-outline-strong px-3 py-1.5 text-base text-on-surface"
+          : "px-2 py-1 text-xs text-on-surface",
         "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
         "disabled:cursor-not-allowed disabled:opacity-50",
         "data-[placeholder]:text-on-surface-variant",
@@ -25,7 +31,7 @@ export function SelectTrigger({
       {...props}
     >
       {children}
-      <ChevronDown className="h-3 w-3 shrink-0 text-on-surface-variant" />
+      <ChevronDown className={cn("shrink-0 text-on-surface-variant", size === "touch" ? "size-4" : "size-3")} />
     </SelectPrimitive.Trigger>
   );
 }
@@ -48,7 +54,9 @@ export function SelectContent({
         position="popper"
         sideOffset={4}
         className={cn(
-          "z-50 max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded border border-outline-variant bg-surface-bright shadow-md",
+          // Capped to the room beside the trigger: Radix locks page scroll, so a taller list would
+          // leave its far rows out of reach. The viewport scrolls inside it.
+          "z-50 max-h-(--radix-select-content-available-height) max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded border border-outline-variant bg-surface-bright shadow-md",
           "panel-motion [transform-origin:var(--radix-select-content-transform-origin)]",
           className,
         )}
@@ -63,14 +71,16 @@ export function SelectContent({
 export function SelectItem({
   className,
   children,
+  size = "default",
   ref,
   ...props
-}: React.ComponentPropsWithRef<typeof SelectPrimitive.Item>) {
+}: React.ComponentPropsWithRef<typeof SelectPrimitive.Item> & { size?: SelectSize }) {
   return (
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center overflow-hidden rounded py-1.5 pl-8 pr-2 text-xs text-on-surface",
+        "relative flex w-full cursor-pointer select-none items-center overflow-hidden rounded py-1.5 pl-8 pr-2 text-on-surface",
+        size === "touch" ? "min-h-11 text-base" : "text-xs",
         "outline-none focus:bg-surface-container-low",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,

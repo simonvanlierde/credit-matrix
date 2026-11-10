@@ -222,6 +222,135 @@ def parse_gold(gold: str, n_authors: int) -> set[tuple[int, str]]:
     return pairs
 
 
+ROLE_NAMES = {
+    "conceptualization": "conceptualization",
+    "data curation": "data-curation",
+    "formal analysis": "formal-analysis",
+    "funding acquisition": "funding-acquisition",
+    "investigation": "investigation",
+    "methodology": "methodology",
+    "project administration": "project-administration",
+    "resources": "resources",
+    "software": "software",
+    "supervision": "supervision",
+    "validation": "validation",
+    "visualization": "visualization",
+    "writing - original draft": "writing-original-draft",
+    "writing - review & editing": "writing-review-editing",
+}
+"""Role name as a definition-B label writes it -> slug."""
+EVIDENCE = ("named", "worded", "inferred")
+"""How a role or degree is stated: by its CRediT name, in wording the mapping table covers, or vaguely."""
+DEGREES = ("lead", "equal", "supporting")
+ICMJE_ROLES = ("conceptualization", "methodology", "investigation", "formal-analysis", "writing-review-editing")
+"""What the generous view reads an ICMJE pledge as: one role per criterion clause, review rather than drafting."""
+_ASSERTION_KEYS = {"quote", "mentions", "authors", "roles", "pledge", "resolved_by", "others_of"}
+_ROLE_KEYS = {"role", "evidence", "degree", "degree_evidence"}
+
+
+def check_label(label: list[dict], text: str, n_authors: int) -> list[dict]:
+    """A definition-B label (a list of assertions), checked against its statement, with each group
+    word's authors computed from `others_of`. Raises ValueError naming the first fault."""
+    if not isinstance(label, list):
+        raise ValueError("label is not a list")
+    out = [dict(a) for a in label]
+    for i, a in enumerate(out):
+        where = f"assertion {i}"
+        if not isinstance(a, dict) or not a.keys() <= _ASSERTION_KEYS:
+            raise ValueError(f"{where}: unknown keys {sorted(set(a) - _ASSERTION_KEYS) if isinstance(a, dict) else a}")
+        if not isinstance(a.get("quote"), str) or not a["quote"] or a["quote"] not in text:
+            raise ValueError(f"{where}: quote {a.get('quote')!r} is not in the statement")
+        if not isinstance(a.get("mentions"), list) or not all(isinstance(m, str) for m in a["mentions"]):
+            raise ValueError(f"{where}: mentions is not a list of names")
+        authors = a.get("authors")
+        if not isinstance(authors, list) or len(set(authors)) != len(authors):
+            raise ValueError(f"{where}: authors is not a list of distinct numbers")
+        if not all(type(n) is int and 1 <= n <= n_authors for n in authors):
+            raise ValueError(f"{where}: authors {authors} outside 1..{n_authors}")
+        if ("roles" in a) == ("pledge" in a) or ("roles" in a and not a["roles"]):
+            raise ValueError(f"{where}: needs exactly one of roles or a pledge")
+        if "pledge" in a and a["pledge"] != "icmje":
+            raise ValueError(f"{where}: pledge {a['pledge']!r} is not 'icmje'")
+        for r in a.get("roles", []):
+            if not isinstance(r, dict) or not r.keys() <= _ROLE_KEYS:
+                raise ValueError(f"{where}: role entry {r!r} has unknown keys")
+            if r.get("role") not in ROLE_NAMES:
+                raise ValueError(f"{where}: role {r.get('role')!r} is not one of the 14 names")
+            if r.get("evidence") not in EVIDENCE:
+                raise ValueError(f"{where}: evidence {r.get('evidence')!r} is not one of {EVIDENCE}")
+            if ("degree" in r) != ("degree_evidence" in r):
+                raise ValueError(f"{where}: degree and degree_evidence come together")
+            if "degree" in r and (r["degree"] not in DEGREES or r["degree_evidence"] not in EVIDENCE):
+                raise ValueError(f"{where}: degree {r['degree']!r} / {r['degree_evidence']!r} not allowed")
+        if a.get("resolved_by", "order") not in ("order", "near-miss"):
+            raise ValueError(f"{where}: resolved_by {a['resolved_by']!r} is not 'order' or 'near-miss'")
+    for i, a in enumerate(out):
+        if "others_of" not in a:
+            continue
+        refs = a["others_of"]
+        if (
+            not isinstance(refs, list)
+            or not refs
+            or not all(type(j) is int and 0 <= j < len(out) and j != i for j in refs)
+        ):
+            raise ValueError(f"assertion {i}: others_of {refs!r} must point at other assertions")
+        named = {n for j in refs for n in out[j]["authors"]}
+        rest = [n for n in range(1, n_authors + 1) if n not in named]
+        if a["authors"] and sorted(a["authors"]) != rest:
+            raise ValueError(f"assertion {i}: authors {a['authors']} are not the others_of complement {rest}")
+        a["authors"] = rest
+    label_degrees(out)
+    return out
+
+
+def label_pairs(
+    label: list[dict], evidence: Iterable[str] = EVIDENCE, *, pledges: bool = False
+) -> set[tuple[int, str]]:
+    """(author, slug) pairs of a checked label: strict is evidence=("named",), general the default,
+    generous adds pledges read as ICMJE_ROLES. Generous is an upper bound, not a training target: in tagged
+    articles with a pledge, 38% of the pairs it adds match a tag."""
+    keep = set(evidence)
+    pairs = {
+        (n, ROLE_NAMES[r["role"]])
+        for a in label
+        for r in a.get("roles", [])
+        if r["evidence"] in keep
+        for n in a["authors"]
+    }
+    if pledges:
+        pairs |= {(n, slug) for a in label if "pledge" in a for n in a["authors"] for slug in ICMJE_ROLES}
+    return pairs
+
+
+def label_degrees(label: list[dict], evidence: Iterable[str] = EVIDENCE) -> dict[tuple[int, str], str]:
+    """(author, slug) -> degree for the degrees stated with the given evidence. Raises ValueError
+    when one author's role gets two different degrees."""
+    keep, out = set(evidence), {}
+    for a in label:
+        for r in a.get("roles", []):
+            if r.get("degree_evidence") not in keep:
+                continue
+            for n in a["authors"]:
+                key = (n, ROLE_NAMES[r["role"]])
+                if out.setdefault(key, r["degree"]) != r["degree"]:
+                    raise ValueError(f"author {n} {key[1]}: degrees {out[key]} and {r['degree']}")
+    return out
+
+
+def label_format(label: list[dict]) -> str:
+    """credit if at least half the roles are named, narrative if fewer, icmje if only pledges, else none.
+    One CRediT word ("supervision") in a narrative statement does not make it a CRediT statement."""
+    evidence = [r["evidence"] for a in label for r in a.get("roles", [])]
+    if evidence:
+        return "credit" if 2 * evidence.count("named") >= len(evidence) else "narrative"
+    return "icmje" if any("pledge" in a for a in label) else "none"
+
+
+def gold_string(pairs: set[tuple[int, str]]) -> str:
+    """A view's pairs as an old-style `gold` cell, for `score`."""
+    return _pairs(pairs) or "none"
+
+
 def read_rows(path: Path) -> list[dict[str, str]]:
     """The rows of a CSV `export` or `export_set` wrote."""
     with path.open(newline="", encoding="utf-8-sig") as f:

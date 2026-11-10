@@ -70,7 +70,14 @@ describe("contribution store", () => {
       store().setInputMode("levels");
       const authors = store().authors;
       const first = store().activeDraftId;
-      const settings = { ...DEFAULT_HEATMAP_SETTINGS, color: "#abc", legend: false, fontSize: 12 };
+      const settings = {
+        ...DEFAULT_HEATMAP_SETTINGS,
+        color: "#abc",
+        legend: false,
+        legendPosition: "right" as const,
+        marks: true,
+        fontSize: 12,
+      };
       store().setHeatmapSettings(settings);
       expect(store().authors).toEqual(authors);
       expect(store().inputMode).toBe("levels");
@@ -112,6 +119,8 @@ describe("contribution store", () => {
                 labels: "abbreviated",
                 skipempty: false,
                 legend: 0,
+                legendPosition: "top",
+                marks: "yes",
                 shape: "triangle",
                 size: Infinity,
                 fontSize: -1,
@@ -985,9 +994,21 @@ describe("contribution store", () => {
         });
         store().applyAskStep(draftId, { kind: "reply", contributorId: id, row, sentAt: 2, at: 3 });
       }
-      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, answered: 2, open: 2 });
+      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, asked: 2, answered: 2, open: 2 });
       store().setSelfId(ana.id);
-      expect(askSummary(store().authors, store().asks, store().selfId)).toEqual({ total: 1, answered: 1, open: 1 });
+      expect(askSummary(store().authors, store().asks, store().selfId)).toEqual({
+        total: 1,
+        asked: 1,
+        answered: 1,
+        open: 1,
+      });
+    });
+
+    it("counts a co-author as asked before they answer", () => {
+      const { ben } = addTwo();
+      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, asked: 0, answered: 0, open: 0 });
+      store().applyAskStep(store().activeDraftId, { kind: "sent", contributorId: ben.id, prefilled: false, at: 1 });
+      expect(askSummary(store().authors, store().asks, null)).toEqual({ total: 2, asked: 1, answered: 0, open: 0 });
     });
 
     it("follows the row into a duplicate, and clears on reset", () => {

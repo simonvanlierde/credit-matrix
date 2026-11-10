@@ -41,7 +41,7 @@ describe("buildHeatmapSvg", () => {
             contributions: CREDIT_ROLES.map((role, r) => ({ role: role.name, score: ((i + r) % 4) * 33 })),
           }),
         );
-        buildHeatmapSvg(authors);
+        buildHeatmapSvg(authors, { marks: true });
         expect(contrast.mock.calls.length).toBeLessThanOrEqual(4);
       }
     } finally {
@@ -97,10 +97,10 @@ describe("buildHeatmapSvg", () => {
     const authors = [33, 66, 100].map((score) =>
       createAuthor(`Researcher ${score}`, { contributions: [{ role: "Software", score }] }),
     );
-    const svg = buildHeatmapSvg(authors);
+    const svg = buildHeatmapSvg(authors, { marks: true });
     const marks = [...svg.matchAll(/<g[^>]*aria-hidden="true"[^>]*>(.*?)<\/g>/gs)];
     expect(marks.map((mark) => (mark[1]?.match(/<circle /g) ?? []).length)).toEqual([1, 2, 3, 3, 2, 1]);
-    expect(buildHeatmapSvg(authors, { legend: false }).match(/<circle /g)).toHaveLength(6);
+    expect(buildHeatmapSvg(authors, { legend: false, marks: true }).match(/<circle /g)).toHaveLength(6);
   });
 
   it("uses a check for contributed cells and the flat legend, leaving empty cells unmarked", () => {
@@ -108,7 +108,7 @@ describe("buildHeatmapSvg", () => {
       createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 33 }] }),
       createAuthor("Bob White"),
     ];
-    const svg = buildHeatmapSvg(authors, { levels: false });
+    const svg = buildHeatmapSvg(authors, { levels: false, marks: true });
     expect(svg.match(/<path /g)).toHaveLength(2);
     expect(svg).not.toContain("<circle ");
   });
@@ -507,5 +507,61 @@ describe("buildHeatmapSvg legend wrapping", () => {
     // Conceptualization (about 139px) fits "Lead, Equal" but not "Supporting, None": every row
     // must fit, so the keys still stack.
     expect(legendRows("Conceptualization")).toBe(4);
+  });
+});
+
+describe("publication heatmap presentation", () => {
+  const team = (count: number) =>
+    Array.from({ length: count }, (_, i) =>
+      createAuthor(`Researcher ${i + 1}`, {
+        contributions: CREDIT_ROLES.map((role, r) => ({ role: role.name, score: (((i + r) % 3) + 1) * 33 })),
+      }),
+    );
+  const swatches = (svg: string) =>
+    [...svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="14" height="14"/g)].map((match) => ({
+      x: Number(match[1]),
+      y: Number(match[2]),
+    }));
+
+  it("defaults to plain fills while retaining the level legend and text alternative", () => {
+    const svg = buildHeatmapSvg(team(3));
+    expect(svg).not.toContain("<g fill=");
+    expect(svg).not.toContain("<path ");
+    expect(svg).toContain(">Supporting<");
+    expect(svg).toContain("(Supporting)");
+  });
+
+  it("places a vertical key immediately beside the matrix when requested", () => {
+    const svg = buildHeatmapSvg(team(3), { legendPosition: "right" });
+    const keys = swatches(svg);
+    const cells = [...svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="22" height="22"/g)];
+    expect(keys).toHaveLength(4);
+    expect(new Set(keys.map((key) => key.x)).size).toBe(1);
+    expect(new Set(keys.map((key) => key.y)).size).toBe(4);
+    expect(keys[0]?.y).toBe(Number(cells[0]?.[2]));
+    expect(keys[0]?.x).toBeGreaterThan(Math.max(...cells.map((cell) => Number(cell[1]))) + 22);
+  });
+
+  it("uses right for a narrow tall matrix and bottom for a wide matrix", () => {
+    expect(buildHeatmapSvg(team(3))).toBe(buildHeatmapSvg(team(3), { legendPosition: "right" }));
+    expect(buildHeatmapSvg(team(20))).toBe(buildHeatmapSvg(team(20), { legendPosition: "bottom" }));
+  });
+
+  it("keeps auto below when long legend text would excessively widen a narrow matrix", () => {
+    const options = { translateUi: makeUiTranslator({ supporting: "Supporting contribution to this work" }) };
+    expect(buildHeatmapSvg(team(3), options)).toBe(buildHeatmapSvg(team(3), { ...options, legendPosition: "bottom" }));
+  });
+
+  it("hides either legend placement and keeps opt-in marks in cells", () => {
+    for (const legendPosition of ["right", "bottom"] as const) {
+      const svg = buildHeatmapSvg(team(3), { legendPosition, legend: false, marks: true });
+      expect(swatches(svg)).toHaveLength(0);
+      expect(svg).toContain("<g fill=");
+    }
+  });
+
+  it("rejects unsupported placement and non-boolean marks", () => {
+    expect(() => buildHeatmapSvg(team(3), { legendPosition: "top" as "right" })).toThrow(/legend position/);
+    expect(() => buildHeatmapSvg(team(3), { marks: "false" as unknown as boolean })).toThrow(/marks/);
   });
 });

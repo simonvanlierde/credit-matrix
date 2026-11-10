@@ -18,7 +18,7 @@ msgid "addContributor"
 msgstr "Nuevos nombres de autores o iD de ORCID"
 
 msgid "addPlaceholder"
-msgstr "Añadir nombres o una ORCID iD…"
+msgstr "Nombres, un DOI o un ORCID iD"
 
 msgid "addButton"
 msgstr "Añadir"
@@ -218,6 +218,42 @@ msgstr "Importar contribuyentes"
 msgid "importData"
 msgstr "Importar datos"
 
+msgid "importSummary"
+msgstr "Pegue o suba una lista de contribuyentes, o búsquela por DOI."
+
+msgid "importFormatsToggle"
+msgstr "¿Qué formatos se admiten?"
+
+msgid "importOr"
+msgstr "o"
+
+msgid "importConverting"
+msgstr "Convirtiendo…"
+
+msgid "importImporting"
+msgstr "Importando…"
+
+msgid "importChoiceTitle"
+msgstr "¿Añadir a este borrador o reemplazarlo?"
+
+msgid "importAddNew"
+msgstr "Añadir {count, plural, one {# nuevo} other {# nuevos}}"
+
+msgid "importedContributors"
+msgstr "{count, plural, one {Se importó # contribuyente} other {Se importaron # contribuyentes}}."
+
+msgid "importAddedContributors"
+msgstr "{count, plural, one {Se añadió # contribuyente} other {Se añadieron # contribuyentes}} a este borrador."
+
+msgid "importUndoStale"
+msgstr "No se ha deshecho nada: el borrador cambió después de la importación. Cámbielo en la tabla."
+
+msgid "annImportUndone"
+msgstr "Importación deshecha."
+
+msgid "errImportXmlUnreadable"
+msgstr "No se pudo leer ese XML. Compruebe que el archivo esté completo."
+
 msgid "close"
 msgstr "Cerrar"
 
@@ -228,16 +264,13 @@ msgid "dragDropFile"
 msgstr "Arrastrar y soltar un archivo aquí"
 
 msgid "acceptedFileTypes"
-msgstr "Admite .csv, .tsv, .json o .xml"
+msgstr "Admite {types}"
 
 msgid "fileLoaded"
 msgstr "Cargado desde {name}"
 
 msgid "pasteRawData"
 msgstr "Pegar datos sin procesar"
-
-msgid "replaceWorkspaceTitle"
-msgstr "¿Reemplazar el espacio de trabajo actual?"
 
 msgid "replaceWorkspace"
 msgstr "Reemplazar espacio de trabajo"
@@ -351,7 +384,7 @@ msgid "structuredFileUpload"
 msgstr "Subir un archivo estructurado"
 
 msgid "doiPlaceholder"
-msgstr "10.1038/s41586-020-2649-2"
+msgstr "p. ej., 10.1234/abcde"
 
 msgid "doiLookUp"
 msgstr "Buscar"
@@ -912,7 +945,7 @@ msgid "formatJsonExport"
 msgstr "Exportación JSON"
 
 msgid "replaceWorkspaceBody"
-msgstr "La importación de {incoming, plural, one {# contribuyente} other {# contribuyentes}} reemplazará {existing, plural, one {al # contribuyente} other {a los # contribuyentes}} de este espacio de trabajo. Esta acción no se puede deshacer."
+msgstr "La importación de {incoming, plural, one {# contribuyente} other {# contribuyentes}} reemplazará {existing, plural, one {al # contribuyente} other {a los # contribuyentes}} de este espacio de trabajo."
 
 msgid "statementEmptyHint"
 msgstr "Aún no se han asignado contribuciones. Seleccione celdas de la cuadrícula para asignar roles."
@@ -979,6 +1012,9 @@ msgstr "Gris oscuro"
 
 msgid "languageSettings"
 msgstr "Configuración de idioma"
+
+msgid "stripEveryoneAgreed"
+msgstr "Todos están de acuerdo"
 
 msgid "stripOpenTeam"
 msgstr "Consultar a los coautores"
@@ -1598,8 +1634,6 @@ msgstr "Etiquetas cortas"
 msgid "heatmapHideUnused"
 msgstr "Omitir roles sin usar"
 
-msgid "heatmapShowLegend"
-msgstr "Mostrar leyenda"
 
 msgid "heatmapShowLevels"
 msgstr "Mostrar niveles de contribución"
@@ -1680,10 +1714,34 @@ msgid "heatmapRecipeTarget"
 msgstr "Usar en"
 
 msgid "heatmapRecipeMyst"
-msgstr "MyST usa los roles de autor de la página, con contribuciones sí/no y etiquetas en inglés."
+msgstr "MyST usa los roles de autor y el idioma de la página, con contribuciones sí/no."
 
 msgid "heatmapRecipeTypst"
 msgstr "Usa tus datos de equipo de Typst. Las métricas tipográficas y el diseño nativo pueden diferir del SVG."
 
 msgid "heatmapCopyRecipe"
 msgstr "Copiar receta de exportación"
+msgid "exportRoCrateFragment"
+msgstr "Fragmento RO-Crate"
+
+
+msgid "heatmapLegendPosition"
+msgstr "Leyenda"
+
+msgid "heatmapLegendAuto"
+msgstr "Automática"
+
+msgid "heatmapLegendRight"
+msgstr "Derecha"
+
+msgid "heatmapLegendBelow"
+msgstr "Debajo"
+
+msgid "heatmapLegendHidden"
+msgstr "Oculta"
+
+msgid "heatmapCellMarks"
+msgstr "Mostrar marcas de contribución"
+
+msgid "heatmapMarksHint"
+msgstr "Activa las marcas para distinguir los niveles de contribución de otra forma."

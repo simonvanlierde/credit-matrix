@@ -18,7 +18,7 @@ msgid "addContributor"
 msgstr "新しい著者名または ORCID iD"
 
 msgid "addPlaceholder"
-msgstr "氏名または ORCID iD を追加…"
+msgstr "氏名、DOI または ORCID iD"
 
 msgid "addButton"
 msgstr "追加"
@@ -218,6 +218,42 @@ msgstr "貢献者をインポート"
 msgid "importData"
 msgstr "データをインポート"
 
+msgid "importSummary"
+msgstr "貢献者リストを貼り付けるかアップロードするか、DOI で検索します。"
+
+msgid "importFormatsToggle"
+msgstr "対応している形式"
+
+msgid "importOr"
+msgstr "または"
+
+msgid "importConverting"
+msgstr "変換中…"
+
+msgid "importImporting"
+msgstr "インポート中…"
+
+msgid "importChoiceTitle"
+msgstr "この下書きに追加しますか、それとも置き換えますか？"
+
+msgid "importAddNew"
+msgstr "新しい{count}名を追加"
+
+msgid "importedContributors"
+msgstr "{count}名の貢献者をインポートしました。"
+
+msgid "importAddedContributors"
+msgstr "この下書きに{count}名の貢献者を追加しました。"
+
+msgid "importUndoStale"
+msgstr "元に戻していません：インポート後に下書きが変更されました。グリッドで変更してください。"
+
+msgid "annImportUndone"
+msgstr "インポートを元に戻しました。"
+
+msgid "errImportXmlUnreadable"
+msgstr "この XML を読み取れませんでした。ファイルが欠けていないか確認してください。"
+
 msgid "close"
 msgstr "閉じる"
 
@@ -228,16 +264,13 @@ msgid "dragDropFile"
 msgstr "ここにファイルをドラッグ＆ドロップ"
 
 msgid "acceptedFileTypes"
-msgstr ".csv、.tsv、.json、.xml に対応しています"
+msgstr "{types} に対応しています"
 
 msgid "fileLoaded"
 msgstr "{name} から読み込みました"
 
 msgid "pasteRawData"
 msgstr "データを貼り付け"
-
-msgid "replaceWorkspaceTitle"
-msgstr "現在のワークスペースを置き換えますか？"
 
 msgid "replaceWorkspace"
 msgstr "置き換える"
@@ -351,7 +384,7 @@ msgid "structuredFileUpload"
 msgstr "構造化ファイルのアップロード"
 
 msgid "doiPlaceholder"
-msgstr "10.1038/s41586-020-2649-2"
+msgstr "例：10.1234/abcde"
 
 msgid "doiLookUp"
 msgstr "取得"
@@ -912,7 +945,7 @@ msgid "formatJsonExport"
 msgstr "JSONエクスポート"
 
 msgid "replaceWorkspaceBody"
-msgstr "このインポートには{incoming}名の貢献者が含まれています。現在の{existing}名の貢献者を置き換えます。この操作は元に戻せません。"
+msgstr "このインポートには{incoming}名の貢献者が含まれています。現在の{existing}名の貢献者を置き換えます。"
 
 msgid "statementEmptyHint"
 msgstr "まだ貢献が割り当てられていません。グリッドのセルを選択して役割を割り当ててください。"
@@ -979,6 +1012,9 @@ msgstr "ダークグレー"
 
 msgid "languageSettings"
 msgstr "言語設定"
+
+msgid "stripEveryoneAgreed"
+msgstr "全員が合意しました"
 
 msgid "stripOpenTeam"
 msgstr "共著者に依頼"
@@ -1598,8 +1634,6 @@ msgstr "短いラベル"
 msgid "heatmapHideUnused"
 msgstr "未使用の役割を省略"
 
-msgid "heatmapShowLegend"
-msgstr "凡例を表示"
 
 msgid "heatmapShowLevels"
 msgstr "貢献レベルを表示"
@@ -1680,10 +1714,34 @@ msgid "heatmapRecipeTarget"
 msgstr "使用先"
 
 msgid "heatmapRecipeMyst"
-msgstr "MyST はページの著者ロールを使用します。貢献は有無のみで、ラベルは英語です。"
+msgstr "MyST はページの著者ロールと言語を使用します。貢献は有無のみです。"
 
 msgid "heatmapRecipeTypst"
 msgstr "Typst のチームデータを使用してください。フォントの寸法やネイティブレイアウトは SVG と異なる場合があります。"
 
 msgid "heatmapCopyRecipe"
 msgstr "書き出し用コードをコピー"
+msgid "exportRoCrateFragment"
+msgstr "RO-Crate フラグメント"
+
+
+msgid "heatmapLegendPosition"
+msgstr "凡例"
+
+msgid "heatmapLegendAuto"
+msgstr "自動"
+
+msgid "heatmapLegendRight"
+msgstr "右側"
+
+msgid "heatmapLegendBelow"
+msgstr "下側"
+
+msgid "heatmapLegendHidden"
+msgstr "非表示"
+
+msgid "heatmapCellMarks"
+msgstr "貢献度の記号を表示"
+
+msgid "heatmapMarksHint"
+msgstr "記号を有効にすると、濃淡以外でも貢献度を区別できます。"

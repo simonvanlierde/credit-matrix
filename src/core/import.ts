@@ -45,7 +45,9 @@ export function detectFormat(text: string): DetectedFormat {
       }
       return "json";
     } catch {
-      /* fall through */
+      // A cut-off or damaged export: reading its lines as names would import garbage contributors.
+      // `[not json, Name` stays a CSV header.
+      if (/^(?:\{|\[\s*[{["])/.test(trimmed)) return "json";
     }
   }
   if (isTenzing(trimmed)) return "tenzing";

@@ -62,9 +62,9 @@ class CreditHeatmap(CreditStatement):
     option_spec = {  # noqa: RUF012 - Docutils reads options from the directive class.
         **{
             key: directives.unchanged_required
-            for key in ("color", "palette", "shape", "size", "font", "font-size", "labels", "locale")
+            for key in ("color", "palette", "shape", "size", "font", "font-size", "labels", "locale", "legend-position")
         },
-        **{key: boolean for key in ("legend", "levels", "skipempty", "initials")},
+        **{key: boolean for key in ("legend", "levels", "skipempty", "initials", "marks")},
         "horizontal": directives.flag,
     }
 

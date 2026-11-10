@@ -34,6 +34,19 @@ export function HeatmapFigureSettings({
           ]}
         />
         <FigureChoice
+          label={t("heatmapLegendPosition")}
+          value={value.legend ? value.legendPosition : "hidden"}
+          onChange={(position) =>
+            patch(position === "hidden" ? { legend: false } : { legend: true, legendPosition: position })
+          }
+          options={[
+            ["auto", t("heatmapLegendAuto")],
+            ["right", t("heatmapLegendRight")],
+            ["bottom", t("heatmapLegendBelow")],
+            ["hidden", t("heatmapLegendHidden")],
+          ]}
+        />
+        <FigureChoice
           label={t("heatmapRoleLabels")}
           value={value.labels}
           onChange={(labels) => patch({ labels })}
@@ -46,8 +59,8 @@ export function HeatmapFigureSettings({
           [
             ["acronyms", t("useInitials")],
             ["skipempty", t("heatmapHideUnused")],
-            ["legend", t("heatmapShowLegend")],
             ["levels", t("heatmapShowLevels")],
+            ["marks", t("heatmapCellMarks")],
           ] as const
         ).map(([key, label]) => (
           <label
@@ -60,6 +73,7 @@ export function HeatmapFigureSettings({
           </label>
         ))}
         {!value.legend && <p className="text-on-surface-variant">{t("heatmapLegendHint")}</p>}
+        {!value.marks && <p className="text-on-surface-variant">{t("heatmapMarksHint")}</p>}
       </fieldset>
       <fieldset className="grid gap-2 border-t border-outline-variant/40 pt-3">
         <legend className="font-semibold">{t("colorLabel")}</legend>

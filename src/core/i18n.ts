@@ -7,6 +7,7 @@ export {
   makeRoleDescriber,
   makeRoleTranslator,
   normalizeLocaleCode,
+  resolveLocaleTag,
 } from "./credit-i18n/index";
 export type { UiCatalog, UiKey, UiTranslator } from "./credit-i18n/ui-strings";
 export { DEFAULT_UI_TRANSLATOR, loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";

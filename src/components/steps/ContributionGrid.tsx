@@ -1,6 +1,6 @@
 import { Check, CheckCheck, Clock, Columns3, Rows3, Settings2, UserPlus } from "lucide-react";
 import { useTheme } from "next-themes";
-import { memo, type ReactNode, type RefObject, useRef, useState } from "react";
+import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
 import { InitialsChip } from "@/components/ui/initials-chip";
@@ -76,7 +76,16 @@ export function ContributionGrid() {
   const reviewSettled = useContributionStore((s) => s.reviewSettled);
   const openReview = useContributionStore((s) => s.openReview);
   const setInspectorTab = useContributionStore((s) => s.setInspectorTab);
+  const setStatementLink = useContributionStore((s) => s.setStatementLink);
+  // A string, so hovering a cell (which only the statement shows) re-renders nothing here.
+  const linkedFromPhrase = useContributionStore((s) =>
+    s.statementLink?.from === "phrase" ? `${s.statementLink.contributorId}:${s.statementLink.role}` : null,
+  );
+  const activeDraftId = useContributionStore((s) => s.activeDraftId);
   const summary = useAskSummary();
+  // Everyone there is to ask (all but you) was asked, answered, and left nothing to review.
+  const everyoneAgreed =
+    summary.total > 0 && summary.asked === summary.total && summary.answered === summary.asked && summary.open === 0;
   // The light ramp mixes toward white, which reads inverted on a dark page.
   const dark = useTheme().resolvedTheme === "dark";
   const {
@@ -95,6 +104,15 @@ export function ContributionGrid() {
   const isFrozen = (authorId: string) => locked && authorId !== editableAuthorId;
   // Second beat of the population sequence; see .enter-fade in globals.css.
   const settled = useSettled();
+  // Said once, as the last difference is settled: not for a draft that opens already agreed.
+  const agreedBefore = useRef({ draftId: activeDraftId, agreed: everyoneAgreed });
+  useEffect(() => {
+    const before = agreedBefore.current;
+    agreedBefore.current = { draftId: activeDraftId, agreed: everyoneAgreed };
+    if (settled && before.draftId === activeDraftId && !before.agreed && everyoneAgreed) {
+      announce(t("stripEveryoneAgreed"));
+    }
+  }, [activeDraftId, everyoneAgreed, settled, t]);
   const [acronyms, setAcronyms] = useState(false);
   const [transpose, setTranspose] = useState(false);
   // The single tab stop in the matrix; arrow keys move it. Reset when the
@@ -103,6 +121,8 @@ export function ContributionGrid() {
   // Handlers for the memoized cells, refreshed every render. The cells read
   // them through this ref, so a new closure never re-renders all 14×N of them.
   const cellApi = useRef<CellApi>(null);
+  // The focused cell's mark comes back when the mouse leaves another cell.
+  const focusedLink = useRef<{ author: Author; roleIndex: number } | null>(null);
   const { bulkUndo, runBulk, undoBulk, triggerRef: bulkTriggerRef } = useBulkUndo();
   // Right-click level picker: direct selection for pointer users, so correcting
   // an overshoot never means cycling a value through None. The anchor is the
@@ -282,6 +302,14 @@ export function ContributionGrid() {
     click: handleCellClick,
     keyDown: handleCellKeyDown,
     focus: (row, col) => setActiveCell({ row, col }),
+    link: (author, roleIndex, source) => {
+      if (source === "focus") focusedLink.current = author ? { author, roleIndex } : null;
+      const target = author ? { author, roleIndex } : focusedLink.current;
+      const role = target && CREDIT_ROLES[target.roleIndex]?.name;
+      if (target && role) setStatementLink({ contributorId: target.author.id, role, from: "cell" });
+      // Only a cell's own mark: leave events can land after the statement has taken over.
+      else if (useContributionStore.getState().statementLink?.from === "cell") setStatementLink(null);
+    },
     openPicker: (authorId, roleIndex, event) => {
       event.preventDefault();
       setPicker({ authorId, roleIndex, x: event.clientX, y: event.clientY, cell: event.currentTarget });
@@ -302,6 +330,7 @@ export function ContributionGrid() {
       highlighted={
         reviewHighlight?.contributorId === author.id && reviewHighlight.target === CREDIT_ROLES[roleIndex]?.name
       }
+      linked={linkedFromPhrase === `${author.id}:${CREDIT_ROLES[roleIndex]?.name}`}
       settling={
         reviewSettled?.contributorId === author.id &&
         reviewSettled.targets.some((target) => target === CREDIT_ROLES[roleIndex]?.name)
@@ -349,24 +378,40 @@ export function ContributionGrid() {
         </h2>
         {!locked && (
           <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
-            <span aria-hidden="true" className="flex flex-wrap gap-0.5">
-              {authors.map((author) => {
-                const state = askState(author);
-                if (state.kind === "you") return null;
-                const answered = state.kind === "differs" || state.kind === "settled";
-                return (
-                  <span
-                    key={author.id}
-                    className={`size-2 rounded-[2px] ${
-                      answered ? "bg-primary" : state.kind === "asked" ? "bg-primary/35" : "bg-outline"
-                    }`}
-                  />
-                );
-              })}
-            </span>
-            <span className="font-semibold text-on-surface">
-              {t("stripAnswered", { answered: summary.answered, total: summary.total })}
-            </span>
+            {/* Until someone is asked there is nothing to count, only the way to ask. */}
+            {summary.asked > 0 && (
+              // Keyed so reaching agreement remounts the pair and the house entrance plays once.
+              <span
+                key={everyoneAgreed ? "agreed" : "answered"}
+                className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${settled ? "enter-rise" : ""}`}
+              >
+                {everyoneAgreed ? (
+                  // The glyph a settled column header shows, for the whole draft.
+                  <CheckCheck aria-hidden="true" className="size-3.5 text-primary" />
+                ) : (
+                  <span aria-hidden="true" className="flex flex-wrap gap-0.5">
+                    {authors.map((author) => {
+                      const state = askState(author);
+                      if (state.kind === "you") return null;
+                      const answered = state.kind === "differs" || state.kind === "settled";
+                      return (
+                        <span
+                          key={author.id}
+                          className={`size-2 rounded-[2px] ${
+                            answered ? "bg-primary" : state.kind === "asked" ? "bg-primary/35" : "bg-outline"
+                          }`}
+                        />
+                      );
+                    })}
+                  </span>
+                )}
+                <span className="font-semibold text-on-surface">
+                  {everyoneAgreed
+                    ? t("stripEveryoneAgreed")
+                    : t("stripAnswered", { answered: summary.answered, total: summary.total })}
+                </span>
+              </span>
+            )}
             {summary.open > 0 ? (
               <>
                 <span aria-hidden="true" className="text-on-surface-variant">
@@ -517,6 +562,8 @@ export function ContributionGrid() {
         >
           <table
             aria-labelledby="contributions-heading"
+            // The key hint is hidden on touch screens, but still describes the grid to a screen reader.
+            aria-describedby="grid-keys-hint"
             className="mx-auto w-max table-auto border-separate border-spacing-[3px]"
           >
             <thead>
@@ -708,6 +755,8 @@ interface CellApi {
     roleIndex: number,
   ) => void;
   focus: (row: number, col: number) => void;
+  /** Mark this cell's phrase in the statement; no author clears the mark, or on hover hands it back to the focused cell. */
+  link: (author: Author | null, roleIndex: number, source: "hover" | "focus") => void;
   openPicker: (authorId: string, roleIndex: number, event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -729,6 +778,7 @@ const GridCell = memo(function GridCellInner({
   recent,
   theySay,
   highlighted,
+  linked,
   settling,
   graded,
   dark,
@@ -746,6 +796,8 @@ const GridCell = memo(function GridCellInner({
   theySay: string | undefined;
   /** The Review line under the pointer or focus is about this cell. */
   highlighted: boolean;
+  /** Its phrase in the statement is under the pointer. */
+  linked: boolean;
   /** A Review choice just changed this cell. */
   settling: boolean;
   graded: boolean;
@@ -764,11 +816,19 @@ const GridCell = memo(function GridCellInner({
         data-cell={`${row}-${col}`}
         data-cell-key={`${author.id}:${roleIndex}`}
         data-recent-reply={recent || undefined}
+        data-linked={linked || undefined}
         aria-describedby={describedBy}
         // One tab stop for the whole matrix; arrows move within it. Without
         // this a keyboard user tabs through every cell, up to 14 x 200.
         tabIndex={tabbable ? 0 : -1}
-        onFocus={() => api.current.focus(row, col)}
+        onFocus={() => {
+          api.current.focus(row, col);
+          api.current.link(author, roleIndex, "focus");
+        }}
+        onBlur={() => api.current.link(null, roleIndex, "focus")}
+        // Mouse only: a tap fires enter with no leave, which would strand the mark.
+        onPointerEnter={(event) => event.pointerType === "mouse" && api.current.link(author, roleIndex, "hover")}
+        onPointerLeave={(event) => event.pointerType === "mouse" && api.current.link(null, roleIndex, "hover")}
         onKeyDown={(event) => api.current.keyDown(event, row, col, author, roleIndex)}
         // A toggle only in yes/no mode: pressed semantics misdescribe a
         // four-way value, whose level the accessible name carries instead.
@@ -793,9 +853,11 @@ const GridCell = memo(function GridCellInner({
         } ${fill ? "" : "ring-1 ring-inset ring-outline-strong"} ${
           highlighted
             ? "outline outline-[3px] outline-flag outline-offset-1"
-            : recent
-              ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
-              : ""
+            : linked
+              ? "outline outline-2 outline-primary outline-offset-2"
+              : recent
+                ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
+                : ""
         } ${settling ? "cell-settle" : ""}`}
         style={{ backgroundColor: fill ?? "var(--color-surface-container-high)" }}
       >
@@ -949,8 +1011,13 @@ function GridLegend({
           </span>
         )}
       </span>
-      {/* Keep keyboard instructions visible beside the desktop key. */}
-      <p className="hidden md:block">{graded ? t("levelHint") : t("toggleKeysHint")}</p>
+      {/* Never truncated: the keys are the only direct way to set a level, so
+          hiding them behind a tooltip hid the feature. */}
+      {/* Hidden where the pointer is a finger, which has no keys to press; the
+          grid's description still points here, so a screen reader reads it. */}
+      <p id="grid-keys-hint" className="pointer-coarse:hidden">
+        {graded ? t("levelHint") : t("toggleKeysHint")}
+      </p>
     </div>
   );
 }

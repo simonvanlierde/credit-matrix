@@ -1,4 +1,4 @@
-import { CircleAlert, FileUp, Search, X } from "lucide-react";
+import { ChevronDown, CircleAlert, FileUp, LoaderCircle, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   type Ask,
@@ -15,11 +15,13 @@ import {
   parseStatement,
   RepeatedIdError,
   statementAuthor,
+  XmlParseError,
 } from "@/core";
 import { recheckSignIns } from "@/core/ask";
 import { MAX_AUTHORS, MAX_IMPORT_BYTES, scoreToLevel } from "@/core/author";
 import type { DoiLookupResult } from "@/core/lookup";
 import { DOI_INPUT_REGEX, lookupDoiWork, normalizeDoi } from "@/core/lookup";
+import { newContributors } from "@/core/merge-row";
 import { fetchOrcidKeys } from "@/core/orcid-proof";
 import { announce } from "@/lib/announce";
 import { ConverterUnavailableError, convertCitation } from "@/lib/citation-import";
@@ -38,7 +40,8 @@ export type LinkFailure = "errShareLinkBroken" | "mergeWrongDraft" | "mergeUnmat
 interface Props {
   open: boolean;
   existingContributorCount: number;
-  onImport: (next: PendingImport) => void;
+  /** `add` keeps the draft and appends the contributors it lacks; `replace` swaps the roster. */
+  onImport: (next: PendingImport, mode: ImportMode) => void;
   /**
    * Handle a pasted share link. Returns a message key when it could not be
    * used, or null on success. Lives with the caller because merging a returned
@@ -147,6 +150,8 @@ function withStatementRoles(authors: Author[], review: StatementReview, score: n
 /** The picker value for an ambiguous token left out; Radix reserves the empty string. */
 const LEAVE_OUT = "leave-out";
 
+export type ImportMode = "add" | "replace";
+
 /** What a resolved import is waiting to write, once any replace is confirmed. */
 export interface PendingImport {
   authors: Author[];
@@ -193,6 +198,9 @@ async function fetchDoiWork(doi: string): Promise<Extract<DoiLookupResult, { ok:
 
 /** The import size cap, written the way the messages below say it. */
 const MAX_IMPORT_MB = `${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB`;
+
+/** The file picker's types, also listed beside it. */
+const ACCEPTED_FILE_TYPES = [".csv", ".tsv", ".json", ".xml", ".cff"];
 
 /** The "nothing found" message for each importable format. */
 const EMPTY_MESSAGE_KEYS: Record<Exclude<DetectedFormat, "unknown" | "link" | "statement">, MessageKey> = {
@@ -438,7 +446,9 @@ export function ImportModal({
             ? "errImportNewerVersion"
             : failure instanceof RepeatedIdError
               ? "errImportRepeatedId"
-              : "errImportFailed",
+              : failure instanceof XmlParseError
+                ? "errImportXmlUnreadable"
+                : "errImportFailed",
         ),
       );
     } finally {
@@ -453,7 +463,7 @@ export function ImportModal({
       setPending(next);
       return;
     }
-    finishImport(next);
+    finishImport(next, "replace");
   }
 
   async function handleDoiLookup() {
@@ -496,13 +506,17 @@ export function ImportModal({
     });
   }
 
-  function finishImport(next: PendingImport) {
+  function finishImport(next: PendingImport, mode: ImportMode) {
+    if (mode === "add" && draftAuthors.length + newContributors(draftAuthors, next.authors).length > MAX_AUTHORS) {
+      showError(t("errTooManyContributors", { limit: MAX_AUTHORS }));
+      return;
+    }
     // `onImport` runs the authors back through the store's normalizeRoster,
     // which throws on anything createAuthor cannot rebuild. On the confirm
     // path this sits outside handleImport's try, so an unguarded throw here
     // escaped the click handler instead of showing as an import error.
     try {
-      onImport(next);
+      onImport(next, mode);
     } catch {
       showError(t("errImportFailed"));
       return;
@@ -539,6 +553,16 @@ export function ImportModal({
     onClose();
   }
 
+  const citation = format === "cff" || format === "zenodo";
+  const busy = importing || doiLoading;
+  const label = "block text-xs uppercase tracking-label font-semibold text-on-surface-variant";
+  const secondary =
+    "rounded-lg border border-outline-strong px-4 py-2 font-semibold text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  // Only asked once the draft has contributors; the DOI preview on an empty draft just confirms.
+  const addable = pending && existingContributorCount > 0 ? newContributors(draftAuthors, pending.authors).length : 0;
+
+  // The dialog keeps the browser's position: fixed, which also anchors the Close button. With
+  // `relative` it would scroll away with the page when focus moves down it on a phone.
   return (
     <dialog
       ref={setDialog}
@@ -548,10 +572,10 @@ export function ImportModal({
       {...closeOnBackdrop}
       onDragOver={swallowDrag}
       onDrop={swallowDrag}
-      className="relative m-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
+      className="m-auto w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden rounded-lg bg-surface-bright p-0 text-on-surface shadow-2xl ring-1 ring-outline-variant/20 backdrop:bg-on-surface/30 backdrop:backdrop-blur-sm"
     >
       <div>
-        <div className="px-8 py-4 border-b border-outline-variant/10 bg-surface-container-low">
+        <div className="py-4 pl-8 pr-14 border-b border-outline-variant/10 bg-surface-container-low">
           <h2
             id="import-title"
             className="text-2xl italic font-semibold text-primary"
@@ -560,134 +584,23 @@ export function ImportModal({
             {t("importTitle")}
           </h2>
           <p id="import-description" className="text-sm text-on-surface-variant mt-1">
-            {t("importDescription")}
+            {t("importSummary")}
           </p>
           <button
             type="button"
             onClick={() => dialog?.close()}
-            className="absolute right-5 top-5 text-on-surface-variant hover:text-on-surface transition-colors"
+            className="touch-target absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <X className="h-5 w-5" />
+            <X aria-hidden="true" className="h-5 w-5" />
             <span className="sr-only">{t("close")}</span>
           </button>
         </div>
 
         <div className="px-8 py-5 space-y-4">
-          {/* DOI lookup */}
-          <div>
-            <label
-              htmlFor="import-doi"
-              className="block text-xs uppercase tracking-widest font-bold text-on-surface-variant mb-2"
-            >
-              {t("importFromDoi")}
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="import-doi"
-                type="text"
-                inputMode="url"
-                value={doi}
-                aria-describedby="import-doi-note"
-                aria-invalid={error?.where === "doi" || undefined}
-                onChange={(e) => {
-                  setDoi(e.target.value);
-                  setError(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    // The same guard as the button's `disabled`, which Enter bypasses.
-                    if (doiLoading || importing || pending !== null) return;
-                    void handleDoiLookup();
-                  }
-                }}
-                placeholder={t("doiPlaceholder")}
-                className="flex-1 min-w-0 bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono px-4 py-2 text-on-surface placeholder:text-on-surface-variant rounded-t transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => void handleDoiLookup()}
-                // One at a time: whichever landed second would replace the other's staged import.
-                disabled={doiLoading || importing || doi.trim().length === 0 || pending !== null}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded border border-primary px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-primary"
-              >
-                <Search className="h-4 w-4" />
-                {doiLoading ? t("doiLookingUp") : t("doiLookUp")}
-              </button>
-            </div>
-            {/* One slot for both, floored at the hint's two lines: swapping a
-                one-line error in for the hint must not move the panels below. */}
-            {error?.where === "doi" ? (
-              <p id="import-doi-note" role="alert" className="mt-2 min-h-8 text-xs text-error">
-                {error.message}
-              </p>
-            ) : (
-              <p id="import-doi-note" className="mt-2 min-h-8 text-xs text-on-surface-variant">
-                {t("doiHint")}
-              </p>
-            )}
-          </div>
-
-          {/* Always mounted: the layout's announcer is outside this modal dialog and inert while it is open. */}
-          <p role="status" className="text-sm text-on-surface-variant">
-            {importing && (format === "cff" || format === "zenodo")
-              ? t("citationConverting")
-              : doiLoading
-                ? t("doiLookingUp")
-                : null}
-          </p>
-          {(format === "cff" || format === "zenodo") && (
-            <ExternalLink className="text-sm text-primary underline" href="https://simonvanlierde.com/citesync/">
-              {t("citationPlayground")}
-            </ExternalLink>
-          )}
-
-          {/* Drop zone */}
-          <div>
-            <p className="text-xs uppercase tracking-widest font-bold text-on-surface-variant mb-2">
-              {t("structuredFileUpload")}
-            </p>
-            {/* biome-ignore lint/a11y/noStaticElementInteractions: drag-and-drop is a mouse-only progressive enhancement; the Browse button + file input below provide the accessible path. */}
-            {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: same as above. */}
-            <div
-              onDragOver={handleFileDragOver}
-              onDragLeave={handleFileDragLeave}
-              onDrop={handleFileDrop}
-              className={`border-2 border-dashed rounded-lg p-3 flex flex-wrap items-center gap-x-4 gap-y-3 transition-colors ${
-                dragging ? "border-primary bg-surface-container" : "border-outline-variant/40 bg-surface"
-              }`}
-            >
-              <div className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-                <FileUp className="h-5 w-5 text-primary" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-on-surface">{t("dragDropFile")}</p>
-                <p className="text-xs text-on-surface-variant mt-0.5">{t("acceptedFileTypes")}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="shrink-0 px-4 py-1.5 border border-primary text-primary text-xs font-semibold rounded hover:bg-primary hover:text-on-primary transition-colors"
-              >
-                {t("browseFiles")}
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".csv,.tsv,.json,.xml,.cff"
-                className="hidden"
-                onChange={handleFileInput}
-              />
-            </div>
-          </div>
-
           {/* Text area */}
           <div>
-            <div className="flex justify-between items-end mb-2">
-              <label
-                htmlFor="import-text"
-                className="block text-xs uppercase tracking-widest font-bold text-on-surface-variant"
-              >
+            <div className="flex justify-between items-end gap-x-3 mb-2">
+              <label htmlFor="import-text" className={label}>
                 {t("pasteRawData")}
               </label>
               {/* Always mounted, so a screen reader hears the file and format as they appear. */}
@@ -719,6 +632,14 @@ export function ImportModal({
               rows={6}
               className="w-full bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono p-4 text-on-surface placeholder:text-on-surface-variant rounded-t resize-none transition-colors"
             />
+            {citation && (
+              <ExternalLink
+                className="mt-1 flex w-fit gap-1 text-sm text-primary underline"
+                href="https://simonvanlierde.com/citesync/"
+              >
+                {t("citationPlayground")}
+              </ExternalLink>
+            )}
           </div>
 
           {error?.where === "form" && (
@@ -731,9 +652,111 @@ export function ImportModal({
             </p>
           )}
 
+          {/* Drop zone */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: drag-and-drop is a mouse-only progressive enhancement; the Browse button + file input below provide the accessible path. */}
+          {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: same as above. */}
+          <div
+            onDragOver={handleFileDragOver}
+            onDragLeave={handleFileDragLeave}
+            onDrop={handleFileDrop}
+            className={`border-2 border-dashed rounded-lg p-3 flex flex-wrap items-center gap-x-4 gap-y-3 transition-colors ${
+              dragging ? "border-primary bg-surface-container" : "border-outline-strong bg-surface"
+            }`}
+          >
+            <div className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+              <FileUp aria-hidden="true" className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              {/* Touch screens have nothing to drag from: there the button is the whole story. */}
+              <p className="text-sm font-medium text-on-surface pointer-coarse:hidden">{t("dragDropFile")}</p>
+              <p className="text-xs text-on-surface-variant mt-0.5 pointer-coarse:mt-0">
+                {t("acceptedFileTypes", { types: formatter.list(ACCEPTED_FILE_TYPES, { type: "disjunction" }) })}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="shrink-0 px-4 py-1.5 border border-primary text-primary text-xs font-semibold rounded hover:bg-primary hover:text-on-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              {t("browseFiles")}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept={ACCEPTED_FILE_TYPES.join(",")}
+              className="hidden"
+              onChange={handleFileInput}
+            />
+          </div>
+
+          <details className="group text-sm">
+            <summary className="inline-flex min-h-6 cursor-pointer list-none items-center gap-1 font-medium text-primary hover:underline [&::-webkit-details-marker]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
+              <ChevronDown aria-hidden="true" className="size-4 transition-transform group-open:rotate-180" />
+              {t("importFormatsToggle")}
+            </summary>
+            <p className="mt-1 max-w-prose text-on-surface-variant">{t("importDescription")}</p>
+          </details>
+
+          {/* DOI lookup: the other way in, below the paste-or-upload route most imports take. */}
+          <div>
+            <div aria-hidden="true" className="mb-3 flex items-center gap-3 text-xs text-on-surface-variant">
+              <span className="h-px flex-1 bg-outline" />
+              {t("importOr")}
+              <span className="h-px flex-1 bg-outline" />
+            </div>
+            <label htmlFor="import-doi" className={`${label} mb-2`}>
+              {t("importFromDoi")}
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="import-doi"
+                type="text"
+                inputMode="url"
+                value={doi}
+                aria-describedby="import-doi-note"
+                aria-invalid={error?.where === "doi" || undefined}
+                onChange={(e) => {
+                  setDoi(e.target.value);
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    // The same guard as the button's `disabled`, which Enter bypasses.
+                    if (doiLoading || importing || pending !== null) return;
+                    void handleDoiLookup();
+                  }
+                }}
+                placeholder={t("doiPlaceholder")}
+                className="flex-1 min-w-0 bg-surface-container-low border-0 border-b-2 border-outline-strong focus:border-primary focus:ring-0 outline-none text-sm font-mono placeholder:font-sans px-4 py-2 text-on-surface placeholder:text-on-surface-variant rounded-t transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => void handleDoiLookup()}
+                // One at a time: whichever landed second would replace the other's staged import.
+                disabled={doiLoading || importing || doi.trim().length === 0 || pending !== null}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded border border-primary px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-primary"
+              >
+                <Search aria-hidden="true" className="h-4 w-4" />
+                {doiLoading ? t("doiLookingUp") : t("doiLookUp")}
+              </button>
+            </div>
+            {/* One slot for both, floored at the hint's two lines: swapping a
+                one-line error in for the hint must not move the panels below. */}
+            {error?.where === "doi" ? (
+              <p id="import-doi-note" role="alert" className="mt-2 min-h-8 text-xs text-error">
+                {error.message}
+              </p>
+            ) : (
+              <p id="import-doi-note" className="mt-2 min-h-8 text-xs text-on-surface-variant">
+                {t("doiHint")}
+              </p>
+            )}
+          </div>
+
           {pending && (
-            <div role="alert" className="rounded-lg bg-error-container/30 p-4 text-sm text-on-surface">
-              <p className="font-semibold">{t(existingContributorCount ? "replaceWorkspaceTitle" : "doiConfirm")}</p>
+            <div role="alert" className="rounded-lg bg-surface-container-low p-4 text-sm text-on-surface">
+              <p className="font-semibold">{t(existingContributorCount ? "importChoiceTitle" : "doiConfirm")}</p>
               {pending.doiNotice && <p className="mt-1">{t(pending.doiNotice)}</p>}
               {pending.doiNotice === "doiRolesImported" && (
                 <ul className="mt-2 list-disc pl-5">
@@ -756,22 +779,37 @@ export function ImportModal({
                   })}
                 </p>
               )}
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  ref={keepRef}
-                  type="button"
-                  onClick={() => setPending(null)}
-                  className="rounded-lg border border-outline-variant px-4 py-2 font-semibold text-on-surface-variant hover:border-primary hover:text-primary"
-                >
+              <div className="mt-3 flex flex-wrap justify-end gap-2">
+                <button ref={keepRef} type="button" onClick={() => setPending(null)} className={secondary}>
                   {t(existingContributorCount ? "keepCurrentWork" : "cancel")}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => finishImport(pending)}
-                  className="rounded-lg bg-error px-4 py-2 font-semibold text-on-error hover:opacity-90"
-                >
-                  {t(existingContributorCount ? "replaceWorkspace" : "doiConfirm")}
-                </button>
+                {existingContributorCount > 0 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => finishImport(pending, "replace")}
+                      className="rounded-lg border border-error px-4 py-2 font-semibold text-error transition-colors hover:bg-error hover:text-on-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      {t("replaceWorkspace")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => finishImport(pending, "add")}
+                      disabled={addable === 0}
+                      className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-on-surface-variant disabled:ring-1 disabled:ring-outline-variant"
+                    >
+                      {t("importAddNew", { count: addable })}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => finishImport(pending, "replace")}
+                    className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    {t("doiConfirm")}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -953,25 +991,44 @@ export function ImportModal({
           )}
         </div>
 
-        <div className="px-8 py-3 border-t border-outline-variant/10 bg-surface-container-low flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => dialog?.close()}
-            className="px-5 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
-          >
-            {t("cancel")}
-          </button>
-          {/* The review carries its own Apply; a faded twin here would only compete with it. */}
-          {!review && (
-            <button
-              ref={importRef}
-              type="button"
-              onClick={() => void handleImport()}
-              disabled={format === "unknown" || pending !== null || importing || doiLoading}
-              className="px-7 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg shadow hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {format === "statement" ? t("statementReview") : t("importData")}
-            </button>
+        <div className="px-8 py-3 border-t border-outline-variant/10 bg-surface-container-low flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
+          {/* Always mounted, and two lines tall when empty, so progress appearing beside Import never moves
+              it; the layout's announcer is outside this modal dialog and inert while it is open. */}
+          <p role="status" className="min-h-8 min-w-0 flex-1 basis-56 text-xs text-on-surface-variant">
+            {importing && citation ? t("citationConverting") : doiLoading ? t("doiLookingUp") : null}
+          </p>
+          {/* The confirmation carries its own way back and its own way on. */}
+          {!pending && (
+            <div className="flex shrink-0 gap-3">
+              <button
+                type="button"
+                onClick={() => dialog?.close()}
+                className="px-5 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {t("cancel")}
+              </button>
+              {/* The review carries its own Apply; a faded twin here would only compete with it. */}
+              {!review && (
+                <button
+                  ref={importRef}
+                  type="button"
+                  onClick={() => void handleImport()}
+                  disabled={format === "unknown" || busy}
+                  className={`inline-flex items-center gap-2 px-7 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg shadow hover:bg-primary-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${busy ? "cursor-progress" : "disabled:opacity-40 disabled:cursor-not-allowed"}`}
+                >
+                  {busy && (
+                    <LoaderCircle aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" />
+                  )}
+                  {doiLoading
+                    ? t("doiLookingUp")
+                    : importing
+                      ? t(citation ? "importConverting" : "importImporting")
+                      : format === "statement"
+                        ? t("statementReview")
+                        : t("importData")}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

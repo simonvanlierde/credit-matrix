@@ -82,6 +82,14 @@ export interface ReviewCell {
   target: Target;
 }
 
+/** A grid cell and its phrase in the statement, tied together while one is under the pointer or focus. */
+export interface StatementLink {
+  contributorId: string;
+  role: CreditRoleName;
+  /** Which side the pointer or focus is on: the side it is not on shows the mark. */
+  from: "cell" | "phrase";
+}
+
 /** More than anyone writes at once, and well inside what localStorage holds. */
 export const MAX_DRAFTS = 50;
 
@@ -117,6 +125,8 @@ interface ContributionState {
   selfId: string | null;
   /** The cell the Review line under the pointer or focus is about. Ephemeral. */
   reviewHighlight: ReviewCell | null;
+  /** The cell and statement phrase to mark together. Ephemeral. */
+  statementLink: StatementLink | null;
   /** The cells a Review choice just changed, so the grid can mark the change. Ephemeral. */
   reviewSettled: { contributorId: string; targets: Target[] } | null;
   /** The contributor whose answers the Review tab should bring into view. Ephemeral. */
@@ -176,6 +186,7 @@ interface ContributionState {
   /** Mark (or, with null, unmark) the contributor who is the person using this browser. */
   setSelfId: (contributorId: string | null) => void;
   setReviewHighlight: (cell: ReviewCell | null) => void;
+  setStatementLink: (link: StatementLink | null) => void;
   setReviewSettled: (cells: { contributorId: string; targets: Target[] } | null) => void;
   /** Open the Review tab on one contributor's answers. */
   openReview: (contributorId: string | null) => void;
@@ -299,6 +310,7 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.asks = draft.asks;
   state.selfId = draft.selfId;
   state.reviewHighlight = null;
+  state.statementLink = null;
   state.reviewSettled = null;
   state.reviewFocus = null;
   // The highlight describes a moment, not the draft: leaving the draft ends it.
@@ -904,6 +916,7 @@ export const useContributionStore = create<ContributionState>()(
       asks: {},
       selfId: null,
       reviewHighlight: null,
+      statementLink: null,
       reviewSettled: null,
       reviewFocus: null,
       recentReply: null,
@@ -1052,6 +1065,11 @@ export const useContributionStore = create<ContributionState>()(
       setReviewHighlight: (cell) =>
         set((state) => {
           state.reviewHighlight = cell;
+        }),
+
+      setStatementLink: (link) =>
+        set((state) => {
+          state.statementLink = link;
         }),
 
       setReviewSettled: (cells) =>
@@ -1356,15 +1374,16 @@ export const useContributionStore = create<ContributionState>()(
 
 /**
  * The co-authors' answers at a glance: how many co-authors there are (you
- * excluded), how many answered (and were not asked again since), and how many
- * differences still wait for a decision.
+ * excluded), how many were asked, how many answered (and were not asked again
+ * since), and how many differences still wait for a decision.
  */
 export function askSummary(
   authors: readonly Author[],
   asks: Readonly<Record<string, Ask>>,
   selfId: string | null,
-): { total: number; answered: number; open: number } {
+): { total: number; asked: number; answered: number; open: number } {
   let total = 0;
+  let asked = 0;
   let answered = 0;
   let open = 0;
   for (const author of authors) {
@@ -1372,11 +1391,12 @@ export function askSummary(
     total += 1;
     const ask = asks[author.id];
     if (!ask) continue;
+    asked += 1;
     const result = review(author, ask);
     if (result.status.kind === "differs" || result.status.kind === "settled") answered += 1;
     open += result.open.length;
   }
-  return { total, answered, open };
+  return { total, asked, answered, open };
 }
 
 export const useAskSummary = () => useContributionStore(useShallow((s) => askSummary(s.authors, s.asks, s.selfId)));

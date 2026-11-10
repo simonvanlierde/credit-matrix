@@ -26,6 +26,10 @@ Tested with mystmd 1.12 and [Jupyter Book 2.1](../jupyter-book/README.md).
 
 ## Use
 
+In the app, choose **MyST YAML** under Export data to copy or download the author block.
+The CLI equivalent is `credit-matrix convert team.json --to myst`. Indent the block under `project`
+in `myst.yml`, or paste it into a page's front matter. MyST roles carry no contribution levels.
+
 ```yaml
 project:
   authors:
@@ -53,6 +57,14 @@ names, spellings and aliases follow MyST (`writing`, `editing`, `review`, `analy
 
 [`example/`](example) is a complete project: run `myst build --site` in it.
 
+## Document language
+
+Set `project.lang` in `myst.yml`, for example `lang: fr-CA` or `lang: ja`.
+A Markdown page's `lang` overrides the project language. Statements and heatmap labels use
+the app's nine language catalogs: English, French, German, Spanish, Italian, Portuguese (Portugal),
+Dutch, Simplified Chinese and Japanese. Regional tags select the available language;
+unsupported languages and Traditional Chinese fall back to English. Write your heading yourself.
+
 ## Contribution heatmap
 
 See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
@@ -63,9 +75,6 @@ See [figure options and examples](../heatmap.md) for the `credit-heatmap` direct
   front matter from disk. A notebook page uses the project's authors.
 - An author listed only by `id` in a page is not looked up in the project's list.
 - MyST roles have no degree of contribution, so the statement shows no Equal or Supporting.
-- English only. The plugin ignores the document's `lang`: role names, separators and the
-  statement are always English, and you write any heading yourself. For another language, run
-  `credit-matrix statement file.json --locale fr` from the package CLI and paste the result.
 - One format: by author. The
-  [`credit-matrix`](../../src/core/README.md) package also writes by role, with initials and in
-  eight other languages. The plugin uses the package for role names and statement wording.
+  [`credit-matrix`](../../src/core/README.md) package also writes by role and with initials.
+  The plugin uses the package for role names and statement wording.

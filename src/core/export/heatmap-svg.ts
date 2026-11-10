@@ -46,6 +46,10 @@ export interface HeatmapSvgOptions {
   /** Cell side in SVG pixels (Typst uses points). */
   size?: number;
   legend?: boolean;
+  /** Place the key beside a narrow tall matrix or below a wide one. Defaults to auto. */
+  legendPosition?: "auto" | "right" | "bottom";
+  /** Add redundant dots/checks in cells and the key. Defaults to false. */
+  marks?: boolean;
   /** Base label size in SVG pixels, from 6 to 32. Defaults to 10.5. */
   fontSize?: number;
   /** Portable font stack. Defaults to sans. */
@@ -105,12 +109,11 @@ export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions):
  *
  * Pure and dependency-free. Runs in the browser (for live preview, SVG
  * download, and canvas→PNG export) and in Node (for tests). The SVG uses
- * system font stacks, so no font embedding is required.
+ * font stacks; exact glyphs depend on the installed fonts.
  *
- * Every band is measured from the labels it actually carries, and the legend
- * wraps to the figure's own width, so the canvas is the drawing's bounding box
- * rather than a fixed frame around it: a two-author figure no longer inherits
- * the width of a four-key legend. Roles that no author contributed to are
+ * Label bands use estimated text widths. The key fits beside tall narrow grids
+ * or wraps below wider ones, with explicit placement overrides.
+ * Roles that no author contributed to are
  * omitted by default. There is no *rendered* image title:
  * captions belong to the embedding document. The `<title>` element is the
  * accessible name for the `role="img"` graphic and `<desc>` its text
@@ -130,6 +133,11 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   if (!Number.isFinite(size) || size <= 0 || size > 256)
     throw new HeatmapOptionError("Heatmap size must be between 0 and 256.");
   const shape = opts?.shape ?? "square";
+  const legendPosition = opts?.legendPosition ?? "auto";
+  if (!["auto", "right", "bottom"].includes(legendPosition))
+    throw new HeatmapOptionError("Unknown heatmap legend position.");
+  if (opts?.marks !== undefined && typeof opts.marks !== "boolean")
+    throw new HeatmapOptionError("Heatmap marks must be a boolean.");
   if (!["square", "rounded", "circle"].includes(shape)) throw new HeatmapOptionError("Unknown heatmap shape.");
   if (opts?.labels && !["full", "short"].includes(opts.labels)) throw new HeatmapOptionError("Unknown heatmap labels.");
   const fontSize = opts?.fontSize ?? FONT_LEFT;
@@ -212,7 +220,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   // A figure has four fills; parsing colors and measuring contrast per cell is costly.
   const tierColor = (score: number) => {
     const fill = heatCellColor(monoColor, score);
-    return { fill, ink: onColor(fill) };
+    return { fill, ink: opts?.marks ? onColor(fill) : "" };
   };
   const tierColors = [tierColor(0), tierColor(33), tierColor(66), tierColor(100)] as const;
   const colorsFor = (score: number) => tierColors[score <= 0 ? 0 : score <= 33 ? 1 : score <= 66 ? 2 : 3];
@@ -266,9 +274,8 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
         { label: translateUi("none"), score: 0 },
       ];
 
-  // Legend geometry: keys packed into rows no wider than the figure, so a
-  // four-key legend under a two-column grid wraps instead of stretching the
-  // canvas. Each row is centred on the canvas.
+  // Measure both placements before choosing: a side key must not buy compactness
+  // by making the whole figure excessively wide at its final print size.
   const SWATCH_S = SWATCH * scale;
   const LEGEND_ITEM_GAP_S = LEGEND_ITEM_GAP * scale;
   const legendItemW = (label: string) => SWATCH_S + 6 * scale + textW(label, fontLegend) + LEGEND_ITEM_GAP_S;
@@ -292,22 +299,46 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   }
   // Align the keys into columns, so a wrapped legend reads as one block rather
   // than as independently centred rows.
+  const legendRowH = Math.max(LEGEND_ROW_H, fontLegend + 6) * scale;
+  const swatchHeight = Math.max(SWATCH_S, fontLegend * 1.2 * scale);
+  const bottomLegendCols = Math.max(...legendRows.map((row) => row.length));
+  const bottomLegendW =
+    Array.from({ length: bottomLegendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]?.w ?? 0))).reduce(
+      (w, c) => w + c,
+      0,
+    ) - LEGEND_ITEM_GAP_S;
+  const bottomW = PAD_S * 2 + Math.max(contentW, bottomLegendW);
+  const bottomH = gridY + gridH + LEGEND_GAP * scale + (legendRows.length - 1) * legendRowH + swatchHeight + PAD_S;
+  const sideLegendW = Math.max(...legendItems.map((item) => item.w)) - LEGEND_ITEM_GAP_S;
+  const sideX = gridX + gridW + LEGEND_GAP * scale;
+  const sideW = Math.max(PAD_S * 2 + contentW, sideX + sideLegendW + PAD_S);
+  const sideH = gridY + Math.max(gridH, (legendItems.length - 1) * legendRowH + swatchHeight) + PAD_S;
+  // At 48 em wide, an 85 mm figure retains a 5 pt legend.
+  const autoWidthLimit = fontLegend * scale * 48;
+  const rightLegend =
+    legendPosition === "right" ||
+    (legendPosition === "auto" &&
+      gridH >= gridW * 1.5 &&
+      sideW <= bottomW * 1.35 &&
+      sideW <= autoWidthLimit &&
+      sideH <= bottomH);
+  if (rightLegend) legendRows = chunk(1);
   const legendCols = Math.max(...legendRows.map((row) => row.length));
   const colW = Array.from({ length: legendCols }, (_, c) => Math.max(...legendRows.map((row) => row[c]?.w ?? 0)));
   const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
   const legendW = colW.reduce((w, c) => w + c, 0) - LEGEND_ITEM_GAP_S;
-  const legendTop = gridY + gridH + LEGEND_GAP * scale;
-  const legendRowH = Math.max(LEGEND_ROW_H, fontLegend + 6) * scale;
-  const legendH = (legendRows.length - 1) * legendRowH + Math.max(SWATCH_S, fontLegend * 1.2 * scale);
+  const legendTop = rightLegend ? gridY : gridY + gridH + LEGEND_GAP * scale;
+  const legendH = (legendRows.length - 1) * legendRowH + swatchHeight;
 
-  const totalW = PAD_S * 2 + Math.max(contentW, opts?.legend === false ? 0 : legendW);
-  const totalH = (opts?.legend === false ? gridY + gridH : legendTop + legendH) + PAD_S;
+  const totalW =
+    opts?.legend === false ? PAD_S * 2 + contentW : rightLegend ? sideW : PAD_S * 2 + Math.max(contentW, legendW);
+  const totalH = (opts?.legend === false ? gridY + gridH : Math.max(gridY + gridH, legendTop + legendH)) + PAD_S;
   const innerW = totalW - PAD_S * 2;
 
   const lines: string[] = [];
   // The same dots and check as the editor keep the figure readable without colour.
   const mark = (x: number, y: number, side: number, score: number) => {
-    if (score <= 0) return;
+    if (!opts?.marks || score <= 0) return;
     const { ink } = colorsFor(fillScore(score));
     if (showLevels) {
       const dots = score <= 33 ? 1 : score <= 66 ? 2 : 3;
@@ -376,7 +407,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   // Legend: level keys, wrapped to the figure width and centred under it.
   (opts?.legend === false ? [] : legendRows).forEach((row, rowIndex) => {
     const y = legendTop + rowIndex * legendRowH;
-    const blockX = PAD_S + (innerW - legendW) / 2;
+    const blockX = rightLegend ? sideX : PAD_S + (innerW - legendW) / 2;
     for (const [col, { label, score }] of row.entries()) {
       const lx = blockX + (colX[col] ?? 0);
       lines.push(

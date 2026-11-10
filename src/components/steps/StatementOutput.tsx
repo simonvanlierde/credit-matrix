@@ -1,24 +1,27 @@
-import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2, TriangleAlert } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
 import { useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Switch } from "@/components/ui/switch";
 import {
-  type Author,
   CREDIT_ROLES,
+  type CreditRoleName,
   generateStatement,
   type StatementFormat,
+  statementSpans,
   toCrossrefContributors,
   toCsv,
   toJats4rXml,
   toJson,
   toLatexCredits,
   toMarkdown,
+  toMyst,
+  toQuarto,
+  toRoCrateFragment,
   toTenzing,
 } from "@/core";
 import { isAllBinary, rolesWithContributions } from "@/core/author";
-import type { RoleTranslator, UiTranslator } from "@/core/i18n";
 import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
 import { useTranslations } from "@/lib/translations";
@@ -28,7 +31,17 @@ import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { useAskSummary, useContributionStore } from "@/store/contribution-store";
 
-type DataFormat = "xml" | "crossref" | "json" | "csv" | "tenzing" | "markdown" | "latex";
+type DataFormat =
+  | "xml"
+  | "crossref"
+  | "json"
+  | "csv"
+  | "tenzing"
+  | "markdown"
+  | "latex"
+  | "quarto"
+  | "myst"
+  | "ro-crate";
 
 const EXPORT_ITEM_BUTTON =
   "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
@@ -38,51 +51,47 @@ const DATA_FORMATS: Record<
   DataFormat,
   {
     label: string;
-    serialize: (authors: Author[], translateRole: RoleTranslator, translateUi: UiTranslator, locale: string) => string;
     filename: string;
     mime: string;
   }
 > = {
-  // XML/JSON/CSV/tenzing are machine round-trip formats and LaTeX feeds a package; all stay in English.
-  // Only Markdown (a human-facing paste artifact) follows the output language.
-  // XML, JSON and LaTeX are replaced per export in the component, which knows the
-  // input mode and whether answers go in.
   xml: {
     label: "XML (JATS4R)",
-    serialize: (authors) => toJats4rXml(authors),
     filename: "credit-contributors.xml",
     mime: "application/xml",
   },
   crossref: {
     label: "XML (Crossref)",
-    serialize: toCrossrefContributors,
     filename: "crossref-contributors.xml",
     mime: "application/xml",
   },
   json: {
     label: "JSON",
-    serialize: (authors) => toJson(authors),
     filename: "credit_result.json",
     mime: "application/json",
   },
-  csv: { label: "CSV", serialize: toCsv, filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
+  csv: { label: "CSV", filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
   tenzing: {
     label: "tenzing CSV",
-    serialize: toTenzing,
     filename: "tenzing-contributors.csv",
     mime: "text/csv;charset=utf-8",
   },
   latex: {
     label: "LaTeX (latex-credits)",
-    serialize: (authors) => toLatexCredits(authors),
     filename: "credit-contributors.tex",
     mime: "application/x-tex;charset=utf-8",
   },
   markdown: {
     label: "Markdown",
-    serialize: toMarkdown,
     filename: "credit-contributors.md",
     mime: "text/markdown;charset=utf-8",
+  },
+  quarto: { label: "Quarto YAML", filename: "credit-quarto.yml", mime: "application/yaml;charset=utf-8" },
+  myst: { label: "MyST YAML", filename: "credit-myst.yml", mime: "application/yaml;charset=utf-8" },
+  "ro-crate": {
+    label: "RO-Crate",
+    filename: "credit-ro-crate-fragment.json",
+    mime: "application/ld+json",
   },
 };
 
@@ -92,6 +101,8 @@ export function StatementOutput() {
   const selfId = useContributionStore((s) => s.selfId);
   const yesNo = useContributionStore((s) => s.inputMode === "toggle");
   const openReview = useContributionStore((s) => s.openReview);
+  const statementLink = useContributionStore((s) => s.statementLink);
+  const setStatementLink = useContributionStore((s) => s.setStatementLink);
   const openDifferences = useAskSummary().open;
   // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
   const [includeAnswers, setIncludeAnswers] = useState(true);
@@ -139,10 +150,28 @@ export function StatementOutput() {
   const hasNonAuthors = authors.some((author) => author.contributorType === "non-author");
 
   function serialize(dataFormat: DataFormat): string {
-    if (dataFormat === "json") return toJson(authors, { asks, includeAnswers, selfId });
-    if (dataFormat === "xml") return toJats4rXml(authors, { yesNo });
-    if (dataFormat === "latex") return toLatexCredits(authors, { yesNo });
-    return DATA_FORMATS[dataFormat].serialize(authors, translateRole, translateUi, outputLanguage);
+    switch (dataFormat) {
+      case "json":
+        return toJson(authors, { asks, includeAnswers, selfId });
+      case "xml":
+        return toJats4rXml(authors, { yesNo });
+      case "latex":
+        return toLatexCredits(authors, { yesNo });
+      case "quarto":
+        return toQuarto(authors, { yesNo });
+      case "myst":
+        return toMyst(authors);
+      case "crossref":
+        return toCrossrefContributors(authors);
+      case "csv":
+        return toCsv(authors);
+      case "tenzing":
+        return toTenzing(authors);
+      case "ro-crate":
+        return JSON.stringify(toRoCrateFragment(authors).metadata, null, 2);
+      case "markdown":
+        return toMarkdown(authors, translateRole, translateUi, outputLanguage);
+    }
   }
 
   function downloadData(dataFormat: DataFormat) {
@@ -151,6 +180,11 @@ export function StatementOutput() {
     // A BOM makes Excel read the file as UTF-8, so non-ASCII names survive.
     const bom = dataFormat === "csv" || dataFormat === "tenzing" ? "﻿" : "";
     download(new Blob([bom, serialize(dataFormat)], { type: mime }), filename);
+  }
+
+  // Only the statement's own mark: a cell may have taken over before this leave event lands.
+  function clearPhraseLink() {
+    if (useContributionStore.getState().statementLink?.from === "phrase") setStatementLink(null);
   }
 
   function goToReview() {
@@ -271,12 +305,38 @@ export function StatementOutput() {
         {statement ? (
           <p
             key="statement"
+            // Pointer only: a keyboard marks the same phrase by focusing its cell in the grid.
+            onPointerOver={(event) => {
+              const phrase = (event.target as HTMLElement).closest<HTMLElement>("[data-role]");
+              const { author, role } = phrase?.dataset ?? {};
+              if (author && role)
+                setStatementLink({ contributorId: author, role: role as CreditRoleName, from: "phrase" });
+              else clearPhraseLink();
+            }}
+            onPointerLeave={clearPhraseLink}
             style={{ transitionDelay: "200ms" }}
             className={`max-w-[75ch] whitespace-pre-line [overflow-wrap:anywhere] text-base leading-relaxed text-on-surface ${
               settled ? "enter-fade" : ""
             }`}
           >
-            {statement}
+            {statementSpans(authors, statementOptions).map((span) => {
+              if (!span.cell) return span.text;
+              const { authorId, role } = span.cell;
+              const linked = statementLink?.contributorId === authorId && statementLink.role === role;
+              // One element either way: swapping in a <mark> would remount the text and break a
+              // selection being dragged across it. Underlined as well as tinted, never colour alone.
+              return (
+                <span
+                  key={`${authorId}:${role}`}
+                  data-author={authorId}
+                  data-role={role}
+                  data-linked={linked || undefined}
+                  className="rounded-sm [box-decoration-break:clone] data-linked:bg-primary/20 data-linked:underline data-linked:decoration-primary data-linked:decoration-2 data-linked:underline-offset-[3px]"
+                >
+                  {span.text}
+                </span>
+              );
+            })}
           </p>
         ) : (
           <p key="placeholder" className="text-sm text-on-surface-variant not-italic">
@@ -286,7 +346,9 @@ export function StatementOutput() {
       </section>
 
       {/* Validation notices. Not a live region: the readiness chip above already says
-          how many there are, and a list that arrived with its text was read a second time. */}
+          how many there are, and a list that arrived with its text was read a second time.
+          All in the note style: none of them blocks copying or exporting, so a draft
+          still being filled in is not shown as an error. */}
       {issues.length > 0 && (
         <ul
           // biome-ignore lint/a11y/noNoninteractiveTabindex: same as the statement pane; the bounded notes list scrolls and holds no focusable content.
@@ -304,17 +366,9 @@ export function StatementOutput() {
                 // The id breaks ties: two contributors can share a name, and
                 // then code+text alone collides (a real duplicate-key error).
                 key={issue.code === "authorNoRoles" ? `${issue.code}-${issue.authorId}` : `${issue.code}-${issue.role}`}
-                className={`flex items-start gap-2 text-xs rounded px-3 py-2 ${
-                  issue.level === "warning"
-                    ? "bg-error-container/30 text-error"
-                    : "bg-surface-container-high text-on-surface-variant"
-                }`}
+                className="flex items-start gap-2 text-xs rounded px-3 py-2 bg-surface-container-high text-on-surface-variant"
               >
-                {issue.level === "warning" ? (
-                  <TriangleAlert className="h-4 w-4 shrink-0 mt-px" />
-                ) : (
-                  <Info className="h-4 w-4 shrink-0 mt-px" />
-                )}
+                <Info className="h-4 w-4 shrink-0 mt-px" aria-hidden="true" />
                 <span>{text}</span>
               </li>
             );
@@ -352,7 +406,7 @@ export function StatementOutput() {
           <PopoverContent align="start" aria-label={t("exportData")} className="w-72 max-w-[calc(100vw-2rem)] p-1">
             <ul aria-label={t("a11yExportFormat")} className="grid">
               {(Object.keys(DATA_FORMATS) as DataFormat[]).map((value) => {
-                const { label } = DATA_FORMATS[value];
+                const label = value === "ro-crate" ? t("exportRoCrateFragment") : DATA_FORMATS[value].label;
                 const copiedThis = copiedFormat === value && dataCopyStatus !== "idle";
                 return (
                   <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">

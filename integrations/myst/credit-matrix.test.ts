@@ -4,8 +4,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
-import plugin, { authorsFor, normalizeRole, statementNode } from "./credit-matrix.mjs";
+import { buildHeatmapSvg, CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import {
+  AVAILABLE_LOCALES,
+  loadRoleCatalog,
+  loadUiCatalog,
+  makeRoleTranslator,
+  makeUiTranslator,
+  resolveLocaleTag,
+} from "@/core/i18n";
+import plugin, { authorsFor, normalizeRole, statementEntries, statementNode } from "./credit-matrix.mjs";
 
 type Node = { type: string; value?: string; children?: Node[] };
 const text = (nodes: Node[]): string => nodes.map((n) => n.value ?? text(n.children ?? [])).join("");
@@ -89,6 +97,49 @@ describe("MyST plugin", () => {
     );
   });
 
+  it.each([
+    ...AVAILABLE_LOCALES.map(({ code }) => code),
+    "fr-CA",
+    "de-DE",
+    "pt-BR",
+    "zh-CN",
+    "zh-TW",
+    "zh-Hant",
+    "zh-HK",
+    "zh-Hans-TW",
+    "unknown",
+  ])("uses page language %s with the core's locale fallback", async (lang) => {
+    const dir = mkdtempSync(join(tmpdir(), "credit-myst-language-"));
+    const page = join(dir, "index.md");
+    writeFileSync(join(dir, "myst.yml"), "project:\n  lang: de\n");
+    writeFileSync(
+      page,
+      `---\nlang: ${lang}\nauthors:\n  - name: Lin Wei\n    roles: [Software, Validation]\n  - name: Eva Novak\n    roles: [Software]\n---\n`,
+    );
+    const locale = resolveLocaleTag(lang) ?? "en";
+    const options = {
+      format: "by-author" as const,
+      locale,
+      translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
+      translateUi: makeUiTranslator(await loadUiCatalog(locale)),
+    };
+    const expected = generateStatement(statementEntries(authorsFor(page)), options).replace(/^CRediT: /, "");
+    expect(text(plugin.directives[0].run({}, { path: page }))).toBe(`${expected}.`);
+  });
+
+  it("inherits project language for Markdown and notebooks", () => {
+    const dir = mkdtempSync(join(tmpdir(), "credit-myst-project-language-"));
+    writeFileSync(
+      join(dir, "myst.yml"),
+      "project:\n  lang: fr\n  authors:\n    - name: Lin Wei\n      roles: [Software]\n",
+    );
+    for (const extension of ["md", "ipynb"]) {
+      const page = join(dir, `index.${extension}`);
+      writeFileSync(page, "# Contributors\n");
+      expect(text(plugin.directives[0].run({}, { path: page }))).toBe("Lin Wei\u00a0: Logiciel(s).");
+    }
+  });
+
   it("names the published version in the READMEs' plugin URL", () => {
     const { version } = JSON.parse(readFileSync(new URL("../../src/core/package.json", import.meta.url), "utf8"));
     for (const readme of ["README.md", "../jupyter-book/README.md"]) {
@@ -130,6 +181,35 @@ it("labels heatmap columns with each author's full name", () => {
   expect(svg).toContain(">Tu Youyou<");
   expect(svg).toContain(">Katherine Johnson<");
   expect(svg).not.toContain(">C<");
+});
+
+it("forwards legend placement and marks without changing MyST publication defaults", () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-legend-"));
+  const path = join(dir, "index.md");
+  const people = [{ name: "Tu Youyou", roles: ["Software"] }];
+  writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  expect(directive?.options).toHaveProperty("legend-position");
+  expect(directive?.options).toHaveProperty("marks");
+  for (const legendPosition of ["auto", "right", "bottom"] as const) {
+    for (const marks of [true, false]) {
+      const nodes = directive?.run({ options: { "legend-position": legendPosition, marks } }, { path });
+      const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+      expect(svg).toBe(
+        buildHeatmapSvg(statementEntries(people), {
+          levels: false,
+          acronyms: false,
+          locale: "en",
+          legendPosition,
+          marks,
+        }),
+      );
+      expect(svg.includes('aria-hidden="true"')).toBe(marks);
+    }
+  }
+  const nodes = directive?.run({ options: {} }, { path });
+  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  expect(svg).not.toContain('aria-hidden="true"');
 });
 
 it("derives distinct initials and preserves ambiguous or nonletter labels", () => {
