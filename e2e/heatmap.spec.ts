@@ -203,63 +203,95 @@ test("lets a large team inspect the figure at actual size without stretching the
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
 });
 
-test("keeps large rotated labels separated and inside the exported canvas", async ({ page, context }) => {
-  await seedStorage(
-    page,
+const mixedNames = ["Alexandra Montgomery Rivera 1", "Li"];
+const headerScenarios = [
+  { name: "large wide-glyph", names: ["É".repeat(20), "W".repeat(20)], fontSize: 32, size: 8, horizontal: false },
+  ...[10.5, 32].flatMap((fontSize) => [
+    { name: `mixed-length ${fontSize}px`, names: mixedNames, fontSize, size: 22, horizontal: false },
     {
-      welcomeSeen: true,
-      activeDraftId: "large-type",
-      drafts: {
-        "large-type": {
-          authors: ["É".repeat(20), "W".repeat(20)].map((name) =>
-            createAuthor(name, { contributions: [{ role: "Software", score: 100 }] }),
-          ),
-          heatmapSettings: { ...DEFAULT_HEATMAP_SETTINGS, fontSize: 32, size: 8, legend: false },
+      name: `reversed mixed-length ${fontSize}px`,
+      names: [...mixedNames].reverse(),
+      fontSize,
+      size: 22,
+      horizontal: false,
+    },
+    { name: `transposed mixed-length ${fontSize}px`, names: mixedNames, fontSize, size: 22, horizontal: true },
+  ]),
+];
+
+for (const scenario of headerScenarios) {
+  test(`keeps ${scenario.name} rotated labels inside the exported canvas`, async ({ page, context }) => {
+    await seedStorage(
+      page,
+      {
+        welcomeSeen: true,
+        activeDraftId: "large-type",
+        drafts: {
+          "large-type": {
+            authors: scenario.names.map((name) =>
+              createAuthor(name, {
+                contributions: [
+                  { role: "Project administration", score: 100 },
+                  { role: "Software", score: 100 },
+                ],
+              }),
+            ),
+            heatmapSettings: {
+              ...DEFAULT_HEATMAP_SETTINGS,
+              fontSize: scenario.fontSize,
+              size: scenario.size,
+              horizontal: scenario.horizontal,
+              legend: false,
+            },
+          },
         },
       },
-    },
-    { clearFirst: true },
-  );
-  await page.reload();
-  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
-  const source = await page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img").getAttribute("src");
-  const svg = decodeURIComponent(source?.split(",").slice(1).join(",") ?? "");
-  const figure = await context.newPage();
-  try {
-    await figure.setContent(svg);
-    const bounds = await figure.evaluate(async () => {
-      await document.fonts.ready;
-      const canvas = document.querySelector("svg");
-      if (!canvas) throw new Error("Expected SVG");
-      const view = canvas.viewBox.baseVal;
-      const labels = Array.from(canvas.querySelectorAll("text"));
-      const fits = labels.every((label) => {
-        const box = label.getBBox();
-        const matrix = label.getCTM();
-        if (!matrix) throw new Error("Expected text transform");
-        return [
-          [box.x, box.y],
-          [box.x + box.width, box.y],
-          [box.x, box.y + box.height],
-          [box.x + box.width, box.y + box.height],
-        ].every(([x, y]) => {
-          const point = new DOMPoint(x, y).matrixTransform(matrix);
-          return point.x >= 0 && point.y >= 0 && point.x <= view.width && point.y <= view.height;
+      { clearFirst: true },
+    );
+    await page.reload();
+    await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+    const source = await page
+      .getByRole("region", { name: "Contribution heatmap" })
+      .getByRole("img")
+      .getAttribute("src");
+    const svg = decodeURIComponent(source?.split(",").slice(1).join(",") ?? "");
+    const figure = await context.newPage();
+    try {
+      await figure.setContent(svg);
+      const bounds = await figure.evaluate(async () => {
+        await document.fonts.ready;
+        const canvas = document.querySelector("svg");
+        if (!canvas) throw new Error("Expected SVG");
+        const view = canvas.viewBox.baseVal;
+        const labels = Array.from(canvas.querySelectorAll("text"));
+        const fits = labels.every((label) => {
+          const box = label.getBBox();
+          const matrix = label.getCTM();
+          if (!matrix) throw new Error("Expected text transform");
+          return [
+            [box.x, box.y],
+            [box.x + box.width, box.y],
+            [box.x, box.y + box.height],
+            [box.x + box.width, box.y + box.height],
+          ].every(([x, y]) => {
+            const point = new DOMPoint(x, y).matrixTransform(matrix);
+            return point.x >= 0 && point.y >= 0 && point.x <= view.width && point.y <= view.height;
+          });
         });
+        const top = labels.filter((label) => label.hasAttribute("transform"));
+        const first = top[0]?.getCTM();
+        const second = top[1]?.getCTM();
+        if (!(first && second)) throw new Error("Expected two column labels");
+        const separation = Math.abs((second.e - first.e) * -first.b + (second.f - first.f) * first.a);
+        return { fits, separation, height: Math.max(...top.map((label) => label.getBBox().height)) };
       });
-      const top = labels.filter((label) => label.hasAttribute("transform"));
-      const first = top[0]?.getCTM();
-      const second = top[1]?.getCTM();
-      if (!(first && second)) throw new Error("Expected two column labels");
-      const separation = Math.abs((second.e - first.e) * -first.b + (second.f - first.f) * first.a);
-      return { fits, separation, height: Math.max(...top.map((label) => label.getBBox().height)) };
-    });
-    expect(bounds.fits).toBe(true);
-    expect(bounds.separation).toBeGreaterThan(bounds.height);
-  } finally {
-    await figure.close();
-  }
-});
+      expect(bounds.fits).toBe(true);
+      expect(bounds.separation).toBeGreaterThan(bounds.height);
+    } finally {
+      await figure.close();
+    }
+  });
+}
 
 test.describe("touch-screen previews", () => {
   test.use({ hasTouch: true });

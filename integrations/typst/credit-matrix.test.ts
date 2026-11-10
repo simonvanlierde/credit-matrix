@@ -132,6 +132,25 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     expect(result.status, result.stderr).toBe(0);
     expect(readFileSync(new URL("out/recipe.svg", import.meta.url), "utf8")).toContain("<svg");
   });
+  it("includes an earlier long header in the canvas bounds", () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    const width = (labels: string[]) => {
+      const team = labels.map((name) => `(name: "${name}", roles: (software: true))`).join(",");
+      writeFileSync(
+        new URL("out/mixed-type.typ", import.meta.url),
+        `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#credit-heatmap((${team},), initials: false, legend: false)`,
+      );
+      const run = typst("compile", "--root", ".", "out/mixed-type.typ", "out/mixed-type.svg");
+      expect(run.status, run.stderr).toBe(0);
+      return Number(
+        /viewBox="0 0 ([\d.]+)/.exec(readFileSync(new URL("out/mixed-type.svg", import.meta.url), "utf8"))?.[1],
+      );
+    };
+    const names = ["Alexandra Montgomery Rivera 1", "Li"];
+    // Moving a header one column changes its reach by at most the 16 pt column pitch.
+    expect(width([...names].reverse()) - width(names)).toBeLessThanOrEqual(16.01);
+  });
+
   it("separates rotated large-font headers above small cells", () => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
     const width = (count: number) => {

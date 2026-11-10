@@ -289,7 +289,10 @@
   let column-gap = calc.max(gap, top-height * calc.sqrt(2) - cell)
   let row-gap = calc.max(gap, font-size * 1.2 - cell)
   let climb = (calc.max(0pt, ..top.map(t => measure(t).width)) + top-height) * calc.sqrt(0.5)
-  let overhang = calc.max(0pt, (measure(top.at(-1, default: [])).width + top-height) * calc.sqrt(0.5) - cell / 2)
+  let overhang = calc.max(0pt, ..range(top.len()).map(i =>
+    (measure(top.at(i)).width + top-height) * calc.sqrt(0.5) - cell / 2
+      - (top.len() - 1 - i) * (cell + column-gap)
+  ))
   let cols = top.len()
   let rows = left-labels.len()
   let drawing = if roles.len() == 0 or people.len() == 0 { text(size: 8pt * font-ratio, fill: _ink-dim, loc.ui.emptyState) } else {

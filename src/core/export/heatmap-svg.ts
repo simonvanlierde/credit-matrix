@@ -250,11 +250,15 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const topBand = Math.max(maxTopW * DIAG + LABEL_GAP_S, safeTopReach + LABEL_GAP_S - PAD_S);
   const safeLeftW = Math.max(0, ...leftLabels.map((label) => safeTextW(label, fontLeft)));
   const leftBand = Math.max(maxLeftW + LABEL_GAP_S, safeLeftW + LABEL_GAP_S - PAD_S);
-  // Only the *last* top label crosses the grid's right edge, and only by the
-  // part of its climb that clears the half-cell it starts from.
-  const lastTopW = topLabelWs[topLabelWs.length - 1] ?? 0;
-  const lastTopSafeW = safeTextW(topLabels.at(-1) ?? "", fontTop) + fontTop * 1.2 * scale;
-  const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2, lastTopSafeW * DIAG - CELL_S / 2 - PAD_S);
+  // An earlier long header can reach farther right than the final short one.
+  const rightOverhang = Math.max(
+    0,
+    ...topLabels.map((label, i) => {
+      const remaining = (topLabels.length - 1 - i) * (CELL_S + COL_GAP_S);
+      const safeW = safeTextW(label, fontTop) + fontTop * 1.2 * scale;
+      return Math.max((topLabelWs[i] ?? 0) * DIAG, safeW * DIAG - PAD_S) - CELL_S / 2 - remaining;
+    }),
+  );
 
   const gridW = (transpose ? nRoles : nAuthors) * (CELL_S + COL_GAP_S) - COL_GAP_S;
   const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + ROW_GAP_S) - ROW_GAP_S;
