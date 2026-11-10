@@ -276,8 +276,12 @@ export function AuthorList() {
         />
       </div>
 
-      {authors.length === 0 && !welcomeOpen && (
-        <div className="rounded-lg border border-dashed border-outline-variant/40 bg-surface-container-low/40 p-6 text-center">
+      {authors.length === 0 && (
+        // Kept in flow, only hidden, while the welcome card is open: removing it moved everything
+        // below it (a layout shift) the moment the card opened over the page.
+        <div
+          className={`rounded-lg border border-dashed border-outline-variant/40 bg-surface-container-low/40 p-6 text-center${welcomeOpen ? " invisible" : ""}`}
+        >
           <UserPlus className="h-8 w-8 text-outline-variant mb-2 mx-auto" />
           <p className="text-sm text-on-surface-variant">
             {t("noContributorsYet")} {t.rich("noContributorsHint", { b: (chunks) => <strong>{chunks}</strong> })}
