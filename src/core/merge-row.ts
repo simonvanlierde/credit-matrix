@@ -36,3 +36,9 @@ export function keepKnownIds(current: Author[], incoming: Author[]): Author[] {
     return id ? { ...author, id } : author;
   });
 }
+
+/** The imported contributors `current` does not have yet, matched as {@link keepKnownIds} matches them. */
+export function newContributors(current: Author[], incoming: Author[]): Author[] {
+  const known = new Set(current.map((author) => author.id));
+  return keepKnownIds(current, incoming).filter((author) => !known.has(author.id));
+}

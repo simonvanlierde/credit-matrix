@@ -218,6 +218,42 @@ msgstr "Bijdragers importeren"
 msgid "importData"
 msgstr "Gegevens importeren"
 
+msgid "importSummary"
+msgstr "Plak of upload een lijst met bijdragers, of zoek die op via een DOI."
+
+msgid "importFormatsToggle"
+msgstr "Welke formaten werken?"
+
+msgid "importOr"
+msgstr "of"
+
+msgid "importConverting"
+msgstr "Bezig met omzetten…"
+
+msgid "importImporting"
+msgstr "Bezig met importeren…"
+
+msgid "importChoiceTitle"
+msgstr "Toevoegen aan dit concept of het vervangen?"
+
+msgid "importAddNew"
+msgstr "{count} nieuwe toevoegen"
+
+msgid "importedContributors"
+msgstr "{count, plural, one {# bijdrager} other {# bijdragers}} geïmporteerd."
+
+msgid "importAddedContributors"
+msgstr "{count, plural, one {# bijdrager} other {# bijdragers}} aan dit concept toegevoegd."
+
+msgid "importUndoStale"
+msgstr "Niets ongedaan gemaakt: het concept is veranderd na de import. Pas het in het raster aan."
+
+msgid "annImportUndone"
+msgstr "Import ongedaan gemaakt."
+
+msgid "errImportXmlUnreadable"
+msgstr "Die XML kon niet worden gelezen. Controleer of het bestand volledig is."
+
 msgid "close"
 msgstr "Sluiten"
 
@@ -228,16 +264,13 @@ msgid "dragDropFile"
 msgstr "Sleep een bestand hierheen"
 
 msgid "acceptedFileTypes"
-msgstr "Accepteert .csv, .tsv, .json of .xml"
+msgstr "Accepteert {types}"
 
 msgid "fileLoaded"
 msgstr "Geladen uit {name}"
 
 msgid "pasteRawData"
 msgstr "Ruwe gegevens plakken"
-
-msgid "replaceWorkspaceTitle"
-msgstr "Huidige werkruimte vervangen?"
 
 msgid "replaceWorkspace"
 msgstr "Werkruimte vervangen"
@@ -351,7 +384,7 @@ msgid "structuredFileUpload"
 msgstr "Gestructureerd bestand uploaden"
 
 msgid "doiPlaceholder"
-msgstr "10.1038/s41586-020-2649-2"
+msgstr "bijv. 10.1234/abcde"
 
 msgid "doiLookUp"
 msgstr "Opzoeken"
@@ -912,7 +945,7 @@ msgid "formatJsonExport"
 msgstr "JSON-export"
 
 msgid "replaceWorkspaceBody"
-msgstr "Deze import bevat {incoming, plural, one {# bijdrager} other {# bijdragers}}. Daarmee {existing, plural, one {wordt de huidige # bijdrager} other {worden de huidige # bijdragers}} vervangen. Dit kan niet ongedaan worden gemaakt."
+msgstr "Deze import bevat {incoming, plural, one {# bijdrager} other {# bijdragers}}. Daarmee {existing, plural, one {wordt de huidige # bijdrager} other {worden de huidige # bijdragers}} vervangen."
 
 msgid "statementEmptyHint"
 msgstr "Nog geen bijdragen toegewezen. Selecteer cellen in het raster om rollen toe te wijzen."
