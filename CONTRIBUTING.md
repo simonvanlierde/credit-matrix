@@ -118,6 +118,14 @@ publish it for the Zenodo archive. Enable immutable releases in the repository's
 Zenodo copies `.zenodo.json`, or `CITATION.cff` when that file is absent, when the GitHub release
 is published. Later metadata edits do not update that archived version.
 
+The Typst package goes to [Typst Universe](https://typst.app/universe/package/credit-matrix)
+through a PR to [typst/packages](https://github.com/typst/packages), only for a plain
+`major.minor.patch` version (the release script leaves `typst.toml` alone for a pre-release).
+Copy `integrations/typst` to `packages/preview/credit-matrix/<version>/` there, without
+`credit-matrix.test.ts` and `out/`, and make two changes in the copy: the examples import
+`@preview/credit-matrix:<version>` instead of `../lib.typ`, and the README's CREDITS.md link
+points at the `v<version>` tag instead of `main`.
+
 ## Testing
 
 - **Unit (Vitest)**: two projects. `core` runs `src/core` under Node and checks the built package:
