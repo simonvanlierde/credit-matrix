@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { type Author, createAuthor } from "@/core";
+import { type Author, CREDIT_ROLES, createAuthor } from "@/core";
 import { announce } from "@/lib/announce";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
@@ -90,12 +90,25 @@ it("says everyone agreed, once, when the last asked co-author's answer leaves no
 
 it("does not announce agreement for a draft that opens already agreed", () => {
   const authors = twoAuthors();
+  const [jane, bob] = authors;
+  if (!(jane && bob)) throw new Error("expected 2 authors");
+  // Jane is you, so Bob is everyone there is to ask.
+  act(() =>
+    store().loadAuthors(authors, { [bob.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(bob) } }, jane.id),
+  );
+  renderGrid();
+  expect(screen.getByText(english.stripEveryoneAgreed)).toBeTruthy();
+  expect(announce).not.toHaveBeenCalled();
+});
+
+it("does not say everyone agreed while a co-author was never asked", () => {
+  const authors = [...twoAuthors(), createAuthor("Ann Lee")];
   const bob = authors[1];
   if (!bob) throw new Error("expected Bob");
   act(() => store().loadAuthors(authors, { [bob.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(bob) } }));
   renderGrid();
-  expect(screen.getByText(english.stripEveryoneAgreed)).toBeTruthy();
-  expect(announce).not.toHaveBeenCalled();
+  expect(screen.getByText("1 of 3 answered")).toBeTruthy();
+  expect(screen.queryByText(english.stripEveryoneAgreed)).toBeNull();
 });
 
 it("rings the cell whose phrase is under the pointer in the statement", () => {
@@ -119,14 +132,47 @@ it("points a hovered or focused cell at its phrase, and lets go on leaving", () 
   const { container } = renderGrid();
   const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${jane.id}:0"]`);
   if (!cell) throw new Error("expected the cell");
-  fireEvent.mouseEnter(cell);
+  fireEvent.pointerEnter(cell, { pointerType: "mouse" });
   expect(store().statementLink).toEqual({ contributorId: jane.id, role: "Conceptualization", from: "cell" });
-  fireEvent.mouseLeave(cell);
+  fireEvent.pointerLeave(cell, { pointerType: "mouse" });
   expect(store().statementLink).toBeNull();
   act(() => cell.focus());
   expect(store().statementLink?.from).toBe("cell");
   act(() => cell.blur());
   expect(store().statementLink).toBeNull();
+});
+
+it("leaves no mark behind after a tap, which never sends a mouse leave", () => {
+  const authors = twoAuthors();
+  const jane = authors[0];
+  if (!jane) throw new Error("expected Jane");
+  act(() => store().loadAuthors(authors));
+  const { container } = renderGrid();
+  const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${jane.id}:0"]`);
+  if (!cell) throw new Error("expected the cell");
+  // iOS fires mouseenter on a tap, and no mouseleave to undo it.
+  fireEvent.mouseEnter(cell);
+  fireEvent.pointerEnter(cell, { pointerType: "touch" });
+  expect(store().statementLink).toBeNull();
+});
+
+it("keeps a focused cell's mark when the mouse passes over another cell and leaves", () => {
+  const authors = twoAuthors();
+  const [jane, bob] = authors;
+  if (!(jane && bob)) throw new Error("expected 2 authors");
+  act(() => store().loadAuthors(authors));
+  const { container } = renderGrid();
+  const cellOf = (author: Author, role: number) => {
+    const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${author.id}:${role}"]`);
+    if (!cell) throw new Error("expected the cell");
+    return cell;
+  };
+  const investigation = CREDIT_ROLES.findIndex((role) => role.name === "Investigation");
+  act(() => cellOf(jane, 0).focus());
+  fireEvent.pointerEnter(cellOf(bob, investigation), { pointerType: "mouse" });
+  expect(store().statementLink).toEqual({ contributorId: bob.id, role: "Investigation", from: "cell" });
+  fireEvent.pointerLeave(cellOf(bob, investigation), { pointerType: "mouse" });
+  expect(store().statementLink).toEqual({ contributorId: jane.id, role: "Conceptualization", from: "cell" });
 });
 
 it("describes the grid with its keys, even where the hint is hidden for touch", () => {
@@ -147,6 +193,6 @@ it("keeps the statement's mark when a cell's leave event lands after the pointer
   if (!cell) throw new Error("expected the cell");
   const phraseLink = { contributorId: bob.id, role: "Investigation" as const, from: "phrase" as const };
   act(() => store().setStatementLink(phraseLink));
-  fireEvent.mouseLeave(cell);
+  fireEvent.pointerLeave(cell, { pointerType: "mouse" });
   expect(store().statementLink).toEqual(phraseLink);
 });

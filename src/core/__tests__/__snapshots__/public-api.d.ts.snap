@@ -976,7 +976,9 @@ export declare function fromJats4rXml(xmlString: string, { parser }?: {
   parser?: XmlParser;
 }): Author[];
 /** Text that is not well-formed XML, such as a truncated file. */
-export declare class XmlParseError extends Error {}
+export declare class XmlParseError extends Error {
+  name: string;
+}
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
  * later), for a publisher to paste into the work's record. Each person gets a

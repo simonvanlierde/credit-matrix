@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { createAuthor } from "@/core";
+import { createAuthor, toJson } from "@/core";
 import { buildShareUrl } from "@/lib/share";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
@@ -243,5 +243,64 @@ describe("importing over a draft", () => {
     expect(names()).toEqual(["Ann Bell", "Bo Chen"]);
     expect(useContributionStore.getState().authors[0]?.id).toBe(ann?.id);
     expect(screen.getByText("Added 1 contributor to this draft.")).toBeTruthy();
+  });
+
+  it("brings the answers a file holds for the contributors it adds", async () => {
+    const ann = createAuthor("Ann Bell");
+    const bo = createAuthor("Bo Chen");
+    const asks = { [ann.id]: { sentAt: 1, prefilled: false }, [bo.id]: { sentAt: 2, prefilled: false } };
+    await importOver(toJson([ann, bo], { asks }));
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 new" }));
+    const state = useContributionStore.getState();
+    expect(state.asks[bo.id]).toEqual(asks[bo.id]);
+    // Ann was already here: her row and its asks stay the draft's.
+    expect(state.authors[0]?.id).not.toBe(ann.id);
+    expect(Object.keys(state.asks)).toEqual([bo.id]);
+  });
+
+  const askBo = () => {
+    const { activeDraftId, authors } = useContributionStore.getState();
+    const bo = authors.find((author) => author.name === "Bo Chen");
+    if (!bo) throw new Error("expected Bo");
+    useContributionStore
+      .getState()
+      .applyAskStep(activeDraftId, { kind: "sent", contributorId: bo.id, prefilled: false, at: 9 });
+  };
+  const markBo = () => {
+    const bo = useContributionStore.getState().authors.find((author) => author.name === "Bo Chen");
+    useContributionStore.getState().setSelfId(bo?.id ?? null);
+  };
+  const retitle = () => useContributionStore.getState().setTitle("A newer title");
+
+  it.each([
+    ["an ask sent", askBo],
+    ["the you mark set", markBo],
+    ["the title edited", retitle],
+  ])("refuses Undo of a replace after %s, and keeps it", async (_, change) => {
+    await importOver("Bo Chen");
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    act(change);
+    const after = useContributionStore.getState();
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
+    const now = useContributionStore.getState();
+    expect(names()).toEqual(["Bo Chen"]);
+    expect([now.asks, now.selfId, now.title]).toEqual([after.asks, after.selfId, after.title]);
+    expect(screen.getByText(english.importUndoStale)).toBeTruthy();
+  });
+
+  it.each([
+    ["an ask sent", askBo],
+    ["the you mark set", markBo],
+    ["the title edited", retitle],
+  ])("refuses Undo of an add after %s, and keeps it", async (_, change) => {
+    await importOver("Ann Bell\nBo Chen");
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 new" }));
+    act(change);
+    const after = useContributionStore.getState();
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
+    const now = useContributionStore.getState();
+    expect(names()).toEqual(["Ann Bell", "Bo Chen"]);
+    expect([now.asks, now.selfId, now.title]).toEqual([after.asks, after.selfId, after.title]);
+    expect(screen.getByText(english.importUndoStale)).toBeTruthy();
   });
 });

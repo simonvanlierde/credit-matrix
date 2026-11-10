@@ -84,7 +84,9 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
 }
 
 /** Text that is not well-formed XML, such as a truncated file. */
-export class XmlParseError extends Error {}
+export class XmlParseError extends Error {
+  override name = "XmlParseError";
+}
 
 /**
  * Parse untrusted XML text. Both exporters write plain documents with no entities. Browsers expand

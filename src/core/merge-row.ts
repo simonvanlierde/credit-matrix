@@ -11,8 +11,9 @@ import type { Author } from "./author";
  *
  * This is for your own import. A reply is matched by its claimed id alone.
  */
+const nameKey = (author: Author) => author.name.trim().replace(/\s+/g, " ").toLowerCase();
+
 export function keepKnownIds(current: Author[], incoming: Author[]): Author[] {
-  const nameKey = (author: Author) => author.name.trim().replace(/\s+/g, " ").toLowerCase();
   const free = new Map(current.map((author) => [author.id, author]));
   // Ids the import already carries are spoken for, so a name match cannot take one first.
   const carried = new Set(incoming.map((author) => author.id).filter((id) => free.has(id)));
@@ -37,8 +38,23 @@ export function keepKnownIds(current: Author[], incoming: Author[]): Author[] {
   });
 }
 
-/** The imported contributors `current` does not have yet, matched as {@link keepKnownIds} matches them. */
+/** Same id, same ORCID iD, or the same name when at least one of them has no ORCID iD. */
+function samePerson(a: Author, b: Author): boolean {
+  if (a.id === b.id) return true;
+  if (a.orcid && b.orcid) return a.orcid === b.orcid;
+  return nameKey(a) === nameKey(b);
+}
+
+/**
+ * The imported contributors who match nobody in `current` nor an earlier row of
+ * `incoming`, as they came in. Unlike {@link keepKnownIds} a match is not used
+ * up, so a file listing someone twice adds them at most once.
+ */
 export function newContributors(current: Author[], incoming: Author[]): Author[] {
-  const known = new Set(current.map((author) => author.id));
-  return keepKnownIds(current, incoming).filter((author) => !known.has(author.id));
+  const added: Author[] = [];
+  for (const author of incoming) {
+    if (!current.some((known) => samePerson(known, author)) && !added.some((known) => samePerson(known, author)))
+      added.push(author);
+  }
+  return added;
 }

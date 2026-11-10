@@ -54,7 +54,9 @@ export function SelectContent({
         position="popper"
         sideOffset={4}
         className={cn(
-          "z-50 max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded border border-outline-variant bg-surface-bright shadow-md",
+          // Capped to the room beside the trigger: Radix locks page scroll, so a taller list would
+          // leave its far rows out of reach. The viewport scrolls inside it.
+          "z-50 max-h-(--radix-select-content-available-height) max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded border border-outline-variant bg-surface-bright shadow-md",
           "panel-motion [transform-origin:var(--radix-select-content-transform-origin)]",
           className,
         )}

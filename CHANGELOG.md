@@ -35,11 +35,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Pointing at a grid cell, or focusing it, marks its phrase in the statement, and pointing at a
   phrase rings its cell. `statementSpans` returns the plain-text statement as spans that name the
   contributor and role behind each phrase.
-- Once every co-author you asked has answered and nothing is left to review, the status strip says
-  "Everyone agreed", and a screen reader hears it once.
+- Once every co-author but you has been asked and has answered, and nothing is left to review, the
+  status strip says "Everyone agreed", and a screen reader hears it once.
 - Importing into a draft that already has contributors offers "Add N new" beside "Replace
   workspace": it keeps the draft and adds only the people it lacks, matched by id, ORCID iD or
-  name.
+  name, with the file's co-author answers for them. A person the file lists twice joins once, and
+  someone with the same name but another ORCID iD joins as a new contributor.
 - Importing contributors from a file, a paste or a DOI ends with a message such as "Imported 2
   contributors." and an Undo, which also takes back a replaced workspace.
 
@@ -56,7 +57,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   "Ask co-authors".
 - The key hint under the grid legend is hidden on touch screens. It still describes the grid to a
   screen reader.
-
+- `generateStatement` with `asHtml` escapes the catalog's separators, which it used to insert raw.
+  This only changes the output of a custom `translateUi` whose separators contain `&`, `<`, `>` or
+  `"`.
+- `XmlParseError` has its own `name`, `"XmlParseError"`, instead of `"Error"`.
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 - Heatmaps look different by default: square cells with a thin gray rule on white, where cells
   were rounded on off-white. `shape: "rounded"` brings back the rounded cells.

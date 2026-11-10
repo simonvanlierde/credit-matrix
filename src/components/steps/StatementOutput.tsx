@@ -298,16 +298,17 @@ export function StatementOutput() {
               if (!span.cell) return span.text;
               const { authorId, role } = span.cell;
               const linked = statementLink?.contributorId === authorId && statementLink.role === role;
+              // One element either way: swapping in a <mark> would remount the text and break a
+              // selection being dragged across it. Underlined as well as tinted, never colour alone.
               return (
-                <span key={`${authorId}:${role}`} data-author={authorId} data-role={role}>
-                  {linked ? (
-                    // Underlined as well as tinted, so the mark never rests on colour alone.
-                    <mark className="rounded-sm bg-primary/20 text-on-surface underline decoration-primary decoration-2 underline-offset-[3px] [box-decoration-break:clone]">
-                      {span.text}
-                    </mark>
-                  ) : (
-                    span.text
-                  )}
+                <span
+                  key={`${authorId}:${role}`}
+                  data-author={authorId}
+                  data-role={role}
+                  data-linked={linked || undefined}
+                  className="rounded-sm [box-decoration-break:clone] data-linked:bg-primary/20 data-linked:underline data-linked:decoration-primary data-linked:decoration-2 data-linked:underline-offset-[3px]"
+                >
+                  {span.text}
                 </span>
               );
             })}

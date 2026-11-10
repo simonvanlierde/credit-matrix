@@ -83,7 +83,9 @@ export function ContributionGrid() {
   );
   const activeDraftId = useContributionStore((s) => s.activeDraftId);
   const summary = useAskSummary();
-  const everyoneAgreed = summary.asked > 0 && summary.answered === summary.asked && summary.open === 0;
+  // Everyone there is to ask (all but you) was asked, answered, and left nothing to review.
+  const everyoneAgreed =
+    summary.total > 0 && summary.asked === summary.total && summary.answered === summary.asked && summary.open === 0;
   // The light ramp mixes toward white, which reads inverted on a dark page.
   const dark = useTheme().resolvedTheme === "dark";
   const {
@@ -119,6 +121,8 @@ export function ContributionGrid() {
   // Handlers for the memoized cells, refreshed every render. The cells read
   // them through this ref, so a new closure never re-renders all 14×N of them.
   const cellApi = useRef<CellApi>(null);
+  // The focused cell's mark comes back when the mouse leaves another cell.
+  const focusedLink = useRef<{ author: Author; roleIndex: number } | null>(null);
   const { bulkUndo, runBulk, undoBulk, triggerRef: bulkTriggerRef } = useBulkUndo();
   // Right-click level picker: direct selection for pointer users, so correcting
   // an overshoot never means cycling a value through None. The anchor is the
@@ -298,9 +302,11 @@ export function ContributionGrid() {
     click: handleCellClick,
     keyDown: handleCellKeyDown,
     focus: (row, col) => setActiveCell({ row, col }),
-    link: (author, roleIndex) => {
-      const role = CREDIT_ROLES[roleIndex]?.name;
-      if (author && role) setStatementLink({ contributorId: author.id, role, from: "cell" });
+    link: (author, roleIndex, source) => {
+      if (source === "focus") focusedLink.current = author ? { author, roleIndex } : null;
+      const target = author ? { author, roleIndex } : focusedLink.current;
+      const role = target && CREDIT_ROLES[target.roleIndex]?.name;
+      if (target && role) setStatementLink({ contributorId: target.author.id, role, from: "cell" });
       // Only a cell's own mark: leave events can land after the statement has taken over.
       else if (useContributionStore.getState().statementLink?.from === "cell") setStatementLink(null);
     },
@@ -728,8 +734,8 @@ interface CellApi {
     roleIndex: number,
   ) => void;
   focus: (row: number, col: number) => void;
-  /** Mark this cell's phrase in the statement; no author clears the mark. */
-  link: (author: Author | null, roleIndex: number) => void;
+  /** Mark this cell's phrase in the statement; no author clears the mark, or on hover hands it back to the focused cell. */
+  link: (author: Author | null, roleIndex: number, source: "hover" | "focus") => void;
   openPicker: (authorId: string, roleIndex: number, event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -796,11 +802,12 @@ const GridCell = memo(function GridCellInner({
         tabIndex={tabbable ? 0 : -1}
         onFocus={() => {
           api.current.focus(row, col);
-          api.current.link(author, roleIndex);
+          api.current.link(author, roleIndex, "focus");
         }}
-        onBlur={() => api.current.link(null, roleIndex)}
-        onMouseEnter={() => api.current.link(author, roleIndex)}
-        onMouseLeave={() => api.current.link(null, roleIndex)}
+        onBlur={() => api.current.link(null, roleIndex, "focus")}
+        // Mouse only: a tap fires enter with no leave, which would strand the mark.
+        onPointerEnter={(event) => event.pointerType === "mouse" && api.current.link(author, roleIndex, "hover")}
+        onPointerLeave={(event) => event.pointerType === "mouse" && api.current.link(null, roleIndex, "hover")}
         onKeyDown={(event) => api.current.keyDown(event, row, col, author, roleIndex)}
         // A toggle only in yes/no mode: pressed semantics misdescribe a
         // four-way value, whose level the accessible name carries instead.

@@ -45,7 +45,7 @@ it("marks the phrase of the cell under the pointer, by author and by role", () =
   if (!(jane && bob)) throw new Error("expected 2 authors");
   act(() => store().loadAuthors(authors));
   const { container } = renderStatement();
-  const marks = () => [...container.querySelectorAll("mark")].map((mark) => mark.textContent);
+  const marks = () => [...container.querySelectorAll("[data-linked]")].map((mark) => mark.textContent);
   const statement = () => container.querySelector("section p")?.textContent;
   const before = statement();
   expect(marks()).toEqual([]);
@@ -53,7 +53,7 @@ it("marks the phrase of the cell under the pointer, by author and by role", () =
   act(() => store().setStatementLink({ contributorId: bob.id, role: "Conceptualization", from: "cell" }));
   // Bob's Conceptualization, not Jane's: the same word appears in both their segments.
   expect(marks()).toEqual(["Conceptualization"]);
-  expect(container.querySelector("mark")?.closest("[data-author]")?.getAttribute("data-author")).toBe(bob.id);
+  expect(container.querySelector("[data-linked]")?.getAttribute("data-author")).toBe(bob.id);
   // Marking changes no text.
   expect(statement()).toBe(before);
 
@@ -73,9 +73,26 @@ it("points the phrase under the pointer at its cell", () => {
   if (!phrase) throw new Error("expected Jane's Software phrase");
   fireEvent.pointerOver(phrase);
   expect(store().statementLink).toEqual({ contributorId: jane.id, role: "Software", from: "phrase" });
-  expect(container.querySelector("mark")?.textContent).toBe("Software");
+  expect(container.querySelector("[data-linked]")?.textContent).toBe("Software");
   const paragraph = phrase.closest("p");
   if (!paragraph) throw new Error("expected the statement");
   fireEvent.pointerLeave(paragraph);
   expect(store().statementLink).toBeNull();
+});
+
+it("keeps a phrase's text node in place as its mark comes and goes, so a selection being dragged holds", () => {
+  const authors = twoAuthors();
+  const jane = authors[0];
+  if (!jane) throw new Error("expected Jane");
+  act(() => store().loadAuthors(authors));
+  const { container } = renderStatement();
+  const text = () => container.querySelector(`[data-author="${jane.id}"][data-role="Software"]`)?.firstChild;
+  const before = text();
+  expect(before?.nodeType).toBe(Node.TEXT_NODE);
+  act(() => store().setStatementLink({ contributorId: jane.id, role: "Software", from: "cell" }));
+  expect(text()).toBe(before);
+  act(() => store().setStatementLink(null));
+  expect(text()).toBe(before);
+  // Never announced: no live region or extra element joins the statement.
+  expect(container.querySelector("section mark, section [aria-live]")).toBeNull();
 });

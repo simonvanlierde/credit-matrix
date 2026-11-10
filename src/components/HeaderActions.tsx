@@ -341,9 +341,10 @@ export function HeaderActions() {
   }
 
   /**
-   * Write an import, then confirm it with Undo. Undo restores the draft only while the roster is
-   * still the one this wrote, as for a pasted statement. Errors surface in ImportModal, which keeps
-   * the dialog open on failure.
+   * Write an import, then confirm it with Undo. Undo restores the draft only while the roster, its
+   * asks, the "you" mark and the title are still the ones this wrote: an ask sent or a title edited
+   * since would be thrown away with it. Errors surface in ImportModal, which keeps the dialog open
+   * on failure.
    */
   function handleImport(
     { authors: importedAuthors, title: importedTitle, asks, selfId }: PendingImport,
@@ -353,9 +354,11 @@ export function HeaderActions() {
     const { authors: current, asks: held } = before;
     let count: number;
     if (mode === "add") {
-      // Rows already here stay as they are, with their asks; only the contributors the draft lacks join.
+      // Rows already here stay as they are, with their asks; only the contributors the draft lacks join,
+      // with the file's answers for them, checked as a replace checks them.
       const added = newContributors(current, importedAuthors);
-      loadAuthors([...current, ...added]);
+      const answers = asks ? importAnswers([], added, added, {}, { asks }).asks : undefined;
+      loadAuthors([...current, ...added], answers ? { ...held, ...answers } : undefined);
       count = added.length;
     } else {
       // Re-imported contributors keep their ids, so their open asks still match.
@@ -367,7 +370,16 @@ export function HeaderActions() {
       if (importedTitle !== undefined) setTitle(importedTitle);
       count = useContributionStore.getState().authors.length;
     }
-    const applied = useContributionStore.getState().authors;
+    const applied = useContributionStore.getState();
+    const unchanged = () => {
+      const now = useContributionStore.getState();
+      return (
+        now.authors === applied.authors &&
+        now.asks === applied.asks &&
+        now.selfId === applied.selfId &&
+        now.title === applied.title
+      );
+    };
     showStatus({
       kind: "success",
       message: t(mode === "add" ? "importAddedContributors" : "importedContributors", { count }),
@@ -375,7 +387,7 @@ export function HeaderActions() {
         {
           label: t("undo"),
           onAct: () => {
-            if (useContributionStore.getState().authors !== applied) {
+            if (!unchanged()) {
               showStatus({ kind: "error", message: t("importUndoStale") });
               return;
             }

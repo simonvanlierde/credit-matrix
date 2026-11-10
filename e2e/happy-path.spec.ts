@@ -954,6 +954,28 @@ test.describe("Happy path UI flows", () => {
     await expect.poll(async () => (await option.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   });
 
+  test("keeps a long phone contributor list on screen, down to its last name", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 600 });
+    await page.goto("/");
+    const names =
+      "Ada Abel, Ben Bell, Cy Cole, Di Dunn, Ed Earl, Flo Ford, Gus Gray, Hal Hunt, Ivy Iles, Jo Judd, Kit Kane, Lu Lord, Mo Moss, Ned Nash, Oz Orr, Pia Pike";
+    const adder = page.getByLabel("New author names or ORCID iD");
+    await adder.fill(names);
+    await adder.press("Enter");
+    const picker = page.getByRole("combobox", { name: "Contributor to assign" });
+    await picker.click();
+    const list = page.getByRole("listbox");
+    // Polled: the list scales in, so its first frames measure short.
+    await expect.poll(async () => (await list.boundingBox())?.height).toBeGreaterThan(100);
+    const box = await list.boundingBox();
+    expect(box?.y).toBeGreaterThanOrEqual(0);
+    expect((box?.y ?? 0) + (box?.height ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(600);
+    const last = page.getByRole("option", { name: "Pia Pike" });
+    await last.scrollIntoViewIfNeeded();
+    await last.click();
+    await expect(page.getByRole("button", { name: "Conceptualization for Pia Pike: None" })).toBeVisible();
+  });
+
   test("keeps the phone contributor picker in view while the role list scrolls", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");

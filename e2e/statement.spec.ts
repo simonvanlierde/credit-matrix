@@ -116,12 +116,12 @@ test("hovering a cell marks its phrase in the statement, and hovering a phrase r
   await bobConcept.click();
 
   const statement = page.getByRole("region", { name: "Generated statement" });
-  const mark = statement.locator("mark");
+  const mark = statement.locator("[data-linked]");
   await bobConcept.hover();
   // Bob's Conceptualization, not Jane's: the role name appears in both their segments.
   await expect(mark).toHaveCount(1);
   await expect(mark).toHaveText("Conceptualization");
-  await expect(mark.locator("xpath=..")).toHaveAttribute("data-author", /.+/);
+  await expect(mark).toHaveAttribute("data-author", /.+/);
   expect(await mark.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("underline");
 
   await page.getByRole("radio", { name: "By role" }).click();
