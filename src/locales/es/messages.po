@@ -1570,3 +1570,102 @@ msgstr "Tamaño real"
 
 msgid "heatmapFitWidth"
 msgstr "Ajustar al ancho"
+
+msgid "heatmapFigureSettings"
+msgstr "Ajustes de la figura"
+
+msgid "heatmapLayout"
+msgstr "Diseño"
+
+msgid "heatmapOrientation"
+msgstr "Orientación"
+
+msgid "heatmapRolesInRows"
+msgstr "Roles en filas"
+
+msgid "heatmapContributorsInRows"
+msgstr "Colaboradores en filas"
+
+msgid "heatmapRoleLabels"
+msgstr "Etiquetas de roles"
+
+msgid "heatmapFullLabels"
+msgstr "Etiquetas completas"
+
+msgid "heatmapShortLabels"
+msgstr "Etiquetas cortas"
+
+msgid "heatmapHideUnused"
+msgstr "Omitir roles sin usar"
+
+msgid "heatmapShowLegend"
+msgstr "Mostrar leyenda"
+
+msgid "heatmapShowLevels"
+msgstr "Mostrar niveles de contribución"
+
+msgid "heatmapLegendHint"
+msgstr "Explique los niveles en el pie de figura si oculta la leyenda."
+
+msgid "heatmapBlue"
+msgstr "Azul"
+
+msgid "heatmapGreen"
+msgstr "Verde"
+
+msgid "heatmapGray"
+msgstr "Escala de grises"
+
+msgid "heatmapPaleColor"
+msgstr "El nivel de apoyo se distingue mal con este color. Elija un tono más oscuro."
+
+msgid "heatmapAdvanced"
+msgstr "Avanzado"
+
+msgid "heatmapFont"
+msgstr "Fuente"
+
+msgid "heatmapSans"
+msgstr "Sin serifa"
+
+msgid "heatmapSerif"
+msgstr "Con serifa"
+
+msgid "heatmapFontSize"
+msgstr "Tamaño del texto (px)"
+
+msgid "heatmapCellShape"
+msgstr "Forma de las celdas"
+
+msgid "heatmapSquare"
+msgstr "Cuadrado"
+
+msgid "heatmapRounded"
+msgstr "Redondeado"
+
+msgid "heatmapCircle"
+msgstr "Círculo"
+
+msgid "heatmapCellSize"
+msgstr "Tamaño de las celdas (px)"
+
+msgid "heatmapPngSize"
+msgstr "Tamaño del PNG"
+
+msgid "heatmapWidthMm"
+msgstr "Anchura (mm)"
+
+msgid "heatmapResolution"
+msgstr "Resolución"
+
+msgid "heatmapSvgHint"
+msgstr "El SVG conserva la nitidez al cambiar de tamaño; estas dimensiones son para PNG."
+
+msgid "heatmapReset"
+msgstr "Restablecer valores predeterminados"
+
+msgid "heatmapPngTooLarge"
+msgstr "Este PNG sería demasiado grande. Reduzca la anchura o resolución, intercambie los ejes o descargue el SVG."
+
+msgid "heatmapSmallPrint"
+msgstr "Las etiquetas se imprimirían a unos {size} pt. Aumente la anchura o intercambie los ejes para facilitar la lectura."

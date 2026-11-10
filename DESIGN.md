@@ -107,6 +107,16 @@ check in yes/no mode. Repeat those marks in the legend, so the level never depen
 Keep the grid's key directly after the table. The heatmap export popover previews the actual figure
 on white paper, with fit-to-width and actual-size views and the PNG pixel dimensions.
 
+Figure settings belong beside that preview and are saved per draft, independently of the editor's
+display options and contribution values. Keep layout, labels, legend and colour together; put font
+and cell geometry under Advanced. Reset restores the figure defaults. On a narrow screen, settings
+replace the preview until the person closes them; desktop shows both side by side.
+
+PNG width and resolution determine its pixel dimensions and print-density metadata. Show the
+resulting dimensions, flag labels that would print very small, and keep SVG available when a PNG
+would exceed the raster size limit. SVG retains its scalable geometry. Use portable sans-serif or
+serif font stacks, with the installed font determining the exact glyphs.
+
 Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the ring
 around the cell a Review line points at, and the ring that fades off a cell when you settle a
 difference. It is a mark, never a fill, and it always comes with a shape or text.

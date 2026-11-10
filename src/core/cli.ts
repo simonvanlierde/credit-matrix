@@ -59,7 +59,8 @@ Commands:
       flat cells with no levels. SVG figure options:
       --color '#1f4e79' --palette blue|green|gray --shape square|rounded|circle
       --size 22 --legend true|false --labels full|short --horizontal
-      --skipempty true|false. Color overrides palette; size is in pixels.
+      --skipempty true|false --initials true|false --font sans|serif --font-size 6..32.
+      Color overrides palette; size and font-size are in pixels.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
       Print a link that asks one contributor to check their roles,
       or with --blank, to fill them in from scratch.
@@ -196,7 +197,10 @@ export async function run(argv: string[]): Promise<string> {
       palette: { type: "string" },
       shape: { type: "string" },
       size: { type: "string" },
+      "font-size": { type: "string" },
+      font: { type: "string" },
       legend: { type: "string", default: "true" },
+      initials: { type: "string", default: "true" },
       labels: { type: "string" },
       horizontal: { type: "boolean", default: false },
       skipempty: { type: "string", default: "true" },
@@ -276,7 +280,7 @@ export async function run(argv: string[]): Promise<string> {
         case "tenzing":
           return toTenzing(authors);
         case "svg": {
-          for (const key of ["legend", "skipempty"] as const) {
+          for (const key of ["legend", "skipempty", "initials"] as const) {
             if (!["true", "false"].includes(values[key])) throw new UsageError(`--${key} must be true or false.`);
           }
           const locale = requireLocale(values.locale);
@@ -287,6 +291,9 @@ export async function run(argv: string[]): Promise<string> {
             palette: values.palette as HeatmapSvgOptions["palette"],
             shape: values.shape as HeatmapSvgOptions["shape"],
             size: values.size === undefined ? undefined : Number(values.size),
+            acronyms: values.initials === "true",
+            fontSize: values["font-size"] === undefined ? undefined : Number(values["font-size"]),
+            font: values.font as HeatmapSvgOptions["font"],
             legend: values.legend === "true",
             labels: values.labels as HeatmapSvgOptions["labels"],
             horizontal: values.horizontal,

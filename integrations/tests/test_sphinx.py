@@ -137,7 +137,7 @@ def test_unicode_output_under_non_utf8_locale(tmp_path, project):
 
 def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
     app, warnings, _ = project(
-        ".. credit-heatmap:: contributors.json\n   :shape: circle\n   :size: 30\n   :legend: false\n"
+        ".. credit-heatmap:: contributors.json\n   :shape: circle\n   :size: 30\n   :font: serif\n   :font-size: 21\n   :initials: false\n   :legend: false\n"
     )
     app.build()
     assert not warnings.getvalue()
@@ -147,3 +147,6 @@ def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
     svg = image.read_text(encoding="utf-8")
     assert 'width="30" height="30" rx="15"' in svg
     assert ">Supporting<" not in svg
+    assert 'font-size="21"' in svg
+    assert ">Marie Curie</text>" in svg
+    assert "Georgia, 'Times New Roman', serif" in svg

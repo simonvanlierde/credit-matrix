@@ -1008,6 +1008,10 @@ interface HeatmapSvgOptions {
   /** Cell side in SVG pixels (Typst uses points). */
   size?: number;
   legend?: boolean;
+  /** Base label size in SVG pixels, from 6 to 32. Defaults to 10.5. */
+  fontSize?: number;
+  /** Portable font stack. Defaults to sans. */
+  font?: "sans" | "serif";
   /** Short labels pair the role number with twelve characters; the text alternative retains full names. */
   labels?: "full" | "short";
   /**

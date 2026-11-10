@@ -1570,3 +1570,102 @@ msgstr "Originalgröße"
 
 msgid "heatmapFitWidth"
 msgstr "An Breite anpassen"
+
+msgid "heatmapFigureSettings"
+msgstr "Abbildungseinstellungen"
+
+msgid "heatmapLayout"
+msgstr "Layout"
+
+msgid "heatmapOrientation"
+msgstr "Ausrichtung"
+
+msgid "heatmapRolesInRows"
+msgstr "Rollen in Zeilen"
+
+msgid "heatmapContributorsInRows"
+msgstr "Mitwirkende in Zeilen"
+
+msgid "heatmapRoleLabels"
+msgstr "Rollenbeschriftungen"
+
+msgid "heatmapFullLabels"
+msgstr "Vollständige Beschriftungen"
+
+msgid "heatmapShortLabels"
+msgstr "Kurze Beschriftungen"
+
+msgid "heatmapHideUnused"
+msgstr "Unbenutzte Rollen ausblenden"
+
+msgid "heatmapShowLegend"
+msgstr "Legende anzeigen"
+
+msgid "heatmapShowLevels"
+msgstr "Beitragsstufen anzeigen"
+
+msgid "heatmapLegendHint"
+msgstr "Erklären Sie die Stufen in der Bildunterschrift, wenn Sie die Legende ausblenden."
+
+msgid "heatmapBlue"
+msgstr "Blau"
+
+msgid "heatmapGreen"
+msgstr "Grün"
+
+msgid "heatmapGray"
+msgstr "Graustufen"
+
+msgid "heatmapPaleColor"
+msgstr "Unterstützend ist mit dieser Farbe schwer zu erkennen. Wählen Sie einen dunkleren Farbton."
+
+msgid "heatmapAdvanced"
+msgstr "Erweitert"
+
+msgid "heatmapFont"
+msgstr "Schriftart"
+
+msgid "heatmapSans"
+msgstr "Serifenlos"
+
+msgid "heatmapSerif"
+msgstr "Mit Serifen"
+
+msgid "heatmapFontSize"
+msgstr "Schriftgröße (px)"
+
+msgid "heatmapCellShape"
+msgstr "Zellform"
+
+msgid "heatmapSquare"
+msgstr "Quadratisch"
+
+msgid "heatmapRounded"
+msgstr "Abgerundet"
+
+msgid "heatmapCircle"
+msgstr "Kreis"
+
+msgid "heatmapCellSize"
+msgstr "Zellgröße (px)"
+
+msgid "heatmapPngSize"
+msgstr "PNG-Größe"
+
+msgid "heatmapWidthMm"
+msgstr "Breite (mm)"
+
+msgid "heatmapResolution"
+msgstr "Auflösung"
+
+msgid "heatmapSvgHint"
+msgstr "SVG bleibt beim Skalieren scharf; diese Maße gelten für PNG."
+
+msgid "heatmapReset"
+msgstr "Standardwerte wiederherstellen"
+
+msgid "heatmapPngTooLarge"
+msgstr "Diese PNG wäre zu groß. Verringern Sie Breite oder Auflösung, tauschen Sie die Achsen oder laden Sie SVG herunter."
+
+msgid "heatmapSmallPrint"
+msgstr "Die Beschriftungen wären im Druck etwa {size} pt groß. Erhöhen Sie die Breite oder tauschen Sie die Achsen für lesbaren Text."

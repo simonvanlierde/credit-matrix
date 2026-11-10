@@ -1570,3 +1570,102 @@ msgstr "実寸表示"
 
 msgid "heatmapFitWidth"
 msgstr "幅に合わせる"
+
+msgid "heatmapFigureSettings"
+msgstr "図の設定"
+
+msgid "heatmapLayout"
+msgstr "レイアウト"
+
+msgid "heatmapOrientation"
+msgstr "向き"
+
+msgid "heatmapRolesInRows"
+msgstr "行に役割を表示"
+
+msgid "heatmapContributorsInRows"
+msgstr "行に貢献者を表示"
+
+msgid "heatmapRoleLabels"
+msgstr "役割ラベル"
+
+msgid "heatmapFullLabels"
+msgstr "完全なラベル"
+
+msgid "heatmapShortLabels"
+msgstr "短いラベル"
+
+msgid "heatmapHideUnused"
+msgstr "未使用の役割を省略"
+
+msgid "heatmapShowLegend"
+msgstr "凡例を表示"
+
+msgid "heatmapShowLevels"
+msgstr "貢献レベルを表示"
+
+msgid "heatmapLegendHint"
+msgstr "凡例を非表示にする場合は、図のキャプションでレベルを説明してください。"
+
+msgid "heatmapBlue"
+msgstr "青"
+
+msgid "heatmapGreen"
+msgstr "緑"
+
+msgid "heatmapGray"
+msgstr "グレースケール"
+
+msgid "heatmapPaleColor"
+msgstr "この色では補助的な貢献を区別しにくくなります。より暗い色を選んでください。"
+
+msgid "heatmapAdvanced"
+msgstr "詳細設定"
+
+msgid "heatmapFont"
+msgstr "フォント"
+
+msgid "heatmapSans"
+msgstr "サンセリフ"
+
+msgid "heatmapSerif"
+msgstr "セリフ"
+
+msgid "heatmapFontSize"
+msgstr "文字サイズ（px）"
+
+msgid "heatmapCellShape"
+msgstr "セルの形"
+
+msgid "heatmapSquare"
+msgstr "四角"
+
+msgid "heatmapRounded"
+msgstr "角丸"
+
+msgid "heatmapCircle"
+msgstr "円"
+
+msgid "heatmapCellSize"
+msgstr "セルサイズ（px）"
+
+msgid "heatmapPngSize"
+msgstr "PNGのサイズ"
+
+msgid "heatmapWidthMm"
+msgstr "幅（mm）"
+
+msgid "heatmapResolution"
+msgstr "解像度"
+
+msgid "heatmapSvgHint"
+msgstr "SVGは拡大縮小しても鮮明です。このサイズ設定はPNGに適用されます。"
+
+msgid "heatmapReset"
+msgstr "既定値に戻す"
+
+msgid "heatmapPngTooLarge"
+msgstr "PNGが大きすぎます。幅または解像度を下げるか、軸を入れ替えるか、SVGをダウンロードしてください。"
+
+msgid "heatmapSmallPrint"
+msgstr "印刷時のラベルは約{size}ptになります。読みやすくするには幅を広げるか、軸を入れ替えてください。"

@@ -36,7 +36,7 @@
   "credit-matrix: unknown CRediT role \"" + role + "\" for " + name + ". Use one of: " + _slugs.join(", "),
 )
 
-// One person as (name, ack, levels: (slug: level), equal, corresponding), from an inline dict
+// One person as (name, initials, ack, levels: (slug: level), equal, corresponding), from an inline dict
 // or an author of the app's JSON export.
 #let _person(entry) = {
   if type(entry) != dictionary or type(entry.at("name", default: none)) != str {
@@ -62,6 +62,7 @@
   }
   (
     name: name,
+    initials: entry.at("initials", default: none),
     ack: entry.at("contributorType", default: none) == "non-author" or entry.at("non-author", default: false),
     levels: _slugs.filter(s => scores.at(s, default: "none") != "none").map(s => (s, scores.at(s))).to-dict(),
     equal: entry.at("equalContribution", default: entry.at("equal-contribution", default: false)),
@@ -205,9 +206,12 @@
   palette: "blue",
   shape: "square",
   size: auto,
+  font: "sans",
+  font-size: 7.5pt,
   legend: true,
   labels: "full",
   horizontal: false,
+  initials: false,
   skipempty: true,
   cell: 14pt,
   gap: 1.5pt,
@@ -217,6 +221,10 @@
   assert(palette in palettes, message: "credit-matrix: unknown palette")
   assert(shape in ("square", "rounded", "circle"), message: "credit-matrix: unknown shape")
   assert(labels in ("full", "short"), message: "credit-matrix: labels must be full or short")
+  assert(font in ("sans", "serif"), message: "credit-matrix: font must be sans or serif")
+  assert(font-size >= 4.5pt and font-size <= 24pt, message: "credit-matrix: font-size must be between 4.5pt and 24pt")
+  set text(font: if font == "serif" { ("Libertinus Serif", "Times New Roman") } else { ("IBM Plex Sans", "DejaVu Sans", "Arial", "DejaVu Sans Mono") })
+  let font-ratio = font-size / 7.5pt
   let hue = if color == auto { palettes.at(palette) } else { color }
   let cell = if size == auto { cell } else { size }
   assert(cell > 0pt and cell <= 192pt, message: "credit-matrix: size must be between 0 and 192pt")
@@ -236,19 +244,55 @@
     let f = if levels { _fractions.at(level) } else { 1 }
     std.color.mix((rgb("#ffffff"), (1 - f) * 100%), (hue, f * 100%), space: rgb)
   }
-  let swatch(level, side: cell) = rect(width: side, height: side, radius: radius(side), fill: fill(level), stroke: 0.35pt + rgb("#c9c9c5"))
-  let top-labels = if horizontal { roles.map(role-label) } else { people.map(p => p.name) }
-  let left-labels = if horizontal { people.map(p => p.name) } else { roles.map(role-label) }
-  let top = top-labels.map(label => text(size: 8pt, weight: 500, fill: _ink, label))
-  let climb = calc.max(0pt, ..top.map(t => measure(t).width)) * calc.sqrt(0.5)
-  let overhang = calc.max(0pt, measure(top.at(-1, default: [])).width * calc.sqrt(0.5) - cell / 2)
+  let luminance(c) = {
+    let v = rgb(c).components().slice(0, 3).map(v => {
+      let s = v / 100%
+      if s <= 0.03928 { s / 12.92 } else { calc.pow((s + 0.055) / 1.055, 2.4) }
+    })
+    0.2126 * v.at(0) + 0.7152 * v.at(1) + 0.0722 * v.at(2)
+  }
+  let swatch(level, side: cell) = {
+    let background = fill(level)
+    let l = luminance(background)
+    let ink = if (l + 0.05) / (luminance(_ink) + 0.05) >= 1.05 / (l + 0.05) { _ink } else { rgb("#ffffff") }
+    box(width: side, height: side)[
+      #place(top + left, rect(width: side, height: side, radius: radius(side), fill: background, stroke: 0.35pt + rgb("#c9c9c5")))
+      #if level != "none" {
+        if levels {
+          let dots = (supporting: 1, equal: 2, lead: 3).at(level)
+          for i in range(dots) {
+            place(top + left, dx: side / 2 + (i - (dots - 1) / 2) * side * 0.22 - side * 0.085,
+              dy: side / 2 - side * 0.085, circle(radius: side * 0.085, fill: ink))
+          }
+        } else {
+          place(center + horizon, text(size: side * 0.7, fill: ink, sym.checkmark))
+        }
+      }
+    ]
+  }
+  let short-name(p) = if type(p.initials) == str and p.initials.trim() != "" { p.initials } else {
+    let words = p.name.split(" ").filter(w => w != "")
+    if words.len() <= 1 { p.name } else { words.map(w => upper(w.clusters().first())).join() }
+  }
+  let author-label(p) = if not initials { p.name } else {
+    let label = short-name(p)
+    if people.filter(other => short-name(other) == label).len() > 1 { p.name } else { label }
+  }
+  let top-labels = if horizontal { roles.map(role-label) } else { people.map(author-label) }
+  let left-labels = if horizontal { people.map(author-label) } else { roles.map(role-label) }
+  let top = top-labels.map(label => text(size: 8pt * font-ratio, weight: 500, fill: _ink, label))
+  let top-height = calc.max(8pt * font-ratio * 1.2, ..top.map(t => measure(t).height))
+  let column-gap = calc.max(gap, top-height * calc.sqrt(2) - cell)
+  let row-gap = calc.max(gap, font-size * 1.2 - cell)
+  let climb = (calc.max(0pt, ..top.map(t => measure(t).width)) + top-height) * calc.sqrt(0.5)
+  let overhang = calc.max(0pt, (measure(top.at(-1, default: [])).width + top-height) * calc.sqrt(0.5) - cell / 2)
   let cols = top.len()
   let rows = left-labels.len()
-  let drawing = if roles.len() == 0 or people.len() == 0 { text(size: 8pt, fill: _ink-dim, loc.ui.emptyState) } else {
+  let drawing = if roles.len() == 0 or people.len() == 0 { text(size: 8pt * font-ratio, fill: _ink-dim, loc.ui.emptyState) } else {
     let grid-figure = pad(right: overhang, grid(
       columns: (auto,) + (cell,) * cols,
-      column-gutter: (6pt,) + (gap,) * cols,
-      row-gutter: (6pt,) + (gap,) * rows,
+      column-gutter: (6pt,) + (column-gap,) * cols,
+      row-gutter: (6pt,) + (row-gap,) * rows,
       align: (x, _) => if x == 0 { right + horizon } else { center + horizon },
       [], ..top.map(t => box(width: cell, height: climb, place(
         bottom + left,
@@ -256,7 +300,7 @@
         rotate(-45deg, origin: bottom + left, box(width: measure(t).width, t)),
       ))),
       ..range(rows).map(row => (
-        text(size: 7.5pt, fill: _ink-dim, left-labels.at(row)),
+        text(size: font-size, fill: _ink-dim, left-labels.at(row)),
         ..range(cols).map(col => {
           let p = people.at(if horizontal { row } else { col })
           let s = roles.at(if horizontal { col } else { row })
@@ -267,7 +311,7 @@
     if legend {
       let keys = if levels { ("lead", "equal", "supporting", "none") } else { ("contributed", "none") }
       let key = keys.map(k => box[#box(baseline: 25%, swatch(if k == "contributed" { "lead" } else { k }, side: 10pt)) #text(
-        size: 7.5pt, fill: _ink-dim, loc.ui.at(k),
+        size: font-size, fill: _ink-dim, loc.ui.at(k),
       )])
       stack(spacing: 10pt, grid-figure, align(center, key.join(h(10pt))))
     } else { grid-figure }

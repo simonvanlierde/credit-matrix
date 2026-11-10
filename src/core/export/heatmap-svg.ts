@@ -46,6 +46,10 @@ export interface HeatmapSvgOptions {
   /** Cell side in SVG pixels (Typst uses points). */
   size?: number;
   legend?: boolean;
+  /** Base label size in SVG pixels, from 6 to 32. Defaults to 10.5. */
+  fontSize?: number;
+  /** Portable font stack. Defaults to sans. */
+  font?: "sans" | "serif";
   /** Short labels pair the role number with twelve characters; the text alternative retains full names. */
   labels?: "full" | "short";
   /**
@@ -116,6 +120,7 @@ export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions):
 export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string {
   const transpose = opts?.horizontal ?? !!opts?.transpose;
   const scale = typeof opts?.scale === "number" ? Math.max(0.1, opts.scale) : 1;
+  if (!Number.isFinite(scale)) throw new HeatmapOptionError("Heatmap scale must be finite.");
   const palettes = { blue: DEFAULT_MONO_COLOR, green: "#00724c", gray: "#404040" };
   if (opts?.palette && !Object.hasOwn(palettes, opts.palette)) throw new HeatmapOptionError("Unknown heatmap palette.");
   const monoColor = opts?.color ?? opts?.monoColor ?? palettes[opts?.palette ?? "blue"];
@@ -127,6 +132,16 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const shape = opts?.shape ?? "square";
   if (!["square", "rounded", "circle"].includes(shape)) throw new HeatmapOptionError("Unknown heatmap shape.");
   if (opts?.labels && !["full", "short"].includes(opts.labels)) throw new HeatmapOptionError("Unknown heatmap labels.");
+  const fontSize = opts?.fontSize ?? FONT_LEFT;
+  if (!Number.isFinite(fontSize) || fontSize < 6 || fontSize > 32)
+    throw new HeatmapOptionError("Heatmap font size must be between 6 and 32.");
+  const font = opts?.font ?? "sans";
+  if (!["sans", "serif"].includes(font)) throw new HeatmapOptionError("Unknown heatmap font.");
+  const fontFamily = font === "serif" ? "Georgia, 'Times New Roman', serif" : FONT;
+  const fontRatio = fontSize / FONT_LEFT;
+  const fontTop = FONT_TOP * fontRatio;
+  const fontLeft = fontSize;
+  const fontLegend = FONT_LEGEND * fontRatio;
   const radius = (side: number) => (shape === "circle" ? side / 2 : shape === "rounded" ? 3 * scale : 0);
   const showLevels = opts?.levels ?? opts?.showLevels ?? true;
   const translateRole = opts?.translateRole ?? ((name: string) => name);
@@ -148,32 +163,6 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
 
   const PAD_S = PAD * scale;
 
-  // Nothing to show: render a small placeholder rather than a 0-row grid.
-  if (roles.length === 0 || authors.length === 0) {
-    const w = 320 * scale;
-    const h = 56 * scale;
-    return [
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img"${lang}>`,
-      `<!-- ${GENERATOR_NOTE} -->`,
-      `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
-      `<rect width="${w}" height="${h}" fill="${COLOR_BG}"/>`,
-      `<text x="${PAD_S}" y="${(PAD + 8) * scale}" font-family="${FONT}" font-size="${11 * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(translateUi("emptyState"))}</text>`,
-      "</svg>",
-    ].join("\n");
-  }
-
-  const nAuthors = authors.length;
-  const nRoles = roles.length;
-
-  const scoreFor = (author: Author | undefined, roleName: string): number =>
-    author?.contributions.find((c) => c.role === roleName)?.score ?? 0;
-  // Flat mode collapses any contribution to full intensity.
-  const fillScore = (score: number): number => (showLevels ? score : score > 0 ? 100 : 0);
-
-  const CELL_S = size * scale;
-  const GAP_S = GAP * scale;
-  const LABEL_GAP_S = LABEL_GAP * scale;
-
   // Approx rendered width of a label. CJK glyphs render full-width (≈1em)
   // against a Latin advance of ≈0.62em, so count them as 1.6 units or a
   // six-character Japanese name overflows its band.
@@ -185,29 +174,82 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const CJK_CHAR = /[\u1100-\u11FF\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF]/;
   const labelUnits = (label: string): number =>
     [...label].reduce((units, char) => units + (CJK_CHAR.test(char) ? 1.6 : 1), 0);
-  const textW = (label: string, fontSize: number): number => labelUnits(label) * fontSize * CHAR_EM * scale;
+  const textW = (label: string, labelSize: number): number => labelUnits(label) * labelSize * CHAR_EM * scale;
+  // Conservative glyph bounds prevent wide capitals and rotated ascenders from clipping.
+  const safeTextW = (label: string, labelSize: number): number =>
+    [...label].reduce(
+      (width, char) =>
+        width + (CJK_CHAR.test(char) || /[MWmw@%&]/u.test(char) ? 1 : /\p{Lu}/u.test(char) ? 0.8 : CHAR_EM),
+      0,
+    ) *
+    labelSize *
+    scale;
+
+  // Nothing to show: render a small placeholder rather than a 0-row grid.
+  if (roles.length === 0 || authors.length === 0) {
+    const message = translateUi("emptyState");
+    const extraFontHeight = Math.max(0, fontTop - FONT_TOP);
+    const w = Math.max(320 * scale, PAD_S * 2 + Math.max(textW(message, fontTop), safeTextW(message, fontTop)));
+    const h = (56 + extraFontHeight * 1.2) * scale;
+    const baseline = (PAD + 8 + extraFontHeight) * scale;
+    return [
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img"${lang}>`,
+      `<!-- ${GENERATOR_NOTE} -->`,
+      `<title>${escapeXml(translateUi("heatmapTitle"))}</title>`,
+      `<rect width="${w}" height="${h}" fill="${COLOR_BG}"/>`,
+      `<text x="${PAD_S}" y="${baseline}" font-family="${fontFamily}" font-size="${fontTop * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(message)}</text>`,
+      "</svg>",
+    ].join("\n");
+  }
+
+  const nAuthors = authors.length;
+  const nRoles = roles.length;
+
+  const scoreFor = (author: Author | undefined, roleName: string): number =>
+    author?.contributions.find((c) => c.role === roleName)?.score ?? 0;
+  // Flat mode collapses any contribution to full intensity.
+  const fillScore = (score: number): number => (showLevels ? score : score > 0 ? 100 : 0);
+  // A figure has four fills; parsing colors and measuring contrast per cell is costly.
+  const tierColor = (score: number) => {
+    const fill = heatCellColor(monoColor, score);
+    return { fill, ink: onColor(fill) };
+  };
+  const tierColors = [tierColor(0), tierColor(33), tierColor(66), tierColor(100)] as const;
+  const colorsFor = (score: number) => tierColors[score <= 0 ? 0 : score <= 33 ? 1 : score <= 66 ? 2 : 3];
+
+  const CELL_S = size * scale;
+  // A 45° header needs sqrt(2) times its line height between columns.
+  const COL_GAP_S = Math.max(GAP, fontTop * 1.2 * Math.SQRT2 - size) * scale;
+  const ROW_GAP_S = Math.max(GAP, fontLeft * 1.2 - size) * scale;
+  const LABEL_GAP_S = LABEL_GAP * scale;
 
   // Top labels (rotated -45°): author labels when normal, role names when transposed.
   const topLabels = transpose ? roles.map((r) => roleLabel(r.name)) : authors.map((_, ai) => authorLabel(ai));
   // Left labels (horizontal, right-aligned): roles when normal, authors when transposed.
   const leftLabels = transpose ? authors.map((_, ai) => authorLabel(ai)) : roles.map((r) => roleLabel(r.name));
 
-  const topLabelWs = topLabels.map((l) => textW(l, FONT_TOP));
+  const topLabelWs = topLabels.map((l) => textW(l, fontTop));
   const maxTopW = Math.max(0, ...topLabelWs);
-  const maxLeftW = Math.max(0, ...leftLabels.map((l) => textW(l, FONT_LEFT)));
+  const maxLeftW = Math.max(0, ...leftLabels.map((l) => textW(l, fontLeft)));
 
   // Bands are the labels' own reach plus one gap — never a fixed frame. A
   // rotated label climbs by its length × cos45°; a horizontal one runs its
   // full length to the left.
-  const topBand = maxTopW * DIAG + LABEL_GAP_S;
-  const leftBand = maxLeftW + LABEL_GAP_S;
+  const safeTopReach = Math.max(
+    0,
+    ...topLabels.map((label) => (safeTextW(label, fontTop) + fontTop * 1.2 * scale) * DIAG),
+  );
+  const topBand = Math.max(maxTopW * DIAG + LABEL_GAP_S, safeTopReach + LABEL_GAP_S - PAD_S);
+  const safeLeftW = Math.max(0, ...leftLabels.map((label) => safeTextW(label, fontLeft)));
+  const leftBand = Math.max(maxLeftW + LABEL_GAP_S, safeLeftW + LABEL_GAP_S - PAD_S);
   // Only the *last* top label crosses the grid's right edge, and only by the
   // part of its climb that clears the half-cell it starts from.
   const lastTopW = topLabelWs[topLabelWs.length - 1] ?? 0;
-  const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2);
+  const lastTopSafeW = safeTextW(topLabels.at(-1) ?? "", fontTop) + fontTop * 1.2 * scale;
+  const rightOverhang = Math.max(0, lastTopW * DIAG - CELL_S / 2, lastTopSafeW * DIAG - CELL_S / 2 - PAD_S);
 
-  const gridW = (transpose ? nRoles : nAuthors) * (CELL_S + GAP_S) - GAP_S;
-  const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + GAP_S) - GAP_S;
+  const gridW = (transpose ? nRoles : nAuthors) * (CELL_S + COL_GAP_S) - COL_GAP_S;
+  const gridH = (transpose ? nAuthors : nRoles) * (CELL_S + ROW_GAP_S) - ROW_GAP_S;
 
   const gridX = PAD_S + leftBand;
   const gridY = PAD_S + topBand;
@@ -229,7 +271,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   // canvas. Each row is centred on the canvas.
   const SWATCH_S = SWATCH * scale;
   const LEGEND_ITEM_GAP_S = LEGEND_ITEM_GAP * scale;
-  const legendItemW = (label: string) => SWATCH_S + 6 * scale + textW(label, FONT_LEGEND) + LEGEND_ITEM_GAP_S;
+  const legendItemW = (label: string) => SWATCH_S + 6 * scale + textW(label, fontLegend) + LEGEND_ITEM_GAP_S;
   const contentW = leftBand + gridW + rightOverhang;
 
   const legendItems = levelKey.map((key) => ({ ...key, w: legendItemW(key.label) }));
@@ -255,7 +297,8 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const colX = colW.map((_, c) => colW.slice(0, c).reduce((x, w) => x + w, 0));
   const legendW = colW.reduce((w, c) => w + c, 0) - LEGEND_ITEM_GAP_S;
   const legendTop = gridY + gridH + LEGEND_GAP * scale;
-  const legendH = legendRows.length * LEGEND_ROW_H * scale - (LEGEND_ROW_H * scale - SWATCH_S);
+  const legendRowH = Math.max(LEGEND_ROW_H, fontLegend + 6) * scale;
+  const legendH = (legendRows.length - 1) * legendRowH + Math.max(SWATCH_S, fontLegend * 1.2 * scale);
 
   const totalW = PAD_S * 2 + Math.max(contentW, opts?.legend === false ? 0 : legendW);
   const totalH = (opts?.legend === false ? gridY + gridH : legendTop + legendH) + PAD_S;
@@ -265,7 +308,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   // The same dots and check as the editor keep the figure readable without colour.
   const mark = (x: number, y: number, side: number, score: number) => {
     if (score <= 0) return;
-    const ink = onColor(heatCellColor(monoColor, fillScore(score)));
+    const { ink } = colorsFor(fillScore(score));
     if (showLevels) {
       const dots = score <= 33 ? 1 : score <= 66 ? 2 : 3;
       const gap = side * 0.22;
@@ -292,10 +335,10 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   lines.push(`<rect width="${totalW}" height="${totalH}" fill="${COLOR_BG}"/>`);
 
   for (let i = 0; i < topLabels.length; i++) {
-    const cx = gridX + i * (CELL_S + GAP_S) + CELL_S / 2;
+    const cx = gridX + i * (CELL_S + COL_GAP_S) + CELL_S / 2;
     const cy = gridY - LABEL_GAP_S;
     lines.push(
-      `<text transform="translate(${cx},${cy}) rotate(-45)" text-anchor="start" font-family="${FONT}" font-size="${FONT_TOP * scale}" font-weight="500" fill="${COLOR_TEXT}">${escapeXml(
+      `<text transform="translate(${cx},${cy}) rotate(-45)" text-anchor="start" font-family="${fontFamily}" font-size="${fontTop * scale}" font-weight="500" fill="${COLOR_TEXT}">${escapeXml(
         topLabels[i] ?? "",
       )}</text>`,
     );
@@ -304,22 +347,22 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   // Rows: roles when normal, authors when transposed.
   const rowCount = transpose ? nAuthors : nRoles;
   for (let r = 0; r < rowCount; r++) {
-    const cy = gridY + r * (CELL_S + GAP_S);
+    const cy = gridY + r * (CELL_S + ROW_GAP_S);
     lines.push(
-      `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * scale}" text-anchor="end" font-family="${FONT}" font-size="${FONT_LEFT * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(
+      `<text x="${gridX - LABEL_GAP_S}" y="${cy + CELL_S / 2 + 4 * fontRatio * scale}" text-anchor="end" font-family="${fontFamily}" font-size="${fontLeft * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(
         leftLabels[r] ?? "",
       )}</text>`,
     );
 
     const colCount = transpose ? nRoles : nAuthors;
     for (let c = 0; c < colCount; c++) {
-      const cx = gridX + c * (CELL_S + GAP_S);
+      const cx = gridX + c * (CELL_S + COL_GAP_S);
       const ai = transpose ? r : c;
       const role = transpose ? roles[c] : roles[r];
       const score = scoreFor(authors[ai], role?.name ?? "");
       const rx = radius(CELL_S);
       lines.push(
-        `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${heatCellColor(monoColor, fillScore(score))}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
+        `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${colorsFor(fillScore(score)).fill}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
       mark(cx, cy, CELL_S, score);
     }
@@ -332,16 +375,16 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
 
   // Legend: level keys, wrapped to the figure width and centred under it.
   (opts?.legend === false ? [] : legendRows).forEach((row, rowIndex) => {
-    const y = legendTop + rowIndex * LEGEND_ROW_H * scale;
+    const y = legendTop + rowIndex * legendRowH;
     const blockX = PAD_S + (innerW - legendW) / 2;
     for (const [col, { label, score }] of row.entries()) {
       const lx = blockX + (colX[col] ?? 0);
       lines.push(
-        `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${radius(SWATCH_S)}" ry="${radius(SWATCH_S)}" fill="${heatCellColor(monoColor, score)}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
+        `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${radius(SWATCH_S)}" ry="${radius(SWATCH_S)}" fill="${colorsFor(score).fill}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
       mark(lx, y, SWATCH_S, score);
       lines.push(
-        `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-size="${FONT_LEGEND * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(label)}</text>`,
+        `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale + Math.max(0, fontLegend - FONT_LEGEND) * 0.8 * scale}" font-family="${fontFamily}" font-size="${fontLegend * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(label)}</text>`,
       );
     }
   });

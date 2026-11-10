@@ -160,7 +160,7 @@ assets.
 Its `<desc>` is the by-author contribution statement, so a screen reader hears who did what;
 `heatmapDescription` returns that text, for an image's alt text or a PNG's Description field.
 
-The [figure options guide](../../integrations/heatmap.md) covers palettes, shapes, cell size, legends,
+The [figure options guide](../../integrations/heatmap.md) covers palettes, shapes, cell size, fonts, legends,
 short labels and orientation for the JavaScript API, CLI and document plugins.
 
 `fromCsv` needs a `Name` column. Other headers and role names match whatever their case or kind of

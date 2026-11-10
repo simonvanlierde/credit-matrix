@@ -109,14 +109,25 @@ const creditHeatmap = {
   name: "credit-heatmap",
   doc: "A contribution heatmap from the page's author roles.",
   options: Object.fromEntries([
-    ...["color", "palette", "shape", "labels"].map((k) => [k, { type: String }]),
+    ...["color", "palette", "shape", "labels", "font"].map((k) => [k, { type: String }]),
     ["size", { type: Number }],
-    ...["legend", "levels", "horizontal", "skipempty"].map((k) => [k, { type: Boolean }]),
+    ["font-size", { type: Number }],
+    ...["legend", "levels", "horizontal", "skipempty", "initials"].map((k) => [k, { type: Boolean }]),
   ]),
   run(data, vfile) {
     if (!vfile?.path) return [];
     const entries = statementEntries(authorsFor(vfile.path));
+    if (data.options?.initials) {
+      const labels = entries.map((entry) =>
+        /\p{L}/u.test(entry.name) ? createAuthor(entry.name).initials : entry.name,
+      );
+      entries.forEach((entry, i) => {
+        entry.initials = labels.filter((label) => label === labels[i]).length === 1 ? labels[i] : entry.name;
+      });
+    }
     const options = { levels: false, acronyms: false, ...data.options };
+    options.fontSize = options["font-size"];
+    options.acronyms = options.initials ?? false;
     const svg = buildHeatmapSvg(entries, options);
     const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
     const dir = join(dirname(vfile.path), "_credit_matrix");

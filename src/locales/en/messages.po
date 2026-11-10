@@ -1570,3 +1570,102 @@ msgstr "Actual size"
 
 msgid "heatmapFitWidth"
 msgstr "Fit to width"
+
+msgid "heatmapFigureSettings"
+msgstr "Figure settings"
+
+msgid "heatmapLayout"
+msgstr "Layout"
+
+msgid "heatmapOrientation"
+msgstr "Orientation"
+
+msgid "heatmapRolesInRows"
+msgstr "Roles in rows"
+
+msgid "heatmapContributorsInRows"
+msgstr "Contributors in rows"
+
+msgid "heatmapRoleLabels"
+msgstr "Role labels"
+
+msgid "heatmapFullLabels"
+msgstr "Full labels"
+
+msgid "heatmapShortLabels"
+msgstr "Short labels"
+
+msgid "heatmapHideUnused"
+msgstr "Omit unused roles"
+
+msgid "heatmapShowLegend"
+msgstr "Show legend"
+
+msgid "heatmapShowLevels"
+msgstr "Show contribution levels"
+
+msgid "heatmapLegendHint"
+msgstr "Keep the level meanings in your caption when hiding the legend."
+
+msgid "heatmapBlue"
+msgstr "Blue"
+
+msgid "heatmapGreen"
+msgstr "Green"
+
+msgid "heatmapGray"
+msgstr "Grayscale"
+
+msgid "heatmapPaleColor"
+msgstr "Supporting is hard to distinguish in this color. Try a darker shade."
+
+msgid "heatmapAdvanced"
+msgstr "Advanced"
+
+msgid "heatmapFont"
+msgstr "Font"
+
+msgid "heatmapSans"
+msgstr "Sans serif"
+
+msgid "heatmapSerif"
+msgstr "Serif"
+
+msgid "heatmapFontSize"
+msgstr "Font size (px)"
+
+msgid "heatmapCellShape"
+msgstr "Cell shape"
+
+msgid "heatmapSquare"
+msgstr "Square"
+
+msgid "heatmapRounded"
+msgstr "Rounded"
+
+msgid "heatmapCircle"
+msgstr "Circle"
+
+msgid "heatmapCellSize"
+msgstr "Cell size (px)"
+
+msgid "heatmapPngSize"
+msgstr "PNG size"
+
+msgid "heatmapWidthMm"
+msgstr "Width (mm)"
+
+msgid "heatmapResolution"
+msgstr "Resolution"
+
+msgid "heatmapSvgHint"
+msgstr "SVG stays sharp when resized; these dimensions apply to PNG."
+
+msgid "heatmapReset"
+msgstr "Reset defaults"
+
+msgid "heatmapPngTooLarge"
+msgstr "This PNG would be too large. Reduce its width or resolution, transpose the figure, or download SVG."
+
+msgid "heatmapSmallPrint"
+msgstr "Labels would print at about {size} pt. Increase the width or transpose the figure for readable print."

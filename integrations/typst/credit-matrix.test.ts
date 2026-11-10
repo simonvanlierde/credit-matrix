@@ -63,6 +63,62 @@ function autoStatement(file: string): string {
 const hasTypst = spawnSync("typst", ["--version"]).status === 0;
 
 describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
+  it("separates rotated large-font headers above small cells", () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    const width = (count: number) => {
+      const person = `(name: "${"É".repeat(20)}", roles: (software: true))`;
+      writeFileSync(
+        new URL("out/large-type.typ", import.meta.url),
+        `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#credit-heatmap((${Array(count).fill(person).join(",")},), font-size: 24pt, size: 14pt, legend: false)`,
+      );
+      const run = typst("compile", "--root", ".", "out/large-type.typ", "out/large-type.svg");
+      expect(run.status, run.stderr).toBe(0);
+      return Number(
+        /viewBox="0 0 ([\d.]+)/.exec(readFileSync(new URL("out/large-type.svg", import.meta.url), "utf8"))?.[1],
+      );
+    };
+    expect((width(2) - width(1)) * Math.SQRT1_2).toBeGreaterThanOrEqual(28);
+  });
+
+  it.each([
+    [
+      '((name: "Marie Skłodowska-Curie", initials: "MSC", roles: (software: true)),)',
+      '((name: "MSC", roles: (software: true)),)',
+    ],
+    ['((name: "Émile 𐐀smith", roles: (software: true)),)', '((name: "É𐐀", roles: (software: true)),)'],
+    ['((name: "王小明", roles: (software: true)),)', '((name: "王小明", roles: (software: true)),)'],
+    [
+      '((name: "Anne Smith", roles: (software: true)), (name: "Albert Smith", roles: (software: true)))',
+      '((name: "Anne Smith", roles: (software: true)), (name: "Albert Smith", roles: (software: true)))',
+    ],
+  ])("uses unambiguous Unicode initials for %s", (people, expected) => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    const dimensions = (input: string, initials: boolean) => {
+      writeFileSync(
+        new URL("out/initials.typ", import.meta.url),
+        `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#credit-heatmap(${input}, initials: ${initials})`,
+      );
+      const run = typst("compile", "--root", ".", "out/initials.typ", "out/initials.svg");
+      expect(run.status, run.stderr).toBe(0);
+      return /viewBox="([^"]+)"/.exec(readFileSync(new URL("out/initials.svg", import.meta.url), "utf8"))?.[1];
+    };
+    expect(dimensions(people, true)).toBe(dimensions(expected, false));
+  });
+
+  it("renders typography options and non-color level marks", () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    writeFileSync(
+      new URL("out/typography.typ", import.meta.url),
+      '#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Tu Youyou", roles: (software: "supporting", methodology: "equal", conceptualization: "lead")),)\n#credit-heatmap(team, font: "serif", font-size: 12pt)\n#credit-heatmap(team, levels: false, color: rgb("#f0e442"))\n#credit-heatmap(team, levels: false)',
+    );
+    const run = typst("compile", "--root", ".", "out/typography.typ", "out/typography.svg");
+    expect(run.status, run.stderr).toBe(0);
+    const svg = readFileSync(new URL("out/typography.svg", import.meta.url), "utf8");
+    expect(svg.match(/<path fill="#[a-f0-9]+"[^>]+d="M 0 0m /g)).toHaveLength(12);
+    expect(svg.match(/<use[^>]+fill="#ffffff"/g)).toHaveLength(4);
+    expect(svg).toContain('fill="#16181c"');
+  });
+
   it("compiles every example", () => {
     expect(hasTypst, "typst is not installed but CI is set").toBe(true);
     mkdirSync(new URL("out", import.meta.url), { recursive: true });

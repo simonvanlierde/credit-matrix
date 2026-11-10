@@ -394,6 +394,10 @@ it("passes figure options through the SVG conversion", async () => {
     "circle",
     "--size",
     "30",
+    "--font",
+    "serif",
+    "--font-size",
+    "21",
     "--palette",
     "green",
     "--legend",
@@ -406,6 +410,19 @@ it("passes figure options through the SVG conversion", async () => {
   ]);
   expect(svg).toContain('width="30" height="30" rx="15"');
   expect(svg).toContain(">1 Conceptualiz…<");
+  expect(svg).toContain('font-size="21"');
+  expect(svg).toContain("Georgia, 'Times New Roman', serif");
   expect(svg).not.toContain(">Supporting<");
   await expect(run(["convert", csv, "--to", "svg", "--legend", "maybe"])).rejects.toThrow("true or false");
+  await expect(run(["convert", csv, "--to", "svg", "--font-size", "NaN"])).rejects.toThrow("between 6 and 32");
+  await expect(run(["convert", csv, "--to", "svg", "--font", "arbitrary"])).rejects.toThrow("Unknown heatmap font");
+});
+
+it("selects full names or initials without shortening the text alternative", async () => {
+  const full = await run(["convert", csv, "--to", "svg", "--initials", "false"]);
+  const compact = await run(["convert", csv, "--to", "svg", "--initials", "true"]);
+  expect(full).toContain(">Jane Smith</text>");
+  expect(compact).toContain(">JS</text>");
+  expect(compact).toContain("Jane Smith: Conceptualization");
+  await expect(run(["convert", csv, "--to", "svg", "--initials", "maybe"])).rejects.toThrow("true or false");
 });

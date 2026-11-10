@@ -202,6 +202,9 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
             "command": ["node", str(ROOT / "src/core/dist/cli.js")],
             "shape": "circle",
             "size": 30,
+            "font": "serif",
+            "font-size": 21,
+            "initials": False,
             "legend": False,
             "levels": levels,
         },
@@ -212,3 +215,6 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
     svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
     assert 'width="30" height="30" rx="15"' in svg
     assert ">Supporting<" not in svg
+    assert 'font-size="21"' in svg
+    assert ">Tu Youyou</text>" in svg
+    assert "Georgia, 'Times New Roman', serif" in svg

@@ -2,6 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { createAuthor } from "../src/core/parse-authors";
+import { DEFAULT_HEATMAP_SETTINGS } from "../src/lib/heatmap-settings";
 import { asReturningVisitor, scan, seedStorage, settleMotion } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -30,11 +31,90 @@ test("previews the exact SVG and reports the downloaded PNG dimensions", async (
   const pngPath = await (await pngDownload).path();
   if (!pngPath) throw new Error("Expected PNG download");
   const png = await readFile(pngPath);
-  await expect(page.getByText(`SVG · PNG ${png.readUInt32BE(16)} × ${png.readUInt32BE(20)} px`)).toBeVisible();
+  await expect(
+    page.getByText(`SVG · PNG ${png.readUInt32BE(16)} × ${png.readUInt32BE(20)} px · 300 dpi`),
+  ).toBeVisible();
   await expect(preview).toHaveAttribute("tabindex", "0");
   await preview.focus();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Heatmap", exact: true })).toBeFocused();
+});
+
+test("saves figure styling independently from the editable contribution grid", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const cells = page.locator("[data-cell]");
+  const assignments = await cells.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  await page.getByRole("switch", { name: "Show legend", exact: true }).click();
+  await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+  await page.getByText("Advanced", { exact: true }).click();
+  await page.getByRole("combobox", { name: "Font", exact: true }).click();
+  await page.getByRole("option", { name: "Serif", exact: true }).click();
+  await page.getByRole("combobox", { name: "Cell shape", exact: true }).click();
+  await page.getByRole("option", { name: "Circle", exact: true }).click();
+  await page.getByRole("spinbutton", { name: "Font size (px)", exact: true }).fill("14");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Escape");
+  expect(await cells.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")))).toEqual(assignments);
+  await page.reload();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  const image = page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img");
+  const svg = decodeURIComponent((await image.getAttribute("src"))?.split(",").slice(1).join(",") ?? "");
+  expect(svg).toContain("Georgia");
+  expect(svg).toContain('fill="#404040"');
+  expect(svg).toContain('rx="11"');
+  expect(svg).not.toContain(">Lead<");
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  await expect(page.getByRole("switch", { name: "Show legend", exact: true })).not.toBeChecked();
+  await page.getByRole("button", { name: "Reset defaults", exact: true }).click();
+  await expect(page.getByRole("switch", { name: "Show legend", exact: true })).toBeChecked();
+  await expect(page.getByRole("spinbutton", { name: "Width (mm)", exact: true })).toHaveValue("85");
+});
+
+test("writes requested PNG width and print resolution into the downloaded file", async ({ page }) => {
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  await page.getByRole("spinbutton", { name: "Width (mm)", exact: true }).fill("100");
+  await page.getByRole("combobox", { name: "Resolution", exact: true }).click();
+  await page.getByRole("option", { name: "600 dpi", exact: true }).click();
+  const downloaded = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download PNG", exact: true }).click();
+  const path = await (await downloaded).path();
+  if (!path) throw new Error("Expected PNG download");
+  const png = await readFile(path);
+  expect(png.readUInt32BE(16)).toBe(Math.round((100 / 25.4) * 600));
+  const densities: number[] = [];
+  for (let offset = 8; offset < png.length; ) {
+    if (png.toString("ascii", offset + 4, offset + 8) === "pHYs") densities.push(png.readUInt32BE(offset + 8));
+    offset += 12 + png.readUInt32BE(offset);
+  }
+  expect(densities).toEqual([23622]);
+  expect(png.toString("utf8")).toContain("Description");
+});
+
+test("offers SVG when a tall team's requested PNG exceeds canvas limits", async ({ page }) => {
+  await seedStorage(
+    page,
+    {
+      welcomeSeen: true,
+      activeDraftId: "tall-team",
+      drafts: {
+        "tall-team": {
+          authors: Array.from({ length: 200 }, (_, i) =>
+            createAuthor(`Researcher ${i + 1}`, { contributions: [{ role: "Software", score: 100 }] }),
+          ),
+          heatmapSettings: { ...DEFAULT_HEATMAP_SETTINGS, horizontal: true, pngWidthMm: 300, pngDpi: 600 },
+        },
+      },
+    },
+    { clearFirst: true },
+  );
+  await page.reload();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Download PNG", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Download SVG", exact: true })).toBeEnabled();
+  await expect(page.getByText(/This PNG would be too large/)).toBeVisible();
 });
 
 test("keeps the desktop key beside the table and reflects display changes in the preview", async ({ page }) => {
@@ -83,6 +163,7 @@ test("lets a large team inspect the figure at actual size without stretching the
   const image = preview.getByRole("img");
   await expect(image).toBeVisible();
   const width = () => image.evaluate((img) => img.getBoundingClientRect().width);
+  await expect(page.getByText(/Labels would print at about/)).toBeVisible();
   expect(await width()).toBeLessThan(512);
   await page.getByRole("button", { name: "Actual size", exact: true }).click();
   expect(await width()).toBeGreaterThan(2000);
@@ -93,6 +174,64 @@ test("lets a large team inspect the figure at actual size without stretching the
   await page.getByRole("button", { name: "Fit to width", exact: true }).click();
   expect(await width()).toBeLessThan(512);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
+});
+
+test("keeps large rotated labels separated and inside the exported canvas", async ({ page, context }) => {
+  await seedStorage(
+    page,
+    {
+      welcomeSeen: true,
+      activeDraftId: "large-type",
+      drafts: {
+        "large-type": {
+          authors: ["É".repeat(20), "W".repeat(20)].map((name) =>
+            createAuthor(name, { contributions: [{ role: "Software", score: 100 }] }),
+          ),
+          heatmapSettings: { ...DEFAULT_HEATMAP_SETTINGS, fontSize: 32, size: 8, legend: false },
+        },
+      },
+    },
+    { clearFirst: true },
+  );
+  await page.reload();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  const source = await page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img").getAttribute("src");
+  const svg = decodeURIComponent(source?.split(",").slice(1).join(",") ?? "");
+  const figure = await context.newPage();
+  try {
+    await figure.setContent(svg);
+    const bounds = await figure.evaluate(async () => {
+      await document.fonts.ready;
+      const canvas = document.querySelector("svg");
+      if (!canvas) throw new Error("Expected SVG");
+      const view = canvas.viewBox.baseVal;
+      const labels = Array.from(canvas.querySelectorAll("text"));
+      const fits = labels.every((label) => {
+        const box = label.getBBox();
+        const matrix = label.getCTM();
+        if (!matrix) throw new Error("Expected text transform");
+        return [
+          [box.x, box.y],
+          [box.x + box.width, box.y],
+          [box.x, box.y + box.height],
+          [box.x + box.width, box.y + box.height],
+        ].every(([x, y]) => {
+          const point = new DOMPoint(x, y).matrixTransform(matrix);
+          return point.x >= 0 && point.y >= 0 && point.x <= view.width && point.y <= view.height;
+        });
+      });
+      const top = labels.filter((label) => label.hasAttribute("transform"));
+      const first = top[0]?.getCTM();
+      const second = top[1]?.getCTM();
+      if (!(first && second)) throw new Error("Expected two column labels");
+      const separation = Math.abs((second.e - first.e) * -first.b + (second.f - first.f) * first.a);
+      return { fits, separation, height: Math.max(...top.map((label) => label.getBBox().height)) };
+    });
+    expect(bounds.fits).toBe(true);
+    expect(bounds.separation).toBeGreaterThan(bounds.height);
+  } finally {
+    await figure.close();
+  }
 });
 
 for (const theme of ["light", "dark"] as const) {
@@ -113,6 +252,11 @@ for (const theme of ["light", "dark"] as const) {
     expect(bounds.y + bounds.height).toBeLessThanOrEqual(700);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
     expect((await scan(page)).violations).toEqual([]);
+    await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+    await expect(page.getByRole("combobox", { name: "Orientation", exact: true })).toBeInViewport();
+    expect((await scan(page)).violations).toEqual([]);
+    await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+    await expect(preview.getByRole("img")).toBeVisible();
   });
 }
 

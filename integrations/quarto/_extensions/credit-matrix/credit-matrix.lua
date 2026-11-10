@@ -100,7 +100,7 @@ local function heatmap(authors, options)
   local args = {}
   for i = 2, #command do args[#args + 1] = stringify(command[i]) end
   for _, arg in ipairs({ "convert", "-", "--to", "svg" }) do args[#args + 1] = arg end
-  for _, key in ipairs({ "color", "palette", "shape", "size", "legend", "labels", "skipempty", "locale" }) do
+  for _, key in ipairs({ "color", "palette", "shape", "size", "font", "font-size", "legend", "initials", "labels", "skipempty", "locale" }) do
     if options[key] ~= nil then
       args[#args + 1] = "--" .. key
       args[#args + 1] = stringify(options[key])

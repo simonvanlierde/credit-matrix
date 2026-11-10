@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
 import type { LocaleCode } from "@/core/i18n";
+import { DEFAULT_HEATMAP_SETTINGS, repairHeatmapSettings } from "@/lib/heatmap-settings";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
   announcingStorage,
@@ -27,6 +28,114 @@ describe("contribution store", () => {
     useContributionStore.setState(initial, true);
     vi.clearAllMocks();
     vi.mocked(reloadForNewerSave).mockReturnValue(true);
+  });
+
+  describe("heatmap figure settings", () => {
+    it("accepts supported settings at their bounds and repairs malformed values", () => {
+      const settings = {
+        ...DEFAULT_HEATMAP_SETTINGS,
+        color: "#ABCDEF",
+        horizontal: true,
+        acronyms: true,
+        labels: "short" as const,
+        skipempty: false,
+        legend: false,
+        shape: "circle" as const,
+        size: 48,
+        fontSize: 32,
+        font: "serif" as const,
+        levels: false,
+        pngWidthMm: 300,
+        pngDpi: 600 as const,
+      };
+      expect(repairHeatmapSettings(settings)).toEqual(settings);
+      expect(repairHeatmapSettings({ size: 8, fontSize: 6, pngWidthMm: 40, pngDpi: 150, shape: "rounded" })).toEqual({
+        ...DEFAULT_HEATMAP_SETTINGS,
+        size: 8,
+        fontSize: 6,
+        pngWidthMm: 40,
+        pngDpi: 150,
+        shape: "rounded",
+      });
+      for (const input of [undefined, null, 1, "settings", []]) expect(repairHeatmapSettings(input)).toBeNull();
+      for (const input of [NaN, Infinity, -Infinity, "22", null, 7, 49]) {
+        expect(repairHeatmapSettings({ size: input })?.size).toBe(DEFAULT_HEATMAP_SETTINGS.size);
+      }
+      expect(repairHeatmapSettings({})).toEqual(DEFAULT_HEATMAP_SETTINGS);
+    });
+
+    it("keeps figure settings with their draft through duplication, switching, and hydration", () => {
+      const authorId = store().addAuthor("Jane Smith") ?? "";
+      store().setAuthorScore(authorId, 0, 66);
+      store().setInputMode("levels");
+      const authors = store().authors;
+      const first = store().activeDraftId;
+      const settings = { ...DEFAULT_HEATMAP_SETTINGS, color: "#abc", legend: false, fontSize: 12 };
+      store().setHeatmapSettings(settings);
+      expect(store().authors).toEqual(authors);
+      expect(store().inputMode).toBe("levels");
+      const copy = store().duplicateDraft(first) ?? "";
+      store().createDraft();
+      expect(store().heatmapSettings).toBeNull();
+      store().switchDraft(copy);
+      expect(store().heatmapSettings).toEqual(settings);
+      store().setHeatmapSettings({ ...settings, legend: true });
+      store().switchDraft(first);
+      expect(store().heatmapSettings).toEqual(settings);
+      const { merge, partialize } = useContributionStore.persist.getOptions();
+      const restored = merge?.(JSON.parse(JSON.stringify(partialize?.(store()))), initial) as typeof initial;
+      expect(restored.heatmapSettings).toEqual(settings);
+      expect(restored.authors).toEqual(authors);
+      store().loadAuthors(authors);
+      expect(store().heatmapSettings).toEqual(settings);
+      store().setHeatmapSettings(null);
+      expect(store().heatmapSettings).toBeNull();
+      expect(store().authors).toEqual(authors);
+      store().setHeatmapSettings(settings);
+      store().reset();
+      expect(store().heatmapSettings).toBeNull();
+    });
+
+    it("repairs malformed figure preferences without altering contribution data", () => {
+      const author = createAuthor("Jane Smith");
+      const { merge } = useContributionStore.persist.getOptions();
+      const restored = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: {
+              authors: [author],
+              heatmapSettings: {
+                color: "url(unsafe)",
+                horizontal: true,
+                acronyms: "yes",
+                labels: "abbreviated",
+                skipempty: false,
+                legend: 0,
+                shape: "triangle",
+                size: Infinity,
+                fontSize: -1,
+                font: "custom",
+                levels: false,
+                pngWidthMm: 301,
+                pngDpi: 72,
+                unknown: "discard",
+              },
+            },
+          },
+        },
+        initial,
+      ) as typeof initial;
+      expect(restored.heatmapSettings).toEqual({
+        ...DEFAULT_HEATMAP_SETTINGS,
+        horizontal: true,
+        skipempty: false,
+        levels: false,
+      });
+      expect(restored.authors).toEqual([author]);
+      const absent = merge?.({ activeDraftId: "d1", drafts: { d1: {} } }, initial) as typeof initial;
+      expect(absent.heatmapSettings).toBeNull();
+    });
   });
 
   describe("title", () => {
@@ -947,13 +1056,19 @@ describe("contribution store", () => {
       store().setTitle("Open here");
       const open = store().activeDraftId;
       const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
-      saveFromOtherTab(open, { [open]: { ...stored.state.drafts[open], title: "Edited there" } }, "nl");
+      const settings = { ...DEFAULT_HEATMAP_SETTINGS, legend: false, color: "#abc" };
+      saveFromOtherTab(
+        open,
+        { [open]: { ...stored.state.drafts[open], title: "Edited there", heatmapSettings: settings } },
+        "nl",
+      );
 
       const writes = vi.spyOn(Storage.prototype, "setItem");
       expect(followOtherTab(storageEvent(PERSIST_KEY))).toBe(true);
 
       expect(store().activeDraftId).toBe(open);
       expect(store().title).toBe("Edited there");
+      expect(store().heatmapSettings).toEqual(settings);
       expect(store().uiLocale).toBe("nl");
       // This tab's other draft is still here.
       expect(store().drafts[held]?.title).toBe("Mine");
@@ -1523,6 +1638,7 @@ describe("contribution store", () => {
         authors: [],
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
+        heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,
         claim: null,
@@ -1581,6 +1697,7 @@ describe("contribution store", () => {
         authors: [],
         inputMode: "toggle" as const,
         heatmapMonoColor: "#2563eb",
+        heatmapSettings: null,
         outputLocale: "en" as const,
         updatedAt: 0,
         claim: null,
@@ -1637,6 +1754,7 @@ describe("contribution store", () => {
         authors: [],
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
+        heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,
         claim: null,
@@ -1694,6 +1812,7 @@ describe("contribution store", () => {
         authors: [],
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
+        heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,
         claim: null,

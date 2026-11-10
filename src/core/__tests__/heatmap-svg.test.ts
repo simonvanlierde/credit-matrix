@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
+import * as colors from "../contributor-color";
 import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
 import { makeUiTranslator } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES, type CreditRoleName } from "../credit-roles";
@@ -30,6 +31,68 @@ function expectedCellCount(authors: Author[]): number {
 }
 
 describe("buildHeatmapSvg", () => {
+  it("calculates mark contrast once per tier regardless of team size", () => {
+    const contrast = vi.spyOn(colors, "onColor");
+    try {
+      for (const count of [20, 200]) {
+        contrast.mockClear();
+        const authors = Array.from({ length: count }, (_, i) =>
+          createAuthor(`Given${i} Surname${i}`, {
+            contributions: CREDIT_ROLES.map((role, r) => ({ role: role.name, score: ((i + r) % 4) * 33 })),
+          }),
+        );
+        buildHeatmapSvg(authors);
+        expect(contrast.mock.calls.length).toBeLessThanOrEqual(4);
+      }
+    } finally {
+      contrast.mockRestore();
+    }
+  });
+  it("sizes label bands and legends for the selected typography", () => {
+    const authors = authorsWithScores();
+    const normal = buildHeatmapSvg(authors);
+    const large = buildHeatmapSvg(authors, { fontSize: 21, font: "serif" });
+    expect(large).toContain('font-size="22"');
+    expect(large).toContain('font-size="21"');
+    expect(large).toContain('font-size="20"');
+    expect(large).toContain("Georgia, 'Times New Roman', serif");
+    const width = (svg: string) => Number(/width="([\d.]+)"/.exec(svg)?.[1]);
+    expect(width(large)).toBeGreaterThan(width(normal));
+    expect(buildHeatmapSvg(authors, { fontSize: 10.5, font: "sans" })).toBe(normal);
+  });
+
+  it.each([0, 5.9, 32.1, Number.NaN, Number.POSITIVE_INFINITY])("rejects invalid font size %s", (fontSize) => {
+    expect(() => buildHeatmapSvg(authorsWithScores(), { fontSize })).toThrow("between 6 and 32");
+  });
+
+  it("keeps small cells apart when labels use large type", () => {
+    const authors = [createAuthor("É".repeat(20)), createAuthor("É".repeat(20))];
+    const svg = buildHeatmapSvg(authors, { size: 8, fontSize: 32, acronyms: false, legend: false, skipempty: false });
+    const cells = [...svg.matchAll(/<rect x="([\d.]+)" y="[\d.]+" width="8" height="8"/g)];
+    const pitch = Number(cells[1]?.[1]) - Number(cells[0]?.[1]);
+    // Rotated labels have a measured 37px line box at this font size.
+    expect(pitch * Math.SQRT1_2).toBeGreaterThanOrEqual(37);
+  });
+
+  it("expands the empty figure for large text and translated full-width glyphs", () => {
+    expect(buildHeatmapSvg([])).toContain('width="320" height="56"');
+    const large = buildHeatmapSvg([], { fontSize: 32 });
+    const dimensions = /width="([\d.]+)" height="([\d.]+)"/.exec(large);
+    expect(Number(dimensions?.[1])).toBeGreaterThanOrEqual(497);
+    expect(Number(dimensions?.[2])).toBeGreaterThan(56);
+    const cjk = buildHeatmapSvg([], {
+      fontSize: 32,
+      scale: 2,
+      translateUi: (key) => (key === "emptyState" ? "漢".repeat(50) : key),
+    });
+    expect(Number(/width="([\d.]+)"/.exec(cjk)?.[1])).toBeGreaterThan(3300);
+  });
+
+  it("rejects invalid font names and non-finite scales", () => {
+    expect(() => buildHeatmapSvg(authorsWithScores(), { font: "unknown" as "sans" })).toThrow("Unknown heatmap font");
+    expect(() => buildHeatmapSvg(authorsWithScores(), { scale: Number.NaN })).toThrow("scale must be finite");
+  });
+
   it("identifies levels with one, two or three dots in both cells and legend", () => {
     const authors = [33, 66, 100].map((score) =>
       createAuthor(`Researcher ${score}`, { contributions: [{ role: "Software", score }] }),
