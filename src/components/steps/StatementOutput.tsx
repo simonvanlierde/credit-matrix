@@ -1,4 +1,5 @@
 import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,9 +23,11 @@ import {
   toTenzing,
 } from "@/core";
 import { isAllBinary, rolesWithContributions } from "@/core/author";
+import { pageMarkColor } from "@/core/contributor-color";
 import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
 import { useTranslations } from "@/lib/translations";
+import { useContributorHue } from "@/lib/use-contributor-hue";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useSettled } from "@/lib/use-settled";
@@ -103,6 +106,10 @@ export function StatementOutput() {
   const openReview = useContributionStore((s) => s.openReview);
   const statementLink = useContributionStore((s) => s.statementLink);
   const setStatementLink = useContributionStore((s) => s.setStatementLink);
+  // The linked phrase takes its contributor's hue, matching their cell.
+  const contributorHue = useContributorHue(statementLink?.contributorId);
+  const dark = useTheme().resolvedTheme === "dark";
+  const linkHue = contributorHue ? pageMarkColor(contributorHue, dark) : null;
   const openDifferences = useAskSummary().open;
   // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
   const [includeAnswers, setIncludeAnswers] = useState(true);
@@ -228,7 +235,7 @@ export function StatementOutput() {
             <PopoverTrigger
               aria-label={t("statementOptions")}
               title={t("statementOptions")}
-              className="flex size-9 items-center justify-center rounded-lg border border-outline-variant/60 text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
+              className="flex size-9 items-center justify-center rounded border border-edge bg-surface-bright text-on-surface-variant transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
             >
               <Settings2 className="size-4" aria-hidden="true" />
             </PopoverTrigger>
@@ -295,7 +302,8 @@ export function StatementOutput() {
         // the page's language. Declaring it lets a screen reader switch
         // pronunciation instead of reading Dutch with English rules.
         lang={outputLanguage}
-        className="relative z-10 min-h-[3.5rem] border-l border-primary bg-surface-container-low p-3 rounded-r focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-0 desk:overflow-y-auto"
+        // A page of the manuscript: paper on the tinted page, an ink edge and the sheet shadow.
+        className="relative z-10 mr-1.5 mb-1.5 min-h-[3.5rem] rounded-sm border border-edge bg-surface-bright px-5 py-4 shadow-sheet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary desk:min-h-0 desk:overflow-y-auto"
         style={{ fontFamily: "var(--font-headline)" }}
       >
         {/* The keys are load-bearing, not React hygiene: both branches render a
@@ -315,7 +323,7 @@ export function StatementOutput() {
             }}
             onPointerLeave={clearPhraseLink}
             style={{ transitionDelay: "200ms" }}
-            className={`max-w-[75ch] whitespace-pre-line [overflow-wrap:anywhere] text-base leading-relaxed text-on-surface ${
+            className={`max-w-[75ch] whitespace-pre-line [overflow-wrap:anywhere] text-[17px] leading-relaxed text-on-surface ${
               settled ? "enter-fade" : ""
             }`}
           >
@@ -332,6 +340,14 @@ export function StatementOutput() {
                   data-role={role}
                   data-linked={linked || undefined}
                   className="rounded-sm [box-decoration-break:clone] data-linked:bg-primary/20 data-linked:underline data-linked:decoration-primary data-linked:decoration-2 data-linked:underline-offset-[3px]"
+                  style={
+                    linked && linkHue
+                      ? {
+                          backgroundColor: `color-mix(in oklab, ${linkHue} 18%, transparent)`,
+                          textDecorationColor: linkHue,
+                        }
+                      : undefined
+                  }
                 >
                   {span.text}
                 </span>
@@ -388,7 +404,7 @@ export function StatementOutput() {
             copyText(() => copyRichText(statement, generateStatement(authors, { ...statementOptions, asHtml: true })))
           }
           disabled={!statement}
-          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:shadow-none"
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded bg-primary shadow-press px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:shadow-none"
         >
           <Copy className="h-[18px] w-[18px]" aria-hidden="true" />
           {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyStatement")}
@@ -397,7 +413,7 @@ export function StatementOutput() {
         <Popover>
           <PopoverTrigger
             disabled={!hasAuthors}
-            className="flex min-h-10 items-center gap-1.5 rounded-lg border border-outline-variant px-3 text-sm font-medium text-on-surface transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60 data-[state=open]:border-primary data-[state=open]:text-primary"
+            className="flex min-h-10 items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60 data-[state=open]:border-primary data-[state=open]:text-primary"
           >
             <Download className="size-4" aria-hidden="true" />
             {t("exportData")}

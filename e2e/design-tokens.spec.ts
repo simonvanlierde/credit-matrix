@@ -45,7 +45,9 @@ function cssVars(): Map<string, string> {
 const MIRRORED: [string, string][] = [
   ["ink-blue", "color-primary"],
   ["ink-blue-hover", "color-primary-hover"],
+  ["paper", "color-paper"],
   ["paper-bright", "color-surface-bright"],
+  ["edge", "color-edge"],
   ["graphite", "color-on-surface"],
   ["error", "color-error"],
 ];

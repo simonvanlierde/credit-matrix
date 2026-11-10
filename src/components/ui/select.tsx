@@ -19,10 +19,8 @@ export function SelectTrigger({
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex min-w-0 items-center justify-between gap-1 rounded border border-outline-variant bg-surface-bright [&>span]:truncate",
-        size === "touch"
-          ? "min-h-11 rounded-lg border-outline-strong px-3 py-1.5 text-base text-on-surface"
-          : "px-2 py-1 text-xs text-on-surface",
+        "flex min-w-0 items-center justify-between gap-1 rounded border border-edge bg-surface-bright [&>span]:truncate",
+        size === "touch" ? "min-h-11 px-3 py-1.5 text-base text-on-surface" : "px-2 py-1 text-xs text-on-surface",
         "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
         "disabled:cursor-not-allowed disabled:opacity-50",
         "data-[placeholder]:text-on-surface-variant",
@@ -56,7 +54,7 @@ export function SelectContent({
         className={cn(
           // Capped to the room beside the trigger: Radix locks page scroll, so a taller list would
           // leave its far rows out of reach. The viewport scrolls inside it.
-          "z-50 max-h-(--radix-select-content-available-height) max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded border border-outline-variant bg-surface-bright shadow-md",
+          "z-50 max-h-(--radix-select-content-available-height) max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded border border-edge bg-surface-bright shadow-float",
           "panel-motion [transform-origin:var(--radix-select-content-transform-origin)]",
           className,
         )}

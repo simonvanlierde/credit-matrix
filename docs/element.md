@@ -60,7 +60,7 @@ regional tag such as `de-DE` uses its language, `de`. Any language it does not o
 
 ## What it renders
 
-Inside a shadow root, so the page's styles neither leak in nor out, on its own light card:
+Inside a shadow root, so the page's styles neither leak in nor out, on its own light card (warm paper with a thin ink border, as in the app):
 
 - the heatmap, drawn at its full size. On a narrow page it scrolls sideways instead of shrinking
   its labels;
@@ -69,7 +69,8 @@ Inside a shadow root, so the page's styles neither leak in nor out, on its own l
 - the statement as plain text, one paragraph per line (the `CRediT:` line, then any
   acknowledgements and notes).
 
-It uses IBM Plex Sans when the page has loaded it, and otherwise Helvetica or Arial. While it fetches
+It uses Atkinson Hyperlegible Next or IBM Plex Sans when the page has loaded one, and otherwise
+Helvetica or Arial. While it fetches
 `src` it shows "Loading contributions…". If the file cannot be fetched (a network error, an HTTP
 error or a file over 1 MB), or it is not a CRediT Matrix export, the element says which in an alert.
 These messages are in English.

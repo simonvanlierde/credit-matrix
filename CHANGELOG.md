@@ -8,6 +8,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The grid colours each contributor in their own hue, shared by their chip, column, cells and
+  statement phrase; turn it off under the grid's display options. Heatmap exports stay one colour
+  unless you pick *Per contributor* under Figure settings. `buildHeatmapSvg` takes the same choice
+  as `colorBy: "contributor"`; the plugins and the CLI draw one hue. See
+  [the figure options](integrations/heatmap.md#figure-options).
 - Download heatmaps as PDF with embedded fonts and selectable text. App, CLI and document-plugin
   SVG exports also carry their fonts. Both formats embed only the glyphs a figure uses: about 30 kB
   for a Latin figure and 35 kB for a Japanese or Chinese one. The app fetches each font face
@@ -61,11 +66,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,
+  sentence-case labels and Atkinson Hyperlegible for the interface. The panes share one page, empty
+  grid cells are a faint dot, and the level key is one scale bar. Exported figures stay on white;
+  the `<credit-matrix>` element's card takes the warm paper and ink border.
 - With no contributors yet, the add field sits right under the empty-state line instead of at the
   foot of the rail, and "Start fresh" puts the cursor in it. Its placeholder says it takes names, a
   DOI or an ORCID iD, and a disabled Add button is muted instead of faded.
 - On a phone, the "Contributor to assign" picker is 44px tall, with the name at body size beside
   the contributor's initials.
+- On a phone, the picker also shows that contributor's statement line, which links down to the
+  full statement, and Figure settings end in a Back button to the preview.
+- On a desktop the grid starts at the pane's left edge, under its toolbar and beside its key, and
+  the heatmap preview shows the whole figure. Actual size still scrolls.
 - A contributor without roles is shown as a note, no longer in error red: no note stops you from
   copying or exporting the statement.
 - The status strip counts answers only once you have asked someone. Before that it offers only
@@ -99,6 +112,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- With Windows high contrast (forced colours) on, focus has a visible outline, cells keep their
+  edges, a Lead cell keeps its three dots, and the selected side of a choice such as Yes / no or
+  Levels stays visible. On a touch screen the small controls take a 44px tap.
 - A cut-off or damaged JSON export no longer imports its lines as contributor names; the import
   fails with the usual message instead.
 - Import says plainly when a file repeats a contributor id: the import box shows its own message

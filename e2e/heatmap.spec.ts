@@ -404,10 +404,11 @@ test("keeps a damaged display preference from crashing the export panel", async 
   );
   await page.reload();
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Heatmap", exact: true }).getByRole("alert")).toContainText(
-    "Could not export the heatmap as SVG.",
-  );
-  await expect(page.getByRole("button", { name: "Download SVG", exact: true })).toBeDisabled();
+  // Loading repairs the colour to the default, so the figure still exports.
+  const dialog = page.getByRole("dialog", { name: "Heatmap", exact: true });
+  await expect(dialog.getByRole("img")).toBeVisible();
+  await expect(dialog.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Download SVG", exact: true })).toBeEnabled();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Heatmap options", exact: true })).toBeVisible();
 });

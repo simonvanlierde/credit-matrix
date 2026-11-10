@@ -180,7 +180,7 @@ function BulkButton({ children, onClick }: { children: ReactNode; onClick: () =>
     <button
       type="button"
       onClick={onClick}
-      className="min-h-9 rounded-lg border border-outline-variant/60 px-2 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="min-h-9 rounded border border-edge bg-surface-bright px-2 text-xs font-medium text-on-surface-variant transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       {children}
     </button>

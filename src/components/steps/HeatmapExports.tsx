@@ -291,7 +291,9 @@ export function HeatmapExports({
                 <img
                   src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(preview.toWellFormed())}`}
                   alt={heatmapDescription(authors, svgOptions)}
-                  className={`mx-auto block h-auto ${actualSize ? "max-w-none" : "max-w-full"}`}
+                  // Fitted, the whole figure shows inside the frame (its height less the p-2 padding);
+                  // Actual size scrolls instead.
+                  className={`mx-auto block ${actualSize ? "h-auto max-w-none" : "h-auto max-h-[calc(min(50vh,24rem)-1.125rem)] w-auto max-w-full"}`}
                 />
               </section>
             )}
@@ -309,6 +311,14 @@ export function HeatmapExports({
                   }}
                 />
                 <HeatmapRecipe settings={settings} language={outputLanguage} />
+                {/* On a phone the settings replace the preview, so give a visible way back to it. */}
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen(false)}
+                  className={`${TOOL_BUTTON} mt-3 min-h-11 w-full justify-center sm:hidden`}
+                >
+                  {t("statementBack")}
+                </button>
               </section>
             )}
           </div>

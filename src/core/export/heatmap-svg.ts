@@ -1,6 +1,6 @@
 import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
-import { DEFAULT_MONO_COLOR, heatCellColor, onColor } from "../contributor-color";
+import { contributorHues, DEFAULT_MONO_COLOR, heatCellColor, onColor } from "../contributor-color";
 import type { RoleTranslator } from "../credit-i18n/index";
 import { makeUiTranslator, type UiTranslator } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../credit-roles";
@@ -34,6 +34,8 @@ const COLOR_TEXT = "#16181c";
 const COLOR_TEXT_DIM = "#595c63";
 const COLOR_BG = "#ffffff";
 const COLOR_BORDER = "#c9c9c5";
+/** The level key's hue when every author has their own (`colorBy: "contributor"`). */
+const LEGEND_NEUTRAL = "#404040";
 
 export class HeatmapOptionError extends Error {}
 
@@ -42,6 +44,12 @@ export interface HeatmapSvgOptions {
   palette?: "blue" | "green" | "gray";
   /** Base hue for the heatmap; defaults to the palette's. */
   color?: string;
+  /**
+   * "contributor" gives each author their own hue (as the app's grid does),
+   * with a neutral legend; past eight authors it falls back to one hue.
+   * Defaults to "color": one hue for the whole figure.
+   */
+  colorBy?: "color" | "contributor";
   shape?: "square" | "rounded" | "circle";
   /** Cell side in SVG pixels (Typst uses points). */
   size?: number;
@@ -133,6 +141,12 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const monoColor = opts?.color ?? opts?.monoColor ?? palettes[opts?.palette ?? "blue"];
   if (!/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(monoColor))
     throw new HeatmapOptionError("Heatmap color must be a three- or six-digit hex color.");
+  const colorBy = opts?.colorBy ?? "color";
+  if (!["color", "contributor"].includes(colorBy)) throw new HeatmapOptionError("Unknown heatmap colorBy.");
+  const authorHues = colorBy === "contributor" ? contributorHues(authors.length) : null;
+  const perAuthor = authorHues !== null;
+  // One colour per person makes the fill strength the only level cue, so the key shows it in a neutral.
+  const legendHue = perAuthor ? LEGEND_NEUTRAL : monoColor;
   const size = opts?.size ?? CELL;
   if (!Number.isFinite(size) || size <= 0 || size > 256)
     throw new HeatmapOptionError("Heatmap size must be between 0 and 256.");
@@ -227,13 +241,19 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
     author?.contributions.find((c) => c.role === roleName)?.score ?? 0;
   // Flat mode collapses any contribution to full intensity.
   const fillScore = (score: number): number => (showLevels ? score : score > 0 ? 100 : 0);
-  // A figure has four fills; parsing colors and measuring contrast per cell is costly.
-  const tierColor = (score: number) => {
-    const fill = heatCellColor(monoColor, score);
-    return { fill, ink: opts?.marks ? onColor(fill) : "" };
+  // Each hue has four fills; parsing colors and measuring contrast per cell is costly.
+  const tiers = new Map<string, { fill: string; ink: string }[]>();
+  const colorsFor = (score: number, hue = monoColor) => {
+    let set = tiers.get(hue);
+    if (!set) {
+      set = [0, 33, 66, 100].map((tier) => {
+        const fill = heatCellColor(hue, tier);
+        return { fill, ink: opts?.marks ? onColor(fill) : "" };
+      });
+      tiers.set(hue, set);
+    }
+    return set[score <= 0 ? 0 : score <= 33 ? 1 : score <= 66 ? 2 : 3] as { fill: string; ink: string };
   };
-  const tierColors = [tierColor(0), tierColor(33), tierColor(66), tierColor(100)] as const;
-  const colorsFor = (score: number) => tierColors[score <= 0 ? 0 : score <= 33 ? 1 : score <= 66 ? 2 : 3];
 
   const CELL_S = size * scale;
   const LABEL_GAP_S = LABEL_GAP * scale;
@@ -354,9 +374,9 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
 
   const lines: string[] = [];
   // The same dots and check as the editor keep the figure readable without colour.
-  const mark = (x: number, y: number, side: number, score: number) => {
+  const mark = (x: number, y: number, side: number, score: number, hue = monoColor) => {
     if (!opts?.marks || score <= 0) return;
-    const { ink } = colorsFor(fillScore(score));
+    const { ink } = colorsFor(fillScore(score), hue);
     if (showLevels) {
       const dots = score <= 33 ? 1 : score <= 66 ? 2 : 3;
       const gap = side * 0.22;
@@ -409,10 +429,11 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
       const role = transpose ? roles[c] : roles[r];
       const score = scoreFor(authors[ai], role?.name ?? "");
       const rx = radius(CELL_S);
+      const cellHue = authorHues?.[ai] ?? monoColor;
       lines.push(
-        `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${colorsFor(fillScore(score)).fill}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
+        `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${colorsFor(fillScore(score), cellHue).fill}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
-      mark(cx, cy, CELL_S, score);
+      mark(cx, cy, CELL_S, score, cellHue);
     }
   }
 
@@ -428,9 +449,9 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
     for (const [col, { label, score }] of row.entries()) {
       const lx = blockX + (colX[col] ?? 0);
       lines.push(
-        `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${radius(SWATCH_S)}" ry="${radius(SWATCH_S)}" fill="${colorsFor(score).fill}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
+        `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${radius(SWATCH_S)}" ry="${radius(SWATCH_S)}" fill="${colorsFor(score, legendHue).fill}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
-      mark(lx, y, SWATCH_S, score);
+      mark(lx, y, SWATCH_S, score, legendHue);
       lines.push(
         `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale + Math.max(0, fontLegend - FONT_LEGEND) * 0.8 * scale}" font-family="${fontFamily}" font-size="${fontLegend * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(label)}</text>`,
       );

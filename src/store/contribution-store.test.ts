@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
+import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import type { LocaleCode } from "@/core/i18n";
 import { DEFAULT_HEATMAP_SETTINGS, repairHeatmapSettings } from "@/lib/heatmap-settings";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
@@ -35,6 +36,7 @@ describe("contribution store", () => {
       const settings = {
         ...DEFAULT_HEATMAP_SETTINGS,
         color: "#ABCDEF",
+        colorBy: "contributor" as const,
         horizontal: true,
         acronyms: true,
         labels: "short" as const,
@@ -58,6 +60,7 @@ describe("contribution store", () => {
         shape: "rounded",
       });
       for (const input of [undefined, null, 1, "settings", []]) expect(repairHeatmapSettings(input)).toBeNull();
+      expect(repairHeatmapSettings({ colorBy: "rainbow" })?.colorBy).toBe("color");
       for (const input of [NaN, Infinity, -Infinity, "22", null, 7, 49]) {
         expect(repairHeatmapSettings({ size: input })?.size).toBe(DEFAULT_HEATMAP_SETTINGS.size);
       }
@@ -171,6 +174,12 @@ describe("contribution store", () => {
       store().setTitle("");
       expect(store().title).toBe("");
     });
+  });
+
+  it("colours by contributor until someone picks one heatmap colour", () => {
+    expect(store().colorByContributor).toBe(true);
+    store().setHeatmapMonoColor("#009e73");
+    expect(store().colorByContributor).toBe(false);
   });
 
   describe("contributors", () => {
@@ -1640,6 +1649,35 @@ describe("contribution store", () => {
       expect(saved.drafts.d2?.future).toBe("kept too");
     });
 
+    it("loads an older draft in one hue only when its owner had picked one", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const load = (d1: object) =>
+        (merge?.({ activeDraftId: "d1", drafts: { d1 } }, initial) as typeof initial | undefined)?.colorByContributor;
+      expect(load({ heatmapMonoColor: "#009e73" })).toBe(false);
+      expect(load({})).toBe(true);
+      // A damaged colour is repaired to the default, so it counts as untouched.
+      expect(load({ heatmapMonoColor: "red;" })).toBe(true);
+      expect(load({ heatmapMonoColor: "#009e73", colorByContributor: true })).toBe(true);
+    });
+
+    it("drops a damaged heatmap colour instead of tinting the page with it", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const merged = merge?.(
+        { activeDraftId: "d1", drafts: { d1: { heatmapMonoColor: "red;" } } },
+        initial,
+      ) as typeof initial;
+      expect(merged.heatmapMonoColor).toBe(DEFAULT_MONO_COLOR);
+    });
+
+    it("keeps colour by contributor per draft", () => {
+      store().setColorByContributor(false);
+      const first = store().activeDraftId;
+      store().createDraft();
+      expect(store().colorByContributor).toBe(true);
+      store().switchDraft(first);
+      expect(store().colorByContributor).toBe(false);
+    });
+
     it("keeps a well-formed claim through the repair pass", () => {
       const merge = useContributionStore.persist.getOptions().merge;
       const claim = { contributorId: "contributor-1", sourceDraftId: "draft-2" };
@@ -1659,6 +1697,7 @@ describe("contribution store", () => {
         authors: [],
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
+        colorByContributor: false,
         heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,
@@ -1718,6 +1757,7 @@ describe("contribution store", () => {
         authors: [],
         inputMode: "toggle" as const,
         heatmapMonoColor: "#2563eb",
+        colorByContributor: false,
         heatmapSettings: null,
         outputLocale: "en" as const,
         updatedAt: 0,
@@ -1775,6 +1815,7 @@ describe("contribution store", () => {
         authors: [],
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
+        colorByContributor: false,
         heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,
@@ -1833,6 +1874,7 @@ describe("contribution store", () => {
         authors: [],
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
+        colorByContributor: false,
         heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,
