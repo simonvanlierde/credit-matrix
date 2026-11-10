@@ -72,7 +72,7 @@ if adjudicated.exists():
     missing = {s["pmcid"] for s in splits} - fixed.keys()
     if missing:
         sys.exit(f"adjudicated file misses {len(missing)} splits")
-    gold |= {k: fixed[k] for k in fixed if k not in gold}
+    gold |= fixed  # an adjudicated row wins over the majority, so a later rule fix survives a rerun
     with (LAB / f"{NAME}-gold.jsonl").open("w", encoding="utf-8") as f:
         f.writelines(json.dumps({"pmcid": k, "label": gold[k]}, ensure_ascii=False) + "\n" for k in base)
     print(f"{NAME}-gold.jsonl {len(gold)} rows")
