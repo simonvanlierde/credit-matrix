@@ -24,6 +24,7 @@ import {
 import { clampScore, isShareableId, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import { type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
+import { type HeatmapFigureSettings, repairHeatmapSettings } from "@/lib/heatmap-settings";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
@@ -57,6 +58,7 @@ export interface Draft {
   heatmapMonoColor: string;
   /** Colour the grid per contributor instead of in `heatmapMonoColor`. */
   colorByContributor: boolean;
+  heatmapSettings: HeatmapFigureSettings | null;
   outputLocale: LocaleCode;
   /** Last write, in epoch milliseconds. Orders the picker. */
   updatedAt: number;
@@ -99,6 +101,7 @@ interface ContributionState {
   title: string;
   inputMode: InputMode;
   heatmapMonoColor: string;
+  heatmapSettings: HeatmapFigureSettings | null;
   /** Language for the generated statement + human-facing exports (role names only). */
   outputLocale: LocaleCode;
   /**
@@ -222,6 +225,7 @@ interface ContributionState {
   toggleContribution: (authorId: string, roleIndex: number) => void;
   setInputMode: (mode: InputMode) => void;
   setHeatmapMonoColor: (color: string) => void;
+  setHeatmapSettings: (settings: HeatmapFigureSettings | null) => void;
   setOutputLocale: (locale: LocaleCode) => void;
   setUiLocale: (locale: LocaleCode) => void;
   openWelcome: () => void;
@@ -294,6 +298,7 @@ function liveDraft(state: ContributionState): Draft {
     inputMode: state.inputMode,
     heatmapMonoColor: state.heatmapMonoColor,
     colorByContributor: state.colorByContributor,
+    heatmapSettings: state.heatmapSettings,
     outputLocale: state.outputLocale,
     updatedAt: Date.now(),
     claim: state.claim,
@@ -310,6 +315,7 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.inputMode = draft.inputMode;
   state.heatmapMonoColor = draft.heatmapMonoColor;
   state.colorByContributor = draft.colorByContributor;
+  state.heatmapSettings = draft.heatmapSettings;
   state.outputLocale = draft.outputLocale;
   state.claim = draft.claim;
   state.asks = draft.asks;
@@ -331,6 +337,7 @@ function emptyDraft(title = ""): Draft {
     inputMode: "toggle",
     heatmapMonoColor: DEFAULT_MONO_COLOR,
     colorByContributor: true,
+    heatmapSettings: null,
     outputLocale: "en",
     updatedAt: Date.now(),
     claim: null,
@@ -445,6 +452,7 @@ function repairSingleDraft(value: unknown, id: string): Draft {
       typeof raw.colorByContributor === "boolean"
         ? raw.colorByContributor
         : (raw.heatmapMonoColor ?? DEFAULT_MONO_COLOR) === DEFAULT_MONO_COLOR,
+    heatmapSettings: repairHeatmapSettings(raw.heatmapSettings),
     outputLocale: normalizeLocaleCode(raw.outputLocale),
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
     claim: isDraftClaim(raw.claim) ? raw.claim : null,
@@ -916,6 +924,7 @@ export const useContributionStore = create<ContributionState>()(
       activeDraftId: INITIAL_DRAFT_ID,
       inputMode: "toggle",
       heatmapMonoColor: DEFAULT_MONO_COLOR,
+      heatmapSettings: null,
       outputLocale: "en",
       uiLocale: "en",
       welcomeSeen: false,
@@ -1286,6 +1295,11 @@ export const useContributionStore = create<ContributionState>()(
           state.colorByContributor = false;
         }),
 
+      setHeatmapSettings: (settings) =>
+        set((state) => {
+          state.heatmapSettings = repairHeatmapSettings(settings);
+        }),
+
       setOutputLocale: (locale) =>
         set((state) => {
           state.outputLocale = normalizeLocaleCode(locale);
@@ -1337,6 +1351,7 @@ export const useContributionStore = create<ContributionState>()(
           state.inputMode = "toggle";
           state.heatmapMonoColor = DEFAULT_MONO_COLOR;
           state.colorByContributor = true;
+          state.heatmapSettings = null;
           state.outputLocale = "en";
           state.asks = {};
           state.selfId = null;

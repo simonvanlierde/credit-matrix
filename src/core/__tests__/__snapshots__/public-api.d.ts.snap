@@ -1030,6 +1030,14 @@ interface HeatmapSvgOptions {
   /** Cell side in SVG pixels (Typst uses points). */
   size?: number;
   legend?: boolean;
+  /** Place the key beside a narrow tall matrix or below a wide one. Defaults to auto. */
+  legendPosition?: "auto" | "right" | "bottom";
+  /** Add redundant dots/checks in cells and the key. Defaults to false. */
+  marks?: boolean;
+  /** Base label size in SVG pixels, from 6 to 32. Defaults to 10.5. */
+  fontSize?: number;
+  /** Portable font stack. Defaults to sans. */
+  font?: "sans" | "serif";
   /** Short labels pair the role number with twelve characters; the text alternative retains full names. */
   labels?: "full" | "short";
   /**
@@ -1048,7 +1056,7 @@ interface HeatmapSvgOptions {
   showLevels?: boolean;
   /**
    * Label authors by their initials (true) or full names (false) on the axis.
-   * Defaults to true. The legend always uses initials badges.
+   * Defaults to true. The text alternative retains full names.
    */
   acronyms?: boolean;
   /** Scale all layout dimensions (min 0.1). */
@@ -1075,13 +1083,12 @@ export declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgO
  *
  * Pure and dependency-free. Runs in the browser (for live preview, SVG
  * download, and canvas→PNG export) and in Node (for tests). The SVG uses
- * system font stacks, so no font embedding is required.
+ * font stacks; exact glyphs depend on the installed fonts.
  *
- * Every band is measured from the labels it actually carries, and the legend
- * wraps to the figure's own width, so the canvas is the drawing's bounding box
- * rather than a fixed frame around it: a two-author figure no longer inherits
- * the width of a four-key legend. Roles that no author contributed to are
- * omitted, matching the live chart. There is no *rendered* image title:
+ * Label bands use estimated text widths. The key fits beside tall narrow grids
+ * or wraps below wider ones, with explicit placement overrides.
+ * Roles that no author contributed to are
+ * omitted by default. There is no *rendered* image title:
  * captions belong to the embedding document. The `<title>` element is the
  * accessible name for the `role="img"` graphic and `<desc>` its text
  * alternative: the by-author contribution statement, so a screen reader hears

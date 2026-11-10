@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Legende"
 
 msgid "levelHint"
-msgstr "Auswählen zum Wechseln · Rechtsklick oder 0–3 setzt eine Stufe."
+msgstr "Auswählen zum Wechseln · Pfeiltasten zum Navigieren · Rechtsklick oder 0–3 setzt eine Stufe."
 
 msgid "heatmapLabel"
 msgstr "Heatmap"
@@ -1601,6 +1601,129 @@ msgstr "Diese Zitationsdatei nennt keine Autoren."
 msgid "citationConverting"
 msgstr "Zitationsdatei wird gelesen … Der Konverter muss möglicherweise erst heruntergeladen werden."
 
+msgid "heatmapActualSize"
+msgstr "Originalgröße"
+
+msgid "heatmapFitWidth"
+msgstr "An Breite anpassen"
+
+msgid "heatmapFigureSettings"
+msgstr "Abbildungseinstellungen"
+
+msgid "heatmapLayout"
+msgstr "Layout"
+
+msgid "heatmapOrientation"
+msgstr "Ausrichtung"
+
+msgid "heatmapRolesInRows"
+msgstr "Rollen in Zeilen"
+
+msgid "heatmapContributorsInRows"
+msgstr "Mitwirkende in Zeilen"
+
+msgid "heatmapRoleLabels"
+msgstr "Rollenbeschriftungen"
+
+msgid "heatmapFullLabels"
+msgstr "Vollständige Beschriftungen"
+
+msgid "heatmapShortLabels"
+msgstr "Kurze Beschriftungen"
+
+msgid "heatmapHideUnused"
+msgstr "Unbenutzte Rollen ausblenden"
+
+
+msgid "heatmapShowLevels"
+msgstr "Beitragsstufen anzeigen"
+
+msgid "heatmapLegendHint"
+msgstr "Erklären Sie die Stufen in der Bildunterschrift, wenn Sie die Legende ausblenden."
+
+msgid "heatmapBlue"
+msgstr "Blau"
+
+msgid "heatmapGreen"
+msgstr "Grün"
+
+msgid "heatmapGray"
+msgstr "Graustufen"
+
+msgid "heatmapPaleColor"
+msgstr "Unterstützend ist mit dieser Farbe schwer zu erkennen. Wählen Sie einen dunkleren Farbton."
+
+msgid "heatmapAdvanced"
+msgstr "Erweitert"
+
+msgid "heatmapFont"
+msgstr "Schriftart"
+
+msgid "heatmapSans"
+msgstr "Serifenlos"
+
+msgid "heatmapSerif"
+msgstr "Mit Serifen"
+
+msgid "heatmapFontSize"
+msgstr "Schriftgröße (px)"
+
+msgid "heatmapCellShape"
+msgstr "Zellform"
+
+msgid "heatmapSquare"
+msgstr "Quadratisch"
+
+msgid "heatmapRounded"
+msgstr "Abgerundet"
+
+msgid "heatmapCircle"
+msgstr "Kreis"
+
+msgid "heatmapCellSize"
+msgstr "Zellgröße (px)"
+
+msgid "heatmapPngSize"
+msgstr "PNG-Größe"
+
+msgid "heatmapWidthMm"
+msgstr "Breite (mm)"
+
+msgid "heatmapResolution"
+msgstr "Auflösung"
+
+msgid "heatmapSvgHint"
+msgstr "SVG bleibt beim Skalieren scharf; diese Maße gelten für PNG."
+
+msgid "heatmapReset"
+msgstr "Standardwerte wiederherstellen"
+
+msgid "heatmapPngTooLarge"
+msgstr "Diese PNG wäre zu groß. Verringern Sie Breite oder Auflösung, tauschen Sie die Achsen oder laden Sie SVG herunter."
+
+msgid "heatmapSmallPrint"
+msgstr "Die Beschriftungen wären im Druck etwa {size} pt groß. Erhöhen Sie die Breite oder tauschen Sie die Achsen für lesbaren Text."
+
+msgid "heatmapRecipe"
+msgstr "Exportvorlage"
+
+msgid "heatmapRecipeHint"
+msgstr "Nur Stileinstellungen. Verwende deine Beitragsdaten und die installierte CLI oder Erweiterung. PNG-Größe und DPI sind nicht enthalten."
+
+msgid "heatmapRecipeTarget"
+msgstr "Verwenden in"
+
+msgid "heatmapRecipeMyst"
+msgstr "MyST verwendet die Autorenrollen und Sprache der Seite mit Ja/Nein-Beiträgen."
+
+msgid "heatmapRecipeTypst"
+msgstr "Verwende deine Typst-Teamdaten. Schriftmaße und natives Layout können von SVG abweichen."
+
+msgid "heatmapRecipeOneColor"
+msgstr "Rezepte zeichnen eine Farbe. Farben je Mitwirkende gibt es nur im SVG und PNG der App."
+
+msgid "heatmapCopyRecipe"
+msgstr "Exportvorlage kopieren"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate-Fragment"
 
@@ -1615,3 +1738,24 @@ msgstr "Eine Farbe"
 
 msgid "figurePerContributor"
 msgstr "Je Mitwirkende"
+
+msgid "heatmapLegendPosition"
+msgstr "Legende"
+
+msgid "heatmapLegendAuto"
+msgstr "Automatisch"
+
+msgid "heatmapLegendRight"
+msgstr "Rechts"
+
+msgid "heatmapLegendBelow"
+msgstr "Darunter"
+
+msgid "heatmapLegendHidden"
+msgstr "Ausgeblendet"
+
+msgid "heatmapCellMarks"
+msgstr "Beitragsmarkierungen anzeigen"
+
+msgid "heatmapMarksHint"
+msgstr "Aktiviere Markierungen, um Beitragsstufen zusätzlich unterscheiden zu können."

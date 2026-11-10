@@ -125,10 +125,29 @@ upside down, so dark mode keeps the hue and raises its lightness instead: 30%, 4
 blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark marks on Lead. Exported heatmaps always use the
 light scale on a white background, because a figure goes onto a manuscript page. A figure uses one
 hue by default, since it must read in greyscale print and in any journal's style. *Per contributor*
-in the heatmap menu gives each person their hue for slides and posters, with the level key in a
+under Figure settings gives each person their hue for slides and posters, with the level key in a
 neutral grey. Figure cells default
 to square corners and a thin neutral rule; the live editing controls retain their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
+
+The editor uses one, two and three dots for Supporting, Equal and Lead, and a check in yes/no mode.
+Publication figures omit these marks by default to keep the matrix quiet. Optional marks repeat
+in the cells and legend as an additional way to distinguish levels. Keep the editor's key directly
+after the table. Figure legends use a vertical key beside tall narrow grids when it fits without
+excessive width, otherwise a wrapped key below. Allow Right, Below and Hidden overrides. The heatmap export popover previews the actual figure
+on white paper, with fit-to-width and actual-size views and the PNG pixel dimensions.
+
+Figure settings belong beside that preview and are saved per draft, independently of the editor's
+display options and contribution values. Keep layout, labels, legend and colour together; put font
+and cell geometry under Advanced. Reset restores the figure defaults. On a narrow screen, settings
+replace the preview until the person closes them; desktop shows both side by side.
+Keep export recipes behind a disclosure in Figure settings. Show a selectable snippet and copy
+action for the chosen document tool, with any differences from the preview beside the snippet.
+
+PNG width and resolution determine its pixel dimensions and print-density metadata. Show the
+resulting dimensions, flag labels that would print very small, and keep SVG available when a PNG
+would exceed the raster size limit. SVG retains its scalable geometry. Use portable sans-serif or
+serif font stacks, with the installed font determining the exact glyphs.
 
 Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the ring
 around the cell a Review line points at, and the ring that fades off a cell when you settle a

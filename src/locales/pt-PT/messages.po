@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Legenda"
 
 msgid "levelHint"
-msgstr "Selecionar para alternar · Clique direito ou 0–3 define um nível."
+msgstr "Selecionar para alternar · Setas para navegar · Clique direito ou 0–3 define um nível."
 
 msgid "heatmapLabel"
 msgstr "Mapa de calor"
@@ -1601,6 +1601,129 @@ msgstr "Este ficheiro de citação não indica autores."
 msgid "citationConverting"
 msgstr "A ler o ficheiro de citação… Pode ser necessário transferir primeiro o conversor."
 
+msgid "heatmapActualSize"
+msgstr "Tamanho real"
+
+msgid "heatmapFitWidth"
+msgstr "Ajustar à largura"
+
+msgid "heatmapFigureSettings"
+msgstr "Definições da figura"
+
+msgid "heatmapLayout"
+msgstr "Disposição"
+
+msgid "heatmapOrientation"
+msgstr "Orientação"
+
+msgid "heatmapRolesInRows"
+msgstr "Papéis nas linhas"
+
+msgid "heatmapContributorsInRows"
+msgstr "Contribuidores nas linhas"
+
+msgid "heatmapRoleLabels"
+msgstr "Rótulos dos papéis"
+
+msgid "heatmapFullLabels"
+msgstr "Rótulos completos"
+
+msgid "heatmapShortLabels"
+msgstr "Rótulos curtos"
+
+msgid "heatmapHideUnused"
+msgstr "Omitir papéis não utilizados"
+
+
+msgid "heatmapShowLevels"
+msgstr "Mostrar níveis de contribuição"
+
+msgid "heatmapLegendHint"
+msgstr "Explique os níveis na legenda do manuscrito se ocultar a legenda da figura."
+
+msgid "heatmapBlue"
+msgstr "Azul"
+
+msgid "heatmapGreen"
+msgstr "Verde"
+
+msgid "heatmapGray"
+msgstr "Escala de cinzentos"
+
+msgid "heatmapPaleColor"
+msgstr "O nível de apoio é difícil de distinguir com esta cor. Escolha um tom mais escuro."
+
+msgid "heatmapAdvanced"
+msgstr "Avançado"
+
+msgid "heatmapFont"
+msgstr "Tipo de letra"
+
+msgid "heatmapSans"
+msgstr "Sem serifas"
+
+msgid "heatmapSerif"
+msgstr "Com serifas"
+
+msgid "heatmapFontSize"
+msgstr "Tamanho do texto (px)"
+
+msgid "heatmapCellShape"
+msgstr "Forma das células"
+
+msgid "heatmapSquare"
+msgstr "Quadrado"
+
+msgid "heatmapRounded"
+msgstr "Arredondado"
+
+msgid "heatmapCircle"
+msgstr "Círculo"
+
+msgid "heatmapCellSize"
+msgstr "Tamanho das células (px)"
+
+msgid "heatmapPngSize"
+msgstr "Tamanho do PNG"
+
+msgid "heatmapWidthMm"
+msgstr "Largura (mm)"
+
+msgid "heatmapResolution"
+msgstr "Resolução"
+
+msgid "heatmapSvgHint"
+msgstr "O SVG mantém a nitidez ao mudar de tamanho; estas dimensões aplicam-se ao PNG."
+
+msgid "heatmapReset"
+msgstr "Repor predefinições"
+
+msgid "heatmapPngTooLarge"
+msgstr "Este PNG seria demasiado grande. Reduza a largura ou resolução, troque os eixos ou transfira o SVG."
+
+msgid "heatmapSmallPrint"
+msgstr "Os rótulos seriam impressos com cerca de {size} pt. Aumente a largura ou troque os eixos para facilitar a leitura."
+
+msgid "heatmapRecipe"
+msgstr "Receita de exportação"
+
+msgid "heatmapRecipeHint"
+msgstr "Apenas definições de estilo. Usa os teus dados de contribuição e a CLI ou o módulo instalado. O tamanho PNG e os DPI não estão incluídos."
+
+msgid "heatmapRecipeTarget"
+msgstr "Usar em"
+
+msgid "heatmapRecipeMyst"
+msgstr "O MyST usa as funções dos autores e o idioma da página, com contribuições sim/não."
+
+msgid "heatmapRecipeTypst"
+msgstr "Usa os teus dados de equipa do Typst. As métricas das fontes e a disposição nativa podem diferir do SVG."
+
+msgid "heatmapRecipeOneColor"
+msgstr "As receitas usam uma só cor. As cores por contribuidor só existem no SVG e no PNG da aplicação."
+
+msgid "heatmapCopyRecipe"
+msgstr "Copiar receita de exportação"
 msgid "exportRoCrateFragment"
 msgstr "Fragmento RO-Crate"
 
@@ -1615,3 +1738,24 @@ msgstr "Uma só cor"
 
 msgid "figurePerContributor"
 msgstr "Por contribuidor"
+
+msgid "heatmapLegendPosition"
+msgstr "Legenda"
+
+msgid "heatmapLegendAuto"
+msgstr "Automática"
+
+msgid "heatmapLegendRight"
+msgstr "À direita"
+
+msgid "heatmapLegendBelow"
+msgstr "Por baixo"
+
+msgid "heatmapLegendHidden"
+msgstr "Oculta"
+
+msgid "heatmapCellMarks"
+msgstr "Mostrar marcas de contribuição"
+
+msgid "heatmapMarksHint"
+msgstr "Ativa as marcas para distinguir os níveis de contribuição também de outra forma."

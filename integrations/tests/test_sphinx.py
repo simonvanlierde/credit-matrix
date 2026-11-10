@@ -137,7 +137,7 @@ def test_unicode_output_under_non_utf8_locale(tmp_path, project):
 
 def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
     app, warnings, _ = project(
-        ".. credit-heatmap:: contributors.json\n   :shape: circle\n   :size: 30\n   :legend: false\n"
+        ".. credit-heatmap:: contributors.json\n   :shape: circle\n   :size: 30\n   :font: serif\n   :font-size: 21\n   :initials: false\n   :legend: false\n"
     )
     app.build()
     assert not warnings.getvalue()
@@ -147,3 +147,39 @@ def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
     svg = image.read_text(encoding="utf-8")
     assert 'width="30" height="30" rx="15"' in svg
     assert ">Supporting<" not in svg
+    assert 'font-size="21"' in svg
+    assert ">Marie Curie</text>" in svg
+    assert "Georgia, 'Times New Roman', serif" in svg
+
+
+@pytest.mark.parametrize("position", ["auto", "right", "bottom"])
+@pytest.mark.parametrize("marks", [True, False])
+def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, project, position, marks):
+    app, warnings, _ = project(
+        f".. credit-heatmap:: contributors.json\n   :legend-position: {position}\n   :marks: {str(marks).lower()}\n"
+    )
+    app.build()
+    assert not warnings.getvalue()
+    svg = next((tmp_path / "html/_images").glob("*.svg")).read_text(encoding="utf-8")
+    expected = subprocess.run(
+        [
+            "node",
+            str(CLI),
+            "convert",
+            str(EXPORT),
+            "--to",
+            "svg",
+            "--legend-position",
+            position,
+            "--marks",
+            str(marks).lower(),
+            "--locale",
+            "en",
+        ],
+        check=True,
+        capture_output=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert svg.strip() == expected.stdout.strip()
+    assert ('aria-hidden="true"' in svg) == marks

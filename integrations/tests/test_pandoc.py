@@ -202,6 +202,9 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
             "command": ["node", str(ROOT / "src/core/dist/cli.js")],
             "shape": "circle",
             "size": 30,
+            "font": "serif",
+            "font-size": 21,
+            "initials": False,
             "legend": False,
             "levels": levels,
         },
@@ -212,3 +215,28 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
     svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
     assert 'width="30" height="30" rx="15"' in svg
     assert ">Supporting<" not in svg
+    assert 'font-size="21"' in svg
+    assert ">Tu Youyou</text>" in svg
+    assert "Georgia, 'Times New Roman', serif" in svg
+
+
+@pytest.mark.parametrize("position", ["auto", "right", "bottom"])
+@pytest.mark.parametrize("marks", [True, False])
+def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, position, marks):
+    cli = str(ROOT / "src/core/dist/cli.js")
+    metadata = {
+        "author": [{"name": "Tu Youyou", "roles": [{"software": "supporting"}]}],
+        "credit-matrix": {"heatmap": True, "command": ["node", cli], "legend-position": position, "marks": marks},
+    }
+    render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}")
+    svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
+    expected = subprocess.run(
+        ["node", cli, "convert", "-", "--to", "svg", "--legend-position", position, "--marks", str(marks).lower()],
+        input="Name,Software\nTu Youyou,33\n",
+        check=True,
+        capture_output=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert svg.strip() == expected.stdout.strip()
+    assert ('aria-hidden="true"' in svg) == marks
