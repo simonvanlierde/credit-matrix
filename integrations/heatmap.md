@@ -1,6 +1,6 @@
 # Contribution heatmap figures
 
-The app's SVG and PNG downloads, the CLI, and the document plugins draw square cells with a thin
+The app's SVG, PDF and PNG downloads, the CLI, and the document plugins draw square cells with a thin
 neutral rule. Rotated headers keep names beside their columns. White paper, one hue, and three
 increasing intensities distinguish Supporting, Equal and Lead. Empty cells stay light gray.
 This follows the compact matrix layout of [latex-credits](https://ctan.org/pkg/latex-credits).

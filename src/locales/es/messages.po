@@ -1720,7 +1720,7 @@ msgid "heatmapRecipeTypst"
 msgstr "Usa tus datos de equipo de Typst. Las métricas tipográficas y el diseño nativo pueden diferir del SVG."
 
 msgid "heatmapRecipeOneColor"
-msgstr "Las recetas usan un solo color. Los colores por contribuyente solo están en el SVG y el PNG de la app."
+msgstr "Las recetas usan un solo color. Los colores por contribuyente solo están en el SVG, el PNG y el PDF de la app."
 
 msgid "heatmapCopyRecipe"
 msgstr "Copiar receta de exportación"

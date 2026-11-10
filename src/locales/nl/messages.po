@@ -1720,7 +1720,7 @@ msgid "heatmapRecipeTypst"
 msgstr "Gebruik je Typst-teamgegevens. Lettertypematen en de eigen lay-out kunnen afwijken van SVG."
 
 msgid "heatmapRecipeOneColor"
-msgstr "Recepten tekenen één kleur. Kleuren per bijdrager staan alleen in de SVG en PNG van de app."
+msgstr "Recepten tekenen één kleur. Kleuren per bijdrager staan alleen in de SVG, PNG en PDF van de app."
 
 msgid "heatmapCopyRecipe"
 msgstr "Exportrecept kopiëren"
