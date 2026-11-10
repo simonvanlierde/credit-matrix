@@ -428,8 +428,9 @@ dialog[open]::backdrop {
 /*
  * The first-run card is in the prerendered HTML, so it paints with the page, before any script.
  * It is closed until hydration calls showModal(), and a closed dialog is display:none, so it is
- * shown here as a fixed box with a box-shadow for its backdrop. WelcomeCard drops data-first-run
- * once it has decided, and index.html hides it for a returning visitor.
+ * shown here as a fixed box, without the dimmed backdrop: any full-screen layer over the page made
+ * the browser credit the card's text to a later frame. showModal() fades the backdrop in.
+ * WelcomeCard drops data-first-run once it has decided, and index.html hides it for a returning visitor.
  */
 dialog[data-first-run]:not([open]) {
   display: block;
@@ -437,10 +438,9 @@ dialog[data-first-run]:not([open]) {
   inset: 0;
   z-index: 60;
   transform: none;
-  box-shadow: 0 0 0 100vmax color-mix(in oklab, var(--color-on-surface) 30%, transparent);
 }
 
-html[data-welcome-skip] dialog[data-first-run] {
+html[data-welcome-skip] dialog[data-first-run]:not([open]) {
   display: none;
 }
 

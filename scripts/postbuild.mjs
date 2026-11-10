@@ -85,7 +85,7 @@ if (!sameSet(routePaths, exported))
 if (!sameSet(routePaths, swPages))
   throw new Error(`postbuild: src/routes.ts has ${routePaths}, ${swPath} PAGES has ${swPages}`);
 // Each prerendered page carries its own head tags and the preloads for its chunks (scripts/prerender.mjs
-// puts those in a loader that runs after parsing).
+// puts those in a loader that runs after the first paint).
 for (const path of exported) {
   const html = await readFile(join(OUT, path === "/" ? "index.html" : `${path.slice(1)}.html`), "utf8");
   const title = html.match(/<title>(.*?)<\/title>/)?.[1];

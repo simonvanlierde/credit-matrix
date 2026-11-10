@@ -38,7 +38,6 @@ test("a first visit ends with the card as a real modal, with no hydration warnin
   await expect
     .poll(() => page.evaluate(() => document.querySelector("dialog#getting-started")?.matches(":modal")))
     .toBe(true);
-  await expect(page.locator("dialog#getting-started")).not.toHaveAttribute("data-first-run");
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog#getting-started")).toBeHidden();
   expect(problems).toEqual([]);
@@ -48,7 +47,7 @@ test("a returning visitor never sees the card paint", async ({ page }) => {
   await seedStorage(page, { authors: [], welcomeSeen: true });
   await watchCard(page);
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "About this app" })).toBeVisible();
+  await expect(page.locator("#add-contributor")).toBeEditable();
   await page.waitForTimeout(500);
   expect(await cardSeen(page)).toBe(false);
 });

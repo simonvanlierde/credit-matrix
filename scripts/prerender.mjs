@@ -6,9 +6,10 @@ const manifest = JSON.parse(await readFile("out/.vite/manifest.json", "utf8"));
 const template = await readFile("out/index.html", "utf8");
 const escapeAttribute = (text) =>
   String(text).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
-// The prerendered page paints without script, so the scripts start downloading in a task after the HTML is parsed,
-// not beside the HTML, CSS and fonts that frame needs. The inserted script still delays the load event. On a slow link they compete
-// with that frame's bytes: before this, the scripts delayed the first-run card's paint by seconds.
+// The prerendered page paints without script, so the scripts start downloading once the first paint is out,
+// not beside the HTML, CSS and fonts that frame needs. On a slow link they compete with that frame's bytes: before this, the scripts delayed the
+// first-run card's paint by seconds. A document.open() iframe keeps the load event pending until the
+// scripts are inserted, so a click made once the page has loaded is not lost to an unhydrated page.
 const deferScripts = (html) => {
   const tags = [];
   const rest = html.replace(/<link rel="modulepreload"[^>]*>|<script type="module"[^>]*><\/script>/g, (tag) => {
@@ -20,7 +21,7 @@ const deferScripts = (html) => {
     tag.startsWith("<script") ? "script" : "link",
     tag.match(/(?:href|src)="([^"]+)"/)[1],
   ]);
-  const loader = `<script>setTimeout(()=>{for(const[k,u]of ${JSON.stringify(urls)}){const e=document.createElement(k);if(k==="script")e.type="module";else e.rel="modulepreload";e[k==="script"?"src":"href"]=u;document.head.append(e)}})</script>`;
+  const loader = `<script>{const hold=document.body.appendChild(document.createElement("iframe"));hold.hidden=true;hold.contentDocument.open();let done=0;const go=()=>{if(done++)return;for(const[k,u]of ${JSON.stringify(urls)}){const e=document.createElement(k);if(k==="script")e.type="module";else e.rel="modulepreload";e[k==="script"?"src":"href"]=u;document.head.append(e)}hold.remove()};new PerformanceObserver(()=>go()).observe({type:"paint",buffered:true});setTimeout(go,1500)}</script>`;
   return rest.replace("</body>", () => `${loader}</body>`);
 };
 const description =
