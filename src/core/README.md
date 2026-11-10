@@ -23,6 +23,7 @@ toJats4rXml(authors);
 | `credit-matrix` | the model and roles, statements, every format, heatmap SVG, links, asks | nothing (in Node, JATS import takes a parser) |
 | `credit-matrix/lookup` | ORCID and DOI lookups | `fetch` |
 | `credit-matrix/i18n` | role names and output strings in nine languages | nothing |
+| `credit-matrix/figures` | embedded-font SVG and PDF heatmaps | bundled Noto fonts; PDF and font libraries |
 | `credit-matrix/element` | registers the `<credit-matrix>` element ([docs](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/element.md)) | a DOM |
 
 ## CLI
@@ -38,6 +39,7 @@ npx credit-matrix convert paper.xml --to json      # convert a JATS4R file to na
 npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
 npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
 npx credit-matrix convert team.csv --to svg > heatmap.svg  # the heatmap; --locale sets its language
+npx credit-matrix convert team.csv --to pdf > heatmap.pdf  # embedded fonts and selectable text
 npx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
 npx credit-matrix convert team.csv --to quarto > authors.yml  # Quarto/Pandoc author metadata, with levels
 npx credit-matrix convert team.csv --to myst > authors.yml    # MyST/Jupyter Book author metadata, without levels
@@ -190,6 +192,22 @@ plugin to render a statement from these blocks.
 assets.
 Its `<desc>` is the by-author contribution statement, so a screen reader hears who did what;
 `heatmapDescription` returns that text, for an image's alt text or a PNG's Description field.
+
+For embedded fonts, use the separate `credit-matrix/figures` entry. Create its renderer once; it loads
+each font face when a figure first needs it:
+
+```ts
+import { createFigureRenderer } from "credit-matrix/figures";
+
+const figures = createFigureRenderer();
+const svg = await figures.svg(authors, { acronyms: false });
+const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
+```
+
+The app downloads and CLI use this renderer. It embeds regular Noto Sans or Noto Serif fonts and measures labels
+with their actual widths. Unsupported glyphs raise `FigureFontError`; they never use installed fonts.
+See the [figure font guide](../../integrations/figures/README.md) for offline use, supported scripts
+and editor compatibility. The lightweight `buildHeatmapSvg` API keeps its system-font output.
 
 The [figure options guide](../../integrations/heatmap.md) covers palettes, shapes, cell size, fonts, legends,
 short labels and orientation for the JavaScript API, CLI and document plugins.

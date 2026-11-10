@@ -1,3 +1,4 @@
+// @vitest-environment node
 // biome-ignore-all lint/correctness/noNodejsModules: execute the recipe through the real file-based CLI.
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -7,8 +8,8 @@ import { parse as parseYaml } from "yaml";
 import { run } from "@/core/cli";
 import { loadRoleCatalog, makeRoleTranslator } from "@/core/credit-i18n";
 import { loadUiCatalog, makeUiTranslator } from "@/core/credit-i18n/ui-strings";
-import { buildHeatmapSvg } from "@/core/export/heatmap-svg";
 import { toJson } from "@/core/export/json";
+import { createFigureRenderer } from "@/core/figures";
 import { createAuthor } from "@/core/parse-authors";
 import { heatmapRecipe } from "./heatmap-recipe";
 import { DEFAULT_HEATMAP_SETTINGS } from "./heatmap-settings";
@@ -40,13 +41,17 @@ describe("heatmap recipes", () => {
     args.splice(args.indexOf(">"));
     args[1] = path;
     const actual = await run(args.map((arg) => arg.replace(/^'|'$/g, "")));
+    expect(typeof actual).toBe("string");
+    if (typeof actual !== "string") throw new Error("Expected SVG text");
     expect(actual.trim()).toBe(
-      buildHeatmapSvg(authors, {
-        ...value,
-        locale: "fr",
-        translateRole: makeRoleTranslator(await loadRoleCatalog("fr")),
-        translateUi: makeUiTranslator(await loadUiCatalog("fr")),
-      }).trim(),
+      (
+        await createFigureRenderer().svg(authors, {
+          ...value,
+          locale: "fr",
+          translateRole: makeRoleTranslator(await loadRoleCatalog("fr")),
+          translateUi: makeUiTranslator(await loadUiCatalog("fr")),
+        })
+      ).trim(),
     );
   });
 

@@ -1724,6 +1724,11 @@ msgstr "复制导出配置代码"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate 片段"
 
+msgid "downloadPdf"
+msgstr "下载 PDF"
+
+msgid "errFigureGlyphs"
+msgstr "图表字体无法显示以下字符：{characters}。"
 
 msgid "heatmapLegendPosition"
 msgstr "图例"

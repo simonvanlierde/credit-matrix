@@ -59,6 +59,10 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "toTenzing",
     "verifyOrcidToken",
   ],
+  "./figures": [
+    "FigureFontError",
+    "createFigureRenderer",
+  ],
   "./i18n": [
     "AVAILABLE_LOCALES",
     "DEFAULT_ROLE_TRANSLATOR",

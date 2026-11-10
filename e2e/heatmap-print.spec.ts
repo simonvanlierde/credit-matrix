@@ -1,11 +1,18 @@
 // biome-ignore lint/correctness/noNodejsModules: retain measured figures as Playwright artifacts.
 import { writeFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
+import type { FigureRenderer } from "credit-matrix/figures";
 import { contrastRatio } from "../src/core/contributor-color";
 import { AVAILABLE_LOCALES, loadRoleCatalog, makeRoleTranslator } from "../src/core/credit-i18n";
 import { loadUiCatalog, makeUiTranslator } from "../src/core/credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../src/core/credit-roles";
-import { buildHeatmapSvg } from "../src/core/export/heatmap-svg";
+
+let figures: FigureRenderer;
+test.beforeAll(async () => {
+  const { createFigureRenderer } = await import("credit-matrix/figures");
+  figures = createFigureRenderer();
+});
+
 import { createAuthor } from "../src/core/parse-authors";
 import { heatmapPrintSize } from "../src/lib/heatmap-print";
 
@@ -17,6 +24,7 @@ const scenarios = [
 for (const { code } of AVAILABLE_LOCALES) {
   for (const font of ["sans", "serif"] as const) {
     for (const scenario of scenarios) {
+      // biome-ignore lint/suspicious/noLoopFunc: beforeAll initializes the shared renderer once per worker.
       test(`${code} ${font} ${scenario.name}: readable text and unclipped layout at print size`, async ({
         page,
       }, info) => {
@@ -25,7 +33,7 @@ for (const { code } of AVAILABLE_LOCALES) {
             contributions: CREDIT_ROLES.map((role, r) => ({ role: role.name, score: ((i + r) % 4) * 33 })),
           }),
         );
-        const svg = buildHeatmapSvg(authors, {
+        const svg = await figures.svg(authors, {
           font,
           acronyms: false,
           horizontal: scenario.horizontal,
@@ -34,7 +42,7 @@ for (const { code } of AVAILABLE_LOCALES) {
           translateRole: makeRoleTranslator(await loadRoleCatalog(code)),
           translateUi: makeUiTranslator(await loadUiCatalog(code)),
         });
-        expect(svg).toContain(`>${authors[0]?.name}</text>`);
+        expect(svg).toContain(`>${authors[0]?.name}</tspan>`);
         const requested = heatmapPrintSize(svg, scenario.widthMm);
         // Fit within the reference column and 170 mm height while retaining at least 5 pt text.
         // https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/
@@ -169,13 +177,13 @@ for (const { code } of AVAILABLE_LOCALES) {
   }
 }
 
-test("a dense team remains valid but cannot be called readable at single-column width", () => {
+test("a dense team remains valid but cannot be called readable at single-column width", async () => {
   const authors = Array.from({ length: 100 }, (_, i) =>
     createAuthor(`Researcher ${i + 1}`, {
       contributions: [{ role: "Software", score: 100 }],
     }),
   );
-  expect(heatmapPrintSize(buildHeatmapSvg(authors), 89).minFontPt).toBeLessThan(5);
-  expect(heatmapPrintSize(buildHeatmapSvg(authors, { horizontal: true }), 183).minFontPt).toBeGreaterThanOrEqual(5);
-  expect(heatmapPrintSize(buildHeatmapSvg(authors, { horizontal: true }), 183).heightMm).toBeGreaterThan(170);
+  expect(heatmapPrintSize(await figures.svg(authors), 89).minFontPt).toBeLessThan(5);
+  expect(heatmapPrintSize(await figures.svg(authors, { horizontal: true }), 183).minFontPt).toBeGreaterThanOrEqual(5);
+  expect(heatmapPrintSize(await figures.svg(authors, { horizontal: true }), 183).heightMm).toBeGreaterThan(170);
 });

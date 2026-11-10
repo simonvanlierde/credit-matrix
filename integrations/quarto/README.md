@@ -84,6 +84,8 @@ To put the statement somewhere else, leave an empty div where it should go:
 
 Set `credit-matrix.heatmap: true` to add a figure through the package CLI.
 See [figure options and examples](../heatmap.md) for setup and all rendering options.
+The CLI embeds fonts in the generated SVG. See
+[font portability and PDF export](../figures/README.md) for PDF and Word converter limits.
 
 ## Limitations
 

@@ -1,7 +1,7 @@
 import { ChevronDown, Copy, Download, Scan, Settings2, Shrink } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type Author, buildHeatmapSvg, heatmapDescription } from "@/core";
+import { type Author, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
 import { heatmapPrintSize, svgDimensions } from "@/lib/heatmap-print";
 import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
@@ -15,7 +15,19 @@ import { MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 import { HeatmapFigureSettings } from "./HeatmapFigureSettings";
 import { HeatmapRecipe } from "./HeatmapRecipe";
 
-type ExportFormat = "svg" | "png";
+type ExportFormat = "svg" | "png" | "pdf";
+
+// One renderer keeps each loaded face; it fetches a face only when a figure's text first needs it.
+let figureRenderer: Promise<import("@/core/figures").FigureRenderer> | undefined;
+function renderer() {
+  figureRenderer ??= import("@/core/figures")
+    .then(({ createFigureRenderer }) => createFigureRenderer())
+    .catch((error) => {
+      figureRenderer = undefined;
+      throw error;
+    });
+  return figureRenderer;
+}
 
 function pngDimensions(svg: string, widthMm: number, dpi: number) {
   const dimensions = svgDimensions(svg);
@@ -87,49 +99,82 @@ export function HeatmapExports({
   const [copySource, setCopySource] = useState<{ svg: string; widthMm: number; dpi: number } | null>(null);
   const storedSettings = useContributionStore((s) => s.heatmapSettings);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
-  const settings = storedSettings ?? {
-    ...DEFAULT_HEATMAP_SETTINGS,
-    color: monoColor,
-    levels: showLevels,
-    horizontal: transpose,
-    acronyms,
-  };
+  const settings = useMemo(
+    () =>
+      storedSettings ?? {
+        ...DEFAULT_HEATMAP_SETTINGS,
+        color: monoColor,
+        levels: showLevels,
+        horizontal: transpose,
+        acronyms,
+      },
+    [storedSettings, monoColor, showLevels, transpose, acronyms],
+  );
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
   });
 
-  const svgOptions = {
-    ...settings,
-    translateRole,
-    translateUi,
-    locale: outputLanguage,
-  };
-  const renderSvg = () => buildHeatmapSvg(authors, svgOptions);
-  const renderPng = () =>
+  const svgOptions = useMemo(
+    () => ({
+      ...settings,
+      translateRole,
+      translateUi,
+      locale: outputLanguage,
+    }),
+    [settings, translateRole, translateUi, outputLanguage],
+  );
+  const renderSvg = async () => (await renderer()).svg(authors, svgOptions);
+  const renderPng = async () =>
     svgToPngBlob(
-      renderSvg(),
+      await renderSvg(),
       heatmapDescription(authors, svgOptions),
       outputLanguage,
       settings.pngWidthMm,
       settings.pngDpi,
     );
-  let preview = "";
-  let previewError: string | null = null;
-  try {
-    if (open) preview = renderSvg();
-  } catch {
-    previewError = t("errHeatmapExport", { format: "SVG" });
-  }
+  const [{ preview, previewCause, rendering }, setPreview] = useState<{
+    preview: string;
+    previewCause: unknown;
+    rendering: boolean;
+  }>({ preview: "", previewCause: null, rendering: true });
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    setPreview((current) => ({ ...current, rendering: true }));
+    renderer()
+      .then((figures) => figures.svg(authors, svgOptions))
+      .then(
+        (svg) => {
+          if (active) setPreview({ preview: svg, previewCause: null, rendering: false });
+        },
+        (cause: unknown) => {
+          if (active) setPreview({ preview: "", previewCause: cause, rendering: false });
+        },
+      );
+    return () => {
+      active = false;
+    };
+  }, [open, authors, svgOptions]);
+  const previewError =
+    previewCause instanceof Error && previewCause.name === "FigureFontError" && "characters" in previewCause
+      ? t("errFigureGlyphs", { characters: String(previewCause.characters) })
+      : previewCause
+        ? t("errHeatmapExport", { format: "SVG" })
+        : null;
   const dimensions = preview ? pngDimensions(preview, settings.pngWidthMm, settings.pngDpi) : null;
   const pngTooLarge = dimensions ? oversizedPng(dimensions) : false;
   const printFontSize = preview ? heatmapPrintSize(preview, settings.pngWidthMm).minFontPt : null;
+
   const currentCopyStatus =
     copySource?.svg === preview && copySource.widthMm === settings.pngWidthMm && copySource.dpi === settings.pngDpi
       ? copyStatus
       : "idle";
 
-  function fail(format: ExportFormat) {
-    const message = t("errHeatmapExport", { format: format.toUpperCase() });
+  function fail(format: ExportFormat, cause: unknown) {
+    const message =
+      cause instanceof Error && cause.name === "FigureFontError" && "characters" in cause
+        ? t("errFigureGlyphs", { characters: String(cause.characters) })
+        : t("errHeatmapExport", { format: format.toUpperCase() });
     setError(message);
     announce(message, { assertive: true });
   }
@@ -138,13 +183,20 @@ export function HeatmapExports({
     setLoading(format);
     setError(null);
     try {
-      if (format === "svg") {
-        downloadBlob(new Blob([renderSvg()], { type: "image/svg+xml;charset=utf-8" }), "credit-heatmap.svg");
+      if (format === "pdf") {
+        downloadBlob(
+          new Blob([new Uint8Array(await (await renderer()).pdf(authors, svgOptions, settings.pngWidthMm))], {
+            type: "application/pdf",
+          }),
+          "credit-heatmap.pdf",
+        );
+      } else if (format === "svg") {
+        downloadBlob(new Blob([await renderSvg()], { type: "image/svg+xml;charset=utf-8" }), "credit-heatmap.svg");
       } else {
         downloadBlob(await renderPng(), "credit-heatmap.png");
       }
-    } catch {
-      fail(format);
+    } catch (cause) {
+      fail(format, cause);
     } finally {
       setLoading(null);
     }
@@ -178,6 +230,7 @@ export function HeatmapExports({
         align="end"
         collisionPadding={8}
         aria-label={t("heatmapLabel")}
+        aria-busy={rendering && !preview}
         className={`grid max-h-[var(--radix-popover-content-available-height)] max-w-[calc(100vw-2rem)] gap-3 overflow-y-auto p-3 ${settingsOpen ? "w-[48rem]" : "w-[32rem]"}`}
       >
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -197,7 +250,7 @@ export function HeatmapExports({
             </button>
             <button
               type="button"
-              disabled={!!previewError}
+              disabled={!preview || !!previewError}
               onClick={() => setActualSize(!actualSize)}
               className={`${TOOL_BUTTON} min-h-8 px-2`}
             >
@@ -211,7 +264,7 @@ export function HeatmapExports({
           </div>
           {dimensions && (
             <span className="w-full text-xs tabular-nums text-on-surface-variant">
-              SVG · PNG {dimensions.width} × {dimensions.height} px · {settings.pngDpi} dpi
+              SVG · PDF · PNG {dimensions.width} × {dimensions.height} px · {settings.pngDpi} dpi
             </span>
           )}
           {printFontSize !== null && printFontSize < 6 && (
@@ -220,6 +273,11 @@ export function HeatmapExports({
             </p>
           )}
         </div>
+        {rendering && !preview && (
+          <p role="status" className="text-sm text-on-surface-variant">
+            …
+          </p>
+        )}
         <div>
           <div className={`grid min-w-0 gap-3 ${settingsOpen ? "sm:grid-cols-[minmax(0,1fr)_15rem]" : ""}`}>
             {preview && (
@@ -255,10 +313,10 @@ export function HeatmapExports({
             )}
           </div>
         </div>
-        <div className="grid gap-0.5 sm:grid-cols-3">
+        <div className="grid gap-0.5 sm:grid-cols-4">
           <button
             type="button"
-            disabled={loading !== null || !!previewError || pngTooLarge}
+            disabled={!preview || loading !== null || !!previewError || pngTooLarge}
             onClick={() => void copyPng()}
             title={t("copyHeatmapHint")}
             className={MENU_ITEM}
@@ -270,16 +328,22 @@ export function HeatmapExports({
                 ? t("copyFailedMessage")
                 : t("copyPng")}
           </button>
-          {(["svg", "png"] as ExportFormat[]).map((format) => (
+          {(["svg", "pdf", "png"] as ExportFormat[]).map((format) => (
             <button
               key={format}
               type="button"
-              disabled={loading !== null || !!previewError || (format === "png" && pngTooLarge)}
+              disabled={!preview || loading !== null || !!previewError || (format === "png" && pngTooLarge)}
               onClick={() => download(format)}
               className={MENU_ITEM}
             >
               <Download className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
-              {loading === format ? "…" : format === "svg" ? t("downloadSvg") : t("downloadPng")}
+              {loading === format
+                ? "…"
+                : format === "svg"
+                  ? t("downloadSvg")
+                  : format === "pdf"
+                    ? t("downloadPdf")
+                    : t("downloadPng")}
             </button>
           ))}
         </div>

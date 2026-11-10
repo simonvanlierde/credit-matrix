@@ -58,7 +58,8 @@ Otherwise the key wraps below. Force `right` or `bottom` to suit the surrounding
 `legend: false` hides the key regardless of placement. In the app these choices share one Legend control.
 
 Font size changes the label bands and legend layout without changing contribution data.
-Fonts use portable serif or sans-serif stacks; their exact appearance depends on installed fonts.
+App, CLI and plugin exports embed bundled Noto Sans or Noto Serif fonts. See the
+[figure font guide](figures/README.md) for coverage, offline use and desktop-editor limits.
 Typst can fall back to a monospace sans font when proportional sans fonts are unavailable.
 Typst also retains `cell` and `gap` for existing documents; `size` overrides `cell`.
 

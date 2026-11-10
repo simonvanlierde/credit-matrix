@@ -6,9 +6,9 @@ import process from "node:process";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { run, USAGE } from "../cli";
-import { buildHeatmapSvg } from "../export/heatmap-svg";
+import { run as runCommand, USAGE } from "../cli";
 import { NewerVersionError, toJson } from "../export/json";
+import { createFigureRenderer } from "../figures";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash } from "../share-link";
 
@@ -20,7 +20,30 @@ function file(name: string, text: string): string {
   return path;
 }
 
+async function run(argv: string[]): Promise<string> {
+  const output = await runCommand(argv);
+  if (typeof output !== "string") throw new Error("Expected textual CLI output");
+  return output;
+}
+
 const csv = file("team.csv", "Name,Conceptualization,Software\nJane Smith,100,66\nBob White,,100\n");
+
+it("exports a binary PDF with embedded figure fonts", async () => {
+  const bytes = await runCommand(["convert", csv, "--to", "pdf"]);
+  expect(bytes).toBeInstanceOf(Uint8Array);
+  expect(new TextDecoder().decode((bytes as Uint8Array).slice(0, 8))).toBe("%PDF-1.7");
+  const svg = await run(["convert", csv, "--to", "svg"]);
+  expect(svg).toContain("@font-face");
+  expect(svg).toContain("<text");
+});
+
+it("names the characters the figure fonts cannot draw, in one line", async () => {
+  const source = file("unsupported-script.csv", "Name,Software\nحسن,100\n");
+  for (const to of ["svg", "pdf"])
+    await expect(runCommand(["convert", source, "--to", to])).rejects.toThrow(
+      /^The figure fonts cannot draw ح \(U\+062D\)[^\n]*\. [^\n]+$/u,
+    );
+});
 
 it("exports manuscript YAML with levels only where the schema supports them", async () => {
   const quarto = await run(["convert", csv, "--to", "quarto"]);
@@ -206,7 +229,7 @@ describe("credit-matrix convert", () => {
 
   it("needs --to", async () => {
     await expect(run(["convert", csv])).rejects.toThrow(
-      /--to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate/,
+      /--to json, csv, jats, crossref, md, latex-credits, tenzing, svg, pdf, quarto, myst or ro-crate/,
     );
   });
 });
@@ -353,7 +376,7 @@ describe("credit-matrix as a program", () => {
     const { out, err } = await launch("convert", csv);
     expect(out).toBe("");
     expect(err).toBe(
-      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, quarto, myst or ro-crate.\nRun 'credit-matrix --help' for usage.\n",
+      "credit-matrix: convert needs --to json, csv, jats, crossref, md, latex-credits, tenzing, svg, pdf, quarto, myst or ro-crate.\nRun 'credit-matrix --help' for usage.\n",
     );
     expect(process.exitCode).toBe(2);
   });
@@ -430,7 +453,7 @@ it("passes figure options through the SVG conversion", async () => {
   expect(svg).toContain('width="30" height="30" rx="15"');
   expect(svg).toContain(">1 Conceptualiz…<");
   expect(svg).toContain('font-size="21"');
-  expect(svg).toContain("Georgia, 'Times New Roman', serif");
+  expect(svg).toContain("Noto Serif");
   expect(svg).not.toContain(">Supporting<");
   await expect(run(["convert", csv, "--to", "svg", "--legend", "maybe"])).rejects.toThrow("true or false");
   await expect(run(["convert", csv, "--to", "svg", "--font-size", "NaN"])).rejects.toThrow("between 6 and 32");
@@ -440,40 +463,51 @@ it("passes figure options through the SVG conversion", async () => {
 it("selects full names or initials without shortening the text alternative", async () => {
   const full = await run(["convert", csv, "--to", "svg", "--initials", "false"]);
   const compact = await run(["convert", csv, "--to", "svg", "--initials", "true"]);
-  expect(full).toContain(">Jane Smith</text>");
-  expect(compact).toContain(">JS</text>");
+  expect(full).toContain(">Jane Smith</tspan>");
+  expect(compact).toContain(">JS</tspan>");
   expect(compact).toContain("Jane Smith: Conceptualization");
   await expect(run(["convert", csv, "--to", "svg", "--initials", "maybe"])).rejects.toThrow("true or false");
 });
 
-it("forwards legend placement and optional marks while keeping publication defaults", async () => {
+describe("figure legend options", () => {
   const authors = [createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 33 }] })];
   const source = file("legend-options.json", toJson(authors));
-  for (const legendPosition of ["auto", "right", "bottom"] as const) {
-    for (const marks of [true, false]) {
-      const svg = await run([
-        "convert",
-        source,
-        "--to",
-        "svg",
-        "--legend-position",
-        legendPosition,
-        "--marks",
-        String(marks),
-      ]);
-      expect(svg).toBe(buildHeatmapSvg(authors, { locale: "en", legendPosition, marks }));
-      expect(svg.includes('aria-hidden="true"')).toBe(marks);
-    }
-  }
-  const defaults = await run(["convert", source, "--to", "svg"]);
-  expect(defaults).toBe(buildHeatmapSvg(authors, { locale: "en", legendPosition: "auto", marks: false }));
-  expect(defaults).not.toContain('aria-hidden="true"');
-  const hidden = await run(["convert", source, "--to", "svg", "--legend", "false", "--legend-position", "right"]);
-  expect(hidden).not.toContain(">Supporting</text>");
-  await expect(run(["convert", source, "--to", "svg", "--marks", "maybe"])).rejects.toThrow(
-    "--marks must be true or false",
-  );
-  await expect(run(["convert", source, "--to", "svg", "--legend-position", "left"])).rejects.toThrow(
-    "--legend-position must be auto, right or bottom",
-  );
+
+  it.each([
+    ["auto", true],
+    ["auto", false],
+    ["right", true],
+    ["right", false],
+    ["bottom", true],
+    ["bottom", false],
+  ] as const)("forwards legend placement %s with marks=%s", async (legendPosition, marks) => {
+    const svg = await run([
+      "convert",
+      source,
+      "--to",
+      "svg",
+      "--legend-position",
+      legendPosition,
+      "--marks",
+      String(marks),
+    ]);
+    expect(svg).toBe(await createFigureRenderer().svg(authors, { locale: "en", legendPosition, marks }));
+    expect(svg.includes('aria-hidden="true"')).toBe(marks);
+  });
+
+  it("keeps publication defaults and validates legend flags", async () => {
+    const defaults = await run(["convert", source, "--to", "svg"]);
+    expect(defaults).toBe(
+      await createFigureRenderer().svg(authors, { locale: "en", legendPosition: "auto", marks: false }),
+    );
+    expect(defaults).not.toContain('aria-hidden="true"');
+    const hidden = await run(["convert", source, "--to", "svg", "--legend", "false", "--legend-position", "right"]);
+    expect(hidden).not.toContain(">Supporting</tspan>");
+    await expect(run(["convert", source, "--to", "svg", "--marks", "maybe"])).rejects.toThrow(
+      "--marks must be true or false",
+    );
+    await expect(run(["convert", source, "--to", "svg", "--legend-position", "left"])).rejects.toThrow(
+      "--legend-position must be auto, right or bottom",
+    );
+  });
 });

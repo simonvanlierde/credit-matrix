@@ -1,10 +1,11 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the plugin reads front matter from disk.
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { buildHeatmapSvg, CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import { createFigureRenderer } from "@/core/figures";
 import {
   AVAILABLE_LOCALES,
   loadRoleCatalog,
@@ -13,10 +14,35 @@ import {
   makeUiTranslator,
   resolveLocaleTag,
 } from "@/core/i18n";
+
+const figures = createFigureRenderer();
+
 import plugin, { authorsFor, normalizeRole, statementEntries, statementNode } from "./credit-matrix.mjs";
 
 type Node = { type: string; value?: string; children?: Node[] };
 const text = (nodes: Node[]): string => nodes.map((n) => n.value ?? text(n.children ?? [])).join("");
+
+type Image = { type: string; url?: string; alt?: string };
+type Message = { message: string; fatal?: boolean };
+
+/** Run the heatmap directive and the transform that draws it, as MyST does. */
+async function heatmap(path: string, options: Record<string, unknown> = {}) {
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  const tree = { type: "root", children: directive?.run({ options }, { path }) ?? [] };
+  const messages: Message[] = [];
+  const vfile = {
+    path,
+    message(reason: string) {
+      const message: Message = { message: reason };
+      messages.push(message);
+      return message;
+    },
+  };
+  await plugin.transforms[0].plugin()(tree, vfile);
+  const image: Image | undefined = tree.children[0]?.children?.[0];
+  const svg = image?.url ? readFileSync(join(dirname(path), image.url), "utf8") : undefined;
+  return { image, messages, svg: svg ?? "missing" };
+}
 
 const examplePage = fileURLToPath(new URL("example/index.md", import.meta.url));
 
@@ -150,40 +176,72 @@ describe("MyST plugin", () => {
   });
 });
 
-it("builds a heatmap SVG asset with shared options and a text alternative", () => {
+it("builds a heatmap SVG asset with shared options and a text alternative", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-heatmap-"));
   const path = join(dir, "index.md");
   writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
-  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
-  expect(directive, "heatmap directive is registered").toBeDefined();
-  const nodes = directive?.run(
-    { options: { legend: false, size: 30, shape: "circle", font: "serif", "font-size": 21 } },
-    { path },
-  );
-  expect(nodes?.[0]?.children?.[0]?.alt).toContain("Tu Youyou: Software");
-  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  const { image, svg } = await heatmap(path, {
+    legend: false,
+    size: 30,
+    shape: "circle",
+    font: "serif",
+    "font-size": 21,
+  });
+  expect(image?.alt).toContain("Tu Youyou: Software");
   expect(svg).toContain('width="30" height="30" rx="15"');
+  expect(svg).toContain("@font-face");
+  expect(svg).toContain("base64,");
+  expect(svg).toMatch(/<text\b[^>]*><tspan\b[^>]*>Tu Youyou<\/tspan><\/text>/);
+  expect(svg).not.toMatch(/<(?:image|path)\b/);
   expect(svg).not.toContain(">Supporting<");
   expect(svg).toContain('font-size="21"');
-  expect(svg).toContain("Georgia, 'Times New Roman', serif");
+  expect(svg).toContain("Noto Serif");
 });
 
-it("labels heatmap columns with each author's full name", () => {
+it("labels heatmap columns with each author's full name", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-names-"));
   const path = join(dir, "index.md");
   writeFileSync(
     path,
     "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n  - name: Katherine Johnson\n    roles: [Software]\n---\n",
   );
-  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
-  const nodes = directive?.run({ options: {} }, { path });
-  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  const { svg } = await heatmap(path);
   expect(svg).toContain(">Tu Youyou<");
   expect(svg).toContain(">Katherine Johnson<");
   expect(svg).not.toContain(">C<");
 });
 
-it("forwards legend placement and marks without changing MyST publication defaults", () => {
+it.each([
+  ["ja", "山田太郎"],
+  ["zh-Hans", "张伟"],
+])("embeds fonts for a %s heatmap without converting contributor text", async (lang, name) => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-fonts-"));
+  const path = join(dir, "index.md");
+  writeFileSync(path, `---\nlang: ${lang}\nauthors:\n  - name: ${name}\n    roles: [Software]\n---\n`);
+  const { svg } = await heatmap(path);
+  expect(svg).toContain("@font-face");
+  expect(svg).toContain("base64,");
+  expect(svg).toContain(`>${name}</tspan>`);
+  expect(svg).toContain(`lang="${lang}"`);
+  expect(svg).not.toMatch(/<(?:image|path)\b/);
+});
+
+it("reports unsupported contributor glyphs in one line instead of using a system fallback", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-missing-font-"));
+  const path = join(dir, "index.md");
+  writeFileSync(path, "---\nauthors:\n  - name: مرحبا\n    roles: [Software]\n---\n");
+  const { image, messages } = await heatmap(path);
+  expect(image).toBeUndefined();
+  expect(messages).toEqual([
+    {
+      message:
+        "credit-heatmap: The figure fonts cannot draw م (U+0645), ر (U+0631), ح (U+062D), ب (U+0628), ا (U+0627). Change these characters in the names or labels.",
+      fatal: true,
+    },
+  ]);
+});
+
+it("forwards legend placement and marks without changing MyST publication defaults", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-legend-"));
   const path = join(dir, "index.md");
   const people = [{ name: "Tu Youyou", roles: ["Software"] }];
@@ -193,10 +251,9 @@ it("forwards legend placement and marks without changing MyST publication defaul
   expect(directive?.options).toHaveProperty("marks");
   for (const legendPosition of ["auto", "right", "bottom"] as const) {
     for (const marks of [true, false]) {
-      const nodes = directive?.run({ options: { "legend-position": legendPosition, marks } }, { path });
-      const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+      const { svg } = await heatmap(path, { "legend-position": legendPosition, marks });
       expect(svg).toBe(
-        buildHeatmapSvg(statementEntries(people), {
+        await figures.svg(statementEntries(people), {
           levels: false,
           acronyms: false,
           locale: "en",
@@ -207,22 +264,20 @@ it("forwards legend placement and marks without changing MyST publication defaul
       expect(svg.includes('aria-hidden="true"')).toBe(marks);
     }
   }
-  const nodes = directive?.run({ options: {} }, { path });
-  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
+  const { svg } = await heatmap(path);
   expect(svg).not.toContain('aria-hidden="true"');
 });
 
-it("derives distinct initials and preserves ambiguous or nonletter labels", () => {
+it("derives distinct initials and preserves ambiguous or nonletter labels", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-initials-"));
   const path = join(dir, "index.md");
   writeFileSync(
     path,
     '---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n  - name: 王小明\n    roles: [Software]\n  - name: Anne Smith\n    roles: [Software]\n  - name: Albert Smith\n    roles: [Software]\n  - id: "1234"\n    roles: [Software]\n---\n',
   );
-  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
-  const nodes = directive?.run({ options: { initials: true } }, { path });
-  const svg = readFileSync(join(dir, nodes?.[0]?.children?.[0]?.url ?? "missing"), "utf8");
-  for (const label of ["TY", "王小明", "Anne Smith", "Albert Smith", "1234"]) expect(svg).toContain(`>${label}</text>`);
+  const { image, svg } = await heatmap(path, { initials: true });
+  for (const label of ["TY", "王小明", "Anne Smith", "Albert Smith", "1234"])
+    expect(svg).toContain(`>${label}</tspan>`);
   expect(svg).not.toContain(">C</text>");
-  expect(nodes?.[0]?.children?.[0]?.alt).toContain("Tu Youyou");
+  expect(image?.alt).toContain("Tu Youyou");
 });

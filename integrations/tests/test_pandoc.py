@@ -216,8 +216,8 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
     assert 'width="30" height="30" rx="15"' in svg
     assert ">Supporting<" not in svg
     assert 'font-size="21"' in svg
-    assert ">Tu Youyou</text>" in svg
-    assert "Georgia, 'Times New Roman', serif" in svg
+    assert ">Tu Youyou</tspan>" in svg
+    assert "Noto Serif" in svg
 
 
 @pytest.mark.parametrize("position", ["auto", "right", "bottom"])

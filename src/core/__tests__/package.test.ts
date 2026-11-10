@@ -1,6 +1,6 @@
 // biome-ignore-all lint/correctness/noNodejsModules: this test reads the built package from disk and runs its CLI.
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -14,6 +14,7 @@ describe("the built credit-matrix package", () => {
       ".": await import("credit-matrix"),
       "./lookup": await import("credit-matrix/lookup"),
       "./i18n": await import("credit-matrix/i18n"),
+      "./figures": await import("credit-matrix/figures"),
     };
     const names = Object.fromEntries(Object.entries(entries).map(([entry, mod]) => [entry, Object.keys(mod).sort()]));
     expect(names).toMatchSnapshot();
@@ -38,7 +39,14 @@ describe("the built credit-matrix package", () => {
       }),
     ) as { files: { path: string }[] };
     const files = packed.files.map((file) => file.path).sort();
-    const expected = [...readdirSync(dist).map((name) => `dist/${name}`), "LICENSE", "README.md", "package.json"];
+    const expected = [
+      ...readdirSync(dist, { recursive: true, encoding: "utf8" })
+        .filter((name) => statSync(`${dist}${name}`).isFile())
+        .map((name) => `dist/${name}`),
+      "LICENSE",
+      "README.md",
+      "package.json",
+    ];
     expect(files).toEqual(expected.sort());
 
     const manifest = JSON.parse(readFileSync(`${root}package.json`, "utf8"));

@@ -17,6 +17,11 @@ project:
 
 MyST caches it in its build folder. The version in the URL is the package version, so
 upgrading is a change of that number.
+The plugin file is about 1.5 MB. The heatmap directive loads a figure font the first time a
+figure needs it: from `figure-fonts/` next to the plugin when present, otherwise from the
+same release on unpkg (0.6 MB for Latin text, 6-15 MB for a Japanese or Chinese face, per build).
+To build offline, download `dist/figure-fonts/` from the package and set
+`CREDIT_MATRIX_FIGURE_FONTS` to that folder's `file://` URL, ending in `/`.
 
 To work offline or pin the file in your repository, copy
 [`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix yaml`
@@ -68,6 +73,8 @@ unsupported languages and Traditional Chinese fall back to English. Write your h
 ## Contribution heatmap
 
 See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
+Generated SVG assets contain embedded fonts and editable text. See
+[font portability and PDF export](../figures/README.md) for document-converter limits.
 
 ## Limitations
 

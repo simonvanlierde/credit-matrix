@@ -5,7 +5,8 @@
  * app only needs its own files back. The citation converter's runtime under
  * /citesync/ (about 13 MB) is not precached: the first CITATION.cff or
  * .zenodo.json import fetches it through the same-origin rule below, and later
- * imports with the same build run offline.
+ * imports with the same build run offline. The figure fonts (/assets/*.ttf,
+ * about 40 MB) work the same way: each loads on the first export that needs it.
  *
  * - install: precache every page and every asset they reference, so a new
  *   version is complete offline before it takes over

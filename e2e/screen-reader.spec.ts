@@ -160,6 +160,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
         - dialog "Heatmap":
           - button "Copy PNG"
           - button "Download SVG"
+          - button "Download PDF"
           - button "Download PNG"
         `,
       ],

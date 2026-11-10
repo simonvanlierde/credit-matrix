@@ -16,7 +16,7 @@ test("previews the exact SVG and reports the downloaded PNG dimensions", async (
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   const preview = page.getByRole("region", { name: "Contribution heatmap" });
   const image = preview.getByRole("img");
-  await expect(image).toBeVisible();
+  await expect(image).toBeVisible({ timeout: 15_000 });
   const source = await image.getAttribute("src");
   const svg = decodeURIComponent(source?.split(",").slice(1).join(",") ?? "");
   expect(svg).not.toContain("<circle ");
@@ -32,7 +32,7 @@ test("previews the exact SVG and reports the downloaded PNG dimensions", async (
   if (!pngPath) throw new Error("Expected PNG download");
   const png = await readFile(pngPath);
   await expect(
-    page.getByText(`SVG · PNG ${png.readUInt32BE(16)} × ${png.readUInt32BE(20)} px · 300 dpi`),
+    page.getByText(`SVG · PDF · PNG ${png.readUInt32BE(16)} × ${png.readUInt32BE(20)} px · 300 dpi`),
   ).toBeVisible();
   await expect(preview).toHaveAttribute("tabindex", "0");
   await preview.focus();
@@ -63,7 +63,7 @@ test("saves figure styling independently from the editable contribution grid", a
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   const image = page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img");
   const svg = decodeURIComponent((await image.getAttribute("src"))?.split(",").slice(1).join(",") ?? "");
-  expect(svg).toContain("Georgia");
+  expect(svg).toContain("Noto Serif");
   expect(svg).toContain('fill="#404040"');
   expect(svg).toContain('rx="11"');
   expect(svg).not.toContain(">Lead<");
@@ -81,22 +81,28 @@ test("changes legend placement and opts into marks in the actual export", async 
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   const image = page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img");
   const source = async () => decodeURIComponent((await image.getAttribute("src"))?.split(",").slice(1).join(",") ?? "");
+  // The preview redraws asynchronously, after its fonts are subset: wait until it shows what a fresh export
+  // with the current settings downloads.
+  const exported = async () => {
+    const downloaded = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download SVG", exact: true }).click();
+    const path = await (await downloaded).path();
+    if (!path) throw new Error("Expected SVG download");
+    const svg = await readFile(path, "utf8");
+    await expect.poll(source).toBe(svg);
+    return svg;
+  };
   const figures: string[] = [];
   for (const name of ["Right", "Below"]) {
     await page.getByRole("combobox", { name: "Legend", exact: true }).click();
     await page.getByRole("option", { name, exact: true }).click();
-    figures.push(await source());
+    figures.push(await exported());
   }
   expect(figures[0]).not.toBe(figures[1]);
   expect(figures[1]).not.toContain("<circle ");
   await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
-  const marked = await source();
+  const marked = await exported();
   expect(marked).toContain("<circle ");
-  const downloaded = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download SVG", exact: true }).click();
-  const path = await (await downloaded).path();
-  if (!path) throw new Error("Expected SVG download");
-  expect(await readFile(path, "utf8")).toBe(marked);
 });
 
 test("clears copied-image status when the figure or PNG dimensions change", async ({ page }) => {
@@ -108,9 +114,12 @@ test("clears copied-image status when the figure or PNG dimensions change", asyn
   });
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  const copy = page.getByRole("button", { name: "Copy PNG", exact: true });
+  // The font subsetter schedules work on timers it captures when the exporter loads, so let it load
+  // before the clock is frozen.
+  await expect(copy).toBeEnabled({ timeout: 15_000 });
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 60_000));
-  const copy = page.getByRole("button", { name: "Copy PNG", exact: true });
   const copied = page.getByRole("button", { name: "Copied", exact: true });
   await copy.click();
   await expect(copied).toBeVisible();
@@ -196,7 +205,7 @@ test("offers SVG when a tall team's requested PNG exceeds canvas limits", async 
   await page.reload();
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await expect(page.getByRole("button", { name: "Download PNG", exact: true })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Download SVG", exact: true })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Download SVG", exact: true })).toBeEnabled({ timeout: 15_000 });
   await expect(page.getByText(/This PNG would be too large/)).toBeVisible();
 });
 
@@ -219,7 +228,7 @@ test("keeps the desktop key beside the table and reflects display changes in the
   const source = await page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img").getAttribute("src");
   const svg = decodeURIComponent(source?.split(",").slice(1).join(",") ?? "");
   expect(svg).toContain(">AL<");
-  expect(svg).toMatch(/<text x="[^"]+"[^>]*>AL<\/text>/);
+  expect(svg).toMatch(/<text x="[^"]+"[^>]*><tspan[^>]*>AL<\/tspan><\/text>/);
 });
 
 test("lets a large team inspect the figure at actual size without stretching the page", async ({ page }) => {
@@ -244,7 +253,7 @@ test("lets a large team inspect the figure at actual size without stretching the
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   const preview = page.getByRole("region", { name: "Contribution heatmap" });
   const image = preview.getByRole("img");
-  await expect(image).toBeVisible();
+  await expect(image).toBeVisible({ timeout: 15_000 });
   const width = () => image.evaluate((img) => img.getBoundingClientRect().width);
   await expect(page.getByText(/Labels would print at about/)).toBeVisible();
   expect(await width()).toBeLessThan(512);
@@ -360,7 +369,7 @@ test.describe("touch-screen previews", () => {
       await expect(page.getByText(/Select to cycle/)).toBeHidden();
       await page.getByRole("button", { name: "Heatmap", exact: true }).click();
       const preview = page.getByRole("region", { name: "Contribution heatmap" });
-      await expect(preview.getByRole("img")).toBeVisible();
+      await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });
       const panel = page.getByRole("dialog", { name: "Heatmap", exact: true });
       const bounds = await panel.boundingBox();
       if (!bounds) throw new Error("Expected heatmap panel");
@@ -373,7 +382,7 @@ test.describe("touch-screen previews", () => {
       await expect(page.getByRole("combobox", { name: "Orientation", exact: true })).toBeInViewport();
       expect((await scan(page)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-      await expect(preview.getByRole("img")).toBeVisible();
+      await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });
     });
   }
 });

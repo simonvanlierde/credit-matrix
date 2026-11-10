@@ -1724,6 +1724,11 @@ msgstr "Exportrecept kopiëren"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate-fragment"
 
+msgid "downloadPdf"
+msgstr "PDF downloaden"
+
+msgid "errFigureGlyphs"
+msgstr "De lettertypen van de figuur kunnen deze tekens niet weergeven: {characters}."
 
 msgid "heatmapLegendPosition"
 msgstr "Legenda"

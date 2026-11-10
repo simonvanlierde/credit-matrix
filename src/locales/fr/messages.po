@@ -1724,6 +1724,11 @@ msgstr "Copier la recette d’export"
 msgid "exportRoCrateFragment"
 msgstr "Fragment RO-Crate"
 
+msgid "downloadPdf"
+msgstr "Télécharger le PDF"
+
+msgid "errFigureGlyphs"
+msgstr "Les polices de la figure ne peuvent pas afficher ces caractères : {characters}."
 
 msgid "heatmapLegendPosition"
 msgstr "Légende"
