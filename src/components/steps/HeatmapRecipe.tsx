@@ -57,9 +57,9 @@ export function HeatmapRecipe({ settings, language }: { settings: HeatmapFigureS
         />
         <button
           type="button"
-          onClick={() => {
+          onClick={async () => {
+            await copy(recipe);
             setLastCopy(recipe);
-            void copy(recipe);
           }}
           className={`${TOOL_BUTTON} justify-center`}
         >

@@ -99,6 +99,62 @@ test("changes legend placement and opts into marks in the actual export", async 
   expect(await readFile(path, "utf8")).toBe(marked);
 });
 
+test("clears copied-image status when the figure or PNG dimensions change", async ({ page }) => {
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { write: async (items: ClipboardItem[]) => Promise.all(items.map((item) => item.getType("image/png"))) },
+    });
+  });
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 60_000));
+  const copy = page.getByRole("button", { name: "Copy PNG", exact: true });
+  const copied = page.getByRole("button", { name: "Copied", exact: true });
+  await copy.click();
+  await expect(copied).toBeVisible();
+  await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+  await expect(copy).toBeVisible();
+  await copy.click();
+  await expect(copied).toBeVisible();
+  await page.getByRole("spinbutton", { name: "Width (mm)", exact: true }).fill("100");
+  await expect(copy).toBeVisible();
+  await copy.click();
+  await expect(copied).toBeVisible();
+  await page.getByRole("combobox", { name: "Resolution", exact: true }).click();
+  await page.getByRole("option", { name: "600 dpi", exact: true }).click();
+  await expect(copy).toBeVisible();
+});
+
+test("waits for a changed recipe's clipboard write before showing copied", async ({ page }) => {
+  await page.evaluate(() => {
+    Object.defineProperty(navigator.clipboard, "writeText", {
+      configurable: true,
+      value: () =>
+        new Promise<void>((resolve) =>
+          document.addEventListener("finish-recipe-copy", () => resolve(), { once: true }),
+        ),
+    });
+  });
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  await page.getByText("Export recipe", { exact: true }).click();
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 60_000));
+  const copy = page.getByRole("button", { name: "Copy export recipe", exact: true });
+  const copied = page.getByRole("button", { name: "Copied", exact: true });
+  await copy.click();
+  await page.evaluate(() => document.dispatchEvent(new Event("finish-recipe-copy")));
+  await expect(copied).toBeVisible();
+  await page.getByRole("combobox", { name: "Use in", exact: true }).click();
+  await page.getByRole("option", { name: "Sphinx", exact: true }).click();
+  await copy.click();
+  await expect(copy).toBeVisible();
+  await page.evaluate(() => document.dispatchEvent(new Event("finish-recipe-copy")));
+  await expect(copied).toBeVisible();
+});
+
 test("writes requested PNG width and print resolution into the downloaded file", async ({ page }) => {
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();

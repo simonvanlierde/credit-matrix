@@ -84,6 +84,7 @@ export function HeatmapExports({
   const [open, setOpen] = useState(false);
   const [actualSize, setActualSize] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [copySource, setCopySource] = useState<{ svg: string; widthMm: number; dpi: number } | null>(null);
   const storedSettings = useContributionStore((s) => s.heatmapSettings);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
   const settings = storedSettings ?? {
@@ -122,6 +123,10 @@ export function HeatmapExports({
   const dimensions = preview ? pngDimensions(preview, settings.pngWidthMm, settings.pngDpi) : null;
   const pngTooLarge = dimensions ? oversizedPng(dimensions) : false;
   const printFontSize = preview ? heatmapPrintSize(preview, settings.pngWidthMm).minFontPt : null;
+  const currentCopyStatus =
+    copySource?.svg === preview && copySource.widthMm === settings.pngWidthMm && copySource.dpi === settings.pngDpi
+      ? copyStatus
+      : "idle";
 
   function fail(format: ExportFormat) {
     const message = t("errHeatmapExport", { format: format.toUpperCase() });
@@ -133,9 +138,8 @@ export function HeatmapExports({
     setLoading(format);
     setError(null);
     try {
-      const svg = renderSvg();
       if (format === "svg") {
-        downloadBlob(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }), "credit-heatmap.svg");
+        downloadBlob(new Blob([renderSvg()], { type: "image/svg+xml;charset=utf-8" }), "credit-heatmap.svg");
       } else {
         downloadBlob(await renderPng(), "credit-heatmap.png");
       }
@@ -152,11 +156,10 @@ export function HeatmapExports({
     setLoading("copy");
     setError(null);
     try {
-      // useCopyStatus owns the status, the announce and the 2s reset; this only
-      // supplies the clipboard write and the inline error text.
       await copy(async () => {
         await navigator.clipboard.write([new ClipboardItem({ "image/png": renderPng() })]);
       });
+      setCopySource({ svg: preview, widthMm: settings.pngWidthMm, dpi: settings.pngDpi });
     } finally {
       setLoading(null);
     }
@@ -261,7 +264,11 @@ export function HeatmapExports({
             className={MENU_ITEM}
           >
             <Copy className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
-            {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyPng")}
+            {currentCopyStatus === "copied"
+              ? t("copied")
+              : currentCopyStatus === "error"
+                ? t("copyFailedMessage")
+                : t("copyPng")}
           </button>
           {(["svg", "png"] as ExportFormat[]).map((format) => (
             <button
