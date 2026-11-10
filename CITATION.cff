@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
 title: "CRediT Matrix"
 abstract: >-
-  CRediT Matrix helps a research team draft the CRediT (Contributor Roles Taxonomy) contribution statement for a paper with its co-authors. Co-authors fill in their own rows through a shared link, can sign their reply with ORCID, and their replies are settled in one review. Contributors can be added from an ORCID iD, a DOI or a tenzing sheet, and an existing statement can be pasted in to fill the grid. The tool exports a contribution heatmap and the statement as JATS4R XML, a Crossref contributors block, CSV, a tenzing sheet, JSON, Markdown or input for the latex-credits LaTeX package, and linked CodeMeta people and roles for software attribution. Beside the grid it shows how often published papers in a field give each role, and a census page shows how 8.2 million open-access articles in Europe PMC use CRediT. The web app works offline in nine languages. The credit-matrix npm package adds a command-line tool, a credit-matrix web element, and integrations for Quarto, Pandoc, MyST, Sphinx, Jupyter Book 2 and Typst.
+  CRediT Matrix helps a research team draft the CRediT (Contributor Roles Taxonomy) contribution statement for a paper with its co-authors. Co-authors fill in their own rows through a shared link, can sign their reply with ORCID, and their replies are settled in one review. Contributors can be added from an ORCID iD, a DOI or a tenzing sheet, and an existing statement can be pasted in to fill the grid. The tool exports a contribution heatmap, with figure settings saved per draft and matching snippets for each document tool, and the statement as JATS4R XML, a Crossref contributors block, CSV, a tenzing sheet, JSON, Markdown, Quarto or MyST author metadata, or input for the latex-credits LaTeX package. For software and data it exports linked CodeMeta people and roles, and an RO-Crate attribution fragment. Beside the grid it shows how often published papers in a field give each role, and a census page shows how 8.2 million open-access articles in Europe PMC use CRediT. The web app works offline in nine languages. The credit-matrix npm package adds a command-line tool, a credit-matrix web element, and integrations for Quarto, Pandoc, MyST, Sphinx, Jupyter Book 2 and Typst.
 type: software
 authors:
   - given-names: Simon
@@ -26,6 +26,7 @@ keywords:
   - research software
   - Quarto
   - MyST
+  - RO-Crate
   - bibliometrics
   - Typst
   - CodeMeta
