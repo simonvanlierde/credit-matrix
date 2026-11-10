@@ -254,6 +254,9 @@ msgstr "Importación deshecha."
 msgid "errImportXmlUnreadable"
 msgstr "No se pudo leer ese XML. Compruebe que el archivo esté completo."
 
+msgid "errImportExportOnly"
+msgstr "Los archivos de Quarto, MyST y RO-Crate son solo de exportación. Importe en su lugar la exportación JSON."
+
 msgid "close"
 msgstr "Cerrar"
 

@@ -254,6 +254,9 @@ msgstr "Importazione annullata."
 msgid "errImportXmlUnreadable"
 msgstr "Impossibile leggere questo XML. Controlla che il file sia completo."
 
+msgid "errImportExportOnly"
+msgstr "I file Quarto, MyST e RO-Crate sono solo di esportazione. Importa invece l'esportazione JSON."
+
 msgid "close"
 msgstr "Chiudi"
 

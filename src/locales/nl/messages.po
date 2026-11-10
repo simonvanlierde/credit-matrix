@@ -254,6 +254,9 @@ msgstr "Import ongedaan gemaakt."
 msgid "errImportXmlUnreadable"
 msgstr "Die XML kon niet worden gelezen. Controleer of het bestand volledig is."
 
+msgid "errImportExportOnly"
+msgstr "Quarto-, MyST- en RO-Crate-bestanden zijn alleen voor export. Importeer in plaats daarvan de JSON-export."
+
 msgid "close"
 msgstr "Sluiten"
 

@@ -254,6 +254,9 @@ msgstr "Import undone."
 msgid "errImportXmlUnreadable"
 msgstr "That XML could not be read. Check that the file is complete."
 
+msgid "errImportExportOnly"
+msgstr "Quarto, MyST and RO-Crate files are export-only. Import the JSON export instead."
+
 msgid "close"
 msgstr "Close"
 

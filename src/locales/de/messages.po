@@ -254,6 +254,9 @@ msgstr "Import rückgängig gemacht."
 msgid "errImportXmlUnreadable"
 msgstr "Dieses XML konnte nicht gelesen werden. Prüfen Sie, ob die Datei vollständig ist."
 
+msgid "errImportExportOnly"
+msgstr "Quarto-, MyST- und RO-Crate-Dateien lassen sich nur exportieren. Importieren Sie stattdessen den JSON-Export."
+
 msgid "close"
 msgstr "Schließen"
 

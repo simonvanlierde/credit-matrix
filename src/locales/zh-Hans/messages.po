@@ -254,6 +254,9 @@ msgstr "已撤销导入。"
 msgid "errImportXmlUnreadable"
 msgstr "无法读取该 XML。请检查文件是否完整。"
 
+msgid "errImportExportOnly"
+msgstr "Quarto、MyST 和 RO-Crate 文件仅供导出。请改为导入 JSON 导出文件。"
+
 msgid "close"
 msgstr "关闭"
 

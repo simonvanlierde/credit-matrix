@@ -132,6 +132,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Import says plainly when a file repeats a contributor id: the import box shows its own message
   in every language, the CLI and the `<credit-matrix>` element say so in English. `fromJson`
   throws the new `RepeatedIdError` for it.
+- Import refuses the Quarto/MyST author YAML and RO-Crate fragments the app exports, with a message
+  that they are export-only, instead of reading their lines as contributor names. `importAny` throws
+  `ExportOnlyError` for them.
 - Import says "That XML could not be read" for XML that is not well formed, such as a truncated
   file, instead of the general failure message. The XML readers throw `XmlParseError` for it.
 - On a phone, the import box stays on screen when its confirmation takes focus. It used to scroll

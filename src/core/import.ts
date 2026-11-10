@@ -59,6 +59,26 @@ export function detectFormat(text: string): DetectedFormat {
   return "unknown";
 }
 
+/** Thrown for text in a format the app writes but cannot read back: Quarto or MyST author YAML, an RO-Crate fragment. */
+export class ExportOnlyError extends Error {
+  override readonly name = "ExportOnlyError";
+
+  constructor(format: string) {
+    super(`${format} is export-only. Import the JSON export instead.`);
+  }
+}
+
+// Author YAML from toQuarto/toMyst: leading comments, then a bare `author:` or `authors:` key.
+const AUTHOR_YAML = /^(?:#[^\n]*\n)*authors?:(?: *\[\])? *(?:\n|$)/;
+
+/** The export-only format `trimmed` is, if any. A bare `author:` line is never a name list. */
+function exportOnlyFormat(trimmed: string): string | undefined {
+  if (AUTHOR_YAML.test(trimmed)) return "Quarto and MyST author YAML";
+  if (trimmed.startsWith("{") && /"@context"\s*:\s*"https:\/\/w3id\.org\/ro\/crate\//.test(trimmed))
+    return "An RO-Crate fragment";
+  return undefined;
+}
+
 /** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */
 export interface Imported {
   format: Exclude<DetectedFormat, "unknown" | "statement">;
@@ -70,7 +90,7 @@ export interface Imported {
 
 /**
  * Read text in any format {@link detectFormat} knows. Throws on text it cannot
- * place, on a CRediT statement (it names roles, not contributors: read it with
+ * place, on text the app only exports (`ExportOnlyError`), on a CRediT statement (it names roles, not contributors: read it with
  * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
  * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
  * `authors` means the format was right but held nobody.
@@ -88,6 +108,8 @@ export async function importAny(
 ): Promise<Imported> {
   if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES) throw new Error("Use a file smaller than 1 MB.");
   const trimmed = text.trim();
+  const exportOnly = exportOnlyFormat(trimmed);
+  if (exportOnly) throw new ExportOnlyError(exportOnly);
   const format = detectFormat(trimmed);
   switch (format) {
     case "cff":

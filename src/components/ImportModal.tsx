@@ -8,6 +8,7 @@ import {
   createAuthor,
   type DetectedFormat,
   detectFormat,
+  ExportOnlyError,
   importAny,
   MAX_STATEMENT_LENGTH,
   NewerVersionError,
@@ -448,7 +449,9 @@ export function ImportModal({
               ? "errImportRepeatedId"
               : failure instanceof XmlParseError
                 ? "errImportXmlUnreadable"
-                : "errImportFailed",
+                : failure instanceof ExportOnlyError
+                  ? "errImportExportOnly"
+                  : "errImportFailed",
         ),
       );
     } finally {

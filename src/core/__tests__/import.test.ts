@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { MAX_AUTHORS } from "../author";
 import { toCsv } from "../export/csv";
+import { toMyst, toQuarto } from "../export/frontmatter";
 import { toJson } from "../export/json";
+import { toRoCrateFragment } from "../export/ro-crate";
 import { toJats4rXml } from "../export/xml";
-import { detectFormat, importAny } from "../import";
+import { detectFormat, ExportOnlyError, importAny } from "../import";
 import { createAuthor, normalizeRoster } from "../parse-authors";
 import { encodeShareHash } from "../share-link";
 import { fromSharePayload } from "../share-payload";
@@ -12,6 +14,26 @@ const roster = () => [
   createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] }),
   createAuthor("Bob White", { contributions: [{ role: "Investigation", score: 66 }] }),
 ];
+
+describe("export-only formats", () => {
+  const exports = {
+    quarto: () => toQuarto(roster()),
+    myst: () => toMyst(roster()),
+    "ro-crate fragment": () => JSON.stringify(toRoCrateFragment(roster()).metadata, null, 2),
+  };
+
+  it.each(Object.entries(exports))(
+    "refuses the app's own %s output instead of importing its lines",
+    async (_, make) => {
+      await expect(importAny(make())).rejects.toBeInstanceOf(ExportOnlyError);
+      await expect(importAny(make())).rejects.toThrow(/export-only/);
+    },
+  );
+
+  it("still reads a name list that mentions an author key", async () => {
+    expect((await importAny("Author: Jane Smith")).authors).toHaveLength(1);
+  });
+});
 
 describe("detectFormat", () => {
   it("treats a cut-off JSON export as JSON, so importing it fails instead of reading lines as names", async () => {
