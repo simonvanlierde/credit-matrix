@@ -44,7 +44,7 @@ Portable exports use regular Noto Sans and Noto Serif, plus Credit Figure JP, SC
 derived from the corresponding Noto Japanese and Simplified Chinese families. The fonts cover all nine output languages.
 Contributor names can contain characters outside
 these fonts; portable export reports unsupported characters instead of silently
-substituting installed fonts. Arabic, Hebrew and Devanagari are outside this set.
+substituting installed fonts. Hangul, Thai, Arabic, Hebrew, Devanagari and emoji are outside this set.
 Han characters use the Simplified Chinese face, unless the output language is Japanese or
 the label contains kana. In Chinese output, punctuation beside Han text comes from the Chinese face.
 

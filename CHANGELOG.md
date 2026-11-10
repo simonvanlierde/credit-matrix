@@ -92,11 +92,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 - Heatmaps look different by default: square cells with a thin gray rule on white, where cells
   were rounded on off-white. `shape: "rounded"` brings back the rounded cells.
-- The package needs Node 22.19 or later, because its new runtime dependency `@lingui/core`
+- **Breaking:** the package needs Node 22.19 or later, because its new runtime dependency `@lingui/core`
   does.
+- A contributor whose name or initials use a script the figure fonts lack (Hangul, Thai, Arabic,
+  Hebrew, Devanagari, emoji) cannot export the heatmap: the export reports the unsupported
+  characters instead of substituting another font.
 - The CLI, the Sphinx extension and Typst render Traditional Chinese (`zh-TW`, `zh-HK`,
   `zh-Hant`) in English instead of Simplified Chinese. The `<credit-matrix>` element now maps
   `pt-BR` to Portuguese and `zh-CN` to Simplified Chinese, as the CLI already did.
+- Import refuses text over 1 MB with "Use a file smaller than 1 MB." in the import
+  box, the CLI and the package's import functions.
+- `detectFormat` returns `"crossref"` for the Crossref `<contributors>` block and `"codemeta"` for
+  CodeMeta JSON, where it used to return `"xml"` and `"json"`. Update any `switch` on its result.
+- `buildHeatmapSvg` throws `HeatmapOptionError` for a colour that is not a hex colour or a size
+  outside its range. Catch it where you pass user-supplied options.
+- New entry point `credit-matrix/figures` exports `createFigureRenderer` for PDF and
+  font-embedded SVG output, and `FigureFontError` for a missing font or an unsupported character.
+- The npm package is about 24 MiB packed (a 25.9 MB tarball), because it bundles the figure fonts.
 - The Sphinx extension reports a failed statement as "CRediT rendering failed".
 - The import box leads with paste and upload, with the DOI lookup below as the other route. Its
   description is one line, and the list of formats sits under "Which formats work?". Progress
