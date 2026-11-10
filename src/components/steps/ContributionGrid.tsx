@@ -170,14 +170,14 @@ export function ContributionGrid() {
     return (
       <div className="p-3 md:p-4">
         <h2 className="sr-only">{t("stepContributions")}</h2>
-        {welcomeOpen ? (
+        {/* The same box while the welcome card is open, with its frame and icon hidden: a box that
+            collapsed to a line moved the inspector below it (a layout shift) as the card opened. */}
+        <div
+          className={`rounded-lg border border-dashed p-6 text-center ${welcomeOpen ? "border-transparent" : "border-outline-variant/40 bg-surface-container-low/40"}`}
+        >
+          <UserPlus className={`h-8 w-8 text-outline-variant mb-2 mx-auto${welcomeOpen ? " invisible" : ""}`} />
           <p className="text-sm text-on-surface-variant">{t("gridEmptyHint")}</p>
-        ) : (
-          <div className="rounded-lg border border-dashed border-outline-variant/40 bg-surface-container-low/40 p-6 text-center">
-            <UserPlus className="h-8 w-8 text-outline-variant mb-2 mx-auto" />
-            <p className="text-sm text-on-surface-variant">{t("gridEmptyHint")}</p>
-          </div>
-        )}
+        </div>
       </div>
     );
   }
