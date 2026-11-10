@@ -2,7 +2,9 @@
 import { readFileSync } from "node:fs";
 import { expect, it, vi } from "vitest";
 import { MAX_AUTHORS } from "../author";
+import { toCodemeta } from "../export/codemeta";
 import { detectFormat, importAny } from "../import";
+import { createAuthor } from "../parse-authors";
 
 const people = [
   {
@@ -35,7 +37,7 @@ it.each([
   const result = await importAny(text, { convertCitation });
   expect(convertCitation).toHaveBeenCalledWith(text, format);
   expect(result.authors.map((author) => author.name)).toEqual(["Antonie van Leeuwenhoek", "The Research Team"]);
-  await expect(importAny(text)).rejects.toThrow(/citesync/);
+  await expect(importAny(text)).rejects.toThrow(/web app/);
 });
 
 it("handles singleton, missing and malformed CodeMeta author entries without reading linked Role entries", async () => {
@@ -43,11 +45,48 @@ it("handles singleton, missing and malformed CodeMeta author entries without rea
   expect((await read({ name: "Tu Youyou", id: "invalid" })).authors[0]?.orcid).toBeUndefined();
   expect((await read([null, false, "Name", {}, { name: "  " }])).authors).toEqual([]);
   expect((await read(undefined)).authors).toEqual([]);
-  await expect(read(Array.from({ length: MAX_AUTHORS + 1 }, () => ({ name: "Researcher" })))).rejects.toThrow(
-    /Too many/,
+  // The limit belongs to the caller (normalizeRoster, the modal), not to the reader.
+  expect((await read(Array.from({ length: MAX_AUTHORS + 1 }, () => ({ name: "Researcher" })))).authors).toHaveLength(
+    MAX_AUTHORS + 1,
   );
-  await expect(read({ name: "1" })).rejects.toThrow();
   await expect(importAny("x".repeat(1_000_001))).rejects.toThrow(/1 MB/);
+});
+
+it("skips one unusable name instead of discarding the file", async () => {
+  const { authors } = await importAny(
+    JSON.stringify({ "@type": "SoftwareSourceCode", author: [{ name: "Ana Lima" }, { name: "42" }] }),
+  );
+  expect(authors.map((author) => author.name)).toEqual(["Ana Lima"]);
+});
+
+it("reads contributor as non-authors and round-trips toCodemeta", async () => {
+  const ana = createAuthor("Ana Lima", { contributions: [{ role: "Software", score: 100 }] });
+  const bo = createAuthor("Bo Chen", {
+    contributorType: "non-author",
+    contributions: [{ role: "Software", score: 100 }],
+  });
+  const { metadata } = toCodemeta([ana, bo]);
+  const { authors } = await importAny(JSON.stringify({ "@type": "SoftwareSourceCode", ...metadata }));
+  expect(authors.map(({ name, contributorType }) => ({ name, contributorType }))).toEqual([
+    { name: "Ana Lima", contributorType: "author" },
+    { name: "Bo Chen", contributorType: "non-author" },
+  ]);
+});
+
+it("keeps a person listed as both author and contributor once, as an author", async () => {
+  const ada = { name: "Ada Lovelace", "@id": "https://orcid.org/0000-0002-1825-0097" };
+  const { authors } = await importAny(
+    JSON.stringify({
+      "@type": "SoftwareSourceCode",
+      author: [ada, { name: "Ana Lima" }],
+      contributor: [ada, { name: "ana lima" }, { name: "Bo Chen" }],
+    }),
+  );
+  expect(authors.map(({ name, contributorType }) => [name, contributorType])).toEqual([
+    ["Ada Lovelace", "author"],
+    ["Ana Lima", "author"],
+    ["Bo Chen", "non-author"],
+  ]);
 });
 
 it("preserves structured family names and name order", async () => {

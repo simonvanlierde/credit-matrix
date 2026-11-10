@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { convertCitation } from "./citation-import";
+import { ConverterUnavailableError, convertCitation } from "./citation-import";
 
 let instance: {
   onmessage: ((event: { data: unknown }) => void) | null;
@@ -38,4 +38,29 @@ it.each(["error", "malformed", "network", "timeout"])("rejects %s failures and t
   else instance.onmessage?.({ data: failure === "error" ? { error: "Bad file" } : {} });
   await checked;
   expect(instance.terminate).toHaveBeenCalledOnce();
+});
+
+it.each([
+  ["a runtime that never loaded", { error: "The converter build is missing.", unavailable: true }, true],
+  ["a file the converter rejects", { error: "Bad CFF", unavailable: false }, false],
+])("marks %s as unavailable only when it is", async (_, data, unavailable) => {
+  vi.stubGlobal("Worker", Worker);
+  const result = convertCitation("{}", "cff");
+  instance.onmessage?.({ data });
+  const failure = await result.catch((error: unknown) => error);
+  expect(failure instanceof ConverterUnavailableError).toBe(unavailable);
+});
+
+it("terminates the worker when the signal aborts, and never starts one for a spent signal", async () => {
+  vi.stubGlobal("Worker", Worker);
+  const controller = new AbortController();
+  const result = convertCitation("{}", "zenodo", controller.signal);
+  const checked = expect(result).rejects.toMatchObject({ name: "AbortError" });
+  controller.abort();
+  await checked;
+  expect(instance.terminate).toHaveBeenCalledOnce();
+
+  Worker.mockClear();
+  await expect(convertCitation("{}", "zenodo", controller.signal)).rejects.toMatchObject({ name: "AbortError" });
+  expect(Worker).not.toHaveBeenCalled();
 });

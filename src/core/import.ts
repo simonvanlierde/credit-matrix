@@ -1,12 +1,12 @@
 import type { Ask } from "./ask";
 import type { Author } from "./author";
-import { isValidOrcid, MAX_AUTHORS, MAX_IMPORT_BYTES, normalizeOrcid } from "./author";
+import { isValidOrcid, MAX_IMPORT_BYTES, normalizeOrcid } from "./author";
 import { fromCrossrefContributors, isCrossrefContributors } from "./export/crossref";
 import { fromCsv, headerCells } from "./export/csv";
 import { fromJson } from "./export/json";
 import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
-import { createAuthor, deduplicateAuthorInitials, parseAuthorText } from "./parse-authors";
+import { deduplicateAuthorInitials, parseAuthorText, tryCreateAuthor } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
 import { readsAsStatement } from "./statement";
 
@@ -90,7 +90,10 @@ export async function importAny(
   switch (format) {
     case "cff":
     case "zenodo": {
-      if (!convertCitation) throw new Error("This citation format needs the citesync converter.");
+      if (!convertCitation)
+        throw new Error(
+          "The web app converts CITATION.cff and .zenodo.json files. Here, convert the file to codemeta.json first.",
+        );
       return { format, authors: fromCodemeta(await convertCitation(trimmed, format)) };
     }
     case "codemeta":
@@ -123,42 +126,43 @@ export async function importAny(
 function fromCodemeta(text: string): Author[] {
   if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES) throw new Error("Use a file smaller than 1 MB.");
   const data = JSON.parse(text);
-  const entries: unknown[] = Array.isArray(data?.author) ? data.author : data?.author ? [data.author] : [];
-  const people = entries.filter(
-    (entry) =>
-      !entry ||
-      typeof entry !== "object" ||
-      ((entry as Record<string, unknown>)["@type"] ?? (entry as Record<string, unknown>).type) !== "Role",
-  );
-  if (people.length > MAX_AUTHORS) throw new Error("Too many contributors.");
-  return deduplicateAuthorInitials(
-    people.flatMap((entry) => {
-      if (!entry || typeof entry !== "object") return [];
-      const person = entry as Record<string, unknown>;
-      const name =
-        typeof person.name === "string"
-          ? person.name.trim()
-          : [person.givenName, person.familyName]
-              .filter((part) => typeof part === "string")
-              .join(" ")
-              .trim();
-      if (!name) return [];
-      const id = person["@id"] ?? person.id;
-      const organization = (person["@type"] ?? person.type) === "Organization";
-      const orcid = !organization && typeof id === "string" && isValidOrcid(id) ? normalizeOrcid(id) : undefined;
-      const given = typeof person.givenName === "string" ? person.givenName.trim().split(/\s+/) : [];
-      return [
-        createAuthor(name, {
-          ...(orcid ? { orcid } : {}),
-          ...(!organization && (typeof person.givenName === "string" || typeof person.familyName === "string")
-            ? {
-                firstName: given[0] ?? "",
-                middleName: given.slice(1).join(" "),
-                surname: typeof person.familyName === "string" ? person.familyName : "",
-              }
-            : {}),
-        }),
-      ];
-    }),
-  );
+  const authors = readPeople(data?.author, "author");
+  // Zenodo and CodeMeta often list a person as both author and contributor: keep the author row.
+  const key = (person: Author) => person.orcid ?? person.name.toLowerCase();
+  const listed = new Set(authors.map(key));
+  const others = readPeople(data?.contributor, "non-author").filter((person) => !listed.has(key(person)));
+  return deduplicateAuthorInitials([...authors, ...others]);
+}
+
+/** People in a CodeMeta field. Linked Roles and unusable entries are skipped one by one; the caller bounds the count. */
+function readPeople(field: unknown, contributorType: Author["contributorType"]): Author[] {
+  const entries: unknown[] = Array.isArray(field) ? field : field ? [field] : [];
+  return entries.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+    const person = entry as Record<string, unknown>;
+    if ((person["@type"] ?? person.type) === "Role") return [];
+    const name =
+      typeof person.name === "string"
+        ? person.name.trim()
+        : [person.givenName, person.familyName]
+            .filter((part) => typeof part === "string")
+            .join(" ")
+            .trim();
+    if (!name) return [];
+    const id = person["@id"] ?? person.id;
+    const organization = (person["@type"] ?? person.type) === "Organization";
+    const orcid = !organization && typeof id === "string" && isValidOrcid(id) ? normalizeOrcid(id) : undefined;
+    const given = typeof person.givenName === "string" ? person.givenName.trim().split(/\s+/) : [];
+    return tryCreateAuthor(name, {
+      contributorType,
+      ...(orcid ? { orcid } : {}),
+      ...(!organization && (typeof person.givenName === "string" || typeof person.familyName === "string")
+        ? {
+            firstName: given[0] ?? "",
+            middleName: given.slice(1).join(" "),
+            surname: typeof person.familyName === "string" ? person.familyName : "",
+          }
+        : {}),
+    });
+  });
 }

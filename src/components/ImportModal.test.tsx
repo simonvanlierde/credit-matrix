@@ -3,13 +3,16 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { type Author, createAuthor, toJson } from "@/core";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import { fetchOrcidKeys, type OrcidKey } from "@/core/orcid-proof";
-import { convertCitation } from "@/lib/citation-import";
+import { ConverterUnavailableError, convertCitation } from "@/lib/citation-import";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
 import { messages as en } from "@/locales/en/messages";
 import { ImportModal } from "./ImportModal";
 
-vi.mock("@/lib/citation-import", () => ({ convertCitation: vi.fn() }));
+vi.mock("@/lib/citation-import", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/citation-import")>()),
+  convertCitation: vi.fn(),
+}));
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
 vi.mock("@/core/orcid-proof", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/core/orcid-proof")>()),
@@ -502,5 +505,57 @@ describe("a citation converter completing after close", () => {
     expect(screen.queryByText(english.errCitationConverter)).toBeNull();
     expect(screen.queryByText(english.errImportNoCitationAuthors)).toBeNull();
     expect(onImport).not.toHaveBeenCalled();
+  });
+});
+
+describe("citation converter", () => {
+  const cff = "cff-version: 1.2.0\ntitle: Example";
+  const paste = () => fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: cff } });
+
+  it("names the converter only when it rejected; other failures use their own message", async () => {
+    const many = JSON.stringify({ author: Array.from({ length: 201 }, (_, i) => ({ name: `Person ${i} Name` })) });
+    vi.mocked(convertCitation).mockResolvedValue(many);
+    renderModal();
+    paste();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    expect(await screen.findByText(/200/)).toBeTruthy();
+    expect(screen.queryByText(english.errCitationConverter)).toBeNull();
+  });
+
+  it.each([
+    ["an unavailable converter", new ConverterUnavailableError("offline"), english.errCitationConverter],
+    ["a file the converter rejects", new Error("Bad CFF"), english.errImportFailed],
+  ])("names %s plainly", async (_, failure, message) => {
+    vi.mocked(convertCitation).mockRejectedValue(failure);
+    renderModal();
+    paste();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    expect(await screen.findByText(message)).toBeTruthy();
+  });
+
+  it("aborts the converter on close and announces progress inside the dialog", () => {
+    vi.mocked(convertCitation).mockReturnValue(Promise.withResolvers<string>().promise);
+    const { container } = renderModal();
+    paste();
+    fireEvent.click(screen.getByRole("button", { name: english.importData }));
+    const progress = screen.getByText(english.citationConverting);
+    expect(progress.closest("[role=status]")?.closest("dialog")).toBeTruthy();
+    const signal = vi.mocked(convertCitation).mock.calls.at(-1)?.[2] as AbortSignal;
+    expect(signal.aborted).toBe(false);
+    act(() => {
+      container.ownerDocument.querySelector("dialog")?.dispatchEvent(new Event("close"));
+    });
+    expect(signal.aborted).toBe(true);
+  });
+
+  it("puts form and DOI errors in alerts inside the dialog", () => {
+    const { input } = renderModal();
+    fireEvent.change(input, { target: { value: "invalid" } });
+    fireEvent.click(screen.getByRole("button", { name: english.doiLookUp }));
+    const doiAlert = screen.getByText(english.errDoiINVALID_DOI);
+    expect(doiAlert.getAttribute("role")).toBe("alert");
+    expect(doiAlert.closest("dialog")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "cff-version: 1.2.0" } });
+    vi.mocked(convertCitation).mockRejectedValue(new Error("x"));
   });
 });

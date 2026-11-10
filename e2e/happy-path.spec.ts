@@ -312,7 +312,7 @@ test.describe("Happy path UI flows", () => {
     // DOMParser via the file input.
     await page.goto("/");
     await page.getByRole("button", { name: "Import" }).click();
-    await page.getByLabel("Upload CSV, TSV, JSON, or XML file").setInputFiles({
+    await page.locator("dialog input[type=file]").setInputFiles({
       name: "contributors.xml",
       mimeType: "application/xml",
       buffer: Buffer.from("<a><b>"),
