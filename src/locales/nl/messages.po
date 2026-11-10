@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Legenda"
 
 msgid "levelHint"
-msgstr "Selecteer om te wisselen · Rechtsklik of 0–3 stelt een niveau in."
+msgstr "Selecteer om te wisselen · Pijltjestoetsen om te bewegen · Rechtsklik of 0–3 stelt een niveau in."
 
 msgid "heatmapLabel"
 msgstr "Heatmap"
@@ -1564,3 +1564,9 @@ msgstr "Dit citatiebestand vermeldt geen auteurs."
 
 msgid "citationConverting"
 msgstr "Citatiebestand wordt gelezen… De converter moet mogelijk eerst worden gedownload."
+
+msgid "heatmapActualSize"
+msgstr "Werkelijke grootte"
+
+msgid "heatmapFitWidth"
+msgstr "Aan breedte aanpassen"

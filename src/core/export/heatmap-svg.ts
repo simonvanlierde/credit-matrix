@@ -1,6 +1,6 @@
 import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
-import { DEFAULT_MONO_COLOR, heatCellColor } from "../contributor-color";
+import { DEFAULT_MONO_COLOR, heatCellColor, onColor } from "../contributor-color";
 import type { RoleTranslator } from "../credit-i18n/index";
 import { makeUiTranslator, type UiTranslator } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../credit-roles";
@@ -64,7 +64,7 @@ export interface HeatmapSvgOptions {
   showLevels?: boolean;
   /**
    * Label authors by their initials (true) or full names (false) on the axis.
-   * Defaults to true. The legend always uses initials badges.
+   * Defaults to true. The text alternative retains full names.
    */
   acronyms?: boolean;
   /** Scale all layout dimensions (min 0.1). */
@@ -107,7 +107,7 @@ export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions):
  * wraps to the figure's own width, so the canvas is the drawing's bounding box
  * rather than a fixed frame around it: a two-author figure no longer inherits
  * the width of a four-key legend. Roles that no author contributed to are
- * omitted, matching the live chart. There is no *rendered* image title:
+ * omitted by default. There is no *rendered* image title:
  * captions belong to the embedding document. The `<title>` element is the
  * accessible name for the `role="img"` graphic and `<desc>` its text
  * alternative: the by-author contribution statement, so a screen reader hears
@@ -136,7 +136,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const authorLabel = (ai: number): string =>
     (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
 
-  // Only roles someone contributed to (matches the live chart).
+  // By default, omit roles nobody contributed to.
   const activeRoleNames = new Set(rolesWithContributions(authors));
   const roles = CREDIT_ROLES.filter((r) => opts?.skipempty === false || activeRoleNames.has(r.name));
   const roleLabel = (name: string) => {
@@ -262,6 +262,26 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const innerW = totalW - PAD_S * 2;
 
   const lines: string[] = [];
+  // The same dots and check as the editor keep the figure readable without colour.
+  const mark = (x: number, y: number, side: number, score: number) => {
+    if (score <= 0) return;
+    const ink = onColor(heatCellColor(monoColor, fillScore(score)));
+    if (showLevels) {
+      const dots = score <= 33 ? 1 : score <= 66 ? 2 : 3;
+      const gap = side * 0.22;
+      lines.push(`<g fill="${ink}" aria-hidden="true">`);
+      for (let i = 0; i < dots; i++) {
+        lines.push(
+          `<circle cx="${x + side / 2 + (i - (dots - 1) / 2) * gap}" cy="${y + side / 2}" r="${side * 0.085}"/>`,
+        );
+      }
+      lines.push("</g>");
+    } else {
+      lines.push(
+        `<path d="M${x + side * 0.28},${y + side * 0.5} l${side * 0.15},${side * 0.15} l${side * 0.29},${-side * 0.3}" fill="none" stroke="${ink}" stroke-width="${side * 0.09}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"/>`,
+      );
+    }
+  };
   const description = heatmapDescription(authors, opts);
   lines.push(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" role="img"${lang}>`,
@@ -301,6 +321,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
       lines.push(
         `<rect x="${cx}" y="${cy}" width="${CELL_S}" height="${CELL_S}" rx="${rx}" ry="${rx}" fill="${heatCellColor(monoColor, fillScore(score))}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
+      mark(cx, cy, CELL_S, score);
     }
   }
 
@@ -318,6 +339,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
       lines.push(
         `<rect x="${lx}" y="${y}" width="${SWATCH_S}" height="${SWATCH_S}" rx="${radius(SWATCH_S)}" ry="${radius(SWATCH_S)}" fill="${heatCellColor(monoColor, score)}" stroke="${COLOR_BORDER}" stroke-width="${0.5 * scale}"/>`,
       );
+      mark(lx, y, SWATCH_S, score);
       lines.push(
         `<text x="${lx + SWATCH_S + 4 * scale}" y="${y + SWATCH_S - 3 * scale}" font-family="${FONT}" font-size="${FONT_LEGEND * scale}" fill="${COLOR_TEXT_DIM}">${escapeXml(label)}</text>`,
       );

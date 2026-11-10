@@ -422,14 +422,20 @@ export function ContributionGrid() {
               <PopoverContent
                 aria-label={t("heatmapOptions")}
                 align="end"
-                className="flex w-auto max-w-[calc(100vw-2rem)] flex-wrap items-center gap-3"
+                className="grid w-64 max-w-[calc(100vw-2rem)] gap-2"
               >
+                <p className="mb-1 text-sm font-semibold text-on-surface">{t("heatmapOptions")}</p>
                 <ColorPopover
                   value={heatmapMonoColor}
                   onChange={setHeatmapMonoColor}
                   label={t("gridColor")}
                   trigger={
-                    <button type="button" aria-label={t("gridColor")} title={t("gridColor")} className={TOOL_BUTTON}>
+                    <button
+                      type="button"
+                      aria-label={t("gridColor")}
+                      title={t("gridColor")}
+                      className={`${TOOL_BUTTON} justify-between`}
+                    >
                       {t("colorLabel")}
                       <span
                         className="h-3 w-3 rounded-full border border-outline-variant/50"
@@ -443,7 +449,7 @@ export function ContributionGrid() {
                   aria-pressed={transpose}
                   onClick={() => setTranspose(!transpose)}
                   title={t("transposeHint")}
-                  className={`${TOOL_BUTTON} aria-pressed:border-primary aria-pressed:text-primary`}
+                  className={`${TOOL_BUTTON} justify-between aria-pressed:border-primary aria-pressed:text-primary`}
                 >
                   {t("transpose")}
                   {transpose ? (
@@ -452,12 +458,20 @@ export function ContributionGrid() {
                     <Rows3 className="h-3.5 w-3.5" aria-hidden="true" />
                   )}
                 </button>
-                <span className="flex min-h-9 items-center gap-1.5 text-xs text-on-surface-variant">
+                <label
+                  htmlFor="grid-use-initials"
+                  className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-xs text-on-surface-variant"
+                >
                   {/* The accessible name starts with the visible "Use initials",
                     so voice control saying the visible label hits it (2.5.3). */}
-                  <Switch checked={acronyms} onCheckedChange={setAcronyms} aria-label={t("a11yUseInitials")} />
                   {t("useInitials")}
-                </span>
+                  <Switch
+                    id="grid-use-initials"
+                    checked={acronyms}
+                    onCheckedChange={setAcronyms}
+                    aria-label={t("a11yUseInitials")}
+                  />
+                </label>
               </PopoverContent>
             </Popover>
           </span>
@@ -493,7 +507,7 @@ export function ContributionGrid() {
             scrollPaddingTop: namedHeaders || transpose ? "9.5rem" : "4rem",
             scrollPaddingLeft: transpose && acronyms ? "6rem" : "12.5rem",
           }}
-          className={`hidden max-h-[min(70vh,44rem)] max-w-full overflow-auto md:block desk:max-h-none desk:min-h-0 desk:flex-1 ${
+          className={`isolate hidden max-h-[min(70vh,44rem)] max-w-full overflow-auto md:block desk:max-h-none desk:min-h-0 desk:flex-[0_1_auto] ${
             settled ? "enter-fade " : ""
           }${
             // Right padding lets the last angled label overhang its own column:
@@ -509,7 +523,8 @@ export function ContributionGrid() {
               <tr>
                 <th
                   scope="col"
-                  className={`sticky left-0 top-0 z-40 bg-surface-bright pb-1 text-left align-bottom font-mono text-xs font-medium uppercase tracking-wider text-on-surface-variant ${
+                  style={{ zIndex: 21 + colCount }}
+                  className={`sticky left-0 top-0 bg-surface-bright pb-1 text-left align-bottom font-mono text-xs font-medium uppercase tracking-wider text-on-surface-variant ${
                     // Transposed with initials, the row headers are 40px chips,
                     // let the axis title size the column instead of reserving the
                     // width a full role name needs.
@@ -565,8 +580,11 @@ export function ContributionGrid() {
             <tbody>
               {transpose
                 ? authors.map((author, authorRow) => (
-                    <tr key={author.id}>
-                      <th scope="row" className="sticky left-0 z-10 bg-surface-bright py-0 text-left">
+                    <tr key={author.id} className="group">
+                      <th
+                        scope="row"
+                        className="sticky left-0 z-10 bg-surface-bright py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
+                      >
                         <span className="flex items-center gap-1.5 min-w-0">
                           <InitialsChip author={author} />
                           <AskGlyph
@@ -589,8 +607,11 @@ export function ContributionGrid() {
                     </tr>
                   ))
                 : CREDIT_ROLES.map((role, roleIndex) => (
-                    <tr key={role.name}>
-                      <th scope="row" className="sticky left-0 z-10 max-w-56 bg-surface-bright py-0 text-left">
+                    <tr key={role.name} className="group">
+                      <th
+                        scope="row"
+                        className="sticky left-0 z-10 max-w-56 bg-surface-bright py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
+                      >
                         {roleHead(roleIndex, "max-w-full truncate text-[13px]")}
                       </th>
                       {authors.map((author, authorCol) => renderCell(author, roleIndex, roleIndex, authorCol))}
@@ -928,9 +949,8 @@ function GridLegend({
           </span>
         )}
       </span>
-      {/* Always shown and never truncated: the keys are the only direct way to
-          set a level, so hiding them behind a tooltip hid the feature. */}
-      <p>{graded ? t("levelHint") : t("toggleKeysHint")}</p>
+      {/* Keep keyboard instructions visible beside the desktop key. */}
+      <p className="hidden md:block">{graded ? t("levelHint") : t("toggleKeysHint")}</p>
     </div>
   );
 }

@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Leyenda"
 
 msgid "levelHint"
-msgstr "Seleccionar para alternar · Clic derecho o 0–3 fija un nivel."
+msgstr "Seleccionar para alternar · Flechas para moverse · Clic derecho o 0–3 fija un nivel."
 
 msgid "heatmapLabel"
 msgstr "Mapa de calor"
@@ -1564,3 +1564,9 @@ msgstr "Este archivo de citas no incluye autores."
 
 msgid "citationConverting"
 msgstr "Leyendo el archivo de citas… Puede que el conversor tenga que descargarse primero."
+
+msgid "heatmapActualSize"
+msgstr "Tamaño real"
+
+msgid "heatmapFitWidth"
+msgstr "Ajustar al ancho"

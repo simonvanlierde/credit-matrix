@@ -102,6 +102,11 @@ light scale on a white background, because a figure goes onto a manuscript page.
 to square corners and a thin neutral rule; the live editing controls retain their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
 
+The editor and SVG/PNG figures use one, two and three dots for Supporting, Equal and Lead, and a
+check in yes/no mode. Repeat those marks in the legend, so the level never depends on colour alone.
+Keep the grid's key directly after the table. The heatmap export popover previews the actual figure
+on white paper, with fit-to-width and actual-size views and the PNG pixel dimensions.
+
 Flag amber marks where a co-author answered differently: the corner mark on a grid cell, the ring
 around the cell a Review line points at, and the ring that fades off a cell when you settle a
 difference. It is a mark, never a fill, and it always comes with a shape or text.

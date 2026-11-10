@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Légende"
 
 msgid "levelHint"
-msgstr "Sélectionnez pour faire défiler · Clic droit ou 0–3 définit un niveau."
+msgstr "Sélectionnez pour faire défiler · Flèches pour naviguer · Clic droit ou 0–3 définit un niveau."
 
 msgid "heatmapLabel"
 msgstr "Heatmap"
@@ -1564,3 +1564,9 @@ msgstr "Ce fichier de citation ne mentionne aucun auteur."
 
 msgid "citationConverting"
 msgstr "Lecture du fichier de citation… Le convertisseur doit peut-être d'abord être téléchargé."
+
+msgid "heatmapActualSize"
+msgstr "Taille réelle"
+
+msgid "heatmapFitWidth"
+msgstr "Ajuster à la largeur"

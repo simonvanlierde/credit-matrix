@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Legenda"
 
 msgid "levelHint"
-msgstr "Selecionar para alternar · Clique direito ou 0–3 define um nível."
+msgstr "Selecionar para alternar · Setas para navegar · Clique direito ou 0–3 define um nível."
 
 msgid "heatmapLabel"
 msgstr "Mapa de calor"
@@ -1564,3 +1564,9 @@ msgstr "Este ficheiro de citação não indica autores."
 
 msgid "citationConverting"
 msgstr "A ler o ficheiro de citação… Pode ser necessário transferir primeiro o conversor."
+
+msgid "heatmapActualSize"
+msgstr "Tamanho real"
+
+msgid "heatmapFitWidth"
+msgstr "Ajustar à largura"

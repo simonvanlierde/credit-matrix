@@ -8,6 +8,9 @@ This follows the compact matrix layout of [latex-credits](https://ctan.org/pkg/l
 The SVG renderer is shared by the app, CLI, MyST, Sphinx and Quarto/Pandoc. Typst draws native
 vector shapes with the same palettes and level fractions. Figures carry the full contribution
 statement as their text alternative, including levels even when axis labels are shortened.
+The shared SVG renderer also marks Supporting, Equal and Lead with one, two and three dots in both
+cells and legend. Yes/no figures use a check for an assigned role. The app previews the exported
+figure before copying or downloading, with fit-to-width and actual-size views and the PNG pixel dimensions.
 
 ## Figure options
 

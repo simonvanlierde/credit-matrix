@@ -1026,7 +1026,7 @@ interface HeatmapSvgOptions {
   showLevels?: boolean;
   /**
    * Label authors by their initials (true) or full names (false) on the axis.
-   * Defaults to true. The legend always uses initials badges.
+   * Defaults to true. The text alternative retains full names.
    */
   acronyms?: boolean;
   /** Scale all layout dimensions (min 0.1). */
@@ -1059,7 +1059,7 @@ export declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgO
  * wraps to the figure's own width, so the canvas is the drawing's bounding box
  * rather than a fixed frame around it: a two-author figure no longer inherits
  * the width of a four-key legend. Roles that no author contributed to are
- * omitted, matching the live chart. There is no *rendered* image title:
+ * omitted by default. There is no *rendered* image title:
  * captions belong to the embedding document. The `<title>` element is the
  * accessible name for the `role="img"` graphic and `<desc>` its text
  * alternative: the by-author contribution statement, so a screen reader hears

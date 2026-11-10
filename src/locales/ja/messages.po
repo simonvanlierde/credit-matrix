@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "凡例"
 
 msgid "levelHint"
-msgstr "選択で切り替え・右クリックまたは0–3でレベルを設定。"
+msgstr "選択で切り替え・矢印キーで移動・右クリックまたは0–3でレベルを設定。"
 
 msgid "heatmapLabel"
 msgstr "ヒートマップ"
@@ -1564,3 +1564,9 @@ msgstr "この引用ファイルには著者が記載されていません。"
 
 msgid "citationConverting"
 msgstr "引用ファイルを読み込み中… 先にコンバーターのダウンロードが必要な場合があります。"
+
+msgid "heatmapActualSize"
+msgstr "実寸表示"
+
+msgid "heatmapFitWidth"
+msgstr "幅に合わせる"

@@ -30,6 +30,26 @@ function expectedCellCount(authors: Author[]): number {
 }
 
 describe("buildHeatmapSvg", () => {
+  it("identifies levels with one, two or three dots in both cells and legend", () => {
+    const authors = [33, 66, 100].map((score) =>
+      createAuthor(`Researcher ${score}`, { contributions: [{ role: "Software", score }] }),
+    );
+    const svg = buildHeatmapSvg(authors);
+    const marks = [...svg.matchAll(/<g[^>]*aria-hidden="true"[^>]*>(.*?)<\/g>/gs)];
+    expect(marks.map((mark) => (mark[1]?.match(/<circle /g) ?? []).length)).toEqual([1, 2, 3, 3, 2, 1]);
+    expect(buildHeatmapSvg(authors, { legend: false }).match(/<circle /g)).toHaveLength(6);
+  });
+
+  it("uses a check for contributed cells and the flat legend, leaving empty cells unmarked", () => {
+    const authors = [
+      createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 33 }] }),
+      createAuthor("Bob White"),
+    ];
+    const svg = buildHeatmapSvg(authors, { levels: false });
+    expect(svg.match(/<path /g)).toHaveLength(2);
+    expect(svg).not.toContain("<circle ");
+  });
+
   it("produces a self-contained SVG with role labels, initials, and legend (no title)", () => {
     const svg = buildHeatmapSvg(authorsWithScores());
     expect(svg.startsWith("<svg")).toBe(true);

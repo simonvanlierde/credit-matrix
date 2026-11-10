@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "Key"
 
 msgid "levelHint"
-msgstr "Select to cycle · Right-click or 0–3 sets a level."
+msgstr "Select to cycle · Arrow keys move · Right-click or 0–3 sets a level."
 
 msgid "heatmapLabel"
 msgstr "Heatmap"
@@ -1564,3 +1564,9 @@ msgstr "This citation file lists no authors."
 
 msgid "citationConverting"
 msgstr "Reading citation file… The converter may need to download first."
+
+msgid "heatmapActualSize"
+msgstr "Actual size"
+
+msgid "heatmapFitWidth"
+msgstr "Fit to width"

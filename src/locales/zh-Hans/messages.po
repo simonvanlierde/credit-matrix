@@ -195,7 +195,7 @@ msgid "legendKey"
 msgstr "图例"
 
 msgid "levelHint"
-msgstr "选择以切换·右键或 0–3 直接设定级别。"
+msgstr "选择以切换 · 方向键移动 · 右键或 0–3 直接设定级别。"
 
 msgid "heatmapLabel"
 msgstr "热图"
@@ -1564,3 +1564,9 @@ msgstr "此引用文件未列出作者。"
 
 msgid "citationConverting"
 msgstr "正在读取引用文件… 可能需要先下载转换器。"
+
+msgid "heatmapActualSize"
+msgstr "实际大小"
+
+msgid "heatmapFitWidth"
+msgstr "适应宽度"

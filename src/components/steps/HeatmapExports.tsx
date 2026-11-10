@@ -1,4 +1,4 @@
-import { ChevronDown, Copy, Download } from "lucide-react";
+import { ChevronDown, Copy, Download, Scan, Shrink } from "lucide-react";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Author, buildHeatmapSvg, heatmapDescription } from "@/core";
@@ -11,6 +11,12 @@ import { download as downloadBlob } from "@/lib/utils";
 import { MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 
 type ExportFormat = "svg" | "png";
+
+function svgDimensions(svg: string) {
+  const dimensions = svg.match(/width="([\d.]+)" height="([\d.]+)"/);
+  if (!dimensions) throw new Error("SVG dimensions missing");
+  return { width: Number(dimensions[1]), height: Number(dimensions[2]) };
+}
 
 /**
  * Rasterise an SVG string to a PNG Blob entirely in the browser, with no
@@ -30,13 +36,15 @@ async function svgToPngBlob(svg: string, description: string, language: string, 
   } finally {
     URL.revokeObjectURL(url);
   }
+  // Browsers round naturalWidth differently; use the figure's own dimensions.
+  const { width, height } = svgDimensions(svg);
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(img.naturalWidth * scale);
-  canvas.height = Math.round(img.naturalHeight * scale);
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas not supported");
   ctx.scale(scale, scale);
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, width, height);
   const png = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("PNG encoding failed"))), "image/png");
   });
@@ -63,6 +71,8 @@ export function HeatmapExports({
   const t = useTranslations();
   const [loading, setLoading] = useState<ExportFormat | "copy" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [actualSize, setActualSize] = useState(false);
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
   });
@@ -78,6 +88,14 @@ export function HeatmapExports({
   };
   const renderSvg = () => buildHeatmapSvg(authors, svgOptions);
   const renderPng = () => svgToPngBlob(renderSvg(), heatmapDescription(authors, svgOptions), outputLanguage);
+  let preview = "";
+  let previewError: string | null = null;
+  try {
+    if (open) preview = renderSvg();
+  } catch {
+    previewError = t("errHeatmapExport", { format: "SVG" });
+  }
+  const dimensions = preview ? svgDimensions(preview) : null;
 
   function fail(format: ExportFormat) {
     const message = t("errHeatmapExport", { format: format.toUpperCase() });
@@ -121,36 +139,85 @@ export function HeatmapExports({
   return (
     // One menu in the status strip: the heatmap is a figure you take out of
     // the app, so its three ways out sit together, away from the cells.
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className={TOOL_BUTTON}>
         <Download className="size-3.5" aria-hidden="true" />
         {t("heatmapLabel")}
         <ChevronDown className="size-3.5" aria-hidden="true" />
       </PopoverTrigger>
-      <PopoverContent align="end" aria-label={t("heatmapLabel")} className="grid w-56 gap-0.5 p-1">
-        <button
-          type="button"
-          disabled={loading !== null}
-          onClick={() => void copyPng()}
-          title={t("copyHeatmapHint")}
-          className={MENU_ITEM}
-        >
-          <Copy className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
-          {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyPng")}
-        </button>
-        {(["svg", "png"] as ExportFormat[]).map((format) => (
+      <PopoverContent
+        align="end"
+        collisionPadding={8}
+        aria-label={t("heatmapLabel")}
+        className="grid max-h-[var(--radix-popover-content-available-height)] w-[32rem] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-y-auto p-3"
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <p lang={outputLanguage} className="text-sm font-semibold text-on-surface">
+            {translateUi("heatmapTitle")}
+          </p>
           <button
-            key={format}
             type="button"
-            disabled={loading !== null}
-            onClick={() => download(format)}
+            disabled={!!previewError}
+            onClick={() => setActualSize(!actualSize)}
+            className={`${TOOL_BUTTON} min-h-8 px-2`}
+          >
+            {actualSize ? (
+              <Shrink className="size-3.5" aria-hidden="true" />
+            ) : (
+              <Scan className="size-3.5" aria-hidden="true" />
+            )}
+            {actualSize ? t("heatmapFitWidth") : t("heatmapActualSize")}
+          </button>
+          {dimensions && (
+            <span className="w-full text-xs tabular-nums text-on-surface-variant">
+              SVG · PNG {Math.round(dimensions.width * 3)} × {Math.round(dimensions.height * 3)} px
+            </span>
+          )}
+        </div>
+        {preview && (
+          <section
+            lang={outputLanguage}
+            aria-label={translateUi("heatmapTitle")}
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: the figure scrolls and keyboard users need to reach it.
+            tabIndex={0}
+            className="min-h-0 max-h-[min(50vh,24rem)] overflow-auto rounded border border-outline-variant bg-white p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <img
+              src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(preview.toWellFormed())}`}
+              alt={heatmapDescription(authors, svgOptions)}
+              className={`mx-auto block h-auto ${actualSize ? "max-w-none" : "max-w-full"}`}
+            />
+          </section>
+        )}
+        <div className="grid gap-0.5 sm:grid-cols-3">
+          <button
+            type="button"
+            disabled={loading !== null || !!previewError}
+            onClick={() => void copyPng()}
+            title={t("copyHeatmapHint")}
             className={MENU_ITEM}
           >
-            <Download className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
-            {loading === format ? "…" : format === "svg" ? t("downloadSvg") : t("downloadPng")}
+            <Copy className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
+            {copyStatus === "copied" ? t("copied") : copyStatus === "error" ? t("copyFailedMessage") : t("copyPng")}
           </button>
-        ))}
-        {error && <p className="px-2 pt-1 pb-1.5 text-[11px] text-error">{error}</p>}
+          {(["svg", "png"] as ExportFormat[]).map((format) => (
+            <button
+              key={format}
+              type="button"
+              disabled={loading !== null || !!previewError}
+              onClick={() => download(format)}
+              className={MENU_ITEM}
+            >
+              <Download className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
+              {loading === format ? "…" : format === "svg" ? t("downloadSvg") : t("downloadPng")}
+            </button>
+          ))}
+        </div>
+        {(error || previewError) && (
+          <p role="alert" className="px-2 text-xs text-error">
+            {error || previewError}
+          </p>
+        )}
       </PopoverContent>
     </Popover>
   );
