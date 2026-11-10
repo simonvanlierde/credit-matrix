@@ -461,36 +461,45 @@ it("selects full names or initials without shortening the text alternative", asy
   await expect(run(["convert", csv, "--to", "svg", "--initials", "maybe"])).rejects.toThrow("true or false");
 });
 
-it("forwards legend placement and optional marks while keeping publication defaults", async () => {
+describe("figure legend options", () => {
   const authors = [createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 33 }] })];
   const source = file("legend-options.json", toJson(authors));
-  for (const legendPosition of ["auto", "right", "bottom"] as const) {
-    for (const marks of [true, false]) {
-      const svg = await run([
-        "convert",
-        source,
-        "--to",
-        "svg",
-        "--legend-position",
-        legendPosition,
-        "--marks",
-        String(marks),
-      ]);
-      expect(svg).toBe((await createFigureRenderer()).svg(authors, { locale: "en", legendPosition, marks }));
-      expect(svg.includes('aria-hidden="true"')).toBe(marks);
-    }
-  }
-  const defaults = await run(["convert", source, "--to", "svg"]);
-  expect(defaults).toBe(
-    (await createFigureRenderer()).svg(authors, { locale: "en", legendPosition: "auto", marks: false }),
-  );
-  expect(defaults).not.toContain('aria-hidden="true"');
-  const hidden = await run(["convert", source, "--to", "svg", "--legend", "false", "--legend-position", "right"]);
-  expect(hidden).not.toContain(">Supporting</tspan>");
-  await expect(run(["convert", source, "--to", "svg", "--marks", "maybe"])).rejects.toThrow(
-    "--marks must be true or false",
-  );
-  await expect(run(["convert", source, "--to", "svg", "--legend-position", "left"])).rejects.toThrow(
-    "--legend-position must be auto, right or bottom",
-  );
+
+  it.each([
+    ["auto", true],
+    ["auto", false],
+    ["right", true],
+    ["right", false],
+    ["bottom", true],
+    ["bottom", false],
+  ] as const)("forwards legend placement %s with marks=%s", async (legendPosition, marks) => {
+    const svg = await run([
+      "convert",
+      source,
+      "--to",
+      "svg",
+      "--legend-position",
+      legendPosition,
+      "--marks",
+      String(marks),
+    ]);
+    expect(svg).toBe((await createFigureRenderer()).svg(authors, { locale: "en", legendPosition, marks }));
+    expect(svg.includes('aria-hidden="true"')).toBe(marks);
+  });
+
+  it("keeps publication defaults and validates legend flags", async () => {
+    const defaults = await run(["convert", source, "--to", "svg"]);
+    expect(defaults).toBe(
+      (await createFigureRenderer()).svg(authors, { locale: "en", legendPosition: "auto", marks: false }),
+    );
+    expect(defaults).not.toContain('aria-hidden="true"');
+    const hidden = await run(["convert", source, "--to", "svg", "--legend", "false", "--legend-position", "right"]);
+    expect(hidden).not.toContain(">Supporting</tspan>");
+    await expect(run(["convert", source, "--to", "svg", "--marks", "maybe"])).rejects.toThrow(
+      "--marks must be true or false",
+    );
+    await expect(run(["convert", source, "--to", "svg", "--legend-position", "left"])).rejects.toThrow(
+      "--legend-position must be auto, right or bottom",
+    );
+  });
 });
