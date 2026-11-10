@@ -378,7 +378,9 @@ export function ContributionGrid() {
   }
 
   return (
-    <div className="flex min-w-0 max-w-full flex-col desk:h-full">
+    // md:w-fit: on a wide pane the toolbar ends at the grid's edge rather than the pane's,
+    // so the controls stay beside the grid they change; spare paper falls after the block.
+    <div className="flex min-w-0 max-w-full flex-col md:w-fit desk:h-full">
       {/* The status strip: what the draft is waiting on, then every control
           that changes the whole grid. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3 pb-1 md:px-4">
@@ -589,7 +591,8 @@ export function ContributionGrid() {
             aria-labelledby="contributions-heading"
             // The key hint is hidden on touch screens, but still describes the grid to a screen reader.
             aria-describedby="grid-keys-hint"
-            className="mx-auto w-max table-auto border-separate border-spacing-[3px]"
+            // Start-aligned, so role labels share the pane's left edge with the toolbar link and the key.
+            className="w-max table-auto border-separate border-spacing-[3px]"
           >
             <thead>
               <tr>

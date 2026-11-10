@@ -205,8 +205,10 @@ scrolls under them. Stacked below `xl`, a thin rule separates the parts.
 
 Never give the statement a full-width row. Its text is capped at 75ch, so in a wide column it wraps
 at half the width and leaves the rest empty. Keep the rail and the inspector at fixed widths, and
-give the grid what is left. The table is as wide as its content and centered in the grid's space. A
-short contributor list sits in calm margins, and a long one gets every column the screen can show.
+give the grid what is left. The table is as wide as its content and starts at the pane's left
+edge, on the same line as the status strip and the level key. The strip ends at the grid's edge, so
+its controls stay beside the grid they change. A short contributor list leaves paper after the
+block, and a long one gets every column the screen can show.
 
 In a desktop-sized window the workspace is locked to the window's height. The page itself doesn't
 scroll; each pane scrolls its own content. Only lock the height when both halves of the `desk` guard
