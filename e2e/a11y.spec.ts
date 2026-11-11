@@ -360,9 +360,8 @@ test.describe("Accessibility (axe-core)", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
     await page.getByRole("button", { name: "Heatmap options" }).click();
-    await page.getByRole("button", { name: "Custom", exact: true }).click();
-    // The Okabe-Ito yellow is the worst case: a white glyph vanishes on it.
-    await page.getByRole("button", { name: "Set color Yellow" }).click();
+    // A pale custom yellow needs dark marks to stay legible.
+    await page.getByLabel("Custom", { exact: true }).fill("#f0e442");
     await page.keyboard.press("Escape");
 
     const glyph = page
@@ -402,10 +401,10 @@ test.describe("Accessibility (axe-core)", () => {
     const reorder = await settled(page.getByRole("button", { name: /Reorder Ada/ }));
     const roleInfo = await settled(page.getByRole("button", { name: "Conceptualization", exact: true }));
     await page.getByRole("button", { name: "Heatmap options" }).click();
-    await page.getByRole("button", { name: "Custom", exact: true }).click();
-    const swatch = await settled(page.getByRole("button", { name: /Set color/ }).first());
+    const swatch = await settled(page.getByRole("button", { name: "Blue", exact: true }));
+    const custom = await settled(page.getByLabel("Custom", { exact: true }));
 
-    for (const box of [reorder, roleInfo, swatch]) {
+    for (const box of [reorder, roleInfo, swatch, custom]) {
       expect(box).not.toBeNull();
       expect(box?.width).toBeGreaterThanOrEqual(24);
       expect(box?.height).toBeGreaterThanOrEqual(24);

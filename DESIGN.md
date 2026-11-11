@@ -343,12 +343,17 @@ setting is a switch on the right with its label on the left; the whole row is th
 short options are a small segmented control with a label. A segmented control outside a panel is a
 mode that changes what the area beside it does (Yes / no or Levels, By author or By role) and stands
 36 px tall like the toolbar buttons next to it; four or more, or long labels, are a select.
-Numbers keep the figure number field. Colour is one row of swatches: *Per contributor* first (a
-conic gradient of the contributor hues), blue, red, green, purple and grayscale presets, then a labeled native *Custom* picker.
+Numbers keep the figure number field. Colour is one row of swatches: *Per contributor* first,
+shown as four brighter segments of the contributor hues, then blue, red, green, purple and
+grayscale presets and a labeled native *Custom* picker.
 Keep all presets in this row; Custom opens the native picker directly. Each preset keeps Supporting
 at least 1.5:1 against the empty-cell fill. A pressed swatch shows a
-ring and a check, and the chosen one is named beside the label. Small popovers are `w-72`; Figure
-settings keeps its 15rem column.
+ring and a check, and the chosen one is named beside the label. Swatch edges use `outline-strong`
+so the controls stay visible on dark paper. Leave at least 4px of padding inside scrolling settings
+for selection and focus rings. Small popovers are `w-72`; Figure settings keeps its 15rem column.
+On a desktop at least 80rem wide and 45rem tall, Heatmap options widens to 20rem with 1rem padding.
+The figure panel widens to 40rem, or 64rem with its 18rem settings column open, and uses 1.25rem
+padding and gaps. Its preview and settings can grow to 60vh, capped at 40rem.
 
 ### Contribution matrix
 

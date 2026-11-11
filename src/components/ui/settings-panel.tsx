@@ -146,7 +146,7 @@ export function SettingChoice<T extends string>({
 }
 
 const SWATCH =
-  "hit-area relative flex size-6 items-center justify-center rounded-full border border-outline-variant/50 ring-offset-1 ring-offset-surface-bright transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-pressed:ring-2 aria-pressed:ring-on-surface forced-colors:aria-pressed:ring-[Highlight]";
+  "hit-area relative flex size-6 items-center justify-center rounded-full border border-outline-strong ring-offset-1 ring-offset-surface-bright transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-pressed:ring-2 aria-pressed:ring-on-surface forced-colors:aria-pressed:ring-[Highlight]";
 
 /**
  * The colour setting: a "Per contributor" swatch first, the preset hues, then a
@@ -188,7 +188,11 @@ export function ColorSwatches({
           title={t("figurePerContributor")}
           onClick={onPerContributor}
           className={SWATCH}
-          style={{ background: `conic-gradient(${CONTRIBUTOR_HUES.slice(0, 4).join(", ")})` }}
+          style={{
+            background: `conic-gradient(${CONTRIBUTOR_HUES.slice(0, 4)
+              .map((hue, i) => `oklch(from ${hue} 0.64 c h) ${i * 25}% ${(i + 1) * 25}%`)
+              .join(", ")})`,
+          }}
         >
           {perContributor && <Check className="size-3 text-white drop-shadow" aria-hidden="true" />}
         </button>

@@ -101,6 +101,21 @@ for (const theme of themes) {
       }
     });
 
+    test("heatmap color swatches have a visible boundary", async ({ page }) => {
+      await page.goto("/");
+      await page.getByRole("button", { name: "Load sample data" }).click();
+      await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+      await settleMotion(page);
+      for (const name of ["Blue", "Red", "Green", "Purple", "Grayscale"]) {
+        const swatch = page.getByRole("button", { name, exact: true });
+        const own = await backdrop(swatch, true);
+        const outside = await flatten(page, await backdrop(swatch, false));
+        const fill = await flatten(page, own);
+        const border = await flatten(page, [...own, await style(swatch, "border-top-color")]);
+        expect(Math.max(ratio(fill, outside), ratio(border, outside)), name).toBeGreaterThanOrEqual(3);
+      }
+    });
+
     test("an empty grid cell's dot reaches 3:1 against the page", async ({ page }) => {
       await page.goto("/");
       await page.getByRole("button", { name: "Load sample data" }).click();

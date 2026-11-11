@@ -554,7 +554,11 @@ export function ContributionGrid() {
               <PopoverTrigger aria-label={t("heatmapOptions")} title={t("heatmapOptions")} className={ICON_TOOL_BUTTON}>
                 <Settings2 className="size-4" aria-hidden="true" />
               </PopoverTrigger>
-              <PopoverContent aria-label={t("heatmapOptions")} align="end" className="w-72 max-w-[calc(100vw-2rem)]">
+              <PopoverContent
+                aria-label={t("heatmapOptions")}
+                align="end"
+                className="w-72 max-w-[calc(100vw-2rem)] desk:w-80 desk:p-4"
+              >
                 <SettingsPanel title={t("heatmapOptions")} onReset={resetGridView}>
                   <GridViewSettings />
                 </SettingsPanel>
