@@ -204,18 +204,21 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
     (opts?.measureText?.(label, labelSize) ?? labelUnits(label) * labelSize * CHAR_EM) * scale;
   const textH = (label: string, labelSize: number): number =>
     opts?.measureTextHeight?.(label, labelSize) ?? labelSize * 1.2;
-  // Conservative glyph bounds prevent wide capitals and rotated ascenders from clipping.
+  // Conservative glyph bounds prevent wide capitals and rotated ascenders from clipping when
+  // widths are guessed. A measurer already gives real advances, so the guess would only add margin.
   const safeTextW = (label: string, labelSize: number): number =>
-    Math.max(
-      textW(label, labelSize),
-      [...label].reduce(
-        (width, char) =>
-          width + (CJK_CHAR.test(char) || /[MWmw@%&]/u.test(char) ? 1 : /\p{Lu}/u.test(char) ? 0.8 : CHAR_EM),
-        0,
-      ) *
-        labelSize *
-        scale,
-    );
+    opts?.measureText
+      ? textW(label, labelSize)
+      : Math.max(
+          textW(label, labelSize),
+          [...label].reduce(
+            (width, char) =>
+              width + (CJK_CHAR.test(char) || /[MWmw@%&]/u.test(char) ? 1 : /\p{Lu}/u.test(char) ? 0.8 : CHAR_EM),
+            0,
+          ) *
+            labelSize *
+            scale,
+        );
 
   // Nothing to show: render a small placeholder rather than a 0-row grid.
   if (roles.length === 0 || authors.length === 0) {

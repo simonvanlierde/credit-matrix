@@ -96,3 +96,25 @@ it("keeps a phrase's text node in place as its mark comes and goes, so a selecti
   // Never announced: no live region or extra element joins the statement.
   expect(container.querySelector("section mark, section [aria-live]")).toBeNull();
 });
+
+it("links a contributor's name in the statement to their sidebar row and column", () => {
+  const authors = twoAuthors();
+  const jane = authors[0];
+  if (!jane) throw new Error("expected Jane");
+  act(() => store().loadAuthors(authors));
+  const { container } = renderStatement();
+  fireEvent.click(screen.getByRole("radio", { name: english.groupByAuthor }));
+  const name = container.querySelector(`[data-author="${jane.id}"]:not([data-role])`);
+  if (!name) throw new Error("expected Jane's name span");
+  fireEvent.pointerOver(name);
+  expect(store().statementLink).toEqual({ contributorId: jane.id, from: "name" });
+  expect(name.hasAttribute("data-linked")).toBe(true);
+  // Her phrases take the mark too.
+  expect(container.querySelector(`[data-author="${jane.id}"][data-role="Software"]`)?.hasAttribute("data-linked")).toBe(
+    true,
+  );
+  const paragraph = name.closest("p");
+  if (!paragraph) throw new Error("expected the statement");
+  fireEvent.pointerLeave(paragraph);
+  expect(store().statementLink).toBeNull();
+});

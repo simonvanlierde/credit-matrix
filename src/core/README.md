@@ -155,9 +155,9 @@ The options you'll most likely want:
 
 Only non-zero contributions appear in statements.
 
-`statementSpans(authors, options)` returns the same plain-text statement as a list of `{ text, cell? }`
+`statementSpans(authors, options)` returns the same plain-text statement as a list of `{ text, cell?, authorId? }`
 spans, where `cell` names the contributor id and role a phrase stands for (the role in a by-author
-statement, the name in a by-role one). Joined in order, the text is exactly `generateStatement`'s
+statement, the name in a by-role one); `authorId` marks a name that is not itself a phrase (by-author). Joined in order, the text is exactly `generateStatement`'s
 output, so a viewer can tie each phrase back to its cell.
 
 ## Import / export

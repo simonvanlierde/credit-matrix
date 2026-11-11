@@ -63,6 +63,8 @@ export interface StatementCell {
 export interface StatementSpan {
   text: string;
   cell?: StatementCell;
+  /** Set on a contributor's name, where it is not itself a role phrase (by-author statements). */
+  authorId?: string;
 }
 
 /** Render strings directly; allocate contributor metadata only for interactive spans. */
@@ -70,6 +72,7 @@ interface Formatter<T extends string | StatementSpan[]> {
   text: (value: string) => T;
   strong: (value: string) => T;
   cell: (value: string, authorId: string, role: CreditRoleName) => T;
+  name: (value: string, authorId: string) => T;
   join: (items: T[], separator: string) => T;
 }
 
@@ -89,6 +92,7 @@ const TEXT_FORMATTER: Formatter<string> = {
   text: (value) => value,
   strong: (value) => value,
   cell: (value) => value,
+  name: (value) => value,
   join: (items, separator) => items.join(separator),
 };
 
@@ -96,6 +100,7 @@ const HTML_FORMATTER: Formatter<string> = {
   text: escapeHtml,
   strong: (value) => `<strong>${escapeHtml(value)}</strong>`,
   cell: escapeHtml,
+  name: (value) => `<strong>${escapeHtml(value)}</strong>`,
   join: (items, separator) => items.join(escapeHtml(separator)),
 };
 
@@ -103,6 +108,7 @@ const SPAN_FORMATTER: Formatter<StatementSpan[]> = {
   text: (text) => [{ text }],
   strong: (text) => [{ text }],
   cell: (text, authorId, role) => [{ text, cell: { authorId, role } }],
+  name: (text, authorId) => [{ text, authorId }],
   join: (items, separator) => {
     const spans: StatementSpan[] = [];
     for (const item of items) {
@@ -274,7 +280,7 @@ function generateByAuthor<T extends string | StatementSpan[]>(
     segments.push(
       fmt.join(
         [
-          fmt.strong(contributorLabel(author, useInitials)),
+          fmt.name(contributorLabel(author, useInitials), author.id),
           fmt.text(translateUi("labelSeparator")),
           fmt.join(roles, translateUi("nameListSeparator")),
         ],

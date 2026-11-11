@@ -84,12 +84,16 @@ interface ReviewCell {
   target: Target;
 }
 
-/** A grid cell and its phrase in the statement, tied together while one is under the pointer or focus. */
+/**
+ * One contributor's representations, tied together while one is under the pointer or focus:
+ * a grid cell and its phrase (with a role), or the whole person (without one: their sidebar row,
+ * grid column, name and phrases).
+ */
 interface StatementLink {
   contributorId: string;
-  role: CreditRoleName;
-  /** Which side the pointer or focus is on: the side it is not on shows the mark. */
-  from: "cell" | "phrase";
+  role?: CreditRoleName;
+  /** Which side the pointer or focus is on: the sides it is not on show the mark. */
+  from: "cell" | "phrase" | "author" | "name";
 }
 
 /** More than anyone writes at once, and well inside what localStorage holds. */
