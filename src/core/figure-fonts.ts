@@ -71,7 +71,7 @@ export class FigureFontFileError extends Error {
 }
 
 /** The `credit-matrix-fonts` release whose files the download fetches and whose hashes are listed here. */
-export const FIGURE_FONTS_VERSION = "1.0.0";
+export const FIGURE_FONTS_VERSION = "1.0.1";
 
 export const FIGURE_FONT_FILES: Record<FigureFace, { file: string; sha256: string }> = {
   sans: {

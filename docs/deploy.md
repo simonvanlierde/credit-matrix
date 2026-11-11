@@ -115,21 +115,12 @@ only when npm does not have that version yet. To release new fonts, bump
 `src/fonts/package.json`, update the pin and hashes, and tag a release as usual. A core that needs a
 face added in fonts 1.N raises its peer range floor to `^1.N.0` in the same release.
 
-The first version cannot use trusted publishing, because npm configures it only for a package that
-exists. Do these steps in order, all **before** you push the `v0.13.0` tag. If the tag comes first, the
-workflow tries an OIDC publish of a package that does not exist yet, and core is never published.
-
-1. From a clean `src/fonts` (`git status --short src/fonts` prints nothing), run
-   `cd src/fonts && npm pack --dry-run --json | jq -r '.[0].integrity'`. It must print
-   `sha512-l1Um9xQzbwjAZ0eIyzOPCPvivt+IJaKT30rABol8AtTiFCrya4p6PowtA/lO580SaKaqbIqLvH+ngwQRKPWrow==`. A stray file would burn 1.0.0 and fail every later tag's integrity check.
-2. Publish with `npm publish --access public --provenance=false` from the owner's two-factor login:
-   npm makes provenance only in CI. The release workflow's own pack then matches it byte for byte,
-   so its integrity check passes.
-3. On npmjs.com, add `release-core.yml` and the `npm-release` environment as the package's trusted
-   publisher, as for `credit-matrix`.
-4. Set https://www.npmjs.com/package/credit-matrix-fonts/access to "Require two-factor
-   authentication and disallow tokens", as for `credit-matrix`.
-5. Only then push the `v0.13.0` tag.
+Fonts releases go through trusted publishing like `credit-matrix`. The package's trusted publisher
+is `release-core.yml` with the `npm-release` environment, and
+https://www.npmjs.com/package/credit-matrix-fonts/access is set to "Require two-factor
+authentication and disallow tokens". A tag whose fonts version npm lacks publishes it before core.
+A tag whose fonts version npm has, with other bytes, fails with "differs from src/fonts. Bump its
+version". A hand publish must come from a clean checkout of `origin/main`, or it hits that check.
 
 ### Roll back a version
 

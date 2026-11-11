@@ -1,6 +1,6 @@
 {
   "name": "credit-matrix-fonts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The Noto figure fonts credit-matrix draws heatmap SVG and PDF exports with, for offline and bundled use.",
   "keywords": [
     "CRediT",
