@@ -118,8 +118,8 @@ Use `git tag -s v<version> -m "v<version>"` with your configured signing key, th
 
 After npm publishing succeeds, the workflow prepares a draft GitHub release with the npm tarball,
 its provenance bundle and an attested CycloneDX SBOM. Review the draft's notes and assets, then
-publish it for the Zenodo archive. Enable immutable releases in the repository's
-**Settings → General → Releases** before the next release: published assets and tags then cannot change.
+publish it for the Zenodo archive. Immutable releases are on, so published assets and tags cannot
+change.
 Zenodo copies `.zenodo.json`, or `CITATION.cff` when that file is absent, when the GitHub release
 is published. Later metadata edits do not update that archived version.
 

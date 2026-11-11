@@ -76,7 +76,8 @@ See [deploying](docs/deploy.md).
 - The Sphinx extension's CLI timeout rises from 30 s to 300 s, so a first run that downloads faces
   does not time out.
 - **Breaking:** the Typst package stops the build on a contributor name with no letter and no
-  ORCID iD, such as "?", instead of drawing an empty label.
+  ORCID iD, such as "?", instead of drawing an empty label. Give each such contributor a name with
+  a letter, or their ORCID iD.
 - A draft holds up to 420 contributors, up from 200. Imports, share links and the element take
   files up to 2 MB, up from 1 MB, and a pasted statement can run to 120,000 characters, up from
   50,000, so a full draft's exports and by-author statement read back in.
