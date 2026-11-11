@@ -1,8 +1,9 @@
 // biome-ignore-all lint/correctness/noNodejsModules: this test reads the font package and a cache folder on disk.
 import { createHash } from "node:crypto";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultFigureFonts, downloadFigureFont, FIGURE_FONT_FILES, FIGURE_FONTS_VERSION } from "../figure-fonts";
 import { createFigureRenderer, type FigureFace } from "../figures";
@@ -109,6 +110,59 @@ describe("downloadFigureFont", () => {
     vi.stubGlobal("fetch", async () => new Response(await sans()));
     await downloadFigureFont("sans");
     expect(await readdir(join(cache, ".cache", "credit-matrix", "fonts"))).toHaveLength(1);
+  });
+
+  it("replaces a cached face whose bytes fail the hash with a fresh download", async () => {
+    const good = await sans();
+    const folder = join(cache, "credit-matrix", "fonts");
+    const cached = join(folder, `${FIGURE_FONT_FILES.sans.sha256}.ttf`);
+    await mkdir(folder, { recursive: true });
+    await writeFile(cached, Buffer.from("corrupt"));
+    const fetch = vi.fn(async () => new Response(good));
+    vi.stubGlobal("fetch", fetch);
+    expect(Buffer.from(await downloadFigureFont("sans")).equals(good)).toBe(true);
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(sha(await readFile(cached))).toBe(FIGURE_FONT_FILES.sans.sha256);
+  });
+
+  describe("cache folder by platform", () => {
+    const platform = process.platform;
+    const downloadOn = async (name: NodeJS.Platform, env: Record<string, string | undefined>) => {
+      Object.defineProperty(process, "platform", { value: name });
+      vi.stubEnv("HOME", cache);
+      for (const [key, value] of Object.entries({ XDG_CACHE_HOME: undefined, LOCALAPPDATA: undefined, ...env }))
+        vi.stubEnv(key, value);
+      vi.stubGlobal("fetch", async () => new Response(await sans()));
+      await downloadFigureFont("sans");
+    };
+    const cachedAt = async (...parts: string[]) =>
+      readdir(join(cache, ...parts, "credit-matrix", "fonts")).then((files) => files.length);
+    afterEach(() => Object.defineProperty(process, "platform", { value: platform }));
+
+    it("uses an absolute XDG_CACHE_HOME on any platform", async () => {
+      await downloadOn("darwin", { XDG_CACHE_HOME: join(cache, "xdg") });
+      expect(await cachedAt("xdg")).toBe(1);
+    });
+
+    it("uses ~/Library/Caches on macOS", async () => {
+      await downloadOn("darwin", {});
+      expect(await cachedAt("Library", "Caches")).toBe(1);
+    });
+
+    it("uses LOCALAPPDATA on Windows", async () => {
+      await downloadOn("win32", { LOCALAPPDATA: join(cache, "local") });
+      expect(await cachedAt("local")).toBe(1);
+    });
+
+    it("falls back to ~/AppData/Local on Windows without LOCALAPPDATA", async () => {
+      await downloadOn("win32", {});
+      expect(await cachedAt("AppData", "Local")).toBe(1);
+    });
+
+    it("uses ~/.cache on Linux", async () => {
+      await downloadOn("linux", {});
+      expect(await cachedAt(".cache")).toBe(1);
+    });
   });
 });
 

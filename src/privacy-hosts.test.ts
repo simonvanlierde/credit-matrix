@@ -23,3 +23,7 @@ it.each([
 ])("%s names every host the browser may contact", (_, text) => {
   expect(hosts.filter((host) => !text.includes(host))).toEqual([]);
 });
+
+it("never lets the browser reach jsDelivr, since the app bundles its figure fonts", () => {
+  expect(csp).not.toContain("jsdelivr");
+});
