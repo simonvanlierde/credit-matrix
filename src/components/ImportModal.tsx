@@ -16,6 +16,7 @@ import {
   parseStatement,
   RepeatedIdError,
   statementAuthor,
+  type Toolchain,
   XmlParseError,
 } from "@/core";
 import { recheckSignIns } from "@/core/ask";
@@ -167,6 +168,7 @@ export interface PendingImport {
   asks?: Record<string, Ask>;
   /** The contributor who made a JSON export, under the file's own id. */
   selfId?: string;
+  toolchain?: Toolchain;
 }
 
 /**

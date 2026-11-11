@@ -154,3 +154,45 @@ it("marks the getting-started copy step once the statement is copied", async () 
   expect(writeText).toHaveBeenCalledOnce();
   vi.unstubAllGlobals();
 });
+
+it("keeps journal exports visible before a writing tool is chosen", () => {
+  act(() => store().loadAuthors(twoAuthors()));
+  renderStatement();
+  expect(screen.getByRole("heading", { name: "For the journal" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Download XML (JATS4R)" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Download XML (Crossref)" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Download tenzing CSV" })).toBeTruthy();
+});
+
+it.each([
+  ["quarto", "Quarto", "Quarto YAML", "credit-matrix:"],
+  ["pandoc", "Pandoc", "Quarto YAML", "credit-matrix:"],
+  ["latex", "LaTeX", "LaTeX (latex-credits)", "\\includesvg{heatmap}"],
+  ["typst", "Typst", "JSON", "#credit-heatmap(team,"],
+  ["sphinx", "Sphinx", "JSON", ".. credit-heatmap:: contributors.json"],
+  ["myst", "MyST / Jupyter Book", "MyST YAML", ":::{credit-heatmap}"],
+  ["markdown", "Markdown", "Markdown", "![CRediT](heatmap.svg)"],
+] as const)("shows the %s export, recipe and style-only CLI", (toolchain, label, format, recipe) => {
+  act(() => {
+    store().loadAuthors(twoAuthors());
+    useContributionStore.setState({ toolchain });
+  });
+  renderStatement();
+  const panel = screen.getByRole("region", { name: `Use this in ${label}` });
+  expect(panel.querySelector(`textarea[aria-label="${format}"]`)?.textContent).toContain("Grace Hopper");
+  expect([...panel.querySelectorAll("textarea")].some((area) => area.value.includes(recipe))).toBe(true);
+  const cli = screen.getByRole("textbox", { name: "CLI equivalent" }) as HTMLTextAreaElement;
+  expect(cli.value).toContain("credit-matrix convert contributors.json --to svg");
+  expect(cli.value).not.toContain("Grace");
+  expect(screen.getByRole("heading", { name: "For the journal" })).toBeTruthy();
+});
+
+it("defines the Typst team from the exported file before drawing it", () => {
+  act(() => {
+    store().loadAuthors(twoAuthors());
+    useContributionStore.setState({ toolchain: "typst" });
+  });
+  renderStatement();
+  const recipe = screen.getByRole("textbox", { name: "Export recipe" }) as HTMLTextAreaElement;
+  expect(recipe.value).toMatch(/^#let team = json\("contributors.json"\)\n\n#credit-heatmap\(team,/);
+});

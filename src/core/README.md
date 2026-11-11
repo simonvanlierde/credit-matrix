@@ -211,7 +211,8 @@ output, so a viewer can tie each phrase back to its cell.
 canonical CRediT roles with lead/equal/supporting degrees. Set `yesNo: true` to omit degrees.
 Paste it into Quarto or Pandoc manuscript front matter. `toMyst(authors)` returns `authors:` with
 ungraded roles; paste it into page front matter, or indent it under `project:` in `myst.yml`.
-The app offers both under Export data, with Copy and Download. They list authors only, including
+The app shows the matching export when you choose Quarto, Pandoc or MyST under “I write in…”.
+Both formats are also under Export data (Other formats when a writing tool is selected), with Copy and Download. They list authors only, including
 those with no roles yet. Acknowledge non-author contributors separately. Keep native JSON for
 exact scores, equal-contribution and corresponding-author markers, and coauthor replies.
 
@@ -273,8 +274,8 @@ fromJats4rXml(xml, { parser: new DOMParser() });
 
 `detectFormat(text)` guesses the format from the text's shape, and `importAny(text, { parser })`
 reads any of them, share links and [tenzing](https://github.com/marton-balazs-kovacs/tenzing)
-spreadsheets (CSV or TSV) included. It returns the `format` it read, plus `asks`, `selfId` and
-`title` when the format includes them. Text that assigns CRediT roles ("MG: conceptualization",
+spreadsheets (CSV or TSV) included. It returns the `format` it read, plus `asks`, `selfId`,
+`title` and `toolchain` when the format includes them. Text that assigns CRediT roles ("MG: conceptualization",
 "Methodology, A.B.") or tells in sentences what the authors did is a `"statement"`, which
 `importAny` refuses: a statement names roles, not contributors. It also throws `ExportOnlyError`
 for Quarto or MyST author YAML and an RO-Crate fragment, which the app writes but cannot read back.
@@ -299,9 +300,10 @@ const { assignments, unresolved } = parseStatement(
 ); // [{ author: 0, role: "Conceptualization" }, { author: 1, role: "Data curation" }], ["XY"]
 ```
 
-`toJson(authors, { asks, includeAnswers, selfId })` also writes the asks and co-author answers
-(unless `includeAnswers` is `false`), and `selfId`, the contributor who made the file. Both are
-optional, so older files still load. `fromJson` returns `{ authors, asks?, selfId? }`. It throws a
+`toJson(authors, { asks, includeAnswers, selfId, toolchain })` also writes the asks and co-author
+answers (unless `includeAnswers` is `false`), and `selfId`, the contributor who made the file.
+`toolchain` records the writing tool, one of `TOOLCHAINS`. These fields are optional, so older
+files still load. `fromJson` returns `{ authors, asks?, selfId?, toolchain? }`. It throws a
 `NewerVersionError` for a file whose `version` is higher than the one this build writes
 (`JSON_EXPORT_VERSION` in `export/json.ts`). It throws a `RepeatedIdError` for a file that repeats a
 contributor id, and a `ZodError` for any other data that does not match.
@@ -357,6 +359,7 @@ ids unique and short enough for a link, and initials made unique.
 
 `encodeShareHash(input, baseUrl)` writes a draft, or one contributor's row for an ask, into a
 compressed `#s=…` link, and `decodeShareHash(hash)` reads one back (or returns `null`).
+The optional `toolchain` travels with the draft in both directions.
 
 ## Exports
 

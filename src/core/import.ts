@@ -9,6 +9,7 @@ import { fromJats4rXml, type XmlParser } from "./export/xml-import";
 import { createAuthor, deduplicateAuthorInitials, splitNameList, tryCreateAuthor } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
 import { readsAsStatement } from "./statement";
+import type { Toolchain } from "./toolchain";
 
 export type DetectedFormat =
   | "link"
@@ -89,6 +90,7 @@ export interface Imported {
   asks?: Record<string, Ask>;
   selfId?: string;
   title?: string;
+  toolchain?: Toolchain;
 }
 
 /**
@@ -130,7 +132,12 @@ export async function importAny(
     case "link": {
       const shared = await decodeShareHash(trimmed.slice(trimmed.indexOf("#")));
       if (!shared) throw new Error("The link is not a CRediT Matrix share link this version can read.");
-      return { format, authors: shared.authors, title: shared.title };
+      return {
+        format,
+        authors: shared.authors,
+        title: shared.title,
+        ...(shared.toolchain ? { toolchain: shared.toolchain } : {}),
+      };
     }
     case "json":
       return { format, ...fromJson(trimmed) };

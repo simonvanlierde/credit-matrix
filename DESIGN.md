@@ -160,8 +160,12 @@ role labels, empty roles, levels and marks, with font and cell geometry under Ad
 option: the grid has room for the full names and their definitions, and a statement must use the
 official CRediT terms. Figure settings' Reset restores the figure's own options and leaves the shared ones. On a narrow screen, settings
 replace the preview until the person closes them; desktop shows both side by side.
-Keep export recipes behind a disclosure in Figure settings. Show a selectable snippet and copy
-action for the chosen document tool, with any differences from the preview beside the snippet.
+The output step starts with an inline “I write in…” select. The draft’s choice wins over the browser
+default. With a tool selected, show its export, contribution heatmap recipe, setup line and style-only
+CLI command in that order. Recipes use file placeholders, never contributor names in shell commands.
+Figure settings links to the selected tool’s recipe; without a choice, it keeps its recipe disclosure.
+Keep “For the journal” visible for every writing tool, with JATS4R XML, Crossref XML and tenzing CSV.
+Other formats stay one click away. Show any differences from the figure preview beside the recipe.
 
 The requested width sets the PDF page size and, with resolution, PNG pixel dimensions and
 print-density metadata. Show the resulting dimensions, flag labels that would print very small,

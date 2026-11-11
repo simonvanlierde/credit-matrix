@@ -78,6 +78,7 @@ function CoauthorPage() {
   const claim = useContributionStore((s) => s.claim);
   const authors = useContributionStore((s) => s.authors);
   const title = useContributionStore((s) => s.title);
+  const toolchain = useContributionStore((s) => s.toolchain);
   const inputMode = useContributionStore((s) => s.inputMode);
   const activeDraftId = useContributionStore((s) => s.activeDraftId);
   const setAuthorScore = useContributionStore((s) => s.setAuthorScore);
@@ -118,7 +119,14 @@ function CoauthorPage() {
 
   if (!claim || !author) return null;
 
-  const reply = { authors, title, claimId: claim.contributorId, sourceDraftId: claim.sourceDraftId, reply: true };
+  const reply = {
+    authors,
+    title,
+    toolchain,
+    claimId: claim.contributorId,
+    sourceDraftId: claim.sourceDraftId,
+    reply: true,
+  };
   // The sign-in holds while the answer is still the one ORCID signed; any change needs a new one.
   const signedIn =
     signIn && signIn !== "failed" && toSharePayload({ ...reply, sentAt: signIn.sentAt }) === signIn.proof.payload
@@ -131,7 +139,7 @@ function CoauthorPage() {
 
   function replyInput(): SharePayloadInput & { sentAt: number } {
     if (signedIn) return { ...reply, sentAt: signedIn.sentAt, idToken: signedIn.proof.token };
-    const answer = JSON.stringify([authors, title]);
+    const answer = JSON.stringify([authors, title, toolchain]);
     if (answeredAt.current?.answer !== answer) answeredAt.current = { answer, at: Date.now() };
     return { ...reply, sentAt: answeredAt.current.at };
   }

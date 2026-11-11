@@ -17,13 +17,16 @@ it("opens a link even when the address bar lost its hash before hashchange fired
       <StatusBanner />
     </IntlProvider>,
   );
-  const link = await buildShareUrl({ authors: [createAuthor("Ada Lovelace")] });
+  act(() => useContributionStore.getState().setToolchain("word"));
+  const link = await buildShareUrl({ authors: [createAuthor("Ada Lovelace")], toolchain: "quarto" });
   // A queued navigation event keeps its URL when the address bar has already changed.
   expect(window.location.hash).toBe("");
   window.dispatchEvent(new HashChangeEvent("hashchange", { oldURL: window.location.href, newURL: link }));
 
   expect(await screen.findByText("Opened the shared draft.")).toBeTruthy();
   expect(useContributionStore.getState().authors.map((author) => author.name)).toEqual(["Ada Lovelace"]);
+  expect(useContributionStore.getState().toolchain).toBe("quarto");
+  expect(useContributionStore.getState().lastToolchain).toBe("word");
 });
 
 it("clears ORCID's tokens and the pending sign-in when no ask is open to take them", async () => {
@@ -237,6 +240,23 @@ describe("importing over a draft", () => {
     expect(screen.getByText("Imported 1 contributor.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
     expect(names()).toEqual(["Ann Bell"]);
+  });
+
+  it("restores a JSON toolchain on replace and its previous choice on Undo", async () => {
+    await importOver(toJson([createAuthor("Bo Chen")], { toolchain: "typst" }));
+    act(() => useContributionStore.getState().setToolchain("word"));
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    expect(useContributionStore.getState().toolchain).toBe("typst");
+    expect(useContributionStore.getState().lastToolchain).toBe("word");
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
+    expect(useContributionStore.getState().toolchain).toBe("word");
+  });
+
+  it("keeps the current toolchain when adding contributors from another toolchain", async () => {
+    await importOver(toJson([createAuthor("Bo Chen")], { toolchain: "typst" }));
+    act(() => useContributionStore.getState().setToolchain("word"));
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 new" }));
+    expect(useContributionStore.getState().toolchain).toBe("word");
   });
 
   it("adds only the new contributors and keeps the ones already here", async () => {

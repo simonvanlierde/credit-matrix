@@ -1803,3 +1803,45 @@ msgstr "Rojo"
 
 msgid "heatmapPurple"
 msgstr "Morado"
+
+msgid "toolchainLabel"
+msgstr "Escribo en…"
+
+msgid "toolchainNone"
+msgstr "Todos los formatos"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown o texto sin formato"
+
+msgid "toolchainMyst"
+msgstr "MyST o Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "Usar en {toolchain}"
+
+msgid "toolchainSetup"
+msgstr "Configuración"
+
+msgid "toolchainSetupLink"
+msgstr "Configurar {toolchain} →"
+
+msgid "toolchainCli"
+msgstr "Equivalente en la línea de comandos"
+
+msgid "toolchainJournal"
+msgstr "Para la revista"
+
+msgid "toolchainOtherFormats"
+msgstr "Otros formatos"
+
+msgid "toolchainNoSetup"
+msgstr "No se necesita ninguna extensión."
+
+msgid "toolchainWordHint"
+msgstr "Copie la declaración de arriba en Word. Descargue el mapa de calor de contribuciones desde las opciones del mapa de calor."
+
+msgid "toolchainLatexHeatmap"
+msgstr "Genere heatmap.svg con la línea de comandos de abajo e incluya la figura en su documento."
+
+msgid "toolchainDataHint"
+msgstr "Guarde la exportación JSON como contributors.json para la receta y la línea de comandos de abajo."

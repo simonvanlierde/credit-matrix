@@ -616,3 +616,12 @@ describe("the XML tag-balance check", () => {
     expect(performance.now() - start).toBeLessThan(500);
   });
 });
+
+it("keeps the draft toolchain in JSON conversions and ask links", async () => {
+  const authors = [createAuthor("Grace Hopper")];
+  const source = file("toolchain.json", toJson(authors, { toolchain: "quarto" }));
+  const converted = JSON.parse(await run(["convert", source, "--to", "json"]));
+  expect(converted.toolchain).toBe("quarto");
+  const link = await run(["ask", source, "--contributor", "Grace Hopper"]);
+  expect((await decodeShareHash(new URL(link).hash))?.toolchain).toBe("quarto");
+});

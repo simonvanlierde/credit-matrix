@@ -3,6 +3,7 @@ import type { Ask } from "../ask";
 import { AskSchema } from "../ask";
 import type { Author } from "../author";
 import { AuthorSchema, MAX_AUTHORS } from "../author";
+import { type Toolchain, ToolchainSchema } from "../toolchain";
 
 /** The export format version this build writes and reads. */
 export const JSON_EXPORT_VERSION = 1;
@@ -23,6 +24,7 @@ const ExportSchema = /* @__PURE__ */ (() =>
     asks: z.optional(z.record(z.string(), AskSchema)),
     /** The contributor who made the file said they are. */
     selfId: z.optional(z.string()),
+    toolchain: z.optional(ToolchainSchema),
   }))();
 
 /** Thrown by `fromJson` for an export stamped by a newer build. */
@@ -53,13 +55,20 @@ export function toJson(
     asks,
     includeAnswers = true,
     selfId,
-  }: { asks?: Readonly<Record<string, Ask>>; includeAnswers?: boolean; selfId?: string | null } = {},
+    toolchain,
+  }: {
+    asks?: Readonly<Record<string, Ask>>;
+    includeAnswers?: boolean;
+    selfId?: string | null;
+    toolchain?: Toolchain;
+  } = {},
 ): string {
   const ids = new Set(authors.map((author) => author.id));
   const kept = Object.entries(asks ?? {}).filter(([id]) => ids.has(id));
   const payload = ExportSchema.parse({
     version: JSON_EXPORT_VERSION,
     authors,
+    ...(toolchain ? { toolchain } : {}),
     ...(includeAnswers && kept.length > 0 ? { asks: Object.fromEntries(kept) } : {}),
     ...(selfId && ids.has(selfId) ? { selfId } : {}),
   });
@@ -71,7 +80,12 @@ export function toJson(
  * Throws a NewerVersionError for a newer build's export, a RepeatedIdError for
  * a file that repeats a contributor id, and a ZodError for any other data that doesn't match the expected shape.
  */
-export function fromJson(json: string): { authors: Author[]; asks?: Record<string, Ask>; selfId?: string } {
+export function fromJson(json: string): {
+  authors: Author[];
+  asks?: Record<string, Ask>;
+  selfId?: string;
+  toolchain?: Toolchain;
+} {
   const data: unknown = JSON.parse(json);
   const version = (data as { version?: unknown } | null)?.version;
   if (typeof version === "number" && version > JSON_EXPORT_VERSION) throw new NewerVersionError(version);
@@ -81,6 +95,6 @@ export function fromJson(json: string): { authors: Author[]; asks?: Record<strin
       ? new RepeatedIdError()
       : result.error;
   }
-  const { authors, asks, selfId } = result.data;
-  return { authors, ...(asks ? { asks } : {}), ...(selfId ? { selfId } : {}) };
+  const { authors, asks, selfId, toolchain } = result.data;
+  return { authors, ...(asks ? { asks } : {}), ...(selfId ? { selfId } : {}), ...(toolchain ? { toolchain } : {}) };
 }

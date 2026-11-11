@@ -4,6 +4,8 @@ import { clampScore, isShareableId, MAX_AUTHORS } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
 import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
 
+import { type Toolchain, ToolchainSchema } from "./toolchain";
+
 /**
  * A draft squeezed small enough to travel in a URL.
  *
@@ -30,6 +32,8 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
       v: z.literal(2),
       /** draft title */
       t: z.optional(z.string().check(z.maxLength(500))),
+      /** writing tool */
+      h: z.optional(ToolchainSchema),
       /** source draft id */
       d: z.optional(z.string().check(z.refine(isShareableId))),
       /** claimed contributor id */
@@ -82,6 +86,7 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
 
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 export interface ShareData {
+  toolchain?: Toolchain;
   authors: Author[];
   /** "" when the payload has none */
   title: string;
@@ -104,6 +109,7 @@ export interface ShareData {
 }
 
 export interface SharePayloadInput {
+  toolchain?: Toolchain;
   authors: Author[];
   title?: string;
   claimId?: string;
@@ -135,6 +141,7 @@ export function toSharePayload(input: SharePayloadInput): string {
 
   return JSON.stringify({
     v: 2,
+    ...(input.toolchain ? { h: input.toolchain } : {}),
     // Cut at 500 UTF-16 units, the schema's limit, without leaving half an emoji at the end.
     ...(title?.trim()
       ? {
@@ -193,6 +200,7 @@ export function fromSharePayload(json: string): ShareData {
 
   return {
     authors,
+    ...(payload.h ? { toolchain: payload.h } : {}),
     title: payload.t ?? "",
     claimId: payload.c ?? null,
     sourceDraftId: payload.d ?? null,

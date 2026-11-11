@@ -303,7 +303,7 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
     case "convert":
       switch (values.to) {
         case "json":
-          return toJson(authors, { asks: imported.asks, selfId: imported.selfId });
+          return toJson(authors, { asks: imported.asks, selfId: imported.selfId, toolchain: imported.toolchain });
         case "csv":
           return toCsv(authors);
         case "jats":
@@ -393,6 +393,7 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
         {
           authors,
           title: imported.title,
+          toolchain: imported.toolchain,
           claimId: author.id,
           // The asker has no draft here; the reply link still decodes with `convert`.
           sourceDraftId: randomUUID(),

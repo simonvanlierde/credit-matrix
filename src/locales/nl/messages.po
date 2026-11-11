@@ -1803,3 +1803,45 @@ msgstr "Rood"
 
 msgid "heatmapPurple"
 msgstr "Paars"
+
+msgid "toolchainLabel"
+msgstr "Ik schrijf in…"
+
+msgid "toolchainNone"
+msgstr "Alle formaten"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown of platte tekst"
+
+msgid "toolchainMyst"
+msgstr "MyST of Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "Gebruik dit in {toolchain}"
+
+msgid "toolchainSetup"
+msgstr "Instellen"
+
+msgid "toolchainSetupLink"
+msgstr "{toolchain} instellen →"
+
+msgid "toolchainCli"
+msgstr "CLI-equivalent"
+
+msgid "toolchainJournal"
+msgstr "Voor het tijdschrift"
+
+msgid "toolchainOtherFormats"
+msgstr "Andere formaten"
+
+msgid "toolchainNoSetup"
+msgstr "Geen extensie nodig."
+
+msgid "toolchainWordHint"
+msgstr "Kopieer de verklaring hierboven naar Word. Download de heatmap van bijdragen via Heatmap-opties."
+
+msgid "toolchainLatexHeatmap"
+msgstr "Genereer heatmap.svg met de CLI hieronder en voeg de figuur toe aan je document."
+
+msgid "toolchainDataHint"
+msgstr "Sla de JSON-export op als contributors.json voor het recept en de CLI hieronder."

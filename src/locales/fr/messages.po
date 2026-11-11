@@ -1803,3 +1803,45 @@ msgstr "Rouge"
 
 msgid "heatmapPurple"
 msgstr "Violet"
+
+msgid "toolchainLabel"
+msgstr "J’écris avec…"
+
+msgid "toolchainNone"
+msgstr "Tous les formats"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown ou texte brut"
+
+msgid "toolchainMyst"
+msgstr "MyST ou Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "Utiliser dans {toolchain}"
+
+msgid "toolchainSetup"
+msgstr "Installation"
+
+msgid "toolchainSetupLink"
+msgstr "Configurer {toolchain} →"
+
+msgid "toolchainCli"
+msgstr "Équivalent en ligne de commande"
+
+msgid "toolchainJournal"
+msgstr "Pour la revue"
+
+msgid "toolchainOtherFormats"
+msgstr "Autres formats"
+
+msgid "toolchainNoSetup"
+msgstr "Aucune extension nécessaire."
+
+msgid "toolchainWordHint"
+msgstr "Copiez la déclaration ci-dessus dans Word. Téléchargez la heatmap des contributions depuis les options de la heatmap."
+
+msgid "toolchainLatexHeatmap"
+msgstr "Générez heatmap.svg avec la ligne de commande ci-dessous, puis insérez la figure dans votre document."
+
+msgid "toolchainDataHint"
+msgstr "Enregistrez l’export JSON sous contributors.json pour la recette et la ligne de commande ci-dessous."
