@@ -50,6 +50,8 @@ See [deploying](docs/deploy.md).
   The `CREDIT_MATRIX_FIGURE_FONTS` variable of the MyST plugin is gone. To work offline, install
   `credit-matrix-fonts` next to the plugin, or run one online build to fill the plugin's cache.
 - `pnpm check:bundle` fails when the npm package grows past 5 MB unpacked.
+- The social card is a poster that reads in a small link preview: the heatmap on its side above a
+  short statement, one cell and its phrase linked in the contributor's hue, and the site's address.
 - **Breaking:** the Typst package stops the build on a contributor name with no letter and no
   ORCID iD, such as "?", instead of drawing an empty label.
 - A draft holds up to 420 contributors, up from 200. Imports, share links and the element take

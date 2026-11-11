@@ -165,7 +165,7 @@ points at the `v<version>` tag instead of `main`.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
-- **Memory**: `vitest.config.ts` caps each worker at 4 GB of heap and runs 4 at once. A test that
+- **Memory**: `vitest.config.ts` caps each worker at 2 GB of heap and runs 4 at once. A test that
   reads a stream or loops on input gives it an end, so a regression fails instead of filling memory.
 - **Document integrations**: `pnpm test:integrations` runs real Pandoc, Sphinx, MyST and Jupyter
   Book builds. It needs uv, and it builds the workspace package first.
@@ -222,6 +222,24 @@ The catalog tests check key parity, blank entries, product names, ICU braces, an
 
 To report a wrong or missing translation without a PR, use the translation issue form.
 
+## Adding a page
+
+1. Add the route to [`src/routes.ts`](src/routes.ts), its path to the list in
+   [`scripts/prerender.mjs`](scripts/prerender.mjs) (which writes the canonical link), its URL to
+   [`public/sitemap.xml`](public/sitemap.xml), and its path to `PAGES` in
+   [`public/sw.js`](public/sw.js). [`scripts/postbuild.mjs`](scripts/postbuild.mjs) fails the
+   build when these lists disagree, or when a page lacks its title, description or canonical link.
+2. Export `metadata` (title and description) from the page's `page.tsx`. Other pages inherit the
+   social card from [`src/app/layout.tsx`](src/app/layout.tsx).
+3. Give every JSON-LD block a `license`: Search Console reports a missing one on `Dataset` and
+   software items. Take its facts from a file the release already keeps, such as `codemeta.json` or
+   `census.json`, not from copies typed into the page.
+4. After the deploy, run the page through the
+   [Rich Results test](https://search.google.com/test/rich-results) and fix what it reports.
+
+The site's Search Console property is the `duinlab.nl` Domain property, which covers every
+subdomain. The sitemap to submit is `https://credit.duinlab.nl/sitemap.xml`.
+
 ## Commit and PR conventions
 
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/). commitlint checks
@@ -244,5 +262,4 @@ The `dco` workflow fails any pull request with a commit that lacks it; commits b
 [GOVERNANCE.md](GOVERNANCE.md) says who decides, who has access, and what happens if the
 maintainer stops.
 
-Deploys and rollback are in [docs/deploy.md](docs/deploy.md). What the site tells search engines,
-and what to check when you add a page, is in [docs/seo.md](docs/seo.md).
+Deploys and rollback are in [docs/deploy.md](docs/deploy.md).

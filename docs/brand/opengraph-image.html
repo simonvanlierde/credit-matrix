@@ -1,64 +1,99 @@
 <!doctype html><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400;1,600&family=Atkinson+Hyperlegible+Mono:wght@500&family=Atkinson+Hyperlegible+Next:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400;1,600&family=Atkinson+Hyperlegible+Next:wght@400;600&display=swap" rel="stylesheet">
+<!-- A poster, not a screen: link previews show this at 300-500 px and some crop it near-square.
+     The name, the line, the statement and the address sit in the centred 630 px (x 285-915) at a
+     size that reads at a quarter scale; the matrix is the picture, on the left, and may fall
+     outside the crop. One idea: the grid becomes the statement. Static markup, no script:
+     regenerate rather than hand-edit the cells. -->
 <style>
  *{box-sizing:border-box}
  html,body{margin:0;padding:0}
- body{width:1200px;height:630px;background:#f4f3ed;font-family:"Atkinson Hyperlegible Next",system-ui;color:#2e2a25;
-      display:grid;grid-template-columns:1fr 448px;gap:52px;padding:56px 64px 56px 72px;overflow:hidden}
- .left{display:flex;flex-direction:column;justify-content:space-between;padding:6px 0}
- .lock{display:flex;align-items:center;gap:17px}
- .wm{font-family:Newsreader,serif;font-style:italic;font-weight:600;font-size:56px;line-height:1;
-     letter-spacing:-.02em;color:#1f4e79}
- .sub{margin-top:26px;font-size:29px;line-height:1.4;color:#5e584e;max-width:24ch;text-wrap:balance}
- /* The statement is the app's real output, so it sits on the result card the
-    app gives it: bright paper, an ink edge and the hard sheet shadow. */
- .out{background:#fffdf8;border:1px solid #2e2a25;border-radius:2px;padding:26px 30px;
-      box-shadow:5px 5px 0 rgb(31 78 121/.22)}
- .cap{font-size:15px;font-weight:600;color:#5e584e}
- .stmt{margin:10px 0 0;font-family:Newsreader,serif;font-size:22px;line-height:1.5;color:#2e2a25;max-width:46ch}
+ /* The page colour is --color-surface: paper #fbf8f1 tinted 3% toward the default ink-blue. */
+ body{width:1200px;height:630px;background:#f4f3ed;color:#2e2a25;overflow:hidden;position:relative;
+      font-family:"Atkinson Hyperlegible Next",system-ui}
+ /* People are columns, roles are rows, as in the app. The top three rows are the brand mark:
+    one hue per column, lead on the diagonal. */
+ .grid{position:absolute;left:56px;top:39px;display:grid;grid-template-columns:repeat(3,68px);gap:3px;z-index:1}
+ .grid i{display:block;height:29px;border-radius:3px;background:#ececea}
+ .grid i:nth-child(n+10):nth-child(-n+12){margin-top:12px}
+ /* The app's link: the cell and the phrase it produced share the contributor's hue. */
+ .grid i.linked{outline:3px solid #2a5fa8;outline-offset:3px}
+ /* Ada's column and the statement share one sheet: bright paper, an ink edge, the hard sheet shadow. */
+ .sheet{background:#fffdf8;border:1px solid #2e2a25;border-radius:2px;box-shadow:5px 5px 0 rgb(31 78 121/.22)}
+ .col-sheet{position:absolute;left:48px;top:139px;width:84px;height:461px}
+ .text{position:absolute;left:300px;top:75px;width:605px}
+ .wm{font-family:Newsreader,serif;font-style:italic;font-weight:600;font-size:72px;line-height:80px;
+      letter-spacing:-.02em;color:#1f4e79}
+ .what{margin:10px 0 0;font-size:40px;line-height:48px;color:#5e584e;height:96px}
+ .card{margin-top:26px;height:206px;padding:24px 34px}
+ .stmt{margin:0;font-family:Newsreader,serif;font-size:40px;line-height:52px}
  .stmt b{font-weight:600}
- table{border-collapse:collapse;width:100%;align-self:center}
- caption{caption-side:top;text-align:left;font-family:Newsreader,serif;font-style:italic;font-size:18px;
-         color:#5e584e;padding-bottom:9px}
- th.role{font-weight:400;font-size:15px;color:#2e2a25;text-align:left;padding:0 14px 0 0;white-space:nowrap}
- thead th.ini{font-family:"Atkinson Hyperlegible Mono",monospace;font-weight:500;font-size:13px;color:#2e2a25;
-              padding:0 0 7px;width:52px}
- /* Each column's name is underlined in that contributor's hue, as in the app. */
- thead th.ini span{display:inline-block;padding-bottom:3px;border-bottom:2px solid var(--hue)}
- tfoot td{padding-top:11px;font-size:12px;color:#5e584e}
- tbody tr td{padding:2px 0}
- .cell{width:44px;height:22px;border-radius:2px;margin:0 auto;display:grid;place-items:center}
- .cell.empty::after{content:"";width:3px;height:3px;border-radius:50%;background:#857d70}
- tbody tr:first-child td,tbody tr:first-child th{padding-top:9px}
+ .stmt .link{white-space:nowrap;color:#2a5fa8;text-decoration:underline 3px;text-underline-offset:6px}
+ .url{margin-top:26px;font-size:32px;line-height:36px;color:#5e584e}
+ /* From the ringed cell, along its row, down the gutter, into the card to the phrase. */
+ .leader{position:absolute;left:0;top:0;z-index:2}
 </style>
-<div class="left">
-  <div class="lock">
-    <svg width="44" height="44" viewBox="0 0 32 32"><title>CRediT Matrix</title>
-      <rect x="3" y="3" width="8" height="8" rx="1" fill="#2a5fa8"/><rect x="12" y="3" width="8" height="8" rx="1" fill="#cb7e5f"/><rect x="21" y="3" width="8" height="8" rx="1" fill="#9fc5c2"/>
-      <rect x="3" y="12" width="8" height="8" rx="1" fill="#6a8fc2"/><rect x="12" y="12" width="8" height="8" rx="1" fill="#b4471a"/><rect x="21" y="12" width="8" height="8" rx="1" fill="#ececea"/>
-      <rect x="3" y="21" width="8" height="8" rx="1" fill="#aabfdc"/><rect x="12" y="21" width="8" height="8" rx="1" fill="#ececea"/><rect x="21" y="21" width="8" height="8" rx="1" fill="#0f6e66"/>
-    </svg>
-    <span class="wm">CRediT Matrix</span>
-  </div>
-  <p class="sub">The contribution heatmap, and the statement that goes with it.</p>
-  <div class="out">
-    <div class="cap">Statement</div>
-    <p class="stmt"><b>CRediT:</b> Ada Lovelace: Conceptualization, Methodology (Equal), Supervision (Supporting), Writing – original draft; Rosalind E. Franklin: Data curation, Formal analysis (Equal), …</p>
-  </div>
+<div class="sheet col-sheet"></div>
+<div class="grid">
+  <i style="background:#2a5fa8"></i>
+  <i style="background:#cb7e5f"></i>
+  <i style="background:#9fc5c2"></i>
+  <i style="background:#6a8fc2"></i>
+  <i style="background:#b4471a"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#aabfdc"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#0f6e66"></i>
+  <i style="background:#2a5fa8"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#b4471a"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#cb7e5f"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#0f6e66"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#b4471a"></i>
+  <i style="background:#ececea"></i>
+  <i class="linked" style="background:#6a8fc2"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#0f6e66"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#579a94"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#cb7e5f"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#aabfdc"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#2a5fa8"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#ececea"></i>
+  <i style="background:#0f6e66"></i>
 </div>
-<table id="m"><caption>Role</caption></table>
-<script>"use strict";
-// The first three of CONTRIBUTOR_HUES (src/core/contributor-color.ts), lighter for equal and supporting.
-const hue={"Ada Lovelace":"#2a5fa8","Rosalind E. Franklin":"#b4471a","Alan M. Turing":"#0f6e66"};
-const roles=["Conceptualization","Data curation","Formal analysis","Funding acquisition","Investigation","Methodology","Project administration","Resources","Software","Supervision","Validation","Visualization","Writing – original draft","Writing – review & editing"];
-const data={"Ada Lovelace":{Conceptualization:100,Methodology:66,"Writing – original draft":100,Supervision:33},
- "Rosalind E. Franklin":{Investigation:100,"Data curation":100,Software:66,"Formal analysis":66},
- "Alan M. Turing":{"Funding acquisition":100,"Project administration":100,"Writing – review & editing":100,Resources:66}};
-const ini={"Ada Lovelace":"AL","Rosalind E. Franklin":"REF","Alan M. Turing":"AMT"};
-const share=s=>s>66?100:s>33?62:32;
-const names=Object.keys(data);
-document.getElementById('m').innerHTML+=
- `<thead><tr><th class="role"></th>${names.map(n=>`<th class="ini" style="--hue:${hue[n]}"><span>${ini[n]}</span></th>`).join('')}</tr></thead>`+
- `<tbody>${roles.map(r=>`<tr><th class="role">${r}</th>${names.map(n=>`<td>${data[n][r]?`<div class="cell" style="background:color-mix(in oklab,${hue[n]} ${share(data[n][r])}%,#fffdf8)"></div>`:'<div class="cell empty"></div>'}</td>`).join('')}</tr>`).join('')}</tbody>`+
- `<tfoot><tr><td colspan="4">Sample data. Lead, equal and supporting by intensity.</td></tr></tfoot>`;
-</script>
+<svg class="leader" width="1200" height="630" viewBox="0 0 1200 630" aria-hidden="true">
+  <path d="M130 321.5H284V442H323" fill="none" stroke="#2a5fa8" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="323" cy="442" r="5" fill="#2a5fa8"/>
+</svg>
+<div class="text">
+  <div class="wm">CRediT Matrix</div>
+  <p class="what">Who did what, in the<br>14 roles of CRediT</p>
+  <div class="sheet card"><p class="stmt"><b>CRediT:</b> Ada Lovelace:<br>Conceptualization,<br><span class="link">Methodology (Equal)</span>, …</p></div>
+  <div class="url">credit.duinlab.nl</div>
+</div>
