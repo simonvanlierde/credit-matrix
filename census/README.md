@@ -224,21 +224,26 @@ seed adds new ones; its weights then stand for the articles left:
   them. Fill `wrong` with `tag`, `parser`, `both` or `neither`, and `notes`; `census score` on that
   file counts the answers. If the tags are often the wrong ones, the paired F1 understates accuracy.
 
-What the set can show, once labelled (`census score data/labels/oa-2026-10-set.csv`):
+Two language-model runs labelled the set, and a third settled where they differed
+(`oa-2026-10-set-opus-adj-defb.csv`; `oa-2026-10-set.csv` is the blank sheet, which scores as empty
+tables). The rule parser on those labels
+(`census score data/labels/oa-2026-10-set-opus-adj-defb.csv --key data/labels/oa-2026-10-set-key.csv`):
 
 | Style | Articles | Precision | Recall | F1 | Exact (95% interval) |
 | --- | --- | --- | --- | --- | --- |
-| `statement_text` | 100 | | | | |
-| `contrib_text` | 30 | | | | |
-| `none` | 30 | | | | |
+| `statement_text` | 100 | 0.971 | 0.898 | 0.933 | 0.652 (0.547 to 0.745) |
+| `contrib_text` | 30 | 0.998 | 0.995 | 0.997 | 0.938 (0.699 to 0.990) |
+| `none` | 30 | - | 0.0 | 0.0 | 0.868 (0.686 to 0.952) |
 
-These are pooled, weighted figures per style. `score` also prints a table per style and publisher,
+For `none`, exact is the share of articles the labels also give no roles; the recall of 0.0 means the
+parser found none of the roles in the rest. These are pooled, weighted figures per style. `score` also prints a table per style and publisher,
 but with 1 to 12 rows per stratum it is for spotting failure patterns, not for accuracy per
 publisher. A third table goes per style and role, counting for each role only the articles where it
 was predicted or labelled. It shows which roles the parser or a model gets wrong: on `oa-2026-10`,
-visualization and writing – review & editing. Agreement between labellers, one figure over the 25
-overlap rows: F1 \_\_. MDPI disagreements, a rough verdict on whether the tag or the parser errs
-from 20 rows: tag wrong \_\_, parser wrong \_\_, both \_\_, neither \_\_.
+visualization and writing – review & editing. On the 25 overlap rows the two labelling runs agree
+at F1 0.993, with 22 of 25 articles exactly the same (`--second`, run B against run A). On the 20
+MDPI disagreements, a language model judged the tag wrong in 18 and both wrong in 2
+(`oa-2026-10-set-disagreements-opus.csv`); it found the parser alone wrong in none.
 
 ## Training a statement parser
 
