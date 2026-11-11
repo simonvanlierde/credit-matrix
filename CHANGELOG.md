@@ -6,6 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Point at a person or role in the contributor list, the grid or the statement to mark them in all
+  three. A click opens one person menu or role popover everywhere, now with set or clear all roles,
+  assign a role to everyone and edit in list; a click on a statement phrase goes to its cell.
+- A getting-started checklist above the grid ticks itself as roles are set, co-authors are asked
+  and the statement is copied, and marks the next step's button.
+
+### Changed
+
+- The grid and the heatmap figure share one colour, orientation and initials setting per draft, and
+  every settings panel uses the same controls. A new figure follows the grid, so it is coloured per
+  contributor unless you pick one colour. Drafts saved by 0.12.0 keep their figure orientation
+  and initials.
+- The heatmap colour is now the accent of the wordmark, tabs and selected options, and body text is
+  charcoal instead of black.
+- Share opens with asking co-authors, then copying the draft link.
+
+### Fixed
+
+- Heatmap SVG and PNG exports no longer carry a wide empty margin on the left.
+
 ## [0.12.0] - 2026-11-11
 
 ### Added
