@@ -1803,3 +1803,12 @@ msgstr "Rouge"
 
 msgid "heatmapPurple"
 msgstr "Violet"
+
+msgid "docsTitle"
+msgstr "Documentation"
+
+msgid "docsHowTo"
+msgstr "L’utiliser dans votre outil d’écriture"
+
+msgid "docsReference"
+msgstr "Référence"

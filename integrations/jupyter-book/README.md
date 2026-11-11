@@ -42,5 +42,5 @@ The [MyST guide](../myst/README.md) describes page author overrides, role aliase
 This integration is for Jupyter Book 2, not the Sphinx-based Jupyter Book 1.
 For a Sphinx project, use the [Sphinx directive](../sphinx/README.md).
 
-[`example/`](example) is a complete book. Its config points at the shared MyST plugin.
+[`example/`](example/) is a complete book. Its config points at the shared MyST plugin.
 CI builds both the MyST and Jupyter Book entry points and checks the rendered statement.

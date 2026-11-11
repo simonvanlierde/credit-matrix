@@ -1803,3 +1803,12 @@ msgstr "赤"
 
 msgid "heatmapPurple"
 msgstr "紫"
+
+msgid "docsTitle"
+msgstr "ドキュメント"
+
+msgid "docsHowTo"
+msgstr "執筆ツールで使う"
+
+msgid "docsReference"
+msgstr "リファレンス"

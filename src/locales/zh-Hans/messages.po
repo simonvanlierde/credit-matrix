@@ -1803,3 +1803,12 @@ msgstr "红色"
 
 msgid "heatmapPurple"
 msgstr "紫色"
+
+msgid "docsTitle"
+msgstr "文档"
+
+msgid "docsHowTo"
+msgstr "在写作工具中使用"
+
+msgid "docsReference"
+msgstr "参考"

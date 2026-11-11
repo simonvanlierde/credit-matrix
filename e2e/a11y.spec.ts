@@ -156,7 +156,7 @@ test.describe("Accessibility (axe-core)", () => {
     expect(results.violations).toEqual([]);
   });
 
-  for (const route of ["/about", "/accessibility"]) {
+  for (const route of ["/about", "/accessibility", "/docs", "/docs/figures", "/docs/typst"]) {
     test(`${route} has no detectable violations, light, dark and on a phone`, async ({ page }) => {
       await page.goto(route);
       await expect(page.getByRole("heading", { level: 2 })).toBeVisible();

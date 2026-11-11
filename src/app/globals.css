@@ -323,8 +323,69 @@ body:has([data-census-page], [data-reading-page]) {
     padding-left: 1.25rem;
     list-style: disc;
   }
+  & ol {
+    padding-left: 1.25rem;
+    list-style: decimal;
+  }
   & li + li {
     margin-top: 0.5rem;
+  }
+  & li > p {
+    margin-top: 0.25rem;
+  }
+  /* The docs pages (/docs) carry code, tables, quotes and figures; set like the About page's citation box
+     and the census tables. */
+  & :is(p, ul, ol, pre, table, blockquote) + :is(p, ul, ol, pre, table, blockquote) {
+    margin-top: 0.75rem;
+  }
+  /* Wraps like the About page's citation box: a scrolling block would need its own tab stop. */
+  & pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: var(--color-surface-container-low);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--color-on-surface);
+  }
+  & pre code {
+    padding: 0;
+    background: none;
+    font-size: inherit;
+  }
+  /* Cells wrap rather than scroll: a scrolling block would cost the table its semantics in some readers. */
+  & table {
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  & th {
+    border-bottom: 1px solid var(--color-outline);
+    font-weight: 600;
+    color: var(--color-on-surface);
+    text-align: left;
+  }
+  & :is(th, td) {
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+  & td {
+    border-bottom: 1px solid var(--color-outline-variant);
+  }
+  & blockquote {
+    padding-left: 1rem;
+    border-left: 2px solid var(--color-outline-variant);
+  }
+  & img {
+    max-width: 100%;
+    height: auto;
+  }
+  & a[aria-current="page"] {
+    color: var(--color-on-surface);
+    font-weight: 600;
+    text-decoration: none;
   }
   & li::marker {
     color: var(--color-outline);

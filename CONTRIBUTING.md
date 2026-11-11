@@ -227,7 +227,8 @@ To report a wrong or missing translation without a PR, use the translation issue
 1. Add the route to [`src/routes.ts`](src/routes.ts). The prerender writes each route's page,
    canonical link and sitemap entry from that list, and postbuild fills the service worker's `PAGES`
    from it. [`scripts/postbuild.mjs`](scripts/postbuild.mjs) fails the build when a page lacks its
-   title, description or canonical link.
+   title, description or canonical link. A docs page needs no route of its own: a new
+   `integrations/<tool>/README.md` is `/docs/<tool>` (see [`src/docs/pages.ts`](src/docs/pages.ts)).
 2. Export `metadata` (title and description) from the page's `page.tsx`. Other pages inherit the
    social card from [`src/app/layout.tsx`](src/app/layout.tsx).
 3. Give every JSON-LD block a `license`: Search Console reports a missing one on `Dataset` and
