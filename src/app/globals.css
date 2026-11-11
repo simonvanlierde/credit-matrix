@@ -425,6 +425,25 @@ dialog[open]::backdrop {
     display 220ms allow-discrete;
 }
 
+/*
+ * The first-run card is in the prerendered HTML, so it paints with the page, before any script.
+ * It is closed until hydration calls showModal(), and a closed dialog is display:none, so it is
+ * shown here as a fixed box, without the dimmed backdrop: any full-screen layer over the page made
+ * the browser credit the card's text to a later frame. showModal() fades the backdrop in.
+ * WelcomeCard drops data-first-run once it has decided, and index.html hides it for a returning visitor.
+ */
+dialog[data-first-run]:not([open]) {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  transform: none;
+}
+
+html[data-welcome-skip] dialog[data-first-run]:not([open]) {
+  display: none;
+}
+
 @starting-style {
   dialog[open] {
     transform: translateY(-8px);

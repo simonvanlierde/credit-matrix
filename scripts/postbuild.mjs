@@ -84,7 +84,8 @@ if (!sameSet(routePaths, exported))
   throw new Error(`postbuild: src/routes.ts has ${routePaths}, out/ exports ${exported}`);
 if (!sameSet(routePaths, swPages))
   throw new Error(`postbuild: src/routes.ts has ${routePaths}, ${swPath} PAGES has ${swPages}`);
-// Each prerendered page carries its own head tags and the preloads for its chunks.
+// Each prerendered page carries its own head tags and the preloads for its chunks (scripts/prerender.mjs
+// puts those in a loader that runs after the first paint).
 for (const path of exported) {
   const html = await readFile(join(OUT, path === "/" ? "index.html" : `${path.slice(1)}.html`), "utf8");
   const title = html.match(/<title>(.*?)<\/title>/)?.[1];
@@ -92,7 +93,7 @@ for (const path of exported) {
     !title && "title",
     !/<meta name="description" content="[^"]+">/.test(html) && "meta description",
     !html.includes(`<link rel="canonical" href="https://credit.duinlab.nl${path}">`) && "canonical link",
-    !html.includes('<link rel="modulepreload"') && "modulepreload",
+    !html.includes('["link","\\u002fassets\\u002f') && "modulepreload (in the deferred script loader)",
   ].filter(Boolean);
   if (problems.length > 0) throw new Error(`postbuild: ${path} lacks ${problems.join(", ")}`);
 }

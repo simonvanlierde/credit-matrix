@@ -127,6 +127,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- On a first visit the welcome card shows with the page, before the scripts load, instead of after
+  them. On a slow phone connection it appears in about 2 seconds rather than 4.
 - With Windows high contrast (forced colours) on, focus has a visible outline, cells keep their
   edges, a Lead cell keeps its three dots, and the selected side of a choice such as Yes / no or
   Levels stays visible. On a touch screen the small controls take a 44px tap.
