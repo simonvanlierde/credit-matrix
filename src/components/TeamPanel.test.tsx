@@ -52,3 +52,28 @@ it("ends the queue when everyone left in it is removed", async () => {
   await act(async () => fireEvent.click(screen.getByRole("button", { name: /^Ask everyone/ })));
   expect(vi.mocked(copyAskMessage)).toHaveBeenCalledTimes(2);
 });
+
+it("clears the copied confirmation after five seconds and offers the copy again", async () => {
+  vi.mocked(copyAskMessage).mockResolvedValue(true);
+  act(() => {
+    useContributionStore.getState().createDraft();
+    for (const name of ["Ann One", "Bob Two"]) useContributionStore.getState().addAuthor(name);
+  });
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <TeamPanel />
+    </IntlProvider>,
+  );
+  vi.useFakeTimers();
+  try {
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy message for Ann One" })));
+    expect(screen.getByText(/Message for Ann One copied/)).toBeTruthy();
+    act(() => vi.advanceTimersByTime(4900));
+    expect(screen.getByText(/Message for Ann One copied/)).toBeTruthy();
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.queryByText(/Message for Ann One copied/)).toBeNull();
+    expect(screen.getByRole("button", { name: "Copy message for Ann One" }).textContent).not.toMatch(/Copied/);
+  } finally {
+    vi.useRealTimers();
+  }
+});
