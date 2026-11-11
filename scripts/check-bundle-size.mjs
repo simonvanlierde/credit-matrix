@@ -32,8 +32,9 @@ if (files.length === 0) {
   process.exit(1);
 }
 const kb = (n) => `${(n / 1000).toFixed(1)} kB`;
-// The font family search is a chunk only the figure exporter imports, and the app never calls it.
-const figure = ({ name }) => /^(?:figures|font-search)-/.test(name);
+// The font family search, and the font provider it shares with the figure exporter, are chunks that
+// load only with the figure exporter.
+const figure = ({ name }) => /^(?:figures|font-search|figure-fonts)-/.test(name);
 for (const [label, limit, group] of [
   ["app", LIMIT_GZIP, files.filter((file) => !figure(file))],
   ["figure exporter", FIGURE_LIMIT_GZIP, files.filter(figure)],
