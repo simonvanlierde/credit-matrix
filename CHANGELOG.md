@@ -85,6 +85,9 @@ roll back past it: an older build refuses to write over drafts saved in version 
 
 ### Changed
 
+- The heatmap SVG for 200 contributors builds in about 30% less time than in 0.11.0 (1.46 ms
+  against 2.10 ms, median of three runs on one machine). Statements and the CSV and JATS exports
+  take the same time as before.
 - Colour, orientation and initials are stored once per draft and shared by the grid's Heatmap
   options and Figure settings, where they are marked as shared with the grid. Every settings panel
   uses the same controls. A new figure follows the grid, so it is coloured per contributor unless
