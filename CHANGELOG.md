@@ -8,6 +8,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The social card is a poster that reads in a small link preview: the heatmap on its side above a
+  short statement, one cell and its phrase linked in the contributor's hue, and the site's address.
 - The favicon, app icons and social card use the warm paper and charcoal ink of the 0.12.0 theme,
   and the mark draws each column in one contributor's hue, as the grid does.
 - Search results and link previews describe asking co-authors to check their own row, and the
