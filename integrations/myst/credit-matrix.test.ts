@@ -229,13 +229,13 @@ it.each([
 it("reports unsupported contributor glyphs in one line instead of using a system fallback", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-missing-font-"));
   const path = join(dir, "index.md");
-  writeFileSync(path, "---\nauthors:\n  - name: مرحبا\n    roles: [Software]\n---\n");
+  writeFileSync(path, "---\nauthors:\n  - name: བོད\n    roles: [Software]\n---\n");
   const { image, messages } = await heatmap(path);
   expect(image).toBeUndefined();
   expect(messages).toEqual([
     {
       message:
-        "credit-heatmap: The figure fonts cannot draw م (U+0645), ر (U+0631), ح (U+062D), ب (U+0628), ا (U+0627). Change these characters in the names or labels.",
+        "credit-heatmap: The figure fonts cannot draw བ (U+0F56), ོ (U+0F7C), ད (U+0F51). Change these characters in the names or labels.",
       fatal: true,
     },
   ]);

@@ -22,7 +22,9 @@
     "index.js",
     "index.d.ts",
     "*.ttf",
-    "OFL-*.txt"
+    "harfbuzz.wasm",
+    "OFL-*.txt",
+    "LICENSE-*.txt"
   ],
   "exports": {
     ".": {

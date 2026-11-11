@@ -103,9 +103,16 @@ export declare class CreditMatrixElement extends HTMLElement {
 }
 // figures.d.ts
 import { a as Author, n as HeatmapSvgOptions } from "./heatmap-svg.js";
-/** A figure font face: the Latin face and the Japanese and Simplified Chinese faces, in sans and serif. */
-type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif-sc";
-/** Returns the bytes of one TrueType face; `createFigureRenderer` calls it the first time a figure needs that face. */
+/**
+ * A figure font face: Latin, Japanese and Simplified Chinese in sans and serif, one sans face per other
+ * script, and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays out the
+ * complex scripts, fetched the same way.
+ */
+type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif-sc" | "sans-kr" | "sans-arabic" | "sans-armenian" | "sans-bengali" | "sans-devanagari" | "sans-ethiopic" | "sans-georgian" | "sans-gujarati" | "sans-gurmukhi" | "sans-hebrew" | "sans-kannada" | "sans-khmer" | "sans-lao" | "sans-malayalam" | "sans-myanmar" | "sans-oriya" | "sans-sinhala" | "sans-tamil" | "sans-telugu" | "sans-thai" | "emoji" | "harfbuzz";
+/**
+ * Returns the bytes of one face (TrueType, or WebAssembly for `harfbuzz`); `createFigureRenderer` calls it
+ * the first time a figure needs that face.
+ */
 type FigureFontProvider = (face: FigureFace) => Uint8Array | Promise<Uint8Array>;
 export declare class FigureFontError extends Error {
   readonly characters: string;

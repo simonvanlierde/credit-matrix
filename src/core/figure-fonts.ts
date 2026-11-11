@@ -1,9 +1,44 @@
 // biome-ignore-all lint/security/noSecrets: SHA-256 hashes of the public font files, not credentials.
 
-/** A figure font face: the Latin face and the Japanese and Simplified Chinese faces, in sans and serif. */
-export type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif-sc";
+/**
+ * A figure font face: Latin, Japanese and Simplified Chinese in sans and serif, one sans face per other
+ * script, and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays out the
+ * complex scripts, fetched the same way.
+ */
+export type FigureFace =
+  | "sans"
+  | "sans-jp"
+  | "sans-sc"
+  | "serif"
+  | "serif-jp"
+  | "serif-sc"
+  | "sans-kr"
+  | "sans-arabic"
+  | "sans-armenian"
+  | "sans-bengali"
+  | "sans-devanagari"
+  | "sans-ethiopic"
+  | "sans-georgian"
+  | "sans-gujarati"
+  | "sans-gurmukhi"
+  | "sans-hebrew"
+  | "sans-kannada"
+  | "sans-khmer"
+  | "sans-lao"
+  | "sans-malayalam"
+  | "sans-myanmar"
+  | "sans-oriya"
+  | "sans-sinhala"
+  | "sans-tamil"
+  | "sans-telugu"
+  | "sans-thai"
+  | "emoji"
+  | "harfbuzz";
 
-/** Returns the bytes of one TrueType face; `createFigureRenderer` calls it the first time a figure needs that face. */
+/**
+ * Returns the bytes of one face (TrueType, or WebAssembly for `harfbuzz`); `createFigureRenderer` calls it
+ * the first time a figure needs that face.
+ */
 export type FigureFontProvider = (face: FigureFace) => Uint8Array | Promise<Uint8Array>;
 
 /** The `credit-matrix-fonts` release whose files the download fetches and whose hashes are listed here. */
@@ -33,6 +68,94 @@ export const FIGURE_FONT_FILES: Record<FigureFace, { file: string; sha256: strin
   "serif-sc": {
     file: "CreditFigureSerifSC.ttf",
     sha256: "9e4eadf4a90c36eaf7f69ef1c0d29fd6b8277eed55f5a035b95232e5243cdd34",
+  },
+  "sans-kr": {
+    file: "CreditFigureKR.ttf",
+    sha256: "134e926bd335ede61927ad3e5209fd9f0b4381c78decd26bc39462af7a8ed640",
+  },
+  "sans-arabic": {
+    file: "NotoSansArabic-Regular.ttf",
+    sha256: "bdff3e5659d67e67def05b33f749683b9376ae819d65d3dd62ac4640b3aaef48",
+  },
+  "sans-armenian": {
+    file: "NotoSansArmenian-Regular.ttf",
+    sha256: "720df88c332417a235b4d6209d14ec2e2bf4bfe2a954b7453d869ea593bfce1e",
+  },
+  "sans-bengali": {
+    file: "NotoSansBengali-Regular.ttf",
+    sha256: "b55c62ee531e3214da6c0701daecea89a52ba42db7d8206b92e6b51f397a3193",
+  },
+  "sans-devanagari": {
+    file: "NotoSansDevanagari-Regular.ttf",
+    sha256: "4e3c66638958c3e2ab5d37f47a8deb89fffeb7be9985c665a519bbc7ba762313",
+  },
+  "sans-ethiopic": {
+    file: "NotoSansEthiopic-Regular.ttf",
+    sha256: "f6f7fc379db9438959a2b0527e7a2cf36ea9c84626d56ec444fff37fc24c3c10",
+  },
+  "sans-georgian": {
+    file: "NotoSansGeorgian-Regular.ttf",
+    sha256: "d3e33254b09e7bb2c5cf0f17e554b80462056c5a107097f258d495168c3a9346",
+  },
+  "sans-gujarati": {
+    file: "NotoSansGujarati-Regular.ttf",
+    sha256: "9b5a7aaeeb649a2e75a49d8b006a1f87db1b61c0df3b001609f4e0725d88dbf6",
+  },
+  "sans-gurmukhi": {
+    file: "NotoSansGurmukhi-Regular.ttf",
+    sha256: "658d0207da305a1411c539a8b0bbeda64d4146e54fb4827facddb890b6b90d74",
+  },
+  "sans-hebrew": {
+    file: "NotoSansHebrew-Regular.ttf",
+    sha256: "cdefaf8efd47045f6820928eba84db5bed7557539328952b5f828315485e02ee",
+  },
+  "sans-kannada": {
+    file: "NotoSansKannada-Regular.ttf",
+    sha256: "9ad74dc64838c6855b96f671fc08e425a58921b9d0c71712ea79c328a27e6e38",
+  },
+  "sans-khmer": {
+    file: "NotoSansKhmer-Regular.ttf",
+    sha256: "e66675f2082788f0511a714bef5a1748928294b38c8e286a96ea73a864b5e605",
+  },
+  "sans-lao": {
+    file: "NotoSansLao-Regular.ttf",
+    sha256: "0a86e5e1ccfe34ca78c43fac6829dc751b42bcc469272a9a55325aae587bfbe7",
+  },
+  "sans-malayalam": {
+    file: "NotoSansMalayalam-Regular.ttf",
+    sha256: "c08de7fa8d032a5d6a4d120fb82c78cec60b362a4e73fa26360d89759ff2a7f9",
+  },
+  "sans-myanmar": {
+    file: "NotoSansMyanmar-Regular.ttf",
+    sha256: "fafce4db400bc0b214907ccdbfb0ad2f18a57bfefd08c8a571830b84088cf2fc",
+  },
+  "sans-oriya": {
+    file: "NotoSansOriya-Regular.ttf",
+    sha256: "a16645d056017927406546aa78e4ce15e782fd8783467267b75450453d007415",
+  },
+  "sans-sinhala": {
+    file: "NotoSansSinhala-Regular.ttf",
+    sha256: "9e32612d47004552f3125e78648a9e2e7899a216ccd3cefbb93a9b5f4c809feb",
+  },
+  "sans-tamil": {
+    file: "NotoSansTamil-Regular.ttf",
+    sha256: "3c0a186feb3c63c7f6d63e1511dcdc144e745ae09b98e217c83f3e317974f6f9",
+  },
+  "sans-telugu": {
+    file: "NotoSansTelugu-Regular.ttf",
+    sha256: "b274780b69d1d23fe84b55e809a152cb2ac5306d33864b1f87622f6971871aae",
+  },
+  "sans-thai": {
+    file: "NotoSansThai-Regular.ttf",
+    sha256: "61cf814eec46b294d6ea4401ac295d0cecd5207bd2331dcc5a15e7301d30ee44",
+  },
+  emoji: {
+    file: "CreditFigureEmoji.ttf",
+    sha256: "e35e380f5ea3d23efb4c9093ced5d5600d1af059feab7fc130ad10824d99416d",
+  },
+  harfbuzz: {
+    file: "harfbuzz.wasm",
+    sha256: "6eeed8e1bc9ad7773038e48ff8f9e07e0ad228572c594b45e5357e9c2f7a0b2e",
   },
 };
 

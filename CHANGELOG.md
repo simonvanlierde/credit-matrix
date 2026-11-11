@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Heatmap SVG and PDF exports draw names in Korean, Thai, Arabic, Hebrew, the Indic scripts
+  (Devanagari, Bengali, Tamil and nine more), Armenian, Georgian, Ethiopic, Khmer, Lao, Myanmar and
+  Sinhala, and monochrome emoji, so these names now export to PDF. HarfBuzz shapes the complex
+  scripts in PDF, and right-to-left names follow the Unicode bidi algorithm. Each face and the
+  shaping engine load only for a figure that needs them. The app's CSP adds `'wasm-unsafe-eval'` to
+  run HarfBuzz. See [Fonts and offline use](integrations/figures/README.md#fonts-and-offline-use).
+
 ### Changed
 
 - **Breaking:** to export SVG or PDF offline, install both packages in one project
@@ -19,10 +28,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   text in system fonts with a warning. See [the CLI section](src/core/README.md#cli).
 - **Breaking:** in `createFigureRenderer`, replace `fontFallback` with `fonts`, a function that
   returns a face's bytes. A bundled app passes `fonts` from `credit-matrix-fonts`. If you self-host
-  the fonts, serve the six files from `base` and fetch them:
+  the fonts, serve the package's files from `base`, and map each face key to its file with the table
+  in [the fonts README](src/fonts/README.md):
 
   ```js
-  const files = { sans: "NotoSans-Regular.ttf", "sans-jp": "CreditFigureJP.ttf", "sans-sc": "CreditFigureSC.ttf", serif: "NotoSerif-Regular.ttf", "serif-jp": "CreditFigureSerifJP.ttf", "serif-sc": "CreditFigureSerifSC.ttf" };
+  const files = { sans: "NotoSans-Regular.ttf", "sans-arabic": "NotoSansArabic-Regular.ttf", harfbuzz: "harfbuzz.wasm" /* ... */ };
   createFigureRenderer({ fonts: async (face) => new Uint8Array(await (await fetch(new URL(files[face], base))).arrayBuffer()) });
   ```
 

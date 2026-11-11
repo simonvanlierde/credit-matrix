@@ -8,6 +8,8 @@ import {
   type PDFFont,
   PDFHexString,
   PDFName,
+  PDFOperator,
+  PDFOperatorNames,
   PDFString,
   popGraphicsState,
   pushGraphicsState,
@@ -19,6 +21,7 @@ import { hexRgb } from "./contributor-color";
 import { escapeXml } from "./export/escape-xml";
 import { buildHeatmapSvg, type HeatmapSvgOptions } from "./export/heatmap-svg";
 import { defaultFigureFonts, type FigureFace, type FigureFontProvider } from "./figure-fonts";
+import { createShaper, type ShapedFace, type ShapedGlyph, type Shaper } from "./shaping";
 
 export type { FigureFace, FigureFontProvider } from "./figure-fonts";
 
@@ -61,12 +64,15 @@ export interface FigureRendererOptions {
 interface FontSource {
   family: string;
   face: FigureFace;
+  /** A complex script: HarfBuzz lays it out, and SVG embeds the whole face so viewers keep its shaping tables. */
+  shaped?: boolean;
 }
 
 interface FigureFont {
   family: string;
   bytes: Uint8Array;
   font: Font;
+  shaped: boolean;
 }
 
 interface TextRun {
@@ -84,6 +90,47 @@ const SOURCES: FontSource[] = [
   { family: "Credit Figure Serif JP", face: "serif-jp" },
   { family: "Credit Figure Serif SC", face: "serif-sc" },
 ];
+
+// Shaped for its ZWJ sequences and skin tones; its own space is 1.27 em wide, so spaces stay out of its runs.
+const EMOJI: FontSource = { family: "Credit Figure Emoji", face: "emoji", shaped: true };
+
+// One sans face per other script, for sans and serif figures alike. Fontkit draws Hangul, as it does CJK.
+const SCRIPT_FACES: [RegExp, FontSource][] = [
+  [/\p{Script=Hangul}/u, { family: "Credit Figure KR", face: "sans-kr" }],
+  [/[\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Regional_Indicator}]/u, EMOJI],
+  ...(
+    [
+      ["Arabic", "sans-arabic"],
+      ["Armenian", "sans-armenian"],
+      ["Bengali", "sans-bengali"],
+      ["Devanagari", "sans-devanagari"],
+      ["Ethiopic", "sans-ethiopic"],
+      ["Georgian", "sans-georgian"],
+      ["Gujarati", "sans-gujarati"],
+      ["Gurmukhi", "sans-gurmukhi"],
+      ["Hebrew", "sans-hebrew"],
+      ["Kannada", "sans-kannada"],
+      ["Khmer", "sans-khmer"],
+      ["Lao", "sans-lao"],
+      ["Malayalam", "sans-malayalam"],
+      ["Myanmar", "sans-myanmar"],
+      ["Oriya", "sans-oriya"],
+      ["Sinhala", "sans-sinhala"],
+      ["Tamil", "sans-tamil"],
+      ["Telugu", "sans-telugu"],
+      ["Thai", "sans-thai"],
+    ] as const
+  ).map(([script, face]): [RegExp, FontSource] => [
+    new RegExp(`\\p{Script=${script}}`, "u"),
+    { family: `Noto Sans ${script}`, face, shaped: true },
+  ]),
+];
+
+/** The shaping engine, loaded through the font provider the first time a complex script needs it. */
+const HARFBUZZ: FontSource = { family: "HarfBuzz", face: "harfbuzz" };
+
+// Right-to-left letters: only labels with these need the bidi algorithm.
+const RTL_TEXT = /[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff\u{10800}-\u{10fff}\u{1e800}-\u{1efff}]/u;
 
 /** Thrown while laying out text that needs a face not yet loaded; the caller loads it and lays out again. */
 class UnloadedFace extends Error {
@@ -105,15 +152,6 @@ function attributes(source: string): Record<string, string> {
 function unescapeXml(text: string): string {
   const entities: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
   return text.replace(/&(amp|lt|gt|quot|apos);/g, (_, name: string) => entities[name] ?? "");
-}
-
-function width(run: TextRun, size: number): number {
-  // Unknown system glyphs: a full em each leaves room for the widest of them.
-  if (!run.font) return [...run.text].length * size;
-  return (
-    run.font.font.layout(run.text, FEATURES).positions.reduce((sum, position) => sum + position.xAdvance, 0) *
-    (size / run.font.font.unitsPerEm)
-  );
 }
 
 function base64(bytes: Uint8Array): string {
@@ -227,6 +265,8 @@ function cmap(glyphs: Map<number, number>): Uint8Array {
  * NOTE: the subset has no GSUB or GPOS, so a browser places an uncomposed combining mark without its anchor.
  */
 async function webFont(face: FigureFont, characters: Set<string>): Promise<Uint8Array> {
+  // shortcut: whole complex-script faces (at most 370 kB); subset with harfbuzz-subset if figures get heavy.
+  if (face.shaped) return face.bytes;
   const subset = face.font.createSubset();
   const glyphs = new Map<number, number>();
   for (const character of characters) {
@@ -280,6 +320,8 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
   const loading = new Map<FontSource, Promise<void>>();
   // Faces already warned about: the app redraws its preview on every settings change.
   const warned = new Set<FontSource>();
+  let shaper: Shaper | undefined;
+  const shapedFaces = new Map<FigureFont, ShapedFace>();
 
   function load(source: FontSource): Promise<void> {
     let pending = loading.get(source);
@@ -287,8 +329,15 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       const fonts = rendererOptions.fonts ?? defaultFigureFonts;
       pending = Promise.resolve()
         .then(() => fonts(source.face))
-        .then((bytes) => {
-          loaded.set(source, { family: source.family, bytes, font: fontkit.create(bytes) });
+        .then(async (bytes) => {
+          if (source === HARFBUZZ) shaper = await createShaper(bytes);
+          else
+            loaded.set(source, {
+              family: source.family,
+              bytes,
+              font: fontkit.create(bytes),
+              shaped: source.shaped === true,
+            });
         })
         .catch((error: unknown) => {
           // A failed download can be retried by the next export.
@@ -333,6 +382,26 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     return font;
   }
 
+  /** HarfBuzz's glyphs for a complex-script run, in visual order. */
+  function shape(font: FigureFont, text: string, rtl: boolean): ShapedGlyph[] {
+    if (!shaper) throw new UnloadedFace(HARFBUZZ);
+    let shapedFace = shapedFaces.get(font);
+    if (!shapedFace) {
+      shapedFace = shaper.face(font.bytes);
+      shapedFaces.set(font, shapedFace);
+    }
+    return shapedFace.shape(text, rtl);
+  }
+
+  function width(run: TextRun, size: number): number {
+    // Unknown system glyphs: a full em each leaves room for the widest of them.
+    if (!run.font) return [...run.text].length * size;
+    const advances = run.font.shaped
+      ? shape(run.font, run.text, RTL_TEXT.test(run.text)).map((glyph) => glyph.xAdvance)
+      : run.font.font.layout(run.text, FEATURES).positions.map((position) => position.xAdvance);
+    return advances.reduce((sum, advance) => sum + advance, 0) * (size / run.font.font.unitsPerEm);
+  }
+
   function textRuns(text: string, options?: FigureSvgOptions, unavailable?: Set<FontSource>): TextRun[] {
     const [latin, japanese, chinese] = options?.font === "serif" ? SOURCES.slice(3) : SOURCES.slice(0, 3);
     const locale = options?.locale?.toLowerCase() ?? "";
@@ -344,25 +413,47 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         : [chinese, japanese];
     // Chinese typesets quotes, dashes and ellipses beside Han at full width, as its own face draws them.
     const cjkPunctuation = /^zh\b/.test(locale) && /\p{Script=Han}/u.test(normalized);
+    // Without HarfBuzz, no complex-script face can be laid out.
+    const isUnavailable = (source: FontSource | undefined) =>
+      source !== undefined &&
+      (unavailable?.has(source) === true || (source.shaped === true && unavailable?.has(HARFBUZZ) === true));
     const runs: TextRun[] = [];
     const missing = new Set<string>();
     for (const character of normalized) {
       const codePoint = character.codePointAt(0) ?? 0;
+      const previous = runs.at(-1);
+      // Marks, joiners and selectors belong to the run before them; so do spaces, digits and punctuation
+      // inside a complex-script run (not emoji), which then shapes, and reads right to left, as one.
+      if (
+        previous?.font &&
+        (/\p{Script=Inherited}/u.test(character)
+          ? previous.font.shaped || previous.font.font.hasGlyphForCodePoint(codePoint)
+          : /\p{Script=Common}/u.test(character) &&
+            previous.font.shaped &&
+            previous.font.family !== EMOJI.family &&
+            previous.font.font.hasGlyphForCodePoint(codePoint))
+      ) {
+        previous.text += character;
+        continue;
+      }
       const chinesePunctuation = cjkPunctuation && codePoint > 0x7f && /\p{P}/u.test(character);
-      const order = chinesePunctuation ? [...cjk, latin] : [latin, ...cjk];
+      const script = SCRIPT_FACES.find(([pattern]) => pattern.test(character))?.[1];
+      const order = [...(script ? [script] : []), ...(chinesePunctuation ? [...cjk, latin] : [latin, ...cjk])];
       // The face meant for this character. When it is unavailable, another face would draw the text in the
       // wrong forms (Chinese Han for Japanese, CJK Latin for Latin), so it becomes a system-font run instead.
-      const designated = chinesePunctuation || CJK_TEXT.test(character) ? cjk[0] : latin;
+      const designated = script ?? (chinesePunctuation || CJK_TEXT.test(character) ? cjk[0] : latin);
       let font: FigureFont | undefined;
-      let skipped = designated !== undefined && unavailable?.has(designated) === true;
+      let skipped = isUnavailable(designated);
       // In order, so a face loads only when every face before it lacks the character.
       for (const source of skipped ? [] : order) {
-        if (source && unavailable?.has(source)) {
+        if (isUnavailable(source)) {
           skipped = true;
           continue;
         }
         const candidate = face(source);
         if (!candidate.font.hasGlyphForCodePoint(codePoint)) continue;
+        // Measuring a complex-script run needs HarfBuzz, so load it with the face.
+        if (candidate.shaped && !shaper) throw new UnloadedFace(HARFBUZZ);
         font = candidate;
         break;
       }
@@ -370,7 +461,6 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         missing.add(character);
         continue;
       }
-      const previous = runs.at(-1);
       if (previous && previous.font === font) previous.text += character;
       else runs.push({ text: character, font });
     }
@@ -395,6 +485,53 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
                 Math.ceil(size * 1.5),
           ),
         ),
+    });
+  }
+
+  /**
+   * A label's runs in drawing order, left to right. A right-to-left complex-script run keeps its logical text,
+   * since HarfBuzz returns its glyphs in visual order; a Latin or CJK run inside it, such as a bracket, is
+   * mirrored and reversed. Labels with no right-to-left letters skip the bidi algorithm.
+   */
+  async function visualRuns(runs: TextRun[]): Promise<(TextRun & { rtl: boolean })[]> {
+    const text = runs.map((run) => run.text).join("");
+    if (!RTL_TEXT.test(text)) return runs.map((run) => ({ ...run, rtl: false }));
+    const bidi = (await import("bidi-js")).default();
+    // Left to right as the base, as SVG <text> has by default, so both formats order a mixed label alike.
+    const { levels } = bidi.getEmbeddingLevels(text, "ltr");
+    // Split each run where the embedding level changes, then reverse each sequence at or above every odd level.
+    const pieces: (TextRun & { level: number })[] = [];
+    let index = 0;
+    for (const run of runs) {
+      for (const unit of run.text.match(/[\s\S]/gu) ?? []) {
+        const level = levels[index] ?? 0;
+        index += unit.length;
+        const last = pieces.at(-1);
+        if (last && last.font === run.font && last.level === level) last.text += unit;
+        else pieces.push({ text: unit, font: run.font, level });
+      }
+    }
+    const highest = Math.max(...pieces.map((piece) => piece.level));
+    const lowestOdd = Math.min(...pieces.map((piece) => piece.level).filter((level) => level % 2));
+    for (let level = highest; level >= lowestOdd; level--)
+      for (let first = 0; first < pieces.length; first++) {
+        if ((pieces[first]?.level ?? 0) < level) continue;
+        let last = first;
+        while (last + 1 < pieces.length && (pieces[last + 1]?.level ?? 0) >= level) last++;
+        pieces.splice(first, last - first + 1, ...pieces.slice(first, last + 1).reverse());
+        first = last;
+      }
+    return pieces.map(({ text: piece, font, level }) => {
+      const rtl = level % 2 === 1;
+      // HarfBuzz reverses a shaped run itself; a fontkit run is drawn as given, so reverse and mirror it here.
+      const drawn =
+        rtl && !font?.shaped
+          ? [...piece]
+              .reverse()
+              .map((character) => bidi.getMirroredCharacter(character) ?? character)
+              .join("")
+          : piece;
+      return { text: drawn, font, rtl };
     });
   }
 
@@ -519,25 +656,100 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           continue;
         }
 
-        const runs = textRuns(unescapeXml(match[4] ?? ""), strict);
+        const runs = await visualRuns(textRuns(unescapeXml(match[4] ?? ""), strict));
         const size = Number(attrs["font-size"]);
         const transform = attrs.transform?.match(/^translate\(([^,]+),([^)]+)\) rotate\(([^)]+)\)$/);
         const originX = transform ? Number(transform[1]) : x;
         const originY = transform ? Number(transform[2]) : y;
         const angle = transform ? -Number(transform[3]) : 0;
         const radians = (angle * Math.PI) / 180;
+        const fill = color(attrs.fill) ?? rgb(0, 0, 0);
         let advance = attrs["text-anchor"] === "end" ? -runs.reduce((sum, run) => sum + width(run, size), 0) : 0;
+        /**
+         * Draw glyphs one by one from `advance`, so mark offsets survive; pdf-lib's drawText drops them. A glyph
+         * with `text` opens a marked span whose ActualText is the characters it and the following glyphs drew.
+         */
+        const drawGlyphs = (
+          key: PDFName,
+          unit: number,
+          glyphs: {
+            code: string;
+            position: Pick<ShapedGlyph, "xAdvance" | "yAdvance" | "xOffset" | "yOffset">;
+            text?: string;
+          }[],
+          rightToLeft = false,
+        ) => {
+          let penX = advance;
+          let penY = 0;
+          let open = false;
+          const placed = glyphs.map((glyph) => {
+            const at = { ...glyph, x: penX, y: penY };
+            penX += glyph.position.xAdvance * unit;
+            penY += glyph.position.yAdvance * unit;
+            return at;
+          });
+          // Right to left: draw the rightmost glyph first, so the content stream runs in reading order, which
+          // MuPDF needs to apply the ActualText the right way round.
+          if (rightToLeft) placed.reverse();
+          for (const { code, position, text, x: glyphX, y: glyphY } of placed) {
+            if (text !== undefined) {
+              if (open) page.pushOperators(PDFOperator.of(PDFOperatorNames.EndMarkedContent));
+              page.pushOperators(
+                PDFOperator.of(PDFOperatorNames.BeginMarkedContentSequence, [
+                  PDFName.of("Span"),
+                  // pdf-lib's operator types omit dictionaries, which BDC takes inline and serializes as written.
+                  document.context.obj({ ActualText: PDFHexString.fromText(text) }) as unknown as PDFName,
+                ]),
+              );
+              open = true;
+            }
+            const offsetX = glyphX + position.xOffset * unit;
+            const offsetY = glyphY + position.yOffset * unit;
+            page.pushOperators(
+              ...drawText(PDFHexString.of(code), {
+                x: originX + offsetX * Math.cos(radians) - offsetY * Math.sin(radians),
+                y: pageHeight - originY + offsetX * Math.sin(radians) + offsetY * Math.cos(radians),
+                size,
+                font: key,
+                color: fill,
+                rotate: degrees(angle),
+                xSkew: degrees(0),
+                ySkew: degrees(0),
+              }),
+            );
+          }
+          if (open) page.pushOperators(PDFOperator.of(PDFOperatorNames.EndMarkedContent));
+        };
         for (const run of runs) {
           const runFace = run.font;
           if (!runFace) throw new FigureFontError(run.text);
           let font = embedded.get(runFace);
           if (!font) {
+            // A complex-script face is embedded whole: its glyph ids are then HarfBuzz's, drawn with Identity-H.
             font = await document.embedFont(runFace.bytes, {
-              subset: true,
+              subset: !runFace.shaped,
               features: FEATURES,
               customName: `CMFIGR+${runFace.font.postscriptName}`,
             });
             embedded.set(runFace, font);
+          }
+          const unit = size / runFace.font.unitsPerEm;
+          if (runFace.shaped) {
+            // Shaped glyphs do not map one to one to letters (reordered marks, shared bases, ligatures), so the
+            // run carries its letters as ActualText.
+            const glyphs = shape(runFace, run.text, run.rtl);
+            drawGlyphs(
+              page.node.newFontDictionary(font.name, font.ref),
+              unit,
+              glyphs.map(({ id, ...position }, index) => ({
+                code: id.toString(16).padStart(4, "0"),
+                position,
+                text: index === (run.rtl ? glyphs.length - 1 : 0) ? run.text : undefined,
+              })),
+              run.rtl,
+            );
+            advance += width(run, size);
+            continue;
           }
           const layout = runFace.font.layout(run.text, FEATURES);
           const positioned = layout.positions.some(
@@ -548,32 +760,15 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
               position.xAdvance !== layout.glyphs[index]?.advanceWidth,
           );
           if (positioned) {
-            // PDF-lib's drawText drops mark attachment offsets; encode first to retain its subset and Unicode mapping.
+            // Encode first to retain the subset's glyph ids and Unicode mapping.
             const codes = font.encodeText(run.text).asString().match(/.{4}/g) ?? [];
-            const key = page.node.newFontDictionary(font.name, font.ref);
-            const unit = size / runFace.font.unitsPerEm;
-            let glyphX = advance;
-            let glyphY = 0;
-            for (const [index, position] of layout.positions.entries()) {
-              const glyphCode = codes[index];
-              if (!glyphCode) throw new Error("Figure glyph layout and PDF encoding do not match.");
-              const offsetX = glyphX + position.xOffset * unit;
-              const offsetY = glyphY + position.yOffset * unit;
-              page.pushOperators(
-                ...drawText(PDFHexString.of(glyphCode), {
-                  x: originX + offsetX * Math.cos(radians) - offsetY * Math.sin(radians),
-                  y: pageHeight - originY + offsetX * Math.sin(radians) + offsetY * Math.cos(radians),
-                  size,
-                  font: key,
-                  color: color(attrs.fill) ?? rgb(0, 0, 0),
-                  rotate: degrees(angle),
-                  xSkew: degrees(0),
-                  ySkew: degrees(0),
-                }),
-              );
-              glyphX += position.xAdvance * unit;
-              glyphY += position.yAdvance * unit;
-            }
+            if (codes.length !== layout.positions.length)
+              throw new Error("Figure glyph layout and PDF encoding do not match.");
+            drawGlyphs(
+              page.node.newFontDictionary(font.name, font.ref),
+              unit,
+              layout.positions.map((position, index) => ({ code: codes[index] ?? "0000", position })),
+            );
           } else {
             page.drawText(run.text, {
               x: originX + advance * Math.cos(radians),

@@ -38,10 +38,10 @@ it("exports a binary PDF with embedded figure fonts", async () => {
 });
 
 it("names the characters the figure fonts cannot draw, in one line", async () => {
-  const source = file("unsupported-script.csv", "Name,Software\nحسن,100\n");
+  const source = file("unsupported-script.csv", "Name,Software\nབོད,100\n");
   for (const to of ["svg", "pdf"])
     await expect(runCommand(["convert", source, "--to", to])).rejects.toThrow(
-      /^The figure fonts cannot draw ح \(U\+062D\)[^\n]*\. [^\n]+$/u,
+      /^The figure fonts cannot draw བ \(U\+0F56\)[^\n]*\. [^\n]+$/u,
     );
 });
 

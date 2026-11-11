@@ -27,8 +27,8 @@ vi.mock("@/lib/utils", async (importOriginal) => ({
 describe("HeatmapExports", () => {
   beforeEach(() => useContributionStore.getState().reset());
 
-  it("previews and exports SVG and PNG for a Hangul name, and refuses only PDF", async () => {
-    const author = createAuthor("김민준");
+  it("previews and exports SVG and PNG for a Tibetan name, and refuses only PDF", async () => {
+    const author = createAuthor("བོད་ཡིག");
     for (const contribution of author.contributions) contribution.score = 100;
     render(
       <IntlProvider locale="en" messages={en}>
@@ -39,9 +39,9 @@ describe("HeatmapExports", () => {
 
     // Real font files: the preview loads every face before falling back.
     const preview = await screen.findByRole("img", {}, { timeout: 15_000 });
-    expect(decodeURIComponent(preview.getAttribute("src") ?? "")).toContain("김민준");
+    expect(decodeURIComponent(preview.getAttribute("src") ?? "")).toContain("བོད་ཡིག");
     expect(screen.getByRole("status").textContent).toMatch(
-      /cannot display these characters: 김민준\..*SVG and PNG draw them with the installed fonts/,
+      /cannot display these characters: བོད་ཡིག\..*SVG and PNG draw them with the installed fonts/,
     );
     expect(screen.queryByRole("alert")).toBeNull();
     const menuButton = (name: string) => screen.getByRole<HTMLButtonElement>("button", { name });
@@ -53,7 +53,7 @@ describe("HeatmapExports", () => {
     await waitFor(() => expect(download).toHaveBeenCalledOnce());
     const [blob, filename] = vi.mocked(download).mock.calls[0] ?? [];
     expect(filename).toBe("credit-heatmap.svg");
-    expect(await (blob as Blob).text()).toMatch(/<tspan font-family="'IBM Plex Sans'[^"]*">김민준<\/tspan>/);
+    expect(await (blob as Blob).text()).toMatch(/<tspan font-family="'IBM Plex Sans'[^"]*">བོད་ཡིག<\/tspan>/);
     expect(screen.queryByRole("alert")).toBeNull();
   }, 30_000);
 

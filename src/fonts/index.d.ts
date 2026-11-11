@@ -1,4 +1,32 @@
-export type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif-sc";
+export type FigureFace =
+  | "sans"
+  | "sans-jp"
+  | "sans-sc"
+  | "serif"
+  | "serif-jp"
+  | "serif-sc"
+  | "sans-kr"
+  | "sans-arabic"
+  | "sans-armenian"
+  | "sans-bengali"
+  | "sans-devanagari"
+  | "sans-ethiopic"
+  | "sans-georgian"
+  | "sans-gujarati"
+  | "sans-gurmukhi"
+  | "sans-hebrew"
+  | "sans-kannada"
+  | "sans-khmer"
+  | "sans-lao"
+  | "sans-malayalam"
+  | "sans-myanmar"
+  | "sans-oriya"
+  | "sans-sinhala"
+  | "sans-tamil"
+  | "sans-telugu"
+  | "sans-thai"
+  | "emoji"
+  | "harfbuzz";
 
-/** Read one face's bytes: from disk in Node, over HTTP from a bundle's assets in a browser. */
+/** Read one face's bytes (WebAssembly for `harfbuzz`): from disk in Node, over HTTP from a bundle's assets in a browser. */
 export function fonts(face: FigureFace): Promise<Uint8Array>;

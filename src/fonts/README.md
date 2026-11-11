@@ -13,7 +13,14 @@ time a figure needs it, and caches it. In a bundled app, pass the `fonts` export
 bundler emits it as an asset. A release comes only when the fonts change, and `credit-matrix` pins
 the version and the hashes below.
 
-These regular faces provide offline fonts for editable figure exports.
+These regular faces provide offline fonts for editable figure exports. Each
+other script has one sans face, used in sans and serif figures alike: Korean
+(Credit Figure KR, from Noto Sans KR), monochrome emoji (Credit Figure Emoji,
+from Noto Emoji), and Noto Sans Arabic, Armenian, Bengali, Devanagari, Ethiopic,
+Georgian, Gujarati, Gurmukhi, Hebrew, Kannada, Khmer, Lao, Malayalam, Myanmar,
+Oriya, Sinhala, Tamil, Telugu and Thai. `harfbuzz.wasm` is the HarfBuzz shaping
+engine, which lays out the complex scripts; it comes through the same `fonts`
+provider, so it is fetched only for a figure that needs it.
 Noto Sans and Serif cover Latin, Greek and Cyrillic. Credit Figure JP and SC
 derive from Noto Sans JP and SC; Credit Figure Serif JP and SC derive from
 Noto Serif JP and SC. Both families provide Japanese and Simplified Chinese glyphs.
@@ -28,6 +35,28 @@ Simplified Chinese face for Chinese labels.
 | `NotoSerif-Regular.ttf` | `serif` | 2.007 | 616196 | `c8f669ceb2c9c60ccf55198b305e08a997ffca79a38cc7eeb551e643cbe66505` |
 | `CreditFigureSerifJP.ttf` | `serif-jp` | 2.003 | 8103576 | `127d13be2fcb997f01ec56ce361e5808a63ee74fbcd94be8262bebbb90aa95d3` |
 | `CreditFigureSerifSC.ttf` | `serif-sc` | 2.003 | 14897976 | `9e4eadf4a90c36eaf7f69ef1c0d29fd6b8277eed55f5a035b95232e5243cdd34` |
+| `CreditFigureKR.ttf` | `sans-kr` | 2.004 | 6262808 | `134e926bd335ede61927ad3e5209fd9f0b4381c78decd26bc39462af7a8ed640` |
+| `NotoSansArabic-Regular.ttf` | `sans-arabic` | 2.013 | 234892 | `bdff3e5659d67e67def05b33f749683b9376ae819d65d3dd62ac4640b3aaef48` |
+| `NotoSansArmenian-Regular.ttf` | `sans-armenian` | 2.008 | 30752 | `720df88c332417a235b4d6209d14ec2e2bf4bfe2a954b7453d869ea593bfce1e` |
+| `NotoSansBengali-Regular.ttf` | `sans-bengali` | 3.011 | 143072 | `b55c62ee531e3214da6c0701daecea89a52ba42db7d8206b92e6b51f397a3193` |
+| `NotoSansDevanagari-Regular.ttf` | `sans-devanagari` | 2.007 | 243520 | `4e3c66638958c3e2ab5d37f47a8deb89fffeb7be9985c665a519bbc7ba762313` |
+| `NotoSansEthiopic-Regular.ttf` | `sans-ethiopic` | 2.102 | 376804 | `f6f7fc379db9438959a2b0527e7a2cf36ea9c84626d56ec444fff37fc24c3c10` |
+| `NotoSansGeorgian-Regular.ttf` | `sans-georgian` | 2.005 | 52888 | `d3e33254b09e7bb2c5cf0f17e554b80462056c5a107097f258d495168c3a9346` |
+| `NotoSansGujarati-Regular.ttf` | `sans-gujarati` | 2.106 | 200704 | `9b5a7aaeeb649a2e75a49d8b006a1f87db1b61c0df3b001609f4e0725d88dbf6` |
+| `NotoSansGurmukhi-Regular.ttf` | `sans-gurmukhi` | 2.004 | 55172 | `658d0207da305a1411c539a8b0bbeda64d4146e54fb4827facddb890b6b90d74` |
+| `NotoSansHebrew-Regular.ttf` | `sans-hebrew` | 3.001 | 26860 | `cdefaf8efd47045f6820928eba84db5bed7557539328952b5f828315485e02ee` |
+| `NotoSansKannada-Regular.ttf` | `sans-kannada` | 2.006 | 182416 | `9ad74dc64838c6855b96f671fc08e425a58921b9d0c71712ea79c328a27e6e38` |
+| `NotoSansKhmer-Regular.ttf` | `sans-khmer` | 2.004 | 114576 | `e66675f2082788f0511a714bef5a1748928294b38c8e286a96ea73a864b5e605` |
+| `NotoSansLao-Regular.ttf` | `sans-lao` | 2.003 | 35884 | `0a86e5e1ccfe34ca78c43fac6829dc751b42bcc469272a9a55325aae587bfbe7` |
+| `NotoSansMalayalam-Regular.ttf` | `sans-malayalam` | 2.104 | 112936 | `c08de7fa8d032a5d6a4d120fb82c78cec60b362a4e73fa26360d89759ff2a7f9` |
+| `NotoSansMyanmar-Regular.ttf` | `sans-myanmar` | 2.107 | 195088 | `fafce4db400bc0b214907ccdbfb0ad2f18a57bfefd08c8a571830b84088cf2fc` |
+| `NotoSansOriya-Regular.ttf` | `sans-oriya` | 2.007 | 131216 | `a16645d056017927406546aa78e4ce15e782fd8783467267b75450453d007415` |
+| `NotoSansSinhala-Regular.ttf` | `sans-sinhala` | 3.000 | 154912 | `9e32612d47004552f3125e78648a9e2e7899a216ccd3cefbb93a9b5f4c809feb` |
+| `NotoSansTamil-Regular.ttf` | `sans-tamil` | 2.004 | 73992 | `3c0a186feb3c63c7f6d63e1511dcdc144e745ae09b98e217c83f3e317974f6f9` |
+| `NotoSansTelugu-Regular.ttf` | `sans-telugu` | 2.005 | 235176 | `b274780b69d1d23fe84b55e809a152cb2ac5306d33864b1f87622f6971871aae` |
+| `NotoSansThai-Regular.ttf` | `sans-thai` | 2.002 | 37780 | `61cf814eec46b294d6ea4401ac295d0cecd5207bd2331dcc5a15e7301d30ee44` |
+| `CreditFigureEmoji.ttf` | `emoji` | 3.002 | 889044 | `e35e380f5ea3d23efb4c9093ced5d5600d1af059feab7fc130ad10824d99416d` |
+| `harfbuzz.wasm` | `harfbuzz` | harfbuzzjs 1.6.4 | 444394 | `6eeed8e1bc9ad7773038e48ff8f9e07e0ad228572c594b45e5357e9c2f7a0b2e` |
 
 ## Sources
 
@@ -43,13 +72,22 @@ Simplified Chinese face for Chinese labels.
   and [Noto Serif SC variable TTF](https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif/Variable/TTF/Subset/NotoSerifSC-VF.ttf),
   from the same CJK commit.
 
+- The 19 `NotoSans<Script>-Regular.ttf` faces, unmodified, from
+  `notofonts/notofonts.github.io` commit `4cf78353cd1668040ba8efa13029cd910fcdf9e2`, at
+  `fonts/NotoSans<Script>/hinted/ttf/NotoSans<Script>-Regular.ttf` (for example
+  [Noto Sans Arabic](https://raw.githubusercontent.com/notofonts/notofonts.github.io/4cf78353cd1668040ba8efa13029cd910fcdf9e2/fonts/NotoSansArabic/hinted/ttf/NotoSansArabic-Regular.ttf)).
+- [Noto Sans KR variable TTF](https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/Variable/TTF/Subset/NotoSansKR-VF.ttf),
+  from the same CJK commit.
+- [Noto Emoji variable TTF](https://raw.githubusercontent.com/google/fonts/c30b221beb0c1da59d563feb91ec8656a1fa972a/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf),
+  from `google/fonts` commit `c30b221beb0c1da59d563feb91ec8656a1fa972a`.
+- `harfbuzz.wasm`, unmodified, from the [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) 1.6.4 npm package.
+
 The CJK sources are upstream regional subsets, not subsets of the translation
 catalogs. They retain characters needed for contributor names beyond those catalogs.
-All nine output catalogs fit within these fonts. Arbitrary names can use scripts
-or rare characters outside their coverage. Export then stops with a `FigureFontError`
+All nine output catalogs fit within these fonts. Names can still use scripts
+outside this set, such as Tibetan or Cherokee. Export then stops with a `FigureFontError`
 that names the missing characters; the CLI and the MyST plugin print it as one line.
 The app turns off only its PDF download and draws the SVG and PNG in system fonts.
-This set does not cover Arabic, Hebrew or Devanagari.
 
 ## Rebuild the fonts
 
@@ -99,6 +137,13 @@ for family, region in product(("Sans", "Serif"), ("", "JP", "SC")):
 PY
 ```
 
+Credit Figure KR and Emoji come from `NotoSansKR-VF.ttf` (SHA-256
+`9e1d729e7e2b36f9ef439da102f8c134c10aabe46f1c843bf0aca5c043b86f76`) and
+`NotoEmoji[wght].ttf` (SHA-256
+`de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551`)
+the same way: instanced at weight 400, renamed "Credit Figure KR" and "Credit Figure Emoji"
+(PostScript `CreditFigureKR-Regular`, `CreditFigureEmoji-Regular`), and saved with four-byte padding.
+
 Copy the outputs into this directory after checking their hashes. Keep the
 four-byte glyph alignment: the PDF subsetter's short location table truncates
 odd glyph offsets, which can silently drop later glyphs. The renderer subsets
@@ -106,7 +151,7 @@ the glyphs a figure uses, in SVG and in PDF.
 
 ## Redistribution
 
-All six fonts use the SIL Open Font License 1.1. Redistribution and document
+All the fonts use the SIL Open Font License 1.1. Redistribution and document
 embedding are permitted under its terms. Font embedding does not change the
 document's license. Keep the license files and font copyright notices when
 redistributing these assets.
@@ -126,9 +171,16 @@ redistributing these assets.
   [OFL-NotoSerifCJK.txt](OFL-NotoSerifCJK.txt) is the unmodified
   [upstream license](https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif/LICENSE).
 
+- The other script faces, Credit Figure KR and Credit Figure Emoji:
+  [OFL-NotoScripts.txt](OFL-NotoScripts.txt) lists each face's own copyright line
+  above the license text. Credit Figure KR, like JP and SC, avoids the reserved
+  font name "Source".
+- `harfbuzz.wasm` is MIT (harfbuzzjs) and "Old MIT" (HarfBuzz):
+  [LICENSE-harfbuzz.txt](LICENSE-harfbuzz.txt).
+
 The fonts also retain their original copyright and license metadata. Their
 OpenType embedding permission field (`OS/2.fsType`) is zero, with no embedding
-restrictions. All six assets use TrueType outlines. The CJK derivatives retain
+restrictions. All the faces use TrueType outlines. The CJK derivatives retain
 the sources' glyph coverage, copyright and license metadata. They use regular
 weight, new family names and aligned glyph data. Noto Sans and Serif retain their
 family names; their upstream license declares no Reserved Font Names.
