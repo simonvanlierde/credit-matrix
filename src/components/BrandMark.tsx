@@ -1,22 +1,33 @@
-import { pageMarkColor } from "@/core/contributor-color";
+import { contributorHues, pageMarkColor } from "@/core/contributor-color";
 import { useDark } from "@/lib/use-dark";
 import { useContributionStore } from "@/store/contribution-store";
 
 /**
  * The mark for CRediT Matrix: a 3x3 crop of the contribution matrix, lead on the diagonal.
- * Cells are drawn in `currentColor` at the app's three intensity tiers, and the
- * color is the workspace's own heatmap hue, so the mark is a live swatch of the
- * grid rather than a fixed sticker. The wordmark beside it stays on the primary
- * token: a hue is chosen for cell legibility, and some of the presets would not
- * carry text contrast.
+ * Cells are drawn at the app's three intensity tiers in the workspace's own heatmap
+ * hue, or one contributor hue per column when the grid colours by contributor, so
+ * the mark is a live swatch of the grid rather than a fixed sticker. The wordmark
+ * beside it takes the accent: the same hue where it carries text contrast, primary
+ * where it does not (see ThemeHue).
  *
  * The store skips hydration, so server and first client render both use the
  * default ink-blue; the transition covers the swap to a stored hue.
  *
  * The favicon (`src/app/icon.svg`) carries the same geometry with literal fills.
  */
+/** Fill opacity per cell, row by row: lead on the diagonal, the app's three intensity tiers around it. */
+const MARK_LEVELS = [
+  [1, 0.62, 0.32],
+  [0.62, 1, 0.12],
+  [0.32, 0.12, 1],
+] as const;
+
 export function BrandMark({ className }: { className?: string }) {
   const monoColor = useContributionStore((state) => state.heatmapMonoColor);
+  // With colour by contributor, each column is a person, so it takes their hue.
+  // A number, not the array: a fresh array per read would re-render on every store change.
+  const people = useContributionStore((state) => (state.colorByContributor ? state.authors.length : 0));
+  const hues = people > 0 ? contributorHues(people) : null;
   // The raw hue and its faded tiers vanish on the dark header; use its dark-ramp lead.
   const dark = useDark();
   return (
@@ -27,17 +38,21 @@ export function BrandMark({ className }: { className?: string }) {
       aria-hidden="true"
       focusable="false"
     >
-      <g fill="currentColor">
-        <rect x="3" y="3" width="8" height="8" rx="1" />
-        <rect x="12" y="3" width="8" height="8" rx="1" fillOpacity="0.62" />
-        <rect x="21" y="3" width="8" height="8" rx="1" fillOpacity="0.32" />
-        <rect x="3" y="12" width="8" height="8" rx="1" fillOpacity="0.62" />
-        <rect x="12" y="12" width="8" height="8" rx="1" />
-        <rect x="21" y="12" width="8" height="8" rx="1" fillOpacity="0.12" />
-        <rect x="3" y="21" width="8" height="8" rx="1" fillOpacity="0.32" />
-        <rect x="12" y="21" width="8" height="8" rx="1" fillOpacity="0.12" />
-        <rect x="21" y="21" width="8" height="8" rx="1" />
-      </g>
+      {MARK_LEVELS.map((row, r) =>
+        row.map((opacity, c) => (
+          <rect
+            // biome-ignore lint/suspicious/noArrayIndexKey: a fixed 3x3 grid
+            key={`${r}-${c}`}
+            x={3 + c * 9}
+            y={3 + r * 9}
+            width="8"
+            height="8"
+            rx="1"
+            fill={hues?.[c] ? pageMarkColor(hues[c], dark) : "currentColor"}
+            fillOpacity={opacity === 1 ? undefined : opacity}
+          />
+        )),
+      )}
     </svg>
   );
 }
@@ -64,7 +79,7 @@ export function Lockup() {
           no accessible name at all. */}
       <span className="sr-only min-[27rem]:hidden">{PRODUCT_NAME}</span>
       <span
-        className="hidden min-[27rem]:inline whitespace-nowrap font-headline text-lg italic font-semibold tracking-tight sm:text-xl"
+        className="hidden min-[27rem]:inline whitespace-nowrap font-headline text-lg italic font-semibold tracking-tight text-accent transition-colors duration-200 sm:text-xl"
         style={{ fontFamily: "var(--font-headline)" }}
       >
         {PRODUCT_NAME}

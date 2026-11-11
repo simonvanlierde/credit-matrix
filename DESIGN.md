@@ -11,10 +11,10 @@ colors:
   paper: "#fbf8f1"
   paper-bright: "#fffdf8"
   paper-muted: "#f5f0e6"
-  graphite: "#1c1a17"
+  graphite: "#2e2a25"
   graphite-muted: "#5e584e"
   rule: "#d6ccba"
-  edge: "#1c1a17"
+  edge: "#2e2a25"
   error: "#ba1a1a"
   flag: "#b45309"
 typography:
@@ -98,14 +98,20 @@ contributors, through the matrix, to the text for the manuscript.
 
 ## Colors
 
-Use warm paper neutrals throughout the interface. The page itself is paper tinted 3% toward the
+Use warm paper neutrals throughout the interface. Ink is a warm charcoal, not near-black: it keeps
+13:1 on paper without the weight of black. The page itself is paper tinted 3% toward the
 draft's heatmap colour (4% in dark mode), so it shifts to a faint sage when someone picks green and
-stays neutral for grey. The tint stops at those values because a custom colour can be anything, and
+stays neutral for grey. With colour by contributor no single hue is drawn, so the page stays plain
+paper. The tint stops at those values because a custom colour can be anything, and
 the muted text must keep 4.5:1 on it. It is for the web interface only: an exported figure is always
 drawn on white. Cards and the statement sit on the page in brighter paper.
 
-Reserve ink blue for primary actions, links, focus, and selected states. Use contributor colors only
-to identify data.
+Reserve ink blue for primary actions, links and focus outside the grid. The heatmap hue is also
+the accent (`--color-accent`, set by `ThemeHue`): the wordmark, the initials chips, the selected
+segment, the active inspector tab and focus inside the grid. In light mode it is deepened toward
+black, and in dark mode lightened toward white, only as far as it takes to reach 4.5:1 against bright
+paper both ways, so any custom colour stays legible. With colour by contributor the accent is ink
+blue. Use contributor colors only to identify data.
 
 By default the grid colours each contributor in their own hue, by list position: their chip, the
 rule under their column name, their cells, and the mark on their phrase in the statement all share
@@ -173,11 +179,12 @@ The mark (the logo) is a 3×3 crop of the contribution matrix, with lead on the 
 drawn on a 32px grid with 8px cells and 1px gaps. Its fills are the heatmap's real levels, not
 decorative tints, so the mark looks like the product's own data.
 
-Draw the mark in `currentColor` wherever it sits beside text, as it does in the header lockup. Where
+Draw the mark in `currentColor` wherever it sits beside text, as it does in the header lockup. With
+colour by contributor each column of the mark takes one contributor's hue, as the grid's columns do. Where
 it stands alone, use the ink-blue levels themselves. The lockup is the mark at cap height, then a
-gap, then the wordmark (the name set as type) in Newsreader italic. Never letterspace the wordmark,
-never color it other than the primary token, and never give the mark and the wordmark different
-colors.
+gap, then the wordmark (the name set as type) in Newsreader italic. Never letterspace the wordmark.
+It takes the accent: the mark's hue where that carries text, deepened where it does not, so the
+mark and the wordmark read as one colour.
 
 The wordmark never wraps and never shrinks to fit. Draw it only where you have measured that the
 row is wide enough, and below that let the mark show the brand alone. Wherever the wordmark is not
@@ -194,7 +201,8 @@ Review and Published practice. Published practice is reference beside the grid, 
 of how often published papers in a field give each role per author position, with a thin bar under
 each value. It never fills, suggests or flags a cell, so it stays neutral: bars in on-surface-variant
 and the user's column in a surface tint with a "You" label, never primary. A status strip above the
-grid says what the draft is waiting for. It also holds the controls
+grid says what the draft is waiting for; until someone answers, that is a labelled "Ask co-authors"
+tool button with the send icon, not a link, since it is the draft's next step. It also holds the controls
 that change the whole grid (Yes/No vs Levels, bulk assign, display options, heatmap export). Below
 `xl` the same parts stack in that order: rail, strip, grid, inspector. On a phone the grid becomes a
 list of roles per contributor.
@@ -258,7 +266,7 @@ mark is contrast-checked against its fill.
 ## Shapes
 
 Corners are small: 2px for document details, chips and cells, 4px for controls, cards and
-popovers. The segmented control is square-cornered, with the selected option filled in graphite.
+popovers. The segmented control is square-cornered, with the selected option filled in the accent.
 Keep pill shapes for status, switches and small markers.
 
 ## Components

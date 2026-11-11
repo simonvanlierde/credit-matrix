@@ -53,13 +53,13 @@ export function SegmentedControl<T extends string>({
             title={title}
             onClick={() => onChange(optionValue)}
             className={cn(
-              "flex items-center justify-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+              "flex items-center justify-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
               size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-[13px]",
               // The group clips overflow, so touch grows the option itself.
               "pointer-coarse:min-h-11",
               // Forced colours repaint the ink fill as Canvas but keep its paper text: use system colours.
               active
-                ? "bg-on-surface text-surface-bright forced-colors:bg-[CanvasText] forced-colors:text-[Canvas]"
+                ? "bg-accent text-on-accent forced-colors:bg-[CanvasText] forced-colors:text-[Canvas]"
                 : "text-on-surface-variant hover:text-on-surface",
             )}
           >

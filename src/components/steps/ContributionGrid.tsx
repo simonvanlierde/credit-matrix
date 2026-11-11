@@ -1,4 +1,4 @@
-import { Check, CheckCheck, Clock, Columns3, Rows3, Settings2, UserPlus } from "lucide-react";
+import { Check, CheckCheck, Clock, Columns3, Rows3, Send, Settings2, UserPlus } from "lucide-react";
 import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
@@ -451,11 +451,9 @@ export function ContributionGrid() {
                 </button>
               </>
             ) : (
-              <button
-                type="button"
-                onClick={() => openInspector("team")}
-                className="min-h-6 rounded px-1 font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
+              // A labelled tool button, not a link: asking co-authors is the draft's next step.
+              <button type="button" onClick={() => openInspector("team")} className={TOOL_BUTTON}>
+                <Send aria-hidden="true" className="size-3.5" />
                 {t("stripOpenTeam")}
               </button>
             )}
@@ -915,7 +913,7 @@ const GridCell = memo(function GridCellInner({
         // A linked cell (its phrase under the pointer) gets an ink edge and a
         // hard shadow in its contributor's hue, the same mark its phrase gets.
         data-level-fill={fill ? "" : undefined}
-        className={`contribution-cell flex h-7 w-full items-center justify-center rounded-sm transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        className={`contribution-cell flex h-7 w-full items-center justify-center rounded-sm transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
           frozen ? "cursor-not-allowed opacity-40" : "hover:ring-[1.5px] hover:ring-edge"
         } ${
           highlighted

@@ -32,21 +32,27 @@
   --color-surface-container: #efe9dd;
   --color-surface-container-high: #ebe4d6;
   --color-surface-container-highest: #e3dbcb;
-  --color-on-surface: #1c1a17;
+  --color-on-surface: #2e2a25; /* warm charcoal: 13:1 on paper, softer than near-black */
   --color-on-surface-variant: #5e584e;
 
   --color-outline: #d6ccba;
   --color-outline-variant: #e6dfd2;
   --color-outline-strong: #857d70; /* 3:1 on every surface: field edges, icon-only controls */
   /* The ink edge: the 1px line around cards, fields and tool buttons. */
-  --color-edge: #1c1a17;
+  --color-edge: #2e2a25;
   /* Elevation is a hard offset, never a blur: cards sit on the page like paper cut-outs. */
-  --shadow-card: 2px 2px 0 rgb(28 26 23 / 0.13);
+  --shadow-card: 2px 2px 0 rgb(46 42 37 / 0.13);
   --shadow-sheet: 5px 5px 0 color-mix(in oklab, var(--color-primary) 22%, transparent);
-  --shadow-float: 4px 4px 0 rgb(28 26 23 / 0.18); /* popovers and menus, over the content */
+  --shadow-float: 4px 4px 0 rgb(46 42 37 / 0.18); /* popovers and menus, over the content */
   --shadow-press: 2px 2px 0 var(--color-edge); /* primary buttons: the one action per view */
 
   --color-background: var(--color-surface);
+
+  /* The draft's heatmap hue where it reads as text and as a fill under bright paper text
+     (4.5:1 both ways); ThemeHue falls back to primary otherwise. Wordmark, selected
+     segments, the active tab and grid focus take it. Actions and links stay primary. */
+  --color-accent: var(--color-primary);
+  --color-on-accent: var(--color-surface-bright);
 
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
@@ -143,6 +149,8 @@
   --color-edge: var(--color-edge);
 
   --color-background: var(--color-background);
+  --color-accent: var(--color-accent);
+  --color-on-accent: var(--color-on-accent);
 
   --color-error: var(--color-error);
   --color-error-container: var(--color-error-container);

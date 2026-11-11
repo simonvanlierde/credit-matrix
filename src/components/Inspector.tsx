@@ -99,7 +99,7 @@ export function Inspector() {
               onClick={() => setTab(id)}
               className={`min-h-10 border-b-2 px-2 text-[13px] leading-tight sm:px-3 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
                 selected
-                  ? "border-primary text-primary"
+                  ? "border-accent text-accent"
                   : "border-transparent text-on-surface-variant hover:text-on-surface"
               }`}
             >
