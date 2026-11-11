@@ -7,7 +7,14 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
-import { CREDIT_ROLES, createAuthor, generateStatement, HeatmapOptionError, heatmapDescription } from "credit-matrix";
+import {
+  CREDIT_ROLES,
+  createAuthor,
+  generateStatement,
+  HeatmapOptionError,
+  heatmapDescription,
+  normalizeRoster,
+} from "credit-matrix";
 import { createFigureRenderer } from "credit-matrix/figures";
 import {
   AVAILABLE_LOCALES,
@@ -171,9 +178,18 @@ const creditHeatmap = {
 function heatmapFigure(path, directiveOptions = {}) {
   const entries = statementEntries(authorsFor(path));
   if (directiveOptions.initials) {
-    const labels = entries.map((entry) => (/\p{L}/u.test(entry.name) ? createAuthor(entry.name).initials : entry.name));
-    entries.forEach((entry, i) => {
-      entry.initials = labels.filter((label) => label === labels[i]).length === 1 ? labels[i] : entry.name;
+    // The app's initials and collision rule; a name with no letter (an ORCID iD) stays whole, and
+    // past the app's contributor limit every label does.
+    const named = entries.filter((entry) => /\p{L}/u.test(entry.name));
+    let roster = [];
+    try {
+      roster = normalizeRoster(named.map((entry) => createAuthor(entry.name)));
+    } catch {
+      // Over the app's contributor limit.
+    }
+    for (const entry of entries) entry.initials = entry.name;
+    named.forEach((entry, i) => {
+      entry.initials = roster[i]?.initials ?? entry.name;
     });
   }
   const options = { levels: false, acronyms: false, ...translationsFor(path), ...directiveOptions };

@@ -173,12 +173,18 @@ points at the `v<version>` tag instead of `main`.
   `pnpm verify` includes these builds and checks the Python extension and tests with Ruff and ty.
 - **Quarto**: the rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto`
   on your `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
+- **One behaviour, defined in core**: wording, role names, levels and initials are defined once, in
+  `src/core`. An integration that can run JavaScript calls the package or its CLI (MyST, Sphinx, the
+  Quarto heatmap). One that cannot (the Typst package, the Quarto statement in Lua) reads data
+  generated from core and has a test that runs both implementations over the same inputs. A new
+  rule goes into core first, then into that generated data or parity test, never into one
+  integration alone.
 - **Typst and Quarto**: generated translations come from the app's catalogs. After changing them, run
   `pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs && node scripts/build-quarto-translations.mjs`.
   The Quarto test checks every generated role name, label and heading against its source catalog.
   The Typst test (`integrations/typst/credit-matrix.test.ts`) fails when the file is stale. With
-  `typst` on your `PATH` it also compiles the examples and checks the statement text against the
-  app's; it is skipped without Typst, and CI installs it.
+  `typst` on your `PATH` it also compiles the examples and checks the statement text and the
+  initials against the app's; it is skipped without Typst, and CI installs it.
 - **End-to-end (Playwright)**: the specs in `e2e/`. In CI they run against `wrangler dev`, which
   applies `public/_headers`. On your machine they use `pnpm dev`, which has no Content Security
   Policy (CSP). You only need [wrangler](https://developers.cloudflare.com/workers/wrangler/) for

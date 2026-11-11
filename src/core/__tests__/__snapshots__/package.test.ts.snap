@@ -11,6 +11,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "ExportOnlyError",
     "HeatmapOptionError",
     "MAX_STATEMENT_LENGTH",
+    "NAME_PARTICLES",
     "NewerVersionError",
     "RepeatedIdError",
     "STATEMENT_FORMATS",

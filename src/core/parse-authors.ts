@@ -334,9 +334,10 @@ function consistentNameParts(author: Author): Pick<Author, "firstName" | "middle
 /**
  * Surname particles that stay attached to the surname ("van der Berg, Anne"),
  * lower case with a straight apostrophe. Not "y", which joins two surnames
- * ("Ortega y Gasset") rather than leading one.
+ * ("Ortega y Gasset") rather than leading one. Exported so integrations that cannot run this
+ * code (the Typst package) read the same list.
  */
-const PARTICLES = new Set([
+export const NAME_PARTICLES: readonly string[] = [
   "van",
   "von",
   "de",
@@ -368,7 +369,8 @@ const PARTICLES = new Set([
   "el",
   "al",
   "van't",
-]);
+];
+const PARTICLES = new Set(NAME_PARTICLES);
 
 /** A generational suffix, with or without its dot, in any case. */
 export function isSuffix(word: string): boolean {

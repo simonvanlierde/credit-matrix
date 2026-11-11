@@ -4,8 +4,10 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES, createAuthor, fromJson, generateStatement, type StatementFormat } from "@/core";
+import { CREDIT_ROLES, createAuthor, fromJson, generateStatement, NAME_PARTICLES, type StatementFormat } from "@/core";
+import { cast } from "@/core/__tests__/cast";
 import * as i18n from "@/core/i18n";
+import { deduplicateAuthorInitials } from "@/core/parse-authors";
 import { heatmapRecipe } from "@/lib/heatmap-recipe";
 import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { renderTypstTranslations } from "../../scripts/build-typst-translations.mjs";
@@ -15,7 +17,7 @@ const dir = fileURLToPath(new URL(".", import.meta.url));
 it("keeps translations.json in step with the core catalogs", async () => {
   const committed = readFileSync(new URL("translations.json", import.meta.url), "utf8");
   // Regenerate with: pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs
-  expect(committed).toBe(await renderTypstTranslations(i18n, CREDIT_ROLES));
+  expect(committed).toBe(await renderTypstTranslations(i18n, CREDIT_ROLES, NAME_PARTICLES));
 });
 
 it("names the same version in typst.toml and the README's import line", () => {
@@ -69,7 +71,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
     writeFileSync(
       new URL("out/without-marks.typ", import.meta.url),
-      `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#credit-heatmap(((name: "Tu Youyou", roles: (software: "supporting")),), levels: ${levels})`,
+      `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#credit-heatmap(((name: "Hua Luogeng", roles: (software: "supporting")),), levels: ${levels})`,
     );
     const result = typst("compile", "--root", ".", "out/without-marks.typ", "out/without-marks.svg");
     expect(result.status, result.stderr).toBe(0);
@@ -177,7 +179,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     ['((name: "王小明", roles: (software: true)),)', '((name: "王小明", roles: (software: true)),)'],
     [
       '((name: "Ada Lovelace", roles: (software: true)), (name: "Antoine Lavoisier", roles: (software: true)))',
-      '((name: "Ada Lovelace", roles: (software: true)), (name: "Antoine Lavoisier", roles: (software: true)))',
+      '((name: "AL", roles: (software: true)), (name: "ALa", roles: (software: true)))',
     ],
   ])("uses unambiguous Unicode initials for %s", (people, expected) => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
@@ -197,7 +199,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
     writeFileSync(
       new URL("out/typography.typ", import.meta.url),
-      '#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Tu Youyou", roles: (software: "supporting", methodology: "equal", conceptualization: "lead")),)\n#credit-heatmap(team, font: "serif", font-size: 12pt, marks: true)\n#credit-heatmap(team, levels: false, color: rgb("#f0e442"), marks: true)\n#credit-heatmap(team, levels: false, marks: true)',
+      '#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Hua Luogeng", roles: (software: "supporting", methodology: "equal", conceptualization: "lead")),)\n#credit-heatmap(team, font: "serif", font-size: 12pt, marks: true)\n#credit-heatmap(team, levels: false, color: rgb("#f0e442"), marks: true)\n#credit-heatmap(team, levels: false, marks: true)',
     );
     const run = typst("compile", "--root", ".", "out/typography.typ", "out/typography.svg");
     expect(run.status, run.stderr).toBe(0);
@@ -228,7 +230,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     );
     writeFileSync(
       new URL("out/options.typ", import.meta.url),
-      '#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Tu Youyou", roles: (software: "supporting", methodology: "equal")),)\n' +
+      '#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Hua Luogeng", roles: (software: "supporting", methodology: "equal")),)\n' +
         calls.join("\n"),
     );
     const run = typst("compile", "--root", ".", "out/options.typ", "out/options.svg");
@@ -242,7 +244,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
     writeFileSync(
       new URL(`out/short-${lang}.typ`, import.meta.url),
-      `#import "../lib.typ": *\n#credit-heatmap(((name: "Tu Youyou", roles: (software: "supporting")),), lang: "${lang}", labels: "short", skipempty: false)`,
+      `#import "../lib.typ": *\n#credit-heatmap(((name: "Hua Luogeng", roles: (software: "supporting")),), lang: "${lang}", labels: "short", skipempty: false)`,
     );
     const run = typst("compile", "--root", ".", `out/short-${lang}.typ`, `out/short-${lang}.svg`);
     expect(run.status, run.stderr).toBe(0);
@@ -263,6 +265,63 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     expect(run.status, run.stderr).toBe(0);
     const expected = await Promise.all(cases.map((c) => appStatement(json, c.format, c.levels, c.lang)));
     expect(JSON.parse(run.stdout)).toEqual(expected);
+  });
+
+  it("gives each name the initials the app gives it, collisions included", () => {
+    const names = [
+      ...Object.values(cast),
+      ...NAME_PARTICLES.map((particle) => `Johannes ${particle} Waals`),
+      "Johannes Diderik van der Waals",
+      "Johannes van\u2019t Waals",
+      "Johannes van\u02BCt Waals",
+      "van der Waals, Johannes D.",
+      "VAN DER WAALS, Johannes",
+      "Hasan Ibn al-Haytham",
+      ...["Jr.", "jr", "Sr.", "II", "III"].map((suffix) => `Charles Darwin ${suffix}`),
+      "Darwin Jr., Charles",
+      "Darwin, Charles, Jr.",
+      "Hopper, Grace Brewster Murray",
+      "Hopper, A B C D",
+      "0000-0002-1825-0097, Ada",
+      "ORCID 0000-0002-1825-0097",
+      "Erwin Schrödinger",
+      "\u00DFtrau\u00DF Johann",
+      "E\u0301mile Zola",
+      "Ada\u0007Lovelace",
+      "Ludwig\uFEFFBoltzmann",
+      "华罗庚",
+      "湯川秀樹",
+      "ジョージ",
+      "ヤマダ・タロウ",
+      "Émile 𐐀smith",
+      "0000-0002-1825-0097",
+      "https://orcid.org/0000-0002-1825-0097",
+    ];
+    // Typst writes a code point escape as \u{7}, JSON as \u0007.
+    const typ = (text: string) => JSON.stringify(text).replace(/\\u([0-9a-fA-F]{4})/g, "\\u{$1}");
+    const one = names.map((name) => `_people(((name: ${typ(name)}),)).first().initials`);
+    const collision = [cast.ada, cast.antoine, cast.antonie, cast.ada];
+    const run = typst(
+      "eval",
+      `import "lib.typ": *; ((${one.join(", ")}), _people((${collision.map((name) => `(name: ${typ(name)})`).join(", ")},)).map(p => p.initials))`,
+    );
+    expect(run.status, run.stderr).toBe(0);
+    expect(JSON.parse(run.stdout)).toEqual([
+      names.map((name) => createAuthor(name).initials),
+      deduplicateAuthorInitials(collision.map((name) => createAuthor(name))).map((a) => a.initials),
+    ]);
+  });
+
+  it("takes an export's stored name parts, and a document's own initials as written", () => {
+    // An export row without initials, as a hand-made file has it: the stored surname decides.
+    const stored = createAuthor("Ana García López", { firstName: "Ana", middleName: "", surname: "García López" });
+    const run = typst(
+      "eval",
+      `import "lib.typ": *; (_people((authors: ((name: "Ana García López", firstName: "Ana", middleName: "", surname: "García López", contributions: ()),))).first().initials, _people(((name: "Xu Guangqi", initials: "AL"), (name: "${cast.ada}"))).map(p => p.initials))`,
+    );
+    expect(run.status, run.stderr).toBe(0);
+    expect(JSON.parse(run.stdout)).toEqual([stored.initials, ["AL", "ALo"]]);
+    expect(stored.initials).toBe("AG");
   });
 
   it("takes the document's language and inline roles in basic.typ", () => {

@@ -1382,6 +1382,13 @@ export declare function createAuthor(name: string, overrides?: {
  */
 export declare function normalizeRoster(authors: Author[]): Author[];
 /**
+ * Surname particles that stay attached to the surname ("van der Berg, Anne"),
+ * lower case with a straight apostrophe. Not "y", which joins two surnames
+ * ("Ortega y Gasset") rather than leading one. Exported so integrations that cannot run this
+ * code (the Typst package) read the same list.
+ */
+export declare const NAME_PARTICLES: readonly string[];
+/**
  * Parse a newline- or comma-separated string of author names into Author objects.
  * Empty lines / entries are ignored.
  */

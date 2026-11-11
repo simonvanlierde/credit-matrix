@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The Typst package and the MyST plugin now label heatmaps with the app's initials. Particles
+  such as "van" are skipped, and contributors who share initials get the next letters of their
+  surname ("AL", "ALa") instead of their full names. See
+  [app and document exports](integrations/heatmap.md#app-and-document-exports).
+
 ## [0.12.0] - 2026-11-11
 
 **Upgrade note:** the browser storage format moves from version 3 to 5, because statement options
