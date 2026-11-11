@@ -67,6 +67,8 @@ See [deploying](docs/deploy.md).
   The `CREDIT_MATRIX_FIGURE_FONTS` variable of the MyST plugin is gone. To work offline, install
   `credit-matrix-fonts` next to the plugin, or run one online build to fill the plugin's cache.
 - `pnpm check:bundle` fails when the npm package grows past 5 MB unpacked.
+- The social card is `og.png` (was `opengraph-image.png`), and its URL carries a `?v=` hash of the file so
+  link previews refresh when the card changes.
 - The social card is a poster that reads in a small link preview: the heatmap on its side above a
   short statement, one cell and its phrase linked in the contributor's hue, and the site's address.
 - The Typst package draws the top labels at regular weight instead of weight 500, as SVG and PDF
