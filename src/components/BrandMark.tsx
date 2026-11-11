@@ -13,7 +13,7 @@ import { useContributionStore } from "@/store/contribution-store";
  * The store skips hydration, so server and first client render both use the
  * default ink-blue; the transition covers the swap to a stored hue.
  *
- * The favicon (`src/app/icon.svg`) has the same geometry with literal fills.
+ * The favicon (`public/icon.svg`) has the same geometry with literal fills.
  */
 /** Fill opacity per cell, row by row: lead on the diagonal, the app's three intensity tiers around it. */
 const MARK_LEVELS = [
