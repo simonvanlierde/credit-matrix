@@ -103,10 +103,23 @@ describe("figures in every covered script", () => {
     expect(left("ل")).toBeLessThan(left("ح"));
   });
 
+  it("draws a character the serif script face lacks from its sans twin", async () => {
+    // Noto Serif Oriya 1.051 has no U+0B55 (ORIYA SIGN OVERLINE); Noto Sans Oriya does.
+    const authors = [createAuthor("ଓଡ଼ିଆ\u0B55", { contributions: [{ role: "Software", score: 100 }] })];
+    const svg = await renderer.svg(authors, { ...options, font: "serif" });
+    expect(svg).toContain("Noto Sans Oriya");
+    await renderer.pdf(authors, { ...options, font: "serif" });
+  });
+
   it("keeps an emoji sequence in one emoji run, keycaps included", async () => {
-    for (const sequence of ["👩\u200d🔬", "🇳🇱", "1\ufe0f\u20e3"]) {
+    for (const [before, sequence] of [
+      ["Ada", "👩\u200d🔬"],
+      ["Ada", "🇳🇱"],
+      ["Ada", "1\ufe0f\u20e3"],
+      ["محمد", "1\ufe0f\u20e3"],
+    ]) {
       const svg = await renderer.svg(
-        [createAuthor(`Ada ${sequence}`, { contributions: [{ role: "Software", score: 100 }] })],
+        [createAuthor(`${before} ${sequence}`, { contributions: [{ role: "Software", score: 100 }] })],
         options,
       );
       expect(svg, sequence).toContain(`>${sequence}</tspan>`);
