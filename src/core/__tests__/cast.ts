@@ -21,7 +21,8 @@ export const cast = {
 
   // Name cases.
   marie: "Marie Skłodowska-Curie", // non-ASCII, hyphenated surname: "MS"
-  antonie: "Antonie van Leeuwenhoek", // particle, skipped in initials: "AL", the same as Ada's
+  antonie: "Antonie van Leeuwenhoek", // particle, skipped in the app's initials: "AL"; lib.typ makes it "AVL"
+  antoine: "Antoine Lavoisier", // "AL" like Ada, in the app and in lib.typ: the initials collision
   tu: "Tu Youyou", // family name first; the parser reads "Tu" as the given name: "TY"
 } as const;
 

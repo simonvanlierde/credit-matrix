@@ -176,8 +176,8 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     ['((name: "Émile 𐐀smith", roles: (software: true)),)', '((name: "É𐐀", roles: (software: true)),)'],
     ['((name: "王小明", roles: (software: true)),)', '((name: "王小明", roles: (software: true)),)'],
     [
-      '((name: "Ada Lovelace", roles: (software: true)), (name: "Antonie van Leeuwenhoek", roles: (software: true)))',
-      '((name: "Ada Lovelace", roles: (software: true)), (name: "Antonie van Leeuwenhoek", roles: (software: true)))',
+      '((name: "Ada Lovelace", roles: (software: true)), (name: "Antoine Lavoisier", roles: (software: true)))',
+      '((name: "Ada Lovelace", roles: (software: true)), (name: "Antoine Lavoisier", roles: (software: true)))',
     ],
   ])("uses unambiguous Unicode initials for %s", (people, expected) => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });
