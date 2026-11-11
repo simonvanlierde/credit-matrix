@@ -12,7 +12,7 @@ export function detectOrcid(text: string): string | null {
 }
 
 /**
- * The name typed beside an ORCID iD ("Jane Smith 0000-…"), or null when the
+ * The name typed beside an ORCID iD ("Grace Hopper 0000-…"), or null when the
  * text is only the iD, bare or as an orcid.org link.
  */
 export function nameBesideOrcid(text: string): string | null {

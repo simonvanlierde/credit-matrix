@@ -17,7 +17,15 @@ function rng(seed: number) {
   };
 }
 
-const NAMES = ["Ada Lovelace", "Marie Curie", "Alan Turing", "Anna Andersson", "Ali Ahmed", "Mei Lin", "Bob White"];
+const NAMES = [
+  "Ada Lovelace",
+  "Marie Curie",
+  "Alan Turing",
+  "Anna Andersson",
+  "Ali Ahmed",
+  "Mei Lin",
+  "Charles Darwin",
+];
 const SCORES = [0, 0, 0, 20, 50, 100];
 
 function randomRow(random: () => number, name: string, id: string): Author {
@@ -569,11 +577,11 @@ describe("asks in JSON", () => {
 describe("signedForTitle", () => {
   const proof = (title?: string) => ({
     orcid: "0000-0002-1825-0097",
-    name: "Bob White",
+    name: "Charles Darwin",
     issuedAt: 1,
     token: "t",
     payload: toSharePayload({
-      authors: [createAuthor("Bob White", { id: "b" })],
+      authors: [createAuthor("Charles Darwin", { id: "b" })],
       title,
       claimId: "b",
       sourceDraftId: "d",

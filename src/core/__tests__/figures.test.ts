@@ -29,7 +29,7 @@ function embeddedFonts(svg: string) {
 }
 
 function team() {
-  return ["Zoë & René <Smith>", "山田 太郎", "屠呦呦"].map((name) => {
+  return ["Zoë & René <Smith>", "山田 太郎", "华罗庚"].map((name) => {
     const author = createAuthor(name);
     for (const contribution of author.contributions) contribution.score = 66;
     return author;
@@ -48,8 +48,8 @@ describe("portable figures", () => {
   it.each([
     { locale: "ja", font: "sans" as const, names: ["山田 太郎", "鈴木 花子"] },
     { locale: "ja", font: "serif" as const, names: ["山田 太郎", "鈴木 花子"] },
-    { locale: "zh-Hans", font: "sans" as const, names: ["屠呦呦", "张伟"] },
-    { locale: "zh-Hans", font: "serif" as const, names: ["屠呦呦", "张伟"] },
+    { locale: "zh-Hans", font: "sans" as const, names: ["华罗庚", "张伟"] },
+    { locale: "zh-Hans", font: "serif" as const, names: ["华罗庚", "张伟"] },
   ])("embeds only the $font $locale glyphs a figure uses in SVG", async ({ locale, font, names }) => {
     const authors = names.map((name) => createAuthor(name, { contributions: [{ role: "Software", score: 100 }] }));
     const svg = await renderer.svg(authors, {
@@ -73,8 +73,8 @@ describe("portable figures", () => {
 
   it.each([
     { locale: "en", name: "张伟", family: "Credit Figure SC" },
-    { locale: "de", name: "屠呦呦", family: "Credit Figure SC" },
-    { locale: "ja", name: "屠呦呦", family: "Credit Figure JP" },
+    { locale: "de", name: "湯川秀樹", family: "Credit Figure SC" },
+    { locale: "ja", name: "湯川秀樹", family: "Credit Figure JP" },
     { locale: "en", name: "やまだ山田", family: "Credit Figure JP" },
   ])("draws $name with $family under $locale", async ({ locale, name, family }) => {
     const author = createAuthor(name, { contributions: [{ role: "Software", score: 100 }] });
@@ -97,7 +97,7 @@ describe("portable figures", () => {
     const create = vi.spyOn(fontkit, "create");
     try {
       const fresh = createFigureRenderer();
-      await fresh.svg([createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] })]);
+      await fresh.svg([createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] })]);
       expect(create).toHaveBeenCalledTimes(1);
       await fresh.svg([createAuthor("张伟", { contributions: [{ role: "Software", score: 100 }] })], {
         acronyms: false,
@@ -166,8 +166,8 @@ describe("portable figures", () => {
   it.each([
     { font: "sans" as const, names: ["É".repeat(20), "W".repeat(20)], emHeight: 1.362 },
     { font: "serif" as const, names: ["É".repeat(20), "W".repeat(20)], emHeight: 1.362 },
-    { font: "sans" as const, names: ["山田".repeat(10), "屠呦呦".repeat(8)], emHeight: 1.2 },
-    { font: "serif" as const, names: ["山田".repeat(10), "屠呦呦".repeat(8)], emHeight: 1.437 },
+    { font: "sans" as const, names: ["山田".repeat(10), "华罗庚".repeat(8)], emHeight: 1.2 },
+    { font: "serif" as const, names: ["山田".repeat(10), "华罗庚".repeat(8)], emHeight: 1.437 },
   ])("separates large $font labels using their font height ($emHeight em)", async ({ font, names, emHeight }) => {
     const authors = names.map((name) => createAuthor(name, { contributions: [{ role: "Software", score: 100 }] }));
     const options = { font, fontSize: 32, size: 8, acronyms: false };
@@ -187,7 +187,7 @@ describe("portable figures", () => {
   });
 
   it.for([true, false])("retains visible publication marks in PDF when levels=%s", async (levels, { skip }) => {
-    const authors = [createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] })];
+    const authors = [createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] })];
     const options = { levels, legendPosition: "right" as const };
     const svg = await renderer.svg(authors, { ...options, marks: true });
     const cell = svg.match(/<rect x="([\d.]+)" y="([\d.]+)" width="22" height="22"/);
@@ -233,7 +233,7 @@ describe("portable figures", () => {
       expect(svg).toMatch(/@font-face/);
       expect(svg).toMatch(/data:font\/(?:ttf|otf);base64,/);
       expect(svg).toContain("山田 太郎");
-      expect(svg).toContain("屠呦呦");
+      expect(svg).toContain("华罗庚");
       expect(svg).toContain("Zoë &amp; René &lt;Smith&gt;");
       expect(svg).not.toContain("Helvetica");
       expect(svg).not.toMatch(/<image|<path/);
@@ -295,7 +295,7 @@ describe("portable figures", () => {
     expect(Number(acuteMatrix?.[1]) - Number(qMatrix?.[1])).toBeCloseTo((615 - 35) * 0.0105, 5);
   });
 
-  it.for(["山田太郎", "屠呦呦", "𠮷野"])(
+  it.for(["山田太郎", "华罗庚", "𠮷野"])(
     "renders ink for every glyph of %s without installed fonts",
     async (name, { skip }) => {
       const author = createAuthor(name);
@@ -372,7 +372,7 @@ describe("portable figures", () => {
         const text = execFileSync("pdftotext", ["-raw", pdf, "-"], { encoding: "utf8" });
         expect(text).toContain("Zoë & René <Smith>");
         expect(text).toContain("山田 太郎");
-        expect(text).toContain("屠呦呦");
+        expect(text).toContain("华罗庚");
         expect(text.replace(/\s/g, "")).toContain("Conceptualization");
         expect(execFileSync("pdfimages", ["-list", pdf], { encoding: "utf8" }).trim().split("\n")).toHaveLength(2);
         expect(readFileSync(pdf).subarray(0, 5).toString()).toBe("%PDF-");

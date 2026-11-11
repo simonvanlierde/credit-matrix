@@ -137,6 +137,10 @@ export declare function createFigureRenderer(rendererOptions?: FigureRendererOpt
 // heatmap-svg.d.ts
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";
+declare const MAX_AUTHORS = 420;
+declare const MAX_AUTHOR_NAME_LENGTH = 500;
+/** Caps every import, fetch and share link; a full draft's JATS export is 1 to 1.5 MB. */
+declare const MAX_IMPORT_BYTES = 2000000;
 /**
  * A contribution is a 0–100 integer score for one CRediT role.
  *
@@ -308,12 +312,12 @@ declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions)
  * who did what. Assistive technology reads both and nothing draws them.
  */
 declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string;
-export { Author as a, ContributionLevel as c, isValidOrcid as d, normalizeOrcid as f, heatmapDescription as i, ContributionSchema as l, HeatmapSvgOptions as n, AuthorSchema as o, scoreToLevel as p, buildHeatmapSvg as r, Contribution as s, HeatmapOptionError as t, ContributorType as u };
+export { Author as a, ContributionLevel as c, MAX_AUTHORS as d, MAX_AUTHOR_NAME_LENGTH as f, scoreToLevel as g, normalizeOrcid as h, heatmapDescription as i, ContributionSchema as l, isValidOrcid as m, HeatmapSvgOptions as n, AuthorSchema as o, MAX_IMPORT_BYTES as p, buildHeatmapSvg as r, Contribution as s, HeatmapOptionError as t, ContributorType as u };
 // i18n.d.ts
 import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog, v as resolveLocaleTag } from "./ui-strings.js";
 export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode, resolveLocaleTag };
 // index.d.ts
-import { a as Author, c as ContributionLevel, d as isValidOrcid, f as normalizeOrcid, i as heatmapDescription, l as ContributionSchema, n as HeatmapSvgOptions, o as AuthorSchema, p as scoreToLevel, r as buildHeatmapSvg, s as Contribution, t as HeatmapOptionError, u as ContributorType } from "./heatmap-svg.js";
+import { a as Author, c as ContributionLevel, d as MAX_AUTHORS, f as MAX_AUTHOR_NAME_LENGTH, g as scoreToLevel, h as normalizeOrcid, i as heatmapDescription, l as ContributionSchema, m as isValidOrcid, n as HeatmapSvgOptions, o as AuthorSchema, p as MAX_IMPORT_BYTES, r as buildHeatmapSvg, s as Contribution, t as HeatmapOptionError, u as ContributorType } from "./heatmap-svg.js";
 import { n as CreditRoleName, r as getRoleByName, t as CREDIT_ROLES } from "./credit-roles.js";
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";
@@ -1118,7 +1122,7 @@ export declare function toCrossrefContributors(authors: Author[]): string;
  * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
  * The block holds no contribution levels, so every listed CRediT role comes back as lead.
  * The display name is rebuilt as given name + surname + suffix, as `fromJats4rXml` does,
- * so a family-first name such as "Smith, Jane" comes back as "Jane Smith".
+ * so a family-first name such as "Hopper, Grace" comes back as "Grace Hopper".
  * Same safety rules and `parser` as `fromJats4rXml`.
  */
 export declare function fromCrossrefContributors(xml: string, { parser }?: {
@@ -1138,6 +1142,14 @@ export declare function toQuarto(authors: Author[], { yesNo }?: {
  * MyST has no contribution levels. Non-authors are omitted, never added to the byline.
  */
 export declare function toMyst(authors: Author[]): string;
+/**
+ * A warning when a heatmap scaled to fit a full journal page prints its smallest label under 6 pt,
+ * or null. The CLI writes it to stderr and the document plugins show it as a
+ * build warning; the app shows its own, translated, at the width the user chose.
+ * @throws {Error} or {RangeError} for an SVG without positive dimensions or text sizes; a
+ * {@link buildHeatmapSvg} figure always has them.
+ */
+export declare function heatmapPrintWarning(svg: string): string | null;
 /** Thrown by `fromJson` for an export stamped by a newer build. */
 export declare class NewerVersionError extends Error {
   constructor(version: number);
@@ -1300,16 +1312,16 @@ interface StatementSpan {
  * Four formats, matching the original Python app:
  *
  * `by-role`:
- *   "CRediT: Conceptualization: Jane A. Smith, Bob White; Data curation: Jane A. Smith; ..."
+ *   "CRediT: Conceptualization: Grace B. Hopper, Charles Darwin; Data curation: Grace B. Hopper; ..."
  *
  * `by-role-short`:
- *   "CRediT: Conceptualization: JAS, BW; Data curation: JAS; ..."
+ *   "CRediT: Conceptualization: GBH, CD; Data curation: GBH; ..."
  *
  * `by-author`:
- *   "CRediT: Jane A Smith: Conceptualization, Data curation; Bob White: Investigation; ..."
+ *   "CRediT: Grace B. Hopper: Conceptualization, Data curation; Charles Darwin: Investigation; ..."
  *
  * `by-author-short`:
- *   "CRediT: JAS: Conceptualization, Data curation; BW: Investigation; ..."
+ *   "CRediT: GBH: Conceptualization, Data curation; CD: Investigation; ..."
  */
 export declare function generateStatement(authors: Author[], options: StatementOptions): string;
 /**
@@ -1340,7 +1352,8 @@ interface Imported {
  * place, on text the app only exports (`ExportOnlyError`), on a CRediT statement (it names roles, not contributors: read it with
  * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
  * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
- * `authors` means the format was right but held nobody.
+ * `authors` means the format was right but held nobody. A list of names longer than `MAX_AUTHORS`
+ * comes back cut to `MAX_AUTHORS + 1`, which is still too many to use.
  */
 export declare function importAny(text: string, { parser, convertCitation }?: {
   parser?: XmlParser;
@@ -1381,6 +1394,15 @@ export declare function createAuthor(name: string, overrides?: {
  * as the same object, so memoised rows and cached reviews keep it.
  */
 export declare function normalizeRoster(authors: Author[]): Author[];
+/**
+ * Surname particles that stay attached to the surname ("van der Berg, Anne"),
+ * lower case with a straight apostrophe. Not "y", which joins two surnames
+ * ("Ortega y Gasset") rather than leading one. Exported so integrations that cannot run this
+ * code (the Typst package) read the same list.
+ */
+export declare const NAME_PARTICLES: readonly string[];
+/** Generational suffixes that end a name rather than the surname ("Martin Luther King Jr."). */
+export declare const NAME_SUFFIXES: readonly string[];
 /**
  * Parse a newline- or comma-separated string of author names into Author objects.
  * Empty lines / entries are ignored.
@@ -1447,7 +1469,7 @@ interface StatementAuthor {
 }
 /**
  * A contributor's name split the way the parser needs it. The given names are everything in the
- * display name before the surname, so "Jane Anne Marie Smith" keeps all three, and "Smith, Jane"
+ * display name before the surname, so "Grace Brewster Murray Hopper" keeps all three, and "Hopper, Grace"
  * reads the part after the comma.
  */
 export declare function statementAuthor(author: Pick<Author, "name" | "firstName" | "middleName" | "surname">): StatementAuthor;
@@ -1470,8 +1492,12 @@ interface ParsedStatement {
     roles: CreditRoleName[];
   }[];
 }
-/** The longest statement {@link parseStatement} reads, in UTF-16 code units. Real ones are under 5,000. */
-export declare const MAX_STATEMENT_LENGTH = 50000;
+/**
+ * The longest statement {@link parseStatement} reads, in UTF-16 code units: a full draft's by-author
+ * statement with every role (117,000). Real ones are under 5,000. Parsing is linear in length times
+ * contributors: 120,000 characters of distinct three-letter initials take about 1.5 s against 420.
+ */
+export declare const MAX_STATEMENT_LENGTH = 120000;
 /**
  * Whether text uses CRediT's own vocabulary, not just a common word that is also a role: at least
  * one of conceptualization, data curation, formal analysis, funding acquisition, project
@@ -1487,7 +1513,7 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isValidOrcid, normalizeOrcid, scoreToLevel };
+export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type Level, MAX_AUTHORS, MAX_AUTHOR_NAME_LENGTH, MAX_IMPORT_BYTES, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isValidOrcid, normalizeOrcid, scoreToLevel };
 // lookup.d.ts
 import { n as CreditRoleName } from "./credit-roles.js";
 /**

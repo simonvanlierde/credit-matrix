@@ -139,6 +139,13 @@ points at the `v<version>` tag instead of `main`.
 - **Format fixtures**: `format-fixtures.test.ts` decodes saved files in
   `src/core/__tests__/fixtures/` that never change (a share link, JSON, CSV and JATS). If you change
   a format on purpose, regenerate the fixture it affects and run `pnpm validate:jats`.
+- **Example people**: tests, docs and demos take their contributors from the cast in
+  `src/core/__tests__/cast.ts`, dead scientists each picked for a name case (a middle initial, a
+  particle, a hyphen, family name first). Build an author with `createAuthor(name)` rather than
+  typing its name parts and initials by hand, and keep the expected strings literal. A parser test
+  about one spelling keeps its own name. The "Load sample data" names are `sampleNames` in each
+  locale's catalog, a translator's choice; `sample-names.test.ts` holds the English trio to the cast,
+  and `cast.test.ts` fails if one of the placeholder names the cast replaced comes back.
 - **Property tests**: `properties.test.ts` feeds random drafts through every format and random text
   to the importers, with [fast-check](https://fast-check.dev). A failure prints the seed and the
   smallest input that fails: add that input as a fixed test next to the fix.
@@ -158,6 +165,8 @@ points at the `v<version>` tag instead of `main`.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
+- **Memory**: `vitest.config.ts` caps each worker at 4 GB of heap and runs 4 at once. A test that
+  reads a stream or loops on input gives it an end, so a regression fails instead of filling memory.
 - **Document integrations**: `pnpm test:integrations` runs real Pandoc, Sphinx, MyST and Jupyter
   Book builds. It needs uv, and it builds the workspace package first.
   Python tools and Pandoc are locked in `integrations/uv.lock`; the two book CLIs are devDependencies.
@@ -166,12 +175,18 @@ points at the `v<version>` tag instead of `main`.
   `pnpm verify` includes these builds and checks the Python extension and tests with Ruff and ty.
 - **Quarto**: the rendered Quarto test (`integrations/quarto/credit-matrix.test.ts`) needs `quarto`
   on your `PATH` and is skipped without it. CI installs Quarto, so it always runs there.
+- **One behaviour, defined in core**: wording, role names, levels and initials are defined once, in
+  `src/core`. An integration that can run JavaScript calls the package or its CLI (MyST, Sphinx, the
+  Quarto heatmap). One that cannot (the Typst package, the Quarto statement in Lua) reads data
+  generated from core and has a test that runs both implementations over the same inputs. A new
+  rule goes into core first, then into that generated data or parity test, never into one
+  integration alone.
 - **Typst and Quarto**: generated translations come from the app's catalogs. After changing them, run
   `pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs && node scripts/build-quarto-translations.mjs`.
   The Quarto test checks every generated role name, label and heading against its source catalog.
   The Typst test (`integrations/typst/credit-matrix.test.ts`) fails when the file is stale. With
-  `typst` on your `PATH` it also compiles the examples and checks the statement text against the
-  app's; it is skipped without Typst, and CI installs it.
+  `typst` on your `PATH` it also compiles the examples and checks the statement text and the
+  initials against the app's; it is skipped without Typst, and CI installs it.
 - **End-to-end (Playwright)**: the specs in `e2e/`. In CI they run against `wrangler dev`, which
   applies `public/_headers`. On your machine they use `pnpm dev`, which has no Content Security
   Policy (CSP). You only need [wrangler](https://developers.cloudflare.com/workers/wrangler/) for

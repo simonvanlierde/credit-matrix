@@ -282,7 +282,7 @@ export function ContributionGrid() {
     if (!next) return;
 
     // Clamp rather than wrap: running off the edge should stop, not jump to
-    // the far side of a 200-column matrix.
+    // the far side of a 420-column matrix.
     next.row = Math.max(0, Math.min(next.row, rowCount - 1));
     next.col = Math.max(0, Math.min(next.col, colCount - 1));
     if (next.row === row && next.col === col) return;
@@ -919,7 +919,7 @@ const GridCell = memo(function GridCellInner({
         data-linked={linked || undefined}
         aria-describedby={describedBy}
         // One tab stop for the whole matrix; arrows move within it. Without
-        // this a keyboard user tabs through every cell, up to 14 x 200.
+        // this a keyboard user tabs through every cell, up to 14 x 420.
         tabIndex={tabbable ? 0 : -1}
         onFocus={() => {
           api.current.focus(row, col);

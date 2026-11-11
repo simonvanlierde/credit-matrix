@@ -15,12 +15,12 @@ import { createAuthor } from "../parse-authors";
  * paragraph, so they ride alongside the contributions.
  */
 function makeAuthors() {
-  const jane = createAuthor("Jane A. Smith", {
+  const jane = createAuthor("Grace B. Hopper", {
     equalContribution: true,
     corresponding: true,
     contributions: [{ role: "Conceptualization", score: 100 }],
   });
-  const bob = createAuthor("Bob White", {
+  const bob = createAuthor("Charles Darwin", {
     equalContribution: true,
     contributions: [{ role: "Investigation", score: 100 }],
   });
@@ -32,7 +32,7 @@ function makeAuthors() {
 
 describe("marker data model", () => {
   it("defaults both markers to false", () => {
-    const author = createAuthor("Jane A. Smith");
+    const author = createAuthor("Grace B. Hopper");
     expect(author.equalContribution).toBe(false);
     expect(author.corresponding).toBe(false);
   });
@@ -40,11 +40,11 @@ describe("marker data model", () => {
   it("accepts an older payload that predates the markers", () => {
     const parsed = AuthorSchema.parse({
       id: "abc",
-      name: "Jane A. Smith",
-      firstName: "Jane",
+      name: "Grace B. Hopper",
+      firstName: "Grace",
       middleName: "A.",
-      surname: "Smith",
-      initials: "JAS",
+      surname: "Hopper",
+      initials: "GBH",
       contributions: [],
     });
     expect(parsed.equalContribution).toBe(false);
@@ -62,18 +62,18 @@ describe("marker data model", () => {
 describe("markers in the statement", () => {
   it("adds one note per marker, naming the people rather than repeating symbols", () => {
     const statement = generateStatement(makeAuthors(), { format: "by-role" });
-    expect(statement).toContain("Jane A. Smith and Bob White contributed equally to this work.");
-    expect(statement).toContain("Correspondence: Jane A. Smith.");
+    expect(statement).toContain("Grace B. Hopper and Charles Darwin contributed equally to this work.");
+    expect(statement).toContain("Correspondence: Grace B. Hopper.");
   });
 
   it("uses initials in the short formats, matching the statement body", () => {
     const statement = generateStatement(makeAuthors(), { format: "by-role-short" });
-    expect(statement).toContain("JAS and BW contributed equally to this work.");
+    expect(statement).toContain("GBH and CD contributed equally to this work.");
   });
 
   it("says nothing when nobody is marked", () => {
     const statement = generateStatement(
-      [createAuthor("Jane A. Smith", { contributions: [{ role: "Software", score: 100 }] })],
+      [createAuthor("Grace B. Hopper", { contributions: [{ role: "Software", score: 100 }] })],
       {
         format: "by-role",
       },
@@ -93,15 +93,15 @@ describe("markers in the statement", () => {
 
   it("keeps the notes in the HTML flavour", () => {
     const html = generateStatement(makeAuthors(), { format: "by-role", asHtml: true });
-    expect(html).toContain("<p>Jane A. Smith and Bob White contributed equally to this work.</p>");
+    expect(html).toContain("<p>Grace B. Hopper and Charles Darwin contributed equally to this work.</p>");
   });
 
   it("uses the output locale's word order and punctuation", async () => {
     const translateUi = makeUiTranslator(await loadUiCatalog("ja"));
     const statement = generateStatement(makeAuthors(), { format: "by-role", translateUi, locale: "ja" });
     // CLDR joins a Japanese list with "、", not "と".
-    expect(statement).toContain("Jane A. Smith、Bob Whiteは本研究に同等に貢献しました。");
-    expect(statement).toContain("責任著者：Jane A. Smith。");
+    expect(statement).toContain("Grace B. Hopper、Charles Darwinは本研究に同等に貢献しました。");
+    expect(statement).toContain("責任著者：Grace B. Hopper。");
   });
 });
 
@@ -118,15 +118,15 @@ describe("markers in exports", () => {
   });
 
   it("reads a CSV written before the marker columns existed", () => {
-    const legacy = "Name,ORCID,Type,Conceptualization\nJane A. Smith,,author,100";
+    const legacy = "Name,ORCID,Type,Conceptualization\nGrace B. Hopper,,author,100";
     const restored = fromCsv(legacy);
     expect(restored[0]?.equalContribution).toBe(false);
   });
 
   it("notes the markers under the Markdown table", () => {
     const markdown = toMarkdown(makeAuthors());
-    expect(markdown).toContain("Jane A. Smith and Bob White contributed equally to this work.");
-    expect(markdown).toContain("Correspondence: Jane A. Smith.");
+    expect(markdown).toContain("Grace B. Hopper and Charles Darwin contributed equally to this work.");
+    expect(markdown).toContain("Correspondence: Grace B. Hopper.");
   });
 
   it("round-trips through JATS4R as contrib attributes", () => {
@@ -153,13 +153,13 @@ describe("replacement-pattern safety", () => {
         corresponding: true,
         contributions: [{ role: "Conceptualization", score: 100 }],
       }),
-      createAuthor("Bob White", {
+      createAuthor("Charles Darwin", {
         equalContribution: true,
         contributions: [{ role: "Investigation", score: 100 }],
       }),
     ];
     const statement = generateStatement(authors, { format: "by-author" });
-    expect(statement).toContain("A $& Consortium and Bob White contributed equally");
+    expect(statement).toContain("A $& Consortium and Charles Darwin contributed equally");
     expect(statement).toContain("Correspondence: A $& Consortium.");
     expect(statement).not.toContain("{names}");
   });

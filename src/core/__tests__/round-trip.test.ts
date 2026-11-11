@@ -8,7 +8,7 @@ import { createAuthor, parseAuthorText } from "../parse-authors";
 
 describe("round-trip exports", () => {
   it("XML round-trip preserves names, initials, contributions, and ORCID", () => {
-    const authors = parseAuthorText("Jane Smith\nBob White");
+    const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
     // set some scores and an ORCID
     const [jane, bob] = authors;
     if (!(jane && bob)) throw new Error("expected 2 authors");
@@ -54,7 +54,7 @@ describe("round-trip exports", () => {
   });
 
   it("JSON round-trip preserves all fields including id", () => {
-    const authors = parseAuthorText("Jane Smith\nBob White");
+    const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
     const [jane] = authors;
     if (!jane) throw new Error("expected at least one author");
 
@@ -71,7 +71,7 @@ describe("round-trip exports", () => {
   });
 
   it("rejects JSON payloads beyond the contributor limit", () => {
-    const [author] = parseAuthorText("Jane Smith");
+    const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
     const payload = JSON.stringify({ version: 1, authors: Array.from({ length: MAX_AUTHORS + 1 }, () => author) });
 
@@ -87,8 +87,8 @@ describe("round-trip exports", () => {
   });
 
   it("throws a RepeatedIdError for a file that repeats a contributor id", () => {
-    const jane = createAuthor("Jane Smith");
-    const file = JSON.stringify({ version: 1, authors: [jane, { ...jane, name: "Bob White" }] });
+    const jane = createAuthor("Grace Hopper");
+    const file = JSON.stringify({ version: 1, authors: [jane, { ...jane, name: "Charles Darwin" }] });
     expect(() => fromJson(file)).toThrow(RepeatedIdError);
     expect(() => fromJson(file)).toThrow("duplicate contributor ids");
     expect(() => fromJson('{"version": 1, "authors": [{"name": 5}]}')).not.toThrow(RepeatedIdError);
@@ -96,8 +96,8 @@ describe("round-trip exports", () => {
   });
 
   it("still reports a repeated id when the file has other faults too", () => {
-    const jane = createAuthor("Jane Smith");
-    const file = JSON.stringify({ version: 1, selfId: 5, authors: [jane, { ...jane, name: "Bob White" }] });
+    const jane = createAuthor("Grace Hopper");
+    const file = JSON.stringify({ version: 1, selfId: 5, authors: [jane, { ...jane, name: "Charles Darwin" }] });
     expect(() => fromJson(file)).toThrow(RepeatedIdError);
   });
 
@@ -118,7 +118,7 @@ describe("round-trip exports", () => {
   });
 
   it("writes asks only for contributors in the file, and no asks key when there are none", () => {
-    const [jane] = parseAuthorText("Jane Smith");
+    const [jane] = parseAuthorText("Grace Hopper");
     if (!jane) throw new Error("expected author");
     const ask = { sentAt: 1, prefilled: true };
     expect(JSON.parse(toJson([jane]))).not.toHaveProperty("asks");
@@ -127,7 +127,7 @@ describe("round-trip exports", () => {
   });
 
   it("XML round-trip preserves ORCID value", () => {
-    const authors = parseAuthorText("Jane Smith");
+    const authors = parseAuthorText("Grace Hopper");
     const [jane] = authors;
     if (!jane) throw new Error("expected author");
 
@@ -185,7 +185,7 @@ describe("round-trip exports", () => {
   it.each([
     ["Martin Luther King Jr.", "Martin Luther King Jr."],
     ["Ann B. C. Smith.", "Ann B. C. Smith"],
-    ["Jane Smith (ed)", "Jane Smith ed"],
+    ["Grace Hopper (ed)", "Grace Hopper ed"],
   ])("XML round-trip keeps every word of %s", (input, expected) => {
     const [author] = parseAuthorText(input);
     if (!author) throw new Error("expected contributor");

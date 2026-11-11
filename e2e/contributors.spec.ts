@@ -3,7 +3,7 @@ import { asReturningVisitor, seedStorage } from "./helpers";
 
 const ORCID = "0000-0002-1825-0097";
 const PERSON_URL = `https://pub.orcid.org/v3.0/${ORCID}/person`;
-const PERSON = { name: { "given-names": { value: "Jane A." }, "family-name": { value: "Smith" } } };
+const PERSON = { name: { "given-names": { value: "Grace B." }, "family-name": { value: "Hopper" } } };
 
 const addField = (page: Page) => page.getByLabel("New author names or ORCID iD");
 const nameField = (page: Page) => page.getByLabel("Name or ORCID iD", { exact: true });
@@ -56,7 +56,7 @@ test.describe("the contributor list", () => {
 
     release();
     // The registry's name reaches the store (the remove button's label) but not the field.
-    await expect(page.getByRole("button", { name: "Remove Jane A. Smith" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove Grace B. Hopper" })).toBeVisible();
     await expect(nameField(page)).toBeFocused();
     await expect(nameField(page)).toHaveValue(`${ORCID} typed`);
 
@@ -94,7 +94,7 @@ test.describe("the contributor list", () => {
     await expect(removedBar).toBeHidden();
     // An announcement reaches the live region on the frame after the click.
     await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
-    expect((await statusText(page)).join(" ")).not.toContain("at most 200 contributors");
+    expect((await statusText(page)).join(" ")).not.toContain("at most 420 contributors");
     await expect(page.getByRole("button", { name: "Remove Bob Jones" })).toHaveCount(1);
   });
 });

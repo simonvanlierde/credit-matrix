@@ -7,13 +7,13 @@ import { createAuthor } from "../parse-authors";
 
 it("keeps shorthand colors accepted by the public monoColor option", () => {
   expect(
-    buildHeatmapSvg([createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 100 }] })], {
+    buildHeatmapSvg([createAuthor("Hua Luogeng", { contributions: [{ role: "Software", score: 100 }] })], {
       monoColor: "#abc",
     }),
   ).toContain('fill="#aabbcc"');
 });
 
-const authors = [createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 33 }] })];
+const authors = [createAuthor("Hua Luogeng", { contributions: [{ role: "Software", score: 33 }] })];
 
 describe("heatmap figure options", () => {
   it("draws square cells with a thin neutral rule by default", () => {
@@ -32,7 +32,7 @@ describe("heatmap figure options", () => {
   });
   it("colours each author with their own hue only when asked, with a neutral key", () => {
     const pair = [
-      createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 100 }] }),
+      createAuthor("Hua Luogeng", { contributions: [{ role: "Software", score: 100 }] }),
       createAuthor("Ada Lovelace", { contributions: [{ role: "Software", score: 100 }] }),
     ];
     const [first, second] = CONTRIBUTOR_HUES;

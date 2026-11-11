@@ -16,7 +16,7 @@ function setScore(author: Author, role: string, score: number): void {
 }
 
 function authorsWithScores(): Author[] {
-  const authors = parseAuthorText("Jane Smith\nBob White");
+  const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
   const [jane, bob] = authors;
   if (!(jane && bob)) throw new Error("expected 2 authors");
   setScore(jane, "Conceptualization", 100); // lead
@@ -105,8 +105,8 @@ describe("buildHeatmapSvg", () => {
 
   it("uses a check for contributed cells and the flat legend, leaving empty cells unmarked", () => {
     const authors = [
-      createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 33 }] }),
-      createAuthor("Bob White"),
+      createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 33 }] }),
+      createAuthor("Charles Darwin"),
     ];
     const svg = buildHeatmapSvg(authors, { levels: false, marks: true });
     expect(svg.match(/<path /g)).toHaveLength(2);
@@ -120,16 +120,16 @@ describe("buildHeatmapSvg", () => {
     // No baked-in image title: captions belong to the embedding document.
     expect(svg).not.toContain("CRediT Contribution Heatmap");
     expect(svg).toContain("Conceptualization");
-    expect(svg).toContain(">JS<"); // author initials
+    expect(svg).toContain(">GH<"); // author initials
     expect(svg).toContain(">Lead<"); // legend label, no score range
   });
 
   it("puts who did what in its text alternative, in <desc>", () => {
     const svg = buildHeatmapSvg(authorsWithScores());
     const desc = svg.match(/<desc>(.*)<\/desc>/s)?.[1] ?? "";
-    expect(desc).toContain("Jane Smith: Conceptualization");
+    expect(desc).toContain("Grace Hopper: Conceptualization");
     expect(desc).toContain("Writing – review &amp; editing"); // escaped once
-    expect(desc).toContain("Bob White: Software");
+    expect(desc).toContain("Charles Darwin: Software");
   });
 
   it("legend drops the meaningless 0–100 score ranges", () => {
@@ -170,9 +170,9 @@ describe("buildHeatmapSvg", () => {
     const initialsSvg = buildHeatmapSvg(authorsWithScores());
     const namesSvg = buildHeatmapSvg(authorsWithScores(), { acronyms: false });
     // Default uses initials, not the full name, on the axis.
-    expect(initialsSvg).toContain(">JS<");
+    expect(initialsSvg).toContain(">GH<");
     // Acronyms off renders the full author name on the axis.
-    expect(namesSvg).toContain(">Jane Smith<");
+    expect(namesSvg).toContain(">Grace Hopper<");
   });
 
   it("escapes XML special characters in labels", () => {
@@ -200,7 +200,7 @@ describe("buildHeatmapSvg", () => {
   });
 
   it("colors each cell by its own author's score, in both orientations and in flat mode", () => {
-    const [jane, bob] = parseAuthorText("Jane Smith\nBob White");
+    const [jane, bob] = parseAuthorText("Grace Hopper\nCharles Darwin");
     if (!(jane && bob)) throw new Error("expected 2 authors");
     setScore(jane, "Conceptualization", 33);
     setScore(bob, "Software", 66);
@@ -244,8 +244,8 @@ describe("buildHeatmapSvg", () => {
     }));
     const shuffled = [...canonical].reverse();
 
-    const a = buildHeatmapSvg([createAuthor("Jane Smith", { contributions: canonical })]);
-    const b = buildHeatmapSvg([createAuthor("Jane Smith", { contributions: shuffled })]);
+    const a = buildHeatmapSvg([createAuthor("Grace Hopper", { contributions: canonical })]);
+    const b = buildHeatmapSvg([createAuthor("Grace Hopper", { contributions: shuffled })]);
 
     expect(b).toBe(a);
   });
@@ -265,8 +265,8 @@ describe("buildHeatmapSvg", () => {
     if (authors[1]) setScore(authors[1], "Software", 33);
     const levels = desc(buildHeatmapSvg(authors));
     const flat = desc(buildHeatmapSvg(authors, { showLevels: false }));
-    expect(levels).toContain("Bob White: Software (Supporting)");
-    expect(flat).toContain("Bob White: Software");
+    expect(levels).toContain("Charles Darwin: Software (Supporting)");
+    expect(flat).toContain("Charles Darwin: Software");
     expect(flat).not.toContain("(Supporting)");
   });
 
@@ -280,7 +280,7 @@ describe("buildHeatmapSvg", () => {
 
   it("wraps the legend under a narrow figure instead of widening the canvas", () => {
     const everyRole = [
-      createAuthor("Jane Smith", { contributions: CREDIT_ROLES.map((r) => ({ role: r.name, score: 100 })) }),
+      createAuthor("Grace Hopper", { contributions: CREDIT_ROLES.map((r) => ({ role: r.name, score: 100 })) }),
     ];
     const narrow = buildHeatmapSvg(authorsWithScores()); // 2 initials wide
     const wide = buildHeatmapSvg(everyRole, { transpose: true }); // all 14 roles wide
@@ -330,7 +330,7 @@ describe("buildHeatmapSvg", () => {
       // left band = widest role label at 10.5px + 6 gap; 24 padding each side.
       const leftBand = WIDE_ROLE * 10.5 + 6;
       expect(g.w).toBeCloseTo(24 * 2 + leftBand + (2 * 24 - 2), 6);
-      // top band = "JS" at 11px, rotated 45 degrees, + 6 gap. Grid is 3 rows tall, then an
+      // top band = "GH" at 11px, rotated 45 degrees, + 6 gap. Grid is 3 rows tall, then an
       // 18px gap, a legend wrapped to two rows (14px swatch + 20px pitch) and the bottom padding.
       const topBand = 2 * 11 * 0.62 * DIAG + 6;
       expect(g.h).toBeCloseTo(24 + topBand + (3 * 24 - 2) + 18 + (14 + 20) + 24, 6);
@@ -343,7 +343,7 @@ describe("buildHeatmapSvg", () => {
 
     it("swaps the grid axes when transposed, and lets the last top label overhang the right edge", () => {
       const g = geometry(buildHeatmapSvg(authorsWithScores(), { transpose: true }));
-      const leftBand = 2 * 10.5 * 0.62 + 6; // "JS" now runs down the left
+      const leftBand = 2 * 10.5 * 0.62 + 6; // "GH" now runs down the left
       const topBand = WIDE_ROLE * 11 * DIAG + 6; // roles are rotated across the top
       const overhang = WIDE_ROLE * 11 * DIAG - 22 / 2; // last label climbs past the half-cell it starts from
       expect(g.w).toBeCloseTo(24 * 2 + leftBand + (3 * 24 - 2) + overhang, 6);
@@ -458,7 +458,7 @@ describe("buildHeatmapSvg placement", () => {
 
     // Top labels start at the middle of their column, one label gap above the grid.
     const top = [...svg.matchAll(/translate\(([\d.]+),([\d.]+)\) rotate\(-45\)[^>]*>([^<]*)</g)];
-    expect(top.map((m) => m[3])).toEqual(["JS", "BW"]);
+    expect(top.map((m) => m[3])).toEqual(["GH", "CD"]);
     expect(top.map((m) => Number(m[1]))).toEqual(columnXs.map((x) => x + 11));
     for (const m of top) expect(Number(m[2])).toBeCloseTo((rowYs[0] ?? 0) - 6, 6);
 
@@ -498,7 +498,7 @@ describe("buildHeatmapSvg placement", () => {
 
 describe("buildHeatmapSvg legend wrapping", () => {
   const legendRows = (role: CreditRoleName) =>
-    legendRowCount(buildHeatmapSvg([createAuthor("Jane Smith", { contributions: [{ role, score: 100 }] })]));
+    legendRowCount(buildHeatmapSvg([createAuthor("Grace Hopper", { contributions: [{ role, score: 100 }] })]));
 
   it("stacks one key per row when no two keys fit side by side", () => {
     // A Methodology-only figure (about 100px wide) is narrower than any pair of keys but wider than
@@ -569,7 +569,7 @@ describe("publication heatmap presentation", () => {
 describe("buildHeatmapSvg golden layouts", () => {
   const contribs = (scores: [CreditRoleName, number][]) => scores.map(([role, score]) => ({ role, score }));
   const team = () => [
-    createAuthor("Tu Youyou", {
+    createAuthor("Hua Luogeng", {
       contributions: contribs([
         ["Conceptualization", 100],
         ["Software", 33],
@@ -675,7 +675,7 @@ describe("buildHeatmapSvg golden layouts", () => {
   });
 
   it("draws an author who lacks a role's entry as no contribution", () => {
-    const sparse = { ...createAuthor("Tu Youyou"), contributions: [] };
+    const sparse = { ...createAuthor("Hua Luogeng"), contributions: [] };
     const svg = buildHeatmapSvg([team()[0] as Author, sparse]);
     expect(svg.match(/width="22" height="22"/g)).toHaveLength(6);
   });

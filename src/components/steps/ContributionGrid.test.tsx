@@ -17,8 +17,8 @@ const initial = store();
 
 function twoAuthors(): Author[] {
   return [
-    createAuthor("Jane Smith", { contributions: [{ role: "Conceptualization", score: 100 }] }),
-    createAuthor("Bob White", { contributions: [{ role: "Investigation", score: 100 }] }),
+    createAuthor("Grace Hopper", { contributions: [{ role: "Conceptualization", score: 100 }] }),
+    createAuthor("Charles Darwin", { contributions: [{ role: "Investigation", score: 100 }] }),
   ];
 }
 
