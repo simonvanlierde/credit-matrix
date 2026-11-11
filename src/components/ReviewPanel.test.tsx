@@ -13,7 +13,7 @@ const ROW_ORCID = "0000-0001-5109-3700";
 it("warns when a signed reply put a different iD on the row than the one asked", () => {
   act(() => {
     useContributionStore.getState().createDraft();
-    useContributionStore.getState().addAuthor("Bob White", ROW_ORCID);
+    useContributionStore.getState().addAuthor("Charles Darwin", ROW_ORCID);
   });
   const { activeDraftId, authors } = useContributionStore.getState();
   const bob = authors[0];
@@ -44,7 +44,7 @@ it("warns when a signed reply put a different iD on the row than the one asked",
 it("notes a signed reply on a row with no iD to compare with", () => {
   act(() => {
     useContributionStore.getState().createDraft();
-    useContributionStore.getState().addAuthor("Bob White");
+    useContributionStore.getState().addAuthor("Charles Darwin");
   });
   const { activeDraftId, authors } = useContributionStore.getState();
   const bob = authors[0];
@@ -56,7 +56,7 @@ it("notes a signed reply on a row with no iD to compare with", () => {
       row: { ...bob, contributions: [{ role: "Investigation", score: 100 }] },
       sentAt: 1,
       at: 2,
-      orcid: { orcid: TEST_ORCID, name: "Bob White", issuedAt: 1, token: "t", payload: "p" },
+      orcid: { orcid: TEST_ORCID, name: "Charles Darwin", issuedAt: 1, token: "t", payload: "p" },
     });
   });
   expect(useContributionStore.getState().authors[0]?.orcid).toBeUndefined();
@@ -66,7 +66,7 @@ it("notes a signed reply on a row with no iD to compare with", () => {
       <ReviewPanel />
     </IntlProvider>,
   );
-  expect(screen.getByText(`Verified by ORCID as Bob White (${TEST_ORCID})`, { exact: false })).toBeTruthy();
+  expect(screen.getByText(`Verified by ORCID as Charles Darwin (${TEST_ORCID})`, { exact: false })).toBeTruthy();
   expect(screen.getByText(english.reviewOrcidNoRowId)).toBeTruthy();
   expect(screen.queryByText(english.reviewOrcidOtherId)).toBeNull();
 });
@@ -74,11 +74,11 @@ it("notes a signed reply on a row with no iD to compare with", () => {
 it("does not show a sign-in an offline import could not check as verified", () => {
   act(() => {
     useContributionStore.getState().createDraft();
-    useContributionStore.getState().addAuthor("Bob White", TEST_ORCID);
+    useContributionStore.getState().addAuthor("Charles Darwin", TEST_ORCID);
   });
   const bob = useContributionStore.getState().authors[0];
   if (!bob) throw new Error("expected Bob");
-  const orcid = { orcid: TEST_ORCID, name: "Bob White", issuedAt: 1, token: "t", payload: "p" };
+  const orcid = { orcid: TEST_ORCID, name: "Charles Darwin", issuedAt: 1, token: "t", payload: "p" };
   const reply = {
     contributions: [{ role: "Investigation" as const, score: 100 }],
     equalContribution: false,
@@ -95,18 +95,18 @@ it("does not show a sign-in an offline import could not check as verified", () =
       <ReviewPanel />
     </IntlProvider>,
   );
-  expect(screen.getByRole("heading", { name: "Bob White" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Charles Darwin" })).toBeTruthy();
   expect(container.querySelector("[data-orcid-verified]")).toBeNull();
 });
 
 it("shows a sign-in given for another row as a warning, not as verified", () => {
   act(() => {
     useContributionStore.getState().createDraft();
-    useContributionStore.getState().addAuthor("Bob White", TEST_ORCID);
+    useContributionStore.getState().addAuthor("Charles Darwin", TEST_ORCID);
   });
   const bob = useContributionStore.getState().authors[0];
   if (!bob) throw new Error("expected Bob");
-  const orcid = { orcid: TEST_ORCID, name: "Bob White", issuedAt: 1, token: "t", payload: "p" };
+  const orcid = { orcid: TEST_ORCID, name: "Charles Darwin", issuedAt: 1, token: "t", payload: "p" };
   const reply = {
     contributions: [{ role: "Investigation" as const, score: 100 }],
     equalContribution: false,
@@ -123,7 +123,7 @@ it("shows a sign-in given for another row as a warning, not as verified", () => 
       <ReviewPanel />
     </IntlProvider>,
   );
-  expect(screen.getByText(/^Not verified for this row: Bob White \(/)).toBeTruthy();
+  expect(screen.getByText(/^Not verified for this row: Charles Darwin \(/)).toBeTruthy();
   expect(container.querySelector("[data-orcid-verified]")).toBeNull();
   expect(screen.queryByText("Verified by ORCID", { exact: false })).toBeNull();
 });
@@ -132,7 +132,7 @@ it("shows the paper title a verified sign-in was given for only when it differs 
   act(() => {
     useContributionStore.getState().createDraft();
     useContributionStore.getState().setTitle("Sea otters");
-    useContributionStore.getState().addAuthor("Bob White", TEST_ORCID);
+    useContributionStore.getState().addAuthor("Charles Darwin", TEST_ORCID);
   });
   const bob = useContributionStore.getState().authors[0];
   if (!bob) throw new Error("expected Bob");
@@ -143,7 +143,7 @@ it("shows the paper title a verified sign-in was given for only when it differs 
     sourceDraftId: "d",
     reply: true,
   });
-  const orcid = { orcid: TEST_ORCID, name: "Bob White", issuedAt: 1, token: "t", payload };
+  const orcid = { orcid: TEST_ORCID, name: "Charles Darwin", issuedAt: 1, token: "t", payload };
   const reply = {
     contributions: [{ role: "Investigation" as const, score: 100 }],
     equalContribution: false,

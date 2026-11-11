@@ -48,7 +48,7 @@ msgid "loadSample"
 msgstr "加载示例数据"
 
 msgid "sampleNames"
-msgstr "Youyou Tu\nXuesen Qian\nChien-Shiung Wu"
+msgstr "Luogeng Hua\nXuesen Qian\nChien-Shiung Wu"
 
 msgid "assignmentMode"
 msgstr "角色分配模式"

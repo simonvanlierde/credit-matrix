@@ -22,7 +22,7 @@ const signToken: Awaited<typeof issuer>["sign"] = async (claims, header) => (awa
 const encode = (value: unknown) => toBase64Url(new TextEncoder().encode(JSON.stringify(value)));
 
 function replyInput(): SharePayloadInput {
-  const bob = createAuthor("Bob White", { id: "bob", contributions: [{ role: "Investigation", score: 100 }] });
+  const bob = createAuthor("Charles Darwin", { id: "bob", contributions: [{ role: "Investigation", score: 100 }] });
   return { authors: [bob], claimId: "bob", sourceDraftId: "draft-1", reply: true, sentAt: NOW };
 }
 
@@ -46,7 +46,7 @@ describe("ORCID sign-in on a reply", () => {
     const token = await signToken({ nonce: await replyNonce(payload) });
     expect(await verifyOrcidToken(token, { payload, keys, now: NOW })).toEqual({
       orcid: ORCID,
-      name: "Bob White",
+      name: "Charles Darwin",
       issuedAt: NOW - 30_000,
       token,
       payload,
@@ -140,14 +140,14 @@ describe("ORCID sign-in on a reply", () => {
 });
 
 describe("a signed reply in the ask record", () => {
-  const lead = () => [createAuthor("Bob White", { id: "bob", contributions: [{ role: "Software", score: 100 }] })];
+  const lead = () => [createAuthor("Charles Darwin", { id: "bob", contributions: [{ role: "Software", score: 100 }] })];
   const row = () => replyInput().authors[0];
 
   async function proof() {
     const payload = toSharePayload(replyInput());
     return {
       orcid: ORCID,
-      name: "Bob White",
+      name: "Charles Darwin",
       issuedAt: NOW,
       token: await signToken({ nonce: await replyNonce(payload) }),
       payload,
@@ -262,7 +262,7 @@ describe("a signed reply in the ask record", () => {
       file.asks.bob.reply.provenance.orcid.orcid = "0000-0001-5109-3700";
       file.asks.bob.reply.provenance.orcid.name = "Someone Else";
       // The token's own claims win over the edited fields.
-      expect((await recheck(file))?.provenance?.orcid).toMatchObject({ orcid: ORCID, name: "Bob White" });
+      expect((await recheck(file))?.provenance?.orcid).toMatchObject({ orcid: ORCID, name: "Charles Darwin" });
 
       file.asks.bob.reply.provenance.orcid.token = await (await testIssuer(NOW)).sign({ nonce: "x" });
       const forged = await recheck(file);
@@ -326,7 +326,7 @@ describe("a signed reply in the ask record", () => {
       it("does not warn when the draft holds the same person under another id", async () => {
         const { authors, asks } = fromJson(JSON.stringify(await imported()));
         const checked = await recheckSignIns(asks ?? {}, keys);
-        const current = [createAuthor("Bob White", { id: "b2" })];
+        const current = [createAuthor("Charles Darwin", { id: "b2" })];
         const mapped = keepKnownIds(current, authors);
         expect(mapped[0]?.id).toBe("b2");
         const provenance = importAnswers(current, authors, mapped, {}, { asks: checked }).asks?.b2?.reply?.provenance;
@@ -371,7 +371,7 @@ describe("a signed reply in the ask record", () => {
       it("judges a repeated id by the first row with it, which is the row that keeps it", async () => {
         const file = await withImpostor();
         const checked = await recheckSignIns(file.asks, keys);
-        const current = [createAuthor("Bob White", { id: "bob" })];
+        const current = [createAuthor("Charles Darwin", { id: "bob" })];
         const incoming = file.authors as Author[];
         const out = importAnswers(current, incoming, incoming, {}, { asks: checked });
         expect(normalizeRoster(incoming)[0]).toMatchObject({ id: "bob", name: "Mallory Evil" });

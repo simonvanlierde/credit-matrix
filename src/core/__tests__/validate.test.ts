@@ -16,7 +16,7 @@ describe("validateContributions", () => {
   });
 
   it("warns about an author with no assigned roles", () => {
-    const authors = parseAuthorText("Jane Smith\nBob White");
+    const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
     setScore(authors, 0, "Conceptualization", 100);
     setScore(authors, 0, "Writing – original draft", 100);
     // Bob has nothing assigned.
@@ -28,12 +28,12 @@ describe("validateContributions", () => {
       level: "warning",
       code: "authorNoRoles",
       authorId: bob?.id,
-      authorName: "Bob White",
+      authorName: "Charles Darwin",
     });
   });
 
   it("flags missing expected roles", () => {
-    const authors = parseAuthorText("Jane Smith");
+    const authors = parseAuthorText("Grace Hopper");
     setScore(authors, 0, "Investigation", 100); // present, but not an expected role
 
     const issues = validateContributions(authors);
@@ -42,7 +42,7 @@ describe("validateContributions", () => {
   });
 
   it("is clean when expected roles are covered and everyone contributes", () => {
-    const authors = parseAuthorText("Jane Smith");
+    const authors = parseAuthorText("Grace Hopper");
     setScore(authors, 0, "Conceptualization", 100);
     setScore(authors, 0, "Writing – original draft", 100);
 

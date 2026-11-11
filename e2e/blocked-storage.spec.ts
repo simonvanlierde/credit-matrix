@@ -35,7 +35,7 @@ test("works, unsaved, when the browser blocks site data", async ({ baseURL, brow
     await expect(page.locator("dialog#getting-started")).toBeVisible();
     await page.keyboard.press("Escape");
     const add = page.getByLabel("New author names or ORCID iD");
-    await add.fill("Jane Smith");
+    await add.fill("Grace Hopper");
     await add.press("Enter");
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(1);
     await expect(onScreen(page, /browser blocks storage/)).toBeVisible();

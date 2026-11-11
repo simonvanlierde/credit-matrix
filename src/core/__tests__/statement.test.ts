@@ -1,7 +1,10 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; the corpus is a file on disk
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { MAX_AUTHORS } from "../author";
 import { CREDIT_ROLES, creditSlug } from "../credit-roles";
+import { generateStatement } from "../generate-statement";
+import { createAuthor } from "../parse-authors";
 import {
   MAX_STATEMENT_LENGTH,
   namesCredit,
@@ -435,6 +438,20 @@ describe("assignment order", () => {
 });
 
 describe("size", () => {
+  it("reads back a full draft's by-author statement with every role", () => {
+    // Letters only: the parser reads names without digits, so "Franklin 1" and "Franklin 2" would tie.
+    const letters = (i: number) => String.fromCharCode(97 + (i % 26), 97 + Math.floor(i / 26));
+    const authors = Array.from({ length: MAX_AUTHORS }, (_, i) => {
+      const person = createAuthor(`Rosalind Elsie Franklin-Lavoisier${letters(i)}`);
+      for (const c of person.contributions) c.score = 100;
+      return person;
+    });
+    const text = generateStatement(authors, { format: "by-author" });
+    expect(text.length).toBeLessThanOrEqual(MAX_STATEMENT_LENGTH);
+    const parsed = parseStatement(text, authors.map(statementAuthor));
+    expect(parsed.assignments).toHaveLength(MAX_AUTHORS * CREDIT_ROLES.length);
+  });
+
   it(`refuses a statement longer than ${MAX_STATEMENT_LENGTH} characters`, () => {
     expect(() => parseStatement("a".repeat(MAX_STATEMENT_LENGTH + 1), THREE)).toThrow(
       new RangeError(
@@ -566,19 +583,19 @@ describe("name matching order", () => {
 describe("statementAuthor", () => {
   it.each([
     [
-      { name: "Jane Anne Marie Smith", firstName: "Jane", middleName: "Anne", surname: "Smith" },
-      "Jane Anne Marie",
-      "Smith",
+      { name: "Grace Anne Marie Hopper", firstName: "Grace", middleName: "Anne", surname: "Hopper" },
+      "Grace Anne Marie",
+      "Hopper",
     ],
-    [{ name: "Smith, Jane A.", firstName: "Jane", middleName: "A", surname: "Smith" }, "Jane A.", "Smith"],
+    [{ name: "Hopper, Grace A.", firstName: "Grace", middleName: "A", surname: "Hopper" }, "Grace A.", "Hopper"],
     [{ name: "Madonna", firstName: "Madonna", middleName: "", surname: "" }, "Madonna", ""],
-    [{ name: "Jane Smith", firstName: "Jane", middleName: "", surname: "Smith" }, "Jane", "Smith"],
+    [{ name: "Grace Hopper", firstName: "Grace", middleName: "", surname: "Hopper" }, "Grace", "Hopper"],
     // A name edited since it was parsed no longer holds the surname: the stored parts stand in.
-    [{ name: "J. Doe", firstName: "Jane", middleName: "Ann", surname: "Smith" }, "Jane Ann", "Smith"],
+    [{ name: "J. Doe", firstName: "Grace", middleName: "Ann", surname: "Hopper" }, "Grace Ann", "Hopper"],
     // Family name first, as Hungarian writes it: nothing comes before the surname.
     [{ name: "Kovács János", firstName: "János", middleName: "", surname: "Kovács" }, "János", "Kovács"],
     // A comma that does not follow the surname is not the inverted form.
-    [{ name: "Jane, Smith", firstName: "Jane", middleName: "", surname: "Smith" }, "Jane,", "Smith"],
+    [{ name: "Grace, Hopper", firstName: "Grace", middleName: "", surname: "Hopper" }, "Grace,", "Hopper"],
   ])("splits %j", (input, given, surname) => {
     expect(statementAuthor(input)).toEqual({ given, surname });
   });
@@ -587,13 +604,13 @@ describe("statementAuthor", () => {
 describe("readsAsStatement", () => {
   it.each([
     // Two sentences with four plain words between them read as prose.
-    ["Jane did all. Bob wrote code.", true],
+    ["Grace did all. Bob wrote code.", true],
     ["Conceptualization - JP", true],
     ["J.-P. Martin; conceptualization", false],
     ["JP - conceptualization", true],
     ["Conceptualization, Jo Lee", false],
     // Many plain words, but no sentence and no distinctive role.
-    ["Jane Smith is the one who did it", false],
+    ["Grace Hopper is the one who did it", false],
     // Name particles and "and" are not prose words.
     ["Ann van der Berg and Bob de la Cruz, conceptualization", false],
     ["Ann Lee and Bob Kim and Cy Moe and Di Wu, conceptualization", false],
@@ -603,7 +620,7 @@ describe("readsAsStatement", () => {
     ["Project administration - JP", true],
     ["Visualization - JP", true],
     // Three plain words beside a distinctive role read as a statement.
-    ["Jane did all the conceptualization", true],
+    ["Grace did all the conceptualization", true],
     // Initials beside any one role are enough.
     ["Visualization, conceptualization AB", true],
     // "Author" with a verb is prose about who did what, singular or plural, with words between.
@@ -618,7 +635,7 @@ describe("readsAsStatement", () => {
     ["Conceptualization, J", false],
     ["Conceptualization AB.", true],
     ["AB and the Conceptualization", false],
-    ["Smith AB Conceptualization", true],
+    ["Hopper AB Conceptualization", true],
     ["McAB, Conceptualization", false],
   ])("reads %j as a statement: %s", (text, expected) => {
     expect(readsAsStatement(text)).toBe(expected);

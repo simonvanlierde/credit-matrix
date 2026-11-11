@@ -48,7 +48,7 @@ msgid "loadSample"
 msgstr "サンプルデータを読み込む"
 
 msgid "sampleNames"
-msgstr "Hideki Yukawa\nMichiyo Tsujimura\nShinya Yamanaka"
+msgstr "Hideki Yukawa\nMichiyo Tsujimura\nShibasaburo Kitasato"
 
 msgid "assignmentMode"
 msgstr "役割の割り当てモード"

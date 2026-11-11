@@ -71,7 +71,9 @@ unsupported languages and Traditional Chinese fall back to English. Write your h
 
 ## Contribution heatmap
 
-See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
+See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive. From about
+25 contributors it warns that the labels print under 6 pt, which fails a strict build; the
+[final-size checks](../heatmap.md#final-size-readability-checks) say how to silence it.
 Generated SVG assets contain embedded fonts and editable text. See
 [font portability and PDF export](../figures/README.md) for document-converter limits.
 

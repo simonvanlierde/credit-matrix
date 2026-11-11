@@ -13,8 +13,8 @@ test.beforeAll(async () => {
   figures = createFigureRenderer();
 });
 
+import { heatmapPrintSize } from "../src/core/export/heatmap-print";
 import { createAuthor } from "../src/core/parse-authors";
-import { heatmapPrintSize } from "../src/lib/heatmap-print";
 
 const scenarios = [
   { name: "single-column", widthMm: 89, count: 3, horizontal: false, marks: false },

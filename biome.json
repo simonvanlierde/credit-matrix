@@ -92,7 +92,7 @@
       }
     },
     {
-      "includes": ["citation.csl.json"],
+      "includes": ["citation.csl.json", "integrations/typst/translations.json"],
       "formatter": {
         "enabled": false
       }

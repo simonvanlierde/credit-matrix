@@ -37,14 +37,14 @@ async function stubOrcid(page: Page, issuer: Awaited<ReturnType<typeof testIssue
   });
 }
 
-/** Add Bob White on the lead's page and copy the link that asks him what he did. */
+/** Add Charles Darwin on the lead's page and copy the link that asks him what he did. */
 async function askBob(lead: Page) {
   await lead.goto("/");
   const adder = lead.getByLabel("New author names or ORCID iD");
-  await adder.fill("Jane Smith, Bob White");
+  await adder.fill("Grace Hopper, Charles Darwin");
   await adder.press("Enter");
-  await lead.getByRole("button", { name: "Actions for Bob White" }).click();
-  const ask = await copyFrom(lead, lead.getByRole("button", { name: "Ask Bob White what they did" }));
+  await lead.getByRole("button", { name: "Actions for Charles Darwin" }).click();
+  const ask = await copyFrom(lead, lead.getByRole("button", { name: "Ask Charles Darwin what they did" }));
   await lead.keyboard.press("Escape");
   return ask;
 }
@@ -69,7 +69,7 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
     .getByRole("radio", { name: "Contributed", exact: true })
     .click();
   await coauthor.getByRole("button", { name: "Sign in with ORCID" }).click();
-  await expect(coauthor.getByText(`Signed in with ORCID as Bob White (${TEST_ORCID}).`)).toBeVisible();
+  await expect(coauthor.getByText(`Signed in with ORCID as Charles Darwin (${TEST_ORCID}).`)).toBeVisible();
   expect(coauthor.url()).not.toContain("id_token");
   expect((await scan(coauthor)).violations).toEqual([]);
   const reply = await copyFrom(coauthor, coauthor.getByRole("button", { name: "Send back" }));
@@ -84,9 +84,9 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
   await coauthor.context().close();
 
   await lead.goto(reply);
-  await expect(onScreen(lead, /Bob White's answer arrived/)).toBeVisible();
+  await expect(onScreen(lead, /Charles Darwin's answer arrived/)).toBeVisible();
   await lead.getByRole("tab", { name: /^Review/ }).click();
-  const verified = lead.getByText(`Verified by ORCID as Bob White (${TEST_ORCID})`, { exact: false });
+  const verified = lead.getByText(`Verified by ORCID as Charles Darwin (${TEST_ORCID})`, { exact: false });
   await expect(verified).toBeVisible();
   expect((await scan(lead)).violations).toEqual([]);
 
@@ -117,7 +117,7 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
   }
 
   const fresh = await importInto(file.buffer);
-  await expect(fresh.getByText(`Verified by ORCID as Bob White (${TEST_ORCID})`, { exact: false })).toBeVisible();
+  await expect(fresh.getByText(`Verified by ORCID as Charles Darwin (${TEST_ORCID})`, { exact: false })).toBeVisible();
   await fresh.context().close();
 
   // A file edited to put the sign-in on a different answer imports without the mark.
@@ -126,7 +126,7 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
   if (!bob) throw new Error("expected Bob's answer in the export");
   bob.reply.contributions = [{ role: "Software", score: 100 }];
   const forged = await importInto(Buffer.from(JSON.stringify(edited)));
-  await expect(forged.getByRole("heading", { name: "Bob White" })).toBeVisible();
+  await expect(forged.getByRole("heading", { name: "Charles Darwin" })).toBeVisible();
   await expect(forged.locator("[data-orcid-verified]")).toHaveCount(0);
   await forged.context().close();
 });
@@ -153,7 +153,7 @@ test("a token signed for another answer arrives unverified", async ({ browser })
     ask.split("#")[0],
   );
   await lead.goto(forged);
-  await expect(onScreen(lead, /Bob White's answer/)).toBeVisible();
+  await expect(onScreen(lead, /Charles Darwin's answer/)).toBeVisible();
   await lead.getByRole("tab", { name: /^Review/ }).click();
   await expect(lead.locator("[data-orcid-verified]")).toHaveCount(0);
   await lead.context().close();

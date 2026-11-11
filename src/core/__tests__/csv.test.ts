@@ -4,7 +4,7 @@ import { parseAuthorText } from "../parse-authors";
 
 describe("CSV import/export", () => {
   it("round-trips authors and contribution scores", () => {
-    const authors = parseAuthorText("Jane Smith\nBob White");
+    const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
     const [jane, bob] = authors;
     if (!(jane && bob)) throw new Error("expected 2 authors");
 
@@ -19,14 +19,14 @@ describe("CSV import/export", () => {
     const parsed = fromCsv(toCsv(authors));
 
     expect(parsed).toHaveLength(2);
-    expect(parsed[0]?.name).toBe("Jane Smith");
+    expect(parsed[0]?.name).toBe("Grace Hopper");
     expect(parsed[0]?.orcid).toBe("0000-0000-0000-0001");
     expect(parsed[0]?.contributions[0]?.score).toBe(100);
     expect(parsed[1]?.contributions[4]?.score).toBe(66);
   });
 
   it("round-trips the author / non-author contributor type", () => {
-    const [jane, bob] = parseAuthorText("Jane Smith\nBob White");
+    const [jane, bob] = parseAuthorText("Grace Hopper\nCharles Darwin");
     if (!(jane && bob)) throw new Error("expected 2 authors");
     bob.contributorType = "non-author";
 
@@ -57,18 +57,18 @@ describe("CSV import/export", () => {
     // A name with an embedded newline must survive quoting on export and the
     // quote-aware record parser on import (a naive line-split would tear it);
     // createAuthor then reads the line break as a space.
-    const [author] = parseAuthorText("Jane Smith");
+    const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
-    author.name = "Jane\nSmith";
+    author.name = "Grace\nHopper";
 
     const parsed = fromCsv(toCsv([author]));
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.name).toBe("Jane Smith");
+    expect(parsed[0]?.name).toBe("Grace Hopper");
   });
 
   it("round-trips a field containing a bare carriage return", () => {
     // The record parser ends a row on a lone \r too, so the field must be quoted.
-    const [author] = parseAuthorText("Jane Smith");
+    const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
     author.name = "Ann\r=HYPERLINK()";
 
@@ -79,7 +79,7 @@ describe("CSV import/export", () => {
 
   it("keeps a leading apostrophe behind leading whitespace", () => {
     // Import trims a cell before it strips the formula guard, so export must decide on the trimmed value too.
-    const [author] = parseAuthorText("Jane Smith");
+    const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
     author.name = "\n'-Ann Lee";
 
@@ -99,9 +99,9 @@ describe("CSV import/export", () => {
   it("parses escaped quotes and commas inside a quoted field", () => {
     // RFC-4180: `""` is a literal quote and a comma inside quotes is data, not a
     // column break. The score column must still land at 100.
-    const parsed = fromCsv(`Name,Conceptualization\n"Jane ""JS"", Smith",100`);
+    const parsed = fromCsv(`Name,Conceptualization\n"Grace ""GH"", Hopper",100`);
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.name).toBe('Jane "JS", Smith'); // field reassembled verbatim, comma not treated as a column break
+    expect(parsed[0]?.name).toBe('Grace "GH", Hopper'); // field reassembled verbatim, comma not treated as a column break
     expect(parsed[0]?.contributions[0]?.score).toBe(100);
   });
 
@@ -112,13 +112,13 @@ describe("CSV import/export", () => {
   });
 
   it("reads a quoted field that follows a space after the comma", () => {
-    const [jane] = fromCsv(`Name,Software\n "Smith, Jane", "Lead"`);
-    expect(jane?.name).toBe("Smith, Jane");
+    const [jane] = fromCsv(`Name,Software\n "Hopper, Grace", "Lead"`);
+    expect(jane?.name).toBe("Hopper, Grace");
     expect(jane?.contributions.find((c) => c.role === "Software")?.score).toBe(100);
   });
 
   it("matches headers and level words whatever their case or dash", () => {
-    const csv = `name,type,conceptualization,Writing - original draft,SOFTWARE\nJane Smith,Non-author,Lead,supporting,50`;
+    const csv = `name,type,conceptualization,Writing - original draft,SOFTWARE\nGrace Hopper,Non-author,Lead,supporting,50`;
     const [jane] = fromCsv(csv);
     expect(jane?.contributorType).toBe("non-author");
     const score = (role: string) => jane?.contributions.find((c) => c.role === role)?.score;
@@ -128,25 +128,25 @@ describe("CSV import/export", () => {
   });
 
   it("skips a row with no usable name and keeps the rest", () => {
-    const parsed = fromCsv(`Name,Conceptualization\nJane Smith,100\n,100\n123,100\nBob Lee,100`);
-    expect(parsed.map((a) => a.name)).toEqual(["Jane Smith", "Bob Lee"]);
+    const parsed = fromCsv(`Name,Conceptualization\nGrace Hopper,100\n,100\n123,100\nBob Lee,100`);
+    expect(parsed.map((a) => a.name)).toEqual(["Grace Hopper", "Bob Lee"]);
   });
 
   it("rounds a fractional score cell to an integer", () => {
-    const csv = `Name,Conceptualization\nJane Smith,50.5`;
+    const csv = `Name,Conceptualization\nGrace Hopper,50.5`;
     const parsed = fromCsv(csv);
     expect(parsed[0]?.contributions[0]?.score).toBe(51);
   });
 
   it("writes the markers as yes and no, and an empty cell for a missing ORCID", () => {
-    const [jane, bob] = parseAuthorText("Jane Smith\nBob White");
+    const [jane, bob] = parseAuthorText("Grace Hopper\nCharles Darwin");
     if (!(jane && bob)) throw new Error("expected 2 authors");
     jane.equalContribution = true;
     jane.corresponding = true;
 
     const [, janeRow, bobRow] = toCsv([jane, bob]).split("\n");
-    expect(janeRow?.startsWith("Jane Smith,,author,yes,yes,")).toBe(true);
-    expect(bobRow?.startsWith("Bob White,,author,no,no,")).toBe(true);
+    expect(janeRow?.startsWith("Grace Hopper,,author,yes,yes,")).toBe(true);
+    expect(bobRow?.startsWith("Charles Darwin,,author,no,no,")).toBe(true);
     expect(fromCsv(toCsv([jane, bob])).map((a) => [a.equalContribution, a.corresponding])).toEqual([
       [true, true],
       [false, false],
@@ -154,7 +154,7 @@ describe("CSV import/export", () => {
   });
 
   it("keeps a leading apostrophe that does not guard a formula", () => {
-    const [author] = parseAuthorText("Jane Smith");
+    const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
     author.name = "'t Hooft";
 
@@ -163,7 +163,7 @@ describe("CSV import/export", () => {
   });
 
   it("strips the formula guard behind the spaces a spreadsheet may add", () => {
-    expect(fromCsv("Name\n  '=Jane Smith")[0]?.name).toBe("=Jane Smith");
+    expect(fromCsv("Name\n  '=Grace Hopper")[0]?.name).toBe("=Grace Hopper");
   });
 
   it("guards only a formula character at the start of a cell", () => {
@@ -173,7 +173,7 @@ describe("CSV import/export", () => {
   });
 
   it("reads the header cells of a sheet with a byte order mark", () => {
-    expect(headerCells("\uFEFFName,ORCID\nJane Smith,")).toEqual(["name", "orcid"]);
+    expect(headerCells("\uFEFFName,ORCID\nGrace Hopper,")).toEqual(["name", "orcid"]);
   });
 
   it("keeps a blank line as an empty record", () => {
@@ -190,12 +190,15 @@ describe("CSV import/export", () => {
   });
 
   it("skips blank lines, also before the header", () => {
-    expect(fromCsv("\n,\nName\nJane Smith\n\nBob White").map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
+    expect(fromCsv("\n,\nName\nGrace Hopper\n\nCharles Darwin").map((a) => a.name)).toEqual([
+      "Grace Hopper",
+      "Charles Darwin",
+    ]);
   });
 
   it("picks the delimiter from the first line only, and comma or semicolon on a tie", () => {
-    expect(delimiterOf("Name,ORCID\nJane;Smith;x;y")).toBe(",");
-    expect(delimiterOf("Name,ORCID\r\nJane;Smith;x;y")).toBe(",");
+    expect(delimiterOf("Name,ORCID\nGrace;Hopper;x;y")).toBe(",");
+    expect(delimiterOf("Name,ORCID\r\nGrace;Hopper;x;y")).toBe(",");
     expect(delimiterOf("Name;ORCID\tType")).toBe(";");
     expect(delimiterOf("Name")).toBe(",");
   });
@@ -206,7 +209,7 @@ describe("CSV import/export", () => {
   });
 
   it("skips a row too short to reach the Name column", () => {
-    expect(fromCsv("ORCID,Name\n0000-0002-1825-0097\n,Jane Smith").map((a) => a.name)).toEqual(["Jane Smith"]);
+    expect(fromCsv("ORCID,Name\n0000-0002-1825-0097\n,Grace Hopper").map((a) => a.name)).toEqual(["Grace Hopper"]);
   });
 
   it("guards a formula after leading spaces, as import trims the cell before reading it", () => {
@@ -215,7 +218,7 @@ describe("CSV import/export", () => {
   });
 
   it("drops an ORCID that is not valid and keeps the contributor", () => {
-    const parsed = fromCsv("Name,ORCID\nJane Smith,0000-0000-0000-0000");
-    expect(parsed.map((a) => [a.name, a.orcid])).toEqual([["Jane Smith", undefined]]);
+    const parsed = fromCsv("Name,ORCID\nGrace Hopper,0000-0000-0000-0000");
+    expect(parsed.map((a) => [a.name, a.orcid])).toEqual([["Grace Hopper", undefined]]);
   });
 });
