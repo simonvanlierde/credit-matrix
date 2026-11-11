@@ -147,7 +147,11 @@ test.describe("the first step", () => {
         const context = document.createElement("canvas").getContext("2d");
         if (!context) throw new Error("no canvas");
         context.font = style.font;
-        const room = el.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight);
+        // From the border box: Firefox's input clientWidth already leaves out the padding, Chromium's does not.
+        const room = ["borderLeftWidth", "borderRightWidth", "paddingLeft", "paddingRight"].reduce(
+          (width, side) => width - Number.parseFloat(style[side as "paddingLeft"]),
+          el.getBoundingClientRect().width,
+        );
         return context.measureText(el.placeholder).width - room;
       });
       expect(overflow).toBeLessThanOrEqual(0);
