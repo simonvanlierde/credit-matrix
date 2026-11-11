@@ -50,7 +50,7 @@ function DocPage() {
       <a href="/docs" className="text-sm text-primary hover:underline">
         {t("docsTitle")}
       </a>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own Markdown, rendered at build time */}
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own Markdown from the repo */}
       <article lang="en" className="document" dangerouslySetInnerHTML={{ __html: html }} />
       <nav aria-label={t("docsTitle")} className="document">
         <DocsList current={route} />

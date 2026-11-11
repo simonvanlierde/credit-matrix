@@ -28,7 +28,8 @@ const CACHE = "credit-matrix-BUILD_ID";
 // Stamped by postbuild so lazy pages and languages also work on their first offline visit.
 const ASSETS = [];
 
-// Every page, stamped by postbuild from src/routes.ts.
+// Every page, stamped by postbuild from src/routes.ts. Docs images are not precached (budget):
+// they work offline once viewed online.
 const PAGES = [];
 
 // Past this, a hanging connection falls back to the cached page instead of

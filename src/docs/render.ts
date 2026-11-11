@@ -37,9 +37,10 @@ export function resolveHref(href: string, from: string): string {
   const url = new URL(href, `https://repo.invalid/${from}`);
   const path = decodeURIComponent(url.pathname.slice(1));
   const route = routes.get(path) ?? routes.get(`${path}README.md`);
-  if (route) return route + url.hash;
+  if (route) return route + url.search + url.hash;
   if (images[path]) return images[path];
-  return `${GITHUB}/${path.endsWith("/") ? "tree" : "blob"}/main/${path.replace(/\/$/, "")}${url.hash}`;
+  const view = path === "" || path.endsWith("/") ? "tree" : "blob";
+  return `${GITHUB}/${view}/main/${path.replace(/\/$/, "")}${url.search}${url.hash}`;
 }
 
 /** Text without Markdown: for a page title and description. */

@@ -4,7 +4,7 @@ import { Marked } from "marked";
 export const slug = (text: string) =>
   text
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/[^\p{L}\p{N}\s_-]/gu, "")
     .replace(/\s/g, "-");
 
 /**
@@ -15,7 +15,7 @@ export function renderMarkdown(source: string, href = (target: string) => target
   const markdown = new Marked({
     walkTokens(token) {
       // The header's brand is the page's h1, so the file's own levels move down one.
-      if (token.type === "heading") token.depth += 1;
+      if (token.type === "heading") token.depth = Math.min(token.depth + 1, 6);
       if (token.type === "link" || token.type === "image") token.href = href(token.href);
     },
     renderer: {

@@ -2,6 +2,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { Lexer, marked } from "marked";
 import { describe, expect, test } from "vitest";
+import { renderMarkdown } from "@/lib/markdown";
 import { routes } from "@/routes";
 import { docFiles } from "./pages";
 import { GITHUB, renderDoc, resolveHref, snippet } from "./render";
@@ -52,6 +53,16 @@ describe("resolveHref", () => {
     expect(resolveHref("../../src/core/README.md#cli", from)).toBe(`${GITHUB}/blob/main/src/core/README.md#cli`);
     expect(resolveHref("#install", from)).toBe("#install");
     expect(resolveHref("https://quarto.org", from)).toBe("https://quarto.org");
+    expect(resolveHref("../../src/core/cli.ts?plain=1#L3", from)).toBe(
+      `${GITHUB}/blob/main/src/core/cli.ts?plain=1#L3`,
+    );
+    expect(resolveHref("../../", from)).toBe(`${GITHUB}/tree/main/`);
+  });
+
+  test("keeps GitHub's underscores in anchors and caps heading depth at h6", () => {
+    const html = renderMarkdown("## my_option\n\n###### Deep");
+    expect(html).toContain('<h3 id="my_option">');
+    expect(html).toContain('<h6 id="deep">');
   });
 
   test("a docs page has its title, description and no maintainer comments", async () => {
