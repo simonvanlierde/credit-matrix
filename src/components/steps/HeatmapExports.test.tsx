@@ -10,13 +10,13 @@ import { HeatmapExports } from "./HeatmapExports";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
 // jsdom has no server for the fonts' asset URLs; read the package's own copies from disk.
-vi.mock("@/core/figures", async (importOriginal) => {
-  const figures = await importOriginal<typeof import("@/core/figures")>();
-  const testFile = import.meta.url;
+vi.mock("credit-matrix-fonts", async () => {
+  // biome-ignore lint/correctness/noNodejsModules: the test runs in Node and reads the font files from disk.
+  const { readFile } = await import("node:fs/promises");
+  const { FIGURE_FONT_FILES } = await import("@/core/figure-fonts");
   return {
-    ...figures,
-    createFigureRenderer: () =>
-      figures.createFigureRenderer({ fontFallback: new URL("../../core/figure-fonts/", testFile) }),
+    fonts: async (face: keyof typeof FIGURE_FONT_FILES) =>
+      new Uint8Array(await readFile(`${import.meta.dirname}/../../fonts/${FIGURE_FONT_FILES[face].file}`)),
   };
 });
 vi.mock("@/lib/utils", async (importOriginal) => ({

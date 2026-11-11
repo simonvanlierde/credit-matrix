@@ -7,15 +7,6 @@ import { useContributionStore } from "@/store/contribution-store";
 import { ContributionGrid } from "./ContributionGrid";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
-vi.mock("@/core/figures", async (importOriginal) => {
-  const figures = await importOriginal<typeof import("@/core/figures")>();
-  const testFile = import.meta.url;
-  return {
-    ...figures,
-    createFigureRenderer: () =>
-      figures.createFigureRenderer({ fontFallback: new URL("../../core/figure-fonts/", testFile) }),
-  };
-});
 
 const author = createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] });
 const state = () => useContributionStore.getState();

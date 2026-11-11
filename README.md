@@ -100,4 +100,4 @@ and Noto, are under the SIL Open Font License:
 [Atkinson Hyperlegible Next](public/fonts/OFL-atkinson-hyperlegible-next.txt),
 [Atkinson Hyperlegible Mono](public/fonts/OFL-atkinson-hyperlegible-mono.txt),
 [IBM Plex](public/fonts/OFL-ibm-plex.txt), [Newsreader](public/fonts/OFL-newsreader.txt),
-[Noto figure fonts](src/core/figure-fonts/README.md#redistribution).
+[Noto figure fonts](src/fonts/README.md#redistribution).

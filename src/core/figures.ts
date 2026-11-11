@@ -18,6 +18,9 @@ import type { Author } from "./author";
 import { hexRgb } from "./contributor-color";
 import { escapeXml } from "./export/escape-xml";
 import { buildHeatmapSvg, type HeatmapSvgOptions } from "./export/heatmap-svg";
+import { defaultFigureFonts, type FigureFace, type FigureFontProvider } from "./figure-fonts";
+
+export type { FigureFace, FigureFontProvider } from "./figure-fonts";
 
 export class FigureFontError extends Error {
   override readonly name = "FigureFontError";
@@ -33,9 +36,10 @@ export class FigureFontError extends Error {
 
 export interface FigureSvgOptions extends HeatmapSvgOptions {
   /**
-   * What SVG does with a character the bundled faces cannot draw: `"error"` (the default) throws
+   * What SVG does with a character the figure faces cannot draw: `"error"` (the default) throws
    * `FigureFontError`; `"system"` draws that run in the system font stack `buildHeatmapSvg` uses,
-   * so its look then depends on the viewer's installed fonts.
+   * so its look then depends on the viewer's installed fonts. A face that cannot be loaded at all
+   * gives system-font runs either way, with a console warning.
    */
   fallback?: "system" | "error";
 }
@@ -48,16 +52,15 @@ export interface FigureRenderer {
 
 export interface FigureRendererOptions {
   /**
-   * Folder URL to fetch the font files from when the module's own `figure-fonts/` copies cannot be read,
-   * for a bundle that runs away from its package files.
+   * Where each face's bytes come from. The default reads the installed `credit-matrix-fonts` package,
+   * otherwise downloads the face from its pinned release on jsDelivr, checks its SHA-256 and caches it.
    */
-  fontFallback?: string | URL;
+  fonts?: FigureFontProvider;
 }
 
 interface FontSource {
   family: string;
-  file: string;
-  url: URL;
+  face: FigureFace;
 }
 
 interface FigureFont {
@@ -72,38 +75,14 @@ interface TextRun {
   font: FigureFont | undefined;
 }
 
-// Literal URLs, so bundlers emit each font as its own file. Order: sans Latin, JP, SC, then the serif three.
+// Order: sans Latin, JP, SC, then the serif three.
 const SOURCES: FontSource[] = [
-  {
-    family: "Noto Sans",
-    file: "NotoSans-Regular.ttf",
-    url: new URL("./figure-fonts/NotoSans-Regular.ttf", import.meta.url),
-  },
-  {
-    family: "Credit Figure JP",
-    file: "CreditFigureJP.ttf",
-    url: new URL("./figure-fonts/CreditFigureJP.ttf", import.meta.url),
-  },
-  {
-    family: "Credit Figure SC",
-    file: "CreditFigureSC.ttf",
-    url: new URL("./figure-fonts/CreditFigureSC.ttf", import.meta.url),
-  },
-  {
-    family: "Noto Serif",
-    file: "NotoSerif-Regular.ttf",
-    url: new URL("./figure-fonts/NotoSerif-Regular.ttf", import.meta.url),
-  },
-  {
-    family: "Credit Figure Serif JP",
-    file: "CreditFigureSerifJP.ttf",
-    url: new URL("./figure-fonts/CreditFigureSerifJP.ttf", import.meta.url),
-  },
-  {
-    family: "Credit Figure Serif SC",
-    file: "CreditFigureSerifSC.ttf",
-    url: new URL("./figure-fonts/CreditFigureSerifSC.ttf", import.meta.url),
-  },
+  { family: "Noto Sans", face: "sans" },
+  { family: "Credit Figure JP", face: "sans-jp" },
+  { family: "Credit Figure SC", face: "sans-sc" },
+  { family: "Noto Serif", face: "serif" },
+  { family: "Credit Figure Serif JP", face: "serif-jp" },
+  { family: "Credit Figure Serif SC", face: "serif-sc" },
 ];
 
 /** Thrown while laying out text that needs a face not yet loaded; the caller loads it and lays out again. */
@@ -115,18 +94,6 @@ class UnloadedFace extends Error {
 
 // PDF text positioning uses glyph advances, so disable optional kerning and ligatures in both formats.
 const FEATURES = { kern: false, liga: false, clig: false };
-
-async function readFont(url: URL): Promise<Uint8Array> {
-  if (url.protocol === "file:") {
-    // Kept dynamic: the same entry runs in the browser, where Node's filesystem does not exist.
-    const nodeFilesystem = "node:fs/promises";
-    const { readFile } = await import(/* @vite-ignore */ nodeFilesystem);
-    return new Uint8Array(await readFile(url));
-  }
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Cannot load bundled figure font: ${response.status} ${url.pathname}`);
-  return new Uint8Array(await response.arrayBuffer());
-}
 
 function attributes(source: string): Record<string, string> {
   return Object.fromEntries([...source.matchAll(/(?:^|\s)([\w:-]+)="([^"]*)"/g)].map((match) => [match[1], match[2]]));
@@ -301,7 +268,7 @@ function color(hex: string | undefined) {
 }
 
 /**
- * Export figures with retained text and bundled Noto fonts. Each face loads on the first figure whose text
+ * Export figures with retained text and embedded Noto fonts. Each face loads on the first figure whose text
  * needs it. SVG and PDF embed only the glyphs that figure uses; editors can require the full fonts
  * installed locally to change its text.
  */
@@ -312,12 +279,9 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
   function load(source: FontSource): Promise<void> {
     let pending = loading.get(source);
     if (!pending) {
-      const { fontFallback } = rendererOptions;
-      pending = readFont(source.url)
-        .catch((error: unknown) => {
-          if (!fontFallback) throw error;
-          return readFont(new URL(source.file, fontFallback));
-        })
+      const fonts = rendererOptions.fonts ?? defaultFigureFonts;
+      pending = Promise.resolve()
+        .then(() => fonts(source.face))
         .then((bytes) => {
           loaded.set(source, { family: source.family, bytes, font: fontkit.create(bytes) });
         })
@@ -331,14 +295,26 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     return pending;
   }
 
-  /** Run a layout, loading each face it asks for, until every face its text needs is in memory. */
-  async function withFaces<T>(layout: () => T): Promise<T> {
+  /**
+   * Run a layout, loading each face it asks for, until every face its text needs is in memory. With
+   * `unavailable`, a face that fails to load is added to it and the layout draws that text in system fonts.
+   */
+  async function withFaces<T>(layout: () => T, unavailable?: Set<FontSource>): Promise<T> {
     for (;;) {
       try {
         return layout();
       } catch (error) {
         if (!(error instanceof UnloadedFace)) throw error;
-        await load(error.source);
+        try {
+          await load(error.source);
+        } catch (loadError) {
+          if (!unavailable) throw loadError;
+          // biome-ignore lint/suspicious/noConsole: the figure still renders; say why it looks different.
+          console.warn(
+            `${loadError instanceof Error ? loadError.message : String(loadError)} Drawing its text in system fonts.`,
+          );
+          unavailable.add(error.source);
+        }
       }
     }
   }
@@ -350,7 +326,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     return font;
   }
 
-  function textRuns(text: string, options?: FigureSvgOptions): TextRun[] {
+  function textRuns(text: string, options?: FigureSvgOptions, unavailable?: Set<FontSource>): TextRun[] {
     const [latin, japanese, chinese] = options?.font === "serif" ? SOURCES.slice(3) : SOURCES.slice(0, 3);
     const locale = options?.locale?.toLowerCase() ?? "";
     const normalized = text.normalize("NFC");
@@ -367,14 +343,19 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       const codePoint = character.codePointAt(0) ?? 0;
       const order = cjkPunctuation && codePoint > 0x7f && /\p{P}/u.test(character) ? [...cjk, latin] : [latin, ...cjk];
       let font: FigureFont | undefined;
+      let skipped = false;
       // In order, so a face loads only when every face before it lacks the character.
       for (const source of order) {
+        if (source && unavailable?.has(source)) {
+          skipped = true;
+          continue;
+        }
         const candidate = face(source);
         if (!candidate.font.hasGlyphForCodePoint(codePoint)) continue;
         font = candidate;
         break;
       }
-      if (!font && options?.fallback !== "system") {
+      if (!font && !skipped && options?.fallback !== "system") {
         missing.add(character);
         continue;
       }
@@ -386,14 +367,15 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     return runs;
   }
 
-  function layoutSvg(authors: Author[], options?: FigureSvgOptions): string {
+  function layoutSvg(authors: Author[], options?: FigureSvgOptions, unavailable?: Set<FontSource>): string {
     return buildHeatmapSvg(authors, {
       ...options,
-      measureText: (label, size) => textRuns(label, options).reduce((sum, run) => sum + width(run, size), 0),
+      measureText: (label, size) =>
+        textRuns(label, options, unavailable).reduce((sum, run) => sum + width(run, size), 0),
       measureTextHeight: (label, size) =>
         Math.max(
           size * 1.2,
-          ...textRuns(label, options).map(({ font }) =>
+          ...textRuns(label, options, unavailable).map(({ font }) =>
             font
               ? // Browsers round line metrics to pixels; retain a pixel of space after rounding.
                 Math.ceil(((font.font.ascent - font.font.descent + font.font.lineGap) * size) / font.font.unitsPerEm) +
@@ -408,13 +390,14 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
   return {
     async svg(authors, options) {
       const used = new Map<FigureFont, Set<string>>();
+      const unavailable = new Set<FontSource>();
       const svg = await withFaces(() => {
         used.clear();
-        return layoutSvg(authors, options).replace(
+        return layoutSvg(authors, options, unavailable).replace(
           /<text\b([^>]*)>([^<]*)<\/text>/g,
           (_, attrs: string, text: string) => {
             const system = attrs.match(/ font-family="([^"]*)"/)?.[1] ?? "sans-serif";
-            const content = textRuns(unescapeXml(text), options)
+            const content = textRuns(unescapeXml(text), options, unavailable)
               .map((run) => {
                 if (!run.font) return `<tspan font-family="${system}">${escapeXml(run.text)}</tspan>`;
                 const characters = used.get(run.font) ?? new Set<string>();
@@ -427,7 +410,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
             return `<text${ownAttrs} xml:space="preserve">${content}</text>`;
           },
         );
-      });
+      }, unavailable);
       const faces = await Promise.all(
         [...used].map(
           async ([font, characters]) =>

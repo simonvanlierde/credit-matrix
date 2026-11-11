@@ -19,16 +19,16 @@ BUNDLE = ROOT / "src/core/dist/myst-plugin.mjs"
     [(command, extension, "file") for command in ("myst", "jupyter-book") for extension in ("md", "ipynb")]
     + [("myst", "md", "bundle")],
 )
-def test_real_document_build(tmp_path, command, extension, source):
+def test_real_document_build(tmp_path, figure_font_cache, command, extension, source):
     plugin = ROOT / "integrations/myst/credit-matrix.mjs"
     env = dict(os.environ)
     if source == "bundle":
         # A user's project has no credit-matrix or yaml: the bundle is the only file.
         assert BUNDLE.exists(), "run `pnpm --filter credit-matrix build` first"
-        # The fonts stay separate files, so the plugin download stays small.
+        # The fonts are not in the bundle, so the plugin download stays small.
         assert BUNDLE.stat().st_size < 3_000_000
-        # Away from its package files, the bundle fetches fonts from the release, here a local copy.
-        env["CREDIT_MATRIX_FIGURE_FONTS"] = (BUNDLE.parent / "figure-fonts").as_uri() + "/"
+        # Away from its package, the bundle reads the faces from the machine's font cache.
+        env.update(figure_font_cache)
         plugin = tmp_path / "plugins" / "credit-matrix.mjs"
         plugin.parent.mkdir()
         plugin.write_bytes(BUNDLE.read_bytes())

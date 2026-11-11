@@ -52,6 +52,16 @@ files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement -
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
 `convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
 takes `--yes-no` for flat cells with no levels.
+
+`--to svg` and `--to pdf` need the figure fonts. With the
+[`credit-matrix-fonts`](../fonts/README.md) package installed (`npm i credit-matrix-fonts`, 23 MB),
+the CLI reads them from disk and works offline. Without it, the CLI downloads each face the first
+time a figure needs it, from `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.0/`. It checks
+the file against the SHA-256 hash in this package and refuses one that does not match. It then
+keeps the face in `$XDG_CACHE_HOME/credit-matrix/fonts/`, or the platform cache folder (`~/.cache`,
+`~/Library/Caches` on macOS, `%LOCALAPPDATA%` on Windows). That download is the only network request
+the CLI makes. Offline with nothing cached, `--to pdf` stops with an error that names both fixes,
+and `--to svg` draws the text in system fonts with a warning.
 `--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN`
 simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and
 gives English.
@@ -195,12 +205,15 @@ Its `<desc>` is the by-author contribution statement, so a screen reader hears w
 `heatmapDescription` returns that text, for an image's alt text or a PNG's Description field.
 
 For embedded fonts, use the separate `credit-matrix/figures` entry. Create its renderer once; it loads
-each font face when a figure first needs it:
+each font face when a figure first needs it, the way the [CLI](#cli) does. Pass `fonts` to supply the
+bytes yourself: `fonts(face)` gets `"sans"`, `"sans-jp"`, `"sans-sc"`, `"serif"`, `"serif-jp"` or
+`"serif-sc"`. In a bundled app, pass the `fonts` export of `credit-matrix-fonts`, so the bundler emits
+the faces as assets:
 
 ```ts
 import { createFigureRenderer } from "credit-matrix/figures";
 
-const figures = createFigureRenderer();
+const figures = createFigureRenderer(); // or createFigureRenderer({ fonts }), from credit-matrix-fonts
 const svg = await figures.svg(authors, { acronyms: false });
 const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
 ```

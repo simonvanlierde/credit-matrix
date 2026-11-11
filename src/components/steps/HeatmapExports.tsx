@@ -20,8 +20,9 @@ type ExportFormat = "svg" | "png" | "pdf";
 // One renderer keeps each loaded face; it fetches a face only when a figure's text first needs it.
 let figureRenderer: Promise<import("@/core/figures").FigureRenderer> | undefined;
 function renderer() {
-  figureRenderer ??= import("@/core/figures")
-    .then(({ createFigureRenderer }) => createFigureRenderer())
+  // The app's own font copies: Vite emits them as hashed assets the service worker can cache.
+  figureRenderer ??= Promise.all([import("@/core/figures"), import("credit-matrix-fonts")])
+    .then(([{ createFigureRenderer }, { fonts }]) => createFigureRenderer({ fonts }))
     .catch((error) => {
       figureRenderer = undefined;
       throw error;

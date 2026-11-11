@@ -1,10 +1,12 @@
 // biome-ignore-all lint/correctness/noNodejsModules: Node build check.
 // biome-ignore-all lint/suspicious/noConsole: build diagnostics.
-// Fails when the app or its separately loaded figure exporter outgrows its budget, or when the service worker's
-// install precache grows (a figure font in it costs every first visit megabytes). Script sizes are the sum of
+// Fails when the app or its separately loaded figure exporter outgrows its budget, when the service worker's
+// install precache grows (a figure font in it costs every first visit megabytes), or when the npm package
+// does (every `npm i credit-matrix` downloads it; the fonts live in credit-matrix-fonts). Script sizes are the sum of
 // each file compressed alone, as a static host serves them; the precache is raw bytes. Run after `pnpm build`.
 // Raise a limit on purpose, in the same commit as the change that needs it.
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { gzipSync } from "node:zlib";
@@ -16,6 +18,8 @@ const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-11: 2.55 MB of scripts and styles plus Noto Sans (0.57 MB), the one figure font
 // precached. Any other figure font is 0.62-14.9 MB.
 const PRECACHE_LIMIT = 3_200_000;
+// Measured 2026-11-11: 2.3 MB unpacked once the fonts moved out (0.12.0 was 43 MB).
+const PACKAGE_LIMIT = 5_000_000;
 
 const dir = join(import.meta.dirname, "..", "out", "assets");
 const files = existsSync(dir)
@@ -56,5 +60,25 @@ console.log(
 if (total > PRECACHE_LIMIT) {
   const named = fonts.length ? `; fonts: ${fonts.map(({ path }) => path).join(", ")}` : "";
   console.error(`check-bundle-size: the service worker precache is over its budget${named}.`);
+  process.exit(1);
+}
+
+const core = join(import.meta.dirname, "..", "src", "core");
+// Scripts off: `pnpm build` already wrote dist/, and prepack would build it again.
+const packed = JSON.parse(
+  execFileSync("pnpm", ["pack", "--dry-run", "--json", "--config.ignore-scripts=true"], {
+    cwd: core,
+    encoding: "utf8",
+  }),
+);
+const unpacked = packed.files.reduce((n, { path }) => n + statSync(join(core, path)).size, 0);
+console.log(`check-bundle-size: npm package: ${kb(unpacked)} unpacked (limit ${kb(PACKAGE_LIMIT)})`);
+if (unpacked > PACKAGE_LIMIT) {
+  const largest = packed.files
+    .map(({ path }) => ({ path, bytes: statSync(join(core, path)).size }))
+    .sort((a, b) => b.bytes - a.bytes)
+    .slice(0, 3)
+    .map(({ path, bytes }) => `${path} ${kb(bytes)}`);
+  console.error(`check-bundle-size: the npm package is over its budget; largest files: ${largest.join(", ")}.`);
   process.exit(1);
 }

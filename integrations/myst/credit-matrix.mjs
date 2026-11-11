@@ -6,8 +6,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import process from "node:process";
-import { CREDIT_ROLES, createAuthor, generateStatement, HeatmapOptionError, heatmapDescription } from "credit-matrix";
+import { CREDIT_ROLES, createAuthor, generateStatement, heatmapDescription } from "credit-matrix";
 import { createFigureRenderer } from "credit-matrix/figures";
 import {
   AVAILABLE_LOCALES,
@@ -18,7 +17,6 @@ import {
   makeUiTranslator,
   resolveLocaleTag,
 } from "credit-matrix/i18n";
-import packageJson from "credit-matrix/package.json" with { type: "json" };
 import { parse } from "yaml";
 
 // Directives run synchronously; load the catalogs once while MyST imports the plugin.
@@ -34,13 +32,9 @@ const TRANSLATORS = Object.fromEntries(
     ]),
   ),
 );
-// MyST runs a plugin listed by URL from a copy in its build cache, away from the package's font
-// files, so that copy fetches the faces a figure needs from the same release.
-const figures = createFigureRenderer({
-  fontFallback:
-    process.env.CREDIT_MATRIX_FIGURE_FONTS ??
-    `https://unpkg.com/credit-matrix@${packageJson.version}/dist/figure-fonts/`,
-});
+// MyST runs a plugin listed by URL from a copy in its build cache, where no package resolves, so the
+// renderer downloads each face once into the machine's font cache.
+const figures = createFigureRenderer();
 
 // The aliases MyST accepts (its `credit-roles` package), so a page that builds also renders.
 const ALIASES = {
@@ -193,12 +187,7 @@ async function renderHeatmap(node, vfile) {
     svg = await figures.svg(entries, options);
   } catch (error) {
     // MyST prints a thrown transform error without its page; a file message names the page.
-    // Any other error is a font that could not be loaded; say how to supply the fonts yourself.
-    const fontHint =
-      error.name === "FigureFontError" || error instanceof HeatmapOptionError
-        ? ""
-        : " Set CREDIT_MATRIX_FIGURE_FONTS to a folder holding the figure fonts; see integrations/myst/README.md.";
-    vfile.message(`credit-heatmap: ${error.message}${fontHint}`, node).fatal = true;
+    vfile.message(`credit-heatmap: ${error.message}`, node).fatal = true;
     return false;
   }
   const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;

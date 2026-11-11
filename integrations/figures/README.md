@@ -52,12 +52,15 @@ caller gets the same error, or passes `fallback: "system"` to `svg()` for the ap
 Han characters use the Simplified Chinese face, unless the output language is Japanese or
 the label contains kana. In Chinese output, punctuation beside Han text comes from the Chinese face.
 
-The font files ship with the package, and the CLI and JavaScript API read them from disk.
+The font files are in the separate [`credit-matrix-fonts`](../../src/fonts/README.md) package.
+The CLI, the document plugins and the JavaScript API read them from there when it is installed.
+Otherwise they download each face once, check its SHA-256 hash and cache it on the machine; the
+[CLI section](../../src/core/README.md#cli) gives the address and the cache folder.
 The app's offline cache holds Noto Sans, the default face, from the first visit, so a Latin,
 Greek or Cyrillic figure in the default font exports offline at once. It fetches any other face
 (serif, Japanese, Chinese) the first time an export needs it and keeps it for offline use; one
 never used online is not available offline. See
-[font sources, checksums and licenses](../../src/core/figure-fonts/README.md).
+[font sources, checksums and licenses](../../src/fonts/README.md).
 SVG and PDF include only the glyphs used in the figure: a Japanese or Chinese figure
 is about 35 kB in either format. The SVG subsets have no OpenType layout tables, so an
 uncomposed combining accent can sit less precisely in SVG than in PDF.

@@ -1,4 +1,17 @@
-# Figure fonts
+# credit-matrix-fonts
+
+The fonts that [`credit-matrix`](../core/README.md) embeds in heatmap SVG and PDF exports. Install
+this package next to it to export figures offline, with no download:
+
+```sh
+npm i credit-matrix credit-matrix-fonts
+```
+
+Without it, `credit-matrix` downloads each face from this package's release on jsDelivr the first
+time a figure needs it, and caches it. In a bundled app, pass the `fonts` export to
+`createFigureRenderer({ fonts })`: each face is a `new URL("./X.ttf", import.meta.url)`, so the
+bundler emits it as an asset. A release comes only when the fonts change, and `credit-matrix` pins
+the version and the hashes below.
 
 These regular faces provide offline fonts for editable figure exports.
 Noto Sans and Serif cover Latin, Greek and Cyrillic. Credit Figure JP and SC

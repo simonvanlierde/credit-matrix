@@ -6,6 +6,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** the figure fonts moved out of `credit-matrix` into a new `credit-matrix-fonts`
+  package, so the package is 2.4 MB unpacked instead of 43 MB. To export SVG or PDF offline, run
+  `npm i credit-matrix-fonts`. Without it, the CLI, the document plugins and `createFigureRenderer`
+  download each face from jsDelivr on first use, check its SHA-256 hash and cache it on the machine.
+  Offline with nothing cached, PDF stops with an error and SVG draws the text in system fonts with a
+  warning. See [the CLI section](src/core/README.md#cli).
+- **Breaking:** `createFigureRenderer` takes `fonts`, a function that returns a face's bytes, in
+  place of `fontFallback`. A bundled app passes `fonts` from `credit-matrix-fonts`. The
+  `CREDIT_MATRIX_FIGURE_FONTS` variable of the MyST plugin is gone; the plugin caches the fonts
+  itself.
+- `pnpm check:bundle` fails when the npm package grows past 5 MB unpacked.
+
 ## [0.12.0] - 2026-11-11
 
 **Upgrade note:** the browser storage format moves from version 3 to 5, because statement options
