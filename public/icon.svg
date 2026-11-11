@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CRediT Matrix">
   <!-- A 3x3 crop of the contribution matrix. Cell fills are the app's real
        intensity tiers (see src/core/contributor-color.ts): white mixed
-       0.4 / 0.7 / 1.0 toward ink-blue, plus the empty-cell fill. Dark values
-       mirror the .dark tokens in globals.css. -->
+       0.4 / 0.7 / 1.0 toward ink-blue, plus the empty-cell fill. The ground and
+       edge are the paper and outline tokens in globals.css, light and dark. -->
   <style>
-    .ground { fill: #fafaf9 } .edge { stroke: #d8d8d4 }
+    .ground { fill: #fbf8f1 } .edge { stroke: #d6ccba }
     .lead { fill: #1f4e79 } .equal { fill: #6283a1 }
     .supporting { fill: #a5b8c9 } .none { fill: #ececea }
     @media (prefers-color-scheme: dark) {
-      .ground { fill: #1e2024 } .edge { stroke: #3a3d42 }
+      .ground { fill: #161513 } .edge { stroke: #4a463f }
       .lead { fill: #a8c1da } .equal { fill: #71879e }
       .supporting { fill: #455465 } .none { fill: #2a2c30 }
     }
