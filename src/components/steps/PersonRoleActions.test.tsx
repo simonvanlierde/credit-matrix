@@ -96,3 +96,15 @@ it("jumps to the cell when a phrase in the statement is clicked", () => {
   fireEvent.click(phrase);
   expect(document.activeElement?.getAttribute("data-cell-key")).toBe(`${jane.id}:${softwareIndex}`);
 });
+
+it("in a claimed draft, offers another person's bulk edits only as disabled items", () => {
+  act(() => useContributionStore.setState({ claim: { contributorId: bob.id, sourceDraftId: "source" } }));
+  const { container } = renderBoth();
+  const header = container.querySelector<HTMLElement>("[data-name-head='0']");
+  if (!header) throw new Error("expected a name header");
+  fireEvent.click(header);
+  const clear = screen.getByRole("button", { name: "Clear every role" });
+  expect(clear.getAttribute("aria-disabled")).toBe("true");
+  fireEvent.click(clear);
+  expect(scoreOf(jane.id, "Conceptualization")).toBe(100);
+});
