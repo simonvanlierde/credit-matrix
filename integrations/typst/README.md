@@ -113,5 +113,9 @@ under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the translators
 ## Contribution heatmap options
 
 See [figure options and examples](../heatmap.md) for palettes, shapes, sizing, labels and orientation.
-Native figures use the document's fonts. See
+Native figures use the document's fonts. `font: "sans"` and `"serif"` set the built-in stacks; any
+other string is a family name, and an array is a list of them, as in `text(font: ...)`. The sans
+stack still draws what your family lacks. Typst finds installed fonts; give it more folders with
+`typst compile --font-path fonts` (or `TYPST_FONT_PATHS`), and `--ignore-system-fonts` for a build
+that ignores installed ones. The top labels use regular weight, as SVG and PDF figures do. See
 [font portability and PDF export](../figures/README.md) for the difference from app and CLI exports.

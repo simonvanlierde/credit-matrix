@@ -207,6 +207,31 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     expect(svg).toContain('fill="#16181c"');
   });
 
+  it("draws the figure in a family from Typst's --font-path", () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    writeFileSync(
+      new URL("out/custom-font.typ", import.meta.url),
+      '#import "../lib.typ": *\n#credit-heatmap(((name: "Tu Youyou", roles: (software: "supporting")),), font: "figure test serif")',
+    );
+    const run = typst(
+      "compile",
+      "--root",
+      ".",
+      "--font-path",
+      "../../src/core/__tests__/fixtures/fonts",
+      "--ignore-system-fonts",
+      "out/custom-font.typ",
+      "out/custom-font.pdf",
+    );
+    expect(run.status, run.stderr).toBe(0);
+    // Typst compresses the font dictionary, so ask Poppler for the embedded names.
+    const fonts = spawnSync("pdffonts", [fileURLToPath(new URL("out/custom-font.pdf", import.meta.url))], {
+      encoding: "utf8",
+    });
+    expect(fonts.error, "pdffonts is not installed").toBeUndefined();
+    expect(fonts.stdout).toMatch(/\+FigureTestSerif-Regular/);
+  });
+
   it("compiles every example", () => {
     expect(hasTypst, "typst is not installed but CI is set").toBe(true);
     mkdirSync(new URL("out", import.meta.url), { recursive: true });

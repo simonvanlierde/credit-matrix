@@ -225,9 +225,16 @@
   assert(labels in ("full", "short"), message: "credit-matrix: labels must be full or short")
   assert(type(marks) == bool, message: "credit-matrix: marks must be true or false")
   assert(legend-position in ("auto", "right", "bottom"), message: "credit-matrix: legend-position must be auto, right or bottom")
-  assert(font in ("sans", "serif"), message: "credit-matrix: font must be sans or serif")
+  assert(
+    type(font) == array or type(font) == str,
+    message: "credit-matrix: font must be sans, serif, a family name or an array of family names",
+  )
   assert(font-size >= 4.5pt and font-size <= 24pt, message: "credit-matrix: font-size must be between 4.5pt and 24pt")
-  set text(font: if font == "serif" { ("Libertinus Serif", "Times New Roman") } else { ("IBM Plex Sans", "DejaVu Sans", "Arial", "DejaVu Sans Mono") })
+  let sans-stack = ("IBM Plex Sans", "DejaVu Sans", "Arial", "DejaVu Sans Mono")
+  // A family name goes first; the sans stack still draws what the family lacks.
+  set text(font: if font == "serif" { ("Libertinus Serif", "Times New Roman") } else if font == "sans" { sans-stack } else {
+    (..if type(font) == array { font } else { (font,) }, ..sans-stack)
+  })
   let font-ratio = font-size / 7.5pt
   let hue = if color == auto { palettes.at(palette) } else { color }
   let cell = if size == auto { cell } else { size }
@@ -284,7 +291,7 @@
   }
   let top-labels = if horizontal { roles.map(role-label) } else { people.map(author-label) }
   let left-labels = if horizontal { people.map(author-label) } else { roles.map(role-label) }
-  let top = top-labels.map(label => text(size: 8pt * font-ratio, weight: 500, fill: _ink, label))
+  let top = top-labels.map(label => text(size: 8pt * font-ratio, fill: _ink, label))
   let top-height = calc.max(8pt * font-ratio * 1.2, ..top.map(t => measure(t).height))
   let column-gap = calc.max(gap, top-height * calc.sqrt(2) - cell)
   let row-gap = calc.max(gap, font-size * 1.2 - cell)
