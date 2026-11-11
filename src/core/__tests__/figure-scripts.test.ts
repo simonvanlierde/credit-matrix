@@ -65,6 +65,37 @@ describe("figures in every covered script", () => {
       ).toContain(name.normalize("NFC").replace("Ada ", ""));
   });
 
+  it("keeps an emoji between right-to-left words neutral, as browsers do", async () => {
+    const authors = [createAuthor("محمد 😀 علي", { contributions: [{ role: "Software", score: 100 }] })];
+    const pdf = await renderer.pdf(authors, options);
+    if (!POPPLER) return;
+    const words = [
+      ...execFileSync("pdftotext", ["-bbox", "-", "-"], { input: pdf, encoding: "utf8" }).matchAll(
+        /xMin="([\d.]+)"[^>]*>([^<]*)</g,
+      ),
+    ].map(([, x, word]) => ({ x: Number(x), word: word ?? "" }));
+    const left = (letter: string) => words.find(({ word }) => word.includes(letter))?.x ?? Number.NaN;
+    // The whole label reads right to left: علي is leftmost, محمد rightmost.
+    expect(left("ل")).toBeLessThan(left("ح"));
+  });
+
+  it("draws text-default emoji and leaves a mark the face lacks to a face that has it", async () => {
+    for (const name of ["Ada ❤️", "Ada ✌🏽", "علي\u0301"]) {
+      const pdf = await renderer.pdf(
+        [createAuthor(name, { contributions: [{ role: "Software", score: 100 }] })],
+        options,
+      );
+      const document = await PDFDocument.load(pdf);
+      const streams = document.context
+        .enumerateIndirectObjects()
+        .flatMap(([, object]) =>
+          object instanceof PDFRawStream ? [Buffer.from(decodePDFRawStream(object).decode()).toString("latin1")] : [],
+        );
+      // No .notdef glyph drawn.
+      expect(streams.join("\n"), name).not.toContain("<0000> Tj");
+    }
+  });
+
   it("loads no script face or shaping engine for a Latin figure", async () => {
     const latin = createFigureRenderer({
       fonts: async (face) => {

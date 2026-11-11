@@ -427,7 +427,9 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       if (
         previous?.font &&
         (/\p{Script=Inherited}/u.test(character)
-          ? previous.font.shaped || previous.font.font.hasGlyphForCodePoint(codePoint)
+          ? // HarfBuzz consumes joiners and selectors; any other mark needs a glyph, or PDF draws .notdef.
+            previous.font.font.hasGlyphForCodePoint(codePoint) ||
+            (previous.font.shaped && /\p{Default_Ignorable_Code_Point}/u.test(character))
           : /\p{Script=Common}/u.test(character) &&
             previous.font.shaped &&
             previous.font.family !== EMOJI.family &&
@@ -438,7 +440,12 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       }
       const chinesePunctuation = cjkPunctuation && codePoint > 0x7f && /\p{P}/u.test(character);
       const script = SCRIPT_FACES.find(([pattern]) => pattern.test(character))?.[1];
-      const order = [...(script ? [script] : []), ...(chinesePunctuation ? [...cjk, latin] : [latin, ...cjk])];
+      // Emoji last: a text-default symbol (❤, ☺, ✌) keeps its text glyph where another face has one.
+      const order = [
+        ...(script ? [script] : []),
+        ...(chinesePunctuation ? [...cjk, latin] : [latin, ...cjk]),
+        ...(script === EMOJI ? [] : [EMOJI]),
+      ];
       // The face meant for this character. When it is unavailable, another face would draw the text in the
       // wrong forms (Chinese Han for Japanese, CJK Latin for Latin), so it becomes a system-font run instead.
       const designated = script ?? (chinesePunctuation || CJK_TEXT.test(character) ? cjk[0] : latin);
@@ -498,7 +505,10 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     if (!RTL_TEXT.test(text)) return runs.map((run) => ({ ...run, rtl: false }));
     const bidi = (await import("bidi-js")).default();
     // Left to right as the base, as SVG <text> has by default, so both formats order a mixed label alike.
-    const { levels } = bidi.getEmbeddingLevels(text, "ltr");
+    // bidi-js classes each UTF-16 unit alone, so an astral emoji's surrogates would count as strong
+    // left-to-right letters; an object replacement character of the same length keeps it neutral.
+    const classified = text.replace(/(?![\p{L}\p{N}])[\u{10000}-\u{10ffff}]/gu, "\ufffc\ufffc");
+    const { levels } = bidi.getEmbeddingLevels(classified, "ltr");
     // Split each run where the embedding level changes, then reverse each sequence at or above every odd level.
     const pieces: (TextRun & { level: number })[] = [];
     let index = 0;
@@ -729,7 +739,10 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
             font = await document.embedFont(runFace.bytes, {
               subset: !runFace.shaped,
               features: FEATURES,
-              customName: `CMFIGR+${runFace.font.postscriptName}`,
+              // The six-letter tag marks a subset, by PDF convention.
+              customName: runFace.shaped
+                ? (runFace.font.postscriptName ?? undefined)
+                : `CMFIGR+${runFace.font.postscriptName}`,
             });
             embedded.set(runFace, font);
           }
