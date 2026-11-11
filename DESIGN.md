@@ -189,7 +189,7 @@ decorative tints, so the mark looks like the product's own data.
 
 Draw the mark in `currentColor` wherever it sits beside text, as it does in the header lockup. With
 colour by contributor each column of the mark takes one contributor's hue, as the grid's columns do. Where
-it stands alone, use the ink-blue levels themselves. The lockup is the mark at cap height, then a
+it stands alone (favicon, app icons, social card), each column takes one of the first three contributor hues. The lockup is the mark at cap height, then a
 gap, then the wordmark (the name set as type) in Newsreader italic. Never letterspace the wordmark.
 It takes the accent: the mark's hue where that reaches text contrast, deepened where it does not, so the
 mark and the wordmark read as one colour.
