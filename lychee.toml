@@ -1,0 +1,5 @@
+# Vite serves root-relative static assets from public/. links.yml reads this file.
+root_dir = "public"
+# Bot walls that answer 403 to any script: Wiley, where Learned Publishing's DOIs (10.1087)
+# resolve, and adobe.com in a font's licence text, which stays verbatim.
+exclude = ['^https://doi\.org/10\.1087/', '^https?://www\.adobe\.com/']

@@ -1,33 +1,31 @@
 # Roadmap
 
 What I plan to work on next. It is a plan, not a promise: CRediT Matrix has one maintainer
-([GOVERNANCE.md](../GOVERNANCE.md)), and the order changes when users report problems. Shipped
-changes are in the [changelog](../CHANGELOG.md).
+([GOVERNANCE.md](../GOVERNANCE.md)), and the order changes when users report problems. Each item
+links to the issue that tracks it, and shipped changes are in the [changelog](../CHANGELOG.md).
+
+Last reviewed: 2026-11-11
 
 ## Now
 
-- **List the Pandoc filter where people look for it**, in the community filter list. The Typst
-  package is on Typst Universe since 0.11.0.
-- **Validate the census parser.** Score the parser that reads roles from published papers against
-  labels that language models wrote and a person checks, so the census and the Published practice
-  tab can drop their "preliminary" note. The
-  [census README](../census/README.md#measuring-accuracy) says how it is measured now.
-- **Stronger tests.** Mutation testing covers the import and export code in `src/core`
-  ([CONTRIBUTING.md](../CONTRIBUTING.md)). Find more code the tests run but do not check.
+- **A smaller npm package.** Take the figure fonts out of it, so `npm i credit-matrix` stops
+  downloading 41 MB of fonts that only the CLI, Sphinx and Quarto use ([#278](https://github.com/simonvanlierde/credit-matrix/issues/278)).
+- **Trustworthy census numbers.** Score the parser that reads roles from published papers against
+  checked labels, so the census can drop its "preliminary" note ([#279](https://github.com/simonvanlierde/credit-matrix/issues/279)).
+- **Find the integrations where people look.** The Typst package is on Typst Universe; the Pandoc
+  filter waits for its listing ([pandoc-ext/info#8](https://github.com/pandoc-ext/info/pull/8)).
 
 ## Next
 
-- **More export formats.** tenzing CSV, Crossref deposit contributors, CodeMeta attribution and
-  latex-credits input now exist. Next are other formats that contributorship tools and journal systems read.
-- **Reviewed translations.** Ask native speakers to review the eight machine-made interface
-  translations ([accessibility statement](accessibility.md#known-problems)). The role names
-  already come from the official CRediT translations.
+- **More export formats** that contributorship tools and journal systems read ([#204](https://github.com/simonvanlierde/credit-matrix/issues/204)).
+- **Reviewed translations** of the eight machine-made interface languages ([#280](https://github.com/simonvanlierde/credit-matrix/issues/280)).
+- **Signed releases** with attested tarballs and signed tags ([#213](https://github.com/simonvanlierde/credit-matrix/issues/213)).
+- **Quarto and MyST plugins** tested in a real build ([#217](https://github.com/simonvanlierde/credit-matrix/issues/217)).
 
 ## Later, or only if asked
 
-- **Replies without copy and paste.** An optional end-to-end encrypted relay for co-author replies
-  ([ADR 0004](adr/0004-encrypted-relay.md), proposed). It waits until people other than the
-  maintainer ask for it.
+- **Replies without copy and paste**, through an optional end-to-end encrypted relay ([#281](https://github.com/simonvanlierde/credit-matrix/issues/281),
+  [ADR 0004](adr/0004-encrypted-relay.md)). It waits until people other than me ask for it.
 
 ## Not planned
 
