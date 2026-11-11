@@ -63,12 +63,12 @@ it("counts the answers once someone was asked", () => {
 
 it("says everyone agreed, once, when the last asked co-author's answer leaves nothing to review", () => {
   const authors = twoAuthors();
-  const [jane, bob] = authors;
-  if (!(jane && bob)) throw new Error("expected 2 authors");
+  const [grace, charles] = authors;
+  if (!(grace && charles)) throw new Error("expected 2 authors");
   act(() =>
     store().loadAuthors(authors, {
-      [jane.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(jane) },
-      [bob.id]: { sentAt: 1, prefilled: false },
+      [grace.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(grace) },
+      [charles.id]: { sentAt: 1, prefilled: false },
     }),
   );
   const { rerender } = renderGrid();
@@ -76,7 +76,13 @@ it("says everyone agreed, once, when the last asked co-author's answer leaves no
   expect(announce).not.toHaveBeenCalledWith(english.stripEveryoneAgreed);
 
   act(() =>
-    store().applyAskStep(store().activeDraftId, { kind: "reply", contributorId: bob.id, row: bob, sentAt: 1, at: 2 }),
+    store().applyAskStep(store().activeDraftId, {
+      kind: "reply",
+      contributorId: charles.id,
+      row: charles,
+      sentAt: 1,
+      at: 2,
+    }),
   );
   expect(screen.getByText(english.stripEveryoneAgreed)).toBeTruthy();
   expect(screen.queryByText(/answered$/)).toBeNull();
@@ -90,11 +96,15 @@ it("says everyone agreed, once, when the last asked co-author's answer leaves no
 
 it("does not announce agreement for a draft that opens already agreed", () => {
   const authors = twoAuthors();
-  const [jane, bob] = authors;
-  if (!(jane && bob)) throw new Error("expected 2 authors");
-  // Jane is you, so Bob is everyone there is to ask.
+  const [grace, charles] = authors;
+  if (!(grace && charles)) throw new Error("expected 2 authors");
+  // Grace is you, so Charles is everyone there is to ask.
   act(() =>
-    store().loadAuthors(authors, { [bob.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(bob) } }, jane.id),
+    store().loadAuthors(
+      authors,
+      { [charles.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(charles) } },
+      grace.id,
+    ),
   );
   renderGrid();
   expect(screen.getByText(english.stripEveryoneAgreed)).toBeTruthy();
@@ -102,10 +112,12 @@ it("does not announce agreement for a draft that opens already agreed", () => {
 });
 
 it("does not say everyone agreed while a co-author was never asked", () => {
-  const authors = [...twoAuthors(), createAuthor("Ann Lee")];
-  const bob = authors[1];
-  if (!bob) throw new Error("expected Bob");
-  act(() => store().loadAuthors(authors, { [bob.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(bob) } }));
+  const authors = [...twoAuthors(), createAuthor("Katherine Johnson")];
+  const charles = authors[1];
+  if (!charles) throw new Error("expected Charles");
+  act(() =>
+    store().loadAuthors(authors, { [charles.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(charles) } }),
+  );
   renderGrid();
   expect(screen.getByText("1 of 3 answered")).toBeTruthy();
   expect(screen.queryByText(english.stripEveryoneAgreed)).toBeNull();
@@ -113,27 +125,27 @@ it("does not say everyone agreed while a co-author was never asked", () => {
 
 it("rings the cell whose phrase is under the pointer in the statement", () => {
   const authors = twoAuthors();
-  const jane = authors[0];
-  if (!jane) throw new Error("expected Jane");
+  const grace = authors[0];
+  if (!grace) throw new Error("expected Grace");
   act(() => store().loadAuthors(authors));
   const { container } = renderGrid();
-  const cell = () => container.querySelector(`table [data-cell-key="${jane.id}:0"]`);
+  const cell = () => container.querySelector(`table [data-cell-key="${grace.id}:0"]`);
   expect(cell()?.hasAttribute("data-linked")).toBe(false);
-  act(() => store().setStatementLink({ contributorId: jane.id, role: "Conceptualization", from: "phrase" }));
+  act(() => store().setStatementLink({ contributorId: grace.id, role: "Conceptualization", from: "phrase" }));
   expect(cell()?.hasAttribute("data-linked")).toBe(true);
   expect(container.querySelectorAll("[data-linked]")).toHaveLength(1);
 });
 
 it("points a hovered or focused cell at its phrase, and lets go on leaving", () => {
   const authors = twoAuthors();
-  const jane = authors[0];
-  if (!jane) throw new Error("expected Jane");
+  const grace = authors[0];
+  if (!grace) throw new Error("expected Grace");
   act(() => store().loadAuthors(authors));
   const { container } = renderGrid();
-  const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${jane.id}:0"]`);
+  const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${grace.id}:0"]`);
   if (!cell) throw new Error("expected the cell");
   fireEvent.pointerEnter(cell, { pointerType: "mouse" });
-  expect(store().statementLink).toEqual({ contributorId: jane.id, role: "Conceptualization", from: "cell" });
+  expect(store().statementLink).toEqual({ contributorId: grace.id, role: "Conceptualization", from: "cell" });
   fireEvent.pointerLeave(cell, { pointerType: "mouse" });
   expect(store().statementLink).toBeNull();
   act(() => cell.focus());
@@ -144,11 +156,11 @@ it("points a hovered or focused cell at its phrase, and lets go on leaving", () 
 
 it("leaves no mark behind after a tap, which never sends a mouse leave", () => {
   const authors = twoAuthors();
-  const jane = authors[0];
-  if (!jane) throw new Error("expected Jane");
+  const grace = authors[0];
+  if (!grace) throw new Error("expected Grace");
   act(() => store().loadAuthors(authors));
   const { container } = renderGrid();
-  const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${jane.id}:0"]`);
+  const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${grace.id}:0"]`);
   if (!cell) throw new Error("expected the cell");
   // iOS fires mouseenter on a tap, and no mouseleave to undo it.
   fireEvent.mouseEnter(cell);
@@ -158,8 +170,8 @@ it("leaves no mark behind after a tap, which never sends a mouse leave", () => {
 
 it("keeps a focused cell's mark when the mouse passes over another cell and leaves", () => {
   const authors = twoAuthors();
-  const [jane, bob] = authors;
-  if (!(jane && bob)) throw new Error("expected 2 authors");
+  const [grace, charles] = authors;
+  if (!(grace && charles)) throw new Error("expected 2 authors");
   act(() => store().loadAuthors(authors));
   const { container } = renderGrid();
   const cellOf = (author: Author, role: number) => {
@@ -168,11 +180,11 @@ it("keeps a focused cell's mark when the mouse passes over another cell and leav
     return cell;
   };
   const investigation = CREDIT_ROLES.findIndex((role) => role.name === "Investigation");
-  act(() => cellOf(jane, 0).focus());
-  fireEvent.pointerEnter(cellOf(bob, investigation), { pointerType: "mouse" });
-  expect(store().statementLink).toEqual({ contributorId: bob.id, role: "Investigation", from: "cell" });
-  fireEvent.pointerLeave(cellOf(bob, investigation), { pointerType: "mouse" });
-  expect(store().statementLink).toEqual({ contributorId: jane.id, role: "Conceptualization", from: "cell" });
+  act(() => cellOf(grace, 0).focus());
+  fireEvent.pointerEnter(cellOf(charles, investigation), { pointerType: "mouse" });
+  expect(store().statementLink).toEqual({ contributorId: charles.id, role: "Investigation", from: "cell" });
+  fireEvent.pointerLeave(cellOf(charles, investigation), { pointerType: "mouse" });
+  expect(store().statementLink).toEqual({ contributorId: grace.id, role: "Conceptualization", from: "cell" });
 });
 
 it("describes the grid with its keys, even where the hint is hidden for touch", () => {
@@ -185,13 +197,13 @@ it("describes the grid with its keys, even where the hint is hidden for touch", 
 
 it("keeps the statement's mark when a cell's leave event lands after the pointer reached a phrase", () => {
   const authors = twoAuthors();
-  const [jane, bob] = authors;
-  if (!(jane && bob)) throw new Error("expected 2 authors");
+  const [grace, charles] = authors;
+  if (!(grace && charles)) throw new Error("expected 2 authors");
   act(() => store().loadAuthors(authors));
   const { container } = renderGrid();
-  const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${jane.id}:0"]`);
+  const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${grace.id}:0"]`);
   if (!cell) throw new Error("expected the cell");
-  const phraseLink = { contributorId: bob.id, role: "Investigation" as const, from: "phrase" as const };
+  const phraseLink = { contributorId: charles.id, role: "Investigation" as const, from: "phrase" as const };
   act(() => store().setStatementLink(phraseLink));
   fireEvent.pointerLeave(cell, { pointerType: "mouse" });
   expect(store().statementLink).toEqual(phraseLink);

@@ -16,9 +16,11 @@ export const cast = {
   rosalind: "Rosalind E. Franklin", // middle initial: "REF"
   alan: "Alan M. Turing", // middle initial: "AMT"
 
-  // A generic pair for setup that is not about names.
+  // Generic people for setup that is not about names.
   grace: "Grace Hopper", // "GH"; "Grace B. Hopper" when a test needs a middle initial
   charles: "Charles Darwin", // "CD"; "Charles R. Darwin" likewise
+  katherine: "Katherine Johnson", // a third and fourth person for lists and roster setup: "KJ"
+  dorothy: "Dorothy Hodgkin", // "DH"
 
   // Name cases.
   marie: "Marie Skłodowska-Curie", // non-ASCII, hyphenated surname: "MS"
@@ -36,4 +38,18 @@ export const RETIRED_PLACEHOLDERS = [
   "Bob White",
   "Bob B. White",
   "White, Bob",
+  "Ann One",
+  "Ann Unsaved",
+  "Bob Two",
+  "Cat Three",
+  "Carol Davis",
+  "Carol Black",
+  "Alice Smith",
+  "Alice Carberry",
+  "Bob Jones",
+  "Bob Black",
+  "Jane Doe",
+  "John Smith",
+  "Jane Q. Smith",
+  "Jane B. Smith",
 ] as const;

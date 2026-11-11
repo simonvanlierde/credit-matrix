@@ -344,7 +344,7 @@ describe("parseAuthorText", () => {
   });
 
   it("assigns 14 default zero-score contributions to each author", () => {
-    const authors = parseAuthorText("Alice Brown");
+    const authors = parseAuthorText("Ada Lovelace");
     expect(authors[0]?.contributions).toHaveLength(14);
     expect(authors[0]?.contributions.every((c) => c.score === 0)).toBe(true);
   });
@@ -352,21 +352,21 @@ describe("parseAuthorText", () => {
 
 describe("splitNameList", () => {
   it("splits on newlines, semicolons, and commas", () => {
-    expect(splitNameList("Alice Brown, Charles Darwin; Carol Davis\nDan Evans")).toEqual([
-      "Alice Brown",
+    expect(splitNameList("Ada Lovelace, Charles Darwin; Katherine Johnson\nDorothy Hodgkin")).toEqual([
+      "Ada Lovelace",
       "Charles Darwin",
-      "Carol Davis",
-      "Dan Evans",
+      "Katherine Johnson",
+      "Dorothy Hodgkin",
     ]);
   });
 
   it("splits on Word's Shift+Enter, form feeds and bare carriage returns", () => {
-    expect(splitNameList("Ann Lee\vBob Kim\fCay Dunn\rDee Fox\r\nEd Ng")).toEqual([
-      "Ann Lee",
-      "Bob Kim",
-      "Cay Dunn",
-      "Dee Fox",
-      "Ed Ng",
+    expect(splitNameList("Ada Lovelace\vCharles Darwin\fKatherine Johnson\rDorothy Hodgkin\r\nGrace Hopper")).toEqual([
+      "Ada Lovelace",
+      "Charles Darwin",
+      "Katherine Johnson",
+      "Dorothy Hodgkin",
+      "Grace Hopper",
     ]);
   });
 
@@ -387,7 +387,7 @@ describe("splitNameList", () => {
   });
 
   it("treats commas as separators when the chunks don't pair up as surname + given name", () => {
-    expect(splitNameList("Alice Brown, Charles Darwin")).toEqual(["Alice Brown", "Charles Darwin"]);
+    expect(splitNameList("Ada Lovelace, Charles Darwin")).toEqual(["Ada Lovelace", "Charles Darwin"]);
     expect(splitNameList("Marie Curie, Grace Hopper, Cher, Madonna")).toEqual([
       "Marie Curie",
       "Grace Hopper",
@@ -414,7 +414,7 @@ describe("splitNameList", () => {
   });
 
   it("ignores empty entries and surrounding whitespace", () => {
-    expect(splitNameList("  Alice Brown ,, \n\n ; Charles Darwin ")).toEqual(["Alice Brown", "Charles Darwin"]);
+    expect(splitNameList("  Ada Lovelace ,, \n\n ; Charles Darwin ")).toEqual(["Ada Lovelace", "Charles Darwin"]);
   });
 });
 
@@ -516,8 +516,8 @@ describe("normalizeRoster name parts", () => {
   });
 
   it("re-parses parts that leave out the first name or use a word twice", () => {
-    const jane = createAuthor("Grace Hopper");
-    expect(rebuilt({ ...jane, firstName: "" })).toEqual({ firstName: "Grace", middleName: "", surname: "Hopper" });
+    const grace = createAuthor("Grace Hopper");
+    expect(rebuilt({ ...grace, firstName: "" })).toEqual({ firstName: "Grace", middleName: "", surname: "Hopper" });
     const smith = createAuthor("Hopper");
     expect(rebuilt({ ...smith, firstName: "Hopper", surname: "Hopper" })).toEqual({
       firstName: "Hopper",
@@ -537,9 +537,9 @@ describe("normalizeRoster name parts", () => {
   });
 
   it("fills in the roles a stored row is missing", () => {
-    const jane = createAuthor("Grace Hopper");
-    const [row] = normalizeRoster([{ ...jane, contributions: jane.contributions.slice(0, 3) }]);
-    expect(row?.contributions).toHaveLength(jane.contributions.length);
+    const grace = createAuthor("Grace Hopper");
+    const [row] = normalizeRoster([{ ...grace, contributions: grace.contributions.slice(0, 3) }]);
+    expect(row?.contributions).toHaveLength(grace.contributions.length);
   });
 });
 

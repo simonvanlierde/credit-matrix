@@ -12,6 +12,8 @@ describe("the example cast", () => {
       alan: "AMT",
       grace: "GH",
       charles: "CD",
+      katherine: "KJ",
+      dorothy: "DH",
       marie: "MS",
       antonie: "AL",
       antoine: "AL",

@@ -15,7 +15,7 @@ describe("useClaimLock", () => {
     const { result } = renderHook(() => useClaimLock());
     expect(result.current).toEqual({ locked: false, editableAuthorId: null });
 
-    act(() => useContributionStore.getState().setClaim({ contributorId: "jane", sourceDraftId: "src-1" }));
-    expect(result.current).toEqual({ locked: true, editableAuthorId: "jane" });
+    act(() => useContributionStore.getState().setClaim({ contributorId: "grace", sourceDraftId: "src-1" }));
+    expect(result.current).toEqual({ locked: true, editableAuthorId: "grace" });
   });
 });

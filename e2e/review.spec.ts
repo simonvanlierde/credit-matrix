@@ -62,7 +62,7 @@ test("two co-authors answer the same draft, and each answer is settled on its ow
   await asReturningVisitor(lead);
   await lead.goto("/");
   const adder = lead.getByLabel("New author names or ORCID iD");
-  await adder.fill("Grace Hopper, Charles Darwin, Ann Lee");
+  await adder.fill("Grace Hopper, Charles Darwin, Katherine Johnson");
   await adder.press("Enter");
   await lead.getByRole("button", { name: "Actions for Grace Hopper" }).click();
   await lead.getByRole("button", { name: "This is me" }).click();
@@ -71,34 +71,36 @@ test("two co-authors answer the same draft, and each answer is settled on its ow
   await expect(lead.getByRole("button", { name: "Software for Charles Darwin: Contributed" })).toBeVisible();
 
   // Both asks go out before either answer comes back.
-  const bobAsk = await copyAsk(lead, "Charles Darwin");
-  const annAsk = await copyAsk(lead, "Ann Lee");
-  const bobReply = await answer(browser, bobAsk, ["Investigation"]);
-  const annReply = await answer(browser, annAsk, ["Conceptualization"]);
+  const charlesAsk = await copyAsk(lead, "Charles Darwin");
+  const katherineAsk = await copyAsk(lead, "Katherine Johnson");
+  const charlesReply = await answer(browser, charlesAsk, ["Investigation"]);
+  const katherineReply = await answer(browser, katherineAsk, ["Conceptualization"]);
 
   // Opened in the other order than they were asked.
-  await lead.goto(annReply);
-  await expect(onScreen(lead, "Ann Lee's answer arrived: 1 difference.")).toBeVisible();
-  await lead.goto(bobReply);
+  await lead.goto(katherineReply);
+  await expect(onScreen(lead, "Katherine Johnson's answer arrived: 1 difference.")).toBeVisible();
+  await lead.goto(charlesReply);
   await expect(onScreen(lead, "Charles Darwin's answer arrived: 2 differences.")).toBeVisible();
 
   await expect(lead.getByText("2 of 2 answered")).toBeVisible();
-  await expect(lead.getByRole("button", { name: "Ann Lee: 1 open difference" })).toBeVisible();
+  await expect(lead.getByRole("button", { name: "Katherine Johnson: 1 open difference" })).toBeVisible();
   await expect(lead.getByRole("button", { name: "Charles Darwin: 2 open differences" })).toBeVisible();
-  // Charles's later reply did not replace Ann's: each answer stays beside its own row.
-  await expect(lead.getByRole("button", { name: "Conceptualization for Ann Lee: None" })).toHaveAccessibleDescription(
-    "Ann says Contributed",
-  );
+  // Charles's later reply did not replace Katherine's: each answer stays beside its own row.
+  await expect(
+    lead.getByRole("button", { name: "Conceptualization for Katherine Johnson: None" }),
+  ).toHaveAccessibleDescription("Katherine says Contributed");
   await expect(
     lead.getByRole("button", { name: "Investigation for Charles Darwin: None" }),
   ).toHaveAccessibleDescription("Charles says Contributed");
 
-  // Settling Ann's answer leaves Charles's open.
-  await lead.getByRole("button", { name: "Ann Lee: 1 open difference" }).click();
-  await expect(lead.getByRole("heading", { name: "Ann Lee" })).toBeFocused();
-  await review(lead).getByRole("button", { name: "Use Ann's: Conceptualization" }).click();
-  await expect(lead.getByRole("button", { name: "Conceptualization for Ann Lee: Contributed" })).toBeVisible();
-  await expect(lead.getByRole("button", { name: "Ann Lee: 1 open difference" })).toHaveCount(0);
+  // Settling Katherine's answer leaves Charles's open.
+  await lead.getByRole("button", { name: "Katherine Johnson: 1 open difference" }).click();
+  await expect(lead.getByRole("heading", { name: "Katherine Johnson" })).toBeFocused();
+  await review(lead).getByRole("button", { name: "Use Katherine's: Conceptualization" }).click();
+  await expect(
+    lead.getByRole("button", { name: "Conceptualization for Katherine Johnson: Contributed" }),
+  ).toBeVisible();
+  await expect(lead.getByRole("button", { name: "Katherine Johnson: 1 open difference" })).toHaveCount(0);
   await expect(lead.getByRole("button", { name: "Charles Darwin: 2 open differences" })).toBeVisible();
 
   await review(lead).getByRole("button", { name: "Use all of Charles's" }).click();

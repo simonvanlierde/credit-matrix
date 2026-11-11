@@ -15,8 +15,8 @@ vi.mock("@/core/lookup", async (importOriginal) => ({
   lookupOrcidPerson: vi.fn(),
 }));
 
-const ALICE = "0000-0002-1825-0097";
-const BOB = "0000-0001-5109-3700";
+const ROSALIND = "0000-0002-1825-0097";
+const ALAN = "0000-0001-5109-3700";
 const NOT_FOUND: OrcidLookupResult = { ok: false, status: 404, code: "NOT_FOUND", error: "" };
 const UNAVAILABLE: OrcidLookupResult = { ok: false, status: 502, code: "UNAVAILABLE", error: "" };
 
@@ -67,53 +67,53 @@ describe("adding a contributor by ORCID iD", () => {
   it("drops the seeded row and restores the iD when the lookup fails", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
     expect(authors()).toHaveLength(1);
 
-    await resolve(ALICE, NOT_FOUND);
+    await resolve(ROSALIND, NOT_FOUND);
 
     expect(authors()).toHaveLength(0);
-    expect(addField().value).toBe(ALICE);
+    expect(addField().value).toBe(ROSALIND);
   });
 
   it("keeps a row the user renamed during the lookup, and what they typed next", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
     const id = authors()[0]?.id ?? "";
     act(() => {
-      useContributionStore.getState().updateAuthorName(id, "Alice Carberry");
+      useContributionStore.getState().updateAuthorName(id, "Rosalind E. Franklin");
     });
-    fireEvent.change(addField(), { target: { value: "Bob Smith" } });
+    fireEvent.change(addField(), { target: { value: "Alan M. Turing" } });
 
-    await resolve(ALICE, NOT_FOUND);
+    await resolve(ROSALIND, NOT_FOUND);
 
-    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry"]);
-    expect(addField().value).toBe("Bob Smith");
+    expect(authors().map((a) => a.name)).toEqual(["Rosalind E. Franklin"]);
+    expect(addField().value).toBe("Alan M. Turing");
   });
 
   it("keeps a name the user typed while the lookup ran", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
     act(() => {
-      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Alice Carberry");
+      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Rosalind E. Franklin");
     });
 
-    await resolve(ALICE, found("Josiah Carberry"));
+    await resolve(ROSALIND, found("Josiah Carberry"));
 
-    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry"]);
+    expect(authors().map((a) => a.name)).toEqual(["Rosalind E. Franklin"]);
   });
 
   it("keeps a row the user gave a role during the lookup", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
     act(() => {
       useContributionStore.getState().toggleContribution(authors()[0]?.id ?? "", 0);
     });
 
-    await resolve(ALICE, NOT_FOUND);
+    await resolve(ROSALIND, NOT_FOUND);
 
     expect(authors()).toHaveLength(1);
   });
@@ -122,10 +122,10 @@ describe("adding a contributor by ORCID iD", () => {
     const resolve = deferLookups();
     const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
 
     onLine.mockReturnValue(false);
-    await resolve(ALICE, UNAVAILABLE);
+    await resolve(ROSALIND, UNAVAILABLE);
 
     expect(screen.getByText(english.errOffline)).toBeTruthy();
   });
@@ -134,9 +134,9 @@ describe("adding a contributor by ORCID iD", () => {
 describe("adding a contributor by name and ORCID iD", () => {
   it("keeps the typed name and looks nothing up", () => {
     renderList();
-    addById(`Grace Hopper ${ALICE}`);
+    addById(`Grace Hopper ${ROSALIND}`);
 
-    expect(authors()).toMatchObject([{ name: "Grace Hopper", orcid: ALICE }]);
+    expect(authors()).toMatchObject([{ name: "Grace Hopper", orcid: ROSALIND }]);
     expect(addField().value).toBe("");
     expect(lookupOrcidPerson).not.toHaveBeenCalled();
   });
@@ -145,24 +145,24 @@ describe("adding a contributor by name and ORCID iD", () => {
     deferLookups();
     renderList();
     fireEvent.paste(addField(), {
-      clipboardData: { getData: () => `Grace Hopper (https://orcid.org/${ALICE}); ${BOB}` },
+      clipboardData: { getData: () => `Grace Hopper (https://orcid.org/${ROSALIND}); ${ALAN}` },
     });
 
     expect(authors()).toMatchObject([
-      { name: "Grace Hopper", orcid: ALICE },
-      { name: BOB, orcid: BOB },
+      { name: "Grace Hopper", orcid: ROSALIND },
+      { name: ALAN, orcid: ALAN },
     ]);
-    expect(vi.mocked(lookupOrcidPerson).mock.calls.map(([orcid]) => orcid)).toEqual([BOB]);
+    expect(vi.mocked(lookupOrcidPerson).mock.calls.map(([orcid]) => orcid)).toEqual([ALAN]);
   });
 
   it("gives back the whole link when a lookup for one fails", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(`https://orcid.org/${ALICE}`);
+    addById(`https://orcid.org/${ROSALIND}`);
 
-    await resolve(ALICE, NOT_FOUND);
+    await resolve(ROSALIND, NOT_FOUND);
 
-    expect(addField().value).toBe(`https://orcid.org/${ALICE}`);
+    expect(addField().value).toBe(`https://orcid.org/${ROSALIND}`);
   });
 });
 
@@ -170,29 +170,29 @@ describe("pasting a list of ORCID iDs", () => {
   it("keeps a name the user typed while the lookups ran", async () => {
     const resolve = deferLookups();
     renderList();
-    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ALICE}, ${BOB}` } });
+    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ROSALIND}, ${ALAN}` } });
     act(() => {
-      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Alice Carberry");
+      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Rosalind E. Franklin");
     });
 
-    await resolve(ALICE, found("Josiah Carberry"));
-    await resolve(BOB, found("Bob Smith"));
+    await resolve(ROSALIND, found("Josiah Carberry"));
+    await resolve(ALAN, found("Alan M. Turing"));
 
-    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry", "Bob Smith"]);
+    expect(authors().map((a) => a.name)).toEqual(["Rosalind E. Franklin", "Alan M. Turing"]);
   });
 
   it("reports lookups whose name could not be written as failed", async () => {
     const resolve = deferLookups();
     renderList();
-    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ALICE}, ${BOB}` } });
+    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ROSALIND}, ${ALAN}` } });
     expect(authors()).toHaveLength(2);
 
     // A draft switch mid-lookup: the rows the names were meant for are gone.
     act(() => {
       useContributionStore.getState().createDraft();
     });
-    await resolve(ALICE, found("Alice Carberry"));
-    await resolve(BOB, found("Bob Smith"));
+    await resolve(ROSALIND, found("Rosalind E. Franklin"));
+    await resolve(ALAN, found("Alan M. Turing"));
 
     expect(vi.mocked(announce)).toHaveBeenLastCalledWith(expect.stringContaining("Could not look up 2 ORCID iDs"), {
       assertive: true,
@@ -203,24 +203,24 @@ describe("pasting a list of ORCID iDs", () => {
 describe("a row's ORCID lookup", () => {
   it("keeps the name of the latest iD when an older lookup finishes last", async () => {
     const resolve = deferLookups();
-    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ALICE })] });
+    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ROSALIND })] });
     renderList();
 
     fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
-    fireEvent.paste(screen.getByLabelText(english.nameLabel), { clipboardData: { getData: () => BOB } });
-    await resolve(BOB, found("Bob Smith"));
-    await resolve(ALICE, found("Alice Carberry"));
+    fireEvent.paste(screen.getByLabelText(english.nameLabel), { clipboardData: { getData: () => ALAN } });
+    await resolve(ALAN, found("Alan M. Turing"));
+    await resolve(ROSALIND, found("Rosalind E. Franklin"));
 
-    expect(authors()[0]).toMatchObject({ name: "Bob Smith", orcid: BOB });
+    expect(authors()[0]).toMatchObject({ name: "Alan M. Turing", orcid: ALAN });
   });
 
   it("says why when the registry's name fails the name rules, and keeps the old one", async () => {
     const resolve = deferLookups();
-    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ALICE })] });
+    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ROSALIND })] });
     renderList();
 
     fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
-    await resolve(ALICE, found("x".repeat(600)));
+    await resolve(ROSALIND, found("x".repeat(600)));
 
     expect(authors()[0]?.name).toBe("Someone");
     expect(announce).toHaveBeenCalledWith(english.errNameTooLong, { assertive: true });
@@ -312,35 +312,35 @@ describe("asking a contributor", () => {
 
 describe("undoing a removal", () => {
   it("puts the contributor's ask back", () => {
-    const ann = createAuthor("Ann Lee");
+    const katherine = createAuthor("Katherine Johnson");
     const ask = { sentAt: 1, prefilled: false } as Ask;
-    useContributionStore.setState({ authors: [ann], asks: { [ann.id]: ask } });
+    useContributionStore.setState({ authors: [katherine], asks: { [katherine.id]: ask } });
     renderList();
-    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Remove Katherine Johnson/ }));
     expect(useContributionStore.getState().asks).toEqual({});
 
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
-    expect(useContributionStore.getState().asks).toEqual({ [ann.id]: ask });
+    expect(useContributionStore.getState().asks).toEqual({ [katherine.id]: ask });
   });
 
   it("marks the row as you again", () => {
-    const ann = createAuthor("Ann Lee");
-    useContributionStore.setState({ authors: [ann], selfId: ann.id });
+    const katherine = createAuthor("Katherine Johnson");
+    useContributionStore.setState({ authors: [katherine], selfId: katherine.id });
     renderList();
-    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Remove Katherine Johnson/ }));
     expect(useContributionStore.getState().selfId).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
-    expect(useContributionStore.getState().selfId).toBe(ann.id);
+    expect(useContributionStore.getState().selfId).toBe(katherine.id);
   });
 
   it("reports no limit when the contributor is already back", () => {
-    const ann = createAuthor("Ann Lee");
-    useContributionStore.setState({ authors: [ann] });
+    const katherine = createAuthor("Katherine Johnson");
+    useContributionStore.setState({ authors: [katherine] });
     renderList();
-    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Remove Katherine Johnson/ }));
     // The grid's bulk Undo puts the whole roster back first.
-    act(() => useContributionStore.getState().loadAuthors([ann]));
+    act(() => useContributionStore.getState().loadAuthors([katherine]));
 
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
     expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("at most"), expect.anything());
@@ -349,9 +349,9 @@ describe("undoing a removal", () => {
   });
 
   it.each(["reset", "deleteAllDrafts"] as const)("restores nothing after %s", (clear) => {
-    useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
+    useContributionStore.setState({ authors: [createAuthor("Katherine Johnson")] });
     renderList();
-    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Remove Katherine Johnson/ }));
     expect(screen.getByRole("button", { name: english.undo })).toBeTruthy();
 
     act(() => useContributionStore.getState()[clear]());
@@ -363,11 +363,11 @@ describe("undoing a removal", () => {
 
 describe("editing a contributor's name", () => {
   it.each([
-    ["a new row's lookup", () => addById(ALICE)],
+    ["a new row's lookup", () => addById(ROSALIND)],
     [
       "a row's lookup",
       () => {
-        act(() => useContributionStore.setState({ authors: [createAuthor(ALICE, { orcid: ALICE })] }));
+        act(() => useContributionStore.setState({ authors: [createAuthor(ROSALIND, { orcid: ROSALIND })] }));
         fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
       },
     ],
@@ -377,17 +377,17 @@ describe("editing a contributor's name", () => {
     startLookup();
     const field = screen.getByLabelText<HTMLInputElement>(english.nameLabel);
     field.focus();
-    fireEvent.change(field, { target: { value: `${ALICE} typed` } });
+    fireEvent.change(field, { target: { value: `${ROSALIND} typed` } });
 
-    await resolve(ALICE, found("Josiah Carberry"));
-    expect(field.value).toBe(`${ALICE} typed`);
+    await resolve(ROSALIND, found("Josiah Carberry"));
+    expect(field.value).toBe(`${ROSALIND} typed`);
 
     fireEvent.blur(field);
-    expect(authors()[0]?.name).toBe(`${ALICE} typed`);
+    expect(authors()[0]?.name).toBe(`${ROSALIND} typed`);
   });
 
   it("discards the edit on Escape, also when the field is left afterwards", () => {
-    useContributionStore.setState({ authors: [createAuthor("Alice Smith")] });
+    useContributionStore.setState({ authors: [createAuthor("Ada Lovelace")] });
     renderList();
     const field = screen.getByLabelText<HTMLInputElement>(english.nameLabel);
     field.focus();
@@ -395,21 +395,21 @@ describe("editing a contributor's name", () => {
     fireEvent.keyDown(field, { key: "Escape" });
     fireEvent.blur(field);
 
-    expect(authors()[0]?.name).toBe("Alice Smith");
-    expect(field.value).toBe("Alice Smith");
+    expect(authors()[0]?.name).toBe("Ada Lovelace");
+    expect(field.value).toBe("Ada Lovelace");
   });
 });
 
 describe("moving a contributor from the menu", () => {
   it("keeps focus on Move up once the row reaches the top, and ignores further clicks", () => {
-    useContributionStore.setState({ authors: [createAuthor("Ann Lee"), createAuthor("Ben Okoro")] });
+    useContributionStore.setState({ authors: [createAuthor("Katherine Johnson"), createAuthor("Ben Okoro")] });
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Actions for Ben Okoro" }));
 
     const moveUp = screen.getByRole("button", { name: english.moveUp });
     moveUp.focus();
     fireEvent.click(moveUp);
-    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
+    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Katherine Johnson"]);
 
     // A disabled button would drop focus to the page body here.
     expect(moveUp).not.toHaveProperty("disabled", true);
@@ -417,34 +417,34 @@ describe("moving a contributor from the menu", () => {
     expect(document.activeElement).toBe(moveUp);
 
     fireEvent.click(moveUp);
-    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
+    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Katherine Johnson"]);
   });
 });
 
 describe("collapsed rail", () => {
   it("links a person on hover and opens their menu from the initials chip", () => {
-    const ann = createAuthor("Ann Lee");
-    act(() => useContributionStore.getState().loadAuthors([ann]));
+    const katherine = createAuthor("Katherine Johnson");
+    act(() => useContributionStore.getState().loadAuthors([katherine]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
-    const chip = screen.getByRole("button", { name: "Ann Lee" });
+    const chip = screen.getByRole("button", { name: "Katherine Johnson" });
 
     fireEvent.pointerEnter(chip, { pointerType: "mouse" });
-    expect(useContributionStore.getState().statementLink).toEqual({ contributorId: ann.id, from: "author" });
+    expect(useContributionStore.getState().statementLink).toEqual({ contributorId: katherine.id, from: "author" });
     fireEvent.pointerLeave(chip, { pointerType: "mouse" });
     expect(useContributionStore.getState().statementLink).toBeNull();
 
     // A link from the grid or statement marks the chip too.
-    act(() => useContributionStore.getState().setStatementLink({ contributorId: ann.id, from: "cell" }));
+    act(() => useContributionStore.getState().setStatementLink({ contributorId: katherine.id, from: "cell" }));
     expect(chip.dataset.linked).toBe("true");
 
     fireEvent.click(chip);
-    expect(screen.getByRole("dialog", { name: "Actions for Ann Lee" })).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: "Actions for Katherine Johnson" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Edit in list" })).toBeTruthy();
   });
 
   it("keeps focus on the fold toggle as the list folds and opens", () => {
-    act(() => useContributionStore.getState().loadAuthors([createAuthor("Ann Lee")]));
+    act(() => useContributionStore.getState().loadAuthors([createAuthor("Katherine Johnson")]));
     renderList();
     const fold = screen.getByRole("button", { name: "Collapse contributor list" });
     fold.focus();
@@ -455,7 +455,7 @@ describe("collapsed rail", () => {
   });
 
   it("shows the full list, with its add field, once a folded roster is empty", () => {
-    act(() => useContributionStore.getState().loadAuthors([createAuthor("Ann Lee")]));
+    act(() => useContributionStore.getState().loadAuthors([createAuthor("Katherine Johnson")]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
     expect(screen.queryByLabelText("New author names or ORCID iD")).toBeNull();
@@ -466,23 +466,23 @@ describe("collapsed rail", () => {
   it("opens the list and focuses the person on Edit in list from a chip", () => {
     // jsdom has no layout, so no scrollIntoView.
     Element.prototype.scrollIntoView = vi.fn();
-    const ann = createAuthor("Ann Lee");
-    act(() => useContributionStore.getState().loadAuthors([ann]));
+    const katherine = createAuthor("Katherine Johnson");
+    act(() => useContributionStore.getState().loadAuthors([katherine]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
-    fireEvent.click(screen.getByRole("button", { name: "Ann Lee" }));
+    fireEvent.click(screen.getByRole("button", { name: "Katherine Johnson" }));
     fireEvent.click(screen.getByRole("button", { name: "Edit in list" }));
 
     expect(screen.getByRole("button", { name: "Collapse contributor list" })).toBeTruthy();
-    expect((document.activeElement as HTMLInputElement | null)?.value).toBe("Ann Lee");
+    expect((document.activeElement as HTMLInputElement | null)?.value).toBe("Katherine Johnson");
     expect(useContributionStore.getState().listFocus).toBeNull();
   });
 
   it("drops an edit request for a person who is removed", () => {
-    const ann = createAuthor("Ann Lee");
-    act(() => useContributionStore.getState().loadAuthors([ann, createAuthor("Bo Kim")]));
-    act(() => useContributionStore.getState().setListFocus({ authorId: ann.id, orcid: false }));
-    act(() => useContributionStore.getState().removeAuthor(ann.id));
+    const katherine = createAuthor("Katherine Johnson");
+    act(() => useContributionStore.getState().loadAuthors([katherine, createAuthor("Bo Kim")]));
+    act(() => useContributionStore.getState().setListFocus({ authorId: katherine.id, orcid: false }));
+    act(() => useContributionStore.getState().removeAuthor(katherine.id));
     expect(useContributionStore.getState().listFocus).toBeNull();
   });
 });

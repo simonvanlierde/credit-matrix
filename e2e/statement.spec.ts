@@ -110,15 +110,15 @@ test("hovering a cell marks its phrase in the statement, and hovering a phrase r
   const adder = page.getByLabel("New author names or ORCID iD");
   await adder.fill("Grace Hopper, Charles Darwin");
   await adder.press("Enter");
-  const janeConcept = page.getByRole("button", { name: /^Conceptualization for Grace Hopper:/ });
-  const bobConcept = page.getByRole("button", { name: /^Conceptualization for Charles Darwin:/ });
-  await janeConcept.click();
-  await bobConcept.click();
+  const graceConcept = page.getByRole("button", { name: /^Conceptualization for Grace Hopper:/ });
+  const charlesConcept = page.getByRole("button", { name: /^Conceptualization for Charles Darwin:/ });
+  await graceConcept.click();
+  await charlesConcept.click();
 
   const statement = page.getByRole("region", { name: "Generated statement" });
   const mark = statement.locator("[data-linked]");
-  await bobConcept.hover();
-  // Bob's Conceptualization, not Jane's: the role name appears in both their segments.
+  await charlesConcept.hover();
+  // Charles's Conceptualization, not Grace's: the role name appears in both their segments.
   await expect(mark).toHaveCount(1);
   await expect(mark).toHaveText("Conceptualization");
   await expect(mark).toHaveAttribute("data-author", /.+/);
@@ -126,13 +126,13 @@ test("hovering a cell marks its phrase in the statement, and hovering a phrase r
 
   await page.getByRole("radio", { name: "By role" }).click();
   await page.getByRole("radio", { name: "Levels" }).click();
-  await janeConcept.hover();
+  await graceConcept.hover();
   await expect(mark).toHaveText("Grace Hopper");
 
   // And back: the phrase rings its cell.
   await statement.getByText("Charles Darwin").hover();
-  await expect(bobConcept).toHaveAttribute("data-linked", "true");
-  await expect(janeConcept).not.toHaveAttribute("data-linked", "true");
+  await expect(charlesConcept).toHaveAttribute("data-linked", "true");
+  await expect(graceConcept).not.toHaveAttribute("data-linked", "true");
   await page.mouse.move(0, 0);
   await expect(mark).toHaveCount(0);
 });

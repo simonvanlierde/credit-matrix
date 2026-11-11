@@ -11,12 +11,12 @@ import { createAuthor, normalizeRoster, parseAuthorText } from "../parse-authors
 describe("fromJats4rXml (DOMParser entry point)", () => {
   it("round-trips through the browser-facing parser", () => {
     const authors = parseAuthorText("Grace Hopper");
-    const [jane] = authors;
-    if (!jane) throw new Error("expected author");
-    const conc = jane.contributions[0];
+    const [grace] = authors;
+    if (!grace) throw new Error("expected author");
+    const conc = grace.contributions[0];
     if (!conc) throw new Error("expected contribution");
     conc.score = 100;
-    jane.orcid = "0000-0002-1825-0097";
+    grace.orcid = "0000-0002-1825-0097";
 
     const xml = toJats4rXml(authors);
     // JATS4R Authors and Affiliations v2.0 asks for the full ORCID URL.
@@ -141,9 +141,9 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
 
     const contrib = el(null, {}, { "given-names": [el("Grace")], surname: [el("Hopper")], role: [el(null)] });
     const ok = { parseFromString: () => el(null, {}, { contrib: [contrib] }) };
-    const [jane] = fromJats4rXml("<x/>", { parser: ok });
-    expect(jane?.name).toBe("Grace Hopper");
-    expect(jane?.contributions.every((c) => c.score === 0)).toBe(true);
+    const [grace] = fromJats4rXml("<x/>", { parser: ok });
+    expect(grace?.name).toBe("Grace Hopper");
+    expect(grace?.contributions.every((c) => c.score === 0)).toBe(true);
   });
 
   it("says what to pass where there is no global DOMParser", () => {
@@ -181,10 +181,10 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
 describe("toJats4rXml", () => {
   it("escapes XML special characters in role names", () => {
     const authors = parseAuthorText("Grace Hopper");
-    const [jane] = authors;
-    if (!jane) throw new Error("expected author");
+    const [grace] = authors;
+    if (!grace) throw new Error("expected author");
     // "Writing – review & editing" is the last role (index 13).
-    const reviewEditing = jane.contributions[13];
+    const reviewEditing = grace.contributions[13];
     if (!reviewEditing) throw new Error("expected contribution");
     reviewEditing.score = 100;
 
@@ -194,21 +194,21 @@ describe("toJats4rXml", () => {
   });
 
   it("writes equal-contrib only when two or more authors share first authorship", () => {
-    const [jane, bob, ann] = parseAuthorText("Grace Hopper, Charles Darwin, Ann Lee");
-    if (!jane || !bob || !ann) throw new Error("expected authors");
+    const [grace, charles, katherine] = parseAuthorText("Grace Hopper, Charles Darwin, Katherine Johnson");
+    if (!grace || !charles || !katherine) throw new Error("expected authors");
     const count = (xml: string) => xml.match(/equal-contrib="yes"/g)?.length ?? 0;
 
-    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, bob]))).toBe(0);
-    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, { ...bob, equalContribution: true }, ann]))).toBe(
-      2,
-    );
+    expect(count(toJats4rXml([{ ...grace, equalContribution: true }, charles]))).toBe(0);
+    expect(
+      count(toJats4rXml([{ ...grace, equalContribution: true }, { ...charles, equalContribution: true }, katherine])),
+    ).toBe(2);
     // A non-author contributor does not make a lone author's flag shared.
-    const acknowledged = { ...bob, equalContribution: true, contributorType: "non-author" as const };
-    expect(count(toJats4rXml([{ ...jane, equalContribution: true }, acknowledged]))).toBe(0);
+    const acknowledged = { ...charles, equalContribution: true, contributorType: "non-author" as const };
+    expect(count(toJats4rXml([{ ...grace, equalContribution: true }, acknowledged]))).toBe(0);
     // Nor does a flagged non-author get the attribute when two authors do share it.
     const shared = toJats4rXml([
-      { ...jane, equalContribution: true },
-      { ...ann, equalContribution: true },
+      { ...grace, equalContribution: true },
+      { ...katherine, equalContribution: true },
       acknowledged,
     ]);
     expect(count(shared)).toBe(2);
@@ -224,28 +224,28 @@ describe("toJats4rXml", () => {
   });
 
   it("falls back to the stored given names when the name no longer holds the surname", () => {
-    const [jane] = parseAuthorText("Grace Q Hopper");
-    if (!jane) throw new Error("expected author");
-    const xml = toJats4rXml([{ ...jane, name: "G. Q. H." }]);
+    const [grace] = parseAuthorText("Grace Q Hopper");
+    if (!grace) throw new Error("expected author");
+    const xml = toJats4rXml([{ ...grace, name: "G. Q. H." }]);
     expect(xml).toContain("<given-names>Grace Q</given-names>");
   });
 
   it("writes the ORCID iD as a full orcid.org URI", () => {
-    const [jane] = parseAuthorText("Grace Hopper");
-    if (!jane) throw new Error("expected author");
-    jane.orcid = "0000-0002-1825-0097";
+    const [grace] = parseAuthorText("Grace Hopper");
+    if (!grace) throw new Error("expected author");
+    grace.orcid = "0000-0002-1825-0097";
 
-    const xml = toJats4rXml([jane]);
+    const xml = toJats4rXml([grace]);
     expect(xml).toContain('<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-1825-0097</contrib-id>');
     expect(xml).not.toContain("authenticated");
   });
 
   it("does not double the prefix of an iD stored as a URL", () => {
-    const [jane] = parseAuthorText("Grace Hopper");
-    if (!jane) throw new Error("expected author");
-    jane.orcid = "https://orcid.org/0000-0002-1825-0097";
+    const [grace] = parseAuthorText("Grace Hopper");
+    if (!grace) throw new Error("expected author");
+    grace.orcid = "https://orcid.org/0000-0002-1825-0097";
 
-    expect(toJats4rXml([jane])).toContain(">https://orcid.org/0000-0002-1825-0097</contrib-id>");
+    expect(toJats4rXml([grace])).toContain(">https://orcid.org/0000-0002-1825-0097</contrib-id>");
   });
 
   it.each(["https://orcid.org/0000-0002-1825-0097", "http://orcid.org/0000-0002-1825-0097", "0000-0002-1825-0097"])(
@@ -258,9 +258,9 @@ describe("toJats4rXml", () => {
 
   it("only emits role elements for active contributions", () => {
     const authors = parseAuthorText("Grace Hopper");
-    const [jane] = authors;
-    if (!jane) throw new Error("expected author");
-    const conc = jane.contributions[0];
+    const [grace] = authors;
+    if (!grace) throw new Error("expected author");
+    const conc = grace.contributions[0];
     if (!conc) throw new Error("expected contribution");
     conc.score = 80;
 
@@ -271,11 +271,11 @@ describe("toJats4rXml", () => {
   });
 
   it('tags non-author contributors with contrib-type="contributor"', () => {
-    const [jane, bob] = parseAuthorText("Grace Hopper\nCharles Darwin");
-    if (!(jane && bob)) throw new Error("expected 2 authors");
-    bob.contributorType = "non-author";
+    const [grace, charles] = parseAuthorText("Grace Hopper\nCharles Darwin");
+    if (!(grace && charles)) throw new Error("expected 2 authors");
+    charles.contributorType = "non-author";
 
-    const xml = toJats4rXml([jane, bob]);
+    const xml = toJats4rXml([grace, charles]);
     expect(xml).toContain('<contrib contrib-type="author">');
     expect(xml).toContain('<contrib contrib-type="contributor">');
   });
@@ -345,13 +345,13 @@ describe("toJats4rXml", () => {
   });
 
   it("reads a role from its identifier alone, over http and without the trailing slash, or from vocab-term alone", () => {
-    const [jane] = fromJats4rXml(`<article><contrib contrib-type="author">
+    const [grace] = fromJats4rXml(`<article><contrib contrib-type="author">
       <name><surname>Hopper</surname><given-names>Grace</given-names></name>
       <role vocab-term-identifier="http://credit.niso.org/contributor-roles/software">Code</role>
       <role vocab-term-identifier=" HTTPS://credit.niso.org/contributor-roles/methodology// ">Methods</role>
       <role vocab-term="Validation"/>
     </contrib></article>`);
-    const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    const active = grace?.contributions.filter((c) => c.score > 0).map((c) => c.role);
     expect(active).toEqual(["Methodology", "Software", "Validation"]);
   });
 
@@ -362,8 +362,8 @@ describe("toJats4rXml", () => {
       <role vocab="credit" vocab-term="Conceptualization">Conceptualization</role>
     </contrib></article>`;
 
-    const [jane] = fromJats4rXml(xml);
-    const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    const [grace] = fromJats4rXml(xml);
+    const active = grace?.contributions.filter((c) => c.score > 0).map((c) => c.role);
     expect(active).toEqual(["Conceptualization", "Writing – original draft"]);
   });
 
@@ -375,8 +375,8 @@ describe("toJats4rXml", () => {
       <role vocab-term="nonsense">Software</role>
     </contrib></article>`;
 
-    const [jane] = fromJats4rXml(xml);
-    const active = jane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    const [grace] = fromJats4rXml(xml);
+    const active = grace?.contributions.filter((c) => c.score > 0).map((c) => c.role);
     expect(active).toEqual(["Conceptualization", "Software", "Writing – original draft"]);
   });
 
@@ -392,8 +392,8 @@ describe("toJats4rXml", () => {
       <role>Not a CRediT role</role>
     </contrib></article>`;
 
-    const [jane] = fromJats4rXml(xml);
-    const score = (role: string) => jane?.contributions.find((c) => c.role === role)?.score;
+    const [grace] = fromJats4rXml(xml);
+    const score = (role: string) => grace?.contributions.find((c) => c.role === role)?.score;
     expect(score("Conceptualization")).toBe(33);
     expect(score("Methodology")).toBe(100);
     expect(score("Software")).toBe(100);
@@ -401,7 +401,7 @@ describe("toJats4rXml", () => {
     expect(score("Resources")).toBe(66);
     // Only the text content names the role.
     expect(score("Visualization")).toBe(66);
-    expect(jane?.contributions.filter((c) => c.score > 0)).toHaveLength(5);
+    expect(grace?.contributions.filter((c) => c.score > 0)).toHaveLength(5);
   });
 
   it("leaves out degree-contribution in yes/no mode and keeps it when a score is graded", () => {
@@ -482,8 +482,8 @@ describe("fromJats4rXml reading", () => {
   });
 
   it("parses the name itself when only one part is given", () => {
-    const [jane] = fromJats4rXml(contrib("<name><surname>Grace Ann Hopper</surname></name>"));
-    expect(jane).toMatchObject({ name: "Grace Ann Hopper", firstName: "Grace", middleName: "Ann", surname: "Hopper" });
+    const [grace] = fromJats4rXml(contrib("<name><surname>Grace Ann Hopper</surname></name>"));
+    expect(grace).toMatchObject({ name: "Grace Ann Hopper", firstName: "Grace", middleName: "Ann", surname: "Hopper" });
   });
 
   it("keeps an ORCID iD padded with spaces and drops one with a bad check digit", () => {

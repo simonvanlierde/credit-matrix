@@ -251,17 +251,17 @@ describe("credit-matrix convert", () => {
 });
 
 describe("credit-matrix ask", () => {
-  const jane = createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] });
-  const json = file("draft.json", toJson([jane, createAuthor("Charles Darwin")]));
+  const grace = createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] });
+  const json = file("draft.json", toJson([grace, createAuthor("Charles Darwin")]));
 
   it("prints a link for one contributor, by name or id", async () => {
     vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
     const link = await run(["ask", json, "--contributor", "grace hopper"]);
     expect(link).toMatch(/^https:\/\/credit\.duinlab\.nl\/#s=/);
     const shared = await decodeShareHash(link.slice(link.indexOf("#")));
-    expect(shared).toMatchObject({ claimId: jane.id, blank: false, sentAt: 1_700_000_000_000 });
+    expect(shared).toMatchObject({ claimId: grace.id, blank: false, sentAt: 1_700_000_000_000 });
     expect(shared?.authors.map((a) => a.name)).toEqual(["Grace Hopper"]);
-    expect(await run(["ask", json, "--contributor", jane.id])).toContain("#s=");
+    expect(await run(["ask", json, "--contributor", grace.id])).toContain("#s=");
   });
 
   it("sends a blank row to another base URL", async () => {
@@ -282,7 +282,7 @@ describe("credit-matrix ask", () => {
 
   it("finds a contributor by a first name or surname only they have", async () => {
     const link = await run(["ask", json, "--contributor", "HOPPER"]);
-    expect((await decodeShareHash(link.slice(link.indexOf("#"))))?.claimId).toBe(jane.id);
+    expect((await decodeShareHash(link.slice(link.indexOf("#"))))?.claimId).toBe(grace.id);
     expect(await run(["ask", json, "--contributor", "charles"])).toContain("#s=");
   });
 
@@ -328,8 +328,8 @@ describe("credit-matrix usage", () => {
   });
 
   it("says plainly that a file repeats a contributor id", async () => {
-    const jane = createAuthor("Grace Hopper");
-    const twice = file("twice.json", JSON.stringify({ version: 1, authors: [jane, jane] }));
+    const grace = createAuthor("Grace Hopper");
+    const twice = file("twice.json", JSON.stringify({ version: 1, authors: [grace, grace] }));
     await expect(run(["statement", twice])).rejects.toThrow(`${twice} repeats a contributor id.`);
   });
 
@@ -412,10 +412,10 @@ describe("credit-matrix as a program", () => {
   });
 
   it("prints that a file repeats a contributor id, and exits 1", async () => {
-    const jane = createAuthor("Grace Hopper");
+    const grace = createAuthor("Grace Hopper");
     const { err } = await launch(
       "statement",
-      file("twice2.json", JSON.stringify({ version: 1, authors: [jane, jane] })),
+      file("twice2.json", JSON.stringify({ version: 1, authors: [grace, grace] })),
     );
     expect(err).toMatch(/^credit-matrix: \S*twice2\.json repeats a contributor id\.\n$/);
     expect(process.exitCode).toBe(1);

@@ -412,8 +412,8 @@ describe("askStep reply with a malformed row", () => {
     ["an unknown role", row({ contributions: [{ role: "Astrology", score: 100 }] }), "broken"],
     ["contributions that are not an array", row({ contributions: { Software: 100 } }), "broken"],
     ["a name past the length limit", row({ name: "A".repeat(501) }), "broken"],
-    ["another contributor's row", row({ id: "bob" }), "broken"],
-    ["a row for nobody in the roster", { ...row({ id: "bob" }) }, "unmatched", "bob"],
+    ["another contributor's row", row({ id: "charles" }), "broken"],
+    ["a row for nobody in the roster", { ...row({ id: "charles" }) }, "unmatched", "charles"],
   ])("reads %s as %s, with nothing to write", (_, payload, kind, contributorId = "ada") => {
     let step: ReturnType<typeof askStep> | undefined;
     expect(() => {

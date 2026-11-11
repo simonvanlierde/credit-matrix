@@ -24,36 +24,36 @@ function makeAuthors() {
 describe("share payload v2", () => {
   it("round-trips authors with their stable ids, title, claim, source draft, and reply flag", () => {
     const authors = makeAuthors();
-    const bob = authors[1];
-    if (!bob) throw new Error("expected Bob");
+    const charles = authors[1];
+    if (!charles) throw new Error("expected Charles");
     const restored = fromSharePayload(
       toSharePayload({
         authors,
         title: "Trust in electric eels",
-        claimId: bob.id,
+        claimId: charles.id,
         sourceDraftId: "11111111-2222-3333-4444-555555555555",
         reply: true,
       }),
     );
 
-    expect(restored.authors.map((a) => a.id)).toEqual([bob.id]);
+    expect(restored.authors.map((a) => a.id)).toEqual([charles.id]);
     expect(restored.title).toBe("Trust in electric eels");
-    expect(restored.claimId).toBe(bob.id);
+    expect(restored.claimId).toBe(charles.id);
     expect(restored.sourceDraftId).toBe("11111111-2222-3333-4444-555555555555");
     expect(restored.reply).toBe(true);
   });
 
   it("holds only the claimed contributor's row on a claim link, never the rest of the roster", () => {
     const authors = makeAuthors();
-    const jane = authors[0];
-    if (!jane) throw new Error("expected Jane");
-    const payload = toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1" });
+    const grace = authors[0];
+    if (!grace) throw new Error("expected Grace");
+    const payload = toSharePayload({ authors, claimId: grace.id, sourceDraftId: "draft-1" });
 
     expect(payload).not.toContain("Charles Darwin");
     const restored = fromSharePayload(payload);
     expect(restored.authors.map((a) => a.name)).toEqual(["Grace B. Hopper"]);
     expect(restored.authors[0]?.orcid).toBe("0000-0002-1825-0097");
-    expect(restored.claimId).toBe(jane.id);
+    expect(restored.claimId).toBe(grace.id);
   });
 
   it("still opens a full-roster claim link from before claims were trimmed", () => {
@@ -76,25 +76,25 @@ describe("share payload v2", () => {
 
   it("sends a blank ask with the row's scores zeroed, and says when it was sent", () => {
     const authors = makeAuthors();
-    const jane = authors[0];
-    if (!jane) throw new Error("expected Jane");
+    const grace = authors[0];
+    if (!grace) throw new Error("expected Grace");
     const sentAt = 1_760_000_000_000;
-    const payload = toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1", blank: true, sentAt });
+    const payload = toSharePayload({ authors, claimId: grace.id, sourceDraftId: "draft-1", blank: true, sentAt });
 
     expect(JSON.parse(payload)).toMatchObject({ b: 1, w: sentAt });
     const restored = fromSharePayload(payload);
     expect(restored.blank).toBe(true);
     expect(restored.sentAt).toBe(sentAt);
     expect(restored.authors[0]?.contributions.every((c) => c.score === 0)).toBe(true);
-    expect(restored.authors[0]?.orcid).toBe(jane.orcid);
+    expect(restored.authors[0]?.orcid).toBe(grace.orcid);
   });
 
   it("keeps the guess on a pre-filled ask", () => {
     const authors = makeAuthors();
-    const jane = authors[0];
-    if (!jane) throw new Error("expected Jane");
+    const grace = authors[0];
+    if (!grace) throw new Error("expected Grace");
     const restored = fromSharePayload(
-      toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1", sentAt: 5 }),
+      toSharePayload({ authors, claimId: grace.id, sourceDraftId: "draft-1", sentAt: 5 }),
     );
     expect(restored.blank).toBe(false);
     expect(restored.sentAt).toBe(5);
@@ -110,7 +110,7 @@ describe("share payload v2", () => {
   it("reads a link from before blank asks and send times as pre-filled and undated", () => {
     // Frozen: the shape v0.6.0 wrote, with no `b` or `w`.
     const old =
-      '{"v":2,"d":"draft-1","c":"jane-1","a":[{"i":"jane-1","n":"Grace Hopper","s":[100,0,0,0,0,0,0,0,0,0,0,0,0,0]}]}';
+      '{"v":2,"d":"draft-1","c":"grace-1","a":[{"i":"grace-1","n":"Grace Hopper","s":[100,0,0,0,0,0,0,0,0,0,0,0,0,0]}]}';
     const restored = fromSharePayload(old);
     expect(restored.blank).toBe(false);
     expect(restored.sentAt).toBeNull();
@@ -120,9 +120,9 @@ describe("share payload v2", () => {
 
   it("says when the asker works in yes/no mode, on a claim only", () => {
     const authors = makeAuthors();
-    const jane = authors[0];
-    if (!jane) throw new Error("expected Jane");
-    const ask = toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1", yesNo: true });
+    const grace = authors[0];
+    if (!grace) throw new Error("expected Grace");
+    const ask = toSharePayload({ authors, claimId: grace.id, sourceDraftId: "draft-1", yesNo: true });
     expect(JSON.parse(ask)).toMatchObject({ y: 1 });
     expect(fromSharePayload(ask).yesNo).toBe(true);
     expect(JSON.parse(toSharePayload({ authors, yesNo: true }))).not.toHaveProperty("y");
@@ -163,9 +163,9 @@ describe("share payload v2", () => {
   });
 
   it("round-trips the equal contribution and corresponding markers", () => {
-    const [jane, bob] = fromSharePayload(toSharePayload({ authors: makeAuthors() })).authors;
-    expect([jane?.equalContribution, jane?.corresponding]).toEqual([true, true]);
-    expect([bob?.equalContribution, bob?.corresponding]).toEqual([false, false]);
+    const [grace, charles] = fromSharePayload(toSharePayload({ authors: makeAuthors() })).authors;
+    expect([grace?.equalContribution, grace?.corresponding]).toEqual([true, true]);
+    expect([charles?.equalContribution, charles?.corresponding]).toEqual([false, false]);
   });
 
   it("rejects duplicate contributor ids", () => {
@@ -219,7 +219,7 @@ describe("share payload title", () => {
 });
 
 describe("share payload envelope validation", () => {
-  const base = { v: 2, a: [{ i: "jane", n: "Grace Hopper", s: [100] }] };
+  const base = { v: 2, a: [{ i: "grace", n: "Grace Hopper", s: [100] }] };
   // Raw JSON text, so values JSON.stringify cannot write (1e400 parses to Infinity) reach the parser.
   const withKey = (key: string, raw: string) => `${JSON.stringify(base).slice(0, -1)},"${key}":${raw}}`;
 

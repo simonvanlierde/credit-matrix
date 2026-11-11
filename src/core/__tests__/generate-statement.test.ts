@@ -6,19 +6,19 @@ import { parseAuthorText } from "../parse-authors";
 
 function makeAuthors() {
   const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
-  const [jane, bob] = authors;
-  if (!(jane && bob)) throw new Error("expected 2 authors");
+  const [grace, charles] = authors;
+  if (!(grace && charles)) throw new Error("expected 2 authors");
 
-  const janeConc = jane.contributions[0];
-  const janeSoft = jane.contributions[8];
-  const bobConc = bob.contributions[0];
-  const bobInv = bob.contributions[4];
-  if (!(janeConc && janeSoft && bobConc && bobInv)) throw new Error("expected contributions");
+  const graceConc = grace.contributions[0];
+  const graceSoft = grace.contributions[8];
+  const charlesConc = charles.contributions[0];
+  const charlesInv = charles.contributions[4];
+  if (!(graceConc && graceSoft && charlesConc && charlesInv)) throw new Error("expected contributions");
 
-  janeConc.score = 100; // Conceptualization lead
-  janeSoft.score = 50; // Software equal
-  bobConc.score = 20; // Conceptualization supporting
-  bobInv.score = 100; // Investigation lead
+  graceConc.score = 100; // Conceptualization lead
+  graceSoft.score = 50; // Software equal
+  charlesConc.score = 20; // Conceptualization supporting
+  charlesInv.score = 100; // Investigation lead
   return authors;
 }
 
@@ -60,9 +60,9 @@ describe("generateStatement, as HTML", () => {
 
   it("puts the acknowledgements line in its own paragraph", () => {
     const authors = makeAuthors();
-    const bob = authors[1];
-    if (!bob) throw new Error("expected 2 authors");
-    bob.contributorType = "non-author";
+    const charles = authors[1];
+    if (!charles) throw new Error("expected 2 authors");
+    charles.contributorType = "non-author";
 
     const html = generateStatement(authors, { format: "by-role", asHtml: true });
     expect(html.match(/<p>/g)).toHaveLength(2);
@@ -110,7 +110,7 @@ describe("generateStatement", () => {
   });
 
   it("returns empty string when no contributions", () => {
-    const authors = parseAuthorText("Alice Brown");
+    const authors = parseAuthorText("Ada Lovelace");
     expect(generateStatement(authors, { format: "by-role" })).toBe("");
   });
 
@@ -134,9 +134,9 @@ describe("generateStatement", () => {
 
   it("credits non-author contributors on a separate Acknowledgements line", () => {
     const authors = makeAuthors();
-    const bob = authors[1];
-    if (!bob) throw new Error("expected Charles");
-    bob.contributorType = "non-author";
+    const charles = authors[1];
+    if (!charles) throw new Error("expected Charles");
+    charles.contributorType = "non-author";
 
     const stmt = generateStatement(authors, { format: "by-author" });
     const [creditLine, ackLine, ...rest] = stmt.split("\n\n");
@@ -150,9 +150,9 @@ describe("generateStatement", () => {
 
   it("keeps everyone on one CRediT line when separateAcknowledgements is false", () => {
     const authors = makeAuthors();
-    const bob = authors[1];
-    if (!bob) throw new Error("expected Charles");
-    bob.contributorType = "non-author";
+    const charles = authors[1];
+    if (!charles) throw new Error("expected Charles");
+    charles.contributorType = "non-author";
 
     const stmt = generateStatement(authors, { format: "by-author", separateAcknowledgements: false });
     expect(stmt).not.toContain("\n");
@@ -189,9 +189,9 @@ describe("generateStatement", () => {
 
   it("localizes the Acknowledgements prefix and level labels via translateUi", () => {
     const authors = makeAuthors();
-    const bob = authors[1];
-    if (!bob) throw new Error("expected Charles");
-    bob.contributorType = "non-author";
+    const charles = authors[1];
+    if (!charles) throw new Error("expected Charles");
+    charles.contributorType = "non-author";
 
     const translateUi = makeUiTranslator({
       acknowledgements: "Remerciements",
@@ -245,10 +245,10 @@ describe("statementSpans", () => {
     "matches plain text and HTML in every format and line layout ($code)",
     async ({ code }) => {
       const authors = makeAuthors();
-      const bob = authors[1];
-      if (!bob) throw new Error("expected 2 authors");
-      bob.contributorType = "non-author";
-      bob.corresponding = true;
+      const charles = authors[1];
+      if (!charles) throw new Error("expected 2 authors");
+      charles.contributorType = "non-author";
+      charles.corresponding = true;
       const translateRole = makeRoleTranslator(await loadRoleCatalog(code));
       const translateUi = makeUiTranslator(await loadUiCatalog(code));
       for (const format of STATEMENT_FORMATS) {

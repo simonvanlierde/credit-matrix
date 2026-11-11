@@ -17,11 +17,11 @@ function setScore(author: Author, role: string, score: number): void {
 
 function authorsWithScores(): Author[] {
   const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
-  const [jane, bob] = authors;
-  if (!(jane && bob)) throw new Error("expected 2 authors");
-  setScore(jane, "Conceptualization", 100); // lead
-  setScore(jane, "Writing – review & editing", 100); // exercises XML escaping
-  setScore(bob, "Software", 100);
+  const [grace, charles] = authors;
+  if (!(grace && charles)) throw new Error("expected 2 authors");
+  setScore(grace, "Conceptualization", 100); // lead
+  setScore(grace, "Writing – review & editing", 100); // exercises XML escaping
+  setScore(charles, "Software", 100);
   return authors;
 }
 
@@ -154,7 +154,7 @@ describe("buildHeatmapSvg", () => {
   });
 
   it("renders a placeholder when there are no contributions", () => {
-    const authors = parseAuthorText("Alice Brown");
+    const authors = parseAuthorText("Ada Lovelace");
     const svg = buildHeatmapSvg(authors);
     expect(svg).toContain("No contributions assigned yet.");
     expect(svg.match(/width="22"/g) ?? []).toHaveLength(0);
@@ -200,22 +200,22 @@ describe("buildHeatmapSvg", () => {
   });
 
   it("colors each cell by its own author's score, in both orientations and in flat mode", () => {
-    const [jane, bob] = parseAuthorText("Grace Hopper\nCharles Darwin");
-    if (!(jane && bob)) throw new Error("expected 2 authors");
-    setScore(jane, "Conceptualization", 33);
-    setScore(bob, "Software", 66);
+    const [grace, charles] = parseAuthorText("Grace Hopper\nCharles Darwin");
+    if (!(grace && charles)) throw new Error("expected 2 authors");
+    setScore(grace, "Conceptualization", 33);
+    setScore(charles, "Software", 66);
     const fills = (svg: string) => [...svg.matchAll(/width="22" height="22"[^>]*fill="([^"]+)"/g)].map((m) => m[1]);
     const color = (score: number) => heatCellColor(DEFAULT_MONO_COLOR, score);
 
-    // Rows are roles, columns authors: Jane then Bob, for Conceptualization then Software.
-    expect(fills(buildHeatmapSvg([jane, bob]))).toEqual([color(33), color(0), color(0), color(66)]);
-    expect(fills(buildHeatmapSvg([jane, bob], { transpose: true }))).toEqual([
+    // Rows are roles, columns authors: Grace then Charles, for Conceptualization then Software.
+    expect(fills(buildHeatmapSvg([grace, charles]))).toEqual([color(33), color(0), color(0), color(66)]);
+    expect(fills(buildHeatmapSvg([grace, charles], { transpose: true }))).toEqual([
       color(33),
       color(0),
       color(0),
       color(66),
     ]);
-    expect(fills(buildHeatmapSvg([jane, bob], { showLevels: false }))).toEqual([
+    expect(fills(buildHeatmapSvg([grace, charles], { showLevels: false }))).toEqual([
       color(100),
       color(0),
       color(0),
@@ -375,7 +375,7 @@ describe("buildHeatmapSvg", () => {
     });
 
     it("renders a fixed-size placeholder, scaled, when nothing is contributed", () => {
-      const svg = buildHeatmapSvg(parseAuthorText("Alice Brown"), { scale: 2 });
+      const svg = buildHeatmapSvg(parseAuthorText("Ada Lovelace"), { scale: 2 });
       expect(svg).toContain('width="640" height="112" viewBox="0 0 640 112"');
       expect(svg).toContain(`<!-- ${GENERATOR_NOTE} -->`);
       expect(svg).toContain("<title>Contribution heatmap</title>");

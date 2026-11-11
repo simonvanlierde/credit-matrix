@@ -80,8 +80,8 @@ describe("<credit-matrix>", () => {
   });
 
   it("says so when the inline data repeats a contributor id", async () => {
-    const jane = createAuthor("Grace Hopper");
-    const twice = JSON.stringify({ version: 1, authors: [jane, jane] });
+    const grace = createAuthor("Grace Hopper");
+    const twice = JSON.stringify({ version: 1, authors: [grace, grace] });
     const root = await mount(`<credit-matrix><script type="application/json">${twice}</script></credit-matrix>`);
     expect(root.querySelector("[role=alert]")?.textContent).toBe("The JSON in this element repeats a contributor id.");
   });

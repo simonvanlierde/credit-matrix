@@ -38,7 +38,7 @@ async function stubOrcid(page: Page, issuer: Awaited<ReturnType<typeof testIssue
 }
 
 /** Add Charles Darwin on the lead's page and copy the link that asks him what he did. */
-async function askBob(lead: Page) {
+async function askCharles(lead: Page) {
   await lead.goto("/");
   const adder = lead.getByLabel("New author names or ORCID iD");
   await adder.fill("Grace Hopper, Charles Darwin");
@@ -57,7 +57,7 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
   const lead = await (await newContext(browser)).newPage();
   await asReturningVisitor(lead);
   await stubOrcid(lead, issuer);
-  const ask = await askBob(lead);
+  const ask = await askCharles(lead);
 
   // The co-author answers, signs in, and sends the answer back.
   const coauthor = await (await newContext(browser)).newPage();
@@ -122,9 +122,9 @@ test("a co-author signs in with ORCID, and the lead's review shows it, through e
 
   // A file edited to put the sign-in on a different answer imports without the mark.
   const edited = JSON.parse(file.buffer.toString());
-  const [bob] = Object.values(edited.asks) as { reply: { contributions: unknown[] } }[];
-  if (!bob) throw new Error("expected Bob's answer in the export");
-  bob.reply.contributions = [{ role: "Software", score: 100 }];
+  const [charles] = Object.values(edited.asks) as { reply: { contributions: unknown[] } }[];
+  if (!charles) throw new Error("expected Charles's answer in the export");
+  charles.reply.contributions = [{ role: "Software", score: 100 }];
   const forged = await importInto(Buffer.from(JSON.stringify(edited)));
   await expect(forged.getByRole("heading", { name: "Charles Darwin" })).toBeVisible();
   await expect(forged.locator("[data-orcid-verified]")).toHaveCount(0);
@@ -136,7 +136,7 @@ test("a token signed for another answer arrives unverified", async ({ browser })
   const lead = await (await newContext(browser)).newPage();
   await asReturningVisitor(lead);
   await stubOrcid(lead, issuer);
-  const ask = await askBob(lead);
+  const ask = await askCharles(lead);
 
   // A token signed for some other answer, sent with this one.
   const shared = await decodeShareHash(ask.slice(ask.indexOf("#")));

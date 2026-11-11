@@ -254,9 +254,9 @@ describe("contribution store", () => {
     });
 
     it("gives an imported contributor a fresh id when it is duplicated or unshareable", () => {
-      const jane = createAuthor("Grace Hopper", { id: "same" });
+      const grace = createAuthor("Grace Hopper", { id: "same" });
       store().loadAuthors([
-        jane,
+        grace,
         { ...createAuthor("Charles Darwin"), id: "same" },
         createAuthor("Cy Young", { id: "a b/c" }),
       ]);
@@ -288,9 +288,9 @@ describe("contribution store", () => {
 
     it("refuses the sample under a claim, like every other whole-roster write", () => {
       store().addAuthor("Grace Hopper");
-      const jane = store().authors[0];
-      if (!jane) throw new Error("expected an author");
-      store().setClaim({ contributorId: jane.id, sourceDraftId: "src-1" });
+      const grace = store().authors[0];
+      if (!grace) throw new Error("expected an author");
+      store().setClaim({ contributorId: grace.id, sourceDraftId: "src-1" });
 
       store().loadSample(["Marie Curie"]);
       expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper"]);
@@ -342,81 +342,81 @@ describe("contribution store", () => {
     function pair() {
       store().addAuthor("Grace Hopper");
       store().addAuthor("Charles Darwin");
-      const [jane, bob] = store().authors;
-      if (!(jane && bob)) throw new Error("expected two authors");
-      return { jane, bob };
+      const [grace, charles] = store().authors;
+      if (!(grace && charles)) throw new Error("expected two authors");
+      return { grace, charles };
     }
 
     it("refuses a name with no letter in it, at add and at rename alike", () => {
-      const { jane } = pair();
+      const { grace } = pair();
       expect(store().addAuthor("123")).toBeNull();
       expect(store().authors).toHaveLength(2);
-      expect(store().updateAuthorName(jane.id, "123")).toBe(false);
+      expect(store().updateAuthorName(grace.id, "123")).toBe(false);
       expect(store().authors[0]?.name).toBe("Grace Hopper");
     });
 
     it("renames in place, keeping the id and everything hanging off it", () => {
-      const { jane } = pair();
-      store().setAuthorMarker(jane.id, "corresponding", true);
-      store().setAuthorScore(jane.id, 0, 66);
+      const { grace } = pair();
+      store().setAuthorMarker(grace.id, "corresponding", true);
+      store().setAuthorScore(grace.id, 0, 66);
 
-      expect(store().updateAuthorName(jane.id, "  Grace B. Hopper  ")).toBe(true);
+      expect(store().updateAuthorName(grace.id, "  Grace B. Hopper  ")).toBe(true);
       const renamed = store().authors[0];
-      expect(renamed?.id).toBe(jane.id);
+      expect(renamed?.id).toBe(grace.id);
       expect(renamed?.name).toBe("Grace B. Hopper");
       expect(renamed?.corresponding).toBe(true);
       expect(renamed?.contributions[0]?.score).toBe(66);
 
       // An empty rename is a cleared input, not a request to blank the row.
-      expect(store().updateAuthorName(jane.id, "   ")).toBe(false);
+      expect(store().updateAuthorName(grace.id, "   ")).toBe(false);
       expect(store().updateAuthorName("no-such-id", "Ghost Author")).toBe(false);
       expect(store().authors[0]?.name).toBe("Grace B. Hopper");
     });
 
     it("takes a valid ORCID iD, normalizes it, and clears it on an empty value", () => {
-      const { jane } = pair();
+      const { grace } = pair();
 
-      store().updateAuthorOrcid(jane.id, " https://orcid.org/0000-0002-1825-0097 ");
+      store().updateAuthorOrcid(grace.id, " https://orcid.org/0000-0002-1825-0097 ");
       expect(store().authors[0]?.orcid).toBe("0000-0002-1825-0097");
 
       // An unvalidated iD here would make the next list edit throw in the reducer.
-      store().updateAuthorOrcid(jane.id, "0000-0002-1825-0098");
+      store().updateAuthorOrcid(grace.id, "0000-0002-1825-0098");
       expect(store().authors[0]?.orcid).toBe("0000-0002-1825-0097");
 
-      store().updateAuthorOrcid(jane.id, "  ");
+      store().updateAuthorOrcid(grace.id, "  ");
       expect(store().authors[0]?.orcid).toBeUndefined();
       expect(() => store().updateAuthorOrcid("no-such-id", "0000-0002-1825-0097")).not.toThrow();
     });
 
     it("marks a contributor as acknowledged rather than an author, and ignores an unknown row", () => {
-      const { jane } = pair();
-      store().setAuthorType(jane.id, "non-author");
+      const { grace } = pair();
+      store().setAuthorType(grace.id, "non-author");
       expect(store().authors[0]?.contributorType).toBe("non-author");
       expect(() => store().setAuthorType("no-such-id", "non-author")).not.toThrow();
     });
 
     it("removes a contributor and restores it at the index undo asks for", () => {
-      const { jane, bob } = pair();
-      store().addAuthor("Carol Davis");
+      const { grace, charles } = pair();
+      store().addAuthor("Katherine Johnson");
 
-      store().removeAuthor(bob.id);
-      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Carol Davis"]);
+      store().removeAuthor(charles.id);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Katherine Johnson"]);
       store().removeAuthor("no-such-id");
       expect(store().authors).toHaveLength(2);
 
-      expect(store().restoreAuthor(bob, 1)).toBe(true);
-      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin", "Carol Davis"]);
+      expect(store().restoreAuthor(charles, 1)).toBe(true);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin", "Katherine Johnson"]);
       // Already back: a double undo must not duplicate the row.
-      expect(store().restoreAuthor(bob, 1)).toBe(false);
+      expect(store().restoreAuthor(charles, 1)).toBe(false);
       expect(store().authors).toHaveLength(3);
-      expect(store().authors.map((a) => a.id)).toContain(jane.id);
+      expect(store().authors.map((a) => a.id)).toContain(grace.id);
     });
 
     it("clamps a restore index that no longer exists onto the list", () => {
-      const { bob } = pair();
-      store().removeAuthor(bob.id);
+      const { charles } = pair();
+      store().removeAuthor(charles.id);
 
-      expect(store().restoreAuthor(bob, 99)).toBe(true);
+      expect(store().restoreAuthor(charles, 99)).toBe(true);
       expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
     });
 
@@ -452,10 +452,10 @@ describe("contribution store", () => {
 
     it("reorders by index and ignores a drag that lands nowhere", () => {
       pair();
-      store().addAuthor("Carol Davis");
+      store().addAuthor("Katherine Johnson");
 
       store().moveAuthor(0, 2);
-      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Carol Davis", "Grace Hopper"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Katherine Johnson", "Grace Hopper"]);
 
       for (const [from, to] of [
         [-1, 0],
@@ -466,7 +466,7 @@ describe("contribution store", () => {
       ]) {
         store().moveAuthor(from ?? 0, to ?? 0);
       }
-      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Carol Davis", "Grace Hopper"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Katherine Johnson", "Grace Hopper"]);
     });
 
     it("re-derives initials on every list edit, so two people with the same initials stay distinct", () => {
@@ -477,7 +477,7 @@ describe("contribution store", () => {
   });
 
   describe("scores", () => {
-    function jane() {
+    function grace() {
       const author = store().authors[0];
       if (!author) throw new Error("expected an author");
       return author;
@@ -489,23 +489,23 @@ describe("contribution store", () => {
     });
 
     it("clamps a score to the 0-100 range rather than storing it out of band", () => {
-      store().setAuthorScore(jane().id, 0, 500);
-      expect(jane().contributions[0]?.score).toBe(100);
-      store().setAuthorScore(jane().id, 0, -20);
-      expect(jane().contributions[0]?.score).toBe(0);
+      store().setAuthorScore(grace().id, 0, 500);
+      expect(grace().contributions[0]?.score).toBe(100);
+      store().setAuthorScore(grace().id, 0, -20);
+      expect(grace().contributions[0]?.score).toBe(0);
     });
 
     it("ignores a score set on a role or contributor that is not there", () => {
-      store().setAuthorScore(jane().id, 99, 100);
+      store().setAuthorScore(grace().id, 99, 100);
       store().setAuthorScore("no-such-id", 0, 100);
-      expect(jane().contributions.every((c) => c.score === 0)).toBe(true);
+      expect(grace().contributions.every((c) => c.score === 0)).toBe(true);
     });
 
     it("fills or clears a whole row at once", () => {
-      store().setAllAuthorScores(jane().id, 66);
-      expect(jane().contributions.every((c) => c.score === 66)).toBe(true);
-      store().setAllAuthorScores(jane().id, 0);
-      expect(jane().contributions.every((c) => c.score === 0)).toBe(true);
+      store().setAllAuthorScores(grace().id, 66);
+      expect(grace().contributions.every((c) => c.score === 66)).toBe(true);
+      store().setAllAuthorScores(grace().id, 0);
+      expect(grace().contributions.every((c) => c.score === 0)).toBe(true);
       expect(() => store().setAllAuthorScores("no-such-id", 100)).not.toThrow();
     });
 
@@ -519,16 +519,16 @@ describe("contribution store", () => {
     });
 
     it("toggles between none and full, whatever the level was", () => {
-      store().toggleContribution(jane().id, 0);
-      expect(jane().contributions[0]?.score).toBe(100);
-      store().toggleContribution(jane().id, 0);
-      expect(jane().contributions[0]?.score).toBe(0);
+      store().toggleContribution(grace().id, 0);
+      expect(grace().contributions[0]?.score).toBe(100);
+      store().toggleContribution(grace().id, 0);
+      expect(grace().contributions[0]?.score).toBe(0);
 
-      store().setAuthorScore(jane().id, 0, 33);
-      store().toggleContribution(jane().id, 0);
-      expect(jane().contributions[0]?.score).toBe(0);
+      store().setAuthorScore(grace().id, 0, 33);
+      store().toggleContribution(grace().id, 0);
+      expect(grace().contributions[0]?.score).toBe(0);
 
-      expect(() => store().toggleContribution(jane().id, 99)).not.toThrow();
+      expect(() => store().toggleContribution(grace().id, 99)).not.toThrow();
     });
   });
 
@@ -723,55 +723,55 @@ describe("contribution store", () => {
   describe("claim lock", () => {
     it("persists the claim on the draft across a switch and back", () => {
       store().addAuthor("Grace Hopper");
-      const jane = store().authors[0];
-      if (!jane) throw new Error("expected an author");
+      const grace = store().authors[0];
+      if (!grace) throw new Error("expected an author");
       const home = store().activeDraftId;
-      store().setClaim({ contributorId: jane.id, sourceDraftId: "src-1" });
+      store().setClaim({ contributorId: grace.id, sourceDraftId: "src-1" });
       store().createDraft();
       expect(store().claim).toBeNull();
       store().switchDraft(home);
-      expect(store().claim).toEqual({ contributorId: jane.id, sourceDraftId: "src-1" });
+      expect(store().claim).toEqual({ contributorId: grace.id, sourceDraftId: "src-1" });
     });
 
     it("locks every row but the claimed one, and the list shape entirely", () => {
       store().addAuthor("Grace Hopper");
       store().addAuthor("Charles Darwin");
-      const [jane, bob] = store().authors;
-      if (!(jane && bob)) throw new Error("expected two authors");
-      store().setClaim({ contributorId: bob.id, sourceDraftId: "src-1" });
+      const [grace, charles] = store().authors;
+      if (!(grace && charles)) throw new Error("expected two authors");
+      store().setClaim({ contributorId: charles.id, sourceDraftId: "src-1" });
 
-      store().toggleContribution(jane.id, 0);
+      store().toggleContribution(grace.id, 0);
       expect(store().authors[0]?.contributions[0]?.score).toBe(0);
-      store().toggleContribution(bob.id, 0);
+      store().toggleContribution(charles.id, 0);
       expect(store().authors[1]?.contributions[0]?.score).toBe(100);
 
-      expect(store().addAuthor("Carol Davis")).toBeNull();
-      store().removeAuthor(jane.id);
+      expect(store().addAuthor("Katherine Johnson")).toBeNull();
+      store().removeAuthor(grace.id);
       store().moveAuthor(0, 1);
       expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
-      expect(store().updateAuthorName(jane.id, "Renamed")).toBe(false);
-      expect(store().updateAuthorName(bob.id, "Charles R. Darwin")).toBe(true);
+      expect(store().updateAuthorName(grace.id, "Renamed")).toBe(false);
+      expect(store().updateAuthorName(charles.id, "Charles R. Darwin")).toBe(true);
     });
 
     it("refuses a whole-roster load, so a late import cannot overwrite a claim", () => {
       store().addAuthor("Grace Hopper");
-      const jane = store().authors[0];
-      if (!jane) throw new Error("expected an author");
+      const grace = store().authors[0];
+      if (!grace) throw new Error("expected an author");
       const replacement = [createAuthor("Charles Darwin")];
 
       store().loadAuthors(replacement);
       expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin"]);
 
       store().setClaim({ contributorId: store().authors[0]?.id ?? "", sourceDraftId: "src-1" });
-      store().loadAuthors([createAuthor("Carol Davis")]);
+      store().loadAuthors([createAuthor("Katherine Johnson")]);
       expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin"]);
     });
 
     it("clearClaimFor reaches a draft you are not looking at", () => {
       store().addAuthor("Grace Hopper");
-      const jane = store().authors[0];
-      if (!jane) throw new Error("expected an author");
-      store().setClaim({ contributorId: jane.id, sourceDraftId: "src-1" });
+      const grace = store().authors[0];
+      if (!grace) throw new Error("expected an author");
+      store().setClaim({ contributorId: grace.id, sourceDraftId: "src-1" });
       const claimed = store().activeDraftId;
 
       store().createDraft();
@@ -784,11 +784,11 @@ describe("contribution store", () => {
 
     it("ends the reply highlight on the way out of the draft it belongs to", () => {
       store().addAuthor("Grace Hopper");
-      const jane = store().authors[0];
-      if (!jane) throw new Error("expected an author");
+      const grace = store().authors[0];
+      if (!grace) throw new Error("expected an author");
       const home = store().activeDraftId;
-      store().setRecentReply(jane.id);
-      expect(store().recentReply).toBe(jane.id);
+      store().setRecentReply(grace.id);
+      expect(store().recentReply).toBe(grace.id);
 
       // The highlight describes a moment, not the draft.
       store().createDraft();
@@ -799,9 +799,9 @@ describe("contribution store", () => {
 
     it("clearClaimFor unlocks the active draft", () => {
       store().addAuthor("Grace Hopper");
-      const jane = store().authors[0];
-      if (!jane) throw new Error("expected an author");
-      store().setClaim({ contributorId: jane.id, sourceDraftId: "src-1" });
+      const grace = store().authors[0];
+      if (!grace) throw new Error("expected an author");
+      store().setClaim({ contributorId: grace.id, sourceDraftId: "src-1" });
       store().clearClaimFor(store().activeDraftId);
       expect(store().claim).toBeNull();
       expect(store().addAuthor("Charles Darwin")).not.toBeNull();
@@ -810,28 +810,28 @@ describe("contribution store", () => {
 
   describe("asks", () => {
     const ask = { sentAt: 1_700_000_000_000, prefilled: false };
-    function addJane() {
+    function addGrace() {
       store().addAuthor("Grace Hopper");
-      const jane = store().authors[0];
-      if (!jane) throw new Error("expected Jane");
-      return jane;
+      const grace = store().authors[0];
+      if (!grace) throw new Error("expected Grace");
+      return grace;
     }
 
     it("marks per draft and survives a switch away and back", () => {
-      const jane = addJane();
-      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
-      expect(store().asks[jane.id]).toEqual(ask);
+      const grace = addGrace();
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [grace.id]: ask } });
+      expect(store().asks[grace.id]).toEqual(ask);
 
       const home = store().activeDraftId;
       store().createDraft();
       // A fresh draft has no open asks of its own.
       expect(store().asks).toEqual({});
       store().switchDraft(home);
-      expect(store().asks[jane.id]).toEqual(ask);
+      expect(store().asks[grace.id]).toEqual(ask);
     });
 
-    /** Jane's reply row: renamed, with Investigation she did not have. */
-    function janeReply(id: string, name = "Jane B. Smith") {
+    /** Grace's reply row: renamed, with Investigation she did not have. */
+    function graceReply(id: string, name = "Grace B. Hopper") {
       return createAuthor(name, {
         id,
         contributions: ROLE_NAMES.map((role) => ({ role, score: role === "Investigation" ? 100 : 0 })),
@@ -839,23 +839,23 @@ describe("contribution store", () => {
     }
 
     it.each([
-      ["received", "jane", { sentAt: 5 }],
+      ["received", "grace", { sentAt: 5 }],
       ["unmatched", "nobody", { sentAt: 5 }],
-      ["broken", "jane", { row: { name: 1 } }],
-      ["stale", "jane", { sentAt: 1 }],
+      ["broken", "grace", { row: { name: 1 } }],
+      ["stale", "grace", { sentAt: 1 }],
     ] as const)("routes a %s reply through applyAskStep", (kind, who, extra) => {
-      const jane = addJane();
+      const grace = addGrace();
       const draftId = store().activeDraftId;
-      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      store().applyAskStep(draftId, { kind: "sent", contributorId: grace.id, prefilled: false, at: 1 });
       store().applyAskStep(draftId, {
         kind: "reply",
-        contributorId: jane.id,
-        row: janeReply(jane.id),
+        contributorId: grace.id,
+        row: graceReply(grace.id),
         sentAt: 3,
         at: 4,
       });
-      const id = who === "jane" ? jane.id : who;
-      const row = "row" in extra ? extra.row : janeReply(id);
+      const id = who === "grace" ? grace.id : who;
+      const row = "row" in extra ? extra.row : graceReply(id);
       const sentAt = "sentAt" in extra ? extra.sentAt : null;
       const before = store().asks;
       const authorsBefore = store().authors;
@@ -870,13 +870,13 @@ describe("contribution store", () => {
     });
 
     it("lets no reply undo write after Delete all", () => {
-      const jane = addJane();
+      const grace = addGrace();
       const draftId = store().activeDraftId;
-      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      store().applyAskStep(draftId, { kind: "sent", contributorId: grace.id, prefilled: false, at: 1 });
       const { undo } = store().applyAskStep(draftId, {
         kind: "reply",
-        contributorId: jane.id,
-        row: janeReply(jane.id),
+        contributorId: grace.id,
+        row: graceReply(grace.id),
         sentAt: 1,
         at: 2,
       });
@@ -891,149 +891,149 @@ describe("contribution store", () => {
     });
 
     it("keeps a reply beside the row, renames it, and undoes the identity but not later scores", () => {
-      const jane = addJane();
+      const grace = addGrace();
       const draftId = store().activeDraftId;
-      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      store().applyAskStep(draftId, { kind: "sent", contributorId: grace.id, prefilled: false, at: 1 });
       const { outcome, undo } = store().applyAskStep(draftId, {
         kind: "reply",
-        contributorId: jane.id,
-        row: janeReply(jane.id),
+        contributorId: grace.id,
+        row: graceReply(grace.id),
         sentAt: 2,
         at: 3,
       });
       expect(outcome).toEqual({ kind: "received", open: 1, duplicate: false });
       const row = store().authors[0];
-      expect(row?.name).toBe("Jane B. Smith");
-      expect(row?.initials).toBe("JBS");
+      expect(row?.name).toBe("Grace B. Hopper");
+      expect(row?.initials).toBe("GBH");
       expect(row?.contributions.every((c) => c.score === 0)).toBe(true);
-      expect(store().asks[jane.id]?.reply?.sentAt).toBe(2);
+      expect(store().asks[grace.id]?.reply?.sentAt).toBe(2);
 
-      store().setAuthorScore(jane.id, 0, 100);
+      store().setAuthorScore(grace.id, 0, 100);
       expect(store().applyAskPatch(draftId, undo)).toBe(true);
       expect(store().authors[0]?.name).toBe("Grace Hopper");
       expect(store().authors[0]?.contributions[0]?.score).toBe(100);
-      expect(store().asks[jane.id]).toEqual({ sentAt: 1, prefilled: false });
+      expect(store().asks[grace.id]).toEqual({ sentAt: 1, prefilled: false });
       expect(store().applyAskPatch("no-such-draft", undo)).toBe(false);
     });
 
     it("undoes a reply in its own draft, whatever ask steps came after", () => {
-      const jane = addJane();
+      const grace = addGrace();
       store().addAuthor("Charles Darwin");
-      const bob = store().authors[1];
-      if (!bob) throw new Error("expected Bob");
+      const charles = store().authors[1];
+      if (!charles) throw new Error("expected Charles");
       const home = store().activeDraftId;
       const { undo } = store().applyAskStep(home, {
         kind: "reply",
-        contributorId: jane.id,
-        row: janeReply(jane.id),
+        contributorId: grace.id,
+        row: graceReply(grace.id),
         sentAt: 2,
         at: 3,
       });
-      store().applyAskStep(home, { kind: "sent", contributorId: bob.id, prefilled: false, at: 4 });
+      store().applyAskStep(home, { kind: "sent", contributorId: charles.id, prefilled: false, at: 4 });
       store().createDraft();
       store().addAuthor("Cleo Park");
       const elsewhere = store().authors;
 
       expect(store().applyAskPatch(home, undo)).toBe(true);
       expect(store().authors).toBe(elsewhere);
-      expect(store().drafts[home]?.asks[jane.id]).toBeUndefined();
-      expect(store().drafts[home]?.asks[bob.id]).toEqual({ sentAt: 4, prefilled: false });
+      expect(store().drafts[home]?.asks[grace.id]).toBeUndefined();
+      expect(store().drafts[home]?.asks[charles.id]).toEqual({ sentAt: 4, prefilled: false });
       expect(store().drafts[home]?.authors[0]?.name).toBe("Grace Hopper");
     });
 
     it.each(["removeAuthor", "reset"] as const)("a late reply undo after %s brings back no ask", (how) => {
-      const jane = addJane();
+      const grace = addGrace();
       const draftId = store().activeDraftId;
-      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      store().applyAskStep(draftId, { kind: "sent", contributorId: grace.id, prefilled: false, at: 1 });
       const { undo } = store().applyAskStep(draftId, {
         kind: "reply",
-        contributorId: jane.id,
-        row: janeReply(jane.id),
+        contributorId: grace.id,
+        row: graceReply(grace.id),
         sentAt: 2,
         at: 3,
       });
       if (how === "reset") store().reset();
-      else store().removeAuthor(jane.id);
+      else store().removeAuthor(grace.id);
       store().applyAskPatch(draftId, undo);
       expect(store().asks).toEqual({});
     });
 
     it("keeps other rows the same objects through ask steps", () => {
-      const jane = addJane();
+      const grace = addGrace();
       store().addAuthor("Charles Darwin");
       const draftId = store().activeDraftId;
-      const bob = store().authors[1];
-      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
+      const charles = store().authors[1];
+      store().applyAskStep(draftId, { kind: "sent", contributorId: grace.id, prefilled: false, at: 1 });
       const before = store().authors;
-      store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: true, at: 2 });
+      store().applyAskStep(draftId, { kind: "sent", contributorId: grace.id, prefilled: true, at: 2 });
       expect(store().authors).toBe(before);
       store().applyAskStep(draftId, {
         kind: "reply",
-        contributorId: jane.id,
-        row: janeReply(jane.id, "Grace Hopper"),
+        contributorId: grace.id,
+        row: graceReply(grace.id, "Grace Hopper"),
         sentAt: 3,
         at: 4,
       });
-      store().applyAskStep(draftId, { kind: "settle", contributorId: jane.id, choices: "theirs" });
-      expect(store().authors[1]).toBe(bob);
+      store().applyAskStep(draftId, { kind: "settle", contributorId: grace.id, choices: "theirs" });
+      expect(store().authors[1]).toBe(charles);
     });
 
     it("stores a reply into a parked draft without switching to it", () => {
-      const jane = addJane();
+      const grace = addGrace();
       const home = store().activeDraftId;
       store().createDraft();
       const { outcome } = store().applyAskStep(home, {
         kind: "reply",
-        contributorId: jane.id,
-        row: janeReply(jane.id, "Grace Hopper"),
+        contributorId: grace.id,
+        row: graceReply(grace.id, "Grace Hopper"),
         sentAt: null,
         at: 3,
       });
       expect(outcome.kind).toBe("received");
       expect(store().activeDraftId).not.toBe(home);
-      expect(store().drafts[home]?.asks[jane.id]?.reply).toBeDefined();
+      expect(store().drafts[home]?.asks[grace.id]?.reply).toBeDefined();
     });
 
     it("loads imported answers only for rows the roster keeps", () => {
-      const jane = addJane();
-      store().loadAuthors(store().authors, { [jane.id]: ask, gone: ask });
-      expect(store().asks).toEqual({ [jane.id]: ask });
+      const grace = addGrace();
+      store().loadAuthors(store().authors, { [grace.id]: ask, gone: ask });
+      expect(store().asks).toEqual({ [grace.id]: ask });
     });
 
     it("marks an imported selfId as you only while that row is in the roster", () => {
-      const jane = addJane();
+      const grace = addGrace();
       store().loadAuthors(store().authors, undefined, "gone");
       expect(store().selfId).toBeNull();
-      store().loadAuthors(store().authors, undefined, jane.id);
-      expect(store().selfId).toBe(jane.id);
+      store().loadAuthors(store().authors, undefined, grace.id);
+      expect(store().selfId).toBe(grace.id);
     });
 
     it("forgets who you are when your row leaves the roster", () => {
-      const jane = addJane();
+      const grace = addGrace();
       store().addAuthor("Charles Darwin");
-      store().setSelfId(jane.id);
-      store().loadAuthors(store().authors.filter((author) => author.id !== jane.id));
+      store().setSelfId(grace.id);
+      store().loadAuthors(store().authors.filter((author) => author.id !== grace.id));
       expect(store().selfId).toBeNull();
 
-      const bob = store().authors[0];
-      if (!bob) throw new Error("expected Bob");
-      store().setSelfId(bob.id);
+      const charles = store().authors[0];
+      if (!charles) throw new Error("expected Charles");
+      store().setSelfId(charles.id);
       store().loadAuthors(store().authors);
-      expect(store().selfId).toBe(bob.id);
-      store().removeAuthor(bob.id);
+      expect(store().selfId).toBe(charles.id);
+      store().removeAuthor(charles.id);
       expect(store().selfId).toBeNull();
     });
 
     it("drops a contributor's ask when they are removed", () => {
-      const jane = addJane();
-      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
-      store().removeAuthor(jane.id);
+      const grace = addGrace();
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [grace.id]: ask } });
+      store().removeAuthor(grace.id);
       expect(store().asks).toEqual({});
     });
 
     it("clears on reset, and does not travel into a duplicate", () => {
-      const jane = addJane();
-      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [jane.id]: ask } });
+      const grace = addGrace();
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [grace.id]: ask } });
       const copy = store().duplicateDraft(store().activeDraftId);
       expect(copy && store().drafts[copy]?.asks).toEqual({});
 
@@ -1322,7 +1322,7 @@ describe("contribution store", () => {
       const reply = { contributions: [], sentAt: 9 };
       const newerSave = JSON.stringify({
         state: {
-          drafts: { [open]: { ...stored.state.drafts[open], asks: { jane: { sentAt: 1, prefilled: false, reply } } } },
+          drafts: { [open]: { ...stored.state.drafts[open], asks: { grace: { sentAt: 1, prefilled: false, reply } } } },
           activeDraftId: open,
         },
         version: PERSIST_VERSION + 1,
@@ -1613,7 +1613,7 @@ describe("contribution store", () => {
               authors: [
                 { ...good, orcid: "not-an-orcid" },
                 { ...createAuthor("Charles Darwin"), contributions: "corrupt" },
-                { ...createAuthor("Carol Davis"), contributions: [null, { role: "Software", score: 100 }] },
+                { ...createAuthor("Katherine Johnson"), contributions: [null, { role: "Software", score: 100 }] },
               ],
             },
           },
@@ -1621,7 +1621,7 @@ describe("contribution store", () => {
         initial,
       ) as typeof initial;
 
-      expect(merged.authors.map((a) => a.name)).toEqual(["Grace B. Hopper", "Charles Darwin", "Carol Davis"]);
+      expect(merged.authors.map((a) => a.name)).toEqual(["Grace B. Hopper", "Charles Darwin", "Katherine Johnson"]);
       expect(merged.authors[0]?.orcid).toBeUndefined();
       expect(merged.authors[1]?.contributions).toEqual([]);
       expect(merged.authors[2]?.contributions).toEqual([{ role: "Software", score: 100 }]);
@@ -1661,7 +1661,7 @@ describe("contribution store", () => {
           activeDraftId: "d1",
           drafts: {
             d1: { asked: { "bad id": 1, "good-id": 2, "another-good-id": "yesterday" } },
-            d2: { asked: { jane: 5 } },
+            d2: { asked: { grace: 5 } },
           },
         },
         initial,
@@ -1669,7 +1669,7 @@ describe("contribution store", () => {
 
       // Every ask before blank asks existed included the asker's guess.
       expect(merged.asks).toEqual({ "good-id": { sentAt: 2, prefilled: true } });
-      expect(merged.drafts.d2?.asks).toEqual({ jane: { sentAt: 5, prefilled: true } });
+      expect(merged.drafts.d2?.asks).toEqual({ grace: { sentAt: 5, prefilled: true } });
       expect(merged.drafts.d2).not.toHaveProperty("asked");
       // Persisted through the live draft too, not only the shelf.
       const saved = useContributionStore.persist.getOptions().partialize?.(merged) as { drafts: Record<string, Draft> };
@@ -1696,8 +1696,8 @@ describe("contribution store", () => {
             d1: {
               future: "kept",
               asks: {
-                jane: { sentAt: 1, prefilled: false, reply },
-                bob: { sentAt: 2, prefilled: true, reply: { contributions: "garbled" } },
+                grace: { sentAt: 1, prefilled: false, reply },
+                charles: { sentAt: 2, prefilled: true, reply: { contributions: "garbled" } },
               },
             },
             d2: { future: "kept too" },
@@ -1713,9 +1713,9 @@ describe("contribution store", () => {
       };
       expect(saved.drafts.d1?.future).toBe("kept");
       expect(saved.drafts.d1?.title).toBe("Edited here");
-      expect(saved.drafts.d1?.asks.jane).toEqual({ sentAt: 1, prefilled: false, reply });
+      expect(saved.drafts.d1?.asks.grace).toEqual({ sentAt: 1, prefilled: false, reply });
       // A malformed reply costs the reply, not the ask.
-      expect(saved.drafts.d1?.asks.bob).toEqual({ sentAt: 2, prefilled: true });
+      expect(saved.drafts.d1?.asks.charles).toEqual({ sentAt: 2, prefilled: true });
       expect(saved.drafts.d2?.future).toBe("kept too");
     });
 

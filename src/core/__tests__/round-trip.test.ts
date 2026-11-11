@@ -10,63 +10,63 @@ describe("round-trip exports", () => {
   it("XML round-trip preserves names, initials, contributions, and ORCID", () => {
     const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
     // set some scores and an ORCID
-    const [jane, bob] = authors;
-    if (!(jane && bob)) throw new Error("expected 2 authors");
+    const [grace, charles] = authors;
+    if (!(grace && charles)) throw new Error("expected 2 authors");
 
-    const jc0 = jane.contributions[0];
-    if (!jc0) throw new Error("expected contribution 0 for jane");
+    const jc0 = grace.contributions[0];
+    if (!jc0) throw new Error("expected contribution 0 for grace");
     jc0.score = 100;
-    const jc8 = jane.contributions[8];
-    if (!jc8) throw new Error("expected contribution 8 for jane");
+    const jc8 = grace.contributions[8];
+    if (!jc8) throw new Error("expected contribution 8 for grace");
     jc8.score = 50;
-    const bc0 = bob.contributions[0];
-    if (!bc0) throw new Error("expected contribution 0 for bob");
+    const bc0 = charles.contributions[0];
+    if (!bc0) throw new Error("expected contribution 0 for charles");
     bc0.score = 20;
-    const bc4 = bob.contributions[4];
-    if (!bc4) throw new Error("expected contribution 4 for bob");
+    const bc4 = charles.contributions[4];
+    if (!bc4) throw new Error("expected contribution 4 for charles");
     bc4.score = 100;
-    jane.orcid = "0000-0002-1825-0097";
+    grace.orcid = "0000-0002-1825-0097";
 
     const xml = toJats4rXml(authors);
     const parsed = fromJats4rXml(xml);
 
     expect(parsed).toHaveLength(2);
-    const [pJane, pBob] = parsed;
-    expect(pJane?.surname).toBe(jane.surname);
-    expect(pJane?.firstName).toBe(jane.firstName);
-    expect(pJane?.initials).toBe(jane.initials);
-    expect(pJane?.orcid).toBe(jane.orcid);
+    const [pGrace, pCharles] = parsed;
+    expect(pGrace?.surname).toBe(grace.surname);
+    expect(pGrace?.firstName).toBe(grace.firstName);
+    expect(pGrace?.initials).toBe(grace.initials);
+    expect(pGrace?.orcid).toBe(grace.orcid);
 
-    expect(pBob?.surname).toBe(bob.surname);
-    expect(pBob?.initials).toBe(bob.initials);
+    expect(pCharles?.surname).toBe(charles.surname);
+    expect(pCharles?.initials).toBe(charles.initials);
 
     // contributions should be present and have the active ones set to 100
-    const janeActive = pJane?.contributions.filter((c) => c.score > 0).map((c) => c.role);
-    expect(janeActive).toContain("Conceptualization");
-    expect(janeActive).toContain("Software");
+    const graceActive = pGrace?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(graceActive).toContain("Conceptualization");
+    expect(graceActive).toContain("Software");
 
     // `degree-contribution` keeps the level, not the exact score: 50 (equal)
     // comes back as 66, 20 (supporting) as 33.
-    expect(pJane?.contributions.find((c) => c.role === "Software")?.score).toBe(66);
-    expect(pBob?.contributions[0]?.score).toBe(33);
-    expect(pBob?.contributions[4]?.score).toBe(100);
+    expect(pGrace?.contributions.find((c) => c.role === "Software")?.score).toBe(66);
+    expect(pCharles?.contributions[0]?.score).toBe(33);
+    expect(pCharles?.contributions[4]?.score).toBe(100);
     expect(xml).not.toContain("permissions");
   });
 
   it("JSON round-trip preserves all fields including id", () => {
     const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
-    const [jane] = authors;
-    if (!jane) throw new Error("expected at least one author");
+    const [grace] = authors;
+    if (!grace) throw new Error("expected at least one author");
 
-    const jc = jane.contributions[0];
-    if (!jc) throw new Error("expected contribution 0 for jane");
+    const jc = grace.contributions[0];
+    if (!jc) throw new Error("expected contribution 0 for grace");
     jc.score = 100;
     const json = toJson(authors);
     const parsed = fromJson(json).authors;
 
     expect(parsed).toHaveLength(2);
     expect(parsed[0]?.id).toBeDefined();
-    expect(parsed[0]?.name).toBe(jane.name);
+    expect(parsed[0]?.name).toBe(grace.name);
     expect(parsed[0]?.contributions[0]?.score).toBe(100);
   });
 
@@ -87,8 +87,8 @@ describe("round-trip exports", () => {
   });
 
   it("throws a RepeatedIdError for a file that repeats a contributor id", () => {
-    const jane = createAuthor("Grace Hopper");
-    const file = JSON.stringify({ version: 1, authors: [jane, { ...jane, name: "Charles Darwin" }] });
+    const grace = createAuthor("Grace Hopper");
+    const file = JSON.stringify({ version: 1, authors: [grace, { ...grace, name: "Charles Darwin" }] });
     expect(() => fromJson(file)).toThrow(RepeatedIdError);
     expect(() => fromJson(file)).toThrow("duplicate contributor ids");
     expect(() => fromJson('{"version": 1, "authors": [{"name": 5}]}')).not.toThrow(RepeatedIdError);
@@ -96,8 +96,8 @@ describe("round-trip exports", () => {
   });
 
   it("still reports a repeated id when the file has other faults too", () => {
-    const jane = createAuthor("Grace Hopper");
-    const file = JSON.stringify({ version: 1, selfId: 5, authors: [jane, { ...jane, name: "Charles Darwin" }] });
+    const grace = createAuthor("Grace Hopper");
+    const file = JSON.stringify({ version: 1, selfId: 5, authors: [grace, { ...grace, name: "Charles Darwin" }] });
     expect(() => fromJson(file)).toThrow(RepeatedIdError);
   });
 
@@ -118,20 +118,20 @@ describe("round-trip exports", () => {
   });
 
   it("writes asks only for contributors in the file, and no asks key when there are none", () => {
-    const [jane] = parseAuthorText("Grace Hopper");
-    if (!jane) throw new Error("expected author");
+    const [grace] = parseAuthorText("Grace Hopper");
+    if (!grace) throw new Error("expected author");
     const ask = { sentAt: 1, prefilled: true };
-    expect(JSON.parse(toJson([jane]))).not.toHaveProperty("asks");
-    expect(JSON.parse(toJson([jane], { asks: { gone: ask } }))).not.toHaveProperty("asks");
-    expect(Object.keys(JSON.parse(toJson([jane], { asks: { [jane.id]: ask, gone: ask } })).asks)).toEqual([jane.id]);
+    expect(JSON.parse(toJson([grace]))).not.toHaveProperty("asks");
+    expect(JSON.parse(toJson([grace], { asks: { gone: ask } }))).not.toHaveProperty("asks");
+    expect(Object.keys(JSON.parse(toJson([grace], { asks: { [grace.id]: ask, gone: ask } })).asks)).toEqual([grace.id]);
   });
 
   it("XML round-trip preserves ORCID value", () => {
     const authors = parseAuthorText("Grace Hopper");
-    const [jane] = authors;
-    if (!jane) throw new Error("expected author");
+    const [grace] = authors;
+    if (!grace) throw new Error("expected author");
 
-    jane.orcid = "0000-0001-2345-6789";
+    grace.orcid = "0000-0001-2345-6789";
     const xml = toJats4rXml(authors);
 
     const parsed = fromJats4rXml(xml);

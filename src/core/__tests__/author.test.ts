@@ -67,14 +67,14 @@ describe("scoreToLevel", () => {
 
 describe("hasContributions / activeContributions", () => {
   it("reports false and an empty list when all scores are zero", () => {
-    const [author] = parseAuthorText("Alice Brown");
+    const [author] = parseAuthorText("Ada Lovelace");
     if (!author) throw new Error("expected author");
     expect(hasContributions(author)).toBe(false);
     expect(activeContributions(author)).toEqual([]);
   });
 
   it("returns only the non-zero contributions", () => {
-    const [author] = parseAuthorText("Alice Brown");
+    const [author] = parseAuthorText("Ada Lovelace");
     if (!author) throw new Error("expected author");
     const first = author.contributions[0];
     const third = author.contributions[2];

@@ -7,7 +7,7 @@ const JANE_ORCID = "0000-0002-1825-0097";
 const DRAFT = [
   createAuthor("Grace B. Hopper", { orcid: JANE_ORCID, contributions: [{ role: "Conceptualization", score: 100 }] }),
   createAuthor("Charles Darwin", { contributions: [{ role: "Investigation", score: 50 }] }),
-  createAuthor("Carol Davis", { contributions: [{ role: "Software", score: 100 }] }),
+  createAuthor("Katherine Johnson", { contributions: [{ role: "Software", score: 100 }] }),
 ];
 
 /** Your roster: a fresh copy each time, with the ids a claim link holds. */
@@ -26,7 +26,7 @@ describe("keepKnownIds", () => {
   it("gives re-imported contributors the ids they already had, so open asks still match", () => {
     const current = draft();
     const imported = [
-      createAuthor("Carol Davis"),
+      createAuthor("Katherine Johnson"),
       createAuthor("G. Hopper", { orcid: JANE_ORCID }),
       createAuthor("charles  darwin"),
       createAuthor("Dan Evans"),
@@ -50,13 +50,13 @@ describe("keepKnownIds", () => {
 
   it("keeps an id the import already has", () => {
     const current = draft();
-    const [bob] = current.slice(1);
-    if (!bob) throw new Error("expected Charles");
-    expect(keepKnownIds(current, [bob])[0]?.id).toBe(bob.id);
+    const [charles] = current.slice(1);
+    if (!charles) throw new Error("expected Charles");
+    expect(keepKnownIds(current, [charles])[0]?.id).toBe(charles.id);
     // Even when an earlier row would match Charles by name.
-    const result = keepKnownIds(current, [createAuthor("Charles Darwin"), bob]);
-    expect(result[1]?.id).toBe(bob.id);
-    expect(result[0]?.id).not.toBe(bob.id);
+    const result = keepKnownIds(current, [createAuthor("Charles Darwin"), charles]);
+    expect(result[1]?.id).toBe(charles.id);
+    expect(result[0]?.id).not.toBe(charles.id);
   });
 });
 
@@ -95,8 +95,8 @@ describe("newContributors", () => {
 
   it("drops a row whose id is already here", () => {
     const current = draft();
-    const [bob] = current.slice(1);
-    if (!bob) throw new Error("expected Charles");
-    expect(newContributors(current, [{ ...bob, name: "Robert Darwin" }])).toEqual([]);
+    const [charles] = current.slice(1);
+    if (!charles) throw new Error("expected Charles");
+    expect(newContributors(current, [{ ...charles, name: "Robert Darwin" }])).toEqual([]);
   });
 });

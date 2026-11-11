@@ -7,8 +7,8 @@ import { type SharePayloadInput, toSharePayload } from "@/core/share-payload";
 import { discardOrcidReturn, startOrcidSignIn, takeOrcidReturn, verifyIncoming } from "./orcid-sign-in";
 
 const reply = (): SharePayloadInput & { sentAt: number } => ({
-  authors: [createAuthor("Charles Darwin", { id: "bob" })],
-  claimId: "bob",
+  authors: [createAuthor("Charles Darwin", { id: "charles" })],
+  claimId: "charles",
   sourceDraftId: "draft-1",
   reply: true,
   sentAt: 5,
