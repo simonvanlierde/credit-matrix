@@ -6,7 +6,8 @@
       "!src/app/globals.css",
       "!.vitest",
       "!public/data/census.json",
-      "!census/labelling/label-workflow.js"
+      "!census/labelling/label-workflow.js",
+      "!src/core/vendor/harfbuzz.js"
     ]
   },
   "formatter": {

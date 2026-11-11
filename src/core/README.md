@@ -54,6 +54,35 @@ Supporting after each contribution below Lead. `statement` exits with 1 when nob
 heatmap's labels would print under 6 pt on a full page; the figure is still written.
 `convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
 takes `--yes-no` for flat cells with no levels.
+
+`--to svg` and `--to pdf` need the figure fonts. With the
+[`credit-matrix-fonts`](../fonts/README.md) package installed (28 MB to download, 51 MB on disk),
+the CLI reads them from disk and works offline. Install both packages in one project
+(`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`. Under a bare
+`npx credit-matrix`, the CLI cannot see a `credit-matrix-fonts` installed in your own project. In
+that case run `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. Without the fonts package, the CLI downloads each face the first
+time a figure needs it, from `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.0/`. It checks
+the file against the SHA-256 hash in this package and refuses one that does not match. It then
+keeps the face in `$XDG_CACHE_HOME/credit-matrix/fonts/`, or the platform cache folder (`~/.cache`,
+`~/Library/Caches` on macOS, `%LOCALAPPDATA%` on Windows). That download is the only network request
+the CLI makes. jsDelivr sees your IP address and which faces you request, which shows which scripts
+the names use. Installing `credit-matrix-fonts` avoids the request. Offline with nothing cached, `--to pdf` stops with an error that names both fixes,
+and `--to svg` draws the text in system fonts with a warning.
+
+`--font` takes `sans`, `serif` or the name of an installed font family. The CLI looks for a family in
+each `--font-path <dir>` (repeatable, searched in order) and then in the system font folders, unless
+`--ignore-system-fonts`, and prints the file it used to standard error:
+
+```sh
+npx credit-matrix convert team.csv --to pdf --font Inter --font-path fonts > heatmap.pdf
+# credit-matrix: font: Inter from /home/you/paper/fonts/Inter-Regular.ttf
+```
+
+The family draws Latin and the other characters it has; complex scripts and emoji keep their own
+faces, and the Noto faces draw what it lacks: serif ones for a serif family, else sans, or the ones
+`--font-fallback sans|serif` names. A family it cannot find, or one installed only
+as a web font (`.woff`, `.woff2`), stops the export with exit code 1. See
+[Use your own font](../../integrations/figures/README.md#use-your-own-font).
 `--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN`
 simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and
 gives English.
@@ -197,18 +226,24 @@ Its `<desc>` is the by-author contribution statement, so a screen reader hears w
 `heatmapDescription` returns that text, for an image's alt text or a PNG's Description field.
 
 For embedded fonts, use the separate `credit-matrix/figures` entry. Create its renderer once; it loads
-each font face when a figure first needs it:
+each font face when a figure first needs it, the way the [CLI](#cli) does. Pass `fonts` to supply the
+bytes yourself: `fonts(face)` gets a face key from the
+[fonts table](../fonts/README.md), such as `"sans"`, `"serif-jp"` or `"sans-arabic"`, `"harfbuzz"`
+for the shaping engine or `"harfbuzz-subset"` for the subsetter. In a bundled app, pass the `fonts` export of `credit-matrix-fonts`, so the bundler emits
+the faces as assets:
 
 ```ts
 import { createFigureRenderer } from "credit-matrix/figures";
 
-const figures = createFigureRenderer();
+const figures = createFigureRenderer(); // or createFigureRenderer({ fonts }), from credit-matrix-fonts
 const svg = await figures.svg(authors, { acronyms: false });
 const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
 ```
 
 The app downloads and CLI use this renderer. It embeds regular Noto Sans or Noto Serif fonts and measures labels
-with their actual widths. Unsupported glyphs raise `FigureFontError`. Pass
+with their actual widths. In Node, `font` also takes a font family name, searched in `fontPath` and then
+the system fonts unless `ignoreSystemFonts`, and `fontFallback` picks the sans or serif faces for what it
+lacks, and a family it cannot find raises `FigureFontFileError`; `createFigureRenderer({ onFont })` reports the file it used. Unsupported glyphs raise `FigureFontError`. Pass
 `fallback: "system"` to `svg()` to draw them in the system font stack instead; `pdf()` always raises.
 See the [figure font guide](../../integrations/figures/README.md) for offline use, supported scripts
 and editor compatibility. The lightweight `buildHeatmapSvg` API keeps its system-font output.

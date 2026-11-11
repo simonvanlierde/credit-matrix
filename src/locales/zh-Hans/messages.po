@@ -1746,6 +1746,9 @@ msgstr "下载 PDF"
 msgid "errFigureGlyphs"
 msgstr "图表字体无法显示以下字符：{characters}。"
 
+msgid "errFigureFontsUnavailable"
+msgstr "无法加载图表字体。"
+
 msgid "heatmapSystemFonts"
 msgstr "PDF 需要嵌入这些字符，因此无法使用。SVG 和 PNG 使用已安装的字体绘制它们；SVG 在其他电脑上可能显示不同。"
 

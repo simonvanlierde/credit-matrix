@@ -1746,6 +1746,9 @@ msgstr "PDF herunterladen"
 msgid "errFigureGlyphs"
 msgstr "Die Abbildungsschriften können diese Zeichen nicht darstellen: {characters}."
 
+msgid "errFigureFontsUnavailable"
+msgstr "Die Abbildungsschriften konnten nicht geladen werden."
+
 msgid "heatmapSystemFonts"
 msgstr "PDF muss sie einbetten und ist daher nicht verfügbar. SVG und PNG zeichnen sie mit den installierten Schriften; die SVG kann auf einem anderen Computer anders aussehen."
 

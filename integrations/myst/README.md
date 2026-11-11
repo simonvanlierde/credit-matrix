@@ -17,14 +17,13 @@ project:
 
 MyST caches it in its build folder. The version in the URL is the package version, so
 upgrading is a change of that number.
-The plugin file is about 1.5 MB. The heatmap directive loads a figure font the first time a
-figure needs it: from `figure-fonts/` next to the plugin when present, otherwise from the
-same release on unpkg (0.6 MB for Latin text, 6-15 MB for a Japanese or Chinese face, per build).
-To build offline, download `dist/figure-fonts/` from the package and set
-`CREDIT_MATRIX_FIGURE_FONTS` to that folder's `file://` URL, ending in `/`.
+The plugin file is about 1.5 MB. The heatmap directive downloads a figure font from jsDelivr the
+first time a figure needs it: 0.6 MB for Latin text, 6-15 MB for a Japanese or Chinese face. It
+keeps each face in the machine's font cache, so later builds work offline; the
+[CLI section](../../src/core/README.md#cli) of the package README gives the folder.
 
 To work offline or pin the file in your repository, copy
-[`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix yaml`
+[`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix credit-matrix-fonts yaml`
 next to it, and list `credit-matrix.mjs` under `plugins` instead.
 
 Tested with mystmd 1.12 and [Jupyter Book 2.1](../jupyter-book/README.md).
@@ -75,6 +74,11 @@ unsupported languages and Traditional Chinese fall back to English. Write your h
 See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive. From about
 25 contributors it warns that the labels print under 6 pt, which fails a strict build; the
 [final-size checks](../heatmap.md#final-size-readability-checks) say how to silence it.
+For your own font, give the directive `:font: Inter` and `:font-path: fonts` (comma-separated
+folders, relative to the folder of `myst.yml`), with `:ignore-system-fonts: true` and
+`:font-fallback: sans|serif` as needed. MyST prints the file used as a message, and a missing
+family is an error that names the page. A folder name cannot contain a comma.
+
 Generated SVG assets contain embedded fonts and editable text. See
 [font portability and PDF export](../figures/README.md) for document-converter limits.
 

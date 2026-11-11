@@ -369,12 +369,25 @@ local function heatmap(authors, options, locale)
   local args = {}
   for i = 2, #command do args[#args + 1] = command[i] end
   for _, arg in ipairs({ "convert", "-", "--to", "svg" }) do args[#args + 1] = arg end
-  for _, key in ipairs({ "color", "palette", "shape", "size", "font", "font-size", "legend", "legend-position", "marks", "initials", "labels", "skipempty" }) do
+  for _, key in ipairs({ "color", "palette", "shape", "size", "font", "font-size", "font-fallback", "legend", "legend-position", "marks", "initials", "labels", "skipempty" }) do
     if options[key] ~= nil then
       args[#args + 1] = "--" .. key
       args[#args + 1] = stringify(options[key])
     end
   end
+  -- font-path is one folder or a list, relative to the document's folder (the working folder for
+  -- standard input), so the same source builds from any directory.
+  local folders = options["font-path"] or {}
+  if pandoc.utils.type(folders) ~= "List" then folders = { folders } end
+  local input = PANDOC_STATE.input_files[1]
+  if input == "-" then input = nil end -- standard input has no folder
+  local base = pandoc.system.get_working_directory()
+  if input then base = pandoc.path.join({ base, pandoc.path.directory(input) }) end
+  for _, folder in ipairs(folders) do
+    args[#args + 1] = "--font-path"
+    args[#args + 1] = pandoc.path.normalize(pandoc.path.join({ base, stringify(folder) }))
+  end
+  if options["ignore-system-fonts"] == true then args[#args + 1] = "--ignore-system-fonts" end
   args[#args + 1] = "--locale"
   args[#args + 1] = options.locale and document_locale(options.locale) or locale
   if options.horizontal == true then args[#args + 1] = "--horizontal" end
@@ -391,7 +404,10 @@ local function heatmap(authors, options, locale)
     end
     rows[#rows + 1] = table.concat(row, ",")
   end
-  local svg = pandoc.pipe(command[1], args, table.concat(rows, "\n") .. "\n")
+  -- The program's own message (a missing font family, say) goes to standard error as it happens; the
+  -- error names the document.
+  local ok, svg = pcall(pandoc.pipe, command[1], args, table.concat(rows, "\n") .. "\n")
+  if not ok then error("credit-matrix: " .. (input or "standard input") .. ": cannot draw the heatmap: " .. tostring(svg), 0) end
   local name = "credit-heatmap-" .. pandoc.utils.sha1(svg) .. ".svg"
   pandoc.mediabag.insert(name, "image/svg+xml", svg)
   local image_locale = options.locale and document_locale(options.locale) or locale

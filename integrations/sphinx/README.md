@@ -64,5 +64,19 @@ uv run --project integrations sphinx-build -W -b html integrations/sphinx/exampl
 See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive. From about
 25 contributors it warns that the labels print under 6 pt, which fails a strict build; the
 [final-size checks](../heatmap.md#final-size-readability-checks) say how to silence it.
-The CLI embeds fonts in the generated SVG. See
+For your own font, give the directive `:font: Inter` and put the font files in the project.
+`:font-path:` (comma-separated folders) and `credit_matrix_font_path` in `conf.py` (a list) resolve
+against the folder of `conf.py`; `:ignore-system-fonts:` or `credit_matrix_ignore_system_fonts = True`
+leaves out installed fonts, and `:font-fallback: sans|serif` picks the built-in faces for what the
+family lacks. The file used shows as an info message, a license warning as a Sphinx warning, and a
+missing family fails the directive with its page and line. A `:font-path:` folder name cannot contain
+a comma; use `credit_matrix_font_path` in `conf.py` for one that does.
+
+```python
+credit_matrix_font_path = ["_fonts"]
+credit_matrix_ignore_system_fonts = True
+```
+
+The CLI embeds fonts in the generated SVG. They come from `credit-matrix-fonts` when it is
+installed, otherwise from a one-time download ([details](../../src/core/README.md#cli)). See
 [font portability and PDF export](../figures/README.md) before converting it to PDF or Word.

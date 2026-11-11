@@ -1,5 +1,5 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the plugin reads front matter from disk.
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -230,16 +230,88 @@ it.each([
 it("reports unsupported contributor glyphs in one line instead of using a system fallback", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-missing-font-"));
   const path = join(dir, "index.md");
-  writeFileSync(path, "---\nauthors:\n  - name: مرحبا\n    roles: [Software]\n---\n");
+  writeFileSync(path, "---\nauthors:\n  - name: བོད\n    roles: [Software]\n---\n");
   const { image, messages } = await heatmap(path);
   expect(image).toBeUndefined();
   expect(messages).toEqual([
     {
       message:
-        "credit-heatmap: The figure fonts cannot draw م (U+0645), ر (U+0631), ح (U+062D), ب (U+0628), ا (U+0627). Change these characters in the names or labels.",
+        "credit-heatmap: The figure fonts cannot draw བ (U+0F56), ོ (U+0F7C), ད (U+0F51). Change these characters in the names or labels.",
       fatal: true,
     },
   ]);
+});
+
+/** A project with fonts/FigureTestSerif-Regular.ttf and a page in pages/, as the font-path is relative to the project. */
+function fontProject() {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-font-path-"));
+  mkdirSync(join(dir, "fonts"));
+  mkdirSync(join(dir, "pages"));
+  copyFileSync(
+    fileURLToPath(new URL("../../src/core/__tests__/fixtures/fonts/FigureTestSerif-Regular.ttf", import.meta.url)),
+    join(dir, "fonts/FigureTestSerif-Regular.ttf"),
+  );
+  writeFileSync(join(dir, "myst.yml"), "version: 1\nproject:\n  title: T\n");
+  const path = join(dir, "pages/index.md");
+  writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
+  return path;
+}
+
+it("draws a family found in a font-path relative to the project, and reports the file", async () => {
+  const path = fontProject();
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  for (const option of ["font-path", "font-fallback", "ignore-system-fonts"])
+    expect(directive?.options).toHaveProperty(option);
+  const { svg, messages } = await heatmap(path, {
+    font: "figure test serif",
+    "font-path": "fonts",
+    "ignore-system-fonts": true,
+  });
+  expect(svg).toContain("font-family:'Figure Test Serif'");
+  expect(svg).toContain(">Tu Youyou</tspan>");
+  expect(messages).toEqual([
+    {
+      message: `credit-heatmap: font Figure Test Serif from ${join(dirname(dirname(path)), "fonts/FigureTestSerif-Regular.ttf")}`,
+      fatal: null,
+    },
+  ]);
+});
+
+it("stops a build in one line when the font family is missing", async () => {
+  const { image, messages } = await heatmap(fontProject(), {
+    font: "No Such Family",
+    "font-path": "fonts",
+    "ignore-system-fonts": true,
+  });
+  expect(image).toBeUndefined();
+  expect(messages).toHaveLength(1);
+  expect(messages[0]).toMatchObject({ fatal: true });
+  expect(messages[0]?.message).toMatch(
+    /^credit-heatmap: Cannot find the font family No Such Family in the font path \(.*fonts\)/,
+  );
+});
+
+it("ignores empty font-path entries instead of resolving them to the project root", async () => {
+  const { messages } = await heatmap(fontProject(), {
+    font: "No Such Family",
+    "font-path": "fonts,",
+    "ignore-system-fonts": true,
+  });
+  const folders = messages[0]?.message.match(/in the font path \((.*)\)/)?.[1];
+  expect(folders).toMatch(/fonts$/);
+  expect(folders).not.toContain(",");
+});
+
+it("leaves no font report behind when a render fails", async () => {
+  const path = fontProject();
+  const options = { font: "figure test serif", "font-path": "fonts", "ignore-system-fonts": true };
+  const bad = join(dirname(path), "bad.md");
+  writeFileSync(bad, "---\nauthors:\n  - name: བོད\n    roles: [Software]\n---\n");
+  const failed = await heatmap(bad, options);
+  expect(failed.messages.map((m) => m.fatal)).toEqual([true]);
+  const good = await heatmap(path, options);
+  expect(good.image).toBeDefined();
+  expect(good.messages.filter((m) => m.message.includes("font Figure Test Serif"))).toEqual([]);
 });
 
 it("warns, without failing the build, when the heatmap would print too small on a page", async () => {

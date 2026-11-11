@@ -103,6 +103,22 @@ export list, public types and CLI (`src/core/__tests__/package.test.ts`).
 The package build is repeatable: two builds from the same commit give byte-identical tarballs.
 Check with `cd src/core && npm pack --pack-destination /tmp/a && npm pack --pack-destination /tmp/b && cmp /tmp/a/*.tgz /tmp/b/*.tgz`.
 
+### The fonts package
+
+`src/fonts` is the [`credit-matrix-fonts`](../src/fonts/README.md) package. It has its own version
+and changes only when the fonts do. `FIGURE_FONTS_VERSION` and `FIGURE_FONT_FILES` in
+`src/core/figure-fonts.ts` pin the release the download fetches and the hashes it checks;
+`src/core/__tests__/figure-fonts.test.ts` fails when they drift from `src/fonts`.
+
+Every `v*` release packs `src/fonts` too. The `publish` job uploads it before `credit-matrix`, but
+only when npm does not have that version yet. To release new fonts, bump
+`src/fonts/package.json`, update the pin and hashes, and tag a release as usual.
+
+The first version cannot use trusted publishing, because npm configures it only for a package that
+exists. Publish 1.0.0 by hand with `cd src/fonts && npm publish --access public` from the owner's
+two-factor login. Then, on npmjs.com, add `release-core.yml` and the `npm-release` environment as
+the package's trusted publisher, as for `credit-matrix`.
+
 ### Roll back a version
 
 A published name and version can never be used again, even after an unpublish. So roll forward:

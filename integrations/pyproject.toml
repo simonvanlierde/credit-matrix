@@ -17,6 +17,7 @@ exclude-newer = "7 days"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["network: the test may make outbound connections"]
 
 [tool.ruff]
 line-length = 120

@@ -111,14 +111,18 @@ const buildInputs = ["index.html", "citesync-worker.js", "citesync/runtime.json"
 const buildId = sha256(Buffer.concat(await Promise.all(buildInputs.map((file) => readFile(join(OUT, file))))))
   .replace(/[^A-Za-z0-9]/g, "")
   .slice(0, 12);
-// Of the figure fonts (about 40 MB), only Noto Sans (0.57 MB, the default face) is precached, so a
-// default figure exports offline from the first visit; the worker caches the others when an export fetches them.
+// Of the figure fonts (about 40 MB), only Noto Sans (0.57 MB, the default face) is precached, with the
+// subsetter every export needs (0.68 MB), so a default figure exports offline from the first visit; the
+// worker caches the others when an export fetches them.
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
-  .filter((file) => /\.(?:js|css)$|^NotoSans-Regular-[\w-]+\.ttf$/.test(file))
+  .filter((file) => /\.(?:js|css)$|^NotoSans-Regular-[\w-]+\.ttf$|^harfbuzz-subset-[\w-]+\.wasm$/.test(file))
   .map((file) => `/assets/${file}`)
   .sort();
-if (!assets.some((file) => file.includes("/NotoSans-Regular-")))
-  throw new Error("postbuild: the default figure font is not in the service worker precache");
+if (
+  !assets.some((file) => file.includes("/NotoSans-Regular-")) ||
+  !assets.some((file) => file.includes("/harfbuzz-subset-"))
+)
+  throw new Error("postbuild: the default figure font or the subsetter is not in the service worker precache");
 if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");
 await writeFile(
   swPath,

@@ -1746,6 +1746,9 @@ msgstr "Descargar PDF"
 msgid "errFigureGlyphs"
 msgstr "Las fuentes de la figura no pueden mostrar estos caracteres: {characters}."
 
+msgid "errFigureFontsUnavailable"
+msgstr "No se pudieron cargar las fuentes de la figura."
+
 msgid "heatmapSystemFonts"
 msgstr "El PDF necesita incrustarlos, por lo que no está disponible. SVG y PNG los dibujan con las fuentes instaladas; el SVG puede verse distinto en otro ordenador."
 

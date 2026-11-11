@@ -1,0 +1,42 @@
+{
+  "name": "credit-matrix-fonts",
+  "version": "1.0.0",
+  "description": "The Noto figure fonts credit-matrix draws heatmap SVG and PDF exports with, for offline and bundled use.",
+  "keywords": [
+    "CRediT",
+    "credit-matrix",
+    "Noto",
+    "fonts"
+  ],
+  "license": "OFL-1.1 AND MIT",
+  "author": "Simon van Lierde",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonvanlierde/credit-matrix.git",
+    "directory": "src/fonts"
+  },
+  "homepage": "https://github.com/simonvanlierde/credit-matrix/tree/main/src/fonts#readme",
+  "bugs": "https://github.com/simonvanlierde/credit-matrix/issues",
+  "type": "module",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.ttf",
+    "harfbuzz.wasm",
+    "harfbuzz-subset.wasm",
+    "OFL-*.txt",
+    "LICENSE-*.txt"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

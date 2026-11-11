@@ -29,15 +29,39 @@ test("downloads embedded-font SVG, PDF and PNG from the same draft", async ({ pa
   }
 });
 
+test("exports a PDF for an Arabic name, shaped by HarfBuzz under the page's CSP", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  await asReturningVisitor(page);
+  await page.goto("/");
+  const names = page.getByLabel("New author names or ORCID iD");
+  await names.fill("محمد عبد الله");
+  await names.press("Enter");
+  await page.getByRole("button", { name: /^Software for محمد عبد الله:/ }).click();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  const pdfButton = page.getByRole("button", { name: "Download PDF", exact: true });
+  await expect(pdfButton).toBeEnabled({ timeout: 15_000 });
+  const pending = page.waitForEvent("download");
+  await pdfButton.click();
+  const path = await (await pending).path();
+  if (!path) throw new Error("Figure download has no local file");
+  const bytes = await readFile(path);
+  expect(bytes.subarray(0, 8).toString()).toBe("%PDF-1.7");
+  // pdf() throws unless HarfBuzz loaded and shaped the name, so a PDF download is the proof.
+  expect(errors.filter((error) => /wasm|Content Security Policy/i.test(error))).toEqual([]);
+});
+
 test("exports SVG and PNG in system fonts when the figure fonts lack a glyph, but not PDF", async ({ page }) => {
   await asReturningVisitor(page);
   await page.goto("/");
   const names = page.getByLabel("New author names or ORCID iD");
-  await names.fill("김민준");
+  await names.fill("བོད་ཡིག");
   await names.press("Enter");
-  await page.getByRole("button", { name: /^Software for 김민준:/ }).click();
+  await page.getByRole("button", { name: /^Software for བོད་ཡིག:/ }).click();
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
-  await expect(onScreen(page, /The figure fonts cannot display these characters: 김민준/)).toBeVisible({
+  await expect(onScreen(page, /The figure fonts cannot display these characters: བོད་ཡིག/)).toBeVisible({
     timeout: 15_000,
   });
   await expect(page.getByRole("button", { name: "Download PDF", exact: true })).toBeDisabled();
@@ -47,7 +71,7 @@ test("exports SVG and PNG in system fonts when the figure fonts lack a glyph, bu
     const path = await (await pending).path();
     if (!path) throw new Error("Figure download has no local file");
     const bytes = await readFile(path);
-    if (format === "SVG") expect(bytes.toString()).toMatch(/<tspan font-family="'IBM Plex Sans'[^"]*">김민준<\/tspan>/);
+    if (format === "SVG") expect(bytes.toString()).toMatch(/<tspan font-family="'IBM Plex Sans'[^"]*">བོད་ཡིག<\/tspan>/);
     else expect(bytes.subarray(1, 4).toString()).toBe("PNG");
   }
 });

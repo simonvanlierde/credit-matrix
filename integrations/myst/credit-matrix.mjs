@@ -5,13 +5,11 @@
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import process from "node:process";
+import { dirname, join, resolve } from "node:path";
 import {
   CREDIT_ROLES,
   createAuthor,
   generateStatement,
-  HeatmapOptionError,
   heatmapDescription,
   heatmapPrintWarning,
   MAX_AUTHOR_NAME_LENGTH,
@@ -28,7 +26,6 @@ import {
   makeUiTranslator,
   resolveLocaleTag,
 } from "credit-matrix/i18n";
-import packageJson from "credit-matrix/package.json" with { type: "json" };
 import { parse } from "yaml";
 
 // Directives run synchronously; load the catalogs once while MyST imports the plugin.
@@ -44,13 +41,20 @@ const TRANSLATORS = Object.fromEntries(
     ]),
   ),
 );
-// MyST runs a plugin listed by URL from a copy in its build cache, away from the package's font
-// files, so that copy fetches the faces a figure needs from the same release.
-const figures = createFigureRenderer({
-  fontFallback:
-    process.env.CREDIT_MATRIX_FIGURE_FONTS ??
-    `https://unpkg.com/credit-matrix@${packageJson.version}/dist/figure-fonts/`,
-});
+// MyST runs a plugin listed by URL from a copy in its build cache, where no package resolves, so the
+// renderer downloads each face once into the machine's font cache.
+// A renderer reports each font family once, so one renderer serves each font search (folders and
+// system fonts); its reports wait here until the page that triggered the search can print them.
+const renderers = new Map();
+function rendererFor(options) {
+  const custom = options.font && !["sans", "serif"].includes(String(options.font).toLowerCase());
+  const key = custom ? JSON.stringify([options.fontPath, options.ignoreSystemFonts]) : "";
+  if (!renderers.has(key)) {
+    const reports = [];
+    renderers.set(key, { reports, figures: createFigureRenderer({ onFont: (report) => reports.push(report) }) });
+  }
+  return renderers.get(key);
+}
 
 // The aliases MyST accepts (its `credit-roles` package), so a page that builds also renders.
 const ALIASES = {
@@ -123,13 +127,16 @@ function readFrontmatter(file) {
   return match ? (parse(match[1]) ?? {}) : {};
 }
 
-function projectConfig(file) {
-  for (let dir = dirname(file); ; dir = dirname(dir)) {
+/** The folder of the nearest myst.yml (the page's own folder without one) and its project settings. */
+function findProject(file) {
+  for (let dir = dirname(resolve(file)); ; dir = dirname(dir)) {
     const config = join(dir, "myst.yml");
-    if (existsSync(config)) return parse(readFileSync(config, "utf8"))?.project ?? {};
-    if (dirname(dir) === dir) return {};
+    if (existsSync(config)) return { root: dir, config: parse(readFileSync(config, "utf8"))?.project ?? {} };
+    if (dirname(dir) === dir) return { root: dirname(resolve(file)), config: {} };
   }
 }
+
+const projectConfig = (file) => findProject(file).config;
 
 /**
  * Page authors replace project authors, as in MyST. Only Markdown pages are read for
@@ -158,10 +165,16 @@ const creditHeatmap = {
   name: "credit-heatmap",
   doc: "A contribution heatmap from the page's author roles.",
   options: Object.fromEntries([
-    ...["color", "palette", "shape", "labels", "font", "legend-position"].map((k) => [k, { type: String }]),
+    ...["color", "palette", "shape", "labels", "font", "legend-position", "font-path", "font-fallback"].map((k) => [
+      k,
+      { type: String },
+    ]),
     ["size", { type: Number }],
     ["font-size", { type: Number }],
-    ...["legend", "levels", "horizontal", "skipempty", "initials", "marks"].map((k) => [k, { type: Boolean }]),
+    ...["legend", "levels", "horizontal", "skipempty", "initials", "marks", "ignore-system-fonts"].map((k) => [
+      k,
+      { type: Boolean },
+    ]),
   ]),
   run(data, vfile) {
     if (!vfile?.path) return [];
@@ -194,6 +207,15 @@ function heatmapFigure(path, directiveOptions = {}) {
   options.fontSize = options["font-size"];
   options.legendPosition = options["legend-position"];
   options.acronyms = options.initials ?? false;
+  // A directive option is one string: several folders are separated by commas. They resolve against the project.
+  const { root } = findProject(path);
+  options.fontPath = options["font-path"]
+    ?.split(",")
+    .map((dir) => dir.trim())
+    .filter(Boolean)
+    .map((dir) => resolve(root, dir));
+  options.ignoreSystemFonts = options["ignore-system-fonts"];
+  options.fontFallback = options["font-fallback"];
   return { entries, options };
 }
 
@@ -202,18 +224,22 @@ async function renderHeatmap(node, vfile) {
   const { path, options: directiveOptions } = node.creditHeatmap;
   delete node.creditHeatmap;
   const { entries, options } = heatmapFigure(path, directiveOptions);
+  const { figures, reports } = rendererFor(options);
   let svg;
+  let found = [];
   try {
     svg = await figures.svg(entries, options);
   } catch (error) {
     // MyST prints a thrown transform error without its page; a file message names the page.
-    // Any other error is a font that could not be loaded; say how to supply the fonts yourself.
-    const fontHint =
-      error.name === "FigureFontError" || error instanceof HeatmapOptionError
-        ? ""
-        : " Set CREDIT_MATRIX_FIGURE_FONTS to a folder holding the figure fonts; see integrations/myst/README.md.";
-    vfile.message(`credit-heatmap: ${error.message}${fontHint}`, node).fatal = true;
+    vfile.message(`credit-heatmap: ${error.message}`, node).fatal = true;
     return false;
+  } finally {
+    // A failed render must not leave its reports for the next page.
+    found = reports.splice(0);
+  }
+  for (const { family, file, warning } of found) {
+    vfile.message(`credit-heatmap: font ${family} from ${file}`, node).fatal = null;
+    if (warning) vfile.message(`credit-heatmap: ${warning}`, node).fatal = false;
   }
   const warning = heatmapPrintWarning(svg);
   // `error_rules: [{ rule: credit-heatmap-small-print, severity: ignore }]` in myst.yml silences it.

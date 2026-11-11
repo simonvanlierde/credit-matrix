@@ -12,6 +12,29 @@ See [deploying](docs/deploy.md).
 
 ### Added
 
+- Heatmap SVG and PDF exports draw names in Korean, Thai, Arabic, Hebrew, the Indic scripts
+  (Devanagari, Bengali, Tamil and nine more), Armenian, Georgian, Ethiopic, Khmer, Lao, Myanmar and
+  Sinhala, and monochrome emoji, so these names now export to PDF. Serif figures draw these scripts
+  in Noto Serif faces (Noto Naskh Arabic for Arabic), except Korean and emoji, which keep their one
+  face. HarfBuzz shapes the complex
+  scripts in PDF, and right-to-left names follow the Unicode bidi algorithm. Each face and the
+  shaping engine load only for a figure that needs them. The app's CSP adds `'wasm-unsafe-eval'` to
+  run HarfBuzz. HarfBuzz's subsetter (`harfbuzz-subset.wasm`, face key `harfbuzz-subset`) replaces
+  fontkit's in SVG and PDF, so complex-script faces are subset too, SVG subsets keep their layout
+  tables, and a face with odd glyph offsets no longer draws blank glyphs. See
+  [Fonts and offline use](integrations/figures/README.md#fonts-and-offline-use).
+- SVG and PDF figures can use an installed font family: `--font <family>` in the CLI, with
+  repeatable `--font-path <dir>`, `--ignore-system-fonts` and `--font-fallback sans|serif`, and
+  `font`, `fontPath`, `ignoreSystemFonts` and `fontFallback` in `createFigureRenderer`'s `svg()` and
+  `pdf()` in Node. The family draws Latin and the other characters it has, the Noto faces draw the
+  rest (serif ones for a serif family), and the CLI prints the file it used to standard error
+  (`onFont` in the API). `.ttf`, `.otf` (CFF too) and collections work;
+  WOFF files and a variable font whose default is not regular are refused, as is a missing family.
+  See [Use your own font](integrations/figures/README.md#use-your-own-font). The MyST, Jupyter
+  Book, Sphinx, Quarto and Pandoc plugins take `font`, `font-path`, `ignore-system-fonts` and
+  `font-fallback` (Sphinx also `credit_matrix_font_path`), with `font-path` relative to the project
+  and a missing family stopping the build; Typst's `font` takes a family name or an array, with
+  Typst's own `--font-path`.
 - The CLI, the MyST, Sphinx and Quarto plugins and Pandoc warn when a heatmap's labels would print
   under 6 pt on a full journal page, which happens from about 25 contributors. `heatmapPrintWarning`
   returns that warning. A strict build (`sphinx-build -W`, `myst build --strict`) now fails on it
@@ -22,10 +45,36 @@ See [deploying](docs/deploy.md).
 
 ### Changed
 
+- **Breaking:** to export SVG or PDF offline, install both packages in one project
+  (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`, or run
+  `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. A bare `npx credit-matrix` cannot
+  see a `credit-matrix-fonts` installed in your own project. The figure fonts moved out of
+  `credit-matrix` into the new `credit-matrix-fonts` package, so `credit-matrix` is 2.3 MB unpacked
+  instead of 43 MB. Without the fonts package, the CLI, the document plugins and
+  `createFigureRenderer` download each face from jsDelivr on first use, check its SHA-256 hash and
+  cache it on the machine. Offline with nothing cached, PDF stops with an error and SVG draws the
+  text in system fonts with a warning. See [the CLI section](src/core/README.md#cli).
+- **Breaking:** in `createFigureRenderer`, replace `fontFallback` with `fonts`, a function that
+  returns a face's bytes. A bundled app passes `fonts` from `credit-matrix-fonts`. If you self-host
+  the fonts, serve the `credit-matrix-fonts` package folder (for example at `/fonts/`) and import
+  its loader, which fetches each face relative to its own URL:
+
+  ```js
+  import { fonts } from "/fonts/index.js";
+  createFigureRenderer({ fonts });
+  ```
+
+  The `CREDIT_MATRIX_FIGURE_FONTS` variable of the MyST plugin is gone. To work offline, install
+  `credit-matrix-fonts` next to the plugin, or run one online build to fill the plugin's cache.
+- `pnpm check:bundle` fails when the npm package grows past 5 MB unpacked.
 - The social card is `og.png` (was `opengraph-image.png`), and its URL carries a `?v=` hash of the file so
   link previews refresh when the card changes.
 - The social card is a poster that reads in a small link preview: the heatmap on its side above a
   short statement, one cell and its phrase linked in the contributor's hue, and the site's address.
+- The Typst package draws the top labels at regular weight instead of weight 500, as SVG and PDF
+  do, so a Typst heatmap looks slightly lighter after you upgrade.
+- The Sphinx extension's CLI timeout rises from 30 s to 300 s, so a first run that downloads faces
+  does not time out.
 - **Breaking:** the Typst package stops the build on a contributor name with no letter and no
   ORCID iD, such as "?", instead of drawing an empty label.
 - A draft holds up to 420 contributors, up from 200. Imports, share links and the element take

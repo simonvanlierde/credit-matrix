@@ -41,7 +41,7 @@ describe("portable figures", () => {
 
   it("uses the embedded font's actual family name for editable SVG", async () => {
     const svg = await renderer.svg(team());
-    expect(svg).toContain('font-family="Noto Sans"');
+    expect(svg).toContain(`font-family="'Noto Sans'"`);
     expect(svg).not.toContain("Credit Figure Sans");
   });
 
@@ -63,7 +63,7 @@ describe("portable figures", () => {
     expect(svg.length).toBeLessThan(300_000);
     const fonts = embeddedFonts(svg);
     expect(fonts.length).toBeGreaterThan(0);
-    for (const [, family, text] of svg.matchAll(/<tspan font-family="([^"]+)">([^<]*)<\/tspan>/g)) {
+    for (const [, family, text] of svg.matchAll(/<tspan font-family="'([^"]+)'">([^<]*)<\/tspan>/g)) {
       const embedded = fonts.find((candidate) => candidate.family === family)?.font;
       for (const character of text?.replace(/&[a-z]+;/g, "") ?? "")
         expect(embedded?.hasGlyphForCodePoint(character.codePointAt(0) ?? 0), `${family} ${character}`).toBe(true);
@@ -79,17 +79,17 @@ describe("portable figures", () => {
   ])("draws $name with $family under $locale", async ({ locale, name, family }) => {
     const author = createAuthor(name, { contributions: [{ role: "Software", score: 100 }] });
     expect(await renderer.svg([author], { locale, acronyms: false })).toContain(
-      `<tspan font-family="${family}">${name}</tspan>`,
+      `<tspan font-family="'${family}'">${name}</tspan>`,
     );
   });
 
   it("takes punctuation beside Chinese text from the Chinese face under zh", async () => {
     const author = createAuthor("“张伟”", { contributions: [{ role: "Software", score: 100 }] });
     expect(await renderer.svg([author], { locale: "zh-Hans", acronyms: false })).toContain(
-      '<tspan font-family="Credit Figure SC">“张伟”</tspan>',
+      `<tspan font-family="'Credit Figure SC'">“张伟”</tspan>`,
     );
     expect(await renderer.svg([author], { locale: "en", acronyms: false })).toContain(
-      '<tspan font-family="Noto Sans">“</tspan><tspan font-family="Credit Figure SC">张伟</tspan>',
+      `<tspan font-family="'Noto Sans'">“</tspan><tspan font-family="'Credit Figure SC'">张伟</tspan>`,
     );
   });
 
@@ -135,9 +135,9 @@ describe("portable figures", () => {
 
   it("honors serif output in embedded SVG and PDF fonts", async ({ skip }) => {
     const svg = await renderer.svg(team(), { font: "serif", locale: "ja", acronyms: false });
-    expect(svg.includes('font-family="Noto Serif"')).toBe(true);
-    expect(svg.includes('font-family="Credit Figure Serif JP"')).toBe(true);
-    expect(svg.includes('font-family="Noto Sans"')).toBe(false);
+    expect(svg.includes(`font-family="'Noto Serif'"`)).toBe(true);
+    expect(svg.includes(`font-family="'Credit Figure Serif JP'"`)).toBe(true);
+    expect(svg.includes(`font-family="'Noto Sans'"`)).toBe(false);
     const bytes = await renderer.pdf(team(), { font: "serif", locale: "ja", acronyms: false });
     skip(!POPPLER, NO_POPPLER);
     const fonts = execFileSync("pdffonts", ["-"], { input: bytes, encoding: "utf8" });
@@ -238,7 +238,7 @@ describe("portable figures", () => {
       expect(svg).not.toContain("Helvetica");
       expect(svg).not.toMatch(/<image|<path/);
       expect(svg).toContain(
-        `font-family="Credit Figure ${font === "serif" ? "Serif " : ""}${code === "ja" ? "JP" : "SC"}"`,
+        `font-family="'Credit Figure ${font === "serif" ? "Serif " : ""}${code === "ja" ? "JP" : "SC"}'"`,
       );
     },
   );
@@ -247,25 +247,25 @@ describe("portable figures", () => {
     const author = createAuthor("Rene\u0301");
     for (const contribution of author.contributions) contribution.score = 100;
     expect(await renderer.svg([author], { acronyms: false })).toContain(">René<");
-    const missing = createAuthor("Researcher \u{1F9EA}");
+    const missing = createAuthor("Researcher \u0F56\u0F7C\u0F51");
     for (const contribution of missing.contributions) contribution.score = 100;
     await expect(renderer.svg([missing], { acronyms: false })).rejects.toThrow(FigureFontError);
-    await expect(renderer.svg([missing], { acronyms: false })).rejects.toThrow(/U\+1F9EA/);
+    await expect(renderer.svg([missing], { acronyms: false })).rejects.toThrow(/U\+0F56/);
     await expect(renderer.pdf([missing], { acronyms: false })).rejects.toThrow(FigureFontError);
   });
 
   it("draws characters outside the bundled faces in system fonts only when asked", async () => {
-    const author = createAuthor("김민준");
+    const author = createAuthor("བོད་ཡིག");
     for (const contribution of author.contributions) contribution.score = 100;
     const latin = createAuthor("René");
     for (const contribution of latin.contributions) contribution.score = 100;
     await expect(renderer.svg([author, latin])).rejects.toThrow(FigureFontError);
     const svg = await renderer.svg([author, latin], { fallback: "system" });
-    expect(svg).toContain(`<tspan font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif">김민준</tspan>`);
-    expect(svg).toContain('<tspan font-family="Noto Sans">R</tspan>');
+    expect(svg).toContain(`<tspan font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif">བ</tspan>`);
+    expect(svg).toContain(`<tspan font-family="'Noto Sans'">R</tspan>`);
     expect(embeddedFonts(svg).map(({ family }) => family)).toEqual(["Noto Sans"]);
     const serif = await renderer.svg([author], { fallback: "system", font: "serif" });
-    expect(serif).toContain(`<tspan font-family="Georgia, 'Times New Roman', serif">김민준</tspan>`);
+    expect(serif).toContain(`<tspan font-family="Georgia, 'Times New Roman', serif">བ</tspan>`);
     await expect(renderer.pdf([author], { fallback: "system" } as never)).rejects.toThrow(FigureFontError);
   });
 
