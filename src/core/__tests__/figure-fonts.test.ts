@@ -129,7 +129,9 @@ describe("downloadFigureFont", () => {
     const platform = process.platform;
     const downloadOn = async (name: NodeJS.Platform, env: Record<string, string | undefined>) => {
       Object.defineProperty(process, "platform", { value: name });
+      // os.homedir() reads HOME on POSIX and USERPROFILE on Windows.
       vi.stubEnv("HOME", cache);
+      vi.stubEnv("USERPROFILE", cache);
       for (const [key, value] of Object.entries({ XDG_CACHE_HOME: undefined, LOCALAPPDATA: undefined, ...env }))
         vi.stubEnv(key, value);
       vi.stubGlobal("fetch", async () => new Response(await sans()));

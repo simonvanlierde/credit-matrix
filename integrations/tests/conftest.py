@@ -25,7 +25,7 @@ def figure_font_cache(tmp_path_factory) -> dict[str, str]:
 
 @pytest.fixture(autouse=True)
 def no_network(monkeypatch, request):
-    """Fail outbound connections from the tests and from the Node CLIs they spawn, unless marked `network`."""
+    """Fail outbound sockets in the tests and `fetch` in the Node CLIs they spawn, unless marked `network`."""
     if request.node.get_closest_marker("network"):
         return
 
