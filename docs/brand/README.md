@@ -27,3 +27,9 @@ pnpm exec playwright screenshot --viewport-size=512,512 \
 
 The social card shows the sample data that "Load sample data" loads, so its statement is one the
 app really produces.
+
+The social card is a poster for link previews, which show it 300 to 500 px wide and sometimes crop it
+to a square. Keep the name, the line, the statement and the address in the centred 630 px, large enough
+to read at a quarter size; the matrix is the picture and may fall outside the crop. After a change look
+at it at 300 px wide and as a centre square crop. The cells and the leader line are static markup placed
+by arithmetic from the cell size, so move the cells and the line's path together.
