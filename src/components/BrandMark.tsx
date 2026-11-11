@@ -1,25 +1,26 @@
-import { contributorHues, pageMarkColor } from "@/core/contributor-color";
+import { contributorHues, heatCellColor } from "@/core/contributor-color";
 import { useDark } from "@/lib/use-dark";
 import { useContributionStore } from "@/store/contribution-store";
 
 /**
  * The mark for CRediT Matrix: a 3x3 crop of the contribution matrix, lead on the diagonal.
- * Cells are drawn at the app's three intensity tiers in the workspace's own heatmap
- * hue, or one contributor hue per column when the grid colours by contributor, so
- * the mark is a live swatch of the grid rather than a fixed sticker. The wordmark
- * beside it takes the accent: the same hue where it reaches text contrast, primary
+ * Cells are filled exactly as the grid fills them (`heatCellColor`, light or dark ramp) in
+ * the workspace's own heatmap hue, or one contributor hue per column when the grid colours
+ * by contributor, so the mark is a live swatch of the grid rather than a fixed sticker. The
+ * wordmark beside it takes the accent: the same hue where it reaches text contrast, primary
  * where it does not (see ThemeHue).
  *
  * The store skips hydration, so server and first client render both use the
  * default ink-blue; the transition covers the swap to a stored hue.
  *
- * The favicon (`public/icon.svg`) has the same geometry with literal fills.
+ * The favicon and app icons (`public/icon.svg`, `docs/brand/`) are the same cells with
+ * literal fills in the first three contributor hues.
  */
-/** Fill opacity per cell, row by row: lead on the diagonal, the app's three intensity tiers around it. */
-const MARK_LEVELS = [
-  [1, 0.62, 0.32],
-  [0.62, 1, 0.12],
-  [0.32, 0.12, 1],
+/** CRediT score per cell, row by row: lead on the diagonal, equal and supporting around it. */
+const MARK_SCORES = [
+  [100, 66, 33],
+  [66, 100, 0],
+  [33, 0, 100],
 ] as const;
 
 export function BrandMark({ className }: { className?: string }) {
@@ -28,18 +29,11 @@ export function BrandMark({ className }: { className?: string }) {
   // A number, not the array: a fresh array per read would re-render on every store change.
   const people = useContributionStore((state) => (state.colorByContributor ? state.authors.length : 0));
   const hues = people > 0 ? contributorHues(people) : null;
-  // The raw hue and its faded tiers vanish on the dark header; use its dark-ramp lead.
   const dark = useDark();
   return (
-    <svg
-      viewBox="0 0 32 32"
-      className={className}
-      style={{ color: pageMarkColor(monoColor, dark), transition: "color 200ms ease-out" }}
-      aria-hidden="true"
-      focusable="false"
-    >
-      {MARK_LEVELS.map((row, r) =>
-        row.map((opacity, c) => (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden="true" focusable="false">
+      {MARK_SCORES.map((row, r) =>
+        row.map((score, c) => (
           <rect
             // biome-ignore lint/suspicious/noArrayIndexKey: a fixed 3x3 grid
             key={`${r}-${c}`}
@@ -48,8 +42,11 @@ export function BrandMark({ className }: { className?: string }) {
             width="8"
             height="8"
             rx="1"
-            fill={hues?.[c] ? pageMarkColor(hues[c], dark) : "currentColor"}
-            fillOpacity={opacity === 1 ? undefined : opacity}
+            // The grid leaves an empty cell bare; the mark needs the cell's shape, so it takes a quiet surface.
+            fill={
+              score > 0 ? heatCellColor(hues?.[c] ?? monoColor, score, dark) : "var(--color-surface-container-high)"
+            }
+            style={{ transition: "fill 200ms ease-out" }}
           />
         )),
       )}
