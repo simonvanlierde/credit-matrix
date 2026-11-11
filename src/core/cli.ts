@@ -21,6 +21,7 @@ import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
 import { toMyst, toQuarto } from "./export/frontmatter";
+import { heatmapPrintWarning } from "./export/heatmap-print";
 import { HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
 import { RepeatedIdError, toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
@@ -94,26 +95,50 @@ const parser: XmlParser = {
   },
 };
 
-/** Throws on a tag left open, closed out of order, or cut off: what a truncated file looks like. */
-function assertBalancedTags(xml: string): void {
-  // Comments, CDATA, processing instructions and the doctype match without a name and are skipped.
-  const token =
-    /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<!DOCTYPE[^>]*>|<(\/?)([^\s/>!?]+)(?:[^>"']|"[^"]*"|'[^']*')*?(\/?)>/g;
+const MAX_XML_DEPTH = 256;
+
+/** Throws on a tag left open, closed out of order, cut off or nested past {@link MAX_XML_DEPTH}. */
+export function assertBalancedTags(xml: string): void {
+  // One pass with indexOf, linear in the input: a regex with a repeated attribute group
+  // backtracked cubically on "<<a<a…" and took a minute on 4,000 characters.
+  const cutOff = () => new Error("XML parse error: a tag is cut off.");
+  const skipTo = (from: number, terminator: string) => {
+    const at = xml.indexOf(terminator, from);
+    if (at === -1) throw cutOff();
+    return at + terminator.length;
+  };
   const open: string[] = [];
-  let end = 0;
-  for (const match of xml.matchAll(token)) {
-    // A "<" between tokens starts something no token matched: a tag or comment cut off.
-    if (xml.slice(end, match.index).includes("<")) throw new Error("XML parse error: a tag is cut off.");
-    end = match.index + match[0].length;
-    const [, closing, name, selfClosing] = match;
-    if (name === undefined) continue;
-    if (closing) {
-      if (open.pop() !== name) throw new Error(`XML parse error: unexpected </${name}>.`);
-    } else if (!selfClosing) {
-      open.push(name);
+  let i = xml.indexOf("<");
+  while (i !== -1) {
+    // Comments, CDATA, processing instructions and the doctype carry no tag name.
+    if (xml.startsWith("<!--", i)) i = skipTo(i + 4, "-->");
+    else if (xml.startsWith("<![CDATA[", i)) i = skipTo(i + 9, "]]>");
+    else if (xml.startsWith("<?", i)) i = skipTo(i + 2, "?>");
+    else if (xml.startsWith("<!DOCTYPE", i)) i = skipTo(i + 9, ">");
+    else {
+      const closing = xml[i + 1] === "/";
+      let j = closing ? i + 2 : i + 1;
+      const nameStart = j;
+      while (j < xml.length && !/[\s/>!?<]/.test(xml.charAt(j))) j++;
+      if (j === nameStart) throw cutOff();
+      const name = xml.slice(nameStart, j);
+      // Attributes run to the first ">" outside quotes; a "<" there means the tag was cut off.
+      while (j < xml.length && xml[j] !== ">") {
+        const c = xml.charAt(j);
+        if (c === "<") throw cutOff();
+        j = c === '"' || c === "'" ? skipTo(j + 1, c) : j + 1;
+      }
+      if (j >= xml.length) throw cutOff();
+      if (closing) {
+        if (open.pop() !== name) throw new Error(`XML parse error: unexpected </${name}>.`);
+      } else if (xml[j - 1] !== "/") {
+        // Exports nest about 8 deep; linkedom slows superlinearly with depth (285,000 levels: 38 s).
+        if (open.push(name) > MAX_XML_DEPTH) throw new Error("XML parse error: elements nest too deep.");
+      }
+      i = j + 1;
     }
+    i = xml.indexOf("<", i);
   }
-  if (xml.slice(end).includes("<")) throw new Error("XML parse error: a tag is cut off.");
   if (open.length > 0) throw new Error(`XML parse error: <${open.at(-1)}> is never closed.`);
 }
 
@@ -349,7 +374,11 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
             translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
             translateUi: makeUiTranslator(await loadUiCatalog(locale)),
           };
-          return values.to === "pdf" ? renderer.pdf(authors, options) : renderer.svg(authors, options);
+          // Measure the figure as written: font-embedded text is narrower than buildHeatmapSvg's estimate.
+          const svg = await renderer.svg(authors, options);
+          const warning = heatmapPrintWarning(svg);
+          if (warning) process.stderr.write(`credit-matrix: ${warning}\n`);
+          return values.to === "pdf" ? renderer.pdf(authors, options) : svg;
         }
         default:
           throw new UsageError(

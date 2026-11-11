@@ -71,7 +71,9 @@ unsupported languages and Traditional Chinese fall back to English. Write your h
 
 ## Contribution heatmap
 
-See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
+See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive. From about
+25 contributors it warns that the labels print under 6 pt, which fails a strict build; the
+[final-size checks](../heatmap.md#final-size-readability-checks) say how to silence it.
 For your own font, give the directive `:font: Inter` and `:font-path: fonts` (comma-separated
 folders, relative to the folder of `myst.yml`), with `:ignore-system-fonts: true` and
 `:font-fallback: sans|serif` as needed. MyST prints the file used as a message, and a missing

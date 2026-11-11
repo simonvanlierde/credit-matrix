@@ -61,7 +61,9 @@ uv run --project integrations sphinx-build -W -b html integrations/sphinx/exampl
 
 ## Contribution heatmap
 
-See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
+See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive. From about
+25 contributors it warns that the labels print under 6 pt, which fails a strict build; the
+[final-size checks](../heatmap.md#final-size-readability-checks) say how to silence it.
 For your own font, give the directive `:font: Inter` and put the font files in the project.
 `:font-path:` (comma-separated folders) and `credit_matrix_font_path` in `conf.py` (a list) resolve
 against the folder of `conf.py`; `:ignore-system-fonts:` or `credit_matrix_ignore_system_fonts = True`

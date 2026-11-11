@@ -25,7 +25,7 @@ import { generateStatement } from "../generate-statement";
 import { parseAuthorText } from "../parse-authors";
 
 function makeAuthors() {
-  const authors = parseAuthorText("Jane Smith\nBob White");
+  const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
   const [jane, bob] = authors;
   if (!(jane && bob)) throw new Error("expected 2 authors");
   const janeConc = jane.contributions[0]; // Conceptualization
@@ -190,7 +190,7 @@ describe("generateStatement with translateRole", () => {
     const t = makeRoleTranslator(await loadRoleCatalog("fr"));
     const stmt = generateStatement(makeAuthors(), { format: "by-role", translateRole: t });
     expect(stmt).toMatch(/^CRediT: /);
-    expect(stmt).toContain("Conceptualisation: Jane Smith");
+    expect(stmt).toContain("Conceptualisation: Grace Hopper");
     expect(stmt).not.toContain("Conceptualization:");
   });
 
@@ -202,8 +202,8 @@ describe("generateStatement with translateRole", () => {
     if (!bobConc) throw new Error("expected contributions");
     bobConc.score = 100;
     const stmt = generateStatement(authors, { format: "by-role", translateUi });
-    expect(stmt).toContain("Jane Smith, Bob White");
-    expect(stmt).toMatch(/Bob White; \S/);
+    expect(stmt).toContain("Grace Hopper, Charles Darwin");
+    expect(stmt).toMatch(/Charles Darwin; \S/);
   });
 
   it("puts a non-breaking space before French colons and semicolons", async () => {
@@ -216,8 +216,8 @@ describe("generateStatement with translateRole", () => {
       translateRole: makeRoleTranslator(await loadRoleCatalog("fr")),
       translateUi: makeUiTranslator(await loadUiCatalog("fr")),
     });
-    expect(stmt).toContain("Conceptualisation\u00a0: Jane Smith\u00a0; Investigation\u00a0: Bob White");
-    expect(stmt).toContain("Correspondance\u00a0: Jane Smith.");
+    expect(stmt).toContain("Conceptualisation\u00a0: Grace Hopper\u00a0; Investigation\u00a0: Charles Darwin");
+    expect(stmt).toContain("Correspondance\u00a0: Grace Hopper.");
     expect(stmt.replace("CRediT: ", "")).not.toMatch(/ [:;]/);
   });
 });

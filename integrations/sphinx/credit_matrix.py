@@ -55,13 +55,16 @@ class CreditStatement(SphinxDirective):
             raise self.error(f"CRediT rendering failed: {error.stderr.strip()}") from error
         except (OSError, subprocess.TimeoutExpired) as error:
             raise self.error(f"Cannot run the credit-matrix CLI: {error}") from error
-        # The CLI reports the font file it drew with, and a licence warning, on standard error.
-        for line in result.stderr.strip().splitlines():
-            message = line.removeprefix("credit-matrix: ")
-            if message.startswith("font: "):
-                logger.info("credit-heatmap: %s", message, location=self.get_location())
-            elif message:
-                logger.warning("credit-heatmap: %s", message, location=self.get_location())
+        # The CLI's own lines become messages on this directive; other stderr, such as a Node notice,
+        # does not. The font it drew with is info; its warnings (a heatmap that prints too small, a
+        # font licence) are build warnings that suppress_warnings = ["credit_matrix"] silences.
+        for line in result.stderr.splitlines():
+            if not line.startswith("credit-matrix: "):
+                continue
+            if line.startswith("credit-matrix: font: "):
+                logger.info("credit-heatmap: %s", line.removeprefix("credit-matrix: "), location=self.get_location())
+            else:
+                logger.warning(line, location=self.get_location(), type="credit_matrix", subtype="cli")
         return result.stdout
 
 

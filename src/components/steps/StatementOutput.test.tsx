@@ -13,13 +13,13 @@ const initial = store();
 
 function twoAuthors(): Author[] {
   return [
-    createAuthor("Jane Smith", {
+    createAuthor("Grace Hopper", {
       contributions: [
         { role: "Conceptualization", score: 100 },
         { role: "Software", score: 50 },
       ],
     }),
-    createAuthor("Bob White", { contributions: [{ role: "Conceptualization", score: 20 }] }),
+    createAuthor("Charles Darwin", { contributions: [{ role: "Conceptualization", score: 20 }] }),
   ];
 }
 
@@ -62,7 +62,7 @@ it("marks the phrase of the cell under the pointer, by author and by role", () =
   expect(statement()).toBe(before);
 
   fireEvent.click(screen.getByRole("radio", { name: english.groupByRole }));
-  expect(marks()).toEqual(["Bob White"]);
+  expect(marks()).toEqual(["Charles Darwin"]);
   act(() => store().setStatementLink(null));
   expect(marks()).toEqual([]);
 });

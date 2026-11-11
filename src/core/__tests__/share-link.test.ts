@@ -1,14 +1,15 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; zlib hand-builds hostile payloads
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
+import { MAX_IMPORT_BYTES } from "../author";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash, encodeShareHash } from "../share-link";
 import { toSharePayload } from "../share-payload";
 
 function draft() {
   return [
-    createAuthor("Jane A. Smith", { contributions: [{ role: "Conceptualization", score: 100 }] }),
-    createAuthor("Bob White", { contributions: [{ role: "Investigation", score: 100 }] }),
+    createAuthor("Grace B. Hopper", { contributions: [{ role: "Conceptualization", score: 100 }] }),
+    createAuthor("Charles Darwin", { contributions: [{ role: "Investigation", score: 100 }] }),
   ];
 }
 
@@ -74,7 +75,9 @@ describe("share links", () => {
   });
 
   it("returns null for a v1 payload", async () => {
-    expect(await decodeShareHash(compressedHash(JSON.stringify({ v: 1, a: [{ n: "Jane Smith", s: [] }] })))).toBeNull();
+    expect(
+      await decodeShareHash(compressedHash(JSON.stringify({ v: 1, a: [{ n: "Grace Hopper", s: [] }] }))),
+    ).toBeNull();
   });
 
   it("round-trips through btoa/atob on an engine without Uint8Array.toBase64", async () => {
@@ -112,7 +115,7 @@ describe("encodeShareHash", () => {
 
   it("refuses to build a link for a draft over the size cap", async () => {
     const [jane] = draft();
-    const huge = { ...jane, name: "x".repeat(1_000_001) } as NonNullable<typeof jane>;
+    const huge = { ...jane, name: "x".repeat(MAX_IMPORT_BYTES + 1) } as NonNullable<typeof jane>;
     await expect(encodeShareHash({ authors: [huge] })).rejects.toThrow(/too large to share/);
   });
 });

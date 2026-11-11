@@ -2,9 +2,10 @@ import * as z from "zod/mini";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
 
-export const MAX_AUTHORS = 200;
+export const MAX_AUTHORS = 420;
 export const MAX_AUTHOR_NAME_LENGTH = 500;
-export const MAX_IMPORT_BYTES = 1_000_000;
+/** Caps every import, fetch and share link; a full draft's JATS export is 1 to 1.5 MB. */
+export const MAX_IMPORT_BYTES = 2_000_000;
 /**
  * A contributor or draft id that fits in a share link. Never a name
  * `Object.prototype` already has ("constructor", "__proto__"): asks are kept in
@@ -83,7 +84,7 @@ export const AuthorSchema = /* @__PURE__ */ (() =>
     /** Stable unique identifier for UI state and persistence */
     id: z._default(z.string().check(z.minLength(1)), () => globalThis.crypto.randomUUID()),
     /**
-     * Display name as entered by the user (e.g. "Jane A. Smith").
+     * Display name as entered by the user (e.g. "Grace B. Hopper").
      *
      * The letter check mirrors `createAuthor`, which throws on a name that keeps
      * no letters once punctuation and digits are stripped. Without it the schema
@@ -104,7 +105,7 @@ export const AuthorSchema = /* @__PURE__ */ (() =>
     /** Parsed surname */
     surname: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
     /**
-     * Unique initials (e.g. "JAS"). Generated automatically, deduplicated
+     * Unique initials (e.g. "GBH"). Generated automatically, deduplicated
      * across the author list. Used in the short statement format.
      */
     initials: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),

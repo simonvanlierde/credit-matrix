@@ -7,7 +7,7 @@ import { type SharePayloadInput, toSharePayload } from "@/core/share-payload";
 import { discardOrcidReturn, startOrcidSignIn, takeOrcidReturn, verifyIncoming } from "./orcid-sign-in";
 
 const reply = (): SharePayloadInput & { sentAt: number } => ({
-  authors: [createAuthor("Bob White", { id: "bob" })],
+  authors: [createAuthor("Charles Darwin", { id: "bob" })],
   claimId: "bob",
   sourceDraftId: "draft-1",
   reply: true,
@@ -39,7 +39,7 @@ describe("ORCID sign-in in the browser", () => {
     const token = await sign({ nonce: await replyNonce(payload) });
     window.history.replaceState(null, "", `/?x=1#access_token=a&token_type=bearer&id_token=${token}&state=${state}`);
     const result = await takeOrcidReturn(jwks(keys));
-    expect(result?.proof).toMatchObject({ orcid: TEST_ORCID, name: "Bob White", token, payload });
+    expect(result?.proof).toMatchObject({ orcid: TEST_ORCID, name: "Charles Darwin", token, payload });
     expect(result).toMatchObject({ sentAt: 5 });
     expect(window.location.hash).toBe("");
     expect(window.location.search).toBe("?x=1");

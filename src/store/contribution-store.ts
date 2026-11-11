@@ -243,6 +243,8 @@ interface ContributionState {
   loadSample: (names: readonly string[]) => void;
   /** Adds a contributor and returns its id; null when the name has no letters to parse. */
   addAuthor: (name: string, orcid?: string) => string | null;
+  /** Add several in one update, in order, up to the cap; each entry's new id, or null when refused. */
+  addAuthors: (entries: { name: string; orcid?: string }[]) => (string | null)[];
   removeAuthor: (authorId: string) => void;
   /** Re-insert a removed contributor. False when the cap or a duplicate id refuses it. */
   restoreAuthor: (author: Author, index: number) => boolean;
@@ -1195,25 +1197,31 @@ export const useContributionStore = create<ContributionState>()(
           state.inputMode = "levels";
         }),
 
-      addAuthor: (name, orcid) => {
-        const trimmed = name.trim();
-        if (!trimmed) return null;
-        let nextAuthor: Author;
-        try {
-          nextAuthor = createAuthor(trimmed, orcid ? { orcid } : undefined);
-        } catch {
-          // Unparseable as a name (a stray affiliation marker in a pasted list,
-          // say). Reject it here rather than letting it throw through the caller.
-          return null;
-        }
-        let added = false;
+      addAuthor: (name, orcid) => get().addAuthors([{ name, orcid }])[0] ?? null,
+
+      addAuthors: (entries) => {
+        const created = entries.map(({ name, orcid }) => {
+          const trimmed = name.trim();
+          if (!trimmed) return null;
+          try {
+            return createAuthor(trimmed, orcid ? { orcid } : undefined);
+          } catch {
+            // Unparseable as a name (a stray affiliation marker in a pasted list,
+            // say). Reject it here rather than letting it throw through the caller.
+            return null;
+          }
+        });
+        const added = new Set<string>();
+        // One roster rebuild for the whole list: one per name is quadratic in a pasted list of hundreds.
         set((state) => {
           if (claimRefuses(state)) return;
-          if (state.authors.length >= MAX_AUTHORS) return;
-          state.authors = normalizeRoster([...state.authors, nextAuthor]);
-          added = true;
+          const room = MAX_AUTHORS - state.authors.length;
+          const accepted = created.filter((author) => author !== null).slice(0, Math.max(0, room));
+          if (accepted.length === 0) return;
+          state.authors = normalizeRoster([...state.authors, ...accepted]);
+          for (const author of accepted) added.add(author.id);
         });
-        return added ? nextAuthor.id : null;
+        return created.map((author) => (author && added.has(author.id) ? author.id : null));
       },
 
       removeAuthor: (authorId) =>

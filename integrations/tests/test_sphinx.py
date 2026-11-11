@@ -1,6 +1,7 @@
 """Build real Sphinx projects against the published CLI entry point."""
 
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -152,6 +153,36 @@ def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
     assert "Noto Serif" in svg
 
 
+@pytest.mark.parametrize("suppressed", [False, True])
+def test_heatmap_too_small_to_print_is_a_build_warning(tmp_path, project, suppressed):
+    conf = "suppress_warnings = ['credit_matrix']\n" if suppressed else ""
+    app, warnings, source = project(".. credit-heatmap:: contributors.json\n", conf=conf)
+    data = json.loads((source / "contributors.json").read_text(encoding="utf-8"))
+    first = data["authors"][0]
+    data["authors"] = [
+        {**first, "id": f"curie-{i}", "name": f"Marie Curie {i}", "surname": f"Curie {i}", "initials": f"MC{i}"}
+        for i in range(40)
+    ]
+    (source / "contributors.json").write_text(json.dumps(data), encoding="utf-8")
+    app.build()
+    if suppressed:
+        assert not warnings.getvalue()
+        return
+    assert "smallest labels print at about" in warnings.getvalue()
+    assert "index.rst" in warnings.getvalue()
+
+
+def test_other_cli_stderr_is_not_a_build_warning(tmp_path, project):
+    # A Node notice on stderr from a CLI that succeeds: the output is used and the build stays clean.
+    script = (
+        "import sys; sys.stderr.write('(node:1) ExperimentalWarning: something\\n'); print('Marie Curie: Software.')"
+    )
+    app, warnings, _ = project(command=[sys.executable, "-c", script])
+    app.build()
+    assert not warnings.getvalue()
+    assert "Marie Curie: Software." in (tmp_path / "html/index.html").read_text(encoding="utf-8")
+
+
 @pytest.mark.parametrize("position", ["auto", "right", "bottom"])
 @pytest.mark.parametrize("marks", [True, False])
 def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, project, position, marks):
@@ -217,7 +248,7 @@ def test_heatmap_font_licence_warning_is_a_sphinx_warning(tmp_path, project):
         project, ".. credit-heatmap:: contributors.json\n   :font: Figure Test Restricted\n   :font-fallback: serif\n"
     )
     app.build()
-    assert "index.rst:4: WARNING: credit-heatmap:" in warnings.getvalue()
+    assert "index.rst:4: WARNING: credit-matrix:" in warnings.getvalue()
     assert "fsType 0x0002" in warnings.getvalue()
 
 

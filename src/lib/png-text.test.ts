@@ -45,7 +45,7 @@ function chunks(png: Uint8Array): [string, Buffer][] {
 
 describe("withPngText", () => {
   it("adds a Description iTXt chunk after IHDR with a valid CRC and UTF-8 text", () => {
-    const text = "CRediT: Jane Smith: Conceptualization; Ōno Ken: Software";
+    const text = "CRediT: Grace Hopper: Conceptualization; Ōno Ken: Software";
     const out = chunks(withPngText(onePixelPng(), "Description", text));
     expect(out.map(([type]) => type)).toEqual(["IHDR", "iTXt", "IDAT", "IEND"]);
     const data = out[1]?.[1] ?? Buffer.alloc(0);

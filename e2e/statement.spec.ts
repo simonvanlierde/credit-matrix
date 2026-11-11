@@ -108,10 +108,10 @@ test("hovering a cell marks its phrase in the statement, and hovering a phrase r
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   const adder = page.getByLabel("New author names or ORCID iD");
-  await adder.fill("Jane Smith, Bob White");
+  await adder.fill("Grace Hopper, Charles Darwin");
   await adder.press("Enter");
-  const janeConcept = page.getByRole("button", { name: /^Conceptualization for Jane Smith:/ });
-  const bobConcept = page.getByRole("button", { name: /^Conceptualization for Bob White:/ });
+  const janeConcept = page.getByRole("button", { name: /^Conceptualization for Grace Hopper:/ });
+  const bobConcept = page.getByRole("button", { name: /^Conceptualization for Charles Darwin:/ });
   await janeConcept.click();
   await bobConcept.click();
 
@@ -127,10 +127,10 @@ test("hovering a cell marks its phrase in the statement, and hovering a phrase r
   await page.getByRole("radio", { name: "By role" }).click();
   await page.getByRole("radio", { name: "Levels" }).click();
   await janeConcept.hover();
-  await expect(mark).toHaveText("Jane Smith");
+  await expect(mark).toHaveText("Grace Hopper");
 
   // And back: the phrase rings its cell.
-  await statement.getByText("Bob White").hover();
+  await statement.getByText("Charles Darwin").hover();
   await expect(bobConcept).toHaveAttribute("data-linked", "true");
   await expect(janeConcept).not.toHaveAttribute("data-linked", "true");
   await page.mouse.move(0, 0);

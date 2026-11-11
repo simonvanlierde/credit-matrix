@@ -36,13 +36,126 @@
   "credit-matrix: unknown CRediT role \"" + role + "\" for " + name + ". Use one of: " + _slugs.join(", "),
 )
 
+// Initials as the app makes them: parseNameParts, buildInitials and deduplicateAuthorInitials in
+// src/core/parse-authors.ts. credit-matrix.test.ts runs both over the same names.
+#let _orcid = regex("^(https?://orcid\.org/)?[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]$")
+// JavaScript's \s, which also matches U+FEFF; Typst's does not.
+#let _ws = regex("[\s\x{FEFF}]+")
+#let _words(text) = text.split(_ws).filter(w => w != "")
+#let _has-letter(text) = text.match(regex("\p{L}")) != none
+#let _is-particle(word) = lower(word).replace(regex("[’ʼ]"), "'") in _data.particles
+#let _is-suffix(word) = lower(word).replace(regex("\.$"), "") in _data.suffixes
+#let _clean(text) = text.replace(regex("[^\p{L}\p{M}'’ʼ\-\s・·\x{200C}\x{200D}]"), "").trim()
+#let _surname-core(surname) = {
+  let words = _words(surname)
+  let start = words.position(w => not _is-particle(w))
+  if start == none { surname } else { words.slice(start).join(" ") }
+}
+
+// "King Jr., Martin" and "King, Martin, Jr." lose the suffix; any other name comes back whole.
+#let _drop-comma-suffix(name) = {
+  let parts = name.split(",").map(p => p.trim())
+  if parts.len() < 2 or parts.len() > 3 or parts.at(1) == "" { return name }
+  if parts.len() == 3 { return if _is-suffix(parts.at(2)) { parts.at(0) + ", " + parts.at(1) } else { name } }
+  let words = parts.at(0).split(_ws)
+  let suffix = words.pop()
+  if words.len() > 0 and _is-suffix(suffix) { words.join(" ") + ", " + parts.at(1) } else { name }
+}
+
+#let _is-surname-part(text) = {
+  if text.match(_orcid) != none { return false }
+  let words = _words(text)
+  if words.len() > 1 and _is-suffix(words.last()) { words = words.slice(0, -1) }
+  words.len() > 0 and _has-letter(words.last()) and words.slice(0, -1).all(_is-particle)
+}
+
+#let _is-given-part(text) = {
+  if text.match(_orcid) != none { return false }
+  let words = _words(text)
+  words.len() > 0 and words.len() <= 3 and words.all(w => w.match(regex("^\p{L}[\p{L}\p{M}'’ʼ-]*\.?$")) != none)
+}
+
+#let _name-parts(name) = {
+  let halves = _drop-comma-suffix(name).split(",").map(p => p.trim()).filter(p => p != "")
+  if halves.len() == 2 and _is-surname-part(halves.at(0)) and _is-given-part(halves.at(1)) {
+    let given = _words(_clean(halves.at(1)))
+    return (first: given.at(0, default: ""), middle: given.at(1, default: ""), surname: _clean(halves.at(0)))
+  }
+  let parts = _words(_clean(name))
+  if parts.len() < 2 { return (first: parts.at(0, default: ""), middle: "", surname: "") }
+  let end = if parts.len() > 2 and _is-suffix(parts.last()) { parts.len() - 1 } else { parts.len() }
+  let start = end - 1
+  while start > 1 and _is-particle(parts.at(start - 1)) { start -= 1 }
+  (first: parts.at(0), middle: if start > 1 { parts.at(1) } else { "" }, surname: parts.slice(start, end).join(" "))
+}
+
+#let _initials(name, parts) = {
+  if name.match(_orcid) != none { return name.replace(regex("^https?://orcid\.org/"), "") }
+  // Script extensions, as in core: "ー" and "・" belong to katakana names.
+  let unspaced = regex("^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul}]+$")
+  if parts.middle == "" and parts.surname == "" and parts.first.match(unspaced) != none { return parts.first }
+  let letters = (parts.first, parts.middle, _surname-core(parts.surname)).filter(_has-letter)
+  if letters.len() == 0 { return name }
+  letters.map(p => {
+    let first = p.codepoints().first()
+    // Keep a letter whose upper case is two ("ß" → "SS").
+    if upper(first).codepoints().len() == 1 { upper(first) } else { first }
+  }).join()
+}
+
+// Later people who repeat taken initials gain the next letters of their surname, then a number.
+// Initials a document sets itself stay as written and count as taken, unless an earlier person set
+// the same ones.
+#let _dedupe-initials(people) = {
+  let taken = ()
+  let marked = ()
+  for p in people {
+    let own = p.own-initials and p.initials not in taken
+    if own { taken.push(p.initials) }
+    marked.push(p + (own-initials: own))
+  }
+  for p in marked {
+    if p.own-initials { (p,); continue }
+    let extra = _surname-core(p.surname).codepoints()
+    let attempt = p.initials
+    let i = 1
+    while attempt in taken {
+      attempt = p.initials + if i < extra.len() { lower(extra.at(i)) } else { str(i) }
+      i += 1
+    }
+    taken.push(attempt)
+    (p + (initials: attempt),)
+  }
+}
+
+// The export's stored parts, when they still fit the name: core's consistentNameParts.
+#let _stored-fit(name, first, middle, last) = {
+  if _drop-comma-suffix(name) != name { return false }
+  let w(text) = _words(_clean(text))
+  let (named, f, m, l) = (w(name), w(first), w(middle), w(last))
+  let opens(whole, part) = part.len() <= whole.len() and whole.slice(0, part.len()) == part
+  let suffixed = named.len() > 2 and _is-suffix(named.last()) and l.at(-1, default: none) != named.last()
+  let all = if suffixed { named.slice(0, -1) } else { named }
+  let between = all.slice(calc.min(f.len(), all.len()), calc.max(calc.min(f.len(), all.len()), all.len() - l.len()))
+  let fits = (
+    f.len() > 0
+      and f.len() + l.len() <= all.len()
+      and opens(all, f)
+      and opens(all.rev(), l.rev())
+      and opens(between, m)
+      and (l.len() > 0 or between.len() == m.len())
+  )
+  fits or (f.len() > 0 and l.len() > 0 and named.join("") == (l + f + m).join(""))
+}
+
 // One person as (name, initials, ack, levels: (slug: level), equal, corresponding), from an inline dict
 // or an author of the app's JSON export.
 #let _person(entry) = {
   if type(entry) != dictionary or type(entry.at("name", default: none)) != str {
     panic("credit-matrix: each contributor needs a name, got " + repr(entry))
   }
-  let name = entry.name.trim().replace(regex("\s+"), " ")
+  // Composed (NFC), with control characters as spaces, as core's cleanText reads a name.
+  let name = entry.name.normalize(form: "nfc").replace(regex("[\s\p{Cc}\x{FEFF}]+"), " ").trim()
   let scores = (:)
   if "contributions" in entry {
     // JSON export: canonical English role names with 0-100 scores; a repeated role keeps its top score.
@@ -60,9 +173,21 @@
       scores.insert(role, _level(value, role, name))
     }
   }
+  if not _has-letter(name) and name.match(_orcid) == none {
+    panic("credit-matrix: a contributor's name needs a letter or an ORCID iD, got " + repr(entry.name))
+  }
+  // The JSON export stores the name parts the app used; take them while they still fit the name.
+  let stored = ("firstName", "middleName", "surname").map(k => entry.at(k, default: none))
+  let parts = if stored.all(v => type(v) == str) and _stored-fit(name, ..stored) {
+    (first: _clean(stored.at(0)), middle: _clean(stored.at(1)), surname: _clean(stored.at(2)))
+  } else { _name-parts(name) }
+  let given = entry.at("initials", default: none)
+  let own = type(given) == str and given.trim() != ""
   (
     name: name,
-    initials: entry.at("initials", default: none),
+    initials: if own { given.trim() } else { _initials(name, parts) },
+    own-initials: own,
+    surname: parts.surname,
     ack: entry.at("contributorType", default: none) == "non-author" or entry.at("non-author", default: false),
     levels: _slugs.filter(s => scores.at(s, default: "none") != "none").map(s => (s, scores.at(s))).to-dict(),
     equal: entry.at("equalContribution", default: entry.at("equal-contribution", default: false)),
@@ -75,7 +200,7 @@
     contributors
   }
   if type(list) == dictionary { list = (list,) }
-  list.map(_person)
+  _dedupe-initials(list.map(_person))
 }
 
 // The catalog for `lang`: auto takes the document's text.lang and falls back to English.
@@ -281,14 +406,7 @@
       }
     ]
   }
-  let short-name(p) = if type(p.initials) == str and p.initials.trim() != "" { p.initials } else {
-    let words = p.name.split(" ").filter(w => w != "")
-    if words.len() <= 1 { p.name } else { words.map(w => upper(w.clusters().first())).join() }
-  }
-  let author-label(p) = if not initials { p.name } else {
-    let label = short-name(p)
-    if people.filter(other => short-name(other) == label).len() > 1 { p.name } else { label }
-  }
+  let author-label(p) = if initials { p.initials } else { p.name }
   let top-labels = if horizontal { roles.map(role-label) } else { people.map(author-label) }
   let left-labels = if horizontal { people.map(author-label) } else { roles.map(role-label) }
   let top = top-labels.map(label => text(size: 8pt * font-ratio, fill: _ink, label))

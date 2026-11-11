@@ -212,9 +212,12 @@ SVG keeps its intrinsic vector dimensions; typography and cell spacing determine
 PNG download and image clipboard copy require a browser; the CLI and document plugins produce vector figures.
 Use `initials` to switch contributor labels between initials and full names in the CLI and plugins.
 The JavaScript API calls this option `acronyms`. Text alternatives always retain full names.
-MyST and Typst fall back to full names when initials would identify more than one contributor.
-Typst preserves unspaced names and otherwise takes the first grapheme of each word.
-Its name parsing can differ from JavaScript. Set each contributor's `initials` explicitly to align Typst labels with the app.
+Every plugin uses the app's initials: one letter each from the given name, the first middle name
+and the surname (skipping particles such as "van"), and an unspaced Chinese or Japanese name whole.
+When two contributors share initials, the later one gets the next letters of the surname, as in
+the app ("AL", "ALa"). A contributor's own `initials` field wins, unless an earlier contributor
+set the same ones.
+Past the app's 420 contributors, MyST labels everyone with full names, while Typst keeps initials.
 
 ## Final-size readability checks
 
@@ -231,7 +234,24 @@ The existing CI Playwright job runs them on Chromium for PRs and all three engin
 Run locally with `pnpm exec playwright test e2e/heatmap-print.spec.ts`. A dense-team regression
 also confirms that a valid figure can be too small at column width, or too tall after transposition.
 The app's small-print advisory uses the actual smallest exported text rather than the selected
-nominal font size. Increasing PNG DPI does not increase the printed text size.
+nominal font size, at the width you chose.
+The CLI and the document plugins warn as well: on stderr for the CLI, Quarto and Pandoc, and as a
+build warning in MyST and Sphinx. They measure the figure scaled to fit 183 × 170 mm, and warn
+below 6 pt. That happens from about 25 contributors, in either orientation. A larger team's
+figure needs a page of its own, such as a supplementary figure. Typst has no build warnings, so the
+Typst package does not warn. To keep a strict build passing once you have checked the figure, add
+`suppress_warnings = ["credit_matrix"]` to Sphinx's `conf.py`, or this to MyST's `myst.yml`:
+
+```yaml
+project:
+  error_rules:
+    - rule: credit-heatmap-small-print
+      severity: ignore
+```
+
+The tests above hold reference figures to a hard 5 pt floor; the 6 pt warning is advice for real
+figures, so a figure can pass the tests and still warn. Increasing PNG DPI does not increase the
+printed text size.
 
 These checks cover the reference fixtures and installed browser fonts. They do not replace checking
 the final manuscript, a native reader's review, a physical printed proof, or the publisher's font rules.

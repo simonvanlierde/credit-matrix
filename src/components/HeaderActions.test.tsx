@@ -58,7 +58,7 @@ async function janeAsked() {
   const store = useContributionStore.getState();
   act(() => {
     store.createDraft();
-    useContributionStore.getState().addAuthor("Jane Smith");
+    useContributionStore.getState().addAuthor("Grace Hopper");
   });
   const state = useContributionStore.getState();
   const jane = state.authors[0];
@@ -104,7 +104,7 @@ it("takes the arrival strip down once the lead decides on that reply", async () 
 it("leaves the strip's Undo on its own reply when other rows are asked meanwhile", async () => {
   const { jane, draftId, reply } = await janeAsked();
   act(() => {
-    useContributionStore.getState().addAuthor("Bob White");
+    useContributionStore.getState().addAuthor("Charles Darwin");
   });
   const bob = useContributionStore.getState().authors[1];
   if (!bob) throw new Error("expected Bob");

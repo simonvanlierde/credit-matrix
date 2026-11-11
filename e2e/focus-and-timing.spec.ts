@@ -129,11 +129,11 @@ test.describe("behaviours that must not trap or hide", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Import" }).click();
     const dialog = page.locator("dialog[open]");
-    await page.locator("#import-text").fill("Jane Smith");
+    await page.locator("#import-text").fill("Grace Hopper");
     await page.mouse.move(5, 300);
     await page.mouse.down();
     await expect(dialog).toBeVisible();
-    await expect(page.locator("#import-text")).toHaveValue("Jane Smith");
+    await expect(page.locator("#import-text")).toHaveValue("Grace Hopper");
     await page.mouse.up();
     await expect(dialog).toBeHidden();
   });

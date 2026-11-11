@@ -132,16 +132,16 @@ const SPAN_FORMATTER: Formatter<StatementSpan[]> = {
  * Four formats, matching the original Python app:
  *
  * `by-role`:
- *   "CRediT: Conceptualization: Jane A. Smith, Bob White; Data curation: Jane A. Smith; ..."
+ *   "CRediT: Conceptualization: Grace B. Hopper, Charles Darwin; Data curation: Grace B. Hopper; ..."
  *
  * `by-role-short`:
- *   "CRediT: Conceptualization: JAS, BW; Data curation: JAS; ..."
+ *   "CRediT: Conceptualization: GBH, CD; Data curation: GBH; ..."
  *
  * `by-author`:
- *   "CRediT: Jane A Smith: Conceptualization, Data curation; Bob White: Investigation; ..."
+ *   "CRediT: Grace B. Hopper: Conceptualization, Data curation; Charles Darwin: Investigation; ..."
  *
  * `by-author-short`:
- *   "CRediT: JAS: Conceptualization, Data curation; BW: Investigation; ..."
+ *   "CRediT: GBH: Conceptualization, Data curation; CD: Investigation; ..."
  */
 export function generateStatement(authors: Author[], options: StatementOptions): string {
   if (!options.asHtml) return statementLines(authors, options, TEXT_FORMATTER).join(LINE_BREAK);

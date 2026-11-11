@@ -19,12 +19,12 @@ async function openBrowser(context: BrowserContext, { firstRun = false } = {}): 
 async function makeAskLink(page: Page): Promise<string> {
   await page.goto("/");
   const adder = page.getByLabel("New author names or ORCID iD");
-  await adder.fill("Jane Smith, Bob White");
+  await adder.fill("Grace Hopper, Charles Darwin");
   await adder.press("Enter");
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(2);
 
-  await page.getByRole("button", { name: "Actions for Bob White" }).click();
-  return copyFrom(page, page.getByRole("button", { name: "Ask Bob White what they did" }));
+  await page.getByRole("button", { name: "Actions for Charles Darwin" }).click();
+  return copyFrom(page, page.getByRole("button", { name: "Ask Charles Darwin what they did" }));
 }
 
 /** The co-author page, which a claim link opens in place of the workspace. */
@@ -72,10 +72,10 @@ test("full round trip: blank ask → locked fill → reply kept beside the row, 
   // The co-author page, not the workspace: no header, no roster, and only
   // Bob's own row travelled.
   await expect(coauthorPage(pageB)).toBeVisible();
-  await expect(onScreen(pageB, /Answering as Bob White\./)).toBeVisible();
+  await expect(onScreen(pageB, /Answering as Charles Darwin\./)).toBeVisible();
   await expect(pageB.getByLabel("New author names or ORCID iD")).toHaveCount(0);
   await expect(pageB.getByRole("button", { name: "Import" })).toBeHidden();
-  await expect(pageB.getByText("Jane Smith")).toHaveCount(0);
+  await expect(pageB.getByText("Grace Hopper")).toHaveCount(0);
   // The ask came from a yes/no draft, so the answer is yes or no too.
   await expect(answer(pageB, "Investigation", "Lead")).toHaveCount(0);
 
@@ -84,19 +84,19 @@ test("full round trip: blank ask → locked fill → reply kept beside the row, 
   // On their own row the co-author is the authority — the name they type ships.
   await pageB.getByText("Your details").click();
   const ownName = pageB.getByLabel("Name", { exact: true });
-  await ownName.fill("Bob B. White");
+  await ownName.fill("Charles R. Darwin");
   await ownName.press("Enter");
   const replyLink = await sendBack(pageB);
 
   // The originator CLICKS the reply — no Import knowledge required.
   await pageA.goto(replyLink);
-  await expect(onScreen(pageA, "Bob B. White's answer arrived: 1 difference.")).toBeVisible();
+  await expect(onScreen(pageA, "Charles R. Darwin's answer arrived: 1 difference.")).toBeVisible();
   // The answer is kept beside the row: the name is theirs, the scores stay yours.
-  await expect(pageA.getByLabel("Name or ORCID iD", { exact: true }).nth(1)).toHaveValue("Bob B. White");
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: None" })).toBeVisible();
+  await expect(pageA.getByLabel("Name or ORCID iD", { exact: true }).nth(1)).toHaveValue("Charles R. Darwin");
+  await expect(pageA.getByRole("button", { name: "Investigation for Charles R. Darwin: None" })).toBeVisible();
   // The row says it changed, and the matrix haloes that contributor's cells.
   await expect(pageA.getByText("Updated", { exact: true })).toBeVisible();
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob B. White: None" })).toHaveAttribute(
+  await expect(pageA.getByRole("button", { name: "Investigation for Charles R. Darwin: None" })).toHaveAttribute(
     "data-recent-reply",
     "true",
   );
@@ -105,10 +105,10 @@ test("full round trip: blank ask → locked fill → reply kept beside the row, 
 
   // Undo restores the name and reopens the ask.
   await pageA.getByRole("button", { name: "Undo" }).click();
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob White: None" })).toBeVisible();
+  await expect(pageA.getByRole("button", { name: "Investigation for Charles Darwin: None" })).toBeVisible();
   await expect(pageA.getByRole("button", { name: /^Remove / })).toHaveCount(2);
   await expect(pageA.getByText("Updated", { exact: true })).toHaveCount(0);
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob White: None" })).not.toHaveAttribute(
+  await expect(pageA.getByRole("button", { name: "Investigation for Charles Darwin: None" })).not.toHaveAttribute(
     "data-recent-reply",
   );
   await expect(pageA.getByText("Asked", { exact: true })).toBeVisible();
@@ -122,17 +122,20 @@ test("a blank ask arrives empty; asking to check a guess sends the guess", async
   const pageA = await openBrowser(originator);
   await pageA.goto("/");
   const adder = pageA.getByLabel("New author names or ORCID iD");
-  await adder.fill("Jane Smith, Bob White");
+  await adder.fill("Grace Hopper, Charles Darwin");
   await adder.press("Enter");
   // The guess: Bob did the investigation.
-  await pageA.getByRole("button", { name: /^Investigation for Bob White:/ }).click();
-  await expect(pageA.getByRole("button", { name: "Investigation for Bob White: Contributed" })).toBeVisible();
+  await pageA.getByRole("button", { name: /^Investigation for Charles Darwin:/ }).click();
+  await expect(pageA.getByRole("button", { name: "Investigation for Charles Darwin: Contributed" })).toBeVisible();
 
-  await pageA.getByRole("button", { name: "Actions for Bob White" }).click();
+  await pageA.getByRole("button", { name: "Actions for Charles Darwin" }).click();
   // What travels is said in plain text, not only on hover.
   await expect(pageA.getByText("The link contains the title, this person's name and iD.")).toBeVisible();
-  const blankLink = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White what they did" }));
-  const guessLink = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White to check your guess" }));
+  const blankLink = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Charles Darwin what they did" }));
+  const guessLink = await copyFrom(
+    pageA,
+    pageA.getByRole("button", { name: "Ask Charles Darwin to check your guess" }),
+  );
 
   const blankSide = await newContext(browser);
   const pageB = await openBrowser(blankSide);
@@ -296,15 +299,15 @@ test("a reply opened out of order is ignored, and the same reply twice changes n
   expect(secondReply).not.toBe(firstReply);
 
   await pageA.goto(secondReply);
-  await expect(onScreen(pageA, "Bob White's answer arrived: 2 differences.")).toBeVisible();
+  await expect(onScreen(pageA, "Charles Darwin's answer arrived: 2 differences.")).toBeVisible();
   await pageA.goto(firstReply);
   await expect(
-    onScreen(pageA, "This answer from Bob White is older than the one you have, so it was not used."),
+    onScreen(pageA, "This answer from Charles Darwin is older than the one you have, so it was not used."),
   ).toBeVisible();
   await pageA.goto(secondReply);
-  await expect(onScreen(pageA, "You already have this answer from Bob White.")).toBeVisible();
+  await expect(onScreen(pageA, "You already have this answer from Charles Darwin.")).toBeVisible();
   // Your row never took their scores.
-  await expect(pageA.getByRole("button", { name: "Software for Bob White: None" })).toBeVisible();
+  await expect(pageA.getByRole("button", { name: "Software for Charles Darwin: None" })).toBeVisible();
 
   await originator.close();
   await coauthor.close();
@@ -320,10 +323,13 @@ test("a newer request replaces the co-author's earlier answers, with undo", asyn
 
   // The lead asks again, this time with a guess: Software.
   await pageA.keyboard.press("Escape");
-  await pageA.getByRole("button", { name: /^Software for Bob White:/ }).click();
-  await expect(pageA.getByRole("button", { name: "Software for Bob White: Contributed" })).toBeVisible();
-  await pageA.getByRole("button", { name: "Actions for Bob White" }).click();
-  const secondAsk = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White to check your guess" }));
+  await pageA.getByRole("button", { name: /^Software for Charles Darwin:/ }).click();
+  await expect(pageA.getByRole("button", { name: "Software for Charles Darwin: Contributed" })).toBeVisible();
+  await pageA.getByRole("button", { name: "Actions for Charles Darwin" }).click();
+  const secondAsk = await copyFrom(
+    pageA,
+    pageA.getByRole("button", { name: "Ask Charles Darwin to check your guess" }),
+  );
 
   const updated = onScreen(pageB, "The request was updated. Your earlier answers were replaced.");
   await pageB.goto(secondAsk);
@@ -357,7 +363,7 @@ test("the Team tab copies one email-ready ask per person, in sequence", async ({
   const page = await openBrowser(context);
   await page.goto("/");
   const adder = page.getByLabel("New author names or ORCID iD");
-  await adder.fill("Jane Smith, Bob White");
+  await adder.fill("Grace Hopper, Charles Darwin");
   await adder.press("Enter");
   // Nobody is asked yet, so the strip has nothing to count, only the way to ask.
   await expect(page.getByText(/answered$/)).toHaveCount(0);
@@ -371,10 +377,10 @@ test("the Team tab copies one email-ready ask per person, in sequence", async ({
   await expect(team.getByText(/Nothing is stored on a server/)).toBeVisible();
 
   const first = await copyFrom(page, team.getByRole("button", { name: "Ask everyone not yet asked (2)" }));
-  expect(first).toMatch(/^Hi Jane Smith,/);
+  expect(first).toMatch(/^Hi Grace Hopper,/);
   expect(first).toMatch(/#s=/);
-  const second = await copyFrom(page, team.getByRole("button", { name: "Copy next: Bob White (2 of 2)" }));
-  expect(second).toMatch(/^Hi Bob White,/);
+  const second = await copyFrom(page, team.getByRole("button", { name: "Copy next: Charles Darwin (2 of 2)" }));
+  expect(second).toMatch(/^Hi Charles Darwin,/);
   await expect(onScreen(page, "All 2 messages copied.")).toBeVisible();
   await expect(team.getByText("Asked today · blank")).toHaveCount(2);
   await expect(page.getByText("0 of 2 answered")).toBeVisible();
@@ -390,8 +396,8 @@ test("a blank ask answered on a phone, by touch, sends back what was tapped", as
   // A levels draft asks in levels: switch before asking again.
   await pageA.keyboard.press("Escape");
   await pageA.getByRole("radio", { name: "Levels" }).click();
-  await pageA.getByRole("button", { name: "Actions for Bob White" }).click();
-  const levelsAsk = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White what they did" }));
+  await pageA.getByRole("button", { name: "Actions for Charles Darwin" }).click();
+  const levelsAsk = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Charles Darwin what they did" }));
   expect(levelsAsk).not.toBe(askLink);
 
   const page = await openBrowser(context);
@@ -431,7 +437,7 @@ test("a blank ask answered on a phone, by touch, sends back what was tapped", as
   expect((await scan(page)).violations).toEqual([]);
 
   await pageA.goto(reply);
-  await expect(onScreen(pageA, "Bob White's answer arrived: 3 differences.")).toBeVisible();
+  await expect(onScreen(pageA, "Charles Darwin's answer arrived: 3 differences.")).toBeVisible();
 
   await originator.close();
   await context.close();
