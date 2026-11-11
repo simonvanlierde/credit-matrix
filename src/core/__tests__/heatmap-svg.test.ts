@@ -124,7 +124,7 @@ describe("buildHeatmapSvg", () => {
     expect(svg).toContain(">Lead<"); // legend label, no score range
   });
 
-  it("carries who did what as its text alternative, in <desc>", () => {
+  it("puts who did what in its text alternative, in <desc>", () => {
     const svg = buildHeatmapSvg(authorsWithScores());
     const desc = svg.match(/<desc>(.*)<\/desc>/s)?.[1] ?? "";
     expect(desc).toContain("Jane Smith: Conceptualization");
@@ -293,7 +293,7 @@ describe("buildHeatmapSvg", () => {
     expect(svgWidth(narrow)).toBeLessThan(svgWidth(wide));
   });
 
-  it("sizes the label bands from the labels they carry", () => {
+  it("sizes the label bands from the labels they hold", () => {
     // Initials on the left band vs. full names: the wider labels move the grid
     // right by their own extra width, and nothing else changes.
     const initials = buildHeatmapSvg(authorsWithScores(), { transpose: true });

@@ -1,5 +1,5 @@
 {
-  "description": "Yes/no mode: roles were ticked, not graded, so no role carries degree-contribution.",
+  "description": "Yes/no mode: roles were ticked, not graded, so no role has degree-contribution.",
   "mode": "yes-no",
   "contributors": [
     {

@@ -185,7 +185,7 @@ test.describe("rendering a non-English locale", () => {
     // is best-effort; extend it when a new key family appears.
     await seed(page, "nl", "nl");
     await page.goto("/");
-    // textContent also covers sr-only text; any inline script is part of it, and carries no such keys.
+    // textContent also covers sr-only text; any inline script is part of it, and has no such keys.
     const visible = await page.locator("body").textContent();
     // A raw key leaking into the page is the failure this guards against.
     expect(visible).not.toMatch(/\b(a11y|ann|err|dnd|step|bulk)[A-Z]\w+/);

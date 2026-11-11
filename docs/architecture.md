@@ -1,7 +1,7 @@
 # Architecture
 
-It's all TypeScript: one React app, built with Vite and prerendered to static HTML, with the logic that doesn't depend
-on React or Next.js in `src/core`. There is no server code.
+It's all TypeScript: one React app, built with Vite and prerendered to static HTML. The logic that
+doesn't depend on React or Next.js lives in `src/core`. There is no server code.
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -45,8 +45,10 @@ The ORCID and DOI lookups call the public APIs of ORCID, Crossref and DataCite s
 browser. DataCite is only asked about DOIs that Crossref does not hold, such as arXiv and Zenodo
 records. All three send CORS headers that let the browser call them. The Content Security Policy
 (CSP) in [`public/_headers`](../public/_headers) allows exactly those origins, plus `orcid.org`, whose
-public keys check a co-author's ORCID sign-in on a reply. Citation files in CFF or Zenodo format
-are converted locally by a lazy citesync worker. The build copies the pinned Pyodide runtime from
+public keys check a co-author's ORCID sign-in on a reply.
+
+Citation files in CFF or Zenodo format are converted locally by a citesync worker that loads on
+first use. The build copies the pinned Pyodide runtime from
 `node_modules/pyodide` into `/citesync/pyodide/` and downloads checksum-verified Python wheels
 (`scripts/vendor-citesync.mjs`); the worker's CSP allows only this site. The service worker caches the
 runtime on first use, so later citation imports work offline until the next deploy; the build id

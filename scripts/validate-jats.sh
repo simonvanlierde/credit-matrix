@@ -58,7 +58,7 @@ fi
 [[ -f $sef ]] || pnpm exec xslt3 -xsl:"$compiled" -export:"$sef" -nogo
 
 # Two findings are expected and accepted:
-#  - permissions-errors asks for <permissions>. The export carries contributor
+#  - permissions-errors asks for <permissions>. The export holds contributor
 #    roles only; licence and copyright are the publisher's to write.
 #  - credit-errors wants the term "Formal Analysis", but NISO's term is
 #    "Formal analysis" (credit.niso.org/contributor-roles/formal-analysis/),

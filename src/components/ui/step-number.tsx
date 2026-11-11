@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 /**
  * The numbered badge that marks a workflow step. The panels form a real
  * sequence: contributors (1) → roles (2) → output (3), so the numbering is
- * honest wayfinding. Decorative to assistive tech: the heading beside it carries
+ * honest wayfinding. Decorative to assistive tech: the heading beside it gives
  * the accessible name, and the welcome card's ordered list conveys the sequence.
  */
 export function StepNumber({ n, className }: { n: number; className?: string }) {

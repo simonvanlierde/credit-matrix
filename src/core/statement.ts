@@ -372,7 +372,7 @@ function find(hay: string, needle: string, text: string): number[] {
   return found;
 }
 
-/** Lower case of the same length, so positions carry over: a letter that lowers to two keeps the first. */
+/** Lower case of the same length, so positions stay the same: a letter that lowers to two keeps the first. */
 function lower(text: string): string {
   const lowered = text.toLowerCase();
   if (lowered.length === text.length) return lowered;

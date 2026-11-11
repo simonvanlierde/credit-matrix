@@ -9,7 +9,7 @@ import { useContributionStore } from "@/store/contribution-store";
 
 /**
  * Below `lg` the header has no room left for the "How it works", "About" and census
- * links: the controls alone are already ~440px once they carry labels. The lockup is the
+ * links: the controls alone are already ~440px once they have labels. The lockup is the
  * one element up there with nothing to do, so it becomes their trigger —
  * tapping the product name opens what the product is, how it works, and what
  * published papers do.

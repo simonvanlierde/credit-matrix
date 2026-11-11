@@ -1,5 +1,5 @@
 {
-  "description": "Roles at all three levels. Each role carries degree-contribution.",
+  "description": "Roles at all three levels. Each role has degree-contribution.",
   "mode": "levels",
   "contributors": [
     {

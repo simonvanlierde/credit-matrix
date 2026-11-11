@@ -204,7 +204,7 @@ def parse_element(root: etree._Element) -> Article:
         license=(lic.get(f"{XLINK}href") or _text(lic.find(f"{ALI}license_ref")) or None) if lic is not None else None,
     )
 
-    # Springer Nature and Frontiers leave contrib-type out; editors and reviewers carry one, or sit in a
+    # Springer Nature and Frontiers leave contrib-type out; editors and reviewers have one, or sit in a
     # contrib-group marked as theirs (eLife).
     # Direct children only: a <collab> holds its own contrib-group of consortium members.
     contribs = [

@@ -154,7 +154,7 @@ describe("askStep reply", () => {
     expect(reply?.decisions).toEqual(kept.asks[target.id]?.reply?.decisions);
   });
 
-  it("keeps a structured surname when the reply carries the same name", () => {
+  it("keeps a structured surname when the reply has the same name", () => {
     const lead = createAuthor("Anne van der Berg", {
       id: "anne",
       firstName: "Anne",

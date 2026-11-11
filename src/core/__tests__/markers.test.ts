@@ -91,7 +91,7 @@ describe("markers in the statement", () => {
     );
   });
 
-  it("carries the notes into the HTML flavour", () => {
+  it("keeps the notes in the HTML flavour", () => {
     const html = generateStatement(makeAuthors(), { format: "by-role", asHtml: true });
     expect(html).toContain("<p>Jane A. Smith and Bob White contributed equally to this work.</p>");
   });

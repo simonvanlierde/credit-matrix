@@ -138,7 +138,7 @@ test("a token signed for another answer arrives unverified", async ({ browser })
   await stubOrcid(lead, issuer);
   const ask = await askBob(lead);
 
-  // A token signed for some other answer, carried by this one.
+  // A token signed for some other answer, sent with this one.
   const shared = await decodeShareHash(ask.slice(ask.indexOf("#")));
   if (!(shared?.claimId && shared.sourceDraftId)) throw new Error("expected an ask link");
   const forged = await encodeShareHash(

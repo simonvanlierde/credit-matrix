@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-// Every exported page carries its own script hashes in a <meta> CSP
+// Every exported page has its own script hashes in a <meta> CSP
 // (scripts/postbuild.mjs), so each one is checked on its own.
 const PAGES = ["/", "/about", "/accessibility", "/census"];
 
@@ -35,7 +35,7 @@ test.describe("Content Security Policy", () => {
         }
       });
 
-      // The header carries the rest of the policy, which a meta CSP cannot.
+      // The header holds the rest of the policy, which a meta CSP cannot.
       const csp = (await page.goto(path))?.headers()["content-security-policy"];
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).toContain("object-src 'none'");

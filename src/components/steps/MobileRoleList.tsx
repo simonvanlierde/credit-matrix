@@ -137,7 +137,7 @@ export function MobileRoleList({
               >
                 {/* The label never sits on the dynamic fill: a mid-tone
                   preset has no 4.5:1 text companion at all, and the
-                  palette is user-picked. The swatch carries the color;
+                  palette is user-picked. The swatch shows the color;
                   its mark needs only the 3:1 non-text ratio, which
                   onColor guarantees. */}
                 {score > 0 && (

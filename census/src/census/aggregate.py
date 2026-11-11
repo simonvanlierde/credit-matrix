@@ -1,6 +1,6 @@
 """Counts for the public census page: totals per year, field, publisher, style and role, never rows.
 
-Research articles only, as in `census report`: corrections, editorials and the like carry no statement.
+Research articles only, as in `census report`: corrections, editorials and the like have no statement.
 """
 
 import json
@@ -12,7 +12,7 @@ from census import store
 from census.export import DATASET_VERSION, commit
 from census.fields import has_fields
 
-# The counts are facts derived from the CC0 role-fact files, so they carry the same dedication.
+# The counts are facts derived from the CC0 role-fact files, so the same dedication applies to them.
 LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/"
 MIN_ARTICLES = 1000
 """A year, field or style with fewer research articles than this is left out: its share is noise. The year

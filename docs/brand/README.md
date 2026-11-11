@@ -6,7 +6,7 @@ and 1.0 of the way toward ink-blue, plus the fill of an empty cell.
 
 | Asset | Source | Output |
 | --- | --- | --- |
-| Favicon | `public/icon.svg` | Served as written; carries its own dark-mode fills |
+| Favicon | `public/icon.svg` | Served as written; has its own dark-mode fills |
 | Header lockup | `src/components/BrandMark.tsx` | Rendered inline; draws in `currentColor`, so it follows the theme |
 | Apple touch icon | `docs/brand/apple-icon.html` | `public/apple-icon.png` |
 | Social card | `docs/brand/opengraph-image.html` | `public/opengraph-image.png` |

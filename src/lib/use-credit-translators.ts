@@ -61,7 +61,7 @@ interface LoadedTranslators extends CreditTranslators {
  * Everything that reads the vendored CRediT catalog, in one subscription.
  *
  * The app has two languages on purpose — someone may want a Dutch interface and
- * an English statement — and the catalog carries both a name and a description
+ * an English statement — and the catalog holds both a name and a description
  * per role. Those two fields follow *different* languages: a name has to match
  * the statement it will appear in, a description is help the reader is reading
  * now. That is the whole reason this is not a single lookup.

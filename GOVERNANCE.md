@@ -4,7 +4,7 @@ CRediT Matrix has one maintainer, Simon van Lierde. This file says who decides a
 
 ## Who decides
 
-The maintainer decides what goes into the app and the `credit-matrix` package, and when to release.
+I decide what goes into the app and the `credit-matrix` package, and when to release.
 Anyone can propose a change in an issue or a pull request. I weigh each proposal against
 [PRODUCT.md](PRODUCT.md) and [DESIGN.md](DESIGN.md), and I record larger design decisions as
 [ADRs](docs/adr/), with the reasons. If I turn a proposal down, I say why in the issue or pull
@@ -34,5 +34,5 @@ service changes.
 
 ## Changes to this file
 
-The maintainer changes this file through a pull request, like any other change. If more people get
+I change this file through a pull request, like any other change. If more people get
 access, this file will name their role first.

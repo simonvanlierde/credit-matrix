@@ -139,7 +139,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
         "Share a link containing all contributor data",
         `
         - dialog "Share":
-          - paragraph: This link carries your data
+          - paragraph: This link contains your data
           - button "Copy data link"
         `,
       ],
@@ -332,7 +332,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
         - paragraph:
           - link "Download the counts (JSON)"
     `);
-    // The chart drawings stay out of the reading order; the summary and the table carry the numbers.
+    // The chart drawings stay out of the reading order; the summary and the table give the numbers.
     await article.getByText("Show as a table").first().click();
     await expect(article.getByRole("table").first()).toBeVisible();
     await expect(article.getByRole("table").first().getByRole("columnheader").first()).not.toBeEmpty();
@@ -490,7 +490,7 @@ test.describe("downloaded heatmap", () => {
     await asReturningVisitor(page);
   });
 
-  test("the PNG and the SVG carry the contribution statement as their description", async ({ page }) => {
+  test("the PNG and the SVG include the contribution statement as their description", async ({ page }) => {
     await loadSample(page);
     const save = async (name: string) => {
       await page.getByRole("button", { name: "Heatmap", exact: true }).click();

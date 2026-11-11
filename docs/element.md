@@ -60,7 +60,8 @@ regional tag such as `de-DE` uses its language, `de`. Any language it does not o
 
 ## What it renders
 
-Inside a shadow root, so the page's styles neither leak in nor out, on its own light card (warm paper with a thin ink border, as in the app):
+It renders inside a shadow root, so the page's styles neither leak in nor out, on its own light card
+(warm paper with a thin ink border, as in the app):
 
 - the heatmap, drawn at its full size. On a narrow page it scrolls sideways instead of shrinking
   its labels;

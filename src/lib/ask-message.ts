@@ -7,7 +7,7 @@ import { useContributionStore } from "@/store/contribution-store";
 /**
  * Build one contributor's ask link, hand it to `copy`, and record the ask once
  * `copy` says it reached the clipboard. A blank ask sends their row empty;
- * otherwise the link carries your guess for them to check. `copy` also gets
+ * otherwise the link includes your guess for them to check. `copy` also gets
  * the title the link was built with. Returns whether it was copied.
  */
 export async function copyAskLink(
@@ -17,7 +17,7 @@ export async function copyAskLink(
   copy: (link: string, title: string) => Promise<boolean>,
 ): Promise<boolean> {
   const sentAt = Date.now();
-  // Read at click time: the link carries this person's current row and the title.
+  // Read at click time: the link holds this person's current row and the title.
   const state = useContributionStore.getState();
   let link: string;
   try {
@@ -46,7 +46,7 @@ export async function copyAskLink(
 /**
  * Copy an email-ready message asking one contributor, around their ask link,
  * and record the ask once it reached the clipboard. With `role`, the message
- * asks about that one role, and the link carries your guess for them to check.
+ * asks about that one role, and the link includes your guess for them to check.
  * Returns whether the message was copied.
  */
 export function copyAskMessage(

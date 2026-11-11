@@ -43,7 +43,7 @@ describe("share payload v2", () => {
     expect(restored.reply).toBe(true);
   });
 
-  it("carries only the claimed contributor's row on a claim link, never the rest of the roster", () => {
+  it("holds only the claimed contributor's row on a claim link, never the rest of the roster", () => {
     const authors = makeAuthors();
     const jane = authors[0];
     if (!jane) throw new Error("expected Jane");
@@ -132,7 +132,7 @@ describe("share payload v2", () => {
     expect(() => fromSharePayload(JSON.stringify({ v: 1, a: [{ n: "Jane Smith", s: [] }] }))).toThrow();
   });
 
-  it("rejects a claim naming a contributor the payload does not carry", () => {
+  it("rejects a claim naming a contributor the payload does not hold", () => {
     const payload = toSharePayload({
       authors: makeAuthors(),
       claimId: makeAuthors()[0]?.id ?? "x", // fresh call → different ids than encoded
