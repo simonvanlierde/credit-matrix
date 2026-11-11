@@ -13,12 +13,13 @@ time a figure needs it, and caches it. In a bundled app, pass the `fonts` export
 bundler emits it as an asset. A release comes only when the fonts change, and `credit-matrix` pins
 the version and the hashes below.
 
-These regular faces provide offline fonts for editable figure exports. Each
-other script has one sans face, used in sans and serif figures alike: Korean
-(Credit Figure KR, from Noto Sans KR), monochrome emoji (Credit Figure Emoji,
-from Noto Emoji), and Noto Sans Arabic, Armenian, Bengali, Devanagari, Ethiopic,
-Georgian, Gujarati, Gurmukhi, Hebrew, Kannada, Khmer, Lao, Malayalam, Myanmar,
-Oriya, Sinhala, Tamil, Telugu and Thai. `harfbuzz.wasm` is the HarfBuzz shaping
+These regular faces provide offline fonts for editable figure exports. Arabic,
+Armenian, Bengali, Devanagari, Ethiopic, Georgian, Gujarati, Gurmukhi, Hebrew,
+Kannada, Khmer, Lao, Malayalam, Myanmar, Oriya, Sinhala, Tamil, Telugu and Thai
+each have a Noto Sans face for sans figures and a Noto Serif face (Noto Naskh
+Arabic for Arabic) for serif figures. Korean (Credit Figure KR, from Noto Sans
+KR) and monochrome emoji (Credit Figure Emoji, from Noto Emoji) have one face,
+used in sans and serif figures alike: a serif Korean face would add 14 MB. `harfbuzz.wasm` is the HarfBuzz shaping
 engine, which lays out the complex scripts; it comes through the same `fonts`
 provider, so it is fetched only for a figure that needs it.
 Noto Sans and Serif cover Latin, Greek and Cyrillic. Credit Figure JP and SC
@@ -55,6 +56,25 @@ Simplified Chinese face for Chinese labels.
 | `NotoSansTamil-Regular.ttf` | `sans-tamil` | 2.004 | 73992 | `3c0a186feb3c63c7f6d63e1511dcdc144e745ae09b98e217c83f3e317974f6f9` |
 | `NotoSansTelugu-Regular.ttf` | `sans-telugu` | 2.005 | 235176 | `b274780b69d1d23fe84b55e809a152cb2ac5306d33864b1f87622f6971871aae` |
 | `NotoSansThai-Regular.ttf` | `sans-thai` | 2.002 | 37780 | `61cf814eec46b294d6ea4401ac295d0cecd5207bd2331dcc5a15e7301d30ee44` |
+| `NotoNaskhArabic-Regular.ttf` | `serif-arabic` | 2.021 | 247336 | `6f0a92031367b2f5a2078fe9d24f3433122b61a0bad57c423aad8f3c39aa2e6e` |
+| `NotoSerifArmenian-Regular.ttf` | `serif-armenian` | 2.008 | 31040 | `6dc71b17c55d398c7cc88edeec527292ba1e0573b033ac2136c636ab36c27d76` |
+| `NotoSerifBengali-Regular.ttf` | `serif-bengali` | 3.000 | 324020 | `c1743dce480147e4563e479ddc31d5ff6544372437428622a54c7c867c50f55b` |
+| `NotoSerifDevanagari-Regular.ttf` | `serif-devanagari` | 2.006 | 280180 | `e272d11d271c61a8d5d0f65764fd368ae53b9f9dabcce244a8941aa8f32ccc70` |
+| `NotoSerifEthiopic-Regular.ttf` | `serif-ethiopic` | 2.102 | 309844 | `4d14f10b7436e762d41ddd9486acdc708744bf377a575d855b81b847b9590779` |
+| `NotoSerifGeorgian-Regular.ttf` | `serif-georgian` | 2.003 | 61956 | `e222862f34ad05bdf950de1049abf6149d250b9e27c1cc482dd645412afb64ff` |
+| `NotoSerifGujarati-Regular.ttf` | `serif-gujarati` | 2.106 | 146056 | `b8961ff6faf8e5561e3d0109953c4a9798e9bb8e8d48f66c3d1ef038fe45c940` |
+| `NotoSerifGurmukhi-Regular.ttf` | `serif-gurmukhi` | 2.004 | 53316 | `5ef2d04a6d6fd22959989d14148dcf0ffbb970cc35e6316ba63cd5c146f32667` |
+| `NotoSerifHebrew-Regular.ttf` | `serif-hebrew` | 2.004 | 30288 | `dfd5a6aefe97a99f68fe43388342913d50bb9fbf6d3afc4d2c7725661bc4a2b1` |
+| `NotoSerifKannada-Regular.ttf` | `serif-kannada` | 2.005 | 194376 | `95a78c95359dc59b9ec56bdc5bdf8a9642394d2ef87ded945fb3885893b3eac6` |
+| `NotoSerifKhmer-Regular.ttf` | `serif-khmer` | 2.004 | 154372 | `ef0612212c7417da732dd43c744abf66f4f62c45d4f8962e42c8553230e0da2a` |
+| `NotoSerifLao-Regular.ttf` | `serif-lao` | 2.003 | 42880 | `a8d38866520f3c96d0e0e43f079f16c72ae4963bbabdf21cae26092c7cb65ec7` |
+| `NotoSerifMalayalam-Regular.ttf` | `serif-malayalam` | 2.104 | 111872 | `45c34ac8c169a37a4fbb5b8fbf507def328bbf36180b08095726d460d577ec1d` |
+| `NotoSerifMyanmar-Regular.ttf` | `serif-myanmar` | 2.106 | 277152 | `fe1a5f1c9cafab515e89e20f884aee3681ccd9f3f2e7bf357c6758d9268535a5` |
+| `NotoSerifOriya-Regular.ttf` | `serif-oriya` | 1.051 | 148896 | `c674ab8038d1e51e783fdd7192fd39ae8a2aa48701589955bdabd627c0c3eb13` |
+| `NotoSerifSinhala-Regular.ttf` | `serif-sinhala` | 2.007 | 325860 | `0d5a63d34ed378e345ec96021d72385c8e288ecd0ea36511a329aed448ede375` |
+| `NotoSerifTamil-Regular.ttf` | `serif-tamil` | 2.004 | 79476 | `8a8cb015a3afec2998e01aabcb42fb365994132d95dbc2150208b4fefd8dc2e4` |
+| `NotoSerifTelugu-Regular.ttf` | `serif-telugu` | 2.005 | 311724 | `2b376e0351fb140f2edad9c54e8977f4f1effc4fe72443e152b3f6ad392c6f5f` |
+| `NotoSerifThai-Regular.ttf` | `serif-thai` | 2.002 | 45424 | `747b5bb1fdd329850ddd3218d872a3d2a96ab0dd544f51e5300c6d1b12071b62` |
 | `CreditFigureEmoji.ttf` | `emoji` | 3.002 | 889044 | `e35e380f5ea3d23efb4c9093ced5d5600d1af059feab7fc130ad10824d99416d` |
 | `harfbuzz.wasm` | `harfbuzz` | harfbuzzjs 1.6.4 | 444394 | `6eeed8e1bc9ad7773038e48ff8f9e07e0ad228572c594b45e5357e9c2f7a0b2e` |
 
@@ -76,6 +96,10 @@ Simplified Chinese face for Chinese labels.
   `notofonts/notofonts.github.io` commit `4cf78353cd1668040ba8efa13029cd910fcdf9e2`, at
   `fonts/NotoSans<Script>/hinted/ttf/NotoSans<Script>-Regular.ttf` (for example
   [Noto Sans Arabic](https://raw.githubusercontent.com/notofonts/notofonts.github.io/4cf78353cd1668040ba8efa13029cd910fcdf9e2/fonts/NotoSansArabic/hinted/ttf/NotoSansArabic-Regular.ttf)).
+- The 19 serif script faces, unmodified, from the same `notofonts.github.io` commit, at
+  `fonts/NotoSerif<Script>/hinted/ttf/NotoSerif<Script>-Regular.ttf`, and for Arabic
+  `fonts/NotoNaskhArabic/hinted/ttf/NotoNaskhArabic-Regular.ttf` (for example
+  [Noto Serif Devanagari](https://raw.githubusercontent.com/notofonts/notofonts.github.io/4cf78353cd1668040ba8efa13029cd910fcdf9e2/fonts/NotoSerifDevanagari/hinted/ttf/NotoSerifDevanagari-Regular.ttf)).
 - [Noto Sans KR variable TTF](https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/Variable/TTF/Subset/NotoSansKR-VF.ttf),
   from the same CJK commit.
 - [Noto Emoji variable TTF](https://raw.githubusercontent.com/google/fonts/c30b221beb0c1da59d563feb91ec8656a1fa972a/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf),
@@ -171,7 +195,7 @@ redistributing these assets.
   [OFL-NotoSerifCJK.txt](OFL-NotoSerifCJK.txt) is the unmodified
   [upstream license](https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif/LICENSE).
 
-- The other script faces, Credit Figure KR and Credit Figure Emoji:
+- The other sans and serif script faces, Credit Figure KR and Credit Figure Emoji:
   [OFL-NotoScripts.txt](OFL-NotoScripts.txt) lists each face's own copyright line
   above the license text. Credit Figure KR, like JP and SC, avoids the reserved
   font name "Source".

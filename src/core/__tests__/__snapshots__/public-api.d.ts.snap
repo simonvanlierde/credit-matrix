@@ -104,11 +104,11 @@ export declare class CreditMatrixElement extends HTMLElement {
 // figures.d.ts
 import { a as Author, n as HeatmapSvgOptions } from "./heatmap-svg.js";
 /**
- * A figure font face: Latin, Japanese and Simplified Chinese in sans and serif, one sans face per other
- * script, and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays out the
- * complex scripts, fetched the same way.
+ * A figure font face: Latin, Japanese, Simplified Chinese and the other scripts in sans and serif (Korean
+ * in sans only), and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays
+ * out the complex scripts, fetched the same way.
  */
-type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif-sc" | "sans-kr" | "sans-arabic" | "sans-armenian" | "sans-bengali" | "sans-devanagari" | "sans-ethiopic" | "sans-georgian" | "sans-gujarati" | "sans-gurmukhi" | "sans-hebrew" | "sans-kannada" | "sans-khmer" | "sans-lao" | "sans-malayalam" | "sans-myanmar" | "sans-oriya" | "sans-sinhala" | "sans-tamil" | "sans-telugu" | "sans-thai" | "emoji" | "harfbuzz";
+type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif-sc" | "sans-kr" | "sans-arabic" | "sans-armenian" | "sans-bengali" | "sans-devanagari" | "sans-ethiopic" | "sans-georgian" | "sans-gujarati" | "sans-gurmukhi" | "sans-hebrew" | "sans-kannada" | "sans-khmer" | "sans-lao" | "sans-malayalam" | "sans-myanmar" | "sans-oriya" | "sans-sinhala" | "sans-tamil" | "sans-telugu" | "sans-thai" | "serif-arabic" | "serif-armenian" | "serif-bengali" | "serif-devanagari" | "serif-ethiopic" | "serif-georgian" | "serif-gujarati" | "serif-gurmukhi" | "serif-hebrew" | "serif-kannada" | "serif-khmer" | "serif-lao" | "serif-malayalam" | "serif-myanmar" | "serif-oriya" | "serif-sinhala" | "serif-tamil" | "serif-telugu" | "serif-thai" | "emoji" | "harfbuzz";
 /**
  * Returns the bytes of one face (TrueType, or WebAssembly for `harfbuzz`); `createFigureRenderer` calls it
  * the first time a figure needs that face.

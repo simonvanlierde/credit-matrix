@@ -1,9 +1,9 @@
 // biome-ignore-all lint/security/noSecrets: SHA-256 hashes of the public font files, not credentials.
 
 /**
- * A figure font face: Latin, Japanese and Simplified Chinese in sans and serif, one sans face per other
- * script, and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays out the
- * complex scripts, fetched the same way.
+ * A figure font face: Latin, Japanese, Simplified Chinese and the other scripts in sans and serif (Korean
+ * in sans only), and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays
+ * out the complex scripts, fetched the same way.
  */
 export type FigureFace =
   | "sans"
@@ -32,6 +32,25 @@ export type FigureFace =
   | "sans-tamil"
   | "sans-telugu"
   | "sans-thai"
+  | "serif-arabic"
+  | "serif-armenian"
+  | "serif-bengali"
+  | "serif-devanagari"
+  | "serif-ethiopic"
+  | "serif-georgian"
+  | "serif-gujarati"
+  | "serif-gurmukhi"
+  | "serif-hebrew"
+  | "serif-kannada"
+  | "serif-khmer"
+  | "serif-lao"
+  | "serif-malayalam"
+  | "serif-myanmar"
+  | "serif-oriya"
+  | "serif-sinhala"
+  | "serif-tamil"
+  | "serif-telugu"
+  | "serif-thai"
   | "emoji"
   | "harfbuzz";
 
@@ -148,6 +167,82 @@ export const FIGURE_FONT_FILES: Record<FigureFace, { file: string; sha256: strin
   "sans-thai": {
     file: "NotoSansThai-Regular.ttf",
     sha256: "61cf814eec46b294d6ea4401ac295d0cecd5207bd2331dcc5a15e7301d30ee44",
+  },
+  "serif-arabic": {
+    file: "NotoNaskhArabic-Regular.ttf",
+    sha256: "6f0a92031367b2f5a2078fe9d24f3433122b61a0bad57c423aad8f3c39aa2e6e",
+  },
+  "serif-armenian": {
+    file: "NotoSerifArmenian-Regular.ttf",
+    sha256: "6dc71b17c55d398c7cc88edeec527292ba1e0573b033ac2136c636ab36c27d76",
+  },
+  "serif-bengali": {
+    file: "NotoSerifBengali-Regular.ttf",
+    sha256: "c1743dce480147e4563e479ddc31d5ff6544372437428622a54c7c867c50f55b",
+  },
+  "serif-devanagari": {
+    file: "NotoSerifDevanagari-Regular.ttf",
+    sha256: "e272d11d271c61a8d5d0f65764fd368ae53b9f9dabcce244a8941aa8f32ccc70",
+  },
+  "serif-ethiopic": {
+    file: "NotoSerifEthiopic-Regular.ttf",
+    sha256: "4d14f10b7436e762d41ddd9486acdc708744bf377a575d855b81b847b9590779",
+  },
+  "serif-georgian": {
+    file: "NotoSerifGeorgian-Regular.ttf",
+    sha256: "e222862f34ad05bdf950de1049abf6149d250b9e27c1cc482dd645412afb64ff",
+  },
+  "serif-gujarati": {
+    file: "NotoSerifGujarati-Regular.ttf",
+    sha256: "b8961ff6faf8e5561e3d0109953c4a9798e9bb8e8d48f66c3d1ef038fe45c940",
+  },
+  "serif-gurmukhi": {
+    file: "NotoSerifGurmukhi-Regular.ttf",
+    sha256: "5ef2d04a6d6fd22959989d14148dcf0ffbb970cc35e6316ba63cd5c146f32667",
+  },
+  "serif-hebrew": {
+    file: "NotoSerifHebrew-Regular.ttf",
+    sha256: "dfd5a6aefe97a99f68fe43388342913d50bb9fbf6d3afc4d2c7725661bc4a2b1",
+  },
+  "serif-kannada": {
+    file: "NotoSerifKannada-Regular.ttf",
+    sha256: "95a78c95359dc59b9ec56bdc5bdf8a9642394d2ef87ded945fb3885893b3eac6",
+  },
+  "serif-khmer": {
+    file: "NotoSerifKhmer-Regular.ttf",
+    sha256: "ef0612212c7417da732dd43c744abf66f4f62c45d4f8962e42c8553230e0da2a",
+  },
+  "serif-lao": {
+    file: "NotoSerifLao-Regular.ttf",
+    sha256: "a8d38866520f3c96d0e0e43f079f16c72ae4963bbabdf21cae26092c7cb65ec7",
+  },
+  "serif-malayalam": {
+    file: "NotoSerifMalayalam-Regular.ttf",
+    sha256: "45c34ac8c169a37a4fbb5b8fbf507def328bbf36180b08095726d460d577ec1d",
+  },
+  "serif-myanmar": {
+    file: "NotoSerifMyanmar-Regular.ttf",
+    sha256: "fe1a5f1c9cafab515e89e20f884aee3681ccd9f3f2e7bf357c6758d9268535a5",
+  },
+  "serif-oriya": {
+    file: "NotoSerifOriya-Regular.ttf",
+    sha256: "c674ab8038d1e51e783fdd7192fd39ae8a2aa48701589955bdabd627c0c3eb13",
+  },
+  "serif-sinhala": {
+    file: "NotoSerifSinhala-Regular.ttf",
+    sha256: "0d5a63d34ed378e345ec96021d72385c8e288ecd0ea36511a329aed448ede375",
+  },
+  "serif-tamil": {
+    file: "NotoSerifTamil-Regular.ttf",
+    sha256: "8a8cb015a3afec2998e01aabcb42fb365994132d95dbc2150208b4fefd8dc2e4",
+  },
+  "serif-telugu": {
+    file: "NotoSerifTelugu-Regular.ttf",
+    sha256: "2b376e0351fb140f2edad9c54e8977f4f1effc4fe72443e152b3f6ad392c6f5f",
+  },
+  "serif-thai": {
+    file: "NotoSerifThai-Regular.ttf",
+    sha256: "747b5bb1fdd329850ddd3218d872a3d2a96ab0dd544f51e5300c6d1b12071b62",
   },
   emoji: {
     file: "CreditFigureEmoji.ttf",

@@ -2,6 +2,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
+import { FIGURE_FONT_FILES } from "./core/figure-fonts";
 
 // Vitest runs from the repository root.
 const folder = "src/fonts";
@@ -12,7 +13,11 @@ it("publishes index.js's faces, the licences and the readme, and nothing else", 
   const faces = [...readFileSync(`${folder}/index.js`, "utf8").matchAll(/new URL\("\.\/([^"]+)"/g)].map(
     ([, file]) => file,
   );
-  expect(faces).toHaveLength(28);
+  expect(faces.sort()).toEqual(
+    Object.values(FIGURE_FONT_FILES)
+      .map(({ file }) => file)
+      .sort(),
+  );
   const expected = new Set([
     ...faces,
     "index.js",

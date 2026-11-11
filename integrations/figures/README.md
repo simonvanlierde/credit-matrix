@@ -43,10 +43,11 @@ support.
 
 Portable exports use regular Noto Sans and Noto Serif, plus Credit Figure JP, SC, Serif JP and
 Serif SC, derived from the corresponding Noto Japanese and Simplified Chinese families. The fonts
-cover all nine output languages. Names in other scripts get one sans face per script, in sans and
-serif figures alike: Korean, monochrome emoji, Arabic, Armenian, Bengali, Devanagari, Ethiopic,
+cover all nine output languages. Names in Arabic, Armenian, Bengali, Devanagari, Ethiopic,
 Georgian, Gujarati, Gurmukhi, Hebrew, Kannada, Khmer, Lao, Malayalam, Myanmar, Oriya, Sinhala,
-Tamil, Telugu and Thai. HarfBuzz lays out the complex scripts, and PDF orders right-to-left text
+Tamil, Telugu and Thai get a Noto Sans face for that script in sans figures and a Noto Serif face
+(Noto Naskh Arabic for Arabic) in serif figures. Korean and monochrome emoji have one face, used in
+sans and serif figures alike. HarfBuzz lays out the complex scripts, and PDF orders right-to-left text
 with the Unicode bidi algorithm, left to right as the base, as SVG viewers do. A face loads only
 when a figure needs it, so a Latin figure loads none of them. SVG embeds a complex-script face whole
 (up to 370 kB, 870 kB for emoji) so viewers keep its shaping tables; in PDF, each shaped run carries

@@ -95,35 +95,38 @@ const SOURCES: FontSource[] = [
 const EMOJI: FontSource = { family: "Credit Figure Emoji", face: "emoji", shaped: true };
 const KEYCAP = /^[\d#*]\ufe0f?\u20e3/u;
 
-// One sans face per other script, for sans and serif figures alike. Fontkit draws Hangul, as it does CJK.
-const SCRIPT_FACES: [RegExp, FontSource][] = [
-  [/\p{Script=Hangul}/u, { family: "Credit Figure KR", face: "sans-kr" }],
-  [/[\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Regional_Indicator}]/u, EMOJI],
+// Each other script's face, sans and serif; Korean has only its sans face, used in serif figures too.
+// Fontkit draws Hangul, as it does CJK.
+const KOREAN: FontSource = { family: "Credit Figure KR", face: "sans-kr" };
+const SCRIPT_FACES: [RegExp, sans: FontSource, serif: FontSource][] = [
+  [/\p{Script=Hangul}/u, KOREAN, KOREAN],
+  [/[\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Regional_Indicator}]/u, EMOJI, EMOJI],
   ...(
     [
-      ["Arabic", "sans-arabic"],
-      ["Armenian", "sans-armenian"],
-      ["Bengali", "sans-bengali"],
-      ["Devanagari", "sans-devanagari"],
-      ["Ethiopic", "sans-ethiopic"],
-      ["Georgian", "sans-georgian"],
-      ["Gujarati", "sans-gujarati"],
-      ["Gurmukhi", "sans-gurmukhi"],
-      ["Hebrew", "sans-hebrew"],
-      ["Kannada", "sans-kannada"],
-      ["Khmer", "sans-khmer"],
-      ["Lao", "sans-lao"],
-      ["Malayalam", "sans-malayalam"],
-      ["Myanmar", "sans-myanmar"],
-      ["Oriya", "sans-oriya"],
-      ["Sinhala", "sans-sinhala"],
-      ["Tamil", "sans-tamil"],
-      ["Telugu", "sans-telugu"],
-      ["Thai", "sans-thai"],
+      ["Arabic", "sans-arabic", "Noto Naskh Arabic", "serif-arabic"],
+      ["Armenian", "sans-armenian", "Noto Serif Armenian", "serif-armenian"],
+      ["Bengali", "sans-bengali", "Noto Serif Bengali", "serif-bengali"],
+      ["Devanagari", "sans-devanagari", "Noto Serif Devanagari", "serif-devanagari"],
+      ["Ethiopic", "sans-ethiopic", "Noto Serif Ethiopic", "serif-ethiopic"],
+      ["Georgian", "sans-georgian", "Noto Serif Georgian", "serif-georgian"],
+      ["Gujarati", "sans-gujarati", "Noto Serif Gujarati", "serif-gujarati"],
+      ["Gurmukhi", "sans-gurmukhi", "Noto Serif Gurmukhi", "serif-gurmukhi"],
+      ["Hebrew", "sans-hebrew", "Noto Serif Hebrew", "serif-hebrew"],
+      ["Kannada", "sans-kannada", "Noto Serif Kannada", "serif-kannada"],
+      ["Khmer", "sans-khmer", "Noto Serif Khmer", "serif-khmer"],
+      ["Lao", "sans-lao", "Noto Serif Lao", "serif-lao"],
+      ["Malayalam", "sans-malayalam", "Noto Serif Malayalam", "serif-malayalam"],
+      ["Myanmar", "sans-myanmar", "Noto Serif Myanmar", "serif-myanmar"],
+      ["Oriya", "sans-oriya", "Noto Serif Oriya", "serif-oriya"],
+      ["Sinhala", "sans-sinhala", "Noto Serif Sinhala", "serif-sinhala"],
+      ["Tamil", "sans-tamil", "Noto Serif Tamil", "serif-tamil"],
+      ["Telugu", "sans-telugu", "Noto Serif Telugu", "serif-telugu"],
+      ["Thai", "sans-thai", "Noto Serif Thai", "serif-thai"],
     ] as const
-  ).map(([script, face]): [RegExp, FontSource] => [
+  ).map(([script, face, serifFamily, serifFace]): [RegExp, FontSource, FontSource] => [
     new RegExp(`\\p{Script=${script}}`, "u"),
     { family: `Noto Sans ${script}`, face, shaped: true },
+    { family: serifFamily, face: serifFace, shaped: true },
   ]),
 ];
 
@@ -404,7 +407,8 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
   }
 
   function textRuns(text: string, options?: FigureSvgOptions, unavailable?: Set<FontSource>): TextRun[] {
-    const [latin, japanese, chinese] = options?.font === "serif" ? SOURCES.slice(3) : SOURCES.slice(0, 3);
+    const serif = options?.font === "serif";
+    const [latin, japanese, chinese] = serif ? SOURCES.slice(3) : SOURCES.slice(0, 3);
     const locale = options?.locale?.toLowerCase() ?? "";
     const normalized = text.normalize("NFC");
     // Han is shared by Japanese and Chinese: kana or a Japanese locale selects Japanese glyph forms.
@@ -443,7 +447,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       // A keycap (1️⃣) is a digit, #, or * the emoji face composes with the marks that follow it.
       const script = KEYCAP.test(normalized.slice(index))
         ? EMOJI
-        : SCRIPT_FACES.find(([pattern]) => pattern.test(character))?.[1];
+        : SCRIPT_FACES.find(([pattern]) => pattern.test(character))?.[serif ? 2 : 1];
       // Emoji last: a text-default symbol (❤, ☺, ✌) keeps its text glyph where another face has one.
       const order = [
         ...(script ? [script] : []),

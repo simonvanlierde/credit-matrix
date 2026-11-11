@@ -10,7 +10,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Heatmap SVG and PDF exports draw names in Korean, Thai, Arabic, Hebrew, the Indic scripts
   (Devanagari, Bengali, Tamil and nine more), Armenian, Georgian, Ethiopic, Khmer, Lao, Myanmar and
-  Sinhala, and monochrome emoji, so these names now export to PDF. HarfBuzz shapes the complex
+  Sinhala, and monochrome emoji, so these names now export to PDF. Serif figures draw these scripts
+  in Noto Serif faces (Noto Naskh Arabic for Arabic), except Korean and emoji, which keep their one
+  face. HarfBuzz shapes the complex
   scripts in PDF, and right-to-left names follow the Unicode bidi algorithm. Each face and the
   shaping engine load only for a figure that needs them. The app's CSP adds `'wasm-unsafe-eval'` to
   run HarfBuzz. See [Fonts and offline use](integrations/figures/README.md#fonts-and-offline-use).

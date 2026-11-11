@@ -65,6 +65,30 @@ describe("figures in every covered script", () => {
       ).toContain(name.normalize("NFC").replace("Ada ", ""));
   });
 
+  it.each([
+    { name: "محمد عبد الله", serif: "Noto Naskh Arabic", sans: "Noto Sans Arabic" },
+    { name: "प्रियंका शर्मा", serif: "Noto Serif Devanagari", sans: "Noto Sans Devanagari" },
+    // Korean has no serif face, so serif figures keep the sans one.
+    { name: "김민준", serif: "Credit Figure KR", sans: "Credit Figure KR" },
+  ])(
+    "draws $name in a serif figure in its serif face, and in a sans one in its sans face",
+    async ({ name, serif, sans }) => {
+      const authors = [createAuthor(name, { contributions: [{ role: "Software", score: 100 }] })];
+      for (const [font, family] of [
+        ["serif", serif],
+        ["sans", sans],
+      ] as const) {
+        const figure = { ...options, font };
+        expect(await renderer.svg(authors, figure)).toContain(`font-family:'${family}'`);
+        if (!POPPLER) continue;
+        const pdf = await renderer.pdf(authors, figure);
+        const fonts = execFileSync("pdffonts", ["-"], { input: pdf, encoding: "utf8" });
+        expect(fonts).toContain(family.replaceAll(" ", ""));
+        if (font === "serif" && serif !== sans) expect(fonts).not.toContain(sans.replaceAll(" ", ""));
+      }
+    },
+  );
+
   it("keeps an emoji between right-to-left words neutral, as browsers do", async () => {
     const authors = [createAuthor("محمد 😀 علي", { contributions: [{ role: "Software", score: 100 }] })];
     const pdf = await renderer.pdf(authors, options);
