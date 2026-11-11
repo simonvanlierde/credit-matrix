@@ -1779,3 +1779,21 @@ msgstr "Cada coautor recebe uma ligação para a sua própria coluna. As respost
 
 msgid "shareCopyTitle"
 msgstr "Ou enviar uma cópia do rascunho"
+
+msgid "guideTitle"
+msgstr "Primeiros passos"
+
+msgid "guideStepRoles"
+msgstr "Assinale as funções"
+
+msgid "guideStepAsk"
+msgstr "Pedir aos coautores"
+
+msgid "guideStepCopy"
+msgstr "Copie a declaração"
+
+msgid "guideDone"
+msgstr "concluído"
+
+msgid "guideDismiss"
+msgstr "Ocultar primeiros passos"

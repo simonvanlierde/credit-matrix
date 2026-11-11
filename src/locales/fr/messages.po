@@ -1779,3 +1779,21 @@ msgstr "Chaque coauteur reçoit un lien vers sa propre colonne. Ses réponses re
 
 msgid "shareCopyTitle"
 msgstr "Ou envoyer une copie du brouillon"
+
+msgid "guideTitle"
+msgstr "Premiers pas"
+
+msgid "guideStepRoles"
+msgstr "Cochez leurs rôles"
+
+msgid "guideStepAsk"
+msgstr "Demander aux coauteurs"
+
+msgid "guideStepCopy"
+msgstr "Copiez la déclaration"
+
+msgid "guideDone"
+msgstr "fait"
+
+msgid "guideDismiss"
+msgstr "Masquer les premiers pas"

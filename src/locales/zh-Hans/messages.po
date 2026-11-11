@@ -1779,3 +1779,21 @@ msgstr "每位合著者都会收到一个指向自己那一列的链接。他们
 
 msgid "shareCopyTitle"
 msgstr "或发送草稿副本"
+
+msgid "guideTitle"
+msgstr "入门"
+
+msgid "guideStepRoles"
+msgstr "勾选各自的角色"
+
+msgid "guideStepAsk"
+msgstr "请合著者确认"
+
+msgid "guideStepCopy"
+msgstr "复制声明"
+
+msgid "guideDone"
+msgstr "已完成"
+
+msgid "guideDismiss"
+msgstr "隐藏入门"

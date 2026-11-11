@@ -1,5 +1,5 @@
 import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
@@ -33,6 +33,7 @@ import { useDark } from "@/lib/use-dark";
 import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "@/store/contribution-store";
+import { useGuide } from "@/store/guide-store";
 import { ICON_TOOL_BUTTON } from "./grid-shared";
 
 type DataFormat =
@@ -123,6 +124,11 @@ export function StatementOutput() {
   const [copyStatus, copyText] = useCopyStatus({
     copied: t("annStatementCopied"),
   });
+  // The last step of the getting-started list: the statement has left the page once.
+  const markGuideCopied = useGuide((state) => state.markCopied);
+  useEffect(() => {
+    if (copyStatus === "copied") markGuideCopied();
+  }, [copyStatus, markGuideCopied]);
   // Separate status for the data-format Copy button, so feedback appears on
   // the button that was clicked rather than on the main statement copy.
   const [dataCopyStatus, copyDataText] = useCopyStatus({
@@ -427,6 +433,7 @@ export function StatementOutput() {
             copyText(() => copyRichText(statement, generateStatement(authors, { ...statementOptions, asHtml: true })))
           }
           disabled={!statement}
+          data-guide-target="copy"
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded bg-primary shadow-press px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:shadow-none"
         >
           <Copy className="h-[18px] w-[18px]" aria-hidden="true" />

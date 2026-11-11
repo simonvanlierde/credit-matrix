@@ -1779,3 +1779,21 @@ msgstr "Jede Mitautorin und jeder Mitautor erhält einen Link zur eigenen Spalte
 
 msgid "shareCopyTitle"
 msgstr "Oder eine Kopie des Entwurfs senden"
+
+msgid "guideTitle"
+msgstr "Erste Schritte"
+
+msgid "guideStepRoles"
+msgstr "Rollen ankreuzen"
+
+msgid "guideStepAsk"
+msgstr "Mitautoren fragen"
+
+msgid "guideStepCopy"
+msgstr "Erklärung kopieren"
+
+msgid "guideDone"
+msgstr "erledigt"
+
+msgid "guideDismiss"
+msgstr "Erste Schritte ausblenden"

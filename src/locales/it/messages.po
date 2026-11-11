@@ -1779,3 +1779,21 @@ msgstr "Ogni coautore riceve un link alla propria colonna. Le risposte tornano i
 
 msgid "shareCopyTitle"
 msgstr "Oppure invia una copia della bozza"
+
+msgid "guideTitle"
+msgstr "Primi passi"
+
+msgid "guideStepRoles"
+msgstr "Spunta i loro ruoli"
+
+msgid "guideStepAsk"
+msgstr "Chiedi ai coautori"
+
+msgid "guideStepCopy"
+msgstr "Copia la dichiarazione"
+
+msgid "guideDone"
+msgstr "fatto"
+
+msgid "guideDismiss"
+msgstr "Nascondi i primi passi"

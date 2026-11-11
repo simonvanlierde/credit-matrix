@@ -1779,3 +1779,21 @@ msgstr "Elke coauteur krijgt een link naar de eigen kolom. De antwoorden komen t
 
 msgid "shareCopyTitle"
 msgstr "Of stuur een kopie van het concept"
+
+msgid "guideTitle"
+msgstr "Aan de slag"
+
+msgid "guideStepRoles"
+msgstr "Vink hun rollen aan"
+
+msgid "guideStepAsk"
+msgstr "Coauteurs vragen"
+
+msgid "guideStepCopy"
+msgstr "Kopieer de verklaring"
+
+msgid "guideDone"
+msgstr "klaar"
+
+msgid "guideDismiss"
+msgstr "Aan de slag verbergen"

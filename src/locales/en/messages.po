@@ -1779,3 +1779,21 @@ msgstr "Each co-author gets a link to their own column. Their answers come back 
 
 msgid "shareCopyTitle"
 msgstr "Or send a copy of the draft"
+
+msgid "guideTitle"
+msgstr "Getting started"
+
+msgid "guideStepRoles"
+msgstr "Tick their roles"
+
+msgid "guideStepAsk"
+msgstr "Ask co-authors"
+
+msgid "guideStepCopy"
+msgstr "Copy the statement"
+
+msgid "guideDone"
+msgstr "done"
+
+msgid "guideDismiss"
+msgstr "Hide getting started"

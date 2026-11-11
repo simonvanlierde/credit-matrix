@@ -247,6 +247,12 @@ validation checks) a maximum height, so it can't push the workflow off the scree
 The first-run help sits over the workspace, not in a band of its own, which would take that
 height for good and shift the page when closed.
 
+After that, a one-line "Getting started" checklist heads the status strip: tick roles, ask
+co-authors, copy the statement. It ticks itself from the draft, never from a Next button, and the
+next step's control (Ask co-authors, Copy statement) carries a ring in the accent that pulses three
+times and then holds; under reduced motion it only holds. It never takes focus or blocks the page,
+and it is gone for good once every step is done or it is closed.
+
 On touch, every control takes a 44px tap. Grow a small control's tap area with the `hit-area`
 class rather than its size, so the desktop density stays. On a phone the picker for the
 contributor carries their live statement line, which links down to the full statement.

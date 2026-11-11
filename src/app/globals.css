@@ -575,3 +575,25 @@ html[data-welcome-skip] dialog[data-first-run]:not([open]) {
     animation-timing-function: steps(1, end) !important;
   }
 }
+
+/* Getting started: the next step's control carries a ring while it is next (GettingStarted.tsx).
+   It pulses three times, then stays as a still ring; reduced motion gets the still ring only. */
+:root[data-guide="ask"] [data-guide-target="ask"],
+:root[data-guide="copy"] [data-guide-target="copy"] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  animation: guide-pulse 1.6s var(--ease-out, ease-out) 3;
+}
+
+@keyframes guide-pulse {
+  70% {
+    outline-color: transparent;
+    outline-offset: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-guide] [data-guide-target] {
+    animation: none;
+  }
+}

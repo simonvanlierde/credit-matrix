@@ -25,6 +25,7 @@ import { useDark } from "@/lib/use-dark";
 import { useSettled } from "@/lib/use-settled";
 import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
+import { GettingStarted } from "./GettingStarted";
 import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
 import { MobileRoleList } from "./MobileRoleList";
@@ -413,6 +414,7 @@ export function ContributionGrid() {
         <h2 id="contributions-heading" className="sr-only">
           {t("stepContributions")}
         </h2>
+        {!locked && <GettingStarted asked={summary.asked} />}
         {!locked && (
           <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
             {/* Until someone is asked there is nothing to count, only the way to ask. */}
@@ -465,7 +467,12 @@ export function ContributionGrid() {
               </>
             ) : (
               // A labelled tool button, not a link: asking co-authors is the draft's next step.
-              <button type="button" onClick={() => openInspector("team")} className={TOOL_BUTTON}>
+              <button
+                type="button"
+                onClick={() => openInspector("team")}
+                className={TOOL_BUTTON}
+                data-guide-target="ask"
+              >
                 <Send aria-hidden="true" className="size-3.5" />
                 {t("stripOpenTeam")}
               </button>

@@ -1779,3 +1779,21 @@ msgstr "共著者ごとに、自分の列へのリンクが届きます。回答
 
 msgid "shareCopyTitle"
 msgstr "または下書きのコピーを送る"
+
+msgid "guideTitle"
+msgstr "はじめに"
+
+msgid "guideStepRoles"
+msgstr "役割にチェック"
+
+msgid "guideStepAsk"
+msgstr "共著者に依頼"
+
+msgid "guideStepCopy"
+msgstr "声明をコピー"
+
+msgid "guideDone"
+msgstr "完了"
+
+msgid "guideDismiss"
+msgstr "はじめにを隠す"
