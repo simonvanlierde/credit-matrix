@@ -44,12 +44,15 @@ test("saves figure styling independently from the editable contribution grid", a
   await page.setViewportSize({ width: 1440, height: 1000 });
   const cells = page.locator("[data-cell]");
   const assignments = await cells.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
+  // The colour is the grid's: picked in its options, drawn by the figure.
+  await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+  await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   await page.getByRole("combobox", { name: "Legend", exact: true }).click();
   await page.getByRole("option", { name: "Hidden", exact: true }).click();
   await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
-  await page.getByRole("button", { name: "Grayscale", exact: true }).click();
   await page.getByText("Advanced", { exact: true }).click();
   await page.getByRole("radio", { name: "Serif", exact: true }).click();
   await page.getByRole("radio", { name: "Circle", exact: true }).click();
@@ -124,7 +127,7 @@ test("clears copied-image status when the figure or PNG dimensions change", asyn
   const copied = page.getByRole("button", { name: "Copied", exact: true });
   await copy.click();
   await expect(copied).toBeVisible();
-  await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+  await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
   await expect(copy).toBeVisible();
   await copy.click();
   await expect(copied).toBeVisible();
@@ -378,7 +381,7 @@ test.describe("touch-screen previews", () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
       expect((await scan(page)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-      await expect(page.getByRole("radiogroup", { name: "Orientation", exact: true })).toBeInViewport();
+      await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toBeInViewport();
       expect((await scan(page)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
       await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });
@@ -425,9 +428,11 @@ for (const width of [1440, 320]) {
         },
       });
     });
+    await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+    await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+    await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Heatmap", exact: true }).click();
     await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-    await page.getByRole("button", { name: "Grayscale", exact: true }).click();
     await page.getByText("Export recipe", { exact: true }).click();
     const recipe = page.getByRole("textbox", { name: "Export recipe", exact: true });
     await expect(recipe).toBeVisible();

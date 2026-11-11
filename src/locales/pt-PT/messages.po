@@ -1658,6 +1658,9 @@ msgstr "Escala de cinzentos"
 msgid "heatmapPaleColor"
 msgstr "O nível de apoio é difícil de distinguir com esta cor. Escolha um tom mais escuro."
 
+msgid "heatmapFollowsGrid"
+msgstr "A cor, a orientação e as iniciais seguem as Opções do mapa de calor da grelha."
+
 msgid "settingsReset"
 msgstr "Repor"
 
@@ -1775,8 +1778,6 @@ msgstr "Oculta"
 msgid "heatmapCellMarks"
 msgstr "Mostrar marcas de contribuição"
 
-msgid "heatmapMarksHint"
-msgstr "Ativa as marcas para distinguir os níveis de contribuição também de outra forma."
 
 msgid "shareAskTitle"
 msgstr "Pedir aos coautores que verifiquem as suas funções"

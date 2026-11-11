@@ -75,9 +75,11 @@ describe("HeatmapExports", () => {
     expect(decodeURIComponent(preview.getAttribute("src") ?? "")).toContain("#00724c");
     expect(screen.queryByText(/Colored per contributor/)).toBeNull();
 
-    // The figure settings edit the same value.
+    // Figure settings name where the colour lives instead of repeating the swatches.
     fireEvent.click(screen.getByRole("button", { name: "Figure settings" }));
-    fireEvent.click(screen.getByRole("button", { name: "Per contributor" }));
+    expect(screen.getByText(/follow the grid's Heatmap options/)).toBeTruthy();
+    expect(screen.queryAllByRole("button", { name: "Per contributor" })).toHaveLength(0);
+    act(() => useContributionStore.getState().setColorByContributor(true));
     expect(await screen.findByText(/Colored per contributor/)).toBeTruthy();
   }, 30_000);
 });

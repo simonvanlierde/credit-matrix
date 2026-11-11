@@ -144,9 +144,12 @@ excessive width, otherwise a wrapped key below. Allow Right, Below and Hidden ov
 on white paper, with fit-to-width and actual-size views and the PNG pixel dimensions.
 
 Figure settings belong beside that preview and are saved per draft, independently of contribution
-values. Colour, orientation and initials are the grid's own settings, stored once, so changing one
-in either panel changes both. Keep layout, labels, legend and colour together; put font and cell
-geometry under Advanced. Reset restores the defaults. On a narrow screen, settings
+values. Each setting has one home. Colour, orientation and initials change what the grid shows, so
+they live only in the grid's Heatmap options; the figure draws them, and Figure settings says so in
+one line. Figure settings hold only what the figure alone has: legend, role labels, empty roles,
+levels and marks, with font and cell geometry under Advanced. Short role labels stay a figure
+option: the grid has room for the full names and their definitions, and a statement must use the
+official CRediT terms. Reset restores the figure's own defaults only. On a narrow screen, settings
 replace the preview until the person closes them; desktop shows both side by side.
 Keep export recipes behind a disclosure in Figure settings. Show a selectable snippet and copy
 action for the chosen document tool, with any differences from the preview beside the snippet.
@@ -327,7 +330,9 @@ one vocabulary, built from `src/components/ui/settings-panel.tsx`. A panel opens
 `text-sm` semibold and a text Reset on the right. Sections have a short semibold label in sentence
 case, never letterspaced capitals, and a rule (`border-outline-variant/40`) between them. An on/off
 setting is a switch on the right with its label on the left; the whole row is the label. Two or three
-short options are a small segmented control with a label; four or more, or long labels, are a select.
+short options are a small segmented control with a label. A segmented control outside a panel is a
+mode that changes what the area beside it does (Yes / no or Levels, By author or By role) and stands
+36 px tall like the toolbar buttons next to it; four or more, or long labels, are a select.
 Numbers keep the figure number field. Colour is one row of swatches: *Per contributor* first (a
 conic gradient of the contributor hues), the preset hues, then *Custom*. A pressed swatch shows a
 ring and a check, and the chosen one is named beside the label. Small popovers are `w-72`; Figure

@@ -1658,6 +1658,9 @@ msgstr "灰度"
 msgid "heatmapPaleColor"
 msgstr "此颜色下难以区分支持级贡献。请尝试更深的颜色。"
 
+msgid "heatmapFollowsGrid"
+msgstr "颜色、方向和首字母缩写沿用网格的“热图选项”。"
+
 msgid "settingsReset"
 msgstr "重置"
 
@@ -1775,8 +1778,6 @@ msgstr "隐藏"
 msgid "heatmapCellMarks"
 msgstr "显示贡献标记"
 
-msgid "heatmapMarksHint"
-msgstr "启用标记后，还可以通过标记区分贡献等级。"
 
 msgid "shareAskTitle"
 msgstr "请合著者核对各自的角色"

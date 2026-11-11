@@ -1658,6 +1658,9 @@ msgstr "Escala de grises"
 msgid "heatmapPaleColor"
 msgstr "El nivel de apoyo se distingue mal con este color. Elija un tono más oscuro."
 
+msgid "heatmapFollowsGrid"
+msgstr "El color, la orientación y las iniciales siguen las Opciones del mapa de calor de la cuadrícula."
+
 msgid "settingsReset"
 msgstr "Restablecer"
 
@@ -1775,8 +1778,6 @@ msgstr "Oculta"
 msgid "heatmapCellMarks"
 msgstr "Mostrar marcas de contribución"
 
-msgid "heatmapMarksHint"
-msgstr "Activa las marcas para distinguir los niveles de contribución de otra forma."
 
 msgid "shareAskTitle"
 msgstr "Pide a los coautores que revisen sus roles"

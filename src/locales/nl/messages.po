@@ -1658,6 +1658,9 @@ msgstr "Grijstinten"
 msgid "heatmapPaleColor"
 msgstr "Ondersteunend is moeilijk te onderscheiden in deze kleur. Kies een donkerdere tint."
 
+msgid "heatmapFollowsGrid"
+msgstr "Kleur, oriëntatie en initialen volgen de Heatmap-opties bij het raster."
+
 msgid "settingsReset"
 msgstr "Herstellen"
 
@@ -1775,8 +1778,6 @@ msgstr "Verborgen"
 msgid "heatmapCellMarks"
 msgstr "Bijdragemarkeringen tonen"
 
-msgid "heatmapMarksHint"
-msgstr "Schakel markeringen in om de bijdrageniveaus ook op een andere manier te onderscheiden."
 
 msgid "shareAskTitle"
 msgstr "Vraag coauteurs hun rollen te controleren"

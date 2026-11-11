@@ -1658,6 +1658,9 @@ msgstr "Niveaux de gris"
 msgid "heatmapPaleColor"
 msgstr "Le niveau de soutien se distingue mal avec cette couleur. Choisissez une teinte plus sombre."
 
+msgid "heatmapFollowsGrid"
+msgstr "La couleur, l'orientation et les initiales suivent les Options de la heatmap de la grille."
+
 msgid "settingsReset"
 msgstr "Réinitialiser"
 
@@ -1775,8 +1778,6 @@ msgstr "Masquée"
 msgid "heatmapCellMarks"
 msgstr "Afficher les marques de contribution"
 
-msgid "heatmapMarksHint"
-msgstr "Activez les marques pour distinguer les niveaux de contribution autrement que par les nuances."
 
 msgid "shareAskTitle"
 msgstr "Demander aux coauteurs de vérifier leurs rôles"

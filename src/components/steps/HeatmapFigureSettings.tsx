@@ -1,16 +1,7 @@
 import { useState } from "react";
-import { useShallow } from "zustand/react/shallow";
-import {
-  ColorSwatches,
-  SettingChoice,
-  SettingSwitch,
-  SettingsPanel,
-  SettingsSection,
-} from "@/components/ui/settings-panel";
-import { contrastRatio, heatCellColor } from "@/core/contributor-color";
+import { SettingChoice, SettingSwitch, SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
 import { DEFAULT_HEATMAP_SETTINGS, type HeatmapFigureSettings as FigureSettings } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
-import { useContributionStore } from "@/store/contribution-store";
 
 export function HeatmapFigureSettings({
   value,
@@ -21,43 +12,11 @@ export function HeatmapFigureSettings({
 }) {
   const t = useTranslations();
   const patch = (change: Partial<FigureSettings>) => onChange({ ...value, ...change });
-  // Colour, orientation and initials are the grid's too: one value, edited here and in its popover.
-  const { color, setColor, colorBy, setColorBy, transpose, setTranspose, initials, setInitials, resetGridView } =
-    useContributionStore(
-      useShallow((s) => ({
-        color: s.heatmapMonoColor,
-        setColor: s.setHeatmapMonoColor,
-        colorBy: s.colorByContributor,
-        setColorBy: s.setColorByContributor,
-        transpose: s.transpose,
-        setTranspose: s.setTranspose,
-        initials: s.initials,
-        setInitials: s.setInitials,
-        resetGridView: s.resetGridView,
-      })),
-    );
-  const pale =
-    !colorBy &&
-    /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) &&
-    contrastRatio(heatCellColor(color, 33), heatCellColor(color, 0)) < 1.5;
   return (
-    <SettingsPanel
-      title={t("heatmapFigureSettings")}
-      onReset={() => {
-        resetGridView();
-        onChange({ ...DEFAULT_HEATMAP_SETTINGS });
-      }}
-    >
+    <SettingsPanel title={t("heatmapFigureSettings")} onReset={() => onChange({ ...DEFAULT_HEATMAP_SETTINGS })}>
+      {/* One home per setting: what the grid shows lives in its options, and the figure draws it. */}
+      <p className="text-on-surface-variant">{t("heatmapFollowsGrid")}</p>
       <SettingsSection label={t("heatmapLayout")}>
-        <SettingChoice
-          label={t("heatmapOrientation")}
-          value={transpose ? "contributors" : "roles"}
-          onChange={(next) => setTranspose(next === "contributors")}
-          options={[
-            ["roles", t("heatmapRolesInRows")],
-            ["contributors", t("heatmapContributorsInRows")],
-          ]}
-        />
         <SettingChoice
           label={t("heatmapLegendPosition")}
           value={value.legend ? value.legendPosition : "hidden"}
@@ -80,7 +39,6 @@ export function HeatmapFigureSettings({
             ["short", t("heatmapShortLabels")],
           ]}
         />
-        <SettingSwitch label={t("useInitials")} checked={initials} onChange={setInitials} />
         <SettingSwitch
           label={t("heatmapHideUnused")}
           checked={value.skipempty}
@@ -89,16 +47,7 @@ export function HeatmapFigureSettings({
         <SettingSwitch label={t("heatmapShowLevels")} checked={value.levels} onChange={(levels) => patch({ levels })} />
         <SettingSwitch label={t("heatmapCellMarks")} checked={value.marks} onChange={(marks) => patch({ marks })} />
         {!value.legend && <p className="text-on-surface-variant">{t("heatmapLegendHint")}</p>}
-        {!value.marks && <p className="text-on-surface-variant">{t("heatmapMarksHint")}</p>}
       </SettingsSection>
-      <ColorSwatches
-        label={t("colorLabel")}
-        color={color}
-        perContributor={colorBy}
-        onColor={setColor}
-        onPerContributor={() => setColorBy(true)}
-      />
-      {pale && <p className="text-on-surface-variant">{t("heatmapPaleColor")}</p>}
       <details className="border-t border-outline-variant/40 pt-3">
         <summary className="min-h-6 cursor-pointer font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
           {t("heatmapAdvanced")}

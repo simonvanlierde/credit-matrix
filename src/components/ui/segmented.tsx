@@ -37,7 +37,12 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={ariaLabel}
       onKeyDown={(event) => moveRadioSelection(event, options, selected, (next) => onChange(next.value))}
-      className={cn("inline-flex overflow-hidden rounded border border-edge bg-surface-bright", className)}
+      // md matches the toolbar's 36 px buttons beside it.
+      className={cn(
+        "inline-flex overflow-hidden rounded border border-edge bg-surface-bright",
+        size === "md" && "min-h-9",
+        className,
+      )}
     >
       {options.map(({ value: optionValue, label, title }, index) => {
         const active = value === optionValue;

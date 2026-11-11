@@ -1658,6 +1658,9 @@ msgstr "Graustufen"
 msgid "heatmapPaleColor"
 msgstr "Unterstützend ist mit dieser Farbe schwer zu erkennen. Wählen Sie einen dunkleren Farbton."
 
+msgid "heatmapFollowsGrid"
+msgstr "Farbe, Ausrichtung und Initialen folgen den Heatmap-Optionen am Raster."
+
 msgid "settingsReset"
 msgstr "Zurücksetzen"
 
@@ -1775,8 +1778,6 @@ msgstr "Ausgeblendet"
 msgid "heatmapCellMarks"
 msgstr "Beitragsmarkierungen anzeigen"
 
-msgid "heatmapMarksHint"
-msgstr "Aktiviere Markierungen, um Beitragsstufen zusätzlich unterscheiden zu können."
 
 msgid "shareAskTitle"
 msgstr "Mitautoren ihre Rollen prüfen lassen"

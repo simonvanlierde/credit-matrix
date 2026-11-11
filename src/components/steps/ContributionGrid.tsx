@@ -15,7 +15,14 @@ import {
 import { UndoBar } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES, type CreditRoleName, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
-import { contributorHue, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
+import {
+  contrastRatio,
+  contributorHue,
+  contributorHues,
+  heatCellColor,
+  onColor,
+  pageMarkColor,
+} from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useLocale, useTranslations } from "@/lib/translations";
@@ -351,6 +358,11 @@ export function ContributionGrid() {
   // Each person's hue, by list position; one hue for all when the view says so.
   const hues = colorByContributor ? contributorHues(authors.length) : null;
   const hueOf = (author: Author) => hues?.[authors.indexOf(author)] ?? heatmapMonoColor;
+  // One hue whose lowest level barely differs from an empty cell: say so where the colour is picked.
+  const paleMono =
+    !colorByContributor &&
+    /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(heatmapMonoColor) &&
+    contrastRatio(heatCellColor(heatmapMonoColor, 33), heatCellColor(heatmapMonoColor, 0)) < 1.5;
 
   cellApi.current = {
     label: assignmentLabel,
@@ -558,6 +570,7 @@ export function ContributionGrid() {
                     onColor={setHeatmapMonoColor}
                     onPerContributor={() => setColorByContributor(true)}
                   />
+                  {paleMono && <p className="text-on-surface-variant">{t("heatmapPaleColor")}</p>}
                   <SettingsSection label={t("heatmapLayout")}>
                     <SettingChoice
                       label={t("heatmapOrientation")}

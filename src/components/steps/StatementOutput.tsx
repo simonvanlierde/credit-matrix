@@ -247,7 +247,6 @@ export function StatementOutput() {
         <span className="flex items-center gap-2">
           <SegmentedControl
             ariaLabel={t("a11yStatementGrouping")}
-            size="sm"
             value={grouping}
             onChange={setGrouping}
             options={[
