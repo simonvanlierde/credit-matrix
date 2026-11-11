@@ -145,8 +145,9 @@ points at the `v<version>` tag instead of `main`.
   and `statement.ts`). It changes the code one small edit at a time and runs the `core` tests
   against each change, to find code the tests run but do not check. The header of
   `test/mutation-baseline.txt` keeps the current score. It takes about 4 minutes with its 8
-  workers, so CI does not run it. Run
-  it on the Node version in `.node-version`: another version moves the score by about half a point. It
+  workers, so pull requests do not run it; the Mutation workflow runs it weekly, and from the
+  Actions tab with "Run workflow", and fails when the survivors differ from the list. Run it on
+  the Node version in `.node-version`: another version moves the score by about half a point. It
   writes an HTML report to `reports/mutation/` and the mutants no test kills to
   `test/mutation-baseline.txt`. Commit that list with your change, and look at what the diff
   adds: a new survivor is a test to write, or a change that does nothing. A survivor no test can

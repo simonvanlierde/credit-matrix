@@ -1,6 +1,7 @@
 /**
  * Mutation testing of the import and export code in src/core, run with `pnpm mutation`.
- * It is not a CI gate: test/mutation-baseline.txt lists the mutants no test kills.
+ * Not a pull-request gate: .github/workflows/mutation.yml runs it weekly and fails when the
+ * survivors differ from test/mutation-baseline.txt, which lists the mutants no test kills.
  * @type {import('@stryker-mutator/api/core').PartialStrykerOptions}
  */
 export default {
@@ -22,8 +23,19 @@ export default {
     "src/core/parse-authors.ts",
     "src/core/statement.ts",
   ],
-  // The statement tests read the census corpus, so census/tests stays in the sandbox.
-  ignorePatterns: ["census/*", "!census/tests", "e2e", "docs", "public", "integrations", "coverage", "reports"],
+  // The statement tests read the census corpus, and the heatmap option tests read the Typst
+  // library, so census/tests and integrations/typst stay in the sandbox.
+  ignorePatterns: [
+    "census/*",
+    "!census/tests",
+    "integrations/*",
+    "!integrations/typst",
+    "e2e",
+    "docs",
+    "public",
+    "coverage",
+    "reports",
+  ],
   reporters: ["clear-text", "progress", "json", "html"],
   jsonReporter: { fileName: "reports/mutation/mutation.json" },
   htmlReporter: { fileName: "reports/mutation/mutation.html" },
