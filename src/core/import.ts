@@ -165,14 +165,12 @@ function readPeople(field: unknown, contributorType: Author["contributorType"]):
     if (!entry || typeof entry !== "object") return [];
     const person = entry as Record<string, unknown>;
     if ((person["@type"] ?? person.type) === "Role") return [];
-    const name =
+    const name = (
       typeof person.name === "string"
-        ? person.name.trim()
-        : [person.givenName, person.familyName]
-            .filter((part) => typeof part === "string")
-            .join(" ")
-            .trim();
-    if (!name) return [];
+        ? person.name
+        : [person.givenName, person.familyName].filter((part) => typeof part === "string").join(" ")
+    ).replace(/\s+/g, " ");
+    if (!name.trim()) return [];
     const id = person["@id"] ?? person.id;
     const organization = (person["@type"] ?? person.type) === "Organization";
     const orcid = !organization && typeof id === "string" && isValidOrcid(id) ? normalizeOrcid(id) : undefined;

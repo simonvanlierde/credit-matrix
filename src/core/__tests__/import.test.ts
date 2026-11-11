@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MAX_AUTHORS } from "../author";
 import { toCsv } from "../export/csv";
 import { toMyst, toQuarto } from "../export/frontmatter";
@@ -29,6 +29,29 @@ describe("export-only formats", () => {
       await expect(importAny(make())).rejects.toThrow(/export-only/);
     },
   );
+
+  it.each([
+    ["author:"],
+    ["authors:  []"],
+    ["# Quarto\n# more\nauthor: []\n"],
+    ['{"@context":"https://w3id.org/ro/crate/1.1/context","@graph":[]}'],
+    ['{"@context" : "https://w3id.org/ro/crate/1.1/context"}'],
+  ])("refuses export-only text however it is spaced: %j", async (text) => {
+    await expect(importAny(text)).rejects.toBeInstanceOf(ExportOnlyError);
+  });
+
+  it("names the format, and the error class, in the refusal", async () => {
+    const yaml = await importAny("author:").catch((e) => e);
+    expect(yaml.name).toBe("ExportOnlyError");
+    expect(yaml.message).toBe("Quarto and MyST author YAML is export-only. Import the JSON export instead.");
+    const crate = await importAny('{"@context": "https://w3id.org/ro/crate/1.1/context"}').catch((e) => e);
+    expect(crate.message).toBe("An RO-Crate fragment is export-only. Import the JSON export instead.");
+  });
+
+  it("does not refuse an RO-Crate context that is not the start of a JSON object", async () => {
+    const text = 'see "@context": "https://w3id.org/ro/crate/1.1/context"';
+    expect(await importAny(text).catch((e) => e)).not.toBeInstanceOf(ExportOnlyError);
+  });
 
   it("still reads a name list that mentions an author key", async () => {
     expect((await importAny("Author: Jane Smith")).authors).toHaveLength(1);
@@ -107,6 +130,18 @@ describe("detectFormat", () => {
     expect(detectFormat(" \n ")).toBe("unknown");
   });
 
+  it("reads CITATION.cff only from a line of its own", () => {
+    expect(detectFormat("cff-version : 1.2.0\ntitle: x")).toBe("cff");
+    expect(detectFormat("title: x\ncff-version: 1.2.0")).toBe("cff");
+    expect(detectFormat("my-cff-version: 1.2.0")).not.toBe("cff");
+  });
+
+  it("reads a cut-off JSON array, however it is spaced, as JSON", () => {
+    expect(detectFormat('[\n  {"name": "Ada"')).toBe("json");
+    expect(detectFormat('[ "Ada", ')).toBe("json");
+    expect(detectFormat("[not json, {x")).not.toBe("json");
+  });
+
   it("reads a link only when the text is the link, over http too", () => {
     expect(detectFormat("http://localhost:3000/#s=abc")).toBe("link");
     expect(detectFormat("Jane Smith, see https://example.org/#s=abc")).toBe("names");
@@ -123,6 +158,18 @@ describe("detectFormat", () => {
 
 describe("importAny", () => {
   const names = (authors: { name: string }[]) => authors.map((a) => a.name);
+
+  it("hands the Crossref reader the XML parser", async () => {
+    const xml =
+      '<contributors><person_name contributor_role="author" sequence="first"><given_name>Ana</given_name><surname>Lima</surname></person_name></contributors>';
+    const parseFromString = vi.fn((text: string, type: "application/xml") =>
+      new DOMParser().parseFromString(text, type),
+    );
+    const imported = await importAny(xml, { parser: { parseFromString } });
+    expect(imported.format).toBe("crossref");
+    expect(parseFromString).toHaveBeenCalled();
+    expect(names(imported.authors)).toEqual(["Ana Lima"]);
+  });
 
   it.each([
     ["json", toJson(roster())],
