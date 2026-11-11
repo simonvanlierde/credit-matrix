@@ -2,12 +2,12 @@ import { Copy } from "lucide-react";
 import { useId, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type HeatmapRecipeTarget, heatmapRecipe } from "@/lib/heatmap-recipe";
-import type { HeatmapFigureSettings } from "@/lib/heatmap-settings";
+import type { HeatmapOptions } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { TOOL_BUTTON } from "./grid-shared";
 
-export function HeatmapRecipe({ settings, language }: { settings: HeatmapFigureSettings; language: string }) {
+export function HeatmapRecipe({ settings, language }: { settings: HeatmapOptions; language: string }) {
   const t = useTranslations();
   const id = useId();
   const [target, setTarget] = useState<HeatmapRecipeTarget>("cli");

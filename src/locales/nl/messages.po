@@ -1649,6 +1649,12 @@ msgstr "Grijstinten"
 msgid "heatmapPaleColor"
 msgstr "Ondersteunend is moeilijk te onderscheiden in deze kleur. Kies een donkerdere tint."
 
+msgid "settingsReset"
+msgstr "Herstellen"
+
+msgid "heatmapPerContributorNote"
+msgstr "Een kleur per bijdrager: kies voor grijstintenafdruk één kleur."
+
 msgid "heatmapAdvanced"
 msgstr "Geavanceerd"
 

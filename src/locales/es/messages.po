@@ -1649,6 +1649,12 @@ msgstr "Escala de grises"
 msgid "heatmapPaleColor"
 msgstr "El nivel de apoyo se distingue mal con este color. Elija un tono más oscuro."
 
+msgid "settingsReset"
+msgstr "Restablecer"
+
+msgid "heatmapPerContributorNote"
+msgstr "Color por colaborador: para imprimir en escala de grises, elige un solo color."
+
 msgid "heatmapAdvanced"
 msgstr "Avanzado"
 

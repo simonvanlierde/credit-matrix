@@ -1649,6 +1649,12 @@ msgstr "Scala di grigi"
 msgid "heatmapPaleColor"
 msgstr "Il livello di supporto è difficile da distinguere con questo colore. Scegli una tonalità più scura."
 
+msgid "settingsReset"
+msgstr "Reimposta"
+
+msgid "heatmapPerContributorNote"
+msgstr "Un colore per ogni contributore: per la stampa in scala di grigi, scegli un solo colore."
+
 msgid "heatmapAdvanced"
 msgstr "Avanzate"
 

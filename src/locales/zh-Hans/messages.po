@@ -1649,6 +1649,12 @@ msgstr "灰度"
 msgid "heatmapPaleColor"
 msgstr "此颜色下难以区分支持级贡献。请尝试更深的颜色。"
 
+msgid "settingsReset"
+msgstr "重置"
+
+msgid "heatmapPerContributorNote"
+msgstr "按贡献者着色。若要灰度打印，请选择单一颜色。"
+
 msgid "heatmapAdvanced"
 msgstr "高级设置"
 

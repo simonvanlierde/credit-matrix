@@ -1649,6 +1649,12 @@ msgstr "Escala de cinzentos"
 msgid "heatmapPaleColor"
 msgstr "O nível de apoio é difícil de distinguir com esta cor. Escolha um tom mais escuro."
 
+msgid "settingsReset"
+msgstr "Repor"
+
+msgid "heatmapPerContributorNote"
+msgstr "Uma cor por contribuidor: para impressão em tons de cinzento, escolha uma só cor."
+
 msgid "heatmapAdvanced"
 msgstr "Avançado"
 

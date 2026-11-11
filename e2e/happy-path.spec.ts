@@ -871,7 +871,7 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(8);
 
     await page.getByRole("button", { name: "Heatmap options" }).click();
-    await page.getByRole("button", { name: "Transpose" }).click();
+    await page.getByRole("radio", { name: "Contributors in rows" }).click();
     await page.keyboard.press("Escape");
 
     // An angled role label overhangs its own column, so it must paint above the

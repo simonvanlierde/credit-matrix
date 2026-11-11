@@ -1649,6 +1649,12 @@ msgstr "Niveaux de gris"
 msgid "heatmapPaleColor"
 msgstr "Le niveau de soutien se distingue mal avec cette couleur. Choisissez une teinte plus sombre."
 
+msgid "settingsReset"
+msgstr "Réinitialiser"
+
+msgid "heatmapPerContributorNote"
+msgstr "Une couleur par contributeur : pour une impression en niveaux de gris, choisissez une seule couleur."
+
 msgid "heatmapAdvanced"
 msgstr "Avancé"
 

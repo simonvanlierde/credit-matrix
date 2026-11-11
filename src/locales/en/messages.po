@@ -1649,6 +1649,12 @@ msgstr "Grayscale"
 msgid "heatmapPaleColor"
 msgstr "Supporting is hard to distinguish in this color. Try a darker shade."
 
+msgid "settingsReset"
+msgstr "Reset"
+
+msgid "heatmapPerContributorNote"
+msgstr "Colored per contributor: for grayscale print, pick one color."
+
 msgid "heatmapAdvanced"
 msgstr "Advanced"
 

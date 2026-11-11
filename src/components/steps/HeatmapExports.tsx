@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { type Author, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
 import { heatmapPrintSize, svgDimensions } from "@/lib/heatmap-print";
-import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
+import { DEFAULT_HEATMAP_SETTINGS, type HeatmapOptions } from "@/lib/heatmap-settings";
 import { withPngResolution, withPngText } from "@/lib/png-text";
 import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -81,19 +81,7 @@ async function svgToPngBlob(
 }
 
 /** Preview, configure and download one draft's contribution figure. */
-export function HeatmapExports({
-  authors,
-  monoColor,
-  showLevels,
-  transpose,
-  acronyms,
-}: {
-  authors: Author[];
-  monoColor: string;
-  showLevels: boolean;
-  transpose: boolean;
-  acronyms: boolean;
-}) {
+export function HeatmapExports({ authors, showLevels }: { authors: Author[]; showLevels: boolean }) {
   const { translateRole, translateUi, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   const formatter = useFormatter();
@@ -105,16 +93,23 @@ export function HeatmapExports({
   const [copySource, setCopySource] = useState<{ svg: string; widthMm: number; dpi: number } | null>(null);
   const storedSettings = useContributionStore((s) => s.heatmapSettings);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
-  const settings = useMemo(
-    () =>
-      storedSettings ?? {
-        ...DEFAULT_HEATMAP_SETTINGS,
-        color: monoColor,
-        levels: showLevels,
-        horizontal: transpose,
-        acronyms,
-      },
-    [storedSettings, monoColor, showLevels, transpose, acronyms],
+  const monoColor = useContributionStore((s) => s.heatmapMonoColor);
+  const colorByContributor = useContributionStore((s) => s.colorByContributor);
+  const transpose = useContributionStore((s) => s.transpose);
+  const initials = useContributionStore((s) => s.initials);
+  // The grid and the figure share colour, orientation and initials; the stored figure settings hold the rest.
+  const settings = useMemo<HeatmapOptions>(
+    () => ({
+      ...DEFAULT_HEATMAP_SETTINGS,
+      // Untouched settings follow the grid's assignment mode.
+      levels: showLevels,
+      ...storedSettings,
+      color: monoColor,
+      colorBy: colorByContributor ? "contributor" : "color",
+      horizontal: transpose,
+      acronyms: initials,
+    }),
+    [storedSettings, showLevels, monoColor, colorByContributor, transpose, initials],
   );
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
@@ -278,6 +273,9 @@ export function HeatmapExports({
             <span className="w-full text-xs tabular-nums text-on-surface-variant">
               SVG · PDF · PNG {dimensions.width} × {dimensions.height} px · {settings.pngDpi} dpi
             </span>
+          )}
+          {settings.colorBy === "contributor" && (
+            <p className="w-full text-xs text-on-surface-variant">{t("heatmapPerContributorNote")}</p>
           )}
           {printFontSize !== null && printFontSize < 6 && (
             <p className="w-full text-xs text-on-surface-variant">

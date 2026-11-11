@@ -58,7 +58,14 @@ export interface Draft {
   heatmapMonoColor: string;
   /** Colour the grid per contributor instead of in `heatmapMonoColor`. */
   colorByContributor: boolean;
+  /** Contributors in rows and roles in columns, in the grid and the figure alike. */
+  transpose: boolean;
+  /** Initials for contributor headers, in the grid and the figure alike. */
+  initials: boolean;
+  /** Figure-only options. The hue, per-contributor colour, orientation and initials live above. */
   heatmapSettings: HeatmapFigureSettings | null;
+  /** The statement's own wording options; its initials are not the figure's. */
+  statementOptions: StatementOptions;
   outputLocale: LocaleCode;
   /** Last write, in epoch milliseconds. Orders the picker. */
   updatedAt: number;
@@ -77,6 +84,14 @@ export interface Draft {
   /** The contributor the person using this browser is, if they said so: never asked, never counted as a co-author. */
   selfId: string | null;
 }
+
+export interface StatementOptions {
+  initials: boolean;
+  showLevels: boolean;
+  separateAck: boolean;
+}
+
+export const DEFAULT_STATEMENT_OPTIONS: StatementOptions = { initials: false, showLevels: false, separateAck: true };
 
 /** A grid cell the Review list points at: a contributor and a role or marker. */
 interface ReviewCell {
@@ -105,6 +120,9 @@ interface ContributionState {
   title: string;
   inputMode: InputMode;
   heatmapMonoColor: string;
+  transpose: boolean;
+  initials: boolean;
+  statementOptions: StatementOptions;
   heatmapSettings: HeatmapFigureSettings | null;
   /** Language for the generated statement + human-facing exports (role names only). */
   outputLocale: LocaleCode;
@@ -236,6 +254,11 @@ interface ContributionState {
   closeWelcome: () => void;
   setInspectorTab: (tab: InspectorTab) => void;
   setColorByContributor: (on: boolean) => void;
+  setTranspose: (on: boolean) => void;
+  setInitials: (on: boolean) => void;
+  /** Colour, per-contributor colour, orientation and initials back to their defaults. */
+  resetGridView: () => void;
+  setStatementOptions: (patch: Partial<StatementOptions>) => void;
   setNormsField: (field: string | null) => void;
   reset: () => void;
 }
@@ -302,6 +325,9 @@ function liveDraft(state: ContributionState): Draft {
     inputMode: state.inputMode,
     heatmapMonoColor: state.heatmapMonoColor,
     colorByContributor: state.colorByContributor,
+    transpose: state.transpose,
+    initials: state.initials,
+    statementOptions: state.statementOptions,
     heatmapSettings: state.heatmapSettings,
     outputLocale: state.outputLocale,
     updatedAt: Date.now(),
@@ -319,6 +345,9 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.inputMode = draft.inputMode;
   state.heatmapMonoColor = draft.heatmapMonoColor;
   state.colorByContributor = draft.colorByContributor;
+  state.transpose = draft.transpose;
+  state.initials = draft.initials;
+  state.statementOptions = draft.statementOptions;
   state.heatmapSettings = draft.heatmapSettings;
   state.outputLocale = draft.outputLocale;
   state.claim = draft.claim;
@@ -341,6 +370,9 @@ function emptyDraft(title = ""): Draft {
     inputMode: "toggle",
     heatmapMonoColor: DEFAULT_MONO_COLOR,
     colorByContributor: true,
+    transpose: false,
+    initials: false,
+    statementOptions: DEFAULT_STATEMENT_OPTIONS,
     heatmapSettings: null,
     outputLocale: "en",
     updatedAt: Date.now(),
@@ -440,6 +472,17 @@ function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
  */
 const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
+function legacyFigure(settings: unknown, key: "horizontal" | "acronyms"): boolean {
+  return isRecord(settings) && settings[key] === true;
+}
+
+function repairStatementOptions(value: unknown): StatementOptions {
+  const d = DEFAULT_STATEMENT_OPTIONS;
+  const raw = isRecord(value) ? value : {};
+  const flag = (key: keyof StatementOptions) => (typeof raw[key] === "boolean" ? raw[key] : d[key]);
+  return { initials: flag("initials"), showLevels: flag("showLevels"), separateAck: flag("separateAck") };
+}
+
 function repairSingleDraft(value: unknown, id: string): Draft {
   const { asked, ...raw } = (isRecord(value) ? value : {}) as Partial<Draft> & { asked?: unknown };
   return {
@@ -459,6 +502,11 @@ function repairSingleDraft(value: unknown, id: string): Draft {
         ? raw.colorByContributor
         : !(typeof raw.heatmapMonoColor === "string" && HEX_COLOR.test(raw.heatmapMonoColor)) ||
           raw.heatmapMonoColor === DEFAULT_MONO_COLOR,
+    // Figure settings once held these as their own copies. A save from before keeps its orientation
+    // and initials; its colour copies are dropped, so the grid's hue wins.
+    transpose: typeof raw.transpose === "boolean" ? raw.transpose : legacyFigure(raw.heatmapSettings, "horizontal"),
+    initials: typeof raw.initials === "boolean" ? raw.initials : legacyFigure(raw.heatmapSettings, "acronyms"),
+    statementOptions: repairStatementOptions(raw.statementOptions),
     heatmapSettings: repairHeatmapSettings(raw.heatmapSettings),
     outputLocale: normalizeLocaleCode(raw.outputLocale),
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
@@ -939,6 +987,9 @@ export const useContributionStore = create<ContributionState>()(
       welcomeOpen: false,
       inspectorTab: "statement",
       colorByContributor: true,
+      transpose: false,
+      initials: false,
+      statementOptions: DEFAULT_STATEMENT_OPTIONS,
       newerVersionBlocked: false,
       saveFailure: null,
       claim: null,
@@ -1341,6 +1392,29 @@ export const useContributionStore = create<ContributionState>()(
           state.colorByContributor = on;
         }),
 
+      setTranspose: (on) =>
+        set((state) => {
+          state.transpose = on;
+        }),
+
+      setInitials: (on) =>
+        set((state) => {
+          state.initials = on;
+        }),
+
+      resetGridView: () =>
+        set((state) => {
+          state.heatmapMonoColor = DEFAULT_MONO_COLOR;
+          state.colorByContributor = true;
+          state.transpose = false;
+          state.initials = false;
+        }),
+
+      setStatementOptions: (patch) =>
+        set((state) => {
+          state.statementOptions = { ...state.statementOptions, ...patch };
+        }),
+
       setNormsField: (field) =>
         set((state) => {
           state.normsField = field;
@@ -1358,6 +1432,9 @@ export const useContributionStore = create<ContributionState>()(
           state.inputMode = "toggle";
           state.heatmapMonoColor = DEFAULT_MONO_COLOR;
           state.colorByContributor = true;
+          state.transpose = false;
+          state.initials = false;
+          state.statementOptions = DEFAULT_STATEMENT_OPTIONS;
           state.heatmapSettings = null;
           state.outputLocale = "en";
           state.asks = {};

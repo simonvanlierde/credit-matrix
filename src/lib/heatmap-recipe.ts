@@ -1,12 +1,16 @@
+import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import { normalizeLocaleCode } from "@/core/credit-i18n";
-import { type HeatmapFigureSettings, repairHeatmapSettings } from "./heatmap-settings";
+import { type HeatmapOptions, repairHeatmapSettings } from "./heatmap-settings";
 
 export type HeatmapRecipeTarget = "cli" | "sphinx" | "quarto" | "myst" | "typst";
 
 /** Style-only recipes use fixed data placeholders and validated values, never contributor names. */
-export function heatmapRecipe(settings: HeatmapFigureSettings, target: HeatmapRecipeTarget, language: string): string {
-  const s = repairHeatmapSettings(settings);
-  if (!s) throw new TypeError("Missing figure settings");
+export function heatmapRecipe(settings: HeatmapOptions, target: HeatmapRecipeTarget, language: string): string {
+  const figure = repairHeatmapSettings(settings);
+  if (!figure) throw new TypeError("Missing figure settings");
+  // The recipe is pasted into a shell: only a hex colour and real booleans pass.
+  const color = /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(settings.color) ? settings.color : DEFAULT_MONO_COLOR;
+  const s = { ...figure, color, horizontal: settings.horizontal === true, acronyms: settings.acronyms === true };
   const locale = normalizeLocaleCode(language);
   const options = {
     color: s.color,
