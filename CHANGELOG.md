@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `NAME_PARTICLES` and `NAME_SUFFIXES` export the name particles ("van", "de la") and generational
+  suffixes ("Jr.") that the parser uses for initials, so another implementation can follow them.
+
 ### Changed
 
 - The Typst package and the MyST plugin now label heatmaps with the app's initials. Particles

@@ -372,9 +372,12 @@ export const NAME_PARTICLES: readonly string[] = [
 ];
 const PARTICLES = new Set(NAME_PARTICLES);
 
+/** Generational suffixes that end a name rather than the surname ("Martin Luther King Jr."). */
+export const NAME_SUFFIXES: readonly string[] = ["jr", "sr", "ii", "iii"];
+
 /** A generational suffix, with or without its dot, in any case. */
 export function isSuffix(word: string): boolean {
-  return /^(?:jr|sr|ii|iii)\.?$/i.test(word);
+  return NAME_SUFFIXES.includes(word.toLowerCase().replace(/\.$/, ""));
 }
 
 /**

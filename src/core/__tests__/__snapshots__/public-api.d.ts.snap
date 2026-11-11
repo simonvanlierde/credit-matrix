@@ -1388,6 +1388,8 @@ export declare function normalizeRoster(authors: Author[]): Author[];
  * code (the Typst package) read the same list.
  */
 export declare const NAME_PARTICLES: readonly string[];
+/** Generational suffixes that end a name rather than the surname ("Martin Luther King Jr."). */
+export declare const NAME_SUFFIXES: readonly string[];
 /**
  * Parse a newline- or comma-separated string of author names into Author objects.
  * Empty lines / entries are ignored.

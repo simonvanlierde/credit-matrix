@@ -4,7 +4,16 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CREDIT_ROLES, createAuthor, fromJson, generateStatement, NAME_PARTICLES, type StatementFormat } from "@/core";
+import {
+  CREDIT_ROLES,
+  createAuthor,
+  fromJson,
+  generateStatement,
+  NAME_PARTICLES,
+  NAME_SUFFIXES,
+  normalizeRoster,
+  type StatementFormat,
+} from "@/core";
 import { cast } from "@/core/__tests__/cast";
 import * as i18n from "@/core/i18n";
 import { deduplicateAuthorInitials } from "@/core/parse-authors";
@@ -17,7 +26,7 @@ const dir = fileURLToPath(new URL(".", import.meta.url));
 it("keeps translations.json in step with the core catalogs", async () => {
   const committed = readFileSync(new URL("translations.json", import.meta.url), "utf8");
   // Regenerate with: pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs
-  expect(committed).toBe(await renderTypstTranslations(i18n, CREDIT_ROLES, NAME_PARTICLES));
+  expect(committed).toBe(await renderTypstTranslations(i18n, CREDIT_ROLES, { NAME_PARTICLES, NAME_SUFFIXES }));
 });
 
 it("names the same version in typst.toml and the README's import line", () => {
@@ -277,7 +286,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
       "van der Waals, Johannes D.",
       "VAN DER WAALS, Johannes",
       "Hasan Ibn al-Haytham",
-      ...["Jr.", "jr", "Sr.", "II", "III"].map((suffix) => `Charles Darwin ${suffix}`),
+      ...NAME_SUFFIXES.flatMap((suffix) => [`Charles Darwin ${suffix}`, `Charles Darwin ${suffix.toUpperCase()}.`]),
       "Darwin Jr., Charles",
       "Darwin, Charles, Jr.",
       "Hopper, Grace Brewster Murray",
@@ -312,16 +321,37 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     ]);
   });
 
-  it("takes an export's stored name parts, and a document's own initials as written", () => {
-    // An export row without initials, as a hand-made file has it: the stored surname decides.
-    const stored = createAuthor("Ana García López", { firstName: "Ana", middleName: "", surname: "García López" });
+  it("takes an export's stored name parts while they fit, and a document's own initials as written", () => {
+    // Export rows without initials, as a hand-made file has them: the stored parts decide when they
+    // fit the name, and the name decides when they are empty or stale.
+    const rows: [string, string, string, string][] = [
+      ["Ana García López", "Ana", "", "García López"],
+      ["Ada Berg", "Ada", "", ""],
+      ["Grace Hopper", "Ada", "", "Berg"],
+      ["王小明", "小明", "", "王"],
+    ];
+    const exported = rows.map(([name, firstName, middleName, surname]) =>
+      createAuthor(name, { firstName, middleName, surname }),
+    );
+    const typRows = rows.map(
+      ([name, first, middle, last]) =>
+        `(name: "${name}", firstName: "${first}", middleName: "${middle}", surname: "${last}", contributions: ())`,
+    );
+    const own = `(name: "Xu Guangqi", initials: "AL"), (name: "${cast.ada}"), (name: "Anna Bell", initials: "AL")`;
     const run = typst(
       "eval",
-      `import "lib.typ": *; (_people((authors: ((name: "Ana García López", firstName: "Ana", middleName: "", surname: "García López", contributions: ()),))).first().initials, _people(((name: "Xu Guangqi", initials: "AL"), (name: "${cast.ada}"))).map(p => p.initials))`,
+      `import "lib.typ": *; (_people((authors: (${typRows.join(", ")}))).map(p => p.initials), _people((${own})).map(p => p.initials))`,
     );
     expect(run.status, run.stderr).toBe(0);
-    expect(JSON.parse(run.stdout)).toEqual([stored.initials, ["AL", "ALo"]]);
-    expect(stored.initials).toBe("AG");
+    expect(JSON.parse(run.stdout)).toEqual([normalizeRoster(exported).map((a) => a.initials), ["AL", "ALo", "ALe"]]);
+    expect(normalizeRoster(exported).map((a) => a.initials)).toEqual(["AG", "AB", "GH", "小王"]);
+  });
+
+  it("refuses a contributor whose name has no letter, as the app does", () => {
+    const run = typst("eval", `import "lib.typ": *; _people(((name: "-- --"),))`);
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain("needs a letter or an ORCID iD");
+    expect(() => createAuthor("-- --")).toThrow();
   });
 
   it("takes the document's language and inline roles in basic.typ", () => {

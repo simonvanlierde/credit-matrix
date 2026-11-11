@@ -44,7 +44,7 @@
 #let _words(text) = text.split(_ws).filter(w => w != "")
 #let _has-letter(text) = text.match(regex("\p{L}")) != none
 #let _is-particle(word) = lower(word).replace(regex("[’ʼ]"), "'") in _data.particles
-#let _is-suffix(word) = lower(word).match(regex("^(jr|sr|ii|iii)\.?$")) != none
+#let _is-suffix(word) = lower(word).replace(regex("\.$"), "") in _data.suffixes
 #let _clean(text) = text.replace(regex("[^\p{L}\p{M}'’ʼ\-\s・·\x{200C}\x{200D}]"), "").trim()
 #let _surname-core(surname) = {
   let words = _words(surname)
@@ -104,10 +104,17 @@
 }
 
 // Later people who repeat taken initials gain the next letters of their surname, then a number.
-// Initials a document sets itself stay as written and count as taken.
+// Initials a document sets itself stay as written and count as taken, unless an earlier person set
+// the same ones.
 #let _dedupe-initials(people) = {
-  let taken = people.filter(p => p.own-initials).map(p => p.initials)
+  let taken = ()
+  let marked = ()
   for p in people {
+    let own = p.own-initials and p.initials not in taken
+    if own { taken.push(p.initials) }
+    marked.push(p + (own-initials: own))
+  }
+  for p in marked {
     if p.own-initials { (p,); continue }
     let extra = _surname-core(p.surname).codepoints()
     let attempt = p.initials
@@ -119,6 +126,26 @@
     taken.push(attempt)
     (p + (initials: attempt),)
   }
+}
+
+// The export's stored parts, when they still fit the name: core's consistentNameParts.
+#let _stored-fit(name, first, middle, last) = {
+  if _drop-comma-suffix(name) != name { return false }
+  let w(text) = _words(_clean(text))
+  let (named, f, m, l) = (w(name), w(first), w(middle), w(last))
+  let opens(whole, part) = part.len() <= whole.len() and whole.slice(0, part.len()) == part
+  let suffixed = named.len() > 2 and _is-suffix(named.last()) and l.at(-1, default: none) != named.last()
+  let all = if suffixed { named.slice(0, -1) } else { named }
+  let between = all.slice(calc.min(f.len(), all.len()), calc.max(calc.min(f.len(), all.len()), all.len() - l.len()))
+  let fits = (
+    f.len() > 0
+      and f.len() + l.len() <= all.len()
+      and opens(all, f)
+      and opens(all.rev(), l.rev())
+      and opens(between, m)
+      and (l.len() > 0 or between.len() == m.len())
+  )
+  fits or (f.len() > 0 and l.len() > 0 and named.join("") == (l + f + m).join(""))
 }
 
 // One person as (name, initials, ack, levels: (slug: level), equal, corresponding), from an inline dict
@@ -146,11 +173,12 @@
       scores.insert(role, _level(value, role, name))
     }
   }
-  // The JSON export stores the name parts the app used; take them when all three are there.
-  // shortcut: no check that they still fit the name (core's consistentNameParts), only a hand-edited
-  // export differs, port it if one turns up.
+  if not _has-letter(name) and name.match(_orcid) == none {
+    panic("credit-matrix: a contributor's name needs a letter or an ORCID iD, got " + repr(entry.name))
+  }
+  // The JSON export stores the name parts the app used; take them while they still fit the name.
   let stored = ("firstName", "middleName", "surname").map(k => entry.at(k, default: none))
-  let parts = if stored.all(v => type(v) == str) {
+  let parts = if stored.all(v => type(v) == str) and _stored-fit(name, ..stored) {
     (first: _clean(stored.at(0)), middle: _clean(stored.at(1)), surname: _clean(stored.at(2)))
   } else { _name-parts(name) }
   let given = entry.at("initials", default: none)

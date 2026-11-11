@@ -280,3 +280,12 @@ it("gives the app's deduplicated initials and keeps nonletter labels whole", asy
   expect(svg).not.toContain(">C</text>");
   expect(image?.alt).toContain("Hua Luogeng");
 });
+
+it("keeps full names past the app's 200 contributors instead of failing the build", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-many-"));
+  const path = join(dir, "index.md");
+  const people = Array.from({ length: 201 }, (_, i) => `  - name: Ada Lovelace ${i}\n    roles: [Software]\n`);
+  writeFileSync(path, `---\nauthors:\n${people.join("")}---\n`);
+  const { svg } = await heatmap(path, { initials: true });
+  expect(svg).toContain(">Ada Lovelace 200</tspan>");
+});

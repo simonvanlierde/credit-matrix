@@ -1,5 +1,6 @@
 // Writes integrations/typst/translations.json, the role names, statement wording and name
-// particles the Typst package reads, from the core (credit-i18n, NAME_PARTICLES). Run after a core build:
+// particles and suffixes the Typst package reads, from the core (credit-i18n, NAME_PARTICLES,
+// NAME_SUFFIXES). Run after a core build:
 //   pnpm --filter credit-matrix build && node scripts/build-typst-translations.mjs
 // integrations/typst/credit-matrix.test.ts fails when the file is stale.
 
@@ -40,10 +41,10 @@ function listSeparators(locale) {
 
 /**
  * The file's text. `i18n` is the core's `credit-matrix/i18n` module, `roles` its CREDIT_ROLES and
- * `particles` its NAME_PARTICLES (for lib.typ's initials), passed in so the test can hand over the
- * source and the script the build.
+ * `names` its NAME_PARTICLES and NAME_SUFFIXES (for lib.typ's initials), passed in so the test can
+ * hand over the source and the script the build.
  */
-export async function renderTypstTranslations(i18n, roles, particles) {
+export async function renderTypstTranslations(i18n, roles, names) {
   const slug = (role) => role.url.split("/").at(-2);
   const locales = {};
   for (const { code } of i18n.AVAILABLE_LOCALES) {
@@ -56,9 +57,10 @@ export async function renderTypstTranslations(i18n, roles, particles) {
     };
   }
   const data = {
-    generated: "By scripts/build-typst-translations.mjs from src/core/credit-i18n. Do not edit.",
+    generated: "By scripts/build-typst-translations.mjs from src/core. Do not edit.",
     roles: roles.map((r) => ({ slug: slug(r), name: r.name })),
-    particles,
+    particles: names.NAME_PARTICLES,
+    suffixes: names.NAME_SUFFIXES,
     locales,
   };
   return `${JSON.stringify(data, null, 2)}\n`;
@@ -66,7 +68,7 @@ export async function renderTypstTranslations(i18n, roles, particles) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const i18n = await import("../src/core/dist/i18n.js");
-  const { CREDIT_ROLES, NAME_PARTICLES } = await import("../src/core/dist/index.js");
+  const core = await import("../src/core/dist/index.js");
   const out = fileURLToPath(new URL("../integrations/typst/translations.json", import.meta.url));
-  await writeFile(out, await renderTypstTranslations(i18n, CREDIT_ROLES, NAME_PARTICLES));
+  await writeFile(out, await renderTypstTranslations(i18n, core.CREDIT_ROLES, core));
 }

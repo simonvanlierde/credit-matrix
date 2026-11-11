@@ -1,5 +1,5 @@
 {
-  "generated": "By scripts/build-typst-translations.mjs from src/core/credit-i18n. Do not edit.",
+  "generated": "By scripts/build-typst-translations.mjs from src/core. Do not edit.",
   "roles": [
     {
       "slug": "conceptualization",
@@ -90,6 +90,12 @@
     "el",
     "al",
     "van't"
+  ],
+  "suffixes": [
+    "jr",
+    "sr",
+    "ii",
+    "iii"
   ],
   "locales": {
     "en": {

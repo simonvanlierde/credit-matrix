@@ -184,7 +184,8 @@ The JavaScript API calls this option `acronyms`. Text alternatives always retain
 Every plugin uses the app's initials: one letter each from the given name, the first middle name
 and the surname (skipping particles such as "van"), and an unspaced Chinese or Japanese name whole.
 When two contributors share initials, the later one gets the next letters of the surname, as in
-the app ("AL", "ALa"). A contributor's own `initials` field wins.
+the app ("AL", "ALa"). A contributor's own `initials` field wins, unless an earlier contributor
+set the same ones.
 
 ## Final-size readability checks
 
