@@ -569,7 +569,7 @@ describe("publication heatmap presentation", () => {
 describe("buildHeatmapSvg golden layouts", () => {
   const contribs = (scores: [CreditRoleName, number][]) => scores.map(([role, score]) => ({ role, score }));
   const team = () => [
-    createAuthor("Tu Youyou", {
+    createAuthor("Hua Luogeng", {
       contributions: contribs([
         ["Conceptualization", 100],
         ["Software", 33],
@@ -675,7 +675,7 @@ describe("buildHeatmapSvg golden layouts", () => {
   });
 
   it("draws an author who lacks a role's entry as no contribution", () => {
-    const sparse = { ...createAuthor("Tu Youyou"), contributions: [] };
+    const sparse = { ...createAuthor("Hua Luogeng"), contributions: [] };
     const svg = buildHeatmapSvg([team()[0] as Author, sparse]);
     expect(svg.match(/width="22" height="22"/g)).toHaveLength(6);
   });

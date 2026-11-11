@@ -183,12 +183,12 @@ def test_custom_template_keeps_the_author_map(tmp_path):
     template = tmp_path / "authors.txt"
     template.write_text("$for(author)$$author.name$|$author.affiliation$$endfor$\n$body$\n")
     result = render(
-        {"author": [{"name": "Tu Youyou", "affiliation": "Example Lab", "roles": ["investigation"]}]},
+        {"author": [{"name": "Hua Luogeng", "affiliation": "Example Lab", "roles": ["investigation"]}]},
         "# Methods\n\nBody.\n",
         "plain",
         f"--template={template}",
     )
-    assert "Tu Youyou|Example Lab" in result
+    assert "Hua Luogeng|Example Lab" in result
 
 
 def test_single_author_map_prints_the_name():
@@ -204,7 +204,7 @@ def test_single_author_map_prints_the_name():
 @pytest.mark.parametrize("levels", [True, False])
 def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, levels):
     metadata = {
-        "author": [{"name": "Tu Youyou", "roles": [{"software": "supporting"}]}],
+        "author": [{"name": "Hua Luogeng", "roles": [{"software": "supporting"}]}],
         "credit-matrix": {
             "heatmap": True,
             "shape": "circle",
@@ -217,13 +217,13 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
         },
     }
     html = render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}", env=LOCAL_CLI)
-    expected = "Tu Youyou: Software (Supporting)." if levels else "Tu Youyou: Software."
+    expected = "Hua Luogeng: Software (Supporting)." if levels else "Hua Luogeng: Software."
     assert f'alt="{expected}"' in html
     svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
     assert 'width="30" height="30" rx="15"' in svg
     assert ">Supporting<" not in svg
     assert 'font-size="21"' in svg
-    assert ">Tu Youyou</tspan>" in svg
+    assert ">Hua Luogeng</tspan>" in svg
     assert "Noto Serif" in svg
 
 
@@ -232,14 +232,14 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
 def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, position, marks):
     cli = str(CLI)
     metadata = {
-        "author": [{"name": "Tu Youyou", "roles": [{"software": "supporting"}]}],
+        "author": [{"name": "Hua Luogeng", "roles": [{"software": "supporting"}]}],
         "credit-matrix": {"heatmap": True, "legend-position": position, "marks": marks},
     }
     render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}", env=LOCAL_CLI)
     svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
     expected = subprocess.run(
         ["node", cli, "convert", "-", "--to", "svg", "--legend-position", position, "--marks", str(marks).lower()],
-        input="Name,Software\nTu Youyou,33\n",
+        input="Name,Software\nHua Luogeng,33\n",
         check=True,
         capture_output=True,
         encoding="utf-8",
@@ -251,11 +251,11 @@ def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, position
 
 def test_heatmap_command_comes_from_the_environment_not_the_document(tmp_path):
     metadata = {
-        "author": [{"name": "Tu Youyou", "roles": ["software"]}],
+        "author": [{"name": "Hua Luogeng", "roles": ["software"]}],
         "credit-matrix": {"heatmap": True, "command": [False]},
     }
     html = render(metadata, "# Methods\n", "html", f"--extract-media={tmp_path}", env=LOCAL_CLI)
-    assert 'alt="Tu Youyou: Software."' in html
+    assert 'alt="Hua Luogeng: Software."' in html
     assert next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8").startswith("<svg")
     with pytest.raises(subprocess.CalledProcessError) as error:
         render(metadata, "# Methods\n", "html", env={"CREDIT_MATRIX_COMMAND": "credit-matrix-missing --flag"})

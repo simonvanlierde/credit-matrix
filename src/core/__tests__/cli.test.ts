@@ -472,7 +472,7 @@ it("selects full names or initials without shortening the text alternative", asy
 });
 
 describe("figure legend options", () => {
-  const authors = [createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 33 }] })];
+  const authors = [createAuthor("Hua Luogeng", { contributions: [{ role: "Software", score: 33 }] })];
   const source = file("legend-options.json", toJson(authors));
 
   it.each([

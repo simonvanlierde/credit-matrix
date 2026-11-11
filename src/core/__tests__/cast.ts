@@ -1,9 +1,10 @@
 /**
  * The people in tests, docs and demos: dead scientists, each picked for the name case they cover.
  *
- * Use a name from here when a test needs "some contributors"; build the author with
- * `createAuthor(cast.ada, overrides)` so name parts and initials come from the real parser, and
- * keep the expected strings literal in the assertion. A parser test about one odd spelling
+ * Take a name from here when a test needs "some contributors", written out or as `cast.ada`. Build
+ * the author with `createAuthor(name, overrides)` so name parts and initials come from the real
+ * parser, and keep the expected strings literal in the assertion. The Typst package's parity test
+ * runs every name here through both implementations. A parser test about one odd spelling
  * ("SMITH, J.", "Anne DE LA CRUZ") keeps its own name inline: the spelling is the point.
  *
  * `sampleNames` in each locale catalog is the in-app "Load sample data" cast and belongs to the
@@ -21,10 +22,18 @@ export const cast = {
 
   // Name cases.
   marie: "Marie Skłodowska-Curie", // non-ASCII, hyphenated surname: "MS"
-  antonie: "Antonie van Leeuwenhoek", // particle, skipped in the app's initials: "AL"; lib.typ makes it "AVL"
-  antoine: "Antoine Lavoisier", // "AL" like Ada, in the app and in lib.typ: the initials collision
-  tu: "Tu Youyou", // family name first; the parser reads "Tu" as the given name: "TY"
+  antonie: "Antonie van Leeuwenhoek", // particle, skipped in initials: "AL"
+  antoine: "Antoine Lavoisier", // "AL" like Ada and Antonie: the initials collision
+  hua: "Hua Luogeng", // family name first (华罗庚); the parser reads "Hua" as the given name: "HL"
 } as const;
 
 /** Names the cast replaced. cast.test.ts fails when one comes back. */
-export const RETIRED_PLACEHOLDERS = ["Jane Smith", "Jane A. Smith", "Bob White"] as const;
+export const RETIRED_PLACEHOLDERS = [
+  "Jane Smith",
+  "Jane A. Smith",
+  "Jane A Smith",
+  "Smith, Jane",
+  "Bob White",
+  "Bob B. White",
+  "White, Bob",
+] as const;

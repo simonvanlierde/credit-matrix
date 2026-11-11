@@ -458,13 +458,13 @@ describe("deposited DOI roles", () => {
     vi.mocked(lookupDoiWork).mockResolvedValue({
       ok: true,
       title: "A paper",
-      authors: [{ name: "Tu Youyou", roles: ["Software"] }],
+      authors: [{ name: "Hua Luogeng", roles: ["Software"] }],
     });
     const { onImport } = renderModal();
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.doiLookUp })));
     expect(onImport).not.toHaveBeenCalled();
     expect(screen.getByText(english.doiRolesImported)).toBeTruthy();
-    expect(screen.getByText("Tu Youyou: Software")).toBeTruthy();
+    expect(screen.getByText("Hua Luogeng: Software")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: english.doiConfirm }));
     expect(onImport.mock.calls[0]?.[0].authors[0].contributions).toContainEqual({ role: "Software", score: 100 });
   });

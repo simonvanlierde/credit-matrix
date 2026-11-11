@@ -192,9 +192,10 @@ describe("share payload v2", () => {
   });
 
   it("gives contributors unique initials, as the workspace does", () => {
-    const authors = [createAuthor("Grace Hopper"), createAuthor("John Smith")];
+    // Both parse to "AL".
+    const authors = [createAuthor("Ada Lovelace"), createAuthor("Antoine Lavoisier")];
     const restored = fromSharePayload(toSharePayload({ authors }));
-    expect(restored.authors[0]?.initials).not.toBe(restored.authors[1]?.initials);
+    expect(restored.authors.map((a) => a.initials)).toEqual(["AL", "ALa"]);
   });
 });
 

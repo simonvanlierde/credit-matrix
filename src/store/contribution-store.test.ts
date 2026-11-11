@@ -448,11 +448,10 @@ describe("contribution store", () => {
       expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Carol Davis", "Grace Hopper"]);
     });
 
-    it("re-derives initials on every list edit, so two J. Smiths stay distinct", () => {
-      store().addAuthor("Grace Hopper");
-      store().addAuthor("John Smith");
-      const [jane, john] = store().authors;
-      expect(jane?.initials).not.toBe(john?.initials);
+    it("re-derives initials on every list edit, so two people with the same initials stay distinct", () => {
+      store().addAuthor("Ada Lovelace");
+      store().addAuthor("Antoine Lavoisier");
+      expect(store().authors.map((a) => a.initials)).toEqual(["AL", "ALa"]);
     });
   });
 
