@@ -191,7 +191,8 @@ export function StatementOutput() {
 
   // Only the statement's own mark: a cell may have taken over before this leave event lands.
   function clearPhraseLink() {
-    if (useContributionStore.getState().statementLink?.from === "phrase") setStatementLink(null);
+    const from = useContributionStore.getState().statementLink?.from;
+    if (from === "phrase" || from === "name") setStatementLink(null);
   }
 
   function goToReview() {
@@ -315,10 +316,11 @@ export function StatementOutput() {
             key="statement"
             // Pointer only: a keyboard marks the same phrase by focusing its cell in the grid.
             onPointerOver={(event) => {
-              const phrase = (event.target as HTMLElement).closest<HTMLElement>("[data-role]");
+              const phrase = (event.target as HTMLElement).closest<HTMLElement>("[data-author]");
               const { author, role } = phrase?.dataset ?? {};
               if (author && role)
                 setStatementLink({ contributorId: author, role: role as CreditRoleName, from: "phrase" });
+              else if (author) setStatementLink({ contributorId: author, from: "name" });
               else clearPhraseLink();
             }}
             onPointerLeave={clearPhraseLink}
@@ -328,9 +330,13 @@ export function StatementOutput() {
             }`}
           >
             {statementSpans(authors, statementOptions).map((span) => {
-              if (!span.cell) return span.text;
-              const { authorId, role } = span.cell;
-              const linked = statementLink?.contributorId === authorId && statementLink.role === role;
+              const authorId = span.cell?.authorId ?? span.authorId;
+              if (!authorId) return span.text;
+              const role = span.cell?.role;
+              // A person link (no role) marks their name and every phrase; a cell link, its one phrase.
+              const linked =
+                statementLink?.contributorId === authorId &&
+                (statementLink.role === undefined || statementLink.role === role);
               // One element either way: swapping in a <mark> would remount the text and break a
               // selection being dragged across it. Underlined as well as tinted, never colour alone.
               return (

@@ -586,6 +586,13 @@ const AuthorRow = memo(function AuthorRowInner({
   const rowLocked = locked && !isClaimed;
   const isSelf = useContributionStore((s) => author !== undefined && s.selfId === author.id);
   const setSelfId = useContributionStore((s) => s.setSelfId);
+  // True while this person is hovered anywhere else (grid cell, statement name or phrase).
+  const linked = useContributionStore((s) => author !== undefined && s.statementLink?.contributorId === author.id);
+  const setStatementLink = useContributionStore((s) => s.setStatementLink);
+  // Only this row's own mark: leave events can land after a cell or the statement has taken over.
+  const clearOwnLink = () => {
+    if (useContributionStore.getState().statementLink?.from === "author") setStatementLink(null);
+  };
   const moveAuthor = useContributionStore((s) => s.moveAuthor);
   const rowCount = useContributionStore((s) => s.authors.length);
   // Down once their answer is in, up again on a re-ask.
@@ -682,10 +689,20 @@ const AuthorRow = memo(function AuthorRowInner({
       // twelve-author list that still leaves them hunting, so the row says so
       // itself — tint, rule, and a worded badge, never colour alone.
       aria-current={isClaimed ? "true" : undefined}
-      className={`group rounded border px-2 py-0.5 transition-[border-color,box-shadow] duration-150 ${
+      data-linked={linked || undefined}
+      // Mouse only (a tap enters with no leave); focus inside the row marks the same links.
+      onPointerEnter={(event) =>
+        event.pointerType === "mouse" && author && setStatementLink({ contributorId: author.id, from: "author" })
+      }
+      onPointerLeave={(event) => event.pointerType === "mouse" && clearOwnLink()}
+      onFocus={() => author && setStatementLink({ contributorId: author.id, from: "author" })}
+      onBlur={clearOwnLink}
+      className={`group rounded border px-2 py-0.5 transition-[border-color,box-shadow] duration-150 motion-reduce:transition-none ${
         isClaimed || isRecentReply
           ? "border-primary bg-primary/5"
-          : "border-outline bg-surface-bright hover:border-edge hover:shadow-card"
+          : linked
+            ? "border-primary bg-primary/10 shadow-card"
+            : "border-outline bg-surface-bright hover:border-edge hover:shadow-card"
       } ${isDragging ? "relative z-10 border-edge shadow-float" : ""}`}
     >
       {/* The entrance lives on this wrapper, not on the row: @dnd-kit owns the

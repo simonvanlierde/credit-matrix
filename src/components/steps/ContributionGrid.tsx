@@ -93,6 +93,11 @@ export function ContributionGrid() {
   const linkedFromPhrase = useContributionStore((s) =>
     s.statementLink?.from === "phrase" ? `${s.statementLink.contributorId}:${s.statementLink.role}` : null,
   );
+  // The person hovered in the sidebar or by name in the statement: their whole column is marked.
+  const linkedPerson = useContributionStore((s) => {
+    const link = s.statementLink;
+    return link && (link.from === "author" || link.from === "name") ? link.contributorId : null;
+  });
   const activeDraftId = useContributionStore((s) => s.activeDraftId);
   const summary = useAskSummary();
   // Everyone there is to ask (all but you) was asked, answered, and left nothing to review.
@@ -346,6 +351,7 @@ export function ContributionGrid() {
         reviewHighlight?.contributorId === author.id && reviewHighlight.target === CREDIT_ROLES[roleIndex]?.name
       }
       linked={linkedFromPhrase === `${author.id}:${CREDIT_ROLES[roleIndex]?.name}`}
+      personLinked={linkedPerson === author.id}
       settling={
         reviewSettled?.contributorId === author.id &&
         reviewSettled.targets.some((target) => target === CREDIT_ROLES[roleIndex]?.name)
@@ -386,8 +392,8 @@ export function ContributionGrid() {
 
   return (
     // md:w-fit: on a wide pane the toolbar ends at the grid's edge rather than the pane's,
-    // so the controls stay beside the grid they change; spare paper falls after the block.
-    <div className="flex min-w-0 max-w-full flex-col md:w-fit desk:h-full">
+    // so the controls stay beside the grid they change; spare paper splits on both sides.
+    <div className="flex min-w-0 max-w-full flex-col md:mx-auto md:w-fit desk:h-full">
       {/* The status strip: what the draft is waiting on, then every control
           that changes the whole grid. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3 pb-1 md:px-4">
@@ -820,6 +826,7 @@ const GridCell = memo(function GridCellInner({
   theySay,
   highlighted,
   linked,
+  personLinked,
   settling,
   graded,
   dark,
@@ -840,6 +847,8 @@ const GridCell = memo(function GridCellInner({
   highlighted: boolean;
   /** Its phrase in the statement is under the pointer. */
   linked: boolean;
+  /** Its contributor's sidebar row or name in the statement is under the pointer. */
+  personLinked: boolean;
   /** A Review choice just changed this cell. */
   settling: boolean;
   graded: boolean;
@@ -854,7 +863,18 @@ const GridCell = memo(function GridCellInner({
   const label = api.current.label(author, roleIndex, score);
   const describedBy = theySay ? `cell-says-${row}-${col}` : undefined;
   return (
-    <td className="relative min-w-11 p-0">
+    <td
+      className="relative min-w-11 p-0"
+      // The column takes the person's hue, like every other linked mark.
+      style={
+        personLinked
+          ? {
+              backgroundColor: `color-mix(in srgb, ${perPerson ? pageMarkColor(monoColor, dark) : "var(--color-primary)"} 10%, transparent)`,
+            }
+          : undefined
+      }
+      data-person-linked={personLinked || undefined}
+    >
       <button
         type="button"
         data-cell={`${row}-${col}`}
@@ -902,9 +922,11 @@ const GridCell = memo(function GridCellInner({
             ? "outline outline-[3px] outline-flag outline-offset-1"
             : linked
               ? "outline outline-[1.5px] outline-edge outline-offset-1 shadow-[3px_3px_0_var(--cell-hue)]"
-              : recent
-                ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
-                : ""
+              : personLinked
+                ? "outline outline-1 outline-edge -outline-offset-1"
+                : recent
+                  ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
+                  : ""
         } ${settling ? "cell-settle" : ""}`}
         style={
           {
