@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-11
+
 ### Added
 
 - New entry point `credit-matrix/figures` exports `createFigureRenderer` for PDF and
@@ -817,7 +819,8 @@ Persisted local drafts migrate automatically.
   contribution heatmap, JATS4R XML / CSV / JSON / Markdown exports, ORCID lookup,
   share links, and a framework-agnostic `@credit-generator/core` domain package.
 
-[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.8.1...v0.9.0
