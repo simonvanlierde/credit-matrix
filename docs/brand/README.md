@@ -1,8 +1,9 @@
 # Brand assets
 
-The rules for the mark and the lockup are in [DESIGN.md](../../DESIGN.md#brand). The mark's cell
-fills are the app's real heatmap levels from `src/core/contributor-color.ts`: white mixed 0.4, 0.7,
-and 1.0 of the way toward ink-blue, plus the fill of an empty cell.
+The rules for the mark and the lockup are in [DESIGN.md](../../DESIGN.md#brand). Each column of the
+mark is one contributor, in the first three `CONTRIBUTOR_HUES`, and its cell fills are the app's
+real heatmap levels from `heatCellColor` in `src/core/contributor-color.ts` (the light ramp, and in
+the favicon also the dark one), plus the fill of an empty cell.
 
 | Asset | Source | Output |
 | --- | --- | --- |
