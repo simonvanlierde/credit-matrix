@@ -1,6 +1,6 @@
 import type { Author } from "../author";
 import { rolesWithContributions } from "../author";
-import { contributorHues, DEFAULT_MONO_COLOR, heatCellColor, onColor } from "../contributor-color";
+import { contributorHues, DEFAULT_MONO_COLOR, HEX_COLOR, heatCellColor, onColor } from "../contributor-color";
 import type { RoleTranslator } from "../credit-i18n/index";
 import { makeUiTranslator, type UiTranslator } from "../credit-i18n/ui-strings";
 import { CREDIT_ROLES } from "../credit-roles";
@@ -139,7 +139,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const palettes = { blue: DEFAULT_MONO_COLOR, green: "#00724c", gray: "#404040" };
   if (opts?.palette && !Object.hasOwn(palettes, opts.palette)) throw new HeatmapOptionError("Unknown heatmap palette.");
   const monoColor = opts?.color ?? opts?.monoColor ?? palettes[opts?.palette ?? "blue"];
-  if (!/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(monoColor))
+  if (!HEX_COLOR.test(monoColor))
     throw new HeatmapOptionError("Heatmap color must be a three- or six-digit hex color.");
   const colorBy = opts?.colorBy ?? "color";
   if (!["color", "contributor"].includes(colorBy)) throw new HeatmapOptionError("Unknown heatmap colorBy.");

@@ -22,10 +22,11 @@ import {
   type Target,
 } from "@/core";
 import { clampScore, isShareableId, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
-import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
+import { DEFAULT_MONO_COLOR, HEX_COLOR } from "@/core/contributor-color";
 import { type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
 import { type HeatmapFigureSettings, repairHeatmapSettings } from "@/lib/heatmap-settings";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
+import { GUIDE_KEY } from "./guide-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 export type InputMode = "toggle" | "levels";
@@ -58,7 +59,14 @@ export interface Draft {
   heatmapMonoColor: string;
   /** Colour the grid per contributor instead of in `heatmapMonoColor`. */
   colorByContributor: boolean;
+  /** Contributors in rows and roles in columns, in the grid and the figure alike. */
+  transpose: boolean;
+  /** Initials for contributor headers, in the grid and the figure alike. */
+  initials: boolean;
+  /** Figure-only options. The hue, per-contributor colour, orientation and initials live above. */
   heatmapSettings: HeatmapFigureSettings | null;
+  /** The statement's own wording options; its initials are not the figure's. */
+  statementOptions: StatementOptions;
   outputLocale: LocaleCode;
   /** Last write, in epoch milliseconds. Orders the picker. */
   updatedAt: number;
@@ -78,6 +86,14 @@ export interface Draft {
   selfId: string | null;
 }
 
+export interface StatementOptions {
+  initials: boolean;
+  showLevels: boolean;
+  separateAck: boolean;
+}
+
+export const DEFAULT_STATEMENT_OPTIONS: StatementOptions = { initials: false, showLevels: false, separateAck: true };
+
 /** A grid cell the Review list points at: a contributor and a role or marker. */
 interface ReviewCell {
   contributorId: string;
@@ -89,11 +105,18 @@ interface ReviewCell {
  * a grid cell and its phrase (with a role), or the whole person (without one: their sidebar row,
  * grid column, name and phrases).
  */
+/** A person (no role), a role (no person), or one cell (both). */
 interface StatementLink {
-  contributorId: string;
+  contributorId?: string;
   role?: CreditRoleName;
   /** Which side the pointer or focus is on: the sides it is not on show the mark. */
-  from: "cell" | "phrase" | "author" | "name";
+  from: "cell" | "phrase" | "author" | "name" | "role";
+}
+
+/** A request to the contributor list to focus one person's row. */
+export interface ListFocus {
+  authorId: string;
+  orcid: boolean;
 }
 
 /** More than anyone writes at once, and well inside what localStorage holds. */
@@ -105,6 +128,9 @@ interface ContributionState {
   title: string;
   inputMode: InputMode;
   heatmapMonoColor: string;
+  transpose: boolean;
+  initials: boolean;
+  statementOptions: StatementOptions;
   heatmapSettings: HeatmapFigureSettings | null;
   /** Language for the generated statement + human-facing exports (role names only). */
   outputLocale: LocaleCode;
@@ -144,6 +170,7 @@ interface ContributionState {
    * leaves), and a draft switch clears it too.
    */
   recentReply: string | null;
+  listFocus: ListFocus | null;
   /**
    * Counts Reset and Delete all. Ephemeral. Components holding an undo
    * buffer drop it when this changes, so Undo cannot bring back cleared work.
@@ -199,6 +226,8 @@ interface ContributionState {
   setSelfId: (contributorId: string | null) => void;
   setReviewHighlight: (cell: ReviewCell | null) => void;
   setStatementLink: (link: StatementLink | null) => void;
+  /** Ask the contributor list to focus a person's name (or open their ORCID field). Ephemeral; the row clears it. */
+  setListFocus: (request: ListFocus | null) => void;
   setReviewSettled: (cells: { contributorId: string; targets: Target[] } | null) => void;
   /** Open the Review tab on one contributor's answers. */
   openReview: (contributorId: string | null) => void;
@@ -236,6 +265,11 @@ interface ContributionState {
   closeWelcome: () => void;
   setInspectorTab: (tab: InspectorTab) => void;
   setColorByContributor: (on: boolean) => void;
+  setTranspose: (on: boolean) => void;
+  setInitials: (on: boolean) => void;
+  /** Colour, per-contributor colour, orientation and initials back to their defaults. */
+  resetGridView: () => void;
+  setStatementOptions: (patch: Partial<StatementOptions>) => void;
   setNormsField: (field: string | null) => void;
   reset: () => void;
 }
@@ -302,6 +336,9 @@ function liveDraft(state: ContributionState): Draft {
     inputMode: state.inputMode,
     heatmapMonoColor: state.heatmapMonoColor,
     colorByContributor: state.colorByContributor,
+    transpose: state.transpose,
+    initials: state.initials,
+    statementOptions: state.statementOptions,
     heatmapSettings: state.heatmapSettings,
     outputLocale: state.outputLocale,
     updatedAt: Date.now(),
@@ -319,6 +356,9 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.inputMode = draft.inputMode;
   state.heatmapMonoColor = draft.heatmapMonoColor;
   state.colorByContributor = draft.colorByContributor;
+  state.transpose = draft.transpose;
+  state.initials = draft.initials;
+  state.statementOptions = draft.statementOptions;
   state.heatmapSettings = draft.heatmapSettings;
   state.outputLocale = draft.outputLocale;
   state.claim = draft.claim;
@@ -328,6 +368,7 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.statementLink = null;
   state.reviewSettled = null;
   state.reviewFocus = null;
+  state.listFocus = null;
   // The highlight describes a moment, not the draft: leaving the draft ends it.
   state.recentReply = null;
 }
@@ -341,6 +382,9 @@ function emptyDraft(title = ""): Draft {
     inputMode: "toggle",
     heatmapMonoColor: DEFAULT_MONO_COLOR,
     colorByContributor: true,
+    transpose: false,
+    initials: false,
+    statementOptions: DEFAULT_STATEMENT_OPTIONS,
     heatmapSettings: null,
     outputLocale: "en",
     updatedAt: Date.now(),
@@ -433,13 +477,22 @@ function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
   return asks;
 }
 
+function legacyFigure(settings: unknown, key: "horizontal" | "acronyms"): boolean {
+  return isRecord(settings) && settings[key] === true;
+}
+
+function repairStatementOptions(value: unknown): StatementOptions {
+  const d = DEFAULT_STATEMENT_OPTIONS;
+  const raw = isRecord(value) ? value : {};
+  const flag = (key: keyof StatementOptions) => (typeof raw[key] === "boolean" ? raw[key] : d[key]);
+  return { initials: flag("initials"), showLevels: flag("showLevels"), separateAck: flag("separateAck") };
+}
+
 /**
  * Rebuild one persisted draft, filling anything missing or malformed. Keys
  * this build does not know are kept: a newer build's fields must survive an
  * older tab's save.
  */
-const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
-
 function repairSingleDraft(value: unknown, id: string): Draft {
   const { asked, ...raw } = (isRecord(value) ? value : {}) as Partial<Draft> & { asked?: unknown };
   return {
@@ -459,6 +512,11 @@ function repairSingleDraft(value: unknown, id: string): Draft {
         ? raw.colorByContributor
         : !(typeof raw.heatmapMonoColor === "string" && HEX_COLOR.test(raw.heatmapMonoColor)) ||
           raw.heatmapMonoColor === DEFAULT_MONO_COLOR,
+    // Figure settings once held these as their own copies. A save from before keeps its orientation
+    // and initials; its colour copies are dropped, so the grid's hue wins.
+    transpose: typeof raw.transpose === "boolean" ? raw.transpose : legacyFigure(raw.heatmapSettings, "horizontal"),
+    initials: typeof raw.initials === "boolean" ? raw.initials : legacyFigure(raw.heatmapSettings, "acronyms"),
+    statementOptions: repairStatementOptions(raw.statementOptions),
     heatmapSettings: repairHeatmapSettings(raw.heatmapSettings),
     outputLocale: normalizeLocaleCode(raw.outputLocale),
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
@@ -717,6 +775,8 @@ export function announcingStorage(): DraftStorage {
         for (const draftKey of draftKeys()) window.localStorage.removeItem(draftKey);
         // Holds draft data too; clearing the drafts should not leave a copy behind.
         window.localStorage.removeItem(UNREADABLE_KEY);
+        // "Every draft" means starting over: the checklist comes back too.
+        window.localStorage.removeItem(GUIDE_KEY);
       } catch {
         // Storage blocked entirely (SecurityError): nothing on disk to clear.
       }
@@ -939,6 +999,9 @@ export const useContributionStore = create<ContributionState>()(
       welcomeOpen: false,
       inspectorTab: "statement",
       colorByContributor: true,
+      transpose: false,
+      initials: false,
+      statementOptions: DEFAULT_STATEMENT_OPTIONS,
       newerVersionBlocked: false,
       saveFailure: null,
       claim: null,
@@ -949,6 +1012,7 @@ export const useContributionStore = create<ContributionState>()(
       reviewSettled: null,
       reviewFocus: null,
       recentReply: null,
+      listFocus: null,
       workspaceCleared: 0,
 
       createDraft: () => {
@@ -1101,6 +1165,11 @@ export const useContributionStore = create<ContributionState>()(
           state.statementLink = link;
         }),
 
+      setListFocus: (request) =>
+        set((state) => {
+          state.listFocus = request;
+        }),
+
       setReviewSettled: (cells) =>
         set((state) => {
           state.reviewSettled = cells;
@@ -1157,6 +1226,7 @@ export const useContributionStore = create<ContributionState>()(
           // Undo of the removal puts the ask back through applyAskPatch.
           delete state.asks[authorId];
           if (state.selfId === authorId) state.selfId = null;
+          if (state.listFocus?.authorId === authorId) state.listFocus = null;
         }),
 
       restoreAuthor: (author, index) => {
@@ -1341,6 +1411,29 @@ export const useContributionStore = create<ContributionState>()(
           state.colorByContributor = on;
         }),
 
+      setTranspose: (on) =>
+        set((state) => {
+          state.transpose = on;
+        }),
+
+      setInitials: (on) =>
+        set((state) => {
+          state.initials = on;
+        }),
+
+      resetGridView: () =>
+        set((state) => {
+          state.heatmapMonoColor = DEFAULT_MONO_COLOR;
+          state.colorByContributor = true;
+          state.transpose = false;
+          state.initials = false;
+        }),
+
+      setStatementOptions: (patch) =>
+        set((state) => {
+          state.statementOptions = { ...state.statementOptions, ...patch };
+        }),
+
       setNormsField: (field) =>
         set((state) => {
           state.normsField = field;
@@ -1358,6 +1451,9 @@ export const useContributionStore = create<ContributionState>()(
           state.inputMode = "toggle";
           state.heatmapMonoColor = DEFAULT_MONO_COLOR;
           state.colorByContributor = true;
+          state.transpose = false;
+          state.initials = false;
+          state.statementOptions = DEFAULT_STATEMENT_OPTIONS;
           state.heatmapSettings = null;
           state.outputLocale = "en";
           state.asks = {};

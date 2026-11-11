@@ -68,9 +68,6 @@ msgstr "Opções do mapa de calor"
 msgid "statementOptions"
 msgstr "Opções da declaração"
 
-msgid "gridColor"
-msgstr "Cor do mapa de calor"
-
 msgid "transpose"
 msgstr "Transpor"
 
@@ -173,6 +170,15 @@ msgstr "Atribuir a todos"
 msgid "bulkClearRole"
 msgstr "Limpar para todos"
 
+msgid "setAllRoles"
+msgstr "Definir todos os papéis…"
+
+msgid "assignToEveryone"
+msgstr "Atribuir a todos…"
+
+msgid "editInList"
+msgstr "Editar na lista"
+
 msgid "bulkChangeApplied"
 msgstr "Alteração em massa aplicada."
 
@@ -184,9 +190,6 @@ msgstr "Contribuidor a atribuir"
 
 msgid "colorLabel"
 msgstr "Cor"
-
-msgid "transposeHint"
-msgstr "Trocar os eixos de linhas e colunas"
 
 msgid "legendLevel"
 msgstr "Nível"
@@ -668,8 +671,6 @@ msgstr "Fechar"
 msgid "rolesUsed"
 msgstr "{used} de {total} papéis usados"
 
-msgid "shareWarningTitle"
-msgstr "Esta ligação contém os seus dados"
 
 msgid "shareWarningBody"
 msgstr "Qualquer pessoa com esta ligação pode ler todos os nomes, ORCID iD, tipo de contribuidor e atribuição de papéis."
@@ -704,8 +705,6 @@ msgstr "Escrever um iD ORCID, ou colá-lo como iD ou como URL de orcid.org"
 msgid "a11yDismissWelcome"
 msgstr "Fechar a introdução"
 
-msgid "a11yShareLink"
-msgstr "Partilhar uma ligação que contém todos os dados dos contribuidores"
 
 msgid "a11yUseInitials"
 msgstr "Usar iniciais em vez de nomes"
@@ -741,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT é uma norma ANSI/NISO (<cc>CC BY 4.0</cc>). Este projeto é independente da NISO e não conta com o seu aval."
 
 msgid "aboutPrivacy"
-msgstr "Ao pesquisar um ORCID iD, o seu navegador envia-o para pub.orcid.org. Ao pesquisar um DOI, envia-o para api.crossref.org, juntamente com o endereço de contacto deste site, e para api.datacite.org se o Crossref não tiver registo. A Cloudflare, que aloja este site, conta os pedidos de páginas nos seus próprios servidores, de forma agregada, sem qualquer script ou cookie no seu navegador. Importar CITATION.cff ou .zenodo.json carrega a partir deste site o conversor citesync e um ambiente de execução Python; o ficheiro é processado no seu navegador e nunca é enviado. Mais nada sai do seu navegador: os rascunhos ficam no armazenamento local. Os pedidos aos coautores e as respostas ficam guardados apenas neste navegador e são incluídos nas exportações JSON, a menos que desmarque essa opção. Ao enviar uma resposta, o link, com o nome e o iD dessa pessoa, é entregue à aplicação que escolher. Iniciar sessão com ORCID numa resposta leva a pessoa a orcid.org e de volta; depois, o início de sessão viaja dentro da ligação de resposta e fica guardado com a resposta, também nas exportações JSON. Inclui o nome que consta do registo ORCID dessa pessoa. Abrir uma resposta assinada, ou importar um JSON que a contenha, obtém as chaves públicas do ORCID em orcid.org para a verificar."
+msgstr "Ao pesquisar um ORCID iD, o seu navegador envia-o para pub.orcid.org. Ao pesquisar um DOI, envia-o para api.crossref.org, juntamente com o endereço de contacto deste site, e para api.datacite.org se o Crossref não tiver registo. A Cloudflare, que aloja este site, conta os pedidos de páginas nos seus próprios servidores, de forma agregada, sem qualquer script ou cookie no seu navegador. Importar CITATION.cff ou .zenodo.json carrega a partir deste site o conversor citesync e um ambiente de execução Python; o ficheiro é processado no seu navegador e nunca é enviado. Mais nada sai do seu navegador: os rascunhos ficam no armazenamento local, tal como o facto de ter fechado a lista Primeiros passos ou copiado uma declaração. Os pedidos aos coautores e as respostas ficam guardados apenas neste navegador e são incluídos nas exportações JSON, a menos que desmarque essa opção. Ao enviar uma resposta, o link, com o nome e o iD dessa pessoa, é entregue à aplicação que escolher. Iniciar sessão com ORCID numa resposta leva a pessoa a orcid.org e de volta; depois, o início de sessão viaja dentro da ligação de resposta e fica guardado com a resposta, também nas exportações JSON. Inclui o nome que consta do registo ORCID dessa pessoa. Abrir uma resposta assinada, ou importar um JSON que a contenha, obtém as chaves públicas do ORCID em orcid.org para a verificar."
 
 msgid "accessibilityStatement"
 msgstr "Declaração de acessibilidade"
@@ -978,7 +977,7 @@ msgid "welcomeAskTitle"
 msgstr "Peça diretamente aos coautores"
 
 msgid "welcomeAskBody"
-msgstr "Copie um link no menu da linha de uma pessoa e envie-lho. Quando o link voltar, abra-o: a resposta fica guardada junto à linha dessa pessoa e as diferenças resolvem-se no separador Revisão."
+msgstr "Use Partilhar e depois Pedir aos coautores que verifiquem as suas funções para enviar a cada coautor um link para a sua própria coluna. Quando o link voltar, abra-o: a resposta fica guardada junto à linha dessa pessoa e as diferenças resolvem-se no separador Revisão."
 
 msgid "importDescription"
 msgstr "Comece por um DOI, cole nomes ou uma ligação que lhe devolveram, ou carregue um ficheiro CSV, JSON, JATS4R XML ou Crossref XML. JSON e XML repõem também as contribuições, com os níveis quando o ficheiro os inclui. Uma folha de cálculo do tenzing (CSV ou TSV) também serve. Cole uma declaração de contribuição dos autores para preencher as funções dos contribuidores que já estão aqui. CITATION.cff, codemeta.json e .zenodo.json importam nomes de autores e iD ORCID, deixando as funções vazias."
@@ -1638,8 +1637,6 @@ msgstr "Omitir papéis não utilizados"
 msgid "heatmapShowLevels"
 msgstr "Mostrar níveis de contribuição"
 
-msgid "heatmapLegendHint"
-msgstr "Explique os níveis na legenda do manuscrito se ocultar a legenda da figura."
 
 msgid "heatmapBlue"
 msgstr "Azul"
@@ -1652,6 +1649,18 @@ msgstr "Escala de cinzentos"
 
 msgid "heatmapPaleColor"
 msgstr "O nível de apoio é difícil de distinguir com esta cor. Escolha um tom mais escuro."
+
+msgid "heatmapSharedWithGrid"
+msgstr "Partilhado com a grelha"
+
+msgid "heatmapFigureOnly"
+msgstr "Só esta figura"
+
+msgid "settingsReset"
+msgstr "Repor"
+
+msgid "heatmapPerContributorNote"
+msgstr "Uma cor por contribuidor: para impressão em tons de cinzento, escolha uma só cor em Opções do mapa de calor."
 
 msgid "heatmapAdvanced"
 msgstr "Avançado"
@@ -1695,8 +1704,6 @@ msgstr "Resolução"
 msgid "heatmapSvgHint"
 msgstr "O SVG mantém a nitidez ao mudar de tamanho; estas dimensões aplicam-se ao PNG."
 
-msgid "heatmapReset"
-msgstr "Repor predefinições"
 
 msgid "heatmapPngTooLarge"
 msgstr "Este PNG seria demasiado grande. Reduza a largura ou resolução, troque os eixos ou transfira o SVG."
@@ -1730,12 +1737,6 @@ msgstr "Fragmento RO-Crate"
 msgid "colorByContributor"
 msgstr "Cor por contribuidor"
 
-msgid "figureColor"
-msgstr "Cor da figura"
-
-msgid "figureOneColor"
-msgstr "Uma só cor"
-
 msgid "figurePerContributor"
 msgstr "Por contribuidor"
 
@@ -1766,5 +1767,30 @@ msgstr "Oculta"
 msgid "heatmapCellMarks"
 msgstr "Mostrar marcas de contribuição"
 
-msgid "heatmapMarksHint"
-msgstr "Ativa as marcas para distinguir os níveis de contribuição também de outra forma."
+
+msgid "shareAskTitle"
+msgstr "Pedir aos coautores que verifiquem as suas funções"
+
+msgid "shareAskBody"
+msgstr "Cada coautor recebe uma ligação para a sua própria coluna. As respostas voltam a este rascunho para as rever."
+
+msgid "shareCopyTitle"
+msgstr "Ou enviar uma cópia do rascunho"
+
+msgid "guideTitle"
+msgstr "Primeiros passos"
+
+msgid "guideStepRoles"
+msgstr "Assinale as funções"
+
+msgid "guideStepAsk"
+msgstr "Pedir aos coautores"
+
+msgid "guideStepCopy"
+msgstr "Copie a declaração"
+
+msgid "guideDone"
+msgstr "concluído"
+
+msgid "guideDismiss"
+msgstr "Ocultar primeiros passos"

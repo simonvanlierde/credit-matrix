@@ -68,9 +68,6 @@ msgstr "ヒートマップの設定"
 msgid "statementOptions"
 msgstr "著者貢献文の設定"
 
-msgid "gridColor"
-msgstr "ヒートマップの色"
-
 msgid "transpose"
 msgstr "転置"
 
@@ -173,6 +170,15 @@ msgstr "全員に割り当て"
 msgid "bulkClearRole"
 msgstr "全員から解除"
 
+msgid "setAllRoles"
+msgstr "すべての役割を設定…"
+
+msgid "assignToEveryone"
+msgstr "全員に割り当て…"
+
+msgid "editInList"
+msgstr "リストで編集"
+
 msgid "bulkChangeApplied"
 msgstr "一括変更を適用しました。"
 
@@ -184,9 +190,6 @@ msgstr "割り当てる貢献者"
 
 msgid "colorLabel"
 msgstr "色"
-
-msgid "transposeHint"
-msgstr "行と列の軸を入れ替えます"
 
 msgid "legendLevel"
 msgstr "レベル"
@@ -668,8 +671,6 @@ msgstr "閉じる"
 msgid "rolesUsed"
 msgstr "{total} 種類中 {used} 種類を使用"
 
-msgid "shareWarningTitle"
-msgstr "このリンクにはデータが含まれます"
 
 msgid "shareWarningBody"
 msgstr "このリンクを知っている人は、氏名、ORCID iD、貢献者の種別、役割の割り当てをすべて閲覧できます。"
@@ -704,8 +705,6 @@ msgstr "ORCID iD を入力するか、iD または orcid.org の URL として�
 msgid "a11yDismissWelcome"
 msgstr "はじめにの案内を閉じる"
 
-msgid "a11yShareLink"
-msgstr "すべての貢献者データを含むリンクを共有します"
 
 msgid "a11yUseInitials"
 msgstr "氏名の代わりにイニシャルを使う"
@@ -741,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT は ANSI/NISO 標準（<cc>CC BY 4.0</cc>）です。本プロジェクトは NISO から独立しており、NISO の承認を受けたものではありません。"
 
 msgid "aboutPrivacy"
-msgstr "ORCID iD を検索すると、ブラウザーから pub.orcid.org に送信されます。DOI を検索すると、このサイトの連絡先アドレスとともに api.crossref.org に、Crossref に記録がない場合は api.datacite.org にも送信されます。このサイトをホストする Cloudflare は、ページへのリクエスト数を自社のサーバー上で集計値としてのみ数えます。ブラウザーではスクリプトも Cookie も使いません。CITATION.cff や .zenodo.json をインポートすると、このサイトから citesync コンバーターと Python ランタイムが読み込まれます。ファイルはブラウザー内で処理され、アップロードされることはありません。それ以外はブラウザーの外に出ません。下書きはローカルストレージにのみ保存されます。共著者への依頼と回答はこのブラウザーにのみ保存され、チェックを外さない限り JSON エクスポートに含まれます。回答を送信すると、その人の名前と iD を含むリンクが、選択したアプリに渡されます。回答でORCIDにサインインすると、共著者はorcid.orgに移動してから戻ります。サインイン情報はその後、返信リンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。これには共著者の ORCID レコードに登録された名前が含まれます。サインイン付きの回答を開くか、それを含む JSON をインポートすると、確認のためにorcid.orgからORCIDの公開鍵を取得します。"
+msgstr "ORCID iD を検索すると、ブラウザーから pub.orcid.org に送信されます。DOI を検索すると、このサイトの連絡先アドレスとともに api.crossref.org に、Crossref に記録がない場合は api.datacite.org にも送信されます。このサイトをホストする Cloudflare は、ページへのリクエスト数を自社のサーバー上で集計値としてのみ数えます。ブラウザーではスクリプトも Cookie も使いません。CITATION.cff や .zenodo.json をインポートすると、このサイトから citesync コンバーターと Python ランタイムが読み込まれます。ファイルはブラウザー内で処理され、アップロードされることはありません。それ以外はブラウザーの外に出ません。下書きはローカルストレージにのみ保存されます。「はじめに」チェックリストを閉じたかどうかと、声明をコピーしたかどうかも同様です。共著者への依頼と回答はこのブラウザーにのみ保存され、チェックを外さない限り JSON エクスポートに含まれます。回答を送信すると、その人の名前と iD を含むリンクが、選択したアプリに渡されます。回答でORCIDにサインインすると、共著者はorcid.orgに移動してから戻ります。サインイン情報はその後、返信リンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。これには共著者の ORCID レコードに登録された名前が含まれます。サインイン付きの回答を開くか、それを含む JSON をインポートすると、確認のためにorcid.orgからORCIDの公開鍵を取得します。"
 
 msgid "accessibilityStatement"
 msgstr "アクセシビリティ方針"
@@ -978,7 +977,7 @@ msgid "welcomeAskTitle"
 msgstr "共著者に直接依頼"
 
 msgid "welcomeAskBody"
-msgstr "貢献者の行メニューからリンクをコピーして本人に送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。"
+msgstr "「共有」から「共著者に役割の確認を依頼」を選び、各共著者に本人の列へのリンクを送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。"
 
 msgid "importDescription"
 msgstr "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML・Crossref XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。著者貢献声明を貼り付けると、ここにいる貢献者の役割を埋められます。CITATION.cff、codemeta.json、.zenodo.json からは著者名と ORCID iD がインポートされ、役割は空のままになります。"
@@ -1638,8 +1637,6 @@ msgstr "未使用の役割を省略"
 msgid "heatmapShowLevels"
 msgstr "貢献レベルを表示"
 
-msgid "heatmapLegendHint"
-msgstr "凡例を非表示にする場合は、図のキャプションでレベルを説明してください。"
 
 msgid "heatmapBlue"
 msgstr "青"
@@ -1652,6 +1649,18 @@ msgstr "グレースケール"
 
 msgid "heatmapPaleColor"
 msgstr "この色では補助的な貢献を区別しにくくなります。より暗い色を選んでください。"
+
+msgid "heatmapSharedWithGrid"
+msgstr "グリッドと共通"
+
+msgid "heatmapFigureOnly"
+msgstr "この図のみ"
+
+msgid "settingsReset"
+msgstr "リセット"
+
+msgid "heatmapPerContributorNote"
+msgstr "貢献者ごとに色分けしています。グレースケール印刷では、「ヒートマップの設定」で単色を選んでください。"
 
 msgid "heatmapAdvanced"
 msgstr "詳細設定"
@@ -1695,8 +1704,6 @@ msgstr "解像度"
 msgid "heatmapSvgHint"
 msgstr "SVGは拡大縮小しても鮮明です。このサイズ設定はPNGに適用されます。"
 
-msgid "heatmapReset"
-msgstr "既定値に戻す"
 
 msgid "heatmapPngTooLarge"
 msgstr "PNGが大きすぎます。幅または解像度を下げるか、軸を入れ替えるか、SVGをダウンロードしてください。"
@@ -1730,12 +1737,6 @@ msgstr "RO-Crate フラグメント"
 msgid "colorByContributor"
 msgstr "貢献者ごとに色分け"
 
-msgid "figureColor"
-msgstr "図の色"
-
-msgid "figureOneColor"
-msgstr "単色"
-
 msgid "figurePerContributor"
 msgstr "貢献者ごと"
 
@@ -1766,5 +1767,30 @@ msgstr "非表示"
 msgid "heatmapCellMarks"
 msgstr "貢献度の記号を表示"
 
-msgid "heatmapMarksHint"
-msgstr "記号を有効にすると、濃淡以外でも貢献度を区別できます。"
+
+msgid "shareAskTitle"
+msgstr "共著者に役割の確認を依頼"
+
+msgid "shareAskBody"
+msgstr "共著者ごとに、自分の列へのリンクが届きます。回答はこの下書きに戻り、確認できます。"
+
+msgid "shareCopyTitle"
+msgstr "または下書きのコピーを送る"
+
+msgid "guideTitle"
+msgstr "はじめに"
+
+msgid "guideStepRoles"
+msgstr "役割にチェック"
+
+msgid "guideStepAsk"
+msgstr "共著者に依頼"
+
+msgid "guideStepCopy"
+msgstr "声明をコピー"
+
+msgid "guideDone"
+msgstr "完了"
+
+msgid "guideDismiss"
+msgstr "はじめにを隠す"

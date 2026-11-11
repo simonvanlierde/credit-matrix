@@ -13,7 +13,13 @@ judge each criterion on it, report.
   allow in Chromium. It fixed four problems, listed under 1.3.1, 2.4.6 and 4.1.3.
 - **Rechecked:** 11 November 2026, after the per-contributor colours and the warm paper palette.
   The axe and contrast tests passed in Chromium, Firefox and WebKit in both themes, and 1.4.11 now
-  also checks the focus ring.
+  also checks the focus ring. The same day the accent and the charcoal ink were rechecked by computing
+  WCAG contrast against the paper tokens in `globals.css`. Charcoal `#2e2a25` measures 13.4:1 on
+  paper and 12.5:1 on muted paper (14.0:1 on bright paper). `accentFor` in
+  `src/components/ThemeHue.tsx` deepens a custom heatmap hue until it reaches 4.5:1 against bright
+  paper (`src/components/ThemeHue.test.tsx`). The default accent, ink blue `#1f4e79`, measures 8.2:1
+  on the page and 8.5:1 on bright paper, and its dark-mode counterpart `#a8c1da` 9.8:1 on the dark
+  page.
 - **Who:** the developer. This is not an external audit.
 - **Browser:** Chromium (Playwright's desktop Chrome profile), at 1280 px, 640 px, 390 px and
   320 px wide, in the light and dark themes. Firefox and WebKit through Playwright, at 1280 px.
@@ -70,7 +76,7 @@ N/A: the page has no content the criterion applies to.
 | 1.4.4 Resize Text | AA | Pass | Fixed: at 640 to 700 px (200% zoom) the header ran past the edge and hid Import. `e2e/visual-contrast.spec.ts` checks the width at 640 and 700 px. |
 | 1.4.5 Images of Text | AA | Pass | The only raster image is the badge logo. |
 | 1.4.10 Reflow | AA | Pass | No sideways scrolling at 320 px on any sampled page. The grid becomes a list of roles per contributor. The element's heatmap scrolls inside its own box, which the exception for data visualisations allows. |
-| 1.4.11 Non-text Contrast | AA | Pass | Fixed: the reorder grip, text-field edges and empty grid cells were 1.1 to 1.6:1. `e2e/visual-contrast.spec.ts` checks them at 3:1 in both themes. The focus ring measures 8.5:1 in both themes and is checked at 3:1 in the same spec. Each contributor's hue holds white initials at 4.5:1 and marks a linked cell at 3:1 in both themes (`src/core/__tests__/contrast.test.ts`). |
+| 1.4.11 Non-text Contrast | AA | Pass | Fixed: the reorder grip, text-field edges and empty grid cells were 1.1 to 1.6:1. `e2e/visual-contrast.spec.ts` checks them at 3:1 in both themes. Focus inside the grid uses the accent ring, which measures 8.2:1 against the page by default and stays at least 4.5:1 against bright paper for any hue; outside the grid the focus ring measures 8.5:1. Both are checked at 3:1 in the same spec. Each contributor's hue holds white initials at 4.5:1 and marks a linked cell at 3:1 in both themes (`src/core/__tests__/contrast.test.ts`). |
 | 1.4.12 Text Spacing | AA | Pass | With the 1.4.12 spacing applied, no text is clipped or overlaps. |
 | 1.4.13 Content on Hover or Focus | AA | Pass | Fixed: Escape did not hide the census chart's value readout. `e2e/focus-and-timing.spec.ts` checks it. Popovers open on click and close on Escape. |
 

@@ -168,7 +168,8 @@ pass through to Typst's `figure` function.
 
 Palette, color, shape, cell size, typography, legend, role labels, orientation and empty-role filtering
 apply to SVG figures in the app, CLI and document plugins. Typst draws equivalent native figures.
-The app adds preview zoom, saved settings per draft, reset and PNG resolution controls.
+The app adds preview zoom, saved settings per draft, reset and PNG resolution controls. Colour,
+orientation and initials are shared with the grid's Heatmap options; Figure settings' Reset covers the rest.
 Under Figure settings, open Export recipe to copy a CLI command or a Sphinx, Quarto/Pandoc,
 MyST/Jupyter Book or Typst snippet. Recipes contain the current style settings and fixed data
 placeholders, without contributor names or PNG settings. Supply the contributor data and install

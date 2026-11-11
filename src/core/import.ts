@@ -71,9 +71,12 @@ export class ExportOnlyError extends Error {
 // Author YAML from toQuarto/toMyst: leading comments, then a bare `author:` or `authors:` key.
 const AUTHOR_YAML = /^(?:#[^\n]*\n)*authors?:(?: *\[\])? *(?:\n|$)/;
 
-/** The export-only format `trimmed` is, if any. A bare `author:` line is never a name list. */
+/**
+ * The export-only format `trimmed` is, if any. A bare `author:` line is never a name list. YAML
+ * keys come in any order, so a CITATION.cff may also open with `authors:`.
+ */
 function exportOnlyFormat(trimmed: string): string | undefined {
-  if (AUTHOR_YAML.test(trimmed)) return "Quarto and MyST author YAML";
+  if (AUTHOR_YAML.test(trimmed) && !/^cff-version\s*:/m.test(trimmed)) return "Quarto and MyST author YAML";
   if (trimmed.startsWith("{") && /"@context"\s*:\s*"https:\/\/w3id\.org\/ro\/crate\//.test(trimmed))
     return "An RO-Crate fragment";
   return undefined;

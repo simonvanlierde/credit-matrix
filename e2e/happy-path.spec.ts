@@ -871,7 +871,7 @@ test.describe("Happy path UI flows", () => {
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(8);
 
     await page.getByRole("button", { name: "Heatmap options" }).click();
-    await page.getByRole("button", { name: "Transpose" }).click();
+    await page.getByRole("radio", { name: "Contributors in rows" }).click();
     await page.keyboard.press("Escape");
 
     // An angled role label overhangs its own column, so it must paint above the
@@ -892,7 +892,7 @@ test.describe("Happy path UI flows", () => {
 
     // A long contributor name is truncated in the transposed row header rather
     // than growing the label column and pushing role columns out of view.
-    const rowHeader = page.locator("tbody th").filter({ hasText: "Maximiliana" }).locator("span > span").last();
+    const rowHeader = page.locator("tbody th").filter({ hasText: "Maximiliana" }).locator("span[title]").last();
     expect(await rowHeader.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
   });
 

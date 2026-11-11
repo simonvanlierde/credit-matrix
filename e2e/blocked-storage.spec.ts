@@ -39,6 +39,9 @@ test("works, unsaved, when the browser blocks site data", async ({ baseURL, brow
     await add.press("Enter");
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(1);
     await expect(onScreen(page, /browser blocks storage/)).toBeVisible();
+    // The checklist keeps its state in memory for the visit.
+    await page.getByRole("button", { name: "Hide getting started" }).click();
+    await expect(page.getByRole("button", { name: "Hide getting started" })).toHaveCount(0);
   } finally {
     await context.close();
     await rm(profile, { recursive: true, force: true });

@@ -4,6 +4,7 @@ import { Lockup } from "@/components/BrandMark";
 import { BrandMenu } from "@/components/BrandMenu";
 import { CensusLink } from "@/components/CensusLink";
 import { HeaderActions } from "@/components/HeaderActions";
+import { HomeLink } from "@/components/HomeLink";
 import { HowItWorks } from "@/components/HowItWorks";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { PersistenceStatus } from "@/components/PersistenceStatus";
@@ -43,9 +44,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         wordmark used to absorb it by wrapping out of the header. */}
                 <BrandMenu version={packageJson.version} />
                 {/* The lockup goes home, as a site's logo does; below lg it opens the menu instead. */}
-                <a href="/" className="hidden shrink-0 items-center gap-2.5 rounded-lg lg:flex">
+                <HomeLink className="hidden shrink-0 items-center gap-2.5 rounded-lg lg:flex">
                   <Lockup />
-                </a>
+                </HomeLink>
               </h1>
               <nav className="hidden lg:flex gap-6 items-center">
                 <HowItWorks />

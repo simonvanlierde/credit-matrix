@@ -68,9 +68,6 @@ msgstr "热图选项"
 msgid "statementOptions"
 msgstr "声明选项"
 
-msgid "gridColor"
-msgstr "热图颜色"
-
 msgid "transpose"
 msgstr "转置"
 
@@ -173,6 +170,15 @@ msgstr "分配给所有人"
 msgid "bulkClearRole"
 msgstr "为所有人清除"
 
+msgid "setAllRoles"
+msgstr "设置所有角色…"
+
+msgid "assignToEveryone"
+msgstr "分配给所有人…"
+
+msgid "editInList"
+msgstr "在列表中编辑"
+
 msgid "bulkChangeApplied"
 msgstr "已应用批量更改。"
 
@@ -184,9 +190,6 @@ msgstr "要分配的贡献者"
 
 msgid "colorLabel"
 msgstr "颜色"
-
-msgid "transposeHint"
-msgstr "交换行轴与列轴"
 
 msgid "legendLevel"
 msgstr "等级"
@@ -668,8 +671,6 @@ msgstr "关闭"
 msgid "rolesUsed"
 msgstr "已使用 {total} 种角色中的 {used} 种"
 
-msgid "shareWarningTitle"
-msgstr "此链接包含您的数据"
 
 msgid "shareWarningBody"
 msgstr "任何拿到此链接的人都可以查看每位贡献者的姓名、ORCID iD、贡献者类型和角色分配。"
@@ -704,8 +705,6 @@ msgstr "输入 ORCID iD，或以 iD 或 orcid.org 网址的形式粘贴"
 msgid "a11yDismissWelcome"
 msgstr "关闭新手引导"
 
-msgid "a11yShareLink"
-msgstr "分享包含全部贡献者数据的链接"
 
 msgid "a11yUseInitials"
 msgstr "使用姓名缩写代替全名"
@@ -741,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT 是 ANSI/NISO 标准（<cc>CC BY 4.0</cc>）。本项目独立于 NISO，未获 NISO 认可。"
 
 msgid "aboutPrivacy"
-msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在你的浏览器中运行脚本或设置 Cookie。导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在你的浏览器中处理，绝不会上传。除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录信息包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
+msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在你的浏览器中运行脚本或设置 Cookie。导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在你的浏览器中处理，绝不会上传。除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中，你是否关闭了“入门”清单或复制过声明也一样。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录信息包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
 
 msgid "accessibilityStatement"
 msgstr "无障碍声明"
@@ -978,7 +977,7 @@ msgid "welcomeAskTitle"
 msgstr "直接邀请合著者"
 
 msgid "welcomeAskBody"
-msgstr "从贡献者行菜单复制链接并发送给对方。收到回传的链接后打开它：回复会保存在该贡献者的行旁边，差异在“核对”标签页中处理。"
+msgstr "点击“分享”，再选“请合著者核对各自的角色”，即可向每位合著者发送指向其本人一列的链接。收到回传的链接后打开它：回复会保存在该贡献者的行旁边，差异在“核对”标签页中处理。"
 
 msgid "importDescription"
 msgstr "可以从 DOI 开始，粘贴姓名或合作者回传的链接，也可以上传 CSV、JSON、JATS4R XML 或 Crossref XML 文件。JSON 和 XML 还会恢复贡献，文件中含有等级时也会恢复等级。也可以导入 tenzing 电子表格（CSV 或 TSV）。粘贴作者贡献声明，即可为已有的贡献者填写角色。CITATION.cff、codemeta.json 和 .zenodo.json 会导入作者姓名和 ORCID iD，角色留空。"
@@ -1638,8 +1637,6 @@ msgstr "省略未使用的角色"
 msgid "heatmapShowLevels"
 msgstr "显示贡献级别"
 
-msgid "heatmapLegendHint"
-msgstr "隐藏图例时，请在图注中解释各级别的含义。"
 
 msgid "heatmapBlue"
 msgstr "蓝色"
@@ -1652,6 +1649,18 @@ msgstr "灰度"
 
 msgid "heatmapPaleColor"
 msgstr "此颜色下难以区分支持级贡献。请尝试更深的颜色。"
+
+msgid "heatmapSharedWithGrid"
+msgstr "与网格共用"
+
+msgid "heatmapFigureOnly"
+msgstr "仅此图"
+
+msgid "settingsReset"
+msgstr "重置"
+
+msgid "heatmapPerContributorNote"
+msgstr "按贡献者着色。若要灰度打印，请在“热图选项”中选择单一颜色。"
 
 msgid "heatmapAdvanced"
 msgstr "高级设置"
@@ -1695,8 +1704,6 @@ msgstr "分辨率"
 msgid "heatmapSvgHint"
 msgstr "SVG 缩放后仍保持清晰；这些尺寸设置仅适用于 PNG。"
 
-msgid "heatmapReset"
-msgstr "恢复默认设置"
 
 msgid "heatmapPngTooLarge"
 msgstr "此 PNG 过大。请减小宽度或分辨率、交换坐标轴，或下载 SVG。"
@@ -1730,12 +1737,6 @@ msgstr "RO-Crate 片段"
 msgid "colorByContributor"
 msgstr "按贡献者着色"
 
-msgid "figureColor"
-msgstr "图的颜色"
-
-msgid "figureOneColor"
-msgstr "单一颜色"
-
 msgid "figurePerContributor"
 msgstr "按贡献者"
 
@@ -1766,5 +1767,30 @@ msgstr "隐藏"
 msgid "heatmapCellMarks"
 msgstr "显示贡献标记"
 
-msgid "heatmapMarksHint"
-msgstr "启用标记后，还可以通过标记区分贡献等级。"
+
+msgid "shareAskTitle"
+msgstr "请合著者核对各自的角色"
+
+msgid "shareAskBody"
+msgstr "每位合著者都会收到一个指向自己那一列的链接。他们的回复会返回到此草稿，供你审阅。"
+
+msgid "shareCopyTitle"
+msgstr "或发送草稿副本"
+
+msgid "guideTitle"
+msgstr "入门"
+
+msgid "guideStepRoles"
+msgstr "勾选各自的角色"
+
+msgid "guideStepAsk"
+msgstr "请合著者确认"
+
+msgid "guideStepCopy"
+msgstr "复制声明"
+
+msgid "guideDone"
+msgstr "已完成"
+
+msgid "guideDismiss"
+msgstr "隐藏入门"

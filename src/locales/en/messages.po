@@ -68,9 +68,6 @@ msgstr "Heatmap options"
 msgid "statementOptions"
 msgstr "Statement options"
 
-msgid "gridColor"
-msgstr "Heatmap color"
-
 msgid "transpose"
 msgstr "Transpose"
 
@@ -173,6 +170,15 @@ msgstr "Assign to everyone"
 msgid "bulkClearRole"
 msgstr "Clear for everyone"
 
+msgid "setAllRoles"
+msgstr "Set all roles…"
+
+msgid "assignToEveryone"
+msgstr "Assign to everyone…"
+
+msgid "editInList"
+msgstr "Edit in list"
+
 msgid "bulkChangeApplied"
 msgstr "Bulk change applied."
 
@@ -184,9 +190,6 @@ msgstr "Contributor to assign"
 
 msgid "colorLabel"
 msgstr "Color"
-
-msgid "transposeHint"
-msgstr "Swap the row and column axes"
 
 msgid "legendLevel"
 msgstr "Level"
@@ -668,8 +671,6 @@ msgstr "Dismiss"
 msgid "rolesUsed"
 msgstr "{used} of {total} roles used"
 
-msgid "shareWarningTitle"
-msgstr "This link contains your data"
 
 msgid "shareWarningBody"
 msgstr "Anyone with this link can read every contributor name, ORCID iD, contributor type, and role assignment."
@@ -704,8 +705,6 @@ msgstr "Type an ORCID iD, or paste one as an iD or an orcid.org URL"
 msgid "a11yDismissWelcome"
 msgstr "Dismiss getting started"
 
-msgid "a11yShareLink"
-msgstr "Share a link containing all contributor data"
 
 msgid "a11yUseInitials"
 msgstr "Use initials instead of names"
@@ -741,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT is an ANSI/NISO standard (<cc>CC BY 4.0</cc>). This project is independent of NISO and not endorsed by it."
 
 msgid "aboutPrivacy"
-msgstr "Looking up an ORCID iD sends it to pub.orcid.org from your browser. Looking up a DOI sends it to api.crossref.org, together with this site's contact address, and to api.datacite.org if Crossref has no record. Cloudflare, which hosts this site, counts page requests on its own servers, in aggregate, with no script or cookie in your browser. Importing CITATION.cff or .zenodo.json loads the citesync converter and a Python runtime from this site; the file is processed in your browser and is never uploaded. Nothing else leaves your browser: drafts stay in its local storage. Asks to co-authors and their answers are kept only in this browser, and go into JSON exports unless you untick that option. Sending a reply hands its link, with that person's name and iD, to the app you choose. Signing in with ORCID on an answer takes the co-author to orcid.org and back; the sign-in then travels inside the reply link and is kept with the answer, also in JSON exports. It includes the name on the co-author's ORCID record. Opening a signed answer, or importing a JSON file with one, fetches ORCID's public keys from orcid.org to check it."
+msgstr "Looking up an ORCID iD sends it to pub.orcid.org from your browser. Looking up a DOI sends it to api.crossref.org, together with this site's contact address, and to api.datacite.org if Crossref has no record. Cloudflare, which hosts this site, counts page requests on its own servers, in aggregate, with no script or cookie in your browser. Importing CITATION.cff or .zenodo.json loads the citesync converter and a Python runtime from this site; the file is processed in your browser and is never uploaded. Nothing else leaves your browser: drafts stay in its local storage, as does whether you closed the getting-started checklist or copied a statement. Asks to co-authors and their answers are kept only in this browser, and go into JSON exports unless you untick that option. Sending a reply hands its link, with that person's name and iD, to the app you choose. Signing in with ORCID on an answer takes the co-author to orcid.org and back; the sign-in then travels inside the reply link and is kept with the answer, also in JSON exports. It includes the name on the co-author's ORCID record. Opening a signed answer, or importing a JSON file with one, fetches ORCID's public keys from orcid.org to check it."
 
 msgid "accessibilityStatement"
 msgstr "Accessibility statement"
@@ -978,7 +977,7 @@ msgid "welcomeAskTitle"
 msgstr "Ask co-authors directly"
 
 msgid "welcomeAskBody"
-msgstr "Copy a link from a contributor's row menu and send it to them. When their link comes back, open it: the answer is kept beside their row, and you settle any differences in the Review tab."
+msgstr "Use Share, then Ask co-authors to check their roles, to send each co-author a link to their own column. When their link comes back, open it: the answer is kept beside their row, and you settle any differences in the Review tab."
 
 msgid "importDescription"
 msgstr "Start from a DOI, paste author names or a link a co-author sent back, or upload a CSV, JSON, or JATS4R or Crossref XML file. JSON and XML restore contributions as well as names, and levels when the file has them. A tenzing spreadsheet (CSV or TSV) works too. Paste an author contribution statement to fill in the roles of the contributors already here. CITATION.cff, codemeta.json and .zenodo.json import author names and ORCID iDs, leaving roles empty."
@@ -1638,8 +1637,6 @@ msgstr "Omit unused roles"
 msgid "heatmapShowLevels"
 msgstr "Show contribution levels"
 
-msgid "heatmapLegendHint"
-msgstr "Keep the level meanings in your caption when hiding the legend."
 
 msgid "heatmapBlue"
 msgstr "Blue"
@@ -1652,6 +1649,18 @@ msgstr "Grayscale"
 
 msgid "heatmapPaleColor"
 msgstr "Supporting is hard to distinguish in this color. Try a darker shade."
+
+msgid "heatmapSharedWithGrid"
+msgstr "Shared with the grid"
+
+msgid "heatmapFigureOnly"
+msgstr "This figure only"
+
+msgid "settingsReset"
+msgstr "Reset"
+
+msgid "heatmapPerContributorNote"
+msgstr "Colored per contributor: for grayscale print, pick one color in Heatmap options."
 
 msgid "heatmapAdvanced"
 msgstr "Advanced"
@@ -1695,8 +1704,6 @@ msgstr "Resolution"
 msgid "heatmapSvgHint"
 msgstr "SVG stays sharp when resized; these dimensions apply to PNG."
 
-msgid "heatmapReset"
-msgstr "Reset defaults"
 
 msgid "heatmapPngTooLarge"
 msgstr "This PNG would be too large. Reduce its width or resolution, transpose the figure, or download SVG."
@@ -1730,12 +1737,6 @@ msgstr "RO-Crate fragment"
 msgid "colorByContributor"
 msgstr "Color by contributor"
 
-msgid "figureColor"
-msgstr "Figure color"
-
-msgid "figureOneColor"
-msgstr "One color"
-
 msgid "figurePerContributor"
 msgstr "Per contributor"
 
@@ -1766,5 +1767,30 @@ msgstr "Hidden"
 msgid "heatmapCellMarks"
 msgstr "Show contribution marks"
 
-msgid "heatmapMarksHint"
-msgstr "Enable marks for an additional way to distinguish contribution levels."
+
+msgid "shareAskTitle"
+msgstr "Ask co-authors to check their roles"
+
+msgid "shareAskBody"
+msgstr "Each co-author gets a link to their own column. Their answers come back to this draft for you to review."
+
+msgid "shareCopyTitle"
+msgstr "Or send a copy of the draft"
+
+msgid "guideTitle"
+msgstr "Getting started"
+
+msgid "guideStepRoles"
+msgstr "Tick their roles"
+
+msgid "guideStepAsk"
+msgstr "Ask co-authors"
+
+msgid "guideStepCopy"
+msgstr "Copy the statement"
+
+msgid "guideDone"
+msgstr "done"
+
+msgid "guideDismiss"
+msgstr "Hide getting started"

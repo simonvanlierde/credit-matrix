@@ -62,7 +62,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
           - link "CRediT census"
         - button "Language settings"
         - button /Drafts:/
-        - button "Share a link containing all contributor data"
+        - button "Share"
         - button "Import"
       - main:
         - region "Contributors":
@@ -136,10 +136,12 @@ test.describe("screen-reader view (accessibility tree)", () => {
     await loadSample(page);
     const cases: [string, string][] = [
       [
-        "Share a link containing all contributor data",
+        "Share",
         `
         - dialog "Share":
-          - paragraph: This link contains your data
+          - paragraph: Ask co-authors to check their roles
+          - button "Ask co-authors"
+          - paragraph: Or send a copy of the draft
           - button "Copy data link"
         `,
       ],
@@ -168,17 +170,36 @@ test.describe("screen-reader view (accessibility tree)", () => {
         "Heatmap options",
         `
         - dialog "Heatmap options":
-          - button "Heatmap color"
-          - button "Transpose"
-          - switch "Use initials instead of names"
+          - paragraph: Heatmap options
+          - button "Reset"
+          - group "Color":
+            - paragraph: Color
+            - text: Per contributor
+            - button "Per contributor" [pressed]
+            - button "Blue"
+            - button "Green"
+            - button "Grayscale"
+            - button "Custom"
+          - group "Layout":
+            - paragraph: Layout
+            - text: Orientation
+            - radiogroup "Orientation":
+              - radio "Roles in rows" [checked]
+              - radio "Contributors in rows"
+            - text: Use initials
+            - switch "Use initials instead of names"
         `,
       ],
       [
         "Language settings",
         `
         - dialog "Language settings":
-          - combobox "Interface language": English
-          - combobox "Output language": English
+          - paragraph: Language settings
+          - group:
+            - text: Interface language
+            - combobox "Interface language": English
+            - text: Output language
+            - combobox "Output language": English
         `,
       ],
       [

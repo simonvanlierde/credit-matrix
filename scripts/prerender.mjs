@@ -24,7 +24,8 @@ const deferScripts = (html) => {
     tag.startsWith("<script") ? "script" : "link",
     tag.match(/(?:href|src)="([^"]+)"/)[1],
   ]);
-  const loader = `<script>{const hold=document.body.appendChild(document.createElement("iframe"));hold.hidden=true;hold.contentDocument.open();let done=0;const go=()=>{if(done++)return;for(const[k,u]of ${scriptJson(urls)}){const e=document.createElement(k);if(k==="script")e.type="module";else e.rel="modulepreload";e[k==="script"?"src":"href"]=u;document.head.append(e)}hold.remove()};new PerformanceObserver(()=>go()).observe({type:"paint",buffered:true});setTimeout(go,1500)}</script>`;
+  // The timer comes first: a browser whose PerformanceObserver throws still starts the app.
+  const loader = `<script>{const hold=document.body.appendChild(document.createElement("iframe"));hold.hidden=true;hold.contentDocument.open();let done=0;const go=()=>{if(done++)return;for(const[k,u]of ${scriptJson(urls)}){const e=document.createElement(k);if(k==="script")e.type="module";else e.rel="modulepreload";e[k==="script"?"src":"href"]=u;document.head.append(e)}hold.remove()};setTimeout(go,1500);try{new PerformanceObserver(()=>go()).observe({type:"paint",buffered:true})}catch{}}</script>`;
   return rest.replace("</body>", () => `${loader}</body>`);
 };
 const description =

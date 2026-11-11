@@ -8,14 +8,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.12.0] - 2026-11-11
 
+**Upgrade note:** the browser storage format moves from version 3 to 5, because statement options
+are now saved per draft and the view settings are shared. Roll forward from this release and do not
+roll back past it: an older build refuses to write over drafts saved in version 5. See
+[deploying](docs/deploy.md).
+
 ### Added
 
 - New entry point `credit-matrix/figures` exports `createFigureRenderer` for PDF and
   font-embedded SVG output, and `FigureFontError` for a missing font or an unsupported character.
 - The grid colours each contributor in their own hue, shared by their chip, column, cells and
-  statement phrase; turn it off under the grid's display options. Heatmap exports stay one colour
-  unless you pick *Per contributor* under Figure settings. `buildHeatmapSvg` takes the same choice
-  as `colorBy: "contributor"`; the plugins and the CLI draw one hue. See
+  statement phrase; turn it off under the grid's display options. In the app, the heatmap figure
+  follows the grid's colour, so it is drawn per contributor by default; a figure saved as one colour
+  before now follows the grid too. `buildHeatmapSvg` takes the same choice as
+  `colorBy: "contributor"`; the library, the CLI and the plugins still draw one hue by default. See
   [the figure options](integrations/heatmap.md#figure-options).
 - Download heatmaps as PDF with embedded fonts and selectable text. App, CLI and document-plugin
   SVG exports also embed their fonts. Both formats embed only the glyphs a figure uses: about 30 kB
@@ -32,11 +38,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Copy or download Quarto/Pandoc and MyST/Jupyter Book author YAML from Export data.
   The CLI has `convert --to quarto` and `--to myst`; the package exports `toQuarto` and `toMyst`.
   Quarto keeps contribution levels, MyST omits them, and both leave non-authors out of the byline.
-- Import reads the Crossref `<contributors>` block the app exports, in the import box and with
-  `importAny`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
+- Import reads the Crossref `<contributors>` block the app exports, in the import box, with
+  `importAny` and with the new `fromCrossrefContributors`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
   has no contribution levels, so every listed role comes back as lead.
-- `credit-matrix convert --to tenzing` and `--to svg` print the Tenzing table and the contribution
-  heatmap. `--to svg` takes `--locale` and `--yes-no`.
+- `credit-matrix convert --to tenzing`, `--to svg` and `--to pdf` print the Tenzing table and the
+  contribution heatmap. The figure formats take `--locale`, `--yes-no` and the figure options as
+  flags (`--color`, `--legend`, `--font` and the rest in the [heatmap guide](integrations/heatmap.md)).
 - The `<credit-matrix>` element takes a `levels` attribute, which marks Equal and Supporting
   contributions in the statement. The heatmap always shows the levels.
 - `importAnswers` sets `provenance.signedElsewhere` when a sign-in was given for a row with another
@@ -59,7 +66,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   from `PATH`, or the command line in the `CREDIT_MATRIX_COMMAND` environment variable.
 - Pointing at a grid cell, or focusing it, marks its phrase in the statement, and pointing at a
   phrase rings its cell. `statementSpans` returns the plain-text statement as spans that name the
-  contributor and role behind each phrase.
+  contributor and role behind each phrase. Its spans hold `authorId` (a by-author name) and `role`
+  (a by-role role label).
+- Point at a person or role in the contributor list, the grid or the statement to mark them in all
+  three. A click opens one person menu or role popover everywhere, now with set or clear all roles,
+  assign a role to everyone and edit in list; a click on a statement phrase goes to its cell.
+- A getting-started checklist above the grid ticks itself as roles are set, co-authors are asked
+  and the statement is copied, and marks the next step's button. It ticks the ask step for a
+  one-person draft too, and once closed it stays closed in that browser.
 - Once every co-author but you has been asked and has answered, and nothing is left to review, the
   status strip says "Everyone agreed", and a screen reader hears it once.
 - Importing into a draft that already has contributors offers "Add N new" beside "Replace
@@ -71,10 +85,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The heatmap SVG for 200 contributors builds in about 30% less time than in 0.11.0 (1.46 ms
+  against 2.10 ms, median of three runs on one machine). Statements and the CSV and JATS exports
+  take the same time as before.
+- Colour, orientation and initials are stored once per draft and shared by the grid's Heatmap
+  options and Figure settings, where they are marked as shared with the grid. Every settings panel
+  uses the same controls. A new figure follows the grid, so it is coloured per contributor unless
+  you pick one colour. Drafts saved before this release keep their figure orientation and initials.
+- Statement options (initials, levels, separate acknowledgements) are saved per draft.
+- The heatmap colour is now the accent of the wordmark, tabs and selected options, and body text is
+  charcoal instead of black.
+- Share opens with asking co-authors, then copying the draft link.
+- The grid and its key centre on the window, as far as the space between the side panels allows. The key
+  is drawn as cells and, as in exported figures, stands beside a tall, narrow grid.
+- The add button sits inside the contributor name field.
+- On a phone, the heatmap export sits with Copy statement and Export data, since the grid there is a
+  list of roles with no figure on screen.
+- The Yes / no and By author / By role switches are as tall as the settings buttons beside them on
+  touch screens too; their tap area still reaches 44 px.
+- The collapsed contributor rail's chips link to the person's cell and open the person menu. On a phone
+  or a narrow window, the contributor list folds the same way, into one row of initials above the grid.
 - A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,
   sentence-case labels and Atkinson Hyperlegible for the interface. The panes share one page, empty
   grid cells are a faint dot, and the level key is one scale bar. Exported figures stay on white;
-  the `<credit-matrix>` element's card takes the warm paper and ink border.
+  the `<credit-matrix>` element's card takes the warm paper and ink border, and its figure is
+  announced as one image (`role="img"`, was `group`) named by the heatmap's title.
 - With no contributors yet, the add field sits right under the empty-state line instead of at the
   foot of the rail, and "Start fresh" puts the cursor in it. Its placeholder says it takes names, a
   DOI or an ORCID iD, and a disabled Add button is muted instead of faded.
@@ -129,6 +164,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- On a narrow phone, a long inspector tab name (German, Dutch) hyphenates onto two lines instead
+  of running off the screen.
+- Clicking the logo on the main page no longer reloads the app, which lost an unsaved draft when the
+  browser blocks site data.
+- Heatmap SVG and PNG exports no longer have a wide empty margin on the left, and
+  `buildHeatmapSvg` with `measureText` no longer pads for guessed glyph widths.
+- After copying an ask message in Team, the confirmation and the row's "Copied" label clear after
+  five seconds, so the row offers its copy again.
+- The heatmap export buttons no longer break a label such as "Download SVG" over two lines; a
+  narrow popover moves the whole button to the next row.
 - On a first visit the welcome card shows with the page, before the scripts load, instead of after
   them. On a slow phone connection it appears in about 2 seconds rather than 4.
 - With Windows high contrast (forced colours) on, focus has a visible outline, cells keep their

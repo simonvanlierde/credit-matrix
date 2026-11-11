@@ -14,6 +14,13 @@ const context = await browser.newContext({
   colorScheme: "light",
   reducedMotion: "reduce",
 });
+// The getting-started checklist comes and goes with the visitor's progress: keep it out of the shots.
+await context.addInitScript(() =>
+  localStorage.setItem(
+    "credit-matrix-guide",
+    JSON.stringify({ state: { copied: false, dismissed: true }, version: 0 }),
+  ),
+);
 const page = await context.newPage();
 
 async function shot(name) {

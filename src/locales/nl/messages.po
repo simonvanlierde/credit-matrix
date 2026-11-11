@@ -68,9 +68,6 @@ msgstr "Heatmap-opties"
 msgid "statementOptions"
 msgstr "Verklaringsopties"
 
-msgid "gridColor"
-msgstr "Heatmapkleur"
-
 msgid "transpose"
 msgstr "Transponeren"
 
@@ -173,6 +170,15 @@ msgstr "Aan iedereen toewijzen"
 msgid "bulkClearRole"
 msgstr "Voor iedereen wissen"
 
+msgid "setAllRoles"
+msgstr "Alle rollen instellen…"
+
+msgid "assignToEveryone"
+msgstr "Aan iedereen toewijzen…"
+
+msgid "editInList"
+msgstr "In de lijst bewerken"
+
 msgid "bulkChangeApplied"
 msgstr "Bulkwijziging toegepast."
 
@@ -184,9 +190,6 @@ msgstr "Toe te wijzen bijdrager"
 
 msgid "colorLabel"
 msgstr "Kleur"
-
-msgid "transposeHint"
-msgstr "Wissel de rij- en kolomassen om"
 
 msgid "legendLevel"
 msgstr "Niveau"
@@ -668,8 +671,6 @@ msgstr "Sluiten"
 msgid "rolesUsed"
 msgstr "{used} van {total} rollen gebruikt"
 
-msgid "shareWarningTitle"
-msgstr "Deze link bevat uw gegevens"
 
 msgid "shareWarningBody"
 msgstr "Iedereen met deze link kan elke naam, ORCID iD, bijdragerstype en roltoewijzing lezen."
@@ -704,8 +705,6 @@ msgstr "Typ een ORCID iD, of plak er een als iD of als orcid.org-URL"
 msgid "a11yDismissWelcome"
 msgstr "Introductie sluiten"
 
-msgid "a11yShareLink"
-msgstr "Een link delen die alle gegevens van bijdragers bevat"
 
 msgid "a11yUseInitials"
 msgstr "Initialen gebruiken in plaats van namen"
@@ -741,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT is een ANSI/NISO-standaard (<cc>CC BY 4.0</cc>). Dit project staat los van NISO en is niet door NISO onderschreven."
 
 msgid "aboutPrivacy"
-msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent. Cloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser. Bij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload. Verder verlaat niets uw browser: concepten blijven in de lokale opslag. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest. Wie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; de inlog reist daarna mee in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
+msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent. Cloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser. Bij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload. Verder verlaat niets uw browser: concepten blijven in de lokale opslag, net als of u de lijst Aan de slag hebt gesloten of een verklaring hebt gekopieerd. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest. Wie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; de inlog reist daarna mee in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
 
 msgid "accessibilityStatement"
 msgstr "Toegankelijkheidsverklaring"
@@ -978,7 +977,7 @@ msgid "welcomeAskTitle"
 msgstr "Vraag co-auteurs rechtstreeks"
 
 msgid "welcomeAskBody"
-msgstr "Kopieer een link uit het rijmenu van een persoon en stuur die naar hen. Komt de link terug, open die dan: het antwoord wordt naast de rij van die persoon bewaard en verschillen handelt u af op het tabblad Controle."
+msgstr "Stuur elke coauteur via Delen en dan Vraag coauteurs hun rollen te controleren een link naar hun eigen kolom. Komt de link terug, open die dan: het antwoord wordt naast de rij van die persoon bewaard en verschillen handelt u af op het tabblad Controle."
 
 msgid "importDescription"
 msgstr "Begin met een DOI, plak namen of een teruggestuurde link, of upload een CSV-, JSON-, JATS4R-XML- of Crossref-XML-bestand. JSON en XML herstellen ook de bijdragen, met niveaus als het bestand die bevat. Een tenzing-spreadsheet (CSV of TSV) kan ook. Plak een verklaring over de bijdragen van auteurs om de rollen in te vullen van de bijdragers die er al staan. CITATION.cff, codemeta.json en .zenodo.json importeren auteursnamen en ORCID iD's; de rollen blijven leeg."
@@ -1638,8 +1637,6 @@ msgstr "Ongebruikte rollen weglaten"
 msgid "heatmapShowLevels"
 msgstr "Bijdrageniveaus tonen"
 
-msgid "heatmapLegendHint"
-msgstr "Leg de niveaus uit in het bijschrift als u de legenda verbergt."
 
 msgid "heatmapBlue"
 msgstr "Blauw"
@@ -1652,6 +1649,18 @@ msgstr "Grijstinten"
 
 msgid "heatmapPaleColor"
 msgstr "Ondersteunend is moeilijk te onderscheiden in deze kleur. Kies een donkerdere tint."
+
+msgid "heatmapSharedWithGrid"
+msgstr "Gedeeld met het raster"
+
+msgid "heatmapFigureOnly"
+msgstr "Alleen deze figuur"
+
+msgid "settingsReset"
+msgstr "Herstellen"
+
+msgid "heatmapPerContributorNote"
+msgstr "Een kleur per bijdrager: kies voor grijstintenafdruk één kleur in Heatmap-opties."
 
 msgid "heatmapAdvanced"
 msgstr "Geavanceerd"
@@ -1695,8 +1704,6 @@ msgstr "Resolutie"
 msgid "heatmapSvgHint"
 msgstr "SVG blijft scherp bij schalen; deze afmetingen gelden voor PNG."
 
-msgid "heatmapReset"
-msgstr "Standaardinstellingen herstellen"
 
 msgid "heatmapPngTooLarge"
 msgstr "Deze PNG zou te groot zijn. Verlaag de breedte of resolutie, wissel de assen om of download SVG."
@@ -1730,12 +1737,6 @@ msgstr "RO-Crate-fragment"
 msgid "colorByContributor"
 msgstr "Kleur per bijdrager"
 
-msgid "figureColor"
-msgstr "Kleur van de figuur"
-
-msgid "figureOneColor"
-msgstr "Eén kleur"
-
 msgid "figurePerContributor"
 msgstr "Per bijdrager"
 
@@ -1766,5 +1767,30 @@ msgstr "Verborgen"
 msgid "heatmapCellMarks"
 msgstr "Bijdragemarkeringen tonen"
 
-msgid "heatmapMarksHint"
-msgstr "Schakel markeringen in om de bijdrageniveaus ook op een andere manier te onderscheiden."
+
+msgid "shareAskTitle"
+msgstr "Vraag coauteurs hun rollen te controleren"
+
+msgid "shareAskBody"
+msgstr "Elke coauteur krijgt een link naar de eigen kolom. De antwoorden komen terug in dit concept, zodat je ze kunt nakijken."
+
+msgid "shareCopyTitle"
+msgstr "Of stuur een kopie van het concept"
+
+msgid "guideTitle"
+msgstr "Aan de slag"
+
+msgid "guideStepRoles"
+msgstr "Vink hun rollen aan"
+
+msgid "guideStepAsk"
+msgstr "Coauteurs vragen"
+
+msgid "guideStepCopy"
+msgstr "Kopieer de verklaring"
+
+msgid "guideDone"
+msgstr "klaar"
+
+msgid "guideDismiss"
+msgstr "Aan de slag verbergen"

@@ -1,6 +1,7 @@
 import { Languages } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
 import { AVAILABLE_LOCALES, type LocaleCode } from "@/core/i18n";
 import { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
@@ -33,16 +34,18 @@ export function LanguageSelector() {
       >
         <Languages className="size-4" />
       </PopoverTrigger>
-      <PopoverContent aria-label={t("languageSettings")} className="w-64 p-3">
-        <div className="grid gap-3">
-          <LocaleSelect id="ui-locale-label" label={t("interfaceLanguage")} value={uiLocale} onChange={setUiLocale} />
-          <LocaleSelect
-            id="output-locale-label"
-            label={t("outputLanguage")}
-            value={outputLocale}
-            onChange={setOutputLocale}
-          />
-        </div>
+      <PopoverContent aria-label={t("languageSettings")} className="w-72 max-w-[calc(100vw-2rem)]">
+        <SettingsPanel title={t("languageSettings")}>
+          <SettingsSection>
+            <LocaleSelect id="ui-locale-label" label={t("interfaceLanguage")} value={uiLocale} onChange={setUiLocale} />
+            <LocaleSelect
+              id="output-locale-label"
+              label={t("outputLanguage")}
+              value={outputLocale}
+              onChange={setOutputLocale}
+            />
+          </SettingsSection>
+        </SettingsPanel>
       </PopoverContent>
     </Popover>
   );
@@ -64,8 +67,10 @@ function LocaleSelect({
   onChange: (locale: LocaleCode) => void;
 }) {
   return (
-    <div className="grid gap-1.5 text-xs font-medium text-on-surface">
-      <span id={id}>{label}</span>
+    <div className="grid gap-1">
+      <span id={id} className="text-on-surface-variant">
+        {label}
+      </span>
       <Select value={value} onValueChange={(next) => onChange(next as LocaleCode)}>
         <SelectTrigger aria-labelledby={id} className="w-full text-xs font-normal">
           <SelectValue />

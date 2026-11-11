@@ -1,10 +1,10 @@
 import { ChevronDown, Copy, Download, Scan, Settings2, Shrink } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Author, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
 import { heatmapPrintSize, svgDimensions } from "@/lib/heatmap-print";
-import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
+import { DEFAULT_HEATMAP_SETTINGS, type HeatmapOptions } from "@/lib/heatmap-settings";
 import { withPngResolution, withPngText } from "@/lib/png-text";
 import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -81,19 +81,19 @@ async function svgToPngBlob(
 }
 
 /** Preview, configure and download one draft's contribution figure. */
+
+const ACTION_ITEM = "whitespace-nowrap sm:w-auto sm:flex-1";
 export function HeatmapExports({
   authors,
-  monoColor,
   showLevels,
-  transpose,
-  acronyms,
+  triggerClassName = TOOL_BUTTON,
 }: {
   authors: Author[];
-  monoColor: string;
   showLevels: boolean;
-  transpose: boolean;
-  acronyms: boolean;
+  /** The trigger's look where it sits: the grid's toolbar by default, the statement's export row on a phone. */
+  triggerClassName?: string;
 }) {
+  const settingsId = useId();
   const { translateRole, translateUi, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   const formatter = useFormatter();
@@ -105,16 +105,23 @@ export function HeatmapExports({
   const [copySource, setCopySource] = useState<{ svg: string; widthMm: number; dpi: number } | null>(null);
   const storedSettings = useContributionStore((s) => s.heatmapSettings);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
-  const settings = useMemo(
-    () =>
-      storedSettings ?? {
-        ...DEFAULT_HEATMAP_SETTINGS,
-        color: monoColor,
-        levels: showLevels,
-        horizontal: transpose,
-        acronyms,
-      },
-    [storedSettings, monoColor, showLevels, transpose, acronyms],
+  const monoColor = useContributionStore((s) => s.heatmapMonoColor);
+  const colorByContributor = useContributionStore((s) => s.colorByContributor);
+  const transpose = useContributionStore((s) => s.transpose);
+  const initials = useContributionStore((s) => s.initials);
+  // The grid and the figure share colour, orientation and initials; the stored figure settings hold the rest.
+  const settings = useMemo<HeatmapOptions>(
+    () => ({
+      ...DEFAULT_HEATMAP_SETTINGS,
+      // Untouched settings follow the grid's assignment mode.
+      levels: showLevels,
+      ...storedSettings,
+      color: monoColor,
+      colorBy: colorByContributor ? "contributor" : "color",
+      horizontal: transpose,
+      acronyms: initials,
+    }),
+    [storedSettings, showLevels, monoColor, colorByContributor, transpose, initials],
   );
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
@@ -233,7 +240,7 @@ export function HeatmapExports({
     // One menu in the status strip: the heatmap is a figure you take out of
     // the app, so its three ways out sit together, away from the cells.
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className={TOOL_BUTTON}>
+      <PopoverTrigger className={triggerClassName}>
         <Download className="size-3.5" aria-hidden="true" />
         {t("heatmapLabel")}
         <ChevronDown className="size-3.5" aria-hidden="true" />
@@ -253,7 +260,7 @@ export function HeatmapExports({
             <button
               type="button"
               aria-expanded={settingsOpen}
-              aria-controls="heatmap-figure-settings"
+              aria-controls={settingsId}
               onClick={() => setSettingsOpen(!settingsOpen)}
               className={`${TOOL_BUTTON} min-h-8 px-2`}
             >
@@ -279,6 +286,9 @@ export function HeatmapExports({
               SVG · PDF · PNG {dimensions.width} × {dimensions.height} px · {settings.pngDpi} dpi
             </span>
           )}
+          {settings.colorBy === "contributor" && (
+            <p className="w-full text-xs text-on-surface-variant">{t("heatmapPerContributorNote")}</p>
+          )}
           {printFontSize !== null && printFontSize < 6 && (
             <p className="w-full text-xs text-on-surface-variant">
               {t("heatmapSmallPrint", { size: formatter.number(printFontSize, { maximumFractionDigits: 1 }) })}
@@ -298,22 +308,24 @@ export function HeatmapExports({
                 aria-label={translateUi("heatmapTitle")}
                 // biome-ignore lint/a11y/noNoninteractiveTabindex: the figure scrolls and keyboard users need to reach it.
                 tabIndex={0}
-                className={`min-h-24 max-h-[min(50vh,24rem)] overflow-auto rounded border border-outline-variant bg-white p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:sticky sm:top-0 ${settingsOpen ? "hidden sm:block" : ""}`}
+                // self-start: beside the taller settings column the frame would stretch and float the figure in white.
+                className={`min-h-24 max-h-[min(40vh,24rem)] overflow-auto rounded bg-surface-container p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:sticky sm:top-0 sm:self-start ${settingsOpen ? "hidden sm:block" : ""}`}
               >
                 <img
                   src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(preview.toWellFormed())}`}
                   alt={heatmapDescription(authors, svgOptions)}
-                  // Fitted, the whole figure shows inside the frame (its height less the p-2 padding);
+                  // The white is the figure's own page on a tinted desk, so its edges show the export's crop.
+                  // Fitted, the whole page shows inside the frame (its height less the p-3 padding);
                   // Actual size scrolls instead.
-                  className={`mx-auto block ${actualSize ? "h-auto max-w-none" : "h-auto max-h-[calc(min(50vh,24rem)-1.125rem)] w-auto max-w-full"}`}
+                  className={`mx-auto block bg-white shadow-card ${actualSize ? "h-auto max-w-none" : "h-auto max-h-[calc(min(40vh,24rem)-1.5rem)] w-auto max-w-full"}`}
                 />
               </section>
             )}
             {settingsOpen && (
               <section
-                id="heatmap-figure-settings"
+                id={settingsId}
                 aria-label={t("heatmapFigureSettings")}
-                className="min-w-0 sm:max-h-[min(50vh,24rem)] sm:overflow-auto sm:pr-1"
+                className="min-w-0 sm:max-h-[min(40vh,24rem)] sm:overflow-auto sm:pr-1"
               >
                 <HeatmapFigureSettings
                   value={settings}
@@ -335,13 +347,15 @@ export function HeatmapExports({
             )}
           </div>
         </div>
-        <div className="grid gap-0.5 sm:grid-cols-4">
+        {/* A row that wraps whole buttons: a label never breaks inside itself, where "Download / SVG"
+            read as two items, and a longer language moves a button to the next line instead. */}
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             disabled={!preview || loading !== null || !!previewError || pngTooLarge}
             onClick={() => void copyPng()}
             title={t("copyHeatmapHint")}
-            className={MENU_ITEM}
+            className={`${MENU_ITEM} ${ACTION_ITEM}`}
           >
             <Copy className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
             {currentCopyStatus === "copied"
@@ -362,7 +376,7 @@ export function HeatmapExports({
                 (format === "pdf" && missingGlyphs !== null)
               }
               onClick={() => download(format)}
-              className={MENU_ITEM}
+              className={`${MENU_ITEM} ${ACTION_ITEM}`}
             >
               <Download className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
               {loading === format

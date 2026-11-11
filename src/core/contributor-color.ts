@@ -8,6 +8,9 @@
 /** Default hue for the heatmap (the app's ink-blue accent). */
 export const DEFAULT_MONO_COLOR = "#1f4e79";
 
+/** A hex colour, short or long: the only form a stored or imported hue may take. */
+export const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
 /**
  * Okabe–Ito categorical palette, offered as preset hues in the color picker.
  * The palette's black is softened to a dark gray for on-screen legibility.
@@ -124,7 +127,7 @@ function hslHex(h: number, s: number, l: number): string {
 }
 
 /** Linear mix of two hex colors; t=0 → a, t=1 → b. */
-function mixHex(a: string, b: string, t: number): string {
+export function mixHex(a: string, b: string, t: number): string {
   const [ar, ag, ab] = hexRgb(a);
   const [br, bg, bb] = hexRgb(b);
   const round = (x: number, y: number) => Math.round(x + (y - x) * t);

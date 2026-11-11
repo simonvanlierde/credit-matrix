@@ -1,6 +1,6 @@
 # Screenshots
 
-The README uses these three images. They are taken at 1440 × 900 in light mode.
+The README uses these three images. They are taken at 1440 × 900 in light mode, with the getting-started checklist dismissed.
 
 - `hero.png`: the sample data loaded, with the Team tab open.
 - `empty-state.png`: the first-run welcome over the empty workspace.

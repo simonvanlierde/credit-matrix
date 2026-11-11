@@ -17,16 +17,14 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  ArrowDown,
-  ArrowUp,
   AtSign,
-  Check,
+  ChevronDown,
+  ChevronUp,
   GripVertical,
   MoreHorizontal,
   PanelLeftClose,
   PanelLeftOpen,
   Pencil,
-  Plus,
   PlusCircle,
   Send,
   Sparkles,
@@ -34,27 +32,24 @@ import {
   UserCheck,
   UserMinus,
   UserPlus,
-  UserRound,
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UNDO_WINDOW_MS, UndoBar } from "@/components/ui/undo-bar";
 import { type Author, review } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { announce } from "@/lib/announce";
-import { copyAskLink } from "@/lib/ask-message";
 import { useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
-import { useCopyStatus } from "@/lib/use-copy-status";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useSettled } from "@/lib/use-settled";
 import { type Ask, useContributionStore } from "@/store/contribution-store";
 import { OrcidLine, useOrcidLine } from "./OrcidLine";
 import { detectOrcid } from "./orcid";
+import { PersonMenu } from "./PersonMenu";
 import { useAddContributors } from "./use-add-contributors";
 
 // Module constants, not inline literals: dnd-kit memoizes a sensor on its
@@ -111,6 +106,22 @@ export function AuthorList() {
   // it is not being edited.
   useEffect(() => setTitleDraft(title), [title]);
   const [collapsed, setCollapsed] = useState(false);
+  // Nothing to fold when empty: an empty roster shows the full list, with its add field.
+  const folded = collapsed && authors.length > 0;
+  // Folding swaps the whole panel, so the toggle remounts: hand focus to the new one.
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const refocusToggle = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: folded only re-runs the effect, after the swap.
+  useEffect(() => {
+    if (!refocusToggle.current) return;
+    refocusToggle.current = false;
+    toggleRef.current?.focus();
+  }, [folded]);
+  // A collapsed rail has no fields: open it for a request to edit one person in the list.
+  const listFocusRequested = useContributionStore((s) => s.listFocus !== null);
+  useEffect(() => {
+    if (listFocusRequested) setCollapsed(false);
+  }, [listFocusRequested]);
   const { newName, setNewName, addError, setAddError, handleAdd, handleAddPaste } = useAddContributors();
   const addErrorId = useId();
   const [removed, setRemoved] = useState<{
@@ -212,7 +223,7 @@ export function AuthorList() {
 
   const header = (
     <div className="mb-3 flex items-center justify-between gap-2">
-      <h2 className={`font-headline text-xl font-semibold text-on-surface ${collapsed ? "xl:sr-only" : ""}`}>
+      <h2 className={`font-headline text-xl font-semibold text-on-surface ${folded ? "xl:sr-only" : ""}`}>
         {t("stepContributors")}
         {authors.length > 0 && (
           <>
@@ -222,21 +233,34 @@ export function AuthorList() {
           </>
         )}
       </h2>
-      {/* The rail folds away on a desktop only; stacked, it is a section like any other. */}
-      <button
-        type="button"
-        onClick={() => setCollapsed(!collapsed)}
-        aria-expanded={!collapsed}
-        aria-label={collapsed ? t("expandContributors") : t("collapseContributors")}
-        title={collapsed ? t("expandContributors") : t("collapseContributors")}
-        className="hidden size-7 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary xl:flex"
-      >
-        {collapsed ? (
-          <PanelLeftOpen className="size-4" aria-hidden="true" />
-        ) : (
-          <PanelLeftClose className="size-4" aria-hidden="true" />
-        )}
-      </button>
+      {/* On a desktop the list folds into a rail of initials beside the grid; stacked above it,
+          into one row of them, which saves the scroll past a long list. */}
+      {authors.length > 0 && (
+        <button
+          ref={toggleRef}
+          type="button"
+          onClick={() => {
+            refocusToggle.current = true;
+            setCollapsed(!folded);
+          }}
+          aria-expanded={!folded}
+          aria-label={folded ? t("expandContributors") : t("collapseContributors")}
+          title={folded ? t("expandContributors") : t("collapseContributors")}
+          className="hit-area flex size-7 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          {folded ? (
+            <>
+              <PanelLeftOpen className="hidden size-4 xl:block" aria-hidden="true" />
+              <ChevronDown className="size-4 xl:hidden" aria-hidden="true" />
+            </>
+          ) : (
+            <>
+              <PanelLeftClose className="hidden size-4 xl:block" aria-hidden="true" />
+              <ChevronUp className="size-4 xl:hidden" aria-hidden="true" />
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 
@@ -348,8 +372,8 @@ export function AuthorList() {
       )}
 
       {!locked && (
-        // Wraps in the narrow desktop rail, so the placeholder gets the whole width.
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        // The add button sits inside the field's end, so the rail spends one row on adding.
+        <div className="relative mt-3">
           <input
             ref={addInputRef}
             id="add-contributor"
@@ -367,16 +391,17 @@ export function AuthorList() {
             aria-describedby={addError !== null ? addErrorId : undefined}
             placeholder={t("addPlaceholder")}
             aria-label={t("addContributor")}
-            className="min-w-56 flex-1 text-ellipsis rounded border border-edge bg-surface-bright px-3 py-2 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary"
+            className="w-full text-ellipsis rounded border border-edge bg-surface-bright py-2 pr-10 pl-3 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary"
           />
           <button
             type="button"
             onClick={() => void handleAdd()}
             disabled={!newName.trim()}
-            className="ml-auto flex items-center gap-1.5 rounded border border-edge bg-surface-bright px-4 py-2 text-sm font-medium text-primary transition-[color,box-shadow] enabled:hover:shadow-card disabled:cursor-not-allowed disabled:border-outline disabled:bg-transparent disabled:text-on-surface-variant/60"
+            aria-label={t("addButton")}
+            title={t("addButton")}
+            className="hit-area absolute inset-y-1 right-1 flex w-8 items-center justify-center rounded text-primary transition-colors enabled:hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:text-on-surface-variant/50"
           >
             <PlusCircle className="h-4 w-4" />
-            {t("addButton")}
           </button>
         </div>
       )}
@@ -386,24 +411,67 @@ export function AuthorList() {
     </div>
   );
 
-  if (!collapsed) return full;
+  if (!folded) return full;
+  // Folded: the initials alone, a rail beside the grid on a desktop and one wrapping row above it
+  // when stacked.
   return (
-    <>
-      {/* Collapsed: initials only, on a desktop. Narrower windows ignore the
-          fold and show the full list, since the rail is not beside anything. */}
-      <div className="hidden flex-col items-center p-2 xl:flex desk:h-full desk:overflow-y-auto">
-        {header}
-        <ul className="flex flex-col items-center gap-1.5">
-          {authors.map((author) => (
-            <li key={author.id}>
-              <InitialsChip author={author} />
-              <span className="sr-only">{author.name}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="xl:hidden">{full}</div>
-    </>
+    <div className="flex flex-col p-3 md:p-4 xl:items-center xl:p-2 desk:h-full desk:overflow-y-auto">
+      {header}
+      <ul className="-mt-1 flex flex-wrap gap-1.5 xl:mt-0 xl:flex-col xl:items-center">
+        {authors.map((author) => (
+          <li key={author.id}>
+            <RailChip author={author} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * Marks a person as linked while their list row or rail chip is hovered or holds focus, as a grid
+ * cell or the statement does. Mouse only: a tap enters with no leave. It clears only the list's own
+ * mark, since a leave can land after a cell or the statement has taken over.
+ */
+function useAuthorLink(authorId: string | undefined) {
+  const setStatementLink = useContributionStore((s) => s.setStatementLink);
+  const link = () => authorId && setStatementLink({ contributorId: authorId, from: "author" });
+  const clear = () => {
+    if (useContributionStore.getState().statementLink?.from === "author") setStatementLink(null);
+  };
+  return {
+    onPointerEnter: (event: React.PointerEvent) => event.pointerType === "mouse" && link(),
+    onPointerLeave: (event: React.PointerEvent) => event.pointerType === "mouse" && clear(),
+    onFocus: link,
+    onBlur: clear,
+  };
+}
+
+/**
+ * A person in the collapsed rail: their initials chip, linked on hover or focus like a full row,
+ * and the trigger for the same person menu. Named by the person; Radix adds the popup state.
+ */
+function RailChip({ author }: { author: Author }) {
+  const linked = useContributionStore((s) => s.statementLink?.contributorId === author.id);
+  const linkHandlers = useAuthorLink(author.id);
+  return (
+    <PersonMenu
+      authorId={author.id}
+      surface="rail"
+      align="start"
+      trigger={
+        <button
+          type="button"
+          aria-label={author.name}
+          title={author.name}
+          data-linked={linked || undefined}
+          {...linkHandlers}
+          className="hit-area block rounded-md p-0.5 ring-offset-1 ring-offset-surface transition-shadow duration-150 hover:ring-2 hover:ring-edge focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent data-linked:ring-2 data-linked:ring-primary data-[state=open]:ring-2 data-[state=open]:ring-primary motion-reduce:transition-none"
+        >
+          <InitialsChip author={author} />
+        </button>
+      }
+    />
   );
 }
 
@@ -414,147 +482,6 @@ function MarkerChip({ icon, label }: { icon: ReactNode; label: string }) {
       {icon}
       {label}
     </span>
-  );
-}
-
-/**
- * The per-contributor actions, behind one disclosure.
- *
- * Inline, these were five chips on every row: on a phone that is three lines
- * per contributor, and this pane is where vertical space is worth most. Behind
- * a menu they also stop depending on hover, which a tablet does not have.
- */
-function RowMenu({
-  name,
-  equalContribution,
-  corresponding,
-  canAddOrcid,
-  askCopied,
-  allowAsk,
-  isSelf,
-  onToggleSelf,
-  onToggleEqual,
-  onToggleCorresponding,
-  onAsk,
-  onAddOrcid,
-  onMoveUp,
-  onMoveDown,
-}: {
-  name: string;
-  equalContribution: boolean;
-  corresponding: boolean;
-  canAddOrcid: boolean;
-  /** Which ask link was just copied, if any. */
-  askCopied: "blank" | "prefilled" | null;
-  /** Asking someone else to fill a draft you are answering is nonsense. */
-  allowAsk: boolean;
-  /** This row is the person using the app; absent where that cannot be set. */
-  isSelf?: boolean;
-  onToggleSelf?: () => void;
-  onToggleEqual: () => void;
-  onToggleCorresponding: () => void;
-  onAsk: (blank: boolean) => void;
-  onAddOrcid: () => void;
-  /** Absent at the top (or bottom) of the list. */
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-}) {
-  const t = useTranslations();
-  const [open, setOpen] = useState(false);
-  // Set only by "Add ORCID iD": that path reveals an auto-focused field the
-  // trigger-refocus would blur (and its blur handler dismisses it). Every
-  // other close should return focus to the trigger as normal.
-  const openedOrcidRef = useRef(false);
-
-  const item =
-    "flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-disabled:cursor-not-allowed aria-disabled:text-on-surface-variant/50 aria-disabled:hover:bg-transparent";
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={t("contributorActions", { name })}
-          title={t("contributorActions", { name })}
-          className="touch-target inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        aria-label={t("contributorActions", { name })}
-        onCloseAutoFocus={(event) => {
-          if (!openedOrcidRef.current) return;
-          openedOrcidRef.current = false;
-          event.preventDefault();
-        }}
-        className="w-60 p-1"
-      >
-        {/* Author order is credit, and dragging is not something every pointer
-            can do (WCAG 2.5.7). The menu stays open, so a row can move several
-            places in a row. */}
-        {(onMoveUp || onMoveDown) && (
-          <div className="mb-1 border-b border-outline-variant/40 pb-1">
-            <button type="button" onClick={onMoveUp} aria-disabled={!onMoveUp || undefined} className={item}>
-              <ArrowUp className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-              {t("moveUp")}
-            </button>
-            <button type="button" onClick={onMoveDown} aria-disabled={!onMoveDown || undefined} className={item}>
-              <ArrowDown className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-              {t("moveDown")}
-            </button>
-          </div>
-        )}
-        {onToggleSelf && (
-          <button type="button" onClick={onToggleSelf} aria-pressed={isSelf} className={item}>
-            <UserRound className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-            {isSelf ? t("thisIsNotMe") : t("thisIsMe")}
-          </button>
-        )}
-        <button type="button" onClick={onToggleEqual} aria-pressed={equalContribution} className={item}>
-          <Users className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-          {equalContribution ? t("equalContributionUnset") : t("equalContributionSet")}
-        </button>
-        <button type="button" onClick={onToggleCorresponding} aria-pressed={corresponding} className={item}>
-          <AtSign className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-          {corresponding ? t("correspondingUnset") : t("correspondingSet")}
-        </button>
-        {allowAsk && (
-          <div className="my-1 border-y border-outline-variant/40 py-1">
-            {(["blank", "prefilled"] as const).map((kind) => (
-              <button key={kind} type="button" onClick={() => onAsk(kind === "blank")} className={item}>
-                {askCopied === kind ? (
-                  <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
-                ) : (
-                  <Send className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-                )}
-                {askCopied === kind
-                  ? t("askCopied")
-                  : kind === "blank"
-                    ? t("askBlank", { name })
-                    : t("askPrefilled", { name })}
-              </button>
-            ))}
-            <p className="px-2 pt-0.5 pb-1 text-[11px] leading-snug text-on-surface-variant">{t("askLinkHint")}</p>
-          </div>
-        )}
-        {canAddOrcid && (
-          <button
-            type="button"
-            onClick={() => {
-              openedOrcidRef.current = true;
-              onAddOrcid();
-              setOpen(false);
-            }}
-            className={item}
-          >
-            <Plus className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-            {t("addOrcid")}
-          </button>
-        )}
-      </PopoverContent>
-    </Popover>
   );
 }
 
@@ -573,64 +500,43 @@ const AuthorRow = memo(function AuthorRowInner({
   enter: boolean;
 }) {
   const t = useTranslations();
-  const { author, updateAuthorName, setAuthorType, setAuthorMarker } = useContributionStore(
+  const { author, updateAuthorName, setAuthorType } = useContributionStore(
     useShallow((s) => ({
       author: s.authors[index],
       updateAuthorName: s.updateAuthorName,
       setAuthorType: s.setAuthorType,
-      setAuthorMarker: s.setAuthorMarker,
     })),
   );
   const { locked, editableAuthorId } = useClaimLock();
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
   const isSelf = useContributionStore((s) => author !== undefined && s.selfId === author.id);
-  const setSelfId = useContributionStore((s) => s.setSelfId);
   // True while this person is hovered anywhere else (grid cell, statement name or phrase).
   const linked = useContributionStore((s) => author !== undefined && s.statementLink?.contributorId === author.id);
-  const setStatementLink = useContributionStore((s) => s.setStatementLink);
-  // Only this row's own mark: leave events can land after a cell or the statement has taken over.
-  const clearOwnLink = () => {
-    if (useContributionStore.getState().statementLink?.from === "author") setStatementLink(null);
-  };
-  const moveAuthor = useContributionStore((s) => s.moveAuthor);
-  const rowCount = useContributionStore((s) => s.authors.length);
+  const linkHandlers = useAuthorLink(author?.id);
   // Down once their answer is in, up again on a re-ask.
   const asked = useContributionStore(
     (s) => author !== undefined && review(author, s.asks[author.id]).status.kind === "asked",
   );
 
-  function move(by: -1 | 1) {
-    if (!author) return;
-    moveAuthor(index, index + by);
-    announce(t("annMoved", { name: author.name, position: index + by + 1, total: rowCount }));
-  }
   const isRecentReply = useContributionStore((s) => s.recentReply !== null && s.recentReply === author?.id);
 
   const [nameDraft, setNameDraft] = useState(author?.name ?? "");
   const [nameError, setNameError] = useState<string | null>(null);
-  // Same status/announce/reset contract as every other copy affordance.
-  const [askStatus, copyAsk] = useCopyStatus({
-    copied: t("askContributorCopied", { name: author?.name ?? "" }),
-  });
-  const [askKind, setAskKind] = useState<"blank" | "prefilled">("blank");
-  const askCopied = askStatus === "copied" ? askKind : null;
-
-  /**
-   * Copy a link addressed at this contributor. They open it, tick their own
-   * roles, and send the same link back; importing it collects that row alone.
-   * A blank ask sends their row empty, so the answer is their own account
-   * rather than a check of your guess.
-   */
-  async function handleAsk(blank: boolean) {
-    if (!author) return;
-    setAskKind(blank ? "blank" : "prefilled");
-    // Only a link that actually reached the clipboard counts as an ask.
-    await copyAskLink(author, t, blank, (link) => copyAsk(link));
-  }
-
   const nameInputRef = useRef<HTMLInputElement>(null);
   const orcidLine = useOrcidLine(author?.id ?? "", () => nameInputRef.current?.focus());
+
+  // "Edit in list" / "Add ORCID iD" from the grid or the statement: take focus here and scroll to it.
+  const listFocus = useContributionStore((s) => (s.listFocus?.authorId === author?.id ? s.listFocus : null));
+  const setListFocus = useContributionStore((s) => s.setListFocus);
+  const { setEditingOrcid } = orcidLine;
+  useEffect(() => {
+    if (!listFocus) return;
+    if (listFocus.orcid) setEditingOrcid(true);
+    else nameInputRef.current?.focus();
+    nameInputRef.current?.scrollIntoView({ block: "nearest" });
+    setListFocus(null);
+  }, [listFocus, setEditingOrcid, setListFocus]);
 
   // Keyed on the stored name, not the author object: normalizeAuthors rebuilds
   // every author on any list mutation, so an identity-keyed effect overwrote
@@ -690,13 +596,8 @@ const AuthorRow = memo(function AuthorRowInner({
       // itself — tint, rule, and a worded badge, never colour alone.
       aria-current={isClaimed ? "true" : undefined}
       data-linked={linked || undefined}
-      // Mouse only (a tap enters with no leave); focus inside the row marks the same links.
-      onPointerEnter={(event) =>
-        event.pointerType === "mouse" && author && setStatementLink({ contributorId: author.id, from: "author" })
-      }
-      onPointerLeave={(event) => event.pointerType === "mouse" && clearOwnLink()}
-      onFocus={() => author && setStatementLink({ contributorId: author.id, from: "author" })}
-      onBlur={clearOwnLink}
+      // Focus anywhere inside the row marks the same links as hovering it.
+      {...linkHandlers}
       className={`group rounded border px-2 py-0.5 transition-[border-color,box-shadow] duration-150 motion-reduce:transition-none ${
         isClaimed || isRecentReply
           ? "border-primary bg-primary/5"
@@ -827,21 +728,21 @@ const AuthorRow = memo(function AuthorRowInner({
                   disclosure. Five inline chips per row cost three lines on a
                   phone, and this pane is where vertical space is worth most. */}
               {!rowLocked && (
-                <RowMenu
-                  name={author.name}
-                  equalContribution={author.equalContribution}
-                  corresponding={author.corresponding}
+                <PersonMenu
+                  authorId={author.id}
+                  surface="list"
                   canAddOrcid={!hasOrcid && !orcidLine.editingOrcid}
-                  askCopied={askCopied}
-                  allowAsk={!(locked || isSelf)}
-                  isSelf={isSelf}
-                  onToggleSelf={locked ? undefined : () => setSelfId(isSelf ? null : author.id)}
-                  onToggleEqual={() => setAuthorMarker(author.id, "equalContribution", !author.equalContribution)}
-                  onToggleCorresponding={() => setAuthorMarker(author.id, "corresponding", !author.corresponding)}
-                  onAsk={(blank) => void handleAsk(blank)}
                   onAddOrcid={() => orcidLine.setEditingOrcid(true)}
-                  onMoveUp={!locked && index > 0 ? () => move(-1) : undefined}
-                  onMoveDown={!locked && index < rowCount - 1 ? () => move(1) : undefined}
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label={t("contributorActions", { name: author.name })}
+                      title={t("contributorActions", { name: author.name })}
+                      className="touch-target inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                  }
                 />
               )}
             </div>

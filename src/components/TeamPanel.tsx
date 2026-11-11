@@ -14,6 +14,8 @@ import { useContributionStore } from "@/store/contribution-store";
  * email-ready text around the same ask link the row menu copies, sent blank so
  * the answer is the co-author's own account rather than a check of a guess.
  */
+
+const COPIED_FEEDBACK_MS = 5000;
 export function TeamPanel() {
   const t = useTranslations();
   const authors = useContributionStore((s) => s.authors);
@@ -37,6 +39,17 @@ export function TeamPanel() {
     setCopied(null);
     setFinished(null);
   }, [activeDraftId]);
+
+  // The confirmation and the row's "Copied" label are feedback, not state: after 5 s the row offers
+  // its copy again. Screen readers already heard the announcement.
+  useEffect(() => {
+    if (!copied && finished === null) return;
+    const timer = setTimeout(() => {
+      setCopied(null);
+      setFinished(null);
+    }, COPIED_FEEDBACK_MS);
+    return () => clearTimeout(timer);
+  }, [copied, finished]);
 
   if (locked) {
     return <p className="text-sm text-on-surface-variant">{t("claimLockedHint")}</p>;

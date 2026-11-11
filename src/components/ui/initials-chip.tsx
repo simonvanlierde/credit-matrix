@@ -14,7 +14,7 @@ export function InitialsChip({ author }: { author: Author }) {
       aria-hidden="true"
       title={author.name}
       className={`shrink-0 inline-flex items-center justify-center min-w-[2.5rem] h-6 px-1.5 rounded-sm font-mono text-[11px] font-semibold ${
-        hue ? "text-white" : "bg-primary/10 text-primary"
+        hue ? "text-white" : "bg-accent/10 text-accent"
       }`}
       style={hue ? { backgroundColor: hue } : undefined}
     >

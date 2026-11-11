@@ -1,5 +1,6 @@
 import { ListChecks } from "lucide-react";
-import { type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useId, useRef, useState } from "react";
+import { create } from "zustand";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UNDO_WINDOW_MS } from "@/components/ui/undo-bar";
@@ -8,22 +9,56 @@ import type { RoleTranslator, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
-import { ICON_TOOL_BUTTON, LEVEL_KEY } from "./grid-shared";
+import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM } from "./grid-shared";
 
 // "None" is what Clear does, so the bulk picker offers only the assignable levels.
 export const ASSIGNABLE_LEVELS = LEVEL_KEY.filter(({ score }) => score > 0);
 // Equal, not Lead: bulk-marking everyone as Lead overstates every one of them.
 export const DEFAULT_BULK_LEVEL = 66;
 
+/** The roster as it stood before the last bulk action; shared, so a menu on any surface can start an undo. */
+const useBulkSnapshot = create<{ snapshot: Author[] | null }>(() => ({ snapshot: null }));
+const setBulkUndo = (snapshot: Author[] | null) => useBulkSnapshot.setState({ snapshot });
+
+/** Run a bulk mutation with the roster snapshotted for undo; the grid shows the bar. */
+export function useRunBulk() {
+  const t = useTranslations();
+  return function runBulk(action: () => void) {
+    const before = useContributionStore.getState().authors;
+    action();
+    setBulkUndo(before);
+    announce(t("bulkChangeApplied"));
+  };
+}
+
+/** The level step of a bulk action: one button per assignable level. */
+export function LevelChoice({ onPick, translateUi }: { onPick: (score: number) => void; translateUi: UiTranslator }) {
+  const t = useTranslations();
+  const labelId = useId();
+  return (
+    <fieldset aria-labelledby={labelId} className="grid gap-0.5">
+      <p id={labelId} className="px-2 pt-1 pb-0.5 text-[11px] font-semibold text-on-surface-variant">
+        {t("bulkAssignLevel")}
+      </p>
+      {ASSIGNABLE_LEVELS.map(({ key, score }) => (
+        <button key={key} type="button" onClick={() => onPick(score)} className={MENU_ITEM}>
+          {translateUi(key)}
+        </button>
+      ))}
+    </fieldset>
+  );
+}
+
 /**
- * The roster as it stood before the last bulk action, with the actions that
- * take and restore it. One click can rewrite fourteen assignments, so it earns
- * the same undo bar a row removal has.
+ * The undo for the last bulk action, with the actions that take and restore
+ * it. One click can rewrite fourteen assignments, so it earns the same undo
+ * bar a row removal has.
  */
 export function useBulkUndo() {
   const t = useTranslations();
   const loadAuthors = useContributionStore((s) => s.loadAuthors);
-  const [bulkUndo, setBulkUndo] = useState<Author[] | null>(null);
+  const bulkUndo = useBulkSnapshot((s) => s.snapshot);
+  const runBulk = useRunBulk();
   // Where focus goes when the undo strip closes under it.
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -39,14 +74,6 @@ export function useBulkUndo() {
   const workspaceCleared = useContributionStore((s) => s.workspaceCleared);
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-runs on draft switch and clear by design
   useEffect(() => setBulkUndo(null), [activeDraftId, workspaceCleared]);
-
-  /** Run a bulk mutation with the roster snapshotted for undo. */
-  function runBulk(action: () => void) {
-    const before = useContributionStore.getState().authors;
-    action();
-    setBulkUndo(before);
-    announce(t("bulkChangeApplied"));
-  }
 
   // NOTE: restores the whole roster snapshot, so it also reverts any edit made
   // inside the undo window — simple last-state undo, not an operation log.

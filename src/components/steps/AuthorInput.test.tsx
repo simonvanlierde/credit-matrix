@@ -420,3 +420,69 @@ describe("moving a contributor from the menu", () => {
     expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
   });
 });
+
+describe("collapsed rail", () => {
+  it("links a person on hover and opens their menu from the initials chip", () => {
+    const ann = createAuthor("Ann Lee");
+    act(() => useContributionStore.getState().loadAuthors([ann]));
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
+    const chip = screen.getByRole("button", { name: "Ann Lee" });
+
+    fireEvent.pointerEnter(chip, { pointerType: "mouse" });
+    expect(useContributionStore.getState().statementLink).toEqual({ contributorId: ann.id, from: "author" });
+    fireEvent.pointerLeave(chip, { pointerType: "mouse" });
+    expect(useContributionStore.getState().statementLink).toBeNull();
+
+    // A link from the grid or statement marks the chip too.
+    act(() => useContributionStore.getState().setStatementLink({ contributorId: ann.id, from: "cell" }));
+    expect(chip.dataset.linked).toBe("true");
+
+    fireEvent.click(chip);
+    expect(screen.getByRole("dialog", { name: "Actions for Ann Lee" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Edit in list" })).toBeTruthy();
+  });
+
+  it("keeps focus on the fold toggle as the list folds and opens", () => {
+    act(() => useContributionStore.getState().loadAuthors([createAuthor("Ann Lee")]));
+    renderList();
+    const fold = screen.getByRole("button", { name: "Collapse contributor list" });
+    fold.focus();
+    fireEvent.click(fold);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Expand contributor list" }));
+    fireEvent.click(document.activeElement as HTMLElement);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Collapse contributor list" }));
+  });
+
+  it("shows the full list, with its add field, once a folded roster is empty", () => {
+    act(() => useContributionStore.getState().loadAuthors([createAuthor("Ann Lee")]));
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
+    expect(screen.queryByLabelText("New author names or ORCID iD")).toBeNull();
+    act(() => useContributionStore.getState().loadAuthors([]));
+    expect(screen.getByLabelText("New author names or ORCID iD")).toBeTruthy();
+  });
+
+  it("opens the list and focuses the person on Edit in list from a chip", () => {
+    // jsdom has no layout, so no scrollIntoView.
+    Element.prototype.scrollIntoView = vi.fn();
+    const ann = createAuthor("Ann Lee");
+    act(() => useContributionStore.getState().loadAuthors([ann]));
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ann Lee" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit in list" }));
+
+    expect(screen.getByRole("button", { name: "Collapse contributor list" })).toBeTruthy();
+    expect((document.activeElement as HTMLInputElement | null)?.value).toBe("Ann Lee");
+    expect(useContributionStore.getState().listFocus).toBeNull();
+  });
+
+  it("drops an edit request for a person who is removed", () => {
+    const ann = createAuthor("Ann Lee");
+    act(() => useContributionStore.getState().loadAuthors([ann, createAuthor("Bo Kim")]));
+    act(() => useContributionStore.getState().setListFocus({ authorId: ann.id, orcid: false }));
+    act(() => useContributionStore.getState().removeAuthor(ann.id));
+    expect(useContributionStore.getState().listFocus).toBeNull();
+  });
+});

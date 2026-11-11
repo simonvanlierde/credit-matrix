@@ -2,10 +2,10 @@ name: Mutation
 
 # Mutation testing of the src/core import and export code (stryker.config.mjs), weekly and
 # from the Actions tab with "Run workflow". A pull request runs it only when it changes this
-# setup: the score moves with the tests over time, not with each change. The job fails when the
-# surviving mutants differ from test/mutation-baseline.txt, either way: a new survivor, or a
-# listed one that a test now kills.
-# Run `pnpm mutation` locally and commit the rewritten list to clear it.
+# setup: the score moves with the tests over time, not with each change. The job fails on a
+# surviving mutant that test/mutation-baseline.txt does not list. A listed one that the runner
+# kills only warns: a slower machine times out on some equivalent mutants (a skipped cache)
+# that a local run lets survive. Run `pnpm mutation` locally and commit the rewritten list.
 on:
   pull_request:
     paths:
@@ -65,7 +65,12 @@ jobs:
             git diff test/mutation-baseline.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-          git diff --exit-code test/mutation-baseline.txt
+          gone=$(git diff -U0 test/mutation-baseline.txt | grep -c '^-src/' || true)
+          if [ "$gone" -gt 0 ]; then
+            echo "::warning::$gone listed survivors were killed on this runner; see the summary"
+          fi
+          # A new survivor fails the job, and is printed.
+          ! git diff -U0 test/mutation-baseline.txt | grep '^+src/'
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}

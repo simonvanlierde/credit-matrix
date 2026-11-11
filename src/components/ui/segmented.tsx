@@ -37,7 +37,8 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={ariaLabel}
       onKeyDown={(event) => moveRadioSelection(event, options, selected, (next) => onChange(next.value))}
-      className={cn("inline-flex overflow-hidden rounded border border-edge bg-surface-bright", className)}
+      // md matches the toolbar's 36 px buttons beside it.
+      className={cn("inline-flex rounded border border-edge bg-surface-bright", size === "md" && "min-h-9", className)}
     >
       {options.map(({ value: optionValue, label, title }, index) => {
         const active = value === optionValue;
@@ -53,13 +54,16 @@ export function SegmentedControl<T extends string>({
             title={title}
             onClick={() => onChange(optionValue)}
             className={cn(
-              "flex items-center justify-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+              "flex items-center justify-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
               size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-[13px]",
-              // The group clips overflow, so touch grows the option itself.
-              "pointer-coarse:min-h-11",
-              // Forced colours repaint the ink fill as Canvas but keep its paper text: use system colours.
+              // As tall as the 36 px toolbar buttons everywhere; on touch an invisible box takes the tap
+              // to 44 px. The group cannot clip it, so the end options round their own corners.
+              "hit-area first:rounded-l-[3px] last:rounded-r-[3px]",
+              // Forced colours would repaint the fill as Canvas under Canvas text, a blank box: opt out and
+              // invert. Not Highlight: Firefox and WebKit emulate it at 2.94:1.
+              // The selected option is the group's tab stop, so its focus ring must show on the accent fill.
               active
-                ? "bg-on-surface text-surface-bright forced-colors:bg-[CanvasText] forced-colors:text-[Canvas]"
+                ? "bg-accent text-on-accent focus-visible:ring-on-accent forced-colors:bg-[CanvasText] forced-colors:text-[Canvas] forced-colors:[forced-color-adjust:none]"
                 : "text-on-surface-variant hover:text-on-surface",
             )}
           >

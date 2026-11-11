@@ -1,9 +1,9 @@
 import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
-import { Switch } from "@/components/ui/switch";
+import { SettingSwitch, SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
 import {
   CREDIT_ROLES,
   type CreditRoleName,
@@ -32,7 +32,22 @@ import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useDark } from "@/lib/use-dark";
 import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
-import { useAskSummary, useContributionStore } from "@/store/contribution-store";
+import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "@/store/contribution-store";
+import { useGuide } from "@/store/guide-store";
+import { EXPORT_BUTTON, ICON_TOOL_BUTTON } from "./grid-shared";
+import { HeatmapExports } from "./HeatmapExports";
+
+import { PersonMenu } from "./PersonMenu";
+import { RoleInfo } from "./RoleInfo";
+
+/** A name or role in the running text that opens a panel: it keeps the text's look, not a button's. */
+/**
+ * A name or role in the statement: text, not a control. A click opens the same menu its real
+ * trigger does (the list row's "…", the grid header), which is the keyboard's way in; as buttons,
+ * every name would be a tab stop and the statement would read as a row of buttons.
+ */
+const NAME_TEXT =
+  "cursor-pointer decoration-outline decoration-dotted underline-offset-4 hover:text-primary hover:underline";
 
 type DataFormat =
   | "xml"
@@ -115,13 +130,19 @@ export function StatementOutput() {
   const [includeAnswers, setIncludeAnswers] = useState(true);
   // Everyone asked, answered or not: the JSON export includes the ask history too.
   const askedCount = authors.filter((author) => author.id in asks).length;
-  const { translateRole, translateUi, translateInterfaceRole, outputLanguage } = useCreditTranslators();
+  const { translateRole, translateUi, translateInterfaceRole, describeRole, interfaceRoleLanguage, outputLanguage } =
+    useCreditTranslators();
   const t = useTranslations();
   // Last beat of the population sequence; see .enter-fade in globals.css.
   const settled = useSettled();
   const [copyStatus, copyText] = useCopyStatus({
     copied: t("annStatementCopied"),
   });
+  // The last step of the getting-started list: the statement has left the page once.
+  const markGuideCopied = useGuide((state) => state.markCopied);
+  useEffect(() => {
+    if (copyStatus === "copied") markGuideCopied();
+  }, [copyStatus, markGuideCopied]);
   // Separate status for the data-format Copy button, so feedback appears on
   // the button that was clicked rather than on the main statement copy.
   const [dataCopyStatus, copyDataText] = useCopyStatus({
@@ -131,9 +152,8 @@ export function StatementOutput() {
   const [copiedFormat, setCopiedFormat] = useState<DataFormat>("xml");
   // Statement-local output controls (independent of the heatmap's).
   const [grouping, setGrouping] = useState<"by-author" | "by-role">("by-author");
-  const [acronyms, setAcronyms] = useState(false);
-  const [showLevels, setShowLevels] = useState(false);
-  const [separateAck, setSeparateAck] = useState(true);
+  const { initials: acronyms, showLevels, separateAck } = useContributionStore((s) => s.statementOptions);
+  const setStatementOptions = useContributionStore((s) => s.setStatementOptions);
 
   const format: StatementFormat =
     grouping === "by-role" ? (acronyms ? "by-role-short" : "by-role") : acronyms ? "by-author-short" : "by-author";
@@ -192,7 +212,16 @@ export function StatementOutput() {
   // Only the statement's own mark: a cell may have taken over before this leave event lands.
   function clearPhraseLink() {
     const from = useContributionStore.getState().statementLink?.from;
-    if (from === "phrase" || from === "name") setStatementLink(null);
+    if (from === "phrase" || from === "name" || from === "role") setStatementLink(null);
+  }
+
+  /** Focus a phrase's cell in the grid (which makes it the grid's tab stop) and bring it into view. */
+  function goToCell(authorId: string, role: string) {
+    const cell = document.querySelector<HTMLElement>(
+      `[data-cell-key="${authorId}:${CREDIT_ROLES.findIndex((candidate) => candidate.name === role)}"]`,
+    );
+    cell?.focus();
+    cell?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
   function goToReview() {
@@ -220,7 +249,6 @@ export function StatementOutput() {
         <span className="flex items-center gap-2">
           <SegmentedControl
             ariaLabel={t("a11yStatementGrouping")}
-            size="sm"
             value={grouping}
             onChange={setGrouping}
             options={[
@@ -236,27 +264,40 @@ export function StatementOutput() {
             <PopoverTrigger
               aria-label={t("statementOptions")}
               title={t("statementOptions")}
-              className="flex size-9 items-center justify-center rounded border border-edge bg-surface-bright text-on-surface-variant transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
+              className={ICON_TOOL_BUTTON}
             >
               <Settings2 className="size-4" aria-hidden="true" />
             </PopoverTrigger>
-            <PopoverContent align="end" aria-label={t("statementOptions")} className="grid w-60 gap-3">
-              <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                <Switch checked={acronyms} onCheckedChange={setAcronyms} aria-label={t("a11yUseInitials")} />
-                {t("useInitials")}
-              </span>
-              {canShowLevels && (
-                <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                  <Switch checked={showLevels} onCheckedChange={setShowLevels} aria-label={t("a11yShowLevels")} />
-                  {t("showLevels")}
-                </span>
-              )}
-              {hasNonAuthors && (
-                <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                  <Switch checked={separateAck} onCheckedChange={setSeparateAck} aria-label={t("a11ySeparateAcks")} />
-                  {t("separateAcknowledgements")}
-                </span>
-              )}
+            <PopoverContent align="end" aria-label={t("statementOptions")} className="w-72 max-w-[calc(100vw-2rem)]">
+              <SettingsPanel
+                title={t("statementOptions")}
+                onReset={() => setStatementOptions(DEFAULT_STATEMENT_OPTIONS)}
+              >
+                <SettingsSection>
+                  <SettingSwitch
+                    label={t("useInitials")}
+                    checked={acronyms}
+                    onChange={(initials) => setStatementOptions({ initials })}
+                    ariaLabel={t("a11yUseInitials")}
+                  />
+                  {canShowLevels && (
+                    <SettingSwitch
+                      label={t("showLevels")}
+                      checked={showLevels}
+                      onChange={(next) => setStatementOptions({ showLevels: next })}
+                      ariaLabel={t("a11yShowLevels")}
+                    />
+                  )}
+                  {hasNonAuthors && (
+                    <SettingSwitch
+                      label={t("separateAcknowledgements")}
+                      checked={separateAck}
+                      onChange={(next) => setStatementOptions({ separateAck: next })}
+                      ariaLabel={t("a11ySeparateAcks")}
+                    />
+                  )}
+                </SettingsSection>
+              </SettingsPanel>
             </PopoverContent>
           </Popover>
         </span>
@@ -312,31 +353,99 @@ export function StatementOutput() {
             statement in place and the element is never *newly* rendered —
             which is the one condition @starting-style needs to fire. */}
         {statement ? (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: pointer shortcut; a keyboard reaches the same cell through the grid's arrow keys.
           <p
             key="statement"
             // Pointer only: a keyboard marks the same phrase by focusing its cell in the grid.
             onPointerOver={(event) => {
-              const phrase = (event.target as HTMLElement).closest<HTMLElement>("[data-author]");
+              // A tap sends no leave, so its mark would stay; the grid and list give touch the same links.
+              if (event.pointerType === "touch") return;
+              const target = event.target as HTMLElement;
+              const phrase = target.closest<HTMLElement>("[data-author]");
               const { author, role } = phrase?.dataset ?? {};
+              const roleName = target.closest<HTMLElement>("[data-role-name]")?.dataset.roleName;
               if (author && role)
                 setStatementLink({ contributorId: author, role: role as CreditRoleName, from: "phrase" });
               else if (author) setStatementLink({ contributorId: author, from: "name" });
+              else if (roleName) setStatementLink({ role: roleName as CreditRoleName, from: "role" });
               else clearPhraseLink();
             }}
             onPointerLeave={clearPhraseLink}
+            // A click on a phrase (one person's one role) goes to its cell in the grid.
+            onClick={(event) => {
+              const phrase = (event.target as HTMLElement).closest<HTMLElement>("[data-author][data-role]");
+              // Not while a selection is being made across the text.
+              if (phrase?.dataset.author && phrase.dataset.role && window.getSelection()?.isCollapsed !== false)
+                goToCell(phrase.dataset.author, phrase.dataset.role);
+            }}
             style={{ transitionDelay: "200ms" }}
             className={`max-w-[75ch] whitespace-pre-line [overflow-wrap:anywhere] text-[17px] leading-relaxed text-on-surface ${
               settled ? "enter-fade" : ""
             }`}
           >
-            {statementSpans(authors, statementOptions).map((span) => {
+            {statementSpans(authors, statementOptions).map((span, spanIndex) => {
               const authorId = span.cell?.authorId ?? span.authorId;
+              if (span.role) {
+                // A role's name in a by-role statement: the same popover as the grid's role label.
+                const roleInfo = CREDIT_ROLES.find((candidate) => candidate.name === span.role);
+                if (!roleInfo) return span.text;
+                return (
+                  <RoleInfo
+                    // biome-ignore lint/suspicious/noArrayIndexKey: the same role heads the CRediT and Acknowledgements lines
+                    key={`role:${span.role}:${spanIndex}`}
+                    role={roleInfo}
+                    translateRole={translateInterfaceRole}
+                    describeRole={describeRole}
+                    language={interfaceRoleLanguage}
+                    textAnchor
+                    trigger={
+                      <span data-role-name={span.role} className={NAME_TEXT}>
+                        {span.text}
+                      </span>
+                    }
+                  />
+                );
+              }
               if (!authorId) return span.text;
               const role = span.cell?.role;
-              // A person link (no role) marks their name and every phrase; a cell link, its one phrase.
+              // A person link (no role) marks their name and every phrase, a role link (no person)
+              // that role's phrase for everyone, and a cell link its one phrase.
               const linked =
-                statementLink?.contributorId === authorId &&
-                (statementLink.role === undefined || statementLink.role === role);
+                statementLink !== null &&
+                (statementLink.contributorId ?? authorId) === authorId &&
+                (statementLink.role === undefined
+                  ? statementLink.contributorId !== undefined
+                  : statementLink.role === role);
+              const markClass =
+                "rounded-sm [box-decoration-break:clone] data-linked:bg-primary/20 data-linked:underline data-linked:decoration-primary data-linked:decoration-2 data-linked:underline-offset-[3px]";
+              const markStyle =
+                linked && linkHue
+                  ? {
+                      backgroundColor: `color-mix(in oklab, ${linkHue} 18%, transparent)`,
+                      textDecorationColor: linkHue,
+                    }
+                  : undefined;
+              // A person's name opens their menu, as the grid's name header does.
+              if (!role) {
+                return (
+                  <PersonMenu
+                    key={`${authorId}:`}
+                    authorId={authorId}
+                    surface="statement"
+                    textAnchor
+                    trigger={
+                      <span
+                        data-author={authorId}
+                        data-linked={linked || undefined}
+                        className={`${NAME_TEXT} ${markClass}`}
+                        style={markStyle}
+                      >
+                        {span.text}
+                      </span>
+                    }
+                  />
+                );
+              }
               // One element either way: swapping in a <mark> would remount the text and break a
               // selection being dragged across it. Underlined as well as tinted, never colour alone.
               return (
@@ -345,15 +454,8 @@ export function StatementOutput() {
                   data-author={authorId}
                   data-role={role}
                   data-linked={linked || undefined}
-                  className="rounded-sm [box-decoration-break:clone] data-linked:bg-primary/20 data-linked:underline data-linked:decoration-primary data-linked:decoration-2 data-linked:underline-offset-[3px]"
-                  style={
-                    linked && linkHue
-                      ? {
-                          backgroundColor: `color-mix(in oklab, ${linkHue} 18%, transparent)`,
-                          textDecorationColor: linkHue,
-                        }
-                      : undefined
-                  }
+                  className={`cursor-pointer ${markClass}`}
+                  style={markStyle}
                 >
                   {span.text}
                 </span>
@@ -410,6 +512,7 @@ export function StatementOutput() {
             copyText(() => copyRichText(statement, generateStatement(authors, { ...statementOptions, asHtml: true })))
           }
           disabled={!statement}
+          data-guide-target="copy"
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded bg-primary shadow-press px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:shadow-none"
         >
           <Copy className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -417,10 +520,7 @@ export function StatementOutput() {
         </button>
 
         <Popover>
-          <PopoverTrigger
-            disabled={!hasAuthors}
-            className="flex min-h-10 items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60 data-[state=open]:border-primary data-[state=open]:text-primary"
-          >
+          <PopoverTrigger disabled={!hasAuthors} className={EXPORT_BUTTON}>
             <Download className="size-4" aria-hidden="true" />
             {t("exportData")}
             <ChevronDown className="size-3.5" aria-hidden="true" />
@@ -480,6 +580,13 @@ export function StatementOutput() {
             </ul>
           </PopoverContent>
         </Popover>
+        {/* On a phone the figure leaves from here, with the other outputs: the grid above is a list
+            of roles there, with no figure on screen. */}
+        {hasAuthors && (
+          <div className="md:hidden">
+            <HeatmapExports authors={authors} showLevels={!yesNo} triggerClassName={EXPORT_BUTTON} />
+          </div>
+        )}
 
         {/* Here, not only on /about: this is where someone takes the statement to their manuscript.
             Primary like other links, since it goes to a page; the badge below opens a popover. */}

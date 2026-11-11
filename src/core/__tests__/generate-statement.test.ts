@@ -227,6 +227,13 @@ describe("catalog-owned separators", () => {
 });
 
 describe("statementSpans", () => {
+  it("marks a role's name in a by-role statement, and nothing in a by-author one", () => {
+    const roles = (format: (typeof STATEMENT_FORMATS)[number]) =>
+      statementSpans(makeAuthors(), { format }).flatMap((span) => (span.role ? [span.role] : []));
+    expect(roles("by-role")).toEqual(["Conceptualization", "Investigation", "Software"]);
+    expect(roles("by-author")).toEqual([]);
+  });
+
   const marked = (authors: ReturnType<typeof makeAuthors>, format: (typeof STATEMENT_FORMATS)[number]) =>
     statementSpans(authors, { format, showLevels: true }).flatMap((span) =>
       span.cell ? [`${span.cell.authorId === authors[0]?.id ? "Jane" : "Bob"}/${span.cell.role}=${span.text}`] : [],

@@ -5,6 +5,11 @@ import { createAuthor } from "../src/core/parse-authors";
 import { DEFAULT_HEATMAP_SETTINGS } from "../src/lib/heatmap-settings";
 import { asReturningVisitor, scan, seedStorage, settleMotion } from "./helpers";
 
+// On a phone the panel opens from the statement's outputs, at the foot of the page, where the role
+// list's sticky picker covers its last rows as it scrolls out: scan the panel these tests are about.
+// a11y.spec.ts scans the whole page.
+const PANEL = "[role=dialog]";
+
 test.beforeEach(async ({ page }) => {
   await asReturningVisitor(page);
   await page.goto("/");
@@ -44,17 +49,18 @@ test("saves figure styling independently from the editable contribution grid", a
   await page.setViewportSize({ width: 1440, height: 1000 });
   const cells = page.locator("[data-cell]");
   const assignments = await cells.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
+  // The colour is the grid's: picked in its options, drawn by the figure.
+  await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+  await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   await page.getByRole("combobox", { name: "Legend", exact: true }).click();
   await page.getByRole("option", { name: "Hidden", exact: true }).click();
   await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
-  await page.getByRole("button", { name: "Grayscale", exact: true }).click();
   await page.getByText("Advanced", { exact: true }).click();
-  await page.getByRole("combobox", { name: "Font", exact: true }).click();
-  await page.getByRole("option", { name: "Serif", exact: true }).click();
-  await page.getByRole("combobox", { name: "Cell shape", exact: true }).click();
-  await page.getByRole("option", { name: "Circle", exact: true }).click();
+  await page.getByRole("radio", { name: "Serif", exact: true }).click();
+  await page.getByRole("radio", { name: "Circle", exact: true }).click();
   await page.getByRole("spinbutton", { name: "Font size (px)", exact: true }).fill("14");
   await page.keyboard.press("Tab");
   await page.keyboard.press("Escape");
@@ -70,7 +76,10 @@ test("saves figure styling independently from the editable contribution grid", a
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toHaveText("Hidden");
   await expect(page.getByRole("switch", { name: "Show contribution marks", exact: true })).toBeChecked();
-  await page.getByRole("button", { name: "Reset defaults", exact: true }).click();
+  await page
+    .getByRole("region", { name: "Figure settings" })
+    .getByRole("button", { name: "Reset", exact: true })
+    .click();
   await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toHaveText("Automatic");
   await expect(page.getByRole("switch", { name: "Show contribution marks", exact: true })).not.toBeChecked();
   await expect(page.getByRole("spinbutton", { name: "Width (mm)", exact: true })).toHaveValue("85");
@@ -123,7 +132,7 @@ test("clears copied-image status when the figure or PNG dimensions change", asyn
   const copied = page.getByRole("button", { name: "Copied", exact: true });
   await copy.click();
   await expect(copied).toBeVisible();
-  await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+  await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
   await expect(copy).toBeVisible();
   await copy.click();
   await expect(copied).toBeVisible();
@@ -131,8 +140,7 @@ test("clears copied-image status when the figure or PNG dimensions change", asyn
   await expect(copy).toBeVisible();
   await copy.click();
   await expect(copied).toBeVisible();
-  await page.getByRole("combobox", { name: "Resolution", exact: true }).click();
-  await page.getByRole("option", { name: "600 dpi", exact: true }).click();
+  await page.getByRole("radio", { name: "600 dpi", exact: true }).click();
   await expect(copy).toBeVisible();
 });
 
@@ -168,8 +176,7 @@ test("writes requested PNG width and print resolution into the downloaded file",
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   await page.getByRole("spinbutton", { name: "Width (mm)", exact: true }).fill("100");
-  await page.getByRole("combobox", { name: "Resolution", exact: true }).click();
-  await page.getByRole("option", { name: "600 dpi", exact: true }).click();
+  await page.getByRole("radio", { name: "600 dpi", exact: true }).click();
   const downloaded = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download PNG", exact: true }).click();
   const path = await (await downloaded).path();
@@ -218,12 +225,26 @@ test("keeps the desktop key beside the table and reflects display changes in the
   const hintBox = await hint.boundingBox();
   if (!(tableBox && hintBox)) throw new Error("Expected table and key");
   expect(hintBox.y - tableBox.y - tableBox.height).toBeLessThan(80);
+  // A tall matrix with room beside it: the key stands right of the table, from its first row.
+  const key = page.locator("[data-grid-key]");
+  await expect(key).toHaveAttribute("data-grid-key", "side");
+  const keyBox = await key.boundingBox();
+  const headBox = await table.locator("thead").boundingBox();
+  if (!(keyBox && headBox)) throw new Error("Expected key and header");
+  expect(keyBox.x).toBeGreaterThanOrEqual(tableBox.x + tableBox.width);
+  expect(Math.abs(keyBox.y - (headBox.y + headBox.height))).toBeLessThan(6);
 
   await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
   await page.getByText("Use initials", { exact: true }).click();
   await expect(page.getByRole("switch", { name: /Use initials/ })).toBeChecked();
-  await page.getByRole("button", { name: "Transpose", exact: true }).click();
+  await page.getByRole("radio", { name: "Contributors in rows", exact: true }).click();
   await page.keyboard.press("Escape");
+  // Contributors in rows makes the matrix wide, so the key moves under it.
+  await expect(key).toHaveAttribute("data-grid-key", "below");
+  const belowBox = await key.boundingBox();
+  const turnedBox = await table.boundingBox();
+  if (!(belowBox && turnedBox)) throw new Error("Expected key and table");
+  expect(belowBox.y).toBeGreaterThanOrEqual(turnedBox.y + turnedBox.height);
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   const source = await page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img").getAttribute("src");
   const svg = decodeURIComponent(source?.split(",").slice(1).join(",") ?? "");
@@ -367,7 +388,14 @@ test.describe("touch-screen previews", () => {
       await page.setViewportSize({ width: 320, height: 700 });
       await page.emulateMedia({ colorScheme: theme });
       await expect(page.getByText(/Select to cycle/)).toBeHidden();
-      await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+      // The whole page in this theme first, from the top, before the panel opens over it.
+      expect((await scan(page)).violations).toEqual([]);
+      // On a phone the grid is a list of roles, so the figure export sits with the statement's outputs.
+      const heatmap = page.getByRole("button", { name: "Heatmap", exact: true });
+      const copy = await page.getByRole("button", { name: "Copy statement" }).boundingBox();
+      const exportAt = await heatmap.boundingBox();
+      expect(exportAt?.y).toBeGreaterThan(copy?.y ?? Number.POSITIVE_INFINITY);
+      await heatmap.click();
       const preview = page.getByRole("region", { name: "Contribution heatmap" });
       await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });
       const panel = page.getByRole("dialog", { name: "Heatmap", exact: true });
@@ -377,10 +405,10 @@ test.describe("touch-screen previews", () => {
       expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(700);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
-      expect((await scan(page)).violations).toEqual([]);
+      expect((await scan(page, PANEL)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-      await expect(page.getByRole("combobox", { name: "Orientation", exact: true })).toBeInViewport();
-      expect((await scan(page)).violations).toEqual([]);
+      await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toBeInViewport();
+      expect((await scan(page, PANEL)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
       await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });
     });
@@ -426,9 +454,11 @@ for (const width of [1440, 320]) {
         },
       });
     });
+    await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+    await page.getByRole("button", { name: "Grayscale", exact: true }).click();
+    await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Heatmap", exact: true }).click();
     await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-    await page.getByRole("button", { name: "Grayscale", exact: true }).click();
     await page.getByText("Export recipe", { exact: true }).click();
     const recipe = page.getByRole("textbox", { name: "Export recipe", exact: true });
     await expect(recipe).toBeVisible();
@@ -448,7 +478,7 @@ for (const width of [1440, 320]) {
     if (!bounds) throw new Error("Recipe field not visible");
     expect(bounds.x).toBeGreaterThanOrEqual(0);
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
-    expect((await scan(page)).violations).toEqual([]);
+    expect((await scan(page, PANEL)).violations).toEqual([]);
   });
 }
 
@@ -471,4 +501,18 @@ test("reports the smallest exported text at final print size, including the lege
       { exact: true },
     ),
   ).toBeVisible();
+});
+
+test("opens the right-click level picker at the cursor on a wide window", async ({ page }) => {
+  // At this width the grid moves toward the window's centre, which must not carry the picker with it.
+  await page.setViewportSize({ width: 1920, height: 1000 });
+  const cell = page.locator(".contribution-cell").filter({ visible: true }).first();
+  const box = await cell.boundingBox();
+  if (!box) throw new Error("Expected a cell");
+  const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await page.mouse.click(at.x, at.y, { button: "right" });
+  const picker = await page.getByRole("dialog").boundingBox();
+  if (!picker) throw new Error("Expected the picker");
+  expect(Math.abs(picker.x - at.x)).toBeLessThan(12);
+  expect(Math.abs(picker.y - at.y)).toBeLessThan(12);
 });

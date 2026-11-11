@@ -7,14 +7,17 @@ colors:
   ink-blue: "#1f4e79"
   ink-blue-hover: "#183f62"
   ink-blue-soft: "#d6e2ee"
+  # Derived from the draft's heatmap hue by ThemeHue; ink blue until a hue is set.
+  accent: "#1f4e79"
+  on-accent: "#fffdf8"
   # The page is paper tinted 3% toward the draft's heatmap colour (4% in dark mode).
   paper: "#fbf8f1"
   paper-bright: "#fffdf8"
   paper-muted: "#f5f0e6"
-  graphite: "#1c1a17"
+  graphite: "#2e2a25"
   graphite-muted: "#5e584e"
   rule: "#d6ccba"
-  edge: "#1c1a17"
+  edge: "#2e2a25"
   error: "#ba1a1a"
   flag: "#b45309"
 typography:
@@ -98,14 +101,20 @@ contributors, through the matrix, to the text for the manuscript.
 
 ## Colors
 
-Use warm paper neutrals throughout the interface. The page itself is paper tinted 3% toward the
+Use warm paper neutrals throughout the interface. Ink is a warm charcoal, not near-black: it keeps
+13:1 on paper without the weight of black. The page itself is paper tinted 3% toward the
 draft's heatmap colour (4% in dark mode), so it shifts to a faint sage when someone picks green and
-stays neutral for grey. The tint stops at those values because a custom colour can be anything, and
+stays neutral for grey. With colour by contributor no single hue is drawn, so the page stays plain
+paper. The tint stops at those values because a custom colour can be anything, and
 the muted text must keep 4.5:1 on it. It is for the web interface only: an exported figure is always
 drawn on white. Cards and the statement sit on the page in brighter paper.
 
-Reserve ink blue for primary actions, links, focus, and selected states. Use contributor colors only
-to identify data.
+Reserve ink blue for primary actions, links and focus outside the grid. The heatmap hue is also
+the accent (`--color-accent`, set by `ThemeHue`): the wordmark, the initials chips when no contributor hue is set, the selected
+segment, the active inspector tab and focus inside the grid. In light mode it is deepened toward
+black, and in dark mode lightened toward white, only as far as it takes to reach 4.5:1 against bright
+paper both ways, so any custom colour stays legible. With colour by contributor the accent is ink
+blue. Use contributor colors only to identify data.
 
 By default the grid colours each contributor in their own hue, by list position: their chip, the
 rule under their column name, their cells, and the mark on their phrase in the statement all share
@@ -123,10 +132,10 @@ The heatmap levels must stand out more from Supporting to Lead, in both themes. 
 fill mixes the chosen hue with white (40%, 70%, 100% of the hue). On a dark page that scale looks
 upside down, so dark mode keeps the hue and raises its lightness instead: 30%, 48% and 77% (for ink
 blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark marks on Lead. Exported heatmaps always use the
-light scale on a white background, because a figure goes onto a manuscript page. A figure uses one
-hue by default, since it must read in greyscale print and in any journal's style. *Per contributor*
-under Figure settings gives each person their hue for slides and posters, with the level key in a
-neutral grey. Figure cells default to square corners and a thin neutral rule; the live editing
+light scale on a white background, because a figure goes onto a manuscript page. A figure draws
+what the grid draws: one hue, or with *Per contributor* each person's hue for slides and posters,
+with the level key in a neutral grey. The preview says so when it is per contributor, because one
+hue is the safe choice for greyscale print and any journal's style. Figure cells default to square corners and a thin neutral rule; the live editing
 controls keep their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
 
@@ -137,9 +146,14 @@ after the table. Figure legends use a vertical key beside tall narrow grids when
 excessive width, otherwise a wrapped key below. Allow Right, Below and Hidden overrides. The heatmap export popover previews the actual figure
 on white paper, with fit-to-width and actual-size views and the PNG pixel dimensions.
 
-Figure settings belong beside that preview and are saved per draft, independently of the editor's
-display options and contribution values. Keep layout, labels, legend and colour together; put font
-and cell geometry under Advanced. Reset restores the figure defaults. On a narrow screen, settings
+Figure settings belong beside that preview and are saved per draft, independently of contribution
+values. Colour, orientation and initials are stored once per draft and drawn by both the grid and
+the figure. Both panels render the same component for them (`GridViewSettings`): the grid's Heatmap
+options, and the top of Figure settings under "Shared with the grid", since choosing them is part
+of preparing a figure and the preview shows the result. Below it, "This figure only" holds legend,
+role labels, empty roles, levels and marks, with font and cell geometry under Advanced. Short role labels stay a figure
+option: the grid has room for the full names and their definitions, and a statement must use the
+official CRediT terms. Figure settings' Reset restores the figure's own options and leaves the shared ones. On a narrow screen, settings
 replace the preview until the person closes them; desktop shows both side by side.
 Keep export recipes behind a disclosure in Figure settings. Show a selectable snippet and copy
 action for the chosen document tool, with any differences from the preview beside the snippet.
@@ -173,11 +187,12 @@ The mark (the logo) is a 3×3 crop of the contribution matrix, with lead on the 
 drawn on a 32px grid with 8px cells and 1px gaps. Its fills are the heatmap's real levels, not
 decorative tints, so the mark looks like the product's own data.
 
-Draw the mark in `currentColor` wherever it sits beside text, as it does in the header lockup. Where
+Draw the mark in `currentColor` wherever it sits beside text, as it does in the header lockup. With
+colour by contributor each column of the mark takes one contributor's hue, as the grid's columns do. Where
 it stands alone, use the ink-blue levels themselves. The lockup is the mark at cap height, then a
-gap, then the wordmark (the name set as type) in Newsreader italic. Never letterspace the wordmark,
-never color it other than the primary token, and never give the mark and the wordmark different
-colors.
+gap, then the wordmark (the name set as type) in Newsreader italic. Never letterspace the wordmark.
+It takes the accent: the mark's hue where that reaches text contrast, deepened where it does not, so the
+mark and the wordmark read as one colour.
 
 The wordmark never wraps and never shrinks to fit. Draw it only where you have measured that the
 row is wide enough, and below that let the mark show the brand alone. Wherever the wordmark is not
@@ -194,10 +209,12 @@ Review and Published practice. Published practice is reference beside the grid, 
 of how often published papers in a field give each role per author position, with a thin bar under
 each value. It never fills, suggests or flags a cell, so it stays neutral: bars in on-surface-variant
 and the user's column in a surface tint with a "You" label, never primary. A status strip above the
-grid says what the draft is waiting for. It also holds the controls
+grid says what the draft is waiting for; until someone answers, that is a labelled "Ask co-authors"
+tool button with the send icon, not a link, since it is the draft's next step. It also holds the controls
 that change the whole grid (Yes/No vs Levels, bulk assign, display options, heatmap export). Below
-`xl` the same parts stack in that order: rail, strip, grid, inspector. On a phone the grid becomes a
-list of roles per contributor.
+`xl` the same parts stack in that order: rail, strip, grid, inspector. Stacked, the list folds into
+one row of initials chips instead of a rail, which saves the scroll past a long list. On a phone the
+grid becomes a list of roles per contributor.
 
 The three panes share one page: no pane backgrounds and no rules between them on a wide screen. The
 contributor cards and the statement sit directly on the tinted page, so the matrix reads as the sheet
@@ -206,10 +223,11 @@ scrolls under them. Stacked below `xl`, a thin rule separates the parts.
 
 Never give the statement a full-width row. Its text is capped at 75ch, so in a wide column it wraps
 at half the width and leaves the rest empty. Keep the rail and the inspector at fixed widths, and
-give the grid what is left. The table is as wide as its content and is centred in its pane, with
-the status strip and the level key aligned to its left edge. The strip ends at the grid's edge, so
-its controls stay beside the grid they change. A short contributor list leaves equal paper on both
-sides of the block, and a long one gets every column the screen can show.
+give the grid what is left. The table is as wide as its content, with the status strip aligned to
+its left edge. The strip ends at the grid's edge, so its controls stay beside the grid they change.
+The rail and the inspector differ in width, so a block centred in its pane sits off the window's
+centre: it moves toward the window's centre as far as the pane's spare width allows. A long
+contributor list gets every column the screen can show.
 
 In a desktop-sized window the workspace is locked to the window's height. The page itself doesn't
 scroll; each pane scrolls its own content. Only lock the height when both halves of the `desk` guard
@@ -236,7 +254,16 @@ rows, and take it from the frame around them. Give a list that can grow without 
 validation checks) a maximum height, so it can't push the workflow off the screen.
 
 The first-run help sits over the workspace, not in a band of its own, which would take that
-height for good and shift the page when closed.
+height for good and shift the page when closed. Its card is painted from the prerendered HTML and
+the scripts load after that first paint, so on a slow link its buttons do nothing for a moment and
+the page behind is not yet inert. That is the accepted price of showing the card at once; the
+scripts start within 1.5 s even when the browser reports no paint.
+
+After that, a one-line "Getting started" checklist heads the status strip: tick roles, ask
+co-authors, copy the statement. It ticks itself from the draft, never from a Next button, and the
+next step's control (Ask co-authors, Copy statement) gets a ring in the accent that pulses three
+times and then holds; under reduced motion it only holds. It never takes focus or blocks the page,
+and it is gone for good once every step is done or it is closed.
 
 On touch, every control takes a 44px tap. Grow a small control's tap area with the `hit-area`
 class rather than its size, so the desktop density stays. On a phone the picker for the
@@ -258,7 +285,7 @@ mark is contrast-checked against its fill.
 ## Shapes
 
 Corners are small: 2px for document details, chips and cells, 4px for controls, cards and
-popovers. The segmented control is square-cornered, with the selected option filled in graphite.
+popovers. The segmented control is square-cornered, with the selected option filled in the accent.
 Keep pill shapes for status, switches and small markers.
 
 ## Components
@@ -271,6 +298,8 @@ buttons use the 1px ink edge on bright paper and lift with the card shadow on ho
 24px.
 
 Keep one primary action per view: Copy statement. The header actions (Share, Import) are secondary.
+Share holds both ways of sending the draft to people, the usual one first: asking each co-author to
+check their own column (it opens the Team tab), then copying a link to the whole draft.
 A disabled button loses its fill and its shadow, and mutes its text and outline, so it never looks
 like a faded working primary button.
 
@@ -303,6 +332,21 @@ the work, name its creator, and link the license
 itself. Put the notice next to the control that takes the material off the page. Keep the project's
 own copyright with the brand, not in the small print.
 
+### Settings panels
+
+The grid's view options, Figure settings, the statement options and the language popover share
+one vocabulary, built from `src/components/ui/settings-panel.tsx`. A panel opens with its title in
+`text-sm` semibold and a text Reset on the right. Sections have a short semibold label in sentence
+case, never letterspaced capitals, and a rule (`border-outline-variant/40`) between them. An on/off
+setting is a switch on the right with its label on the left; the whole row is the label. Two or three
+short options are a small segmented control with a label. A segmented control outside a panel is a
+mode that changes what the area beside it does (Yes / no or Levels, By author or By role) and stands
+36 px tall like the toolbar buttons next to it; four or more, or long labels, are a select.
+Numbers keep the figure number field. Colour is one row of swatches: *Per contributor* first (a
+conic gradient of the contributor hues), the preset hues, then *Custom*. A pressed swatch shows a
+ring and a check, and the chosen one is named beside the label. Small popovers are `w-72`; Figure
+settings keeps its 15rem column.
+
 ### Contribution matrix
 
 Use the matrix on larger screens, and a list of roles per contributor on narrow screens. Keep role
@@ -311,8 +355,12 @@ accessible label, and in the exported data. Keep bulk assignment behind a toggle
 first.
 
 An empty cell has no fill and no ring: a 3px dot in `outline-strong` (3:1 on the page) marks it, so
-the filled cells give the grid its shape. Hover and focus draw the whole target. The key under the grid is
-one joined scale from None to Lead, each step labelled under its swatch. With colour by contributor
+the filled cells give the grid its shape. Hover and focus draw the whole target. The key's swatches
+are drawn as cells are (None as the empty cell's dot), each labelled in plain text. It follows the
+figure export's rule: beside a matrix at least 1.5 times as tall as it is wide, when the pane has
+room, as a column from Lead down to None, top-aligned with the first row. Otherwise it is a row from
+None to Lead under the grid, starting at the grid's left edge, never centred under the lopsided
+table. With colour by contributor
 the scale is neutral, and while a cell or phrase is linked it redraws in that person's hue.
 
 Column headers show full names at 50°. They switch to initials past 20 columns, or when the person
@@ -332,6 +380,27 @@ shadow in it. Nothing moves and nothing is announced. The
 status strip counts answers only once someone has been asked; when every co-author but you has been
 asked and has answered, and nothing is left to review, the count becomes the double check and
 "Everyone agreed".
+
+### People and roles
+
+A person and a role each act the same way on every surface that shows them. Pointing at a person
+(their list row or collapsed-rail chip, the grid's name header, their name in the statement) marks
+them everywhere; pointing
+at a role (the grid's role label, a role's name in a by-role statement) marks that role. Pointing
+at a phrase or a cell marks that one cell. Hover is mouse only and never opens anything.
+
+Clicking opens one panel per object. A person opens the person menu: move up or down, this is me,
+equal contribution, corresponding, ask links, add ORCID iD, set all roles (it asks which level) and
+clear all roles; the grid and the statement add Edit in list, which focuses the name field in the
+list. In the list only the "…" button opens it, since the name itself is a text field; in the
+collapsed rail the initials chip does, and Edit in list opens the rail. A role opens
+its popover: the description and the full definition, then Assign to everyone (it asks which level)
+and Clear for everyone. Both bulk actions share the undo strip under the grid. A click on a phrase
+in the statement goes to its cell and makes that cell the grid's tab stop. The name and role
+headers are not in the tab order; the grid's arrow keys reach them. In the statement, names, roles
+and phrases stay text, not buttons: a click there is a pointer shortcut to a panel the keyboard
+reaches from the list's "…" or the grid's headers, so the statement never reads as a row of buttons
+or fills the tab order. Frozen rows disable the items that edit them.
 
 ## Do and don't
 

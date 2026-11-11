@@ -68,9 +68,6 @@ msgstr "Options de la heatmap"
 msgid "statementOptions"
 msgstr "Options de la déclaration"
 
-msgid "gridColor"
-msgstr "Couleur de la heatmap"
-
 msgid "transpose"
 msgstr "Transposer"
 
@@ -173,6 +170,15 @@ msgstr "Attribuer à tous"
 msgid "bulkClearRole"
 msgstr "Effacer pour tous"
 
+msgid "setAllRoles"
+msgstr "Définir tous les rôles…"
+
+msgid "assignToEveryone"
+msgstr "Attribuer à tous…"
+
+msgid "editInList"
+msgstr "Modifier dans la liste"
+
 msgid "bulkChangeApplied"
 msgstr "Modification groupée appliquée."
 
@@ -184,9 +190,6 @@ msgstr "Contributeur à attribuer"
 
 msgid "colorLabel"
 msgstr "Couleur"
-
-msgid "transposeHint"
-msgstr "Intervertir les axes des lignes et des colonnes"
 
 msgid "legendLevel"
 msgstr "Niveau"
@@ -668,8 +671,6 @@ msgstr "Fermer"
 msgid "rolesUsed"
 msgstr "{used} rôles sur {total} utilisés"
 
-msgid "shareWarningTitle"
-msgstr "Ce lien contient vos données"
 
 msgid "shareWarningBody"
 msgstr "Toute personne disposant de ce lien peut lire chaque nom, iD ORCID, type de contributeur et attribution de rôle."
@@ -704,8 +705,6 @@ msgstr "Saisissez un iD ORCID, ou collez-en un sous forme d'iD ou d'URL orcid.or
 msgid "a11yDismissWelcome"
 msgstr "Fermer l'introduction"
 
-msgid "a11yShareLink"
-msgstr "Partager un lien contenant toutes les données des contributeurs"
 
 msgid "a11yUseInitials"
 msgstr "Utiliser les initiales au lieu des noms"
@@ -741,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT est une norme ANSI/NISO (<cc>CC BY 4.0</cc>). Ce projet est indépendant de NISO et n'est pas approuvé par elle."
 
 msgid "aboutPrivacy"
-msgstr "La recherche d'un ORCID iD l'envoie depuis votre navigateur à pub.orcid.org. La recherche d'un DOI l'envoie à api.crossref.org, avec l'adresse de contact de ce site, puis à api.datacite.org si Crossref n'a pas de notice. Cloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur. L'import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d'exécution Python ; le fichier est traité dans votre navigateur et n'est jamais téléversé. Rien d'autre ne quitte votre navigateur : les brouillons restent dans son stockage local. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l'iD de cette personne, à l'application que vous choisissez. Se connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la connexion voyage ensuite dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
+msgstr "La recherche d'un ORCID iD l'envoie depuis votre navigateur à pub.orcid.org. La recherche d'un DOI l'envoie à api.crossref.org, avec l'adresse de contact de ce site, puis à api.datacite.org si Crossref n'a pas de notice. Cloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur. L'import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d'exécution Python ; le fichier est traité dans votre navigateur et n'est jamais téléversé. Rien d'autre ne quitte votre navigateur : les brouillons restent dans son stockage local, tout comme le fait d'avoir fermé la liste Premiers pas ou copié une déclaration. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l'iD de cette personne, à l'application que vous choisissez. Se connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la connexion voyage ensuite dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
 
 msgid "accessibilityStatement"
 msgstr "Déclaration d'accessibilité"
@@ -978,7 +977,7 @@ msgid "welcomeAskTitle"
 msgstr "Demandez directement aux co-auteurs"
 
 msgid "welcomeAskBody"
-msgstr "Copiez un lien depuis le menu de la ligne d'une personne et envoyez-le-lui. Quand le lien revient, ouvrez-le : la réponse est conservée à côté de sa ligne, et vous tranchez les écarts dans l'onglet Revue."
+msgstr "Avec Partager, puis Demander aux coauteurs de vérifier leurs rôles, envoyez à chaque coauteur un lien vers sa propre colonne. Quand le lien revient, ouvrez-le : la réponse est conservée à côté de sa ligne, et vous tranchez les écarts dans l'onglet Revue."
 
 msgid "importDescription"
 msgstr "Partez d'un DOI, collez des noms ou un lien qu'une personne vous a renvoyé, ou téléversez un fichier CSV, JSON, JATS4R XML ou Crossref XML. JSON et XML restaurent aussi les contributions, avec leurs niveaux si le fichier les contient. Une feuille de calcul tenzing (CSV ou TSV) fonctionne aussi. Collez une déclaration de contribution des auteurs pour remplir les rôles des contributeurs déjà présents. CITATION.cff, codemeta.json et .zenodo.json importent les noms des auteurs et les iD ORCID ; les rôles restent vides."
@@ -1638,8 +1637,6 @@ msgstr "Omettre les rôles inutilisés"
 msgid "heatmapShowLevels"
 msgstr "Afficher les niveaux de contribution"
 
-msgid "heatmapLegendHint"
-msgstr "Expliquez les niveaux dans la légende du manuscrit si vous masquez celle de la figure."
 
 msgid "heatmapBlue"
 msgstr "Bleu"
@@ -1652,6 +1649,18 @@ msgstr "Niveaux de gris"
 
 msgid "heatmapPaleColor"
 msgstr "Le niveau de soutien se distingue mal avec cette couleur. Choisissez une teinte plus sombre."
+
+msgid "heatmapSharedWithGrid"
+msgstr "Partagé avec la grille"
+
+msgid "heatmapFigureOnly"
+msgstr "Cette figure seulement"
+
+msgid "settingsReset"
+msgstr "Réinitialiser"
+
+msgid "heatmapPerContributorNote"
+msgstr "Une couleur par contributeur : pour une impression en niveaux de gris, choisissez une seule couleur dans Options de la heatmap."
 
 msgid "heatmapAdvanced"
 msgstr "Avancé"
@@ -1695,8 +1704,6 @@ msgstr "Résolution"
 msgid "heatmapSvgHint"
 msgstr "Le SVG reste net après redimensionnement ; ces dimensions concernent le PNG."
 
-msgid "heatmapReset"
-msgstr "Rétablir les valeurs par défaut"
 
 msgid "heatmapPngTooLarge"
 msgstr "Ce PNG serait trop grand. Réduisez sa largeur ou sa résolution, inversez les axes ou téléchargez le SVG."
@@ -1730,12 +1737,6 @@ msgstr "Fragment RO-Crate"
 msgid "colorByContributor"
 msgstr "Couleur par contributeur"
 
-msgid "figureColor"
-msgstr "Couleur de la figure"
-
-msgid "figureOneColor"
-msgstr "Une seule couleur"
-
 msgid "figurePerContributor"
 msgstr "Par contributeur"
 
@@ -1766,5 +1767,30 @@ msgstr "Masquée"
 msgid "heatmapCellMarks"
 msgstr "Afficher les marques de contribution"
 
-msgid "heatmapMarksHint"
-msgstr "Activez les marques pour distinguer les niveaux de contribution autrement que par les nuances."
+
+msgid "shareAskTitle"
+msgstr "Demander aux coauteurs de vérifier leurs rôles"
+
+msgid "shareAskBody"
+msgstr "Chaque coauteur reçoit un lien vers sa propre colonne. Ses réponses reviennent dans ce brouillon pour que vous les examiniez."
+
+msgid "shareCopyTitle"
+msgstr "Ou envoyer une copie du brouillon"
+
+msgid "guideTitle"
+msgstr "Premiers pas"
+
+msgid "guideStepRoles"
+msgstr "Cochez leurs rôles"
+
+msgid "guideStepAsk"
+msgstr "Demander aux coauteurs"
+
+msgid "guideStepCopy"
+msgstr "Copiez la déclaration"
+
+msgid "guideDone"
+msgstr "fait"
+
+msgid "guideDismiss"
+msgstr "Masquer les premiers pas"

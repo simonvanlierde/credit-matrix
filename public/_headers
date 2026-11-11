@@ -5,7 +5,8 @@
 # simply unrestricted, so `default-src 'self'` is the base.
 # - script-src: allows inline script here, but scripts/postbuild.mjs gives
 #   every exported page a <meta> CSP whose script-src lists the hashes of that
-#   page's own inline scripts (the theme bootstrap). The browser enforces both
+#   page's own inline scripts (the theme bootstrap, the first-run check and the
+#   deferred script loader). The browser enforces both
 #   policies, so only those scripts run. The hashes stay out of this file
 #   because Cloudflare refuses a line over 2000 characters, and postbuild
 #   fails the build if one is.

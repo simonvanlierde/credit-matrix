@@ -1,23 +1,15 @@
-import { Check, CheckCheck, Clock, Columns3, Rows3, Settings2, UserPlus } from "lucide-react";
-import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
+import { Check, CheckCheck, Clock, Send, Settings2, UserPlus } from "lucide-react";
+import { memo, type PointerEvent, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { ColorPopover } from "@/components/ui/color-popover";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { LevelMark } from "@/components/ui/level-mark";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
-import { Switch } from "@/components/ui/switch";
+import { SettingsPanel } from "@/components/ui/settings-panel";
 import { UndoBar } from "@/components/ui/undo-bar";
-import { type Author, CREDIT_ROLES, review, scoreToLevel } from "@/core";
+import { type Author, CREDIT_ROLES, type CreditRoleName, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
-import {
-  CONTRIBUTOR_HUES,
-  contributorHue,
-  contributorHues,
-  heatCellColor,
-  onColor,
-  pageMarkColor,
-} from "@/core/contributor-color";
+import { contributorHue, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useLocale, useTranslations } from "@/lib/translations";
@@ -27,9 +19,13 @@ import { useDark } from "@/lib/use-dark";
 import { useSettled } from "@/lib/use-settled";
 import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
+import { GettingStarted } from "./GettingStarted";
+import { GridViewSettings } from "./GridViewSettings";
+import { SIDE_KEY_W, useGridPlacement } from "./grid-placement";
 import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
 import { MobileRoleList } from "./MobileRoleList";
+import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
 
 // Clicks in Levels mode cycle through the scores ascending; the legend renders
@@ -56,31 +52,27 @@ type AskState = { kind: "you" | "asked" | "settled" | "none" } | { kind: "differ
  * heatmap: cell fills use the same color scale as the downloadable SVG/PNG.
  */
 export function ContributionGrid() {
-  const {
-    authors,
-    inputMode,
-    setInputMode,
-    heatmapMonoColor,
-    setHeatmapMonoColor,
-    setAuthorScore,
-    toggleContribution,
-    welcomeOpen,
-  } = useContributionStore(
-    // Only what the grid renders: a whole-store subscription re-rendered every
-    // cell on writes it never shows, such as a title edit or a recorded ask.
-    useShallow((s) => ({
-      authors: s.authors,
-      inputMode: s.inputMode,
-      setInputMode: s.setInputMode,
-      heatmapMonoColor: s.heatmapMonoColor,
-      setHeatmapMonoColor: s.setHeatmapMonoColor,
-      setAuthorScore: s.setAuthorScore,
-      toggleContribution: s.toggleContribution,
-      welcomeOpen: s.welcomeOpen,
-    })),
-  );
+  const { authors, inputMode, setInputMode, heatmapMonoColor, setAuthorScore, toggleContribution, welcomeOpen } =
+    useContributionStore(
+      // Only what the grid renders: a whole-store subscription re-rendered every
+      // cell on writes it never shows, such as a title edit or a recorded ask.
+      useShallow((s) => ({
+        authors: s.authors,
+        inputMode: s.inputMode,
+        setInputMode: s.setInputMode,
+        heatmapMonoColor: s.heatmapMonoColor,
+        setAuthorScore: s.setAuthorScore,
+        toggleContribution: s.toggleContribution,
+        welcomeOpen: s.welcomeOpen,
+      })),
+    );
   const colorByContributor = useContributionStore((s) => s.colorByContributor);
-  const setColorByContributor = useContributionStore((s) => s.setColorByContributor);
+  const _setColorByContributor = useContributionStore((s) => s.setColorByContributor);
+  const acronyms = useContributionStore((s) => s.initials);
+  const _setAcronyms = useContributionStore((s) => s.setInitials);
+  const transpose = useContributionStore((s) => s.transpose);
+  const _setTranspose = useContributionStore((s) => s.setTranspose);
+  const resetGridView = useContributionStore((s) => s.resetGridView);
   const recentReply = useContributionStore((s) => s.recentReply);
   const asks = useContributionStore((s) => s.asks);
   const selfId = useContributionStore((s) => s.selfId);
@@ -93,10 +85,22 @@ export function ContributionGrid() {
   const linkedFromPhrase = useContributionStore((s) =>
     s.statementLink?.from === "phrase" ? `${s.statementLink.contributorId}:${s.statementLink.role}` : null,
   );
-  // The person hovered in the sidebar or by name in the statement: their whole column is marked.
+  // The person hovered in the sidebar, by name in the statement or by their header: their whole column is marked.
   const linkedPerson = useContributionStore((s) => {
     const link = s.statementLink;
-    return link && (link.from === "author" || link.from === "name") ? link.contributorId : null;
+    return link && (link.from === "author" || link.from === "name") ? (link.contributorId ?? null) : null;
+  });
+  // The role whose label is under the pointer: its row is marked, and its phrases in the statement.
+  const linkedRole = useContributionStore((s) =>
+    s.statementLink?.from === "role" ? (s.statementLink.role ?? null) : null,
+  );
+  /** Pointer-only link from a header; a tap sends no leave, and the keyboard reaches cells instead. */
+  const headerLink = (link: { contributorId: string; from: "author" } | { role: CreditRoleName; from: "role" }) => ({
+    onPointerEnter: (event: PointerEvent) => event.pointerType === "mouse" && setStatementLink(link),
+    onPointerLeave: (event: PointerEvent) => {
+      if (event.pointerType === "mouse" && useContributionStore.getState().statementLink?.from === link.from)
+        setStatementLink(null);
+    },
   });
   const activeDraftId = useContributionStore((s) => s.activeDraftId);
   const summary = useAskSummary();
@@ -122,6 +126,10 @@ export function ContributionGrid() {
   // Second beat of the population sequence; see .enter-fade in globals.css.
   const settled = useSettled();
   // Said once, as the last difference is settled: not for a draft that opens already agreed.
+  const blockRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  // Signed, so a transpose with the same count measures again too.
+  const placement = useGridPlacement(blockRef, tableRef, authors.length * (transpose ? -1 : 1));
   const agreedBefore = useRef({ draftId: activeDraftId, agreed: everyoneAgreed });
   useEffect(() => {
     const before = agreedBefore.current;
@@ -130,8 +138,6 @@ export function ContributionGrid() {
       announce(t("stripEveryoneAgreed"));
     }
   }, [activeDraftId, everyoneAgreed, settled, t]);
-  const [acronyms, setAcronyms] = useState(false);
-  const [transpose, setTranspose] = useState(false);
   // The single tab stop in the matrix; arrow keys move it. Reset when the
   // orientation flips, since row/col swap meaning.
   const [activeCell, setActiveCell] = useState({ row: 0, col: 0 });
@@ -233,13 +239,28 @@ export function ContributionGrid() {
       return;
     }
 
-    // Off the role edge of the matrix, focus steps onto the role name, which
-    // opens its description. The role names sit outside the tab order, so this
-    // is how a keyboard user reaches them.
-    if (event.key === (transpose ? "ArrowUp" : "ArrowLeft") && (transpose ? row : col) === 0) {
+    // Off the role edge of the matrix, focus steps onto the role name, and off
+    // the person edge onto the name: each opens its own panel. Both sit outside
+    // the tab order, so this is how a keyboard user reaches them.
+    const edges = [
+      {
+        key: transpose ? "ArrowUp" : "ArrowLeft",
+        at: transpose ? row : col,
+        head: "role",
+        index: transpose ? col : row,
+      },
+      {
+        key: transpose ? "ArrowLeft" : "ArrowUp",
+        at: transpose ? col : row,
+        head: "name",
+        index: transpose ? row : col,
+      },
+    ];
+    for (const edge of edges) {
+      if (event.key !== edge.key || edge.at !== 0) continue;
       const head = event.currentTarget
         .closest("table")
-        ?.querySelector<HTMLButtonElement>(`[data-role-head="${transpose ? col : row}"]`);
+        ?.querySelector<HTMLButtonElement>(`[data-${edge.head}-head="${edge.index}"]`);
       if (head) {
         event.preventDefault();
         head.focus();
@@ -274,20 +295,25 @@ export function ContributionGrid() {
     target?.focus();
   }
 
-  /** Arrow keys on a role name: along the role axis, or back into the matrix. */
-  function handleRoleHeadKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, roleIndex: number) {
+  /**
+   * Arrow keys on a role or person name: along its own axis, or back into the
+   * matrix. Roles run down the rows (across the columns when transposed), people the other way.
+   */
+  function handleHeadKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, kind: "role" | "name", index: number) {
     const table = event.currentTarget.closest("table");
-    const [previous, next, intoGrid] = transpose
-      ? ["ArrowLeft", "ArrowRight", "ArrowDown"]
-      : ["ArrowUp", "ArrowDown", "ArrowRight"];
+    const vertical = (kind === "role") !== transpose;
+    const [previous, next, intoGrid] = vertical
+      ? ["ArrowUp", "ArrowDown", "ArrowRight"]
+      : ["ArrowLeft", "ArrowRight", "ArrowDown"];
+    const count = kind === "role" ? CREDIT_ROLES.length : authors.length;
     let selector: string | null = null;
     if (event.key === intoGrid) {
-      const cell = transpose ? { row: 0, col: roleIndex } : { row: roleIndex, col: 0 };
+      const cell = vertical ? { row: index, col: 0 } : { row: 0, col: index };
       setActiveCell(cell);
       selector = `[data-cell="${cell.row}-${cell.col}"]`;
     } else if (event.key === previous || event.key === next) {
-      const target = roleIndex + (event.key === next ? 1 : -1);
-      if (target >= 0 && target < CREDIT_ROLES.length) selector = `[data-role-head="${target}"]`;
+      const target = index + (event.key === next ? 1 : -1);
+      if (target >= 0 && target < count) selector = `[data-${kind}-head="${target}"]`;
     }
     if (!selector) return;
     event.preventDefault();
@@ -313,6 +339,12 @@ export function ContributionGrid() {
     return t("cellTheySay", { name: author.firstName || author.name, level: translateUi(level) });
   };
   const namedHeaders = !acronyms && authors.length <= MAX_NAMED_COLUMNS;
+  const lastRole = CREDIT_ROLES[CREDIT_ROLES.length - 1];
+  const lastAngledLabel = transpose
+    ? lastRole && translateInterfaceRole(lastRole.name)
+    : namedHeaders
+      ? authors[authors.length - 1]?.name
+      : undefined;
   // Each person's hue, by list position; one hue for all when the view says so.
   const hues = colorByContributor ? contributorHues(authors.length) : null;
   const hueOf = (author: Author) => hues?.[authors.indexOf(author)] ?? heatmapMonoColor;
@@ -351,7 +383,7 @@ export function ContributionGrid() {
         reviewHighlight?.contributorId === author.id && reviewHighlight.target === CREDIT_ROLES[roleIndex]?.name
       }
       linked={linkedFromPhrase === `${author.id}:${CREDIT_ROLES[roleIndex]?.name}`}
-      personLinked={linkedPerson === author.id}
+      personLinked={linkedPerson === author.id || linkedRole === CREDIT_ROLES[roleIndex]?.name}
       settling={
         reviewSettled?.contributorId === author.id &&
         reviewSettled.targets.some((target) => target === CREDIT_ROLES[roleIndex]?.name)
@@ -378,11 +410,34 @@ export function ContributionGrid() {
         triggerProps={{
           tabIndex: -1,
           "data-role-head": roleIndex,
-          onKeyDown: (event) => handleRoleHeadKeyDown(event, roleIndex),
+          onKeyDown: (event) => handleHeadKeyDown(event, "role", roleIndex),
         }}
       />
     );
   };
+
+  /** A person's name in the matrix: opens their menu, and joins the grid's arrow-key focus like a role name. */
+  const nameHead = (author: Author, index: number, content: ReactNode) => (
+    <PersonMenu
+      authorId={author.id}
+      surface="grid"
+      align="center"
+      trigger={
+        <button
+          type="button"
+          tabIndex={-1}
+          data-name-head={index}
+          // Named by the person alone: a column header names every cell under it, so "Actions for …"
+          // here would be read before each cell. The content can be an aria-hidden initials chip.
+          aria-label={author.name}
+          onKeyDown={(event) => handleHeadKeyDown(event, "name", index)}
+          className="block max-w-full rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary"
+        >
+          {content}
+        </button>
+      }
+    />
+  );
 
   function openInspector(tab: "team" | "review") {
     setInspectorTab(tab);
@@ -393,13 +448,21 @@ export function ContributionGrid() {
   return (
     // md:w-fit: on a wide pane the toolbar ends at the grid's edge rather than the pane's,
     // so the controls stay beside the grid they change; spare paper splits on both sides.
-    <div className="flex min-w-0 max-w-full flex-col md:mx-auto md:w-fit desk:h-full">
+    <div
+      ref={blockRef}
+      // Toward the window's centre, as far as the column's spare width allows (grid-placement.ts).
+      // An offset, not a transform: a transform would become the containing block of the
+      // right-click picker's fixed anchor and move it off the cursor.
+      style={placement.shift ? { position: "relative", left: placement.shift } : undefined}
+      className="flex min-w-0 max-w-full flex-col md:mx-auto md:w-fit desk:h-full"
+    >
       {/* The status strip: what the draft is waiting on, then every control
           that changes the whole grid. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3 pb-1 md:px-4">
         <h2 id="contributions-heading" className="sr-only">
           {t("stepContributions")}
         </h2>
+        {!locked && <GettingStarted asked={summary.asked} />}
         {!locked && (
           <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
             {/* Until someone is asked there is nothing to count, only the way to ask. */}
@@ -451,11 +514,14 @@ export function ContributionGrid() {
                 </button>
               </>
             ) : (
+              // A labelled tool button, not a link: asking co-authors is the draft's next step.
               <button
                 type="button"
                 onClick={() => openInspector("team")}
-                className="min-h-6 rounded px-1 font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className={TOOL_BUTTON}
+                data-guide-target="ask"
               >
+                <Send aria-hidden="true" className="size-3.5" />
                 {t("stripOpenTeam")}
               </button>
             )}
@@ -488,85 +554,18 @@ export function ContributionGrid() {
               <PopoverTrigger aria-label={t("heatmapOptions")} title={t("heatmapOptions")} className={ICON_TOOL_BUTTON}>
                 <Settings2 className="size-4" aria-hidden="true" />
               </PopoverTrigger>
-              <PopoverContent
-                aria-label={t("heatmapOptions")}
-                align="end"
-                className="grid w-64 max-w-[calc(100vw-2rem)] gap-2"
-              >
-                <p className="mb-1 text-sm font-semibold text-on-surface">{t("heatmapOptions")}</p>
-                <ColorPopover
-                  value={heatmapMonoColor}
-                  onChange={setHeatmapMonoColor}
-                  label={t("gridColor")}
-                  trigger={
-                    <button
-                      type="button"
-                      aria-label={t("gridColor")}
-                      title={t("gridColor")}
-                      className={`${TOOL_BUTTON} justify-between`}
-                    >
-                      {t("colorLabel")}
-                      <span
-                        className="h-3 w-3 rounded-full border border-outline-variant/50"
-                        // Per-person hues on: picking a colour switches to one hue, so show what is drawn now.
-                        style={{
-                          background: hues
-                            ? `conic-gradient(${CONTRIBUTOR_HUES.slice(0, 4).join(", ")})`
-                            : heatmapMonoColor,
-                        }}
-                      />
-                    </button>
-                  }
-                />
-                <button
-                  type="button"
-                  aria-pressed={transpose}
-                  onClick={() => setTranspose(!transpose)}
-                  title={t("transposeHint")}
-                  className={`${TOOL_BUTTON} justify-between aria-pressed:border-primary aria-pressed:text-primary`}
-                >
-                  {t("transpose")}
-                  {transpose ? (
-                    <Columns3 className="h-3.5 w-3.5" aria-hidden="true" />
-                  ) : (
-                    <Rows3 className="h-3.5 w-3.5" aria-hidden="true" />
-                  )}
-                </button>
-                <label
-                  htmlFor="grid-color-by-contributor"
-                  className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-xs text-on-surface-variant"
-                >
-                  {t("colorByContributor")}
-                  <Switch
-                    id="grid-color-by-contributor"
-                    checked={colorByContributor}
-                    onCheckedChange={setColorByContributor}
-                  />
-                </label>
-                <label
-                  htmlFor="grid-use-initials"
-                  className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-xs text-on-surface-variant"
-                >
-                  {/* The accessible name starts with the visible "Use initials",
-                    so voice control saying the visible label hits it (2.5.3). */}
-                  {t("useInitials")}
-                  <Switch
-                    id="grid-use-initials"
-                    checked={acronyms}
-                    onCheckedChange={setAcronyms}
-                    aria-label={t("a11yUseInitials")}
-                  />
-                </label>
+              <PopoverContent aria-label={t("heatmapOptions")} align="end" className="w-72 max-w-[calc(100vw-2rem)]">
+                <SettingsPanel title={t("heatmapOptions")} onReset={resetGridView}>
+                  <GridViewSettings />
+                </SettingsPanel>
               </PopoverContent>
             </Popover>
           </span>
-          <HeatmapExports
-            authors={authors}
-            monoColor={heatmapMonoColor}
-            showLevels={graded}
-            transpose={transpose}
-            acronyms={acronyms}
-          />
+          {/* On a phone the grid is a list of roles, with no figure on screen: the export sits with
+              the statement's outputs there instead (StatementOutput). */}
+          <div className="hidden md:block">
+            <HeatmapExports authors={authors} showLevels={graded} />
+          </div>
         </div>
       </div>
 
@@ -583,207 +582,244 @@ export function ContributionGrid() {
           handleCellClick={handleCellClick}
         />
 
-        {/* A bounded viewport makes both sticky axes persistent during long desktop matrices. */}
+        {/* The table and its key centre as one block: the strip above can be wider than a small
+            team's table, and the key keeps to the table's left edge. Its own flex column keeps the
+            desk height lock reaching the scroller. */}
         <div
-          style={{
-            transitionDelay: "120ms",
-            // Keeps a focused cell clear of the sticky headers when arrow keys
-            // scroll the matrix (WCAG 2.4.11).
-            scrollPaddingTop: namedHeaders || transpose ? "9.5rem" : "4rem",
-            scrollPaddingLeft: transpose && acronyms ? "6rem" : "12.5rem",
-          }}
-          className={`isolate hidden max-h-[min(70vh,44rem)] max-w-full overflow-auto md:block desk:max-h-none desk:min-h-0 desk:flex-[0_1_auto] ${
-            settled ? "enter-fade " : ""
-          }${
-            // Right padding lets the last angled label overhang its own column:
-            // a 9rem label rotated 50° reaches ~5.8rem past its own centre.
-            transpose || namedHeaders ? "pr-24" : ""
-          }`}
+          className="relative flex min-h-0 max-w-full flex-col md:mx-auto md:w-fit desk:flex-[0_1_auto]"
+          style={placement.side ? { minWidth: placement.keyLeft + SIDE_KEY_W } : undefined}
         >
-          <table
-            aria-labelledby="contributions-heading"
-            // The key hint is hidden on touch screens, but still describes the grid to a screen reader.
-            aria-describedby="grid-keys-hint"
-            // Start-aligned, so role labels share the pane's left edge with the toolbar link and the key.
-            className="w-max table-auto border-separate border-spacing-[3px]"
+          {/* A bounded viewport makes both sticky axes persistent during long desktop matrices. */}
+          <div
+            style={{
+              transitionDelay: "120ms",
+              // Keeps a focused cell clear of the sticky headers when arrow keys
+              // scroll the matrix (WCAG 2.4.11).
+              scrollPaddingTop: namedHeaders || transpose ? "9.5rem" : "4rem",
+              scrollPaddingLeft: transpose && acronyms ? "6rem" : "12.5rem",
+              // Room for the last angled label to overhang its own column, sized to that label so a
+              // short name does not push the centred table off centre. At text-xs a character is
+              // about 0.42rem, cos 50° keeps 0.64 of it, and the label starts mid-column; 9rem caps it.
+              paddingRight: lastAngledLabel
+                ? `${Math.max(0, Math.min(lastAngledLabel.length * 0.27, 5.8) - 1)}rem`
+                : undefined,
+            }}
+            className={`isolate hidden max-h-[min(70vh,44rem)] max-w-full overflow-auto md:block desk:max-h-none desk:min-h-0 desk:flex-[0_1_auto] ${
+              settled ? "enter-fade " : ""
+            }`}
           >
-            <thead>
-              <tr>
-                <th
-                  scope="col"
-                  style={{ zIndex: 21 + colCount }}
-                  className={`sticky left-0 top-0 bg-surface pb-1 text-left align-bottom font-headline text-base font-medium italic text-on-surface-variant ${
-                    // Transposed with initials, the row headers are 40px chips,
-                    // let the axis title size the column instead of reserving the
-                    // width a full role name needs.
-                    transpose && acronyms ? "" : "min-w-40 md:min-w-48"
-                  }`}
-                >
-                  {transpose ? t("contributorColumn") : t("roleColumn")}
-                </th>
+            <table
+              ref={tableRef}
+              aria-labelledby="contributions-heading"
+              // The key hint is hidden on touch screens, but still describes the grid to a screen reader.
+              aria-describedby="grid-keys-hint"
+              // Start-aligned, so role labels share the pane's left edge with the toolbar link and the key.
+              className="w-max table-auto border-separate border-spacing-[3px]"
+            >
+              <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    style={{ zIndex: 21 + colCount }}
+                    className={`sticky left-0 top-0 bg-surface pb-1 text-left align-bottom font-headline text-base font-medium italic text-on-surface-variant ${
+                      // Transposed with initials, the row headers are 40px chips,
+                      // let the axis title size the column instead of reserving the
+                      // width a full role name needs.
+                      transpose && acronyms ? "" : "min-w-40 md:min-w-48"
+                    }`}
+                  >
+                    {transpose ? t("contributorColumn") : t("roleColumn")}
+                  </th>
+                  {transpose
+                    ? CREDIT_ROLES.map((role, columnIndex) => (
+                        <th
+                          key={role.name}
+                          scope="col"
+                          // An angled label overhangs its own column to the right, so
+                          // without a reversed paint order the next header's opaque
+                          // background covers all but its first few characters.
+                          style={{ zIndex: 20 + (CREDIT_ROLES.length - columnIndex) }}
+                          className="sticky top-0 min-w-[2rem] bg-surface pb-1 align-bottom"
+                          {...headerLink({ role: role.name, from: "role" })}
+                        >
+                          <AngledLabel title={translateInterfaceRole(role.name)}>
+                            {roleHead(columnIndex, "text-xs")}
+                          </AngledLabel>
+                        </th>
+                      ))
+                    : authors.map((author, columnIndex) => (
+                        <th
+                          key={author.id}
+                          scope="col"
+                          style={{ zIndex: 20 + (authors.length - columnIndex) }}
+                          className="sticky top-0 min-w-[2.75rem] bg-surface pb-1 align-bottom"
+                          {...headerLink({ contributorId: author.id, from: "author" })}
+                        >
+                          <span className="flex flex-col items-center gap-1">
+                            {namedHeaders ? (
+                              <AngledLabel title={author.name}>
+                                {nameHead(
+                                  author,
+                                  columnIndex,
+                                  <span
+                                    className="block overflow-hidden text-ellipsis border-b-2 pb-0.5 text-xs font-semibold text-on-surface"
+                                    style={{ borderColor: hues ? hueOf(author) : "transparent" }}
+                                  >
+                                    {author.name}
+                                  </span>,
+                                )}
+                              </AngledLabel>
+                            ) : (
+                              nameHead(author, columnIndex, <InitialsChip author={author} />)
+                            )}
+                            <AskGlyph
+                              state={askState(author)}
+                              name={author.name}
+                              onReview={() => openReview(author.id)}
+                            />
+                          </span>
+                        </th>
+                      ))}
+                </tr>
+              </thead>
+              <tbody>
                 {transpose
-                  ? CREDIT_ROLES.map((role, columnIndex) => (
-                      <th
-                        key={role.name}
-                        scope="col"
-                        // An angled label overhangs its own column to the right, so
-                        // without a reversed paint order the next header's opaque
-                        // background covers all but its first few characters.
-                        style={{ zIndex: 20 + (CREDIT_ROLES.length - columnIndex) }}
-                        className="sticky top-0 min-w-[2rem] bg-surface pb-1 align-bottom"
-                      >
-                        <AngledLabel title={translateInterfaceRole(role.name)}>
-                          {roleHead(columnIndex, "text-xs")}
-                        </AngledLabel>
-                      </th>
-                    ))
-                  : authors.map((author, columnIndex) => (
-                      <th
-                        key={author.id}
-                        scope="col"
-                        style={{ zIndex: 20 + (authors.length - columnIndex) }}
-                        className="sticky top-0 min-w-[2.75rem] bg-surface pb-1 align-bottom"
-                      >
-                        <span className="flex flex-col items-center gap-1">
-                          {namedHeaders ? (
-                            <AngledLabel title={author.name}>
-                              <span
-                                className="border-b-2 pb-0.5 text-xs font-semibold text-on-surface"
-                                style={{ borderColor: hues ? hueOf(author) : "transparent" }}
-                              >
-                                {author.name}
-                              </span>
-                            </AngledLabel>
-                          ) : (
-                            <>
+                  ? authors.map((author, authorRow) => (
+                      <tr key={author.id} className="group">
+                        <th
+                          scope="row"
+                          className="sticky left-0 z-10 bg-surface py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
+                          {...headerLink({ contributorId: author.id, from: "author" })}
+                        >
+                          <span className="flex items-center gap-1.5 min-w-0">
+                            {acronyms ? (
+                              nameHead(author, authorRow, <InitialsChip author={author} />)
+                            ) : (
                               <InitialsChip author={author} />
-                              <span className="sr-only">{author.name}</span>
-                            </>
-                          )}
-                          <AskGlyph
-                            state={askState(author)}
-                            name={author.name}
-                            onReview={() => openReview(author.id)}
-                          />
-                        </span>
-                      </th>
+                            )}
+                            <AskGlyph
+                              state={askState(author)}
+                              name={author.name}
+                              onReview={() => openReview(author.id)}
+                            />
+                            {!acronyms &&
+                              nameHead(
+                                author,
+                                authorRow,
+                                <span
+                                  className="block max-w-36 truncate text-[13px] font-medium text-on-surface"
+                                  title={author.name}
+                                >
+                                  {author.name}
+                                </span>,
+                              )}
+                          </span>
+                        </th>
+                        {CREDIT_ROLES.map((_, roleIndex) => renderCell(author, roleIndex, authorRow, roleIndex))}
+                      </tr>
+                    ))
+                  : CREDIT_ROLES.map((role, roleIndex) => (
+                      <tr key={role.name} className="group">
+                        <th
+                          scope="row"
+                          className="sticky left-0 z-10 max-w-56 bg-surface py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
+                          {...headerLink({ role: role.name, from: "role" })}
+                        >
+                          {roleHead(roleIndex, "max-w-full truncate text-[13px]")}
+                        </th>
+                        {authors.map((author, authorCol) => renderCell(author, roleIndex, roleIndex, authorCol))}
+                      </tr>
                     ))}
-              </tr>
-            </thead>
-            <tbody>
-              {transpose
-                ? authors.map((author, authorRow) => (
-                    <tr key={author.id} className="group">
-                      <th
-                        scope="row"
-                        className="sticky left-0 z-10 bg-surface py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
-                      >
-                        <span className="flex items-center gap-1.5 min-w-0">
-                          <InitialsChip author={author} />
-                          <AskGlyph
-                            state={askState(author)}
-                            name={author.name}
-                            onReview={() => openReview(author.id)}
-                          />
-                          {!acronyms && (
-                            <span
-                              className="max-w-36 truncate text-[13px] font-medium text-on-surface"
-                              title={author.name}
-                            >
-                              {author.name}
-                            </span>
-                          )}
-                          {acronyms && <span className="sr-only">{author.name}</span>}
-                        </span>
-                      </th>
-                      {CREDIT_ROLES.map((_, roleIndex) => renderCell(author, roleIndex, authorRow, roleIndex))}
-                    </tr>
-                  ))
-                : CREDIT_ROLES.map((role, roleIndex) => (
-                    <tr key={role.name} className="group">
-                      <th
-                        scope="row"
-                        className="sticky left-0 z-10 max-w-56 bg-surface py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
-                      >
-                        {roleHead(roleIndex, "max-w-full truncate text-[13px]")}
-                      </th>
-                      {authors.map((author, authorCol) => renderCell(author, roleIndex, roleIndex, authorCol))}
-                    </tr>
-                  ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
 
-        {/* Right-click level picker: one shared panel, anchored at the cursor.
+          {/* Right-click level picker: one shared panel, anchored at the cursor.
           Focus returns to the cell on every close, as a context menu's does. */}
-        {picker &&
-          (() => {
-            const pickerAuthor = authors.find((candidate) => candidate.id === picker.authorId);
-            if (!pickerAuthor) return null;
-            const current = pickerAuthor.contributions[picker.roleIndex]?.score ?? 0;
-            const close = () => {
-              picker.cell.focus();
-              setPicker(null);
-            };
-            return (
-              <Popover open onOpenChange={(open) => !open && close()}>
-                <PopoverAnchor className="fixed" style={{ left: picker.x, top: picker.y }} />
-                <PopoverContent
-                  align="start"
-                  aria-label={assignmentLabel(pickerAuthor, picker.roleIndex, current)}
-                  className="w-40 p-1"
-                  onCloseAutoFocus={(event) => event.preventDefault()}
-                >
-                  {LEVEL_KEY.map(({ key, score }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => {
-                        setAuthorScore(pickerAuthor.id, picker.roleIndex, score);
-                        announce(assignmentLabel(pickerAuthor, picker.roleIndex, score));
-                        close();
-                      }}
-                      className={MENU_ITEM}
-                    >
-                      <span
-                        className="h-3 w-3 rounded-sm border border-outline-variant"
-                        style={{
-                          backgroundColor:
-                            score > 0
-                              ? heatCellColor(hueOf(pickerAuthor), score, dark)
-                              : "var(--color-surface-container-high)",
+          {picker &&
+            (() => {
+              const pickerAuthor = authors.find((candidate) => candidate.id === picker.authorId);
+              if (!pickerAuthor) return null;
+              const current = pickerAuthor.contributions[picker.roleIndex]?.score ?? 0;
+              const close = () => {
+                picker.cell.focus();
+                setPicker(null);
+              };
+              return (
+                <Popover open onOpenChange={(open) => !open && close()}>
+                  <PopoverAnchor className="fixed" style={{ left: picker.x, top: picker.y }} />
+                  <PopoverContent
+                    align="start"
+                    aria-label={assignmentLabel(pickerAuthor, picker.roleIndex, current)}
+                    className="w-40 p-1"
+                    onCloseAutoFocus={(event) => event.preventDefault()}
+                  >
+                    {LEVEL_KEY.map(({ key, score }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setAuthorScore(pickerAuthor.id, picker.roleIndex, score);
+                          announce(assignmentLabel(pickerAuthor, picker.roleIndex, score));
+                          close();
                         }}
-                      />
-                      {translateUi(key)}
-                      {score === current && <Check aria-hidden="true" className="ml-auto size-3.5 text-primary" />}
-                    </button>
-                  ))}
-                </PopoverContent>
-              </Popover>
-            );
-          })()}
+                        className={MENU_ITEM}
+                      >
+                        <span
+                          className="h-3 w-3 rounded-sm border border-outline-variant"
+                          style={{
+                            backgroundColor:
+                              score > 0
+                                ? heatCellColor(hueOf(pickerAuthor), score, dark)
+                                : "var(--color-surface-container-high)",
+                          }}
+                        />
+                        {translateUi(key)}
+                        {score === current && <Check aria-hidden="true" className="ml-auto size-3.5 text-primary" />}
+                      </button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
+              );
+            })()}
 
-        {/* Same bar a row removal gets. */}
-        {bulkUndo && (
-          <UndoBar
-            message={t("bulkChangeApplied")}
-            onUndo={undoBulk}
-            onFocusLost={() => bulkTriggerRef.current?.focus()}
-            className="mt-2"
-          />
-        )}
+          {/* Same bar a row removal gets. */}
+          {bulkUndo && (
+            <UndoBar
+              message={t("bulkChangeApplied")}
+              onUndo={undoBulk}
+              onFocusLost={() => bulkTriggerRef.current?.focus()}
+              className="mt-2"
+            />
+          )}
 
-        {/* `w-0 min-w-full` keeps the legend out of the pane's max-content width,
-          so switching modes cannot resize the whole column to fit a longer key. */}
-        <div className="mt-2 w-0 min-w-full">
-          <GridLegend
-            monoColor={hues ? LEGEND_NEUTRAL : heatmapMonoColor}
-            hueForId={hues ? (id) => contributorHue(authors, id) : null}
-            graded={graded}
-            dark={dark}
-            translateUi={translateUi}
-            differs={summary.open > 0}
-          />
+          {/* Beside a tall, narrow grid, top-aligned with its first row; else below it. `w-0
+              min-w-full` keeps a key below out of the column's max-content width, so switching
+              modes cannot resize the column to fit a longer key. */}
+          <div
+            data-grid-key={placement.side ? "side" : "below"}
+            className={placement.side ? "absolute" : "mt-2 w-0 min-w-full"}
+            style={placement.side ? { left: placement.keyLeft, top: placement.keyTop, width: SIDE_KEY_W } : undefined}
+          >
+            <GridLegend
+              monoColor={hues ? LEGEND_NEUTRAL : heatmapMonoColor}
+              hueForId={hues ? (id) => contributorHue(authors, id) : null}
+              graded={graded}
+              dark={dark}
+              translateUi={translateUi}
+              differs={summary.open > 0}
+              side={placement.side}
+            />
+          </div>
+          {/* Never truncated: the keys are the only direct way to set a level, so hiding them
+              behind a tooltip hid the feature. Hidden where the pointer is a finger, which has no
+              keys to press; the grid's description still points here, so a screen reader reads it. */}
+          <p
+            id="grid-keys-hint"
+            className="mt-1.5 w-0 min-w-full text-xs text-on-surface-variant pointer-coarse:hidden"
+          >
+            {graded ? t("levelHint") : t("toggleKeysHint")}
+          </p>
         </div>
       </div>
     </div>
@@ -915,7 +951,7 @@ const GridCell = memo(function GridCellInner({
         // A linked cell (its phrase under the pointer) gets an ink edge and a
         // hard shadow in its contributor's hue, the same mark its phrase gets.
         data-level-fill={fill ? "" : undefined}
-        className={`contribution-cell flex h-7 w-full items-center justify-center rounded-sm transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        className={`contribution-cell flex h-7 w-full items-center justify-center rounded-sm transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
           frozen ? "cursor-not-allowed opacity-40" : "hover:ring-[1.5px] hover:ring-edge"
         } ${
           highlighted
@@ -1037,8 +1073,7 @@ function AskGlyph({ state, name, onReview }: { state: AskState; name: string; on
 }
 
 /**
- * The key: one joined scale from None to Lead, each step labelled under its
- * swatch. With colour by contributor the scale is neutral, and while a cell or
+ * The key: a row of cell-shaped swatches from None to Lead, each labelled under it. With colour by contributor the scale is neutral, and while a cell or
  * phrase is linked it redraws in that person's hue.
  */
 function GridLegend({
@@ -1048,6 +1083,7 @@ function GridLegend({
   translateUi,
   dark,
   differs,
+  side,
 }: {
   monoColor: string;
   /** Each person's hue, when the grid colours by contributor. */
@@ -1057,30 +1093,42 @@ function GridLegend({
   dark: boolean;
   /** Some cell has a difference mark, so the key explains it. */
   differs: boolean;
+  /** Stands beside the grid: one step per line, as the figure's side key. */
+  side: boolean;
 }) {
   const t = useTranslations();
   const linkedId = useContributionStore((s) => s.statementLink?.contributorId ?? null);
   const hue = (linkedId && hueForId?.(linkedId)) || monoColor;
-  // Ascending, so the scale reads None → Lead in the direction the fills grow.
-  const steps = [...(graded ? LEVEL_KEY : FLAT_KEY)].reverse();
+  // Below the grid it reads None → Lead left to right, as the fills grow; beside it, Lead on top,
+  // as the figure's side key does.
+  const scale = graded ? LEVEL_KEY : FLAT_KEY;
+  const steps = side ? scale : [...scale].reverse();
   return (
     <div className="flex min-w-0 flex-col gap-1.5 text-xs text-on-surface-variant">
-      <span className="flex flex-wrap items-end gap-x-4 gap-y-2">
+      <span className={side ? "flex flex-col gap-2" : "flex flex-wrap items-end gap-x-4 gap-y-2"}>
         <span className="sr-only">{graded ? t("legendLevel") : t("legendKey")}</span>
-        <span className="inline-flex overflow-hidden rounded-sm border border-edge">
-          {steps.map(({ key, score }, index) => {
+        {/* Each step is drawn as a grid cell is, None as the empty cell's dot, so the key reads
+            "these cells mean this" rather than as a table of its own. */}
+        <span className={side ? "flex flex-col gap-0.5" : "inline-flex gap-0.5"}>
+          {steps.map(({ key, score }) => {
             const fill = score > 0 ? heatCellColor(hue, score, dark) : null;
             return (
-              <span key={key} className={`flex min-w-14 flex-col ${index > 0 ? "border-l border-edge" : ""}`}>
+              <span
+                key={key}
+                className={side ? "flex items-center gap-2" : "flex min-w-14 flex-col items-center gap-1"}
+              >
                 <span
-                  className="flex h-4 items-center justify-center transition-[background-color] duration-200 ease-[var(--ease-out)]"
-                  style={{ backgroundColor: fill ?? "var(--color-surface-bright)" }}
+                  data-level-fill={fill ? "" : undefined}
+                  className={`flex h-5 shrink-0 items-center justify-center rounded-sm transition-[background-color] duration-200 ease-[var(--ease-out)] ${side ? "w-10" : "w-full"}`}
+                  style={fill ? { backgroundColor: fill } : undefined}
                 >
-                  {graded && fill && <LevelMark score={score} graded color={onColor(fill)} size="small" />}
+                  {fill ? (
+                    graded && <LevelMark score={score} graded color={onColor(fill)} size="small" />
+                  ) : (
+                    <span aria-hidden="true" className="size-[3px] rounded-full bg-outline-strong" />
+                  )}
                 </span>
-                <span className="border-t border-edge bg-surface-bright px-1.5 py-0.5 text-center text-[11px] text-on-surface">
-                  {translateUi(key)}
-                </span>
+                <span className="text-[11px] text-on-surface-variant">{translateUi(key)}</span>
               </span>
             );
           })}
@@ -1098,13 +1146,6 @@ function GridLegend({
           </span>
         )}
       </span>
-      {/* Never truncated: the keys are the only direct way to set a level, so
-          hiding them behind a tooltip hid the feature. */}
-      {/* Hidden where the pointer is a finger, which has no keys to press; the
-          grid's description still points here, so a screen reader reads it. */}
-      <p id="grid-keys-hint" className="pointer-coarse:hidden">
-        {graded ? t("levelHint") : t("toggleKeysHint")}
-      </p>
     </div>
   );
 }
