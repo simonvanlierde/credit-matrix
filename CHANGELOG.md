@@ -92,7 +92,9 @@ roll back past it: an older build refuses to write over drafts saved in version 
 - The heatmap colour is now the accent of the wordmark, tabs and selected options, and body text is
   charcoal instead of black.
 - Share opens with asking co-authors, then copying the draft link.
-- The grid and its key centre together under the status strip, and the key is drawn as cells.
+- The grid and its key centre on the window, as far as the space between the side panels allows. The key
+  is drawn as cells and, as in exported figures, stands beside a tall, narrow grid.
+- The add button sits inside the contributor name field.
 - The collapsed contributor rail's chips link to the person's cell and open the person menu.
 - A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,
   sentence-case labels and Atkinson Hyperlegible for the interface. The panes share one page, empty
@@ -152,6 +154,8 @@ roll back past it: an older build refuses to write over drafts saved in version 
 
 ### Fixed
 
+- Clicking the logo on the main page no longer reloads the app, which lost an unsaved draft when the
+  browser blocks site data.
 - Heatmap SVG and PNG exports no longer have a wide empty margin on the left, and
   `buildHeatmapSvg` with `measureText` no longer pads for guessed glyph widths.
 - After copying an ask message in Team, the confirmation and the row's "Copied" label clear after

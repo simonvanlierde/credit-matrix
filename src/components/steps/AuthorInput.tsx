@@ -346,8 +346,8 @@ export function AuthorList() {
       )}
 
       {!locked && (
-        // Wraps in the narrow desktop rail, so the placeholder gets the whole width.
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        // The add button sits inside the field's end, so the rail spends one row on adding.
+        <div className="relative mt-3">
           <input
             ref={addInputRef}
             id="add-contributor"
@@ -365,16 +365,17 @@ export function AuthorList() {
             aria-describedby={addError !== null ? addErrorId : undefined}
             placeholder={t("addPlaceholder")}
             aria-label={t("addContributor")}
-            className="min-w-56 flex-1 text-ellipsis rounded border border-edge bg-surface-bright px-3 py-2 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary"
+            className="w-full text-ellipsis rounded border border-edge bg-surface-bright py-2 pr-10 pl-3 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary"
           />
           <button
             type="button"
             onClick={() => void handleAdd()}
             disabled={!newName.trim()}
-            className="ml-auto flex items-center gap-1.5 rounded border border-edge bg-surface-bright px-4 py-2 text-sm font-medium text-primary transition-[color,box-shadow] enabled:hover:shadow-card disabled:cursor-not-allowed disabled:border-outline disabled:bg-transparent disabled:text-on-surface-variant/60"
+            aria-label={t("addButton")}
+            title={t("addButton")}
+            className="hit-area absolute inset-y-1 right-1 flex w-8 items-center justify-center rounded text-primary transition-colors enabled:hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:text-on-surface-variant/50"
           >
             <PlusCircle className="h-4 w-4" />
-            {t("addButton")}
           </button>
         </div>
       )}

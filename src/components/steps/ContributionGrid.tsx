@@ -21,6 +21,7 @@ import { type InputMode, useAskSummary, useContributionStore } from "@/store/con
 import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
 import { GettingStarted } from "./GettingStarted";
 import { GridViewSettings } from "./GridViewSettings";
+import { SIDE_KEY_W, useGridPlacement } from "./grid-placement";
 import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
 import { MobileRoleList } from "./MobileRoleList";
@@ -125,6 +126,9 @@ export function ContributionGrid() {
   // Second beat of the population sequence; see .enter-fade in globals.css.
   const settled = useSettled();
   // Said once, as the last difference is settled: not for a draft that opens already agreed.
+  const blockRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const placement = useGridPlacement(blockRef, tableRef, authors.length * (transpose ? -1 : 1));
   const agreedBefore = useRef({ draftId: activeDraftId, agreed: everyoneAgreed });
   useEffect(() => {
     const before = agreedBefore.current;
@@ -443,7 +447,12 @@ export function ContributionGrid() {
   return (
     // md:w-fit: on a wide pane the toolbar ends at the grid's edge rather than the pane's,
     // so the controls stay beside the grid they change; spare paper splits on both sides.
-    <div className="flex min-w-0 max-w-full flex-col md:mx-auto md:w-fit desk:h-full">
+    <div
+      ref={blockRef}
+      // Toward the window's centre, as far as the column's spare width allows (grid-placement.ts).
+      style={placement.shift ? { transform: `translateX(${placement.shift}px)` } : undefined}
+      className="flex min-w-0 max-w-full flex-col md:mx-auto md:w-fit desk:h-full"
+    >
       {/* The status strip: what the draft is waiting on, then every control
           that changes the whole grid. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3 pb-1 md:px-4">
@@ -569,7 +578,10 @@ export function ContributionGrid() {
         {/* The table and its key centre as one block: the strip above can be wider than a small
             team's table, and the key keeps to the table's left edge. Its own flex column keeps the
             desk height lock reaching the scroller. */}
-        <div className="flex min-h-0 max-w-full flex-col md:mx-auto md:w-fit desk:flex-[0_1_auto]">
+        <div
+          className="relative flex min-h-0 max-w-full flex-col md:mx-auto md:w-fit desk:flex-[0_1_auto]"
+          style={placement.side ? { minWidth: placement.keyLeft + SIDE_KEY_W } : undefined}
+        >
           {/* A bounded viewport makes both sticky axes persistent during long desktop matrices. */}
           <div
             style={{
@@ -590,6 +602,7 @@ export function ContributionGrid() {
             }`}
           >
             <table
+              ref={tableRef}
               aria-labelledby="contributions-heading"
               // The key hint is hidden on touch screens, but still describes the grid to a screen reader.
               aria-describedby="grid-keys-hint"
@@ -773,9 +786,13 @@ export function ContributionGrid() {
             />
           )}
 
-          {/* `w-0 min-w-full` keeps the legend out of the pane's max-content width,
-          so switching modes cannot resize the whole column to fit a longer key. */}
-          <div className="mt-2 w-0 min-w-full">
+          {/* Beside a tall, narrow grid, top-aligned with its first row; else below it. `w-0
+              min-w-full` keeps a key below out of the column's max-content width, so switching
+              modes cannot resize the column to fit a longer key. */}
+          <div
+            className={placement.side ? "absolute" : "mt-2 w-0 min-w-full"}
+            style={placement.side ? { left: placement.keyLeft, top: placement.keyTop, width: SIDE_KEY_W } : undefined}
+          >
             <GridLegend
               monoColor={hues ? LEGEND_NEUTRAL : heatmapMonoColor}
               hueForId={hues ? (id) => contributorHue(authors, id) : null}
@@ -783,8 +800,18 @@ export function ContributionGrid() {
               dark={dark}
               translateUi={translateUi}
               differs={summary.open > 0}
+              side={placement.side}
             />
           </div>
+          {/* Never truncated: the keys are the only direct way to set a level, so hiding them
+              behind a tooltip hid the feature. Hidden where the pointer is a finger, which has no
+              keys to press; the grid's description still points here, so a screen reader reads it. */}
+          <p
+            id="grid-keys-hint"
+            className="mt-1.5 w-0 min-w-full text-xs text-on-surface-variant pointer-coarse:hidden"
+          >
+            {graded ? t("levelHint") : t("toggleKeysHint")}
+          </p>
         </div>
       </div>
     </div>
@@ -1048,6 +1075,7 @@ function GridLegend({
   translateUi,
   dark,
   differs,
+  side,
 }: {
   monoColor: string;
   /** Each person's hue, when the grid colours by contributor. */
@@ -1057,26 +1085,33 @@ function GridLegend({
   dark: boolean;
   /** Some cell has a difference mark, so the key explains it. */
   differs: boolean;
+  /** Stands beside the grid: one step per line, as the figure's side key. */
+  side: boolean;
 }) {
   const t = useTranslations();
   const linkedId = useContributionStore((s) => s.statementLink?.contributorId ?? null);
   const hue = (linkedId && hueForId?.(linkedId)) || monoColor;
-  // Ascending, so the scale reads None → Lead in the direction the fills grow.
-  const steps = [...(graded ? LEVEL_KEY : FLAT_KEY)].reverse();
+  // Below the grid it reads None → Lead left to right, as the fills grow; beside it, Lead on top,
+  // as the figure's side key does.
+  const key = graded ? LEVEL_KEY : FLAT_KEY;
+  const steps = side ? key : [...key].reverse();
   return (
     <div className="flex min-w-0 flex-col gap-1.5 text-xs text-on-surface-variant">
-      <span className="flex flex-wrap items-end gap-x-4 gap-y-2">
+      <span className={side ? "flex flex-col gap-2" : "flex flex-wrap items-end gap-x-4 gap-y-2"}>
         <span className="sr-only">{graded ? t("legendLevel") : t("legendKey")}</span>
         {/* Each step is drawn as a grid cell is, None as the empty cell's dot, so the key reads
             "these cells mean this" rather than as a table of its own. */}
-        <span className="inline-flex gap-0.5">
+        <span className={side ? "flex flex-col gap-0.5" : "inline-flex gap-0.5"}>
           {steps.map(({ key, score }) => {
             const fill = score > 0 ? heatCellColor(hue, score, dark) : null;
             return (
-              <span key={key} className="flex min-w-14 flex-col items-center gap-1">
+              <span
+                key={key}
+                className={side ? "flex items-center gap-2" : "flex min-w-14 flex-col items-center gap-1"}
+              >
                 <span
                   data-level-fill={fill ? "" : undefined}
-                  className="flex h-5 w-full items-center justify-center rounded-sm transition-[background-color] duration-200 ease-[var(--ease-out)]"
+                  className={`flex h-5 shrink-0 items-center justify-center rounded-sm transition-[background-color] duration-200 ease-[var(--ease-out)] ${side ? "w-10" : "w-full"}`}
                   style={fill ? { backgroundColor: fill } : undefined}
                 >
                   {fill ? (
@@ -1103,13 +1138,6 @@ function GridLegend({
           </span>
         )}
       </span>
-      {/* Never truncated: the keys are the only direct way to set a level, so
-          hiding them behind a tooltip hid the feature. */}
-      {/* Hidden where the pointer is a finger, which has no keys to press; the
-          grid's description still points here, so a screen reader reads it. */}
-      <p id="grid-keys-hint" className="pointer-coarse:hidden">
-        {graded ? t("levelHint") : t("toggleKeysHint")}
-      </p>
     </div>
   );
 }
