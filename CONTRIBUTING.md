@@ -91,7 +91,7 @@ Add a dated changelog entry before running `pnpm version`: rename `## [Unrelease
 the `[Unreleased]` link at `compare/v<version>...HEAD` and add a `[<version>]` link to
 `compare/v<previous>...v<version>`. Its lifecycle script takes the
 version from the root package and the date from that entry. It runs `citesync==0.4.0` through
-`uvx` to update CITATION.cff, codemeta.json, the four committed citation exports (including
+`uvx` to update CITATION.cff, codemeta.json, .zenodo.json, the four committed citation exports (including
 `schema.jsonld`) and the published `src/core/package.json`.
 The first run needs access to the Python package index; later runs can use uv's cache.
 

@@ -1,5 +1,5 @@
 source = "CITATION.cff"
-files = ["CITATION.cff", "codemeta.json"]
+files = ["CITATION.cff", "codemeta.json", ".zenodo.json"]
 manifests = ["src/core/package.json"]
 write-manifests = ["version"]
 exports = ["CITATION.bib", "citation.csl.json", "citation.apa.txt", "schema.jsonld"]
