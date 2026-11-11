@@ -220,8 +220,10 @@ described in [labelling/README.md](labelling/README.md).
 | rule parser | 0.932 | 0.997 | 0.868 |
 | Ettin-68M | 0.946 | 0.842 | 0.000 |
 
-On the later 1,000-row label set, the shipped settings (2 epochs, 5e-5) average statement_text F1
-0.905 over five seeds, and the rule parser 0.907 ([census README](README.md)).
+On the later 1,000-row label set, these settings (2 epochs, 5e-5) average statement_text F1 0.905
+over five seeds, and the rule parser 0.907. One epoch at 3e-5 averages 0.914 and is now the
+`census model train` default ([census README](README.md)). The weights this card describes were
+trained before that change, and the table above uses them.
 
 ### On every free-text statement
 
