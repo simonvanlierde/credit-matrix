@@ -668,8 +668,6 @@ msgstr "关闭"
 msgid "rolesUsed"
 msgstr "已使用 {total} 种角色中的 {used} 种"
 
-msgid "shareWarningTitle"
-msgstr "此链接包含您的数据"
 
 msgid "shareWarningBody"
 msgstr "任何拿到此链接的人都可以查看每位贡献者的姓名、ORCID iD、贡献者类型和角色分配。"
@@ -704,8 +702,6 @@ msgstr "输入 ORCID iD，或以 iD 或 orcid.org 网址的形式粘贴"
 msgid "a11yDismissWelcome"
 msgstr "关闭新手引导"
 
-msgid "a11yShareLink"
-msgstr "分享包含全部贡献者数据的链接"
 
 msgid "a11yUseInitials"
 msgstr "使用姓名缩写代替全名"
@@ -1768,3 +1764,12 @@ msgstr "显示贡献标记"
 
 msgid "heatmapMarksHint"
 msgstr "启用标记后，还可以通过标记区分贡献等级。"
+
+msgid "shareAskTitle"
+msgstr "请合著者核对各自的角色"
+
+msgid "shareAskBody"
+msgstr "每位合著者都会收到一个指向自己那一列的链接。他们的回复会返回到此草稿，供你审阅。"
+
+msgid "shareCopyTitle"
+msgstr "或发送草稿副本"

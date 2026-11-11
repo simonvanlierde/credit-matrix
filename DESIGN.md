@@ -279,6 +279,8 @@ buttons use the 1px ink edge on bright paper and lift with the card shadow on ho
 24px.
 
 Keep one primary action per view: Copy statement. The header actions (Share, Import) are secondary.
+Share holds both ways of sending the draft to people, the usual one first: asking each co-author to
+check their own column (it opens the Team tab), then copying a link to the whole draft.
 A disabled button loses its fill and its shadow, and mutes its text and outline, so it never looks
 like a faded working primary button.
 

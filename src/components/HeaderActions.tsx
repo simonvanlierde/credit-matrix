@@ -1,4 +1,4 @@
-import { Check, CircleAlert, Link2, Upload } from "lucide-react";
+import { Check, CircleAlert, Link2, Send, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type ImportMode, type LinkFailure, type PendingImport } from "@/components/ImportModal";
@@ -437,6 +437,14 @@ export function HeaderActions() {
     return current() ? openFromLink(shared, orcid) : null;
   }
 
+  /** Asking happens per person in the Team tab, which holds each co-author's own link. */
+  function askCoauthors() {
+    setShareOpen(false);
+    useContributionStore.getState().setInspectorTab("team");
+    // After the tab has rendered as selected, so focus lands on a tab stop.
+    requestAnimationFrame(() => document.getElementById("inspector-tab-team")?.focus());
+  }
+
   async function handleShare() {
     const state = useContributionStore.getState();
     try {
@@ -456,8 +464,8 @@ export function HeaderActions() {
             <button
               type="button"
               disabled={authorCount === 0 || claim !== null}
-              aria-label={t("a11yShareLink")}
-              title={claim !== null ? t("claimLockedHint") : t("a11yShareLink")}
+              aria-label={t("share")}
+              title={claim !== null ? t("claimLockedHint") : t("share")}
               className="touch-target flex size-9 items-center justify-center gap-2 rounded border border-edge bg-surface-bright text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 md:w-auto md:px-4"
             >
               {shareStatus === "copied" ? (
@@ -476,16 +484,31 @@ export function HeaderActions() {
               </span>
             </button>
           </PopoverTrigger>
+          {/* Both ways of sending the draft to people, the usual one first: each co-author
+              checks their own column, or everyone gets a full copy. */}
           <PopoverContent align="end" aria-label={t("share")} className="w-80 max-w-[calc(100vw-1.5rem)]">
-            <p className="text-sm font-semibold text-on-surface">{t("shareWarningTitle")}</p>
-            <p className="mt-1 text-xs leading-relaxed text-on-surface-variant">{t("shareWarningBody")}</p>
+            <p className="text-sm font-semibold text-on-surface">{t("shareAskTitle")}</p>
+            <p className="mt-1 text-xs leading-relaxed text-on-surface-variant">{t("shareAskBody")}</p>
             <button
               type="button"
-              onClick={() => void handleShare()}
-              className="mt-3 inline-flex min-h-9 items-center rounded bg-primary shadow-press px-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+              onClick={askCoauthors}
+              className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded bg-primary shadow-press px-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              {t("copyDataLink")}
+              <Send aria-hidden="true" className="size-4" />
+              {t("stripOpenTeam")}
             </button>
+            <div className="mt-4 border-t border-outline-variant/40 pt-3">
+              <p className="text-sm font-semibold text-on-surface">{t("shareCopyTitle")}</p>
+              <p className="mt-1 text-xs leading-relaxed text-on-surface-variant">{t("shareWarningBody")}</p>
+              <button
+                type="button"
+                onClick={() => void handleShare()}
+                className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:text-primary hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <Link2 aria-hidden="true" className="size-4" />
+                {t("copyDataLink")}
+              </button>
+            </div>
           </PopoverContent>
         </Popover>
         <button

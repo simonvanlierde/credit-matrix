@@ -668,8 +668,6 @@ msgstr "Chiudi"
 msgid "rolesUsed"
 msgstr "{used} di {total} ruoli usati"
 
-msgid "shareWarningTitle"
-msgstr "Questo link contiene i dati della bozza"
 
 msgid "shareWarningBody"
 msgstr "Chiunque abbia questo link può leggere ogni nome, ORCID iD, tipo di contributore e assegnazione di ruolo."
@@ -704,8 +702,6 @@ msgstr "Digitare un iD ORCID, oppure incollarlo come iD o come URL di orcid.org"
 msgid "a11yDismissWelcome"
 msgstr "Chiudere l'introduzione"
 
-msgid "a11yShareLink"
-msgstr "Condividere un link che contiene tutti i dati dei contributori"
 
 msgid "a11yUseInitials"
 msgstr "Usare le iniziali invece dei nomi"
@@ -1768,3 +1764,12 @@ msgstr "Mostra indicatori dei contributi"
 
 msgid "heatmapMarksHint"
 msgstr "Attiva gli indicatori per distinguere i livelli di contributo anche in un altro modo."
+
+msgid "shareAskTitle"
+msgstr "Chiedi ai coautori di controllare i loro ruoli"
+
+msgid "shareAskBody"
+msgstr "Ogni coautore riceve un link alla propria colonna. Le risposte tornano in questa bozza perché tu possa esaminarle."
+
+msgid "shareCopyTitle"
+msgstr "Oppure invia una copia della bozza"

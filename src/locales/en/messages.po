@@ -668,8 +668,6 @@ msgstr "Dismiss"
 msgid "rolesUsed"
 msgstr "{used} of {total} roles used"
 
-msgid "shareWarningTitle"
-msgstr "This link carries your data"
 
 msgid "shareWarningBody"
 msgstr "Anyone with this link can read every contributor name, ORCID iD, contributor type, and role assignment."
@@ -704,8 +702,6 @@ msgstr "Type an ORCID iD, or paste one as an iD or an orcid.org URL"
 msgid "a11yDismissWelcome"
 msgstr "Dismiss getting started"
 
-msgid "a11yShareLink"
-msgstr "Share a link containing all contributor data"
 
 msgid "a11yUseInitials"
 msgstr "Use initials instead of names"
@@ -1768,3 +1764,12 @@ msgstr "Show contribution marks"
 
 msgid "heatmapMarksHint"
 msgstr "Enable marks for an additional way to distinguish contribution levels."
+
+msgid "shareAskTitle"
+msgstr "Ask co-authors to check their roles"
+
+msgid "shareAskBody"
+msgstr "Each co-author gets a link to their own column. Their answers come back to this draft for you to review."
+
+msgid "shareCopyTitle"
+msgstr "Or send a copy of the draft"

@@ -62,7 +62,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
           - link "CRediT census"
         - button "Language settings"
         - button /Drafts:/
-        - button "Share a link containing all contributor data"
+        - button "Share"
         - button "Import"
       - main:
         - region "Contributors":
@@ -136,10 +136,12 @@ test.describe("screen-reader view (accessibility tree)", () => {
     await loadSample(page);
     const cases: [string, string][] = [
       [
-        "Share a link containing all contributor data",
+        "Share",
         `
         - dialog "Share":
-          - paragraph: This link carries your data
+          - paragraph: Ask co-authors to check their roles
+          - button "Ask co-authors"
+          - paragraph: Or send a copy of the draft
           - button "Copy data link"
         `,
       ],

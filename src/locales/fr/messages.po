@@ -668,8 +668,6 @@ msgstr "Fermer"
 msgid "rolesUsed"
 msgstr "{used} rôles sur {total} utilisés"
 
-msgid "shareWarningTitle"
-msgstr "Ce lien contient vos données"
 
 msgid "shareWarningBody"
 msgstr "Toute personne disposant de ce lien peut lire chaque nom, iD ORCID, type de contributeur et attribution de rôle."
@@ -704,8 +702,6 @@ msgstr "Saisissez un iD ORCID, ou collez-en un sous forme d'iD ou d'URL orcid.or
 msgid "a11yDismissWelcome"
 msgstr "Fermer l'introduction"
 
-msgid "a11yShareLink"
-msgstr "Partager un lien contenant toutes les données des contributeurs"
 
 msgid "a11yUseInitials"
 msgstr "Utiliser les initiales au lieu des noms"
@@ -1768,3 +1764,12 @@ msgstr "Afficher les marques de contribution"
 
 msgid "heatmapMarksHint"
 msgstr "Activez les marques pour distinguer les niveaux de contribution autrement que par les nuances."
+
+msgid "shareAskTitle"
+msgstr "Demander aux coauteurs de vérifier leurs rôles"
+
+msgid "shareAskBody"
+msgstr "Chaque coauteur reçoit un lien vers sa propre colonne. Ses réponses reviennent dans ce brouillon pour que vous les examiniez."
+
+msgid "shareCopyTitle"
+msgstr "Ou envoyer une copie du brouillon"

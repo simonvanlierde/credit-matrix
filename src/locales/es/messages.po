@@ -668,8 +668,6 @@ msgstr "Cerrar"
 msgid "rolesUsed"
 msgstr "{used} de {total} roles usados"
 
-msgid "shareWarningTitle"
-msgstr "Este enlace contiene sus datos"
 
 msgid "shareWarningBody"
 msgstr "Cualquier persona con este enlace puede leer cada nombre, ORCID iD, tipo de contribuyente y asignación de roles."
@@ -704,8 +702,6 @@ msgstr "Escribir un iD de ORCID, o pegarlo como iD o como URL de orcid.org"
 msgid "a11yDismissWelcome"
 msgstr "Cerrar la introducción"
 
-msgid "a11yShareLink"
-msgstr "Compartir un enlace que contiene todos los datos de los contribuyentes"
 
 msgid "a11yUseInitials"
 msgstr "Usar iniciales en lugar de nombres"
@@ -1768,3 +1764,12 @@ msgstr "Mostrar marcas de contribución"
 
 msgid "heatmapMarksHint"
 msgstr "Activa las marcas para distinguir los niveles de contribución de otra forma."
+
+msgid "shareAskTitle"
+msgstr "Pide a los coautores que revisen sus roles"
+
+msgid "shareAskBody"
+msgstr "Cada coautor recibe un enlace a su propia columna. Sus respuestas vuelven a este borrador para que las revises."
+
+msgid "shareCopyTitle"
+msgstr "O envía una copia del borrador"

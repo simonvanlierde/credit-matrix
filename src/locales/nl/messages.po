@@ -668,8 +668,6 @@ msgstr "Sluiten"
 msgid "rolesUsed"
 msgstr "{used} van {total} rollen gebruikt"
 
-msgid "shareWarningTitle"
-msgstr "Deze link bevat uw gegevens"
 
 msgid "shareWarningBody"
 msgstr "Iedereen met deze link kan elke naam, ORCID iD, bijdragerstype en roltoewijzing lezen."
@@ -704,8 +702,6 @@ msgstr "Typ een ORCID iD, of plak er een als iD of als orcid.org-URL"
 msgid "a11yDismissWelcome"
 msgstr "Introductie sluiten"
 
-msgid "a11yShareLink"
-msgstr "Een link delen die alle gegevens van bijdragers bevat"
 
 msgid "a11yUseInitials"
 msgstr "Initialen gebruiken in plaats van namen"
@@ -1768,3 +1764,12 @@ msgstr "Bijdragemarkeringen tonen"
 
 msgid "heatmapMarksHint"
 msgstr "Schakel markeringen in om de bijdrageniveaus ook op een andere manier te onderscheiden."
+
+msgid "shareAskTitle"
+msgstr "Vraag coauteurs hun rollen te controleren"
+
+msgid "shareAskBody"
+msgstr "Elke coauteur krijgt een link naar de eigen kolom. De antwoorden komen terug in dit concept, zodat je ze kunt nakijken."
+
+msgid "shareCopyTitle"
+msgstr "Of stuur een kopie van het concept"

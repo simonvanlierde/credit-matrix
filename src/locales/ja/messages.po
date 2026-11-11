@@ -668,8 +668,6 @@ msgstr "閉じる"
 msgid "rolesUsed"
 msgstr "{total} 種類中 {used} 種類を使用"
 
-msgid "shareWarningTitle"
-msgstr "このリンクにはデータが含まれます"
 
 msgid "shareWarningBody"
 msgstr "このリンクを知っている人は、氏名、ORCID iD、貢献者の種別、役割の割り当てをすべて閲覧できます。"
@@ -704,8 +702,6 @@ msgstr "ORCID iD を入力するか、iD または orcid.org の URL として�
 msgid "a11yDismissWelcome"
 msgstr "はじめにの案内を閉じる"
 
-msgid "a11yShareLink"
-msgstr "すべての貢献者データを含むリンクを共有します"
 
 msgid "a11yUseInitials"
 msgstr "氏名の代わりにイニシャルを使う"
@@ -1768,3 +1764,12 @@ msgstr "貢献度の記号を表示"
 
 msgid "heatmapMarksHint"
 msgstr "記号を有効にすると、濃淡以外でも貢献度を区別できます。"
+
+msgid "shareAskTitle"
+msgstr "共著者に役割の確認を依頼"
+
+msgid "shareAskBody"
+msgstr "共著者ごとに、自分の列へのリンクが届きます。回答はこの下書きに戻り、確認できます。"
+
+msgid "shareCopyTitle"
+msgstr "または下書きのコピーを送る"

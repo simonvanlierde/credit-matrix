@@ -668,8 +668,6 @@ msgstr "Schließen"
 msgid "rolesUsed"
 msgstr "{used} von {total} Rollen belegt"
 
-msgid "shareWarningTitle"
-msgstr "Dieser Link enthält Ihre Daten"
 
 msgid "shareWarningBody"
 msgstr "Wer diesen Link hat, kann jeden Namen, jede ORCID iD, jeden Beitragstyp und jede Rollenzuweisung lesen."
@@ -704,8 +702,6 @@ msgstr "Geben Sie eine ORCID iD ein oder fügen Sie eine als iD oder als orcid.o
 msgid "a11yDismissWelcome"
 msgstr "Einführung schließen"
 
-msgid "a11yShareLink"
-msgstr "Einen Link teilen, der alle Daten der Mitwirkenden enthält"
 
 msgid "a11yUseInitials"
 msgstr "Initialen statt Namen verwenden"
@@ -1768,3 +1764,12 @@ msgstr "Beitragsmarkierungen anzeigen"
 
 msgid "heatmapMarksHint"
 msgstr "Aktiviere Markierungen, um Beitragsstufen zusätzlich unterscheiden zu können."
+
+msgid "shareAskTitle"
+msgstr "Mitautoren ihre Rollen prüfen lassen"
+
+msgid "shareAskBody"
+msgstr "Jede Mitautorin und jeder Mitautor erhält einen Link zur eigenen Spalte. Die Antworten kommen zu diesem Entwurf zurück, damit Sie sie prüfen können."
+
+msgid "shareCopyTitle"
+msgstr "Oder eine Kopie des Entwurfs senden"
