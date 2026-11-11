@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   CONTRIBUTOR_HUES,
   contrastRatio,
+  contributorHue,
   contributorHues,
   DEFAULT_MONO_COLOR,
   heatCellColor,
@@ -161,5 +162,13 @@ describe("contributor hues", () => {
     expect(contributorHues(3)).toEqual(CONTRIBUTOR_HUES.slice(0, 3));
     expect(new Set(contributorHues(CONTRIBUTOR_HUES.length)).size).toBe(CONTRIBUTOR_HUES.length);
     expect(contributorHues(CONTRIBUTOR_HUES.length + 1)).toBeNull();
+  });
+
+  it("look up one person's hue by id, with none for a stranger or past the palette", () => {
+    const team = [{ id: "a" }, { id: "b" }];
+    expect(contributorHue(team, "b")).toBe(CONTRIBUTOR_HUES[1]);
+    expect(contributorHue(team, "z")).toBeNull();
+    const crowd = Array.from({ length: CONTRIBUTOR_HUES.length + 1 }, (_, i) => ({ id: `p${i}` }));
+    expect(contributorHue(crowd, "p0")).toBeNull();
   });
 });

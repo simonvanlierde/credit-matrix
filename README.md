@@ -42,7 +42,7 @@ The sampled GraphQL `httpRequestsAdaptiveGroups` query filtered this hostname, `
 
 ## Quick start
 
-Run it yourself (Node ≥ 26, pnpm ≥ 11):
+Run it yourself (Node ≥ 26, pnpm 12):
 
 ```bash
 git clone https://github.com/simonvanlierde/credit-matrix

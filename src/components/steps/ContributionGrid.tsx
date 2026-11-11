@@ -128,6 +128,7 @@ export function ContributionGrid() {
   // Said once, as the last difference is settled: not for a draft that opens already agreed.
   const blockRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
+  // Signed, so a transpose with the same count measures again too.
   const placement = useGridPlacement(blockRef, tableRef, authors.length * (transpose ? -1 : 1));
   const agreedBefore = useRef({ draftId: activeDraftId, agreed: everyoneAgreed });
   useEffect(() => {
@@ -450,7 +451,9 @@ export function ContributionGrid() {
     <div
       ref={blockRef}
       // Toward the window's centre, as far as the column's spare width allows (grid-placement.ts).
-      style={placement.shift ? { transform: `translateX(${placement.shift}px)` } : undefined}
+      // An offset, not a transform: a transform would become the containing block of the
+      // right-click picker's fixed anchor and move it off the cursor.
+      style={placement.shift ? { position: "relative", left: placement.shift } : undefined}
       className="flex min-w-0 max-w-full flex-col md:mx-auto md:w-fit desk:h-full"
     >
       {/* The status strip: what the draft is waiting on, then every control
@@ -794,6 +797,7 @@ export function ContributionGrid() {
               min-w-full` keeps a key below out of the column's max-content width, so switching
               modes cannot resize the column to fit a longer key. */}
           <div
+            data-grid-key={placement.side ? "side" : "below"}
             className={placement.side ? "absolute" : "mt-2 w-0 min-w-full"}
             style={placement.side ? { left: placement.keyLeft, top: placement.keyTop, width: SIDE_KEY_W } : undefined}
           >

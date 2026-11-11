@@ -189,7 +189,8 @@ body {
  * Insets resolve against the control's own size, so a 24px chip gets -10px.
  */
 @media (pointer: coarse) {
-  .hit-area {
+  /* Unlayered, so it would beat Tailwind's layered `absolute`: leave positioned controls alone. */
+  .hit-area:not(.absolute, .fixed, .sticky) {
     position: relative;
   }
   .hit-area::after {

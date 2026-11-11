@@ -11,7 +11,7 @@ vulnerability as [SECURITY.md](SECURITY.md) says, not in an issue.
 
 ## Getting set up
 
-**Prerequisites:** Node ≥ 26, pnpm ≥ 11.
+**Prerequisites:** Node ≥ 26, pnpm 12.
 
 ```bash
 git clone https://github.com/simonvanlierde/credit-matrix
@@ -148,7 +148,8 @@ points at the `v<version>` tag instead of `main`.
   against each change, to find code the tests run but do not check. The header of
   `test/mutation-baseline.txt` keeps the current score. It takes about 4 minutes with its 8
   workers, so pull requests do not run it; the Mutation workflow runs it weekly, and from the
-  Actions tab with "Run workflow", and fails when the survivors differ from the list. Run it on
+  Actions tab with "Run workflow". It fails on a survivor the list does not have, and only warns
+  when the runner kills a listed one (it times out on some mutants a local run lets live). Run it on
   the Node version in `.node-version`: another version moves the score by about half a point. It
   writes an HTML report to `reports/mutation/` and the mutants no test kills to
   `test/mutation-baseline.txt`. Commit that list with your change, and look at what the diff

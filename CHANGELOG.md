@@ -8,7 +8,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.12.0] - 2026-11-11
 
-**Upgrade note:** the browser storage format moves from version 4 to 5, because statement options
+**Upgrade note:** the browser storage format moves from version 3 to 5, because statement options
 are now saved per draft and the view settings are shared. Roll forward from this release and do not
 roll back past it: an older build refuses to write over drafts saved in version 5. See
 [deploying](docs/deploy.md).
@@ -38,11 +38,12 @@ roll back past it: an older build refuses to write over drafts saved in version 
 - Copy or download Quarto/Pandoc and MyST/Jupyter Book author YAML from Export data.
   The CLI has `convert --to quarto` and `--to myst`; the package exports `toQuarto` and `toMyst`.
   Quarto keeps contribution levels, MyST omits them, and both leave non-authors out of the byline.
-- Import reads the Crossref `<contributors>` block the app exports, in the import box and with
-  `importAny`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
+- Import reads the Crossref `<contributors>` block the app exports, in the import box, with
+  `importAny` and with the new `fromCrossrefContributors`. Names, ORCID iDs, corresponding and Acknowledgements-only people come back. The schema
   has no contribution levels, so every listed role comes back as lead.
-- `credit-matrix convert --to tenzing` and `--to svg` print the Tenzing table and the contribution
-  heatmap. `--to svg` takes `--locale` and `--yes-no`.
+- `credit-matrix convert --to tenzing`, `--to svg` and `--to pdf` print the Tenzing table and the
+  contribution heatmap. The figure formats take `--locale`, `--yes-no` and the figure options as
+  flags (`--color`, `--legend`, `--font` and the rest in the [heatmap guide](integrations/heatmap.md)).
 - The `<credit-matrix>` element takes a `levels` attribute, which marks Equal and Supporting
   contributions in the statement. The heatmap always shows the levels.
 - `importAnswers` sets `provenance.signedElsewhere` when a sign-in was given for a row with another
@@ -104,7 +105,8 @@ roll back past it: an older build refuses to write over drafts saved in version 
 - A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,
   sentence-case labels and Atkinson Hyperlegible for the interface. The panes share one page, empty
   grid cells are a faint dot, and the level key is one scale bar. Exported figures stay on white;
-  the `<credit-matrix>` element's card takes the warm paper and ink border.
+  the `<credit-matrix>` element's card takes the warm paper and ink border, and its figure is
+  announced as one image (`role="img"`, was `group`) named by the heatmap's title.
 - With no contributors yet, the add field sits right under the empty-state line instead of at the
   foot of the rail, and "Start fresh" puts the cursor in it. Its placeholder says it takes names, a
   DOI or an ORCID iD, and a disabled Add button is muted instead of faded.
@@ -159,6 +161,8 @@ roll back past it: an older build refuses to write over drafts saved in version 
 
 ### Fixed
 
+- On a narrow phone, a long inspector tab name (German, Dutch) hyphenates onto two lines instead
+  of running off the screen.
 - Clicking the logo on the main page no longer reloads the app, which lost an unsaved draft when the
   browser blocks site data.
 - Heatmap SVG and PNG exports no longer have a wide empty margin on the left, and

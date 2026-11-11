@@ -164,12 +164,27 @@ test("on a phone, the list folds into a row of initials that still open each per
 
   await page.getByRole("button", { name: "Collapse contributor list" }).click();
   await expect(addField(page)).toBeHidden();
-  const chip = page.getByRole("button", { name: "Alan Turing", exact: true }).filter({ visible: true });
-  await expect(chip).toHaveCount(1);
+  const chip = page.getByRole("button", { name: "Alan Turing", exact: true });
   await chip.click();
   await expect(page.getByRole("dialog", { name: "Actions for Alan Turing" })).toBeVisible();
   await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "Expand contributor list" }).click();
   await expect(addField(page)).toBeVisible();
+});
+
+test.describe("on a touch screen", () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test("keeps the add button inside the name field", async ({ page }) => {
+    await asReturningVisitor(page);
+    await page.goto("/");
+    const field = await addField(page).boundingBox();
+    const button = await page.getByRole("button", { name: "Add", exact: true }).boundingBox();
+    if (!(field && button)) throw new Error("Expected the field and its button");
+    expect(button.x).toBeGreaterThanOrEqual(field.x);
+    expect(button.x + button.width).toBeLessThanOrEqual(field.x + field.width);
+    expect(button.y).toBeGreaterThanOrEqual(field.y);
+    expect(button.y + button.height).toBeLessThanOrEqual(field.y + field.height);
+  });
 });

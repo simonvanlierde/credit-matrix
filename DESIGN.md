@@ -223,10 +223,11 @@ scrolls under them. Stacked below `xl`, a thin rule separates the parts.
 
 Never give the statement a full-width row. Its text is capped at 75ch, so in a wide column it wraps
 at half the width and leaves the rest empty. Keep the rail and the inspector at fixed widths, and
-give the grid what is left. The table is as wide as its content and is centred in its pane, with
-the status strip and the level key aligned to its left edge. The strip ends at the grid's edge, so
-its controls stay beside the grid they change. A short contributor list leaves equal paper on both
-sides of the block, and a long one gets every column the screen can show.
+give the grid what is left. The table is as wide as its content, with the status strip aligned to
+its left edge. The strip ends at the grid's edge, so its controls stay beside the grid they change.
+The rail and the inspector differ in width, so a block centred in its pane sits off the window's
+centre: it moves toward the window's centre as far as the pane's spare width allows. A long
+contributor list gets every column the screen can show.
 
 In a desktop-sized window the workspace is locked to the window's height. The page itself doesn't
 scroll; each pane scrolls its own content. Only lock the height when both halves of the `desk` guard
@@ -253,7 +254,10 @@ rows, and take it from the frame around them. Give a list that can grow without 
 validation checks) a maximum height, so it can't push the workflow off the screen.
 
 The first-run help sits over the workspace, not in a band of its own, which would take that
-height for good and shift the page when closed.
+height for good and shift the page when closed. Its card is painted from the prerendered HTML and
+the scripts load after that first paint, so on a slow link its buttons do nothing for a moment and
+the page behind is not yet inert. That is the accepted price of showing the card at once; the
+scripts start within 1.5 s even when the browser reports no paint.
 
 After that, a one-line "Getting started" checklist heads the status strip: tick roles, ask
 co-authors, copy the statement. It ticks itself from the draft, never from a Next button, and the
@@ -351,10 +355,12 @@ accessible label, and in the exported data. Keep bulk assignment behind a toggle
 first.
 
 An empty cell has no fill and no ring: a 3px dot in `outline-strong` (3:1 on the page) marks it, so
-the filled cells give the grid its shape. Hover and focus draw the whole target. The key under the grid is
-a row of swatches drawn as cells are (None as the empty cell's dot), 2px apart, from None to Lead,
-each labelled in plain text under it. It starts at the grid's left edge, never centred under the
-lopsided table. With colour by contributor
+the filled cells give the grid its shape. Hover and focus draw the whole target. The key's swatches
+are drawn as cells are (None as the empty cell's dot), each labelled in plain text. It follows the
+figure export's rule: beside a matrix at least 1.5 times as tall as it is wide, when the pane has
+room, as a column from Lead down to None, top-aligned with the first row. Otherwise it is a row from
+None to Lead under the grid, starting at the grid's left edge, never centred under the lopsided
+table. With colour by contributor
 the scale is neutral, and while a cell or phrase is linked it redraws in that person's hue.
 
 Column headers show full names at 50°. They switch to initials past 20 columns, or when the person

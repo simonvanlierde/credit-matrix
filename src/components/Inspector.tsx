@@ -97,7 +97,7 @@ export function Inspector() {
               aria-controls={`inspector-panel-${id}`}
               tabIndex={selected ? 0 : -1}
               onClick={() => setTab(id)}
-              className={`min-h-10 border-b-2 px-2 text-[13px] leading-tight sm:px-3 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
+              className={`min-h-10 hyphens-auto border-b-2 px-2 text-[13px] leading-tight sm:px-3 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
                 selected
                   ? "border-accent text-accent"
                   : "border-transparent text-on-surface-variant hover:text-on-surface"

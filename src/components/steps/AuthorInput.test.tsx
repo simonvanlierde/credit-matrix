@@ -427,9 +427,7 @@ describe("collapsed rail", () => {
     act(() => useContributionStore.getState().loadAuthors([ann]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
-    // The rail (desktop) and the chip row (stacked) both render; CSS shows one.
-    const [chip] = screen.getAllByRole("button", { name: "Ann Lee" });
-    if (!chip) throw new Error("expected a chip");
+    const chip = screen.getByRole("button", { name: "Ann Lee" });
 
     fireEvent.pointerEnter(chip, { pointerType: "mouse" });
     expect(useContributionStore.getState().statementLink).toEqual({ contributorId: ann.id, from: "author" });
@@ -438,11 +436,31 @@ describe("collapsed rail", () => {
 
     // A link from the grid or statement marks the chip too.
     act(() => useContributionStore.getState().setStatementLink({ contributorId: ann.id, from: "cell" }));
-    for (const each of screen.getAllByRole("button", { name: "Ann Lee" })) expect(each.dataset.linked).toBe("true");
+    expect(chip.dataset.linked).toBe("true");
 
     fireEvent.click(chip);
     expect(screen.getByRole("dialog", { name: "Actions for Ann Lee" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Edit in list" })).toBeTruthy();
+  });
+
+  it("keeps focus on the fold toggle as the list folds and opens", () => {
+    act(() => useContributionStore.getState().loadAuthors([createAuthor("Ann Lee")]));
+    renderList();
+    const fold = screen.getByRole("button", { name: "Collapse contributor list" });
+    fold.focus();
+    fireEvent.click(fold);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Expand contributor list" }));
+    fireEvent.click(document.activeElement as HTMLElement);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Collapse contributor list" }));
+  });
+
+  it("shows the full list, with its add field, once a folded roster is empty", () => {
+    act(() => useContributionStore.getState().loadAuthors([createAuthor("Ann Lee")]));
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
+    expect(screen.queryByLabelText("New author names or ORCID iD")).toBeNull();
+    act(() => useContributionStore.getState().loadAuthors([]));
+    expect(screen.getByLabelText("New author names or ORCID iD")).toBeTruthy();
   });
 
   it("opens the list and focuses the person on Edit in list from a chip", () => {
@@ -452,7 +470,7 @@ describe("collapsed rail", () => {
     act(() => useContributionStore.getState().loadAuthors([ann]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
-    fireEvent.click(screen.getAllByRole("button", { name: "Ann Lee" })[0] as HTMLElement);
+    fireEvent.click(screen.getByRole("button", { name: "Ann Lee" }));
     fireEvent.click(screen.getByRole("button", { name: "Edit in list" }));
 
     expect(screen.getByRole("button", { name: "Collapse contributor list" })).toBeTruthy();

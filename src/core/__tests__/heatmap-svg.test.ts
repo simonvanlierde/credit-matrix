@@ -641,6 +641,27 @@ describe("buildHeatmapSvg golden layouts", () => {
     expect(buildHeatmapSvg(team(), options)).toMatchSnapshot();
   });
 
+  // The snapshots pin every byte; these name the rules a reviewer checks before accepting `-u`.
+  // The grid's frame, the one rect drawn with no fill.
+  const cellEdges = (svg: string) => {
+    const frame = svg.match(/<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"[^>]*fill="none"/);
+    if (!frame) throw new Error("expected the grid frame");
+    const [x, y, w, h] = frame.slice(1).map(Number) as [number, number, number, number];
+    return { right: x + w, bottom: y + h };
+  };
+  const leadAt = (svg: string) => {
+    const lead = svg.match(/<text x="([\d.]+)" y="([\d.]+)"[^>]*>(?:<tspan[^>]*>)?Lead</);
+    if (!lead) throw new Error("expected the key's Lead label");
+    return { x: Number(lead[1]), y: Number(lead[2]) };
+  };
+
+  it("puts a right key right of the cells and a bottom key under them", () => {
+    const right = buildHeatmapSvg(team(), cases["tall right legend, large type, measured"]);
+    expect(leadAt(right).x).toBeGreaterThan(cellEdges(right).right);
+    const bottom = buildHeatmapSvg(team(), cases["measured text, bottom legend"]);
+    expect(leadAt(bottom).y).toBeGreaterThan(cellEdges(bottom).bottom);
+  });
+
   it.each([
     ["auto picks a right key for a tall narrow matrix", { legendPosition: "auto" as const }],
     ["a tall matrix with marks", { marks: true, size: 12, scale: 3 }],
@@ -791,5 +812,19 @@ describe("buildHeatmapSvg automatic key placement", () => {
       }
     }
     expect(rows.join("\n")).toMatchSnapshot();
+  });
+});
+
+describe("row label room", () => {
+  it("leaves guessed room for wide letters in the row labels", () => {
+    // No measurer: a name of Ws and Ms is wider than the average glyph guess, so the row band
+    // must use the conservative bound (one em per wide letter) to keep the label inside the figure.
+    const wide = createAuthor("WWWWWWWWWW MMMMMMMMMM");
+    wide.contributions[0] = { ...wide.contributions[0], score: 100 } as (typeof wide.contributions)[0];
+    const svg = buildHeatmapSvg([wide], { transpose: true, acronyms: false });
+    const label = svg.match(/<text x="([\d.]+)"[^>]*text-anchor="end"[^>]*font-size="([\d.]+)"[^>]*>WWWWWWWWWW/);
+    if (!label) throw new Error("expected the row label");
+    const [, x, size] = label.map(Number);
+    expect(x).toBeGreaterThanOrEqual(20 * (size ?? 0));
   });
 });

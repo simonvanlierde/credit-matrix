@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
+import { MENU_ITEM } from "./grid-shared";
 
-const ITEM =
-  "flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-disabled:cursor-not-allowed aria-disabled:text-on-surface-variant/50 aria-disabled:hover:bg-transparent";
+const ITEM = `${MENU_ITEM} aria-disabled:cursor-not-allowed aria-disabled:text-on-surface-variant/50 aria-disabled:hover:bg-transparent`;
 /** The icon class for a menu row's leading icon. */
 export const MENU_ICON = "h-3.5 w-3.5 shrink-0 text-on-surface-variant";
 

@@ -106,6 +106,17 @@ export function AuthorList() {
   // it is not being edited.
   useEffect(() => setTitleDraft(title), [title]);
   const [collapsed, setCollapsed] = useState(false);
+  // Nothing to fold when empty: an empty roster shows the full list, with its add field.
+  const folded = collapsed && authors.length > 0;
+  // Folding swaps the whole panel, so the toggle remounts: hand focus to the new one.
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const refocusToggle = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: folded only re-runs the effect, after the swap.
+  useEffect(() => {
+    if (!refocusToggle.current) return;
+    refocusToggle.current = false;
+    toggleRef.current?.focus();
+  }, [folded]);
   // A collapsed rail has no fields: open it for a request to edit one person in the list.
   const listFocusRequested = useContributionStore((s) => s.listFocus !== null);
   useEffect(() => {
@@ -212,7 +223,7 @@ export function AuthorList() {
 
   const header = (
     <div className="mb-3 flex items-center justify-between gap-2">
-      <h2 className={`font-headline text-xl font-semibold text-on-surface ${collapsed ? "xl:sr-only" : ""}`}>
+      <h2 className={`font-headline text-xl font-semibold text-on-surface ${folded ? "xl:sr-only" : ""}`}>
         {t("stepContributors")}
         {authors.length > 0 && (
           <>
@@ -223,29 +234,33 @@ export function AuthorList() {
         )}
       </h2>
       {/* On a desktop the list folds into a rail of initials beside the grid; stacked above it,
-          into one row of them, which saves the scroll past a long list. Nothing to fold when empty. */}
-      <button
-        type="button"
-        onClick={() => setCollapsed(!collapsed)}
-        aria-expanded={!collapsed}
-        aria-label={collapsed ? t("expandContributors") : t("collapseContributors")}
-        title={collapsed ? t("expandContributors") : t("collapseContributors")}
-        className={`hit-area size-7 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-          authors.length > 0 ? "flex" : "hidden xl:flex"
-        }`}
-      >
-        {collapsed ? (
-          <>
-            <PanelLeftOpen className="hidden size-4 xl:block" aria-hidden="true" />
-            <ChevronDown className="size-4 xl:hidden" aria-hidden="true" />
-          </>
-        ) : (
-          <>
-            <PanelLeftClose className="hidden size-4 xl:block" aria-hidden="true" />
-            <ChevronUp className="size-4 xl:hidden" aria-hidden="true" />
-          </>
-        )}
-      </button>
+          into one row of them, which saves the scroll past a long list. */}
+      {authors.length > 0 && (
+        <button
+          ref={toggleRef}
+          type="button"
+          onClick={() => {
+            refocusToggle.current = true;
+            setCollapsed(!folded);
+          }}
+          aria-expanded={!folded}
+          aria-label={folded ? t("expandContributors") : t("collapseContributors")}
+          title={folded ? t("expandContributors") : t("collapseContributors")}
+          className="hit-area flex size-7 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          {folded ? (
+            <>
+              <PanelLeftOpen className="hidden size-4 xl:block" aria-hidden="true" />
+              <ChevronDown className="size-4 xl:hidden" aria-hidden="true" />
+            </>
+          ) : (
+            <>
+              <PanelLeftClose className="hidden size-4 xl:block" aria-hidden="true" />
+              <ChevronUp className="size-4 xl:hidden" aria-hidden="true" />
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 
@@ -396,32 +411,20 @@ export function AuthorList() {
     </div>
   );
 
-  if (!collapsed) return full;
+  if (!folded) return full;
+  // Folded: the initials alone, a rail beside the grid on a desktop and one wrapping row above it
+  // when stacked.
   return (
-    <>
-      {/* Collapsed on a desktop: a rail of initials beside the grid. */}
-      <div className="hidden flex-col items-center p-2 xl:flex desk:h-full desk:overflow-y-auto">
-        {header}
-        <ul className="flex flex-col items-center gap-1.5">
-          {authors.map((author) => (
-            <li key={author.id}>
-              <RailChip author={author} />
-            </li>
-          ))}
-        </ul>
-      </div>
-      {/* Collapsed when stacked: the same chips in one wrapping row above the grid. */}
-      <div className="p-3 md:p-4 xl:hidden">
-        {header}
-        <ul className="-mt-1 flex flex-wrap gap-1.5">
-          {authors.map((author) => (
-            <li key={author.id}>
-              <RailChip author={author} />
-            </li>
-          ))}
-        </ul>
-      </div>
-    </>
+    <div className="flex flex-col p-3 md:p-4 xl:items-center xl:p-2 desk:h-full desk:overflow-y-auto">
+      {header}
+      <ul className="-mt-1 flex flex-wrap gap-1.5 xl:mt-0 xl:flex-col xl:items-center">
+        {authors.map((author) => (
+          <li key={author.id}>
+            <RailChip author={author} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

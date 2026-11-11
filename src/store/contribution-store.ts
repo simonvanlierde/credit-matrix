@@ -477,12 +477,6 @@ function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
   return asks;
 }
 
-/**
- * Rebuild one persisted draft, filling anything missing or malformed. Keys
- * this build does not know are kept: a newer build's fields must survive an
- * older tab's save.
- */
-
 function legacyFigure(settings: unknown, key: "horizontal" | "acronyms"): boolean {
   return isRecord(settings) && settings[key] === true;
 }
@@ -494,6 +488,11 @@ function repairStatementOptions(value: unknown): StatementOptions {
   return { initials: flag("initials"), showLevels: flag("showLevels"), separateAck: flag("separateAck") };
 }
 
+/**
+ * Rebuild one persisted draft, filling anything missing or malformed. Keys
+ * this build does not know are kept: a newer build's fields must survive an
+ * older tab's save.
+ */
 function repairSingleDraft(value: unknown, id: string): Draft {
   const { asked, ...raw } = (isRecord(value) ? value : {}) as Partial<Draft> & { asked?: unknown };
   return {

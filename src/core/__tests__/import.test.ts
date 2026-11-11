@@ -53,6 +53,13 @@ describe("export-only formats", () => {
     expect(await importAny(text).catch((e) => e)).not.toBeInstanceOf(ExportOnlyError);
   });
 
+  it("reads a CITATION.cff that lists its authors before cff-version as CFF", async () => {
+    const text = "# c\nauthors:\n  - family-names: Smith\n    given-names: Jane\ncff-version: 1.2.0\ntitle: T\n";
+    const convertCitation = vi.fn(async () => JSON.stringify({ "@type": "SoftwareSourceCode", author: [] }));
+    await importAny(text, { convertCitation }).catch(() => undefined);
+    expect(convertCitation).toHaveBeenCalledWith(text.trim(), "cff");
+  });
+
   it("still reads a name list that mentions an author key", async () => {
     expect((await importAny("Author: Jane Smith")).authors).toHaveLength(1);
   });

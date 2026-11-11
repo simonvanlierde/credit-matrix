@@ -34,12 +34,8 @@ import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { useGuide } from "@/store/guide-store";
-import { ICON_TOOL_BUTTON } from "./grid-shared";
+import { EXPORT_BUTTON, ICON_TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
-
-/** The outlined export buttons beside Copy statement. */
-const EXPORT_BUTTON =
-  "flex min-h-10 items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60 data-[state=open]:border-primary data-[state=open]:text-primary";
 
 import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
