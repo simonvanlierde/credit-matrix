@@ -165,6 +165,8 @@ points at the `v<version>` tag instead of `main`.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
+- **Memory**: `vitest.config.ts` caps each worker at 4 GB of heap and runs 4 at once. A test that
+  reads a stream or loops on input gives it an end, so a regression fails instead of filling memory.
 - **Document integrations**: `pnpm test:integrations` runs real Pandoc, Sphinx, MyST and Jupyter
   Book builds. It needs uv, and it builds the workspace package first.
   Python tools and Pandoc are locked in `integrations/uv.lock`; the two book CLIs are devDependencies.

@@ -232,6 +232,42 @@ describe("<credit-matrix>", () => {
     }
   });
 
+  it("stops reading a body with no length once it passes the cap", async () => {
+    // Finite, twice the cap, so a regression that reads it whole fails on `cancelled`
+    // instead of buffering without end (an endless stream here once filled 47 GB).
+    const chunk = 64 * 1024;
+    let mostSent = 0;
+    let cancelled = false;
+    const oversized = () => {
+      let sent = 0;
+      return new ReadableStream<Uint8Array>({
+        pull: (controller) => {
+          if (sent >= 2 * MAX_IMPORT_BYTES) return controller.close();
+          sent += chunk;
+          mostSent = Math.max(mostSent, sent);
+          controller.enqueue(new Uint8Array(chunk));
+        },
+        cancel: () => {
+          cancelled = true;
+        },
+      });
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(oversized())),
+    );
+    try {
+      const root = await mount('<credit-matrix src="big.json"></credit-matrix>');
+      expect(root.querySelector("[role=alert]")?.textContent).toBe(
+        `Could not load big.json: it is larger than ${MAX_IMPORT_BYTES / 1_000_000} MB.`,
+      );
+      expect(cancelled).toBe(true);
+      expect(mostSent).toBeLessThan(MAX_IMPORT_BYTES + 4 * chunk);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("shows a loading line while src is fetched", async () => {
     let answer: (r: Response) => void = () => undefined;
     vi.stubGlobal(
