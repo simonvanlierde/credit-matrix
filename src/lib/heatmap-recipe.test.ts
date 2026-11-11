@@ -34,7 +34,7 @@ const settings = {
 describe("heatmap recipes", () => {
   it.each([true, false])("reproduces the SVG through the actual CLI with levels=%s", async (levels) => {
     const value = { ...settings, levels };
-    const authors = [createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 33 }] })];
+    const authors = [createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 33 }] })];
     const path = join(mkdtempSync(join(tmpdir(), "heatmap-recipe-")), "contributors.json");
     writeFileSync(path, toJson(authors));
     const recipe = heatmapRecipe(value, "cli", "fr");

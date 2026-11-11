@@ -59,7 +59,7 @@ describe("fromTenzing", () => {
     });
     expect(roles(ana)).toEqual(ANA_ROLES);
 
-    expect(bob).toMatchObject({ name: "Bob White", contributorType: "author", corresponding: false });
+    expect(bob).toMatchObject({ name: "Charles Darwin", contributorType: "author", corresponding: false });
     expect(bob?.orcid).toBeUndefined();
     expect(roles(bob)).toEqual([
       "Data curation:100",
@@ -100,7 +100,7 @@ describe("fromTenzing", () => {
 
 describe("fromTenzing edge cases", () => {
   it("drops a bad ORCID but keeps the person, and leaves a blank one unset", () => {
-    const [ana, bob] = fromTenzing("Firstname,Surname,ORCID ID\nAna,Lopez,not-an-orcid\nBob,White,");
+    const [ana, bob] = fromTenzing("Firstname,Surname,ORCID ID\nAna,Lopez,not-an-orcid\nCharles,Darwin,");
     expect(ana).toMatchObject({ name: "Ana Lopez" });
     expect(ana?.orcid).toBeUndefined();
     expect(bob?.orcid).toBeUndefined();
@@ -202,7 +202,7 @@ describe("toTenzing", () => {
     createAuthor("Gerard 't Hooft", { contributions: scored(CREDIT_ROLES.map((role) => role.name)) }),
     createAuthor("María José García López", { corresponding: true, contributions: scored(["Resources"]) }),
     createAuthor("Plato", { contributions: scored(["Validation", "Visualization"]) }),
-    createAuthor("Jane A. Smith", { contributorType: "non-author" }),
+    createAuthor("Grace B. Hopper", { contributorType: "non-author" }),
     createAuthor("Seán O'Brien", { contributions: scored(["Supervision", "Project administration"]) }),
     // A spreadsheet runs a cell that starts with "=" or "@"; a comma or quote needs quoting.
     createAuthor("=Cy Lee, Jr", { firstName: "=Cy", surname: "Lee, Jr", contributions: scored(["Methodology"]) }),
@@ -247,7 +247,7 @@ describe("toTenzing", () => {
       "=Cy Lee, Jr",
       '@Dee "DJ" Ray',
       "Kim Nam-joon",
-      "Jane A. Smith",
+      "Grace B. Hopper",
     ]);
   });
 

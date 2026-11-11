@@ -1,8 +1,13 @@
 // biome-ignore lint/correctness/noNodejsModules: fixture files are read only by tests.
 import { readFileSync } from "node:fs";
 import { expect, it, vi } from "vitest";
-import { MAX_AUTHORS } from "../author";
+import { MAX_AUTHORS, MAX_IMPORT_BYTES } from "../author";
 import { toCodemeta } from "../export/codemeta";
+import { toCrossrefContributors } from "../export/crossref";
+import { toCsv } from "../export/csv";
+import { toJson } from "../export/json";
+import { toTenzing } from "../export/tenzing";
+import { toJats4rXml } from "../export/xml";
 import { detectFormat, importAny } from "../import";
 import { createAuthor } from "../parse-authors";
 
@@ -42,14 +47,14 @@ it.each([
 
 it("handles singleton, missing and malformed CodeMeta author entries without reading linked Role entries", async () => {
   const read = (author: unknown) => importAny(JSON.stringify({ "@type": "SoftwareSourceCode", author }));
-  expect((await read({ name: "Tu Youyou", id: "invalid" })).authors[0]?.orcid).toBeUndefined();
+  expect((await read({ name: "Hua Luogeng", id: "invalid" })).authors[0]?.orcid).toBeUndefined();
   expect((await read([null, false, "Name", {}, { name: "  " }])).authors).toEqual([]);
   expect((await read(undefined)).authors).toEqual([]);
   // The limit belongs to the caller (normalizeRoster, the modal), not to the reader.
   expect((await read(Array.from({ length: MAX_AUTHORS + 1 }, () => ({ name: "Researcher" })))).authors).toHaveLength(
     MAX_AUTHORS + 1,
   );
-  await expect(importAny("x".repeat(1_000_001))).rejects.toThrow(/1 MB/);
+  await expect(importAny("x".repeat(MAX_IMPORT_BYTES + 1))).rejects.toThrow(/2 MB/);
 });
 
 it("skips one unusable name instead of discarding the file", async () => {
@@ -135,7 +140,7 @@ const codemetaOf = (fields: object) => JSON.stringify({ "@type": "SoftwareSource
 
 it("reads a single author object and a Role under either type key", async () => {
   const read = async (author: unknown) => (await importAny(codemetaOf({ author }))).authors.map((a) => a.name);
-  expect(await read({ name: "Tu Youyou" })).toEqual(["Tu Youyou"]);
+  expect(await read({ name: "Hua Luogeng" })).toEqual(["Hua Luogeng"]);
   expect(
     await read([{ "@type": "Role", name: "Lead" }, { type: "Role", name: "Maintainer" }, { name: "Ana" }]),
   ).toEqual(["Ana"]);
@@ -177,14 +182,14 @@ it("keeps structured name parts, and only for people", async () => {
   expect(person?.orcid).toBe("0000-0002-1825-0097");
 });
 
-it("accepts exactly 1 MB and refuses one byte more, for the file and for converted metadata", async () => {
+it("accepts exactly the size cap and refuses one byte more, for the file and for converted metadata", async () => {
   const pad = (n: number) => `${codemeta}${" ".repeat(n - new TextEncoder().encode(codemeta).length)}`;
-  expect((await importAny(pad(1_000_000))).authors).toHaveLength(2);
-  await expect(importAny(pad(1_000_001))).rejects.toThrow("Use a file smaller than 1 MB.");
+  expect((await importAny(pad(MAX_IMPORT_BYTES))).authors).toHaveLength(2);
+  await expect(importAny(pad(MAX_IMPORT_BYTES + 1))).rejects.toThrow("Use a file smaller than 2 MB.");
   const cff = "cff-version: 1.2.0\ntitle: Example";
-  expect((await importAny(cff, { convertCitation: async () => pad(1_000_000) })).authors).toHaveLength(2);
-  await expect(importAny(cff, { convertCitation: async () => pad(1_000_001) })).rejects.toThrow(
-    "Use a file smaller than 1 MB.",
+  expect((await importAny(cff, { convertCitation: async () => pad(MAX_IMPORT_BYTES) })).authors).toHaveLength(2);
+  await expect(importAny(cff, { convertCitation: async () => pad(MAX_IMPORT_BYTES + 1) })).rejects.toThrow(
+    "Use a file smaller than 2 MB.",
   );
 });
 
@@ -235,4 +240,28 @@ it("skips a null CodeMeta entry and keeps an ORCID only on a person", async () =
     ["Duin Lab", undefined],
     ["Sven Berg", undefined],
   ]);
+});
+
+it("imports a full draft back from every export the app reads, under the size cap", async () => {
+  // The census's largest article with per-person roles names 340 people (oa-2026-10).
+  expect(MAX_AUTHORS).toBeGreaterThanOrEqual(340);
+  // The worst case: long names, ORCIDs and most roles filled, at MAX_AUTHORS. JATS is the largest.
+  const authors = Array.from({ length: MAX_AUTHORS }, (_, i) => {
+    const author = createAuthor(`Rosalind Elsie Franklin-Lavoisier van der Waals ${i}`, {
+      orcid: "0000-0002-1825-0097",
+    });
+    for (const [k, c] of author.contributions.entries()) if ((i + k) % 3 !== 0) c.score = 67;
+    return author;
+  });
+  for (const text of [
+    toJson(authors),
+    toCsv(authors),
+    toJats4rXml(authors),
+    toCrossrefContributors(authors),
+    JSON.stringify(toCodemeta(authors).metadata),
+    toTenzing(authors),
+  ]) {
+    expect(new TextEncoder().encode(text).length).toBeLessThan(MAX_IMPORT_BYTES * 0.75);
+    expect((await importAny(text)).authors).toHaveLength(MAX_AUTHORS);
+  }
 });

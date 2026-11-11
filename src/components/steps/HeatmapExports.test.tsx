@@ -58,7 +58,7 @@ describe("HeatmapExports", () => {
   }, 30_000);
 
   it("draws the figure in the hue picked in the grid's popover, and says when it is per contributor", async () => {
-    const author = createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] });
+    const author = createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] });
     act(() => useContributionStore.getState().loadAuthors([author]));
     render(
       <IntlProvider locale="en" messages={en}>
@@ -86,7 +86,7 @@ describe("HeatmapExports", () => {
   }, 30_000);
 
   it("Reset restores the figure's own options and leaves the shared ones", () => {
-    const author = createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] });
+    const author = createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] });
     act(() => {
       const store = useContributionStore.getState();
       store.loadAuthors([author]);

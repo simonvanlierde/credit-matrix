@@ -80,7 +80,7 @@ test.describe("input errors reach assistive tech", () => {
     await add.fill("12345");
     await add.press("Enter");
     await expect(await describedBy(page, add)).toHaveText(NO_LETTER);
-    await add.fill("Jane");
+    await add.fill("Grace");
     await expect(add).not.toHaveAttribute("aria-invalid", "true");
   });
 
@@ -89,10 +89,10 @@ test.describe("input errors reach assistive tech", () => {
     await asReturningVisitor(lead);
     await lead.goto("/");
     const add = lead.getByLabel("New author names or ORCID iD");
-    await add.fill("Jane Smith, Bob White");
+    await add.fill("Grace Hopper, Charles Darwin");
     await add.press("Enter");
-    await lead.getByRole("button", { name: "Actions for Bob White" }).click();
-    const ask = await copyFrom(lead, lead.getByRole("button", { name: "Ask Bob White what they did" }));
+    await lead.getByRole("button", { name: "Actions for Charles Darwin" }).click();
+    const ask = await copyFrom(lead, lead.getByRole("button", { name: "Ask Charles Darwin what they did" }));
 
     const page = await (await browser.newContext()).newPage();
     await asReturningVisitor(page);
@@ -105,7 +105,7 @@ test.describe("input errors reach assistive tech", () => {
     await name.fill("");
     await name.press("Tab");
     await expect(await describedBy(page, name)).toHaveText(NO_LETTER);
-    await name.fill("Bob B. White");
+    await name.fill("Charles R. Darwin");
     await name.press("Tab");
     await expect(name).not.toHaveAttribute("aria-invalid", "true");
     await expect(onScreen(page, NO_LETTER)).toBeHidden();
@@ -117,7 +117,7 @@ test.describe("input errors reach assistive tech", () => {
     await page.locator("input[type=file]").setInputFiles({
       name: "authors.csv",
       mimeType: "text/csv",
-      buffer: Buffer.from("name,orcid\nJane Smith,\nBob White,\n"),
+      buffer: Buffer.from("name,orcid\nGrace Hopper,\nCharles Darwin,\n"),
     });
     const status = page.getByRole("status").filter({ hasText: "Loaded from authors.csv" });
     await expect(status).toBeVisible();

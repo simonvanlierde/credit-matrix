@@ -5,11 +5,11 @@ const ID = "0000-0002-1825-0097";
 
 describe("nameBesideOrcid", () => {
   it.each([
-    [`Jane Smith ${ID}`, "Jane Smith"],
-    [`${ID} Jane Smith`, "Jane Smith"],
-    [`Jane Smith (https://orcid.org/${ID})`, "Jane Smith"],
-    [`Jane Smith – ORCID iD: ${ID}`, "Jane Smith"],
-    [`Smith, Jane ${ID}`, "Smith, Jane"],
+    [`Grace Hopper ${ID}`, "Grace Hopper"],
+    [`${ID} Grace Hopper`, "Grace Hopper"],
+    [`Grace Hopper (https://orcid.org/${ID})`, "Grace Hopper"],
+    [`Grace Hopper – ORCID iD: ${ID}`, "Grace Hopper"],
+    [`Hopper, Grace ${ID}`, "Hopper, Grace"],
     [`王小明：${ID}`, "王小明"],
     [`（王小明、${ID}）`, "王小明"],
   ])("finds the name in %s", (text, name) => {
