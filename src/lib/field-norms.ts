@@ -53,7 +53,7 @@ export function selfPosition(authors: readonly Author[], selfId: string | null):
   return positionOf(byline.indexOf(self), byline.length);
 }
 
-export interface NormRow {
+interface NormRow {
   role: CreditRoleName;
   /** Share of authors in that position given the role, 0..1, or null when too few authors to say. */
   shares: Record<Position, number | null>;

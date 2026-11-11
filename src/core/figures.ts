@@ -15,6 +15,7 @@ import {
   setLineJoin,
 } from "pdf-lib";
 import type { Author } from "./author";
+import { hexRgb } from "./contributor-color";
 import { escapeXml } from "./export/escape-xml";
 import { buildHeatmapSvg, type HeatmapSvgOptions } from "./export/heatmap-svg";
 
@@ -295,10 +296,8 @@ async function webFont(face: FigureFont, characters: Set<string>): Promise<Uint8
 
 function color(hex: string | undefined) {
   if (!hex || hex === "none") return undefined;
-  const full = hex.length === 4 ? hex.slice(1).replace(/./g, "$&$&") : hex.slice(1);
-  return rgb(
-    ...([0, 2, 4].map((index) => Number.parseInt(full.slice(index, index + 2), 16) / 255) as [number, number, number]),
-  );
+  const [r, g, b] = hexRgb(hex);
+  return rgb(r / 255, g / 255, b / 255);
 }
 
 /**

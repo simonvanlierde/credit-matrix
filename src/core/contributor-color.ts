@@ -48,6 +48,11 @@ export function contributorHues(count: number): string[] | null {
   return count <= CONTRIBUTOR_HUES.length ? CONTRIBUTOR_HUES.slice(0, count) : null;
 }
 
+/** One contributor's hue by list position, or null for an unknown id or past the palette. */
+export function contributorHue(authors: readonly { id: string }[], id: string): string | null {
+  return contributorHues(authors.length)?.[authors.findIndex((author) => author.id === id)] ?? null;
+}
+
 const NONE_FILL = "#ececea";
 const MIX_TOWARD = "#ffffff";
 
@@ -98,7 +103,7 @@ export function pageMarkColor(hue: string, dark: boolean): string {
 
 /** Hue (0–1), saturation and lightness of a hex color. */
 function hsl(hex: string): [number, number, number] {
-  const [r, g, b] = rgb(hex).map((c) => c / 255) as [number, number, number];
+  const [r, g, b] = hexRgb(hex).map((c) => c / 255) as [number, number, number];
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const l = (max + min) / 2;
@@ -120,15 +125,15 @@ function hslHex(h: number, s: number, l: number): string {
 
 /** Linear mix of two hex colors; t=0 → a, t=1 → b. */
 function mixHex(a: string, b: string, t: number): string {
-  const [ar, ag, ab] = rgb(a);
-  const [br, bg, bb] = rgb(b);
+  const [ar, ag, ab] = hexRgb(a);
+  const [br, bg, bb] = hexRgb(b);
   const round = (x: number, y: number) => Math.round(x + (y - x) * t);
   return `#${[round(ar, br), round(ag, bg), round(ab, bb)].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
 
 /** WCAG 2.x relative luminance: gamma-linearised. */
 function wcagLuminance(hex: string): number {
-  const [r, g, b] = rgb(hex).map((channel) => {
+  const [r, g, b] = hexRgb(hex).map((channel) => {
     const s = channel / 255;
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
   }) as [number, number, number];
@@ -158,7 +163,8 @@ export function onColor(background: string): string {
     : ON_COLOR_LIGHT;
 }
 
-function rgb(hex: string): [number, number, number] {
+/** `#rgb` or `#rrggbb` as 0-255 channels; black for anything else. */
+export function hexRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
   // Expand shorthand (#abc → #aabbcc) and reject anything else so a malformed
   // color can't poison mixHex/contrastRatio with NaN channels.

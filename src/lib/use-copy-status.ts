@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { announce } from "@/lib/announce";
 import { useTranslations } from "@/lib/translations";
 
-export type CopyStatus = "idle" | "copied" | "error";
+type CopyStatus = "idle" | "copied" | "error";
 
 /**
  * Copy to the clipboard, exposing a status that resets to "idle" after 2s.

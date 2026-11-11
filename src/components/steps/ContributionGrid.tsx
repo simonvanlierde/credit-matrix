@@ -1,5 +1,4 @@
 import { Check, CheckCheck, Clock, Columns3, Rows3, Settings2, UserPlus } from "lucide-react";
-import { useTheme } from "next-themes";
 import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { ColorPopover } from "@/components/ui/color-popover";
@@ -11,12 +10,20 @@ import { Switch } from "@/components/ui/switch";
 import { UndoBar } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
-import { CONTRIBUTOR_HUES, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
+import {
+  CONTRIBUTOR_HUES,
+  contributorHue,
+  contributorHues,
+  heatCellColor,
+  onColor,
+  pageMarkColor,
+} from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useLocale, useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { useDark } from "@/lib/use-dark";
 import { useSettled } from "@/lib/use-settled";
 import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
@@ -92,7 +99,7 @@ export function ContributionGrid() {
   const everyoneAgreed =
     summary.total > 0 && summary.asked === summary.total && summary.answered === summary.asked && summary.open === 0;
   // The light ramp mixes toward white, which reads inverted on a dark page.
-  const dark = useTheme().resolvedTheme === "dark";
+  const dark = useDark();
   const {
     describeRole,
     translateInterfaceRole,
@@ -765,14 +772,7 @@ export function ContributionGrid() {
         <div className="mt-2 w-0 min-w-full">
           <GridLegend
             monoColor={hues ? LEGEND_NEUTRAL : heatmapMonoColor}
-            hueForId={
-              hues
-                ? (id) => {
-                    const index = authors.findIndex((author) => author.id === id);
-                    return index < 0 ? null : (hues[index] ?? null);
-                  }
-                : null
-            }
+            hueForId={hues ? (id) => contributorHue(authors, id) : null}
             graded={graded}
             dark={dark}
             translateUi={translateUi}

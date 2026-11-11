@@ -1,5 +1,4 @@
 import { ArrowRight, BadgeCheck, Check, CircleAlert, MessagesSquare } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { daysSince, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/ask-panel-shared";
 import { LevelMark } from "@/components/ui/level-mark";
@@ -20,11 +19,12 @@ import {
 } from "@/core";
 import { signedForTitle } from "@/core/ask";
 import { LEVEL_SCORE } from "@/core/author";
-import { contributorHues, heatCellColor, onColor } from "@/core/contributor-color";
+import { contributorHue, heatCellColor, onColor } from "@/core/contributor-color";
 import { announce } from "@/lib/announce";
 import { copyAskMessage } from "@/lib/ask-message";
 import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { useDark } from "@/lib/use-dark";
 import { useContributionStore } from "@/store/contribution-store";
 
 const LINK_BUTTON =
@@ -77,10 +77,9 @@ export function ReviewPanel() {
   const monoColor = useContributionStore((s) => s.heatmapMonoColor);
   const colorByContributor = useContributionStore((s) => s.colorByContributor);
   // The same hue the person's grid column uses.
-  const hues = colorByContributor ? contributorHues(authors.length) : null;
-  const hueFor = (authorId: string) => hues?.[authors.findIndex((a) => a.id === authorId)] ?? monoColor;
+  const hueFor = (authorId: string) => (colorByContributor && contributorHue(authors, authorId)) || monoColor;
   const levels = useContributionStore((s) => s.inputMode === "levels");
-  const dark = useTheme().resolvedTheme === "dark";
+  const dark = useDark();
   const { translateInterfaceRole, translateInterfaceUi } = useCreditTranslators();
   const listRef = useRef<HTMLDivElement>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
