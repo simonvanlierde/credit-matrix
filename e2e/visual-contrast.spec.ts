@@ -193,3 +193,23 @@ test.describe("header at 200% zoom widths", () => {
     });
   }
 });
+
+test("heatmap swatches and their selected outline survive forced colors", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load sample data" }).click();
+  await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+  const multicolor = page.getByRole("button", { name: "Per contributor", exact: true });
+  await expect(multicolor).toHaveAttribute("aria-pressed", "true");
+  expect(await style(multicolor, "background-image")).not.toBe("none");
+  expect(Number.parseFloat(await style(multicolor, "outline-width"))).toBeGreaterThanOrEqual(2);
+  const blue = page.getByRole("button", { name: "Blue", exact: true });
+  expect(await flatten(page, [await style(blue, "background-color")])).toEqual([31, 78, 121]);
+  await blue.click();
+  expect(Number.parseFloat(await style(blue, "outline-width"))).toBeGreaterThanOrEqual(2);
+  const custom = page.getByLabel("Custom", { exact: true });
+  await custom.fill("#123456");
+  await expect(blue).toHaveAttribute("aria-pressed", "false");
+  expect(Number.parseFloat(await style(custom, "outline-width"))).toBeGreaterThanOrEqual(2);
+});

@@ -280,9 +280,10 @@ popovers and menus over the content) and `shadow-sheet` (5px, tinted ink blue, t
 result of the work). Pair a 1px ink edge (`edge`) with a hard shadow, never with a soft one. Lines
 inside a card stay thin and neutral (`rule`).
 
-Forced colours drop every shadow, so a surface that floats keeps a real 1px border, and focus
-falls back to a `Highlight` outline. Filled level marks keep their own colours there, since the
-mark is contrast-checked against its fill.
+In forced colours, floating surfaces keep a real 1px border and focus uses a `Highlight` outline.
+Colour swatches retain their hues and use a `Highlight` outline for selection, since shadow rings
+may disappear. Filled level marks keep their own colours, since the mark is contrast-checked
+against its fill.
 
 ## Shapes
 

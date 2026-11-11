@@ -145,8 +145,9 @@ export function SettingChoice<T extends string>({
   );
 }
 
+// Preserve color samples in forced colors; outlines replace the suppressed shadow rings.
 const SWATCH =
-  "hit-area relative flex size-6 items-center justify-center rounded-full border border-outline-strong ring-offset-1 ring-offset-surface-bright transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-pressed:ring-2 aria-pressed:ring-on-surface forced-colors:aria-pressed:ring-[Highlight]";
+  "hit-area relative flex size-6 items-center justify-center rounded-full border border-outline-strong ring-offset-1 ring-offset-surface-bright transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-pressed:ring-2 aria-pressed:ring-on-surface forced-colors:[forced-color-adjust:none] forced-colors:aria-pressed:[outline:2px_solid_Highlight] forced-colors:aria-pressed:outline-offset-2";
 
 /**
  * The colour setting: a "Per contributor" swatch first, the preset hues, then a
@@ -218,7 +219,11 @@ export function ColorSwatches({
             id={customId}
             value={color}
             onChange={onColor}
-            className={custom ? "ring-2 ring-on-surface ring-offset-1 ring-offset-surface-bright" : undefined}
+            className={
+              custom
+                ? "ring-2 ring-on-surface ring-offset-1 ring-offset-surface-bright forced-colors:[outline:2px_solid_Highlight] forced-colors:outline-offset-2"
+                : undefined
+            }
           />
           {t("customColor")}
         </label>
