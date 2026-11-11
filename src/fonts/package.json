@@ -6,9 +6,14 @@
     "CRediT",
     "credit-matrix",
     "Noto",
-    "fonts"
+    "fonts",
+    "svg",
+    "pdf",
+    "offline",
+    "harfbuzz",
+    "ttf"
   ],
-  "license": "OFL-1.1 AND MIT",
+  "license": "OFL-1.1 AND MIT AND MIT-Modern-Variant",
   "author": "Simon van Lierde",
   "repository": {
     "type": "git",
@@ -38,5 +43,8 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "engines": {
+    "node": ">=22.19.0"
   }
 }

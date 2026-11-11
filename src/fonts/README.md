@@ -1,25 +1,55 @@
 # credit-matrix-fonts
 
-The fonts that [`credit-matrix`](../core/README.md) embeds in heatmap SVG and PDF exports. Install
-this package next to it to export figures offline, with no download:
+The fonts that [`credit-matrix`](https://github.com/simonvanlierde/credit-matrix/blob/main/src/core/README.md)
+embeds in heatmap SVG and PDF exports. Install this package next to it to export figures offline,
+with no download. Without it, `credit-matrix` downloads each face from this package's release on
+jsDelivr the first time a figure needs it, and caches it.
+
+## Usage
+
+In a bundler or a browser, pass the `fonts` export to the figure renderer. Each face is a
+`new URL("./X.ttf", import.meta.url)`, so the bundler emits it as an asset:
+
+```js
+import { createFigureRenderer } from "credit-matrix/figures";
+import { fonts } from "credit-matrix-fonts";
+
+const renderer = createFigureRenderer({ fonts });
+```
+
+`fonts(face)` returns a `Promise<Uint8Array>` of that face's bytes (WebAssembly for `harfbuzz` and
+`harfbuzz-subset`). The face names are the `Face` column below.
+
+In Node and the CLI, install both packages in one project, then run the local CLI:
 
 ```sh
 npm i credit-matrix credit-matrix-fonts
+npx credit-matrix ...
 ```
 
-Without it, `credit-matrix` downloads each face from this package's release on jsDelivr the first
-time a figure needs it, and caches it. In a bundled app, pass the `fonts` export to
-`createFigureRenderer({ fonts })`: each face is a `new URL("./X.ttf", import.meta.url)`, so the
-bundler emits it as an asset. A release comes only when the fonts change, and `credit-matrix` pins
-the version and the hashes below.
+Without a project, `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...` installs both for
+one run.
 
-These regular faces provide offline fonts for editable figure exports. Arabic,
+## Versions
+
+A 1.x release only adds faces. Changing the bytes of an existing face needs a new major version:
+`credit-matrix` checks each face's hash, and layout depends on the glyph widths. A release comes
+only when the fonts change. `credit-matrix` pins the version and the hashes below for its jsDelivr
+download, and checks faces read from an installed package against the same hashes.
+
+For the unmodified upstream faces, these hashes are the check that the bytes are the ones in
+Sources. Credit Figure KR and Credit Figure Emoji are rebuilt (see "Rebuild the fonts"), so their
+hashes check the rebuilt file, not an upstream one.
+
+These regular faces provide offline fonts for editable figure exports. They cover Arabic,
 Armenian, Bengali, Devanagari, Ethiopic, Georgian, Gujarati, Gurmukhi, Hebrew,
 Kannada, Khmer, Lao, Malayalam, Myanmar, Oriya, Sinhala, Tamil, Telugu and Thai
 each have a Noto Sans face for sans figures and a Noto Serif face (Noto Naskh
 Arabic for Arabic) for serif figures. Korean (Credit Figure KR, from Noto Sans
 KR) and monochrome emoji (Credit Figure Emoji, from Noto Emoji) have one face,
-used in sans and serif figures alike: a serif Korean face would add 14 MB. `harfbuzz.wasm` is the HarfBuzz shaping
+used in sans and serif figures alike: a serif Korean face would add 14 MB.
+
+`harfbuzz.wasm` is the HarfBuzz shaping
 engine, which lays out the complex scripts, and `harfbuzz-subset.wasm` is HarfBuzz's subsetter,
 which cuts each face down to the glyphs a figure uses. Both come through the same `fonts`
 provider, so each is fetched only for a figure that needs it.
@@ -182,26 +212,26 @@ document's license. Keep the license files and font copyright notices when
 redistributing these assets.
 
 - Noto Sans: Copyright 2015–2021 Google LLC. All Rights Reserved.
-  [OFL-NotoSans.txt](OFL-NotoSans.txt) is the unmodified
+  [OFL-NotoSans.txt](https://github.com/simonvanlierde/credit-matrix/blob/main/src/fonts/OFL-NotoSans.txt) is the unmodified
   [upstream license](https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/LICENSE).
 - Credit Figure JP and SC: derived from Noto Sans JP and SC,
   © 2014–2021 Adobe (http://www.adobe.com/).
-  [OFL-NotoSansCJK.txt](OFL-NotoSansCJK.txt) is the unmodified
+  [OFL-NotoSansCJK.txt](https://github.com/simonvanlierde/credit-matrix/blob/main/src/fonts/OFL-NotoSansCJK.txt) is the unmodified
   [upstream license](https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/LICENSE).
 - Noto Serif: Copyright 2015–2021 Google LLC. All Rights Reserved.
-  [OFL-NotoSans.txt](OFL-NotoSans.txt) also supplies its unmodified
+  [OFL-NotoSans.txt](https://github.com/simonvanlierde/credit-matrix/blob/main/src/fonts/OFL-NotoSans.txt) also supplies its unmodified
   [upstream license](https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/LICENSE).
 - Credit Figure Serif JP and SC: derived from Noto Serif JP and SC,
   © 2017–2024 Adobe (http://www.adobe.com/).
-  [OFL-NotoSerifCJK.txt](OFL-NotoSerifCJK.txt) is the unmodified
+  [OFL-NotoSerifCJK.txt](https://github.com/simonvanlierde/credit-matrix/blob/main/src/fonts/OFL-NotoSerifCJK.txt) is the unmodified
   [upstream license](https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif/LICENSE).
 
 - The other sans and serif script faces, Credit Figure KR and Credit Figure Emoji:
-  [OFL-NotoScripts.txt](OFL-NotoScripts.txt) lists each face's own copyright line
+  [OFL-NotoScripts.txt](https://github.com/simonvanlierde/credit-matrix/blob/main/src/fonts/OFL-NotoScripts.txt) lists each face's own copyright line
   above the license text. Credit Figure KR, like JP and SC, avoids the reserved
   font name "Source".
 - `harfbuzz.wasm` and `harfbuzz-subset.wasm` are MIT (harfbuzzjs) and "Old MIT" (HarfBuzz):
-  [LICENSE-harfbuzz.txt](LICENSE-harfbuzz.txt).
+  [LICENSE-harfbuzz.txt](https://github.com/simonvanlierde/credit-matrix/blob/main/fonts/LICENSE-harfbuzz.txt).
 
 The fonts also retain their original copyright and license metadata. Their
 OpenType embedding permission field (`OS/2.fsType`) is zero, with no embedding
