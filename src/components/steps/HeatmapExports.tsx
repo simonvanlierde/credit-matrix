@@ -1,5 +1,5 @@
 import { ChevronDown, Copy, Download, Scan, Settings2, Shrink } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Author, heatmapDescription } from "@/core";
 import { announce } from "@/lib/announce";
@@ -83,7 +83,17 @@ async function svgToPngBlob(
 /** Preview, configure and download one draft's contribution figure. */
 
 const ACTION_ITEM = "whitespace-nowrap sm:w-auto sm:flex-1";
-export function HeatmapExports({ authors, showLevels }: { authors: Author[]; showLevels: boolean }) {
+export function HeatmapExports({
+  authors,
+  showLevels,
+  triggerClassName = TOOL_BUTTON,
+}: {
+  authors: Author[];
+  showLevels: boolean;
+  /** The trigger's look where it sits: the grid's toolbar by default, the statement's export row on a phone. */
+  triggerClassName?: string;
+}) {
+  const settingsId = useId();
   const { translateRole, translateUi, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
   const formatter = useFormatter();
@@ -230,7 +240,7 @@ export function HeatmapExports({ authors, showLevels }: { authors: Author[]; sho
     // One menu in the status strip: the heatmap is a figure you take out of
     // the app, so its three ways out sit together, away from the cells.
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className={TOOL_BUTTON}>
+      <PopoverTrigger className={triggerClassName}>
         <Download className="size-3.5" aria-hidden="true" />
         {t("heatmapLabel")}
         <ChevronDown className="size-3.5" aria-hidden="true" />
@@ -250,7 +260,7 @@ export function HeatmapExports({ authors, showLevels }: { authors: Author[]; sho
             <button
               type="button"
               aria-expanded={settingsOpen}
-              aria-controls="heatmap-figure-settings"
+              aria-controls={settingsId}
               onClick={() => setSettingsOpen(!settingsOpen)}
               className={`${TOOL_BUTTON} min-h-8 px-2`}
             >
@@ -313,7 +323,7 @@ export function HeatmapExports({ authors, showLevels }: { authors: Author[]; sho
             )}
             {settingsOpen && (
               <section
-                id="heatmap-figure-settings"
+                id={settingsId}
                 aria-label={t("heatmapFigureSettings")}
                 className="min-w-0 sm:max-h-[min(40vh,24rem)] sm:overflow-auto sm:pr-1"
               >

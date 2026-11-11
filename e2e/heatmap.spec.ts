@@ -5,6 +5,11 @@ import { createAuthor } from "../src/core/parse-authors";
 import { DEFAULT_HEATMAP_SETTINGS } from "../src/lib/heatmap-settings";
 import { asReturningVisitor, scan, seedStorage, settleMotion } from "./helpers";
 
+// On a phone the panel opens from the statement's outputs, at the foot of the page, where the role
+// list's sticky picker covers its last rows as it scrolls out: scan the panel these tests are about.
+// a11y.spec.ts scans the whole page.
+const PANEL = "[role=dialog]";
+
 test.beforeEach(async ({ page }) => {
   await asReturningVisitor(page);
   await page.goto("/");
@@ -369,7 +374,12 @@ test.describe("touch-screen previews", () => {
       await page.setViewportSize({ width: 320, height: 700 });
       await page.emulateMedia({ colorScheme: theme });
       await expect(page.getByText(/Select to cycle/)).toBeHidden();
-      await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+      // On a phone the grid is a list of roles, so the figure export sits with the statement's outputs.
+      const heatmap = page.getByRole("button", { name: "Heatmap", exact: true });
+      const copy = await page.getByRole("button", { name: "Copy statement" }).boundingBox();
+      const exportAt = await heatmap.boundingBox();
+      expect(exportAt?.y).toBeGreaterThan(copy?.y ?? Number.POSITIVE_INFINITY);
+      await heatmap.click();
       const preview = page.getByRole("region", { name: "Contribution heatmap" });
       await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });
       const panel = page.getByRole("dialog", { name: "Heatmap", exact: true });
@@ -379,10 +389,10 @@ test.describe("touch-screen previews", () => {
       expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(700);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
-      expect((await scan(page)).violations).toEqual([]);
+      expect((await scan(page, PANEL)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
       await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toBeInViewport();
-      expect((await scan(page)).violations).toEqual([]);
+      expect((await scan(page, PANEL)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
       await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });
     });
@@ -452,7 +462,7 @@ for (const width of [1440, 320]) {
     if (!bounds) throw new Error("Recipe field not visible");
     expect(bounds.x).toBeGreaterThanOrEqual(0);
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
-    expect((await scan(page)).violations).toEqual([]);
+    expect((await scan(page, PANEL)).violations).toEqual([]);
   });
 }
 

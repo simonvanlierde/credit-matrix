@@ -38,11 +38,7 @@ export function SegmentedControl<T extends string>({
       aria-label={ariaLabel}
       onKeyDown={(event) => moveRadioSelection(event, options, selected, (next) => onChange(next.value))}
       // md matches the toolbar's 36 px buttons beside it.
-      className={cn(
-        "inline-flex overflow-hidden rounded border border-edge bg-surface-bright",
-        size === "md" && "min-h-9",
-        className,
-      )}
+      className={cn("inline-flex rounded border border-edge bg-surface-bright", size === "md" && "min-h-9", className)}
     >
       {options.map(({ value: optionValue, label, title }, index) => {
         const active = value === optionValue;
@@ -60,8 +56,9 @@ export function SegmentedControl<T extends string>({
             className={cn(
               "flex items-center justify-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
               size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-[13px]",
-              // The group clips overflow, so touch grows the option itself.
-              "pointer-coarse:min-h-11",
+              // As tall as the 36 px toolbar buttons everywhere; on touch an invisible box takes the tap
+              // to 44 px. The group cannot clip it, so the end options round their own corners.
+              "hit-area first:rounded-l-[3px] last:rounded-r-[3px]",
               // Forced colours would repaint the fill as Canvas under Canvas text, a blank box: opt out and
               // invert. Not Highlight: Firefox and WebKit emulate it at 2.94:1.
               // The selected option is the group's tab stop, so its focus ring must show on the accent fill.

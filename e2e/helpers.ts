@@ -141,9 +141,11 @@ export async function settleMotion(page: Page) {
   });
 }
 
-export const scan = async (page: Page) => {
+/** Runs axe on the page, or only inside `within` (a CSS selector) when the test is about one panel. */
+export const scan = async (page: Page, within?: string) => {
   await settleMotion(page);
-  return new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+  const builder = new AxeBuilder({ page }).withTags(WCAG_TAGS);
+  return (within ? builder.include(within) : builder).analyze();
 };
 
 /** A role's strongest answer on the co-author page: Lead in levels, Contributed in yes/no. */

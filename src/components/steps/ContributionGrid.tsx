@@ -558,7 +558,11 @@ export function ContributionGrid() {
               </PopoverContent>
             </Popover>
           </span>
-          <HeatmapExports authors={authors} showLevels={graded} />
+          {/* On a phone the grid is a list of roles, with no figure on screen: the export sits with
+              the statement's outputs there instead (StatementOutput). */}
+          <div className="hidden md:block">
+            <HeatmapExports authors={authors} showLevels={graded} />
+          </div>
         </div>
       </div>
 

@@ -95,6 +95,10 @@ roll back past it: an older build refuses to write over drafts saved in version 
 - The grid and its key centre on the window, as far as the space between the side panels allows. The key
   is drawn as cells and, as in exported figures, stands beside a tall, narrow grid.
 - The add button sits inside the contributor name field.
+- On a phone, the heatmap export sits with Copy statement and Export data, since the grid there is a
+  list of roles with no figure on screen.
+- The Yes / no and By author / By role switches are as tall as the settings buttons beside them on
+  touch screens too; their tap area still reaches 44 px.
 - The collapsed contributor rail's chips link to the person's cell and open the person menu. On a phone
   or a narrow window, the contributor list folds the same way, into one row of initials above the grid.
 - A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,

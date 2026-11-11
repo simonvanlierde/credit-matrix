@@ -35,6 +35,12 @@ import { download } from "@/lib/utils";
 import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { useGuide } from "@/store/guide-store";
 import { ICON_TOOL_BUTTON } from "./grid-shared";
+import { HeatmapExports } from "./HeatmapExports";
+
+/** The outlined export buttons beside Copy statement. */
+const EXPORT_BUTTON =
+  "flex min-h-10 items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60 data-[state=open]:border-primary data-[state=open]:text-primary";
+
 import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
 
@@ -518,10 +524,7 @@ export function StatementOutput() {
         </button>
 
         <Popover>
-          <PopoverTrigger
-            disabled={!hasAuthors}
-            className="flex min-h-10 items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/60 data-[state=open]:border-primary data-[state=open]:text-primary"
-          >
+          <PopoverTrigger disabled={!hasAuthors} className={EXPORT_BUTTON}>
             <Download className="size-4" aria-hidden="true" />
             {t("exportData")}
             <ChevronDown className="size-3.5" aria-hidden="true" />
@@ -581,6 +584,13 @@ export function StatementOutput() {
             </ul>
           </PopoverContent>
         </Popover>
+        {/* On a phone the figure leaves from here, with the other outputs: the grid above is a list
+            of roles there, with no figure on screen. */}
+        {hasAuthors && (
+          <div className="md:hidden">
+            <HeatmapExports authors={authors} showLevels={!yesNo} triggerClassName={EXPORT_BUTTON} />
+          </div>
+        )}
 
         {/* Here, not only on /about: this is where someone takes the statement to their manuscript.
             Primary like other links, since it goes to a page; the badge below opens a popover. */}
