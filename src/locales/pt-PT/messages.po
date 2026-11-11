@@ -1797,3 +1797,9 @@ msgstr "concluído"
 
 msgid "guideDismiss"
 msgstr "Ocultar primeiros passos"
+
+msgid "heatmapRed"
+msgstr "Vermelho"
+
+msgid "heatmapPurple"
+msgstr "Roxo"

@@ -74,7 +74,7 @@ describe("HeatmapExports", () => {
       {},
       { timeout: 15_000 },
     );
-    expect(decodeURIComponent(preview.getAttribute("src") ?? "")).toContain("#00724c");
+    expect(decodeURIComponent(preview.getAttribute("src") ?? "")).toContain("#115629");
     expect(screen.queryByText(/Colored per contributor/)).toBeNull();
 
     // Figure settings edit the same value, under a heading that says it is shared.
@@ -90,7 +90,7 @@ describe("HeatmapExports", () => {
     act(() => {
       const store = useContributionStore.getState();
       store.loadAuthors([author]);
-      store.setHeatmapMonoColor("#00724c");
+      store.setHeatmapMonoColor("#115629");
       store.setTranspose(true);
       store.setInitials(true);
       store.setColorByContributor(false);
@@ -111,7 +111,7 @@ describe("HeatmapExports", () => {
     expect(pressed("Full labels")).toBe("true");
     const state = useContributionStore.getState();
     expect([state.heatmapMonoColor, state.transpose, state.initials, state.colorByContributor]).toEqual([
-      "#00724c",
+      "#115629",
       true,
       true,
       false,

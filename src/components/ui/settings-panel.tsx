@@ -1,8 +1,8 @@
 import { Check } from "lucide-react";
 import { type ReactNode, useId } from "react";
-import { CONTRIBUTOR_HUES, onColor as inkOn } from "@/core/contributor-color";
+import { CONTRIBUTOR_HUES, HEATMAP_HUES, onColor as inkOn } from "@/core/contributor-color";
 import { useTranslations } from "@/lib/translations";
-import { ColorPopover } from "./color-popover";
+import { CustomColorInput } from "./custom-color-input";
 import { SegmentedControl } from "./segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { Switch } from "./switch";
@@ -148,9 +148,6 @@ export function SettingChoice<T extends string>({
 const SWATCH =
   "hit-area relative flex size-6 items-center justify-center rounded-full border border-outline-variant/50 ring-offset-1 ring-offset-surface-bright transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-pressed:ring-2 aria-pressed:ring-on-surface forced-colors:aria-pressed:ring-[Highlight]";
 
-/** The hues offered beside "Per contributor" and "Custom". */
-const PRESET_HUES = ["#1f4e79", "#00724c", "#404040"] as const;
-
 /**
  * The colour setting: a "Per contributor" swatch first, the preset hues, then a
  * custom picker. A pressed swatch shows a ring and a check, so colour is never
@@ -170,17 +167,20 @@ export function ColorSwatches({
   onPerContributor: () => void;
 }) {
   const t = useTranslations();
+  const customId = useId();
   const presets: [string, string][] = [
-    [PRESET_HUES[0], t("heatmapBlue")],
-    [PRESET_HUES[1], t("heatmapGreen")],
-    [PRESET_HUES[2], t("heatmapGray")],
+    [HEATMAP_HUES[0], t("heatmapBlue")],
+    [HEATMAP_HUES[1], t("heatmapRed")],
+    [HEATMAP_HUES[2], t("heatmapGreen")],
+    [HEATMAP_HUES[3], t("heatmapPurple")],
+    [HEATMAP_HUES[4], t("heatmapGray")],
   ];
   const preset = presets.find(([hex]) => hex === color.toLowerCase());
   const custom = !perContributor && !preset;
   const active = perContributor ? t("figurePerContributor") : (preset?.[1] ?? color);
   return (
     <SettingsSection label={label} aside={active}>
-      <div className="flex items-center gap-2.5 py-1">
+      <div className="flex flex-wrap items-center gap-2.5 py-1">
         <button
           type="button"
           aria-pressed={perContributor}
@@ -209,29 +209,15 @@ export function ColorSwatches({
             </button>
           );
         })}
-        <ColorPopover
-          value={color}
-          onChange={onColor}
-          label={t("customColor")}
-          trigger={
-            <button
-              type="button"
-              aria-pressed={custom}
-              aria-label={t("customColor")}
-              title={t("customColor")}
-              className={`${SWATCH} ${custom ? "" : "border-dashed"}`}
-              style={custom ? { backgroundColor: color } : undefined}
-            >
-              {custom ? (
-                <Check className="size-3" style={{ color: inkOn(color) }} aria-hidden="true" />
-              ) : (
-                <span aria-hidden="true" className="text-sm leading-none text-on-surface-variant">
-                  +
-                </span>
-              )}
-            </button>
-          }
-        />
+        <label htmlFor={customId} className="hit-area flex cursor-pointer items-center gap-1.5 text-on-surface-variant">
+          <CustomColorInput
+            id={customId}
+            value={color}
+            onChange={onColor}
+            className={custom ? "ring-2 ring-on-surface ring-offset-1 ring-offset-surface-bright" : undefined}
+          />
+          {t("customColor")}
+        </label>
       </div>
     </SettingsSection>
   );

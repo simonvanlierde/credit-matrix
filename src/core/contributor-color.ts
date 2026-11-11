@@ -12,19 +12,10 @@ export const DEFAULT_MONO_COLOR = "#1f4e79";
 export const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 /**
- * Okabe–Ito categorical palette, offered as preset hues in the color picker.
- * The palette's black is softened to a dark gray for on-screen legibility.
+ * Single-hue presets. Red, green and purple use OKLCH L=0.40, C=0.10 at
+ * 25°, 150° and 305°; hex keeps browser controls and figure exports identical.
  */
-export const OKABE_ITO = [
-  "#0072b2",
-  "#e69f00",
-  "#009e73",
-  "#cc79a7",
-  "#d55e00",
-  "#56b4e9",
-  "#f0e442",
-  "#404040",
-] as const;
+export const HEATMAP_HUES = [DEFAULT_MONO_COLOR, "#742e2b", "#115629", "#543772", "#404040"] as const;
 
 /**
  * One hue per contributor, by list position, for grids that colour each person

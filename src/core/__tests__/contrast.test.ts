@@ -7,8 +7,8 @@ import {
   contributorHue,
   contributorHues,
   DEFAULT_MONO_COLOR,
+  HEATMAP_HUES,
   heatCellColor,
-  OKABE_ITO,
   ON_COLOR_DARK,
   ON_COLOR_LIGHT,
   onColor,
@@ -21,7 +21,7 @@ const NONE_FILL = "#ececea";
 /** WCAG 1.4.11 floor for a graphical object that conveys state. */
 const NON_TEXT_MIN = 3;
 
-const ALL_HUES = [DEFAULT_MONO_COLOR, ...OKABE_ITO, ...CONTRIBUTOR_HUES];
+const ALL_HUES = [DEFAULT_MONO_COLOR, ...HEATMAP_HUES, ...CONTRIBUTOR_HUES];
 const SCORES = [33, 66, 100];
 
 describe("contrastRatio", () => {
@@ -64,17 +64,18 @@ describe("heatCellColor tiers", () => {
     // ~1.29:1 against the empty fill, so an assigned cell read as unassigned.
     const supporting = heatCellColor(DEFAULT_MONO_COLOR, 33);
     expect(contrastRatio(supporting, NONE_FILL)).toBeGreaterThan(1.5);
+    for (const hue of HEATMAP_HUES) {
+      expect(contrastRatio(heatCellColor(hue, 33), NONE_FILL), hue).toBeGreaterThanOrEqual(1.5);
+    }
   });
 
   it("keeps every hue's supporting cell distinguishable from the page an empty cell shows", () => {
     // Empty cells are transparent in the editor, so the paper is their ground (globals.css --color-paper).
-    // Only the hues the app picks: a pale preset such as Okabe-Ito orange sits near 1.3:1, and there
-    // the empty cell's dot against the filled cell's level mark is the cue, not the fill.
     for (const [paper, dark] of [
       ["#fbf8f1", false],
       ["#161513", true],
     ] as const) {
-      for (const hue of [DEFAULT_MONO_COLOR, ...CONTRIBUTOR_HUES]) {
+      for (const hue of [...HEATMAP_HUES, ...CONTRIBUTOR_HUES]) {
         const supporting = heatCellColor(hue, 33, dark);
         expect(contrastRatio(supporting, paper), `${hue} on ${paper}`).toBeGreaterThan(1.5);
       }
