@@ -58,7 +58,7 @@ export interface ParsedStatement {
 /**
  * The longest statement {@link parseStatement} reads, in UTF-16 code units: a full draft's by-author
  * statement with every role (117,000). Real ones are under 5,000. Parsing is linear in length times
- * contributors, about 1.5 s for a hostile 120,000 against 420.
+ * contributors: 120,000 characters of distinct three-letter initials take about 1.5 s against 420.
  */
 export const MAX_STATEMENT_LENGTH = 120_000;
 

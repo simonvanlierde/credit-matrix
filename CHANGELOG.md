@@ -6,11 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+**Upgrade note:** the browser storage format moves from version 5 to 6, so that a build from before
+the 420 cap cannot cut a stored draft back to 200 contributors. Do not roll back past this release.
+See [deploying](docs/deploy.md).
+
 ### Added
 
 - The CLI, the MyST, Sphinx and Quarto plugins and Pandoc warn when a heatmap's labels would print
   under 6 pt on a full journal page, which happens from about 25 contributors. `heatmapPrintWarning`
-  returns that warning. See [final-size readability checks](integrations/heatmap.md#final-size-readability-checks).
+  returns that warning. A strict build (`sphinx-build -W`, `myst build --strict`) now fails on it
+  until you silence it. See [final-size readability checks](integrations/heatmap.md#final-size-readability-checks).
 
 ### Changed
 

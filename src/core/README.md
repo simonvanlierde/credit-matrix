@@ -50,6 +50,8 @@ npx credit-matrix --help                           # or --version
 Each command reads a file, or `-` for standard input, in any format `importAny` reads. Spreadsheet
 files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement --levels` adds Equal or
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
+`convert --to svg` and `--to pdf` write a warning to stderr, starting `credit-matrix: `, when the
+heatmap's labels would print under 6 pt on a full page; the figure is still written.
 `convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
 takes `--yes-no` for flat cells with no levels.
 `--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN`
@@ -336,7 +338,7 @@ holds its exact shape. By entry point:
     `StatementSpan`, `StatementCell`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `XmlParseError`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
-    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `HeatmapOptionError`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
+    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `HeatmapOptionError`, `heatmapDescription`, `heatmapPrintWarning`, `HeatmapSvgOptions`, `detectFormat`,
     `importAny`, `ExportOnlyError`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`

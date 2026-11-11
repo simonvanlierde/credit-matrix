@@ -213,7 +213,11 @@ project:
   error_rules:
     - rule: credit-heatmap-small-print
       severity: ignore
-``` Increasing PNG DPI does not increase the printed text size.
+```
+
+The tests above hold reference figures to a hard 5 pt floor; the 6 pt warning is advice for real
+figures, so a figure can pass the tests and still warn. Increasing PNG DPI does not increase the
+printed text size.
 
 These checks cover the reference fixtures and installed browser fonts. They do not replace checking
 the final manuscript, a native reader's review, a physical printed proof, or the publisher's font rules.

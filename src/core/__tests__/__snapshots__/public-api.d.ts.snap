@@ -1142,6 +1142,8 @@ export declare function toMyst(authors: Author[]): string;
  * A warning when a heatmap scaled to fit a full journal page prints its smallest label under 6 pt,
  * or null. The CLI writes it to stderr and the document plugins show it as a
  * build warning; the app shows its own, translated, at the width the user chose.
+ * @throws {Error} or {RangeError} for an SVG without positive dimensions or text sizes; a
+ * {@link buildHeatmapSvg} figure always has them.
  */
 export declare function heatmapPrintWarning(svg: string): string | null;
 /** Thrown by `fromJson` for an export stamped by a newer build. */
@@ -1479,7 +1481,7 @@ interface ParsedStatement {
 /**
  * The longest statement {@link parseStatement} reads, in UTF-16 code units: a full draft's by-author
  * statement with every role (117,000). Real ones are under 5,000. Parsing is linear in length times
- * contributors, about 1.5 s for a hostile 120,000 against 420.
+ * contributors: 120,000 characters of distinct three-letter initials take about 1.5 s against 420.
  */
 export declare const MAX_STATEMENT_LENGTH = 120000;
 /**
