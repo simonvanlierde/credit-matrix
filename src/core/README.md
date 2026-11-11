@@ -56,7 +56,7 @@ heatmap's labels would print under 6 pt on a full page; the figure is still writ
 takes `--yes-no` for flat cells with no levels.
 
 `--to svg` and `--to pdf` need the figure fonts. With the
-[`credit-matrix-fonts`](../fonts/README.md) package installed (28 MB to download, 51 MB on disk),
+[`credit-matrix-fonts`](../fonts/README.md) package installed (30 MB to download, 55 MB on disk),
 the CLI reads them from disk and works offline. Install both packages in one project
 (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`. Under a bare
 `npx credit-matrix`, the CLI cannot see a `credit-matrix-fonts` installed in your own project. In

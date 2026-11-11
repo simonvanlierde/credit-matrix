@@ -91,13 +91,13 @@ Add a dated changelog entry before running `pnpm version`: rename `## [Unrelease
 the `[Unreleased]` link at `compare/v<version>...HEAD` and add a `[<version>]` link to
 `compare/v<previous>...v<version>`. Its lifecycle script takes the
 version from the root package and the date from that entry. It runs `citesync==0.4.0` through
-`uvx` to update CITATION.cff, codemeta.json, the four committed citation exports (including
-`schema.jsonld`) and the published `src/core/package.json`.
+`uvx` to update CITATION.cff, codemeta.json, .zenodo.json, the four committed citation exports (including
+`schema.jsonld`), the published `src/core/package.json` and Quarto's `_extension.yml`.
 The first run needs access to the Python package index; later runs can use uv's cache.
 
-[citesync.toml](citesync.toml) lists those files and permits only version writes to the package.
+[citesync.toml](citesync.toml) lists those files and permits only version writes to the two manifests.
 The release script supplies a temporary source with only version and date, so it does not
-replace names, roles or other metadata. It still updates Quarto's extension version itself.
+replace names, roles or other metadata.
 `citesync check` checks the citation files against CITATION.cff and the published package;
 the private root package supplies the release version and is not a citation target.
 `scripts/sync-citation.sh` also rewrites the unpkg version in `integrations/myst/README.md` and

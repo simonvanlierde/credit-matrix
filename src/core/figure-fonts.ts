@@ -349,14 +349,23 @@ export async function downloadFigureFont(face: FigureFace): Promise<Uint8Array> 
 
 /**
  * The installed `credit-matrix-fonts` package when it resolves and has the face, otherwise the checked,
- * cached download. An older 1.x package can lack a face a newer core asks for.
+ * cached download. An older 1.x package can lack a face a newer core asks for (a RangeError); any other
+ * failure of an installed package, or bytes that do not match the pinned hash, is an error, not a download.
  */
 export async function defaultFigureFonts(face: FigureFace): Promise<Uint8Array> {
   const installed = await nodeModule<{ fonts: FigureFontProvider }>("credit-matrix-fonts").catch(() => undefined);
   if (!installed) return downloadFigureFont(face);
+  let bytes: Uint8Array;
   try {
-    return await installed.fonts(face);
-  } catch {
-    return downloadFigureFont(face);
+    bytes = await installed.fonts(face);
+  } catch (error) {
+    if (error instanceof RangeError) return downloadFigureFont(face);
+    throw error;
   }
+  const { file, sha256: expected } = FIGURE_FONT_FILES[face];
+  if ((await sha256(bytes)) !== expected)
+    throw new Error(
+      `The installed credit-matrix-fonts has a ${file} that does not match its SHA-256 hash, so it was not used. Reinstall credit-matrix-fonts ${FIGURE_FONTS_VERSION} or later 1.x.`,
+    );
+  return bytes;
 }
