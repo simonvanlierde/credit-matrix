@@ -36,6 +36,7 @@ describe("the pinned font list", () => {
     for (const [face, { sha256 }] of Object.entries(FIGURE_FONT_FILES))
       expect(sha(await fonts(face)), face).toBe(sha256);
     await expect(fonts("nope")).rejects.toThrow(RangeError);
+    await expect(fonts("toString")).rejects.toThrow(RangeError);
   });
 });
 
@@ -102,6 +103,25 @@ describe("downloadFigureFont", () => {
     );
     expect(sha(await defaultFigureFonts("sans"))).toBe(FIGURE_FONT_FILES.sans.sha256);
     expect(fetch).toHaveBeenCalledOnce();
+    vi.doUnmock("credit-matrix-fonts");
+  });
+
+  it("refuses an installed face that does not match its hash, and does not download one", async () => {
+    vi.doMock("credit-matrix-fonts", () => ({ fonts: async () => new Uint8Array([1, 2, 3]) }));
+    vi.stubGlobal("fetch", vi.fn());
+    await expect(defaultFigureFonts("sans")).rejects.toThrow(
+      "The installed credit-matrix-fonts has a NotoSans-Regular.ttf that does not match its SHA-256 hash",
+    );
+    expect(fetch).not.toHaveBeenCalled();
+    vi.doUnmock("credit-matrix-fonts");
+  });
+
+  it("reports an installed package that fails to read a face instead of downloading it", async () => {
+    const missing = Object.assign(new Error("ENOENT: no such file"), { code: "ENOENT" });
+    vi.doMock("credit-matrix-fonts", () => ({ fonts: () => Promise.reject(missing) }));
+    vi.stubGlobal("fetch", vi.fn());
+    await expect(defaultFigureFonts("sans")).rejects.toBe(missing);
+    expect(fetch).not.toHaveBeenCalled();
     vi.doUnmock("credit-matrix-fonts");
   });
 

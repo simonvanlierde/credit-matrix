@@ -52,7 +52,8 @@ const URLS = {
 
 /** Read one face's bytes: from disk in Node, over HTTP from a bundle's assets in a browser. */
 export async function fonts(face) {
-  const url = URLS[face];
+  // Own keys only: "toString" and the like are not faces.
+  const url = Object.hasOwn(URLS, face) ? URLS[face] : undefined;
   if (!url) throw new RangeError(`Unknown figure font face: ${face}.`);
   if (url.protocol === "file:") {
     // Kept dynamic: the same module runs in the browser, where Node's filesystem does not exist.
