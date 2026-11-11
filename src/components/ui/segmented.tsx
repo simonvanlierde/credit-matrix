@@ -57,9 +57,10 @@ export function SegmentedControl<T extends string>({
               size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-[13px]",
               // The group clips overflow, so touch grows the option itself.
               "pointer-coarse:min-h-11",
-              // Forced colours repaint the ink fill as Canvas but keep its paper text: use system colours.
+              // Forced colours repaint the fill as Canvas but would keep the Canvas text, leaving a blank
+              // box: opt the selected option out and paint it in the system's own selection colours.
               active
-                ? "bg-accent text-on-accent forced-colors:bg-[CanvasText] forced-colors:text-[Canvas]"
+                ? "bg-accent text-on-accent forced-colors:bg-[Highlight] forced-colors:text-[HighlightText] forced-colors:[forced-color-adjust:none]"
                 : "text-on-surface-variant hover:text-on-surface",
             )}
           >

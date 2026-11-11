@@ -357,6 +357,8 @@ export function StatementOutput() {
             key="statement"
             // Pointer only: a keyboard marks the same phrase by focusing its cell in the grid.
             onPointerOver={(event) => {
+              // A tap sends no leave, so its mark would stay; the grid and list give touch the same links.
+              if (event.pointerType === "touch") return;
               const target = event.target as HTMLElement;
               const phrase = target.closest<HTMLElement>("[data-author]");
               const { author, role } = phrase?.dataset ?? {};

@@ -128,3 +128,12 @@ it("marks a role's phrase for everyone, and no names, while its label in the gri
   const marked = [...container.querySelectorAll("[data-linked]")].map((span) => span.getAttribute("data-role"));
   expect(marked).toEqual(["Conceptualization", "Conceptualization"]);
 });
+
+it("leaves no mark behind after a tap on a phrase, which never sends a leave", () => {
+  act(() => store().loadAuthors(twoAuthors()));
+  const { container } = renderStatement();
+  const phrase = container.querySelector("[data-author][data-role]");
+  if (!phrase) throw new Error("expected a phrase");
+  fireEvent.pointerOver(phrase, { pointerType: "touch" });
+  expect(store().statementLink).toBeNull();
+});
