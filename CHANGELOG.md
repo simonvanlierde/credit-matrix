@@ -95,7 +95,8 @@ roll back past it: an older build refuses to write over drafts saved in version 
 - The grid and its key centre on the window, as far as the space between the side panels allows. The key
   is drawn as cells and, as in exported figures, stands beside a tall, narrow grid.
 - The add button sits inside the contributor name field.
-- The collapsed contributor rail's chips link to the person's cell and open the person menu.
+- The collapsed contributor rail's chips link to the person's cell and open the person menu. On a phone
+  or a narrow window, the contributor list folds the same way, into one row of initials above the grid.
 - A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,
   sentence-case labels and Atkinson Hyperlegible for the interface. The panes share one page, empty
   grid cells are a faint dot, and the level key is one scale bar. Exported figures stay on white;

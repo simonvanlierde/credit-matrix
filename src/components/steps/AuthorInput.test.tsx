@@ -427,7 +427,9 @@ describe("collapsed rail", () => {
     act(() => useContributionStore.getState().loadAuthors([ann]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
-    const chip = screen.getByRole("button", { name: "Ann Lee" });
+    // The rail (desktop) and the chip row (stacked) both render; CSS shows one.
+    const [chip] = screen.getAllByRole("button", { name: "Ann Lee" });
+    if (!chip) throw new Error("expected a chip");
 
     fireEvent.pointerEnter(chip, { pointerType: "mouse" });
     expect(useContributionStore.getState().statementLink).toEqual({ contributorId: ann.id, from: "author" });
@@ -436,7 +438,7 @@ describe("collapsed rail", () => {
 
     // A link from the grid or statement marks the chip too.
     act(() => useContributionStore.getState().setStatementLink({ contributorId: ann.id, from: "cell" }));
-    expect(chip.dataset.linked).toBe("true");
+    for (const each of screen.getAllByRole("button", { name: "Ann Lee" })) expect(each.dataset.linked).toBe("true");
 
     fireEvent.click(chip);
     expect(screen.getByRole("dialog", { name: "Actions for Ann Lee" })).toBeTruthy();
@@ -450,7 +452,7 @@ describe("collapsed rail", () => {
     act(() => useContributionStore.getState().loadAuthors([ann]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
-    fireEvent.click(screen.getByRole("button", { name: "Ann Lee" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Ann Lee" })[0] as HTMLElement);
     fireEvent.click(screen.getByRole("button", { name: "Edit in list" }));
 
     expect(screen.getByRole("button", { name: "Collapse contributor list" })).toBeTruthy();

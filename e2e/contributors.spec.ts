@@ -154,3 +154,24 @@ test.describe("the first step", () => {
     });
   }
 });
+
+test("on a phone, the list folds into a row of initials that still open each person's menu", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await asReturningVisitor(page);
+  await page.goto("/");
+  const add = page.getByLabel("New author names or ORCID iD");
+  await add.fill("Ada Lovelace, Alan Turing");
+  await add.press("Enter");
+  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(2);
+
+  await page.getByRole("button", { name: "Collapse contributor list" }).click();
+  await expect(add).toBeHidden();
+  const chip = page.getByRole("button", { name: "Alan Turing", exact: true }).filter({ visible: true });
+  await expect(chip).toHaveCount(1);
+  await chip.click();
+  await expect(page.getByRole("dialog", { name: "Actions for Alan Turing" })).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "Expand contributor list" }).click();
+  await expect(add).toBeVisible();
+});

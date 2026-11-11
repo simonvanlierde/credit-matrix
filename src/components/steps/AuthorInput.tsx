@@ -18,6 +18,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   AtSign,
+  ChevronDown,
+  ChevronUp,
   GripVertical,
   MoreHorizontal,
   PanelLeftClose,
@@ -33,7 +35,7 @@ import {
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { createContext, memo, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { UNDO_WINDOW_MS, UndoBar } from "@/components/ui/undo-bar";
@@ -220,19 +222,28 @@ export function AuthorList() {
           </>
         )}
       </h2>
-      {/* The rail folds away on a desktop only; stacked, it is a section like any other. */}
+      {/* On a desktop the list folds into a rail of initials beside the grid; stacked above it,
+          into one row of them, which saves the scroll past a long list. Nothing to fold when empty. */}
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
         aria-expanded={!collapsed}
         aria-label={collapsed ? t("expandContributors") : t("collapseContributors")}
         title={collapsed ? t("expandContributors") : t("collapseContributors")}
-        className="hidden size-7 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary xl:flex"
+        className={`hit-area size-7 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          authors.length > 0 ? "flex" : "hidden xl:flex"
+        }`}
       >
         {collapsed ? (
-          <PanelLeftOpen className="size-4" aria-hidden="true" />
+          <>
+            <PanelLeftOpen className="hidden size-4 xl:block" aria-hidden="true" />
+            <ChevronDown className="size-4 xl:hidden" aria-hidden="true" />
+          </>
         ) : (
-          <PanelLeftClose className="size-4" aria-hidden="true" />
+          <>
+            <PanelLeftClose className="hidden size-4 xl:block" aria-hidden="true" />
+            <ChevronUp className="size-4 xl:hidden" aria-hidden="true" />
+          </>
         )}
       </button>
     </div>
@@ -388,8 +399,7 @@ export function AuthorList() {
   if (!collapsed) return full;
   return (
     <>
-      {/* Collapsed: initials only, on a desktop. Narrower windows ignore the
-          fold and show the full list, since the rail is not beside anything. */}
+      {/* Collapsed on a desktop: a rail of initials beside the grid. */}
       <div className="hidden flex-col items-center p-2 xl:flex desk:h-full desk:overflow-y-auto">
         {header}
         <ul className="flex flex-col items-center gap-1.5">
@@ -400,8 +410,16 @@ export function AuthorList() {
           ))}
         </ul>
       </div>
-      <div className="xl:hidden">
-        <UnderRail value>{full}</UnderRail>
+      {/* Collapsed when stacked: the same chips in one wrapping row above the grid. */}
+      <div className="p-3 md:p-4 xl:hidden">
+        {header}
+        <ul className="-mt-1 flex flex-wrap gap-1.5">
+          {authors.map((author) => (
+            <li key={author.id}>
+              <RailChip author={author} />
+            </li>
+          ))}
+        </ul>
       </div>
     </>
   );
@@ -427,12 +445,6 @@ function useAuthorLink(authorId: string | undefined) {
 }
 
 /**
- * True for the full list rendered under a collapsed rail (shown only below xl). Its rows leave an
- * "Edit in list" request alone: the rail opens for it, and the list that mounts then takes it.
- */
-const UnderRail = createContext(false);
-
-/**
  * A person in the collapsed rail: their initials chip, linked on hover or focus like a full row,
  * and the trigger for the same person menu. Named by the person; Radix adds the popup state.
  */
@@ -451,7 +463,7 @@ function RailChip({ author }: { author: Author }) {
           title={author.name}
           data-linked={linked || undefined}
           {...linkHandlers}
-          className="block rounded-md p-0.5 ring-offset-1 ring-offset-surface transition-shadow duration-150 hover:ring-2 hover:ring-edge focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent data-linked:ring-2 data-linked:ring-primary data-[state=open]:ring-2 data-[state=open]:ring-primary motion-reduce:transition-none"
+          className="hit-area block rounded-md p-0.5 ring-offset-1 ring-offset-surface transition-shadow duration-150 hover:ring-2 hover:ring-edge focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent data-linked:ring-2 data-linked:ring-primary data-[state=open]:ring-2 data-[state=open]:ring-primary motion-reduce:transition-none"
         >
           <InitialsChip author={author} />
         </button>
@@ -515,14 +527,13 @@ const AuthorRow = memo(function AuthorRowInner({
   const listFocus = useContributionStore((s) => (s.listFocus?.authorId === author?.id ? s.listFocus : null));
   const setListFocus = useContributionStore((s) => s.setListFocus);
   const { setEditingOrcid } = orcidLine;
-  const underRail = useContext(UnderRail);
   useEffect(() => {
-    if (!listFocus || underRail) return;
+    if (!listFocus) return;
     if (listFocus.orcid) setEditingOrcid(true);
     else nameInputRef.current?.focus();
     nameInputRef.current?.scrollIntoView({ block: "nearest" });
     setListFocus(null);
-  }, [listFocus, underRail, setEditingOrcid, setListFocus]);
+  }, [listFocus, setEditingOrcid, setListFocus]);
 
   // Keyed on the stored name, not the author object: normalizeAuthors rebuilds
   // every author on any list mutation, so an identity-keyed effect overwrote

@@ -212,8 +212,9 @@ and the user's column in a surface tint with a "You" label, never primary. A sta
 grid says what the draft is waiting for; until someone answers, that is a labelled "Ask co-authors"
 tool button with the send icon, not a link, since it is the draft's next step. It also holds the controls
 that change the whole grid (Yes/No vs Levels, bulk assign, display options, heatmap export). Below
-`xl` the same parts stack in that order: rail, strip, grid, inspector. On a phone the grid becomes a
-list of roles per contributor.
+`xl` the same parts stack in that order: rail, strip, grid, inspector. Stacked, the list folds into
+one row of initials chips instead of a rail, which saves the scroll past a long list. On a phone the
+grid becomes a list of roles per contributor.
 
 The three panes share one page: no pane backgrounds and no rules between them on a wide screen. The
 contributor cards and the statement sit directly on the tinted page, so the matrix reads as the sheet
