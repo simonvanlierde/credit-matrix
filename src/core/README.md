@@ -315,7 +315,7 @@ To check a reply link's sign-in yourself, pass it to `verifyOrcidToken` with the
 ## Rosters and links
 
 `createAuthor(name, fields)` builds one contributor and `parseAuthorText(text)` a list from pasted
-names. `normalizeRoster(authors)` applies the rules every caller shares: at most 400 contributors,
+names. `normalizeRoster(authors)` applies the rules every caller shares: at most 420 contributors,
 ids unique and short enough for a link, and initials made unique.
 
 `encodeShareHash(input, baseUrl)` writes a draft, or one contributor's row for an ask, into a

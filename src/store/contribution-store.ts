@@ -1212,7 +1212,7 @@ export const useContributionStore = create<ContributionState>()(
           }
         });
         const added = new Set<string>();
-        // One roster rebuild for the whole list: one per name is quadratic in a pasted 400-name list.
+        // One roster rebuild for the whole list: one per name is quadratic in a pasted list of hundreds.
         set((state) => {
           if (claimRefuses(state)) return;
           const room = MAX_AUTHORS - state.authors.length;

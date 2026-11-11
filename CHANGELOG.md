@@ -14,7 +14,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- A draft holds up to 400 contributors, up from 200. Imports, share links and the element take
+- A draft holds up to 420 contributors, up from 200. Imports, share links and the element take
   files up to 2 MB, up from 1 MB, and a pasted statement can run to 120,000 characters, up from
   50,000, so a full draft's exports and by-author statement read back in.
 - Pasting a long list of names adds them in one step: 400 names take milliseconds instead of
