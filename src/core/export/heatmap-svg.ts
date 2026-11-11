@@ -154,7 +154,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const shape = opts?.shape ?? "square";
   const legendPosition = opts?.legendPosition ?? "auto";
   if (!["auto", "right", "bottom"].includes(legendPosition))
-    throw new HeatmapOptionError("Unknown heatmap legend position.");
+    throw new HeatmapOptionError("Unknown heatmap legend position. Use auto, right or bottom.");
   if (opts?.marks !== undefined && typeof opts.marks !== "boolean")
     throw new HeatmapOptionError("Heatmap marks must be a boolean.");
   if (!["square", "rounded", "circle"].includes(shape))
