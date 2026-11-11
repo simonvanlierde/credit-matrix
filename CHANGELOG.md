@@ -22,6 +22,8 @@ See [deploying](docs/deploy.md).
 
 ### Changed
 
+- The social card is `og.png` (was `opengraph-image.png`), and its URL carries a `?v=` hash of the file so
+  link previews refresh when the card changes.
 - The social card is a poster that reads in a small link preview: the heatmap on its side above a
   short statement, one cell and its phrase linked in the contributor's hue, and the site's address.
 - **Breaking:** the Typst package stops the build on a contributor name with no letter and no
