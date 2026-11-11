@@ -57,7 +57,8 @@ or commissioned an external audit. This review does not assess all requirements 
 ### Content we don't control
 
 - **ORCID sign-in.** Signing a co-author answer with ORCID opens orcid.org, which ORCID runs, so
-  we have not assessed that authentication process. An answer can be sent without signing in.
+  we have only inspected its initial sign-in page. The full authentication process remains
+  unassessed. An answer can be sent without signing in.
 
 ## Tell us about a problem
 
@@ -97,7 +98,8 @@ statement or an export in another format, email us and we'll send it.
 - **Visual checks.** Browser tests check sampled contrast, focus rings, swatch selection in forced
   colors, and figure settings under reduced motion. Text-spacing tests check page width and access
   to figure downloads at phone and desktop widths. These use browser emulation; they do not replace
-  testing native color dialogs, actual browser zoom or Windows High Contrast by hand.
+  testing other browsers or Windows High Contrast by hand. Separate checks cover real 200% Chromium
+  zoom in both themes and keyboard selection/cancellation in Chromium’s native color picker on Linux.
 - **Lint.** [Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) check
   every change for things like missing alt text, invalid ARIA and click handlers without a keyboard
   equivalent.

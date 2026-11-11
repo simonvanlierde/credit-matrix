@@ -7,7 +7,7 @@ It is a developer self-assessment of sampled pages, not an external audit or a c
 - **Reviewed:** 12 November 2026, against merged main `aef0630` and the timing fixes described below.
 - **Browsers:** Chromium, Firefox and WebKit in Playwright desktop profiles. WebKit testing does not replace testing Safari on Apple hardware.
 - **Settings:** light and dark themes, phone and desktop viewports, plus targeted forced-colors and reduced-motion emulation.
-- **Not tested:** NVDA, JAWS, VoiceOver, switch access, voice control, real browser zoom, or the operating system's native color dialog.
+- **Not tested:** NVDA, JAWS, VoiceOver, switch access or voice control. Real zoom and native color-picker checks cover Chromium on Linux only.
 - **Earlier reviews:** October observations informed this review. Their counts of Tab stops and controls are not current measurements.
 
 ## Sample and method
@@ -24,7 +24,7 @@ They check page width and access to figure settings at 320, 375, 768 and 1440 CS
 These checks do not establish what a screen reader speaks or prove that every control works with every input method.
 
 The implementation review checks semantics, language attributes, timer behavior, text alternatives and color calculations.
-Current light-mode text uses `--color-on-surface: #45413a`, replacing the old darker charcoal.
+Current light-mode text uses `--color-on-surface: #45413a`.
 `src/lib/theme-color.ts` derives a readable accent from a custom hue; browser and unit tests check the sampled backgrounds.
 
 ### Repeatable checks
@@ -44,14 +44,36 @@ BASE_URL=http://localhost:3437 pnpm exec playwright test \
   e2e/visual-contrast.spec.ts e2e/input-errors.spec.ts e2e/about.spec.ts \
   e2e/accessibility-statement.spec.ts e2e/happy-path.spec.ts \
   e2e/heatmap-resilience.spec.ts e2e/text-spacing.spec.ts e2e/messages.spec.ts \
-  --workers 3
+  e2e/browser-zoom.spec.ts --workers 3
 ```
 
 On 12 November 2026, 456 distinct browser checks passed across the three engines, including targeted
-reruns of the text-spacing and settings checks. `pnpm verify` passed 1,730 unit tests and 85 integration tests.
+reruns of the text-spacing and settings checks. Two additional Chromium zoom checks passed in the follow-up below.
+`pnpm verify` passed 1,730 unit tests and 85 integration tests.
 
 Firefox and WebKit clipboard workflows use an in-page clipboard substitute.
 They exercise the app's handlers, not the browser's native clipboard integration.
+
+### Additional checks
+
+`e2e/browser-zoom.spec.ts` uses Chromium’s [browser zoom API](https://developer.chrome.com/docs/extensions/reference/api/tabs#method-setZoom).
+Its temporary extension and browser profile are removed after each test.
+It verifies zoom 2, doubled pixel density and halved layout width, rather than changing the viewport alone.
+Both light and dark checks passed: Import opens, figure settings remain reachable, the keyboard can download SVG,
+and the reading pages fit at 200% zoom. The browser starts at 1440 × 1000 pixels, with a 720 CSS-pixel layout after zoom.
+Firefox and Safari zoom behavior has not been checked.
+
+A headed Chromium 156.0.8078.4 session on Linux checked the native color picker with the keyboard.
+Space opened it; Tab reached its RGB fields. Enter applied a new color and returned focus to Custom.
+Escape cancelled edits, preserved the previous color and returned focus. The committed color persisted after reload.
+No screen reader was used for this check.
+Other browsers and Windows/macOS color dialogs remain untested.
+
+The public ORCID sign-in page was inspected in the same Chromium version without entering credentials or submitting a form.
+Email/ORCID and password fields exposed accessible names and accepted focus; autocomplete was not disabled.
+Synthetic paste events were not cancelled, and no CAPTCHA was visible on the initial page.
+Actual paste, password-manager autofill, MFA, recovery and risk-triggered challenges were not checked.
+This narrows the evidence gap without settling the complete authentication process.
 
 ### Timing corrections
 
@@ -85,7 +107,7 @@ A longer fixed timeout alone does not establish [2.2.1 Timing Adjustable](https:
 | 1.4.1 Use of Color | A | Checked | Contribution levels have dot marks and names. Text links are underlined; errors have text. Selected color swatches also have a checkmark and outline. |
 | 1.4.2 Audio Control | A | N/A | No audio. |
 | 1.4.3 Contrast (Minimum) | AA | Checked | `visual-contrast.spec.ts` checks sampled text, placeholders, primary actions and hover colors in both themes. `contrast.test.ts` and `ThemeHue.test.tsx` check palette and custom-accent calculations. |
-| 1.4.4 Resize Text | AA | Needs review | 640/700 CSS-pixel header checks are viewport proxies. Actual 200% browser/text zoom has not been tested in this review. |
+| 1.4.4 Resize Text | AA | Checked | `browser-zoom.spec.ts` verifies real 200% Chromium zoom in both themes, including Import, keyboard access to settings/downloads and reading-page width. Firefox/Safari zoom and text-only resizing remain untested. |
 | 1.4.5 Images of Text | AA | Checked | Reviewed controls use real text. Heatmap previews are data figures with statement alternatives; this does not assess accessibility after inserting an exported image into another document. |
 | 1.4.10 Reflow | AA | Checked | `text-spacing.spec.ts` checks the four app routes down to 320 CSS pixels and access to figure settings. The phone grid becomes a role list; the web element keeps the drawing within a scroll box and supplies a separate accessible table. |
 | 1.4.11 Non-text Contrast | AA | Checked | `visual-contrast.spec.ts` checks sampled field edges, grips, empty-cell marks, focus rings and swatch boundaries. It also checks real selection outlines under forced-colors emulation. |
@@ -133,7 +155,7 @@ A longer fixed timeout alone does not establish [2.2.1 Timing Adjustable](https:
 | 3.3.3 Error Suggestion | AA | Checked | Reviewed error messages name the problem and an available correction or retry. |
 | 3.3.4 Error Prevention (Legal, Financial, Data) | AA | Checked | Removals, bulk changes and supported imports offer Undo; replacing a workspace and deleting drafts require confirmation. This does not assess legal or financial transactions. |
 | 3.3.7 Redundant Entry | A | Checked | Imports and co-author reply links reuse known contributor information; the tests exercise those journeys. |
-| 3.3.8 Accessible Authentication (Minimum) | AA | Needs review | Unsigned replies require no login. Optional ORCID verification has an external authentication process that has not been evaluated; it is not treated as N/A merely because another service runs it. |
+| 3.3.8 Accessible Authentication (Minimum) | AA | Needs review | Unsigned replies require no login. The initial ORCID sign-in page has named, focusable fields and does not disable autocomplete or cancel the tested paste events. The complete external authentication process remains unassessed. |
 
 ### Robust
 
@@ -147,8 +169,8 @@ WCAG 2.2 removed 4.1.1 Parsing, so it is not listed.
 ## Remaining work
 
 - Test real screen-reader journeys with NVDA/Firefox and VoiceOver/Safari, including custom colors, grid changes, dialogs and exported figures.
-- Test actual 200% browser/text zoom and native color dialogs. Viewport emulation does not replace those checks.
-- Evaluate optional ORCID authentication against [3.3.8](https://www.w3.org/TR/WCAG22/#accessible-authentication-minimum), including its external pages and timing.
+- Extend actual browser zoom and native color-picker checks to Firefox and Safari, including Windows/macOS and assistive technology.
+- Evaluate optional ORCID authentication against [3.3.8](https://www.w3.org/TR/WCAG22/#accessible-authentication-minimum), including actual clipboard/autofill assistance, MFA, recovery, later challenges and timing.
 - Review translated labels with native speakers. Machine-translated interface text has not had that review.
 
 The public statement remains partially conformant. Browser checks and source review leave the gaps above;
