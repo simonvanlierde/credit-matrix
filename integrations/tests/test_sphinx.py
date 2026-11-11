@@ -20,7 +20,7 @@ CLI = ROOT / "src/core/dist/cli.js"
 def project(tmp_path):
     apps = []
 
-    def build(directive=".. credit-statement:: contributors.json\n", language="en", command=None):
+    def build(directive=".. credit-statement:: contributors.json\n", language="en", command=None, conf=""):
         source = tmp_path / "source"
         source.mkdir()
         (source / "_ext").mkdir()
@@ -30,7 +30,7 @@ def project(tmp_path):
         (source / "conf.py").write_text(
             "import sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(__file__).parent / '_ext'))\n"
             f"extensions = ['credit_matrix']\nproject = 'Example Lab'\nlanguage = {language!r}\n"
-            f"credit_matrix_command = {command!r}\n",
+            f"credit_matrix_command = {command!r}\n{conf}",
             encoding="utf-8",
         )
         (source / "index.rst").write_text(f"Contributors\n============\n\n{directive}", encoding="utf-8")
@@ -183,3 +183,51 @@ def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, project,
     )
     assert svg.strip() == expected.stdout.strip()
     assert ('aria-hidden="true"' in svg) == marks
+
+
+FONTS = ROOT / "src/core/__tests__/fixtures/fonts"
+
+
+def font_project(
+    project, directive, conf="credit_matrix_font_path = ['fonts']\ncredit_matrix_ignore_system_fonts = True\n"
+):
+    app, warnings, source = project(directive, conf=conf)
+    (source / "fonts").mkdir()
+    shutil.copyfile(FONTS / "FigureTestSerif-Regular.ttf", source / "fonts/FigureTestSerif-Regular.ttf")
+    shutil.copyfile(FONTS / "FigureTestRestricted-Regular.ttf", source / "fonts/FigureTestRestricted-Regular.ttf")
+    return app, warnings, source
+
+
+def test_heatmap_font_path_is_relative_to_conf_py(tmp_path, project):
+    # The build runs from another folder, so only the conf directory can resolve the path.
+    app, warnings, source = font_project(
+        project, ".. credit-heatmap:: contributors.json\n   :font: figure test serif\n"
+    )
+    app.build()
+    assert not warnings.getvalue()
+    svg = next((tmp_path / "html/_images").glob("*.svg")).read_text(encoding="utf-8")
+    assert "font-family:'Figure Test Serif'" in svg
+    assert f"credit-heatmap: font: Figure Test Serif from {source / 'fonts/FigureTestSerif-Regular.ttf'}" in (
+        app._status.getvalue()
+    )
+
+
+def test_heatmap_font_licence_warning_is_a_sphinx_warning(tmp_path, project):
+    app, warnings, _ = font_project(
+        project, ".. credit-heatmap:: contributors.json\n   :font: Figure Test Restricted\n   :font-fallback: serif\n"
+    )
+    app.build()
+    assert "index.rst:4: WARNING: credit-heatmap:" in warnings.getvalue()
+    assert "fsType 0x0002" in warnings.getvalue()
+
+
+def test_missing_font_family_fails_the_directive_in_one_line(tmp_path, project):
+    app, warnings, _ = font_project(
+        project,
+        ".. credit-heatmap:: contributors.json\n   :font: No Such Family\n   :font-path: fonts\n   :ignore-system-fonts:\n",
+    )
+    app.build()
+    lines = warnings.getvalue().strip().splitlines()
+    assert len(lines) == 1
+    assert "index.rst:4: ERROR: CRediT rendering failed:" in lines[0]
+    assert "Cannot find the font family No Such Family in the font path" in lines[0]
