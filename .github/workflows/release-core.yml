@@ -75,7 +75,7 @@ jobs:
           tarball=$(npm pack --silent | tail -n 1)
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: package
           path: src/core/${{ steps.pack.outputs.tarball }}
@@ -88,7 +88,7 @@ jobs:
         # Include build dependencies: the CLI and MyST plugin bundle some of them.
         run: pnpm --filter credit-matrix sbom --sbom-format cyclonedx --sbom-spec-version 1.6 --out "$TARBALL.cdx.json"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: sbom
           path: ${{ steps.pack.outputs.tarball }}.cdx.json
