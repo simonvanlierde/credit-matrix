@@ -25,4 +25,4 @@ it("publishes index.js's faces, the licences and the readme, and nothing else", 
     "OFL-NotoSerifCJK.txt",
   ]);
   expect([...files].sort()).toEqual([...expected].sort());
-});
+}, 60_000); // npm pack hashes every face: tens of MB, slow while the whole suite runs.
