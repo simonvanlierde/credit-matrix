@@ -115,8 +115,10 @@ only when npm does not have that version yet. To release new fonts, bump
 `src/fonts/package.json`, update the pin and hashes, and tag a release as usual.
 
 The first version cannot use trusted publishing, because npm configures it only for a package that
-exists. Publish 1.0.0 by hand with `cd src/fonts && npm publish --access public` from the owner's
-two-factor login. Then, on npmjs.com, add `release-core.yml` and the `npm-release` environment as
+exists. Publish 1.0.0 by hand from a clean `src/fonts` (`git status --short src/fonts` prints nothing),
+with `cd src/fonts && npm publish --access public --provenance=false` from the owner's two-factor
+login: npm makes provenance only in CI. The release workflow's own pack then matches it byte for
+byte, so its integrity check passes. Then, on npmjs.com, add `release-core.yml` and the `npm-release` environment as
 the package's trusted publisher, as for `credit-matrix`.
 
 ### Roll back a version
