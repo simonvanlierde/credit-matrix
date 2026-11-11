@@ -48,9 +48,12 @@ jobs:
       - name: Compile message catalogs
         run: pnpm i18n:compile
 
-      # The config's 8 workers suit a local machine; a hosted runner has 4 cores.
+      # The config's 8 workers suit a local machine; a hosted runner has 4 cores. On the slower
+      # runner some equivalent mutants (a split on /\s/ instead of /\s+/, a skipped cache) outlast
+      # the default 5 s timeout and count as killed, which a local run never sees; 30 s lets them
+      # finish, and only the mutants that loop forever pay for it.
       - name: Run Stryker
-        run: pnpm exec stryker run --concurrency 4
+        run: pnpm exec stryker run --concurrency 4 --timeoutMS 30000
 
       - name: Compare survivors with the baseline
         run: |
