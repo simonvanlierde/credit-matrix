@@ -8,10 +8,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultFigureFonts, downloadFigureFont, FIGURE_FONT_FILES, FIGURE_FONTS_VERSION } from "../figure-fonts";
 import { createFigureRenderer, type FigureFace } from "../figures";
 import { createAuthor } from "../parse-authors";
+import { cast } from "./cast";
 
 const fontsDir = new URL("../../fonts/", import.meta.url);
 const sans = () => readFile(new URL(FIGURE_FONT_FILES.sans.file, fontsDir));
-const jane = [createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] })];
+const grace = [createAuthor(cast.grace, { contributions: [{ role: "Software", score: 100 }] })];
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 // Replaced per test with vi.doMock; the real package is read through vi.importActual.
@@ -184,7 +185,7 @@ describe("a renderer with one face unavailable", () => {
   it("draws Latin in system fonts rather than in a CJK face", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const { renderer, asked } = failing("sans");
-    const svg = await renderer.svg(jane);
+    const svg = await renderer.svg(grace);
     expect(svg).toMatch(/<tspan font-family="[^"]*sans-serif">Software<\/tspan>/);
     expect(svg).not.toContain("@font-face");
     expect(asked).toEqual(["sans"]);
@@ -212,9 +213,9 @@ describe("a renderer whose fonts cannot be loaded", () => {
   it("draws SVG in system fonts and warns", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const renderer = offline();
-    const svg = await renderer.svg(jane);
+    const svg = await renderer.svg(grace);
     const warnings = warn.mock.calls.length;
-    await renderer.svg(jane);
+    await renderer.svg(grace);
     expect(svg).toMatch(/<tspan font-family="[^"]*sans-serif">Software<\/tspan>/);
     expect(svg).not.toContain("@font-face");
     expect(warn).toHaveBeenCalledWith(
@@ -225,6 +226,6 @@ describe("a renderer whose fonts cannot be loaded", () => {
   });
 
   it("stops PDF with the provider's error", async () => {
-    await expect(offline().pdf(jane)).rejects.toThrow("Cannot load figure font NotoSans-Regular.ttf (offline).");
+    await expect(offline().pdf(grace)).rejects.toThrow("Cannot load figure font NotoSans-Regular.ttf (offline).");
   });
 });

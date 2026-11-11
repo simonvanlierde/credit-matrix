@@ -8,7 +8,7 @@ import { ClaimGate } from "./CoauthorPage";
 
 it("sends the same answer with the same send time, shared or copied", async () => {
   const store = useContributionStore.getState();
-  store.addAuthor("Jane Smith");
+  store.addAuthor("Grace Hopper");
   const jane = useContributionStore.getState().authors[0];
   if (!jane) throw new Error("expected Jane");
   store.setClaim({ contributorId: jane.id, sourceDraftId: "src-1", sentAt: 1 });

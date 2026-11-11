@@ -8,7 +8,7 @@ import { ContributionGrid } from "./ContributionGrid";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
 
-const author = createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] });
+const author = createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] });
 const state = () => useContributionStore.getState();
 const PALE = "Supporting is hard to distinguish in this color. Try a darker shade.";
 

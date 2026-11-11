@@ -10,7 +10,7 @@ import { createAuthor } from "../parse-authors";
 // export on disk for xmllint, and the run is skipped otherwise.
 it.runIf(process.env.JATS_OUT)("writes a fresh export for DTD validation", () => {
   const xml = toJats4rXml([
-    createAuthor("Jane A. Smith", {
+    createAuthor("Grace B. Hopper", {
       orcid: "0000-0002-1825-0097",
       corresponding: true,
       equalContribution: true,
@@ -19,7 +19,7 @@ it.runIf(process.env.JATS_OUT)("writes a fresh export for DTD validation", () =>
         { role: "Writing – review & editing", score: 33 },
       ],
     }),
-    createAuthor("Bob White", {
+    createAuthor("Charles Darwin", {
       contributorType: "non-author",
       contributions: [{ role: "Investigation", score: 66 }],
     }),

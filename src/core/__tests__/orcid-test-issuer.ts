@@ -31,8 +31,8 @@ export async function testIssuer(now = Date.now()) {
       iat,
       exp: iat + 600,
       auth_time: iat,
-      given_name: "Bob",
-      family_name: "White",
+      given_name: "Charles",
+      family_name: "Darwin",
       ...claims,
     });
     const signature = await crypto.subtle.sign(

@@ -8,8 +8,8 @@ async function readItem(item: ClipboardItem): Promise<Record<string, string>> {
   return out;
 }
 
-const HTML = "<p><strong>CRediT:</strong> <strong>Conceptualization</strong>: Jane Smith</p>";
-const TEXT = "CRediT: Conceptualization: Jane Smith";
+const HTML = "<p><strong>CRediT:</strong> <strong>Conceptualization</strong>: Grace Hopper</p>";
+const TEXT = "CRediT: Conceptualization: Grace Hopper";
 
 describe("copyRichText", () => {
   let write: ReturnType<typeof vi.fn>;

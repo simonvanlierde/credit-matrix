@@ -3,6 +3,10 @@ import { readFileSync } from "node:fs";
 import { parsePoFile } from "@lingui/format-po";
 import type { MessageKey } from "@/locales/keys";
 
-export const english = Object.fromEntries(
-  parsePoFile(readFileSync("src/locales/en/messages.po", "utf8")).items.map(({ msgid, msgstr }) => [msgid, msgstr[0]]),
-) as Record<MessageKey, string>;
+/** A locale's source catalog, msgid to translation. */
+export function catalog(locale: string): Record<MessageKey, string> {
+  const po = parsePoFile(readFileSync(`src/locales/${locale}/messages.po`, "utf8"));
+  return Object.fromEntries(po.items.map(({ msgid, msgstr }) => [msgid, msgstr[0]])) as Record<MessageKey, string>;
+}
+
+export const english = catalog("en");

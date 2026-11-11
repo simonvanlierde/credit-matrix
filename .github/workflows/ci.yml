@@ -217,7 +217,7 @@ jobs:
       - name: Run the CLI
         run: |
           node --version
-          printf 'Name,Conceptualization,Software\nJane Smith,100,66\n' > team.csv
+          printf 'Name,Conceptualization,Software\nAda Lovelace,100,66\n' > team.csv
           node src/core/dist/cli.js statement team.csv
           node src/core/dist/cli.js convert team.csv --to jats > /dev/null
 

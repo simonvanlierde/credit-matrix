@@ -78,7 +78,7 @@ export function cleanNamePart(value: string): string {
 const UNSPACED_NAME_REGEX = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Hangul}]+$/u;
 
 /**
- * Build initials from name parts (e.g. "Jane A. Smith" → "JAS").
+ * Build initials from name parts (e.g. "Grace B. Hopper" → "GBH").
  * Only uses first letter of each non-empty part. The surname gives the letter
  * of its first word that is not a particle, so "Anne van der Berg" is "AB"
  * however the name was entered or imported. A single-token CJK name
@@ -334,9 +334,10 @@ function consistentNameParts(author: Author): Pick<Author, "firstName" | "middle
 /**
  * Surname particles that stay attached to the surname ("van der Berg, Anne"),
  * lower case with a straight apostrophe. Not "y", which joins two surnames
- * ("Ortega y Gasset") rather than leading one.
+ * ("Ortega y Gasset") rather than leading one. Exported so integrations that cannot run this
+ * code (the Typst package) read the same list.
  */
-const PARTICLES = new Set([
+export const NAME_PARTICLES: readonly string[] = [
   "van",
   "von",
   "de",
@@ -368,11 +369,15 @@ const PARTICLES = new Set([
   "el",
   "al",
   "van't",
-]);
+];
+const PARTICLES = new Set(NAME_PARTICLES);
+
+/** Generational suffixes that end a name rather than the surname ("Martin Luther King Jr."). */
+export const NAME_SUFFIXES: readonly string[] = ["jr", "sr", "ii", "iii"];
 
 /** A generational suffix, with or without its dot, in any case. */
 export function isSuffix(word: string): boolean {
-  return /^(?:jr|sr|ii|iii)\.?$/i.test(word);
+  return NAME_SUFFIXES.includes(word.toLowerCase().replace(/\.$/, ""));
 }
 
 /**
@@ -422,7 +427,7 @@ function isGivenNamePart(text: string): boolean {
 /**
  * Split typed or pasted text into contributor name tokens. Line breaks of any
  * kind (including Word's Shift+Enter, U+000B) and semicolons always separate. A comma is ambiguous on its own: it separates
- * contributors ("Marie Curie, Jane Smith") or the halves of one inverted name
+ * contributors ("Marie Curie, Grace Hopper") or the halves of one inverted name
  * ("Curie, Marie"), so the choice is made per line, over the whole chunk list
  * rather than per comma: a line is read as inverted names only when its chunks
  * pair up cleanly as surname + given name. Anything else is a delimiter list.

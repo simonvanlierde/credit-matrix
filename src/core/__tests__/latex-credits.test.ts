@@ -13,7 +13,7 @@ const curie = createAuthor("Marie Skłodowska-Curie", {
 
 describe("toLatexCredits", () => {
   it("writes the whole file: header, macros once for a mixed team, then one line per author", () => {
-    const plain = createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 100 }] });
+    const plain = createAuthor("Hua Luogeng", { contributions: [{ role: "Software", score: 100 }] });
     const split = createAuthor("van_Leeuwenhoek \r\n\n  Antonie", { contributions: [] });
     expect(toLatexCredits([plain, split])).toBe(
       [
@@ -29,7 +29,7 @@ describe("toLatexCredits", () => {
         "\\protected\\def\\crUS{\\_}\\protected\\def\\crDOLLAR{\\$}",
         "\\protected\\def\\crTILDE{\\textasciitilde}\\protected\\def\\crCARET{\\textasciicircum}",
         "\\protected\\def\\crBSLASH{\\textbackslash}",
-        "\\credit{Tu Youyou}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}",
+        "\\credit{Hua Luogeng}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}",
         "\\credit{van\\crUS{}Leeuwenhoek Antonie}{0,0,0,0,0,0,0,0,0,0,0,0,0,0}",
       ].join("\n"),
     );
@@ -41,8 +41,8 @@ describe("toLatexCredits", () => {
   });
 
   it("keeps custom scores as fractions", () => {
-    const a = createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 50 }] });
-    expect(toLatexCredits([a])).toContain("\\credit{Tu Youyou}{0,0,0,0,0,0,0,0,0.5,0,0,0,0,0}");
+    const a = createAuthor("Hua Luogeng", { contributions: [{ role: "Software", score: 50 }] });
+    expect(toLatexCredits([a])).toContain("\\credit{Hua Luogeng}{0,0,0,0,0,0,0,0,0.5,0,0,0,0,0}");
   });
 
   it("escapes every LaTeX special in names, with protected macros for the ones \\xdef breaks", () => {
@@ -75,7 +75,7 @@ describe("toLatexCredits", () => {
       contributorType: "non-author",
       contributions: [{ role: "Software", score: 100 }],
     });
-    for (const authors of [[], [ack], [createAuthor("Tu Youyou")]]) {
+    for (const authors of [[], [ack], [createAuthor("Hua Luogeng")]]) {
       const tex = toLatexCredits(authors);
       expect(tex).toContain("% No authors with roles yet");
       expect(tex).not.toContain("\\credit{");

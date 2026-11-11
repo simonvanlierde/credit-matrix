@@ -12,7 +12,7 @@ npm install credit-matrix
 import { generateStatement, importAny, toJats4rXml } from "credit-matrix";
 
 const { authors } = await importAny(csvText); // JSON, CodeMeta, CSV, JATS4R or Crossref XML, a share link or names
-generateStatement(authors, { format: "by-role" }); // "CRediT: Conceptualization: Jane Smith; …"
+generateStatement(authors, { format: "by-role" }); // "CRediT: Conceptualization: Grace Hopper; …"
 toJats4rXml(authors);
 ```
 
@@ -43,13 +43,15 @@ npx credit-matrix convert team.csv --to pdf > heatmap.pdf  # embedded fonts and 
 npx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
 npx credit-matrix convert team.csv --to quarto > authors.yml  # Quarto/Pandoc author metadata, with levels
 npx credit-matrix convert team.csv --to myst > authors.yml    # MyST/Jupyter Book author metadata, without levels
-npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
+npx credit-matrix ask draft.json --contributor "Grace Hopper" --blank
 npx credit-matrix --help                           # or --version
 ```
 
 Each command reads a file, or `-` for standard input, in any format `importAny` reads. Spreadsheet
 files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement --levels` adds Equal or
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
+`convert --to svg` and `--to pdf` write a warning to stderr, starting `credit-matrix: `, when the
+heatmap's labels would print under 6 pt on a full page; the figure is still written.
 `convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
 takes `--yes-no` for flat cells with no levels.
 
@@ -154,9 +156,9 @@ for shape and checksum.
 
 `generateStatement(authors, options)` renders four formats:
 
-- **`by-role`**: `CRediT: Conceptualization: Jane Smith, Bob White; Software: Jane Smith; …`
+- **`by-role`**: `CRediT: Conceptualization: Grace Hopper, Charles Darwin; Software: Grace Hopper; …`
 - **`by-role-short`**: same grouping as `by-role`, using initials
-- **`by-author`**: `CRediT: Jane Smith: Conceptualization, Software; …`
+- **`by-author`**: `CRediT: Grace Hopper: Conceptualization, Software; …`
 - **`by-author-short`**: same grouping as `by-author`, using initials
 
 The options you'll most likely want:
@@ -265,7 +267,7 @@ for Quarto or MyST author YAML and an RO-Crate fragment, which the app writes bu
 `assignments`, each an author index and a role name, and `unresolved`: names or initials that fit
 no author, or more than one, which it never guesses. `unmatched` lists each of those once, with
 `candidates` (the author indices it could be, empty when none) and the `roles` left out for it.
-It throws a `RangeError` on text longer than `MAX_STATEMENT_LENGTH` (50,000 characters); real
+It throws a `RangeError` on text longer than `MAX_STATEMENT_LENGTH` (120,000 characters); real
 statements stay under 5,000. Only CRediT wording counts, so "A.B. conceived
 the study" yields nothing. It does not judge whether the text is a CRediT statement at all:
 `namesCredit(text)` says whether it uses a term prose rarely does (conceptualization, data curation,
@@ -333,7 +335,7 @@ To check a reply link's sign-in yourself, pass it to `verifyOrcidToken` with the
 ## Rosters and links
 
 `createAuthor(name, fields)` builds one contributor and `parseAuthorText(text)` a list from pasted
-names. `normalizeRoster(authors)` applies the rules every caller shares: at most 200 contributors,
+names. `normalizeRoster(authors)` applies the rules every caller shares: at most 420 contributors,
 ids unique and short enough for a link, and initials made unique.
 
 `encodeShareHash(input, baseUrl)` writes a draft, or one contributor's row for an ask, into a
@@ -347,14 +349,14 @@ holds its exact shape. By entry point:
 
 - `credit-matrix`
   - Model: `Author`, `Contribution`, `ContributionLevel`, `ContributorType`, `AuthorSchema`,
-    `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`
+    `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`, `MAX_AUTHORS`, `MAX_AUTHOR_NAME_LENGTH`, `MAX_IMPORT_BYTES`
   - Roles: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
   - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
   - Statements: `generateStatement`, `statementSpans`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`,
     `StatementSpan`, `StatementCell`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `XmlParseError`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
-    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `HeatmapOptionError`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
+    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `HeatmapOptionError`, `heatmapDescription`, `heatmapPrintWarning`, `HeatmapSvgOptions`, `detectFormat`,
     `importAny`, `ExportOnlyError`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`

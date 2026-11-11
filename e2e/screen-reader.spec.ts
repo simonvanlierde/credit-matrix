@@ -481,7 +481,7 @@ test.describe("screen-reader view (live announcements)", () => {
     await page.getByRole("button", { name: "Import" }).click();
     await page
       .locator("input[type=file]")
-      .setInputFiles({ name: "team.csv", mimeType: "text/csv", buffer: Buffer.from("name\nJane Smith\n") });
+      .setInputFiles({ name: "team.csv", mimeType: "text/csv", buffer: Buffer.from("name\nGrace Hopper\n") });
     await expect
       .poll(async () => (await announcements(page)).filter((a) => !a.inserted).map((a) => a.text))
       .toContainEqual(expect.stringContaining("team.csv"));

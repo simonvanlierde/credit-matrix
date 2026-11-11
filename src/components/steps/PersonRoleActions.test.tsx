@@ -13,13 +13,13 @@ vi.mock("@/lib/use-settled", () => ({ useSettled: () => true }));
 const store = () => useContributionStore.getState();
 const initial = store();
 
-const jane = createAuthor("Jane Smith", {
+const jane = createAuthor("Grace Hopper", {
   contributions: [
     { role: "Conceptualization", score: 100 },
     { role: "Software", score: 50 },
   ],
 });
-const bob = createAuthor("Bob White", { contributions: [{ role: "Conceptualization", score: 20 }] });
+const bob = createAuthor("Charles Darwin", { contributions: [{ role: "Conceptualization", score: 20 }] });
 
 const renderBoth = () =>
   render(
@@ -54,7 +54,7 @@ it("opens the same person menu from the grid's name header and from the name in 
 
   fireEvent.click(header);
   const fromGrid = menuItems();
-  expect(screen.getByRole("dialog", { name: "Actions for Jane Smith" })).toBeTruthy();
+  expect(screen.getByRole("dialog", { name: "Actions for Grace Hopper" })).toBeTruthy();
   fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
 
   fireEvent.click(name);

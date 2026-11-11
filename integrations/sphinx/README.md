@@ -61,7 +61,9 @@ uv run --project integrations sphinx-build -W -b html integrations/sphinx/exampl
 
 ## Contribution heatmap
 
-See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
+See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive. From about
+25 contributors it warns that the labels print under 6 pt, which fails a strict build; the
+[final-size checks](../heatmap.md#final-size-readability-checks) say how to silence it.
 The CLI embeds fonts in the generated SVG. They come from `credit-matrix-fonts` when it is
 installed, otherwise from a one-time download ([details](../../src/core/README.md#cli)). See
 [font portability and PDF export](../figures/README.md) before converting it to PDF or Word.

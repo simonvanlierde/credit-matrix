@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { MAX_AUTHORS } from "../author";
 import { escapeXml } from "../export/escape-xml";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml, readPerson, XmlParseError } from "../export/xml-import";
@@ -9,7 +10,7 @@ import { createAuthor, normalizeRoster, parseAuthorText } from "../parse-authors
 // web app calls.
 describe("fromJats4rXml (DOMParser entry point)", () => {
   it("round-trips through the browser-facing parser", () => {
-    const authors = parseAuthorText("Jane Smith");
+    const authors = parseAuthorText("Grace Hopper");
     const [jane] = authors;
     if (!jane) throw new Error("expected author");
     const conc = jane.contributions[0];
@@ -22,7 +23,7 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     expect(xml).toContain('<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-1825-0097</contrib-id>');
     const parsed = fromJats4rXml(xml);
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.surname).toBe("Smith");
+    expect(parsed[0]?.surname).toBe("Hopper");
     expect(parsed[0]?.orcid).toBe("0000-0002-1825-0097");
     expect(parsed[0]?.contributions.find((c) => c.role === "Conceptualization")?.score).toBe(100);
   });
@@ -87,7 +88,7 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     "Anne van der Berg",
     // spell-checker: ignore Carmen García López
     "Maria del Carmen García López",
-    "Jane A. Smith",
+    "Grace B. Hopper",
     "Madonna",
     // A row still named by its ORCID iD after a failed lookup.
     "0000-0002-1825-0097",
@@ -138,10 +139,10 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
     const failing = { parseFromString: () => el(null, {}, { parsererror: [el(null)] }) };
     expect(() => fromJats4rXml("<x/>", { parser: failing })).toThrow("XML parse error: invalid XML");
 
-    const contrib = el(null, {}, { "given-names": [el("Jane")], surname: [el("Smith")], role: [el(null)] });
+    const contrib = el(null, {}, { "given-names": [el("Grace")], surname: [el("Hopper")], role: [el(null)] });
     const ok = { parseFromString: () => el(null, {}, { contrib: [contrib] }) };
     const [jane] = fromJats4rXml("<x/>", { parser: ok });
-    expect(jane?.name).toBe("Jane Smith");
+    expect(jane?.name).toBe("Grace Hopper");
     expect(jane?.contributions.every((c) => c.score === 0)).toBe(true);
   });
 
@@ -158,14 +159,14 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
   // import different names in the app and the CLI. A large expansion also freezes the tab.
   const contrib = '<contrib contrib-type="author"><name><surname>&x;</surname></name></contrib>';
   it.each([
-    ["an internal entity", `<!DOCTYPE article [<!ENTITY x "Smith">]><article>${contrib}</article>`],
+    ["an internal entity", `<!DOCTYPE article [<!ENTITY x "Hopper">]><article>${contrib}</article>`],
     ["a SYSTEM entity", `<!DOCTYPE article [<!ENTITY x SYSTEM "file:///etc/passwd">]><article>${contrib}</article>`],
     [
       "a billion-laughs expansion",
       `<!DOCTYPE article [<!ENTITY a "lol"><!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">` +
         `<!ENTITY x "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">]><article>${contrib}</article>`,
     ],
-    ["a lower-case declaration", `<!DOCTYPE article [<!entity x "Smith">]><article>${contrib}</article>`],
+    ["a lower-case declaration", `<!DOCTYPE article [<!entity x "Hopper">]><article>${contrib}</article>`],
     [
       "an attribute-list declaration",
       `<!DOCTYPE article [<!ATTLIST contrib x CDATA "y">]><article>${contrib}</article>`,
@@ -179,7 +180,7 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
 
 describe("toJats4rXml", () => {
   it("escapes XML special characters in role names", () => {
-    const authors = parseAuthorText("Jane Smith");
+    const authors = parseAuthorText("Grace Hopper");
     const [jane] = authors;
     if (!jane) throw new Error("expected author");
     // "Writing – review & editing" is the last role (index 13).
@@ -193,7 +194,7 @@ describe("toJats4rXml", () => {
   });
 
   it("writes equal-contrib only when two or more authors share first authorship", () => {
-    const [jane, bob, ann] = parseAuthorText("Jane Smith, Bob White, Ann Lee");
+    const [jane, bob, ann] = parseAuthorText("Grace Hopper, Charles Darwin, Ann Lee");
     if (!jane || !bob || !ann) throw new Error("expected authors");
     const count = (xml: string) => xml.match(/equal-contrib="yes"/g)?.length ?? 0;
 
@@ -223,14 +224,14 @@ describe("toJats4rXml", () => {
   });
 
   it("falls back to the stored given names when the name no longer holds the surname", () => {
-    const [jane] = parseAuthorText("Jane Q Smith");
+    const [jane] = parseAuthorText("Grace Q Hopper");
     if (!jane) throw new Error("expected author");
-    const xml = toJats4rXml([{ ...jane, name: "J. Q. S." }]);
-    expect(xml).toContain("<given-names>Jane Q</given-names>");
+    const xml = toJats4rXml([{ ...jane, name: "G. Q. H." }]);
+    expect(xml).toContain("<given-names>Grace Q</given-names>");
   });
 
   it("writes the ORCID iD as a full orcid.org URI", () => {
-    const [jane] = parseAuthorText("Jane Smith");
+    const [jane] = parseAuthorText("Grace Hopper");
     if (!jane) throw new Error("expected author");
     jane.orcid = "0000-0002-1825-0097";
 
@@ -240,7 +241,7 @@ describe("toJats4rXml", () => {
   });
 
   it("does not double the prefix of an iD stored as a URL", () => {
-    const [jane] = parseAuthorText("Jane Smith");
+    const [jane] = parseAuthorText("Grace Hopper");
     if (!jane) throw new Error("expected author");
     jane.orcid = "https://orcid.org/0000-0002-1825-0097";
 
@@ -250,13 +251,13 @@ describe("toJats4rXml", () => {
   it.each(["https://orcid.org/0000-0002-1825-0097", "http://orcid.org/0000-0002-1825-0097", "0000-0002-1825-0097"])(
     "imports the ORCID iD written as %s",
     (id) => {
-      const xml = `<article><contrib contrib-type="author"><contrib-id contrib-id-type="orcid">${id}</contrib-id><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib></article>`;
+      const xml = `<article><contrib contrib-type="author"><contrib-id contrib-id-type="orcid">${id}</contrib-id><name><surname>Hopper</surname><given-names>Grace</given-names></name></contrib></article>`;
       expect(fromJats4rXml(xml)[0]?.orcid).toBe("0000-0002-1825-0097");
     },
   );
 
   it("only emits role elements for active contributions", () => {
-    const authors = parseAuthorText("Jane Smith");
+    const authors = parseAuthorText("Grace Hopper");
     const [jane] = authors;
     if (!jane) throw new Error("expected author");
     const conc = jane.contributions[0];
@@ -270,7 +271,7 @@ describe("toJats4rXml", () => {
   });
 
   it('tags non-author contributors with contrib-type="contributor"', () => {
-    const [jane, bob] = parseAuthorText("Jane Smith\nBob White");
+    const [jane, bob] = parseAuthorText("Grace Hopper\nCharles Darwin");
     if (!(jane && bob)) throw new Error("expected 2 authors");
     bob.contributorType = "non-author";
 
@@ -281,71 +282,71 @@ describe("toJats4rXml", () => {
 
   it("skips a nameless contrib (e.g. a <collab> group) instead of aborting the import", () => {
     const xml = `<article><contrib-group>
-      <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib>
+      <contrib contrib-type="author"><name><surname>Hopper</surname><given-names>Grace</given-names></name></contrib>
       <contrib contrib-type="author"><collab>The Working Group</collab></contrib>
     </contrib-group></article>`;
 
     const parsed = fromJats4rXml(xml);
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.name).toBe("Jane Smith");
+    expect(parsed[0]?.name).toBe("Grace Hopper");
   });
 
   it("skips a contrib whose name is rejected instead of aborting the import", () => {
     const xml = `<article><contrib-group>
       <contrib contrib-type="author"><name><surname>123</surname><given-names>!!!</given-names></name></contrib>
-      <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib>
+      <contrib contrib-type="author"><name><surname>Hopper</surname><given-names>Grace</given-names></name></contrib>
     </contrib-group></article>`;
 
-    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Smith"]);
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Grace Hopper"]);
   });
 
   it("imports only authors and contributors, not editors or reviewers", () => {
     const xml = `<article><contrib-group>
-      <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane</given-names></name></contrib>
+      <contrib contrib-type="author"><name><surname>Hopper</surname><given-names>Grace</given-names></name></contrib>
       <contrib contrib-type="editor"><name><surname>Editor</surname><given-names>Ed</given-names></name></contrib>
       <contrib contrib-type="reviewer"><name><surname>Reviewer</surname><given-names>Rev</given-names></name></contrib>
-      <contrib contrib-type="contributor"><name><surname>White</surname><given-names>Bob</given-names></name></contrib>
+      <contrib contrib-type="contributor"><name><surname>Darwin</surname><given-names>Charles</given-names></name></contrib>
     </contrib-group></article>`;
 
-    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
   });
 
   it("imports each member of a collab once, and collapses spaces inside names", () => {
     const xml = `<article><contrib-group>
       <contrib contrib-type="author"><collab>The Lab
         <contrib-group>
-          <contrib contrib-type="author"><name><surname>Smith</surname><given-names>Jane   Ann</given-names></name></contrib>
-          <contrib contrib-type="author"><name><surname>White</surname><given-names>Bob</given-names></name></contrib>
+          <contrib contrib-type="author"><name><surname>Hopper</surname><given-names>Grace   Ann</given-names></name></contrib>
+          <contrib contrib-type="author"><name><surname>Darwin</surname><given-names>Charles</given-names></name></contrib>
         </contrib-group>
       </collab></contrib>
     </contrib-group></article>`;
 
-    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Jane Ann Smith", "Bob White"]);
+    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Grace Ann Hopper", "Charles Darwin"]);
   });
 
   it("keeps a double surname as JATS splits it, with single spaces", () => {
     const [ana, dot] = fromJats4rXml(
       `<article>
         <contrib contrib-type="author"><name><surname>García  López</surname><given-names>Ana</given-names></name></contrib>
-        <contrib contrib-type="author"><name><surname>Smith</surname><given-names>.</given-names></name></contrib>
+        <contrib contrib-type="author"><name><surname>Hopper</surname><given-names>.</given-names></name></contrib>
       </article>`,
     );
     expect(ana).toMatchObject({ name: "Ana García López", firstName: "Ana", surname: "García López", initials: "AG" });
     // Given names with no letters leave the first name empty.
-    expect(dot).toMatchObject({ firstName: "", middleName: "", surname: "Smith" });
+    expect(dot).toMatchObject({ firstName: "", middleName: "", surname: "Hopper" });
   });
 
   it("drops an ORCID iD that is not valid and keeps the contributor", () => {
     const authors = fromJats4rXml(
       `<article><contrib contrib-type="author"><contrib-id contrib-id-type="orcid">0000-0000-0000-0000</contrib-id>
-        <name><surname>Smith</surname><given-names>Jane</given-names></name></contrib></article>`,
+        <name><surname>Hopper</surname><given-names>Grace</given-names></name></contrib></article>`,
     );
-    expect(authors.map((a) => [a.name, a.orcid])).toEqual([["Jane Smith", undefined]]);
+    expect(authors.map((a) => [a.name, a.orcid])).toEqual([["Grace Hopper", undefined]]);
   });
 
   it("reads a role from its identifier alone, over http and without the trailing slash, or from vocab-term alone", () => {
     const [jane] = fromJats4rXml(`<article><contrib contrib-type="author">
-      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <name><surname>Hopper</surname><given-names>Grace</given-names></name>
       <role vocab-term-identifier="http://credit.niso.org/contributor-roles/software">Code</role>
       <role vocab-term-identifier=" HTTPS://credit.niso.org/contributor-roles/methodology// ">Methods</role>
       <role vocab-term="Validation"/>
@@ -356,7 +357,7 @@ describe("toJats4rXml", () => {
 
   it("matches roles by their CRediT identifier before the term text", () => {
     const xml = `<article><contrib contrib-type="author">
-      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <name><surname>Hopper</surname><given-names>Grace</given-names></name>
       <role vocab="credit" vocab-term="Writing - original draft" vocab-term-identifier="http://credit.niso.org/contributor-roles/writing-original-draft">Writing - original draft</role>
       <role vocab="credit" vocab-term="Conceptualization">Conceptualization</role>
     </contrib></article>`;
@@ -368,7 +369,7 @@ describe("toJats4rXml", () => {
 
   it("matches role names without an identifier whatever their case or dash", () => {
     const xml = `<article><contrib contrib-type="author">
-      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <name><surname>Hopper</surname><given-names>Grace</given-names></name>
       <role vocab-term="Writing - original draft">Writing - original draft</role>
       <role>conceptualization</role>
       <role vocab-term="nonsense">Software</role>
@@ -381,7 +382,7 @@ describe("toJats4rXml", () => {
 
   it("reads degree-contribution, and falls back to lead when it is missing or unknown", () => {
     const xml = `<article><contrib contrib-type="author">
-      <name><surname>Smith</surname><given-names>Jane</given-names></name>
+      <name><surname>Hopper</surname><given-names>Grace</given-names></name>
       <role vocab-term="Conceptualization" degree-contribution="supporting">Conceptualization</role>
       <role vocab-term="Methodology">Methodology</role>
       <role vocab-term="Software" degree-contribution="major">Software</role>
@@ -405,8 +406,8 @@ describe("toJats4rXml", () => {
 
   it("leaves out degree-contribution in yes/no mode and keeps it when a score is graded", () => {
     const yesNo = [
-      createAuthor("Jane Smith", { contributions: [{ role: "Conceptualization", score: 100 }] }),
-      createAuthor("Bob White", { contributions: [{ role: "Software", score: 100 }] }),
+      createAuthor("Grace Hopper", { contributions: [{ role: "Conceptualization", score: 100 }] }),
+      createAuthor("Charles Darwin", { contributions: [{ role: "Software", score: 100 }] }),
     ];
     const xml = toJats4rXml(yesNo, { yesNo: true });
     expect(xml).not.toContain("degree-contribution");
@@ -417,18 +418,18 @@ describe("toJats4rXml", () => {
 
     // Levels mode, or yes/no with a graded score left over, keeps the level.
     expect(toJats4rXml(yesNo)).toContain('degree-contribution="lead"');
-    const graded = [createAuthor("Jane Smith", { contributions: [{ role: "Conceptualization", score: 33 }] })];
+    const graded = [createAuthor("Grace Hopper", { contributions: [{ role: "Conceptualization", score: 33 }] })];
     expect(toJats4rXml(graded, { yesNo: true })).toContain('degree-contribution="supporting"');
   });
 });
 
 describe("toJats4rXml with characters XML cannot hold", () => {
   it("writes none of them, even from a contributor built without createAuthor", () => {
-    const [author] = parseAuthorText("Jane Smith");
+    const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
-    const xml = toJats4rXml([{ ...author, firstName: "Ja\u0001ne", surname: "Sm\u000Bith\uFFFE" }]);
-    expect(xml).toContain("<given-names>Jane</given-names>");
-    expect(xml).toContain("<surname>Smith</surname>");
+    const xml = toJats4rXml([{ ...author, firstName: "Gra\u0001ce", surname: "Hop\u000Bper\uFFFE" }]);
+    expect(xml).toContain("<given-names>Grace</given-names>");
+    expect(xml).toContain("<surname>Hopper</surname>");
     // biome-ignore lint/suspicious/noControlCharactersInRegex: the characters under test.
     expect(xml).not.toMatch(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/);
   });
@@ -449,14 +450,14 @@ describe("fromJats4rXml reading", () => {
     author?.contributions.filter((c) => c.score > 0).map((c) => `${c.role}:${c.score}`);
 
   it("trusts the role identifier over the term, whatever its scheme, case or trailing slash", () => {
-    const xml = contrib(`<name><surname>Smith</surname><given-names>Jane</given-names></name>
+    const xml = contrib(`<name><surname>Hopper</surname><given-names>Grace</given-names></name>
       <role vocab-term="Methodology" vocab-term-identifier=" HTTPS://CREDIT.NISO.ORG/contributor-roles/software// ">Methodology</role>
       <role vocab-term="Methodology" vocab-term-identifier="ftp://credit.niso.org/contributor-roles/data-curation/">Methodology</role>`);
     expect(active(fromJats4rXml(xml)[0])).toEqual(["Methodology:100", "Software:100"]);
   });
 
   it("reads a listed role as lead when its degree is none", () => {
-    const xml = contrib(`<name><surname>Smith</surname><given-names>Jane</given-names></name>
+    const xml = contrib(`<name><surname>Hopper</surname><given-names>Grace</given-names></name>
       <role vocab-term="Software" degree-contribution="none">Software</role>`);
     expect(active(fromJats4rXml(xml)[0])).toEqual(["Software:100"]);
   });
@@ -481,14 +482,14 @@ describe("fromJats4rXml reading", () => {
   });
 
   it("parses the name itself when only one part is given", () => {
-    const [jane] = fromJats4rXml(contrib("<name><surname>Jane Ann Smith</surname></name>"));
-    expect(jane).toMatchObject({ name: "Jane Ann Smith", firstName: "Jane", middleName: "Ann", surname: "Smith" });
+    const [jane] = fromJats4rXml(contrib("<name><surname>Grace Ann Hopper</surname></name>"));
+    expect(jane).toMatchObject({ name: "Grace Ann Hopper", firstName: "Grace", middleName: "Ann", surname: "Hopper" });
   });
 
   it("keeps an ORCID iD padded with spaces and drops one with a bad check digit", () => {
     const orcid = (id: string) =>
       fromJats4rXml(
-        contrib(`<contrib-id contrib-id-type="orcid">${id}</contrib-id><name><surname>Smith</surname></name>`),
+        contrib(`<contrib-id contrib-id-type="orcid">${id}</contrib-id><name><surname>Hopper</surname></name>`),
       )[0]?.orcid;
     expect(orcid(" https://orcid.org/0000-0002-1825-0097 ")).toBe("0000-0002-1825-0097");
     expect(orcid("0000-0002-1825-0098")).toBeUndefined();
@@ -518,5 +519,25 @@ describe("readPerson", () => {
     expect(readPerson({}, {})).toBeNull();
     expect(readPerson({ given: " ", surname: null }, {})).toBeNull();
     expect(readPerson({ surname: "--" }, {})).toBeNull();
+  });
+});
+
+describe("reading stops one past the contributor cap", () => {
+  const editors = '<contrib contrib-type="editor"><name><surname>Editor</surname></name></contrib>'.repeat(30);
+  const authors = (n: number) =>
+    Array.from(
+      { length: n },
+      (_, i) =>
+        `<contrib contrib-type="author"><name><surname>Curie${i}</surname><given-names>Marie</given-names></name></contrib>`,
+    ).join("");
+  const jats = (n: number) =>
+    `<article><front><article-meta><contrib-group>${editors}${authors(n)}</contrib-group></article-meta></front></article>`;
+
+  it("keeps every author behind non-author contribs", () => {
+    expect(fromJats4rXml(jats(MAX_AUTHORS))).toHaveLength(MAX_AUTHORS);
+  });
+
+  it("reads no more than one author past the cap, which every caller then refuses", () => {
+    expect(fromJats4rXml(jats(MAX_AUTHORS + 50))).toHaveLength(MAX_AUTHORS + 1);
   });
 });

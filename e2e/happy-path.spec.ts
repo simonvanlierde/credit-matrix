@@ -131,15 +131,15 @@ test.describe("Happy path UI flows", () => {
 
     const textarea = page.locator("#import-text");
     await textarea.waitFor({ state: "visible" });
-    await textarea.fill("Jane Smith\nBob White");
+    await textarea.fill("Grace Hopper\nCharles Darwin");
 
     await page.getByRole("button", { name: "Import data" }).click();
 
     // The contributor name is rendered in an editable input.
-    await expect(page.getByLabel("Name or ORCID iD", { exact: true }).first()).toHaveValue("Jane Smith");
+    await expect(page.getByLabel("Name or ORCID iD", { exact: true }).first()).toHaveValue("Grace Hopper");
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(2);
     // The grid renders an (unassigned) cell for the imported contributor.
-    await expect(page.getByRole("button", { name: /^Conceptualization for Jane Smith:/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Conceptualization for Grace Hopper:/ })).toBeVisible();
 
     // Imported names have no roles yet → a validation notice appears.
     // .first(): several imported contributors are noticed at once; onScreen
@@ -160,8 +160,8 @@ test.describe("Happy path UI flows", () => {
         message: {
           title: ["A study of studies"],
           author: [
-            { given: "Jane A.", family: "Smith", ORCID: "https://orcid.org/0000-0002-1825-0097" },
-            { given: "Bob", family: "White" },
+            { given: "Grace B.", family: "Hopper", ORCID: "https://orcid.org/0000-0002-1825-0097" },
+            { given: "Charles", family: "Darwin" },
           ],
         },
       },
@@ -178,7 +178,7 @@ test.describe("Happy path UI flows", () => {
 
     const names = page.getByLabel("Name or ORCID iD", { exact: true });
     await expect(names).toHaveCount(2);
-    await expect(names.first()).toHaveValue("Jane A. Smith");
+    await expect(names.first()).toHaveValue("Grace B. Hopper");
     // The iD rides along with the name: that is half the point of the lookup.
     // A stored iD renders as a link to the registry, not as an input.
     await expect(page.getByRole("link", { name: /0000-0002-1825-0097/ })).toHaveAttribute(
@@ -277,7 +277,7 @@ test.describe("Happy path UI flows", () => {
   });
 
   for (const [format, payload, expectedName] of [
-    ["CSV", "Name,ORCID,Type\nJane Smith,,author", "Jane Smith"],
+    ["CSV", "Name,ORCID,Type\nGrace Hopper,,author", "Grace Hopper"],
     [
       "JSON",
       JSON.stringify({
@@ -285,17 +285,17 @@ test.describe("Happy path UI flows", () => {
         authors: [
           {
             id: "json-author",
-            name: "Bob White",
-            firstName: "Bob",
+            name: "Charles Darwin",
+            firstName: "Charles",
             middleName: "",
-            surname: "White",
-            initials: "BW",
+            surname: "Darwin",
+            initials: "CD",
             contributorType: "author",
             contributions: [],
           },
         ],
       }),
-      "Bob White",
+      "Charles Darwin",
     ],
     [
       "XML",
@@ -349,7 +349,7 @@ test.describe("Happy path UI flows", () => {
     await page.goto("/");
 
     const input = page.getByLabel("New author names or ORCID iD");
-    await input.fill("Jane Smith, Bob White, Carol Davis");
+    await input.fill("Grace Hopper, Charles Darwin, Carol Davis");
     await input.press("Enter");
 
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
@@ -682,11 +682,11 @@ test.describe("Happy path UI flows", () => {
       authors: [
         {
           id: "orcid-author",
-          name: "Jane Smith",
-          firstName: "Jane",
+          name: "Grace Hopper",
+          firstName: "Grace",
           middleName: "",
-          surname: "Smith",
-          initials: "JS",
+          surname: "Hopper",
+          initials: "GH",
           orcid: "https://orcid.org/0000-0002-1825-0097",
           contributorType: "author",
           contributions: [],
@@ -733,7 +733,7 @@ test.describe("Happy path UI flows", () => {
     // Stub ORCID so the row's own states are what is under test, not the registry.
     // Exact URL: only the checksum-valid iD may reach the registry.
     await stubUpstream(page, "https://pub.orcid.org/v3.0/0000-0002-1825-0097/person", 200, {
-      name: { "given-names": { value: "Jane A." }, "family-name": { value: "Smith" } },
+      name: { "given-names": { value: "Grace B." }, "family-name": { value: "Hopper" } },
     });
     await page.goto("/");
     await page.getByRole("button", { name: "Load sample data" }).click();
@@ -783,7 +783,7 @@ test.describe("Happy path UI flows", () => {
 
   test("gives an attached ORCID iD its own aligned line rather than a ragged wrap", async ({ page }) => {
     await stubUpstream(page, "https://pub.orcid.org/**", 200, {
-      name: { "given-names": { value: "Jane A." }, "family-name": { value: "Smith" } },
+      name: { "given-names": { value: "Grace B." }, "family-name": { value: "Hopper" } },
     });
     await page.setViewportSize({ width: 1600, height: 900 });
     await page.goto("/");

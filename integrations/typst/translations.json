@@ -1,5 +1,5 @@
 {
-  "generated": "By scripts/build-typst-translations.mjs from src/core/credit-i18n. Do not edit.",
+  "generated": "By scripts/build-typst-translations.mjs from src/core. Do not edit.",
   "roles": [
     {
       "slug": "conceptualization",
@@ -57,6 +57,45 @@
       "slug": "writing-review-editing",
       "name": "Writing – review & editing"
     }
+  ],
+  "particles": [
+    "van",
+    "von",
+    "de",
+    "del",
+    "della",
+    "di",
+    "da",
+    "du",
+    "le",
+    "la",
+    "den",
+    "der",
+    "ten",
+    "ter",
+    "dos",
+    "das",
+    "do",
+    "los",
+    "las",
+    "degli",
+    "dei",
+    "dalla",
+    "dal",
+    "zu",
+    "zur",
+    "af",
+    "bin",
+    "ibn",
+    "el",
+    "al",
+    "van't"
+  ],
+  "suffixes": [
+    "jr",
+    "sr",
+    "ii",
+    "iii"
   ],
   "locales": {
     "en": {
