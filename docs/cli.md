@@ -27,9 +27,7 @@ node src/core/dist/cli.js --version
 
 Examples below write `credit-matrix`; use whichever form you installed.
 
-The `svg` and `pdf` figures need the Noto fonts. The README of the
-[`credit-matrix` package](../src/core/README.md#cli) explains how the CLI finds them, when it
-downloads them, and the one network request it makes.
+The `svg` and `pdf` figures need the Noto fonts; see [Fonts and offline use](#fonts-and-offline-use).
 
 ## Usage
 
@@ -138,12 +136,15 @@ cat contributors.json | credit-matrix statement -
 
 The format comes from the content, not the file name. The CLI reads:
 
-- the native JSON export, and a JSON file that is a CodeMeta, CITATION.cff or Zenodo record
+- the native JSON export, and CodeMeta JSON
 - CSV with a `Name` header cell, and Tenzing CSV or TSV
 - JATS4R XML and the `<contributors>` block of Crossref XML
 - a share link, including the reply link a contributor sends back after `ask`
 - a statement written as text
 - a plain list of names, which gives contributors without roles
+
+The CLI does not read `CITATION.cff` or `.zenodo.json`. Convert them to `codemeta.json` first; the
+web app does that.
 
 Limits and special cases:
 
@@ -214,7 +215,33 @@ there is no Traditional Chinese catalog. A code the CLI cannot place exits 2:
 ```text
 $ credit-matrix statement contributors.json --locale xx
 credit-matrix: Unknown locale: xx. Use one of en, fr, de, es, it, pt-PT, nl, zh-Hans, ja.
+Run 'credit-matrix --help' for usage.
 ```
+
+## Fonts and offline use
+
+`--to svg` and `--to pdf` embed Noto fonts. The CLI finds them in this order:
+
+1. The `credit-matrix-fonts` package, when installed next to `credit-matrix` (30 MB to download,
+   55 MB on disk). The CLI reads the faces from disk and works offline. Install both in one
+   project (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`.
+   A bare `npx credit-matrix` does not see a `credit-matrix-fonts` installed in your own project;
+   run `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...` instead.
+2. Otherwise, a download on first use of each face, from
+   `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.1/`. The CLI checks each file against a
+   SHA-256 hash that ships in the package and refuses one that does not match. It keeps the face
+   in `$XDG_CACHE_HOME/credit-matrix/fonts/`, or in the platform cache folder: `~/.cache`,
+   `~/Library/Caches` on macOS, `%LOCALAPPDATA%` on Windows.
+
+That download is the only network request the CLI makes. jsDelivr sees your IP address and which
+faces you request, which shows which scripts the names use. Installing `credit-matrix-fonts` avoids
+it.
+
+Offline with nothing cached, `--to pdf` exits 1 with an error that names both fixes. `--to svg`
+warns on standard error and draws the text in system fonts.
+
+For your own font, see `--font` in [Figure flags](#figure-flags) and
+[Use your own font](../integrations/figures/README.md#use-your-own-font).
 
 ## statement
 
@@ -336,7 +363,7 @@ Prints the contributions in another format. `--to` is required.
 | `jats` | JATS4R `<contrib-group>` in a minimal `<article>` | Roles carry a `degree-contribution` level unless `--yes-no`. |
 | `crossref` | The `<contributors>` block of a Crossref deposit (schema 5.5.0) | Has no levels. Non-authors get the role type `other`. |
 | `md` | A Markdown table of people and roles | Role names follow `--locale`. Levels shown as (Equal), (Supporting). |
-| `latex-credits` | `\credit` lines for the latex-credits package | One value from 0 to 1 per role, with the levels as shades (lead 1, equal 0.66, supporting 0.33); `--yes-no` writes 1 or 0. Authors only. Exits 1 if nobody has a role. |
+| `latex-credits` | `\credit` lines for the latex-credits package | The score divided by 100 (the app's levels give 1, 0.66 and 0.33); `--yes-no` writes 1 or 0. Authors only. Exits 1 if nobody has a role. |
 | `tenzing` | A Tenzing-style CSV table | Non-authors are marked "Acknowledgment only". |
 | `quarto` | Author YAML for Quarto and Pandoc | Levels kept unless `--yes-no`. Authors only. |
 | `myst` | Author YAML for MyST and Jupyter Book | Never has levels. Authors only. |
@@ -636,7 +663,7 @@ credit-matrix: RO-Crate attribution omits scores and contribution levels; keep t
 }
 ```
 
-### Example: SVG heatmap
+### Example: SVG contribution heatmap
 
 ```sh
 credit-matrix convert contributors.json --to svg > heatmap.svg
@@ -666,7 +693,7 @@ credit-matrix convert contributors.json --to svg --palette green --shape circle 
   --labels short --horizontal --legend-position bottom --marks true --size 18 > heatmap.svg
 ```
 
-### Example: PDF heatmap
+### Example: PDF contribution heatmap
 
 ```sh
 credit-matrix convert contributors.json --to pdf > heatmap.pdf

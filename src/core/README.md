@@ -28,74 +28,18 @@ toJats4rXml(authors);
 
 ## CLI
 
-The package also installs a `credit-matrix` command: the CLI, with an XML parser bundled. It needs
-Node 22.19 or later. Run it with `npx credit-matrix` without installing, or with
-`node src/core/dist/cli.js` from a clone after `pnpm --filter credit-matrix build`.
+The package also installs a `credit-matrix` command. It needs Node 22.19 or later. Run it with
+`npx credit-matrix` without installing, or with `node src/core/dist/cli.js` from a clone after
+`pnpm --filter credit-matrix build`.
 
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
-npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 people and roles
-npx credit-matrix convert paper.xml --to json      # convert a JATS4R file to native JSON
-npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
-npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
-npx credit-matrix convert team.csv --to svg > heatmap.svg  # the heatmap; --locale sets its language
-npx credit-matrix convert team.csv --to pdf > heatmap.pdf  # embedded fonts and selectable text
-npx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
-npx credit-matrix convert team.csv --to quarto > authors.yml  # Quarto/Pandoc author metadata, with levels
-npx credit-matrix convert team.csv --to myst > authors.yml    # MyST/Jupyter Book author metadata, without levels
-npx credit-matrix ask draft.json --contributor "Grace Hopper" --blank
-npx credit-matrix --help                           # or --version
+npx credit-matrix convert team.csv --to jats
+npx credit-matrix convert team.csv --to svg > heatmap.svg
 ```
 
-Each command reads a file, or `-` for standard input, in any format `importAny` reads. Spreadsheet
-files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement --levels` adds Equal or
-Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
-`convert --to svg` and `--to pdf` write a warning to stderr, starting `credit-matrix: `, when the
-heatmap's labels would print under 6 pt on a full page; the figure is still written.
-`convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
-takes `--yes-no` for flat cells with no levels.
-
-`--to svg` and `--to pdf` need the figure fonts. With the
-[`credit-matrix-fonts`](../fonts/README.md) package installed (30 MB to download, 55 MB on disk),
-the CLI reads them from disk and works offline. Install both packages in one project
-(`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`. Under a bare
-`npx credit-matrix`, the CLI cannot see a `credit-matrix-fonts` installed in your own project. In
-that case run `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. Without the fonts package, the CLI downloads each face the first
-time a figure needs it, from `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.1/`. It checks
-the file against the SHA-256 hash in this package and refuses one that does not match. It then
-keeps the face in `$XDG_CACHE_HOME/credit-matrix/fonts/`, or the platform cache folder (`~/.cache`,
-`~/Library/Caches` on macOS, `%LOCALAPPDATA%` on Windows). That download is the only network request
-the CLI makes. jsDelivr sees your IP address and which faces you request, which shows which scripts
-the names use. Installing `credit-matrix-fonts` avoids the request. Offline with nothing cached, `--to pdf` stops with an error that names both fixes,
-and `--to svg` draws the text in system fonts with a warning.
-
-`--font` takes `sans`, `serif` or the name of an installed font family. The CLI looks for a family in
-each `--font-path <dir>` (repeatable, searched in order) and then in the system font folders, unless
-`--ignore-system-fonts`, and prints the file it used to standard error:
-
-```sh
-npx credit-matrix convert team.csv --to pdf --font Inter --font-path fonts > heatmap.pdf
-# credit-matrix: font: Inter from /home/you/paper/fonts/Inter-Regular.ttf
-```
-
-The family draws Latin and the other characters it has; complex scripts and emoji keep their own
-faces, and the Noto faces draw what it lacks: serif ones for a serif family, else sans, or the ones
-`--font-fallback sans|serif` names. A family it cannot find, or one installed only
-as a web font (`.woff`, `.woff2`), stops the export with exit code 1. See
-[Use your own font](../../integrations/figures/README.md#use-your-own-font).
-`--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN`
-simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and
-gives English.
-
-`statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
-or `codemeta`. See [CodeMeta attribution](#codemeta-attribution) for its output and limits.
-
-`ask` prints a link that opens the contributor's own row in the web app (`--base-url` points it at
-another copy). `--contributor` takes an id, a full name, or a first name or surname only one person
-has; when nothing matches, the error lists the contributors. The link they send back can be read
-with `convert`.
-
-A mistake in the command line prints one line and exits with 2; any other error exits with 1.
+Every command, flag, exit code and output format is in the
+[CLI reference](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/cli.md).
 
 ### RO-Crate attribution
 
