@@ -1656,8 +1656,11 @@ msgstr "Graustufen"
 msgid "heatmapPaleColor"
 msgstr "Unterstützend ist mit dieser Farbe schwer zu erkennen. Wählen Sie einen dunkleren Farbton."
 
-msgid "heatmapFollowsGrid"
-msgstr "Farbe, Ausrichtung und Initialen folgen den Heatmap-Optionen am Raster."
+msgid "heatmapSharedWithGrid"
+msgstr "Mit dem Raster geteilt"
+
+msgid "heatmapFigureOnly"
+msgstr "Nur diese Abbildung"
 
 msgid "settingsReset"
 msgstr "Zurücksetzen"

@@ -296,14 +296,16 @@ export function HeatmapExports({ authors, showLevels }: { authors: Author[]; sho
                 aria-label={translateUi("heatmapTitle")}
                 // biome-ignore lint/a11y/noNoninteractiveTabindex: the figure scrolls and keyboard users need to reach it.
                 tabIndex={0}
-                className={`min-h-24 max-h-[min(50vh,24rem)] overflow-auto rounded border border-outline-variant bg-white p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:sticky sm:top-0 ${settingsOpen ? "hidden sm:block" : ""}`}
+                // self-start: beside the taller settings column the frame would stretch and float the figure in white.
+                className={`min-h-24 max-h-[min(50vh,24rem)] overflow-auto rounded bg-surface-container p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:sticky sm:top-0 sm:self-start ${settingsOpen ? "hidden sm:block" : ""}`}
               >
                 <img
                   src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(preview.toWellFormed())}`}
                   alt={heatmapDescription(authors, svgOptions)}
-                  // Fitted, the whole figure shows inside the frame (its height less the p-2 padding);
+                  // The white is the figure's own page on a tinted desk, so its edges show the export's crop.
+                  // Fitted, the whole page shows inside the frame (its height less the p-3 padding);
                   // Actual size scrolls instead.
-                  className={`mx-auto block ${actualSize ? "h-auto max-w-none" : "h-auto max-h-[calc(min(50vh,24rem)-1.125rem)] w-auto max-w-full"}`}
+                  className={`mx-auto block bg-white shadow-card ${actualSize ? "h-auto max-w-none" : "h-auto max-h-[calc(min(50vh,24rem)-1.5rem)] w-auto max-w-full"}`}
                 />
               </section>
             )}

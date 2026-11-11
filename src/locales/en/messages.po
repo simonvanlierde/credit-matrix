@@ -1656,8 +1656,11 @@ msgstr "Grayscale"
 msgid "heatmapPaleColor"
 msgstr "Supporting is hard to distinguish in this color. Try a darker shade."
 
-msgid "heatmapFollowsGrid"
-msgstr "Color, orientation and initials follow the grid's Heatmap options."
+msgid "heatmapSharedWithGrid"
+msgstr "Shared with the grid"
+
+msgid "heatmapFigureOnly"
+msgstr "This figure only"
 
 msgid "settingsReset"
 msgstr "Reset"

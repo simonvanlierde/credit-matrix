@@ -75,11 +75,16 @@ describe("HeatmapExports", () => {
     expect(decodeURIComponent(preview.getAttribute("src") ?? "")).toContain("#00724c");
     expect(screen.queryByText(/Colored per contributor/)).toBeNull();
 
-    // Figure settings name where the colour lives instead of repeating the swatches.
+    // Figure settings edit the same value, under a heading that says it is shared.
     fireEvent.click(screen.getByRole("button", { name: "Figure settings" }));
-    expect(screen.getByText(/follow the grid's Heatmap options/)).toBeTruthy();
-    expect(screen.queryAllByRole("button", { name: "Per contributor" })).toHaveLength(0);
-    act(() => useContributionStore.getState().setColorByContributor(true));
+    expect(screen.getByRole("group", { name: "Shared with the grid" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Per contributor" }));
+    expect(useContributionStore.getState().colorByContributor).toBe(true);
     expect(await screen.findByText(/Colored per contributor/)).toBeTruthy();
+    // Reset restores the figure's own options and leaves the shared ones.
+    fireEvent.click(
+      within(screen.getByRole("region", { name: "Figure settings" })).getByRole("button", { name: "Reset" }),
+    );
+    expect(useContributionStore.getState().colorByContributor).toBe(true);
   }, 30_000);
 });

@@ -1656,8 +1656,11 @@ msgstr "Scala di grigi"
 msgid "heatmapPaleColor"
 msgstr "Il livello di supporto è difficile da distinguere con questo colore. Scegli una tonalità più scura."
 
-msgid "heatmapFollowsGrid"
-msgstr "Colore, orientamento e iniziali seguono le Opzioni heatmap della griglia."
+msgid "heatmapSharedWithGrid"
+msgstr "Condiviso con la griglia"
+
+msgid "heatmapFigureOnly"
+msgstr "Solo questa figura"
 
 msgid "settingsReset"
 msgstr "Reimposta"

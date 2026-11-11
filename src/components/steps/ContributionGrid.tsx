@@ -5,24 +5,11 @@ import { InitialsChip } from "@/components/ui/initials-chip";
 import { LevelMark } from "@/components/ui/level-mark";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
-import {
-  ColorSwatches,
-  SettingChoice,
-  SettingSwitch,
-  SettingsPanel,
-  SettingsSection,
-} from "@/components/ui/settings-panel";
+import { SettingsPanel } from "@/components/ui/settings-panel";
 import { UndoBar } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES, type CreditRoleName, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
-import {
-  contrastRatio,
-  contributorHue,
-  contributorHues,
-  heatCellColor,
-  onColor,
-  pageMarkColor,
-} from "@/core/contributor-color";
+import { contributorHue, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useLocale, useTranslations } from "@/lib/translations";
@@ -33,6 +20,7 @@ import { useSettled } from "@/lib/use-settled";
 import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
 import { GettingStarted } from "./GettingStarted";
+import { GridViewSettings } from "./GridViewSettings";
 import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
 import { MobileRoleList } from "./MobileRoleList";
@@ -63,35 +51,26 @@ type AskState = { kind: "you" | "asked" | "settled" | "none" } | { kind: "differ
  * heatmap: cell fills use the same color scale as the downloadable SVG/PNG.
  */
 export function ContributionGrid() {
-  const {
-    authors,
-    inputMode,
-    setInputMode,
-    heatmapMonoColor,
-    setHeatmapMonoColor,
-    setAuthorScore,
-    toggleContribution,
-    welcomeOpen,
-  } = useContributionStore(
-    // Only what the grid renders: a whole-store subscription re-rendered every
-    // cell on writes it never shows, such as a title edit or a recorded ask.
-    useShallow((s) => ({
-      authors: s.authors,
-      inputMode: s.inputMode,
-      setInputMode: s.setInputMode,
-      heatmapMonoColor: s.heatmapMonoColor,
-      setHeatmapMonoColor: s.setHeatmapMonoColor,
-      setAuthorScore: s.setAuthorScore,
-      toggleContribution: s.toggleContribution,
-      welcomeOpen: s.welcomeOpen,
-    })),
-  );
+  const { authors, inputMode, setInputMode, heatmapMonoColor, setAuthorScore, toggleContribution, welcomeOpen } =
+    useContributionStore(
+      // Only what the grid renders: a whole-store subscription re-rendered every
+      // cell on writes it never shows, such as a title edit or a recorded ask.
+      useShallow((s) => ({
+        authors: s.authors,
+        inputMode: s.inputMode,
+        setInputMode: s.setInputMode,
+        heatmapMonoColor: s.heatmapMonoColor,
+        setAuthorScore: s.setAuthorScore,
+        toggleContribution: s.toggleContribution,
+        welcomeOpen: s.welcomeOpen,
+      })),
+    );
   const colorByContributor = useContributionStore((s) => s.colorByContributor);
-  const setColorByContributor = useContributionStore((s) => s.setColorByContributor);
+  const _setColorByContributor = useContributionStore((s) => s.setColorByContributor);
   const acronyms = useContributionStore((s) => s.initials);
-  const setAcronyms = useContributionStore((s) => s.setInitials);
+  const _setAcronyms = useContributionStore((s) => s.setInitials);
   const transpose = useContributionStore((s) => s.transpose);
-  const setTranspose = useContributionStore((s) => s.setTranspose);
+  const _setTranspose = useContributionStore((s) => s.setTranspose);
   const resetGridView = useContributionStore((s) => s.resetGridView);
   const recentReply = useContributionStore((s) => s.recentReply);
   const asks = useContributionStore((s) => s.asks);
@@ -358,11 +337,6 @@ export function ContributionGrid() {
   // Each person's hue, by list position; one hue for all when the view says so.
   const hues = colorByContributor ? contributorHues(authors.length) : null;
   const hueOf = (author: Author) => hues?.[authors.indexOf(author)] ?? heatmapMonoColor;
-  // One hue whose lowest level barely differs from an empty cell: say so where the colour is picked.
-  const paleMono =
-    !colorByContributor &&
-    /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(heatmapMonoColor) &&
-    contrastRatio(heatCellColor(heatmapMonoColor, 33), heatCellColor(heatmapMonoColor, 0)) < 1.5;
 
   cellApi.current = {
     label: assignmentLabel,
@@ -563,33 +537,7 @@ export function ContributionGrid() {
               </PopoverTrigger>
               <PopoverContent aria-label={t("heatmapOptions")} align="end" className="w-72 max-w-[calc(100vw-2rem)]">
                 <SettingsPanel title={t("heatmapOptions")} onReset={resetGridView}>
-                  <ColorSwatches
-                    label={t("colorLabel")}
-                    color={heatmapMonoColor}
-                    perContributor={colorByContributor}
-                    onColor={setHeatmapMonoColor}
-                    onPerContributor={() => setColorByContributor(true)}
-                  />
-                  {paleMono && <p className="text-on-surface-variant">{t("heatmapPaleColor")}</p>}
-                  <SettingsSection label={t("heatmapLayout")}>
-                    <SettingChoice
-                      label={t("heatmapOrientation")}
-                      value={transpose ? "contributors" : "roles"}
-                      onChange={(next) => setTranspose(next === "contributors")}
-                      options={[
-                        ["roles", t("heatmapRolesInRows")],
-                        ["contributors", t("heatmapContributorsInRows")],
-                      ]}
-                    />
-                    {/* The accessible name starts with the visible "Use initials",
-                      so voice control saying the visible label hits it (2.5.3). */}
-                    <SettingSwitch
-                      label={t("useInitials")}
-                      checked={acronyms}
-                      onChange={setAcronyms}
-                      ariaLabel={t("a11yUseInitials")}
-                    />
-                  </SettingsSection>
+                  <GridViewSettings />
                 </SettingsPanel>
               </PopoverContent>
             </Popover>
@@ -1076,8 +1024,7 @@ function AskGlyph({ state, name, onReview }: { state: AskState; name: string; on
 }
 
 /**
- * The key: one joined scale from None to Lead, each step labelled under its
- * swatch. With colour by contributor the scale is neutral, and while a cell or
+ * The key: a row of cell-shaped swatches from None to Lead, each labelled under it. With colour by contributor the scale is neutral, and while a cell or
  * phrase is linked it redraws in that person's hue.
  */
 function GridLegend({
@@ -1106,20 +1053,25 @@ function GridLegend({
     <div className="flex min-w-0 flex-col gap-1.5 text-xs text-on-surface-variant">
       <span className="flex flex-wrap items-end gap-x-4 gap-y-2">
         <span className="sr-only">{graded ? t("legendLevel") : t("legendKey")}</span>
-        <span className="inline-flex overflow-hidden rounded-sm border border-edge">
-          {steps.map(({ key, score }, index) => {
+        {/* Each step is drawn as a grid cell is, None as the empty cell's dot, so the key reads
+            "these cells mean this" rather than as a table of its own. */}
+        <span className="inline-flex gap-0.5">
+          {steps.map(({ key, score }) => {
             const fill = score > 0 ? heatCellColor(hue, score, dark) : null;
             return (
-              <span key={key} className={`flex min-w-14 flex-col ${index > 0 ? "border-l border-edge" : ""}`}>
+              <span key={key} className="flex min-w-14 flex-col items-center gap-1">
                 <span
-                  className="flex h-4 items-center justify-center transition-[background-color] duration-200 ease-[var(--ease-out)]"
-                  style={{ backgroundColor: fill ?? "var(--color-surface-bright)" }}
+                  data-level-fill={fill ? "" : undefined}
+                  className="flex h-5 w-full items-center justify-center rounded-sm transition-[background-color] duration-200 ease-[var(--ease-out)]"
+                  style={fill ? { backgroundColor: fill } : undefined}
                 >
-                  {graded && fill && <LevelMark score={score} graded color={onColor(fill)} size="small" />}
+                  {fill ? (
+                    graded && <LevelMark score={score} graded color={onColor(fill)} size="small" />
+                  ) : (
+                    <span aria-hidden="true" className="size-[3px] rounded-full bg-outline-strong" />
+                  )}
                 </span>
-                <span className="border-t border-edge bg-surface-bright px-1.5 py-0.5 text-center text-[11px] text-on-surface">
-                  {translateUi(key)}
-                </span>
+                <span className="text-[11px] text-on-surface-variant">{translateUi(key)}</span>
               </span>
             );
           })}

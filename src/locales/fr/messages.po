@@ -1656,8 +1656,11 @@ msgstr "Niveaux de gris"
 msgid "heatmapPaleColor"
 msgstr "Le niveau de soutien se distingue mal avec cette couleur. Choisissez une teinte plus sombre."
 
-msgid "heatmapFollowsGrid"
-msgstr "La couleur, l'orientation et les initiales suivent les Options de la heatmap de la grille."
+msgid "heatmapSharedWithGrid"
+msgstr "Partagé avec la grille"
+
+msgid "heatmapFigureOnly"
+msgstr "Cette figure seulement"
 
 msgid "settingsReset"
 msgstr "Réinitialiser"

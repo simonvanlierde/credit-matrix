@@ -1656,8 +1656,11 @@ msgstr "Escala de cinzentos"
 msgid "heatmapPaleColor"
 msgstr "O nível de apoio é difícil de distinguir com esta cor. Escolha um tom mais escuro."
 
-msgid "heatmapFollowsGrid"
-msgstr "A cor, a orientação e as iniciais seguem as Opções do mapa de calor da grelha."
+msgid "heatmapSharedWithGrid"
+msgstr "Partilhado com a grelha"
+
+msgid "heatmapFigureOnly"
+msgstr "Só esta figura"
 
 msgid "settingsReset"
 msgstr "Repor"

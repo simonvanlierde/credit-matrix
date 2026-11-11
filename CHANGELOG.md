@@ -16,9 +16,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- Colour, orientation and initials are set once per draft in the grid's Heatmap options, and the
-  figure draws them; Figure settings keep only figure options. Every settings panel uses the same
-  controls. A new figure follows the grid, so it is coloured per
+- Colour, orientation and initials are stored once per draft and shared by the grid's Heatmap
+  options and Figure settings, where they are marked as shared with the grid. Every settings panel
+  uses the same controls. A new figure follows the grid, so it is coloured per
   contributor unless you pick one colour. Drafts saved by 0.12.0 keep their figure orientation
   and initials.
 - The heatmap colour is now the accent of the wordmark, tabs and selected options, and body text is

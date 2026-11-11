@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SettingChoice, SettingSwitch, SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
 import { DEFAULT_HEATMAP_SETTINGS, type HeatmapFigureSettings as FigureSettings } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
+import { GridViewSettings } from "./GridViewSettings";
 
 export function HeatmapFigureSettings({
   value,
@@ -14,9 +15,11 @@ export function HeatmapFigureSettings({
   const patch = (change: Partial<FigureSettings>) => onChange({ ...value, ...change });
   return (
     <SettingsPanel title={t("heatmapFigureSettings")} onReset={() => onChange({ ...DEFAULT_HEATMAP_SETTINGS })}>
-      {/* One home per setting: what the grid shows lives in its options, and the figure draws it. */}
-      <p className="text-on-surface-variant">{t("heatmapFollowsGrid")}</p>
-      <SettingsSection label={t("heatmapLayout")}>
+      {/* The grid's own view settings, one value edited from either panel; Reset here leaves them. */}
+      <SettingsSection label={t("heatmapSharedWithGrid")}>
+        <GridViewSettings />
+      </SettingsSection>
+      <SettingsSection label={t("heatmapFigureOnly")}>
         <SettingChoice
           label={t("heatmapLegendPosition")}
           value={value.legend ? value.legendPosition : "hidden"}

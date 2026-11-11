@@ -1656,8 +1656,11 @@ msgstr "Grijstinten"
 msgid "heatmapPaleColor"
 msgstr "Ondersteunend is moeilijk te onderscheiden in deze kleur. Kies een donkerdere tint."
 
-msgid "heatmapFollowsGrid"
-msgstr "Kleur, oriëntatie en initialen volgen de Heatmap-opties bij het raster."
+msgid "heatmapSharedWithGrid"
+msgstr "Gedeeld met het raster"
+
+msgid "heatmapFigureOnly"
+msgstr "Alleen deze figuur"
 
 msgid "settingsReset"
 msgstr "Herstellen"

@@ -1656,8 +1656,11 @@ msgstr "Escala de grises"
 msgid "heatmapPaleColor"
 msgstr "El nivel de apoyo se distingue mal con este color. Elija un tono más oscuro."
 
-msgid "heatmapFollowsGrid"
-msgstr "El color, la orientación y las iniciales siguen las Opciones del mapa de calor de la cuadrícula."
+msgid "heatmapSharedWithGrid"
+msgstr "Compartido con la cuadrícula"
+
+msgid "heatmapFigureOnly"
+msgstr "Solo esta figura"
 
 msgid "settingsReset"
 msgstr "Restablecer"

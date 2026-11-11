@@ -1656,8 +1656,11 @@ msgstr "グレースケール"
 msgid "heatmapPaleColor"
 msgstr "この色では補助的な貢献を区別しにくくなります。より暗い色を選んでください。"
 
-msgid "heatmapFollowsGrid"
-msgstr "色、向き、イニシャルはグリッドの「ヒートマップの設定」に従います。"
+msgid "heatmapSharedWithGrid"
+msgstr "グリッドと共通"
+
+msgid "heatmapFigureOnly"
+msgstr "この図のみ"
 
 msgid "settingsReset"
 msgstr "リセット"

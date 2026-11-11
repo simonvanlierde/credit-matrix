@@ -144,12 +144,13 @@ excessive width, otherwise a wrapped key below. Allow Right, Below and Hidden ov
 on white paper, with fit-to-width and actual-size views and the PNG pixel dimensions.
 
 Figure settings belong beside that preview and are saved per draft, independently of contribution
-values. Each setting has one home. Colour, orientation and initials change what the grid shows, so
-they live only in the grid's Heatmap options; the figure draws them, and Figure settings says so in
-one line. Figure settings hold only what the figure alone has: legend, role labels, empty roles,
-levels and marks, with font and cell geometry under Advanced. Short role labels stay a figure
+values. Colour, orientation and initials are stored once per draft and drawn by both the grid and
+the figure. Both panels render the same component for them (`GridViewSettings`): the grid's Heatmap
+options, and the top of Figure settings under "Shared with the grid", since choosing them is part
+of preparing a figure and the preview shows the result. Below it, "This figure only" holds legend,
+role labels, empty roles, levels and marks, with font and cell geometry under Advanced. Short role labels stay a figure
 option: the grid has room for the full names and their definitions, and a statement must use the
-official CRediT terms. Reset restores the figure's own defaults only. On a narrow screen, settings
+official CRediT terms. Figure settings' Reset restores the figure's own options and leaves the shared ones. On a narrow screen, settings
 replace the preview until the person closes them; desktop shows both side by side.
 Keep export recipes behind a disclosure in Figure settings. Show a selectable snippet and copy
 action for the chosen document tool, with any differences from the preview beside the snippet.
@@ -347,7 +348,9 @@ first.
 
 An empty cell has no fill and no ring: a 3px dot in `outline-strong` (3:1 on the page) marks it, so
 the filled cells carry the grid. Hover and focus draw the whole target. The key under the grid is
-one joined scale from None to Lead, each step labelled under its swatch. With colour by contributor
+a row of swatches drawn as cells are (None as the empty cell's dot), 2px apart, from None to Lead,
+each labelled in plain text under it. It starts at the grid's left edge, never centred under the
+lopsided table. With colour by contributor
 the scale is neutral, and while a cell or phrase is linked it redraws in that person's hue.
 
 Column headers show full names at 50°. They switch to initials past 20 columns, or when the person
