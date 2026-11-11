@@ -70,7 +70,8 @@ The [Quarto guide](../quarto/README.md#document-language) lists supported langua
 Set `credit-matrix.heatmap: true` to add a figure through the package CLI. The filter runs
 `credit-matrix` from `PATH`, or the command line in the `CREDIT_MATRIX_COMMAND` environment variable.
 See [figure options and examples](../heatmap.md) for setup and all rendering options.
-The CLI embeds fonts in the generated SVG. See
+The CLI embeds fonts in the generated SVG. They come from `credit-matrix-fonts` when it is
+installed, otherwise from a one-time download ([details](../../src/core/README.md#cli)). See
 [font portability and PDF export](../figures/README.md) for PDF and Word converter limits.
 
 ## Limits

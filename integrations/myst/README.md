@@ -23,7 +23,7 @@ keeps each face in the machine's font cache, so later builds work offline; the
 [CLI section](../../src/core/README.md#cli) of the package README gives the folder.
 
 To work offline or pin the file in your repository, copy
-[`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix yaml`
+[`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix credit-matrix-fonts yaml`
 next to it, and list `credit-matrix.mjs` under `plugins` instead.
 
 Tested with mystmd 1.12 and [Jupyter Book 2.1](../jupyter-book/README.md).

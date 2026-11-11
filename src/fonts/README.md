@@ -20,14 +20,14 @@ Noto Serif JP and SC. Both families provide Japanese and Simplified Chinese glyp
 Use the Japanese face for Japanese labels and the
 Simplified Chinese face for Chinese labels.
 
-| File | Version | Bytes | SHA-256 |
-| --- | --- | ---: | --- |
-| `NotoSans-Regular.ttf` | 2.008 | 569208 | `8409b656cf2cf57ea0d218bc22bb8f9bbb855e425dd1651081c3488c39dfded6` |
-| `CreditFigureJP.ttf` | 2.004 | 5794156 | `cf10690af695ffb42ac3817dcabf87fc9fe706961c51654d23d61630f9a90af6` |
-| `CreditFigureSC.ttf` | 2.004 | 10642684 | `083e615a0d762b3494ef294a1fb3da65dd7b870f24c7a83eb7b62e22e41f3b3f` |
-| `NotoSerif-Regular.ttf` | 2.007 | 616196 | `c8f669ceb2c9c60ccf55198b305e08a997ffca79a38cc7eeb551e643cbe66505` |
-| `CreditFigureSerifJP.ttf` | 2.003 | 8103576 | `127d13be2fcb997f01ec56ce361e5808a63ee74fbcd94be8262bebbb90aa95d3` |
-| `CreditFigureSerifSC.ttf` | 2.003 | 14897976 | `9e4eadf4a90c36eaf7f69ef1c0d29fd6b8277eed55f5a035b95232e5243cdd34` |
+| File | Face | Version | Bytes | SHA-256 |
+| --- | --- | --- | ---: | --- |
+| `NotoSans-Regular.ttf` | `sans` | 2.008 | 569208 | `8409b656cf2cf57ea0d218bc22bb8f9bbb855e425dd1651081c3488c39dfded6` |
+| `CreditFigureJP.ttf` | `sans-jp` | 2.004 | 5794156 | `cf10690af695ffb42ac3817dcabf87fc9fe706961c51654d23d61630f9a90af6` |
+| `CreditFigureSC.ttf` | `sans-sc` | 2.004 | 10642684 | `083e615a0d762b3494ef294a1fb3da65dd7b870f24c7a83eb7b62e22e41f3b3f` |
+| `NotoSerif-Regular.ttf` | `serif` | 2.007 | 616196 | `c8f669ceb2c9c60ccf55198b305e08a997ffca79a38cc7eeb551e643cbe66505` |
+| `CreditFigureSerifJP.ttf` | `serif-jp` | 2.003 | 8103576 | `127d13be2fcb997f01ec56ce361e5808a63ee74fbcd94be8262bebbb90aa95d3` |
+| `CreditFigureSerifSC.ttf` | `serif-sc` | 2.003 | 14897976 | `9e4eadf4a90c36eaf7f69ef1c0d29fd6b8277eed55f5a035b95232e5243cdd34` |
 
 ## Sources
 

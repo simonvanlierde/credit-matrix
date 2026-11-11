@@ -54,13 +54,17 @@ Supporting after each contribution below Lead. `statement` exits with 1 when nob
 takes `--yes-no` for flat cells with no levels.
 
 `--to svg` and `--to pdf` need the figure fonts. With the
-[`credit-matrix-fonts`](../fonts/README.md) package installed (`npm i credit-matrix-fonts`, 23 MB),
-the CLI reads them from disk and works offline. Without it, the CLI downloads each face the first
+[`credit-matrix-fonts`](../fonts/README.md) package installed (23 MB to download, 41 MB on disk),
+the CLI reads them from disk and works offline. Install both packages in one project
+(`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`. Under a bare
+`npx credit-matrix`, the CLI cannot see a `credit-matrix-fonts` installed in your own project. In
+that case run `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. Without the fonts package, the CLI downloads each face the first
 time a figure needs it, from `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.0/`. It checks
 the file against the SHA-256 hash in this package and refuses one that does not match. It then
 keeps the face in `$XDG_CACHE_HOME/credit-matrix/fonts/`, or the platform cache folder (`~/.cache`,
 `~/Library/Caches` on macOS, `%LOCALAPPDATA%` on Windows). That download is the only network request
-the CLI makes. Offline with nothing cached, `--to pdf` stops with an error that names both fixes,
+the CLI makes. jsDelivr sees your IP address and which faces you request, which shows which scripts
+the names use. Installing `credit-matrix-fonts` avoids the request. Offline with nothing cached, `--to pdf` stops with an error that names both fixes,
 and `--to svg` draws the text in system fonts with a warning.
 `--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN`
 simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and

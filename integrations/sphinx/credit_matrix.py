@@ -46,7 +46,8 @@ class CreditStatement(SphinxDirective):
 
     def render(self, command: list[str]) -> str:
         try:
-            result = subprocess.run(command, check=True, capture_output=True, encoding="utf-8", timeout=30)
+            # Room for the first download of a CJK figure font (up to 15 MB) on a slow link.
+            result = subprocess.run(command, check=True, capture_output=True, encoding="utf-8", timeout=300)
         except subprocess.CalledProcessError as error:
             raise self.error(f"CRediT rendering failed: {error.stderr.strip()}") from error
         except (OSError, subprocess.TimeoutExpired) as error:

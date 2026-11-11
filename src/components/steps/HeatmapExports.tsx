@@ -19,10 +19,27 @@ type ExportFormat = "svg" | "png" | "pdf";
 
 // One renderer keeps each loaded face; it fetches a face only when a figure's text first needs it.
 let figureRenderer: Promise<import("@/core/figures").FigureRenderer> | undefined;
+// Faces whose last load failed (offline before the service worker cached them). svg() then draws their
+// text in system fonts without throwing, so the app reads this to say so and to refuse PDF.
+const failedFaces = new Set<string>();
 function renderer() {
   // The app's own font copies: Vite emits them as hashed assets the service worker can cache.
   figureRenderer ??= Promise.all([import("@/core/figures"), import("credit-matrix-fonts")])
-    .then(([{ createFigureRenderer }, { fonts }]) => createFigureRenderer({ fonts }))
+    .then(([{ createFigureRenderer }, { fonts }]) =>
+      createFigureRenderer({
+        fonts: (face) =>
+          fonts(face).then(
+            (bytes) => {
+              failedFaces.delete(face);
+              return bytes;
+            },
+            (error: unknown) => {
+              failedFaces.add(face);
+              throw error;
+            },
+          ),
+      }),
+    )
     .catch((error) => {
       figureRenderer = undefined;
       throw error;
@@ -147,13 +164,15 @@ export function HeatmapExports({
       settings.pngWidthMm,
       settings.pngDpi,
     );
-  const [{ preview, previewCause, missingGlyphs, rendering }, setPreview] = useState<{
+  const [{ preview, previewCause, missingGlyphs, fontsUnavailable, rendering }, setPreview] = useState<{
     preview: string;
     previewCause: unknown;
     /** Characters the bundled faces lack: PDF is refused, SVG and PNG use system fonts for them. */
     missingGlyphs: string | null;
+    /** A face failed to load: PDF is refused, SVG and PNG use system fonts for its text. */
+    fontsUnavailable: boolean;
     rendering: boolean;
-  }>({ preview: "", previewCause: null, missingGlyphs: null, rendering: true });
+  }>({ preview: "", previewCause: null, missingGlyphs: null, fontsUnavailable: false, rendering: true });
   useEffect(() => {
     if (!open) return;
     let active = true;
@@ -169,10 +188,18 @@ export function HeatmapExports({
       }
     })().then(
       (result) => {
-        if (active) setPreview({ ...result, previewCause: null, rendering: false });
+        if (active)
+          setPreview({ ...result, fontsUnavailable: failedFaces.size > 0, previewCause: null, rendering: false });
       },
       (cause: unknown) => {
-        if (active) setPreview({ preview: "", previewCause: cause, missingGlyphs: null, rendering: false });
+        if (active)
+          setPreview({
+            preview: "",
+            previewCause: cause,
+            missingGlyphs: null,
+            fontsUnavailable: false,
+            rendering: false,
+          });
       },
     );
     return () => {
@@ -374,7 +401,7 @@ export function HeatmapExports({
                 loading !== null ||
                 !!previewError ||
                 (format === "png" && pngTooLarge) ||
-                (format === "pdf" && missingGlyphs !== null)
+                (format === "pdf" && (missingGlyphs !== null || fontsUnavailable))
               }
               onClick={() => download(format)}
               className={`${MENU_ITEM} ${ACTION_ITEM}`}
@@ -395,9 +422,12 @@ export function HeatmapExports({
             {t("heatmapPngTooLarge")}
           </p>
         )}
-        {missingGlyphs !== null && (
+        {(missingGlyphs !== null || fontsUnavailable) && (
           <p role="status" className="px-2 text-xs text-on-surface-variant">
-            {t("errFigureGlyphs", { characters: missingGlyphs })} {t("heatmapSystemFonts")}
+            {missingGlyphs !== null
+              ? t("errFigureGlyphs", { characters: missingGlyphs })
+              : t("errFigureFontsUnavailable")}{" "}
+            {t("heatmapSystemFonts")}
           </p>
         )}
         {(error || previewError) && (

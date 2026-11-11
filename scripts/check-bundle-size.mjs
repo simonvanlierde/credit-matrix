@@ -71,6 +71,13 @@ const packed = JSON.parse(
     encoding: "utf8",
   }),
 );
+const fontFiles = packed.files.filter(({ path }) => path.endsWith(".ttf"));
+if (fontFiles.length) {
+  console.error(
+    `check-bundle-size: fonts belong in credit-matrix-fonts, not the npm package: ${fontFiles.map(({ path }) => path).join(", ")}.`,
+  );
+  process.exit(1);
+}
 const unpacked = packed.files.reduce((n, { path }) => n + statSync(join(core, path)).size, 0);
 console.log(`check-bundle-size: npm package: ${kb(unpacked)} unpacked (limit ${kb(PACKAGE_LIMIT)})`);
 if (unpacked > PACKAGE_LIMIT) {

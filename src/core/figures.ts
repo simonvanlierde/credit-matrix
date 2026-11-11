@@ -92,6 +92,9 @@ class UnloadedFace extends Error {
   }
 }
 
+// Han, kana, CJK symbols and fullwidth forms: the CJK faces draw them, not the Latin face.
+const CJK_TEXT = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\u3000-\u30ff\uff00-\uffef]/u;
+
 // PDF text positioning uses glyph advances, so disable optional kerning and ligatures in both formats.
 const FEATURES = { kern: false, liga: false, clig: false };
 
@@ -345,11 +348,15 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     const missing = new Set<string>();
     for (const character of normalized) {
       const codePoint = character.codePointAt(0) ?? 0;
-      const order = cjkPunctuation && codePoint > 0x7f && /\p{P}/u.test(character) ? [...cjk, latin] : [latin, ...cjk];
+      const chinesePunctuation = cjkPunctuation && codePoint > 0x7f && /\p{P}/u.test(character);
+      const order = chinesePunctuation ? [...cjk, latin] : [latin, ...cjk];
+      // The face meant for this character. When it is unavailable, another face would draw the text in the
+      // wrong forms (Chinese Han for Japanese, CJK Latin for Latin), so it becomes a system-font run instead.
+      const designated = chinesePunctuation || CJK_TEXT.test(character) ? cjk[0] : latin;
       let font: FigureFont | undefined;
-      let skipped = false;
+      let skipped = designated !== undefined && unavailable?.has(designated) === true;
       // In order, so a face loads only when every face before it lacks the character.
-      for (const source of order) {
+      for (const source of skipped ? [] : order) {
         if (source && unavailable?.has(source)) {
           skipped = true;
           continue;

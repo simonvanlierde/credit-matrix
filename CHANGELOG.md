@@ -8,16 +8,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **Breaking:** the figure fonts moved out of `credit-matrix` into a new `credit-matrix-fonts`
-  package, so the package is 2.4 MB unpacked instead of 43 MB. To export SVG or PDF offline, run
-  `npm i credit-matrix-fonts`. Without it, the CLI, the document plugins and `createFigureRenderer`
-  download each face from jsDelivr on first use, check its SHA-256 hash and cache it on the machine.
-  Offline with nothing cached, PDF stops with an error and SVG draws the text in system fonts with a
-  warning. See [the CLI section](src/core/README.md#cli).
-- **Breaking:** `createFigureRenderer` takes `fonts`, a function that returns a face's bytes, in
-  place of `fontFallback`. A bundled app passes `fonts` from `credit-matrix-fonts`. The
-  `CREDIT_MATRIX_FIGURE_FONTS` variable of the MyST plugin is gone; the plugin caches the fonts
-  itself.
+- **Breaking:** to export SVG or PDF offline, install both packages in one project
+  (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`, or run
+  `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. A bare `npx credit-matrix` cannot
+  see a `credit-matrix-fonts` installed in your own project. The figure fonts moved out of
+  `credit-matrix` into the new `credit-matrix-fonts` package, so `credit-matrix` is 2.3 MB unpacked
+  instead of 43 MB. Without the fonts package, the CLI, the document plugins and
+  `createFigureRenderer` download each face from jsDelivr on first use, check its SHA-256 hash and
+  cache it on the machine. Offline with nothing cached, PDF stops with an error and SVG draws the
+  text in system fonts with a warning. See [the CLI section](src/core/README.md#cli).
+- **Breaking:** in `createFigureRenderer`, replace `fontFallback` with `fonts`, a function that
+  returns a face's bytes. A bundled app passes `fonts` from `credit-matrix-fonts`. If you self-host
+  the fonts, serve the six files from `base` and fetch them:
+
+  ```js
+  const files = { sans: "NotoSans-Regular.ttf", "sans-jp": "CreditFigureJP.ttf", "sans-sc": "CreditFigureSC.ttf", serif: "NotoSerif-Regular.ttf", "serif-jp": "CreditFigureSerifJP.ttf", "serif-sc": "CreditFigureSerifSC.ttf" };
+  createFigureRenderer({ fonts: async (face) => new Uint8Array(await (await fetch(new URL(files[face], base))).arrayBuffer()) });
+  ```
+
+  The `CREDIT_MATRIX_FIGURE_FONTS` variable of the MyST plugin is gone. To work offline, install
+  `credit-matrix-fonts` next to the plugin, or run one online build to fill the plugin's cache.
 - `pnpm check:bundle` fails when the npm package grows past 5 MB unpacked.
 - The favicon, app icons and social card use the warm paper and charcoal ink of the 0.12.0 theme,
   and the mark draws each column in one contributor's hue, as the grid does.

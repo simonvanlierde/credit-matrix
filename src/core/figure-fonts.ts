@@ -57,9 +57,11 @@ async function cacheFolder(): Promise<string | undefined> {
   const process = (globalThis as { process?: NodeJS.Process }).process;
   if (!process?.versions?.node) return undefined;
   const { homedir } = await nodeModule<typeof import("node:os")>("node:os");
-  const { join } = await nodeModule<typeof import("node:path")>("node:path");
+  const { isAbsolute, join } = await nodeModule<typeof import("node:path")>("node:path");
+  // The XDG spec says to ignore a relative XDG_CACHE_HOME.
+  const xdg = process.env.XDG_CACHE_HOME;
   const base =
-    process.env.XDG_CACHE_HOME ||
+    (xdg && isAbsolute(xdg) ? xdg : undefined) ||
     (process.platform === "win32"
       ? (process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"))
       : process.platform === "darwin"
@@ -86,12 +88,16 @@ export async function downloadFigureFont(face: FigureFace): Promise<Uint8Array> 
   }
   let bytes: Uint8Array;
   try {
-    const response = await fetch(`${CDN}${file}`);
+    // The largest face is 15 MB; two minutes fits a slow link but stops a stalled one.
+    const response = await fetch(`${CDN}${file}`, {
+      referrerPolicy: "no-referrer",
+      signal: AbortSignal.timeout(120_000),
+    });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     bytes = new Uint8Array(await response.arrayBuffer());
   } catch (error) {
     throw new Error(
-      `Cannot load figure font ${file} (${error instanceof Error ? error.message : String(error)}). Install the fonts with \`npm i credit-matrix-fonts\`, or connect to the internet once to download them.`,
+      `Cannot load figure font ${file} (${error instanceof Error ? error.message : String(error)}). Install the fonts next to credit-matrix with \`npm i credit-matrix credit-matrix-fonts\` (or run \`npx -p credit-matrix -p credit-matrix-fonts credit-matrix\`), or connect to the internet once to download them.`,
       { cause: error },
     );
   }
@@ -104,13 +110,21 @@ export async function downloadFigureFont(face: FigureFace): Promise<Uint8Array> 
       .mkdir(folder, { recursive: true })
       .then(() => fs.writeFile(partial, bytes))
       .then(() => fs.rename(partial, cached))
-      .catch(() => fs.rm(partial, { force: true }));
+      .catch(() => fs.rm(partial, { force: true }).catch(() => undefined));
   }
   return bytes;
 }
 
-/** The installed `credit-matrix-fonts` package when it resolves, otherwise the checked, cached download. */
+/**
+ * The installed `credit-matrix-fonts` package when it resolves and has the face, otherwise the checked,
+ * cached download. An older 1.x package can lack a face a newer core asks for.
+ */
 export async function defaultFigureFonts(face: FigureFace): Promise<Uint8Array> {
   const installed = await nodeModule<{ fonts: FigureFontProvider }>("credit-matrix-fonts").catch(() => undefined);
-  return installed ? installed.fonts(face) : downloadFigureFont(face);
+  if (!installed) return downloadFigureFont(face);
+  try {
+    return await installed.fonts(face);
+  } catch {
+    return downloadFigureFont(face);
+  }
 }

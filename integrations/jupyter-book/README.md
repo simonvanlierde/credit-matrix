@@ -19,7 +19,7 @@ project:
 ```
 
 To work offline, copy [credit-matrix.mjs](../myst/credit-matrix.mjs) into your book, run
-`pnpm add credit-matrix yaml`, and list `credit-matrix.mjs` under `plugins` instead.
+`pnpm add credit-matrix credit-matrix-fonts yaml`, and list `credit-matrix.mjs` under `plugins` instead.
 
 ## Use
 

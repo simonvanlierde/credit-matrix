@@ -159,11 +159,24 @@ jobs:
         env:
           TARBALL: ${{ needs.build.outputs.fonts-tarball }}
         run: |
+          set -o pipefail
           version=$(tar -xOzf "$TARBALL" package/package.json | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).version')
-          if npm view "credit-matrix-fonts@$version" version > /dev/null 2>&1; then
-            echo "credit-matrix-fonts $version is already on npm."
-          else
+          local_integrity="sha512-$(openssl dgst -sha512 -binary "$TARBALL" | base64 -w0)"
+          # Core pins the font hashes, so a published version must be this exact tarball.
+          if published=$(npm view "credit-matrix-fonts@$version" dist.integrity 2> npm-view.log); then
+            if [ -z "$published" ]; then
+              npm publish "./$TARBALL" --provenance --access public
+            elif [ "$published" = "$local_integrity" ]; then
+              echo "credit-matrix-fonts $version is already on npm, with these files."
+            else
+              echo "::error::credit-matrix-fonts $version on npm differs from src/fonts. Bump its version."
+              exit 1
+            fi
+          elif grep -q E404 npm-view.log; then
             npm publish "./$TARBALL" --provenance --access public
+          else
+            cat npm-view.log
+            exit 1
           fi
 
       - name: Publish

@@ -62,5 +62,6 @@ uv run --project integrations sphinx-build -W -b html integrations/sphinx/exampl
 ## Contribution heatmap
 
 See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
-The CLI embeds fonts in the generated SVG. See
+The CLI embeds fonts in the generated SVG. They come from `credit-matrix-fonts` when it is
+installed, otherwise from a one-time download ([details](../../src/core/README.md#cli)). See
 [font portability and PDF export](../figures/README.md) before converting it to PDF or Word.
