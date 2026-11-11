@@ -28,6 +28,7 @@ import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
 import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
 import { MobileRoleList } from "./MobileRoleList";
+import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
 
 // Clicks in Levels mode cycle through the scores ascending; the legend renders
@@ -246,13 +247,28 @@ export function ContributionGrid() {
       return;
     }
 
-    // Off the role edge of the matrix, focus steps onto the role name, which
-    // opens its description. The role names sit outside the tab order, so this
-    // is how a keyboard user reaches them.
-    if (event.key === (transpose ? "ArrowUp" : "ArrowLeft") && (transpose ? row : col) === 0) {
+    // Off the role edge of the matrix, focus steps onto the role name, and off
+    // the person edge onto the name: each opens its own panel. Both sit outside
+    // the tab order, so this is how a keyboard user reaches them.
+    const edges = [
+      {
+        key: transpose ? "ArrowUp" : "ArrowLeft",
+        at: transpose ? row : col,
+        head: "role",
+        index: transpose ? col : row,
+      },
+      {
+        key: transpose ? "ArrowLeft" : "ArrowUp",
+        at: transpose ? col : row,
+        head: "name",
+        index: transpose ? row : col,
+      },
+    ];
+    for (const edge of edges) {
+      if (event.key !== edge.key || edge.at !== 0) continue;
       const head = event.currentTarget
         .closest("table")
-        ?.querySelector<HTMLButtonElement>(`[data-role-head="${transpose ? col : row}"]`);
+        ?.querySelector<HTMLButtonElement>(`[data-${edge.head}-head="${edge.index}"]`);
       if (head) {
         event.preventDefault();
         head.focus();
@@ -287,20 +303,25 @@ export function ContributionGrid() {
     target?.focus();
   }
 
-  /** Arrow keys on a role name: along the role axis, or back into the matrix. */
-  function handleRoleHeadKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, roleIndex: number) {
+  /**
+   * Arrow keys on a role or person name: along its own axis, or back into the
+   * matrix. Roles run down the rows (across the columns when transposed), people the other way.
+   */
+  function handleHeadKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, kind: "role" | "name", index: number) {
     const table = event.currentTarget.closest("table");
-    const [previous, next, intoGrid] = transpose
-      ? ["ArrowLeft", "ArrowRight", "ArrowDown"]
-      : ["ArrowUp", "ArrowDown", "ArrowRight"];
+    const vertical = (kind === "role") !== transpose;
+    const [previous, next, intoGrid] = vertical
+      ? ["ArrowUp", "ArrowDown", "ArrowRight"]
+      : ["ArrowLeft", "ArrowRight", "ArrowDown"];
+    const count = kind === "role" ? CREDIT_ROLES.length : authors.length;
     let selector: string | null = null;
     if (event.key === intoGrid) {
-      const cell = transpose ? { row: 0, col: roleIndex } : { row: roleIndex, col: 0 };
+      const cell = vertical ? { row: index, col: 0 } : { row: 0, col: index };
       setActiveCell(cell);
       selector = `[data-cell="${cell.row}-${cell.col}"]`;
     } else if (event.key === previous || event.key === next) {
-      const target = roleIndex + (event.key === next ? 1 : -1);
-      if (target >= 0 && target < CREDIT_ROLES.length) selector = `[data-role-head="${target}"]`;
+      const target = index + (event.key === next ? 1 : -1);
+      if (target >= 0 && target < count) selector = `[data-${kind}-head="${target}"]`;
     }
     if (!selector) return;
     event.preventDefault();
@@ -391,11 +412,32 @@ export function ContributionGrid() {
         triggerProps={{
           tabIndex: -1,
           "data-role-head": roleIndex,
-          onKeyDown: (event) => handleRoleHeadKeyDown(event, roleIndex),
+          onKeyDown: (event) => handleHeadKeyDown(event, "role", roleIndex),
         }}
       />
     );
   };
+
+  /** A person's name in the matrix: opens their menu, and joins the grid's arrow-key focus like a role name. */
+  const nameHead = (author: Author, index: number, content: ReactNode) => (
+    <PersonMenu
+      authorId={author.id}
+      surface="grid"
+      align="center"
+      trigger={
+        <button
+          type="button"
+          tabIndex={-1}
+          data-name-head={index}
+          aria-label={t("contributorActions", { name: author.name })}
+          onKeyDown={(event) => handleHeadKeyDown(event, "name", index)}
+          className="block max-w-full rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary"
+        >
+          {content}
+        </button>
+      }
+    />
+  );
 
   function openInspector(tab: "team" | "review") {
     setInspectorTab(tab);
@@ -614,18 +656,19 @@ export function ContributionGrid() {
                         <span className="flex flex-col items-center gap-1">
                           {namedHeaders ? (
                             <AngledLabel title={author.name}>
-                              <span
-                                className="border-b-2 pb-0.5 text-xs font-semibold text-on-surface"
-                                style={{ borderColor: hues ? hueOf(author) : "transparent" }}
-                              >
-                                {author.name}
-                              </span>
+                              {nameHead(
+                                author,
+                                columnIndex,
+                                <span
+                                  className="block overflow-hidden text-ellipsis border-b-2 pb-0.5 text-xs font-semibold text-on-surface"
+                                  style={{ borderColor: hues ? hueOf(author) : "transparent" }}
+                                >
+                                  {author.name}
+                                </span>,
+                              )}
                             </AngledLabel>
                           ) : (
-                            <>
-                              <InitialsChip author={author} />
-                              <span className="sr-only">{author.name}</span>
-                            </>
+                            nameHead(author, columnIndex, <InitialsChip author={author} />)
                           )}
                           <AskGlyph
                             state={askState(author)}
@@ -647,21 +690,27 @@ export function ContributionGrid() {
                         {...headerLink({ contributorId: author.id, from: "author" })}
                       >
                         <span className="flex items-center gap-1.5 min-w-0">
-                          <InitialsChip author={author} />
+                          {acronyms ? (
+                            nameHead(author, authorRow, <InitialsChip author={author} />)
+                          ) : (
+                            <InitialsChip author={author} />
+                          )}
                           <AskGlyph
                             state={askState(author)}
                             name={author.name}
                             onReview={() => openReview(author.id)}
                           />
-                          {!acronyms && (
-                            <span
-                              className="max-w-36 truncate text-[13px] font-medium text-on-surface"
-                              title={author.name}
-                            >
-                              {author.name}
-                            </span>
-                          )}
-                          {acronyms && <span className="sr-only">{author.name}</span>}
+                          {!acronyms &&
+                            nameHead(
+                              author,
+                              authorRow,
+                              <span
+                                className="block max-w-36 truncate text-[13px] font-medium text-on-surface"
+                                title={author.name}
+                              >
+                                {author.name}
+                              </span>,
+                            )}
                         </span>
                       </th>
                       {CREDIT_ROLES.map((_, roleIndex) => renderCell(author, roleIndex, authorRow, roleIndex))}

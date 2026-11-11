@@ -173,6 +173,15 @@ msgstr "Assegna a tutti"
 msgid "bulkClearRole"
 msgstr "Cancella per tutti"
 
+msgid "setAllRoles"
+msgstr "Imposta tutti i ruoli…"
+
+msgid "assignToEveryone"
+msgstr "Assegna a tutti…"
+
+msgid "editInList"
+msgstr "Modifica nell'elenco"
+
 msgid "bulkChangeApplied"
 msgstr "Modifica in blocco applicata."
 

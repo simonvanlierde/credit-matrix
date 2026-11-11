@@ -173,6 +173,15 @@ msgstr "Assign to everyone"
 msgid "bulkClearRole"
 msgstr "Clear for everyone"
 
+msgid "setAllRoles"
+msgstr "Set all roles…"
+
+msgid "assignToEveryone"
+msgstr "Assign to everyone…"
+
+msgid "editInList"
+msgstr "Edit in list"
+
 msgid "bulkChangeApplied"
 msgstr "Bulk change applied."
 

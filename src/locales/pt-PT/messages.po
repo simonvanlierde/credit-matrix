@@ -173,6 +173,15 @@ msgstr "Atribuir a todos"
 msgid "bulkClearRole"
 msgstr "Limpar para todos"
 
+msgid "setAllRoles"
+msgstr "Definir todos os papéis…"
+
+msgid "assignToEveryone"
+msgstr "Atribuir a todos…"
+
+msgid "editInList"
+msgstr "Editar na lista"
+
 msgid "bulkChangeApplied"
 msgstr "Alteração em massa aplicada."
 

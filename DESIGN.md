@@ -357,6 +357,23 @@ status strip counts answers only once someone has been asked; when every co-auth
 asked and has answered, and nothing is left to review, the count becomes the double check and
 "Everyone agreed".
 
+### People and roles
+
+A person and a role each act the same way on every surface that shows them. Pointing at a person
+(their list row, the grid's name header, their name in the statement) marks them everywhere; pointing
+at a role (the grid's role label, a role's name in a by-role statement) marks that role. Pointing
+at a phrase or a cell marks that one cell. Hover is mouse only and never opens anything.
+
+Clicking opens one panel per object. A person opens the person menu: move up or down, this is me,
+equal contribution, corresponding, ask links, add ORCID iD, set all roles (it asks which level) and
+clear all roles; the grid and the statement add Edit in list, which focuses the name field in the
+list. In the list only the "…" button opens it, since the name itself is a text field. A role opens
+its popover: the description and the full definition, then Assign to everyone (it asks which level)
+and Clear for everyone. Both bulk actions share the undo strip under the grid. A click on a phrase
+in the statement goes to its cell and makes that cell the grid's tab stop. The name and role
+headers are not in the tab order; the grid's arrow keys reach them. Frozen rows disable the items
+that edit them.
+
 ## Do and don't
 
 ### Do

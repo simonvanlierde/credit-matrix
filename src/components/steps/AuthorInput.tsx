@@ -17,16 +17,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  ArrowDown,
-  ArrowUp,
   AtSign,
-  Check,
   GripVertical,
   MoreHorizontal,
   PanelLeftClose,
   PanelLeftOpen,
   Pencil,
-  Plus,
   PlusCircle,
   Send,
   Sparkles,
@@ -34,27 +30,24 @@ import {
   UserCheck,
   UserMinus,
   UserPlus,
-  UserRound,
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UNDO_WINDOW_MS, UndoBar } from "@/components/ui/undo-bar";
 import { type Author, review } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { announce } from "@/lib/announce";
-import { copyAskLink } from "@/lib/ask-message";
 import { useTranslations } from "@/lib/translations";
 import { useClaimLock } from "@/lib/use-claim-lock";
-import { useCopyStatus } from "@/lib/use-copy-status";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useSettled } from "@/lib/use-settled";
 import { type Ask, useContributionStore } from "@/store/contribution-store";
 import { OrcidLine, useOrcidLine } from "./OrcidLine";
 import { detectOrcid } from "./orcid";
+import { PersonMenu } from "./PersonMenu";
 import { useAddContributors } from "./use-add-contributors";
 
 // Module constants, not inline literals: dnd-kit memoizes a sensor on its
@@ -111,6 +104,11 @@ export function AuthorList() {
   // it is not being edited.
   useEffect(() => setTitleDraft(title), [title]);
   const [collapsed, setCollapsed] = useState(false);
+  // A collapsed rail has no fields: open it for a request to edit one person in the list.
+  const listFocusRequested = useContributionStore((s) => s.listFocus !== null);
+  useEffect(() => {
+    if (listFocusRequested) setCollapsed(false);
+  }, [listFocusRequested]);
   const { newName, setNewName, addError, setAddError, handleAdd, handleAddPaste } = useAddContributors();
   const addErrorId = useId();
   const [removed, setRemoved] = useState<{
@@ -418,147 +416,6 @@ function MarkerChip({ icon, label }: { icon: ReactNode; label: string }) {
 }
 
 /**
- * The per-contributor actions, behind one disclosure.
- *
- * Inline, these were five chips on every row: on a phone that is three lines
- * per contributor, and this pane is where vertical space is worth most. Behind
- * a menu they also stop depending on hover, which a tablet does not have.
- */
-function RowMenu({
-  name,
-  equalContribution,
-  corresponding,
-  canAddOrcid,
-  askCopied,
-  allowAsk,
-  isSelf,
-  onToggleSelf,
-  onToggleEqual,
-  onToggleCorresponding,
-  onAsk,
-  onAddOrcid,
-  onMoveUp,
-  onMoveDown,
-}: {
-  name: string;
-  equalContribution: boolean;
-  corresponding: boolean;
-  canAddOrcid: boolean;
-  /** Which ask link was just copied, if any. */
-  askCopied: "blank" | "prefilled" | null;
-  /** Asking someone else to fill a draft you are answering is nonsense. */
-  allowAsk: boolean;
-  /** This row is the person using the app; absent where that cannot be set. */
-  isSelf?: boolean;
-  onToggleSelf?: () => void;
-  onToggleEqual: () => void;
-  onToggleCorresponding: () => void;
-  onAsk: (blank: boolean) => void;
-  onAddOrcid: () => void;
-  /** Absent at the top (or bottom) of the list. */
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-}) {
-  const t = useTranslations();
-  const [open, setOpen] = useState(false);
-  // Set only by "Add ORCID iD": that path reveals an auto-focused field the
-  // trigger-refocus would blur (and its blur handler dismisses it). Every
-  // other close should return focus to the trigger as normal.
-  const openedOrcidRef = useRef(false);
-
-  const item =
-    "flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-disabled:cursor-not-allowed aria-disabled:text-on-surface-variant/50 aria-disabled:hover:bg-transparent";
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={t("contributorActions", { name })}
-          title={t("contributorActions", { name })}
-          className="touch-target inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        aria-label={t("contributorActions", { name })}
-        onCloseAutoFocus={(event) => {
-          if (!openedOrcidRef.current) return;
-          openedOrcidRef.current = false;
-          event.preventDefault();
-        }}
-        className="w-60 p-1"
-      >
-        {/* Author order is credit, and dragging is not something every pointer
-            can do (WCAG 2.5.7). The menu stays open, so a row can move several
-            places in a row. */}
-        {(onMoveUp || onMoveDown) && (
-          <div className="mb-1 border-b border-outline-variant/40 pb-1">
-            <button type="button" onClick={onMoveUp} aria-disabled={!onMoveUp || undefined} className={item}>
-              <ArrowUp className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-              {t("moveUp")}
-            </button>
-            <button type="button" onClick={onMoveDown} aria-disabled={!onMoveDown || undefined} className={item}>
-              <ArrowDown className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-              {t("moveDown")}
-            </button>
-          </div>
-        )}
-        {onToggleSelf && (
-          <button type="button" onClick={onToggleSelf} aria-pressed={isSelf} className={item}>
-            <UserRound className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-            {isSelf ? t("thisIsNotMe") : t("thisIsMe")}
-          </button>
-        )}
-        <button type="button" onClick={onToggleEqual} aria-pressed={equalContribution} className={item}>
-          <Users className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-          {equalContribution ? t("equalContributionUnset") : t("equalContributionSet")}
-        </button>
-        <button type="button" onClick={onToggleCorresponding} aria-pressed={corresponding} className={item}>
-          <AtSign className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-          {corresponding ? t("correspondingUnset") : t("correspondingSet")}
-        </button>
-        {allowAsk && (
-          <div className="my-1 border-y border-outline-variant/40 py-1">
-            {(["blank", "prefilled"] as const).map((kind) => (
-              <button key={kind} type="button" onClick={() => onAsk(kind === "blank")} className={item}>
-                {askCopied === kind ? (
-                  <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
-                ) : (
-                  <Send className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-                )}
-                {askCopied === kind
-                  ? t("askCopied")
-                  : kind === "blank"
-                    ? t("askBlank", { name })
-                    : t("askPrefilled", { name })}
-              </button>
-            ))}
-            <p className="px-2 pt-0.5 pb-1 text-[11px] leading-snug text-on-surface-variant">{t("askLinkHint")}</p>
-          </div>
-        )}
-        {canAddOrcid && (
-          <button
-            type="button"
-            onClick={() => {
-              openedOrcidRef.current = true;
-              onAddOrcid();
-              setOpen(false);
-            }}
-            className={item}
-          >
-            <Plus className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
-            {t("addOrcid")}
-          </button>
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-/**
  * Memoized, and subscribed to its own contributor only: immer keeps an
  * untouched author object identical, so an edit to one row (or one grid cell)
  * re-renders that row, not all of them.
@@ -573,19 +430,17 @@ const AuthorRow = memo(function AuthorRowInner({
   enter: boolean;
 }) {
   const t = useTranslations();
-  const { author, updateAuthorName, setAuthorType, setAuthorMarker } = useContributionStore(
+  const { author, updateAuthorName, setAuthorType } = useContributionStore(
     useShallow((s) => ({
       author: s.authors[index],
       updateAuthorName: s.updateAuthorName,
       setAuthorType: s.setAuthorType,
-      setAuthorMarker: s.setAuthorMarker,
     })),
   );
   const { locked, editableAuthorId } = useClaimLock();
   const isClaimed = author !== undefined && author.id === editableAuthorId;
   const rowLocked = locked && !isClaimed;
   const isSelf = useContributionStore((s) => author !== undefined && s.selfId === author.id);
-  const setSelfId = useContributionStore((s) => s.setSelfId);
   // True while this person is hovered anywhere else (grid cell, statement name or phrase).
   const linked = useContributionStore((s) => author !== undefined && s.statementLink?.contributorId === author.id);
   const setStatementLink = useContributionStore((s) => s.setStatementLink);
@@ -593,44 +448,29 @@ const AuthorRow = memo(function AuthorRowInner({
   const clearOwnLink = () => {
     if (useContributionStore.getState().statementLink?.from === "author") setStatementLink(null);
   };
-  const moveAuthor = useContributionStore((s) => s.moveAuthor);
-  const rowCount = useContributionStore((s) => s.authors.length);
   // Down once their answer is in, up again on a re-ask.
   const asked = useContributionStore(
     (s) => author !== undefined && review(author, s.asks[author.id]).status.kind === "asked",
   );
 
-  function move(by: -1 | 1) {
-    if (!author) return;
-    moveAuthor(index, index + by);
-    announce(t("annMoved", { name: author.name, position: index + by + 1, total: rowCount }));
-  }
   const isRecentReply = useContributionStore((s) => s.recentReply !== null && s.recentReply === author?.id);
 
   const [nameDraft, setNameDraft] = useState(author?.name ?? "");
   const [nameError, setNameError] = useState<string | null>(null);
-  // Same status/announce/reset contract as every other copy affordance.
-  const [askStatus, copyAsk] = useCopyStatus({
-    copied: t("askContributorCopied", { name: author?.name ?? "" }),
-  });
-  const [askKind, setAskKind] = useState<"blank" | "prefilled">("blank");
-  const askCopied = askStatus === "copied" ? askKind : null;
-
-  /**
-   * Copy a link addressed at this contributor. They open it, tick their own
-   * roles, and send the same link back; importing it collects that row alone.
-   * A blank ask sends their row empty, so the answer is their own account
-   * rather than a check of your guess.
-   */
-  async function handleAsk(blank: boolean) {
-    if (!author) return;
-    setAskKind(blank ? "blank" : "prefilled");
-    // Only a link that actually reached the clipboard counts as an ask.
-    await copyAskLink(author, t, blank, (link) => copyAsk(link));
-  }
-
   const nameInputRef = useRef<HTMLInputElement>(null);
   const orcidLine = useOrcidLine(author?.id ?? "", () => nameInputRef.current?.focus());
+
+  // "Edit in list" / "Add ORCID iD" from the grid or the statement: take focus here and scroll to it.
+  const listFocus = useContributionStore((s) => (s.listFocus?.authorId === author?.id ? s.listFocus : null));
+  const setListFocus = useContributionStore((s) => s.setListFocus);
+  const { setEditingOrcid } = orcidLine;
+  useEffect(() => {
+    if (!listFocus) return;
+    if (listFocus.orcid) setEditingOrcid(true);
+    else nameInputRef.current?.focus();
+    nameInputRef.current?.scrollIntoView({ block: "nearest" });
+    setListFocus(null);
+  }, [listFocus, setEditingOrcid, setListFocus]);
 
   // Keyed on the stored name, not the author object: normalizeAuthors rebuilds
   // every author on any list mutation, so an identity-keyed effect overwrote
@@ -827,21 +667,21 @@ const AuthorRow = memo(function AuthorRowInner({
                   disclosure. Five inline chips per row cost three lines on a
                   phone, and this pane is where vertical space is worth most. */}
               {!rowLocked && (
-                <RowMenu
-                  name={author.name}
-                  equalContribution={author.equalContribution}
-                  corresponding={author.corresponding}
+                <PersonMenu
+                  authorId={author.id}
+                  surface="list"
                   canAddOrcid={!hasOrcid && !orcidLine.editingOrcid}
-                  askCopied={askCopied}
-                  allowAsk={!(locked || isSelf)}
-                  isSelf={isSelf}
-                  onToggleSelf={locked ? undefined : () => setSelfId(isSelf ? null : author.id)}
-                  onToggleEqual={() => setAuthorMarker(author.id, "equalContribution", !author.equalContribution)}
-                  onToggleCorresponding={() => setAuthorMarker(author.id, "corresponding", !author.corresponding)}
-                  onAsk={(blank) => void handleAsk(blank)}
                   onAddOrcid={() => orcidLine.setEditingOrcid(true)}
-                  onMoveUp={!locked && index > 0 ? () => move(-1) : undefined}
-                  onMoveDown={!locked && index < rowCount - 1 ? () => move(1) : undefined}
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label={t("contributorActions", { name: author.name })}
+                      title={t("contributorActions", { name: author.name })}
+                      className="touch-target inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                  }
                 />
               )}
             </div>
