@@ -1,6 +1,6 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the font search reads font folders; Poppler checks the PDF.
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -130,6 +130,21 @@ describe("figures in a font family the caller names", () => {
     expect(listed.stderr).toBe("");
   });
 
+  it("refuses a CID-keyed CFF font whose CIDs are not its glyph ids in PDF, and draws it in SVG", async () => {
+    const figures = renderer();
+    expect(
+      svgFonts(await figures.svg(authors("Ada 中文"), options("Figure Test CID"))).drawn.get("Figure Test CID"),
+    ).toContain("Ada");
+    await expect(figures.pdf(authors("Ada 中文"), options("Figure Test CID"))).rejects.toThrow(
+      /CIDs differ from its glyph ids/,
+    );
+  });
+
+  it("embeds a CID-keyed CFF font whose CIDs are its glyph ids in PDF", async () => {
+    const pdf = await renderer().pdf(authors("ABBA"), options("Figure Test CID Identity"));
+    expect([...(await pdfFonts(pdf)).keys()]).toContain("CMFIGR+FigureTestCIDIdentity-Regular");
+  });
+
   it("picks the upright regular face of a collection", async () => {
     const reports: FigureFontReport[] = [];
     const pdf = await renderer(reports).pdf(authors("Ada Lovelace"), options("Figure Test Collection"));
@@ -175,6 +190,36 @@ describe("figures in a font family the caller names", () => {
     const pdf = await pdfFonts(await figures.pdf(authors("Ada"), options("Figure Test No Subset")));
     // No subset tag, by PDF convention.
     expect(pdf.get("FigureTestNoSubset-Regular")?.numGlyphs).toBe(whole.numGlyphs);
+  });
+
+  it("finds a family past an unreadable subfolder and a symlink loop in the font path", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    try {
+      mkdirSync(join(folder, "locked"));
+      chmodSync(join(folder, "locked"), 0o000);
+      symlinkSync(folder, join(folder, "loop"));
+      mkdirSync(join(folder, "zz"));
+      copyFileSync(join(FIXTURES, "FigureTest-Regular.ttf"), join(folder, "zz", "FigureTest-Regular.ttf"));
+      const reports: FigureFontReport[] = [];
+      await renderer(reports).svg(authors("Ada Lovelace"), options("Figure Test", [folder]));
+      expect(reports.map(({ file }) => file)).toEqual([join(folder, "zz", "FigureTest-Regular.ttf")]);
+    } finally {
+      chmodSync(join(folder, "locked"), 0o700);
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
+  it("names a custom family apart from a built-in fallback face of the same name", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    try {
+      copyFileSync(fileURLToPath(new URL("../../fonts/NotoSans-Regular.ttf", import.meta.url)), join(folder, "a.ttf"));
+      const svg = await renderer().svg(authors("Ada 中"), options("noto sans", [folder]));
+      const families = [...svg.matchAll(/@font-face\{font-family:'([^']+)'/g)].map(([, family]) => family);
+      expect(new Set(families).size).toBe(families.length);
+      expect(families).toContain("Noto Sans (custom)");
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
   });
 
   it("stops on a family it cannot find, never falling back", async () => {

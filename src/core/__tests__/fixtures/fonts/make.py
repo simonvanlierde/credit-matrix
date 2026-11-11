@@ -6,6 +6,13 @@ License 1.1 (OFL-Inter.txt, no Reserved Font Name). Each fixture is a printable-
 a new "Figure Test" family name, so no installed font can match it.
 
     uv run --no-project --with fonttools==4.68.0 --with brotli==1.1.0 python make.py Inter-4.1.zip
+
+FigureTestCID-Regular.otf is the CID-keyed CFF case: "Ada 中文" from the first face of Noto Sans CJK
+2.004's NotoSansCJK-Regular.ttc (SHA-256 b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a,
+OFL 1.1, src/fonts/OFL-NotoSansCJK.txt), subset with fontTools' defaults so its CIDs are no longer its
+glyph ids, and renamed "Figure Test CID" (name IDs 1, 4, 16; 6 FigureTestCID-Regular).
+FigureTestCIDIdentity-Regular.otf is "ABCDE" from the same face with retain_gids, so its CIDs stay its
+glyph ids, renamed "Figure Test CID Identity".
 """
 
 import hashlib

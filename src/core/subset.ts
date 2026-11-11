@@ -31,29 +31,39 @@ export async function createSubsetter(wasm: Uint8Array): Promise<Subsetter> {
   const heap = () => new Uint8Array(hb.memory.buffer);
   return {
     face(bytes) {
-      // shortcut: faces are never freed; a renderer loads each at most once per process.
-      const data = hb.malloc?.(bytes.length) ?? 0;
-      heap().set(bytes, data);
-      const face = hb.hb_face_create?.(hb.hb_blob_create?.(data, bytes.length, READONLY, 0, 0) ?? 0, 0) ?? 0;
       return {
         subset(codePoints, retainGids) {
+          // The module's memory is fixed at 64 MB, so each subset copies its face in and frees it again
+          // (about 10 ms for a 14 MB face) rather than keeping every face a long-lived renderer has seen.
+          const data = hb.malloc?.(bytes.length) ?? 0;
+          if (!data)
+            throw new Error(`A ${Math.round(bytes.length / 1e6)} MB font is too large for HarfBuzz's subsetter.`);
+          heap().set(bytes, data);
+          const source = hb.hb_blob_create?.(data, bytes.length, READONLY, 0, 0) ?? 0;
+          const face = hb.hb_face_create?.(source, 0) ?? 0;
           const input = hb.hb_subset_input_create_or_fail?.() ?? 0;
-          if (!input) throw new Error("HarfBuzz could not start a font subset.");
-          const unicodes = hb.hb_subset_input_unicode_set?.(input) ?? 0;
-          for (const point of codePoints) hb.hb_set_add?.(unicodes, point);
-          if (retainGids) hb.hb_subset_input_set_flags?.(input, RETAIN_GIDS);
-          // A no-op for a static face; a variable one becomes its default instance, which fontkit measures.
-          hb.hb_subset_input_pin_all_axes_to_default?.(input, face);
-          const result = hb.hb_subset_or_fail?.(face, input) ?? 0;
-          hb.hb_subset_input_destroy?.(input);
-          if (!result) throw new Error("HarfBuzz could not subset a figure font.");
-          const blob = hb.hb_face_reference_blob?.(result) ?? 0;
-          const length = hb.hb_blob_get_length?.(blob) ?? 0;
-          const pointer = hb.hb_blob_get_data?.(blob, 0) ?? 0;
-          const out = heap().slice(pointer, pointer + length);
-          hb.hb_blob_destroy?.(blob);
-          hb.hb_face_destroy?.(result);
-          return out;
+          try {
+            if (!input) throw new Error("HarfBuzz could not start a font subset.");
+            const unicodes = hb.hb_subset_input_unicode_set?.(input) ?? 0;
+            for (const point of codePoints) hb.hb_set_add?.(unicodes, point);
+            if (retainGids) hb.hb_subset_input_set_flags?.(input, RETAIN_GIDS);
+            // A no-op for a static face; a variable one becomes its default instance, which fontkit measures.
+            hb.hb_subset_input_pin_all_axes_to_default?.(input, face);
+            const result = hb.hb_subset_or_fail?.(face, input) ?? 0;
+            if (!result) throw new Error("HarfBuzz could not subset a figure font.");
+            const blob = hb.hb_face_reference_blob?.(result) ?? 0;
+            const length = hb.hb_blob_get_length?.(blob) ?? 0;
+            const pointer = hb.hb_blob_get_data?.(blob, 0) ?? 0;
+            const out = heap().slice(pointer, pointer + length);
+            hb.hb_blob_destroy?.(blob);
+            hb.hb_face_destroy?.(result);
+            return out;
+          } finally {
+            if (input) hb.hb_subset_input_destroy?.(input);
+            hb.hb_face_destroy?.(face);
+            hb.hb_blob_destroy?.(source);
+            hb.free?.(data);
+          }
         },
       };
     },

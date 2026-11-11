@@ -23,7 +23,7 @@ import type { Author } from "./author";
 import { hexRgb } from "./contributor-color";
 import { escapeXml } from "./export/escape-xml";
 import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
-import { defaultFigureFonts, type FigureFace, type FigureFontProvider } from "./figure-fonts";
+import { defaultFigureFonts, type FigureFace, FigureFontFileError, type FigureFontProvider } from "./figure-fonts";
 import type { FoundFont } from "./font-search";
 import { createShaper, type ShapedFace, type ShapedGlyph, type Shaper } from "./shaping";
 import { createSubsetter, type SubsetFace, type Subsetter } from "./subset";
@@ -302,9 +302,15 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           findFigureFont(family, { fontPath: options?.fontPath, ignoreSystemFonts: options?.ignoreSystemFonts }),
         )
         .then((found: FoundFont) => {
-          const source: FontSource = { family: found.family, face: "sans", serif: found.serif };
+          // The SVG's @font-face rules go by family name: a custom "Noto Sans" beside the built-in fallback
+          // Noto Sans would share one name, and a viewer would use only one of the two subsets.
+          const builtIn = [...SOURCES, ...SCRIPT_FACES.flatMap(([, sans, serif]) => [sans, serif]), EMOJI].some(
+            (known) => known.family.toLowerCase() === found.family.toLowerCase(),
+          );
+          const cssFamily = builtIn ? `${found.family} (custom)` : found.family;
+          const source: FontSource = { family: cssFamily, face: "sans", serif: found.serif };
           loaded.set(source, {
-            family: found.family,
+            family: cssFamily,
             bytes: found.bytes,
             font: fontkit.create(found.bytes),
             shaped: false,
@@ -744,7 +750,15 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
                 : `CMFIGR+${runFace.font.postscriptName}`,
             });
             embedded.set(runFace, font);
-            if (String.fromCharCode(...bytes.subarray(0, 4)) === "OTTO") openType.push(font);
+            if (String.fromCharCode(...bytes.subarray(0, 4)) === "OTTO") {
+              // As CIDFontType0, a viewer maps each code through the CFF charset (CID to glyph), but the codes
+              // are glyph ids: a CID-keyed font whose CIDs are not its glyph ids would draw the wrong glyphs.
+              if (!cidsAreGlyphIds(bytes))
+                throw new FigureFontFileError(
+                  `${runFace.family} is a CID-keyed font whose CIDs differ from its glyph ids, which PDF figures cannot embed. Install its TrueType (.ttf) build.`,
+                );
+              openType.push(font);
+            }
           }
           const unit = size / runFace.font.unitsPerEm;
           if (runFace.shaped) {
@@ -820,4 +834,88 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       return document.save();
     },
   };
+}
+
+/**
+ * Whether a CFF-flavored font's charset maps every glyph id to the same CID. Name-keyed CFF has no CIDs and
+ * passes. Read from the bytes, since fontkit 1.1.1 cannot always parse the CFF table.
+ */
+function cidsAreGlyphIds(font: Uint8Array): boolean {
+  const view = new DataView(font.buffer, font.byteOffset, font.byteLength);
+  let at = -1;
+  for (let record = 12; record < 12 + view.getUint16(4) * 16; record += 16)
+    if (view.getUint32(record) === 0x43464620) at = view.getUint32(record + 8);
+  if (at < 0) return false;
+  const byte = (offset: number) => view.getUint8(at + offset);
+  const u16 = (offset: number) => view.getUint16(at + offset);
+  const sized = (offset: number, size: number) => {
+    let value = 0;
+    for (let i = 0; i < size; i++) value = value * 256 + byte(offset + i);
+    return value;
+  };
+  // A CFF INDEX: a count, an offset size, count + 1 offsets (from 1), then the data.
+  const index = (offset: number) => {
+    const count = u16(offset);
+    if (count === 0) return { count, items: [] as [number, number][], end: offset + 2 };
+    const size = byte(offset + 2);
+    const data = offset + 2 + (count + 1) * size;
+    const items: [number, number][] = [];
+    for (let i = 0; i < count; i++)
+      items.push([data + sized(offset + 3 + i * size, size), data + sized(offset + 3 + (i + 1) * size, size)]);
+    return { count, items, end: data + sized(offset + 3 + count * size, size) };
+  };
+  const names = index(byte(2));
+  const [top] = index(names.end).items;
+  if (!top) return false;
+  // The Top DICT's operands come before their operator; only the integer ones matter here.
+  const dict = new Map<number, number[]>();
+  let operands: number[] = [];
+  for (let i = top[0]; i < top[1]; ) {
+    const b = byte(i);
+    if (b <= 21) {
+      const operator = b === 12 ? 1200 + byte(i + 1) : b;
+      i += b === 12 ? 2 : 1;
+      dict.set(operator, operands);
+      operands = [];
+    } else if (b === 28) {
+      operands.push(view.getInt16(at + i + 1));
+      i += 3;
+    } else if (b === 29) {
+      operands.push(view.getInt32(at + i + 1));
+      i += 5;
+    } else if (b === 30) {
+      i += 1;
+      while ((byte(i) & 0x0f) !== 0x0f && (byte(i) & 0xf0) !== 0xf0) i++;
+      i += 1;
+      operands.push(0);
+    } else if (b <= 246) {
+      operands.push(b - 139);
+      i += 1;
+    } else {
+      const sign = b <= 250 ? 1 : -1;
+      operands.push(sign * ((b - (b <= 250 ? 247 : 251)) * 256 + byte(i + 1) + 108));
+      i += 2;
+    }
+  }
+  // ROS (12 30) marks a CID-keyed font.
+  if (!dict.has(1230)) return true;
+  const charset = dict.get(15)?.[0] ?? 0;
+  const glyphs = index(dict.get(17)?.[0] ?? 0).count;
+  if (charset <= 2) return false;
+  const format = byte(charset);
+  let glyph = 1;
+  // Format 0 lists each glyph's CID from glyph 1; formats 1 and 2 list ranges of consecutive CIDs.
+  for (let p = charset + 1; glyph < glyphs; ) {
+    const first = u16(p);
+    if (first !== glyph) return false;
+    if (format === 0) {
+      glyph += 1;
+      p += 2;
+    } else {
+      const left = format === 1 ? byte(p + 2) : u16(p + 2);
+      glyph += left + 1;
+      p += format === 1 ? 3 : 4;
+    }
+  }
+  return true;
 }

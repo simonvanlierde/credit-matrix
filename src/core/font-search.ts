@@ -201,13 +201,26 @@ async function webFontFamilies(file: string): Promise<string[]> {
 }
 
 async function fontFiles(folder: string, pattern: RegExp): Promise<string[]> {
-  const { readdir } = await nodeModule<typeof import("node:fs/promises")>("node:fs/promises");
+  const { readdir, realpath, stat } = await nodeModule<typeof import("node:fs/promises")>("node:fs/promises");
   const { join } = await nodeModule<typeof import("node:path")>("node:path");
-  const entries = await readdir(folder, { recursive: true }).catch(() => [] as string[]);
-  return entries
-    .filter((entry) => pattern.test(entry))
-    .sort()
-    .map((entry) => join(folder, entry));
+  const files: string[] = [];
+  // Folder by folder, so one unreadable subfolder hides only itself; real paths stop symlink loops.
+  const seen = new Set<string>();
+  const pending = [folder];
+  for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+    const real = await realpath(next).catch(() => undefined);
+    if (!real || seen.has(real)) continue;
+    seen.add(real);
+    const entries = await readdir(next, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const path = join(next, entry.name);
+      const isFolder =
+        entry.isDirectory() || (entry.isSymbolicLink() && (await stat(path).catch(() => undefined))?.isDirectory());
+      if (isFolder) pending.push(path);
+      else if (pattern.test(entry.name)) files.push(path);
+    }
+  }
+  return files.sort();
 }
 
 /** The folders fontconfig, macOS and Windows install fonts in, for this platform. */
