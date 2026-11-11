@@ -93,7 +93,7 @@ for (const path of exported) {
     !title && "title",
     !/<meta name="description" content="[^"]+">/.test(html) && "meta description",
     !html.includes(`<link rel="canonical" href="https://credit.duinlab.nl${path}">`) && "canonical link",
-    !html.includes('["link","/assets/') && "modulepreload (in the deferred script loader)",
+    !html.includes('["link","\\u002fassets\\u002f') && "modulepreload (in the deferred script loader)",
   ].filter(Boolean);
   if (problems.length > 0) throw new Error(`postbuild: ${path} lacks ${problems.join(", ")}`);
 }
