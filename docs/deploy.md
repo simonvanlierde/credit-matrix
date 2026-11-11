@@ -110,9 +110,14 @@ and changes only when the fonts do. `FIGURE_FONTS_VERSION` and `FIGURE_FONT_FILE
 `src/core/figure-fonts.ts` pin the release the download fetches and the hashes it checks;
 `src/core/__tests__/figure-fonts.test.ts` fails when they drift from `src/fonts`.
 
-To release new fonts, bump `src/fonts/package.json`, update the pin and hashes, and publish with
-`cd src/fonts && npm publish --access public` from the owner's two-factor login. Release
-`credit-matrix` after it, since its download points at the new version.
+Every `v*` release packs `src/fonts` too. The `publish` job uploads it before `credit-matrix`, but
+only when npm does not have that version yet. To release new fonts, bump
+`src/fonts/package.json`, update the pin and hashes, and tag a release as usual.
+
+The first version cannot use trusted publishing, because npm configures it only for a package that
+exists. Publish 1.0.0 by hand with `cd src/fonts && npm publish --access public` from the owner's
+two-factor login. Then, on npmjs.com, add `release-core.yml` and the `npm-release` environment as
+the package's trusted publisher, as for `credit-matrix`.
 
 ### Roll back a version
 
