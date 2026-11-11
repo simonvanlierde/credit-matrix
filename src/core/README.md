@@ -2,7 +2,7 @@
 
 [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) statements and exports, as the
 [CRediT Matrix](https://credit.duinlab.nl) web app runs them in the browser. It is an ESM package
-with types, with no tie to React or Next.js, and runtime dependencies `zod` and `@lingui/core`.
+with types, with no tie to React, and runtime dependencies `zod` and `@lingui/core`.
 
 ```bash
 npm install credit-matrix

@@ -1,7 +1,7 @@
 # Architecture
 
 It's all TypeScript: one React app, built with Vite and prerendered to static HTML. The logic that
-doesn't depend on React or Next.js lives in `src/core`. There is no server code.
+doesn't depend on React lives in `src/core`. There is no server code.
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -28,8 +28,8 @@ Browser
 [`src/core`](../src/core/README.md) holds the domain logic (statements, exports, validation, heatmap
 SVG/PDF) as plain TypeScript with no side effects, with `zod` for validation and Lingui for translation. It is
 published as the `credit-matrix` npm package, with a CLI (`cli.ts`) and a web element
-(`element.ts`). Apart from the CLI, it uses no React, Next.js or Node APIs when it's imported. Biome
-refuses imports there of React, Next.js, `@/`, or relative paths that leave `src/core`. Most changes
+(`element.ts`). Apart from the CLI, it uses no React or Node APIs when it's imported. Biome
+refuses imports there of React, next-themes, `@/`, or relative paths that leave `src/core`. Most changes
 and most tests go here. XML import uses the browser's own `DOMParser`, and the PNG is drawn from the
 heatmap SVG onto a `<canvas>`. [`figures.ts`](../src/core/figures.ts) embeds fonts in SVG and PDF;
 the [figure font guide](../integrations/figures/README.md) describes coverage and offline use.
