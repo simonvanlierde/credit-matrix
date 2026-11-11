@@ -1,7 +1,9 @@
 """Shared fixtures for the integration tests."""
 
 import hashlib
+import os
 import shutil
+import socket
 from pathlib import Path
 
 import pytest
@@ -18,3 +20,17 @@ def figure_font_cache(tmp_path_factory) -> dict[str, str]:
     for font in (ROOT / "src/fonts").glob("*.ttf"):
         shutil.copyfile(font, folder / f"{hashlib.sha256(font.read_bytes()).hexdigest()}.ttf")
     return {"XDG_CACHE_HOME": str(cache)}
+
+
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch, request):
+    """Fail outbound connections from the tests and from the Node CLIs they spawn, unless marked `network`."""
+    if request.node.get_closest_marker("network"):
+        return
+
+    def refuse(*_args, **_kwargs):
+        raise RuntimeError("Outbound network access in an integration test; mark it @pytest.mark.network if intended.")
+
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    guard = f"--import={Path(__file__).with_name('no_network.mjs').as_uri()}"
+    monkeypatch.setenv("NODE_OPTIONS", f"{os.environ.get('NODE_OPTIONS', '')} {guard}".strip())
