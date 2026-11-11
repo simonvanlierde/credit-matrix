@@ -29,6 +29,7 @@ import { toRoCrateFragment } from "./export/ro-crate";
 import { toTenzing } from "./export/tenzing";
 import { toJats4rXml } from "./export/xml";
 import type { XmlParser } from "./export/xml-import";
+import type { FigureOptions } from "./figures";
 import { generateStatement, STATEMENT_FORMATS, type StatementFormat } from "./generate-statement";
 import { importAny } from "./import";
 import pkg from "./package.json" with { type: "json" };
@@ -65,9 +66,16 @@ Commands:
       --color '#1f4e79' --palette blue|green|gray --shape square|rounded|circle
       --size 22 --legend true|false --labels full|short --horizontal
       --legend-position auto|right|bottom --marks true|false
-      --skipempty true|false --initials true|false --font sans|serif --font-size 6..32.
+      --skipempty true|false --initials true|false --font-size 6..32
+      --font sans|serif|<family> --font-path <dir> --ignore-system-fonts
+      --font-fallback sans|serif.
       Color overrides palette; size and font-size are in pixels.
       Legend position defaults to auto; marks default to false.
+      --font <family> draws Latin and the other characters it has in an
+      installed font family, found in each --font-path folder (repeatable)
+      first, then the system fonts unless --ignore-system-fonts. Prints the
+      file it used to standard error. Noto Sans, or Noto Serif for a serif
+      family or --font-fallback serif, draws what the family lacks.
       ro-crate prints an RO-Crate 1.2 attribution fragment. Merge its people,
       roles and root links into existing package metadata; it is not a complete crate.
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
@@ -208,6 +216,9 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
       size: { type: "string" },
       "font-size": { type: "string" },
       font: { type: "string" },
+      "font-path": { type: "string", multiple: true },
+      "ignore-system-fonts": { type: "boolean", default: false },
+      "font-fallback": { type: "string" },
       legend: { type: "string", default: "true" },
       "legend-position": { type: "string", default: "auto" },
       marks: { type: "string", default: "false" },
@@ -304,12 +315,19 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
           for (const key of ["legend", "skipempty", "initials", "marks"] as const) {
             if (!["true", "false"].includes(values[key])) throw new UsageError(`--${key} must be true or false.`);
           }
+          if (values["font-fallback"] !== undefined && !["sans", "serif"].includes(values["font-fallback"]))
+            throw new UsageError("--font-fallback must be sans or serif.");
           if (!["auto", "right", "bottom"].includes(values["legend-position"]))
             throw new UsageError("--legend-position must be auto, right or bottom.");
           const locale = requireLocale(values.locale);
           const { createFigureRenderer } = await import("./figures");
-          const renderer = createFigureRenderer();
-          const options: HeatmapSvgOptions = {
+          const renderer = createFigureRenderer({
+            onFont: (font) => {
+              process.stderr.write(`credit-matrix: font: ${font.family} from ${font.file}\n`);
+              if (font.warning) process.stderr.write(`credit-matrix: ${font.warning}\n`);
+            },
+          });
+          const options: FigureOptions = {
             locale,
             levels: !values["yes-no"],
             color: values.color,
@@ -318,7 +336,10 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
             size: values.size === undefined ? undefined : Number(values.size),
             acronyms: values.initials === "true",
             fontSize: values["font-size"] === undefined ? undefined : Number(values["font-size"]),
-            font: values.font as HeatmapSvgOptions["font"],
+            font: values.font,
+            fontPath: values["font-path"],
+            ignoreSystemFonts: values["ignore-system-fonts"],
+            fontFallback: values["font-fallback"] as FigureOptions["fontFallback"],
             legend: values.legend === "true",
             legendPosition: values["legend-position"] as HeatmapSvgOptions["legendPosition"],
             marks: values.marks === "true",

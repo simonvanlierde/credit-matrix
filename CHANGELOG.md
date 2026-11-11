@@ -15,7 +15,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   face. HarfBuzz shapes the complex
   scripts in PDF, and right-to-left names follow the Unicode bidi algorithm. Each face and the
   shaping engine load only for a figure that needs them. The app's CSP adds `'wasm-unsafe-eval'` to
-  run HarfBuzz. See [Fonts and offline use](integrations/figures/README.md#fonts-and-offline-use).
+  run HarfBuzz. HarfBuzz's subsetter (`harfbuzz-subset.wasm`, face key `harfbuzz-subset`) replaces
+  fontkit's in SVG and PDF, so complex-script faces are subset too, SVG subsets keep their layout
+  tables, and a face with odd glyph offsets no longer draws blank glyphs. See
+  [Fonts and offline use](integrations/figures/README.md#fonts-and-offline-use).
+- SVG and PDF figures can use an installed font family: `--font <family>` in the CLI, with
+  repeatable `--font-path <dir>`, `--ignore-system-fonts` and `--font-fallback sans|serif`, and
+  `font`, `fontPath`, `ignoreSystemFonts` and `fontFallback` in `createFigureRenderer`'s `svg()` and
+  `pdf()` in Node. The family draws Latin and the other characters it has, the Noto faces draw the
+  rest (serif ones for a serif family), and the CLI prints the file it used to standard error
+  (`onFont` in the API). `.ttf`, `.otf` (CFF too) and collections work;
+  WOFF files and a variable font whose default is not regular are refused, as is a missing family.
+  See [Use your own font](integrations/figures/README.md#use-your-own-font).
 
 ### Changed
 

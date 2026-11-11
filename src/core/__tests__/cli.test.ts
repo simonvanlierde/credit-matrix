@@ -457,7 +457,50 @@ it("passes figure options through the SVG conversion", async () => {
   expect(svg).not.toContain(">Supporting<");
   await expect(run(["convert", csv, "--to", "svg", "--legend", "maybe"])).rejects.toThrow("true or false");
   await expect(run(["convert", csv, "--to", "svg", "--font-size", "NaN"])).rejects.toThrow("between 6 and 32");
-  await expect(run(["convert", csv, "--to", "svg", "--font", "arbitrary"])).rejects.toThrow("Unknown heatmap font");
+  await expect(
+    run(["convert", csv, "--to", "svg", "--font", "arbitrary", "--font-path", dir, "--ignore-system-fonts"]),
+  ).rejects.toThrow(`Cannot find the font family arbitrary in the font path (${dir}), with system fonts ignored.`);
+});
+
+it("draws a figure in a font family from --font-path and names its file on standard error", async () => {
+  const fonts = fileURLToPath(new URL("fixtures/fonts/", import.meta.url));
+  const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  const figure = [
+    "convert",
+    csv,
+    "--initials",
+    "false",
+    "--font",
+    "Figure Test",
+    "--font-path",
+    dir,
+    "--font-path",
+    fonts,
+  ];
+  const svg = await run([...figure, "--ignore-system-fonts", "--to", "svg"]);
+  expect(svg).toContain("font-family:'Figure Test'");
+  expect(svg).toContain('<tspan font-family="Figure Test">Jane Smith</tspan>');
+  expect(stderr.mock.calls.flat().join("")).toBe(
+    `credit-matrix: font: Figure Test from ${join(fonts, "FigureTest-Regular.ttf")}\n`,
+  );
+  stderr.mockClear();
+  const accented = file("accented.csv", "Name,Software\nZoë Smith,100\n");
+  const serif = await run([
+    "convert",
+    accented,
+    ...figure.slice(2),
+    "--ignore-system-fonts",
+    "--font-fallback",
+    "serif",
+    "--to",
+    "svg",
+  ]);
+  expect(serif).toContain("font-family:'Noto Serif'");
+  await expect(run([...figure, "--font-fallback", "mono", "--to", "svg"])).rejects.toThrow(
+    "--font-fallback must be sans or serif.",
+  );
+  const pdf = await runCommand([...figure, "--ignore-system-fonts", "--to", "pdf"]);
+  expect(new TextDecoder().decode((pdf as Uint8Array).slice(0, 8))).toBe("%PDF-1.7");
 });
 
 it("selects full names or initials without shortening the text alternative", async () => {

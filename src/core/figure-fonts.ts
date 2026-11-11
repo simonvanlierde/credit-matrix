@@ -3,7 +3,8 @@
 /**
  * A figure font face: Latin, Japanese, Simplified Chinese and the other scripts in sans and serif (Korean
  * in sans only), and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays
- * out the complex scripts, fetched the same way.
+ * out the complex scripts, and `harfbuzz-subset` its subsetter, which cuts each face down to a figure's glyphs;
+ * both are fetched the same way.
  */
 export type FigureFace =
   | "sans"
@@ -52,13 +53,22 @@ export type FigureFace =
   | "serif-telugu"
   | "serif-thai"
   | "emoji"
-  | "harfbuzz";
+  | "harfbuzz"
+  | "harfbuzz-subset";
 
 /**
- * Returns the bytes of one face (TrueType, or WebAssembly for `harfbuzz`); `createFigureRenderer` calls it
- * the first time a figure needs that face.
+ * Returns the bytes of one face (TrueType, or WebAssembly for `harfbuzz` and `harfbuzz-subset`);
+ * `createFigureRenderer` calls it the first time a figure needs that face.
  */
 export type FigureFontProvider = (face: FigureFace) => Uint8Array | Promise<Uint8Array>;
+
+/**
+ * A `font` family a figure cannot use: not found, installed only as a web font (WOFF), or a variable font
+ * whose default instance is not the upright regular one.
+ */
+export class FigureFontFileError extends Error {
+  override readonly name = "FigureFontFileError";
+}
 
 /** The `credit-matrix-fonts` release whose files the download fetches and whose hashes are listed here. */
 export const FIGURE_FONTS_VERSION = "1.0.0";
@@ -252,12 +262,16 @@ export const FIGURE_FONT_FILES: Record<FigureFace, { file: string; sha256: strin
     file: "harfbuzz.wasm",
     sha256: "6eeed8e1bc9ad7773038e48ff8f9e07e0ad228572c594b45e5357e9c2f7a0b2e",
   },
+  "harfbuzz-subset": {
+    file: "harfbuzz-subset.wasm",
+    sha256: "62415fe6bad92ef16f3e5d2dbed6c66a4adec7f5a59c6d27084811c92cce1ba5",
+  },
 };
 
 const CDN = `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@${FIGURE_FONTS_VERSION}/`;
 
 // Kept dynamic: the same module runs in the browser, where Node's modules do not exist.
-function nodeModule<T>(name: string): Promise<T> {
+export function nodeModule<T>(name: string): Promise<T> {
   return import(/* @vite-ignore */ name) as Promise<T>;
 }
 

@@ -4,12 +4,15 @@ import {
   drawText,
   LineCapStyle,
   LineJoinStyle,
+  PDFArray,
+  PDFDict,
   PDFDocument,
   type PDFFont,
   PDFHexString,
   PDFName,
   PDFOperator,
   PDFOperatorNames,
+  PDFStream,
   PDFString,
   popGraphicsState,
   pushGraphicsState,
@@ -19,11 +22,14 @@ import {
 import type { Author } from "./author";
 import { hexRgb } from "./contributor-color";
 import { escapeXml } from "./export/escape-xml";
-import { buildHeatmapSvg, type HeatmapSvgOptions } from "./export/heatmap-svg";
+import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
 import { defaultFigureFonts, type FigureFace, type FigureFontProvider } from "./figure-fonts";
+import type { FoundFont } from "./font-search";
 import { createShaper, type ShapedFace, type ShapedGlyph, type Shaper } from "./shaping";
+import { createSubsetter, type SubsetFace, type Subsetter } from "./subset";
 
 export type { FigureFace, FigureFontProvider } from "./figure-fonts";
+export { FigureFontFileError } from "./figure-fonts";
 
 export class FigureFontError extends Error {
   override readonly name = "FigureFontError";
@@ -37,7 +43,25 @@ export class FigureFontError extends Error {
   }
 }
 
-export interface FigureSvgOptions extends HeatmapSvgOptions {
+export interface FigureOptions extends Omit<HeatmapSvgOptions, "font"> {
+  /**
+   * `"sans"` (the default), `"serif"`, or the name of an installed font family (name ID 16, else 1, any case),
+   * in Node only. The family's upright regular face draws Latin and every other character it has, except the
+   * complex scripts and emoji, which keep their own faces; the sans faces draw what it lacks.
+   */
+  font?: "sans" | "serif" | (string & {});
+  /** Folders searched for a `font` family before the system font folders, the first one first. */
+  fontPath?: string[];
+  /** Search only `fontPath`, not the system font folders. */
+  ignoreSystemFonts?: boolean;
+  /**
+   * The built-in faces that draw what a `font` family lacks. Defaults to the family's own classification
+   * (OS/2 sFamilyClass, else PANOSE): serif for a serif family, else sans.
+   */
+  fontFallback?: "sans" | "serif";
+}
+
+export interface FigureSvgOptions extends FigureOptions {
   /**
    * What SVG does with a character the figure faces cannot draw: `"error"` (the default) throws
    * `FigureFontError`; `"system"` draws that run in the system font stack `buildHeatmapSvg` uses,
@@ -50,7 +74,15 @@ export interface FigureSvgOptions extends HeatmapSvgOptions {
 export interface FigureRenderer {
   svg(authors: Author[], options?: FigureSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
-  pdf(authors: Author[], options?: HeatmapSvgOptions, widthMm?: number): Promise<Uint8Array>;
+  pdf(authors: Author[], options?: FigureOptions, widthMm?: number): Promise<Uint8Array>;
+}
+
+/** The file a `font` family was found in, reported once per renderer and family. */
+export interface FigureFontReport {
+  family: string;
+  file: string;
+  /** Set when the font's OS/2 embedding permission restricts sharing documents that embed it. */
+  warning?: string;
 }
 
 export interface FigureRendererOptions {
@@ -59,11 +91,15 @@ export interface FigureRendererOptions {
    * otherwise downloads the face from its pinned release on jsDelivr, checks its SHA-256 and caches it.
    */
   fonts?: FigureFontProvider;
+  /** Called when a `font` family is found. Without it, only a permission warning is printed, to the console. */
+  onFont?: (report: FigureFontReport) => void;
 }
 
 interface FontSource {
   family: string;
   face: FigureFace;
+  /** A `font` family that classes itself as serif. */
+  serif?: boolean;
   /** A complex script: HarfBuzz lays it out, and SVG embeds the whole face so viewers keep its shaping tables. */
   shaped?: boolean;
 }
@@ -73,6 +109,13 @@ interface FigureFont {
   bytes: Uint8Array;
   font: Font;
   shaped: boolean;
+  /** OS/2 fsType 0x0100: embedded whole, never subset. */
+  noSubset: boolean;
+}
+
+/** The options one export lays out with, its `font` family found. */
+interface Layout extends FigureSvgOptions {
+  custom?: FontSource;
 }
 
 interface TextRun {
@@ -132,6 +175,8 @@ const SCRIPT_FACES: [RegExp, sans: FontSource, serif: FontSource][] = [
 
 /** The shaping engine, loaded through the font provider the first time a complex script needs it. */
 const HARFBUZZ: FontSource = { family: "HarfBuzz", face: "harfbuzz" };
+/** The subsetter, loaded the first time an export embeds a face. */
+const SUBSETTER: FontSource = { family: "HarfBuzz subset", face: "harfbuzz-subset" };
 
 // Right-to-left letters: only labels with these need the bidi algorithm.
 const RTL_TEXT = /[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff\u{10800}-\u{10fff}\u{1e800}-\u{1efff}]/u;
@@ -165,149 +210,6 @@ function base64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-function checksum(bytes: Uint8Array): number {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let sum = 0;
-  for (let offset = 0; offset < bytes.length; offset += 4) sum = (sum + view.getUint32(offset)) % 2 ** 32;
-  return sum;
-}
-
-/** Read an OpenType file's tables by tag. */
-function sfntTables(bytes: Uint8Array): Map<string, Uint8Array> {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const tables = new Map<string, Uint8Array>();
-  for (let index = 0; index < view.getUint16(4); index++) {
-    const record = 12 + index * 16;
-    const tag = String.fromCharCode(...bytes.subarray(record, record + 4));
-    const offset = view.getUint32(record + 8);
-    tables.set(tag, bytes.subarray(offset, offset + view.getUint32(record + 12)));
-  }
-  return tables;
-}
-
-/** Write a TrueType file from its tables, with the checksums browsers' font sanitizers verify. */
-function sfnt(tables: Map<string, Uint8Array>): Uint8Array {
-  const tags = [...tables.keys()].sort();
-  const padded = tags.map((tag) => {
-    const table = tables.get(tag) ?? new Uint8Array();
-    const copy = new Uint8Array(Math.ceil(table.length / 4) * 4);
-    copy.set(table);
-    if (tag === "head") copy.fill(0, 8, 12);
-    return copy;
-  });
-  const header = 12 + tags.length * 16;
-  const bytes = new Uint8Array(header + padded.reduce((sum, table) => sum + table.length, 0));
-  const view = new DataView(bytes.buffer);
-  const power = 2 ** Math.floor(Math.log2(tags.length));
-  view.setUint32(0, 0x00010000);
-  view.setUint16(4, tags.length);
-  view.setUint16(6, power * 16);
-  view.setUint16(8, Math.log2(power));
-  view.setUint16(10, tags.length * 16 - power * 16);
-  let offset = header;
-  let headOffset = 0;
-  for (const [index, tag] of tags.entries()) {
-    const table = padded[index] ?? new Uint8Array();
-    const record = 12 + index * 16;
-    for (let char = 0; char < 4; char++) bytes[record + char] = tag.charCodeAt(char);
-    view.setUint32(record + 4, checksum(table));
-    view.setUint32(record + 8, offset);
-    view.setUint32(record + 12, tables.get(tag)?.length ?? 0);
-    bytes.set(table, offset);
-    if (tag === "head") headOffset = offset;
-    offset += table.length;
-  }
-  view.setUint32(headOffset + 8, (0xb1b0afba - checksum(bytes) + 2 ** 32) % 2 ** 32);
-  return bytes;
-}
-
-/** A cmap with a BMP format 4 and a full format 12 subtable, mapping each code point to its subset glyph. */
-function cmap(glyphs: Map<number, number>): Uint8Array {
-  const points = [...glyphs.keys()].sort((a, b) => a - b);
-  const bmp = [...points.filter((point) => point < 0xffff), 0xffff];
-  const format4 = new DataView(new ArrayBuffer(16 + bmp.length * 8));
-  const segments = bmp.length;
-  const power = 2 ** Math.floor(Math.log2(segments));
-  format4.setUint16(0, 4);
-  format4.setUint16(2, format4.byteLength);
-  format4.setUint16(6, segments * 2);
-  format4.setUint16(8, power * 2);
-  format4.setUint16(10, Math.log2(power));
-  format4.setUint16(12, segments * 2 - power * 2);
-  for (const [index, point] of bmp.entries()) {
-    format4.setUint16(14 + index * 2, point);
-    format4.setUint16(16 + segments * 2 + index * 2, point);
-    format4.setUint16(16 + segments * 4 + index * 2, ((glyphs.get(point) ?? 0) - point + 0x10000) % 0x10000);
-  }
-  // The final 0xFFFF segment maps to glyph 0, as the format requires.
-  format4.setUint16(16 + segments * 4 + (segments - 1) * 2, 1);
-  const format12 = new DataView(new ArrayBuffer(16 + points.length * 12));
-  format12.setUint16(0, 12);
-  format12.setUint32(4, format12.byteLength);
-  format12.setUint32(12, points.length);
-  for (const [index, point] of points.entries()) {
-    format12.setUint32(16 + index * 12, point);
-    format12.setUint32(20 + index * 12, point);
-    format12.setUint32(24 + index * 12, glyphs.get(point) ?? 0);
-  }
-  const table = new Uint8Array(20 + format4.byteLength + format12.byteLength);
-  const view = new DataView(table.buffer);
-  view.setUint16(2, 2);
-  view.setUint16(4, 3);
-  view.setUint16(6, 1);
-  view.setUint32(8, 20);
-  view.setUint16(12, 3);
-  view.setUint16(14, 10);
-  view.setUint32(16, 20 + format4.byteLength);
-  table.set(new Uint8Array(format4.buffer), 20);
-  table.set(new Uint8Array(format12.buffer), 20 + format4.byteLength);
-  return table;
-}
-
-/**
- * A standalone font holding only these characters' glyphs, from the subsetter that also feeds the PDF.
- * NOTE: the subset has no GSUB or GPOS, so a browser places an uncomposed combining mark without its anchor.
- */
-async function webFont(face: FigureFont, characters: Set<string>): Promise<Uint8Array> {
-  // shortcut: whole complex-script faces (at most 370 kB); subset with harfbuzz-subset if figures get heavy.
-  if (face.shaped) return face.bytes;
-  const subset = face.font.createSubset();
-  const glyphs = new Map<number, number>();
-  for (const character of characters) {
-    const point = character.codePointAt(0) ?? 0;
-    glyphs.set(point, subset.includeGlyph(face.font.glyphForCodePoint(point)));
-  }
-  const encoded = await new Promise<Uint8Array>((resolve) => {
-    const parts: Uint8Array[] = [];
-    subset
-      .encodeStream()
-      .on("data", (part: Uint8Array) => parts.push(part))
-      .on("end", () => {
-        const bytes = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
-        let offset = 0;
-        for (const part of parts) {
-          bytes.set(part, offset);
-          offset += part.length;
-        }
-        resolve(bytes);
-      });
-  });
-  // The PDF subsetter writes only the tables a PDF reads; a web font also needs these four.
-  const original = sfntTables(face.bytes);
-  const tables = sfntTables(encoded);
-  tables.set("cmap", cmap(glyphs));
-  for (const tag of ["OS/2", "name"]) {
-    const table = original.get(tag);
-    if (table) tables.set(tag, table);
-  }
-  // post version 3 names no glyphs, so it stays valid for the renumbered subset.
-  const post = new Uint8Array(32);
-  post.set((original.get("post") ?? new Uint8Array(32)).subarray(0, 32));
-  new DataView(post.buffer).setUint32(0, 0x00030000);
-  tables.set("post", post);
-  return sfnt(tables);
-}
-
 function color(hex: string | undefined) {
   if (!hex || hex === "none") return undefined;
   const [r, g, b] = hexRgb(hex);
@@ -315,9 +217,9 @@ function color(hex: string | undefined) {
 }
 
 /**
- * Export figures with retained text and embedded Noto fonts. Each face loads on the first figure whose text
- * needs it. SVG and PDF embed only the glyphs that figure uses; editors can require the full fonts
- * installed locally to change its text.
+ * Export figures with retained text and embedded Noto fonts, or a font family the caller names. Each face
+ * loads on the first figure whose text needs it. SVG and PDF embed only the glyphs that figure uses; editors
+ * can require the full fonts installed locally to change its text.
  */
 export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}): FigureRenderer {
   const loaded = new Map<FontSource, FigureFont>();
@@ -326,6 +228,10 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
   const warned = new Set<FontSource>();
   let shaper: Shaper | undefined;
   const shapedFaces = new Map<FigureFont, ShapedFace>();
+  let subsetter: Subsetter | undefined;
+  const subsetFaces = new Map<FigureFont, SubsetFace>();
+  // Each `font` family search, by family, font path and system-font switch.
+  const customFonts = new Map<string, Promise<FontSource>>();
 
   function load(source: FontSource): Promise<void> {
     let pending = loading.get(source);
@@ -335,12 +241,14 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         .then(() => fonts(source.face))
         .then(async (bytes) => {
           if (source === HARFBUZZ) shaper = await createShaper(bytes);
+          else if (source === SUBSETTER) subsetter = await createSubsetter(bytes);
           else
             loaded.set(source, {
               family: source.family,
               bytes,
               font: fontkit.create(bytes),
               shaped: source.shaped === true,
+              noSubset: false,
             });
         })
         .catch((error: unknown) => {
@@ -379,6 +287,57 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     }
   }
 
+  /** Find the options' `font` family, once per renderer; undefined for sans and serif. */
+  function customFont(options: FigureOptions | undefined): Promise<FontSource | undefined> {
+    const family = options?.font;
+    const fallback = options?.fontFallback;
+    if (fallback !== undefined && fallback !== "sans" && fallback !== "serif")
+      return Promise.reject(new HeatmapOptionError("Figure font fallback must be sans or serif."));
+    if (family === undefined || family === "sans" || family === "serif") return Promise.resolve(undefined);
+    const key = JSON.stringify([family.trim().toLowerCase(), options?.fontPath ?? [], options?.ignoreSystemFonts]);
+    let pending = customFonts.get(key);
+    if (!pending) {
+      pending = import("./font-search")
+        .then(({ findFigureFont }) =>
+          findFigureFont(family, { fontPath: options?.fontPath, ignoreSystemFonts: options?.ignoreSystemFonts }),
+        )
+        .then((found: FoundFont) => {
+          const source: FontSource = { family: found.family, face: "sans", serif: found.serif };
+          loaded.set(source, {
+            family: found.family,
+            bytes: found.bytes,
+            font: fontkit.create(found.bytes),
+            shaped: false,
+            noSubset: found.noSubset,
+          });
+          if (rendererOptions.onFont)
+            rendererOptions.onFont({ family: found.family, file: found.file, warning: found.warning });
+          // biome-ignore lint/suspicious/noConsole: the figure still renders; the font's license may restrict it.
+          else if (found.warning) console.warn(found.warning);
+          return source;
+        });
+      // A failed search runs again on the next export, after the caller installs the font.
+      pending.catch(() => customFonts.delete(key));
+      customFonts.set(key, pending);
+    }
+    return pending;
+  }
+
+  /** The bytes a document embeds for a face: its glyphs for these characters, or the whole face. */
+  function embeddable(font: FigureFont, characters: Iterable<string>, retainGids: boolean): Uint8Array {
+    if (font.noSubset) return font.bytes;
+    if (!subsetter) throw new UnloadedFace(SUBSETTER);
+    let subsetFace = subsetFaces.get(font);
+    if (!subsetFace) {
+      subsetFace = subsetter.face(font.bytes);
+      subsetFaces.set(font, subsetFace);
+    }
+    return subsetFace.subset(
+      [...characters].map((character) => character.codePointAt(0) ?? 0),
+      retainGids,
+    );
+  }
+
   function face(source: FontSource | undefined): FigureFont {
     if (!source) throw new Error("Missing figure font source.");
     const font = loaded.get(source);
@@ -406,9 +365,16 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     return advances.reduce((sum, advance) => sum + advance, 0) * (size / run.font.font.unitsPerEm);
   }
 
-  function textRuns(text: string, options?: FigureSvgOptions, unavailable?: Set<FontSource>): TextRun[] {
-    const serif = options?.font === "serif";
-    const [latin, japanese, chinese] = serif ? SOURCES.slice(3) : SOURCES.slice(0, 3);
+  /** Whether the built-in serif faces draw this figure: for `font: "serif"`, or a serif `font` family. */
+  function fallbackSerif(options?: Layout): boolean {
+    if (!options?.custom) return options?.font === "serif";
+    return (options.fontFallback ?? (options.custom.serif ? "serif" : "sans")) === "serif";
+  }
+
+  function textRuns(text: string, options?: Layout, unavailable?: Set<FontSource>): TextRun[] {
+    const serif = fallbackSerif(options);
+    const [sansOrSerif, japanese, chinese] = serif ? SOURCES.slice(3) : SOURCES.slice(0, 3);
+    const latin = options?.custom ? [options.custom, sansOrSerif] : [sansOrSerif];
     const locale = options?.locale?.toLowerCase() ?? "";
     const normalized = text.normalize("NFC");
     // Han is shared by Japanese and Chinese: kana or a Japanese locale selects Japanese glyph forms.
@@ -419,9 +385,12 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     // Chinese typesets quotes, dashes and ellipses beside Han at full width, as its own face draws them.
     const cjkPunctuation = /^zh\b/.test(locale) && /\p{Script=Han}/u.test(normalized);
     // Without HarfBuzz, no complex-script face can be laid out.
+    // Without the subsetter, no face can be embedded.
     const isUnavailable = (source: FontSource | undefined) =>
       source !== undefined &&
-      (unavailable?.has(source) === true || (source.shaped === true && unavailable?.has(HARFBUZZ) === true));
+      (unavailable?.has(source) === true ||
+        unavailable?.has(SUBSETTER) === true ||
+        (source.shaped === true && unavailable?.has(HARFBUZZ) === true));
     const runs: TextRun[] = [];
     const missing = new Set<string>();
     for (const { 0: character, index } of normalized.matchAll(/./gsu)) {
@@ -454,12 +423,12 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         ...(script ? [script] : []),
         // A serif script face lacking a character its sans twin has (Noto Serif Oriya's U+0B55) falls back to it.
         ...(faces && faces[1] !== script ? [faces[1]] : []),
-        ...(chinesePunctuation ? [...cjk, latin] : [latin, ...cjk]),
+        ...(chinesePunctuation ? [...cjk, ...latin] : [...latin, ...cjk]),
         ...(script === EMOJI ? [] : [EMOJI]),
       ];
       // The face meant for this character. When it is unavailable, another face would draw the text in the
       // wrong forms (Chinese Han for Japanese, CJK Latin for Latin), so it becomes a system-font run instead.
-      const designated = script ?? (chinesePunctuation || CJK_TEXT.test(character) ? cjk[0] : latin);
+      const designated = script ?? (chinesePunctuation || CJK_TEXT.test(character) ? cjk[0] : latin[0]);
       let font: FigureFont | undefined;
       let skipped = isUnavailable(designated);
       // In order, so a face loads only when every face before it lacks the character.
@@ -486,9 +455,11 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     return runs;
   }
 
-  function layoutSvg(authors: Author[], options?: FigureSvgOptions, unavailable?: Set<FontSource>): string {
+  function layoutSvg(authors: Author[], options?: Layout, unavailable?: Set<FontSource>): string {
     return buildHeatmapSvg(authors, {
       ...options,
+      // The system font stack for text no face draws.
+      font: fallbackSerif(options) ? "serif" : "sans",
       measureText: (label, size) =>
         textRuns(label, options, unavailable).reduce((sum, run) => sum + width(run, size), 0),
       measureTextHeight: (label, size) =>
@@ -558,34 +529,37 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
 
   return {
     async svg(authors, options) {
+      const layout: Layout = { ...options, custom: await customFont(options) };
       const used = new Map<FigureFont, Set<string>>();
       const unavailable = new Set<FontSource>();
       const svg = await withFaces(() => {
         used.clear();
-        return layoutSvg(authors, options, unavailable).replace(
+        const drawn = layoutSvg(authors, layout, unavailable).replace(
           /<text\b([^>]*)>([^<]*)<\/text>/g,
           (_, attrs: string, text: string) => {
             const system = attrs.match(/ font-family="([^"]*)"/)?.[1] ?? "sans-serif";
-            const content = textRuns(unescapeXml(text), options, unavailable)
+            const content = textRuns(unescapeXml(text), layout, unavailable)
               .map((run) => {
                 if (!run.font) return `<tspan font-family="${system}">${escapeXml(run.text)}</tspan>`;
                 const characters = used.get(run.font) ?? new Set<string>();
                 for (const character of run.text) characters.add(character);
                 used.set(run.font, characters);
-                return `<tspan font-family="${run.font.family}">${escapeXml(run.text)}</tspan>`;
+                return `<tspan font-family="${escapeXml(run.font.family)}">${escapeXml(run.text)}</tspan>`;
               })
               .join("");
             const ownAttrs = attrs.replace(/ font-family="[^"]*"/, "").replace(/ font-weight="[^"]*"/, "");
             return `<text${ownAttrs} xml:space="preserve">${content}</text>`;
           },
         );
+        if (!subsetter && [...used.keys()].some((font) => !font.noSubset)) throw new UnloadedFace(SUBSETTER);
+        return drawn;
       }, unavailable);
-      const faces = await Promise.all(
-        [...used].map(
-          async ([font, characters]) =>
-            `@font-face{font-family:'${font.family}';src:url('data:font/ttf;base64,${base64(await webFont(font, characters))}');font-weight:400}`,
-        ),
-      );
+      const faces = [...used].map(([font, characters]) => {
+        const bytes = embeddable(font, characters, false);
+        const type = String.fromCharCode(...bytes.subarray(0, 4)) === "OTTO" ? "otf" : "ttf";
+        const family = escapeXml(font.family.replace(/['\\]/g, "\\$&"));
+        return `@font-face{font-family:'${family}';src:url('data:font/${type};base64,${base64(bytes)}');font-weight:400}`;
+      });
       return svg.replace(
         /(<svg\b[^>]*>)/,
         `$1\n<style>${faces.join("")}text{font-kerning:none;font-variant-ligatures:none}</style>`,
@@ -595,13 +569,24 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     async pdf(authors, options, widthMm) {
       if (widthMm !== undefined && (!Number.isFinite(widthMm) || widthMm <= 0))
         throw new RangeError("Figure width must be a positive finite number of millimeters.");
-      const strict = { ...options, fallback: "error" as const };
+      const strict: Layout = { ...options, custom: await customFont(options), fallback: "error" };
       const svg = await withFaces(() => {
         const layout = layoutSvg(authors, strict);
         for (const [, text] of layout.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g))
           textRuns(unescapeXml(text ?? ""), strict);
         return layout;
       });
+      // Each label's runs, and each face's drawn characters (mirrored brackets included), so a face is
+      // subset before pdf-lib embeds it.
+      const labels = new Map<string, (TextRun & { rtl: boolean })[]>();
+      const used = new Map<FigureFont, Set<string>>();
+      for (const [, text = ""] of svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)) {
+        const runs = await visualRuns(textRuns(unescapeXml(text), strict));
+        labels.set(text, runs);
+        for (const { font, text: drawn } of runs)
+          if (font) used.set(font, new Set([...(used.get(font) ?? []), ...drawn]));
+      }
+      if ([...used.keys()].some((font) => !font.noSubset)) await load(SUBSETTER);
       const root = attributes(svg.slice(0, svg.indexOf(">")));
       const pageWidth = Number(root.width);
       const pageHeight = Number(root.height);
@@ -614,6 +599,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       if (options?.locale) document.catalog.set(PDFName.of("Lang"), PDFString.of(options.locale));
       const page = document.addPage([pageWidth, pageHeight]);
       const embedded = new Map<FigureFont, PDFFont>();
+      const openType: PDFFont[] = [];
       const groups: Record<string, string>[] = [];
       const supported = new Set(["svg", "title", "desc", "rect", "text", "g", "circle", "path"]);
 
@@ -677,7 +663,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           continue;
         }
 
-        const runs = await visualRuns(textRuns(unescapeXml(match[4] ?? ""), strict));
+        const runs = labels.get(match[4] ?? "") ?? [];
         const size = Number(attrs["font-size"]);
         const transform = attrs.transform?.match(/^translate\(([^,]+),([^)]+)\) rotate\(([^)]+)\)$/);
         const originX = transform ? Number(transform[1]) : x;
@@ -746,16 +732,19 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           if (!runFace) throw new FigureFontError(run.text);
           let font = embedded.get(runFace);
           if (!font) {
-            // A complex-script face is embedded whole: its glyph ids are then HarfBuzz's, drawn with Identity-H.
-            font = await document.embedFont(runFace.bytes, {
-              subset: !runFace.shaped,
+            const bytes = embeddable(runFace, used.get(runFace) ?? [], true);
+            // Subset here with every glyph id kept, so HarfBuzz's ids (drawn with Identity-H) and pdf-lib's own
+            // encoding of the whole face stay valid; pdf-lib then embeds these bytes as they are.
+            font = await document.embedFont(bytes, {
+              subset: false,
               features: FEATURES,
               // The six-letter tag marks a subset, by PDF convention.
-              customName: runFace.shaped
+              customName: runFace.noSubset
                 ? (runFace.font.postscriptName ?? undefined)
                 : `CMFIGR+${runFace.font.postscriptName}`,
             });
             embedded.set(runFace, font);
+            if (String.fromCharCode(...bytes.subarray(0, 4)) === "OTTO") openType.push(font);
           }
           const unit = size / runFace.font.unitsPerEm;
           if (runFace.shaped) {
@@ -805,6 +794,24 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           }
           advance += width(run, size);
         }
+      }
+      // fontkit 1.1.1 never reports a CFF table, so pdf-lib declares a CFF-flavored OpenType file a TrueType
+      // one (CIDFontType2, FontFile2). Relabel it as PDF 1.6 does: CIDFontType0, FontFile3 /OpenType.
+      // Embedding now, after the last glyph is drawn, is final.
+      for (const font of openType) {
+        await font.embed();
+        const cid = document.context
+          .lookup(font.ref, PDFDict)
+          .lookup(PDFName.of("DescendantFonts"), PDFArray)
+          .lookup(0, PDFDict);
+        cid.set(PDFName.of("Subtype"), PDFName.of("CIDFontType0"));
+        cid.delete(PDFName.of("CIDToGIDMap"));
+        const descriptor = cid.lookup(PDFName.of("FontDescriptor"), PDFDict);
+        const file = descriptor.get(PDFName.of("FontFile2"));
+        if (!file) throw new Error("pdf-lib embedded an OpenType figure font without its font file.");
+        descriptor.delete(PDFName.of("FontFile2"));
+        descriptor.set(PDFName.of("FontFile3"), file);
+        descriptor.lookup(PDFName.of("FontFile3"), PDFStream).dict.set(PDFName.of("Subtype"), PDFName.of("OpenType"));
       }
       // SVG pixels are 1/96 inch; PDF points are 1/72 inch. Keep their natural print sizes equal.
       const printScale = widthMm === undefined ? 0.75 : (widthMm * 72) / (25.4 * pageWidth);

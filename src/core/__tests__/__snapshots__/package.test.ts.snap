@@ -63,6 +63,7 @@ exports[`the built credit-matrix package > exports exactly the public names from
   ],
   "./figures": [
     "FigureFontError",
+    "FigureFontFileError",
     "createFigureRenderer",
   ],
   "./i18n": [

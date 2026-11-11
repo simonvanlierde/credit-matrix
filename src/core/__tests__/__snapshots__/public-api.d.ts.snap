@@ -106,20 +106,45 @@ import { a as Author, n as HeatmapSvgOptions } from "./heatmap-svg.js";
 /**
  * A figure font face: Latin, Japanese, Simplified Chinese and the other scripts in sans and serif (Korean
  * in sans only), and monochrome emoji. `harfbuzz` is the HarfBuzz shaping engine (WebAssembly) that lays
- * out the complex scripts, fetched the same way.
+ * out the complex scripts, and `harfbuzz-subset` its subsetter, which cuts each face down to a figure's glyphs;
+ * both are fetched the same way.
  */
-type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif-sc" | "sans-kr" | "sans-arabic" | "sans-armenian" | "sans-bengali" | "sans-devanagari" | "sans-ethiopic" | "sans-georgian" | "sans-gujarati" | "sans-gurmukhi" | "sans-hebrew" | "sans-kannada" | "sans-khmer" | "sans-lao" | "sans-malayalam" | "sans-myanmar" | "sans-oriya" | "sans-sinhala" | "sans-tamil" | "sans-telugu" | "sans-thai" | "serif-arabic" | "serif-armenian" | "serif-bengali" | "serif-devanagari" | "serif-ethiopic" | "serif-georgian" | "serif-gujarati" | "serif-gurmukhi" | "serif-hebrew" | "serif-kannada" | "serif-khmer" | "serif-lao" | "serif-malayalam" | "serif-myanmar" | "serif-oriya" | "serif-sinhala" | "serif-tamil" | "serif-telugu" | "serif-thai" | "emoji" | "harfbuzz";
+type FigureFace = "sans" | "sans-jp" | "sans-sc" | "serif" | "serif-jp" | "serif-sc" | "sans-kr" | "sans-arabic" | "sans-armenian" | "sans-bengali" | "sans-devanagari" | "sans-ethiopic" | "sans-georgian" | "sans-gujarati" | "sans-gurmukhi" | "sans-hebrew" | "sans-kannada" | "sans-khmer" | "sans-lao" | "sans-malayalam" | "sans-myanmar" | "sans-oriya" | "sans-sinhala" | "sans-tamil" | "sans-telugu" | "sans-thai" | "serif-arabic" | "serif-armenian" | "serif-bengali" | "serif-devanagari" | "serif-ethiopic" | "serif-georgian" | "serif-gujarati" | "serif-gurmukhi" | "serif-hebrew" | "serif-kannada" | "serif-khmer" | "serif-lao" | "serif-malayalam" | "serif-myanmar" | "serif-oriya" | "serif-sinhala" | "serif-tamil" | "serif-telugu" | "serif-thai" | "emoji" | "harfbuzz" | "harfbuzz-subset";
 /**
- * Returns the bytes of one face (TrueType, or WebAssembly for `harfbuzz`); `createFigureRenderer` calls it
- * the first time a figure needs that face.
+ * Returns the bytes of one face (TrueType, or WebAssembly for `harfbuzz` and `harfbuzz-subset`);
+ * `createFigureRenderer` calls it the first time a figure needs that face.
  */
 type FigureFontProvider = (face: FigureFace) => Uint8Array | Promise<Uint8Array>;
+/**
+ * A `font` family a figure cannot use: not found, installed only as a web font (WOFF), or a variable font
+ * whose default instance is not the upright regular one.
+ */
+export declare class FigureFontFileError extends Error {
+  readonly name = "FigureFontFileError";
+}
 export declare class FigureFontError extends Error {
   readonly characters: string;
   readonly name = "FigureFontError";
   constructor(characters: string);
 }
-export interface FigureSvgOptions extends HeatmapSvgOptions {
+export interface FigureOptions extends Omit<HeatmapSvgOptions, "font"> {
+  /**
+   * `"sans"` (the default), `"serif"`, or the name of an installed font family (name ID 16, else 1, any case),
+   * in Node only. The family's upright regular face draws Latin and every other character it has, except the
+   * complex scripts and emoji, which keep their own faces; the sans faces draw what it lacks.
+   */
+  font?: "sans" | "serif" | (string & {});
+  /** Folders searched for a `font` family before the system font folders, the first one first. */
+  fontPath?: string[];
+  /** Search only `fontPath`, not the system font folders. */
+  ignoreSystemFonts?: boolean;
+  /**
+   * The built-in faces that draw what a `font` family lacks. Defaults to the family's own classification
+   * (OS/2 sFamilyClass, else PANOSE): serif for a serif family, else sans.
+   */
+  fontFallback?: "sans" | "serif";
+}
+export interface FigureSvgOptions extends FigureOptions {
   /**
    * What SVG does with a character the figure faces cannot draw: `"error"` (the default) throws
    * `FigureFontError`; `"system"` draws that run in the system font stack `buildHeatmapSvg` uses,
@@ -131,7 +156,14 @@ export interface FigureSvgOptions extends HeatmapSvgOptions {
 export interface FigureRenderer {
   svg(authors: Author[], options?: FigureSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
-  pdf(authors: Author[], options?: HeatmapSvgOptions, widthMm?: number): Promise<Uint8Array>;
+  pdf(authors: Author[], options?: FigureOptions, widthMm?: number): Promise<Uint8Array>;
+}
+/** The file a `font` family was found in, reported once per renderer and family. */
+export interface FigureFontReport {
+  family: string;
+  file: string;
+  /** Set when the font's OS/2 embedding permission restricts sharing documents that embed it. */
+  warning?: string;
 }
 export interface FigureRendererOptions {
   /**
@@ -139,11 +171,13 @@ export interface FigureRendererOptions {
    * otherwise downloads the face from its pinned release on jsDelivr, checks its SHA-256 and caches it.
    */
   fonts?: FigureFontProvider;
+  /** Called when a `font` family is found. Without it, only a permission warning is printed, to the console. */
+  onFont?: (report: FigureFontReport) => void;
 }
 /**
- * Export figures with retained text and embedded Noto fonts. Each face loads on the first figure whose text
- * needs it. SVG and PDF embed only the glyphs that figure uses; editors can require the full fonts
- * installed locally to change its text.
+ * Export figures with retained text and embedded Noto fonts, or a font family the caller names. Each face
+ * loads on the first figure whose text needs it. SVG and PDF embed only the glyphs that figure uses; editors
+ * can require the full fonts installed locally to change its text.
  */
 export declare function createFigureRenderer(rendererOptions?: FigureRendererOptions): FigureRenderer;
 export type { FigureFace, FigureFontProvider };

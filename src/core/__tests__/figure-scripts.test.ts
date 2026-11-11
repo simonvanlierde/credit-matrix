@@ -146,9 +146,10 @@ describe("figures in every covered script", () => {
   it("loads no script face or shaping engine for a Latin figure", async () => {
     const latin = createFigureRenderer({
       fonts: async (face) => {
-        if (face !== "sans") throw new Error(`Asked for ${face}.`);
+        if (face !== "sans" && face !== "harfbuzz-subset") throw new Error(`Asked for ${face}.`);
         const { readFile } = await import("node:fs/promises");
-        return new Uint8Array(await readFile(new URL("../../fonts/NotoSans-Regular.ttf", import.meta.url)));
+        const { FIGURE_FONT_FILES } = await import("../figure-fonts");
+        return new Uint8Array(await readFile(new URL(`../../fonts/${FIGURE_FONT_FILES[face].file}`, import.meta.url)));
       },
     });
     const authors = [createAuthor("Ada Lovelace", { contributions: [{ role: "Software", score: 100 }] })];
