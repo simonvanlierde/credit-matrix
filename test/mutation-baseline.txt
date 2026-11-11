@@ -1,6 +1,6 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
 # Each line: file status mutator -> replacement | original line, and why it is kept, for one left on purpose.
-# Score 92.42%: 3316 killed, 216 survived, 56 without coverage, 260 kept with a reason.
+# Score 92.42%: 3316 killed, 216 survived, 56 without coverage, 263 kept with a reason.
 src/core/export/crossref.ts Survived ConditionalExpression -> false | if (end < 0) return false;  # kept: equivalent: after slice(1) or slice(2) the text starts with ? or -, so the root test fails the same way
 src/core/export/crossref.ts Survived ConditionalExpression -> false | if (end < 0) return false;  # kept: equivalent: after slice(1) or slice(2) the text starts with ? or -, so the root test fails the same way
 src/core/export/crossref.ts Survived EqualityOperator -> end <= 0 | if (end < 0) return false;  # kept: equivalent: indexOf cannot return 0 here, the text starts with the opener, not the closer
@@ -24,9 +24,9 @@ src/core/export/heatmap-svg.ts NoCoverage StringLiteral -> "Stryker was here!" |
 src/core/export/heatmap-svg.ts NoCoverage StringLiteral -> "Stryker was here!" | const score = scoreFor(authors[ai], role?.name ?? "");  # kept: equivalent: the role index is always in range
 src/core/export/heatmap-svg.ts NoCoverage StringLiteral -> "Stryker was here!" | leftLabels[r] ?? "",  # kept: equivalent: the index is always in range
 src/core/export/heatmap-svg.ts NoCoverage StringLiteral -> "Stryker was here!" | topLabels[i] ?? "",  # kept: equivalent: the index is always in range
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> (legendRows.length - 1) / legendRowH | const bottomH = gridY + gridH + LEGEND_GAP * scale + (legendRows.length - 1) * legendRowH + swatchHe
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridY + gridH + LEGEND_GAP * scale - (legendRows.length - 1) | const bottomH = gridY + gridH + LEGEND_GAP * scale + (legendRows.length - 1) * legendRowH + swatchHe
-src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> LEGEND_GAP / scale | const bottomH = gridY + gridH + LEGEND_GAP * scale + (legendRows.length - 1) * legendRowH + swatchHe
+src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> (legendRows.length - 1) / legendRowH | const bottomH = gridY + gridH + LEGEND_GAP * scale + (legendRows.length - 1) * legendRowH + swatchHe  # kept: equivalent in practice: dropping the sideH <= bottomH check, the only reader of bottomH, changed the auto choice in none of 1,008 option sets (1-3 authors, 1-14 roles, cell 8-60, font 6-32, scale 1-2)
+src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> gridY + gridH + LEGEND_GAP * scale - (legendRows.length - 1) | const bottomH = gridY + gridH + LEGEND_GAP * scale + (legendRows.length - 1) * legendRowH + swatchHe  # kept: equivalent in practice: dropping the sideH <= bottomH check, the only reader of bottomH, changed the auto choice in none of 1,008 option sets (1-3 authors, 1-14 roles, cell 8-60, font 6-32, scale 1-2)
+src/core/export/heatmap-svg.ts Survived ArithmeticOperator -> LEGEND_GAP / scale | const bottomH = gridY + gridH + LEGEND_GAP * scale + (legendRows.length - 1) * legendRowH + swatchHe  # kept: equivalent in practice: dropping the sideH <= bottomH check, the only reader of bottomH, changed the auto choice in none of 1,008 option sets (1-3 authors, 1-14 roles, cell 8-60, font 6-32, scale 1-2)
 src/core/export/heatmap-svg.ts Survived EqualityOperator -> gridH > gridW * 1.5 | gridH >= gridW * 1.5 &&  # kept: equivalent: needs gridH to equal 1.5 x gridW exactly; the cell and gap arithmetic cannot produce that tie
 src/core/export/heatmap-svg.ts Survived EqualityOperator -> rowWidth(row) < contentW | if (candidate.every((row) => rowWidth(row) <= contentW)) {  # kept: equivalent: a row width equal to the figure width to the last bit does not occur
 src/core/export/heatmap-svg.ts Survived EqualityOperator -> sideH < bottomH | sideH <= bottomH);  # kept: equivalent: differs only when sideH equals bottomH to the last float bit
