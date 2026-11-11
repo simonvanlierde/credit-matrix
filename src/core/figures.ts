@@ -275,6 +275,8 @@ function color(hex: string | undefined) {
 export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}): FigureRenderer {
   const loaded = new Map<FontSource, FigureFont>();
   const loading = new Map<FontSource, Promise<void>>();
+  // Faces already warned about: the app redraws its preview on every settings change.
+  const warned = new Set<FontSource>();
 
   function load(source: FontSource): Promise<void> {
     let pending = loading.get(source);
@@ -309,10 +311,12 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           await load(error.source);
         } catch (loadError) {
           if (!unavailable) throw loadError;
-          // biome-ignore lint/suspicious/noConsole: the figure still renders; say why it looks different.
-          console.warn(
-            `${loadError instanceof Error ? loadError.message : String(loadError)} Drawing its text in system fonts.`,
-          );
+          if (!warned.has(error.source))
+            // biome-ignore lint/suspicious/noConsole: the figure still renders; say why it looks different.
+            console.warn(
+              `${loadError instanceof Error ? loadError.message : String(loadError)} Drawing its text in system fonts.`,
+            );
+          warned.add(error.source);
           unavailable.add(error.source);
         }
       }

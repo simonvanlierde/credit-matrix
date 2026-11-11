@@ -63,6 +63,12 @@ describe("downloadFigureFont", () => {
     await expect(readdir(join(cache, "credit-matrix", "fonts"))).rejects.toThrow();
   });
 
+  it("says why when the page has no Web Crypto to check a download", async () => {
+    vi.stubGlobal("fetch", async () => new Response(await sans()));
+    vi.stubGlobal("crypto", {});
+    await expect(downloadFigureFont("sans")).rejects.toThrow("needs Web Crypto");
+  });
+
   it("names both fixes when offline with nothing cached", async () => {
     vi.stubGlobal("fetch", () => Promise.reject(new TypeError("fetch failed")));
     await expect(downloadFigureFont("sans-jp")).rejects.toThrow(
@@ -81,12 +87,17 @@ describe("a renderer whose fonts cannot be loaded", () => {
 
   it("draws SVG in system fonts and warns", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    const svg = await offline().svg(jane);
+    const renderer = offline();
+    const svg = await renderer.svg(jane);
+    const warnings = warn.mock.calls.length;
+    await renderer.svg(jane);
     expect(svg).toMatch(/<tspan font-family="[^"]*sans-serif">Software<\/tspan>/);
     expect(svg).not.toContain("@font-face");
     expect(warn).toHaveBeenCalledWith(
       "Cannot load figure font NotoSans-Regular.ttf (offline). Drawing its text in system fonts.",
     );
+    // Once per face, not once per figure.
+    expect(warn).toHaveBeenCalledTimes(warnings);
   });
 
   it("stops PDF with the provider's error", async () => {
