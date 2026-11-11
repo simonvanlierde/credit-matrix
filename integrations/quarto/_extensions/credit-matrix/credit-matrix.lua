@@ -380,6 +380,7 @@ local function heatmap(authors, options, locale)
   local folders = options["font-path"] or {}
   if pandoc.utils.type(folders) ~= "List" then folders = { folders } end
   local input = PANDOC_STATE.input_files[1]
+  if input == "-" then input = nil end -- standard input has no folder
   local base = pandoc.system.get_working_directory()
   if input then base = pandoc.path.join({ base, pandoc.path.directory(input) }) end
   for _, folder in ipairs(folders) do

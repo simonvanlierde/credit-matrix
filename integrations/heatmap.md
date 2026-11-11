@@ -27,7 +27,7 @@ Use these names in every plugin. The JavaScript `buildHeatmapSvg` function uses 
 | `size` | Cell side: pixels in SVG, a length in Typst | `22`, or `14pt` in Typst |
 | `font` | `sans`, `serif`, or an installed font family name (case-insensitive); Typst also takes an array of names | `sans` |
 | `font-path` | Folder or list of folders searched for the family before the system fonts; not in Typst | none |
-| `ignore-system-fonts` | `true`: search only `font-path`; not in Typst | `false` |
+| `ignore-system-fonts` | search only `font-path`, not installed fonts; MyST and Quarto take `true`, Sphinx a bare flag (`:ignore-system-fonts:`); not in Typst | `false` |
 | `font-fallback` | `sans`, `serif`: built-in faces for what the family lacks; not in Typst | follows the family's style |
 | `font-size` | 6–32 SVG pixels; 4.5–24 points in Typst | `10.5`, or `7.5pt` in Typst |
 | `legend` | `true`, `false` | `true` |
@@ -95,7 +95,7 @@ missing glyphs. Typst draws the top labels at regular weight, as SVG and PDF do.
 `--ignore-system-fonts` to Typst for a build that ignores installed fonts.
 
 Font size changes the label bands and legend layout without changing contribution data.
-App, CLI and plugin exports embed bundled Noto Sans or Noto Serif fonts. See the
+App, CLI and plugin exports embed the bundled Noto faces, or the family you choose with `font`. See the
 [figure font guide](figures/README.md) for coverage, offline use and desktop-editor limits.
 Typst can fall back to a monospace sans font when proportional sans fonts are unavailable.
 Typst also retains `cell` and `gap` for existing documents; `size` overrides `cell`.

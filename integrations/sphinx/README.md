@@ -69,7 +69,8 @@ For your own font, give the directive `:font: Inter` and put the font files in t
 against the folder of `conf.py`; `:ignore-system-fonts:` or `credit_matrix_ignore_system_fonts = True`
 leaves out installed fonts, and `:font-fallback: sans|serif` picks the built-in faces for what the
 family lacks. The file used shows as an info message, a license warning as a Sphinx warning, and a
-missing family fails the directive with its page and line.
+missing family fails the directive with its page and line. A `:font-path:` folder name cannot contain
+a comma; use `credit_matrix_font_path` in `conf.py` for one that does.
 
 ```python
 credit_matrix_font_path = ["_fonts"]

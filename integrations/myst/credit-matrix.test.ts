@@ -291,6 +291,29 @@ it("stops a build in one line when the font family is missing", async () => {
   );
 });
 
+it("ignores empty font-path entries instead of resolving them to the project root", async () => {
+  const { messages } = await heatmap(fontProject(), {
+    font: "No Such Family",
+    "font-path": "fonts,",
+    "ignore-system-fonts": true,
+  });
+  const folders = messages[0]?.message.match(/in the font path \((.*)\)/)?.[1];
+  expect(folders).toMatch(/fonts$/);
+  expect(folders).not.toContain(",");
+});
+
+it("leaves no font report behind when a render fails", async () => {
+  const path = fontProject();
+  const options = { font: "figure test serif", "font-path": "fonts", "ignore-system-fonts": true };
+  const bad = join(dirname(path), "bad.md");
+  writeFileSync(bad, "---\nauthors:\n  - name: བོད\n    roles: [Software]\n---\n");
+  const failed = await heatmap(bad, options);
+  expect(failed.messages.map((m) => m.fatal)).toEqual([true]);
+  const good = await heatmap(path, options);
+  expect(good.image).toBeDefined();
+  expect(good.messages.filter((m) => m.message.includes("font Figure Test Serif"))).toEqual([]);
+});
+
 it("warns, without failing the build, when the heatmap would print too small on a page", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-small-print-"));
   const path = join(dir, "index.md");

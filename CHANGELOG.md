@@ -34,8 +34,7 @@ See [deploying](docs/deploy.md).
   Book, Sphinx, Quarto and Pandoc plugins take `font`, `font-path`, `ignore-system-fonts` and
   `font-fallback` (Sphinx also `credit_matrix_font_path`), with `font-path` relative to the project
   and a missing family stopping the build; Typst's `font` takes a family name or an array, with
-  Typst's own `--font-path`. The Typst package draws the top labels at regular weight instead of
-  weight 500, as SVG and PDF do.
+  Typst's own `--font-path`.
 - The CLI, the MyST, Sphinx and Quarto plugins and Pandoc warn when a heatmap's labels would print
   under 6 pt on a full journal page, which happens from about 25 contributors. `heatmapPrintWarning`
   returns that warning. A strict build (`sphinx-build -W`, `myst build --strict`) now fails on it
@@ -57,12 +56,12 @@ See [deploying](docs/deploy.md).
   text in system fonts with a warning. See [the CLI section](src/core/README.md#cli).
 - **Breaking:** in `createFigureRenderer`, replace `fontFallback` with `fonts`, a function that
   returns a face's bytes. A bundled app passes `fonts` from `credit-matrix-fonts`. If you self-host
-  the fonts, serve the package's files from `base`, and map each face key to its file with the table
-  in [the fonts README](src/fonts/README.md):
+  the fonts, serve the `credit-matrix-fonts` package folder (for example at `/fonts/`) and import
+  its loader, which fetches each face relative to its own URL:
 
   ```js
-  const files = { sans: "NotoSans-Regular.ttf", "sans-arabic": "NotoSansArabic-Regular.ttf", harfbuzz: "harfbuzz.wasm" /* ... */ };
-  createFigureRenderer({ fonts: async (face) => new Uint8Array(await (await fetch(new URL(files[face], base))).arrayBuffer()) });
+  import { fonts } from "/fonts/index.js";
+  createFigureRenderer({ fonts });
   ```
 
   The `CREDIT_MATRIX_FIGURE_FONTS` variable of the MyST plugin is gone. To work offline, install
@@ -70,6 +69,10 @@ See [deploying](docs/deploy.md).
 - `pnpm check:bundle` fails when the npm package grows past 5 MB unpacked.
 - The social card is a poster that reads in a small link preview: the heatmap on its side above a
   short statement, one cell and its phrase linked in the contributor's hue, and the site's address.
+- The Typst package draws the top labels at regular weight instead of weight 500, as SVG and PDF
+  do, so a Typst heatmap looks slightly lighter after you upgrade.
+- The Sphinx extension's CLI timeout rises from 30 s to 300 s, so a first run that downloads faces
+  does not time out.
 - **Breaking:** the Typst package stops the build on a contributor name with no letter and no
   ORCID iD, such as "?", instead of drawing an empty label.
 - A draft holds up to 420 contributors, up from 200. Imports, share links and the element take

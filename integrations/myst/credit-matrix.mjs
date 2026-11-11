@@ -209,7 +209,11 @@ function heatmapFigure(path, directiveOptions = {}) {
   options.acronyms = options.initials ?? false;
   // A directive option is one string: several folders are separated by commas. They resolve against the project.
   const { root } = findProject(path);
-  options.fontPath = options["font-path"]?.split(",").map((dir) => resolve(root, dir.trim()));
+  options.fontPath = options["font-path"]
+    ?.split(",")
+    .map((dir) => dir.trim())
+    .filter(Boolean)
+    .map((dir) => resolve(root, dir));
   options.ignoreSystemFonts = options["ignore-system-fonts"];
   options.fontFallback = options["font-fallback"];
   return { entries, options };
@@ -222,14 +226,18 @@ async function renderHeatmap(node, vfile) {
   const { entries, options } = heatmapFigure(path, directiveOptions);
   const { figures, reports } = rendererFor(options);
   let svg;
+  let found = [];
   try {
     svg = await figures.svg(entries, options);
   } catch (error) {
     // MyST prints a thrown transform error without its page; a file message names the page.
     vfile.message(`credit-heatmap: ${error.message}`, node).fatal = true;
     return false;
+  } finally {
+    // A failed render must not leave its reports for the next page.
+    found = reports.splice(0);
   }
-  for (const { family, file, warning } of reports.splice(0)) {
+  for (const { family, file, warning } of found) {
     vfile.message(`credit-heatmap: font ${family} from ${file}`, node).fatal = null;
     if (warning) vfile.message(`credit-heatmap: ${warning}`, node).fatal = false;
   }

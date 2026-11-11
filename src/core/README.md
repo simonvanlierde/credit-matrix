@@ -243,7 +243,7 @@ const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
 The app downloads and CLI use this renderer. It embeds regular Noto Sans or Noto Serif fonts and measures labels
 with their actual widths. In Node, `font` also takes a font family name, searched in `fontPath` and then
 the system fonts unless `ignoreSystemFonts`, and `fontFallback` picks the sans or serif faces for what it
-lacks; `createFigureRenderer({ onFont })` reports the file it used. Unsupported glyphs raise `FigureFontError`. Pass
+lacks, and a family it cannot find raises `FigureFontFileError`; `createFigureRenderer({ onFont })` reports the file it used. Unsupported glyphs raise `FigureFontError`. Pass
 `fallback: "system"` to `svg()` to draw them in the system font stack instead; `pdf()` always raises.
 See the [figure font guide](../../integrations/figures/README.md) for offline use, supported scripts
 and editor compatibility. The lightweight `buildHeatmapSvg` API keeps its system-font output.
