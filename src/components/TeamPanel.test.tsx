@@ -14,7 +14,8 @@ it("skips someone removed mid-queue and still asks everyone after them", async (
   act(() => {
     const store = useContributionStore.getState();
     store.createDraft();
-    for (const name of ["Ann One", "Bob Two", "Cat Three"]) useContributionStore.getState().addAuthor(name);
+    for (const name of ["Ada Lovelace", "Charles Darwin", "Grace Hopper"])
+      useContributionStore.getState().addAuthor(name);
   });
   render(
     <IntlProvider locale="en" messages={en}>
@@ -22,19 +23,20 @@ it("skips someone removed mid-queue and still asks everyone after them", async (
     </IntlProvider>,
   );
   await act(async () => fireEvent.click(screen.getByRole("button", { name: /^Ask everyone/ })));
-  const bob = useContributionStore.getState().authors.find((author) => author.name === "Bob Two");
-  act(() => useContributionStore.getState().removeAuthor(bob?.id ?? ""));
+  const charles = useContributionStore.getState().authors.find((author) => author.name === "Charles Darwin");
+  act(() => useContributionStore.getState().removeAuthor(charles?.id ?? ""));
 
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy next: Cat Three (2 of 2)" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy next: Grace Hopper (2 of 2)" })));
 
-  expect(vi.mocked(copyAskMessage).mock.calls.map(([author]) => author.name)).toEqual(["Ann One", "Cat Three"]);
+  expect(vi.mocked(copyAskMessage).mock.calls.map(([author]) => author.name)).toEqual(["Ada Lovelace", "Grace Hopper"]);
 });
 
 it("ends the queue when everyone left in it is removed", async () => {
   vi.mocked(copyAskMessage).mockResolvedValue(true);
   act(() => {
     useContributionStore.getState().createDraft();
-    for (const name of ["Ann One", "Bob Two", "Cat Three"]) useContributionStore.getState().addAuthor(name);
+    for (const name of ["Ada Lovelace", "Charles Darwin", "Grace Hopper"])
+      useContributionStore.getState().addAuthor(name);
   });
   render(
     <IntlProvider locale="en" messages={en}>
@@ -43,7 +45,7 @@ it("ends the queue when everyone left in it is removed", async () => {
   );
   await act(async () => fireEvent.click(screen.getByRole("button", { name: /^Ask everyone/ })));
   act(() => {
-    for (const author of useContributionStore.getState().authors.filter((a) => a.name !== "Ann One")) {
+    for (const author of useContributionStore.getState().authors.filter((a) => a.name !== "Ada Lovelace")) {
       useContributionStore.getState().removeAuthor(author.id);
     }
   });
@@ -57,7 +59,7 @@ it("clears the copied confirmation after five seconds and offers the copy again"
   vi.mocked(copyAskMessage).mockResolvedValue(true);
   act(() => {
     useContributionStore.getState().createDraft();
-    for (const name of ["Ann One", "Bob Two"]) useContributionStore.getState().addAuthor(name);
+    for (const name of ["Ada Lovelace", "Charles Darwin"]) useContributionStore.getState().addAuthor(name);
   });
   render(
     <IntlProvider locale="en" messages={en}>
@@ -66,13 +68,13 @@ it("clears the copied confirmation after five seconds and offers the copy again"
   );
   vi.useFakeTimers();
   try {
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy message for Ann One" })));
-    expect(screen.getByText(/Message for Ann One copied/)).toBeTruthy();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy message for Ada Lovelace" })));
+    expect(screen.getByText(/Message for Ada Lovelace copied/)).toBeTruthy();
     act(() => vi.advanceTimersByTime(4900));
-    expect(screen.getByText(/Message for Ann One copied/)).toBeTruthy();
+    expect(screen.getByText(/Message for Ada Lovelace copied/)).toBeTruthy();
     act(() => vi.advanceTimersByTime(200));
-    expect(screen.queryByText(/Message for Ann One copied/)).toBeNull();
-    expect(screen.getByRole("button", { name: "Copy message for Ann One" }).textContent).not.toMatch(/Copied/);
+    expect(screen.queryByText(/Message for Ada Lovelace copied/)).toBeNull();
+    expect(screen.getByRole("button", { name: "Copy message for Ada Lovelace" }).textContent).not.toMatch(/Copied/);
   } finally {
     vi.useRealTimers();
   }

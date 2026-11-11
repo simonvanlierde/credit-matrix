@@ -24,10 +24,10 @@ function makeAuthors() {
     equalContribution: true,
     contributions: [{ role: "Investigation", score: 100 }],
   });
-  const carol = createAuthor("Carol Davis", {
+  const katherine = createAuthor("Katherine Johnson", {
     contributions: [{ role: "Software", score: 100 }],
   });
-  return [jane, bob, carol];
+  return [jane, bob, katherine];
 }
 
 describe("marker data model", () => {

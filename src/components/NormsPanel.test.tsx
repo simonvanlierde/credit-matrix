@@ -22,19 +22,19 @@ describe("positionOf", () => {
 });
 
 describe("selfPosition", () => {
-  const ann = createAuthor("Ann Lee", { id: "a" });
+  const katherine = createAuthor("Katherine Johnson", { id: "a" });
   const bo = createAuthor("Bo Chen", { id: "b" });
   const tech = createAuthor("Cy Diaz", { id: "c", contributorType: "non-author" });
 
   it("counts the byline over authors only, as the census does", () => {
     // A non-author listed last does not make Bo a middle author.
-    expect(selfPosition([ann, bo, tech], "b")).toBe("last");
-    expect(selfPosition([tech, ann], "a")).toBe("single");
-    expect(selfPosition([ann, bo, tech], null)).toBeNull();
+    expect(selfPosition([katherine, bo, tech], "b")).toBe("last");
+    expect(selfPosition([tech, katherine], "a")).toBe("single");
+    expect(selfPosition([katherine, bo, tech], null)).toBeNull();
   });
 
   it("names a non-author self instead of giving a position", () => {
-    expect(selfPosition([ann, bo, tech], "c")).toBe("non-author");
+    expect(selfPosition([katherine, bo, tech], "c")).toBe("non-author");
   });
 });
 
@@ -100,7 +100,7 @@ describe("NormsPanel", () => {
     act(() => {
       const store = useContributionStore.getState();
       store.createDraft();
-      for (const name of ["Ann Lee", "Bo Chen", "Cy Diaz"]) store.addAuthor(name);
+      for (const name of ["Katherine Johnson", "Bo Chen", "Cy Diaz"]) store.addAuthor(name);
       const last = useContributionStore.getState().authors[2];
       if (last) store.setSelfId(last.id);
       store.setNormsField(field);
@@ -135,7 +135,7 @@ describe("NormsPanel", () => {
     act(() => {
       const store = useContributionStore.getState();
       store.createDraft();
-      for (const name of ["Ann Lee", "Bo Chen"]) store.addAuthor(name);
+      for (const name of ["Katherine Johnson", "Bo Chen"]) store.addAuthor(name);
       const tech = useContributionStore.getState().authors[1];
       if (tech) {
         store.setAuthorType(tech.id, "non-author");

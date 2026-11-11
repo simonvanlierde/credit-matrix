@@ -312,35 +312,35 @@ describe("asking a contributor", () => {
 
 describe("undoing a removal", () => {
   it("puts the contributor's ask back", () => {
-    const ann = createAuthor("Ann Lee");
+    const katherine = createAuthor("Katherine Johnson");
     const ask = { sentAt: 1, prefilled: false } as Ask;
-    useContributionStore.setState({ authors: [ann], asks: { [ann.id]: ask } });
+    useContributionStore.setState({ authors: [katherine], asks: { [katherine.id]: ask } });
     renderList();
-    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Remove Katherine Johnson/ }));
     expect(useContributionStore.getState().asks).toEqual({});
 
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
-    expect(useContributionStore.getState().asks).toEqual({ [ann.id]: ask });
+    expect(useContributionStore.getState().asks).toEqual({ [katherine.id]: ask });
   });
 
   it("marks the row as you again", () => {
-    const ann = createAuthor("Ann Lee");
-    useContributionStore.setState({ authors: [ann], selfId: ann.id });
+    const katherine = createAuthor("Katherine Johnson");
+    useContributionStore.setState({ authors: [katherine], selfId: katherine.id });
     renderList();
-    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Remove Katherine Johnson/ }));
     expect(useContributionStore.getState().selfId).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
-    expect(useContributionStore.getState().selfId).toBe(ann.id);
+    expect(useContributionStore.getState().selfId).toBe(katherine.id);
   });
 
   it("reports no limit when the contributor is already back", () => {
-    const ann = createAuthor("Ann Lee");
-    useContributionStore.setState({ authors: [ann] });
+    const katherine = createAuthor("Katherine Johnson");
+    useContributionStore.setState({ authors: [katherine] });
     renderList();
-    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Remove Katherine Johnson/ }));
     // The grid's bulk Undo puts the whole roster back first.
-    act(() => useContributionStore.getState().loadAuthors([ann]));
+    act(() => useContributionStore.getState().loadAuthors([katherine]));
 
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
     expect(announce).not.toHaveBeenCalledWith(expect.stringContaining("at most"), expect.anything());
@@ -349,9 +349,9 @@ describe("undoing a removal", () => {
   });
 
   it.each(["reset", "deleteAllDrafts"] as const)("restores nothing after %s", (clear) => {
-    useContributionStore.setState({ authors: [createAuthor("Ann Lee")] });
+    useContributionStore.setState({ authors: [createAuthor("Katherine Johnson")] });
     renderList();
-    fireEvent.click(screen.getByRole("button", { name: /Remove Ann Lee/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Remove Katherine Johnson/ }));
     expect(screen.getByRole("button", { name: english.undo })).toBeTruthy();
 
     act(() => useContributionStore.getState()[clear]());
@@ -402,14 +402,14 @@ describe("editing a contributor's name", () => {
 
 describe("moving a contributor from the menu", () => {
   it("keeps focus on Move up once the row reaches the top, and ignores further clicks", () => {
-    useContributionStore.setState({ authors: [createAuthor("Ann Lee"), createAuthor("Ben Okoro")] });
+    useContributionStore.setState({ authors: [createAuthor("Katherine Johnson"), createAuthor("Ben Okoro")] });
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Actions for Ben Okoro" }));
 
     const moveUp = screen.getByRole("button", { name: english.moveUp });
     moveUp.focus();
     fireEvent.click(moveUp);
-    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
+    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Katherine Johnson"]);
 
     // A disabled button would drop focus to the page body here.
     expect(moveUp).not.toHaveProperty("disabled", true);
@@ -417,34 +417,34 @@ describe("moving a contributor from the menu", () => {
     expect(document.activeElement).toBe(moveUp);
 
     fireEvent.click(moveUp);
-    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
+    expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Katherine Johnson"]);
   });
 });
 
 describe("collapsed rail", () => {
   it("links a person on hover and opens their menu from the initials chip", () => {
-    const ann = createAuthor("Ann Lee");
-    act(() => useContributionStore.getState().loadAuthors([ann]));
+    const katherine = createAuthor("Katherine Johnson");
+    act(() => useContributionStore.getState().loadAuthors([katherine]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
-    const chip = screen.getByRole("button", { name: "Ann Lee" });
+    const chip = screen.getByRole("button", { name: "Katherine Johnson" });
 
     fireEvent.pointerEnter(chip, { pointerType: "mouse" });
-    expect(useContributionStore.getState().statementLink).toEqual({ contributorId: ann.id, from: "author" });
+    expect(useContributionStore.getState().statementLink).toEqual({ contributorId: katherine.id, from: "author" });
     fireEvent.pointerLeave(chip, { pointerType: "mouse" });
     expect(useContributionStore.getState().statementLink).toBeNull();
 
     // A link from the grid or statement marks the chip too.
-    act(() => useContributionStore.getState().setStatementLink({ contributorId: ann.id, from: "cell" }));
+    act(() => useContributionStore.getState().setStatementLink({ contributorId: katherine.id, from: "cell" }));
     expect(chip.dataset.linked).toBe("true");
 
     fireEvent.click(chip);
-    expect(screen.getByRole("dialog", { name: "Actions for Ann Lee" })).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: "Actions for Katherine Johnson" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Edit in list" })).toBeTruthy();
   });
 
   it("keeps focus on the fold toggle as the list folds and opens", () => {
-    act(() => useContributionStore.getState().loadAuthors([createAuthor("Ann Lee")]));
+    act(() => useContributionStore.getState().loadAuthors([createAuthor("Katherine Johnson")]));
     renderList();
     const fold = screen.getByRole("button", { name: "Collapse contributor list" });
     fold.focus();
@@ -455,7 +455,7 @@ describe("collapsed rail", () => {
   });
 
   it("shows the full list, with its add field, once a folded roster is empty", () => {
-    act(() => useContributionStore.getState().loadAuthors([createAuthor("Ann Lee")]));
+    act(() => useContributionStore.getState().loadAuthors([createAuthor("Katherine Johnson")]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
     expect(screen.queryByLabelText("New author names or ORCID iD")).toBeNull();
@@ -466,23 +466,23 @@ describe("collapsed rail", () => {
   it("opens the list and focuses the person on Edit in list from a chip", () => {
     // jsdom has no layout, so no scrollIntoView.
     Element.prototype.scrollIntoView = vi.fn();
-    const ann = createAuthor("Ann Lee");
-    act(() => useContributionStore.getState().loadAuthors([ann]));
+    const katherine = createAuthor("Katherine Johnson");
+    act(() => useContributionStore.getState().loadAuthors([katherine]));
     renderList();
     fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
-    fireEvent.click(screen.getByRole("button", { name: "Ann Lee" }));
+    fireEvent.click(screen.getByRole("button", { name: "Katherine Johnson" }));
     fireEvent.click(screen.getByRole("button", { name: "Edit in list" }));
 
     expect(screen.getByRole("button", { name: "Collapse contributor list" })).toBeTruthy();
-    expect((document.activeElement as HTMLInputElement | null)?.value).toBe("Ann Lee");
+    expect((document.activeElement as HTMLInputElement | null)?.value).toBe("Katherine Johnson");
     expect(useContributionStore.getState().listFocus).toBeNull();
   });
 
   it("drops an edit request for a person who is removed", () => {
-    const ann = createAuthor("Ann Lee");
-    act(() => useContributionStore.getState().loadAuthors([ann, createAuthor("Bo Kim")]));
-    act(() => useContributionStore.getState().setListFocus({ authorId: ann.id, orcid: false }));
-    act(() => useContributionStore.getState().removeAuthor(ann.id));
+    const katherine = createAuthor("Katherine Johnson");
+    act(() => useContributionStore.getState().loadAuthors([katherine, createAuthor("Bo Kim")]));
+    act(() => useContributionStore.getState().setListFocus({ authorId: katherine.id, orcid: false }));
+    act(() => useContributionStore.getState().removeAuthor(katherine.id));
     expect(useContributionStore.getState().listFocus).toBeNull();
   });
 });

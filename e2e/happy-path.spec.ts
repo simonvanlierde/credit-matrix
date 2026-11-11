@@ -300,8 +300,8 @@ test.describe("Happy path UI flows", () => {
     [
       "XML",
       // biome-ignore lint/security/noSecrets: inline XML fixture contains no credential.
-      '<article><contrib-group><contrib contrib-type="contributor"><name><surname>Davis</surname><given-names>Carol</given-names></name></contrib></contrib-group></article>',
-      "Carol Davis",
+      '<article><contrib-group><contrib contrib-type="contributor"><name><surname>Johnson</surname><given-names>Katherine</given-names></name></contrib></contrib-group></article>',
+      "Katherine Johnson",
     ],
   ] as const) {
     test(`imports structured ${format} through the modal`, async ({ page }) => {
@@ -349,7 +349,7 @@ test.describe("Happy path UI flows", () => {
     await page.goto("/");
 
     const input = page.getByLabel("New author names or ORCID iD");
-    await input.fill("Grace Hopper, Charles Darwin, Carol Davis");
+    await input.fill("Grace Hopper, Charles Darwin, Katherine Johnson");
     await input.press("Enter");
 
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);

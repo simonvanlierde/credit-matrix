@@ -102,7 +102,7 @@ it("does not announce agreement for a draft that opens already agreed", () => {
 });
 
 it("does not say everyone agreed while a co-author was never asked", () => {
-  const authors = [...twoAuthors(), createAuthor("Ann Lee")];
+  const authors = [...twoAuthors(), createAuthor("Katherine Johnson")];
   const bob = authors[1];
   if (!bob) throw new Error("expected Bob");
   act(() => store().loadAuthors(authors, { [bob.id]: { sentAt: 1, prefilled: false, reply: agreeingReply(bob) } }));

@@ -396,15 +396,15 @@ describe("contribution store", () => {
 
     it("removes a contributor and restores it at the index undo asks for", () => {
       const { jane, bob } = pair();
-      store().addAuthor("Carol Davis");
+      store().addAuthor("Katherine Johnson");
 
       store().removeAuthor(bob.id);
-      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Carol Davis"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Katherine Johnson"]);
       store().removeAuthor("no-such-id");
       expect(store().authors).toHaveLength(2);
 
       expect(store().restoreAuthor(bob, 1)).toBe(true);
-      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin", "Carol Davis"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin", "Katherine Johnson"]);
       // Already back: a double undo must not duplicate the row.
       expect(store().restoreAuthor(bob, 1)).toBe(false);
       expect(store().authors).toHaveLength(3);
@@ -431,10 +431,10 @@ describe("contribution store", () => {
 
     it("reorders by index and ignores a drag that lands nowhere", () => {
       pair();
-      store().addAuthor("Carol Davis");
+      store().addAuthor("Katherine Johnson");
 
       store().moveAuthor(0, 2);
-      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Carol Davis", "Grace Hopper"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Katherine Johnson", "Grace Hopper"]);
 
       for (const [from, to] of [
         [-1, 0],
@@ -445,7 +445,7 @@ describe("contribution store", () => {
       ]) {
         store().moveAuthor(from ?? 0, to ?? 0);
       }
-      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Carol Davis", "Grace Hopper"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Katherine Johnson", "Grace Hopper"]);
     });
 
     it("re-derives initials on every list edit, so two people with the same initials stay distinct", () => {
@@ -724,7 +724,7 @@ describe("contribution store", () => {
       store().toggleContribution(bob.id, 0);
       expect(store().authors[1]?.contributions[0]?.score).toBe(100);
 
-      expect(store().addAuthor("Carol Davis")).toBeNull();
+      expect(store().addAuthor("Katherine Johnson")).toBeNull();
       store().removeAuthor(jane.id);
       store().moveAuthor(0, 1);
       expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
@@ -742,7 +742,7 @@ describe("contribution store", () => {
       expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin"]);
 
       store().setClaim({ contributorId: store().authors[0]?.id ?? "", sourceDraftId: "src-1" });
-      store().loadAuthors([createAuthor("Carol Davis")]);
+      store().loadAuthors([createAuthor("Katherine Johnson")]);
       expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin"]);
     });
 
@@ -1592,7 +1592,7 @@ describe("contribution store", () => {
               authors: [
                 { ...good, orcid: "not-an-orcid" },
                 { ...createAuthor("Charles Darwin"), contributions: "corrupt" },
-                { ...createAuthor("Carol Davis"), contributions: [null, { role: "Software", score: 100 }] },
+                { ...createAuthor("Katherine Johnson"), contributions: [null, { role: "Software", score: 100 }] },
               ],
             },
           },
@@ -1600,7 +1600,7 @@ describe("contribution store", () => {
         initial,
       ) as typeof initial;
 
-      expect(merged.authors.map((a) => a.name)).toEqual(["Grace B. Hopper", "Charles Darwin", "Carol Davis"]);
+      expect(merged.authors.map((a) => a.name)).toEqual(["Grace B. Hopper", "Charles Darwin", "Katherine Johnson"]);
       expect(merged.authors[0]?.orcid).toBeUndefined();
       expect(merged.authors[1]?.contributions).toEqual([]);
       expect(merged.authors[2]?.contributions).toEqual([{ role: "Software", score: 100 }]);

@@ -17,13 +17,13 @@ it("opens a link even when the address bar lost its hash before hashchange fired
       <StatusBanner />
     </IntlProvider>,
   );
-  const link = await buildShareUrl({ authors: [createAuthor("Ann One")] });
+  const link = await buildShareUrl({ authors: [createAuthor("Ada Lovelace")] });
   // A queued navigation event keeps its URL when the address bar has already changed.
   expect(window.location.hash).toBe("");
   window.dispatchEvent(new HashChangeEvent("hashchange", { oldURL: window.location.href, newURL: link }));
 
   expect(await screen.findByText("Opened the shared draft.")).toBeTruthy();
-  expect(useContributionStore.getState().authors.map((author) => author.name)).toEqual(["Ann One"]);
+  expect(useContributionStore.getState().authors.map((author) => author.name)).toEqual(["Ada Lovelace"]);
 });
 
 it("clears ORCID's tokens and the pending sign-in when no ask is open to take them", async () => {
@@ -134,7 +134,7 @@ it("keeps what this tab holds unsaved when a link opens", async () => {
   });
   act(() => {
     useContributionStore.getState().createDraft();
-    useContributionStore.getState().addAuthor("Ann Unsaved");
+    useContributionStore.getState().addAuthor("Katherine Johnson");
   });
   const held = useContributionStore.getState().activeDraftId;
   full.mockRestore();
@@ -143,7 +143,9 @@ it("keeps what this tab holds unsaved when a link opens", async () => {
   window.dispatchEvent(new HashChangeEvent("hashchange", { oldURL: window.location.href, newURL: link }));
 
   expect(await screen.findByText("Opened the shared draft beside your own work.")).toBeTruthy();
-  expect(useContributionStore.getState().drafts[held]?.authors.map((author) => author.name)).toEqual(["Ann Unsaved"]);
+  expect(useContributionStore.getState().drafts[held]?.authors.map((author) => author.name)).toEqual([
+    "Katherine Johnson",
+  ]);
 });
 
 describe("Undo after a pasted statement", () => {
