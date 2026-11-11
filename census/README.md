@@ -69,7 +69,8 @@ database or one without fields.
   in `snapshots/<name>.inventory` and in the database; `--inventory latest` reads a newer one into
   a new database.
 - **The parser:** the database records a hash of the parsing code (`roles.py`, `statement.py`,
-  `jats.py` and `rows.py`) and a schema version derived from the table definitions. A run refuses a
+  `jats.py` and `rows.py`, without comments and docstrings, so rewording them keeps the database
+  valid) and a schema version derived from the table definitions. A run refuses a
   database built by other code; `--fresh` deletes it and re-parses from the cache.
 - **The bulk listing:** the first `bulk` run writes the file list it reads (names and listed dates)
   to `snapshots/<name>.files.csv` and fills in each file's sha256 as it is read. A hash already
@@ -114,8 +115,7 @@ The web app's paste-a-statement import runs a TypeScript port of `roles.py` and 
 output as `expected` here, so a change to one parser needs the same change in the other. One
 step differs in form only: `roles.clean` replaces dashes with the spaces around them before it
 collapses runs of spaces, and the port collapses spaces first, because the first order takes
-quadratic time on a long run of spaces in a browser. The output is the same. The comment for this
-lives here, not in `roles.py`, because the database pins a hash of that file's bytes.
+quadratic time on a long run of spaces in a browser. The output is the same.
 
 ## Tables
 
