@@ -79,8 +79,18 @@ describe("figures in every covered script", () => {
     expect(left("ل")).toBeLessThan(left("ح"));
   });
 
+  it("keeps an emoji sequence in one emoji run, keycaps included", async () => {
+    for (const sequence of ["👩\u200d🔬", "🇳🇱", "1\ufe0f\u20e3"]) {
+      const svg = await renderer.svg(
+        [createAuthor(`Ada ${sequence}`, { contributions: [{ role: "Software", score: 100 }] })],
+        options,
+      );
+      expect(svg, sequence).toContain(`>${sequence}</tspan>`);
+    }
+  });
+
   it("draws text-default emoji and leaves a mark the face lacks to a face that has it", async () => {
-    for (const name of ["Ada ❤️", "Ada ✌🏽", "علي\u0301"]) {
+    for (const name of ["Ada ❤️", "Ada ✌🏽", "علي\u0301", "Ada 1\ufe0f\u20e3"]) {
       const pdf = await renderer.pdf(
         [createAuthor(name, { contributions: [{ role: "Software", score: 100 }] })],
         options,

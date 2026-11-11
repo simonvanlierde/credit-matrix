@@ -93,6 +93,7 @@ const SOURCES: FontSource[] = [
 
 // Shaped for its ZWJ sequences and skin tones; its own space is 1.27 em wide, so spaces stay out of its runs.
 const EMOJI: FontSource = { family: "Credit Figure Emoji", face: "emoji", shaped: true };
+const KEYCAP = /^[\d#*]\ufe0f?\u20e3/u;
 
 // One sans face per other script, for sans and serif figures alike. Fontkit draws Hangul, as it does CJK.
 const SCRIPT_FACES: [RegExp, FontSource][] = [
@@ -419,7 +420,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       (unavailable?.has(source) === true || (source.shaped === true && unavailable?.has(HARFBUZZ) === true));
     const runs: TextRun[] = [];
     const missing = new Set<string>();
-    for (const character of normalized) {
+    for (const { 0: character, index } of normalized.matchAll(/./gsu)) {
       const codePoint = character.codePointAt(0) ?? 0;
       const previous = runs.at(-1);
       // Marks, joiners and selectors belong to the run before them; so do spaces, digits and punctuation
@@ -439,7 +440,10 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         continue;
       }
       const chinesePunctuation = cjkPunctuation && codePoint > 0x7f && /\p{P}/u.test(character);
-      const script = SCRIPT_FACES.find(([pattern]) => pattern.test(character))?.[1];
+      // A keycap (1️⃣) is a digit, #, or * the emoji face composes with the marks that follow it.
+      const script = KEYCAP.test(normalized.slice(index))
+        ? EMOJI
+        : SCRIPT_FACES.find(([pattern]) => pattern.test(character))?.[1];
       // Emoji last: a text-default symbol (❤, ☺, ✌) keeps its text glyph where another face has one.
       const order = [
         ...(script ? [script] : []),
