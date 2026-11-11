@@ -137,7 +137,8 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const scale = typeof opts?.scale === "number" ? Math.max(0.1, opts.scale) : 1;
   if (!Number.isFinite(scale)) throw new HeatmapOptionError("Heatmap scale must be finite.");
   const palettes = { blue: DEFAULT_MONO_COLOR, green: "#00724c", gray: "#404040" };
-  if (opts?.palette && !Object.hasOwn(palettes, opts.palette)) throw new HeatmapOptionError("Unknown heatmap palette.");
+  if (opts?.palette && !Object.hasOwn(palettes, opts.palette))
+    throw new HeatmapOptionError("Unknown heatmap palette. Use blue, green or gray.");
   const monoColor = opts?.color ?? opts?.monoColor ?? palettes[opts?.palette ?? "blue"];
   if (!HEX_COLOR.test(monoColor))
     throw new HeatmapOptionError("Heatmap color must be a three- or six-digit hex color.");
@@ -149,15 +150,17 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const legendHue = perAuthor ? LEGEND_NEUTRAL : monoColor;
   const size = opts?.size ?? CELL;
   if (!Number.isFinite(size) || size <= 0 || size > 256)
-    throw new HeatmapOptionError("Heatmap size must be between 0 and 256.");
+    throw new HeatmapOptionError("Heatmap size must be above 0 and at most 256.");
   const shape = opts?.shape ?? "square";
   const legendPosition = opts?.legendPosition ?? "auto";
   if (!["auto", "right", "bottom"].includes(legendPosition))
     throw new HeatmapOptionError("Unknown heatmap legend position.");
   if (opts?.marks !== undefined && typeof opts.marks !== "boolean")
     throw new HeatmapOptionError("Heatmap marks must be a boolean.");
-  if (!["square", "rounded", "circle"].includes(shape)) throw new HeatmapOptionError("Unknown heatmap shape.");
-  if (opts?.labels && !["full", "short"].includes(opts.labels)) throw new HeatmapOptionError("Unknown heatmap labels.");
+  if (!["square", "rounded", "circle"].includes(shape))
+    throw new HeatmapOptionError("Unknown heatmap shape. Use square, rounded or circle.");
+  if (opts?.labels && !["full", "short"].includes(opts.labels))
+    throw new HeatmapOptionError("Unknown heatmap labels. Use full or short.");
   const fontSize = opts?.fontSize ?? FONT_LEFT;
   if (!Number.isFinite(fontSize) || fontSize < 6 || fontSize > 32)
     throw new HeatmapOptionError("Heatmap font size must be between 6 and 32.");
