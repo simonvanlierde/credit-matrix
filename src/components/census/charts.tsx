@@ -50,7 +50,7 @@ export function LineChart({
   /** The top of the scale; the largest y by default. Pass one to share a scale between charts. */
   yMax?: number;
   formatY: (y: number) => string;
-  /** Names the chart for screen readers; the table beside it carries the values. */
+  /** Names the chart for screen readers; the table beside it holds the values. */
   label: string;
   /** One sentence on the trend, read after the name. */
   description: string;

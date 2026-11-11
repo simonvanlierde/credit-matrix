@@ -365,7 +365,7 @@ export function HeaderActions() {
       const mapped = keepKnownIds(current, importedAuthors);
       const answers = importAnswers(current, importedAuthors, mapped, held, { asks, selfId });
       loadAuthors(mapped, answers.asks, answers.selfId);
-      // Only the DOI path carries a title. Guard on it rather than on emptiness,
+      // Only the DOI path brings a title. Guard on it rather than on emptiness,
       // so a record with no title still clears a stale one from the last import.
       if (importedTitle !== undefined) setTitle(importedTitle);
       count = useContributionStore.getState().authors.length;

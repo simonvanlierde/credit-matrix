@@ -97,7 +97,7 @@ describe("toLatexCredits", () => {
     expect(tex).not.toContain("Leeuwenhoek");
   });
 
-  it("carries the generator note and usage in comments, with the package options", () => {
+  it("writes the generator note and usage in comments, with the package options", () => {
     const tex = toLatexCredits([curie]);
     expect(tex).toContain(`% ${GENERATOR_NOTE}`);
     expect(tex).toContain("\\usepackage{credits}");

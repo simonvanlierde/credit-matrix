@@ -26,7 +26,7 @@ const MAX_TOKEN_LENGTH = 4096;
 const SharePayloadSchema = /* @__PURE__ */ (() =>
   z
     .object({
-      /** Payload version. v2 carries ids and the envelope; nothing older decodes. */
+      /** Payload version. v2 adds ids and the envelope; nothing older decodes. */
       v: z.literal(2),
       /** draft title */
       t: z.optional(z.string().check(z.maxLength(500))),
@@ -83,7 +83,7 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 export interface ShareData {
   authors: Author[];
-  /** "" when the payload carries none */
+  /** "" when the payload has none */
   title: string;
   /** contributor id the link is addressed to */
   claimId: string | null;
@@ -123,7 +123,7 @@ export function toSharePayload(input: SharePayloadInput): string {
   const { title, claimId, sourceDraftId, reply, sentAt } = input;
   const blank = Boolean(input.blank && claimId);
   // A claim link is addressed to one person and travels through their mail:
-  // it carries their own row and nobody else's names, iDs, or scores. The
+  // it holds their own row and nobody else's names, iDs, or scores. The
   // reply comes back the same way, and the merge only ever takes that row.
   const authors = claimId ? input.authors.filter((author) => author.id === claimId) : input.authors;
 

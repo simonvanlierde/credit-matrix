@@ -200,7 +200,7 @@ test("a difference settles from the keyboard alone", async ({ browser }) => {
 
 test("the Review tab with open differences has no accessibility violations", async ({ browser }) => {
   const page = await leadWithReply(browser);
-  // The arrival message covers the grid's status strip, so it carries its own way to Review.
+  // The arrival message covers the grid's status strip, so it has its own way to Review.
   const arrival = onScreen(page, "Bob White's answer arrived: 2 differences.");
   await arrival.locator("..").getByRole("button", { name: "Review", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Bob White" })).toBeFocused();

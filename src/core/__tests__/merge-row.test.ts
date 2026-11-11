@@ -10,12 +10,12 @@ const DRAFT = [
   createAuthor("Carol Davis", { contributions: [{ role: "Software", score: 100 }] }),
 ];
 
-/** Your roster: a fresh copy each time, with the ids a claim link carries. */
+/** Your roster: a fresh copy each time, with the ids a claim link holds. */
 function draft() {
   return structuredClone(DRAFT);
 }
 
-/** The id of the row at `index`, the way a claim link carries it. */
+/** The id of the row at `index`, the way a claim link holds it. */
 function idAt(authors: { id: string }[], index: number): string {
   const author = authors[index];
   if (!author) throw new Error(`expected a row at ${index}`);
@@ -48,7 +48,7 @@ describe("keepKnownIds", () => {
     expect(result[1]?.id).not.toBe(idAt(current, 1));
   });
 
-  it("keeps an id the import already carries", () => {
+  it("keeps an id the import already has", () => {
     const current = draft();
     const [bob] = current.slice(1);
     if (!bob) throw new Error("expected Bob");

@@ -89,7 +89,7 @@ components:
 
 ## Overview
 
-The interface looks like a working document: scholarly, compact, and sure of itself. Warm paper,
+The interface looks like a working document: scholarly and compact. Warm paper,
 ink edges and a book-like serif give it the feel of a typeset page. The serif gives the manuscript
 output weight, and a hyperlegible sans-serif keeps the controls practical.
 
@@ -110,7 +110,7 @@ to identify data.
 By default the grid colours each contributor in their own hue, by list position: their chip, the
 rule under their column name, their cells, and the mark on their phrase in the statement all share
 it. The eight hues in `CONTRIBUTOR_HUES` (`src/core/contributor-color.ts`) differ in hue and
-lightness, and each carries white initials at 4.5:1 or more. A person is also named by their column,
+lightness, and each holds white initials at 4.5:1 or more. A person is also named by their column,
 so colour is never the only cue. Past eight contributors two people would share a hue, so the grid
 falls back to the draft's one hue. Choosing a heatmap colour also switches to one hue, because that
 is what the person asked to see. Colour by contributor is a display option, saved per draft beside the
@@ -126,8 +126,8 @@ blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark marks on Lead. Exported heatmap
 light scale on a white background, because a figure goes onto a manuscript page. A figure uses one
 hue by default, since it must read in greyscale print and in any journal's style. *Per contributor*
 under Figure settings gives each person their hue for slides and posters, with the level key in a
-neutral grey. Figure cells default
-to square corners and a thin neutral rule; the live editing controls retain their rounded corners. `heatCellColor` in
+neutral grey. Figure cells default to square corners and a thin neutral rule; the live editing
+controls keep their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
 
 The editor uses one, two and three dots for Supporting, Equal and Lead, and a check in yes/no mode.
@@ -240,7 +240,7 @@ height for good and shift the page when closed.
 
 On touch, every control takes a 44px tap. Grow a small control's tap area with the `hit-area`
 class rather than its size, so the desktop density stays. On a phone the picker for the
-contributor carries their live statement line, which links down to the full statement.
+contributor shows their live statement line, which links down to the full statement.
 
 ## Elevation and depth
 
@@ -311,7 +311,7 @@ accessible label, and in the exported data. Keep bulk assignment behind a toggle
 first.
 
 An empty cell has no fill and no ring: a 3px dot in `outline-strong` (3:1 on the page) marks it, so
-the filled cells carry the grid. Hover and focus draw the whole target. The key under the grid is
+the filled cells give the grid its shape. Hover and focus draw the whole target. The key under the grid is
 one joined scale from None to Lead, each step labelled under its swatch. With colour by contributor
 the scale is neutral, and while a cell or phrase is linked it redraws in that person's hue.
 

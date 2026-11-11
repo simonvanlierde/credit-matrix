@@ -11,7 +11,7 @@ import { importAny } from "../import";
 import { createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 import { fromSharePayload, toSharePayload } from "../share-payload";
 
-// Names the formats must carry: accents, CJK, quotes, `&`, `<`, and line breaks mixed into a real word.
+// Names the formats must keep intact: accents, CJK, quotes, `&`, `<`, and line breaks mixed into a real word.
 const nameArb = fc
   .tuple(
     fc.constantFrom("José", "Zoë", "O'Brien", "日本語", "Smith & Co", "Ana García", "Müller", "Ng"),

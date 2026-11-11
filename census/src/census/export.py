@@ -1,6 +1,6 @@
 """The public dataset: role facts and bare ORCIDs under CC0, statement text only from CC BY and CC0 articles.
 
-The role tables carry no author names; statement text is the source's own and names authors as it does.
+The role tables hold no author names; statement text is the source's own and names authors as it does.
 """
 
 import hashlib
@@ -38,7 +38,7 @@ Per-author CRediT roles read from open-access articles by the CRediT census
 (https://github.com/simonvanlierde/credit-matrix, census/). Counts, versions and provenance are in
 meta.json.
 
-The role tables (articles, assignments) carry no author names; PMCID and DOI lead to them at the
+The role tables (articles, assignments) hold no author names; PMCID and DOI lead to them at the
 source. statements.parquet is the verbatim statement text of CC BY and CC0 articles and names
 authors as the source does.
 

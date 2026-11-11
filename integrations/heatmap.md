@@ -6,13 +6,14 @@ increasing intensities distinguish Supporting, Equal and Lead. Empty cells stay 
 This follows the compact matrix layout of [latex-credits](https://ctan.org/pkg/latex-credits).
 
 The SVG renderer is shared by the app, CLI, MyST, Sphinx and Quarto/Pandoc. Typst draws native
-vector shapes with the same palettes and level fractions. Figures carry the full contribution
+vector shapes with the same palettes and level fractions. Figures include the full contribution
 statement as their text alternative, including levels even when axis labels are shortened.
 Both renderers omit contribution marks by default. Enable `marks` for one, two and three dots
 for Supporting, Equal and Lead, or checks in yes/no mode, in both cells and legend.
-Marks provide an additional way to distinguish levels; keep a text alternative or contribution
-table with the figure when sharing it. The editable grid retains its marks. The app previews the exported
-figure before copying or downloading, with fit-to-width and actual-size views and the PNG pixel dimensions.
+Marks give a second way to tell levels apart. Keep a text alternative or contribution table with
+the figure when you share it. The editable grid keeps its marks. The app previews the exported
+figure before copying or downloading, with fit-to-width and actual-size views and the PNG pixel
+dimensions.
 
 ## Figure options
 
@@ -56,10 +57,10 @@ SVG sizes must be greater than zero and at most 256 pixels. Typst sizes must be 
 and at most 192 points. Scaling the whole SVG remains available through the JavaScript `scale` option.
 The JavaScript `monoColor`, `transpose` and `showLevels` options are deprecated aliases of `color`,
 `horizontal` and `levels`, and still work. `acronyms` is unchanged.
-Automatic placement uses a vertical key to the right when the grid is at least 1.5 times as tall
-as it is wide, the figure grows by no more than 35% in width, stays within 48 legend-font ems,
-and its height does not increase. That width limit keeps legend text above 5 pt at 85 mm.
-Otherwise the key wraps below. Force `right` or `bottom` to suit the surrounding page;
+Automatic placement puts a vertical key to the right when three things hold: the grid is at least
+1.5 times as tall as it is wide, the figure grows by no more than 35% in width (and stays within 48
+legend-font ems), and its height does not increase. That width limit keeps legend text above 5 pt
+at 85 mm. Otherwise the key wraps below. Force `right` or `bottom` to suit the surrounding page;
 `legend: false` hides the key regardless of placement. In the app these choices share one Legend control.
 
 Font size changes the label bands and legend layout without changing contribution data.
@@ -171,8 +172,8 @@ The app adds preview zoom, saved settings per draft, reset and PNG resolution co
 Under Figure settings, open Export recipe to copy a CLI command or a Sphinx, Quarto/Pandoc,
 MyST/Jupyter Book or Typst snippet. Recipes contain the current style settings and fixed data
 placeholders, without contributor names or PNG settings. Supply the contributor data and install
-the CLI or plugin first. MyST uses its page author roles and language, with yes/no contributions. Set `lang` in the page
-front matter or `project.lang` in `myst.yml` to match the app’s language.
+the CLI or plugin first. MyST uses its page author roles and language, with yes/no contributions.
+Set `lang` in the page front matter or `project.lang` in `myst.yml` to match the app’s language.
 Typst recipes convert CSS pixels to points; native layout and font metrics can differ from SVG.
 PNG width (40–300 mm) and resolution (150, 300 or 600 dpi) set its pixel dimensions and print metadata.
 SVG keeps its intrinsic vector dimensions; typography and cell spacing determine its layout.
@@ -190,8 +191,8 @@ contributor names in all nine output languages, using both font stacks. Referenc
 within 89 mm or 183 mm columns and a 170 mm height; the test reduces width when height requires it.
 These are reference bounds from the [Nature figure guide](https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/), not universal journal requirements.
 
-Reference fixtures exercise both plain default fills and optional marks. Tests require at least 5 pt for the smallest text, including the legend. They measure actual browser
-text bounds for clipping and overlap, check 4.5:1 text contrast and 3:1 contribution-mark contrast,
+Reference fixtures exercise both plain default fills and optional marks. Tests require at least 5 pt
+for the smallest text, including the legend. They measure actual browser text bounds for clipping and overlap, check 4.5:1 text contrast and 3:1 contribution-mark contrast,
 and save SVG, rendered PNG and physical-size measurements under `test-results/`.
 The existing CI Playwright job runs them on Chromium for PRs and all three engines on main and weekly.
 

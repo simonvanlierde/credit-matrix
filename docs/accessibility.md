@@ -33,25 +33,25 @@ CRediT Matrix aims to meet [WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA
 web requirements of
 [EN 301 549 v4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf).
 
-Its conformance is **partially conformant**. The self-assessment found no criterion it fails, but
-it checks a sample of pages and no screen reader has read the app yet, so it does not claim full
-conformance. The developer checked the app and
-the web element against every WCAG 2.2 level A and AA criterion on 24 October 2026, in the
+Its conformance is **partially conformant**. On 24 October 2026 the developer checked the app and
+the web element against every WCAG 2.2 level A and AA criterion, in the
 [self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md).
+It found no criterion the app fails. It covers a sample of pages and no screen reader has read the
+app yet, so it does not claim full conformance.
 On 26 October 2026 a second pass read what a screen reader is given on each page and ran the
 checks in Firefox and WebKit too. There has been no external audit. What is checked, and how, is
 under [How we check](#how-we-check).
 
 ## Known problems
 
-- **Editors may not use a downloaded heatmap's description.** The SVG and PNG downloads carry the
+- **Editors may not use a downloaded heatmap's description.** The SVG and PNG downloads include the
   contribution statement as their text alternative: the SVG in its description, which screen
   readers read, and the PNG in its Description field. A word processor or slide tool may not turn
   that field into alt text. When you put the heatmap in a paper or slide, check its alt text there,
   and paste in the contribution statement if it is empty. **Copy PNG** is worse: Chromium drops the
   Description field from a copied image, so paste the contribution statement in as alt text, or
   use **Download PNG** or **Download SVG**.
-- **The PDF download is not tagged.** It carries the heatmap's title, its contribution statement as
+- **The PDF download is not tagged.** It includes the heatmap's title, its contribution statement as
   the subject and the document language, but it has no tag structure, so a screen reader gets the
   selectable text without headings, reading order or a figure description.
 - **No native speaker has checked eight of the nine languages yet.** The German, Spanish, French,
@@ -123,8 +123,8 @@ speak it is not checked. Nobody has used the app in Firefox or Safari by hand.
 
 In the app, screen readers skip the heatmap drawing, and the contribution statement beside it says
 the same in words. The downloaded SVG has the title "Contribution heatmap" and, as its description,
-the contribution statement by author. The downloaded PNG carries the same statement in its Description field; a copied PNG does not.
-The first known problem says where that text gets lost.
+the contribution statement by author. The downloaded PNG holds the same statement in its Description
+field; a copied PNG does not. The first known problem says where that text gets lost.
 
 ### The web element
 

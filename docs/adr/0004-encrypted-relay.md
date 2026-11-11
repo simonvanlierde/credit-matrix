@@ -12,12 +12,12 @@ copies a reply link back, and the lead opens it. Since v0.7.0 the reply is kept 
 and settled in the Review tab, but the copy and paste remain. Live co-editing of one draft is not
 possible at all.
 
-[ADR 0002](0002-no-accounts-or-server-side-storage.md) chose this on purpose. It says to revisit only
+[ADR 0002](0002-no-accounts-or-server-side-storage.md) chose this round trip. It says to revisit only
 when both of its conditions hold:
 
 1. **People who are not the maintainer ask for it.** This does not hold yet. Nobody but the maintainer
    has asked for replies without copy-paste or for live editing.
-2. **Someone carries the operational and data-protection burden** of storing third-party personal
+2. **Someone takes on the operational and data-protection burden** of storing third-party personal
    data. This holds in part. The maintainer is willing to run a small relay. The design below keeps the
    data-protection burden small, because the server never holds readable draft data. It does not make
    that burden zero (see "What the server still sees").
@@ -38,7 +38,7 @@ opting in, nothing changes.
   cost no duration charges.
 - **Encryption.** AES-GCM through WebCrypto, with a fresh random nonce per message. XChaCha20-Poly1305
   (libsodium) is the fallback if nonce handling becomes awkward, at the cost of a dependency. Each
-  message carries a format version.
+  message has a format version.
 - **Key.** One random symmetric key per shared draft, in the URL fragment. Browsers do not send the
   fragment to the server. The app must also keep it out of `Referer`, logs and analytics.
 - **Presence** (who is online, which cell they are on) is encrypted under the same key.
@@ -77,7 +77,7 @@ has the new link, it re-encrypts them before uploading. If not, they stay local.
 ## Options considered
 
 - **Keyhive with Beelay or Subduction (Ink & Switch).** The right long-term shape, with per-member keys
-  and real revocation. Both carry a "DO NOT use in production" warning as of October 2026.
+  and real revocation. Both have a "DO NOT use in production" warning as of October 2026.
 - **Jazz.** Built-in encryption with key rotation on removal, but mid-rewrite: 0.20.x is "classic" and
   Jazz 2 is in alpha.
 - **MLS (RFC 9420, for example ts-mls).** Gives forward secrecy and post-compromise security, but needs
@@ -110,9 +110,8 @@ has the new link, it re-encrypts them before uploading. If not, they stay local.
   the link round trip.
 - **The privacy claim changes.** "Nothing on a server" becomes "nothing readable on a server". The
   README must say so before the relay ships, and ADR 0002's status line would then note that this ADR
-  amends it. Whether stored ciphertext counts as
-  personal data for an operator without the key is not settled. Short expiry keeps the exposure small
-  either way.
+  amends it. Whether stored ciphertext counts as personal data for an operator without the key is
+  not settled. Short expiry keeps the exposure small either way.
 - **Link leaks are permanent.** Browser history and link-preview bots can capture the key, and
   rotation cannot undo what was read.
 - **Crypto code to own.** No audited package does this for Yjs, so the encryption layer is ours to get

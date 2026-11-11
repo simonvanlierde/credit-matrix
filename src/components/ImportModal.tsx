@@ -157,7 +157,7 @@ export type ImportMode = "add" | "replace";
 export interface PendingImport {
   authors: Author[];
   doiNotice?: "doiRolesImported" | "doiNoRoles";
-  /** Set only by the DOI path; the other importers carry no title. */
+  /** Set only by the DOI path; the other importers give no title. */
   title?: string;
   /** Co-author asks and answers, from a JSON export that has them. */
   asks?: Record<string, Ask>;
@@ -1000,7 +1000,7 @@ export function ImportModal({
           <p role="status" className="min-h-8 min-w-0 flex-1 basis-56 text-xs text-on-surface-variant">
             {importing && citation ? t("citationConverting") : doiLoading ? t("doiLookingUp") : null}
           </p>
-          {/* The confirmation carries its own way back and its own way on. */}
+          {/* The confirmation has its own way back and its own way on. */}
           {!pending && (
             <div className="flex shrink-0 gap-3">
               <button
@@ -1010,7 +1010,7 @@ export function ImportModal({
               >
                 {t("cancel")}
               </button>
-              {/* The review carries its own Apply; a faded twin here would only compete with it. */}
+              {/* The review has its own Apply; a faded twin here would only compete with it. */}
               {!review && (
                 <button
                   ref={importRef}

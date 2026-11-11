@@ -2,7 +2,7 @@
 
 [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) statements and exports, as the
 [CRediT Matrix](https://credit.duinlab.nl) web app runs them in the browser. It is an ESM package
-with types, with no tie to React or Next.js, and runtime dependencies `zod` and `@lingui/core`.
+with types, with no tie to React, and runtime dependencies `zod` and `@lingui/core`.
 
 ```bash
 npm install credit-matrix
@@ -52,10 +52,19 @@ files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement -
 Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
 `convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
 takes `--yes-no` for flat cells with no levels.
-`--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN` simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and gives English.
+`--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN`
+simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and
+gives English.
 
 `statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
 or `codemeta`. See [CodeMeta attribution](#codemeta-attribution) for its output and limits.
+
+`ask` prints a link that opens the contributor's own row in the web app (`--base-url` points it at
+another copy). `--contributor` takes an id, a full name, or a first name or surname only one person
+has; when nothing matches, the error lists the contributors. The link they send back can be read
+with `convert`.
+
+A mistake in the command line prints one line and exits with 2; any other error exits with 1.
 
 ### RO-Crate attribution
 
@@ -74,8 +83,7 @@ gets a `Person` record and one linked `Role` per active CRediT role. Non-authors
 particles, suffixes and supplied family-first names are preserved.
 
 Merge these fields into the work's `codemeta.json`. The fragment has no software title, version
-or release information. It replaces the old CLI output, which was an array of author roles:
-use its `author` and `contributor` lists together, including their Person records.
+or release information. Use its `author` and `contributor` lists together, including their Person records.
 
 A Person's `id` is their canonical ORCID URL when supplied. Otherwise, a fragment such as
 `#credit-matrix-person-2` links their roles within this document. These local links use roster
@@ -90,16 +98,9 @@ correspondence and replies.
 
 The package also exports `toCodemeta(authors)`, returning `{ metadata, warnings }` without writing
 to standard error. The [citesync integration check](../../integrations/codemeta/README.md) runs
-the built CLI's output through the existing citation-file writer. CFF cannot carry a general
+the built CLI's output through the existing citation-file writer. CFF has no field for a general
 contributor list or roles. Zenodo needs a separately chosen contributor type; a CRediT role does
 not supply one.
-
-`ask` prints a link that opens the contributor's own row in the web app (`--base-url` points it at
-another copy). `--contributor` takes an id, a full name, or a first name or surname only one person
-has; when nothing matches, the error lists the contributors. The link they send back can be read
-with `convert`.
-
-A mistake in the command line prints one line and exits with 2; any other error exits with 1.
 
 ## Domain model
 
@@ -236,7 +237,7 @@ fromJats4rXml(xml, { parser: new DOMParser() });
 `detectFormat(text)` guesses the format from the text's shape, and `importAny(text, { parser })`
 reads any of them, share links and [tenzing](https://github.com/marton-balazs-kovacs/tenzing)
 spreadsheets (CSV or TSV) included. It returns the `format` it read, plus `asks`, `selfId` and
-`title` when the format carries them. Text that assigns CRediT roles ("MG: conceptualization",
+`title` when the format includes them. Text that assigns CRediT roles ("MG: conceptualization",
 "Methodology, A.B.") or tells in sentences what the authors did is a `"statement"`, which
 `importAny` refuses: a statement names roles, not contributors. It also throws `ExportOnlyError`
 for Quarto or MyST author YAML and an RO-Crate fragment, which the app writes but cannot read back.
@@ -271,7 +272,7 @@ contributor id, and a `ZodError` for any other data that does not match.
 ## Asks and review
 
 `ask.ts` models asking a co-author for their row and settling their answer. An **`Ask`** records when
-the link was sent, whether it carried your guess (`prefilled`), and the latest `reply`. A reply keeps
+the link was sent, whether it included your guess (`prefilled`), and the latest `reply`. A reply keeps
 the co-author's roles and markers beside the row. Once you choose, it also holds a `Decision` per
 target. A target is one of the 14 roles or one of the two markers (`equalContribution`,
 `corresponding`). `ASK_TARGETS` lists them in order.
@@ -292,19 +293,22 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
 - `levelOf(answer, target)` and `isMarker(target)`: compare levels, never raw scores.
 - `AskSchema` validates stored and imported asks.
 
-A reply can carry an ORCID sign-in. The caller checks it and passes it on the `reply` event as
+A reply can include an ORCID sign-in. The caller checks it and passes it on the `reply` event as
 `orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`). What "verified" means is
 defined in the module comment of `orcid-proof.ts`. When a reply changes the row's iD, signed or not,
-it keeps the iD the ask went to as `provenance.replacedOrcid`, and later replies keep it too. Run
-`recheckSignIns(asks, fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before
+it keeps the iD the ask went to as `provenance.replacedOrcid`, and later replies keep it too.
+
+Run `recheckSignIns(asks, fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before
 you show any sign-in as verified. `provenance.orcid` then holds only checked sign-ins: when ORCID
 cannot be reached, each one moves to `provenance.uncheckedOrcid`, which you should not show as
 verified, and a later check can still verify it. A sign-in counts only on the row id it signed for.
+
 `importAnswers` then compares each sign-in with the row it lands on: when it was given for a row
 with another id, name or iD, it sets `provenance.signedElsewhere`, which you should show as a
-warning instead of as verified. The draft is not compared, since an export carries no draft id, so a
-copied file can carry a true sign-in into another draft. `fromJson` refuses a file that repeats a
+warning instead of as verified. The draft is not compared, since an export has no draft id, so a
+copied file can bring a true sign-in into another draft. `fromJson` refuses a file that repeats a
 row id.
+
 To check a reply link's sign-in yourself, pass it to `verifyOrcidToken` with the keys from
 `fetchOrcidKeys()`.
 

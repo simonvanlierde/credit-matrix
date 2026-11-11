@@ -95,7 +95,7 @@ describe("ORCID sign-in on a reply", () => {
     expect(await verifyOrcidToken(token, { payload: "", keys, now: NOW - 10 * 60_000 })).toBeNull();
   });
 
-  it("carries the token in the reply link, bound to that link's answer", async () => {
+  it("puts the token in the reply link, bound to that link's answer", async () => {
     const { keys } = await issuer;
     const input = replyInput();
     const nonce = await replyNonce(toSharePayload(input));

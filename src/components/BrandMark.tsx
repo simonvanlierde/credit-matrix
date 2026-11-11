@@ -7,13 +7,13 @@ import { useContributionStore } from "@/store/contribution-store";
  * Cells are drawn in `currentColor` at the app's three intensity tiers, and the
  * color is the workspace's own heatmap hue, so the mark is a live swatch of the
  * grid rather than a fixed sticker. The wordmark beside it stays on the primary
- * token: a hue is chosen for cell legibility, and some of the presets would not
- * carry text contrast.
+ * token: a hue is chosen for cell legibility, and some of the presets would fail
+ * text contrast.
  *
  * The store skips hydration, so server and first client render both use the
  * default ink-blue; the transition covers the swap to a stored hue.
  *
- * The favicon (`src/app/icon.svg`) carries the same geometry with literal fills.
+ * The favicon (`src/app/icon.svg`) has the same geometry with literal fills.
  */
 export function BrandMark({ className }: { className?: string }) {
   const monoColor = useContributionStore((state) => state.heatmapMonoColor);
@@ -52,7 +52,7 @@ export const PRODUCT_NAME = "CRediT Matrix";
  * The wordmark never wraps and never shrinks: a two-line brand overflows the
  * 52px header, and a squeezed one stops being the wordmark. It appears only from
  * 27rem, where the row measurably has the ~171px the lockup needs beside 232px
- * of controls at their 44px touch size. Below that the mark carries the brand
+ * of controls at their 44px touch size. Below that the mark shows the brand
  * alone, and the menu it opens names the product on its first line.
  */
 export function Lockup() {

@@ -103,8 +103,8 @@ export interface HeatmapSvgOptions {
 
 /**
  * The heatmap's text alternative: the by-author contribution statement, in the
- * same language and with the same levels as the figure. The SVG carries it as
- * `<desc>`; a PNG export can carry it as a Description text chunk.
+ * same language and with the same levels as the figure. The SVG stores it as
+ * `<desc>`; a PNG export can store it as a Description text chunk.
  */
 export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string {
   return generateStatement(authors, {

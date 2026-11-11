@@ -324,7 +324,7 @@ export function ReviewPanel() {
                             : t("reviewKindAdded");
                   const isOpen = line.state === "open";
                   const graded = levels || (line.state !== "used" && line.difference.kind === "level");
-                  // Focus rings the cell as hovering does; the buttons carry it, since the line is not focusable.
+                  // Focus rings the cell as hovering does; the buttons take it, since the line is not focusable.
                   const focusRing = {
                     onFocus: () => highlight(author, line.target),
                     onBlur: () => highlight(author, null),

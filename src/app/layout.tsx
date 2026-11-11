@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <h1 className="flex items-center text-primary">
                 {/* Below lg the lockup is the trigger for the two links the
                         nav has no room for; from lg it is the plain lockup and
-                        the nav carries them itself. Exactly one is ever shown.
+                        the nav shows them itself. Exactly one is ever shown.
                         The boundary is lg, not md: at md the lockup, the nav and
                         the labelled actions together overrun the row, and the
                         wordmark used to absorb it by wrapping out of the header. */}

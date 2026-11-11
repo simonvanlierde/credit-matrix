@@ -8,7 +8,7 @@ test.describe("CRediT census page", () => {
   });
 
   test("is linked from the header at every width and from the Published practice tab", async ({ page }) => {
-    // Below lg the brand menu carries it as a row.
+    // Below lg the brand menu shows it as a row.
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await page.getByRole("heading", { name: "CRediT Matrix" }).getByRole("button").click();

@@ -7,7 +7,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 
 const BASELINE = "test/mutation-baseline.txt";
-// A survivor left on purpose carries its reason after this marker: an equivalent mutant no test can
+// A survivor left on purpose has its reason after this marker: an equivalent mutant no test can
 // tell apart, or a design constant a test would only restate.
 const REASON = "  # kept: ";
 

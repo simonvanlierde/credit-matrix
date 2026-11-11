@@ -895,7 +895,7 @@ const GridCell = memo(function GridCellInner({
         onPointerLeave={(event) => event.pointerType === "mouse" && api.current.link(null, roleIndex, "hover")}
         onKeyDown={(event) => api.current.keyDown(event, row, col, author, roleIndex)}
         // A toggle only in yes/no mode: pressed semantics misdescribe a
-        // four-way value, whose level the accessible name carries instead.
+        // four-way value, whose level the accessible name gives instead.
         aria-pressed={graded ? undefined : score > 0}
         // aria-disabled, not disabled: a disabled button drops out of the
         // roving tab order, which would strand arrow navigation on a locked
@@ -911,7 +911,7 @@ const GridCell = memo(function GridCellInner({
         // (hundreds a session, in a 3px-gapped grid) a press scale would read
         // as the matrix twitching rather than as feedback.
         // An empty cell is a dot in outline-strong (3:1 on the page), so the
-        // filled cells carry the grid; hover and focus draw the full target.
+        // filled cells give the grid its shape; hover and focus draw the full target.
         // A linked cell (its phrase under the pointer) gets an ink edge and a
         // hard shadow in its contributor's hue, the same mark its phrase gets.
         data-level-fill={fill ? "" : undefined}
@@ -1055,7 +1055,7 @@ function GridLegend({
   graded: boolean;
   translateUi: UiTranslator;
   dark: boolean;
-  /** Some cell carries a difference mark, so the key explains it. */
+  /** Some cell has a difference mark, so the key explains it. */
   differs: boolean;
 }) {
   const t = useTranslations();

@@ -23,7 +23,7 @@ and can be shared as a URL or imported from a file.
 ## Capabilities
 
 - Add, rename, reorder, paste, import, and classify contributors. Look up names through ORCID, or
-  fill a whole list from a DOI, if you want to.
+  fill a whole list from a DOI. Both are optional.
 - Assign all 14 official CRediT roles as yes/no values or contribution levels.
 - Paste an existing contribution statement to fill in the grid.
 - Ask co-authors by link for their own row. Keep each answer beside the draft, and settle every
@@ -43,7 +43,7 @@ and can be shared as a URL or imported from a file.
 ## Voice and claims
 
 The product name is **CRediT Matrix**. What it's known for is the **contribution heatmap**. Use
-that full term in text, documentation, and help, so people carry it into their methods sections.
+that full term in text, documentation, and help, so people use it in their methods sections.
 A control with little room may shorten it to *Heatmap*, once the full term is already on screen.
 
 The voice is direct, precise, calm, and useful. Explain specialist ideas without making them less

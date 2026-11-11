@@ -43,7 +43,7 @@ export interface StatementOptions {
    * `CRediT:` prefix plus each leading label (the role in a by-role statement,
    * the contributor in a by-author one) is wrapped in `<strong>`.
    *
-   * Both forms carry identical wording, because they travel together on the
+   * Both forms have identical wording, because they travel together on the
    * clipboard and the recipient's editor picks one.
    */
   asHtml?: boolean;
