@@ -10,7 +10,7 @@ the favicon also the dark one), plus the fill of an empty cell.
 | Favicon | `public/icon.svg` | Served as written; has its own dark-mode fills |
 | Header lockup | `src/components/BrandMark.tsx` | Rendered inline; draws in `currentColor`, so it follows the theme |
 | Apple touch icon | `docs/brand/apple-icon.html` | `public/apple-icon.png` |
-| Social card | `docs/brand/opengraph-image.html` | `public/opengraph-image.png` |
+| Social card | `docs/brand/og-card.html` | `public/og.png` |
 | Maskable icon | `docs/brand/maskable-icon.html` | `public/icon-512.png`, via the web app manifest |
 
 The PNGs are rendered from the HTML in this folder ahead of time, not on each request, because
@@ -18,7 +18,7 @@ rendering them in the Cloudflare Worker would need a WASM image renderer.
 
 ```sh
 pnpm exec playwright screenshot --viewport-size=1200,630 \
-  "file://$PWD/docs/brand/opengraph-image.html" public/opengraph-image.png
+  "file://$PWD/docs/brand/og-card.html" public/og.png
 pnpm exec playwright screenshot --viewport-size=180,180 \
   "file://$PWD/docs/brand/apple-icon.html" public/apple-icon.png
 pnpm exec playwright screenshot --viewport-size=512,512 \
