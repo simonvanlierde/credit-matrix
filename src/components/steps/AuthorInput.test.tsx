@@ -420,3 +420,26 @@ describe("moving a contributor from the menu", () => {
     expect(authors().map((a) => a.name)).toEqual(["Ben Okoro", "Ann Lee"]);
   });
 });
+
+describe("collapsed rail", () => {
+  it("links a person on hover and opens their menu from the initials chip", () => {
+    const ann = createAuthor("Ann Lee");
+    act(() => useContributionStore.getState().loadAuthors([ann]));
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
+    const chip = screen.getByRole("button", { name: "Ann Lee" });
+
+    fireEvent.pointerEnter(chip, { pointerType: "mouse" });
+    expect(useContributionStore.getState().statementLink).toEqual({ contributorId: ann.id, from: "author" });
+    fireEvent.pointerLeave(chip, { pointerType: "mouse" });
+    expect(useContributionStore.getState().statementLink).toBeNull();
+
+    // A link from the grid or statement marks the chip too.
+    act(() => useContributionStore.getState().setStatementLink({ contributorId: ann.id, from: "cell" }));
+    expect(chip.dataset.linked).toBe("true");
+
+    fireEvent.click(chip);
+    expect(screen.getByRole("dialog", { name: "Actions for Ann Lee" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Edit in list" })).toBeTruthy();
+  });
+});

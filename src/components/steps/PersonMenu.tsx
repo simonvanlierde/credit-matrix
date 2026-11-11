@@ -60,7 +60,8 @@ export function PersonMenu({
   trigger: ReactElement;
   /** The trigger is running text (the statement): a click opens the menu, but it stays text. */
   textAnchor?: boolean;
-  surface: "list" | "grid" | "statement";
+  /** `rail` is the collapsed list: its initials chips open this menu. */
+  surface: "list" | "rail" | "grid" | "statement";
   align?: "start" | "center" | "end";
   /** List only: false while the ORCID field is already open. */
   canAddOrcid?: boolean;

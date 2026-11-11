@@ -394,14 +394,49 @@ export function AuthorList() {
         <ul className="flex flex-col items-center gap-1.5">
           {authors.map((author) => (
             <li key={author.id}>
-              <InitialsChip author={author} />
-              <span className="sr-only">{author.name}</span>
+              <RailChip author={author} />
             </li>
           ))}
         </ul>
       </div>
       <div className="xl:hidden">{full}</div>
     </>
+  );
+}
+
+/**
+ * A person in the collapsed rail: their initials chip, linked on hover or focus like a full row,
+ * and the trigger for the same person menu. Named by the person; Radix adds the popup state.
+ */
+function RailChip({ author }: { author: Author }) {
+  const linked = useContributionStore((s) => s.statementLink?.contributorId === author.id);
+  const setStatementLink = useContributionStore((s) => s.setStatementLink);
+  const link = () => setStatementLink({ contributorId: author.id, from: "author" });
+  const clearOwnLink = () => {
+    if (useContributionStore.getState().statementLink?.from === "author") setStatementLink(null);
+  };
+  return (
+    <PersonMenu
+      authorId={author.id}
+      surface="rail"
+      align="start"
+      trigger={
+        <button
+          type="button"
+          aria-label={author.name}
+          title={author.name}
+          data-linked={linked || undefined}
+          // Mouse only (a tap enters with no leave), as on a full row.
+          onPointerEnter={(event) => event.pointerType === "mouse" && link()}
+          onPointerLeave={(event) => event.pointerType === "mouse" && clearOwnLink()}
+          onFocus={link}
+          onBlur={clearOwnLink}
+          className="block rounded-md p-0.5 ring-offset-1 ring-offset-surface transition-shadow duration-150 hover:ring-2 hover:ring-edge focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent data-linked:ring-2 data-linked:ring-primary data-[state=open]:ring-2 data-[state=open]:ring-primary motion-reduce:transition-none"
+        >
+          <InitialsChip author={author} />
+        </button>
+      }
+    />
   );
 }
 
