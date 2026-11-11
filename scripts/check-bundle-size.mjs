@@ -16,8 +16,8 @@ const LIMIT_GZIP = 437_000;
 // Embedded-font PDF generation is loaded on export; keep its cost separate from editing.
 const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-11: 2.55 MB of scripts and styles plus Noto Sans (0.57 MB), the one figure font
-// precached. Any other figure font is 0.62-14.9 MB.
-const PRECACHE_LIMIT = 3_200_000;
+// precached, and the subsetter every export needs (0.68 MB). Any other figure font is 0.62-14.9 MB.
+const PRECACHE_LIMIT = 4_000_000;
 // Measured 2026-11-11: 2.3 MB unpacked once the fonts moved out (0.12.0 was 43 MB).
 const PACKAGE_LIMIT = 5_000_000;
 
@@ -32,9 +32,11 @@ if (files.length === 0) {
   process.exit(1);
 }
 const kb = (n) => `${(n / 1000).toFixed(1)} kB`;
+// The font family search is a chunk only the figure exporter imports, and the app never calls it.
+const figure = ({ name }) => /^(?:figures|font-search)-/.test(name);
 for (const [label, limit, group] of [
-  ["app", LIMIT_GZIP, files.filter(({ name }) => !name.startsWith("figures-"))],
-  ["figure exporter", FIGURE_LIMIT_GZIP, files.filter(({ name }) => name.startsWith("figures-"))],
+  ["app", LIMIT_GZIP, files.filter((file) => !figure(file))],
+  ["figure exporter", FIGURE_LIMIT_GZIP, files.filter(figure)],
 ]) {
   const gzip = group.reduce((n, { bytes }) => n + gzipSync(bytes, { level: 9 }).length, 0);
   console.log(`check-bundle-size: ${label}: ${kb(gzip)} gzip (limit ${kb(limit)})`);

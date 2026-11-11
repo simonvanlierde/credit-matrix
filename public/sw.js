@@ -6,7 +6,8 @@
  * /citesync/ (about 13 MB) is not precached: the first CITATION.cff or
  * .zenodo.json import fetches it through the same-origin rule below, and later
  * imports with the same build run offline. Of the figure fonts (/assets/*.ttf,
- * about 40 MB), Noto Sans, the default face, is precached; the others load on
+ * about 40 MB), Noto Sans, the default face, is precached with the font
+ * subsetter (harfbuzz-subset.wasm) every export uses; the others load on
  * the first export that needs them.
  *
  * - install: precache every page and every asset they reference, so a new
