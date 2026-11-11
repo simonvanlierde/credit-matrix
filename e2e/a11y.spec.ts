@@ -159,7 +159,7 @@ test.describe("Accessibility (axe-core)", () => {
   for (const route of ["/about", "/accessibility", "/docs", "/docs/figures", "/docs/typst"]) {
     test(`${route} has no detectable violations, light, dark and on a phone`, async ({ page }) => {
       await page.goto(route);
-      await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+      await expect(page.locator("main").getByRole("heading", { level: 2 }).first()).toBeVisible();
       expect((await scan(page)).violations).toEqual([]);
       await page.emulateMedia({ colorScheme: "dark" });
       expect((await scan(page)).violations).toEqual([]);

@@ -27,4 +27,36 @@ test.describe("Docs", () => {
         .getByRole("link", { name: "CRediT statement for Quarto" }),
     ).toHaveAttribute("aria-current", "page");
   });
+
+  test("About links each plugin to its docs page", async ({ page }) => {
+    await page.goto("/about");
+    await page.getByRole("link", { name: "Quarto", exact: true }).click();
+    await expect(page).toHaveURL(/\/docs\/quarto$/);
+  });
+
+  test("no docs page scrolls sideways at 320 px, and option names stay whole", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto("/docs");
+    const routes = await page
+      .locator("main a[href^='/docs/']")
+      .evaluateAll((links) => [...new Set(links.map((link) => link.getAttribute("href")))]);
+    expect(routes.length).toBeGreaterThan(5);
+    for (const route of routes) {
+      await page.goto(route as string);
+      // Text clipped by an ancestor never shows in scrollWidth, so measure every element against the viewport.
+      const wide = await page
+        .locator("article *")
+        .evaluateAll((nodes) =>
+          nodes
+            .filter((node) => node.getBoundingClientRect().right > window.innerWidth + 1)
+            .map((node) => node.outerHTML.slice(0, 80)),
+        );
+      expect(wide, route as string).toEqual([]);
+    }
+    await page.goto("/docs/heatmap");
+    const optionHeights = await page
+      .locator("article td:first-child code")
+      .evaluateAll((codes) => codes.map((code) => code.getClientRects().length));
+    expect(optionHeights.every((lines) => lines === 1)).toBe(true);
+  });
 });
