@@ -53,11 +53,23 @@ describe("export-only formats", () => {
     expect(await importAny(text).catch((e) => e)).not.toBeInstanceOf(ExportOnlyError);
   });
 
-  it("reads a CITATION.cff that lists its authors before cff-version as CFF", async () => {
-    const text = "# c\nauthors:\n  - family-names: Smith\n    given-names: Jane\ncff-version: 1.2.0\ntitle: T\n";
-    const convertCitation = vi.fn(async () => JSON.stringify({ "@type": "SoftwareSourceCode", author: [] }));
-    await importAny(text, { convertCitation }).catch(() => undefined);
-    expect(convertCitation).toHaveBeenCalledWith(text.trim(), "cff");
+  it.each([["cff-version: 1.2.0"], ["cff-version : 1.2.0"]])(
+    "reads a CITATION.cff that lists its authors before %j as CFF",
+    async (version) => {
+      const text = `# c\nauthors:\n  - family-names: Smith\n    given-names: Jane\n${version}\ntitle: T\n`;
+      const convertCitation = vi.fn(async () => JSON.stringify({ "@type": "SoftwareSourceCode", author: [] }));
+      await importAny(text, { convertCitation }).catch(() => undefined);
+      expect(convertCitation).toHaveBeenCalledWith(text.trim(), "cff");
+    },
+  );
+
+  it("still refuses author YAML whose comment mentions cff-version", async () => {
+    const text = "# not cff-version: 1.2.0\nauthors:\n  - name: Jane Smith\n";
+    await expect(importAny(text)).rejects.toBeInstanceOf(ExportOnlyError);
+  });
+
+  it("reads a name list whose first word only ends in authors:", async () => {
+    expect((await importAny("coauthors:\nJane Smith")).authors.map((a) => a.name)).toContain("Jane Smith");
   });
 
   it("still reads a name list that mentions an author key", async () => {

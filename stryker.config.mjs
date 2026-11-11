@@ -1,7 +1,7 @@
 /**
  * Mutation testing of the import and export code in src/core, run with `pnpm mutation`.
- * Not a pull-request gate: .github/workflows/mutation.yml runs it weekly and fails when the
- * survivors differ from test/mutation-baseline.txt, which lists the mutants no test kills.
+ * Not a pull-request gate: .github/workflows/mutation.yml runs it weekly and fails on a survivor
+ * that test/mutation-baseline.txt, the list of mutants no test kills, does not have.
  * @type {import('@stryker-mutator/api/core').PartialStrykerOptions}
  */
 export default {
