@@ -17,7 +17,8 @@ def figure_font_cache(tmp_path_factory) -> dict[str, str]:
     cache = tmp_path_factory.mktemp("cache")
     folder = cache / "credit-matrix" / "fonts"
     folder.mkdir(parents=True)
-    for font in (ROOT / "src/fonts").glob("*.ttf"):
+    # The provider caches every face, the HarfBuzz wasm included, as <sha256>.ttf.
+    for font in [*(ROOT / "src/fonts").glob("*.ttf"), ROOT / "src/fonts/harfbuzz.wasm"]:
         shutil.copyfile(font, folder / f"{hashlib.sha256(font.read_bytes()).hexdigest()}.ttf")
     return {"XDG_CACHE_HOME": str(cache)}
 

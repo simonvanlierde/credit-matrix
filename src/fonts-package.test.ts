@@ -12,7 +12,7 @@ it("publishes index.js's faces, the licences and the readme, and nothing else", 
   const faces = [...readFileSync(`${folder}/index.js`, "utf8").matchAll(/new URL\("\.\/([^"]+)"/g)].map(
     ([, file]) => file,
   );
-  expect(faces).toHaveLength(6);
+  expect(faces).toHaveLength(28);
   const expected = new Set([
     ...faces,
     "index.js",
@@ -23,6 +23,8 @@ it("publishes index.js's faces, the licences and the readme, and nothing else", 
     "OFL-NotoSans.txt",
     "OFL-NotoSansCJK.txt",
     "OFL-NotoSerifCJK.txt",
+    "OFL-NotoScripts.txt",
+    "LICENSE-harfbuzz.txt",
   ]);
   expect([...files].sort()).toEqual([...expected].sort());
 });
