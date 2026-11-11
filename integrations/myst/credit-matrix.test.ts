@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import { MAX_AUTHORS } from "@/core/author";
 import { createFigureRenderer } from "@/core/figures";
 import {
   AVAILABLE_LOCALES,
@@ -281,11 +282,14 @@ it("gives the app's deduplicated initials and keeps nonletter labels whole", asy
   expect(image?.alt).toContain("Hua Luogeng");
 });
 
-it("keeps full names past the app's 200 contributors instead of failing the build", async () => {
+it("keeps full names past the app's contributor cap instead of failing the build", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-many-"));
   const path = join(dir, "index.md");
-  const people = Array.from({ length: 201 }, (_, i) => `  - name: Ada Lovelace ${i}\n    roles: [Software]\n`);
+  const people = Array.from(
+    { length: MAX_AUTHORS + 1 },
+    (_, i) => `  - name: Ada Lovelace ${i}\n    roles: [Software]\n`,
+  );
   writeFileSync(path, `---\nauthors:\n${people.join("")}---\n`);
   const { svg } = await heatmap(path, { initials: true });
-  expect(svg).toContain(">Ada Lovelace 200</tspan>");
+  expect(svg).toContain(`>Ada Lovelace ${MAX_AUTHORS}</tspan>`);
 });
