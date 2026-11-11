@@ -32,8 +32,9 @@ export function accentFor(hue: string, dark: boolean): string | null {
 /**
  * Hands the open draft's heatmap hue to the page: `--color-theme` tints the page
  * ground and `--color-accent` colours the wordmark, selected segments, the active
- * tab and grid focus (see globals.css). Colour by contributor draws no single hue,
- * so the page goes back to plain paper and the accent to primary. Only the web
+ * tab and grid focus (see globals.css). Primary actions and links share that accent.
+ * Colour by contributor draws no single hue, so the page goes back to plain paper
+ * and the accent to ink blue. Only the web
  * interface reads these: exported figures take their colours from the export options.
  */
 export function ThemeHue() {
@@ -47,8 +48,15 @@ export function ThemeHue() {
     const root = document.documentElement.style;
     root.setProperty("--color-theme", perPerson ? "var(--color-paper)" : monoColor);
     const accent = perPerson ? null : accentFor(monoColor, dark);
-    if (accent) root.setProperty("--color-accent", accent);
-    else root.removeProperty("--color-accent");
+    if (accent) {
+      root.setProperty("--color-accent", accent);
+      root.setProperty("--color-primary", accent);
+      root.setProperty("--color-primary-hover", mixHex(accent, dark ? "#ffffff" : "#000000", 0.12));
+    } else {
+      root.removeProperty("--color-accent");
+      root.removeProperty("--color-primary");
+      root.removeProperty("--color-primary-hover");
+    }
   }, [monoColor, perPerson, dark]);
   return null;
 }

@@ -1,9 +1,12 @@
 import { act, render } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor } from "@/core";
 import { CONTRIBUTOR_HUES, contrastRatio, DEFAULT_MONO_COLOR, mixHex } from "@/core/contributor-color";
+import { useDark } from "@/lib/use-dark";
 import { useContributionStore } from "@/store/contribution-store";
 import { accentFor, ThemeHue } from "./ThemeHue";
+
+vi.mock("@/lib/use-dark", () => ({ useDark: vi.fn(() => false) }));
 
 describe("accentFor", () => {
   it("keeps a hue that already reaches text contrast", () => {
@@ -39,9 +42,12 @@ describe("accentFor", () => {
 describe("ThemeHue", () => {
   const root = document.documentElement.style;
   const reset = () => {
-    useContributionStore.getState().reset();
+    act(() => useContributionStore.getState().reset());
     root.removeProperty("--color-theme");
     root.removeProperty("--color-accent");
+    root.removeProperty("--color-primary");
+    root.removeProperty("--color-primary-hover");
+    vi.mocked(useDark).mockReturnValue(false);
   };
   beforeEach(reset);
   afterEach(reset);
@@ -64,6 +70,8 @@ describe("ThemeHue", () => {
     mount();
     expect(root.getPropertyValue("--color-accent")).not.toBe("");
     act(() => useContributionStore.getState().setColorByContributor(true));
+    expect(root.getPropertyValue("--color-primary")).toBe("");
+    expect(root.getPropertyValue("--color-primary-hover")).toBe("");
     expect(root.getPropertyValue("--color-theme")).toBe("var(--color-paper)");
     expect(root.getPropertyValue("--color-accent")).toBe("");
   });
@@ -77,4 +85,21 @@ describe("ThemeHue", () => {
     expect(root.getPropertyValue("--color-theme")).toBe(DEFAULT_MONO_COLOR);
     expect(root.getPropertyValue("--color-accent")).not.toBe("");
   });
+  it.each([false, true])(
+    "uses the selected hue for links and buttons, with readable hover fills (dark: %s)",
+    (dark) => {
+      vi.mocked(useDark).mockReturnValue(dark);
+      mount();
+      for (const hue of ["#21763c", "#9c433f", "#ffffff", "#ffff00", "#000000"]) {
+        act(() => useContributionStore.getState().setHeatmapMonoColor(hue));
+        const primary = root.getPropertyValue("--color-primary");
+        const hover = root.getPropertyValue("--color-primary-hover");
+        expect(primary).toBe(accentFor(hue, dark));
+        expect(contrastRatio(primary, dark ? "#24221f" : "#fffdf8")).toBeGreaterThanOrEqual(4.5);
+        for (const fill of [primary, hover]) {
+          expect(contrastRatio(fill, dark ? "#16181c" : "#ffffff")).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    },
+  );
 });

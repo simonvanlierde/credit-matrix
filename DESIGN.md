@@ -14,7 +14,7 @@ colors:
   paper: "#fbf8f1"
   paper-bright: "#fffdf8"
   paper-muted: "#f5f0e6"
-  graphite: "#2e2a25"
+  graphite: "#45413a"
   graphite-muted: "#5e584e"
   rule: "#d6ccba"
   edge: "#2e2a25"
@@ -67,7 +67,7 @@ spacing:
   xl: "24px"
 components:
   button-primary:
-    backgroundColor: "{colors.ink-blue}"
+    backgroundColor: "{colors.accent}"
     textColor: "{colors.paper-bright}"
     rounded: "{rounded.md}"
     padding: "10px 20px"
@@ -102,19 +102,20 @@ contributors, through the matrix, to the text for the manuscript.
 ## Colors
 
 Use warm paper neutrals throughout the interface. Ink is a warm charcoal, not near-black: it keeps
-13:1 on paper without the weight of black. The page itself is paper tinted 3% toward the
+9.6:1 on paper without the weight of black. The page itself is paper tinted 3% toward the
 draft's heatmap colour (4% in dark mode), so it shifts to a faint sage when someone picks green and
 stays neutral for grey. With colour by contributor no single hue is drawn, so the page stays plain
 paper. The tint stops at those values because a custom colour can be anything, and
 the muted text must keep 4.5:1 on it. It is for the web interface only: an exported figure is always
 drawn on white. Cards and the statement sit on the page in brighter paper.
 
-Reserve ink blue for primary actions, links and focus outside the grid. The heatmap hue is also
-the accent (`--color-accent`, set by `ThemeHue`): the wordmark, the initials chips when no contributor hue is set, the selected
+Primary actions, links and focus follow the heatmap hue through the same readable accent
+(`--color-primary` and `--color-accent`, set by `ThemeHue`): the wordmark, the initials chips when no contributor hue is set, the selected
 segment, the active inspector tab and focus inside the grid. In light mode it is deepened toward
 black, and in dark mode lightened toward white, only as far as it takes to reach 4.5:1 against bright
 paper both ways, so any custom colour stays legible. With colour by contributor the accent is ink
-blue. Use contributor colors only to identify data.
+blue. Hover fills deepen in light mode and lighten in dark mode to keep button text readable.
+Use contributor colors only to identify data.
 
 By default the grid colours each contributor in their own hue, by list position: their chip, the
 rule under their column name, their cells, and the mark on their phrase in the statement all share
@@ -293,8 +294,9 @@ Keep pill shapes for status, switches and small markers.
 
 ### Buttons
 
-Primary buttons use ink blue with bright paper text and the press shadow, and a darker opaque ink
-blue on hover (`ink-blue-hover`), never a translucent tint that lets the text fade. Secondary
+Primary buttons use the readable heatmap accent and the press shadow, with bright paper text in
+light mode and dark ink in dark mode. Hover deepens the fill in light mode and lightens it in dark
+mode, never using a translucent tint that lets the text fade. Secondary
 buttons use the 1px ink edge on bright paper and lift with the card shadow on hover. Give every control a visible keyboard focus and a target of at least
 24px.
 

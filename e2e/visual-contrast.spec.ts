@@ -101,6 +101,26 @@ for (const theme of themes) {
       }
     });
 
+    test("primary actions and links follow the readable heatmap accent", async ({ page }) => {
+      await page.goto("/");
+      await page.getByRole("button", { name: "Load sample data" }).click();
+      await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+      await page.getByRole("button", { name: "Green", exact: true }).click();
+      await page.keyboard.press("Escape");
+      await settleMotion(page);
+      const copy = page.getByRole("button", { name: "Copy statement", exact: true });
+      const link = page.getByRole("link", { name: /^Plugins for/ });
+      const accent = await page.evaluate(() => document.documentElement.style.getPropertyValue("--color-accent"));
+      const fill = await flatten(page, [await style(copy, "background-color")]);
+      expect(fill).toEqual(await flatten(page, [accent]));
+      expect(await flatten(page, [await style(link, "color")])).toEqual(fill);
+      const ink = await flatten(page, [await style(copy, "color")]);
+      expect(ratio(ink, fill)).toBeGreaterThanOrEqual(4.5);
+      await copy.hover();
+      await settleMotion(page);
+      expect(ratio(ink, await flatten(page, [await style(copy, "background-color")]))).toBeGreaterThanOrEqual(4.5);
+    });
+
     test("heatmap color swatches have a visible boundary", async ({ page }) => {
       await page.goto("/");
       await page.getByRole("button", { name: "Load sample data" }).click();

@@ -12,10 +12,10 @@ export const DEFAULT_MONO_COLOR = "#1f4e79";
 export const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 /**
- * Single-hue presets. Red, green and purple use OKLCH L=0.40, C=0.10 at
+ * Single-hue presets. Red, green and purple use OKLCH L=0.50, C=0.12 at
  * 25°, 150° and 305°; hex keeps browser controls and figure exports identical.
  */
-export const HEATMAP_HUES = [DEFAULT_MONO_COLOR, "#742e2b", "#115629", "#543772", "#404040"] as const;
+export const HEATMAP_HUES = [DEFAULT_MONO_COLOR, "#9c433f", "#21763c", "#734f99", "#404040"] as const;
 
 /**
  * One hue per contributor, by list position, for grids that colour each person
