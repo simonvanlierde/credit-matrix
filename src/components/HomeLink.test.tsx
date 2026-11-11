@@ -11,7 +11,7 @@ const renderAt = (path: string) =>
   );
 
 it("on the main page, scrolls to the top instead of reloading", () => {
-  const scroll = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+  const scroll = vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
   renderAt("/");
   const clicked = fireEvent.click(screen.getByRole("link", { name: "Home" }));
   expect(clicked).toBe(false);

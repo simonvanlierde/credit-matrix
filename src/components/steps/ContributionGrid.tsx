@@ -1093,8 +1093,8 @@ function GridLegend({
   const hue = (linkedId && hueForId?.(linkedId)) || monoColor;
   // Below the grid it reads None → Lead left to right, as the fills grow; beside it, Lead on top,
   // as the figure's side key does.
-  const key = graded ? LEVEL_KEY : FLAT_KEY;
-  const steps = side ? key : [...key].reverse();
+  const scale = graded ? LEVEL_KEY : FLAT_KEY;
+  const steps = side ? scale : [...scale].reverse();
   return (
     <div className="flex min-w-0 flex-col gap-1.5 text-xs text-on-surface-variant">
       <span className={side ? "flex flex-col gap-2" : "flex flex-wrap items-end gap-x-4 gap-y-2"}>
