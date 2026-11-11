@@ -61,7 +61,7 @@ the CLI reads them from disk and works offline. Install both packages in one pro
 (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`. Under a bare
 `npx credit-matrix`, the CLI cannot see a `credit-matrix-fonts` installed in your own project. In
 that case run `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. Without the fonts package, the CLI downloads each face the first
-time a figure needs it, from `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.0/`. It checks
+time a figure needs it, from `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.1/`. It checks
 the file against the SHA-256 hash in this package and refuses one that does not match. It then
 keeps the face in `$XDG_CACHE_HOME/credit-matrix/fonts/`, or the platform cache folder (`~/.cache`,
 `~/Library/Caches` on macOS, `%LOCALAPPDATA%` on Windows). That download is the only network request
