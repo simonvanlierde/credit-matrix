@@ -141,9 +141,11 @@ credit-matrix:
   skipempty: true
 ```
 
-The filter invokes `credit-matrix` from `PATH`. To select a local installation, set `command` to
-an argument list, for example `[node, node_modules/credit-matrix/dist/cli.js]`. No shell runs.
-Rendering someone else's document with the filter runs the command it names: read its metadata first.
+The filter invokes `credit-matrix` from `PATH`. To select a local installation, set the
+`CREDIT_MATRIX_COMMAND` environment variable to a command line, for example
+`CREDIT_MATRIX_COMMAND="node node_modules/credit-matrix/dist/cli.js" quarto render`. The filter splits
+it at whitespace, so no part of it can contain a space, and no shell runs. A document cannot choose
+the program: the filter does not read it from metadata.
 
 The filter puts the SVG into Pandoc's media bag. For standalone HTML, use `--embed-resources`, or
 extract the image with `--extract-media=images`. Quarto handles the image through its normal media

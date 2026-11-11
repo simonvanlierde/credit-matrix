@@ -35,6 +35,12 @@ function pngDimensions(svg: string, widthMm: number, dpi: number) {
   return { width, height: Math.round((width * dimensions.height) / dimensions.width) };
 }
 
+function glyphError(cause: unknown): string | null {
+  return cause instanceof Error && cause.name === "FigureFontError" && "characters" in cause
+    ? String(cause.characters)
+    : null;
+}
+
 function oversizedPng({ width, height }: { width: number; height: number }) {
   return width > 16384 || height > 16384 || width * height > 32_000_000;
 }
@@ -123,7 +129,8 @@ export function HeatmapExports({
     }),
     [settings, translateRole, translateUi, outputLanguage],
   );
-  const renderSvg = async () => (await renderer()).svg(authors, svgOptions);
+  // SVG and PNG draw what the bundled faces lack in system fonts; only PDF needs every glyph embedded.
+  const renderSvg = async () => (await renderer()).svg(authors, { ...svgOptions, fallback: "system" });
   const renderPng = async () =>
     svgToPngBlob(
       await renderSvg(),
@@ -132,35 +139,39 @@ export function HeatmapExports({
       settings.pngWidthMm,
       settings.pngDpi,
     );
-  const [{ preview, previewCause, rendering }, setPreview] = useState<{
+  const [{ preview, previewCause, missingGlyphs, rendering }, setPreview] = useState<{
     preview: string;
     previewCause: unknown;
+    /** Characters the bundled faces lack: PDF is refused, SVG and PNG use system fonts for them. */
+    missingGlyphs: string | null;
     rendering: boolean;
-  }>({ preview: "", previewCause: null, rendering: true });
+  }>({ preview: "", previewCause: null, missingGlyphs: null, rendering: true });
   useEffect(() => {
     if (!open) return;
     let active = true;
     setPreview((current) => ({ ...current, rendering: true }));
-    renderer()
-      .then((figures) => figures.svg(authors, svgOptions))
-      .then(
-        (svg) => {
-          if (active) setPreview({ preview: svg, previewCause: null, rendering: false });
-        },
-        (cause: unknown) => {
-          if (active) setPreview({ preview: "", previewCause: cause, rendering: false });
-        },
-      );
+    (async () => {
+      const figures = await renderer();
+      try {
+        return { preview: await figures.svg(authors, svgOptions), missingGlyphs: null };
+      } catch (cause) {
+        const missing = glyphError(cause);
+        if (missing === null) throw cause;
+        return { preview: await figures.svg(authors, { ...svgOptions, fallback: "system" }), missingGlyphs: missing };
+      }
+    })().then(
+      (result) => {
+        if (active) setPreview({ ...result, previewCause: null, rendering: false });
+      },
+      (cause: unknown) => {
+        if (active) setPreview({ preview: "", previewCause: cause, missingGlyphs: null, rendering: false });
+      },
+    );
     return () => {
       active = false;
     };
   }, [open, authors, svgOptions]);
-  const previewError =
-    previewCause instanceof Error && previewCause.name === "FigureFontError" && "characters" in previewCause
-      ? t("errFigureGlyphs", { characters: String(previewCause.characters) })
-      : previewCause
-        ? t("errHeatmapExport", { format: "SVG" })
-        : null;
+  const previewError = previewCause ? t("errHeatmapExport", { format: "SVG" }) : null;
   const dimensions = preview ? pngDimensions(preview, settings.pngWidthMm, settings.pngDpi) : null;
   const pngTooLarge = dimensions ? oversizedPng(dimensions) : false;
   const printFontSize = preview ? heatmapPrintSize(preview, settings.pngWidthMm).minFontPt : null;
@@ -171,10 +182,11 @@ export function HeatmapExports({
       : "idle";
 
   function fail(format: ExportFormat, cause: unknown) {
+    const missing = glyphError(cause);
     const message =
-      cause instanceof Error && cause.name === "FigureFontError" && "characters" in cause
-        ? t("errFigureGlyphs", { characters: String(cause.characters) })
-        : t("errHeatmapExport", { format: format.toUpperCase() });
+      missing === null
+        ? t("errHeatmapExport", { format: format.toUpperCase() })
+        : t("errFigureGlyphs", { characters: missing });
     setError(message);
     announce(message, { assertive: true });
   }
@@ -342,7 +354,13 @@ export function HeatmapExports({
             <button
               key={format}
               type="button"
-              disabled={!preview || loading !== null || !!previewError || (format === "png" && pngTooLarge)}
+              disabled={
+                !preview ||
+                loading !== null ||
+                !!previewError ||
+                (format === "png" && pngTooLarge) ||
+                (format === "pdf" && missingGlyphs !== null)
+              }
               onClick={() => download(format)}
               className={MENU_ITEM}
             >
@@ -360,6 +378,11 @@ export function HeatmapExports({
         {pngTooLarge && (
           <p role="status" className="text-xs text-on-surface-variant">
             {t("heatmapPngTooLarge")}
+          </p>
+        )}
+        {missingGlyphs !== null && (
+          <p role="status" className="px-2 text-xs text-on-surface-variant">
+            {t("errFigureGlyphs", { characters: missingGlyphs })} {t("heatmapSystemFonts")}
           </p>
         )}
         {(error || previewError) && (

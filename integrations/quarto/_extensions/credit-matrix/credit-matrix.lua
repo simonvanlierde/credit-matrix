@@ -362,10 +362,12 @@ end
 
 -- Figure generation shares the CLI renderer with the app and the other document plugins.
 local function heatmap(authors, options, locale)
-  local command = options.command or { "credit-matrix" }
-  if pandoc.utils.type(command) ~= "List" then command = { command } end
+  -- Only whoever runs the render picks the program, never the document's metadata.
+  local command = {}
+  for word in (os.getenv("CREDIT_MATRIX_COMMAND") or ""):gmatch("%S+") do command[#command + 1] = word end
+  if #command == 0 then command = { "credit-matrix" } end
   local args = {}
-  for i = 2, #command do args[#args + 1] = stringify(command[i]) end
+  for i = 2, #command do args[#args + 1] = command[i] end
   for _, arg in ipairs({ "convert", "-", "--to", "svg" }) do args[#args + 1] = arg end
   for _, key in ipairs({ "color", "palette", "shape", "size", "font", "font-size", "legend", "legend-position", "marks", "initials", "labels", "skipempty" }) do
     if options[key] ~= nil then
@@ -389,7 +391,7 @@ local function heatmap(authors, options, locale)
     end
     rows[#rows + 1] = table.concat(row, ",")
   end
-  local svg = pandoc.pipe(stringify(command[1]), args, table.concat(rows, "\n") .. "\n")
+  local svg = pandoc.pipe(command[1], args, table.concat(rows, "\n") .. "\n")
   local name = "credit-heatmap-" .. pandoc.utils.sha1(svg) .. ".svg"
   pandoc.mediabag.insert(name, "image/svg+xml", svg)
   local image_locale = options.locale and document_locale(options.locale) or locale

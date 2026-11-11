@@ -2,7 +2,7 @@
 import { writeFileSync } from "node:fs";
 import process from "node:process";
 import { DOMParser as LinkedomParser } from "linkedom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { activeContributions } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromCrossrefContributors, isCrossrefContributors, toCrossrefContributors } from "../export/crossref";
@@ -175,6 +175,24 @@ describe("fromCrossrefContributors", () => {
     ).toEqual([]);
   });
 
+  it("reads roles of the crossref vocabulary only, for author type and corresponding mark", () => {
+    const xml = `<contributors><person_name><surname>Smith</surname>
+      <role vocab="crossref" type="other"/><role vocab="credit" type="author"/><role vocab="credit" type="corresponding-author"/>
+      <role vocab="crossref"/></person_name></contributors>`;
+    const [smith] = fromCrossrefContributors(xml);
+    expect(smith?.contributorType).toBe("non-author");
+    expect(smith?.corresponding).toBe(false);
+  });
+
+  it("says which reader needs a DOMParser where there is no global one", () => {
+    vi.stubGlobal("DOMParser", undefined);
+    try {
+      expect(() => fromCrossrefContributors("<contributors/>")).toThrow(/^fromCrossrefContributors needs a DOMParser/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("refuses an attribute-list declaration", () => {
     expect(() => fromCrossrefContributors('<!DOCTYPE c [<!ATTLIST person_name x CDATA "y">]><contributors/>')).toThrow(
       /^XML parse error: entity and attribute-list declarations are not supported\.$/,
@@ -224,6 +242,12 @@ describe("isCrossrefContributors", () => {
   it("rejects an unterminated comment or declaration", () => {
     expect(isCrossrefContributors("<!-- never closed <contributors>")).toBe(false);
     expect(isCrossrefContributors('<?xml version="1.0"<contributors>')).toBe(false);
+  });
+
+  it("looks only at the root element", () => {
+    expect(isCrossrefContributors("<article><contributors>")).toBe(false);
+    expect(isCrossrefContributors("<!-- a --><body><contributors/></body>")).toBe(false);
+    expect(isCrossrefContributors("\uFEFF\n <contributors>")).toBe(true);
   });
 
   it("accepts a BOM, a declaration, comments and a self-closing root", () => {

@@ -254,6 +254,9 @@ msgstr "Importation annulée."
 msgid "errImportXmlUnreadable"
 msgstr "Ce XML est illisible. Vérifiez que le fichier est complet."
 
+msgid "errImportExportOnly"
+msgstr "Les fichiers Quarto, MyST et RO-Crate sont réservés à l'export. Importez plutôt l'export JSON."
+
 msgid "close"
 msgstr "Fermer"
 
@@ -379,9 +382,6 @@ msgstr "Le service ORCID est indisponible. Réessayez dans un instant ou saisiss
 
 msgid "importFromDoi"
 msgstr "Importer depuis un DOI"
-
-msgid "structuredFileUpload"
-msgstr "Importer un fichier structuré"
 
 msgid "doiPlaceholder"
 msgstr "p. ex. 10.1234/abcde"
@@ -1744,6 +1744,9 @@ msgstr "Télécharger le PDF"
 
 msgid "errFigureGlyphs"
 msgstr "Les polices de la figure ne peuvent pas afficher ces caractères : {characters}."
+
+msgid "heatmapSystemFonts"
+msgstr "Le PDF doit les incorporer et n’est donc pas disponible. SVG et PNG les dessinent avec les polices installées ; le SVG peut s’afficher autrement sur un autre ordinateur."
 
 msgid "heatmapLegendPosition"
 msgstr "Légende"

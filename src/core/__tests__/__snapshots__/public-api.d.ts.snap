@@ -102,14 +102,22 @@ export declare class CreditMatrixElement extends HTMLElement {
   render(): Promise<void>;
 }
 // figures.d.ts
-import { i as Author, t as HeatmapSvgOptions } from "./heatmap-svg.js";
+import { a as Author, n as HeatmapSvgOptions } from "./heatmap-svg.js";
 export declare class FigureFontError extends Error {
   readonly characters: string;
   readonly name = "FigureFontError";
   constructor(characters: string);
 }
+export interface FigureSvgOptions extends HeatmapSvgOptions {
+  /**
+   * What SVG does with a character the bundled faces cannot draw: `"error"` (the default) throws
+   * `FigureFontError`; `"system"` draws that run in the system font stack `buildHeatmapSvg` uses,
+   * so its look then depends on the viewer's installed fonts.
+   */
+  fallback?: "system" | "error";
+}
 export interface FigureRenderer {
-  svg(authors: Author[], options?: HeatmapSvgOptions): Promise<string>;
+  svg(authors: Author[], options?: FigureSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
   pdf(authors: Author[], options?: HeatmapSvgOptions, widthMm?: number): Promise<Uint8Array>;
 }
@@ -215,6 +223,7 @@ type ContributorType = Author["contributorType"];
  */
 type ContributionLevel = "none" | "supporting" | "equal" | "lead";
 declare function scoreToLevel(score: number): ContributionLevel;
+declare class HeatmapOptionError extends Error {}
 interface HeatmapSvgOptions {
   /** Named sequential palette; color overrides its base hue. */
   palette?: "blue" | "green" | "gray";
@@ -299,12 +308,12 @@ declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions)
  * who did what. Assistive technology reads both and nothing draws them.
  */
 declare function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string;
-export { AuthorSchema as a, ContributionSchema as c, normalizeOrcid as d, scoreToLevel as f, Author as i, ContributorType as l, buildHeatmapSvg as n, Contribution as o, heatmapDescription as r, ContributionLevel as s, HeatmapSvgOptions as t, isValidOrcid as u };
+export { Author as a, ContributionLevel as c, isValidOrcid as d, normalizeOrcid as f, heatmapDescription as i, ContributionSchema as l, HeatmapSvgOptions as n, AuthorSchema as o, scoreToLevel as p, buildHeatmapSvg as r, Contribution as s, HeatmapOptionError as t, ContributorType as u };
 // i18n.d.ts
 import { _ as normalizeLocaleCode, a as loadUiCatalog, c as DEFAULT_ROLE_TRANSLATOR, d as RoleDescriber, f as RoleTranslator, g as makeRoleTranslator, h as makeRoleDescriber, i as UiTranslator, l as LocaleCode, m as loadRoleCatalog, n as UiCatalog, o as makeUiTranslator, p as hasCatalog, r as UiKey, s as AVAILABLE_LOCALES, t as DEFAULT_UI_TRANSLATOR, u as RoleCatalog, v as resolveLocaleTag } from "./ui-strings.js";
 export { AVAILABLE_LOCALES, DEFAULT_ROLE_TRANSLATOR, DEFAULT_UI_TRANSLATOR, type LocaleCode, type RoleCatalog, type RoleDescriber, type RoleTranslator, type UiCatalog, type UiKey, type UiTranslator, hasCatalog, loadRoleCatalog, loadUiCatalog, makeRoleDescriber, makeRoleTranslator, makeUiTranslator, normalizeLocaleCode, resolveLocaleTag };
 // index.d.ts
-import { a as AuthorSchema, c as ContributionSchema, d as normalizeOrcid, f as scoreToLevel, i as Author, l as ContributorType, n as buildHeatmapSvg, o as Contribution, r as heatmapDescription, s as ContributionLevel, t as HeatmapSvgOptions, u as isValidOrcid } from "./heatmap-svg.js";
+import { a as Author, c as ContributionLevel, d as isValidOrcid, f as normalizeOrcid, i as heatmapDescription, l as ContributionSchema, n as HeatmapSvgOptions, o as AuthorSchema, p as scoreToLevel, r as buildHeatmapSvg, s as Contribution, t as HeatmapOptionError, u as ContributorType } from "./heatmap-svg.js";
 import { n as CreditRoleName, r as getRoleByName, t as CREDIT_ROLES } from "./credit-roles.js";
 import { f as RoleTranslator, i as UiTranslator } from "./ui-strings.js";
 import * as z from "zod/mini";
@@ -1309,6 +1318,11 @@ export declare function statementSpans(authors: Author[], options: StatementOpti
 type DetectedFormat = "link" | "csv" | "tenzing" | "json" | "codemeta" | "cff" | "zenodo" | "xml" | "crossref" | "statement" | "names" | "unknown";
 /** Guess what pasted or loaded text is, from its shape alone. */
 export declare function detectFormat(text: string): DetectedFormat;
+/** Thrown for text in a format the app writes but cannot read back: Quarto or MyST author YAML, an RO-Crate fragment. */
+export declare class ExportOnlyError extends Error {
+  readonly name = "ExportOnlyError";
+  constructor(format: string);
+}
 /** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */
 interface Imported {
   format: Exclude<DetectedFormat, "unknown" | "statement">;
@@ -1319,7 +1333,7 @@ interface Imported {
 }
 /**
  * Read text in any format {@link detectFormat} knows. Throws on text it cannot
- * place, on a CRediT statement (it names roles, not contributors: read it with
+ * place, on text the app only exports (`ExportOnlyError`), on a CRediT statement (it names roles, not contributors: read it with
  * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
  * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
  * `authors` means the format was right but held nobody.
@@ -1469,7 +1483,7 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isValidOrcid, normalizeOrcid, scoreToLevel };
+export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type Level, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isValidOrcid, normalizeOrcid, scoreToLevel };
 // lookup.d.ts
 import { n as CreditRoleName } from "./credit-roles.js";
 /**

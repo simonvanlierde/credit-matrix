@@ -205,7 +205,8 @@ const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
 ```
 
 The app downloads and CLI use this renderer. It embeds regular Noto Sans or Noto Serif fonts and measures labels
-with their actual widths. Unsupported glyphs raise `FigureFontError`; they never use installed fonts.
+with their actual widths. Unsupported glyphs raise `FigureFontError`. Pass
+`fallback: "system"` to `svg()` to draw them in the system font stack instead; `pdf()` always raises.
 See the [figure font guide](../../integrations/figures/README.md) for offline use, supported scripts
 and editor compatibility. The lightweight `buildHeatmapSvg` API keeps its system-font output.
 
@@ -237,7 +238,8 @@ reads any of them, share links and [tenzing](https://github.com/marton-balazs-ko
 spreadsheets (CSV or TSV) included. It returns the `format` it read, plus `asks`, `selfId` and
 `title` when the format carries them. Text that assigns CRediT roles ("MG: conceptualization",
 "Methodology, A.B.") or tells in sentences what the authors did is a `"statement"`, which
-`importAny` refuses: a statement names roles, not contributors.
+`importAny` refuses: a statement names roles, not contributors. It also throws `ExportOnlyError`
+for Quarto or MyST author YAML and an RO-Crate fragment, which the app writes but cannot read back.
 
 `parseStatement(text, authors)` reads a free-text CRediT statement against an author list of
 `{ given, surname }` (`statementAuthor(author)` splits a contributor's name that way). It returns
@@ -329,9 +331,9 @@ holds its exact shape. By entry point:
   - Statements: `generateStatement`, `statementSpans`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`,
     `StatementSpan`, `StatementCell`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `toJats4rXml`,
-    `fromJats4rXml`, `XmlParser`, `XmlElement`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
-    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
-    `importAny`, `DetectedFormat`, `Imported`
+    `fromJats4rXml`, `XmlParser`, `XmlElement`, `XmlParseError`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
+    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `HeatmapOptionError`, `heatmapDescription`, `HeatmapSvgOptions`, `detectFormat`,
+    `importAny`, `ExportOnlyError`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`
   - Links: `encodeShareHash`, `decodeShareHash`, `ShareData`, `SharePayloadInput`

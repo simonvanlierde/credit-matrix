@@ -82,7 +82,8 @@ To put the statement somewhere else, leave an empty div where it should go:
 
 ## Contribution heatmap
 
-Set `credit-matrix.heatmap: true` to add a figure through the package CLI.
+Set `credit-matrix.heatmap: true` to add a figure through the package CLI. The filter runs
+`credit-matrix` from `PATH`, or the command line in the `CREDIT_MATRIX_COMMAND` environment variable.
 See [figure options and examples](../heatmap.md) for setup and all rendering options.
 The CLI embeds fonts in the generated SVG. See
 [font portability and PDF export](../figures/README.md) for PDF and Word converter limits.

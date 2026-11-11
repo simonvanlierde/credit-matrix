@@ -254,6 +254,9 @@ msgstr "Importazione annullata."
 msgid "errImportXmlUnreadable"
 msgstr "Impossibile leggere questo XML. Controlla che il file sia completo."
 
+msgid "errImportExportOnly"
+msgstr "I file Quarto, MyST e RO-Crate sono solo di esportazione. Importa invece l'esportazione JSON."
+
 msgid "close"
 msgstr "Chiudi"
 
@@ -379,9 +382,6 @@ msgstr "Il servizio ORCID non è disponibile. Riprovare a breve oppure digitare 
 
 msgid "importFromDoi"
 msgstr "Importa da un DOI"
-
-msgid "structuredFileUpload"
-msgstr "Carica un file strutturato"
 
 msgid "doiPlaceholder"
 msgstr "ad es. 10.1234/abcde"
@@ -1744,6 +1744,9 @@ msgstr "Scarica PDF"
 
 msgid "errFigureGlyphs"
 msgstr "I caratteri della figura non possono visualizzare questi simboli: {characters}."
+
+msgid "heatmapSystemFonts"
+msgstr "Il PDF deve incorporarli, quindi non è disponibile. SVG e PNG li disegnano con i font installati; l’SVG può apparire diverso su un altro computer."
 
 msgid "heatmapLegendPosition"
 msgstr "Legenda"
