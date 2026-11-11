@@ -442,9 +442,9 @@ describe("size", () => {
     // Letters only: the parser reads names without digits, so "Franklin 1" and "Franklin 2" would tie.
     const letters = (i: number) => String.fromCharCode(97 + (i % 26), 97 + Math.floor(i / 26));
     const authors = Array.from({ length: MAX_AUTHORS }, (_, i) => {
-      const author = createAuthor(`Rosalind Elsie Franklin-Lavoisier${letters(i)}`);
-      for (const c of author.contributions) c.score = 100;
-      return author;
+      const person = createAuthor(`Rosalind Elsie Franklin-Lavoisier${letters(i)}`);
+      for (const c of person.contributions) c.score = 100;
+      return person;
     });
     const text = generateStatement(authors, { format: "by-author" });
     expect(text.length).toBeLessThanOrEqual(MAX_STATEMENT_LENGTH);
