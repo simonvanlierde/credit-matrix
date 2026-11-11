@@ -8,3 +8,4 @@ I made each one. The format follows
 - [0002: No accounts or server-side storage](0002-no-accounts-or-server-side-storage.md)
 - [0003: Static export, lookups from the browser](0003-static-export.md)
 - [0004: Optional end-to-end encrypted relay](0004-encrypted-relay.md) (proposed)
+- [0005: Vite, React and Lingui catalogs](0005-vite-lingui.md)

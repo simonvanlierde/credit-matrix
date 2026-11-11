@@ -17,7 +17,7 @@ vulnerability as [SECURITY.md](SECURITY.md) says, not in an issue.
 git clone https://github.com/simonvanlierde/credit-matrix
 cd credit-matrix
 pnpm install        # also installs the lefthook git hooks
-pnpm dev            # → http://localhost:3000
+pnpm dev            # → http://localhost:5173
 ```
 
 ## Build from source

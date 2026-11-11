@@ -155,7 +155,6 @@ def test_pandoc_heatmap_language(tmp_path, override):
         "author": [{"name": "Lin Wei", "roles": ["software"]}],
         "credit-matrix": {
             "heatmap": True,
-            "command": ["node", str(ROOT / "src/core/dist/cli.js")],
             **({"locale": override} if override else {}),
         },
     }
@@ -171,6 +170,7 @@ def test_pandoc_heatmap_language(tmp_path, override):
         capture_output=True,
         text=True,
         check=True,
+        env={**os.environ, "CREDIT_MATRIX_COMMAND": f"node {ROOT / 'src/core/dist/cli.js'}"},
     )
     svg = next(tmp_path.rglob("*.svg")).read_text(encoding="utf-8")
     locale, role = ("ja", "ソフトウェア") if override else ("fr", "Logiciel(s)")

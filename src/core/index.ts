@@ -34,7 +34,7 @@ export { fromCrossrefContributors, toCrossrefContributors } from "./export/cross
 export { fromCsv, toCsv } from "./export/csv";
 export { toMyst, toQuarto } from "./export/frontmatter";
 export type { HeatmapSvgOptions } from "./export/heatmap-svg";
-export { buildHeatmapSvg, heatmapDescription } from "./export/heatmap-svg";
+export { buildHeatmapSvg, HeatmapOptionError, heatmapDescription } from "./export/heatmap-svg";
 export { fromJson, NewerVersionError, RepeatedIdError, toJson } from "./export/json";
 export { toLatexCredits } from "./export/latex-credits";
 export { toMarkdown } from "./export/markdown";
@@ -47,7 +47,7 @@ export { fromJats4rXml, XmlParseError } from "./export/xml-import";
 export type { StatementCell, StatementFormat, StatementOptions, StatementSpan } from "./generate-statement";
 export { generateStatement, STATEMENT_FORMATS, statementSpans } from "./generate-statement";
 export type { DetectedFormat, Imported } from "./import";
-export { detectFormat, importAny } from "./import";
+export { detectFormat, ExportOnlyError, importAny } from "./import";
 export type { OrcidKey, OrcidProof } from "./orcid-proof";
 export { fetchOrcidKeys, verifyOrcidToken } from "./orcid-proof";
 export { createAuthor, normalizeRoster, parseAuthorText } from "./parse-authors";

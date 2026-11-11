@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
-import { CREDIT_ROLES, createAuthor, generateStatement, heatmapDescription } from "credit-matrix";
+import { CREDIT_ROLES, createAuthor, generateStatement, HeatmapOptionError, heatmapDescription } from "credit-matrix";
 import { createFigureRenderer } from "credit-matrix/figures";
 import {
   AVAILABLE_LOCALES,
@@ -193,7 +193,12 @@ async function renderHeatmap(node, vfile) {
     svg = await figures.svg(entries, options);
   } catch (error) {
     // MyST prints a thrown transform error without its page; a file message names the page.
-    vfile.message(`credit-heatmap: ${error.message}`, node).fatal = true;
+    // Any other error is a font that could not be loaded; say how to supply the fonts yourself.
+    const fontHint =
+      error.name === "FigureFontError" || error instanceof HeatmapOptionError
+        ? ""
+        : " Set CREDIT_MATRIX_FIGURE_FONTS to a folder holding the figure fonts; see integrations/myst/README.md.";
+    vfile.message(`credit-heatmap: ${error.message}${fontHint}`, node).fatal = true;
     return false;
   }
   const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;

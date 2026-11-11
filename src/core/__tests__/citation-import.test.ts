@@ -130,3 +130,108 @@ it("detects one recorded citation fixture per supported format", async () => {
     expect(result.authors[0]).toMatchObject({ name: "Antonie van Leeuwenhoek", orcid: "0000-0002-1825-0097" });
   }
 });
+
+const codemetaOf = (fields: object) => JSON.stringify({ "@type": "SoftwareSourceCode", ...fields });
+
+it("reads a single author object and a Role under either type key", async () => {
+  const read = async (author: unknown) => (await importAny(codemetaOf({ author }))).authors.map((a) => a.name);
+  expect(await read({ name: "Tu Youyou" })).toEqual(["Tu Youyou"]);
+  expect(
+    await read([{ "@type": "Role", name: "Lead" }, { type: "Role", name: "Maintainer" }, { name: "Ana" }]),
+  ).toEqual(["Ana"]);
+});
+
+it("keeps structured name parts, and only for people", async () => {
+  const read = async (author: object) => {
+    const [a] = (await importAny(codemetaOf({ author: [author] }))).authors;
+    return a && { name: a.name, first: a.firstName, middle: a.middleName, surname: a.surname };
+  };
+  expect(await read({ givenName: "  Ana  Maria ", familyName: "Lima" })).toMatchObject({
+    first: "Ana",
+    middle: "Maria",
+    surname: "Lima",
+  });
+  expect(await read({ familyName: "Lima" })).toMatchObject({ name: "Lima", first: "", surname: "Lima" });
+  expect(await read({ givenName: "Ana" })).toMatchObject({ name: "Ana", first: "Ana", middle: "", surname: "" });
+  // Non-string parts are ignored, not printed into the name.
+  expect(await read({ givenName: 5, familyName: "Lima" })).toMatchObject({ name: "Lima" });
+  expect(await read({ givenName: ["Ana"], familyName: "Lima" })).toMatchObject({ name: "Lima" });
+  expect(await read({ givenName: "Ana  Maria  Clara" })).toMatchObject({
+    first: "Ana",
+    middle: "Maria Clara",
+    surname: "",
+  });
+  expect(await read({ name: "Ana Maria Lima" })).toMatchObject({ first: "Ana", middle: "Maria", surname: "Lima" });
+  // An organisation keeps its name as written, with no ORCID and no split into parts.
+  expect(
+    await read({ type: "Organization", name: "Acme Consortium Ltd", givenName: "Zed", familyName: "Quux" }),
+  ).toMatchObject({ first: "Acme", middle: "Consortium", surname: "Ltd" });
+  const [org] = (
+    await importAny(
+      codemetaOf({ author: [{ "@type": "Organization", name: "Lab Group", "@id": "0000-0002-1825-0097" }] }),
+    )
+  ).authors;
+  expect(org?.orcid).toBeUndefined();
+  const [person] = (await importAny(codemetaOf({ author: [{ name: "Ana Lima", id: "0000-0002-1825-0097" }] }))).authors;
+  expect(person?.orcid).toBe("0000-0002-1825-0097");
+});
+
+it("accepts exactly 1 MB and refuses one byte more, for the file and for converted metadata", async () => {
+  const pad = (n: number) => `${codemeta}${" ".repeat(n - new TextEncoder().encode(codemeta).length)}`;
+  expect((await importAny(pad(1_000_000))).authors).toHaveLength(2);
+  await expect(importAny(pad(1_000_001))).rejects.toThrow("Use a file smaller than 1 MB.");
+  const cff = "cff-version: 1.2.0\ntitle: Example";
+  expect((await importAny(cff, { convertCitation: async () => pad(1_000_000) })).authors).toHaveLength(2);
+  await expect(importAny(cff, { convertCitation: async () => pad(1_000_001) })).rejects.toThrow(
+    "Use a file smaller than 1 MB.",
+  );
+});
+
+it("treats converted metadata with no object as having no authors", async () => {
+  const result = await importAny("cff-version: 1.2.0", { convertCitation: async () => "null" });
+  expect(result.authors).toEqual([]);
+});
+
+it.each([
+  ["@type alone", { "@type": "SoftwareSourceCode" }],
+  ["a CodeMeta context alone", { "@context": "https://doi.org/10.5063/schema/codemeta-2.0" }],
+  ["a context list that names CodeMeta", { "@context": ["https://schema.org", "https://w3id.org/codemeta/3.0"] }],
+])("detects CodeMeta from %s", (_, fields) => {
+  expect(detectFormat(JSON.stringify({ ...fields, author: [] }))).toBe("codemeta");
+});
+
+it("does not take other JSON for CodeMeta or Zenodo", () => {
+  expect(detectFormat(JSON.stringify({ "@context": "https://schema.org", "@type": "Dataset" }))).toBe("json");
+  expect(detectFormat(JSON.stringify({ creators: "x" }))).toBe("json");
+  expect(detectFormat(JSON.stringify([{ creators: [{ name: "A" }] }]))).toBe("json");
+});
+
+it("collapses stray spaces in CodeMeta names", async () => {
+  const { authors } = await importAny(
+    JSON.stringify({
+      "@type": "SoftwareSourceCode",
+      author: [{ givenName: "Ana  Maria", familyName: " Lima " }, { name: "Sven   Berg" }],
+    }),
+  );
+  expect(authors.map((author) => author.name)).toEqual(["Ana Maria Lima", "Sven Berg"]);
+  expect(authors[0]).toMatchObject({ firstName: "Ana", middleName: "Maria", surname: "Lima" });
+});
+
+it("skips a null CodeMeta entry and keeps an ORCID only on a person", async () => {
+  const { authors } = await importAny(
+    JSON.stringify({
+      "@type": "SoftwareSourceCode",
+      author: [
+        null,
+        { "@type": "Person", name: "Ana Lima", "@id": "https://orcid.org/0000-0002-1825-0097" },
+        { "@type": "Organization", name: "Duin Lab", "@id": "https://orcid.org/0000-0002-1825-0097" },
+        { "@type": "Person", name: "Sven Berg", "@id": "https://example.org/sven" },
+      ],
+    }),
+  );
+  expect(authors.map((author) => [author.name, author.orcid])).toEqual([
+    ["Ana Lima", "0000-0002-1825-0097"],
+    ["Duin Lab", undefined],
+    ["Sven Berg", undefined],
+  ]);
+});

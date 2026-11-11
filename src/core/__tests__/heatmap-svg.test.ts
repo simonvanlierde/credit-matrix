@@ -565,3 +565,231 @@ describe("publication heatmap presentation", () => {
     expect(() => buildHeatmapSvg(team(3), { marks: "false" as unknown as boolean })).toThrow(/marks/);
   });
 });
+
+describe("buildHeatmapSvg golden layouts", () => {
+  const contribs = (scores: [CreditRoleName, number][]) => scores.map(([role, score]) => ({ role, score }));
+  const team = () => [
+    createAuthor("Tu Youyou", {
+      contributions: contribs([
+        ["Conceptualization", 100],
+        ["Software", 33],
+        ["Writing – review & editing", 66],
+      ]),
+    }),
+    createAuthor("王小明", {
+      contributions: contribs([
+        ["Software", 100],
+        ["Data curation", 66],
+      ]),
+    }),
+    createAuthor("Marie Curie-Skłodowska", {
+      contributions: contribs([
+        ["Investigation", 66],
+        ["Supervision", 33],
+        ["Conceptualization", 33],
+      ]),
+    }),
+    createAuthor("WM Walker", { contributions: contribs([["Methodology", 100]]) }),
+  ];
+  // Heights and widths that differ per label, so a max-vs-min mix-up changes the layout.
+  const measureText = (label: string, size: number) => label.length * size * 0.5 + 3;
+  const measureTextHeight = (label: string, size: number) => size * (1 + (label.length % 5) / 4);
+
+  const cases: Record<string, Parameters<typeof buildHeatmapSvg>[1]> = {
+    default: {},
+    "marks, rounded, scale 1.5": { marks: true, shape: "rounded", scale: 1.5 },
+    "flat marks, circle, scale 0.5": { marks: true, shape: "circle", levels: false, scale: 0.5 },
+    "tall right legend, large type, measured": {
+      legendPosition: "right",
+      fontSize: 14,
+      size: 30,
+      horizontal: true,
+      measureText,
+      measureTextHeight,
+    },
+    "measured text, bottom legend": { legendPosition: "bottom", measureText, measureTextHeight, scale: 1.25 },
+    "contributor hues, short labels, full names": {
+      colorBy: "contributor",
+      labels: "short",
+      acronyms: false,
+      skipempty: false,
+      scale: 0.75,
+    },
+    "no legend": { legend: false, fontSize: 20 },
+    "large legend type": { fontSize: 24, scale: 2, horizontal: true },
+    "small cells under tall measured labels": {
+      size: 6,
+      fontSize: 20,
+      legend: false,
+      measureTextHeight: (label: string, size: number) => size * (label.length > 8 ? 3 : 1.2),
+    },
+    "wrapped large-type key": {
+      fontSize: 20,
+      translateUi: makeUiTranslator({ lead: "Led the work", equal: "Shared the lead", supporting: "Helped out" }),
+    },
+    "wrapped large-type key on the right": {
+      fontSize: 20,
+      legendPosition: "right",
+      translateUi: makeUiTranslator({ lead: "Led the work", equal: "Shared the lead", supporting: "Helped out" }),
+    },
+    "long legend labels": {
+      translateUi: makeUiTranslator({ lead: "Led the work from start to finish", none: "Took no part in this role" }),
+    },
+  };
+
+  it.each(Object.entries(cases))("draws %s", (_name, options) => {
+    expect(buildHeatmapSvg(team(), options)).toMatchSnapshot();
+  });
+
+  it.each([
+    ["auto picks a right key for a tall narrow matrix", { legendPosition: "auto" as const }],
+    ["a tall matrix with marks", { marks: true, size: 12, scale: 3 }],
+  ])("keeps %s stable", (_name, options) => {
+    const tall = Array.from({ length: 2 }, (_, i) =>
+      createAuthor(`Researcher ${i + 1}`, {
+        contributions: CREDIT_ROLES.map((role, r) => ({ role: role.name, score: (((i + r) % 3) + 1) * 33 })),
+      }),
+    );
+    expect(buildHeatmapSvg(tall, options)).toMatchSnapshot();
+  });
+
+  it("draws an author who lacks a role's entry as no contribution", () => {
+    const sparse = { ...createAuthor("Tu Youyou"), contributions: [] };
+    const svg = buildHeatmapSvg([team()[0] as Author, sparse]);
+    expect(svg.match(/width="22" height="22"/g)).toHaveLength(6);
+  });
+
+  it("draws the empty figure for large text, scaled", () => {
+    expect(buildHeatmapSvg([], { fontSize: 20, scale: 1.5 })).toMatchSnapshot();
+    const noAuthors = buildHeatmapSvg([], { skipempty: false });
+    expect(noAuthors).toContain(">No contributions assigned yet.<");
+    expect(noAuthors).not.toContain("<desc>");
+    expect(buildHeatmapSvg([createAuthor("Nobody")])).toContain('height="56"');
+  });
+
+  it("names the rejected option in each error", () => {
+    const make = (options: object) => () => buildHeatmapSvg(team(), options);
+    expect(() => buildHeatmapSvg(team(), { labels: "full" })).not.toThrow();
+    expect(make({ shape: "hexagon" })).toThrow("Unknown heatmap shape.");
+    expect(make({ labels: "tiny" })).toThrow("Unknown heatmap labels.");
+    expect(make({ palette: "pink" })).toThrow("Unknown heatmap palette.");
+    expect(make({ colorBy: "mood" })).toThrow("Unknown heatmap colorBy.");
+    expect(make({ legendPosition: "top" })).toThrow("Unknown heatmap legend position.");
+    expect(make({ palette: "toString" })).toThrow("Unknown heatmap palette.");
+  });
+
+  it("accepts the limits of size and font size, and anchors the colour check at both ends", () => {
+    expect(() => buildHeatmapSvg(team(), { size: 256 })).not.toThrow();
+    expect(() => buildHeatmapSvg(team(), { fontSize: 6 })).not.toThrow();
+    expect(() => buildHeatmapSvg(team(), { fontSize: 32 })).not.toThrow();
+    expect(() => buildHeatmapSvg(team(), { size: 256.5 })).toThrow("size");
+    expect(() => buildHeatmapSvg(team(), { color: "#abc" })).not.toThrow();
+    expect(() => buildHeatmapSvg(team(), { color: "#aabbcc" })).not.toThrow();
+    expect(() => buildHeatmapSvg(team(), { color: "x#abc" })).toThrow("color");
+    expect(() => buildHeatmapSvg(team(), { color: "#abcx" })).toThrow("color");
+    expect(() => buildHeatmapSvg(team(), { color: "#abcd" })).toThrow("color");
+  });
+
+  it("cuts a short label after twelve characters and marks the cut only then", () => {
+    const n = CREDIT_ROLES.findIndex((r) => r.name === "Software") + 1;
+    const labelOf = (name: string) =>
+      buildHeatmapSvg(team(), {
+        labels: "short",
+        horizontal: false,
+        translateRole: (r) => (r === "Software" ? name : r),
+      });
+    expect(labelOf("abcdefghijkl")).toContain(`>${n} abcdefghijkl<`);
+    expect(labelOf("abcdefghijklm")).toContain(`>${n} abcdefghijkl…<`);
+    expect(labelOf("abc")).toContain(`>${n} abc<`);
+  });
+
+  it("draws the grid, legend and canvas with and without a key", () => {
+    const on = buildHeatmapSvg(team(), { translateUi: makeUiTranslator({ lead: "L".repeat(80) }) });
+    const off = buildHeatmapSvg(team(), { legend: false, translateUi: makeUiTranslator({ lead: "L".repeat(80) }) });
+    const width = (svg: string) => Number(/ width="([\d.]+)"/.exec(svg)?.[1]);
+    expect(width(on)).toBeGreaterThan(width(off));
+    expect(off).not.toContain('width="14"');
+  });
+});
+
+describe("buildHeatmapSvg automatic key placement", () => {
+  const roster = (count: number) =>
+    Array.from({ length: count }, (_, i) =>
+      createAuthor(`Researcher ${i + 1}`, {
+        contributions: [{ role: CREDIT_ROLES[i % 3]?.name ?? "Software", score: 66 }],
+      }),
+    );
+  /** "R" when the key sits beside the grid, "B" when it sits below. */
+  function placement(svg: string): string {
+    const border = /<rect x="[\d.]+" y="([\d.]+)" width="[\d.]+" height="([\d.]+)"[^>]*fill="none"/.exec(svg);
+    const swatch = /<rect x="[\d.]+" y="([\d.]+)" width="14" height="14"/.exec(svg);
+    return Number(swatch?.[1]) < Number(border?.[1]) + Number(border?.[2]) ? "R" : "B";
+  }
+
+  it("chooses the side for narrow tall grids and the bottom otherwise, over a grid of sizes and key texts", () => {
+    const rows: string[] = [];
+    for (const [size, levels, scale] of [
+      [22, true, 1],
+      [8, true, 1],
+      [8, false, 1],
+      [22, false, 0.5],
+      [5, true, 0.5],
+    ] as const) {
+      for (const fontSize of [10.5, 16]) {
+        for (const keyLength of [4, 14, 30, 60]) {
+          const translateUi = makeUiTranslator({
+            lead: "L".repeat(keyLength),
+            none: "N".repeat(keyLength),
+            contributed: "C".repeat(keyLength),
+          });
+          const line = [1, 2, 3, 4, 5, 6, 8, 10].map((count) =>
+            placement(buildHeatmapSvg(roster(count), { skipempty: false, size, levels, scale, fontSize, translateUi })),
+          );
+          rows.push(`size ${size} levels ${levels} scale ${scale} font ${fontSize} key ${keyLength}: ${line.join("")}`);
+        }
+      }
+    }
+    expect(rows.join("\n")).toMatchSnapshot();
+  });
+
+  it("keeps a short side key below when it would make the figure taller, for small grids", () => {
+    const team = (authors: number, roles: number) =>
+      Array.from({ length: authors }, (_, i) =>
+        createAuthor(`Researcher ${i + 1}`, {
+          contributions: CREDIT_ROLES.slice(0, roles).map((role) => ({ role: role.name, score: 66 })),
+        }),
+      );
+    const rows: string[] = [];
+    for (const levels of [true, false]) {
+      for (const size of [4, 6, 8, 12, 22]) {
+        for (const keyLength of [4, 14, 30]) {
+          const translateUi = makeUiTranslator({
+            lead: "L".repeat(keyLength),
+            none: "N".repeat(keyLength),
+            contributed: "C".repeat(keyLength),
+          });
+          const line = [1, 2, 3, 5].flatMap((roles) =>
+            [1, 2, 3].map((authors) => placement(buildHeatmapSvg(team(authors, roles), { size, levels, translateUi }))),
+          );
+          rows.push(`levels ${levels} size ${size} key ${keyLength}: ${line.join("")}`);
+        }
+      }
+    }
+    for (const size of [6, 8, 10, 12, 15, 16]) {
+      for (const levels of [true, false]) {
+        const line = [6, 10, 14, 18, 22, 26, 30, 34, 40, 50].flatMap((keyLength) =>
+          [2, 3, 4].map((roles) => {
+            const translateUi = makeUiTranslator({
+              lead: "l".repeat(keyLength),
+              none: "n".repeat(keyLength),
+              contributed: "c".repeat(keyLength),
+            });
+            return placement(buildHeatmapSvg(team(1, roles), { size, levels, translateUi }));
+          }),
+        );
+        rows.push(`one author, size ${size} levels ${levels}: ${line.join("")}`);
+      }
+    }
+    expect(rows.join("\n")).toMatchSnapshot();
+  });
+});

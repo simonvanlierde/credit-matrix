@@ -254,6 +254,9 @@ msgstr "Import ongedaan gemaakt."
 msgid "errImportXmlUnreadable"
 msgstr "Die XML kon niet worden gelezen. Controleer of het bestand volledig is."
 
+msgid "errImportExportOnly"
+msgstr "Quarto-, MyST- en RO-Crate-bestanden zijn alleen voor export. Importeer in plaats daarvan de JSON-export."
+
 msgid "close"
 msgstr "Sluiten"
 
@@ -379,9 +382,6 @@ msgstr "De ORCID-service is niet beschikbaar. Probeer het zo meteen opnieuw of t
 
 msgid "importFromDoi"
 msgstr "Importeren vanuit een DOI"
-
-msgid "structuredFileUpload"
-msgstr "Gestructureerd bestand uploaden"
 
 msgid "doiPlaceholder"
 msgstr "bijv. 10.1234/abcde"
@@ -1744,6 +1744,9 @@ msgstr "PDF downloaden"
 
 msgid "errFigureGlyphs"
 msgstr "De lettertypen van de figuur kunnen deze tekens niet weergeven: {characters}."
+
+msgid "heatmapSystemFonts"
+msgstr "PDF moet ze insluiten en is daarom niet beschikbaar. SVG en PNG tekenen ze met de geïnstalleerde lettertypen; de SVG kan er op een andere computer anders uitzien."
 
 msgid "heatmapLegendPosition"
 msgstr "Legenda"

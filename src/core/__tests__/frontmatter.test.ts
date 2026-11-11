@@ -55,6 +55,11 @@ describe("manuscript front matter", () => {
     expect(exportYaml(authors)).toContain("Keep native JSON for scores, author markers and replies");
   });
 
+  it("notes the missing contribution levels in MyST only", () => {
+    expect(toMyst(authors)).toContain("# MyST omits contribution levels; all listed roles are ungraded.");
+    expect(toQuarto(authors)).not.toContain("MyST");
+  });
+
   it.each([toQuarto, toMyst])("keeps Unicode and YAML control characters as data", (exportYaml) => {
     const name = "Éva\tO'Neil: [roles] & 李";
     const [people] = Object.values(parse(exportYaml([createAuthor(name)]))) as { name: string }[][];

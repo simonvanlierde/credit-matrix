@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Author } from "../author";
-import { MAX_AUTHOR_NAME_LENGTH } from "../author";
+import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "../author";
 import {
   buildInitials,
   cleanNamePart,
@@ -555,5 +555,19 @@ describe("splitCommaSuffix", () => {
     ]) {
       expect(splitCommaSuffix(name)).toEqual([name, ""]);
     }
+  });
+});
+
+describe("deduplicateAuthorInitials at the size limit", () => {
+  const same = (n: number) => Array.from({ length: n }, () => createAuthor("Ana Lima"));
+
+  it("gives every author of a full roster its own initials", () => {
+    const initials = deduplicateAuthorInitials(same(MAX_AUTHORS)).map((a) => a.initials);
+    expect(new Set(initials).size).toBe(MAX_AUTHORS);
+  });
+
+  it("returns an oversized list as it is", () => {
+    const list = same(MAX_AUTHORS + 1);
+    expect(deduplicateAuthorInitials(list)).toBe(list);
   });
 });

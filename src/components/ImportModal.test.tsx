@@ -591,6 +591,13 @@ describe("import progress and outcome", () => {
     expect(screen.getByText(english.errImportXmlUnreadable)).toBeTruthy();
   });
 
+  it("says plainly when the pasted text is an export-only format", async () => {
+    renderModal();
+    paste('# Keep native JSON for scores.\nauthors:\n  - name: "Ann Bell"\n    roles: []');
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    expect(screen.getByText(english.errImportExportOnly)).toBeTruthy();
+  });
+
   it("lists every file type the picker accepts", () => {
     renderModal();
     const accept = (document.querySelector('input[type="file"]') as HTMLInputElement).accept.split(",");

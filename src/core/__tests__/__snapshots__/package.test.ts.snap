@@ -8,6 +8,8 @@ exports[`the built credit-matrix package > exports exactly the public names from
     "AuthorSchema",
     "CREDIT_ROLES",
     "ContributionSchema",
+    "ExportOnlyError",
+    "HeatmapOptionError",
     "MAX_STATEMENT_LENGTH",
     "NewerVersionError",
     "RepeatedIdError",

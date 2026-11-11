@@ -55,8 +55,6 @@ ${lines.map((line) => `    ${line}`).join("\n")}
   </person_name>`;
 }
 
-/** The slug Crossref uses for a CRediT role: the last path part of its credit.niso.org URL. */
-
 /** Whether text opens with a Crossref `<contributors>` block, after any BOM, XML declaration and comments. */
 export function isCrossrefContributors(text: string): boolean {
   // Plain indexOf steps, not one regex: comment bodies cannot cross `-->`, so matching stays linear.

@@ -254,6 +254,21 @@ describe("portable figures", () => {
     await expect(renderer.pdf([missing], { acronyms: false })).rejects.toThrow(FigureFontError);
   });
 
+  it("draws characters outside the bundled faces in system fonts only when asked", async () => {
+    const author = createAuthor("김민준");
+    for (const contribution of author.contributions) contribution.score = 100;
+    const latin = createAuthor("René");
+    for (const contribution of latin.contributions) contribution.score = 100;
+    await expect(renderer.svg([author, latin])).rejects.toThrow(FigureFontError);
+    const svg = await renderer.svg([author, latin], { fallback: "system" });
+    expect(svg).toContain(`<tspan font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif">김민준</tspan>`);
+    expect(svg).toContain('<tspan font-family="Noto Sans">R</tspan>');
+    expect(embeddedFonts(svg).map(({ family }) => family)).toEqual(["Noto Sans"]);
+    const serif = await renderer.svg([author], { fallback: "system", font: "serif" });
+    expect(serif).toContain(`<tspan font-family="Georgia, 'Times New Roman', serif">김민준</tspan>`);
+    await expect(renderer.pdf([author], { fallback: "system" } as never)).rejects.toThrow(FigureFontError);
+  });
+
   it("positions an uncomposed Latin accent using its font's mark offsets", async ({ skip }) => {
     const author = createAuthor("q\u0301");
     for (const contribution of author.contributions) contribution.score = 100;
