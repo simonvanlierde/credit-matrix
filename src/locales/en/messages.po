@@ -1665,7 +1665,7 @@ msgid "settingsReset"
 msgstr "Reset"
 
 msgid "heatmapPerContributorNote"
-msgstr "Colored per contributor: for grayscale print, pick one color."
+msgstr "Colored per contributor: for grayscale print, pick one color in Heatmap options."
 
 msgid "heatmapAdvanced"
 msgstr "Advanced"

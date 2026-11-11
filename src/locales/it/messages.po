@@ -1665,7 +1665,7 @@ msgid "settingsReset"
 msgstr "Reimposta"
 
 msgid "heatmapPerContributorNote"
-msgstr "Un colore per ogni contributore: per la stampa in scala di grigi, scegli un solo colore."
+msgstr "Un colore per ogni contributore: per la stampa in scala di grigi, scegli un solo colore in Opzioni heatmap."
 
 msgid "heatmapAdvanced"
 msgstr "Avanzate"

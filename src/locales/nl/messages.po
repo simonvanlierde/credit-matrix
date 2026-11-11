@@ -1665,7 +1665,7 @@ msgid "settingsReset"
 msgstr "Herstellen"
 
 msgid "heatmapPerContributorNote"
-msgstr "Een kleur per bijdrager: kies voor grijstintenafdruk één kleur."
+msgstr "Een kleur per bijdrager: kies voor grijstintenafdruk één kleur in Heatmap-opties."
 
 msgid "heatmapAdvanced"
 msgstr "Geavanceerd"

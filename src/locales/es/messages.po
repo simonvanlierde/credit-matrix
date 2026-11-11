@@ -1665,7 +1665,7 @@ msgid "settingsReset"
 msgstr "Restablecer"
 
 msgid "heatmapPerContributorNote"
-msgstr "Color por colaborador: para imprimir en escala de grises, elige un solo color."
+msgstr "Color por colaborador: para imprimir en escala de grises, elige un solo color en Opciones del mapa de calor."
 
 msgid "heatmapAdvanced"
 msgstr "Avanzado"

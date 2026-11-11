@@ -1665,7 +1665,7 @@ msgid "settingsReset"
 msgstr "リセット"
 
 msgid "heatmapPerContributorNote"
-msgstr "貢献者ごとに色分けしています。グレースケール印刷では、単色を選んでください。"
+msgstr "貢献者ごとに色分けしています。グレースケール印刷では、「ヒートマップの設定」で単色を選んでください。"
 
 msgid "heatmapAdvanced"
 msgstr "詳細設定"

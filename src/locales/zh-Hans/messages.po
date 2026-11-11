@@ -1665,7 +1665,7 @@ msgid "settingsReset"
 msgstr "重置"
 
 msgid "heatmapPerContributorNote"
-msgstr "按贡献者着色。若要灰度打印，请选择单一颜色。"
+msgstr "按贡献者着色。若要灰度打印，请在“热图选项”中选择单一颜色。"
 
 msgid "heatmapAdvanced"
 msgstr "高级设置"

@@ -1665,7 +1665,7 @@ msgid "settingsReset"
 msgstr "Repor"
 
 msgid "heatmapPerContributorNote"
-msgstr "Uma cor por contribuidor: para impressão em tons de cinzento, escolha uma só cor."
+msgstr "Uma cor por contribuidor: para impressão em tons de cinzento, escolha uma só cor em Opções do mapa de calor."
 
 msgid "heatmapAdvanced"
 msgstr "Avançado"

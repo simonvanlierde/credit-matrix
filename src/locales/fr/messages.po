@@ -1665,7 +1665,7 @@ msgid "settingsReset"
 msgstr "Réinitialiser"
 
 msgid "heatmapPerContributorNote"
-msgstr "Une couleur par contributeur : pour une impression en niveaux de gris, choisissez une seule couleur."
+msgstr "Une couleur par contributeur : pour une impression en niveaux de gris, choisissez une seule couleur dans Options de la heatmap."
 
 msgid "heatmapAdvanced"
 msgstr "Avancé"
