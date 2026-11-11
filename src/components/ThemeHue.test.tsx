@@ -2,11 +2,15 @@ import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor } from "@/core";
 import { CONTRIBUTOR_HUES, contrastRatio, DEFAULT_MONO_COLOR, mixHex } from "@/core/contributor-color";
+import { accentFor } from "@/lib/theme-color";
 import { useDark } from "@/lib/use-dark";
+import { useHydrated } from "@/lib/use-hydrated";
 import { useContributionStore } from "@/store/contribution-store";
-import { accentFor, ThemeHue } from "./ThemeHue";
+import { ThemeHue } from "./ThemeHue";
 
 vi.mock("@/lib/use-dark", () => ({ useDark: vi.fn(() => false) }));
+
+vi.mock("@/lib/use-hydrated", () => ({ useHydrated: vi.fn(() => true) }));
 
 describe("accentFor", () => {
   it("keeps a hue that already reaches text contrast", () => {
@@ -48,12 +52,24 @@ describe("ThemeHue", () => {
     root.removeProperty("--color-primary");
     root.removeProperty("--color-primary-hover");
     vi.mocked(useDark).mockReturnValue(false);
+    vi.mocked(useHydrated).mockReturnValue(true);
   };
   beforeEach(reset);
   afterEach(reset);
 
   const authors = (n: number) => Array.from({ length: n }, (_, i) => createAuthor(`Person ${i}`));
   const mount = () => render(<ThemeHue />);
+
+  it("preserves prepaint colours until the draft is hydrated", () => {
+    root.setProperty("--color-primary", "#21763c");
+    vi.mocked(useHydrated).mockReturnValue(false);
+    const view = mount();
+    expect(root.getPropertyValue("--color-primary")).toBe("#21763c");
+    vi.mocked(useHydrated).mockReturnValue(true);
+    act(() => useContributionStore.getState().setHeatmapMonoColor("#9c433f"));
+    view.rerender(<ThemeHue />);
+    expect(root.getPropertyValue("--color-primary")).toBe(accentFor("#9c433f", false));
+  });
 
   it("sets the page tint and accent from the mono colour", () => {
     act(() => useContributionStore.getState().setColorByContributor(false));

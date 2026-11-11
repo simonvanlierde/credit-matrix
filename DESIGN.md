@@ -117,6 +117,10 @@ paper both ways, so any custom colour stays legible. With colour by contributor 
 blue. Hover fills deepen in light mode and lighten in dark mode to keep button text readable.
 Use contributor colors only to identify data.
 
+The saved draft's accent, page tint and header mark colours are applied in the document head before
+first paint. `src/lib/theme-color.ts` shares the colour calculation with `ThemeHue`, which waits for
+draft hydration before updating those values. Page navigation keeps the chosen hue throughout loading.
+
 By default the grid colours each contributor in their own hue, by list position: their chip, the
 rule under their column name, their cells, and the mark on their phrase in the statement all share
 it. The eight hues in `CONTRIBUTOR_HUES` (`src/core/contributor-color.ts`) differ in hue and

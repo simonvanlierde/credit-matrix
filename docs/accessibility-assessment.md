@@ -16,7 +16,7 @@ judge each criterion on it, report.
   also checks the focus ring. The same day the accent and the charcoal ink were rechecked by computing
   WCAG contrast against the paper tokens in `globals.css`. Charcoal `#2e2a25` measures 13.4:1 on
   paper and 12.5:1 on muted paper (14.0:1 on bright paper). `accentFor` in
-  `src/components/ThemeHue.tsx` deepens a custom heatmap hue until it reaches 4.5:1 against bright
+  `src/lib/theme-color.ts` deepens a custom heatmap hue until it reaches 4.5:1 against bright
   paper (`src/components/ThemeHue.test.tsx`). The default accent, ink blue `#1f4e79`, measures 8.2:1
   on the page and 8.5:1 on bright paper, and its dark-mode counterpart `#a8c1da` 9.8:1 on the dark
   page.

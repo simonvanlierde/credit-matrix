@@ -7,11 +7,10 @@ import { useContributionStore } from "@/store/contribution-store";
  * Cells are filled exactly as the grid fills them (`heatCellColor`, light or dark ramp) in
  * the workspace's own heatmap hue, or one contributor hue per column when the grid colours
  * by contributor, so the mark is a live swatch of the grid rather than a fixed sticker. The
- * wordmark beside it takes the accent: the same hue where it reaches text contrast, primary
- * where it does not (see ThemeHue).
+ * wordmark beside it takes the same hue adjusted for text contrast (see theme-color.ts).
  *
- * The store skips hydration, so server and first client render both use the
- * default ink-blue; the transition covers the swap to a stored hue.
+ * CSS variables restore the stored colours before first paint; literal fallbacks
+ * also draw the mark when scripts or storage are unavailable.
  *
  * The favicon and app icons (`public/icon.svg`, `docs/brand/`) are the same cells with
  * literal fills in the first three contributor hues.
@@ -44,7 +43,9 @@ export function BrandMark({ className }: { className?: string }) {
             rx="1"
             // The grid leaves an empty cell bare; the mark needs the cell's shape, so it takes a quiet surface.
             fill={
-              score > 0 ? heatCellColor(hues?.[c] ?? monoColor, score, dark) : "var(--color-surface-container-high)"
+              score > 0
+                ? `var(--color-mark-${c}-${score}, ${heatCellColor(hues?.[c] ?? monoColor, score, dark)})`
+                : "var(--color-surface-container-high)"
             }
             style={{ transition: "fill 200ms ease-out" }}
           />
