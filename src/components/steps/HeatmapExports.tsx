@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { type Author, heatmapDescription } from "@/core";
 import { heatmapPrintSize, SMALL_PRINT_PT, svgDimensions } from "@/core/export/heatmap-print";
 import { announce } from "@/lib/announce";
+import { copyFigure } from "@/lib/copy-figure";
 import { DEFAULT_HEATMAP_SETTINGS, type HeatmapOptions } from "@/lib/heatmap-settings";
 import { withPngResolution, withPngText } from "@/lib/png-text";
 import { useFormatter, useTranslations } from "@/lib/translations";
@@ -250,13 +251,15 @@ export function HeatmapExports({
   }
 
   // Copy the image bytes (not a URL) so it pastes straight into a doc or slide,
-  // the same move the CRediT badge makes. PNG, because that is what editors take.
+  // the same move the CRediT badge makes. PNG, because that is what editors take,
+  // plus an HTML <img alt> so Word keeps the alt text.
   async function copyPng() {
     setLoading("copy");
     setError(null);
     try {
       await copy(async () => {
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": renderPng() })]);
+        const { width, height } = pngDimensions(preview, settings.pngWidthMm, settings.pngDpi);
+        await copyFigure(renderPng(), heatmapDescription(authors, svgOptions), width, height, settings.pngDpi);
       });
       setCopySource({ svg: preview, widthMm: settings.pngWidthMm, dpi: settings.pngDpi });
     } finally {
