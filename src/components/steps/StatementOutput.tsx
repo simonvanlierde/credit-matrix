@@ -39,8 +39,13 @@ import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
 
 /** A name or role in the running text that opens a panel: it keeps the text's look, not a button's. */
-const NAME_BUTTON =
-  "inline cursor-pointer border-0 bg-transparent p-0 text-inherit [font:inherit] [text-align:inherit] decoration-outline decoration-dotted underline-offset-4 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary";
+/**
+ * A name or role in the statement: text, not a control. A click opens the same menu its real
+ * trigger does (the list row's "…", the grid header), which is the keyboard's way in; as buttons,
+ * every name would be a tab stop and the statement would read as a row of buttons.
+ */
+const NAME_TEXT =
+  "cursor-pointer decoration-outline decoration-dotted underline-offset-4 hover:text-primary hover:underline";
 
 type DataFormat =
   | "xml"
@@ -389,10 +394,11 @@ export function StatementOutput() {
                     translateRole={translateInterfaceRole}
                     describeRole={describeRole}
                     language={interfaceRoleLanguage}
+                    textAnchor
                     trigger={
-                      <button type="button" data-role-name={span.role} className={NAME_BUTTON}>
+                      <span data-role-name={span.role} className={NAME_TEXT}>
                         {span.text}
-                      </button>
+                      </span>
                     }
                   />
                 );
@@ -423,16 +429,16 @@ export function StatementOutput() {
                     key={`${authorId}:`}
                     authorId={authorId}
                     surface="statement"
+                    textAnchor
                     trigger={
-                      <button
-                        type="button"
+                      <span
                         data-author={authorId}
                         data-linked={linked || undefined}
-                        className={`${NAME_BUTTON} ${markClass}`}
+                        className={`${NAME_TEXT} ${markClass}`}
                         style={markStyle}
                       >
                         {span.text}
-                      </button>
+                      </span>
                     }
                   />
                 );

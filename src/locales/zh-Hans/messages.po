@@ -1706,8 +1706,6 @@ msgstr "分辨率"
 msgid "heatmapSvgHint"
 msgstr "SVG 缩放后仍保持清晰；这些尺寸设置仅适用于 PNG。"
 
-msgid "heatmapReset"
-msgstr "恢复默认设置"
 
 msgid "heatmapPngTooLarge"
 msgstr "此 PNG 过大。请减小宽度或分辨率、交换坐标轴，或下载 SVG。"

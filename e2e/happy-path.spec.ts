@@ -892,7 +892,7 @@ test.describe("Happy path UI flows", () => {
 
     // A long contributor name is truncated in the transposed row header rather
     // than growing the label column and pushing role columns out of view.
-    const rowHeader = page.locator("tbody th").filter({ hasText: "Maximiliana" }).locator("span > span").last();
+    const rowHeader = page.locator("tbody th").filter({ hasText: "Maximiliana" }).locator("span[title]").last();
     expect(await rowHeader.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
   });
 

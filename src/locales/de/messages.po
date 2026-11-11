@@ -1706,8 +1706,6 @@ msgstr "Auflösung"
 msgid "heatmapSvgHint"
 msgstr "SVG bleibt beim Skalieren scharf; diese Maße gelten für PNG."
 
-msgid "heatmapReset"
-msgstr "Standardwerte wiederherstellen"
 
 msgid "heatmapPngTooLarge"
 msgstr "Diese PNG wäre zu groß. Verringern Sie Breite oder Auflösung, tauschen Sie die Achsen oder laden Sie SVG herunter."

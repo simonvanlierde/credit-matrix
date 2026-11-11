@@ -1706,8 +1706,6 @@ msgstr "Resolução"
 msgid "heatmapSvgHint"
 msgstr "O SVG mantém a nitidez ao mudar de tamanho; estas dimensões aplicam-se ao PNG."
 
-msgid "heatmapReset"
-msgstr "Repor predefinições"
 
 msgid "heatmapPngTooLarge"
 msgstr "Este PNG seria demasiado grande. Reduza a largura ou resolução, troque os eixos ou transfira o SVG."

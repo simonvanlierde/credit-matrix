@@ -1,7 +1,7 @@
 import { ListChecks, X } from "lucide-react";
-import { type ReactElement, useState } from "react";
+import { type MouseEventHandler, type ReactElement, useState } from "react";
 import { ExternalLink } from "@/components/ui/external-link";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger, TextAnchor } from "@/components/ui/popover";
 import { CREDIT_ROLES } from "@/core";
 import type { RoleDescriber, RoleTranslator } from "@/core/i18n";
 import { useTranslations } from "@/lib/translations";
@@ -28,6 +28,7 @@ export function RoleInfo({
   className,
   triggerProps,
   trigger,
+  textAnchor = false,
 }: {
   role: (typeof CREDIT_ROLES)[number];
   translateRole: RoleTranslator;
@@ -36,6 +37,8 @@ export function RoleInfo({
   className?: string;
   triggerProps?: React.ComponentProps<"button"> & { "data-role-head"?: number };
   trigger?: ReactElement;
+  /** `trigger` is running text (the statement): a click opens the popover, but it stays text. */
+  textAnchor?: boolean;
 }) {
   const t = useTranslations();
   const { translateInterfaceUi: translateUi } = useCreditTranslators();
@@ -60,18 +63,24 @@ export function RoleInfo({
   // The description follows the interface language: it is help, never exported.
   return (
     <Popover open={open} onOpenChange={openChange}>
-      <PopoverTrigger asChild>
-        {trigger ?? (
-          <button
-            type="button"
-            title={name}
-            {...triggerProps}
-            className={`block min-h-6 rounded text-left font-medium text-on-surface underline decoration-outline decoration-dotted underline-offset-4 transition-colors hover:text-primary hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary ${className ?? ""}`}
-          >
-            {name}
-          </button>
-        )}
-      </PopoverTrigger>
+      {textAnchor && trigger ? (
+        <TextAnchor onOpen={() => openChange(true)}>
+          {trigger as ReactElement<{ onClick?: MouseEventHandler }>}
+        </TextAnchor>
+      ) : (
+        <PopoverTrigger asChild>
+          {trigger ?? (
+            <button
+              type="button"
+              title={name}
+              {...triggerProps}
+              className={`block min-h-6 rounded text-left font-medium text-on-surface underline decoration-outline decoration-dotted underline-offset-4 transition-colors hover:text-primary hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary ${className ?? ""}`}
+            >
+              {name}
+            </button>
+          )}
+        </PopoverTrigger>
+      )}
       <PopoverContent aria-label={name} className="w-64 max-w-xs p-1">
         {choosingLevel ? (
           <LevelChoice onPick={assign} translateUi={translateUi} />

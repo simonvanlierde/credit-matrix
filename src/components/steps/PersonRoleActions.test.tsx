@@ -49,7 +49,7 @@ const scoreOf = (id: string, role: string) =>
 it("opens the same person menu from the grid's name header and from the name in the statement", () => {
   const { container } = renderBoth();
   const header = container.querySelector<HTMLElement>("[data-name-head='0']");
-  const name = container.querySelector<HTMLElement>("section button[data-author]");
+  const name = container.querySelector<HTMLElement>("section [data-author]:not([data-role])");
   if (!(header && name)) throw new Error("expected a name header and a statement name");
 
   fireEvent.click(header);

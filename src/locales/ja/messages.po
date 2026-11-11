@@ -1706,8 +1706,6 @@ msgstr "解像度"
 msgid "heatmapSvgHint"
 msgstr "SVGは拡大縮小しても鮮明です。このサイズ設定はPNGに適用されます。"
 
-msgid "heatmapReset"
-msgstr "既定値に戻す"
 
 msgid "heatmapPngTooLarge"
 msgstr "PNGが大きすぎます。幅または解像度を下げるか、軸を入れ替えるか、SVGをダウンロードしてください。"

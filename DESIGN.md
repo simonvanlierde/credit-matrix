@@ -377,8 +377,10 @@ list. In the list only the "…" button opens it, since the name itself is a tex
 its popover: the description and the full definition, then Assign to everyone (it asks which level)
 and Clear for everyone. Both bulk actions share the undo strip under the grid. A click on a phrase
 in the statement goes to its cell and makes that cell the grid's tab stop. The name and role
-headers are not in the tab order; the grid's arrow keys reach them. Frozen rows disable the items
-that edit them.
+headers are not in the tab order; the grid's arrow keys reach them. In the statement, names, roles
+and phrases stay text, not buttons: a click there is a pointer shortcut to a panel the keyboard
+reaches from the list's "…" or the grid's headers, so the statement never reads as a row of buttons
+or fills the tab order. Frozen rows disable the items that edit them.
 
 ## Do and don't
 

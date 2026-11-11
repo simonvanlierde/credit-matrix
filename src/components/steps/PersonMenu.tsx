@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, AtSign, Check, ListChecks, Pencil, Plus, Send, UserRound, Users, X } from "lucide-react";
-import { type ReactElement, type ReactNode, useRef, useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { type MouseEventHandler, type ReactElement, type ReactNode, useRef, useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger, TextAnchor } from "@/components/ui/popover";
 import { announce } from "@/lib/announce";
 import { copyAskLink } from "@/lib/ask-message";
 import { useTranslations } from "@/lib/translations";
@@ -54,9 +54,12 @@ export function PersonMenu({
   align = "start",
   canAddOrcid,
   onAddOrcid,
+  textAnchor = false,
 }: {
   authorId: string;
   trigger: ReactElement;
+  /** The trigger is running text (the statement): a click opens the menu, but it stays text. */
+  textAnchor?: boolean;
   surface: "list" | "grid" | "statement";
   align?: "start" | "center" | "end";
   /** List only: false while the ORCID field is already open. */
@@ -124,7 +127,13 @@ export function PersonMenu({
 
   return (
     <Popover open={open} onOpenChange={openChange}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      {textAnchor ? (
+        <TextAnchor onOpen={() => openChange(true)}>
+          {trigger as ReactElement<{ onClick?: MouseEventHandler }>}
+        </TextAnchor>
+      ) : (
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      )}
       <PopoverContent
         align={align}
         aria-label={label}

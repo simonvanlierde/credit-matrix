@@ -1,10 +1,35 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
+import { cloneElement, type MouseEvent, type MouseEventHandler, type ReactElement } from "react";
 import { cn } from "@/lib/utils";
 
 export const Popover = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;
 /** For panels anchored to a point (a right-clicked cell) rather than a trigger. */
 export const PopoverAnchor = PopoverPrimitive.Anchor;
+
+/**
+ * A click shortcut on running text: the panel hangs off the text, but the text stays text, with no
+ * popup state and no tab stop. Only for a panel the keyboard already reaches from a real trigger
+ * elsewhere. A click that ends a text selection does not open it.
+ */
+export function TextAnchor({
+  children,
+  onOpen,
+}: {
+  children: ReactElement<{ onClick?: MouseEventHandler }>;
+  onOpen: () => void;
+}) {
+  return (
+    <PopoverPrimitive.Anchor asChild>
+      {cloneElement(children, {
+        onClick: (event: MouseEvent) => {
+          children.props.onClick?.(event);
+          if (window.getSelection()?.isCollapsed !== false) onOpen();
+        },
+      })}
+    </PopoverPrimitive.Anchor>
+  );
+}
 
 export function PopoverContent({
   className,

@@ -430,7 +430,8 @@ export function ContributionGrid() {
           type="button"
           tabIndex={-1}
           data-name-head={index}
-          aria-label={t("contributorActions", { name: author.name })}
+          // Named by its content, the person's name: a column header names every cell under it,
+          // so "Actions for …" here would be read before each cell. Radix adds the popup state.
           onKeyDown={(event) => handleHeadKeyDown(event, "name", index)}
           className="block max-w-full rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary"
         >
