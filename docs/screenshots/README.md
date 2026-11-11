@@ -1,12 +1,9 @@
 # Screenshots
 
-The README uses these three images. They are taken at 1440 × 900 in light mode, with the getting-started checklist dismissed.
+The README shows `hero.png`: the sample data loaded, with the Team tab open. It is taken at
+1440 × 900 in light mode, with the getting-started checklist dismissed.
 
-- `hero.png`: the sample data loaded, with the Team tab open.
-- `empty-state.png`: the first-run welcome over the empty workspace.
-- `statement-export.png`: the Statement tab with the *Export data* menu open.
-
-To retake them after a UI change:
+To retake it after a UI change:
 
 ```bash
 pnpm build
@@ -15,5 +12,5 @@ node scripts/screenshots.mjs        # or pass another URL as the first argument
 kill %1
 ```
 
-The script needs Playwright's Chromium (`pnpm exec playwright install chromium`). It overwrites the
-three files in this folder. Update the alt text in the README if what they show has changed.
+The script needs Playwright's Chromium (`pnpm exec playwright install chromium`). It overwrites
+`hero.png`. Update the alt text in the README if what it shows has changed.

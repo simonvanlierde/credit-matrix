@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The favicon, app icons and social card use the warm paper and charcoal ink of the 0.12.0 theme,
+  and the mark draws each column in one contributor's hue, as the grid does.
+- Search results and link previews describe asking co-authors to check their own row, and the
+  preview image carries its full alt text and size.
+
 ## [0.12.0] - 2026-11-11
 
 **Upgrade note:** the browser storage format moves from version 3 to 5, because statement options

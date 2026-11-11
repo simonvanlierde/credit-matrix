@@ -1,29 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CRediT Matrix">
-  <!-- A 3x3 crop of the contribution matrix. Cell fills are the app's real
-       intensity tiers (see src/core/contributor-color.ts): white mixed
-       0.4 / 0.7 / 1.0 toward ink-blue, plus the empty-cell fill. Dark values
-       mirror the .dark tokens in globals.css. -->
+  <!-- A 3x3 crop of the contribution matrix, one column per contributor in the
+       first three CONTRIBUTOR_HUES. Fills are heatCellColor's lead, equal and
+       supporting tiers (src/core/contributor-color.ts), light and dark, plus
+       the empty-cell fill. Ground and edge are the paper and outline tokens. -->
   <style>
-    .ground { fill: #fafaf9 } .edge { stroke: #d8d8d4 }
-    .lead { fill: #1f4e79 } .equal { fill: #6283a1 }
-    .supporting { fill: #a5b8c9 } .none { fill: #ececea }
+    .ground { fill: #fbf8f1 } .edge { stroke: #d6ccba } .none { fill: #ececea }
+    .a0 { fill: #2a5fa8 } .a1 { fill: #6a8fc2 } .a2 { fill: #aabfdc } .b0 { fill: #b4471a } .b1 { fill: #cb7e5f } .b2 { fill: #e1b5a3 } .c0 { fill: #0f6e66 } .c1 { fill: #579a94 } .c2 { fill: #9fc5c2 }
     @media (prefers-color-scheme: dark) {
-      .ground { fill: #1e2024 } .edge { stroke: #3a3d42 }
-      .lead { fill: #a8c1da } .equal { fill: #71879e }
-      .supporting { fill: #455465 } .none { fill: #2a2c30 }
+      .ground { fill: #161513 } .edge { stroke: #4a463f } .none { fill: #292723 }
+      .a0 { fill: #a1bfe8 } .a1 { fill: #316fc4 } .a2 { fill: #1f457a } .b0 { fill: #eab59e } .b1 { fill: #ca592b } .b2 { fill: #7e381b } .c0 { fill: #9eeae4 } .c1 { fill: #2bcabd } .c2 { fill: #1b7e76 }
     }
   </style>
   <rect class="ground" width="32" height="32" rx="6"/>
   <rect class="edge" x=".5" y=".5" width="31" height="31" rx="5.5" fill="none"/>
-  <g>
-    <rect class="lead"        x="3"  y="3"  width="8" height="8" rx="1"/>
-    <rect class="equal"       x="12" y="3"  width="8" height="8" rx="1"/>
-    <rect class="supporting"  x="21" y="3"  width="8" height="8" rx="1"/>
-    <rect class="equal"       x="3"  y="12" width="8" height="8" rx="1"/>
-    <rect class="lead"        x="12" y="12" width="8" height="8" rx="1"/>
-    <rect class="none"        x="21" y="12" width="8" height="8" rx="1"/>
-    <rect class="supporting"  x="3"  y="21" width="8" height="8" rx="1"/>
-    <rect class="none"        x="12" y="21" width="8" height="8" rx="1"/>
-    <rect class="lead"        x="21" y="21" width="8" height="8" rx="1"/>
-  </g>
+  <rect x="3" y="3" width="8" height="8" rx="1" class="a0"/><rect x="12" y="3" width="8" height="8" rx="1" class="b1"/><rect x="21" y="3" width="8" height="8" rx="1" class="c2"/>
+  <rect x="3" y="12" width="8" height="8" rx="1" class="a1"/><rect x="12" y="12" width="8" height="8" rx="1" class="b0"/><rect x="21" y="12" width="8" height="8" rx="1" class="none"/>
+  <rect x="3" y="21" width="8" height="8" rx="1" class="a2"/><rect x="12" y="21" width="8" height="8" rx="1" class="none"/><rect x="21" y="21" width="8" height="8" rx="1" class="c0"/>
 </svg>
