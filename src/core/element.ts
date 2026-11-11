@@ -9,7 +9,7 @@ import { normalizeRoster } from "./parse-authors";
 // The app's paper-and-ink look: Atkinson Hyperlegible or IBM Plex where the page has them, its neutrals otherwise.
 // The element is its own card, so its text keeps its contrast on a dark page too.
 const STYLE = `
-:host { display: block; font-family: "Atkinson Hyperlegible Next", "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; color: #2e2a25; background: #fbf8f1; padding: 1rem; border: 1px solid #2e2a25; border-radius: 4px; }
+:host { display: block; font-family: "Atkinson Hyperlegible Next", "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; color: #45413a; background: #fbf8f1; padding: 1rem; border: 1px solid #2e2a25; border-radius: 4px; }
 :host([hidden]) { display: none; }
 figure { margin: 0; position: relative; }
 .scroll { overflow-x: auto; }

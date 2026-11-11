@@ -1797,3 +1797,9 @@ msgstr "fatto"
 
 msgid "guideDismiss"
 msgstr "Nascondi i primi passi"
+
+msgid "heatmapRed"
+msgstr "Rosso"
+
+msgid "heatmapPurple"
+msgstr "Viola"

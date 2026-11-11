@@ -277,7 +277,7 @@ test("lets a large team inspect the figure at actual size without stretching the
   await expect(image).toBeVisible({ timeout: 15_000 });
   const width = () => image.evaluate((img) => img.getBoundingClientRect().width);
   await expect(page.getByText(/Labels would print at about/)).toBeVisible();
-  expect(await width()).toBeLessThan(512);
+  expect(await width()).toBeLessThan(await preview.evaluate((el) => el.clientWidth));
   await page.getByRole("button", { name: "Actual size", exact: true }).click();
   expect(await width()).toBeGreaterThan(2000);
   expect(await preview.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
@@ -285,7 +285,7 @@ test("lets a large team inspect the figure at actual size without stretching the
   await page.keyboard.press("ArrowRight");
   await expect.poll(() => preview.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
   await page.getByRole("button", { name: "Fit to width", exact: true }).click();
-  expect(await width()).toBeLessThan(512);
+  expect(await width()).toBeLessThan(await preview.evaluate((el) => el.clientWidth));
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
 });
 
@@ -515,4 +515,48 @@ test("opens the right-click level picker at the cursor on a wide window", async 
   if (!picker) throw new Error("Expected the picker");
   expect(Math.abs(picker.x - at.x)).toBeLessThan(12);
   expect(Math.abs(picker.y - at.y)).toBeLessThan(12);
+});
+
+for (const width of [390, 1440]) {
+  test(`keeps the selected color ring inside Figure settings at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+    await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+    const settings = page.getByRole("region", { name: "Figure settings", exact: true });
+    const swatch = settings.getByRole("button", { name: "Per contributor", exact: true });
+    await expect(swatch).toHaveAttribute("aria-pressed", "true");
+    const clip = await settings.boundingBox();
+    const circle = await swatch.boundingBox();
+    if (!clip || !circle) throw new Error("Expected visible color settings");
+    // The selected ring extends 3px beyond the circle (2px ring and 1px offset).
+    expect(circle.x - 3).toBeGreaterThanOrEqual(clip.x);
+    expect(circle.x + circle.width + 3).toBeLessThanOrEqual(clip.x + clip.width);
+  });
+}
+
+test("uses extra desktop space while keeping short windows compact", async ({ page }) => {
+  const sizes: { width: number; previewHeight: number; optionsWidth: number }[] = [];
+  for (const height of [650, 1000]) {
+    await page.setViewportSize({ width: 1440, height });
+    await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+    const options = await page.getByRole("dialog", { name: "Heatmap options", exact: true }).boundingBox();
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+    const settingsButton = page.getByRole("button", { name: "Figure settings", exact: true });
+    if ((await settingsButton.getAttribute("aria-expanded")) === "false") await settingsButton.click();
+    const preview = page.getByRole("region", { name: "Contribution heatmap", exact: true });
+    await expect(preview.getByRole("img")).toBeVisible();
+    await settleMotion(page);
+    const panel = await page.getByRole("dialog", { name: "Heatmap", exact: true }).boundingBox();
+    const maxHeight = await preview.evaluate((el) => Number.parseFloat(getComputedStyle(el).maxHeight));
+    if (!panel || !options) throw new Error("Expected heatmap panels");
+    expect(panel.x).toBeGreaterThanOrEqual(0);
+    expect(panel.x + panel.width).toBeLessThanOrEqual(1440);
+    expect(panel.y + panel.height).toBeLessThanOrEqual(height);
+    sizes.push({ width: panel.width, previewHeight: maxHeight, optionsWidth: options.width });
+    await page.keyboard.press("Escape");
+  }
+  expect(sizes[1]?.width).toBeGreaterThan(sizes[0]?.width ?? 0);
+  expect(sizes[1]?.previewHeight).toBeGreaterThan(sizes[0]?.previewHeight ?? 0);
+  expect(sizes[1]?.optionsWidth).toBeGreaterThan(sizes[0]?.optionsWidth ?? 0);
 });

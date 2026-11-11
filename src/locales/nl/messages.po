@@ -1797,3 +1797,9 @@ msgstr "klaar"
 
 msgid "guideDismiss"
 msgstr "Aan de slag verbergen"
+
+msgid "heatmapRed"
+msgstr "Rood"
+
+msgid "heatmapPurple"
+msgstr "Paars"

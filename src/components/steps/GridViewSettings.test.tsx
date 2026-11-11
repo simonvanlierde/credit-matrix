@@ -5,6 +5,7 @@ import { IntlProvider } from "@/lib/translations";
 import { messages as en } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { ContributionGrid } from "./ContributionGrid";
+import { GridViewSettings } from "./GridViewSettings";
 
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
 
@@ -55,4 +56,20 @@ describe("GridViewSettings", () => {
     act(() => state().setColorByContributor(true));
     expect(screen.queryByText(PALE)).toBeNull();
   });
+});
+
+it("offers readable red, green, blue, purple and gray presets beside a direct custom picker", () => {
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <GridViewSettings />
+    </IntlProvider>,
+  );
+  for (const name of ["Blue", "Red", "Green", "Purple", "Grayscale"]) {
+    fireEvent.click(screen.getByRole("button", { name }));
+    expect(state().colorByContributor).toBe(false);
+    expect(screen.getByRole("button", { name }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.queryByText(PALE)).toBeNull();
+  }
+  expect(screen.getByLabelText("Custom").getAttribute("type")).toBe("color");
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

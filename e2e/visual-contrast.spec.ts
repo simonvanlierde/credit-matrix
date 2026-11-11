@@ -101,6 +101,41 @@ for (const theme of themes) {
       }
     });
 
+    test("primary actions and links follow the readable heatmap accent", async ({ page }) => {
+      await page.goto("/");
+      await page.getByRole("button", { name: "Load sample data" }).click();
+      await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+      await page.getByRole("button", { name: "Green", exact: true }).click();
+      await page.keyboard.press("Escape");
+      await settleMotion(page);
+      const copy = page.getByRole("button", { name: "Copy statement", exact: true });
+      const link = page.getByRole("link", { name: /^Plugins for/ });
+      const accent = await page.evaluate(() => document.documentElement.style.getPropertyValue("--color-accent"));
+      const fill = await flatten(page, [await style(copy, "background-color")]);
+      expect(fill).toEqual(await flatten(page, [accent]));
+      expect(await flatten(page, [await style(link, "color")])).toEqual(fill);
+      const ink = await flatten(page, [await style(copy, "color")]);
+      expect(ratio(ink, fill)).toBeGreaterThanOrEqual(4.5);
+      await copy.hover();
+      await settleMotion(page);
+      expect(ratio(ink, await flatten(page, [await style(copy, "background-color")]))).toBeGreaterThanOrEqual(4.5);
+    });
+
+    test("heatmap color swatches have a visible boundary", async ({ page }) => {
+      await page.goto("/");
+      await page.getByRole("button", { name: "Load sample data" }).click();
+      await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+      await settleMotion(page);
+      for (const name of ["Blue", "Red", "Green", "Purple", "Grayscale"]) {
+        const swatch = page.getByRole("button", { name, exact: true });
+        const own = await backdrop(swatch, true);
+        const outside = await flatten(page, await backdrop(swatch, false));
+        const fill = await flatten(page, own);
+        const border = await flatten(page, [...own, await style(swatch, "border-top-color")]);
+        expect(Math.max(ratio(fill, outside), ratio(border, outside)), name).toBeGreaterThanOrEqual(3);
+      }
+    });
+
     test("an empty grid cell's dot reaches 3:1 against the page", async ({ page }) => {
       await page.goto("/");
       await page.getByRole("button", { name: "Load sample data" }).click();
@@ -157,4 +192,24 @@ test.describe("header at 200% zoom widths", () => {
       expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
     });
   }
+});
+
+test("heatmap swatches and their selected outline survive forced colors", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load sample data" }).click();
+  await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
+  const multicolor = page.getByRole("button", { name: "Per contributor", exact: true });
+  await expect(multicolor).toHaveAttribute("aria-pressed", "true");
+  expect(await style(multicolor, "background-image")).not.toBe("none");
+  expect(Number.parseFloat(await style(multicolor, "outline-width"))).toBeGreaterThanOrEqual(2);
+  const blue = page.getByRole("button", { name: "Blue", exact: true });
+  expect(await flatten(page, [await style(blue, "background-color")])).toEqual([31, 78, 121]);
+  await blue.click();
+  expect(Number.parseFloat(await style(blue, "outline-width"))).toBeGreaterThanOrEqual(2);
+  const custom = page.getByLabel("Custom", { exact: true });
+  await custom.fill("#123456");
+  await expect(blue).toHaveAttribute("aria-pressed", "false");
+  expect(Number.parseFloat(await style(custom, "outline-width"))).toBeGreaterThanOrEqual(2);
 });

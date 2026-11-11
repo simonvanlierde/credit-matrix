@@ -1797,3 +1797,9 @@ msgstr "done"
 
 msgid "guideDismiss"
 msgstr "Hide getting started"
+
+msgid "heatmapRed"
+msgstr "Red"
+
+msgid "heatmapPurple"
+msgstr "Purple"

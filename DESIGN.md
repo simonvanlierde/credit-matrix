@@ -14,7 +14,7 @@ colors:
   paper: "#fbf8f1"
   paper-bright: "#fffdf8"
   paper-muted: "#f5f0e6"
-  graphite: "#2e2a25"
+  graphite: "#45413a"
   graphite-muted: "#5e584e"
   rule: "#d6ccba"
   edge: "#2e2a25"
@@ -67,7 +67,7 @@ spacing:
   xl: "24px"
 components:
   button-primary:
-    backgroundColor: "{colors.ink-blue}"
+    backgroundColor: "{colors.accent}"
     textColor: "{colors.paper-bright}"
     rounded: "{rounded.md}"
     padding: "10px 20px"
@@ -102,19 +102,24 @@ contributors, through the matrix, to the text for the manuscript.
 ## Colors
 
 Use warm paper neutrals throughout the interface. Ink is a warm charcoal, not near-black: it keeps
-13:1 on paper without the weight of black. The page itself is paper tinted 3% toward the
+9.6:1 on paper without the weight of black. The page itself is paper tinted 3% toward the
 draft's heatmap colour (4% in dark mode), so it shifts to a faint sage when someone picks green and
 stays neutral for grey. With colour by contributor no single hue is drawn, so the page stays plain
 paper. The tint stops at those values because a custom colour can be anything, and
 the muted text must keep 4.5:1 on it. It is for the web interface only: an exported figure is always
 drawn on white. Cards and the statement sit on the page in brighter paper.
 
-Reserve ink blue for primary actions, links and focus outside the grid. The heatmap hue is also
-the accent (`--color-accent`, set by `ThemeHue`): the wordmark, the initials chips when no contributor hue is set, the selected
+Primary actions, links and focus follow the heatmap hue through the same readable accent
+(`--color-primary` and `--color-accent`, set by `ThemeHue`): the wordmark, the initials chips when no contributor hue is set, the selected
 segment, the active inspector tab and focus inside the grid. In light mode it is deepened toward
 black, and in dark mode lightened toward white, only as far as it takes to reach 4.5:1 against bright
 paper both ways, so any custom colour stays legible. With colour by contributor the accent is ink
-blue. Use contributor colors only to identify data.
+blue. Hover fills deepen in light mode and lighten in dark mode to keep button text readable.
+Use contributor colors only to identify data.
+
+The saved draft's accent, page tint and header mark colours are applied in the document head before
+first paint. `src/lib/theme-color.ts` shares the colour calculation with `ThemeHue`, which waits for
+draft hydration before updating those values. Page navigation keeps the chosen hue throughout loading.
 
 By default the grid colours each contributor in their own hue, by list position: their chip, the
 rule under their column name, their cells, and the mark on their phrase in the statement all share
@@ -279,9 +284,10 @@ popovers and menus over the content) and `shadow-sheet` (5px, tinted ink blue, t
 result of the work). Pair a 1px ink edge (`edge`) with a hard shadow, never with a soft one. Lines
 inside a card stay thin and neutral (`rule`).
 
-Forced colours drop every shadow, so a surface that floats keeps a real 1px border, and focus
-falls back to a `Highlight` outline. Filled level marks keep their own colours there, since the
-mark is contrast-checked against its fill.
+In forced colours, floating surfaces keep a real 1px border and focus uses a `Highlight` outline.
+Colour swatches retain their hues and use a `Highlight` outline for selection, since shadow rings
+may disappear. Filled level marks keep their own colours, since the mark is contrast-checked
+against its fill.
 
 ## Shapes
 
@@ -293,8 +299,9 @@ Keep pill shapes for status, switches and small markers.
 
 ### Buttons
 
-Primary buttons use ink blue with bright paper text and the press shadow, and a darker opaque ink
-blue on hover (`ink-blue-hover`), never a translucent tint that lets the text fade. Secondary
+Primary buttons use the readable heatmap accent and the press shadow, with bright paper text in
+light mode and dark ink in dark mode. Hover deepens the fill in light mode and lightens it in dark
+mode, never using a translucent tint that lets the text fade. Secondary
 buttons use the 1px ink edge on bright paper and lift with the card shadow on hover. Give every control a visible keyboard focus and a target of at least
 24px.
 
@@ -343,10 +350,17 @@ setting is a switch on the right with its label on the left; the whole row is th
 short options are a small segmented control with a label. A segmented control outside a panel is a
 mode that changes what the area beside it does (Yes / no or Levels, By author or By role) and stands
 36 px tall like the toolbar buttons next to it; four or more, or long labels, are a select.
-Numbers keep the figure number field. Colour is one row of swatches: *Per contributor* first (a
-conic gradient of the contributor hues), the preset hues, then *Custom*. A pressed swatch shows a
-ring and a check, and the chosen one is named beside the label. Small popovers are `w-72`; Figure
-settings keeps its 15rem column.
+Numbers keep the figure number field. Colour is one row of swatches: *Per contributor* first,
+shown as four brighter segments of the contributor hues, then blue, red, green, purple and
+grayscale presets and a labeled native *Custom* picker.
+Keep all presets in this row; Custom opens the native picker directly. Each preset keeps Supporting
+at least 1.5:1 against the empty-cell fill. A pressed swatch shows a
+ring and a check, and the chosen one is named beside the label. Swatch edges use `outline-strong`
+so the controls stay visible on dark paper. Leave at least 4px of padding inside scrolling settings
+for selection and focus rings. Small popovers are `w-72`; Figure settings keeps its 15rem column.
+On a desktop at least 80rem wide and 45rem tall, Heatmap options widens to 20rem with 1rem padding.
+The figure panel widens to 40rem, or 64rem with its 18rem settings column open, and uses 1.25rem
+padding and gaps. Its preview and settings can grow to 60vh, capped at 40rem.
 
 ### Contribution matrix
 

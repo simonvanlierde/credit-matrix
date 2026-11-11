@@ -1797,3 +1797,9 @@ msgstr "erledigt"
 
 msgid "guideDismiss"
 msgstr "Erste Schritte ausblenden"
+
+msgid "heatmapRed"
+msgstr "Rot"
+
+msgid "heatmapPurple"
+msgstr "Violett"

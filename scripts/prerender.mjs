@@ -1,10 +1,24 @@
 // biome-ignore-all lint/correctness/noNodejsModules: static site build script.
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
+import { build } from "vite";
 import { render } from "../.vite-ssr/entry-server.mjs";
 
 const manifest = JSON.parse(await readFile("out/.vite/manifest.json", "utf8"));
-const template = await readFile("out/index.html", "utf8");
+const themeBuild = await build({
+  configFile: false,
+  build: {
+    write: false,
+    lib: { entry: "src/lib/theme-bootstrap.ts", name: "ThemeBootstrap", formats: ["iife"] },
+  },
+});
+const themeOutput = (Array.isArray(themeBuild) ? themeBuild[0] : themeBuild).output;
+const themeScript = themeOutput.find((chunk) => chunk.type === "chunk" && chunk.isEntry)?.code;
+if (!themeScript) throw new Error("prerender: no theme bootstrap script");
+const template = (await readFile("out/index.html", "utf8")).replace(
+  "<!--theme-->",
+  () => `<script>${themeScript}</script>`,
+);
 const escapeAttribute = (text) =>
   String(text).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 // JSON inside an inline <script>: escape the characters that could end the tag or break the JS string.

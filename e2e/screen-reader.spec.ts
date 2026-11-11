@@ -177,9 +177,12 @@ test.describe("screen-reader view (accessibility tree)", () => {
             - text: Per contributor
             - button "Per contributor" [pressed]
             - button "Blue"
+            - button "Red"
             - button "Green"
+            - button "Purple"
             - button "Grayscale"
-            - button "Custom"
+            - textbox "Custom": "#1f4e79"
+            - text: Custom
           - group "Layout":
             - paragraph: Layout
             - text: Orientation

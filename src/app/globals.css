@@ -13,7 +13,7 @@
    colors below for documentation; a drift test in e2e/ keeps the two honest.
    Change a value here first. Radii stay on Tailwind's defaults. */
 :root {
-  /* --- Accent (single ink-blue: links, focus, primary buttons only) --- */
+  /* --- Primary actions, links and focus: the draft's readable accent, ink blue by default. --- */
   --color-primary: #1f4e79;
   --color-primary-hover: #183f62; /* opaque, under on-primary text on hover */
   --color-on-primary: #ffffff;
@@ -32,7 +32,7 @@
   --color-surface-container: #efe9dd;
   --color-surface-container-high: #ebe4d6;
   --color-surface-container-highest: #e3dbcb;
-  --color-on-surface: #2e2a25; /* warm charcoal: 13:1 on paper, softer than near-black */
+  --color-on-surface: #45413a; /* warm charcoal: 9.6:1 on paper */
   --color-on-surface-variant: #5e584e;
 
   --color-outline: #d6ccba;
@@ -49,8 +49,8 @@
   --color-background: var(--color-surface);
 
   /* The draft's heatmap hue where it reads as text and as a fill under bright paper text
-     (4.5:1 both ways); ThemeHue falls back to primary otherwise. Wordmark, selected
-     segments, the active tab and grid focus take it. Actions and links stay primary. */
+     (4.5:1 both ways). ThemeHue sets accent and primary together; the wordmark,
+     selected segments, actions, links and focus share the same readable hue. */
   --color-accent: var(--color-primary);
   --color-on-accent: var(--color-surface-bright);
 

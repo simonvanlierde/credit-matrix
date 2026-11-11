@@ -1797,3 +1797,9 @@ msgstr "已完成"
 
 msgid "guideDismiss"
 msgstr "隐藏入门"
+
+msgid "heatmapRed"
+msgstr "红色"
+
+msgid "heatmapPurple"
+msgstr "紫色"
