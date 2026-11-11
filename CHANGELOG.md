@@ -17,9 +17,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   [the figure options](integrations/heatmap.md#figure-options).
 - Download heatmaps as PDF with embedded fonts and selectable text. App, CLI and document-plugin
   SVG exports also carry their fonts. Both formats embed only the glyphs a figure uses: about 30 kB
-  for a Latin figure and 35 kB for a Japanese or Chinese one. The app fetches each font face
-  (0.6-15 MB) on the first export that needs it and keeps it for offline use; the MyST plugin
-  file is 1.5 MB and loads its fonts the same way. See the
+  for a Latin figure and 35 kB for a Japanese or Chinese one. The app installs the default face
+  (Noto Sans, 0.6 MB) with its offline cache, and fetches each other face (0.6-15 MB) on the first
+  export that needs it; the MyST plugin file is 1.5 MB and fetches its fonts on first use. See the
   [figure font guide](integrations/figures/README.md) for coverage, offline use and editing limits.
 - [Quarto/Pandoc](integrations/quarto/README.md#document-language) and
   [MyST/Jupyter Book](integrations/myst/README.md#document-language) statements and heatmaps follow

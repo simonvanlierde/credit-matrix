@@ -13,8 +13,9 @@ import { gzipSync } from "node:zlib";
 const LIMIT_GZIP = 437_000;
 // Embedded-font PDF generation is loaded on export; keep its cost separate from editing.
 const FIGURE_LIMIT_GZIP = 555_000;
-// Measured 2026-11-10: 2.51 MB of scripts and styles, no fonts. A single figure font is 0.57-14.9 MB.
-const PRECACHE_LIMIT = 2_800_000;
+// Measured 2026-11-11: 2.52 MB of scripts and styles plus Noto Sans (0.57 MB), the one figure font
+// precached. Any other figure font is 0.62-14.9 MB.
+const PRECACHE_LIMIT = 3_200_000;
 
 const dir = join(import.meta.dirname, "..", "out", "assets");
 const files = existsSync(dir)
