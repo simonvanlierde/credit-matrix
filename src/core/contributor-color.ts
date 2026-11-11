@@ -23,6 +23,31 @@ export const OKABE_ITO = [
   "#404040",
 ] as const;
 
+/**
+ * One hue per contributor, by list position, for grids that colour each person
+ * (the app's default view, and an export option). Picked to stay apart by hue
+ * and lightness, and dark enough that white initials clear 4.5:1 on each. A
+ * person is also named by their column, so colour is never the only cue.
+ */
+export const CONTRIBUTOR_HUES = [
+  "#2a5fa8",
+  "#b4471a",
+  "#0f6e66",
+  "#7b4b94",
+  "#8a6d00",
+  "#a3366b",
+  "#3d7a2e",
+  "#4a5a6a",
+] as const;
+
+/**
+ * Each contributor's hue, in list order, or null past the palette's eight
+ * hues, where two people would share a colour and the view uses one hue.
+ */
+export function contributorHues(count: number): string[] | null {
+  return count <= CONTRIBUTOR_HUES.length ? CONTRIBUTOR_HUES.slice(0, count) : null;
+}
+
 const NONE_FILL = "#ececea";
 const MIX_TOWARD = "#ffffff";
 
@@ -60,6 +85,15 @@ export function heatCellColor(hue: string, score: number, dark = false): string 
   const [h, s] = hsl(hue);
   const tier = fraction < 0.5 ? 0 : fraction < 1 ? 1 : 2;
   return hslHex(h, Math.min(s, 0.65), DARK_TIER_LIGHTNESS[tier] ?? 0.5);
+}
+
+/**
+ * A hue drawn straight on the page: a linked cell and phrase, or the brand mark.
+ * The palette is tuned for white initials, so on the dark page it is too dark to
+ * mark with; there the mark uses the hue's lead tier from the dark ramp instead.
+ */
+export function pageMarkColor(hue: string, dark: boolean): string {
+  return dark ? heatCellColor(hue, 100, true) : hue;
 }
 
 /** Hue (0–1), saturation and lightness of a hex color. */

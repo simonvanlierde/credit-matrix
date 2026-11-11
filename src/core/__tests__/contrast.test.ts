@@ -2,13 +2,16 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  CONTRIBUTOR_HUES,
   contrastRatio,
+  contributorHues,
   DEFAULT_MONO_COLOR,
   heatCellColor,
   OKABE_ITO,
   ON_COLOR_DARK,
   ON_COLOR_LIGHT,
   onColor,
+  pageMarkColor,
 } from "../contributor-color";
 
 /** The empty-cell fill, mirrored from contributor-color.ts. */
@@ -17,7 +20,7 @@ const NONE_FILL = "#ececea";
 /** WCAG 1.4.11 floor for a graphical object that conveys state. */
 const NON_TEXT_MIN = 3;
 
-const ALL_HUES = [DEFAULT_MONO_COLOR, ...OKABE_ITO];
+const ALL_HUES = [DEFAULT_MONO_COLOR, ...OKABE_ITO, ...CONTRIBUTOR_HUES];
 const SCORES = [33, 66, 100];
 
 describe("contrastRatio", () => {
@@ -62,6 +65,28 @@ describe("heatCellColor tiers", () => {
     expect(contrastRatio(supporting, NONE_FILL)).toBeGreaterThan(1.5);
   });
 
+  it("keeps every hue's supporting cell distinguishable from the page an empty cell shows", () => {
+    // Empty cells are transparent in the editor, so the paper is their ground (globals.css --color-paper).
+    // Only the hues the app picks: a pale preset such as Okabe-Ito orange sits near 1.3:1, and there
+    // the empty cell's dot against the filled cell's level mark is the cue, not the fill.
+    for (const [paper, dark] of [
+      ["#fbf8f1", false],
+      ["#161513", true],
+    ] as const) {
+      for (const hue of [DEFAULT_MONO_COLOR, ...CONTRIBUTOR_HUES]) {
+        const supporting = heatCellColor(hue, 33, dark);
+        expect(contrastRatio(supporting, paper), `${hue} on ${paper}`).toBeGreaterThan(1.5);
+      }
+    }
+  });
+
+  it("marks a linked cell and phrase at 3:1 on the page in both themes", () => {
+    for (const hue of CONTRIBUTOR_HUES) {
+      expect(contrastRatio(pageMarkColor(hue, false), "#fffdf8"), `${hue} light`).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(pageMarkColor(hue, true), "#24221f"), `${hue} dark`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("keeps the three assigned tiers ordered and distinct", () => {
     for (const hue of ALL_HUES) {
       const [supporting, equal, lead] = SCORES.map((s) => heatCellColor(hue, s));
@@ -92,10 +117,11 @@ describe("heatCellColor tiers", () => {
 });
 
 describe("difference corner mark", () => {
-  // Mirrored from globals.css: --color-flag and --color-surface-container-high per theme.
+  // Mirrored from globals.css: --color-flag and --color-paper per theme. An empty
+  // cell has no fill, so the mark sits on the page (paper, tinted 3–4% by the theme hue).
   const THEMES = [
-    { dark: false, flag: "#b45309", empty: NONE_FILL },
-    { dark: true, flag: "#f0a35e", empty: "#25272b" },
+    { dark: false, flag: "#b45309", empty: "#fbf8f1" },
+    { dark: true, flag: "#f0a35e", empty: "#161513" },
   ];
 
   it("has an edge at 3:1 or more against every filled cell, per preset, tier and theme", () => {
@@ -122,6 +148,18 @@ describe("difference corner mark", () => {
     const pick = (name: string) =>
       [...css.matchAll(new RegExp(`--color-${name}:\\s*(#[0-9a-f]{6})`, "gi"))].map((m) => m[1]?.toLowerCase());
     expect(pick("flag")).toEqual(THEMES.map((theme) => theme.flag));
-    expect(pick("surface-container-high")).toEqual(THEMES.map((theme) => theme.empty));
+    expect(pick("paper")).toEqual(THEMES.map((theme) => theme.empty));
+  });
+});
+
+describe("contributor hues", () => {
+  it("carry white initials at 4.5:1 or more on every chip", () => {
+    for (const hue of CONTRIBUTOR_HUES) expect(contrastRatio(hue, "#ffffff"), hue).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("give each person their own hue, and one shared hue past the palette", () => {
+    expect(contributorHues(3)).toEqual(CONTRIBUTOR_HUES.slice(0, 3));
+    expect(new Set(contributorHues(CONTRIBUTOR_HUES.length)).size).toBe(CONTRIBUTOR_HUES.length);
+    expect(contributorHues(CONTRIBUTOR_HUES.length + 1)).toBeNull();
   });
 });

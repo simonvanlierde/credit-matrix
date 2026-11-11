@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { UndoBar } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
-import { heatCellColor, onColor } from "@/core/contributor-color";
+import { CONTRIBUTOR_HUES, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useLocale, useTranslations } from "@/lib/translations";
@@ -32,6 +32,9 @@ const FLAT_KEY: { key: UiKey; score: number }[] = [
   { key: "contributed", score: 100 },
   { key: "none", score: 0 },
 ];
+
+// The key's hue when each person has their own: fill strength is then the level cue.
+const LEGEND_NEUTRAL = "#5e584e";
 
 // Past this many columns the angled names make the header taller than the
 // rows it labels, so the headers fall back to initials.
@@ -69,6 +72,8 @@ export function ContributionGrid() {
       welcomeOpen: s.welcomeOpen,
     })),
   );
+  const colorByContributor = useContributionStore((s) => s.colorByContributor);
+  const setColorByContributor = useContributionStore((s) => s.setColorByContributor);
   const recentReply = useContributionStore((s) => s.recentReply);
   const asks = useContributionStore((s) => s.asks);
   const selfId = useContributionStore((s) => s.selfId);
@@ -296,6 +301,9 @@ export function ContributionGrid() {
     return t("cellTheySay", { name: author.firstName || author.name, level: translateUi(level) });
   };
   const namedHeaders = !acronyms && authors.length <= MAX_NAMED_COLUMNS;
+  // Each person's hue, by list position; one hue for all when the view says so.
+  const hues = colorByContributor ? contributorHues(authors.length) : null;
+  const hueOf = (author: Author) => hues?.[authors.indexOf(author)] ?? heatmapMonoColor;
 
   cellApi.current = {
     label: assignmentLabel,
@@ -337,7 +345,8 @@ export function ContributionGrid() {
       }
       graded={graded}
       dark={dark}
-      monoColor={heatmapMonoColor}
+      monoColor={hueOf(author)}
+      perPerson={hues !== null}
       language={`${interfaceRoleLanguage}:${messagesLocale}`}
     />
   );
@@ -369,10 +378,12 @@ export function ContributionGrid() {
   }
 
   return (
-    <div className="flex min-w-0 max-w-full flex-col desk:h-full">
+    // md:w-fit: on a wide pane the toolbar ends at the grid's edge rather than the pane's,
+    // so the controls stay beside the grid they change; spare paper falls after the block.
+    <div className="flex min-w-0 max-w-full flex-col md:w-fit desk:h-full">
       {/* The status strip: what the draft is waiting on, then every control
           that changes the whole grid. */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-outline-variant/40 bg-surface-container-low px-3 py-2 md:px-4">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3 pb-1 md:px-4">
         <h2 id="contributions-heading" className="sr-only">
           {t("stepContributions")}
         </h2>
@@ -484,7 +495,12 @@ export function ContributionGrid() {
                       {t("colorLabel")}
                       <span
                         className="h-3 w-3 rounded-full border border-outline-variant/50"
-                        style={{ backgroundColor: heatmapMonoColor }}
+                        // Per-person hues on: picking a colour switches to one hue, so show what is drawn now.
+                        style={{
+                          background: hues
+                            ? `conic-gradient(${CONTRIBUTOR_HUES.slice(0, 4).join(", ")})`
+                            : heatmapMonoColor,
+                        }}
                       />
                     </button>
                   }
@@ -503,6 +519,17 @@ export function ContributionGrid() {
                     <Rows3 className="h-3.5 w-3.5" aria-hidden="true" />
                   )}
                 </button>
+                <label
+                  htmlFor="grid-color-by-contributor"
+                  className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-xs text-on-surface-variant"
+                >
+                  {t("colorByContributor")}
+                  <Switch
+                    id="grid-color-by-contributor"
+                    checked={colorByContributor}
+                    onCheckedChange={setColorByContributor}
+                  />
+                </label>
                 <label
                   htmlFor="grid-use-initials"
                   className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-xs text-on-surface-variant"
@@ -534,7 +561,7 @@ export function ContributionGrid() {
         <MobileRoleList
           authors={authors}
           graded={graded}
-          heatmapMonoColor={heatmapMonoColor}
+          hueOf={hueOf}
           dark={dark}
           settled={settled}
           isFrozen={isFrozen}
@@ -564,14 +591,15 @@ export function ContributionGrid() {
             aria-labelledby="contributions-heading"
             // The key hint is hidden on touch screens, but still describes the grid to a screen reader.
             aria-describedby="grid-keys-hint"
-            className="mx-auto w-max table-auto border-separate border-spacing-[3px]"
+            // Start-aligned, so role labels share the pane's left edge with the toolbar link and the key.
+            className="w-max table-auto border-separate border-spacing-[3px]"
           >
             <thead>
               <tr>
                 <th
                   scope="col"
                   style={{ zIndex: 21 + colCount }}
-                  className={`sticky left-0 top-0 bg-surface-bright pb-1 text-left align-bottom font-mono text-xs font-medium uppercase tracking-wider text-on-surface-variant ${
+                  className={`sticky left-0 top-0 bg-surface pb-1 text-left align-bottom font-headline text-base font-medium italic text-on-surface-variant ${
                     // Transposed with initials, the row headers are 40px chips,
                     // let the axis title size the column instead of reserving the
                     // width a full role name needs.
@@ -589,7 +617,7 @@ export function ContributionGrid() {
                         // without a reversed paint order the next header's opaque
                         // background covers all but its first few characters.
                         style={{ zIndex: 20 + (CREDIT_ROLES.length - columnIndex) }}
-                        className="sticky top-0 min-w-[2rem] bg-surface-bright pb-1 align-bottom"
+                        className="sticky top-0 min-w-[2rem] bg-surface pb-1 align-bottom"
                       >
                         <AngledLabel title={translateInterfaceRole(role.name)}>
                           {roleHead(columnIndex, "text-xs")}
@@ -601,12 +629,17 @@ export function ContributionGrid() {
                         key={author.id}
                         scope="col"
                         style={{ zIndex: 20 + (authors.length - columnIndex) }}
-                        className="sticky top-0 min-w-[2.75rem] bg-surface-bright pb-1 align-bottom"
+                        className="sticky top-0 min-w-[2.75rem] bg-surface pb-1 align-bottom"
                       >
                         <span className="flex flex-col items-center gap-1">
                           {namedHeaders ? (
                             <AngledLabel title={author.name}>
-                              <span className="text-xs font-medium text-on-surface">{author.name}</span>
+                              <span
+                                className="border-b-2 pb-0.5 text-xs font-semibold text-on-surface"
+                                style={{ borderColor: hues ? hueOf(author) : "transparent" }}
+                              >
+                                {author.name}
+                              </span>
                             </AngledLabel>
                           ) : (
                             <>
@@ -630,7 +663,7 @@ export function ContributionGrid() {
                     <tr key={author.id} className="group">
                       <th
                         scope="row"
-                        className="sticky left-0 z-10 bg-surface-bright py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
+                        className="sticky left-0 z-10 bg-surface py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
                       >
                         <span className="flex items-center gap-1.5 min-w-0">
                           <InitialsChip author={author} />
@@ -657,7 +690,7 @@ export function ContributionGrid() {
                     <tr key={role.name} className="group">
                       <th
                         scope="row"
-                        className="sticky left-0 z-10 max-w-56 bg-surface-bright py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
+                        className="sticky left-0 z-10 max-w-56 bg-surface py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
                       >
                         {roleHead(roleIndex, "max-w-full truncate text-[13px]")}
                       </th>
@@ -704,7 +737,7 @@ export function ContributionGrid() {
                         style={{
                           backgroundColor:
                             score > 0
-                              ? heatCellColor(heatmapMonoColor, score, dark)
+                              ? heatCellColor(hueOf(pickerAuthor), score, dark)
                               : "var(--color-surface-container-high)",
                         }}
                       />
@@ -731,7 +764,15 @@ export function ContributionGrid() {
           so switching modes cannot resize the whole column to fit a longer key. */}
         <div className="mt-2 w-0 min-w-full">
           <GridLegend
-            monoColor={heatmapMonoColor}
+            monoColor={hues ? LEGEND_NEUTRAL : heatmapMonoColor}
+            hueForId={
+              hues
+                ? (id) => {
+                    const index = authors.findIndex((author) => author.id === id);
+                    return index < 0 ? null : (hues[index] ?? null);
+                  }
+                : null
+            }
             graded={graded}
             dark={dark}
             translateUi={translateUi}
@@ -783,6 +824,7 @@ const GridCell = memo(function GridCellInner({
   graded,
   dark,
   monoColor,
+  perPerson,
 }: {
   api: RefObject<CellApi>;
   author: Author;
@@ -803,6 +845,8 @@ const GridCell = memo(function GridCellInner({
   graded: boolean;
   dark: boolean;
   monoColor: string;
+  /** Per-person hues are on: the linked mark is in this person's hue, not primary. */
+  perPerson: boolean;
   language: string;
 }) {
   const score = author.contributions[roleIndex]?.score ?? 0;
@@ -846,21 +890,31 @@ const GridCell = memo(function GridCellInner({
         // a click's only result is the shade stepping up, and at this cadence
         // (hundreds a session, in a 3px-gapped grid) a press scale would read
         // as the matrix twitching rather than as feedback.
-        // Empty cells get a hairline ring: fill-on-fill alone is ~1.2:1
-        // against the card, which loses the click target on dim displays.
-        className={`contribution-cell flex h-7 w-full items-center justify-center rounded transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-          frozen ? "cursor-not-allowed opacity-40" : "hover:ring-2 hover:ring-primary/50"
-        } ${fill ? "" : "ring-1 ring-inset ring-outline-strong"} ${
+        // An empty cell is a dot in outline-strong (3:1 on the page), so the
+        // filled cells carry the grid; hover and focus draw the full target.
+        // A linked cell (its phrase under the pointer) gets an ink edge and a
+        // hard shadow in its contributor's hue, the same mark its phrase gets.
+        data-level-fill={fill ? "" : undefined}
+        className={`contribution-cell flex h-7 w-full items-center justify-center rounded-sm transition-[background-color,box-shadow] duration-[120ms] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          frozen ? "cursor-not-allowed opacity-40" : "hover:ring-[1.5px] hover:ring-edge"
+        } ${
           highlighted
             ? "outline outline-[3px] outline-flag outline-offset-1"
             : linked
-              ? "outline outline-2 outline-primary outline-offset-2"
+              ? "outline outline-[1.5px] outline-edge outline-offset-1 shadow-[3px_3px_0_var(--cell-hue)]"
               : recent
                 ? "outline outline-2 outline-primary/50 outline-offset-1 shadow-[0_0_8px_2px_var(--tw-shadow-color)] shadow-primary/40"
                 : ""
         } ${settling ? "cell-settle" : ""}`}
-        style={{ backgroundColor: fill ?? "var(--color-surface-container-high)" }}
+        style={
+          {
+            backgroundColor: fill ?? "transparent",
+            // Without per-person hues the phrase is marked in primary, so the cell matches it.
+            "--cell-hue": perPerson ? pageMarkColor(monoColor, dark) : "var(--color-primary)",
+          } as React.CSSProperties
+        }
       >
+        {!fill && <span aria-hidden="true" data-empty-dot className="size-[3px] rounded-full bg-outline-strong" />}
         {fill && (
           // The check is the state indicator, so it must clear 3:1 against
           // the fill it sits on (WCAG 1.4.11). Hardcoded white failed that on
@@ -960,15 +1014,22 @@ function AskGlyph({ state, name, onReview }: { state: AskState; name: string; on
   );
 }
 
-/** A single key mapping cell intensity to its contribution level. */
+/**
+ * The key: one joined scale from None to Lead, each step labelled under its
+ * swatch. With colour by contributor the scale is neutral, and while a cell or
+ * phrase is linked it redraws in that person's hue.
+ */
 function GridLegend({
   monoColor,
+  hueForId,
   graded,
   translateUi,
   dark,
   differs,
 }: {
   monoColor: string;
+  /** Each person's hue, when the grid colours by contributor. */
+  hueForId: ((id: string) => string | null) | null;
   graded: boolean;
   translateUi: UiTranslator;
   dark: boolean;
@@ -976,28 +1037,32 @@ function GridLegend({
   differs: boolean;
 }) {
   const t = useTranslations();
+  const linkedId = useContributionStore((s) => s.statementLink?.contributorId ?? null);
+  const hue = (linkedId && hueForId?.(linkedId)) || monoColor;
+  // Ascending, so the scale reads None → Lead in the direction the fills grow.
+  const steps = [...(graded ? LEVEL_KEY : FLAT_KEY)].reverse();
   return (
-    <div className="flex min-w-0 flex-col gap-1 text-xs text-on-surface-variant">
-      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="font-mono uppercase tracking-wider">{graded ? t("legendLevel") : t("legendKey")}</span>
-        {(graded ? LEVEL_KEY : FLAT_KEY).map(({ key, score }) => (
-          <span key={key} className="inline-flex items-center gap-1.5">
-            <span
-              className={`inline-flex h-3 items-center justify-center rounded-sm border border-outline-variant ${graded ? "w-6" : "w-3"}`}
-              style={{
-                // Zero-score swatch matches the grid's theme-aware empty cells,
-                // not the download SVG's fixed paper-white fill.
-                backgroundColor:
-                  score > 0 ? heatCellColor(monoColor, score, dark) : "var(--color-surface-container-high)",
-              }}
-            >
-              {graded && score > 0 && (
-                <LevelMark score={score} graded color={onColor(heatCellColor(monoColor, score, dark))} size="small" />
-              )}
-            </span>
-            {translateUi(key)}
-          </span>
-        ))}
+    <div className="flex min-w-0 flex-col gap-1.5 text-xs text-on-surface-variant">
+      <span className="flex flex-wrap items-end gap-x-4 gap-y-2">
+        <span className="sr-only">{graded ? t("legendLevel") : t("legendKey")}</span>
+        <span className="inline-flex overflow-hidden rounded-sm border border-edge">
+          {steps.map(({ key, score }, index) => {
+            const fill = score > 0 ? heatCellColor(hue, score, dark) : null;
+            return (
+              <span key={key} className={`flex min-w-14 flex-col ${index > 0 ? "border-l border-edge" : ""}`}>
+                <span
+                  className="flex h-4 items-center justify-center transition-[background-color] duration-200 ease-[var(--ease-out)]"
+                  style={{ backgroundColor: fill ?? "var(--color-surface-bright)" }}
+                >
+                  {graded && fill && <LevelMark score={score} graded color={onColor(fill)} size="small" />}
+                </span>
+                <span className="border-t border-edge bg-surface-bright px-1.5 py-0.5 text-center text-[11px] text-on-surface">
+                  {translateUi(key)}
+                </span>
+              </span>
+            );
+          })}
+        </span>
         {differs && (
           <span className="inline-flex items-center gap-1.5">
             {/* Shown on a Lead swatch, where the flag fill alone has the least contrast. */}

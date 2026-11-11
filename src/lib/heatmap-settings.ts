@@ -1,5 +1,7 @@
 export interface HeatmapFigureSettings {
   color: string;
+  /** One hue for the figure, or each contributor in their own (app exports only). */
+  colorBy: "color" | "contributor";
   horizontal: boolean;
   acronyms: boolean;
   labels: "full" | "short";
@@ -18,6 +20,7 @@ export interface HeatmapFigureSettings {
 
 export const DEFAULT_HEATMAP_SETTINGS: HeatmapFigureSettings = {
   color: "#1f4e79",
+  colorBy: "color",
   horizontal: false,
   acronyms: false,
   labels: "full",
@@ -52,6 +55,7 @@ export function repairHeatmapSettings(input: unknown): HeatmapFigureSettings | n
       typeof value.color === "string" && /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(value.color)
         ? value.color
         : defaults.color,
+    colorBy: value.colorBy === "contributor" ? "contributor" : defaults.colorBy,
     horizontal: boolean("horizontal"),
     acronyms: boolean("acronyms"),
     labels: value.labels === "short" ? "short" : defaults.labels,

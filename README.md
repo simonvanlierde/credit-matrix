@@ -46,7 +46,7 @@ Run it yourself (Node ≥ 26, pnpm ≥ 11):
 git clone https://github.com/simonvanlierde/credit-matrix
 cd credit-matrix
 pnpm install
-pnpm dev            # → http://localhost:3000
+pnpm dev            # → http://localhost:5173
 ```
 
 Or use the same logic elsewhere:
@@ -93,7 +93,9 @@ releases are on Zenodo: [doi:10.5281/zenodo.21213659](https://doi.org/10.5281/ze
 
 ## License
 
-[MIT](LICENSE) © Simon van Lierde. The bundled fonts, IBM Plex, Newsreader and Noto, are under the SIL
-Open Font License: [IBM Plex](public/fonts/OFL-ibm-plex.txt),
-[Newsreader](public/fonts/OFL-newsreader.txt),
+[MIT](LICENSE) © Simon van Lierde. The bundled fonts, Atkinson Hyperlegible, IBM Plex, Newsreader
+and Noto, are under the SIL Open Font License:
+[Atkinson Hyperlegible Next](public/fonts/OFL-atkinson-hyperlegible-next.txt),
+[Atkinson Hyperlegible Mono](public/fonts/OFL-atkinson-hyperlegible-mono.txt),
+[IBM Plex](public/fonts/OFL-ibm-plex.txt), [Newsreader](public/fonts/OFL-newsreader.txt),
 [Noto figure fonts](src/core/figure-fonts/README.md#redistribution).

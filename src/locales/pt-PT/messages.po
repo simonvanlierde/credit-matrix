@@ -254,6 +254,9 @@ msgstr "Importação anulada."
 msgid "errImportXmlUnreadable"
 msgstr "Não foi possível ler esse XML. Verifique se o ficheiro está completo."
 
+msgid "errImportExportOnly"
+msgstr "Os ficheiros Quarto, MyST e RO-Crate servem apenas para exportação. Importe antes a exportação JSON."
+
 msgid "close"
 msgstr "Fechar"
 
@@ -379,9 +382,6 @@ msgstr "O serviço ORCID está indisponível. Tentar novamente dentro de momento
 
 msgid "importFromDoi"
 msgstr "Importar a partir de um DOI"
-
-msgid "structuredFileUpload"
-msgstr "Carregar um ficheiro estruturado"
 
 msgid "doiPlaceholder"
 msgstr "p. ex., 10.1234/abcde"
@@ -1719,16 +1719,34 @@ msgstr "O MyST usa as funções dos autores e o idioma da página, com contribui
 msgid "heatmapRecipeTypst"
 msgstr "Usa os teus dados de equipa do Typst. As métricas das fontes e a disposição nativa podem diferir do SVG."
 
+msgid "heatmapRecipeOneColor"
+msgstr "As receitas usam uma só cor. As cores por contribuidor só existem no SVG, no PNG e no PDF da aplicação."
+
 msgid "heatmapCopyRecipe"
 msgstr "Copiar receita de exportação"
 msgid "exportRoCrateFragment"
 msgstr "Fragmento RO-Crate"
+
+msgid "colorByContributor"
+msgstr "Cor por contribuidor"
+
+msgid "figureColor"
+msgstr "Cor da figura"
+
+msgid "figureOneColor"
+msgstr "Uma só cor"
+
+msgid "figurePerContributor"
+msgstr "Por contribuidor"
 
 msgid "downloadPdf"
 msgstr "Descarregar PDF"
 
 msgid "errFigureGlyphs"
 msgstr "Os tipos de letra da figura não podem apresentar estes caracteres: {characters}."
+
+msgid "heatmapSystemFonts"
+msgstr "O PDF tem de os incorporar, por isso não está disponível. SVG e PNG desenham-nos com os tipos de letra instalados; o SVG pode ter outro aspeto noutro computador."
 
 msgid "heatmapLegendPosition"
 msgstr "Legenda"

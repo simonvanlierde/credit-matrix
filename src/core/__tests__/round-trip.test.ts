@@ -92,6 +92,13 @@ describe("round-trip exports", () => {
     expect(() => fromJson(file)).toThrow(RepeatedIdError);
     expect(() => fromJson(file)).toThrow("duplicate contributor ids");
     expect(() => fromJson('{"version": 1, "authors": [{"name": 5}]}')).not.toThrow(RepeatedIdError);
+    expect(new RepeatedIdError().name).toBe("RepeatedIdError");
+  });
+
+  it("still reports a repeated id when the file has other faults too", () => {
+    const jane = createAuthor("Jane Smith");
+    const file = JSON.stringify({ version: 1, selfId: 5, authors: [jane, { ...jane, name: "Bob White" }] });
+    expect(() => fromJson(file)).toThrow(RepeatedIdError);
   });
 
   it("names the newer version and its own in the error", () => {

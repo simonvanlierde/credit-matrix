@@ -254,6 +254,9 @@ msgstr "Import rückgängig gemacht."
 msgid "errImportXmlUnreadable"
 msgstr "Dieses XML konnte nicht gelesen werden. Prüfen Sie, ob die Datei vollständig ist."
 
+msgid "errImportExportOnly"
+msgstr "Quarto-, MyST- und RO-Crate-Dateien lassen sich nur exportieren. Importieren Sie stattdessen den JSON-Export."
+
 msgid "close"
 msgstr "Schließen"
 
@@ -379,9 +382,6 @@ msgstr "Der ORCID-Dienst ist nicht verfügbar. Versuchen Sie es in Kürze erneut
 
 msgid "importFromDoi"
 msgstr "Aus einer DOI importieren"
-
-msgid "structuredFileUpload"
-msgstr "Strukturierte Datei hochladen"
 
 msgid "doiPlaceholder"
 msgstr "z. B. 10.1234/abcde"
@@ -1719,16 +1719,34 @@ msgstr "MyST verwendet die Autorenrollen und Sprache der Seite mit Ja/Nein-Beitr
 msgid "heatmapRecipeTypst"
 msgstr "Verwende deine Typst-Teamdaten. Schriftmaße und natives Layout können von SVG abweichen."
 
+msgid "heatmapRecipeOneColor"
+msgstr "Rezepte zeichnen eine Farbe. Farben je Mitwirkende gibt es nur im SVG, PNG und PDF der App."
+
 msgid "heatmapCopyRecipe"
 msgstr "Exportvorlage kopieren"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate-Fragment"
+
+msgid "colorByContributor"
+msgstr "Nach Mitwirkenden einfärben"
+
+msgid "figureColor"
+msgstr "Farbe der Abbildung"
+
+msgid "figureOneColor"
+msgstr "Eine Farbe"
+
+msgid "figurePerContributor"
+msgstr "Je Mitwirkende"
 
 msgid "downloadPdf"
 msgstr "PDF herunterladen"
 
 msgid "errFigureGlyphs"
 msgstr "Die Abbildungsschriften können diese Zeichen nicht darstellen: {characters}."
+
+msgid "heatmapSystemFonts"
+msgstr "PDF muss sie einbetten und ist daher nicht verfügbar. SVG und PNG zeichnen sie mit den installierten Schriften; die SVG kann auf einem anderen Computer anders aussehen."
 
 msgid "heatmapLegendPosition"
 msgstr "Legende"

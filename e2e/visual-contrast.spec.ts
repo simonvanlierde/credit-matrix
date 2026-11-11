@@ -54,16 +54,6 @@ const style = (el: Locator, prop: string, pseudo?: string) =>
     [prop, pseudo ?? ""],
   );
 
-/** The first inset ring's color out of a computed box-shadow. */
-const ringColor = (el: Locator) =>
-  el.evaluate((node) => {
-    const shadow = getComputedStyle(node).boxShadow;
-    for (const m of shadow.matchAll(/((?:rgb|oklch|lab|oklab|hsl|color)a?\([^)]*\))\s+([^,]*)/g)) {
-      if (m[2]?.includes("inset") && !/\b0px\s*$/.test(m[2].trim())) return m[1] as string;
-    }
-    return "";
-  });
-
 const themes = ["light", "dark"] as const;
 
 for (const theme of themes) {
@@ -111,15 +101,14 @@ for (const theme of themes) {
       }
     });
 
-    test("an empty grid cell's ring reaches 3:1 against its fill and the card", async ({ page }) => {
+    test("an empty grid cell's dot reaches 3:1 against the page", async ({ page }) => {
       await page.goto("/");
       await page.getByRole("button", { name: "Load sample data" }).click();
-      const cell = page.locator(".contribution-cell.ring-inset").first();
-      await expect(cell).toBeVisible();
-      const own = await backdrop(cell, true);
-      const ring = await flatten(page, [...own, await ringColor(cell)]);
-      expect(ratio(ring, await flatten(page, own)), "vs fill").toBeGreaterThanOrEqual(3);
-      expect(ratio(ring, await flatten(page, await backdrop(cell, false))), "vs card").toBeGreaterThanOrEqual(3);
+      const dot = page.locator("[data-empty-dot]").first();
+      await expect(dot).toBeVisible();
+      const ground = await backdrop(dot, false);
+      const mark = await flatten(page, [...ground, await style(dot, "background-color")]);
+      expect(ratio(mark, await flatten(page, ground))).toBeGreaterThanOrEqual(3);
     });
   });
 }

@@ -29,16 +29,27 @@ test("downloads embedded-font SVG, PDF and PNG from the same draft", async ({ pa
   }
 });
 
-test("reports unsupported figure characters without substituting local fonts", async ({ page }) => {
+test("exports SVG and PNG in system fonts when the figure fonts lack a glyph, but not PDF", async ({ page }) => {
   await asReturningVisitor(page);
   await page.goto("/");
   const names = page.getByLabel("New author names or ORCID iD");
-  await names.fill("أحمد");
+  await names.fill("김민준");
   await names.press("Enter");
-  await page.getByRole("button", { name: /^Software for أحمد:/ }).click();
+  await page.getByRole("button", { name: /^Software for 김민준:/ }).click();
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
-  await expect(onScreen(page, /The figure fonts cannot display these characters:/)).toBeVisible({ timeout: 15_000 });
+  await expect(onScreen(page, /The figure fonts cannot display these characters: 김민준/)).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(page.getByRole("button", { name: "Download PDF", exact: true })).toBeDisabled();
+  for (const format of ["SVG", "PNG"]) {
+    const pending = page.waitForEvent("download");
+    await page.getByRole("button", { name: `Download ${format}`, exact: true }).click();
+    const path = await (await pending).path();
+    if (!path) throw new Error("Figure download has no local file");
+    const bytes = await readFile(path);
+    if (format === "SVG") expect(bytes.toString()).toMatch(/<tspan font-family="'IBM Plex Sans'[^"]*">김민준<\/tspan>/);
+    else expect(bytes.subarray(1, 4).toString()).toBe("PNG");
+  }
 });
 
 test("fetches only the figure font faces a Latin figure needs", async ({ page }) => {
@@ -78,4 +89,21 @@ test("exports a PDF offline once an export has fetched its fonts", async ({ page
   const offline = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download PDF", exact: true }).click();
   expect((await offline).suggestedFilename()).toBe("credit-heatmap.pdf");
+});
+
+test("exports a Latin figure offline without an earlier export", async ({ page, context }) => {
+  test.skip(test.info().project.name !== "chromium", "One service-worker check covers the shared offline cache");
+  test.skip(!process.env.CI, "Requires the production build");
+  await asReturningVisitor(page);
+  await page.goto("/");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.getByRole("button", { name: "Load sample data" }).click();
+  await context.setOffline(true);
+  await page.reload();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  for (const format of ["SVG", "PDF"]) {
+    const pending = page.waitForEvent("download");
+    await page.getByRole("button", { name: `Download ${format}`, exact: true }).click();
+    expect((await pending).suggestedFilename()).toBe(`credit-heatmap.${format.toLowerCase()}`);
+  }
 });

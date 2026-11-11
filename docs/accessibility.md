@@ -44,13 +44,16 @@ under [How we check](#how-we-check).
 
 ## Known problems
 
-- **Editors may not use a downloaded heatmap's description.** Both image files carry the
+- **Editors may not use a downloaded heatmap's description.** The SVG and PNG downloads carry the
   contribution statement as their text alternative: the SVG in its description, which screen
   readers read, and the PNG in its Description field. A word processor or slide tool may not turn
   that field into alt text. When you put the heatmap in a paper or slide, check its alt text there,
   and paste in the contribution statement if it is empty. **Copy PNG** is worse: Chromium drops the
   Description field from a copied image, so paste the contribution statement in as alt text, or
   use **Download PNG** or **Download SVG**.
+- **The PDF download is not tagged.** It carries the heatmap's title, its contribution statement as
+  the subject and the document language, but it has no tag structure, so a screen reader gets the
+  selectable text without headings, reading order or a figure description.
 - **No native speaker has checked eight of the nine languages yet.** The German, Spanish, French,
   Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
   translated by machine. If a label is unclear, switch the language menu to English. The CRediT role names themselves come from the reviewed

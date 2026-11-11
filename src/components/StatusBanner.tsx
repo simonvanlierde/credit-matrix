@@ -107,7 +107,7 @@ export function StatusBanner() {
       className={`pointer-events-none fixed inset-x-0 z-40 flex justify-center px-3 ${atBottom ? "bottom-4" : "top-16"}`}
     >
       <div
-        className={`pointer-events-auto flex max-w-xl items-center gap-3 rounded-lg border px-4 py-2.5 text-sm shadow-md ${
+        className={`pointer-events-auto flex max-w-xl items-center gap-3 rounded border px-4 py-2.5 text-sm shadow-float ${
           status.kind === "error"
             ? "border-error/40 bg-error-container/90 text-on-error-container"
             : "border-primary/30 bg-surface-bright text-on-surface"

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { escapeXml } from "../export/escape-xml";
 import { toJats4rXml } from "../export/xml";
-import { fromJats4rXml, XmlParseError } from "../export/xml-import";
+import { fromJats4rXml, readPerson, XmlParseError } from "../export/xml-import";
 import { createAuthor, normalizeRoster, parseAuthorText } from "../parse-authors";
 
 // `fromJats4rXml` defaults to the global DOMParser, native in the browser and
@@ -148,7 +148,7 @@ describe("fromJats4rXml (DOMParser entry point)", () => {
   it("says what to pass where there is no global DOMParser", () => {
     vi.stubGlobal("DOMParser", undefined);
     try {
-      expect(() => fromJats4rXml("<article/>")).toThrow(/pass \{ parser \}/);
+      expect(() => fromJats4rXml("<article/>")).toThrow(/^fromJats4rXml needs a DOMParser: pass \{ parser \}/);
     } finally {
       vi.unstubAllGlobals();
     }
@@ -510,5 +510,13 @@ describe("fromJats4rXml reading", () => {
     };
     expect(() => fromJats4rXml("<x/>", { parser })).toThrow(/^XML parse error: line 1: bad$/);
     expect(types).toEqual(["application/xml"]);
+  });
+});
+
+describe("readPerson", () => {
+  it("returns null, not undefined, for a nameless or unusable person", () => {
+    expect(readPerson({}, {})).toBeNull();
+    expect(readPerson({ given: " ", surname: null }, {})).toBeNull();
+    expect(readPerson({ surname: "--" }, {})).toBeNull();
   });
 });

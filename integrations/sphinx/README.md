@@ -20,7 +20,7 @@ statement generator of its own.
    credit_matrix_command = ["node", str(docs.parent / "node_modules/credit-matrix/dist/cli.js")]
    ```
 
-Use Sphinx 8 or later with Python 3.11 or later. The CLI needs Node 22 or later.
+Use Sphinx 8 or later with Python 3.11 or later. The CLI needs Node 22.19 or later.
 If `credit-matrix` is already on your build's `PATH`, leave out `credit_matrix_command`.
 The command is a list of arguments, not a shell command.
 

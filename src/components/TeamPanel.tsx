@@ -140,7 +140,6 @@ export function TeamPanel() {
 
       <ul className="flex flex-col divide-y divide-outline-variant/40 border-t border-outline-variant/40">
         {team.map((author) => {
-          const ask = asks[author.id];
           const status = statusOf(author);
           const justCopied = copied?.id === author.id;
           return (
@@ -168,7 +167,8 @@ export function TeamPanel() {
                   type="button"
                   onClick={() => void copyMessage(author)}
                   aria-label={t("teamCopyMessageFor", { name: author.name })}
-                  className={ask ? SECONDARY_BUTTON : PRIMARY_BUTTON}
+                  // One solid button per panel: the per-person copies stay secondary.
+                  className={SECONDARY_BUTTON}
                 >
                   {justCopied ? (
                     <Check className="size-3.5" aria-hidden="true" />

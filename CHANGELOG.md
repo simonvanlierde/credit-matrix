@@ -8,11 +8,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- New entry point `credit-matrix/figures` exports `createFigureRenderer` for PDF and
+  font-embedded SVG output, and `FigureFontError` for a missing font or an unsupported character.
+- The grid colours each contributor in their own hue, shared by their chip, column, cells and
+  statement phrase; turn it off under the grid's display options. Heatmap exports stay one colour
+  unless you pick *Per contributor* under Figure settings. `buildHeatmapSvg` takes the same choice
+  as `colorBy: "contributor"`; the plugins and the CLI draw one hue. See
+  [the figure options](integrations/heatmap.md#figure-options).
 - Download heatmaps as PDF with embedded fonts and selectable text. App, CLI and document-plugin
   SVG exports also carry their fonts. Both formats embed only the glyphs a figure uses: about 30 kB
-  for a Latin figure and 35 kB for a Japanese or Chinese one. The app fetches each font face
-  (0.6-15 MB) on the first export that needs it and keeps it for offline use; the MyST plugin
-  file is 1.5 MB and loads its fonts the same way. See the
+  for a Latin figure and 35 kB for a Japanese or Chinese one. The app installs the default face
+  (Noto Sans, 0.6 MB) with its offline cache, and fetches each other face (0.6-15 MB) on the first
+  export that needs it; the MyST plugin file is 1.5 MB and fetches its fonts on first use. See the
   [figure font guide](integrations/figures/README.md) for coverage, offline use and editing limits.
 - [Quarto/Pandoc](integrations/quarto/README.md#document-language) and
   [MyST/Jupyter Book](integrations/myst/README.md#document-language) statements and heatmaps follow
@@ -46,7 +53,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `legend`, `labels`, `levels`, `horizontal` and `skipempty`. They work in `buildHeatmapSvg`,
   `credit-matrix convert --to svg`, the new MyST and Sphinx `credit-heatmap` directives, the
   Quarto and Pandoc `heatmap` key, and Typst's `credit-heatmap`. See
-  [heatmap figures](integrations/heatmap.md).
+  [heatmap figures](integrations/heatmap.md). The Quarto and Pandoc filter runs `credit-matrix`
+  from `PATH`, or the command line in the `CREDIT_MATRIX_COMMAND` environment variable.
 - Pointing at a grid cell, or focusing it, marks its phrase in the statement, and pointing at a
   phrase rings its cell. `statementSpans` returns the plain-text statement as spans that name the
   contributor and role behind each phrase.
@@ -61,11 +69,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,
+  sentence-case labels and Atkinson Hyperlegible for the interface. The panes share one page, empty
+  grid cells are a faint dot, and the level key is one scale bar. Exported figures stay on white;
+  the `<credit-matrix>` element's card takes the warm paper and ink border.
 - With no contributors yet, the add field sits right under the empty-state line instead of at the
   foot of the rail, and "Start fresh" puts the cursor in it. Its placeholder says it takes names, a
   DOI or an ORCID iD, and a disabled Add button is muted instead of faded.
 - On a phone, the "Contributor to assign" picker is 44px tall, with the name at body size beside
   the contributor's initials.
+- On a phone, the picker also shows that contributor's statement line, which links down to the
+  full statement, and Figure settings end in a Back button to the preview.
+- On a desktop the grid starts at the pane's left edge, under its toolbar and beside its key, and
+  the heatmap preview shows the whole figure. Actual size still scrolls.
 - A contributor without roles is shown as a note, no longer in error red: no note stops you from
   copying or exporting the statement.
 - The status strip counts answers only once you have asked someone. Before that it offers only
@@ -79,11 +95,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `fromJson` and `toJson` refuse a file or roster that repeats a contributor id.
 - Heatmaps look different by default: square cells with a thin gray rule on white, where cells
   were rounded on off-white. `shape: "rounded"` brings back the rounded cells.
-- The package needs Node 22.19 or later, because its new runtime dependency `@lingui/core`
+- **Breaking:** the package needs Node 22.19 or later, because its new runtime dependency `@lingui/core`
   does.
+- A contributor whose name or initials use a script the figure fonts lack (Hangul, Thai, Arabic,
+  Hebrew, Devanagari, emoji) cannot download the heatmap as PDF; the app names the characters.
+  Its preview, SVG and PNG draw them in system fonts, as 0.11.0 did, so that SVG can look different
+  on another computer. The CLI and document plugins stop with `FigureFontError`;
+  `createFigureRenderer().svg()` takes `fallback: "system"` for the app's behaviour.
 - The CLI, the Sphinx extension and Typst render Traditional Chinese (`zh-TW`, `zh-HK`,
   `zh-Hant`) in English instead of Simplified Chinese. The `<credit-matrix>` element now maps
   `pt-BR` to Portuguese and `zh-CN` to Simplified Chinese, as the CLI already did.
+- Import refuses text over 1 MB with "Use a file smaller than 1 MB." in the import
+  box, the CLI and the package's import functions.
+- `detectFormat` returns `"crossref"` for the Crossref `<contributors>` block and `"codemeta"` for
+  CodeMeta JSON, where it used to return `"xml"` and `"json"`. Update any `switch` on its result.
+- `buildHeatmapSvg` throws `HeatmapOptionError` for a colour that is not a hex colour or a size
+  outside its range. Catch it where you pass user-supplied options.
+- The npm package is about 24 MiB packed (a 25.9 MB tarball), because it bundles the figure fonts.
 - The Sphinx extension reports a failed statement as "CRediT rendering failed".
 - The import box leads with paste and upload, with the DOI lookup below as the other route. Its
   description is one line, and the list of formats sits under "Which formats work?". Progress
@@ -99,11 +127,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- With Windows high contrast (forced colours) on, focus has a visible outline, cells keep their
+  edges, a Lead cell keeps its three dots, and the selected side of a choice such as Yes / no or
+  Levels stays visible. On a touch screen the small controls take a 44px tap.
 - A cut-off or damaged JSON export no longer imports its lines as contributor names; the import
   fails with the usual message instead.
 - Import says plainly when a file repeats a contributor id: the import box shows its own message
   in every language, the CLI and the `<credit-matrix>` element say so in English. `fromJson`
   throws the new `RepeatedIdError` for it.
+- Import refuses the Quarto/MyST author YAML and RO-Crate fragments the app exports, with a message
+  that they are export-only, instead of reading their lines as contributor names. `importAny` throws
+  `ExportOnlyError` for them.
 - Import says "That XML could not be read" for XML that is not well formed, such as a truncated
   file, instead of the general failure message. The XML readers throw `XmlParseError` for it.
 - On a phone, the import box stays on screen when its confirmation takes focus. It used to scroll

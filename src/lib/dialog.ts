@@ -8,8 +8,11 @@ import { type MouseEvent, useEffect } from "react";
 export function useModalDialog(dialog: HTMLDialogElement | null, open: boolean) {
   useEffect(() => {
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    else if (!open && dialog.open) dialog.close();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      // showModal() focuses the first control; a dialog can name its primary action instead.
+      dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    } else if (!open && dialog.open) dialog.close();
   }, [dialog, open]);
 }
 

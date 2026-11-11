@@ -1,6 +1,6 @@
 # Contribution heatmap figures
 
-The app's SVG and PNG downloads, the CLI, and the document plugins draw square cells with a thin
+The app's SVG, PDF and PNG downloads, the CLI, and the document plugins draw square cells with a thin
 neutral rule. Rotated headers keep names beside their columns. White paper, one hue, and three
 increasing intensities distinguish Supporting, Equal and Lead. Empty cells stay light gray.
 This follows the compact matrix layout of [latex-credits](https://ctan.org/pkg/latex-credits).
@@ -34,6 +34,11 @@ Use these names in every plugin. The JavaScript `buildHeatmapSvg` function uses 
 | `initials` | `true`, `false`: abbreviate contributor labels | `false` in MyST/Typst; `true` in CLI/Sphinx/Quarto/Pandoc |
 | `horizontal` | `true`, `false`: contributors in rows | `false` |
 | `skipempty` | `true`, `false`: omit roles nobody holds | `true` |
+
+The app and the JavaScript `buildHeatmapSvg` function also take `colorBy`: `"color"` (the
+default) draws the figure in one hue, and `"contributor"` gives each of up to eight contributors
+their own hue, with the level key in neutral gray. Past eight contributors it falls back to one
+hue. The plugins and the CLI draw one hue only.
 
 `color` overrides the palette. The palettes use blue `#1f4e79`, green `#00724c`, or gray `#404040`.
 Supporting, Equal and Lead mix 40%, 70% and 100% of that hue with white. These are contribution
@@ -136,9 +141,11 @@ credit-matrix:
   skipempty: true
 ```
 
-The filter invokes `credit-matrix` from `PATH`. To select a local installation, set `command` to
-an argument list, for example `[node, node_modules/credit-matrix/dist/cli.js]`. No shell runs.
-Rendering someone else's document with the filter runs the command it names: read its metadata first.
+The filter invokes `credit-matrix` from `PATH`. To select a local installation, set the
+`CREDIT_MATRIX_COMMAND` environment variable to a command line, for example
+`CREDIT_MATRIX_COMMAND="node node_modules/credit-matrix/dist/cli.js" quarto render`. The filter splits
+it at whitespace, so no part of it can contain a space, and no shell runs. A document cannot choose
+the program: the filter does not read it from metadata.
 
 The filter puts the SVG into Pandoc's media bag. For standalone HTML, use `--embed-resources`, or
 extract the image with `--extract-media=images`. Quarto handles the image through its normal media

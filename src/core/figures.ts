@@ -30,8 +30,17 @@ export class FigureFontError extends Error {
   }
 }
 
+export interface FigureSvgOptions extends HeatmapSvgOptions {
+  /**
+   * What SVG does with a character the bundled faces cannot draw: `"error"` (the default) throws
+   * `FigureFontError`; `"system"` draws that run in the system font stack `buildHeatmapSvg` uses,
+   * so its look then depends on the viewer's installed fonts.
+   */
+  fallback?: "system" | "error";
+}
+
 export interface FigureRenderer {
-  svg(authors: Author[], options?: HeatmapSvgOptions): Promise<string>;
+  svg(authors: Author[], options?: FigureSvgOptions): Promise<string>;
   /** Set a positive width in millimeters, or retain the SVG's natural print size. */
   pdf(authors: Author[], options?: HeatmapSvgOptions, widthMm?: number): Promise<Uint8Array>;
 }
@@ -58,7 +67,8 @@ interface FigureFont {
 
 interface TextRun {
   text: string;
-  font: FigureFont;
+  /** Undefined for a fallback run that no bundled face can draw. */
+  font: FigureFont | undefined;
 }
 
 // Literal URLs, so bundlers emit each font as its own file. Order: sans Latin, JP, SC, then the serif three.
@@ -127,6 +137,8 @@ function unescapeXml(text: string): string {
 }
 
 function width(run: TextRun, size: number): number {
+  // Unknown system glyphs: a full em each leaves room for the widest of them.
+  if (!run.font) return [...run.text].length * size;
   return (
     run.font.font.layout(run.text, FEATURES).positions.reduce((sum, position) => sum + position.xAdvance, 0) *
     (size / run.font.font.unitsPerEm)
@@ -339,7 +351,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     return font;
   }
 
-  function textRuns(text: string, options?: HeatmapSvgOptions): TextRun[] {
+  function textRuns(text: string, options?: FigureSvgOptions): TextRun[] {
     const [latin, japanese, chinese] = options?.font === "serif" ? SOURCES.slice(3) : SOURCES.slice(0, 3);
     const locale = options?.locale?.toLowerCase() ?? "";
     const normalized = text.normalize("NFC");
@@ -363,29 +375,32 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         font = candidate;
         break;
       }
-      if (!font) {
+      if (!font && options?.fallback !== "system") {
         missing.add(character);
         continue;
       }
       const previous = runs.at(-1);
-      if (previous?.font === font) previous.text += character;
+      if (previous && previous.font === font) previous.text += character;
       else runs.push({ text: character, font });
     }
     if (missing.size) throw new FigureFontError([...missing].join(""));
     return runs;
   }
 
-  function layoutSvg(authors: Author[], options?: HeatmapSvgOptions): string {
+  function layoutSvg(authors: Author[], options?: FigureSvgOptions): string {
     return buildHeatmapSvg(authors, {
       ...options,
       measureText: (label, size) => textRuns(label, options).reduce((sum, run) => sum + width(run, size), 0),
       measureTextHeight: (label, size) =>
         Math.max(
           size * 1.2,
-          ...textRuns(label, options).map(
-            ({ font }) =>
-              // Browsers round line metrics to pixels; retain a pixel of space after rounding.
-              Math.ceil(((font.font.ascent - font.font.descent + font.font.lineGap) * size) / font.font.unitsPerEm) + 1,
+          ...textRuns(label, options).map(({ font }) =>
+            font
+              ? // Browsers round line metrics to pixels; retain a pixel of space after rounding.
+                Math.ceil(((font.font.ascent - font.font.descent + font.font.lineGap) * size) / font.font.unitsPerEm) +
+                1
+              : // System fonts for Thai or Devanagari stack marks above and below the line.
+                Math.ceil(size * 1.5),
           ),
         ),
     });
@@ -399,8 +414,10 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         return layoutSvg(authors, options).replace(
           /<text\b([^>]*)>([^<]*)<\/text>/g,
           (_, attrs: string, text: string) => {
+            const system = attrs.match(/ font-family="([^"]*)"/)?.[1] ?? "sans-serif";
             const content = textRuns(unescapeXml(text), options)
               .map((run) => {
+                if (!run.font) return `<tspan font-family="${system}">${escapeXml(run.text)}</tspan>`;
                 const characters = used.get(run.font) ?? new Set<string>();
                 for (const character of run.text) characters.add(character);
                 used.set(run.font, characters);
@@ -427,10 +444,11 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     async pdf(authors, options, widthMm) {
       if (widthMm !== undefined && (!Number.isFinite(widthMm) || widthMm <= 0))
         throw new RangeError("Figure width must be a positive finite number of millimeters.");
+      const strict = { ...options, fallback: "error" as const };
       const svg = await withFaces(() => {
-        const layout = layoutSvg(authors, options);
+        const layout = layoutSvg(authors, strict);
         for (const [, text] of layout.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g))
-          textRuns(unescapeXml(text ?? ""), options);
+          textRuns(unescapeXml(text ?? ""), strict);
         return layout;
       });
       const root = attributes(svg.slice(0, svg.indexOf(">")));
@@ -508,7 +526,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           continue;
         }
 
-        const runs = textRuns(unescapeXml(match[4] ?? ""), options);
+        const runs = textRuns(unescapeXml(match[4] ?? ""), strict);
         const size = Number(attrs["font-size"]);
         const transform = attrs.transform?.match(/^translate\(([^,]+),([^)]+)\) rotate\(([^)]+)\)$/);
         const originX = transform ? Number(transform[1]) : x;
@@ -517,16 +535,18 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         const radians = (angle * Math.PI) / 180;
         let advance = attrs["text-anchor"] === "end" ? -runs.reduce((sum, run) => sum + width(run, size), 0) : 0;
         for (const run of runs) {
-          let font = embedded.get(run.font);
+          const runFace = run.font;
+          if (!runFace) throw new FigureFontError(run.text);
+          let font = embedded.get(runFace);
           if (!font) {
-            font = await document.embedFont(run.font.bytes, {
+            font = await document.embedFont(runFace.bytes, {
               subset: true,
               features: FEATURES,
-              customName: `CMFIGR+${run.font.font.postscriptName}`,
+              customName: `CMFIGR+${runFace.font.postscriptName}`,
             });
-            embedded.set(run.font, font);
+            embedded.set(runFace, font);
           }
-          const layout = run.font.font.layout(run.text, FEATURES);
+          const layout = runFace.font.layout(run.text, FEATURES);
           const positioned = layout.positions.some(
             (position, index) =>
               position.xOffset ||
@@ -538,7 +558,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
             // PDF-lib's drawText drops mark attachment offsets; encode first to retain its subset and Unicode mapping.
             const codes = font.encodeText(run.text).asString().match(/.{4}/g) ?? [];
             const key = page.node.newFontDictionary(font.name, font.ref);
-            const unit = size / run.font.font.unitsPerEm;
+            const unit = size / runFace.font.unitsPerEm;
             let glyphX = advance;
             let glyphY = 0;
             for (const [index, position] of layout.positions.entries()) {

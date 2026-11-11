@@ -25,7 +25,7 @@ export function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "z-50 rounded-lg border border-outline-variant bg-surface-bright p-3 shadow-md",
+          "z-50 rounded border border-edge bg-surface-bright p-3 shadow-float",
           // `panel-motion` (globals.css) carries the open/close keyframes; the
           // origin makes the panel grow from the trigger it hangs off.
           "panel-motion [transform-origin:var(--radix-popover-content-transform-origin)]",

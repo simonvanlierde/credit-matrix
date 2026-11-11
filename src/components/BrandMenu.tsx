@@ -26,7 +26,7 @@ export function BrandMenu({ version }: { version: string }) {
   const onMainPage = usePathname() === "/";
   const t = useTranslations();
   const rowClass =
-    "touch-target flex w-full items-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-low px-3 text-left font-semibold text-on-surface transition-colors hover:border-primary hover:bg-surface-container hover:text-primary";
+    "touch-target flex w-full items-center gap-2.5 rounded border border-edge bg-surface-bright bg-surface-container-low px-3 text-left font-semibold text-on-surface transition-[color,box-shadow] hover:shadow-card hover:bg-surface-container hover:text-primary";
   const howItWorksLabel = (
     <>
       <HelpCircle className="size-4 shrink-0 text-primary" aria-hidden="true" />
@@ -84,7 +84,7 @@ export function BrandMenu({ version }: { version: string }) {
           </a>
         </div>
         <div className="space-y-3 border-t border-outline-variant/30 pt-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t("about")}</p>
+          <p className="font-headline text-base font-semibold text-on-surface">{t("about")}</p>
           <AboutPanel version={version} />
         </div>
       </PopoverContent>

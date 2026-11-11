@@ -254,6 +254,9 @@ msgstr "インポートを元に戻しました。"
 msgid "errImportXmlUnreadable"
 msgstr "この XML を読み取れませんでした。ファイルが欠けていないか確認してください。"
 
+msgid "errImportExportOnly"
+msgstr "Quarto、MyST、RO-Crate のファイルは書き出し専用です。代わりに JSON の書き出しを読み込んでください。"
+
 msgid "close"
 msgstr "閉じる"
 
@@ -379,9 +382,6 @@ msgstr "ORCID のサービスを利用できません。しばらくしてから
 
 msgid "importFromDoi"
 msgstr "DOI からインポート"
-
-msgid "structuredFileUpload"
-msgstr "構造化ファイルのアップロード"
 
 msgid "doiPlaceholder"
 msgstr "例：10.1234/abcde"
@@ -1719,16 +1719,34 @@ msgstr "MyST はページの著者ロールと言語を使用します。貢献�
 msgid "heatmapRecipeTypst"
 msgstr "Typst のチームデータを使用してください。フォントの寸法やネイティブレイアウトは SVG と異なる場合があります。"
 
+msgid "heatmapRecipeOneColor"
+msgstr "レシピは1色で描画します。投稿者ごとの色はアプリのSVG・PNG・PDFだけです。"
+
 msgid "heatmapCopyRecipe"
 msgstr "書き出し用コードをコピー"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate フラグメント"
+
+msgid "colorByContributor"
+msgstr "貢献者ごとに色分け"
+
+msgid "figureColor"
+msgstr "図の色"
+
+msgid "figureOneColor"
+msgstr "単色"
+
+msgid "figurePerContributor"
+msgstr "貢献者ごと"
 
 msgid "downloadPdf"
 msgstr "PDFをダウンロード"
 
 msgid "errFigureGlyphs"
 msgstr "図のフォントでは次の文字を表示できません: {characters}。"
+
+msgid "heatmapSystemFonts"
+msgstr "PDFにはこれらの文字を埋め込む必要があるため、利用できません。SVGとPNGはインストール済みのフォントで描画します。SVGは別のコンピューターでは見た目が変わる場合があります。"
 
 msgid "heatmapLegendPosition"
 msgstr "凡例"

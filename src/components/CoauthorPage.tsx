@@ -200,7 +200,7 @@ function CoauthorPage() {
           <button
             type="button"
             onClick={() => setSent(null)}
-            className="min-h-11 rounded-lg border border-outline bg-surface-bright px-4 font-medium text-on-surface transition-colors hover:border-primary hover:text-primary"
+            className="min-h-11 rounded-lg border border-outline bg-surface-bright px-4 font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary"
           >
             {t("coauthorChange")}
           </button>
@@ -329,7 +329,7 @@ function CoauthorPage() {
         <button
           type="button"
           onClick={() => void handleSend()}
-          className="flex h-13 w-full items-center justify-center gap-2 rounded-lg bg-primary text-base font-semibold text-on-primary transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="flex h-13 w-full items-center justify-center gap-2 rounded bg-primary shadow-press text-base font-semibold text-on-primary transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <Send className="size-4" aria-hidden="true" />
           {t("coauthorSend")}
@@ -502,7 +502,7 @@ function OrcidSignIn({
       <button
         type="button"
         onClick={onSignIn}
-        className="flex min-h-11 items-center justify-center gap-2 self-start rounded-lg border border-outline bg-surface-bright px-4 font-medium text-on-surface transition-colors hover:border-primary hover:text-primary"
+        className="flex min-h-11 items-center justify-center gap-2 self-start rounded-lg border border-outline bg-surface-bright px-4 font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary"
       >
         <BadgeCheck className="size-4" aria-hidden="true" />
         {t("coauthorOrcidSignIn")}

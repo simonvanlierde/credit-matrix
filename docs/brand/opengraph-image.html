@@ -1,32 +1,34 @@
 <!doctype html><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,600&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400;1,600&family=Atkinson+Hyperlegible+Mono:wght@500&family=Atkinson+Hyperlegible+Next:wght@400;600&display=swap" rel="stylesheet">
 <style>
  *{box-sizing:border-box}
  html,body{margin:0;padding:0}
- body{width:1200px;height:630px;background:#fafaf9;font-family:"IBM Plex Sans",system-ui;color:#16181c;
+ body{width:1200px;height:630px;background:#f4f3ed;font-family:"Atkinson Hyperlegible Next",system-ui;color:#1c1a17;
       display:grid;grid-template-columns:1fr 448px;gap:52px;padding:56px 64px 56px 72px;overflow:hidden}
  .left{display:flex;flex-direction:column;justify-content:space-between;padding:6px 0}
  .lock{display:flex;align-items:center;gap:17px}
  .wm{font-family:Newsreader,serif;font-style:italic;font-weight:600;font-size:56px;line-height:1;
      letter-spacing:-.02em;color:#1f4e79}
- .sub{margin-top:26px;font-size:29px;line-height:1.4;color:#595c63;max-width:24ch;text-wrap:balance}
+ .sub{margin-top:26px;font-size:29px;line-height:1.4;color:#5e584e;max-width:24ch;text-wrap:balance}
  /* The statement is the app's real output, so it sits on the result card the
-    app gives it: bright paper, 8px corners, a slightly stronger shadow. */
- .out{background:#fff;border:1px solid rgba(201,201,197,.55);border-radius:8px;padding:26px 30px;
-      box-shadow:0 2px 10px rgba(22,24,28,.07)}
- .cap{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#595c63}
- .stmt{margin:13px 0 0;font-family:Newsreader,serif;font-size:22px;line-height:1.5;color:#16181c;max-width:46ch}
+    app gives it: bright paper, an ink edge and the hard sheet shadow. */
+ .out{background:#fffdf8;border:1px solid #1c1a17;border-radius:2px;padding:26px 30px;
+      box-shadow:5px 5px 0 rgb(31 78 121/.22)}
+ .cap{font-size:15px;font-weight:600;color:#5e584e}
+ .stmt{margin:10px 0 0;font-family:Newsreader,serif;font-size:22px;line-height:1.5;color:#1c1a17;max-width:46ch}
  .stmt b{font-weight:600}
  table{border-collapse:collapse;width:100%;align-self:center}
- caption{caption-side:top;text-align:left;font-size:12px;font-weight:600;letter-spacing:.08em;
-         text-transform:uppercase;color:#595c63;padding-bottom:11px}
- th.role{font-weight:400;font-size:15px;color:#16181c;text-align:left;padding:0 14px 0 0;white-space:nowrap}
- thead tr{border-bottom:1px solid #c9c9c5}
- thead th.ini{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:13px;color:#595c63;
-              padding:0 0 9px;width:52px}
- tfoot td{border-top:1px solid #c9c9c5;padding-top:11px;font-size:12px;color:#595c63}
+ caption{caption-side:top;text-align:left;font-family:Newsreader,serif;font-style:italic;font-size:18px;
+         color:#5e584e;padding-bottom:9px}
+ th.role{font-weight:400;font-size:15px;color:#1c1a17;text-align:left;padding:0 14px 0 0;white-space:nowrap}
+ thead th.ini{font-family:"Atkinson Hyperlegible Mono",monospace;font-weight:500;font-size:13px;color:#1c1a17;
+              padding:0 0 7px;width:52px}
+ /* Each column's name is underlined in that contributor's hue, as in the app. */
+ thead th.ini span{display:inline-block;padding-bottom:3px;border-bottom:2px solid var(--hue)}
+ tfoot td{padding-top:11px;font-size:12px;color:#5e584e}
  tbody tr td{padding:2px 0}
- .cell{width:44px;height:22px;border-radius:2px;margin:0 auto}
+ .cell{width:44px;height:22px;border-radius:2px;margin:0 auto;display:grid;place-items:center}
+ .cell.empty::after{content:"";width:3px;height:3px;border-radius:50%;background:#857d70}
  tbody tr:first-child td,tbody tr:first-child th{padding-top:9px}
 </style>
 <div class="left">
@@ -40,22 +42,23 @@
   </div>
   <p class="sub">The contribution heatmap, and the statement that goes with it.</p>
   <div class="out">
-    <div class="cap">Generated statement</div>
+    <div class="cap">Statement</div>
     <p class="stmt"><b>CRediT:</b> Ada Lovelace: Conceptualization, Methodology (Equal), Supervision (Supporting), Writing – original draft; Rosalind E. Franklin: Data curation, Formal analysis (Equal), …</p>
   </div>
 </div>
-<table id="m"><caption>Contributions</caption></table>
+<table id="m"><caption>Role</caption></table>
 <script>"use strict";
-const L='#1f4e79',E='#6283a1',S='#a5b8c9',N='#ececea';
+// The first three of CONTRIBUTOR_HUES (src/core/contributor-color.ts), lighter for equal and supporting.
+const hue={"Ada Lovelace":"#2a5fa8","Rosalind E. Franklin":"#b4471a","Alan M. Turing":"#0f6e66"};
 const roles=["Conceptualization","Data curation","Formal analysis","Funding acquisition","Investigation","Methodology","Project administration","Resources","Software","Supervision","Validation","Visualization","Writing – original draft","Writing – review & editing"];
 const data={"Ada Lovelace":{Conceptualization:100,Methodology:66,"Writing – original draft":100,Supervision:33},
  "Rosalind E. Franklin":{Investigation:100,"Data curation":100,Software:66,"Formal analysis":66},
  "Alan M. Turing":{"Funding acquisition":100,"Project administration":100,"Writing – review & editing":100,Resources:66}};
 const ini={"Ada Lovelace":"AL","Rosalind E. Franklin":"REF","Alan M. Turing":"AMT"};
-const fill=s=>s>66?L:s>33?E:s>0?S:N;
+const share=s=>s>66?100:s>33?62:32;
 const names=Object.keys(data);
 document.getElementById('m').innerHTML+=
- `<thead><tr><th class="role"></th>${names.map(n=>`<th class="ini">${ini[n]}</th>`).join('')}</tr></thead>`+
- `<tbody>${roles.map(r=>`<tr><th class="role">${r}</th>${names.map(n=>`<td><div class="cell" style="background:${fill(data[n][r]||0)}"></div></td>`).join('')}</tr>`).join('')}</tbody>`+
- `<tfoot><tr><td colspan="4">Sample data. Lead, equal, and supporting shown by intensity.</td></tr></tfoot>`;
+ `<thead><tr><th class="role"></th>${names.map(n=>`<th class="ini" style="--hue:${hue[n]}"><span>${ini[n]}</span></th>`).join('')}</tr></thead>`+
+ `<tbody>${roles.map(r=>`<tr><th class="role">${r}</th>${names.map(n=>`<td>${data[n][r]?`<div class="cell" style="background:color-mix(in oklab,${hue[n]} ${share(data[n][r])}%,#fffdf8)"></div>`:'<div class="cell empty"></div>'}</td>`).join('')}</tr>`).join('')}</tbody>`+
+ `<tfoot><tr><td colspan="4">Sample data. Lead, equal and supporting by intensity.</td></tr></tfoot>`;
 </script>

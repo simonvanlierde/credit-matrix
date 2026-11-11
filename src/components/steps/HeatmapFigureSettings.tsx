@@ -77,37 +77,51 @@ export function HeatmapFigureSettings({
       </fieldset>
       <fieldset className="grid gap-2 border-t border-outline-variant/40 pt-3">
         <legend className="font-semibold">{t("colorLabel")}</legend>
-        <div className="grid grid-cols-2 gap-1.5 pt-1">
-          {(
-            [
-              ["#1f4e79", t("heatmapBlue")],
-              ["#00724c", t("heatmapGreen")],
-              ["#404040", t("heatmapGray")],
-            ] as const
-          ).map(([color, label]) => (
-            <button
-              key={color}
-              type="button"
-              className={`${TOOL_BUTTON} justify-start px-2 aria-pressed:border-primary aria-pressed:text-primary`}
-              aria-pressed={value.color.toLowerCase() === color}
-              onClick={() => patch({ color })}
-            >
-              <span aria-hidden="true" className="size-3 shrink-0 rounded-sm" style={{ backgroundColor: color }} />
-              {label}
-            </button>
-          ))}
-          <ColorPopover
-            value={value.color}
-            onChange={(color) => patch({ color })}
-            label={t("customColor")}
-            trigger={
-              <button type="button" className={`${TOOL_BUTTON} px-2`}>
-                {t("customColor")}
-              </button>
-            }
-          />
-        </div>
-        {pale && <p className="text-on-surface-variant">{t("heatmapPaleColor")}</p>}
+        <FigureChoice
+          label={t("figureColor")}
+          value={value.colorBy}
+          onChange={(colorBy) => patch({ colorBy })}
+          options={[
+            ["color", t("figureOneColor")],
+            ["contributor", t("figurePerContributor")],
+          ]}
+        />
+        {/* Per contributor ignores the one colour, so its swatches would change nothing. */}
+        {value.colorBy === "color" && (
+          <>
+            <div className="grid grid-cols-2 gap-1.5 pt-1">
+              {(
+                [
+                  ["#1f4e79", t("heatmapBlue")],
+                  ["#00724c", t("heatmapGreen")],
+                  ["#404040", t("heatmapGray")],
+                ] as const
+              ).map(([color, label]) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`${TOOL_BUTTON} justify-start px-2 aria-pressed:border-primary aria-pressed:text-primary`}
+                  aria-pressed={value.color.toLowerCase() === color}
+                  onClick={() => patch({ color })}
+                >
+                  <span aria-hidden="true" className="size-3 shrink-0 rounded-sm" style={{ backgroundColor: color }} />
+                  {label}
+                </button>
+              ))}
+              <ColorPopover
+                value={value.color}
+                onChange={(color) => patch({ color })}
+                label={t("customColor")}
+                trigger={
+                  <button type="button" className={`${TOOL_BUTTON} px-2`}>
+                    {t("customColor")}
+                  </button>
+                }
+              />
+            </div>
+            {pale && <p className="text-on-surface-variant">{t("heatmapPaleColor")}</p>}
+          </>
+        )}
       </fieldset>
       <details className="border-t border-outline-variant/40 pt-3">
         <summary className="min-h-6 cursor-pointer font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">

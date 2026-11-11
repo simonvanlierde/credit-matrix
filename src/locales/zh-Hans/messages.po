@@ -254,6 +254,9 @@ msgstr "已撤销导入。"
 msgid "errImportXmlUnreadable"
 msgstr "无法读取该 XML。请检查文件是否完整。"
 
+msgid "errImportExportOnly"
+msgstr "Quarto、MyST 和 RO-Crate 文件仅供导出。请改为导入 JSON 导出文件。"
+
 msgid "close"
 msgstr "关闭"
 
@@ -379,9 +382,6 @@ msgstr "ORCID 服务暂时不可用。请稍后重试，或直接输入姓名。
 
 msgid "importFromDoi"
 msgstr "从 DOI 导入"
-
-msgid "structuredFileUpload"
-msgstr "上传结构化文件"
 
 msgid "doiPlaceholder"
 msgstr "例如：10.1234/abcde"
@@ -1719,16 +1719,34 @@ msgstr "MyST 使用页面中的作者角色和语言，贡献仅区分有无。"
 msgid "heatmapRecipeTypst"
 msgstr "请使用 Typst 团队数据。字体度量和原生布局可能与 SVG 不同。"
 
+msgid "heatmapRecipeOneColor"
+msgstr "配方只使用一种颜色。按贡献者着色仅见于应用导出的 SVG、PNG 和 PDF。"
+
 msgid "heatmapCopyRecipe"
 msgstr "复制导出配置代码"
 msgid "exportRoCrateFragment"
 msgstr "RO-Crate 片段"
+
+msgid "colorByContributor"
+msgstr "按贡献者着色"
+
+msgid "figureColor"
+msgstr "图的颜色"
+
+msgid "figureOneColor"
+msgstr "单一颜色"
+
+msgid "figurePerContributor"
+msgstr "按贡献者"
 
 msgid "downloadPdf"
 msgstr "下载 PDF"
 
 msgid "errFigureGlyphs"
 msgstr "图表字体无法显示以下字符：{characters}。"
+
+msgid "heatmapSystemFonts"
+msgstr "PDF 需要嵌入这些字符，因此无法使用。SVG 和 PNG 使用已安装的字体绘制它们；SVG 在其他电脑上可能显示不同。"
 
 msgid "heatmapLegendPosition"
 msgstr "图例"
