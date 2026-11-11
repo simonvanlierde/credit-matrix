@@ -173,6 +173,15 @@ msgstr "Aan iedereen toewijzen"
 msgid "bulkClearRole"
 msgstr "Voor iedereen wissen"
 
+msgid "setAllRoles"
+msgstr "Alle rollen instellen…"
+
+msgid "assignToEveryone"
+msgstr "Aan iedereen toewijzen…"
+
+msgid "editInList"
+msgstr "In de lijst bewerken"
+
 msgid "bulkChangeApplied"
 msgstr "Bulkwijziging toegepast."
 

@@ -35,6 +35,12 @@ import { download } from "@/lib/utils";
 import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { useGuide } from "@/store/guide-store";
 import { ICON_TOOL_BUTTON } from "./grid-shared";
+import { PersonMenu } from "./PersonMenu";
+import { RoleInfo } from "./RoleInfo";
+
+/** A name or role in the running text that opens a panel: it keeps the text's look, not a button's. */
+const NAME_BUTTON =
+  "inline cursor-pointer border-0 bg-transparent p-0 text-inherit [font:inherit] [text-align:inherit] decoration-outline decoration-dotted underline-offset-4 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary";
 
 type DataFormat =
   | "xml"
@@ -117,7 +123,8 @@ export function StatementOutput() {
   const [includeAnswers, setIncludeAnswers] = useState(true);
   // Everyone asked, answered or not: the JSON export carries the ask history too.
   const askedCount = authors.filter((author) => author.id in asks).length;
-  const { translateRole, translateUi, translateInterfaceRole, outputLanguage } = useCreditTranslators();
+  const { translateRole, translateUi, translateInterfaceRole, describeRole, interfaceRoleLanguage, outputLanguage } =
+    useCreditTranslators();
   const t = useTranslations();
   // Last beat of the population sequence; see .enter-fade in globals.css.
   const settled = useSettled();
@@ -198,7 +205,16 @@ export function StatementOutput() {
   // Only the statement's own mark: a cell may have taken over before this leave event lands.
   function clearPhraseLink() {
     const from = useContributionStore.getState().statementLink?.from;
-    if (from === "phrase" || from === "name") setStatementLink(null);
+    if (from === "phrase" || from === "name" || from === "role") setStatementLink(null);
+  }
+
+  /** Focus a phrase's cell in the grid (which makes it the grid's tab stop) and bring it into view. */
+  function goToCell(authorId: string, role: string) {
+    const cell = document.querySelector<HTMLElement>(
+      `[data-cell-key="${authorId}:${CREDIT_ROLES.findIndex((candidate) => candidate.name === role)}"]`,
+    );
+    cell?.focus();
+    cell?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
   function goToReview() {
@@ -331,25 +347,56 @@ export function StatementOutput() {
             statement in place and the element is never *newly* rendered —
             which is the one condition @starting-style needs to fire. */}
         {statement ? (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: pointer shortcut; a keyboard reaches the same cell through the grid's arrow keys.
           <p
             key="statement"
             // Pointer only: a keyboard marks the same phrase by focusing its cell in the grid.
             onPointerOver={(event) => {
-              const phrase = (event.target as HTMLElement).closest<HTMLElement>("[data-author]");
+              const target = event.target as HTMLElement;
+              const phrase = target.closest<HTMLElement>("[data-author]");
               const { author, role } = phrase?.dataset ?? {};
+              const roleName = target.closest<HTMLElement>("[data-role-name]")?.dataset.roleName;
               if (author && role)
                 setStatementLink({ contributorId: author, role: role as CreditRoleName, from: "phrase" });
               else if (author) setStatementLink({ contributorId: author, from: "name" });
+              else if (roleName) setStatementLink({ role: roleName as CreditRoleName, from: "role" });
               else clearPhraseLink();
             }}
             onPointerLeave={clearPhraseLink}
+            // A click on a phrase (one person's one role) goes to its cell in the grid.
+            onClick={(event) => {
+              const phrase = (event.target as HTMLElement).closest<HTMLElement>("[data-author][data-role]");
+              // Not while a selection is being made across the text.
+              if (phrase?.dataset.author && phrase.dataset.role && window.getSelection()?.isCollapsed !== false)
+                goToCell(phrase.dataset.author, phrase.dataset.role);
+            }}
             style={{ transitionDelay: "200ms" }}
             className={`max-w-[75ch] whitespace-pre-line [overflow-wrap:anywhere] text-[17px] leading-relaxed text-on-surface ${
               settled ? "enter-fade" : ""
             }`}
           >
-            {statementSpans(authors, statementOptions).map((span) => {
+            {statementSpans(authors, statementOptions).map((span, spanIndex) => {
               const authorId = span.cell?.authorId ?? span.authorId;
+              if (span.role) {
+                // A role's name in a by-role statement: the same popover as the grid's role label.
+                const roleInfo = CREDIT_ROLES.find((candidate) => candidate.name === span.role);
+                if (!roleInfo) return span.text;
+                return (
+                  <RoleInfo
+                    // biome-ignore lint/suspicious/noArrayIndexKey: the same role heads the CRediT and Acknowledgements lines
+                    key={`role:${span.role}:${spanIndex}`}
+                    role={roleInfo}
+                    translateRole={translateInterfaceRole}
+                    describeRole={describeRole}
+                    language={interfaceRoleLanguage}
+                    trigger={
+                      <button type="button" data-role-name={span.role} className={NAME_BUTTON}>
+                        {span.text}
+                      </button>
+                    }
+                  />
+                );
+              }
               if (!authorId) return span.text;
               const role = span.cell?.role;
               // A person link (no role) marks their name and every phrase, a role link (no person)
@@ -360,6 +407,36 @@ export function StatementOutput() {
                 (statementLink.role === undefined
                   ? statementLink.contributorId !== undefined
                   : statementLink.role === role);
+              const markClass =
+                "rounded-sm [box-decoration-break:clone] data-linked:bg-primary/20 data-linked:underline data-linked:decoration-primary data-linked:decoration-2 data-linked:underline-offset-[3px]";
+              const markStyle =
+                linked && linkHue
+                  ? {
+                      backgroundColor: `color-mix(in oklab, ${linkHue} 18%, transparent)`,
+                      textDecorationColor: linkHue,
+                    }
+                  : undefined;
+              // A person's name opens their menu, as the grid's name header does.
+              if (!role) {
+                return (
+                  <PersonMenu
+                    key={`${authorId}:`}
+                    authorId={authorId}
+                    surface="statement"
+                    trigger={
+                      <button
+                        type="button"
+                        data-author={authorId}
+                        data-linked={linked || undefined}
+                        className={`${NAME_BUTTON} ${markClass}`}
+                        style={markStyle}
+                      >
+                        {span.text}
+                      </button>
+                    }
+                  />
+                );
+              }
               // One element either way: swapping in a <mark> would remount the text and break a
               // selection being dragged across it. Underlined as well as tinted, never colour alone.
               return (
@@ -368,15 +445,8 @@ export function StatementOutput() {
                   data-author={authorId}
                   data-role={role}
                   data-linked={linked || undefined}
-                  className="rounded-sm [box-decoration-break:clone] data-linked:bg-primary/20 data-linked:underline data-linked:decoration-primary data-linked:decoration-2 data-linked:underline-offset-[3px]"
-                  style={
-                    linked && linkHue
-                      ? {
-                          backgroundColor: `color-mix(in oklab, ${linkHue} 18%, transparent)`,
-                          textDecorationColor: linkHue,
-                        }
-                      : undefined
-                  }
+                  className={`cursor-pointer ${markClass}`}
+                  style={markStyle}
                 >
                   {span.text}
                 </span>

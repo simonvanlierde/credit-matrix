@@ -65,12 +65,14 @@ export interface StatementSpan {
   cell?: StatementCell;
   /** Set on a contributor's name, where it is not itself a role phrase (by-author statements). */
   authorId?: string;
+  /** Set on a role's name in a by-role statement, where it labels the people credited for it. */
+  role?: CreditRoleName;
 }
 
 /** Render strings directly; allocate contributor metadata only for interactive spans. */
 interface Formatter<T extends string | StatementSpan[]> {
   text: (value: string) => T;
-  strong: (value: string) => T;
+  strong: (value: string, role?: CreditRoleName) => T;
   cell: (value: string, authorId: string, role: CreditRoleName) => T;
   name: (value: string, authorId: string) => T;
   join: (items: T[], separator: string) => T;
@@ -106,7 +108,7 @@ const HTML_FORMATTER: Formatter<string> = {
 
 const SPAN_FORMATTER: Formatter<StatementSpan[]> = {
   text: (text) => [{ text }],
-  strong: (text) => [{ text }],
+  strong: (text, role) => [role ? { text, role } : { text }],
   cell: (text, authorId, role) => [{ text, cell: { authorId, role } }],
   name: (text, authorId) => [{ text, authorId }],
   join: (items, separator) => {
@@ -243,7 +245,7 @@ function generateByRole<T extends string | StatementSpan[]>(
   const segments = CREDIT_ROLES.filter((r) => roleMap.has(r.name)).map((r) =>
     fmt.join(
       [
-        fmt.strong(translateRole(r.name)),
+        fmt.strong(translateRole(r.name), r.name),
         fmt.text(translateUi("labelSeparator")),
         fmt.join(roleMap.get(r.name) ?? [], translateUi("nameListSeparator")),
       ],

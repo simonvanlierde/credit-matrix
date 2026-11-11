@@ -1286,6 +1286,8 @@ interface StatementSpan {
   cell?: StatementCell;
   /** Set on a contributor's name, where it is not itself a role phrase (by-author statements). */
   authorId?: string;
+  /** Set on a role's name in a by-role statement, where it labels the people credited for it. */
+  role?: CreditRoleName;
 }
 /**
  * Generate a CRediT author statement.

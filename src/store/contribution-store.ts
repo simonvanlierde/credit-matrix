@@ -112,6 +112,12 @@ interface StatementLink {
   from: "cell" | "phrase" | "author" | "name" | "role";
 }
 
+/** A request to the contributor list to focus one person's row. */
+export interface ListFocus {
+  authorId: string;
+  orcid: boolean;
+}
+
 /** More than anyone writes at once, and well inside what localStorage holds. */
 export const MAX_DRAFTS = 50;
 
@@ -163,6 +169,7 @@ interface ContributionState {
    * leaves), and a draft switch clears it too.
    */
   recentReply: string | null;
+  listFocus: ListFocus | null;
   /**
    * Counts Reset and Delete all. Ephemeral. Components holding an undo
    * buffer drop it when this changes, so Undo cannot bring back cleared work.
@@ -218,6 +225,8 @@ interface ContributionState {
   setSelfId: (contributorId: string | null) => void;
   setReviewHighlight: (cell: ReviewCell | null) => void;
   setStatementLink: (link: StatementLink | null) => void;
+  /** Ask the contributor list to focus a person's name (or open their ORCID field). Ephemeral; the row clears it. */
+  setListFocus: (request: ListFocus | null) => void;
   setReviewSettled: (cells: { contributorId: string; targets: Target[] } | null) => void;
   /** Open the Review tab on one contributor's answers. */
   openReview: (contributorId: string | null) => void;
@@ -1001,6 +1010,7 @@ export const useContributionStore = create<ContributionState>()(
       reviewSettled: null,
       reviewFocus: null,
       recentReply: null,
+      listFocus: null,
       workspaceCleared: 0,
 
       createDraft: () => {
@@ -1151,6 +1161,11 @@ export const useContributionStore = create<ContributionState>()(
       setStatementLink: (link) =>
         set((state) => {
           state.statementLink = link;
+        }),
+
+      setListFocus: (request) =>
+        set((state) => {
+          state.listFocus = request;
         }),
 
       setReviewSettled: (cells) =>

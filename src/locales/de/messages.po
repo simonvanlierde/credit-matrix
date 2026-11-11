@@ -173,6 +173,15 @@ msgstr "Allen zuweisen"
 msgid "bulkClearRole"
 msgstr "Für alle löschen"
 
+msgid "setAllRoles"
+msgstr "Alle Rollen festlegen…"
+
+msgid "assignToEveryone"
+msgstr "Allen zuweisen…"
+
+msgid "editInList"
+msgstr "In der Liste bearbeiten"
+
 msgid "bulkChangeApplied"
 msgstr "Massenänderung angewendet."
 

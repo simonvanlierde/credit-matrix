@@ -173,6 +173,15 @@ msgstr "分配给所有人"
 msgid "bulkClearRole"
 msgstr "为所有人清除"
 
+msgid "setAllRoles"
+msgstr "设置所有角色…"
+
+msgid "assignToEveryone"
+msgstr "分配给所有人…"
+
+msgid "editInList"
+msgstr "在列表中编辑"
+
 msgid "bulkChangeApplied"
 msgstr "已应用批量更改。"
 

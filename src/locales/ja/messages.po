@@ -173,6 +173,15 @@ msgstr "全員に割り当て"
 msgid "bulkClearRole"
 msgstr "全員から解除"
 
+msgid "setAllRoles"
+msgstr "すべての役割を設定…"
+
+msgid "assignToEveryone"
+msgstr "全員に割り当て…"
+
+msgid "editInList"
+msgstr "リストで編集"
+
 msgid "bulkChangeApplied"
 msgstr "一括変更を適用しました。"
 
