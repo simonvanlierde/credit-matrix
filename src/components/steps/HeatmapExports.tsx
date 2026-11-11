@@ -81,6 +81,8 @@ async function svgToPngBlob(
 }
 
 /** Preview, configure and download one draft's contribution figure. */
+
+const ACTION_ITEM = "whitespace-nowrap sm:w-auto sm:flex-1";
 export function HeatmapExports({ authors, showLevels }: { authors: Author[]; showLevels: boolean }) {
   const { translateRole, translateUi, outputLanguage } = useCreditTranslators();
   const t = useTranslations();
@@ -335,13 +337,15 @@ export function HeatmapExports({ authors, showLevels }: { authors: Author[]; sho
             )}
           </div>
         </div>
-        <div className="grid gap-0.5 sm:grid-cols-4">
+        {/* A row that wraps whole buttons: a label never breaks inside itself, where "Download / SVG"
+            read as two items, and a longer language moves a button to the next line instead. */}
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             disabled={!preview || loading !== null || !!previewError || pngTooLarge}
             onClick={() => void copyPng()}
             title={t("copyHeatmapHint")}
-            className={MENU_ITEM}
+            className={`${MENU_ITEM} ${ACTION_ITEM}`}
           >
             <Copy className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
             {currentCopyStatus === "copied"
@@ -362,7 +366,7 @@ export function HeatmapExports({ authors, showLevels }: { authors: Author[]; sho
                 (format === "pdf" && missingGlyphs !== null)
               }
               onClick={() => download(format)}
-              className={MENU_ITEM}
+              className={`${MENU_ITEM} ${ACTION_ITEM}`}
             >
               <Download className="size-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
               {loading === format
