@@ -1,1 +1,1 @@
-The CRediT Matrix card: a contribution heatmap of three sample authors across the 14 CRediT roles, beside the author statement it generates.
+CRediT Matrix: who did what, in the 14 roles of CRediT. A matrix of three sample contributors fills the left edge, one column each, with the 14 roles running down; Ada Lovelace's Methodology cell is ringed in her blue and a line leads from it to the same words in the statement beside it: "CRediT: Ada Lovelace: Conceptualization, Methodology (Equal), …". credit.duinlab.nl
