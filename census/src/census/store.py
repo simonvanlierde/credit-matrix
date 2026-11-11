@@ -1,5 +1,6 @@
 """The DuckDB tables an extraction writes, the writer, and the pins that keep one database to one parser."""
 
+import ast
 import hashlib
 import sys
 from pathlib import Path
@@ -78,9 +79,28 @@ SCHEMA_VERSION = hashlib.sha256(f"{SCHEMA}{_ARTICLE_SCHEMA}{_ROLE_SCHEMA}".encod
 """Changes with any edit to the tables, so a database never gets rows its tables were not made for."""
 
 _PARSER_FILES = ("roles.py", "statement.py", "jats.py", "rows.py")
-PARSER_VERSION = hashlib.sha256(
-    b"".join((Path(__file__).parent / name).read_bytes() for name in _PARSER_FILES)
-).hexdigest()[:12]
+
+
+def parser_version(src: Path) -> str:
+    """Hash of the parser files in `src` as Python parses them, without comments and bare strings
+    (docstrings), so rewording one keeps the version. `ast.dump` can differ between Python versions,
+    so a Python upgrade changes it too."""
+    digest = hashlib.sha256()
+    for name in _PARSER_FILES:
+        tree = ast.parse((src / name).read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            for field in ("body", "orelse", "finalbody"):
+                if isinstance(block := getattr(node, field, None), list):
+                    setattr(node, field, [s for s in block if not _is_bare_string(s)])
+        digest.update(ast.dump(tree).encode())
+    return digest.hexdigest()[:12]
+
+
+def _is_bare_string(node: ast.AST) -> bool:
+    return isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+
+
+PARSER_VERSION = parser_version(Path(__file__).parent)
 """Changes whenever the code that turns XML into rows changes, so one database never mixes parsers."""
 
 

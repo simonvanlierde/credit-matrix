@@ -1,6 +1,5 @@
 import ast
 import gzip
-import hashlib
 import os
 import urllib.error
 from email.message import Message
@@ -271,8 +270,18 @@ def test_parser_version_covers_exactly_the_code_that_makes_rows():
             if module and module.startswith("census.") and module[7:] not in seen:
                 todo.append(module[7:])
     assert {f"{name}.py" for name in seen} == set(store._PARSER_FILES)
-    digest = hashlib.sha256(b"".join((src / name).read_bytes() for name in store._PARSER_FILES))
-    assert digest.hexdigest()[:12] == store.PARSER_VERSION
+    assert store.parser_version(src) == store.PARSER_VERSION
+
+
+def test_parser_version_ignores_comments_and_docstrings(tmp_path):
+    src = Path(store.__file__).parent
+    for name in store._PARSER_FILES:
+        (tmp_path / name).write_text((src / name).read_text(encoding="utf-8"), encoding="utf-8")
+    rows = tmp_path / "rows.py"
+    rows.write_text('"""Reworded."""\n# A new comment.\n' + rows.read_text(encoding="utf-8").split('"""', 2)[2])
+    assert store.parser_version(tmp_path) == store.PARSER_VERSION
+    rows.write_text(rows.read_text(encoding="utf-8") + "\nLIMIT = 1\n")
+    assert store.parser_version(tmp_path) != store.PARSER_VERSION
 
 
 def test_schema_version_follows_the_tables():
