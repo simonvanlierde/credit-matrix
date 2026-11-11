@@ -13,6 +13,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Search results and link previews describe asking co-authors to check their own row, and the
   preview image carries its full alt text and size.
 
+### Security
+
+- The CLI checks an XML file's tags in one linear pass. A hostile file of a few thousand
+  characters made the old check run for a minute or more, hanging the CLI and Sphinx builds.
+- `importAny` stops creating contributors one past the cap on a long name list, instead of
+  building all of them before the list is refused.
+- `<credit-matrix src>` stops reading a response once it passes the size cap, also when the
+  server sends no length.
+
 ## [0.12.0] - 2026-11-11
 
 **Upgrade note:** the browser storage format moves from version 3 to 5, because statement options

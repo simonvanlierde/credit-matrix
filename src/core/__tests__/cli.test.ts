@@ -6,7 +6,7 @@ import process from "node:process";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { run as runCommand, USAGE } from "../cli";
+import { assertBalancedTags, run as runCommand, USAGE } from "../cli";
 import { NewerVersionError, toJson } from "../export/json";
 import { createFigureRenderer } from "../figures";
 import { createAuthor } from "../parse-authors";
@@ -509,5 +509,36 @@ describe("figure legend options", () => {
     await expect(run(["convert", source, "--to", "svg", "--legend-position", "left"])).rejects.toThrow(
       "--legend-position must be auto, right or bottom",
     );
+  });
+});
+
+describe("the XML tag-balance check", () => {
+  it.each([
+    "<a><b/></a>",
+    "<a x=\"1 > 0\" y='<'><!-- <b> --><![CDATA[<c>]]><?pi <d>?></a>",
+    '<!DOCTYPE article><?xml version="1.0"?><a>text</a>',
+  ])("accepts balanced XML: %s", (xml) => {
+    expect(() => assertBalancedTags(xml)).not.toThrow();
+  });
+
+  it.each([
+    ["<a><b></a></b>", "unexpected </a>"],
+    ["<a><b/>", "<a> is never closed"],
+    ["<a><b", "a tag is cut off"],
+    ['<a x="1>', "a tag is cut off"],
+    ["<a><!-- open", "a tag is cut off"],
+    ["<a>1 < 2</a>", "a tag is cut off"],
+  ])("refuses %s", (xml, message) => {
+    expect(() => assertBalancedTags(xml)).toThrow(message);
+  });
+
+  // Each took from seconds to minutes with the old regex (4,000 characters of "<a" took 57 s).
+  it.each([
+    `<${"<a".repeat(200_000)}`,
+    "<!DOCTYPE".repeat(100_000),
+    "<!--".repeat(200_000),
+    `<a ${'x="1" '.repeat(100_000)}`,
+  ])("refuses a hostile file in linear time (%#)", { timeout: 2_000 }, (xml) => {
+    expect(() => assertBalancedTags(xml)).toThrow("a tag is cut off");
   });
 });

@@ -1,12 +1,12 @@
 import type { Ask } from "./ask";
 import type { Author } from "./author";
-import { isValidOrcid, MAX_IMPORT_BYTES, normalizeOrcid } from "./author";
+import { isValidOrcid, MAX_AUTHORS, MAX_IMPORT_BYTES, normalizeOrcid } from "./author";
 import { fromCrossrefContributors, isCrossrefContributors } from "./export/crossref";
 import { fromCsv, headerCells } from "./export/csv";
 import { fromJson } from "./export/json";
 import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
-import { deduplicateAuthorInitials, parseAuthorText, tryCreateAuthor } from "./parse-authors";
+import { createAuthor, deduplicateAuthorInitials, splitNameList, tryCreateAuthor } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
 import { readsAsStatement } from "./statement";
 
@@ -96,7 +96,8 @@ export interface Imported {
  * place, on text the app only exports (`ExportOnlyError`), on a CRediT statement (it names roles, not contributors: read it with
  * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
  * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
- * `authors` means the format was right but held nobody.
+ * `authors` means the format was right but held nobody. A list of names longer than `MAX_AUTHORS`
+ * comes back cut to `MAX_AUTHORS + 1`, which is still too many to use.
  */
 export async function importAny(
   text: string,
@@ -140,8 +141,12 @@ export async function importAny(
       return { format, authors: fromJats4rXml(trimmed, { parser }) };
     case "crossref":
       return { format, authors: fromCrossrefContributors(trimmed, { parser }) };
-    case "names":
-      return { format, authors: parseAuthorText(trimmed) };
+    case "names": {
+      // Past the cap every caller refuses the list, so create only one contributor more than
+      // fits: a list at the size cap holds 200,000 names or more and costs hundreds of MB.
+      const names = splitNameList(trimmed).slice(0, MAX_AUTHORS + 1);
+      return { format, authors: deduplicateAuthorInitials(names.map((name) => createAuthor(name))) };
+    }
     case "statement":
       throw new Error("A CRediT statement holds roles, not contributors. Read it with parseStatement.");
     default:
