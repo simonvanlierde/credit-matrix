@@ -6,39 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
-
-- Point at a person or role in the contributor list, the grid or the statement to mark them in all
-  three. A click opens one person menu or role popover everywhere, now with set or clear all roles,
-  assign a role to everyone and edit in list; a click on a statement phrase goes to its cell.
-- A getting-started checklist above the grid ticks itself as roles are set, co-authors are asked
-  and the statement is copied, and marks the next step's button.
-
-### Changed
-
-- Colour, orientation and initials are stored once per draft and shared by the grid's Heatmap
-  options and Figure settings, where they are marked as shared with the grid. Every settings panel
-  uses the same controls. A new figure follows the grid, so it is coloured per
-  contributor unless you pick one colour. Drafts saved by 0.12.0 keep their figure orientation
-  and initials.
-- The heatmap colour is now the accent of the wordmark, tabs and selected options, and body text is
-  charcoal instead of black.
-- Share opens with asking co-authors, then copying the draft link.
-
-### Fixed
-
-- Heatmap SVG and PNG exports no longer carry a wide empty margin on the left.
-
 ## [0.12.0] - 2026-11-11
+
+**Upgrade note:** the browser storage format moves from version 4 to 5, because statement options
+are now saved per draft and the view settings are shared. Roll forward from this release and do not
+roll back past it: an older build refuses to write over drafts saved in version 5. See
+[deploying](docs/deploy.md).
 
 ### Added
 
 - New entry point `credit-matrix/figures` exports `createFigureRenderer` for PDF and
   font-embedded SVG output, and `FigureFontError` for a missing font or an unsupported character.
 - The grid colours each contributor in their own hue, shared by their chip, column, cells and
-  statement phrase; turn it off under the grid's display options. Heatmap exports stay one colour
-  unless you pick *Per contributor* under Figure settings. `buildHeatmapSvg` takes the same choice
-  as `colorBy: "contributor"`; the plugins and the CLI draw one hue. See
+  statement phrase; turn it off under the grid's display options. In the app, the heatmap figure
+  follows the grid's colour, so it is drawn per contributor by default; a figure saved as one colour
+  before now follows the grid too. `buildHeatmapSvg` takes the same choice as
+  `colorBy: "contributor"`; the library, the CLI and the plugins still draw one hue by default. See
   [the figure options](integrations/heatmap.md#figure-options).
 - Download heatmaps as PDF with embedded fonts and selectable text. App, CLI and document-plugin
   SVG exports also carry their fonts. Both formats embed only the glyphs a figure uses: about 30 kB
@@ -82,7 +65,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   from `PATH`, or the command line in the `CREDIT_MATRIX_COMMAND` environment variable.
 - Pointing at a grid cell, or focusing it, marks its phrase in the statement, and pointing at a
   phrase rings its cell. `statementSpans` returns the plain-text statement as spans that name the
-  contributor and role behind each phrase.
+  contributor and role behind each phrase. Its spans hold `authorId` (a by-author name) and `role`
+  (a by-role role label).
+- Point at a person or role in the contributor list, the grid or the statement to mark them in all
+  three. A click opens one person menu or role popover everywhere, now with set or clear all roles,
+  assign a role to everyone and edit in list; a click on a statement phrase goes to its cell.
+- A getting-started checklist above the grid ticks itself as roles are set, co-authors are asked
+  and the statement is copied, and marks the next step's button. It ticks the ask step for a
+  one-person draft too, and once closed it stays closed in that browser.
 - Once every co-author but you has been asked and has answered, and nothing is left to review, the
   status strip says "Everyone agreed", and a screen reader hears it once.
 - Importing into a draft that already has contributors offers "Add N new" beside "Replace
@@ -94,6 +84,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Colour, orientation and initials are stored once per draft and shared by the grid's Heatmap
+  options and Figure settings, where they are marked as shared with the grid. Every settings panel
+  uses the same controls. A new figure follows the grid, so it is coloured per contributor unless
+  you pick one colour. Drafts saved before this release keep their figure orientation and initials.
+- Statement options (initials, levels, separate acknowledgements) are saved per draft.
+- The heatmap colour is now the accent of the wordmark, tabs and selected options, and body text is
+  charcoal instead of black.
+- Share opens with asking co-authors, then copying the draft link.
+- The grid and its key centre together under the status strip, and the key is drawn as cells.
+- The collapsed contributor rail's chips link to the person's cell and open the person menu.
 - A new look: warm paper tinted by the draft's heatmap colour, ink edges with hard offset shadows,
   sentence-case labels and Atkinson Hyperlegible for the interface. The panes share one page, empty
   grid cells are a faint dot, and the level key is one scale bar. Exported figures stay on white;
@@ -152,6 +152,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Heatmap SVG and PNG exports no longer have a wide empty margin on the left, and
+  `buildHeatmapSvg` with `measureText` no longer pads for guessed glyph widths.
+- After copying an ask message in Team, the confirmation and the row's "Copied" label clear after
+  five seconds, so the row offers its copy again.
+- The heatmap export buttons no longer break a label such as "Download SVG" over two lines; a
+  narrow popover moves the whole button to the next row.
 - On a first visit the welcome card shows with the page, before the scripts load, instead of after
   them. On a slow phone connection it appears in about 2 seconds rather than 4.
 - With Windows high contrast (forced colours) on, focus has a visible outline, cells keep their

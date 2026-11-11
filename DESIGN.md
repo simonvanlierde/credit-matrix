@@ -7,6 +7,9 @@ colors:
   ink-blue: "#1f4e79"
   ink-blue-hover: "#183f62"
   ink-blue-soft: "#d6e2ee"
+  # Derived from the draft's heatmap hue by ThemeHue; ink blue until a hue is set.
+  accent: "#1f4e79"
+  on-accent: "#fffdf8"
   # The page is paper tinted 3% toward the draft's heatmap colour (4% in dark mode).
   paper: "#fbf8f1"
   paper-bright: "#fffdf8"
@@ -107,7 +110,7 @@ the muted text must keep 4.5:1 on it. It is for the web interface only: an expor
 drawn on white. Cards and the statement sit on the page in brighter paper.
 
 Reserve ink blue for primary actions, links and focus outside the grid. The heatmap hue is also
-the accent (`--color-accent`, set by `ThemeHue`): the wordmark, the initials chips, the selected
+the accent (`--color-accent`, set by `ThemeHue`): the wordmark, the initials chips when no contributor hue is set, the selected
 segment, the active inspector tab and focus inside the grid. In light mode it is deepened toward
 black, and in dark mode lightened toward white, only as far as it takes to reach 4.5:1 against bright
 paper both ways, so any custom colour stays legible. With colour by contributor the accent is ink
