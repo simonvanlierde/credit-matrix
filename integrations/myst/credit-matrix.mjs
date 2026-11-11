@@ -13,6 +13,9 @@ import {
   generateStatement,
   HeatmapOptionError,
   heatmapDescription,
+  heatmapPrintWarning,
+  MAX_AUTHOR_NAME_LENGTH,
+  MAX_AUTHORS,
   normalizeRoster,
 } from "credit-matrix";
 import { createFigureRenderer } from "credit-matrix/figures";
@@ -178,15 +181,10 @@ const creditHeatmap = {
 function heatmapFigure(path, directiveOptions = {}) {
   const entries = statementEntries(authorsFor(path));
   if (directiveOptions.initials) {
-    // The app's initials and collision rule; a name with no letter (an ORCID iD) stays whole, and
-    // past the app's contributor limit every label does.
-    const named = entries.filter((entry) => /\p{L}/u.test(entry.name));
-    let roster = [];
-    try {
-      roster = normalizeRoster(named.map((entry) => createAuthor(entry.name)));
-    } catch {
-      // Over the app's contributor limit.
-    }
+    // The app's initials and collision rule. A name with no letter (an ORCID iD) or one too long for
+    // the app stays whole, and past the app's contributor limit every label does.
+    const named = entries.filter((entry) => /\p{L}/u.test(entry.name) && entry.name.length <= MAX_AUTHOR_NAME_LENGTH);
+    const roster = named.length > MAX_AUTHORS ? [] : normalizeRoster(named.map((entry) => createAuthor(entry.name)));
     for (const entry of entries) entry.initials = entry.name;
     named.forEach((entry, i) => {
       entry.initials = roster[i]?.initials ?? entry.name;
@@ -217,6 +215,9 @@ async function renderHeatmap(node, vfile) {
     vfile.message(`credit-heatmap: ${error.message}${fontHint}`, node).fatal = true;
     return false;
   }
+  const warning = heatmapPrintWarning(svg);
+  // `error_rules: [{ rule: credit-heatmap-small-print, severity: ignore }]` in myst.yml silences it.
+  if (warning) vfile.message(`credit-heatmap: ${warning}`, node).ruleId = "credit-heatmap-small-print";
   const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
   const dir = join(dirname(path), "_credit_matrix");
   mkdirSync(dir, { recursive: true });

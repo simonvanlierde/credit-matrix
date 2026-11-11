@@ -1,7 +1,10 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; the corpus is a file on disk
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { MAX_AUTHORS } from "../author";
 import { CREDIT_ROLES, creditSlug } from "../credit-roles";
+import { generateStatement } from "../generate-statement";
+import { createAuthor } from "../parse-authors";
 import {
   MAX_STATEMENT_LENGTH,
   namesCredit,
@@ -435,6 +438,20 @@ describe("assignment order", () => {
 });
 
 describe("size", () => {
+  it("reads back a full draft's by-author statement with every role", () => {
+    // Letters only: the parser reads names without digits, so "Franklin 1" and "Franklin 2" would tie.
+    const letters = (i: number) => String.fromCharCode(97 + (i % 26), 97 + Math.floor(i / 26));
+    const authors = Array.from({ length: MAX_AUTHORS }, (_, i) => {
+      const person = createAuthor(`Rosalind Elsie Franklin-Lavoisier${letters(i)}`);
+      for (const c of person.contributions) c.score = 100;
+      return person;
+    });
+    const text = generateStatement(authors, { format: "by-author" });
+    expect(text.length).toBeLessThanOrEqual(MAX_STATEMENT_LENGTH);
+    const parsed = parseStatement(text, authors.map(statementAuthor));
+    expect(parsed.assignments).toHaveLength(MAX_AUTHORS * CREDIT_ROLES.length);
+  });
+
   it(`refuses a statement longer than ${MAX_STATEMENT_LENGTH} characters`, () => {
     expect(() => parseStatement("a".repeat(MAX_STATEMENT_LENGTH + 1), THREE)).toThrow(
       new RangeError(

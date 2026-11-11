@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { MAX_AUTHORS } from "../author";
 import { lookupDoiWork, normalizeDoi } from "../doi-lookup";
 
 /** A minimal Crossref `works` body: only the fields the lookup reads. */
@@ -117,7 +118,7 @@ describe("lookupDoiWork", () => {
   });
 
   it("refuses a record with more contributors than a draft can hold", async () => {
-    const author = Array.from({ length: 201 }, (_, i) => ({ given: "A", family: `Author${i}` }));
+    const author = Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => ({ given: "A", family: `Author${i}` }));
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(crossrefResponse({ title: ["T"], author }));
     expect(await lookupDoiWork("10.1038/x", fetcher)).toMatchObject({ status: 422, code: "TOO_MANY_AUTHORS" });
   });
@@ -220,7 +221,7 @@ describe("DataCite fallback", () => {
   });
 
   it("applies the same author-count rules", async () => {
-    const many = Array.from({ length: 201 }, (_, i) => ({ givenName: "A", familyName: `Author${i}` }));
+    const many = Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => ({ givenName: "A", familyName: `Author${i}` }));
     expect(await lookupDoiWork("10.1038/x", fallbackFetcher(dataCite({ creators: many })))).toMatchObject({
       code: "TOO_MANY_AUTHORS",
     });

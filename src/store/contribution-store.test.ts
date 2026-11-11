@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
+import { MAX_AUTHORS } from "@/core/author";
 import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import type { LocaleCode } from "@/core/i18n";
 import { DEFAULT_HEATMAP_SETTINGS, repairHeatmapSettings } from "@/lib/heatmap-settings";
@@ -296,7 +297,7 @@ describe("contribution store", () => {
     });
 
     it("rejects a load of more contributors than a draft can hold", () => {
-      const authors = Array.from({ length: 201 }, (_, i) => createAuthor(`Author ${i}`));
+      const authors = Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => createAuthor(`Author ${i}`));
       expect(() => store().loadAuthors(authors)).toThrow(/at most/);
     });
   });
@@ -419,13 +420,33 @@ describe("contribution store", () => {
       expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
     });
 
+    it("adds a pasted list in one update, in order, refusing unparseable names and past the cap", () => {
+      store().loadAuthors(Array.from({ length: MAX_AUTHORS - 2 }, (_, i) => createAuthor(`Author ${i}`)));
+      const ids = store().addAuthors([
+        { name: "Grace Hopper" },
+        { name: "   " },
+        { name: "Charles Darwin", orcid: "0000-0002-1825-0097" },
+        { name: "One Too Many" },
+      ]);
+      expect(ids.map((id) => id !== null)).toEqual([true, false, true, false]);
+      expect(
+        store()
+          .authors.slice(-2)
+          .map((a) => [a.name, a.orcid]),
+      ).toEqual([
+        ["Grace Hopper", undefined],
+        ["Charles Darwin", "0000-0002-1825-0097"],
+      ]);
+      expect(store().authors).toHaveLength(MAX_AUTHORS);
+    });
+
     it("refuses a restore into a list that refilled to the cap", () => {
       const spare = createAuthor("Spare Author");
-      store().loadAuthors(Array.from({ length: 200 }, (_, i) => createAuthor(`Author ${i}`)));
+      store().loadAuthors(Array.from({ length: MAX_AUTHORS }, (_, i) => createAuthor(`Author ${i}`)));
 
       // Without the guard the splice pushes past the cap and the reducer throws.
       expect(store().restoreAuthor(spare, 0)).toBe(false);
-      expect(store().authors).toHaveLength(200);
+      expect(store().authors).toHaveLength(MAX_AUTHORS);
       expect(store().addAuthor("One Too Many")).toBeNull();
     });
 

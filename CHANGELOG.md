@@ -6,23 +6,48 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+**Upgrade note:** the browser storage format moves from version 5 to 6, so that a build from before
+the 420 cap cannot cut a stored draft back to 200 contributors. Do not roll back past this release.
+See [deploying](docs/deploy.md).
+
 ### Added
 
+- The CLI, the MyST, Sphinx and Quarto plugins and Pandoc warn when a heatmap's labels would print
+  under 6 pt on a full journal page, which happens from about 25 contributors. `heatmapPrintWarning`
+  returns that warning. A strict build (`sphinx-build -W`, `myst build --strict`) now fails on it
+  until you silence it. See [final-size readability checks](integrations/heatmap.md#final-size-readability-checks).
 - `NAME_PARTICLES` and `NAME_SUFFIXES` export the name particles ("van", "de la") and generational
   suffixes ("Jr.") that the parser uses for initials, so another implementation can follow them.
+- `MAX_AUTHORS`, `MAX_AUTHOR_NAME_LENGTH` and `MAX_IMPORT_BYTES` export the caps every reader enforces.
 
 ### Changed
 
+- The social card is a poster that reads in a small link preview: the heatmap on its side above a
+  short statement, one cell and its phrase linked in the contributor's hue, and the site's address.
+- **Breaking:** the Typst package stops the build on a contributor name with no letter and no
+  ORCID iD, such as "?", instead of drawing an empty label.
+- A draft holds up to 420 contributors, up from 200. Imports, share links and the element take
+  files up to 2 MB, up from 1 MB, and a pasted statement can run to 120,000 characters, up from
+  50,000, so a full draft's exports and by-author statement read back in.
+- Pasting a long list of names adds them in one step: 400 names take milliseconds instead of
+  seconds.
 - The Typst package and the MyST plugin now label heatmaps with the app's initials. Particles
   such as "van" are skipped, and contributors who share initials get the next letters of their
   surname ("AL", "ALa") instead of their full names. See
   [app and document exports](integrations/heatmap.md#app-and-document-exports).
-- **Breaking:** the Typst package stops the build on a contributor name with no letter and no
-  ORCID iD, such as "?", instead of drawing an empty label.
 - The favicon, app icons and social card use the warm paper and charcoal ink of the 0.12.0 theme,
   and the mark draws each column in one contributor's hue, as the grid does.
 - Search results and link previews describe asking co-authors to check their own row, and the
   preview image carries its full alt text and size.
+
+### Security
+
+- The CLI checks an XML file's tags in one linear pass. A hostile file of a few thousand
+  characters made the old check run for a minute or more, hanging the CLI and Sphinx builds.
+- `importAny` stops creating contributors one past the cap on a long name list, instead of
+  building all of them before the list is refused.
+- `<credit-matrix src>` stops reading a response once it passes the size cap, also when the
+  server sends no length.
 
 ## [0.12.0] - 2026-11-11
 

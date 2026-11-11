@@ -25,7 +25,16 @@ export {
   settledAt,
 } from "./ask";
 export type { Author, Contribution, ContributionLevel, ContributorType } from "./author";
-export { AuthorSchema, ContributionSchema, isValidOrcid, normalizeOrcid, scoreToLevel } from "./author";
+export {
+  AuthorSchema,
+  ContributionSchema,
+  isValidOrcid,
+  MAX_AUTHOR_NAME_LENGTH,
+  MAX_AUTHORS,
+  MAX_IMPORT_BYTES,
+  normalizeOrcid,
+  scoreToLevel,
+} from "./author";
 export type { CreditRoleName } from "./credit-roles";
 export { CREDIT_ROLES, getRoleByName } from "./credit-roles";
 export type { CodemetaAttribution, CodemetaPerson, CodemetaRole } from "./export/codemeta";
@@ -33,6 +42,7 @@ export { toCodemeta } from "./export/codemeta";
 export { fromCrossrefContributors, toCrossrefContributors } from "./export/crossref";
 export { fromCsv, toCsv } from "./export/csv";
 export { toMyst, toQuarto } from "./export/frontmatter";
+export { heatmapPrintWarning } from "./export/heatmap-print";
 export type { HeatmapSvgOptions } from "./export/heatmap-svg";
 export { buildHeatmapSvg, HeatmapOptionError, heatmapDescription } from "./export/heatmap-svg";
 export { fromJson, NewerVersionError, RepeatedIdError, toJson } from "./export/json";

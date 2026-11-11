@@ -2,8 +2,8 @@ import { ChevronDown, Copy, Download, Scan, Settings2, Shrink } from "lucide-rea
 import { useEffect, useId, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Author, heatmapDescription } from "@/core";
+import { heatmapPrintSize, SMALL_PRINT_PT, svgDimensions } from "@/core/export/heatmap-print";
 import { announce } from "@/lib/announce";
-import { heatmapPrintSize, svgDimensions } from "@/lib/heatmap-print";
 import { DEFAULT_HEATMAP_SETTINGS, type HeatmapOptions } from "@/lib/heatmap-settings";
 import { withPngResolution, withPngText } from "@/lib/png-text";
 import { useFormatter, useTranslations } from "@/lib/translations";
@@ -289,7 +289,7 @@ export function HeatmapExports({
           {settings.colorBy === "contributor" && (
             <p className="w-full text-xs text-on-surface-variant">{t("heatmapPerContributorNote")}</p>
           )}
-          {printFontSize !== null && printFontSize < 6 && (
+          {printFontSize !== null && printFontSize < SMALL_PRINT_PT && (
             <p className="w-full text-xs text-on-surface-variant">
               {t("heatmapSmallPrint", { size: formatter.number(printFontSize, { maximumFractionDigits: 1 }) })}
             </p>

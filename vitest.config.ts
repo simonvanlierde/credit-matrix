@@ -21,6 +21,10 @@ export default defineConfig({
   test: {
     globals: true,
     restoreMocks: true,
+    // A runaway test dies with a heap error instead of filling the host. The heap cap does not cover
+    // ArrayBuffers and streams, so the worker count also bounds what a leak in each can take.
+    execArgv: ["--max-old-space-size=2048"],
+    maxWorkers: 4,
     coverage: {
       provider: "v8",
       // lcov feeds Codecov; text prints a summary in the terminal/CI log

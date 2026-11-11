@@ -94,7 +94,7 @@ test.describe("the contributor list", () => {
     await expect(removedBar).toBeHidden();
     // An announcement reaches the live region on the frame after the click.
     await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
-    expect((await statusText(page)).join(" ")).not.toContain("at most 200 contributors");
+    expect((await statusText(page)).join(" ")).not.toContain("at most 420 contributors");
     await expect(page.getByRole("button", { name: "Remove Charles Darwin" })).toHaveCount(1);
   });
 });

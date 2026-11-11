@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { MAX_AUTHORS } from "../author";
 import { escapeXml } from "../export/escape-xml";
 import { toJats4rXml } from "../export/xml";
 import { fromJats4rXml, readPerson, XmlParseError } from "../export/xml-import";
@@ -518,5 +519,25 @@ describe("readPerson", () => {
     expect(readPerson({}, {})).toBeNull();
     expect(readPerson({ given: " ", surname: null }, {})).toBeNull();
     expect(readPerson({ surname: "--" }, {})).toBeNull();
+  });
+});
+
+describe("reading stops one past the contributor cap", () => {
+  const editors = '<contrib contrib-type="editor"><name><surname>Editor</surname></name></contrib>'.repeat(30);
+  const authors = (n: number) =>
+    Array.from(
+      { length: n },
+      (_, i) =>
+        `<contrib contrib-type="author"><name><surname>Curie${i}</surname><given-names>Marie</given-names></name></contrib>`,
+    ).join("");
+  const jats = (n: number) =>
+    `<article><front><article-meta><contrib-group>${editors}${authors(n)}</contrib-group></article-meta></front></article>`;
+
+  it("keeps every author behind non-author contribs", () => {
+    expect(fromJats4rXml(jats(MAX_AUTHORS))).toHaveLength(MAX_AUTHORS);
+  });
+
+  it("reads no more than one author past the cap, which every caller then refuses", () => {
+    expect(fromJats4rXml(jats(MAX_AUTHORS + 50))).toHaveLength(MAX_AUTHORS + 1);
   });
 });

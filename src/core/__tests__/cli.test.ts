@@ -6,7 +6,8 @@ import process from "node:process";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { run as runCommand, USAGE } from "../cli";
+import { assertBalancedTags, run as runCommand, USAGE } from "../cli";
+import { heatmapPrintWarning } from "../export/heatmap-print";
 import { NewerVersionError, toJson } from "../export/json";
 import { createFigureRenderer } from "../figures";
 import { createAuthor } from "../parse-authors";
@@ -35,6 +36,21 @@ it("exports a binary PDF with embedded figure fonts", async () => {
   const svg = await run(["convert", csv, "--to", "svg"]);
   expect(svg).toContain("@font-face");
   expect(svg).toContain("<text");
+});
+
+it("warns on stderr when a heatmap would print too small on a full page, and only then", async () => {
+  const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  const rows = Array.from({ length: 40 }, (_, i) => `Grace Hopper ${i},100,`).join("\n");
+  const large = file("large.csv", `Name,Conceptualization,Software\n${rows}\n`);
+  const svg = await run(["convert", large, "--to", "svg"]);
+  await runCommand(["convert", large, "--to", "pdf"]);
+  const warnings = stderr.mock.calls.flat().filter((text) => String(text).includes("smallest labels"));
+  // The warning measures the figure the CLI writes, not an estimate of it.
+  expect(warnings).toEqual(Array(2).fill(`credit-matrix: ${heatmapPrintWarning(svg)}\n`));
+  stderr.mockClear();
+  await run(["convert", csv, "--to", "svg"]);
+  expect(stderr.mock.calls.flat().join(" ")).not.toContain("smallest labels");
+  stderr.mockRestore();
 });
 
 it("names the characters the figure fonts cannot draw, in one line", async () => {
@@ -511,5 +527,49 @@ describe("figure legend options", () => {
     await expect(run(["convert", source, "--to", "svg", "--legend-position", "left"])).rejects.toThrow(
       "--legend-position must be auto, right or bottom",
     );
+  });
+});
+
+describe("the XML tag-balance check", () => {
+  it.each([
+    "<a><b/></a>",
+    "<a x=\"1 > 0\" y='<'><!-- <b> --><![CDATA[<c>]]><?pi <d>?></a>",
+    '<!DOCTYPE article><?xml version="1.0"?><a>text</a>',
+  ])("accepts balanced XML: %s", (xml) => {
+    expect(() => assertBalancedTags(xml)).not.toThrow();
+  });
+
+  it.each([
+    ["<a><b></a></b>", "unexpected </a>"],
+    ["<a><b/>", "<a> is never closed"],
+    ["<a><b", "a tag is cut off"],
+    ['<a x="1>', "a tag is cut off"],
+    ["<a><!-- open", "a tag is cut off"],
+    ["<a>1 < 2</a>", "a tag is cut off"],
+    ["<a <b/>", "a tag is cut off"],
+    ["<a>".repeat(257), "elements nest too deep"],
+  ])("refuses %s", (xml, message) => {
+    expect(() => assertBalancedTags(xml)).toThrow(message);
+  });
+
+  // Sized so the old regex takes 10 to 15 s on each and the scanner a few ms. A wall-clock bound, not
+  // vitest's timeout: synchronous code finishes before a timeout can fire.
+  it.each([
+    `<${"<a".repeat(2_500)}`,
+    "<!DOCTYPE".repeat(50_000),
+    "<!--".repeat(80_000),
+    `<a ${'x="1" '.repeat(100_000)}`,
+  ])("refuses a hostile file in linear time (%#)", (xml) => {
+    const start = performance.now();
+    expect(() => assertBalancedTags(xml)).toThrow("a tag is cut off");
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+
+  it("refuses deep nesting before linkedom reads it", () => {
+    const start = performance.now();
+    expect(() => assertBalancedTags(`${"<a>".repeat(285_000)}${"</a>".repeat(285_000)}`)).toThrow(
+      "elements nest too deep",
+    );
+    expect(performance.now() - start).toBeLessThan(500);
   });
 });

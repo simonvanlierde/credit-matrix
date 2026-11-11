@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
-import { MAX_AUTHORS } from "@/core/author";
+import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { createFigureRenderer } from "@/core/figures";
 import {
   AVAILABLE_LOCALES,
@@ -24,7 +24,7 @@ type Node = { type: string; value?: string; children?: Node[] };
 const text = (nodes: Node[]): string => nodes.map((n) => n.value ?? text(n.children ?? [])).join("");
 
 type Image = { type: string; url?: string; alt?: string };
-type Message = { message: string; fatal?: boolean };
+type Message = { message: string; fatal?: boolean; ruleId?: string };
 
 /** Run the heatmap directive and the transform that draws it, as MyST does. */
 async function heatmap(path: string, options: Record<string, unknown> = {}) {
@@ -242,6 +242,19 @@ it("reports unsupported contributor glyphs in one line instead of using a system
   ]);
 });
 
+it("warns, without failing the build, when the heatmap would print too small on a page", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-small-print-"));
+  const path = join(dir, "index.md");
+  const people = Array.from({ length: 40 }, (_, i) => `  - name: Grace Hopper ${i}\n    roles: [Software]\n`);
+  writeFileSync(path, `---\nauthors:\n${people.join("")}---\n`);
+  const { image, messages } = await heatmap(path);
+  expect(image?.url).toMatch(/\.svg$/);
+  expect(messages).toHaveLength(1);
+  expect(messages[0]?.message).toMatch(/^credit-heatmap: the heatmap's smallest labels print at about/);
+  expect(messages[0]?.fatal).toBeUndefined();
+  expect(messages[0]?.ruleId).toBe("credit-heatmap-small-print");
+});
+
 it("forwards legend placement and marks without changing MyST publication defaults", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-legend-"));
   const path = join(dir, "index.md");
@@ -280,6 +293,19 @@ it("gives the app's deduplicated initials and keeps nonletter labels whole", asy
   for (const label of ["HL", "王小明", "AS", "ASm", "1234"]) expect(svg).toContain(`>${label}</tspan>`);
   expect(svg).not.toContain(">C</text>");
   expect(image?.alt).toContain("Hua Luogeng");
+});
+
+it("keeps one over-long name whole and still gives everyone else initials", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-long-name-"));
+  const path = join(dir, "index.md");
+  const long = `Ada ${"L".repeat(MAX_AUTHOR_NAME_LENGTH)}`;
+  writeFileSync(
+    path,
+    `---\nauthors:\n  - name: Grace Hopper\n    roles: [Software]\n  - name: ${long}\n    roles: [Software]\n---\n`,
+  );
+  const { svg } = await heatmap(path, { initials: true });
+  expect(svg).toContain(">GH</tspan>");
+  expect(svg).not.toContain(">Grace Hopper</tspan>");
 });
 
 it("keeps full names past the app's contributor cap instead of failing the build", async () => {

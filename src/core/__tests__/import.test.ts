@@ -338,3 +338,16 @@ describe("normalizeRoster", () => {
     expect(normalizeRoster([stray])[0]).not.toHaveProperty("legacy");
   });
 });
+
+it("reads only one name past the cap from a long list, which every caller then refuses", async () => {
+  const names = Array.from({ length: 50_000 }, (_, i) => `Ada Lovelace ${i}`).join("\n");
+  const { format, authors } = await importAny(names);
+  expect(format).toBe("names");
+  expect(authors).toHaveLength(MAX_AUTHORS + 1);
+  expect(authors.at(-1)?.name).toBe(`Ada Lovelace ${MAX_AUTHORS}`);
+});
+
+it("keeps the initials of a short name list unique", async () => {
+  const { authors } = await importAny("Ada Lovelace\nAntoine Lavoisier");
+  expect(authors.map((a) => a.initials)).toEqual(["AL", "ALa"]);
+});

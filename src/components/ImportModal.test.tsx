@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { type Author, createAuthor, toJson } from "@/core";
+import { type Author, createAuthor, MAX_STATEMENT_LENGTH, toJson } from "@/core";
+import { MAX_AUTHORS } from "@/core/author";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import { fetchOrcidKeys, type OrcidKey } from "@/core/orcid-proof";
 import { ConverterUnavailableError, convertCitation } from "@/lib/citation-import";
@@ -447,9 +448,19 @@ describe("a pasted CRediT statement", () => {
 
   it("refuses a statement over the length cap", async () => {
     renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
-    paste(`AB: conceptualization. ${"x".repeat(50_000)}`);
+    paste(`AB: conceptualization. ${"x".repeat(MAX_STATEMENT_LENGTH)}`);
     await review();
-    expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "50,000"))).toBeTruthy();
+    expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "120,000"))).toBeTruthy();
+  });
+
+  it("refuses a long statement of short lines without rescanning it per line", async () => {
+    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
+    // 400 kB of one-letter lines took 18 s when each line rescanned everything joined so far.
+    paste(`AB: conceptualization.\n${"A\n".repeat(200_000)}`);
+    const start = performance.now();
+    await review();
+    expect(performance.now() - start).toBeLessThan(2_000);
+    expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "120,000"))).toBeTruthy();
   });
 });
 
@@ -513,12 +524,14 @@ describe("citation converter", () => {
   const paste = () => fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: cff } });
 
   it("names the converter only when it rejected; other failures use their own message", async () => {
-    const many = JSON.stringify({ author: Array.from({ length: 201 }, (_, i) => ({ name: `Person ${i} Name` })) });
+    const many = JSON.stringify({
+      author: Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => ({ name: `Person ${i} Name` })),
+    });
     vi.mocked(convertCitation).mockResolvedValue(many);
     renderModal();
     paste();
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
-    expect(await screen.findByText(/200/)).toBeTruthy();
+    expect(await screen.findByText(new RegExp(String(MAX_AUTHORS)))).toBeTruthy();
     expect(screen.queryByText(english.errCitationConverter)).toBeNull();
   });
 
