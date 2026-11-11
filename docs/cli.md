@@ -35,7 +35,7 @@ downloads them, and the one network request it makes.
 
 ```text
 credit-matrix <command> <file> [options]
-credit-matrix --help | --version
+credit-matrix -h, --help | -v, --version
 ```
 
 | Command | What it prints |
@@ -45,7 +45,8 @@ credit-matrix --help | --version
 | [`ask`](#ask) | A link that asks one contributor to check their roles |
 
 The command comes first, then the file, then the flags in any order. A flag that a command does
-not use is accepted and ignored (`statement --to csv` prints the statement).
+not use is accepted and ignored (`statement --to csv` prints the statement). `--help` and `--version`
+also win over a missing command, and `--version` wins over `--help`.
 
 Flags that take a value accept `--flag value` and `--flag=value`. When you repeat a flag, the last
 one wins, except `--font-path`, which collects every value.
@@ -80,7 +81,7 @@ that matter. The role names are the NISO names; note the en dash in `Writing –
       "contributions": [
         { "role": "Conceptualization", "score": 100 },
         { "role": "Writing – original draft", "score": 100 },
-        { "role": "Software", "score": 40 }
+        { "role": "Software", "score": 66 }
       ]
     },
     {
@@ -92,8 +93,8 @@ that matter. The role names are the NISO names; note the en dash in `Writing –
       "initials": "REF",
       "contributions": [
         { "role": "Supervision", "score": 100 },
-        { "role": "Conceptualization", "score": 50 },
-        { "role": "Writing – original draft", "score": 20 }
+        { "role": "Conceptualization", "score": 66 },
+        { "role": "Writing – original draft", "score": 33 }
       ]
     },
     {
@@ -113,14 +114,16 @@ that matter. The role names are the NISO names; note the en dash in `Writing –
       "surname": "Hopper",
       "initials": "GH",
       "contributorType": "non-author",
-      "contributions": [{ "role": "Validation", "score": 30 }]
+      "contributions": [{ "role": "Validation", "score": 33 }]
     }
   ]
 }
 ```
 
-A score runs from 0 to 100. It maps to a level: 67 to 100 is lead, 34 to 66 is equal, 1 to 33 is
-supporting, 0 is no contribution. Ada's Software score of 40 is therefore an equal contribution.
+The app stores one score per level: 33 for supporting, 66 for equal and 100 for lead (Yes/No mode
+uses 0 and 100). A file you write by hand may carry any score from 0 to 100. It maps to a level:
+67 to 100 is lead, 34 to 66 is equal, 1 to 33 is supporting, 0 is no contribution. `latex-credits`
+passes the score through, divided by 100.
 `contributorType` is `author` unless the file says `non-author`. Keep the names in a file like
 this one and refer to people by `id` on the command line, so a name never has to pass through
 shell quoting.
@@ -169,6 +172,9 @@ Limits and special cases:
 | 0 | Success | The result was printed, with or without warnings. `--help` and `--version`. |
 | 1 | The command line was fine but the work failed | File not found, a directory, or permission denied. A spreadsheet, a ZIP or a file over 2 MB. XML that is not well formed. JSON or another format that does not validate. No roles assigned yet, for `statement` and `convert --to latex-credits`. `ask` finds no contributor, or several. The figure fonts cannot draw a character, or the font family is missing. |
 | 2 | The command line is wrong | No command, an unknown command, no file, an unknown option or a missing option value. `convert` without `--to`, or with an unknown one. An unknown `--format`, `--locale` or heatmap value. `ask` without `--contributor`. |
+
+An empty roster is not the same everywhere. With no roles assigned, `statement` and
+`convert --to latex-credits` exit 1. All other targets print an empty roster and exit 0.
 
 Exit 2 also prints `Run 'credit-matrix --help' for usage.` after the message.
 
@@ -330,7 +336,7 @@ Prints the contributions in another format. `--to` is required.
 | `jats` | JATS4R `<contrib-group>` in a minimal `<article>` | Roles carry a `degree-contribution` level unless `--yes-no`. |
 | `crossref` | The `<contributors>` block of a Crossref deposit (schema 5.5.0) | Has no levels. Non-authors get the role type `other`. |
 | `md` | A Markdown table of people and roles | Role names follow `--locale`. Levels shown as (Equal), (Supporting). |
-| `latex-credits` | `\credit` lines for the latex-credits package | One value from 0 to 1 per role (the score divided by 100); `--yes-no` writes 1 or 0. Authors only. Exits 1 if nobody has a role. |
+| `latex-credits` | `\credit` lines for the latex-credits package | One value from 0 to 1 per role, with the levels as shades (lead 1, equal 0.66, supporting 0.33); `--yes-no` writes 1 or 0. Authors only. Exits 1 if nobody has a role. |
 | `tenzing` | A Tenzing-style CSV table | Non-authors are marked "Acknowledgment only". |
 | `quarto` | Author YAML for Quarto and Pandoc | Levels kept unless `--yes-no`. Authors only. |
 | `myst` | Author YAML for MyST and Jupyter Book | Never has levels. Authors only. |
@@ -419,10 +425,10 @@ $ credit-matrix convert contributors.json --to json
 ```text
 $ credit-matrix convert contributors.json --to csv
 Name,ORCID,Type,Equal contribution,Corresponding,Conceptualization,Data curation,Formal analysis,Funding acquisition,Investigation,Methodology,Project administration,Resources,Software,Supervision,Validation,Visualization,Writing – original draft,Writing – review & editing
-Ada Lovelace,0000-0002-1825-0097,author,no,no,100,0,0,0,0,0,0,0,40,0,0,0,100,0
-Rosalind E. Franklin,,author,no,no,50,0,0,0,0,0,0,0,0,100,0,0,20,0
+Ada Lovelace,0000-0002-1825-0097,author,no,no,100,0,0,0,0,0,0,0,66,0,0,0,100,0
+Rosalind E. Franklin,,author,no,no,66,0,0,0,0,0,0,0,0,100,0,0,33,0
 Alan M. Turing,,author,no,no,0,0,0,0,0,0,0,0,100,0,0,0,0,0
-Grace Hopper,,non-author,no,no,0,0,0,0,0,0,0,0,0,0,30,0,0,0
+Grace Hopper,,non-author,no,no,0,0,0,0,0,0,0,0,0,0,33,0,0,0
 ```
 
 ### Example: JATS4R
@@ -518,13 +524,12 @@ $ credit-matrix convert contributors.json --to latex-credits
 % Acknowledgees are left out: the package lists authors only.
 % Names outside Latin scripts need lualatex or xelatex with a suitable font.
 % Generated by CRediT Matrix · https://credit.duinlab.nl
-\credit{Ada Lovelace}{1,0,0,0,0,0,0,0,0.4,0,0,0,1,0}
-\credit{Rosalind E. Franklin}{0.5,0,0,0,0,0,0,0,0,1,0,0,0.2,0}
+\credit{Ada Lovelace}{1,0,0,0,0,0,0,0,0.66,0,0,0,1,0}
+\credit{Rosalind E. Franklin}{0.66,0,0,0,0,0,0,0,0,1,0,0,0.33,0}
 \credit{Alan M. Turing}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}
 ```
 
-The values are the scores divided by 100 (0.4, 0.5, 0.2), not the 1, 0.66 and 0.33 level shades
-that the header comment and `--help` describe. `--yes-no` turns every non-zero value into 1.
+Levels become the shades 1, 0.66 and 0.33. `--yes-no` turns every non-zero value into 1.
 
 ### Example: Tenzing
 
@@ -707,14 +712,14 @@ links for the same person.
 
 ```text
 $ credit-matrix ask contributors.json --contributor ada
-https://credit.duinlab.nl/#s=VYqxCsMwDAV_pbxZAtmR7URb9_5ByGDHDhRKMxSSIeTfC4UWyi0Hdwc2mCdUGEqqS9Mc2JdYWMOSuAzRsYaSuuZdbIuCMMOQawZhh7k0qHZ9F726QMiw8cD9dzxhuNZ8ua1be-S5gbDCICLCIuLZ9T6wyJBAeMFGJ0L_6Fc-aTqn8w0
+https://credit.duinlab.nl/#s=VYq9CsJAEAZfRb76FvYum_vZzt43CCnWuwsIYgohFiHvLogIMs3AzI4NGhwaFGOVq6U6UJfWSbgEym3pZLIsObZWgq9wqFBYMzi8oD4VkSFHSUMQB4NOO26_4wHFudnpsm79brXDYYWCmZmYOZDPYSTmkuDwhE6e2f0T41c-aT7m4w0
 ```
 
 With a blank form and another app address:
 
 ```text
 $ credit-matrix ask contributors.json --contributor rosalind --blank --base-url https://example.org/credit/
-https://example.org/credit/#s=dcq9CsIwFIbhWynffCJJcxKbs-sFuJYO-VEIlhRa0KH03l1cHOSdHnh3vCA9oUBg870k51hpk6xi_3AqsfVKD5qtNyn7EEDIEKzLFufaCggJYghviDkHZjtY33s2hAgZd9TfuUFw-7K7nLrrGttzrg2EDTJq-tt0TMcH
+https://example.org/credit/#s=dcq7CsJAEEbhVwl_PSsmsxdnen0A25BiLwqLYYUEtAh5dxsbCznVB2fDCzoQChSOOQfpo8kid2PLUIxkYZOd9ynldGPPIGQoluca59oKCAnaE97QPoi1fPI2OGFChI4b6u_coLh-2Z0P3WWJ7THXBsIKHY_0t2mf9g8
 ```
 
 The CLI does not set the yes/no flag that links from the app can carry.
@@ -749,19 +754,3 @@ credit-matrix convert contributors.json --to ro-crate 2>/dev/null > fragment.jso
 
 Use `2>/dev/null` with care: it also hides the error message when the command exits 1 or 2. Check
 the exit code (`$?`) as well.
-
-## Behavior to know about
-
-These are as the code behaves today.
-
-- A flag the command does not use is silently ignored, so `statement --to csv` and
-  `convert --to csv --locale fr` do not warn.
-- With no roles, `statement` and `latex-credits` exit 1, but `csv`, `jats`, `crossref`, `md`,
-  `tenzing`, `quarto`, `myst`, `ro-crate`, `svg` and `pdf` print an empty roster and exit 0.
-- `--version` wins over `--help`, and both win over a missing command.
-- `--size 0` and `--size abc` report "Heatmap size must be between 0 and 256", but 0 is not
-  allowed: the size must be above 0.
-- `--palette`, `--shape` and `--labels` errors do not list the allowed values. See
-  [Figure flags](#figure-flags).
-- `convert --to latex-credits` writes the scores divided by 100, where `--help` and the file's own
-  header comment say it writes level shades.
