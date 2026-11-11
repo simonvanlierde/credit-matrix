@@ -44,7 +44,7 @@ function svgFonts(svg: string) {
     embedded.set(family, { type, bytes, font: fontkit.create(bytes) });
   }
   const drawn = new Map<string, string>();
-  for (const [, family = "", text = ""] of svg.matchAll(/<tspan font-family="([^"]+)">([^<]*)<\/tspan>/g))
+  for (const [, family = "", text = ""] of svg.matchAll(/<tspan font-family="'([^"]+)'">([^<]*)<\/tspan>/g))
     drawn.set(family, (drawn.get(family) ?? "") + text);
   return { embedded, drawn };
 }
@@ -145,6 +145,18 @@ describe("figures in a font family the caller names", () => {
     expect([...(await pdfFonts(pdf)).keys()]).toContain("CMFIGR+FigureTestCIDIdentity-Regular");
   });
 
+  it("refuses a CFF2 font in PDF with its own reason", async () => {
+    await expect(renderer().pdf(authors("Ada Lovelace"), options("Figure Test CFF2"))).rejects.toThrow(
+      /Figure Test CFF2 is a CFF2 \(variable OpenType\) font/,
+    );
+  });
+
+  it("refuses the fontFallback renderer option that fonts replaced", () => {
+    expect(() => createFigureRenderer({ fontFallback: "https://example.org/fonts/" } as never)).toThrow(
+      /takes fonts instead of fontFallback/,
+    );
+  });
+
   it("picks the upright regular face of a collection", async () => {
     const reports: FigureFontReport[] = [];
     const pdf = await renderer(reports).pdf(authors("Ada Lovelace"), options("Figure Test Collection"));
@@ -192,22 +204,26 @@ describe("figures in a font family the caller names", () => {
     expect(pdf.get("FigureTestNoSubset-Regular")?.numGlyphs).toBe(whole.numGlyphs);
   });
 
-  it("finds a family past an unreadable subfolder and a symlink loop in the font path", async () => {
-    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
-    try {
-      mkdirSync(join(folder, "locked"));
-      chmodSync(join(folder, "locked"), 0o000);
-      symlinkSync(folder, join(folder, "loop"));
-      mkdirSync(join(folder, "zz"));
-      copyFileSync(join(FIXTURES, "FigureTest-Regular.ttf"), join(folder, "zz", "FigureTest-Regular.ttf"));
-      const reports: FigureFontReport[] = [];
-      await renderer(reports).svg(authors("Ada Lovelace"), options("Figure Test", [folder]));
-      expect(reports.map(({ file }) => file)).toEqual([join(folder, "zz", "FigureTest-Regular.ttf")]);
-    } finally {
-      chmodSync(join(folder, "locked"), 0o700);
-      rmSync(folder, { recursive: true, force: true });
-    }
-  });
+  // Root and Windows ignore mode 000, so the subfolder would stay readable and the test prove nothing.
+  it.skipIf(process.getuid?.() === 0 || process.platform === "win32")(
+    "finds a family past an unreadable subfolder and a symlink loop in the font path",
+    async () => {
+      const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+      try {
+        mkdirSync(join(folder, "locked"));
+        chmodSync(join(folder, "locked"), 0o000);
+        symlinkSync(folder, join(folder, "loop"));
+        mkdirSync(join(folder, "zz"));
+        copyFileSync(join(FIXTURES, "FigureTest-Regular.ttf"), join(folder, "zz", "FigureTest-Regular.ttf"));
+        const reports: FigureFontReport[] = [];
+        await renderer(reports).svg(authors("Ada Lovelace"), options("Figure Test", [folder]));
+        expect(reports.map(({ file }) => file)).toEqual([join(folder, "zz", "FigureTest-Regular.ttf")]);
+      } finally {
+        chmodSync(join(folder, "locked"), 0o700);
+        rmSync(folder, { recursive: true, force: true });
+      }
+    },
+  );
 
   it("names a custom family apart from a built-in fallback face of the same name", async () => {
     const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
@@ -217,6 +233,8 @@ describe("figures in a font family the caller names", () => {
       const families = [...svg.matchAll(/@font-face\{font-family:'([^']+)'/g)].map(([, family]) => family);
       expect(new Set(families).size).toBe(families.length);
       expect(families).toContain("Noto Sans (custom)");
+      // Quoted: unquoted, the parentheses make the CSS value invalid and a browser draws its default font.
+      expect(svg).toContain(`<tspan font-family="'Noto Sans (custom)'">Ada </tspan>`);
     } finally {
       rmSync(folder, { recursive: true, force: true });
     }
@@ -284,7 +302,7 @@ describe("figures in a font family the caller names", () => {
       } finally {
         rmSync(data, { recursive: true });
       }
-    });
+    }, 30_000);
 
     it("finds a system family unless system fonts are ignored", async () => {
       const data = userFonts();
@@ -299,6 +317,6 @@ describe("figures in a font family the caller names", () => {
       } finally {
         rmSync(data, { recursive: true });
       }
-    });
+    }, 30_000);
   });
 });

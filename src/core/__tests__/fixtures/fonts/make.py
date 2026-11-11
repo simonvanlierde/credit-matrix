@@ -12,7 +12,8 @@ FigureTestCID-Regular.otf is the CID-keyed CFF case: "Ada 中文" from the first
 OFL 1.1, src/fonts/OFL-NotoSansCJK.txt), subset with fontTools' defaults so its CIDs are no longer its
 glyph ids, and renamed "Figure Test CID" (name IDs 1, 4, 16; 6 FigureTestCID-Regular).
 FigureTestCIDIdentity-Regular.otf is "ABCDE" from the same face with retain_gids, so its CIDs stay its
-glyph ids, renamed "Figure Test CID Identity".
+glyph ids, renamed "Figure Test CID Identity". FigureTestCFF2-Regular.otf is FigureTestCFF-Regular.otf
+through fontTools.cffLib.CFFToCFF2.convertCFFToCFF2, renamed "Figure Test CFF2".
 """
 
 import hashlib

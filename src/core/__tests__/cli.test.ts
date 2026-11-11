@@ -497,7 +497,7 @@ it("draws a figure in a font family from --font-path and names its file on stand
   ];
   const svg = await run([...figure, "--ignore-system-fonts", "--to", "svg"]);
   expect(svg).toContain("font-family:'Figure Test'");
-  expect(svg).toContain('<tspan font-family="Figure Test">Grace Hopper</tspan>');
+  expect(svg).toContain("<tspan font-family=\"'Figure Test'\">Grace Hopper</tspan>");
   expect(stderr.mock.calls.flat().join("")).toBe(
     `credit-matrix: font: Figure Test from ${join(fonts, "FigureTest-Regular.ttf")}\n`,
   );

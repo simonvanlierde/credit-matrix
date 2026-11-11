@@ -53,6 +53,7 @@ export async function createSubsetter(wasm: Uint8Array): Promise<Subsetter> {
             if (!result) throw new Error("HarfBuzz could not subset a figure font.");
             const blob = hb.hb_face_reference_blob?.(result) ?? 0;
             const length = hb.hb_blob_get_length?.(blob) ?? 0;
+            if (!length) throw new Error("HarfBuzz returned an empty subset of a figure font.");
             const pointer = hb.hb_blob_get_data?.(blob, 0) ?? 0;
             const out = heap().slice(pointer, pointer + length);
             hb.hb_blob_destroy?.(blob);

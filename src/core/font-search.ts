@@ -34,8 +34,9 @@ interface Face {
   variable: boolean;
 }
 
-const FONT_FILE = /\.(?:ttf|otf|ttc|otc)$/i;
 const WEB_FONT_FILE = /\.woff2?$/i;
+// Web fonts are found only to name them in the error when a family exists only as one.
+const FONT_FILE = /\.(?:ttf|otf|ttc|otc|woff2?)$/i;
 const SFNT = new Set(["\x00\x01\x00\x00", "OTTO", "true"]);
 
 const text = (bytes: Uint8Array) => String.fromCharCode(...bytes);
@@ -347,24 +348,29 @@ export async function findFigureFont(family: string, options: FontSearchOptions 
   const groups = [(options.fontPath ?? []).map((folder) => resolve(folder))];
   if (!options.ignoreSystemFonts) groups.push(await systemFolders());
   let best: Face | undefined;
+  // One walk per folder: the web fonts are kept for the error when the family is not found.
+  const webFonts: string[] = [];
   for (const folders of groups) {
     for (const folder of folders)
-      for (const file of await fontFiles(folder, FONT_FILE))
+      for (const file of await fontFiles(folder, FONT_FILE)) {
+        if (WEB_FONT_FILE.test(file)) {
+          webFonts.push(file);
+          continue;
+        }
         for (const face of await faces(file))
           if (face.families.some((name) => name.toLowerCase() === wanted) && (!best || compare(face, best) < 0))
             best = face;
+      }
     // A family in a fontPath folder wins over the same family installed on the system.
     if (best) break;
   }
   const searched = `${options.fontPath?.length ? `the font path (${options.fontPath.join(", ")})` : "no font path"}${options.ignoreSystemFonts ? ", with system fonts ignored" : " or the system fonts"}`;
   if (!best) {
-    for (const folders of groups)
-      for (const folder of folders)
-        for (const file of await fontFiles(folder, WEB_FONT_FILE))
-          if ((await webFontFamilies(file)).some((name) => name.toLowerCase() === wanted))
-            throw new FigureFontFileError(
-              `${file} is a web font (WOFF), which figures cannot embed. Install the .ttf or .otf build of ${family}.`,
-            );
+    for (const file of webFonts)
+      if ((await webFontFamilies(file)).some((name) => name.toLowerCase() === wanted))
+        throw new FigureFontFileError(
+          `${file} is a web font (WOFF), which figures cannot embed. Install the .ttf or .otf build of ${family}.`,
+        );
     throw new FigureFontFileError(`Cannot find the font family ${family} in ${searched}.`);
   }
   const { readFile } = await nodeModule<typeof import("node:fs/promises")>("node:fs/promises");

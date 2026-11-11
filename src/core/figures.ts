@@ -203,6 +203,12 @@ function unescapeXml(text: string): string {
   return text.replace(/&(amp|lt|gt|quot|apos);/g, (_, name: string) => entities[name] ?? "");
 }
 
+/** A family name as a quoted CSS string, escaped for an XML attribute or `<style>`: unquoted, a name such as
+ * "Noto Sans (custom)" or one starting with a digit is invalid CSS, and the viewer draws its default font. */
+function cssFamily(family: string): string {
+  return `'${escapeXml(family.replace(/['\\]/g, "\\$&"))}'`;
+}
+
 function base64(bytes: Uint8Array): string {
   let binary = "";
   for (let index = 0; index < bytes.length; index += 32768)
@@ -222,6 +228,11 @@ function color(hex: string | undefined) {
  * can require the full fonts installed locally to change its text.
  */
 export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}): FigureRenderer {
+  // Before 0.13.0 the renderer took fontFallback (a font URL); the name now means a per-call sans or serif.
+  if ("fontFallback" in rendererOptions)
+    throw new HeatmapOptionError(
+      "createFigureRenderer takes fonts instead of fontFallback; fontFallback is now a per-call sans or serif option.",
+    );
   const loaded = new Map<FontSource, FigureFont>();
   const loading = new Map<FontSource, Promise<void>>();
   // Faces already warned about: the app redraws its preview on every settings change.
@@ -307,10 +318,10 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           const builtIn = [...SOURCES, ...SCRIPT_FACES.flatMap(([, sans, serif]) => [sans, serif]), EMOJI].some(
             (known) => known.family.toLowerCase() === found.family.toLowerCase(),
           );
-          const cssFamily = builtIn ? `${found.family} (custom)` : found.family;
-          const source: FontSource = { family: cssFamily, face: "sans", serif: found.serif };
+          const svgFamily = builtIn ? `${found.family} (custom)` : found.family;
+          const source: FontSource = { family: svgFamily, face: "sans", serif: found.serif };
           loaded.set(source, {
-            family: cssFamily,
+            family: svgFamily,
             bytes: found.bytes,
             font: fontkit.create(found.bytes),
             shaped: false,
@@ -550,7 +561,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
                 const characters = used.get(run.font) ?? new Set<string>();
                 for (const character of run.text) characters.add(character);
                 used.set(run.font, characters);
-                return `<tspan font-family="${escapeXml(run.font.family)}">${escapeXml(run.text)}</tspan>`;
+                return `<tspan font-family="${cssFamily(run.font.family)}">${escapeXml(run.text)}</tspan>`;
               })
               .join("");
             const ownAttrs = attrs.replace(/ font-family="[^"]*"/, "").replace(/ font-weight="[^"]*"/, "");
@@ -563,8 +574,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       const faces = [...used].map(([font, characters]) => {
         const bytes = embeddable(font, characters, false);
         const type = String.fromCharCode(...bytes.subarray(0, 4)) === "OTTO" ? "otf" : "ttf";
-        const family = escapeXml(font.family.replace(/['\\]/g, "\\$&"));
-        return `@font-face{font-family:'${family}';src:url('data:font/${type};base64,${base64(bytes)}');font-weight:400}`;
+        return `@font-face{font-family:${cssFamily(font.family)};src:url('data:font/${type};base64,${base64(bytes)}');font-weight:400}`;
       });
       return svg.replace(
         /(<svg\b[^>]*>)/,
@@ -753,9 +763,10 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
             if (String.fromCharCode(...bytes.subarray(0, 4)) === "OTTO") {
               // As CIDFontType0, a viewer maps each code through the CFF charset (CID to glyph), but the codes
               // are glyph ids: a CID-keyed font whose CIDs are not its glyph ids would draw the wrong glyphs.
-              if (!cidsAreGlyphIds(bytes))
+              const problem = cffProblem(bytes);
+              if (problem)
                 throw new FigureFontFileError(
-                  `${runFace.family} is a CID-keyed font whose CIDs differ from its glyph ids, which PDF figures cannot embed. Install its TrueType (.ttf) build.`,
+                  `${runFace.family} ${problem}, which PDF figures cannot embed. Install its TrueType (.ttf) build.`,
                 );
               openType.push(font);
             }
@@ -836,16 +847,25 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
   };
 }
 
-/**
- * Whether a CFF-flavored font's charset maps every glyph id to the same CID. Name-keyed CFF has no CIDs and
- * passes. Read from the bytes, since fontkit 1.1.1 cannot always parse the CFF table.
- */
-function cidsAreGlyphIds(font: Uint8Array): boolean {
-  const view = new DataView(font.buffer, font.byteOffset, font.byteLength);
-  let at = -1;
-  for (let record = 12; record < 12 + view.getUint16(4) * 16; record += 16)
-    if (view.getUint32(record) === 0x43464620) at = view.getUint32(record + 8);
-  if (at < 0) return false;
+/** Why an OTTO font cannot go into a PDF figure, or undefined. Read from the bytes: fontkit 1.1.1 often cannot. */
+function cffProblem(font: Uint8Array): string | undefined {
+  try {
+    const view = new DataView(font.buffer, font.byteOffset, font.byteLength);
+    const tables = new Map<number, number>();
+    for (let record = 12; record < 12 + view.getUint16(4) * 16; record += 16)
+      tables.set(view.getUint32(record), view.getUint32(record + 8));
+    // pdf-lib's embed and the CIDFontType0 relabel assume CFF; viewers do not draw CFF2 in a PDF.
+    if (tables.has(0x43464632)) return "is a CFF2 (variable OpenType) font";
+    const at = tables.get(0x43464620);
+    if (at === undefined) return "has no CFF table";
+    return cidsAreGlyphIds(font, view, at) ? undefined : "is a CID-keyed font whose CIDs differ from its glyph ids";
+  } catch {
+    return "has a CFF table that cannot be read";
+  }
+}
+
+/** Whether the CFF table at `at` maps every glyph id to the same CID; name-keyed CFF has no CIDs and passes. */
+function cidsAreGlyphIds(font: Uint8Array, view: DataView, at: number): boolean {
   const byte = (offset: number) => view.getUint8(at + offset);
   const u16 = (offset: number) => view.getUint16(at + offset);
   const sized = (offset: number, size: number) => {
