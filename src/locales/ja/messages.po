@@ -1653,6 +1653,12 @@ msgstr "グレースケール"
 msgid "heatmapPaleColor"
 msgstr "この色では補助的な貢献を区別しにくくなります。より暗い色を選んでください。"
 
+msgid "settingsReset"
+msgstr "リセット"
+
+msgid "heatmapPerContributorNote"
+msgstr "貢献者ごとに色分けしています。グレースケール印刷では、単色を選んでください。"
+
 msgid "heatmapAdvanced"
 msgstr "詳細設定"
 

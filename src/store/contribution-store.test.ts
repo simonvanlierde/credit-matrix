@@ -7,6 +7,7 @@ import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import {
   announcingStorage,
   askSummary,
+  DEFAULT_STATEMENT_OPTIONS,
   type Draft,
   ensureHydrated,
   followOtherTab,
@@ -35,10 +36,6 @@ describe("contribution store", () => {
     it("accepts supported settings at their bounds and repairs malformed values", () => {
       const settings = {
         ...DEFAULT_HEATMAP_SETTINGS,
-        color: "#ABCDEF",
-        colorBy: "contributor" as const,
-        horizontal: true,
-        acronyms: true,
         labels: "short" as const,
         skipempty: false,
         legend: false,
@@ -60,7 +57,6 @@ describe("contribution store", () => {
         shape: "rounded",
       });
       for (const input of [undefined, null, 1, "settings", []]) expect(repairHeatmapSettings(input)).toBeNull();
-      expect(repairHeatmapSettings({ colorBy: "rainbow" })?.colorBy).toBe("color");
       for (const input of [NaN, Infinity, -Infinity, "22", null, 7, 49]) {
         expect(repairHeatmapSettings({ size: input })?.size).toBe(DEFAULT_HEATMAP_SETTINGS.size);
       }
@@ -75,7 +71,6 @@ describe("contribution store", () => {
       const first = store().activeDraftId;
       const settings = {
         ...DEFAULT_HEATMAP_SETTINGS,
-        color: "#abc",
         legend: false,
         legendPosition: "right" as const,
         marks: true,
@@ -117,7 +112,7 @@ describe("contribution store", () => {
               authors: [author],
               heatmapSettings: {
                 color: "url(unsafe)",
-                horizontal: true,
+                horizontal: "yes",
                 acronyms: "yes",
                 labels: "abbreviated",
                 skipempty: false,
@@ -140,13 +135,53 @@ describe("contribution store", () => {
       ) as typeof initial;
       expect(restored.heatmapSettings).toEqual({
         ...DEFAULT_HEATMAP_SETTINGS,
-        horizontal: true,
         skipempty: false,
         levels: false,
       });
       expect(restored.authors).toEqual([author]);
       const absent = merge?.({ activeDraftId: "d1", drafts: { d1: {} } }, initial) as typeof initial;
       expect(absent.heatmapSettings).toBeNull();
+    });
+
+    it("migrates a draft that kept colour, orientation and initials in its figure settings", () => {
+      const { merge } = useContributionStore.persist.getOptions();
+      const load = (draft: Record<string, unknown>) =>
+        merge?.({ activeDraftId: "d1", drafts: { d1: draft } }, initial) as typeof initial;
+      const legacy = {
+        heatmapMonoColor: "#009e73",
+        colorByContributor: false,
+        heatmapSettings: { color: "#abcdef", colorBy: "contributor", horizontal: true, acronyms: true, marks: true },
+      };
+      const migrated = load(legacy);
+      // The grid's colour wins; orientation and initials, which the grid never saved, come from the figure.
+      expect(migrated.heatmapMonoColor).toBe("#009e73");
+      expect(migrated.colorByContributor).toBe(false);
+      expect(migrated.transpose).toBe(true);
+      expect(migrated.initials).toBe(true);
+      expect(migrated.heatmapSettings).toEqual({ ...DEFAULT_HEATMAP_SETTINGS, marks: true });
+      expect(migrated.statementOptions).toEqual(DEFAULT_STATEMENT_OPTIONS);
+      // Once the draft stores them itself, the old copies no longer count.
+      expect(load({ ...legacy, transpose: false, initials: false }).transpose).toBe(false);
+      expect(load({ statementOptions: { initials: true, showLevels: "yes" } }).statementOptions).toEqual({
+        ...DEFAULT_STATEMENT_OPTIONS,
+        initials: true,
+      });
+    });
+
+    it("shares colour, orientation and initials between the grid and the figure, per draft", () => {
+      store().setHeatmapMonoColor("#00724c");
+      store().setTranspose(true);
+      store().setInitials(true);
+      store().setStatementOptions({ separateAck: false });
+      const first = store().activeDraftId;
+      store().createDraft();
+      expect([store().heatmapMonoColor, store().transpose, store().initials]).not.toEqual(["#00724c", true, true]);
+      expect(store().statementOptions).toEqual(DEFAULT_STATEMENT_OPTIONS);
+      store().switchDraft(first);
+      expect([store().heatmapMonoColor, store().transpose, store().initials]).toEqual(["#00724c", true, true]);
+      expect(store().statementOptions.separateAck).toBe(false);
+      store().resetGridView();
+      expect([store().transpose, store().initials, store().colorByContributor]).toEqual([false, false, true]);
     });
   });
 
@@ -1086,7 +1121,7 @@ describe("contribution store", () => {
       store().setTitle("Open here");
       const open = store().activeDraftId;
       const stored = JSON.parse(globalThis.localStorage.getItem(PERSIST_KEY) ?? "{}");
-      const settings = { ...DEFAULT_HEATMAP_SETTINGS, legend: false, color: "#abc" };
+      const settings = { ...DEFAULT_HEATMAP_SETTINGS, legend: false };
       saveFromOtherTab(
         open,
         { [open]: { ...stored.state.drafts[open], title: "Edited there", heatmapSettings: settings } },
@@ -1698,6 +1733,9 @@ describe("contribution store", () => {
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
         colorByContributor: false,
+        transpose: false,
+        initials: false,
+        statementOptions: DEFAULT_STATEMENT_OPTIONS,
         heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,
@@ -1758,6 +1796,9 @@ describe("contribution store", () => {
         inputMode: "toggle" as const,
         heatmapMonoColor: "#2563eb",
         colorByContributor: false,
+        transpose: false,
+        initials: false,
+        statementOptions: DEFAULT_STATEMENT_OPTIONS,
         heatmapSettings: null,
         outputLocale: "en" as const,
         updatedAt: 0,
@@ -1816,6 +1857,9 @@ describe("contribution store", () => {
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
         colorByContributor: false,
+        transpose: false,
+        initials: false,
+        statementOptions: DEFAULT_STATEMENT_OPTIONS,
         heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,
@@ -1875,6 +1919,9 @@ describe("contribution store", () => {
         inputMode: "toggle",
         heatmapMonoColor: "#2563eb",
         colorByContributor: false,
+        transpose: false,
+        initials: false,
+        statementOptions: DEFAULT_STATEMENT_OPTIONS,
         heatmapSettings: null,
         outputLocale: "en",
         updatedAt: 0,

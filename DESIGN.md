@@ -123,10 +123,10 @@ The heatmap levels must stand out more from Supporting to Lead, in both themes. 
 fill mixes the chosen hue with white (40%, 70%, 100% of the hue). On a dark page that scale looks
 upside down, so dark mode keeps the hue and raises its lightness instead: 30%, 48% and 77% (for ink
 blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark marks on Lead. Exported heatmaps always use the
-light scale on a white background, because a figure goes onto a manuscript page. A figure uses one
-hue by default, since it must read in greyscale print and in any journal's style. *Per contributor*
-under Figure settings gives each person their hue for slides and posters, with the level key in a
-neutral grey. Figure cells default
+light scale on a white background, because a figure goes onto a manuscript page. A figure draws
+what the grid draws: one hue, or with *Per contributor* each person's hue for slides and posters,
+with the level key in a neutral grey. The preview says so when it is per contributor, because one
+hue is the safe choice for greyscale print and any journal's style. Figure cells default
 to square corners and a thin neutral rule; the live editing controls retain their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
 
@@ -137,9 +137,10 @@ after the table. Figure legends use a vertical key beside tall narrow grids when
 excessive width, otherwise a wrapped key below. Allow Right, Below and Hidden overrides. The heatmap export popover previews the actual figure
 on white paper, with fit-to-width and actual-size views and the PNG pixel dimensions.
 
-Figure settings belong beside that preview and are saved per draft, independently of the editor's
-display options and contribution values. Keep layout, labels, legend and colour together; put font
-and cell geometry under Advanced. Reset restores the figure defaults. On a narrow screen, settings
+Figure settings belong beside that preview and are saved per draft, independently of contribution
+values. Colour, orientation and initials are the grid's own settings, stored once, so changing one
+in either panel changes both. Keep layout, labels, legend and colour together; put font and cell
+geometry under Advanced. Reset restores the defaults. On a narrow screen, settings
 replace the preview until the person closes them; desktop shows both side by side.
 Keep export recipes behind a disclosure in Figure settings. Show a selectable snippet and copy
 action for the chosen document tool, with any differences from the preview beside the snippet.
@@ -302,6 +303,19 @@ When a license asks for attribution, give it in the deployed app, not only in th
 the work, name its creator, and link the license
 itself. Put the notice next to the control that takes the material off the page. Keep the project's
 own copyright with the brand, not in the small print.
+
+### Settings panels
+
+The grid's view options, Figure settings, the statement options and the language popover share
+one vocabulary, built from `src/components/ui/settings-panel.tsx`. A panel opens with its title in
+`text-sm` semibold and a text Reset on the right. Sections have a short semibold label in sentence
+case, never letterspaced capitals, and a rule (`border-outline-variant/40`) between them. An on/off
+setting is a switch on the right with its label on the left; the whole row is the label. Two or three
+short options are a small segmented control with a label; four or more, or long labels, are a select.
+Numbers keep the figure number field. Colour is one row of swatches: *Per contributor* first (a
+conic gradient of the contributor hues), the preset hues, then *Custom*. A pressed swatch shows a
+ring and a check, and the chosen one is named beside the label. Small popovers are `w-72`; Figure
+settings keeps its 15rem column.
 
 ### Contribution matrix
 

@@ -1,23 +1,21 @@
-import { Check, CheckCheck, Clock, Columns3, Rows3, Settings2, UserPlus } from "lucide-react";
+import { Check, CheckCheck, Clock, Settings2, UserPlus } from "lucide-react";
 import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { ColorPopover } from "@/components/ui/color-popover";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { LevelMark } from "@/components/ui/level-mark";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
-import { Switch } from "@/components/ui/switch";
+import {
+  ColorSwatches,
+  SettingChoice,
+  SettingSwitch,
+  SettingsPanel,
+  SettingsSection,
+} from "@/components/ui/settings-panel";
 import { UndoBar } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
-import {
-  CONTRIBUTOR_HUES,
-  contributorHue,
-  contributorHues,
-  heatCellColor,
-  onColor,
-  pageMarkColor,
-} from "@/core/contributor-color";
+import { contributorHue, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
 import { useLocale, useTranslations } from "@/lib/translations";
@@ -27,7 +25,7 @@ import { useDark } from "@/lib/use-dark";
 import { useSettled } from "@/lib/use-settled";
 import { type InputMode, useAskSummary, useContributionStore } from "@/store/contribution-store";
 import { BulkAssignMenu, useBulkUndo } from "./BulkAssignMenu";
-import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
+import { ICON_TOOL_BUTTON, LEVEL_KEY, MENU_ITEM } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
 import { MobileRoleList } from "./MobileRoleList";
 import { RoleInfo } from "./RoleInfo";
@@ -81,6 +79,11 @@ export function ContributionGrid() {
   );
   const colorByContributor = useContributionStore((s) => s.colorByContributor);
   const setColorByContributor = useContributionStore((s) => s.setColorByContributor);
+  const acronyms = useContributionStore((s) => s.initials);
+  const setAcronyms = useContributionStore((s) => s.setInitials);
+  const transpose = useContributionStore((s) => s.transpose);
+  const setTranspose = useContributionStore((s) => s.setTranspose);
+  const resetGridView = useContributionStore((s) => s.resetGridView);
   const recentReply = useContributionStore((s) => s.recentReply);
   const asks = useContributionStore((s) => s.asks);
   const selfId = useContributionStore((s) => s.selfId);
@@ -125,8 +128,6 @@ export function ContributionGrid() {
       announce(t("stripEveryoneAgreed"));
     }
   }, [activeDraftId, everyoneAgreed, settled, t]);
-  const [acronyms, setAcronyms] = useState(false);
-  const [transpose, setTranspose] = useState(false);
   // The single tab stop in the matrix; arrow keys move it. Reset when the
   // orientation flips, since row/col swap meaning.
   const [activeCell, setActiveCell] = useState({ row: 0, col: 0 });
@@ -482,85 +483,39 @@ export function ContributionGrid() {
               <PopoverTrigger aria-label={t("heatmapOptions")} title={t("heatmapOptions")} className={ICON_TOOL_BUTTON}>
                 <Settings2 className="size-4" aria-hidden="true" />
               </PopoverTrigger>
-              <PopoverContent
-                aria-label={t("heatmapOptions")}
-                align="end"
-                className="grid w-64 max-w-[calc(100vw-2rem)] gap-2"
-              >
-                <p className="mb-1 text-sm font-semibold text-on-surface">{t("heatmapOptions")}</p>
-                <ColorPopover
-                  value={heatmapMonoColor}
-                  onChange={setHeatmapMonoColor}
-                  label={t("gridColor")}
-                  trigger={
-                    <button
-                      type="button"
-                      aria-label={t("gridColor")}
-                      title={t("gridColor")}
-                      className={`${TOOL_BUTTON} justify-between`}
-                    >
-                      {t("colorLabel")}
-                      <span
-                        className="h-3 w-3 rounded-full border border-outline-variant/50"
-                        // Per-person hues on: picking a colour switches to one hue, so show what is drawn now.
-                        style={{
-                          background: hues
-                            ? `conic-gradient(${CONTRIBUTOR_HUES.slice(0, 4).join(", ")})`
-                            : heatmapMonoColor,
-                        }}
-                      />
-                    </button>
-                  }
-                />
-                <button
-                  type="button"
-                  aria-pressed={transpose}
-                  onClick={() => setTranspose(!transpose)}
-                  title={t("transposeHint")}
-                  className={`${TOOL_BUTTON} justify-between aria-pressed:border-primary aria-pressed:text-primary`}
-                >
-                  {t("transpose")}
-                  {transpose ? (
-                    <Columns3 className="h-3.5 w-3.5" aria-hidden="true" />
-                  ) : (
-                    <Rows3 className="h-3.5 w-3.5" aria-hidden="true" />
-                  )}
-                </button>
-                <label
-                  htmlFor="grid-color-by-contributor"
-                  className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-xs text-on-surface-variant"
-                >
-                  {t("colorByContributor")}
-                  <Switch
-                    id="grid-color-by-contributor"
-                    checked={colorByContributor}
-                    onCheckedChange={setColorByContributor}
+              <PopoverContent aria-label={t("heatmapOptions")} align="end" className="w-72 max-w-[calc(100vw-2rem)]">
+                <SettingsPanel title={t("heatmapOptions")} onReset={resetGridView}>
+                  <ColorSwatches
+                    label={t("colorLabel")}
+                    color={heatmapMonoColor}
+                    perContributor={colorByContributor}
+                    onColor={setHeatmapMonoColor}
+                    onPerContributor={() => setColorByContributor(true)}
                   />
-                </label>
-                <label
-                  htmlFor="grid-use-initials"
-                  className="flex min-h-9 cursor-pointer items-center justify-between gap-3 px-3 text-xs text-on-surface-variant"
-                >
-                  {/* The accessible name starts with the visible "Use initials",
-                    so voice control saying the visible label hits it (2.5.3). */}
-                  {t("useInitials")}
-                  <Switch
-                    id="grid-use-initials"
-                    checked={acronyms}
-                    onCheckedChange={setAcronyms}
-                    aria-label={t("a11yUseInitials")}
-                  />
-                </label>
+                  <SettingsSection label={t("heatmapLayout")}>
+                    <SettingChoice
+                      label={t("heatmapOrientation")}
+                      value={transpose ? "contributors" : "roles"}
+                      onChange={(next) => setTranspose(next === "contributors")}
+                      options={[
+                        ["roles", t("heatmapRolesInRows")],
+                        ["contributors", t("heatmapContributorsInRows")],
+                      ]}
+                    />
+                    {/* The accessible name starts with the visible "Use initials",
+                      so voice control saying the visible label hits it (2.5.3). */}
+                    <SettingSwitch
+                      label={t("useInitials")}
+                      checked={acronyms}
+                      onChange={setAcronyms}
+                      ariaLabel={t("a11yUseInitials")}
+                    />
+                  </SettingsSection>
+                </SettingsPanel>
               </PopoverContent>
             </Popover>
           </span>
-          <HeatmapExports
-            authors={authors}
-            monoColor={heatmapMonoColor}
-            showLevels={graded}
-            transpose={transpose}
-            acronyms={acronyms}
-          />
+          <HeatmapExports authors={authors} showLevels={graded} />
         </div>
       </div>
 

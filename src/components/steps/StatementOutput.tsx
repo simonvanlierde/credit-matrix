@@ -3,7 +3,7 @@ import { useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
-import { Switch } from "@/components/ui/switch";
+import { SettingSwitch, SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
 import {
   CREDIT_ROLES,
   type CreditRoleName,
@@ -32,7 +32,8 @@ import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useDark } from "@/lib/use-dark";
 import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
-import { useAskSummary, useContributionStore } from "@/store/contribution-store";
+import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "@/store/contribution-store";
+import { ICON_TOOL_BUTTON } from "./grid-shared";
 
 type DataFormat =
   | "xml"
@@ -131,9 +132,8 @@ export function StatementOutput() {
   const [copiedFormat, setCopiedFormat] = useState<DataFormat>("xml");
   // Statement-local output controls (independent of the heatmap's).
   const [grouping, setGrouping] = useState<"by-author" | "by-role">("by-author");
-  const [acronyms, setAcronyms] = useState(false);
-  const [showLevels, setShowLevels] = useState(false);
-  const [separateAck, setSeparateAck] = useState(true);
+  const { initials: acronyms, showLevels, separateAck } = useContributionStore((s) => s.statementOptions);
+  const setStatementOptions = useContributionStore((s) => s.setStatementOptions);
 
   const format: StatementFormat =
     grouping === "by-role" ? (acronyms ? "by-role-short" : "by-role") : acronyms ? "by-author-short" : "by-author";
@@ -235,27 +235,40 @@ export function StatementOutput() {
             <PopoverTrigger
               aria-label={t("statementOptions")}
               title={t("statementOptions")}
-              className="flex size-9 items-center justify-center rounded border border-edge bg-surface-bright text-on-surface-variant transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:bg-primary/10 data-[state=open]:text-primary"
+              className={ICON_TOOL_BUTTON}
             >
               <Settings2 className="size-4" aria-hidden="true" />
             </PopoverTrigger>
-            <PopoverContent align="end" aria-label={t("statementOptions")} className="grid w-60 gap-3">
-              <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                <Switch checked={acronyms} onCheckedChange={setAcronyms} aria-label={t("a11yUseInitials")} />
-                {t("useInitials")}
-              </span>
-              {canShowLevels && (
-                <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                  <Switch checked={showLevels} onCheckedChange={setShowLevels} aria-label={t("a11yShowLevels")} />
-                  {t("showLevels")}
-                </span>
-              )}
-              {hasNonAuthors && (
-                <span className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                  <Switch checked={separateAck} onCheckedChange={setSeparateAck} aria-label={t("a11ySeparateAcks")} />
-                  {t("separateAcknowledgements")}
-                </span>
-              )}
+            <PopoverContent align="end" aria-label={t("statementOptions")} className="w-72 max-w-[calc(100vw-2rem)]">
+              <SettingsPanel
+                title={t("statementOptions")}
+                onReset={() => setStatementOptions(DEFAULT_STATEMENT_OPTIONS)}
+              >
+                <SettingsSection>
+                  <SettingSwitch
+                    label={t("useInitials")}
+                    checked={acronyms}
+                    onChange={(initials) => setStatementOptions({ initials })}
+                    ariaLabel={t("a11yUseInitials")}
+                  />
+                  {canShowLevels && (
+                    <SettingSwitch
+                      label={t("showLevels")}
+                      checked={showLevels}
+                      onChange={(next) => setStatementOptions({ showLevels: next })}
+                      ariaLabel={t("a11yShowLevels")}
+                    />
+                  )}
+                  {hasNonAuthors && (
+                    <SettingSwitch
+                      label={t("separateAcknowledgements")}
+                      checked={separateAck}
+                      onChange={(next) => setStatementOptions({ separateAck: next })}
+                      ariaLabel={t("a11ySeparateAcks")}
+                    />
+                  )}
+                </SettingsSection>
+              </SettingsPanel>
             </PopoverContent>
           </Popover>
         </span>

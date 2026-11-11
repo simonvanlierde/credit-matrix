@@ -51,10 +51,8 @@ test("saves figure styling independently from the editable contribution grid", a
   await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
   await page.getByRole("button", { name: "Grayscale", exact: true }).click();
   await page.getByText("Advanced", { exact: true }).click();
-  await page.getByRole("combobox", { name: "Font", exact: true }).click();
-  await page.getByRole("option", { name: "Serif", exact: true }).click();
-  await page.getByRole("combobox", { name: "Cell shape", exact: true }).click();
-  await page.getByRole("option", { name: "Circle", exact: true }).click();
+  await page.getByRole("radio", { name: "Serif", exact: true }).click();
+  await page.getByRole("radio", { name: "Circle", exact: true }).click();
   await page.getByRole("spinbutton", { name: "Font size (px)", exact: true }).fill("14");
   await page.keyboard.press("Tab");
   await page.keyboard.press("Escape");
@@ -70,7 +68,10 @@ test("saves figure styling independently from the editable contribution grid", a
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toHaveText("Hidden");
   await expect(page.getByRole("switch", { name: "Show contribution marks", exact: true })).toBeChecked();
-  await page.getByRole("button", { name: "Reset defaults", exact: true }).click();
+  await page
+    .getByRole("region", { name: "Figure settings" })
+    .getByRole("button", { name: "Reset", exact: true })
+    .click();
   await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toHaveText("Automatic");
   await expect(page.getByRole("switch", { name: "Show contribution marks", exact: true })).not.toBeChecked();
   await expect(page.getByRole("spinbutton", { name: "Width (mm)", exact: true })).toHaveValue("85");
@@ -131,8 +132,7 @@ test("clears copied-image status when the figure or PNG dimensions change", asyn
   await expect(copy).toBeVisible();
   await copy.click();
   await expect(copied).toBeVisible();
-  await page.getByRole("combobox", { name: "Resolution", exact: true }).click();
-  await page.getByRole("option", { name: "600 dpi", exact: true }).click();
+  await page.getByRole("radio", { name: "600 dpi", exact: true }).click();
   await expect(copy).toBeVisible();
 });
 
@@ -168,8 +168,7 @@ test("writes requested PNG width and print resolution into the downloaded file",
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
   await page.getByRole("spinbutton", { name: "Width (mm)", exact: true }).fill("100");
-  await page.getByRole("combobox", { name: "Resolution", exact: true }).click();
-  await page.getByRole("option", { name: "600 dpi", exact: true }).click();
+  await page.getByRole("radio", { name: "600 dpi", exact: true }).click();
   const downloaded = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download PNG", exact: true }).click();
   const path = await (await downloaded).path();
@@ -222,7 +221,7 @@ test("keeps the desktop key beside the table and reflects display changes in the
   await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
   await page.getByText("Use initials", { exact: true }).click();
   await expect(page.getByRole("switch", { name: /Use initials/ })).toBeChecked();
-  await page.getByRole("button", { name: "Transpose", exact: true }).click();
+  await page.getByRole("radio", { name: "Contributors in rows", exact: true }).click();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   const source = await page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img").getAttribute("src");
@@ -379,7 +378,7 @@ test.describe("touch-screen previews", () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
       expect((await scan(page)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-      await expect(page.getByRole("combobox", { name: "Orientation", exact: true })).toBeInViewport();
+      await expect(page.getByRole("radiogroup", { name: "Orientation", exact: true })).toBeInViewport();
       expect((await scan(page)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
       await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });

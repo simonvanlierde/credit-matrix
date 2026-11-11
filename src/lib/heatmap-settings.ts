@@ -1,9 +1,18 @@
-export interface HeatmapFigureSettings {
+/**
+ * What the grid and the figure share. Stored once per draft beside the grid
+ * (hue, per-contributor colour, orientation, initials), never inside the
+ * figure settings, so the two panels cannot disagree.
+ */
+export interface HeatmapViewSettings {
   color: string;
   /** One hue for the figure, or each contributor in their own (app exports only). */
   colorBy: "color" | "contributor";
   horizontal: boolean;
   acronyms: boolean;
+}
+
+/** Figure-only options: how the figure is laid out, labelled and sized. */
+export interface HeatmapFigureSettings {
   labels: "full" | "short";
   skipempty: boolean;
   legend: boolean;
@@ -19,10 +28,6 @@ export interface HeatmapFigureSettings {
 }
 
 export const DEFAULT_HEATMAP_SETTINGS: HeatmapFigureSettings = {
-  color: "#1f4e79",
-  colorBy: "color",
-  horizontal: false,
-  acronyms: false,
   labels: "full",
   skipempty: true,
   legend: true,
@@ -37,6 +42,9 @@ export const DEFAULT_HEATMAP_SETTINGS: HeatmapFigureSettings = {
   pngDpi: 300,
 };
 
+/** The figure settings with the grid's shared view: everything the renderer and the recipes take. */
+export type HeatmapOptions = HeatmapFigureSettings & HeatmapViewSettings;
+
 /** Repair browser-only figure preferences without changing contribution data. */
 export function repairHeatmapSettings(input: unknown): HeatmapFigureSettings | null {
   if (input === null || typeof input !== "object" || Array.isArray(input)) return null;
@@ -48,16 +56,9 @@ export function repairHeatmapSettings(input: unknown): HeatmapFigureSettings | n
       ? candidate
       : defaults[key];
   };
-  const boolean = (key: "horizontal" | "acronyms" | "skipempty" | "legend" | "levels" | "marks"): boolean =>
+  const boolean = (key: "skipempty" | "legend" | "levels" | "marks"): boolean =>
     typeof value[key] === "boolean" ? value[key] : defaults[key];
   return {
-    color:
-      typeof value.color === "string" && /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(value.color)
-        ? value.color
-        : defaults.color,
-    colorBy: value.colorBy === "contributor" ? "contributor" : defaults.colorBy,
-    horizontal: boolean("horizontal"),
-    acronyms: boolean("acronyms"),
     labels: value.labels === "short" ? "short" : defaults.labels,
     skipempty: boolean("skipempty"),
     legend: boolean("legend"),

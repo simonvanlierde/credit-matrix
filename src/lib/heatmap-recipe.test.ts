@@ -17,6 +17,7 @@ import { DEFAULT_HEATMAP_SETTINGS } from "./heatmap-settings";
 const settings = {
   ...DEFAULT_HEATMAP_SETTINGS,
   color: "#00724c",
+  colorBy: "color" as const,
   horizontal: true,
   legend: false,
   legendPosition: "right" as const,

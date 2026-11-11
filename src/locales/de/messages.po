@@ -1653,6 +1653,12 @@ msgstr "Graustufen"
 msgid "heatmapPaleColor"
 msgstr "Unterstützend ist mit dieser Farbe schwer zu erkennen. Wählen Sie einen dunkleren Farbton."
 
+msgid "settingsReset"
+msgstr "Zurücksetzen"
+
+msgid "heatmapPerContributorNote"
+msgstr "Farbe pro Beitragendem: Für Graustufendruck eine einzelne Farbe wählen."
+
 msgid "heatmapAdvanced"
 msgstr "Erweitert"
 

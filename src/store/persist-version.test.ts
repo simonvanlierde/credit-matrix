@@ -4,14 +4,14 @@ import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { ensureHydrated, useContributionStore } from "./contribution-store";
 import { PERSIST_KEY } from "./persist-meta";
 
-// Version 3 writers must yield before repairing figure settings they cannot retain.
+// Version 4 writers must yield before repairing figure settings they cannot retain.
 vi.mock("./persist-meta", async (original) => ({
   ...(await original<typeof import("./persist-meta")>()),
-  PERSIST_VERSION: 3,
+  PERSIST_VERSION: 4,
 }));
 vi.mock("@/lib/reload-for-new-build", () => ({ reloadForNewerSave: vi.fn(() => true) }));
 
-it("keeps a version 3 tab from overwriting the saved figure colour mode", async () => {
+it("keeps a version 4 tab from overwriting the saved figure settings", async () => {
   const { PERSIST_VERSION } = await vi.importActual<typeof import("./persist-meta")>("./persist-meta");
   await ensureHydrated();
   const state = useContributionStore.getState();
@@ -24,7 +24,7 @@ it("keeps a version 3 tab from overwriting the saved figure colour mode", async 
       drafts: {
         [state.activeDraftId]: {
           ...draft,
-          heatmapSettings: { ...DEFAULT_HEATMAP_SETTINGS, colorBy: "contributor" },
+          heatmapSettings: { ...DEFAULT_HEATMAP_SETTINGS, legend: false },
         },
       },
     },
