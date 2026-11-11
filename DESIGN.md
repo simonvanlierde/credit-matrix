@@ -184,10 +184,11 @@ gets a Newsreader heading, a control group gets a short semibold label.
 ## Brand
 
 The mark (the logo) is a 3×3 crop of the contribution matrix, with lead on the diagonal. It is
-drawn on a 32px grid with 8px cells and 1px gaps. Its fills are the heatmap's real levels, not
+drawn on a 32px grid with 8px cells and 1px gaps. The favicon spaces its cells 2px apart instead, so at
+16px every cell and gap lands on whole pixels. Its fills are the heatmap's real levels, not
 decorative tints, so the mark looks like the product's own data.
 
-Draw the mark in `currentColor` wherever it sits beside text, as it does in the header lockup. With
+Beside text, as in the header lockup, the mark takes the draft's heatmap hue at the grid's own tiers. With
 colour by contributor each column of the mark takes one contributor's hue, as the grid's columns do. Where
 it stands alone (favicon, app icons, social card), each column takes one of the first three contributor hues. The lockup is the mark at cap height, then a
 gap, then the wordmark (the name set as type) in Newsreader italic. Never letterspace the wordmark.

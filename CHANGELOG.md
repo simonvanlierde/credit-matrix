@@ -89,6 +89,10 @@ See [deploying](docs/deploy.md).
   [app and document exports](integrations/heatmap.md#app-and-document-exports).
 - The favicon, app icons and social card use the warm paper and charcoal ink of the 0.12.0 theme,
   and the mark draws each column in one contributor's hue, as the grid does.
+- The header mark fills its cells at the grid's own heatmap tiers, light and dark, instead of
+  approximate opacities.
+- The favicon's cells sit 1 px apart at 16 px, so the grid stays sharp in a browser tab.
+- The `<credit-matrix>` element draws its text, edge and focus ring in the charcoal ink.
 - Search results and link previews describe asking co-authors to check their own row, and the
   preview image carries its full alt text and size.
 
