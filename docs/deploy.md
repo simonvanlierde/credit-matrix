@@ -121,7 +121,7 @@ workflow tries an OIDC publish of a package that does not exist yet, and core is
 
 1. From a clean `src/fonts` (`git status --short src/fonts` prints nothing), run
    `cd src/fonts && npm pack --dry-run --json | jq -r '.[0].integrity'`. It must print
-   `sha512-TODO`. A stray file would burn 1.0.0 and fail every later tag's integrity check.
+   `sha512-l1Um9xQzbwjAZ0eIyzOPCPvivt+IJaKT30rABol8AtTiFCrya4p6PowtA/lO580SaKaqbIqLvH+ngwQRKPWrow==`. A stray file would burn 1.0.0 and fail every later tag's integrity check.
 2. Publish with `npm publish --access public --provenance=false` from the owner's two-factor login:
    npm makes provenance only in CI. The release workflow's own pack then matches it byte for byte,
    so its integrity check passes.
