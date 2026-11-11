@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -81,3 +82,40 @@ def test_real_document_build(tmp_path, figure_font_cache, command, extension, so
     assert "<path" not in svg
     assert "<image" not in svg
     assert "_credit_matrix/" in statement
+
+
+FONTS = ROOT / "src/core/__tests__/fixtures/fonts"
+
+
+@pytest.mark.parametrize("family", ["Figure Test Serif", "No Such Family"])
+def test_font_path_is_relative_to_the_project(tmp_path, figure_font_cache, family):
+    (tmp_path / "fonts").mkdir()
+    shutil.copyfile(FONTS / "FigureTestSerif-Regular.ttf", tmp_path / "fonts/FigureTestSerif-Regular.ttf")
+    (tmp_path / "myst.yml").write_text(
+        "version: 1\nproject:\n  title: Example Lab\n  authors:\n"
+        "    - name: Marie Curie\n      roles: [Software]\n"
+        f"  plugins:\n    - {ROOT / 'integrations/myst/credit-matrix.mjs'}\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "index.md").write_text(
+        f"# Contributors\n\n:::{{credit-heatmap}}\n:font: {family}\n:font-path: fonts\n:ignore-system-fonts: true\n:::\n",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [str(ROOT / "node_modules/.bin/myst"), "build", "index.md", "--md", "--strict", "--ci", "-o", "out.md"],
+        cwd=tmp_path,
+        env={**os.environ, **figure_font_cache},
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    output = result.stdout + result.stderr
+    if family == "No Such Family":
+        # `myst build --md` exits 0 on a fatal message, as it does for any other; --strict fails site and PDF builds.
+        line = next(line for line in output.splitlines() if "Cannot find the font family" in line)
+        assert "index.md credit-heatmap: Cannot find the font family No Such Family in the font path" in line
+        assert not (tmp_path / "_credit_matrix").exists()
+        return
+    assert result.returncode == 0, output
+    svg = next((tmp_path / "_credit_matrix").glob("*.svg")).read_text(encoding="utf-8")
+    assert "font-family:'Figure Test Serif'" in svg

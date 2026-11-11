@@ -1,5 +1,5 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the plugin reads front matter from disk.
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -239,6 +239,55 @@ it("reports unsupported contributor glyphs in one line instead of using a system
       fatal: true,
     },
   ]);
+});
+
+/** A project with fonts/FigureTestSerif-Regular.ttf and a page in pages/, as the font-path is relative to the project. */
+function fontProject() {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-font-path-"));
+  mkdirSync(join(dir, "fonts"));
+  mkdirSync(join(dir, "pages"));
+  copyFileSync(
+    fileURLToPath(new URL("../../src/core/__tests__/fixtures/fonts/FigureTestSerif-Regular.ttf", import.meta.url)),
+    join(dir, "fonts/FigureTestSerif-Regular.ttf"),
+  );
+  writeFileSync(join(dir, "myst.yml"), "version: 1\nproject:\n  title: T\n");
+  const path = join(dir, "pages/index.md");
+  writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
+  return path;
+}
+
+it("draws a family found in a font-path relative to the project, and reports the file", async () => {
+  const path = fontProject();
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  for (const option of ["font-path", "font-fallback", "ignore-system-fonts"])
+    expect(directive?.options).toHaveProperty(option);
+  const { svg, messages } = await heatmap(path, {
+    font: "figure test serif",
+    "font-path": "fonts",
+    "ignore-system-fonts": true,
+  });
+  expect(svg).toContain("font-family:'Figure Test Serif'");
+  expect(svg).toContain(">Tu Youyou</tspan>");
+  expect(messages).toEqual([
+    {
+      message: `credit-heatmap: font Figure Test Serif from ${join(dirname(dirname(path)), "fonts/FigureTestSerif-Regular.ttf")}`,
+      fatal: null,
+    },
+  ]);
+});
+
+it("stops a build in one line when the font family is missing", async () => {
+  const { image, messages } = await heatmap(fontProject(), {
+    font: "No Such Family",
+    "font-path": "fonts",
+    "ignore-system-fonts": true,
+  });
+  expect(image).toBeUndefined();
+  expect(messages).toHaveLength(1);
+  expect(messages[0]).toMatchObject({ fatal: true });
+  expect(messages[0]?.message).toMatch(
+    /^credit-heatmap: Cannot find the font family No Such Family in the font path \(.*fonts\)/,
+  );
 });
 
 it("forwards legend placement and marks without changing MyST publication defaults", async () => {

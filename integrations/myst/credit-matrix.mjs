@@ -5,7 +5,7 @@
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { CREDIT_ROLES, createAuthor, generateStatement, heatmapDescription } from "credit-matrix";
 import { createFigureRenderer } from "credit-matrix/figures";
 import {
@@ -34,7 +34,18 @@ const TRANSLATORS = Object.fromEntries(
 );
 // MyST runs a plugin listed by URL from a copy in its build cache, where no package resolves, so the
 // renderer downloads each face once into the machine's font cache.
-const figures = createFigureRenderer();
+// A renderer reports each font family once, so one renderer serves each font search (folders and
+// system fonts); its reports wait here until the page that triggered the search can print them.
+const renderers = new Map();
+function rendererFor(options) {
+  const custom = options.font && !["sans", "serif"].includes(String(options.font).toLowerCase());
+  const key = custom ? JSON.stringify([options.fontPath, options.ignoreSystemFonts]) : "";
+  if (!renderers.has(key)) {
+    const reports = [];
+    renderers.set(key, { reports, figures: createFigureRenderer({ onFont: (report) => reports.push(report) }) });
+  }
+  return renderers.get(key);
+}
 
 // The aliases MyST accepts (its `credit-roles` package), so a page that builds also renders.
 const ALIASES = {
@@ -107,13 +118,16 @@ function readFrontmatter(file) {
   return match ? (parse(match[1]) ?? {}) : {};
 }
 
-function projectConfig(file) {
-  for (let dir = dirname(file); ; dir = dirname(dir)) {
+/** The folder of the nearest myst.yml (the page's own folder without one) and its project settings. */
+function findProject(file) {
+  for (let dir = dirname(resolve(file)); ; dir = dirname(dir)) {
     const config = join(dir, "myst.yml");
-    if (existsSync(config)) return parse(readFileSync(config, "utf8"))?.project ?? {};
-    if (dirname(dir) === dir) return {};
+    if (existsSync(config)) return { root: dir, config: parse(readFileSync(config, "utf8"))?.project ?? {} };
+    if (dirname(dir) === dir) return { root: dirname(resolve(file)), config: {} };
   }
 }
+
+const projectConfig = (file) => findProject(file).config;
 
 /**
  * Page authors replace project authors, as in MyST. Only Markdown pages are read for
@@ -142,10 +156,16 @@ const creditHeatmap = {
   name: "credit-heatmap",
   doc: "A contribution heatmap from the page's author roles.",
   options: Object.fromEntries([
-    ...["color", "palette", "shape", "labels", "font", "legend-position"].map((k) => [k, { type: String }]),
+    ...["color", "palette", "shape", "labels", "font", "legend-position", "font-path", "font-fallback"].map((k) => [
+      k,
+      { type: String },
+    ]),
     ["size", { type: Number }],
     ["font-size", { type: Number }],
-    ...["legend", "levels", "horizontal", "skipempty", "initials", "marks"].map((k) => [k, { type: Boolean }]),
+    ...["legend", "levels", "horizontal", "skipempty", "initials", "marks", "ignore-system-fonts"].map((k) => [
+      k,
+      { type: Boolean },
+    ]),
   ]),
   run(data, vfile) {
     if (!vfile?.path) return [];
@@ -174,6 +194,11 @@ function heatmapFigure(path, directiveOptions = {}) {
   options.fontSize = options["font-size"];
   options.legendPosition = options["legend-position"];
   options.acronyms = options.initials ?? false;
+  // A directive option is one string: several folders are separated by commas. They resolve against the project.
+  const { root } = findProject(path);
+  options.fontPath = options["font-path"]?.split(",").map((dir) => resolve(root, dir.trim()));
+  options.ignoreSystemFonts = options["ignore-system-fonts"];
+  options.fontFallback = options["font-fallback"];
   return { entries, options };
 }
 
@@ -182,6 +207,7 @@ async function renderHeatmap(node, vfile) {
   const { path, options: directiveOptions } = node.creditHeatmap;
   delete node.creditHeatmap;
   const { entries, options } = heatmapFigure(path, directiveOptions);
+  const { figures, reports } = rendererFor(options);
   let svg;
   try {
     svg = await figures.svg(entries, options);
@@ -189,6 +215,10 @@ async function renderHeatmap(node, vfile) {
     // MyST prints a thrown transform error without its page; a file message names the page.
     vfile.message(`credit-heatmap: ${error.message}`, node).fatal = true;
     return false;
+  }
+  for (const { family, file, warning } of reports.splice(0)) {
+    vfile.message(`credit-heatmap: font ${family} from ${file}`, node).fatal = null;
+    if (warning) vfile.message(`credit-heatmap: ${warning}`, node).fatal = false;
   }
   const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
   const dir = join(dirname(path), "_credit_matrix");
