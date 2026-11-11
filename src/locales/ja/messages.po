@@ -1643,8 +1643,6 @@ msgstr "未使用の役割を省略"
 msgid "heatmapShowLevels"
 msgstr "貢献レベルを表示"
 
-msgid "heatmapLegendHint"
-msgstr "凡例を非表示にする場合は、図のキャプションでレベルを説明してください。"
 
 msgid "heatmapBlue"
 msgstr "青"

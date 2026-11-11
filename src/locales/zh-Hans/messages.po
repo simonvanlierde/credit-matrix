@@ -1643,8 +1643,6 @@ msgstr "省略未使用的角色"
 msgid "heatmapShowLevels"
 msgstr "显示贡献级别"
 
-msgid "heatmapLegendHint"
-msgstr "隐藏图例时，请在图注中解释各级别的含义。"
 
 msgid "heatmapBlue"
 msgstr "蓝色"

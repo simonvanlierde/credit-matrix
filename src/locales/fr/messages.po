@@ -1643,8 +1643,6 @@ msgstr "Omettre les rôles inutilisés"
 msgid "heatmapShowLevels"
 msgstr "Afficher les niveaux de contribution"
 
-msgid "heatmapLegendHint"
-msgstr "Expliquez les niveaux dans la légende du manuscrit si vous masquez celle de la figure."
 
 msgid "heatmapBlue"
 msgstr "Bleu"

@@ -1643,8 +1643,6 @@ msgstr "Unbenutzte Rollen ausblenden"
 msgid "heatmapShowLevels"
 msgstr "Beitragsstufen anzeigen"
 
-msgid "heatmapLegendHint"
-msgstr "Erklären Sie die Stufen in der Bildunterschrift, wenn Sie die Legende ausblenden."
 
 msgid "heatmapBlue"
 msgstr "Blau"

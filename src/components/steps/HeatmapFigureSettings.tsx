@@ -46,7 +46,6 @@ export function HeatmapFigureSettings({
         />
         <SettingSwitch label={t("heatmapShowLevels")} checked={value.levels} onChange={(levels) => patch({ levels })} />
         <SettingSwitch label={t("heatmapCellMarks")} checked={value.marks} onChange={(marks) => patch({ marks })} />
-        {!value.legend && <p className="text-on-surface-variant">{t("heatmapLegendHint")}</p>}
       </SettingsSection>
       <details className="border-t border-outline-variant/40 pt-3">
         <summary className="min-h-6 cursor-pointer font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">

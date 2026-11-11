@@ -1643,8 +1643,6 @@ msgstr "Ometti ruoli inutilizzati"
 msgid "heatmapShowLevels"
 msgstr "Mostra livelli di contributo"
 
-msgid "heatmapLegendHint"
-msgstr "Spiega i livelli nella didascalia se nascondi la legenda."
 
 msgid "heatmapBlue"
 msgstr "Blu"

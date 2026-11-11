@@ -1643,8 +1643,6 @@ msgstr "Omitir papéis não utilizados"
 msgid "heatmapShowLevels"
 msgstr "Mostrar níveis de contribuição"
 
-msgid "heatmapLegendHint"
-msgstr "Explique os níveis na legenda do manuscrito se ocultar a legenda da figura."
 
 msgid "heatmapBlue"
 msgstr "Azul"

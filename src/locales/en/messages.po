@@ -1643,8 +1643,6 @@ msgstr "Omit unused roles"
 msgid "heatmapShowLevels"
 msgstr "Show contribution levels"
 
-msgid "heatmapLegendHint"
-msgstr "Keep the level meanings in your caption when hiding the legend."
 
 msgid "heatmapBlue"
 msgstr "Blue"

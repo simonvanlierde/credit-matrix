@@ -1643,8 +1643,6 @@ msgstr "Ongebruikte rollen weglaten"
 msgid "heatmapShowLevels"
 msgstr "Bijdrageniveaus tonen"
 
-msgid "heatmapLegendHint"
-msgstr "Leg de niveaus uit in het bijschrift als u de legenda verbergt."
 
 msgid "heatmapBlue"
 msgstr "Blauw"
