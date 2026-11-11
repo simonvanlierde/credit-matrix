@@ -32,11 +32,11 @@ The sampled GraphQL `httpRequestsAdaptiveGroups` query filtered this hostname, `
 `edgeResponseContentTypeName: "html"` and HTTP status 200–299, following
 [Cloudflare's page-view definition](https://developers.cloudflare.com/analytics/account-and-zone-analytics/zone-analytics/).
 
-![The CRediT Matrix workspace with sample data: a contributor rail on the left, the contribution grid as the main canvas with a strip above it counting answered co-authors, and an inspector on the right with Statement, Team and Review tabs. The Team tab is open and lists each contributor as not asked yet, with a Copy message button per person and an Ask everyone not yet asked button](docs/screenshots/hero.png)
+![The CRediT Matrix workspace with sample data for three contributors. On the left, the contributor list gives each person an initials chip in their own colour. In the middle, the contribution grid shows the 14 CRediT roles as rows and one column per person; filled cells in that person's colour carry one, two or three dots for Supporting, Equal and Lead, above a key. On the right, the Team tab lists each contributor as not asked yet, with a Copy message button per person and an Ask everyone not yet asked button](docs/screenshots/hero.png)
 
 | First run | Statement & export |
 |---|---|
-| ![The first-run welcome as a dialog over the empty workspace: three numbered steps, notes on drafts and asking co-authors, and Load sample data and Start fresh buttons](docs/screenshots/empty-state.png) | ![The Statement tab of the inspector: a By author or By role switch, the generated statement, a Copy statement button, and the open Export data menu with Copy and Download for XML (JATS4R), XML (Crossref), JSON, CSV, tenzing CSV, LaTeX (latex-credits) and Markdown](docs/screenshots/statement-export.png) |
+| ![The first-run welcome as a dialog over the empty workspace: three numbered steps, notes on drafts and asking co-authors, and Load sample data and Start fresh buttons](docs/screenshots/empty-state.png) | ![The Statement tab beside the grid: a By author or By role switch, the generated statement, a Copy statement button, and the open Export data menu with Copy and Download for XML (JATS4R), XML (Crossref), JSON, CSV, tenzing CSV, LaTeX (latex-credits), Markdown, Quarto YAML, MyST YAML and RO-Crate fragment](docs/screenshots/statement-export.png) |
 
 ## Quick start
 
