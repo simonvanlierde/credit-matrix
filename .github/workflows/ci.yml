@@ -123,7 +123,12 @@ jobs:
           save-cache: ${{ github.event_name != 'pull_request' }}
 
       - name: Install PDF inspection tools
-        run: sudo apt-get update -q && sudo apt-get install -yq poppler-utils
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq poppler-utils && exit 0
+          # The runner's mirror list starts at azure.archive.ubuntu.com, which can stop resolving
+          # for an hour at a time; Ubuntu's own archive is the fallback.
+          echo "http://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt
+          sudo apt-get update -q && sudo apt-get install -yq poppler-utils
       # `verify` is the pre-push gate: lint, types, unit tests and document builds.
       # The coverage output feeds Codecov below.
       - name: Lint, typecheck, test
