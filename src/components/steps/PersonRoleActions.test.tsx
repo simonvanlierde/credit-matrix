@@ -108,3 +108,50 @@ it("in a claimed draft, offers another person's bulk edits only as disabled item
   fireEvent.click(clear);
   expect(scoreOf(jane.id, "Conceptualization")).toBe(100);
 });
+
+it("in a claimed draft, offers no bulk edit on the claimed person's own row, as Undo could not restore it", () => {
+  act(() => useContributionStore.setState({ claim: { contributorId: bob.id, sourceDraftId: "source" } }));
+  const { container } = renderBoth();
+  const header = container.querySelector<HTMLElement>("[data-name-head='1']");
+  if (!header) throw new Error("expected Bob's name header");
+  fireEvent.click(header);
+  const clear = screen.getByRole("button", { name: "Clear every role" });
+  expect(clear.getAttribute("aria-disabled")).toBe("true");
+  fireEvent.click(clear);
+  expect(scoreOf(bob.id, "Conceptualization")).toBe(20);
+});
+
+const statementName = (container: HTMLElement) => {
+  const name = container.querySelector<HTMLElement>("section [data-author]:not([data-role])");
+  if (!name) throw new Error("expected a statement name");
+  return name;
+};
+
+it("closes a statement name's menu on a second click, and gives focus back to the name", async () => {
+  const { container } = renderBoth();
+  const name = statementName(container);
+  fireEvent.click(name);
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  // Radix registers its outside-pointerdown listener a tick after opening.
+  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
+  // Radix closes on the pointerdown (outside the panel); the click must not reopen it.
+  fireEvent.pointerDown(name);
+  fireEvent.click(name);
+  expect(screen.queryByRole("dialog")).toBeNull();
+
+  fireEvent.click(name);
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+  // Radix moves focus on close a tick later.
+  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(document.activeElement).toBe(name);
+});
+
+it("leaves the menu shut when a click ends a text selection over a name", () => {
+  const { container } = renderBoth();
+  const selection = vi.spyOn(window, "getSelection").mockReturnValue({ isCollapsed: false } as Selection);
+  fireEvent.click(statementName(container));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  selection.mockRestore();
+});

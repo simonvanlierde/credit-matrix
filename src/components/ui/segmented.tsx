@@ -64,8 +64,9 @@ export function SegmentedControl<T extends string>({
               "pointer-coarse:min-h-11",
               // Forced colours would repaint the fill as Canvas under Canvas text, a blank box: opt out and
               // invert. Not Highlight: Firefox and WebKit emulate it at 2.94:1.
+              // The selected option is the group's tab stop, so its focus ring must show on the accent fill.
               active
-                ? "bg-accent text-on-accent forced-colors:bg-[CanvasText] forced-colors:text-[Canvas] forced-colors:[forced-color-adjust:none]"
+                ? "bg-accent text-on-accent focus-visible:ring-on-accent forced-colors:bg-[CanvasText] forced-colors:text-[Canvas] forced-colors:[forced-color-adjust:none]"
                 : "text-on-surface-variant hover:text-on-surface",
             )}
           >

@@ -1,9 +1,7 @@
 import { ColorSwatches, SettingChoice, SettingSwitch, SettingsSection } from "@/components/ui/settings-panel";
-import { contrastRatio, heatCellColor } from "@/core/contributor-color";
+import { contrastRatio, HEX_COLOR, heatCellColor } from "@/core/contributor-color";
 import { useTranslations } from "@/lib/translations";
 import { useContributionStore } from "@/store/contribution-store";
-
-const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 /**
  * Colour, orientation and initials: what the grid shows and the figure draws, stored once per

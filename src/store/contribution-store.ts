@@ -22,10 +22,11 @@ import {
   type Target,
 } from "@/core";
 import { clampScore, isShareableId, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
-import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
+import { DEFAULT_MONO_COLOR, HEX_COLOR } from "@/core/contributor-color";
 import { type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
 import { type HeatmapFigureSettings, repairHeatmapSettings } from "@/lib/heatmap-settings";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
+import { GUIDE_KEY } from "./guide-store";
 import { PERSIST_KEY, PERSIST_VERSION } from "./persist-meta";
 
 export type InputMode = "toggle" | "levels";
@@ -367,6 +368,7 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.statementLink = null;
   state.reviewSettled = null;
   state.reviewFocus = null;
+  state.listFocus = null;
   // The highlight describes a moment, not the draft: leaving the draft ends it.
   state.recentReply = null;
 }
@@ -480,7 +482,6 @@ function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
  * this build does not know are kept: a newer build's fields must survive an
  * older tab's save.
  */
-const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 function legacyFigure(settings: unknown, key: "horizontal" | "acronyms"): boolean {
   return isRecord(settings) && settings[key] === true;
@@ -775,6 +776,8 @@ export function announcingStorage(): DraftStorage {
         for (const draftKey of draftKeys()) window.localStorage.removeItem(draftKey);
         // Holds draft data too; clearing the drafts should not leave a copy behind.
         window.localStorage.removeItem(UNREADABLE_KEY);
+        // "Every draft" means starting over: the checklist comes back too.
+        window.localStorage.removeItem(GUIDE_KEY);
       } catch {
         // Storage blocked entirely (SecurityError): nothing on disk to clear.
       }
@@ -1224,6 +1227,7 @@ export const useContributionStore = create<ContributionState>()(
           // Undo of the removal puts the ask back through applyAskPatch.
           delete state.asks[authorId];
           if (state.selfId === authorId) state.selfId = null;
+          if (state.listFocus?.authorId === authorId) state.listFocus = null;
         }),
 
       restoreAuthor: (author, index) => {

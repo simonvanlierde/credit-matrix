@@ -29,7 +29,8 @@ export function SettingsPanel({
   return (
     <div className="grid content-start gap-3 text-xs text-on-surface">
       <div className="flex items-center justify-between gap-3">
-        <p lang={titleLang} className="text-sm font-semibold">
+        {/* A long one-word title ("Abbildungseinstellungen") breaks rather than widening the column. */}
+        <p lang={titleLang} className="min-w-0 text-sm font-semibold hyphens-auto [overflow-wrap:anywhere]">
           {title}
         </p>
         {onReset && (

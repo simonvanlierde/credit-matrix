@@ -68,9 +68,6 @@ msgstr "Opciones del mapa de calor"
 msgid "statementOptions"
 msgstr "Opciones de la declaración"
 
-msgid "gridColor"
-msgstr "Color del mapa de calor"
-
 msgid "transpose"
 msgstr "Transponer"
 
@@ -193,9 +190,6 @@ msgstr "Contribuyente que asignar"
 
 msgid "colorLabel"
 msgstr "Color"
-
-msgid "transposeHint"
-msgstr "Intercambiar los ejes de filas y columnas"
 
 msgid "legendLevel"
 msgstr "Nivel"
@@ -746,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT es un estándar ANSI/NISO (<cc>CC BY 4.0</cc>). Este proyecto es independiente de NISO y no cuenta con su respaldo."
 
 msgid "aboutPrivacy"
-msgstr "Al buscar un ORCID iD, tu navegador lo envía a pub.orcid.org. Al buscar un DOI, lo envía a api.crossref.org junto con la dirección de contacto de este sitio, y a api.datacite.org si Crossref no lo tiene. Cloudflare, que aloja este sitio, cuenta las solicitudes de páginas en sus propios servidores, de forma agregada, sin ningún script ni cookie en tu navegador. Al importar CITATION.cff o .zenodo.json se cargan desde este sitio el conversor citesync y un entorno de ejecución de Python; el archivo se procesa en tu navegador y nunca se sube. Nada más sale de tu navegador: los borradores se quedan en su almacenamiento local. Las consultas a coautores y sus respuestas se guardan solo en este navegador y se incluyen en las exportaciones JSON salvo que desmarques esa opción. Al enviar una respuesta, su enlace, con el nombre y el iD de esa persona, pasa a la aplicación que elijas. Iniciar sesión con ORCID en una respuesta lleva a la persona a orcid.org y de vuelta; después, el inicio de sesión viaja dentro del enlace de respuesta y se guarda con la respuesta, también en las exportaciones JSON. Incluye el nombre que figura en el registro ORCID de esa persona. Al abrir una respuesta firmada, o al importar un JSON que la contenga, se descargan las claves públicas de ORCID desde orcid.org para comprobarla."
+msgstr "Al buscar un ORCID iD, tu navegador lo envía a pub.orcid.org. Al buscar un DOI, lo envía a api.crossref.org junto con la dirección de contacto de este sitio, y a api.datacite.org si Crossref no lo tiene. Cloudflare, que aloja este sitio, cuenta las solicitudes de páginas en sus propios servidores, de forma agregada, sin ningún script ni cookie en tu navegador. Al importar CITATION.cff o .zenodo.json se cargan desde este sitio el conversor citesync y un entorno de ejecución de Python; el archivo se procesa en tu navegador y nunca se sube. Nada más sale de tu navegador: los borradores se quedan en su almacenamiento local, igual que si cerró la lista de Primeros pasos o copió una declaración. Las consultas a coautores y sus respuestas se guardan solo en este navegador y se incluyen en las exportaciones JSON salvo que desmarques esa opción. Al enviar una respuesta, su enlace, con el nombre y el iD de esa persona, pasa a la aplicación que elijas. Iniciar sesión con ORCID en una respuesta lleva a la persona a orcid.org y de vuelta; después, el inicio de sesión viaja dentro del enlace de respuesta y se guarda con la respuesta, también en las exportaciones JSON. Incluye el nombre que figura en el registro ORCID de esa persona. Al abrir una respuesta firmada, o al importar un JSON que la contenga, se descargan las claves públicas de ORCID desde orcid.org para comprobarla."
 
 msgid "accessibilityStatement"
 msgstr "Declaración de accesibilidad"
@@ -983,7 +977,7 @@ msgid "welcomeAskTitle"
 msgstr "Pregunte directamente a sus coautores"
 
 msgid "welcomeAskBody"
-msgstr "Copie un enlace desde el menú de la fila de una persona y envíeselo. Cuando le devuelvan el enlace, ábralo: la respuesta se guarda junto a su fila y las diferencias se resuelven en la pestaña Revisión."
+msgstr "Use Compartir y luego Pide a los coautores que revisen sus roles para enviar a cada coautor un enlace a su propia columna. Cuando le devuelvan el enlace, ábralo: la respuesta se guarda junto a su fila y las diferencias se resuelven en la pestaña Revisión."
 
 msgid "importDescription"
 msgstr "Empiece por un DOI, pegue nombres o un enlace que le hayan devuelto, o suba un archivo CSV, JSON, JATS4R XML o Crossref XML. JSON y XML también restauran las contribuciones, con sus niveles si el archivo los incluye. También sirve una hoja de cálculo de tenzing (CSV o TSV). Pegue una declaración de contribución de autores para completar las funciones de los colaboradores que ya están aquí. CITATION.cff, codemeta.json y .zenodo.json importan los nombres de autores y los iD de ORCID; las funciones quedan vacías."
@@ -1742,12 +1736,6 @@ msgstr "Fragmento RO-Crate"
 
 msgid "colorByContributor"
 msgstr "Color por contribuyente"
-
-msgid "figureColor"
-msgstr "Color de la figura"
-
-msgid "figureOneColor"
-msgstr "Un solo color"
 
 msgid "figurePerContributor"
 msgstr "Por contribuyente"

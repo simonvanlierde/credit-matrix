@@ -1,10 +1,11 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, expect, it } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, expect, it, vi } from "vitest";
 import { type Author, createAuthor } from "@/core";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
 import { messages as en } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
+import { useGuide } from "@/store/guide-store";
 import { StatementOutput } from "./StatementOutput";
 
 const store = () => useContributionStore.getState();
@@ -29,7 +30,10 @@ const renderStatement = () =>
     </IntlProvider>,
   );
 
-beforeEach(() => useContributionStore.setState(initial, true));
+beforeEach(() => {
+  useContributionStore.setState(initial, true);
+  useGuide.setState({ copied: false, dismissed: false });
+});
 
 it("shows a contributor without roles as a note, not as an error", () => {
   act(() => store().loadAuthors([...twoAuthors(), createAuthor("Grace Hopper")]));
@@ -136,4 +140,17 @@ it("leaves no mark behind after a tap on a phrase, which never sends a leave", (
   if (!phrase) throw new Error("expected a phrase");
   fireEvent.pointerOver(phrase, { pointerType: "touch" });
   expect(store().statementLink).toBeNull();
+});
+
+it("marks the getting-started copy step once the statement is copied", async () => {
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  vi.stubGlobal("ClipboardItem", undefined);
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+  act(() => store().loadAuthors(twoAuthors()));
+  renderStatement();
+  expect(useGuide.getState().copied).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Copy statement" }));
+  await waitFor(() => expect(useGuide.getState().copied).toBe(true));
+  expect(writeText).toHaveBeenCalledOnce();
+  vi.unstubAllGlobals();
 });

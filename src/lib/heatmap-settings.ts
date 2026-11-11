@@ -3,7 +3,7 @@
  * (hue, per-contributor colour, orientation, initials), never inside the
  * figure settings, so the two panels cannot disagree.
  */
-export interface HeatmapViewSettings {
+interface HeatmapViewSettings {
   color: string;
   /** One hue for the figure, or each contributor in their own (app exports only). */
   colorBy: "color" | "contributor";

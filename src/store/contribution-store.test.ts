@@ -168,6 +168,19 @@ describe("contribution store", () => {
       });
     });
 
+    it.each([
+      ["horizontal true", { heatmapSettings: { horizontal: true } }, { transpose: true, initials: false }],
+      ["acronyms true", { heatmapSettings: { acronyms: true } }, { transpose: false, initials: true }],
+      ["horizontal not a boolean", { heatmapSettings: { horizontal: "yes" } }, { transpose: false, initials: false }],
+      ["no colour fields", {}, { colorByContributor: true }],
+      ["custom colour, no flag", { heatmapMonoColor: "#009e73" }, { colorByContributor: false }],
+      ["default colour, no flag", { heatmapMonoColor: DEFAULT_MONO_COLOR }, { colorByContributor: true }],
+    ])("repairs a stored draft with %s", (_name, draft, expected) => {
+      const { merge } = useContributionStore.persist.getOptions();
+      const restored = merge?.({ activeDraftId: "d1", drafts: { d1: draft } }, initial) as typeof initial;
+      expect(restored).toMatchObject(expected);
+    });
+
     it("shares colour, orientation and initials between the grid and the figure, per draft", () => {
       store().setHeatmapMonoColor("#00724c");
       store().setTranspose(true);
@@ -670,6 +683,7 @@ describe("contribution store", () => {
       store().setTitle("Second paper");
       // A shelf key another tab wrote, which this tab never knew about.
       globalThis.localStorage.setItem(`${PERSIST_KEY}:draft:elsewhere`, JSON.stringify({ title: "Other tab" }));
+      globalThis.localStorage.setItem("credit-matrix-guide", JSON.stringify({ state: { dismissed: true } }));
 
       store().deleteAllDrafts();
 
@@ -679,6 +693,7 @@ describe("contribution store", () => {
       expect(store().uiLocale).toBe("nl");
       const keys = Object.keys(globalThis.localStorage);
       expect(keys.filter((key) => key.includes(":draft:"))).toEqual([]);
+      expect(keys).not.toContain("credit-matrix-guide");
       expect(globalThis.localStorage.getItem(PERSIST_KEY)).not.toContain("Second paper");
       hydrated.mockRestore();
       globalThis.localStorage.clear();

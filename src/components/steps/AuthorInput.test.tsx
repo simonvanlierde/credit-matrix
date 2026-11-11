@@ -442,4 +442,27 @@ describe("collapsed rail", () => {
     expect(screen.getByRole("dialog", { name: "Actions for Ann Lee" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Edit in list" })).toBeTruthy();
   });
+
+  it("opens the list and focuses the person on Edit in list from a chip", () => {
+    // jsdom has no layout, so no scrollIntoView.
+    Element.prototype.scrollIntoView = vi.fn();
+    const ann = createAuthor("Ann Lee");
+    act(() => useContributionStore.getState().loadAuthors([ann]));
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse contributor list" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ann Lee" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit in list" }));
+
+    expect(screen.getByRole("button", { name: "Collapse contributor list" })).toBeTruthy();
+    expect((document.activeElement as HTMLInputElement | null)?.value).toBe("Ann Lee");
+    expect(useContributionStore.getState().listFocus).toBeNull();
+  });
+
+  it("drops an edit request for a person who is removed", () => {
+    const ann = createAuthor("Ann Lee");
+    act(() => useContributionStore.getState().loadAuthors([ann, createAuthor("Bo Kim")]));
+    act(() => useContributionStore.getState().setListFocus({ authorId: ann.id, orcid: false }));
+    act(() => useContributionStore.getState().removeAuthor(ann.id));
+    expect(useContributionStore.getState().listFocus).toBeNull();
+  });
 });

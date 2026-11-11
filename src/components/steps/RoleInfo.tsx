@@ -1,7 +1,7 @@
 import { ListChecks, X } from "lucide-react";
 import { type MouseEventHandler, type ReactElement, useState } from "react";
 import { ExternalLink } from "@/components/ui/external-link";
-import { Popover, PopoverContent, PopoverTrigger, TextAnchor } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger, useTextAnchor } from "@/components/ui/popover";
 import { CREDIT_ROLES } from "@/core";
 import type { RoleDescriber, RoleTranslator } from "@/core/i18n";
 import { useTranslations } from "@/lib/translations";
@@ -9,9 +9,7 @@ import { useClaimLock } from "@/lib/use-claim-lock";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useContributionStore } from "@/store/contribution-store";
 import { LevelChoice, useRunBulk } from "./BulkAssignMenu";
-
-const ACTION =
-  "flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-disabled:cursor-not-allowed aria-disabled:text-on-surface-variant/50 aria-disabled:hover:bg-transparent";
+import { MENU_ICON, MenuItem } from "./menu-item";
 
 /**
  * A role's name as a button that opens its short description, with a link to
@@ -48,6 +46,7 @@ export function RoleInfo({
   const runBulk = useRunBulk();
   const [open, setOpen] = useState(false);
   const [choosingLevel, setChoosingLevel] = useState(false);
+  const anchor = useTextAnchor(open, () => openChange(true));
   const name = translateRole(role.name);
   const roleIndex = CREDIT_ROLES.findIndex((candidate) => candidate.name === role.name);
 
@@ -64,9 +63,7 @@ export function RoleInfo({
   return (
     <Popover open={open} onOpenChange={openChange}>
       {textAnchor && trigger ? (
-        <TextAnchor onOpen={() => openChange(true)}>
-          {trigger as ReactElement<{ onClick?: MouseEventHandler }>}
-        </TextAnchor>
+        anchor.anchorOn(trigger as ReactElement<{ onClick?: MouseEventHandler }>)
       ) : (
         <PopoverTrigger asChild>
           {trigger ?? (
@@ -81,7 +78,12 @@ export function RoleInfo({
           )}
         </PopoverTrigger>
       )}
-      <PopoverContent aria-label={name} className="w-64 max-w-xs p-1">
+      <PopoverContent
+        aria-label={name}
+        collisionPadding={8}
+        className="max-h-[var(--radix-popover-content-available-height)] w-64 max-w-xs overflow-y-auto p-1"
+        {...anchor.contentProps}
+      >
         {choosingLevel ? (
           <LevelChoice onPick={assign} translateUi={translateUi} />
         ) : (
@@ -93,24 +95,16 @@ export function RoleInfo({
               </ExternalLink>
             </p>
             <div className="border-t border-outline-variant/40 pt-1">
-              <button
-                type="button"
-                aria-disabled={locked || undefined}
-                onClick={locked ? undefined : () => (graded ? setChoosingLevel(true) : assign(100))}
-                className={ACTION}
+              <MenuItem
+                icon={<ListChecks className={MENU_ICON} />}
+                disabled={locked}
+                onClick={() => (graded ? setChoosingLevel(true) : assign(100))}
               >
-                <ListChecks className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
                 {graded ? t("assignToEveryone") : t("bulkAssignToAll")}
-              </button>
-              <button
-                type="button"
-                aria-disabled={locked || undefined}
-                onClick={locked ? undefined : () => assign(0)}
-                className={ACTION}
-              >
-                <X className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
+              </MenuItem>
+              <MenuItem icon={<X className={MENU_ICON} />} disabled={locked} onClick={() => assign(0)}>
                 {t("bulkClearRole")}
-              </button>
+              </MenuItem>
             </div>
           </>
         )}

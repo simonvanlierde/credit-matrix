@@ -33,7 +33,7 @@ import {
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
+import { createContext, memo, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { UNDO_WINDOW_MS, UndoBar } from "@/components/ui/undo-bar";
@@ -399,10 +399,37 @@ export function AuthorList() {
           ))}
         </ul>
       </div>
-      <div className="xl:hidden">{full}</div>
+      <div className="xl:hidden">
+        <UnderRail value>{full}</UnderRail>
+      </div>
     </>
   );
 }
+
+/**
+ * Marks a person as linked while their list row or rail chip is hovered or holds focus, as a grid
+ * cell or the statement does. Mouse only: a tap enters with no leave. It clears only the list's own
+ * mark, since a leave can land after a cell or the statement has taken over.
+ */
+function useAuthorLink(authorId: string | undefined) {
+  const setStatementLink = useContributionStore((s) => s.setStatementLink);
+  const link = () => authorId && setStatementLink({ contributorId: authorId, from: "author" });
+  const clear = () => {
+    if (useContributionStore.getState().statementLink?.from === "author") setStatementLink(null);
+  };
+  return {
+    onPointerEnter: (event: React.PointerEvent) => event.pointerType === "mouse" && link(),
+    onPointerLeave: (event: React.PointerEvent) => event.pointerType === "mouse" && clear(),
+    onFocus: link,
+    onBlur: clear,
+  };
+}
+
+/**
+ * True for the full list rendered under a collapsed rail (shown only below xl). Its rows leave an
+ * "Edit in list" request alone: the rail opens for it, and the list that mounts then takes it.
+ */
+const UnderRail = createContext(false);
 
 /**
  * A person in the collapsed rail: their initials chip, linked on hover or focus like a full row,
@@ -410,11 +437,7 @@ export function AuthorList() {
  */
 function RailChip({ author }: { author: Author }) {
   const linked = useContributionStore((s) => s.statementLink?.contributorId === author.id);
-  const setStatementLink = useContributionStore((s) => s.setStatementLink);
-  const link = () => setStatementLink({ contributorId: author.id, from: "author" });
-  const clearOwnLink = () => {
-    if (useContributionStore.getState().statementLink?.from === "author") setStatementLink(null);
-  };
+  const linkHandlers = useAuthorLink(author.id);
   return (
     <PersonMenu
       authorId={author.id}
@@ -426,11 +449,7 @@ function RailChip({ author }: { author: Author }) {
           aria-label={author.name}
           title={author.name}
           data-linked={linked || undefined}
-          // Mouse only (a tap enters with no leave), as on a full row.
-          onPointerEnter={(event) => event.pointerType === "mouse" && link()}
-          onPointerLeave={(event) => event.pointerType === "mouse" && clearOwnLink()}
-          onFocus={link}
-          onBlur={clearOwnLink}
+          {...linkHandlers}
           className="block rounded-md p-0.5 ring-offset-1 ring-offset-surface transition-shadow duration-150 hover:ring-2 hover:ring-edge focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent data-linked:ring-2 data-linked:ring-primary data-[state=open]:ring-2 data-[state=open]:ring-primary motion-reduce:transition-none"
         >
           <InitialsChip author={author} />
@@ -478,11 +497,7 @@ const AuthorRow = memo(function AuthorRowInner({
   const isSelf = useContributionStore((s) => author !== undefined && s.selfId === author.id);
   // True while this person is hovered anywhere else (grid cell, statement name or phrase).
   const linked = useContributionStore((s) => author !== undefined && s.statementLink?.contributorId === author.id);
-  const setStatementLink = useContributionStore((s) => s.setStatementLink);
-  // Only this row's own mark: leave events can land after a cell or the statement has taken over.
-  const clearOwnLink = () => {
-    if (useContributionStore.getState().statementLink?.from === "author") setStatementLink(null);
-  };
+  const linkHandlers = useAuthorLink(author?.id);
   // Down once their answer is in, up again on a re-ask.
   const asked = useContributionStore(
     (s) => author !== undefined && review(author, s.asks[author.id]).status.kind === "asked",
@@ -499,13 +514,14 @@ const AuthorRow = memo(function AuthorRowInner({
   const listFocus = useContributionStore((s) => (s.listFocus?.authorId === author?.id ? s.listFocus : null));
   const setListFocus = useContributionStore((s) => s.setListFocus);
   const { setEditingOrcid } = orcidLine;
+  const underRail = useContext(UnderRail);
   useEffect(() => {
-    if (!listFocus) return;
+    if (!listFocus || underRail) return;
     if (listFocus.orcid) setEditingOrcid(true);
     else nameInputRef.current?.focus();
     nameInputRef.current?.scrollIntoView({ block: "nearest" });
     setListFocus(null);
-  }, [listFocus, setEditingOrcid, setListFocus]);
+  }, [listFocus, underRail, setEditingOrcid, setListFocus]);
 
   // Keyed on the stored name, not the author object: normalizeAuthors rebuilds
   // every author on any list mutation, so an identity-keyed effect overwrote
@@ -565,13 +581,8 @@ const AuthorRow = memo(function AuthorRowInner({
       // itself — tint, rule, and a worded badge, never colour alone.
       aria-current={isClaimed ? "true" : undefined}
       data-linked={linked || undefined}
-      // Mouse only (a tap enters with no leave); focus inside the row marks the same links.
-      onPointerEnter={(event) =>
-        event.pointerType === "mouse" && author && setStatementLink({ contributorId: author.id, from: "author" })
-      }
-      onPointerLeave={(event) => event.pointerType === "mouse" && clearOwnLink()}
-      onFocus={() => author && setStatementLink({ contributorId: author.id, from: "author" })}
-      onBlur={clearOwnLink}
+      // Focus anywhere inside the row marks the same links as hovering it.
+      {...linkHandlers}
       className={`group rounded border px-2 py-0.5 transition-[border-color,box-shadow] duration-150 motion-reduce:transition-none ${
         isClaimed || isRecentReply
           ? "border-primary bg-primary/5"

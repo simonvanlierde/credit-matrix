@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuthor } from "@/core";
 import { IntlProvider } from "@/lib/translations";
 import { download } from "@/lib/utils";
@@ -25,6 +25,8 @@ vi.mock("@/lib/utils", async (importOriginal) => ({
 }));
 
 describe("HeatmapExports", () => {
+  beforeEach(() => useContributionStore.getState().reset());
+
   it("previews and exports SVG and PNG for a Hangul name, and refuses only PDF", async () => {
     const author = createAuthor("김민준");
     for (const contribution of author.contributions) contribution.score = 100;
@@ -81,10 +83,38 @@ describe("HeatmapExports", () => {
     fireEvent.click(screen.getByRole("button", { name: "Per contributor" }));
     expect(useContributionStore.getState().colorByContributor).toBe(true);
     expect(await screen.findByText(/Colored per contributor/)).toBeTruthy();
-    // Reset restores the figure's own options and leaves the shared ones.
-    fireEvent.click(
-      within(screen.getByRole("region", { name: "Figure settings" })).getByRole("button", { name: "Reset" }),
-    );
-    expect(useContributionStore.getState().colorByContributor).toBe(true);
   }, 30_000);
+
+  it("Reset restores the figure's own options and leaves the shared ones", () => {
+    const author = createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] });
+    act(() => {
+      const store = useContributionStore.getState();
+      store.loadAuthors([author]);
+      store.setHeatmapMonoColor("#00724c");
+      store.setTranspose(true);
+      store.setInitials(true);
+      store.setColorByContributor(false);
+    });
+    render(
+      <IntlProvider locale="en" messages={en}>
+        <HeatmapExports authors={[author]} showLevels={false} />
+      </IntlProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^Heatmap$/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Figure settings" }));
+    const panel = screen.getByRole("region", { name: "Figure settings" });
+    // A figure-only option: switch to short labels, then check Reset brings the full ones back.
+    const pressed = (name: string) => within(panel).getByRole("radio", { name }).getAttribute("aria-checked");
+    fireEvent.click(within(panel).getByRole("radio", { name: "Short labels" }));
+    expect(pressed("Short labels")).toBe("true");
+    fireEvent.click(within(panel).getByRole("button", { name: "Reset" }));
+    expect(pressed("Full labels")).toBe("true");
+    const state = useContributionStore.getState();
+    expect([state.heatmapMonoColor, state.transpose, state.initials, state.colorByContributor]).toEqual([
+      "#00724c",
+      true,
+      true,
+      false,
+    ]);
+  });
 });

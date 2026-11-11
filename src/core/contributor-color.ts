@@ -8,6 +8,9 @@
 /** Default hue for the heatmap (the app's ink-blue accent). */
 export const DEFAULT_MONO_COLOR = "#1f4e79";
 
+/** A hex colour, short or long: the only form a stored or imported hue may take. */
+export const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
 /**
  * Okabe–Ito categorical palette, offered as preset hues in the color picker.
  * The palette's black is softened to a dark gray for on-screen legibility.

@@ -334,6 +334,12 @@ export function ContributionGrid() {
     return t("cellTheySay", { name: author.firstName || author.name, level: translateUi(level) });
   };
   const namedHeaders = !acronyms && authors.length <= MAX_NAMED_COLUMNS;
+  const lastRole = CREDIT_ROLES[CREDIT_ROLES.length - 1];
+  const lastAngledLabel = transpose
+    ? lastRole && translateInterfaceRole(lastRole.name)
+    : namedHeaders
+      ? authors[authors.length - 1]?.name
+      : undefined;
   // Each person's hue, by list position; one hue for all when the view says so.
   const hues = colorByContributor ? contributorHues(authors.length) : null;
   const hueOf = (author: Author) => hues?.[authors.indexOf(author)] ?? heatmapMonoColor;
@@ -416,8 +422,9 @@ export function ContributionGrid() {
           type="button"
           tabIndex={-1}
           data-name-head={index}
-          // Named by its content, the person's name: a column header names every cell under it,
-          // so "Actions for …" here would be read before each cell. Radix adds the popup state.
+          // Named by the person alone: a column header names every cell under it, so "Actions for …"
+          // here would be read before each cell. The content can be an aria-hidden initials chip.
+          aria-label={author.name}
           onKeyDown={(event) => handleHeadKeyDown(event, "name", index)}
           className="block max-w-full rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary"
         >
@@ -571,13 +578,15 @@ export function ContributionGrid() {
               // scroll the matrix (WCAG 2.4.11).
               scrollPaddingTop: namedHeaders || transpose ? "9.5rem" : "4rem",
               scrollPaddingLeft: transpose && acronyms ? "6rem" : "12.5rem",
+              // Room for the last angled label to overhang its own column, sized to that label so a
+              // short name does not push the centred table off centre. At text-xs a character is
+              // about 0.42rem, cos 50° keeps 0.64 of it, and the label starts mid-column; 9rem caps it.
+              paddingRight: lastAngledLabel
+                ? `${Math.max(0, Math.min(lastAngledLabel.length * 0.27, 5.8) - 1)}rem`
+                : undefined,
             }}
             className={`isolate hidden max-h-[min(70vh,44rem)] max-w-full overflow-auto md:block desk:max-h-none desk:min-h-0 desk:flex-[0_1_auto] ${
               settled ? "enter-fade " : ""
-            }${
-              // Right padding lets the last angled label overhang its own column:
-              // a 9rem label rotated 50° reaches ~5.8rem past its own centre.
-              transpose || namedHeaders ? "pr-24" : ""
             }`}
           >
             <table

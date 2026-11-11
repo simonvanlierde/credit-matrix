@@ -1,4 +1,4 @@
-import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
+import { DEFAULT_MONO_COLOR, HEX_COLOR } from "@/core/contributor-color";
 import { normalizeLocaleCode } from "@/core/credit-i18n";
 import { type HeatmapOptions, repairHeatmapSettings } from "./heatmap-settings";
 
@@ -9,7 +9,7 @@ export function heatmapRecipe(settings: HeatmapOptions, target: HeatmapRecipeTar
   const figure = repairHeatmapSettings(settings);
   if (!figure) throw new TypeError("Missing figure settings");
   // The recipe is pasted into a shell: only a hex colour and real booleans pass.
-  const color = /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(settings.color) ? settings.color : DEFAULT_MONO_COLOR;
+  const color = HEX_COLOR.test(settings.color) ? settings.color : DEFAULT_MONO_COLOR;
   const s = { ...figure, color, horizontal: settings.horizontal === true, acronyms: settings.acronyms === true };
   const locale = normalizeLocaleCode(language);
   const options = {

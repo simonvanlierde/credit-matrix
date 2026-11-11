@@ -6,7 +6,7 @@ import { useGuide } from "@/store/guide-store";
 
 /** The steps from names to a statement in the manuscript, each ticked by what the draft shows. */
 const STEPS = ["roles", "ask", "copy"] as const;
-export type GuideStep = (typeof STEPS)[number];
+type GuideStep = (typeof STEPS)[number];
 
 /**
  * A short checklist at the head of the status strip. It ticks itself from the
