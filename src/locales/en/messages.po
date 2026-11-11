@@ -1838,7 +1838,7 @@ msgid "toolchainNoSetup"
 msgstr "No extension needed."
 
 msgid "toolchainWordHint"
-msgstr "Copy the statement above into Word. Download the contribution heatmap from Heatmap options."
+msgstr "Copy the statement above into Word. Use Heatmap to copy or download the contribution heatmap."
 
 msgid "toolchainLatexHeatmap"
 msgstr "Generate heatmap.svg with the CLI below, then include the figure in your document."

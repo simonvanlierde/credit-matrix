@@ -1838,7 +1838,7 @@ msgid "toolchainNoSetup"
 msgstr "No se necesita ninguna extensión."
 
 msgid "toolchainWordHint"
-msgstr "Copie la declaración de arriba en Word. Descargue el mapa de calor de contribuciones desde las opciones del mapa de calor."
+msgstr "Copie la declaración de arriba en Word. Use Mapa de calor para copiar o descargar el mapa de calor de contribuciones."
 
 msgid "toolchainLatexHeatmap"
 msgstr "Genere heatmap.svg con la línea de comandos de abajo e incluya la figura en su documento."

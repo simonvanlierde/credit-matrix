@@ -1838,7 +1838,7 @@ msgid "toolchainNoSetup"
 msgstr "Keine Erweiterung erforderlich."
 
 msgid "toolchainWordHint"
-msgstr "Kopieren Sie die obige Erklärung nach Word. Laden Sie die Beitrags-Heatmap über die Heatmap-Optionen herunter."
+msgstr "Kopieren Sie die obige Erklärung nach Word. Über Heatmap können Sie die Beitrags-Heatmap kopieren oder herunterladen."
 
 msgid "toolchainLatexHeatmap"
 msgstr "Erstellen Sie heatmap.svg mit dem folgenden CLI-Befehl und fügen Sie die Abbildung in Ihr Dokument ein."

@@ -1838,7 +1838,7 @@ msgid "toolchainNoSetup"
 msgstr "无需扩展。"
 
 msgid "toolchainWordHint"
-msgstr "将上方声明复制到 Word。在热图选项中下载贡献热图。"
+msgstr "将上方声明复制到 Word。使用“热图”复制或下载贡献热图。"
 
 msgid "toolchainLatexHeatmap"
 msgstr "使用下方 CLI 命令生成 heatmap.svg，然后将图插入文档。"

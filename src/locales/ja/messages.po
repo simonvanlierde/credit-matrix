@@ -1838,7 +1838,7 @@ msgid "toolchainNoSetup"
 msgstr "拡張機能は不要です。"
 
 msgid "toolchainWordHint"
-msgstr "上の著者貢献を Word にコピーしてください。貢献度ヒートマップはヒートマップの設定からダウンロードできます。"
+msgstr "上の著者貢献を Word にコピーしてください。「ヒートマップ」から貢献度ヒートマップをコピーまたはダウンロードできます。"
 
 msgid "toolchainLatexHeatmap"
 msgstr "下の CLI コマンドで heatmap.svg を生成し、文書に図を挿入してください。"
