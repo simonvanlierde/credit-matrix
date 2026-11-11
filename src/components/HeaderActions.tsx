@@ -160,7 +160,7 @@ export function HeaderActions() {
       }
       // Mark the row itself, so the status strip's message has a visible
       // counterpart where the answer landed. The strip owns the mark's
-      // lifetime through onDismiss below: dismissing, undoing, timing out, or
+      // lifetime through onDismiss below: dismissing, undoing, or
       // being replaced all take the mark down with the message.
       const receipt = ++replyReceipt.current;
       setRecentReply(contributorId);
@@ -182,7 +182,7 @@ export function HeaderActions() {
           {
             label: t("undo"),
             onAct: () => {
-              // The strip lives a minute, long enough to switch drafts under it.
+              // Return to the reply’s draft before restoring its state.
               switchDraft(target);
               if (!applyAskPatch(target, undo)) return;
               announce(t("annMergeUndone"));

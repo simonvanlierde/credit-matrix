@@ -30,7 +30,7 @@ export function CreditBadge({ className }: { className?: string }) {
   const [pngStatus, copyPngBlob] = useCopyStatus({ copied: t("annBadgeCopied") });
 
   // Copy the image bytes (not a URL) so it pastes straight into a doc/editor.
-  // useCopyStatus owns the status, the announce and the 2s reset; this only
+  // useCopyStatus owns the status, announcement and success reset; this only
   // supplies the clipboard write.
   function copyPng() {
     return copyPngBlob(async () => {

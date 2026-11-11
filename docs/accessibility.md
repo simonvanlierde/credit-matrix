@@ -25,35 +25,27 @@ You should be able to:
 - tell contribution levels apart without color: Lead, Equal and Supporting each have their own mark
   of three, two or one dots;
 - use a dark theme, which follows your system setting until you pick one;
-- stop the animations with your system's reduced-motion setting.
+- reduce animations with your system's reduced-motion setting.
 
 ## How accessible CRediT Matrix is
 
-CRediT Matrix aims to meet [WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA, and through it the
-web requirements of
-[EN 301 549 v4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf).
+CRediT Matrix aims to meet [WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA.
 
-Its conformance is **partially conformant**. On 24 October 2026 the developer checked the app and
-the web element against every WCAG 2.2 level A and AA criterion, in the
-[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md).
-It found no criterion the app fails. It covers a sample of pages and no screen reader has read the
-app yet, so it does not claim full conformance.
-On 26 October 2026 a second pass read what a screen reader is given on each page and ran the
-checks in Firefox and WebKit too. There has been no external audit. What is checked, and how, is
-under [How we check](#how-we-check).
+Its conformance is **partially conformant**. The latest review, on 12 November 2026, checked sampled
+pages, browser tests and the implementation against WCAG 2.2 AA. The
+[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md)
+records the evidence and the checks still needed. We have not tested the app with a screen reader
+or commissioned an external audit. This review does not assess all requirements of EN 301 549.
 
 ## Known problems
 
-- **Editors may not use a downloaded heatmap's description.** The SVG and PNG downloads include the
-  contribution statement as their text alternative: the SVG in its description, which screen
-  readers read, and the PNG in its Description field. A word processor or slide tool may not turn
-  that field into alt text. When you put the heatmap in a paper or slide, check its alt text there,
-  and paste in the contribution statement if it is empty. **Copy PNG** is worse: Chromium drops the
-  Description field from a copied image, so paste the contribution statement in as alt text, or
-  use **Download PNG** or **Download SVG**.
-- **The PDF download is not tagged.** It includes the heatmap's title, its contribution statement as
-  the subject and the document language, but it has no tag structure, so a screen reader gets the
-  selectable text without headings, reading order or a figure description.
+- **Editors may not use a heatmap's description.** SVG downloads contain the contribution
+  statement in their description, and PNG downloads contain it in a Description field. A word
+  processor or slide tool may not turn that metadata into alt text. Clipboard transfers may
+  discard it too. After inserting or pasting a heatmap, check its alt text and paste in the
+  contribution statement if needed.
+- **The PDF download is not tagged.** It includes a title, the contribution statement as its
+  subject and the document language. It does not provide a tagged reading order or figure alternative.
 - **No native speaker has checked eight of the nine languages yet.** The German, Spanish, French,
   Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
   translated by machine. If a label is unclear, switch the language menu to English. The CRediT role names themselves come from the reviewed
@@ -65,7 +57,7 @@ under [How we check](#how-we-check).
 ### Content we don't control
 
 - **ORCID sign-in.** Signing a co-author answer with ORCID opens orcid.org, which ORCID runs, so
-  its accessibility is up to ORCID. An answer can be sent without signing in.
+  we have not assessed that authentication process. An answer can be sent without signing in.
 
 ## Tell us about a problem
 
@@ -80,10 +72,10 @@ statement or an export in another format, email us and we'll send it.
 
 ## How we check
 
-- **Self-assessment.** Every WCAG 2.2 level A and AA criterion was judged in Chromium on a sample
-  of the app, the co-author page, the census, the about page, this statement and the web element,
-  with the result and its evidence per criterion in the
-  [self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md). It is repeated at each yearly review.
+- **Self-assessment.** The criterion-by-criterion
+  [assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md)
+  records browser checks, source review and evidence gaps for the sampled pages and web element.
+  It is repeated at each yearly review.
 - **Automated scan.** The end-to-end tests run [axe-core](https://github.com/dequelabs/axe-core)
   with the WCAG 2.0, 2.1 and 2.2 level A and AA rules (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`,
   `wcag22a`, `wcag22aa`). They scan the welcome dialog, the empty and filled workspace, a phone-sized
@@ -93,15 +85,19 @@ statement or an export in another format, email us and we'll send it.
   [e2e/a11y.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/a11y.spec.ts).
 - **What a screen reader is given.**
   [e2e/screen-reader.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/screen-reader.spec.ts)
-  reads the accessibility tree of the workspace, the grid, every popover and dialog, the co-author
+  reads the accessibility tree of the workspace, the grid, sampled popovers and dialogs, the co-author
   page, the census, the about page, this statement and the web element: the names, roles, states,
-  headings and landmarks a screen reader reads out. It also logs every message that reaches a live
-  region, and checks that copying, removing, undoing and changing the grid are each announced once.
+  headings and landmarks exposed to assistive technology. It also checks the expected live-region
+  DOM messages for copying, removing, undoing and changing the grid. It does not check spoken output.
 - **Keyboard tests.** The same tests use the keyboard alone to move through the contributor list,
   reorder a contributor without dragging, switch the inspector tabs, move through the grid with the
   arrow keys, open a role's description from its name, and use the segmented controls. They also
   check that focus stays in place after a contributor is removed, and that small icon buttons are
-  at least 24 by 24 px.
+  at least 24 by 24 px in the measured sample.
+- **Visual checks.** Browser tests check sampled contrast, focus rings, swatch selection in forced
+  colors, and figure settings under reduced motion. Text-spacing tests check page width and access
+  to figure downloads at phone and desktop widths. These use browser emulation; they do not replace
+  testing native color dialogs, actual browser zoom or Windows High Contrast by hand.
 - **Lint.** [Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) check
   every change for things like missing alt text, invalid ARIA and click handlers without a keyboard
   equivalent.
@@ -121,19 +117,19 @@ speak it is not checked. Nobody has used the app in Firefox or Safari by hand.
 
 ### Heatmap text alternatives
 
-In the app, screen readers skip the heatmap drawing, and the contribution statement beside it says
-the same in words. The downloaded SVG has the title "Contribution heatmap" and, as its description,
-the contribution statement by author. The downloaded PNG holds the same statement in its Description
-field; a copied PNG does not. The first known problem says where that text gets lost.
+The workspace grid exposes each contribution and its level to assistive technology. The export
+preview also has the contribution statement as its image alternative. Downloaded SVG files contain
+a title and description; downloaded PNG files contain the statement in a Description field.
+Editors may not turn those fields into alt text. Check the alt text after inserting a figure into
+a document, and paste the statement if needed.
 
 ### The web element
 
 The [`<credit-matrix>` element](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/element.md)
-draws a light card with dark text, so its text keeps enough contrast on a dark page. Screen readers
-skip the heatmap drawing and read a table instead: a row per role, a column per contributor, and the
-level (Lead, Equal, Supporting or None) in each cell. The element marks the language of its
-statement, heatmap and table, so screen readers pronounce it right. Its loading and error messages
-are in English, and marked as English.
+draws a light card with dark text, so its text keeps enough contrast on a dark page. It supplies
+assistive technology with a table instead of the drawing: a row per role, a column per contributor, and the
+level (Lead, Equal, Supporting or None) in each cell. The element declares the language of its
+statement, heatmap and table. Its loading and error messages are marked as English.
 
 ## Tested with
 
@@ -150,9 +146,9 @@ CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 
 Prepared: 13 October 2026
 
-Last reviewed: 26 October 2026
+Last reviewed: 12 November 2026
 
-Next review: by 26 October 2027, or at the next major release if that comes first.
+Next review: by 12 November 2027, or at the next major release if that comes first.
 
-Method: self-assessment by the developer, following WCAG-EM, with the checks under
+Method: self-assessment by the developer, using the browser and source checks under
 [How we check](#how-we-check). No external audit.

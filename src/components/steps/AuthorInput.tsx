@@ -38,7 +38,7 @@ import type { ReactNode } from "react";
 import { memo, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
-import { UNDO_WINDOW_MS, UndoBar } from "@/components/ui/undo-bar";
+import { UndoBar } from "@/components/ui/undo-bar";
 import { type Author, review } from "@/core";
 import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { announce } from "@/lib/announce";
@@ -135,14 +135,6 @@ export function AuthorList() {
   const addInputRef = useRef<HTMLInputElement>(null);
   // Rows that arrive after the app has settled animate in; a restored draft does not.
   const settled = useSettled();
-
-  // A screen-reader user still hearing the removal announcement could lose a
-  // short Undo mid-route, hence the long window.
-  useEffect(() => {
-    if (!removed) return;
-    const timer = window.setTimeout(() => setRemoved(null), UNDO_WINDOW_MS);
-    return () => window.clearTimeout(timer);
-  }, [removed]);
 
   // The undo buffer belongs to the draft the row was removed from: restoring
   // it after a switch would insert one paper's contributor into another, and
@@ -703,7 +695,7 @@ const AuthorRow = memo(function AuthorRowInner({
               )}
               {/* A reply just landed here: the status strip says so at the
                   top, and this badge says so on the row itself. It leaves
-                  with the strip — dismissed, undone, timed out, or replaced —
+                  when the strip is dismissed, undone, or replaced,
                   or on a draft switch. */}
               {isRecentReply && (
                 <span
