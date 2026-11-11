@@ -1,5 +1,4 @@
 import { BadgeCheck, Check, ChevronDown, CircleCheck, Send } from "lucide-react";
-import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
@@ -16,6 +15,7 @@ import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { useDark } from "@/lib/use-dark";
 import { cn } from "@/lib/utils";
 import { useContributionStore } from "@/store/contribution-store";
 
@@ -84,7 +84,7 @@ function CoauthorPage() {
   const setAuthorMarker = useContributionStore((s) => s.setAuthorMarker);
   const clearClaimFor = useContributionStore((s) => s.clearClaimFor);
   const { translateInterfaceRole, describeRole, translateInterfaceUi } = useCreditTranslators();
-  const dark = useTheme().resolvedTheme === "dark";
+  const dark = useDark();
   const [sent, setSent] = useState<"shared" | "copied" | null>(null);
   const [cancelled, setCancelled] = useState(false);
   const [copyStatus, copy] = useCopyStatus({ copied: t("annLinkCopied") });

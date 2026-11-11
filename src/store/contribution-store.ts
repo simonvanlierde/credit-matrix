@@ -79,13 +79,13 @@ export interface Draft {
 }
 
 /** A grid cell the Review list points at: a contributor and a role or marker. */
-export interface ReviewCell {
+interface ReviewCell {
   contributorId: string;
   target: Target;
 }
 
 /** A grid cell and its phrase in the statement, tied together while one is under the pointer or focus. */
-export interface StatementLink {
+interface StatementLink {
   contributorId: string;
   role: CreditRoleName;
   /** Which side the pointer or focus is on: the side it is not on shows the mark. */

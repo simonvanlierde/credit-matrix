@@ -1,5 +1,5 @@
 /** OpenAlex field names with a translation; any other field shows its OpenAlex name. */
-export const FIELD_KEYS = {
+const FIELD_KEYS = {
   "Agricultural and Biological Sciences": "censusFieldAgriculturalAndBiologicalSciences",
   "Biochemistry, Genetics and Molecular Biology": "censusFieldBiochemistryGeneticsAndMolecularBiology",
   Chemistry: "censusFieldChemistry",

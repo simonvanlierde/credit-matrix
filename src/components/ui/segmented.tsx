@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { moveRadioSelection } from "@/lib/roving-radio";
 import { cn } from "@/lib/utils";
 
-export interface SegmentedOption<T extends string> {
+interface SegmentedOption<T extends string> {
   value: T;
   label: ReactNode;
   /** Optional accessible label when `label` is an icon/swatch. */

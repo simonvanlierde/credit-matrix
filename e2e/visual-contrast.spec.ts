@@ -110,6 +110,22 @@ for (const theme of themes) {
       const mark = await flatten(page, [...ground, await style(dot, "background-color")]);
       expect(ratio(mark, await flatten(page, ground))).toBeGreaterThanOrEqual(3);
     });
+
+    test("the focus ring reaches 3:1 against the page", async ({ page }) => {
+      await page.goto("/");
+      await page.getByRole("button", { name: "Load sample data" }).click();
+      const input = page.locator('input[aria-label="Name or ORCID iD"]').first();
+      await input.focus();
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Tab");
+      await expect(input).toBeFocused();
+      // The ring is the 2px layer of a stacked box-shadow, drawn outside the field over its parent's background.
+      const ringColor = (await style(input, "box-shadow")).match(/(rgba?\([^)]*\)) 0px 0px 0px 2px/)?.[1];
+      expect(ringColor, "box-shadow colour").toBeTruthy();
+      const ground = await backdrop(input, false);
+      const ring = await flatten(page, [...ground, ringColor as string]);
+      expect(ratio(ring, await flatten(page, ground))).toBeGreaterThanOrEqual(3);
+    });
   });
 }
 
