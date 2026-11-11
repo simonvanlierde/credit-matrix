@@ -80,9 +80,14 @@ describe("figures in every covered script", () => {
   });
 
   it("keeps an emoji sequence in one emoji run, keycaps included", async () => {
-    for (const sequence of ["👩\u200d🔬", "🇳🇱", "1\ufe0f\u20e3"]) {
+    for (const [before, sequence] of [
+      ["Ada", "👩\u200d🔬"],
+      ["Ada", "🇳🇱"],
+      ["Ada", "1\ufe0f\u20e3"],
+      ["محمد", "1\ufe0f\u20e3"],
+    ]) {
       const svg = await renderer.svg(
-        [createAuthor(`Ada ${sequence}`, { contributions: [{ role: "Software", score: 100 }] })],
+        [createAuthor(`${before} ${sequence}`, { contributions: [{ role: "Software", score: 100 }] })],
         options,
       );
       expect(svg, sequence).toContain(`>${sequence}</tspan>`);

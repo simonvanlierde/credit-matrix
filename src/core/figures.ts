@@ -423,10 +423,13 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
     for (const { 0: character, index } of normalized.matchAll(/./gsu)) {
       const codePoint = character.codePointAt(0) ?? 0;
       const previous = runs.at(-1);
+      // A keycap (1️⃣) is a digit, #, or * the emoji face composes with the marks that follow it.
+      const keycap = KEYCAP.test(normalized.slice(index));
       // Marks, joiners and selectors belong to the run before them; so do spaces, digits and punctuation
       // inside a complex-script run (not emoji), which then shapes, and reads right to left, as one.
       if (
         previous?.font &&
+        !keycap &&
         (/\p{Script=Inherited}/u.test(character)
           ? // HarfBuzz consumes joiners and selectors; any other mark needs a glyph, or PDF draws .notdef.
             previous.font.font.hasGlyphForCodePoint(codePoint) ||
@@ -440,10 +443,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
         continue;
       }
       const chinesePunctuation = cjkPunctuation && codePoint > 0x7f && /\p{P}/u.test(character);
-      // A keycap (1️⃣) is a digit, #, or * the emoji face composes with the marks that follow it.
-      const script = KEYCAP.test(normalized.slice(index))
-        ? EMOJI
-        : SCRIPT_FACES.find(([pattern]) => pattern.test(character))?.[1];
+      const script = keycap ? EMOJI : SCRIPT_FACES.find(([pattern]) => pattern.test(character))?.[1];
       // Emoji last: a text-default symbol (❤, ☺, ✌) keeps its text glyph where another face has one.
       const order = [
         ...(script ? [script] : []),
