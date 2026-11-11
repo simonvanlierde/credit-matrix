@@ -41,9 +41,22 @@ async function fetchJson(src: string): Promise<string> {
   if (!res.ok) throw new LoadError(`Could not load ${src} (HTTP ${res.status}).`);
   const tooBig = new LoadError(`Could not load ${src}: it is larger than ${MAX_IMPORT_BYTES / 1_000_000} MB.`);
   if (Number(res.headers.get("content-length")) > MAX_IMPORT_BYTES) throw tooBig;
-  const text = await res.text();
-  if (text.length > MAX_IMPORT_BYTES) throw tooBig;
-  return text;
+  // Count bytes as they arrive: a chunked or understated response has no trustworthy length.
+  if (!res.body) return "";
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_IMPORT_BYTES) {
+      await reader.cancel();
+      throw tooBig;
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(await new Blob(chunks as Uint8Array<ArrayBuffer>[]).arrayBuffer());
 }
 
 function englishParagraph(text: string, className?: string): HTMLParagraphElement {

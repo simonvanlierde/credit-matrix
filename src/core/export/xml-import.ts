@@ -1,5 +1,5 @@
 import type { Author, Contribution } from "../author";
-import { isValidOrcid, LEVEL_SCORE, normalizeOrcid } from "../author";
+import { isValidOrcid, LEVEL_SCORE, MAX_AUTHORS, normalizeOrcid } from "../author";
 import { CREDIT_ROLES, roleNamed } from "../credit-roles";
 import { cleanNamePart, createAuthor, deduplicateAuthorInitials } from "../parse-authors";
 
@@ -32,7 +32,7 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   const contribEls = Array.from(doc.querySelectorAll("contrib"));
   if (contribEls.length === 0) return [];
 
-  const authors = contribEls.flatMap((contrib) => {
+  const authors = readUpToCap(contribEls, (contrib) => {
     // Editors, reviewers and other non-credited contrib types are not authors.
     const contribType = contrib.getAttribute("contrib-type");
     if (contribType && contribType !== "author" && contribType !== "contributor") return [];
@@ -81,6 +81,20 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   });
 
   return deduplicateAuthorInitials(authors);
+}
+
+/**
+ * Read people from elements, stopping one past `MAX_AUTHORS`: every caller refuses that many, and
+ * a 2 MB file of tiny elements otherwise builds about 50,000 people first. It counts the people
+ * read, not elements, so editors and group wrappers before the authors are not counted.
+ */
+export function readUpToCap<T>(elements: T[], read: (element: T) => Author[]): Author[] {
+  const people: Author[] = [];
+  for (const element of elements) {
+    if (people.length > MAX_AUTHORS) break;
+    people.push(...read(element));
+  }
+  return people;
 }
 
 /** Text that is not well-formed XML, such as a truncated file. */

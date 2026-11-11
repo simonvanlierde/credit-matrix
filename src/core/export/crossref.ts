@@ -5,7 +5,7 @@ import { deduplicateAuthorInitials } from "../parse-authors";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 import { givenNamesOf, suffixOf } from "./xml";
-import { parseXml, readPerson, type XmlParser } from "./xml-import";
+import { parseXml, readPerson, readUpToCap, type XmlParser } from "./xml-import";
 
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
@@ -76,12 +76,12 @@ export function isCrossrefContributors(text: string): boolean {
  * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
  * The block holds no contribution levels, so every listed CRediT role comes back as lead.
  * The display name is rebuilt as given name + surname + suffix, as `fromJats4rXml` does,
- * so a family-first name such as "Smith, Jane" comes back as "Jane Smith".
+ * so a family-first name such as "Hopper, Grace" comes back as "Grace Hopper".
  * Same safety rules and `parser` as `fromJats4rXml`.
  */
 export function fromCrossrefContributors(xml: string, { parser }: { parser?: XmlParser } = {}): Author[] {
   const doc = parseXml(xml, parser, "fromCrossrefContributors");
-  const authors = Array.from(doc.querySelectorAll("person_name")).flatMap((person) => {
+  const authors = readUpToCap(Array.from(doc.querySelectorAll("person_name")), (person) => {
     // Mirrors the JATS reader skipping nested contribs: a wrapper's own text would repeat its members, and the scan is quadratic.
     if (person.querySelector("person_name")) return [];
     const roles = Array.from(person.querySelectorAll("role"));

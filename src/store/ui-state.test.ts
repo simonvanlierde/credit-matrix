@@ -50,7 +50,7 @@ describe("workspace view state", () => {
     const { result: summary } = renderHook(() => useAskSummary());
     expect(summary.current).toEqual({ total: 0, asked: 0, answered: 0, open: 0 });
 
-    act(() => store().loadAuthors([createAuthor("Jane Smith"), createAuthor("Bob White")]));
+    act(() => store().loadAuthors([createAuthor("Grace Hopper"), createAuthor("Charles Darwin")]));
     expect(summary.current.total).toBe(2);
   });
 });

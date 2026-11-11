@@ -11,8 +11,8 @@ import { encodeShareHash } from "../share-link";
 import { fromSharePayload } from "../share-payload";
 
 const roster = () => [
-  createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] }),
-  createAuthor("Bob White", { contributions: [{ role: "Investigation", score: 66 }] }),
+  createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] }),
+  createAuthor("Charles Darwin", { contributions: [{ role: "Investigation", score: 66 }] }),
 ];
 
 describe("export-only formats", () => {
@@ -56,7 +56,7 @@ describe("export-only formats", () => {
   it.each([["cff-version: 1.2.0"], ["cff-version : 1.2.0"]])(
     "reads a CITATION.cff that lists its authors before %j as CFF",
     async (version) => {
-      const text = `# c\nauthors:\n  - family-names: Smith\n    given-names: Jane\n${version}\ntitle: T\n`;
+      const text = `# c\nauthors:\n  - family-names: Hopper\n    given-names: Grace\n${version}\ntitle: T\n`;
       const convertCitation = vi.fn(async () => JSON.stringify({ "@type": "SoftwareSourceCode", author: [] }));
       await importAny(text, { convertCitation }).catch(() => undefined);
       expect(convertCitation).toHaveBeenCalledWith(text.trim(), "cff");
@@ -64,16 +64,16 @@ describe("export-only formats", () => {
   );
 
   it("still refuses author YAML whose comment mentions cff-version", async () => {
-    const text = "# not cff-version: 1.2.0\nauthors:\n  - name: Jane Smith\n";
+    const text = "# not cff-version: 1.2.0\nauthors:\n  - name: Grace Hopper\n";
     await expect(importAny(text)).rejects.toBeInstanceOf(ExportOnlyError);
   });
 
   it("reads a name list whose first word only ends in authors:", async () => {
-    expect((await importAny("coauthors:\nJane Smith")).authors.map((a) => a.name)).toContain("Jane Smith");
+    expect((await importAny("coauthors:\nGrace Hopper")).authors.map((a) => a.name)).toContain("Grace Hopper");
   });
 
   it("still reads a name list that mentions an author key", async () => {
-    expect((await importAny("Author: Jane Smith")).authors).toHaveLength(1);
+    expect((await importAny("Author: Grace Hopper")).authors).toHaveLength(1);
   });
 });
 
@@ -94,7 +94,7 @@ describe("detectFormat", () => {
     const text = "MG: Writing, conceptualization. EM and FG: software.";
     expect(detectFormat(text)).toBe("statement");
     // "Software" alone also turns up in name lists and ICMJE prose.
-    expect(detectFormat("Software Smith, Jane Doe")).toBe("names");
+    expect(detectFormat("Software Hopper, Grace Doe")).toBe("names");
     await expect(importAny(text)).rejects.toThrow(/parseStatement/);
   });
 
@@ -125,19 +125,19 @@ describe("detectFormat", () => {
   });
 
   it("reads text with a Name header cell as CSV", () => {
-    expect(detectFormat("Name,ORCID\nJane Smith,")).toBe("csv");
-    expect(detectFormat('"name" , Conceptualization\nJane Smith,100')).toBe("csv");
-    expect(detectFormat("﻿Name,Conceptualization\nJane Smith,100")).toBe("csv");
+    expect(detectFormat("Name,ORCID\nGrace Hopper,")).toBe("csv");
+    expect(detectFormat('"name" , Conceptualization\nGrace Hopper,100')).toBe("csv");
+    expect(detectFormat("\uFEFFName,Conceptualization\nGrace Hopper,100")).toBe("csv");
   });
 
   it("reads a tenzing header as tenzing, whatever the separator", () => {
-    expect(detectFormat("Author/Acknowledgee,Firstname,Surname\nAuthor,Jane,Smith")).toBe("tenzing");
-    expect(detectFormat("Author/Acknowledgee;Firstname;Surname\nAuthor;Jane;Smith")).toBe("tenzing");
+    expect(detectFormat("Author/Acknowledgee,Firstname,Surname\nAuthor,Grace,Hopper")).toBe("tenzing");
+    expect(detectFormat("Author/Acknowledgee;Firstname;Surname\nAuthor;Grace;Hopper")).toBe("tenzing");
   });
 
   it("reads a tab- or semicolon-separated sheet with a Name header as CSV", () => {
-    expect(detectFormat("Name\tSoftware\nJane Smith\t100")).toBe("csv");
-    expect(detectFormat("Name;Software\nJane Smith;100")).toBe("csv");
+    expect(detectFormat("Name\tSoftware\nGrace Hopper\t100")).toBe("csv");
+    expect(detectFormat("Name;Software\nGrace Hopper;100")).toBe("csv");
   });
 
   it("tells JSON, XML, links and nothing apart", () => {
@@ -163,14 +163,14 @@ describe("detectFormat", () => {
 
   it("reads a link only when the text is the link, over http too", () => {
     expect(detectFormat("http://localhost:3000/#s=abc")).toBe("link");
-    expect(detectFormat("Jane Smith, see https://example.org/#s=abc")).toBe("names");
-    expect(detectFormat("Jane Smith #s=abc")).toBe("names");
-    expect(detectFormat("#s=abc and Bob White")).toBe("names");
+    expect(detectFormat("Grace Hopper, see https://example.org/#s=abc")).toBe("names");
+    expect(detectFormat("Grace Hopper #s=abc")).toBe("names");
+    expect(detectFormat("#s=abc and Charles Darwin")).toBe("names");
   });
 
   it("reads JSON only when it is an object or an array", () => {
     expect(detectFormat("2024")).toBe("names");
-    expect(detectFormat('"Jane Smith"')).toBe("names");
+    expect(detectFormat('"Grace Hopper"')).toBe("names");
     expect(detectFormat("[]")).toBe("json");
   });
 });
@@ -194,12 +194,12 @@ describe("importAny", () => {
     ["json", toJson(roster())],
     ["csv", toCsv(roster())],
     ["xml", toJats4rXml(roster())],
-    ["names", "Jane Smith\nBob White"],
-    ["tenzing", "Author/Acknowledgee,Firstname,Surname\nAuthor,Jane,Smith\nAuthor,Bob,White"],
+    ["names", "Grace Hopper\nCharles Darwin"],
+    ["tenzing", "Author/Acknowledgee,Firstname,Surname\nAuthor,Grace,Hopper\nAuthor,Charles,Darwin"],
   ])("reads %s", async (format, text) => {
     const imported = await importAny(text);
     expect(imported.format).toBe(format);
-    expect(names(imported.authors)).toEqual(["Jane Smith", "Bob White"]);
+    expect(names(imported.authors)).toEqual(["Grace Hopper", "Charles Darwin"]);
   });
 
   it("hands the XML parser the text without the blank lines before it", async () => {
@@ -214,17 +214,17 @@ describe("importAny", () => {
     };
     const imported = await importAny(`\n  ${xml}\n`, { parser });
     expect(seen).toEqual([xml]);
-    expect(names(imported.authors)).toEqual(["Jane Smith", "Bob White"]);
+    expect(names(imported.authors)).toEqual(["Grace Hopper", "Charles Darwin"]);
   });
 
   it("reads a bare share hash", async () => {
     const imported = await importAny(await encodeShareHash({ authors: roster() }));
     expect(imported.format).toBe("link");
-    expect(names(imported.authors)).toEqual(["Jane Smith", "Bob White"]);
+    expect(names(imported.authors)).toEqual(["Grace Hopper", "Charles Darwin"]);
   });
 
   it("reads a semicolon CSV", async () => {
-    const imported = await importAny("Name;Software\nJane Smith;100\nBob White;66");
+    const imported = await importAny("Name;Software\nGrace Hopper;100\nCharles Darwin;66");
     expect(imported.format).toBe("csv");
     expect(imported.authors[1]?.contributions.find((c) => c.role === "Software")?.score).toBe(66);
   });
@@ -241,7 +241,7 @@ describe("importAny", () => {
     const link = await encodeShareHash({ authors: roster(), title: "Eel cognition" }, "https://example.org/");
     const imported = await importAny(link);
     expect(imported).toMatchObject({ format: "link", title: "Eel cognition" });
-    expect(names(imported.authors)).toEqual(["Jane Smith", "Bob White"]);
+    expect(names(imported.authors)).toEqual(["Grace Hopper", "Charles Darwin"]);
   });
 
   it("throws on a broken link and on empty text", async () => {
@@ -264,7 +264,7 @@ describe("normalizeRoster", () => {
     const [jane] = roster();
     if (!jane) throw new Error("expected an author");
     expect(normalizeRoster([{ ...jane, id }])[0]?.id).not.toBe(id);
-    expect(() => fromSharePayload(JSON.stringify({ v: 2, a: [{ i: id, n: "Jane Smith", s: [] }] }))).toThrow();
+    expect(() => fromSharePayload(JSON.stringify({ v: 2, a: [{ i: id, n: "Grace Hopper", s: [] }] }))).toThrow();
   });
 
   it("deduplicates initials and keeps a structured particle surname", () => {
@@ -282,9 +282,9 @@ describe("normalizeRoster", () => {
     const [jane] = roster();
     if (!jane) throw new Error("expected an author");
     expect(normalizeRoster([{ ...jane, ...parts }])[0]).toMatchObject({
-      firstName: "Jane",
-      surname: "Smith",
-      initials: "JS",
+      firstName: "Grace",
+      surname: "Hopper",
+      initials: "GH",
     });
   });
 
@@ -337,4 +337,17 @@ describe("normalizeRoster", () => {
     const stray = { ...jane, legacy: true } as typeof jane;
     expect(normalizeRoster([stray])[0]).not.toHaveProperty("legacy");
   });
+});
+
+it("reads only one name past the cap from a long list, which every caller then refuses", async () => {
+  const names = Array.from({ length: 50_000 }, (_, i) => `Ada Lovelace ${i}`).join("\n");
+  const { format, authors } = await importAny(names);
+  expect(format).toBe("names");
+  expect(authors).toHaveLength(MAX_AUTHORS + 1);
+  expect(authors.at(-1)?.name).toBe(`Ada Lovelace ${MAX_AUTHORS}`);
+});
+
+it("keeps the initials of a short name list unique", async () => {
+  const { authors } = await importAny("Ada Lovelace\nAntoine Lavoisier");
+  expect(authors.map((a) => a.initials)).toEqual(["AL", "ALa"]);
 });

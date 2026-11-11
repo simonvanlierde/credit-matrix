@@ -6,7 +6,7 @@ import { createAuthor, parseAuthorText } from "../parse-authors";
 
 describe("toMarkdown", () => {
   it("renders a contributor → roles table with level annotations", () => {
-    const authors = parseAuthorText("Jane Smith\nBob White");
+    const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
     const [jane, bob] = authors;
     if (!(jane && bob)) throw new Error("expected 2 authors");
     const conc = jane.contributions.find((c) => c.role === "Conceptualization");
@@ -21,13 +21,13 @@ describe("toMarkdown", () => {
     expect(lines[1]).toBe("| --- | --- |");
     // Level label uses the canonical English UI string (capitalized), matching
     // the statement and heatmap output.
-    expect(md).toContain("| Jane Smith | Conceptualization, Methodology (Equal) |");
+    expect(md).toContain("| Grace Hopper | Conceptualization, Methodology (Equal) |");
     // Bob has no roles → em dash placeholder
-    expect(md).toContain("| Bob White | — |");
+    expect(md).toContain("| Charles Darwin | — |");
   });
 
   it("localizes role names and level labels via the translators", () => {
-    const authors = parseAuthorText("Jane Smith");
+    const authors = parseAuthorText("Grace Hopper");
     const [jane] = authors;
     if (!jane) throw new Error("expected author");
     const meth = jane.contributions.find((c) => c.role === "Methodology");
@@ -43,7 +43,7 @@ describe("toMarkdown", () => {
   });
 
   it("annotates levels with the locale's template, like the statement", () => {
-    const [jane] = parseAuthorText("Jane Smith");
+    const [jane] = parseAuthorText("Grace Hopper");
     const meth = jane?.contributions.find((c) => c.role === "Methodology");
     if (!(jane && meth)) throw new Error("expected author");
     meth.score = 50;
@@ -55,7 +55,7 @@ describe("toMarkdown", () => {
   });
 
   it("escapes pipe characters that would break the table", () => {
-    const authors = parseAuthorText("Jane Smith");
+    const authors = parseAuthorText("Grace Hopper");
     const [jane] = authors;
     if (!jane) throw new Error("expected author");
     jane.name = "Jane | Smith";
@@ -67,7 +67,7 @@ describe("toMarkdown", () => {
   });
 
   it("renders untrusted Markdown and HTML syntax as literal table text", () => {
-    const [author] = parseAuthorText("Jane Smith");
+    const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
     author.name = "Jane\n[click](https://example.com) <img src=x onerror=alert(1)>";
 
@@ -81,7 +81,7 @@ describe("toMarkdown", () => {
   });
 
   it("escapes ampersands and backslashes, so an entity or an escape in a name stays literal", () => {
-    const [author] = parseAuthorText("Jane Smith");
+    const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
     author.name = String.raw`Smith &lt;Lab&gt; \*`;
 
@@ -90,8 +90,8 @@ describe("toMarkdown", () => {
 
   it("writes the marker notes in the locale and wording it is given", () => {
     const authors = [
-      createAuthor("Jane Smith", { equalContribution: true, contributions: [{ role: "Software", score: 100 }] }),
-      createAuthor("Bob White", { equalContribution: true, contributions: [{ role: "Software", score: 100 }] }),
+      createAuthor("Grace Hopper", { equalContribution: true, contributions: [{ role: "Software", score: 100 }] }),
+      createAuthor("Charles Darwin", { equalContribution: true, contributions: [{ role: "Software", score: 100 }] }),
     ];
 
     const md = toMarkdown(
@@ -102,14 +102,14 @@ describe("toMarkdown", () => {
     );
     expect(md.split("\n").slice(-4)).toEqual([
       "",
-      "Gleich: Jane Smith und Bob White.",
+      "Gleich: Grace Hopper und Charles Darwin.",
       "",
       `<!-- ${GENERATOR_NOTE} -->`,
     ]);
   });
 
   it("ends with the generator note as an HTML comment after a blank line", () => {
-    const md = toMarkdown(parseAuthorText("Jane Smith"));
+    const md = toMarkdown(parseAuthorText("Grace Hopper"));
     expect(GENERATOR_NOTE).toContain("CRediT Matrix");
     expect(md.split("\n").slice(-2)).toEqual(["", `<!-- ${GENERATOR_NOTE} -->`]);
   });

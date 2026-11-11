@@ -27,8 +27,8 @@ it.each([
   ["toggle", true],
   ["levels", false],
 ] as const)("an ask link from a %s draft says yes/no is %s", async (mode, yesNo) => {
-  const bob = createAuthor("Bob White");
-  useContributionStore.setState({ authors: [createAuthor("Jane Smith"), bob], inputMode: mode });
+  const bob = createAuthor("Charles Darwin");
+  useContributionStore.setState({ authors: [createAuthor("Grace Hopper"), bob], inputMode: mode });
   expect(await copyAskMessage(bob, t)).toBe(true);
   const shared = await decodeShareHash(copied.slice(copied.indexOf("#")));
   expect(shared?.yesNo).toBe(yesNo);

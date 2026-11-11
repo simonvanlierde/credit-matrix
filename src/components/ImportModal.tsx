@@ -86,11 +86,15 @@ const RUNS_ON_FROM_RE = /^(?:\p{Ll}|and\b)/u;
  */
 function breakLines(text: string): string {
   let joined = "";
+  let last = "";
   for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    const runsOn = RUNS_ON_RE.test(joined) || RUNS_ON_FROM_RE.test(trimmed);
+    // Test the previous line, not all of `joined`: the end-anchored regex rescanned the whole
+    // text per line, and a 2 MB paste of short lines froze the tab for minutes.
+    const runsOn = RUNS_ON_RE.test(last) || RUNS_ON_FROM_RE.test(trimmed);
     joined = joined ? `${joined}${runsOn ? " " : "; "}${trimmed}` : trimmed;
+    last = trimmed;
   }
   return joined;
 }

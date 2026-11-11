@@ -13,6 +13,9 @@
 // - Service worker: stamps the build id into its cache name, so a new version
 //   drops the previous build's chunks when it activates, and checks that its
 //   page list names every exported page, so each one works offline.
+// - Page lists: src/routes.ts, the exported pages, the service worker's list and
+//   sitemap.xml name the same paths, and each page has its title, description
+//   and canonical link.
 //
 // Runs after `vite build` (see the `build` script); fails the build rather
 // than ship a page whose own scripts the CSP would block, a page without its
@@ -84,6 +87,11 @@ if (!sameSet(routePaths, exported))
   throw new Error(`postbuild: src/routes.ts has ${routePaths}, out/ exports ${exported}`);
 if (!sameSet(routePaths, swPages))
   throw new Error(`postbuild: src/routes.ts has ${routePaths}, ${swPath} PAGES has ${swPages}`);
+const sitemapPaths = [
+  ...(await readFile(join(OUT, "sitemap.xml"), "utf8")).matchAll(/<loc>https:\/\/credit\.duinlab\.nl(\/[^<]*)<\/loc>/g),
+].map(([, path]) => path);
+if (!sameSet(routePaths, sitemapPaths))
+  throw new Error(`postbuild: src/routes.ts has ${routePaths}, sitemap.xml has ${sitemapPaths}`);
 // Each prerendered page has its own head tags and the preloads for its chunks (scripts/prerender.mjs
 // puts those in a loader that runs after the first paint).
 for (const path of exported) {

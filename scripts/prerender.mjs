@@ -28,8 +28,6 @@ const deferScripts = (html) => {
   const loader = `<script>{const hold=document.body.appendChild(document.createElement("iframe"));hold.hidden=true;hold.contentDocument.open();let done=0;const go=()=>{if(done++)return;for(const[k,u]of ${scriptJson(urls)}){const e=document.createElement(k);if(k==="script")e.type="module";else e.rel="modulepreload";e[k==="script"?"src":"href"]=u;document.head.append(e)}hold.remove()};setTimeout(go,1500);try{new PerformanceObserver(()=>go()).observe({type:"paint",buffered:true})}catch{}}</script>`;
   return rest.replace("</body>", () => `${loader}</body>`);
 };
-const description =
-  "Draft your paper's CRediT statement: assign the 14 roles, let each co-author check their own row through a link, and export the statement and contribution heatmap. Open source; it runs in your browser.";
 const imageAlt = escapeAttribute((await readFile("public/opengraph-image.alt.txt", "utf8")).trim());
 for (const path of ["/", "/about", "/census", "/accessibility"]) {
   const { html, metadata } = await render(path);
@@ -50,7 +48,7 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
     .map((file) => `<link rel="modulepreload" href="/${file}">`)
     .join("");
   const title = metadata.title ?? "CRediT Matrix · CRediT author statement generator";
-  const tags = `<meta name="description" content="${escapeAttribute(metadata.description ?? description)}"><link rel="canonical" href="https://credit.duinlab.nl${path}"><meta property="og:type" content="website"><meta property="og:site_name" content="CRediT Matrix"><meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(metadata.description ?? description)}"><meta property="og:url" content="https://credit.duinlab.nl${path}"><meta property="og:image" content="https://credit.duinlab.nl/opengraph-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${imageAlt}"><meta name="twitter:card" content="summary_large_image">`;
+  const tags = `<meta name="description" content="${escapeAttribute(metadata.description)}"><link rel="canonical" href="https://credit.duinlab.nl${path}"><meta property="og:type" content="website"><meta property="og:site_name" content="CRediT Matrix"><meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(metadata.description)}"><meta property="og:url" content="https://credit.duinlab.nl${path}"><meta property="og:image" content="https://credit.duinlab.nl/opengraph-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${imageAlt}"><meta name="twitter:card" content="summary_large_image">`;
   await writeFile(
     `out/${path === "/" ? "index" : path.slice(1)}.html`,
     deferScripts(

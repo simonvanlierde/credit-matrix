@@ -36,10 +36,11 @@ async function forEachWithConcurrency<T>(items: T[], limit: number, task: (item:
 export function useAddContributors() {
   const t = useTranslations();
   const format = useFormatter();
-  const { authorCount, addAuthor, removeAuthor, updateAuthorName } = useContributionStore(
+  const { authorCount, addAuthor, addAuthors, removeAuthor, updateAuthorName } = useContributionStore(
     useShallow((s) => ({
       authorCount: s.authors.length,
       addAuthor: s.addAuthor,
+      addAuthors: s.addAuthors,
       removeAuthor: s.removeAuthor,
       updateAuthorName: s.updateAuthorName,
     })),
@@ -75,6 +76,7 @@ export function useAddContributors() {
 
     // A bad check digit is reported as such, not as an entry with no name.
     const badChecksum: string[] = [];
+    const entries: { token: string; name: string; orcid?: string; lookup: boolean }[] = [];
     for (const token of acceptedTokens) {
       const orcid = detectOrcid(token);
       if (orcid && !isValidOrcid(orcid)) {
@@ -83,9 +85,13 @@ export function useAddContributors() {
       }
       // A name typed with the iD is the user's; only a bare iD needs a lookup.
       const name = orcid ? nameBesideOrcid(token) : null;
-      const id = addAuthor(name ?? orcid ?? token, orcid ?? undefined);
+      entries.push({ token, name: name ?? orcid ?? token, orcid: orcid ?? undefined, lookup: !!orcid && !name });
+    }
+    const ids = addAuthors(entries);
+    for (const [i, { token, orcid, lookup }] of entries.entries()) {
+      const id = ids[i];
       if (!id) rejected.push(token);
-      else if (orcid && !name) pending.push({ id, orcid });
+      else if (lookup && orcid) pending.push({ id, orcid });
     }
 
     // Keep the row on a failed lookup (named after its iD) so one bad token

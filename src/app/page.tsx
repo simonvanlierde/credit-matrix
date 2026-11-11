@@ -4,31 +4,11 @@ import { LabelledSection } from "@/components/LabelledSection";
 import { AuthorList } from "@/components/steps/AuthorInput";
 import { ContributionGrid } from "@/components/steps/ContributionGrid";
 import { WelcomeCard } from "@/components/WelcomeCard";
-import { authors } from "@/lib/json-ld";
-import codemeta from "../../codemeta.json";
+import { homeDescription, webApplicationJsonLd } from "@/lib/json-ld";
 
 export const metadata = {
+  description: homeDescription,
   alternates: { canonical: "/" },
-};
-
-// Structured data for search engines, built from codemeta.json (which citesync keeps in step with
-// CITATION.cff), so the licence, version and authors never drift from the release metadata.
-// Search engines read only schema.org terms, so the CodeMeta record is mapped, not embedded.
-const JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: codemeta.name,
-  description: codemeta.description,
-  url: codemeta.url,
-  applicationCategory: "ReferenceApplication",
-  operatingSystem: codemeta.operatingSystem,
-  isAccessibleForFree: true,
-  license: codemeta.license,
-  softwareVersion: codemeta.version,
-  identifier: codemeta.identifier,
-  keywords: codemeta.keywords.join(", "),
-  sameAs: codemeta.codeRepository,
-  author: authors,
 };
 
 export default function HomePage() {
@@ -38,7 +18,7 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: a constant built at build time, no user input
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webApplicationJsonLd) }}
       />
       <ClaimGate>
         <div className="desk:flex desk:h-full desk:flex-col">
