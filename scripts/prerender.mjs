@@ -29,7 +29,8 @@ const deferScripts = (html) => {
   return rest.replace("</body>", () => `${loader}</body>`);
 };
 const description =
-  "Assign the 14 CRediT roles in a contribution matrix, export the author statement in nine languages, and download the contribution heatmap. Open source; your contribution data stays in your browser.";
+  "Draft your paper's CRediT statement: assign the 14 roles, let each co-author check their own row through a link, and export the statement and contribution heatmap. Open source; it runs in your browser.";
+const imageAlt = escapeAttribute((await readFile("public/opengraph-image.alt.txt", "utf8")).trim());
 for (const path of ["/", "/about", "/census", "/accessibility"]) {
   const { html, metadata } = await render(path);
   const source = path === "/" ? "src/app/page.tsx" : `src/app${path}/page.tsx`;
@@ -49,7 +50,7 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
     .map((file) => `<link rel="modulepreload" href="/${file}">`)
     .join("");
   const title = metadata.title ?? "CRediT Matrix · CRediT author statement generator";
-  const tags = `<meta name="description" content="${escapeAttribute(metadata.description ?? description)}"><link rel="canonical" href="https://credit.duinlab.nl${path}"><meta property="og:type" content="website"><meta property="og:site_name" content="CRediT Matrix"><meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(metadata.description ?? description)}"><meta property="og:url" content="https://credit.duinlab.nl${path}"><meta property="og:image" content="https://credit.duinlab.nl/opengraph-image.png"><meta property="og:image:alt" content="CRediT Matrix contribution statement generator"><meta name="twitter:card" content="summary_large_image">`;
+  const tags = `<meta name="description" content="${escapeAttribute(metadata.description ?? description)}"><link rel="canonical" href="https://credit.duinlab.nl${path}"><meta property="og:type" content="website"><meta property="og:site_name" content="CRediT Matrix"><meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(metadata.description ?? description)}"><meta property="og:url" content="https://credit.duinlab.nl${path}"><meta property="og:image" content="https://credit.duinlab.nl/opengraph-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${imageAlt}"><meta name="twitter:card" content="summary_large_image">`;
   await writeFile(
     `out/${path === "/" ? "index" : path.slice(1)}.html`,
     deferScripts(
