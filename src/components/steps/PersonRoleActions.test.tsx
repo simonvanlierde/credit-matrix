@@ -13,13 +13,13 @@ vi.mock("@/lib/use-settled", () => ({ useSettled: () => true }));
 const store = () => useContributionStore.getState();
 const initial = store();
 
-const jane = createAuthor("Grace Hopper", {
+const grace = createAuthor("Grace Hopper", {
   contributions: [
     { role: "Conceptualization", score: 100 },
     { role: "Software", score: 50 },
   ],
 });
-const bob = createAuthor("Charles Darwin", { contributions: [{ role: "Conceptualization", score: 20 }] });
+const charles = createAuthor("Charles Darwin", { contributions: [{ role: "Conceptualization", score: 20 }] });
 
 const renderBoth = () =>
   render(
@@ -34,7 +34,7 @@ const softwareIndex = CREDIT_ROLES.findIndex((r) => r.name === "Software");
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
   useContributionStore.setState(initial, true);
-  act(() => store().loadAuthors([jane, bob]));
+  act(() => store().loadAuthors([grace, charles]));
 });
 
 const menuItems = () =>
@@ -82,23 +82,23 @@ it("asks for a level before assigning a role to everyone", () => {
   fireEvent.click(role);
   fireEvent.click(screen.getByRole("button", { name: "Assign to everyone…" }));
   // Nothing is assigned until a level is chosen.
-  expect(scoreOf(bob.id, "Software")).toBe(0);
+  expect(scoreOf(charles.id, "Software")).toBe(0);
   fireEvent.click(screen.getByRole("button", { name: "Equal" }));
 
-  expect(scoreOf(bob.id, "Software")).toBe(66);
-  expect(scoreOf(jane.id, "Software")).toBe(66);
+  expect(scoreOf(charles.id, "Software")).toBe(66);
+  expect(scoreOf(grace.id, "Software")).toBe(66);
 });
 
 it("jumps to the cell when a phrase in the statement is clicked", () => {
   const { container } = renderBoth();
-  const phrase = container.querySelector<HTMLElement>(`[data-author="${jane.id}"][data-role="Software"]`);
+  const phrase = container.querySelector<HTMLElement>(`[data-author="${grace.id}"][data-role="Software"]`);
   if (!phrase) throw new Error("expected the phrase");
   fireEvent.click(phrase);
-  expect(document.activeElement?.getAttribute("data-cell-key")).toBe(`${jane.id}:${softwareIndex}`);
+  expect(document.activeElement?.getAttribute("data-cell-key")).toBe(`${grace.id}:${softwareIndex}`);
 });
 
 it("in a claimed draft, offers another person's bulk edits only as disabled items", () => {
-  act(() => useContributionStore.setState({ claim: { contributorId: bob.id, sourceDraftId: "source" } }));
+  act(() => useContributionStore.setState({ claim: { contributorId: charles.id, sourceDraftId: "source" } }));
   const { container } = renderBoth();
   const header = container.querySelector<HTMLElement>("[data-name-head='0']");
   if (!header) throw new Error("expected a name header");
@@ -106,19 +106,19 @@ it("in a claimed draft, offers another person's bulk edits only as disabled item
   const clear = screen.getByRole("button", { name: "Clear every role" });
   expect(clear.getAttribute("aria-disabled")).toBe("true");
   fireEvent.click(clear);
-  expect(scoreOf(jane.id, "Conceptualization")).toBe(100);
+  expect(scoreOf(grace.id, "Conceptualization")).toBe(100);
 });
 
 it("in a claimed draft, offers no bulk edit on the claimed person's own row, as Undo could not restore it", () => {
-  act(() => useContributionStore.setState({ claim: { contributorId: bob.id, sourceDraftId: "source" } }));
+  act(() => useContributionStore.setState({ claim: { contributorId: charles.id, sourceDraftId: "source" } }));
   const { container } = renderBoth();
   const header = container.querySelector<HTMLElement>("[data-name-head='1']");
-  if (!header) throw new Error("expected Bob's name header");
+  if (!header) throw new Error("expected Charles's name header");
   fireEvent.click(header);
   const clear = screen.getByRole("button", { name: "Clear every role" });
   expect(clear.getAttribute("aria-disabled")).toBe("true");
   fireEvent.click(clear);
-  expect(scoreOf(bob.id, "Conceptualization")).toBe(20);
+  expect(scoreOf(charles.id, "Conceptualization")).toBe(20);
 });
 
 const statementName = (container: HTMLElement) => {

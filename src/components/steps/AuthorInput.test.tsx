@@ -15,8 +15,8 @@ vi.mock("@/core/lookup", async (importOriginal) => ({
   lookupOrcidPerson: vi.fn(),
 }));
 
-const ALICE = "0000-0002-1825-0097";
-const BOB = "0000-0001-5109-3700";
+const ROSALIND = "0000-0002-1825-0097";
+const ALAN = "0000-0001-5109-3700";
 const NOT_FOUND: OrcidLookupResult = { ok: false, status: 404, code: "NOT_FOUND", error: "" };
 const UNAVAILABLE: OrcidLookupResult = { ok: false, status: 502, code: "UNAVAILABLE", error: "" };
 
@@ -67,53 +67,53 @@ describe("adding a contributor by ORCID iD", () => {
   it("drops the seeded row and restores the iD when the lookup fails", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
     expect(authors()).toHaveLength(1);
 
-    await resolve(ALICE, NOT_FOUND);
+    await resolve(ROSALIND, NOT_FOUND);
 
     expect(authors()).toHaveLength(0);
-    expect(addField().value).toBe(ALICE);
+    expect(addField().value).toBe(ROSALIND);
   });
 
   it("keeps a row the user renamed during the lookup, and what they typed next", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
     const id = authors()[0]?.id ?? "";
     act(() => {
-      useContributionStore.getState().updateAuthorName(id, "Alice Carberry");
+      useContributionStore.getState().updateAuthorName(id, "Rosalind E. Franklin");
     });
-    fireEvent.change(addField(), { target: { value: "Bob Smith" } });
+    fireEvent.change(addField(), { target: { value: "Alan M. Turing" } });
 
-    await resolve(ALICE, NOT_FOUND);
+    await resolve(ROSALIND, NOT_FOUND);
 
-    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry"]);
-    expect(addField().value).toBe("Bob Smith");
+    expect(authors().map((a) => a.name)).toEqual(["Rosalind E. Franklin"]);
+    expect(addField().value).toBe("Alan M. Turing");
   });
 
   it("keeps a name the user typed while the lookup ran", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
     act(() => {
-      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Alice Carberry");
+      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Rosalind E. Franklin");
     });
 
-    await resolve(ALICE, found("Josiah Carberry"));
+    await resolve(ROSALIND, found("Josiah Carberry"));
 
-    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry"]);
+    expect(authors().map((a) => a.name)).toEqual(["Rosalind E. Franklin"]);
   });
 
   it("keeps a row the user gave a role during the lookup", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
     act(() => {
       useContributionStore.getState().toggleContribution(authors()[0]?.id ?? "", 0);
     });
 
-    await resolve(ALICE, NOT_FOUND);
+    await resolve(ROSALIND, NOT_FOUND);
 
     expect(authors()).toHaveLength(1);
   });
@@ -122,10 +122,10 @@ describe("adding a contributor by ORCID iD", () => {
     const resolve = deferLookups();
     const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
     renderList();
-    addById(ALICE);
+    addById(ROSALIND);
 
     onLine.mockReturnValue(false);
-    await resolve(ALICE, UNAVAILABLE);
+    await resolve(ROSALIND, UNAVAILABLE);
 
     expect(screen.getByText(english.errOffline)).toBeTruthy();
   });
@@ -134,9 +134,9 @@ describe("adding a contributor by ORCID iD", () => {
 describe("adding a contributor by name and ORCID iD", () => {
   it("keeps the typed name and looks nothing up", () => {
     renderList();
-    addById(`Grace Hopper ${ALICE}`);
+    addById(`Grace Hopper ${ROSALIND}`);
 
-    expect(authors()).toMatchObject([{ name: "Grace Hopper", orcid: ALICE }]);
+    expect(authors()).toMatchObject([{ name: "Grace Hopper", orcid: ROSALIND }]);
     expect(addField().value).toBe("");
     expect(lookupOrcidPerson).not.toHaveBeenCalled();
   });
@@ -145,24 +145,24 @@ describe("adding a contributor by name and ORCID iD", () => {
     deferLookups();
     renderList();
     fireEvent.paste(addField(), {
-      clipboardData: { getData: () => `Grace Hopper (https://orcid.org/${ALICE}); ${BOB}` },
+      clipboardData: { getData: () => `Grace Hopper (https://orcid.org/${ROSALIND}); ${ALAN}` },
     });
 
     expect(authors()).toMatchObject([
-      { name: "Grace Hopper", orcid: ALICE },
-      { name: BOB, orcid: BOB },
+      { name: "Grace Hopper", orcid: ROSALIND },
+      { name: ALAN, orcid: ALAN },
     ]);
-    expect(vi.mocked(lookupOrcidPerson).mock.calls.map(([orcid]) => orcid)).toEqual([BOB]);
+    expect(vi.mocked(lookupOrcidPerson).mock.calls.map(([orcid]) => orcid)).toEqual([ALAN]);
   });
 
   it("gives back the whole link when a lookup for one fails", async () => {
     const resolve = deferLookups();
     renderList();
-    addById(`https://orcid.org/${ALICE}`);
+    addById(`https://orcid.org/${ROSALIND}`);
 
-    await resolve(ALICE, NOT_FOUND);
+    await resolve(ROSALIND, NOT_FOUND);
 
-    expect(addField().value).toBe(`https://orcid.org/${ALICE}`);
+    expect(addField().value).toBe(`https://orcid.org/${ROSALIND}`);
   });
 });
 
@@ -170,29 +170,29 @@ describe("pasting a list of ORCID iDs", () => {
   it("keeps a name the user typed while the lookups ran", async () => {
     const resolve = deferLookups();
     renderList();
-    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ALICE}, ${BOB}` } });
+    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ROSALIND}, ${ALAN}` } });
     act(() => {
-      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Alice Carberry");
+      useContributionStore.getState().updateAuthorName(authors()[0]?.id ?? "", "Rosalind E. Franklin");
     });
 
-    await resolve(ALICE, found("Josiah Carberry"));
-    await resolve(BOB, found("Bob Smith"));
+    await resolve(ROSALIND, found("Josiah Carberry"));
+    await resolve(ALAN, found("Alan M. Turing"));
 
-    expect(authors().map((a) => a.name)).toEqual(["Alice Carberry", "Bob Smith"]);
+    expect(authors().map((a) => a.name)).toEqual(["Rosalind E. Franklin", "Alan M. Turing"]);
   });
 
   it("reports lookups whose name could not be written as failed", async () => {
     const resolve = deferLookups();
     renderList();
-    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ALICE}, ${BOB}` } });
+    fireEvent.paste(addField(), { clipboardData: { getData: () => `${ROSALIND}, ${ALAN}` } });
     expect(authors()).toHaveLength(2);
 
     // A draft switch mid-lookup: the rows the names were meant for are gone.
     act(() => {
       useContributionStore.getState().createDraft();
     });
-    await resolve(ALICE, found("Alice Carberry"));
-    await resolve(BOB, found("Bob Smith"));
+    await resolve(ROSALIND, found("Rosalind E. Franklin"));
+    await resolve(ALAN, found("Alan M. Turing"));
 
     expect(vi.mocked(announce)).toHaveBeenLastCalledWith(expect.stringContaining("Could not look up 2 ORCID iDs"), {
       assertive: true,
@@ -203,24 +203,24 @@ describe("pasting a list of ORCID iDs", () => {
 describe("a row's ORCID lookup", () => {
   it("keeps the name of the latest iD when an older lookup finishes last", async () => {
     const resolve = deferLookups();
-    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ALICE })] });
+    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ROSALIND })] });
     renderList();
 
     fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
-    fireEvent.paste(screen.getByLabelText(english.nameLabel), { clipboardData: { getData: () => BOB } });
-    await resolve(BOB, found("Bob Smith"));
-    await resolve(ALICE, found("Alice Carberry"));
+    fireEvent.paste(screen.getByLabelText(english.nameLabel), { clipboardData: { getData: () => ALAN } });
+    await resolve(ALAN, found("Alan M. Turing"));
+    await resolve(ROSALIND, found("Rosalind E. Franklin"));
 
-    expect(authors()[0]).toMatchObject({ name: "Bob Smith", orcid: BOB });
+    expect(authors()[0]).toMatchObject({ name: "Alan M. Turing", orcid: ALAN });
   });
 
   it("says why when the registry's name fails the name rules, and keeps the old one", async () => {
     const resolve = deferLookups();
-    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ALICE })] });
+    useContributionStore.setState({ authors: [createAuthor("Someone", { orcid: ROSALIND })] });
     renderList();
 
     fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
-    await resolve(ALICE, found("x".repeat(600)));
+    await resolve(ROSALIND, found("x".repeat(600)));
 
     expect(authors()[0]?.name).toBe("Someone");
     expect(announce).toHaveBeenCalledWith(english.errNameTooLong, { assertive: true });
@@ -363,11 +363,11 @@ describe("undoing a removal", () => {
 
 describe("editing a contributor's name", () => {
   it.each([
-    ["a new row's lookup", () => addById(ALICE)],
+    ["a new row's lookup", () => addById(ROSALIND)],
     [
       "a row's lookup",
       () => {
-        act(() => useContributionStore.setState({ authors: [createAuthor(ALICE, { orcid: ALICE })] }));
+        act(() => useContributionStore.setState({ authors: [createAuthor(ROSALIND, { orcid: ROSALIND })] }));
         fireEvent.click(screen.getByRole("button", { name: english.lookupOrcidName }));
       },
     ],
@@ -377,17 +377,17 @@ describe("editing a contributor's name", () => {
     startLookup();
     const field = screen.getByLabelText<HTMLInputElement>(english.nameLabel);
     field.focus();
-    fireEvent.change(field, { target: { value: `${ALICE} typed` } });
+    fireEvent.change(field, { target: { value: `${ROSALIND} typed` } });
 
-    await resolve(ALICE, found("Josiah Carberry"));
-    expect(field.value).toBe(`${ALICE} typed`);
+    await resolve(ROSALIND, found("Josiah Carberry"));
+    expect(field.value).toBe(`${ROSALIND} typed`);
 
     fireEvent.blur(field);
-    expect(authors()[0]?.name).toBe(`${ALICE} typed`);
+    expect(authors()[0]?.name).toBe(`${ROSALIND} typed`);
   });
 
   it("discards the edit on Escape, also when the field is left afterwards", () => {
-    useContributionStore.setState({ authors: [createAuthor("Alice Smith")] });
+    useContributionStore.setState({ authors: [createAuthor("Ada Lovelace")] });
     renderList();
     const field = screen.getByLabelText<HTMLInputElement>(english.nameLabel);
     field.focus();
@@ -395,8 +395,8 @@ describe("editing a contributor's name", () => {
     fireEvent.keyDown(field, { key: "Escape" });
     fireEvent.blur(field);
 
-    expect(authors()[0]?.name).toBe("Alice Smith");
-    expect(field.value).toBe("Alice Smith");
+    expect(authors()[0]?.name).toBe("Ada Lovelace");
+    expect(field.value).toBe("Ada Lovelace");
   });
 });
 

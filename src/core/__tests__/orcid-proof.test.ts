@@ -22,8 +22,11 @@ const signToken: Awaited<typeof issuer>["sign"] = async (claims, header) => (awa
 const encode = (value: unknown) => toBase64Url(new TextEncoder().encode(JSON.stringify(value)));
 
 function replyInput(): SharePayloadInput {
-  const bob = createAuthor("Charles Darwin", { id: "bob", contributions: [{ role: "Investigation", score: 100 }] });
-  return { authors: [bob], claimId: "bob", sourceDraftId: "draft-1", reply: true, sentAt: NOW };
+  const charles = createAuthor("Charles Darwin", {
+    id: "charles",
+    contributions: [{ role: "Investigation", score: 100 }],
+  });
+  return { authors: [charles], claimId: "charles", sourceDraftId: "draft-1", reply: true, sentAt: NOW };
 }
 
 describe("ORCID sign-in on a reply", () => {
@@ -140,7 +143,9 @@ describe("ORCID sign-in on a reply", () => {
 });
 
 describe("a signed reply in the ask record", () => {
-  const lead = () => [createAuthor("Charles Darwin", { id: "bob", contributions: [{ role: "Software", score: 100 }] })];
+  const lead = () => [
+    createAuthor("Charles Darwin", { id: "charles", contributions: [{ role: "Software", score: 100 }] }),
+  ];
   const row = () => replyInput().authors[0];
 
   async function proof() {
@@ -157,33 +162,54 @@ describe("a signed reply in the ask record", () => {
   it("keeps the sign-in beside the answer, and a later sign-in of the same answer replaces an unsigned one", async () => {
     const orcid = await proof();
     const state = { authors: lead(), asks: {} };
-    const unsigned = askStep(state, { kind: "reply", contributorId: "bob", row: row(), sentAt: NOW, at: NOW + 1 });
+    const unsigned = askStep(state, { kind: "reply", contributorId: "charles", row: row(), sentAt: NOW, at: NOW + 1 });
     const held = applyPatch(state, unsigned.patch);
-    expect(held.asks.bob?.reply?.provenance).toBeUndefined();
+    expect(held.asks.charles?.reply?.provenance).toBeUndefined();
 
-    const signed = askStep(held, { kind: "reply", contributorId: "bob", row: row(), sentAt: NOW, at: NOW + 2, orcid });
+    const signed = askStep(held, {
+      kind: "reply",
+      contributorId: "charles",
+      row: row(),
+      sentAt: NOW,
+      at: NOW + 2,
+      orcid,
+    });
     expect(signed.outcome).toMatchObject({ kind: "received", duplicate: false });
     const after = applyPatch(held, signed.patch);
-    expect(after.asks.bob?.reply?.provenance).toEqual({ orcid });
+    expect(after.asks.charles?.reply?.provenance).toEqual({ orcid });
 
     // The same signed link again is a duplicate.
-    const again = askStep(after, { kind: "reply", contributorId: "bob", row: row(), sentAt: NOW, at: NOW + 3, orcid });
+    const again = askStep(after, {
+      kind: "reply",
+      contributorId: "charles",
+      row: row(),
+      sentAt: NOW,
+      at: NOW + 3,
+      orcid,
+    });
     expect(again.outcome).toMatchObject({ duplicate: true });
   });
 
   it("survives a JSON export and import, and a malformed one is dropped without the answer", async () => {
     const orcid = await proof();
     const state = { authors: lead(), asks: {} };
-    const step = askStep(state, { kind: "reply", contributorId: "bob", row: row(), sentAt: NOW, at: NOW + 1, orcid });
+    const step = askStep(state, {
+      kind: "reply",
+      contributorId: "charles",
+      row: row(),
+      sentAt: NOW,
+      at: NOW + 1,
+      orcid,
+    });
     const { authors, asks } = applyPatch(state, step.patch);
     const back = fromJson(toJson([...authors], { asks }));
-    expect(back.asks?.bob?.reply?.provenance).toEqual({ orcid });
+    expect(back.asks?.charles?.reply?.provenance).toEqual({ orcid });
 
     const file = JSON.parse(toJson([...authors], { asks }));
-    file.asks.bob.reply.provenance = { orcid: { orcid: "nope" } };
+    file.asks.charles.reply.provenance = { orcid: { orcid: "nope" } };
     const broken = fromJson(JSON.stringify(file));
-    expect(broken.asks?.bob?.reply).toBeDefined();
-    expect(broken.asks?.bob?.reply?.provenance).toBeUndefined();
+    expect(broken.asks?.charles?.reply).toBeDefined();
+    expect(broken.asks?.charles?.reply?.provenance).toBeUndefined();
   });
 
   it("flags a signed reply that changed the row's iD, keeping the iD the ask went to", async () => {
@@ -193,23 +219,23 @@ describe("a signed reply in the ask record", () => {
     const changing = { ...row(), orcid: ORCID };
     const step = askStep(state, {
       kind: "reply",
-      contributorId: "bob",
+      contributorId: "charles",
       row: changing,
       sentAt: NOW,
       at: NOW + 1,
       orcid,
     });
-    expect(applyPatch(state, step.patch).asks.bob?.reply?.provenance).toEqual({ orcid, replacedOrcid: asked });
+    expect(applyPatch(state, step.patch).asks.charles?.reply?.provenance).toEqual({ orcid, replacedOrcid: asked });
     // A signed reply that keeps the row's iD flags nothing.
     const keeping = askStep(state, {
       kind: "reply",
-      contributorId: "bob",
+      contributorId: "charles",
       row: { ...row(), orcid: asked },
       sentAt: NOW,
       at: NOW + 1,
       orcid,
     });
-    expect(applyPatch(state, keeping.patch).asks.bob?.reply?.provenance).toEqual({ orcid });
+    expect(applyPatch(state, keeping.patch).asks.charles?.reply?.provenance).toEqual({ orcid });
   });
 
   it("keeps the iD the ask went to through later replies, signed or not", async () => {
@@ -222,7 +248,7 @@ describe("a signed reply in the ask record", () => {
         state,
         askStep(state, {
           kind: "reply",
-          contributorId: "bob",
+          contributorId: "charles",
           row: answer,
           sentAt: at,
           at,
@@ -233,25 +259,32 @@ describe("a signed reply in the ask record", () => {
     // A signed reply changes the iD, then a second signed one edits a role.
     const first = reply(start, NOW + 1, changing, true);
     const edited = { ...changing, contributions: [{ role: "Software", score: 100 }] };
-    expect(reply(first, NOW + 2, edited, true).asks.bob?.reply?.provenance?.replacedOrcid).toBe(asked);
+    expect(reply(first, NOW + 2, edited, true).asks.charles?.reply?.provenance?.replacedOrcid).toBe(asked);
 
     // An unsigned reply changes the iD, then the same answer arrives signed.
     const unsigned = reply(start, NOW + 1, changing, false);
     const resigned = reply(unsigned, NOW + 2, changing, true);
-    expect(resigned.asks.bob?.reply?.provenance).toEqual({ orcid, replacedOrcid: asked });
+    expect(resigned.asks.charles?.reply?.provenance).toEqual({ orcid, replacedOrcid: asked });
   });
 
   describe("checked again on import", () => {
     async function imported() {
       const orcid = await proof();
       const state = { authors: lead(), asks: {} };
-      const step = askStep(state, { kind: "reply", contributorId: "bob", row: row(), sentAt: NOW, at: NOW + 1, orcid });
+      const step = askStep(state, {
+        kind: "reply",
+        contributorId: "charles",
+        row: row(),
+        sentAt: NOW,
+        at: NOW + 1,
+        orcid,
+      });
       const { authors, asks } = applyPatch(state, step.patch);
       return JSON.parse(toJson([...authors], { asks }));
     }
     const keys = async (): Promise<OrcidKey[] | null> => (await issuer).keys;
     const recheck = async (file: unknown, from = keys) =>
-      (await recheckSignIns(fromJson(JSON.stringify(file)).asks ?? {}, from)).bob?.reply;
+      (await recheckSignIns(fromJson(JSON.stringify(file)).asks ?? {}, from)).charles?.reply;
 
     it("keeps a genuine sign-in", async () => {
       expect((await recheck(await imported()))?.provenance?.orcid).toMatchObject({ orcid: ORCID });
@@ -259,12 +292,12 @@ describe("a signed reply in the ask record", () => {
 
     it("drops a hand-edited iD, name, or token, and keeps the answer", async () => {
       const file = await imported();
-      file.asks.bob.reply.provenance.orcid.orcid = "0000-0001-5109-3700";
-      file.asks.bob.reply.provenance.orcid.name = "Someone Else";
+      file.asks.charles.reply.provenance.orcid.orcid = "0000-0001-5109-3700";
+      file.asks.charles.reply.provenance.orcid.name = "Someone Else";
       // The token's own claims win over the edited fields.
       expect((await recheck(file))?.provenance?.orcid).toMatchObject({ orcid: ORCID, name: "Charles Darwin" });
 
-      file.asks.bob.reply.provenance.orcid.token = await (await testIssuer(NOW)).sign({ nonce: "x" });
+      file.asks.charles.reply.provenance.orcid.token = await (await testIssuer(NOW)).sign({ nonce: "x" });
       const forged = await recheck(file);
       expect(forged?.provenance).toBeUndefined();
       expect(forged?.contributions).toEqual(row()?.contributions);
@@ -273,24 +306,24 @@ describe("a signed reply in the ask record", () => {
     it("does not move a real sign-in onto another row named in the file", async () => {
       // A file can name any row id: one row per signed id, the id the token signed for.
       const file = await imported();
-      file.authors.push({ ...file.authors[0], id: "ann", name: "Ann Lee", orcid: undefined });
-      file.asks.ann = structuredClone(file.asks.bob);
-      file.asks.ann.reply.provenance.claimId = "bob";
+      file.authors.push({ ...file.authors[0], id: "katherine", name: "Katherine Johnson", orcid: undefined });
+      file.asks.katherine = structuredClone(file.asks.charles);
+      file.asks.katherine.reply.provenance.claimId = "charles";
       const checked = await recheckSignIns(fromJson(JSON.stringify(file)).asks ?? {}, keys);
-      expect(checked.bob?.reply?.provenance?.orcid).toMatchObject({ orcid: ORCID });
-      expect(checked.ann?.reply?.provenance?.orcid).toBeUndefined();
+      expect(checked.charles?.reply?.provenance?.orcid).toMatchObject({ orcid: ORCID });
+      expect(checked.katherine?.reply?.provenance?.orcid).toBeUndefined();
     });
 
     it("drops a real sign-in moved onto a different answer or another contributor", async () => {
       const changed = await imported();
-      changed.asks.bob.reply.contributions = [{ role: "Software", score: 100 }];
+      changed.asks.charles.reply.contributions = [{ role: "Software", score: 100 }];
       expect((await recheck(changed))?.provenance).toBeUndefined();
 
       const moved = await imported();
-      moved.authors[0].id = "ann";
-      moved.asks = { ann: moved.asks.bob };
+      moved.authors[0].id = "katherine";
+      moved.asks = { katherine: moved.asks.charles };
       expect(
-        (await recheckSignIns(fromJson(JSON.stringify(moved)).asks ?? {}, keys)).ann?.reply?.provenance,
+        (await recheckSignIns(fromJson(JSON.stringify(moved)).asks ?? {}, keys)).katherine?.reply?.provenance,
       ).toBeUndefined();
     });
 
@@ -299,13 +332,13 @@ describe("a signed reply in the ask record", () => {
       async function landed(file: { authors: Author[] }) {
         const { authors, asks } = fromJson(JSON.stringify(file));
         const checked = await recheckSignIns(asks ?? {}, keys);
-        return importAnswers([], authors, authors, {}, { asks: checked }).asks?.bob?.reply?.provenance;
+        return importAnswers([], authors, authors, {}, { asks: checked }).asks?.charles?.reply?.provenance;
       }
 
       it("does not warn on the row the sign-in was given for", async () => {
         const file = await imported();
         // A flag the file brings is worked out again, not trusted.
-        file.asks.bob.reply.provenance.signedElsewhere = true;
+        file.asks.charles.reply.provenance.signedElsewhere = true;
         const provenance = await landed(file);
         expect(provenance?.orcid).toMatchObject({ orcid: ORCID });
         expect(provenance).not.toHaveProperty("signedElsewhere");
@@ -313,7 +346,7 @@ describe("a signed reply in the ask record", () => {
 
       it("warns when the row with the signed id has another name", async () => {
         const file = await imported();
-        file.authors[0].name = "Ann Lee";
+        file.authors[0].name = "Katherine Johnson";
         expect(await landed(file)).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
       });
 
@@ -342,9 +375,9 @@ describe("a signed reply in the ask record", () => {
 
       it("warns when the sign-in was given for another row id, with the same name and iD", async () => {
         const file = await imported();
-        file.authors[0].id = "ann";
-        file.asks = { ann: file.asks.bob };
-        expect(unchecked(file)?.ann?.reply?.provenance).toMatchObject({
+        file.authors[0].id = "katherine";
+        file.asks = { katherine: file.asks.charles };
+        expect(unchecked(file)?.katherine?.reply?.provenance).toMatchObject({
           orcid: { orcid: ORCID },
           signedElsewhere: true,
         });
@@ -352,8 +385,8 @@ describe("a signed reply in the ask record", () => {
 
       it("warns when the sign-in's payload cannot be read", async () => {
         const file = await imported();
-        file.asks.bob.reply.provenance.orcid.payload = "not a payload";
-        expect(unchecked(file)?.bob?.reply?.provenance).toMatchObject({ signedElsewhere: true });
+        file.asks.charles.reply.provenance.orcid.payload = "not a payload";
+        expect(unchecked(file)?.charles?.reply?.provenance).toMatchObject({ signedElsewhere: true });
       });
 
       // A second row with the signed id must not vouch for the first, which keeps the id.
@@ -371,11 +404,11 @@ describe("a signed reply in the ask record", () => {
       it("judges a repeated id by the first row with it, which is the row that keeps it", async () => {
         const file = await withImpostor();
         const checked = await recheckSignIns(file.asks, keys);
-        const current = [createAuthor("Charles Darwin", { id: "bob" })];
+        const current = [createAuthor("Charles Darwin", { id: "charles" })];
         const incoming = file.authors as Author[];
         const out = importAnswers(current, incoming, incoming, {}, { asks: checked });
-        expect(normalizeRoster(incoming)[0]).toMatchObject({ id: "bob", name: "Mallory Evil" });
-        expect(out.asks?.bob?.reply?.provenance).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
+        expect(normalizeRoster(incoming)[0]).toMatchObject({ id: "charles", name: "Mallory Evil" });
+        expect(out.asks?.charles?.reply?.provenance).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });
       });
     });
 
@@ -384,13 +417,15 @@ describe("a signed reply in the ask record", () => {
       expect(offline?.provenance).toMatchObject({ uncheckedOrcid: { orcid: ORCID } });
       expect(offline?.provenance).not.toHaveProperty("orcid");
       // Checked again once ORCID answers, it counts as verified again.
-      const file = JSON.parse(toJson([...lead()], { asks: { bob: { sentAt: NOW, prefilled: true, reply: offline } } }));
+      const file = JSON.parse(
+        toJson([...lead()], { asks: { charles: { sentAt: NOW, prefilled: true, reply: offline } } }),
+      );
       const online = await recheck(file);
       expect(online?.provenance?.orcid).toMatchObject({ orcid: ORCID });
       expect(online?.provenance).not.toHaveProperty("uncheckedOrcid");
       const fetcher = vi.fn(keys);
       const bare = await imported();
-      delete bare.asks.bob.reply.provenance;
+      delete bare.asks.charles.reply.provenance;
       await recheck(bare, fetcher);
       expect(fetcher).not.toHaveBeenCalled();
     });

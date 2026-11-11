@@ -15,19 +15,19 @@ import { createAuthor } from "../parse-authors";
  * paragraph, so they ride alongside the contributions.
  */
 function makeAuthors() {
-  const jane = createAuthor("Grace B. Hopper", {
+  const grace = createAuthor("Grace B. Hopper", {
     equalContribution: true,
     corresponding: true,
     contributions: [{ role: "Conceptualization", score: 100 }],
   });
-  const bob = createAuthor("Charles Darwin", {
+  const charles = createAuthor("Charles Darwin", {
     equalContribution: true,
     contributions: [{ role: "Investigation", score: 100 }],
   });
   const katherine = createAuthor("Katherine Johnson", {
     contributions: [{ role: "Software", score: 100 }],
   });
-  return [jane, bob, katherine];
+  return [grace, charles, katherine];
 }
 
 describe("marker data model", () => {

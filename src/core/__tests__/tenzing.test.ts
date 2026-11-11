@@ -45,7 +45,7 @@ describe("fromTenzing", () => {
   });
 
   it("reads tenzing's example CSV layout in publication order", () => {
-    const [ana, bob, carol, ...rest] = fromTenzing(fixture("tenzing.csv"));
+    const [ana, charles, dorothy, ...rest] = fromTenzing(fixture("tenzing.csv"));
     expect(rest).toEqual([]);
 
     expect(ana).toMatchObject({
@@ -59,17 +59,17 @@ describe("fromTenzing", () => {
     });
     expect(roles(ana)).toEqual(ANA_ROLES);
 
-    expect(bob).toMatchObject({ name: "Charles Darwin", contributorType: "author", corresponding: false });
-    expect(bob?.orcid).toBeUndefined();
-    expect(roles(bob)).toEqual([
+    expect(charles).toMatchObject({ name: "Charles Darwin", contributorType: "author", corresponding: false });
+    expect(charles?.orcid).toBeUndefined();
+    expect(roles(charles)).toEqual([
       "Data curation:100",
       "Formal analysis:100",
       "Software:100",
       "Writing – review & editing:100",
     ]);
 
-    expect(carol).toMatchObject({ name: "Carol Black", contributorType: "non-author" });
-    expect(roles(carol)).toEqual(["Investigation:100"]);
+    expect(dorothy).toMatchObject({ name: "Dorothy Hodgkin", contributorType: "non-author" });
+    expect(roles(dorothy)).toEqual(["Investigation:100"]);
   });
 
   it("still reads the older Acknowledgee value as an acknowledgee", () => {
@@ -100,10 +100,10 @@ describe("fromTenzing", () => {
 
 describe("fromTenzing edge cases", () => {
   it("drops a bad ORCID but keeps the person, and leaves a blank one unset", () => {
-    const [ana, bob] = fromTenzing("Firstname,Surname,ORCID ID\nAna,Lopez,not-an-orcid\nCharles,Darwin,");
+    const [ana, charles] = fromTenzing("Firstname,Surname,ORCID ID\nAna,Lopez,not-an-orcid\nCharles,Darwin,");
     expect(ana).toMatchObject({ name: "Ana Lopez" });
     expect(ana?.orcid).toBeUndefined();
-    expect(bob?.orcid).toBeUndefined();
+    expect(charles?.orcid).toBeUndefined();
   });
 
   it("keeps sheet order for rows without an order, and sorts the numbered rows first", () => {
@@ -178,7 +178,7 @@ describe("isTenzing", () => {
     expect(isTenzing(`Firstname,Surname,${roleHeaders},${more}`)).toBe(true);
     expect(isTenzing(`Name,${roleHeaders},${more}`)).toBe(false);
     expect(isTenzing("Firstname,Surname,A,B,C,D,E,F,G,H,I,J")).toBe(false);
-    expect(isTenzing("Anne Namer, Bob Smith")).toBe(false);
+    expect(isTenzing("Anne Namer, Charles Darwin")).toBe(false);
     expect(isTenzing("Firstname,Surname")).toBe(false);
     expect(isTenzing("")).toBe(false);
   });

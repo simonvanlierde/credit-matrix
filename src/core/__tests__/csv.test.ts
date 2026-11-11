@@ -5,16 +5,16 @@ import { parseAuthorText } from "../parse-authors";
 describe("CSV import/export", () => {
   it("round-trips authors and contribution scores", () => {
     const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
-    const [jane, bob] = authors;
-    if (!(jane && bob)) throw new Error("expected 2 authors");
+    const [grace, charles] = authors;
+    if (!(grace && charles)) throw new Error("expected 2 authors");
 
-    const janeConceptualization = jane.contributions[0];
-    const bobInvestigation = bob.contributions[4];
-    if (!(janeConceptualization && bobInvestigation)) throw new Error("expected contributions");
+    const graceConceptualization = grace.contributions[0];
+    const charlesInvestigation = charles.contributions[4];
+    if (!(graceConceptualization && charlesInvestigation)) throw new Error("expected contributions");
 
-    jane.orcid = "0000-0000-0000-0001";
-    janeConceptualization.score = 100;
-    bobInvestigation.score = 66;
+    grace.orcid = "0000-0000-0000-0001";
+    graceConceptualization.score = 100;
+    charlesInvestigation.score = 66;
 
     const parsed = fromCsv(toCsv(authors));
 
@@ -26,11 +26,11 @@ describe("CSV import/export", () => {
   });
 
   it("round-trips the author / non-author contributor type", () => {
-    const [jane, bob] = parseAuthorText("Grace Hopper\nCharles Darwin");
-    if (!(jane && bob)) throw new Error("expected 2 authors");
-    bob.contributorType = "non-author";
+    const [grace, charles] = parseAuthorText("Grace Hopper\nCharles Darwin");
+    if (!(grace && charles)) throw new Error("expected 2 authors");
+    charles.contributorType = "non-author";
 
-    const parsed = fromCsv(toCsv([jane, bob]));
+    const parsed = fromCsv(toCsv([grace, charles]));
     expect(parsed[0]?.contributorType).toBe("author");
     expect(parsed[1]?.contributorType).toBe("non-author");
   });
@@ -81,10 +81,10 @@ describe("CSV import/export", () => {
     // Import trims a cell before it strips the formula guard, so export must decide on the trimmed value too.
     const [author] = parseAuthorText("Grace Hopper");
     if (!author) throw new Error("expected author");
-    author.name = "\n'-Ann Lee";
+    author.name = "\n'-Katherine Johnson";
 
     const parsed = fromCsv(toCsv([author]));
-    expect(parsed[0]?.name).toBe("'-Ann Lee");
+    expect(parsed[0]?.name).toBe("'-Katherine Johnson");
   });
 
   it("reads a CSV that starts with a UTF-8 byte order mark", () => {
@@ -106,30 +106,30 @@ describe("CSV import/export", () => {
   });
 
   it("reads a quote inside an unquoted field as a literal character", () => {
-    const parsed = fromCsv(`Name,Conceptualization\nAnn O"Brien,100\nBob Lee,100`);
-    expect(parsed.map((a) => a.name)).toEqual(['Ann O"Brien', "Bob Lee"]);
+    const parsed = fromCsv(`Name,Conceptualization\nAnn O"Brien,100\nCharles Lee,100`);
+    expect(parsed.map((a) => a.name)).toEqual(['Ann O"Brien', "Charles Lee"]);
     expect(parsed[0]?.contributions[0]?.score).toBe(100);
   });
 
   it("reads a quoted field that follows a space after the comma", () => {
-    const [jane] = fromCsv(`Name,Software\n "Hopper, Grace", "Lead"`);
-    expect(jane?.name).toBe("Hopper, Grace");
-    expect(jane?.contributions.find((c) => c.role === "Software")?.score).toBe(100);
+    const [grace] = fromCsv(`Name,Software\n "Hopper, Grace", "Lead"`);
+    expect(grace?.name).toBe("Hopper, Grace");
+    expect(grace?.contributions.find((c) => c.role === "Software")?.score).toBe(100);
   });
 
   it("matches headers and level words whatever their case or dash", () => {
     const csv = `name,type,conceptualization,Writing - original draft,SOFTWARE\nGrace Hopper,Non-author,Lead,supporting,50`;
-    const [jane] = fromCsv(csv);
-    expect(jane?.contributorType).toBe("non-author");
-    const score = (role: string) => jane?.contributions.find((c) => c.role === role)?.score;
+    const [grace] = fromCsv(csv);
+    expect(grace?.contributorType).toBe("non-author");
+    const score = (role: string) => grace?.contributions.find((c) => c.role === role)?.score;
     expect(score("Conceptualization")).toBe(100);
     expect(score("Writing – original draft")).toBe(33);
     expect(score("Software")).toBe(50);
   });
 
   it("skips a row with no usable name and keeps the rest", () => {
-    const parsed = fromCsv(`Name,Conceptualization\nGrace Hopper,100\n,100\n123,100\nBob Lee,100`);
-    expect(parsed.map((a) => a.name)).toEqual(["Grace Hopper", "Bob Lee"]);
+    const parsed = fromCsv(`Name,Conceptualization\nGrace Hopper,100\n,100\n123,100\nCharles Lee,100`);
+    expect(parsed.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Lee"]);
   });
 
   it("rounds a fractional score cell to an integer", () => {
@@ -139,15 +139,15 @@ describe("CSV import/export", () => {
   });
 
   it("writes the markers as yes and no, and an empty cell for a missing ORCID", () => {
-    const [jane, bob] = parseAuthorText("Grace Hopper\nCharles Darwin");
-    if (!(jane && bob)) throw new Error("expected 2 authors");
-    jane.equalContribution = true;
-    jane.corresponding = true;
+    const [grace, charles] = parseAuthorText("Grace Hopper\nCharles Darwin");
+    if (!(grace && charles)) throw new Error("expected 2 authors");
+    grace.equalContribution = true;
+    grace.corresponding = true;
 
-    const [, janeRow, bobRow] = toCsv([jane, bob]).split("\n");
-    expect(janeRow?.startsWith("Grace Hopper,,author,yes,yes,")).toBe(true);
-    expect(bobRow?.startsWith("Charles Darwin,,author,no,no,")).toBe(true);
-    expect(fromCsv(toCsv([jane, bob])).map((a) => [a.equalContribution, a.corresponding])).toEqual([
+    const [, graceRow, charlesRow] = toCsv([grace, charles]).split("\n");
+    expect(graceRow?.startsWith("Grace Hopper,,author,yes,yes,")).toBe(true);
+    expect(charlesRow?.startsWith("Charles Darwin,,author,no,no,")).toBe(true);
+    expect(fromCsv(toCsv([grace, charles])).map((a) => [a.equalContribution, a.corresponding])).toEqual([
       [true, true],
       [false, false],
     ]);

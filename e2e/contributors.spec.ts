@@ -21,22 +21,22 @@ test.describe("the contributor list", () => {
 
   test("Escape in a name field discards the edit", async ({ page }) => {
     await page.goto("/");
-    await add(page, "Alice Smith");
+    await add(page, "Ada Lovelace");
     await nameField(page).fill("Zed Typo");
     await nameField(page).press("Escape");
-    await expect(nameField(page)).toHaveValue("Alice Smith");
+    await expect(nameField(page)).toHaveValue("Ada Lovelace");
     // Leaving the field afterwards must not commit the abandoned text either.
     await addField(page).click();
-    await expect(nameField(page)).toHaveValue("Alice Smith");
-    await expect(page.getByRole("button", { name: "Remove Alice Smith" })).toBeVisible();
+    await expect(nameField(page)).toHaveValue("Ada Lovelace");
+    await expect(page.getByRole("button", { name: "Remove Ada Lovelace" })).toBeVisible();
   });
 
   test("keeps the name typed with an ORCID iD", async ({ page }) => {
     // Any lookup fails, so a name that survives was not fetched.
     await page.route("https://pub.orcid.org/**", (route) => route.abort("failed"));
     await page.goto("/");
-    await add(page, `Jane Q. Smith ${ORCID}`);
-    await expect(nameField(page)).toHaveValue("Jane Q. Smith");
+    await add(page, `Grace B. Hopper ${ORCID}`);
+    await expect(nameField(page)).toHaveValue("Grace B. Hopper");
     await expect(page.getByRole("link", { name: new RegExp(ORCID) })).toBeVisible();
     await expect(addField(page)).toHaveValue("");
   });
@@ -66,36 +66,36 @@ test.describe("the contributor list", () => {
 
   test("undoing the removal of your own row keeps it marked as you", async ({ page }) => {
     await page.goto("/");
-    await add(page, "Alice Smith");
-    await page.getByRole("button", { name: "Actions for Alice Smith" }).click();
+    await add(page, "Ada Lovelace");
+    await page.getByRole("button", { name: "Actions for Ada Lovelace" }).click();
     await page.getByRole("button", { name: "This is me" }).click();
     await page.keyboard.press("Escape");
     const row = page.getByRole("listitem").filter({ has: nameField(page) });
     await expect(row.getByText("You", { exact: true })).toBeVisible();
 
-    await page.getByRole("button", { name: "Remove Alice Smith" }).click();
-    await page.getByRole("group", { name: "Removed Alice Smith" }).getByRole("button").click();
+    await page.getByRole("button", { name: "Remove Ada Lovelace" }).click();
+    await page.getByRole("group", { name: "Removed Ada Lovelace" }).getByRole("button").click();
     await expect(row.getByText("You", { exact: true })).toBeVisible();
   });
 
   test("undoing a removal the grid's Undo already reverted reports no limit", async ({ page }) => {
     await page.goto("/");
-    await add(page, "Alice Smith");
-    await add(page, "Bob Jones");
+    await add(page, "Ada Lovelace");
+    await add(page, "Charles Darwin");
     await page.getByRole("button", { name: "Bulk assign" }).click();
     await page.getByRole("button", { name: "Assign every role", exact: true }).click();
 
-    await page.getByRole("button", { name: "Remove Bob Jones" }).click();
+    await page.getByRole("button", { name: "Remove Charles Darwin" }).click();
     await page.getByRole("group", { name: "Bulk change applied." }).getByRole("button").click();
-    await expect(page.getByRole("button", { name: "Remove Bob Jones" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove Charles Darwin" })).toBeVisible();
 
-    const removedBar = page.getByRole("group", { name: "Removed Bob Jones" });
+    const removedBar = page.getByRole("group", { name: "Removed Charles Darwin" });
     await removedBar.getByRole("button").click();
     await expect(removedBar).toBeHidden();
     // An announcement reaches the live region on the frame after the click.
     await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
     expect((await statusText(page)).join(" ")).not.toContain("at most 200 contributors");
-    await expect(page.getByRole("button", { name: "Remove Bob Jones" })).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Remove Charles Darwin" })).toHaveCount(1);
   });
 });
 

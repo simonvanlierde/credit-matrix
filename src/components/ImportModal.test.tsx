@@ -144,10 +144,10 @@ describe("closing the dialog while ORCID's keys load", () => {
     });
   /** A JSON export whose answer includes a sign-in, so importing it fetches ORCID's keys. */
   function signedFile() {
-    const bob = createAuthor("Charles Darwin", { id: "bob" });
+    const charles = createAuthor("Charles Darwin", { id: "charles" });
     const orcid = { orcid: "0000-0002-1825-0097", issuedAt: 1, token: "t", payload: "p" };
-    const reply = { ...bob, sentAt: 1, receivedAt: 2, provenance: { orcid }, decisions: {} };
-    return toJson([bob], { asks: { bob: { sentAt: 1, prefilled: true, reply } } });
+    const reply = { ...charles, sentAt: 1, receivedAt: 2, provenance: { orcid }, decisions: {} };
+    return toJson([charles], { asks: { charles: { sentAt: 1, prefilled: true, reply } } });
   }
 
   it.each([0, 3])("imports nothing and stages no prompt (%i contributors already)", async (existing) => {
@@ -228,9 +228,9 @@ describe("a JSON export from a newer version", () => {
 describe("a JSON export that repeats a contributor id", () => {
   it("says so, instead of the catch-all failure", async () => {
     const { onImport } = renderModal(0);
-    const jane = createAuthor("Grace Hopper");
+    const grace = createAuthor("Grace Hopper");
     fireEvent.change(screen.getByLabelText(english.pasteRawData), {
-      target: { value: JSON.stringify({ version: 1, authors: [jane, jane] }) },
+      target: { value: JSON.stringify({ version: 1, authors: [grace, grace] }) },
     });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
 

@@ -44,8 +44,8 @@ async function openReply(link: string, contributorId: string, sentAt: number) {
   await waitFor(() => expect(useContributionStore.getState().asks[contributorId]?.reply?.sentAt).toBe(sentAt));
 }
 
-/** Jane asked in a fresh draft, and a reply link from her claiming a role by `sentAt`. */
-async function janeAsked() {
+/** Grace asked in a fresh draft, and a reply link from her claiming a role by `sentAt`. */
+async function graceAsked() {
   render(
     <StrictMode>
       <IntlProvider locale="en" messages={en}>
@@ -61,63 +61,63 @@ async function janeAsked() {
     useContributionStore.getState().addAuthor("Grace Hopper");
   });
   const state = useContributionStore.getState();
-  const jane = state.authors[0];
-  if (!jane) throw new Error("expected Jane");
+  const grace = state.authors[0];
+  if (!grace) throw new Error("expected Grace");
   const draftId = state.activeDraftId;
   const reply = (role: number, sentAt: number) =>
     buildShareUrl({
       authors: [
-        createAuthor(jane.name, {
-          id: jane.id,
-          contributions: jane.contributions.map((c, index) => ({ ...c, score: index === role ? 100 : 0 })),
+        createAuthor(grace.name, {
+          id: grace.id,
+          contributions: grace.contributions.map((c, index) => ({ ...c, score: index === role ? 100 : 0 })),
         }),
       ],
-      claimId: jane.id,
+      claimId: grace.id,
       sourceDraftId: draftId,
       reply: true,
       sentAt,
     });
-  return { jane, draftId, reply };
+  return { grace, draftId, reply };
 }
 
 it("keeps the row mark of a newer reply from the same person when it replaces the strip", async () => {
-  const { jane, reply } = await janeAsked();
-  await openReply(await reply(0, 5), jane.id, 5);
-  expect(useContributionStore.getState().recentReply).toBe(jane.id);
-  await openReply(await reply(1, 6), jane.id, 6);
-  expect(useContributionStore.getState().recentReply).toBe(jane.id);
+  const { grace, reply } = await graceAsked();
+  await openReply(await reply(0, 5), grace.id, 5);
+  expect(useContributionStore.getState().recentReply).toBe(grace.id);
+  await openReply(await reply(1, 6), grace.id, 6);
+  expect(useContributionStore.getState().recentReply).toBe(grace.id);
 });
 
 it("takes the arrival strip down once the lead decides on that reply", async () => {
-  const { jane, draftId, reply } = await janeAsked();
-  await openReply(await reply(0, 5), jane.id, 5);
+  const { grace, draftId, reply } = await graceAsked();
+  await openReply(await reply(0, 5), grace.id, 5);
   expect(screen.getByRole("button", { name: "Undo" })).toBeTruthy();
   act(() => {
     useContributionStore
       .getState()
-      .applyAskStep(draftId, { kind: "settle", contributorId: jane.id, choices: "theirs", at: 7 });
+      .applyAskStep(draftId, { kind: "settle", contributorId: grace.id, choices: "theirs", at: 7 });
   });
   expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
   expect(useContributionStore.getState().recentReply).toBeNull();
 });
 
 it("leaves the strip's Undo on its own reply when other rows are asked meanwhile", async () => {
-  const { jane, draftId, reply } = await janeAsked();
+  const { grace, draftId, reply } = await graceAsked();
   act(() => {
     useContributionStore.getState().addAuthor("Charles Darwin");
   });
-  const bob = useContributionStore.getState().authors[1];
-  if (!bob) throw new Error("expected Bob");
-  await openReply(await reply(0, 5), jane.id, 5);
+  const charles = useContributionStore.getState().authors[1];
+  if (!charles) throw new Error("expected Charles");
+  await openReply(await reply(0, 5), grace.id, 5);
   act(() => {
     useContributionStore
       .getState()
-      .applyAskStep(draftId, { kind: "sent", contributorId: bob.id, prefilled: false, at: 6 });
+      .applyAskStep(draftId, { kind: "sent", contributorId: charles.id, prefilled: false, at: 6 });
   });
   fireEvent.click(screen.getByRole("button", { name: "Undo" }));
   const { asks } = useContributionStore.getState();
-  expect(asks[jane.id]).toBeUndefined();
-  expect(asks[bob.id]).toEqual({ sentAt: 6, prefilled: false });
+  expect(asks[grace.id]).toBeUndefined();
+  expect(asks[charles.id]).toEqual({ sentAt: 6, prefilled: false });
 });
 
 it("keeps what this tab holds unsaved when a link opens", async () => {

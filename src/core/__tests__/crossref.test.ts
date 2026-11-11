@@ -9,7 +9,7 @@ import { fromCrossrefContributors, isCrossrefContributors, toCrossrefContributor
 import { detectFormat, importAny } from "../import";
 import { createAuthor } from "../parse-authors";
 
-const jane = createAuthor("Grace B. Hopper", {
+const grace = createAuthor("Grace B. Hopper", {
   orcid: "0000-0002-1825-0097",
   corresponding: true,
   contributions: [
@@ -17,14 +17,14 @@ const jane = createAuthor("Grace B. Hopper", {
     { role: "Writing – review & editing", score: 33 },
   ],
 });
-const bob = createAuthor("Charles Darwin", {
+const charles = createAuthor("Charles Darwin", {
   contributorType: "non-author",
   contributions: [{ role: "Investigation", score: 66 }],
 });
 
 describe("toCrossrefContributors", () => {
   it("writes name parts, Crossref and CRediT roles, and the ORCID URL in schema order", () => {
-    const xml = toCrossrefContributors([jane]);
+    const xml = toCrossrefContributors([grace]);
     expect(xml).toContain(`<contributors>
   <person_name sequence="first">
     <given_name>Grace B.</given_name>
@@ -60,26 +60,26 @@ describe("toCrossrefContributors", () => {
   });
 
   it("never claims a degree or an authenticated ORCID iD", () => {
-    const xml = toCrossrefContributors([jane]);
+    const xml = toCrossrefContributors([grace]);
     expect(xml).not.toMatch(/degree|lead|authenticated/);
   });
 
   it("lists authors first, gives 'first' to the first of them, and marks non-authors 'other'", () => {
-    const xml = toCrossrefContributors([bob, jane]);
+    const xml = toCrossrefContributors([charles, grace]);
     expect(xml).toMatch(
       /<contributors>\n {2}<person_name sequence="first">\n {4}<given_name>Grace B\.[\s\S]*<person_name sequence="additional">\n {4}<given_name>Charles<\/given_name>[\s\S]*?type="other"\/>/,
     );
   });
 
   it("leaves out a contributor whose name is still an ORCID iD, and says so", () => {
-    const xml = toCrossrefContributors([createAuthor("0000-0001-5109-3700"), jane]);
+    const xml = toCrossrefContributors([createAuthor("0000-0001-5109-3700"), grace]);
     expect(xml).not.toContain("<surname>0000-0001-5109-3700</surname>");
     expect(xml).toContain("<!-- Left out: 0000-0001-5109-3700 has no name yet. -->");
     expect(xml).toMatch(/<person_name sequence="first">\n {4}<given_name>Grace B\./);
   });
 
   it("puts each person and each left-out note on its own line", () => {
-    const xml = toCrossrefContributors([createAuthor("0000-0001-5109-3700"), jane, bob]);
+    const xml = toCrossrefContributors([createAuthor("0000-0001-5109-3700"), grace, charles]);
     expect(xml).toContain(`has no name yet. -->
   <person_name sequence="first">`);
     expect(xml).toContain(`</person_name>
@@ -108,7 +108,7 @@ it.runIf(process.env.CROSSREF_OUT)("writes a fresh export for XSD validation", (
   });
   writeFileSync(
     process.env.CROSSREF_OUT as string,
-    toCrossrefContributors([jane, everyRole, bob, createAuthor("Madonna"), createAuthor("0000-0003-1415-9269")]),
+    toCrossrefContributors([grace, everyRole, charles, createAuthor("Madonna"), createAuthor("0000-0003-1415-9269")]),
   );
 });
 
@@ -125,7 +125,7 @@ describe("fromCrossrefContributors", () => {
     active: a.contributions.filter((c) => c.score > 0).map((c) => c.role),
   });
   // Authors first, then the others: the order the export writes.
-  const roster = [jane, createAuthor("Martin Luther King Jr."), createAuthor("Ana García López"), bob];
+  const roster = [grace, createAuthor("Martin Luther King Jr."), createAuthor("Ana García López"), charles];
 
   it("reads the app's own export back to the same authors, roles and ORCIDs", () => {
     const back = fromCrossrefContributors(toCrossrefContributors(roster));
@@ -135,7 +135,7 @@ describe("fromCrossrefContributors", () => {
   });
 
   it("reads an author before the people credited only in the Acknowledgements, in export order", () => {
-    const back = fromCrossrefContributors(toCrossrefContributors([bob, jane]));
+    const back = fromCrossrefContributors(toCrossrefContributors([charles, grace]));
     expect(back.map((a) => [a.name, a.contributorType])).toEqual([
       ["Grace B. Hopper", "author"],
       ["Charles Darwin", "non-author"],

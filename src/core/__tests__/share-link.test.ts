@@ -113,8 +113,8 @@ describe("encodeShareHash", () => {
   });
 
   it("refuses to build a link for a draft over the size cap", async () => {
-    const [jane] = draft();
-    const huge = { ...jane, name: "x".repeat(1_000_001) } as NonNullable<typeof jane>;
+    const [grace] = draft();
+    const huge = { ...grace, name: "x".repeat(1_000_001) } as NonNullable<typeof grace>;
     await expect(encodeShareHash({ authors: [huge] })).rejects.toThrow(/too large to share/);
   });
 });

@@ -25,7 +25,7 @@ describe("nameBesideOrcid", () => {
 
   it("takes linear time over a long run of spaces", () => {
     const started = performance.now();
-    expect(nameBesideOrcid(`Jane${" ".repeat(100_000)}x ${ID}`)).toBe("Jane x");
+    expect(nameBesideOrcid(`Grace${" ".repeat(100_000)}x ${ID}`)).toBe("Grace x");
     expect(performance.now() - started).toBeLessThan(200);
   });
 });

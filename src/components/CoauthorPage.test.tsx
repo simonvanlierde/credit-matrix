@@ -9,9 +9,9 @@ import { ClaimGate } from "./CoauthorPage";
 it("sends the same answer with the same send time, shared or copied", async () => {
   const store = useContributionStore.getState();
   store.addAuthor("Grace Hopper");
-  const jane = useContributionStore.getState().authors[0];
-  if (!jane) throw new Error("expected Jane");
-  store.setClaim({ contributorId: jane.id, sourceDraftId: "src-1", sentAt: 1 });
+  const grace = useContributionStore.getState().authors[0];
+  if (!grace) throw new Error("expected Grace");
+  store.setClaim({ contributorId: grace.id, sourceDraftId: "src-1", sentAt: 1 });
   const writeText = vi.fn((_: string) => Promise.resolve());
   Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
   let now = 1_000;
@@ -37,7 +37,7 @@ it("sends the same answer with the same send time, shared or copied", async () =
   expect(await sentAt(2)).toBe(first);
 
   // A changed answer is a newer one.
-  act(() => useContributionStore.getState().setAuthorScore(jane.id, 0, 100));
+  act(() => useContributionStore.getState().setAuthorScore(grace.id, 0, 100));
   fireEvent.click(screen.getByRole("button", { name: /Copy the link instead|Link copied/ }));
   expect(await sentAt(3)).toBeGreaterThan(first ?? Number.POSITIVE_INFINITY);
 });

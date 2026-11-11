@@ -26,13 +26,13 @@ import { parseAuthorText } from "../parse-authors";
 
 function makeAuthors() {
   const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
-  const [jane, bob] = authors;
-  if (!(jane && bob)) throw new Error("expected 2 authors");
-  const janeConc = jane.contributions[0]; // Conceptualization
-  const bobInv = bob.contributions[4]; // Investigation
-  if (!(janeConc && bobInv)) throw new Error("expected contributions");
-  janeConc.score = 100;
-  bobInv.score = 100;
+  const [grace, charles] = authors;
+  if (!(grace && charles)) throw new Error("expected 2 authors");
+  const graceConc = grace.contributions[0]; // Conceptualization
+  const charlesInv = charles.contributions[4]; // Investigation
+  if (!(graceConc && charlesInv)) throw new Error("expected contributions");
+  graceConc.score = 100;
+  charlesInv.score = 100;
   return authors;
 }
 
@@ -198,9 +198,9 @@ describe("generateStatement with translateRole", () => {
   it("keeps the spaces in localized separators", async () => {
     const translateUi = makeUiTranslator(await loadUiCatalog("de"));
     const authors = makeAuthors();
-    const bobConc = authors[1]?.contributions[0];
-    if (!bobConc) throw new Error("expected contributions");
-    bobConc.score = 100;
+    const charlesConc = authors[1]?.contributions[0];
+    if (!charlesConc) throw new Error("expected contributions");
+    charlesConc.score = 100;
     const stmt = generateStatement(authors, { format: "by-role", translateUi });
     expect(stmt).toContain("Grace Hopper, Charles Darwin");
     expect(stmt).toMatch(/Charles Darwin; \S/);
@@ -208,9 +208,9 @@ describe("generateStatement with translateRole", () => {
 
   it("puts a non-breaking space before French colons and semicolons", async () => {
     const authors = makeAuthors();
-    const [jane] = authors;
-    if (!jane) throw new Error("expected contributor");
-    jane.corresponding = true;
+    const [grace] = authors;
+    if (!grace) throw new Error("expected contributor");
+    grace.corresponding = true;
     const stmt = generateStatement(authors, {
       format: "by-role",
       translateRole: makeRoleTranslator(await loadRoleCatalog("fr")),

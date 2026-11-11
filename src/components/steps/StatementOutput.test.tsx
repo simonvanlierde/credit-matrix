@@ -45,8 +45,8 @@ it("shows a contributor without roles as a note, not as an error", () => {
 
 it("marks the phrase of the cell under the pointer, by author and by role", () => {
   const authors = twoAuthors();
-  const [jane, bob] = authors;
-  if (!(jane && bob)) throw new Error("expected 2 authors");
+  const [grace, charles] = authors;
+  if (!(grace && charles)) throw new Error("expected 2 authors");
   act(() => store().loadAuthors(authors));
   const { container } = renderStatement();
   const marks = () => [...container.querySelectorAll("[data-linked]")].map((mark) => mark.textContent);
@@ -54,10 +54,10 @@ it("marks the phrase of the cell under the pointer, by author and by role", () =
   const before = statement();
   expect(marks()).toEqual([]);
 
-  act(() => store().setStatementLink({ contributorId: bob.id, role: "Conceptualization", from: "cell" }));
-  // Bob's Conceptualization, not Jane's: the same word appears in both their segments.
+  act(() => store().setStatementLink({ contributorId: charles.id, role: "Conceptualization", from: "cell" }));
+  // Charles's Conceptualization, not Grace's: the same word appears in both their segments.
   expect(marks()).toEqual(["Conceptualization"]);
-  expect(container.querySelector("[data-linked]")?.getAttribute("data-author")).toBe(bob.id);
+  expect(container.querySelector("[data-linked]")?.getAttribute("data-author")).toBe(charles.id);
   // Marking changes no text.
   expect(statement()).toBe(before);
 
@@ -69,14 +69,14 @@ it("marks the phrase of the cell under the pointer, by author and by role", () =
 
 it("points the phrase under the pointer at its cell", () => {
   const authors = twoAuthors();
-  const jane = authors[0];
-  if (!jane) throw new Error("expected Jane");
+  const grace = authors[0];
+  if (!grace) throw new Error("expected Grace");
   act(() => store().loadAuthors(authors));
   const { container } = renderStatement();
-  const phrase = container.querySelector(`[data-author="${jane.id}"][data-role="Software"]`);
-  if (!phrase) throw new Error("expected Jane's Software phrase");
+  const phrase = container.querySelector(`[data-author="${grace.id}"][data-role="Software"]`);
+  if (!phrase) throw new Error("expected Grace's Software phrase");
   fireEvent.pointerOver(phrase);
-  expect(store().statementLink).toEqual({ contributorId: jane.id, role: "Software", from: "phrase" });
+  expect(store().statementLink).toEqual({ contributorId: grace.id, role: "Software", from: "phrase" });
   expect(container.querySelector("[data-linked]")?.textContent).toBe("Software");
   const paragraph = phrase.closest("p");
   if (!paragraph) throw new Error("expected the statement");
@@ -86,14 +86,14 @@ it("points the phrase under the pointer at its cell", () => {
 
 it("keeps a phrase's text node in place as its mark comes and goes, so a selection being dragged holds", () => {
   const authors = twoAuthors();
-  const jane = authors[0];
-  if (!jane) throw new Error("expected Jane");
+  const grace = authors[0];
+  if (!grace) throw new Error("expected Grace");
   act(() => store().loadAuthors(authors));
   const { container } = renderStatement();
-  const text = () => container.querySelector(`[data-author="${jane.id}"][data-role="Software"]`)?.firstChild;
+  const text = () => container.querySelector(`[data-author="${grace.id}"][data-role="Software"]`)?.firstChild;
   const before = text();
   expect(before?.nodeType).toBe(Node.TEXT_NODE);
-  act(() => store().setStatementLink({ contributorId: jane.id, role: "Software", from: "cell" }));
+  act(() => store().setStatementLink({ contributorId: grace.id, role: "Software", from: "cell" }));
   expect(text()).toBe(before);
   act(() => store().setStatementLink(null));
   expect(text()).toBe(before);
@@ -103,20 +103,20 @@ it("keeps a phrase's text node in place as its mark comes and goes, so a selecti
 
 it("links a contributor's name in the statement to their sidebar row and column", () => {
   const authors = twoAuthors();
-  const jane = authors[0];
-  if (!jane) throw new Error("expected Jane");
+  const grace = authors[0];
+  if (!grace) throw new Error("expected Grace");
   act(() => store().loadAuthors(authors));
   const { container } = renderStatement();
   fireEvent.click(screen.getByRole("radio", { name: english.groupByAuthor }));
-  const name = container.querySelector(`[data-author="${jane.id}"]:not([data-role])`);
-  if (!name) throw new Error("expected Jane's name span");
+  const name = container.querySelector(`[data-author="${grace.id}"]:not([data-role])`);
+  if (!name) throw new Error("expected Grace's name span");
   fireEvent.pointerOver(name);
-  expect(store().statementLink).toEqual({ contributorId: jane.id, from: "name" });
+  expect(store().statementLink).toEqual({ contributorId: grace.id, from: "name" });
   expect(name.hasAttribute("data-linked")).toBe(true);
   // Her phrases take the mark too.
-  expect(container.querySelector(`[data-author="${jane.id}"][data-role="Software"]`)?.hasAttribute("data-linked")).toBe(
-    true,
-  );
+  expect(
+    container.querySelector(`[data-author="${grace.id}"][data-role="Software"]`)?.hasAttribute("data-linked"),
+  ).toBe(true);
   const paragraph = name.closest("p");
   if (!paragraph) throw new Error("expected the statement");
   fireEvent.pointerLeave(paragraph);

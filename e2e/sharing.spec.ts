@@ -63,14 +63,14 @@ test("full round trip: blank ask → locked fill → reply kept beside the row, 
   const pageA = await openBrowser(originator);
   const askLink = await makeAskLink(pageA);
 
-  // Copying the ask link marked Bob's row as asked; the chip waits for him.
+  // Copying the ask link marked Charles's row as asked; the chip waits for him.
   await expect(pageA.getByText("Asked", { exact: true })).toBeVisible();
 
   const pageB = await openBrowser(coauthor);
   await pageB.goto(askLink);
 
   // The co-author page, not the workspace: no header, no roster, and only
-  // Bob's own row travelled.
+  // Charles's own row travelled.
   await expect(coauthorPage(pageB)).toBeVisible();
   await expect(onScreen(pageB, /Answering as Charles Darwin\./)).toBeVisible();
   await expect(pageB.getByLabel("New author names or ORCID iD")).toHaveCount(0);
@@ -124,7 +124,7 @@ test("a blank ask arrives empty; asking to check a guess sends the guess", async
   const adder = pageA.getByLabel("New author names or ORCID iD");
   await adder.fill("Grace Hopper, Charles Darwin");
   await adder.press("Enter");
-  // The guess: Bob did the investigation.
+  // The guess: Charles did the investigation.
   await pageA.getByRole("button", { name: /^Investigation for Charles Darwin:/ }).click();
   await expect(pageA.getByRole("button", { name: "Investigation for Charles Darwin: Contributed" })).toBeVisible();
 

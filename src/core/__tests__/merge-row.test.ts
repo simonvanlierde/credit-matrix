@@ -50,13 +50,13 @@ describe("keepKnownIds", () => {
 
   it("keeps an id the import already has", () => {
     const current = draft();
-    const [bob] = current.slice(1);
-    if (!bob) throw new Error("expected Charles");
-    expect(keepKnownIds(current, [bob])[0]?.id).toBe(bob.id);
+    const [charles] = current.slice(1);
+    if (!charles) throw new Error("expected Charles");
+    expect(keepKnownIds(current, [charles])[0]?.id).toBe(charles.id);
     // Even when an earlier row would match Charles by name.
-    const result = keepKnownIds(current, [createAuthor("Charles Darwin"), bob]);
-    expect(result[1]?.id).toBe(bob.id);
-    expect(result[0]?.id).not.toBe(bob.id);
+    const result = keepKnownIds(current, [createAuthor("Charles Darwin"), charles]);
+    expect(result[1]?.id).toBe(charles.id);
+    expect(result[0]?.id).not.toBe(charles.id);
   });
 });
 
@@ -95,8 +95,8 @@ describe("newContributors", () => {
 
   it("drops a row whose id is already here", () => {
     const current = draft();
-    const [bob] = current.slice(1);
-    if (!bob) throw new Error("expected Charles");
-    expect(newContributors(current, [{ ...bob, name: "Robert Darwin" }])).toEqual([]);
+    const [charles] = current.slice(1);
+    if (!charles) throw new Error("expected Charles");
+    expect(newContributors(current, [{ ...charles, name: "Robert Darwin" }])).toEqual([]);
   });
 });

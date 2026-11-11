@@ -71,15 +71,15 @@ test("two co-authors answer the same draft, and each answer is settled on its ow
   await expect(lead.getByRole("button", { name: "Software for Charles Darwin: Contributed" })).toBeVisible();
 
   // Both asks go out before either answer comes back.
-  const bobAsk = await copyAsk(lead, "Charles Darwin");
+  const charlesAsk = await copyAsk(lead, "Charles Darwin");
   const katherineAsk = await copyAsk(lead, "Katherine Johnson");
-  const bobReply = await answer(browser, bobAsk, ["Investigation"]);
+  const charlesReply = await answer(browser, charlesAsk, ["Investigation"]);
   const katherineReply = await answer(browser, katherineAsk, ["Conceptualization"]);
 
   // Opened in the other order than they were asked.
   await lead.goto(katherineReply);
   await expect(onScreen(lead, "Katherine Johnson's answer arrived: 1 difference.")).toBeVisible();
-  await lead.goto(bobReply);
+  await lead.goto(charlesReply);
   await expect(onScreen(lead, "Charles Darwin's answer arrived: 2 differences.")).toBeVisible();
 
   await expect(lead.getByText("2 of 2 answered")).toBeVisible();

@@ -16,14 +16,14 @@ it("warns when a signed reply put a different iD on the row than the one asked",
     useContributionStore.getState().addAuthor("Charles Darwin", ROW_ORCID);
   });
   const { activeDraftId, authors } = useContributionStore.getState();
-  const bob = authors[0];
-  if (!bob) throw new Error("expected Bob");
+  const charles = authors[0];
+  if (!charles) throw new Error("expected Charles");
   // Someone holding a forwarded link signs in as themselves and types their own iD into the row.
   act(() => {
     useContributionStore.getState().applyAskStep(activeDraftId, {
       kind: "reply",
-      contributorId: bob.id,
-      row: { ...bob, orcid: TEST_ORCID, contributions: [{ role: "Investigation", score: 100 }] },
+      contributorId: charles.id,
+      row: { ...charles, orcid: TEST_ORCID, contributions: [{ role: "Investigation", score: 100 }] },
       sentAt: 1,
       at: 2,
       orcid: { orcid: TEST_ORCID, name: "Eve Other", issuedAt: 1, token: "t", payload: "p" },
@@ -47,13 +47,13 @@ it("notes a signed reply on a row with no iD to compare with", () => {
     useContributionStore.getState().addAuthor("Charles Darwin");
   });
   const { activeDraftId, authors } = useContributionStore.getState();
-  const bob = authors[0];
-  if (!bob) throw new Error("expected Bob");
+  const charles = authors[0];
+  if (!charles) throw new Error("expected Charles");
   act(() => {
     useContributionStore.getState().applyAskStep(activeDraftId, {
       kind: "reply",
-      contributorId: bob.id,
-      row: { ...bob, contributions: [{ role: "Investigation", score: 100 }] },
+      contributorId: charles.id,
+      row: { ...charles, contributions: [{ role: "Investigation", score: 100 }] },
       sentAt: 1,
       at: 2,
       orcid: { orcid: TEST_ORCID, name: "Charles Darwin", issuedAt: 1, token: "t", payload: "p" },
@@ -76,8 +76,8 @@ it("does not show a sign-in an offline import could not check as verified", () =
     useContributionStore.getState().createDraft();
     useContributionStore.getState().addAuthor("Charles Darwin", TEST_ORCID);
   });
-  const bob = useContributionStore.getState().authors[0];
-  if (!bob) throw new Error("expected Bob");
+  const charles = useContributionStore.getState().authors[0];
+  if (!charles) throw new Error("expected Charles");
   const orcid = { orcid: TEST_ORCID, name: "Charles Darwin", issuedAt: 1, token: "t", payload: "p" };
   const reply = {
     contributions: [{ role: "Investigation" as const, score: 100 }],
@@ -88,7 +88,9 @@ it("does not show a sign-in an offline import could not check as verified", () =
     provenance: { uncheckedOrcid: orcid },
     decisions: {},
   };
-  act(() => useContributionStore.getState().loadAuthors([bob], { [bob.id]: { sentAt: 1, prefilled: true, reply } }));
+  act(() =>
+    useContributionStore.getState().loadAuthors([charles], { [charles.id]: { sentAt: 1, prefilled: true, reply } }),
+  );
 
   const { container } = render(
     <IntlProvider locale="en" messages={en}>
@@ -104,8 +106,8 @@ it("shows a sign-in given for another row as a warning, not as verified", () => 
     useContributionStore.getState().createDraft();
     useContributionStore.getState().addAuthor("Charles Darwin", TEST_ORCID);
   });
-  const bob = useContributionStore.getState().authors[0];
-  if (!bob) throw new Error("expected Bob");
+  const charles = useContributionStore.getState().authors[0];
+  if (!charles) throw new Error("expected Charles");
   const orcid = { orcid: TEST_ORCID, name: "Charles Darwin", issuedAt: 1, token: "t", payload: "p" };
   const reply = {
     contributions: [{ role: "Investigation" as const, score: 100 }],
@@ -116,7 +118,9 @@ it("shows a sign-in given for another row as a warning, not as verified", () => 
     provenance: { orcid, signedElsewhere: true as const },
     decisions: {},
   };
-  act(() => useContributionStore.getState().loadAuthors([bob], { [bob.id]: { sentAt: 1, prefilled: true, reply } }));
+  act(() =>
+    useContributionStore.getState().loadAuthors([charles], { [charles.id]: { sentAt: 1, prefilled: true, reply } }),
+  );
 
   const { container } = render(
     <IntlProvider locale="en" messages={en}>
@@ -134,12 +138,12 @@ it("shows the paper title a verified sign-in was given for only when it differs 
     useContributionStore.getState().setTitle("Sea otters");
     useContributionStore.getState().addAuthor("Charles Darwin", TEST_ORCID);
   });
-  const bob = useContributionStore.getState().authors[0];
-  if (!bob) throw new Error("expected Bob");
+  const charles = useContributionStore.getState().authors[0];
+  if (!charles) throw new Error("expected Charles");
   const payload = toSharePayload({
-    authors: [bob],
+    authors: [charles],
     title: "Kelp forests",
-    claimId: bob.id,
+    claimId: charles.id,
     sourceDraftId: "d",
     reply: true,
   });
@@ -153,7 +157,9 @@ it("shows the paper title a verified sign-in was given for only when it differs 
     provenance: { orcid },
     decisions: {},
   };
-  act(() => useContributionStore.getState().loadAuthors([bob], { [bob.id]: { sentAt: 1, prefilled: true, reply } }));
+  act(() =>
+    useContributionStore.getState().loadAuthors([charles], { [charles.id]: { sentAt: 1, prefilled: true, reply } }),
+  );
 
   const { container } = render(
     <IntlProvider locale="en" messages={en}>

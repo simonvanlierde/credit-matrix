@@ -17,7 +17,7 @@ it("shows its actions in order before Dismiss, and each one runs and leaves", ()
   act(() =>
     showStatus({
       kind: "success",
-      message: "Bob's answer arrived: 2 differences.",
+      message: "Charles's answer arrived: 2 differences.",
       actions: [
         { label: "Undo", onAct: undo },
         { label: "Review", onAct: review },
@@ -32,7 +32,7 @@ it("shows its actions in order before Dismiss, and each one runs and leaves", ()
   expect(review).toHaveBeenCalledOnce();
   expect(undo).not.toHaveBeenCalled();
   expect(onDismiss).toHaveBeenCalledOnce();
-  expect(screen.queryByText("Bob's answer arrived: 2 differences.")).toBeNull();
+  expect(screen.queryByText("Charles's answer arrived: 2 differences.")).toBeNull();
 });
 
 it("dismisses a replaced strip once, outside rendering, and only the strip asked for", () => {

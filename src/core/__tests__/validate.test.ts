@@ -19,15 +19,15 @@ describe("validateContributions", () => {
     const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
     setScore(authors, 0, "Conceptualization", 100);
     setScore(authors, 0, "Writing – original draft", 100);
-    // Bob has nothing assigned.
+    // Charles has nothing assigned.
 
     const issues = validateContributions(authors);
-    const bob = authors[1];
-    expect(bob).toBeDefined();
+    const charles = authors[1];
+    expect(charles).toBeDefined();
     expect(issues).toContainEqual({
       level: "warning",
       code: "authorNoRoles",
-      authorId: bob?.id,
+      authorId: charles?.id,
       authorName: "Charles Darwin",
     });
   });

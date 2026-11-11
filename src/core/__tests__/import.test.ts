@@ -87,7 +87,7 @@ describe("detectFormat", () => {
   });
 
   it("reads a comma list of names containing 'name' as names, not CSV", () => {
-    expect(detectFormat("Anne Namer, Bob Smith")).toBe("names");
+    expect(detectFormat("Anne Namer, Charles Darwin")).toBe("names");
   });
 
   it("reads text with CRediT's own wording as a statement, and importAny refuses it", async () => {
@@ -100,7 +100,7 @@ describe("detectFormat", () => {
 
   it.each([
     "Conceptualization, A.B. and C.D.; Methodology, A.B.",
-    "Conceptualization: Jane Doe, John Smith",
+    "Conceptualization: Grace Hopper, Ada Lovelace",
     "A.B. - conceptualization\nC.D. - writing - original draft",
     "A.B. did the conceptualization and wrote the original draft.",
   ])("reads an assignment of CRediT roles as a statement: %s", (text) => {
@@ -108,9 +108,9 @@ describe("detectFormat", () => {
   });
 
   it.each([
-    "Jane Doe (Visualization Lab), John Smith",
-    "Jane Doe, Data Curation Unit\nJohn Smith",
-    "Prof. Jane Doe, Prof. John Smith",
+    "Grace Hopper (Visualization Lab), Ada Lovelace",
+    "Grace Hopper, Data Curation Unit\nAda Lovelace",
+    "Prof. Grace Hopper, Prof. Ada Lovelace",
     "Jan van der Berg, Ana da Silva",
   ])("keeps a name list that merely mentions a role word as names: %s", (text) => {
     expect(detectFormat(text)).toBe("names");
@@ -252,18 +252,18 @@ describe("importAny", () => {
 
 describe("normalizeRoster", () => {
   it("gives duplicate and unshareable ids fresh ones and keeps the rest", () => {
-    const [jane, bob] = roster();
-    if (!(jane && bob)) throw new Error("expected two authors");
-    const result = normalizeRoster([jane, { ...bob, id: jane.id }, { ...bob, id: "has spaces" }]);
-    expect(result[0]?.id).toBe(jane.id);
+    const [grace, charles] = roster();
+    if (!(grace && charles)) throw new Error("expected two authors");
+    const result = normalizeRoster([grace, { ...charles, id: grace.id }, { ...charles, id: "has spaces" }]);
+    expect(result[0]?.id).toBe(grace.id);
     expect(new Set(result.map((a) => a.id)).size).toBe(3);
     expect(result.every((a) => /^[\w-]{1,64}$/.test(a.id))).toBe(true);
   });
 
   it.each(["constructor", "toString", "__proto__"])("replaces the id %s, which plain objects already hold", (id) => {
-    const [jane] = roster();
-    if (!jane) throw new Error("expected an author");
-    expect(normalizeRoster([{ ...jane, id }])[0]?.id).not.toBe(id);
+    const [grace] = roster();
+    if (!grace) throw new Error("expected an author");
+    expect(normalizeRoster([{ ...grace, id }])[0]?.id).not.toBe(id);
     expect(() => fromSharePayload(JSON.stringify({ v: 2, a: [{ i: id, n: "Grace Hopper", s: [] }] }))).toThrow();
   });
 
@@ -279,9 +279,9 @@ describe("normalizeRoster", () => {
     ["stale", { firstName: "Jan", middleName: "", surname: "Smit" }],
     ["partial-word", { firstName: "Ja", middleName: "", surname: "th" }],
   ])("re-parses %s name parts instead of keeping them", (_, parts) => {
-    const [jane] = roster();
-    if (!jane) throw new Error("expected an author");
-    expect(normalizeRoster([{ ...jane, ...parts }])[0]).toMatchObject({
+    const [grace] = roster();
+    if (!grace) throw new Error("expected an author");
+    expect(normalizeRoster([{ ...grace, ...parts }])[0]).toMatchObject({
       firstName: "Grace",
       surname: "Hopper",
       initials: "GH",
@@ -289,11 +289,11 @@ describe("normalizeRoster", () => {
   });
 
   it("returns an unchanged row as the same object", () => {
-    const [jane, bob] = normalizeRoster(roster());
-    if (!(jane && bob)) throw new Error("expected two authors");
-    const [sameJane, renamedBob] = normalizeRoster([jane, { ...bob, name: "Bob Black" }]);
-    expect(sameJane).toBe(jane);
-    expect(renamedBob).toMatchObject({ name: "Bob Black", surname: "Black" });
+    const [grace, charles] = normalizeRoster(roster());
+    if (!(grace && charles)) throw new Error("expected two authors");
+    const [sameGrace, renamedCharles] = normalizeRoster([grace, { ...charles, name: "Dorothy Hodgkin" }]);
+    expect(sameGrace).toBe(grace);
+    expect(renamedCharles).toMatchObject({ name: "Dorothy Hodgkin", surname: "Hodgkin" });
   });
 
   it("refuses more than MAX_AUTHORS rows, and takes exactly that many", () => {
@@ -325,16 +325,16 @@ describe("normalizeRoster", () => {
   });
 
   it("rebuilds a row whose contributions are out of order or that has a stray field", () => {
-    const [jane] = normalizeRoster(roster());
-    if (!jane) throw new Error("expected an author");
-    const [first, second, ...rest] = jane.contributions;
+    const [grace] = normalizeRoster(roster());
+    if (!grace) throw new Error("expected an author");
+    const [first, second, ...rest] = grace.contributions;
     if (!(first && second)) throw new Error("expected contributions");
-    const swapped = { ...jane, contributions: [second, first, ...rest] };
+    const swapped = { ...grace, contributions: [second, first, ...rest] };
     const [rebuilt] = normalizeRoster([swapped]);
     expect(rebuilt).not.toBe(swapped);
-    expect(rebuilt?.contributions.map((c) => c.role)).toEqual(jane.contributions.map((c) => c.role));
+    expect(rebuilt?.contributions.map((c) => c.role)).toEqual(grace.contributions.map((c) => c.role));
 
-    const stray = { ...jane, legacy: true } as typeof jane;
+    const stray = { ...grace, legacy: true } as typeof grace;
     expect(normalizeRoster([stray])[0]).not.toHaveProperty("legacy");
   });
 });
