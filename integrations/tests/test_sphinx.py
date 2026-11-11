@@ -1,6 +1,7 @@
 """Build real Sphinx projects against the published CLI entry point."""
 
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -150,6 +151,20 @@ def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
     assert 'font-size="21"' in svg
     assert ">Marie Curie</tspan>" in svg
     assert "Noto Serif" in svg
+
+
+def test_heatmap_too_small_to_print_is_a_build_warning(tmp_path, project):
+    app, warnings, source = project(".. credit-heatmap:: contributors.json\n")
+    data = json.loads((source / "contributors.json").read_text(encoding="utf-8"))
+    first = data["authors"][0]
+    data["authors"] = [
+        {**first, "id": f"curie-{i}", "name": f"Marie Curie {i}", "surname": f"Curie {i}", "initials": f"MC{i}"}
+        for i in range(40)
+    ]
+    (source / "contributors.json").write_text(json.dumps(data), encoding="utf-8")
+    app.build()
+    assert "smallest labels print at about" in warnings.getvalue()
+    assert "index.rst" in warnings.getvalue()
 
 
 @pytest.mark.parametrize("position", ["auto", "right", "bottom"])

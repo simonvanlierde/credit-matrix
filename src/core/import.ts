@@ -109,7 +109,8 @@ export async function importAny(
     convertCitation?: (text: string, format: "cff" | "zenodo") => Promise<string>;
   } = {},
 ): Promise<Imported> {
-  if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES) throw new Error("Use a file smaller than 1 MB.");
+  if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES)
+    throw new Error(`Use a file smaller than ${MAX_IMPORT_BYTES / 1_000_000} MB.`);
   const trimmed = text.trim();
   const exportOnly = exportOnlyFormat(trimmed);
   if (exportOnly) throw new ExportOnlyError(exportOnly);
@@ -151,7 +152,8 @@ export async function importAny(
 
 /** Citation metadata supplies names and ORCIDs, never contribution scores. */
 function fromCodemeta(text: string): Author[] {
-  if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES) throw new Error("Use a file smaller than 1 MB.");
+  if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES)
+    throw new Error(`Use a file smaller than ${MAX_IMPORT_BYTES / 1_000_000} MB.`);
   const data = JSON.parse(text);
   const authors = readPeople(data?.author, "author");
   // Zenodo and CodeMeta often list a person as both author and contributor: keep the author row.

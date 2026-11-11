@@ -7,7 +7,14 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
-import { CREDIT_ROLES, createAuthor, generateStatement, HeatmapOptionError, heatmapDescription } from "credit-matrix";
+import {
+  CREDIT_ROLES,
+  createAuthor,
+  generateStatement,
+  HeatmapOptionError,
+  heatmapDescription,
+  heatmapPrintWarning,
+} from "credit-matrix";
 import { createFigureRenderer } from "credit-matrix/figures";
 import {
   AVAILABLE_LOCALES,
@@ -201,6 +208,8 @@ async function renderHeatmap(node, vfile) {
     vfile.message(`credit-heatmap: ${error.message}${fontHint}`, node).fatal = true;
     return false;
   }
+  const warning = heatmapPrintWarning(svg);
+  if (warning) vfile.message(`credit-heatmap: ${warning}`, node);
   const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
   const dir = join(dirname(path), "_credit_matrix");
   mkdirSync(dir, { recursive: true });

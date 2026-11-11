@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CREDIT_ROLES, createAuthor } from "@/core";
+import { MAX_AUTHORS } from "@/core/author";
 import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import type { LocaleCode } from "@/core/i18n";
 import { DEFAULT_HEATMAP_SETTINGS, repairHeatmapSettings } from "@/lib/heatmap-settings";
@@ -296,7 +297,7 @@ describe("contribution store", () => {
     });
 
     it("rejects a load of more contributors than a draft can hold", () => {
-      const authors = Array.from({ length: 201 }, (_, i) => createAuthor(`Author ${i}`));
+      const authors = Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => createAuthor(`Author ${i}`));
       expect(() => store().loadAuthors(authors)).toThrow(/at most/);
     });
   });
@@ -421,11 +422,11 @@ describe("contribution store", () => {
 
     it("refuses a restore into a list that refilled to the cap", () => {
       const spare = createAuthor("Spare Author");
-      store().loadAuthors(Array.from({ length: 200 }, (_, i) => createAuthor(`Author ${i}`)));
+      store().loadAuthors(Array.from({ length: MAX_AUTHORS }, (_, i) => createAuthor(`Author ${i}`)));
 
       // Without the guard the splice pushes past the cap and the reducer throws.
       expect(store().restoreAuthor(spare, 0)).toBe(false);
-      expect(store().authors).toHaveLength(200);
+      expect(store().authors).toHaveLength(MAX_AUTHORS);
       expect(store().addAuthor("One Too Many")).toBeNull();
     });
 

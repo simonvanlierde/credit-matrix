@@ -6,8 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- The CLI, the MyST, Sphinx and Quarto plugins and Pandoc warn when a heatmap's labels would print
+  under 6 pt on a full journal page, which happens from about 25 contributors. `heatmapPrintWarning`
+  returns that warning. See [final-size readability checks](integrations/heatmap.md#final-size-readability-checks).
+
 ### Changed
 
+- A draft holds up to 400 contributors, up from 200, and imports, share links and the element take
+  files up to 2 MB, up from 1 MB, so a full draft exports and imports back in every format.
 - The favicon, app icons and social card use the warm paper and charcoal ink of the 0.12.0 theme,
   and the mark draws each column in one contributor's hue, as the grid does.
 - Search results and link previews describe asking co-authors to check their own row, and the

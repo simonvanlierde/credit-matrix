@@ -219,7 +219,7 @@ describe("<credit-matrix>", () => {
     try {
       for (const src of ["said.json", "big.json"]) {
         const root = await mount(`<credit-matrix src="${src}"></credit-matrix>`);
-        expect(root.querySelector("[role=alert]")?.textContent).toBe(`Could not load ${src}: it is larger than 1 MB.`);
+        expect(root.querySelector("[role=alert]")?.textContent).toBe(`Could not load ${src}: it is larger than 2 MB.`);
       }
     } finally {
       vi.unstubAllGlobals();

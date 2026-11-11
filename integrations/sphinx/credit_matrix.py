@@ -9,7 +9,10 @@ from xml.etree import ElementTree
 from docutils import nodes
 from docutils.parsers.rst import directives
 from sphinx.application import Sphinx
+from sphinx.util import logging
 from sphinx.util.docutils import SphinxDirective
+
+logger = logging.getLogger(__name__)
 
 
 def statement_format(value: str) -> str:
@@ -51,6 +54,10 @@ class CreditStatement(SphinxDirective):
             raise self.error(f"CRediT rendering failed: {error.stderr.strip()}") from error
         except (OSError, subprocess.TimeoutExpired) as error:
             raise self.error(f"Cannot run the credit-matrix CLI: {error}") from error
+        # The CLI's warnings (a heatmap that prints too small) become build warnings on this directive.
+        for line in result.stderr.splitlines():
+            if line.strip():
+                logger.warning(line.strip(), location=self.get_location())
         return result.stdout
 
 

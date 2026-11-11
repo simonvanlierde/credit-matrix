@@ -241,6 +241,18 @@ it("reports unsupported contributor glyphs in one line instead of using a system
   ]);
 });
 
+it("warns, without failing the build, when the heatmap would print too small on a page", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-small-print-"));
+  const path = join(dir, "index.md");
+  const people = Array.from({ length: 40 }, (_, i) => `  - name: Grace Hopper ${i}\n    roles: [Software]\n`);
+  writeFileSync(path, `---\nauthors:\n${people.join("")}---\n`);
+  const { image, messages } = await heatmap(path);
+  expect(image?.url).toMatch(/\.svg$/);
+  expect(messages).toHaveLength(1);
+  expect(messages[0]?.message).toMatch(/^credit-heatmap: the heatmap's smallest labels print at about/);
+  expect(messages[0]?.fatal).toBeUndefined();
+});
+
 it("forwards legend placement and marks without changing MyST publication defaults", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-legend-"));
   const path = join(dir, "index.md");

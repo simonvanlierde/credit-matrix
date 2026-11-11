@@ -227,6 +227,21 @@ def test_heatmap_uses_shared_renderer_and_embeds_accessible_image(tmp_path, leve
     assert "Noto Serif" in svg
 
 
+def test_heatmap_too_small_to_print_warns_on_stderr(tmp_path):
+    people = [{"name": f"Grace Hopper {i}", "roles": [{"software": "lead"}]} for i in range(40)]
+    source = f"---\n{json.dumps({'author': people, 'credit-matrix': {'heatmap': True}})}\n---\n\n# Methods\n"
+    result = subprocess.run(
+        [pypandoc.get_pandoc_path(), "--to=html", f"--extract-media={tmp_path}", f"--lua-filter={FILTER}"],
+        input=source,
+        capture_output=True,
+        text=True,
+        check=True,
+        env={**os.environ, **LOCAL_CLI},
+    )
+    assert "smallest labels print at about" in result.stderr
+    assert next(tmp_path.rglob("*.svg"))
+
+
 @pytest.mark.parametrize("position", ["auto", "right", "bottom"])
 @pytest.mark.parametrize("marks", [True, False])
 def test_heatmap_forwards_legend_placement_and_optional_marks(tmp_path, position, marks):

@@ -200,7 +200,12 @@ The existing CI Playwright job runs them on Chromium for PRs and all three engin
 Run locally with `pnpm exec playwright test e2e/heatmap-print.spec.ts`. A dense-team regression
 also confirms that a valid figure can be too small at column width, or too tall after transposition.
 The app's small-print advisory uses the actual smallest exported text rather than the selected
-nominal font size. Increasing PNG DPI does not increase the printed text size.
+nominal font size, at the width you chose.
+The CLI and the document plugins warn as well: on stderr for the CLI, Quarto and Pandoc, and as a
+build warning in MyST and Sphinx. They measure the figure scaled to fit 183 × 170 mm, and warn
+below 6 pt. That happens from about 25 contributors, in either orientation. A larger team's
+figure needs a page of its own, such as a supplementary figure. Typst has no build warnings, so the
+Typst package does not warn. Increasing PNG DPI does not increase the printed text size.
 
 These checks cover the reference fixtures and installed browser fonts. They do not replace checking
 the final manuscript, a native reader's review, a physical printed proof, or the publisher's font rules.

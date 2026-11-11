@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { type Author, createAuthor, toJson } from "@/core";
+import { MAX_AUTHORS } from "@/core/author";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import { fetchOrcidKeys, type OrcidKey } from "@/core/orcid-proof";
 import { ConverterUnavailableError, convertCitation } from "@/lib/citation-import";
@@ -513,12 +514,14 @@ describe("citation converter", () => {
   const paste = () => fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: cff } });
 
   it("names the converter only when it rejected; other failures use their own message", async () => {
-    const many = JSON.stringify({ author: Array.from({ length: 201 }, (_, i) => ({ name: `Person ${i} Name` })) });
+    const many = JSON.stringify({
+      author: Array.from({ length: MAX_AUTHORS + 1 }, (_, i) => ({ name: `Person ${i} Name` })),
+    });
     vi.mocked(convertCitation).mockResolvedValue(many);
     renderModal();
     paste();
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
-    expect(await screen.findByText(/200/)).toBeTruthy();
+    expect(await screen.findByText(new RegExp(String(MAX_AUTHORS)))).toBeTruthy();
     expect(screen.queryByText(english.errCitationConverter)).toBeNull();
   });
 

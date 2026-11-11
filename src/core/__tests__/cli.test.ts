@@ -37,6 +37,18 @@ it("exports a binary PDF with embedded figure fonts", async () => {
   expect(svg).toContain("<text");
 });
 
+it("warns on stderr when a heatmap would print too small on a full page, and only then", async () => {
+  const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  const rows = Array.from({ length: 40 }, (_, i) => `Grace Hopper ${i},100,`).join("\n");
+  const large = file("large.csv", `Name,Conceptualization,Software\n${rows}\n`);
+  for (const to of ["svg", "pdf"]) await runCommand(["convert", large, "--to", to]);
+  expect(stderr.mock.calls.flat().filter((text) => String(text).includes("smallest labels"))).toHaveLength(2);
+  stderr.mockClear();
+  await run(["convert", csv, "--to", "svg"]);
+  expect(stderr.mock.calls.flat().join(" ")).not.toContain("smallest labels");
+  stderr.mockRestore();
+});
+
 it("names the characters the figure fonts cannot draw, in one line", async () => {
   const source = file("unsupported-script.csv", "Name,Software\nحسن,100\n");
   for (const to of ["svg", "pdf"])

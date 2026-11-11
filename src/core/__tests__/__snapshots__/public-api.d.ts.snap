@@ -1138,6 +1138,12 @@ export declare function toQuarto(authors: Author[], { yesNo }?: {
  * MyST has no contribution levels. Non-authors are omitted, never added to the byline.
  */
 export declare function toMyst(authors: Author[]): string;
+/**
+ * A warning when a heatmap scaled to fit a full journal page prints its smallest label under 6 pt,
+ * or null. The CLI writes it to stderr and the document plugins show it as a
+ * build warning; the app shows its own, translated, at the width the user chose.
+ */
+export declare function heatmapPrintWarning(svg: string): string | null;
 /** Thrown by `fromJson` for an export stamped by a newer build. */
 export declare class NewerVersionError extends Error {
   constructor(version: number);

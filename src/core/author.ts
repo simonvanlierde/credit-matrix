@@ -2,9 +2,10 @@ import * as z from "zod/mini";
 import type { CreditRoleName } from "./credit-roles";
 import { CREDIT_ROLES } from "./credit-roles";
 
-export const MAX_AUTHORS = 200;
+export const MAX_AUTHORS = 400;
 export const MAX_AUTHOR_NAME_LENGTH = 500;
-export const MAX_IMPORT_BYTES = 1_000_000;
+/** Caps every import, fetch and share link; a 400-contributor JATS export is about 1 MB. */
+export const MAX_IMPORT_BYTES = 2_000_000;
 /**
  * A contributor or draft id that fits in a share link. Never a name
  * `Object.prototype` already has ("constructor", "__proto__"): asks are kept in

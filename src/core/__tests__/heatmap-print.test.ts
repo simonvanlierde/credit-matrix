@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildHeatmapSvg } from "@/core/export/heatmap-svg";
-import { createAuthor } from "@/core/parse-authors";
-import { heatmapPrintSize, svgDimensions } from "./heatmap-print";
+import { heatmapPrintSize, heatmapPrintWarning, svgDimensions } from "../export/heatmap-print";
+import { buildHeatmapSvg } from "../export/heatmap-svg";
+import { createAuthor } from "../parse-authors";
 
 const figure = '<svg width="96" height="192"><text font-size="12">Axis</text><text font-size="8">Key</text></svg>';
 
@@ -14,7 +14,7 @@ describe("final-size heatmap measurements", () => {
   });
 
   it("uses the generated legend, omits a hidden legend and handles empty figures", () => {
-    const authors = [createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] })];
+    const authors = [createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] })];
     for (const scale of [1, 2]) {
       for (const legend of [true, false]) {
         const svg = buildHeatmapSvg(authors, { legend, scale });
@@ -44,4 +44,23 @@ describe("final-size heatmap measurements", () => {
       expect(() => heatmapPrintSize(svg, 89)).toThrow(/text sizes/);
     },
   );
+
+  it.each([false, true])("warns when a team prints under 6 pt on a full page (horizontal: %s)", (horizontal) => {
+    const team = (n: number) =>
+      Array.from({ length: n }, (_, i) =>
+        createAuthor(`Rosalind Franklin ${i + 1}`, { contributions: [{ role: "Software", score: 100 }] }),
+      );
+    expect(heatmapPrintWarning(buildHeatmapSvg(team(10), { horizontal }))).toBeNull();
+    expect(heatmapPrintWarning(buildHeatmapSvg(team(40), { horizontal }))).toMatch(/about 4\.\d pt .*183 × 170 mm/);
+  });
+
+  it("fits a tall figure to the page height before measuring", () => {
+    // 96 × 960 px fitted to 170 mm tall is 17 mm wide, which prints its 12 px label at 6 pt.
+    const tall = '<svg width="96" height="960"><text font-size="12">Axis</text></svg>';
+    expect(heatmapPrintSize(tall, 17).minFontPt).toBeCloseTo(6.0, 1);
+    expect(heatmapPrintWarning(tall)).toBeNull();
+    expect(heatmapPrintWarning('<svg width="96" height="1000"><text font-size="12">Axis</text></svg>')).toMatch(
+      /about 5\.8 pt/,
+    );
+  });
 });

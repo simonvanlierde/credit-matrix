@@ -1,6 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: tests run in Node; zlib hand-builds hostile payloads
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
+import { MAX_IMPORT_BYTES } from "../author";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash, encodeShareHash } from "../share-link";
 import { toSharePayload } from "../share-payload";
@@ -112,7 +113,7 @@ describe("encodeShareHash", () => {
 
   it("refuses to build a link for a draft over the size cap", async () => {
     const [jane] = draft();
-    const huge = { ...jane, name: "x".repeat(1_000_001) } as NonNullable<typeof jane>;
+    const huge = { ...jane, name: "x".repeat(MAX_IMPORT_BYTES + 1) } as NonNullable<typeof jane>;
     await expect(encodeShareHash({ authors: [huge] })).rejects.toThrow(/too large to share/);
   });
 });
