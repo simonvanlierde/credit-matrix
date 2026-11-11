@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
-import { MAX_AUTHORS } from "@/core/author";
+import { MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { createFigureRenderer } from "@/core/figures";
 import {
   AVAILABLE_LOCALES,
@@ -293,6 +293,19 @@ it("gives the app's deduplicated initials and keeps nonletter labels whole", asy
   for (const label of ["HL", "王小明", "AS", "ASm", "1234"]) expect(svg).toContain(`>${label}</tspan>`);
   expect(svg).not.toContain(">C</text>");
   expect(image?.alt).toContain("Hua Luogeng");
+});
+
+it("keeps one over-long name whole and still gives everyone else initials", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-long-name-"));
+  const path = join(dir, "index.md");
+  const long = `Ada ${"L".repeat(MAX_AUTHOR_NAME_LENGTH)}`;
+  writeFileSync(
+    path,
+    `---\nauthors:\n  - name: Grace Hopper\n    roles: [Software]\n  - name: ${long}\n    roles: [Software]\n---\n`,
+  );
+  const { svg } = await heatmap(path, { initials: true });
+  expect(svg).toContain(">GH</tspan>");
+  expect(svg).not.toContain(">Grace Hopper</tspan>");
 });
 
 it("keeps full names past the app's contributor cap instead of failing the build", async () => {

@@ -186,6 +186,7 @@ and the surname (skipping particles such as "van"), and an unspaced Chinese or J
 When two contributors share initials, the later one gets the next letters of the surname, as in
 the app ("AL", "ALa"). A contributor's own `initials` field wins, unless an earlier contributor
 set the same ones.
+Past the app's 420 contributors, MyST labels everyone with full names, while Typst keeps initials.
 
 ## Final-size readability checks
 

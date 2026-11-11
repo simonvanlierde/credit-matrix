@@ -87,7 +87,9 @@ const parser: XmlParser = {
   },
 };
 
-/** Throws on a tag left open, closed out of order, or cut off: what a truncated file looks like. */
+const MAX_XML_DEPTH = 256;
+
+/** Throws on a tag left open, closed out of order, cut off or nested past {@link MAX_XML_DEPTH}. */
 export function assertBalancedTags(xml: string): void {
   // One pass with indexOf, linear in the input: a regex with a repeated attribute group
   // backtracked cubically on "<<a<a…" and took a minute on 4,000 characters.
@@ -122,7 +124,8 @@ export function assertBalancedTags(xml: string): void {
       if (closing) {
         if (open.pop() !== name) throw new Error(`XML parse error: unexpected </${name}>.`);
       } else if (xml[j - 1] !== "/") {
-        open.push(name);
+        // Exports nest about 8 deep; linkedom slows superlinearly with depth (285,000 levels: 38 s).
+        if (open.push(name) > MAX_XML_DEPTH) throw new Error("XML parse error: elements nest too deep.");
       }
       i = j + 1;
     }

@@ -5,7 +5,7 @@ import { deduplicateAuthorInitials } from "../parse-authors";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 import { givenNamesOf, suffixOf } from "./xml";
-import { parseXml, readPerson, type XmlParser } from "./xml-import";
+import { parseXml, readPerson, readUpToCap, type XmlParser } from "./xml-import";
 
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or
@@ -81,7 +81,7 @@ export function isCrossrefContributors(text: string): boolean {
  */
 export function fromCrossrefContributors(xml: string, { parser }: { parser?: XmlParser } = {}): Author[] {
   const doc = parseXml(xml, parser, "fromCrossrefContributors");
-  const authors = Array.from(doc.querySelectorAll("person_name")).flatMap((person) => {
+  const authors = readUpToCap(Array.from(doc.querySelectorAll("person_name")), (person) => {
     // Mirrors the JATS reader skipping nested contribs: a wrapper's own text would repeat its members, and the scan is quadratic.
     if (person.querySelector("person_name")) return [];
     const roles = Array.from(person.querySelectorAll("role"));

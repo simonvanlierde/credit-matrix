@@ -546,17 +546,30 @@ describe("the XML tag-balance check", () => {
     ['<a x="1>', "a tag is cut off"],
     ["<a><!-- open", "a tag is cut off"],
     ["<a>1 < 2</a>", "a tag is cut off"],
+    ["<a <b/>", "a tag is cut off"],
+    ["<a>".repeat(257), "elements nest too deep"],
   ])("refuses %s", (xml, message) => {
     expect(() => assertBalancedTags(xml)).toThrow(message);
   });
 
-  // Each took from seconds to minutes with the old regex (4,000 characters of "<a" took 57 s).
+  // Sized so the old regex takes 10 to 15 s on each and the scanner a few ms. A wall-clock bound, not
+  // vitest's timeout: synchronous code finishes before a timeout can fire.
   it.each([
-    `<${"<a".repeat(200_000)}`,
-    "<!DOCTYPE".repeat(100_000),
-    "<!--".repeat(200_000),
+    `<${"<a".repeat(2_500)}`,
+    "<!DOCTYPE".repeat(50_000),
+    "<!--".repeat(80_000),
     `<a ${'x="1" '.repeat(100_000)}`,
-  ])("refuses a hostile file in linear time (%#)", { timeout: 2_000 }, (xml) => {
+  ])("refuses a hostile file in linear time (%#)", (xml) => {
+    const start = performance.now();
     expect(() => assertBalancedTags(xml)).toThrow("a tag is cut off");
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+
+  it("refuses deep nesting before linkedom reads it", () => {
+    const start = performance.now();
+    expect(() => assertBalancedTags(`${"<a>".repeat(285_000)}${"</a>".repeat(285_000)}`)).toThrow(
+      "elements nest too deep",
+    );
+    expect(performance.now() - start).toBeLessThan(500);
   });
 });

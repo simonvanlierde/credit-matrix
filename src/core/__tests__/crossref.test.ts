@@ -3,7 +3,7 @@ import { writeFileSync } from "node:fs";
 import process from "node:process";
 import { DOMParser as LinkedomParser } from "linkedom";
 import { describe, expect, it, vi } from "vitest";
-import { activeContributions } from "../author";
+import { activeContributions, MAX_AUTHORS } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromCrossrefContributors, isCrossrefContributors, toCrossrefContributors } from "../export/crossref";
 import { detectFormat, importAny } from "../import";
@@ -265,4 +265,13 @@ describe("fromCrossrefContributors display name", () => {
     const author = createAuthor("Hopper, Grace");
     expect(fromCrossrefContributors(toCrossrefContributors([author])).map((a) => a.name)).toEqual(["Grace Hopper"]);
   });
+});
+
+it("reads no more than one person past the contributor cap, which every caller then refuses", () => {
+  const people = Array.from(
+    { length: MAX_AUTHORS + 50 },
+    (_, i) =>
+      `<person_name sequence="additional"><given_name>Marie</given_name><surname>Curie${i}</surname></person_name>`,
+  ).join("");
+  expect(fromCrossrefContributors(`<contributors>${people}</contributors>`)).toHaveLength(MAX_AUTHORS + 1);
 });

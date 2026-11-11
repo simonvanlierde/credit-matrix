@@ -25,7 +25,16 @@ export {
   settledAt,
 } from "./ask";
 export type { Author, Contribution, ContributionLevel, ContributorType } from "./author";
-export { AuthorSchema, ContributionSchema, isValidOrcid, normalizeOrcid, scoreToLevel } from "./author";
+export {
+  AuthorSchema,
+  ContributionSchema,
+  isValidOrcid,
+  MAX_AUTHOR_NAME_LENGTH,
+  MAX_AUTHORS,
+  MAX_IMPORT_BYTES,
+  normalizeOrcid,
+  scoreToLevel,
+} from "./author";
 export type { CreditRoleName } from "./credit-roles";
 export { CREDIT_ROLES, getRoleByName } from "./credit-roles";
 export type { CodemetaAttribution, CodemetaPerson, CodemetaRole } from "./export/codemeta";

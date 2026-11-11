@@ -331,7 +331,7 @@ holds its exact shape. By entry point:
 
 - `credit-matrix`
   - Model: `Author`, `Contribution`, `ContributionLevel`, `ContributorType`, `AuthorSchema`,
-    `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`
+    `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`, `MAX_AUTHORS`, `MAX_AUTHOR_NAME_LENGTH`, `MAX_IMPORT_BYTES`
   - Roles: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
   - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
   - Statements: `generateStatement`, `statementSpans`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`,

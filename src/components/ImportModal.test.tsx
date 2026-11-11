@@ -452,6 +452,16 @@ describe("a pasted CRediT statement", () => {
     await review();
     expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "120,000"))).toBeTruthy();
   });
+
+  it("refuses a long statement of short lines without rescanning it per line", async () => {
+    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
+    // 400 kB of one-letter lines took 18 s when each line rescanned everything joined so far.
+    paste(`AB: conceptualization.\n${"A\n".repeat(200_000)}`);
+    const start = performance.now();
+    await review();
+    expect(performance.now() - start).toBeLessThan(2_000);
+    expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "120,000"))).toBeTruthy();
+  });
 });
 
 describe("deposited DOI roles", () => {

@@ -18,6 +18,7 @@ See [deploying](docs/deploy.md).
   until you silence it. See [final-size readability checks](integrations/heatmap.md#final-size-readability-checks).
 - `NAME_PARTICLES` and `NAME_SUFFIXES` export the name particles ("van", "de la") and generational
   suffixes ("Jr.") that the parser uses for initials, so another implementation can follow them.
+- `MAX_AUTHORS`, `MAX_AUTHOR_NAME_LENGTH` and `MAX_IMPORT_BYTES` export the caps every reader enforces.
 
 ### Changed
 
