@@ -27,13 +27,6 @@ CRediT Matrix is an independent project. It is not affiliated with or endorsed b
 
 **Try it:** [credit.duinlab.nl](https://credit.duinlab.nl)
 
-Cloudflare's server-side analytics estimated **5,330 page views** for `credit.duinlab.nl`
-from 8 October through 6 November 2026 (UTC), queried on 7 November. This counts successful
-HTML responses, including bots and repeat loads; it does not count people or saved drafts.
-The sampled GraphQL `httpRequestsAdaptiveGroups` query filtered this hostname, `requestSource: "eyeball"`,
-`edgeResponseContentTypeName: "html"` and HTTP status 200–299, following
-[Cloudflare's page-view definition](https://developers.cloudflare.com/analytics/account-and-zone-analytics/zone-analytics/).
-
 ![The CRediT Matrix workspace with sample data for three contributors. On the left, the contributor list gives each person an initials chip in their own colour. In the middle, the contribution grid shows the 14 CRediT roles as rows and one column per person; filled cells in that person's colour show one, two or three dots for Supporting, Equal and Lead, above a key. On the right, the Team tab lists each contributor as not asked yet, with a Copy message button per person and an Ask everyone not yet asked button](docs/screenshots/hero.png)
 
 ## Quick start
