@@ -40,6 +40,6 @@
   Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'
 
 # /citesync/* (the runtime and the pinned wheels) keeps Cloudflare's default
-# Cache-Control (max-age=0, must-revalidate, with an ETag): the paths carry no
+# Cache-Control (max-age=0, must-revalidate, with an ETag): the paths have no
 # version, so marking them immutable would pin a stale runtime after an upgrade.
 # Cloudflare serves .wasm as application/wasm and .mjs as JavaScript by extension.

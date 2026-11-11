@@ -6,7 +6,7 @@
  * Stored as a const tuple so the role names are narrowed to their literal
  * string types, so callers can use `CreditRoleName` as a union type.
  *
- * Each role carries its canonical NISO `id` (the official role UUID) so the
+ * Each role has its canonical NISO `id` (the official role UUID) so the
  * identifiers travel with exported data. Crossref adds CRediT to its metadata
  * schema in 2026 and these UUIDs are the machine-readable role keys.
  */
@@ -287,8 +287,8 @@ interface HeatmapSvgOptions {
 }
 /**
  * The heatmap's text alternative: the by-author contribution statement, in the
- * same language and with the same levels as the figure. The SVG carries it as
- * `<desc>`; a PNG export can carry it as a Description text chunk.
+ * same language and with the same levels as the figure. The SVG stores it as
+ * `<desc>`; a PNG export can store it as a Description text chunk.
  */
 declare function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string;
 /**
@@ -1018,7 +1018,7 @@ export declare function askStep(state: AskState, event: AskEvent): {
  * stored reply; the draft id is not compared, because an export does not keep
  * it. `importAnswers` later compares the row's name and iD with the row the
  * answer lands on. A failing sign-in is dropped, the answer stays. `keys` is called only
- * when some reply carries a sign-in; null from it moves every sign-in to
+ * when some reply has a sign-in; null from it moves every sign-in to
  * `provenance.uncheckedOrcid`, so a later check can still verify it.
  */
 export declare function recheckSignIns(asks: Readonly<Record<string, Ask>>, keys: () => Promise<readonly OrcidKey[] | null>): Promise<Record<string, Ask>>;
@@ -1028,7 +1028,7 @@ export declare function settledAt(reply: Reply): number;
  * Apply a patch to plain values. Rows a patch names but the roster no longer
  * holds are skipped, and so are its asks for them: a late undo never brings
  * back an ask for a removed row. A rename re-derives the name parts (unless
- * the patch carries them) and the initials; untouched rows stay the same objects.
+ * the patch has them) and the initials; untouched rows stay the same objects.
  */
 export declare function applyPatch(state: AskState, patch: Patch): AskState;
 /**
@@ -1038,7 +1038,7 @@ export declare function applyPatch(state: AskState, patch: Patch): AskState;
  * replaces the held one for the row it matched, and answers for rows that
  * matched nobody are dropped. Held answers for matched rows the file has none
  * for are kept. `selfId` follows the same rule. `asks` is undefined when the
- * file carries none, and `selfId` when it does not survive. A filed answer's
+ * file has none, and `selfId` when it does not survive. A filed answer's
  * checked sign-in gets `provenance.signedElsewhere` when it was given for
  * another row id than the file row's, or another name or iD than the row it
  * lands on.
@@ -1223,7 +1223,7 @@ export declare function fromTenzing(text: string): Author[];
 /**
  * Serialize authors to a JATS4R-compliant XML string.
  * Output mirrors the format produced by the original Python app.
- * With `yesNo` (the Yes/No input mode) and only 0/100 scores, roles carry no
+ * With `yesNo` (the Yes/No input mode) and only 0/100 scores, roles have no
  * `degree-contribution`: the author never chose a level, so writing every role
  * as "lead" would claim one.
  */
@@ -1266,7 +1266,7 @@ interface StatementOptions {
    * `CRediT:` prefix plus each leading label (the role in a by-role statement,
    * the contributor in a by-author one) is wrapped in `<strong>`.
    *
-   * Both forms carry identical wording, because they travel together on the
+   * Both forms have identical wording, because they travel together on the
    * clipboard and the recipient's editor picks one.
    */
   asHtml?: boolean;
@@ -1389,7 +1389,7 @@ export declare function parseAuthorText(text: string): Author[];
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 interface ShareData {
   authors: Author[];
-  /** "" when the payload carries none */
+  /** "" when the payload has none */
   title: string;
   /** contributor id the link is addressed to */
   claimId: string | null;

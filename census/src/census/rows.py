@@ -46,7 +46,7 @@ def rows_for(pmcid: str, stratum: str, xml: bytes, version: int | None = None) -
 
 def rows_for_element(element: etree._Element, stratum: str, unit: str) -> Rows | None:
     """Rows for one <article> of a bulk file, or None when it has no PMCID to key it by. The file's
-    hash, in `units`, pins the XML; articles carry the file's name instead of their own hash."""
+    hash, in `units`, pins the XML; articles store the file's name instead of their own hash."""
     ids = {i.get("pub-id-type"): (i.text or "").strip() for i in element.iterfind("front/article-meta/article-id")}
     pmcid = ids.get("pmcid") or (f"PMC{ids['pmc']}" if ids.get("pmc", "").isdigit() else "")
     if not pmcid.startswith("PMC"):

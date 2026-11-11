@@ -72,7 +72,7 @@ export async function replyNonce(payload: string): Promise<string> {
 export function orcidSignInUrl({ redirectUri, nonce, state }: { redirectUri: string; nonce: string; state: string }) {
   const params = new URLSearchParams({
     client_id: ORCID_CLIENT_ID,
-    // ORCID's implicit flow: the token response carries the id_token when the scope is openid.
+    // ORCID's implicit flow: the token response includes the id_token when the scope is openid.
     response_type: "token",
     scope: "openid",
     redirect_uri: redirectUri,

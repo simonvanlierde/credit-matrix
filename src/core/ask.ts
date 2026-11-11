@@ -72,7 +72,7 @@ export const AskSchema = /* @__PURE__ */ (() =>
   z.looseObject({
     /** When the ask link was copied, in epoch milliseconds. */
     sentAt: z.number(),
-    /** Whether the link carried the asker's guess, or an empty row. */
+    /** Whether the link included the asker's guess, or an empty row. */
     prefilled: z.boolean(),
     reply: z.optional(ReplySchema),
   }))();
@@ -376,7 +376,7 @@ export function askStep(state: AskState, event: AskEvent): { outcome: Outcome; p
  * stored reply; the draft id is not compared, because an export does not keep
  * it. `importAnswers` later compares the row's name and iD with the row the
  * answer lands on. A failing sign-in is dropped, the answer stays. `keys` is called only
- * when some reply carries a sign-in; null from it moves every sign-in to
+ * when some reply has a sign-in; null from it moves every sign-in to
  * `provenance.uncheckedOrcid`, so a later check can still verify it.
  */
 export async function recheckSignIns(
@@ -454,7 +454,7 @@ function setValue(row: Answer, target: Target, value: number | boolean): void {
  * Apply a patch to plain values. Rows a patch names but the roster no longer
  * holds are skipped, and so are its asks for them: a late undo never brings
  * back an ask for a removed row. A rename re-derives the name parts (unless
- * the patch carries them) and the initials; untouched rows stay the same objects.
+ * the patch has them) and the initials; untouched rows stay the same objects.
  */
 export function applyPatch(state: AskState, patch: Patch): AskState {
   let renamed = false;
@@ -500,7 +500,7 @@ function rederiveInitials(authors: readonly Author[]): Author[] {
  * replaces the held one for the row it matched, and answers for rows that
  * matched nobody are dropped. Held answers for matched rows the file has none
  * for are kept. `selfId` follows the same rule. `asks` is undefined when the
- * file carries none, and `selfId` when it does not survive. A filed answer's
+ * file has none, and `selfId` when it does not survive. A filed answer's
  * checked sign-in gets `provenance.signedElsewhere` when it was given for
  * another row id than the file row's, or another name or iD than the row it
  * lands on.
@@ -564,7 +564,7 @@ function signedHere(proof: OrcidProof, fileRow: Author, landing: Author): boolea
 /**
  * The paper title a sign-in was given for, when it differs from `draftTitle`
  * after trimming and squashing whitespace. Null when the payload cannot be
- * read or carries no title. Exports carry no draft id, so this is how Review
+ * read or has no title. Exports have no draft id, so this is how Review
  * shows a true sign-in copied in from another draft.
  */
 export function signedForTitle(proof: OrcidProof, draftTitle: string): string | null {

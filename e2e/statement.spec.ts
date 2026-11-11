@@ -69,7 +69,7 @@ test("in a Levels draft, the level and the contributor behind shared initials ar
   const review = page.getByRole("region", { name: "Roles found in the statement" });
   await expect(review.getByText("1 role to add as Equal for 1 contributor.", { exact: false })).toBeVisible();
 
-  // Both selects carry a name and open, move and choose from the keyboard alone.
+  // Both selects have a name and open, move and choose from the keyboard alone.
   const level = review.getByRole("combobox", { name: "Level to assign" });
   const who = review.getByRole("combobox", { name: "MG" });
   await expect(who).toHaveText("Leave out");

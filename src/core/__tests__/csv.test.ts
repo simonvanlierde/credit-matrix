@@ -88,7 +88,7 @@ describe("CSV import/export", () => {
   });
 
   it("reads a CSV that starts with a UTF-8 byte order mark", () => {
-    // Downloads carry a BOM so Excel reads non-ASCII names as UTF-8.
+    // Downloads start with a BOM so Excel reads non-ASCII names as UTF-8.
     const [author] = parseAuthorText("José García");
     if (!author) throw new Error("expected author");
 

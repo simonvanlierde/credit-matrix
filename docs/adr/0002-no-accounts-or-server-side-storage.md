@@ -29,7 +29,7 @@ and Crossref.
 
 Multiple drafts are handled in the browser: a map of drafts in `localStorage`,
 with a picker. Asking co-authors works with a share link addressed to one
-person. It carries the draft in its fragment (the part after `#`) and comes
+person. It holds the draft in its fragment (the part after `#`) and comes
 back the same way.
 
 ## Rationale

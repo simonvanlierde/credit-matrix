@@ -126,7 +126,7 @@ export function StatementOutput() {
   const openDifferences = useAskSummary().open;
   // Co-author answers travel in the JSON export by default: it is the backup and device-move format.
   const [includeAnswers, setIncludeAnswers] = useState(true);
-  // Everyone asked, answered or not: the JSON export carries the ask history too.
+  // Everyone asked, answered or not: the JSON export includes the ask history too.
   const askedCount = authors.filter((author) => author.id in asks).length;
   const { translateRole, translateUi, translateInterfaceRole, describeRole, interfaceRoleLanguage, outputLanguage } =
     useCreditTranslators();
@@ -563,7 +563,7 @@ export function StatementOutput() {
                         {t("download")}
                       </button>
                     </div>
-                    {/* Only JSON carries asks, so the choice sits on its row. */}
+                    {/* Only JSON includes asks, so the choice sits on its row. */}
                     {value === "json" && askedCount > 0 && (
                       <label className="flex min-h-8 items-center gap-2 pr-2 text-xs text-on-surface-variant">
                         <input

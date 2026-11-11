@@ -41,11 +41,10 @@ support.
 
 ## Fonts and offline use
 
-Portable exports use regular Noto Sans and Noto Serif, plus Credit Figure JP, SC, Serif JP and Serif SC,
-derived from the corresponding Noto Japanese and Simplified Chinese families. The fonts cover all nine output languages.
-Contributor names can contain characters outside
-these fonts. Hangul, Thai, Arabic, Hebrew, Devanagari and emoji are outside this set.
-For such a name, the app names the characters and turns off the PDF download, since PDF
+Portable exports use regular Noto Sans and Noto Serif, plus Credit Figure JP, SC, Serif JP and
+Serif SC, derived from the corresponding Noto Japanese and Simplified Chinese families. The fonts
+cover all nine output languages. Contributor names can contain characters outside these fonts:
+Hangul, Thai, Arabic, Hebrew, Devanagari and emoji are not in the set. For such a name, the app names the characters and turns off the PDF download, since PDF
 must embed every glyph. Its preview, SVG and PNG draw those characters in the system font
 stack instead, so the SVG depends on the viewer's installed fonts and can look different on
 another computer. The CLI and the document plugins stop with `FigureFontError`. A JavaScript

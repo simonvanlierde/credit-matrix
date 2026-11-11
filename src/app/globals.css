@@ -396,7 +396,7 @@ body:has([data-census-page], [data-reading-page]) {
 /*
  * The two modals (welcome, import). Transform only on the panel: an opacity
  * fade lets an accessibility scan catch the dialog mid-transition at reduced
- * contrast, so the backdrop carries the fade instead. `allow-discrete` on
+ * contrast, so the backdrop fades instead. `allow-discrete` on
  * `display`/`overlay` is what lets the close play out rather than cut. Without
  * it the dialog is display:none the instant close() lands. Exit is quicker than
  * entrance; leaving should not cost as much as arriving.
@@ -576,7 +576,7 @@ html[data-welcome-skip] dialog[data-first-run]:not([open]) {
   }
 }
 
-/* Getting started: the next step's control carries a ring while it is next (GettingStarted.tsx).
+/* Getting started: the next step's control has a ring while it is next (GettingStarted.tsx).
    It pulses three times, then stays as a still ring; reduced motion gets the still ring only. */
 :root[data-guide="ask"] [data-guide-target="ask"],
 :root[data-guide="copy"] [data-guide-target="copy"] {

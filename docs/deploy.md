@@ -2,10 +2,11 @@
 
 ## Self-hosting
 
-`pnpm build` builds the `credit-matrix` package, compiles the Lingui catalogs, runs the Vite client and prerender builds, then
-[`scripts/postbuild.mjs`](../scripts/postbuild.mjs), which gives each exported page a `<meta>` CSP
-listing the hashes of that page's inline scripts and names the service worker's cache after the
-build. The result is a static export in `out/` that any static host can serve. The response
+`pnpm build` builds the `credit-matrix` package, compiles the Lingui catalogs, and runs the Vite
+client and prerender builds. Then [`scripts/postbuild.mjs`](../scripts/postbuild.mjs) gives each
+exported page a `<meta>` CSP listing the hashes of that page's inline scripts, and names the service
+worker's cache after the build. The result is a static export in `out/` that any static host can
+serve. The response
 headers, including the rest of the CSP, are in [`public/_headers`](../public/_headers).
 
 To host it on Cloudflare yourself, set your own domain in [`wrangler.jsonc`](../wrangler.jsonc):
@@ -34,7 +35,8 @@ On pull requests, the `preview` job deploys the build as its own Worker, `credit
 (from `wrangler.preview.jsonc`), and writes its `workers.dev` address to the job summary. That is the
 only address: the config sets `preview_urls: false`. A preview is live only while its PR is open and
 not a draft: a draft gets none, and the job re-reads the PR just before it deploys. The job runs in the
-`preview` environment with its own secrets, and skips on fork PRs, bot PRs such as Renovate's, and when the token is missing.
+`preview` environment with its own secrets. It skips fork PRs, bot PRs such as Renovate's, and any
+run where the token is missing.
 Previews are public and send `X-Robots-Tag: noindex`.
 
 `preview-retire.yml` runs when a PR closes, merges or turns draft. It deletes the PR's Worker
@@ -47,7 +49,7 @@ copy of the project-templates script, which is tested there.
 To retire previews by hand, run `preview-retire.yml` from the Actions tab. Give it PR numbers to
 retire those previews now, or leave the list empty to run the sweep.
 
-The token needs one permission, Account > Workers Scripts: Edit, and the account needs a
+The preview token needs one permission, Account > Workers Scripts: Edit, and the account needs a
 `workers.dev` subdomain. Production also sets `preview_urls: false`, so its versions get no preview
 URL.
 
@@ -81,16 +83,14 @@ through `.github/workflows/release-core.yml`. It runs in three jobs:
 
 With immutable releases enabled, publishing locks the tag and assets. If draft preparation fails
 after npm publishing succeeds, rerun only the failed job; rerunning the successful npm job would
-try to publish an existing version.
-
-The `release` job runs after `npm publish`. If it fails, re-run it within 7 days, while the
-tarball artifact is still retained, and delete any half-made draft release first.
+try to publish an existing version. Rerun the `release` job within 7 days, while the tarball
+artifact is still retained, and delete any half-made draft release first.
 
 To verify a downloaded release tarball, run
 `gh attestation verify credit-matrix-<version>.tgz --repo simonvanlierde/credit-matrix`.
 Add `--predicate-type https://cyclonedx.org/bom` to verify its SBOM attestation.
 
-It uses npm trusted publishing: npm accepts the workflow's GitHub OIDC token instead of an access
+The package uses npm trusted publishing: npm accepts the workflow's GitHub OIDC token instead of an access
 token, so no `NPM_TOKEN` secret exists, and the package page links each version to the workflow run
 that built it. On npmjs.com, the trusted publisher may publish but not move dist-tags, and the
 package refuses access tokens, so a version comes from this workflow or from the owner's own

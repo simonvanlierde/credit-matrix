@@ -125,7 +125,7 @@ describe("difference corner mark", () => {
   ];
 
   it("has an edge at 3:1 or more against every filled cell, per preset, tier and theme", () => {
-    // The flag fill alone sits near 1:1 on some Lead cells, so the edge carries the shape.
+    // The flag fill alone sits near 1:1 on some Lead cells, so the edge draws the shape.
     for (const { dark } of THEMES) {
       for (const hue of ALL_HUES) {
         for (const score of SCORES) {
@@ -153,7 +153,7 @@ describe("difference corner mark", () => {
 });
 
 describe("contributor hues", () => {
-  it("carry white initials at 4.5:1 or more on every chip", () => {
+  it("hold white initials at 4.5:1 or more on every chip", () => {
     for (const hue of CONTRIBUTOR_HUES) expect(contrastRatio(hue, "#ffffff"), hue).toBeGreaterThanOrEqual(4.5);
   });
 

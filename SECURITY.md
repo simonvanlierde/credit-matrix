@@ -35,7 +35,7 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
 
 - **No server holds your data.** The app is a static build
   ([ADR 0002](docs/adr/0002-no-accounts-or-server-side-storage.md)). Drafts live in your browser's
-  storage. Share and reply links carry the draft in the URL fragment, which browsers do not send
+  storage. Share and reply links hold the draft in the URL fragment, which browsers do not send
   with page requests, and the app clears it from the address bar once it has read it. Until then,
   scripts on the page can read it, and the Content Security Policy lets only the app's own scripts
   run. There are no accounts and no passwords to steal.
@@ -46,7 +46,7 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
   A CITATION.cff or .zenodo.json import runs the citesync converter and its Python runtime
   (Pyodide) in a worker, from files this site serves; the worker's own policy allows no other
   host, and the file never leaves the browser.
-- **ORCID sign-in.** A co-author who signs in leaves the page for orcid.org. The request carries a
+- **ORCID sign-in.** A co-author who signs in leaves the page for orcid.org. The request includes a
   hash of the reply, not the reply. ORCID returns a signed token in the URL fragment, and the app
   checks it in the browser against ORCID's public keys. The token then travels inside the reply link.
 - **Links and storage.** Anyone who gets a share or reply link can read the draft in it, so send

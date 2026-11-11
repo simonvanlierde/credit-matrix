@@ -101,7 +101,7 @@ In this repository, `pnpm validate:jats` runs both checks on every expected file
 - **JATS4R rules**, version 0.0.17, compiled with SchXslt2 and run with SaxonJS. Two findings are
   expected and ignored:
   - The rules ask for `<permissions>`. Licence and copyright belong to the publisher, so the
-    files do not carry them.
+    files do not include them.
   - The rules' term list spells one role "Formal Analysis". NISO's term is
     ["Formal analysis"](https://credit.niso.org/contributor-roles/formal-analysis/), and the files
     use NISO's spelling.

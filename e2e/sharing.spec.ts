@@ -130,7 +130,7 @@ test("a blank ask arrives empty; asking to check a guess sends the guess", async
 
   await pageA.getByRole("button", { name: "Actions for Bob White" }).click();
   // What travels is said in plain text, not only on hover.
-  await expect(pageA.getByText("The link carries the title, this person's name and iD.")).toBeVisible();
+  await expect(pageA.getByText("The link contains the title, this person's name and iD.")).toBeVisible();
   const blankLink = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White what they did" }));
   const guessLink = await copyFrom(pageA, pageA.getByRole("button", { name: "Ask Bob White to check your guess" }));
 

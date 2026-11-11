@@ -1,5 +1,5 @@
 """The summary tables `census report` prints. Research articles only: corrections, editorials and the
-like carry no statement."""
+like have no statement."""
 
 REPORTS = {
     "Markup style per publisher stratum": """

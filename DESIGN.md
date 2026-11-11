@@ -92,7 +92,7 @@ components:
 
 ## Overview
 
-The interface looks like a working document: scholarly, compact, and sure of itself. Warm paper,
+The interface looks like a working document: scholarly and compact. Warm paper,
 ink edges and a book-like serif give it the feel of a typeset page. The serif gives the manuscript
 output weight, and a hyperlegible sans-serif keeps the controls practical.
 
@@ -119,7 +119,7 @@ blue. Use contributor colors only to identify data.
 By default the grid colours each contributor in their own hue, by list position: their chip, the
 rule under their column name, their cells, and the mark on their phrase in the statement all share
 it. The eight hues in `CONTRIBUTOR_HUES` (`src/core/contributor-color.ts`) differ in hue and
-lightness, and each carries white initials at 4.5:1 or more. A person is also named by their column,
+lightness, and each holds white initials at 4.5:1 or more. A person is also named by their column,
 so colour is never the only cue. Past eight contributors two people would share a hue, so the grid
 falls back to the draft's one hue. Choosing a heatmap colour also switches to one hue, because that
 is what the person asked to see. Colour by contributor is a display option, saved per draft beside the
@@ -135,8 +135,8 @@ blue `#1f4f7a`, `#327ec3`, `#a2c6e7`), with dark marks on Lead. Exported heatmap
 light scale on a white background, because a figure goes onto a manuscript page. A figure draws
 what the grid draws: one hue, or with *Per contributor* each person's hue for slides and posters,
 with the level key in a neutral grey. The preview says so when it is per contributor, because one
-hue is the safe choice for greyscale print and any journal's style. Figure cells default
-to square corners and a thin neutral rule; the live editing controls retain their rounded corners. `heatCellColor` in
+hue is the safe choice for greyscale print and any journal's style. Figure cells default to square corners and a thin neutral rule; the live editing
+controls keep their rounded corners. `heatCellColor` in
 `src/core/contributor-color.ts` holds both scales.
 
 The editor uses one, two and three dots for Supporting, Equal and Lead, and a check in yes/no mode.
@@ -191,7 +191,7 @@ Draw the mark in `currentColor` wherever it sits beside text, as it does in the 
 colour by contributor each column of the mark takes one contributor's hue, as the grid's columns do. Where
 it stands alone, use the ink-blue levels themselves. The lockup is the mark at cap height, then a
 gap, then the wordmark (the name set as type) in Newsreader italic. Never letterspace the wordmark.
-It takes the accent: the mark's hue where that carries text, deepened where it does not, so the
+It takes the accent: the mark's hue where that reaches text contrast, deepened where it does not, so the
 mark and the wordmark read as one colour.
 
 The wordmark never wraps and never shrinks to fit. Draw it only where you have measured that the
@@ -256,13 +256,13 @@ height for good and shift the page when closed.
 
 After that, a one-line "Getting started" checklist heads the status strip: tick roles, ask
 co-authors, copy the statement. It ticks itself from the draft, never from a Next button, and the
-next step's control (Ask co-authors, Copy statement) carries a ring in the accent that pulses three
+next step's control (Ask co-authors, Copy statement) gets a ring in the accent that pulses three
 times and then holds; under reduced motion it only holds. It never takes focus or blocks the page,
 and it is gone for good once every step is done or it is closed.
 
 On touch, every control takes a 44px tap. Grow a small control's tap area with the `hit-area`
 class rather than its size, so the desktop density stays. On a phone the picker for the
-contributor carries their live statement line, which links down to the full statement.
+contributor shows their live statement line, which links down to the full statement.
 
 ## Elevation and depth
 
@@ -350,7 +350,7 @@ accessible label, and in the exported data. Keep bulk assignment behind a toggle
 first.
 
 An empty cell has no fill and no ring: a 3px dot in `outline-strong` (3:1 on the page) marks it, so
-the filled cells carry the grid. Hover and focus draw the whole target. The key under the grid is
+the filled cells give the grid its shape. Hover and focus draw the whole target. The key under the grid is
 a row of swatches drawn as cells are (None as the empty cell's dot), 2px apart, from None to Lead,
 each labelled in plain text under it. It starts at the grid's left edge, never centred under the
 lopsided table. With colour by contributor

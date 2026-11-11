@@ -34,7 +34,7 @@ const OrcidPersonSchema = /* @__PURE__ */ (() =>
     name: z.catch(z.nullish(z.object({ "given-names": NamePart, "family-name": NamePart })), null),
   }))();
 
-/** Build a failure carrying both the code and its English description. */
+/** Build a failure with both the code and its English description. */
 function fail(status: 400 | 404 | 502, code: OrcidErrorCode): OrcidLookupResult {
   return { ok: false, status, code, error: MESSAGES[code] };
 }

@@ -217,7 +217,7 @@ describe("contribution store", () => {
       expect(store().authors).toHaveLength(0);
     });
 
-    it("survives a DOI import that carries no title, when cleared deliberately", () => {
+    it("survives a DOI import that has no title, when cleared deliberately", () => {
       store().setTitle("An earlier import");
       store().setTitle("");
       expect(store().title).toBe("");
@@ -318,7 +318,7 @@ describe("contribution store", () => {
 
     it("keeps the markers through an unrelated edit", () => {
       // Every mutation rebuilds the list through `normalizeRoster`; a field it
-      // forgets to carry is silently lost on the next keystroke.
+      // forgets to copy is silently lost on the next keystroke.
       const id = store().addAuthor("Jane Smith");
       if (!id) throw new Error("expected an author");
       store().setAuthorMarker(id, "corresponding", true);
@@ -1647,7 +1647,7 @@ describe("contribution store", () => {
         initial,
       ) as typeof initial;
 
-      // Every ask before blank asks existed carried the asker's guess.
+      // Every ask before blank asks existed included the asker's guess.
       expect(merged.asks).toEqual({ "good-id": { sentAt: 2, prefilled: true } });
       expect(merged.drafts.d2?.asks).toEqual({ jane: { sentAt: 5, prefilled: true } });
       expect(merged.drafts.d2).not.toHaveProperty("asked");

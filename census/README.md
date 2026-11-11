@@ -1,7 +1,8 @@
 # CRediT census
 
-How published papers use CRediT roles, read from open-access JATS. It feeds the field norms and
-the "paste a statement" import in CRediT Matrix, and a public dataset of per-author role facts.
+How published papers use CRediT roles, read from open-access JATS XML (the article format of PubMed
+Central and Europe PMC). It feeds the field norms and the "paste a statement" import in CRediT
+Matrix, and a public dataset of per-author role facts.
 
 A Python project, separate from the web app. You need [uv](https://docs.astral.sh/uv/) 0.13 or
 newer (it fetches Python 3.14 itself) and outbound HTTPS. The examples run from `census/`. From the
@@ -101,11 +102,11 @@ clauses and pairs authors with roles inside each, so a clause with no CRediT wor
 figures") cannot shift the rest. Initials are resolved against the author list, including
 non-ASCII initials, initials without the name's accents ("A.A.-A." for Ángel Arias-Arias), particles
 ("F.d.S.N."), given names written as one word ("Q.M. Li" for Qinming Li), Frontiers' extra letters
-("YiL") and Vancouver style ("Nam KC"). Initials that fit no author
-or several are listed in `articles.unresolved`, never guessed. Only CRediT wording counts, so prose
+("YiL") and Vancouver style ("Nam KC"). Initials that fit no author or several are listed in
+`articles.unresolved`, never guessed. Only CRediT wording counts, so prose
 such as "A.B. conceived the study" yields no roles, and a statement needs at least one term prose
-rarely uses (conceptualization, data curation, original draft, ...): "under the supervision of B.J."
-or an ICMJE list with "Supervision" stays `none`, its text kept. Text that Europe PMC's bulk files
+rarely uses (conceptualization, data curation, original draft, ...). "Under the supervision of
+B.J." or an ICMJE list with "Supervision" stays `none`, its text kept. Text that Europe PMC's bulk files
 store double-encoded ("â\x80\x94" for an em dash) is repaired before parsing.
 
 The web app's paste-a-statement import runs a TypeScript port of `roles.py` and `statement.py`
@@ -114,7 +115,7 @@ output as `expected` here, so a change to one parser needs the same change in th
 step differs in form only: `roles.clean` replaces dashes with the spaces around them before it
 collapses runs of spaces, and the port collapses spaces first, because the first order takes
 quadratic time on a long run of spaces in a browser. The output is the same. The comment for this
-lives here, not in `roles.py`: the database pins a hash of that file's bytes.
+lives here, not in `roles.py`, because the database pins a hash of that file's bytes.
 
 ## Tables
 
@@ -139,7 +140,7 @@ lives here, not in `roles.py`: the database pins a hash of that file's bytes.
 The database is local working data with author names in it. `census export` writes the public
 dataset to `data/export/<snapshot>/`:
 
-- `articles.parquet` and `assignments.parquet`: role facts and bare ORCIDs, CC0. These carry no
+- `articles.parquet` and `assignments.parquet`: role facts and bare ORCIDs, CC0. These hold no
   author names.
 - `statements.parquet`: the verbatim statement text of CC BY and CC0 articles only, each with its
   licence and style, under CC BY 4.0. The text names authors as the source does.
@@ -158,8 +159,7 @@ holding each role by byline place, and the paired F1 with how much of it comes f
 Frontiers. Groups under 1,000 articles are left out, and the years start at the first with 1,000
 articles with roles. The last full year is the one before the newest year with 1,000 articles. It
 is CC0, holds no names and no article rows, and records the snapshot, dataset version, code
-commit, parser hash and OpenAlex sources date. Like `export`, it refuses an incomplete database unless given
-`--partial`.
+commit, parser hash and OpenAlex sources date. Like `export`, it refuses an incomplete database unless given `--partial`.
 
 ## Field norms for the app
 
@@ -167,8 +167,8 @@ commit, parser hash and OpenAlex sources date. Like `export`, it refuses an inco
 For each field and author position (single author, first, middle, last) it holds the share of
 authors given each role, with the article and author counts behind it. It counts research
 articles with roles and a field, and only authors with at least one role, so an author whose
-initials the parser could not resolve does not count as holding none. Fields with fewer than 1,000 such articles are left out
-(`--min-articles`), and a position with fewer than 50 authors in a field gets no shares. The file
+initials the parser could not resolve does not count as holding none. Fields with fewer than 1,000
+such articles are left out (`--min-articles`), and a position with fewer than 50 authors in a field gets no shares. The file
 names the snapshot, dataset version, code commit and the date of the newest bulk file, and the
 parser's F1 against publisher tags with its article count (the `(all)` row of the paired scores); it
 holds no names and no per-article rows. Rerun it after `fields` and commit the file.
@@ -224,21 +224,26 @@ seed adds new ones; its weights then stand for the articles left:
   them. Fill `wrong` with `tag`, `parser`, `both` or `neither`, and `notes`; `census score` on that
   file counts the answers. If the tags are often the wrong ones, the paired F1 understates accuracy.
 
-What the set can show, once labelled (`census score data/labels/oa-2026-10-set.csv`):
+Two language-model runs labelled the set, and a third settled where they differed
+(`oa-2026-10-set-opus-adj-defb.csv`; `oa-2026-10-set.csv` is the blank sheet, which scores as empty
+tables). The rule parser on those labels
+(`census score data/labels/oa-2026-10-set-opus-adj-defb.csv --key data/labels/oa-2026-10-set-key.csv`):
 
 | Style | Articles | Precision | Recall | F1 | Exact (95% interval) |
 | --- | --- | --- | --- | --- | --- |
-| `statement_text` | 100 | | | | |
-| `contrib_text` | 30 | | | | |
-| `none` | 30 | | | | |
+| `statement_text` | 100 | 0.971 | 0.898 | 0.933 | 0.652 (0.547 to 0.745) |
+| `contrib_text` | 30 | 0.998 | 0.995 | 0.997 | 0.938 (0.699 to 0.990) |
+| `none` | 30 | - | 0.0 | 0.0 | 0.868 (0.686 to 0.952) |
 
-These are pooled, weighted figures per style. `score` also prints a table per style and publisher,
+For `none`, exact is the share of articles the labels also give no roles; the recall of 0.0 means the
+parser found none of the roles in the rest. These are pooled, weighted figures per style. `score` also prints a table per style and publisher,
 but with 1 to 12 rows per stratum it is for spotting failure patterns, not for accuracy per
 publisher. A third table goes per style and role, counting for each role only the articles where it
 was predicted or labelled. It shows which roles the parser or a model gets wrong: on `oa-2026-10`,
-visualization and writing – review & editing. Agreement between labellers, one figure over the 25
-overlap rows: F1 \_\_. MDPI disagreements, a rough verdict on whether the tag or the parser errs
-from 20 rows: tag wrong \_\_, parser wrong \_\_, both \_\_, neither \_\_.
+visualization and writing – review & editing. On the 25 overlap rows the two labelling runs agree
+at F1 0.993, with 22 of 25 articles exactly the same (`--second`, run B against run A). On the 20
+MDPI disagreements, a language model judged the tag wrong in 18 and both wrong in 2
+(`oa-2026-10-set-disagreements-opus.csv`); it found the parser alone wrong in none.
 
 ## Training a statement parser
 
@@ -263,8 +268,8 @@ never redrawn. The `oa-2026-10` split has sha256
 true (CC BY or CC0) may be shared; the files name authors and stay in `data/`. Predictions are
 JSONL lines `{"pmcid": ..., "pairs": [[position, slug], ...]}`. Both scorers count them the way
 `census score` counts the parser: precision, recall and F1 over (author, role) pairs pooled across
-articles (F1 is twice the right pairs over twice the right pairs plus the wrong and missed ones), the share of articles exactly right with a 95% interval, and `-` for a rate
-with nothing to count. An article without a prediction predicts nothing. `model score` weighs every
+articles (F1 is twice the right pairs over twice the right pairs plus the wrong and missed ones), the share
+of articles exactly right with a 95% interval, and `-` for a rate with nothing to count. An article without a prediction predicts nothing. `model score` weighs every
 held-out article 1; `census score --predictions` uses the label set's key-file weights.
 
 `zero-shot` asks any chat-completions server (`--base-url`, default `http://localhost:8000/v1`) for
@@ -318,14 +323,18 @@ whether `census/` had uncommitted changes, the hash of `uv.lock`, the container 
 `CENSUS_IMAGE_DIGEST`, when set), the config and seed, the base model's repo, revision and weights hash,
 each dataset file as a run input with its SHA-256, the split rule, the dev F1 after each epoch, the best
 epoch's scores, the hash of the trained weights, and the energy. Weights are not stored in MLflow; they
-stay in the run directory. Energy comes from CodeCarbon in offline mode (country NLD, Our World in Data
+stay in the run directory.
+
+Energy comes from CodeCarbon in offline mode (country NLD, Our World in Data
 grid average, power sampled every second): kWh for the CPU, GPU and memory as metrics, and tags that say
 how each was got. The CPU is `rapl` when the host lets CodeCarbon read `/sys/class/powercap`, else an
 `estimate` from the chip's TDP; the GPU is `nvml`; memory is always an `estimate`. Without CodeCarbon the
-run is tagged `energy_tracked=False`. Without MLflow the command still runs and says tracking was skipped.
-MLflow is in the `train` group; `uv sync --group tracking` installs it without the training stack.
-Failed runs retain their energy figures when CodeCarbon can measure them. Tracking errors from an installed
-MLflow store stop the command. To browse the runs:
+run is tagged `energy_tracked=False`.
+
+Without MLflow the command still runs and says tracking was skipped. MLflow is in the `train` group;
+`uv sync --group tracking` installs it without the training stack. Failed runs keep their energy
+figures when CodeCarbon can measure them. Tracking errors from an installed MLflow store stop the
+command. To browse the runs:
 
 ```sh
 uvx --python 3.14 --from 'mlflow==3.17.2' mlflow ui --backend-store-uri sqlite:///data/mlflow.db --host 127.0.0.1
@@ -340,8 +349,9 @@ tags, the dev F1 per epoch, and the best epoch's scores as `best_*` metrics). A 
 `run_dir`, so a rerun adds only new directories. Back up first: `cp data/mlflow.db data/mlflow.db.bak`.
 To undo a backfill, restore the copy. Runs that logged fewer epochs than `config.epochs` are tagged
 `finished=False`. Dev sets differ between runs (the open-licence runs have 299 articles), so when
-comparing `best_f1` check `manifest.dev_articles`. To
-compare dev F1 across configs, open the experiment `census-oa-2026-10`, tick all runs, press Compare, and
+comparing `best_f1` check `manifest.dev_articles`.
+
+To compare dev F1 across configs, open the experiment `census-oa-2026-10`, tick all runs, press Compare, and
 pick the parallel-coordinates or scatter plot with `config.model`, `config.learning_rate`,
 `config.epochs` or `config.batch_size` against the metric `best_f1`. Or sort the run table by `best_f1`.
 
@@ -458,10 +468,11 @@ seeds of Ettin-68M, on its 700 `statement_text` rows:
 | 1 epoch, 3e-5, CC BY and CC0 only | 5 | 0.916 | 0.911 to 0.919 | 0.627 |
 | rule parser | | 0.907 | | 0.551 |
 
-One epoch at 3e-5 scores a little higher and varies far less between seeds, so it is the default
-now. Training only on CC BY and CC0 articles (`--open-licence-only`) costs no F1, though exact is about 0.01 lower, and
-those are the weights that can be published. With 1 epoch at 3e-5, CC BY and CC0 only, and three seeds each, Ettin-32M
-reaches F1 0.913 but exact 0.584, and Ettin-150M 0.905 and 0.617: neither beats Ettin-68M.
+One epoch at 3e-5 scores a little higher and varies far less between seeds, so it is the default.
+Training only on CC BY and CC0 articles (`--open-licence-only`) costs no F1, though exact is about
+0.01 lower, and those are the weights that can be published. With 1 epoch at 3e-5, CC BY and CC0
+only, and three seeds each, Ettin-32M reaches F1 0.913 but exact 0.584, and Ettin-150M 0.905 and
+0.617: neither beats Ettin-68M.
 
 ## Limits
 

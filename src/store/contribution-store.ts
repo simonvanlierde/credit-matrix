@@ -328,7 +328,7 @@ function findAuthorIndex(authors: Author[], authorId: string): number {
 /** Snapshot the live top-level fields as a draft record. */
 function liveDraft(state: ContributionState): Draft {
   return {
-    // The map copy carries keys a newer build wrote, which this one keeps.
+    // The map copy holds keys a newer build wrote, which this one keeps.
     ...state.drafts[state.activeDraftId],
     id: state.activeDraftId,
     title: state.title,
@@ -454,7 +454,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => value !==
 /**
  * Open asks by contributor id; a malformed entry costs that entry. `legacy` is
  * the `asked` map of timestamps that came before, and every one of those asks
- * carried the asker's guess.
+ * included the asker's guess.
  */
 function repairAsks(value: unknown, legacy: unknown): Record<string, Ask> {
   const asks: Record<string, Ask> = {};
@@ -963,7 +963,7 @@ function adoptKey(key: string): boolean {
 }
 
 /**
- * The id the very first draft carries before anything is persisted. A constant
+ * The id the very first draft has before anything is persisted. A constant
  * rather than a fresh uuid, so the server render and the first client render
  * agree (see `skipHydration`).
  */

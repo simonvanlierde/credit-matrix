@@ -18,10 +18,12 @@ systems: JATS4R XML, a Crossref `<contributors>` block, CSV, a tenzing spreadshe
 Markdown, and input for the latex-credits LaTeX package.
 An [RO-Crate attribution fragment](integrations/ro-crate/README.md) supplies people and CRediT roles for existing research packages.
 
-Each co-author can check their own row through a link, and everything runs in your browser: only
-the ORCID and DOI lookups and the fetch of ORCID's public keys send identifiers out. Citation-file
-imports load a Python runtime from this site and run citesync locally; your file stays in the browser. CRediT Matrix is an
-independent project. It is not affiliated with or endorsed by NISO.
+Each co-author can check their own row through a link. Everything runs in your browser. Only the
+ORCID and DOI lookups and the fetch of ORCID's public keys send identifiers out. Citation-file
+imports load a Python runtime from this site and run citesync locally, so your file stays in the
+browser.
+
+CRediT Matrix is an independent project. It is not affiliated with or endorsed by NISO.
 
 **Try it:** [credit.duinlab.nl](https://credit.duinlab.nl)
 
@@ -32,7 +34,7 @@ The sampled GraphQL `httpRequestsAdaptiveGroups` query filtered this hostname, `
 `edgeResponseContentTypeName: "html"` and HTTP status 200–299, following
 [Cloudflare's page-view definition](https://developers.cloudflare.com/analytics/account-and-zone-analytics/zone-analytics/).
 
-![The CRediT Matrix workspace with sample data for three contributors. On the left, the contributor list gives each person an initials chip in their own colour. In the middle, the contribution grid shows the 14 CRediT roles as rows and one column per person; filled cells in that person's colour carry one, two or three dots for Supporting, Equal and Lead, above a key. On the right, the Team tab lists each contributor as not asked yet, with a Copy message button per person and an Ask everyone not yet asked button](docs/screenshots/hero.png)
+![The CRediT Matrix workspace with sample data for three contributors. On the left, the contributor list gives each person an initials chip in their own colour. In the middle, the contribution grid shows the 14 CRediT roles as rows and one column per person; filled cells in that person's colour show one, two or three dots for Supporting, Equal and Lead, above a key. On the right, the Team tab lists each contributor as not asked yet, with a Copy message button per person and an Ask everyone not yet asked button](docs/screenshots/hero.png)
 
 | First run | Statement & export |
 |---|---|

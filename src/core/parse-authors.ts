@@ -198,7 +198,7 @@ function cleanText(value: string): string {
 /**
  * Project an arbitrary contributions list onto the canonical CREDIT_ROLES order
  * and length, keyed by role name. Imported, shared, or older-export data may
- * carry contributions in a different order or with roles missing; the matrix and
+ * list contributions in a different order or with roles missing; the matrix and
  * heatmap index contributions positionally, so they must be canonicalized here.
  */
 function normalizeContributions(contributions?: Contribution[]): Contribution[] {
@@ -316,7 +316,7 @@ function consistentNameParts(author: Author): Pick<Author, "firstName" | "middle
     string[],
   ];
   // A generational suffix ends the name, not the surname, as in `parseNameParts`,
-  // unless the stored surname carries it ("King Jr.").
+  // unless the stored surname has it ("King Jr.").
   const suffixed = named.length > 2 && isSuffix(named.at(-1) ?? "") && last.at(-1) !== named.at(-1);
   const all = suffixed ? named.slice(0, -1) : named;
   const between = all.slice(first.length, all.length - last.length);

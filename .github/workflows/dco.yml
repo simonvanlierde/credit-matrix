@@ -1,6 +1,6 @@
 name: dco
 
-# Every commit in a pull request must carry a Signed-off-by line: the Developer
+# Every commit in a pull request must have a Signed-off-by line: the Developer
 # Certificate of Origin, as CONTRIBUTING.md asks. Commits by bots (Renovate) are
 # skipped: a bot cannot certify anything.
 on:

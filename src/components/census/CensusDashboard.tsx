@@ -46,7 +46,7 @@ function Section({ title, caption, children }: { title: string; caption: ReactNo
   );
 }
 
-/** A square shaded by the share, so the eye finds the large cells; the printed share carries the value. */
+/** A square shaded by the share, so the eye finds the large cells; the printed share gives the value. */
 function Swatch({ shade }: { shade: number }) {
   return (
     <span

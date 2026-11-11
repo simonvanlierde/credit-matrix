@@ -1,7 +1,7 @@
 # CRediT statement for Sphinx
 
 Render a CRediT Matrix export in Sphinx documentation with a `credit-statement` directive.
-The extension calls the [package CLI](../../src/core/README.md); it carries no role list or
+The extension calls the [package CLI](../../src/core/README.md); it has no role list or
 statement generator of its own.
 
 ## Install
@@ -44,7 +44,8 @@ The export is read during the documentation build, not by the reader's browser.
 
 - `:format:` accepts `by-author` (default), `by-author-short`, `by-role` or `by-role-short`.
 - `:locale:` overrides Sphinx's `language`. The default is English when no language is set.
-  The CLI supports the app's nine languages and reports unsupported languages as build errors. Traditional Chinese (`zh_TW`, `zh_HK`, `zh_Hant`) has no catalog and uses English.
+  The CLI supports the app's nine languages and reports other languages as build errors.
+  Traditional Chinese (`zh_TW`, `zh_HK`, `zh_Hant`) has no catalog and uses English.
 - `:levels:` includes Equal and Supporting contribution levels.
 
 Names and statements are inserted as text. They are never interpreted as reStructuredText or HTML.

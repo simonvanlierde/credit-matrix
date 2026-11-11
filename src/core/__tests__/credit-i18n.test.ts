@@ -194,7 +194,7 @@ describe("generateStatement with translateRole", () => {
     expect(stmt).not.toContain("Conceptualization:");
   });
 
-  // Separators carry meaningful whitespace: trimming them ran names together.
+  // Separators hold meaningful whitespace: trimming them ran names together.
   it("keeps the spaces in localized separators", async () => {
     const translateUi = makeUiTranslator(await loadUiCatalog("de"));
     const authors = makeAuthors();

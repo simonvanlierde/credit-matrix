@@ -76,7 +76,7 @@ N/A: the page has no content the criterion applies to.
 | 1.4.4 Resize Text | AA | Pass | Fixed: at 640 to 700 px (200% zoom) the header ran past the edge and hid Import. `e2e/visual-contrast.spec.ts` checks the width at 640 and 700 px. |
 | 1.4.5 Images of Text | AA | Pass | The only raster image is the badge logo. |
 | 1.4.10 Reflow | AA | Pass | No sideways scrolling at 320 px on any sampled page. The grid becomes a list of roles per contributor. The element's heatmap scrolls inside its own box, which the exception for data visualisations allows. |
-| 1.4.11 Non-text Contrast | AA | Pass | Fixed: the reorder grip, text-field edges and empty grid cells were 1.1 to 1.6:1. `e2e/visual-contrast.spec.ts` checks them at 3:1 in both themes. Focus inside the grid uses the accent ring, which measures 8.2:1 against the page by default and stays at least 4.5:1 against bright paper for any hue; outside the grid the focus ring measures 8.5:1. Both are checked at 3:1 in the same spec. White initials on each contributor's hue reach 4.5:1 and marks a linked cell at 3:1 in both themes (`src/core/__tests__/contrast.test.ts`). |
+| 1.4.11 Non-text Contrast | AA | Pass | Fixed: the reorder grip, text-field edges and empty grid cells were 1.1 to 1.6:1. `e2e/visual-contrast.spec.ts` checks them at 3:1 in both themes. Focus inside the grid uses the accent ring, which measures 8.2:1 against the page by default and stays at least 4.5:1 against bright paper for any hue; outside the grid the focus ring measures 8.5:1. Both are checked at 3:1 in the same spec. Each contributor's hue holds white initials at 4.5:1 and marks a linked cell at 3:1 in both themes (`src/core/__tests__/contrast.test.ts`). |
 | 1.4.12 Text Spacing | AA | Pass | With the 1.4.12 spacing applied, no text is clipped or overlaps. |
 | 1.4.13 Content on Hover or Focus | AA | Pass | Fixed: Escape did not hide the census chart's value readout. `e2e/focus-and-timing.spec.ts` checks it. Popovers open on click and close on Escape. |
 
@@ -110,7 +110,7 @@ N/A: the page has no content the criterion applies to.
 | Criterion | Level | Result | Evidence |
 | --- | --- | --- | --- |
 | 3.1.1 Language of Page | A | Pass | `lang` is right on every page in all nine languages, also after switching. |
-| 3.1.2 Language of Parts | AA | Pass | The statement, role popovers, the English-only statement page and the element's English messages carry their own `lang`. |
+| 3.1.2 Language of Parts | AA | Pass | The statement, role popovers, the English-only statement page and the element's English messages set their own `lang`. |
 | 3.2.1 On Focus | A | Pass | Focus alone opens nothing and changes no page. |
 | 3.2.2 On Input | A | Pass | Changing a setting changes no page and moves no focus. |
 | 3.2.3 Consistent Navigation | AA | Pass | The header is the same, in the same order, on every page. |

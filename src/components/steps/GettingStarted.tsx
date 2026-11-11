@@ -11,7 +11,7 @@ type GuideStep = (typeof STEPS)[number];
 /**
  * A short checklist at the head of the status strip. It ticks itself from the
  * draft, never from a Next button, and names the next step. The Ask and Copy
- * controls carry `data-guide-target` and get a ring while they are next (see
+ * controls have `data-guide-target` and get a ring while they are next (see
  * `[data-guide]` in globals.css), so the help sits on the control itself, not
  * in a tour over the page; ticking roles has the empty grid as its cue. Adding
  * people is the empty grid's own job, so the list starts once someone is on it.

@@ -653,7 +653,7 @@ const AuthorRow = memo(function AuthorRowInner({
 
             {/* Type badge, plus the ORCID trigger while there is nothing to show. */}
             <div className="flex flex-wrap items-center gap-1.5">
-              {/* The changing visible name carries the state; aria-pressed on
+              {/* The changing visible name shows the state; aria-pressed on
                   top of it double-encoded the same fact inverted ("Author,
                   pressed" when they are not one). */}
               <button
@@ -672,7 +672,7 @@ const AuthorRow = memo(function AuthorRowInner({
                 </span>
               )}
               {isClaimed && (
-                // No icon: the neighbouring type chip already carries UserCheck,
+                // No icon: the neighbouring type chip already shows UserCheck,
                 // and two identical glyphs side by side read as a mistake.
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                   {t("claimedRowBadge")}

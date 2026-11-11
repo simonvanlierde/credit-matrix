@@ -24,7 +24,7 @@ roll back past it: an older build refuses to write over drafts saved in version 
   `colorBy: "contributor"`; the library, the CLI and the plugins still draw one hue by default. See
   [the figure options](integrations/heatmap.md#figure-options).
 - Download heatmaps as PDF with embedded fonts and selectable text. App, CLI and document-plugin
-  SVG exports also carry their fonts. Both formats embed only the glyphs a figure uses: about 30 kB
+  SVG exports also embed their fonts. Both formats embed only the glyphs a figure uses: about 30 kB
   for a Latin figure and 35 kB for a Japanese or Chinese one. The app installs the default face
   (Noto Sans, 0.6 MB) with its offline cache, and fetches each other face (0.6-15 MB) on the first
   export that needs it; the MyST plugin file is 1.5 MB and fetches its fonts on first use. See the
@@ -279,7 +279,7 @@ return `"statement"` (see Changed).
   `toTenzing`, so a team can move between the two tools.
 - `credit-matrix statement --format codemeta` prints CodeMeta 3.0 `Role` objects for a
   `codemeta.json`, for the authors with an ORCID iD.
-- Downloaded heatmaps carry the contribution statement as their text alternative, in the output
+- Downloaded heatmaps include the contribution statement as their text alternative, in the output
   language: the SVG in its description, the PNG in its Description field. `heatmapDescription`
   returns the same text.
 - An About page (`/about`) with how to cite the app and what it sends where, and the
@@ -520,7 +520,7 @@ update does not know the new storage version and can overwrite changes made in t
   link to check your guess. *Use all of Ben's* takes his whole answer. Each choice moves on to the
   next difference and animates the grid cell as it changes. Every decided line keeps its own Undo,
   also after *Use all*, and undoing *Use Ben's* puts your own level back.
-- Grid cells where a co-author answered differently carry a corner mark, and a screen reader hears
+- Grid cells where a co-author answered differently get a corner mark, and a screen reader hears
   what they said ("Ben says Lead"). The mark has an outline that stands out on every level, in every
   heatmap colour and both themes. A count under each column header opens Review on that person.
 - *This is me* in a contributor's menu marks your own row. You are left out of the Team tab, of
@@ -561,10 +561,10 @@ update does not know the new storage version and can overwrite changes made in t
 - In dark mode the heatmap gets brighter from Supporting to Lead, as it gets darker in light mode.
   Downloaded heatmaps keep the light colors.
 - *Import* and *Share* in the header are secondary buttons, and disabled buttons look disabled.
-- The ask menu says in plain text what the link carries: the title, and that person's name and iD.
+- The ask menu says in plain text what the link contains: the title, and that person's name and iD.
 - An open tab no longer saves over drafts that a newer version saved in another tab. It reloads
   into the newer version, or says that its edits are not being saved when it cannot.
-- Saved drafts move to a new storage version. Open asks carry over. An older version opened later
+- Saved drafts move to a new storage version. Open asks are kept. An older version opened later
   starts empty and leaves the newer drafts in place. After updating, reload any other tab that still
   has CRediT Matrix open: a tab opened before the update has no such guard and can overwrite changes
   made in the updated version.
@@ -583,7 +583,7 @@ update does not know the new storage version and can overwrite changes made in t
   contributor rows, status messages and heatmap controls have visible focus and 24px targets.
 - The JATS4R XML export no longer claims "© 2019 JATS4R" and a CC BY licence for your paper. That
   block was sample text and is gone.
-- The JATS4R XML export keeps contribution levels. Each role carries lead, equal, or supporting as
+- The JATS4R XML export keeps contribution levels. Each role has lead, equal, or supporting as
   JATS 1.3 `degree-contribution`, and importing the file restores them. Files without it import
   every role as lead, as before.
   In Yes/No mode the export leaves `degree-contribution` out, rather than call every role lead:
@@ -600,7 +600,7 @@ update does not know the new storage version and can overwrite changes made in t
 - DOIs that Crossref does not know, such as arXiv and Zenodo records, are looked up in DataCite.
 - *Delete all drafts* in the drafts menu clears every draft from this browser.
 - A draft open in two tabs stays in step: an edit in one shows up in the other, with a note.
-- *About* says which lookups leave your browser. The ask link says it carries names and iDs.
+- *About* says which lookups leave your browser. The ask link says it contains names and iDs.
 
 ### Changed
 
@@ -626,7 +626,7 @@ update does not know the new storage version and can overwrite changes made in t
 
 ### Added
 
-- Below `lg` the lockup opens a menu carrying the *How it works* and *About* links the header has no
+- Below `lg` the lockup opens a menu with the *How it works* and *About* links the header has no
   room for. *About* is reachable from the welcome card too.
 - Attribution for the CC BY 4.0 work the app redistributes. The role translations and NISO's badge
   image now link to the licence deed, and the notice travels with the badge.
@@ -648,7 +648,7 @@ update does not know the new storage version and can overwrite changes made in t
   is the icon alone, the step headings are a size smaller, and the statement column gives back width
   its 75ch prose never used.
 - The wordmark no longer wraps out of the fixed header. It appears only from `27rem`; below that the
-  mark carries the brand alone, and the name is still announced.
+  mark shows the brand alone, and the name is still announced.
 - The header nav moved from `md` to `lg`, where it stopped overrunning the row.
 - Links inside a sentence are underlined, not only recoloured.
 
@@ -678,7 +678,7 @@ update does not know the new storage version and can overwrite changes made in t
 ### Fixed
 
 - On narrow screens in Levels, a role button's label no longer sits on the dynamic fill, where a
-  mid-tone preset had no readable text color at all; a small swatch carries the color instead.
+  mid-tone preset had no readable text color at all; a small swatch shows the color instead.
 
 ## [0.3.0] - 2026-08-27
 
@@ -689,7 +689,7 @@ update does not know the new storage version and can overwrite changes made in t
   paths that still need a network, and now say so.
 - DOI import: paste a DOI to fill the contributor list, their ORCID iDs, and the work's title from
   the published record, through a new `/api/doi` proxy to Crossref. Roles stay empty, because
-  published records do not carry them.
+  published records do not include them.
 - Drafts, one per paper. A picker in the header switches, renames, duplicates, and deletes them, up
   to fifty. They live in this browser, as everything else does.
 - Collecting contributions from co-authors. A contributor's row menu copies a link addressed to
@@ -704,7 +704,7 @@ update does not know the new storage version and can overwrite changes made in t
 - A visible status strip for share and merge outcomes. These previously reached only screen
   readers, so a merge, a refusal, or a broken link looked like nothing happened.
 - Shared first authorship and corresponding authors, which CRediT has no term for. They are noted
-  under the statement and the Markdown table, carried as columns in CSV, and written as JATS4R
+  under the statement and the Markdown table, added as columns in CSV, and written as JATS4R
   `equal-contrib` and `corresp` attributes.
 - Rich-text copy: the statement now goes to the clipboard as HTML alongside plain text, so pasting
   into a word processor keeps the emphasis on each label. Editors that want plain text still get it.
@@ -725,7 +725,7 @@ update does not know the new storage version and can overwrite changes made in t
 
 ### Changed
 
-- Share links carry everything in one compressed fragment: the roster with stable contributor
+- Share links hold everything in one compressed fragment: the roster with stable contributor
   ids, the draft title, and, on requests and replies, whom the link addresses and which draft
   it came from. A ten-author link is roughly 1.4 kB instead of 18 kB, which is the difference
   between a link that survives an email client and one that does not. **Links built by earlier
@@ -769,7 +769,7 @@ update does not know the new storage version and can overwrite changes made in t
 - Screen readers announce the contributor list as a list, with a count and a position per row.
 - The statement and export controls stay reachable on short desktop windows, at high zoom, and with
   a larger minimum font size, instead of being clipped with no way to scroll to them.
-- A share link carrying an unusable contributor shows an error and keeps the current draft, rather
+- A share link with an unusable contributor shows an error and keeps the current draft, rather
   than failing to render the page.
 - Editing one contributor's name is no longer overwritten when another contributor's ORCID lookup
   finishes.
@@ -785,7 +785,7 @@ update does not know the new storage version and can overwrite changes made in t
 
 - Editable contribution grid: roles and contributors in one matrix, where a click
   assigns a role or cycles its level. It doubles as the live heatmap, and its
-  transpose, full-name, and color controls carry through to the SVG/PNG downloads.
+  transpose, full-name, and color controls apply to the SVG/PNG downloads too.
 - Bulk contributor entry: paste an author list (commas, newlines, semicolons, or
   ORCID iDs) and each name gets a row. Inverted names (`Smith, J. A.`) stay whole.
 - First-run welcome card, re-openable from the header, and numbered step headings.
@@ -799,7 +799,7 @@ update does not know the new storage version and can overwrite changes made in t
   full-width below.
 - Exported heatmaps drop the baked-in image title and fit their label bands to
   their content.
-- The About popover carries the version and source link; the header nav is down
+- The About popover shows the version and source link; the header nav is down
   to two items.
 - Copying an export format confirms on its own button.
 

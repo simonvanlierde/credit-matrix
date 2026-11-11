@@ -1,7 +1,7 @@
 // biome-ignore-all lint/correctness/noNodejsModules: MyST runs plugins in Node.
 // MyST plugin: a `{credit-statement}` directive that renders a CRediT statement from the
 // `roles` of the page's authors, or of the project's authors in myst.yml.
-// MyST roles carry no degree of contribution.
+// MyST roles have no degree of contribution.
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";

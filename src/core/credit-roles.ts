@@ -5,7 +5,7 @@
  * Stored as a const tuple so the role names are narrowed to their literal
  * string types, so callers can use `CreditRoleName` as a union type.
  *
- * Each role carries its canonical NISO `id` (the official role UUID) so the
+ * Each role has its canonical NISO `id` (the official role UUID) so the
  * identifiers travel with exported data. Crossref adds CRediT to its metadata
  * schema in 2026 and these UUIDs are the machine-readable role keys.
  */

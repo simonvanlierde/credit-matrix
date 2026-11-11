@@ -221,7 +221,7 @@ def _find(hay: str, needle: str, text: str):
 
 
 def _lower(text: str) -> str:
-    """Lower case of the same length, so positions carry over: the few characters that lower to two keep
+    """Lower case of the same length, so positions stay the same: the few characters that lower to two keep
     the first ("İ" to "i")."""
     lower = text.lower()
     return lower if len(lower) == len(text) else "".join(c.lower()[0] for c in text)

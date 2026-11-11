@@ -42,7 +42,7 @@ export type DoiLookupResult =
   | { ok: false; status: 400 | 404 | 422 | 502; code: DoiErrorCode; error: string };
 
 /**
- * Crossref's shape is loose: `title` is an array, a contributor carries
+ * Crossref's shape is loose: `title` is an array, a contributor has
  * `given`/`family` or a bare `name`, and `ORCID` may be a URL. Parse
  * permissively and let the reader below decide what is usable.
  */
@@ -99,7 +99,7 @@ const DataCiteWorkSchema = /* @__PURE__ */ (() =>
 /** The contributor shape both lookups are reduced to before reading. */
 type CrossrefAuthor = { given?: string; family?: string; name?: string; ORCID?: string; role?: unknown };
 
-/** Build a failure carrying both the code and its English description. */
+/** Build a failure with both the code and its English description. */
 function fail(status: 400 | 404 | 422 | 502, code: DoiErrorCode): DoiLookupResult {
   return { ok: false, status, code, error: MESSAGES[code] };
 }

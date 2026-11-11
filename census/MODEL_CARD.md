@@ -135,6 +135,7 @@ at the threshold can flip between runtimes.
 The pairs come from Europe PMC's open-access subset, snapshot `oa-2026-10`. Some publishers tag
 each author's roles in the JATS XML and also print a statement. The statement is the input and
 the tags are the answer.
+
 - The split holds out every twentieth group of identical statements, in publisher and year order,
   so no statement text sits on both sides. Its sha256 is
   `fe3b1264b06d3fe98a9373cda8f9f46408f98b2ac4cf462f458f16f37683e43a`.
@@ -146,8 +147,9 @@ the tags are the answer.
 
 **Licence of the training text.** Training used every tagged article in the training split,
 whatever its licence. Of the 120,000 articles, 10,817 are not CC BY or CC0, most of them from
-SAGE, Oxford University Press and AAAS. The training files name authors and are not published. These weights are not published either: the model put on Hugging Face will be
-trained on CC BY and CC0 articles only.
+SAGE, Oxford University Press and AAAS. The training files name authors and are not published.
+These weights are not published either. The model put on Hugging Face will be trained on CC BY and
+CC0 articles only.
 The census publishes statement text only for CC BY and CC0 articles (`OPEN_LICENCE` in
 `src/census/export.py`). A retrain with `census model train --open-licence-only` draws train and
 dev from those articles alone.
@@ -218,8 +220,10 @@ described in [labelling/README.md](labelling/README.md).
 | rule parser | 0.932 | 0.997 | 0.868 |
 | Ettin-68M | 0.946 | 0.842 | 0.000 |
 
-On the later 1,000-row label set, the shipped settings (2 epochs, 5e-5) average statement_text F1
-0.905 over five seeds, and the rule parser 0.907 ([census README](README.md)).
+On the later 1,000-row label set, these settings (2 epochs, 5e-5) average statement_text F1 0.905
+over five seeds, and the rule parser 0.907. One epoch at 3e-5 averages 0.914 and is now the
+`census model train` default ([census README](README.md)). The weights this card describes were
+trained before that change, and the table above uses them.
 
 ### On every free-text statement
 

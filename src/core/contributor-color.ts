@@ -1,7 +1,7 @@
 /**
  * Canonical heatmap-color logic, shared by the live UI and the SVG/PNG export so
  * on-screen and exported heatmaps never drift. Heatmap intensity encodes the
- * contribution *level*; the single base hue (the chosen mono color) carries no
+ * contribution *level*; the single base hue (the chosen mono color) has no
  * meaning beyond legibility: contributors are identified by the row/column labels.
  */
 

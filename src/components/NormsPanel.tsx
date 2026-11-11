@@ -55,7 +55,7 @@ export function NormsPanel() {
           </SelectTrigger>
           <SelectContent>
             {fields.map(({ name, label: text }) => (
-              // The span, not the item, carries lang: the trigger shows a copy of the item's text.
+              // The span, not the item, sets lang: the trigger shows a copy of the item's text.
               <SelectItem key={name} value={name} className="text-sm">
                 {english(name)(text)}
               </SelectItem>

@@ -116,11 +116,11 @@ test.describe("Accessibility (axe-core)", () => {
   /**
    * Below `lg` the header nav is hidden and the brand lockup becomes the only
    * route to "How it works" and "About". Every other header assertion in the
-   * suite runs at the 1280px default, where the nav still carries them — so
+   * suite runs at the 1280px default, where the nav still shows them — so
    * without these the whole mobile branch could break, or the nav's `lg`
    * boundary silently revert to `md`, with the suite still green.
    */
-  test("below lg the brand menu carries the links the nav drops", async ({ page }) => {
+  test("below lg the brand menu shows the links the nav drops", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await expect(page.getByRole("button", { name: "How it works" })).toBeHidden();

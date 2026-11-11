@@ -91,7 +91,7 @@ export function StatusBanner() {
   }, [status]);
 
   // Successes leave on their own; errors stay until dismissed. A success
-  // carrying an action (Undo) gets the same 60s the contributor-removal undo
+  // with an action (Undo) gets the same 60s the contributor-removal undo
   // gives, for the same WCAG 2.2.1 reason.
   useEffect(() => {
     if (!status || status.kind === "error") return;

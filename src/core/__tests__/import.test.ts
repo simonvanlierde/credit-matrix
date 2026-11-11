@@ -305,7 +305,7 @@ describe("normalizeRoster", () => {
     expect(normalizeRoster([madonna])[0]).toMatchObject({ firstName: "Madonna", middleName: "Louise", surname: "" });
   });
 
-  it("rebuilds a row whose contributions are out of order or that carries a stray field", () => {
+  it("rebuilds a row whose contributions are out of order or that has a stray field", () => {
     const [jane] = normalizeRoster(roster());
     if (!jane) throw new Error("expected an author");
     const [first, second, ...rest] = jane.contributions;

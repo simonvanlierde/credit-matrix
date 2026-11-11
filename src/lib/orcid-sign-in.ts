@@ -75,7 +75,7 @@ export async function takeOrcidReturn(
   return proof ? { proof, sentAt: pending.sentAt } : { proof: null };
 }
 
-/** Check the sign-in a reply link carries. Undefined when it has none, or it does not check out. */
+/** Check the sign-in a reply link holds. Undefined when it has none, or it does not check out. */
 export async function verifyIncoming(
   shared: ShareData,
   fetcher: typeof fetch = fetch,

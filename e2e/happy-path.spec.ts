@@ -393,7 +393,7 @@ test.describe("Happy path UI flows", () => {
       page,
       page.getByRole("button", { name: "Ask Rosalind E. Franklin to check your guess" }),
     );
-    // Everything the link carries — whose row, which draft — rides inside the
+    // Everything the link holds — whose row, which draft — rides inside the
     // payload now; the URL is nothing but the fragment.
     expect(askUrl).toContain("#s=");
     expect(new URL(askUrl).search).toBe("");
@@ -405,7 +405,7 @@ test.describe("Happy path UI flows", () => {
     await coauthor.goto(askUrl);
     await expect(onScreen(coauthor, /Answering as Rosalind E\. Franklin\./)).toBeVisible();
 
-    // She assigns herself a role. The link carries only her row, so no one
+    // She assigns herself a role. The link holds only her row, so no one
     // else's is there to change.
     await strongestAnswer(coauthor, "Validation").click();
     await expect(coauthor.getByText("Ada Lovelace")).toHaveCount(0);

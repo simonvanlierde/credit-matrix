@@ -142,7 +142,7 @@ describe("closing the dialog while ORCID's keys load", () => {
     act(() => {
       document.querySelector("dialog")?.dispatchEvent(new Event("close"));
     });
-  /** A JSON export whose answer carries a sign-in, so importing it fetches ORCID's keys. */
+  /** A JSON export whose answer includes a sign-in, so importing it fetches ORCID's keys. */
   function signedFile() {
     const bob = createAuthor("Bob White", { id: "bob" });
     const orcid = { orcid: "0000-0002-1825-0097", issuedAt: 1, token: "t", payload: "p" };
