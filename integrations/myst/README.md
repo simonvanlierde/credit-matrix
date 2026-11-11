@@ -72,6 +72,11 @@ unsupported languages and Traditional Chinese fall back to English. Write your h
 ## Contribution heatmap
 
 See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive.
+For your own font, give the directive `:font: Inter` and `:font-path: fonts` (comma-separated
+folders, relative to the folder of `myst.yml`), with `:ignore-system-fonts: true` and
+`:font-fallback: sans|serif` as needed. MyST prints the file used as a message, and a missing
+family is an error that names the page.
+
 Generated SVG assets contain embedded fonts and editable text. See
 [font portability and PDF export](../figures/README.md) for document-converter limits.
 

@@ -36,6 +36,8 @@ Build with `jupyter-book build --html`. The statement appears in the book:
 
 > **Marie Curie**: Software, Writing – original draft.
 
+The heatmap's `:font:`, `:font-path:`, `:ignore-system-fonts:` and `:font-fallback:` options work
+as in MyST; see [your own font](../myst/README.md#contribution-heatmap).
 The [MyST guide](../myst/README.md) describes page author overrides, role aliases and limits.
 This integration is for Jupyter Book 2, not the Sphinx-based Jupyter Book 1.
 For a Sphinx project, use the [Sphinx directive](../sphinx/README.md).

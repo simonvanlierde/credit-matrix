@@ -26,7 +26,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   rest (serif ones for a serif family), and the CLI prints the file it used to standard error
   (`onFont` in the API). `.ttf`, `.otf` (CFF too) and collections work;
   WOFF files and a variable font whose default is not regular are refused, as is a missing family.
-  See [Use your own font](integrations/figures/README.md#use-your-own-font).
+  See [Use your own font](integrations/figures/README.md#use-your-own-font). The MyST, Jupyter
+  Book, Sphinx, Quarto and Pandoc plugins take `font`, `font-path`, `ignore-system-fonts` and
+  `font-fallback` (Sphinx also `credit_matrix_font_path`), with `font-path` relative to the project
+  and a missing family stopping the build; Typst's `font` takes a family name or an array, with
+  Typst's own `--font-path`. The Typst package draws the top labels at regular weight instead of
+  weight 500, as SVG and PDF do.
 
 ### Changed
 

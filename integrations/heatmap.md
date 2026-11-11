@@ -25,7 +25,10 @@ Use these names in every plugin. The JavaScript `buildHeatmapSvg` function uses 
 | `palette` | `blue`, `green`, `gray` | `blue` |
 | `shape` | `square`, `rounded`, `circle` | `square` |
 | `size` | Cell side: pixels in SVG, a length in Typst | `22`, or `14pt` in Typst |
-| `font` | `sans`, `serif` | `sans` |
+| `font` | `sans`, `serif`, or an installed font family name (case-insensitive); Typst also takes an array of names | `sans` |
+| `font-path` | Folder or list of folders searched for the family before the system fonts; not in Typst | none |
+| `ignore-system-fonts` | `true`: search only `font-path`; not in Typst | `false` |
+| `font-fallback` | `sans`, `serif`: built-in faces for what the family lacks; not in Typst | follows the family's style |
 | `font-size` | 6–32 SVG pixels; 4.5–24 points in Typst | `10.5`, or `7.5pt` in Typst |
 | `legend` | `true`, `false` | `true` |
 | `legend-position` | `auto`, `right`, `bottom` | `auto` |
@@ -62,6 +65,34 @@ Automatic placement puts a vertical key to the right when three things hold: the
 legend-font ems), and its height does not increase. That width limit keeps legend text above 5 pt
 at 85 mm. Otherwise the key wraps below. Force `right` or `bottom` to suit the surrounding page;
 `legend: false` hides the key regardless of placement. In the app these choices share one Legend control.
+
+### Your own font
+
+A family name draws the figure in that font and embeds it, under its own name, in SVG and PDF
+(MyST, Jupyter Book, Sphinx, Quarto, Pandoc and the CLI; see
+[Use your own font](figures/README.md#use-your-own-font) for what is read and refused). A missing
+family stops the build. For a build that looks the same on every computer, commit the font files to
+the project and point `font-path` at them: a bare `font: Inter` takes whichever Inter the machine
+has. In CI, add `ignore-system-fonts` so that only the project's fonts count. Check the font's
+license before you commit or embed it.
+
+`font-path` folders resolve against the project, not the working folder:
+
+| Plugin | Syntax | Relative to |
+| --- | --- | --- |
+| CLI | `--font-path <dir>`, repeatable | the working folder |
+| MyST, Jupyter Book | `:font-path: fonts, more-fonts`, comma-separated | the folder of `myst.yml` |
+| Sphinx | `:font-path:` as in MyST, and `credit_matrix_font_path = [...]` and `credit_matrix_ignore_system_fonts = True` in `conf.py` | the folder of `conf.py` |
+| Quarto, Pandoc | `credit-matrix.font-path`, one folder or a list | the document's folder |
+| Typst | no option: pass Typst's own `--font-path` | see below |
+
+The plugins print the file they used, `credit-matrix: font: Inter from <file>` (a MyST or Sphinx
+message, or Pandoc's standard error), and warn when the font's license restricts embedding.
+
+Typst takes the family name or an array of names in `font`, searches the folders you give
+`typst compile --font-path <dir>` (or `TYPST_FONT_PATHS`), and falls back to the sans stack for
+missing glyphs. Typst draws the top labels at regular weight, as SVG and PDF do. Pass
+`--ignore-system-fonts` to Typst for a build that ignores installed fonts.
 
 Font size changes the label bands and legend layout without changing contribution data.
 App, CLI and plugin exports embed bundled Noto Sans or Noto Serif fonts. See the
