@@ -14,8 +14,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- A draft holds up to 400 contributors, up from 200, and imports, share links and the element take
-  files up to 2 MB, up from 1 MB, so a full draft exports and imports back in every format.
+- A draft holds up to 400 contributors, up from 200. Imports, share links and the element take
+  files up to 2 MB, up from 1 MB, and a pasted statement can run to 120,000 characters, up from
+  50,000, so a full draft's exports and by-author statement read back in.
+- Pasting a long list of names adds them in one step: 400 names take milliseconds instead of
+  seconds.
 - The favicon, app icons and social card use the warm paper and charcoal ink of the 0.12.0 theme,
   and the mark draws each column in one contributor's hue, as the grid does.
 - Search results and link previews describe asking co-authors to check their own row, and the

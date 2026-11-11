@@ -21,7 +21,7 @@ CLI = ROOT / "src/core/dist/cli.js"
 def project(tmp_path):
     apps = []
 
-    def build(directive=".. credit-statement:: contributors.json\n", language="en", command=None):
+    def build(directive=".. credit-statement:: contributors.json\n", language="en", command=None, conf=""):
         source = tmp_path / "source"
         source.mkdir()
         (source / "_ext").mkdir()
@@ -31,7 +31,7 @@ def project(tmp_path):
         (source / "conf.py").write_text(
             "import sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(__file__).parent / '_ext'))\n"
             f"extensions = ['credit_matrix']\nproject = 'Example Lab'\nlanguage = {language!r}\n"
-            f"credit_matrix_command = {command!r}\n",
+            f"credit_matrix_command = {command!r}\n{conf}",
             encoding="utf-8",
         )
         (source / "index.rst").write_text(f"Contributors\n============\n\n{directive}", encoding="utf-8")
@@ -153,8 +153,10 @@ def test_heatmap_is_an_image_with_accessible_statement(tmp_path, project):
     assert "Noto Serif" in svg
 
 
-def test_heatmap_too_small_to_print_is_a_build_warning(tmp_path, project):
-    app, warnings, source = project(".. credit-heatmap:: contributors.json\n")
+@pytest.mark.parametrize("suppressed", [False, True])
+def test_heatmap_too_small_to_print_is_a_build_warning(tmp_path, project, suppressed):
+    conf = "suppress_warnings = ['credit_matrix']\n" if suppressed else ""
+    app, warnings, source = project(".. credit-heatmap:: contributors.json\n", conf=conf)
     data = json.loads((source / "contributors.json").read_text(encoding="utf-8"))
     first = data["authors"][0]
     data["authors"] = [
@@ -163,8 +165,22 @@ def test_heatmap_too_small_to_print_is_a_build_warning(tmp_path, project):
     ]
     (source / "contributors.json").write_text(json.dumps(data), encoding="utf-8")
     app.build()
+    if suppressed:
+        assert not warnings.getvalue()
+        return
     assert "smallest labels print at about" in warnings.getvalue()
     assert "index.rst" in warnings.getvalue()
+
+
+def test_other_cli_stderr_is_not_a_build_warning(tmp_path, project):
+    # A Node notice on stderr from a CLI that succeeds: the output is used and the build stays clean.
+    script = (
+        "import sys; sys.stderr.write('(node:1) ExperimentalWarning: something\\n'); print('Marie Curie: Software.')"
+    )
+    app, warnings, _ = project(command=[sys.executable, "-c", script])
+    app.build()
+    assert not warnings.getvalue()
+    assert "Marie Curie: Software." in (tmp_path / "html/index.html").read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize("position", ["auto", "right", "bottom"])

@@ -54,10 +54,12 @@ class CreditStatement(SphinxDirective):
             raise self.error(f"CRediT rendering failed: {error.stderr.strip()}") from error
         except (OSError, subprocess.TimeoutExpired) as error:
             raise self.error(f"Cannot run the credit-matrix CLI: {error}") from error
-        # The CLI's warnings (a heatmap that prints too small) become build warnings on this directive.
+        # The CLI's own warnings (a heatmap that prints too small) become build warnings on this
+        # directive; other stderr, such as a Node notice, does not. suppress_warnings = ["credit_matrix"]
+        # silences them.
         for line in result.stderr.splitlines():
-            if line.strip():
-                logger.warning(line.strip(), location=self.get_location())
+            if line.startswith("credit-matrix: "):
+                logger.warning(line, location=self.get_location(), type="credit_matrix", subtype="cli")
         return result.stdout
 
 

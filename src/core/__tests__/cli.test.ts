@@ -7,6 +7,7 @@ import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { run as runCommand, USAGE } from "../cli";
+import { heatmapPrintWarning } from "../export/heatmap-print";
 import { NewerVersionError, toJson } from "../export/json";
 import { createFigureRenderer } from "../figures";
 import { createAuthor } from "../parse-authors";
@@ -41,8 +42,11 @@ it("warns on stderr when a heatmap would print too small on a full page, and onl
   const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
   const rows = Array.from({ length: 40 }, (_, i) => `Grace Hopper ${i},100,`).join("\n");
   const large = file("large.csv", `Name,Conceptualization,Software\n${rows}\n`);
-  for (const to of ["svg", "pdf"]) await runCommand(["convert", large, "--to", to]);
-  expect(stderr.mock.calls.flat().filter((text) => String(text).includes("smallest labels"))).toHaveLength(2);
+  const svg = await run(["convert", large, "--to", "svg"]);
+  await runCommand(["convert", large, "--to", "pdf"]);
+  const warnings = stderr.mock.calls.flat().filter((text) => String(text).includes("smallest labels"));
+  // The warning measures the figure the CLI writes, not an estimate of it.
+  expect(warnings).toEqual(Array(2).fill(`credit-matrix: ${heatmapPrintWarning(svg)}\n`));
   stderr.mockClear();
   await run(["convert", csv, "--to", "svg"]);
   expect(stderr.mock.calls.flat().join(" ")).not.toContain("smallest labels");

@@ -209,7 +209,8 @@ async function renderHeatmap(node, vfile) {
     return false;
   }
   const warning = heatmapPrintWarning(svg);
-  if (warning) vfile.message(`credit-heatmap: ${warning}`, node);
+  // `error_rules: [{ id: credit-heatmap-small-print, severity: ignore }]` in myst.yml silences it.
+  if (warning) vfile.message(`credit-heatmap: ${warning}`, node).ruleId = "credit-heatmap-small-print";
   const name = `${createHash("sha256").update(svg).digest("hex").slice(0, 20)}.svg`;
   const dir = join(dirname(path), "_credit_matrix");
   mkdirSync(dir, { recursive: true });

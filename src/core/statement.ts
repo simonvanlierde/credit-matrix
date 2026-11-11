@@ -55,8 +55,12 @@ export interface ParsedStatement {
   unmatched: { token: string; candidates: number[]; roles: CreditRoleName[] }[];
 }
 
-/** The longest statement {@link parseStatement} reads, in UTF-16 code units. Real ones are under 5,000. */
-export const MAX_STATEMENT_LENGTH = 50_000;
+/**
+ * The longest statement {@link parseStatement} reads, in UTF-16 code units: a full draft's by-author
+ * statement with every role (111,000). Real ones are under 5,000. Parsing is linear in length times
+ * contributors, about 1.4 s for a hostile 120,000 against 400.
+ */
+export const MAX_STATEMENT_LENGTH = 120_000;
 
 // Python's \w: any letter, digit or number, or "_". JS's \w and \b are ASCII-only.
 const W = String.raw`[\p{L}\p{N}_]`;

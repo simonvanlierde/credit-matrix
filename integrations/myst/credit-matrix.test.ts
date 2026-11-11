@@ -23,7 +23,7 @@ type Node = { type: string; value?: string; children?: Node[] };
 const text = (nodes: Node[]): string => nodes.map((n) => n.value ?? text(n.children ?? [])).join("");
 
 type Image = { type: string; url?: string; alt?: string };
-type Message = { message: string; fatal?: boolean };
+type Message = { message: string; fatal?: boolean; ruleId?: string };
 
 /** Run the heatmap directive and the transform that draws it, as MyST does. */
 async function heatmap(path: string, options: Record<string, unknown> = {}) {
@@ -251,6 +251,7 @@ it("warns, without failing the build, when the heatmap would print too small on 
   expect(messages).toHaveLength(1);
   expect(messages[0]?.message).toMatch(/^credit-heatmap: the heatmap's smallest labels print at about/);
   expect(messages[0]?.fatal).toBeUndefined();
+  expect(messages[0]?.ruleId).toBe("credit-heatmap-small-print");
 });
 
 it("forwards legend placement and marks without changing MyST publication defaults", async () => {

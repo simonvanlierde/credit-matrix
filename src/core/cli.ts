@@ -22,7 +22,7 @@ import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
 import { toMyst, toQuarto } from "./export/frontmatter";
 import { heatmapPrintWarning } from "./export/heatmap-print";
-import { buildHeatmapSvg, HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
+import { HeatmapOptionError, type HeatmapSvgOptions } from "./export/heatmap-svg";
 import { RepeatedIdError, toJson } from "./export/json";
 import { toLatexCredits } from "./export/latex-credits";
 import { toMarkdown } from "./export/markdown";
@@ -329,9 +329,11 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
             translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
             translateUi: makeUiTranslator(await loadUiCatalog(locale)),
           };
-          const warning = heatmapPrintWarning(buildHeatmapSvg(authors, options));
+          // Measure the figure as written: font-embedded text is narrower than buildHeatmapSvg's estimate.
+          const svg = await renderer.svg(authors, options);
+          const warning = heatmapPrintWarning(svg);
           if (warning) process.stderr.write(`credit-matrix: ${warning}\n`);
-          return values.to === "pdf" ? renderer.pdf(authors, options) : renderer.svg(authors, options);
+          return values.to === "pdf" ? renderer.pdf(authors, options) : svg;
         }
         default:
           throw new UsageError(

@@ -247,7 +247,7 @@ for Quarto or MyST author YAML and an RO-Crate fragment, which the app writes bu
 `assignments`, each an author index and a role name, and `unresolved`: names or initials that fit
 no author, or more than one, which it never guesses. `unmatched` lists each of those once, with
 `candidates` (the author indices it could be, empty when none) and the `roles` left out for it.
-It throws a `RangeError` on text longer than `MAX_STATEMENT_LENGTH` (50,000 characters); real
+It throws a `RangeError` on text longer than `MAX_STATEMENT_LENGTH` (120,000 characters); real
 statements stay under 5,000. Only CRediT wording counts, so "A.B. conceived
 the study" yields nothing. It does not judge whether the text is a CRediT statement at all:
 `namesCredit(text)` says whether it uses a term prose rarely does (conceptualization, data curation,

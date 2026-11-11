@@ -23,7 +23,10 @@ export function heatmapPrintSize(svg: string, widthMm: number) {
   };
 }
 
-/** Below this size, the app and the CLI warn that a heatmap's labels print too small to read. */
+/**
+ * Below this size a heatmap's labels print too small to read. The app measures at the width the user
+ * picked; `heatmapPrintWarning` at a full page.
+ */
 export const SMALL_PRINT_PT = 6;
 
 /**
@@ -42,6 +45,7 @@ export function heatmapPrintWarning(svg: string): string | null {
   const widthMm = Math.min(PAGE_FIGURE_MM.width, (PAGE_FIGURE_MM.height * width) / height);
   const { minFontPt } = heatmapPrintSize(svg, widthMm);
   if (minFontPt >= SMALL_PRINT_PT) return null;
-  const size = minFontPt.toFixed(1);
+  // Rounded down, so 5.97 pt never reads "about 6.0 pt" under a 6 pt threshold.
+  const size = (Math.floor(minFontPt * 10) / 10).toFixed(1);
   return `the heatmap's smallest labels print at about ${size} pt when it fits a full page (183 × 170 mm). Under ${SMALL_PRINT_PT} pt they are hard to read: use initials or transpose it for a small team, or give a large team's figure a page of its own, such as a supplementary figure.`;
 }

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { type Author, createAuthor, toJson } from "@/core";
+import { type Author, createAuthor, MAX_STATEMENT_LENGTH, toJson } from "@/core";
 import { MAX_AUTHORS } from "@/core/author";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import { fetchOrcidKeys, type OrcidKey } from "@/core/orcid-proof";
@@ -448,9 +448,9 @@ describe("a pasted CRediT statement", () => {
 
   it("refuses a statement over the length cap", async () => {
     renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
-    paste(`AB: conceptualization. ${"x".repeat(50_000)}`);
+    paste(`AB: conceptualization. ${"x".repeat(MAX_STATEMENT_LENGTH)}`);
     await review();
-    expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "50,000"))).toBeTruthy();
+    expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "120,000"))).toBeTruthy();
   });
 });
 

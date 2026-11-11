@@ -60,7 +60,14 @@ describe("final-size heatmap measurements", () => {
     expect(heatmapPrintSize(tall, 17).minFontPt).toBeCloseTo(6.0, 1);
     expect(heatmapPrintWarning(tall)).toBeNull();
     expect(heatmapPrintWarning('<svg width="96" height="1000"><text font-size="12">Axis</text></svg>')).toMatch(
-      /about 5\.8 pt/,
+      /about 5\.7 pt/,
+    );
+  });
+
+  it("rounds the printed size down, so it never reads 6.0 pt under the 6 pt threshold", () => {
+    // 96 px wide at 183 mm: a 1.105 px label prints at 5.97 pt.
+    expect(heatmapPrintWarning('<svg width="96" height="10"><text font-size="1.105">A</text></svg>')).toMatch(
+      /about 5\.9 pt/,
     );
   });
 });

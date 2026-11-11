@@ -205,7 +205,15 @@ The CLI and the document plugins warn as well: on stderr for the CLI, Quarto and
 build warning in MyST and Sphinx. They measure the figure scaled to fit 183 × 170 mm, and warn
 below 6 pt. That happens from about 25 contributors, in either orientation. A larger team's
 figure needs a page of its own, such as a supplementary figure. Typst has no build warnings, so the
-Typst package does not warn. Increasing PNG DPI does not increase the printed text size.
+Typst package does not warn. To keep a strict build passing once you have checked the figure, add
+`suppress_warnings = ["credit_matrix"]` to Sphinx's `conf.py`, or this to MyST's `myst.yml`:
+
+```yaml
+project:
+  error_rules:
+    - rule: credit-heatmap-small-print
+      severity: ignore
+``` Increasing PNG DPI does not increase the printed text size.
 
 These checks cover the reference fixtures and installed browser fonts. They do not replace checking
 the final manuscript, a native reader's review, a physical printed proof, or the publisher's font rules.
