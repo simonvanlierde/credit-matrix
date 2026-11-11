@@ -118,3 +118,13 @@ it("links a contributor's name in the statement to their sidebar row and column"
   fireEvent.pointerLeave(paragraph);
   expect(store().statementLink).toBeNull();
 });
+
+it("marks a role's phrase for everyone, and no names, while its label in the grid is hovered", () => {
+  const authors = twoAuthors();
+  act(() => store().loadAuthors(authors));
+  const { container } = renderStatement();
+  fireEvent.click(screen.getByRole("radio", { name: english.groupByAuthor }));
+  act(() => store().setStatementLink({ role: "Conceptualization", from: "role" }));
+  const marked = [...container.querySelectorAll("[data-linked]")].map((span) => span.getAttribute("data-role"));
+  expect(marked).toEqual(["Conceptualization", "Conceptualization"]);
+});

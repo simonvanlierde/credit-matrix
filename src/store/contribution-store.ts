@@ -104,11 +104,12 @@ interface ReviewCell {
  * a grid cell and its phrase (with a role), or the whole person (without one: their sidebar row,
  * grid column, name and phrases).
  */
+/** A person (no role), a role (no person), or one cell (both). */
 interface StatementLink {
-  contributorId: string;
+  contributorId?: string;
   role?: CreditRoleName;
   /** Which side the pointer or focus is on: the sides it is not on show the mark. */
-  from: "cell" | "phrase" | "author" | "name";
+  from: "cell" | "phrase" | "author" | "name" | "role";
 }
 
 /** More than anyone writes at once, and well inside what localStorage holds. */

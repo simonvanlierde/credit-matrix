@@ -1,5 +1,5 @@
 import { Check, CheckCheck, Clock, Send, Settings2, UserPlus } from "lucide-react";
-import { memo, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
+import { memo, type PointerEvent, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { InitialsChip } from "@/components/ui/initials-chip";
 import { LevelMark } from "@/components/ui/level-mark";
@@ -13,7 +13,7 @@ import {
   SettingsSection,
 } from "@/components/ui/settings-panel";
 import { UndoBar } from "@/components/ui/undo-bar";
-import { type Author, CREDIT_ROLES, review, scoreToLevel } from "@/core";
+import { type Author, CREDIT_ROLES, type CreditRoleName, review, scoreToLevel } from "@/core";
 import { LEVEL_SCORE } from "@/core/author";
 import { contributorHue, contributorHues, heatCellColor, onColor, pageMarkColor } from "@/core/contributor-color";
 import type { UiKey, UiTranslator } from "@/core/i18n";
@@ -96,10 +96,22 @@ export function ContributionGrid() {
   const linkedFromPhrase = useContributionStore((s) =>
     s.statementLink?.from === "phrase" ? `${s.statementLink.contributorId}:${s.statementLink.role}` : null,
   );
-  // The person hovered in the sidebar or by name in the statement: their whole column is marked.
+  // The person hovered in the sidebar, by name in the statement or by their header: their whole column is marked.
   const linkedPerson = useContributionStore((s) => {
     const link = s.statementLink;
-    return link && (link.from === "author" || link.from === "name") ? link.contributorId : null;
+    return link && (link.from === "author" || link.from === "name") ? (link.contributorId ?? null) : null;
+  });
+  // The role whose label is under the pointer: its row is marked, and its phrases in the statement.
+  const linkedRole = useContributionStore((s) =>
+    s.statementLink?.from === "role" ? (s.statementLink.role ?? null) : null,
+  );
+  /** Pointer-only link from a header; a tap sends no leave, and the keyboard reaches cells instead. */
+  const headerLink = (link: { contributorId: string; from: "author" } | { role: CreditRoleName; from: "role" }) => ({
+    onPointerEnter: (event: PointerEvent) => event.pointerType === "mouse" && setStatementLink(link),
+    onPointerLeave: (event: PointerEvent) => {
+      if (event.pointerType === "mouse" && useContributionStore.getState().statementLink?.from === link.from)
+        setStatementLink(null);
+    },
   });
   const activeDraftId = useContributionStore((s) => s.activeDraftId);
   const summary = useAskSummary();
@@ -352,7 +364,7 @@ export function ContributionGrid() {
         reviewHighlight?.contributorId === author.id && reviewHighlight.target === CREDIT_ROLES[roleIndex]?.name
       }
       linked={linkedFromPhrase === `${author.id}:${CREDIT_ROLES[roleIndex]?.name}`}
-      personLinked={linkedPerson === author.id}
+      personLinked={linkedPerson === author.id || linkedRole === CREDIT_ROLES[roleIndex]?.name}
       settling={
         reviewSettled?.contributorId === author.id &&
         reviewSettled.targets.some((target) => target === CREDIT_ROLES[roleIndex]?.name)
@@ -584,6 +596,7 @@ export function ContributionGrid() {
                         // background covers all but its first few characters.
                         style={{ zIndex: 20 + (CREDIT_ROLES.length - columnIndex) }}
                         className="sticky top-0 min-w-[2rem] bg-surface pb-1 align-bottom"
+                        {...headerLink({ role: role.name, from: "role" })}
                       >
                         <AngledLabel title={translateInterfaceRole(role.name)}>
                           {roleHead(columnIndex, "text-xs")}
@@ -596,6 +609,7 @@ export function ContributionGrid() {
                         scope="col"
                         style={{ zIndex: 20 + (authors.length - columnIndex) }}
                         className="sticky top-0 min-w-[2.75rem] bg-surface pb-1 align-bottom"
+                        {...headerLink({ contributorId: author.id, from: "author" })}
                       >
                         <span className="flex flex-col items-center gap-1">
                           {namedHeaders ? (
@@ -630,6 +644,7 @@ export function ContributionGrid() {
                       <th
                         scope="row"
                         className="sticky left-0 z-10 bg-surface py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
+                        {...headerLink({ contributorId: author.id, from: "author" })}
                       >
                         <span className="flex items-center gap-1.5 min-w-0">
                           <InitialsChip author={author} />
@@ -657,6 +672,7 @@ export function ContributionGrid() {
                       <th
                         scope="row"
                         className="sticky left-0 z-10 max-w-56 bg-surface py-0 text-left group-hover:bg-surface-container-low group-focus-within:bg-surface-container-low"
+                        {...headerLink({ role: role.name, from: "role" })}
                       >
                         {roleHead(roleIndex, "max-w-full truncate text-[13px]")}
                       </th>

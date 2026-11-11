@@ -346,10 +346,14 @@ export function StatementOutput() {
               const authorId = span.cell?.authorId ?? span.authorId;
               if (!authorId) return span.text;
               const role = span.cell?.role;
-              // A person link (no role) marks their name and every phrase; a cell link, its one phrase.
+              // A person link (no role) marks their name and every phrase, a role link (no person)
+              // that role's phrase for everyone, and a cell link its one phrase.
               const linked =
-                statementLink?.contributorId === authorId &&
-                (statementLink.role === undefined || statementLink.role === role);
+                statementLink !== null &&
+                (statementLink.contributorId ?? authorId) === authorId &&
+                (statementLink.role === undefined
+                  ? statementLink.contributorId !== undefined
+                  : statementLink.role === role);
               // One element either way: swapping in a <mark> would remount the text and break a
               // selection being dragged across it. Underlined as well as tinted, never colour alone.
               return (
