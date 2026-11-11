@@ -65,7 +65,7 @@ the label contains kana. In Chinese output, punctuation beside Han text comes fr
 The font files are in the separate [`credit-matrix-fonts`](../../src/fonts/README.md) package.
 The CLI, the document plugins and the JavaScript API read them from there when it is installed.
 Otherwise they download each face once, check its SHA-256 hash and cache it on the machine; the
-[CLI section](../../src/core/README.md#cli) gives the address and the cache folder.
+[CLI section](../../docs/cli.md#fonts-and-offline-use) gives the address and the cache folder.
 The app's offline cache holds Noto Sans, the default face, and the subsetter from the first visit, so a Latin,
 Greek or Cyrillic figure in the default font exports offline at once. It fetches any other face
 (serif, Japanese, Chinese) the first time an export needs it and keeps it for offline use; one

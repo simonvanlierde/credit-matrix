@@ -78,5 +78,5 @@ credit_matrix_ignore_system_fonts = True
 ```
 
 The CLI embeds fonts in the generated SVG. They come from `credit-matrix-fonts` when it is
-installed, otherwise from a one-time download ([details](../../src/core/README.md#cli)). See
+installed, otherwise from a one-time download ([details](../../docs/cli.md#fonts-and-offline-use)). See
 [font portability and PDF export](../figures/README.md) before converting it to PDF or Word.

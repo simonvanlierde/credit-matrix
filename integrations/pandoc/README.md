@@ -84,7 +84,7 @@ credit-matrix:
 
 A missing family stops the render, and the CLI's message goes to standard error.
 The CLI embeds fonts in the generated SVG. They come from `credit-matrix-fonts` when it is
-installed, otherwise from a one-time download ([details](../../src/core/README.md#cli)). See
+installed, otherwise from a one-time download ([details](../../docs/cli.md#fonts-and-offline-use)). See
 [font portability and PDF export](../figures/README.md) for PDF and Word converter limits.
 
 ## Limits

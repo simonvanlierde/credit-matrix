@@ -20,7 +20,7 @@ upgrading is a change of that number.
 The plugin file is about 1.5 MB. The heatmap directive downloads a figure font from jsDelivr the
 first time a figure needs it: 0.6 MB for Latin text, 6-15 MB for a Japanese or Chinese face. It
 keeps each face in the machine's font cache, so later builds work offline; the
-[CLI section](../../src/core/README.md#cli) of the package README gives the folder.
+[CLI section](../../docs/cli.md#fonts-and-offline-use) of the package README gives the folder.
 
 To work offline or pin the file in your repository, copy
 [`credit-matrix.mjs`](credit-matrix.mjs) into your project, run `pnpm add credit-matrix credit-matrix-fonts yaml`
