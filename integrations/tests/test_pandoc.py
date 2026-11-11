@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -260,3 +261,59 @@ def test_heatmap_command_comes_from_the_environment_not_the_document(tmp_path):
     with pytest.raises(subprocess.CalledProcessError) as error:
         render(metadata, "# Methods\n", "html", env={"CREDIT_MATRIX_COMMAND": "credit-matrix-missing --flag"})
     assert "credit-matrix-missing" in error.value.stderr
+
+
+FONTS = ROOT / "src/core/__tests__/fixtures/fonts"
+
+
+@pytest.fixture
+def font_document(tmp_path):
+    """A document in docs/ whose font-path is the folder beside it, and a working folder elsewhere."""
+    (tmp_path / "fonts").mkdir()
+    shutil.copyfile(FONTS / "FigureTestSerif-Regular.ttf", tmp_path / "fonts/FigureTestSerif-Regular.ttf")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "elsewhere").mkdir()
+
+    def build(family):
+        meta = {
+            "author": [{"name": "Tu Youyou", "roles": ["software"]}],
+            "credit-matrix": {
+                "heatmap": True,
+                "font": family,
+                "font-path": "../fonts",
+                "ignore-system-fonts": True,
+            },
+        }
+        (tmp_path / "docs/paper.md").write_text(f"---\n{json.dumps(meta)}\n---\n\n# Methods\n", encoding="utf-8")
+        return subprocess.run(
+            [
+                pypandoc.get_pandoc_path(),
+                "--to=html",
+                f"--lua-filter={FILTER}",
+                f"--extract-media={tmp_path / 'media'}",
+                str(tmp_path / "docs/paper.md"),
+            ],
+            cwd=tmp_path / "elsewhere",
+            capture_output=True,
+            text=True,
+            env={**os.environ, **LOCAL_CLI},
+        )
+
+    return build, tmp_path
+
+
+def test_heatmap_font_path_is_relative_to_the_document(font_document):
+    build, tmp_path = font_document
+    result = build("figure test serif")
+    assert result.returncode == 0, result.stderr
+    assert "credit-matrix: font: Figure Test Serif from " in result.stderr
+    svg = next((tmp_path / "media").rglob("*.svg")).read_text(encoding="utf-8")
+    assert "font-family:'Figure Test Serif'" in svg
+
+
+def test_heatmap_missing_font_family_names_the_document(font_document):
+    build, tmp_path = font_document
+    result = build("No Such Family")
+    assert result.returncode != 0
+    assert "Cannot find the font family No Such Family in the font path" in result.stderr
+    assert f"credit-matrix: {tmp_path / 'docs/paper.md'}: cannot draw the heatmap" in result.stderr
