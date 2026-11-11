@@ -107,17 +107,17 @@ jobs:
       # renovate.json5 included, which biome skips. After the install, so the
       # $schema paths in biome.json and wrangler.jsonc resolve and both files are
       # also checked against their schemas.
-      - uses: simonvanlierde/jsonvet@022d320d5b971eccb28cfa6ce205152cbb382e53 # v3.2.0
+      - uses: simonvanlierde/jsonvet@83df66110a108e0fa4b7d2b2adcef6831f618e05 # v3.3.1
 
       # integrations/quarto/credit-matrix.test.ts renders a document with the filter.
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
 
       # integrations/typst/credit-matrix.test.ts compiles the Typst package's examples.
-      - uses: typst-community/setup-typst@fee4b65b091cc546f02ce3be15fad8760f38a108 # v5.3.0
+      - uses: typst-community/setup-typst@6a2cfaf0b28d636b00148f965e315bae81079aaa # v5.3.1
         with:
           typst-version: 0.15.1
 
-      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "0.13.x"
           save-cache: ${{ github.event_name != 'pull_request' }}
@@ -235,7 +235,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "0.13.x"
           working-directory: census
@@ -266,7 +266,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "0.13.x"
           working-directory: census
@@ -360,7 +360,7 @@ jobs:
       # reproduced locally.
       - name: Upload Playwright traces on failure
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: playwright-traces-${{ matrix.browser }}
           path: test-results
@@ -432,7 +432,7 @@ jobs:
         run: pnpm exec wrangler deploy --dry-run
 
       - name: Upload static export
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: out
           path: out
