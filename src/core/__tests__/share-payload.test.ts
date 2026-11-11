@@ -5,7 +5,7 @@ import { fromSharePayload, toSharePayload } from "../share-payload";
 
 function makeAuthors() {
   return [
-    createAuthor("Jane A. Smith", {
+    createAuthor("Grace B. Hopper", {
       orcid: "0000-0002-1825-0097",
       corresponding: true,
       equalContribution: true,
@@ -14,7 +14,7 @@ function makeAuthors() {
         { role: "Software", score: 50 },
       ],
     }),
-    createAuthor("Bob White", {
+    createAuthor("Charles Darwin", {
       contributorType: "non-author",
       contributions: [{ role: "Investigation", score: 100 }],
     }),
@@ -49,9 +49,9 @@ describe("share payload v2", () => {
     if (!jane) throw new Error("expected Jane");
     const payload = toSharePayload({ authors, claimId: jane.id, sourceDraftId: "draft-1" });
 
-    expect(payload).not.toContain("Bob White");
+    expect(payload).not.toContain("Charles Darwin");
     const restored = fromSharePayload(payload);
-    expect(restored.authors.map((a) => a.name)).toEqual(["Jane A. Smith"]);
+    expect(restored.authors.map((a) => a.name)).toEqual(["Grace B. Hopper"]);
     expect(restored.authors[0]?.orcid).toBe("0000-0002-1825-0097");
     expect(restored.claimId).toBe(jane.id);
   });
@@ -110,7 +110,7 @@ describe("share payload v2", () => {
   it("reads a link from before blank asks and send times as pre-filled and undated", () => {
     // Frozen: the shape v0.6.0 wrote, with no `b` or `w`.
     const old =
-      '{"v":2,"d":"draft-1","c":"jane-1","a":[{"i":"jane-1","n":"Jane Smith","s":[100,0,0,0,0,0,0,0,0,0,0,0,0,0]}]}';
+      '{"v":2,"d":"draft-1","c":"jane-1","a":[{"i":"jane-1","n":"Grace Hopper","s":[100,0,0,0,0,0,0,0,0,0,0,0,0,0]}]}';
     const restored = fromSharePayload(old);
     expect(restored.blank).toBe(false);
     expect(restored.sentAt).toBeNull();
@@ -129,7 +129,7 @@ describe("share payload v2", () => {
   });
 
   it("rejects a v1 payload outright", () => {
-    expect(() => fromSharePayload(JSON.stringify({ v: 1, a: [{ n: "Jane Smith", s: [] }] }))).toThrow();
+    expect(() => fromSharePayload(JSON.stringify({ v: 1, a: [{ n: "Grace Hopper", s: [] }] }))).toThrow();
   });
 
   it("rejects a claim naming a contributor the payload does not hold", () => {
@@ -192,9 +192,10 @@ describe("share payload v2", () => {
   });
 
   it("gives contributors unique initials, as the workspace does", () => {
-    const authors = [createAuthor("Jane Smith"), createAuthor("John Smith")];
+    // Both parse to "AL".
+    const authors = [createAuthor("Ada Lovelace"), createAuthor("Antoine Lavoisier")];
     const restored = fromSharePayload(toSharePayload({ authors }));
-    expect(restored.authors[0]?.initials).not.toBe(restored.authors[1]?.initials);
+    expect(restored.authors.map((a) => a.initials)).toEqual(["AL", "ALa"]);
   });
 });
 
@@ -218,7 +219,7 @@ describe("share payload title", () => {
 });
 
 describe("share payload envelope validation", () => {
-  const base = { v: 2, a: [{ i: "jane", n: "Jane Smith", s: [100] }] };
+  const base = { v: 2, a: [{ i: "jane", n: "Grace Hopper", s: [100] }] };
   // Raw JSON text, so values JSON.stringify cannot write (1e400 parses to Infinity) reach the parser.
   const withKey = (key: string, raw: string) => `${JSON.stringify(base).slice(0, -1)},"${key}":${raw}}`;
 

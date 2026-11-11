@@ -5,7 +5,7 @@ import { generateStatement, STATEMENT_FORMATS, statementSpans } from "../generat
 import { parseAuthorText } from "../parse-authors";
 
 function makeAuthors() {
-  const authors = parseAuthorText("Jane Smith\nBob White");
+  const authors = parseAuthorText("Grace Hopper\nCharles Darwin");
   const [jane, bob] = authors;
   if (!(jane && bob)) throw new Error("expected 2 authors");
 
@@ -28,8 +28,8 @@ describe("generateStatement, as HTML", () => {
     const html = generateStatement(authors, { format: "by-role", asHtml: true });
 
     expect(html).toBe(
-      "<p><strong>CRediT:</strong> <strong>Conceptualization</strong>: Jane Smith, Bob White; " +
-        "<strong>Investigation</strong>: Bob White; <strong>Software</strong>: Jane Smith</p>",
+      "<p><strong>CRediT:</strong> <strong>Conceptualization</strong>: Grace Hopper, Charles Darwin; " +
+        "<strong>Investigation</strong>: Charles Darwin; <strong>Software</strong>: Grace Hopper</p>",
     );
     // The rich and plain forms must say the same thing: they travel together on
     // the clipboard, and the recipient sees whichever their editor prefers.
@@ -38,7 +38,7 @@ describe("generateStatement, as HTML", () => {
 
   it("bolds the contributor in a by-author statement", () => {
     const html = generateStatement(makeAuthors(), { format: "by-author", asHtml: true });
-    expect(html).toContain("<strong>Jane Smith</strong>: Conceptualization, Software");
+    expect(html).toContain("<strong>Grace Hopper</strong>: Conceptualization, Software");
   });
 
   it("escapes characters that would otherwise be markup", () => {
@@ -70,7 +70,7 @@ describe("generateStatement, as HTML", () => {
   });
 
   it("returns an empty string when nobody has contributions", () => {
-    expect(generateStatement(parseAuthorText("Jane Smith"), { format: "by-role", asHtml: true })).toBe("");
+    expect(generateStatement(parseAuthorText("Grace Hopper"), { format: "by-role", asHtml: true })).toBe("");
   });
 });
 
@@ -84,29 +84,29 @@ describe("generateStatement", () => {
   it("by-role format uses full names", () => {
     const stmt = generateStatement(makeAuthors(), { format: "by-role" });
     expect(stmt).toMatch(/^CRediT: /);
-    expect(stmt).toContain("Conceptualization: Jane Smith, Bob White");
-    expect(stmt).toContain("Software: Jane Smith");
-    expect(stmt).toContain("Investigation: Bob White");
+    expect(stmt).toContain("Conceptualization: Grace Hopper, Charles Darwin");
+    expect(stmt).toContain("Software: Grace Hopper");
+    expect(stmt).toContain("Investigation: Charles Darwin");
   });
 
   it("by-role-short format uses initials", () => {
     const stmt = generateStatement(makeAuthors(), { format: "by-role-short" });
-    expect(stmt).toContain("Conceptualization: JS, BW");
-    expect(stmt).toContain("Software: JS");
-    expect(stmt).toContain("Investigation: BW");
+    expect(stmt).toContain("Conceptualization: GH, CD");
+    expect(stmt).toContain("Software: GH");
+    expect(stmt).toContain("Investigation: CD");
   });
 
   it("by-author format", () => {
     const stmt = generateStatement(makeAuthors(), { format: "by-author" });
     expect(stmt).toMatch(/^CRediT: /);
-    expect(stmt).toContain("Jane Smith: Conceptualization, Software");
-    expect(stmt).toContain("Bob White: Conceptualization, Investigation");
+    expect(stmt).toContain("Grace Hopper: Conceptualization, Software");
+    expect(stmt).toContain("Charles Darwin: Conceptualization, Investigation");
   });
 
   it("by-author-short format", () => {
     const stmt = generateStatement(makeAuthors(), { format: "by-author-short" });
-    expect(stmt).toContain("JS:");
-    expect(stmt).toContain("BW:");
+    expect(stmt).toContain("GH:");
+    expect(stmt).toContain("CD:");
   });
 
   it("returns empty string when no contributions", () => {
@@ -116,49 +116,49 @@ describe("generateStatement", () => {
 
   it("appends level labels for non-lead scores when showLevels is set", () => {
     const stmt = generateStatement(makeAuthors(), { format: "by-author", showLevels: true });
-    // Jane: Conceptualization is lead (100) → no label; Software is equal (50) → labelled
+    // Grace: Conceptualization is lead (100) → no label; Software is equal (50) → labelled
     expect(stmt).toContain("Conceptualization, Software (Equal)");
-    // Bob: Conceptualization is supporting (20) → labelled
+    // Charles: Conceptualization is supporting (20) → labelled
     expect(stmt).toContain("Conceptualization (Supporting)");
   });
 
   it("appends level labels to contributor names in by-role formats when showLevels is set", () => {
     const stmt = generateStatement(makeAuthors(), { format: "by-role", showLevels: true });
-    // Jane leads Conceptualization (no label); Bob supports it (labelled).
-    expect(stmt).toContain("Conceptualization: Jane Smith, Bob White (Supporting)");
-    expect(stmt).toContain("Software: Jane Smith (Equal)");
+    // Grace leads Conceptualization (no label); Charles supports it (labelled).
+    expect(stmt).toContain("Conceptualization: Grace Hopper, Charles Darwin (Supporting)");
+    expect(stmt).toContain("Software: Grace Hopper (Equal)");
     // Lead contributions stay unannotated.
-    expect(stmt).toContain("Investigation: Bob White");
-    expect(stmt).not.toContain("Investigation: Bob White (");
+    expect(stmt).toContain("Investigation: Charles Darwin");
+    expect(stmt).not.toContain("Investigation: Charles Darwin (");
   });
 
   it("credits non-author contributors on a separate Acknowledgements line", () => {
     const authors = makeAuthors();
     const bob = authors[1];
-    if (!bob) throw new Error("expected Bob");
+    if (!bob) throw new Error("expected Charles");
     bob.contributorType = "non-author";
 
     const stmt = generateStatement(authors, { format: "by-author" });
     const [creditLine, ackLine, ...rest] = stmt.split("\n\n");
     expect(rest).toHaveLength(0);
-    // Authors only on the CRediT line; Bob moves to Acknowledgements.
+    // Authors only on the CRediT line; Charles moves to Acknowledgements.
     expect(creditLine).toMatch(/^CRediT: /);
-    expect(creditLine).toContain("Jane Smith:");
-    expect(creditLine).not.toContain("Bob White");
-    expect(ackLine).toBe("Acknowledgements: Bob White: Conceptualization, Investigation");
+    expect(creditLine).toContain("Grace Hopper:");
+    expect(creditLine).not.toContain("Charles Darwin");
+    expect(ackLine).toBe("Acknowledgements: Charles Darwin: Conceptualization, Investigation");
   });
 
   it("keeps everyone on one CRediT line when separateAcknowledgements is false", () => {
     const authors = makeAuthors();
     const bob = authors[1];
-    if (!bob) throw new Error("expected Bob");
+    if (!bob) throw new Error("expected Charles");
     bob.contributorType = "non-author";
 
     const stmt = generateStatement(authors, { format: "by-author", separateAcknowledgements: false });
     expect(stmt).not.toContain("\n");
     expect(stmt).not.toContain("Acknowledgements:");
-    expect(stmt).toContain("Jane Smith:");
-    expect(stmt).toContain("Bob White:");
+    expect(stmt).toContain("Grace Hopper:");
+    expect(stmt).toContain("Charles Darwin:");
   });
 
   it("emits by-role in canonical CRediT order, not author-encounter order", () => {
@@ -190,7 +190,7 @@ describe("generateStatement", () => {
   it("localizes the Acknowledgements prefix and level labels via translateUi", () => {
     const authors = makeAuthors();
     const bob = authors[1];
-    if (!bob) throw new Error("expected Bob");
+    if (!bob) throw new Error("expected Charles");
     bob.contributorType = "non-author";
 
     const translateUi = makeUiTranslator({
@@ -200,8 +200,8 @@ describe("generateStatement", () => {
     });
     const stmt = generateStatement(authors, { format: "by-author", showLevels: true, translateUi });
     // "CRediT:" stays English (proper noun); Acknowledgements + level labels localize.
-    expect(stmt).toContain("CRediT: Jane Smith: Conceptualization, Software (Égal)");
-    expect(stmt).toContain("Remerciements: Bob White: Conceptualization (Secondaire)");
+    expect(stmt).toContain("CRediT: Grace Hopper: Conceptualization, Software (Égal)");
+    expect(stmt).toContain("Remerciements: Charles Darwin: Conceptualization (Secondaire)");
   });
 });
 
@@ -236,7 +236,9 @@ describe("statementSpans", () => {
 
   const marked = (authors: ReturnType<typeof makeAuthors>, format: (typeof STATEMENT_FORMATS)[number]) =>
     statementSpans(authors, { format, showLevels: true }).flatMap((span) =>
-      span.cell ? [`${span.cell.authorId === authors[0]?.id ? "Jane" : "Bob"}/${span.cell.role}=${span.text}`] : [],
+      span.cell
+        ? [`${span.cell.authorId === authors[0]?.id ? "Grace" : "Charles"}/${span.cell.role}=${span.text}`]
+        : [],
     );
 
   it.each(AVAILABLE_LOCALES)(
@@ -266,19 +268,19 @@ describe("statementSpans", () => {
 
   it("marks each role phrase of a by-author statement with its contributor and role", () => {
     expect(marked(makeAuthors(), "by-author")).toEqual([
-      "Jane/Conceptualization=Conceptualization",
-      "Jane/Software=Software (Equal)",
-      "Bob/Conceptualization=Conceptualization (Supporting)",
-      "Bob/Investigation=Investigation",
+      "Grace/Conceptualization=Conceptualization",
+      "Grace/Software=Software (Equal)",
+      "Charles/Conceptualization=Conceptualization (Supporting)",
+      "Charles/Investigation=Investigation",
     ]);
   });
 
   it("marks each name phrase of a by-role statement with its contributor and role", () => {
     expect(marked(makeAuthors(), "by-role-short")).toEqual([
-      "Jane/Conceptualization=JS",
-      "Bob/Conceptualization=BW (Supporting)",
-      "Bob/Investigation=BW",
-      "Jane/Software=JS (Equal)",
+      "Grace/Conceptualization=GH",
+      "Charles/Conceptualization=CD (Supporting)",
+      "Charles/Investigation=CD",
+      "Grace/Software=GH (Equal)",
     ]);
   });
 
@@ -288,11 +290,11 @@ describe("statementSpans", () => {
     const spans = statementSpans(authors, { format: "by-author" });
     const plain = spans.filter((span) => !span.cell).map((span) => span.text);
     expect(plain).toContain("CRediT:");
-    expect(plain).toContain("Jane Smith");
-    expect(plain.at(-1)).toMatch(/Jane Smith and Bob White/);
+    expect(plain).toContain("Grace Hopper");
+    expect(plain.at(-1)).toMatch(/Grace Hopper and Charles Darwin/);
   });
 
   it("has no spans when nobody has contributions", () => {
-    expect(statementSpans(parseAuthorText("Jane Smith"), { format: "by-role" })).toEqual([]);
+    expect(statementSpans(parseAuthorText("Grace Hopper"), { format: "by-role" })).toEqual([]);
   });
 });

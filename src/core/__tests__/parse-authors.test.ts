@@ -23,10 +23,10 @@ describe("parseNameParts", () => {
   });
 
   it("parses a three-part name", () => {
-    expect(parseNameParts("Jane A Smith")).toEqual({
-      firstName: "Jane",
-      middleName: "A",
-      surname: "Smith",
+    expect(parseNameParts("Grace B Hopper")).toEqual({
+      firstName: "Grace",
+      middleName: "B",
+      surname: "Hopper",
     });
   });
 
@@ -36,7 +36,7 @@ describe("parseNameParts", () => {
       middleName: "Luther",
       surname: "King",
     });
-    expect(parseNameParts("Bob White III")).toEqual({ firstName: "Bob", middleName: "", surname: "White" });
+    expect(parseNameParts("Charles Darwin III")).toEqual({ firstName: "Charles", middleName: "", surname: "Darwin" });
     expect(parseNameParts("Ann Jr")).toEqual({ firstName: "Ann", middleName: "", surname: "Jr" });
   });
 
@@ -74,10 +74,10 @@ describe("parseNameParts", () => {
   });
 
   it("parses a two-part name (no middle)", () => {
-    expect(parseNameParts("Bob White")).toEqual({
-      firstName: "Bob",
+    expect(parseNameParts("Charles Darwin")).toEqual({
+      firstName: "Charles",
       middleName: "",
-      surname: "White",
+      surname: "Darwin",
     });
   });
 
@@ -192,13 +192,13 @@ describe("createAuthor", () => {
   });
 
   it("takes a name of exactly the maximum length", () => {
-    const name = `Jane ${"a".repeat(MAX_AUTHOR_NAME_LENGTH - 5)}`;
+    const name = `Grace ${"a".repeat(MAX_AUTHOR_NAME_LENGTH - 6)}`;
     expect(createAuthor(name).name).toHaveLength(MAX_AUTHOR_NAME_LENGTH);
     expect(() => createAuthor(`${name}a`)).toThrow(/characters or fewer/);
   });
 
   it("writes initials in upper case for a name typed in lower case", () => {
-    expect(createAuthor("jane anne smith").initials).toBe("JAS");
+    expect(createAuthor("grace anne hopper").initials).toBe("GAH");
   });
 
   it.each([
@@ -217,9 +217,9 @@ describe("createAuthor", () => {
   });
 
   it("rejects a malformed ORCID but accepts bare and URL forms", () => {
-    expect(() => createAuthor("Jane Smith", { orcid: "not-an-orcid" })).toThrow(/ORCID/);
-    expect(createAuthor("Jane Smith", { orcid: "0000-0002-1825-0097" }).orcid).toBe("0000-0002-1825-0097");
-    expect(createAuthor("Jane Smith", { orcid: "https://orcid.org/0000-0002-1825-0097" }).orcid).toBe(
+    expect(() => createAuthor("Grace Hopper", { orcid: "not-an-orcid" })).toThrow(/ORCID/);
+    expect(createAuthor("Grace Hopper", { orcid: "0000-0002-1825-0097" }).orcid).toBe("0000-0002-1825-0097");
+    expect(createAuthor("Grace Hopper", { orcid: "https://orcid.org/0000-0002-1825-0097" }).orcid).toBe(
       "0000-0002-1825-0097",
     );
   });
@@ -238,7 +238,7 @@ describe("createAuthor", () => {
     expect(createAuthor("0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
     expect(createAuthor("0000-0002-1694-233X").initials).toBe("0000-0002-1694-233X");
     expect(createAuthor("https://orcid.org/0000-0002-1825-0097").initials).toBe("0000-0002-1825-0097");
-    expect(createAuthor("Jane - Smith").initials).toBe("JS");
+    expect(createAuthor("Grace - Hopper").initials).toBe("GH");
   });
 
   it("takes the surname initial from its first word that is not a particle", () => {
@@ -322,10 +322,10 @@ describe("deduplicateAuthorInitials", () => {
 
 describe("parseAuthorText", () => {
   it("parses newline-separated names", () => {
-    const authors = parseAuthorText("Alice Brown\nBob White\nCarol Ann Davis");
+    const authors = parseAuthorText("Alice Brown\nCharles Darwin\nCarol Ann Davis");
     expect(authors).toHaveLength(3);
     expect(authors[0]?.initials).toBe("AB");
-    expect(authors[1]?.initials).toBe("BW");
+    expect(authors[1]?.initials).toBe("CD");
     expect(authors[2]?.initials).toBe("CAD");
   });
 
@@ -352,9 +352,9 @@ describe("parseAuthorText", () => {
 
 describe("splitNameList", () => {
   it("splits on newlines, semicolons, and commas", () => {
-    expect(splitNameList("Alice Brown, Bob White; Carol Davis\nDan Evans")).toEqual([
+    expect(splitNameList("Alice Brown, Charles Darwin; Carol Davis\nDan Evans")).toEqual([
       "Alice Brown",
-      "Bob White",
+      "Charles Darwin",
       "Carol Davis",
       "Dan Evans",
     ]);
@@ -373,48 +373,48 @@ describe("splitNameList", () => {
   it("keeps a 'Lastname, Firstname' pair as one contributor", () => {
     expect(splitNameList("Curie, Marie")).toEqual(["Curie, Marie"]);
     expect(splitNameList("Curie, M.")).toEqual(["Curie, M."]);
-    expect(splitNameList("Curie, Marie; Smith, Jane")).toEqual(["Curie, Marie", "Smith, Jane"]);
+    expect(splitNameList("Curie, Marie; Hopper, Grace")).toEqual(["Curie, Marie", "Hopper, Grace"]);
   });
 
   it("keeps multi-token given names and initials attached to their surname", () => {
-    expect(splitNameList("Smith, J. A.")).toEqual(["Smith, J. A."]);
+    expect(splitNameList("Hopper, G. A.")).toEqual(["Hopper, G. A."]);
     expect(splitNameList("Curie, Marie Skłodowska")).toEqual(["Curie, Marie Skłodowska"]);
     expect(splitNameList("van der Berg, Anne")).toEqual(["van der Berg, Anne"]);
   });
 
   it("reads a comma-only list of inverted names as pairs", () => {
-    expect(splitNameList("Curie, Marie, Smith, J. A.")).toEqual(["Curie, Marie", "Smith, J. A."]);
+    expect(splitNameList("Curie, Marie, Hopper, G. A.")).toEqual(["Curie, Marie", "Hopper, G. A."]);
   });
 
   it("treats commas as separators when the chunks don't pair up as surname + given name", () => {
-    expect(splitNameList("Alice Brown, Bob White")).toEqual(["Alice Brown", "Bob White"]);
-    expect(splitNameList("Marie Curie, Jane Smith, Cher, Madonna")).toEqual([
+    expect(splitNameList("Alice Brown, Charles Darwin")).toEqual(["Alice Brown", "Charles Darwin"]);
+    expect(splitNameList("Marie Curie, Grace Hopper, Cher, Madonna")).toEqual([
       "Marie Curie",
-      "Jane Smith",
+      "Grace Hopper",
       "Cher",
       "Madonna",
     ]);
   });
 
   it("reads up to three given names as the second half of an inverted name, not four", () => {
-    expect(splitNameList("Smith, Jane Ann Marie")).toEqual(["Smith, Jane Ann Marie"]);
-    expect(splitNameList("Smith, Jane Ann Marie Lou")).toEqual(["Smith", "Jane Ann Marie Lou"]);
+    expect(splitNameList("Hopper, Grace Ann Marie")).toEqual(["Hopper, Grace Ann Marie"]);
+    expect(splitNameList("Hopper, Grace Ann Marie Lou")).toEqual(["Hopper", "Grace Ann Marie Lou"]);
   });
 
   it("does not read a chunk that ends without a letter as a surname", () => {
-    expect(splitNameList("Lab 42, Jane")).toEqual(["Lab 42", "Jane"]);
+    expect(splitNameList("Lab 42, Grace")).toEqual(["Lab 42", "Grace"]);
   });
 
   it("splits a list containing a mononym", () => {
-    expect(splitNameList("Marie Curie, Jane Smith, Cher")).toEqual(["Marie Curie", "Jane Smith", "Cher"]);
+    expect(splitNameList("Marie Curie, Grace Hopper, Cher")).toEqual(["Marie Curie", "Grace Hopper", "Cher"]);
   });
 
   it("splits a name paired with an ORCID iD rather than reading it as an inverted name", () => {
-    expect(splitNameList("Jane Smith, 0000-0002-1825-0097")).toEqual(["Jane Smith", "0000-0002-1825-0097"]);
+    expect(splitNameList("Grace Hopper, 0000-0002-1825-0097")).toEqual(["Grace Hopper", "0000-0002-1825-0097"]);
   });
 
   it("ignores empty entries and surrounding whitespace", () => {
-    expect(splitNameList("  Alice Brown ,, \n\n ; Bob White ")).toEqual(["Alice Brown", "Bob White"]);
+    expect(splitNameList("  Alice Brown ,, \n\n ; Charles Darwin ")).toEqual(["Alice Brown", "Charles Darwin"]);
   });
 });
 
@@ -422,7 +422,7 @@ describe("name parsing edge cases", () => {
   it("reads an inverted name past a stray comma and doubled spaces", () => {
     expect(parseNameParts("Curie, Marie,")).toEqual({ firstName: "Marie", middleName: "", surname: "Curie" });
     expect(parseNameParts("Curie, Marie  Anne")).toEqual({ firstName: "Marie", middleName: "Anne", surname: "Curie" });
-    expect(parseNameParts("Jane  Ann Smith")).toEqual({ firstName: "Jane", middleName: "Ann", surname: "Smith" });
+    expect(parseNameParts("Grace  Ann Hopper")).toEqual({ firstName: "Grace", middleName: "Ann", surname: "Hopper" });
   });
 
   it("gives no name parts for a name without letters", () => {
@@ -443,7 +443,7 @@ describe("name parsing edge cases", () => {
   });
 
   it("turns a run of pasted line breaks into one space", () => {
-    expect(createAuthor("Jane\n\r\nSmith").name).toBe("Jane Smith");
+    expect(createAuthor("Grace\n\r\nHopper").name).toBe("Grace Hopper");
   });
 });
 
@@ -457,7 +457,7 @@ describe("splitNameList comma pairs", () => {
       "King Jr., Martin",
       "King, Martin Luther, Jr.",
     ]);
-    expect(splitNameList("Martin Luther King, Jr., Jane Smith")).toEqual(["Martin Luther King, Jr.", "Jane Smith"]);
+    expect(splitNameList("Martin Luther King, Jr., Grace Hopper")).toEqual(["Martin Luther King, Jr.", "Grace Hopper"]);
   });
 
   it("joins a suffix only to a name before it, and reads a lone one as a surname", () => {
@@ -467,13 +467,13 @@ describe("splitNameList comma pairs", () => {
   });
 
   it("does not read an ORCID iD or a number as a surname", () => {
-    expect(splitNameList("0000-0002-1825-009X, Jane")).toEqual(["0000-0002-1825-009X", "Jane"]);
-    expect(splitNameList("2, Jane")).toEqual(["2", "Jane"]);
+    expect(splitNameList("0000-0002-1825-009X, Grace")).toEqual(["0000-0002-1825-009X", "Grace"]);
+    expect(splitNameList("2, Grace")).toEqual(["2", "Grace"]);
   });
 
   it("pairs a surname only with given names made of letters", () => {
-    for (const given of ["Jane 2", "2Jane", "Jane2"]) {
-      expect(splitNameList(`Smith, ${given}`)).toEqual(["Smith", given]);
+    for (const given of ["Grace 2", "2Grace", "Grace2"]) {
+      expect(splitNameList(`Hopper, ${given}`)).toEqual(["Hopper", given]);
     }
   });
 });
@@ -516,23 +516,28 @@ describe("normalizeRoster name parts", () => {
   });
 
   it("re-parses parts that leave out the first name or use a word twice", () => {
-    const jane = createAuthor("Jane Smith");
-    expect(rebuilt({ ...jane, firstName: "" })).toEqual({ firstName: "Jane", middleName: "", surname: "Smith" });
-    const smith = createAuthor("Smith");
-    expect(rebuilt({ ...smith, firstName: "Smith", surname: "Smith" })).toEqual({
-      firstName: "Smith",
+    const jane = createAuthor("Grace Hopper");
+    expect(rebuilt({ ...jane, firstName: "" })).toEqual({ firstName: "Grace", middleName: "", surname: "Hopper" });
+    const smith = createAuthor("Hopper");
+    expect(rebuilt({ ...smith, firstName: "Hopper", surname: "Hopper" })).toEqual({
+      firstName: "Hopper",
       middleName: "",
       surname: "",
     });
   });
 
   it("re-parses a row whose name parts are missing, as an old export has", () => {
-    const old = { ...createAuthor("Jane Ann Smith"), firstName: undefined, middleName: undefined, surname: undefined };
-    expect(rebuilt(old as unknown as Author)).toEqual({ firstName: "Jane", middleName: "Ann", surname: "Smith" });
+    const old = {
+      ...createAuthor("Grace Ann Hopper"),
+      firstName: undefined,
+      middleName: undefined,
+      surname: undefined,
+    };
+    expect(rebuilt(old as unknown as Author)).toEqual({ firstName: "Grace", middleName: "Ann", surname: "Hopper" });
   });
 
   it("fills in the roles a stored row is missing", () => {
-    const jane = createAuthor("Jane Smith");
+    const jane = createAuthor("Grace Hopper");
     const [row] = normalizeRoster([{ ...jane, contributions: jane.contributions.slice(0, 3) }]);
     expect(row?.contributions).toHaveLength(jane.contributions.length);
   });

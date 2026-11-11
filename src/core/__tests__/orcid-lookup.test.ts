@@ -35,15 +35,15 @@ describe("lookupOrcidPerson", () => {
       .fn<typeof fetch>()
       .mockResolvedValue(
         new Response(
-          JSON.stringify({ name: { "given-names": { value: "Jane" }, "family-name": { value: "Smith" } } }),
+          JSON.stringify({ name: { "given-names": { value: "Grace" }, "family-name": { value: "Hopper" } } }),
           { status: 200 },
         ),
       );
     expect(await lookupOrcidPerson("0000-0002-1825-0097", valid)).toEqual({
       ok: true,
-      firstName: "Jane",
-      surname: "Smith",
-      displayName: "Jane Smith",
+      firstName: "Grace",
+      surname: "Hopper",
+      displayName: "Grace Hopper",
     });
   });
 

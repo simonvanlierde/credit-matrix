@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES, createAuthor, generateStatement } from "@/core";
+import { MAX_AUTHORS } from "@/core/author";
 import { createFigureRenderer } from "@/core/figures";
 import {
   AVAILABLE_LOCALES,
@@ -179,7 +180,7 @@ describe("MyST plugin", () => {
 it("builds a heatmap SVG asset with shared options and a text alternative", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-heatmap-"));
   const path = join(dir, "index.md");
-  writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
+  writeFileSync(path, "---\nauthors:\n  - name: Hua Luogeng\n    roles: [Software]\n---\n");
   const { image, svg } = await heatmap(path, {
     legend: false,
     size: 30,
@@ -187,11 +188,11 @@ it("builds a heatmap SVG asset with shared options and a text alternative", asyn
     font: "serif",
     "font-size": 21,
   });
-  expect(image?.alt).toContain("Tu Youyou: Software");
+  expect(image?.alt).toContain("Hua Luogeng: Software");
   expect(svg).toContain('width="30" height="30" rx="15"');
   expect(svg).toContain("@font-face");
   expect(svg).toContain("base64,");
-  expect(svg).toMatch(/<text\b[^>]*><tspan\b[^>]*>Tu Youyou<\/tspan><\/text>/);
+  expect(svg).toMatch(/<text\b[^>]*><tspan\b[^>]*>Hua Luogeng<\/tspan><\/text>/);
   expect(svg).not.toMatch(/<(?:image|path)\b/);
   expect(svg).not.toContain(">Supporting<");
   expect(svg).toContain('font-size="21"');
@@ -203,10 +204,10 @@ it("labels heatmap columns with each author's full name", async () => {
   const path = join(dir, "index.md");
   writeFileSync(
     path,
-    "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n  - name: Katherine Johnson\n    roles: [Software]\n---\n",
+    "---\nauthors:\n  - name: Hua Luogeng\n    roles: [Software]\n  - name: Katherine Johnson\n    roles: [Software]\n---\n",
   );
   const { svg } = await heatmap(path);
-  expect(svg).toContain(">Tu Youyou<");
+  expect(svg).toContain(">Hua Luogeng<");
   expect(svg).toContain(">Katherine Johnson<");
   expect(svg).not.toContain(">C<");
 });
@@ -257,8 +258,8 @@ it("warns, without failing the build, when the heatmap would print too small on 
 it("forwards legend placement and marks without changing MyST publication defaults", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-legend-"));
   const path = join(dir, "index.md");
-  const people = [{ name: "Tu Youyou", roles: ["Software"] }];
-  writeFileSync(path, "---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n---\n");
+  const people = [{ name: "Hua Luogeng", roles: ["Software"] }];
+  writeFileSync(path, "---\nauthors:\n  - name: Hua Luogeng\n    roles: [Software]\n---\n");
   const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
   expect(directive?.options).toHaveProperty("legend-position");
   expect(directive?.options).toHaveProperty("marks");
@@ -281,16 +282,27 @@ it("forwards legend placement and marks without changing MyST publication defaul
   expect(svg).not.toContain('aria-hidden="true"');
 });
 
-it("derives distinct initials and preserves ambiguous or nonletter labels", async () => {
+it("gives the app's deduplicated initials and keeps nonletter labels whole", async () => {
   const dir = mkdtempSync(join(tmpdir(), "credit-myst-initials-"));
   const path = join(dir, "index.md");
   writeFileSync(
     path,
-    '---\nauthors:\n  - name: Tu Youyou\n    roles: [Software]\n  - name: 王小明\n    roles: [Software]\n  - name: Anne Smith\n    roles: [Software]\n  - name: Albert Smith\n    roles: [Software]\n  - id: "1234"\n    roles: [Software]\n---\n',
+    '---\nauthors:\n  - name: Hua Luogeng\n    roles: [Software]\n  - name: 王小明\n    roles: [Software]\n  - name: Anne Smith\n    roles: [Software]\n  - name: Albert Smith\n    roles: [Software]\n  - id: "1234"\n    roles: [Software]\n---\n',
   );
   const { image, svg } = await heatmap(path, { initials: true });
-  for (const label of ["TY", "王小明", "Anne Smith", "Albert Smith", "1234"])
-    expect(svg).toContain(`>${label}</tspan>`);
+  for (const label of ["HL", "王小明", "AS", "ASm", "1234"]) expect(svg).toContain(`>${label}</tspan>`);
   expect(svg).not.toContain(">C</text>");
-  expect(image?.alt).toContain("Tu Youyou");
+  expect(image?.alt).toContain("Hua Luogeng");
+});
+
+it("keeps full names past the app's contributor cap instead of failing the build", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "credit-myst-many-"));
+  const path = join(dir, "index.md");
+  const people = Array.from(
+    { length: MAX_AUTHORS + 1 },
+    (_, i) => `  - name: Ada Lovelace ${i}\n    roles: [Software]\n`,
+  );
+  writeFileSync(path, `---\nauthors:\n${people.join("")}---\n`);
+  const { svg } = await heatmap(path, { initials: true });
+  expect(svg).toContain(`>Ada Lovelace ${MAX_AUTHORS}</tspan>`);
 });

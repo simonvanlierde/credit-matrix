@@ -15,20 +15,20 @@ import { createAuthor, parseAuthorText } from "../parse-authors";
 
 /** Minimal schema-valid author, for tests that vary one field. */
 const VALID_AUTHOR = {
-  name: "Jane Smith",
-  firstName: "Jane",
+  name: "Grace Hopper",
+  firstName: "Grace",
   middleName: "",
-  surname: "Smith",
-  initials: "JS",
+  surname: "Hopper",
+  initials: "GH",
   contributions: [],
 };
 
 describe("isAllBinary", () => {
   it("is true only when every score is 0 or 100", () => {
     expect(isAllBinary([])).toBe(true);
-    const yes = createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] });
+    const yes = createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] });
     expect(isAllBinary([yes])).toBe(true);
-    const level = createAuthor("Bob White", { contributions: [{ role: "Software", score: 50 }] });
+    const level = createAuthor("Charles Darwin", { contributions: [{ role: "Software", score: 50 }] });
     expect(isAllBinary([yes, level])).toBe(false);
   });
 });
@@ -119,11 +119,11 @@ describe("ORCID_INPUT_REGEX", () => {
 describe("schemas", () => {
   it("defaults a random id and accepts a minimal valid author", () => {
     const author = AuthorSchema.parse({
-      name: "Jane Smith",
-      firstName: "Jane",
+      name: "Grace Hopper",
+      firstName: "Grace",
       middleName: "",
-      surname: "Smith",
-      initials: "JS",
+      surname: "Hopper",
+      initials: "GH",
       contributions: [],
     });
     expect(author.id).toMatch(/[0-9a-f-]{36}/);
@@ -154,11 +154,11 @@ describe("schemas", () => {
 
   it("rejects a malformed ORCID but accepts a valid one", () => {
     const base = {
-      name: "Jane Smith",
-      firstName: "Jane",
+      name: "Grace Hopper",
+      firstName: "Grace",
       middleName: "",
-      surname: "Smith",
-      initials: "JS",
+      surname: "Hopper",
+      initials: "GH",
       contributions: [],
     };
     expect(() => AuthorSchema.parse({ ...base, orcid: "bogus" })).toThrow();
@@ -183,7 +183,7 @@ describe("schemas", () => {
     },
   );
 
-  it.each(["Jane Smith", "李雷", "O'Brien", "Ana-María"])("accepts the real name %o", (name) => {
+  it.each(["Grace Hopper", "李雷", "O'Brien", "Ana-María"])("accepts the real name %o", (name) => {
     expect(AuthorSchema.parse({ ...VALID_AUTHOR, name }).name).toBe(name);
     expect(() => createAuthor(name)).not.toThrow();
   });
@@ -197,7 +197,7 @@ describe("schemas", () => {
       ...CREDIT_ROLES.map((role) => ({ role: role.name, score: 0 })),
     ];
     expect(() => AuthorSchema.parse({ ...VALID_AUTHOR, contributions })).not.toThrow();
-    expect(createAuthor("Jane Smith", { contributions }).contributions).toContainEqual({
+    expect(createAuthor("Grace Hopper", { contributions }).contributions).toContainEqual({
       role: "Software",
       score: 90,
     });

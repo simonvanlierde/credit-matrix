@@ -76,7 +76,7 @@ export function isCrossrefContributors(text: string): boolean {
  * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
  * The block holds no contribution levels, so every listed CRediT role comes back as lead.
  * The display name is rebuilt as given name + surname + suffix, as `fromJats4rXml` does,
- * so a family-first name such as "Smith, Jane" comes back as "Jane Smith".
+ * so a family-first name such as "Hopper, Grace" comes back as "Grace Hopper".
  * Same safety rules and `parser` as `fromJats4rXml`.
  */
 export function fromCrossrefContributors(xml: string, { parser }: { parser?: XmlParser } = {}): Author[] {

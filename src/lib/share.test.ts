@@ -4,9 +4,9 @@ import { buildShareUrl, shareFailureKey } from "./share";
 
 describe("buildShareUrl", () => {
   it("links to this page", async () => {
-    const url = await buildShareUrl({ authors: [createAuthor("Jane Smith")] });
+    const url = await buildShareUrl({ authors: [createAuthor("Grace Hopper")] });
     expect(url.startsWith(`${window.location.origin}${window.location.pathname}#s=`)).toBe(true);
-    expect((await decodeShareHash(url.slice(url.indexOf("#"))))?.authors[0]?.name).toBe("Jane Smith");
+    expect((await decodeShareHash(url.slice(url.indexOf("#"))))?.authors[0]?.name).toBe("Grace Hopper");
   });
 });
 

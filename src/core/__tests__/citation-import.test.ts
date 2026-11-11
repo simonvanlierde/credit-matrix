@@ -47,7 +47,7 @@ it.each([
 
 it("handles singleton, missing and malformed CodeMeta author entries without reading linked Role entries", async () => {
   const read = (author: unknown) => importAny(JSON.stringify({ "@type": "SoftwareSourceCode", author }));
-  expect((await read({ name: "Tu Youyou", id: "invalid" })).authors[0]?.orcid).toBeUndefined();
+  expect((await read({ name: "Hua Luogeng", id: "invalid" })).authors[0]?.orcid).toBeUndefined();
   expect((await read([null, false, "Name", {}, { name: "  " }])).authors).toEqual([]);
   expect((await read(undefined)).authors).toEqual([]);
   // The limit belongs to the caller (normalizeRoster, the modal), not to the reader.
@@ -140,7 +140,7 @@ const codemetaOf = (fields: object) => JSON.stringify({ "@type": "SoftwareSource
 
 it("reads a single author object and a Role under either type key", async () => {
   const read = async (author: unknown) => (await importAny(codemetaOf({ author }))).authors.map((a) => a.name);
-  expect(await read({ name: "Tu Youyou" })).toEqual(["Tu Youyou"]);
+  expect(await read({ name: "Hua Luogeng" })).toEqual(["Hua Luogeng"]);
   expect(
     await read([{ "@type": "Role", name: "Lead" }, { type: "Role", name: "Maintainer" }, { name: "Ana" }]),
   ).toEqual(["Ana"]);

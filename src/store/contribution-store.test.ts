@@ -65,7 +65,7 @@ describe("contribution store", () => {
     });
 
     it("keeps figure settings with their draft through duplication, switching, and hydration", () => {
-      const authorId = store().addAuthor("Jane Smith") ?? "";
+      const authorId = store().addAuthor("Grace Hopper") ?? "";
       store().setAuthorScore(authorId, 0, 66);
       store().setInputMode("levels");
       const authors = store().authors;
@@ -103,7 +103,7 @@ describe("contribution store", () => {
     });
 
     it("repairs malformed figure preferences without altering contribution data", () => {
-      const author = createAuthor("Jane Smith");
+      const author = createAuthor("Grace Hopper");
       const { merge } = useContributionStore.persist.getOptions();
       const restored = merge?.(
         {
@@ -212,7 +212,7 @@ describe("contribution store", () => {
 
     it("is draft data, so a reset clears it", () => {
       store().setTitle("A study of studies");
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       store().reset();
       expect(store().title).toBe("");
       expect(store().authors).toHaveLength(0);
@@ -233,9 +233,9 @@ describe("contribution store", () => {
 
   describe("contributors", () => {
     it("returns the new id, and null for a name with nothing to parse", () => {
-      const id = store().addAuthor("Jane Smith");
+      const id = store().addAuthor("Grace Hopper");
       expect(id).toBeTruthy();
-      expect(store().authors[0]?.name).toBe("Jane Smith");
+      expect(store().authors[0]?.name).toBe("Grace Hopper");
       expect(store().addAuthor("   ")).toBeNull();
       expect(store().authors).toHaveLength(1);
     });
@@ -244,7 +244,7 @@ describe("contribution store", () => {
       store().loadAuthors([
         createAuthor("Anne van der Berg", { firstName: "Anne", middleName: "", surname: "van der Berg" }),
       ]);
-      store().addAuthor("Bob White");
+      store().addAuthor("Charles Darwin");
       expect(store().authors[0]).toMatchObject({ surname: "van der Berg", middleName: "", initials: "AB" });
 
       // A rename re-parses: the old parts no longer describe the name.
@@ -254,10 +254,10 @@ describe("contribution store", () => {
     });
 
     it("gives an imported contributor a fresh id when it is duplicated or unshareable", () => {
-      const jane = createAuthor("Jane Smith", { id: "same" });
+      const jane = createAuthor("Grace Hopper", { id: "same" });
       store().loadAuthors([
         jane,
-        { ...createAuthor("Bob White"), id: "same" },
+        { ...createAuthor("Charles Darwin"), id: "same" },
         createAuthor("Cy Young", { id: "a b/c" }),
       ]);
 
@@ -268,7 +268,7 @@ describe("contribution store", () => {
     });
 
     it("keeps an ORCID iD given alongside the name", () => {
-      store().addAuthor("Jane Smith", "0000-0002-1825-0097");
+      store().addAuthor("Grace Hopper", "0000-0002-1825-0097");
       expect(store().authors[0]?.orcid).toBe("0000-0002-1825-0097");
     });
 
@@ -287,13 +287,13 @@ describe("contribution store", () => {
     });
 
     it("refuses the sample under a claim, like every other whole-roster write", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected an author");
       store().setClaim({ contributorId: jane.id, sourceDraftId: "src-1" });
 
       store().loadSample(["Marie Curie"]);
-      expect(store().authors.map((a) => a.name)).toEqual(["Jane Smith"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper"]);
     });
 
     it("rejects a load of more contributors than a draft can hold", () => {
@@ -304,7 +304,7 @@ describe("contribution store", () => {
 
   describe("markers", () => {
     it("toggles each marker independently", () => {
-      const id = store().addAuthor("Jane Smith");
+      const id = store().addAuthor("Grace Hopper");
       if (!id) throw new Error("expected an author");
 
       store().setAuthorMarker(id, "equalContribution", true);
@@ -320,18 +320,18 @@ describe("contribution store", () => {
     it("keeps the markers through an unrelated edit", () => {
       // Every mutation rebuilds the list through `normalizeRoster`; a field it
       // forgets to copy is silently lost on the next keystroke.
-      const id = store().addAuthor("Jane Smith");
+      const id = store().addAuthor("Grace Hopper");
       if (!id) throw new Error("expected an author");
       store().setAuthorMarker(id, "corresponding", true);
 
-      store().addAuthor("Bob White");
-      store().updateAuthorName(id, "Jane A. Smith");
+      store().addAuthor("Charles Darwin");
+      store().updateAuthorName(id, "Grace B. Hopper");
 
       expect(store().authors[0]?.corresponding).toBe(true);
     });
 
     it("ignores a marker set on an unknown contributor", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       expect(() => store().setAuthorMarker("no-such-id", "corresponding", true)).not.toThrow();
       expect(store().authors[0]?.corresponding).toBe(false);
     });
@@ -340,8 +340,8 @@ describe("contribution store", () => {
   describe("contributor edits", () => {
     /** Two contributors, in list order, with their ids. */
     function pair() {
-      store().addAuthor("Jane Smith");
-      store().addAuthor("Bob White");
+      store().addAuthor("Grace Hopper");
+      store().addAuthor("Charles Darwin");
       const [jane, bob] = store().authors;
       if (!(jane && bob)) throw new Error("expected two authors");
       return { jane, bob };
@@ -352,7 +352,7 @@ describe("contribution store", () => {
       expect(store().addAuthor("123")).toBeNull();
       expect(store().authors).toHaveLength(2);
       expect(store().updateAuthorName(jane.id, "123")).toBe(false);
-      expect(store().authors[0]?.name).toBe("Jane Smith");
+      expect(store().authors[0]?.name).toBe("Grace Hopper");
     });
 
     it("renames in place, keeping the id and everything hanging off it", () => {
@@ -360,17 +360,17 @@ describe("contribution store", () => {
       store().setAuthorMarker(jane.id, "corresponding", true);
       store().setAuthorScore(jane.id, 0, 66);
 
-      expect(store().updateAuthorName(jane.id, "  Jane A. Smith  ")).toBe(true);
+      expect(store().updateAuthorName(jane.id, "  Grace B. Hopper  ")).toBe(true);
       const renamed = store().authors[0];
       expect(renamed?.id).toBe(jane.id);
-      expect(renamed?.name).toBe("Jane A. Smith");
+      expect(renamed?.name).toBe("Grace B. Hopper");
       expect(renamed?.corresponding).toBe(true);
       expect(renamed?.contributions[0]?.score).toBe(66);
 
       // An empty rename is a cleared input, not a request to blank the row.
       expect(store().updateAuthorName(jane.id, "   ")).toBe(false);
       expect(store().updateAuthorName("no-such-id", "Ghost Author")).toBe(false);
-      expect(store().authors[0]?.name).toBe("Jane A. Smith");
+      expect(store().authors[0]?.name).toBe("Grace B. Hopper");
     });
 
     it("takes a valid ORCID iD, normalizes it, and clears it on an empty value", () => {
@@ -400,12 +400,12 @@ describe("contribution store", () => {
       store().addAuthor("Carol Davis");
 
       store().removeAuthor(bob.id);
-      expect(store().authors.map((a) => a.name)).toEqual(["Jane Smith", "Carol Davis"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Carol Davis"]);
       store().removeAuthor("no-such-id");
       expect(store().authors).toHaveLength(2);
 
       expect(store().restoreAuthor(bob, 1)).toBe(true);
-      expect(store().authors.map((a) => a.name)).toEqual(["Jane Smith", "Bob White", "Carol Davis"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin", "Carol Davis"]);
       // Already back: a double undo must not duplicate the row.
       expect(store().restoreAuthor(bob, 1)).toBe(false);
       expect(store().authors).toHaveLength(3);
@@ -417,7 +417,7 @@ describe("contribution store", () => {
       store().removeAuthor(bob.id);
 
       expect(store().restoreAuthor(bob, 99)).toBe(true);
-      expect(store().authors.map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
     });
 
     it("adds a pasted list in one update, in order, refusing unparseable names and past the cap", () => {
@@ -455,7 +455,7 @@ describe("contribution store", () => {
       store().addAuthor("Carol Davis");
 
       store().moveAuthor(0, 2);
-      expect(store().authors.map((a) => a.name)).toEqual(["Bob White", "Carol Davis", "Jane Smith"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Carol Davis", "Grace Hopper"]);
 
       for (const [from, to] of [
         [-1, 0],
@@ -466,14 +466,13 @@ describe("contribution store", () => {
       ]) {
         store().moveAuthor(from ?? 0, to ?? 0);
       }
-      expect(store().authors.map((a) => a.name)).toEqual(["Bob White", "Carol Davis", "Jane Smith"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin", "Carol Davis", "Grace Hopper"]);
     });
 
-    it("re-derives initials on every list edit, so two J. Smiths stay distinct", () => {
-      store().addAuthor("Jane Smith");
-      store().addAuthor("John Smith");
-      const [jane, john] = store().authors;
-      expect(jane?.initials).not.toBe(john?.initials);
+    it("re-derives initials on every list edit, so two people with the same initials stay distinct", () => {
+      store().addAuthor("Ada Lovelace");
+      store().addAuthor("Antoine Lavoisier");
+      expect(store().authors.map((a) => a.initials)).toEqual(["AL", "ALa"]);
     });
   });
 
@@ -485,8 +484,8 @@ describe("contribution store", () => {
     }
 
     beforeEach(() => {
-      store().addAuthor("Jane Smith");
-      store().addAuthor("Bob White");
+      store().addAuthor("Grace Hopper");
+      store().addAuthor("Charles Darwin");
     });
 
     it("clamps a score to the 0-100 range rather than storing it out of band", () => {
@@ -586,7 +585,7 @@ describe("contribution store", () => {
 
     it("parks the current work when switching away, and restores it coming back", () => {
       const first = store().activeDraftId;
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       store().setTitle("First paper");
       store().setHeatmapMonoColor("#123456");
 
@@ -595,16 +594,16 @@ describe("contribution store", () => {
       expect(store().authors).toHaveLength(0);
       expect(store().title).toBe("");
 
-      store().addAuthor("Bob White");
+      store().addAuthor("Charles Darwin");
       store().switchDraft(first);
 
       expect(store().title).toBe("First paper");
-      expect(store().authors[0]?.name).toBe("Jane Smith");
+      expect(store().authors[0]?.name).toBe("Grace Hopper");
       // Output settings travel with the draft; the interface language does not.
       expect(store().heatmapMonoColor).toBe("#123456");
 
       store().switchDraft(second);
-      expect(store().authors[0]?.name).toBe("Bob White");
+      expect(store().authors[0]?.name).toBe("Charles Darwin");
     });
 
     it("leaves the interface language alone across a switch", () => {
@@ -615,7 +614,7 @@ describe("contribution store", () => {
     });
 
     it("duplicates a draft with fresh contributor ids", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       store().setTitle("Original");
       const source = store().activeDraftId;
 
@@ -626,7 +625,7 @@ describe("contribution store", () => {
 
       store().switchDraft(copy);
       expect(store().title).toBe("Original");
-      expect(store().authors[0]?.name).toBe("Jane Smith");
+      expect(store().authors[0]?.name).toBe("Grace Hopper");
       // Two drafts sharing a contributor id would make every lookup ambiguous.
       store().switchDraft(source);
       const originalId = store().authors[0]?.id;
@@ -649,7 +648,7 @@ describe("contribution store", () => {
 
     it("always leaves one draft behind, even deleting the last", () => {
       const only = store().activeDraftId;
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
 
       store().deleteDraft(only);
 
@@ -681,25 +680,25 @@ describe("contribution store", () => {
     });
 
     it("empties the draft you are in without touching the others", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       store().setTitle("First paper");
       const first = store().activeDraftId;
       const second = store().createDraft();
       if (!second) throw new Error("expected a new draft");
-      store().addAuthor("Bob White");
+      store().addAuthor("Charles Darwin");
 
       store().reset();
 
       expect(store().authors).toHaveLength(0);
       store().switchDraft(first);
-      expect(store().authors[0]?.name).toBe("Jane Smith");
+      expect(store().authors[0]?.name).toBe("Grace Hopper");
     });
 
     it("deletes every draft, on disk too, and keeps the person's preferences", () => {
       const hydrated = vi.spyOn(useContributionStore.persist, "hasHydrated").mockReturnValue(true);
       globalThis.localStorage.clear();
       store().setUiLocale("nl");
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       store().createDraft();
       store().setTitle("Second paper");
       // A shelf key another tab wrote, which this tab never knew about.
@@ -723,7 +722,7 @@ describe("contribution store", () => {
 
   describe("claim lock", () => {
     it("persists the claim on the draft across a switch and back", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected an author");
       const home = store().activeDraftId;
@@ -735,8 +734,8 @@ describe("contribution store", () => {
     });
 
     it("locks every row but the claimed one, and the list shape entirely", () => {
-      store().addAuthor("Jane Smith");
-      store().addAuthor("Bob White");
+      store().addAuthor("Grace Hopper");
+      store().addAuthor("Charles Darwin");
       const [jane, bob] = store().authors;
       if (!(jane && bob)) throw new Error("expected two authors");
       store().setClaim({ contributorId: bob.id, sourceDraftId: "src-1" });
@@ -749,27 +748,27 @@ describe("contribution store", () => {
       expect(store().addAuthor("Carol Davis")).toBeNull();
       store().removeAuthor(jane.id);
       store().moveAuthor(0, 1);
-      expect(store().authors.map((a) => a.name)).toEqual(["Jane Smith", "Bob White"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
       expect(store().updateAuthorName(jane.id, "Renamed")).toBe(false);
-      expect(store().updateAuthorName(bob.id, "Bob B. White")).toBe(true);
+      expect(store().updateAuthorName(bob.id, "Charles R. Darwin")).toBe(true);
     });
 
     it("refuses a whole-roster load, so a late import cannot overwrite a claim", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected an author");
-      const replacement = [createAuthor("Bob White")];
+      const replacement = [createAuthor("Charles Darwin")];
 
       store().loadAuthors(replacement);
-      expect(store().authors.map((a) => a.name)).toEqual(["Bob White"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin"]);
 
       store().setClaim({ contributorId: store().authors[0]?.id ?? "", sourceDraftId: "src-1" });
       store().loadAuthors([createAuthor("Carol Davis")]);
-      expect(store().authors.map((a) => a.name)).toEqual(["Bob White"]);
+      expect(store().authors.map((a) => a.name)).toEqual(["Charles Darwin"]);
     });
 
     it("clearClaimFor reaches a draft you are not looking at", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected an author");
       store().setClaim({ contributorId: jane.id, sourceDraftId: "src-1" });
@@ -784,7 +783,7 @@ describe("contribution store", () => {
     });
 
     it("ends the reply highlight on the way out of the draft it belongs to", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected an author");
       const home = store().activeDraftId;
@@ -799,20 +798,20 @@ describe("contribution store", () => {
     });
 
     it("clearClaimFor unlocks the active draft", () => {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected an author");
       store().setClaim({ contributorId: jane.id, sourceDraftId: "src-1" });
       store().clearClaimFor(store().activeDraftId);
       expect(store().claim).toBeNull();
-      expect(store().addAuthor("Bob White")).not.toBeNull();
+      expect(store().addAuthor("Charles Darwin")).not.toBeNull();
     });
   });
 
   describe("asks", () => {
     const ask = { sentAt: 1_700_000_000_000, prefilled: false };
     function addJane() {
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       const jane = store().authors[0];
       if (!jane) throw new Error("expected Jane");
       return jane;
@@ -911,7 +910,7 @@ describe("contribution store", () => {
 
       store().setAuthorScore(jane.id, 0, 100);
       expect(store().applyAskPatch(draftId, undo)).toBe(true);
-      expect(store().authors[0]?.name).toBe("Jane Smith");
+      expect(store().authors[0]?.name).toBe("Grace Hopper");
       expect(store().authors[0]?.contributions[0]?.score).toBe(100);
       expect(store().asks[jane.id]).toEqual({ sentAt: 1, prefilled: false });
       expect(store().applyAskPatch("no-such-draft", undo)).toBe(false);
@@ -919,7 +918,7 @@ describe("contribution store", () => {
 
     it("undoes a reply in its own draft, whatever ask steps came after", () => {
       const jane = addJane();
-      store().addAuthor("Bob White");
+      store().addAuthor("Charles Darwin");
       const bob = store().authors[1];
       if (!bob) throw new Error("expected Bob");
       const home = store().activeDraftId;
@@ -939,7 +938,7 @@ describe("contribution store", () => {
       expect(store().authors).toBe(elsewhere);
       expect(store().drafts[home]?.asks[jane.id]).toBeUndefined();
       expect(store().drafts[home]?.asks[bob.id]).toEqual({ sentAt: 4, prefilled: false });
-      expect(store().drafts[home]?.authors[0]?.name).toBe("Jane Smith");
+      expect(store().drafts[home]?.authors[0]?.name).toBe("Grace Hopper");
     });
 
     it.each(["removeAuthor", "reset"] as const)("a late reply undo after %s brings back no ask", (how) => {
@@ -961,7 +960,7 @@ describe("contribution store", () => {
 
     it("keeps other rows the same objects through ask steps", () => {
       const jane = addJane();
-      store().addAuthor("Bob White");
+      store().addAuthor("Charles Darwin");
       const draftId = store().activeDraftId;
       const bob = store().authors[1];
       store().applyAskStep(draftId, { kind: "sent", contributorId: jane.id, prefilled: false, at: 1 });
@@ -971,7 +970,7 @@ describe("contribution store", () => {
       store().applyAskStep(draftId, {
         kind: "reply",
         contributorId: jane.id,
-        row: janeReply(jane.id, "Jane Smith"),
+        row: janeReply(jane.id, "Grace Hopper"),
         sentAt: 3,
         at: 4,
       });
@@ -986,7 +985,7 @@ describe("contribution store", () => {
       const { outcome } = store().applyAskStep(home, {
         kind: "reply",
         contributorId: jane.id,
-        row: janeReply(jane.id, "Jane Smith"),
+        row: janeReply(jane.id, "Grace Hopper"),
         sentAt: null,
         at: 3,
       });
@@ -1011,7 +1010,7 @@ describe("contribution store", () => {
 
     it("forgets who you are when your row leaves the roster", () => {
       const jane = addJane();
-      store().addAuthor("Bob White");
+      store().addAuthor("Charles Darwin");
       store().setSelfId(jane.id);
       store().loadAuthors(store().authors.filter((author) => author.id !== jane.id));
       expect(store().selfId).toBeNull();
@@ -1517,7 +1516,7 @@ describe("contribution store", () => {
       // The one contract that matters here: what partialize writes, merge must
       // read back as the same live workspace.
       const options = useContributionStore.persist.getOptions();
-      store().addAuthor("Jane Smith");
+      store().addAuthor("Grace Hopper");
       store().setTitle("First paper");
       const other = store().createDraft();
       if (!other) throw new Error("expected a new draft");
@@ -1546,7 +1545,7 @@ describe("contribution store", () => {
 
     it("drops contributors that would throw on the next edit", () => {
       const merge = useContributionStore.persist.getOptions().merge;
-      const good = createAuthor("Jane A. Smith");
+      const good = createAuthor("Grace B. Hopper");
       const merged = merge?.(
         {
           activeDraftId: "d1",
@@ -1555,7 +1554,7 @@ describe("contribution store", () => {
         initial,
       ) as { authors: { name: string }[] };
 
-      expect(merged.authors.map((a) => a.name)).toEqual(["Jane A. Smith"]);
+      expect(merged.authors.map((a) => a.name)).toEqual(["Grace B. Hopper"]);
     });
 
     it("reads an unversioned value as version 0, and survives storage that refuses reads", () => {
@@ -1579,7 +1578,7 @@ describe("contribution store", () => {
       });
       await useContributionStore.persist.rehydrate();
       expect(useContributionStore.persist.hasHydrated()).toBe(true);
-      expect(store().addAuthor("Jane Smith")).toBeTruthy();
+      expect(store().addAuthor("Grace Hopper")).toBeTruthy();
       expect(() => store().deleteAllDrafts()).not.toThrow();
       blocked.mockRestore();
     });
@@ -1605,7 +1604,7 @@ describe("contribution store", () => {
       // runs inside the reducer on every list edit: a field that would throw
       // there must cost the field, never the workspace.
       const merge = useContributionStore.persist.getOptions().merge;
-      const good = createAuthor("Jane A. Smith");
+      const good = createAuthor("Grace B. Hopper");
       const merged = merge?.(
         {
           activeDraftId: "d1",
@@ -1613,7 +1612,7 @@ describe("contribution store", () => {
             d1: {
               authors: [
                 { ...good, orcid: "not-an-orcid" },
-                { ...createAuthor("Bob White"), contributions: "corrupt" },
+                { ...createAuthor("Charles Darwin"), contributions: "corrupt" },
                 { ...createAuthor("Carol Davis"), contributions: [null, { role: "Software", score: 100 }] },
               ],
             },
@@ -1622,7 +1621,7 @@ describe("contribution store", () => {
         initial,
       ) as typeof initial;
 
-      expect(merged.authors.map((a) => a.name)).toEqual(["Jane A. Smith", "Bob White", "Carol Davis"]);
+      expect(merged.authors.map((a) => a.name)).toEqual(["Grace B. Hopper", "Charles Darwin", "Carol Davis"]);
       expect(merged.authors[0]?.orcid).toBeUndefined();
       expect(merged.authors[1]?.contributions).toEqual([]);
       expect(merged.authors[2]?.contributions).toEqual([{ role: "Software", score: 100 }]);
@@ -1991,7 +1990,7 @@ describe("contribution store", () => {
         { drafts: [1, null], activeDraftId: null },
         {
           activeDraftId: "d1",
-          drafts: { d1: { authors: { 0: "Jane" }, title: 3, asked: "x", claim: 1, updatedAt: "now" }, d2: null },
+          drafts: { d1: { authors: { 0: "Grace" }, title: 3, asked: "x", claim: 1, updatedAt: "now" }, d2: null },
         },
       ];
       for (const persisted of garbage) {
@@ -2002,7 +2001,7 @@ describe("contribution store", () => {
         expect(store().drafts[store().activeDraftId]).toBeDefined();
         expect(typeof store().title).toBe("string");
         // Usable means the next edits work, not just that the load did.
-        expect(store().addAuthor("Jane Smith")).toBeTruthy();
+        expect(store().addAuthor("Grace Hopper")).toBeTruthy();
         expect(store().createDraft()).toBeTruthy();
       }
     });
@@ -2026,11 +2025,11 @@ describe("contribution store", () => {
 
     it("leaves a persisted draft alone when nothing is wrong with it", () => {
       const merge = useContributionStore.persist.getOptions().merge;
-      const authors = [createAuthor("Jane A. Smith"), createAuthor("Bob White")];
+      const authors = [createAuthor("Grace B. Hopper"), createAuthor("Charles Darwin")];
       const merged = merge?.({ activeDraftId: "d1", drafts: { d1: { authors } } }, initial) as {
         authors: { name: string }[];
       };
-      expect(merged.authors.map((a) => a.name)).toEqual(["Jane A. Smith", "Bob White"]);
+      expect(merged.authors.map((a) => a.name)).toEqual(["Grace B. Hopper", "Charles Darwin"]);
     });
   });
 });

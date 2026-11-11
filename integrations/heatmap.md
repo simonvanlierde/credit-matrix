@@ -181,9 +181,11 @@ SVG keeps its intrinsic vector dimensions; typography and cell spacing determine
 PNG download and image clipboard copy require a browser; the CLI and document plugins produce vector figures.
 Use `initials` to switch contributor labels between initials and full names in the CLI and plugins.
 The JavaScript API calls this option `acronyms`. Text alternatives always retain full names.
-MyST and Typst fall back to full names when initials would identify more than one contributor.
-Typst preserves unspaced names and otherwise takes the first grapheme of each word.
-Its name parsing can differ from JavaScript. Set each contributor's `initials` explicitly to align Typst labels with the app.
+Every plugin uses the app's initials: one letter each from the given name, the first middle name
+and the surname (skipping particles such as "van"), and an unspaced Chinese or Japanese name whole.
+When two contributors share initials, the later one gets the next letters of the surname, as in
+the app ("AL", "ALa"). A contributor's own `initials` field wins, unless an earlier contributor
+set the same ones.
 
 ## Final-size readability checks
 

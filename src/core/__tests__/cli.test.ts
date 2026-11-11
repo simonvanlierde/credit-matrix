@@ -27,7 +27,7 @@ async function run(argv: string[]): Promise<string> {
   return output;
 }
 
-const csv = file("team.csv", "Name,Conceptualization,Software\nJane Smith,100,66\nBob White,,100\n");
+const csv = file("team.csv", "Name,Conceptualization,Software\nGrace Hopper,100,66\nCharles Darwin,,100\n");
 
 it("exports a binary PDF with embedded figure fonts", async () => {
   const bytes = await runCommand(["convert", csv, "--to", "pdf"]);
@@ -82,15 +82,15 @@ describe("credit-matrix statement", () => {
   });
   it("prints the by-role statement by default", async () => {
     expect(await run(["statement", csv])).toBe(
-      "CRediT: Conceptualization: Jane Smith; Software: Jane Smith, Bob White",
+      "CRediT: Conceptualization: Grace Hopper; Software: Grace Hopper, Charles Darwin",
     );
   });
 
   it("takes a format and a locale", async () => {
     expect(await run(["statement", csv, "--format", "by-author"])).toBe(
-      "CRediT: Jane Smith: Conceptualization, Software; Bob White: Software",
+      "CRediT: Grace Hopper: Conceptualization, Software; Charles Darwin: Software",
     );
-    expect(await run(["statement", csv, "--locale", "fr"])).toContain("Conceptualisation\u00a0: Jane Smith");
+    expect(await run(["statement", csv, "--locale", "fr"])).toContain("Conceptualisation\u00a0: Grace Hopper");
   });
 
   it("keeps a ja statement in full-width punctuation", async () => {
@@ -122,8 +122,8 @@ describe("credit-matrix statement", () => {
   });
 
   it("shows levels below Lead with --levels", async () => {
-    const levels = file("levels.csv", "Name,Software\nJane Smith,50\nBob White,100\n");
-    expect(await run(["statement", levels, "--levels"])).toBe("CRediT: Software: Jane Smith (Equal), Bob White");
+    const levels = file("levels.csv", "Name,Software\nGrace Hopper,50\nCharles Darwin,100\n");
+    expect(await run(["statement", levels, "--levels"])).toBe("CRediT: Software: Grace Hopper (Equal), Charles Darwin");
   });
 
   it("prints linked CodeMeta people and roles, with explicit identity and score losses", async () => {
@@ -158,7 +158,7 @@ describe("credit-matrix statement", () => {
   );
 
   it("refuses a roster with no roles rather than print an empty statement", async () => {
-    const names = file("names.txt", "Jane Smith, Bob White");
+    const names = file("names.txt", "Grace Hopper, Charles Darwin");
     await expect(run(["statement", names])).rejects.toThrow("No roles assigned yet: the statement is empty.");
     await expect(run(["statement", names, "--format", "codemeta"])).rejects.toThrow(
       "No roles assigned yet: the statement is empty.",
@@ -167,34 +167,34 @@ describe("credit-matrix statement", () => {
 
   it("refuses a spreadsheet or other binary file instead of reading it as names", async () => {
     const message = "Excel and other spreadsheet files are not read: save the sheet as CSV first.";
-    await expect(run(["statement", file("team.xlsx", "Jane Smith")])).rejects.toThrow(message);
-    await expect(run(["statement", file("team.bin", "PK\x03\x04Jane Smith")])).rejects.toThrow(message);
-    await expect(run(["statement", file("team.dat", "Jane\0Smith")])).rejects.toThrow(message);
+    await expect(run(["statement", file("team.xlsx", "Grace Hopper")])).rejects.toThrow(message);
+    await expect(run(["statement", file("team.bin", "PK\x03\x04Grace Hopper")])).rejects.toThrow(message);
+    await expect(run(["statement", file("team.dat", "Grace\0Hopper")])).rejects.toThrow(message);
   });
 
   it("reads a UTF-16 file, as Excel's Unicode Text export writes, instead of refusing it", async () => {
-    const text = "Name,Conceptualization\nJane Smith,100\n";
+    const text = "Name,Conceptualization\nGrace Hopper,100\n";
     const le = join(dir, "utf16le.csv");
     writeFileSync(le, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, "utf16le")]));
-    expect(await run(["statement", le])).toBe("CRediT: Conceptualization: Jane Smith");
+    expect(await run(["statement", le])).toBe("CRediT: Conceptualization: Grace Hopper");
     const be = join(dir, "utf16be.csv");
     writeFileSync(be, Buffer.concat([Buffer.from([0xfe, 0xff]), Buffer.from(text, "utf16le").swap16()]));
-    expect(await run(["statement", be])).toBe("CRediT: Conceptualization: Jane Smith");
+    expect(await run(["statement", be])).toBe("CRediT: Conceptualization: Grace Hopper");
   });
 });
 
 describe("credit-matrix convert", () => {
   it("refuses a latex-credits export with no roles, which the package cannot compile", async () => {
-    const names = file("names.txt", "Jane Smith, Bob White");
+    const names = file("names.txt", "Grace Hopper, Charles Darwin");
     await expect(run(["convert", names, "--to", "latex-credits"])).rejects.toThrow(
       "No roles assigned yet: the latex-credits export is empty.",
     );
   });
 
   it("writes latex-credits values as 1 or 0 with --yes-no", async () => {
-    const team = file("half.csv", "Name,Software\nJane Smith,50\n");
+    const team = file("half.csv", "Name,Software\nGrace Hopper,50\n");
     expect(await run(["convert", team, "--to", "latex-credits", "--yes-no"])).toContain(
-      "\\credit{Jane Smith}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}",
+      "\\credit{Grace Hopper}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}",
     );
   });
 
@@ -206,15 +206,15 @@ describe("credit-matrix convert", () => {
   it("writes each format, and reads its own JATS back without a browser", async () => {
     expect(await run(["convert", csv, "--to", "csv"])).toMatch(/^Name,ORCID/);
     expect(JSON.parse(await run(["convert", csv, "--to", "json"])).authors).toHaveLength(2);
-    expect(await run(["convert", csv, "--to", "md"])).toContain("| Jane Smith |");
-    expect(await run(["convert", csv, "--to", "latex-credits"])).toContain("\\credit{Jane Smith}{");
+    expect(await run(["convert", csv, "--to", "md"])).toContain("| Grace Hopper |");
+    expect(await run(["convert", csv, "--to", "latex-credits"])).toContain("\\credit{Grace Hopper}{");
     expect(await run(["convert", csv, "--to", "crossref"])).toContain('<role vocab="credit" type="software"/>');
     const xml = file("team.xml", await run(["convert", csv, "--to", "jats"]));
     expect(await run(["statement", xml])).toBe(await run(["statement", csv]));
   });
 
   it("writes JATS without degree-contribution with --yes-no, and reads it back", async () => {
-    const ticks = file("ticks.csv", "Name,Conceptualization,Software\nJane Smith,100,100\nBob White,,100\n");
+    const ticks = file("ticks.csv", "Name,Conceptualization,Software\nGrace Hopper,100,100\nCharles Darwin,,100\n");
     const xml = await run(["convert", ticks, "--to", "jats", "--yes-no"]);
     expect(xml).not.toContain("degree-contribution");
     expect(await run(["convert", ticks, "--to", "jats"])).toContain('degree-contribution="lead"');
@@ -225,10 +225,10 @@ describe("credit-matrix convert", () => {
   it("writes Tenzing and the heatmap SVG", async () => {
     const tenzing = await run(["convert", csv, "--to", "tenzing"]);
     expect(tenzing).toMatch(/^Author\/Acknowledgee,/);
-    expect(tenzing).toContain("Author,1,Jane,,Smith,");
+    expect(tenzing).toContain("Author,1,Grace,,Hopper,");
     const svg = await run(["convert", csv, "--to", "svg"]);
     expect(svg).toMatch(/^<svg /);
-    expect(svg).toContain("Jane Smith");
+    expect(svg).toContain("Grace Hopper");
     expect(await run(["convert", csv, "--to", "svg", "--locale", "fr"])).toContain("Logiciel");
     const flat = await run(["convert", csv, "--to", "svg", "--yes-no"]);
     expect(flat).toContain("Contributed");
@@ -238,7 +238,7 @@ describe("credit-matrix convert", () => {
 
   it("writes Markdown in the --locale language", async () => {
     const md = await run(["convert", csv, "--to", "md", "--locale", "fr"]);
-    expect(md).toContain("| Jane Smith | Conceptualisation");
+    expect(md).toContain("| Grace Hopper | Conceptualisation");
     expect(md).toContain("Logiciel(s)");
     await expect(run(["convert", csv, "--to", "md", "--locale", "xx"])).rejects.toThrow("Unknown locale: xx.");
   });
@@ -251,16 +251,16 @@ describe("credit-matrix convert", () => {
 });
 
 describe("credit-matrix ask", () => {
-  const jane = createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] });
-  const json = file("draft.json", toJson([jane, createAuthor("Bob White")]));
+  const jane = createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] });
+  const json = file("draft.json", toJson([jane, createAuthor("Charles Darwin")]));
 
   it("prints a link for one contributor, by name or id", async () => {
     vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
-    const link = await run(["ask", json, "--contributor", "jane smith"]);
+    const link = await run(["ask", json, "--contributor", "grace hopper"]);
     expect(link).toMatch(/^https:\/\/credit\.duinlab\.nl\/#s=/);
     const shared = await decodeShareHash(link.slice(link.indexOf("#")));
     expect(shared).toMatchObject({ claimId: jane.id, blank: false, sentAt: 1_700_000_000_000 });
-    expect(shared?.authors.map((a) => a.name)).toEqual(["Jane Smith"]);
+    expect(shared?.authors.map((a) => a.name)).toEqual(["Grace Hopper"]);
     expect(await run(["ask", json, "--contributor", jane.id])).toContain("#s=");
   });
 
@@ -269,7 +269,7 @@ describe("credit-matrix ask", () => {
       "ask",
       json,
       "--contributor",
-      "Jane Smith",
+      "Grace Hopper",
       "--blank",
       "--base-url",
       "http://localhost:3000/",
@@ -281,25 +281,25 @@ describe("credit-matrix ask", () => {
   });
 
   it("finds a contributor by a first name or surname only they have", async () => {
-    const link = await run(["ask", json, "--contributor", "SMITH"]);
+    const link = await run(["ask", json, "--contributor", "HOPPER"]);
     expect((await decodeShareHash(link.slice(link.indexOf("#"))))?.claimId).toBe(jane.id);
-    expect(await run(["ask", json, "--contributor", "bob"])).toContain("#s=");
+    expect(await run(["ask", json, "--contributor", "charles"])).toContain("#s=");
   });
 
   it("finds a contributor whose name is typed decomposed", async () => {
     const jose = createAuthor("Jos\u00E9 Garc\u00EDa");
-    const accents = file("accents.json", toJson([jose, createAuthor("Bob White")]));
+    const accents = file("accents.json", toJson([jose, createAuthor("Charles Darwin")]));
     const link = await run(["ask", accents, "--contributor", "Jose\u0301 Garci\u0301a"]);
     expect((await decodeShareHash(link.slice(link.indexOf("#"))))?.claimId).toBe(jose.id);
   });
 
   it("lists the contributors when none or several match", async () => {
-    const twins = file("twins.json", toJson([createAuthor("Jane Smith"), createAuthor("Jane Doe")]));
-    await expect(run(["ask", twins, "--contributor", "jane"])).rejects.toThrow(
-      "jane matches more than one contributor: Jane Smith, Jane Doe. Give the full name or id.",
+    const twins = file("twins.json", toJson([createAuthor("Grace Hopper"), createAuthor("Grace Chisholm Young")]));
+    await expect(run(["ask", twins, "--contributor", "grace"])).rejects.toThrow(
+      "grace matches more than one contributor: Grace Hopper, Grace Chisholm Young. Give the full name or id.",
     );
     await expect(run(["ask", json, "--contributor", "Nobody"])).rejects.toThrow(
-      "No contributor named or with id Nobody. Contributors: Jane Smith, Bob White.",
+      "No contributor named or with id Nobody. Contributors: Grace Hopper, Charles Darwin.",
     );
     await expect(run(["ask", json])).rejects.toThrow(/needs --contributor/);
   });
@@ -328,7 +328,7 @@ describe("credit-matrix usage", () => {
   });
 
   it("says plainly that a file repeats a contributor id", async () => {
-    const jane = createAuthor("Jane Smith");
+    const jane = createAuthor("Grace Hopper");
     const twice = file("twice.json", JSON.stringify({ version: 1, authors: [jane, jane] }));
     await expect(run(["statement", twice])).rejects.toThrow(`${twice} repeats a contributor id.`);
   });
@@ -343,11 +343,11 @@ describe("credit-matrix standard input", () => {
   it("reads the roster from - when piped in", async () => {
     vi.spyOn(process, "stdin", "get").mockReturnValue(
       Readable.from([
-        Buffer.from("Name,Software\nJane "),
-        Buffer.from("Smith,100\n"),
+        Buffer.from("Name,Software\nGrace "),
+        Buffer.from("Hopper,100\n"),
       ]) as unknown as typeof process.stdin,
     );
-    expect(await run(["statement", "-"])).toBe("CRediT: Software: Jane Smith");
+    expect(await run(["statement", "-"])).toBe("CRediT: Software: Grace Hopper");
     vi.restoreAllMocks();
   });
 
@@ -383,7 +383,7 @@ describe("credit-matrix as a program", () => {
 
   it("prints the result with one trailing newline and exits 0", async () => {
     const { out, err } = await launch("statement", csv);
-    expect(out).toBe("CRediT: Conceptualization: Jane Smith; Software: Jane Smith, Bob White\n");
+    expect(out).toBe("CRediT: Conceptualization: Grace Hopper; Software: Grace Hopper, Charles Darwin\n");
     expect(err).toBe("");
     expect(process.exitCode).toBeUndefined();
   });
@@ -412,7 +412,7 @@ describe("credit-matrix as a program", () => {
   });
 
   it("prints that a file repeats a contributor id, and exits 1", async () => {
-    const jane = createAuthor("Jane Smith");
+    const jane = createAuthor("Grace Hopper");
     const { err } = await launch(
       "statement",
       file("twice2.json", JSON.stringify({ version: 1, authors: [jane, jane] })),
@@ -431,7 +431,9 @@ describe("credit-matrix as a program", () => {
 
   it("prints only the message for a contributor the file does not have, and exits 1", async () => {
     const { err } = await launch("ask", csv, "--contributor", "Nobody");
-    expect(err).toBe("credit-matrix: No contributor named or with id Nobody. Contributors: Jane Smith, Bob White.\n");
+    expect(err).toBe(
+      "credit-matrix: No contributor named or with id Nobody. Contributors: Grace Hopper, Charles Darwin.\n",
+    );
     expect(process.exitCode).toBe(1);
   });
 
@@ -479,14 +481,14 @@ it("passes figure options through the SVG conversion", async () => {
 it("selects full names or initials without shortening the text alternative", async () => {
   const full = await run(["convert", csv, "--to", "svg", "--initials", "false"]);
   const compact = await run(["convert", csv, "--to", "svg", "--initials", "true"]);
-  expect(full).toContain(">Jane Smith</tspan>");
-  expect(compact).toContain(">JS</tspan>");
-  expect(compact).toContain("Jane Smith: Conceptualization");
+  expect(full).toContain(">Grace Hopper</tspan>");
+  expect(compact).toContain(">GH</tspan>");
+  expect(compact).toContain("Grace Hopper: Conceptualization");
   await expect(run(["convert", csv, "--to", "svg", "--initials", "maybe"])).rejects.toThrow("true or false");
 });
 
 describe("figure legend options", () => {
-  const authors = [createAuthor("Tu Youyou", { contributions: [{ role: "Software", score: 33 }] })];
+  const authors = [createAuthor("Hua Luogeng", { contributions: [{ role: "Software", score: 33 }] })];
   const source = file("legend-options.json", toJson(authors));
 
   it.each([

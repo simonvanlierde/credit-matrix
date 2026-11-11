@@ -25,7 +25,7 @@ vi.mock("@/core/lookup", async (importOriginal) => ({
 }));
 
 const DOI = "10.1234/abcd";
-const WORK: DoiLookupResult = { ok: true, title: "A paper", authors: [{ name: "Jane Smith" }] };
+const WORK: DoiLookupResult = { ok: true, title: "A paper", authors: [{ name: "Grace Hopper" }] };
 
 // jsdom has no modal dialog API; stand in for the two calls useModalDialog makes.
 beforeAll(() => {
@@ -145,7 +145,7 @@ describe("closing the dialog while ORCID's keys load", () => {
     });
   /** A JSON export whose answer includes a sign-in, so importing it fetches ORCID's keys. */
   function signedFile() {
-    const bob = createAuthor("Bob White", { id: "bob" });
+    const bob = createAuthor("Charles Darwin", { id: "bob" });
     const orcid = { orcid: "0000-0002-1825-0097", issuedAt: 1, token: "t", payload: "p" };
     const reply = { ...bob, sentAt: 1, receivedAt: 2, provenance: { orcid }, decisions: {} };
     return toJson([bob], { asks: { bob: { sentAt: 1, prefilled: true, reply } } });
@@ -217,7 +217,7 @@ describe("a JSON export from a newer version", () => {
   it("says so, instead of failing validation", async () => {
     const { onImport } = renderModal(0);
     fireEvent.change(screen.getByLabelText(english.pasteRawData), {
-      target: { value: JSON.stringify({ version: 2, authors: [{ name: "Jane Smith", future: true }] }) },
+      target: { value: JSON.stringify({ version: 2, authors: [{ name: "Grace Hopper", future: true }] }) },
     });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
 
@@ -229,7 +229,7 @@ describe("a JSON export from a newer version", () => {
 describe("a JSON export that repeats a contributor id", () => {
   it("says so, instead of the catch-all failure", async () => {
     const { onImport } = renderModal(0);
-    const jane = createAuthor("Jane Smith");
+    const jane = createAuthor("Grace Hopper");
     fireEvent.change(screen.getByLabelText(english.pasteRawData), {
       target: { value: JSON.stringify({ version: 1, authors: [jane, jane] }) },
     });
@@ -274,7 +274,7 @@ describe("accessibility and drops", () => {
   it("names the file that replaced the textarea", async () => {
     renderModal(0);
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    const file = new File(["Jane Smith"], "authors.csv");
+    const file = new File(["Grace Hopper"], "authors.csv");
     await act(async () => fireEvent.change(input, { target: { files: [file] } }));
     expect(screen.getByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
   });
@@ -459,13 +459,13 @@ describe("deposited DOI roles", () => {
     vi.mocked(lookupDoiWork).mockResolvedValue({
       ok: true,
       title: "A paper",
-      authors: [{ name: "Tu Youyou", roles: ["Software"] }],
+      authors: [{ name: "Hua Luogeng", roles: ["Software"] }],
     });
     const { onImport } = renderModal();
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.doiLookUp })));
     expect(onImport).not.toHaveBeenCalled();
     expect(screen.getByText(english.doiRolesImported)).toBeTruthy();
-    expect(screen.getByText("Tu Youyou: Software")).toBeTruthy();
+    expect(screen.getByText("Hua Luogeng: Software")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: english.doiConfirm }));
     expect(onImport.mock.calls[0]?.[0].authors[0].contributions).toContainEqual({ role: "Software", score: 100 });
   });

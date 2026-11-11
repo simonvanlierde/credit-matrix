@@ -16,14 +16,22 @@ See [deploying](docs/deploy.md).
   under 6 pt on a full journal page, which happens from about 25 contributors. `heatmapPrintWarning`
   returns that warning. A strict build (`sphinx-build -W`, `myst build --strict`) now fails on it
   until you silence it. See [final-size readability checks](integrations/heatmap.md#final-size-readability-checks).
+- `NAME_PARTICLES` and `NAME_SUFFIXES` export the name particles ("van", "de la") and generational
+  suffixes ("Jr.") that the parser uses for initials, so another implementation can follow them.
 
 ### Changed
 
+- **Breaking:** the Typst package stops the build on a contributor name with no letter and no
+  ORCID iD, such as "?", instead of drawing an empty label.
 - A draft holds up to 420 contributors, up from 200. Imports, share links and the element take
   files up to 2 MB, up from 1 MB, and a pasted statement can run to 120,000 characters, up from
   50,000, so a full draft's exports and by-author statement read back in.
 - Pasting a long list of names adds them in one step: 400 names take milliseconds instead of
   seconds.
+- The Typst package and the MyST plugin now label heatmaps with the app's initials. Particles
+  such as "van" are skipped, and contributors who share initials get the next letters of their
+  surname ("AL", "ALa") instead of their full names. See
+  [app and document exports](integrations/heatmap.md#app-and-document-exports).
 - The favicon, app icons and social card use the warm paper and charcoal ink of the 0.12.0 theme,
   and the mark draws each column in one contributor's hue, as the grid does.
 - Search results and link previews describe asking co-authors to check their own row, and the

@@ -51,7 +51,7 @@ export type { DetectedFormat, Imported } from "./import";
 export { detectFormat, ExportOnlyError, importAny } from "./import";
 export type { OrcidKey, OrcidProof } from "./orcid-proof";
 export { fetchOrcidKeys, verifyOrcidToken } from "./orcid-proof";
-export { createAuthor, normalizeRoster, parseAuthorText } from "./parse-authors";
+export { createAuthor, NAME_PARTICLES, NAME_SUFFIXES, normalizeRoster, parseAuthorText } from "./parse-authors";
 export { decodeShareHash, encodeShareHash } from "./share-link";
 export type { ShareData, SharePayloadInput } from "./share-payload";
 export type { ParsedStatement, StatementAuthor } from "./statement";

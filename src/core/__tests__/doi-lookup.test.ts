@@ -66,8 +66,8 @@ describe("lookupDoiWork", () => {
       crossrefResponse({
         title: ["A study of studies"],
         author: [
-          { given: "Jane A.", family: "Smith", ORCID: "http://orcid.org/0000-0002-1825-0097" },
-          { given: "Bob", family: "White" },
+          { given: "Grace B.", family: "Hopper", ORCID: "http://orcid.org/0000-0002-1825-0097" },
+          { given: "Charles", family: "Darwin" },
         ],
       }),
     );
@@ -75,21 +75,22 @@ describe("lookupDoiWork", () => {
     expect(await lookupDoiWork("10.1038/x", fetcher)).toEqual({
       ok: true,
       title: "A study of studies",
-      authors: [{ name: "Jane A. Smith", orcid: "0000-0002-1825-0097" }, { name: "Bob White" }],
+      authors: [{ name: "Grace B. Hopper", orcid: "0000-0002-1825-0097" }, { name: "Charles Darwin" }],
     });
   });
 
   it("keeps the name when the ORCID fails its checksum", async () => {
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(
-        crossrefResponse({ title: ["T"], author: [{ given: "Jane", family: "Smith", ORCID: "0000-0002-1825-0098" }] }),
-      );
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      crossrefResponse({
+        title: ["T"],
+        author: [{ given: "Grace", family: "Hopper", ORCID: "0000-0002-1825-0098" }],
+      }),
+    );
 
     expect(await lookupDoiWork("10.1038/x", fetcher)).toEqual({
       ok: true,
       title: "T",
-      authors: [{ name: "Jane Smith" }],
+      authors: [{ name: "Grace Hopper" }],
     });
   });
 
@@ -125,7 +126,7 @@ describe("lookupDoiWork", () => {
   it("tolerates a missing title", async () => {
     const fetcher = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(crossrefResponse({ author: [{ given: "Jane", family: "Smith" }] }));
+      .mockResolvedValue(crossrefResponse({ author: [{ given: "Grace", family: "Hopper" }] }));
     expect(await lookupDoiWork("10.1038/x", fetcher)).toMatchObject({ ok: true, title: "" });
   });
 });
@@ -133,7 +134,7 @@ describe("lookupDoiWork", () => {
 describe("polite pool contact", () => {
   it("appends the mailto only when the caller provides one", async () => {
     const fetcher = vi.fn(async (_input: string | URL | Request) =>
-      crossrefResponse({ title: ["T"], author: [{ name: "Jane Smith" }] }),
+      crossrefResponse({ title: ["T"], author: [{ name: "Grace Hopper" }] }),
     );
     await lookupDoiWork("10.1038/x", fetcher as unknown as typeof fetch);
     expect(String(fetcher.mock.calls[0]?.[0])).not.toContain("mailto");
@@ -159,9 +160,9 @@ describe("DataCite fallback", () => {
         titles: [{ title: "Attention Is All You Need" }],
         creators: [
           {
-            name: "Smith, Jane",
-            givenName: "Jane",
-            familyName: "Smith",
+            name: "Hopper, Grace",
+            givenName: "Grace",
+            familyName: "Hopper",
             nameIdentifiers: [
               { nameIdentifier: "https://orcid.org/0000-0002-1825-0097", nameIdentifierScheme: "ORCID" },
             ],
@@ -181,7 +182,7 @@ describe("DataCite fallback", () => {
       ok: true,
       title: "Attention Is All You Need",
       authors: [
-        { name: "Jane Smith", orcid: "0000-0002-1825-0097" },
+        { name: "Grace Hopper", orcid: "0000-0002-1825-0097" },
         { name: "Bob Bad" },
         { name: "The Zenodo Consortium" },
       ],
