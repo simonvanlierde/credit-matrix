@@ -45,7 +45,8 @@ export type FigureFace =
   | "serif-telugu"
   | "serif-thai"
   | "emoji"
-  | "harfbuzz";
+  | "harfbuzz"
+  | "harfbuzz-subset";
 
-/** Read one face's bytes (WebAssembly for `harfbuzz`): from disk in Node, over HTTP from a bundle's assets in a browser. */
+/** Read one face's bytes (WebAssembly for `harfbuzz` and `harfbuzz-subset`): from disk in Node, over HTTP from a bundle's assets in a browser. */
 export function fonts(face: FigureFace): Promise<Uint8Array>;

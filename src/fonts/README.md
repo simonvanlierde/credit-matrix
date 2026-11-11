@@ -20,8 +20,9 @@ each have a Noto Sans face for sans figures and a Noto Serif face (Noto Naskh
 Arabic for Arabic) for serif figures. Korean (Credit Figure KR, from Noto Sans
 KR) and monochrome emoji (Credit Figure Emoji, from Noto Emoji) have one face,
 used in sans and serif figures alike: a serif Korean face would add 14 MB. `harfbuzz.wasm` is the HarfBuzz shaping
-engine, which lays out the complex scripts; it comes through the same `fonts`
-provider, so it is fetched only for a figure that needs it.
+engine, which lays out the complex scripts, and `harfbuzz-subset.wasm` is HarfBuzz's subsetter,
+which cuts each face down to the glyphs a figure uses. Both come through the same `fonts`
+provider, so each is fetched only for a figure that needs it.
 Noto Sans and Serif cover Latin, Greek and Cyrillic. Credit Figure JP and SC
 derive from Noto Sans JP and SC; Credit Figure Serif JP and SC derive from
 Noto Serif JP and SC. Both families provide Japanese and Simplified Chinese glyphs.
@@ -77,6 +78,7 @@ Simplified Chinese face for Chinese labels.
 | `NotoSerifThai-Regular.ttf` | `serif-thai` | 2.002 | 45424 | `747b5bb1fdd329850ddd3218d872a3d2a96ab0dd544f51e5300c6d1b12071b62` |
 | `CreditFigureEmoji.ttf` | `emoji` | 3.002 | 889044 | `e35e380f5ea3d23efb4c9093ced5d5600d1af059feab7fc130ad10824d99416d` |
 | `harfbuzz.wasm` | `harfbuzz` | harfbuzzjs 1.6.4 | 444394 | `6eeed8e1bc9ad7773038e48ff8f9e07e0ad228572c594b45e5357e9c2f7a0b2e` |
+| `harfbuzz-subset.wasm` | `harfbuzz-subset` | harfbuzzjs 1.6.4 | 683531 | `62415fe6bad92ef16f3e5d2dbed6c66a4adec7f5a59c6d27084811c92cce1ba5` |
 
 ## Sources
 
@@ -104,7 +106,8 @@ Simplified Chinese face for Chinese labels.
   from the same CJK commit.
 - [Noto Emoji variable TTF](https://raw.githubusercontent.com/google/fonts/c30b221beb0c1da59d563feb91ec8656a1fa972a/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf),
   from `google/fonts` commit `c30b221beb0c1da59d563feb91ec8656a1fa972a`.
-- `harfbuzz.wasm`, unmodified, from the [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) 1.6.4 npm package.
+- `harfbuzz.wasm` and `harfbuzz-subset.wasm`, unmodified, from `dist/` in the
+  [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) 1.6.4 npm package.
 
 The CJK sources are upstream regional subsets, not subsets of the translation
 catalogs. They retain characters needed for contributor names beyond those catalogs.
@@ -168,10 +171,8 @@ Credit Figure KR and Emoji come from `NotoSansKR-VF.ttf` (SHA-256
 the same way: instanced at weight 400, renamed "Credit Figure KR" and "Credit Figure Emoji"
 (PostScript `CreditFigureKR-Regular`, `CreditFigureEmoji-Regular`), and saved with four-byte padding.
 
-Copy the outputs into this directory after checking their hashes. Keep the
-four-byte glyph alignment: the PDF subsetter's short location table truncates
-odd glyph offsets, which can silently drop later glyphs. The renderer subsets
-the glyphs a figure uses, in SVG and in PDF.
+Copy the outputs into this directory after checking their hashes. The renderer
+subsets the glyphs a figure uses with HarfBuzz, in SVG and in PDF.
 
 ## Redistribution
 
@@ -199,7 +200,7 @@ redistributing these assets.
   [OFL-NotoScripts.txt](OFL-NotoScripts.txt) lists each face's own copyright line
   above the license text. Credit Figure KR, like JP and SC, avoids the reserved
   font name "Source".
-- `harfbuzz.wasm` is MIT (harfbuzzjs) and "Old MIT" (HarfBuzz):
+- `harfbuzz.wasm` and `harfbuzz-subset.wasm` are MIT (harfbuzzjs) and "Old MIT" (HarfBuzz):
   [LICENSE-harfbuzz.txt](LICENSE-harfbuzz.txt).
 
 The fonts also retain their original copyright and license metadata. Their

@@ -1,4 +1,4 @@
-harfbuzz.wasm is HarfBuzz built for WebAssembly by harfbuzzjs 1.6.4.
+harfbuzz.wasm and harfbuzz-subset.wasm are HarfBuzz built for WebAssembly by harfbuzzjs 1.6.4.
 
 harfbuzzjs:
 

@@ -47,6 +47,7 @@ const URLS = {
   "serif-thai": new URL("./NotoSerifThai-Regular.ttf", import.meta.url),
   emoji: new URL("./CreditFigureEmoji.ttf", import.meta.url),
   harfbuzz: new URL("./harfbuzz.wasm", import.meta.url),
+  "harfbuzz-subset": new URL("./harfbuzz-subset.wasm", import.meta.url),
 };
 
 /** Read one face's bytes: from disk in Node, over HTTP from a bundle's assets in a browser. */

@@ -23,6 +23,7 @@
     "index.d.ts",
     "*.ttf",
     "harfbuzz.wasm",
+    "harfbuzz-subset.wasm",
     "OFL-*.txt",
     "LICENSE-*.txt"
   ],
