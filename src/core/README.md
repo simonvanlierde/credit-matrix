@@ -12,7 +12,7 @@ npm install credit-matrix
 import { generateStatement, importAny, toJats4rXml } from "credit-matrix";
 
 const { authors } = await importAny(csvText); // JSON, CodeMeta, CSV, JATS4R or Crossref XML, a share link or names
-generateStatement(authors, { format: "by-role" }); // "CRediT: Conceptualization: Jane Smith; …"
+generateStatement(authors, { format: "by-role" }); // "CRediT: Conceptualization: Grace Hopper; …"
 toJats4rXml(authors);
 ```
 
@@ -43,7 +43,7 @@ npx credit-matrix convert team.csv --to pdf > heatmap.pdf  # embedded fonts and 
 npx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
 npx credit-matrix convert team.csv --to quarto > authors.yml  # Quarto/Pandoc author metadata, with levels
 npx credit-matrix convert team.csv --to myst > authors.yml    # MyST/Jupyter Book author metadata, without levels
-npx credit-matrix ask draft.json --contributor "Jane Smith" --blank
+npx credit-matrix ask draft.json --contributor "Grace Hopper" --blank
 npx credit-matrix --help                           # or --version
 ```
 
@@ -140,9 +140,9 @@ for shape and checksum.
 
 `generateStatement(authors, options)` renders four formats:
 
-- **`by-role`**: `CRediT: Conceptualization: Jane Smith, Bob White; Software: Jane Smith; …`
+- **`by-role`**: `CRediT: Conceptualization: Grace Hopper, Charles Darwin; Software: Grace Hopper; …`
 - **`by-role-short`**: same grouping as `by-role`, using initials
-- **`by-author`**: `CRediT: Jane Smith: Conceptualization, Software; …`
+- **`by-author`**: `CRediT: Grace Hopper: Conceptualization, Software; …`
 - **`by-author-short`**: same grouping as `by-author`, using initials
 
 The options you'll most likely want:

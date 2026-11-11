@@ -134,9 +134,9 @@ describe("adding a contributor by ORCID iD", () => {
 describe("adding a contributor by name and ORCID iD", () => {
   it("keeps the typed name and looks nothing up", () => {
     renderList();
-    addById(`Jane Smith ${ALICE}`);
+    addById(`Grace Hopper ${ALICE}`);
 
-    expect(authors()).toMatchObject([{ name: "Jane Smith", orcid: ALICE }]);
+    expect(authors()).toMatchObject([{ name: "Grace Hopper", orcid: ALICE }]);
     expect(addField().value).toBe("");
     expect(lookupOrcidPerson).not.toHaveBeenCalled();
   });
@@ -145,11 +145,11 @@ describe("adding a contributor by name and ORCID iD", () => {
     deferLookups();
     renderList();
     fireEvent.paste(addField(), {
-      clipboardData: { getData: () => `Jane Smith (https://orcid.org/${ALICE}); ${BOB}` },
+      clipboardData: { getData: () => `Grace Hopper (https://orcid.org/${ALICE}); ${BOB}` },
     });
 
     expect(authors()).toMatchObject([
-      { name: "Jane Smith", orcid: ALICE },
+      { name: "Grace Hopper", orcid: ALICE },
       { name: BOB, orcid: BOB },
     ]);
     expect(vi.mocked(lookupOrcidPerson).mock.calls.map(([orcid]) => orcid)).toEqual([BOB]);
@@ -239,7 +239,7 @@ describe("asking a contributor", () => {
   async function ask(item: string) {
     // The menu stays open after an item, so open it only the first time.
     if (!screen.queryByRole("button", { name: item })) {
-      fireEvent.click(screen.getByRole("button", { name: "Actions for Jane Smith" }));
+      fireEvent.click(screen.getByRole("button", { name: "Actions for Grace Hopper" }));
     }
     fireEvent.click(screen.getByRole("button", { name: item }));
     await waitFor(() => expect(writeText).toHaveBeenCalled());
@@ -249,12 +249,12 @@ describe("asking a contributor", () => {
   }
 
   it("records the ask only once the link reached the clipboard", async () => {
-    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    useContributionStore.setState({ authors: [createAuthor("Grace Hopper")] });
     const id = authors()[0]?.id ?? "";
     renderList();
 
     stubClipboard(() => Promise.reject(new Error("denied")));
-    await ask("Ask Jane Smith what they did");
+    await ask("Ask Grace Hopper what they did");
     expect(useContributionStore.getState().asks).toEqual({});
 
     let copied = "";
@@ -262,7 +262,7 @@ describe("asking a contributor", () => {
       copied = text;
       return Promise.resolve();
     });
-    await ask("Ask Jane Smith what they did");
+    await ask("Ask Grace Hopper what they did");
     const recorded = useContributionStore.getState().asks[id];
     expect(recorded).toMatchObject({ prefilled: false });
 
@@ -272,24 +272,24 @@ describe("asking a contributor", () => {
   });
 
   it("records a pre-filled ask as such", async () => {
-    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    useContributionStore.setState({ authors: [createAuthor("Grace Hopper")] });
     renderList();
     stubClipboard(() => Promise.resolve());
-    await ask("Ask Jane Smith to check your guess");
+    await ask("Ask Grace Hopper to check your guess");
     expect(Object.values(useContributionStore.getState().asks)).toEqual([
       { sentAt: expect.any(Number), prefilled: true },
     ]);
   });
 
   it("records nothing when the draft switched during the copy", async () => {
-    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    useContributionStore.setState({ authors: [createAuthor("Grace Hopper")] });
     const asked = useContributionStore.getState().activeDraftId;
     renderList();
     stubClipboard(() => {
       useContributionStore.getState().createDraft();
       return Promise.resolve();
     });
-    await ask("Ask Jane Smith what they did");
+    await ask("Ask Grace Hopper what they did");
 
     const state = useContributionStore.getState();
     expect(state.activeDraftId).not.toBe(asked);
@@ -298,13 +298,13 @@ describe("asking a contributor", () => {
   });
 
   it("records nothing when the contributor was removed during the copy", async () => {
-    useContributionStore.setState({ authors: [createAuthor("Jane Smith")] });
+    useContributionStore.setState({ authors: [createAuthor("Grace Hopper")] });
     renderList();
     stubClipboard(() => {
       useContributionStore.setState({ authors: [] });
       return Promise.resolve();
     });
-    await ask("Ask Jane Smith what they did");
+    await ask("Ask Grace Hopper what they did");
 
     expect(useContributionStore.getState().asks).toEqual({});
   });

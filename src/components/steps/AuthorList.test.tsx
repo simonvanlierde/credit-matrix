@@ -19,7 +19,8 @@ describe("AuthorList", () => {
     await useContributionStore.persist.rehydrate();
     useContributionStore.setState({ welcomeOpen: false, welcomeSeen: true });
     useContributionStore.getState().loadAuthors([]);
-    for (const name of ["Ada Lovelace", "Bob White", "Carol Davis"]) useContributionStore.getState().addAuthor(name);
+    for (const name of ["Ada Lovelace", "Charles Darwin", "Rosalind E. Franklin"])
+      useContributionStore.getState().addAuthor(name);
     render(
       <IntlProvider locale="en" messages={messages}>
         <AuthorList />
@@ -29,17 +30,17 @@ describe("AuthorList", () => {
   afterEach(cleanup);
 
   it("renders names in store order across move, remove and rename", () => {
-    expect(names()).toEqual(["Ada Lovelace", "Bob White", "Carol Davis"]);
+    expect(names()).toEqual(["Ada Lovelace", "Charles Darwin", "Rosalind E. Franklin"]);
 
     act(() => useContributionStore.getState().moveAuthor(0, 2));
-    expect(names()).toEqual(["Bob White", "Carol Davis", "Ada Lovelace"]);
+    expect(names()).toEqual(["Charles Darwin", "Rosalind E. Franklin", "Ada Lovelace"]);
 
     act(() => useContributionStore.getState().removeAuthor(ids()[1] as string));
-    expect(names()).toEqual(["Bob White", "Ada Lovelace"]);
+    expect(names()).toEqual(["Charles Darwin", "Ada Lovelace"]);
 
     act(() => {
-      useContributionStore.getState().updateAuthorName(ids()[0] as string, "Robert White");
+      useContributionStore.getState().updateAuthorName(ids()[0] as string, "Erasmus Darwin");
     });
-    expect(names()).toEqual(["Robert White", "Ada Lovelace"]);
+    expect(names()).toEqual(["Erasmus Darwin", "Ada Lovelace"]);
   });
 });

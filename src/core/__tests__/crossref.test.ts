@@ -9,7 +9,7 @@ import { fromCrossrefContributors, isCrossrefContributors, toCrossrefContributor
 import { detectFormat, importAny } from "../import";
 import { createAuthor } from "../parse-authors";
 
-const jane = createAuthor("Jane A. Smith", {
+const jane = createAuthor("Grace B. Hopper", {
   orcid: "0000-0002-1825-0097",
   corresponding: true,
   contributions: [
@@ -17,7 +17,7 @@ const jane = createAuthor("Jane A. Smith", {
     { role: "Writing – review & editing", score: 33 },
   ],
 });
-const bob = createAuthor("Bob White", {
+const bob = createAuthor("Charles Darwin", {
   contributorType: "non-author",
   contributions: [{ role: "Investigation", score: 66 }],
 });
@@ -27,8 +27,8 @@ describe("toCrossrefContributors", () => {
     const xml = toCrossrefContributors([jane]);
     expect(xml).toContain(`<contributors>
   <person_name sequence="first">
-    <given_name>Jane A.</given_name>
-    <surname>Smith</surname>
+    <given_name>Grace B.</given_name>
+    <surname>Hopper</surname>
     <role vocab="crossref" type="author"/>
     <role vocab="crossref" type="corresponding-author"/>
     <role vocab="credit" type="conceptualization"/>
@@ -67,7 +67,7 @@ describe("toCrossrefContributors", () => {
   it("lists authors first, gives 'first' to the first of them, and marks non-authors 'other'", () => {
     const xml = toCrossrefContributors([bob, jane]);
     expect(xml).toMatch(
-      /<contributors>\n {2}<person_name sequence="first">\n {4}<given_name>Jane A\.[\s\S]*<person_name sequence="additional">\n {4}<given_name>Bob<\/given_name>[\s\S]*?type="other"\/>/,
+      /<contributors>\n {2}<person_name sequence="first">\n {4}<given_name>Grace B\.[\s\S]*<person_name sequence="additional">\n {4}<given_name>Charles<\/given_name>[\s\S]*?type="other"\/>/,
     );
   });
 
@@ -75,7 +75,7 @@ describe("toCrossrefContributors", () => {
     const xml = toCrossrefContributors([createAuthor("0000-0001-5109-3700"), jane]);
     expect(xml).not.toContain("<surname>0000-0001-5109-3700</surname>");
     expect(xml).toContain("<!-- Left out: 0000-0001-5109-3700 has no name yet. -->");
-    expect(xml).toMatch(/<person_name sequence="first">\n {4}<given_name>Jane A\./);
+    expect(xml).toMatch(/<person_name sequence="first">\n {4}<given_name>Grace B\./);
   });
 
   it("puts each person and each left-out note on its own line", () => {
@@ -131,14 +131,14 @@ describe("fromCrossrefContributors", () => {
     const back = fromCrossrefContributors(toCrossrefContributors(roster));
     // The schema has no level slot, so the exported roles come back as lead.
     expect(back.map(shape)).toEqual(roster.map(shape));
-    expect(back.find((a) => a.name === "Jane A. Smith")?.contributions.find((c) => c.score > 0)?.score).toBe(100);
+    expect(back.find((a) => a.name === "Grace B. Hopper")?.contributions.find((c) => c.score > 0)?.score).toBe(100);
   });
 
   it("reads an author before the people credited only in the Acknowledgements, in export order", () => {
     const back = fromCrossrefContributors(toCrossrefContributors([bob, jane]));
     expect(back.map((a) => [a.name, a.contributorType])).toEqual([
-      ["Jane A. Smith", "author"],
-      ["Bob White", "non-author"],
+      ["Grace B. Hopper", "author"],
+      ["Charles Darwin", "non-author"],
     ]);
   });
 
@@ -176,7 +176,7 @@ describe("fromCrossrefContributors", () => {
   });
 
   it("reads roles of the crossref vocabulary only, for author type and corresponding mark", () => {
-    const xml = `<contributors><person_name><surname>Smith</surname>
+    const xml = `<contributors><person_name><surname>Hopper</surname>
       <role vocab="crossref" type="other"/><role vocab="credit" type="author"/><role vocab="credit" type="corresponding-author"/>
       <role vocab="crossref"/></person_name></contributors>`;
     const [smith] = fromCrossrefContributors(xml);
@@ -201,7 +201,7 @@ describe("fromCrossrefContributors", () => {
 
   it("reads deeply nested person_name in linear time and keeps the outer one", () => {
     const n = 8000;
-    const xml = `<contributors>${"<person_name>".repeat(n)}<surname>Smith</surname>${"</person_name>".repeat(n)}</contributors>`;
+    const xml = `<contributors>${"<person_name>".repeat(n)}<surname>Hopper</surname>${"</person_name>".repeat(n)}</contributors>`;
     const linkedom = new LinkedomParser();
     const start = performance.now();
     const authors = fromCrossrefContributors(xml, {
@@ -259,10 +259,10 @@ describe("isCrossrefContributors", () => {
 describe("fromCrossrefContributors display name", () => {
   it("rebuilds the name as given + surname + suffix", () => {
     const xml =
-      "<contributors><person_name><given_name>Jane</given_name><surname>Smith</surname><suffix>Jr</suffix></person_name></contributors>";
-    expect(fromCrossrefContributors(xml).map((a) => a.name)).toEqual(["Jane Smith Jr"]);
-    // A family-first name ("Smith, Jane") comes back given-first, as fromJats4rXml does.
-    const author = createAuthor("Smith, Jane");
-    expect(fromCrossrefContributors(toCrossrefContributors([author])).map((a) => a.name)).toEqual(["Jane Smith"]);
+      "<contributors><person_name><given_name>Grace</given_name><surname>Hopper</surname><suffix>Jr</suffix></person_name></contributors>";
+    expect(fromCrossrefContributors(xml).map((a) => a.name)).toEqual(["Grace Hopper Jr"]);
+    // A family-first name ("Hopper, Grace") comes back given-first, as fromJats4rXml does.
+    const author = createAuthor("Hopper, Grace");
+    expect(fromCrossrefContributors(toCrossrefContributors([author])).map((a) => a.name)).toEqual(["Grace Hopper"]);
   });
 });

@@ -1118,7 +1118,7 @@ export declare function toCrossrefContributors(authors: Author[]): string;
  * Read a `<contributors>` block written by {@link toCrossrefContributors} back into authors.
  * The block holds no contribution levels, so every listed CRediT role comes back as lead.
  * The display name is rebuilt as given name + surname + suffix, as `fromJats4rXml` does,
- * so a family-first name such as "Smith, Jane" comes back as "Jane Smith".
+ * so a family-first name such as "Hopper, Grace" comes back as "Grace Hopper".
  * Same safety rules and `parser` as `fromJats4rXml`.
  */
 export declare function fromCrossrefContributors(xml: string, { parser }?: {
@@ -1300,16 +1300,16 @@ interface StatementSpan {
  * Four formats, matching the original Python app:
  *
  * `by-role`:
- *   "CRediT: Conceptualization: Jane A. Smith, Bob White; Data curation: Jane A. Smith; ..."
+ *   "CRediT: Conceptualization: Grace B. Hopper, Charles Darwin; Data curation: Grace B. Hopper; ..."
  *
  * `by-role-short`:
- *   "CRediT: Conceptualization: JAS, BW; Data curation: JAS; ..."
+ *   "CRediT: Conceptualization: GBH, CD; Data curation: GBH; ..."
  *
  * `by-author`:
- *   "CRediT: Jane A Smith: Conceptualization, Data curation; Bob White: Investigation; ..."
+ *   "CRediT: Grace B. Hopper: Conceptualization, Data curation; Charles Darwin: Investigation; ..."
  *
  * `by-author-short`:
- *   "CRediT: JAS: Conceptualization, Data curation; BW: Investigation; ..."
+ *   "CRediT: GBH: Conceptualization, Data curation; CD: Investigation; ..."
  */
 export declare function generateStatement(authors: Author[], options: StatementOptions): string;
 /**
@@ -1447,7 +1447,7 @@ interface StatementAuthor {
 }
 /**
  * A contributor's name split the way the parser needs it. The given names are everything in the
- * display name before the surname, so "Jane Anne Marie Smith" keeps all three, and "Smith, Jane"
+ * display name before the surname, so "Grace Brewster Murray Hopper" keeps all three, and "Hopper, Grace"
  * reads the part after the comma.
  */
 export declare function statementAuthor(author: Pick<Author, "name" | "firstName" | "middleName" | "surname">): StatementAuthor;

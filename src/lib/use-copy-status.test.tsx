@@ -40,10 +40,10 @@ describe("useCopyStatus", () => {
 
     expect(result.current[0]).toBe("idle");
     await act(async () => {
-      expect(await result.current[1]("CRediT: Jane Smith")).toBe(true);
+      expect(await result.current[1]("CRediT: Grace Hopper")).toBe(true);
     });
 
-    expect(writeText).toHaveBeenCalledWith("CRediT: Jane Smith");
+    expect(writeText).toHaveBeenCalledWith("CRediT: Grace Hopper");
     expect(result.current[0]).toBe("copied");
     expect(announce).toHaveBeenCalledWith("Copied to clipboard");
 
@@ -69,7 +69,7 @@ describe("useCopyStatus", () => {
     const { result } = renderHook(() => useCopyStatus(), { wrapper });
 
     await act(async () => {
-      expect(await result.current[1]("CRediT: Jane Smith")).toBe(false);
+      expect(await result.current[1]("CRediT: Grace Hopper")).toBe(false);
     });
 
     expect(result.current[0]).toBe("error");

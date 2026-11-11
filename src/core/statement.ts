@@ -26,7 +26,7 @@ export interface StatementAuthor {
 
 /**
  * A contributor's name split the way the parser needs it. The given names are everything in the
- * display name before the surname, so "Jane Anne Marie Smith" keeps all three, and "Smith, Jane"
+ * display name before the surname, so "Grace Brewster Murray Hopper" keeps all three, and "Hopper, Grace"
  * reads the part after the comma.
  */
 export function statementAuthor(

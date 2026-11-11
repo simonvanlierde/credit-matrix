@@ -6,8 +6,8 @@ import { toJson } from "../export/json";
 import { createAuthor } from "../parse-authors";
 
 const json = toJson([
-  createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] }),
-  createAuthor("Bob <White>", { contributions: [{ role: "Investigation", score: 100 }] }),
+  createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] }),
+  createAuthor("Charles <Darwin>", { contributions: [{ role: "Investigation", score: 100 }] }),
 ]);
 
 async function mount(html: string): Promise<ShadowRoot> {
@@ -27,7 +27,9 @@ describe("<credit-matrix>", () => {
     const svg = root.querySelector("svg");
     expect(svg?.getAttribute("role")).toBe("img");
     expect(svg?.querySelector("title")?.textContent).toBe("Contribution heatmap");
-    expect(root.querySelector("p")?.textContent).toBe("CRediT: Investigation: Bob <White>; Software: Jane Smith");
+    expect(root.querySelector("p")?.textContent).toBe(
+      "CRediT: Investigation: Charles <Darwin>; Software: Grace Hopper",
+    );
   });
 
   it("fetches src and follows the format attribute", async () => {
@@ -36,23 +38,23 @@ describe("<credit-matrix>", () => {
     try {
       const root = await mount('<credit-matrix src="team.json" format="by-author-short"></credit-matrix>');
       expect(fetch).toHaveBeenCalledWith("team.json");
-      expect(root.querySelector("p")?.textContent).toBe("CRediT: JS: Software; BW: Investigation");
+      expect(root.querySelector("p")?.textContent).toBe("CRediT: GH: Software; CD: Investigation");
     } finally {
       vi.unstubAllGlobals();
     }
   });
 
   it("marks non-lead contributions with their level when levels is set", async () => {
-    const half = toJson([createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 50 }] })]);
+    const half = toJson([createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 50 }] })]);
     const inline = `<script type="application/json">${half}</script>`;
     const plain = await mount(`<credit-matrix>${inline}</credit-matrix>`);
-    expect(plain.querySelector("p")?.textContent).toBe("CRediT: Software: Jane Smith");
+    expect(plain.querySelector("p")?.textContent).toBe("CRediT: Software: Grace Hopper");
     const levels = await mount(`<credit-matrix levels>${inline}</credit-matrix>`);
-    expect(levels.querySelector("p")?.textContent).toBe("CRediT: Software: Jane Smith (Equal)");
+    expect(levels.querySelector("p")?.textContent).toBe("CRediT: Software: Grace Hopper (Equal)");
   });
 
   it("grades the heatmap whether or not levels is set", async () => {
-    const half = toJson([createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 50 }] })]);
+    const half = toJson([createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 50 }] })]);
     const root = await mount(`<credit-matrix><script type="application/json">${half}</script></credit-matrix>`);
     const text = root.querySelector("svg")?.textContent ?? "";
     expect(text).toContain("Equal");
@@ -60,14 +62,14 @@ describe("<credit-matrix>", () => {
   });
 
   it("re-renders the statement when levels is added or removed while connected", async () => {
-    const half = toJson([createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 50 }] })]);
+    const half = toJson([createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 50 }] })]);
     const root = await mount(`<credit-matrix><script type="application/json">${half}</script></credit-matrix>`);
     const element = document.querySelector("credit-matrix") as HTMLElement;
-    expect(root.querySelector("p")?.textContent).toBe("CRediT: Software: Jane Smith");
+    expect(root.querySelector("p")?.textContent).toBe("CRediT: Software: Grace Hopper");
     element.setAttribute("levels", "");
-    await vi.waitFor(() => expect(root.querySelector("p")?.textContent).toBe("CRediT: Software: Jane Smith (Equal)"));
+    await vi.waitFor(() => expect(root.querySelector("p")?.textContent).toBe("CRediT: Software: Grace Hopper (Equal)"));
     element.removeAttribute("levels");
-    await vi.waitFor(() => expect(root.querySelector("p")?.textContent).toBe("CRediT: Software: Jane Smith"));
+    await vi.waitFor(() => expect(root.querySelector("p")?.textContent).toBe("CRediT: Software: Grace Hopper"));
   });
 
   it("says so when the inline data is not an export", async () => {
@@ -78,7 +80,7 @@ describe("<credit-matrix>", () => {
   });
 
   it("says so when the inline data repeats a contributor id", async () => {
-    const jane = createAuthor("Jane Smith");
+    const jane = createAuthor("Grace Hopper");
     const twice = JSON.stringify({ version: 1, authors: [jane, jane] });
     const root = await mount(`<credit-matrix><script type="application/json">${twice}</script></credit-matrix>`);
     expect(root.querySelector("[role=alert]")?.textContent).toBe("The JSON in this element repeats a contributor id.");
@@ -105,7 +107,9 @@ describe("<credit-matrix>", () => {
     const root = await mount(
       `<credit-matrix format="sideways"><script type="application/json">${json}</script></credit-matrix>`,
     );
-    expect(root.querySelector("p")?.textContent).toBe("CRediT: Investigation: Bob <White>; Software: Jane Smith");
+    expect(root.querySelector("p")?.textContent).toBe(
+      "CRediT: Investigation: Charles <Darwin>; Software: Grace Hopper",
+    );
   });
 
   it("re-renders when src changes while connected, and not before it is connected", async () => {
@@ -119,7 +123,9 @@ describe("<credit-matrix>", () => {
       document.body.append(loose);
       await vi.waitFor(() => expect(loose.shadowRoot?.querySelector("svg")).not.toBeNull());
       loose.setAttribute("format", "by-author");
-      await vi.waitFor(() => expect(loose.shadowRoot?.querySelector("p")?.textContent).toMatch(/^CRediT: Jane Smith/));
+      await vi.waitFor(() =>
+        expect(loose.shadowRoot?.querySelector("p")?.textContent).toMatch(/^CRediT: Grace Hopper/),
+      );
       // A format change re-renders from the JSON already fetched.
       expect(fetch).toHaveBeenCalledTimes(1);
       loose.setAttribute("src", "b.json");
@@ -139,7 +145,7 @@ describe("<credit-matrix>", () => {
       document.body.append(element);
       await vi.waitFor(() => expect(element.shadowRoot?.querySelector("svg")).not.toBeNull());
       element.setAttribute("format", "by-author");
-      await vi.waitFor(() => expect(element.shadowRoot?.querySelector("p")?.textContent).toMatch(/^CRediT: Jane/));
+      await vi.waitFor(() => expect(element.shadowRoot?.querySelector("p")?.textContent).toMatch(/^CRediT: Grace/));
       expect(fetch).toHaveBeenCalledTimes(1);
       element.setAttribute("src", "a.json");
       await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
@@ -279,7 +285,7 @@ describe("<credit-matrix>", () => {
     const byAttribute = await mount(`<credit-matrix locale="de">${inline}</credit-matrix>`);
     expect(byAttribute.querySelector("figure")?.lang).toBe("de");
     expect(byAttribute.querySelector("figure > p")?.textContent).toBe(
-      "CRediT: Untersuchung: Bob <White>; Software: Jane Smith",
+      "CRediT: Untersuchung: Charles <Darwin>; Software: Grace Hopper",
     );
     expect(byAttribute.querySelector("svg title")?.textContent).toBe("Beitragsheatmap");
 
@@ -292,8 +298,8 @@ describe("<credit-matrix>", () => {
 
   it("gives screen readers a table of contributor, role and level, and hides the drawing", async () => {
     const leveled = toJson([
-      createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] }),
-      createAuthor("Bob White", { contributions: [{ role: "Software", score: 33 }] }),
+      createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] }),
+      createAuthor("Charles Darwin", { contributions: [{ role: "Software", score: 33 }] }),
     ]);
     const root = await mount(`<credit-matrix><script type="application/json">${leveled}</script></credit-matrix>`);
     expect(root.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
@@ -301,7 +307,7 @@ describe("<credit-matrix>", () => {
     expect(table.caption?.textContent).toBe("Contribution heatmap");
     const rows = [...table.rows].map((row) => [...row.cells].map((cell) => cell.textContent));
     expect(rows).toEqual([
-      ["", "Jane Smith", "Bob White"],
+      ["", "Grace Hopper", "Charles Darwin"],
       ["Software", "Lead", "Supporting"],
     ]);
   });

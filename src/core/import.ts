@@ -51,7 +51,7 @@ export function detectFormat(text: string): DetectedFormat {
     }
   }
   if (isTenzing(trimmed)) return "tenzing";
-  // CSV only with a "Name" header cell: a pasted "Anne Namer, Bob Smith" is names.
+  // CSV only with a "Name" header cell: a pasted "Ada Lovelace, Alan Turing" is names.
   if (headerCells(trimmed).includes("name")) return "csv";
   // A name list never assigns "conceptualization" to initials or tells what the authors did.
   if (readsAsStatement(trimmed)) return "statement";

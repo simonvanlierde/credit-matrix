@@ -139,6 +139,13 @@ points at the `v<version>` tag instead of `main`.
 - **Format fixtures**: `format-fixtures.test.ts` decodes saved files in
   `src/core/__tests__/fixtures/` that never change (a share link, JSON, CSV and JATS). If you change
   a format on purpose, regenerate the fixture it affects and run `pnpm validate:jats`.
+- **Example people**: tests, docs and demos take their contributors from the cast in
+  `src/core/__tests__/cast.ts`, dead scientists each picked for a name case (a middle initial, a
+  particle, a hyphen, family name first). Build an author with `createAuthor(name)` rather than
+  typing its name parts and initials by hand, and keep the expected strings literal. A parser test
+  about one spelling keeps its own name. The "Load sample data" names are `sampleNames` in each
+  locale's catalog, a translator's choice; `sample-names.test.ts` holds the English trio to the cast,
+  and `cast.test.ts` fails if one of the placeholder names the cast replaced comes back.
 - **Property tests**: `properties.test.ts` feeds random drafts through every format and random text
   to the importers, with [fast-check](https://fast-check.dev). A failure prints the seed and the
   smallest input that fails: add that input as a fixed test next to the fix.

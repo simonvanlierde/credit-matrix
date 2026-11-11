@@ -97,7 +97,7 @@ describe("portable figures", () => {
     const create = vi.spyOn(fontkit, "create");
     try {
       const fresh = createFigureRenderer();
-      await fresh.svg([createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] })]);
+      await fresh.svg([createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] })]);
       expect(create).toHaveBeenCalledTimes(1);
       await fresh.svg([createAuthor("张伟", { contributions: [{ role: "Software", score: 100 }] })], {
         acronyms: false,
@@ -187,7 +187,7 @@ describe("portable figures", () => {
   });
 
   it.for([true, false])("retains visible publication marks in PDF when levels=%s", async (levels, { skip }) => {
-    const authors = [createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] })];
+    const authors = [createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] })];
     const options = { levels, legendPosition: "right" as const };
     const svg = await renderer.svg(authors, { ...options, marks: true });
     const cell = svg.match(/<rect x="([\d.]+)" y="([\d.]+)" width="22" height="22"/);

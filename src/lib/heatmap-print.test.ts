@@ -14,7 +14,7 @@ describe("final-size heatmap measurements", () => {
   });
 
   it("uses the generated legend, omits a hidden legend and handles empty figures", () => {
-    const authors = [createAuthor("Jane Smith", { contributions: [{ role: "Software", score: 100 }] })];
+    const authors = [createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] })];
     for (const scale of [1, 2]) {
       for (const legend of [true, false]) {
         const svg = buildHeatmapSvg(authors, { legend, scale });

@@ -126,7 +126,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     const recipe = heatmapRecipe({ ...DEFAULT_HEATMAP_SETTINGS, font: "serif", horizontal: true }, "typst", "fr");
     writeFileSync(
       new URL("out/recipe.typ", import.meta.url),
-      `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Jane Smith", roles: (software: true)),)\n${recipe}`,
+      `#import "../lib.typ": *\n#set page(width: auto, height: auto)\n#let team = ((name: "Ada Lovelace", roles: (software: true)),)\n${recipe}`,
     );
     const result = typst("compile", "--root", ".", "out/recipe.typ", "out/recipe.svg");
     expect(result.status, result.stderr).toBe(0);
@@ -176,8 +176,8 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     ['((name: "Émile 𐐀smith", roles: (software: true)),)', '((name: "É𐐀", roles: (software: true)),)'],
     ['((name: "王小明", roles: (software: true)),)', '((name: "王小明", roles: (software: true)),)'],
     [
-      '((name: "Anne Smith", roles: (software: true)), (name: "Albert Smith", roles: (software: true)))',
-      '((name: "Anne Smith", roles: (software: true)), (name: "Albert Smith", roles: (software: true)))',
+      '((name: "Ada Lovelace", roles: (software: true)), (name: "Antonie van Leeuwenhoek", roles: (software: true)))',
+      '((name: "Ada Lovelace", roles: (software: true)), (name: "Antonie van Leeuwenhoek", roles: (software: true)))',
     ],
   ])("uses unambiguous Unicode initials for %s", (people, expected) => {
     mkdirSync(new URL("out", import.meta.url), { recursive: true });

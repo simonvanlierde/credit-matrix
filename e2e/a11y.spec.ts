@@ -67,7 +67,7 @@ test.describe("Accessibility (axe-core)", () => {
     await page.goto("/");
     // Imported names have no roles yet, so the validation notice renders.
     await page.getByRole("button", { name: "Import" }).click();
-    await page.locator("#import-text").fill("Jane Smith\nBob White");
+    await page.locator("#import-text").fill("Grace Hopper\nCharles Darwin");
     await page.getByRole("button", { name: "Import data" }).click();
     await expect(page.getByText(/has no assigned CRediT roles/).first()).toBeVisible();
     const results = await scan(page);
@@ -90,7 +90,7 @@ test.describe("Accessibility (axe-core)", () => {
   test("every opened popover panel has an accessible name", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Import" }).click();
-    await page.locator("#import-text").fill("Jane Smith\nBob White");
+    await page.locator("#import-text").fill("Grace Hopper\nCharles Darwin");
     await page.getByRole("button", { name: "Import data" }).click();
     // The import's outcome strip sits over the controls below it.
     await page.getByRole("button", { name: "Dismiss" }).click();
@@ -100,7 +100,7 @@ test.describe("Accessibility (axe-core)", () => {
       "Language settings",
       "Bulk assign",
       "Heatmap options",
-      "Actions for Jane Smith",
+      "Actions for Grace Hopper",
       "Conceptualization",
     ]) {
       await page.getByRole("button", { name, exact: true }).first().click();
