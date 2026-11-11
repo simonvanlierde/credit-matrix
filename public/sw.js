@@ -28,8 +28,8 @@ const CACHE = "credit-matrix-BUILD_ID";
 // Stamped by postbuild so lazy pages and languages also work on their first offline visit.
 const ASSETS = [];
 
-// Every exported page; scripts/postbuild.mjs fails the build when one is missing.
-const PAGES = ["/", "/about", "/accessibility", "/census"];
+// Every page, stamped by postbuild from src/routes.ts.
+const PAGES = [];
 
 // Past this, a hanging connection falls back to the cached page instead of
 // leaving a blank tab until the browser's own network timeout.
