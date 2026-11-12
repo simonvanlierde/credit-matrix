@@ -118,7 +118,8 @@ jobs:
     name: Publish to npm
     needs: [build]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Room for the 15-minute wait on jsDelivr after a fonts publish.
+    timeout-minutes: 30
     environment: npm-release
     permissions:
       contents: read
@@ -157,16 +158,19 @@ jobs:
 
       # Before the main package: its font download points at this version.
       - name: Publish the fonts when their version is new
+        id: fonts
         env:
           TARBALL: ${{ needs.build.outputs.fonts-tarball }}
         run: |
           set -o pipefail
           version=$(tar -xOzf "$TARBALL" package/package.json | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).version')
           local_integrity="sha512-$(openssl dgst -sha512 -binary "$TARBALL" | base64 -w0)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           # Core pins the font hashes, so a published version must be this exact tarball.
           if published=$(npm view "credit-matrix-fonts@$version" dist.integrity 2> npm-view.log); then
             if [ -z "$published" ]; then
               npm publish "./$TARBALL" --provenance --access public
+              echo "published=true" >> "$GITHUB_OUTPUT"
             elif [ "$published" = "$local_integrity" ]; then
               echo "credit-matrix-fonts $version is already on npm, with these files."
             else
@@ -175,10 +179,25 @@ jobs:
             fi
           elif grep -q E404 npm-view.log; then
             npm publish "./$TARBALL" --provenance --access public
+            echo "published=true" >> "$GITHUB_OUTPUT"
           else
             cat npm-view.log
             exit 1
           fi
+
+      # Core downloads its fonts from jsDelivr, which answers 500 for several minutes after a publish.
+      - name: Wait for jsDelivr to serve the new fonts
+        if: steps.fonts.outputs.published == 'true'
+        env:
+          VERSION: ${{ steps.fonts.outputs.version }}
+        run: |
+          url="https://cdn.jsdelivr.net/npm/credit-matrix-fonts@$VERSION/package.json"
+          for _ in $(seq 30); do
+            curl -fsS -o /dev/null "$url" && exit 0
+            sleep 30
+          done
+          echo "::error::jsDelivr still does not serve credit-matrix-fonts $VERSION after 15 minutes ($url). Rerun the job once it does."
+          exit 1
 
       - name: Publish
         env:

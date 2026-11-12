@@ -63,7 +63,7 @@ export function docsPlugin() {
       });
       const imageSizes = withSource
         ? Object.fromEntries(
-            globSync("integrations/*/examples/*.{png,jpg,svg,webp}", { cwd: root }).map((path) => [
+            globSync("integrations/*/examples/*.png", { cwd: root }).map((path) => [
               path,
               pngSize(readFileSync(join(root, path)), path),
             ]),
@@ -105,7 +105,8 @@ function docMeta(path, source) {
   return { title: TITLES[path] ?? plain(heading.tokens), description: snippet(plain(paragraph.tokens)) };
 }
 
-// shortcut: reads PNG headers only, the one docs image format in use; add a reader when a JPEG, SVG or WebP lands.
+// shortcut: reads PNG headers only, as the docs image glob (here and in src/docs/images.ts) takes PNGs only;
+// widen both and add a reader when another format lands.
 function pngSize(bytes, path) {
   if (bytes.toString("latin1", 1, 4) !== "PNG") throw new Error(`docs: ${path} is no PNG; teach pngSize its format`);
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };

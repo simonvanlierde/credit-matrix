@@ -21,7 +21,8 @@
  *
  * The cache is named per build (scripts/postbuild.mjs stamps BUILD_ID), so
  * activating a new version drops the previous build's chunks instead of
- * letting them pile up.
+ * letting them pile up. It first fetches the docs pages, and search, that
+ * the old caches held, so a visited docs page stays offline.
  *
  */
 
@@ -58,7 +59,8 @@ async function cachePaths(paths) {
   for (const path of paths) {
     if (!(await cache.match(path))) missing.push(path);
   }
-  await cache.addAll(missing);
+  // no-cache: the HTTP cache may still hold a page from the previous build.
+  await cache.addAll(missing.map((path) => new Request(path, { cache: "no-cache" })));
 }
 
 // Every page, stamped by postbuild from src/routes.ts: a visit caches it for offline use.
@@ -122,9 +124,34 @@ async function cachedPage(request) {
 }
 
 async function dropOldCaches() {
-  const keys = await caches.keys();
-  await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
+  const old = (await caches.keys()).filter((key) => key !== CACHE);
+  await carryVisitedDocs(old.filter((key) => key.startsWith("credit-matrix-"))).catch(() => {
+    // Reading an old cache failed: those docs lose their offline copy, the update still activates.
+  });
+  await Promise.all(old.map((key) => caches.delete(key)));
   await self.clients.claim();
+}
+
+/**
+ * Install skips the docs, so the docs pages and search an older build cached on a visit are fetched
+ * again for this build before its cache goes; otherwise a deploy costs them their offline copy.
+ */
+async function carryVisitedDocs(keys) {
+  const visited = new Set();
+  let search = false;
+  for (const key of keys) {
+    for (const request of await (await caches.open(key)).keys()) {
+      const path = new URL(request.url).pathname;
+      if (/^\/docs(?:\/|$)/.test(path) && PAGES.includes(path)) visited.add(path);
+      search ||= path.startsWith("/pagefind/");
+    }
+  }
+  // Pages and search apart, so a failed search fetch still keeps the pages. A failure here only
+  // costs an offline copy; activation goes on.
+  await Promise.allSettled([
+    cachePaths([...visited].flatMap((path) => [path, ...(DOCS_ASSETS[path] ?? [])])),
+    search && cachePaths(SEARCH_ASSETS),
+  ]);
 }
 
 /** Network first: an online visitor always gets the freshest document. */

@@ -1,6 +1,10 @@
+// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
+import process from "node:process";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { asReturningVisitor } from "./helpers";
+
+test.skip(!process.env.CI && !process.env.BASE_URL, "needs /pagefind/ from a production build");
 
 test("searches the guides and opens a result with the keyboard", async ({ page }) => {
   await asReturningVisitor(page);
