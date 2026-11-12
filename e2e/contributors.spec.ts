@@ -78,16 +78,17 @@ test.describe("the contributor list", () => {
     await expect(row.getByText("You", { exact: true })).toBeVisible();
   });
 
-  test("undoing a removal the grid's Undo already reverted reports no limit", async ({ page }) => {
+  test("removing a contributor after a bulk change retires the bulk Undo", async ({ page }) => {
     await page.goto("/");
     await add(page, "Ada Lovelace");
     await add(page, "Charles Darwin");
     await page.getByRole("button", { name: "Bulk assign" }).click();
     await page.getByRole("button", { name: "Assign every role", exact: true }).click();
+    await expect(page.getByRole("group", { name: "Bulk change applied." })).toBeVisible();
 
+    // The bulk Undo restores the roster from before the bulk change, so it must not outlive an edit.
     await page.getByRole("button", { name: "Remove Charles Darwin" }).click();
-    await page.getByRole("group", { name: "Bulk change applied." }).getByRole("button").click();
-    await expect(page.getByRole("button", { name: "Remove Charles Darwin" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Bulk change applied." })).toBeHidden();
 
     const removedBar = page.getByRole("group", { name: "Removed Charles Darwin" });
     await removedBar.getByRole("button").click();
