@@ -320,6 +320,15 @@ msgstr "Link in die Zwischenablage kopiert"
 msgid "annHeatmapCopied"
 msgstr "Heatmap-PNG in die Zwischenablage kopiert"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "Heatmap-PNG in die Zwischenablage kopiert. Word übernimmt den Alternativtext aus diesem Browser nicht: Kopieren Sie ihn unten."
+
+msgid "heatmapAltHint"
+msgstr "Word übernimmt den Alternativtext nicht, wenn Sie aus diesem Browser einfügen. Kopieren Sie ihn hier und fügen Sie ihn unter Bildformat > Alternativtext ein."
+
+msgid "copyAltText"
+msgstr "Alternativtext kopieren"
+
 msgid "annBadgeCopied"
 msgstr "Badge-PNG in die Zwischenablage kopiert"
 

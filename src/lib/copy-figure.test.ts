@@ -7,6 +7,9 @@ async function readItem(item: ClipboardItem): Promise<Record<string, Blob>> {
   return out;
 }
 
+const CHROME = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36";
+const FIREFOX = "Mozilla/5.0 (X11; Linux x86_64; rv:157.0) Gecko/20100101 Firefox/157.0";
+
 const PNG = new Blob([new Uint8Array([137, 80, 78, 71])], { type: "image/png" });
 
 describe("copyFigure", () => {
@@ -14,7 +17,7 @@ describe("copyFigure", () => {
 
   beforeEach(() => {
     write = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("navigator", { clipboard: { write } });
+    vi.stubGlobal("navigator", { clipboard: { write }, userAgent: CHROME });
     vi.stubGlobal(
       "ClipboardItem",
       class {
@@ -30,7 +33,7 @@ describe("copyFigure", () => {
   });
 
   it("writes an img with alt, size and PNG data next to the PNG", async () => {
-    await copyFigure(Promise.resolve(PNG), 'Grace\'s "map" <b> & more', 600, 300, 300);
+    expect(await copyFigure(Promise.resolve(PNG), 'Grace\'s "map" <b> & more', 600, 300, 300)).toBe(true);
 
     expect(write).toHaveBeenCalledTimes(1);
     const [[item]] = write.mock.calls[0] as [ClipboardItem[]];
@@ -44,10 +47,20 @@ describe("copyFigure", () => {
   it("falls back to the PNG alone when the HTML flavour is refused", async () => {
     write.mockRejectedValueOnce(new DOMException("NotSupportedError"));
 
-    await copyFigure(Promise.resolve(PNG), "alt", 100, 50, 96);
+    expect(await copyFigure(Promise.resolve(PNG), "alt", 100, 50, 96)).toBe(false);
 
     expect(write).toHaveBeenCalledTimes(2);
     const [[item]] = write.mock.calls[1] as [ClipboardItem[]];
     expect((item as ClipboardItem).types).toEqual(["image/png"]);
+  });
+
+  it("writes both flavours in Firefox but reports that Word drops the alt text", async () => {
+    vi.stubGlobal("navigator", { clipboard: { write }, userAgent: FIREFOX });
+
+    expect(await copyFigure(Promise.resolve(PNG), "alt", 100, 50, 96)).toBe(false);
+
+    expect(write).toHaveBeenCalledTimes(1);
+    const [[item]] = write.mock.calls[0] as [ClipboardItem[]];
+    expect((item as ClipboardItem).types).toEqual(["text/html", "image/png"]);
   });
 });

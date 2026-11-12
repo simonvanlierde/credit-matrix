@@ -320,6 +320,15 @@ msgstr "Link copiato negli appunti"
 msgid "annHeatmapCopied"
 msgstr "PNG della heatmap copiato negli appunti"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "PNG della heatmap copiato negli appunti. Word non mantiene il testo alternativo da questo browser: copialo qui sotto."
+
+msgid "heatmapAltHint"
+msgstr "Word non mantiene il testo alternativo quando incolli da questo browser. Copialo qui e incollalo in Formato immagine > Testo alternativo."
+
+msgid "copyAltText"
+msgstr "Copia testo alternativo"
+
 msgid "annBadgeCopied"
 msgstr "PNG del badge copiato negli appunti"
 

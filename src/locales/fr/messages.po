@@ -320,6 +320,15 @@ msgstr "Lien copié dans le presse-papiers"
 msgid "annHeatmapCopied"
 msgstr "PNG de la heatmap copié dans le presse-papiers"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "PNG de la heatmap copié dans le presse-papiers. Word ne garde pas le texte de remplacement depuis ce navigateur : copiez-le ci-dessous."
+
+msgid "heatmapAltHint"
+msgstr "Word ne garde pas le texte de remplacement quand vous collez depuis ce navigateur. Copiez-le ici et collez-le dans Format de l'image > Texte de remplacement."
+
+msgid "copyAltText"
+msgstr "Copier le texte de remplacement"
+
 msgid "annBadgeCopied"
 msgstr "PNG du badge copié dans le presse-papiers"
 
