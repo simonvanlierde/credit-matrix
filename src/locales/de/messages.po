@@ -1866,3 +1866,21 @@ msgstr "Suche wird geladen…"
 
 msgid "docsSearchFailed"
 msgstr "Die Suche konnte nicht geladen werden. Laden Sie die Seite neu, um es erneut zu versuchen."
+
+msgid "docsLiveExample"
+msgstr "Live-Beispiel"
+
+msgid "docsLiveLoading"
+msgstr "Entwurf wird geladen…"
+
+msgid "docsLiveDraft"
+msgstr "Dein Entwurf wird angezeigt"
+
+msgid "docsLiveSample"
+msgstr "Beispieldaten werden angezeigt"
+
+msgid "docsUseSample"
+msgstr "Beispieldaten verwenden"
+
+msgid "docsUseDraft"
+msgstr "Deinen Entwurf verwenden"

@@ -454,6 +454,30 @@ body:has([data-census-page], [data-reading-page]) {
   }
 }
 
+/* Live examples use the app's controls inside the article's reading layout. */
+.document [data-doc-live] {
+  & :is(h3, h4) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    text-wrap: inherit;
+  }
+  & h3 {
+    font-size: 0.875rem;
+  }
+  & :is(ul, ol) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  & :is(h3, h4, p, ul, ol) + * {
+    margin-top: 0;
+  }
+}
+
 /*
  * Popovers and selects. Radix keeps a closing panel mounted only while a CSS
  * *animation* is running: it listens for `animationend` and ignores

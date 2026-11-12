@@ -1866,3 +1866,21 @@ msgstr "検索を読み込み中…"
 
 msgid "docsSearchFailed"
 msgstr "検索を読み込めませんでした。ページを再読み込みして、もう一度お試しください。"
+
+msgid "docsLiveExample"
+msgstr "ライブ例"
+
+msgid "docsLiveLoading"
+msgstr "下書きを読み込み中…"
+
+msgid "docsLiveDraft"
+msgstr "下書きを表示しています"
+
+msgid "docsLiveSample"
+msgstr "サンプルデータを表示しています"
+
+msgid "docsUseSample"
+msgstr "サンプルデータを使う"
+
+msgid "docsUseDraft"
+msgstr "下書きを使う"

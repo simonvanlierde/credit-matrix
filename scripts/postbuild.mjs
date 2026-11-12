@@ -136,12 +136,25 @@ for (const page of pages.filter((file) => /^docs(?:\/|\.html$)/.test(file))) {
 const manifest = JSON.parse(await readFile(join(OUT, ".vite", "manifest.json"), "utf8"));
 const docsChunks = new Set(
   Object.entries(manifest)
-    .filter(([source]) => source.startsWith("src/app/docs/"))
+    .filter(([source]) => source.startsWith("src/app/docs/") || source === "src/docs/LiveExample.tsx")
     .map(([, { file }]) => file.replace(/^assets\//, "")),
 );
 if (docsChunks.size === 0) throw new Error("postbuild: no docs chunk in the Vite manifest");
 const docsPage = manifest["src/app/docs/page.tsx"]?.file;
 if (!docsPage) throw new Error("postbuild: no docs page entry in the Vite manifest");
+const liveExample = manifest["src/docs/LiveExample.tsx"]?.file;
+const docsAssets = Object.fromEntries(
+  await Promise.all(
+    paths
+      .filter((path) => /^\/docs(?:\/|$)/.test(path))
+      .map(async (path) => {
+        const html = await readFile(join(OUT, `${path.slice(1)}.html`), "utf8");
+        const hasLive = html.includes('<div data-doc-live="');
+        if (hasLive && !liveExample) throw new Error(`postbuild: no live example chunk for ${path}`);
+        return [path, [`/${docsPage}`, ...(hasLive ? [`/${liveExample}`] : [])]];
+      }),
+  ),
+);
 const precachedPages = paths.filter((path) => !/^\/docs(?:\/|$)/.test(path));
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
   .filter((file) => /\.(?:js|css)$|^NotoSans-Regular-[\w-]+\.ttf$|^harfbuzz-subset-[\w-]+\.wasm$/.test(file))
@@ -156,7 +169,7 @@ if (
   throw new Error("postbuild: the default figure font or the subsetter is not in the service worker precache");
 if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");
 if (!sw.includes("const SEARCH_ASSETS = [];")) throw new Error("postbuild: missing search asset placeholder");
-if (!sw.includes("const DOCS_ASSETS = [];")) throw new Error("postbuild: missing docs asset placeholder");
+if (!sw.includes("const DOCS_ASSETS = {};")) throw new Error("postbuild: missing docs asset placeholder");
 if (!sw.includes("const PAGES = [];")) throw new Error("postbuild: missing service worker page placeholder");
 if (!sw.includes("const PRECACHED_PAGES = [];"))
   throw new Error("postbuild: missing service worker precached page placeholder");
@@ -165,7 +178,7 @@ await writeFile(
   sw
     .replace(placeholder, `"credit-matrix-${buildId}"`)
     .replace("const SEARCH_ASSETS = [];", `const SEARCH_ASSETS = ${JSON.stringify(searchAssets)};`)
-    .replace("const DOCS_ASSETS = [];", `const DOCS_ASSETS = ${JSON.stringify([`/${docsPage}`])};`)
+    .replace("const DOCS_ASSETS = {};", `const DOCS_ASSETS = ${JSON.stringify(docsAssets)};`)
     .replace("const ASSETS = [];", `const ASSETS = ${JSON.stringify(assets)};`)
     .replace("const PAGES = [];", `const PAGES = ${JSON.stringify(paths)};`)
     .replace("const PRECACHED_PAGES = [];", `const PRECACHED_PAGES = ${JSON.stringify(precachedPages)};`),

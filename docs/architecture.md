@@ -39,7 +39,14 @@ yes/no and levels without changing what is stored. The
 [domain model](../src/core/README.md#domain-model) has the score range of each level.
 [ADR 0001](adr/0001-client-side-architecture.md) explains the split.
 
-## Documentation search
+## Documentation
+
+The `/docs` pages render the integration READMEs at build time. The browser receives navigation
+metadata and prerendered HTML, without the Markdown sources or renderer. A standalone
+`<!-- live: quarto -->` comment inserts a live example; pages without a marker never load that code.
+Examples reuse the app's export controls and recipes with the active draft or local sample data.
+The visible source switch changes only the example, leaving the saved draft unchanged. Static
+instructions remain readable when JavaScript or a live example cannot load.
 
 Pagefind builds the English search index from prerendered documentation, before the single postbuild
 pass stamps the CSP and service worker. Search uses the build id as its metadata cache tag, so offline

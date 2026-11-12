@@ -1,32 +1,17 @@
-import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SettingSwitch, SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
-import {
-  CREDIT_ROLES,
-  type CreditRoleName,
-  generateStatement,
-  type StatementFormat,
-  statementSpans,
-  toCrossrefContributors,
-  toCsv,
-  toJats4rXml,
-  toJson,
-  toLatexCredits,
-  toMarkdown,
-  toMyst,
-  toQuarto,
-  toRoCrateFragment,
-  toTenzing,
-} from "@/core";
+import { CREDIT_ROLES, type CreditRoleName, generateStatement, type StatementFormat, statementSpans } from "@/core";
 import { isAllBinary, rolesWithContributions } from "@/core/author";
 import { pageMarkColor } from "@/core/contributor-color";
 import { TOOLCHAINS, type Toolchain } from "@/core/toolchain";
 import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
+import { DATA_FORMATS, type DataFormat } from "@/lib/data-exports";
 import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
 import { useContributorHue } from "@/lib/use-contributor-hue";
@@ -39,6 +24,7 @@ import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "
 import { useGuide } from "@/store/guide-store";
 import { EXPORT_BUTTON, ICON_TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
+import { EXPORT_ITEM_BUTTON, OutputActions, OutputBlock } from "./OutputBlock";
 import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
 import { TOOLCHAIN_OUTPUTS, ToolchainPanel } from "./ToolchainPanel";
@@ -51,70 +37,6 @@ import { TOOLCHAIN_OUTPUTS, ToolchainPanel } from "./ToolchainPanel";
  */
 const NAME_TEXT =
   "cursor-pointer decoration-outline decoration-dotted underline-offset-4 hover:text-primary hover:underline";
-
-type DataFormat =
-  | "xml"
-  | "crossref"
-  | "json"
-  | "csv"
-  | "tenzing"
-  | "markdown"
-  | "latex"
-  | "quarto"
-  | "myst"
-  | "ro-crate";
-
-const EXPORT_ITEM_BUTTON =
-  "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
-
-/** Machine-readable export formats, each able to be copied or downloaded. */
-const DATA_FORMATS: Record<
-  DataFormat,
-  {
-    label: string;
-    filename: string;
-    mime: string;
-  }
-> = {
-  xml: {
-    label: "XML (JATS4R)",
-    filename: "credit-contributors.xml",
-    mime: "application/xml",
-  },
-  crossref: {
-    label: "XML (Crossref)",
-    filename: "crossref-contributors.xml",
-    mime: "application/xml",
-  },
-  json: {
-    label: "JSON",
-    filename: "credit_result.json",
-    mime: "application/json",
-  },
-  csv: { label: "CSV", filename: "credit_result.csv", mime: "text/csv;charset=utf-8" },
-  tenzing: {
-    label: "tenzing CSV",
-    filename: "tenzing-contributors.csv",
-    mime: "text/csv;charset=utf-8",
-  },
-  latex: {
-    label: "LaTeX (latex-credits)",
-    filename: "credit-contributors.tex",
-    mime: "application/x-tex;charset=utf-8",
-  },
-  markdown: {
-    label: "Markdown",
-    filename: "credit-contributors.md",
-    mime: "text/markdown;charset=utf-8",
-  },
-  quarto: { label: "Quarto YAML", filename: "credit-quarto.yml", mime: "application/yaml;charset=utf-8" },
-  myst: { label: "MyST YAML", filename: "credit-myst.yml", mime: "application/yaml;charset=utf-8" },
-  "ro-crate": {
-    label: "RO-Crate",
-    filename: "credit-ro-crate-fragment.json",
-    mime: "application/ld+json",
-  },
-};
 
 export function StatementOutput() {
   const toolchain = useContributionStore((s) => s.toolchain);
@@ -155,13 +77,6 @@ export function StatementOutput() {
   useEffect(() => {
     if (copyStatus === "copied") markGuideCopied();
   }, [copyStatus, markGuideCopied]);
-  // Separate status for the data-format Copy button, so feedback appears on
-  // the button that was clicked rather than on the main statement copy.
-  const [dataCopyStatus, copyDataText] = useCopyStatus({
-    copied: t("annExportDataCopied"),
-  });
-  // Which format the shared copy status belongs to, so feedback lands on that row.
-  const [copiedFormat, setCopiedFormat] = useState<DataFormat>("xml");
   // Statement-local output controls (independent of the heatmap's).
   const [grouping, setGrouping] = useState<"by-author" | "by-role">("by-author");
   const { initials: acronyms, showLevels, separateAck } = useContributionStore((s) => s.statementOptions);
@@ -188,88 +103,28 @@ export function StatementOutput() {
   // The split control only matters once someone is marked a non-author contributor.
   const hasNonAuthors = authors.some((author) => author.contributorType === "non-author");
 
-  function serialize(dataFormat: DataFormat): string {
-    switch (dataFormat) {
-      case "json":
-        return toJson(authors, { asks, includeAnswers, selfId, toolchain });
-      case "xml":
-        return toJats4rXml(authors, { yesNo });
-      case "latex":
-        return toLatexCredits(authors, { yesNo });
-      case "quarto":
-        return toQuarto(authors, { yesNo });
-      case "myst":
-        return toMyst(authors);
-      case "crossref":
-        return toCrossrefContributors(authors);
-      case "csv":
-        return toCsv(authors);
-      case "tenzing":
-        return toTenzing(authors);
-      case "ro-crate":
-        return JSON.stringify(toRoCrateFragment(authors).metadata, null, 2);
-      case "markdown":
-        return toMarkdown(authors, translateRole, translateUi, outputLanguage);
-    }
-  }
+  const exportOptions = useMemo(
+    () => ({ asks, includeAnswers, selfId, toolchain, yesNo, translateRole, translateUi, outputLanguage }),
+    [asks, includeAnswers, selfId, toolchain, yesNo, translateRole, translateUi, outputLanguage],
+  );
 
-  function downloadData(dataFormat: DataFormat) {
-    if (!hasAuthors) return;
-    const { filename, mime } = DATA_FORMATS[dataFormat];
-    // A BOM makes Excel read the file as UTF-8, so non-ASCII names survive.
-    const bom = dataFormat === "csv" || dataFormat === "tenzing" ? "﻿" : "";
-    download(new Blob([bom, serialize(dataFormat)], { type: mime }), filename);
-  }
+  const answersChoice = askedCount > 0 && (
+    <label className="flex min-h-8 items-center gap-2 pr-2 text-xs text-on-surface-variant">
+      <input
+        type="checkbox"
+        checked={includeAnswers}
+        onChange={(event) => setIncludeAnswers(event.target.checked)}
+        className="size-4 shrink-0 accent-primary"
+      />
+      {t("exportIncludesAnswers", { count: askedCount })}
+    </label>
+  );
 
   function exportRow(value: DataFormat) {
-    const label = value === "ro-crate" ? t("exportRoCrateFragment") : DATA_FORMATS[value].label;
-    const copiedThis = copiedFormat === value && dataCopyStatus !== "idle";
     return (
       <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">
-        <div className="flex items-center gap-1">
-          <span className="min-w-0 flex-1">{label}</span>
-          <button
-            type="button"
-            onClick={() => {
-              setCopiedFormat(value);
-              void copyDataText(serialize(value));
-            }}
-            disabled={!hasAuthors}
-            aria-label={t("copyFormat", { format: label })}
-            title={t("copyFormat", { format: label })}
-            className={EXPORT_ITEM_BUTTON}
-          >
-            {copiedThis && dataCopyStatus === "copied" ? (
-              <Check className="size-3.5 text-primary" aria-hidden="true" />
-            ) : (
-              <Copy className="size-3.5" aria-hidden="true" />
-            )}
-            {copiedThis ? (dataCopyStatus === "copied" ? t("copied") : t("copyFailedMessage")) : t("copy")}
-          </button>
-          <button
-            type="button"
-            onClick={() => downloadData(value)}
-            disabled={!hasAuthors}
-            aria-label={t("downloadFormat", { format: label })}
-            title={t("downloadFormat", { format: label })}
-            className={EXPORT_ITEM_BUTTON}
-          >
-            <Download className="size-3.5" aria-hidden="true" />
-            {t("download")}
-          </button>
-        </div>
-        {/* Only JSON includes asks, so the choice sits on its row. */}
-        {value === "json" && askedCount > 0 && (
-          <label className="flex min-h-8 items-center gap-2 pr-2 text-xs text-on-surface-variant">
-            <input
-              type="checkbox"
-              checked={includeAnswers}
-              onChange={(event) => setIncludeAnswers(event.target.checked)}
-              className="size-4 shrink-0 accent-primary"
-            />
-            {t("exportIncludesAnswers", { count: askedCount })}
-          </label>
-        )}
+        <OutputActions authors={authors} format={value} options={exportOptions} />
+        {value === "json" && answersChoice}
       </li>
     );
   }
@@ -646,17 +501,9 @@ export function StatementOutput() {
           }}
         >
           {toolchainOutput ? (
-            <>
-              <textarea
-                aria-label={DATA_FORMATS[toolchainOutput].label}
-                readOnly
-                value={serialize(toolchainOutput)}
-                rows={6}
-                spellCheck={false}
-                className="w-full min-w-0 resize-y rounded border border-edge bg-surface-bright p-2 font-mono text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <ul>{exportRow(toolchainOutput)}</ul>
-            </>
+            <OutputBlock authors={authors} format={toolchainOutput} options={exportOptions} language={outputLanguage}>
+              {toolchainOutput === "json" && answersChoice}
+            </OutputBlock>
           ) : (
             <button
               type="button"

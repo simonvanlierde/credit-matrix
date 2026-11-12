@@ -1866,3 +1866,21 @@ msgstr "Cargando búsqueda…"
 
 msgid "docsSearchFailed"
 msgstr "No se pudo cargar la búsqueda. Recargue la página para volver a intentarlo."
+
+msgid "docsLiveExample"
+msgstr "Ejemplo en vivo"
+
+msgid "docsLiveLoading"
+msgstr "Cargando tu borrador…"
+
+msgid "docsLiveDraft"
+msgstr "Se muestra tu borrador"
+
+msgid "docsLiveSample"
+msgstr "Se muestran datos de ejemplo"
+
+msgid "docsUseSample"
+msgstr "Usar datos de ejemplo"
+
+msgid "docsUseDraft"
+msgstr "Usar tu borrador"

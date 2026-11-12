@@ -47,15 +47,33 @@ test.describe("Offline docs search", () => {
           document.documentElement.dataset.cspViolation = `${event.violatedDirective} ${event.blockedURI}`;
         });
       });
+      if (docPath === "/docs/quarto") {
+        await page.addInitScript(() => {
+          const register = navigator.serviceWorker.register.bind(navigator.serviceWorker);
+          navigator.serviceWorker.register = (...args) =>
+            new Promise<ServiceWorkerRegistration>((resolve, reject) => {
+              document.addEventListener("start-docs-worker", () => void register(...args).then(resolve, reject), {
+                once: true,
+              });
+            });
+        });
+      }
       const response = await page.goto(docPath);
       expect(response?.headers()["content-security-policy"]).toContain("worker-src 'self'");
       const build = await page.locator('meta[name="docs-search-build"]').getAttribute("content");
       expect(build).toBeTruthy();
+      if (docPath === "/docs/quarto") {
+        await expect(page.getByText("Showing sample data", { exact: true })).toBeVisible();
+        await page.evaluate(() => document.dispatchEvent(new Event("start-docs-worker")));
+      }
       await page.evaluate(() => navigator.serviceWorker.ready);
       const sw = await (await request.get("/sw.js")).text();
       const searchAssets: string[] = JSON.parse(sw.match(/const SEARCH_ASSETS = (\[.*?\]);/)?.[1] ?? "[]");
-      const docsAssets: string[] = JSON.parse(sw.match(/const DOCS_ASSETS = (\[.*?\]);/)?.[1] ?? "[]");
-      expect(docsAssets).toHaveLength(1);
+      const docsAssetsByPath: Record<string, string[]> = JSON.parse(
+        sw.match(/const DOCS_ASSETS = (\{.*?\});/)?.[1] ?? "{}",
+      );
+      const docsAssets = docsAssetsByPath[docPath] ?? [];
+      expect(docsAssets).toHaveLength(docPath === "/docs/quarto" ? 2 : 1);
       expect(searchAssets).toContain(`/pagefind/pagefind-entry.json?ts=${build}`);
       expect(searchAssets.some((path) => path.endsWith("wasm.en.pagefind"))).toBe(true);
       await expect
@@ -69,10 +87,23 @@ test.describe("Offline docs search", () => {
           ),
         )
         .toBe(true);
+      if (docPath === "/docs/quarto") {
+        const liveChunk = await page.evaluate(
+          () =>
+            performance.getEntriesByType("resource").find((entry) => /\/LiveExample-[\w-]+\.js$/.test(entry.name))
+              ?.name,
+        );
+        expect(liveChunk).toBeTruthy();
+        await expect
+          .poll(() => page.evaluate(async (url) => Boolean(await caches.match(url as string)), liveChunk))
+          .toBe(true);
+      }
 
       // No query has run: every index chunk and result fragment must already be cached.
       await context.setOffline(true);
       await page.reload();
+      if (docPath === "/docs/quarto")
+        await expect(page.getByText("Showing sample data", { exact: true })).toBeVisible();
       const search = page.getByRole("region", { name: "Search documentation" });
       await search.getByRole("combobox").fill("quarto");
       await expect(search.getByRole("option").and(page.locator('a[href^="/docs/quarto"]')).first()).toBeVisible();

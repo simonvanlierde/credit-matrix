@@ -11,10 +11,10 @@ import { join } from "node:path";
 import process from "node:process";
 import { gzipSync } from "node:zlib";
 
-// Measured 2026-11-12: 438 kB gzip with writing-tool panels and nine interface catalogs.
-const LIMIT_GZIP = 440_000;
-// Measured 2026-11-12: 1.6 kB for the /docs page: the nav metadata, no Markdown (pages are prerendered).
-const DOCS_LIMIT_GZIP = 2_500;
+// Measured 2026-11-12: 442.6 kB gzip with shared exports, search controls and nine interface catalogs.
+const LIMIT_GZIP = 445_000;
+// Measured 2026-11-12: 4.3 kB for docs navigation, search and optional live examples; Markdown stays prerendered.
+const DOCS_LIMIT_GZIP = 4_500;
 // Measured 2026-11-12: 425 kB raw for Component UI and the full English index.
 // Loaded on the first docs visit, separately from the install precache.
 const SEARCH_LIMIT = 470_000;
@@ -46,7 +46,7 @@ const figure = ({ name }) => /^(?:figures|font-search|figure-fonts)-/.test(name)
 const manifest = JSON.parse(readFileSync(join(dir, "..", ".vite", "manifest.json"), "utf8"));
 const docsFiles = new Set(
   Object.entries(manifest)
-    .filter(([source]) => /\.md\?raw$|^src\/app\/docs\//.test(source))
+    .filter(([source]) => /\.md\?raw$|^src\/app\/docs\/|^src\/docs\/LiveExample\.tsx$/.test(source))
     .map(([, { file }]) => file.replace(/^assets\//, "")),
 );
 const docs = ({ name }) => docsFiles.has(name);

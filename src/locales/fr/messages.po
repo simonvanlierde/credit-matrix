@@ -1866,3 +1866,21 @@ msgstr "Chargement de la recherche…"
 
 msgid "docsSearchFailed"
 msgstr "La recherche n’a pas pu se charger. Rechargez la page pour réessayer."
+
+msgid "docsLiveExample"
+msgstr "Exemple en direct"
+
+msgid "docsLiveLoading"
+msgstr "Chargement de votre brouillon…"
+
+msgid "docsLiveDraft"
+msgstr "Votre brouillon est affiché"
+
+msgid "docsLiveSample"
+msgstr "Les données d’exemple sont affichées"
+
+msgid "docsUseSample"
+msgstr "Utiliser les données d’exemple"
+
+msgid "docsUseDraft"
+msgstr "Utiliser votre brouillon"

@@ -4,6 +4,8 @@ import "@/docs/images";
 import { ArrowLeft } from "lucide-react";
 import { DocsSearch } from "@/components/DocsSearch";
 import { ReadingPage } from "@/components/ReadingPage";
+import { DocArticle, readDocParts } from "@/docs/DocArticle";
+import type { DocPart } from "@/docs/live-markers";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";
 
@@ -12,11 +14,11 @@ import { useTranslations } from "@/lib/translations";
 const rendered =
   import.meta.env.SSR || import.meta.env.DEV
     ? await import("@/docs/render").then(
-        ({ renderDoc }) => new Map<string, string>(docs.map((doc) => [doc.route, renderDoc(doc, doc.source ?? "")])),
+        ({ renderDoc }) => new Map<string, DocPart[]>(docs.map((doc) => [doc.route, renderDoc(doc, doc.source ?? "")])),
       )
     : null;
-// Read before hydration, so the client's __html is the server's DOM and React leaves it alone.
-const prerendered = rendered ? "" : (document.querySelector("main article")?.innerHTML ?? "");
+// Read before hydration, so React keeps the server's static fragments unchanged.
+const prerendered = rendered ? [] : readDocParts(document.querySelector("main article"));
 
 /** The docs grouped by section: the index's content and each page's nav. Docs text is English. */
 function DocsList({ current, details, level = 3 }: { current?: string; details?: boolean; level?: 2 | 3 }) {
@@ -59,7 +61,7 @@ function DocPage() {
   const t = useTranslations();
   const route = usePathname();
   const doc = docs.find((entry) => entry.route === route);
-  const html = rendered?.get(route) ?? prerendered;
+  const parts = rendered?.get(route) ?? prerendered;
   return (
     <ReadingPage>
       <meta name="pagefind:title" data-pagefind-meta="title[content]" content={doc?.title} />
@@ -69,8 +71,7 @@ function DocPage() {
         {t("docsTitle")}
       </a>
       <DocsSearch />
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own Markdown from the repo */}
-      <article lang="en" data-pagefind-body className="document" dangerouslySetInnerHTML={{ __html: html }} />
+      <DocArticle parts={parts} />
       <nav aria-label={t("docsTitle")} className="document">
         <DocsList current={route} level={2} />
       </nav>

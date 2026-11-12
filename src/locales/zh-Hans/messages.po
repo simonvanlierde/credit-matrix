@@ -1866,3 +1866,21 @@ msgstr "正在加载搜索…"
 
 msgid "docsSearchFailed"
 msgstr "无法加载搜索。请重新加载页面后重试。"
+
+msgid "docsLiveExample"
+msgstr "实时示例"
+
+msgid "docsLiveLoading"
+msgstr "正在加载草稿…"
+
+msgid "docsLiveDraft"
+msgstr "正在显示你的草稿"
+
+msgid "docsLiveSample"
+msgstr "正在显示示例数据"
+
+msgid "docsUseSample"
+msgstr "使用示例数据"
+
+msgid "docsUseDraft"
+msgstr "使用你的草稿"

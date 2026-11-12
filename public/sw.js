@@ -30,7 +30,7 @@ const CACHE = "credit-matrix-BUILD_ID";
 const ASSETS = [];
 // Search is warmed on the first docs visit, never during app installation.
 const SEARCH_ASSETS = [];
-const DOCS_ASSETS = [];
+const DOCS_ASSETS = {};
 let searchCaching;
 
 self.addEventListener("message", (event) => {
@@ -40,13 +40,13 @@ self.addEventListener("message", (event) => {
   const url = new URL(source);
   if (url.origin !== self.location.origin || !/^\/docs(?:\/|$)/.test(url.pathname) || !PAGES.includes(url.pathname))
     return;
-  searchCaching ??= cachePaths([...SEARCH_ASSETS, ...DOCS_ASSETS]).catch(() => {
+  searchCaching ??= cachePaths(SEARCH_ASSETS).catch(() => {
     // Retry on a later docs visit after a failed connection or quota write.
     searchCaching = undefined;
   });
   // A direct first visit loads before the worker controls navigations or chunk requests.
   event.waitUntil(
-    Promise.all([searchCaching, cachePaths([url.pathname])]).catch(() => {
+    Promise.all([searchCaching, cachePaths([url.pathname, ...(DOCS_ASSETS[url.pathname] ?? [])])]).catch(() => {
       // Storage failures only cost the offline copy; retry on the next visit.
     }),
   );

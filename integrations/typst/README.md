@@ -60,6 +60,8 @@ names it.
 
 To use the app's export, choose Export data, then JSON, and pass the file:
 
+<!-- live: typst -->
+
 ```typ
 #credit-statement(json("team.json"))
 ```

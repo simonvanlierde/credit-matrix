@@ -1866,3 +1866,21 @@ msgstr "Zoeken wordt geladen…"
 
 msgid "docsSearchFailed"
 msgstr "Zoeken kon niet worden geladen. Herlaad de pagina om het opnieuw te proberen."
+
+msgid "docsLiveExample"
+msgstr "Livevoorbeeld"
+
+msgid "docsLiveLoading"
+msgstr "Je concept laden…"
+
+msgid "docsLiveDraft"
+msgstr "Je concept wordt getoond"
+
+msgid "docsLiveSample"
+msgstr "Voorbeeldgegevens worden getoond"
+
+msgid "docsUseSample"
+msgstr "Voorbeeldgegevens gebruiken"
+
+msgid "docsUseDraft"
+msgstr "Je concept gebruiken"

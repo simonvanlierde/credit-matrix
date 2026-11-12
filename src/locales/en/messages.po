@@ -1866,3 +1866,21 @@ msgstr "Loading search…"
 
 msgid "docsSearchFailed"
 msgstr "Search could not load. Reload the page to try again."
+
+msgid "docsLiveExample"
+msgstr "Live example"
+
+msgid "docsLiveLoading"
+msgstr "Loading your draft…"
+
+msgid "docsLiveDraft"
+msgstr "Showing your draft"
+
+msgid "docsLiveSample"
+msgstr "Showing sample data"
+
+msgid "docsUseSample"
+msgstr "Use sample data"
+
+msgid "docsUseDraft"
+msgstr "Use your draft"
