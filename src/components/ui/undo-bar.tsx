@@ -12,12 +12,9 @@ import { cn } from "@/lib/utils";
  * many screen readers. The caller says the message with announce(); the group
  * name tells someone tabbing to Undo what it undoes.
  *
- * The strip unmounts on Undo and on timeout. If it holds focus then, focus
- * would drop to <body>, so `onFocusLost` names where it goes instead.
+ * Unmounting a focused strip would drop focus to <body>, so `onFocusLost`
+ * names where it goes instead.
  */
-/** How long an undo stays on offer: eight seconds was under WCAG 2.2.1's threshold. */
-export const UNDO_WINDOW_MS = 60_000;
-
 export function UndoBar({
   message,
   onUndo,

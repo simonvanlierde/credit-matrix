@@ -21,7 +21,7 @@ test.describe("behaviours that must not trap or hide", () => {
     await asReturningVisitor(page);
   });
 
-  test("the bulk-assign Undo bar outlasts 8 seconds (2.2.1)", async ({ page }) => {
+  test("bulk Undo remains available without a deadline (2.2.1)", async ({ page }) => {
     await page.clock.install();
     await loadSample(page);
     await page.getByRole("button", { name: "Bulk assign" }).click();
@@ -30,7 +30,10 @@ test.describe("behaviours that must not trap or hide", () => {
     await expect(bar).toBeVisible();
     await page.clock.runFor(20_000);
     await expect(bar).toBeVisible();
-    await page.clock.runFor(45_000);
+    await page.clock.runFor(100_000);
+    await expect(bar).toBeVisible();
+    await page.keyboard.press("Escape");
+    await bar.click();
     await expect(bar).toBeHidden();
   });
 
@@ -73,7 +76,7 @@ test.describe("behaviours that must not trap or hide", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test("an Undo that times out while focused does not drop focus to the page (2.4.3)", async ({ page }) => {
+  test("removal Undo keeps its focus and recovery after two minutes (2.2.1)", async ({ page }) => {
     await page.clock.install();
     await loadSample(page);
     await page
@@ -82,8 +85,11 @@ test.describe("behaviours that must not trap or hide", () => {
       .click();
     const undo = page.getByRole("group", { name: /^Removed / }).getByRole("button");
     await undo.focus();
-    await page.clock.runFor(65_000);
-    await expect(undo).toBeHidden();
+    await page.clock.runFor(120_000);
+    await expect(undo).toBeVisible();
+    await expect(undo).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
     await expect(page.getByRole("button", { name: /^Remove / }).first()).toBeFocused();
   });
 
