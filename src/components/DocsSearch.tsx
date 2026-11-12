@@ -29,13 +29,17 @@ export function DocsSearch() {
       .catch(() => {
         if (active) setStatus("error");
       });
-    if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker.ready.then((registration) => {
+    const workers = "serviceWorker" in navigator ? navigator.serviceWorker : null;
+    const warmSearch = () => workers?.controller?.postMessage({ type: "cache-docs-search" });
+    workers?.addEventListener("controllerchange", warmSearch);
+    if (workers) {
+      void workers.ready.then((registration) => {
         if (active) registration.active?.postMessage({ type: "cache-docs-search" });
       });
     }
     return () => {
       active = false;
+      workers?.removeEventListener("controllerchange", warmSearch);
     };
   }, [locale]);
   return (
@@ -46,7 +50,7 @@ export function DocsSearch() {
           "pagefind-searchbox",
           {},
           <script type="text/pagefind-template">
-            {`<a class="pf-searchbox-result" id="{{ aria.result_id }}" href="{{ meta.url | default(url) | safeUrl }}" role="option" aria-selected="false">
+            {`<a lang="en" class="pf-searchbox-result" id="{{ aria.result_id }}" href="{{ meta.url | default(url) | safeUrl }}" role="option" aria-selected="false">
   <p class="pf-searchbox-result-title" id="{{ aria.title_id }}">{{ meta.title | default("Untitled") }}</p>
   {{#if excerpt}}<p class="pf-searchbox-result-excerpt" id="{{ aria.excerpt_id }}">{{+ excerpt +}}</p>{{/if}}
 </a>`}

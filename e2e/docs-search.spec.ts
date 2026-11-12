@@ -67,4 +67,10 @@ test("changes search chrome language while keeping the English index", async ({ 
   await expect(input).not.toHaveAttribute("aria-label", "Search");
   await input.fill("Typst");
   await expect(search.getByRole("option").first()).toContainText("CRediT statement for Typst");
+  expect(
+    await search
+      .getByRole("option")
+      .first()
+      .evaluate((result) => result.closest("[lang]")?.getAttribute("lang")),
+  ).toBe("en");
 });
