@@ -31,7 +31,7 @@ export default {
     "integrations/*",
     "!integrations/typst",
     "e2e",
-    "docs",
+    "/docs",
     "public",
     "coverage",
     "reports",
