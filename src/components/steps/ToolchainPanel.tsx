@@ -114,6 +114,9 @@ export function ToolchainPanel({
   const config = TOOLCHAIN_OUTPUTS[toolchain];
   const guide = docFiles.find((file) => file.path === config.guide);
   const cli = heatmapRecipe(settings, "cli", language);
+  // Figure settings links here; for CLI-recipe tools the CLI command is the recipe, so the link lands on it.
+  const anchor = { id: "toolchain-heatmap-recipe", tabIndex: -1 };
+  const cliRecipe = config.recipe === "cli";
   const recipe = `${toolchain === "typst" ? '#let team = json("contributors.json")\n\n' : ""}${heatmapRecipe(settings, config.recipe, language)}`;
   return (
     <section
@@ -123,18 +126,20 @@ export function ToolchainPanel({
       <h3 className="font-semibold text-sm text-on-surface">{t("toolchainPanel", { toolchain: config.label })}</h3>
       {children}
       {toolchain === "word" && <p className="text-on-surface-variant">{t("toolchainWordHint")}</p>}
-      <div id="toolchain-heatmap-recipe" tabIndex={-1} className="grid min-w-0 gap-2 scroll-mt-4">
-        <h4 className="font-semibold">{t("heatmapRecipe")}</h4>
-        {toolchain === "latex" && <p className="text-on-surface-variant">{t("toolchainLatexHeatmap")}</p>}
-        {settings.colorBy === "contributor" && <p className="text-on-surface-variant">{t("heatmapRecipeOneColor")}</p>}
-        {toolchain === "myst" && <p className="text-on-surface-variant">{t("heatmapRecipeMyst")}</p>}
-        {toolchain === "typst" && <p className="text-on-surface-variant">{t("heatmapRecipeTypst")}</p>}
-        {config.recipe !== "cli" && <CopySnippet label={t("heatmapRecipe")} text={recipe} rows={6} />}
-        {toolchain === "latex" && <CopySnippet label="LaTeX" text={"\\includesvg{heatmap}"} rows={2} />}
-        {toolchain === "word" ? null : toolchain === "markdown" ? (
-          <CopySnippet label="Markdown" text="![CRediT](heatmap.svg)" rows={2} />
-        ) : null}
-      </div>
+      {toolchain !== "word" && (
+        <div {...(cliRecipe ? {} : anchor)} className="grid min-w-0 gap-2 scroll-mt-4">
+          <h4 className="font-semibold">{t("heatmapRecipe")}</h4>
+          {toolchain === "latex" && <p className="text-on-surface-variant">{t("toolchainLatexHeatmap")}</p>}
+          {settings.colorBy === "contributor" && (
+            <p className="text-on-surface-variant">{t("heatmapRecipeOneColor")}</p>
+          )}
+          {toolchain === "myst" && <p className="text-on-surface-variant">{t("heatmapRecipeMyst")}</p>}
+          {toolchain === "typst" && <p className="text-on-surface-variant">{t("heatmapRecipeTypst")}</p>}
+          {!cliRecipe && <CopySnippet label={t("heatmapRecipe")} text={recipe} rows={6} />}
+          {toolchain === "latex" && <CopySnippet label="LaTeX" text={"\\includesvg{heatmap}"} rows={2} />}
+          {toolchain === "markdown" && <CopySnippet label="Markdown" text="![CRediT](heatmap.svg)" rows={2} />}
+        </div>
+      )}
       <div className="grid min-w-0 gap-2">
         <h4 className="font-semibold">{t("toolchainSetup")}</h4>
         {config.setup ? (
@@ -154,7 +159,7 @@ export function ToolchainPanel({
           )
         )}
       </div>
-      <div className="grid min-w-0 gap-2">
+      <div {...(cliRecipe ? anchor : {})} className="grid min-w-0 gap-2 scroll-mt-4">
         <h4 className="font-semibold">{t("toolchainCli")}</h4>
         <p className="text-on-surface-variant">{t("toolchainDataHint")}</p>
         <CopySnippet label={t("toolchainCli")} text={cli} rows={4} />

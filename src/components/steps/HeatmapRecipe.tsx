@@ -19,8 +19,10 @@ export function HeatmapRecipe({ settings, language }: { settings: HeatmapOptions
   const currentStatus = lastCopy === recipe ? status : "idle";
   if (toolchain)
     return (
+      // biome-ignore lint/a11y/useValidAnchor: select the Statement tab, which holds the recipe, before native fragment navigation.
       <a
         href="#toolchain-heatmap-recipe"
+        onClick={() => useContributionStore.getState().setInspectorTab("statement")}
         className="inline-flex min-h-6 items-center text-xs font-semibold text-primary hover:underline"
       >
         {t("heatmapRecipe")}

@@ -87,6 +87,31 @@ test("Figure settings closes when following the selected tool's recipe", async (
   await expect(page.locator("#toolchain-heatmap-recipe")).toBeFocused();
 });
 
+test("Figure settings opens the recipe from another inspector tab", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load sample data" }).click();
+  await page.getByRole("combobox", { name: "I write in…" }).click();
+  await page.getByRole("option", { name: "Quarto", exact: true }).click();
+  await page.getByRole("tab", { name: "Team" }).click();
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
+  await page.getByRole("link", { name: "Export recipe", exact: true }).click();
+  await expect(page.locator("#toolchain-heatmap-recipe")).toBeFocused();
+  await expect(page.locator("#toolchain-heatmap-recipe")).toBeVisible();
+});
+
+test("Word's recipe link lands on the CLI equivalent", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load sample data" }).click();
+  await page.getByRole("combobox", { name: "I write in…" }).click();
+  await page.getByRole("option", { name: "Word", exact: true }).click();
+  await expect(
+    page.locator("#toolchain-heatmap-recipe").getByRole("textbox", { name: "CLI equivalent" }),
+  ).toBeVisible();
+});
+
 test("Undo restores the roster a plain import replaced after a tool pick", async ({ page }) => {
   await asReturningVisitor(page);
   await page.goto("/");
