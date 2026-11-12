@@ -5,11 +5,11 @@ import { type Author, heatmapDescription } from "@/core";
 import { heatmapPrintSize, SMALL_PRINT_PT, svgDimensions } from "@/core/export/heatmap-print";
 import { announce } from "@/lib/announce";
 import { copyFigure } from "@/lib/copy-figure";
-import { DEFAULT_HEATMAP_SETTINGS, type HeatmapOptions } from "@/lib/heatmap-settings";
 import { withPngResolution, withPngText } from "@/lib/png-text";
 import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { useHeatmapSettings } from "@/lib/use-heatmap-settings";
 import { download as downloadBlob } from "@/lib/utils";
 import { useContributionStore } from "@/store/contribution-store";
 import { MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
@@ -123,26 +123,8 @@ export function HeatmapExports({
   const [actualSize, setActualSize] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [copySource, setCopySource] = useState<{ svg: string; widthMm: number; dpi: number } | null>(null);
-  const storedSettings = useContributionStore((s) => s.heatmapSettings);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
-  const monoColor = useContributionStore((s) => s.heatmapMonoColor);
-  const colorByContributor = useContributionStore((s) => s.colorByContributor);
-  const transpose = useContributionStore((s) => s.transpose);
-  const initials = useContributionStore((s) => s.initials);
-  // The grid and the figure share colour, orientation and initials; the stored figure settings hold the rest.
-  const settings = useMemo<HeatmapOptions>(
-    () => ({
-      ...DEFAULT_HEATMAP_SETTINGS,
-      // Untouched settings follow the grid's assignment mode.
-      levels: showLevels,
-      ...storedSettings,
-      color: monoColor,
-      colorBy: colorByContributor ? "contributor" : "color",
-      horizontal: transpose,
-      acronyms: initials,
-    }),
-    [storedSettings, showLevels, monoColor, colorByContributor, transpose, initials],
-  );
+  const settings = useHeatmapSettings(showLevels);
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
   });
