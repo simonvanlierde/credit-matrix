@@ -15,9 +15,12 @@ export const ASSIGNABLE_LEVELS = LEVEL_KEY.filter(({ score }) => score > 0);
 // Equal, not Lead: bulk-marking everyone as Lead overstates every one of them.
 export const DEFAULT_BULK_LEVEL = 66;
 
-/** The roster as it stood before the last bulk action; shared, so a menu on any surface can start an undo. */
-const useBulkSnapshot = create<{ snapshot: Author[] | null }>(() => ({ snapshot: null }));
-const setBulkUndo = (snapshot: Author[] | null) => useBulkSnapshot.setState({ snapshot });
+/**
+ * The roster before and after the last bulk action; shared, so a menu on any surface can start an
+ * undo. `after` lets any other change to the roster drop it: undoing then would discard that edit.
+ */
+const useBulkSnapshot = create<{ snapshot: { before: Author[]; after: Author[] } | null }>(() => ({ snapshot: null }));
+const setBulkUndo = (snapshot: { before: Author[]; after: Author[] } | null) => useBulkSnapshot.setState({ snapshot });
 
 /** Run a bulk mutation with the roster snapshotted for undo; the grid shows the bar. */
 export function useRunBulk() {
@@ -25,7 +28,7 @@ export function useRunBulk() {
   return function runBulk(action: () => void) {
     const before = useContributionStore.getState().authors;
     action();
-    setBulkUndo(before);
+    setBulkUndo({ before, after: useContributionStore.getState().authors });
     announce(t("bulkChangeApplied"));
   };
 }
@@ -56,7 +59,9 @@ export function LevelChoice({ onPick, translateUi }: { onPick: (score: number) =
 export function useBulkUndo() {
   const t = useTranslations();
   const loadAuthors = useContributionStore((s) => s.loadAuthors);
-  const bulkUndo = useBulkSnapshot((s) => s.snapshot);
+  const snapshot = useBulkSnapshot((s) => s.snapshot);
+  const authors = useContributionStore((s) => s.authors);
+  const bulkUndo = snapshot?.after === authors ? snapshot.before : null;
   const runBulk = useRunBulk();
   // Where focus goes when the undo strip closes under it.
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -67,9 +72,11 @@ export function useBulkUndo() {
   const workspaceCleared = useContributionStore((s) => s.workspaceCleared);
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-runs on draft switch and clear by design
   useEffect(() => setBulkUndo(null), [activeDraftId, workspaceCleared]);
+  // Any other roster change ends the undo for good, even if a later change lands on the same roster.
+  useEffect(() => {
+    if (snapshot && snapshot.after !== authors) setBulkUndo(null);
+  }, [snapshot, authors]);
 
-  // NOTE: restores the whole roster snapshot, so it also reverts any edit made
-  // since the bulk action. This is last-state undo, not an operation log.
   function undoBulk() {
     if (!bulkUndo) return;
     loadAuthors(bulkUndo);

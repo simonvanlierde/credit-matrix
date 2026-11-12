@@ -277,7 +277,8 @@ export function HeaderActions() {
 
   /**
    * Answer a newer request in the claim draft the older one made: its row and
-   * title replace the earlier answers, with Undo. The claim lock refuses
+   * title replace the earlier answers, with Undo. Undo restores them only while the draft is still
+   * the one this wrote: an answer given since would be thrown away with it. The claim lock refuses
    * roster writes, so it comes off for the swap and goes back on after.
    */
   function replaceClaim(draftId: string, incoming: DraftClaim, shared: ShareData): LinkFailure | null {
@@ -310,6 +311,7 @@ export function HeaderActions() {
       write(previous);
       return "errShareLinkBroken";
     }
+    const applied = useContributionStore.getState();
     showStatus({
       kind: "success",
       message: t("claimRequestUpdated"),
@@ -318,7 +320,19 @@ export function HeaderActions() {
           label: t("undo"),
           onAct: () => {
             switchDraft(draftId);
-            if (useContributionStore.getState().activeDraftId !== draftId) return;
+            const now = useContributionStore.getState();
+            if (now.activeDraftId !== draftId) return;
+            if (
+              now.authors !== applied.authors ||
+              now.asks !== applied.asks ||
+              now.selfId !== applied.selfId ||
+              now.title !== applied.title ||
+              now.claim !== applied.claim ||
+              now.toolchain !== applied.toolchain
+            ) {
+              showStatus({ kind: "error", message: t("claimUndoStale") });
+              return;
+            }
             write(previous);
           },
         },

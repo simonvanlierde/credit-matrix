@@ -1,4 +1,5 @@
 import { beforeEach, expect, it } from "vitest";
+import { createAuthor } from "@/core";
 import { followOtherTab, useContributionStore } from "./contribution-store";
 import { PERSIST_KEY } from "./persist-meta";
 
@@ -94,4 +95,23 @@ it("adopts another tab's browser default while a different draft is open here", 
   expect(followOtherTab(new StorageEvent("storage", { key: PERSIST_KEY, storageArea: localStorage }))).toBe(false);
   expect(store().activeDraftId).toBe(here);
   expect(store().lastToolchain).toBe("sphinx");
+});
+
+it("loads a version 5 blob, saved before toolchains existed, with no toolchain chosen", async () => {
+  store().loadAuthors([createAuthor("Ada Lovelace")]);
+  store().setTitle("Engines");
+  const { partialize } = useContributionStore.persist.getOptions();
+  const state = JSON.parse(JSON.stringify(partialize?.(store()))) as Record<string, unknown> & {
+    drafts: Record<string, Record<string, unknown>>;
+  };
+  delete state.lastToolchain;
+  for (const draft of Object.values(state.drafts)) delete draft.toolchain;
+  useContributionStore.setState(initial, true);
+  localStorage.setItem(PERSIST_KEY, JSON.stringify({ state, version: 5 }));
+  await useContributionStore.persist.rehydrate();
+  expect(Object.keys(store().drafts)).toHaveLength(1);
+  expect(store().authors.map((a) => a.name)).toEqual(["Ada Lovelace"]);
+  expect(store().title).toBe("Engines");
+  expect(store().toolchain).toBeUndefined();
+  expect(store().lastToolchain).toBeUndefined();
 });

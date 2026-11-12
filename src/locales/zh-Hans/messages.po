@@ -593,6 +593,9 @@ msgstr "已从上次中断处继续此请求。"
 msgid "claimRequestUpdated"
 msgstr "请求已更新。您之前的回答已被替换。"
 
+msgid "claimUndoStale"
+msgstr "未撤销：请求更新后草稿已更改。请在表格中修改。"
+
 msgid "claimLockedDraft"
 msgstr "已锁定：正在回复请求"
 

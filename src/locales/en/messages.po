@@ -593,6 +593,9 @@ msgstr "Picked up where you left off on this request."
 msgid "claimRequestUpdated"
 msgstr "The request was updated. Your earlier answers were replaced."
 
+msgid "claimUndoStale"
+msgstr "Nothing undone: the draft changed after the request was updated. Change it in the grid instead."
+
 msgid "claimLockedDraft"
 msgstr "Locked: answering a request"
 

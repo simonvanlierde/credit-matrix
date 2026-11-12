@@ -1628,6 +1628,18 @@ describe("contribution store", () => {
       expect(merged.authors[2]?.contributions).toEqual([{ role: "Software", score: 100 }]);
     });
 
+    it("derives a contributor's name parts and initials from the name when the save lacks them", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const grace = createAuthor("Grace B. Hopper");
+      const { id, name, contributions } = grace;
+      const merged = merge?.(
+        { activeDraftId: "d1", drafts: { d1: { authors: [{ id, name, contributions }] } } },
+        initial,
+      ) as typeof initial;
+
+      expect(merged.authors).toEqual([grace]);
+    });
+
     it("drops a hand-edited claim or ask entry rather than trusting it", () => {
       const merge = useContributionStore.persist.getOptions().merge;
       const merged = merge?.(

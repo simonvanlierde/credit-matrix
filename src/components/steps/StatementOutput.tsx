@@ -12,12 +12,12 @@ import { TOOLCHAINS, type Toolchain } from "@/core/toolchain";
 import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
 import { DATA_FORMATS, type DataFormat } from "@/lib/data-exports";
-import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
 import { useContributorHue } from "@/lib/use-contributor-hue";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
 import { useDark } from "@/lib/use-dark";
+import { useHeatmapSettings } from "@/lib/use-heatmap-settings";
 import { useSettled } from "@/lib/use-settled";
 import { download } from "@/lib/utils";
 import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "@/store/contribution-store";
@@ -42,15 +42,11 @@ export function StatementOutput() {
   const toolchain = useContributionStore((s) => s.toolchain);
   const setToolchain = useContributionStore((s) => s.setToolchain);
   const toolchainId = useId();
-  const storedSettings = useContributionStore((s) => s.heatmapSettings);
-  const color = useContributionStore((s) => s.heatmapMonoColor);
-  const colorByContributor = useContributionStore((s) => s.colorByContributor);
-  const horizontal = useContributionStore((s) => s.transpose);
-  const figureInitials = useContributionStore((s) => s.initials);
   const authors = useContributionStore((s) => s.authors);
   const asks = useContributionStore((s) => s.asks);
   const selfId = useContributionStore((s) => s.selfId);
   const yesNo = useContributionStore((s) => s.inputMode === "toggle");
+  const heatmapSettings = useHeatmapSettings(!yesNo);
   const openReview = useContributionStore((s) => s.openReview);
   const statementLink = useContributionStore((s) => s.statementLink);
   const setStatementLink = useContributionStore((s) => s.setStatementLink);
@@ -487,19 +483,7 @@ export function StatementOutput() {
         )}
       </div>
       {toolchain && (
-        <ToolchainPanel
-          toolchain={toolchain}
-          language={outputLanguage}
-          settings={{
-            ...DEFAULT_HEATMAP_SETTINGS,
-            levels: !yesNo,
-            ...storedSettings,
-            color,
-            colorBy: colorByContributor ? "contributor" : "color",
-            horizontal,
-            acronyms: figureInitials,
-          }}
-        >
+        <ToolchainPanel toolchain={toolchain} language={outputLanguage} settings={heatmapSettings}>
           {toolchainOutput ? (
             <OutputBlock authors={authors} format={toolchainOutput} options={exportOptions} language={outputLanguage}>
               {toolchainOutput === "json" && answersChoice}

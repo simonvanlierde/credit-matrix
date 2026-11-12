@@ -593,6 +593,9 @@ msgstr "Retomado de onde você parou neste pedido."
 msgid "claimRequestUpdated"
 msgstr "O pedido foi atualizado. As suas respostas anteriores foram substituídas."
 
+msgid "claimUndoStale"
+msgstr "Nada foi anulado: o rascunho mudou depois de o pedido ser atualizado. Altere-o na grelha."
+
 msgid "claimLockedDraft"
 msgstr "Bloqueado: respondendo a um pedido"
 
@@ -902,7 +905,7 @@ msgid "copyPng"
 msgstr "Copiar PNG"
 
 msgid "downloadPng"
-msgstr "Transferir PNG"
+msgstr "Descarregar PNG"
 
 msgid "switchToDarkTheme"
 msgstr "Mudar para o tema escuro"
@@ -1028,13 +1031,13 @@ msgid "toggleKeysHint"
 msgstr "Selecione para alternar · As setas movem, 1 ou 0 define uma função."
 
 msgid "downloadSvg"
-msgstr "Transferir SVG"
+msgstr "Descarregar SVG"
 
 msgid "copyFormat"
 msgstr "Copiar {format}"
 
 msgid "downloadFormat"
-msgstr "Transferir {format}"
+msgstr "Descarregar {format}"
 
 msgid "a11yInspector"
 msgstr "Declaração, equipa, revisão e prática nas publicações"
@@ -1559,7 +1562,7 @@ msgid "censusOpenAlex"
 msgstr "Fontes do OpenAlex"
 
 msgid "censusDownload"
-msgstr "Transferir as contagens (JSON)"
+msgstr "Descarregar as contagens (JSON)"
 
 msgid "censusHowTitle"
 msgstr "Como o censo lê as declarações"

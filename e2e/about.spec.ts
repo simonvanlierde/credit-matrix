@@ -12,7 +12,7 @@ test.describe("About page", () => {
 
   test("is linked from the About panel, cites the concept DOI, and gives privacy its own section", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "About this app" }).click();
+    await page.getByRole("button", { name: "About", exact: true }).click();
     await page.getByRole("dialog").getByRole("link", { name: "About, citing and privacy" }).click();
     await expect(page).toHaveURL(/\/about\/?$/);
     await expect(page).toHaveTitle(/^About/);

@@ -126,6 +126,11 @@ See [deploying](docs/deploy.md).
 - Search results and link previews describe asking co-authors to check their own row, and the
   preview image carries its full alt text and size.
 
+### Fixed
+
+- A saved draft whose contributors lack name parts or initials, as after a hand edit of browser
+  storage, now opens with them taken from each name instead of failing to show the page.
+
 ### Security
 
 - The CLI checks an XML file's tags in one linear pass. A hostile file of a few thousand
