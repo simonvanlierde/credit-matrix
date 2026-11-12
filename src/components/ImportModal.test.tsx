@@ -284,8 +284,8 @@ describe("a pasted CRediT statement", () => {
   const paste = (value: string) => fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value } });
   const review = () => act(async () => fireEvent.click(screen.getByRole("button", { name: english.statementReview })));
   const roster = () => [
-    createAuthor("Ann Bell", { contributions: [{ role: "Software", score: 33 }] }),
-    createAuthor("Carl Dunn"),
+    createAuthor("Ada Lovelace", { contributions: [{ role: "Software", score: 33 }] }),
+    createAuthor("Charles Darwin"),
     createAuthor("Yibo Lu"),
     createAuthor("Yang Lin"),
   ];
@@ -300,14 +300,14 @@ describe("a pasted CRediT statement", () => {
 
   it("asks for contributors first when the draft is empty", async () => {
     renderModal(0);
-    paste("AB: conceptualization.");
+    paste("AL: conceptualization.");
     await review();
     expect(screen.getByText(english.errStatementNoContributors)).toBeTruthy();
   });
 
   it("shows what matched and what did not, and applies only on request", async () => {
     const { onApplyStatement } = renderModal(4, undefined, { authors: roster() });
-    paste("AB: conceptualization, software, review & editing. YL: data curation.");
+    paste("AL: conceptualization, software, review & editing. YL: data curation.");
     await review();
 
     const heading = screen.getByRole("heading", { name: english.statementReviewTitle });
@@ -316,10 +316,10 @@ describe("a pasted CRediT statement", () => {
       "2 roles to add for 1 contributor. Roles already in the grid stay as they are.",
     );
     // Commas only, and the role already set says so in words.
-    expect(listOf("Ann Bell")).toBe("Conceptualization, Software (already set), Writing – review & editing");
+    expect(listOf("Ada Lovelace")).toBe("Conceptualization, Software (already set), Writing – review & editing");
     // Nobody without roles gets a row; one muted line names them, with the hint for the ambiguous token.
-    expect(screen.queryByText("Carl Dunn")).toBeNull();
-    expect(noRolesLine()).toBe("No roles found for: Carl Dunn, Yibo Lu (could be YL), Yang Lin (could be YL)");
+    expect(screen.queryByText("Charles Darwin")).toBeNull();
+    expect(noRolesLine()).toBe("No roles found for: Charles Darwin, Yibo Lu (could be YL), Yang Lin (could be YL)");
     // An ambiguous token gets a picker that leaves its roles out until someone is chosen.
     expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(english.statementLeaveOut);
     // The review's Apply is the only primary action on screen.
@@ -340,7 +340,7 @@ describe("a pasted CRediT statement", () => {
 
   it("gives an ambiguous token's roles to the contributor picked for it", async () => {
     const { onApplyStatement } = renderModal(4, undefined, { authors: roster() });
-    paste("AB: conceptualization. YL: data curation, software.");
+    paste("AL: conceptualization. YL: data curation, software.");
     await review();
     await pick("YL", "Yang Lin");
 
@@ -349,7 +349,7 @@ describe("a pasted CRediT statement", () => {
     ).toBeTruthy();
     expect(listOf("Yang Lin")).toBe("Data curation, Software");
     expect(screen.queryByText("Yibo Lu")).toBeNull();
-    expect(noRolesLine()).toBe("No roles found for: Carl Dunn, Yibo Lu (could be YL)");
+    expect(noRolesLine()).toBe("No roles found for: Charles Darwin, Yibo Lu (could be YL)");
     fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     const [next, added] = onApplyStatement.mock.calls[0] ?? [];
     expect(added).toBe(3);
@@ -360,7 +360,7 @@ describe("a pasted CRediT statement", () => {
 
   it("leaves an ambiguous token's roles out when switched back to Leave out", async () => {
     const { onApplyStatement } = renderModal(4, undefined, { authors: roster() });
-    paste("AB: conceptualization. YL: data curation.");
+    paste("AL: conceptualization. YL: data curation.");
     await review();
     await pick("YL", "Yibo Lu");
     expect(listOf("Yibo Lu")).toBe("Data curation");
@@ -374,10 +374,10 @@ describe("a pasted CRediT statement", () => {
 
   it("forgets the choices when the text changes", async () => {
     renderModal(4, undefined, { authors: roster() });
-    paste("AB: conceptualization. YL: data curation.");
+    paste("AL: conceptualization. YL: data curation.");
     await review();
     await pick("YL", "Yibo Lu");
-    paste("AB: conceptualization. YL: data curation. ");
+    paste("AL: conceptualization. YL: data curation. ");
     await review();
     expect(screen.getByRole("combobox", { name: "YL" }).textContent).toBe(english.statementLeaveOut);
     expect(noRolesLine()).toContain("Yibo Lu (could be YL)");
@@ -400,63 +400,63 @@ describe("a pasted CRediT statement", () => {
 
   it("reads a line break as the end of a contributor's roles", async () => {
     const { onApplyStatement } = renderModal(2, undefined, {
-      authors: [createAuthor("Ann Bell"), createAuthor("Carl Dunn")],
+      authors: [createAuthor("Ada Lovelace"), createAuthor("Charles Darwin")],
     });
-    paste("A.B. - conceptualization\nC.D. - writing - original draft");
+    paste("A.L. - conceptualization\nC.D. - writing - original draft");
     await review();
-    expect(listOf("Ann Bell")).toBe("Conceptualization");
-    expect(listOf("Carl Dunn")).toBe("Writing – original draft");
+    expect(listOf("Ada Lovelace")).toBe("Conceptualization");
+    expect(listOf("Charles Darwin")).toBe("Writing – original draft");
     fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
     expect(onApplyStatement.mock.calls[0]?.[1]).toBe(2);
   });
 
   it.each([
     [
-      "Conceptualization, A.B. and C.D.; Formal\nanalysis, C.D.",
+      "Conceptualization, A.L. and C.D.; Formal\nanalysis, C.D.",
       "Conceptualization",
       "Conceptualization, Formal analysis",
     ],
-    ["Conceptualization, A.B.\nand C.D.; Data curation, A.B.", "Conceptualization, Data curation", "Conceptualization"],
+    ["Conceptualization, A.L.\nand C.D.; Data curation, A.L.", "Conceptualization, Data curation", "Conceptualization"],
     [
-      "A.B.: conceptualization, writing - original\ndraft; C.D.: software.",
+      "A.L.: conceptualization, writing - original\ndraft; C.D.: software.",
       "Conceptualization, Writing – original draft",
       "Software",
     ],
-    ["Conceptualization: A.B.\nSoftware: C.D.", "Conceptualization", "Software"],
-  ])("joins a line that runs on, and splits one that starts a new entry: %j", async (text, ann, carl) => {
-    renderModal(2, undefined, { authors: [createAuthor("Ann Bell"), createAuthor("Carl Dunn")] });
+    ["Conceptualization: A.L.\nSoftware: C.D.", "Conceptualization", "Software"],
+  ])("joins a line that runs on, and splits one that starts a new entry: %j", async (text, ada, charles) => {
+    renderModal(2, undefined, { authors: [createAuthor("Ada Lovelace"), createAuthor("Charles Darwin")] });
     paste(text);
     await review();
-    expect(listOf("Ann Bell")).toBe(ann);
-    expect(listOf("Carl Dunn")).toBe(carl);
+    expect(listOf("Ada Lovelace")).toBe(ada);
+    expect(listOf("Charles Darwin")).toBe(charles);
   });
 
   it("says so when nothing matches the draft", async () => {
-    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
+    renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });
     paste("XY: conceptualization.");
     await review();
     expect(screen.getByText(english.errStatementNoRoles)).toBeTruthy();
   });
 
   it("explains that prose is not read, and never offers to replace the workspace", async () => {
-    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
-    paste("A.B. conceived the study. A.B. wrote the paper and analysed the data.");
+    renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });
+    paste("A.L. conceived the study. A.L. wrote the paper and analysed the data.");
     await review();
     expect(screen.getByText(`${english.errStatementNoRoles} ${english.statementOnlyCredit}`)).toBeTruthy();
     expect(screen.queryByText(english.importChoiceTitle)).toBeNull();
   });
 
   it("refuses a statement over the length cap", async () => {
-    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
-    paste(`AB: conceptualization. ${"x".repeat(MAX_STATEMENT_LENGTH)}`);
+    renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });
+    paste(`AL: conceptualization. ${"x".repeat(MAX_STATEMENT_LENGTH)}`);
     await review();
     expect(screen.getByText(english.errStatementTooLong.replace("{limit}", "120,000"))).toBeTruthy();
   });
 
   it("refuses a long statement of short lines without rescanning it per line", async () => {
-    renderModal(1, undefined, { authors: [createAuthor("Ann Bell")] });
+    renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });
     // 400 kB of one-letter lines took 18 s when each line rescanned everything joined so far.
-    paste(`AB: conceptualization.\n${"A\n".repeat(200_000)}`);
+    paste(`AL: conceptualization.\n${"A\n".repeat(200_000)}`);
     const start = performance.now();
     await review();
     expect(performance.now() - start).toBeLessThan(2_000);
@@ -586,9 +586,9 @@ describe("import progress and outcome", () => {
   });
 
   it("offers to add only the contributors the draft lacks, without a second Cancel", async () => {
-    const ann = createAuthor("Ann Bell");
-    const { onImport } = renderModal(1, undefined, { authors: [ann] });
-    paste("Ann Bell\nBo Chen");
+    const ada = createAuthor("Ada Lovelace");
+    const { onImport } = renderModal(1, undefined, { authors: [ada] });
+    paste("Ada Lovelace\nGrace Hopper");
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
     expect(screen.getByText(english.importChoiceTitle)).toBeTruthy();
     expect(screen.queryByText(/cannot be undone/)).toBeNull();
@@ -606,7 +606,7 @@ describe("import progress and outcome", () => {
 
   it("says plainly when the pasted text is an export-only format", async () => {
     renderModal();
-    paste('# Keep native JSON for scores.\nauthors:\n  - name: "Ann Bell"\n    roles: []');
+    paste('# Keep native JSON for scores.\nauthors:\n  - name: "Ada Lovelace"\n    roles: []');
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
     expect(screen.getByText(english.errImportExportOnly)).toBeTruthy();
   });

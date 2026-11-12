@@ -71,7 +71,15 @@ Your own `credit-matrix.heading` still wins.
 credit-matrix:
   heading: Author contributions   # default: CRediT authorship contribution statement
   placement: start                # end (default) or start of the body
+  format: by-role                 # by-author (default), by-role or table
+  levels: false                   # true (default) shows equal/supporting degrees
 ```
+
+`by-role` lists the contributors under each role, in author order. `table` puts active roles
+in rows and contributors in columns. Both use canonical CRediT role order.
+The table shows translated contribution levels in assigned cells. With `levels: false`,
+every assigned cell shows “Contributed” in the document's language. Empty cells mean no
+contribution. Contributors without a CRediT role are left out.
 
 To put the statement somewhere else, leave an empty div where it should go:
 
@@ -103,5 +111,5 @@ A missing family stops the render. The CLI embeds fonts in the SVG; where they c
 
 ## Limitations
 
-- One format: by author, with levels. The app also writes by role and with initials.
+- Names are written in full. For statements with initials, use the app or package CLI.
 - Non-author contributors (acknowledgements) aren't handled: Quarto has no field for them.

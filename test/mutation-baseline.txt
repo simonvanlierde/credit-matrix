@@ -1,6 +1,6 @@
 # Mutants that no test kills, from `pnpm mutation` on src/core.
 # Each line: file status mutator -> replacement | original line, and why it is kept, for one left on purpose.
-# Score 92.42%: 3316 killed, 216 survived, 56 without coverage, 263 kept with a reason.
+# Score 92.72%: 3441 killed, 214 survived, 56 without coverage, 261 kept with a reason.
 src/core/export/crossref.ts Survived ConditionalExpression -> false | if (end < 0) return false;  # kept: equivalent: after slice(1) or slice(2) the text starts with ? or -, so the root test fails the same way
 src/core/export/crossref.ts Survived ConditionalExpression -> false | if (end < 0) return false;  # kept: equivalent: after slice(1) or slice(2) the text starts with ? or -, so the root test fails the same way
 src/core/export/crossref.ts Survived EqualityOperator -> end <= 0 | if (end < 0) return false;  # kept: equivalent: indexOf cannot return 0 here, the text starts with the opener, not the closer
@@ -217,7 +217,6 @@ src/core/statement.ts Survived ArrowFunction -> () => undefined | [...hits].sort
 src/core/statement.ts Survived ArrowFunction -> () => undefined | const original = clean(statement.normalize("NFC")).replace(APPROVAL_RE, (m) => " ".repeat(m.length))  # kept: equivalent: mentions and clause ends are both read from the same masked text
 src/core/statement.ts Survived ArrowFunction -> () => undefined | for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {  # kept: equivalent: clauses fill in text order, so they are already sorted
 src/core/statement.ts Survived CallExpression -> ; | partsCache.set(author, parts);  # kept: the cache only saves recomputing nameParts, which is pure
-src/core/statement.ts Survived CallExpression -> ; | resolved.set(token, hits);  # kept: equivalent: a cache; recomputing gives the same candidates
 src/core/statement.ts Survived ConditionalExpression -> false | if (!surname) return [new Set(), new Set()];  # kept: parity with the census parser, which matches no name for an author without a surname
 src/core/statement.ts Survived ConditionalExpression -> false | if (before === "" || isLowerWord(before) || ")]".includes(before)) ends.push(m.index);  # kept: differs only for a statement that opens with a full stop
 src/core/statement.ts Survived ConditionalExpression -> false | if (chunks.length === 0) return [];  # kept: equivalent: no author has an empty name, so no-chunk tokens match no one either way
@@ -226,7 +225,6 @@ src/core/statement.ts Survived ConditionalExpression -> false | if (lowered.leng
 src/core/statement.ts Survived ConditionalExpression -> false | if (ranges.length === 0) return text;  # kept: the loop does nothing for no ranges and returns the same text
 src/core/statement.ts Survived ConditionalExpression -> false | if (surname.length === 0) return false;  # kept: equivalent: without a surname the head is empty, so the lead check fails anyway
 src/core/statement.ts Survived ConditionalExpression -> true | const isAlnum = (ch: string | undefined) => ch !== undefined && /^[\p{L}\p{N}_]/u.test(ch);  # kept: equivalent: both callers check the index first, so ch is never undefined
-src/core/statement.ts Survived ConditionalExpression -> true | if (!hits) {  # kept: equivalent: a cache; recomputing gives the same candidates
 src/core/statement.ts Survived ConditionalExpression -> true | if (!parts) {  # kept: the cache only saves recomputing nameParts, which is pure
 src/core/statement.ts Survived ConditionalExpression -> true | if ((i as number) <= UNRESOLVED)  # kept: equivalent: the optional call skips indices that are not unresolved tokens
 src/core/statement.ts Survived ConditionalExpression -> true | if (end !== text.length && isAlnum(text[end])) return false;  # kept: equivalent: isAlnum reads past the end as no character

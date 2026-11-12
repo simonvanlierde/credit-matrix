@@ -36,7 +36,7 @@ export const TOOLCHAIN_OUTPUTS = {
     label: "Typst",
     format: "json",
     recipe: "typst",
-    setup: '#import "@preview/credit-matrix:0.12.0": *',
+    setup: '#import "@preview/credit-matrix:0.13.0": *',
     guide: "integrations/typst/README.md",
   },
   pandoc: {
@@ -50,7 +50,7 @@ export const TOOLCHAIN_OUTPUTS = {
     label: "MyST / Jupyter Book",
     format: "myst",
     recipe: "myst",
-    setup: "project: {plugins: [https://unpkg.com/credit-matrix@0.12.0/dist/myst-plugin.mjs]}",
+    setup: "project: {plugins: [https://unpkg.com/credit-matrix@0.13.0/dist/myst-plugin.mjs]}",
     guide: "integrations/myst/README.md",
   },
   sphinx: {

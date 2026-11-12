@@ -66,15 +66,15 @@ it("skips one unusable name instead of discarding the file", async () => {
 
 it("reads contributor as non-authors and round-trips toCodemeta", async () => {
   const ana = createAuthor("Ana Lima", { contributions: [{ role: "Software", score: 100 }] });
-  const bo = createAuthor("Bo Chen", {
+  const grace = createAuthor("Grace Hopper", {
     contributorType: "non-author",
     contributions: [{ role: "Software", score: 100 }],
   });
-  const { metadata } = toCodemeta([ana, bo]);
+  const { metadata } = toCodemeta([ana, grace]);
   const { authors } = await importAny(JSON.stringify({ "@type": "SoftwareSourceCode", ...metadata }));
   expect(authors.map(({ name, contributorType }) => ({ name, contributorType }))).toEqual([
     { name: "Ana Lima", contributorType: "author" },
-    { name: "Bo Chen", contributorType: "non-author" },
+    { name: "Grace Hopper", contributorType: "non-author" },
   ]);
 });
 
@@ -84,13 +84,13 @@ it("keeps a person listed as both author and contributor once, as an author", as
     JSON.stringify({
       "@type": "SoftwareSourceCode",
       author: [ada, { name: "Ana Lima" }],
-      contributor: [ada, { name: "ana lima" }, { name: "Bo Chen" }],
+      contributor: [ada, { name: "ana lima" }, { name: "Grace Hopper" }],
     }),
   );
   expect(authors.map(({ name, contributorType }) => [name, contributorType])).toEqual([
     ["Ada Lovelace", "author"],
     ["Ana Lima", "author"],
-    ["Bo Chen", "non-author"],
+    ["Grace Hopper", "non-author"],
   ]);
 });
 

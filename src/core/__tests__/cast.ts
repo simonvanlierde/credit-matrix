@@ -52,4 +52,8 @@ export const RETIRED_PLACEHOLDERS = [
   "John Smith",
   "Jane Q. Smith",
   "Jane B. Smith",
+  "Ann Bell",
+  "Bo Chen",
+  "Cy Diaz",
+  "Carl Dunn",
 ] as const;

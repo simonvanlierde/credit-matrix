@@ -69,7 +69,8 @@ A rollback by CLI or dashboard lasts only until the next push to `main` deploys 
 Pushing a `v*` tag publishes `src/core` as the [`credit-matrix`](../src/core/README.md) npm package,
 through `.github/workflows/release-core.yml`. It runs in three jobs:
 
-1. `build`, with read-only rights: checks that the tagged commit is on `main` and that the tag
+1. `build`, with read-only rights: requires an annotated tag with a signature GitHub verifies,
+   checks that the tagged commit is on `main` and that the tag
    matches the version in `src/core/package.json` (`pnpm version` keeps it in step with the
    app's), runs the core tests against the build, packs the tarball with `npm pack` and uploads it.
 2. `publish`, in the `npm-release` environment, which only `v*` tags can use (a tag ruleset lets

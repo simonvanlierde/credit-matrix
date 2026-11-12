@@ -68,11 +68,87 @@ describe("MyST plugin", () => {
     );
   });
 
+  it("adds per-author level footnotes without changing native author roles", () => {
+    const authors = [{ id: "marie", name: "Marie Curie", roles: ["Software", "writing"] }];
+    const levels = { marie: { Software: "equal", writing: "supporting" } };
+    const nodes = statementNode(authors, { levels });
+    expect(text(nodes[0]?.children ?? [])).toBe("Marie Curie: Software, Writing – original draft.");
+    expect(nodes[0]?.children?.some((node) => node.type === "footnoteReference")).toBe(true);
+    expect(text(nodes.slice(1))).toBe("Software (Equal), Writing – original draft (Supporting).");
+    expect(
+      statementEntries(authors, levels)[0]
+        ?.contributions.filter((c: { score: number }) => c.score > 0)
+        .map((c: { score: number }) => c.score),
+    ).toEqual([66, 33]);
+    expect(authors[0]?.roles).toEqual(["Software", "writing"]);
+  });
+
+  it.each([
+    ["unknown author", { missing: { Software: "equal" } }],
+    ["unknown role", { marie: { Coffee: "equal" } }],
+    ["unassigned role", { marie: { Validation: "equal" } }],
+    ["unknown level", { marie: { Software: "maybe" } }],
+    ["non-string level", { marie: { Software: ["equal"] } }],
+    ["invalid map", { marie: "equal" }],
+    ["invalid root", []],
+  ])("rejects %s in contribution levels", (_label, levels) => {
+    expect(() => statementEntries([{ id: "marie", name: "Marie Curie", roles: ["Software"] }], levels)).toThrow(
+      /credit-matrix levels/,
+    );
+  });
+
+  it("leaves lead contributions unannotated and rejects ambiguous names", () => {
+    const authors = [{ name: "Marie Curie", roles: ["Software"] }];
+    expect(text(statementNode(authors, { levels: { "Marie Curie": { Software: "lead" } } }))).toBe(
+      "Marie Curie: Software.",
+    );
+    expect(() => statementEntries([...authors, ...authors], { "Marie Curie": { Software: "equal" } })).toThrow(
+      /one author/,
+    );
+  });
+
+  it("localizes footnotes and drops project levels when a page replaces its authors", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "credit-myst-levels-"));
+    const page = join(dir, "index.md");
+    writeFileSync(
+      join(dir, "myst.yml"),
+      "project:\n  lang: fr\n  authors:\n    - name: Marie Curie\n      roles: [Software]\n  options:\n    credit-matrix:\n      levels:\n        Marie Curie:\n          Software: equal\n",
+    );
+    writeFileSync(page, "# Contributors\n");
+    const fr = makeUiTranslator(await loadUiCatalog("fr"));
+    expect(text(plugin.directives[0].run({}, { path: page }))).toContain(fr("equal"));
+    writeFileSync(page, "---\nauthors:\n  - name: Eva Novak\n    roles: [Software]\n---\n");
+    expect(plugin.directives[0].run({}, { path: page })).toHaveLength(1);
+    expect(text(plugin.directives[0].run({}, { path: page }))).toBe("Eva Novak : Logiciel(s).");
+    writeFileSync(
+      page,
+      "---\nauthors:\n  - name: Eva Novak\n    roles: [Software]\noptions:\n  credit-matrix:\n    levels:\n      Eva Novak:\n        Software: supporting\n---\n",
+    );
+    const nodes = plugin.directives[0].run({}, { path: page });
+    expect(text(nodes.slice(1))).toContain(fr("supporting"));
+    const { svg } = await heatmap(page, { levels: true });
+    expect(svg).toContain(fr("supporting"));
+  });
+
   it("uses the app's by-author wording", () => {
     const marie = createAuthor("Marie Curie");
     for (const c of marie.contributions) c.score = c.role === "Software" || c.role === "Validation" ? 100 : 0;
     const app = generateStatement([marie], { format: "by-author" }).replace(/^CRediT: /, "");
     expect(text(statementNode([{ name: "Marie Curie", roles: ["Validation", "Software"] }]))).toBe(`${app}.`);
+  });
+
+  it.each(AVAILABLE_LOCALES.map(({ code }) => code))("starts a %s level footnote with its role", async (locale) => {
+    const translateRole = makeRoleTranslator(await loadRoleCatalog(locale));
+    const translateUi = makeUiTranslator(await loadUiCatalog(locale));
+    const nodes = statementNode([{ name: "Marie Curie", roles: ["Software"] }], {
+      locale,
+      translateRole,
+      translateUi,
+      levels: { "Marie Curie": { Software: "equal" } },
+    });
+    const note = text(nodes.slice(1));
+    expect(note.startsWith(translateRole("Software"))).toBe(true);
+    expect(note).toContain(translateUi("equal"));
   });
 
   it("accepts a single author instead of a list, and skips authors without roles", () => {

@@ -1,7 +1,7 @@
 // biome-ignore-all lint/correctness/noNodejsModules: MyST runs plugins in Node.
 // MyST plugin: a `{credit-statement}` directive that renders a CRediT statement from the
 // `roles` of the page's authors, or of the project's authors in myst.yml.
-// MyST roles have no degree of contribution.
+// Optional degree metadata lives under options.credit-matrix.levels; native roles stay strings.
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -89,9 +89,9 @@ function authorName(author) {
 }
 
 /** Adapt MyST front matter to the package's authors, in canonical role order. */
-export function statementEntries(authors) {
+export function statementEntries(authors, levels = {}) {
   // A single author may be a map or a string rather than a list; a bare string has no roles.
-  return [].concat(authors ?? []).flatMap((author) => {
+  const entries = [].concat(authors ?? []).flatMap((author) => {
     if (typeof author !== "object" || author === null) return [];
     const raw = typeof author.roles === "string" ? author.roles.split(/[,;]/) : (author.roles ?? []);
     const roles = new Set(raw.map((r) => normalizeRole(String(r))).filter(Boolean));
@@ -100,26 +100,62 @@ export function statementEntries(authors) {
     // MyST also permits unnamed and id-only authors; keep those display names.
     const entry = createAuthor("Contributor");
     entry.name = name;
+    entry.id = author.id ?? name;
     for (const contribution of entry.contributions) contribution.score = roles.has(contribution.role) ? 100 : 0;
     return [entry];
   });
+  const isMap = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+  if (!isMap(levels)) throw new Error("credit-matrix levels must map author ids or names to role levels");
+  for (const [key, roles] of Object.entries(levels)) {
+    const matches = entries.filter((entry) => entry.id === key || entry.name === key);
+    if (matches.length !== 1 || !isMap(roles))
+      throw new Error(`credit-matrix levels: ${key} must identify one author and map roles to levels`);
+    for (const [role, level] of Object.entries(roles)) {
+      const contribution = matches[0].contributions.find((c) => c.role === normalizeRole(role) && c.score > 0);
+      const score = { lead: 100, equal: 66, supporting: 33 };
+      if (!contribution || typeof level !== "string" || !Object.hasOwn(score, level))
+        throw new Error(`credit-matrix levels: ${key} / ${role} needs an assigned role and lead, equal or supporting`);
+      contribution.score = score[level];
+    }
+  }
+  return entries;
 }
 
 /** mdast for the statement: "**Name**: Role, Role; **Name**: Role." */
 export function statementNode(authors, options = {}) {
-  const entries = statementEntries(authors);
+  const entries = statementEntries(authors, options.levels);
   if (entries.length === 0) return [];
   const ui = options.translateUi ?? DEFAULT_UI_TRANSLATOR;
+  const footnotes = [];
   const children = entries.flatMap((author, i) => {
     const statement = generateStatement([author], { format: "by-author", ...options });
+    const suffix = statement.slice(`CRediT: ${author.name}`.length);
+    let reference = [];
+    if (author.contributions.some((c) => c.score > 0 && c.score < 100)) {
+      const value = `${generateStatement([author], { ...options, format: "by-author", showLevels: true }).slice(
+        `CRediT: ${author.name}${ui("labelSeparator")}`.length,
+      )}.`;
+      const identifier = `credit-matrix-${createHash("sha256")
+        .update(author.name + value)
+        .digest("hex")
+        .slice(0, 20)}`;
+      reference = [{ type: "footnoteReference", identifier, label: identifier }];
+      footnotes.push({
+        type: "footnoteDefinition",
+        identifier,
+        label: identifier,
+        children: [{ type: "paragraph", children: [{ type: "text", value }] }],
+      });
+    }
     return [
       ...(i > 0 ? [{ type: "text", value: ui("segmentSeparator") }] : []),
       { type: "strong", children: [{ type: "text", value: author.name }] },
-      { type: "text", value: statement.slice(`CRediT: ${author.name}`.length) },
+      { type: "text", value: suffix },
+      ...reference,
     ];
   });
   children.push({ type: "text", value: "." });
-  return [{ type: "paragraph", children }];
+  return [{ type: "paragraph", children }, ...footnotes];
 }
 
 function readFrontmatter(file) {
@@ -137,6 +173,13 @@ function findProject(file) {
 }
 
 const projectConfig = (file) => findProject(file).config;
+
+function levelsFor(file) {
+  const page = file.endsWith(".md") ? readFrontmatter(file) : {};
+  // Page authors replace project authors, so their level metadata must replace it too.
+  const config = page.authors !== undefined || page.author !== undefined ? page : projectConfig(file);
+  return (page.options?.["credit-matrix"] ?? config.options?.["credit-matrix"])?.levels;
+}
 
 /**
  * Page authors replace project authors, as in MyST. Only Markdown pages are read for
@@ -157,7 +200,9 @@ const creditStatement = {
   name: "credit-statement",
   doc: "A CRediT authorship statement built from the authors' `roles`.",
   run(_data, vfile) {
-    return vfile?.path ? statementNode(authorsFor(vfile.path), translationsFor(vfile.path)) : [];
+    return vfile?.path
+      ? statementNode(authorsFor(vfile.path), { ...translationsFor(vfile.path), levels: levelsFor(vfile.path) })
+      : [];
   },
 };
 
@@ -192,7 +237,7 @@ const creditHeatmap = {
 
 /** The heatmap's authors and renderer options for one directive on one page. */
 function heatmapFigure(path, directiveOptions = {}) {
-  const entries = statementEntries(authorsFor(path));
+  const entries = statementEntries(authorsFor(path), levelsFor(path));
   if (directiveOptions.initials) {
     // The app's initials and collision rule. A name with no letter (an ORCID iD) or one too long for
     // the app stays whole, and past the app's contributor limit every label does.

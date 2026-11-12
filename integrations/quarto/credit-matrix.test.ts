@@ -77,6 +77,28 @@ describe.skipIf(!hasQuarto && !process.env.CI)("Quarto filter, rendered", () => 
     expect(result.stdout.replaceAll("**", "")).toContain(`${expected}.`);
   });
 
+  it.each(["by-role", "table"])("renders the %s format through Quarto", (format) => {
+    expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
+    const dir = mkdtempSync(join(tmpdir(), "credit-quarto-format-"));
+    const filter = fileURLToPath(new URL("_extensions/credit-matrix/credit-matrix.lua", import.meta.url));
+    writeFileSync(
+      join(dir, "paper.qmd"),
+      `---\nauthor:\n  - name: Tu Youyou\n    roles: [software: supporting, validation]\ncredit-matrix:\n  format: ${format}\nfilters: [${JSON.stringify(filter)}]\n---\n\n# Methods\n`,
+    );
+    const result = spawnSync("quarto", ["render", "paper.qmd", "--to", "gfm", "-o", "-"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    expect(result.status, result.stderr).toBe(0);
+    if (format === "by-role") {
+      expect(result.stdout.replaceAll("**", "")).toContain("Software: Tu Youyou (Supporting); Validation: Tu Youyou.");
+    } else {
+      expect(result.stdout).toMatch(/\|\s*Tu Youyou\s*\|/);
+      expect(result.stdout).toMatch(/\|\s*Software\s*\|\s*Supporting\s*\|/);
+      expect(result.stdout).toMatch(/\|\s*Validation\s*\|\s*Lead\s*\|/);
+    }
+  });
+
   it("renders exported YAML with the app's contribution levels", () => {
     expect(hasQuarto, "quarto is not installed but CI is set").toBe(true);
     const authors = [author("Lin Wei", { Software: 33, "Formal analysis": 66 })];

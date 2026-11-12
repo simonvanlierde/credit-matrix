@@ -60,6 +60,11 @@ such as `software: supporting`. The filter accepts the canonical CRediT names, B
 and the aliases `writing`, `editing`, `review`, `analysis`, `funding`, `admin` and `administration`.
 Unknown roles are left out. Repeated roles are merged, keeping the strongest degree.
 
+Set `credit-matrix.format` to `by-role` for a paragraph grouped by role, or `table` for
+roles in rows and contributors in columns. The default is `by-author`.
+Set `credit-matrix.levels: false` to hide contribution degrees in text and tables.
+The [Quarto options](../quarto/README.md#options) describe table cells and ordering.
+
 Set `credit-matrix.heading` to change the heading, and `credit-matrix.placement` to `start` to
 put the statement before the body. An empty `::: {#credit-statement}` div places it there instead.
 The heading takes the level of the document's first heading.
@@ -90,7 +95,7 @@ A missing family stops the render. The CLI embeds fonts in the SVG; where they c
 
 ## Limits
 
-- By author, with contribution levels. For other formats, use the
+- Names are written in full. For statements with initials, use the
   [package CLI](../../src/core/README.md).
 - Roles must be in the front matter. The filter doesn't infer them from prose.
 - It credits authors only and doesn't create an acknowledgements section.

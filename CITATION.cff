@@ -35,8 +35,8 @@ keywords:
   - Sphinx
   - Jupyter Book
   - LaTeX
-version: "0.12.0"
-date-released: "2026-11-11"
+version: "0.13.0"
+date-released: "2026-11-12"
 # Concept DOI: resolves to all versions, so it stays fixed across releases.
 doi: "10.5281/zenodo.21213659"
 references:

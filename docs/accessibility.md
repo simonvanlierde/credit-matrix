@@ -88,7 +88,7 @@ Our browser tests check:
 
 An automated check covers real 200% Chromium zoom in both themes. Keyboard use of Chromium's native
 color picker was checked once by hand in headed Chromium on Linux, as recorded in the
-[accessibility assessment](accessibility-assessment.md). Neither establishes how other browsers or
+[accessibility assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md). Neither establishes how other browsers or
 operating systems behave.
 [Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) also check code changes
 for errors such as missing alt text and invalid ARIA attributes.

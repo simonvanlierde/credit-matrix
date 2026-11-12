@@ -115,6 +115,7 @@ creating its signed version tag on main; the tag starts the npm publishing workf
 
 Use `git tag -s v<version> -m "v<version>"` with your configured signing key, then check it with
 `git verify-tag v<version>` before pushing the tag. Do not create release tags through GitHub's web interface.
+The release workflow rejects lightweight tags and signatures GitHub cannot verify.
 
 After npm publishing succeeds, the workflow prepares a draft GitHub release with the npm tarball,
 its provenance bundle and an attested CycloneDX SBOM. Review the draft's notes and assets, then

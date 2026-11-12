@@ -37,10 +37,18 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Check the tagged commit is on main
+      - name: Check the tagged commit is signed and on main
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "::error::$GITHUB_REF_NAME points at $GITHUB_SHA, which is not on main."
+            exit 1
+          fi
+          tag_sha=$(git rev-parse "$GITHUB_REF_NAME^{tag}")
+          verified=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_sha" --jq '.verification.verified')
+          if [ "$verified" != true ]; then
+            echo "::error::$GITHUB_REF_NAME must have a verified tag signature. Create it with git tag -s."
             exit 1
           fi
 
@@ -118,7 +126,7 @@ jobs:
     name: Publish to npm
     needs: [build]
     runs-on: ubuntu-latest
-    # Room for the 15-minute wait on jsDelivr after a fonts publish.
+    # Room for bounded jsDelivr retries and publishing.
     timeout-minutes: 30
     environment: npm-release
     permissions:
@@ -170,7 +178,6 @@ jobs:
           if published=$(npm view "credit-matrix-fonts@$version" dist.integrity 2> npm-view.log); then
             if [ -z "$published" ]; then
               npm publish "./$TARBALL" --provenance --access public
-              echo "published=true" >> "$GITHUB_OUTPUT"
             elif [ "$published" = "$local_integrity" ]; then
               echo "credit-matrix-fonts $version is already on npm, with these files."
             else
@@ -179,24 +186,22 @@ jobs:
             fi
           elif grep -q E404 npm-view.log; then
             npm publish "./$TARBALL" --provenance --access public
-            echo "published=true" >> "$GITHUB_OUTPUT"
           else
             cat npm-view.log
             exit 1
           fi
 
       # Core downloads its fonts from jsDelivr, which answers 500 for several minutes after a publish.
-      - name: Wait for jsDelivr to serve the new fonts
-        if: steps.fonts.outputs.published == 'true'
+      - name: Wait for jsDelivr to serve the fonts
         env:
           VERSION: ${{ steps.fonts.outputs.version }}
         run: |
           url="https://cdn.jsdelivr.net/npm/credit-matrix-fonts@$VERSION/package.json"
           for _ in $(seq 30); do
-            curl -fsS -o /dev/null "$url" && exit 0
+            curl --connect-timeout 5 --max-time 10 -fsS -o /dev/null "$url" && exit 0
             sleep 30
           done
-          echo "::error::jsDelivr still does not serve credit-matrix-fonts $VERSION after 15 minutes ($url). Rerun the job once it does."
+          echo "::error::jsDelivr still does not serve credit-matrix-fonts $VERSION after 30 attempts ($url). Rerun the job once it does."
           exit 1
 
       - name: Publish

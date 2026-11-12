@@ -151,7 +151,7 @@ The app turns off only its PDF download and draws the SVG and PNG in system font
 
 ## Rebuild the fonts
 
-Download the six pinned TTF sources above into `font-sources/`.
+Download the eight pinned TTF sources below into `font-sources/`.
 Verify their SHA-256 hashes before generating the regular faces:
 
 | Source | SHA-256 |
@@ -162,26 +162,32 @@ Verify their SHA-256 hashes before generating the regular faces:
 | `NotoSerif-Regular.ttf` | `c8f669ceb2c9c60ccf55198b305e08a997ffca79a38cc7eeb551e643cbe66505` |
 | `NotoSerifJP-VF.ttf` | `99999f906b3793c7c97661a05ef9d53488d488604683b308c756d084b71df7d1` |
 | `NotoSerifSC-VF.ttf` | `5326cfb097e3ab26fcb39329752b5c0a439bf8d5c4649520e4b492939c352a09` |
+| `NotoSansKR-VF.ttf` | `9e1d729e7e2b36f9ef439da102f8c134c10aabe46f1c843bf0aca5c043b86f76` |
+| `NotoEmoji[wght].ttf` | `de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551` |
 
-Run this from the directory containing `font-sources/`. It writes the six regular
+Run this from the directory containing `font-sources/`. It writes the eight regular
 faces there. FontTools 4.68.0 generates the asset hashes above.
 
 ```sh
 uv run --no-project --with fonttools==4.68.0 python - <<'PY'
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
-from itertools import product
 
-for family, region in product(("Sans", "Serif"), ("", "JP", "SC")):
-    latin = not region
-    source = f"Noto{family}-Regular.ttf" if latin else f"Noto{family}{region}-VF.ttf"
-    prefix = "" if family == "Sans" else "Serif"
-    target = f"Noto{family}-Regular.ttf" if latin else f"CreditFigure{prefix}{region}.ttf"
+faces = (
+    ("NotoSans-Regular.ttf", "NotoSans-Regular.ttf", None),
+    ("NotoSansJP-VF.ttf", "CreditFigureJP.ttf", "Credit Figure JP"),
+    ("NotoSansSC-VF.ttf", "CreditFigureSC.ttf", "Credit Figure SC"),
+    ("NotoSerif-Regular.ttf", "NotoSerif-Regular.ttf", None),
+    ("NotoSerifJP-VF.ttf", "CreditFigureSerifJP.ttf", "Credit Figure Serif JP"),
+    ("NotoSerifSC-VF.ttf", "CreditFigureSerifSC.ttf", "Credit Figure Serif SC"),
+    ("NotoSansKR-VF.ttf", "CreditFigureKR.ttf", "Credit Figure KR"),
+    ("NotoEmoji[wght].ttf", "CreditFigureEmoji.ttf", "Credit Figure Emoji"),
+)
+for source, target, family_name in faces:
     font = TTFont(f"font-sources/{source}", recalcTimestamp=False)
-    if not latin:
+    if family_name is not None:
         instantiateVariableFont(font, {"wght": 400}, inplace=True)
-        family_name = f"Credit Figure {'Serif ' if family == 'Serif' else ''}{region}"
-        postscript = f"CreditFigure{prefix}{region}-Regular"
+        postscript = f"{target.removesuffix('.ttf')}-Regular"
         for record in font["name"].names:
             if record.nameID in (1, 4, 6, 16):
                 value = postscript if record.nameID == 6 else family_name
@@ -196,13 +202,6 @@ for family, region in product(("Sans", "Serif"), ("", "JP", "SC")):
     font.save(target)
 PY
 ```
-
-Credit Figure KR and Emoji come from `NotoSansKR-VF.ttf` (SHA-256
-`9e1d729e7e2b36f9ef439da102f8c134c10aabe46f1c843bf0aca5c043b86f76`) and
-`NotoEmoji[wght].ttf` (SHA-256
-`de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551`)
-the same way: instanced at weight 400, renamed "Credit Figure KR" and "Credit Figure Emoji"
-(PostScript `CreditFigureKR-Regular`, `CreditFigureEmoji-Regular`), and saved with four-byte padding.
 
 Copy the outputs into this directory after checking their hashes. The renderer
 subsets the glyphs a figure uses with HarfBuzz, in SVG and in PDF.

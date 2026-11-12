@@ -12,7 +12,7 @@ List the plugin by URL in `myst.yml`. It is one self-contained file.
 ```yaml
 project:
   plugins:
-    - https://unpkg.com/credit-matrix@0.12.0/dist/myst-plugin.mjs
+    - https://unpkg.com/credit-matrix@0.13.0/dist/myst-plugin.mjs
 ```
 
 MyST caches it in its build folder. The version in the URL is the package version: change that
@@ -32,7 +32,7 @@ Tested with mystmd 1.12 and [Jupyter Book 2.1](../jupyter-book/README.md).
 
 In the app, choose **MyST YAML** under Export data to copy or download the author block.
 The CLI equivalent is `credit-matrix convert team.json --to myst`. Indent the block under `project`
-in `myst.yml`, or paste it into a page's front matter. MyST roles have no contribution levels.
+in `myst.yml`, or paste it into a page's front matter. The exported roles have no contribution levels.
 
 <!-- live: myst -->
 
@@ -63,6 +63,40 @@ Roles that are not CRediT roles are left out, and the rest are listed in CRediT 
 
 [`example/`](example/) is a complete project: run `myst build --site` in it.
 
+## Contribution levels
+
+To add a footnote with an author's contribution levels, keep MyST's `roles` as strings.
+Add the optional levels under `project.options.credit-matrix.levels` in `myst.yml`:
+
+```yaml
+project:
+  authors:
+    - id: marie
+      name: Marie Curie
+      roles: [Software, writing]
+  options:
+    credit-matrix:
+      levels:
+        marie:
+          Software: equal
+          writing: supporting
+```
+
+The statement keeps its role list and adds a footnote after the author’s roles:
+“Software (Equal), Writing – original draft (Supporting).”
+Levels use `lead`, `equal` or `supporting`; omitted roles default to lead.
+An author with only lead roles gets no footnote. Footnote wording follows the document language.
+A heatmap uses these levels when its `:levels:` option is true.
+
+Each key identifies one author by `id` or exact display name. Use ids when names repeat.
+Role names and aliases follow the native `roles` list. An unknown or unassigned role,
+invalid level or ambiguous author stops the directive with an error.
+This metadata belongs to this plugin; MyST's native roles and the app's MyST export stay unchanged.
+
+A Markdown page can put `options.credit-matrix.levels` in its own front matter.
+Page levels replace project levels. When a page replaces the project authors, it also drops
+project levels unless it supplies its own. Notebook pages use the project settings.
+
 ## Document language
 
 Set `project.lang` in `myst.yml`, for example `lang: fr-CA` or `lang: ja`.
@@ -89,6 +123,5 @@ The SVG assets embed fonts and keep editable text. For PDF and Word, see
 - MyST passes plugins no front matter, so the plugin reads `myst.yml` and the page's own Markdown
   front matter from disk. A notebook page uses the project's authors.
 - An author listed only by `id` in a page is not looked up in the project's list.
-- MyST roles have no degree of contribution, so the statement shows no Equal or Supporting.
 - One format: by author. The [`credit-matrix`](../../src/core/README.md) package also writes by
   role and with initials.

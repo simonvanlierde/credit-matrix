@@ -15,12 +15,14 @@ describe("draft toolchain", () => {
     expect(await importAny(json)).toEqual({ format: "json", authors, toolchain });
     const hash = await encodeShareHash({ authors, toolchain });
     expect((await decodeShareHash(hash))?.toolchain).toBe(toolchain);
+    expect(await decodeShareHash(hash)).not.toHaveProperty("toolchainDropped");
     expect((await importAny(hash)).toolchain).toBe(toolchain);
   });
 
   it("keeps old files and links without a toolchain optional", () => {
     expect(fromJson(toJson([]))).not.toHaveProperty("toolchain");
     expect(fromSharePayload(toSharePayload({ authors: [] }))).not.toHaveProperty("toolchain");
+    expect(fromSharePayload(toSharePayload({ authors: [] }))).not.toHaveProperty("toolchainDropped");
   });
 
   it.each(["rmarkdown", "Quarto", "", null, 1])(
@@ -35,6 +37,7 @@ describe("draft toolchain", () => {
       const shared = fromSharePayload(JSON.stringify({ ...link, h: toolchain }));
       expect(shared.authors.map((author) => author.name)).toEqual(["Grace Hopper"]);
       expect(shared).not.toHaveProperty("toolchain");
+      expect(shared.toolchainDropped).toBe(true);
     },
   );
 });

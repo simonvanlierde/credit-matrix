@@ -234,6 +234,23 @@ describe("figures in a font family the caller names", () => {
     },
   );
 
+  it("prefers the first font path even when a later folder has a closer weight", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    try {
+      const medium = readFileSync(join(FIXTURES, "FigureTest-Regular.ttf"));
+      const os2 = tables(medium).indexOf("OS/2");
+      expect(os2).toBeGreaterThanOrEqual(0);
+      medium.writeUInt16BE(500, medium.readUInt32BE(12 + os2 * 16 + 8) + 4);
+      const first = join(folder, "medium.ttf");
+      writeFileSync(first, medium);
+      const reports: FigureFontReport[] = [];
+      await renderer(reports).svg(authors("Ada"), options("Figure Test", [folder, FIXTURES]));
+      expect(reports[0]?.file).toBe(first);
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
   it("names a custom family apart from a built-in fallback face of the same name", async () => {
     const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
     try {

@@ -357,7 +357,7 @@ msgid "errFileTooLarge"
 msgstr "Esse ficheiro é demasiado grande. Escolher um ficheiro com menos de {limit}."
 
 msgid "errFileUnreadable"
-msgstr "Não foi possível ler o arquivo. Verifique o arquivo e tente novamente."
+msgstr "Não foi possível ler o ficheiro. Verifique o ficheiro e tente novamente."
 
 msgid "errImportTooLarge"
 msgstr "Essa importação é demasiado grande. Colar menos de {limit} de dados."
@@ -594,7 +594,7 @@ msgid "annClaimUnlocked"
 msgstr "Agora é um rascunho normal. Todas as linhas podem ser editadas."
 
 msgid "claimLockedHint"
-msgstr "Você está respondendo a um pedido, por isso apenas a sua linha é editável."
+msgstr "Está a responder a um pedido, por isso apenas a sua linha é editável."
 
 msgid "claimResumed"
 msgstr "Retomado de onde você parou neste pedido."
@@ -606,7 +606,7 @@ msgid "claimUndoStale"
 msgstr "Nada foi anulado: o rascunho mudou depois de o pedido ser atualizado. Altere-o na grelha."
 
 msgid "claimLockedDraft"
-msgstr "Bloqueado: respondendo a um pedido"
+msgstr "Bloqueado: a responder a um pedido"
 
 msgid "requestLinkOwn"
 msgstr "Este é o link de pedido que você criou para {name}."
