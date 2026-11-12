@@ -33,7 +33,7 @@ test.describe("About page", () => {
       "href",
       "https://simonvanlierde.com/citesync/",
     );
-    await expect(page.locator("#privacy + p")).toContainText("Nothing else leaves your browser");
+    await expect(page.locator("#privacy + p")).toContainText("Drafts stay in this browser's local storage");
     await expect(article.getByRole("link", { name: "accessibility statement" })).toHaveAttribute(
       "href",
       "/accessibility",
