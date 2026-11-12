@@ -12,6 +12,8 @@ it("sends the same answer with the same send time, shared or copied", async () =
   const grace = useContributionStore.getState().authors[0];
   if (!grace) throw new Error("expected Grace");
   store.setClaim({ contributorId: grace.id, sourceDraftId: "src-1", sentAt: 1 });
+  // The co-author's own writing tool is theirs, not the lead's: it stays out of the reply.
+  store.setToolchain("quarto");
   const writeText = vi.fn((_: string) => Promise.resolve());
   Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
   let now = 1_000;
@@ -33,6 +35,7 @@ it("sends the same answer with the same send time, shared or copied", async () =
 
   fireEvent.click(screen.getByRole("button", { name: "Send back" }));
   const first = await sentAt(1);
+  expect(await decodeShareHash(new URL(writeText.mock.calls[0]?.[0] ?? "").hash)).not.toHaveProperty("toolchain");
   fireEvent.click(await screen.findByRole("button", { name: /Copy the link instead|Link copied/ }));
   expect(await sentAt(2)).toBe(first);
 
