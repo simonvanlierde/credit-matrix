@@ -149,7 +149,11 @@ export function AboutPage({ version, citations }: { version: string; citations: 
       <p>{t.rich("aboutTaxonomy", { cc: (chunks) => <LicenseLink>{chunks}</LicenseLink> })}</p>
 
       <h3 id="privacy">{t("privacy")}</h3>
-      <p>{t("aboutPrivacy")}</p>
+      {t("aboutPrivacy")
+        .split("\n\n")
+        .map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
 
       <h3>{t("accessibility")}</h3>
       <p>

@@ -740,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT 是 ANSI/NISO 标准（<cc>CC BY 4.0</cc>）。本项目独立于 NISO，未获 NISO 认可。"
 
 msgid "aboutPrivacy"
-msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在你的浏览器中运行脚本或设置 Cookie。导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在你的浏览器中处理，绝不会上传。除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中，你是否关闭了“入门”清单或复制过声明也一样。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录信息包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
+msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。\n\n本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在你的浏览器中运行脚本或设置 Cookie。\n\n导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在你的浏览器中处理，绝不会上传。\n\n除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中，你是否关闭了“入门”清单或复制过声明也一样。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。\n\n在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录信息包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
 
 msgid "accessibilityStatement"
 msgstr "无障碍声明"
@@ -1585,6 +1585,9 @@ msgstr "已导入 CRediT 角色。应用前请核对这些分配；该记录未�
 msgid "doiNoRoles"
 msgstr "该记录没有已登记的 CRediT 角色。贡献矩阵将保持为空。"
 
+msgid "importToolchainDropped"
+msgstr "此文件指定了当前版本无法识别的写作工具，因此已略去。"
+
 msgid "doiConfirm"
 msgstr "确认导入 DOI"
 
@@ -1803,6 +1806,48 @@ msgstr "红色"
 
 msgid "heatmapPurple"
 msgstr "紫色"
+
+msgid "toolchainLabel"
+msgstr "我的写作工具…"
+
+msgid "toolchainNone"
+msgstr "所有格式"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown 或纯文本"
+
+msgid "toolchainMyst"
+msgstr "MyST 或 Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "在 {toolchain} 中使用"
+
+msgid "toolchainSetup"
+msgstr "设置"
+
+msgid "toolchainSetupLink"
+msgstr "设置 {toolchain} →"
+
+msgid "toolchainCli"
+msgstr "对应的 CLI 命令"
+
+msgid "toolchainJournal"
+msgstr "期刊投稿"
+
+msgid "toolchainOtherFormats"
+msgstr "其他格式"
+
+msgid "toolchainNoSetup"
+msgstr "无需扩展。"
+
+msgid "toolchainWordHint"
+msgstr "将上方声明复制到 Word。使用“热图”复制或下载贡献热图。"
+
+msgid "toolchainLatexHeatmap"
+msgstr "使用下方 CLI 命令生成 heatmap.svg，然后将图插入文档。"
+
+msgid "toolchainDataHint"
+msgstr "将导出的 JSON 保存为 contributors.json，供下方配置和 CLI 命令使用。"
 
 msgid "docsTitle"
 msgstr "文档"

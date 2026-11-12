@@ -1197,6 +1197,8 @@ export declare function toMyst(authors: Author[]): string;
  * {@link buildHeatmapSvg} figure always has them.
  */
 export declare function heatmapPrintWarning(svg: string): string | null;
+export declare const TOOLCHAINS: readonly ["word", "markdown", "latex", "quarto", "typst", "pandoc", "myst", "sphinx"];
+type Toolchain = (typeof TOOLCHAINS)[number];
 /** Thrown by `fromJson` for an export stamped by a newer build. */
 export declare class NewerVersionError extends Error {
   constructor(version: number);
@@ -1211,20 +1213,24 @@ export declare class RepeatedIdError extends Error {
  * while it names a contributor in the file. Throws a ZodError when two authors
  * share an id.
  */
-export declare function toJson(authors: Author[], { asks, includeAnswers, selfId }?: {
+export declare function toJson(authors: Author[], { asks, includeAnswers, selfId, toolchain }?: {
   asks?: Readonly<Record<string, Ask>>;
   includeAnswers?: boolean;
   selfId?: string | null;
+  toolchain?: Toolchain;
 }): string;
 /**
  * Parse a JSON string previously produced by `toJson()`.
  * Throws a NewerVersionError for a newer build's export, a RepeatedIdError for
  * a file that repeats a contributor id, and a ZodError for any other data that doesn't match the expected shape.
+ * A toolchain this build does not know is left out, with a line saying so in `warnings`.
  */
 export declare function fromJson(json: string): {
   authors: Author[];
   asks?: Record<string, Ask>;
   selfId?: string;
+  toolchain?: Toolchain;
+  warnings?: string[];
 };
 /**
  * A draft as input for the latex-credits package (github.com/Pseudomanifold/latex-credits).
@@ -1393,6 +1399,9 @@ interface Imported {
   asks?: Record<string, Ask>;
   selfId?: string;
   title?: string;
+  toolchain?: Toolchain;
+  /** What the import left out, for the reader; see `fromJson`. */
+  warnings?: string[];
 }
 /**
  * Read text in any format {@link detectFormat} knows. Throws on text it cannot
@@ -1457,6 +1466,7 @@ export declare const NAME_SUFFIXES: readonly string[];
 export declare function parseAuthorText(text: string): Author[];
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 interface ShareData {
+  toolchain?: Toolchain;
   authors: Author[];
   /** "" when the payload has none */
   title: string;
@@ -1481,6 +1491,7 @@ interface ShareData {
   } | null;
 }
 interface SharePayloadInput {
+  toolchain?: Toolchain;
   authors: Author[];
   title?: string;
   claimId?: string;
@@ -1560,7 +1571,7 @@ export declare function namesCredit(text: string): boolean;
  * @throws RangeError when `statement` is longer than {@link MAX_STATEMENT_LENGTH}.
  */
 export declare function parseStatement(statement: string, authorList: readonly StatementAuthor[]): ParsedStatement;
-export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type Level, MAX_AUTHORS, MAX_AUTHOR_NAME_LENGTH, MAX_IMPORT_BYTES, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isValidOrcid, normalizeOrcid, scoreToLevel };
+export { type Ask, type AskEvent, type AskState, type Author, AuthorSchema, CREDIT_ROLES, type Choice, type CodemetaAttribution, type CodemetaPerson, type CodemetaRole, type Contribution, type ContributionLevel, ContributionSchema, type ContributorType, type CreditRoleName, type Decision, type DetectedFormat, type Difference, HeatmapOptionError, type HeatmapSvgOptions, type Imported, type Level, MAX_AUTHORS, MAX_AUTHOR_NAME_LENGTH, MAX_IMPORT_BYTES, type OrcidKey, type OrcidProof, type Outcome, type ParsedStatement, type Patch, type Reply, type Review, type RoCrateAttributionFragment, type ShareData, type SharePayloadInput, type StatementAuthor, type StatementCell, type StatementFormat, type StatementOptions, type StatementSpan, type Target, type Toolchain, type XmlElement, type XmlParser, buildHeatmapSvg, getRoleByName, heatmapDescription, isValidOrcid, normalizeOrcid, scoreToLevel };
 // lookup.d.ts
 import { n as CreditRoleName } from "./credit-roles.js";
 /**

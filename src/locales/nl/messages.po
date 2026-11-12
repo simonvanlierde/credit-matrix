@@ -740,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT is een ANSI/NISO-standaard (<cc>CC BY 4.0</cc>). Dit project staat los van NISO en is niet door NISO onderschreven."
 
 msgid "aboutPrivacy"
-msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent. Cloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser. Bij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload. Verder verlaat niets uw browser: concepten blijven in de lokale opslag, net als of u de lijst Aan de slag hebt gesloten of een verklaring hebt gekopieerd. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest. Wie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; de inlog reist daarna mee in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
+msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent.\n\nCloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser.\n\nBij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload.\n\nVerder verlaat niets uw browser: concepten blijven in de lokale opslag, net als of u de lijst Aan de slag hebt gesloten of een verklaring hebt gekopieerd. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest.\n\nWie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; de inlog reist daarna mee in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
 
 msgid "accessibilityStatement"
 msgstr "Toegankelijkheidsverklaring"
@@ -1585,6 +1585,9 @@ msgstr "CRediT-rollen geïmporteerd. Controleer deze toewijzingen voordat u ze t
 msgid "doiNoRoles"
 msgstr "Dit record bevat geen gedeponeerde CRediT-rollen. De bijdragenmatrix blijft leeg."
 
+msgid "importToolchainDropped"
+msgstr "Dit bestand noemt een schrijftool die deze versie niet kent, dus die is weggelaten."
+
 msgid "doiConfirm"
 msgstr "DOI-import bevestigen"
 
@@ -1803,6 +1806,48 @@ msgstr "Rood"
 
 msgid "heatmapPurple"
 msgstr "Paars"
+
+msgid "toolchainLabel"
+msgstr "Ik schrijf in…"
+
+msgid "toolchainNone"
+msgstr "Alle formaten"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown of platte tekst"
+
+msgid "toolchainMyst"
+msgstr "MyST of Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "Gebruik dit in {toolchain}"
+
+msgid "toolchainSetup"
+msgstr "Instellen"
+
+msgid "toolchainSetupLink"
+msgstr "{toolchain} instellen →"
+
+msgid "toolchainCli"
+msgstr "CLI-equivalent"
+
+msgid "toolchainJournal"
+msgstr "Voor het tijdschrift"
+
+msgid "toolchainOtherFormats"
+msgstr "Andere formaten"
+
+msgid "toolchainNoSetup"
+msgstr "Geen extensie nodig."
+
+msgid "toolchainWordHint"
+msgstr "Kopieer de verklaring hierboven naar Word. Gebruik Heatmap om de heatmap van bijdragen te kopiëren of te downloaden."
+
+msgid "toolchainLatexHeatmap"
+msgstr "Genereer heatmap.svg met de CLI hieronder en voeg de figuur toe aan je document."
+
+msgid "toolchainDataHint"
+msgstr "Sla de JSON-export op als contributors.json voor het recept en de CLI hieronder."
 
 msgid "docsTitle"
 msgstr "Documentatie"

@@ -56,7 +56,8 @@ from open-access papers, for the Published practice tab and a public dataset.
 
 ## Docs
 
-[Architecture](docs/architecture.md) · [CLI reference](docs/cli.md) · [Deploying](docs/deploy.md) ·
+[Guides for each writing tool](https://credit.duinlab.nl/docs) · [Architecture](docs/architecture.md) ·
+[CLI reference](docs/cli.md) · [Deploying](docs/deploy.md) ·
 [Accessibility statement](docs/accessibility.md) · [JATS conformance suite](conformance/README.md) ·
 [Design decisions](docs/adr/) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 

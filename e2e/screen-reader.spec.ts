@@ -134,6 +134,23 @@ test.describe("screen-reader view (accessibility tree)", () => {
 
   test("popovers are named dialogs that report their opener as expanded", async ({ page }) => {
     await loadSample(page);
+    await expect(page.getByRole("region", { name: "For the journal" })).toMatchAriaSnapshot(`
+      - region "For the journal":
+        - heading "For the journal" [level=3]
+        - list:
+          - listitem:
+            - text: XML (JATS4R)
+            - button "Copy XML (JATS4R)"
+            - button "Download XML (JATS4R)"
+          - listitem:
+            - text: XML (Crossref)
+            - button "Copy XML (Crossref)"
+            - button "Download XML (Crossref)"
+          - listitem:
+            - text: tenzing CSV
+            - button "Copy tenzing CSV"
+            - button "Download tenzing CSV"
+    `);
     const cases: [string, string][] = [
       [
         "Share",
@@ -151,9 +168,9 @@ test.describe("screen-reader view (accessibility tree)", () => {
         - dialog "Export data":
           - list "Export format":
             - listitem:
-              - text: XML (JATS4R)
-              - button "Copy XML (JATS4R)"
-              - button "Download XML (JATS4R)"
+              - text: JSON
+              - button "Copy JSON"
+              - button "Download JSON"
         `,
       ],
       [

@@ -283,16 +283,29 @@ export function HeaderActions() {
   function replaceClaim(draftId: string, incoming: DraftClaim, shared: ShareData): LinkFailure | null {
     switchDraft(draftId);
     const before = useContributionStore.getState();
-    const previous = { authors: before.authors, title: before.title, claim: before.claim, mode: before.inputMode };
+    const previous = {
+      authors: before.authors,
+      title: before.title,
+      claim: before.claim,
+      mode: before.inputMode,
+      toolchain: before.toolchain,
+    };
     const write = (next: typeof previous) => {
       setClaim(null);
       loadAuthors(next.authors);
       setTitle(next.title);
+      useContributionStore.setState({ toolchain: next.toolchain });
       setInputMode(next.mode);
       setClaim(next.claim);
     };
     try {
-      write({ authors: shared.authors, title: shared.title, claim: incoming, mode: claimMode(shared) });
+      write({
+        authors: shared.authors,
+        title: shared.title,
+        claim: incoming,
+        mode: claimMode(shared),
+        toolchain: shared.toolchain ?? before.lastToolchain,
+      });
     } catch {
       write(previous);
       return "errShareLinkBroken";
@@ -331,6 +344,7 @@ export function HeaderActions() {
     setTitle(shared.title);
     try {
       loadAuthors(shared.authors);
+      useContributionStore.setState((state) => ({ toolchain: shared.toolchain ?? state.lastToolchain }));
     } catch (error) {
       // A payload that fails to load must not leave an empty draft behind;
       // deleting it also lands you back on your own most recent work.
@@ -347,7 +361,7 @@ export function HeaderActions() {
    * on failure.
    */
   function handleImport(
-    { authors: importedAuthors, title: importedTitle, asks, selfId }: PendingImport,
+    { authors: importedAuthors, title: importedTitle, asks, selfId, toolchain }: PendingImport,
     mode: ImportMode,
   ) {
     const before = useContributionStore.getState();
@@ -365,19 +379,23 @@ export function HeaderActions() {
       const mapped = keepKnownIds(current, importedAuthors);
       const answers = importAnswers(current, importedAuthors, mapped, held, { asks, selfId });
       loadAuthors(mapped, answers.asks, answers.selfId);
+      if (toolchain !== undefined) useContributionStore.setState({ toolchain });
       // Only the DOI path brings a title. Guard on it rather than on emptiness,
       // so a record with no title still clears a stale one from the last import.
       if (importedTitle !== undefined) setTitle(importedTitle);
       count = useContributionStore.getState().authors.length;
     }
     const applied = useContributionStore.getState();
+    // Only an import that set the toolchain owns it: a tool picked after a plain import must not block Undo.
+    const setsToolchain = mode === "replace" && toolchain !== undefined;
     const unchanged = () => {
       const now = useContributionStore.getState();
       return (
         now.authors === applied.authors &&
         now.asks === applied.asks &&
         now.selfId === applied.selfId &&
-        now.title === applied.title
+        now.title === applied.title &&
+        (!setsToolchain || now.toolchain === applied.toolchain)
       );
     };
     showStatus({
@@ -394,6 +412,7 @@ export function HeaderActions() {
             loadAuthors(before.authors, before.asks);
             setSelfId(before.selfId);
             setTitle(before.title);
+            if (setsToolchain) useContributionStore.setState({ toolchain: before.toolchain });
             announce(t("annImportUndone"));
           },
         },
@@ -448,7 +467,9 @@ export function HeaderActions() {
   async function handleShare() {
     const state = useContributionStore.getState();
     try {
-      await copyShareUrl(await buildShareUrl({ authors: state.authors, title: state.title }));
+      await copyShareUrl(
+        await buildShareUrl({ authors: state.authors, title: state.title, toolchain: state.toolchain }),
+      );
       setShareOpen(false);
     } catch {
       showStatus({ kind: "error", message: t(shareFailureKey()) });

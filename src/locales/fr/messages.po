@@ -740,7 +740,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT est une norme ANSI/NISO (<cc>CC BY 4.0</cc>). Ce projet est indépendant de NISO et n'est pas approuvé par elle."
 
 msgid "aboutPrivacy"
-msgstr "La recherche d'un ORCID iD l'envoie depuis votre navigateur à pub.orcid.org. La recherche d'un DOI l'envoie à api.crossref.org, avec l'adresse de contact de ce site, puis à api.datacite.org si Crossref n'a pas de notice. Cloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur. L'import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d'exécution Python ; le fichier est traité dans votre navigateur et n'est jamais téléversé. Rien d'autre ne quitte votre navigateur : les brouillons restent dans son stockage local, tout comme le fait d'avoir fermé la liste Premiers pas ou copié une déclaration. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l'iD de cette personne, à l'application que vous choisissez. Se connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la connexion voyage ensuite dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
+msgstr "La recherche d'un ORCID iD l'envoie depuis votre navigateur à pub.orcid.org. La recherche d'un DOI l'envoie à api.crossref.org, avec l'adresse de contact de ce site, puis à api.datacite.org si Crossref n'a pas de notice.\n\nCloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur.\n\nL'import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d'exécution Python ; le fichier est traité dans votre navigateur et n'est jamais téléversé.\n\nRien d'autre ne quitte votre navigateur : les brouillons restent dans son stockage local, tout comme le fait d'avoir fermé la liste Premiers pas ou copié une déclaration. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l'iD de cette personne, à l'application que vous choisissez.\n\nSe connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la connexion voyage ensuite dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
 
 msgid "accessibilityStatement"
 msgstr "Déclaration d'accessibilité"
@@ -1585,6 +1585,9 @@ msgstr "Rôles CRediT importés. Vérifiez ces attributions avant de les appliqu
 msgid "doiNoRoles"
 msgstr "Cette notice ne contient aucun rôle CRediT déposé. La matrice des contributions restera vide."
 
+msgid "importToolchainDropped"
+msgstr "Ce fichier indique un outil d'écriture que cette version ne connaît pas. Il a été ignoré."
+
 msgid "doiConfirm"
 msgstr "Confirmer l'import du DOI"
 
@@ -1803,6 +1806,48 @@ msgstr "Rouge"
 
 msgid "heatmapPurple"
 msgstr "Violet"
+
+msgid "toolchainLabel"
+msgstr "J’écris avec…"
+
+msgid "toolchainNone"
+msgstr "Tous les formats"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown ou texte brut"
+
+msgid "toolchainMyst"
+msgstr "MyST ou Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "Utiliser dans {toolchain}"
+
+msgid "toolchainSetup"
+msgstr "Installation"
+
+msgid "toolchainSetupLink"
+msgstr "Configurer {toolchain} →"
+
+msgid "toolchainCli"
+msgstr "Équivalent en ligne de commande"
+
+msgid "toolchainJournal"
+msgstr "Pour la revue"
+
+msgid "toolchainOtherFormats"
+msgstr "Autres formats"
+
+msgid "toolchainNoSetup"
+msgstr "Aucune extension nécessaire."
+
+msgid "toolchainWordHint"
+msgstr "Copiez la déclaration ci-dessus dans Word. Utilisez Heatmap pour copier ou télécharger la heatmap des contributions."
+
+msgid "toolchainLatexHeatmap"
+msgstr "Générez heatmap.svg avec la ligne de commande ci-dessous, puis insérez la figure dans votre document."
+
+msgid "toolchainDataHint"
+msgstr "Enregistrez l’export JSON sous contributors.json pour la recette et la ligne de commande ci-dessous."
 
 msgid "docsTitle"
 msgstr "Documentation"
