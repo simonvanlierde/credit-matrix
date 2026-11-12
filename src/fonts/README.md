@@ -32,8 +32,9 @@ one run.
 
 ## Versions
 
-A 1.x release only adds faces. Changing the bytes of an existing face needs a new major version:
-`credit-matrix` checks each face's hash, and layout depends on the glyph widths. A release comes
+A 1.x release only adds faces. Within 1.x the bytes of a face never change, because `credit-matrix`
+checks every face against SHA-256 hashes pinned to its fonts version. Changed face bytes ship as a new
+major version (2.0), and layout depends on the glyph widths. A release comes
 only when the fonts change. `credit-matrix` pins the version and the hashes below for its jsDelivr
 download, and checks faces read from an installed package against the same hashes.
 
