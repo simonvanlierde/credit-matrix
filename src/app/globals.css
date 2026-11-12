@@ -1,6 +1,27 @@
 /* spell-checker: ignore wght */
 @import "tailwindcss";
 
+.docs-search {
+  --pf-text: var(--color-on-surface);
+  --pf-text-secondary: var(--color-on-surface-variant);
+  --pf-text-muted: var(--color-on-surface-variant);
+  --pf-background: var(--color-surface-bright);
+  --pf-border: var(--color-outline-strong);
+  --pf-border-focus: var(--color-primary);
+  --pf-outline-focus: var(--color-primary);
+  --pf-hover: var(--color-surface-container-low);
+  --pf-mark: var(--color-on-surface);
+  --pf-skeleton: var(--color-surface-container);
+  --pf-skeleton-shine: var(--color-surface-bright);
+  --pf-font: var(--font-body);
+  --pf-border-radius: 4px;
+  --pf-searchbox-max-width: 100%;
+  --pf-error-bg: var(--color-error-container);
+  --pf-error-border: var(--color-error);
+  --pf-error-text: var(--color-on-error-container);
+  --pf-error-text-secondary: var(--color-on-error-container);
+}
+
 /*
  * `desk` height-locks the workspace into the viewport, but only when there is
  * genuinely room for it: a short window, a zoomed-in page, or a phone in

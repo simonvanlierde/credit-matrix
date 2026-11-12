@@ -1857,3 +1857,12 @@ msgstr "Gebruik het in uw schrijfprogramma"
 
 msgid "docsReference"
 msgstr "Naslag"
+
+msgid "docsSearch"
+msgstr "Documentatie doorzoeken"
+
+msgid "docsSearchLoading"
+msgstr "Zoeken wordt geladen…"
+
+msgid "docsSearchFailed"
+msgstr "Zoeken kon niet worden geladen. Herlaad de pagina om het opnieuw te proberen."

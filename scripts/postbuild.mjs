@@ -98,10 +98,37 @@ for (const path of exported) {
 }
 // The page references every hashed chunk, and the converter files name its
 // runtime, so the digest changes exactly when the build does.
-const buildInputs = ["index.html", "citesync-worker.js", "citesync/runtime.json", "citesync/pyodide/pyodide-lock.json"];
+const searchFiles = (await readdir(join(OUT, "pagefind"), { recursive: true }))
+  .filter((file) =>
+    /^(?:pagefind-component-ui\.(?:js|css)|pagefind(?:-worker)?\.js|pagefind-entry\.json|wasm\.en\.pagefind|pagefind\.en_[\w]+\.pf_meta|(?:index|fragment|filter)\/en_[\w]+\.pf_(?:index|fragment|filter))$/.test(
+      file,
+    ),
+  )
+  .sort();
+const entry = JSON.parse(await readFile(join(OUT, "pagefind/pagefind-entry.json"), "utf8"));
+if (!entry.languages.en || Object.keys(entry.languages).length !== 1)
+  throw new Error("postbuild: docs search must have exactly the English index");
+const buildInputs = [
+  "index.html",
+  "citesync-worker.js",
+  "citesync/runtime.json",
+  "citesync/pyodide/pyodide-lock.json",
+  ...searchFiles.map((file) => `pagefind/${file}`),
+];
 const buildId = sha256(Buffer.concat(await Promise.all(buildInputs.map((file) => readFile(join(OUT, file))))))
   .replace(/[^A-Za-z0-9]/g, "")
   .slice(0, 12);
+const searchAssets = searchFiles.map(
+  (file) => `/pagefind/${file}${file === "pagefind-entry.json" ? `?ts=${buildId}` : ""}`,
+);
+for (const page of pages.filter((file) => /^docs(?:\/|\.html$)/.test(file))) {
+  const path = join(OUT, page);
+  const html = await readFile(path, "utf8");
+  await writeFile(
+    path,
+    html.replace(HEAD_START, (start) => `${start}<meta name="docs-search-build" content="${buildId}">`),
+  );
+}
 // Of the figure fonts (about 40 MB), only Noto Sans (0.57 MB, the default face) is precached, with the
 // subsetter every export needs (0.68 MB), so a default figure exports offline from the first visit; the
 // worker caches the others when an export fetches them.
@@ -113,11 +140,14 @@ const docsChunks = new Set(
     .map(([, { file }]) => file.replace(/^assets\//, "")),
 );
 if (docsChunks.size === 0) throw new Error("postbuild: no docs chunk in the Vite manifest");
+const docsPage = manifest["src/app/docs/page.tsx"]?.file;
+if (!docsPage) throw new Error("postbuild: no docs page entry in the Vite manifest");
 const precachedPages = paths.filter((path) => !/^\/docs(?:\/|$)/.test(path));
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
   .filter((file) => /\.(?:js|css)$|^NotoSans-Regular-[\w-]+\.ttf$|^harfbuzz-subset-[\w-]+\.wasm$/.test(file))
   .filter((file) => !docsChunks.has(file))
   .map((file) => `/assets/${file}`)
+  .concat(["/manifest.webmanifest", "/fonts/newsreader-italic-latin.woff2"])
   .sort();
 if (
   !assets.some((file) => file.includes("/NotoSans-Regular-")) ||
@@ -125,6 +155,8 @@ if (
 )
   throw new Error("postbuild: the default figure font or the subsetter is not in the service worker precache");
 if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");
+if (!sw.includes("const SEARCH_ASSETS = [];")) throw new Error("postbuild: missing search asset placeholder");
+if (!sw.includes("const DOCS_ASSETS = [];")) throw new Error("postbuild: missing docs asset placeholder");
 if (!sw.includes("const PAGES = [];")) throw new Error("postbuild: missing service worker page placeholder");
 if (!sw.includes("const PRECACHED_PAGES = [];"))
   throw new Error("postbuild: missing service worker precached page placeholder");
@@ -132,6 +164,8 @@ await writeFile(
   swPath,
   sw
     .replace(placeholder, `"credit-matrix-${buildId}"`)
+    .replace("const SEARCH_ASSETS = [];", `const SEARCH_ASSETS = ${JSON.stringify(searchAssets)};`)
+    .replace("const DOCS_ASSETS = [];", `const DOCS_ASSETS = ${JSON.stringify([`/${docsPage}`])};`)
     .replace("const ASSETS = [];", `const ASSETS = ${JSON.stringify(assets)};`)
     .replace("const PAGES = [];", `const PAGES = ${JSON.stringify(paths)};`)
     .replace("const PRECACHED_PAGES = [];", `const PRECACHED_PAGES = ${JSON.stringify(precachedPages)};`),

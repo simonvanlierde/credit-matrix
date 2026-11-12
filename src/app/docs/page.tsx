@@ -2,6 +2,7 @@ import { docs } from "virtual:docs";
 // The browser build emits the images the prerendered articles show; nothing here reads the map.
 import "@/docs/images";
 import { ArrowLeft } from "lucide-react";
+import { DocsSearch } from "@/components/DocsSearch";
 import { ReadingPage } from "@/components/ReadingPage";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";
@@ -47,6 +48,7 @@ function DocsIndex() {
     <ReadingPage>
       <div className="document">
         <h2>{t("docsTitle")}</h2>
+        <DocsSearch />
         <DocsList details />
       </div>
     </ReadingPage>
@@ -56,15 +58,19 @@ function DocsIndex() {
 function DocPage() {
   const t = useTranslations();
   const route = usePathname();
+  const doc = docs.find((entry) => entry.route === route);
   const html = rendered?.get(route) ?? prerendered;
   return (
     <ReadingPage>
+      <meta name="pagefind:title" data-pagefind-meta="title[content]" content={doc?.title} />
+      <meta name="pagefind:url" data-pagefind-meta="url[content]" content={route} />
       <a href="/docs" className="flex w-fit items-center gap-1.5 text-sm text-primary hover:underline">
         <ArrowLeft className="size-4" aria-hidden="true" />
         {t("docsTitle")}
       </a>
+      <DocsSearch />
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own Markdown from the repo */}
-      <article lang="en" className="document" dangerouslySetInnerHTML={{ __html: html }} />
+      <article lang="en" data-pagefind-body className="document" dangerouslySetInnerHTML={{ __html: html }} />
       <nav aria-label={t("docsTitle")} className="document">
         <DocsList current={route} level={2} />
       </nav>

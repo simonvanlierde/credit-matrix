@@ -39,6 +39,13 @@ yes/no and levels without changing what is stored. The
 [domain model](../src/core/README.md#domain-model) has the score range of each level.
 [ADR 0001](adr/0001-client-side-architecture.md) explains the split.
 
+## Documentation search
+
+Pagefind builds the English search index from prerendered documentation, before the single postbuild
+pass stamps the CSP and service worker. Search uses the build id as its metadata cache tag, so offline
+queries use the same index as the page. The first docs visit caches search, the docs page chunk,
+and the visited page; app installation does not download documentation or the search index.
+
 ## Lookups and the CSP
 
 The ORCID and DOI lookups call the public APIs of ORCID, Crossref and DataCite straight from the

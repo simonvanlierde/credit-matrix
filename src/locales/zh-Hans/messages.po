@@ -1857,3 +1857,12 @@ msgstr "在写作工具中使用"
 
 msgid "docsReference"
 msgstr "参考"
+
+msgid "docsSearch"
+msgstr "搜索文档"
+
+msgid "docsSearchLoading"
+msgstr "正在加载搜索…"
+
+msgid "docsSearchFailed"
+msgstr "无法加载搜索。请重新加载页面后重试。"

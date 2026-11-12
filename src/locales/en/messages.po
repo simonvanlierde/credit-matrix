@@ -1857,3 +1857,12 @@ msgstr "Use it in your writing tool"
 
 msgid "docsReference"
 msgstr "Reference"
+
+msgid "docsSearch"
+msgstr "Search documentation"
+
+msgid "docsSearchLoading"
+msgstr "Loading search…"
+
+msgid "docsSearchFailed"
+msgstr "Search could not load. Reload the page to try again."

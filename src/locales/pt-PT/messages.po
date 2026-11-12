@@ -1857,3 +1857,12 @@ msgstr "Use-o na sua ferramenta de escrita"
 
 msgid "docsReference"
 msgstr "Referência"
+
+msgid "docsSearch"
+msgstr "Pesquisar na documentação"
+
+msgid "docsSearchLoading"
+msgstr "A carregar a pesquisa…"
+
+msgid "docsSearchFailed"
+msgstr "Não foi possível carregar a pesquisa. Recarregue a página para tentar novamente."
