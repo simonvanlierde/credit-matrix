@@ -1857,3 +1857,21 @@ msgstr "Gebruik het in uw schrijfprogramma"
 
 msgid "docsReference"
 msgstr "Naslag"
+
+msgid "docsLiveExample"
+msgstr "Livevoorbeeld"
+
+msgid "docsLiveLoading"
+msgstr "Je concept laden…"
+
+msgid "docsLiveDraft"
+msgstr "Je concept wordt getoond"
+
+msgid "docsLiveSample"
+msgstr "Voorbeeldgegevens worden getoond"
+
+msgid "docsUseSample"
+msgstr "Voorbeeldgegevens gebruiken"
+
+msgid "docsUseDraft"
+msgstr "Je concept gebruiken"

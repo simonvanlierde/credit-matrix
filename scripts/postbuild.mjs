@@ -109,7 +109,7 @@ const buildId = sha256(Buffer.concat(await Promise.all(buildInputs.map((file) =>
 const manifest = JSON.parse(await readFile(join(OUT, ".vite", "manifest.json"), "utf8"));
 const docsChunks = new Set(
   Object.entries(manifest)
-    .filter(([source]) => source.startsWith("src/app/docs/"))
+    .filter(([source]) => source.startsWith("src/app/docs/") || source === "src/docs/LiveExample.tsx")
     .map(([, { file }]) => file.replace(/^assets\//, "")),
 );
 if (docsChunks.size === 0) throw new Error("postbuild: no docs chunk in the Vite manifest");

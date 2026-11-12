@@ -23,6 +23,8 @@ instead.
 
 ## Use
 
+<!-- live: myst -->
+
 Add this to a Markdown page:
 
 ````markdown

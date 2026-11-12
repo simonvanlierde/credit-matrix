@@ -1857,3 +1857,21 @@ msgstr "在写作工具中使用"
 
 msgid "docsReference"
 msgstr "参考"
+
+msgid "docsLiveExample"
+msgstr "实时示例"
+
+msgid "docsLiveLoading"
+msgstr "正在加载草稿…"
+
+msgid "docsLiveDraft"
+msgstr "正在显示你的草稿"
+
+msgid "docsLiveSample"
+msgstr "正在显示示例数据"
+
+msgid "docsUseSample"
+msgstr "使用示例数据"
+
+msgid "docsUseDraft"
+msgstr "使用你的草稿"

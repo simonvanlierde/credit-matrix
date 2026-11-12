@@ -28,6 +28,8 @@ The command is a list of arguments, not a shell command.
 
 Export JSON from CRediT Matrix and save it beside your page as `contributors.json`:
 
+<!-- live: sphinx -->
+
 ```rst
 Contributors
 ============

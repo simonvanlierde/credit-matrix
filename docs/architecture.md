@@ -55,6 +55,15 @@ runtime on first use, so later citation imports work offline until the next depl
 hashes the runtime files, so a new converter never mixes with a cached old one. CodeMeta imports
 need no runtime and work offline.
 
+## Documentation
+
+The `/docs` pages render the integration READMEs at build time. The browser receives navigation
+metadata and prerendered HTML, without the Markdown sources or renderer. A standalone
+`<!-- live: quarto -->` comment inserts a live example; pages without a marker never load that code.
+Examples reuse the app's export controls and recipes with the active draft or local sample data.
+The visible source switch changes only the example, leaving the saved draft unchanged. Static
+instructions remain readable when JavaScript or a live example cannot load.
+
 ## No accounts, no server-side storage
 
 A draft holds the names and ORCID iDs of co-authors who never visited this site. So the draft stays

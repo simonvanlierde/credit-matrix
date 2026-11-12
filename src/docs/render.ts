@@ -1,6 +1,7 @@
 import { imageSizes } from "virtual:docs";
 import { renderMarkdown } from "@/lib/markdown";
 import { images } from "./images";
+import { type DocPart, splitLiveMarkers } from "./live-markers";
 import { type DocFile, docFiles } from "./pages";
 
 export const GITHUB = "https://github.com/simonvanlierde/credit-matrix";
@@ -32,11 +33,25 @@ export function resolveHref(href: string, from: string): string {
   return `${GITHUB}/${view}/main/${path.replace(/\/$/, "")}${url.search}${url.hash}`;
 }
 
-/** The page HTML of the repo file `file`, with its links and images pointing at the site. */
-export function renderDoc(file: DocFile, source: string) {
-  return renderMarkdown(
-    source,
+/** Render static HTML and live targets, keeping reference links in one Markdown parse. */
+export function renderDoc(file: DocFile, source: string): DocPart[] {
+  const parts = splitLiveMarkers(source);
+  const html = renderMarkdown(
+    parts
+      .map((part) => (typeof part === "string" ? part : `<div data-doc-live-slot="${part.live}"></div>\n\n`))
+      .join(""),
     (href) => resolveHref(href, file.path),
     (src) => sizes.get(src),
   );
+  const rendered: DocPart[] = [];
+  let offset = 0;
+  for (const marker of html.matchAll(/<div data-doc-live-slot="([a-z-]+)"><\/div>\n?/g)) {
+    if (marker.index > offset) rendered.push(html.slice(offset, marker.index));
+    const part = parts.find((candidate) => typeof candidate !== "string" && candidate.live === marker[1]);
+    if (!part || typeof part === "string") throw new Error("Invalid rendered live target");
+    rendered.push(part);
+    offset = marker.index + marker[0].length;
+  }
+  if (offset < html.length || rendered.length === 0) rendered.push(html.slice(offset));
+  return rendered;
 }

@@ -34,6 +34,8 @@ In the app, choose **MyST YAML** under Export data to copy or download the autho
 The CLI equivalent is `credit-matrix convert team.json --to myst`. Indent the block under `project`
 in `myst.yml`, or paste it into a page's front matter. MyST roles have no contribution levels.
 
+<!-- live: myst -->
+
 ```yaml
 project:
   authors:

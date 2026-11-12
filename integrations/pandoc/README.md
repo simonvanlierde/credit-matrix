@@ -10,6 +10,8 @@ Pandoc and Quarto share this file.
 
 ## Use
 
+<!-- live: pandoc -->
+
 ```yaml
 ---
 title: My paper

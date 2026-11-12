@@ -1857,3 +1857,21 @@ msgstr "Use-o na sua ferramenta de escrita"
 
 msgid "docsReference"
 msgstr "Referência"
+
+msgid "docsLiveExample"
+msgstr "Exemplo ao vivo"
+
+msgid "docsLiveLoading"
+msgstr "A carregar o seu rascunho…"
+
+msgid "docsLiveDraft"
+msgstr "A mostrar o seu rascunho"
+
+msgid "docsLiveSample"
+msgstr "A mostrar dados de exemplo"
+
+msgid "docsUseSample"
+msgstr "Usar dados de exemplo"
+
+msgid "docsUseDraft"
+msgstr "Usar o seu rascunho"
