@@ -48,17 +48,18 @@ or commissioned an external audit. This review does not assess all requirements 
   subject and the document language. It does not provide a tagged reading order or figure alternative.
 - **No native speaker has checked eight of the nine languages yet.** The German, Spanish, French,
   Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
-  translated by machine. If a label is unclear, switch the language menu to English. The CRediT role names themselves come from the reviewed
+  translated by machine. If a label is unclear, switch the language menu to English.
+  The CRediT role names come from the reviewed
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation) project.
-  No fix date: it waits on volunteer reviewers.
+  We need volunteer reviewers, so we cannot give a fix date.
 - **This statement is in English only.** Its exact wording matters, so we don't machine-translate it.
-  Your browser's translate feature gives a rough version. No fix planned.
+  Your browser's translate feature gives a rough version. We have no plans to translate this statement.
 
 ### Content we don't control
 
-- **ORCID sign-in.** Signing a co-author answer with ORCID opens orcid.org, which ORCID runs, so
-  we have only inspected its initial sign-in page. The full authentication process remains
-  unassessed. An answer can be sent without signing in.
+- **ORCID sign-in.** Signing a co-author answer opens orcid.org, a separate service run by ORCID.
+  We checked its initial sign-in page, but not the full sign-in process. You can send an answer
+  without signing in.
 
 ## Tell us about a problem
 
@@ -73,57 +74,37 @@ statement or an export in another format, email us and we'll send it.
 
 ## How we check
 
-- **Self-assessment.** The criterion-by-criterion
-  [assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md)
-  records browser checks, source review and evidence gaps for the sampled pages and web element.
-  It is repeated at each yearly review.
-- **Automated scan.** The end-to-end tests run [axe-core](https://github.com/dequelabs/axe-core)
-  with the WCAG 2.0, 2.1 and 2.2 level A and AA rules (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`,
-  `wcag22a`, `wcag22aa`). They scan the welcome dialog, the empty and filled workspace, a phone-sized
-  screen, the import dialog, an error state, an open popover, the published practice tab, dark
-  mode, the about page and this statement, and the web element on a light page, a dark page and a
-  320 px wide screen. See
-  [e2e/a11y.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/a11y.spec.ts).
-- **What a screen reader is given.**
-  [e2e/screen-reader.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/screen-reader.spec.ts)
-  reads the accessibility tree of the workspace, the grid, sampled popovers and dialogs, the co-author
-  page, the census, the about page, this statement and the web element: the names, roles, states,
-  headings and landmarks exposed to assistive technology. It also checks the expected live-region
-  DOM messages for copying, removing, undoing and changing the grid. It does not check spoken output.
-- **Keyboard tests.** The same tests use the keyboard alone to move through the contributor list,
-  reorder a contributor without dragging, switch the inspector tabs, move through the grid with the
-  arrow keys, open a role's description from its name, and use the segmented controls. They also
-  check that focus stays in place after a contributor is removed, and that small icon buttons are
-  at least 24 by 24 px in the measured sample.
-- **Visual checks.** Browser tests check sampled contrast, focus rings, swatch selection in forced
-  colors, and figure settings under reduced motion. Text-spacing tests check page width and access
-  to figure downloads at phone and desktop widths. These use browser emulation; they do not replace
-  testing other browsers or Windows High Contrast by hand. Separate checks cover real 200% Chromium
-  zoom in both themes and keyboard selection/cancellation in Chromium’s native color picker on Linux.
-- **Lint.** [Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) check
-  every change for things like missing alt text, invalid ARIA and click handlers without a keyboard
-  equivalent.
-- **This statement.**
-  [e2e/accessibility-statement.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/accessibility-statement.spec.ts)
-  fails when this page loses a section, claims full conformance, loses its email contact,
-  or goes more than 400 days without a review.
+We review the app against WCAG 2.2 AA each year. The
+[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md)
+lists the pages, checks and evidence for each criterion.
 
-Chromium runs all of this on every pull request that changes the app, and all three browsers
-run it on every push to main and weekly. Automated tools find only part of
-the problems a person can run into, so a passing run does not mean there are none.
+Our browser tests check:
 
-Not checked yet: nobody who relies on a screen reader, switch access or voice control has tested
-the app, and the self-assessment did not use a screen reader. The tests read the accessibility
-tree a screen reader gets, but no screen reader has read it out, so how NVDA, JAWS or VoiceOver
-speak it is not checked. Nobody has used the app in Firefox or Safari by hand.
+- common tasks with the keyboard, including contributor order, grid navigation and figure downloads;
+- the names, roles, states and messages the app supplies to assistive technology;
+- sampled contrast, focus rings, control sizes, text spacing and narrow screens;
+- settings with reduced motion and forced colors, which emulate some system accessibility settings;
+- common accessibility errors with [axe-core](https://github.com/dequelabs/axe-core), using its WCAG 2.0, 2.1 and 2.2 A and AA rules.
+
+Separate checks cover real 200% Chromium zoom in both themes and keyboard use of Chromium's
+native color picker on Linux. These do not establish how other browsers or operating systems behave.
+[Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) also check code changes
+for errors such as missing alt text and invalid ARIA attributes.
+
+Tests guard this statement's sections, conformance status, email contact and review date.
+They fail if a review is more than 400 days old.
+
+Passing these checks does not mean we have found every problem. We have not checked spoken output
+with NVDA, JAWS or VoiceOver, or tested with people who rely on screen readers, switch access or
+voice control. We have not used the app in Firefox or Safari by hand, or tested Windows High Contrast
+by hand.
 
 ### Heatmap text alternatives
 
-The workspace grid exposes each contribution and its level to assistive technology. The export
-preview also has the contribution statement as its image alternative. Downloaded SVG files contain
-a title and description; downloaded PNG files contain the statement in a Description field.
-Editors may not turn those fields into alt text. Check the alt text after inserting a figure into
-a document, and paste the statement if needed.
+The workspace grid gives assistive technology each contribution and its level. The export preview
+has the contribution statement as its image alternative. SVG and PNG downloads also include the
+statement, but editors may not use it as alt text. See [Known problems](#known-problems) before
+inserting a figure into a document.
 
 ### The web element
 
@@ -135,12 +116,12 @@ statement, heatmap and table. Its loading and error messages are marked as Engli
 
 ## Tested with
 
-- Chromium, Firefox and WebKit, the engine Safari uses, in Playwright's desktop profiles, with
-  axe-core: Chromium on every pull request, all three on every push to `main` and weekly. They
-  cover the axe scans, this statement, the about page, the accessibility tree and the main
-  workflows. Firefox and WebKit have no clipboard permissions, so
-  the workflow tests that read the clipboard run there against a clipboard kept in the page.
-  They don't check the browser's own clipboard.
+Automated tests use Chromium, Firefox and WebKit in Playwright's desktop profiles, with axe-core.
+WebKit is the engine Safari uses; these tests do not replace testing Safari on Apple hardware.
+Chromium runs on pull requests that change the app. All three run on pushes to `main` and weekly.
+
+Firefox and WebKit workflow tests use a clipboard kept within the page. They check the app's copy
+handlers, but do not test the browser's own clipboard.
 
 CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 

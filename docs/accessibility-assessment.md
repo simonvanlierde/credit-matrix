@@ -1,8 +1,8 @@
 # WCAG 2.2 self-assessment
 
-This is the evidence behind the [accessibility statement](accessibility.md).
-It reviews the 55 level A and AA criteria of [WCAG 2.2](https://www.w3.org/TR/WCAG22/).
-It is a developer self-assessment of sampled pages, not an external audit or a claim of full conformance.
+This developer self-assessment records the evidence behind the [accessibility statement](accessibility.md).
+It covers the 55 level A and AA criteria of [WCAG 2.2](https://www.w3.org/TR/WCAG22/) on sampled pages.
+It is not an external audit or a claim of full conformance.
 
 - **Reviewed:** 12 November 2026, against merged main `aef0630` and the timing fixes described below.
 - **Browsers:** Chromium, Firefox and WebKit in Playwright desktop profiles. WebKit testing does not replace testing Safari on Apple hardware.
@@ -17,11 +17,11 @@ phone role list, inspector tabs, sampled popovers, heatmap settings and preview,
 It also covers the census, about and accessibility pages, and the `<credit-matrix>` web element
 on light and dark pages and at 320 CSS pixels.
 
-Browser checks cover axe rules, accessibility-tree snapshots, live-region DOM messages, keyboard actions,
-focus restoration, contrast, selected targets, and settings under forced colors and reduced motion.
+Browser tests check keyboard actions, focus restoration, contrast, selected control sizes, forced colors and reduced motion.
+They also run axe rules, inspect accessibility trees and check messages the app supplies to assistive technology.
 Text-spacing checks apply line height 1.5, letter spacing 0.12em, word spacing 0.16em and paragraph spacing 2em.
 They check page width and access to figure settings at 320, 375, 768 and 1440 CSS pixels.
-These checks do not establish what a screen reader speaks or prove that every control works with every input method.
+These checks do not establish what a screen reader speaks, or whether every control works with every input method.
 
 The implementation review checks semantics, language attributes, timer behavior, text alternatives and color calculations.
 Current light-mode text uses `--color-on-surface: #45413a`.
@@ -58,9 +58,9 @@ They exercise the app's handlers, not the browser's native clipboard integration
 
 `e2e/browser-zoom.spec.ts` uses Chromium’s [browser zoom API](https://developer.chrome.com/docs/extensions/reference/api/tabs#method-setZoom).
 Its temporary extension and browser profile are removed after each test.
-It verifies zoom 2, doubled pixel density and halved layout width, rather than changing the viewport alone.
-Both light and dark checks passed: Import opens, figure settings remain reachable, the keyboard can download SVG,
-and the reading pages fit at 200% zoom. The browser starts at 1440 × 1000 pixels, with a 720 CSS-pixel layout after zoom.
+It verifies a zoom factor of 2, doubled pixel density and halved layout width.
+The browser starts at 1440 × 1000 pixels, with a 720 CSS-pixel layout after zoom.
+Both themes passed: Import opens, settings remain reachable, SVG downloads work with the keyboard, and reading pages fit at 200% zoom.
 Firefox and Safari zoom behavior has not been checked.
 
 A headed Chromium 156.0.8078.4 session on Linux checked the native color picker with the keyboard.
@@ -69,11 +69,11 @@ Escape cancelled edits, preserved the previous color and returned focus. The com
 No screen reader was used for this check.
 Other browsers and Windows/macOS color dialogs remain untested.
 
-The public ORCID sign-in page was inspected in the same Chromium version without entering credentials or submitting a form.
-Email/ORCID and password fields exposed accessible names and accepted focus; autocomplete was not disabled.
-Synthetic paste events were not cancelled, and no CAPTCHA was visible on the initial page.
-Actual paste, password-manager autofill, MFA, recovery and risk-triggered challenges were not checked.
-This narrows the evidence gap without settling the complete authentication process.
+We inspected the public ORCID sign-in page in the same Chromium version, without entering credentials or submitting a form.
+Email/ORCID and password fields had accessible names and accepted focus. The page did not disable autocomplete.
+The page did not cancel synthetic paste events or show a CAPTCHA.
+We did not check actual paste, password-manager autofill, multi-factor authentication (MFA), recovery or later security challenges.
+The full sign-in process remains unassessed.
 
 ### Timing corrections
 
@@ -85,7 +85,7 @@ A longer fixed timeout alone does not establish [2.2.1 Timing Adjustable](https:
 
 ## Results
 
-- **Checked:** the listed browser or source checks found no failure in the sample. This is not a criterion-wide conformance verdict.
+- **Checked:** the listed browser or source checks found no failure in the sample. This does not establish conformance for the whole criterion.
 - **Needs review:** the evidence does not settle the criterion.
 - **N/A:** no applicable content or input method was found in the sample.
 
@@ -173,5 +173,5 @@ WCAG 2.2 removed 4.1.1 Parsing, so it is not listed.
 - Evaluate optional ORCID authentication against [3.3.8](https://www.w3.org/TR/WCAG22/#accessible-authentication-minimum), including actual clipboard/autofill assistance, MFA, recovery, later challenges and timing.
 - Review translated labels with native speakers. Machine-translated interface text has not had that review.
 
-The public statement remains partially conformant. Browser checks and source review leave the gaps above;
-there is no independent audit or complete assistive-technology assessment.
+The public statement remains partially conformant because of these gaps.
+We have not commissioned an independent audit or completed testing with assistive technology.
