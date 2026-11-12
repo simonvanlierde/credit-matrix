@@ -10,16 +10,15 @@ import { cn, download } from "@/lib/utils";
 const REPO = "https://github.com/simonvanlierde/credit-matrix";
 // The concept DOI from CITATION.cff: it resolves to every version, so it never changes on release.
 const CONCEPT_DOI = "https://doi.org/10.5281/zenodo.21213659";
-const INTEGRATIONS = `${REPO}/tree/main/integrations`;
 
 // Each tool with the line that puts the statement in a document, so a reader can tell at a glance
 // whether it fits their setup. The line is code, so it stays untranslated.
 const PLUGINS = [
-  { name: "MyST, Jupyter Book", href: `${INTEGRATIONS}/myst#readme`, code: ":::{credit-statement}" },
-  { name: "Quarto", href: `${INTEGRATIONS}/quarto#readme`, code: "filters: [credit-matrix]" },
-  { name: "Pandoc", href: `${INTEGRATIONS}/pandoc#readme`, code: "--lua-filter=credit-matrix.lua" },
-  { name: "Typst", href: `${INTEGRATIONS}/typst#readme`, code: "#credit-statement(team)" },
-  { name: "Sphinx", href: `${INTEGRATIONS}/sphinx#readme`, code: ".. credit-statement::" },
+  { name: "MyST, Jupyter Book", href: "/docs/myst", code: ":::{credit-statement}" },
+  { name: "Quarto", href: "/docs/quarto", code: "filters: [credit-matrix]" },
+  { name: "Pandoc", href: "/docs/pandoc", code: "--lua-filter=credit-matrix.lua" },
+  { name: "Typst", href: "/docs/typst", code: "#credit-statement(team)" },
+  { name: "Sphinx", href: "/docs/sphinx", code: ".. credit-statement::" },
 ];
 
 const BUTTON =

@@ -13,6 +13,8 @@ import { gzipSync } from "node:zlib";
 
 // Measured 2026-11-09: 397 kB gzip, 1227 kB raw. The limit sits about 10% above.
 const LIMIT_GZIP = 437_000;
+// Measured 2026-11-12: 27 kB for the /docs page and its 11 Markdown files, which load only on /docs.
+const DOCS_LIMIT_GZIP = 40_000;
 // Embedded-font PDF generation is loaded on export; keep its cost separate from editing.
 const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-11: 2.55 MB of scripts and styles plus Noto Sans (0.57 MB), the one figure font
@@ -35,9 +37,18 @@ const kb = (n) => `${(n / 1000).toFixed(1)} kB`;
 // The font family search, and the font provider it shares with the figure exporter, are chunks that
 // load only with the figure exporter.
 const figure = ({ name }) => /^(?:figures|font-search|figure-fonts)-/.test(name);
+// The docs chunks by source, from the manifest: their file names (README-*, heatmap-*) say too little.
+const manifest = JSON.parse(readFileSync(join(dir, "..", ".vite", "manifest.json"), "utf8"));
+const docsFiles = new Set(
+  Object.entries(manifest)
+    .filter(([source]) => /\.md\?raw$|^src\/app\/docs\//.test(source))
+    .map(([, { file }]) => file.replace(/^assets\//, "")),
+);
+const docs = ({ name }) => docsFiles.has(name);
 for (const [label, limit, group] of [
-  ["app", LIMIT_GZIP, files.filter((file) => !figure(file))],
+  ["app", LIMIT_GZIP, files.filter((file) => !(figure(file) || docs(file)))],
   ["figure exporter", FIGURE_LIMIT_GZIP, files.filter(figure)],
+  ["docs", DOCS_LIMIT_GZIP, files.filter(docs)],
 ]) {
   const gzip = group.reduce((n, { bytes }) => n + gzipSync(bytes, { level: 9 }).length, 0);
   console.log(`check-bundle-size: ${label}: ${kb(gzip)} gzip (limit ${kb(limit)})`);

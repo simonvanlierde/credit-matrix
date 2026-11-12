@@ -9,7 +9,7 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing application root");
 let page: Awaited<ReturnType<(typeof routes)[keyof typeof routes]>> | null = null;
 try {
-  if (path) page = await routes[path]();
+  if (path) page = (await routes[path]?.()) ?? null;
 } catch {
   // The page's chunk is gone (a deploy since this tab loaded) or the network failed. Without a
   // page the prerendered markup stays inert, so reload once, else say so with a way out.

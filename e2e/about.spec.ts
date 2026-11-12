@@ -28,7 +28,7 @@ test.describe("About page", () => {
     ]);
     expect(conceptDoi).toBeTruthy();
     await expect(article.getByRole("link", { name: `https://doi.org/${conceptDoi}` })).toBeVisible();
-    await expect(article.getByRole("link", { name: "Quarto" })).toHaveAttribute("href", /integrations\/quarto/);
+    await expect(article.getByRole("link", { name: "Quarto" })).toHaveAttribute("href", "/docs/quarto");
     await expect(article.getByRole("link", { name: "citesync" }).first()).toHaveAttribute(
       "href",
       "https://simonvanlierde.com/citesync/",

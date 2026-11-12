@@ -1803,3 +1803,12 @@ msgstr "Rood"
 
 msgid "heatmapPurple"
 msgstr "Paars"
+
+msgid "docsTitle"
+msgstr "Documentatie"
+
+msgid "docsHowTo"
+msgstr "Gebruik het in uw schrijfprogramma"
+
+msgid "docsReference"
+msgstr "Naslag"

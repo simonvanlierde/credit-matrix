@@ -52,7 +52,7 @@ Names and statements are inserted as text. They are never interpreted as reStruc
 Missing files, invalid exports and CLI errors appear as Sphinx diagnostics; use `sphinx-build -W`
 to make them fail the build.
 
-[`example/`](example) contains a complete project. From the repository root:
+[`example/`](example/) contains a complete project. From the repository root:
 
 ```sh
 pnpm --filter credit-matrix build
