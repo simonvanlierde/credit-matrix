@@ -1858,6 +1858,15 @@ msgstr "執筆ツールで使う"
 msgid "docsReference"
 msgstr "リファレンス"
 
+msgid "docsSearch"
+msgstr "ドキュメントを検索"
+
+msgid "docsSearchLoading"
+msgstr "検索を読み込み中…"
+
+msgid "docsSearchFailed"
+msgstr "検索を読み込めませんでした。ページを再読み込みして、もう一度お試しください。"
+
 msgid "docsLiveExample"
 msgstr "ライブ例"
 

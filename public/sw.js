@@ -28,6 +28,38 @@
 const CACHE = "credit-matrix-BUILD_ID";
 // Stamped by postbuild so lazy pages and languages also work on their first offline visit.
 const ASSETS = [];
+// Search is warmed on the first docs visit, never during app installation.
+const SEARCH_ASSETS = [];
+const DOCS_ASSETS = {};
+let searchCaching;
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type !== "cache-docs-search") return;
+  const source = event.source?.url;
+  if (!source) return;
+  const url = new URL(source);
+  if (url.origin !== self.location.origin || !/^\/docs(?:\/|$)/.test(url.pathname) || !PAGES.includes(url.pathname))
+    return;
+  searchCaching ??= cachePaths(SEARCH_ASSETS).catch(() => {
+    // Retry on a later docs visit after a failed connection or quota write.
+    searchCaching = undefined;
+  });
+  // A direct first visit loads before the worker controls navigations or chunk requests.
+  event.waitUntil(
+    Promise.all([searchCaching, cachePaths([url.pathname, ...(DOCS_ASSETS[url.pathname] ?? [])])]).catch(() => {
+      // Storage failures only cost the offline copy; retry on the next visit.
+    }),
+  );
+});
+
+async function cachePaths(paths) {
+  const cache = await caches.open(CACHE);
+  const missing = [];
+  for (const path of paths) {
+    if (!(await cache.match(path))) missing.push(path);
+  }
+  await cache.addAll(missing);
+}
 
 // Every page, stamped by postbuild from src/routes.ts: a visit caches it for offline use.
 const PAGES = [];
@@ -122,7 +154,8 @@ async function handleAsset(request, event) {
     // the runtime), so their cached copy is the final word; only other
     // assets (favicon, manifest) can change in place. waitUntil keeps the
     // worker alive until the refresh lands.
-    if (!/^\/(?:assets|fonts|citesync)\//.test(new URL(request.url).pathname)) event.waitUntil(refresh(request));
+    if (!/^\/(?:assets|fonts|citesync|pagefind)\//.test(new URL(request.url).pathname))
+      event.waitUntil(refresh(request));
     return cached;
   }
   return fetch(request).then(async (response) => {

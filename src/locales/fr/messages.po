@@ -1858,6 +1858,15 @@ msgstr "L’utiliser dans votre outil d’écriture"
 msgid "docsReference"
 msgstr "Référence"
 
+msgid "docsSearch"
+msgstr "Rechercher dans la documentation"
+
+msgid "docsSearchLoading"
+msgstr "Chargement de la recherche…"
+
+msgid "docsSearchFailed"
+msgstr "La recherche n’a pas pu se charger. Rechargez la page pour réessayer."
+
 msgid "docsLiveExample"
 msgstr "Exemple en direct"
 

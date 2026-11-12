@@ -66,7 +66,8 @@ test("reference pages do not fetch live example code", async ({ page }) => {
   await asReturningVisitor(page);
   const fetched: string[] = [];
   page.on("request", (request) => fetched.push(request.url()));
-  await page.goto("/docs/cli");
+  await page.goto("/docs/heatmap");
+  await expect(page.locator("article").getByRole("heading", { name: "Contribution heatmap figures" })).toBeVisible();
   await page.getByRole("button", { name: "Language settings" }).click();
   expect(fetched.filter((url) => /LiveExample|OutputBlock|StatementOutput/.test(url))).toEqual([]);
 });

@@ -44,11 +44,11 @@ export function DocArticle({ parts }: { parts: DocPart[] }) {
   if (parts.length === 1 && typeof parts[0] === "string") {
     return (
       // biome-ignore lint/security/noDangerouslySetInnerHtml: our own Markdown from the repo
-      <article lang="en" className="document" dangerouslySetInnerHTML={{ __html: parts[0] }} />
+      <article lang="en" data-pagefind-body className="document" dangerouslySetInnerHTML={{ __html: parts[0] }} />
     );
   }
   return (
-    <article lang="en" className="document">
+    <article lang="en" data-pagefind-body className="document">
       {parts.map((part, index) =>
         typeof part === "string" ? (
           <div

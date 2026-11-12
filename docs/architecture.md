@@ -39,6 +39,20 @@ yes/no and levels without changing what is stored. The
 [domain model](../src/core/README.md#domain-model) has the score range of each level.
 [ADR 0001](adr/0001-client-side-architecture.md) explains the split.
 
+## Documentation
+
+The `/docs` pages render the integration READMEs at build time. The browser receives navigation
+metadata and prerendered HTML, without the Markdown sources or renderer. A standalone
+`<!-- live: quarto -->` comment inserts a live example; pages without a marker never load that code.
+Examples reuse the app's export controls and recipes with the active draft or local sample data.
+The visible source switch changes only the example, leaving the saved draft unchanged. Static
+instructions remain readable when JavaScript or a live example cannot load.
+
+Pagefind builds the English search index from prerendered documentation, before the single postbuild
+pass stamps the CSP and service worker. Search uses the build id as its metadata cache tag, so offline
+queries use the same index as the page. The first docs visit caches search, the docs page chunk,
+and the visited page; app installation does not download documentation or the search index.
+
 ## Lookups and the CSP
 
 The ORCID and DOI lookups call the public APIs of ORCID, Crossref and DataCite straight from the
@@ -54,15 +68,6 @@ first use. The build copies the pinned Pyodide runtime from
 runtime on first use, so later citation imports work offline until the next deploy; the build id
 hashes the runtime files, so a new converter never mixes with a cached old one. CodeMeta imports
 need no runtime and work offline.
-
-## Documentation
-
-The `/docs` pages render the integration READMEs at build time. The browser receives navigation
-metadata and prerendered HTML, without the Markdown sources or renderer. A standalone
-`<!-- live: quarto -->` comment inserts a live example; pages without a marker never load that code.
-Examples reuse the app's export controls and recipes with the active draft or local sample data.
-The visible source switch changes only the example, leaving the saved draft unchanged. Static
-instructions remain readable when JavaScript or a live example cannot load.
 
 ## No accounts, no server-side storage
 
