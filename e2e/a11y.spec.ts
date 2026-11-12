@@ -1,7 +1,11 @@
+// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node and read the catalogs.
+import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
+import { parsePoFile } from "@lingui/format-po";
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { createAuthor } from "../src/core";
 import { PERSIST_KEY } from "../src/store/persist-meta";
-import { asReturningVisitor, elementBundleBuilt, openElementHost, scan, settleMotion } from "./helpers";
+import { asReturningVisitor, elementBundleBuilt, openElementHost, scan, seedStorage, settleMotion } from "./helpers";
 
 /**
  * Automated accessibility scans. axe-core catches a subset of WCAG issues
@@ -76,8 +80,8 @@ test.describe("Accessibility (axe-core)", () => {
 
   test("open popover (portalled Radix content) has no detectable violations", async ({ page }) => {
     await page.goto("/");
-    // The header "About this app" popover renders its content in a portal.
-    await page.getByRole("button", { name: "About this app" }).click();
+    // The header About popover renders its content in a portal.
+    await page.getByRole("button", { name: "About", exact: true }).click();
     const results = await scan(page);
     expect(results.violations).toEqual([]);
     // The Radix Select listbox is deliberately not axe-scanned while open: on
@@ -96,7 +100,7 @@ test.describe("Accessibility (axe-core)", () => {
     await page.getByRole("button", { name: "Dismiss" }).click();
     const panel = page.locator("[data-radix-popper-content-wrapper] [role=dialog]");
     for (const name of [
-      "About this app",
+      "About",
       "Language settings",
       "Bulk assign",
       "Heatmap options",
@@ -442,5 +446,48 @@ test.describe("<credit-matrix> element (axe-core)", () => {
     const drawn = await svg.evaluate((el) => el.getBoundingClientRect().width);
     expect(drawn).toBeCloseTo(Number(await svg.getAttribute("width")) + 2, 0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+});
+
+// WCAG 2.5.3: a control's accessible name contains its visible text, so a voice user can say what they see.
+// axe ships this rule as experimental, off by default, so these scans turn it on by name.
+test.describe("Label in name", () => {
+  const nameMismatches = async (page: Page) =>
+    (await new AxeBuilder({ page }).withRules(["label-content-name-mismatch"]).analyze()).violations;
+  const catalog = (locale: string): Record<string, string> =>
+    Object.fromEntries(
+      parsePoFile(readFileSync(`src/locales/${locale}/messages.po`, "utf8")).items.map(({ msgid, msgstr }) => [
+        msgid,
+        msgstr[0] ?? "",
+      ]),
+    );
+
+  for (const locale of ["de", "pt-PT", "ja"]) {
+    test(`header and journal downloads say what they show in ${locale}`, async ({ page }) => {
+      await seedStorage(page, { authors: [], welcomeSeen: true, uiLocale: locale });
+      await page.goto("/");
+      await expect(page.locator("html")).toHaveAttribute("lang", locale);
+      await page.getByRole("button", { name: catalog(locale).loadSample, exact: true }).click();
+      await expect(page.getByRole("heading", { name: catalog(locale).toolchainJournal })).toBeVisible();
+      await settleMotion(page);
+      expect(await nameMismatches(page)).toEqual([]);
+    });
+  }
+
+  test("a grid with too many contributors to name heads each column with initials it also says", async ({ page }) => {
+    const authors = Array.from({ length: 24 }, (_, i) =>
+      createAuthor(`${String.fromCharCode(65 + i)}da Lovelace`, {
+        contributions: [{ role: "Conceptualization", score: 100 }],
+      }),
+    );
+    await seedStorage(page, {
+      activeDraftId: "d1",
+      drafts: { d1: { id: "d1", title: "", authors, inputMode: "levels", updatedAt: 1 } },
+      welcomeSeen: true,
+    });
+    await page.goto("/");
+    await expect(page.locator("[data-name-head]")).toHaveCount(24);
+    await settleMotion(page);
+    expect(await nameMismatches(page)).toEqual([]);
   });
 });

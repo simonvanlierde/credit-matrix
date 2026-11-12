@@ -96,7 +96,7 @@ msgid "exportData"
 msgstr "Daten exportieren"
 
 msgid "download"
-msgstr "Download"
+msgstr "Herunterladen"
 
 msgid "copy"
 msgstr "Kopieren"
