@@ -25,6 +25,7 @@
 // biome-ignore-all lint/suspicious/noConsole: console is the script's progress output.
 
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { paths } from "../.vite-ssr/entry-server.mjs";
@@ -88,6 +89,10 @@ for (const path of exported) {
     !/<meta name="description" content="[^"]+">/.test(html) && "meta description",
     !html.includes(`<link rel="canonical" href="https://credit.duinlab.nl${path}">`) && "canonical link",
     !html.includes('["link","\\u002fassets\\u002f') && "modulepreload (in the deferred script loader)",
+    // The browser build emits a docs image only because the page imports src/docs/images.ts.
+    ...[...html.matchAll(/(?:src|href)="\/(assets\/[^"]+)"/g)]
+      .filter(([, file]) => !existsSync(join(OUT, file)))
+      .map(([, file]) => `${file} (not in out/)`),
   ].filter(Boolean);
   if (problems.length > 0) throw new Error(`postbuild: ${path} lacks ${problems.join(", ")}`);
 }
@@ -100,8 +105,18 @@ const buildId = sha256(Buffer.concat(await Promise.all(buildInputs.map((file) =>
 // Of the figure fonts (about 40 MB), only Noto Sans (0.57 MB, the default face) is precached, with the
 // subsetter every export needs (0.68 MB), so a default figure exports offline from the first visit; the
 // worker caches the others when an export fetches them.
+// The docs are not precached either: the worker caches a docs page and its chunk on a visit.
+const manifest = JSON.parse(await readFile(join(OUT, ".vite", "manifest.json"), "utf8"));
+const docsChunks = new Set(
+  Object.entries(manifest)
+    .filter(([source]) => source.startsWith("src/app/docs/"))
+    .map(([, { file }]) => file.replace(/^assets\//, "")),
+);
+if (docsChunks.size === 0) throw new Error("postbuild: no docs chunk in the Vite manifest");
+const precachedPages = paths.filter((path) => !/^\/docs(?:\/|$)/.test(path));
 const assets = (await readdir(join(OUT, "assets"), { recursive: true }))
   .filter((file) => /\.(?:js|css)$|^NotoSans-Regular-[\w-]+\.ttf$|^harfbuzz-subset-[\w-]+\.wasm$/.test(file))
+  .filter((file) => !docsChunks.has(file))
   .map((file) => `/assets/${file}`)
   .sort();
 if (
@@ -111,12 +126,15 @@ if (
   throw new Error("postbuild: the default figure font or the subsetter is not in the service worker precache");
 if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");
 if (!sw.includes("const PAGES = [];")) throw new Error("postbuild: missing service worker page placeholder");
+if (!sw.includes("const PRECACHED_PAGES = [];"))
+  throw new Error("postbuild: missing service worker precached page placeholder");
 await writeFile(
   swPath,
   sw
     .replace(placeholder, `"credit-matrix-${buildId}"`)
     .replace("const ASSETS = [];", `const ASSETS = ${JSON.stringify(assets)};`)
-    .replace("const PAGES = [];", `const PAGES = ${JSON.stringify(paths)};`),
+    .replace("const PAGES = [];", `const PAGES = ${JSON.stringify(paths)};`)
+    .replace("const PRECACHED_PAGES = [];", `const PRECACHED_PAGES = ${JSON.stringify(precachedPages)};`),
 );
 
 console.log(`postbuild: CSP script hashes per page: ${counts.join(", ")}; service worker cache ${buildId}`);

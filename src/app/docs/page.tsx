@@ -1,13 +1,21 @@
+import { docs } from "virtual:docs";
+// The browser build emits the images the prerendered articles show; nothing here reads the map.
+import "@/docs/images";
 import { ArrowLeft } from "lucide-react";
 import { ReadingPage } from "@/components/ReadingPage";
-import { docFiles } from "@/docs/pages";
-import { renderDoc } from "@/docs/render";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";
 
-// Every docs page loads every file: the nav needs each title. NOTE: this ships the sources and marked
-// (about 27 kB gz) though pages are prerendered; build-time nav metadata would drop them.
-const docs = await Promise.all(docFiles.map(async (file) => renderDoc(file, await file.load())));
+// The server renders each article from its Markdown; the browser keeps the prerendered article, so
+// neither the sources nor the renderer ship to it. The dev server prerenders nothing and renders here.
+const rendered =
+  import.meta.env.SSR || import.meta.env.DEV
+    ? await import("@/docs/render").then(
+        ({ renderDoc }) => new Map<string, string>(docs.map((doc) => [doc.route, renderDoc(doc, doc.source ?? "")])),
+      )
+    : null;
+// Read before hydration, so the client's __html is the server's DOM and React leaves it alone.
+const prerendered = rendered ? "" : (document.querySelector("main article")?.innerHTML ?? "");
 
 /** The docs grouped by section: the index's content and each page's nav. Docs text is English. */
 function DocsList({ current, details, level = 3 }: { current?: string; details?: boolean; level?: 2 | 3 }) {
@@ -48,7 +56,7 @@ function DocsIndex() {
 function DocPage() {
   const t = useTranslations();
   const route = usePathname();
-  const html = docs.find((doc) => doc.route === route)?.html ?? "";
+  const html = rendered?.get(route) ?? prerendered;
   return (
     <ReadingPage>
       <a href="/docs" className="flex w-fit items-center gap-1.5 text-sm text-primary hover:underline">

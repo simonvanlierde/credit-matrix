@@ -1,11 +1,13 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the test reads the repo's files.
 import { existsSync, readFileSync, statSync } from "node:fs";
+import { docs } from "virtual:docs";
 import { Lexer, marked } from "marked";
 import { describe, expect, test } from "vitest";
 import { renderMarkdown } from "@/lib/markdown";
 import { routes } from "@/routes";
 import { docFiles } from "./pages";
-import { GITHUB, renderDoc, resolveHref, snippet } from "./render";
+import { snippet } from "./plugin.mjs";
+import { GITHUB, renderDoc, resolveHref } from "./render";
 
 const targets = (path: string) => {
   const found: { href: string; image: boolean }[] = [];
@@ -65,15 +67,29 @@ describe("resolveHref", () => {
     expect(html).toContain('<h6 id="deep">');
   });
 
-  test("a docs page has its title, description and no maintainer comments", async () => {
-    const file = docFiles.find(({ route }) => route === "/docs/quarto");
-    if (!file) throw new Error("no quarto page");
-    const doc = renderDoc(file, `<!-- note to self -->\n${await file.load()}`);
+  test("a docs page has its title, description and no maintainer comments", () => {
+    const doc = docs.find(({ route }) => route === "/docs/quarto");
+    if (!doc) throw new Error("no quarto page");
     expect(doc.title).toBe("CRediT statement for Quarto");
     expect(doc.description).toMatch(/^A Quarto filter that turns/);
-    expect(doc.html).toContain('<h2 id="credit-statement-for-quarto">');
-    expect(doc.html).not.toContain("note to self");
+    expect(docs.find(({ route }) => route === "/docs/typst")?.title).toBe("CRediT statement for Typst");
+    const html = renderDoc(doc, `<!-- note to self -->\n${doc.source}`);
+    expect(html).toContain('<h2 id="credit-statement-for-quarto">');
+    expect(html).not.toContain("note to self");
   });
+});
+
+test("a docs image loads lazily with its intrinsic size", () => {
+  const file = docFiles.find(({ route }) => route === "/docs/typst");
+  if (!file) throw new Error("no typst page");
+  const html = renderDoc(file, readFileSync(file.path, "utf8"));
+  expect(html).toMatch(/<img loading="lazy" width="\d+" height="\d+" src="[^"]+basic[^"]*\.png" alt="/);
+});
+
+test("without a size, an image still loads lazily and keeps its target", () => {
+  const html = renderMarkdown("[guide](a.md)\n\n![Figure](b.png)");
+  expect(html).toContain('<a href="a.md">');
+  expect(html).toContain('<img loading="lazy" src="b.png" alt="Figure">');
 });
 
 test("a description stops at the first sentence that does not fit 160 characters", () => {

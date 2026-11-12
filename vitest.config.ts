@@ -1,6 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: this config runs in Node, not the browser bundle.
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
+import { docsPlugin } from "./src/docs/plugin.mjs";
 
 const src = fileURLToPath(new URL("./src", import.meta.url));
 
@@ -18,6 +19,7 @@ const src = fileURLToPath(new URL("./src", import.meta.url));
  * User-visible behaviour is covered by Playwright in `e2e/`.
  */
 export default defineConfig({
+  plugins: [docsPlugin()],
   test: {
     globals: true,
     restoreMocks: true,

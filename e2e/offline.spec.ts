@@ -1,4 +1,6 @@
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
+import { readFileSync } from "node:fs";
+// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import process from "node:process";
 import { expect, test } from "@playwright/test";
 
@@ -29,13 +31,39 @@ test.describe("Offline", () => {
   test("each page opens offline as itself, not as the workspace", async ({ page, context }) => {
     test.skip(!process.env.CI, "needs the production build; CI runs one");
     await page.goto("/");
-    // Installing the worker precaches every page, so none needs a visit first.
+    // Installing the worker precaches every page but the docs, so none needs a visit first.
     await page.evaluate(() => navigator.serviceWorker.ready);
 
     await context.setOffline(true);
     await page.goto("/accessibility");
 
     await expect(page).toHaveTitle("Accessibility statement · CRediT Matrix");
+  });
+
+  test("a docs page is cached on its first visit, not at install", async ({ page, context }) => {
+    test.skip(!process.env.CI, "needs the production build; CI runs one");
+    const manifest = JSON.parse(readFileSync("out/.vite/manifest.json", "utf8")) as Record<string, { file: string }>;
+    const chunk = `/${manifest["src/app/docs/page.tsx"]?.file}`;
+    const cached = () =>
+      page.evaluate(async () => {
+        const keys = await Promise.all((await caches.keys()).map(async (name) => (await caches.open(name)).keys()));
+        return keys.flat().map((request) => new URL(request.url).pathname);
+      });
+    await page.goto("/");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await expect.poll(cached).toContain("/about");
+    expect(await cached()).not.toContain("/docs/quarto");
+    expect(await cached()).not.toContain(chunk);
+
+    // The first load ran before the worker controlled the page; this one goes through it.
+    await page.goto("/docs/quarto");
+    await expect.poll(cached).toEqual(expect.arrayContaining(["/docs/quarto", chunk]));
+
+    await context.setOffline(true);
+    await page.goto("/docs/quarto");
+    await expect(page).toHaveTitle("CRediT statement for Quarto · CRediT Matrix");
+    await page.getByRole("button", { name: "Language settings" }).click();
+    await expect(page.getByRole("combobox", { name: "Interface language" })).toBeVisible();
   });
 
   test("an unvisited page and language stay interactive offline", async ({ page, context }) => {

@@ -60,3 +60,51 @@ test.describe("Docs", () => {
     expect(optionHeights.every((lines) => lines === 1)).toBe(true);
   });
 });
+
+test.describe("Docs without their sources", () => {
+  // The pages are prerendered, so the browser needs neither the Markdown files nor the renderer.
+  const sources = /\/assets\/(?:README|heatmap|element|markdown)-[\w-]+\.js$/;
+
+  test.beforeEach(async ({ page }) => {
+    await asReturningVisitor(page);
+  });
+
+  for (const route of ["/docs", "/docs/quarto", "/docs/typst"]) {
+    test(`${route} hydrates without warnings and without the Markdown chunks`, async ({ page }) => {
+      const messages: string[] = [];
+      page.on("console", (message) => {
+        if (message.type() === "error" || message.type() === "warning") messages.push(message.text());
+      });
+      page.on("pageerror", (error) => messages.push(error.message));
+      const blocked: string[] = [];
+      await page.route(sources, (request) => {
+        blocked.push(request.request().url());
+        return request.abort();
+      });
+      await page.goto(route);
+      // The header's menu opens only once React has hydrated the page.
+      await page.getByRole("button", { name: "Language settings" }).click();
+      await expect(page.getByRole("combobox", { name: "Interface language" })).toBeVisible();
+      await expect(page.getByText("This page could not load")).toHaveCount(0);
+      expect(blocked).toEqual([]);
+      expect(messages).toEqual([]);
+    });
+  }
+
+  test("a page keeps its article and nav and navigates", async ({ page }) => {
+    await page.route(sources, (request) => request.abort());
+    await page.goto("/docs/quarto");
+    await page.getByRole("button", { name: "Language settings" }).click();
+    await page.keyboard.press("Escape");
+    await expect(page.locator("article").getByRole("heading", { level: 2 })).toHaveText("CRediT statement for Quarto");
+    const nav = page.getByRole("navigation", { name: "Documentation" });
+    await expect(nav.getByRole("link", { name: "CRediT statement for Quarto" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await nav.getByRole("link", { name: "CRediT statement for Typst" }).click();
+    await expect(page).toHaveURL(/\/docs\/typst$/);
+    await expect(nav.getByRole("link", { name: "CRediT statement for Typst" })).toHaveAttribute("aria-current", "page");
+    await expect(page.locator("article img")).toHaveAttribute("loading", "lazy");
+  });
+});
