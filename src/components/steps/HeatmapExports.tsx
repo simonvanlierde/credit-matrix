@@ -20,8 +20,9 @@ type ExportFormat = "svg" | "png" | "pdf";
 
 // One renderer keeps each loaded face; it fetches a face only when a figure's text first needs it.
 let figureRenderer: Promise<import("@/core/figures").FigureRenderer> | undefined;
-// Faces whose last load failed (offline before the service worker cached them). svg() then draws their
-// text in system fonts without throwing, so the app reads this to say so and to refuse PDF.
+// Faces that failed to load during the current preview render (offline before the service worker cached
+// them). svg() then draws their text in system fonts without throwing, so the app reads this to say so and
+// to refuse PDF. Each preview clears it first: the renderer retries a failed face only when the text needs it.
 const failedFaces = new Set<string>();
 function renderer() {
   // The app's own font copies: Vite emits them as hashed assets the service worker can cache.
@@ -180,6 +181,7 @@ export function HeatmapExports({
     setPreview((current) => ({ ...current, rendering: true }));
     (async () => {
       const figures = await renderer();
+      failedFaces.clear();
       try {
         return { preview: await figures.svg(authors, svgOptions), missingGlyphs: null };
       } catch (cause) {
