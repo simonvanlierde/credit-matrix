@@ -86,3 +86,19 @@ test("Figure settings closes when following the selected tool's recipe", async (
   await expect(page.getByRole("dialog", { name: "Heatmap", exact: true })).not.toBeVisible();
   await expect(page.locator("#toolchain-heatmap-recipe")).toBeFocused();
 });
+
+test("Undo restores the roster a plain import replaced after a tool pick", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load sample data" }).click();
+  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
+  await page.getByRole("button", { name: "Import" }).click();
+  await page.locator("#import-text").fill("Marie Curie");
+  await page.getByRole("button", { name: "Import data" }).click();
+  await page.getByRole("button", { name: "Replace workspace" }).click();
+  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(1);
+  await page.getByRole("combobox", { name: "I write in…" }).click();
+  await page.getByRole("option", { name: "Quarto", exact: true }).click();
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(3);
+});

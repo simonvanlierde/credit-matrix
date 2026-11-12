@@ -252,6 +252,15 @@ describe("importing over a draft", () => {
     expect(useContributionStore.getState().toolchain).toBe("word");
   });
 
+  it("undoes a replace that set no toolchain after a tool is picked", async () => {
+    await importOver("Bo Chen");
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    act(() => useContributionStore.getState().setToolchain("quarto"));
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
+    expect(names()).toEqual(["Ann Bell"]);
+    expect(useContributionStore.getState().toolchain).toBe("quarto");
+  });
+
   it("keeps the current toolchain when adding contributors from another toolchain", async () => {
     await importOver(toJson([createAuthor("Bo Chen")], { toolchain: "typst" }));
     act(() => useContributionStore.getState().setToolchain("word"));

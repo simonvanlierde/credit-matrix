@@ -386,6 +386,8 @@ export function HeaderActions() {
       count = useContributionStore.getState().authors.length;
     }
     const applied = useContributionStore.getState();
+    // Only an import that set the toolchain owns it: a tool picked after a plain import must not block Undo.
+    const setsToolchain = mode === "replace" && toolchain !== undefined;
     const unchanged = () => {
       const now = useContributionStore.getState();
       return (
@@ -393,7 +395,7 @@ export function HeaderActions() {
         now.asks === applied.asks &&
         now.selfId === applied.selfId &&
         now.title === applied.title &&
-        now.toolchain === applied.toolchain
+        (!setsToolchain || now.toolchain === applied.toolchain)
       );
     };
     showStatus({
@@ -410,7 +412,7 @@ export function HeaderActions() {
             loadAuthors(before.authors, before.asks);
             setSelfId(before.selfId);
             setTitle(before.title);
-            useContributionStore.setState({ toolchain: before.toolchain });
+            if (setsToolchain) useContributionStore.setState({ toolchain: before.toolchain });
             announce(t("annImportUndone"));
           },
         },
