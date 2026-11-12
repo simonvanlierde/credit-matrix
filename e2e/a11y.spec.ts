@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { parsePoFile } from "@lingui/format-po";
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { createAuthor } from "../src/core";
+import { createAuthor } from "../src/core/parse-authors";
 import { PERSIST_KEY } from "../src/store/persist-meta";
 import { asReturningVisitor, elementBundleBuilt, openElementHost, scan, seedStorage, settleMotion } from "./helpers";
 
