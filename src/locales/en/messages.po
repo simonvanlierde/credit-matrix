@@ -1845,3 +1845,12 @@ msgstr "Generate heatmap.svg with the CLI below, then include the figure in your
 
 msgid "toolchainDataHint"
 msgstr "Save the JSON export as contributors.json for the recipe and CLI below."
+
+msgid "docsTitle"
+msgstr "Documentation"
+
+msgid "docsHowTo"
+msgstr "Use it in your writing tool"
+
+msgid "docsReference"
+msgstr "Reference"

@@ -1,5 +1,6 @@
 import { beforeEach, expect, it } from "vitest";
-import { useContributionStore } from "./contribution-store";
+import { followOtherTab, useContributionStore } from "./contribution-store";
+import { PERSIST_KEY } from "./persist-meta";
 
 const initial = useContributionStore.getState();
 const store = () => useContributionStore.getState();
@@ -52,7 +53,6 @@ it("persists the draft and browser default separately and keeps the preference o
 it("saves the browser default through the real localStorage adapter", async () => {
   await useContributionStore.persist.rehydrate();
   store().setToolchain("myst");
-  const { PERSIST_KEY } = await import("./persist-meta");
   const saved = JSON.parse(localStorage.getItem(PERSIST_KEY) ?? "null");
   expect(saved.state.lastToolchain).toBe("myst");
   const savedText = JSON.stringify(saved);
@@ -62,4 +62,18 @@ it("saves the browser default through the real localStorage adapter", async () =
   expect(store().lastToolchain).toBe("myst");
   store().createDraft();
   expect(store().toolchain).toBe("myst");
+});
+
+it("adopts a cleared toolchain and browser default from another tab", async () => {
+  await useContributionStore.persist.rehydrate();
+  store().setToolchain("quarto");
+  const stale = store();
+  store().setToolchain(undefined);
+  const cleared = localStorage.getItem(PERSIST_KEY) ?? "null";
+  useContributionStore.setState(stale, true);
+  localStorage.setItem(PERSIST_KEY, cleared);
+
+  expect(followOtherTab(new StorageEvent("storage", { key: PERSIST_KEY, storageArea: localStorage }))).toBe(true);
+  expect(store().toolchain).toBeUndefined();
+  expect(store().lastToolchain).toBeUndefined();
 });

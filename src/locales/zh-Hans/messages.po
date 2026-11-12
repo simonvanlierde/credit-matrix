@@ -1845,3 +1845,12 @@ msgstr "使用下方 CLI 命令生成 heatmap.svg，然后将图插入文档。"
 
 msgid "toolchainDataHint"
 msgstr "将导出的 JSON 保存为 contributors.json，供下方配置和 CLI 命令使用。"
+
+msgid "docsTitle"
+msgstr "文档"
+
+msgid "docsHowTo"
+msgstr "在写作工具中使用"
+
+msgid "docsReference"
+msgstr "参考"

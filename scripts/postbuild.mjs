@@ -11,11 +11,10 @@
 //   build time, which is what makes hashes possible here; a nonce would need
 //   a server.
 // - Service worker: stamps the build id into its cache name, so a new version
-//   drops the previous build's chunks when it activates, and checks that its
-//   page list names every exported page, so each one works offline.
-// - Page lists: src/routes.ts, the exported pages, the service worker's list and
-//   sitemap.xml name the same paths, and each page has its title, description
-//   and canonical link.
+//   drops the previous build's chunks when it activates, and fills in its page
+//   list from src/routes.ts, so each page works offline.
+// - Page lists: src/routes.ts and the exported pages name the same paths, and
+//   each page has its title, description and canonical link.
 //
 // Runs after `vite build` (see the `build` script); fails the build rather
 // than ship a page whose own scripts the CSP would block, a page without its
@@ -28,6 +27,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { paths } from "../.vite-ssr/entry-server.mjs";
 
 const OUT = "out";
 const INLINE_SCRIPT = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
@@ -70,28 +70,14 @@ const swPath = join(OUT, "sw.js");
 const sw = await readFile(swPath, "utf8");
 const placeholder = '"credit-matrix-BUILD_ID"';
 if (!sw.includes(placeholder)) throw new Error(`postbuild: no ${placeholder} in ${swPath}`);
-const swPages = JSON.parse(sw.match(/const PAGES = (\[[^\]]*\]);/)?.[1] ?? "null");
-if (!swPages) throw new Error(`postbuild: no PAGES list in ${swPath}`);
 // 404 and _not-found are error pages, never navigated to by path.
 const exported = pages
   .filter((page) => !/^(?:404|_not-found)\.html$/.test(page))
   .map((page) => (page === "index.html" ? "/" : `/${page.replace(/\.html$/, "")}`));
-const missing = exported.filter((path) => !swPages.includes(path));
-if (missing.length > 0) throw new Error(`postbuild: ${swPath} PAGES lacks ${missing.join(", ")}`);
-// src/routes.ts is the router's list; the prerendered pages and the service worker must match it.
-const routePaths = [...(await readFile("src/routes.ts", "utf8")).matchAll(/^\s+"(\/[^"]*)":/gm)].map(
-  ([, path]) => path,
-);
+// The router's list (src/routes.ts, through the server build) is the one the prerender, the sitemap and the
+// service worker's PAGES are made from; the exported pages must match it.
 const sameSet = (a, b) => a.length === b.length && a.every((path) => b.includes(path));
-if (!sameSet(routePaths, exported))
-  throw new Error(`postbuild: src/routes.ts has ${routePaths}, out/ exports ${exported}`);
-if (!sameSet(routePaths, swPages))
-  throw new Error(`postbuild: src/routes.ts has ${routePaths}, ${swPath} PAGES has ${swPages}`);
-const sitemapPaths = [
-  ...(await readFile(join(OUT, "sitemap.xml"), "utf8")).matchAll(/<loc>https:\/\/credit\.duinlab\.nl(\/[^<]*)<\/loc>/g),
-].map(([, path]) => path);
-if (!sameSet(routePaths, sitemapPaths))
-  throw new Error(`postbuild: src/routes.ts has ${routePaths}, sitemap.xml has ${sitemapPaths}`);
+if (!sameSet(paths, exported)) throw new Error(`postbuild: src/routes.ts has ${paths}, out/ exports ${exported}`);
 // Each prerendered page has its own head tags and the preloads for its chunks (scripts/prerender.mjs
 // puts those in a loader that runs after the first paint).
 for (const path of exported) {
@@ -124,11 +110,13 @@ if (
 )
   throw new Error("postbuild: the default figure font or the subsetter is not in the service worker precache");
 if (!sw.includes("const ASSETS = [];")) throw new Error("postbuild: missing service worker asset placeholder");
+if (!sw.includes("const PAGES = [];")) throw new Error("postbuild: missing service worker page placeholder");
 await writeFile(
   swPath,
   sw
     .replace(placeholder, `"credit-matrix-${buildId}"`)
-    .replace("const ASSETS = [];", `const ASSETS = ${JSON.stringify(assets)};`),
+    .replace("const ASSETS = [];", `const ASSETS = ${JSON.stringify(assets)};`)
+    .replace("const PAGES = [];", `const PAGES = ${JSON.stringify(paths)};`),
 );
 
 console.log(`postbuild: CSP script hashes per page: ${counts.join(", ")}; service worker cache ${buildId}`);

@@ -12,7 +12,7 @@ declare global {
 
 // Every exported page has its own script hashes in a <meta> CSP
 // (scripts/postbuild.mjs), so each one is checked on its own.
-const PAGES = ["/", "/about", "/accessibility", "/census"];
+const PAGES = ["/", "/about", "/accessibility", "/census", "/docs", "/docs/quarto"];
 
 test.describe("Content Security Policy", () => {
   test.skip(!process.env.CI, "needs the production build; CI runs one");

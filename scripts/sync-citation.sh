@@ -16,11 +16,11 @@ release_metadata_dir=$(mktemp -d .cache/release-metadata.XXXXXX)
 trap 'rm -rf "$release_metadata_dir"' EXIT
 printf 'cff-version: 1.2.0\nversion: "%s"\ndate-released: "%s"\n' "$v" "$released" >"$release_metadata_dir/CITATION.cff"
 uvx --from citesync==0.4.0 citesync write --root . --source "$release_metadata_dir/CITATION.cff"
-V=$v perl -pi -e 's{(credit-matrix@)[0-9][^/]*(/dist/myst-plugin)}{$1$ENV{V}$2}' integrations/myst/README.md integrations/jupyter-book/README.md
+V=$v perl -pi -e 's{(credit-matrix@)[0-9][^/]*(/dist/myst-plugin)}{$1$ENV{V}$2}' integrations/myst/README.md integrations/jupyter-book/README.md src/components/steps/ToolchainPanel.tsx
 # Typst Universe takes only major.minor.patch, so a pre-release leaves the Typst package alone.
 if [[ $v =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   V=$v perl -pi -e 's/^version = ".*"/version = "$ENV{V}"/' integrations/typst/typst.toml
-  V=$v perl -pi -e 's{(\@preview/credit-matrix:)[0-9.]+}{$1$ENV{V}}g' integrations/typst/README.md
+  V=$v perl -pi -e 's{(\@preview/credit-matrix:)[0-9.]+}{$1$ENV{V}}g' integrations/typst/README.md src/components/steps/ToolchainPanel.tsx
   git add integrations/typst/typst.toml integrations/typst/README.md
 fi
-git add CITATION.cff codemeta.json .zenodo.json CITATION.bib citation.csl.json citation.apa.txt schema.jsonld src/core/package.json integrations/quarto/_extensions/credit-matrix/_extension.yml integrations/myst/README.md integrations/jupyter-book/README.md
+git add CITATION.cff codemeta.json .zenodo.json CITATION.bib citation.csl.json citation.apa.txt schema.jsonld src/core/package.json integrations/quarto/_extensions/credit-matrix/_extension.yml integrations/myst/README.md integrations/jupyter-book/README.md src/components/steps/ToolchainPanel.tsx

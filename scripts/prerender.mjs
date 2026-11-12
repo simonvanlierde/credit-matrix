@@ -1,8 +1,9 @@
 // biome-ignore-all lint/correctness/noNodejsModules: static site build script.
 import { createHash } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { build } from "vite";
-import { render } from "../.vite-ssr/entry-server.mjs";
+import { paths, render, sourcesOf } from "../.vite-ssr/entry-server.mjs";
 
 const manifest = JSON.parse(await readFile("out/.vite/manifest.json", "utf8"));
 const themeBuild = await build({
@@ -48,9 +49,8 @@ const imageHash = createHash("sha256")
   .update(await readFile("public/og.png"))
   .digest("hex")
   .slice(0, 8);
-for (const path of ["/", "/about", "/census", "/accessibility"]) {
+for (const path of paths) {
   const { html, metadata } = await render(path);
-  const source = path === "/" ? "src/app/page.tsx" : `src/app${path}/page.tsx`;
   const chunks = new Set();
   const preload = (key) => {
     const chunk = manifest[key];
@@ -59,8 +59,8 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
     chunks.add(chunk.file);
     for (const imported of chunk.imports ?? []) preload(imported);
   };
-  preload(source);
-  if (chunks.size === 0) throw new Error(`prerender: no chunks for ${path} (${source})`);
+  for (const source of sourcesOf(path)) preload(source);
+  if (chunks.size === 0) throw new Error(`prerender: no chunks for ${path}`);
   // Vite already preloads the entry's static imports in the template; list only the rest.
   const preloads = [...chunks]
     .filter((file) => !template.includes(`href="/${file}"`))
@@ -68,8 +68,10 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
     .join("");
   const title = metadata.title ?? "CRediT Matrix · CRediT author statement generator";
   const tags = `<meta name="description" content="${escapeAttribute(metadata.description)}"><link rel="canonical" href="https://credit.duinlab.nl${path}"><meta property="og:type" content="website"><meta property="og:site_name" content="CRediT Matrix"><meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(metadata.description)}"><meta property="og:url" content="https://credit.duinlab.nl${path}"><meta property="og:image" content="https://credit.duinlab.nl/og.png?v=${imageHash}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${imageAlt}"><meta name="twitter:card" content="summary_large_image">`;
+  const outFile = `out/${path === "/" ? "index" : path.slice(1)}.html`;
+  await mkdir(dirname(outFile), { recursive: true });
   await writeFile(
-    `out/${path === "/" ? "index" : path.slice(1)}.html`,
+    outFile,
     deferScripts(
       template
         .replace(/<title>.*?<\/title>/, `<title>${escapeAttribute(title)}</title>`)
@@ -78,6 +80,10 @@ for (const path of ["/", "/about", "/census", "/accessibility"]) {
     ),
   );
 }
+await writeFile(
+  "out/sitemap.xml",
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map((path) => `<url><loc>https://credit.duinlab.nl${path}</loc></url>`).join("")}</urlset>\n`,
+);
 await writeFile(
   "out/404.html",
   deferScripts(

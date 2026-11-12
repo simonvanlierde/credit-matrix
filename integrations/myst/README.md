@@ -59,7 +59,7 @@ Authors in a page's own front matter replace the project's authors, as they do i
 names, spellings and aliases follow MyST (`writing`, `editing`, `review`, `analysis`, `funding`,
 `admin`). Roles that are not CRediT roles are left out. Roles are listed in the CRediT order.
 
-[`example/`](example) is a complete project: run `myst build --site` in it.
+[`example/`](example/) is a complete project: run `myst build --site` in it.
 
 ## Document language
 

@@ -966,7 +966,7 @@ function adoptKey(key: string): boolean {
     useContributionStore.setState((state) => {
       Object.assign(state.drafts, changed);
       if (!open) return;
-      if ("lastToolchain" in prefs) state.lastToolchain = ToolchainSchema.safeParse(prefs.lastToolchain).data;
+      if (key === PERSIST_KEY) state.lastToolchain = ToolchainSchema.safeParse(prefs.lastToolchain).data;
       applyDraft(state, open);
       if ("uiLocale" in prefs) state.uiLocale = normalizeLocaleCode(prefs.uiLocale);
       if (typeof prefs.welcomeSeen === "boolean") state.welcomeSeen = prefs.welcomeSeen;

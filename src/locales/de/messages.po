@@ -1845,3 +1845,12 @@ msgstr "Erstellen Sie heatmap.svg mit dem folgenden CLI-Befehl und fügen Sie di
 
 msgid "toolchainDataHint"
 msgstr "Speichern Sie den JSON-Export als contributors.json für die folgende Vorlage und den CLI-Befehl."
+
+msgid "docsTitle"
+msgstr "Dokumentation"
+
+msgid "docsHowTo"
+msgstr "In Ihrem Schreibwerkzeug nutzen"
+
+msgid "docsReference"
+msgstr "Referenz"

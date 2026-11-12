@@ -12,6 +12,10 @@ See [deploying](docs/deploy.md).
 
 ### Added
 
+- The site has documentation at [/docs](https://credit.duinlab.nl/docs): a page for each writing tool
+  (Quarto, Pandoc, Typst, MyST, Jupyter Book, Sphinx, RO-Crate) and reference pages for heatmap
+  figures, figure fonts and the `<credit-matrix>` element, rendered from the same Markdown files
+  GitHub shows.
 - Heatmap SVG and PDF exports draw names in Korean, Thai, Arabic, Hebrew, the Indic scripts
   (Devanagari, Bengali, Tamil and nine more), Armenian, Georgian, Ethiopic, Khmer, Lao, Myanmar and
   Sinhala, and monochrome emoji, so these names now export to PDF. Serif figures draw these scripts

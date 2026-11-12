@@ -74,6 +74,12 @@ def release(tmp_path, monkeypatch):
     typst.mkdir(parents=True)
     (typst / "typst.toml").write_text('[package]\nname = "credit-matrix"\nversion = "0.9.0"\n')
     (typst / "README.md").write_text('#import "@preview/credit-matrix:0.9.0": *\n')
+    panel = tmp_path / "src/components/steps/ToolchainPanel.tsx"
+    panel.parent.mkdir(parents=True)
+    panel.write_text(
+        "setup: '#import \"@preview/credit-matrix:0.9.0\": *',\n"
+        'setup: "project: {plugins: [https://unpkg.com/credit-matrix@0.9.0/dist/myst-plugin.mjs]}",\n'
+    )
     return tmp_path, metadata
 
 
@@ -98,6 +104,11 @@ def test_release_sync_preserves_metadata_and_is_idempotent(release):
         assert "credit-matrix@1.2.3/dist/myst-plugin.mjs" in (root / f"integrations/{name}/README.md").read_text()
     assert 'version = "1.2.3"' in (root / "integrations/typst/typst.toml").read_text()
     assert "@preview/credit-matrix:1.2.3" in (root / "integrations/typst/README.md").read_text()
+    panel = (root / "src/components/steps/ToolchainPanel.tsx").read_text()
+    assert "@preview/credit-matrix:1.2.3" in panel
+    assert "credit-matrix@1.2.3/dist/myst-plugin.mjs" in panel
+    staged = subprocess.check_output(["git", "diff", "--cached", "--name-only"], cwd=root, text=True)
+    assert "src/components/steps/ToolchainPanel.tsx" in staged.splitlines()
     assert json.loads((root / "package.json").read_text())["version"] == "1.2.3"
     files = [
         "CITATION.cff",
@@ -107,6 +118,7 @@ def test_release_sync_preserves_metadata_and_is_idempotent(release):
         "citation.apa.txt",
         "citation.csl.json",
         "src/core/package.json",
+        "src/components/steps/ToolchainPanel.tsx",
         "integrations/quarto/_extensions/credit-matrix/_extension.yml",
         "integrations/myst/README.md",
         "integrations/jupyter-book/README.md",
@@ -158,3 +170,6 @@ def test_release_sync_leaves_typst_alone_for_a_pre_release(release, monkeypatch)
     assert result.returncode == 0, result.stdout + result.stderr
     assert 'version = "0.9.0"' in (root / "integrations/typst/typst.toml").read_text()
     assert "credit-matrix@1.3.0-rc.1/dist/myst-plugin.mjs" in (root / "integrations/myst/README.md").read_text()
+    panel = (root / "src/components/steps/ToolchainPanel.tsx").read_text()
+    assert "@preview/credit-matrix:0.9.0" in panel
+    assert "credit-matrix@1.3.0-rc.1/dist/myst-plugin.mjs" in panel
