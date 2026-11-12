@@ -342,3 +342,42 @@ describe("importing over a draft", () => {
     expect(screen.getByText(english.importUndoStale)).toBeTruthy();
   });
 });
+
+describe("a newer request in the claim draft", () => {
+  /** Grace's request from another browser, sent at `sentAt`, and the claim draft it opened. */
+  async function requested() {
+    render(
+      <IntlProvider locale="en" messages={en}>
+        <HeaderActions />
+        <StatusBanner />
+      </IntlProvider>,
+    );
+    const grace = createAuthor("Grace Hopper");
+    const request = (sentAt: number, title: string) =>
+      buildShareUrl({ authors: [grace], title, claimId: grace.id, sourceDraftId: "elsewhere", sentAt });
+    const open = (link: string) =>
+      window.dispatchEvent(new HashChangeEvent("hashchange", { oldURL: window.location.href, newURL: link }));
+    open(await request(1, "First ask"));
+    await waitFor(() => expect(useContributionStore.getState().claim?.sentAt).toBe(1));
+    open(await request(2, "Second ask"));
+    await screen.findByText(english.claimRequestUpdated);
+    return grace;
+  }
+
+  it("undoes to the earlier answers while the draft is untouched", async () => {
+    await requested();
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
+    const state = useContributionStore.getState();
+    expect([state.title, state.claim?.sentAt]).toEqual(["First ask", 1]);
+  });
+
+  it("refuses Undo once an answer changed since, and keeps that answer", async () => {
+    const grace = await requested();
+    act(() => useContributionStore.getState().setAuthorScore(grace.id, 0, 100));
+    fireEvent.click(screen.getByRole("button", { name: english.undo }));
+    const state = useContributionStore.getState();
+    expect(state.authors[0]?.contributions[0]?.score).toBe(100);
+    expect([state.title, state.claim?.sentAt]).toEqual(["Second ask", 2]);
+    expect(screen.getByText(english.claimUndoStale)).toBeTruthy();
+  });
+});

@@ -593,6 +593,9 @@ msgstr "この依頼の続きから再開しました。"
 msgid "claimRequestUpdated"
 msgstr "依頼が更新されました。以前の回答は置き換えられました。"
 
+msgid "claimUndoStale"
+msgstr "元に戻していません：依頼の更新後に下書きが変更されました。グリッドで変更してください。"
+
 msgid "claimLockedDraft"
 msgstr "ロック中: 依頼に回答しています"
 

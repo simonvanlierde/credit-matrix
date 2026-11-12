@@ -593,6 +593,9 @@ msgstr "Retomado de onde você parou neste pedido."
 msgid "claimRequestUpdated"
 msgstr "O pedido foi atualizado. As suas respostas anteriores foram substituídas."
 
+msgid "claimUndoStale"
+msgstr "Nada foi anulado: o rascunho mudou depois de o pedido ser atualizado. Altere-o na grelha."
+
 msgid "claimLockedDraft"
 msgstr "Bloqueado: respondendo a um pedido"
 
