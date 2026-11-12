@@ -208,3 +208,19 @@ it("keeps the statement's mark when a cell's leave event lands after the pointer
   fireEvent.pointerLeave(cell, { pointerType: "mouse" });
   expect(store().statementLink).toEqual(phraseLink);
 });
+
+it("drops the bulk Undo once the roster changes another way, so it cannot restore a stale roster", () => {
+  act(() => store().loadAuthors(twoAuthors()));
+  renderGrid();
+  fireEvent.click(screen.getByRole("button", { name: english.bulkAssign }));
+  fireEvent.click(screen.getAllByRole("button", { name: english.bulkAssignAll })[0] as HTMLElement);
+  expect(screen.getByText(english.bulkChangeApplied)).toBeTruthy();
+  const grace = store().authors[0];
+  if (!grace) throw new Error("expected an author");
+  act(() => {
+    store().updateAuthorName(grace.id, "Ada Lovelace");
+  });
+  expect(screen.queryByText(english.bulkChangeApplied)).toBeNull();
+  expect(screen.queryByRole("button", { name: english.undo })).toBeNull();
+  expect(store().authors[0]?.name).toBe("Ada Lovelace");
+});
