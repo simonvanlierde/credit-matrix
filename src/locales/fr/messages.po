@@ -1857,3 +1857,21 @@ msgstr "L’utiliser dans votre outil d’écriture"
 
 msgid "docsReference"
 msgstr "Référence"
+
+msgid "docsLiveExample"
+msgstr "Exemple en direct"
+
+msgid "docsLiveLoading"
+msgstr "Chargement de votre brouillon…"
+
+msgid "docsLiveDraft"
+msgstr "Votre brouillon est affiché"
+
+msgid "docsLiveSample"
+msgstr "Les données d’exemple sont affichées"
+
+msgid "docsUseSample"
+msgstr "Utiliser les données d’exemple"
+
+msgid "docsUseDraft"
+msgstr "Utiliser votre brouillon"

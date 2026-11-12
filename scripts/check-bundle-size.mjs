@@ -11,16 +11,16 @@ import { join } from "node:path";
 import process from "node:process";
 import { gzipSync } from "node:zlib";
 
-// Measured 2026-11-12: 438 kB gzip with writing-tool panels and nine interface catalogs.
-const LIMIT_GZIP = 440_000;
-// Measured 2026-11-12: 1.6 kB for the /docs page: the nav metadata, no Markdown (pages are prerendered).
-const DOCS_LIMIT_GZIP = 2_500;
+// Measured 2026-11-12: 442.2 kB gzip with shared export controls and nine live-example catalogs.
+const LIMIT_GZIP = 445_000;
+// Measured 2026-11-12: 3.6 kB for docs navigation and optional live examples; Markdown stays prerendered.
+const DOCS_LIMIT_GZIP = 4_000;
 // Embedded-font PDF generation is loaded on export; keep its cost separate from editing.
 const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-11: 2.55 MB of scripts and styles plus Noto Sans (0.57 MB), the one figure font
 // precached, and the subsetter every export needs (0.68 MB). Any other figure font is 0.62-14.9 MB.
-// Raised from 4 MB once the total included the precached pages' HTML (4.10 MB on 2026-11-12, docs not precached).
-const PRECACHE_LIMIT = 4_200_000;
+// Includes precached HTML and its discovered fonts (4.24 MB on 2026-11-12, docs not precached).
+const PRECACHE_LIMIT = 4_300_000;
 // Measured 2026-11-11: 2.3 MB unpacked once the fonts moved out (0.12.0 was 43 MB).
 const PACKAGE_LIMIT = 5_000_000;
 
@@ -42,7 +42,7 @@ const figure = ({ name }) => /^(?:figures|font-search|figure-fonts)-/.test(name)
 const manifest = JSON.parse(readFileSync(join(dir, "..", ".vite", "manifest.json"), "utf8"));
 const docsFiles = new Set(
   Object.entries(manifest)
-    .filter(([source]) => /\.md\?raw$|^src\/app\/docs\//.test(source))
+    .filter(([source]) => /\.md\?raw$|^src\/app\/docs\/|^src\/docs\/LiveExample\.tsx$/.test(source))
     .map(([, { file }]) => file.replace(/^assets\//, "")),
 );
 const docs = ({ name }) => docsFiles.has(name);
@@ -66,12 +66,18 @@ if (!precached) {
   process.exit(1);
 }
 const pages = JSON.parse(sw.match(/const PRECACHED_PAGES = (\[.*?\]);/)?.[1] ?? "[]");
-const pageBytes = pages.reduce(
-  (n, path) => n + readFileSync(join(dir, "..", path === "/" ? "index.html" : `${path.slice(1)}.html`)).length,
-  0,
-);
-const sizes = precached.map((path) => ({ path, bytes: readFileSync(join(dir, "..", path)).length }));
-const total = sizes.reduce((n, { bytes }) => n + bytes, pageBytes);
+const installFiles = new Set(precached);
+let pageBytes = 0;
+for (const path of pages) {
+  const file = path === "/" ? "/index.html" : `${path}.html`;
+  installFiles.add(file);
+  const html = readFileSync(join(dir, "..", file), "utf8");
+  pageBytes += Buffer.byteLength(html);
+  for (const asset of html.match(/\/(?:assets|fonts)\/[^"'\s)\\]+\.(?:js|css|woff2)(?=["'\s)\\])/g) ?? [])
+    installFiles.add(asset);
+}
+const sizes = [...installFiles].map((path) => ({ path, bytes: readFileSync(join(dir, "..", path)).length }));
+const total = sizes.reduce((n, { bytes }) => n + bytes, 0);
 const fonts = sizes.filter(({ path }) => /\.(?:ttf|otf|woff2?)$/.test(path));
 const fontBytes = fonts.reduce((n, { bytes }) => n + bytes, 0);
 console.log(`check-bundle-size: install precache pages: ${pages.length}, ${kb(pageBytes)} raw`);

@@ -23,6 +23,8 @@ In the app, choose **Quarto YAML** under Export data to copy or download the aut
 The CLI equivalent is `credit-matrix convert team.json --to quarto`. Paste the block into your
 manuscript's front matter, next to `filters`. It keeps contribution levels; `--yes-no` omits them.
 
+<!-- live: quarto -->
+
 ```yaml
 ---
 title: My paper

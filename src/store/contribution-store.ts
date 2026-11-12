@@ -297,7 +297,7 @@ const MAX_TITLE_LENGTH = 500;
  * positional, so extra names beyond the three role sets are dropped rather
  * than seeded with an empty row.
  */
-function buildSampleAuthors(names: readonly string[]): Author[] {
+export function buildSampleAuthors(names: readonly string[]): Author[] {
   const roleSets: Partial<Record<CreditRoleName, number>>[] = [
     {
       Conceptualization: 100,

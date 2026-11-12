@@ -65,7 +65,17 @@ export const TOOLCHAIN_OUTPUTS = {
   { label: string; format: string | null; recipe: HeatmapRecipeTarget; setup: string | null; guide: string | null }
 >;
 
-function CopySnippet({ label, text, rows = 4 }: { label: string; text: string; rows?: number }) {
+function CopySnippet({
+  label,
+  text,
+  rows = 4,
+  language,
+}: {
+  label: string;
+  text: string;
+  rows?: number;
+  language?: string;
+}) {
   const t = useTranslations();
   const [status, copy] = useCopyStatus();
   const [lastCopy, setLastCopy] = useState<string>();
@@ -74,6 +84,7 @@ function CopySnippet({ label, text, rows = 4 }: { label: string; text: string; r
     <div className="grid min-w-0 gap-1.5">
       <textarea
         aria-label={label}
+        lang={language}
         value={text}
         readOnly
         rows={rows}
@@ -104,18 +115,20 @@ export function ToolchainPanel({
   settings,
   language,
   children,
+  recipeId = "toolchain-heatmap-recipe",
 }: {
   toolchain: Toolchain;
   settings: HeatmapOptions;
   language: string;
   children: ReactNode;
+  recipeId?: string;
 }) {
   const t = useTranslations();
   const config = TOOLCHAIN_OUTPUTS[toolchain];
   const guide = docFiles.find((file) => file.path === config.guide);
   const cli = heatmapRecipe(settings, "cli", language);
   // Figure settings links here; for CLI-recipe tools the CLI command is the recipe, so the link lands on it.
-  const anchor = { id: "toolchain-heatmap-recipe", tabIndex: -1 };
+  const anchor = { id: recipeId, tabIndex: -1 };
   const cliRecipe = config.recipe === "cli";
   const recipe = `${toolchain === "typst" ? '#let team = json("contributors.json")\n\n' : ""}${heatmapRecipe(settings, config.recipe, language)}`;
   return (
@@ -135,7 +148,7 @@ export function ToolchainPanel({
           )}
           {toolchain === "myst" && <p className="text-on-surface-variant">{t("heatmapRecipeMyst")}</p>}
           {toolchain === "typst" && <p className="text-on-surface-variant">{t("heatmapRecipeTypst")}</p>}
-          {!cliRecipe && <CopySnippet label={t("heatmapRecipe")} text={recipe} rows={6} />}
+          {!cliRecipe && <CopySnippet label={t("heatmapRecipe")} text={recipe} rows={6} language={language} />}
           {toolchain === "latex" && <CopySnippet label="LaTeX" text={"\\includesvg{heatmap}"} rows={2} />}
           {toolchain === "markdown" && <CopySnippet label="Markdown" text="![CRediT](heatmap.svg)" rows={2} />}
         </div>
@@ -162,7 +175,7 @@ export function ToolchainPanel({
       <div {...(cliRecipe ? anchor : {})} className="grid min-w-0 gap-2 scroll-mt-4">
         <h4 className="font-semibold">{t("toolchainCli")}</h4>
         <p className="text-on-surface-variant">{t("toolchainDataHint")}</p>
-        <CopySnippet label={t("toolchainCli")} text={cli} rows={4} />
+        <CopySnippet label={t("toolchainCli")} text={cli} rows={4} language={language} />
       </div>
     </section>
   );

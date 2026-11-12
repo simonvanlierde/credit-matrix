@@ -3,6 +3,8 @@
 In the app, open the Export data menu, choose **RO-Crate fragment**, then Copy or Download.
 The download is `credit-ro-crate-fragment.json`. The CLI produces the same JSON-LD:
 
+<!-- live: ro-crate -->
+
 ```sh
 pnpm dlx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
 ```
