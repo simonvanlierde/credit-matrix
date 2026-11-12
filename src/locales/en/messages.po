@@ -320,6 +320,15 @@ msgstr "Link copied to clipboard"
 msgid "annHeatmapCopied"
 msgstr "Heatmap PNG copied to clipboard"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "Heatmap PNG copied to clipboard. Word can't keep its alt text from this browser: copy the alt text below."
+
+msgid "heatmapAltHint"
+msgstr "Word can't keep the alt text when you paste from this browser. Copy it here and paste it under Picture Format > Alt Text."
+
+msgid "copyAltText"
+msgstr "Copy alt text"
+
 msgid "annBadgeCopied"
 msgstr "Badge PNG copied to clipboard"
 

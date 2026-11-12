@@ -320,6 +320,15 @@ msgstr "Ligação copiada para a área de transferência"
 msgid "annHeatmapCopied"
 msgstr "PNG do mapa de calor copiado para a área de transferência"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "PNG do mapa de calor copiado para a área de transferência. O Word não mantém o texto alternativo a partir deste navegador: copie-o abaixo."
+
+msgid "heatmapAltHint"
+msgstr "O Word não mantém o texto alternativo quando cola a partir deste navegador. Copie-o aqui e cole-o em Formato da Imagem > Texto Alternativo."
+
+msgid "copyAltText"
+msgstr "Copiar texto alternativo"
+
 msgid "annBadgeCopied"
 msgstr "PNG do emblema copiado para a área de transferência"
 
@@ -348,7 +357,7 @@ msgid "errFileTooLarge"
 msgstr "Esse ficheiro é demasiado grande. Escolher um ficheiro com menos de {limit}."
 
 msgid "errFileUnreadable"
-msgstr "Não foi possível ler o arquivo. Verifique o arquivo e tente novamente."
+msgstr "Não foi possível ler o ficheiro. Verifique o ficheiro e tente novamente."
 
 msgid "errImportTooLarge"
 msgstr "Essa importação é demasiado grande. Colar menos de {limit} de dados."
@@ -585,7 +594,7 @@ msgid "annClaimUnlocked"
 msgstr "Agora é um rascunho normal. Todas as linhas podem ser editadas."
 
 msgid "claimLockedHint"
-msgstr "Você está respondendo a um pedido, por isso apenas a sua linha é editável."
+msgstr "Está a responder a um pedido, por isso apenas a sua linha é editável."
 
 msgid "claimResumed"
 msgstr "Retomado de onde você parou neste pedido."
@@ -597,7 +606,7 @@ msgid "claimUndoStale"
 msgstr "Nada foi anulado: o rascunho mudou depois de o pedido ser atualizado. Altere-o na grelha."
 
 msgid "claimLockedDraft"
-msgstr "Bloqueado: respondendo a um pedido"
+msgstr "Bloqueado: a responder a um pedido"
 
 msgid "requestLinkOwn"
 msgstr "Este é o link de pedido que você criou para {name}."

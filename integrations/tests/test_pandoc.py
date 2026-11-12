@@ -116,11 +116,16 @@ def test_names_are_text_in_html():
     assert "<script>" not in result
 
 
+@pytest.mark.parametrize("format", ["by-author", "by-role", "table"])
 @given(st.permutations(["software", "validation", "writing", "software"]))
 @settings(max_examples=12)
-def test_role_order_and_deduplication(roles):
-    result = render({"author": [{"name": "Marie Curie", "roles": list(roles)}]})
-    assert "Marie Curie: Software, Validation, Writing – original draft." in result
+def test_role_order_and_deduplication(format, roles):
+    result = render({"author": [{"name": "Marie Curie", "roles": list(roles)}], "credit-matrix": {"format": format}})
+    labels = ["Software", "Validation", "Writing – original draft"]
+    assert [result.index(label) for label in labels] == sorted(result.index(label) for label in labels)
+    assert all(result.count(label) == 1 for label in labels)
+    if format == "by-author":
+        assert "Marie Curie: Software, Validation, Writing – original draft." in result
 
 
 def test_duplicate_roles_keep_the_strongest_level():
@@ -332,3 +337,70 @@ def test_heatmap_missing_font_family_names_the_document(font_document):
     assert result.returncode != 0
     assert "Cannot find the font family No Such Family in the font path" in result.stderr
     assert f"credit-matrix: {tmp_path / 'docs/paper.md'}: cannot draw the heatmap" in result.stderr
+
+
+@pytest.mark.parametrize("levels", [True, False])
+def test_by_role_format_preserves_author_order_and_localized_degrees(levels):
+    result = render(
+        {
+            "lang": "fr",
+            "author": [
+                {"name": "Tu Youyou", "roles": [{"software": "supporting"}, "validation"]},
+                {"name": "Tu Youyou", "roles": [{"software": "equal"}, "conceptualization", "software"]},
+            ],
+            "credit-matrix": {"format": "by-role", "levels": levels},
+        }
+    )
+    names = "Tu Youyou (Secondaire), Tu Youyou" if levels else "Tu Youyou, Tu Youyou"
+    assert f"Conceptualisation : Tu Youyou ; Logiciel(s) : {names} ; Validation : Tu Youyou." in result.replace(
+        "\u00a0", " "
+    )
+
+
+@pytest.mark.parametrize("levels", [True, False])
+@pytest.mark.parametrize(
+    ("locale", "software", "lead", "equal", "contributed"),
+    [("en", "Software", "Lead", "Equal", "Contributed"), ("fr", "Logiciel(s)", "Principal", "Égal", "Contribué")],
+)
+def test_table_has_role_rows_and_separate_columns_for_duplicate_names(
+    levels, locale, software, lead, equal, contributed
+):
+    html = render(
+        {
+            "lang": locale,
+            "author": [
+                {"name": "Tu & Youyou", "roles": [{"software": "supporting"}, "software", "validation"]},
+                {"name": "Tu & Youyou", "roles": [{"software": "equal"}]},
+                {"name": "No roles", "roles": ["coffee"]},
+            ],
+            "credit-matrix": {"format": "table", "levels": levels},
+        },
+        writer="html",
+    )
+    assert "<table>" in html
+    assert html.count("Tu &amp; Youyou") == 2
+    assert "No roles" not in html
+    assert html.index(software) < html.index("Validation")
+    assert (equal in html) == levels
+    assert "Supporting" not in html
+    assert f'<th style="text-align: left;">{software}</th>' in html
+    assert '<th style="text-align: left;">Validation</th>' in html
+    assert "●" not in html
+    assert html.count(lead) == (2 if levels else 0)
+    assert html.count(contributed) == (0 if levels else 3)
+
+
+def test_statement_can_hide_levels():
+    result = render(
+        {
+            "author": [{"name": "Tu Youyou", "roles": [{"software": "supporting"}]}],
+            "credit-matrix": {"levels": False},
+        }
+    )
+    assert "Tu Youyou: Software." in result
+
+
+def test_invalid_statement_format_fails_with_available_values():
+    with pytest.raises(subprocess.CalledProcessError) as error:
+        render({"author": [{"name": "Tu Youyou", "roles": ["software"]}], "credit-matrix": {"format": "grid"}})
+    assert "credit-matrix: format must be by-author, by-role or table" in error.value.stderr

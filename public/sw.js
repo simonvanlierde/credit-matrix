@@ -60,7 +60,9 @@ async function cachePaths(paths) {
     if (!(await cache.match(path))) missing.push(path);
   }
   // no-cache: the HTTP cache may still hold a page from the previous build.
-  await cache.addAll(missing.map((path) => new Request(path, { cache: "no-cache" })));
+  // Warming search can fetch many files; bound it without using the shorter navigation deadline.
+  const signal = AbortSignal.timeout(15_000);
+  await cache.addAll(missing.map((path) => new Request(path, { cache: "no-cache", signal })));
 }
 
 // Every page, stamped by postbuild from src/routes.ts: a visit caches it for offline use.

@@ -4,7 +4,16 @@ import process from "node:process";
 import { pathToFileURL } from "node:url";
 import { parsePoFile } from "@lingui/format-po";
 
-const UI_KEYS = ["equal", "supporting", "labelSeparator", "nameListSeparator", "segmentSeparator", "levelAnnotation"];
+const UI_KEYS = [
+  "lead",
+  "equal",
+  "supporting",
+  "contributed",
+  "labelSeparator",
+  "nameListSeparator",
+  "segmentSeparator",
+  "levelAnnotation",
+];
 
 /** The standalone Lua filter keeps generated translations inline, so no sidecar needs installing. */
 export async function renderQuartoTranslations(i18n, roles) {

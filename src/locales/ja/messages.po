@@ -320,6 +320,15 @@ msgstr "リンクをクリップボードにコピーしました"
 msgid "annHeatmapCopied"
 msgstr "ヒートマップの PNG をクリップボードにコピーしました"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "ヒートマップの PNG をクリップボードにコピーしました。このブラウザーからは Word に代替テキストが渡りません。下でコピーしてください。"
+
+msgid "heatmapAltHint"
+msgstr "このブラウザーから貼り付けると、Word は代替テキストを保持しません。ここでコピーし、[図の形式] > [代替テキスト] に貼り付けてください。"
+
+msgid "copyAltText"
+msgstr "代替テキストをコピー"
+
 msgid "annBadgeCopied"
 msgstr "バッジの PNG をクリップボードにコピーしました"
 
@@ -1733,7 +1742,7 @@ msgid "heatmapRecipeTypst"
 msgstr "Typst のチームデータを使用してください。フォントの寸法やネイティブレイアウトは SVG と異なる場合があります。"
 
 msgid "heatmapRecipeOneColor"
-msgstr "レシピは1色で描画します。投稿者ごとの色はアプリのSVG・PNG・PDFだけです。"
+msgstr "レシピは1色で描画します。貢献者ごとの色はアプリのSVG・PNG・PDFだけです。"
 
 msgid "heatmapCopyRecipe"
 msgstr "書き出し用コードをコピー"
@@ -1756,7 +1765,7 @@ msgid "errFigureFontsUnavailable"
 msgstr "図のフォントを読み込めませんでした。"
 
 msgid "heatmapSystemFonts"
-msgstr "PDFにはこれらの文字を埋め込む必要があるため、利用できません。SVGとPNGはインストール済みのフォントで描画します。SVGは別のコンピューターでは見た目が変わる場合があります。"
+msgstr "PDFにはこれらのフォントを埋め込む必要があるため、利用できません。SVGとPNGはインストール済みのフォントで描画します。SVGは別のコンピューターでは見た目が変わる場合があります。"
 
 msgid "heatmapLegendPosition"
 msgstr "凡例"

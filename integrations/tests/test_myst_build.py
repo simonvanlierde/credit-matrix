@@ -119,3 +119,55 @@ def test_font_path_is_relative_to_the_project(tmp_path, figure_font_cache, famil
     assert result.returncode == 0, output
     svg = next((tmp_path / "_credit_matrix").glob("*.svg")).read_text(encoding="utf-8")
     assert "font-family:'Figure Test Serif'" in svg
+
+
+@pytest.mark.parametrize(
+    ("command", "extension", "source"),
+    [(command, extension, "file") for command in ("myst", "jupyter-book") for extension in ("md", "ipynb")]
+    + [("myst", "md", "bundle")],
+)
+def test_contribution_level_footnotes(tmp_path, command, extension, source):
+    plugin = ROOT / "integrations/myst/credit-matrix.mjs"
+    if source == "bundle":
+        plugin = tmp_path / "credit-matrix.mjs"
+        plugin.write_bytes(BUNDLE.read_bytes())
+    (tmp_path / "myst.yml").write_text(
+        "version: 1\nproject:\n  title: Example Lab\n  authors:\n"
+        "    - id: marie\n      name: Marie Curie\n      roles: [Software, writing]\n"
+        "  options:\n    credit-matrix:\n      levels:\n        marie:\n          Software: equal\n          writing: supporting\n"
+        f"  plugins:\n    - {plugin}\n",
+        encoding="utf-8",
+    )
+    text = "# Contributors\n\n:::{credit-statement}\n:::\n"
+    if extension == "ipynb":
+        text = json.dumps(
+            {
+                "nbformat": 4,
+                "nbformat_minor": 5,
+                "metadata": {},
+                "cells": [{"id": "contributors", "cell_type": "markdown", "metadata": {}, "source": [text]}],
+            }
+        )
+    (tmp_path / f"index.{extension}").write_text(text, encoding="utf-8")
+    result = subprocess.run(
+        [
+            str(ROOT / "node_modules/.bin" / command),
+            "build",
+            f"index.{extension}",
+            "--md",
+            "--strict",
+            "--ci",
+            "-o",
+            "out.md",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "unknown" not in (result.stdout + result.stderr).lower()
+    statement = (tmp_path / "out.md").read_text(encoding="utf-8")
+    assert "**Marie Curie**: Software, Writing – original draft[^" in statement
+    assert "Software (Equal), Writing – original draft (Supporting)." in statement
+    assert "]: " in statement

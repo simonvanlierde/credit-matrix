@@ -122,12 +122,19 @@ export function HeatmapExports({
   const [open, setOpen] = useState(false);
   const [actualSize, setActualSize] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [copySource, setCopySource] = useState<{ svg: string; widthMm: number; dpi: number } | null>(null);
+  const [copySource, setCopySource] = useState<{
+    svg: string;
+    widthMm: number;
+    dpi: number;
+    /** Alt text the paste will not carry, shown to copy by hand. */
+    manualAlt: string | null;
+  } | null>(null);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
   const settings = useHeatmapSettings(showLevels);
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
   });
+  const [altCopyStatus, copyAlt] = useCopyStatus();
 
   const svgOptions = useMemo(
     () => ({
@@ -196,10 +203,10 @@ export function HeatmapExports({
   const pngTooLarge = dimensions ? oversizedPng(dimensions) : false;
   const printFontSize = preview ? heatmapPrintSize(preview, settings.pngWidthMm).minFontPt : null;
 
-  const currentCopyStatus =
-    copySource?.svg === preview && copySource.widthMm === settings.pngWidthMm && copySource.dpi === settings.pngDpi
-      ? copyStatus
-      : "idle";
+  const copiedCurrent =
+    copySource?.svg === preview && copySource.widthMm === settings.pngWidthMm && copySource.dpi === settings.pngDpi;
+  const currentCopyStatus = copiedCurrent ? copyStatus : "idle";
+  const manualAlt = copiedCurrent ? copySource.manualAlt : null;
 
   function fail(format: ExportFormat, cause: unknown) {
     const missing = glyphError(cause);
@@ -240,12 +247,21 @@ export function HeatmapExports({
   async function copyPng() {
     setLoading("copy");
     setError(null);
+    const alt = heatmapDescription(authors, svgOptions);
+    let altKept = true;
     try {
-      await copy(async () => {
+      const copied = await copy(async () => {
         const { width, height } = pngDimensions(preview, settings.pngWidthMm, settings.pngDpi);
-        await copyFigure(renderPng(), heatmapDescription(authors, svgOptions), width, height, settings.pngDpi);
+        altKept = await copyFigure(renderPng(), alt, width, height, settings.pngDpi);
       });
-      setCopySource({ svg: preview, widthMm: settings.pngWidthMm, dpi: settings.pngDpi });
+      setCopySource({
+        svg: preview,
+        widthMm: settings.pngWidthMm,
+        dpi: settings.pngDpi,
+        manualAlt: altKept ? null : alt,
+      });
+      // Replaces the copied announcement, so it says both.
+      if (copied && !altKept) announce(t("annHeatmapCopiedNoAlt"));
     } finally {
       setLoading(null);
     }
@@ -406,6 +422,22 @@ export function HeatmapExports({
             </button>
           ))}
         </div>
+        {manualAlt && (
+          <div className="grid gap-1.5 rounded bg-surface-container p-2 text-xs">
+            <p className="text-on-surface-variant">{t("heatmapAltHint")}</p>
+            <p lang={outputLanguage} className="select-all text-on-surface">
+              {manualAlt}
+            </p>
+            <button type="button" onClick={() => void copyAlt(manualAlt)} className={`${TOOL_BUTTON} w-fit`}>
+              <Copy className="size-3.5 shrink-0" aria-hidden="true" />
+              {altCopyStatus === "copied"
+                ? t("copied")
+                : altCopyStatus === "error"
+                  ? t("copyFailedMessage")
+                  : t("copyAltText")}
+            </button>
+          </div>
+        )}
         {pngTooLarge && (
           <p role="status" className="text-xs text-on-surface-variant">
             {t("heatmapPngTooLarge")}

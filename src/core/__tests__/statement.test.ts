@@ -67,7 +67,11 @@ const AUTHORS = [
   author("Yibo", "Lu"),
   author("Yang", "Lin"),
 ];
-const THREE = [author("Ann", "Bell"), author("Carl", "Dunn"), author("Eva", "Fox")];
+const THREE = [
+  statementAuthor(createAuthor("Ada Lovelace")),
+  statementAuthor(createAuthor("Charles Darwin")),
+  author("Eva", "Fox"),
+];
 
 describe("parseStatement", () => {
   it("reads author-first statements with initials", () => {
@@ -124,14 +128,14 @@ describe("parseStatement", () => {
 
   it.each([
     [
-      "AB: conceptualization. CD: drew the figures. EF: software.",
+      "AL: conceptualization. CD: drew the figures. EF: software.",
       [
         [0, "conceptualization"],
         [2, "software"],
       ],
     ],
     [
-      "Conceptualization, A.B. Methodology, C.D. and E.F.",
+      "Conceptualization, A.L. Methodology, C.D. and E.F.",
       [
         [0, "conceptualization"],
         [1, "methodology"],
@@ -139,31 +143,31 @@ describe("parseStatement", () => {
       ],
     ],
     [
-      "A.B.: conceptualization; methodology. C.D.: software.",
+      "A.L.: conceptualization; methodology. C.D.: software.",
       [
         [0, "conceptualization"],
         [0, "methodology"],
         [1, "software"],
       ],
     ],
-    ["Supervision: EF. AB is the guarantor.", [[2, "supervision"]]],
+    ["Supervision: EF. AL is the guarantor.", [[2, "supervision"]]],
     [
-      "A.B.: software; Dunn, C: writing - review and editing",
+      "A.L.: software; Darwin, C: writing - review and editing",
       [
         [0, "software"],
         [1, "writing-review-editing"],
       ],
     ],
     [
-      "Software: Bell, Ann, Fox, E.",
+      "Software: Lovelace, Ada, Fox, E.",
       [
         [0, "software"],
         [2, "software"],
       ],
     ],
-    ["A.B.: software; Dunne, C: writing - review and editing", [[0, "software"]]],
-    ["Software, A.B. All authors read and approved the manuscript.", [[0, "software"]]],
-    ["A.B.: software. All authors have read and approved the final manuscript.", [[0, "software"]]],
+    ["A.L.: software; Darwine, C: writing - review and editing", [[0, "software"]]],
+    ["Software, A.L. All authors read and approved the manuscript.", [[0, "software"]]],
+    ["A.L.: software. All authors have read and approved the final manuscript.", [[0, "software"]]],
   ])("splits clauses in %j", (text, expected) => {
     expect(pairsOf(text, THREE)).toEqual(expected);
   });
@@ -265,7 +269,7 @@ describe("parseStatement", () => {
       "Writing—original draft preparation",
       "Writing − review & editing",
     ];
-    const pairs = pairsOf(`AB: ${wordings.join(", ")}.`, THREE);
+    const pairs = pairsOf(`AL: ${wordings.join(", ")}.`, THREE);
     expect(pairs.map(([, slug]) => slug).sort()).toEqual([...SLUG.values()].sort());
   });
 });
@@ -296,14 +300,14 @@ describe("clause ends and initials", () => {
   });
 
   it("ends a clause after initials when a comma comes before the next role", () => {
-    expect(pairsOf("Methodology, A.B., Software", THREE)).toEqual([
+    expect(pairsOf("Methodology, A.L., Software", THREE)).toEqual([
       [0, "methodology"],
       [0, "software"],
     ]);
   });
 
   it("joins two authors only with a comma or the word and", () => {
-    expect(pairsOf("Methodology, EF. Standard AB: software", THREE)).toEqual([
+    expect(pairsOf("Methodology, EF. Standard AL: software", THREE)).toEqual([
       [0, "software"],
       [2, "methodology"],
     ]);
@@ -335,7 +339,7 @@ describe("resolveInitials", () => {
     ["ZL", author("Li", "Zhao")],
     ["L.Z.", author("Li-Jun", "Zhao")],
   ])("resolves %s through its tier", (token, who) => {
-    expect(resolveInitials(token, [author("Ann", "Bell"), who])).toBe(1);
+    expect(resolveInitials(token, [statementAuthor(createAuthor("Ada Lovelace")), who])).toBe(1);
   });
 
   it("lets a stricter tier win over particles", () => {
@@ -379,12 +383,12 @@ describe("namesCredit", () => {
 describe("edge cases", () => {
   it("keeps positions when lower case changes a letter's length", () => {
     // "İ" lowers to two code units; the name after it must still be found.
-    expect(pairsOf("İŞ: software. Ann Bell: data curation.", THREE)).toEqual([[0, "data-curation"]]);
+    expect(pairsOf("İŞ: software. Ada Lovelace: data curation.", THREE)).toEqual([[0, "data-curation"]]);
   });
 
   it("reads a contributor with one name only, and skips a name inside a longer word", () => {
-    const authors = [author("", "Madonna"), author("Ann", "Bell")];
-    expect(pairsOf("Madonna: data curation. Bellamy: software. Ann Bell: methodology.", authors)).toEqual([
+    const authors = [author("", "Madonna"), statementAuthor(createAuthor("Ada Lovelace"))];
+    expect(pairsOf("Madonna: data curation. Lovelacely: software. Ada Lovelace: methodology.", authors)).toEqual([
       [0, "data-curation"],
       [1, "methodology"],
     ]);
@@ -420,14 +424,14 @@ describe("unmatched", () => {
   });
 
   it("gives the roles of a role-first clause to the token it names", () => {
-    const { unmatched } = parseStatement("Methodology, XY and A.B.", [author("Ann", "Bell")]);
+    const { unmatched } = parseStatement("Methodology, XY and A.L.", [statementAuthor(createAuthor("Ada Lovelace"))]);
     expect(unmatched).toEqual([{ token: "XY", candidates: [], roles: ["Methodology"] }]);
   });
 });
 
 describe("assignment order", () => {
   it("lists assignments by author, then in CRediT order, whatever order the text gives", () => {
-    const text = "Eva Fox: software, conceptualization. Ann Bell: writing – original draft, methodology.";
+    const text = "Eva Fox: software, conceptualization. Ada Lovelace: writing – original draft, methodology.";
     expect(parseStatement(text, THREE).assignments).toEqual([
       { author: 0, role: "Methodology" },
       { author: 0, role: "Writing – original draft" },
@@ -462,10 +466,10 @@ describe("size", () => {
   });
 
   it.each([
-    ["spaces", (n: number) => `AB: conceptualization.${" ".repeat(n)}x`],
-    ["line breaks", (n: number) => `AB: conceptualization.${"\n".repeat(n)}x`],
+    ["spaces", (n: number) => `AL: conceptualization.${" ".repeat(n)}x`],
+    ["line breaks", (n: number) => `AL: conceptualization.${"\n".repeat(n)}x`],
     ["unknown initials", (n: number) => `${"XY, ".repeat(n / 4)}: conceptualization`],
-    ["names and roles", (n: number) => "Ann Bell: conceptualization; ".repeat(n / 29)],
+    ["names and roles", (n: number) => "Ada Lovelace: conceptualization; ".repeat(n / 33)],
     ["author-first initials", () => BY_AUTHOR],
     ["role-first initials", () => BY_ROLE],
   ])("reads %s up to the cap in well under a second", (_, make) => {
@@ -478,19 +482,19 @@ describe("size", () => {
 });
 
 describe("name hits next to initials", () => {
-  const ANN: [number, string][] = [[0, "conceptualization"]];
+  const ADA: [number, string][] = [[0, "conceptualization"]];
   const offsets = (prefix: string) =>
-    Array.from({ length: 10 }, (_, k) => `${",".repeat(k)}${prefix}Ann Bell: conceptualization`);
+    Array.from({ length: 10 }, (_, k) => `${",".repeat(k)}${prefix}Ada Lovelace: conceptualization`);
   // Expected values are what the parser returned before the fast path for hits.
   it.each([
-    ["after an initial and a dot, at offsets 0 to 9", offsets("A. "), ANN, []],
-    ["after an initial, dot and dash, at offsets 0 to 9", offsets("A.- "), [], ["A. - Ann"]],
-    ["after an astral initial", ["𝐀. Ann Bell: conceptualization"], ANN, []],
-    ["after an astral initial and dash", ["𝐀.- Ann Bell: conceptualization"], [], ["𝐀. - Ann"]],
-    ["twice in a row", ["Ann Bell, Ann Bell: conceptualization"], ANN, []],
+    ["after an initial and a dot, at offsets 0 to 9", offsets("A. "), ADA, []],
+    ["after an initial, dot and dash, at offsets 0 to 9", offsets("A.- "), [], ["A. - Ada"]],
+    ["after an astral initial", ["𝐀. Ada Lovelace: conceptualization"], ADA, []],
+    ["after an astral initial and dash", ["𝐀.- Ada Lovelace: conceptualization"], [], ["𝐀. - Ada"]],
+    ["twice in a row", ["Ada Lovelace, Ada Lovelace: conceptualization"], ADA, []],
     [
       "right after a role",
-      ["Conceptualization, Ann Bell; methodology, Carl Dunn"],
+      ["Conceptualization, Ada Lovelace; methodology, Charles Darwin"],
       [
         [0, "conceptualization"],
         [1, "methodology"],
@@ -504,8 +508,8 @@ describe("name hits next to initials", () => {
 
 describe("empty name needles", () => {
   it("skips an author whose surname is blank", () => {
-    expect(parseStatement("Ann Bell: conceptualization", [author("", " ")])).toEqual(
-      parseStatement("Ann Bell: conceptualization", []),
+    expect(parseStatement("Ada Lovelace: conceptualization", [author("", " ")])).toEqual(
+      parseStatement("Ada Lovelace: conceptualization", []),
     );
   }, 1000);
 });

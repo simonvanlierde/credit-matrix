@@ -10,7 +10,7 @@ export them as JSON and print them in your paper.
 Import it from [Typst Universe](https://typst.app/universe/package/credit-matrix):
 
 ```typ
-#import "@preview/credit-matrix:0.12.0": *
+#import "@preview/credit-matrix:0.13.0": *
 ```
 
 To work from the repository, copy this folder (`lib.typ`, `translations.json`,

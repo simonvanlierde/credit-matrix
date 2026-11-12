@@ -144,6 +144,33 @@ test("clears copied-image status when the figure or PNG dimensions change", asyn
   await expect(copy).toBeVisible();
 });
 
+test("shows the alt text to copy when the paste cannot carry it", async ({ page }) => {
+  await page.evaluate(() => {
+    const written: string[] = [];
+    Object.defineProperty(window, "written", { value: written });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        write: (items: ClipboardItem[]) =>
+          items[0]?.types.includes("text/html")
+            ? Promise.reject(new DOMException("refused", "NotAllowedError"))
+            : Promise.resolve(),
+        writeText: (text: string) => Promise.resolve(void written.push(text)),
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+  const copy = page.getByRole("button", { name: "Copy PNG", exact: true });
+  await expect(copy).toBeEnabled({ timeout: 15_000 });
+  await copy.click();
+  await expect(page.getByText("Word can't keep the alt text", { exact: false })).toBeVisible();
+  const alt = await page.getByRole("region", { name: "Contribution heatmap" }).getByRole("img").getAttribute("alt");
+  await expect(page.getByText(alt ?? "", { exact: true })).toBeVisible();
+  expect((await scan(page, PANEL)).violations).toEqual([]);
+  await page.getByRole("button", { name: "Copy alt text", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { written: string[] }).written)).toEqual([alt]);
+});
+
 test("waits for a changed recipe's clipboard write before showing copied", async ({ page }) => {
   await page.evaluate(() => {
     Object.defineProperty(navigator.clipboard, "writeText", {

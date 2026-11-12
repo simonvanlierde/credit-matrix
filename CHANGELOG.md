@@ -6,12 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-12
+
 **Upgrade note:** the browser storage format moves from version 5 to 6, so that a build from before
 the 420 cap cannot cut a stored draft back to 200 contributors. Do not roll back past this release.
 See [deploying](docs/deploy.md).
 
 ### Added
 
+- Quarto and Pandoc can write statements by role or as a role-by-contributor table, with optional
+  contribution levels. See [statement formats](integrations/quarto/README.md).
+- MyST and Jupyter Book can show contribution levels in a footnote for each contributor using
+  `options.credit-matrix.levels`. See [contribution levels](integrations/myst/README.md#contribution-levels).
 - The site has documentation at [/docs](https://credit.duinlab.nl/docs): a page for each writing tool
   (Quarto, Pandoc, Typst, MyST, Jupyter Book, Sphinx, RO-Crate) and reference pages for heatmap
   figures, figure fonts and the `<credit-matrix>` element, rendered from the same Markdown files
@@ -55,7 +61,8 @@ See [deploying](docs/deploy.md).
 - The draft keeps its writing tool (`toolchain` in JSON exports and share links), and the browser
   remembers the last choice for new drafts. `fromJson` and `importAny` drop a writing tool they do
   not know and return it in `warnings`, so a file from a newer version still imports.
-- A copied heatmap pastes into Word with its alt text.
+- A copied heatmap pastes into Word with its alt text. In Firefox, where Word for the web keeps only
+  the image, the heatmap menu shows the alt text with a button to copy it.
 - A [CLI reference](docs/cli.md) covers every command, target, flag and exit code.
 - The docs have a search box. It works offline after one online visit to the docs. Docs pages
   also show your current draft, or a sample, in each export they describe.
@@ -128,17 +135,26 @@ See [deploying](docs/deploy.md).
 
 ### Fixed
 
+- Japanese font-recipe wording and European Portuguese file and response hints use consistent terms.
 - A saved draft whose contributors lack name parts or initials, as after a hand edit of browser
   storage, now opens with them taken from each name instead of failing to show the page.
 
 ### Security
 
+- The release workflow rejects lightweight tags and tag signatures GitHub cannot verify before
+  building or publishing a package. See [release signing](CONTRIBUTING.md#releases).
 - The CLI checks an XML file's tags in one linear pass. A hostile file of a few thousand
   characters made the old check run for a minute or more, hanging the CLI and Sphinx builds.
 - `importAny` stops creating contributors one past the cap on a long name list, instead of
   building all of them before the list is refused.
 - `<credit-matrix src>` stops reading a response once it passes the size cap, also when the
   server sends no length.
+
+### Fixed
+
+- Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
+  replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
+- A stalled documentation download no longer holds a service-worker update open indefinitely.
 
 ## [0.12.0] - 2026-11-11
 
@@ -998,7 +1014,8 @@ Persisted local drafts migrate automatically.
   contribution heatmap, JATS4R XML / CSV / JSON / Markdown exports, ORCID lookup,
   share links, and a framework-agnostic `@credit-generator/core` domain package.
 
-[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/simonvanlierde/credit-matrix/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/simonvanlierde/credit-matrix/compare/v0.9.0...v0.10.0

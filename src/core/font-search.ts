@@ -347,7 +347,7 @@ export async function findFigureFont(family: string, options: FontSearchOptions 
   const wanted = family.trim().toLowerCase();
   if (!wanted) throw new FigureFontFileError("The figure font family name is empty.");
   const { resolve } = await nodeModule<typeof import("node:path")>("node:path");
-  const groups = [(options.fontPath ?? []).map((folder) => resolve(folder))];
+  const groups = (options.fontPath ?? []).map((folder) => [resolve(folder)]);
   if (!options.ignoreSystemFonts) groups.push(await systemFolders());
   let best: Face | undefined;
   // One walk per folder: the web fonts are kept for the error when the family is not found.

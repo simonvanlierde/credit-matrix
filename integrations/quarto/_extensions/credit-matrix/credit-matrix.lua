@@ -1,5 +1,5 @@
 -- Renders a CRediT statement from Pandoc metadata or Quarto's normalised author roles.
--- Wording follows the by-author statement of the credit-matrix package
+-- Wording follows the by-author and by-role statements of the credit-matrix package
 -- (src/core/generate-statement.ts), in the document's language.
 
 local stringify = pandoc.utils.stringify
@@ -33,8 +33,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "Writing – review & editing",
     },
     ui = {
+      lead = "Lead",
       equal = "Equal",
       supporting = "Supporting",
+      contributed = "Contributed",
       labelSeparator = ": ",
       nameListSeparator = ", ",
       segmentSeparator = "; ",
@@ -60,8 +62,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "Rédaction - relectures et corrections",
     },
     ui = {
+      lead = "Principal",
       equal = "Égal",
       supporting = "Secondaire",
+      contributed = "Contribué",
       labelSeparator = " : ",
       nameListSeparator = ", ",
       segmentSeparator = " ; ",
@@ -87,8 +91,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "Schreiben - Überprüfung und Überarbeitung",
     },
     ui = {
+      lead = "Führend",
       equal = "Gleichwertig",
       supporting = "Unterstützend",
+      contributed = "Beigetragen",
       labelSeparator = ": ",
       nameListSeparator = ", ",
       segmentSeparator = "; ",
@@ -114,8 +120,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "Redacción - revisión y edición",
     },
     ui = {
+      lead = "Principal",
       equal = "Igual",
       supporting = "De apoyo",
+      contributed = "Contribuyó",
       labelSeparator = ": ",
       nameListSeparator = ", ",
       segmentSeparator = "; ",
@@ -141,8 +149,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "Scrittura - revisione e modifica",
     },
     ui = {
+      lead = "Principale",
       equal = "Paritario",
       supporting = "Di supporto",
+      contributed = "Contribuito",
       labelSeparator = ": ",
       nameListSeparator = ", ",
       segmentSeparator = "; ",
@@ -168,8 +178,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "Redação – revisão e edição",
     },
     ui = {
+      lead = "Principal",
       equal = "Igual",
       supporting = "De apoio",
+      contributed = "Contribuiu",
       labelSeparator = ": ",
       nameListSeparator = ", ",
       segmentSeparator = "; ",
@@ -195,8 +207,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "Schrijven – review en bewerking",
     },
     ui = {
+      lead = "Leidend",
       equal = "Gelijk",
       supporting = "Ondersteunend",
+      contributed = "Bijgedragen",
       labelSeparator = ": ",
       nameListSeparator = ", ",
       segmentSeparator = "; ",
@@ -222,8 +236,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "撰写 - 评论和编辑",
     },
     ui = {
+      lead = "主导",
       equal = "同等",
       supporting = "辅助",
+      contributed = "有贡献",
       labelSeparator = "：",
       nameListSeparator = "、",
       segmentSeparator = "；",
@@ -249,8 +265,10 @@ local TRANSLATIONS = {
       ["writing – review & editing"] = "執筆 – レビューおよび校閲",
     },
     ui = {
+      lead = "主導",
       equal = "同等",
       supporting = "補助",
+      contributed = "貢献あり",
       labelSeparator = "：",
       nameListSeparator = "、",
       segmentSeparator = "；",
@@ -327,19 +345,21 @@ local function role_values(author)
   return roles
 end
 
+local function with_level(label, role, levels, translations)
+  if levels ~= false and role.level then
+    return translations.ui.levelAnnotation:gsub("{(%w+)}", function(key)
+      return ({ label = label, level = translations.ui[role.level] })[key]
+    end)
+  end
+  return label
+end
+
 local function role_labels(author, levels, translations)
   local roles = role_values(author)
   local labels = {}
   for _, term in ipairs(CREDIT_TERMS) do
     if roles[term] then
-      local label = translations.roles[term]
-      local level = levels ~= false and roles[term].level or nil
-      if level then
-        label = translations.ui.levelAnnotation:gsub("{(%w+)}", function(key)
-          return ({ label = label, level = translations.ui[level] })[key]
-        end)
-      end
-      labels[#labels + 1] = label
+      labels[#labels + 1] = with_level(translations.roles[term], roles[term], levels, translations)
     end
   end
   return labels
@@ -358,6 +378,60 @@ local function statement(authors, levels, locale)
   if #inlines == 0 then return nil end
   inlines:insert(pandoc.Str("."))
   return pandoc.Para(inlines)
+end
+
+local function role_statement(authors, levels, locale)
+  local translations = TRANSLATIONS[locale]
+  local people = {}
+  for _, author in ipairs(authors) do
+    people[#people + 1] = { name = author_name(author), roles = role_values(author) }
+  end
+  local inlines = pandoc.List()
+  for _, term in ipairs(CREDIT_TERMS) do
+    local names = {}
+    for _, person in ipairs(people) do
+      if person.roles[term] then
+        names[#names + 1] = with_level(person.name, person.roles[term], levels, translations)
+      end
+    end
+    if #names > 0 then
+      if #inlines > 0 then inlines:insert(pandoc.Str(translations.ui.segmentSeparator)) end
+      inlines:extend({ pandoc.Strong(pandoc.Str(translations.roles[term])), pandoc.Str(translations.ui.labelSeparator .. table.concat(names, translations.ui.nameListSeparator)) })
+    end
+  end
+  if #inlines == 0 then return nil end
+  inlines:insert(pandoc.Str("."))
+  return pandoc.Para(inlines)
+end
+
+local function role_table(authors, levels, locale)
+  local translations = TRANSLATIONS[locale]
+  local function cell(text) return { pandoc.Plain({ pandoc.Str(text) }) } end
+  local headers, aligns, widths, people = { cell("") }, { pandoc.AlignLeft }, { 0 }, {}
+  for _, author in ipairs(authors) do
+    local roles = role_values(author)
+    if next(roles) then
+      people[#people + 1] = roles
+      headers[#headers + 1] = cell(author_name(author))
+      aligns[#aligns + 1] = pandoc.AlignCenter
+      widths[#widths + 1] = 0
+    end
+  end
+  if #people == 0 then return nil end
+  local rows = {}
+  for _, term in ipairs(CREDIT_TERMS) do
+    local row, active = { cell(translations.roles[term]) }, false
+    for _, roles in ipairs(people) do
+      local role = roles[term]
+      active = active or role ~= nil
+      local text = role and translations.ui[levels == false and "contributed" or role.level or "lead"] or ""
+      row[#row + 1] = cell(text)
+    end
+    if active then rows[#rows + 1] = row end
+  end
+  local result = pandoc.utils.from_simple_table(pandoc.SimpleTable({}, aligns, widths, headers, rows))
+  result.bodies[1].row_head_columns = 1
+  return result
 end
 
 -- Figure generation shares the CLI renderer with the app and the other document plugins.
@@ -433,7 +507,11 @@ function Pandoc(doc)
   local authors = doc.meta.authors or doc.meta.author or {}
   if pandoc.utils.type(authors) ~= "List" then authors = { authors } end
   local locale = document_locale(doc.meta.lang)
-  local para = statement(authors, true, locale)
+  local options = doc.meta["credit-matrix"] or {}
+  local format = options.format and stringify(options.format) or "by-author"
+  local render = ({ ["by-author"] = statement, ["by-role"] = role_statement, table = role_table })[format]
+  if not render then error("credit-matrix: format must be by-author, by-role or table", 0) end
+  local para = render(authors, options.levels, locale)
   if not para then return nil end
 
   -- Pandoc's own templates print an author map as "true", so outside Quarto (which builds its own
@@ -447,7 +525,6 @@ function Pandoc(doc)
     end)
   end
 
-  local options = doc.meta["credit-matrix"] or {}
   local heading = options.heading and stringify(options.heading) or TRANSLATIONS[locale].heading
   local placement = options.placement and stringify(options.placement) or "end"
 

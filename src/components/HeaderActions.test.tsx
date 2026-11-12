@@ -172,15 +172,15 @@ describe("Undo after a pasted statement", () => {
     await act(() => useContributionStore.persist.rehydrate());
     act(() => {
       useContributionStore.getState().createDraft();
-      useContributionStore.getState().addAuthor("Ann Bell");
+      useContributionStore.getState().addAuthor("Ada Lovelace");
     });
     fireEvent.click(screen.getByRole("button", { name: english.import }));
-    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "AB: conceptualization." } });
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "AL: conceptualization." } });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.statementReview })));
     fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
-    const ann = useContributionStore.getState().authors[0];
-    if (!ann) throw new Error("expected Ann");
-    return ann;
+    const ada = useContributionStore.getState().authors[0];
+    if (!ada) throw new Error("expected Ada");
+    return ada;
   }
   const score = (role: string) =>
     useContributionStore.getState().authors[0]?.contributions.find((c) => c.role === role)?.score;
@@ -193,8 +193,8 @@ describe("Undo after a pasted statement", () => {
   });
 
   it("keeps an edit made after applying, and says why nothing was undone", async () => {
-    const ann = await applyStatement();
-    act(() => useContributionStore.getState().setAuthorScore(ann.id, 1, 100));
+    const ada = await applyStatement();
+    act(() => useContributionStore.getState().setAuthorScore(ada.id, 1, 100));
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
     expect(score("Conceptualization")).toBe(100);
     expect(score("Data curation")).toBe(100);
@@ -212,7 +212,7 @@ describe("importing over a draft", () => {
     };
   });
 
-  /** A draft holding Ann Bell, and the import dialog filled with `text` and submitted. */
+  /** A draft holding Ada Lovelace, and the import dialog filled with `text` and submitted. */
   async function importOver(text: string) {
     render(
       <IntlProvider locale="en" messages={en}>
@@ -223,27 +223,27 @@ describe("importing over a draft", () => {
     await act(() => useContributionStore.persist.rehydrate());
     act(() => {
       useContributionStore.getState().createDraft();
-      useContributionStore.getState().addAuthor("Ann Bell");
+      useContributionStore.getState().addAuthor("Ada Lovelace");
     });
-    const ann = useContributionStore.getState().authors[0];
+    const ada = useContributionStore.getState().authors[0];
     fireEvent.click(screen.getByRole("button", { name: english.import }));
     fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: text } });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
-    return ann;
+    return ada;
   }
   const names = () => useContributionStore.getState().authors.map((author) => author.name);
 
   it("replaces with an Undo that brings the draft back", async () => {
-    await importOver("Bo Chen");
+    await importOver("Grace Hopper");
     fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
-    expect(names()).toEqual(["Bo Chen"]);
+    expect(names()).toEqual(["Grace Hopper"]);
     expect(screen.getByText("Imported 1 contributor.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
-    expect(names()).toEqual(["Ann Bell"]);
+    expect(names()).toEqual(["Ada Lovelace"]);
   });
 
   it("restores a JSON toolchain on replace and its previous choice on Undo", async () => {
-    await importOver(toJson([createAuthor("Bo Chen")], { toolchain: "typst" }));
+    await importOver(toJson([createAuthor("Grace Hopper")], { toolchain: "typst" }));
     act(() => useContributionStore.getState().setToolchain("word"));
     fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
     expect(useContributionStore.getState().toolchain).toBe("typst");
@@ -253,91 +253,91 @@ describe("importing over a draft", () => {
   });
 
   it("undoes a replace that set no toolchain after a tool is picked", async () => {
-    await importOver("Bo Chen");
+    await importOver("Grace Hopper");
     fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
     act(() => useContributionStore.getState().setToolchain("quarto"));
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
-    expect(names()).toEqual(["Ann Bell"]);
+    expect(names()).toEqual(["Ada Lovelace"]);
     expect(useContributionStore.getState().toolchain).toBe("quarto");
   });
 
   it("imports a file naming an unknown toolchain and says it was left out", async () => {
-    await importOver(JSON.stringify({ ...JSON.parse(toJson([createAuthor("Bo Chen")])), toolchain: "rmarkdown" }));
+    await importOver(JSON.stringify({ ...JSON.parse(toJson([createAuthor("Grace Hopper")])), toolchain: "rmarkdown" }));
     expect(screen.getByText(english.importToolchainDropped)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
-    expect(names()).toEqual(["Bo Chen"]);
+    expect(names()).toEqual(["Grace Hopper"]);
   });
 
   it("keeps the current toolchain when adding contributors from another toolchain", async () => {
-    await importOver(toJson([createAuthor("Bo Chen")], { toolchain: "typst" }));
+    await importOver(toJson([createAuthor("Grace Hopper")], { toolchain: "typst" }));
     act(() => useContributionStore.getState().setToolchain("word"));
     fireEvent.click(screen.getByRole("button", { name: "Add 1 new" }));
     expect(useContributionStore.getState().toolchain).toBe("word");
   });
 
   it("adds only the new contributors and keeps the ones already here", async () => {
-    const ann = await importOver("Ann Bell\nBo Chen");
+    const ada = await importOver("Ada Lovelace\nGrace Hopper");
     fireEvent.click(screen.getByRole("button", { name: "Add 1 new" }));
-    expect(names()).toEqual(["Ann Bell", "Bo Chen"]);
-    expect(useContributionStore.getState().authors[0]?.id).toBe(ann?.id);
+    expect(names()).toEqual(["Ada Lovelace", "Grace Hopper"]);
+    expect(useContributionStore.getState().authors[0]?.id).toBe(ada?.id);
     expect(screen.getByText("Added 1 contributor to this draft.")).toBeTruthy();
   });
 
   it("brings the answers a file holds for the contributors it adds", async () => {
-    const ann = createAuthor("Ann Bell");
-    const bo = createAuthor("Bo Chen");
-    const asks = { [ann.id]: { sentAt: 1, prefilled: false }, [bo.id]: { sentAt: 2, prefilled: false } };
-    await importOver(toJson([ann, bo], { asks }));
+    const ada = createAuthor("Ada Lovelace");
+    const grace = createAuthor("Grace Hopper");
+    const asks = { [ada.id]: { sentAt: 1, prefilled: false }, [grace.id]: { sentAt: 2, prefilled: false } };
+    await importOver(toJson([ada, grace], { asks }));
     fireEvent.click(screen.getByRole("button", { name: "Add 1 new" }));
     const state = useContributionStore.getState();
-    expect(state.asks[bo.id]).toEqual(asks[bo.id]);
-    // Ann was already here: her row and its asks stay the draft's.
-    expect(state.authors[0]?.id).not.toBe(ann.id);
-    expect(Object.keys(state.asks)).toEqual([bo.id]);
+    expect(state.asks[grace.id]).toEqual(asks[grace.id]);
+    // Ada was already here: her row and its asks stay the draft's.
+    expect(state.authors[0]?.id).not.toBe(ada.id);
+    expect(Object.keys(state.asks)).toEqual([grace.id]);
   });
 
-  const askBo = () => {
+  const askGrace = () => {
     const { activeDraftId, authors } = useContributionStore.getState();
-    const bo = authors.find((author) => author.name === "Bo Chen");
-    if (!bo) throw new Error("expected Bo");
+    const grace = authors.find((author) => author.name === "Grace Hopper");
+    if (!grace) throw new Error("expected Grace");
     useContributionStore
       .getState()
-      .applyAskStep(activeDraftId, { kind: "sent", contributorId: bo.id, prefilled: false, at: 9 });
+      .applyAskStep(activeDraftId, { kind: "sent", contributorId: grace.id, prefilled: false, at: 9 });
   };
-  const markBo = () => {
-    const bo = useContributionStore.getState().authors.find((author) => author.name === "Bo Chen");
-    useContributionStore.getState().setSelfId(bo?.id ?? null);
+  const markGrace = () => {
+    const grace = useContributionStore.getState().authors.find((author) => author.name === "Grace Hopper");
+    useContributionStore.getState().setSelfId(grace?.id ?? null);
   };
   const retitle = () => useContributionStore.getState().setTitle("A newer title");
 
   it.each([
-    ["an ask sent", askBo],
-    ["the you mark set", markBo],
+    ["an ask sent", askGrace],
+    ["the you mark set", markGrace],
     ["the title edited", retitle],
   ])("refuses Undo of a replace after %s, and keeps it", async (_, change) => {
-    await importOver("Bo Chen");
+    await importOver("Grace Hopper");
     fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
     act(change);
     const after = useContributionStore.getState();
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
     const now = useContributionStore.getState();
-    expect(names()).toEqual(["Bo Chen"]);
+    expect(names()).toEqual(["Grace Hopper"]);
     expect([now.asks, now.selfId, now.title]).toEqual([after.asks, after.selfId, after.title]);
     expect(screen.getByText(english.importUndoStale)).toBeTruthy();
   });
 
   it.each([
-    ["an ask sent", askBo],
-    ["the you mark set", markBo],
+    ["an ask sent", askGrace],
+    ["the you mark set", markGrace],
     ["the title edited", retitle],
   ])("refuses Undo of an add after %s, and keeps it", async (_, change) => {
-    await importOver("Ann Bell\nBo Chen");
+    await importOver("Ada Lovelace\nGrace Hopper");
     fireEvent.click(screen.getByRole("button", { name: "Add 1 new" }));
     act(change);
     const after = useContributionStore.getState();
     fireEvent.click(screen.getByRole("button", { name: english.undo }));
     const now = useContributionStore.getState();
-    expect(names()).toEqual(["Ann Bell", "Bo Chen"]);
+    expect(names()).toEqual(["Ada Lovelace", "Grace Hopper"]);
     expect([now.asks, now.selfId, now.title]).toEqual([after.asks, after.selfId, after.title]);
     expect(screen.getByText(english.importUndoStale)).toBeTruthy();
   });

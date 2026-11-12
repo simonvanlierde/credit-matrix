@@ -80,7 +80,8 @@ test.describe("Offline", () => {
       await old.addAll(["/docs/quarto", "/pagefind/pagefind.js"]);
     });
 
-    await page.goto("/");
+    // Keep the seeding document alive until the new worker has carried its cached docs forward.
+    await page.evaluate(() => navigator.serviceWorker.register("/sw.js"));
     await page.evaluate(() => navigator.serviceWorker.ready);
     await expect.poll(() => page.evaluate(() => caches.keys())).not.toContain("credit-matrix-v0-docs");
 
