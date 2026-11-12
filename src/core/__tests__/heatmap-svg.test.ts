@@ -695,7 +695,7 @@ describe("buildHeatmapSvg golden layouts", () => {
     expect(make({ labels: "tiny" })).toThrow("Unknown heatmap labels.");
     expect(make({ palette: "pink" })).toThrow("Unknown heatmap palette.");
     expect(make({ colorBy: "mood" })).toThrow("Unknown heatmap colorBy.");
-    expect(make({ legendPosition: "top" })).toThrow("Unknown heatmap legend position.");
+    expect(make({ legendPosition: "top" })).toThrow("Unknown heatmap legend position. Use auto, right or bottom.");
     expect(make({ palette: "toString" })).toThrow("Unknown heatmap palette.");
   });
 

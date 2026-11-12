@@ -57,7 +57,7 @@ See [deploying](docs/deploy.md).
   instead of 43 MB. Without the fonts package, the CLI, the document plugins and
   `createFigureRenderer` download each face from jsDelivr on first use, check its SHA-256 hash and
   cache it on the machine. Offline with nothing cached, PDF stops with an error and SVG draws the
-  text in system fonts with a warning. See [the CLI section](src/core/README.md#cli).
+  text in system fonts with a warning. See [the CLI section](docs/cli.md#fonts-and-offline-use).
 - **Breaking:** in `createFigureRenderer`, replace `fontFallback` with `fonts`, a function that
   returns a face's bytes. A bundled app passes `fonts` from `credit-matrix-fonts`. If you self-host
   the fonts, serve the `credit-matrix-fonts` package folder (for example at `/fonts/`) and import

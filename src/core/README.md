@@ -1,8 +1,8 @@
 # credit-matrix
 
-[CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) statements and exports, as the
-[CRediT Matrix](https://credit.duinlab.nl) web app runs them in the browser. It is an ESM package
-with types, with no tie to React, and runtime dependencies `zod` and `@lingui/core`.
+[CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) statements and exports: the code
+behind the [CRediT Matrix](https://credit.duinlab.nl) web app. It is a typed ESM package that does
+not depend on React. Its runtime dependencies are `zod` and `@lingui/core`.
 
 ```bash
 npm install credit-matrix
@@ -28,110 +28,50 @@ toJats4rXml(authors);
 
 ## CLI
 
-The package also installs a `credit-matrix` command: the CLI, with an XML parser bundled. It needs
-Node 22.19 or later. Run it with `npx credit-matrix` without installing, or with
-`node src/core/dist/cli.js` from a clone after `pnpm --filter credit-matrix build`.
+The package also installs a `credit-matrix` command. It needs Node 22.19 or later. Run it with
+`npx credit-matrix`, or from a clone with `node src/core/dist/cli.js` after
+`pnpm --filter credit-matrix build`.
 
 ```bash
 npx credit-matrix statement team.csv --format by-author --locale fr --levels
-npx credit-matrix statement draft.json --format codemeta   # CodeMeta 3.0 people and roles
-npx credit-matrix convert paper.xml --to json      # convert a JATS4R file to native JSON
-npx credit-matrix convert team.csv --to crossref   # the <contributors> block of a Crossref deposit
-npx credit-matrix convert team.csv --to jats --yes-no  # roles without a level
-npx credit-matrix convert team.csv --to svg > heatmap.svg  # the heatmap; --locale sets its language
-npx credit-matrix convert team.csv --to pdf > heatmap.pdf  # embedded fonts and selectable text
-npx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
-npx credit-matrix convert team.csv --to quarto > authors.yml  # Quarto/Pandoc author metadata, with levels
-npx credit-matrix convert team.csv --to myst > authors.yml    # MyST/Jupyter Book author metadata, without levels
-npx credit-matrix ask draft.json --contributor "Grace Hopper" --blank
-npx credit-matrix --help                           # or --version
+npx credit-matrix convert team.csv --to jats
+npx credit-matrix convert team.csv --to svg > heatmap.svg
 ```
 
-Each command reads a file, or `-` for standard input, in any format `importAny` reads. Spreadsheet
-files (.xlsx, .xls, .ods) are refused: save the sheet as CSV first. `statement --levels` adds Equal or
-Supporting after each contribution below Lead. `statement` exits with 1 when nobody has a role yet.
-`convert --to svg` and `--to pdf` write a warning to stderr, starting `credit-matrix: `, when the
-heatmap's labels would print under 6 pt on a full page; the figure is still written.
-`convert --to md` and `--to svg` take `--locale` too, for the language of the role names. `--to svg`
-takes `--yes-no` for flat cells with no levels.
-
-`--to svg` and `--to pdf` need the figure fonts. With the
-[`credit-matrix-fonts`](../fonts/README.md) package installed (30 MB to download, 55 MB on disk),
-the CLI reads them from disk and works offline. Install both packages in one project
-(`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`. Under a bare
-`npx credit-matrix`, the CLI cannot see a `credit-matrix-fonts` installed in your own project. In
-that case run `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. Without the fonts package, the CLI downloads each face the first
-time a figure needs it, from `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.1/`. It checks
-the file against the SHA-256 hash in this package and refuses one that does not match. It then
-keeps the face in `$XDG_CACHE_HOME/credit-matrix/fonts/`, or the platform cache folder (`~/.cache`,
-`~/Library/Caches` on macOS, `%LOCALAPPDATA%` on Windows). That download is the only network request
-the CLI makes. jsDelivr sees your IP address and which faces you request, which shows which scripts
-the names use. Installing `credit-matrix-fonts` avoids the request. Offline with nothing cached, `--to pdf` stops with an error that names both fixes,
-and `--to svg` draws the text in system fonts with a warning.
-
-`--font` takes `sans`, `serif` or the name of an installed font family. The CLI looks for a family in
-each `--font-path <dir>` (repeatable, searched in order) and then in the system font folders, unless
-`--ignore-system-fonts`, and prints the file it used to standard error:
-
-```sh
-npx credit-matrix convert team.csv --to pdf --font Inter --font-path fonts > heatmap.pdf
-# credit-matrix: font: Inter from /home/you/paper/fonts/Inter-Regular.ttf
-```
-
-The family draws Latin and the other characters it has; complex scripts and emoji keep their own
-faces, and the Noto faces draw what it lacks: serif ones for a serif family, else sans, or the ones
-`--font-fallback sans|serif` names. A family it cannot find, or one installed only
-as a web font (`.woff`, `.woff2`), stops the export with exit code 1. See
-[Use your own font](../../integrations/figures/README.md#use-your-own-font).
-`--locale` also takes a regional tag: `de-DE` gives German, `pt-BR` Portuguese (Portugal), `zh-CN`
-simplified Chinese. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant`) has no catalog and
-gives English.
-
-`statement --format` takes `by-role` (the default), `by-role-short`, `by-author`, `by-author-short`
-or `codemeta`. See [CodeMeta attribution](#codemeta-attribution) for its output and limits.
-
-`ask` prints a link that opens the contributor's own row in the web app (`--base-url` points it at
-another copy). `--contributor` takes an id, a full name, or a first name or surname only one person
-has; when nothing matches, the error lists the contributors. The link they send back can be read
-with `convert`.
-
-A mistake in the command line prints one line and exits with 2; any other error exits with 1.
+The [CLI reference](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/cli.md) lists every command, flag, exit code and output format.
 
 ### RO-Crate attribution
 
-`credit-matrix convert draft.json --to ro-crate` exports people and linked CRediT roles for an existing RO-Crate 1.2 package.
-`toRoCrateFragment(authors)` returns `{ metadata, warnings }` with the same fragment.
-It includes proposed root links but no package title, date or licence, so it is not a standalone crate.
-See [merging and validating the fragment](../../integrations/ro-crate/README.md).
+`credit-matrix convert draft.json --to ro-crate` exports people and linked CRediT roles for an
+existing RO-Crate 1.2 package. `toRoCrateFragment(authors)` returns `{ metadata, warnings }` with the
+same fragment. It has no package title, date or licence, so it is not a standalone crate.
+[Merge and validate it](../../integrations/ro-crate/README.md) in your package.
 Keep native JSON for scores and replies.
 
 ### CodeMeta attribution
 
 `credit-matrix statement draft.json --format codemeta` prints a CodeMeta 3.0 attribution
-fragment with `@context`, `author` and `contributor` fields. Each person with a score above zero
-gets a `Person` record and one linked `Role` per active CRediT role. Non-authors go in
-`contributor`. People with no active roles are absent. Names use the roster's structured fields;
-particles, suffixes and supplied family-first names are preserved.
+fragment with `@context`, `author` and `contributor` fields. `toCodemeta(authors)` returns the
+same fragment as `{ metadata, warnings }`, without writing to standard error.
 
-Merge these fields into the work's `codemeta.json`. The fragment has no software title, version
-or release information. Use its `author` and `contributor` lists together, including their Person records.
+Each person with a score above zero gets a `Person` record and one linked `Role` per active CRediT
+role. Non-authors go in `contributor`. People with no active roles are absent. Names use the
+roster's structured fields, which keep particles, suffixes and family-first names.
 
-A Person's `id` is their canonical ORCID URL when supplied. Otherwise, a fragment such as
-`#credit-matrix-person-2` links their roles within this document. These local links use roster
-positions, change when the roster order changes, and are not ORCIDs or persistent identities.
-The CLI warns for each local link. Re-export the full attribution together instead of combining
-local links from separate exports.
+Merge the fragment into the work's `codemeta.json`, keeping `author` and `contributor` together with
+their Person records. It has no software title or version.
+
+A Person's `id` is their canonical ORCID URL when supplied. Otherwise it is a local link such as
+`#credit-matrix-person-2`, which ties their roles together within this document. Local links use
+roster positions and change when the roster order changes. They are not ORCIDs or persistent
+identities, so re-export the full attribution instead of combining local links from separate
+exports.
 
 `Role.roleName` is the role's `credit.niso.org` URL. `schema:author` links each Role to its Person,
-including roles in `contributor`. Scores and contribution levels have no slot in this export;
-the CLI warns about that loss. Keep the native roster JSON for those values, equal contribution,
-correspondence and replies.
+including roles in `contributor`. The export has no slot for scores or contribution levels. Keep the
+native roster JSON for those, and for equal contribution, correspondence and replies.
 
-The package also exports `toCodemeta(authors)`, returning `{ metadata, warnings }` without writing
-to standard error. The [citesync integration check](../../integrations/codemeta/README.md) runs
-the built CLI's output through the existing citation-file writer. CFF has no field for a general
-contributor list or roles. Zenodo needs a separately chosen contributor type; a CRediT role does
-not supply one.
+For CITATION.cff and Zenodo, see the [citesync integration check](../../integrations/codemeta/README.md).
 
 ## Domain model
 
@@ -147,8 +87,8 @@ to `createAuthor`. `normalizeRoster` preserves parts that spell the full name, i
 family-first names with or without spaces. It does not infer family order from a display name.
 The [shared name cases](../../conformance/names/README.md) record this contract.
 
-`contributorType` is either `author` or `non-author`. A statement can put non-author contributors
-on a separate `Acknowledgements:` line. The JATS4R export writes the value as `contrib-type`.
+`contributorType` is `author` or `non-author`. A statement can put non-author contributors on a
+separate `Acknowledgements:` line. The JATS4R export writes the value as `contrib-type`.
 
 A contribution stores a **0–100 integer score**, not a yes/no value. `scoreToLevel()` maps scores to
 CRediT's optional levels of contribution:
@@ -160,12 +100,12 @@ CRediT's optional levels of contribution:
 | `34–66`  | `equal`      |
 | `67–100` | `lead`       |
 
-The 14 roles are defined once, in `credit-roles.ts`, with their NISO UUIDs, descriptions, and URLs,
-and the `CreditRoleName` union derives from them.
+`credit-roles.ts` defines the 14 roles once, with their NISO UUIDs, descriptions and URLs. The
+`CreditRoleName` union derives from them.
 
-`AuthorSchema` and `ContributionSchema` validate imported data and any other data the app can't
-trust. Scores must be `0–100` integers, and roles must be known CRediT names. ORCID iDs are checked
-for shape and checksum.
+`AuthorSchema` and `ContributionSchema` validate imported data and any other data you can't trust.
+Scores must be `0–100` integers, and roles must be known CRediT names. ORCID iDs are checked for
+shape and checksum.
 
 ## Statements
 
@@ -176,7 +116,7 @@ for shape and checksum.
 - **`by-author`**: `CRediT: Grace Hopper: Conceptualization, Software; …`
 - **`by-author-short`**: same grouping as `by-author`, using initials
 
-The options you'll most likely want:
+Common options:
 
 - `showLevels`: mark non-lead contributions with their level, after the role in by-author formats
   (for example `Software (Equal)`) and after the name in by-role formats
@@ -187,10 +127,12 @@ The options you'll most likely want:
 
 Only non-zero contributions appear in statements.
 
-`statementSpans(authors, options)` returns the same plain-text statement as a list of `{ text, cell?, authorId?, role? }`
-spans, where `cell` names the contributor id and role a phrase stands for (the role in a by-author
-statement, the name in a by-role one); `authorId` marks a name that is not itself a phrase (by-author), and `role` is set on a by-role statement's role label. Joined in order, the text is exactly `generateStatement`'s
-output, so a viewer can tie each phrase back to its cell.
+`statementSpans(authors, options)` returns the same plain-text statement as a list of
+`{ text, cell?, authorId?, role? }` spans. Joined in order, the text is exactly
+`generateStatement`'s output, so a viewer can tie each phrase back to its cell. `cell` names the
+contributor id and role a phrase stands for: the role in a by-author statement, the name in a
+by-role one. `authorId` marks a name that is not itself a phrase (by-author). `role` is set on a
+by-role statement's role label.
 
 ## Import / export
 
@@ -208,29 +150,28 @@ output, so a viewer can tie each phrase back to its cell.
 | Heatmap SVG | `buildHeatmapSvg` | —                                   |
 
 `toQuarto(authors, { yesNo: false })` returns an `author:` YAML block with names, ORCID iDs and
-canonical CRediT roles with lead/equal/supporting degrees. Set `yesNo: true` to omit degrees.
+canonical CRediT roles with lead/equal/supporting degrees. `yesNo: true` omits the degrees.
 Paste it into Quarto or Pandoc manuscript front matter. `toMyst(authors)` returns `authors:` with
 ungraded roles; paste it into page front matter, or indent it under `project:` in `myst.yml`.
 The app offers both under Export data, with Copy and Download. They list authors only, including
 those with no roles yet. Acknowledge non-author contributors separately. Keep native JSON for
-exact scores, equal-contribution and corresponding-author markers, and coauthor replies.
+exact scores, markers and replies.
 
-The [Quarto](https://quarto.org/docs/journals/authors.html#roles) schema supports contribution degrees;
-the [MyST](https://mystmd.org/guide/frontmatter#authors) schema has role names only.
-Use the [Quarto](../../integrations/quarto/README.md) or [MyST](../../integrations/myst/README.md)
-plugin to render a statement from these blocks.
+The [Quarto](https://quarto.org/docs/journals/authors.html#roles) schema supports contribution degrees.
+The [MyST](https://mystmd.org/guide/frontmatter#authors) schema has role names only.
+To render a statement from these blocks, use the [Quarto](../../integrations/quarto/README.md) or
+[MyST](../../integrations/myst/README.md) plugin.
 
-`buildHeatmapSvg` returns an SVG string that needs nothing else: it uses system fonts and embeds no
-assets.
-Its `<desc>` is the by-author contribution statement, so a screen reader hears who did what;
+`buildHeatmapSvg` returns a self-contained SVG string. It uses system fonts and embeds no assets.
+Its `<desc>` is the by-author contribution statement, so a screen reader hears who did what.
 `heatmapDescription` returns that text, for an image's alt text or a PNG's Description field.
 
-For embedded fonts, use the separate `credit-matrix/figures` entry. Create its renderer once; it loads
-each font face when a figure first needs it, the way the [CLI](#cli) does. Pass `fonts` to supply the
-bytes yourself: `fonts(face)` gets a face key from the
+For embedded fonts, use the separate `credit-matrix/figures` entry. Create its renderer once. It
+loads each font face when a figure first needs it, as the [CLI](#cli) does. To supply the bytes
+yourself, pass `fonts`. `fonts(face)` gets a face key from the
 [fonts table](../fonts/README.md), such as `"sans"`, `"serif-jp"` or `"sans-arabic"`, `"harfbuzz"`
-for the shaping engine or `"harfbuzz-subset"` for the subsetter. In a bundled app, pass the `fonts` export of `credit-matrix-fonts`, so the bundler emits
-the faces as assets:
+for the shaping engine or `"harfbuzz-subset"` for the subsetter. In a bundled app, pass the `fonts`
+export of `credit-matrix-fonts`, so the bundler emits the faces as assets:
 
 ```ts
 import { createFigureRenderer } from "credit-matrix/figures";
@@ -240,56 +181,59 @@ const svg = await figures.svg(authors, { acronyms: false });
 const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
 ```
 
-The app downloads and CLI use this renderer. It embeds regular Noto Sans or Noto Serif fonts and measures labels
-with their actual widths. In Node, `font` also takes a font family name, searched in `fontPath` and then
-the system fonts unless `ignoreSystemFonts`, and `fontFallback` picks the sans or serif faces for what it
-lacks, and a family it cannot find raises `FigureFontFileError`; `createFigureRenderer({ onFont })` reports the file it used. Unsupported glyphs raise `FigureFontError`. Pass
-`fallback: "system"` to `svg()` to draw them in the system font stack instead; `pdf()` always raises.
-See the [figure font guide](../../integrations/figures/README.md) for offline use, supported scripts
-and editor compatibility. The lightweight `buildHeatmapSvg` API keeps its system-font output.
+The app downloads and the CLI use this renderer. It embeds regular Noto Sans or Noto Serif fonts and
+measures labels with their actual widths. In Node, `font` also takes a font family name. It is searched in `fontPath`, then in the system
+fonts unless `ignoreSystemFonts` is set. `fontFallback` picks the sans or serif faces for what the
+family lacks. A family it cannot find raises `FigureFontFileError`.
+`createFigureRenderer({ onFont })` reports the file it used. Unsupported glyphs raise
+`FigureFontError`. Pass `fallback: "system"` to `svg()` to draw them in the system font stack
+instead. `pdf()` always raises.
 
-The [figure options guide](../../integrations/heatmap.md) covers palettes, shapes, cell size, fonts, legends,
-short labels and orientation for the JavaScript API, CLI and document plugins.
+The [figure font guide](../../integrations/figures/README.md) covers offline use, supported scripts
+and editor compatibility. The [figure options guide](../../integrations/heatmap.md) covers palettes,
+shapes, cell size, fonts, legends, short labels and orientation for the JavaScript API, CLI and
+document plugins. The lightweight `buildHeatmapSvg` keeps its system-font output.
 
-`fromCsv` needs a `Name` column. Other headers and role names match whatever their case or kind of
+`fromCsv` needs a `Name` column. Other headers and role names match in any case and with any kind of
 dash. A score cell is a number from 0 to 100 or a level word (`None`, `Supporting`, `Equal`, `Lead`).
 Rows without a usable name are skipped.
 
 `toTenzing` writes the columns of tenzing's example CSV. tenzing records a role as done or not, so
 any score above 0 becomes `TRUE`, and equal contribution is not kept. Rows run in byline order:
 authors in draft order, then acknowledgees, numbered on from the authors. Affiliations, email,
-funding and declarations are left empty for the team.
+funding and declarations are empty, for the team to fill in.
 
 `toLatexCredits` writes one granular `\credit` line per author, with each score as a fraction of 1,
 so `\insertcreditsgranular` shades lead, equal and supporting differently. Acknowledgees are left out.
 
-`fromJats4rXml(xml, { parser })` and `fromCrossrefContributors` read XML with `parser`, which defaults to the global `DOMParser`.
-In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:
+`fromJats4rXml(xml, { parser })` and `fromCrossrefContributors` read XML with `parser`, which
+defaults to the global `DOMParser`. In Node, pass one, such as [linkedom](https://github.com/WebReflection/linkedom)'s:
 
 ```ts
 import { DOMParser } from "linkedom";
 fromJats4rXml(xml, { parser: new DOMParser() });
 ```
 
-`detectFormat(text)` guesses the format from the text's shape, and `importAny(text, { parser })`
-reads any of them, share links and [tenzing](https://github.com/marton-balazs-kovacs/tenzing)
-spreadsheets (CSV or TSV) included. It returns the `format` it read, plus `asks`, `selfId` and
-`title` when the format includes them. Text that assigns CRediT roles ("MG: conceptualization",
-"Methodology, A.B.") or tells in sentences what the authors did is a `"statement"`, which
-`importAny` refuses: a statement names roles, not contributors. It also throws `ExportOnlyError`
-for Quarto or MyST author YAML and an RO-Crate fragment, which the app writes but cannot read back.
+`detectFormat(text)` guesses the format from the text's shape. `importAny(text, { parser })` reads
+any of them, including share links and [tenzing](https://github.com/marton-balazs-kovacs/tenzing)
+spreadsheets (CSV or TSV). It returns the `format` it read, plus `asks`, `selfId` and `title` when
+the format includes them.
+
+`importAny` refuses a `"statement"`: text that assigns CRediT roles ("MG: conceptualization",
+"Methodology, A.B.") or tells in sentences what the authors did. A statement names roles, not
+contributors. It throws `ExportOnlyError` for Quarto or MyST author YAML and an RO-Crate fragment,
+which the app writes but cannot read back.
 
 `parseStatement(text, authors)` reads a free-text CRediT statement against an author list of
-`{ given, surname }` (`statementAuthor(author)` splits a contributor's name that way). It returns
-`assignments`, each an author index and a role name, and `unresolved`: names or initials that fit
-no author, or more than one, which it never guesses. `unmatched` lists each of those once, with
+`{ given, surname }`. `statementAuthor(author)` splits a contributor's name that way.
+
+It returns `assignments`, each an author index and a role name, and `unresolved`: names or initials
+that fit no author, or more than one. It never guesses. `unmatched` lists each of those once, with
 `candidates` (the author indices it could be, empty when none) and the `roles` left out for it.
-It throws a `RangeError` on text longer than `MAX_STATEMENT_LENGTH` (120,000 characters); real
-statements stay under 5,000. Only CRediT wording counts, so "A.B. conceived
-the study" yields nothing. It does not judge whether the text is a CRediT statement at all:
-`namesCredit(text)` says whether it uses a term prose rarely does (conceptualization, data curation,
-original draft, ...). The parser is a port of the one in `census/`, which is scored there against
-the roles publishers tag, and a test holds the two to the same output.
+Only CRediT wording counts, so "A.B. conceived the study" yields nothing. It throws a `RangeError`
+on text longer than `MAX_STATEMENT_LENGTH` (120,000 characters). It does not judge whether the text
+is a CRediT statement at all. `namesCredit(text)` says whether it uses a term prose rarely does
+(conceptualization, data curation, original draft, ...).
 
 ```ts
 const authors = [createAuthor("Mark Green"), createAuthor("Eva Mills")];
@@ -301,10 +245,12 @@ const { assignments, unresolved } = parseStatement(
 
 `toJson(authors, { asks, includeAnswers, selfId })` also writes the asks and co-author answers
 (unless `includeAnswers` is `false`), and `selfId`, the contributor who made the file. Both are
-optional, so older files still load. `fromJson` returns `{ authors, asks?, selfId? }`. It throws a
-`NewerVersionError` for a file whose `version` is higher than the one this build writes
-(`JSON_EXPORT_VERSION` in `export/json.ts`). It throws a `RepeatedIdError` for a file that repeats a
-contributor id, and a `ZodError` for any other data that does not match.
+optional, so older files still load.
+
+`fromJson` returns `{ authors, asks?, selfId? }`. It throws `NewerVersionError` for a file whose
+`version` is higher than the one this build writes (`JSON_EXPORT_VERSION` in `export/json.ts`),
+`RepeatedIdError` for a file that repeats a contributor id, and `ZodError` for any other data that
+does not match.
 
 ## Asks and review
 
@@ -315,8 +261,8 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
 `corresponding`). `ASK_TARGETS` lists them in order.
 
 - `askStep(state, event)`: every change to asks and replies (`sent`, `reply`, `settle`). It has no
-  side effects: the time comes in on the event, and it never throws on the row in a reply, which it
-  can't trust. Returns an `outcome`, a `patch`, and the `undo` patch.
+  side effects: the time comes in on the event. It never throws on the row in a reply, which it
+  can't trust. It returns an `outcome`, a `patch`, and the `undo` patch.
 - `applyPatch(state, patch)`: applies a patch to `{ authors, asks }`. It skips rows that are gone, so
   a late undo never brings back an ask for a removed row.
 - `review(author, ask)`: the ask's status (`none`, `asked`, `differs`, `settled`), every difference
@@ -331,20 +277,19 @@ target. A target is one of the 14 roles or one of the two markers (`equalContrib
 - `AskSchema` validates stored and imported asks.
 
 A reply can include an ORCID sign-in. The caller checks it and passes it on the `reply` event as
-`orcid`; the reply keeps it as `provenance.orcid` (an `OrcidProof`). What "verified" means is
-defined in the module comment of `orcid-proof.ts`. When a reply changes the row's iD, signed or not,
+`orcid`. The reply keeps it as `provenance.orcid` (an `OrcidProof`). The module comment of
+`orcid-proof.ts` defines what "verified" means. When a reply changes the row's iD, signed or not,
 it keeps the iD the ask went to as `provenance.replacedOrcid`, and later replies keep it too.
 
-Run `recheckSignIns(asks, fetchOrcidKeys)` on the `asks` that `fromJson` or `importAny` returns before
-you show any sign-in as verified. `provenance.orcid` then holds only checked sign-ins: when ORCID
-cannot be reached, each one moves to `provenance.uncheckedOrcid`, which you should not show as
-verified, and a later check can still verify it. A sign-in counts only on the row id it signed for.
+Before you show any sign-in as verified, run `recheckSignIns(asks, fetchOrcidKeys)` on the `asks`
+that `fromJson` or `importAny` returns. `provenance.orcid` then holds only checked sign-ins. When
+ORCID cannot be reached, each one moves to `provenance.uncheckedOrcid`. Do not show those as
+verified. A later check can still verify them. A sign-in counts only on the row id it signed for.
 
-`importAnswers` then compares each sign-in with the row it lands on: when it was given for a row
-with another id, name or iD, it sets `provenance.signedElsewhere`, which you should show as a
-warning instead of as verified. The draft is not compared, since an export has no draft id, so a
-copied file can bring a true sign-in into another draft. `fromJson` refuses a file that repeats a
-row id.
+`importAnswers` then compares each sign-in with the row it lands on. When the sign-in was given for
+a row with another id, name or iD, it sets `provenance.signedElsewhere`. Show that as a warning, not
+as verified. The draft is not compared, since an export has no draft id, so a copied file can bring
+a true sign-in into another draft. `fromJson` refuses a file that repeats a row id.
 
 To check a reply link's sign-in yourself, pass it to `verifyOrcidToken` with the keys from
 `fetchOrcidKeys()`.
@@ -389,8 +334,8 @@ holds its exact shape. By entry point:
   `RoleCatalog`, `RoleDescriber`, `RoleTranslator`, `UiCatalog`, `UiKey`, `UiTranslator`
 - `credit-matrix/element`: `CreditMatrixElement`
 
-The palette, the limits and the merge helpers are internal: the web app imports core modules by
-path (`@/core/author`, …), and users of the package get only the entry points above.
+The palette, the limits and the merge helpers are internal. The web app imports core modules by
+path (`@/core/author`, …). Package users get only the entry points above.
 
 ## Testing
 
@@ -399,19 +344,19 @@ pnpm test                          # from the repository root
 pnpm --filter credit-matrix build  # dist/, as published
 ```
 
-The core tests run under Node, with linkedom standing in for `DOMParser`. See
+The core tests run under Node, with linkedom standing in for `DOMParser`.
 [CONTRIBUTING.md](https://github.com/simonvanlierde/credit-matrix/blob/main/CONTRIBUTING.md#testing)
-for the package checks and how to update the type snapshot.
+covers the package checks and how to update the type snapshot.
 
 ### Citation-file imports
 
 `importAny` reads CodeMeta author names and ORCID iDs directly, leaving contribution roles empty.
 CITATION.cff and .zenodo.json need an injected `convertCitation(text, format)` callback that returns
-CodeMeta JSON from citesync. The web app supplies this through a lazy worker running citesync 0.4.0.
-It loads a pinned Pyodide runtime and checksum-verified Python wheels, both from the web app's own site.
-The file stays in the browser. A failed download leaves it available to retry or convert in the
-[citesync playground](https://simonvanlierde.com/citesync/). CodeMeta imports work offline; citation
-imports do after one online use.
+CodeMeta JSON from citesync. The web app supplies this through a lazy worker running citesync 0.4.0. The worker loads a pinned
+Pyodide runtime and checksum-verified Python wheels, both from the web app's own site. The file
+stays in the browser. After a failed download, the file stays available to retry or convert in the
+[citesync playground](https://simonvanlierde.com/citesync/). CodeMeta imports work offline.
+Citation imports work offline after one online use.
 
 `lookupDoiWork` returns optional `roles` on each contributor when Crossref deposits them with the
 CRediT vocabulary. DataCite contributor types are not CRediT roles. The app previews deposited roles

@@ -1,9 +1,9 @@
 # credit-matrix
 
 Write a [CRediT](https://credit.niso.org/) authorship statement in Typst, with a role-by-contributor
-table and heatmap. The wording, levels and translations are the same as in the
-[CRediT matrix app](https://github.com/simonvanlierde/credit-matrix), so you can plan the roles in
-the app, export them as JSON and print them in your paper.
+table and a contribution heatmap. The wording, levels and translations match the
+[CRediT matrix app](https://github.com/simonvanlierde/credit-matrix). Plan the roles in the app,
+export them as JSON and print them in your paper.
 
 ## Install
 
@@ -13,14 +13,14 @@ Import it from [Typst Universe](https://typst.app/universe/package/credit-matrix
 #import "@preview/credit-matrix:0.12.0": *
 ```
 
-To work from the repository instead, copy this folder (`lib.typ`, `translations.json`,
+To work from the repository, copy this folder (`lib.typ`, `translations.json`,
 `typst.toml`) into your project and import `lib.typ`:
 
 ```typ
 #import "credit-matrix/lib.typ": *
 ```
 
-Needs Typst 0.14 or later.
+This needs Typst 0.14 or later.
 
 ## Use
 
@@ -55,10 +55,10 @@ An array of dictionaries, one per person:
 Roles are the slugs of the [CRediT role pages](https://credit.niso.org/): `conceptualization`,
 `data-curation`, `formal-analysis`, `funding-acquisition`, `investigation`, `methodology`,
 `project-administration`, `resources`, `software`, `supervision`, `validation`, `visualization`,
-`writing-original-draft`, `writing-review-editing`. An unknown role stops the build with a message
-that names it.
+`writing-original-draft`, `writing-review-editing`. An unknown role stops the build and the message
+names it.
 
-You can also pass the app's own export: Export data, JSON, then
+To use the app's export, choose Export data, then JSON, and pass the file:
 
 ```typ
 #credit-statement(json("team.json"))
@@ -76,9 +76,9 @@ You can also pass the app's own export: Export data, JSON, then
   and a column per person. A cell shows the level, or a check mark with `levels: false`. Pass
   `marks: (lead: [L], equal: [E], supporting: [S])` for marks of your own.
 - `credit-heatmap(contributors, levels: true, lang: auto, color: auto, cell: 14pt,
-  gap: 1.5pt, ..)`: the app's heatmap, as a figure. Other named arguments, such as `caption`, go
-  to `figure`. Its alt text is the statement, so a screen reader in a tagged PDF reads who did
-  what.
+  gap: 1.5pt, ..)`: the app's contribution heatmap, as a figure. Other named arguments, such as
+  `caption`, go to `figure`. Its alt text is the statement, so a screen reader in a tagged PDF reads
+  who did what.
 
 Only roles someone holds are shown, in the CRediT order.
 
@@ -87,17 +87,17 @@ Only roles someone holds are shown, in the CRediT order.
 `lang: auto` follows the document's `#set text(lang: ..)`. Role names come from the
 [community CRediT translations](https://github.com/contributorshipcollaboration/credit-translation)
 in English, French, German, Spanish, Italian, Portuguese (`pt`, Portugal), Dutch, Chinese (`zh`,
-simplified) and Japanese. Traditional Chinese (`zh-Hant`, or `region: "TW"`, `"HK"`, `"MO"`) has no catalog and uses English.
-Any other document language falls back to English; an explicit `lang` the package lacks stops the
-build. The "CRediT:" prefix stays English, as in the app.
+simplified) and Japanese. Traditional Chinese (`zh-Hant`, or `region: "TW"`, `"HK"`, `"MO"`) has no
+catalog and uses English. So does any other document language. An explicit `lang` the package lacks
+stops the build. The "CRediT:" prefix stays English, as in the app.
 
 Examples: [a document with inline roles](examples/basic.typ) and
 [one that reads a JSON export in French](examples/team.typ).
 
 ### Accessible PDFs
 
-Give the document a title (`#set document(title: [..])`) so `--pdf-standard ua-1` passes. For a
-tagged PDF, put the table in a figure with a caption, as Typst 0.15 cannot mark row headers:
+Give the document a title (`#set document(title: [..])`) so `--pdf-standard ua-1` passes. Typst 0.15
+cannot mark row headers, so for a tagged PDF put the table in a figure with a caption:
 
 ```typ
 #figure(credit-table(team), caption: [Contributions by role.])
@@ -113,9 +113,8 @@ under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the translators
 ## Contribution heatmap options
 
 See [figure options and examples](../heatmap.md) for palettes, shapes, sizing, labels and orientation.
-Native figures use the document's fonts. `font: "sans"` and `"serif"` set the built-in stacks; any
-other string is a family name, and an array is a list of them, as in `text(font: ...)`. The sans
-stack still draws what your family lacks. Typst finds installed fonts; give it more folders with
-`typst compile --font-path fonts` (or `TYPST_FONT_PATHS`), and `--ignore-system-fonts` for a build
-that ignores installed ones. The top labels use regular weight, as SVG and PDF figures do. See
-[font portability and PDF export](../figures/README.md) for the difference from app and CLI exports.
+The figures use the document's fonts. `font: "sans"` and `"serif"` set the built-in stacks, any other
+string is a family name, and an array is a list of them, as in `text(font: ...)`. Add font folders
+with `typst compile --font-path fonts` (or `TYPST_FONT_PATHS`). The other font options are in
+[Your own font](../heatmap.md#your-own-font). For how these figures differ from app and CLI
+exports, see [font portability and PDF export](../figures/README.md).
