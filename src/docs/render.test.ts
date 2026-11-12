@@ -86,6 +86,12 @@ test("a docs image loads lazily with its intrinsic size", () => {
   expect(html).toMatch(/<img loading="lazy" width="\d+" height="\d+" src="[^"]+basic[^"]*\.png" alt="/);
 });
 
+test("without a size, an image still loads lazily and keeps its target", () => {
+  const html = renderMarkdown("[guide](a.md)\n\n![Figure](b.png)");
+  expect(html).toContain('<a href="a.md">');
+  expect(html).toContain('<img loading="lazy" src="b.png" alt="Figure">');
+});
+
 test("a description stops at the first sentence that does not fit 160 characters", () => {
   const long = "x".repeat(160);
   expect(snippet(`One. ${long}. Two.`)).toBe("One.");
