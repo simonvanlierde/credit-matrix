@@ -54,6 +54,8 @@ it("fails an offline PDF without SVG fallback warnings, while SVG still falls ba
     expect(warn).not.toHaveBeenCalled();
     expect(await run(["convert", csv, "--to", "svg"])).toContain("<text");
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("Drawing its text in system fonts."));
+    // The Sphinx extension reports only prefixed lines: an unprefixed one would vanish from the build log.
+    for (const [line] of warn.mock.calls) expect(String(line)).toMatch(/^credit-matrix: /);
   } finally {
     vi.doUnmock("credit-matrix-fonts");
     vi.unstubAllEnvs();

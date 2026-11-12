@@ -2,7 +2,7 @@
 
 [CRediT (Contributor Roles Taxonomy)](https://credit.niso.org/) statements and exports: the code
 behind the [CRediT Matrix](https://credit.duinlab.nl) web app. It is a typed ESM package that does
-not depend on React. Its runtime dependencies are `zod` and `@lingui/core`.
+not depend on React. Its runtime dependencies are `zod`, `@lingui/core`, `pdf-lib`, `@pdf-lib/fontkit` and `bidi-js`.
 
 ```bash
 npm install credit-matrix
@@ -23,7 +23,7 @@ toJats4rXml(authors);
 | `credit-matrix` | the model and roles, statements, every format, heatmap SVG, links, asks | nothing (in Node, JATS import takes a parser) |
 | `credit-matrix/lookup` | ORCID and DOI lookups | `fetch` |
 | `credit-matrix/i18n` | role names and output strings in nine languages | nothing |
-| `credit-matrix/figures` | embedded-font SVG and PDF heatmaps | bundled Noto fonts; PDF and font libraries |
+| `credit-matrix/figures` | embedded-font SVG and PDF heatmaps | the optional `credit-matrix-fonts` peer, or a one-time download of pinned fonts |
 | `credit-matrix/element` | registers the `<credit-matrix>` element ([docs](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/element.md)) | a DOM |
 
 ## CLI
@@ -182,10 +182,12 @@ const svg = await figures.svg(authors, { acronyms: false });
 const pdf = await figures.pdf(authors, { acronyms: false }); // Uint8Array
 ```
 
-The app downloads and the CLI use this renderer. It embeds regular Noto Sans or Noto Serif fonts and
-measures labels with their actual widths. In Node, `font` also takes a font family name. It is searched in `fontPath`, then in the system
-fonts unless `ignoreSystemFonts` is set. `fontFallback` picks the sans or serif faces for what the
-family lacks. A family it cannot find raises `FigureFontFileError`.
+The app's figure downloads and the CLI use this renderer. It embeds regular Noto Sans or Noto Serif
+fonts and measures labels with their actual widths.
+
+In Node, `font` also takes a font family name. The renderer looks for it in `fontPath`, then in the
+system fonts unless `ignoreSystemFonts` is set. `fontFallback` picks the sans or serif faces for
+the characters the family lacks. A family it cannot find raises `FigureFontFileError`.
 `createFigureRenderer({ onFont })` reports the file it used. Unsupported glyphs raise
 `FigureFontError`. Pass `fallback: "system"` to `svg()` to draw them in the system font stack
 instead. `pdf()` always raises.
@@ -306,7 +308,7 @@ ids unique and short enough for a link, and initials made unique.
 `encodeShareHash(input, baseUrl)` writes a draft, or one contributor's row for an ask, into a
 compressed `#s=…` link, and `decodeShareHash(hash)` reads one back (or returns `null`).
 The optional `toolchain` travels with the draft in both directions; one this build does not know is
-dropped without a warning.
+dropped, and `fromJson` and `importAny` return a warning for it.
 
 ## Exports
 
@@ -323,7 +325,7 @@ holds its exact shape. By entry point:
     `StatementSpan`, `StatementCell`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `XmlParseError`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
-    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `HeatmapOptionError`, `heatmapDescription`, `heatmapPrintWarning`, `HeatmapSvgOptions`, `detectFormat`,
+    `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `HeatmapOptionError`, `heatmapDescription`, `heatmapPrintWarning`, `HeatmapSvgOptions`, `TOOLCHAINS`, `Toolchain`, `NAME_PARTICLES`, `NAME_SUFFIXES`, `detectFormat`,
     `importAny`, `ExportOnlyError`, `DetectedFormat`, `Imported`
   - Pasted statements: `parseStatement`, `statementAuthor`, `namesCredit`, `MAX_STATEMENT_LENGTH`,
     `ParsedStatement`, `StatementAuthor`
@@ -337,6 +339,8 @@ holds its exact shape. By entry point:
   `loadRoleCatalog`, `makeRoleTranslator`, `makeRoleDescriber`, `DEFAULT_ROLE_TRANSLATOR`,
   `loadUiCatalog`, `makeUiTranslator`, `DEFAULT_UI_TRANSLATOR`, and the types `LocaleCode`,
   `RoleCatalog`, `RoleDescriber`, `RoleTranslator`, `UiCatalog`, `UiKey`, `UiTranslator`
+- `credit-matrix/figures`: `createFigureRenderer`, `FigureOptions`, `FigureFace`, `FigureFontProvider`,
+  `FigureFontFileError`, `FigureFontReport`
 - `credit-matrix/element`: `CreditMatrixElement`
 
 The palette, the limits and the merge helpers are internal. The web app imports core modules by

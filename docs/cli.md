@@ -164,6 +164,9 @@ Limits and special cases:
 - `convert --to pdf` writes binary bytes. Redirect them to a file; do not print them to a terminal.
 - Warnings and the font report go to standard error and start with `credit-matrix: `. They do not
   change the exit code and do not appear in a redirected result.
+- A JSON file or share link that names a writing tool this version does not know prints "The input
+  names a writing tool this version doesn't know, so it was left out." on standard error, and the
+  command carries on without that tool.
 - On an error, nothing is written to standard output.
 
 ## Exit codes

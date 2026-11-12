@@ -7,14 +7,19 @@ import { createAuthor } from "../parse-authors";
 
 const POPPLER = ["pdftotext", "pdffonts"].every((tool) => spawnSync(tool, ["-v"]).error === undefined);
 
-/** The ActualText strings a PDF's content streams carry, decoded from UTF-16BE. */
-async function actualTexts(pdf: Uint8Array): Promise<string[]> {
+/** A PDF's decoded streams, as Latin-1 text. */
+async function streams(pdf: Uint8Array): Promise<string[]> {
   const document = await PDFDocument.load(pdf);
   return document.context
     .enumerateIndirectObjects()
     .flatMap(([, object]) =>
       object instanceof PDFRawStream ? [Buffer.from(decodePDFRawStream(object).decode()).toString("latin1")] : [],
-    )
+    );
+}
+
+/** The ActualText strings a PDF's content streams carry, decoded from UTF-16BE. */
+async function actualTexts(pdf: Uint8Array): Promise<string[]> {
+  return (await streams(pdf))
     .flatMap((stream) => [...stream.matchAll(/\/ActualText <FEFF([0-9A-F]*)>/gi)])
     .map(([, hex]) =>
       Buffer.from(hex ?? "", "hex")
@@ -56,59 +61,37 @@ describe("figures in every covered script", () => {
     // Korean needs no shaping; "Ada " is a Latin run before the emoji.
     if (family !== "Credit Figure KR")
       expect(await actualTexts(pdf)).toEqual([name.replace("Ada ", "").normalize("NFC")]);
-    if (!POPPLER) return;
-    expect(execFileSync("pdffonts", ["-"], { input: pdf, encoding: "utf8" })).toContain(family.replaceAll(" ", ""));
-    // Poppler reads a right-to-left ActualText backwards, against the PDF spec; MuPDF and Acrobat do not.
-    if (!/[\u0590-\u08ff]/u.test(name))
-      expect(
-        execFileSync("pdftotext", ["-", "-"], { input: pdf, encoding: "utf8" }).normalize("NFC").replace(/\s+/g, " "),
-      ).toContain(name.normalize("NFC").replace("Ada ", ""));
   });
 
-  it.each([
+  const SERIF_NAMES = [
     { name: "محمد عبد الله", serif: "Noto Naskh Arabic", sans: "Noto Sans Arabic" },
     { name: "प्रियंका शर्मा", serif: "Noto Serif Devanagari", sans: "Noto Sans Devanagari" },
     // Korean has no serif face, so serif figures keep the sans one.
     { name: "김민준", serif: "Credit Figure KR", sans: "Credit Figure KR" },
-  ])(
+  ];
+  const styles = ({ serif, sans }: (typeof SERIF_NAMES)[number]) =>
+    [
+      ["serif", serif],
+      ["sans", sans],
+    ] as const;
+
+  it.each(SERIF_NAMES)(
     "draws $name in a serif figure in its serif face, and in a sans one in its sans face",
-    async ({ name, serif, sans }) => {
-      const authors = [createAuthor(name, { contributions: [{ role: "Software", score: 100 }] })];
-      for (const [font, family] of [
-        ["serif", serif],
-        ["sans", sans],
-      ] as const) {
-        const figure = { ...options, font };
-        expect(await renderer.svg(authors, figure)).toContain(`font-family:'${family}'`);
-        if (!POPPLER) continue;
-        const pdf = await renderer.pdf(authors, figure);
-        const fonts = execFileSync("pdffonts", ["-"], { input: pdf, encoding: "utf8" });
-        expect(fonts).toContain(family.replaceAll(" ", ""));
-        if (font === "serif" && serif !== sans) expect(fonts).not.toContain(sans.replaceAll(" ", ""));
-      }
+    async (row) => {
+      const authors = [createAuthor(row.name, { contributions: [{ role: "Software", score: 100 }] })];
+      for (const [font, family] of styles(row))
+        expect(await renderer.svg(authors, { ...options, font })).toContain(`font-family:'${family}'`);
     },
   );
-
-  it("keeps an emoji between right-to-left words neutral, as browsers do", async () => {
-    const authors = [createAuthor("محمد 😀 علي", { contributions: [{ role: "Software", score: 100 }] })];
-    const pdf = await renderer.pdf(authors, options);
-    if (!POPPLER) return;
-    const words = [
-      ...execFileSync("pdftotext", ["-bbox", "-", "-"], { input: pdf, encoding: "utf8" }).matchAll(
-        /xMin="([\d.]+)"[^>]*>([^<]*)</g,
-      ),
-    ].map(([, x, word]) => ({ x: Number(x), word: word ?? "" }));
-    const left = (letter: string) => words.find(({ word }) => word.includes(letter))?.x ?? Number.NaN;
-    // The whole label reads right to left: علي is leftmost, محمد rightmost.
-    expect(left("ل")).toBeLessThan(left("ح"));
-  });
 
   it("draws a character the serif script face lacks from its sans twin", async () => {
     // Noto Serif Oriya 1.051 has no U+0B55 (ORIYA SIGN OVERLINE); Noto Sans Oriya does.
     const authors = [createAuthor("ଓଡ଼ିଆ\u0B55", { contributions: [{ role: "Software", score: 100 }] })];
     const svg = await renderer.svg(authors, { ...options, font: "serif" });
     expect(svg).toContain("Noto Sans Oriya");
-    await renderer.pdf(authors, { ...options, font: "serif" });
+    const pdf = await renderer.pdf(authors, { ...options, font: "serif" });
+    // No .notdef glyph drawn.
+    expect((await streams(pdf)).join("\n")).not.toContain("<0000> Tj");
   });
 
   it("keeps an emoji sequence in one emoji run, keycaps included", async () => {
@@ -132,14 +115,8 @@ describe("figures in every covered script", () => {
         [createAuthor(name, { contributions: [{ role: "Software", score: 100 }] })],
         options,
       );
-      const document = await PDFDocument.load(pdf);
-      const streams = document.context
-        .enumerateIndirectObjects()
-        .flatMap(([, object]) =>
-          object instanceof PDFRawStream ? [Buffer.from(decodePDFRawStream(object).decode()).toString("latin1")] : [],
-        );
       // No .notdef glyph drawn.
-      expect(streams.join("\n"), name).not.toContain("<0000> Tj");
+      expect((await streams(pdf)).join("\n"), name).not.toContain("<0000> Tj");
     }
   });
 
@@ -161,13 +138,58 @@ describe("figures in every covered script", () => {
     const authors = [createAuthor("محمد Smith", { contributions: [{ role: "Software", score: 100 }] })];
     const pdf = await renderer.pdf(authors, options);
     expect(await actualTexts(pdf)).toEqual(["محمد", " "]);
-    if (!POPPLER) return;
-    const words = [
-      ...execFileSync("pdftotext", ["-bbox", "-", "-"], { input: pdf, encoding: "utf8" }).matchAll(
-        /xMin="([\d.]+)"[^>]*>([^<]*)</g,
-      ),
-    ].map(([, x, word]) => ({ x: Number(x), word: word ?? "" }));
-    const left = (pattern: RegExp) => words.find(({ word }) => pattern.test(word))?.x ?? Number.NaN;
-    expect(left(/[\u0600-\u06ff]/)).toBeLessThan(left(/Smith/));
+  });
+
+  describe.runIf(POPPLER)("as Poppler reads the PDF", () => {
+    it.each(NAMES)("embeds the $script face and its text", async ({ name, family }) => {
+      const authors = [createAuthor(name, { contributions: [{ role: "Software", score: 100 }] })];
+      const pdf = await renderer.pdf(authors, options);
+      expect(execFileSync("pdffonts", ["-"], { input: pdf, encoding: "utf8" })).toContain(family.replaceAll(" ", ""));
+      // Poppler reads a right-to-left ActualText backwards, against the PDF spec; MuPDF and Acrobat do not.
+      if (!/[\u0590-\u08ff]/u.test(name))
+        expect(
+          execFileSync("pdftotext", ["-", "-"], { input: pdf, encoding: "utf8" }).normalize("NFC").replace(/\s+/g, " "),
+        ).toContain(name.normalize("NFC").replace("Ada ", ""));
+    });
+
+    it.each(SERIF_NAMES)(
+      "embeds only the serif face of $name in a serif PDF, and the sans face in a sans one",
+      async (row) => {
+        const { name, serif, sans } = row;
+        const authors = [createAuthor(name, { contributions: [{ role: "Software", score: 100 }] })];
+        for (const [font, family] of styles(row)) {
+          const figure = { ...options, font };
+          const pdf = await renderer.pdf(authors, figure);
+          const fonts = execFileSync("pdffonts", ["-"], { input: pdf, encoding: "utf8" });
+          expect(fonts).toContain(family.replaceAll(" ", ""));
+          if (font === "serif" && serif !== sans) expect(fonts).not.toContain(sans.replaceAll(" ", ""));
+        }
+      },
+    );
+
+    it("keeps an emoji between right-to-left words neutral, as browsers do", async () => {
+      const authors = [createAuthor("محمد 😀 علي", { contributions: [{ role: "Software", score: 100 }] })];
+      const pdf = await renderer.pdf(authors, options);
+      const words = [
+        ...execFileSync("pdftotext", ["-bbox", "-", "-"], { input: pdf, encoding: "utf8" }).matchAll(
+          /xMin="([\d.]+)"[^>]*>([^<]*)</g,
+        ),
+      ].map(([, x, word]) => ({ x: Number(x), word: word ?? "" }));
+      const left = (letter: string) => words.find(({ word }) => word.includes(letter))?.x ?? Number.NaN;
+      // The whole label reads right to left: علي is leftmost, محمد rightmost.
+      expect(left("ل")).toBeLessThan(left("ح"));
+    });
+
+    it("places a mixed label's words as SVG viewers do", async () => {
+      const authors = [createAuthor("محمد Smith", { contributions: [{ role: "Software", score: 100 }] })];
+      const pdf = await renderer.pdf(authors, options);
+      const words = [
+        ...execFileSync("pdftotext", ["-bbox", "-", "-"], { input: pdf, encoding: "utf8" }).matchAll(
+          /xMin="([\d.]+)"[^>]*>([^<]*)</g,
+        ),
+      ].map(([, x, word]) => ({ x: Number(x), word: word ?? "" }));
+      const left = (pattern: RegExp) => words.find(({ word }) => pattern.test(word))?.x ?? Number.NaN;
+      expect(left(/[\u0600-\u06ff]/)).toBeLessThan(left(/Smith/));
+    });
   });
 });

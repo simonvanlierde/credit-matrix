@@ -3,7 +3,7 @@ import type { Author } from "./author";
 import { isValidOrcid, MAX_AUTHORS, MAX_IMPORT_BYTES, normalizeOrcid } from "./author";
 import { fromCrossrefContributors, isCrossrefContributors } from "./export/crossref";
 import { fromCsv, headerCells } from "./export/csv";
-import { fromJson } from "./export/json";
+import { fromJson, UNKNOWN_TOOLCHAIN_WARNING } from "./export/json";
 import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
 import { createAuthor, deduplicateAuthorInitials, splitNameList, tryCreateAuthor } from "./parse-authors";
@@ -139,6 +139,7 @@ export async function importAny(
         authors: shared.authors,
         title: shared.title,
         ...(shared.toolchain ? { toolchain: shared.toolchain } : {}),
+        ...(shared.toolchainDropped ? { warnings: [UNKNOWN_TOOLCHAIN_WARNING] } : {}),
       };
     }
     case "json":

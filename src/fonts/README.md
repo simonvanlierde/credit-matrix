@@ -32,8 +32,9 @@ one run.
 
 ## Versions
 
-A 1.x release only adds faces. Changing the bytes of an existing face needs a new major version:
-`credit-matrix` checks each face's hash, and layout depends on the glyph widths. A release comes
+A 1.x release only adds faces. Within 1.x the bytes of a face never change, because `credit-matrix`
+checks every face against SHA-256 hashes pinned to its fonts version. Changed face bytes ship as a new
+major version (2.0), and layout depends on the glyph widths. A release comes
 only when the fonts change. `credit-matrix` pins the version and the hashes below for its jsDelivr
 download, and checks faces read from an installed package against the same hashes.
 
@@ -41,23 +42,25 @@ For the unmodified upstream faces, these hashes are the check that the bytes are
 Sources. Credit Figure KR and Credit Figure Emoji are rebuilt (see "Rebuild the fonts"), so their
 hashes check the rebuilt file, not an upstream one.
 
-These regular faces provide offline fonts for editable figure exports. They cover Arabic,
-Armenian, Bengali, Devanagari, Ethiopic, Georgian, Gujarati, Gurmukhi, Hebrew,
-Kannada, Khmer, Lao, Malayalam, Myanmar, Oriya, Sinhala, Tamil, Telugu and Thai
-each have a Noto Sans face for sans figures and a Noto Serif face (Noto Naskh
-Arabic for Arabic) for serif figures. Korean (Credit Figure KR, from Noto Sans
-KR) and monochrome emoji (Credit Figure Emoji, from Noto Emoji) have one face,
-used in sans and serif figures alike: a serif Korean face would add 14 MB.
+## Faces
 
-`harfbuzz.wasm` is the HarfBuzz shaping
-engine, which lays out the complex scripts, and `harfbuzz-subset.wasm` is HarfBuzz's subsetter,
-which cuts each face down to the glyphs a figure uses. Both come through the same `fonts`
-provider, so each is fetched only for a figure that needs it.
-Noto Sans and Serif cover Latin, Greek and Cyrillic. Credit Figure JP and SC
-derive from Noto Sans JP and SC; Credit Figure Serif JP and SC derive from
-Noto Serif JP and SC. Both families provide Japanese and Simplified Chinese glyphs.
-Use the Japanese face for Japanese labels and the
-Simplified Chinese face for Chinese labels.
+The faces are regular weight. Noto Sans and Noto Serif cover Latin, Greek and Cyrillic.
+
+Arabic, Armenian, Bengali, Devanagari, Ethiopic, Georgian, Gujarati, Gurmukhi, Hebrew, Kannada,
+Khmer, Lao, Malayalam, Myanmar, Oriya, Sinhala, Tamil, Telugu and Thai each have a Noto Sans face
+for sans figures and a Noto Serif face for serif figures. Arabic uses Noto Naskh Arabic in serif.
+
+Credit Figure JP and SC come from Noto Sans JP and SC. Credit Figure Serif JP and SC come from Noto
+Serif JP and SC. Use the Japanese face for Japanese labels and the Simplified Chinese face for
+Chinese labels.
+
+Korean (Credit Figure KR, from Noto Sans KR) and monochrome emoji (Credit Figure Emoji, from Noto
+Emoji) have one face each. Sans and serif figures both use it, because a serif Korean face would
+add 14 MB.
+
+`harfbuzz.wasm` is the HarfBuzz shaping engine, which lays out the complex scripts.
+`harfbuzz-subset.wasm` is HarfBuzz's subsetter, which cuts each face down to the glyphs a figure
+uses. Both come through the same `fonts` provider, so each is fetched only for a figure that needs it.
 
 | File | Face | Version | Bytes | SHA-256 |
 | --- | --- | --- | ---: | --- |
@@ -231,7 +234,7 @@ redistributing these assets.
   above the license text. Credit Figure KR, like JP and SC, avoids the reserved
   font name "Source".
 - `harfbuzz.wasm` and `harfbuzz-subset.wasm` are MIT (harfbuzzjs) and "Old MIT" (HarfBuzz):
-  [LICENSE-harfbuzz.txt](https://github.com/simonvanlierde/credit-matrix/blob/main/fonts/LICENSE-harfbuzz.txt).
+  [LICENSE-harfbuzz.txt](https://github.com/simonvanlierde/credit-matrix/blob/main/src/fonts/LICENSE-harfbuzz.txt).
 
 The fonts also retain their original copyright and license metadata. Their
 OpenType embedding permission field (`OS/2.fsType`) is zero, with no embedding

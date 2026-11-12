@@ -57,9 +57,21 @@ See [deploying](docs/deploy.md).
   not know and return it in `warnings`, so a file from a newer version still imports.
 - A copied heatmap pastes into Word with its alt text.
 - A [CLI reference](docs/cli.md) covers every command, target, flag and exit code.
+- The docs have a search box. It works offline after one online visit to the docs. Docs pages
+  also show your current draft, or a sample, in each export they describe.
+- `credit-matrix/figures` exports `createFigureRenderer`, `FigureOptions`, `FigureFace`,
+  `FigureFontProvider`, `FigureFontFileError` and `FigureFontReport`, and the main entry exports
+  `TOOLCHAINS` and `Toolchain`. The Sphinx extension takes `credit_matrix_ignore_system_fonts` and
+  `credit_matrix_confdir`.
 
 ### Changed
 
+- The app uses one accent colour, light-theme text is softer, and colour choices survive forced-colors
+  mode. The heatmap colour choice is five single hues plus a custom colour input, replacing the
+  Okabe-Ito presets. The heatmap options and figure-export popovers are wider on desk screens.
+- Undo bars and status messages stay until you act instead of expiring on a timer. The Undo bar
+  for a bulk action goes away once you edit the roster, and otherwise stays until you switch drafts.
+  A failed copy keeps its error label until the next attempt.
 - The heatmap export recipe moved from Figure settings into the writing-tool panel; Figure settings
   links to it.
 - CLI heatmap option errors name the allowed values, and `--help` shows `-h` and `-v`.
@@ -67,13 +79,13 @@ See [deploying](docs/deploy.md).
   (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`, or run
   `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. A bare `npx credit-matrix` cannot
   see a `credit-matrix-fonts` installed in your own project. The figure fonts moved out of
-  `credit-matrix` into the new `credit-matrix-fonts` package, so `credit-matrix` is 2.3 MB unpacked
+  `credit-matrix` into the new `credit-matrix-fonts` package, so `credit-matrix` is 2.5 MB unpacked
   instead of 43 MB. Without the fonts package, the CLI, the document plugins and
   `createFigureRenderer` download each face from jsDelivr on first use, check its SHA-256 hash and
   cache it on the machine. Offline with nothing cached, PDF stops with an error and SVG draws the
   text in system fonts with a warning. See [the CLI section](docs/cli.md#fonts-and-offline-use).
 - **Breaking:** in `createFigureRenderer`, replace `fontFallback` with `fonts`, a function that
-  returns a face's bytes. A bundled app passes `fonts` from `credit-matrix-fonts`. If you self-host
+  returns a face's bytes. The old `fontFallback` option now throws `HeatmapOptionError`. A bundled app passes `fonts` from `credit-matrix-fonts`. If you self-host
   the fonts, serve the `credit-matrix-fonts` package folder (for example at `/fonts/`) and import
   its loader, which fetches each face relative to its own URL:
 
