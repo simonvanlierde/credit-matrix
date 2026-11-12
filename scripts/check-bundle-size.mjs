@@ -25,7 +25,7 @@ const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-12: 4.30 MB including pages, their linked UI fonts and the offline manifest.
 // Docs pages and search are cached separately on a docs visit.
 const PRECACHE_LIMIT = 4_400_000;
-// Measured 2026-11-11: 2.3 MB unpacked once the fonts moved out (0.12.0 was 43 MB).
+// Measured 2026-11-12: 2.5 MB unpacked once the fonts moved out (0.12.0 was 43 MB).
 const PACKAGE_LIMIT = 5_000_000;
 
 const dir = join(import.meta.dirname, "..", "out", "assets");

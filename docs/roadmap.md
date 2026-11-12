@@ -4,12 +4,10 @@ What I plan to work on next. It is a plan, not a promise: CRediT Matrix has one 
 ([GOVERNANCE.md](../GOVERNANCE.md)), and the order changes when users report problems. Each item
 links to the issue that tracks it, and shipped changes are in the [changelog](../CHANGELOG.md).
 
-Last reviewed: 2026-11-11
+Last reviewed: 2026-11-12
 
 ## Now
 
-- **A smaller npm package.** Take the figure fonts out of it, so `npm i credit-matrix` stops
-  downloading 41 MB of fonts that only the CLI, Sphinx and Quarto use ([#278](https://github.com/simonvanlierde/credit-matrix/issues/278)).
 - **Trustworthy census numbers.** Score the parser that reads roles from published papers against
   checked labels, so the census can drop its "preliminary" note ([#279](https://github.com/simonvanlierde/credit-matrix/issues/279)).
 - **Find the integrations where people look.** The Typst package is on Typst Universe; the Pandoc
