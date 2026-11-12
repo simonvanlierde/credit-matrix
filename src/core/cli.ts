@@ -375,11 +375,12 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
             translateRole: makeRoleTranslator(await loadRoleCatalog(locale)),
             translateUi: makeUiTranslator(await loadUiCatalog(locale)),
           };
+          const pdf = values.to === "pdf" ? await renderer.pdf(authors, options) : undefined;
           // Measure the figure as written: font-embedded text is narrower than buildHeatmapSvg's estimate.
           const svg = await renderer.svg(authors, options);
           const warning = heatmapPrintWarning(svg);
           if (warning) process.stderr.write(`credit-matrix: ${warning}\n`);
-          return values.to === "pdf" ? renderer.pdf(authors, options) : svg;
+          return pdf ?? svg;
         }
         default:
           throw new UsageError(
