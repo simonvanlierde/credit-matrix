@@ -9,7 +9,9 @@ export default {
   // pnpm keeps the runner out of the core's own node_modules, so Stryker does not find it by glob.
   plugins: ["@stryker-mutator/vitest-runner"],
   testRunner: "vitest",
-  vitest: { configFile: "vitest.mutation.config.ts" },
+  // Forks, not the default threads: worker threads refuse the base config's heap-cap flag
+  // (ERR_WORKER_INVALID_EXEC_ARGV), and os.homedir() there ignores a stubbed HOME.
+  vitest: { configFile: "vitest.mutation.config.ts", pool: "forks" },
   coverageAnalysis: "perTest",
   // The host runs a benchmark queue; 8 workers leave the rest of the cores free.
   concurrency: 8,
