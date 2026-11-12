@@ -38,6 +38,29 @@ it("exports a binary PDF with embedded figure fonts", async () => {
   expect(svg).toContain("<text");
 });
 
+it("fails an offline PDF without SVG fallback warnings, while SVG still falls back", async () => {
+  vi.doMock("credit-matrix-fonts", () => {
+    throw new Error("fonts package unavailable");
+  });
+  vi.stubEnv("XDG_CACHE_HOME", join(dir, "offline-cache"));
+  const fetch = vi.fn(() => Promise.reject(new TypeError("offline")));
+  vi.stubGlobal("fetch", fetch);
+  const warn = vi.spyOn(console, "warn").mockReturnValue(undefined);
+  try {
+    await expect(runCommand(["convert", csv, "--to", "pdf"])).rejects.toThrow(
+      "Cannot load figure font NotoSans-Regular.ttf (offline).",
+    );
+    expect(fetch).toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
+    expect(await run(["convert", csv, "--to", "svg"])).toContain("<text");
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("Drawing its text in system fonts."));
+  } finally {
+    vi.doUnmock("credit-matrix-fonts");
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  }
+});
+
 it("warns on stderr when a heatmap would print too small on a full page, and only then", async () => {
   const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
   const rows = Array.from({ length: 40 }, (_, i) => `Grace Hopper ${i},100,`).join("\n");
