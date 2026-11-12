@@ -1,5 +1,8 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CREDIT_ROLES, createAuthor } from "@/core";
+import { InitialsChip } from "@/components/ui/initials-chip";
+import { CREDIT_ROLES, createAuthor, toJson } from "@/core";
 import { MAX_AUTHORS } from "@/core/author";
 import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import type { LocaleCode } from "@/core/i18n";
@@ -1638,6 +1641,48 @@ describe("contribution store", () => {
       ) as typeof initial;
 
       expect(merged.authors).toEqual([grace]);
+    });
+
+    it.each(["firstName", "middleName", "surname", "initials"] as const)(
+      "repairs malformed saved %s without replacing valid custom name fields",
+      (field) => {
+        const merge = useContributionStore.persist.getOptions().merge;
+        const grace = { ...createAuthor("Grace B. Hopper"), initials: "GH" };
+        const derived = createAuthor(grace.name);
+        for (const value of [null, 42, { bad: true }, "x".repeat(501)]) {
+          const merged = merge?.(
+            { activeDraftId: "d1", drafts: { d1: { authors: [{ ...grace, [field]: value }] } } },
+            initial,
+          ) as typeof initial;
+          expect(merged.authors).toEqual([{ ...grace, [field]: derived[field] }]);
+          expect(() => toJson(merged.authors)).not.toThrow();
+          const repaired = merged.authors[0];
+          if (!repaired) throw new Error("Contributor lost during repair");
+          expect(renderToStaticMarkup(createElement(InitialsChip, { author: repaired }))).toContain(
+            field === "initials" ? ">GBH<" : ">GH<",
+          );
+        }
+      },
+    );
+
+    it("repairs invalid saved ids, contributor types and author flags", () => {
+      const merge = useContributionStore.persist.getOptions().merge;
+      const grace = createAuthor("Grace B. Hopper");
+      const merged = merge?.(
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: {
+              authors: [
+                { ...grace, id: 42, contributorType: "other", equalContribution: "false", corresponding: "false" },
+              ],
+            },
+          },
+        },
+        initial,
+      ) as typeof initial;
+      expect(merged.authors).toEqual([{ ...grace, id: expect.any(String) }]);
+      expect(() => toJson(merged.authors)).not.toThrow();
     });
 
     it("drops a hand-edited claim or ask entry rather than trusting it", () => {

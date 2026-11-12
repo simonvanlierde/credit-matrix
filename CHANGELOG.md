@@ -136,8 +136,8 @@ See [deploying](docs/deploy.md).
 ### Fixed
 
 - Japanese font-recipe wording and European Portuguese file and response hints use consistent terms.
-- A saved draft whose contributors lack name parts or initials, as after a hand edit of browser
-  storage, now opens with them taken from each name instead of failing to show the page.
+- A saved draft with missing or malformed contributor name parts, initials or flags now opens
+  with safe values derived from each name instead of failing to render or export.
 
 ### Security
 

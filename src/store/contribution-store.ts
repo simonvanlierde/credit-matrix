@@ -434,21 +434,32 @@ function repairAuthors(authors: unknown): Author[] {
       return typeof name === "string" && name.length <= MAX_AUTHOR_NAME_LENGTH && isUsableAuthorName(name);
     })
     .slice(0, MAX_AUTHORS)
-    .map((author) => ({
-      // A save that lacks the name parts, initials or flags (hand-edited, or written by another
-      // tool) gets them derived from the name, as a new contributor would; the page reads them all.
-      ...createAuthor(author.name),
-      ...author,
-      // Same reasoning as the name check: createAuthor throws on an invalid
-      // iD, and normalizeContributions iterates the array and dereferences
-      // each entry. A malformed field costs that field, not the workspace.
-      orcid: typeof author.orcid === "string" && isValidOrcid(author.orcid) ? author.orcid : undefined,
-      contributions: Array.isArray(author.contributions)
-        ? author.contributions.filter(
-            (c) => c !== null && typeof c === "object" && typeof c.role === "string" && typeof c.score === "number",
-          )
-        : [],
-    }));
+    .map((author) => {
+      const defaults = createAuthor(author.name);
+      const repaired = { ...defaults, ...author };
+      for (const field of ["firstName", "middleName", "surname", "initials"] as const) {
+        if (typeof repaired[field] !== "string" || repaired[field].length > MAX_AUTHOR_NAME_LENGTH)
+          repaired[field] = defaults[field];
+      }
+      return {
+        // A save that lacks the name parts, initials or flags (hand-edited, or written by another
+        // tool) gets them derived from the name, as a new contributor would; the page reads them all.
+        ...repaired,
+        id: typeof author.id === "string" && isShareableId(author.id) ? author.id : defaults.id,
+        contributorType: author.contributorType === "non-author" ? "non-author" : "author",
+        equalContribution: typeof author.equalContribution === "boolean" ? author.equalContribution : false,
+        corresponding: typeof author.corresponding === "boolean" ? author.corresponding : false,
+        // Same reasoning as the name check: createAuthor throws on an invalid
+        // iD, and normalizeContributions iterates the array and dereferences
+        // each entry. A malformed field costs that field, not the workspace.
+        orcid: typeof author.orcid === "string" && isValidOrcid(author.orcid) ? author.orcid : undefined,
+        contributions: Array.isArray(author.contributions)
+          ? author.contributions.filter(
+              (c) => c !== null && typeof c === "object" && typeof c.role === "string" && typeof c.score === "number",
+            )
+          : [],
+      };
+    });
 }
 
 function isDraftClaim(value: unknown): value is DraftClaim {
