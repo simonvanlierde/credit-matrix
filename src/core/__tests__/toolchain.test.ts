@@ -29,6 +29,7 @@ describe("draft toolchain", () => {
       const authors = [createAuthor("Grace Hopper")];
       const json = JSON.stringify({ ...JSON.parse(toJson(authors)), toolchain });
       expect(fromJson(json)).toEqual({ authors, warnings: [UNKNOWN_TOOLCHAIN_WARNING] });
+      expect(UNKNOWN_TOOLCHAIN_WARNING).toMatch(/writing tool/);
       expect(await importAny(json)).toEqual({ format: "json", authors, warnings: [UNKNOWN_TOOLCHAIN_WARNING] });
       const link = JSON.parse(toSharePayload({ authors }));
       const shared = fromSharePayload(JSON.stringify({ ...link, h: toolchain }));

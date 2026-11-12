@@ -602,6 +602,9 @@ msgstr "Retomado donde lo dejó en esta solicitud."
 msgid "claimRequestUpdated"
 msgstr "La solicitud se ha actualizado. Sus respuestas anteriores se han sustituido."
 
+msgid "claimUndoStale"
+msgstr "No se ha deshecho nada: el borrador cambió después de actualizar la solicitud. Cámbielo en la tabla."
+
 msgid "claimLockedDraft"
 msgstr "Bloqueado: respondiendo a una solicitud"
 

@@ -63,7 +63,7 @@ test.describe("Accessibility statement", () => {
 
   test("the About panel links to it", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "About this app" }).click();
+    await page.getByRole("button", { name: "About", exact: true }).click();
     await page.getByRole("dialog").getByRole("link", { name: "Accessibility statement" }).click();
     await expect(page).toHaveURL(/\/accessibility\/?$/);
     await expect(page.getByRole("heading", { name: "Accessibility statement", exact: true })).toBeVisible();

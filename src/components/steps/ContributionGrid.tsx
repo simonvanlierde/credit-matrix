@@ -417,7 +417,7 @@ export function ContributionGrid() {
   };
 
   /** A person's name in the matrix: opens their menu, and joins the grid's arrow-key focus like a role name. */
-  const nameHead = (author: Author, index: number, content: ReactNode) => (
+  const nameHead = (author: Author, index: number, content: ReactNode, initials = false) => (
     <PersonMenu
       authorId={author.id}
       surface="grid"
@@ -428,8 +428,9 @@ export function ContributionGrid() {
           tabIndex={-1}
           data-name-head={index}
           // Named by the person alone: a column header names every cell under it, so "Actions for …"
-          // here would be read before each cell. The content can be an aria-hidden initials chip.
-          aria-label={author.name}
+          // here would be read before each cell. An initials head says its initials first, so a voice
+          // user can name the button by what it shows (WCAG 2.5.3).
+          aria-label={initials ? `${author.initials}, ${author.name}` : author.name}
           onKeyDown={(event) => handleHeadKeyDown(event, "name", index)}
           className="block max-w-full rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-primary"
         >
@@ -674,7 +675,7 @@ export function ContributionGrid() {
                                 )}
                               </AngledLabel>
                             ) : (
-                              nameHead(author, columnIndex, <InitialsChip author={author} />)
+                              nameHead(author, columnIndex, <InitialsChip author={author} />, true)
                             )}
                             <AskGlyph
                               state={askState(author)}
@@ -697,7 +698,7 @@ export function ContributionGrid() {
                         >
                           <span className="flex items-center gap-1.5 min-w-0">
                             {acronyms ? (
-                              nameHead(author, authorRow, <InitialsChip author={author} />)
+                              nameHead(author, authorRow, <InitialsChip author={author} />, true)
                             ) : (
                               <InitialsChip author={author} />
                             )}

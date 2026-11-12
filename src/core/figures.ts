@@ -289,7 +289,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
           if (!warned.has(error.source))
             // biome-ignore lint/suspicious/noConsole: the figure still renders; say why it looks different.
             console.warn(
-              `${loadError instanceof Error ? loadError.message : String(loadError)} Drawing its text in system fonts.`,
+              `credit-matrix: ${loadError instanceof Error ? loadError.message : String(loadError)} Drawing its text in system fonts.`,
             );
           warned.add(error.source);
           unavailable.add(error.source);
@@ -436,7 +436,10 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       const faces = keycap ? undefined : SCRIPT_FACES.find(([pattern]) => pattern.test(character));
       const script = keycap ? EMOJI : faces?.[serif ? 2 : 1];
       // Emoji last: a text-default symbol (❤, ☺, ✌) keeps its text glyph where another face has one.
+      // A custom family draws what it has before an unshaped script face (Hangul); shaped faces keep theirs.
+      const custom = script && !script.shaped ? options?.custom : undefined;
       const order = [
+        ...(custom ? [custom] : []),
         ...(script ? [script] : []),
         // A serif script face lacking a character its sans twin has (Noto Serif Oriya's U+0B55) falls back to it.
         ...(faces && faces[1] !== script ? [faces[1]] : []),
@@ -449,7 +452,7 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
       let font: FigureFont | undefined;
       let skipped = isUnavailable(designated);
       // In order, so a face loads only when every face before it lacks the character.
-      for (const source of skipped ? [] : order) {
+      for (const source of skipped ? (custom ? [custom] : []) : order) {
         if (isUnavailable(source)) {
           skipped = true;
           continue;

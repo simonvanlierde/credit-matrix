@@ -96,7 +96,7 @@ msgid "exportData"
 msgstr "Daten exportieren"
 
 msgid "download"
-msgstr "Download"
+msgstr "Herunterladen"
 
 msgid "copy"
 msgstr "Kopieren"
@@ -601,6 +601,9 @@ msgstr "Dort weitergemacht, wo Sie bei dieser Anfrage aufgehört haben."
 
 msgid "claimRequestUpdated"
 msgstr "Die Anfrage wurde aktualisiert. Ihre früheren Antworten wurden ersetzt."
+
+msgid "claimUndoStale"
+msgstr "Nichts rückgängig gemacht: Der Entwurf hat sich geändert, seit die Anfrage aktualisiert wurde. Ändern Sie ihn stattdessen in der Tabelle."
 
 msgid "claimLockedDraft"
 msgstr "Gesperrt: beantwortet eine Anfrage"

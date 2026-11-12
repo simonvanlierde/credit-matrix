@@ -2,7 +2,14 @@
 import { readFileSync } from "node:fs";
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
 import process from "node:process";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+
+/** Every path in the page's caches, across cache names. */
+const cachedPaths = (page: Page) =>
+  page.evaluate(async () => {
+    const keys = await Promise.all((await caches.keys()).map(async (name) => (await caches.open(name)).keys()));
+    return keys.flat().map((request) => new URL(request.url).pathname);
+  });
 
 /**
  * The offline path needs the shipped bundle: `ServiceWorkerRegistrar` skips
@@ -44,11 +51,7 @@ test.describe("Offline", () => {
     test.skip(!process.env.CI, "needs the production build; CI runs one");
     const manifest = JSON.parse(readFileSync("out/.vite/manifest.json", "utf8")) as Record<string, { file: string }>;
     const chunk = `/${manifest["src/app/docs/page.tsx"]?.file}`;
-    const cached = () =>
-      page.evaluate(async () => {
-        const keys = await Promise.all((await caches.keys()).map(async (name) => (await caches.open(name)).keys()));
-        return keys.flat().map((request) => new URL(request.url).pathname);
-      });
+    const cached = () => cachedPaths(page);
     await page.goto("/");
     await page.evaluate(() => navigator.serviceWorker.ready);
     await expect.poll(cached).toContain("/about");
@@ -64,6 +67,40 @@ test.describe("Offline", () => {
     await expect(page).toHaveTitle("CRediT statement for Quarto · CRediT Matrix");
     await page.getByRole("button", { name: "Language settings" }).click();
     await expect(page.getByRole("combobox", { name: "Interface language" })).toBeVisible();
+  });
+
+  test("a visited docs page and search still work offline after a deploy", async ({ page, context }) => {
+    test.skip(!process.env.CI, "needs the production build; CI runs one");
+    const manifest = JSON.parse(readFileSync("out/.vite/manifest.json", "utf8")) as Record<string, { file: string }>;
+    // An older build's cache holding a visited docs page and search, left before any worker exists
+    // (see the stale-cache test below). A deploy almost always changes the build id.
+    await page.goto("/robots.txt");
+    await page.evaluate(async () => {
+      const old = await caches.open("credit-matrix-v0-docs");
+      await old.addAll(["/docs/quarto", "/pagefind/pagefind.js"]);
+    });
+
+    await page.goto("/");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await expect.poll(() => page.evaluate(() => caches.keys())).not.toContain("credit-matrix-v0-docs");
+
+    await context.setOffline(true);
+    await page.goto("/docs/quarto");
+    await expect(page).toHaveTitle("CRediT statement for Quarto · CRediT Matrix");
+    expect(await cachedPaths(page)).toEqual(
+      expect.arrayContaining([`/${manifest["src/app/docs/page.tsx"]?.file}`, "/pagefind/pagefind-entry.json"]),
+    );
+  });
+
+  test("a docs page's images are cached on its first visit", async ({ page }) => {
+    test.skip(!process.env.CI, "needs the production build; CI runs one");
+    await page.goto("/docs/typst");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    const images = await page
+      .locator('img[src^="/assets/"]')
+      .evaluateAll((elements) => elements.map((element) => element.getAttribute("src") ?? ""));
+    expect(images.length).toBeGreaterThan(0);
+    await expect.poll(() => cachedPaths(page)).toEqual(expect.arrayContaining(images));
   });
 
   test("an unvisited page and language stay interactive offline", async ({ page, context }) => {

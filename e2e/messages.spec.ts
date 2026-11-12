@@ -80,7 +80,6 @@ test.describe("interface messages", () => {
       heatmapLayout: ["de"], // "Layout" is also used in German.
       docsTitle: ["fr"], // "Documentation" is the French word too.
       heatmapOrientation: ["fr"], // "Orientation" has the same spelling in French.
-      download: ["de"],
       coauthorName: ["de"],
       aboutVersion: ["de", "fr"],
       colorOrange: ["de", "fr"],

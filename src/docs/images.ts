@@ -2,7 +2,7 @@
 // Only these folders are bundled; the link test fails on an image anywhere else.
 export const images = Object.fromEntries(
   Object.entries(
-    import.meta.glob<string>("../../integrations/*/examples/*.{png,jpg,svg,webp}", {
+    import.meta.glob<string>("../../integrations/*/examples/*.png", {
       query: "?url",
       import: "default",
       eager: true,

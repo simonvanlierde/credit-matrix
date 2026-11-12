@@ -602,6 +602,9 @@ msgstr "Reprise là où vous en étiez sur cette demande."
 msgid "claimRequestUpdated"
 msgstr "La demande a été mise à jour. Vos réponses précédentes ont été remplacées."
 
+msgid "claimUndoStale"
+msgstr "Rien n’a été annulé : le brouillon a changé depuis la mise à jour de la demande. Modifiez-le plutôt dans la grille."
+
 msgid "claimLockedDraft"
 msgstr "Verrouillé : réponse à une demande"
 

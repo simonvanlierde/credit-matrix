@@ -6,6 +6,7 @@ import {
   cleanNamePart,
   createAuthor,
   deduplicateAuthorInitials,
+  isSuffix,
   normalizeRoster,
   parseAuthorText,
   parseNameParts,
@@ -574,5 +575,12 @@ describe("deduplicateAuthorInitials at the size limit", () => {
   it("returns an oversized list as it is", () => {
     const list = same(MAX_AUTHORS + 1);
     expect(deduplicateAuthorInitials(list)).toBe(list);
+  });
+});
+
+describe("isSuffix", () => {
+  it("takes each generational suffix, with or without a final dot, and nothing else", () => {
+    for (const word of ["Jr", "jr.", "Sr", "SR.", "II", "iii"]) expect(isSuffix(word)).toBe(true);
+    for (const word of ["J.r", "", "IV", "Junior"]) expect(isSuffix(word)).toBe(false);
   });
 });

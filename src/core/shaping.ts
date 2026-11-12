@@ -29,10 +29,23 @@ const RTL = 5;
 /** HarfBuzz from its WebAssembly bytes, which come through the font provider like a face. */
 export async function createShaper(wasm: Uint8Array): Promise<Shaper> {
   const module = await createHarfBuzz({ wasmBinary: wasm });
-  const hb = module.wasmExports as Record<string, (...args: number[]) => number> & {
-    malloc(size: number): number;
-    free(pointer: number): number;
-  };
+  const hb = module.wasmExports as Record<
+    | "malloc"
+    | "free"
+    | "hb_blob_create"
+    | "hb_buffer_add_utf16"
+    | "hb_buffer_create"
+    | "hb_buffer_destroy"
+    | "hb_buffer_get_glyph_infos"
+    | "hb_buffer_get_glyph_positions"
+    | "hb_buffer_get_length"
+    | "hb_buffer_guess_segment_properties"
+    | "hb_buffer_set_direction"
+    | "hb_face_create"
+    | "hb_font_create"
+    | "hb_shape",
+    (...args: number[]) => number
+  >;
   // hb_feature_t: tag, value, start, end; value 0 turns the feature off for the whole buffer.
   const features = hb.malloc(OFF.length * 16);
   for (const [index, name] of OFF.entries())
@@ -42,21 +55,21 @@ export async function createShaper(wasm: Uint8Array): Promise<Shaper> {
       // shortcut: faces are never freed; a renderer loads each at most once per process.
       const data = hb.malloc(bytes.length);
       module.HEAPU8.set(bytes, data);
-      const blob = hb.hb_blob_create?.(data, bytes.length, 1, 0, 0) ?? 0;
-      const font = hb.hb_font_create?.(hb.hb_face_create?.(blob, 0) ?? 0) ?? 0;
+      const blob = hb.hb_blob_create(data, bytes.length, 1, 0, 0);
+      const font = hb.hb_font_create(hb.hb_face_create(blob, 0));
       return {
         shape(text, rtl) {
-          const buffer = hb.hb_buffer_create?.() ?? 0;
+          const buffer = hb.hb_buffer_create();
           const units = hb.malloc(text.length * 2);
           for (let index = 0; index < text.length; index++) module.HEAPU16[units / 2 + index] = text.charCodeAt(index);
-          hb.hb_buffer_add_utf16?.(buffer, units, text.length, 0, text.length);
+          hb.hb_buffer_add_utf16(buffer, units, text.length, 0, text.length);
           hb.free(units);
-          hb.hb_buffer_set_direction?.(buffer, rtl ? RTL : LTR);
-          hb.hb_buffer_guess_segment_properties?.(buffer);
-          hb.hb_shape?.(font, buffer, features, OFF.length);
-          const length = hb.hb_buffer_get_length?.(buffer) ?? 0;
-          const infos = (hb.hb_buffer_get_glyph_infos?.(buffer, 0) ?? 0) / 4;
-          const positions = (hb.hb_buffer_get_glyph_positions?.(buffer, 0) ?? 0) / 4;
+          hb.hb_buffer_set_direction(buffer, rtl ? RTL : LTR);
+          hb.hb_buffer_guess_segment_properties(buffer);
+          hb.hb_shape(font, buffer, features, OFF.length);
+          const length = hb.hb_buffer_get_length(buffer);
+          const infos = hb.hb_buffer_get_glyph_infos(buffer, 0) / 4;
+          const positions = hb.hb_buffer_get_glyph_positions(buffer, 0) / 4;
           const glyphs: ShapedGlyph[] = [];
           for (let index = 0; index < length; index++) {
             const position = positions + index * 5;
@@ -69,7 +82,7 @@ export async function createShaper(wasm: Uint8Array): Promise<Shaper> {
               yOffset: module.HEAP32[position + 3] ?? 0,
             });
           }
-          hb.hb_buffer_destroy?.(buffer);
+          hb.hb_buffer_destroy(buffer);
           return glyphs;
         },
       };

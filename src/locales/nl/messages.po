@@ -602,6 +602,9 @@ msgstr "Verdergegaan waar u bij dit verzoek was gebleven."
 msgid "claimRequestUpdated"
 msgstr "Het verzoek is bijgewerkt. Uw eerdere antwoorden zijn vervangen."
 
+msgid "claimUndoStale"
+msgstr "Niets ongedaan gemaakt: het concept is veranderd nadat het verzoek is bijgewerkt. Pas het in het raster aan."
+
 msgid "claimLockedDraft"
 msgstr "Vergrendeld: beantwoordt een verzoek"
 

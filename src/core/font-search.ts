@@ -118,6 +118,8 @@ async function faces(file: string): Promise<Face[]> {
     // A collection lists each face's offset after its 12-byte header.
     const collection = text(head.subarray(0, 4)) === "ttcf";
     const count = collection ? view(head).getUint32(8) : 0;
+    // A forged count would size the face-list buffer: up to 16 GiB.
+    if (collection && (count > 1024 || 12 + count * 4 > (await handle.stat()).size)) return [];
     const list = collection ? view(await readAt(handle, 12, count * 4)) : undefined;
     const starts = list ? Array.from({ length: list.byteLength / 4 }, (_, index) => list.getUint32(index * 4)) : [0];
     const found: Face[] = [];

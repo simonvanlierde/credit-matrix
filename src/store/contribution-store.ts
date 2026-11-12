@@ -435,6 +435,9 @@ function repairAuthors(authors: unknown): Author[] {
     })
     .slice(0, MAX_AUTHORS)
     .map((author) => ({
+      // A save that lacks the name parts, initials or flags (hand-edited, or written by another
+      // tool) gets them derived from the name, as a new contributor would; the page reads them all.
+      ...createAuthor(author.name),
       ...author,
       // Same reasoning as the name check: createAuthor throws on an invalid
       // iD, and normalizeContributions iterates the array and dereferences

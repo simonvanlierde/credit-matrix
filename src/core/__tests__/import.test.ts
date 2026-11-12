@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MAX_AUTHORS } from "../author";
 import { toCsv } from "../export/csv";
 import { toMyst, toQuarto } from "../export/frontmatter";
-import { toJson } from "../export/json";
+import { toJson, UNKNOWN_TOOLCHAIN_WARNING } from "../export/json";
 import { toRoCrateFragment } from "../export/ro-crate";
 import { toJats4rXml } from "../export/xml";
 import { detectFormat, ExportOnlyError, importAny } from "../import";
@@ -241,6 +241,14 @@ describe("importAny", () => {
     const link = await encodeShareHash({ authors: roster(), title: "Eel cognition" }, "https://example.org/");
     const imported = await importAny(link);
     expect(imported).toMatchObject({ format: "link", title: "Eel cognition" });
+    expect(names(imported.authors)).toEqual(["Grace Hopper", "Charles Darwin"]);
+  });
+
+  it("warns about a link's unknown writing tool, as JSON does", async () => {
+    const link = await encodeShareHash({ authors: roster(), toolchain: "foo" as never }, "https://example.org/");
+    const imported = await importAny(link);
+    expect(imported.warnings).toEqual([UNKNOWN_TOOLCHAIN_WARNING]);
+    expect(imported).not.toHaveProperty("toolchain");
     expect(names(imported.authors)).toEqual(["Grace Hopper", "Charles Darwin"]);
   });
 

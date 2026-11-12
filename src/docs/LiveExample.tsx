@@ -6,6 +6,7 @@ import { DEFAULT_MONO_COLOR } from "@/core/contributor-color";
 import { DEFAULT_HEATMAP_SETTINGS, type HeatmapOptions } from "@/lib/heatmap-settings";
 import { useLocale, useTranslations } from "@/lib/translations";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { useHeatmapSettings } from "@/lib/use-heatmap-settings";
 import { useHydrated } from "@/lib/use-hydrated";
 import { buildSampleAuthors, useContributionStore } from "@/store/contribution-store";
 import type { LiveTarget } from "./live-markers";
@@ -18,11 +19,6 @@ export default function LiveExample({ target }: { target: LiveTarget }) {
   const [useSample, setUseSample] = useState(false);
   const draftAuthors = useContributionStore((s) => s.authors);
   const inputMode = useContributionStore((s) => s.inputMode);
-  const storedSettings = useContributionStore((s) => s.heatmapSettings);
-  const color = useContributionStore((s) => s.heatmapMonoColor);
-  const colorByContributor = useContributionStore((s) => s.colorByContributor);
-  const horizontal = useContributionStore((s) => s.transpose);
-  const acronyms = useContributionStore((s) => s.initials);
   const { translateRole, translateUi, outputLanguage } = useCreditTranslators();
   const names = t("sampleNames");
   const sampleAuthors = useMemo(() => buildSampleAuthors(names.split("\n")), [names]);
@@ -30,16 +26,9 @@ export default function LiveExample({ target }: { target: LiveTarget }) {
   const showingDraft = hasDraft && !useSample;
   const authors = showingDraft ? draftAuthors : sampleAuthors;
   const yesNo = showingDraft && inputMode === "toggle";
+  const draftSettings = useHeatmapSettings(!yesNo);
   const settings: HeatmapOptions = showingDraft
-    ? {
-        ...DEFAULT_HEATMAP_SETTINGS,
-        levels: !yesNo,
-        ...storedSettings,
-        color,
-        colorBy: colorByContributor ? "contributor" : "color",
-        horizontal,
-        acronyms,
-      }
+    ? draftSettings
     : { ...DEFAULT_HEATMAP_SETTINGS, color: DEFAULT_MONO_COLOR, colorBy: "color", horizontal: false, acronyms: false };
   const output = (
     <OutputBlock

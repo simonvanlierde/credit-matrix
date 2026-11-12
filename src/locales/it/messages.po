@@ -602,6 +602,9 @@ msgstr "Ripreso da dove eri rimasto con questa richiesta."
 msgid "claimRequestUpdated"
 msgstr "La richiesta è stata aggiornata. Le sue risposte precedenti sono state sostituite."
 
+msgid "claimUndoStale"
+msgstr "Nulla è stato annullato: la bozza è cambiata dopo l’aggiornamento della richiesta. Modificala nella griglia."
+
 msgid "claimLockedDraft"
 msgstr "Bloccata: risposta a una richiesta"
 

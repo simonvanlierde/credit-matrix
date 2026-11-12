@@ -12,7 +12,6 @@ export function AboutPopover({ version }: { version: string }) {
         <button
           type="button"
           className="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors"
-          aria-label={t("aboutApp")}
         >
           <Info className="size-3.5" aria-hidden="true" />
           {t("about")}

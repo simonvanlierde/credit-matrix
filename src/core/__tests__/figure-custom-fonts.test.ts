@@ -1,7 +1,16 @@
 // biome-ignore-all lint/correctness/noNodejsModules: the font search reads font folders; Poppler checks the PDF.
 import { spawnSync } from "node:child_process";
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import {
+  chmodSync,
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { open, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
@@ -236,6 +245,40 @@ describe("figures in a font family the caller names", () => {
       // Quoted: unquoted, the parentheses make the CSS value invalid and a browser draws its default font.
       expect(svg).toContain(`<tspan font-family="'Noto Sans (custom)'">Ada </tspan>`);
     } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
+  it("draws Hangul in a custom family that has it, not in Credit Figure KR", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    try {
+      copyFileSync(fileURLToPath(new URL("../../fonts/CreditFigureKR.ttf", import.meta.url)), join(folder, "a.ttf"));
+      const { drawn } = svgFonts(await renderer().svg(authors("Ada 김연아"), options("credit figure kr", [folder])));
+      expect(drawn.get("Credit Figure KR (custom)")).toContain("김연아");
+      expect(drawn.has("Credit Figure KR")).toBe(false);
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
+  it("skips a collection whose header claims more faces than the file holds, reading only its bytes", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    const header = new DataView(new ArrayBuffer(16));
+    header.setUint32(0, 0x74746366); // "ttcf"
+    header.setUint32(8, 2 ** 28);
+    writeFileSync(join(folder, "a.ttc"), new Uint8Array(header.buffer));
+    copyFileSync(join(FIXTURES, "FigureTest-Regular.ttf"), join(folder, "b.ttf"));
+    const handle = await open(join(folder, "b.ttf"));
+    const read = vi.spyOn(Object.getPrototypeOf(handle), "read");
+    await handle.close();
+    try {
+      const svg = await renderer().svg(authors("Ada"), options("Figure Test", [folder]));
+      expect(svgFonts(svg).drawn.get("Figure Test")).toContain("Ada");
+      // A 2^28-face header once allocated a 1 GiB buffer to read the face list.
+      const lengths = read.mock.calls.map((call) => Number(call[2] ?? 0));
+      expect(Math.max(...lengths)).toBeLessThan(2 ** 20);
+    } finally {
+      read.mockRestore();
       rmSync(folder, { recursive: true, force: true });
     }
   });

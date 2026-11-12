@@ -5,11 +5,11 @@ import { type Author, heatmapDescription } from "@/core";
 import { heatmapPrintSize, SMALL_PRINT_PT, svgDimensions } from "@/core/export/heatmap-print";
 import { announce } from "@/lib/announce";
 import { copyFigure } from "@/lib/copy-figure";
-import { DEFAULT_HEATMAP_SETTINGS, type HeatmapOptions } from "@/lib/heatmap-settings";
 import { withPngResolution, withPngText } from "@/lib/png-text";
 import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { useHeatmapSettings } from "@/lib/use-heatmap-settings";
 import { download as downloadBlob } from "@/lib/utils";
 import { useContributionStore } from "@/store/contribution-store";
 import { MENU_ITEM, TOOL_BUTTON } from "./grid-shared";
@@ -20,8 +20,9 @@ type ExportFormat = "svg" | "png" | "pdf";
 
 // One renderer keeps each loaded face; it fetches a face only when a figure's text first needs it.
 let figureRenderer: Promise<import("@/core/figures").FigureRenderer> | undefined;
-// Faces whose last load failed (offline before the service worker cached them). svg() then draws their
-// text in system fonts without throwing, so the app reads this to say so and to refuse PDF.
+// Faces that failed to load during the current preview render (offline before the service worker cached
+// them). svg() then draws their text in system fonts without throwing, so the app reads this to say so and
+// to refuse PDF. Each preview clears it first: the renderer retries a failed face only when the text needs it.
 const failedFaces = new Set<string>();
 function renderer() {
   // The app's own font copies: Vite emits them as hashed assets the service worker can cache.
@@ -128,26 +129,8 @@ export function HeatmapExports({
     /** Alt text the paste will not carry, shown to copy by hand. */
     manualAlt: string | null;
   } | null>(null);
-  const storedSettings = useContributionStore((s) => s.heatmapSettings);
   const setSettings = useContributionStore((s) => s.setHeatmapSettings);
-  const monoColor = useContributionStore((s) => s.heatmapMonoColor);
-  const colorByContributor = useContributionStore((s) => s.colorByContributor);
-  const transpose = useContributionStore((s) => s.transpose);
-  const initials = useContributionStore((s) => s.initials);
-  // The grid and the figure share colour, orientation and initials; the stored figure settings hold the rest.
-  const settings = useMemo<HeatmapOptions>(
-    () => ({
-      ...DEFAULT_HEATMAP_SETTINGS,
-      // Untouched settings follow the grid's assignment mode.
-      levels: showLevels,
-      ...storedSettings,
-      color: monoColor,
-      colorBy: colorByContributor ? "contributor" : "color",
-      horizontal: transpose,
-      acronyms: initials,
-    }),
-    [storedSettings, showLevels, monoColor, colorByContributor, transpose, initials],
-  );
+  const settings = useHeatmapSettings(showLevels);
   const [copyStatus, copy] = useCopyStatus({
     copied: t("annHeatmapCopied"),
   });
@@ -187,6 +170,7 @@ export function HeatmapExports({
     setPreview((current) => ({ ...current, rendering: true }));
     (async () => {
       const figures = await renderer();
+      failedFaces.clear();
       try {
         return { preview: await figures.svg(authors, svgOptions), missingGlyphs: null };
       } catch (cause) {
