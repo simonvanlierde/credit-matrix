@@ -86,8 +86,10 @@ Our browser tests check:
 - settings with reduced motion and forced colors, which emulate some system accessibility settings;
 - common accessibility errors with [axe-core](https://github.com/dequelabs/axe-core), using its WCAG 2.0, 2.1 and 2.2 A and AA rules.
 
-Separate checks cover real 200% Chromium zoom in both themes and keyboard use of Chromium's
-native color picker on Linux. These do not establish how other browsers or operating systems behave.
+An automated check covers real 200% Chromium zoom in both themes. Keyboard use of Chromium's native
+color picker was checked once by hand in headed Chromium on Linux, as recorded in the
+[accessibility assessment](accessibility-assessment.md). Neither establishes how other browsers or
+operating systems behave.
 [Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) also check code changes
 for errors such as missing alt text and invalid ARIA attributes.
 
