@@ -12,7 +12,7 @@ const REPEATED_ID_MESSAGE = "duplicate contributor ids";
 
 /** In `fromJson` warnings when the file names a toolchain this build does not know. */
 export const UNKNOWN_TOOLCHAIN_WARNING =
-  "This file names a writing tool this version doesn't know, so it was left out.";
+  "The input names a writing tool this version doesn't know, so it was left out.";
 
 const ExportSchema = /* @__PURE__ */ (() =>
   z.object({
