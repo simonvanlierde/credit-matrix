@@ -77,3 +77,21 @@ it("adopts a cleared toolchain and browser default from another tab", async () =
   expect(store().toolchain).toBeUndefined();
   expect(store().lastToolchain).toBeUndefined();
 });
+
+it("adopts another tab's browser default while a different draft is open here", async () => {
+  await useContributionStore.persist.rehydrate();
+  const here = store().activeDraftId;
+  store().createDraft();
+  const there = store().activeDraftId;
+  store().switchDraft(here);
+  const stale = store();
+  store().switchDraft(there);
+  store().setToolchain("sphinx");
+  const saved = localStorage.getItem(PERSIST_KEY) ?? "null";
+  useContributionStore.setState(stale, true);
+  localStorage.setItem(PERSIST_KEY, saved);
+
+  expect(followOtherTab(new StorageEvent("storage", { key: PERSIST_KEY, storageArea: localStorage }))).toBe(false);
+  expect(store().activeDraftId).toBe(here);
+  expect(store().lastToolchain).toBe("sphinx");
+});

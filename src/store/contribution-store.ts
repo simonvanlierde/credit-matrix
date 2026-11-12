@@ -965,8 +965,9 @@ function adoptKey(key: string): boolean {
   try {
     useContributionStore.setState((state) => {
       Object.assign(state.drafts, changed);
-      if (!open) return;
+      // Before the open-draft check: a pick in another tab on another draft must not be overwritten by this tab's next save.
       if (key === PERSIST_KEY) state.lastToolchain = ToolchainSchema.safeParse(prefs.lastToolchain).data;
+      if (!open) return;
       applyDraft(state, open);
       if ("uiLocale" in prefs) state.uiLocale = normalizeLocaleCode(prefs.uiLocale);
       if (typeof prefs.welcomeSeen === "boolean") state.welcomeSeen = prefs.welcomeSeen;
