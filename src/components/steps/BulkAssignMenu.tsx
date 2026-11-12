@@ -3,7 +3,6 @@ import { type ReactNode, type RefObject, useEffect, useId, useRef, useState } fr
 import { create } from "zustand";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UNDO_WINDOW_MS } from "@/components/ui/undo-bar";
 import { type Author, CREDIT_ROLES } from "@/core";
 import type { RoleTranslator, UiTranslator } from "@/core/i18n";
 import { announce } from "@/lib/announce";
@@ -62,12 +61,6 @@ export function useBulkUndo() {
   // Where focus goes when the undo strip closes under it.
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!bulkUndo) return;
-    const timer = window.setTimeout(() => setBulkUndo(null), UNDO_WINDOW_MS);
-    return () => window.clearTimeout(timer);
-  }, [bulkUndo]);
-
   // The snapshot is one draft's roster: undoing it after a switch, Reset or
   // Delete all would load it over other or cleared work.
   const activeDraftId = useContributionStore((s) => s.activeDraftId);
@@ -76,7 +69,7 @@ export function useBulkUndo() {
   useEffect(() => setBulkUndo(null), [activeDraftId, workspaceCleared]);
 
   // NOTE: restores the whole roster snapshot, so it also reverts any edit made
-  // inside the undo window — simple last-state undo, not an operation log.
+  // since the bulk action. This is last-state undo, not an operation log.
   function undoBulk() {
     if (!bulkUndo) return;
     loadAuthors(bulkUndo);

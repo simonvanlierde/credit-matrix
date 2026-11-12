@@ -1,13 +1,12 @@
 # Keep figure fonts with the figure
 
-Use the PDF download for a publication figure whose text must look the same on
-another computer. It embeds the glyphs it uses and retains selectable text and
-vector cells. SVG embeds fonts too, but desktop applications and document
-converters vary in their support for SVG web fonts.
+Use the PDF download for a publication figure whose text must look the same on another computer.
+It embeds the glyphs it uses and keeps selectable text and vector cells. SVG embeds fonts too, but
+desktop applications and document converters differ in their support for SVG web fonts.
 
-Neither format turns text into outlines or a raster image. An editor may still
-require the original fonts to change labels or add characters. Embedded PDF
-subsets contain the existing glyphs, not an installed font for further editing.
+Neither format turns text into outlines or a raster image. An editor may still need the original
+fonts to change labels or add characters, because an embedded PDF subset holds only the glyphs the
+figure uses.
 
 ## Choose an export
 
@@ -23,114 +22,116 @@ subsets contain the existing glyphs, not an installed font for further editing.
 | Native Typst heatmap | Uses Typst's fonts | Independent native renderer; fonts follow the document configuration. |
 | JavaScript `buildHeatmapSvg` | No | Lightweight renderer with system font references. |
 
-The standalone JavaScript API is `createFigureRenderer` from
-`credit-matrix/figures`. Create it once, then call `await svg(authors, options)` or
-`await pdf(authors, options)`. It uses the same options as `buildHeatmapSvg`, and in Node its
-`font` also takes a font family name (see [Use your own font](#use-your-own-font)); `svg()` also
-takes `fallback` (see [Fonts and offline use](#fonts-and-offline-use)). It loads
-each font face the first time a figure's text needs it and keeps it for later figures.
+The standalone JavaScript API is `createFigureRenderer` from `credit-matrix/figures`. Create it
+once, then call `await svg(authors, options)` or `await pdf(authors, options)`. It takes the same
+options as `buildHeatmapSvg`. In Node, `font` also takes a font family name (see
+[Use your own font](#use-your-own-font)), and `svg()` takes `fallback` (see
+[Fonts and offline use](#fonts-and-offline-use)). Each font face loads the first time a figure needs
+it and stays loaded for later figures.
 
 ```sh
 credit-matrix convert team.json --to svg > heatmap.svg
 credit-matrix convert team.json --to pdf > heatmap.pdf
 ```
 
-The document directives generate SVG assets. They do not select PDF automatically
-for PDF or Word manuscripts. If your converter ignores the embedded SVG fonts,
-export the PDF separately and include it through the document engine's image
-support.
+The document directives generate SVG assets. They do not pick PDF for PDF or Word manuscripts. If
+your converter ignores the embedded SVG fonts, export the PDF separately and include it through the
+document engine's image support.
 
 ## Fonts and offline use
 
 Portable exports use regular Noto Sans and Noto Serif, plus Credit Figure JP, SC, Serif JP and
-Serif SC, derived from the corresponding Noto Japanese and Simplified Chinese families. The fonts
-cover all nine output languages. Names in Arabic, Armenian, Bengali, Devanagari, Ethiopic,
-Georgian, Gujarati, Gurmukhi, Hebrew, Kannada, Khmer, Lao, Malayalam, Myanmar, Oriya, Sinhala,
-Tamil, Telugu and Thai get a Noto Sans face for that script in sans figures and a Noto Serif face
-(Noto Naskh Arabic for Arabic) in serif figures. Korean and monochrome emoji have one face, used in
-sans and serif figures alike. HarfBuzz lays out the complex scripts, and PDF orders right-to-left text
-with the Unicode bidi algorithm, left to right as the base, as SVG viewers do. A face loads only
-when a figure needs it, so a Latin figure loads none of them. In PDF, each shaped run carries
-its text, so copying gives the letters in reading order. Poppler-based viewers read right-to-left
-runs backwards; MuPDF and Acrobat do not.
+Serif SC, derived from the corresponding Noto Japanese and Simplified Chinese families. These cover
+all nine output languages. Names in Arabic, Armenian, Bengali, Devanagari, Ethiopic, Georgian,
+Gujarati, Gurmukhi, Hebrew, Kannada, Khmer, Lao, Malayalam, Myanmar, Oriya, Sinhala, Tamil, Telugu
+and Thai get a Noto Sans face for that script in sans figures and a Noto Serif face (Noto Naskh
+Arabic for Arabic) in serif figures. Korean and monochrome emoji have one face, used in both. A
+face loads only when a figure needs it, so a Latin figure loads none of them.
 
-A name can still use a script outside the set, such as Tibetan. For such a name, the app names the
-characters and turns off the PDF download, since PDF must embed every glyph. Its preview, SVG and PNG draw those characters in the system font
-stack instead, so the SVG depends on the viewer's installed fonts and can look different on
-another computer. The CLI and the document plugins stop with `FigureFontError`. A JavaScript
-caller gets the same error, or passes `fallback: "system"` to `svg()` for the app's behaviour.
-Han characters use the Simplified Chinese face, unless the output language is Japanese or
+HarfBuzz lays out the complex scripts. PDF orders right-to-left text with the Unicode bidi
+algorithm, left to right as the base, as SVG viewers do. Each shaped PDF run carries its text, so
+copying gives the letters in reading order. Poppler-based viewers read right-to-left runs backwards;
+MuPDF and Acrobat do not.
+
+A name can use a script outside this set, such as Tibetan. The app then names the characters and
+turns off the PDF download, because PDF must embed every glyph. Its preview, SVG and PNG draw those
+characters in the system font stack, so the SVG depends on the viewer's installed fonts and can look
+different on another computer. The CLI and the document plugins stop with `FigureFontError`. A
+JavaScript caller gets the same error, or passes `fallback: "system"` to `svg()` for the app's
+behaviour. Han characters use the Simplified Chinese face, unless the output language is Japanese or
 the label contains kana. In Chinese output, punctuation beside Han text comes from the Chinese face.
 
-The font files are in the separate [`credit-matrix-fonts`](../../src/fonts/README.md) package.
-The CLI, the document plugins and the JavaScript API read them from there when it is installed.
-Otherwise they download each face once, check its SHA-256 hash and cache it on the machine; the
-[CLI section](../../src/core/README.md#cli) gives the address and the cache folder.
-The app's offline cache holds Noto Sans, the default face, and the subsetter from the first visit, so a Latin,
-Greek or Cyrillic figure in the default font exports offline at once. It fetches any other face
-(serif, Japanese, Chinese) the first time an export needs it and keeps it for offline use; one
-never used online is not available offline. See
-[font sources, checksums and licenses](../../src/fonts/README.md).
+The font files are in the separate [`credit-matrix-fonts`](../../src/fonts/README.md) package, which
+also lists their sources, checksums and licenses. The CLI, the document plugins and the JavaScript
+API read them from there when it is installed. Otherwise they download each face once, check its
+SHA-256 hash and cache it on the machine. The
+[CLI section](../../docs/cli.md#fonts-and-offline-use) gives the address and the cache folder.
+
+The app's offline cache holds Noto Sans (the default face) and the subsetter from the first visit.
+A Latin, Greek or Cyrillic figure in the default font therefore exports offline at once. The app
+fetches any other face (serif, Japanese, Chinese) the first time an export needs it and keeps it
+for offline use. A face never used online is not available offline.
+
 SVG and PDF include only the glyphs used in the figure, cut out by HarfBuzz's subsetter
-(`harfbuzz-subset.wasm`, which the first export loads like a face): a Japanese or Chinese figure
-is about 35 kB in either format. The SVG subsets keep their OpenType layout tables, so viewers
-shape the complex scripts and place combining accents themselves.
-The fonts use the SIL Open Font License 1.1; embedding does not change the
-figure's license.
+(`harfbuzz-subset.wasm`, which the first export loads like a face). A Japanese or Chinese figure is
+about 35 kB in either format. The SVG subsets keep their OpenType layout tables, so viewers shape
+the complex scripts and place combining accents themselves.
+
+The fonts use the SIL Open Font License 1.1. Embedding does not change the figure's license.
 
 ## Use your own font
 
 In the CLI and the JavaScript API in Node, `font` also takes the name of an installed font family,
 such as `--font Inter` or `font: "Inter"`. The renderer looks for it in each `--font-path` folder
-(`fontPath`, in the order given) and then in the system font folders, unless
-`--ignore-system-fonts` (`ignoreSystemFonts: true`). A family found in a font path folder wins
-over the same family on the system. The name matches the family a font file gives (its typographic
-family name, else its family name), in any case. The CLI prints the file it used to standard error,
-`credit-matrix: font: Inter from /usr/share/fonts/inter/Inter-Regular.ttf`; a JavaScript caller
-passes `onFont` to `createFigureRenderer` to get the same report. A family it cannot find stops the
-export with `FigureFontFileError`; it never falls back silently.
+(`fontPath`, in the order given), then in the system font folders, unless you pass
+`--ignore-system-fonts` (`ignoreSystemFonts: true`). A family in a font path folder wins over the
+same family on the system. The name matches the family a font file gives (its typographic family
+name, else its family name), in any case.
 
-Of the family, the renderer uses the upright face closest to regular weight, by the CSS rule for
-weight 400, and a static face before a variable one. It reads `.ttf` and `.otf` files, CFF
-outlines included, and the matching face of a `.ttc` or `.otc` collection. It refuses a family
-installed only as `.woff` or `.woff2`: install its `.ttf` or `.otf` build. A variable font draws
-its default instance, so one whose default is not upright weight 400 is refused, and the message
+The CLI prints the file it used to standard error:
+`credit-matrix: font: Inter from /usr/share/fonts/inter/Inter-Regular.ttf`. A JavaScript caller
+passes `onFont` to `createFigureRenderer` to get the same report. A family the renderer cannot find
+stops the export with `FigureFontFileError`; it never falls back silently.
+
+The renderer uses the upright face of the family closest to regular weight, by the CSS rule for
+weight 400, and a static face before a variable one. It reads `.ttf` and `.otf` files, CFF outlines
+included, and the matching face of a `.ttc` or `.otc` collection. It refuses a family installed only
+as `.woff` or `.woff2`: install its `.ttf` or `.otf` build. A variable font draws its default
+instance, so a variable font whose default is not upright weight 400 is refused, and the message
 names the static build to install.
 
 The family draws Latin and every other character it has, except the complex scripts and emoji:
 those keep their Noto faces, since only HarfBuzz shapes them. The built-in faces draw what the
-family lacks, such as Han in Credit Figure SC: the serif faces for a family that classes itself as
-serif (its OS/2 `sFamilyClass`, else its PANOSE serif style), otherwise the sans faces.
+family lacks, such as Han in Credit Figure SC. They are the serif faces for a family that classes
+itself as serif (its OS/2 `sFamilyClass`, else its PANOSE serif style), otherwise the sans faces.
 `--font-fallback sans|serif` (`fontFallback`) overrides that choice. The SVG `@font-face` and the
 PDF font carry the family's own name.
 
 A font's license decides whether you may share a document that embeds it. When its OS/2 embedding
-permission is restricted, preview-and-print only or bitmap only, the export warns and embeds it
+permission is restricted (preview-and-print only, or bitmap only), the export warns and embeds it
 anyway. A font that forbids subsetting is embedded whole.
 
 ## Receiving applications
 
-Modern browsers support SVG fonts included through `@font-face` data URLs.
-External font URLs cannot load in some SVG image contexts, so these exports
-include the font bytes in the asset. See
+Modern browsers support SVG fonts included through `@font-face` data URLs. Some SVG image contexts
+cannot load external font URLs, so these exports include the font bytes in the asset. See
 [SVG image restrictions](https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/SVG_as_an_image).
 
-Inkscape 1.2.2 and 1.4 ignore the SVG's embedded `@font-face` fonts. Install the
-bundled fonts before importing SVG for editing; this preserves Unicode labels.
-PDF remains portable for viewing or placing in a document. Inkscape's PDF import
-can turn text into outlines when its fonts are unavailable. Even with the fonts
-installed, PDF import changed the uncomposed accent in `q́`; SVG import preserved it.
-Use SVG with installed fonts when editing labels.
+Inkscape 1.2.2 and 1.4 ignore the SVG's embedded `@font-face` fonts. Install the bundled fonts
+before you import an SVG for editing, so Unicode labels survive. PDF stays portable for viewing or
+placing in a document. Inkscape's PDF import can turn text into outlines when its fonts are
+unavailable, and even with the fonts installed it changed the uncomposed accent in `q́`; SVG import
+kept it. Use SVG with installed fonts when you edit labels.
 
 Illustrator, Office and journal converters have not been tested. Check imported
 labels before submission.
 
-Native Typst figures use the document's font selection and Typst's fallback.
-To choose these fonts, supply them to Typst and set a matching font stack, for
-example `#set text(font: ("Noto Sans", "Credit Figure JP", "Credit Figure SC"))`.
-Typst's PDF and SVG exports have different text behavior: its SVG output
+Native Typst figures use the document's font selection and Typst's fallback. To choose fonts,
+supply them to Typst and set a matching font stack, for example
+`#set text(font: ("Noto Sans", "Credit Figure JP", "Credit Figure SC"))`. Typst's PDF and SVG
+exports treat text differently: its SVG output
 [converts glyphs to shapes](https://typst.app/docs/reference/svg/).
 
-Keep the figure at its intended print size when checking readability. Embedded
-fonts do not enforce a journal's typeface, dimensions, minimum text size or
-submission rules; check the target publication's requirements.
+Check readability at the figure's intended print size. Embedded fonts do not enforce a journal's
+typeface, dimensions, minimum text size or submission rules, so check the publication's
+requirements.

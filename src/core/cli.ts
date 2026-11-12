@@ -38,7 +38,7 @@ import { normalizeRoster } from "./parse-authors";
 import { encodeShareHash } from "./share-link";
 
 export const USAGE = `Usage: credit-matrix <command> <file> [options]
-       credit-matrix --help | --version
+       credit-matrix -h, --help | -v, --version
 
 Read <file> (or - for standard input) in any format CRediT Matrix imports:
 JSON, CSV, tenzing, JATS4R or Crossref XML, a share link, or a list of names.

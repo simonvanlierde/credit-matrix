@@ -2,6 +2,7 @@ import { Copy } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { ExternalLink } from "@/components/ui/external-link";
 import type { Toolchain } from "@/core/toolchain";
+import { docFiles } from "@/docs/pages";
 import { type HeatmapRecipeTarget, heatmapRecipe } from "@/lib/heatmap-recipe";
 import type { HeatmapOptions } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
@@ -14,7 +15,7 @@ export const TOOLCHAIN_OUTPUTS = {
     format: null,
     recipe: "cli",
     setup: null,
-    guide: "https://github.com/simonvanlierde/credit-matrix/blob/main/integrations/figures/README.md",
+    guide: "integrations/figures/README.md",
   },
   markdown: { label: "Markdown", format: "markdown", recipe: "cli", setup: null, guide: null },
   latex: {
@@ -29,35 +30,35 @@ export const TOOLCHAIN_OUTPUTS = {
     format: "quarto",
     recipe: "quarto",
     setup: "quarto add simonvanlierde/credit-matrix/integrations/quarto",
-    guide: "quarto",
+    guide: "integrations/quarto/README.md",
   },
   typst: {
     label: "Typst",
     format: "json",
     recipe: "typst",
     setup: '#import "@preview/credit-matrix:0.12.0": *',
-    guide: "typst",
+    guide: "integrations/typst/README.md",
   },
   pandoc: {
     label: "Pandoc",
     format: "quarto",
     recipe: "quarto",
     setup: "pandoc paper.md --lua-filter=credit-matrix.lua -o paper.html",
-    guide: "pandoc",
+    guide: "integrations/pandoc/README.md",
   },
   myst: {
     label: "MyST / Jupyter Book",
     format: "myst",
     recipe: "myst",
     setup: "project: {plugins: [https://unpkg.com/credit-matrix@0.12.0/dist/myst-plugin.mjs]}",
-    guide: "myst",
+    guide: "integrations/myst/README.md",
   },
   sphinx: {
     label: "Sphinx",
     format: "json",
     recipe: "sphinx",
     setup: 'extensions = ["credit_matrix"]',
-    guide: "sphinx",
+    guide: "integrations/sphinx/README.md",
   },
 } as const satisfies Record<
   Toolchain,
@@ -111,6 +112,7 @@ export function ToolchainPanel({
 }) {
   const t = useTranslations();
   const config = TOOLCHAIN_OUTPUTS[toolchain];
+  const guide = docFiles.find((file) => file.path === config.guide);
   const cli = heatmapRecipe(settings, "cli", language);
   const recipe = `${toolchain === "typst" ? '#let team = json("contributors.json")\n\n' : ""}${heatmapRecipe(settings, config.recipe, language)}`;
   return (
@@ -140,17 +142,16 @@ export function ToolchainPanel({
         ) : (
           <p className="text-on-surface-variant">{t("toolchainNoSetup")}</p>
         )}
-        {config.guide && (
-          <ExternalLink
-            href={
-              config.guide.startsWith("https:")
-                ? config.guide
-                : `https://github.com/simonvanlierde/credit-matrix/blob/main/integrations/${config.guide}/README.md`
-            }
-            className="min-h-6 gap-1 text-primary hover:underline"
-          >
+        {guide ? (
+          <a href={guide.route} className="inline-flex min-h-6 items-center text-primary hover:underline">
             {t("toolchainSetupLink", { toolchain: config.label })}
-          </ExternalLink>
+          </a>
+        ) : (
+          config.guide && (
+            <ExternalLink href={config.guide} className="min-h-6 gap-1 text-primary hover:underline">
+              {t("toolchainSetupLink", { toolchain: config.label })}
+            </ExternalLink>
+          )
         )}
       </div>
       <div className="grid min-w-0 gap-2">

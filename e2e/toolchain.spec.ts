@@ -27,6 +27,10 @@ test("writing tool survives reload, export and share while journal files stay av
   for (const format of ["XML (JATS4R)", "XML (Crossref)", "tenzing CSV"]) {
     await expect(page.getByRole("button", { name: `Download ${format}`, exact: true })).toBeVisible();
   }
+  await panel.getByRole("link", { name: "Set up Quarto →", exact: true }).click();
+  await expect(page).toHaveURL(/\/docs\/quarto$/);
+  await expect(page.getByRole("heading", { name: "CRediT statement for Quarto", exact: true })).toBeVisible();
+  await page.goBack();
   await page.reload();
   await expect(page.getByRole("combobox", { name: "I write in…" })).toHaveText("Quarto");
   await page.getByRole("button", { name: "Other formats", exact: true }).click();

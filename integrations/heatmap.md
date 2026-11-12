@@ -1,23 +1,23 @@
 # Contribution heatmap figures
 
-The app's SVG, PDF and PNG downloads, the CLI, and the document plugins draw square cells with a thin
-neutral rule. Rotated headers keep names beside their columns. White paper, one hue, and three
-increasing intensities distinguish Supporting, Equal and Lead. Empty cells stay light gray.
-This follows the compact matrix layout of [latex-credits](https://github.com/Pseudomanifold/latex-credits).
+The app's SVG, PDF and PNG downloads, the CLI and the document plugins draw square cells with a thin
+neutral rule. Rotated headers keep names beside their columns. White paper, one hue and three
+increasing intensities distinguish Supporting, Equal and Lead. Empty cells stay light gray. The
+layout follows the compact matrix of [latex-credits](https://github.com/Pseudomanifold/latex-credits).
 
-The SVG renderer is shared by the app, CLI, MyST, Sphinx and Quarto/Pandoc. Typst draws native
-vector shapes with the same palettes and level fractions. Figures include the full contribution
-statement as their text alternative, including levels even when axis labels are shortened.
-Both renderers omit contribution marks by default. Enable `marks` for one, two and three dots
-for Supporting, Equal and Lead, or checks in yes/no mode, in both cells and legend.
-Marks give a second way to tell levels apart. Keep a text alternative or contribution table with
-the figure when you share it. The editable grid keeps its marks. The app previews the exported
-figure before copying or downloading, with fit-to-width and actual-size views and the PNG pixel
-dimensions.
+The app, CLI, MyST, Sphinx and Quarto/Pandoc share one SVG renderer. Typst draws native vector
+shapes with the same palettes and level fractions. Every figure carries the full contribution
+statement as its text alternative, with levels even when axis labels are shortened.
+
+Both renderers omit contribution marks by default. Enable `marks` for one, two and three dots for
+Supporting, Equal and Lead (checks in yes/no mode), in both cells and legend. Marks give a second
+way to tell levels apart. When you share the figure, keep a text alternative or contribution table
+with it. The editable grid keeps its marks. The app previews the exported figure before you copy or
+download it, with fit-to-width and actual-size views and the PNG pixel dimensions.
 
 ## Figure options
 
-Use these names in every plugin. The JavaScript `buildHeatmapSvg` function uses `fontSize` for `font-size`, `legendPosition` for `legend-position`, and `acronyms` for `initials`. Other keys match.
+Use these names in every plugin. The JavaScript `buildHeatmapSvg` function calls `font-size` `fontSize`, `legend-position` `legendPosition` and `initials` `acronyms`. Other keys match.
 
 | Option | Values | Default |
 | --- | --- | --- |
@@ -39,42 +39,44 @@ Use these names in every plugin. The JavaScript `buildHeatmapSvg` function uses 
 | `horizontal` | `true`, `false`: contributors in rows | `false` |
 | `skipempty` | `true`, `false`: omit roles nobody holds | `true` |
 
-The app and the JavaScript `buildHeatmapSvg` function also take `colorBy`: `"color"` (the
-default) draws the figure in one hue, and `"contributor"` gives each of up to eight contributors
-their own hue, with the level key in neutral gray. Past eight contributors it falls back to one
-hue. The plugins and the CLI draw one hue only.
+The app and the JavaScript `buildHeatmapSvg` function also take `colorBy`. `"color"` (the default)
+draws the figure in one hue. `"contributor"` gives each of up to eight contributors their own hue,
+with the level key in neutral gray; with more than eight it falls back to one hue. The plugins and
+the CLI draw one hue only.
 
-`color` overrides the palette. The palettes use blue `#1f4e79`, green `#00724c`, or gray `#404040`.
-Supporting, Equal and Lead mix 40%, 70% and 100% of that hue with white. These are contribution
-levels, not continuous measurements of effort.
+`color` overrides the palette. The palettes use blue `#1f4e79`, green `#00724c` or gray `#404040`.
+Supporting, Equal and Lead mix 40%, 70% and 100% of that hue with white. They are contribution
+levels, not measurements of effort.
 
 Pick a dark custom `color`. Nothing rejects a pale one, but the Supporting level (40% of the hue)
-must stand out from an empty cell (`#ececea`). Measured contrast of that level against the empty
-fill: `#f0e442` 1.05:1, `#e69f00` 1.16:1, `#56b4e9` 1.17:1, `#cc79a7` 1.28:1, `#009e73` 1.37:1,
+must stand out from an empty cell (`#ececea`). Its measured contrast against the empty fill: `#f0e442` 1.05:1, `#e69f00` 1.16:1, `#56b4e9` 1.17:1, `#cc79a7` 1.28:1, `#009e73` 1.37:1,
 `#d55e00` 1.41:1. Use `#0072b2` (1.53:1) or darker; the shipped palettes measure 1.58:1 to 1.77:1.
 
 Short labels pair the canonical role number with the first twelve characters of its translated
-name. The text alternative retains the full names.
+name. The text alternative keeps the full names.
 
 SVG sizes must be greater than zero and at most 256 pixels. Typst sizes must be greater than zero
-and at most 192 points. Scaling the whole SVG remains available through the JavaScript `scale` option.
-The JavaScript `monoColor`, `transpose` and `showLevels` options are deprecated aliases of `color`,
-`horizontal` and `levels`, and still work. `acronyms` is unchanged.
-Automatic placement puts a vertical key to the right when three things hold: the grid is at least
-1.5 times as tall as it is wide, the figure grows by no more than 35% in width (and stays within 48
-legend-font ems), and its height does not increase. That width limit keeps legend text above 5 pt
-at 85 mm. Otherwise the key wraps below. Force `right` or `bottom` to suit the surrounding page;
-`legend: false` hides the key regardless of placement. In the app these choices share one Legend control.
+and at most 192 points. The JavaScript `scale` option scales the whole SVG. The JavaScript
+`monoColor`, `transpose` and `showLevels` options are deprecated aliases of `color`, `horizontal`
+and `levels`, and still work. `acronyms` is unchanged.
+
+Automatic legend placement puts a vertical key to the right when three things hold: the grid is at
+least 1.5 times as tall as it is wide, the figure grows by no more than 35% in width (and stays
+within 48 legend-font ems), and its height does not increase. That width limit keeps legend text
+above 5 pt at 85 mm. Otherwise the key wraps below. Force `right` or `bottom` to suit the
+surrounding page. `legend: false` hides the key whatever the placement. In the app these choices
+share one Legend control.
 
 ### Your own font
 
 A family name draws the figure in that font and embeds it, under its own name, in SVG and PDF
-(MyST, Jupyter Book, Sphinx, Quarto, Pandoc and the CLI; see
-[Use your own font](figures/README.md#use-your-own-font) for what is read and refused). A missing
-family stops the build. For a build that looks the same on every computer, commit the font files to
-the project and point `font-path` at them: a bare `font: Inter` takes whichever Inter the machine
-has. In CI, add `ignore-system-fonts` so that only the project's fonts count. Check the font's
-license before you commit or embed it.
+(MyST, Jupyter Book, Sphinx, Quarto, Pandoc and the CLI). A missing family stops the build.
+[Use your own font](figures/README.md#use-your-own-font) says what the renderer reads and refuses.
+
+For a build that looks the same on every computer, commit the font files to the project and point
+`font-path` at them. A bare `font: Inter` takes whichever Inter the machine has. In CI, add
+`ignore-system-fonts` so that only the project's fonts count. Check the font's license before you
+commit or embed it.
 
 `font-path` folders resolve against the project, not the working folder:
 
@@ -89,16 +91,16 @@ license before you commit or embed it.
 The plugins print the file they used, `credit-matrix: font: Inter from <file>` (a MyST or Sphinx
 message, or Pandoc's standard error), and warn when the font's license restricts embedding.
 
-Typst takes the family name or an array of names in `font`, searches the folders you give
-`typst compile --font-path <dir>` (or `TYPST_FONT_PATHS`), and falls back to the sans stack for
+Typst takes the family name or an array of names in `font`. It searches the folders you give
+`typst compile --font-path <dir>` (or `TYPST_FONT_PATHS`) and falls back to the sans stack for
 missing glyphs. Typst draws the top labels at regular weight, as SVG and PDF do. Pass
 `--ignore-system-fonts` to Typst for a build that ignores installed fonts.
 
-Font size changes the label bands and legend layout without changing contribution data.
-App, CLI and plugin exports embed the bundled Noto faces, or the family you choose with `font`. See the
-[figure font guide](figures/README.md) for coverage, offline use and desktop-editor limits.
-Typst can fall back to a monospace sans font when proportional sans fonts are unavailable.
-Typst also retains `cell` and `gap` for existing documents; `size` overrides `cell`.
+Font size changes the label bands and legend layout, not the contribution data. App, CLI and plugin
+exports embed the bundled Noto faces, or the family you choose with `font`. The
+[figure font guide](figures/README.md) covers coverage, offline use and desktop-editor limits.
+Typst can fall back to a monospace sans font when proportional sans fonts are unavailable. Typst
+also keeps `cell` and `gap` for existing documents; `size` overrides `cell`.
 
 ## CLI
 
@@ -106,8 +108,9 @@ Typst also retains `cell` and `gap` for existing documents; `size` overrides `ce
 credit-matrix convert contributors.json --to svg --palette green --shape square --size 22 --font sans --font-size 10.5 --legend true --legend-position auto --marks false --labels full --horizontal --skipempty true --initials false > heatmap.svg
 ```
 
-The CLI uses `--yes-no` to turn levels off, and `--horizontal` as a flag. Boolean options with values
-(`--legend`, `--marks`, `--skipempty` and `--initials`) require the word `true` or `false`.
+The CLI turns levels off with `--yes-no` and takes `--horizontal` as a flag. The boolean options
+that take a value (`--legend`, `--marks`, `--skipempty` and `--initials`) need the word `true` or
+`false`.
 
 ## MyST and Jupyter Book
 
@@ -128,9 +131,10 @@ Add this directive beside `{credit-statement}`. It reads the same author roles:
 :::
 ```
 
-The plugin writes content-addressed SVG assets into `_credit_matrix/` beside the source page.
-MyST includes the asset in its normal image pipeline. These generated files can be ignored by Git.
-MyST's author roles have no contribution degrees, so its figures default to `levels: false` and show contributed or empty cells.
+The plugin writes content-addressed SVG assets into `_credit_matrix/` beside the source page, and
+MyST includes them in its normal image pipeline. Git can ignore these generated files. MyST's author
+roles have no contribution degrees, so its figures default to `levels: false` and show contributed
+or empty cells.
 
 ## Sphinx
 
@@ -148,9 +152,9 @@ MyST's author roles have no contribution degrees, so its figures default to `lev
    :skipempty: true
 ```
 
-Use `:horizontal:` without a value to transpose. `:locale:` follows the statement directive.
+Use `:horizontal:` without a value to transpose. `:locale:` works as in the statement directive.
 The extension writes SVG assets into `_credit_matrix/` under the source root and tracks the input
-file as a dependency. Sphinx copies the generated image into its output.
+file as a dependency.
 
 ## Quarto and Pandoc
 
@@ -173,10 +177,10 @@ credit-matrix:
   skipempty: true
 ```
 
-The filter invokes `credit-matrix` from `PATH`. To select a local installation, set the
+The filter runs `credit-matrix` from `PATH`. To use a local installation, set the
 `CREDIT_MATRIX_COMMAND` environment variable to a command line, for example
-`CREDIT_MATRIX_COMMAND="node node_modules/credit-matrix/dist/cli.js" quarto render`. The filter splits
-it at whitespace, so no part of it can contain a space, and no shell runs. A document cannot choose
+`CREDIT_MATRIX_COMMAND="node node_modules/credit-matrix/dist/cli.js" quarto render`. The filter
+splits it at whitespace, so no part can contain a space, and no shell runs. A document cannot choose
 the program: the filter does not read it from metadata.
 
 The filter puts the SVG into Pandoc's media bag. For standalone HTML, use `--embed-resources`, or
@@ -197,49 +201,56 @@ pass through to Typst's `figure` function.
 
 ## App and document exports
 
-Palette, color, shape, cell size, typography, legend, role labels, orientation and empty-role filtering
-apply to SVG figures in the app, CLI and document plugins. Typst draws equivalent native figures.
 The app adds preview zoom, saved settings per draft, reset and PNG resolution controls. Colour,
-orientation and initials are shared with the grid's Heatmap options; Figure settings' Reset covers the rest.
+orientation and initials are shared with the grid's Heatmap options; Figure settings' Reset covers
+the rest.
+
 Under Figure settings, open Export recipe to copy a CLI command or a Sphinx, Quarto/Pandoc,
-MyST/Jupyter Book or Typst snippet. Recipes contain the current style settings and fixed data
-placeholders, without contributor names or PNG settings. Supply the contributor data and install
-the CLI or plugin first. MyST uses its page author roles and language, with yes/no contributions.
-Set `lang` in the page front matter or `project.lang` in `myst.yml` to match the app’s language.
-Typst recipes convert CSS pixels to points; native layout and font metrics can differ from SVG.
-PNG width (40–300 mm) and resolution (150, 300 or 600 dpi) set its pixel dimensions and print metadata.
-SVG keeps its intrinsic vector dimensions; typography and cell spacing determine its layout.
-PNG download and image clipboard copy require a browser; the CLI and document plugins produce vector figures.
+MyST/Jupyter Book or Typst snippet. Install the CLI or plugin first and supply the contributor data:
+recipes hold the current style settings and fixed data placeholders, without contributor names or
+PNG settings. MyST uses its page author roles and language, with yes/no contributions. Set `lang` in
+the page front matter or `project.lang` in `myst.yml` to match the app's language. Typst recipes
+convert CSS pixels to points, so native layout and font metrics can differ from SVG.
+
+PNG width (40–300 mm) and resolution (150, 300 or 600 dpi) set its pixel dimensions and print
+metadata. SVG keeps its intrinsic vector dimensions, and typography and cell spacing determine its
+layout. PNG download and image clipboard copy need a browser; the CLI and document plugins produce
+vector figures.
+
 Use `initials` to switch contributor labels between initials and full names in the CLI and plugins.
-The JavaScript API calls this option `acronyms`. Text alternatives always retain full names.
-Every plugin uses the app's initials: one letter each from the given name, the first middle name
-and the surname (skipping particles such as "van"), and an unspaced Chinese or Japanese name whole.
-When two contributors share initials, the later one gets the next letters of the surname, as in
-the app ("AL", "ALa"). A contributor's own `initials` field wins, unless an earlier contributor
-set the same ones.
-Past the app's 420 contributors, MyST labels everyone with full names, while Typst keeps initials.
+The JavaScript API calls this option `acronyms`. Text alternatives always keep full names. Every
+plugin uses the app's initials: one letter each from the given name, the first middle name and the
+surname (skipping particles such as "van"), and an unspaced Chinese or Japanese name whole. When two
+contributors share initials, the later one gets the next letters of the surname, as in the app
+("AL", "ALa"). A contributor's own `initials` field wins, unless an earlier contributor set the same
+ones. Past the app's 420 contributors, MyST labels everyone with full names, while Typst keeps
+initials.
 
 ## Final-size readability checks
 
 The browser test suite includes `e2e/heatmap-print.spec.ts`. It renders small teams and long
 contributor names in all nine output languages, using both font stacks. Reference figures fit
 within 89 mm or 183 mm columns and a 170 mm height; the test reduces width when height requires it.
-These are reference bounds from the [Nature figure guide](https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/), not universal journal requirements.
+These are reference bounds from the
+[Nature figure guide](https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/),
+not universal journal requirements.
 
-Reference fixtures exercise both plain default fills and optional marks. Tests require at least 5 pt
-for the smallest text, including the legend. They measure actual browser text bounds for clipping and overlap, check 4.5:1 text contrast and 3:1 contribution-mark contrast,
-and save SVG, rendered PNG and physical-size measurements under `test-results/`.
-The existing CI Playwright job runs them on Chromium for PRs and all three engines on main and weekly.
+The reference fixtures use both plain default fills and optional marks. The tests require at least
+5 pt for the smallest text, including the legend. They measure actual browser text bounds for
+clipping and overlap, check 4.5:1 text contrast and 3:1 contribution-mark contrast, and save SVG,
+rendered PNG and physical-size measurements under `test-results/`. The CI Playwright job runs them
+on Chromium for PRs and on all three engines on main and weekly.
 
-Run locally with `pnpm exec playwright test e2e/heatmap-print.spec.ts`. A dense-team regression
-also confirms that a valid figure can be too small at column width, or too tall after transposition.
-The app's small-print advisory uses the actual smallest exported text rather than the selected
-nominal font size, at the width you chose.
+Run them locally with `pnpm exec playwright test e2e/heatmap-print.spec.ts`. A dense-team regression
+test also confirms that a valid figure can be too small at column width, or too tall after
+transposition. The app's small-print advisory uses the smallest text it actually exports, not the
+selected nominal font size, at the width you chose.
+
 The CLI and the document plugins warn as well: on stderr for the CLI, Quarto and Pandoc, and as a
-build warning in MyST and Sphinx. They measure the figure scaled to fit 183 × 170 mm, and warn
-below 6 pt. That happens from about 25 contributors, in either orientation. A larger team's
-figure needs a page of its own, such as a supplementary figure. Typst has no build warnings, so the
-Typst package does not warn. To keep a strict build passing once you have checked the figure, add
+build warning in MyST and Sphinx. They measure the figure scaled to fit 183 × 170 mm and warn below
+6 pt. That happens from about 25 contributors, in either orientation. A larger team's figure needs a
+page of its own, such as a supplementary figure. Typst has no build warnings, so the Typst package
+does not warn. To keep a strict build passing once you have checked the figure, add
 `suppress_warnings = ["credit_matrix"]` to Sphinx's `conf.py`, or this to MyST's `myst.yml`:
 
 ```yaml
@@ -249,9 +260,8 @@ project:
       severity: ignore
 ```
 
-The tests above hold reference figures to a hard 5 pt floor; the 6 pt warning is advice for real
-figures, so a figure can pass the tests and still warn. Increasing PNG DPI does not increase the
-printed text size.
+The tests hold reference figures to a hard 5 pt floor. The 6 pt warning is advice for real figures,
+so a figure can pass the tests and still warn. A higher PNG dpi does not enlarge the printed text.
 
 These checks cover the reference fixtures and installed browser fonts. They do not replace checking
-the final manuscript, a native reader's review, a physical printed proof, or the publisher's font rules.
+the final manuscript, a native reader's review, a physical printed proof or the publisher's font rules.

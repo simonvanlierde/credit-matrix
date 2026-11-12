@@ -74,6 +74,15 @@ describe("useCopyStatus", () => {
 
     expect(result.current[0]).toBe("error");
     expect(announce).toHaveBeenCalledWith("Copy failed. Try again.", { assertive: true });
+    act(() => vi.advanceTimersByTime(120_000));
+    expect(result.current[0]).toBe("error");
+    stubClipboard(() => Promise.resolve());
+    await act(async () => {
+      await result.current[1]("try again");
+    });
+    expect(result.current[0]).toBe("copied");
+    act(() => vi.advanceTimersByTime(2000));
+    expect(result.current[0]).toBe("idle");
   });
 
   it("restarts the window on a second copy, so a quick pair does not clear early", async () => {

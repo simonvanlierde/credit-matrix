@@ -55,3 +55,32 @@ it("dismisses a replaced strip once, outside rendering, and only the strip asked
   expect(screen.queryByText("Second.")).toBeNull();
   expect(second.onDismiss).toHaveBeenCalledOnce();
 });
+
+it.each([false, true])("keeps success statuses available without a time limit (actions: %s)", (withAction) => {
+  vi.useFakeTimers();
+  try {
+    render(
+      <IntlProvider locale="en" messages={en}>
+        <StatusBanner />
+      </IntlProvider>,
+    );
+    const undo = vi.fn();
+    const onDismiss = vi.fn();
+    act(() =>
+      showStatus({
+        kind: "success",
+        message: "Imported contributors.",
+        actions: withAction ? [{ label: "Undo", onAct: undo }] : undefined,
+        onDismiss,
+      }),
+    );
+    act(() => vi.advanceTimersByTime(120_000));
+    expect(screen.getByText("Imported contributors.")).toBeTruthy();
+    expect(onDismiss).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: withAction ? "Undo" : "Dismiss" }));
+    expect(undo).toHaveBeenCalledTimes(withAction ? 1 : 0);
+    expect(onDismiss).toHaveBeenCalledOnce();
+  } finally {
+    vi.useRealTimers();
+  }
+});

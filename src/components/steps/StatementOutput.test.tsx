@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { type Author, createAuthor } from "@/core";
+import { docFiles } from "@/docs/pages";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
 import { messages as en } from "@/locales/en/messages";
@@ -195,4 +196,24 @@ it("defines the Typst team from the exported file before drawing it", () => {
   renderStatement();
   const recipe = screen.getByRole("textbox", { name: "Export recipe" }) as HTMLTextAreaElement;
   expect(recipe.value).toMatch(/^#let team = json\("contributors.json"\)\n\n#credit-heatmap\(team,/);
+});
+
+it.each([
+  ["word", "Word", "integrations/figures/README.md"],
+  ["quarto", "Quarto", "integrations/quarto/README.md"],
+  ["typst", "Typst", "integrations/typst/README.md"],
+  ["pandoc", "Pandoc", "integrations/pandoc/README.md"],
+  ["myst", "MyST / Jupyter Book", "integrations/myst/README.md"],
+  ["sphinx", "Sphinx", "integrations/sphinx/README.md"],
+] as const)("links %s setup to its rendered README in this tab", (toolchain, label, path) => {
+  act(() => {
+    store().loadAuthors(twoAuthors());
+    store().setToolchain(toolchain);
+  });
+  renderStatement();
+  const page = docFiles.find((file) => file.path === path);
+  expect(page).toBeDefined();
+  const link = screen.getByRole("link", { name: `Set up ${label} →` });
+  expect(link.getAttribute("href")).toBe(page?.route);
+  expect(link.getAttribute("target")).toBeNull();
 });

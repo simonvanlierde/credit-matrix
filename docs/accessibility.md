@@ -25,47 +25,41 @@ You should be able to:
 - tell contribution levels apart without color: Lead, Equal and Supporting each have their own mark
   of three, two or one dots;
 - use a dark theme, which follows your system setting until you pick one;
-- stop the animations with your system's reduced-motion setting.
+- reduce animations with your system's reduced-motion setting.
 
 ## How accessible CRediT Matrix is
 
-CRediT Matrix aims to meet [WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA, and through it the
-web requirements of
-[EN 301 549 v4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf).
+CRediT Matrix aims to meet [WCAG 2.2](https://www.w3.org/TR/WCAG22/) at level AA.
 
-Its conformance is **partially conformant**. On 24 October 2026 the developer checked the app and
-the web element against every WCAG 2.2 level A and AA criterion, in the
-[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md).
-It found no criterion the app fails. It covers a sample of pages and no screen reader has read the
-app yet, so it does not claim full conformance.
-On 26 October 2026 a second pass read what a screen reader is given on each page and ran the
-checks in Firefox and WebKit too. There has been no external audit. What is checked, and how, is
-under [How we check](#how-we-check).
+Its conformance is **partially conformant**. The latest review, on 12 November 2026, checked sampled
+pages, browser tests and the implementation against WCAG 2.2 AA. The
+[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md)
+records the evidence and the checks still needed. We have not tested the app with a screen reader
+or commissioned an external audit. This review does not assess all requirements of EN 301 549.
 
 ## Known problems
 
-- **Editors may not use a downloaded heatmap's description.** The SVG and PNG downloads include the
-  contribution statement as their text alternative: the SVG in its description, which screen
-  readers read, and the PNG in its Description field. A word processor or slide tool may not turn
-  that field into alt text. When you put the heatmap in a paper or slide, check its alt text there,
-  and paste in the contribution statement if it is empty. **Copy PNG** is worse: Chromium drops the
-  Description field from a copied image, so paste the contribution statement in as alt text, or
-  use **Download PNG** or **Download SVG**.
-- **The PDF download is not tagged.** It includes the heatmap's title, its contribution statement as
-  the subject and the document language, but it has no tag structure, so a screen reader gets the
-  selectable text without headings, reading order or a figure description.
+- **Editors may not use a heatmap's description.** SVG downloads contain the contribution
+  statement in their description, and PNG downloads contain it in a Description field. A word
+  processor or slide tool may not turn that metadata into alt text. Clipboard transfers may
+  discard it too. After inserting or pasting a heatmap, check its alt text and paste in the
+  contribution statement if needed.
+- **The PDF download is not tagged.** It includes a title, the contribution statement as its
+  subject and the document language. It does not provide a tagged reading order or figure alternative.
 - **No native speaker has checked eight of the nine languages yet.** The German, Spanish, French,
   Italian, Japanese, Dutch, European Portuguese and Simplified Chinese interface text was
-  translated by machine. If a label is unclear, switch the language menu to English. The CRediT role names themselves come from the reviewed
+  translated by machine. If a label is unclear, switch the language menu to English.
+  The CRediT role names come from the reviewed
   [credit-translation](https://github.com/contributorshipcollaboration/credit-translation) project.
-  No fix date: it waits on volunteer reviewers.
+  We need volunteer reviewers, so we cannot give a fix date.
 - **This statement is in English only.** Its exact wording matters, so we don't machine-translate it.
-  Your browser's translate feature gives a rough version. No fix planned.
+  Your browser's translate feature gives a rough version. We have no plans to translate this statement.
 
 ### Content we don't control
 
-- **ORCID sign-in.** Signing a co-author answer with ORCID opens orcid.org, which ORCID runs, so
-  its accessibility is up to ORCID. An answer can be sent without signing in.
+- **ORCID sign-in.** Signing a co-author answer opens orcid.org, a separate service run by ORCID.
+  We checked its initial sign-in page, but not the full sign-in process. You can send an answer
+  without signing in.
 
 ## Tell us about a problem
 
@@ -80,69 +74,54 @@ statement or an export in another format, email us and we'll send it.
 
 ## How we check
 
-- **Self-assessment.** Every WCAG 2.2 level A and AA criterion was judged in Chromium on a sample
-  of the app, the co-author page, the census, the about page, this statement and the web element,
-  with the result and its evidence per criterion in the
-  [self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md). It is repeated at each yearly review.
-- **Automated scan.** The end-to-end tests run [axe-core](https://github.com/dequelabs/axe-core)
-  with the WCAG 2.0, 2.1 and 2.2 level A and AA rules (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`,
-  `wcag22a`, `wcag22aa`). They scan the welcome dialog, the empty and filled workspace, a phone-sized
-  screen, the import dialog, an error state, an open popover, the published practice tab, dark
-  mode, the about page and this statement, and the web element on a light page, a dark page and a
-  320 px wide screen. See
-  [e2e/a11y.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/a11y.spec.ts).
-- **What a screen reader is given.**
-  [e2e/screen-reader.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/screen-reader.spec.ts)
-  reads the accessibility tree of the workspace, the grid, every popover and dialog, the co-author
-  page, the census, the about page, this statement and the web element: the names, roles, states,
-  headings and landmarks a screen reader reads out. It also logs every message that reaches a live
-  region, and checks that copying, removing, undoing and changing the grid are each announced once.
-- **Keyboard tests.** The same tests use the keyboard alone to move through the contributor list,
-  reorder a contributor without dragging, switch the inspector tabs, move through the grid with the
-  arrow keys, open a role's description from its name, and use the segmented controls. They also
-  check that focus stays in place after a contributor is removed, and that small icon buttons are
-  at least 24 by 24 px.
-- **Lint.** [Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) check
-  every change for things like missing alt text, invalid ARIA and click handlers without a keyboard
-  equivalent.
-- **This statement.**
-  [e2e/accessibility-statement.spec.ts](https://github.com/simonvanlierde/credit-matrix/blob/main/e2e/accessibility-statement.spec.ts)
-  fails when this page loses a section, claims full conformance, loses its email contact,
-  or goes more than 400 days without a review.
+We review the app against WCAG 2.2 AA each year. The
+[self-assessment](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/accessibility-assessment.md)
+lists the pages, checks and evidence for each criterion.
 
-Chromium runs all of this on every pull request that changes the app, and all three browsers
-run it on every push to main and weekly. Automated tools find only part of
-the problems a person can run into, so a passing run does not mean there are none.
+Our browser tests check:
 
-Not checked yet: nobody who relies on a screen reader, switch access or voice control has tested
-the app, and the self-assessment did not use a screen reader. The tests read the accessibility
-tree a screen reader gets, but no screen reader has read it out, so how NVDA, JAWS or VoiceOver
-speak it is not checked. Nobody has used the app in Firefox or Safari by hand.
+- common tasks with the keyboard, including contributor order, grid navigation and figure downloads;
+- the names, roles, states and messages the app supplies to assistive technology;
+- sampled contrast, focus rings, control sizes, text spacing and narrow screens;
+- settings with reduced motion and forced colors, which emulate some system accessibility settings;
+- common accessibility errors with [axe-core](https://github.com/dequelabs/axe-core), using its WCAG 2.0, 2.1 and 2.2 A and AA rules.
+
+Separate checks cover real 200% Chromium zoom in both themes and keyboard use of Chromium's
+native color picker on Linux. These do not establish how other browsers or operating systems behave.
+[Biome's accessibility rules](https://biomejs.dev/linter/javascript/rules/#a11y) also check code changes
+for errors such as missing alt text and invalid ARIA attributes.
+
+Tests guard this statement's sections, conformance status, email contact and review date.
+They fail if a review is more than 400 days old.
+
+Passing these checks does not mean we have found every problem. We have not checked spoken output
+with NVDA, JAWS or VoiceOver, or tested with people who rely on screen readers, switch access or
+voice control. We have not used the app in Firefox or Safari by hand, or tested Windows High Contrast
+by hand.
 
 ### Heatmap text alternatives
 
-In the app, screen readers skip the heatmap drawing, and the contribution statement beside it says
-the same in words. The downloaded SVG has the title "Contribution heatmap" and, as its description,
-the contribution statement by author. The downloaded PNG holds the same statement in its Description
-field; a copied PNG does not. The first known problem says where that text gets lost.
+The workspace grid gives assistive technology each contribution and its level. The export preview
+has the contribution statement as its image alternative. SVG and PNG downloads also include the
+statement, but editors may not use it as alt text. See [Known problems](#known-problems) before
+inserting a figure into a document.
 
 ### The web element
 
 The [`<credit-matrix>` element](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/element.md)
-draws a light card with dark text, so its text keeps enough contrast on a dark page. Screen readers
-skip the heatmap drawing and read a table instead: a row per role, a column per contributor, and the
-level (Lead, Equal, Supporting or None) in each cell. The element marks the language of its
-statement, heatmap and table, so screen readers pronounce it right. Its loading and error messages
-are in English, and marked as English.
+draws a light card with dark text, so its text keeps enough contrast on a dark page. It supplies
+assistive technology with a table instead of the drawing: a row per role, a column per contributor, and the
+level (Lead, Equal, Supporting or None) in each cell. The element declares the language of its
+statement, heatmap and table. Its loading and error messages are marked as English.
 
 ## Tested with
 
-- Chromium, Firefox and WebKit, the engine Safari uses, in Playwright's desktop profiles, with
-  axe-core: Chromium on every pull request, all three on every push to `main` and weekly. They
-  cover the axe scans, this statement, the about page, the accessibility tree and the main
-  workflows. Firefox and WebKit have no clipboard permissions, so
-  the workflow tests that read the clipboard run there against a clipboard kept in the page.
-  They don't check the browser's own clipboard.
+Automated tests use Chromium, Firefox and WebKit in Playwright's desktop profiles, with axe-core.
+WebKit is the engine Safari uses; these tests do not replace testing Safari on Apple hardware.
+Chromium runs on pull requests that change the app. All three run on pushes to `main` and weekly.
+
+Firefox and WebKit workflow tests use a clipboard kept within the page. They check the app's copy
+handlers, but do not test the browser's own clipboard.
 
 CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 
@@ -150,9 +129,9 @@ CRediT Matrix relies on HTML, CSS, JavaScript, WAI-ARIA and SVG.
 
 Prepared: 13 October 2026
 
-Last reviewed: 26 October 2026
+Last reviewed: 12 November 2026
 
-Next review: by 26 October 2027, or at the next major release if that comes first.
+Next review: by 12 November 2027, or at the next major release if that comes first.
 
-Method: self-assessment by the developer, following WCAG-EM, with the checks under
+Method: self-assessment by the developer, using the browser and source checks under
 [How we check](#how-we-check). No external audit.

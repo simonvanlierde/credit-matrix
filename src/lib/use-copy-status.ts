@@ -5,11 +5,10 @@ import { useTranslations } from "@/lib/translations";
 type CopyStatus = "idle" | "copied" | "error";
 
 /**
- * Copy to the clipboard, exposing a status that resets to "idle" after 2s.
+ * Copy to the clipboard. Success resets after 2s; failure stays until another attempt.
  * The outcome is also announced to assistive tech; pass `labels.copied` to
  * tailor the spoken text to what was copied (defaults to a generic "Copied to
- * clipboard"). Failure always announces `annCopyFailed`, which names the manual
- * fallback — the visible button label stays short, the announcement does not.
+ * clipboard"). Failure announces `annCopyFailed` assertively.
  *
  * The returned `copy` takes either a string (written as text) or a function
  * doing the write itself. The heatmap copies an image blob, which is the same
@@ -43,7 +42,7 @@ export function useCopyStatus(labels?: {
     }
     // Reset the window on each copy so rapid successive copies don't clear early.
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => setStatus("idle"), 2000);
+    if (copied) timer.current = setTimeout(() => setStatus("idle"), 2000);
     return copied;
   }
 

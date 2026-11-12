@@ -314,6 +314,18 @@ describe("credit-matrix usage", () => {
     await expect(run(["statement"])).rejects.toThrow(/needs a file/);
   });
 
+  it("shows the short flags -h and -v in the usage text", () => {
+    expect(USAGE).toContain("credit-matrix -h, --help | -v, --version");
+  });
+
+  it("names the allowed values when a heatmap option is wrong", async () => {
+    const svg = (...flags: string[]) => run(["convert", csv, "--to", "svg", ...flags]);
+    await expect(svg("--palette", "pink")).rejects.toThrow("Unknown heatmap palette. Use blue, green or gray.");
+    await expect(svg("--shape", "hex")).rejects.toThrow("Unknown heatmap shape. Use square, rounded or circle.");
+    await expect(svg("--labels", "long")).rejects.toThrow("Unknown heatmap labels. Use full or short.");
+    await expect(svg("--size", "0")).rejects.toThrow("Heatmap size must be above 0 and at most 256.");
+  });
+
   it("prints the package version for --version or -v", async () => {
     expect(await run(["--version"])).toMatch(/^\d+\.\d+\.\d+/);
     expect(await run(["-v"])).toBe(await run(["--version"]));

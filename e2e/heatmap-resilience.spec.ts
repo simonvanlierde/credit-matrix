@@ -75,6 +75,8 @@ for (const mode of ["forced colors", "reduced motion"] as const) {
     await page.emulateMedia(mode === "forced colors" ? { forcedColors: "active" } : { reducedMotion: "reduce" });
     await page.getByRole("button", { name: "Figure settings", exact: true }).click();
     await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toBeVisible();
+    // Preview rendering enables the exports asynchronously; scan their settled state.
+    await expect(page.getByRole("button", { name: "Download PNG", exact: true })).toBeEnabled();
     expect((await scan(page)).violations).toEqual([]);
     await page.getByRole("combobox", { name: "Legend", exact: true }).focus();
     await page.keyboard.press("ArrowDown");

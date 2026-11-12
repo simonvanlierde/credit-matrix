@@ -34,6 +34,6 @@ it("publishes index.js's faces, the licences and the readme, and nothing else", 
   expect([...files].sort()).toEqual([...expected].sort());
 }, 60_000); // npm pack hashes every face: tens of MB, slow while the whole suite runs.
 
-it("names the pinned fonts version in the core README", () => {
-  expect(readFileSync("src/core/README.md", "utf8")).toContain(`credit-matrix-fonts@${FIGURE_FONTS_VERSION}/`);
+it("names the pinned fonts version in the CLI reference", () => {
+  expect(readFileSync("docs/cli.md", "utf8")).toContain(`credit-matrix-fonts@${FIGURE_FONTS_VERSION}/`);
 });

@@ -1,6 +1,5 @@
 import { CircleAlert, CircleCheck, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { UNDO_WINDOW_MS } from "@/components/ui/undo-bar";
 import { announce } from "@/lib/announce";
 import { useTranslations } from "@/lib/translations";
 
@@ -10,8 +9,7 @@ export interface Status {
   /** Buttons after the message, in this order (Undo first, then a way onward). Each also dismisses the strip. */
   actions?: readonly { label: string; onAct: () => void }[];
   /**
-   * Runs when the strip leaves for any reason — the dismiss button, the
-   * timeout, the action, or a newer status replacing it — so anything shown
+   * Runs on dismissal, an action, or replacement by a newer status, so anything shown
    * alongside the strip (a row mark, a cell halo) can leave with it.
    */
   onDismiss?: () => void;
@@ -89,15 +87,6 @@ export function StatusBanner() {
     document.addEventListener("focusin", onFocusIn);
     return () => document.removeEventListener("focusin", onFocusIn);
   }, [status]);
-
-  // Successes leave on their own; errors stay until dismissed. A success
-  // with an action (Undo) gets the same 60s the contributor-removal undo
-  // gives, for the same WCAG 2.2.1 reason.
-  useEffect(() => {
-    if (!status || status.kind === "error") return;
-    const timer = window.setTimeout(() => replace(null), status.actions?.length ? UNDO_WINDOW_MS : 10000);
-    return () => window.clearTimeout(timer);
-  }, [status, replace]);
 
   if (!status) return null;
 

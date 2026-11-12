@@ -1,8 +1,8 @@
 # CRediT statement for Sphinx
 
-Render a CRediT Matrix export in Sphinx documentation with a `credit-statement` directive.
-The extension calls the [package CLI](../../src/core/README.md); it has no role list or
-statement generator of its own.
+The `credit-statement` directive renders a CRediT Matrix export in your Sphinx documentation.
+It calls the [package CLI](../../src/core/README.md) and has no role list or statement generator
+of its own.
 
 ## Install
 
@@ -20,7 +20,7 @@ statement generator of its own.
    credit_matrix_command = ["node", str(docs.parent / "node_modules/credit-matrix/dist/cli.js")]
    ```
 
-Use Sphinx 8 or later with Python 3.11 or later. The CLI needs Node 22.19 or later.
+This needs Sphinx 8 or later, Python 3.11 or later and, for the CLI, Node 22.19 or later.
 If `credit-matrix` is already on your build's `PATH`, leave out `credit_matrix_command`.
 The command is a list of arguments, not a shell command.
 
@@ -36,23 +36,22 @@ Contributors
    :levels:
 ```
 
-The directive prints the statement at that position. Paths are relative to the page;
-a leading `/` means the Sphinx source root. Changes to the export trigger a rebuild of the page.
-The export is read during the documentation build, not by the reader's browser.
+The directive prints the statement at that position. Paths are relative to the page; a leading `/`
+means the Sphinx source root. A change to the export rebuilds the page. The build reads the export,
+not the reader's browser.
 
 ## Options
 
 - `:format:` accepts `by-author` (default), `by-author-short`, `by-role` or `by-role-short`.
-- `:locale:` overrides Sphinx's `language`. The default is English when no language is set.
-  The CLI supports the app's nine languages and reports other languages as build errors.
+- `:locale:` overrides Sphinx's `language`. With no language set, it is English.
+  The CLI supports the app's nine languages and reports any other as a build error.
   Traditional Chinese (`zh_TW`, `zh_HK`, `zh_Hant`) has no catalog and uses English.
 - `:levels:` includes Equal and Supporting contribution levels.
 
-Names and statements are inserted as text. They are never interpreted as reStructuredText or HTML.
-Missing files, invalid exports and CLI errors appear as Sphinx diagnostics; use `sphinx-build -W`
-to make them fail the build.
+Names and statements go in as text, never as reStructuredText or HTML. Missing files, invalid
+exports and CLI errors appear as Sphinx diagnostics. Use `sphinx-build -W` to fail the build on them.
 
-[`example/`](example/) contains a complete project. From the repository root:
+[`example/`](example/) is a complete project. To build it, run this from the repository root:
 
 ```sh
 pnpm --filter credit-matrix build
@@ -62,15 +61,13 @@ uv run --project integrations sphinx-build -W -b html integrations/sphinx/exampl
 ## Contribution heatmap
 
 See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive. From about
-25 contributors it warns that the labels print under 6 pt, which fails a strict build; the
+25 contributors it warns that the labels print under 6 pt, which fails a strict build. The
 [final-size checks](../heatmap.md#final-size-readability-checks) say how to silence it.
+
 For your own font, give the directive `:font: Inter` and put the font files in the project.
-`:font-path:` (comma-separated folders) and `credit_matrix_font_path` in `conf.py` (a list) resolve
-against the folder of `conf.py`; `:ignore-system-fonts:` or `credit_matrix_ignore_system_fonts = True`
-leaves out installed fonts, and `:font-fallback: sans|serif` picks the built-in faces for what the
-family lacks. The file used shows as an info message, a license warning as a Sphinx warning, and a
-missing family fails the directive with its page and line. A `:font-path:` folder name cannot contain
-a comma; use `credit_matrix_font_path` in `conf.py` for one that does.
+`:font-path:` and `credit_matrix_font_path` resolve against the folder of `conf.py`, and the other
+font options work as in the [options table](../heatmap.md#your-own-font). A `:font-path:` folder name
+cannot contain a comma. For one that does, use `credit_matrix_font_path` (a list) in `conf.py`:
 
 ```python
 credit_matrix_font_path = ["_fonts"]
@@ -78,5 +75,7 @@ credit_matrix_ignore_system_fonts = True
 ```
 
 The CLI embeds fonts in the generated SVG. They come from `credit-matrix-fonts` when it is
-installed, otherwise from a one-time download ([details](../../src/core/README.md#cli)). See
-[font portability and PDF export](../figures/README.md) before converting it to PDF or Word.
+installed, otherwise from a one-time download
+([fonts and offline use](../../docs/cli.md#fonts-and-offline-use)).
+Before you convert the SVG to PDF or Word, read
+[font portability and PDF export](../figures/README.md).

@@ -12,8 +12,8 @@ framework and no build step.
 <credit-matrix src="contributions.json"></credit-matrix>
 ```
 
-This loads the latest release. To keep a page from changing under you, pin the version you tested
-with, for example `https://esm.sh/credit-matrix@0.9.0/element` (use the version you installed).
+This loads the latest release. To stop the page changing under you, pin the version you tested, for
+example `https://esm.sh/credit-matrix@0.9.0/element`.
 
 Or put the JSON in the page:
 
@@ -31,10 +31,10 @@ With a bundler, import it once instead of the script tag:
 import "credit-matrix/element";
 ```
 
-Without a bundler, load it through esm.sh as above. The package's `element.js` imports `zod/mini` by
-its bare name, which a browser cannot find on its own: to serve the file yourself, add an
+Without a bundler, load it through esm.sh as above. To serve the file yourself, add an
 [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap)
-that points `zod/mini` at a copy of zod.
+that points `zod/mini` at a copy of zod. The package's `element.js` imports `zod/mini` by its bare
+name, which a browser cannot resolve on its own.
 
 ## Attributes
 
@@ -45,41 +45,39 @@ that points `zod/mini` at a copy of zod.
 | `locale`  | Language of the statement and heatmap, such as `fr` or `zh-Hans`. See below.                                                                        |
 | `levels`  | Boolean: present (any value, even `"false"`) or absent. Marks Equal and Supporting contributions in the statement; the heatmap always shows levels. |
 
-Changing any attribute renders again. A `format`, `locale` or `levels` change reuses the file already
-downloaded; setting `src`, even to the same URL, downloads it again, as does calling `render()`.
+Changing any attribute renders again. A `format`, `locale` or `levels` change reuses the downloaded
+file. Setting `src`, even to the same URL, downloads it again, as does calling `render()`.
 Without `src`, adding or editing the JSON child also renders again, so a script can fill it in after
 the element is on the page.
 
 ## Language
 
-The element writes role names, level names and the heatmap in one of the languages CRediT Matrix
-offers: `en`, `fr`, `de`, `es`, `it`, `pt-PT`, `nl`, `zh-Hans` and `ja`. It takes the `locale`
-attribute, or else the `lang` of the nearest element around it, such as `<html lang="fr">`. A
-regional tag such as `de-DE` uses its language, `de`. Any language it does not offer is English. The
-`CRediT:` prefix stays English in every language.
+The element writes role names, level names and the heatmap in `en`, `fr`, `de`, `es`, `it`, `pt-PT`,
+`nl`, `zh-Hans` or `ja`. It uses the `locale` attribute, or else the `lang` of the nearest element
+around it, such as `<html lang="fr">`. A regional tag such as `de-DE` uses its language, `de`. Any
+other language falls back to English. The `CRediT:` prefix stays English in every language.
 
 ## What it renders
 
-It renders inside a shadow root, so the page's styles neither leak in nor out, on its own light card
-(warm paper with a thin ink border, as in the app):
+It renders inside a shadow root, so the page's styles neither leak in nor out. It draws a light card
+(warm paper with a thin ink border, as in the app) holding:
 
-- the heatmap, drawn at its full size. On a narrow page it scrolls sideways instead of shrinking
-  its labels;
+- the heatmap, at its full size. On a narrow page it scrolls sideways instead of shrinking its
+  labels;
 - a table of each contributor's level in each role, for screen readers (see the
   [accessibility statement](accessibility.md#the-web-element));
 - the statement as plain text, one paragraph per line (the `CRediT:` line, then any
   acknowledgements and notes).
 
-It uses Atkinson Hyperlegible Next or IBM Plex Sans when the page has loaded one, and otherwise
-Helvetica or Arial. While it fetches
-`src` it shows "Loading contributions…". If the file cannot be fetched (a network error, an HTTP
-error or a file over 2 MB), or it is not a CRediT Matrix export, the element says which in an alert.
-These messages are in English.
+The font is Atkinson Hyperlegible Next or IBM Plex Sans when the page has loaded one, and otherwise
+Helvetica or Arial. While it fetches `src` it shows "Loading contributions…". If the file cannot be
+fetched (a network error, an HTTP error or a file over 2 MB), or it is not a CRediT Matrix export,
+the element shows an alert that says which. These messages are in English.
 
 ## Avoid a jump while it loads
 
-Until the script has loaded, the browser shows `<credit-matrix>` as an empty inline element, and the
-page shifts when the content appears. Reserve some room in the page's own CSS:
+Until the script loads, the browser shows `<credit-matrix>` as an empty inline element, and the page
+shifts when the content appears. Reserve room in your own CSS:
 
 ```css
 credit-matrix:not(:defined) {
@@ -88,4 +86,4 @@ credit-matrix:not(:defined) {
 }
 ```
 
-Set the height to roughly what your figure needs.
+Set the height to about what your figure needs.
