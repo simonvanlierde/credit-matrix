@@ -1,11 +1,10 @@
 # CLI reference
 
-`credit-matrix` reads a contributor file in any format CRediT Matrix imports and prints a CRediT
-statement, an export, or a link that asks one contributor to check their roles. This page covers
-every command, flag, exit code and the way input and output work. The examples all use the file in
-[The example file](#the-example-file) and were run for real.
+`credit-matrix` reads a contributor file in any format CRediT Matrix imports. It prints a CRediT
+statement, an export, or a link that asks one contributor to check their roles. The examples all use
+[the example file](#the-example-file) and show real output.
 
-The CLI is built for scripts and for tools that call it. If you write a manuscript by hand, the
+The CLI is for scripts and tools. If you write a manuscript by hand, the
 [app](https://credit.duinlab.nl) does the same jobs without a terminal.
 
 ## Install and run
@@ -42,9 +41,8 @@ credit-matrix -h, --help | -v, --version
 | [`convert`](#convert) | The contributions in another format |
 | [`ask`](#ask) | A link that asks one contributor to check their roles |
 
-The command comes first, then the file, then the flags in any order. A flag that a command does
-not use is accepted and ignored (`statement --to csv` prints the statement). `--help` and `--version`
-also win over a missing command, and `--version` wins over `--help`.
+The command comes first, then the file, then the flags in any order. A command accepts and
+ignores a flag it does not use (`statement --to csv` prints the statement).
 
 Flags that take a value accept `--flag value` and `--flag=value`. When you repeat a flag, the last
 one wins, except `--font-path`, which collects every value.
@@ -62,7 +60,7 @@ Both work without a command or file.
 
 Every example reads this `contributors.json`. It has three authors and one non-author contributor.
 The file is the native JSON export of the app (**Export data**, **JSON**), cut down to the fields
-that matter. The role names are the NISO names; note the en dash in `Writing – original draft`.
+that matter. The role names are the NISO names, with an en dash in `Writing – original draft`.
 
 ```json
 {
@@ -122,9 +120,11 @@ The app stores one score per level: 33 for supporting, 66 for equal and 100 for 
 uses 0 and 100). A file you write by hand may carry any score from 0 to 100. It maps to a level:
 67 to 100 is lead, 34 to 66 is equal, 1 to 33 is supporting, 0 is no contribution. `latex-credits`
 passes the score through, divided by 100.
-`contributorType` is `author` unless the file says `non-author`. Keep the names in a file like
-this one and refer to people by `id` on the command line, so a name never has to pass through
-shell quoting.
+
+`contributorType` is `author` unless the file says `non-author`.
+
+Keep the names in the file and refer to people by `id` on the command line. Then no name passes
+through shell quoting.
 
 ## Input
 
@@ -149,9 +149,9 @@ web app does that.
 Limits and special cases:
 
 - A file over 2 MB is refused, and so is a roster of more than 420 contributors.
-- UTF-8 (with or without a byte order mark) and UTF-16 with a byte order mark (Excel's "Unicode
-  Text" export) are read. Excel and OpenDocument files (`.xlsx`, `.xls`, `.ods`), ZIP files and
-  files with a NUL byte are refused with a request to save the sheet as CSV.
+- The CLI reads UTF-8 (with or without a byte order mark) and UTF-16 with a byte order mark
+  (Excel's "Unicode Text" export). It refuses Excel and OpenDocument files (`.xlsx`, `.xls`,
+  `.ods`), ZIP files and files with a NUL byte, and asks you to save the sheet as CSV.
 - A JSON file that fails validation names up to three failing fields, for example
   `bad.json is not a CRediT Matrix JSON export. Check authors.0.name, authors.0.firstName,
   authors.0.middleName and 3 more.`
@@ -174,8 +174,8 @@ Limits and special cases:
 | 1 | The command line was fine but the work failed | File not found, a directory, or permission denied. A spreadsheet, a ZIP or a file over 2 MB. XML that is not well formed. JSON or another format that does not validate. No roles assigned yet, for `statement` and `convert --to latex-credits`. `ask` finds no contributor, or several. The figure fonts cannot draw a character, or the font family is missing. |
 | 2 | The command line is wrong | No command, an unknown command, no file, an unknown option or a missing option value. `convert` without `--to`, or with an unknown one. An unknown `--format`, `--locale` or heatmap value. `ask` without `--contributor`. |
 
-An empty roster is not the same everywhere. With no roles assigned, `statement` and
-`convert --to latex-credits` exit 1. All other targets print an empty roster and exit 0.
+With no roles assigned, only `statement` and `convert --to latex-credits` exit 1. All other
+targets print an empty roster and exit 0.
 
 Exit 2 also prints `Run 'credit-matrix --help' for usage.` after the message.
 
@@ -209,8 +209,8 @@ and `--to pdf`. Other exports ignore it.
 
 The CLI also accepts other spellings of these. It ignores case, reads `_` as `-` and drops a
 region it has no catalog for: `PT` gives `pt-PT`, `zh` gives `zh-Hans`, `fr-CA` gives `fr` and
-`ja_JP` gives `ja`. `zh-Hant`, `zh-TW`, `zh-HK` and `zh-MO` give English without a warning, since
-there is no Traditional Chinese catalog. A code the CLI cannot place exits 2:
+`ja_JP` gives `ja`. `zh-Hant`, `zh-TW`, `zh-HK` and `zh-MO` give English without a warning. There is
+no Traditional Chinese catalog. A code the CLI cannot place exits 2:
 
 ```text
 $ credit-matrix statement contributors.json --locale xx
@@ -225,9 +225,9 @@ Run 'credit-matrix --help' for usage.
 1. The `credit-matrix-fonts` package, when installed next to `credit-matrix` (30 MB to download,
    55 MB on disk). The CLI reads the faces from disk and works offline. Install both in one
    project (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`.
-   A bare `npx credit-matrix` does not see a `credit-matrix-fonts` installed in your own project;
-   run `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...` instead.
-2. Otherwise, a download on first use of each face, from
+   A bare `npx credit-matrix` does not see a `credit-matrix-fonts` installed in your own project.
+   Run `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...` instead.
+2. Otherwise, the CLI downloads each face on first use from
    `https://cdn.jsdelivr.net/npm/credit-matrix-fonts@1.0.1/`. The CLI checks each file against a
    SHA-256 hash that ships in the package and refuses one that does not match. It keeps the face
    in `$XDG_CACHE_HOME/credit-matrix/fonts/`, or in the platform cache folder: `~/.cache`,
@@ -264,8 +264,9 @@ The formats:
 - `by-author` lists the roles under each person.
 - `by-author-short` does the same with initials.
 - `codemeta` prints linked CodeMeta 3.0 JSON, with non-authors under `contributor`. It ignores
-  `--locale` and `--levels`. It warns on standard error about each person without an ORCID iD,
-  whose link only identifies them inside the document, and that CodeMeta omits scores.
+  `--locale` and `--levels`. On standard error it warns that CodeMeta omits scores. It also warns
+  about each person without an ORCID iD, because their link identifies them only inside the
+  document.
 
 The statement exits 1 with `No roles assigned yet: the statement is empty.` when nobody has a role.
 
@@ -409,9 +410,9 @@ exits 2.
 
 The "boolean word" flags need a value: write `--legend false`, not `--legend`.
 
-With `--font <family>`, the CLI draws Latin and the other characters the family has in that
-family. It prints the file it used to standard error. Noto Sans, or Noto Serif for a serif family
-or `--font-fallback serif`, draws the rest. A missing family exits 1.
+With `--font <family>`, the CLI draws every character the family has in that family and prints
+the file it used to standard error. Noto Sans draws the rest, or Noto Serif for a serif family or
+`--font-fallback serif`. A missing family exits 1.
 
 If the labels would print under 6 pt on a full page, the CLI warns on standard error and still
 writes the figure. A character no bundled font can draw exits 1 and names the character.
@@ -538,7 +539,7 @@ $ credit-matrix convert contributors.json --to md --locale nl
 
 ### Example: latex-credits
 
-The file lists authors only. Values run 0 to 1 in CRediT order.
+The file lists authors only.
 
 ```text
 $ credit-matrix convert contributors.json --to latex-credits
@@ -555,8 +556,6 @@ $ credit-matrix convert contributors.json --to latex-credits
 \credit{Rosalind E. Franklin}{0.66,0,0,0,0,0,0,0,0,1,0,0,0.33,0}
 \credit{Alan M. Turing}{0,0,0,0,0,0,0,0,1,0,0,0,0,0}
 ```
-
-Levels become the shades 1, 0.66 and 0.33. `--yes-no` turns every non-zero value into 1.
 
 ### Example: Tenzing
 
@@ -700,7 +699,7 @@ credit-matrix convert contributors.json --to pdf > heatmap.pdf
 ```
 
 The result is a 10 KB PDF 1.7 file (it starts with `%PDF-1.7`) with embedded fonts and selectable
-text. The CLI prints nothing on standard output besides the bytes.
+text.
 
 ## ask
 
@@ -709,8 +708,8 @@ credit-matrix ask <file> --contributor <name or id> [--blank] [--base-url <url>]
 ```
 
 Prints one link that asks a contributor to check their roles in the app, or with `--blank` to
-fill them in from scratch. The link carries only that person's row and the file's title, in the
-URL fragment, so the app's server never receives it. The reply link the contributor sends back
+fill them in from scratch. The link carries only that person's row and the file's title.
+They sit in the URL fragment, so the app's server never receives them. The reply link the contributor sends back
 reads with `convert` (`credit-matrix convert reply.txt --to json`).
 
 | Flag | Type | Default | Effect |
@@ -719,12 +718,12 @@ reads with `convert` (`credit-matrix convert reply.txt --to json`).
 | `--blank` | boolean | off | Send the row with all scores at 0. |
 | `--base-url` | string | `https://credit.duinlab.nl/` | The app the link opens. Not checked: any text is accepted. |
 
-`--contributor` matches in this order: the `id`; the full name, ignoring case and accents'
-composition; a first name or surname that only one person has. If several people share it, the
-command exits 1 and lists them: give the full name or the `id`. No match also exits 1 and lists
+`--contributor` matches in this order: the `id`; the full name, ignoring case and
+treating a composed `é` and a decomposed `e` + `´` as the same; a first name or surname that only one person has. If several people share it, the
+command exits 1 and lists them. Give the full name or the `id`. No match also exits 1 and lists
 up to 10 names.
 
-Prefer the `id`, so a name does not go through the shell. To get one link for each person:
+Prefer the `id`. To get one link for each person:
 
 ```sh
 jq -r '.authors[].id' contributors.json | while read -r id; do
@@ -779,5 +778,5 @@ Keep warnings out of a log but still see errors:
 credit-matrix convert contributors.json --to ro-crate 2>/dev/null > fragment.json
 ```
 
-Use `2>/dev/null` with care: it also hides the error message when the command exits 1 or 2. Check
-the exit code (`$?`) as well.
+`2>/dev/null` also hides the error message when the command exits 1 or 2, so check the exit code
+(`$?`).
