@@ -32,7 +32,7 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
       v: z.literal(2),
       /** draft title */
       t: z.optional(z.string().check(z.maxLength(500))),
-      /** writing tool; one this build does not know is dropped in fromSharePayload */
+      /** writing tool; one this build does not know is dropped in fromSharePayload, which says so */
       h: z.optional(z.unknown()),
       /** source draft id */
       d: z.optional(z.string().check(z.refine(isShareableId))),
@@ -87,6 +87,8 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 export interface ShareData {
   toolchain?: Toolchain;
+  /** The link named a writing tool this build does not know, so `toolchain` left it out. */
+  toolchainDropped?: true;
   authors: Author[];
   /** "" when the payload has none */
   title: string;
@@ -202,6 +204,7 @@ export function fromSharePayload(json: string): ShareData {
   return {
     authors,
     ...(toolchain ? { toolchain } : {}),
+    ...(payload.h !== undefined && !toolchain ? { toolchainDropped: true as const } : {}),
     title: payload.t ?? "",
     claimId: payload.c ?? null,
     sourceDraftId: payload.d ?? null,

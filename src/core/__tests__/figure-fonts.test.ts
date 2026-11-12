@@ -239,7 +239,7 @@ describe("a renderer whose fonts cannot be loaded", () => {
     expect(svg).toMatch(/<tspan font-family="[^"]*sans-serif">Software<\/tspan>/);
     expect(svg).not.toContain("@font-face");
     expect(warn).toHaveBeenCalledWith(
-      "Cannot load figure font NotoSans-Regular.ttf (offline). Drawing its text in system fonts.",
+      "credit-matrix: Cannot load figure font NotoSans-Regular.ttf (offline). Drawing its text in system fonts.",
     );
     // Once per face, not once per figure.
     expect(warn).toHaveBeenCalledTimes(warnings);

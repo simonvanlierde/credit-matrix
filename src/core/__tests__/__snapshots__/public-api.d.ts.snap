@@ -1467,6 +1467,8 @@ export declare function parseAuthorText(text: string): Author[];
 /** Decoded share link: the author matrix plus the envelope it travelled with. */
 interface ShareData {
   toolchain?: Toolchain;
+  /** The link named a writing tool this build does not know, so `toolchain` left it out. */
+  toolchainDropped?: true;
   authors: Author[];
   /** "" when the payload has none */
   title: string;
