@@ -71,3 +71,21 @@ describe("final-size heatmap measurements", () => {
     );
   });
 });
+
+describe("heatmap print edge cases", () => {
+  it("refuses a zero dimension and an invalid text size next to a valid one", () => {
+    expect(() => svgDimensions('<svg width="0" height="10"></svg>')).toThrow(RangeError);
+    expect(() => svgDimensions('<svg width="10" height="0"></svg>')).toThrow(RangeError);
+    expect(() =>
+      heatmapPrintSize(
+        '<svg width="10" height="10"><text font-size="5">a</text><text font-size=".">b</text></svg>',
+        100,
+      ),
+    ).toThrow("SVG text sizes missing or invalid");
+  });
+
+  it("does not warn at exactly 6 pt", () => {
+    // 127 px in a 10980 px wide figure scaled to 183 mm prints at exactly 6 pt.
+    expect(heatmapPrintWarning('<svg width="10980" height="1000"><text font-size="127">a</text></svg>')).toBeNull();
+  });
+});
