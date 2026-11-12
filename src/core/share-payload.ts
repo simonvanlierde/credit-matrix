@@ -32,8 +32,8 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
       v: z.literal(2),
       /** draft title */
       t: z.optional(z.string().check(z.maxLength(500))),
-      /** writing tool */
-      h: z.optional(ToolchainSchema),
+      /** writing tool; one this build does not know is dropped in fromSharePayload */
+      h: z.optional(z.unknown()),
       /** source draft id */
       d: z.optional(z.string().check(z.refine(isShareableId))),
       /** claimed contributor id */
@@ -180,6 +180,7 @@ export function fromSharePayload(json: string): ShareData {
   const payload = SharePayloadSchema.parse(raw);
   // Re-serializing JSON.stringify output gives the same string back, so this is what the co-author hashed.
   const { k: _token, ...signed } = raw;
+  const toolchain = ToolchainSchema.safeParse(payload.h).data;
   const authors = deduplicateAuthorInitials(
     payload.a.map((entry) =>
       createAuthor(entry.n, {
@@ -200,7 +201,7 @@ export function fromSharePayload(json: string): ShareData {
 
   return {
     authors,
-    ...(payload.h ? { toolchain: payload.h } : {}),
+    ...(toolchain ? { toolchain } : {}),
     title: payload.t ?? "",
     claimId: payload.c ?? null,
     sourceDraftId: payload.d ?? null,

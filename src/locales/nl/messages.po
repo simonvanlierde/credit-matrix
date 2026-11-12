@@ -1585,6 +1585,9 @@ msgstr "CRediT-rollen geïmporteerd. Controleer deze toewijzingen voordat u ze t
 msgid "doiNoRoles"
 msgstr "Dit record bevat geen gedeponeerde CRediT-rollen. De bijdragenmatrix blijft leeg."
 
+msgid "importToolchainDropped"
+msgstr "Dit bestand noemt een schrijftool die deze versie niet kent, dus die is weggelaten."
+
 msgid "doiConfirm"
 msgstr "DOI-import bevestigen"
 

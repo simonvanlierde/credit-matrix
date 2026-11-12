@@ -1585,6 +1585,9 @@ msgstr "Ruoli CRediT importati. Controlla queste assegnazioni prima di applicarl
 msgid "doiNoRoles"
 msgstr "Questo record non contiene ruoli CRediT depositati. La matrice dei contributi resterà vuota."
 
+msgid "importToolchainDropped"
+msgstr "Questo file indica uno strumento di scrittura che questa versione non conosce, quindi è stato omesso."
+
 msgid "doiConfirm"
 msgstr "Conferma l'importazione del DOI"
 

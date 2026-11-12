@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { assertBalancedTags, run as runCommand, USAGE } from "../cli";
 import { heatmapPrintWarning } from "../export/heatmap-print";
-import { NewerVersionError, toJson } from "../export/json";
+import { NewerVersionError, toJson, UNKNOWN_TOOLCHAIN_WARNING } from "../export/json";
 import { createFigureRenderer } from "../figures";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash } from "../share-link";
@@ -636,4 +636,17 @@ it("keeps the draft toolchain in JSON conversions and ask links", async () => {
   expect(converted.toolchain).toBe("quarto");
   const link = await run(["ask", source, "--contributor", "Grace Hopper"]);
   expect((await decodeShareHash(new URL(link).hash))?.toolchain).toBe("quarto");
+});
+
+it("converts a file with an unknown toolchain, warning once on stderr", async () => {
+  const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  const source = file(
+    "rmarkdown.json",
+    JSON.stringify({ ...JSON.parse(toJson([createAuthor("Grace Hopper")])), toolchain: "rmarkdown" }),
+  );
+  const converted = JSON.parse(await run(["convert", source, "--to", "json"]));
+  expect(converted.authors.map((author: { name: string }) => author.name)).toEqual(["Grace Hopper"]);
+  expect(converted).not.toHaveProperty("toolchain");
+  expect(stderr.mock.calls.flat()).toEqual([`credit-matrix: ${UNKNOWN_TOOLCHAIN_WARNING}\n`]);
+  stderr.mockRestore();
 });

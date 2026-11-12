@@ -91,6 +91,8 @@ export interface Imported {
   selfId?: string;
   title?: string;
   toolchain?: Toolchain;
+  /** What the import left out, for the reader; see `fromJson`. */
+  warnings?: string[];
 }
 
 /**

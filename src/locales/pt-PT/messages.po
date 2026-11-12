@@ -1585,6 +1585,9 @@ msgstr "Funções CRediT importadas. Verifique estas atribuições antes de as a
 msgid "doiNoRoles"
 msgstr "Este registo não tem funções CRediT depositadas. A matriz de contribuições ficará vazia."
 
+msgid "importToolchainDropped"
+msgstr "Este ficheiro indica uma ferramenta de escrita que esta versão não conhece, por isso foi omitida."
+
 msgid "doiConfirm"
 msgstr "Confirmar a importação do DOI"
 

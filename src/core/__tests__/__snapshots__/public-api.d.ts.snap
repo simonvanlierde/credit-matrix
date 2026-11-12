@@ -1223,12 +1223,14 @@ export declare function toJson(authors: Author[], { asks, includeAnswers, selfId
  * Parse a JSON string previously produced by `toJson()`.
  * Throws a NewerVersionError for a newer build's export, a RepeatedIdError for
  * a file that repeats a contributor id, and a ZodError for any other data that doesn't match the expected shape.
+ * A toolchain this build does not know is left out, with a line saying so in `warnings`.
  */
 export declare function fromJson(json: string): {
   authors: Author[];
   asks?: Record<string, Ask>;
   selfId?: string;
   toolchain?: Toolchain;
+  warnings?: string[];
 };
 /**
  * A draft as input for the latex-credits package (github.com/Pseudomanifold/latex-credits).
@@ -1398,6 +1400,8 @@ interface Imported {
   selfId?: string;
   title?: string;
   toolchain?: Toolchain;
+  /** What the import left out, for the reader; see `fromJson`. */
+  warnings?: string[];
 }
 /**
  * Read text in any format {@link detectFormat} knows. Throws on text it cannot

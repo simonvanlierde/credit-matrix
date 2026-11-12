@@ -1585,6 +1585,9 @@ msgstr "CRediT の役割をインポートしました。適用する前にこ�
 msgid "doiNoRoles"
 msgstr "このレコードには登録済みの CRediT の役割がありません。貢献マトリクスは空のままになります。"
 
+msgid "importToolchainDropped"
+msgstr "このファイルには、このバージョンが認識しない執筆ツールが指定されているため、省略しました。"
+
 msgid "doiConfirm"
 msgstr "DOI のインポートを確認"
 

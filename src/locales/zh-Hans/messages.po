@@ -1585,6 +1585,9 @@ msgstr "已导入 CRediT 角色。应用前请核对这些分配；该记录未�
 msgid "doiNoRoles"
 msgstr "该记录没有已登记的 CRediT 角色。贡献矩阵将保持为空。"
 
+msgid "importToolchainDropped"
+msgstr "此文件指定了当前版本无法识别的写作工具，因此已略去。"
+
 msgid "doiConfirm"
 msgstr "确认导入 DOI"
 

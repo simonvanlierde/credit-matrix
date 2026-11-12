@@ -276,6 +276,7 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
       throw new Error(`${file === "-" ? "The input" : file} repeats a contributor id.`);
     throw error instanceof z.core.$ZodError ? new Error(describeZodError(error, file)) : error;
   });
+  for (const warning of imported.warnings ?? []) process.stderr.write(`credit-matrix: ${warning}\n`);
   const authors = normalizeRoster(imported.authors);
 
   switch (command) {

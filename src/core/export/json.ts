@@ -10,6 +10,10 @@ export const JSON_EXPORT_VERSION = 1;
 
 const REPEATED_ID_MESSAGE = "duplicate contributor ids";
 
+/** In `fromJson` warnings when the file names a toolchain this build does not know. */
+export const UNKNOWN_TOOLCHAIN_WARNING =
+  "This file names a writing tool this version doesn't know, so it was left out.";
+
 const ExportSchema = /* @__PURE__ */ (() =>
   z.object({
     version: z.literal(JSON_EXPORT_VERSION),
@@ -24,7 +28,8 @@ const ExportSchema = /* @__PURE__ */ (() =>
     asks: z.optional(z.record(z.string(), AskSchema)),
     /** The contributor who made the file said they are. */
     selfId: z.optional(z.string()),
-    toolchain: z.optional(ToolchainSchema),
+    /** Checked after parsing: an unknown tool from a newer build is dropped, not a reason to lose the authors. */
+    toolchain: z.optional(z.unknown()),
   }))();
 
 /** Thrown by `fromJson` for an export stamped by a newer build. */
@@ -79,12 +84,14 @@ export function toJson(
  * Parse a JSON string previously produced by `toJson()`.
  * Throws a NewerVersionError for a newer build's export, a RepeatedIdError for
  * a file that repeats a contributor id, and a ZodError for any other data that doesn't match the expected shape.
+ * A toolchain this build does not know is left out, with a line saying so in `warnings`.
  */
 export function fromJson(json: string): {
   authors: Author[];
   asks?: Record<string, Ask>;
   selfId?: string;
   toolchain?: Toolchain;
+  warnings?: string[];
 } {
   const data: unknown = JSON.parse(json);
   const version = (data as { version?: unknown } | null)?.version;
@@ -95,6 +102,13 @@ export function fromJson(json: string): {
       ? new RepeatedIdError()
       : result.error;
   }
-  const { authors, asks, selfId, toolchain } = result.data;
-  return { authors, ...(asks ? { asks } : {}), ...(selfId ? { selfId } : {}), ...(toolchain ? { toolchain } : {}) };
+  const { authors, asks, selfId } = result.data;
+  const toolchain = ToolchainSchema.safeParse(result.data.toolchain).data;
+  return {
+    authors,
+    ...(asks ? { asks } : {}),
+    ...(selfId ? { selfId } : {}),
+    ...(toolchain ? { toolchain } : {}),
+    ...("toolchain" in result.data && !toolchain ? { warnings: [UNKNOWN_TOOLCHAIN_WARNING] } : {}),
+  };
 }

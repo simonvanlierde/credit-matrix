@@ -1585,6 +1585,9 @@ msgstr "CRediT-Rollen importiert. Prüfen Sie diese Zuordnungen, bevor Sie sie �
 msgid "doiNoRoles"
 msgstr "Dieser Datensatz enthält keine hinterlegten CRediT-Rollen. Die Beitragsmatrix bleibt leer."
 
+msgid "importToolchainDropped"
+msgstr "Diese Datei nennt ein Schreibwerkzeug, das diese Version nicht kennt. Es wurde ausgelassen."
+
 msgid "doiConfirm"
 msgstr "DOI-Import bestätigen"
 

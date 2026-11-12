@@ -21,6 +21,7 @@ import {
 } from "@/core";
 import { recheckSignIns } from "@/core/ask";
 import { MAX_AUTHORS, MAX_IMPORT_BYTES, scoreToLevel } from "@/core/author";
+import { UNKNOWN_TOOLCHAIN_WARNING } from "@/core/export/json";
 import type { DoiLookupResult } from "@/core/lookup";
 import { DOI_INPUT_REGEX, lookupDoiWork, normalizeDoi } from "@/core/lookup";
 import { newContributors } from "@/core/merge-row";
@@ -169,6 +170,8 @@ export interface PendingImport {
   /** The contributor who made a JSON export, under the file's own id. */
   selfId?: string;
   toolchain?: Toolchain;
+  /** The file named a writing tool this build does not know, so it was left out. */
+  toolchainDropped?: boolean;
 }
 
 /**
@@ -438,7 +441,7 @@ export function ImportModal({
       // A file's ORCID sign-ins are only claims until checked against ORCID's keys.
       if (parsed.asks) parsed.asks = await recheckSignIns(parsed.asks, () => fetchOrcidKeys());
       if (!current()) return;
-      stageImport(parsed);
+      stageImport({ ...parsed, toolchainDropped: parsed.warnings?.includes(UNKNOWN_TOOLCHAIN_WARNING) });
     } catch (failure) {
       if (!current()) return;
       // Only a converter that could not load fits the "try again online" message; a bad file falls through.
@@ -468,7 +471,7 @@ export function ImportModal({
 
   /** Import straight away, or hold it behind the replace confirmation. */
   function stageImport(next: PendingImport) {
-    if (existingContributorCount > 0 || next.doiNotice) {
+    if (existingContributorCount > 0 || next.doiNotice || next.toolchainDropped) {
       setPending(next);
       return;
     }
@@ -765,8 +768,11 @@ export function ImportModal({
 
           {pending && (
             <div role="alert" className="rounded-lg bg-surface-container-low p-4 text-sm text-on-surface">
-              <p className="font-semibold">{t(existingContributorCount ? "importChoiceTitle" : "doiConfirm")}</p>
+              <p className="font-semibold">
+                {t(existingContributorCount ? "importChoiceTitle" : pending.doiNotice ? "doiConfirm" : "importData")}
+              </p>
               {pending.doiNotice && <p className="mt-1">{t(pending.doiNotice)}</p>}
+              {pending.toolchainDropped && <p className="mt-1">{t("importToolchainDropped")}</p>}
               {pending.doiNotice === "doiRolesImported" && (
                 <ul className="mt-2 list-disc pl-5">
                   {pending.authors.map((author) => (
@@ -816,7 +822,7 @@ export function ImportModal({
                     onClick={() => finishImport(pending, "replace")}
                     className="rounded bg-primary shadow-press px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
-                    {t("doiConfirm")}
+                    {t(pending.doiNotice ? "doiConfirm" : "importData")}
                   </button>
                 )}
               </div>

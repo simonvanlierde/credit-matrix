@@ -1585,6 +1585,9 @@ msgstr "Imported CRediT roles. Check these assignments before applying them; the
 msgid "doiNoRoles"
 msgstr "This record has no deposited CRediT roles. The contribution matrix will stay empty."
 
+msgid "importToolchainDropped"
+msgstr "This file names a writing tool this version doesn't know, so it was left out."
+
 msgid "doiConfirm"
 msgstr "Confirm DOI import"
 

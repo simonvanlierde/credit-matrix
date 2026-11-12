@@ -217,7 +217,7 @@ fromJats4rXml(xml, { parser: new DOMParser() });
 
 `detectFormat(text)` guesses the format from the text's shape. `importAny(text, { parser })` reads
 any of them, including share links and [tenzing](https://github.com/marton-balazs-kovacs/tenzing)
-spreadsheets (CSV or TSV). It returns the `format` it read, plus `asks`, `selfId`, `title` and `toolchain`
+spreadsheets (CSV or TSV). It returns the `format` it read, plus `asks`, `selfId`, `title`, `toolchain` and `warnings`
 when the format includes them.
 
 `importAny` refuses a `"statement"`: text that assigns CRediT roles ("MG: conceptualization",
@@ -249,7 +249,8 @@ answers (unless `includeAnswers` is `false`), and `selfId`, the contributor who 
 `toolchain` records the writing tool, one of `TOOLCHAINS`. These fields are optional, so older
 files still load.
 
-`fromJson` returns `{ authors, asks?, selfId?, toolchain? }`. It throws `NewerVersionError` for a file whose
+`fromJson` returns `{ authors, asks?, selfId?, toolchain?, warnings? }`. A `toolchain` this build does
+not know is left out and named in `warnings`, so a file from a newer build still loads. It throws `NewerVersionError` for a file whose
 `version` is higher than the one this build writes (`JSON_EXPORT_VERSION` in `export/json.ts`),
 `RepeatedIdError` for a file that repeats a contributor id, and `ZodError` for any other data that
 does not match.
@@ -304,7 +305,8 @@ ids unique and short enough for a link, and initials made unique.
 
 `encodeShareHash(input, baseUrl)` writes a draft, or one contributor's row for an ask, into a
 compressed `#s=…` link, and `decodeShareHash(hash)` reads one back (or returns `null`).
-The optional `toolchain` travels with the draft in both directions.
+The optional `toolchain` travels with the draft in both directions; one this build does not know is
+dropped without a warning.
 
 ## Exports
 

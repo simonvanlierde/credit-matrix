@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fromJson, toJson } from "../export/json";
+import { fromJson, toJson, UNKNOWN_TOOLCHAIN_WARNING } from "../export/json";
 import { importAny } from "../import";
 import { createAuthor } from "../parse-authors";
 import { decodeShareHash, encodeShareHash } from "../share-link";
@@ -23,8 +23,17 @@ describe("draft toolchain", () => {
     expect(fromSharePayload(toSharePayload({ authors: [] }))).not.toHaveProperty("toolchain");
   });
 
-  it.each(["unknown", "", null, 1])("rejects an invalid imported toolchain %j", (toolchain) => {
-    expect(() => fromJson(JSON.stringify({ version: 1, authors: [], toolchain }))).toThrow();
-    expect(() => fromSharePayload(JSON.stringify({ v: 2, a: [], h: toolchain }))).toThrow();
-  });
+  it.each(["rmarkdown", "Quarto", "", null, 1])(
+    "drops an unknown imported toolchain %j and keeps the authors",
+    async (toolchain) => {
+      const authors = [createAuthor("Grace Hopper")];
+      const json = JSON.stringify({ ...JSON.parse(toJson(authors)), toolchain });
+      expect(fromJson(json)).toEqual({ authors, warnings: [UNKNOWN_TOOLCHAIN_WARNING] });
+      expect(await importAny(json)).toEqual({ format: "json", authors, warnings: [UNKNOWN_TOOLCHAIN_WARNING] });
+      const link = JSON.parse(toSharePayload({ authors }));
+      const shared = fromSharePayload(JSON.stringify({ ...link, h: toolchain }));
+      expect(shared.authors.map((author) => author.name)).toEqual(["Grace Hopper"]);
+      expect(shared).not.toHaveProperty("toolchain");
+    },
+  );
 });

@@ -261,6 +261,13 @@ describe("importing over a draft", () => {
     expect(useContributionStore.getState().toolchain).toBe("quarto");
   });
 
+  it("imports a file naming an unknown toolchain and says it was left out", async () => {
+    await importOver(JSON.stringify({ ...JSON.parse(toJson([createAuthor("Bo Chen")])), toolchain: "rmarkdown" }));
+    expect(screen.getByText(english.importToolchainDropped)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    expect(names()).toEqual(["Bo Chen"]);
+  });
+
   it("keeps the current toolchain when adding contributors from another toolchain", async () => {
     await importOver(toJson([createAuthor("Bo Chen")], { toolchain: "typst" }));
     act(() => useContributionStore.getState().setToolchain("word"));
