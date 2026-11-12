@@ -132,7 +132,7 @@ for (const page of pages.filter((file) => /^docs(?:\/|\.html$)/.test(file))) {
 // Of the figure fonts (about 40 MB), only Noto Sans (0.57 MB, the default face) is precached, with the
 // subsetter every export needs (0.68 MB), so a default figure exports offline from the first visit; the
 // worker caches the others when an export fetches them.
-// The docs are not precached either: the worker caches a docs page and its chunk on a visit.
+// The docs are not precached either: the worker caches a docs page, its chunks and images on a visit.
 const manifest = JSON.parse(await readFile(join(OUT, ".vite", "manifest.json"), "utf8"));
 const docsChunks = new Set(
   Object.entries(manifest)
@@ -151,7 +151,11 @@ const docsAssets = Object.fromEntries(
         const html = await readFile(join(OUT, `${path.slice(1)}.html`), "utf8");
         const hasLive = html.includes('<div data-doc-live="');
         if (hasLive && !liveExample) throw new Error(`postbuild: no live example chunk for ${path}`);
-        return [path, [`/${docsPage}`, ...(hasLive ? [`/${liveExample}`] : [])]];
+        // The page's images, so a visited docs page shows them offline too.
+        const images = new Set(
+          [...html.matchAll(/src="(\/assets\/[^"]+\.(?:png|svg|webp|jpg))"/g)].map(([, src]) => src),
+        );
+        return [path, [`/${docsPage}`, ...(hasLive ? [`/${liveExample}`] : []), ...images]];
       }),
   ),
 );
