@@ -13,8 +13,8 @@ import { gzipSync } from "node:zlib";
 
 // Measured 2026-11-09: 397 kB gzip, 1227 kB raw. The limit sits about 10% above.
 const LIMIT_GZIP = 437_000;
-// Measured 2026-11-12: 27 kB for the /docs page and its 11 Markdown files, which load only on /docs.
-const DOCS_LIMIT_GZIP = 40_000;
+// Measured 2026-11-12: 1.6 kB for the /docs page: the nav metadata, no Markdown (pages are prerendered).
+const DOCS_LIMIT_GZIP = 2_500;
 // Embedded-font PDF generation is loaded on export; keep its cost separate from editing.
 const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-11: 2.55 MB of scripts and styles plus Noto Sans (0.57 MB), the one figure font

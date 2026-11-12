@@ -2,10 +2,12 @@
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { docsPlugin } from "./src/docs/plugin.mjs";
 
 export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
     react(),
+    docsPlugin(),
     ...(isSsrBuild
       ? [
           {

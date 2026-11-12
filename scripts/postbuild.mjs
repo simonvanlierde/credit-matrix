@@ -25,6 +25,7 @@
 // biome-ignore-all lint/suspicious/noConsole: console is the script's progress output.
 
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { paths } from "../.vite-ssr/entry-server.mjs";
@@ -88,6 +89,10 @@ for (const path of exported) {
     !/<meta name="description" content="[^"]+">/.test(html) && "meta description",
     !html.includes(`<link rel="canonical" href="https://credit.duinlab.nl${path}">`) && "canonical link",
     !html.includes('["link","\\u002fassets\\u002f') && "modulepreload (in the deferred script loader)",
+    // The browser build emits a docs image only because the page imports src/docs/images.ts.
+    ...[...html.matchAll(/(?:src|href)="\/(assets\/[^"]+)"/g)]
+      .filter(([, file]) => !existsSync(join(OUT, file)))
+      .map(([, file]) => `${file} (not in out/)`),
   ].filter(Boolean);
   if (problems.length > 0) throw new Error(`postbuild: ${path} lacks ${problems.join(", ")}`);
 }
