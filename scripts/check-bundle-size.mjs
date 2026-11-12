@@ -19,7 +19,8 @@ const DOCS_LIMIT_GZIP = 2_500;
 const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-11: 2.55 MB of scripts and styles plus Noto Sans (0.57 MB), the one figure font
 // precached, and the subsetter every export needs (0.68 MB). Any other figure font is 0.62-14.9 MB.
-const PRECACHE_LIMIT = 4_000_000;
+// Raised from 4 MB once the total included the precached pages' HTML (4.10 MB on 2026-11-12, docs not precached).
+const PRECACHE_LIMIT = 4_200_000;
 // Measured 2026-11-11: 2.3 MB unpacked once the fonts moved out (0.12.0 was 43 MB).
 const PACKAGE_LIMIT = 5_000_000;
 
@@ -64,10 +65,16 @@ if (!precached) {
   console.error("check-bundle-size: no stamped ASSETS list in out/sw.js. Run 'pnpm build' first.");
   process.exit(1);
 }
+const pages = JSON.parse(sw.match(/const PRECACHED_PAGES = (\[.*?\]);/)?.[1] ?? "[]");
+const pageBytes = pages.reduce(
+  (n, path) => n + readFileSync(join(dir, "..", path === "/" ? "index.html" : `${path.slice(1)}.html`)).length,
+  0,
+);
 const sizes = precached.map((path) => ({ path, bytes: readFileSync(join(dir, "..", path)).length }));
-const total = sizes.reduce((n, { bytes }) => n + bytes, 0);
+const total = sizes.reduce((n, { bytes }) => n + bytes, pageBytes);
 const fonts = sizes.filter(({ path }) => /\.(?:ttf|otf|woff2?)$/.test(path));
 const fontBytes = fonts.reduce((n, { bytes }) => n + bytes, 0);
+console.log(`check-bundle-size: install precache pages: ${pages.length}, ${kb(pageBytes)} raw`);
 console.log(
   `check-bundle-size: install precache: ${kb(total)} raw, fonts ${kb(fontBytes)} (limit ${kb(PRECACHE_LIMIT)})`,
 );

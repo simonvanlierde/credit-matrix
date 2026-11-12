@@ -10,8 +10,9 @@
  * subsetter (harfbuzz-subset.wasm) every export uses; the others load on
  * the first export that needs them.
  *
- * - install: precache every page and every asset they reference, so a new
- *   version is complete offline before it takes over
+ * - install: precache every page but the docs, and every asset they
+ *   reference, so a new version is complete offline before it takes over. A
+ *   docs page, its chunk and its images are cached when someone visits it.
  * - navigations: network first (bounded), that path's cached page as the
  *   fallback, or the app's page for any other path
  * - other same-origin GETs: cache first, unhashed ones refreshed in the background
@@ -28,9 +29,10 @@ const CACHE = "credit-matrix-BUILD_ID";
 // Stamped by postbuild so lazy pages and languages also work on their first offline visit.
 const ASSETS = [];
 
-// Every page, stamped by postbuild from src/routes.ts. Docs images are not precached (budget):
-// they work offline once viewed online.
+// Every page, stamped by postbuild from src/routes.ts: a visit caches it for offline use.
 const PAGES = [];
+// The pages install fetches, also stamped by postbuild: every page but the docs (budget).
+const PRECACHED_PAGES = [];
 
 // Past this, a hanging connection falls back to the cached page instead of
 // leaving a blank tab until the browser's own network timeout.
@@ -53,11 +55,11 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(request.mode === "navigate" ? handleNavigation(request) : handleAsset(request, event));
 });
 
-/** Every page plus every script, style and font they link, fetched fresh. */
+/** The precached pages plus every script, style and font they link, fetched fresh. */
 async function precache() {
   const cache = await caches.open(CACHE);
   const pages = await Promise.all(
-    PAGES.map(async (path) => {
+    PRECACHED_PAGES.map(async (path) => {
       const page = await fetch(path, { cache: "no-cache" });
       if (!page.ok) throw new Error(`precache: ${path} answered ${page.status}`);
       return [path, page, await page.clone().text()];
