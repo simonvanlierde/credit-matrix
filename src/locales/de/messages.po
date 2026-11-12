@@ -1585,6 +1585,9 @@ msgstr "CRediT-Rollen importiert. Prüfen Sie diese Zuordnungen, bevor Sie sie �
 msgid "doiNoRoles"
 msgstr "Dieser Datensatz enthält keine hinterlegten CRediT-Rollen. Die Beitragsmatrix bleibt leer."
 
+msgid "importToolchainDropped"
+msgstr "Diese Datei nennt ein Schreibwerkzeug, das diese Version nicht kennt. Es wurde ausgelassen."
+
 msgid "doiConfirm"
 msgstr "DOI-Import bestätigen"
 
@@ -1803,6 +1806,48 @@ msgstr "Rot"
 
 msgid "heatmapPurple"
 msgstr "Violett"
+
+msgid "toolchainLabel"
+msgstr "Ich schreibe mit…"
+
+msgid "toolchainNone"
+msgstr "Alle Formate"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown oder Klartext"
+
+msgid "toolchainMyst"
+msgstr "MyST oder Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "In {toolchain} verwenden"
+
+msgid "toolchainSetup"
+msgstr "Einrichtung"
+
+msgid "toolchainSetupLink"
+msgstr "{toolchain} einrichten →"
+
+msgid "toolchainCli"
+msgstr "Entsprechender CLI-Befehl"
+
+msgid "toolchainJournal"
+msgstr "Für die Zeitschrift"
+
+msgid "toolchainOtherFormats"
+msgstr "Andere Formate"
+
+msgid "toolchainNoSetup"
+msgstr "Keine Erweiterung erforderlich."
+
+msgid "toolchainWordHint"
+msgstr "Kopieren Sie die obige Erklärung nach Word. Über Heatmap können Sie die Beitrags-Heatmap kopieren oder herunterladen."
+
+msgid "toolchainLatexHeatmap"
+msgstr "Erstellen Sie heatmap.svg mit dem folgenden CLI-Befehl und fügen Sie die Abbildung in Ihr Dokument ein."
+
+msgid "toolchainDataHint"
+msgstr "Speichern Sie den JSON-Export als contributors.json für die folgende Vorlage und den CLI-Befehl."
 
 msgid "docsTitle"
 msgstr "Dokumentation"

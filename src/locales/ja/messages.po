@@ -1585,6 +1585,9 @@ msgstr "CRediT の役割をインポートしました。適用する前にこ�
 msgid "doiNoRoles"
 msgstr "このレコードには登録済みの CRediT の役割がありません。貢献マトリクスは空のままになります。"
 
+msgid "importToolchainDropped"
+msgstr "このファイルには、このバージョンが認識しない執筆ツールが指定されているため、省略しました。"
+
 msgid "doiConfirm"
 msgstr "DOI のインポートを確認"
 
@@ -1803,6 +1806,48 @@ msgstr "赤"
 
 msgid "heatmapPurple"
 msgstr "紫"
+
+msgid "toolchainLabel"
+msgstr "執筆ツール…"
+
+msgid "toolchainNone"
+msgstr "すべての形式"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown またはプレーンテキスト"
+
+msgid "toolchainMyst"
+msgstr "MyST または Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "{toolchain} で使う"
+
+msgid "toolchainSetup"
+msgstr "セットアップ"
+
+msgid "toolchainSetupLink"
+msgstr "{toolchain} を設定 →"
+
+msgid "toolchainCli"
+msgstr "同等の CLI コマンド"
+
+msgid "toolchainJournal"
+msgstr "投稿先の学術誌向け"
+
+msgid "toolchainOtherFormats"
+msgstr "その他の形式"
+
+msgid "toolchainNoSetup"
+msgstr "拡張機能は不要です。"
+
+msgid "toolchainWordHint"
+msgstr "上の著者貢献を Word にコピーしてください。「ヒートマップ」から貢献度ヒートマップをコピーまたはダウンロードできます。"
+
+msgid "toolchainLatexHeatmap"
+msgstr "下の CLI コマンドで heatmap.svg を生成し、文書に図を挿入してください。"
+
+msgid "toolchainDataHint"
+msgstr "下のレシピと CLI コマンドで使うため、JSON エクスポートを contributors.json として保存してください。"
 
 msgid "docsTitle"
 msgstr "ドキュメント"

@@ -24,6 +24,7 @@ import {
 import { clampScore, isShareableId, isUsableAuthorName, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "@/core/author";
 import { DEFAULT_MONO_COLOR, HEX_COLOR } from "@/core/contributor-color";
 import { type LocaleCode, normalizeLocaleCode } from "@/core/i18n";
+import { type Toolchain, ToolchainSchema } from "@/core/toolchain";
 import { type HeatmapFigureSettings, repairHeatmapSettings } from "@/lib/heatmap-settings";
 import { reloadForNewerSave } from "@/lib/reload-for-new-build";
 import { GUIDE_KEY } from "./guide-store";
@@ -52,6 +53,7 @@ export type { Ask };
  * stays outside it, so switching drafts never changes the interface.
  */
 export interface Draft {
+  toolchain?: Toolchain;
   id: string;
   title: string;
   authors: Author[];
@@ -123,6 +125,10 @@ export interface ListFocus {
 export const MAX_DRAFTS = 50;
 
 interface ContributionState {
+  toolchain?: Toolchain;
+  /** Last selected writing tool, used when a draft has no choice yet. */
+  lastToolchain?: Toolchain;
+  setToolchain: (toolchain: Toolchain | undefined) => void;
   authors: Author[];
   /** The work's title, filled by a DOI import. Draft data, so `reset` clears it. */
   title: string;
@@ -334,6 +340,7 @@ function liveDraft(state: ContributionState): Draft {
     ...state.drafts[state.activeDraftId],
     id: state.activeDraftId,
     title: state.title,
+    toolchain: state.toolchain,
     authors: state.authors,
     inputMode: state.inputMode,
     heatmapMonoColor: state.heatmapMonoColor,
@@ -354,6 +361,7 @@ function liveDraft(state: ContributionState): Draft {
 function applyDraft(state: ContributionState, draft: Draft): void {
   state.activeDraftId = draft.id;
   state.title = draft.title;
+  state.toolchain = draft.toolchain ?? state.lastToolchain;
   state.authors = draft.authors;
   state.inputMode = draft.inputMode;
   state.heatmapMonoColor = draft.heatmapMonoColor;
@@ -500,6 +508,7 @@ function repairSingleDraft(value: unknown, id: string): Draft {
   return {
     ...raw,
     id,
+    toolchain: ToolchainSchema.safeParse(raw.toolchain).data,
     title: typeof raw.title === "string" ? raw.title.slice(0, MAX_TITLE_LENGTH) : "",
     authors: repairAuthors(raw.authors),
     inputMode: raw.inputMode === "levels" ? "levels" : "toggle",
@@ -559,6 +568,7 @@ function hydrateDrafts(persisted: unknown): Partial<ContributionState> {
 
   const out = {
     drafts,
+    lastToolchain: ToolchainSchema.safeParse(state.lastToolchain).data,
     uiLocale: normalizeLocaleCode(state.uiLocale),
     ...(typeof state.welcomeSeen === "boolean" ? { welcomeSeen: state.welcomeSeen } : {}),
     normsField: typeof state.normsField === "string" ? state.normsField : null,
@@ -569,6 +579,7 @@ function hydrateDrafts(persisted: unknown): Partial<ContributionState> {
 
 /** The shape partialize hands to storage. */
 interface PersistedState {
+  lastToolchain?: Toolchain;
   drafts: Record<string, Draft>;
   activeDraftId: string;
   uiLocale: LocaleCode;
@@ -611,6 +622,7 @@ function persistedState(state: ContributionState): PersistedState {
     prev.state.uiLocale === state.uiLocale &&
     prev.state.welcomeSeen === state.welcomeSeen &&
     prev.state.normsField === state.normsField &&
+    prev.state.lastToolchain === state.lastToolchain &&
     shallow({ ...liveDraft(prev.state), updatedAt: 0 }, { ...liveDraft(state), updatedAt: 0 })
   ) {
     return prev.value;
@@ -624,6 +636,7 @@ function persistedState(state: ContributionState): PersistedState {
     uiLocale: state.uiLocale,
     welcomeSeen: state.welcomeSeen,
     normsField: state.normsField,
+    lastToolchain: state.lastToolchain,
   };
   lastPersisted = { state, value };
   return value;
@@ -794,7 +807,7 @@ export function announcingStorage(): DraftStorage {
       // emptied value back. One early keystroke could erase a saved paper.
       if (!useContributionStore.persist.hasHydrated()) return;
       if (value.state === lastWritten) return;
-      const { drafts, activeDraftId, uiLocale, welcomeSeen, normsField } = value.state;
+      const { drafts, activeDraftId, uiLocale, welcomeSeen, normsField, lastToolchain } = value.state;
       // Adopting another tab's save writes nothing back (it would wake that
       // tab, which would adopt, write back...), but this tab now holds those
       // drafts, so deleting one later must remove its key.
@@ -847,6 +860,7 @@ export function announcingStorage(): DraftStorage {
               uiLocale,
               welcomeSeen,
               normsField,
+              lastToolchain,
             },
             version: value.version,
           }),
@@ -951,6 +965,8 @@ function adoptKey(key: string): boolean {
   try {
     useContributionStore.setState((state) => {
       Object.assign(state.drafts, changed);
+      // Before the open-draft check: a pick in another tab on another draft must not be overwritten by this tab's next save.
+      if (key === PERSIST_KEY) state.lastToolchain = ToolchainSchema.safeParse(prefs.lastToolchain).data;
       if (!open) return;
       applyDraft(state, open);
       if ("uiLocale" in prefs) state.uiLocale = normalizeLocaleCode(prefs.uiLocale);
@@ -1181,6 +1197,12 @@ export const useContributionStore = create<ContributionState>()(
         set((state) => {
           state.inspectorTab = "review";
           state.reviewFocus = contributorId;
+        }),
+
+      setToolchain: (toolchain) =>
+        set((state) => {
+          state.toolchain = toolchain;
+          state.lastToolchain = toolchain;
         }),
 
       setTitle: (title) =>
@@ -1456,6 +1478,7 @@ export const useContributionStore = create<ContributionState>()(
           if (claimRefuses(state)) return;
           state.authors = [];
           state.title = "";
+          state.toolchain = state.lastToolchain;
           state.inputMode = "toggle";
           state.heatmapMonoColor = DEFAULT_MONO_COLOR;
           state.colorByContributor = true;

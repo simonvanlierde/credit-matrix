@@ -1585,6 +1585,9 @@ msgstr "Imported CRediT roles. Check these assignments before applying them; the
 msgid "doiNoRoles"
 msgstr "This record has no deposited CRediT roles. The contribution matrix will stay empty."
 
+msgid "importToolchainDropped"
+msgstr "This file names a writing tool this version doesn't know, so it was left out."
+
 msgid "doiConfirm"
 msgstr "Confirm DOI import"
 
@@ -1803,6 +1806,48 @@ msgstr "Red"
 
 msgid "heatmapPurple"
 msgstr "Purple"
+
+msgid "toolchainLabel"
+msgstr "I write in…"
+
+msgid "toolchainNone"
+msgstr "All formats"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown or plain text"
+
+msgid "toolchainMyst"
+msgstr "MyST or Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "Use this in {toolchain}"
+
+msgid "toolchainSetup"
+msgstr "Setup"
+
+msgid "toolchainSetupLink"
+msgstr "Set up {toolchain} →"
+
+msgid "toolchainCli"
+msgstr "CLI equivalent"
+
+msgid "toolchainJournal"
+msgstr "For the journal"
+
+msgid "toolchainOtherFormats"
+msgstr "Other formats"
+
+msgid "toolchainNoSetup"
+msgstr "No extension needed."
+
+msgid "toolchainWordHint"
+msgstr "Copy the statement above into Word. Use Heatmap to copy or download the contribution heatmap."
+
+msgid "toolchainLatexHeatmap"
+msgstr "Generate heatmap.svg with the CLI below, then include the figure in your document."
+
+msgid "toolchainDataHint"
+msgstr "Save the JSON export as contributors.json for the recipe and CLI below."
 
 msgid "docsTitle"
 msgstr "Documentation"

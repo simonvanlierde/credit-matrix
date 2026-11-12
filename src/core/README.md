@@ -153,7 +153,8 @@ by-role statement's role label.
 canonical CRediT roles with lead/equal/supporting degrees. `yesNo: true` omits the degrees.
 Paste it into Quarto or Pandoc manuscript front matter. `toMyst(authors)` returns `authors:` with
 ungraded roles; paste it into page front matter, or indent it under `project:` in `myst.yml`.
-The app offers both under Export data, with Copy and Download. They list authors only, including
+The app shows the matching export when you choose Quarto, Pandoc or MyST under “I write in…”.
+Both formats are also under Export data (Other formats when a writing tool is selected), with Copy and Download. They list authors only, including
 those with no roles yet. Acknowledge non-author contributors separately. Keep native JSON for
 exact scores, markers and replies.
 
@@ -216,8 +217,8 @@ fromJats4rXml(xml, { parser: new DOMParser() });
 
 `detectFormat(text)` guesses the format from the text's shape. `importAny(text, { parser })` reads
 any of them, including share links and [tenzing](https://github.com/marton-balazs-kovacs/tenzing)
-spreadsheets (CSV or TSV). It returns the `format` it read, plus `asks`, `selfId` and `title` when
-the format includes them.
+spreadsheets (CSV or TSV). It returns the `format` it read, plus `asks`, `selfId`, `title`, `toolchain` and `warnings`
+when the format includes them.
 
 `importAny` refuses a `"statement"`: text that assigns CRediT roles ("MG: conceptualization",
 "Methodology, A.B.") or tells in sentences what the authors did. A statement names roles, not
@@ -243,11 +244,13 @@ const { assignments, unresolved } = parseStatement(
 ); // [{ author: 0, role: "Conceptualization" }, { author: 1, role: "Data curation" }], ["XY"]
 ```
 
-`toJson(authors, { asks, includeAnswers, selfId })` also writes the asks and co-author answers
-(unless `includeAnswers` is `false`), and `selfId`, the contributor who made the file. Both are
-optional, so older files still load.
+`toJson(authors, { asks, includeAnswers, selfId, toolchain })` also writes the asks and co-author
+answers (unless `includeAnswers` is `false`), and `selfId`, the contributor who made the file.
+`toolchain` records the writing tool, one of `TOOLCHAINS`. These fields are optional, so older
+files still load.
 
-`fromJson` returns `{ authors, asks?, selfId? }`. It throws `NewerVersionError` for a file whose
+`fromJson` returns `{ authors, asks?, selfId?, toolchain?, warnings? }`. A `toolchain` this build does
+not know is left out and named in `warnings`, so a file from a newer build still loads. It throws `NewerVersionError` for a file whose
 `version` is higher than the one this build writes (`JSON_EXPORT_VERSION` in `export/json.ts`),
 `RepeatedIdError` for a file that repeats a contributor id, and `ZodError` for any other data that
 does not match.
@@ -302,6 +305,8 @@ ids unique and short enough for a link, and initials made unique.
 
 `encodeShareHash(input, baseUrl)` writes a draft, or one contributor's row for an ask, into a
 compressed `#s=…` link, and `decodeShareHash(hash)` reads one back (or returns `null`).
+The optional `toolchain` travels with the draft in both directions; one this build does not know is
+dropped without a warning.
 
 ## Exports
 

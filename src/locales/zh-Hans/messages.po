@@ -1585,6 +1585,9 @@ msgstr "已导入 CRediT 角色。应用前请核对这些分配；该记录未�
 msgid "doiNoRoles"
 msgstr "该记录没有已登记的 CRediT 角色。贡献矩阵将保持为空。"
 
+msgid "importToolchainDropped"
+msgstr "此文件指定了当前版本无法识别的写作工具，因此已略去。"
+
 msgid "doiConfirm"
 msgstr "确认导入 DOI"
 
@@ -1803,6 +1806,48 @@ msgstr "红色"
 
 msgid "heatmapPurple"
 msgstr "紫色"
+
+msgid "toolchainLabel"
+msgstr "我的写作工具…"
+
+msgid "toolchainNone"
+msgstr "所有格式"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown 或纯文本"
+
+msgid "toolchainMyst"
+msgstr "MyST 或 Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "在 {toolchain} 中使用"
+
+msgid "toolchainSetup"
+msgstr "设置"
+
+msgid "toolchainSetupLink"
+msgstr "设置 {toolchain} →"
+
+msgid "toolchainCli"
+msgstr "对应的 CLI 命令"
+
+msgid "toolchainJournal"
+msgstr "期刊投稿"
+
+msgid "toolchainOtherFormats"
+msgstr "其他格式"
+
+msgid "toolchainNoSetup"
+msgstr "无需扩展。"
+
+msgid "toolchainWordHint"
+msgstr "将上方声明复制到 Word。使用“热图”复制或下载贡献热图。"
+
+msgid "toolchainLatexHeatmap"
+msgstr "使用下方 CLI 命令生成 heatmap.svg，然后将图插入文档。"
+
+msgid "toolchainDataHint"
+msgstr "将导出的 JSON 保存为 contributors.json，供下方配置和 CLI 命令使用。"
 
 msgid "docsTitle"
 msgstr "文档"

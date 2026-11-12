@@ -65,3 +65,4 @@ export { decodeShareHash, encodeShareHash } from "./share-link";
 export type { ShareData, SharePayloadInput } from "./share-payload";
 export type { ParsedStatement, StatementAuthor } from "./statement";
 export { MAX_STATEMENT_LENGTH, namesCredit, parseStatement, statementAuthor } from "./statement";
+export { TOOLCHAINS, type Toolchain } from "./toolchain";

@@ -1,8 +1,9 @@
 import { Check, CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SettingSwitch, SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
 import {
   CREDIT_ROLES,
@@ -23,8 +24,10 @@ import {
 } from "@/core";
 import { isAllBinary, rolesWithContributions } from "@/core/author";
 import { pageMarkColor } from "@/core/contributor-color";
+import { TOOLCHAINS, type Toolchain } from "@/core/toolchain";
 import { validateContributions } from "@/core/validate";
 import { copyRichText } from "@/lib/copy-rich-text";
+import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
 import { useContributorHue } from "@/lib/use-contributor-hue";
 import { useCopyStatus } from "@/lib/use-copy-status";
@@ -36,9 +39,9 @@ import { DEFAULT_STATEMENT_OPTIONS, useAskSummary, useContributionStore } from "
 import { useGuide } from "@/store/guide-store";
 import { EXPORT_BUTTON, ICON_TOOL_BUTTON } from "./grid-shared";
 import { HeatmapExports } from "./HeatmapExports";
-
 import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
+import { TOOLCHAIN_OUTPUTS, ToolchainPanel } from "./ToolchainPanel";
 
 /** A name or role in the running text that opens a panel: it keeps the text's look, not a button's. */
 /**
@@ -114,6 +117,14 @@ const DATA_FORMATS: Record<
 };
 
 export function StatementOutput() {
+  const toolchain = useContributionStore((s) => s.toolchain);
+  const setToolchain = useContributionStore((s) => s.setToolchain);
+  const toolchainId = useId();
+  const storedSettings = useContributionStore((s) => s.heatmapSettings);
+  const color = useContributionStore((s) => s.heatmapMonoColor);
+  const colorByContributor = useContributionStore((s) => s.colorByContributor);
+  const horizontal = useContributionStore((s) => s.transpose);
+  const figureInitials = useContributionStore((s) => s.initials);
   const authors = useContributionStore((s) => s.authors);
   const asks = useContributionStore((s) => s.asks);
   const selfId = useContributionStore((s) => s.selfId);
@@ -133,6 +144,7 @@ export function StatementOutput() {
   const { translateRole, translateUi, translateInterfaceRole, describeRole, interfaceRoleLanguage, outputLanguage } =
     useCreditTranslators();
   const t = useTranslations();
+  const toolchainOutput = toolchain ? TOOLCHAIN_OUTPUTS[toolchain].format : null;
   // Last beat of the population sequence; see .enter-fade in globals.css.
   const settled = useSettled();
   const [copyStatus, copyText] = useCopyStatus({
@@ -179,7 +191,7 @@ export function StatementOutput() {
   function serialize(dataFormat: DataFormat): string {
     switch (dataFormat) {
       case "json":
-        return toJson(authors, { asks, includeAnswers, selfId });
+        return toJson(authors, { asks, includeAnswers, selfId, toolchain });
       case "xml":
         return toJats4rXml(authors, { yesNo });
       case "latex":
@@ -209,6 +221,59 @@ export function StatementOutput() {
     download(new Blob([bom, serialize(dataFormat)], { type: mime }), filename);
   }
 
+  function exportRow(value: DataFormat) {
+    const label = value === "ro-crate" ? t("exportRoCrateFragment") : DATA_FORMATS[value].label;
+    const copiedThis = copiedFormat === value && dataCopyStatus !== "idle";
+    return (
+      <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">
+        <div className="flex items-center gap-1">
+          <span className="min-w-0 flex-1">{label}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setCopiedFormat(value);
+              void copyDataText(serialize(value));
+            }}
+            disabled={!hasAuthors}
+            aria-label={t("copyFormat", { format: label })}
+            title={t("copyFormat", { format: label })}
+            className={EXPORT_ITEM_BUTTON}
+          >
+            {copiedThis && dataCopyStatus === "copied" ? (
+              <Check className="size-3.5 text-primary" aria-hidden="true" />
+            ) : (
+              <Copy className="size-3.5" aria-hidden="true" />
+            )}
+            {copiedThis ? (dataCopyStatus === "copied" ? t("copied") : t("copyFailedMessage")) : t("copy")}
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadData(value)}
+            disabled={!hasAuthors}
+            aria-label={t("downloadFormat", { format: label })}
+            title={t("downloadFormat", { format: label })}
+            className={EXPORT_ITEM_BUTTON}
+          >
+            <Download className="size-3.5" aria-hidden="true" />
+            {t("download")}
+          </button>
+        </div>
+        {/* Only JSON includes asks, so the choice sits on its row. */}
+        {value === "json" && askedCount > 0 && (
+          <label className="flex min-h-8 items-center gap-2 pr-2 text-xs text-on-surface-variant">
+            <input
+              type="checkbox"
+              checked={includeAnswers}
+              onChange={(event) => setIncludeAnswers(event.target.checked)}
+              className="size-4 shrink-0 accent-primary"
+            />
+            {t("exportIncludesAnswers", { count: askedCount })}
+          </label>
+        )}
+      </li>
+    );
+  }
+
   // Only the statement's own mark: a cell may have taken over before this leave event lands.
   function clearPhraseLink() {
     const from = useContributionStore.getState().statementLink?.from;
@@ -230,7 +295,32 @@ export function StatementOutput() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor={toolchainId} className="text-xs font-semibold">
+          {t("toolchainLabel")}
+        </label>
+        <Select
+          value={toolchain ?? "none"}
+          onValueChange={(value) => setToolchain(value === "none" ? undefined : (value as Toolchain))}
+        >
+          <SelectTrigger id={toolchainId} className="min-h-9 max-w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">{t("toolchainNone")}</SelectItem>
+            {TOOLCHAINS.map((value) => (
+              <SelectItem key={value} value={value}>
+                {value === "markdown"
+                  ? t("toolchainMarkdown")
+                  : value === "myst"
+                    ? t("toolchainMyst")
+                    : TOOLCHAIN_OUTPUTS[value].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       {/* Says the statement is the lead's version; never blocks copying it. */}
       {openDifferences > 0 && (
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-primary/10 px-3 py-2 text-[13px] text-on-surface">
@@ -522,61 +612,14 @@ export function StatementOutput() {
         <Popover>
           <PopoverTrigger disabled={!hasAuthors} className={EXPORT_BUTTON}>
             <Download className="size-4" aria-hidden="true" />
-            {t("exportData")}
+            {toolchain ? t("toolchainOtherFormats") : t("exportData")}
             <ChevronDown className="size-3.5" aria-hidden="true" />
           </PopoverTrigger>
           <PopoverContent align="start" aria-label={t("exportData")} className="w-72 max-w-[calc(100vw-2rem)] p-1">
             <ul aria-label={t("a11yExportFormat")} className="grid">
-              {(Object.keys(DATA_FORMATS) as DataFormat[]).map((value) => {
-                const label = value === "ro-crate" ? t("exportRoCrateFragment") : DATA_FORMATS[value].label;
-                const copiedThis = copiedFormat === value && dataCopyStatus !== "idle";
-                return (
-                  <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">
-                    <div className="flex items-center gap-1">
-                      <span className="min-w-0 flex-1">{label}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCopiedFormat(value);
-                          void copyDataText(serialize(value));
-                        }}
-                        aria-label={t("copyFormat", { format: label })}
-                        title={t("copyFormat", { format: label })}
-                        className={EXPORT_ITEM_BUTTON}
-                      >
-                        {copiedThis && dataCopyStatus === "copied" ? (
-                          <Check className="size-3.5 text-primary" aria-hidden="true" />
-                        ) : (
-                          <Copy className="size-3.5" aria-hidden="true" />
-                        )}
-                        {copiedThis ? (dataCopyStatus === "copied" ? t("copied") : t("copyFailedMessage")) : t("copy")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => downloadData(value)}
-                        aria-label={t("downloadFormat", { format: label })}
-                        title={t("downloadFormat", { format: label })}
-                        className={EXPORT_ITEM_BUTTON}
-                      >
-                        <Download className="size-3.5" aria-hidden="true" />
-                        {t("download")}
-                      </button>
-                    </div>
-                    {/* Only JSON includes asks, so the choice sits on its row. */}
-                    {value === "json" && askedCount > 0 && (
-                      <label className="flex min-h-8 items-center gap-2 pr-2 text-xs text-on-surface-variant">
-                        <input
-                          type="checkbox"
-                          checked={includeAnswers}
-                          onChange={(event) => setIncludeAnswers(event.target.checked)}
-                          className="size-4 shrink-0 accent-primary"
-                        />
-                        {t("exportIncludesAnswers", { count: askedCount })}
-                      </label>
-                    )}
-                  </li>
-                );
-              })}
+              {(Object.keys(DATA_FORMATS) as DataFormat[])
+                .filter((value) => !["xml", "crossref", "tenzing"].includes(value) && value !== toolchainOutput)
+                .map(exportRow)}
             </ul>
           </PopoverContent>
         </Popover>
@@ -587,7 +630,55 @@ export function StatementOutput() {
             <HeatmapExports authors={authors} showLevels={!yesNo} triggerClassName={EXPORT_BUTTON} />
           </div>
         )}
-
+      </div>
+      {toolchain && (
+        <ToolchainPanel
+          toolchain={toolchain}
+          language={outputLanguage}
+          settings={{
+            ...DEFAULT_HEATMAP_SETTINGS,
+            levels: !yesNo,
+            ...storedSettings,
+            color,
+            colorBy: colorByContributor ? "contributor" : "color",
+            horizontal,
+            acronyms: figureInitials,
+          }}
+        >
+          {toolchainOutput ? (
+            <>
+              <textarea
+                aria-label={DATA_FORMATS[toolchainOutput].label}
+                readOnly
+                value={serialize(toolchainOutput)}
+                rows={6}
+                spellCheck={false}
+                className="w-full min-w-0 resize-y rounded border border-edge bg-surface-bright p-2 font-mono text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <ul>{exportRow(toolchainOutput)}</ul>
+            </>
+          ) : (
+            <button
+              type="button"
+              disabled={!statement}
+              onClick={() =>
+                download(new Blob([statement], { type: "text/plain;charset=utf-8" }), "credit-statement.txt")
+              }
+              className={`${EXPORT_ITEM_BUTTON} justify-self-start`}
+            >
+              <Download className="size-3.5" aria-hidden="true" />
+              {t("downloadFormat", { format: "TXT" })}
+            </button>
+          )}
+        </ToolchainPanel>
+      )}
+      <section aria-labelledby={`${toolchainId}-journal`} className="border-t border-outline-variant/40 pt-3">
+        <h3 id={`${toolchainId}-journal`} className="mb-1 text-sm font-semibold">
+          {t("toolchainJournal")}
+        </h3>
+        <ul>{(["xml", "crossref", "tenzing"] as const).map(exportRow)}</ul>
+      </section>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
         {/* Here, not only on /about: this is where someone takes the statement to their manuscript.
             Primary like other links, since it goes to a page; the badge below opens a popover. */}
         <a

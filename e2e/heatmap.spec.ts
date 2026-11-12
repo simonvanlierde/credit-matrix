@@ -407,7 +407,11 @@ test.describe("touch-screen previews", () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
       expect((await scan(page, PANEL)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-      await expect(page.getByRole("combobox", { name: "Legend", exact: true })).toBeInViewport();
+      await expect(page.getByRole("button", { name: "Per contributor", exact: true })).toBeInViewport();
+      // The anchor's position limits the popover height; settings below it remain reachable by scrolling.
+      const legend = page.getByRole("combobox", { name: "Legend", exact: true });
+      await legend.scrollIntoViewIfNeeded();
+      await expect(legend).toBeInViewport();
       expect((await scan(page, PANEL)).violations).toEqual([]);
       await page.getByRole("button", { name: "Figure settings", exact: true }).click();
       await expect(preview.getByRole("img")).toBeVisible({ timeout: 15_000 });

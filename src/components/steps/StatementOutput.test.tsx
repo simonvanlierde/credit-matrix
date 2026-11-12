@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { type Author, createAuthor } from "@/core";
+import { docFiles } from "@/docs/pages";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
 import { messages as en } from "@/locales/en/messages";
@@ -153,4 +154,66 @@ it("marks the getting-started copy step once the statement is copied", async () 
   await waitFor(() => expect(useGuide.getState().copied).toBe(true));
   expect(writeText).toHaveBeenCalledOnce();
   vi.unstubAllGlobals();
+});
+
+it("keeps journal exports visible before a writing tool is chosen", () => {
+  act(() => store().loadAuthors(twoAuthors()));
+  renderStatement();
+  expect(screen.getByRole("heading", { name: "For the journal" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Download XML (JATS4R)" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Download XML (Crossref)" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Download tenzing CSV" })).toBeTruthy();
+});
+
+it.each([
+  ["quarto", "Quarto", "Quarto YAML", "credit-matrix:"],
+  ["pandoc", "Pandoc", "Quarto YAML", "credit-matrix:"],
+  ["latex", "LaTeX", "LaTeX (latex-credits)", "\\includesvg{heatmap}"],
+  ["typst", "Typst", "JSON", "#credit-heatmap(team,"],
+  ["sphinx", "Sphinx", "JSON", ".. credit-heatmap:: contributors.json"],
+  ["myst", "MyST / Jupyter Book", "MyST YAML", ":::{credit-heatmap}"],
+  ["markdown", "Markdown", "Markdown", "![CRediT](heatmap.svg)"],
+] as const)("shows the %s export, recipe and style-only CLI", (toolchain, label, format, recipe) => {
+  act(() => {
+    store().loadAuthors(twoAuthors());
+    useContributionStore.setState({ toolchain });
+  });
+  renderStatement();
+  const panel = screen.getByRole("region", { name: `Use this in ${label}` });
+  expect(panel.querySelector(`textarea[aria-label="${format}"]`)?.textContent).toContain("Grace Hopper");
+  expect([...panel.querySelectorAll("textarea")].some((area) => area.value.includes(recipe))).toBe(true);
+  const cli = screen.getByRole("textbox", { name: "CLI equivalent" }) as HTMLTextAreaElement;
+  expect(cli.value).toContain("credit-matrix convert contributors.json --to svg");
+  expect(cli.value).not.toContain("Grace");
+  expect(screen.getByRole("heading", { name: "For the journal" })).toBeTruthy();
+});
+
+it("defines the Typst team from the exported file before drawing it", () => {
+  act(() => {
+    store().loadAuthors(twoAuthors());
+    useContributionStore.setState({ toolchain: "typst" });
+  });
+  renderStatement();
+  const recipe = screen.getByRole("textbox", { name: "Export recipe" }) as HTMLTextAreaElement;
+  expect(recipe.value).toMatch(/^#let team = json\("contributors.json"\)\n\n#credit-heatmap\(team,/);
+});
+
+it.each([
+  ["word", "Word", "integrations/figures/README.md"],
+  ["quarto", "Quarto", "integrations/quarto/README.md"],
+  ["typst", "Typst", "integrations/typst/README.md"],
+  ["pandoc", "Pandoc", "integrations/pandoc/README.md"],
+  ["myst", "MyST / Jupyter Book", "integrations/myst/README.md"],
+  ["sphinx", "Sphinx", "integrations/sphinx/README.md"],
+] as const)("links %s setup to its rendered README in this tab", (toolchain, label, path) => {
+  act(() => {
+    store().loadAuthors(twoAuthors());
+    store().setToolchain(toolchain);
+  });
+  renderStatement();
+  const page = docFiles.find((file) => file.path === path);
+  expect(page).toBeDefined();
+  const link = screen.getByRole("link", { name: `Set up ${label} →` });
+  expect(link.getAttribute("href")).toBe(page?.route);
+  expect(link.getAttribute("target")).toBeNull();
 });

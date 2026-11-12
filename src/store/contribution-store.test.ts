@@ -1377,6 +1377,7 @@ describe("contribution store", () => {
       expect(Object.keys(persisted).sort()).toEqual([
         "activeDraftId",
         "drafts",
+        "lastToolchain",
         "normsField",
         "uiLocale",
         "welcomeSeen",

@@ -3,11 +3,16 @@ import type { Ask } from "../ask";
 import { AskSchema } from "../ask";
 import type { Author } from "../author";
 import { AuthorSchema, MAX_AUTHORS } from "../author";
+import { type Toolchain, ToolchainSchema } from "../toolchain";
 
 /** The export format version this build writes and reads. */
 export const JSON_EXPORT_VERSION = 1;
 
 const REPEATED_ID_MESSAGE = "duplicate contributor ids";
+
+/** In `fromJson` warnings when the file names a toolchain this build does not know. */
+export const UNKNOWN_TOOLCHAIN_WARNING =
+  "This file names a writing tool this version doesn't know, so it was left out.";
 
 const ExportSchema = /* @__PURE__ */ (() =>
   z.object({
@@ -23,6 +28,8 @@ const ExportSchema = /* @__PURE__ */ (() =>
     asks: z.optional(z.record(z.string(), AskSchema)),
     /** The contributor who made the file said they are. */
     selfId: z.optional(z.string()),
+    /** Checked after parsing: an unknown tool from a newer build is dropped, not a reason to lose the authors. */
+    toolchain: z.optional(z.unknown()),
   }))();
 
 /** Thrown by `fromJson` for an export stamped by a newer build. */
@@ -53,13 +60,20 @@ export function toJson(
     asks,
     includeAnswers = true,
     selfId,
-  }: { asks?: Readonly<Record<string, Ask>>; includeAnswers?: boolean; selfId?: string | null } = {},
+    toolchain,
+  }: {
+    asks?: Readonly<Record<string, Ask>>;
+    includeAnswers?: boolean;
+    selfId?: string | null;
+    toolchain?: Toolchain;
+  } = {},
 ): string {
   const ids = new Set(authors.map((author) => author.id));
   const kept = Object.entries(asks ?? {}).filter(([id]) => ids.has(id));
   const payload = ExportSchema.parse({
     version: JSON_EXPORT_VERSION,
     authors,
+    ...(toolchain ? { toolchain } : {}),
     ...(includeAnswers && kept.length > 0 ? { asks: Object.fromEntries(kept) } : {}),
     ...(selfId && ids.has(selfId) ? { selfId } : {}),
   });
@@ -70,8 +84,15 @@ export function toJson(
  * Parse a JSON string previously produced by `toJson()`.
  * Throws a NewerVersionError for a newer build's export, a RepeatedIdError for
  * a file that repeats a contributor id, and a ZodError for any other data that doesn't match the expected shape.
+ * A toolchain this build does not know is left out, with a line saying so in `warnings`.
  */
-export function fromJson(json: string): { authors: Author[]; asks?: Record<string, Ask>; selfId?: string } {
+export function fromJson(json: string): {
+  authors: Author[];
+  asks?: Record<string, Ask>;
+  selfId?: string;
+  toolchain?: Toolchain;
+  warnings?: string[];
+} {
   const data: unknown = JSON.parse(json);
   const version = (data as { version?: unknown } | null)?.version;
   if (typeof version === "number" && version > JSON_EXPORT_VERSION) throw new NewerVersionError(version);
@@ -82,5 +103,12 @@ export function fromJson(json: string): { authors: Author[]; asks?: Record<strin
       : result.error;
   }
   const { authors, asks, selfId } = result.data;
-  return { authors, ...(asks ? { asks } : {}), ...(selfId ? { selfId } : {}) };
+  const toolchain = ToolchainSchema.safeParse(result.data.toolchain).data;
+  return {
+    authors,
+    ...(asks ? { asks } : {}),
+    ...(selfId ? { selfId } : {}),
+    ...(toolchain ? { toolchain } : {}),
+    ...("toolchain" in result.data && !toolchain ? { warnings: [UNKNOWN_TOOLCHAIN_WARNING] } : {}),
+  };
 }

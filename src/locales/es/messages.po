@@ -1585,6 +1585,9 @@ msgstr "Roles de CRediT importados. Revise estas asignaciones antes de aplicarla
 msgid "doiNoRoles"
 msgstr "Este registro no tiene roles de CRediT depositados. La matriz de contribuciones quedará vacía."
 
+msgid "importToolchainDropped"
+msgstr "Este archivo indica una herramienta de escritura que esta versión no conoce, así que se ha omitido."
+
 msgid "doiConfirm"
 msgstr "Confirmar la importación del DOI"
 
@@ -1803,6 +1806,48 @@ msgstr "Rojo"
 
 msgid "heatmapPurple"
 msgstr "Morado"
+
+msgid "toolchainLabel"
+msgstr "Escribo en…"
+
+msgid "toolchainNone"
+msgstr "Todos los formatos"
+
+msgid "toolchainMarkdown"
+msgstr "Markdown o texto sin formato"
+
+msgid "toolchainMyst"
+msgstr "MyST o Jupyter Book"
+
+msgid "toolchainPanel"
+msgstr "Usar en {toolchain}"
+
+msgid "toolchainSetup"
+msgstr "Configuración"
+
+msgid "toolchainSetupLink"
+msgstr "Configurar {toolchain} →"
+
+msgid "toolchainCli"
+msgstr "Equivalente en la línea de comandos"
+
+msgid "toolchainJournal"
+msgstr "Para la revista"
+
+msgid "toolchainOtherFormats"
+msgstr "Otros formatos"
+
+msgid "toolchainNoSetup"
+msgstr "No se necesita ninguna extensión."
+
+msgid "toolchainWordHint"
+msgstr "Copie la declaración de arriba en Word. Use Mapa de calor para copiar o descargar el mapa de calor de contribuciones."
+
+msgid "toolchainLatexHeatmap"
+msgstr "Genere heatmap.svg con la línea de comandos de abajo e incluya la figura en su documento."
+
+msgid "toolchainDataHint"
+msgstr "Guarde la exportación JSON como contributors.json para la receta y la línea de comandos de abajo."
 
 msgid "docsTitle"
 msgstr "Documentación"

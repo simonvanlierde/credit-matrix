@@ -24,6 +24,7 @@ export async function copyAskLink(
     link = await buildShareUrl({
       authors: state.authors,
       title: state.title,
+      toolchain: state.toolchain,
       claimId: author.id,
       sourceDraftId: state.activeDraftId,
       blank,
