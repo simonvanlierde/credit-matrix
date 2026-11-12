@@ -47,9 +47,22 @@ See [deploying](docs/deploy.md).
 - `NAME_PARTICLES` and `NAME_SUFFIXES` export the name particles ("van", "de la") and generational
   suffixes ("Jr.") that the parser uses for initials, so another implementation can follow them.
 - `MAX_AUTHORS`, `MAX_AUTHOR_NAME_LENGTH` and `MAX_IMPORT_BYTES` export the caps every reader enforces.
+- The output step asks "I write in…" and groups the exports for that writing tool: Word, Markdown
+  or plain text, LaTeX, Quarto, Typst, Pandoc, MyST or Jupyter Book, or Sphinx. Each shows the
+  statement or data block, the heatmap recipe, the setup line with a link to its guide at /docs,
+  and the CLI command. JATS4R XML, Crossref XML and tenzing stay in a "For the journal" group, and
+  every other format is under "Other formats". With no choice, the step looks as before.
+- The draft keeps its writing tool (`toolchain` in JSON exports and share links), and the browser
+  remembers the last choice for new drafts. `fromJson` and `importAny` drop a writing tool they do
+  not know and return it in `warnings`, so a file from a newer version still imports.
+- A copied heatmap pastes into Word with its alt text.
+- A [CLI reference](docs/cli.md) covers every command, target, flag and exit code.
 
 ### Changed
 
+- The heatmap export recipe moved from Figure settings into the writing-tool panel; Figure settings
+  links to it.
+- CLI heatmap option errors name the allowed values, and `--help` shows `-h` and `-v`.
 - **Breaking:** to export SVG or PDF offline, install both packages in one project
   (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`, or run
   `npx -p credit-matrix -p credit-matrix-fonts credit-matrix ...`. A bare `npx credit-matrix` cannot
