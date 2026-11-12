@@ -320,6 +320,15 @@ msgstr "Link naar het klembord gekopieerd"
 msgid "annHeatmapCopied"
 msgstr "Heatmap-PNG naar het klembord gekopieerd"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "Heatmap-PNG naar het klembord gekopieerd. Word kan de alternatieve tekst uit deze browser niet overnemen: kopieer die hieronder."
+
+msgid "heatmapAltHint"
+msgstr "Word neemt de alternatieve tekst niet over als je vanuit deze browser plakt. Kopieer hem hier en plak hem onder Afbeeldingsopmaak > Alternatieve tekst."
+
+msgid "copyAltText"
+msgstr "Alternatieve tekst kopiëren"
+
 msgid "annBadgeCopied"
 msgstr "Badge-PNG naar het klembord gekopieerd"
 

@@ -55,7 +55,8 @@ See [deploying](docs/deploy.md).
 - The draft keeps its writing tool (`toolchain` in JSON exports and share links), and the browser
   remembers the last choice for new drafts. `fromJson` and `importAny` drop a writing tool they do
   not know and return it in `warnings`, so a file from a newer version still imports.
-- A copied heatmap pastes into Word with its alt text.
+- A copied heatmap pastes into Word with its alt text. In Firefox, where Word for the web keeps only
+  the image, the heatmap menu shows the alt text with a button to copy it.
 - A [CLI reference](docs/cli.md) covers every command, target, flag and exit code.
 - The docs have a search box. It works offline after one online visit to the docs. Docs pages
   also show your current draft, or a sample, in each export they describe.

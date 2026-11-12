@@ -320,6 +320,15 @@ msgstr "Enlace copiado al portapapeles"
 msgid "annHeatmapCopied"
 msgstr "PNG del mapa de calor copiado al portapapeles"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "PNG del mapa de calor copiado al portapapeles. Word no conserva el texto alternativo desde este navegador: cópialo abajo."
+
+msgid "heatmapAltHint"
+msgstr "Word no conserva el texto alternativo al pegar desde este navegador. Cópialo aquí y pégalo en Formato de imagen > Texto alternativo."
+
+msgid "copyAltText"
+msgstr "Copiar texto alternativo"
+
 msgid "annBadgeCopied"
 msgstr "PNG de la insignia copiado al portapapeles"
 

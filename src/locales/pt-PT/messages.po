@@ -320,6 +320,15 @@ msgstr "Ligação copiada para a área de transferência"
 msgid "annHeatmapCopied"
 msgstr "PNG do mapa de calor copiado para a área de transferência"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "PNG do mapa de calor copiado para a área de transferência. O Word não mantém o texto alternativo a partir deste navegador: copie-o abaixo."
+
+msgid "heatmapAltHint"
+msgstr "O Word não mantém o texto alternativo quando cola a partir deste navegador. Copie-o aqui e cole-o em Formato da Imagem > Texto Alternativo."
+
+msgid "copyAltText"
+msgstr "Copiar texto alternativo"
+
 msgid "annBadgeCopied"
 msgstr "PNG do emblema copiado para a área de transferência"
 

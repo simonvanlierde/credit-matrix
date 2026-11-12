@@ -320,6 +320,15 @@ msgstr "リンクをクリップボードにコピーしました"
 msgid "annHeatmapCopied"
 msgstr "ヒートマップの PNG をクリップボードにコピーしました"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "ヒートマップの PNG をクリップボードにコピーしました。このブラウザーからは Word に代替テキストが渡りません。下でコピーしてください。"
+
+msgid "heatmapAltHint"
+msgstr "このブラウザーから貼り付けると、Word は代替テキストを保持しません。ここでコピーし、[図の形式] > [代替テキスト] に貼り付けてください。"
+
+msgid "copyAltText"
+msgstr "代替テキストをコピー"
+
 msgid "annBadgeCopied"
 msgstr "バッジの PNG をクリップボードにコピーしました"
 

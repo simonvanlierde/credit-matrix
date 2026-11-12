@@ -320,6 +320,15 @@ msgstr "链接已复制到剪贴板"
 msgid "annHeatmapCopied"
 msgstr "热图 PNG 已复制到剪贴板"
 
+msgid "annHeatmapCopiedNoAlt"
+msgstr "热图 PNG 已复制到剪贴板。从此浏览器粘贴时，Word 不会保留替换文字：请在下方复制。"
+
+msgid "heatmapAltHint"
+msgstr "从此浏览器粘贴时，Word 不会保留替换文字。请在此复制，然后粘贴到“图片格式”>“替换文字”中。"
+
+msgid "copyAltText"
+msgstr "复制替换文字"
+
 msgid "annBadgeCopied"
 msgstr "徽章 PNG 已复制到剪贴板"
 
