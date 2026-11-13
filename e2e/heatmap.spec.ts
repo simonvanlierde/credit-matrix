@@ -488,7 +488,10 @@ for (const width of [1440, 320]) {
     await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
     await page.getByRole("button", { name: "Grayscale", exact: true }).click();
     await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: "Grayscale", exact: true })).toBeHidden();
     await page.getByRole("button", { name: "Heatmap", exact: true }).click();
+    // Wait for the async preview to finish so the popover stops resizing and export buttons are enabled before axe runs.
+    await expect(page.getByRole("button", { name: "Download SVG", exact: true })).toBeEnabled({ timeout: 15_000 });
     await page.getByRole("button", { name: "Figure settings", exact: true }).click();
     await page.getByText("Export recipe", { exact: true }).click();
     const recipe = page.getByRole("textbox", { name: "Export recipe", exact: true });
@@ -572,6 +575,7 @@ test("uses extra desktop space while keeping short windows compact", async ({ pa
     await page.getByRole("button", { name: "Heatmap options", exact: true }).click();
     const options = await page.getByRole("dialog", { name: "Heatmap options", exact: true }).boundingBox();
     await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: "Grayscale", exact: true })).toBeHidden();
     await page.getByRole("button", { name: "Heatmap", exact: true }).click();
     const settingsButton = page.getByRole("button", { name: "Figure settings", exact: true });
     if ((await settingsButton.getAttribute("aria-expanded")) === "false") await settingsButton.click();
