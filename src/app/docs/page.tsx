@@ -33,7 +33,11 @@ function DocsList({ current, details, level = 3 }: { current?: string; details?:
           .filter((doc) => doc.section === section)
           .map((doc) => (
             <li key={doc.route} lang="en">
-              <a href={doc.route} aria-current={doc.route === current ? "page" : undefined}>
+              <a
+                href={doc.route}
+                aria-current={doc.route === current ? "page" : undefined}
+                className="aria-[current=page]:font-semibold aria-[current=page]:text-primary"
+              >
                 {doc.title}
               </a>
               {details && <p>{doc.description}</p>}
@@ -66,15 +70,19 @@ function DocPage() {
     <ReadingPage>
       <meta name="pagefind:title" data-pagefind-meta="title[content]" content={doc?.title} />
       <meta name="pagefind:url" data-pagefind-meta="url[content]" content={route} />
-      <a href="/docs" className="flex w-fit items-center gap-1.5 text-sm text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        {t("docsTitle")}
-      </a>
-      <DocsSearch />
-      <DocArticle parts={parts} />
-      <nav aria-label={t("docsTitle")} className="document">
-        <DocsList current={route} level={2} />
-      </nav>
+      <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+        <div className="min-w-0 space-y-6">
+          <a href="/docs" className="flex w-fit items-center gap-1.5 text-sm text-primary hover:underline">
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            {t("docsTitle")}
+          </a>
+          <DocsSearch />
+          <DocArticle parts={parts} />
+        </div>
+        <nav aria-label={t("docsTitle")} className="document mt-8 lg:sticky lg:top-6 lg:order-first lg:mt-0">
+          <DocsList current={route} level={2} />
+        </nav>
+      </div>
     </ReadingPage>
   );
 }

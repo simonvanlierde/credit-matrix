@@ -36,7 +36,7 @@ import { TOOLCHAIN_OUTPUTS, ToolchainPanel } from "./ToolchainPanel";
  * every name would be a tab stop and the statement would read as a row of buttons.
  */
 const NAME_TEXT =
-  "cursor-pointer decoration-outline decoration-dotted underline-offset-4 hover:text-primary hover:underline";
+  "cursor-pointer underline decoration-outline/50 decoration-dotted underline-offset-4 hover:text-primary hover:decoration-primary";
 
 export function StatementOutput() {
   const toolchain = useContributionStore((s) => s.toolchain);
@@ -81,16 +81,19 @@ export function StatementOutput() {
   const format: StatementFormat =
     grouping === "by-role" ? (acronyms ? "by-role-short" : "by-role") : acronyms ? "by-author-short" : "by-author";
 
-  const statementOptions = {
-    format,
-    showLevels,
-    translateRole,
-    translateUi,
-    locale: outputLanguage,
-    separateAcknowledgements: separateAck,
-  };
-  const statement = generateStatement(authors, statementOptions);
-  const issues = validateContributions(authors);
+  const statementOptions = useMemo(
+    () => ({
+      format,
+      showLevels,
+      translateRole,
+      translateUi,
+      locale: outputLanguage,
+      separateAcknowledgements: separateAck,
+    }),
+    [format, showLevels, translateRole, translateUi, outputLanguage, separateAck],
+  );
+  const statement = useMemo(() => generateStatement(authors, statementOptions), [authors, statementOptions]);
+  const issues = useMemo(() => validateContributions(authors), [authors]);
   const hasAuthors = authors.length > 0;
   const assignedRoleCount = rolesWithContributions(authors).length;
   const isReady = Boolean(statement) && issues.length === 0;
@@ -509,14 +512,12 @@ export function StatementOutput() {
         </h3>
         <ul>{(["xml", "crossref", "tenzing"] as const).map(exportRow)}</ul>
       </section>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
-        {/* Here, not only on /about: this is where someone takes the statement to their manuscript.
-            Primary like other links, since it goes to a page; the badge below opens a popover. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-outline-variant/40 pt-3">
         <a
           href="/about#plugins"
-          className="basis-full flex min-h-6 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+          className="basis-full flex min-h-6 items-center gap-1.5 text-xs text-on-surface-variant underline decoration-outline/50 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary"
         >
-          <Puzzle className="h-[18px] w-[18px]" aria-hidden="true" />
+          <Puzzle className="size-3.5 shrink-0" aria-hidden="true" />
           {t("statementPlugins")}
         </a>
         {/* Its own left-aligned line: hung off the right edge it read as a

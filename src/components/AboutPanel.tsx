@@ -1,4 +1,4 @@
-import { Accessibility, BookOpen, Code, FileText, Puzzle } from "lucide-react";
+import { Accessibility, BookOpen, Code, Puzzle } from "lucide-react";
 import { PRODUCT_NAME } from "@/components/BrandMark";
 import { ExternalLink } from "@/components/ui/external-link";
 import { useTranslations } from "@/lib/translations";
@@ -25,10 +25,6 @@ export function AboutPanel({ version }: { version: string }) {
       <a href="/about" className="flex items-center gap-1.5 font-medium text-primary hover:underline">
         <BookOpen className="size-4" aria-hidden="true" />
         {t("aboutPageLink")}
-      </a>
-      <a href="/docs" className="flex items-center gap-1.5 font-medium text-primary hover:underline">
-        <FileText className="size-4" aria-hidden="true" />
-        {t("docsTitle")}
       </a>
       <a href="/about#plugins" className="flex items-center gap-1.5 font-medium text-primary hover:underline">
         <Puzzle className="size-4" aria-hidden="true" />

@@ -118,7 +118,7 @@ export function DraftPicker() {
           // Names the control *and* which draft is live: below `sm` the title is
           // hidden, and without this the button would announce only "Drafts".
           aria-label={`${t("drafts")}: ${label}`}
-          className="flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface md:max-w-[16rem]"
+          className="touch-target flex min-h-9 items-center gap-1.5 rounded px-2 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface md:max-w-[16rem]"
         >
           <Files className="h-4 w-4 shrink-0" />
           {/* The title is the first thing to go on a narrow header: the icon

@@ -501,16 +501,16 @@ export function HeaderActions() {
               disabled={authorCount === 0 || claim !== null}
               aria-label={t("share")}
               title={claim !== null ? t("claimLockedHint") : t("share")}
-              className="touch-target flex size-9 items-center justify-center gap-2 rounded border border-edge bg-surface-bright text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 md:w-auto md:px-4"
+              className="touch-target flex h-9 items-center justify-center gap-1.5 rounded border border-edge bg-surface-bright px-2.5 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 md:gap-2 md:px-4"
             >
               {shareStatus === "copied" ? (
-                <Check className="h-4 w-4" />
+                <Check className="h-4 w-4 shrink-0" />
               ) : shareStatus === "error" ? (
-                <CircleAlert className="h-4 w-4" />
+                <CircleAlert className="h-4 w-4 shrink-0" />
               ) : (
-                <Link2 className="h-4 w-4" />
+                <Link2 className="h-4 w-4 shrink-0" />
               )}
-              <span className="sr-only md:not-sr-only">
+              <span>
                 {shareStatus === "copied"
                   ? t("linkCopied")
                   : shareStatus === "error"
@@ -554,10 +554,10 @@ export function HeaderActions() {
           title={claim !== null ? t("claimLockedHint") : t("import")}
           // Secondary, like Share: importing is an occasional start, not the
           // page's main action, which is copying the statement.
-          className="touch-target flex size-9 items-center justify-center gap-2 rounded border border-edge bg-surface-bright text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 md:w-auto md:px-4"
+          className="touch-target flex h-9 items-center justify-center gap-1.5 rounded border border-edge bg-surface-bright px-2.5 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:border-outline-variant/40 disabled:text-on-surface-variant/50 disabled:hover:text-on-surface-variant/50 md:gap-2 md:px-4"
         >
-          <Upload className="h-4 w-4" />
-          <span className="sr-only md:not-sr-only">{t("import")}</span>
+          <Upload className="h-4 w-4 shrink-0" />
+          <span>{t("import")}</span>
         </button>
       </div>
 
