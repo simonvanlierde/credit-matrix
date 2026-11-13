@@ -12,7 +12,7 @@ import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
 
 export const EXPORT_ITEM_BUTTON =
-  "flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "flex min-h-7 items-center gap-1 rounded px-1.5 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 type OutputProps = {
   authors: Author[];
@@ -80,7 +80,7 @@ export function OutputBlock({ authors, format, options, language, children }: Ou
         lang={language}
         readOnly
         value={text}
-        rows={6}
+        rows={4}
         spellCheck={false}
         className="w-full min-w-0 resize-y rounded border border-edge bg-surface-bright p-2 font-mono text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
       />

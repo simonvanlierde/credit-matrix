@@ -14,8 +14,8 @@ export function CensusLink() {
       title={t("censusTitle")}
       className="touch-target inline-flex items-center justify-center whitespace-nowrap gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
     >
-      <ChartLine className="size-4 xl:size-3.5" aria-hidden="true" />
-      <span className="sr-only xl:not-sr-only">{t("censusTitle")}</span>
+      <ChartLine className="size-4 lg:size-3.5" aria-hidden="true" />
+      <span>{t("censusTitle")}</span>
     </a>
   );
 }

@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronDown, Copy, Download, Info, Puzzle, Settings2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, Copy, Download, Info, Settings2 } from "lucide-react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { CreditBadge } from "@/components/ui/credit-badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -6,7 +6,7 @@ import { SegmentedControl } from "@/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SettingSwitch, SettingsPanel, SettingsSection } from "@/components/ui/settings-panel";
 import { CREDIT_ROLES, type CreditRoleName, generateStatement, type StatementFormat, statementSpans } from "@/core";
-import { isAllBinary, rolesWithContributions } from "@/core/author";
+import { isAllBinary } from "@/core/author";
 import { pageMarkColor } from "@/core/contributor-color";
 import { TOOLCHAINS, type Toolchain } from "@/core/toolchain";
 import { validateContributions } from "@/core/validate";
@@ -36,7 +36,7 @@ import { TOOLCHAIN_OUTPUTS, ToolchainPanel } from "./ToolchainPanel";
  * every name would be a tab stop and the statement would read as a row of buttons.
  */
 const NAME_TEXT =
-  "cursor-pointer decoration-outline decoration-dotted underline-offset-4 hover:text-primary hover:underline";
+  "cursor-pointer underline decoration-outline/50 decoration-dotted underline-offset-4 hover:text-primary hover:decoration-primary";
 
 export function StatementOutput() {
   const toolchain = useContributionStore((s) => s.toolchain);
@@ -81,18 +81,20 @@ export function StatementOutput() {
   const format: StatementFormat =
     grouping === "by-role" ? (acronyms ? "by-role-short" : "by-role") : acronyms ? "by-author-short" : "by-author";
 
-  const statementOptions = {
-    format,
-    showLevels,
-    translateRole,
-    translateUi,
-    locale: outputLanguage,
-    separateAcknowledgements: separateAck,
-  };
-  const statement = generateStatement(authors, statementOptions);
-  const issues = validateContributions(authors);
+  const statementOptions = useMemo(
+    () => ({
+      format,
+      showLevels,
+      translateRole,
+      translateUi,
+      locale: outputLanguage,
+      separateAcknowledgements: separateAck,
+    }),
+    [format, showLevels, translateRole, translateUi, outputLanguage, separateAck],
+  );
+  const statement = useMemo(() => generateStatement(authors, statementOptions), [authors, statementOptions]);
+  const issues = useMemo(() => validateContributions(authors), [authors]);
   const hasAuthors = authors.length > 0;
-  const assignedRoleCount = rolesWithContributions(authors).length;
   const isReady = Boolean(statement) && issues.length === 0;
   // Levels only mean something when contributions aren't purely binary.
   const canShowLevels = !isAllBinary(authors);
@@ -118,7 +120,7 @@ export function StatementOutput() {
 
   function exportRow(value: DataFormat) {
     return (
-      <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">
+      <li key={value} className="py-0.5 text-[13px] text-on-surface">
         <OutputActions authors={authors} format={value} options={exportOptions} />
         {value === "json" && answersChoice}
       </li>
@@ -174,7 +176,7 @@ export function StatementOutput() {
       </div>
       {/* Says the statement is the lead's version; never blocks copying it. */}
       {openDifferences > 0 && (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-primary/10 px-3 py-2 text-[13px] text-on-surface">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded bg-primary/10 px-3 py-2 text-[13px] text-on-surface">
           <span className="flex-1">{t("statementDiffers", { count: openDifferences })}</span>
           <button
             type="button"
@@ -246,8 +248,6 @@ export function StatementOutput() {
 
       {hasAuthors && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-on-surface-variant">
-          {/* Only the readiness is live. With the counts in it too, every grid
-              change was read out a second time after the grid's own message. */}
           <span role="status">
             <span
               // Keyed on readiness so the flip remounts the chip and the house
@@ -267,8 +267,6 @@ export function StatementOutput() {
               {isReady ? t("statusReady") : t("statusNotes", { count: issues.length })}
             </span>
           </span>
-          <span>{t("contributorCount", { count: authors.length })}</span>
-          <span>{t("rolesUsed", { used: assignedRoleCount, total: CREDIT_ROLES.length })}</span>
         </div>
       )}
 
@@ -278,8 +276,7 @@ export function StatementOutput() {
           runs out of room. tabIndex makes that overflow keyboard-reachable:
           the pane holds no focusable content of its own. */}
       <section
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region with no focusable content needs a tab stop, or keyboard users cannot reach the overflow (axe scrollable-region-focusable).
-        tabIndex={0}
+        tabIndex={statement ? 0 : undefined}
         aria-label={t("a11yGeneratedStatement")}
         // The statement is written in the *output* language, which need not be
         // the page's language. Declaring it lets a screen reader switch
@@ -466,12 +463,16 @@ export function StatementOutput() {
             {toolchain ? t("toolchainOtherFormats") : t("exportData")}
             <ChevronDown className="size-3.5" aria-hidden="true" />
           </PopoverTrigger>
-          <PopoverContent align="start" aria-label={t("exportData")} className="w-72 max-w-[calc(100vw-2rem)] p-1">
+          <PopoverContent align="start" aria-label={t("exportData")} className="w-72 max-w-[calc(100vw-2rem)] p-2">
             <ul aria-label={t("a11yExportFormat")} className="grid">
               {(Object.keys(DATA_FORMATS) as DataFormat[])
                 .filter((value) => !["xml", "crossref", "tenzing"].includes(value) && value !== toolchainOutput)
                 .map(exportRow)}
             </ul>
+            <div className="mt-2 border-t border-outline-variant/40 pt-2">
+              <p className="mb-1 text-xs font-semibold text-on-surface-variant">{t("toolchainJournal")}</p>
+              <ul className="grid">{(["xml", "crossref", "tenzing"] as const).map(exportRow)}</ul>
+            </div>
           </PopoverContent>
         </Popover>
         {/* On a phone the figure leaves from here, with the other outputs: the grid above is a list
@@ -483,7 +484,7 @@ export function StatementOutput() {
         )}
       </div>
       {toolchain && (
-        <ToolchainPanel toolchain={toolchain} language={outputLanguage} settings={heatmapSettings}>
+        <ToolchainPanel compact toolchain={toolchain} language={outputLanguage} settings={heatmapSettings}>
           {toolchainOutput ? (
             <OutputBlock authors={authors} format={toolchainOutput} options={exportOptions} language={outputLanguage}>
               {toolchainOutput === "json" && answersChoice}
@@ -503,25 +504,8 @@ export function StatementOutput() {
           )}
         </ToolchainPanel>
       )}
-      <section aria-labelledby={`${toolchainId}-journal`} className="border-t border-outline-variant/40 pt-3">
-        <h3 id={`${toolchainId}-journal`} className="mb-1 text-sm font-semibold">
-          {t("toolchainJournal")}
-        </h3>
-        <ul>{(["xml", "crossref", "tenzing"] as const).map(exportRow)}</ul>
-      </section>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
-        {/* Here, not only on /about: this is where someone takes the statement to their manuscript.
-            Primary like other links, since it goes to a page; the badge below opens a popover. */}
-        <a
-          href="/about#plugins"
-          className="basis-full flex min-h-6 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-        >
-          <Puzzle className="h-[18px] w-[18px]" aria-hidden="true" />
-          {t("statementPlugins")}
-        </a>
-        {/* Its own left-aligned line: hung off the right edge it read as a
-            dangling leftover of the export row rather than a quiet extra. */}
-        <CreditBadge className="basis-full flex min-h-6 items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors" />
+      <div className="border-t border-outline-variant/40 pt-3">
+        <CreditBadge className="flex min-h-6 items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors" />
       </div>
     </div>
   );

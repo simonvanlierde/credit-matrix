@@ -1,7 +1,9 @@
-import { ChartLine, ChevronDown, ChevronRight, HelpCircle } from "lucide-react";
+import { ChartLine, ChevronDown, ChevronRight, FileText, HelpCircle } from "lucide-react";
 import { useState } from "react";
 import { AboutPanel } from "@/components/AboutPanel";
 import { Lockup, PRODUCT_NAME } from "@/components/BrandMark";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";
@@ -26,7 +28,7 @@ export function BrandMenu({ version }: { version: string }) {
   const onMainPage = usePathname() === "/";
   const t = useTranslations();
   const rowClass =
-    "touch-target flex w-full items-center gap-2.5 rounded border border-edge bg-surface-bright bg-surface-container-low px-3 text-left font-semibold text-on-surface transition-[color,box-shadow] hover:shadow-card hover:bg-surface-container hover:text-primary";
+    "touch-target flex w-full items-center gap-2.5 rounded border border-edge bg-surface-container-low px-3 text-left font-semibold text-on-surface transition-[color,box-shadow] hover:shadow-card hover:bg-surface-container hover:text-primary";
   const howItWorksLabel = (
     <>
       <HelpCircle className="size-4 shrink-0 text-primary" aria-hidden="true" />
@@ -77,11 +79,20 @@ export function BrandMenu({ version }: { version: string }) {
               {howItWorksLabel}
             </a>
           )}
+          <a href="/docs" className={rowClass}>
+            <FileText className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            {t("docsTitle")}
+            <ChevronRight className="ml-auto size-4 shrink-0 text-on-surface-variant" aria-hidden="true" />
+          </a>
           <a href="/census" className={rowClass}>
             <ChartLine className="size-4 shrink-0 text-primary" aria-hidden="true" />
             {t("censusTitle")}
             <ChevronRight className="ml-auto size-4 shrink-0 text-on-surface-variant" aria-hidden="true" />
           </a>
+        </div>
+        <div className="flex items-center gap-2 border-t border-outline-variant/30 pt-3 md:hidden">
+          <LanguageSelector />
+          <ThemeToggle />
         </div>
         <div className="space-y-3 border-t border-outline-variant/30 pt-3">
           <p className="font-headline text-base font-semibold text-on-surface">{t("about")}</p>

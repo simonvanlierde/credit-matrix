@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { ChevronDown, Copy } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { ExternalLink } from "@/components/ui/external-link";
 import type { Toolchain } from "@/core/toolchain";
@@ -116,14 +116,17 @@ export function ToolchainPanel({
   language,
   children,
   recipeId = "toolchain-heatmap-recipe",
+  compact = false,
 }: {
   toolchain: Toolchain;
   settings: HeatmapOptions;
   language: string;
   children: ReactNode;
   recipeId?: string;
+  compact?: boolean;
 }) {
   const t = useTranslations();
+  const [expanded, setExpanded] = useState(true);
   const config = TOOLCHAIN_OUTPUTS[toolchain];
   const guide = docFiles.find((file) => file.path === config.guide);
   const cli = heatmapRecipe(settings, "cli", language);
@@ -136,47 +139,76 @@ export function ToolchainPanel({
       aria-label={t("toolchainPanel", { toolchain: config.label })}
       className="grid min-w-0 gap-3 border-t border-outline-variant/40 pt-3 text-xs"
     >
-      <h3 className="font-semibold text-sm text-on-surface">{t("toolchainPanel", { toolchain: config.label })}</h3>
-      {children}
-      {toolchain === "word" && <p className="text-on-surface-variant">{t("toolchainWordHint")}</p>}
-      {toolchain !== "word" && (
-        <div {...(cliRecipe ? {} : anchor)} className="grid min-w-0 gap-2 scroll-mt-4">
-          <h4 className="font-semibold">{t("heatmapRecipe")}</h4>
-          {toolchain === "latex" && <p className="text-on-surface-variant">{t("toolchainLatexHeatmap")}</p>}
-          {settings.colorBy === "contributor" && (
-            <p className="text-on-surface-variant">{t("heatmapRecipeOneColor")}</p>
+      <h3 className="font-semibold text-sm text-on-surface">
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((prev) => !prev)}
+          className="flex w-full items-center justify-between gap-2 text-left transition-colors hover:text-primary"
+        >
+          <span>{t("toolchainPanel", { toolchain: config.label })}</span>
+          <ChevronDown
+            className={`size-4 shrink-0 text-on-surface-variant transition-transform duration-150 ${expanded ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          />
+        </button>
+      </h3>
+      {expanded && (
+        <>
+          {children}
+          {toolchain === "word" && <p className="text-on-surface-variant">{t("toolchainWordHint")}</p>}
+          {!compact && toolchain !== "word" && (
+            <div {...(cliRecipe ? {} : anchor)} className="grid min-w-0 gap-2 scroll-mt-4">
+              <h4 className="font-semibold">{t("heatmapRecipe")}</h4>
+              {toolchain === "latex" && <p className="text-on-surface-variant">{t("toolchainLatexHeatmap")}</p>}
+              {settings.colorBy === "contributor" && (
+                <p className="text-on-surface-variant">{t("heatmapRecipeOneColor")}</p>
+              )}
+              {toolchain === "myst" && <p className="text-on-surface-variant">{t("heatmapRecipeMyst")}</p>}
+              {toolchain === "typst" && <p className="text-on-surface-variant">{t("heatmapRecipeTypst")}</p>}
+              {!cliRecipe && <CopySnippet label={t("heatmapRecipe")} text={recipe} rows={4} language={language} />}
+              {toolchain === "latex" && <CopySnippet label="LaTeX" text={"\\includesvg{heatmap}"} rows={2} />}
+              {toolchain === "markdown" && <CopySnippet label="Markdown" text="![CRediT](heatmap.svg)" rows={2} />}
+            </div>
           )}
-          {toolchain === "myst" && <p className="text-on-surface-variant">{t("heatmapRecipeMyst")}</p>}
-          {toolchain === "typst" && <p className="text-on-surface-variant">{t("heatmapRecipeTypst")}</p>}
-          {!cliRecipe && <CopySnippet label={t("heatmapRecipe")} text={recipe} rows={6} language={language} />}
-          {toolchain === "latex" && <CopySnippet label="LaTeX" text={"\\includesvg{heatmap}"} rows={2} />}
-          {toolchain === "markdown" && <CopySnippet label="Markdown" text="![CRediT](heatmap.svg)" rows={2} />}
-        </div>
+          <div className="grid min-w-0 gap-2">
+            {!compact && (
+              <>
+                <h4 className="font-semibold">{t("toolchainSetup")}</h4>
+                {config.setup ? (
+                  <CopySnippet label={t("toolchainSetup")} text={config.setup} rows={2} />
+                ) : (
+                  <p className="text-on-surface-variant">{t("toolchainNoSetup")}</p>
+                )}
+              </>
+            )}
+            {guide ? (
+              <a
+                href={guide.route}
+                className="inline-flex min-h-6 items-center text-primary underline decoration-outline/50 underline-offset-4 hover:decoration-primary"
+              >
+                {t("toolchainSetupLink", { toolchain: config.label })}
+              </a>
+            ) : (
+              config.guide && (
+                <ExternalLink
+                  href={config.guide}
+                  className="min-h-6 gap-1 text-primary underline decoration-outline/50 underline-offset-4 hover:decoration-primary"
+                >
+                  {t("toolchainSetupLink", { toolchain: config.label })}
+                </ExternalLink>
+              )
+            )}
+          </div>
+          {!compact && (
+            <div {...(cliRecipe ? anchor : {})} className="grid min-w-0 gap-2 scroll-mt-4">
+              <h4 className="font-semibold">{t("toolchainCli")}</h4>
+              <p className="text-on-surface-variant">{t("toolchainDataHint")}</p>
+              <CopySnippet label={t("toolchainCli")} text={cli} rows={2} language={language} />
+            </div>
+          )}
+        </>
       )}
-      <div className="grid min-w-0 gap-2">
-        <h4 className="font-semibold">{t("toolchainSetup")}</h4>
-        {config.setup ? (
-          <CopySnippet label={t("toolchainSetup")} text={config.setup} rows={2} />
-        ) : (
-          <p className="text-on-surface-variant">{t("toolchainNoSetup")}</p>
-        )}
-        {guide ? (
-          <a href={guide.route} className="inline-flex min-h-6 items-center text-primary hover:underline">
-            {t("toolchainSetupLink", { toolchain: config.label })}
-          </a>
-        ) : (
-          config.guide && (
-            <ExternalLink href={config.guide} className="min-h-6 gap-1 text-primary hover:underline">
-              {t("toolchainSetupLink", { toolchain: config.label })}
-            </ExternalLink>
-          )
-        )}
-      </div>
-      <div {...(cliRecipe ? anchor : {})} className="grid min-w-0 gap-2 scroll-mt-4">
-        <h4 className="font-semibold">{t("toolchainCli")}</h4>
-        <p className="text-on-surface-variant">{t("toolchainDataHint")}</p>
-        <CopySnippet label={t("toolchainCli")} text={cli} rows={4} language={language} />
-      </div>
     </section>
   );
 }
