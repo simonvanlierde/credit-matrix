@@ -116,12 +116,14 @@ export function ToolchainPanel({
   language,
   children,
   recipeId = "toolchain-heatmap-recipe",
+  compact = false,
 }: {
   toolchain: Toolchain;
   settings: HeatmapOptions;
   language: string;
   children: ReactNode;
   recipeId?: string;
+  compact?: boolean;
 }) {
   const t = useTranslations();
   const [expanded, setExpanded] = useState(true);
@@ -155,7 +157,7 @@ export function ToolchainPanel({
         <>
           {children}
           {toolchain === "word" && <p className="text-on-surface-variant">{t("toolchainWordHint")}</p>}
-          {toolchain !== "word" && (
+          {!compact && toolchain !== "word" && (
             <div {...(cliRecipe ? {} : anchor)} className="grid min-w-0 gap-2 scroll-mt-4">
               <h4 className="font-semibold">{t("heatmapRecipe")}</h4>
               {toolchain === "latex" && <p className="text-on-surface-variant">{t("toolchainLatexHeatmap")}</p>}
@@ -170,11 +172,15 @@ export function ToolchainPanel({
             </div>
           )}
           <div className="grid min-w-0 gap-2">
-            <h4 className="font-semibold">{t("toolchainSetup")}</h4>
-            {config.setup ? (
-              <CopySnippet label={t("toolchainSetup")} text={config.setup} rows={2} />
-            ) : (
-              <p className="text-on-surface-variant">{t("toolchainNoSetup")}</p>
+            {!compact && (
+              <>
+                <h4 className="font-semibold">{t("toolchainSetup")}</h4>
+                {config.setup ? (
+                  <CopySnippet label={t("toolchainSetup")} text={config.setup} rows={2} />
+                ) : (
+                  <p className="text-on-surface-variant">{t("toolchainNoSetup")}</p>
+                )}
+              </>
             )}
             {guide ? (
               <a
@@ -194,11 +200,13 @@ export function ToolchainPanel({
               )
             )}
           </div>
-          <div {...(cliRecipe ? anchor : {})} className="grid min-w-0 gap-2 scroll-mt-4">
-            <h4 className="font-semibold">{t("toolchainCli")}</h4>
-            <p className="text-on-surface-variant">{t("toolchainDataHint")}</p>
-            <CopySnippet label={t("toolchainCli")} text={cli} rows={2} language={language} />
-          </div>
+          {!compact && (
+            <div {...(cliRecipe ? anchor : {})} className="grid min-w-0 gap-2 scroll-mt-4">
+              <h4 className="font-semibold">{t("toolchainCli")}</h4>
+              <p className="text-on-surface-variant">{t("toolchainDataHint")}</p>
+              <CopySnippet label={t("toolchainCli")} text={cli} rows={2} language={language} />
+            </div>
+          )}
         </>
       )}
     </section>
