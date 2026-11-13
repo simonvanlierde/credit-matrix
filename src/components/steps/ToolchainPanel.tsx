@@ -164,7 +164,7 @@ export function ToolchainPanel({
               )}
               {toolchain === "myst" && <p className="text-on-surface-variant">{t("heatmapRecipeMyst")}</p>}
               {toolchain === "typst" && <p className="text-on-surface-variant">{t("heatmapRecipeTypst")}</p>}
-              {!cliRecipe && <CopySnippet label={t("heatmapRecipe")} text={recipe} rows={6} language={language} />}
+              {!cliRecipe && <CopySnippet label={t("heatmapRecipe")} text={recipe} rows={4} language={language} />}
               {toolchain === "latex" && <CopySnippet label="LaTeX" text={"\\includesvg{heatmap}"} rows={2} />}
               {toolchain === "markdown" && <CopySnippet label="Markdown" text="![CRediT](heatmap.svg)" rows={2} />}
             </div>
@@ -177,12 +177,18 @@ export function ToolchainPanel({
               <p className="text-on-surface-variant">{t("toolchainNoSetup")}</p>
             )}
             {guide ? (
-              <a href={guide.route} className="inline-flex min-h-6 items-center text-primary hover:underline">
+              <a
+                href={guide.route}
+                className="inline-flex min-h-6 items-center text-primary underline decoration-outline/50 underline-offset-4 hover:decoration-primary"
+              >
                 {t("toolchainSetupLink", { toolchain: config.label })}
               </a>
             ) : (
               config.guide && (
-                <ExternalLink href={config.guide} className="min-h-6 gap-1 text-primary hover:underline">
+                <ExternalLink
+                  href={config.guide}
+                  className="min-h-6 gap-1 text-primary underline decoration-outline/50 underline-offset-4 hover:decoration-primary"
+                >
                   {t("toolchainSetupLink", { toolchain: config.label })}
                 </ExternalLink>
               )
@@ -191,7 +197,7 @@ export function ToolchainPanel({
           <div {...(cliRecipe ? anchor : {})} className="grid min-w-0 gap-2 scroll-mt-4">
             <h4 className="font-semibold">{t("toolchainCli")}</h4>
             <p className="text-on-surface-variant">{t("toolchainDataHint")}</p>
-            <CopySnippet label={t("toolchainCli")} text={cli} rows={4} language={language} />
+            <CopySnippet label={t("toolchainCli")} text={cli} rows={2} language={language} />
           </div>
         </>
       )}

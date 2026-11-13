@@ -121,7 +121,7 @@ export function StatementOutput() {
 
   function exportRow(value: DataFormat) {
     return (
-      <li key={value} className="rounded-md py-0.5 pl-2 text-[13px] text-on-surface">
+      <li key={value} className="py-0.5 text-[13px] text-on-surface">
         <OutputActions authors={authors} format={value} options={exportOptions} />
         {value === "json" && answersChoice}
       </li>
@@ -177,7 +177,7 @@ export function StatementOutput() {
       </div>
       {/* Says the statement is the lead's version; never blocks copying it. */}
       {openDifferences > 0 && (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-primary/10 px-3 py-2 text-[13px] text-on-surface">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded bg-primary/10 px-3 py-2 text-[13px] text-on-surface">
           <span className="flex-1">{t("statementDiffers", { count: openDifferences })}</span>
           <button
             type="button"
@@ -281,8 +281,7 @@ export function StatementOutput() {
           runs out of room. tabIndex makes that overflow keyboard-reachable:
           the pane holds no focusable content of its own. */}
       <section
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region with no focusable content needs a tab stop, or keyboard users cannot reach the overflow (axe scrollable-region-focusable).
-        tabIndex={0}
+        tabIndex={statement ? 0 : undefined}
         aria-label={t("a11yGeneratedStatement")}
         // The statement is written in the *output* language, which need not be
         // the page's language. Declaring it lets a screen reader switch
