@@ -590,6 +590,7 @@ test("uses extra desktop space while keeping short windows compact", async ({ pa
     expect(panel.y + panel.height).toBeLessThanOrEqual(height);
     sizes.push({ width: panel.width, previewHeight: maxHeight, optionsWidth: options.width });
     await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: "Heatmap", exact: true })).toBeHidden();
   }
   expect(sizes[1]?.width).toBeGreaterThan(sizes[0]?.width ?? 0);
   expect(sizes[1]?.previewHeight).toBeGreaterThan(sizes[0]?.previewHeight ?? 0);

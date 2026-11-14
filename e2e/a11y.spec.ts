@@ -137,15 +137,15 @@ test.describe("Accessibility (axe-core)", () => {
     expect(results.violations).toEqual([]);
   });
 
-  test("the welcome modal links to the About page and, from the statement, to the plugins", async ({ page }) => {
+  test("the welcome modal links to the About page and the header links to Docs", async ({ page }) => {
     await page.addInitScript((key) => window.localStorage.removeItem(key), PERSIST_KEY);
     await page.goto("/");
     const dialog = page.locator("dialog#getting-started");
     await expect(dialog.getByRole("link", { name: "About this app" })).toHaveAttribute("href", "/about");
     await dialog.getByRole("button", { name: "Load sample data" }).click();
-    await expect(page.getByRole("link", { name: /Plugins for Quarto, MyST, Typst and more/ })).toHaveAttribute(
+    await expect(page.getByRole("banner").getByRole("link", { name: "Documentation" })).toHaveAttribute(
       "href",
-      "/about#plugins",
+      "/docs",
     );
   });
 
@@ -468,7 +468,8 @@ test.describe("Label in name", () => {
       await page.goto("/");
       await expect(page.locator("html")).toHaveAttribute("lang", locale);
       await page.getByRole("button", { name: catalog(locale).loadSample, exact: true }).click();
-      await expect(page.getByRole("heading", { name: catalog(locale).toolchainJournal })).toBeVisible();
+      await page.getByRole("button", { name: catalog(locale).exportData ?? "", exact: true }).click();
+      await expect(page.getByText(catalog(locale).toolchainJournal ?? "")).toBeVisible();
       await settleMotion(page);
       expect(await nameMismatches(page)).toEqual([]);
     });

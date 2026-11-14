@@ -16,13 +16,13 @@ test.describe("CRediT census page", () => {
       "href",
       "/census",
     );
-    // At lg the nav shows the icon alone; the name stays for screen readers.
+    // From lg the nav shows the labelled link.
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.keyboard.press("Escape");
     const navLink = page.getByRole("banner").getByRole("link", { name: "CRediT census" });
     await expect(navLink).toBeVisible();
-    await expect(navLink.getByText("CRediT census")).toHaveClass(/sr-only/);
-    // From xl the name shows.
+    await expect(navLink.getByText("CRediT census")).toBeVisible();
+    // From xl it stays visible.
     await page.setViewportSize({ width: 1280, height: 800 });
     await expect(navLink.getByText("CRediT census")).toBeVisible();
 

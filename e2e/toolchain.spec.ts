@@ -13,20 +13,10 @@ test("writing tool survives reload, export and share while journal files stay av
   await page.goto("/");
   await page.getByRole("button", { name: "Load sample data" }).click();
   await expect(page.getByRole("combobox", { name: "I write in…" })).toHaveText("All formats");
-  await expect(page.getByRole("heading", { name: "For the journal" })).toBeVisible();
   await page.getByRole("combobox", { name: "I write in…" }).click();
   await page.getByRole("option", { name: "Quarto", exact: true }).click();
   const panel = page.getByRole("region", { name: "Use this in Quarto" });
   await expect(panel.getByRole("textbox", { name: "Quarto YAML" })).toContainText("Ada Lovelace");
-  await expect(panel.getByRole("textbox", { name: "Export recipe", exact: true })).toHaveValue(
-    /credit-matrix:\n {2}heatmap: true/,
-  );
-  await expect(panel.getByRole("textbox", { name: "CLI equivalent" })).toHaveValue(
-    /^credit-matrix convert contributors.json --to svg/,
-  );
-  for (const format of ["XML (JATS4R)", "XML (Crossref)", "tenzing CSV"]) {
-    await expect(page.getByRole("button", { name: `Download ${format}`, exact: true })).toBeVisible();
-  }
   await panel.getByRole("link", { name: "Set up Quarto →", exact: true }).click();
   await expect(page).toHaveURL(/\/docs\/quarto$/);
   await expect(page.getByRole("heading", { name: "CRediT statement for Quarto", exact: true })).toBeVisible();
@@ -34,6 +24,9 @@ test("writing tool survives reload, export and share while journal files stay av
   await page.reload();
   await expect(page.getByRole("combobox", { name: "I write in…" })).toHaveText("Quarto");
   await page.getByRole("button", { name: "Other formats", exact: true }).click();
+  for (const format of ["XML (JATS4R)", "XML (Crossref)", "tenzing CSV"]) {
+    await expect(page.getByRole("button", { name: `Download ${format}`, exact: true })).toBeVisible();
+  }
   const downloading = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download JSON", exact: true }).click();
   const file = await (await downloading).path();
@@ -51,30 +44,29 @@ test("writing tool survives reload, export and share while journal files stay av
   await fresh.close();
 });
 
-test("each writing tool keeps the journal group and fits a phone", async ({ page }) => {
+test("each writing tool renders cleanly and fits a phone", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await asReturningVisitor(page);
   await page.goto("/");
   await page.getByRole("button", { name: "Load sample data" }).click();
-  for (const tool of [
-    "Word",
-    "Markdown or plain text",
-    "LaTeX",
-    "Quarto",
-    "Typst",
-    "Pandoc",
-    "MyST or Jupyter Book",
-    "Sphinx",
-  ]) {
+  for (const [tool, label] of [
+    ["Word", "Word"],
+    ["Markdown or plain text", "Markdown"],
+    ["LaTeX", "LaTeX"],
+    ["Quarto", "Quarto"],
+    ["Typst", "Typst"],
+    ["Pandoc", "Pandoc"],
+    ["MyST or Jupyter Book", "MyST / Jupyter Book"],
+    ["Sphinx", "Sphinx"],
+  ] as const) {
     await page.getByRole("combobox", { name: "I write in…" }).click();
     await page.getByRole("option", { name: tool, exact: true }).click();
-    await expect(page.getByRole("heading", { name: "For the journal" })).toBeVisible();
+    await expect(page.getByRole("region", { name: `Use this in ${label}` })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await expect(page.getByRole("textbox", { name: "CLI equivalent" })).toHaveValue(/contributors.json/);
   }
 });
 
-test("Figure settings closes when following the selected tool's recipe", async ({ page }) => {
+test("Figure settings keeps its own recipe disclosure when a writing tool is selected", async ({ page }) => {
   await asReturningVisitor(page);
   await page.goto("/");
   await page.getByRole("button", { name: "Load sample data" }).click();
@@ -82,34 +74,8 @@ test("Figure settings closes when following the selected tool's recipe", async (
   await page.getByRole("option", { name: "Quarto", exact: true }).click();
   await page.getByRole("button", { name: "Heatmap", exact: true }).click();
   await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-  await page.getByRole("link", { name: "Export recipe", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Heatmap", exact: true })).not.toBeVisible();
-  await expect(page.locator("#toolchain-heatmap-recipe")).toBeFocused();
-});
-
-test("Figure settings opens the recipe from another inspector tab", async ({ page }) => {
-  await asReturningVisitor(page);
-  await page.goto("/");
-  await page.getByRole("button", { name: "Load sample data" }).click();
-  await page.getByRole("combobox", { name: "I write in…" }).click();
-  await page.getByRole("option", { name: "Quarto", exact: true }).click();
-  await page.getByRole("tab", { name: "Team" }).click();
-  await page.getByRole("button", { name: "Heatmap", exact: true }).click();
-  await page.getByRole("button", { name: "Figure settings", exact: true }).click();
-  await page.getByRole("link", { name: "Export recipe", exact: true }).click();
-  await expect(page.locator("#toolchain-heatmap-recipe")).toBeFocused();
-  await expect(page.locator("#toolchain-heatmap-recipe")).toBeVisible();
-});
-
-test("Word's recipe link lands on the CLI equivalent", async ({ page }) => {
-  await asReturningVisitor(page);
-  await page.goto("/");
-  await page.getByRole("button", { name: "Load sample data" }).click();
-  await page.getByRole("combobox", { name: "I write in…" }).click();
-  await page.getByRole("option", { name: "Word", exact: true }).click();
-  await expect(
-    page.locator("#toolchain-heatmap-recipe").getByRole("textbox", { name: "CLI equivalent" }),
-  ).toBeVisible();
+  await page.getByText("Export recipe", { exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Export recipe", exact: true })).toHaveValue(/contributors\.json/);
 });
 
 test("Undo restores the roster a plain import replaced after a tool pick", async ({ page }) => {

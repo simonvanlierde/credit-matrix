@@ -59,10 +59,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-2">
-                <LanguageSelector />
-                <ThemeToggle />
-              </div>
+              <LanguageSelector />
+              <ThemeToggle />
               <HeaderActions />
             </div>
           </div>

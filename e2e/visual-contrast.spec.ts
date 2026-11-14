@@ -108,8 +108,10 @@ for (const theme of themes) {
       await page.getByRole("button", { name: "Green", exact: true }).click();
       await page.keyboard.press("Escape");
       await settleMotion(page);
+      await page.getByRole("combobox", { name: "I write in…" }).click();
+      await page.getByRole("option", { name: "Quarto", exact: true }).click();
       const copy = page.getByRole("button", { name: "Copy statement", exact: true });
-      const link = page.getByRole("link", { name: /^Plugins for/ });
+      const link = page.getByRole("link", { name: "Set up Quarto →" });
       const accent = await page.evaluate(() => document.documentElement.style.getPropertyValue("--color-accent"));
       const fill = await flatten(page, [await style(copy, "background-color")]);
       expect(fill).toEqual(await flatten(page, [accent]));

@@ -2,8 +2,6 @@ import { ChartLine, ChevronDown, ChevronRight, FileText, HelpCircle } from "luci
 import { useState } from "react";
 import { AboutPanel } from "@/components/AboutPanel";
 import { Lockup, PRODUCT_NAME } from "@/components/BrandMark";
-import { LanguageSelector } from "@/components/LanguageSelector";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";
@@ -89,10 +87,6 @@ export function BrandMenu({ version }: { version: string }) {
             {t("censusTitle")}
             <ChevronRight className="ml-auto size-4 shrink-0 text-on-surface-variant" aria-hidden="true" />
           </a>
-        </div>
-        <div className="flex items-center gap-2 border-t border-outline-variant/30 pt-3 md:hidden">
-          <LanguageSelector />
-          <ThemeToggle />
         </div>
         <div className="space-y-3 border-t border-outline-variant/30 pt-3">
           <p className="font-headline text-base font-semibold text-on-surface">{t("about")}</p>

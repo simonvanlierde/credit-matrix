@@ -134,23 +134,15 @@ test.describe("screen-reader view (accessibility tree)", () => {
 
   test("popovers are named dialogs that report their opener as expanded", async ({ page }) => {
     await loadSample(page);
-    await expect(page.getByRole("region", { name: "For the journal" })).toMatchAriaSnapshot(`
-      - region "For the journal":
-        - heading "For the journal" [level=3]
-        - list:
-          - listitem:
-            - text: XML (JATS4R)
-            - button "Copy XML (JATS4R)"
-            - button "Download XML (JATS4R)"
-          - listitem:
-            - text: XML (Crossref)
-            - button "Copy XML (Crossref)"
-            - button "Download XML (Crossref)"
-          - listitem:
-            - text: tenzing CSV
-            - button "Copy tenzing CSV"
-            - button "Download tenzing CSV"
-    `);
+    await page.getByRole("button", { name: "Export data", exact: true }).click();
+    const exportDialog = page.getByRole("dialog", { name: "Export data", exact: true });
+    await expect(exportDialog.getByText("For the journal")).toBeVisible();
+    for (const format of ["XML (JATS4R)", "XML (Crossref)", "tenzing CSV"]) {
+      await expect(exportDialog.getByRole("button", { name: `Copy ${format}` })).toBeVisible();
+      await expect(exportDialog.getByRole("button", { name: `Download ${format}` })).toBeVisible();
+    }
+    await page.keyboard.press("Escape");
+    await expect(exportDialog).toBeHidden();
     const cases: [string, string][] = [
       [
         "Share",
