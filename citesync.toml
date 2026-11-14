@@ -3,3 +3,7 @@ files = ["CITATION.cff", "codemeta.json", ".zenodo.json"]
 manifests = ["src/core/package.json", "integrations/quarto/_extensions/credit-matrix/_extension.yml"]
 write-manifests = ["version"]
 exports = ["CITATION.bib", "citation.csl.json", "citation.apa.txt", "schema.jsonld"]
+
+[required-fields]
+"CITATION.cff" = ["name", "version", "author", "license", "identifier"]
+"codemeta.json" = ["name", "version", "author", "license", "identifier"]
