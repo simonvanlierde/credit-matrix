@@ -187,6 +187,24 @@ it("keeps a focused cell's mark when the mouse passes over another cell and leav
   expect(store().statementLink).toEqual({ contributorId: grace.id, role: "Conceptualization", from: "cell" });
 });
 
+it("leaves a modified digit or arrow to the browser, so Ctrl+0 resets zoom without clearing a cell", () => {
+  const authors = twoAuthors();
+  const grace = authors[0];
+  if (!grace) throw new Error("expected Grace");
+  act(() => store().loadAuthors(authors));
+  const { container } = renderGrid();
+  const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${grace.id}:0"]`);
+  if (!cell) throw new Error("expected the cell");
+  for (const init of [
+    { key: "0", ctrlKey: true },
+    { key: "0", metaKey: true },
+    { key: "ArrowLeft", altKey: true },
+  ]) {
+    expect(fireEvent.keyDown(cell, init)).toBe(true);
+  }
+  expect(store().authors[0]?.contributions.find((c) => c.role === "Conceptualization")?.score).toBe(100);
+});
+
 it("describes the grid with its keys, even where the hint is hidden for touch", () => {
   act(() => store().loadAuthors(twoAuthors()));
   renderGrid();

@@ -337,12 +337,16 @@ export function ImportModal({
       showError(t("errFileTooLarge", { limit: MAX_IMPORT_MB }));
       return;
     }
+    const started = closes.current;
     try {
-      setText(await file.text());
+      const content = await file.text();
+      // A dialog closed mid-read has dropped this file.
+      if (started !== closes.current) return;
+      setText(content);
       setFileName(file.name);
       setError(null);
     } catch {
-      showError(t("errFileUnreadable"));
+      if (started === closes.current) showError(t("errFileUnreadable"));
     }
   }
 

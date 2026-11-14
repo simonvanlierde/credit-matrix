@@ -261,7 +261,8 @@ def _joins(text: str, ordered: list[tuple[int, int, str, int | str]], start: int
         following = next((kind for s, _, kind, _ in ordered if s > pos), None)
         return following == "A" and _only_authors(text, ordered, start + 1 if start else 0, pos)
     # Role-first statements only: in "DP; wrote the original draft. PP; conceived ..." the initials open a clause.
-    if text[pos] != "." or ordered[0][2] != "R" or {kind for s, _, kind, _ in ordered if start <= s < pos} != {"R"}:
+    # The set test runs first: it is empty, and so stops here, when the text names nothing.
+    if text[pos] != "." or {kind for s, _, kind, _ in ordered if start <= s < pos} != {"R"} or ordered[0][2] != "R":
         return False
     stop = len(text) if (stop := text.find(";", pos)) < 0 else stop
     # Only resolved initials close it: "editing. Sarah Macek;" or "MD;" opens the next clause.

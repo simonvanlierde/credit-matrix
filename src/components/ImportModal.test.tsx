@@ -278,6 +278,24 @@ describe("accessibility and drops", () => {
     await act(async () => fireEvent.change(input, { target: { files: [file] } }));
     expect(screen.getByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
   });
+
+  it("drops a file whose read settles after the dialog closed", async () => {
+    const { container } = renderModal(0);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    let finish: (text: string) => void = () => undefined;
+    const file = new File(["Grace Hopper"], "authors.csv");
+    file.text = () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      });
+    fireEvent.change(input, { target: { files: [file] } });
+    act(() => {
+      container.ownerDocument.querySelector("dialog")?.dispatchEvent(new Event("close"));
+    });
+    await act(async () => finish("Grace Hopper"));
+    expect(screen.queryByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeNull();
+    expect((screen.getByLabelText(english.pasteRawData) as HTMLTextAreaElement).value).toBe("");
+  });
 });
 
 describe("a pasted CRediT statement", () => {
