@@ -15,7 +15,7 @@ mkdir -p .cache
 release_metadata_dir=$(mktemp -d .cache/release-metadata.XXXXXX)
 trap 'rm -rf "$release_metadata_dir"' EXIT
 printf 'cff-version: 1.2.0\nversion: "%s"\ndate-released: "%s"\n' "$v" "$released" >"$release_metadata_dir/CITATION.cff"
-uvx --from https://github.com/simonvanlierde/citesync/archive/3f8fa2135399252c57d8ccd2c7aeca4cf5efe81b.tar.gz citesync write --root . --source "$release_metadata_dir/CITATION.cff"
+uvx --from https://github.com/simonvanlierde/citesync/archive/e201f309ce72779618e965ea41507452a03da155.tar.gz citesync write --root . --source "$release_metadata_dir/CITATION.cff"
 V=$v perl -pi -e 's{(credit-matrix@)[0-9][^/]*(/dist/myst-plugin)}{$1$ENV{V}$2}' integrations/myst/README.md integrations/jupyter-book/README.md src/components/steps/ToolchainPanel.tsx
 # Typst Universe takes only major.minor.patch, so a pre-release leaves the Typst package alone.
 if [[ $v =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
