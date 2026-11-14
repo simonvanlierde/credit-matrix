@@ -137,7 +137,7 @@ test.describe("Accessibility (axe-core)", () => {
     expect(results.violations).toEqual([]);
   });
 
-  test("the welcome modal links to the About page and the header links to Docs", async ({ page }) => {
+  test("the welcome modal links to About and Documentation alongside the header", async ({ page }) => {
     await page.addInitScript((key) => window.localStorage.removeItem(key), PERSIST_KEY);
     await page.goto("/");
     const dialog = page.locator("dialog#getting-started");
@@ -147,6 +147,13 @@ test.describe("Accessibility (axe-core)", () => {
       "href",
       "/docs",
     );
+    await page.getByRole("button", { name: "How it works", exact: true }).click();
+    const docsLink = dialog.getByRole("link", { name: "Documentation", exact: true });
+    await expect(docsLink).toHaveAttribute("href", "/docs");
+    await docsLink.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/docs$/);
+    await expect(page.getByRole("heading", { name: "Documentation", exact: true })).toBeVisible();
   });
 
   test("dark mode (loaded state) has no detectable violations", async ({ page }) => {

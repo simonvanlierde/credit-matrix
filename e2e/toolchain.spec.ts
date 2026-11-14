@@ -113,7 +113,9 @@ for (const { locale, title, sample, importLabel } of [
   },
 ]) {
   for (const { width, fontSize } of [
+    { width: 768, fontSize: "16px" },
     { width: 1024, fontSize: "16px" },
+    { width: 1280, fontSize: "16px" },
     { width: 1440, fontSize: "16px" },
     { width: 1440, fontSize: "20px" },
   ]) {
@@ -139,12 +141,19 @@ for (const { locale, title, sample, importLabel } of [
       await expect(importButton).toBeVisible();
       expect(await importButton.evaluate((button) => button.getBoundingClientRect().right)).toBeLessThanOrEqual(width);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-      await expect(
-        header.getByRole("link", { name: locale === "de" ? "CRediT-Zensus" : "CRediT census", exact: true }),
-      ).toBeVisible();
+      if (width >= 1024) {
+        await expect(
+          header.getByRole("link", { name: locale === "de" ? "CRediT-Zensus" : "CRediT census", exact: true }),
+        ).toBeVisible();
+      }
       const draftPicker = header.locator("[data-draft-actions] > button").first();
-      if (title) await expect(draftPicker).toHaveAccessibleName(new RegExp(title));
-      expect(await draftPicker.evaluate((button) => button.getBoundingClientRect().width)).toBeGreaterThanOrEqual(36);
+      if (title) {
+        await expect(draftPicker).toHaveAccessibleName(new RegExp(title));
+        const titleLabel = draftPicker.locator("span");
+        await expect(titleLabel).toHaveCSS("text-overflow", "ellipsis");
+        expect(await titleLabel.evaluate((label) => label.scrollWidth > label.clientWidth)).toBe(true);
+      }
+      expect(await draftPicker.evaluate((button) => button.getBoundingClientRect().width)).toBeGreaterThanOrEqual(44);
     });
   }
 }

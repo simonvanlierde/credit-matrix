@@ -1,4 +1,4 @@
-import { Files, Fingerprint, Info, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
+import { Files, FileText, Fingerprint, Info, Send, Sparkles, TableProperties, TextQuote, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink } from "@/components/ui/external-link";
 import { StepNumber } from "@/components/ui/step-number";
@@ -202,6 +202,13 @@ export function WelcomeCard() {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-outline-variant/40 pt-4">
           {/* What the app itself is, and what it is built on. A page, not a popover: a panel opened
               over this dialog covered its own steps. */}
+          <a
+            href="/docs"
+            className="inline-flex items-center gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
+          >
+            <FileText className="size-3.5" aria-hidden="true" />
+            {t("docsTitle")}
+          </a>
           <a
             href="/about"
             className="inline-flex items-center gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
