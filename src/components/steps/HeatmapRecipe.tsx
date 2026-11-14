@@ -5,29 +5,16 @@ import { type HeatmapRecipeTarget, heatmapRecipe } from "@/lib/heatmap-recipe";
 import type { HeatmapOptions } from "@/lib/heatmap-settings";
 import { useTranslations } from "@/lib/translations";
 import { useCopyStatus } from "@/lib/use-copy-status";
-import { useContributionStore } from "@/store/contribution-store";
 import { TOOL_BUTTON } from "./grid-shared";
 
 export function HeatmapRecipe({ settings, language }: { settings: HeatmapOptions; language: string }) {
   const t = useTranslations();
-  const toolchain = useContributionStore((s) => s.toolchain);
   const id = useId();
   const [target, setTarget] = useState<HeatmapRecipeTarget>("cli");
   const [status, copy] = useCopyStatus();
   const [lastCopy, setLastCopy] = useState<string | null>(null);
   const recipe = heatmapRecipe(settings, target, language);
   const currentStatus = lastCopy === recipe ? status : "idle";
-  if (toolchain)
-    return (
-      // biome-ignore lint/a11y/useValidAnchor: select the Statement tab, which holds the recipe, before native fragment navigation.
-      <a
-        href="#toolchain-heatmap-recipe"
-        onClick={() => useContributionStore.getState().setInspectorTab("statement")}
-        className="inline-flex min-h-6 items-center text-xs font-semibold text-primary hover:underline"
-      >
-        {t("heatmapRecipe")}
-      </a>
-    );
   return (
     <details className="border-t border-outline-variant/40 pt-3 text-xs">
       <summary className="min-h-6 cursor-pointer font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">

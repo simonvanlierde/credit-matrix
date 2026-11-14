@@ -3,6 +3,7 @@ import { AboutPopover } from "@/components/AboutPopover";
 import { Lockup } from "@/components/BrandMark";
 import { BrandMenu } from "@/components/BrandMenu";
 import { CensusLink } from "@/components/CensusLink";
+import { DocsLink } from "@/components/DocsLink";
 import { HeaderActions } from "@/components/HeaderActions";
 import { HomeLink } from "@/components/HomeLink";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -48,15 +49,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Lockup />
                 </HomeLink>
               </h1>
-              <nav className="hidden lg:flex gap-6 items-center">
+              <nav aria-label="Primary" className="hidden lg:flex gap-6 items-center">
                 <HowItWorks />
                 <AboutPopover version={packageJson.version} />
+                <DocsLink />
                 <CensusLink />
               </nav>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <LanguageSelector />
               <ThemeToggle />
               <HeaderActions />
