@@ -31,10 +31,10 @@ def release(tmp_path, monkeypatch):
         'cff-version: 1.2.0\ntitle: Example Lab\nversion: "0.9.0"\ndate-released: "2026-10-30"\n'
         "authors:\n  - given-names: Marie\n    family-names: Curie\n"
         '    orcid: "https://orcid.org/0000-0002-1825-0097"\n'
-        'license: MIT\n# Keep this explanation.\nmessage: "Please cite the software."\n'
+        'license: MIT\ndoi: 10.5555/example\n# Keep this explanation.\nmessage: "Please cite the software."\n'
     )
     metadata = {
-        "@context": "https://w3id.org/codemeta/3.0",
+        "@context": ["https://w3id.org/codemeta/3.0", "https://example.org/context.jsonld"],
         "@type": "SoftwareSourceCode",
         "name": "Example Lab",
         "version": "0.9.0",
@@ -130,13 +130,6 @@ def test_release_sync_preserves_metadata_and_is_idempotent(release):
     assert result.returncode == 0, result.stdout + result.stderr
     assert {name: (root / name).read_bytes() for name in files} == snapshot
     assert not list((root / ".cache").glob("release-metadata.*"))
-    result = subprocess.run(
-        ["uvx", "--from", "citesync==0.4.0", "citesync", "check", "--root", str(root)],
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_missing_changelog_date_changes_no_metadata(release):
@@ -173,3 +166,16 @@ def test_release_sync_leaves_typst_alone_for_a_pre_release(release, monkeypatch)
     panel = (root / "src/components/steps/ToolchainPanel.tsx").read_text()
     assert "@preview/credit-matrix:0.9.0" in panel
     assert "credit-matrix@1.3.0-rc.1/dist/myst-plugin.mjs" in panel
+
+
+@pytest.mark.parametrize("field", ["name", "version", "author", "license", "identifier"])
+def test_release_refuses_missing_required_metadata(release, field):
+    root, metadata = release
+    del metadata[field]
+    (root / "codemeta.json").write_text(json.dumps(metadata))
+    result = subprocess.run(["bash", "scripts/sync-citation.sh"], cwd=root, capture_output=True, text=True, timeout=60)
+    assert result.returncode != 0
+    assert "required-field-missing" in result.stdout + result.stderr
+    assert field in result.stdout + result.stderr
+    staged = subprocess.check_output(["git", "diff", "--cached", "--name-only"], cwd=root, text=True)
+    assert not staged

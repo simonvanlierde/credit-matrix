@@ -90,8 +90,9 @@ Add a dated changelog entry before running `pnpm version`: rename `## [Unrelease
 `## [<version>] - <date>` above a new empty `## [Unreleased]`, and at the bottom of the file point
 the `[Unreleased]` link at `compare/v<version>...HEAD` and add a `[<version>]` link to
 `compare/v<previous>...v<version>`. Its lifecycle script takes the
-version from the root package and the date from that entry. It runs `citesync==0.4.0` through
-`uvx` to update CITATION.cff, codemeta.json, .zenodo.json, the four committed citation exports (including
+version from the root package and the date from that entry.
+It runs the citesync commit pinned in [`scripts/sync-citation.sh`](scripts/sync-citation.sh)
+through `uvx` to update CITATION.cff, codemeta.json, .zenodo.json, the four committed citation exports (including
 `schema.jsonld`), the published `src/core/package.json` and Quarto's `_extension.yml`.
 The first run needs access to the Python package index; later runs can use uv's cache.
 
@@ -100,6 +101,7 @@ The release script supplies a temporary source with only version and date, so it
 replace names, roles or other metadata.
 `citesync check` checks the citation files against CITATION.cff and the published package;
 the private root package supplies the release version and is not a citation target.
+The hook and CI also require a name, version, author, licence and DOI in `CITATION.cff` and `codemeta.json`.
 `scripts/sync-citation.sh` also rewrites the unpkg version in `integrations/myst/README.md` and
 `integrations/jupyter-book/README.md`.
 
