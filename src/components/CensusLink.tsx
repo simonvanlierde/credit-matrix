@@ -15,7 +15,7 @@ export function CensusLink() {
       className="touch-target inline-flex items-center justify-center whitespace-nowrap gap-1 text-sm text-on-surface-variant transition-colors hover:text-primary"
     >
       <ChartLine className="size-4 lg:size-3.5" aria-hidden="true" />
-      <span>{t("censusTitle")}</span>
+      <span className="sr-only xl:not-sr-only">{t("censusTitle")}</span>
     </a>
   );
 }
