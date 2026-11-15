@@ -391,3 +391,9 @@ def test_role_wording(slug, wording):
 def test_names_credit_only_for_distinctive_roles(slug, wording):
     common = {"investigation", "methodology", "resources", "software", "supervision", "validation"}
     assert names_credit(clean(wording)) is (slug not in common)
+
+
+@pytest.mark.parametrize("text", [".", "x.", "hello world.", " . "])
+def test_text_without_mentions_parses_to_nothing(text):
+    parsed = parse_statement(text, AUTHORS)
+    assert not parsed.assignments

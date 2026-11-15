@@ -88,6 +88,15 @@ describe("toLatexCredits", () => {
     );
   });
 
+  it("turns a line break and the spaces around it into one space, and keeps other runs of spaces", () => {
+    const curieAs = (name: string) => ({
+      ...createAuthor("Marie Curie", { contributions: [{ role: "Software", score: 100 }] }),
+      name,
+    });
+    expect(toLatexCredits([curieAs("Marie \r\n  Curie")])).toContain("\\credit{Marie Curie}");
+    expect(toLatexCredits([curieAs("Marie   Curie\n")])).toContain("\\credit{Marie   Curie }");
+  });
+
   it("leaves non-author contributors out", () => {
     const ack = createAuthor("Antonie van Leeuwenhoek", {
       contributorType: "non-author",

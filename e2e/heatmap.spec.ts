@@ -133,14 +133,18 @@ test("clears copied-image status when the figure or PNG dimensions change", asyn
   await copy.click();
   await expect(copied).toBeVisible();
   await page.getByRole("switch", { name: "Show contribution marks", exact: true }).click();
+  // The preview redraws 200 ms after the last change, and the clock is frozen.
+  await page.clock.runFor(250);
   await expect(copy).toBeVisible();
   await copy.click();
   await expect(copied).toBeVisible();
   await page.getByRole("spinbutton", { name: "Width (mm)", exact: true }).fill("100");
+  await page.clock.runFor(250);
   await expect(copy).toBeVisible();
   await copy.click();
   await expect(copied).toBeVisible();
   await page.getByRole("radio", { name: "600 dpi", exact: true }).click();
+  await page.clock.runFor(250);
   await expect(copy).toBeVisible();
 });
 

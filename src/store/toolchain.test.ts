@@ -22,20 +22,29 @@ it("remembers a browser default while each draft keeps its own toolchain", () =>
   expect(store().toolchain).toBe("typst");
 });
 
-it("hydrates draft first, browser second, then no choice, and repairs invalid values", () => {
+it("keeps a draft's own none when another draft picked a tool", () => {
+  const none = store().activeDraftId;
+  store().createDraft();
+  store().setToolchain("typst");
+  store().switchDraft(none);
+  expect(store().toolchain).toBeUndefined();
+});
+
+it("hydrates each draft's own toolchain, seeds only a new draft from the browser, and repairs invalid values", () => {
   const { merge } = useContributionStore.persist.getOptions();
   for (const toolchain of [undefined, "invalid", null, "word"]) {
     const restored = merge?.(
       { drafts: { paper: { toolchain } }, activeDraftId: "paper", lastToolchain: "quarto" },
       initial,
     ) as typeof initial;
-    expect(restored.toolchain).toBe(toolchain === "word" ? "word" : "quarto");
+    expect(restored.toolchain).toBe(toolchain === "word" ? "word" : undefined);
+    expect(restored.lastToolchain).toBe("quarto");
   }
-  const restored = merge?.(
-    { drafts: { paper: { toolchain: "invalid" } }, activeDraftId: "paper", lastToolchain: "invalid" },
-    initial,
-  ) as typeof initial;
+  const fresh = merge?.({ drafts: {}, lastToolchain: "quarto" }, initial) as typeof initial;
+  expect(fresh.toolchain).toBe("quarto");
+  const restored = merge?.({ drafts: {}, lastToolchain: "invalid" }, initial) as typeof initial;
   expect(restored.toolchain).toBeUndefined();
+  expect(restored.lastToolchain).toBeUndefined();
 });
 
 it("persists the draft and browser default separately and keeps the preference on reset", () => {
@@ -49,6 +58,12 @@ it("persists the draft and browser default separately and keeps the preference o
   store().setToolchain(undefined);
   store().createDraft();
   expect(store().toolchain).toBeUndefined();
+  store().setToolchain("typst");
+  store().deleteDraft(store().activeDraftId);
+  store().deleteDraft(store().activeDraftId);
+  expect(store().toolchain).toBe("typst");
+  store().deleteAllDrafts();
+  expect(store().toolchain).toBe("typst");
 });
 
 it("saves the browser default through the real localStorage adapter", async () => {

@@ -166,6 +166,22 @@ describe("parseStatement", () => {
       ],
     ],
     ["A.L.: software; Darwine, C: writing - review and editing", [[0, "software"]]],
+    ["A.L.: software; Darwine: C: writing - review and editing", [[0, "software"]]],
+    ["A.L.: software; Darwine, C:  \n writing - review and editing", [[0, "software"]]],
+    [
+      "A.L.: software; darwine c: writing - review and editing",
+      [
+        [0, "software"],
+        [0, "writing-review-editing"],
+      ],
+    ],
+    [
+      "A.L.: software; Darwine, C: x: writing - review and editing",
+      [
+        [0, "software"],
+        [0, "writing-review-editing"],
+      ],
+    ],
     ["Software, A.L. All authors read and approved the manuscript.", [[0, "software"]]],
     ["A.L.: software. All authors have read and approved the final manuscript.", [[0, "software"]]],
   ])("splits clauses in %j", (text, expected) => {

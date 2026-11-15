@@ -9,15 +9,21 @@ const csp = read("public/_headers").match(/Content-Security-Policy: (.*)/)?.[1] 
 const hosts = [...(csp.match(/connect-src ([^;]*)/)?.[1] ?? "").matchAll(/https:\/\/([^\s;]+)/g)].map(
   ([, host]) => host ?? "",
 );
-const privacy = read("src/locales/en/messages.po").match(/msgid "aboutPrivacy"\nmsgstr "(.*)"/)?.[1] ?? "";
+const LOCALES = ["de", "en", "es", "fr", "it", "ja", "nl", "pt-PT", "zh-Hans"];
+const privacyOf = (locale: string) =>
+  read(`src/locales/${locale}/messages.po`).match(/msgid "aboutPrivacy"\nmsgstr "(.*)"/)?.[1] ?? "";
+const privacy = privacyOf("en");
 
 it("reads the site's outside hosts from _headers", () => {
   expect(hosts.length).toBeGreaterThan(0);
   expect(privacy).not.toBe("");
 });
 
+it.each(LOCALES)("the About page's privacy text in %s names every host the browser may contact", (locale) => {
+  expect(hosts.filter((host) => !privacyOf(locale).includes(host))).toEqual([]);
+});
+
 it.each([
-  ["the About page's privacy text", privacy],
   ["docs/architecture.md", read("docs/architecture.md")],
   ["docs/assurance-case.md", read("docs/assurance-case.md")],
 ])("%s names every host the browser may contact", (_, text) => {

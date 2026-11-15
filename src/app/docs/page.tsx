@@ -71,6 +71,10 @@ function DocPage() {
       <meta name="pagefind:title" data-pagefind-meta="title[content]" content={doc?.title} />
       <meta name="pagefind:url" data-pagefind-meta="url[content]" content={route} />
       <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+        {/* Two copies keep DOM order equal to visual order; display:none drops the hidden one from tab order and the a11y tree. */}
+        <nav aria-label={t("docsTitle")} className="document hidden lg:sticky lg:top-6 lg:block">
+          <DocsList current={route} level={2} />
+        </nav>
         <div className="min-w-0 space-y-6">
           <a href="/docs" className="flex w-fit items-center gap-1.5 text-sm text-primary hover:underline">
             <ArrowLeft className="size-4" aria-hidden="true" />
@@ -79,7 +83,7 @@ function DocPage() {
           <DocsSearch />
           <DocArticle parts={parts} />
         </div>
-        <nav aria-label={t("docsTitle")} className="document mt-8 lg:sticky lg:top-6 lg:order-first lg:mt-0">
+        <nav aria-label={t("docsTitle")} className="document mt-8 lg:hidden">
           <DocsList current={route} level={2} />
         </nav>
       </div>

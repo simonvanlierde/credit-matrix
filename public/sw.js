@@ -14,7 +14,7 @@
  *   reference, so a new version is complete offline before it takes over. A
  *   docs page, its chunk and its images are cached when someone visits it.
  * - navigations: network first (bounded), that path's cached page as the
- *   fallback, or the app's page for any other path
+ *   fallback, or the app's page for any other path but an unvisited docs page
  * - other same-origin GETs: cache first, unhashed ones refreshed in the background
  * - cross-origin (the ORCID, Crossref, and DataCite lookups): never cached, so a lookup
  *   fails honestly when offline
@@ -56,7 +56,8 @@ self.addEventListener("message", (event) => {
 async function cachePaths(paths) {
   const cache = await caches.open(CACHE);
   const missing = [];
-  for (const path of paths) {
+  // Docs pages share their chunk and images, and addAll rejects a list that repeats a request.
+  for (const path of new Set(paths)) {
     if (!(await cache.match(path))) missing.push(path);
   }
   // no-cache: the HTTP cache may still hold a page from the previous build.
@@ -122,7 +123,11 @@ function pageFor(url) {
 }
 
 async function cachedPage(request) {
-  return (await caches.match(pageFor(request.url))) ?? (await caches.match("/"));
+  const path = pageFor(request.url);
+  const page = await caches.match(path);
+  // A docs chunk renders an empty article on the app's page, so an unvisited docs page fails instead.
+  if (page || /^\/docs(?:\/|$)/.test(path)) return page;
+  return caches.match("/");
 }
 
 async function dropOldCaches() {
@@ -159,7 +164,13 @@ async function carryVisitedDocs(keys) {
 /** Network first: an online visitor always gets the freshest document. */
 async function handleNavigation(request) {
   try {
-    const response = await fetch(request, { signal: AbortSignal.timeout(NAVIGATION_TIMEOUT_MS) });
+    // The deadline covers the wait for headers only; a slow body still streams in.
+    // An unvisited docs page has no cached copy to fall back on, so it waits for the network.
+    const page = pageFor(request.url);
+    const deadline = !/^\/docs(?:\/|$)/.test(page) || (await caches.match(page));
+    const controller = new AbortController();
+    const timer = deadline && setTimeout(() => controller.abort(), NAVIGATION_TIMEOUT_MS);
+    const response = await fetch(request, { signal: controller.signal }).finally(() => clearTimeout(timer));
     // A server error is not a better answer than the working copy on hand.
     if (response.status >= 500) return (await cachedPage(request)) ?? response;
     // Share links live in the fragment, which never reaches the server, so the

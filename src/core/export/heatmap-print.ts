@@ -1,6 +1,7 @@
 /** Intrinsic dimensions of a figure produced by buildHeatmapSvg. */
 export function svgDimensions(svg: string) {
-  const dimensions = svg.match(/<svg\b[^>]*\bwidth="([\d.]+)" height="([\d.]+)"/);
+  // [^<>]* ends at the next tag, so unclosed "<svg" tags cannot each rescan the rest of the file.
+  const dimensions = svg.match(/<svg\b[^<>]*\bwidth="([\d.]+)" height="([\d.]+)"/);
   if (!dimensions) throw new Error("SVG dimensions missing");
   const width = Number(dimensions[1]);
   const height = Number(dimensions[2]);
@@ -13,7 +14,7 @@ export function svgDimensions(svg: string) {
 export function heatmapPrintSize(svg: string, widthMm: number) {
   if (!(widthMm > 0 && Number.isFinite(widthMm))) throw new RangeError("Print width must be finite and positive");
   const dimensions = svgDimensions(svg);
-  const sizes = [...svg.matchAll(/<text\b[^>]*\bfont-size="([\d.]+)"/g)].map((match) => Number(match[1]));
+  const sizes = [...svg.matchAll(/<text\b[^<>]*\bfont-size="([\d.]+)"/g)].map((match) => Number(match[1]));
   if (!sizes.length || sizes.some((size) => !(size > 0 && Number.isFinite(size))))
     throw new Error("SVG text sizes missing or invalid");
   return {
@@ -39,6 +40,7 @@ const PAGE_FIGURE_MM = { width: 183, height: 170 } as const;
  * A warning when a heatmap scaled to fit a full journal page prints its smallest label under 6 pt,
  * or null. The CLI writes it to stderr and the document plugins show it as a
  * build warning; the app shows its own, translated, at the width the user chose.
+ * The input must be well-formed SVG: a raw "<" inside a tag hides its attributes.
  * @throws {Error} or {RangeError} for an SVG without positive dimensions or text sizes; a
  * {@link buildHeatmapSvg} figure always has them.
  */

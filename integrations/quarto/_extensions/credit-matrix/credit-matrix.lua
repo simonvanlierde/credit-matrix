@@ -318,7 +318,11 @@ local function author_name(author)
   local name = author.name
   if type(name) == "table" and name.literal then return stringify(name.literal) end
   if type(name) == "table" and (name.given or name.family) then
-    return (stringify(name.given or "") .. " " .. stringify(name.family or "")):match("^%s*(.-)%s*$")
+    local full = stringify(name.given or "") .. " " .. stringify(name.family or "")
+    -- Trimmed in linear time: "^%s*(.-)%s*$" backtracks on a long inner run of spaces, and
+    -- "^%s*(.*%S)" on a name of spaces alone, so that case returns first.
+    if not full:find("%S") then return "" end
+    return full:match("^%s*(.*%S)")
   end
   return stringify(name or "")
 end

@@ -253,7 +253,7 @@ def check_label(label: list[dict], text: str, n_authors: int) -> list[dict]:
     word's authors computed from `others_of`. Raises ValueError naming the first fault."""
     if not isinstance(label, list):
         raise ValueError("label is not a list")
-    out = [dict(a) for a in label]
+    out = [dict(a) if isinstance(a, dict) else a for a in label]  # a non-dict fails the key check below
     for i, a in enumerate(out):
         where = f"assertion {i}"
         if not isinstance(a, dict) or not a.keys() <= _ASSERTION_KEYS:
