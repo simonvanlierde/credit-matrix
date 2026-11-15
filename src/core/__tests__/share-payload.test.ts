@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { toJson } from "../export/json";
 import { createAuthor } from "../parse-authors";
-import { fromSharePayload, toSharePayload } from "../share-payload";
+import { fromSharePayload, toSharePayload, UnsharableDraftError } from "../share-payload";
 
 function makeAuthors() {
   return [
@@ -132,13 +132,23 @@ describe("share payload v2", () => {
     expect(() => fromSharePayload(JSON.stringify({ v: 1, a: [{ n: "Grace Hopper", s: [] }] }))).toThrow();
   });
 
-  it("rejects a claim naming a contributor the payload does not hold", () => {
-    const payload = toSharePayload({
-      authors: makeAuthors(),
-      claimId: makeAuthors()[0]?.id ?? "x", // fresh call → different ids than encoded
-      sourceDraftId: "11111111-2222-3333-4444-555555555555",
-    });
-    expect(() => fromSharePayload(payload)).toThrow();
+  it("refuses to write a link its reader would reject", () => {
+    const authors = makeAuthors();
+    const draft = "11111111-2222-3333-4444-555555555555";
+    // A fresh makeAuthors() call mints other ids, so this claim names nobody here.
+    const absent = makeAuthors()[0]?.id;
+    for (const input of [
+      { authors, claimId: absent, sourceDraftId: draft },
+      { authors, claimId: authors[0]?.id },
+      { authors, sentAt: -1 },
+      { authors, reply: true },
+    ]) {
+      expect(() => toSharePayload(input)).toThrow(UnsharableDraftError);
+    }
+    expect(new UnsharableDraftError("x").name).toBe("UnsharableDraftError");
+    // Whatever it does write, it reads back.
+    const ok = { authors, claimId: authors[0]?.id, sourceDraftId: draft, sentAt: 0, reply: true };
+    expect(fromSharePayload(toSharePayload(ok))).toMatchObject({ claimId: authors[0]?.id, sentAt: 0, reply: true });
   });
 
   it("rejects a claim without a source draft, and a reply without a claim", () => {
