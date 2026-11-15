@@ -114,6 +114,11 @@ def _own_text(el: etree._Element, skip: str) -> str:
 
 def _author(contrib: etree._Element) -> Author:
     name = contrib.find("name")
+    if name is None:
+        # <name-alternatives> holds a name per script or style: take the western one, else the first.
+        alternatives = contrib.findall("name-alternatives/name")
+        western = (n for n in alternatives if n.get("name-style", "western") == "western")
+        name = next(western, alternatives[0] if alternatives else None)
     ids = (_ORCID_RE.search(_text(c)) for c in contrib.findall("contrib-id") if c.get("contrib-id-type") == "orcid")
     orcid = next((m.group() for m in ids if m), None)  # bare form: http and https URIs both occur
     if name is not None:
@@ -139,7 +144,8 @@ def _contrib_roles(contrib: etree._Element, fns: dict[str, str]) -> tuple[list[t
             # the URL's last segment or the text, and keep the tagged style.
             fallback = " ".join([role.get("vocab-term", ""), url.rstrip("/").rsplit("/", 1)[-1], _text(role)])
             found += [(style, s) for s in {s for _, _, s in find_roles(clean(fallback))}]
-    texts += [fns[rid] for x in contrib.findall("xref") if (rid := x.get("rid", "")) in fns]
+    # rid is IDREFS: one xref may point at several footnotes ("con1 con2").
+    texts += [fns[rid] for x in contrib.findall("xref") for rid in x.get("rid", "").split() if rid in fns]
     found += [("contrib_text", s) for t in texts for _, _, s in find_roles(clean(t))]
     return found, texts
 
