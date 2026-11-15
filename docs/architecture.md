@@ -1,7 +1,12 @@
 # Architecture
 
-It's all TypeScript: one React app, built with Vite and prerendered to static HTML. The logic that
-doesn't depend on React lives in `src/core`. There is no server code.
+Last reviewed: 2026-11-15
+
+The web app is TypeScript: one React app, built with Vite and prerendered to static HTML. The logic
+that doesn't depend on React lives in `src/core`, published to npm as `credit-matrix`, and the figure
+fonts in `src/fonts`, published as `credit-matrix-fonts`. There is no server code. Beside the app,
+`census/` is a Python project that measures how papers use CRediT, and `integrations/` holds the
+plugins for writing tools.
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -9,19 +14,33 @@ doesn't depend on React lives in `src/core`. There is no server code.
 | Styling | Tailwind CSS v4 | Design tokens via `@theme`; no runtime CSS |
 | State | Zustand + immer + persist | Survives a refresh via localStorage |
 | Validation | Zod | Schema checks at trust boundaries |
+| Translation | Lingui, PO catalogs in `src/locales` | A standard catalog format that translation checks read |
 | Heatmap | SVG and embedded-font renderer (`core`) | One SVG source feeds SVG, PDF and canvas PNG exports |
 | Offline | Service worker + manifest | Precaches the app's own files under a per-build cache name |
 
-```text
-Browser
-  └─ React app  (repo root, Vite)
-       ├─ React UI + Zustand store (persisted to localStorage)
-       ├─ src/core   ← all domain logic, runs in the browser
-       │     statements · JATS4R XML · Crossref XML · CSV · tenzing CSV · JSON · Markdown · latex-credits · heatmap SVG/PDF · validation
-       ├─ ORCID and DOI lookups ──→ pub.orcid.org · api.crossref.org · api.datacite.org
-       └─ ORCID sign-in on replies ──→ orcid.org (sign-in page, public keys)
-                                     ← the only calls that leave the browser
+```mermaid
+flowchart LR
+  subgraph browser["Browser"]
+    app["React app<br/>src/app · src/components<br/>src/store · src/lib · src/docs"]
+    citesync["citesync worker<br/>public/citesync-worker.js"]
+  end
+  core["src/core<br/>npm: credit-matrix<br/>library · CLI · web element"]
+  fonts["src/fonts<br/>npm: credit-matrix-fonts"]
+  integrations["integrations/<br/>MyST · Sphinx · Jupyter Book<br/>Pandoc and Quarto filter · Typst"]
+  census["census/<br/>Python pipeline"]
+  norms["src/data/field-norms.json"]
+  apis["pub.orcid.org · orcid.org<br/>api.crossref.org · api.datacite.org"]
+
+  app --> core
+  app --> fonts
+  core -. "figure fonts, optional" .-> fonts
+  app -- "CFF and Zenodo imports" --> citesync
+  integrations -- "import or CLI" --> core
+  census -- "census norms" --> norms --> app
+  app -- "ORCID and DOI lookups,<br/>ORCID sign-in on replies" --> apis
 ```
+
+The lookups to ORCID, Crossref and DataCite are the only calls that leave the browser.
 
 ## `src/core`
 
@@ -30,7 +49,7 @@ SVG/PDF) as plain TypeScript with no side effects, with `zod` for validation and
 published as the `credit-matrix` npm package, with a CLI (`cli.ts`) and a web element
 (`element.ts`). Apart from the CLI, it uses no React or Node APIs when it's imported. Biome
 refuses imports there of React, next-themes, `@/`, or relative paths that leave `src/core`. Most changes
-and most tests go here. XML import uses the browser's own `DOMParser`, and the PNG is drawn from the
+and most tests go here. XML import uses the browser's own `DOMParser`; the CLI bundles linkedom in its place. The PNG is drawn from the
 heatmap SVG onto a `<canvas>`. [`figures.ts`](../src/core/figures.ts) embeds fonts in SVG and PDF;
 the [figure font guide](../integrations/figures/README.md) describes coverage and offline use.
 
@@ -38,6 +57,25 @@ Each contribution stores a 0–100 integer `score`, not a yes/no value, so the U
 yes/no and levels without changing what is stored. The
 [domain model](../src/core/README.md#domain-model) has the score range of each level.
 [ADR 0001](adr/0001-client-side-architecture.md) explains the split.
+
+## `src/fonts`
+
+[`src/fonts`](../src/fonts/README.md) holds the Noto faces and the HarfBuzz WebAssembly that heatmap
+SVG and PDF exports embed. The app imports it, so the bundler serves each face from this site.
+Without it, `credit-matrix` downloads the faces once from jsDelivr and checks them against hashes
+pinned in [`figure-fonts.ts`](../src/core/figure-fonts.ts).
+
+## `integrations` and `census`
+
+[`integrations`](../integrations) holds one folder per writing tool. MyST and Sphinx call the
+package or its CLI; the Pandoc and Quarto Lua filter and the Typst package reimplement the statement
+wording, and their tests check it against `src/core`. RO-Crate, CodeMeta and figures are guides to
+the CLI's exports. The Python tests run with `pnpm test:integrations`.
+
+[`census`](../census/README.md) is a separate uv project that reads open-access JATS articles. Its
+`norms` command writes [`src/data/field-norms.json`](../src/data/field-norms.json), which the norms
+panel shows. [`statement.ts`](../src/core/statement.ts) is a port of the census statement parser,
+and a parity test runs both over the same corpus.
 
 ## Documentation
 
