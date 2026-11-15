@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.13.0] - 2026-11-12
+## [0.13.0] - 2026-11-15
 
 **Upgrade note:** the browser storage format moves from version 5 to 6, so that a build from before
 the 420 cap cannot cut a stored draft back to 200 contributors. Do not roll back past this release.

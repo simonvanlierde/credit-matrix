@@ -36,7 +36,7 @@ keywords:
   - Jupyter Book
   - LaTeX
 version: "0.13.0"
-date-released: "2026-11-12"
+date-released: "2026-11-15"
 # Concept DOI: resolves to all versions, so it stays fixed across releases.
 doi: "10.5281/zenodo.21213659"
 references:
