@@ -639,6 +639,10 @@ export function ImportModal({
                 setFileName(null);
                 setError(null);
                 setReviewed(null);
+                // A staged confirmation holds the old text's parse. Dropping it here leaves focus in the
+                // textarea instead of the effect moving it to Import.
+                hadPending.current = false;
+                setPending(null);
               }}
               placeholder={t("importPlaceholder", { names: t("sampleNames") })}
               rows={6}
