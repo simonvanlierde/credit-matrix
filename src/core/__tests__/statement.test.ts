@@ -330,6 +330,63 @@ describe("clause ends and initials", () => {
   });
 });
 
+// The census tests' three authors, so these cases read the same as theirs.
+const BELL = [author("Ann", "Bell"), author("Carl", "Dunn"), author("Eva", "Fox")];
+const holdersOf = (text: string, slug: string) =>
+  pairsOf(text, BELL)
+    .filter(([, s]) => s === slug)
+    .map(([i]) => i);
+
+describe("all other authors", () => {
+  it("heading a list item, leaves out everyone named before it", () => {
+    expect(pairsOf("A.B.: software. All other authors: validation.", BELL)).toEqual([
+      [0, "software"],
+      [1, "validation"],
+      [2, "validation"],
+    ]);
+    expect(holdersOf("A.B.: software. C.D.: methodology. All other authors: validation.", "validation")).toEqual([2]);
+  });
+
+  it("after roles, leaves out the run of authors given roles just before it", () => {
+    const text = "Software: A.B., C.D.; methodology: A.B.; validation: all other authors.";
+    expect(pairsOf(text, BELL)).toEqual([
+      [0, "methodology"],
+      [0, "software"],
+      [1, "software"],
+      [1, "validation"],
+      [2, "validation"],
+    ]);
+  });
+
+  it("leaves the same authors out of a clause of roles alone after it", () => {
+    expect(holdersOf("A.B.: software. All other authors: validation; visualization.", "visualization")).toEqual([1, 2]);
+    const text = "A.B., C.D.: software; all other authors: validation; visualization.";
+    expect(holdersOf(text, "visualization")).toEqual([2]);
+  });
+
+  it("after all authors, leaves out everyone", () => {
+    expect(holdersOf("All authors: software. All other authors: validation.", "validation")).toEqual([]);
+  });
+
+  it("beside named authors, leaves out no one", () => {
+    expect(holdersOf("E.F.: software; A.B. and all the other authors: validation.", "validation")).toEqual([0, 1, 2]);
+  });
+
+  it("keeps authors named without roles", () => {
+    const text = "A.B. wrote the original draft and all other authors reviewed it.";
+    expect(new Set(pairsOf(text, BELL).map(([i]) => i))).toEqual(new Set([0, 1, 2]));
+  });
+
+  it("leaves plain all authors as everyone", () => {
+    expect(pairsOf("A.B.: software. All authors: validation.", BELL)).toEqual([
+      [0, "software"],
+      [0, "validation"],
+      [1, "validation"],
+      [2, "validation"],
+    ]);
+  });
+});
+
 describe("resolveInitials", () => {
   it.each([
     ["AP", 0],
