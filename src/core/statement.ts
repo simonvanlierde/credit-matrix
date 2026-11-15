@@ -691,21 +691,24 @@ export function parseStatement(statement: string, authorList: readonly Statement
 
   // "The remaining authors (C.D., E.F.)": names right after it say who it means, so it adds no one. Only
   // when the first is an author ("(UCL)", "PhD students" are not) and not an exception ("A.B. excepted").
-  mentions.sort(compareMentions);
-  const excepted = (at: number) => {
-    EXCEPTED_RE.lastIndex = at;
-    return EXCEPTED_RE.test(original);
-  };
-  mentions = mentions.filter((m, i) => {
-    const after = mentions[i + 1];
-    return !(
-      m[3] === OTHER_AUTHORS &&
-      after?.[2] === "A" &&
-      (after[3] as number) >= 0 &&
-      APPOSITION_RE.test(original.slice(m[1], after[0])) &&
-      !excepted(after[1])
-    );
-  });
+  // Skipped when there is nothing to drop: the extra sort cost "by author" and "by role" 16% in CodSpeed.
+  if (mentions.some((m) => m[3] === OTHER_AUTHORS)) {
+    const sorted = [...mentions].sort(compareMentions);
+    const excepted = (at: number) => {
+      EXCEPTED_RE.lastIndex = at;
+      return EXCEPTED_RE.test(original);
+    };
+    mentions = sorted.filter((m, i) => {
+      const after = sorted[i + 1];
+      return !(
+        m[3] === OTHER_AUTHORS &&
+        after?.[2] === "A" &&
+        (after[3] as number) >= 0 &&
+        APPOSITION_RE.test(original.slice(m[1], after[0])) &&
+        !excepted(after[1])
+      );
+    });
+  }
 
   const ends = clauseEnds(original, mentions);
   const clauses = new Map<number, [number, Kind, number | string][]>();
