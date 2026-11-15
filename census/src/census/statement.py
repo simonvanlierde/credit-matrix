@@ -45,6 +45,13 @@ class Parsed:
 ALL_AUTHORS = -1
 UNRESOLVED = -2
 """Holds an unresolved author's place, so the roles next to it are not paired with a neighbour."""
+OTHER_AUTHORS = -3
+""""All other authors": every author but the ones it is set against. Heading a list item ("A.B.: software.
+C.D.: validation. All other authors: writing"), those are everyone named before it; anywhere else
+("draft, A.B.; review and editing, all other authors"), the run of authors given roles just before it.
+Beside named authors ("A.B. and all other authors"), it is everyone. Authors named without roles ("A.B.
+wrote the draft and all other authors reviewed it") are not left out: which of them the roles belong to
+is unclear."""
 
 # Initials such as "AP", "Q.M.L.", "H.Š.", "YiL" (Frontiers adds letters to tell authors apart), "L. - J. Z.".
 # A capital is any letter but a-z (Python's re has no Unicode-category classes); tokens that start
@@ -57,7 +64,7 @@ _INITIALS_RE = re.compile(
     rf"(?<![\w.]){_U}[a-z]{{0,2}}{_PARTICLES}"
     rf"(?:(?:\.(?! )|\. (?={_U}\.)|\.? - )?{_U}[a-z]{{0,2}}{_PARTICLES}){{0,5}}\.?(?!\w)"
 )
-_ALL_RE = re.compile(r"\ball (?:the )?(?:other )?authors\b", re.IGNORECASE)
+_ALL_RE = re.compile(r"\ball (?:the )?(other )?authors\b", re.IGNORECASE)
 # The closing "All authors read and approved the manuscript." is not a role assignment. "All authors
 # contributed to the investigation" is, so only approval wording is dropped.
 _APPROVAL_RE = re.compile(
@@ -194,6 +201,7 @@ def _name_variants(author: Author) -> tuple[set[str], set[str]]:
 
 _AFTER_INITIAL_RE = re.compile(rf"(?<!\w){_U}(?:\.|\.? - )$")
 _CAPITAL_RE = re.compile(_U)
+_COLON_RE = re.compile(r"\s*:")
 
 
 def _opens_with_name(lead_in: str) -> bool:
@@ -276,7 +284,7 @@ def _joins(text: str, ordered: list[tuple[int, int, str, int | str]], start: int
     stop = len(text) if (stop := text.find(";", pos)) < 0 else stop
     # Only resolved initials close it: "editing. Sarah Macek;" or "MD;" opens the next clause.
     return _only_authors(text, ordered, pos + 1, stop) and all(
-        value not in (UNRESOLVED, ALL_AUTHORS) and _INITIALS_RE.fullmatch(text[s:e])
+        value not in (UNRESOLVED, ALL_AUTHORS, OTHER_AUTHORS) and _INITIALS_RE.fullmatch(text[s:e])
         for s, e, _, value in ordered
         if pos < s < stop
     )
@@ -322,7 +330,7 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
                 parsed.unresolved.append(text[start:end])
             text, lower = _mask(text, start, end), _mask(lower, start, end)
     for m in _ALL_RE.finditer(text):
-        mentions.append((m.start(), m.end(), "A", ALL_AUTHORS))
+        mentions.append((m.start(), m.end(), "A", OTHER_AUTHORS if m.group(1) else ALL_AUTHORS))
         text = _mask(text, m.start(), m.end())
     resolved: dict[str, int | None] = {}  # role-first statements repeat each author's initials per role
     for m in _INITIALS_RE.finditer(text):
@@ -344,24 +352,42 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         clauses.setdefault(bisect_left(ends, start), []).append((start, kind, value))
 
     previous_people: list[int | str] = []
+    previous_paired: list[int | str] = []  # previous_people, if their clause gave them roles
+    listed: dict[int, set[int | str]] = {}  # start of each "all other authors:" -> the authors named before it
+    named: set[int | str] = set()
+    for start, end, kind, value in sorted(mentions):
+        if value == OTHER_AUTHORS and _COLON_RE.match(original, end):
+            listed[start] = set(named)
+        if kind == "A":
+            named.add(value)
     for k, clause in sorted(clauses.items()):
         runs: list[tuple[str, list[int | str]]] = []
-        for _, kind, value in clause:
+        starts: list[int] = []
+        for start, kind, value in clause:
             if runs and runs[-1][0] == kind:
                 runs[-1][1].append(value)
             else:
                 runs.append((kind, [value]))
+                starts.append(start)
         # "A.B.: conceptualization; methodology": a clause of roles alone goes to the people before it,
         # unless it opens with a name the parser did not recognise.
         lead_in = text[ends[k - 1] if k else 0 : clause[0][0]]  # names found are masked
         if [kind for kind, _ in runs] == ["R"] and previous_people and not _opens_with_name(lead_in):
             runs.insert(0, ("A", previous_people))
+            starts.insert(0, -1)
         # A trailing run with no partner (authors named after the last roles) is dropped by zip.
-        for lead, follow in zip(runs[::2], runs[1::2], strict=False):
+        for n, (lead, follow) in enumerate(zip(runs[::2], runs[1::2], strict=False)):
             people, slugs = (lead[1], follow[1]) if lead[0] == "A" else (follow[1], lead[1])
-            indices = range(len(authors)) if ALL_AUTHORS in people else [int(i) for i in people if i != UNRESOLVED]
+            indices = [int(i) for i in people if int(i) >= 0]
+            if ALL_AUTHORS in people or (OTHER_AUTHORS in people and indices):
+                indices = range(len(authors))
+            elif OTHER_AUTHORS in people:
+                at = 2 * n if lead[0] == "A" else 2 * n + 1
+                before = listed[starts[at]] if starts[at] in listed else runs[at - 2][1] if at >= 2 else previous_paired
+                indices = [i for i in range(len(authors)) if i not in before]
             parsed.assignments |= {(i, str(s)) for i in indices for s in slugs}
-        people_runs = [values for kind, values in runs if kind == "A"]
+        people_runs = [n for n, (kind, _) in enumerate(runs) if kind == "A"]
         if people_runs:
-            previous_people = people_runs[-1]
+            previous_people = runs[people_runs[-1]][1]
+            previous_paired = previous_people if people_runs[-1] < len(runs) // 2 * 2 else []
     return parsed

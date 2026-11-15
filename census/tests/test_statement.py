@@ -403,6 +403,26 @@ def test_text_without_mentions_parses_to_nothing(text):
     assert not parsed.assignments
 
 
+def test_all_other_authors_leaves_out_the_authors_given_roles_before():
+    parsed = parse_statement("A.B.: software. All other authors: validation.", THREE)
+    assert parsed.assignments == {(0, "software"), (1, "validation"), (2, "validation")}
+    # Heading a list item, it leaves out everyone the list named.
+    parsed = parse_statement("A.B.: software. C.D.: methodology. All other authors: validation.", THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == {2}
+    # After roles, only the authors just before it are left out.
+    parsed = parse_statement("Software: A.B., C.D.; methodology: A.B.; validation: all other authors.", THREE)
+    assert roles_of(parsed, 1) == {"software", "validation"}
+    assert roles_of(parsed, 0) == {"software", "methodology"}
+    # Beside named authors it is everyone.
+    parsed = parse_statement("E.F.: software; A.B. and all the other authors: validation.", THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == {0, 1, 2}
+    # Named without roles, A.B. may be the one the roles belong to: kept.
+    parsed = parse_statement("A.B. wrote the original draft and all other authors reviewed it.", THREE)
+    assert {i for i, _ in parsed.assignments} == {0, 1, 2}
+    parsed = parse_statement("A.B.: software. All authors: validation.", THREE)
+    assert parsed.assignments == {(0, "software"), (0, "validation"), (1, "validation"), (2, "validation")}
+
+
 def test_opens_with_name_matches_the_regex_it_replaces():
     regex = re.compile(rf"{_U}[^:;]*:\s*$")
     rng = random.Random(0)
