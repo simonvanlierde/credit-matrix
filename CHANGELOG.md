@@ -148,8 +148,8 @@ See [deploying](docs/deploy.md).
   apostrophe or hyphen ("DOb", not "DO'"), in the app and the Typst package.
 - tenzing import strips leading punctuation from name parts, so a cell like "=Evil" no longer
   gives "=" initials.
-- Editing the pasted text while the import confirmation is open closes the confirmation, so Import
-  reads the new text.
+- Editing the pasted text, or choosing or dropping a file, while the import confirmation is open
+  closes the confirmation, so Import reads the new text.
 - On a slow connection, a page that has started loading is no longer cut off after 4 seconds.
 - The MyST plugin reads an empty front matter block.
 - Importing a JATS file whose role URL ends in a long run of slashes no longer hangs; a 2 MB file
