@@ -318,7 +318,8 @@ local function author_name(author)
   local name = author.name
   if type(name) == "table" and name.literal then return stringify(name.literal) end
   if type(name) == "table" and (name.given or name.family) then
-    return (stringify(name.given or "") .. " " .. stringify(name.family or "")):match("^%s*(.-)%s*$")
+    -- Not "^%s*(.-)%s*$", which backtracks quadratically on a long run of spaces.
+    return (stringify(name.given or "") .. " " .. stringify(name.family or "")):match("^%s*(.*%S)") or ""
   end
   return stringify(name or "")
 end
