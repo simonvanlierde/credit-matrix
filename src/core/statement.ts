@@ -112,8 +112,8 @@ const SPACES = /\s+/gu;
 /**
  * One kind of dash, single spaces, "&" as "and". Keeps case, which initials need.
  *
- * roles.py replaces `\s*dashes\s*` before collapsing spaces. That pattern takes quadratic time on a
- * long run of spaces, so this collapses spaces first; the output is the same.
+ * Spaces collapse first, as in roles.py: `\s*dashes\s*` would take quadratic time on a long run of
+ * spaces, and the output is the same.
  */
 function clean(text: string): string {
   return text.replaceAll("&", " and ").replace(SPACES, " ").replace(DASHES, " - ").replace(SPACES, " ").trim();

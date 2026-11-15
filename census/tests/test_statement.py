@@ -1,7 +1,11 @@
+import random
+import re
+import time
+
 import pytest
 
 from census.roles import ROLE_PATTERNS, clean, find_roles, names_credit, slug_from_url
-from census.statement import Author, parse_statement, resolve_initials
+from census.statement import _U, Author, _opens_with_name, parse_statement, resolve_initials
 
 AUTHORS = [
     Author("Anna", "Peters"),
@@ -397,3 +401,31 @@ def test_names_credit_only_for_distinctive_roles(slug, wording):
 def test_text_without_mentions_parses_to_nothing(text):
     parsed = parse_statement(text, AUTHORS)
     assert not parsed.assignments
+
+
+def test_opens_with_name_matches_the_regex_it_replaces():
+    regex = re.compile(rf"{_U}[^:;]*:\s*$")
+    rng = random.Random(0)
+    for _ in range(20_000):
+        lead_in = "".join(rng.choices("Aaé1 :;,.\n", k=rng.randrange(12)))
+        assert _opens_with_name(lead_in) == bool(regex.search(lead_in)), repr(lead_in)
+
+
+@pytest.mark.parametrize("unit", [" ", "A", "A ", "A.", "é", ",", ":", ";", "-"])
+def test_long_runs_parse_in_linear_time(unit):
+    """A run k times longer must take under 3k times as long (quadratic work takes about k² times).
+    Best of 3, and under 500 ms never fails, so a GC pause or a busy CPU does not fail linear code."""
+
+    def best(n: int) -> float:
+        text = f"A.B.: methodology; {unit * n} software"
+        timings = []
+        for _ in range(3):
+            start = time.perf_counter()
+            parse_statement(text, THREE)
+            timings.append(time.perf_counter() - start)
+        return min(timings)
+
+    small, k = 4_000, 8
+    best(small)  # warm-up
+    large = best(small * k)
+    assert large < 0.5 or large < 3 * k * best(small)

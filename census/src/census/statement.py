@@ -193,8 +193,17 @@ def _name_variants(author: Author) -> tuple[set[str], set[str]]:
 
 
 _AFTER_INITIAL_RE = re.compile(rf"(?<!\w){_U}(?:\.|\.? - )$")
-# A clause opening with a name the parser did not recognise: "Dunn, C: writing".
-_NAME_COLON_RE = re.compile(rf"{_U}[^:;]*:\s*$")
+_CAPITAL_RE = re.compile(_U)
+
+
+def _opens_with_name(lead_in: str) -> bool:
+    """Whether a clause opens with a name the parser did not recognise: "Dunn, C: writing". A capital
+    between the last colon or semicolon and a closing colon; a scan, as a regex backtracks on long text."""
+    colon = len(lead_in.rstrip()) - 1
+    if colon < 0 or lead_in[colon] != ":":
+        return False
+    start = max(lead_in.rfind(":", 0, colon), lead_in.rfind(";", 0, colon)) + 1
+    return _CAPITAL_RE.search(lead_in, start, colon) is not None
 
 
 def _bounded(text: str, start: int, end: int) -> bool:
@@ -345,7 +354,7 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         # "A.B.: conceptualization; methodology": a clause of roles alone goes to the people before it,
         # unless it opens with a name the parser did not recognise.
         lead_in = text[ends[k - 1] if k else 0 : clause[0][0]]  # names found are masked
-        if [kind for kind, _ in runs] == ["R"] and previous_people and not _NAME_COLON_RE.search(lead_in):
+        if [kind for kind, _ in runs] == ["R"] and previous_people and not _opens_with_name(lead_in):
             runs.insert(0, ("A", previous_people))
         # A trailing run with no partner (authors named after the last roles) is dropped by zip.
         for lead, follow in zip(runs[::2], runs[1::2], strict=False):
