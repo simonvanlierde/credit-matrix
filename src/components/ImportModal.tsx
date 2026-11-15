@@ -285,6 +285,8 @@ export function ImportModal({
   const request = useRef(0);
   // Bumped on close and unmount: an import that settles after either must not land.
   const closes = useRef(0);
+  // Only the last selected file may replace the textarea.
+  const fileRead = useRef(0);
   // Ends the citation converter's worker when its import is no longer wanted.
   const converting = useRef<AbortController | null>(null);
   useEffect(
@@ -333,6 +335,7 @@ export function ImportModal({
   useModalDialog(dialog, open);
 
   async function handleFileRead(file: File) {
+    const read = ++fileRead.current;
     if (file.size > MAX_IMPORT_BYTES) {
       showError(t("errFileTooLarge", { limit: MAX_IMPORT_MB }));
       return;
@@ -340,8 +343,7 @@ export function ImportModal({
     const started = closes.current;
     try {
       const content = await file.text();
-      // A dialog closed mid-read has dropped this file.
-      if (started !== closes.current) return;
+      if (started !== closes.current || read !== fileRead.current) return;
       setText(content);
       // A staged confirmation holds the earlier text's parse; without a focus jump, it goes.
       hadPending.current = false;
@@ -350,7 +352,7 @@ export function ImportModal({
       setFileName(file.name);
       setError(null);
     } catch {
-      if (started === closes.current) showError(t("errFileUnreadable"));
+      if (started === closes.current && read === fileRead.current) showError(t("errFileUnreadable"));
     }
   }
 
