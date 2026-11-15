@@ -15,6 +15,10 @@ on:
     - cron: "23 5 * * 1" # Mondays, 05:23 UTC
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 permissions:
   contents: read
 
@@ -37,11 +41,14 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: List licences
+        # An SPDX expression such as "(MIT OR GPL-3.0)" passes when any branch is allowed.
+        # LGPL is allowed on purpose: a dependency linked from a bundle stays replaceable.
         run: |
           pnpm licenses list --prod --json > licenses.json
           node -e '
             const l = require("./licenses.json");
             for (const [k, v] of Object.entries(l)) console.log(`${k}: ${v.length}`);
-            const bad = Object.keys(l).filter((k) => /GPL|SSPL|BUSL|Unknown|UNLICENSED/i.test(k) && !/LGPL/i.test(k));
+            const disallowed = (b) => /GPL|SSPL|BUSL|Unknown|UNLICENSED/i.test(b) && !/LGPL/i.test(b);
+            const bad = Object.keys(l).filter((k) => k.replace(/[()]/g, "").split(/\s+OR\s+/).every(disallowed));
             if (bad.length) { console.error("Incompatible licences: " + bad.join(", ")); process.exit(1); }
           '
