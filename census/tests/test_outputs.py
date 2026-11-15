@@ -441,3 +441,9 @@ def test_label_set_exclude_draws_new_articles(set_db, tmp_path):
     assert cli.main(argv) == 0
     drawn = [{r["pmcid"] for r in labels.read_rows(f)} for f in (first, second)]
     assert drawn[1] and not drawn[0] & drawn[1]
+
+
+@pytest.mark.parametrize("item", [1, None, "x"])
+def test_check_label_refuses_a_non_object_assertion(item):
+    with pytest.raises(ValueError, match="assertion 0"):
+        labels.check_label([item], _TEXT, 3)

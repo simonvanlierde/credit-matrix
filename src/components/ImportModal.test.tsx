@@ -278,6 +278,51 @@ describe("accessibility and drops", () => {
     await act(async () => fireEvent.change(input, { target: { files: [file] } }));
     expect(screen.getByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
   });
+
+  it("imports a file chosen while an earlier paste waits for confirmation", async () => {
+    const { onImport } = renderModal(1);
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "Ada Lovelace" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await act(async () => fireEvent.change(input, { target: { files: [new File(["Grace Hopper"], "authors.csv")] } }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    expect(onImport.mock.calls[0]?.[0].authors.map((author: Author) => author.name)).toEqual(["Grace Hopper"]);
+  });
+
+  it("drops a file whose read settles after the dialog closed", async () => {
+    const { container } = renderModal(0);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    let finish: (text: string) => void = () => undefined;
+    const file = new File(["Grace Hopper"], "authors.csv");
+    file.text = () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      });
+    fireEvent.change(input, { target: { files: [file] } });
+    act(() => {
+      container.ownerDocument.querySelector("dialog")?.dispatchEvent(new Event("close"));
+    });
+    await act(async () => finish("Grace Hopper"));
+    expect(screen.queryByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeNull();
+    expect((screen.getByLabelText(english.pasteRawData) as HTMLTextAreaElement).value).toBe("");
+  });
+
+  it("keeps a newer file when an earlier read finishes last", async () => {
+    renderModal(0);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    let finish: (text: string) => void = () => undefined;
+    const slow = new File(["Ada Lovelace"], "slow.csv");
+    slow.text = () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      });
+    fireEvent.change(input, { target: { files: [slow] } });
+    await act(async () => fireEvent.change(input, { target: { files: [new File(["Grace Hopper"], "new.csv")] } }));
+    await act(async () => finish("Ada Lovelace"));
+    expect((screen.getByLabelText(english.pasteRawData) as HTMLTextAreaElement).value).toBe("Grace Hopper");
+    expect(screen.getByText(english.fileLoaded.replace("{name}", "new.csv"))).toBeTruthy();
+  });
 });
 
 describe("a pasted CRediT statement", () => {
