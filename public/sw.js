@@ -165,8 +165,11 @@ async function carryVisitedDocs(keys) {
 async function handleNavigation(request) {
   try {
     // The deadline covers the wait for headers only; a slow body still streams in.
+    // An unvisited docs page has no cached copy to fall back on, so it waits for the network.
+    const page = pageFor(request.url);
+    const deadline = !/^\/docs(?:\/|$)/.test(page) || (await caches.match(page));
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), NAVIGATION_TIMEOUT_MS);
+    const timer = deadline && setTimeout(() => controller.abort(), NAVIGATION_TIMEOUT_MS);
     const response = await fetch(request, { signal: controller.signal }).finally(() => clearTimeout(timer));
     // A server error is not a better answer than the working copy on hand.
     if (response.status >= 500) return (await cachedPage(request)) ?? response;

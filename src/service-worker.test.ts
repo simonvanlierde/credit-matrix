@@ -175,3 +175,32 @@ it("stops the navigation deadline once the headers arrive", async () => {
   expect(clearTimeout).toHaveBeenCalledWith(7);
   expect(signals[0]?.aborted).toBe(false);
 });
+
+it.each([
+  ["/docs/quarto", "network"],
+  ["/about", "home"],
+])("headers slower than the deadline: an uncached %s answers with %s", async (path, expected) => {
+  const home = { page: "home" };
+  const network = { ok: true, status: 200, clone: () => ({}) };
+  const listeners = loadWorker({
+    fetch: (_request: unknown, init: { signal: AbortSignal }) =>
+      new Promise((resolve, reject) => {
+        const abort = () => reject(new DOMException("aborted", "AbortError"));
+        if (init.signal.aborted) abort();
+        init.signal.addEventListener("abort", abort);
+        setTimeout(() => resolve(network), 20);
+      }),
+    // The deadline passes at once, before the headers arrive.
+    setTimeout: (callback: () => void) => {
+      callback();
+      return 1;
+    },
+    clearTimeout: () => undefined,
+    Response: { error: () => ({ page: "error" }) },
+    caches: {
+      match: async (key: string) => (key === "/" ? home : undefined),
+      open: async () => ({ put: async () => undefined }),
+    },
+  });
+  expect(await navigate(listeners, path)).toBe(expected === "home" ? home : network);
+});
