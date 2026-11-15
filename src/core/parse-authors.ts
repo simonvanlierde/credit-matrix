@@ -451,16 +451,18 @@ function splitCommaLine(line: string): string[] {
       else kept.push(chunk);
       return kept;
     }, []);
-  if (chunks.length < 2 || chunks.length % 2 !== 0) return chunks;
+  // A serial comma: "A, B, and Grace Hopper", or "Lovelace, Ada, and Hopper, Grace".
+  const parts = chunks.map((chunk, i) => (i > 0 ? chunk.replace(/^(?:and|&)\s+/i, "") : chunk));
+  if (parts.length < 2 || parts.length % 2 !== 0) return parts;
 
   // NOTE: a comma-only list of mononyms ("Cher, Madonna") reads as one
   // inverted name. Genuinely undecidable without a name database, so use
   // semicolons or newlines to force separation.
   const pairs: string[] = [];
-  for (let i = 0; i < chunks.length; i += 2) {
-    const surname = chunks[i] ?? "";
-    const given = chunks[i + 1] ?? "";
-    if (!isSurnamePart(surname) || !isGivenNamePart(given.split(",")[0] ?? "")) return chunks;
+  for (let i = 0; i < parts.length; i += 2) {
+    const surname = parts[i] ?? "";
+    const given = parts[i + 1] ?? "";
+    if (!isSurnamePart(surname) || !isGivenNamePart(given.split(",")[0] ?? "")) return parts;
     pairs.push(`${surname}, ${given}`);
   }
   return pairs;

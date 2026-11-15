@@ -352,6 +352,16 @@ describe("parseAuthorText", () => {
 });
 
 describe("splitNameList", () => {
+  it("reads a serial comma's 'and' before the last name as a separator", () => {
+    expect(splitNameList("Ada Lovelace, Charles Darwin, and Grace Hopper")).toEqual([
+      "Ada Lovelace",
+      "Charles Darwin",
+      "Grace Hopper",
+    ]);
+    expect(splitNameList("Ada Lovelace, & Grace Hopper")).toEqual(["Ada Lovelace", "Grace Hopper"]);
+    expect(splitNameList("Lovelace, Ada, and Hopper, Grace")).toEqual(["Lovelace, Ada", "Hopper, Grace"]);
+  });
+
   it("splits on newlines, semicolons, and commas", () => {
     expect(splitNameList("Ada Lovelace, Charles Darwin; Katherine Johnson\nDorothy Hodgkin")).toEqual([
       "Ada Lovelace",
