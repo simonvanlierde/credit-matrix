@@ -45,8 +45,8 @@ See [deploying](docs/deploy.md).
   Book, Sphinx, Quarto and Pandoc plugins take `font`, `font-path`, `ignore-system-fonts` and
   `font-fallback` (Sphinx also `credit_matrix_font_path`). A relative `font-path` resolves against the
   document's folder in Quarto and Pandoc, the `conf.py` folder in Sphinx and the project (`myst.yml`)
-  in MyST and Jupyter Book. A missing family stops the build; Typst's `font` takes a family name or an array, with
-  Typst's own `--font-path`.
+  in MyST and Jupyter Book. A missing family stops the build. Typst's `font` takes a family name or
+  an array, with Typst's own `--font-path`.
 - The CLI, the MyST, Sphinx and Quarto plugins and Pandoc warn when a heatmap's labels would print
   under 6 pt on a full journal page, which happens from about 25 contributors. `heatmapPrintWarning`
   returns that warning. A strict build (`sphinx-build -W`, `myst build --strict`) now fails on it
@@ -136,8 +136,25 @@ See [deploying](docs/deploy.md).
 ### Fixed
 
 - Japanese font-recipe wording and European Portuguese file and response hints use consistent terms.
-- A saved draft with missing or malformed contributor name parts, initials or flags now opens
-  with safe values derived from each name instead of failing to render or export.
+- A saved draft with missing or malformed contributor name parts, initials or flags, repeated
+  contributor ids or an incomplete role list now opens with safe values derived from each name
+  instead of failing to render or export.
+- ORCID iDs written with spaces, a lowercase x, `orcid.org/` without `https://` or a trailing slash
+  are accepted and kept by CSV, JATS and tenzing import.
+- A JSON file that lists a role twice for one contributor gives the same score in every export.
+- Importing a roster again no longer gives a person with the same name but a different ORCID iD
+  the existing contributor's place and open ask.
+- Contributors whose initials collide are told apart by a letter of the surname, never an
+  apostrophe or hyphen ("DOb", not "DO'"), in the app and the Typst package.
+- tenzing import strips leading punctuation from name parts, so a cell like "=Evil" no longer
+  gives "=" initials.
+- Editing the pasted text while the import confirmation is open closes the confirmation, so Import
+  reads the new text.
+- On a slow connection, a page that has started loading is no longer cut off after 4 seconds.
+- The MyST plugin reads an empty front matter block.
+- Importing a JATS file whose role URL ends in a long run of slashes no longer hangs; a 2 MB file
+  now imports in well under a second.
+- Reading a very long pasted statement no longer slows down on a long name before a colon.
 - Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
   replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
 - A stalled documentation download no longer holds a service-worker update open indefinitely.
