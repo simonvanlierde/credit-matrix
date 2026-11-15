@@ -371,6 +371,9 @@ msgstr "此草稿过大，无法以链接形式分享。请改为导出为 JSON�
 msgid "errShareUnsupported"
 msgstr "此浏览器无法创建分享链接。请改为将草稿导出为 JSON。"
 
+msgid "errShareInvalid"
+msgstr "此草稿目前无法以链接形式分享。请重新加载页面，或检查贡献者。"
+
 msgid "errShareLinkBroken"
 msgstr "无法打开该分享链接。您自己的草稿已保留。"
 

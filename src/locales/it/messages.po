@@ -371,6 +371,9 @@ msgstr "Questa bozza è troppo grande per essere condivisa come link. Esportarla
 msgid "errShareUnsupported"
 msgstr "Questo browser non può creare link di condivisione. Esporta la bozza come JSON."
 
+msgid "errShareInvalid"
+msgstr "Questa bozza non può essere condivisa come link così com'è. Ricarica la pagina o controlla i contributori."
+
 msgid "errShareLinkBroken"
 msgstr "Impossibile aprire il link condiviso. La bozza locale è stata mantenuta."
 

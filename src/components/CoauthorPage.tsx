@@ -139,8 +139,8 @@ function CoauthorPage() {
   async function buildReply(): Promise<string | null> {
     try {
       return await buildShareUrl(replyInput());
-    } catch {
-      announce(t(shareFailureKey()), { assertive: true });
+    } catch (error) {
+      announce(t(shareFailureKey(error)), { assertive: true });
       return null;
     }
   }

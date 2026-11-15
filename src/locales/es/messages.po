@@ -371,6 +371,9 @@ msgstr "Este borrador es demasiado grande para compartirlo como enlace. Exportar
 msgid "errShareUnsupported"
 msgstr "Este navegador no puede crear enlaces para compartir. Exporte el borrador como JSON."
 
+msgid "errShareInvalid"
+msgstr "Este borrador no se puede compartir como enlace tal como está. Recargue la página o revise los contribuyentes."
+
 msgid "errShareLinkBroken"
 msgstr "No se ha podido abrir ese enlace compartido. Se ha conservado el borrador propio."
 

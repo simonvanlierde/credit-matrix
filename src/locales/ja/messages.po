@@ -371,6 +371,9 @@ msgstr "この下書きはリンクで共有するには大きすぎます。代
 msgid "errShareUnsupported"
 msgstr "このブラウザーでは共有リンクを作成できません。代わりに下書きをJSONとしてエクスポートしてください。"
 
+msgid "errShareInvalid"
+msgstr "この下書きは現在の状態ではリンクで共有できません。ページを再読み込みするか、貢献者を確認してください。"
+
 msgid "errShareLinkBroken"
 msgstr "その共有リンクは開けませんでした。お使いの下書きはそのまま保持されています。"
 
