@@ -61,6 +61,8 @@ export async function createSubsetter(wasm: Uint8Array): Promise<Subsetter> {
           const source = hb.hb_blob_create(data, bytes.length, READONLY, 0, 0);
           const face = hb.hb_face_create(source, 0);
           const input = hb.hb_subset_input_create_or_fail();
+          let result = 0;
+          let blob = 0;
           try {
             if (!input) throw new Error("HarfBuzz could not start a font subset.");
             const unicodes = hb.hb_subset_input_unicode_set(input);
@@ -68,17 +70,16 @@ export async function createSubsetter(wasm: Uint8Array): Promise<Subsetter> {
             if (retainGids) hb.hb_subset_input_set_flags(input, RETAIN_GIDS);
             // A no-op for a static face; a variable one becomes its default instance, which fontkit measures.
             hb.hb_subset_input_pin_all_axes_to_default(input, face);
-            const result = hb.hb_subset_or_fail(face, input);
+            result = hb.hb_subset_or_fail(face, input);
             if (!result) throw new Error("HarfBuzz could not subset a figure font.");
-            const blob = hb.hb_face_reference_blob(result);
+            blob = hb.hb_face_reference_blob(result);
             const length = hb.hb_blob_get_length(blob);
             if (!length) throw new Error("HarfBuzz returned an empty subset of a figure font.");
             const pointer = hb.hb_blob_get_data(blob, 0);
-            const out = heap().slice(pointer, pointer + length);
-            hb.hb_blob_destroy(blob);
-            hb.hb_face_destroy(result);
-            return out;
+            return heap().slice(pointer, pointer + length);
           } finally {
+            if (blob) hb.hb_blob_destroy(blob);
+            if (result) hb.hb_face_destroy(result);
             if (input) hb.hb_subset_input_destroy(input);
             hb.hb_face_destroy(face);
             hb.hb_blob_destroy(source);

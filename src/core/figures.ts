@@ -757,10 +757,11 @@ export function createFigureRenderer(rendererOptions: FigureRendererOptions = {}
             font = await document.embedFont(bytes, {
               subset: false,
               features: FEATURES,
-              // The six-letter tag marks a subset, by PDF convention.
+              // The six-letter tag marks a subset, by PDF convention; a figure has one custom family, whose
+              // tag differs so it cannot share a BaseFont with a built-in face of the same PostScript name.
               customName: runFace.noSubset
                 ? (runFace.font.postscriptName ?? undefined)
-                : `CMFIGR+${runFace.font.postscriptName}`,
+                : `${strict.custom && runFace === loaded.get(strict.custom) ? "CMCUST" : "CMFIGR"}+${runFace.font.postscriptName}`,
             });
             embedded.set(runFace, font);
             if (String.fromCharCode(...bytes.subarray(0, 4)) === "OTTO") {
