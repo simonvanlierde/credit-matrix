@@ -573,6 +573,22 @@ describe("contribution store", () => {
       expect(store().welcomeSeen).toBe(true);
     });
 
+    it("reset clears the highlights and focus that point into the old roster", () => {
+      store().addAuthor("Ana Lima");
+      const id = store().authors[0]?.id ?? "";
+      store().setReviewHighlight({ contributorId: id, target: "corresponding" });
+      store().setStatementLink({ contributorId: id, from: "cell" });
+      store().setListFocus({ authorId: id, orcid: false });
+      store().setReviewSettled({ contributorId: id, targets: [] });
+      store().openReview(id);
+      store().setRecentReply(id);
+      store().reset();
+      const { reviewHighlight, statementLink, listFocus, reviewSettled, reviewFocus, recentReply } = store();
+      expect([reviewHighlight, statementLink, listFocus, reviewSettled, reviewFocus, recentReply]).toEqual(
+        Array(6).fill(null),
+      );
+    });
+
     it("dismisses an open welcome card on reset, so it cannot undo the reset", () => {
       store().openWelcome();
       store().reset();
@@ -1034,6 +1050,17 @@ describe("contribution store", () => {
       expect(store().asks).toEqual({});
     });
 
+    it("drops the asks of rows a roster load without asks removes", () => {
+      const grace = addGrace();
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [grace.id]: ask } });
+      store().loadAuthors([createAuthor("Charles Darwin")]);
+      expect(store().asks).toEqual({});
+      store().loadAuthors([...store().authors, grace]);
+      store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [grace.id]: ask } });
+      store().loadAuthors(store().authors);
+      expect(store().asks).toEqual({ [grace.id]: ask });
+    });
+
     it("clears on reset, and does not travel into a duplicate", () => {
       const grace = addGrace();
       store().applyAskPatch(store().activeDraftId, { rows: {}, asks: { [grace.id]: ask } });
@@ -1108,11 +1135,19 @@ describe("contribution store", () => {
     it("survives a repair, and a malformed one is dropped", () => {
       const merge = useContributionStore.persist.getOptions().merge;
       const merged = merge?.(
-        { activeDraftId: "d1", drafts: { d1: { selfId: "ana-1" }, d2: { selfId: "not an id" } } },
+        {
+          activeDraftId: "d1",
+          drafts: {
+            d1: { authors: [{ ...createAuthor("Ana Lima"), id: "ana-1" }], selfId: "ana-1" },
+            d2: { selfId: "not an id" },
+            d3: { authors: [createAuthor("Ben Okafor")], selfId: "gone-1" },
+          },
+        },
         initial,
       ) as typeof initial;
       expect(merged.selfId).toBe("ana-1");
       expect(merged.drafts.d2?.selfId).toBeNull();
+      expect(merged.drafts.d3?.selfId).toBeNull();
       const saved = useContributionStore.persist.getOptions().partialize?.(merged) as { drafts: Record<string, Draft> };
       expect(saved.drafts.d1?.selfId).toBe("ana-1");
     });
@@ -1603,6 +1638,24 @@ describe("contribution store", () => {
       globalThis.localStorage.clear();
     });
 
+    it("gives a repeated id a fresh one and fills a short contributions list", async () => {
+      const ana = createAuthor("Ana Lima", { id: "dup" });
+      const short = { ...createAuthor("Ben Okafor"), contributions: [{ role: "Software", score: 100 }] };
+      globalThis.localStorage.setItem(
+        PERSIST_KEY,
+        JSON.stringify({
+          state: { activeDraftId: "d1", drafts: { d1: { authors: [ana, { ...ana, name: "Ana Souza" }, short] } } },
+          version: PERSIST_VERSION,
+        }),
+      );
+      await useContributionStore.persist.rehydrate();
+      const ids = store().authors.map((author) => author.id);
+      expect(ids[0]).toBe("dup");
+      expect(new Set(ids).size).toBe(3);
+      expect(store().authors.map((author) => author.contributions.length)).toEqual(Array(3).fill(CREDIT_ROLES.length));
+      expect(store().authors[2]?.contributions.find((c) => c.role === "Software")?.score).toBe(100);
+    });
+
     it("drops a malformed iD or contributions list, not the contributor", () => {
       // createAuthor throws on a bad ORCID and iterates contributions, and it
       // runs inside the reducer on every list edit: a field that would throw
@@ -1627,8 +1680,12 @@ describe("contribution store", () => {
 
       expect(merged.authors.map((a) => a.name)).toEqual(["Grace B. Hopper", "Charles Darwin", "Katherine Johnson"]);
       expect(merged.authors[0]?.orcid).toBeUndefined();
-      expect(merged.authors[1]?.contributions).toEqual([]);
-      expect(merged.authors[2]?.contributions).toEqual([{ role: "Software", score: 100 }]);
+      // Every role is listed, unscored where the save had nothing usable.
+      const scored = (index: number) => merged.authors[index]?.contributions.filter((c) => c.score > 0);
+      expect(merged.authors[1]?.contributions).toHaveLength(CREDIT_ROLES.length);
+      expect(scored(1)).toEqual([]);
+      expect(merged.authors[2]?.contributions).toHaveLength(CREDIT_ROLES.length);
+      expect(scored(2)).toEqual([{ role: "Software", score: 100 }]);
     });
 
     it("derives a contributor's name parts and initials from the name when the save lacks them", () => {
@@ -1695,7 +1752,10 @@ describe("contribution store", () => {
               // A claim is a lock: an id that a URL fragment would mangle, or a
               // half-written one, must not be honoured.
               claim: { contributorId: "not a valid id", sourceDraftId: "src-1" },
+              authors: [{ ...createAuthor("Ana Lima"), id: "good-id" }],
               asks: {
+                // No row left to ask.
+                "gone-id": { sentAt: 5, prefilled: false },
                 "bad id": { sentAt: 1, prefilled: true },
                 "good-id": { sentAt: 2, prefilled: false },
                 "no-time": { prefilled: true },
@@ -1718,8 +1778,14 @@ describe("contribution store", () => {
         {
           activeDraftId: "d1",
           drafts: {
-            d1: { asked: { "bad id": 1, "good-id": 2, "another-good-id": "yesterday" } },
-            d2: { asked: { grace: 5 } },
+            d1: {
+              authors: [
+                { ...createAuthor("Ana Lima"), id: "good-id" },
+                { ...createAuthor("Ben Okafor"), id: "another-good-id" },
+              ],
+              asked: { "bad id": 1, "good-id": 2, "another-good-id": "yesterday" },
+            },
+            d2: { authors: [{ ...createAuthor("Grace Hopper"), id: "grace" }], asked: { grace: 5 } },
           },
         },
         initial,
@@ -1753,6 +1819,10 @@ describe("contribution store", () => {
           drafts: {
             d1: {
               future: "kept",
+              authors: [
+                { ...createAuthor("Grace Hopper"), id: "grace" },
+                { ...createAuthor("Charles Babbage"), id: "charles" },
+              ],
               asks: {
                 grace: { sentAt: 1, prefilled: false, reply },
                 charles: { sentAt: 2, prefilled: true, reply: { contributions: "garbled" } },
