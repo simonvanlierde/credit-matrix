@@ -937,6 +937,9 @@ msgstr "Questo file è stato creato con una versione più recente di CRediT Matr
 msgid "errImportRepeatedId"
 msgstr "Questo file contiene due volte lo stesso ID di collaboratore, quindi non è stato importato."
 
+msgid "errImportScoreCell"
+msgstr "Riga {row}, colonna «{column}»: «{value}» non è un punteggio. Usa un numero da 0 a 100, un livello come Lead, oppure yes/no."
+
 msgid "errHeatmapExport"
 msgstr "Impossibile esportare la heatmap in formato {format}."
 

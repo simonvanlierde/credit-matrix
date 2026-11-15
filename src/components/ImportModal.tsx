@@ -15,6 +15,7 @@ import {
   namesCredit,
   parseStatement,
   RepeatedIdError,
+  ScoreCellError,
   statementAuthor,
   type Toolchain,
   XmlParseError,
@@ -457,6 +458,10 @@ export function ImportModal({
       // Only a converter that could not load fits the "try again online" message; a bad file falls through.
       if (failure instanceof ConverterUnavailableError) {
         showError(t("errCitationConverter"));
+        return;
+      }
+      if (failure instanceof ScoreCellError) {
+        showError(t("errImportScoreCell", { row: failure.row, column: failure.column, value: failure.value }));
         return;
       }
       // A newer build's export, or one that repeats an id, is said plainly, not as a validation failure.

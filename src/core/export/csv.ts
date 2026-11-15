@@ -23,10 +23,38 @@ function yesNo(value: boolean): string {
   return value ? "yes" : "no";
 }
 
-/** A score cell: a number, or a level word ("Lead") as a person typing one would write it. */
-function readScore(value: string): number {
-  const level = value.trim().toLowerCase();
-  return Object.hasOwn(LEVEL_SCORE, level) ? LEVEL_SCORE[level as keyof typeof LEVEL_SCORE] : clampScore(Number(value));
+/** A score cell that is not a number, a level or yes/no. `row` counts the header as row 1, as a spreadsheet does. */
+export class ScoreCellError extends Error {
+  constructor(
+    readonly row: number,
+    readonly column: string,
+    readonly value: string,
+  ) {
+    super(`Row ${row}, column "${column}": "${value}" is not a score. Use 0 to 100, a level (Lead) or yes/no.`);
+    this.name = "ScoreCellError";
+  }
+}
+
+/** Checkbox-style cells a person ticking roles in a spreadsheet writes. */
+const TICK_SCORE: Record<string, number> = {
+  yes: LEVEL_SCORE.lead,
+  x: LEVEL_SCORE.lead,
+  true: LEVEL_SCORE.lead,
+  "✓": LEVEL_SCORE.lead,
+  "✔": LEVEL_SCORE.lead,
+  no: 0,
+  false: 0,
+  "-": 0,
+};
+
+/** A trimmed score cell: empty, a number, a level word ("Lead") or a tick ("yes", "x"). Undefined for anything else. */
+function readScore(value: string): number | undefined {
+  const cell = value.toLowerCase();
+  if (Object.hasOwn(LEVEL_SCORE, cell)) return LEVEL_SCORE[cell as keyof typeof LEVEL_SCORE];
+  if (Object.hasOwn(TICK_SCORE, cell)) return TICK_SCORE[cell];
+  // "0,5" from a sheet saved where the comma is the decimal mark, "50%" from a percentage cell.
+  const score = Number(cell.replace(",", ".").replace(/%$/, ""));
+  return Number.isFinite(score) ? clampScore(score) : undefined;
 }
 
 function readYesNo(value: string | undefined): boolean {
@@ -162,8 +190,14 @@ export function toCsv(authors: Author[]): string {
 }
 
 export function fromCsv(csv: string): Author[] {
+  // Each record keeps its spreadsheet row number, for the score cell error.
   const records = parseCsvRecords(csv, delimiterOf(csv))
-    .map((cells) => cells.map((cell) => unescapeCsvValue(cell.trim())))
+    .map((cells, index) =>
+      Object.assign(
+        cells.map((cell) => unescapeCsvValue(cell.trim())),
+        { row: index + 1 },
+      ),
+    )
     .filter((cells) => cells.some((cell) => cell !== ""));
 
   if (records.length === 0) return [];
@@ -189,10 +223,14 @@ export function fromCsv(csv: string): Author[] {
     const name = cells[nameIndex] ?? "";
     if (!name) return [];
 
-    const contributions: Contribution[] = CREDIT_ROLES.map((role, i) => ({
-      role: role.name,
-      score: readScore(cells[roleIndexes[i] ?? -1] ?? "0"),
-    }));
+    const contributions: Contribution[] = CREDIT_ROLES.map((role, i) => {
+      const column = roleIndexes[i] ?? -1;
+      const cell = cells[column] ?? "";
+      const score = readScore(cell);
+      if (score === undefined)
+        throw new ScoreCellError(cells.row, records[0]?.[column] ?? "", Array.from(cell).slice(0, 40).join(""));
+      return { role: role.name, score };
+    });
 
     const contributorType = headerKey(cells[typeIndex] ?? "") === "non-author" ? "non-author" : "author";
     // Drop an unparseable ORCID rather than aborting the whole import.

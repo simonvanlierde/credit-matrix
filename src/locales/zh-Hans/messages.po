@@ -937,6 +937,9 @@ msgstr "此文件由更新版本的 CRediT Matrix 创建。请重新加载页面
 msgid "errImportRepeatedId"
 msgstr "此文件两次列出了同一个贡献者 ID，因此未导入。"
 
+msgid "errImportScoreCell"
+msgstr "第 {row} 行，“{column}”列：“{value}”不是分数。请使用 0 到 100 的数字、Lead 等级别，或 yes/no。"
+
 msgid "errHeatmapExport"
 msgstr "无法将贡献热图导出为 {format} 格式。"
 

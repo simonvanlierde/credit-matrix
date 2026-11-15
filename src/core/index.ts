@@ -40,7 +40,7 @@ export { CREDIT_ROLES, getRoleByName } from "./credit-roles";
 export type { CodemetaAttribution, CodemetaPerson, CodemetaRole } from "./export/codemeta";
 export { toCodemeta } from "./export/codemeta";
 export { fromCrossrefContributors, toCrossrefContributors } from "./export/crossref";
-export { fromCsv, toCsv } from "./export/csv";
+export { fromCsv, ScoreCellError, toCsv } from "./export/csv";
 export { toMyst, toQuarto } from "./export/frontmatter";
 export { heatmapPrintWarning } from "./export/heatmap-print";
 export type { HeatmapSvgOptions } from "./export/heatmap-svg";

@@ -937,6 +937,9 @@ msgstr "Ce fichier a été créé par une version plus récente de CRediT Matrix
 msgid "errImportRepeatedId"
 msgstr "Ce fichier contient deux fois le même identifiant de contributeur, il n'a donc pas été importé."
 
+msgid "errImportScoreCell"
+msgstr "Ligne {row}, colonne « {column} » : « {value} » n’est pas un score. Utilisez un nombre de 0 à 100, un niveau comme Lead, ou yes/no."
+
 msgid "errHeatmapExport"
 msgstr "Impossible d’exporter la heatmap au format {format}."
 
