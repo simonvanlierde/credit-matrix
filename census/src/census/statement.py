@@ -65,7 +65,9 @@ _INITIALS_RE = re.compile(
     rf"(?<![\w.]){_U}[a-z]{{0,2}}{_PARTICLES}"
     rf"(?:(?:\.(?! )|\. (?={_U}\.)|\.? - )?{_U}[a-z]{{0,2}}{_PARTICLES}){{0,5}}\.?(?!\w)"
 )
-_ALL_RE = re.compile(r"\ball (?:the )?(other )?authors\b", re.IGNORECASE)
+# "The remaining authors" reads as "all other authors". "The other authors" does not: it is mostly prose ("with
+# feedback from the other authors") that would hand the roles nearby to everyone else.
+_ALL_RE = re.compile(r"\b(?:all (?:the )?(?:(other|remaining) )?|(the remaining ))authors\b", re.IGNORECASE)
 # The closing "All authors read and approved the manuscript." is not a role assignment. "All authors
 # contributed to the investigation" is, so only approval wording is dropped.
 _APPROVAL_RE = re.compile(
@@ -331,7 +333,7 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
                 parsed.unresolved.append(text[start:end])
             text, lower = _mask(text, start, end), _mask(lower, start, end)
     for m in _ALL_RE.finditer(text):
-        mentions.append((m.start(), m.end(), "A", OTHER_AUTHORS if m.group(1) else ALL_AUTHORS))
+        mentions.append((m.start(), m.end(), "A", OTHER_AUTHORS if m.group(1) or m.group(2) else ALL_AUTHORS))
         text = _mask(text, m.start(), m.end())
     resolved: dict[str, int | None] = {}  # role-first statements repeat each author's initials per role
     for m in _INITIALS_RE.finditer(text):

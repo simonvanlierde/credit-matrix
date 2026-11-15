@@ -445,6 +445,33 @@ def test_all_other_authors_stands_for_the_same_authors_later(text, expected):
     assert {i for i, s in parsed.assignments if s == "formal-analysis"} == expected
 
 
+def test_all_other_authors_after_a_semicolon_in_a_list_of_authors():
+    # The semicolon separates names, so Dunn is beside "all other authors" and everyone gets the role.
+    parsed = parse_statement("Dunn, C.; All other authors: visualization.", THREE)
+    assert parsed.assignments == {(i, "visualization") for i in (0, 1, 2)}
+    parsed = parse_statement("A.B.: software; C.D.; all other authors: visualization.", THREE)
+    assert {i for i, s in parsed.assignments if s == "visualization"} == {0, 1, 2}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A.B.: software. The remaining authors: validation.",
+        "A.B.: software. All remaining authors: validation.",
+        "Software: A.B.; validation: all the remaining authors.",
+    ],
+)
+def test_the_remaining_authors_reads_as_all_other_authors(text):
+    parsed = parse_statement(text, THREE)
+    assert parsed.assignments == {(0, "software"), (1, "validation"), (2, "validation")}
+
+
+def test_the_other_authors_is_not_read_as_a_mention():
+    # Mostly prose: read as "all other authors", it would give A.B.'s role to everyone.
+    parsed = parse_statement("Formal analysis: A.B., with feedback from the other authors.", THREE)
+    assert parsed.assignments == {(0, "formal-analysis")}
+
+
 def test_opens_with_name_matches_the_regex_it_replaces():
     regex = re.compile(rf"{_U}[^:;]*:\s*$")
     rng = random.Random(0)

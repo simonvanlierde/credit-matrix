@@ -162,6 +162,11 @@ See [deploying](docs/deploy.md).
 - Reading a very long pasted statement no longer slows down on a long name before a colon.
 - In a pasted statement, "A.B.: software. All other authors: validation." no longer gives A.B.
   validation too, and neither does a roles-only clause or a second "all other authors" after it.
+- In a pasted statement, a semicolon between names keeps them in one list, so
+  "Dunn, C.; All other authors: visualization." gives Dunn visualization too, and a role-first
+  clause keeps the initials after its full stop ("Visualization. C.D.;"). Initials without accents
+  match accented names ("N.N.A." for Nguyễn Ngọc Ánh), and "the remaining authors" reads as
+  "all other authors".
 - Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
   replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
 - A stalled documentation download no longer holds a service-worker update open indefinitely.

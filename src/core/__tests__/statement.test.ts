@@ -47,7 +47,7 @@ const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
 
 describe("parity with the census parser", () => {
   it("covers the whole corpus", () => {
-    expect(CORPUS).toHaveLength(60);
+    expect(CORPUS).toHaveLength(61);
   });
 
   it.each(CORPUS.map((c) => [c.pmcid, c] as const))("%s", (_, c) => {
@@ -401,7 +401,98 @@ describe("all other authors", () => {
   });
 });
 
+describe("all other authors after a semicolon", () => {
+  it("reads a semicolon between names as part of the list, so the author before it is not left out", () => {
+    expect(pairsOf("Dunn, C.; All other authors: visualization.", BELL)).toEqual([
+      [0, "visualization"],
+      [1, "visualization"],
+      [2, "visualization"],
+    ]);
+    expect(holdersOf("A.B.: software; C.D.; all other authors: visualization.", "visualization")).toEqual([0, 1, 2]);
+  });
+
+  it.each([
+    "A.B.: software. The remaining authors: validation.",
+    "A.B.: software. All remaining authors: validation.",
+    "Software: A.B.; validation: all the remaining authors.",
+  ])("reads the remaining authors as all other authors: %s", (text) => {
+    expect(pairsOf(text, BELL)).toEqual([
+      [0, "software"],
+      [1, "validation"],
+      [2, "validation"],
+    ]);
+  });
+
+  it("does not read the other authors, which is mostly prose", () => {
+    expect(pairsOf("Formal analysis: A.B., with feedback from the other authors.", BELL)).toEqual([
+      [0, "formal-analysis"],
+    ]);
+  });
+});
+
+describe("clauses that run across a semicolon or a full stop", () => {
+  const split = (...names: string[]) =>
+    names.map((n) => author(n.slice(0, n.lastIndexOf(" ")), n.slice(n.lastIndexOf(" ") + 1)));
+
+  it("reads a semicolon inside a list of authors as part of the list", () => {
+    const authors = [
+      author("Tomás Andrés", "Ruiz-López"),
+      author("Carlos", "Ortiz-Pérez"),
+      author("José María", "García-Ruiz"),
+    ];
+    expect(pairsOf("T.A.R.-L., C.O.-P.; J.M.G.-R.: software. T.A.R.-L.: validation.", authors)).toEqual([
+      [0, "software"],
+      [0, "validation"],
+      [1, "software"],
+      [2, "software"],
+    ]);
+    // A clause that names a role keeps its semicolon.
+    expect(pairsOf("Validation: T.A.R.-L.; C.O.-P.: software.", authors)).toEqual([
+      [0, "validation"],
+      [1, "software"],
+    ]);
+    // So does a sentence: its authors do not take the next clause's roles.
+    const text = "S.A.D. and M.R. conceptualized the project; M.R. prepared the original draft.";
+    expect(pairsOf(text, split("Moritz Reese", "Sameer A. Dhayat"))).toEqual([[0, "writing-original-draft"]]);
+  });
+
+  it("closes a role-first clause with the initials after its full stop", () => {
+    expect(pairsOf("Software, A.B.; visualization. C.D.; supervision. C.D.;", BELL)).toEqual([
+      [0, "software"],
+      [1, "supervision"],
+      [1, "visualization"],
+    ]);
+  });
+
+  it("does not close a clause of roles with a full name, unresolved initials or an author-first statement", () => {
+    const text =
+      "Emmanuel Luciano, MD; conceptualization. Sarah Macek; methodology. Felipe Pacheco, MD; final review and editing.";
+    const parsed = pairsOf(text, split("Emmanuel Luciano", "Sarah Macek", "Felipe Pacheco"));
+    expect(parsed.filter(([i]) => i === 2)).toEqual([[2, "writing-review-editing"]]);
+    const authorFirst = "DP; wrote the original draft. PP; reviewed and edited the manuscript.";
+    expect(pairsOf(authorFirst, split("Duc-Vinh Pham", "Pil-Hoon Park"))).toEqual([[0, "writing-original-draft"]]);
+  });
+
+  it("does not close a clause of roles with initials in a sentence", () => {
+    const text = "Funding acquisition, writing - original draft. Funding was acquired by H.-J.L.";
+    expect(pairsOf(text, split("Seon-Joo Park", "Hae-Jeung Lee"))).toEqual([]);
+  });
+});
+
 describe("resolveInitials", () => {
+  it("matches initials without diacritics, but as written first", () => {
+    const authors = [author("Ngọc Ánh", "Nguyễn"), author("Văn Đức", "Trần"), author("Nam", "Nguyen")];
+    expect(pairsOf("N.N.A.: software; TVD: validation; NN: investigation.", authors)).toEqual([
+      [0, "software"],
+      [1, "validation"],
+      [2, "investigation"],
+    ]);
+    expect(resolveInitials("D.D.", [author("Đức", "Đặng")])).toBe(0);
+    expect(resolveInitials("A.A.-A.", [author("Ana", "Hernández-Martín"), author("Ángel", "Arias-Arias")])).toBe(1);
+    // Folded, "ŞY" would fit the second author as well.
+    expect(resolveInitials("ŞY", [author("Şilan", "Yavuz"), author("Sema", "Yılmaz")])).toBe(0);
+  });
+
   it.each([
     ["AP", 0],
     ["L.J.Z.", 2],
