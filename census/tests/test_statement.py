@@ -1,7 +1,11 @@
+import random
+import re
+import time
+
 import pytest
 
 from census.roles import ROLE_PATTERNS, clean, find_roles, names_credit, slug_from_url
-from census.statement import Author, parse_statement, resolve_initials
+from census.statement import _U, Author, _opens_with_name, parse_statement, resolve_initials
 
 AUTHORS = [
     Author("Anna", "Peters"),
@@ -397,3 +401,73 @@ def test_names_credit_only_for_distinctive_roles(slug, wording):
 def test_text_without_mentions_parses_to_nothing(text):
     parsed = parse_statement(text, AUTHORS)
     assert not parsed.assignments
+
+
+def test_all_other_authors_leaves_out_the_authors_given_roles_before():
+    parsed = parse_statement("A.B.: software. All other authors: validation.", THREE)
+    assert parsed.assignments == {(0, "software"), (1, "validation"), (2, "validation")}
+    # Heading a list item, it leaves out everyone the list named.
+    parsed = parse_statement("A.B.: software. C.D.: methodology. All other authors: validation.", THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == {2}
+    # After roles, only the authors just before it are left out.
+    parsed = parse_statement("Software: A.B., C.D.; methodology: A.B.; validation: all other authors.", THREE)
+    assert roles_of(parsed, 1) == {"software", "validation"}
+    assert roles_of(parsed, 0) == {"software", "methodology"}
+    # Beside named authors it is everyone.
+    parsed = parse_statement("E.F.: software; A.B. and all the other authors: validation.", THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == {0, 1, 2}
+    # Heading a list item, it leaves out authors named without roles too.
+    parsed = parse_statement("A.B. and C.D. conceived the study. All other authors: validation.", THREE)
+    assert parsed.assignments == {(2, "validation")}
+    # After authors with no roles, no one is left out: the draft may be A.B.'s, so A.B. keeps it, and
+    # C.D. and E.F. get it too, as before "all other authors" was read apart from "all authors".
+    parsed = parse_statement("A.B. wrote the original draft and all other authors reviewed it.", THREE)
+    assert parsed.assignments == {(i, "writing-original-draft") for i in (0, 1, 2)}
+    parsed = parse_statement("A.B.: software. All authors: validation.", THREE)
+    assert parsed.assignments == {(0, "software"), (0, "validation"), (1, "validation"), (2, "validation")}
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # Roles alone after it go to the same authors.
+        ("A.B.: software. All other authors: validation; formal analysis.", {1, 2}),
+        ("A.B.: software. All other authors: validation. Formal analysis.", {1, 2}),
+        ("A.B., C.D.: software; all other authors: validation; formal analysis.", {2}),
+        # A second one is set against the same authors as the first.
+        ("Software: A.B.; validation: all other authors; formal analysis: all other authors.", {1, 2}),
+        # After "all authors", there is no one else.
+        ("All authors: software. All other authors: formal analysis.", set()),
+    ],
+)
+def test_all_other_authors_stands_for_the_same_authors_later(text, expected):
+    parsed = parse_statement(text, THREE)
+    assert {i for i, s in parsed.assignments if s == "formal-analysis"} == expected
+
+
+def test_opens_with_name_matches_the_regex_it_replaces():
+    regex = re.compile(rf"{_U}[^:;]*:\s*$")
+    rng = random.Random(0)
+    for _ in range(20_000):
+        lead_in = "".join(rng.choices("Aaé1 :;,.\n", k=rng.randrange(12)))
+        assert _opens_with_name(lead_in) == bool(regex.search(lead_in)), repr(lead_in)
+
+
+@pytest.mark.parametrize("unit", [" ", "A", "A ", "A.", "é", ",", ":", ";", "-"])
+def test_long_runs_parse_in_linear_time(unit):
+    """A run k times longer must take under 3k times as long (quadratic work takes about k² times).
+    Best of 3, and under 500 ms never fails, so a GC pause or a busy CPU does not fail linear code."""
+
+    def best(n: int) -> float:
+        text = f"A.B.: methodology; {unit * n} software"
+        timings = []
+        for _ in range(3):
+            start = time.perf_counter()
+            parse_statement(text, THREE)
+            timings.append(time.perf_counter() - start)
+        return min(timings)
+
+    small, k = 4_000, 8
+    best(small)  # warm-up
+    large = best(small * k)
+    assert large < 0.5 or large < 3 * k * best(small)

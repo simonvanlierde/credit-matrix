@@ -156,6 +156,8 @@ See [deploying](docs/deploy.md).
 - Importing a JATS file whose role URL ends in a long run of slashes no longer hangs; a 2 MB file
   now imports in well under a second.
 - Reading a very long pasted statement no longer slows down on a long name before a colon.
+- In a pasted statement, "A.B.: software. All other authors: validation." no longer gives A.B.
+  validation too, and neither does a roles-only clause or a second "all other authors" after it.
 - Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
   replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
 - A stalled documentation download no longer holds a service-worker update open indefinitely.

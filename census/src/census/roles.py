@@ -46,7 +46,8 @@ SPACES = re.compile(r"\s+")
 
 def clean(text: str) -> str:
     """One kind of dash, single spaces, "&" as "and". Keeps case, which initials need."""
-    text = _DASHES.sub(" - ", text.replace("&", " and "))
+    # Spaces collapse first: `_DASHES` takes quadratic time on a long run of spaces.
+    text = _DASHES.sub(" - ", SPACES.sub(" ", text.replace("&", " and ")))
     return SPACES.sub(" ", text).strip()
 
 

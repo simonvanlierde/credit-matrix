@@ -256,3 +256,28 @@ def test_entities_are_not_expanded_and_comments_stay_out_of_text():
     assert "NAME=" not in "".join(etree.fromstring(secret, PARSER).itertext())
     xml = article(contrib("Ann", "Sm<!-- note -->ith<?pi x?>"))
     assert parse_article(xml).authors[0].name == "Ann Smith"
+
+
+def test_name_alternatives_give_the_western_name_and_keep_the_roles():
+    alternatives = (
+        '<contrib contrib-type="author"><name-alternatives>'
+        '<name name-style="eastern" xml:lang="zh"><surname>李</surname><given-names>安</given-names></name>'
+        '<name name-style="western"><surname>Li</surname><given-names>An</given-names></name>'
+        "</name-alternatives><role>Software</role></contrib>"
+    )
+    a = parse_article(article(contrib("Ann", "Smith", "<role>Validation</role>") + alternatives))
+    assert [(x.given, x.surname) for x in a.authors] == [("Ann", "Smith"), ("An", "Li")]
+    assert a.assignments == {(0, "validation"), (1, "software")}
+
+
+def test_an_xref_to_several_footnotes_reads_them_all():
+    a = parse_article(
+        article(
+            contrib("Ann", "Smith", '<xref ref-type="fn" rid="con1 con2"/>')
+            + contrib("Bo", "Jones", '<xref ref-type="fn" rid="con3"/>'),
+            '<fn-group><fn fn-type="con" id="con1"><p>Software.</p></fn>'
+            '<fn fn-type="con" id="con2"><p>Validation.</p></fn>'
+            '<fn fn-type="con" id="con3"><p>Data curation.</p></fn></fn-group>',
+        )
+    )
+    assert a.assignments == {(0, "software"), (0, "validation"), (1, "data-curation")}

@@ -112,10 +112,7 @@ store double-encoded ("â\x80\x94" for an em dash) is repaired before parsing.
 
 The web app's paste-a-statement import runs a TypeScript port of `roles.py` and `statement.py`
 (`src/core/statement.ts`). A test there runs it over `tests/corpus.jsonl` and requires the same
-output as `expected` here, so a change to one parser needs the same change in the other. One
-step differs in form only: `roles.clean` replaces dashes with the spaces around them before it
-collapses runs of spaces, and the port collapses spaces first, because the first order takes
-quadratic time on a long run of spaces in a browser. The output is the same.
+output as `expected` here, so a change to one parser needs the same change in the other.
 
 ## Tables
 
@@ -275,7 +272,8 @@ held-out article 1; `census score --predictions` uses the label set's key-file w
 `zero-shot` asks any chat-completions server (`--base-url`, default `http://localhost:8000/v1`) for
 JSON that fits a schema, 32 requests at a time (`--workers`) so the server can batch them. It writes
 to `data/model/<snapshot>/predictions/`, one file per model and set, and skips articles already
-there, so a stopped run resumes. On one 24 GB GPU, vLLM serves Qwen3.5-9B quantized to FP8 when
+there, so a stopped run resumes; a line it left half written, and a reply with no answer in it, are
+asked again. On one 24 GB GPU, vLLM serves Qwen3.5-9B quantized to FP8 when
 loading (the first start downloads about 19 GB to the Hugging Face cache):
 
 ```sh

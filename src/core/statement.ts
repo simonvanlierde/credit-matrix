@@ -112,8 +112,8 @@ const SPACES = /\s+/gu;
 /**
  * One kind of dash, single spaces, "&" as "and". Keeps case, which initials need.
  *
- * roles.py replaces `\s*dashes\s*` before collapsing spaces. That pattern takes quadratic time on a
- * long run of spaces, so this collapses spaces first; the output is the same.
+ * Spaces collapse first, as in roles.py: `\s*dashes\s*` would take quadratic time on a long run of
+ * spaces, and the output is the same.
  */
 function clean(text: string): string {
   return text.replaceAll("&", " and ").replace(SPACES, " ").replace(DASHES, " - ").replace(SPACES, " ").trim();
@@ -139,10 +139,21 @@ export function namesCredit(text: string): boolean {
 
 const ALL_AUTHORS = -1;
 /**
+ * "All other authors": every author but the ones it is set against. Heading a list item ("A.B.:
+ * software. C.D.: validation. All other authors: writing"), those are everyone named before it;
+ * anywhere else ("draft, A.B.; review and editing, all other authors"), the run of authors given roles
+ * just before it. Beside named authors ("A.B. and all other authors"), it is everyone. Authors named
+ * without roles ("A.B. wrote the draft and all other authors reviewed it") are not left out: which of
+ * them the roles belong to is unclear. After "all authors" it is no one. A clause of roles alone after
+ * it ("All other authors: validation; visualization"), or another "all other authors" right after it,
+ * leaves out the same authors.
+ */
+const OTHER_AUTHORS = -2;
+/**
  * Holds an unresolved author's place, so the roles next to it are not paired with a neighbour:
  * UNRESOLVED - k for the k-th entry of `unmatched`.
  */
-const UNRESOLVED = -2;
+const UNRESOLVED = -3;
 
 // Initials such as "AP", "Q.M.L.", "H.Š.", "YiL" (Frontiers adds letters to tell authors apart),
 // "L. - J. Z.". Tokens that start lower-case are skipped later. A space after a dot only continues
@@ -154,7 +165,7 @@ const INITIALS_RE = new RegExp(
     String.raw`(?:(?:\.(?! )|\. (?=${U}\.)|\.? - )?${U}[a-z]{0,2}${PARTICLES}){0,5}\.?(?!${W})`,
   "gu",
 );
-const ALL_RE = new RegExp(`(?<!${W})all (?:the )?(?:other )?authors(?!${W})`, "giu");
+const ALL_RE = new RegExp(`(?<!${W})all (?:the )?(other )?authors(?!${W})`, "giu");
 // The closing "All authors read and approved the manuscript." is not a role assignment. "All authors
 // contributed to the investigation" is, so only approval wording is dropped.
 const APPROVAL_RE = new RegExp(
@@ -343,6 +354,7 @@ function nameVariants(author: StatementAuthor): [Set<string>, Set<string>] {
 
 const AFTER_INITIAL_RE = new RegExp(`(?<!${W})${U}(?:\\.|\\.? - )$`, "gu");
 const CAPITAL_RE = new RegExp(U, "u");
+const COLON_RE = /\s*:/y;
 
 /**
  * Whether a clause opens with a name the parser did not recognise: "Dunn, C: writing". Same as
@@ -528,7 +540,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
   }
   const allRanges: [number, number][] = [];
   for (const m of text.matchAll(ALL_RE)) {
-    mentions.push([m.index, m.index + m[0].length, "A", ALL_AUTHORS]);
+    mentions.push([m.index, m.index + m[0].length, "A", m[1] ? OTHER_AUTHORS : ALL_AUTHORS]);
     allRanges.push([m.index, m.index + m[0].length]);
   }
   text = maskRanges(text, allRanges);
@@ -560,36 +572,66 @@ export function parseStatement(statement: string, authorList: readonly Statement
 
   const assignments = new Set<string>();
   let previousPeople: (number | string)[] = [];
+  let previousPaired: (number | string)[] = []; // previousPeople, if their clause gave them roles
+  // Whom previousPeople's "all other authors" left out, so the clause after it can leave out the same.
+  let previousLeftOut: Set<number | string> | undefined;
+  // Start of each "all other authors:" -> the authors named before it.
+  const listed = new Map<number, Set<number | string>>();
+  const named = new Set<number | string>();
+  for (const [start, end, kind, value] of [...mentions].sort(compareMentions)) {
+    COLON_RE.lastIndex = end;
+    if (value === OTHER_AUTHORS && COLON_RE.test(original)) listed.set(start, new Set(named));
+    if (kind === "A" && ((value as number) >= 0 || value === ALL_AUTHORS)) named.add(value);
+  }
   for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {
     const runs: [Kind, (number | string)[]][] = [];
-    for (const [, kind, value] of clause) {
+    const starts: number[] = [];
+    const leftOut: (Set<number | string> | undefined)[] = [];
+    for (const [start, kind, value] of clause) {
       const last = runs.at(-1);
       if (last && last[0] === kind) last[1].push(value);
-      else runs.push([kind, [value]]);
+      else {
+        runs.push([kind, [value]]);
+        starts.push(start);
+      }
     }
     // "A.B.: conceptualization; methodology": a clause of roles alone goes to the people before it,
     // unless it opens with a name the parser did not recognise.
     const leadIn = text.slice(k ? ends[k - 1] : 0, clause[0]?.[0]); // names found are masked
     if (runs.length === 1 && runs[0]?.[0] === "R" && previousPeople.length > 0 && !opensWithName(leadIn)) {
       runs.unshift(["A", previousPeople]);
+      starts.unshift(-1);
     }
     // A trailing run with no partner (authors named after the last roles) is dropped.
     for (let r = 0; r + 1 < runs.length; r += 2) {
       type Run = [Kind, (number | string)[]];
       const [lead, follow] = [runs[r], runs[r + 1]] as [Run, Run];
       const [people, slugs] = lead[0] === "A" ? [lead[1], follow[1]] : [follow[1], lead[1]];
-      const indices = people.includes(ALL_AUTHORS)
-        ? authors.map((_, i) => i)
-        : people.filter((i) => (i as number) >= 0).map(Number);
+      let indices = people.filter((i) => (i as number) >= 0).map(Number);
+      if (people.includes(ALL_AUTHORS) || (people.includes(OTHER_AUTHORS) && indices.length > 0)) {
+        indices = authors.map((_, i) => i);
+      } else if (people.includes(OTHER_AUTHORS)) {
+        const at = lead[0] === "A" ? r : r + 1;
+        // After another "all other authors", it leaves out the same authors.
+        const before =
+          listed.get(starts[at] as number) ??
+          (at >= 2 ? (leftOut[at - 2] ?? new Set(runs[at - 2]?.[1])) : (previousLeftOut ?? new Set(previousPaired)));
+        leftOut[at] = before;
+        // After "all authors", everyone is named already.
+        indices = before.has(ALL_AUTHORS) ? [] : authors.map((_, i) => i).filter((i) => !before.has(i));
+      }
       for (const i of indices) for (const slug of slugs) assignments.add(`${i} ${slug}`);
       for (const i of people) {
         if ((i as number) <= UNRESOLVED)
           for (const slug of slugs) slugsOf[UNRESOLVED - (i as number)]?.add(String(slug));
       }
     }
-    const peopleRuns = runs.filter(([kind]) => kind === "A");
-    const lastPeople = peopleRuns.at(-1);
-    if (lastPeople) previousPeople = lastPeople[1];
+    const lastPeople = runs.findLastIndex(([kind]) => kind === "A");
+    if (lastPeople >= 0) {
+      previousPeople = (runs[lastPeople] as [Kind, (number | string)[]])[1];
+      previousPaired = lastPeople < runs.length - (runs.length % 2) ? previousPeople : [];
+      previousLeftOut = leftOut[lastPeople];
+    }
   }
 
   const roleOrder = (role: CreditRoleName) => CREDIT_ROLES.findIndex((r) => r.name === role);
