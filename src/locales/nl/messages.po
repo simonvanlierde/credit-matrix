@@ -371,6 +371,9 @@ msgstr "Dit concept is te groot om als link te delen. Exporteer het in plaats da
 msgid "errShareUnsupported"
 msgstr "Deze browser kan geen deellinks maken. Exporteer het concept als JSON."
 
+msgid "errShareInvalid"
+msgstr "Dit concept kan zo niet als link worden gedeeld. Laad de pagina opnieuw of controleer de bijdragers."
+
 msgid "errShareLinkBroken"
 msgstr "Deze gedeelde link kon niet worden geopend. Uw eigen concept is behouden."
 
@@ -752,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT is een ANSI/NISO-standaard (<cc>CC BY 4.0</cc>). Dit project staat los van NISO en is niet door NISO onderschreven."
 
 msgid "aboutPrivacy"
-msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent.\n\nCloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser.\n\nBij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload.\n\nVerder verlaat niets uw browser: concepten blijven in de lokale opslag, net als of u de lijst Aan de slag hebt gesloten of een verklaring hebt gekopieerd. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest.\n\nWie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; de inlog reist daarna mee in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
+msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent.\n\nCloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser.\n\nBij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload.\n\nVerder verlaat niets uw browser: concepten blijven in de lokale opslag, net als of u de lijst Aan de slag hebt gesloten of een verklaring hebt gekopieerd, en welk schrijfprogramma u het laatst koos. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest.\n\nWie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; de inlog reist daarna mee in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
 
 msgid "accessibilityStatement"
 msgstr "Toegankelijkheidsverklaring"
@@ -936,6 +939,9 @@ msgstr "Dit bestand is gemaakt met een nieuwere versie van CRediT Matrix. Laad d
 
 msgid "errImportRepeatedId"
 msgstr "Dit bestand bevat dezelfde bijdrager-id twee keer, dus het is niet geïmporteerd."
+
+msgid "errImportScoreCell"
+msgstr "Rij {row}, kolom ‘{column}’: ‘{value}’ is geen score. Gebruik een getal van 0 tot 100, een niveau zoals Lead, of yes/no."
 
 msgid "errHeatmapExport"
 msgstr "De heatmap kan niet als {format} worden geëxporteerd."
@@ -1860,6 +1866,9 @@ msgstr "Genereer heatmap.svg met de CLI hieronder en voeg de figuur toe aan je d
 
 msgid "toolchainDataHint"
 msgstr "Sla de JSON-export op als contributors.json voor het recept en de CLI hieronder."
+
+msgid "navPrimary"
+msgstr "Hoofdmenu"
 
 msgid "docsTitle"
 msgstr "Documentatie"

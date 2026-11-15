@@ -86,6 +86,26 @@ describe("round-trip exports", () => {
     expect(fromJson('{"version": 1, "authors": []}')).toEqual({ authors: [] });
   });
 
+  it("merges a repeated role the way every other import does, so all exports agree", () => {
+    const grace = createAuthor("Grace Hopper");
+    const file = JSON.stringify({
+      version: 1,
+      authors: [
+        {
+          ...grace,
+          contributions: [
+            { role: "Software", score: 100 },
+            { role: "Software", score: 0 },
+          ],
+        },
+      ],
+    });
+    const [imported] = fromJson(file).authors;
+    expect(imported?.contributions).toEqual(
+      createAuthor("Grace Hopper", { contributions: [{ role: "Software", score: 100 }] }).contributions,
+    );
+  });
+
   it("throws a RepeatedIdError for a file that repeats a contributor id", () => {
     const grace = createAuthor("Grace Hopper");
     const file = JSON.stringify({ version: 1, authors: [grace, { ...grace, name: "Charles Darwin" }] });

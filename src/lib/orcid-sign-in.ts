@@ -70,6 +70,8 @@ export async function takeOrcidReturn(
   const { params, pending } = discardOrcidReturn();
   const token = params.get("id_token");
   if (!(pending && token) || params.get("state") !== pending.state) return { proof: null };
+  // The page rebuilds the signed link from sentAt, and toSharePayload throws on a time its reader rejects.
+  if (!(Number.isSafeInteger(pending.sentAt) && pending.sentAt >= 0)) return { proof: null };
   const keys = await fetchOrcidKeys(fetcher);
   const proof = keys && (await verifyOrcidToken(token, { payload: pending.payload, keys, now: Date.now() }));
   return proof ? { proof, sentAt: pending.sentAt } : { proof: null };

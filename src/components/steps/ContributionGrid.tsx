@@ -224,6 +224,8 @@ export function ContributionGrid() {
     author: Author,
     roleIndex: number,
   ) {
+    // Modified keys belong to the browser: Ctrl+0 resets zoom, Alt+Left is Back.
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     // Direct entry: 0–3 set none/supporting/equal/lead without cycling, so a
     // keyboard user never has to destroy a value to correct an overshoot. In
     // yes/no mode only 0 and 1 mean anything.

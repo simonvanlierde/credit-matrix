@@ -18,6 +18,14 @@ const SECTIONS = {
 // The Typst README's title is the package name, as Typst Universe shows it; in the docs list it needs the tool's.
 const TITLES = { "integrations/typst/README.md": "CRediT statement for Typst" };
 
+// Pages whose first sentence reads badly as a search-result summary.
+const DESCRIPTIONS = {
+  "integrations/heatmap.md":
+    "How the contribution heatmap is drawn: cells, levels, marks and the text alternative every writing tool embeds.",
+  "integrations/figures/README.md":
+    "Keep the heatmap's fonts with the figure: when to export PDF or SVG, and how to supply your own font.",
+};
+
 /**
  * Two modules, so the app entry carries the route list and nothing else:
  * - `virtual:doc-files`: each file's path, route and section (src/docs/pages.ts).
@@ -102,7 +110,10 @@ function docMeta(path, source) {
   const heading = tokens.find((token) => token.type === "heading" && token.depth === 1);
   const paragraph = tokens.find((token) => token.type === "paragraph");
   if (!(heading?.tokens && paragraph?.tokens)) throw new Error(`${path} needs a # title and a first paragraph`);
-  return { title: TITLES[path] ?? plain(heading.tokens), description: snippet(plain(paragraph.tokens)) };
+  return {
+    title: TITLES[path] ?? plain(heading.tokens),
+    description: DESCRIPTIONS[path] ?? snippet(plain(paragraph.tokens)),
+  };
 }
 
 // shortcut: reads PNG headers only, as the docs image glob (here and in src/docs/images.ts) takes PNGs only;

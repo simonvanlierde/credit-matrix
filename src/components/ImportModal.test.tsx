@@ -240,6 +240,23 @@ describe("a JSON export that repeats a contributor id", () => {
   });
 });
 
+describe("a CSV with a cell that is not a score", () => {
+  it("names the row, column and cell", async () => {
+    const { onImport } = renderModal(0);
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), {
+      target: { value: "Name,Software\nGrace Hopper,maybe" },
+    });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+
+    const message = english.errImportScoreCell
+      .replace("{row}", "2")
+      .replace("{column}", "Software")
+      .replace("{value}", "maybe");
+    expect(screen.getByText(message)).toBeTruthy();
+    expect(onImport).not.toHaveBeenCalled();
+  });
+});
+
 describe("accessibility and drops", () => {
   it("ties the form error to the textarea", async () => {
     renderModal(0);
@@ -277,6 +294,51 @@ describe("accessibility and drops", () => {
     const file = new File(["Grace Hopper"], "authors.csv");
     await act(async () => fireEvent.change(input, { target: { files: [file] } }));
     expect(screen.getByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
+  });
+
+  it("imports a file chosen while an earlier paste waits for confirmation", async () => {
+    const { onImport } = renderModal(1);
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "Ada Lovelace" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await act(async () => fireEvent.change(input, { target: { files: [new File(["Grace Hopper"], "authors.csv")] } }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    expect(onImport.mock.calls[0]?.[0].authors.map((author: Author) => author.name)).toEqual(["Grace Hopper"]);
+  });
+
+  it("drops a file whose read settles after the dialog closed", async () => {
+    const { container } = renderModal(0);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    let finish: (text: string) => void = () => undefined;
+    const file = new File(["Grace Hopper"], "authors.csv");
+    file.text = () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      });
+    fireEvent.change(input, { target: { files: [file] } });
+    act(() => {
+      container.ownerDocument.querySelector("dialog")?.dispatchEvent(new Event("close"));
+    });
+    await act(async () => finish("Grace Hopper"));
+    expect(screen.queryByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeNull();
+    expect((screen.getByLabelText(english.pasteRawData) as HTMLTextAreaElement).value).toBe("");
+  });
+
+  it("keeps a newer file when an earlier read finishes last", async () => {
+    renderModal(0);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    let finish: (text: string) => void = () => undefined;
+    const slow = new File(["Ada Lovelace"], "slow.csv");
+    slow.text = () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      });
+    fireEvent.change(input, { target: { files: [slow] } });
+    await act(async () => fireEvent.change(input, { target: { files: [new File(["Grace Hopper"], "new.csv")] } }));
+    await act(async () => finish("Ada Lovelace"));
+    expect((screen.getByLabelText(english.pasteRawData) as HTMLTextAreaElement).value).toBe("Grace Hopper");
+    expect(screen.getByText(english.fileLoaded.replace("{name}", "new.csv"))).toBeTruthy();
   });
 });
 
@@ -595,6 +657,21 @@ describe("import progress and outcome", () => {
     expect(screen.queryByRole("button", { name: english.cancel })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: english.importAddNew.replace("{count}", "1") }));
     expect(onImport.mock.calls[0]?.[1]).toBe("add");
+  });
+
+  it("drops a staged confirmation when the text changes, so Import parses the new text", async () => {
+    const ada = createAuthor("Ada Lovelace");
+    const { onImport } = renderModal(1, undefined, { authors: [ada] });
+    paste("Grace Hopper");
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    expect(screen.getByText(english.importChoiceTitle)).toBeTruthy();
+    screen.getByLabelText(english.pasteRawData).focus();
+    paste("Katherine Johnson");
+    expect(screen.queryByText(english.importChoiceTitle)).toBeNull();
+    expect(document.activeElement).toBe(screen.getByLabelText(english.pasteRawData));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    expect(onImport.mock.calls[0]?.[0].authors.map((author: Author) => author.name)).toEqual(["Katherine Johnson"]);
   });
 
   it("says plainly when XML cannot be read", async () => {

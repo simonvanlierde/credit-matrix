@@ -44,11 +44,13 @@ const TRANSLATORS = Object.fromEntries(
 // MyST runs a plugin listed by URL from a copy in its build cache, where no package resolves, so the
 // renderer downloads each face once into the machine's font cache.
 // A renderer reports each font family once, so one renderer serves each font search (folders and
-// system fonts); its reports wait here until the page that triggered the search can print them.
+// system fonts) and family; its reports wait here until the page that triggered the search can print them.
+// Keyed by family too: heatmaps render concurrently, and a report must land on one that uses its family.
 const renderers = new Map();
 function rendererFor(options) {
-  const custom = options.font && !["sans", "serif"].includes(String(options.font).toLowerCase());
-  const key = custom ? JSON.stringify([options.fontPath, options.ignoreSystemFonts]) : "";
+  const family = String(options.font ?? "").toLowerCase();
+  const custom = family && !["sans", "serif"].includes(family);
+  const key = custom ? JSON.stringify([family, options.fontPath, options.ignoreSystemFonts]) : "";
   if (!renderers.has(key)) {
     const reports = [];
     renderers.set(key, { reports, figures: createFigureRenderer({ onFont: (report) => reports.push(report) }) });
@@ -121,7 +123,10 @@ export function statementEntries(authors, levels = {}) {
   return entries;
 }
 
-/** mdast for the statement: "**Name**: Role, Role; **Name**: Role." */
+/**
+ * mdast for the statement: "**Name**: Role, Role; **Name**: Role." `options.footnoteKey`
+ * tells apart the level footnotes of statements that share a page.
+ */
 export function statementNode(authors, options = {}) {
   const entries = statementEntries(authors, options.levels);
   if (entries.length === 0) return [];
@@ -136,7 +141,7 @@ export function statementNode(authors, options = {}) {
         `CRediT: ${author.name}${ui("labelSeparator")}`.length,
       )}.`;
       const identifier = `credit-matrix-${createHash("sha256")
-        .update(author.name + value)
+        .update(`${options.footnoteKey ?? 0}\n${i}\n${author.name}\n${value}`)
         .digest("hex")
         .slice(0, 20)}`;
       reference = [{ type: "footnoteReference", identifier, label: identifier }];
@@ -159,8 +164,9 @@ export function statementNode(authors, options = {}) {
 }
 
 function readFrontmatter(file) {
-  const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(readFileSync(file, "utf8"));
-  return match ? (parse(match[1]) ?? {}) : {};
+  // The closing fence is a whole line, and the block may be empty.
+  const match = /^---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)??---[ \t]*(?:\r?\n|$)/.exec(readFileSync(file, "utf8"));
+  return match ? (parse(match[1] ?? "") ?? {}) : {};
 }
 
 /** The folder of the nearest myst.yml (the page's own folder without one) and its project settings. */
@@ -177,7 +183,8 @@ const projectConfig = (file) => findProject(file).config;
 function levelsFor(file) {
   const page = file.endsWith(".md") ? readFrontmatter(file) : {};
   // Page authors replace project authors, so their level metadata must replace it too.
-  const config = page.authors !== undefined || page.author !== undefined ? page : projectConfig(file);
+  // The same test as authorsFor: a null page list falls back to the project's authors.
+  const config = (page.authors ?? page.author ?? null) !== null ? page : projectConfig(file);
   return (page.options?.["credit-matrix"] ?? config.options?.["credit-matrix"])?.levels;
 }
 
@@ -196,13 +203,26 @@ function translationsFor(file) {
   return TRANSLATORS[resolveLocaleTag(page.lang ?? projectConfig(file).lang) ?? "en"];
 }
 
+/**
+ * Statements run so far per page. Every statement on a page lists the same authors, so its
+ * ordinal keeps their footnote ids apart; the node's position cannot, as each notebook cell
+ * is parsed on its own from line 1.
+ */
+// NOTE: counts per process, so `myst start` rebuilds renumber the ids (still unique within a page).
+const statementsPerPage = new Map();
+
 const creditStatement = {
   name: "credit-statement",
   doc: "A CRediT authorship statement built from the authors' `roles`.",
   run(_data, vfile) {
-    return vfile?.path
-      ? statementNode(authorsFor(vfile.path), { ...translationsFor(vfile.path), levels: levelsFor(vfile.path) })
-      : [];
+    if (!vfile?.path) return [];
+    const footnoteKey = statementsPerPage.get(vfile.path) ?? 0;
+    statementsPerPage.set(vfile.path, footnoteKey + 1);
+    return statementNode(authorsFor(vfile.path), {
+      ...translationsFor(vfile.path),
+      levels: levelsFor(vfile.path),
+      footnoteKey,
+    });
   },
 };
 

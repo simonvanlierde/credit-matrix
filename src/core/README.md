@@ -198,8 +198,9 @@ shapes, cell size, fonts, legends, short labels and orientation for the JavaScri
 document plugins. The lightweight `buildHeatmapSvg` keeps its system-font output.
 
 `fromCsv` needs a `Name` column. Other headers and role names match in any case and with any kind of
-dash. A score cell is a number from 0 to 100 or a level word (`None`, `Supporting`, `Equal`, `Lead`).
-Rows without a usable name are skipped.
+dash. A score cell is empty, a number from 0 to 100 (`50%` and a decimal comma read too), a level word
+(`None`, `Supporting`, `Equal`, `Lead`), or `yes`, `x`, `TRUE` or `✓` for lead and `no`, `FALSE` or `-` for none.
+Any other cell throws a `ScoreCellError` naming its row and column. Rows without a usable name are skipped.
 
 `toTenzing` writes the columns of tenzing's example CSV. tenzing records a role as done or not, so
 any score above 0 becomes `TRUE`, and equal contribution is not kept. Rows run in byline order:
@@ -323,7 +324,7 @@ holds its exact shape. By entry point:
   - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
   - Statements: `generateStatement`, `statementSpans`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`,
     `StatementSpan`, `StatementCell`
-  - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `toJats4rXml`,
+  - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `ScoreCellError`, `toJats4rXml`,
     `fromJats4rXml`, `XmlParser`, `XmlElement`, `XmlParseError`, `fromTenzing`, `isTenzing`, `toTenzing`, `toLatexCredits`,
     `toMarkdown`, `toCrossrefContributors`, `fromCrossrefContributors`, `buildHeatmapSvg`, `HeatmapOptionError`, `heatmapDescription`, `heatmapPrintWarning`, `HeatmapSvgOptions`, `TOOLCHAINS`, `Toolchain`, `NAME_PARTICLES`, `NAME_SUFFIXES`, `detectFormat`,
     `importAny`, `ExportOnlyError`, `DetectedFormat`, `Imported`

@@ -55,6 +55,8 @@ export function Inspector() {
   };
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    // Modified keys belong to the browser: Alt+Left is Back.
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     const current = TABS.indexOf(tab);
     const target =
       event.key === "ArrowRight"

@@ -1,10 +1,16 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { decodeShareHash } from "@/core";
+import { startOrcidSignIn } from "@/lib/orcid-sign-in";
 import { IntlProvider } from "@/lib/translations";
 import { messages as en } from "@/locales/en/messages";
 import { useContributionStore } from "@/store/contribution-store";
 import { ClaimGate } from "./CoauthorPage";
+
+vi.mock("@/lib/orcid-sign-in", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/orcid-sign-in")>();
+  return { ...actual, startOrcidSignIn: vi.fn(actual.startOrcidSignIn) };
+});
 
 it("sends the same answer with the same send time, shared or copied", async () => {
   const store = useContributionStore.getState();
@@ -43,4 +49,21 @@ it("sends the same answer with the same send time, shared or copied", async () =
   act(() => useContributionStore.getState().setAuthorScore(grace.id, 0, 100));
   fireEvent.click(screen.getByRole("button", { name: /Copy the link instead|Link copied/ }));
   expect(await sentAt(3)).toBeGreaterThan(first ?? Number.POSITIVE_INFINITY);
+});
+
+it("reports a sign-in that throws before leaving for ORCID as failed", async () => {
+  const store = useContributionStore.getState();
+  store.addAuthor("Grace Hopper");
+  const grace = useContributionStore.getState().authors.at(-1);
+  if (!grace) throw new Error("expected Grace");
+  store.setClaim({ contributorId: grace.id, sourceDraftId: "src-1", sentAt: 1 });
+  vi.mocked(startOrcidSignIn).mockRejectedValueOnce(new Error("no crypto.subtle"));
+
+  render(
+    <IntlProvider locale="en" messages={en}>
+      <ClaimGate>{null}</ClaimGate>
+    </IntlProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Sign in with ORCID" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("The ORCID sign-in did not finish.");
 });

@@ -46,20 +46,29 @@ export const ORCID_REGEX = /^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$/;
 /** ORCID iD accepted on input: bare form or the canonical orcid.org URL. */
 export const ORCID_INPUT_REGEX = /^(https?:\/\/orcid\.org\/)?\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$/;
 
-/** Return the canonical bare ORCID form used in state and exports. */
+/**
+ * Return the canonical bare ORCID form used in state and exports. Takes what
+ * people paste: surrounding spaces, the orcid.org address with or without its
+ * scheme or a trailing slash, and a lower-case check character.
+ */
 export function normalizeOrcid(id: string): string {
-  return id.replace(/^https?:\/\/orcid\.org\//, "");
+  return id
+    .trim()
+    .replace(/^(?:https?:\/\/)?(?:www\.)?orcid\.org\//i, "")
+    .replace(/\/$/, "")
+    .toUpperCase();
 }
 
 /**
  * Validate an ORCID iD fully: correct shape *and* a valid ISO 7064 MOD 11-2
  * check digit. The shape regexes alone accept checksum-invalid iDs (e.g. a
  * mistyped digit), which would then be exported as if verified.
- * Accepts the bare form or the orcid.org URL.
+ * Accepts any form `normalizeOrcid` reads; store its result, not the input.
  */
 export function isValidOrcid(id: string): boolean {
-  if (!ORCID_INPUT_REGEX.test(id)) return false;
-  const digits = normalizeOrcid(id).replace(/-/g, "");
+  const bare = normalizeOrcid(id);
+  if (!ORCID_REGEX.test(bare)) return false;
+  const digits = bare.replace(/-/g, "");
   let total = 0;
   for (let i = 0; i < 15; i += 1) total = (total + Number(digits[i])) * 2;
   const check = (12 - (total % 11)) % 11;

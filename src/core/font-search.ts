@@ -118,8 +118,9 @@ async function faces(file: string): Promise<Face[]> {
     // A collection lists each face's offset after its 12-byte header.
     const collection = text(head.subarray(0, 4)) === "ttcf";
     const count = collection ? view(head).getUint32(8) : 0;
+    const { size } = await handle.stat();
     // A forged count would size the face-list buffer: up to 16 GiB.
-    if (collection && (count > 1024 || 12 + count * 4 > (await handle.stat()).size)) return [];
+    if (collection && (count > 1024 || 12 + count * 4 > size)) return [];
     const list = collection ? view(await readAt(handle, 12, count * 4)) : undefined;
     const starts = list ? Array.from({ length: list.byteLength / 4 }, (_, index) => list.getUint32(index * 4)) : [0];
     const found: Face[] = [];
@@ -130,6 +131,8 @@ async function faces(file: string): Promise<Face[]> {
       const tables = new Map<string, Uint8Array>();
       for (const tag of ["name", "OS/2", "fvar"]) {
         const record = records.get(tag);
+        // A forged table length would size the read buffer: up to 4 GiB.
+        if (record && record.offset + record.length > size) continue;
         // fvar only needs to exist here.
         if (record)
           tables.set(tag, tag === "fvar" ? new Uint8Array() : await readAt(handle, record.offset, record.length));
@@ -148,6 +151,8 @@ async function faces(file: string): Promise<Face[]> {
 
 // WOFF2's known-table index: name is entry 5.
 const WOFF2_NAME = 5;
+// A name table is a few kB; the cap stops a decompression bomb from filling memory.
+const MAX_DECOMPRESSED = 64 << 20;
 
 function base128(data: DataView, at: { offset: number }): number {
   let value = 0;
@@ -173,7 +178,11 @@ async function webFontFamilies(file: string): Promise<string[]> {
         if (text(bytes.subarray(record, record + 4)) !== "name") continue;
         const offset = data.getUint32(record + 4);
         const table = bytes.subarray(offset, offset + data.getUint32(record + 8));
-        return familyNames(table.length < data.getUint32(record + 12) ? new Uint8Array(inflateSync(table)) : table);
+        return familyNames(
+          table.length < data.getUint32(record + 12)
+            ? new Uint8Array(inflateSync(table, { maxOutputLength: MAX_DECOMPRESSED }))
+            : table,
+        );
       }
     }
     if (signature === "wOF2") {
@@ -193,7 +202,9 @@ async function webFontFamilies(file: string): Promise<string[]> {
         start += stored;
       }
       if (name && text(bytes.subarray(4, 8)) !== "ttcf") {
-        const stream = brotliDecompressSync(bytes.subarray(at.offset, at.offset + data.getUint32(20)));
+        const stream = brotliDecompressSync(bytes.subarray(at.offset, at.offset + data.getUint32(20)), {
+          maxOutputLength: MAX_DECOMPRESSED,
+        });
         return familyNames(new Uint8Array(stream).subarray(name.start, name.start + name.length));
       }
     }
@@ -256,12 +267,12 @@ async function systemFolders(): Promise<string[]> {
 }
 
 /**
- * CSS Fonts 4 matching for weight 400: 400, then 500, then lighter weights descending, then bolder ones
- * ascending. Then the width nearest normal, and a static face before a variable one.
+ * CSS Fonts 4 matching for weight 400: 400, then 401-500 ascending, then lighter weights descending, then
+ * weights above 500 ascending. Then the width nearest normal, and a static face before a variable one.
  */
 function rank(face: Face): number[] {
-  const weight =
-    face.weight === 400 ? 0 : face.weight === 500 ? 1 : face.weight < 400 ? 2 + 400 - face.weight : 2000 + face.weight;
+  const { weight: w } = face;
+  const weight = w >= 400 && w <= 500 ? w - 400 : w < 400 ? 500 - w : 2000 + w;
   return [face.upright ? 0 : 1, weight, Math.abs(face.width - 5), face.variable ? 1 : 0];
 }
 

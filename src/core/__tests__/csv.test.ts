@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { delimiterOf, escapeCsvFormulaOnly, fromCsv, headerCells, parseCsvRecords, toCsv } from "../export/csv";
+import {
+  delimiterOf,
+  escapeCsvFormulaOnly,
+  fromCsv,
+  headerCells,
+  parseCsvRecords,
+  ScoreCellError,
+  toCsv,
+} from "../export/csv";
 import { parseAuthorText } from "../parse-authors";
 
 describe("CSV import/export", () => {
@@ -127,6 +135,22 @@ describe("CSV import/export", () => {
     expect(score("Software")).toBe(50);
   });
 
+  it("reads ticked cells as lead and refuses a cell that is not a score, naming its row and column", () => {
+    const [grace] = fromCsv(
+      `Name,Conceptualization,Software,Methodology,Formal analysis,Funding acquisition,Investigation,Resources\nGrace Hopper,yes,X,TRUE,✓,FALSE,-,no`,
+    );
+    const scores = grace?.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(scores).toEqual(["Conceptualization", "Formal analysis", "Methodology", "Software"]);
+    // A sheet saved where the comma is the decimal mark, a percentage cell, and a row cut short.
+    const [ana] = fromCsv(`Name;Software;Methodology;Validation\nAna Lima;12,5;50%`);
+    expect(ana?.contributions.filter((c) => c.score > 0).map((c) => c.score)).toEqual([50, 13]);
+
+    const read = (cell: string) => () => fromCsv(`Name,software\n\nGrace Hopper,100\n"Charles\nDarwin",${cell}`);
+    expect(read("maybe")).toThrow(ScoreCellError);
+    expect(read("maybe")).toThrow(expect.objectContaining({ row: 4, column: "software", value: "maybe" }));
+    expect(read("n".repeat(50))).toThrow(expect.objectContaining({ value: "n".repeat(40) }));
+  });
+
   it("skips a row with no usable name and keeps the rest", () => {
     const parsed = fromCsv(`Name,Conceptualization\nGrace Hopper,100\n,100\n123,100\nCharles Lee,100`);
     expect(parsed.map((a) => a.name)).toEqual(["Grace Hopper", "Charles Lee"]);
@@ -220,5 +244,9 @@ describe("CSV import/export", () => {
   it("drops an ORCID that is not valid and keeps the contributor", () => {
     const parsed = fromCsv("Name,ORCID\nGrace Hopper,0000-0000-0000-0000");
     expect(parsed.map((a) => [a.name, a.orcid])).toEqual([["Grace Hopper", undefined]]);
+  });
+
+  it("keeps a pasted ORCID iD in its bare form", () => {
+    expect(fromCsv("Name,ORCID\nGrace Hopper, orcid.org/0000-0002-1694-233x/")[0]?.orcid).toBe("0000-0002-1694-233X");
   });
 });

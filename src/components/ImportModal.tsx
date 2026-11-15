@@ -15,6 +15,7 @@ import {
   namesCredit,
   parseStatement,
   RepeatedIdError,
+  ScoreCellError,
   statementAuthor,
   type Toolchain,
   XmlParseError,
@@ -285,6 +286,8 @@ export function ImportModal({
   const request = useRef(0);
   // Bumped on close and unmount: an import that settles after either must not land.
   const closes = useRef(0);
+  // Only the last selected file may replace the textarea.
+  const fileRead = useRef(0);
   // Ends the citation converter's worker when its import is no longer wanted.
   const converting = useRef<AbortController | null>(null);
   useEffect(
@@ -333,16 +336,24 @@ export function ImportModal({
   useModalDialog(dialog, open);
 
   async function handleFileRead(file: File) {
+    const read = ++fileRead.current;
     if (file.size > MAX_IMPORT_BYTES) {
       showError(t("errFileTooLarge", { limit: MAX_IMPORT_MB }));
       return;
     }
+    const started = closes.current;
     try {
-      setText(await file.text());
+      const content = await file.text();
+      if (started !== closes.current || read !== fileRead.current) return;
+      setText(content);
+      // A staged confirmation holds the earlier text's parse; without a focus jump, it goes.
+      hadPending.current = false;
+      setPending(null);
+      setReviewed(null);
       setFileName(file.name);
       setError(null);
     } catch {
-      showError(t("errFileUnreadable"));
+      if (started === closes.current && read === fileRead.current) showError(t("errFileUnreadable"));
     }
   }
 
@@ -447,6 +458,10 @@ export function ImportModal({
       // Only a converter that could not load fits the "try again online" message; a bad file falls through.
       if (failure instanceof ConverterUnavailableError) {
         showError(t("errCitationConverter"));
+        return;
+      }
+      if (failure instanceof ScoreCellError) {
+        showError(t("errImportScoreCell", { row: failure.row, column: failure.column, value: failure.value }));
         return;
       }
       // A newer build's export, or one that repeats an id, is said plainly, not as a validation failure.
@@ -639,6 +654,10 @@ export function ImportModal({
                 setFileName(null);
                 setError(null);
                 setReviewed(null);
+                // A staged confirmation holds the old text's parse. Dropping it here leaves focus in the
+                // textarea instead of the effect moving it to Import.
+                hadPending.current = false;
+                setPending(null);
               }}
               placeholder={t("importPlaceholder", { names: t("sampleNames") })}
               rows={6}

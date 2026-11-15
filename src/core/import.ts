@@ -99,7 +99,7 @@ export interface Imported {
  * Read text in any format {@link detectFormat} knows. Throws on text it cannot
  * place, on text the app only exports (`ExportOnlyError`), on a CRediT statement (it names roles, not contributors: read it with
  * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
- * throws (`NewerVersionError`, `ZodError`, an XML parse error). An empty
+ * throws (`NewerVersionError`, `ZodError`, an XML parse error, `ScoreCellError`). An empty
  * `authors` means the format was right but held nobody. A list of names longer than `MAX_AUTHORS`
  * comes back cut to `MAX_AUTHORS + 1`, which is still too many to use.
  */

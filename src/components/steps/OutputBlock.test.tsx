@@ -122,3 +122,19 @@ function readBlob(blob: Blob | undefined): Promise<string> {
     reader.readAsArrayBuffer(blob);
   });
 }
+
+it("keeps the visible Copy text inside the button's accessible name in every state", async () => {
+  render(jsonBlock());
+  const button = screen.getByRole("button", { name: /^Copy/ });
+  expect(button.getAttribute("aria-label")).toBeNull();
+  expect(button.textContent).toBe("Copy JSON");
+  fireEvent.click(button);
+  expect(await screen.findByRole("button", { name: "Copied JSON" })).toBeTruthy();
+});
+
+it("names the copy-failed state with its visible text", async () => {
+  writeText.mockRejectedValue(new Error("denied"));
+  render(jsonBlock());
+  fireEvent.click(screen.getByRole("button", { name: "Copy JSON" }));
+  expect(await screen.findByRole("button", { name: /^Copy failed/ })).toBeTruthy();
+});

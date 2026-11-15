@@ -128,7 +128,7 @@ function normalizeRoleUrl(url: string): string {
     .trim()
     .toLowerCase()
     .replace(/^https?:\/\//, "")
-    .replace(/\/+$/, "");
+    .replace(/(?<!\/)\/+$/, ""); // the lookbehind tries each run of slashes once, not from every slash
 }
 
 const squash = (text: string | null | undefined) => (text ?? "").replace(/\s+/g, " ").trim();

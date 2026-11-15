@@ -7,7 +7,8 @@ import type { Author } from "./author";
  * id. Without this, re-importing a roster turns every pending reply into
  * "unmatched". A contributor keeps an id the import already has, else takes
  * the id of the row with the same ORCID iD, else of the row with the same name
- * (ignoring case and spacing). Each existing id goes to one contributor only.
+ * (ignoring case and spacing) unless both rows have different ORCID iDs. Each
+ * existing id goes to one contributor only.
  *
  * This is for your own import. A reply is matched by its claimed id alone.
  */
@@ -33,7 +34,7 @@ export function keepKnownIds(current: Author[], incoming: Author[]): Author[] {
     if (kept.has(author.id)) return author;
     const id =
       (author.orcid ? take((known) => known.orcid === author.orcid) : undefined) ??
-      take((known) => nameKey(known) === nameKey(author));
+      take((known) => samePerson(known, author));
     return id ? { ...author, id } : author;
   });
 }

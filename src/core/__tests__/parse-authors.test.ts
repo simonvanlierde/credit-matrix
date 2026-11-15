@@ -291,6 +291,15 @@ describe("deduplicateAuthorInitials", () => {
     expect(deduped[1]?.initials).not.toBe(deduped[0]?.initials);
   });
 
+  it("takes only letters from the surname to tell initials apart", () => {
+    expect(parseAuthorText("Dan O'Brien\nDora O'Brien\nDave O'Brien").map((a) => a.initials)).toEqual([
+      "DO",
+      "DOb",
+      "DOr",
+    ]);
+    expect(parseAuthorText("Ann Al-Bayati\nAmy Al-Bayati").map((a) => a.initials)).toEqual(["AA", "AAl"]);
+  });
+
   it("still assigns unique initials when the surname runs out of letters", () => {
     // "Jo Li" → JL, then JLi (the surname's 2nd letter), and then the surname is
     // spent, so the disambiguator falls back to a counter suffix.
@@ -352,6 +361,16 @@ describe("parseAuthorText", () => {
 });
 
 describe("splitNameList", () => {
+  it("reads a serial comma's 'and' before the last name as a separator", () => {
+    expect(splitNameList("Ada Lovelace, Charles Darwin, and Grace Hopper")).toEqual([
+      "Ada Lovelace",
+      "Charles Darwin",
+      "Grace Hopper",
+    ]);
+    expect(splitNameList("Ada Lovelace, & Grace Hopper")).toEqual(["Ada Lovelace", "Grace Hopper"]);
+    expect(splitNameList("Lovelace, Ada, and Hopper, Grace")).toEqual(["Lovelace, Ada", "Hopper, Grace"]);
+  });
+
   it("splits on newlines, semicolons, and commas", () => {
     expect(splitNameList("Ada Lovelace, Charles Darwin; Katherine Johnson\nDorothy Hodgkin")).toEqual([
       "Ada Lovelace",

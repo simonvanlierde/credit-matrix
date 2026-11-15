@@ -15,6 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { brotliCompressSync, constants as zlibConstants } from "node:zlib";
 import fontkit, { type Font } from "@pdf-lib/fontkit";
 import { decodePDFRawStream, PDFDict, PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -105,7 +106,7 @@ describe("figures in a font family the caller names", () => {
     expect(svg).not.toContain("Noto Sans");
     expect(reports).toEqual([{ family: "Figure Test", file: join(FIXTURES, "FigureTest-Regular.ttf") }]);
     const pdf = await figures.pdf(authors("Ada Lovelace"), options("Figure Test"));
-    expect([...(await pdfFonts(pdf)).keys()]).toEqual(["CMFIGR+FigureTest-Regular"]);
+    expect([...(await pdfFonts(pdf)).keys()]).toEqual(["CMCUST+FigureTest-Regular"]);
     // One search per renderer and family.
     expect(reports).toHaveLength(1);
     if (!POPPLER) return;
@@ -118,7 +119,7 @@ describe("figures in a font family the caller names", () => {
     const font = embedded.get("Figure Test")?.font;
     expect(font && blank(font, "Ada Lovelace Software")).toBe("");
     const pdf = await pdfFonts(await figures.pdf(authors("Ada Lovelace"), options("Figure Test")));
-    const embeddedPdf = pdf.get("CMFIGR+FigureTest-Regular");
+    const embeddedPdf = pdf.get("CMCUST+FigureTest-Regular");
     expect(embeddedPdf && blank(embeddedPdf, "Ada Lovelace Software")).toBe("");
   });
 
@@ -135,7 +136,7 @@ describe("figures in a font family the caller names", () => {
     const pdf = await figures.pdf(authors("Ada Lovelace"), options("Figure Test CFF"));
     if (!POPPLER) return;
     const listed = spawnSync("pdffonts", ["-"], { input: pdf, encoding: "utf8" });
-    expect(listed.stdout).toMatch(/CMFIGR\+FigureTestCFF-Regular\s+CID Type 0C \(OT\)/);
+    expect(listed.stdout).toMatch(/CMCUST\+FigureTestCFF-Regular\s+CID Type 0C \(OT\)/);
     expect(listed.stderr).toBe("");
   });
 
@@ -151,7 +152,7 @@ describe("figures in a font family the caller names", () => {
 
   it("embeds a CID-keyed CFF font whose CIDs are its glyph ids in PDF", async () => {
     const pdf = await renderer().pdf(authors("ABBA"), options("Figure Test CID Identity"));
-    expect([...(await pdfFonts(pdf)).keys()]).toContain("CMFIGR+FigureTestCIDIdentity-Regular");
+    expect([...(await pdfFonts(pdf)).keys()]).toContain("CMCUST+FigureTestCIDIdentity-Regular");
   });
 
   it("refuses a CFF2 font in PDF with its own reason", async () => {
@@ -169,7 +170,7 @@ describe("figures in a font family the caller names", () => {
   it("picks the upright regular face of a collection", async () => {
     const reports: FigureFontReport[] = [];
     const pdf = await renderer(reports).pdf(authors("Ada Lovelace"), options("Figure Test Collection"));
-    expect([...(await pdfFonts(pdf)).keys()]).toEqual(["CMFIGR+FigureTestCollection-Regular"]);
+    expect([...(await pdfFonts(pdf)).keys()]).toEqual(["CMCUST+FigureTestCollection-Regular"]);
     expect(reports[0]?.file).toBe(join(FIXTURES, "FigureTestCollection.ttc"));
   });
 
@@ -251,6 +252,29 @@ describe("figures in a font family the caller names", () => {
     }
   });
 
+  it("picks weights in CSS Fonts 4 order for 400: 401-500 up, then lighter down, then bolder up", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    try {
+      const regular = readFileSync(join(FIXTURES, "FigureTest-Regular.ttf"));
+      const weightAt = regular.readUInt32BE(12 + tables(regular).indexOf("OS/2") * 16 + 8) + 4;
+      for (const weight of [900, 600, 100, 300, 500, 450, 400]) {
+        regular.writeUInt16BE(weight, weightAt);
+        writeFileSync(join(folder, `${weight}.ttf`), regular);
+      }
+      const picked: string[] = [];
+      for (let left = 7; left > 0; left--) {
+        const reports: FigureFontReport[] = [];
+        await renderer(reports).svg(authors("Ada"), options("Figure Test", [folder]));
+        const file = reports[0]?.file ?? "";
+        picked.push(file.slice(folder.length + 1));
+        rmSync(file);
+      }
+      expect(picked).toEqual(["400.ttf", "450.ttf", "500.ttf", "300.ttf", "100.ttf", "600.ttf", "900.ttf"]);
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
   it("names a custom family apart from a built-in fallback face of the same name", async () => {
     const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
     try {
@@ -261,6 +285,26 @@ describe("figures in a font family the caller names", () => {
       expect(families).toContain("Noto Sans (custom)");
       // Quoted: unquoted, the parentheses make the CSS value invalid and a browser draws its default font.
       expect(svg).toContain(`<tspan font-family="'Noto Sans (custom)'">Ada </tspan>`);
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
+  it("tags a custom family's PDF subset apart from a built-in face with the same PostScript name", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    try {
+      const thai = fileURLToPath(new URL("../../fonts/NotoSansThai-Regular.ttf", import.meta.url));
+      copyFileSync(thai, join(folder, "a.ttf"));
+      // Thai is shaped, so the built-in face draws it; the custom copy draws the Latin.
+      const pdf = await renderer().pdf(authors("Ada สมชาย"), options("noto sans thai", [folder]));
+      const document = await PDFDocument.load(pdf);
+      const names = document.context
+        .enumerateIndirectObjects()
+        .map(([, object]) => object)
+        .filter((object) => object instanceof PDFDict && object.get(PDFName.of("Subtype"))?.toString() === "/Type0")
+        .map((object) => (object as PDFDict).get(PDFName.of("BaseFont"))?.toString())
+        .filter((name) => name?.includes("NotoSansThai"));
+      expect(names.sort()).toEqual(["/CMCUST+NotoSansThai-Regular", "/CMFIGR+NotoSansThai-Regular"]);
     } finally {
       rmSync(folder, { recursive: true, force: true });
     }
@@ -300,6 +344,59 @@ describe("figures in a font family the caller names", () => {
     }
   });
 
+  it("skips a face whose table directory claims a table longer than the file", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    const forged = readFileSync(join(FIXTURES, "FigureTest-Regular.ttf"));
+    forged.writeUInt32BE(0xfffffff0, 12 + tables(forged).indexOf("name") * 16 + 12);
+    writeFileSync(join(folder, "a.ttf"), forged);
+    copyFileSync(join(FIXTURES, "FigureTest-Regular.ttf"), join(folder, "b.ttf"));
+    const handle = await open(join(folder, "b.ttf"));
+    const read = vi.spyOn(Object.getPrototypeOf(handle), "read");
+    await handle.close();
+    try {
+      const reports: FigureFontReport[] = [];
+      await renderer(reports).svg(authors("Ada"), options("Figure Test", [folder]));
+      expect(reports[0]?.file).toBe(join(folder, "b.ttf"));
+      const lengths = read.mock.calls.map((call) => Number(call[2] ?? 0));
+      expect(Math.max(...lengths)).toBeLessThan(2 ** 20);
+    } finally {
+      read.mockRestore();
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
+  it("stops reading a WOFF2 file whose Brotli stream expands past 64 MiB", async () => {
+    // A name table naming the family, placed after 64 MiB of zeros in a stream that compresses to ~12 kB.
+    const family = Buffer.from("Figure Test Bomb", "utf16le").swap16();
+    const name = Buffer.alloc(18 + family.length);
+    name.writeUInt16BE(1, 2);
+    name.writeUInt16BE(18, 4);
+    [3, 1, 0x409, 1, family.length, 0].forEach((value, index) => {
+      name.writeUInt16BE(value, 6 + index * 2);
+    });
+    family.copy(name, 18);
+    const padding = 2 ** 26;
+    const stream = brotliCompressSync(Buffer.concat([Buffer.alloc(padding), name]), {
+      params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 1 },
+    });
+    // Directory: a 64 MiB head table (known index 1), then name (known index 5), lengths in UIntBase128.
+    const directory = Buffer.from([1, 0xa0, 0x80, 0x80, 0x00, 5, name.length]);
+    const header = Buffer.alloc(48);
+    header.write("wOF2", 0, "latin1");
+    header.write("true", 4, "latin1");
+    header.writeUInt16BE(2, 12);
+    header.writeUInt32BE(stream.length, 20);
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    writeFileSync(join(folder, "FigureTestBomb-Regular.woff2"), Buffer.concat([header, directory, stream]));
+    try {
+      await expect(renderer().svg(authors("Ada"), options("Figure Test Bomb", [folder]))).rejects.toThrow(
+        `Cannot find the font family Figure Test Bomb in the font path (${folder}), with system fonts ignored.`,
+      );
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
   it("stops on a family it cannot find, never falling back", async () => {
     const figures = renderer();
     const missing = figures.pdf(authors("Ada"), options("No Such Family"));
@@ -317,8 +414,8 @@ describe("figures in a font family the caller names", () => {
     expect(drawn.get("Credit Figure SC")).toBe("屠呦呦");
     const pdf = await pdfFonts(await figures.pdf(authors("Zoë Chen 屠呦呦"), options("Figure Test")));
     expect([...pdf.keys()].sort()).toEqual([
+      "CMCUST+FigureTest-Regular",
       "CMFIGR+CreditFigureSC-Regular",
-      "CMFIGR+FigureTest-Regular",
       "CMFIGR+NotoSans-Regular",
     ]);
   });
@@ -337,7 +434,7 @@ describe("figures in a font family the caller names", () => {
     expect(forced.get("Noto Serif")).toBe("ë");
     const pdf = await pdfFonts(await figures.pdf(names, options("Figure Test Serif")));
     expect([...pdf.keys()].sort()).toEqual([
-      "CMFIGR+FigureTestSerif-Regular",
+      "CMCUST+FigureTestSerif-Regular",
       "CMFIGR+NotoNaskhArabic-Regular",
       "CMFIGR+NotoSerif-Regular",
     ]);

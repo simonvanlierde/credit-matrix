@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import fontkit from "@pdf-lib/fontkit";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { createSubsetter } from "../subset";
 
 const fonts = new URL("../../fonts/", import.meta.url);
@@ -40,4 +40,32 @@ it("says why it cannot subset a face too large for its memory or not a font at a
   const subsetter = await createSubsetter(readFileSync(new URL("harfbuzz-subset.wasm", fonts)));
   expect(() => subsetter.face(new Uint8Array(70e6)).subset([0x41], false)).toThrow("A 70 MB font is too large");
   expect(() => subsetter.face(new Uint8Array(64)).subset([0x41], false)).toThrow(/HarfBuzz/);
+});
+
+it("frees the subset face and its blob when HarfBuzz returns an empty subset", async () => {
+  const wasm = readFileSync(new URL("harfbuzz-subset.wasm", fonts));
+  const { instance } = await WebAssembly.instantiate(wasm);
+  const real = instance.exports as Record<string, (...args: number[]) => number>;
+  const destroyed: string[] = [];
+  const exports = {
+    ...real,
+    hb_blob_get_length: () => 0,
+    hb_blob_destroy: (blob: number) => {
+      destroyed.push("blob");
+      return real.hb_blob_destroy?.(blob);
+    },
+    hb_face_destroy: (face: number) => {
+      destroyed.push("face");
+      return real.hb_face_destroy?.(face);
+    },
+  };
+  const instantiate = vi.spyOn(WebAssembly, "instantiate").mockResolvedValue({ instance: { exports } } as never);
+  try {
+    const face = (await createSubsetter(wasm)).face(readFileSync(new URL("NotoSans-Regular.ttf", fonts)));
+    expect(() => face.subset([0x41], false)).toThrow("HarfBuzz returned an empty subset");
+    // The source face and blob, and the subset face and the blob it references.
+    expect(destroyed.sort()).toEqual(["blob", "blob", "face", "face"]);
+  } finally {
+    instantiate.mockRestore();
+  }
 });

@@ -342,8 +342,18 @@ function nameVariants(author: StatementAuthor): [Set<string>, Set<string>] {
 }
 
 const AFTER_INITIAL_RE = new RegExp(`(?<!${W})${U}(?:\\.|\\.? - )$`, "gu");
-// A clause opening with a name the parser did not recognise: "Dunn, C: writing".
-const NAME_COLON_RE = new RegExp(String.raw`${U}[^:;]*:\s*$`, "u");
+const CAPITAL_RE = new RegExp(U, "u");
+
+/**
+ * Whether a clause opens with a name the parser did not recognise: "Dunn, C: writing". Same as
+ * testing `${U}[^:;]*:\s*$`, without the regex's quadratic backtracking on a long lead-in.
+ */
+function opensWithName(leadIn: string): boolean {
+  const colon = leadIn.trimEnd().length - 1;
+  if (leadIn[colon] !== ":") return false;
+  const start = Math.max(leadIn.lastIndexOf(":", colon - 1), leadIn.lastIndexOf(";", colon - 1)) + 1;
+  return CAPITAL_RE.test(leadIn.slice(start, colon));
+}
 
 /**
  * No word character on either side of text[start:end], nor an initial and a dot or dash before it:
@@ -560,7 +570,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
     // "A.B.: conceptualization; methodology": a clause of roles alone goes to the people before it,
     // unless it opens with a name the parser did not recognise.
     const leadIn = text.slice(k ? ends[k - 1] : 0, clause[0]?.[0]); // names found are masked
-    if (runs.length === 1 && runs[0]?.[0] === "R" && previousPeople.length > 0 && !NAME_COLON_RE.test(leadIn)) {
+    if (runs.length === 1 && runs[0]?.[0] === "R" && previousPeople.length > 0 && !opensWithName(leadIn)) {
       runs.unshift(["A", previousPeople]);
     }
     // A trailing run with no partner (authors named after the last roles) is dropped.

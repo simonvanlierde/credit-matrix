@@ -16,9 +16,20 @@ import { ThemeHue } from "@/components/ThemeHue";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Announcer } from "@/lib/announce";
 import { AppIntlProvider } from "@/lib/intl";
+import { useTranslations } from "@/lib/translations";
 import packageJson from "../../package.json";
 import "./fonts.css";
 import "./globals.css";
+
+// A component of its own: the layout renders the translation provider, so only a child can read it.
+function PrimaryNav({ children }: { children: React.ReactNode }) {
+  const t = useTranslations();
+  return (
+    <nav aria-label={t("navPrimary")} className="hidden lg:flex gap-6 items-center">
+      {children}
+    </nav>
+  );
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -49,12 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Lockup />
                 </HomeLink>
               </h1>
-              <nav aria-label="Primary" className="hidden lg:flex gap-6 items-center">
+              <PrimaryNav>
                 <HowItWorks />
                 <AboutPopover version={packageJson.version} />
                 <DocsLink />
                 <CensusLink />
-              </nav>
+              </PrimaryNav>
             </div>
 
             {/* Actions */}

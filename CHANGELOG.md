@@ -159,6 +159,15 @@ See [deploying](docs/deploy.md).
 - Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
   replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
 - A stalled documentation download no longer holds a service-worker update open indefinitely.
+- CSV import reads `yes`, `x`, `TRUE` and `✓` in a score cell as lead, `no`, `FALSE` and `-` as none, and
+  `12,5` and `50%` as numbers. Any other cell that is not a number or a level stops the import with
+  its row and column, where it used to import as 0 without a warning. See
+  [import formats](docs/cli.md#input).
+- A share link keeps a name's first name, middle name and surname when they differ from how the name
+  splits, so "García López" comes back as one surname.
+- A list of names with a serial comma, "Ada Lovelace, Charles Darwin, and Grace Hopper", gives three
+  contributors, not one named "and Grace Hopper". The same holds for inverted names, "Lovelace, Ada,
+  and Hopper, Grace".
 
 ### Security
 
