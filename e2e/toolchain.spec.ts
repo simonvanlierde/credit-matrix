@@ -13,6 +13,12 @@ test("writing tool survives reload, export and share while journal files stay av
   await page.goto("/");
   await page.getByRole("button", { name: "Load sample data" }).click();
   await expect(page.getByRole("combobox", { name: "I write in…" })).toHaveText("All formats");
+  // The picker follows the statement's actions in tab order, just above the panel it opens.
+  await page.getByRole("button", { name: "Copy statement" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Export data" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("combobox", { name: "I write in…" })).toBeFocused();
   await page.getByRole("combobox", { name: "I write in…" }).click();
   await page.getByRole("option", { name: "Quarto", exact: true }).click();
   const panel = page.getByRole("region", { name: "Use this in Quarto" });

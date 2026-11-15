@@ -842,7 +842,7 @@ msgid "aboutPluginsTitle"
 msgstr "Plugin per gli strumenti di scrittura"
 
 msgid "aboutPlugins"
-msgstr "Scrivi la dichiarazione dove scrivi l'articolo. Questi plugin la aggiungono al tuo documento, a partire dai ruoli nell'elenco degli autori o da un file esportato qui. Ogni nome rimanda alla sua guida di installazione."
+msgstr "La <docs>documentazione</docs> ha una guida di installazione per ogni plugin: MyST, Jupyter Book, Quarto, Pandoc, Typst e Sphinx."
 
 msgid "aboutPluginsSoftware"
 msgstr "Per il software, lo <cli>strumento a riga di comando</cli> scrive anche persone e ruoli in formato CodeMeta. <citesync>citesync</citesync> trasforma questi metadati in file CITATION.cff e Zenodo, e <drift>codemeta-drift</drift> controlla la coerenza di un file CodeMeta."

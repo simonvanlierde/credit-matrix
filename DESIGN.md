@@ -160,8 +160,8 @@ role labels, empty roles, levels and marks, with font and cell geometry under Ad
 option: the grid has room for the full names and their definitions, and a statement must use the
 official CRediT terms. Figure settings' Reset restores the figure's own options and leaves the shared ones. On a narrow screen, settings
 replace the preview until the person closes them; desktop shows both side by side.
-The output step starts with an inline “I write in…” select. The draft’s choice wins over the browser
-default. With a tool selected, the sidebar shows its export and setup link, keeping the heatmap
+The statement leads the output step. Below the Copy and Export actions, an inline “I write in…”
+select sits directly above the panel it opens. The draft’s choice wins over the browser default. With a tool selected, the sidebar shows its export and setup link, keeping the heatmap
 recipe, setup snippet, and CLI command in `/docs` and the `Export data` popover holding JATS4R XML,
 Crossref XML, and tenzing CSV under “For the journal”. Figure settings keeps its own recipe
 disclosure. Show any differences from the figure preview beside the recipe.

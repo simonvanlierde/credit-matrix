@@ -152,31 +152,6 @@ export function StatementOutput() {
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <label htmlFor={toolchainId} className="text-xs font-semibold">
-          {t("toolchainLabel")}
-        </label>
-        <Select
-          value={toolchain ?? "none"}
-          onValueChange={(value) => setToolchain(value === "none" ? undefined : (value as Toolchain))}
-        >
-          <SelectTrigger id={toolchainId} className="min-h-9 max-w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">{t("toolchainNone")}</SelectItem>
-            {TOOLCHAINS.map((value) => (
-              <SelectItem key={value} value={value}>
-                {value === "markdown"
-                  ? t("toolchainMarkdown")
-                  : value === "myst"
-                    ? t("toolchainMyst")
-                    : TOOLCHAIN_OUTPUTS[value].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
       {/* Says the statement is the lead's version; never blocks copying it. */}
       {openDifferences > 0 && (
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded bg-primary/10 px-3 py-2 text-[13px] text-on-surface">
@@ -485,6 +460,32 @@ export function StatementOutput() {
             <HeatmapExports authors={authors} showLevels={!yesNo} triggerClassName={EXPORT_BUTTON} />
           </div>
         )}
+      </div>
+      {/* The picker sits with the panel it opens, after the statement and its actions. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor={toolchainId} className="text-xs font-semibold">
+          {t("toolchainLabel")}
+        </label>
+        <Select
+          value={toolchain ?? "none"}
+          onValueChange={(value) => setToolchain(value === "none" ? undefined : (value as Toolchain))}
+        >
+          <SelectTrigger id={toolchainId} className="min-h-9 max-w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">{t("toolchainNone")}</SelectItem>
+            {TOOLCHAINS.map((value) => (
+              <SelectItem key={value} value={value}>
+                {value === "markdown"
+                  ? t("toolchainMarkdown")
+                  : value === "myst"
+                    ? t("toolchainMyst")
+                    : TOOLCHAIN_OUTPUTS[value].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       {toolchain && (
         <ToolchainPanel compact toolchain={toolchain} language={outputLanguage} settings={heatmapSettings}>
