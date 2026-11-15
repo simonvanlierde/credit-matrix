@@ -68,6 +68,14 @@ const W = String.raw`[\p{L}\p{N}_]`;
 // The only letter where the two differ.
 const dotlessI = (pattern: string) =>
   pattern.replace(/\[[^\]]*\]|i/g, (m) => (m === "i" ? "[iıİ]" : m.replace("i", "iıİ")));
+// Each pattern twice, the widened one only for text that has ı or İ: under CodSpeed's simulated CPU its
+// non-Latin-1 classes slowed every parse by about 16%.
+type Turkish = { plain: RegExp; dotless: RegExp };
+const turkish = (pattern: string, flags: string): Turkish => ({
+  plain: new RegExp(pattern, flags),
+  dotless: new RegExp(dotlessI(pattern), flags),
+});
+const pick = (re: Turkish, text: string) => (/[ıİ]/u.test(text) ? re.dotless : re.plain);
 // A capital for initials: any letter or number but a-z and digits (Python's [^\W\d_a-z]).
 const U = String.raw`(?![a-z])[\p{L}\p{Nl}\p{No}]`;
 
@@ -89,9 +97,9 @@ const ROLE_PATTERNS: Record<string, string> = {
   "writing-review-editing": "(?:writing ?- ?)?review(?:ing)? and edit(?:ing)?",
 };
 const SLUGS = Object.keys(ROLE_PATTERNS);
-const ROLE_RE = new RegExp(
+const ROLE_RE = turkish(
   Object.values(ROLE_PATTERNS)
-    .map((p) => `((?<!${W})${dotlessI(p)}(?!${W}))`)
+    .map((p) => `((?<!${W})${p}(?!${W}))`)
     .join("|"),
   "giu",
 );
@@ -125,7 +133,7 @@ function clean(text: string): string {
 
 /** (start, end, slug) for each role named in `clean`ed text, in order. */
 function findRoles(text: string): [number, number, string][] {
-  return Array.from(text.matchAll(ROLE_RE), (m) => [
+  return Array.from(text.matchAll(pick(ROLE_RE, text)), (m) => [
     m.index,
     m.index + m[0].length,
     SLUGS[m.findIndex((group, i) => i > 0 && group !== undefined) - 1] ?? "",
@@ -176,23 +184,19 @@ const INITIALS_RE = new RegExp(
 // authors: validation"), and "all remaining authors" anywhere. Elsewhere it is prose ("with input from the
 // remaining authors"), and so is "the other authors": read as mentions, they would hand the roles nearby to
 // everyone else.
-const ALL_RE = new RegExp(
-  dotlessI(
-    `(?<!${W})all (?:the )?(?:(other|remaining) )?authors(?!${W})` +
-      `|(?:^|(?<=[,;:.] ?))((?:the )?remaining authors)(?!${W})` +
-      String.raw`|(?<!${W})((?:the )?remaining authors)(?=\s*:)`,
-  ),
+const ALL_RE = turkish(
+  `(?<!${W})all (?:the )?(?:(other|remaining) )?authors(?!${W})` +
+    `|(?:^|(?<=[,;:.] ?))((?:the )?remaining authors)(?!${W})` +
+    String.raw`|(?<!${W})((?:the )?remaining authors)(?=\s*:)`,
   "giu",
 );
 // The closing "All authors read and approved the manuscript." is not a role assignment, nor is "The remaining
 // authors read and approved it". "All authors contributed to the investigation" is, so only approval wording
 // is dropped.
-const APPROVAL_RE = new RegExp(
-  dotlessI(
-    `(?<!${W})(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?` +
-      "(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)" +
-      String.raw`[^;]*?(?:\.(?=\s|$)|;|$)`,
-  ),
+const APPROVAL_RE = turkish(
+  `(?<!${W})(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?` +
+    "(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)" +
+    String.raw`[^;]*?(?:\.(?=\s|$)|;|$)`,
   "giu",
 );
 const APPOSITION_RE = /^\s*[(,]\s*$/u;
@@ -217,7 +221,7 @@ const AUTHOR_VERB_RE =
  */
 export function readsAsStatement(text: string): boolean {
   const cleaned = clean(text.normalize("NFC"));
-  const lowerWords = (cleaned.replace(ROLE_RE, " ").match(LOWER_WORD_RE) ?? []).filter(
+  const lowerWords = (cleaned.replace(pick(ROLE_RE, cleaned), " ").match(LOWER_WORD_RE) ?? []).filter(
     (w) => w !== "and" && !PARTICLE_RE.test(w),
   );
   if (AUTHOR_VERB_RE.test(cleaned)) return true;
@@ -594,7 +598,8 @@ export function parseStatement(statement: string, authorList: readonly Statement
     );
   }
   const authors = authorList.map((a) => ({ given: a.given.normalize("NFC"), surname: a.surname.normalize("NFC") }));
-  const original = clean(statement.normalize("NFC")).replace(APPROVAL_RE, (m) => " ".repeat(m.length));
+  const cleanedStatement = clean(statement.normalize("NFC"));
+  const original = cleanedStatement.replace(pick(APPROVAL_RE, cleanedStatement), (m) => " ".repeat(m.length));
   let text = original;
   const unresolved: string[] = [];
   const unmatched: ParsedStatement["unmatched"] = [];
@@ -667,7 +672,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
     lowered = maskRanges(lowered, masked);
   }
   const allRanges: [number, number][] = [];
-  for (const m of text.matchAll(ALL_RE)) {
+  for (const m of text.matchAll(pick(ALL_RE, text))) {
     mentions.push([m.index, m.index + m[0].length, "A", m[1] || m[2] || m[3] ? OTHER_AUTHORS : ALL_AUTHORS]);
     allRanges.push([m.index, m.index + m[0].length]);
   }
