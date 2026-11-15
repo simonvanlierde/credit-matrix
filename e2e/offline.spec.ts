@@ -69,8 +69,14 @@ test.describe("Offline", () => {
     await expect(page.getByRole("combobox", { name: "Interface language" })).toBeVisible();
   });
 
-  test("an unvisited docs page fails offline instead of opening the workspace", async ({ page, context }) => {
+  test("an unvisited docs page fails offline instead of opening the workspace", async ({
+    page,
+    context,
+    browserName,
+  }) => {
     test.skip(!process.env.CI, "needs the production build; CI runs one");
+    // Firefox's offline emulation leaves the worker's own fetch online, so the page loads there.
+    test.skip(browserName === "firefox", "offline emulation does not reach the service worker in Firefox");
     await page.goto("/");
     await page.evaluate(() => navigator.serviceWorker.ready);
     await context.setOffline(true);
