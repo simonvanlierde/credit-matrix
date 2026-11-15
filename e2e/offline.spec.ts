@@ -69,15 +69,24 @@ test.describe("Offline", () => {
     await expect(page.getByRole("combobox", { name: "Interface language" })).toBeVisible();
   });
 
-  test("a visited docs page and search still work offline after a deploy", async ({ page, context }) => {
+  test("an unvisited docs page fails offline instead of opening the workspace", async ({ page, context }) => {
+    test.skip(!process.env.CI, "needs the production build; CI runs one");
+    await page.goto("/");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await context.setOffline(true);
+    // The worker answers with a network error, so the browser shows its own offline page.
+    await expect(page.goto("/docs/pandoc")).rejects.toThrow();
+  });
+
+  test("visited docs pages and search still work offline after a deploy", async ({ page, context }) => {
     test.skip(!process.env.CI, "needs the production build; CI runs one");
     const manifest = JSON.parse(readFileSync("out/.vite/manifest.json", "utf8")) as Record<string, { file: string }>;
-    // An older build's cache holding a visited docs page and search, left before any worker exists
-    // (see the stale-cache test below). A deploy almost always changes the build id.
+    // An older build's cache holding two visited docs pages, which share a chunk, and search, left
+    // before any worker exists (see the stale-cache test below). A deploy almost always changes the build id.
     await page.goto("/robots.txt");
     await page.evaluate(async () => {
       const old = await caches.open("credit-matrix-v0-docs");
-      await old.addAll(["/docs/quarto", "/pagefind/pagefind.js"]);
+      await old.addAll(["/docs/quarto", "/docs/typst", "/pagefind/pagefind.js"]);
     });
 
     // Keep the seeding document alive until the new worker has carried its cached docs forward.
@@ -88,8 +97,16 @@ test.describe("Offline", () => {
     await context.setOffline(true);
     await page.goto("/docs/quarto");
     await expect(page).toHaveTitle("CRediT statement for Quarto · CRediT Matrix");
+    await page.goto("/docs/typst");
+    await expect(page).toHaveTitle("CRediT statement for Typst · CRediT Matrix");
     expect(await cachedPaths(page)).toEqual(
-      expect.arrayContaining([`/${manifest["src/app/docs/page.tsx"]?.file}`, "/pagefind/pagefind-entry.json"]),
+      // The title alone proves little: the app's page also takes it from the docs chunk.
+      expect.arrayContaining([
+        "/docs/quarto",
+        "/docs/typst",
+        `/${manifest["src/app/docs/page.tsx"]?.file}`,
+        "/pagefind/pagefind-entry.json",
+      ]),
     );
   });
 
