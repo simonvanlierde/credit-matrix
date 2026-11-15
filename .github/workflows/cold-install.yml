@@ -1,0 +1,61 @@
+name: cold install
+
+# Installs the published credit-matrix and credit-matrix-fonts from npm into an empty
+# project, as the package READMEs tell a user to, and runs the CLI and both imports. It
+# catches what the workspace build hides: a missing file in the tarball, a dependency
+# left out of package.json, or a Node release below `engines` that no longer works.
+on:
+  pull_request:
+    paths: [.github/workflows/cold-install.yml]
+  schedule:
+    - cron: "47 5 * * 1" # Mondays, 05:47 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm:
+    name: npm install, Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # The lowest major src/core/package.json `engines` allows, and the current one.
+        node: ["22", "26"]
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+
+      - name: Install the published packages
+        working-directory: ${{ runner.temp }}
+        # The latest release, as a user gets it, is what this job tests: no lockfile.
+        run: | # zizmor: ignore[adhoc-packages]
+          npm init -y >/dev/null
+          npm install --no-fund --no-audit credit-matrix credit-matrix-fonts
+          npm ls credit-matrix credit-matrix-fonts
+
+      - name: Run the CLI and the imports
+        working-directory: ${{ runner.temp }}
+        run: |-
+          printf '%s\n' \
+            'Name,ORCID,Type,Conceptualization,Software,Writing – original draft' \
+            'Ada Lovelace,0000-0002-1825-0097,author,100,0,100' \
+            'Alan Turing,,author,0,100,33' >team.csv
+          npx --no-install credit-matrix statement team.csv | grep '^CRediT: Conceptualization: Ada Lovelace'
+          npx --no-install credit-matrix convert team.csv --to jats | grep -q '<contrib '
+          npx --no-install credit-matrix convert team.csv --to svg | grep -q '@font-face'
+          node --input-type=module -e '
+            import { generateStatement, importAny } from "credit-matrix";
+            import { fonts } from "credit-matrix-fonts";
+            import { readFileSync } from "node:fs";
+            const { authors } = await importAny(readFileSync("team.csv", "utf8"));
+            if (!generateStatement(authors, { format: "by-role" }).startsWith("CRediT: ")) process.exit(1);
+            if (!(await fonts("harfbuzz")).length) process.exit(1);
+          '
