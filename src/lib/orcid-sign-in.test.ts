@@ -46,6 +46,16 @@ describe("ORCID sign-in in the browser", () => {
     expect(pending()).toBeNull();
   });
 
+  it("refuses a stored send time a reply link cannot carry", async () => {
+    const { keys, sign } = await testIssuer();
+    await startOrcidSignIn(reply());
+    const stored = pending();
+    sessionStorage.setItem("credit-matrix:orcid-sign-in", JSON.stringify({ ...stored, sentAt: -1 }));
+    const token = await sign({ nonce: await replyNonce(stored.payload) });
+    window.history.replaceState(null, "", `/#id_token=${token}&state=${stored.state}`);
+    expect(await takeOrcidReturn(jwks(keys))).toEqual({ proof: null });
+  });
+
   it("refuses a token that expired before it came back", async () => {
     const { keys, sign } = await testIssuer(Date.now() - 24 * 3600 * 1000);
     await startOrcidSignIn(reply());
