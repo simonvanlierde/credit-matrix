@@ -208,7 +208,7 @@ function translationsFor(file) {
  * ordinal keeps their footnote ids apart; the node's position cannot, as each notebook cell
  * is parsed on its own from line 1.
  */
-// shortcut: counts per process, so `myst start` rebuilds renumber the ids; key by page parse if that matters.
+// NOTE: counts per process, so `myst start` rebuilds renumber the ids (still unique within a page).
 const statementsPerPage = new Map();
 
 const creditStatement = {
