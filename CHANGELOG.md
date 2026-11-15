@@ -151,6 +151,7 @@ See [deploying](docs/deploy.md).
 - Editing the pasted text, or choosing or dropping a file, while the import confirmation is open
   closes the confirmation, so Import reads the new text.
 - On a slow connection, a page that has started loading is no longer cut off after 4 seconds.
+- On the co-author page, a sign-in with ORCID that fails to start says so instead of doing nothing.
 - The MyST plugin reads an empty front matter block.
 - Importing a JATS file whose role URL ends in a long run of slashes no longer hangs; a 2 MB file
   now imports in well under a second.
