@@ -140,7 +140,9 @@ uses. Both come through the same `fonts` provider, so each is fetched only for a
 - [Noto Emoji variable TTF](https://raw.githubusercontent.com/google/fonts/c30b221beb0c1da59d563feb91ec8656a1fa972a/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf),
   from `google/fonts` commit `c30b221beb0c1da59d563feb91ec8656a1fa972a`.
 - `harfbuzz.wasm` and `harfbuzz-subset.wasm`, unmodified, from `dist/` in the
-  [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) 1.6.4 npm package.
+  [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) 1.6.4 npm package. The package is an exact
+  dev dependency, and a core test checks these files and `src/core/vendor/harfbuzz.js` are byte-equal
+  to it, so a harfbuzzjs update fails until the files are copied again.
 
 The CJK sources are upstream regional subsets, not subsets of the translation
 catalogs. They retain characters needed for contributor names beyond those catalogs.
