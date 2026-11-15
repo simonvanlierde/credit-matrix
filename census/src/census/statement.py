@@ -47,11 +47,12 @@ UNRESOLVED = -2
 """Holds an unresolved author's place, so the roles next to it are not paired with a neighbour."""
 OTHER_AUTHORS = -3
 """"All other authors": every author but the ones it is set against. Heading a list item ("A.B.: software.
-C.D.: validation. All other authors: writing"), those are everyone named before it; anywhere else
-("draft, A.B.; review and editing, all other authors"), the run of authors given roles just before it.
-Beside named authors ("A.B. and all other authors"), it is everyone. Authors named without roles ("A.B.
-wrote the draft and all other authors reviewed it") are not left out: which of them the roles belong to
-is unclear."""
+All other authors: validation"), those are everyone named before it, with roles or without, and "all
+authors" among them leaves no one. Anywhere else ("draft, A.B.; review and editing, all other authors"),
+they are the authors given roles just before it, or no one when the authors just before it have no roles
+("A.B. wrote the draft and all other authors reviewed it"), as the roles may be theirs. Beside named
+authors ("A.B. and all other authors"), it is everyone. Roles alone after it go to the same authors, and
+a second "all other authors" is set against the same ones as the first."""
 
 # Initials such as "AP", "Q.M.L.", "H.Š.", "YiL" (Frontiers adds letters to tell authors apart), "L. - J. Z.".
 # A capital is any letter but a-z (Python's re has no Unicode-category classes); tokens that start
@@ -353,6 +354,7 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
 
     previous_people: list[int | str] = []
     previous_paired: list[int | str] = []  # previous_people, if their clause gave them roles
+    previous_against: list[int | str] | None = None  # what previous_people's "all other authors" was set against
     listed: dict[int, set[int | str]] = {}  # start of each "all other authors:" -> the authors named before it
     named: set[int | str] = set()
     for start, end, kind, value in sorted(mentions):
@@ -372,9 +374,12 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         # "A.B.: conceptualization; methodology": a clause of roles alone goes to the people before it,
         # unless it opens with a name the parser did not recognise.
         lead_in = text[ends[k - 1] if k else 0 : clause[0][0]]  # names found are masked
+        against: dict[int, list[int | str]] = {}  # run -> what its "all other authors" was set against
         if [kind for kind, _ in runs] == ["R"] and previous_people and not _opens_with_name(lead_in):
             runs.insert(0, ("A", previous_people))
             starts.insert(0, -1)
+            if previous_against is not None:
+                against[0] = previous_against
         # A trailing run with no partner (authors named after the last roles) is dropped by zip.
         for n, (lead, follow) in enumerate(zip(runs[::2], runs[1::2], strict=False)):
             people, slugs = (lead[1], follow[1]) if lead[0] == "A" else (follow[1], lead[1])
@@ -383,11 +388,21 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
                 indices = range(len(authors))
             elif OTHER_AUTHORS in people:
                 at = 2 * n if lead[0] == "A" else 2 * n + 1
-                before = listed[starts[at]] if starts[at] in listed else runs[at - 2][1] if at >= 2 else previous_paired
-                indices = [i for i in range(len(authors)) if i not in before]
+                if starts[at] in listed:
+                    before = list(listed[starts[at]])
+                elif at >= 2:
+                    before = against.get(at - 2, runs[at - 2][1])
+                else:
+                    before = previous_against if previous_against is not None else previous_paired
+                indices = [] if ALL_AUTHORS in before else [i for i in range(len(authors)) if i not in before]
+                # Later clauses see the authors it stands for, not the placeholder.
+                runs[at] = ("A", list(indices))
+                against[at] = before
             parsed.assignments |= {(i, str(s)) for i in indices for s in slugs}
         people_runs = [n for n, (kind, _) in enumerate(runs) if kind == "A"]
         if people_runs:
-            previous_people = runs[people_runs[-1]][1]
-            previous_paired = previous_people if people_runs[-1] < len(runs) // 2 * 2 else []
+            last = people_runs[-1]
+            previous_people = runs[last][1]
+            previous_paired = previous_people if last < len(runs) // 2 * 2 else []
+            previous_against = against.get(last)
     return parsed

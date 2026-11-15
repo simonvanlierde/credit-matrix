@@ -416,11 +416,33 @@ def test_all_other_authors_leaves_out_the_authors_given_roles_before():
     # Beside named authors it is everyone.
     parsed = parse_statement("E.F.: software; A.B. and all the other authors: validation.", THREE)
     assert {i for i, s in parsed.assignments if s == "validation"} == {0, 1, 2}
-    # Named without roles, A.B. may be the one the roles belong to: kept.
+    # Heading a list item, it leaves out authors named without roles too.
+    parsed = parse_statement("A.B. and C.D. conceived the study. All other authors: validation.", THREE)
+    assert parsed.assignments == {(2, "validation")}
+    # After authors with no roles, no one is left out: the draft may be A.B.'s, so A.B. keeps it, and
+    # C.D. and E.F. get it too, as before "all other authors" was read apart from "all authors".
     parsed = parse_statement("A.B. wrote the original draft and all other authors reviewed it.", THREE)
-    assert {i for i, _ in parsed.assignments} == {0, 1, 2}
+    assert parsed.assignments == {(i, "writing-original-draft") for i in (0, 1, 2)}
     parsed = parse_statement("A.B.: software. All authors: validation.", THREE)
     assert parsed.assignments == {(0, "software"), (0, "validation"), (1, "validation"), (2, "validation")}
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # Roles alone after it go to the same authors.
+        ("A.B.: software. All other authors: validation; formal analysis.", {1, 2}),
+        ("A.B.: software. All other authors: validation. Formal analysis.", {1, 2}),
+        ("A.B., C.D.: software; all other authors: validation; formal analysis.", {2}),
+        # A second one is set against the same authors as the first.
+        ("Software: A.B.; validation: all other authors; formal analysis: all other authors.", {1, 2}),
+        # After "all authors", there is no one else.
+        ("All authors: software. All other authors: formal analysis.", set()),
+    ],
+)
+def test_all_other_authors_stands_for_the_same_authors_later(text, expected):
+    parsed = parse_statement(text, THREE)
+    assert {i for i, s in parsed.assignments if s == "formal-analysis"} == expected
 
 
 def test_opens_with_name_matches_the_regex_it_replaces():
