@@ -343,6 +343,10 @@ export function ImportModal({
       // A dialog closed mid-read has dropped this file.
       if (started !== closes.current) return;
       setText(content);
+      // A staged confirmation holds the earlier text's parse; without a focus jump, it goes.
+      hadPending.current = false;
+      setPending(null);
+      setReviewed(null);
       setFileName(file.name);
       setError(null);
     } catch {

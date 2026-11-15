@@ -279,6 +279,17 @@ describe("accessibility and drops", () => {
     expect(screen.getByText(english.fileLoaded.replace("{name}", "authors.csv"))).toBeTruthy();
   });
 
+  it("imports a file chosen while an earlier paste waits for confirmation", async () => {
+    const { onImport } = renderModal(1);
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), { target: { value: "Ada Lovelace" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await act(async () => fireEvent.change(input, { target: { files: [new File(["Grace Hopper"], "authors.csv")] } }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    expect(onImport.mock.calls[0]?.[0].authors.map((author: Author) => author.name)).toEqual(["Grace Hopper"]);
+  });
+
   it("drops a file whose read settles after the dialog closed", async () => {
     const { container } = renderModal(0);
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
