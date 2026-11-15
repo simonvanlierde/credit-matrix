@@ -106,7 +106,7 @@ describe("figures in a font family the caller names", () => {
     expect(svg).not.toContain("Noto Sans");
     expect(reports).toEqual([{ family: "Figure Test", file: join(FIXTURES, "FigureTest-Regular.ttf") }]);
     const pdf = await figures.pdf(authors("Ada Lovelace"), options("Figure Test"));
-    expect([...(await pdfFonts(pdf)).keys()]).toEqual(["CMFIGR+FigureTest-Regular"]);
+    expect([...(await pdfFonts(pdf)).keys()]).toEqual(["CMCUST+FigureTest-Regular"]);
     // One search per renderer and family.
     expect(reports).toHaveLength(1);
     if (!POPPLER) return;
@@ -119,7 +119,7 @@ describe("figures in a font family the caller names", () => {
     const font = embedded.get("Figure Test")?.font;
     expect(font && blank(font, "Ada Lovelace Software")).toBe("");
     const pdf = await pdfFonts(await figures.pdf(authors("Ada Lovelace"), options("Figure Test")));
-    const embeddedPdf = pdf.get("CMFIGR+FigureTest-Regular");
+    const embeddedPdf = pdf.get("CMCUST+FigureTest-Regular");
     expect(embeddedPdf && blank(embeddedPdf, "Ada Lovelace Software")).toBe("");
   });
 
@@ -136,7 +136,7 @@ describe("figures in a font family the caller names", () => {
     const pdf = await figures.pdf(authors("Ada Lovelace"), options("Figure Test CFF"));
     if (!POPPLER) return;
     const listed = spawnSync("pdffonts", ["-"], { input: pdf, encoding: "utf8" });
-    expect(listed.stdout).toMatch(/CMFIGR\+FigureTestCFF-Regular\s+CID Type 0C \(OT\)/);
+    expect(listed.stdout).toMatch(/CMCUST\+FigureTestCFF-Regular\s+CID Type 0C \(OT\)/);
     expect(listed.stderr).toBe("");
   });
 
@@ -152,7 +152,7 @@ describe("figures in a font family the caller names", () => {
 
   it("embeds a CID-keyed CFF font whose CIDs are its glyph ids in PDF", async () => {
     const pdf = await renderer().pdf(authors("ABBA"), options("Figure Test CID Identity"));
-    expect([...(await pdfFonts(pdf)).keys()]).toContain("CMFIGR+FigureTestCIDIdentity-Regular");
+    expect([...(await pdfFonts(pdf)).keys()]).toContain("CMCUST+FigureTestCIDIdentity-Regular");
   });
 
   it("refuses a CFF2 font in PDF with its own reason", async () => {
@@ -170,7 +170,7 @@ describe("figures in a font family the caller names", () => {
   it("picks the upright regular face of a collection", async () => {
     const reports: FigureFontReport[] = [];
     const pdf = await renderer(reports).pdf(authors("Ada Lovelace"), options("Figure Test Collection"));
-    expect([...(await pdfFonts(pdf)).keys()]).toEqual(["CMFIGR+FigureTestCollection-Regular"]);
+    expect([...(await pdfFonts(pdf)).keys()]).toEqual(["CMCUST+FigureTestCollection-Regular"]);
     expect(reports[0]?.file).toBe(join(FIXTURES, "FigureTestCollection.ttc"));
   });
 
@@ -290,6 +290,26 @@ describe("figures in a font family the caller names", () => {
     }
   });
 
+  it("tags a custom family's PDF subset apart from a built-in face with the same PostScript name", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
+    try {
+      const thai = fileURLToPath(new URL("../../fonts/NotoSansThai-Regular.ttf", import.meta.url));
+      copyFileSync(thai, join(folder, "a.ttf"));
+      // Thai is shaped, so the built-in face draws it; the custom copy draws the Latin.
+      const pdf = await renderer().pdf(authors("Ada สมชาย"), options("noto sans thai", [folder]));
+      const document = await PDFDocument.load(pdf);
+      const names = document.context
+        .enumerateIndirectObjects()
+        .map(([, object]) => object)
+        .filter((object) => object instanceof PDFDict && object.get(PDFName.of("Subtype"))?.toString() === "/Type0")
+        .map((object) => (object as PDFDict).get(PDFName.of("BaseFont"))?.toString())
+        .filter((name) => name?.includes("NotoSansThai"));
+      expect(names.sort()).toEqual(["/CMCUST+NotoSansThai-Regular", "/CMFIGR+NotoSansThai-Regular"]);
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+
   it("draws Hangul in a custom family that has it, not in Credit Figure KR", async () => {
     const folder = mkdtempSync(join(tmpdir(), "credit-matrix-font-path-"));
     try {
@@ -394,8 +414,8 @@ describe("figures in a font family the caller names", () => {
     expect(drawn.get("Credit Figure SC")).toBe("屠呦呦");
     const pdf = await pdfFonts(await figures.pdf(authors("Zoë Chen 屠呦呦"), options("Figure Test")));
     expect([...pdf.keys()].sort()).toEqual([
+      "CMCUST+FigureTest-Regular",
       "CMFIGR+CreditFigureSC-Regular",
-      "CMFIGR+FigureTest-Regular",
       "CMFIGR+NotoSans-Regular",
     ]);
   });
@@ -414,7 +434,7 @@ describe("figures in a font family the caller names", () => {
     expect(forced.get("Noto Serif")).toBe("ë");
     const pdf = await pdfFonts(await figures.pdf(names, options("Figure Test Serif")));
     expect([...pdf.keys()].sort()).toEqual([
-      "CMFIGR+FigureTestSerif-Regular",
+      "CMCUST+FigureTestSerif-Regular",
       "CMFIGR+NotoNaskhArabic-Regular",
       "CMFIGR+NotoSerif-Regular",
     ]);
