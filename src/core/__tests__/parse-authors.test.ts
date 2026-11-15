@@ -291,6 +291,15 @@ describe("deduplicateAuthorInitials", () => {
     expect(deduped[1]?.initials).not.toBe(deduped[0]?.initials);
   });
 
+  it("takes only letters from the surname to tell initials apart", () => {
+    expect(parseAuthorText("Dan O'Brien\nDora O'Brien\nDave O'Brien").map((a) => a.initials)).toEqual([
+      "DO",
+      "DOb",
+      "DOr",
+    ]);
+    expect(parseAuthorText("Ann Al-Bayati\nAmy Al-Bayati").map((a) => a.initials)).toEqual(["AA", "AAl"]);
+  });
+
   it("still assigns unique initials when the surname runs out of letters", () => {
     // "Jo Li" → JL, then JLi (the surname's 2nd letter), and then the surname is
     // spent, so the disambiguator falls back to a counter suffix.

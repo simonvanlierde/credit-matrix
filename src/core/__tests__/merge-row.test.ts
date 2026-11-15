@@ -58,6 +58,15 @@ describe("keepKnownIds", () => {
     expect(result[1]?.id).toBe(charles.id);
     expect(result[0]?.id).not.toBe(charles.id);
   });
+
+  it("gives a same-name person with a different ORCID iD a fresh id, not the old row's", () => {
+    const current = draft();
+    const namesake = createAuthor("Grace B. Hopper", { orcid: "0000-0002-1694-233X" });
+    expect(keepKnownIds(current, [namesake])[0]?.id).toBe(namesake.id);
+    // Without an iD on one side, the name still decides.
+    const unnamed = createAuthor("Grace B. Hopper");
+    expect(keepKnownIds(current, [unnamed])[0]?.id).toBe(idAt(current, 0));
+  });
 });
 
 describe("newContributors", () => {

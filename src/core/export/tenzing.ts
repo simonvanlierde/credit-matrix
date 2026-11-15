@@ -1,7 +1,7 @@
 import type { Author } from "../author";
 import { isValidOrcid } from "../author";
 import { CREDIT_ROLES, headerKey as key } from "../credit-roles";
-import { deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
+import { cleanNamePart, deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
 import { delimiterOf, escapeCsvFormulaOnly, headerCells, parseCsvRecords, unescapeCsvValue } from "./csv";
 import { givenNamesOf, suffixOf } from "./xml";
 
@@ -132,9 +132,9 @@ export function fromTenzing(text: string): Author[] {
   const authors = people.flatMap(({ row, firstName, middleName, surname, status }) => {
     const orcid = cell(row, "orcid id");
     return tryCreateAuthor([firstName, middleName, surname].filter(Boolean).join(" "), {
-      firstName,
-      middleName,
-      surname,
+      firstName: cleanNamePart(firstName),
+      middleName: cleanNamePart(middleName),
+      surname: cleanNamePart(surname),
       // Drop an unparseable ORCID rather than aborting the whole import.
       orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
       // "Acknowledgee" is the older spelling this app once wrote; tenzing itself keeps only "Acknowledgment only".
