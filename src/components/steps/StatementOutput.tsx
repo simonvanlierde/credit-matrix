@@ -461,53 +461,54 @@ export function StatementOutput() {
           </div>
         )}
       </div>
-      {/* The picker sits with the panel it opens, after the statement and its actions. */}
-      <div className="flex flex-wrap items-center gap-2">
-        <label htmlFor={toolchainId} className="text-xs font-semibold">
-          {t("toolchainLabel")}
-        </label>
-        <Select
-          value={toolchain ?? "none"}
-          onValueChange={(value) => setToolchain(value === "none" ? undefined : (value as Toolchain))}
-        >
-          <SelectTrigger id={toolchainId} className="min-h-9 max-w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">{t("toolchainNone")}</SelectItem>
-            {TOOLCHAINS.map((value) => (
-              <SelectItem key={value} value={value}>
-                {value === "markdown"
-                  ? t("toolchainMarkdown")
-                  : value === "myst"
-                    ? t("toolchainMyst")
-                    : TOOLCHAIN_OUTPUTS[value].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid min-w-0 gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor={toolchainId} className="text-xs font-semibold">
+            {t("toolchainLabel")}
+          </label>
+          <Select
+            value={toolchain ?? "none"}
+            onValueChange={(value) => setToolchain(value === "none" ? undefined : (value as Toolchain))}
+          >
+            <SelectTrigger id={toolchainId} className="min-h-9 max-w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t("toolchainNone")}</SelectItem>
+              {TOOLCHAINS.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {value === "markdown"
+                    ? t("toolchainMarkdown")
+                    : value === "myst"
+                      ? t("toolchainMyst")
+                      : TOOLCHAIN_OUTPUTS[value].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {toolchain && (
+          <ToolchainPanel compact toolchain={toolchain} language={outputLanguage} settings={heatmapSettings}>
+            {toolchainOutput ? (
+              <OutputBlock authors={authors} format={toolchainOutput} options={exportOptions} language={outputLanguage}>
+                {toolchainOutput === "json" && answersChoice}
+              </OutputBlock>
+            ) : (
+              <button
+                type="button"
+                disabled={!statement}
+                onClick={() =>
+                  download(new Blob([statement], { type: "text/plain;charset=utf-8" }), "credit-statement.txt")
+                }
+                className={`${EXPORT_ITEM_BUTTON} justify-self-start`}
+              >
+                <Download className="size-3.5" aria-hidden="true" />
+                {t("downloadFormat", { format: "TXT" })}
+              </button>
+            )}
+          </ToolchainPanel>
+        )}
       </div>
-      {toolchain && (
-        <ToolchainPanel compact toolchain={toolchain} language={outputLanguage} settings={heatmapSettings}>
-          {toolchainOutput ? (
-            <OutputBlock authors={authors} format={toolchainOutput} options={exportOptions} language={outputLanguage}>
-              {toolchainOutput === "json" && answersChoice}
-            </OutputBlock>
-          ) : (
-            <button
-              type="button"
-              disabled={!statement}
-              onClick={() =>
-                download(new Blob([statement], { type: "text/plain;charset=utf-8" }), "credit-statement.txt")
-              }
-              className={`${EXPORT_ITEM_BUTTON} justify-self-start`}
-            >
-              <Download className="size-3.5" aria-hidden="true" />
-              {t("downloadFormat", { format: "TXT" })}
-            </button>
-          )}
-        </ToolchainPanel>
-      )}
       <div className="border-t border-outline-variant/40 pt-3">
         <CreditBadge className="flex min-h-6 items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors" />
       </div>

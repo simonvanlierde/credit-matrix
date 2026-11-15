@@ -182,6 +182,7 @@ it.each([
   });
   renderStatement();
   const panel = screen.getByRole("region", { name: `Use this in ${label}` });
+  expect(screen.queryByRole("button", { name: `Use this in ${label}` })).toBeNull();
   expect(panel.querySelector(`textarea[aria-label="${format}"]`)?.textContent).toContain("Grace Hopper");
   expect(panel.querySelector('textarea[aria-label="CLI equivalent"]')).toBeNull();
   expect(screen.queryByRole("heading", { name: "For the journal" })).toBeNull();

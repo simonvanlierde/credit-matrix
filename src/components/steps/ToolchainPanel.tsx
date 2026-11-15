@@ -137,23 +137,25 @@ export function ToolchainPanel({
   return (
     <section
       aria-label={t("toolchainPanel", { toolchain: config.label })}
-      className="grid min-w-0 gap-3 border-t border-outline-variant/40 pt-3 text-xs"
+      className={`grid min-w-0 gap-3 text-xs ${compact ? "" : "border-t border-outline-variant/40 pt-3"}`}
     >
-      <h3 className="font-semibold text-sm text-on-surface">
-        <button
-          type="button"
-          aria-expanded={expanded}
-          onClick={() => setExpanded((prev) => !prev)}
-          className="flex w-full items-center justify-between gap-2 text-left transition-colors hover:text-primary"
-        >
-          <span>{t("toolchainPanel", { toolchain: config.label })}</span>
-          <ChevronDown
-            className={`size-4 shrink-0 text-on-surface-variant transition-transform duration-150 ${expanded ? "rotate-180" : ""}`}
-            aria-hidden="true"
-          />
-        </button>
-      </h3>
-      {expanded && (
+      {!compact && (
+        <h3 className="font-semibold text-sm text-on-surface">
+          <button
+            type="button"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((prev) => !prev)}
+            className="flex w-full items-center justify-between gap-2 text-left transition-colors hover:text-primary"
+          >
+            <span>{t("toolchainPanel", { toolchain: config.label })}</span>
+            <ChevronDown
+              className={`size-4 shrink-0 text-on-surface-variant transition-transform duration-150 ${expanded ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
+          </button>
+        </h3>
+      )}
+      {(compact || expanded) && (
         <>
           {children}
           {toolchain === "word" && <p className="text-on-surface-variant">{t("toolchainWordHint")}</p>}
