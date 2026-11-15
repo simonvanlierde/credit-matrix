@@ -165,11 +165,22 @@ const INITIALS_RE = new RegExp(
     String.raw`(?:(?:\.(?! )|\. (?=${U}\.)|\.? - )?${U}[a-z]{0,2}${PARTICLES}){0,5}\.?(?!${W})`,
   "gu",
 );
-const ALL_RE = new RegExp(`(?<!${W})all (?:the )?(other )?authors(?!${W})`, "giu");
-// The closing "All authors read and approved the manuscript." is not a role assignment. "All authors
-// contributed to the investigation" is, so only approval wording is dropped.
+// "(The) remaining authors" reads as "all other authors" where it opens a clause or heads one ("Remaining
+// authors: validation"), and "all remaining authors" anywhere. Elsewhere it is prose ("with input from the
+// remaining authors"), and so is "the other authors": read as mentions, they would hand the roles nearby to
+// everyone else.
+const ALL_RE = new RegExp(
+  `(?<!${W})all (?:the )?(?:(other|remaining) )?authors(?!${W})` +
+    `|(?:^|(?<=[,;:.] ?))((?:the )?remaining authors)(?!${W})` +
+    String.raw`|(?<!${W})((?:the )?remaining authors)(?=\s*:)`,
+  "giu",
+);
+// The closing "All authors read and approved the manuscript." is not a role assignment, nor is "The remaining
+// authors read and approved it". "All authors contributed to the investigation" is, so only approval wording
+// is dropped.
 const APPROVAL_RE = new RegExp(
-  `(?<!${W})all (?:the )?authors (?:have |has )?(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)` +
+  `(?<!${W})(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?` +
+    "(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)" +
     String.raw`[^;]*?(?:\.(?=\s|$)|;|$)`,
   "giu",
 );
@@ -295,12 +306,54 @@ function cachedParts(author: StatementAuthor): ReturnType<typeof nameParts> {
   return parts;
 }
 
-/** Every author the first order that fits any author finds for `token`; see {@link resolveInitials}. */
+// Đ has no decomposition; Vietnamese statements write it as D, like Á as A.
+const unmarked = (text: string) =>
+  text
+    .normalize("NFKD")
+    .replace(/\p{Mn}/gu, "")
+    .replace(/Đ/g, "D")
+    .replace(/đ/g, "d");
+
+const foldedCache = new WeakMap<StatementAuthor, ReturnType<typeof nameParts>>();
+function foldedParts(author: StatementAuthor): ReturnType<typeof nameParts> {
+  let parts = foldedCache.get(author);
+  if (!parts) {
+    parts = cachedParts(author).map((p) => p.map(unmarked)) as ReturnType<typeof nameParts>;
+    foldedCache.set(author, parts);
+  }
+  return parts;
+}
+
+/**
+ * Every author the first order that fits any author finds for `token`; see {@link resolveInitials}.
+ * Initials often drop diacritics ("N.N.A." for Nguyễn Ngọc Ánh), so they are dropped on both sides,
+ * but only when no author fits as written: folded, "ŞY" for Şilan Yavuz fits Sema Y. too.
+ */
 function initialsCandidates(token: string, authors: readonly StatementAuthor[]): number[] {
   const chunks = chunksOf(token);
   if (chunks.length === 0) return [];
+  const hits = tierHits(chunks, authors.map(cachedParts));
+  if (hits.length > 0) return hits;
+  const folded = chunks.map(unmarked);
+  // Nothing to fold on either side: the second pass would only repeat the first.
+  if (folded.every((chunk, i) => chunk === chunks[i]) && !anyMarked(authors)) return [];
+  return tierHits(folded, authors.map(foldedParts));
+}
+
+const markedCache = new WeakMap<readonly StatementAuthor[], boolean>();
+function anyMarked(authors: readonly StatementAuthor[]): boolean {
+  let marked = markedCache.get(authors);
+  if (marked === undefined) {
+    marked = authors.some((author) =>
+      foldedParts(author).some((part, i) => part.some((word, j) => word !== cachedParts(author)[i]?.[j])),
+    );
+    markedCache.set(authors, marked);
+  }
+  return marked;
+}
+
+function tierHits(chunks: string[], parts: ReturnType<typeof nameParts>[]): number[] {
   const letters = chunks.join("");
-  const parts = authors.map(cachedParts);
   const tiers: ((g: Parts, s: Parts, w: Parts, c: Parts) => boolean)[] = [
     (g, s) => fits(chunks, [...g, ...s]),
     (g, s) => fits(chunks, [...s, ...g]),
@@ -418,10 +471,11 @@ const compareMentions = (a: Mention, b: Mention) =>
  * Positions where one assignment clause ends: a semicolon; a full stop after a lower-case word
  * ("draft. NZ:"); and a full stop after an author ("Nam KC. Data curation", "A.B. Methodology",
  * "EF. AB is the guarantor"), but not "C.D.: writing", where the colon ties the author to the roles
- * after it.
+ * after it. Ends that {@link joins} reads as inside a clause are left out.
  */
 function clauseEnds(text: string, mentions: Mention[]): number[] {
-  const ends = Array.from(text.matchAll(/;/g), (m) => m.index);
+  const semicolons = Array.from(text.matchAll(/;/g), (m) => m.index);
+  const ends = [...semicolons];
   for (const m of text.matchAll(/\.(?=\s|$)/gu)) {
     const before = m.index ? (text[m.index - 1] ?? "") : "";
     if (before === "" || isLowerWord(before) || ")]".includes(before)) ends.push(m.index);
@@ -432,14 +486,75 @@ function clauseEnds(text: string, mentions: Mention[]): number[] {
     const [start, , nextKind] = ordered[i] as Mention;
     const gap = text.slice(end - 1, start);
     // "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
-    // unless a comma or "and" joins the two authors ("C.D. and E.F.").
-    const joined = new RegExp(`,|(?<!${W})and(?!${W})`, "u").test(gap);
+    // unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
+    const joined = JOINED_RE.test(gap);
     if (kind === "A" && gap.includes(".") && !gap.includes(":") && (nextKind === "R" || !joined)) ends.push(end);
   }
-  return ends.sort((a, b) => a - b);
+  // Mentions and semicolons are looked up by position, so a long statement stays linear.
+  const lookup: Lookup = { text, ordered, starts: ordered.map(([s]) => s), semicolons };
+  const kept: number[] = [];
+  for (const pos of ends.sort((a, b) => a - b)) {
+    if (!joins(lookup, kept.at(-1) ?? 0, pos)) kept.push(pos);
+  }
+  return kept;
 }
 
-/** First index whose end is at or after `start`, as Python's bisect_left. */
+interface Lookup {
+  text: string;
+  /** Mentions by start, and their starts. */
+  ordered: Mention[];
+  starts: number[];
+  semicolons: number[];
+}
+
+const JOINED_RE = new RegExp(`[,;]|(?<!${W})and(?!${W})`, "u");
+const INITIALS_ONLY_RE = new RegExp(`^(?:${INITIALS_RE.source})$`, "u");
+const AUTHOR_GAP_RE = new RegExp(String.raw`^(?:[\s.,]|(?<!${W})and(?!${W}))*$`, "u");
+
+/**
+ * Whether the end at `pos` falls inside one clause after all, given the clause so far from `start`:
+ * a semicolon inside a list of authors ("T.A.R.-L., C.O.-P.; J.M.G.-R.: software", "Dunn, C.; all
+ * other authors: visualization"), or the full stop between a clause of roles and the initials that
+ * close it in a role-first statement ("Investigation, methodology. S.H.;").
+ */
+function joins(lookup: Lookup, start: number, pos: number): boolean {
+  const { text, ordered, starts, semicolons } = lookup;
+  if (text[pos] === ";") {
+    const following = ordered[bisectLeft(starts, pos + 1)]?.[2];
+    return following === "A" && onlyAuthors(lookup, start ? start + 1 : 0, pos);
+  }
+  // Role-first statements only: in "DP; wrote the original draft. PP; conceived ..." the initials open a clause.
+  if (text[pos] !== "." || ordered[0]?.[2] !== "R") return false;
+  let i = bisectLeft(starts, start);
+  if (i >= ordered.length || (starts[i] as number) >= pos) return false;
+  for (; i < ordered.length && (starts[i] as number) < pos; i += 1) if (ordered[i]?.[2] !== "R") return false;
+  const stop = semicolons[bisectLeft(semicolons, pos)] ?? text.length;
+  if (!onlyAuthors(lookup, pos + 1, stop)) return false;
+  // Only resolved initials close it: "editing. Sarah Macek;" or "MD;" opens the next clause.
+  for (let k = bisectLeft(starts, pos + 1); k < ordered.length && (starts[k] as number) < stop; k += 1) {
+    const [s, e, , value] = ordered[k] as Mention;
+    if ((value as number) < 0 || !INITIALS_ONLY_RE.test(text.slice(s, e))) return false;
+  }
+  return true;
+}
+
+/**
+ * Whether text[start:stop] names authors and holds nothing else but commas, "and", full stops and spaces:
+ * "S.A.D. and M.R. conceptualized the project;" or "Funding was acquired by H.-J.L." is a sentence.
+ */
+function onlyAuthors({ text, ordered, starts }: Lookup, start: number, stop: number): boolean {
+  let i = bisectLeft(starts, start);
+  if (i >= ordered.length || (starts[i] as number) >= stop) return false;
+  let at = start;
+  for (; i < ordered.length && (starts[i] as number) < stop; i += 1) {
+    const [s, e, kind] = ordered[i] as Mention;
+    if (kind !== "A" || !AUTHOR_GAP_RE.test(text.slice(at, s))) return false;
+    at = e;
+  }
+  return AUTHOR_GAP_RE.test(text.slice(at, stop));
+}
+
+/** First index whose value is at or after `start`, as Python's bisect_left. */
 function bisectLeft(ends: number[], start: number): number {
   let lo = 0;
   let hi = ends.length;
@@ -540,7 +655,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
   }
   const allRanges: [number, number][] = [];
   for (const m of text.matchAll(ALL_RE)) {
-    mentions.push([m.index, m.index + m[0].length, "A", m[1] ? OTHER_AUTHORS : ALL_AUTHORS]);
+    mentions.push([m.index, m.index + m[0].length, "A", m[1] || m[2] || m[3] ? OTHER_AUTHORS : ALL_AUTHORS]);
     allRanges.push([m.index, m.index + m[0].length]);
   }
   text = maskRanges(text, allRanges);
