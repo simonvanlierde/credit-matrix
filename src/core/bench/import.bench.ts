@@ -1,7 +1,10 @@
+// biome-ignore lint/correctness/noNodejsModules: the custom font is a test fixture on disk.
+import { fileURLToPath } from "node:url";
 import { DOMParser } from "linkedom";
 import { describe, test } from "vitest";
 import { MAX_AUTHORS, MAX_IMPORT_BYTES } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
+import { lookupDoiWork } from "../doi-lookup";
 import { toCrossrefContributors } from "../export/crossref";
 import { toCsv } from "../export/csv";
 import { heatmapPrintWarning } from "../export/heatmap-print";
@@ -9,9 +12,11 @@ import { buildHeatmapSvg } from "../export/heatmap-svg";
 import { toJson } from "../export/json";
 import { toTenzing } from "../export/tenzing";
 import { toJats4rXml } from "../export/xml";
+import { createFigureRenderer } from "../figures";
 import { generateStatement, STATEMENT_FORMATS, statementSpans } from "../generate-statement";
 import { importAny } from "../import";
 import { createAuthor } from "../parse-authors";
+import { decodeShareHash, encodeShareHash } from "../share-link";
 import { MAX_STATEMENT_LENGTH, parseStatement } from "../statement";
 
 // The slowest file each importer accepts. JSON refuses more than MAX_AUTHORS people, so its worst case
@@ -114,5 +119,69 @@ describe("former quadratic inputs at their caps", () => {
         }
       }),
     );
+  });
+});
+
+// Every other contributor with name parts that differ from the parsed name, so the link carries `p`.
+const WITH_PARTS = LONG_NAMES.map((author, i) =>
+  i % 2 ? author : { ...author, middleName: "", surname: `Middle Surname${i}` },
+);
+const SHARE_HASH = await encodeShareHash({ authors: WITH_PARTS });
+
+describe(`share link with ${MAX_AUTHORS} contributors`, () => {
+  test("encode and decode", { timeout: TIMEOUT }, async ({ bench }) => {
+    // decodeShareHash returns null on any error, which would time the refusal instead.
+    if ((await decodeShareHash(SHARE_HASH))?.authors.length !== MAX_AUTHORS) throw new Error("the link did not decode");
+    await bench.compare(
+      bench("encode", async () => {
+        await encodeShareHash({ authors: WITH_PARTS });
+      }),
+      bench("decode", async () => {
+        await decodeShareHash(SHARE_HASH);
+      }),
+    );
+  });
+});
+
+// The figure renderer embeds a subset of each face it draws with, where buildHeatmapSvg names a font stack.
+describe(`figure SVG with embedded fonts, ${MAX_AUTHORS} contributors`, () => {
+  const renderer = createFigureRenderer();
+  const custom = {
+    font: "Figure Test",
+    fontPath: [fileURLToPath(new URL("../__tests__/fixtures/fonts/", import.meta.url))],
+    ignoreSystemFonts: true,
+  };
+  test("Noto Sans and a custom family", { timeout: TIMEOUT }, async ({ bench }) => {
+    await bench.compare(
+      bench("Noto Sans subset, long names", async () => {
+        await renderer.svg(LONG_NAMES);
+      }),
+      bench("custom family subset", async () => {
+        await renderer.svg(SHORT_NAMES, custom);
+      }),
+    );
+  });
+});
+
+// A Crossref record with as many authors as a draft holds, served without the network.
+const CROSSREF_WORK = JSON.stringify({
+  status: "ok",
+  message: {
+    title: ["A long author list"],
+    author: SHORT_NAMES.map((author) => ({
+      given: author.firstName,
+      family: author.surname,
+      ORCID: "https://orcid.org/0000-0002-1825-0097",
+    })),
+  },
+});
+const crossref = async () => new Response(CROSSREF_WORK);
+
+describe(`DOI lookup with ${MAX_AUTHORS} authors`, () => {
+  test("Crossref record", async ({ bench }) => {
+    if (!(await lookupDoiWork("10.5555/12345678", crossref)).ok) throw new Error("the lookup failed");
+    await bench("Crossref record", async () => {
+      await lookupDoiWork("10.5555/12345678", crossref);
+    }).run();
   });
 });
