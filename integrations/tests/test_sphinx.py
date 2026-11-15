@@ -262,3 +262,13 @@ def test_missing_font_family_fails_the_directive_in_one_line(tmp_path, project):
     assert len(lines) == 1
     assert "index.rst:4: ERROR: CRediT rendering failed:" in lines[0]
     assert "Cannot find the font family No Such Family in the font path" in lines[0]
+
+
+def test_empty_heatmap_alt_is_the_localised_title(tmp_path, project):
+    app, _, source = project(".. credit-heatmap:: contributors.json\n", language="nl")
+    (source / "contributors.json").write_text('{"version": 1, "authors": []}', encoding="utf-8")
+    app.build()
+    svg = next((tmp_path / "html/_images").glob("*.svg")).read_text(encoding="utf-8")
+    title = svg.split("<title>", 1)[1].split("</title>", 1)[0]
+    assert title and title != "Contribution heatmap"
+    assert f'alt="{title}"' in (tmp_path / "html/index.html").read_text(encoding="utf-8")
