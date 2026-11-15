@@ -940,6 +940,9 @@ msgstr "このファイルは CRediT Matrix の新しいバージョンで作成
 msgid "errImportRepeatedId"
 msgstr "このファイルには同じ貢献者 ID が 2 回含まれているため、インポートされませんでした。"
 
+msgid "errImportScoreCell"
+msgstr "{row} 行目、列「{column}」：「{value}」はスコアではありません。0〜100 の数値、Lead などのレベル、または yes/no を使ってください。"
+
 msgid "errHeatmapExport"
 msgstr "ヒートマップを{format}形式でエクスポートできませんでした。"
 

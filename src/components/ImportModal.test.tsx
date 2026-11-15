@@ -240,6 +240,23 @@ describe("a JSON export that repeats a contributor id", () => {
   });
 });
 
+describe("a CSV with a cell that is not a score", () => {
+  it("names the row, column and cell", async () => {
+    const { onImport } = renderModal(0);
+    fireEvent.change(screen.getByLabelText(english.pasteRawData), {
+      target: { value: "Name,Software\nGrace Hopper,maybe" },
+    });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+
+    const message = english.errImportScoreCell
+      .replace("{row}", "2")
+      .replace("{column}", "Software")
+      .replace("{value}", "maybe");
+    expect(screen.getByText(message)).toBeTruthy();
+    expect(onImport).not.toHaveBeenCalled();
+  });
+});
+
 describe("accessibility and drops", () => {
   it("ties the form error to the textarea", async () => {
     renderModal(0);

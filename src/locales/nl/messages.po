@@ -940,6 +940,9 @@ msgstr "Dit bestand is gemaakt met een nieuwere versie van CRediT Matrix. Laad d
 msgid "errImportRepeatedId"
 msgstr "Dit bestand bevat dezelfde bijdrager-id twee keer, dus het is niet geïmporteerd."
 
+msgid "errImportScoreCell"
+msgstr "Rij {row}, kolom ‘{column}’: ‘{value}’ is geen score. Gebruik een getal van 0 tot 100, een niveau zoals Lead, of yes/no."
+
 msgid "errHeatmapExport"
 msgstr "De heatmap kan niet als {format} worden geëxporteerd."
 

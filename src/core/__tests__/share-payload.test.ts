@@ -22,6 +22,30 @@ function makeAuthors() {
 }
 
 describe("share payload v2", () => {
+  it("keeps name parts that parsing the name would lose, and stays short when it would not", () => {
+    const ana = createAuthor("Ana García López", { firstName: "Ana", middleName: "", surname: "García López" });
+    const payload = toSharePayload({ authors: [ana, createAuthor("Grace Hopper")] });
+    expect(JSON.parse(payload).a.map((entry: { p?: string[] }) => entry.p)).toEqual([
+      ["Ana", "", "García López"],
+      undefined,
+    ]);
+    expect(fromSharePayload(payload).authors[0]).toMatchObject({
+      firstName: "Ana",
+      middleName: "",
+      surname: "García López",
+    });
+
+    const forged = JSON.parse(payload);
+    forged.a[0].p = ["Evil", "", "Mallory"];
+    expect(fromSharePayload(JSON.stringify(forged)).authors[0]).toMatchObject({ surname: "López" });
+
+    // The sign-in nonce hashes the payload without the token, so the parts are signed too.
+    const reply = { authors: [ana], claimId: ana.id, sourceDraftId: "draft-1", reply: true };
+    expect(fromSharePayload(toSharePayload({ ...reply, idToken: "a.b.c" })).signIn?.payload).toBe(
+      toSharePayload(reply),
+    );
+  });
+
   it("round-trips authors with their stable ids, title, claim, source draft, and reply flag", () => {
     const authors = makeAuthors();
     const charles = authors[1];

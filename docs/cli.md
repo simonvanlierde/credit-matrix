@@ -137,7 +137,9 @@ cat contributors.json | credit-matrix statement -
 The format comes from the content, not the file name. The CLI reads:
 
 - the native JSON export, and CodeMeta JSON
-- CSV with a `Name` header cell, and Tenzing CSV or TSV
+- CSV with a `Name` header cell, and Tenzing CSV or TSV. A CSV score cell holds 0 to 100, a level
+  (`Lead`, `Equal`, `Supporting`, `None`), or `yes`, `x`, `TRUE` or `✓` for lead. Any other cell stops the import
+  with its row and column
 - JATS4R XML and the `<contributors>` block of Crossref XML
 - a share link, including the reply link a contributor sends back after `ask`
 - a statement written as text
