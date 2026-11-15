@@ -168,9 +168,12 @@ def resolve_initials(token: str, authors: list[Author]) -> int | None:
     if not chunks:
         return None
     # Without diacritics only when no author fits as written: folded, "ŞY" for Şilan Yavuz fits Sema Y. too.
-    hits = _hits(chunks, [_name_parts(a) for a in authors]) or _hits(
-        [_fold(c) for c in chunks], [_folded_parts(a) for a in authors]
-    )
+    hits = _hits(chunks, [_name_parts(a) for a in authors])
+    if not hits:
+        folded = [_fold(c) for c in chunks]
+        # Nothing to fold on either side: the second pass would only repeat the first.
+        if folded != chunks or any(_folded_parts(a) != _name_parts(a) for a in authors):
+            hits = _hits(folded, [_folded_parts(a) for a in authors])
     return hits[0] if len(hits) == 1 else None
 
 

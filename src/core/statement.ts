@@ -333,7 +333,23 @@ function initialsCandidates(token: string, authors: readonly StatementAuthor[]):
   const chunks = chunksOf(token);
   if (chunks.length === 0) return [];
   const hits = tierHits(chunks, authors.map(cachedParts));
-  return hits.length > 0 ? hits : tierHits(chunks.map(unmarked), authors.map(foldedParts));
+  if (hits.length > 0) return hits;
+  const folded = chunks.map(unmarked);
+  // Nothing to fold on either side: the second pass would only repeat the first.
+  if (folded.every((chunk, i) => chunk === chunks[i]) && !anyMarked(authors)) return [];
+  return tierHits(folded, authors.map(foldedParts));
+}
+
+const markedCache = new WeakMap<readonly StatementAuthor[], boolean>();
+function anyMarked(authors: readonly StatementAuthor[]): boolean {
+  let marked = markedCache.get(authors);
+  if (marked === undefined) {
+    marked = authors.some((author) =>
+      foldedParts(author).some((part, i) => part.some((word, j) => word !== cachedParts(author)[i]?.[j])),
+    );
+    markedCache.set(authors, marked);
+  }
+  return marked;
 }
 
 function tierHits(chunks: string[], parts: ReturnType<typeof nameParts>[]): number[] {
