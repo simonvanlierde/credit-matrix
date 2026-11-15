@@ -137,9 +137,9 @@ def test_hybrid_keeps_the_rules_gate_and_per_author_text(tmp_path):
 
 class ChatServer(BaseHTTPRequestHandler):
     """A chat-completions endpoint that answers from `replies`, keyed by the statement it is sent:
-    (content, finish_reason), or an HTTP error code."""
+    (content, finish_reason), an HTTP error code, or a whole reply body."""
 
-    replies: ClassVar[dict[str, tuple[str, str] | int]] = {}
+    replies: ClassVar[dict[str, tuple[str, str] | int | dict]] = {}
     requests: ClassVar[list[dict]] = []
 
     def do_POST(self):
@@ -149,11 +149,14 @@ class ChatServer(BaseHTTPRequestHandler):
         if isinstance(reply, int):
             self.send_error(reply)
             return
-        content, finish = reply
-        answer = {
-            "choices": [{"message": {"content": content}, "finish_reason": finish}],
-            "usage": {"prompt_tokens": 300, "completion_tokens": 40},
-        }
+        if isinstance(reply, dict):
+            answer = reply
+        else:
+            content, finish = reply
+            answer = {
+                "choices": [{"message": {"content": content}, "finish_reason": finish}],
+                "usage": {"prompt_tokens": 300, "completion_tokens": 40},
+            }
         payload = json.dumps(answer).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -234,3 +237,18 @@ def test_compare_reads_free_text_by_rules_and_by_model(tmp_path):
     first = {(r["role"], r["reader"]): r["share"] for r in positions if r["place"] == "first"}
     assert first == {("software", "rules"): 1.0, ("software", "model"): 1.0}
     assert publishers[0] == {"publisher": "(all)", "articles": 2, "same_pairs": 0.5, "pair_f1": 0.8}
+
+
+def test_zero_shot_runner_retries_replies_without_choices_and_half_written_lines(server, tmp_path, capsys):
+    ChatServer.replies = {"s0": {"object": "error", "message": "overloaded"}, "s1": {"choices": []}}
+    items = [{"pmcid": f"PMC{i}", "statement": f"s{i}", "authors": ["Ann Smith"]} for i in range(3)]
+    out = tmp_path / "preds.jsonl"
+    # A run stopped while writing PMC2's line.
+    out.write_text('{"pmcid": "PMC9", "pairs": []}\n{"pmcid": "PMC2", "pai')
+    ChatServer.replies["s2"] = ('{"assignments": [{"author": 1, "roles": ["software"]}]}', "stop")
+    assert modelset.run_zero_shot(server, "m", items, out, limit=None, workers=2) == (1, 2)
+    assert "reply without choices" in capsys.readouterr().err
+    assert modelset.read_predictions(out) == {"PMC9": set(), "PMC2": {(1, "software")}}
+    ChatServer.replies.update(s0=('{"assignments": []}', "stop"), s1=('{"assignments": []}', "stop"))
+    assert modelset.run_zero_shot(server, "m", items, out, limit=None, workers=2) == (2, 0)
+    assert set(modelset.read_predictions(out)) == {"PMC9", "PMC0", "PMC1", "PMC2"}

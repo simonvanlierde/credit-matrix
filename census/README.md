@@ -275,7 +275,8 @@ held-out article 1; `census score --predictions` uses the label set's key-file w
 `zero-shot` asks any chat-completions server (`--base-url`, default `http://localhost:8000/v1`) for
 JSON that fits a schema, 32 requests at a time (`--workers`) so the server can batch them. It writes
 to `data/model/<snapshot>/predictions/`, one file per model and set, and skips articles already
-there, so a stopped run resumes. On one 24 GB GPU, vLLM serves Qwen3.5-9B quantized to FP8 when
+there, so a stopped run resumes; a line it left half written, and a reply with no answer in it, are
+asked again. On one 24 GB GPU, vLLM serves Qwen3.5-9B quantized to FP8 when
 loading (the first start downloads about 19 GB to the Hugging Face cache):
 
 ```sh
