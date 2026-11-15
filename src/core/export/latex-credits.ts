@@ -20,7 +20,7 @@ const PROTECTED_MACROS = [
 ];
 
 /** Make untrusted text print literally in a credits.sty name. Line breaks become spaces. */
-function escapeLatex(s: string): string {
+export function escapeLatex(s: string): string {
   // The lookbehind starts a match only at the first space of a run, so a long run is scanned once.
   return s.replace(/(?<!\s)\s*[\r\n]+\s*/g, " ").replace(/[\\&%$#_{}~^]/g, (c) => PROTECTED_SPECIALS[c] ?? `\\${c}`);
 }

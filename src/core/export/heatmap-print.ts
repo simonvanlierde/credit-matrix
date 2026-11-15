@@ -40,6 +40,7 @@ const PAGE_FIGURE_MM = { width: 183, height: 170 } as const;
  * A warning when a heatmap scaled to fit a full journal page prints its smallest label under 6 pt,
  * or null. The CLI writes it to stderr and the document plugins show it as a
  * build warning; the app shows its own, translated, at the width the user chose.
+ * The input must be well-formed SVG: a raw "<" inside a tag hides its attributes.
  * @throws {Error} or {RangeError} for an SVG without positive dimensions or text sizes; a
  * {@link buildHeatmapSvg} figure always has them.
  */
