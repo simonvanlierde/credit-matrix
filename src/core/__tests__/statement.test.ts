@@ -415,6 +415,7 @@ describe("all other authors after a semicolon", () => {
     "A.B.: software. The remaining authors: validation.",
     "A.B.: software. All remaining authors: validation.",
     "Software: A.B.; validation: all the remaining authors.",
+    "A.B.: software. Remaining authors: validation.",
   ])("reads the remaining authors as all other authors: %s", (text) => {
     expect(pairsOf(text, BELL)).toEqual([
       [0, "software"],
@@ -426,6 +427,22 @@ describe("all other authors after a semicolon", () => {
   it("does not read the other authors, which is mostly prose", () => {
     expect(pairsOf("Formal analysis: A.B., with feedback from the other authors.", BELL)).toEqual([
       [0, "formal-analysis"],
+    ]);
+  });
+
+  it("reads the remaining authors only where it opens or heads a clause", () => {
+    expect(pairsOf("Formal analysis: A.B., with input from the remaining authors.", BELL)).toEqual([
+      [0, "formal-analysis"],
+    ]);
+  });
+
+  it("does not read the remaining authors approving the manuscript as an assignment", () => {
+    const text =
+      "A.B.: software. C.D.: validation. The remaining authors have read and approved the manuscript, " +
+      "including its original draft.";
+    expect(pairsOf(text, BELL)).toEqual([
+      [0, "software"],
+      [1, "validation"],
     ]);
   });
 });
@@ -491,6 +508,8 @@ describe("resolveInitials", () => {
     expect(resolveInitials("A.A.-A.", [author("Ana", "Hernández-Martín"), author("Ángel", "Arias-Arias")])).toBe(1);
     // Folded, "ŞY" would fit the second author as well.
     expect(resolveInitials("ŞY", [author("Şilan", "Yavuz"), author("Sema", "Yılmaz")])).toBe(0);
+    // U+0941, a Devanagari vowel sign, is a nonspacing mark of combining class 0: the census drops it too.
+    expect(resolveInitials("सम", [author("", "सुमन")])).toBe(0);
   });
 
   it.each([

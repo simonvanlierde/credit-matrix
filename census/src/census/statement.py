@@ -65,13 +65,22 @@ _INITIALS_RE = re.compile(
     rf"(?<![\w.]){_U}[a-z]{{0,2}}{_PARTICLES}"
     rf"(?:(?:\.(?! )|\. (?={_U}\.)|\.? - )?{_U}[a-z]{{0,2}}{_PARTICLES}){{0,5}}\.?(?!\w)"
 )
-# "The remaining authors" reads as "all other authors". "The other authors" does not: it is mostly prose ("with
-# feedback from the other authors") that would hand the roles nearby to everyone else.
-_ALL_RE = re.compile(r"\b(?:all (?:the )?(?:(other|remaining) )?|(the remaining ))authors\b", re.IGNORECASE)
-# The closing "All authors read and approved the manuscript." is not a role assignment. "All authors
-# contributed to the investigation" is, so only approval wording is dropped.
+# "(The) remaining authors" reads as "all other authors" where it opens a clause or heads one ("Remaining
+# authors: validation"), and "all remaining authors" anywhere. Elsewhere it is prose ("with input from the
+# remaining authors"), and so is "the other authors": read as mentions, they would hand the roles nearby to
+# everyone else.
+_ALL_RE = re.compile(
+    r"\ball (?:the )?(?:(other|remaining) )?authors\b"
+    r"|(?:^|(?<=[,;:.])|(?<=[,;:.] ))((?:the )?remaining authors)\b"
+    r"|\b((?:the )?remaining authors)(?=\s*:)",
+    re.IGNORECASE,
+)
+# The closing "All authors read and approved the manuscript." is not a role assignment, nor is "The remaining
+# authors read and approved it". "All authors contributed to the investigation" is, so only approval wording
+# is dropped.
 _APPROVAL_RE = re.compile(
-    r"\ball (?:the )?authors (?:have |has )?(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)"
+    r"\b(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?"
+    r"(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)"
     r"[^;]*?(?:\.(?=\s|$)|;|$)",
     re.IGNORECASE,
 )
@@ -99,8 +108,10 @@ _UNMARKED = str.maketrans("Đđ", "Dd")
 
 def _fold(text: str) -> str:
     """`text` without diacritics: initials often drop them ("N.N.A." for Nguyễn Ngọc Ánh, "A.A.-A." for Ángel
-    Arias-Arias)."""
-    return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).translate(_UNMARKED)
+    Arias-Arias). Drops nonspacing marks (category Mn), the set the app's `\\p{Mn}` drops."""
+    return "".join(c for c in unicodedata.normalize("NFKD", text) if unicodedata.category(c) != "Mn").translate(
+        _UNMARKED
+    )
 
 
 @lru_cache(maxsize=4096)
@@ -181,8 +192,13 @@ def _hits(chunks: list[str], parts: list[tuple[Parts, Parts, Parts, Parts]]) -> 
     return []
 
 
-def _mask(text: str, start: int, end: int) -> str:
-    return text[:start] + " " * (end - start) + text[end:]
+def _mask(text: str, spans: list[tuple[int, int]]) -> str:
+    """`text` with each (start, end) span, in order and apart, as spaces: one copy, however many spans."""
+    parts, at = [], 0
+    for start, end in spans:
+        parts += [text[at:start], " " * (end - start)]
+        at = end
+    return "".join([*parts, text[at:]])
 
 
 def _name_variants(author: Author) -> tuple[set[str], set[str]]:
@@ -265,42 +281,70 @@ def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> 
         joined = re.search(r"[,;]|\band\b", gap)
         if kind == "A" and "." in gap and ":" not in gap and (next_kind == "R" or not joined):
             ends.append(end)
+    # Mentions and semicolons are looked up by position, so a long statement stays linear.
+    starts = [s for s, _, _, _ in ordered]
+    semicolons = [m.start() for m in re.finditer(";", text)]
     kept: list[int] = []
     for pos in sorted(ends):
-        if not _joins(text, ordered, kept[-1] if kept else 0, pos):
+        if not _joins(text, ordered, starts, semicolons, kept[-1] if kept else 0, pos):
             kept.append(pos)
     return kept
 
 
-def _joins(text: str, ordered: list[tuple[int, int, str, int | str]], start: int, pos: int) -> bool:
+type Mentions = list[tuple[int, int, str, int | str]]
+_AUTHOR_GAP_RE = re.compile(r"(?:[\s.,]|\band\b)*")
+
+
+def _joins(text: str, ordered: Mentions, starts: list[int], semicolons: list[int], start: int, pos: int) -> bool:
     """Whether the end at `pos` falls inside one clause after all, given the clause so far from `start`:
     a semicolon inside a list of authors ("T.A.R.-L., C.O.-P.; J.M.G.-R.: software"), or the full stop
     between a clause of roles and the initials that close it in a role-first statement ("Investigation,
-    methodology. S.H.;")."""
+    methodology. S.H.;"). `starts` holds the start of each of `ordered`, `semicolons` their positions."""
     if text[pos] == ";":
-        following = next((kind for s, _, kind, _ in ordered if s > pos), None)
-        return following == "A" and _only_authors(text, ordered, start + 1 if start else 0, pos)
+        following = bisect_left(starts, pos + 1)
+        return (
+            following < len(ordered)
+            and ordered[following][2] == "A"
+            and _only_authors(text, ordered, starts, start + 1 if start else 0, pos)
+        )
     # Role-first statements only: in "DP; wrote the original draft. PP; conceived ..." the initials open a clause.
-    # The set test runs first: it is empty, and so stops here, when the text names nothing.
-    if text[pos] != "." or {kind for s, _, kind, _ in ordered if start <= s < pos} != {"R"} or ordered[0][2] != "R":
+    if text[pos] != "." or not ordered or ordered[0][2] != "R":
         return False
-    stop = len(text) if (stop := text.find(";", pos)) < 0 else stop
+    i = bisect_left(starts, start)
+    if i == len(ordered) or starts[i] >= pos:
+        return False
+    while i < len(ordered) and starts[i] < pos:
+        if ordered[i][2] != "R":
+            return False
+        i += 1
+    k = bisect_left(semicolons, pos)
+    stop = semicolons[k] if k < len(semicolons) else len(text)
+    if not _only_authors(text, ordered, starts, pos + 1, stop):
+        return False
     # Only resolved initials close it: "editing. Sarah Macek;" or "MD;" opens the next clause.
-    return _only_authors(text, ordered, pos + 1, stop) and all(
-        value not in (UNRESOLVED, ALL_AUTHORS, OTHER_AUTHORS) and _INITIALS_RE.fullmatch(text[s:e])
-        for s, e, _, value in ordered
-        if pos < s < stop
-    )
+    i = bisect_left(starts, pos + 1)
+    while i < len(ordered) and starts[i] < stop:
+        s, e, _, value = ordered[i]
+        if value in (UNRESOLVED, ALL_AUTHORS, OTHER_AUTHORS) or not _INITIALS_RE.fullmatch(text[s:e]):
+            return False
+        i += 1
+    return True
 
 
-def _only_authors(text: str, ordered: list[tuple[int, int, str, int | str]], start: int, stop: int) -> bool:
+def _only_authors(text: str, ordered: Mentions, starts: list[int], start: int, stop: int) -> bool:
     """Whether text[start:stop] names authors and holds nothing else but commas, "and", full stops and spaces:
     "S.A.D. and M.R. conceptualized the project;" or "Funding was acquired by H.-J.L." is a sentence."""
-    spans = [(s, e) for s, e, _, _ in ordered if start <= s < stop]
-    if not spans or any(kind != "A" for s, _, kind, _ in ordered if start <= s < stop):
+    i = bisect_left(starts, start)
+    if i == len(ordered) or starts[i] >= stop:
         return False
-    rest = [text[e:s] for (_, e), (s, _) in pairwise([(start, start), *spans, (stop, stop)])]
-    return all(re.fullmatch(r"(?:[\s.,]|\band\b)*", r) for r in rest)
+    at = start
+    while i < len(ordered) and starts[i] < stop:
+        s, e, kind, _ = ordered[i]
+        if kind != "A" or not _AUTHOR_GAP_RE.fullmatch(text[at:s]):
+            return False
+        at = e
+        i += 1
+    return bool(_AUTHOR_GAP_RE.fullmatch(text[at:stop]))
 
 
 def parse_statement(text: str, authors: list[Author]) -> Parsed:
@@ -310,8 +354,7 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
     parsed = Parsed()
     mentions: list[tuple[int, int, str, int | str]] = [(s, e, "R", slug) for s, e, slug in find_roles(text)]
     # Mask roles so their capitals ("Writing") are not read as initials.
-    for start, end, _, _ in mentions:
-        text = _mask(text, start, end)
+    text = _mask(text, [(start, end) for start, end, _, _ in mentions])
 
     # Each spelling maps to every author it fits; one two authors share stays unresolved. Longest first,
     # and "Surname, Given" forms last, so they cannot take a name out of a list: "Ann Lee, Bo Wu".
@@ -324,17 +367,20 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
             variants.setdefault((v, False), set()).add(i)
     lower = _lower(text)
     for (needle, any_case), hits in sorted(variants.items(), key=lambda kv: ("," in kv[0][0], -len(kv[0][0]), kv[0])):
-        for start in list(_find(lower if any_case else text, needle, text)):
-            end = start + len(needle)
+        spans = [(start, start + len(needle)) for start in _find(lower if any_case else text, needle, text)]
+        for start, end in spans:
             if len(hits) == 1:
                 mentions.append((start, end, "A", next(iter(hits))))
             else:
                 mentions.append((start, end, "A", UNRESOLVED))
                 parsed.unresolved.append(text[start:end])
-            text, lower = _mask(text, start, end), _mask(lower, start, end)
+        text, lower = _mask(text, spans), _mask(lower, spans)
+    spans = []
     for m in _ALL_RE.finditer(text):
-        mentions.append((m.start(), m.end(), "A", OTHER_AUTHORS if m.group(1) or m.group(2) else ALL_AUTHORS))
-        text = _mask(text, m.start(), m.end())
+        other = m.group(1) or m.group(2) or m.group(3)
+        mentions.append((m.start(), m.end(), "A", OTHER_AUTHORS if other else ALL_AUTHORS))
+        spans.append(m.span())
+    text = _mask(text, spans)
     resolved: dict[str, int | None] = {}  # role-first statements repeat each author's initials per role
     for m in _INITIALS_RE.finditer(text):
         token = m.group().strip()

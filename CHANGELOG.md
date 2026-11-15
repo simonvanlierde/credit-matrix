@@ -165,8 +165,8 @@ See [deploying](docs/deploy.md).
 - In a pasted statement, a semicolon between names keeps them in one list, so
   "Dunn, C.; All other authors: visualization." gives Dunn visualization too, and a role-first
   clause keeps the initials after its full stop ("Visualization. C.D.;"). Initials without accents
-  match accented names ("N.N.A." for Nguyễn Ngọc Ánh), and "the remaining authors" reads as
-  "all other authors".
+  match accented names ("N.N.A." for Nguyễn Ngọc Ánh). "All remaining authors", and "the remaining
+  authors" heading a clause ("Remaining authors: validation"), read as "all other authors".
 - Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
   replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
 - A stalled documentation download no longer holds a service-worker update open indefinitely.

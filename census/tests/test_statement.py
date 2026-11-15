@@ -459,6 +459,7 @@ def test_all_other_authors_after_a_semicolon_in_a_list_of_authors():
         "A.B.: software. The remaining authors: validation.",
         "A.B.: software. All remaining authors: validation.",
         "Software: A.B.; validation: all the remaining authors.",
+        "A.B.: software. Remaining authors: validation.",
     ],
 )
 def test_the_remaining_authors_reads_as_all_other_authors(text):
@@ -472,6 +473,25 @@ def test_the_other_authors_is_not_read_as_a_mention():
     assert parsed.assignments == {(0, "formal-analysis")}
 
 
+def test_the_remaining_authors_in_prose_is_not_read_as_a_mention():
+    # Only where it opens or heads a clause: here it would give A.B.'s role to everyone.
+    parsed = parse_statement("Formal analysis: A.B., with input from the remaining authors.", THREE)
+    assert parsed.assignments == {(0, "formal-analysis")}
+
+
+def test_the_remaining_authors_approving_is_not_an_assignment():
+    text = (
+        "A.B.: software. C.D.: validation. The remaining authors have read and approved the manuscript, "
+        "including its original draft."
+    )
+    assert parse_statement(text, THREE).assignments == {(0, "software"), (1, "validation")}
+
+
+def test_initials_without_nonspacing_marks():
+    # U+0941, a Devanagari vowel sign, is a nonspacing mark of combining class 0: the app drops it as \p{Mn}.
+    assert resolve_initials("सम", [Author("", "सुमन")]) == 0
+
+
 def test_opens_with_name_matches_the_regex_it_replaces():
     regex = re.compile(rf"{_U}[^:;]*:\s*$")
     rng = random.Random(0)
@@ -480,7 +500,7 @@ def test_opens_with_name_matches_the_regex_it_replaces():
         assert _opens_with_name(lead_in) == bool(regex.search(lead_in)), repr(lead_in)
 
 
-@pytest.mark.parametrize("unit", [" ", "A", "A ", "A.", "é", ",", ":", ";", "-"])
+@pytest.mark.parametrize("unit", [" ", "A", "A ", "A.", "é", ",", ":", ";", "-", "Software. ", "A.B.; "])
 def test_long_runs_parse_in_linear_time(unit):
     """A run k times longer must take under 3k times as long (quadratic work takes about k² times).
     Best of 3, and under 500 ms never fails, so a GC pause or a busy CPU does not fail linear code."""

@@ -165,13 +165,22 @@ const INITIALS_RE = new RegExp(
     String.raw`(?:(?:\.(?! )|\. (?=${U}\.)|\.? - )?${U}[a-z]{0,2}${PARTICLES}){0,5}\.?(?!${W})`,
   "gu",
 );
-// "The remaining authors" reads as "all other authors". "The other authors" does not: it is mostly prose ("with
-// feedback from the other authors") that would hand the roles nearby to everyone else.
-const ALL_RE = new RegExp(`(?<!${W})(?:all (?:the )?(?:(other|remaining) )?|(the remaining ))authors(?!${W})`, "giu");
-// The closing "All authors read and approved the manuscript." is not a role assignment. "All authors
-// contributed to the investigation" is, so only approval wording is dropped.
+// "(The) remaining authors" reads as "all other authors" where it opens a clause or heads one ("Remaining
+// authors: validation"), and "all remaining authors" anywhere. Elsewhere it is prose ("with input from the
+// remaining authors"), and so is "the other authors": read as mentions, they would hand the roles nearby to
+// everyone else.
+const ALL_RE = new RegExp(
+  `(?<!${W})all (?:the )?(?:(other|remaining) )?authors(?!${W})` +
+    `|(?:^|(?<=[,;:.] ?))((?:the )?remaining authors)(?!${W})` +
+    String.raw`|(?<!${W})((?:the )?remaining authors)(?=\s*:)`,
+  "giu",
+);
+// The closing "All authors read and approved the manuscript." is not a role assignment, nor is "The remaining
+// authors read and approved it". "All authors contributed to the investigation" is, so only approval wording
+// is dropped.
 const APPROVAL_RE = new RegExp(
-  `(?<!${W})all (?:the )?authors (?:have |has )?(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)` +
+  `(?<!${W})(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?` +
+    "(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)" +
     String.raw`[^;]*?(?:\.(?=\s|$)|;|$)`,
   "giu",
 );
@@ -529,7 +538,7 @@ function onlyAuthors({ text, ordered, starts }: Lookup, start: number, stop: num
   return AUTHOR_GAP_RE.test(text.slice(at, stop));
 }
 
-/** First index whose end is at or after `start`, as Python's bisect_left. */
+/** First index whose value is at or after `start`, as Python's bisect_left. */
 function bisectLeft(ends: number[], start: number): number {
   let lo = 0;
   let hi = ends.length;
@@ -630,7 +639,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
   }
   const allRanges: [number, number][] = [];
   for (const m of text.matchAll(ALL_RE)) {
-    mentions.push([m.index, m.index + m[0].length, "A", m[1] || m[2] ? OTHER_AUTHORS : ALL_AUTHORS]);
+    mentions.push([m.index, m.index + m[0].length, "A", m[1] || m[2] || m[3] ? OTHER_AUTHORS : ALL_AUTHORS]);
     allRanges.push([m.index, m.index + m[0].length]);
   }
   text = maskRanges(text, allRanges);
