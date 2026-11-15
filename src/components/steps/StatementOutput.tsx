@@ -29,15 +29,15 @@ import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
 import { TOOLCHAIN_OUTPUTS, ToolchainPanel } from "./ToolchainPanel";
 
+// Journal submission formats: listed under their own heading, not among the general exports.
+const JOURNAL_FORMATS: DataFormat[] = ["xml", "crossref", "tenzing"];
+
 /** A name or role in the running text that opens a panel: it keeps the text's look, not a button's. */
 /**
  * A name or role in the statement: text, not a control. A click opens the same menu its real
  * trigger does (the list row's "…", the grid header), which is the keyboard's way in; as buttons,
  * every name would be a tab stop and the statement would read as a row of buttons.
  */
-// Journal submission formats: listed under their own heading, not among the general exports.
-const JOURNAL_FORMATS: DataFormat[] = ["xml", "crossref", "tenzing"];
-
 const NAME_TEXT =
   "cursor-pointer underline decoration-outline/50 decoration-dotted underline-offset-4 hover:text-primary hover:decoration-primary";
 
