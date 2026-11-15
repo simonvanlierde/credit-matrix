@@ -171,7 +171,11 @@ function CoauthorPage() {
   }
 
   async function handleSignIn() {
-    if (!(await startOrcidSignIn(replyInput()))) setSignIn("failed");
+    try {
+      if (!(await startOrcidSignIn(replyInput()))) setSignIn("failed");
+    } catch {
+      setSignIn("failed");
+    }
   }
 
   function handleUnlock() {
