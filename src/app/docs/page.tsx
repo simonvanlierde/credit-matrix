@@ -70,7 +70,11 @@ function DocPage() {
     <ReadingPage>
       <meta name="pagefind:title" data-pagefind-meta="title[content]" content={doc?.title} />
       <meta name="pagefind:url" data-pagefind-meta="url[content]" content={route} />
-      <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+      <div className="max-lg:flex max-lg:flex-col lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+        {/* First in the DOM so focus reaches it before the article; below lg it follows the article. */}
+        <nav aria-label={t("docsTitle")} className="document max-lg:order-last max-lg:mt-8 lg:sticky lg:top-6">
+          <DocsList current={route} level={2} />
+        </nav>
         <div className="min-w-0 space-y-6">
           <a href="/docs" className="flex w-fit items-center gap-1.5 text-sm text-primary hover:underline">
             <ArrowLeft className="size-4" aria-hidden="true" />
@@ -79,9 +83,6 @@ function DocPage() {
           <DocsSearch />
           <DocArticle parts={parts} />
         </div>
-        <nav aria-label={t("docsTitle")} className="document mt-8 lg:sticky lg:top-6 lg:order-first lg:mt-0">
-          <DocsList current={route} level={2} />
-        </nav>
       </div>
     </ReadingPage>
   );
