@@ -52,9 +52,11 @@ const FILES = {
   names: "Marie Curie\n".repeat(Math.floor(MAX_IMPORT_BYTES / 12)),
 };
 
+// Fixed names keep CodSpeed's history when an exporter's output changes. Sizes: JSON about 830 kB, the
+// others within one row of MAX_IMPORT_BYTES.
 describe("importers at the size cap", () => {
   for (const [format, text] of Object.entries(FILES)) {
-    test(`${format}, ${(text.length / 1000).toFixed(0)} kB`, { timeout: TIMEOUT }, async ({ bench }) => {
+    test(`${format} at the size cap`, { timeout: TIMEOUT }, async ({ bench }) => {
       await bench(format, async () => {
         await importAny(text, { parser });
       }).run();
@@ -89,7 +91,7 @@ describe("former quadratic inputs at their caps", () => {
     'identifier="https://credit.niso.org/contributor-roles/',
     (url) => url + "/".repeat(MAX_IMPORT_BYTES - one.length - 100),
   );
-  test("statement lead-in, JATS role URL, unclosed SVG tags", { timeout: TIMEOUT }, async ({ bench }) => {
+  test("statement lead-in, JATS role URL, unclosed SVG and text tags", { timeout: TIMEOUT }, async ({ bench }) => {
     await bench.compare(
       bench("statement lead-in", () => {
         parseStatement(statement, [{ given: "Marie", surname: "Curie" }]);
@@ -102,6 +104,13 @@ describe("former quadratic inputs at their caps", () => {
           heatmapPrintWarning("<svg ".repeat(MAX_IMPORT_BYTES / 5));
         } catch {
           // No dimensions: only the scan counts.
+        }
+      }),
+      bench("unclosed <text tags", () => {
+        try {
+          heatmapPrintWarning(`<svg width="1" height="1">${"<text ".repeat(MAX_IMPORT_BYTES / 6)}`);
+        } catch {
+          // No text sizes: only the scan counts.
         }
       }),
     );
