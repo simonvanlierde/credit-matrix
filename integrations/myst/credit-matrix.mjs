@@ -123,7 +123,10 @@ export function statementEntries(authors, levels = {}) {
   return entries;
 }
 
-/** mdast for the statement: "**Name**: Role, Role; **Name**: Role." */
+/**
+ * mdast for the statement: "**Name**: Role, Role; **Name**: Role." `options.footnoteKey`
+ * tells apart the level footnotes of statements that share a page.
+ */
 export function statementNode(authors, options = {}) {
   const entries = statementEntries(authors, options.levels);
   if (entries.length === 0) return [];
@@ -138,7 +141,7 @@ export function statementNode(authors, options = {}) {
         `CRediT: ${author.name}${ui("labelSeparator")}`.length,
       )}.`;
       const identifier = `credit-matrix-${createHash("sha256")
-        .update(`${i}\n${author.name}\n${value}`)
+        .update(`${options.footnoteKey ?? 0}\n${i}\n${author.name}\n${value}`)
         .digest("hex")
         .slice(0, 20)}`;
       reference = [{ type: "footnoteReference", identifier, label: identifier }];
@@ -200,13 +203,26 @@ function translationsFor(file) {
   return TRANSLATORS[resolveLocaleTag(page.lang ?? projectConfig(file).lang) ?? "en"];
 }
 
+/**
+ * Statements run so far per page. Every statement on a page lists the same authors, so its
+ * ordinal keeps their footnote ids apart; the node's position cannot, as each notebook cell
+ * is parsed on its own from line 1.
+ */
+// shortcut: counts per process, so `myst start` rebuilds renumber the ids; key by page parse if that matters.
+const statementsPerPage = new Map();
+
 const creditStatement = {
   name: "credit-statement",
   doc: "A CRediT authorship statement built from the authors' `roles`.",
   run(_data, vfile) {
-    return vfile?.path
-      ? statementNode(authorsFor(vfile.path), { ...translationsFor(vfile.path), levels: levelsFor(vfile.path) })
-      : [];
+    if (!vfile?.path) return [];
+    const footnoteKey = statementsPerPage.get(vfile.path) ?? 0;
+    statementsPerPage.set(vfile.path, footnoteKey + 1);
+    return statementNode(authorsFor(vfile.path), {
+      ...translationsFor(vfile.path),
+      levels: levelsFor(vfile.path),
+      footnoteKey,
+    });
   },
 };
 

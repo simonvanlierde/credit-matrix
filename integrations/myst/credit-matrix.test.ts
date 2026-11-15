@@ -222,6 +222,21 @@ describe("MyST plugin", () => {
     expect(new Set(ids).size).toBe(2);
   });
 
+  it("gives each statement on a page its own footnote ids", () => {
+    const dir = mkdtempSync(join(tmpdir(), "credit-myst-twice-"));
+    const page = join(dir, "index.md");
+    writeFileSync(
+      page,
+      "---\nauthors:\n  - name: Marie Curie\n    roles: [Software]\noptions:\n  credit-matrix:\n    levels:\n      Marie Curie:\n        Software: equal\n---\n",
+    );
+    const ids = () =>
+      plugin.directives[0].run({}, { path: page }).flatMap((node: { identifier?: string }) => node.identifier ?? []);
+    const [first, second] = [ids(), ids()];
+    expect(first).toHaveLength(1);
+    expect(second).toHaveLength(1);
+    expect(second).not.toEqual(first);
+  });
+
   it("registers a credit-statement directive that renders from the page's file", () => {
     const [directive] = plugin.directives;
     expect(directive?.name).toBe("credit-statement");
