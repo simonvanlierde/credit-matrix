@@ -1,7 +1,7 @@
 import type { Author, Contribution } from "../author";
 import { clampScore, isValidOrcid, LEVEL_SCORE } from "../author";
 import { CREDIT_ROLES, headerKey } from "../credit-roles";
-import { deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
+import { deduplicateAuthorInitials, readUpToCap, tryCreateAuthor } from "../parse-authors";
 
 const NAME_HEADER = "Name";
 const ORCID_HEADER = "ORCID";
@@ -189,6 +189,7 @@ export function toCsv(authors: Author[]): string {
   return rows.join("\n");
 }
 
+/** Read people from a CSV, stopping one past `MAX_AUTHORS`: refuse a result longer than that. */
 export function fromCsv(csv: string): Author[] {
   // Each record keeps its spreadsheet row number, for the score cell error.
   const records = parseCsvRecords(csv, delimiterOf(csv))
@@ -219,7 +220,7 @@ export function fromCsv(csv: string): Author[] {
 
   // A row with no usable name is skipped, as JATS import skips a nameless
   // contrib, rather than aborting the whole import.
-  const authors = records.slice(1).flatMap((cells) => {
+  const authors = readUpToCap(records.slice(1), (cells) => {
     const name = cells[nameIndex] ?? "";
     if (!name) return [];
 

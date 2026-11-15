@@ -1,7 +1,7 @@
 import type { Author } from "../author";
 import { isValidOrcid } from "../author";
 import { CREDIT_ROLES, headerKey as key } from "../credit-roles";
-import { cleanNamePart, deduplicateAuthorInitials, tryCreateAuthor } from "../parse-authors";
+import { cleanNamePart, deduplicateAuthorInitials, readUpToCap, tryCreateAuthor } from "../parse-authors";
 import { delimiterOf, escapeCsvFormulaOnly, headerCells, parseCsvRecords, unescapeCsvValue } from "./csv";
 import { givenNamesOf, suffixOf } from "./xml";
 
@@ -103,6 +103,7 @@ function isTrue(value: string | undefined): boolean {
   return value?.trim().toLowerCase() === "true";
 }
 
+/** Read people from a tenzing sheet, stopping one past `MAX_AUTHORS`: refuse a result longer than that. */
 export function fromTenzing(text: string): Author[] {
   const trimmed = text.replace(/^﻿/, "").trim();
   const [headerRow = [], ...rows] = parseCsvRecords(trimmed, delimiterOf(trimmed));
@@ -129,7 +130,7 @@ export function fromTenzing(text: string): Author[] {
     .filter((person) => !/^don['’]t agree to be named$/i.test(person.status))
     .sort((a, b) => a.order - b.order || a.index - b.index);
 
-  const authors = people.flatMap(({ row, firstName, middleName, surname, status }) => {
+  const authors = readUpToCap(people, ({ row, firstName, middleName, surname, status }) => {
     const orcid = cell(row, "orcid id");
     return tryCreateAuthor([firstName, middleName, surname].filter(Boolean).join(" "), {
       firstName: cleanNamePart(firstName),

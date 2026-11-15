@@ -6,7 +6,7 @@ import { fromCsv, headerCells } from "./export/csv";
 import { fromJson, UNKNOWN_TOOLCHAIN_WARNING } from "./export/json";
 import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
-import { createAuthor, deduplicateAuthorInitials, splitNameList, tryCreateAuthor } from "./parse-authors";
+import { createAuthor, deduplicateAuthorInitials, readUpToCap, splitNameList, tryCreateAuthor } from "./parse-authors";
 import { decodeShareHash } from "./share-link";
 import { readsAsStatement } from "./statement";
 import type { Toolchain } from "./toolchain";
@@ -100,8 +100,8 @@ export interface Imported {
  * place, on text the app only exports (`ExportOnlyError`), on a CRediT statement (it names roles, not contributors: read it with
  * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
  * throws (`NewerVersionError`, `ZodError`, an XML parse error, `ScoreCellError`). An empty
- * `authors` means the format was right but held nobody. A list of names longer than `MAX_AUTHORS`
- * comes back cut to `MAX_AUTHORS + 1`, which is still too many to use.
+ * `authors` means the format was right but held nobody. Any format but JSON with more than `MAX_AUTHORS`
+ * people comes back cut to `MAX_AUTHORS + 1`, which is still too many to use.
  */
 export async function importAny(
   text: string,
@@ -174,14 +174,21 @@ function fromCodemeta(text: string): Author[] {
   // Zenodo and CodeMeta often list a person as both author and contributor: keep the author row.
   const key = (person: Author) => person.orcid ?? person.name.toLowerCase();
   const listed = new Set(authors.map(key));
-  const others = readPeople(data?.contributor, "non-author").filter((person) => !listed.has(key(person)));
+  const others = readPeople(data?.contributor, "non-author", (person) => !listed.has(key(person)));
   return deduplicateAuthorInitials([...authors, ...others]);
 }
 
-/** People in a CodeMeta field. Linked Roles and unusable entries are skipped one by one; the caller bounds the count. */
-function readPeople(field: unknown, contributorType: Author["contributorType"]): Author[] {
+/**
+ * People in a CodeMeta field that `keep` accepts, up to one past `MAX_AUTHORS`. Linked Roles and
+ * unusable entries are skipped one by one.
+ */
+function readPeople(
+  field: unknown,
+  contributorType: Author["contributorType"],
+  keep: (person: Author) => boolean = () => true,
+): Author[] {
   const entries: unknown[] = Array.isArray(field) ? field : field ? [field] : [];
-  return entries.flatMap((entry) => {
+  return readUpToCap(entries, (entry) => {
     if (!entry || typeof entry !== "object") return [];
     const person = entry as Record<string, unknown>;
     if ((person["@type"] ?? person.type) === "Role") return [];
@@ -205,6 +212,6 @@ function readPeople(field: unknown, contributorType: Author["contributorType"]):
             surname: typeof person.familyName === "string" ? person.familyName : "",
           }
         : {}),
-    });
+    }).filter(keep);
   });
 }

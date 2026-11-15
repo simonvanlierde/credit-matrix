@@ -1187,6 +1187,7 @@ export declare class ScoreCellError extends Error {
   constructor(row: number, column: string, value: string);
 }
 export declare function toCsv(authors: Author[]): string;
+/** Read people from a CSV, stopping one past `MAX_AUTHORS`: refuse a result longer than that. */
 export declare function fromCsv(csv: string): Author[];
 /**
  * YAML for Quarto/Pandoc's `author` field, with canonical CRediT names and levels.
@@ -1296,6 +1297,7 @@ export declare function toRoCrateFragment(authors: Author[]): {
 export declare function toTenzing(authors: Author[]): string;
 /** True for a header row that looks like a tenzing contributor spreadsheet. */
 export declare function isTenzing(text: string): boolean;
+/** Read people from a tenzing sheet, stopping one past `MAX_AUTHORS`: refuse a result longer than that. */
 export declare function fromTenzing(text: string): Author[];
 /**
  * Serialize authors to a JATS4R-compliant XML string.
@@ -1420,8 +1422,8 @@ interface Imported {
  * place, on text the app only exports (`ExportOnlyError`), on a CRediT statement (it names roles, not contributors: read it with
  * `parseStatement` against your author list), on a link that does not decode, and whatever the format's own reader
  * throws (`NewerVersionError`, `ZodError`, an XML parse error, `ScoreCellError`). An empty
- * `authors` means the format was right but held nobody. A list of names longer than `MAX_AUTHORS`
- * comes back cut to `MAX_AUTHORS + 1`, which is still too many to use.
+ * `authors` means the format was right but held nobody. Any format but JSON with more than `MAX_AUTHORS`
+ * people comes back cut to `MAX_AUTHORS + 1`, which is still too many to use.
  */
 export declare function importAny(text: string, { parser, convertCitation }?: {
   parser?: XmlParser;
