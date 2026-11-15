@@ -341,17 +341,18 @@ def ask(base_url: str, model: str, statement: str, authors: list[str]) -> tuple[
     )
     with urllib.request.urlopen(request, timeout=600) as response:
         answer = json.load(response)
-    try:
-        choice, usage = answer["choices"][0], answer.get("usage") or {}
-    except (KeyError, IndexError, TypeError) as error:
+    choices = answer.get("choices") if isinstance(answer, dict) else None
+    choice = choices[0] if isinstance(choices, list) and choices else None
+    usage = (answer.get("usage") or {}) if isinstance(answer, dict) else None
+    message = (choice.get("message") or {}) if isinstance(choice, dict) else None
+    if not (isinstance(choice, dict) and isinstance(usage, dict) and isinstance(message, dict)):
         # Raised as a failed request, which writes nothing, so the next run asks again.
-        raise ValueError(f"reply without choices: {str(answer)[:200]}") from error
+        raise ValueError(f"malformed reply: {str(answer)[:200]}")
     record: dict[str, Any] = {
         "finish_reason": choice.get("finish_reason"),
         "input_tokens": usage.get("prompt_tokens"),
         "output_tokens": usage.get("completion_tokens"),
     }
-    message = choice.get("message") or {}
     if record["finish_reason"] != "stop" or message.get("refusal"):
         return set(), record
     try:
@@ -367,7 +368,7 @@ def run_zero_shot(
 ) -> tuple[int, int]:
     """Append one prediction line per item to `out` as answers arrive, skipping pmcids already there, so
     a stopped run resumes. `workers` requests run at once, which lets the server batch them. A request
-    that fails (server down, HTTP error, a reply without choices) writes nothing, so a rerun retries it.
+    that fails (server down, HTTP error, a reply without a usable choice) writes nothing, so a rerun retries it.
     Returns (answered, failed)."""
     done: set[str] = set()
     if out.exists():

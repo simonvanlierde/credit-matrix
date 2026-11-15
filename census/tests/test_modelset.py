@@ -2,7 +2,7 @@ import json
 import random
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import pyarrow as pa
 import pytest
@@ -137,9 +137,9 @@ def test_hybrid_keeps_the_rules_gate_and_per_author_text(tmp_path):
 
 class ChatServer(BaseHTTPRequestHandler):
     """A chat-completions endpoint that answers from `replies`, keyed by the statement it is sent:
-    (content, finish_reason), an HTTP error code, or a whole reply body."""
+    (content, finish_reason), an HTTP error code, or any other JSON value as the whole reply body."""
 
-    replies: ClassVar[dict[str, tuple[str, str] | int | dict]] = {}
+    replies: ClassVar[dict[str, Any]] = {}
     requests: ClassVar[list[dict]] = []
 
     def do_POST(self):
@@ -149,7 +149,7 @@ class ChatServer(BaseHTTPRequestHandler):
         if isinstance(reply, int):
             self.send_error(reply)
             return
-        if isinstance(reply, dict):
+        if not isinstance(reply, tuple):
             answer = reply
         else:
             content, finish = reply
@@ -247,8 +247,30 @@ def test_zero_shot_runner_retries_replies_without_choices_and_half_written_lines
     out.write_text('{"pmcid": "PMC9", "pairs": []}\n{"pmcid": "PMC2", "pai')
     ChatServer.replies["s2"] = ('{"assignments": [{"author": 1, "roles": ["software"]}]}', "stop")
     assert modelset.run_zero_shot(server, "m", items, out, limit=None, workers=2) == (1, 2)
-    assert "reply without choices" in capsys.readouterr().err
+    assert "malformed reply" in capsys.readouterr().err
     assert modelset.read_predictions(out) == {"PMC9": set(), "PMC2": {(1, "software")}}
     ChatServer.replies.update(s0=('{"assignments": []}', "stop"), s1=('{"assignments": []}', "stop"))
     assert modelset.run_zero_shot(server, "m", items, out, limit=None, workers=2) == (2, 0)
     assert set(modelset.read_predictions(out)) == {"PMC9", "PMC0", "PMC1", "PMC2"}
+
+
+GOOD_CHOICE = {"message": {"content": '{"assignments": []}'}, "finish_reason": "stop"}
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"choices": None},
+        {"choices": [None]},
+        {"choices": ["x"]},
+        {"choices": [{"message": "x", "finish_reason": "stop"}]},
+        {"choices": [GOOD_CHOICE], "usage": "x"},
+        ["not", "an", "object"],
+    ],
+)
+def test_zero_shot_runner_counts_malformed_replies_as_failed(server, tmp_path, body):
+    ChatServer.replies = {"s0": body}
+    out = tmp_path / "preds.jsonl"
+    items = [{"pmcid": "PMC0", "statement": "s0", "authors": ["Ann Smith"]}]
+    assert modelset.run_zero_shot(server, "m", items, out, limit=None, workers=1) == (0, 1)
+    assert modelset.read_predictions(out) == {}
