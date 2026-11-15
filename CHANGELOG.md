@@ -24,7 +24,7 @@ See [deploying](docs/deploy.md).
   GitHub shows. A docs page works offline once you have opened it; installing the app does not
   download the docs.
 - Heatmap SVG and PDF exports draw names in Korean, Thai, Arabic, Hebrew, the Indic scripts
-  (Devanagari, Bengali, Tamil and nine more), Armenian, Georgian, Ethiopic, Khmer, Lao, Myanmar and
+  (Devanagari, Bengali, Tamil and six more), Armenian, Georgian, Ethiopic, Khmer, Lao, Myanmar and
   Sinhala, and monochrome emoji, so these names now export to PDF. Serif figures draw these scripts
   in Noto Serif faces (Noto Naskh Arabic for Arabic), except Korean and emoji, which keep their one
   face. HarfBuzz shapes the complex
@@ -43,8 +43,9 @@ See [deploying](docs/deploy.md).
   WOFF files and a variable font whose default is not regular are refused, as is a missing family.
   See [Use your own font](integrations/figures/README.md#use-your-own-font). The MyST, Jupyter
   Book, Sphinx, Quarto and Pandoc plugins take `font`, `font-path`, `ignore-system-fonts` and
-  `font-fallback` (Sphinx also `credit_matrix_font_path`), with `font-path` relative to the project
-  and a missing family stopping the build; Typst's `font` takes a family name or an array, with
+  `font-fallback` (Sphinx also `credit_matrix_font_path`). A relative `font-path` resolves against the
+  document's folder in Quarto and Pandoc, the `conf.py` folder in Sphinx and the project (`myst.yml`)
+  in MyST and Jupyter Book. A missing family stops the build; Typst's `font` takes a family name or an array, with
   Typst's own `--font-path`.
 - The CLI, the MyST, Sphinx and Quarto plugins and Pandoc warn when a heatmap's labels would print
   under 6 pt on a full journal page, which happens from about 25 contributors. `heatmapPrintWarning`
@@ -53,11 +54,11 @@ See [deploying](docs/deploy.md).
 - `NAME_PARTICLES` and `NAME_SUFFIXES` export the name particles ("van", "de la") and generational
   suffixes ("Jr.") that the parser uses for initials, so another implementation can follow them.
 - `MAX_AUTHORS`, `MAX_AUTHOR_NAME_LENGTH` and `MAX_IMPORT_BYTES` export the caps every reader enforces.
-- The output step asks "I write in…" and groups the exports for that writing tool: Word, Markdown
-  or plain text, LaTeX, Quarto, Typst, Pandoc, MyST or Jupyter Book, or Sphinx. Each shows the
-  statement or data block, the heatmap recipe, the setup line with a link to its guide at /docs,
-  and the CLI command. JATS4R XML, Crossref XML and tenzing stay in a "For the journal" group, and
-  every other format is under "Other formats". With no choice, the step looks as before.
+- The output step asks "I write in…" for Word, Markdown or plain text, LaTeX, Quarto, Typst, Pandoc,
+  MyST or Jupyter Book, or Sphinx. It then shows the statement or data block for that tool with a
+  link to its guide at [/docs](https://credit.duinlab.nl/docs), where the heatmap recipe, setup line
+  and CLI command live. Other formats, including JATS4R XML, Crossref XML and tenzing, are under
+  Export data. With no choice, the step looks as before.
 - The draft keeps its writing tool (`toolchain` in JSON exports and share links), and the browser
   remembers the last choice for new drafts. `fromJson` and `importAny` drop a writing tool they do
   not know and return it in `warnings`, so a file from a newer version still imports.
@@ -68,8 +69,7 @@ See [deploying](docs/deploy.md).
   also show your current draft, or a sample, in each export they describe.
 - `credit-matrix/figures` exports `createFigureRenderer`, `FigureOptions`, `FigureFace`,
   `FigureFontProvider`, `FigureFontFileError` and `FigureFontReport`, and the main entry exports
-  `TOOLCHAINS` and `Toolchain`. The Sphinx extension takes `credit_matrix_ignore_system_fonts` and
-  `credit_matrix_confdir`.
+  `TOOLCHAINS` and `Toolchain`. The Sphinx extension takes `credit_matrix_ignore_system_fonts`.
 
 ### Changed
 
@@ -79,8 +79,8 @@ See [deploying](docs/deploy.md).
 - Undo bars and status messages stay until you act instead of expiring on a timer. The Undo bar
   for a bulk action goes away once you edit the roster, and otherwise stays until you switch drafts.
   A failed copy keeps its error label until the next attempt.
-- The heatmap export recipe moved from Figure settings into the writing-tool panel; Figure settings
-  links to it.
+- The header navigation, the docs sidebar and the statement sidebar are more compact, and "Getting
+  started" links to [/docs](https://credit.duinlab.nl/docs).
 - CLI heatmap option errors name the allowed values, and `--help` shows `-h` and `-v`.
 - **Breaking:** to export SVG or PDF offline, install both packages in one project
   (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`, or run
@@ -92,8 +92,8 @@ See [deploying](docs/deploy.md).
   cache it on the machine. Offline with nothing cached, PDF stops with an error and SVG draws the
   text in system fonts with a warning. See [the CLI section](docs/cli.md#fonts-and-offline-use).
 - **Breaking:** in `createFigureRenderer`, replace `fontFallback` with `fonts`, a function that
-  returns a face's bytes. The old `fontFallback` option now throws `HeatmapOptionError`. A bundled app passes `fonts` from `credit-matrix-fonts`. If you self-host
-  the fonts, serve the `credit-matrix-fonts` package folder (for example at `/fonts/`) and import
+  returns a face's bytes. The old `fontFallback` option now throws `HeatmapOptionError` when the renderer is created. A bundled app
+  passes `fonts` from `credit-matrix-fonts`. If you self-host the fonts, serve the `credit-matrix-fonts` package folder (for example at `/fonts/`) and import
   its loader, which fetches each face relative to its own URL:
 
   ```js
@@ -138,6 +138,9 @@ See [deploying](docs/deploy.md).
 - Japanese font-recipe wording and European Portuguese file and response hints use consistent terms.
 - A saved draft with missing or malformed contributor name parts, initials or flags now opens
   with safe values derived from each name instead of failing to render or export.
+- Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
+  replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
+- A stalled documentation download no longer holds a service-worker update open indefinitely.
 
 ### Security
 
@@ -149,12 +152,6 @@ See [deploying](docs/deploy.md).
   building all of them before the list is refused.
 - `<credit-matrix src>` stops reading a response once it passes the size cap, also when the
   server sends no length.
-
-### Fixed
-
-- Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
-  replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
-- A stalled documentation download no longer holds a service-worker update open indefinitely.
 
 ## [0.12.0] - 2026-11-11
 

@@ -17,6 +17,7 @@ permissions:
   contents: read
 
 concurrency:
+  # One group on purpose: two tags must not race a fonts publish. A tag pushed while another is queued replaces it.
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
@@ -196,12 +197,18 @@ jobs:
         env:
           VERSION: ${{ steps.fonts.outputs.version }}
         run: |
-          url="https://cdn.jsdelivr.net/npm/credit-matrix-fonts@$VERSION/package.json"
+          base="https://cdn.jsdelivr.net/npm/credit-matrix-fonts@$VERSION"
+          # The files core fetches first, not only package.json.
+          urls="$base/package.json $base/NotoSans-Regular.ttf $base/harfbuzz-subset.wasm"
           for _ in $(seq 30); do
-            curl --connect-timeout 5 --max-time 10 -fsS -o /dev/null "$url" && exit 0
+            ok=1
+            for url in $urls; do
+              curl --connect-timeout 5 --max-time 10 -fsSI -o /dev/null "$url" || ok=0
+            done
+            [ "$ok" = 1 ] && exit 0
             sleep 30
           done
-          echo "::error::jsDelivr still does not serve credit-matrix-fonts $VERSION after 30 attempts ($url). Rerun the job once it does."
+          echo "::error::jsDelivr still does not serve credit-matrix-fonts $VERSION after 30 attempts ($base). Rerun the job once it does."
           exit 1
 
       - name: Publish

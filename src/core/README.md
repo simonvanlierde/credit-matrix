@@ -154,7 +154,7 @@ canonical CRediT roles with lead/equal/supporting degrees. `yesNo: true` omits t
 Paste it into Quarto or Pandoc manuscript front matter. `toMyst(authors)` returns `authors:` with
 ungraded roles; paste it into page front matter, or indent it under `project:` in `myst.yml`.
 The app shows the matching export when you choose Quarto, Pandoc or MyST under “I write in…”.
-Both formats are also under Export data (Other formats when a writing tool is selected), with Copy and Download. They list authors only, including
+Copy the block from that panel, or from Export data when no writing tool is chosen. Both formats also have Download. They list authors only, including
 those with no roles yet. Acknowledge non-author contributors separately. Keep native JSON for
 exact scores, markers and replies.
 
@@ -252,7 +252,7 @@ answers (unless `includeAnswers` is `false`), and `selfId`, the contributor who 
 files still load.
 
 `fromJson` returns `{ authors, asks?, selfId?, toolchain?, warnings? }`. A `toolchain` this build does
-not know is left out and named in `warnings`, so a file from a newer build still loads. It throws `NewerVersionError` for a file whose
+not know is left out and named in `warnings`, so a file from a newer build still loads. `warnings` is text for display, not a stable code. It throws `NewerVersionError` for a file whose
 `version` is higher than the one this build writes (`JSON_EXPORT_VERSION` in `export/json.ts`),
 `RepeatedIdError` for a file that repeats a contributor id, and `ZodError` for any other data that
 does not match.
