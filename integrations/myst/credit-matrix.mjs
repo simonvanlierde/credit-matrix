@@ -44,11 +44,13 @@ const TRANSLATORS = Object.fromEntries(
 // MyST runs a plugin listed by URL from a copy in its build cache, where no package resolves, so the
 // renderer downloads each face once into the machine's font cache.
 // A renderer reports each font family once, so one renderer serves each font search (folders and
-// system fonts); its reports wait here until the page that triggered the search can print them.
+// system fonts) and family; its reports wait here until the page that triggered the search can print them.
+// Keyed by family too: heatmaps render concurrently, and a report must land on one that uses its family.
 const renderers = new Map();
 function rendererFor(options) {
-  const custom = options.font && !["sans", "serif"].includes(String(options.font).toLowerCase());
-  const key = custom ? JSON.stringify([options.fontPath, options.ignoreSystemFonts]) : "";
+  const family = String(options.font ?? "").toLowerCase();
+  const custom = family && !["sans", "serif"].includes(family);
+  const key = custom ? JSON.stringify([family, options.fontPath, options.ignoreSystemFonts]) : "";
   if (!renderers.has(key)) {
     const reports = [];
     renderers.set(key, { reports, figures: createFigureRenderer({ onFont: (report) => reports.push(report) }) });
@@ -136,7 +138,7 @@ export function statementNode(authors, options = {}) {
         `CRediT: ${author.name}${ui("labelSeparator")}`.length,
       )}.`;
       const identifier = `credit-matrix-${createHash("sha256")
-        .update(author.name + value)
+        .update(`${i}\n${author.name}\n${value}`)
         .digest("hex")
         .slice(0, 20)}`;
       reference = [{ type: "footnoteReference", identifier, label: identifier }];
@@ -159,8 +161,9 @@ export function statementNode(authors, options = {}) {
 }
 
 function readFrontmatter(file) {
-  const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(readFileSync(file, "utf8"));
-  return match ? (parse(match[1]) ?? {}) : {};
+  // The closing fence is a whole line, and the block may be empty.
+  const match = /^---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)??---[ \t]*(?:\r?\n|$)/.exec(readFileSync(file, "utf8"));
+  return match ? (parse(match[1] ?? "") ?? {}) : {};
 }
 
 /** The folder of the nearest myst.yml (the page's own folder without one) and its project settings. */
@@ -177,7 +180,8 @@ const projectConfig = (file) => findProject(file).config;
 function levelsFor(file) {
   const page = file.endsWith(".md") ? readFrontmatter(file) : {};
   // Page authors replace project authors, so their level metadata must replace it too.
-  const config = page.authors !== undefined || page.author !== undefined ? page : projectConfig(file);
+  // The same test as authorsFor: a null page list falls back to the project's authors.
+  const config = (page.authors ?? page.author ?? null) !== null ? page : projectConfig(file);
   return (page.options?.["credit-matrix"] ?? config.options?.["credit-matrix"])?.levels;
 }
 

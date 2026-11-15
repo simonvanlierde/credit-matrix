@@ -191,6 +191,37 @@ describe("MyST plugin", () => {
     expect(text(statementNode(authorsFor(page)))).toBe("Rosalind Franklin: Software.");
   });
 
+  it("reads an empty front matter block, and closes it only on a whole --- line", () => {
+    const dir = mkdtempSync(join(tmpdir(), "credit-myst-fence-"));
+    writeFileSync(join(dir, "myst.yml"), "project:\n  authors:\n    - name: Marie Curie\n      roles: [Software]\n");
+    const page = join(dir, "index.md");
+    const eva = "authors:\n  - name: Eva Novak\n    roles: [Software]\n";
+    // A Markdown rule further down is not the end of an empty block, and ---- is not a fence.
+    for (const source of [`---\n---\n\n${eva}\n---\n`, `---\r\n---\r\n\n${eva}\n---\n`, `---\n${eva}----\n# Page\n`]) {
+      writeFileSync(page, source);
+      expect(text(statementNode(authorsFor(page)))).toBe("Marie Curie: Software.");
+    }
+  });
+
+  it("keeps project levels when a page sets its authors to null", () => {
+    const dir = mkdtempSync(join(tmpdir(), "credit-myst-null-"));
+    writeFileSync(
+      join(dir, "myst.yml"),
+      "project:\n  authors:\n    - name: Marie Curie\n      roles: [Software]\n  options:\n    credit-matrix:\n      levels:\n        Marie Curie:\n          Software: equal\n",
+    );
+    const page = join(dir, "index.md");
+    writeFileSync(page, "---\nauthors: null\n---\n");
+    expect(text(plugin.directives[0].run({}, { path: page }).slice(1))).toBe("Software (Equal).");
+  });
+
+  it("gives same-name contributors with the same levels their own footnotes", () => {
+    const authors = ["a", "b"].map((id) => ({ id, name: "Marie Curie", roles: ["Software"] }));
+    const nodes = statementNode(authors, { levels: { a: { Software: "equal" }, b: { Software: "equal" } } });
+    const ids = nodes.slice(1).map((node: { identifier?: string }) => node.identifier);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+  });
+
   it("registers a credit-statement directive that renders from the page's file", () => {
     const [directive] = plugin.directives;
     expect(directive?.name).toBe("credit-statement");
@@ -466,4 +497,37 @@ it("keeps full names past the app's contributor cap instead of failing the build
   writeFileSync(path, `---\nauthors:\n${people.join("")}---\n`);
   const { svg } = await heatmap(path, { initials: true });
   expect(svg).toContain(`>Ada Lovelace ${MAX_AUTHORS}</tspan>`);
+});
+
+it("reports each font on the heatmap that uses it when two render on one page", async () => {
+  const path = fontProject();
+  const fonts = join(dirname(dirname(path)), "fonts");
+  copyFileSync(
+    fileURLToPath(new URL("../../src/core/__tests__/fixtures/fonts/FigureTest-Regular.ttf", import.meta.url)),
+    join(fonts, "FigureTest-Regular.ttf"),
+  );
+  const directive = plugin.directives.find((d: { name: string }) => d.name === "credit-heatmap");
+  const shared = { "font-path": "fonts", "ignore-system-fonts": true };
+  const tree = {
+    type: "root",
+    children: ["Figure Test Serif", "Figure Test"].flatMap((font) =>
+      directive?.run({ options: { ...shared, font } }, { path }),
+    ),
+  };
+  const messages: { node: unknown; message: string }[] = [];
+  const vfile = {
+    path,
+    message(message: string, node: unknown) {
+      messages.push({ node, message });
+      return {};
+    },
+  };
+  await plugin.transforms[0].plugin()(tree, vfile);
+  const images = tree.children.map((paragraph: { children: unknown[] }) => paragraph.children[0]);
+  expect(messages.filter(({ node }) => node === images[0]).map(({ message }) => message)).toEqual([
+    `credit-heatmap: font Figure Test Serif from ${join(fonts, "FigureTestSerif-Regular.ttf")}`,
+  ]);
+  expect(messages.filter(({ node }) => node === images[1]).map(({ message }) => message)).toEqual([
+    `credit-heatmap: font Figure Test from ${join(fonts, "FigureTest-Regular.ttf")}`,
+  ]);
 });
