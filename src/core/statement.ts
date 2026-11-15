@@ -64,6 +64,10 @@ export const MAX_STATEMENT_LENGTH = 120_000;
 
 // Python's \w: any letter, digit or number, or "_". JS's \w and \b are ASCII-only.
 const W = String.raw`[\p{L}\p{N}_]`;
+// Python's case-insensitive match also reads dotless ı and dotted İ as i ("ınvestigation"); JS's does not.
+// The only letter where the two differ.
+const dotlessI = (pattern: string) =>
+  pattern.replace(/\[[^\]]*\]|i/g, (m) => (m === "i" ? "[iıİ]" : m.replace("i", "iıİ")));
 // A capital for initials: any letter or number but a-z and digits (Python's [^\W\d_a-z]).
 const U = String.raw`(?![a-z])[\p{L}\p{Nl}\p{No}]`;
 
@@ -87,7 +91,7 @@ const ROLE_PATTERNS: Record<string, string> = {
 const SLUGS = Object.keys(ROLE_PATTERNS);
 const ROLE_RE = new RegExp(
   Object.values(ROLE_PATTERNS)
-    .map((p) => `((?<!${W})${p}(?!${W}))`)
+    .map((p) => `((?<!${W})${dotlessI(p)}(?!${W}))`)
     .join("|"),
   "giu",
 );
@@ -142,7 +146,9 @@ const ALL_AUTHORS = -1;
  * "All other authors": every author but the ones it is set against. Heading a list item ("A.B.:
  * software. C.D.: validation. All other authors: writing"), those are everyone named before it;
  * anywhere else ("draft, A.B.; review and editing, all other authors"), the run of authors given roles
- * just before it. Beside named authors ("A.B. and all other authors"), it is everyone. Authors named
+ * just before it. Beside named authors ("A.B. and all other authors"), it is everyone. Followed by names,
+ * in brackets or after a comma ("the remaining authors (C.D., E.F.)", "the remaining authors, C.D. and
+ * E.F., ..."), it adds no one: the names are who it means. Authors named
  * without roles ("A.B. wrote the draft and all other authors reviewed it") are not left out: which of
  * them the roles belong to is unclear. After "all authors" it is no one. A clause of roles alone after
  * it ("All other authors: validation; visualization"), or another "all other authors" right after it,
@@ -170,20 +176,25 @@ const INITIALS_RE = new RegExp(
 // remaining authors"), and so is "the other authors": read as mentions, they would hand the roles nearby to
 // everyone else.
 const ALL_RE = new RegExp(
-  `(?<!${W})all (?:the )?(?:(other|remaining) )?authors(?!${W})` +
-    `|(?:^|(?<=[,;:.] ?))((?:the )?remaining authors)(?!${W})` +
-    String.raw`|(?<!${W})((?:the )?remaining authors)(?=\s*:)`,
+  dotlessI(
+    `(?<!${W})all (?:the )?(?:(other|remaining) )?authors(?!${W})` +
+      `|(?:^|(?<=[,;:.] ?))((?:the )?remaining authors)(?!${W})` +
+      String.raw`|(?<!${W})((?:the )?remaining authors)(?=\s*:)`,
+  ),
   "giu",
 );
 // The closing "All authors read and approved the manuscript." is not a role assignment, nor is "The remaining
 // authors read and approved it". "All authors contributed to the investigation" is, so only approval wording
 // is dropped.
 const APPROVAL_RE = new RegExp(
-  `(?<!${W})(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?` +
-    "(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)" +
-    String.raw`[^;]*?(?:\.(?=\s|$)|;|$)`,
+  dotlessI(
+    `(?<!${W})(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?` +
+      "(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)" +
+      String.raw`[^;]*?(?:\.(?=\s|$)|;|$)`,
+  ),
   "giu",
 );
+const APPOSITION_RE = /^\s*[(,]\s*$/u;
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
 
 // A colon after a name, initials or a role: "MG: conceptualization", "Conceptualization: M.G.".
@@ -598,7 +609,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
     unresolved.push(token);
     return UNRESOLVED - k;
   };
-  const mentions: Mention[] = findRoles(text).map(([s, e, slug]) => [s, e, "R", slug]);
+  let mentions: Mention[] = findRoles(text).map(([s, e, slug]) => [s, e, "R", slug]);
   // Mask roles so their capitals ("Writing") are not read as initials.
   text = maskRanges(text, mentions);
 
@@ -675,6 +686,19 @@ export function parseStatement(statement: string, authorList: readonly Statement
       mentions.push([m.index, m.index + m[0].length, "A", placeholder(token, hits)]);
     }
   }
+
+  // "The remaining authors (C.D., E.F.)": names right after it say who it means, so it adds no one.
+  mentions.sort(compareMentions);
+  mentions = mentions.filter((m, i) => {
+    const after = mentions[i + 1];
+    return !(
+      m[3] === OTHER_AUTHORS &&
+      after?.[2] === "A" &&
+      after[3] !== ALL_AUTHORS &&
+      after[3] !== OTHER_AUTHORS &&
+      APPOSITION_RE.test(original.slice(m[1], after[0]))
+    );
+  });
 
   const ends = clauseEnds(original, mentions);
   const clauses = new Map<number, [number, Kind, number | string][]>();

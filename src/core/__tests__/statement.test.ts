@@ -436,6 +436,22 @@ describe("all other authors after a semicolon", () => {
     ]);
   });
 
+  it.each([
+    "A.B.: software. The remaining authors, C.D., contributed to review and editing.",
+    "A.B.: software. Remaining authors (C.D.) contributed to review and editing.",
+    "A.B.: software; all other authors (C.D.): review and editing.",
+  ])("reads names right after all other authors as who it means: %s", (text) => {
+    expect(pairsOf(text, BELL)).toEqual([
+      [0, "software"],
+      [1, "writing-review-editing"],
+    ]);
+  });
+
+  it("still reads all other authors including named authors as everyone", () => {
+    const text = "A.B.: software. All other authors, including C.D., contributed to validation.";
+    expect(holdersOf(text, "validation")).toEqual([0, 1, 2]);
+  });
+
   it("does not read the remaining authors approving the manuscript as an assignment", () => {
     const text =
       "A.B.: software. C.D.: validation. The remaining authors have read and approved the manuscript, " +
@@ -578,6 +594,18 @@ describe("namesCredit", () => {
 });
 
 describe("edge cases", () => {
+  it.each([
+    ["ınvestigation", "investigation"],
+    ["İnvestigation", "investigation"],
+    ["ſoftware", "software"],
+  ])("matches %s as the census does, reading ı and İ as i and ſ as s", (word, slug) => {
+    expect(pairsOf(`A.B.: ${word}.`, BELL)).toEqual([[0, slug]]);
+  });
+
+  it("keeps İ in initials when it reads role words with İ as i", () => {
+    expect(pairsOf("İ.K.: İnvestigation.", [author("İpek", "Kaya")])).toEqual([[0, "investigation"]]);
+  });
+
   it("keeps positions when lower case changes a letter's length", () => {
     // "İ" lowers to two code units; the name after it must still be found.
     expect(pairsOf("İŞ: software. Ada Lovelace: data curation.", THREE)).toEqual([[0, "data-curation"]]);

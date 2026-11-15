@@ -51,8 +51,10 @@ All other authors: validation"), those are everyone named before it, with roles 
 authors" among them leaves no one. Anywhere else ("draft, A.B.; review and editing, all other authors"),
 they are the authors given roles just before it, or no one when the authors just before it have no roles
 ("A.B. wrote the draft and all other authors reviewed it"), as the roles may be theirs. Beside named
-authors ("A.B. and all other authors"), it is everyone. Roles alone after it go to the same authors, and
-a second "all other authors" is set against the same ones as the first."""
+authors ("A.B. and all other authors"), it is everyone. Followed by names, in brackets or after a comma ("the
+remaining authors (C.D., E.F.)", "the remaining authors, C.D. and E.F., ..."), it adds no one: the names
+are who it means. Roles alone after it go to the same authors, and a second "all other authors" is set
+against the same ones as the first."""
 
 # Initials such as "AP", "Q.M.L.", "H.Š.", "YiL" (Frontiers adds letters to tell authors apart), "L. - J. Z.".
 # A capital is any letter but a-z (Python's re has no Unicode-category classes); tokens that start
@@ -226,6 +228,7 @@ def _name_variants(author: Author) -> tuple[set[str], set[str]]:
 _AFTER_INITIAL_RE = re.compile(rf"(?<!\w){_U}(?:\.|\.? - )$")
 _CAPITAL_RE = re.compile(_U)
 _COLON_RE = re.compile(r"\s*:")
+_APPOSITION_RE = re.compile(r"\s*[(,]\s*")
 
 
 def _opens_with_name(lead_in: str) -> bool:
@@ -399,6 +402,20 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         elif sum(c.isupper() for c in token) >= 2:
             mentions.append((m.start(), m.end(), "A", UNRESOLVED))
             parsed.unresolved.append(token)
+
+    # "The remaining authors (C.D., E.F.)": names right after it say who it means, so it adds no one.
+    mentions.sort()
+    mentions = [
+        m
+        for m, after in zip(mentions, [*mentions[1:], None], strict=False)
+        if not (
+            m[3] == OTHER_AUTHORS
+            and after
+            and after[2] == "A"
+            and after[3] not in (ALL_AUTHORS, OTHER_AUTHORS)
+            and _APPOSITION_RE.fullmatch(original, m[1], after[0])
+        )
+    ]
 
     ends = _clause_ends(original, mentions)
     clauses: dict[int, list[tuple[int, str, int | str]]] = {}
