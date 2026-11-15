@@ -1,0 +1,47 @@
+name: licenses
+
+# Lists the production dependencies by licence and fails on one that cannot ship
+# in an MIT-licensed app: a strong copyleft licence or none declared.
+on:
+  pull_request:
+    paths:
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/licenses.yml
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 5 * * 1" # Mondays, 05:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  licenses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          node-version-file: .node-version
+          cache: false
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: List licences
+        run: |
+          pnpm licenses list --prod --json > licenses.json
+          node -e '
+            const l = require("./licenses.json");
+            for (const [k, v] of Object.entries(l)) console.log(`${k}: ${v.length}`);
+            const bad = Object.keys(l).filter((k) => /GPL|SSPL|BUSL|Unknown|UNLICENSED/i.test(k) && !/LGPL/i.test(k));
+            if (bad.length) { console.error("Incompatible licences: " + bad.join(", ")); process.exit(1); }
+          '
