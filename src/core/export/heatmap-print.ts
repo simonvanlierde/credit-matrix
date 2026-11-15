@@ -1,6 +1,7 @@
 /** Intrinsic dimensions of a figure produced by buildHeatmapSvg. */
 export function svgDimensions(svg: string) {
-  const dimensions = svg.match(/<svg\b[^>]*\bwidth="([\d.]+)" height="([\d.]+)"/);
+  // [^<>]* ends at the next tag, so unclosed "<svg" tags cannot each rescan the rest of the file.
+  const dimensions = svg.match(/<svg\b[^<>]*\bwidth="([\d.]+)" height="([\d.]+)"/);
   if (!dimensions) throw new Error("SVG dimensions missing");
   const width = Number(dimensions[1]);
   const height = Number(dimensions[2]);
@@ -13,7 +14,7 @@ export function svgDimensions(svg: string) {
 export function heatmapPrintSize(svg: string, widthMm: number) {
   if (!(widthMm > 0 && Number.isFinite(widthMm))) throw new RangeError("Print width must be finite and positive");
   const dimensions = svgDimensions(svg);
-  const sizes = [...svg.matchAll(/<text\b[^>]*\bfont-size="([\d.]+)"/g)].map((match) => Number(match[1]));
+  const sizes = [...svg.matchAll(/<text\b[^<>]*\bfont-size="([\d.]+)"/g)].map((match) => Number(match[1]));
   if (!sizes.length || sizes.some((size) => !(size > 0 && Number.isFinite(size))))
     throw new Error("SVG text sizes missing or invalid");
   return {
