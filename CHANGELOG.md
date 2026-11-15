@@ -175,8 +175,9 @@ See [deploying](docs/deploy.md).
   building or publishing a package. See [release signing](CONTRIBUTING.md#releases).
 - The CLI checks an XML file's tags in one linear pass. A hostile file of a few thousand
   characters made the old check run for a minute or more, hanging the CLI and Sphinx builds.
-- `importAny` stops creating contributors one past the cap on a long name list, instead of
-  building all of them before the list is refused.
+- `importAny`, `fromCsv` and `fromTenzing` stop creating contributors one past the cap on a long
+  name list, CSV, tenzing sheet or CodeMeta file, instead of building all of them before the file is refused. A 2 MB CSV now
+  imports in 29 ms, down from 135 ms.
 - `<credit-matrix src>` stops reading a response once it passes the size cap, also when the
   server sends no length.
 

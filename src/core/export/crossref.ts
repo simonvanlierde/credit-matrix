@@ -1,11 +1,11 @@
 import type { Author, Contribution } from "../author";
 import { activeContributions, normalizeOrcid, ORCID_INPUT_REGEX } from "../author";
 import { CREDIT_ROLES, creditSlug, getRoleByName } from "../credit-roles";
-import { deduplicateAuthorInitials } from "../parse-authors";
+import { deduplicateAuthorInitials, readUpToCap } from "../parse-authors";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 import { givenNamesOf, suffixOf } from "./xml";
-import { parseXml, readPerson, readUpToCap, type XmlParser } from "./xml-import";
+import { parseXml, readPerson, type XmlParser } from "./xml-import";
 
 /**
  * The `<contributors>` block of a Crossref deposit (metadata schema 5.5.0 or

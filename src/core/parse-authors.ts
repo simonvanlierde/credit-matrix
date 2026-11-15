@@ -475,3 +475,17 @@ function splitCommaLine(line: string): string[] {
 export function parseAuthorText(text: string): Author[] {
   return deduplicateAuthorInitials(splitNameList(text).map((name) => createAuthor(name)));
 }
+
+/**
+ * Read people from rows or elements, stopping one past `MAX_AUTHORS`: every caller refuses that many,
+ * and a 2 MB file of tiny rows otherwise builds tens of thousands of people first. It counts the
+ * people read, not rows, so skipped rows (editors, group wrappers, blank names) are not counted.
+ */
+export function readUpToCap<T>(elements: T[], read: (element: T) => Author[]): Author[] {
+  const people: Author[] = [];
+  for (const element of elements) {
+    if (people.length > MAX_AUTHORS) break;
+    people.push(...read(element));
+  }
+  return people;
+}

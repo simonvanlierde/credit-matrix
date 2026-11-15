@@ -1,7 +1,7 @@
 import type { Author, Contribution } from "../author";
-import { isValidOrcid, LEVEL_SCORE, MAX_AUTHORS, normalizeOrcid } from "../author";
+import { isValidOrcid, LEVEL_SCORE, normalizeOrcid } from "../author";
 import { CREDIT_ROLES, roleNamed } from "../credit-roles";
-import { cleanNamePart, createAuthor, deduplicateAuthorInitials } from "../parse-authors";
+import { cleanNamePart, createAuthor, deduplicateAuthorInitials, readUpToCap } from "../parse-authors";
 
 /** The score each `degree-contribution` level imports as. "none" is not one: a listed role counts. */
 const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(([level]) => level !== "none"));
@@ -81,20 +81,6 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   });
 
   return deduplicateAuthorInitials(authors);
-}
-
-/**
- * Read people from elements, stopping one past `MAX_AUTHORS`: every caller refuses that many, and
- * a 2 MB file of tiny elements otherwise builds about 50,000 people first. It counts the people
- * read, not elements, so editors and group wrappers before the authors are not counted.
- */
-export function readUpToCap<T>(elements: T[], read: (element: T) => Author[]): Author[] {
-  const people: Author[] = [];
-  for (const element of elements) {
-    if (people.length > MAX_AUTHORS) break;
-    people.push(...read(element));
-  }
-  return people;
 }
 
 /** Text that is not well-formed XML, such as a truncated file. */

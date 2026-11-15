@@ -4,6 +4,7 @@ import { toCsv } from "../export/csv";
 import { toMyst, toQuarto } from "../export/frontmatter";
 import { toJson, UNKNOWN_TOOLCHAIN_WARNING } from "../export/json";
 import { toRoCrateFragment } from "../export/ro-crate";
+import { toTenzing } from "../export/tenzing";
 import { toJats4rXml } from "../export/xml";
 import { detectFormat, ExportOnlyError, importAny } from "../import";
 import { createAuthor, normalizeRoster } from "../parse-authors";
@@ -353,6 +354,19 @@ it("reads only one name past the cap from a long list, which every caller then r
   expect(format).toBe("names");
   expect(authors).toHaveLength(MAX_AUTHORS + 1);
   expect(authors.at(-1)?.name).toBe(`Ada Lovelace ${MAX_AUTHORS}`);
+});
+
+it("reads a CSV, tenzing sheet or CodeMeta file only one person past the cap", async () => {
+  const people = Array.from({ length: 1_000 }, (_, i) => createAuthor(`Ada Lovelace ${i}`));
+  const codemeta = (field: string, extra = {}) =>
+    JSON.stringify({ "@type": "SoftwareSourceCode", [field]: people.map((p) => ({ name: p.name })), ...extra });
+  for (const text of [toCsv(people), toTenzing(people), codemeta("author"), codemeta("contributor")]) {
+    const { authors } = await importAny(text);
+    expect(authors).toHaveLength(MAX_AUTHORS + 1);
+  }
+  // Contributors already listed as authors do not count toward the contributors' cap.
+  const { authors } = await importAny(codemeta("contributor", { author: [{ name: people[0]?.name }] }));
+  expect(authors).toHaveLength(MAX_AUTHORS + 2);
 });
 
 it("keeps the initials of a short name list unique", async () => {

@@ -16,7 +16,7 @@ import { MAX_STATEMENT_LENGTH, parseStatement } from "../statement";
 
 // The slowest file each importer accepts. JSON refuses more than MAX_AUTHORS people, so its worst case
 // is MAX_AUTHORS long names with every role. The other readers take any number of rows up to
-// MAX_IMPORT_BYTES (the XML ones read only MAX_AUTHORS + 1 of them), so theirs is a file of short rows
+// MAX_IMPORT_BYTES (all of them read only MAX_AUTHORS + 1 of them), so theirs is a file of short rows
 // filled to the byte cap. Most of these take over 100 ms here, and CodSpeed's simulated CPU runs about
 // 50 times slower, hence the long timeouts.
 const TIMEOUT = 300_000;
