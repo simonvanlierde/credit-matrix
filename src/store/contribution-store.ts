@@ -471,7 +471,8 @@ function repairAuthors(authors: unknown): Author[] {
         // Same reasoning as the name check: createAuthor throws on an invalid
         // iD, and normalizeContributions iterates the array and dereferences
         // each entry. A malformed field costs that field, not the workspace.
-        orcid: typeof author.orcid === "string" && isValidOrcid(author.orcid) ? author.orcid : undefined,
+        orcid:
+          typeof author.orcid === "string" && isValidOrcid(author.orcid) ? normalizeOrcid(author.orcid) : undefined,
         contributions: defaults.contributions,
       };
     });

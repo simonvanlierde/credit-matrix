@@ -6,6 +6,7 @@ import {
   hasContributions,
   isAllBinary,
   isValidOrcid,
+  normalizeOrcid,
   ORCID_INPUT_REGEX,
   ORCID_REGEX,
   scoreToLevel,
@@ -50,6 +51,19 @@ describe("isValidOrcid", () => {
   it("rejects malformed strings", () => {
     expect(isValidOrcid("not-an-orcid")).toBe(false);
     expect(isValidOrcid("0000-0002-1825-009")).toBe(false);
+    expect(isValidOrcid("https://orcid.org/https://orcid.org/0000-0002-1825-0097")).toBe(false);
+  });
+
+  it("accepts the forms people paste, and normalizeOrcid gives the bare iD for each", () => {
+    for (const pasted of [
+      " 0000-0002-1694-233x ",
+      "orcid.org/0000-0002-1694-233X",
+      "https://orcid.org/0000-0002-1694-233X/",
+      "HTTPS://www.ORCID.org/0000-0002-1694-233x",
+    ]) {
+      expect(isValidOrcid(pasted), pasted).toBe(true);
+      expect(normalizeOrcid(pasted)).toBe("0000-0002-1694-233X");
+    }
   });
 });
 

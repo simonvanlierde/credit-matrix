@@ -3,6 +3,7 @@ import type { Ask } from "../ask";
 import { AskSchema } from "../ask";
 import type { Author } from "../author";
 import { AuthorSchema, MAX_AUTHORS } from "../author";
+import { normalizeContributions } from "../parse-authors";
 import { type Toolchain, ToolchainSchema } from "../toolchain";
 
 /** The export format version this build writes and reads. */
@@ -105,7 +106,8 @@ export function fromJson(json: string): {
   const { authors, asks, selfId } = result.data;
   const toolchain = ToolchainSchema.safeParse(result.data.toolchain).data;
   return {
-    authors,
+    // A file may repeat or reorder roles; every export reads contributions by position.
+    authors: authors.map((author) => ({ ...author, contributions: normalizeContributions(author.contributions) })),
     ...(asks ? { asks } : {}),
     ...(selfId ? { selfId } : {}),
     ...(toolchain ? { toolchain } : {}),

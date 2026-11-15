@@ -371,6 +371,9 @@ msgstr "Ce brouillon est trop volumineux pour être partagé par lien. Exportez-
 msgid "errShareUnsupported"
 msgstr "Ce navigateur ne peut pas créer de liens de partage. Exportez plutôt le brouillon en JSON."
 
+msgid "errShareInvalid"
+msgstr "Ce brouillon ne peut pas être partagé par lien en l'état. Rechargez la page ou vérifiez les contributeurs."
+
 msgid "errShareLinkBroken"
 msgstr "Ce lien partagé n'a pas pu être ouvert. Votre propre brouillon a été conservé."
 

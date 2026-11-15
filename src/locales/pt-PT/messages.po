@@ -371,6 +371,9 @@ msgstr "Este rascunho é demasiado grande para partilhar como ligação. Exporta
 msgid "errShareUnsupported"
 msgstr "Este navegador não consegue criar links de compartilhamento. Exporte o rascunho como JSON."
 
+msgid "errShareInvalid"
+msgstr "Este rascunho não pode ser partilhado como ligação tal como está. Recarregue a página ou verifique os contribuidores."
+
 msgid "errShareLinkBroken"
 msgstr "Não foi possível abrir essa ligação partilhada. O rascunho local foi mantido."
 

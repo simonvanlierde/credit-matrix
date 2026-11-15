@@ -371,6 +371,9 @@ msgstr "Dieser Entwurf ist zu groß, um ihn als Link zu teilen. Exportieren Sie 
 msgid "errShareUnsupported"
 msgstr "Dieser Browser kann keine Freigabe-Links erstellen. Exportieren Sie den Entwurf stattdessen als JSON."
 
+msgid "errShareInvalid"
+msgstr "Dieser Entwurf lässt sich so nicht als Link teilen. Laden Sie die Seite neu oder prüfen Sie die Mitwirkenden."
+
 msgid "errShareLinkBroken"
 msgstr "Dieser geteilte Link konnte nicht geöffnet werden. Ihr eigener Entwurf wurde beibehalten."
 

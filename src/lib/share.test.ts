@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAuthor, decodeShareHash } from "@/core";
+import { UnsharableDraftError } from "@/core/share-payload";
 import { buildShareUrl, shareFailureKey } from "./share";
 
 describe("buildShareUrl", () => {
@@ -16,11 +17,18 @@ describe("shareFailureKey", () => {
   });
 
   it("blames the browser, not the draft, when there is no CompressionStream", () => {
-    expect(shareFailureKey()).toBe("errShareTooLarge");
+    expect(shareFailureKey(new Error("too large"))).toBe("errShareTooLarge");
 
     // A pre-2023 browser cannot build any link; telling that user to trim their
     // roster sends them fixing something that was never the problem.
     vi.stubGlobal("CompressionStream", undefined);
-    expect(shareFailureKey()).toBe("errShareUnsupported");
+    expect(shareFailureKey(new Error("no stream"))).toBe("errShareUnsupported");
+  });
+
+  it("says the draft itself cannot be shared when the payload is refused", async () => {
+    const grace = createAuthor("Grace Hopper");
+    const error = await buildShareUrl({ authors: [grace, { ...grace }] }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(UnsharableDraftError);
+    expect(shareFailureKey(error)).toBe("errShareInvalid");
   });
 });

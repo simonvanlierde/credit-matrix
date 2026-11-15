@@ -485,8 +485,8 @@ export function HeaderActions() {
         await buildShareUrl({ authors: state.authors, title: state.title, toolchain: state.toolchain }),
       );
       setShareOpen(false);
-    } catch {
-      showStatus({ kind: "error", message: t(shareFailureKey()) });
+    } catch (error) {
+      showStatus({ kind: "error", message: t(shareFailureKey(error)) });
     }
   }
 

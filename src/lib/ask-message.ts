@@ -31,8 +31,8 @@ export async function copyAskLink(
       sentAt,
       yesNo: state.inputMode === "toggle",
     });
-  } catch {
-    announce(t(shareFailureKey()), { assertive: true });
+  } catch (error) {
+    announce(t(shareFailureKey(error)), { assertive: true });
     return false;
   }
   if (!(await copy(link, state.title))) return false;

@@ -116,7 +116,7 @@
   }
   for p in marked {
     if p.own-initials { (p,); continue }
-    let extra = _surname-core(p.surname).codepoints()
+    let extra = _surname-core(p.surname).codepoints().filter(c => c.match(regex("\\p{L}")) != none)
     let attempt = p.initials
     let i = 1
     while attempt in taken {

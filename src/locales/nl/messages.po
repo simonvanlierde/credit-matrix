@@ -371,6 +371,9 @@ msgstr "Dit concept is te groot om als link te delen. Exporteer het in plaats da
 msgid "errShareUnsupported"
 msgstr "Deze browser kan geen deellinks maken. Exporteer het concept als JSON."
 
+msgid "errShareInvalid"
+msgstr "Dit concept kan zo niet als link worden gedeeld. Laad de pagina opnieuw of controleer de bijdragers."
+
 msgid "errShareLinkBroken"
 msgstr "Deze gedeelde link kon niet worden geopend. Uw eigen concept is behouden."
 

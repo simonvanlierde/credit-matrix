@@ -201,7 +201,7 @@ function cleanText(value: string): string {
  * list contributions in a different order or with roles missing; the matrix and
  * heatmap index contributions positionally, so they must be canonicalized here.
  */
-function normalizeContributions(contributions?: Contribution[]): Contribution[] {
+export function normalizeContributions(contributions?: Contribution[]): Contribution[] {
   // Merge duplicate role entries (legal in an imported array) by keeping the
   // highest score, rather than letting a trailing 0 silently erase a real score.
   const scoreByRole = new Map<string, number>();
@@ -222,8 +222,8 @@ export function deduplicateAuthorInitials(authors: Author[]): Author[] {
 
   return authors.map((author) => {
     const initials = author.initials;
-    // Continue from the letter the initials took, past any particles.
-    const surnameCodePoints = [...surnameCore(author.surname)];
+    // Continue from the letter the initials took, past any particles; a suffix is a letter, never "'" or "-".
+    const surnameCodePoints = [...surnameCore(author.surname)].filter((c) => /\p{L}/u.test(c));
     let attempt = initials;
     let extraIdx = 1;
 

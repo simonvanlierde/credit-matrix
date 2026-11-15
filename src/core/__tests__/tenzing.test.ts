@@ -118,6 +118,16 @@ describe("fromTenzing edge cases", () => {
     expect(names).toEqual(["Al One", "Bo Two", "Cy Three", "Di Four", "Ed Five"]);
   });
 
+  it("cleans name parts as every other import does", () => {
+    const [evil] = fromTenzing("Firstname,Middle name,Surname\n=Evil,+M.,=Name");
+    expect(evil).toMatchObject({ firstName: "Evil", middleName: "M", surname: "Name", initials: "EMN" });
+  });
+
+  it("keeps a pasted ORCID iD in its bare form", () => {
+    const [ana] = fromTenzing("Firstname,Surname,ORCID ID\nAna,Lopez,https://orcid.org/0000-0002-1694-233x/");
+    expect(ana?.orcid).toBe("0000-0002-1694-233X");
+  });
+
   it("reads cells padded with spaces", () => {
     const [ana] = fromTenzing(
       "Firstname,Surname,ORCID ID,Author/Acknowledgee,Software\nAna,Lopez, 0000-0002-1825-0097 , Acknowledgee , TRUE ",
@@ -140,7 +150,7 @@ describe("fromTenzing edge cases", () => {
 
   it("keeps a comma inside a quoted cell", () => {
     const [ana] = fromTenzing('Firstname,Surname,Software\nAna,"Lopez, Jr",TRUE');
-    expect(ana).toMatchObject({ firstName: "Ana", surname: "Lopez, Jr" });
+    expect(ana).toMatchObject({ name: "Ana Lopez, Jr", firstName: "Ana", surname: "Lopez Jr" });
     expect(roles(ana)).toEqual(["Software:100"]);
   });
 

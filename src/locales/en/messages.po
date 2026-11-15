@@ -371,6 +371,9 @@ msgstr "This draft is too large to share as a link. Export it as JSON instead."
 msgid "errShareUnsupported"
 msgstr "This browser can't build share links. Export the draft as JSON instead."
 
+msgid "errShareInvalid"
+msgstr "This draft can't be shared as a link as it is. Reload the page or check the contributors."
+
 msgid "errShareLinkBroken"
 msgstr "That shared link could not be opened. Your own draft was kept."
 

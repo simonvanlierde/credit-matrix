@@ -334,7 +334,7 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
     // Typst writes a code point escape as \u{7}, JSON as \u0007.
     const typ = (text: string) => JSON.stringify(text).replace(/\\u([0-9a-fA-F]{4})/g, "\\u{$1}");
     const one = names.map((name) => `_people(((name: ${typ(name)}),)).first().initials`);
-    const collision = [cast.ada, cast.antoine, cast.antonie, cast.ada];
+    const collision = [cast.ada, cast.antoine, cast.antonie, cast.ada, "Dan O'Brien", "Dora O'Brien"];
     const run = typst(
       "eval",
       `import "lib.typ": *; ((${one.join(", ")}), _people((${collision.map((name) => `(name: ${typ(name)})`).join(", ")},)).map(p => p.initials))`,

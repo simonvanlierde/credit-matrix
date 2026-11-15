@@ -221,4 +221,8 @@ describe("CSV import/export", () => {
     const parsed = fromCsv("Name,ORCID\nGrace Hopper,0000-0000-0000-0000");
     expect(parsed.map((a) => [a.name, a.orcid])).toEqual([["Grace Hopper", undefined]]);
   });
+
+  it("keeps a pasted ORCID iD in its bare form", () => {
+    expect(fromCsv("Name,ORCID\nGrace Hopper, orcid.org/0000-0002-1694-233x/")[0]?.orcid).toBe("0000-0002-1694-233X");
+  });
 });

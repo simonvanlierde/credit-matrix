@@ -126,7 +126,20 @@ export interface SharePayloadInput {
   idToken?: string;
 }
 
-/** Serialize authors and envelope into the compact share shape. Minified, never pretty. */
+/** Thrown by `toSharePayload` for input whose link `fromSharePayload` would reject. */
+export class UnsharableDraftError extends Error {
+  constructor(reason: string) {
+    super(`This draft cannot be shared as a link: ${reason}.`);
+    this.name = "UnsharableDraftError";
+  }
+}
+
+/**
+ * Serialize authors and envelope into the compact share shape. Minified, never pretty.
+ * Throws an UnsharableDraftError rather than write a link its reader rejects: a
+ * claim on a contributor not in `authors`, a claim without `sourceDraftId`, a
+ * negative `sentAt`. Dropping the claim instead would send everyone's rows.
+ */
 export function toSharePayload(input: SharePayloadInput): string {
   const { title, claimId, sourceDraftId, reply, sentAt } = input;
   const blank = Boolean(input.blank && claimId);
@@ -141,7 +154,7 @@ export function toSharePayload(input: SharePayloadInput): string {
     return CREDIT_ROLES.map((role) => scores.get(role.name) ?? 0);
   };
 
-  return JSON.stringify({
+  const payload = {
     v: 2,
     ...(input.toolchain ? { h: input.toolchain } : {}),
     // Cut at 500 UTF-16 units, the schema's limit, without leaving half an emoji at the end.
@@ -170,7 +183,10 @@ export function toSharePayload(input: SharePayloadInput): string {
     })),
     // Last, so dropping it gives back the exact payload the token's nonce hashes.
     ...(input.idToken && reply ? { k: input.idToken } : {}),
-  });
+  };
+  const checked = SharePayloadSchema.safeParse(payload);
+  if (!checked.success) throw new UnsharableDraftError(checked.error.issues[0]?.message ?? "invalid payload");
+  return JSON.stringify(payload);
 }
 
 /**

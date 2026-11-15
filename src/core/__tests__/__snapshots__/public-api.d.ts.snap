@@ -222,13 +222,17 @@ declare const ContributionSchema: z.ZodMiniObject<{
   score: z.ZodMiniInt;
 }, z.core.$strip>;
 type Contribution = z.infer<typeof ContributionSchema>;
-/** Return the canonical bare ORCID form used in state and exports. */
+/**
+ * Return the canonical bare ORCID form used in state and exports. Takes what
+ * people paste: surrounding spaces, the orcid.org address with or without its
+ * scheme or a trailing slash, and a lower-case check character.
+ */
 declare function normalizeOrcid(id: string): string;
 /**
  * Validate an ORCID iD fully: correct shape *and* a valid ISO 7064 MOD 11-2
  * check digit. The shape regexes alone accept checksum-invalid iDs (e.g. a
  * mistyped digit), which would then be exported as if verified.
- * Accepts the bare form or the orcid.org URL.
+ * Accepts any form `normalizeOrcid` reads; store its result, not the input.
  */
 declare function isValidOrcid(id: string): boolean;
 declare const AuthorSchema: z.ZodMiniObject<{

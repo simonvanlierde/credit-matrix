@@ -117,7 +117,9 @@ class CreditHeatmap(CreditStatement):
         target.parent.mkdir(exist_ok=True)
         target.write_text(svg, encoding="utf-8")
         root = ElementTree.fromstring(svg)
-        alt = root.findtext("{http://www.w3.org/2000/svg}desc", default="Contribution heatmap")
+        # The empty-state figure has a localised <title> but no <desc>.
+        svg_ns = "{http://www.w3.org/2000/svg}"
+        alt = root.findtext(svg_ns + "desc") or root.findtext(svg_ns + "title") or "Contribution heatmap"
         source = Path(self.env.doc2path(self.env.docname)).parent
         return [nodes.image(uri=os.path.relpath(target, source), alt=alt)]
 
