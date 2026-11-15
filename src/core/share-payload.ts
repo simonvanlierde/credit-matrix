@@ -1,8 +1,8 @@
 import * as z from "zod/mini";
 import type { Author } from "./author";
-import { clampScore, isShareableId, MAX_AUTHORS } from "./author";
+import { clampScore, isShareableId, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
-import { createAuthor, deduplicateAuthorInitials } from "./parse-authors";
+import { createAuthor, deduplicateAuthorInitials, parseNameParts } from "./parse-authors";
 
 import { type Toolchain, ToolchainSchema } from "./toolchain";
 
@@ -24,6 +24,8 @@ import { type Toolchain, ToolchainSchema } from "./toolchain";
  */
 /** An ORCID id_token is under 1 kB; the cap only keeps junk out. */
 const MAX_TOKEN_LENGTH = 4096;
+
+const namePart = () => z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH));
 
 const SharePayloadSchema = /* @__PURE__ */ (() =>
   z
@@ -57,6 +59,8 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
             n: z.string(),
             /** ORCID iD, omitted when there is none */
             o: z.optional(z.string()),
+            /** first, middle and surname, omitted when parsing the name gives the same parts */
+            p: z.optional(z.tuple([namePart(), namePart(), namePart()])),
             /** 1 for a non-author contributor; omitted for a named author */
             t: z.optional(z.literal(1)),
             /** scores, in CREDIT_ROLES order */
@@ -163,6 +167,7 @@ export function toSharePayload(input: SharePayloadInput): string {
       i: author.id,
       n: author.name,
       ...(author.orcid ? { o: author.orcid } : {}),
+      ...(sameParts(author) ? {} : { p: [author.firstName, author.middleName, author.surname] }),
       ...(author.contributorType === "non-author" ? { t: 1 } : {}),
       s: scoreByRole(author),
       ...(author.equalContribution ? { e: 1 } : {}),
@@ -171,6 +176,21 @@ export function toSharePayload(input: SharePayloadInput): string {
     // Last, so dropping it gives back the exact payload the token's nonce hashes.
     ...(input.idToken && reply ? { k: input.idToken } : {}),
   });
+}
+
+/** Parts a link may set: a surname, and each part found in the name, so they cannot rename the contributor. */
+function partsOf(name: string, parts: readonly string[]): boolean {
+  return parts[2] !== "" && parts.every((part) => name.includes(part));
+}
+
+/** Whether the name parses back to the parts the author has, so the link need not carry them. */
+function sameParts(author: Author): boolean {
+  const parsed = parseNameParts(author.name);
+  return (
+    parsed.firstName === author.firstName &&
+    parsed.middleName === author.middleName &&
+    parsed.surname === author.surname
+  );
 }
 
 /**
@@ -188,6 +208,9 @@ export function fromSharePayload(json: string): ShareData {
       createAuthor(entry.n, {
         id: entry.i,
         ...(entry.o ? { orcid: entry.o } : {}),
+        ...(entry.p && partsOf(entry.n, entry.p)
+          ? { firstName: entry.p[0], middleName: entry.p[1], surname: entry.p[2] }
+          : {}),
         contributorType: entry.t === 1 ? "non-author" : "author",
         contributions: CREDIT_ROLES.map((role, index) => ({
           role: role.name,
