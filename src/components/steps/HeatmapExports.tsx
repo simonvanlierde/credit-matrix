@@ -168,34 +168,38 @@ export function HeatmapExports({
     if (!open) return;
     let active = true;
     setPreview((current) => ({ ...current, rendering: true }));
-    (async () => {
-      const figures = await renderer();
-      failedFaces.clear();
-      try {
-        return { preview: await figures.svg(authors, svgOptions), missingGlyphs: null };
-      } catch (cause) {
-        const missing = glyphError(cause);
-        if (missing === null) throw cause;
-        return { preview: await figures.svg(authors, { ...svgOptions, fallback: "system" }), missingGlyphs: missing };
-      }
-    })().then(
-      (result) => {
-        if (active)
-          setPreview({ ...result, fontsUnavailable: failedFaces.size > 0, previewCause: null, rendering: false });
-      },
-      (cause: unknown) => {
-        if (active)
-          setPreview({
-            preview: "",
-            previewCause: cause,
-            missingGlyphs: null,
-            fontsUnavailable: false,
-            rendering: false,
-          });
-      },
-    );
+    // Typing in the settings changes the options on every keystroke; render once they pause.
+    const timer = setTimeout(() => {
+      (async () => {
+        const figures = await renderer();
+        failedFaces.clear();
+        try {
+          return { preview: await figures.svg(authors, svgOptions), missingGlyphs: null };
+        } catch (cause) {
+          const missing = glyphError(cause);
+          if (missing === null) throw cause;
+          return { preview: await figures.svg(authors, { ...svgOptions, fallback: "system" }), missingGlyphs: missing };
+        }
+      })().then(
+        (result) => {
+          if (active)
+            setPreview({ ...result, fontsUnavailable: failedFaces.size > 0, previewCause: null, rendering: false });
+        },
+        (cause: unknown) => {
+          if (active)
+            setPreview({
+              preview: "",
+              previewCause: cause,
+              missingGlyphs: null,
+              fontsUnavailable: false,
+              rendering: false,
+            });
+        },
+      );
+    }, 200);
     return () => {
       active = false;
+      clearTimeout(timer);
     };
   }, [open, authors, svgOptions]);
   const previewError = previewCause ? t("errHeatmapExport", { format: "SVG" }) : null;

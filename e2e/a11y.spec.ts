@@ -1,5 +1,7 @@
 // biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node and read the catalogs.
 import { readFileSync } from "node:fs";
+// biome-ignore lint/correctness/noNodejsModules: Playwright tests run in Node.
+import process from "node:process";
 import AxeBuilder from "@axe-core/playwright";
 import { parsePoFile } from "@lingui/format-po";
 import { expect, type Locator, type Page, test } from "@playwright/test";
@@ -135,6 +137,47 @@ test.describe("Accessibility (axe-core)", () => {
 
     const results = await scan(page);
     expect(results.violations).toEqual([]);
+  });
+
+  test("the docs sidebar comes before the article in tab order at lg", async ({ page }) => {
+    test.skip(!process.env.CI && !process.env.BASE_URL, "needs /pagefind/ from a production build");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/docs/typst");
+    await page.getByRole("region", { name: "Search documentation" }).getByRole("combobox").focus();
+    // Back from the search box: the "Documentation" link, then the sidebar's last link.
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Shift+Tab");
+    expect(await page.evaluate(() => document.activeElement?.closest("nav")?.getAttribute("aria-label"))).toBe(
+      "Documentation",
+    );
+    // It is also first in reading order, so the visual order matches.
+    const box = async (loc: Locator) => (await loc.boundingBox())?.x ?? 0;
+    const nav = page.getByRole("navigation", { name: "Documentation" });
+    expect(await box(nav)).toBeLessThan(await box(page.locator("article")));
+  });
+
+  test("the docs sidebar comes after the article in tab order and on screen below lg", async ({ page }) => {
+    test.skip(!process.env.CI && !process.env.BASE_URL, "needs /pagefind/ from a production build");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/docs/typst");
+    // One navigation landmark, drawn below the article.
+    const nav = page.getByRole("navigation", { name: "Documentation" });
+    await expect(nav).toHaveCount(1);
+    const top = async (loc: Locator) => (await loc.boundingBox())?.y ?? 0;
+    expect(await top(nav)).toBeGreaterThan(await top(page.locator("article")));
+    // Forward from the search box: the article's links come before the sidebar's.
+    await page.getByRole("region", { name: "Search documentation" }).getByRole("combobox").focus();
+    for (let i = 0; i < 200; i++) {
+      await page.keyboard.press("Tab");
+      if (await page.evaluate(() => !!document.activeElement?.closest("nav[aria-label='Documentation']"))) break;
+    }
+    expect(
+      await page.evaluate(() => {
+        const el = document.activeElement;
+        const article = document.querySelector("article");
+        return !!el && !!article && !!(article.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+      }),
+    ).toBe(true);
   });
 
   test("the welcome modal links to About and Documentation alongside the header", async ({ page }) => {

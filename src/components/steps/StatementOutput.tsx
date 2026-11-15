@@ -29,6 +29,9 @@ import { PersonMenu } from "./PersonMenu";
 import { RoleInfo } from "./RoleInfo";
 import { TOOLCHAIN_OUTPUTS, ToolchainPanel } from "./ToolchainPanel";
 
+// Journal submission formats: listed under their own heading, not among the general exports.
+const JOURNAL_FORMATS: DataFormat[] = ["xml", "crossref", "tenzing"];
+
 /** A name or role in the running text that opens a panel: it keeps the text's look, not a button's. */
 /**
  * A name or role in the statement: text, not a control. A click opens the same menu its real
@@ -466,12 +469,12 @@ export function StatementOutput() {
           <PopoverContent align="start" aria-label={t("exportData")} className="w-72 max-w-[calc(100vw-2rem)] p-2">
             <ul aria-label={t("a11yExportFormat")} className="grid">
               {(Object.keys(DATA_FORMATS) as DataFormat[])
-                .filter((value) => !["xml", "crossref", "tenzing"].includes(value) && value !== toolchainOutput)
+                .filter((value) => !JOURNAL_FORMATS.includes(value) && value !== toolchainOutput)
                 .map(exportRow)}
             </ul>
             <div className="mt-2 border-t border-outline-variant/40 pt-2">
               <p className="mb-1 text-xs font-semibold text-on-surface-variant">{t("toolchainJournal")}</p>
-              <ul className="grid">{(["xml", "crossref", "tenzing"] as const).map(exportRow)}</ul>
+              <ul className="grid">{JOURNAL_FORMATS.map(exportRow)}</ul>
             </div>
           </PopoverContent>
         </Popover>
