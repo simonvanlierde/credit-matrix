@@ -197,6 +197,8 @@ def _hits(chunks: list[str], parts: list[tuple[Parts, Parts, Parts, Parts]]) -> 
 
 def _mask(text: str, spans: list[tuple[int, int]]) -> str:
     """`text` with each (start, end) span, in order and apart, as spaces: one copy, however many spans."""
+    if not spans:
+        return text
     parts, at = [], 0
     for start, end in spans:
         parts += [text[at:start], " " * (end - start)]
