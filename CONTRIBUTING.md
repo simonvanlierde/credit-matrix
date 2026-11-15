@@ -68,7 +68,7 @@ cd census && uv run --locked ruff format --check . && uv run --locked ruff check
 in what it reads fails a test. After a change you meant to make, review the diff and rewrite the
 expected output with `CENSUS_UPDATE_CORPUS=1 uv run pytest -q tests/test_corpus.py`.
 
-`census/tests/test_benchmarks.py` times the parser on that corpus and on two JATS articles. A plain
+`census/tests/test_benchmarks.py` times the parser on that corpus and on three JATS articles. A plain
 `pytest` runs each once; on pull requests that touch `census/` or `src/core/`, [CodSpeed](https://codspeed.io) measures them and
 comments when one gets slower or faster than on main.
 
@@ -110,7 +110,9 @@ package version fields may already have changed. Fix the reported file, then run
 to finish syncing the current version without another version bump.
 
 Before tagging, review the whole change since the previous tag, then run `pnpm verify`,
-`pnpm mutation`, `pnpm validate:jats` and `pnpm validate:crossref`. Check the citation abstract,
+`pnpm mutation`, `pnpm validate:jats` and `pnpm validate:crossref`. List the entry points bounded by `MAX_AUTHORS` or
+`MAX_IMPORT_BYTES` (`grep -rln 'MAX_AUTHORS\|MAX_IMPORT_BYTES' src/core`) and check each has a case in
+`src/core/bench/`. Check the citation abstract,
 title and keywords against the README and GitHub About text. Merge the release PR before
 creating its signed version tag on main; the tag starts the npm publishing workflow described in
 [deployment](docs/deploy.md#the-npm-package).
@@ -169,6 +171,12 @@ points at the `v<version>` tag instead of `main`.
   `test/mutation-baseline.txt`. Commit that list with your change, and look at what the diff
   adds: a new survivor is a test to write, or a change that does nothing. A survivor no test can
   tell apart keeps its reason after `  # kept: ` at the end of its line, and the next run keeps it.
+- **Benchmarks**: `pnpm bench` runs `src/core/bench/*.bench.ts`, but prints timings only under
+  CodSpeed, which measures them on pull requests that touch `src/core/`. A PR that adds or changes a parser,
+  importer, exporter or other code that takes user-sized input (anything bounded by `MAX_AUTHORS` or
+  `MAX_IMPORT_BYTES`) adds or updates a case at that bound, so CodSpeed watches it. CodSpeed's
+  simulated CPU runs about 50 times slower than a laptop: a case over about 100 ms locally needs
+  `{ timeout: 300_000 }`.
 - **Watch mode**: Vitest's global setup builds the package's `dist/` once, when Vitest starts. In
   watch mode (`pnpm exec vitest`) it is not rebuilt, so after editing `src/core`, restart Vitest
   before trusting the package tests.
