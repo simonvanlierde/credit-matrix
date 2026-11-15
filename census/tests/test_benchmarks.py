@@ -41,6 +41,26 @@ TAGGED_XML = article(
         for i in range(40)
     )
 )
+# An eLife-style article: each author links two role footnotes with one IDREFS xref, and every
+# other author's name sits in <name-alternatives>.
+_FOOTNOTES = ["Software", "Validation", "Data curation", "Writing - review and editing"]
+FOOTNOTE_XML = article(
+    "".join(
+        (
+            contrib(f"Given{i}", f"Surname{i}", xref)
+            if i % 2
+            else '<contrib contrib-type="author"><name-alternatives>'
+            f'<name name-style="eastern"><surname>S{i}</surname><given-names>G{i}</given-names></name>'
+            f'<name name-style="western"><surname>Surname{i}</surname><given-names>Given{i}</given-names></name>'
+            f"</name-alternatives>{xref}</contrib>"
+        )
+        for i in range(40)
+        for xref in [f'<xref ref-type="fn" rid="con{i % 4} con{(i + 1) % 4}"/>']
+    ),
+    "<fn-group>"
+    + "".join(f'<fn fn-type="con" id="con{i}"><p>{text}.</p></fn>' for i, text in enumerate(_FOOTNOTES))
+    + "</fn-group>",
+)
 
 
 @pytest.mark.benchmark
@@ -69,3 +89,10 @@ def test_parse_article_statement(benchmark):
 def test_parse_article_tagged_roles(benchmark):
     result = benchmark(parse_article, TAGGED_XML)
     assert result.style == "plos_uri"
+
+
+def test_parse_article_footnote_roles(benchmark):
+    result = benchmark(parse_article, FOOTNOTE_XML)
+    assert result.style == "contrib_text"
+    assert len(result.authors) == 40 and all(author.surname for author in result.authors)
+    assert {role for author, role in result.assignments if author == 0} == {"software", "validation"}
