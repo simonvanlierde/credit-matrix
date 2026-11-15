@@ -364,6 +364,20 @@ describe("all other authors", () => {
     expect(holdersOf(text, "visualization")).toEqual([2]);
   });
 
+  it("after another all other authors, leaves out the same authors", () => {
+    const text = "Software: A.B.; validation: all other authors; writing - original draft: all other authors.";
+    expect(holdersOf(text, "writing-original-draft")).toEqual([1, 2]);
+    expect(holdersOf("A.B.: software. All other authors: validation. Formal analysis.", "formal-analysis")).toEqual([
+      1, 2,
+    ]);
+  });
+
+  it("heading a list item, also leaves out authors named before it without roles", () => {
+    expect(pairsOf("A.B. and C.D. conceived the study. All other authors: validation.", BELL)).toEqual([
+      [2, "validation"],
+    ]);
+  });
+
   it("after all authors, leaves out everyone", () => {
     expect(holdersOf("All authors: software. All other authors: validation.", "validation")).toEqual([]);
   });

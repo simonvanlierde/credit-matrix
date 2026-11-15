@@ -144,8 +144,9 @@ const ALL_AUTHORS = -1;
  * anywhere else ("draft, A.B.; review and editing, all other authors"), the run of authors given roles
  * just before it. Beside named authors ("A.B. and all other authors"), it is everyone. Authors named
  * without roles ("A.B. wrote the draft and all other authors reviewed it") are not left out: which of
- * them the roles belong to is unclear. After "all authors" it is no one, and a clause of roles alone
- * after it ("All other authors: validation; visualization") leaves out the same authors.
+ * them the roles belong to is unclear. After "all authors" it is no one. A clause of roles alone after
+ * it ("All other authors: validation; visualization"), or another "all other authors" right after it,
+ * leaves out the same authors.
  */
 const OTHER_AUTHORS = -2;
 /**
@@ -572,7 +573,7 @@ export function parseStatement(statement: string, authorList: readonly Statement
   const assignments = new Set<string>();
   let previousPeople: (number | string)[] = [];
   let previousPaired: (number | string)[] = []; // previousPeople, if their clause gave them roles
-  // Whom previousPeople's "all other authors" left out, so a clause of roles alone after it does too.
+  // Whom previousPeople's "all other authors" left out, so the clause after it can leave out the same.
   let previousLeftOut: Set<number | string> | undefined;
   // Start of each "all other authors:" -> the authors named before it.
   const listed = new Map<number, Set<number | string>>();
@@ -611,10 +612,10 @@ export function parseStatement(statement: string, authorList: readonly Statement
         indices = authors.map((_, i) => i);
       } else if (people.includes(OTHER_AUTHORS)) {
         const at = lead[0] === "A" ? r : r + 1;
+        // After another "all other authors", it leaves out the same authors.
         const before =
           listed.get(starts[at] as number) ??
-          (starts[at] === -1 ? previousLeftOut : undefined) ??
-          new Set(at >= 2 ? runs[at - 2]?.[1] : previousPaired);
+          (at >= 2 ? (leftOut[at - 2] ?? new Set(runs[at - 2]?.[1])) : (previousLeftOut ?? new Set(previousPaired)));
         leftOut[at] = before;
         // After "all authors", everyone is named already.
         indices = before.has(ALL_AUTHORS) ? [] : authors.map((_, i) => i).filter((i) => !before.has(i));
