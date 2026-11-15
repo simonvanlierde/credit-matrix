@@ -361,7 +361,8 @@ function liveDraft(state: ContributionState): Draft {
 function applyDraft(state: ContributionState, draft: Draft): void {
   state.activeDraftId = draft.id;
   state.title = draft.title;
-  state.toolchain = draft.toolchain ?? state.lastToolchain;
+  // A draft without one chose none, or predates the choice; lastToolchain only seeds new drafts.
+  state.toolchain = draft.toolchain;
   state.authors = draft.authors;
   state.inputMode = draft.inputMode;
   state.heatmapMonoColor = draft.heatmapMonoColor;
@@ -374,6 +375,11 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.claim = draft.claim;
   state.asks = draft.asks;
   state.selfId = draft.selfId;
+  clearPointers(state);
+}
+
+/** Drop the highlights and focus targets that point into the draft on screen. */
+function clearPointers(state: ContributionState): void {
   state.reviewHighlight = null;
   state.statementLink = null;
   state.reviewSettled = null;
@@ -383,11 +389,12 @@ function applyDraft(state: ContributionState, draft: Draft): void {
   state.recentReply = null;
 }
 
-/** A fresh, empty draft. */
-function emptyDraft(title = ""): Draft {
+/** A fresh, empty draft, with the writing tool last picked. */
+function emptyDraft(toolchain: Toolchain | undefined): Draft {
   return {
     id: globalThis.crypto.randomUUID(),
-    title,
+    title: "",
+    toolchain,
     authors: [],
     inputMode: "toggle",
     heatmapMonoColor: DEFAULT_MONO_COLOR,
@@ -425,6 +432,7 @@ function stashLive(state: ContributionState): void {
 /** Drop anything from a draft's contributor list that would make a later edit throw. */
 function repairAuthors(authors: unknown): Author[] {
   if (!Array.isArray(authors)) return [];
+  const seenIds = new Set<string>();
   return authors
     .filter((author): author is Author => {
       if (author === null || typeof author !== "object") return false;
@@ -435,7 +443,18 @@ function repairAuthors(authors: unknown): Author[] {
     })
     .slice(0, MAX_AUTHORS)
     .map((author) => {
-      const defaults = createAuthor(author.name);
+      // createAuthor fills every role a short list lacks, as the grid and the exports expect.
+      const defaults = createAuthor(author.name, {
+        contributions: Array.isArray(author.contributions)
+          ? author.contributions.filter(
+              (c) => c !== null && typeof c === "object" && typeof c.role === "string" && typeof c.score === "number",
+            )
+          : [],
+      });
+      // A repeated id would make every id-keyed lookup hit the first row.
+      const id =
+        typeof author.id === "string" && isShareableId(author.id) && !seenIds.has(author.id) ? author.id : defaults.id;
+      seenIds.add(id);
       const repaired = { ...defaults, ...author };
       for (const field of ["firstName", "middleName", "surname", "initials"] as const) {
         if (typeof repaired[field] !== "string" || repaired[field].length > MAX_AUTHOR_NAME_LENGTH)
@@ -445,7 +464,7 @@ function repairAuthors(authors: unknown): Author[] {
         // A save that lacks the name parts, initials or flags (hand-edited, or written by another
         // tool) gets them derived from the name, as a new contributor would; the page reads them all.
         ...repaired,
-        id: typeof author.id === "string" && isShareableId(author.id) ? author.id : defaults.id,
+        id,
         contributorType: author.contributorType === "non-author" ? "non-author" : "author",
         equalContribution: typeof author.equalContribution === "boolean" ? author.equalContribution : false,
         corresponding: typeof author.corresponding === "boolean" ? author.corresponding : false,
@@ -453,11 +472,7 @@ function repairAuthors(authors: unknown): Author[] {
         // iD, and normalizeContributions iterates the array and dereferences
         // each entry. A malformed field costs that field, not the workspace.
         orcid: typeof author.orcid === "string" && isValidOrcid(author.orcid) ? author.orcid : undefined,
-        contributions: Array.isArray(author.contributions)
-          ? author.contributions.filter(
-              (c) => c !== null && typeof c === "object" && typeof c.role === "string" && typeof c.score === "number",
-            )
-          : [],
+        contributions: defaults.contributions,
       };
     });
 }
@@ -519,12 +534,15 @@ function repairStatementOptions(value: unknown): StatementOptions {
  */
 function repairSingleDraft(value: unknown, id: string): Draft {
   const { asked, ...raw } = (isRecord(value) ? value : {}) as Partial<Draft> & { asked?: unknown };
+  const authors = repairAuthors(raw.authors);
+  // An ask or a self pick for a row that is gone points at nothing.
+  const authorIds = new Set(authors.map((author) => author.id));
   return {
     ...raw,
     id,
     toolchain: ToolchainSchema.safeParse(raw.toolchain).data,
     title: typeof raw.title === "string" ? raw.title.slice(0, MAX_TITLE_LENGTH) : "",
-    authors: repairAuthors(raw.authors),
+    authors,
     inputMode: raw.inputMode === "levels" ? "levels" : "toggle",
     // The page tint mixes this into its background, so a damaged value would blank the page.
     heatmapMonoColor:
@@ -546,8 +564,8 @@ function repairSingleDraft(value: unknown, id: string): Draft {
     outputLocale: normalizeLocaleCode(raw.outputLocale),
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
     claim: isDraftClaim(raw.claim) ? raw.claim : null,
-    asks: repairAsks(raw.asks, asked),
-    selfId: typeof raw.selfId === "string" && isShareableId(raw.selfId) ? raw.selfId : null,
+    asks: Object.fromEntries(Object.entries(repairAsks(raw.asks, asked)).filter(([key]) => authorIds.has(key))),
+    selfId: typeof raw.selfId === "string" && authorIds.has(raw.selfId) ? raw.selfId : null,
   };
 }
 
@@ -577,12 +595,14 @@ function hydrateDrafts(persisted: unknown): Partial<ContributionState> {
   // "No active draft" is not a renderable state. Prefer the stored choice, then
   // the most recently touched survivor, then a fresh empty one.
   const storedId = typeof state.activeDraftId === "string" ? state.activeDraftId : "";
-  const active = drafts[storedId] ?? Object.values(drafts).sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? emptyDraft();
+  const lastToolchain = ToolchainSchema.safeParse(state.lastToolchain).data;
+  const active =
+    drafts[storedId] ?? Object.values(drafts).sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? emptyDraft(lastToolchain);
   drafts[active.id] = active;
 
   const out = {
     drafts,
-    lastToolchain: ToolchainSchema.safeParse(state.lastToolchain).data,
+    lastToolchain,
     uiLocale: normalizeLocaleCode(state.uiLocale),
     ...(typeof state.welcomeSeen === "boolean" ? { welcomeSeen: state.welcomeSeen } : {}),
     normsField: typeof state.normsField === "string" ? state.normsField : null,
@@ -1054,7 +1074,7 @@ export const useContributionStore = create<ContributionState>()(
           // draft, which makes the count exact rather than off by one.
           stashLive(state);
           if (Object.keys(state.drafts).length >= MAX_DRAFTS) return;
-          const draft = emptyDraft();
+          const draft = emptyDraft(state.lastToolchain);
           state.drafts[draft.id] = draft;
           applyDraft(state, draft);
           created = draft.id;
@@ -1108,7 +1128,7 @@ export const useContributionStore = create<ContributionState>()(
           // Deleting what you are looking at lands on the most recently touched
           // survivor, or on a fresh empty draft when there is none.
           const next = Object.values(state.drafts).sort((a, b) => b.updatedAt - a.updatedAt)[0];
-          const target = next ?? emptyDraft();
+          const target = next ?? emptyDraft(state.lastToolchain);
           state.drafts[target.id] = target;
           applyDraft(state, target);
         }),
@@ -1119,7 +1139,7 @@ export const useContributionStore = create<ContributionState>()(
         // otherwise survive the "all".
         useContributionStore.persist.clearStorage();
         set((state) => {
-          const draft = emptyDraft();
+          const draft = emptyDraft(state.lastToolchain);
           state.drafts = { [draft.id]: draft };
           applyDraft(state, draft);
           state.workspaceCleared += 1;
@@ -1137,8 +1157,7 @@ export const useContributionStore = create<ContributionState>()(
           const ids = new Set(state.authors.map((author) => author.id));
           if (selfId !== undefined && ids.has(selfId)) state.selfId = selfId;
           else if (state.selfId !== null && !ids.has(state.selfId)) state.selfId = null;
-          if (!asks) return;
-          state.asks = Object.fromEntries(Object.entries(asks).filter(([id]) => ids.has(id)));
+          state.asks = Object.fromEntries(Object.entries(asks ?? state.asks).filter(([id]) => ids.has(id)));
         }),
 
       setClaim: (claim) =>
@@ -1503,6 +1522,7 @@ export const useContributionStore = create<ContributionState>()(
           state.outputLocale = "en";
           state.asks = {};
           state.selfId = null;
+          clearPointers(state);
           // uiLocale is a display preference, not draft data: a workspace reset
           // should not silently switch the interface back to English.
           state.welcomeOpen = false;
@@ -1534,7 +1554,7 @@ export const useContributionStore = create<ContributionState>()(
           const drafts = { ...next.drafts };
           const first = drafts[INITIAL_DRAFT_ID];
           delete drafts[INITIAL_DRAFT_ID];
-          drafts[id] = first ? { ...first, id } : { ...emptyDraft(), id };
+          drafts[id] = first ? { ...first, id } : { ...emptyDraft(next.lastToolchain), id };
           return { ...next, drafts, activeDraftId: id };
         }
         return next;

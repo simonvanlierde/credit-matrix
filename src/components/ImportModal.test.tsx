@@ -642,6 +642,21 @@ describe("import progress and outcome", () => {
     expect(onImport.mock.calls[0]?.[1]).toBe("add");
   });
 
+  it("drops a staged confirmation when the text changes, so Import parses the new text", async () => {
+    const ada = createAuthor("Ada Lovelace");
+    const { onImport } = renderModal(1, undefined, { authors: [ada] });
+    paste("Grace Hopper");
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    expect(screen.getByText(english.importChoiceTitle)).toBeTruthy();
+    screen.getByLabelText(english.pasteRawData).focus();
+    paste("Katherine Johnson");
+    expect(screen.queryByText(english.importChoiceTitle)).toBeNull();
+    expect(document.activeElement).toBe(screen.getByLabelText(english.pasteRawData));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.importData })));
+    fireEvent.click(screen.getByRole("button", { name: english.replaceWorkspace }));
+    expect(onImport.mock.calls[0]?.[0].authors.map((author: Author) => author.name)).toEqual(["Katherine Johnson"]);
+  });
+
   it("says plainly when XML cannot be read", async () => {
     renderModal();
     paste("<article><contrib-group><contrib>");
