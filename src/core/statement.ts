@@ -148,7 +148,8 @@ const ALL_AUTHORS = -1;
  * anywhere else ("draft, A.B.; review and editing, all other authors"), the run of authors given roles
  * just before it. Beside named authors ("A.B. and all other authors"), it is everyone. Followed by names,
  * in brackets or after a comma ("the remaining authors (C.D., E.F.)", "the remaining authors, C.D. and
- * E.F., ..."), it adds no one: the names are who it means. Authors named
+ * E.F., ..."), it adds no one: the names are who it means, if the first resolves to an author and is
+ * not an exception ("C.D. excepted"). Authors named
  * without roles ("A.B. wrote the draft and all other authors reviewed it") are not left out: which of
  * them the roles belong to is unclear. After "all authors" it is no one. A clause of roles alone after
  * it ("All other authors: validation; visualization"), or another "all other authors" right after it,
@@ -195,6 +196,7 @@ const APPROVAL_RE = new RegExp(
   "giu",
 );
 const APPOSITION_RE = /^\s*[(,]\s*$/u;
+const EXCEPTED_RE = /\s*(?:excepted|excluded|aside)(?![\p{L}\p{N}_])/uy;
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
 
 // A colon after a name, initials or a role: "MG: conceptualization", "Conceptualization: M.G.".
@@ -687,16 +689,21 @@ export function parseStatement(statement: string, authorList: readonly Statement
     }
   }
 
-  // "The remaining authors (C.D., E.F.)": names right after it say who it means, so it adds no one.
+  // "The remaining authors (C.D., E.F.)": names right after it say who it means, so it adds no one. Only
+  // when the first is an author ("(UCL)", "PhD students" are not) and not an exception ("A.B. excepted").
   mentions.sort(compareMentions);
+  const excepted = (at: number) => {
+    EXCEPTED_RE.lastIndex = at;
+    return EXCEPTED_RE.test(original);
+  };
   mentions = mentions.filter((m, i) => {
     const after = mentions[i + 1];
     return !(
       m[3] === OTHER_AUTHORS &&
       after?.[2] === "A" &&
-      after[3] !== ALL_AUTHORS &&
-      after[3] !== OTHER_AUTHORS &&
-      APPOSITION_RE.test(original.slice(m[1], after[0]))
+      (after[3] as number) >= 0 &&
+      APPOSITION_RE.test(original.slice(m[1], after[0])) &&
+      !excepted(after[1])
     );
   });
 

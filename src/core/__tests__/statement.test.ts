@@ -447,6 +447,30 @@ describe("all other authors after a semicolon", () => {
     ]);
   });
 
+  it.each([
+    // Only names that resolve to an author say who it means: not an acronym, a degree or a group.
+    ["A.B.: software. All other authors (UCL): validation.", [1, 2]],
+    ["A.B.: software. All other authors, MD, PhD: validation.", [1, 2]],
+    ["A.B.: software. All other authors, PhD students, contributed to validation.", [1, 2]],
+    // The first mention decides: unresolved, so it is beside named authors and means everyone.
+    ["A.B.: software. All other authors (XY and C.D.): validation.", [0, 1, 2]],
+    ["A.B.: software. All other authors, all authors: validation.", [0, 1, 2]],
+    // An exception, not a list of who it means.
+    ["All other authors, A.B. excepted, did validation.", [0, 1, 2]],
+    ["Software: A.B.; validation: all other authors, C.D. excluded.", [0, 1, 2]],
+    // Names after the comma are who it means, also after other names and into a list item.
+    ["A.B. and all other authors, C.D.: validation.", [0, 1]],
+    ["A.B.: software; all other authors, C.D.: validation; E.F.: visualization.", [1]],
+  ])("before other mentions: %s", (text, expected) => {
+    expect(holdersOf(text, "validation")).toEqual(expected);
+  });
+
+  it("does not read ambiguous initials after it as who it means", () => {
+    const text = "C.D.: software. All other authors (A.B.): validation.";
+    const holders = run(text, [...BELL, author("Amy", "Bloom")]).pairs.filter(([, s]) => s === "validation");
+    expect(holders.map(([i]) => i)).toEqual([0, 2, 3]);
+  });
+
   it("still reads all other authors including named authors as everyone", () => {
     const text = "A.B.: software. All other authors, including C.D., contributed to validation.";
     expect(holdersOf(text, "validation")).toEqual([0, 1, 2]);
@@ -600,6 +624,12 @@ describe("edge cases", () => {
     ["ſoftware", "software"],
   ])("matches %s as the census does, reading ı and İ as i and ſ as s", (word, slug) => {
     expect(pairsOf(`A.B.: ${word}.`, BELL)).toEqual([[0, slug]]);
+  });
+
+  it.each(["crıtıcally", "crİtİcally"])("does not read approval written %s as an assignment", (word) => {
+    expect(pairsOf(`A.B.: software. All authors ${word} reviewed the original draft.`, BELL)).toEqual([
+      [0, "software"],
+    ]);
   });
 
   it("keeps İ in initials when it reads role words with İ as i", () => {

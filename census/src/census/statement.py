@@ -51,9 +51,10 @@ All other authors: validation"), those are everyone named before it, with roles 
 authors" among them leaves no one. Anywhere else ("draft, A.B.; review and editing, all other authors"),
 they are the authors given roles just before it, or no one when the authors just before it have no roles
 ("A.B. wrote the draft and all other authors reviewed it"), as the roles may be theirs. Beside named
-authors ("A.B. and all other authors"), it is everyone. Followed by names, in brackets or after a comma ("the
-remaining authors (C.D., E.F.)", "the remaining authors, C.D. and E.F., ..."), it adds no one: the names
-are who it means. Roles alone after it go to the same authors, and a second "all other authors" is set
+authors ("A.B. and all other authors"), it is everyone. Followed by names, in brackets or after a comma
+("the remaining authors (C.D., E.F.)", "the remaining authors, C.D. and E.F., ..."), it adds no one: the
+names are who it means, if the first resolves to an author and is not an exception ("C.D. excepted").
+Roles alone after it go to the same authors, and a second "all other authors" is set
 against the same ones as the first."""
 
 # Initials such as "AP", "Q.M.L.", "H.Š.", "YiL" (Frontiers adds letters to tell authors apart), "L. - J. Z.".
@@ -229,6 +230,7 @@ _AFTER_INITIAL_RE = re.compile(rf"(?<!\w){_U}(?:\.|\.? - )$")
 _CAPITAL_RE = re.compile(_U)
 _COLON_RE = re.compile(r"\s*:")
 _APPOSITION_RE = re.compile(r"\s*[(,]\s*")
+_EXCEPTED_RE = re.compile(r"\s*(?:excepted|excluded|aside)\b")
 
 
 def _opens_with_name(lead_in: str) -> bool:
@@ -403,7 +405,8 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
             mentions.append((m.start(), m.end(), "A", UNRESOLVED))
             parsed.unresolved.append(token)
 
-    # "The remaining authors (C.D., E.F.)": names right after it say who it means, so it adds no one.
+    # "The remaining authors (C.D., E.F.)": names right after it say who it means, so it adds no one. Only
+    # when the first is an author ("(UCL)", "PhD students" are not) and not an exception ("A.B. excepted").
     mentions.sort()
     mentions = [
         m
@@ -412,8 +415,9 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
             m[3] == OTHER_AUTHORS
             and after
             and after[2] == "A"
-            and after[3] not in (ALL_AUTHORS, OTHER_AUTHORS)
+            and int(after[3]) >= 0
             and _APPOSITION_RE.fullmatch(original, m[1], after[0])
+            and not _EXCEPTED_RE.match(original, after[1])
         )
     ]
 

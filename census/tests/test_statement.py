@@ -499,6 +499,42 @@ def test_all_other_authors_including_named_authors_is_still_everyone():
 
 
 @pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # Only names that resolve to an author say who it means: not an acronym, a degree or a group.
+        ("A.B.: software. All other authors (UCL): validation.", {1, 2}),
+        ("A.B.: software. All other authors, MD, PhD: validation.", {1, 2}),
+        ("A.B.: software. All other authors, PhD students, contributed to validation.", {1, 2}),
+        # The first mention decides: unresolved, so it is beside named authors and means everyone.
+        ("A.B.: software. All other authors (XY and C.D.): validation.", {0, 1, 2}),
+        ("A.B.: software. All other authors, all authors: validation.", {0, 1, 2}),
+        # An exception, not a list of who it means.
+        ("All other authors, A.B. excepted, did validation.", {0, 1, 2}),
+        ("Software: A.B.; validation: all other authors, C.D. excluded.", {0, 1, 2}),
+        # Names after the comma are who it means, also after other names and into a list item.
+        ("A.B. and all other authors, C.D.: validation.", {0, 1}),
+        ("A.B.: software; all other authors, C.D.: validation; E.F.: visualization.", {1}),
+    ],
+)
+def test_all_other_authors_before_other_mentions(text, expected):
+    parsed = parse_statement(text, THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == expected
+
+
+def test_all_other_authors_before_ambiguous_initials_is_unchanged():
+    # "A.B." fits two authors, so it does not say who it means.
+    parsed = parse_statement("C.D.: software. All other authors (A.B.): validation.", [*THREE, Author("Amy", "Bloom")])
+    assert {i for i, s in parsed.assignments if s == "validation"} == {0, 2, 3}
+
+
+@pytest.mark.parametrize("word", ["crıtıcally", "crİtİcally"])
+def test_approval_with_dotless_and_dotted_i_is_not_an_assignment(word):
+    assert parse_statement(f"A.B.: software. All authors {word} reviewed the original draft.", THREE).assignments == {
+        (0, "software")
+    }
+
+
+@pytest.mark.parametrize(
     ("word", "slug"), [("ınvestigation", "investigation"), ("İnvestigation", "investigation"), ("ſoftware", "software")]
 )
 def test_role_words_match_dotless_and_dotted_i(word, slug):
