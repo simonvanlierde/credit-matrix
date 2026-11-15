@@ -842,7 +842,7 @@ msgid "aboutPluginsTitle"
 msgstr "Plug-ins voor schrijftools"
 
 msgid "aboutPlugins"
-msgstr "Schrijf de verklaring waar u het artikel schrijft. Deze plug-ins zetten hem in uw document, uit de rollen in de auteurslijst of uit een bestand dat u hier exporteert. Elke naam linkt naar de installatiegids."
+msgstr "De <docs>documentatie</docs> heeft voor elke plug-in een installatiegids: MyST, Jupyter Book, Quarto, Pandoc, Typst en Sphinx."
 
 msgid "aboutPluginsSoftware"
 msgstr "Voor software schrijft de <cli>opdrachtregeltool</cli> personen en rollen ook als CodeMeta. <citesync>citesync</citesync> maakt van die metadata CITATION.cff- en Zenodo-bestanden, en <drift>codemeta-drift</drift> controleert of een CodeMeta-bestand consistent is."

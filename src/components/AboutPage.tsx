@@ -11,16 +11,6 @@ const REPO = "https://github.com/simonvanlierde/credit-matrix";
 // The concept DOI from CITATION.cff: it resolves to every version, so it never changes on release.
 const CONCEPT_DOI = "https://doi.org/10.5281/zenodo.21213659";
 
-// Each tool with the line that puts the statement in a document, so a reader can tell at a glance
-// whether it fits their setup. The line is code, so it stays untranslated.
-const PLUGINS = [
-  { name: "MyST, Jupyter Book", href: "/docs/myst", code: ":::{credit-statement}" },
-  { name: "Quarto", href: "/docs/quarto", code: "filters: [credit-matrix]" },
-  { name: "Pandoc", href: "/docs/pandoc", code: "--lua-filter=credit-matrix.lua" },
-  { name: "Typst", href: "/docs/typst", code: "#credit-statement(team)" },
-  { name: "Sphinx", href: "/docs/sphinx", code: ".. credit-statement::" },
-];
-
 const BUTTON =
   "inline-flex min-h-9 items-center gap-1.5 rounded border border-edge bg-surface-bright px-3 text-sm font-medium text-on-surface transition-[color,box-shadow] hover:shadow-card hover:text-primary";
 
@@ -114,20 +104,7 @@ export function AboutPage({ version, citations }: { version: string; citations: 
       </p>
 
       <h3 id="plugins">{t("aboutPluginsTitle")}</h3>
-      <p>{t("aboutPlugins")}</p>
-      {/* Laid out like the colophon: the tool, then what you type to use it. */}
-      <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm">
-        {PLUGINS.map(({ name, href, code }) => (
-          <div key={name} className="contents">
-            <dt>
-              <a href={href}>{name}</a>
-            </dt>
-            <dd className="min-w-0 break-words">
-              <code>{code}</code>
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <p>{t.rich("aboutPlugins", { docs: (chunks) => <a href="/docs">{chunks}</a> })}</p>
       <p>
         {t.rich("aboutPluginsSoftware", {
           cli: (chunks) => <a href={`${REPO}/tree/main/src/core#cli`}>{chunks}</a>,

@@ -842,7 +842,7 @@ msgid "aboutPluginsTitle"
 msgstr "Complementos para herramientas de escritura"
 
 msgid "aboutPlugins"
-msgstr "Redacte la declaración donde redacta el artículo. Estos complementos la añaden a su documento, a partir de los roles de la lista de autores o de un archivo exportado aquí. Cada nombre enlaza a su guía de instalación."
+msgstr "La <docs>documentación</docs> tiene una guía de instalación para cada complemento: MyST, Jupyter Book, Quarto, Pandoc, Typst y Sphinx."
 
 msgid "aboutPluginsSoftware"
 msgstr "Para software, la <cli>herramienta de línea de comandos</cli> también escribe las personas y sus roles en formato CodeMeta. <citesync>citesync</citesync> convierte esos metadatos en archivos CITATION.cff y Zenodo, y <drift>codemeta-drift</drift> comprueba la coherencia de un archivo CodeMeta."

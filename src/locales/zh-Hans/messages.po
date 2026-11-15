@@ -842,7 +842,7 @@ msgid "aboutPluginsTitle"
 msgstr "写作工具插件"
 
 msgid "aboutPlugins"
-msgstr "在撰写论文的地方直接写出声明。这些插件根据作者列表中的角色，或根据从这里导出的文件，把声明加入你的文档。每个名称都链接到相应的安装指南。"
+msgstr "<docs>文档</docs>中有每个插件的安装指南：MyST、Jupyter Book、Quarto、Pandoc、Typst 和 Sphinx。"
 
 msgid "aboutPluginsSoftware"
 msgstr "对于软件，<cli>命令行工具</cli>还能以 CodeMeta 格式写出人员和角色。<citesync>citesync</citesync> 将这些元数据转换为 CITATION.cff 和 Zenodo 文件，<drift>codemeta-drift</drift> 检查 CodeMeta 文件的一致性。"

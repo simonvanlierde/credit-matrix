@@ -81,6 +81,10 @@ See [deploying](docs/deploy.md).
   A failed copy keeps its error label until the next attempt.
 - The header navigation, the docs sidebar and the statement sidebar are more compact, and "Getting
   started" links to [/docs](https://credit.duinlab.nl/docs).
+- The statement sidebar opens with the statement. The "I write in…" picker sits below the Copy and
+  Export actions, directly above the panel it opens.
+- The About panel no longer links to a plugin list, and the About page points to
+  [/docs](https://credit.duinlab.nl/docs) for each writing tool's setup guide.
 - CLI heatmap option errors name the allowed values, and `--help` shows `-h` and `-v`.
 - **Breaking:** to export SVG or PDF offline, install both packages in one project
   (`npm i credit-matrix credit-matrix-fonts`) and run the local `npx credit-matrix`, or run

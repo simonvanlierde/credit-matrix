@@ -842,7 +842,7 @@ msgid "aboutPluginsTitle"
 msgstr "Extensions pour vos outils d'écriture"
 
 msgid "aboutPlugins"
-msgstr "Rédigez la déclaration là où vous rédigez l'article. Ces extensions l'ajoutent à votre document, à partir des rôles de la liste des auteurs ou d'un fichier exporté ici. Chaque nom renvoie à son guide d'installation."
+msgstr "La <docs>documentation</docs> propose un guide de configuration pour chaque extension : MyST, Jupyter Book, Quarto, Pandoc, Typst et Sphinx."
 
 msgid "aboutPluginsSoftware"
 msgstr "Pour les logiciels, l'<cli>outil en ligne de commande</cli> écrit aussi les personnes et leurs rôles au format CodeMeta. <citesync>citesync</citesync> transforme ces métadonnées en fichiers CITATION.cff et Zenodo, et <drift>codemeta-drift</drift> vérifie la cohérence d'un fichier CodeMeta."

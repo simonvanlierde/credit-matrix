@@ -28,10 +28,10 @@ test.describe("Docs", () => {
     ).toHaveAttribute("aria-current", "page");
   });
 
-  test("About links each plugin to its docs page", async ({ page }) => {
+  test("About points to the docs for each plugin's setup guide", async ({ page }) => {
     await page.goto("/about");
-    await page.getByRole("link", { name: "Quarto", exact: true }).click();
-    await expect(page).toHaveURL(/\/docs\/quarto$/);
+    await page.locator("article").getByRole("link", { name: "documentation", exact: true }).click();
+    await expect(page).toHaveURL(/\/docs\/?$/);
   });
 
   test("no docs page scrolls sideways at 320 px, and option names stay whole", async ({ page }) => {
