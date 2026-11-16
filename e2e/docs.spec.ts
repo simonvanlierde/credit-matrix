@@ -11,8 +11,12 @@ test.describe("Docs", () => {
     await page.goto("/docs");
     await expect(page).toHaveTitle("Documentation · CRediT Matrix");
     await expect(page.getByRole("heading", { level: 2, name: "Documentation" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 3 })).toHaveText(["Use it in your writing tool", "Reference"]);
-    await page.getByRole("link", { name: "CRediT statement for Quarto" }).click();
+    await expect(page.getByRole("heading", { level: 3 })).toHaveText([
+      "Writing tools",
+      "Data and exports",
+      "Reference",
+    ]);
+    await page.getByRole("link", { name: "Quarto", exact: true }).click();
 
     await expect(page).toHaveURL(/\/docs\/quarto$/);
     await expect(page).toHaveTitle("CRediT statement for Quarto · CRediT Matrix");
@@ -22,9 +26,7 @@ test.describe("Docs", () => {
     // A relative link to another rendered file is its route; the nav marks this page.
     await expect(article.getByRole("link", { name: "Pandoc guide" })).toHaveAttribute("href", "/docs/pandoc");
     await expect(
-      page
-        .getByRole("navigation", { name: "Documentation" })
-        .getByRole("link", { name: "CRediT statement for Quarto" }),
+      page.getByRole("navigation", { name: "Documentation" }).getByRole("link", { name: "Quarto", exact: true }),
     ).toHaveAttribute("aria-current", "page");
   });
 
@@ -98,13 +100,39 @@ test.describe("Docs without their sources", () => {
     await page.keyboard.press("Escape");
     await expect(page.locator("article").getByRole("heading", { level: 2 })).toHaveText("CRediT statement for Quarto");
     const nav = page.getByRole("navigation", { name: "Documentation" });
-    await expect(nav.getByRole("link", { name: "CRediT statement for Quarto" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
-    await nav.getByRole("link", { name: "CRediT statement for Typst" }).click();
+    await expect(nav.getByRole("link", { name: "Quarto", exact: true })).toHaveAttribute("aria-current", "page");
+    await nav.getByRole("link", { name: "Typst", exact: true }).click();
     await expect(page).toHaveURL(/\/docs\/typst$/);
-    await expect(nav.getByRole("link", { name: "CRediT statement for Typst" })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Typst", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.locator("article img")).toHaveAttribute("loading", "lazy");
   });
+});
+
+test("desktop docs use the viewport with compact navigation and a working outline", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/docs/quarto");
+  const nav = page.getByRole("navigation", { name: "Documentation", exact: true }).first();
+  const bounds = await nav.boundingBox();
+  expect(bounds?.x).toBeLessThan(64);
+  expect(bounds?.width).toBeGreaterThanOrEqual(260);
+  const heading = nav.getByRole("heading", { name: "Writing tools", exact: true });
+  expect(await heading.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize))).toBeLessThanOrEqual(16);
+  const outline = page.getByRole("navigation", { name: "On this page", exact: true });
+  await outline.getByRole("link", { name: "Contribution heatmap", exact: true }).click();
+  await expect(page).toHaveURL(/#contribution-heatmap$/);
+  await expect(page.locator("#contribution-heatmap")).toBeInViewport();
+});
+
+test("writing tool selection navigates to a shareable URL and browser Back restores the guide", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/docs/quarto");
+  await page.getByRole("combobox", { name: "Writing tool", exact: true }).click();
+  await page.getByRole("option", { name: "Typst", exact: true }).click();
+  await expect(page).toHaveURL(/\/docs\/typst$/);
+  await expect(page.getByRole("combobox", { name: "Writing tool", exact: true })).toContainText("Typst");
+  await page.goBack();
+  await expect(page).toHaveURL(/\/docs\/quarto$/);
+  await expect(page.getByRole("combobox", { name: "Writing tool", exact: true })).toContainText("Quarto");
 });

@@ -58,7 +58,7 @@ describe("resolveHref", () => {
     expect(resolveHref("../quarto/", from)).toBe("/docs/quarto");
     expect(resolveHref("../../docs/accessibility.md", from)).toBe("/accessibility");
     expect(resolveHref("example/", from)).toBe(`${GITHUB}/tree/main/integrations/myst/example`);
-    expect(resolveHref("../../src/core/README.md#cli", from)).toBe(`${GITHUB}/blob/main/src/core/README.md#cli`);
+    expect(resolveHref("../../src/core/README.md#cli", from)).toBe("/docs/core#cli");
     expect(resolveHref("#install", from)).toBe("#install");
     expect(resolveHref("https://quarto.org", from)).toBe("https://quarto.org");
     expect(resolveHref("../../src/core/cli.ts?plain=1#L3", from)).toBe(
@@ -124,7 +124,10 @@ describe("live docs parts", () => {
 
   test.each([
     ["# Next heading", '<h2 id="next-heading">Next heading</h2>'],
-    ["```yaml\nauthor: Example\n```", '<pre><code class="language-yaml">author: Example\n</code></pre>'],
+    [
+      "```yaml\nauthor: Example\n```",
+      '<pre data-doc-fallback><code class="language-yaml">author: Example\n</code></pre>',
+    ],
   ])("renders Markdown immediately after a live marker: %s", (markdown, expected) => {
     const parts = renderDoc(file, `<!-- live: quarto -->\n${markdown}`);
     expect(parts[0]).toEqual({ live: "quarto" });

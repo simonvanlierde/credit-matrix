@@ -1742,7 +1742,7 @@ msgid "heatmapRecipeTarget"
 msgstr "Usar en"
 
 msgid "heatmapRecipeMyst"
-msgstr "MyST usa los roles de autor y el idioma de la página, con contribuciones sí/no."
+msgstr "La exportación MyST de la aplicación indica los roles con sí o no. El complemento MyST también puede leer niveles de contribución."
 
 msgid "heatmapRecipeTypst"
 msgstr "Usa tus datos de equipo de Typst. Las métricas tipográficas y el diseño nativo pueden diferir del SVG."
@@ -1874,7 +1874,7 @@ msgid "docsTitle"
 msgstr "Documentación"
 
 msgid "docsHowTo"
-msgstr "Úselo en su herramienta de escritura"
+msgstr "Herramientas de escritura"
 
 msgid "docsReference"
 msgstr "Referencia"
@@ -1889,19 +1889,28 @@ msgid "docsSearchFailed"
 msgstr "No se pudo cargar la búsqueda. Recargue la página para volver a intentarlo."
 
 msgid "docsLiveExample"
-msgstr "Ejemplo en vivo"
+msgstr "Ejemplo"
 
 msgid "docsLiveLoading"
-msgstr "Cargando tu borrador…"
+msgstr "Cargando ejemplo…"
 
 msgid "docsLiveDraft"
-msgstr "Se muestra tu borrador"
+msgstr "Tu borrador en este navegador"
 
 msgid "docsLiveSample"
-msgstr "Se muestran datos de ejemplo"
+msgstr "Colaboradores de ejemplo"
 
 msgid "docsUseSample"
-msgstr "Usar datos de ejemplo"
+msgstr "Usar colaboradores de ejemplo"
 
 msgid "docsUseDraft"
 msgstr "Usar tu borrador"
+
+msgid "docsData"
+msgstr "Datos y exportaciones"
+
+msgid "docsWritingTool"
+msgstr "Herramienta de escritura"
+
+msgid "docsOnPage"
+msgstr "En esta página"

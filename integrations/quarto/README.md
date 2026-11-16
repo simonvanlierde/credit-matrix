@@ -12,16 +12,20 @@ From the root of your Quarto project:
 quarto add simonvanlierde/credit-matrix/integrations/quarto
 ```
 
-Or copy `_extensions/credit-matrix/` from this folder into your project's `_extensions/` folder.
-
 Needs Quarto 1.4 or later. Tested with Quarto 1.10.
 For plain Pandoc, use the same Lua file as in the [Pandoc guide](../pandoc/README.md).
 
 ## Use
 
-In the app, copy the author block from the writing-tool panel after you choose Quarto or Pandoc under "I write in…", or choose **Quarto YAML** under Export data when no tool is chosen.
-The CLI equivalent is `credit-matrix convert team.json --to quarto`. Paste the block into your
-manuscript's front matter, next to `filters`. It keeps contribution levels; `--yes-no` omits them.
+Enable the filter in the front matter of `paper.qmd`:
+
+```yaml
+filters:
+  - credit-matrix
+```
+
+Add authors and roles to the same front matter. Use the example below, or copy your
+Quarto YAML from the app. Contribution levels are kept; a yes/no export omits them.
 
 <!-- live: quarto -->
 
@@ -33,20 +37,25 @@ author:
     roles:
       - conceptualization: lead
       - software: supporting
-      - writing
   - name: Albert Einstein
-    roles: [investigation, formal analysis]
-filters:
-  - credit-matrix
+    roles:
+      - formal-analysis: equal
+      - investigation
 ---
 ```
 
-The filter adds this at the end of the body:
+Build the document:
+
+```sh
+quarto render paper.qmd
+```
+
+With the sample data, the filter adds this at the end of the body:
 
 > **CRediT authorship contribution statement**
 >
-> **Marie Curie**: Conceptualization, Software (Supporting), Writing – original draft;
-> **Albert Einstein**: Formal analysis, Investigation.
+> **Marie Curie**: Conceptualization, Software (Supporting);
+> **Albert Einstein**: Formal analysis (Equal), Investigation.
 
 Roles use Quarto's names and aliases (`writing`, `editing`, `analysis`, `funding`). An `equal` or
 `supporting` degree shows after the role; `lead` or no degree shows nothing. Roles that are not
@@ -54,6 +63,8 @@ CRediT roles are left out, and the rest are listed in CRediT order. The heading 
 takes the level of the first heading in the document. References still come after it.
 
 [`example.qmd`](example.qmd) is a complete document.
+
+To install manually, copy `_extensions/credit-matrix/` from this folder into your project's `_extensions/` folder.
 
 ## Document language
 
@@ -90,11 +101,28 @@ To put the statement somewhere else, leave an empty div where it should go:
 
 ## Contribution heatmap
 
-Set `credit-matrix.heatmap: true` to add a figure through the package CLI. The filter runs
-`credit-matrix` from `PATH`, or the command line in the `CREDIT_MATRIX_COMMAND` environment variable.
+The figure needs Node 22.19 or later and the package CLI. Install it in your document project:
+
+```sh
+pnpm add -D credit-matrix
+```
+
+Add this to the same front matter, then build with the local CLI:
+
+```yaml
+credit-matrix:
+  heatmap: true
+```
+
+```sh
+CREDIT_MATRIX_COMMAND="node node_modules/credit-matrix/dist/cli.js" quarto render paper.qmd
+```
+
+The document now includes a contribution heatmap. If `credit-matrix` is on `PATH`, you can omit
+`CREDIT_MATRIX_COMMAND`. Its value is a command line; no argument can contain a space.
 [Figure options and examples](../heatmap.md) lists every rendering option.
-To use your own font, set `font` to the family name and `font-path` to the folder, or list of
-folders, that holds it, relative to the document. [Your own font](../heatmap.md#your-own-font) lists
+For your own font, set `font` to the family name. Set `font-path` to its folder, or list of
+folders, relative to the document. Merge these options into the same `credit-matrix` block. [Your own font](../heatmap.md#your-own-font) lists
 the other font options:
 
 ```yaml

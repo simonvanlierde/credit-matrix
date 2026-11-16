@@ -84,7 +84,14 @@ export function OutputActions(props: OutputProps) {
   );
 }
 
-export function OutputBlock({ authors, format, options, language, children }: OutputProps & { children?: ReactNode }) {
+export function OutputBlock({
+  authors,
+  format,
+  options,
+  language,
+  children,
+  rows = 4,
+}: OutputProps & { children?: ReactNode; rows?: number }) {
   const { label, text } = useExport({ authors, format, options });
   return (
     <>
@@ -93,7 +100,7 @@ export function OutputBlock({ authors, format, options, language, children }: Ou
         lang={language}
         readOnly
         value={text}
-        rows={4}
+        rows={rows}
         spellCheck={false}
         className="w-full min-w-0 resize-y rounded border border-edge bg-surface-bright p-2 font-mono text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
       />

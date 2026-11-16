@@ -1742,7 +1742,7 @@ msgid "heatmapRecipeTarget"
 msgstr "使用先"
 
 msgid "heatmapRecipeMyst"
-msgstr "MyST はページの著者ロールと言語を使用します。貢献は有無のみです。"
+msgstr "アプリのMySTエクスポートは役割の有無のみを記録します。MySTプラグインは貢献度も読み取れます。"
 
 msgid "heatmapRecipeTypst"
 msgstr "Typst のチームデータを使用してください。フォントの寸法やネイティブレイアウトは SVG と異なる場合があります。"
@@ -1874,7 +1874,7 @@ msgid "docsTitle"
 msgstr "ドキュメント"
 
 msgid "docsHowTo"
-msgstr "執筆ツールで使う"
+msgstr "執筆ツール"
 
 msgid "docsReference"
 msgstr "リファレンス"
@@ -1889,19 +1889,28 @@ msgid "docsSearchFailed"
 msgstr "検索を読み込めませんでした。ページを再読み込みして、もう一度お試しください。"
 
 msgid "docsLiveExample"
-msgstr "ライブ例"
+msgstr "例"
 
 msgid "docsLiveLoading"
-msgstr "下書きを読み込み中…"
+msgstr "例を読み込み中…"
 
 msgid "docsLiveDraft"
-msgstr "下書きを表示しています"
+msgstr "このブラウザーの下書きを使用中"
 
 msgid "docsLiveSample"
-msgstr "サンプルデータを表示しています"
+msgstr "サンプルの貢献者"
 
 msgid "docsUseSample"
-msgstr "サンプルデータを使う"
+msgstr "サンプルの貢献者を使う"
 
 msgid "docsUseDraft"
 msgstr "下書きを使う"
+
+msgid "docsData"
+msgstr "データとエクスポート"
+
+msgid "docsWritingTool"
+msgstr "執筆ツール"
+
+msgid "docsOnPage"
+msgstr "このページの内容"

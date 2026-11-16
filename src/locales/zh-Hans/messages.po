@@ -1742,7 +1742,7 @@ msgid "heatmapRecipeTarget"
 msgstr "使用于"
 
 msgid "heatmapRecipeMyst"
-msgstr "MyST 使用页面中的作者角色和语言，贡献仅区分有无。"
+msgstr "应用导出的 MyST 数据仅记录是否参与各项角色。MyST 插件还可以读取贡献程度。"
 
 msgid "heatmapRecipeTypst"
 msgstr "请使用 Typst 团队数据。字体度量和原生布局可能与 SVG 不同。"
@@ -1874,7 +1874,7 @@ msgid "docsTitle"
 msgstr "文档"
 
 msgid "docsHowTo"
-msgstr "在写作工具中使用"
+msgstr "写作工具"
 
 msgid "docsReference"
 msgstr "参考"
@@ -1889,19 +1889,28 @@ msgid "docsSearchFailed"
 msgstr "无法加载搜索。请重新加载页面后重试。"
 
 msgid "docsLiveExample"
-msgstr "实时示例"
+msgstr "示例"
 
 msgid "docsLiveLoading"
-msgstr "正在加载草稿…"
+msgstr "正在加载示例…"
 
 msgid "docsLiveDraft"
-msgstr "正在显示你的草稿"
+msgstr "正在使用此浏览器中的草稿"
 
 msgid "docsLiveSample"
-msgstr "正在显示示例数据"
+msgstr "示例贡献者"
 
 msgid "docsUseSample"
-msgstr "使用示例数据"
+msgstr "使用示例贡献者"
 
 msgid "docsUseDraft"
 msgstr "使用你的草稿"
+
+msgid "docsData"
+msgstr "数据与导出"
+
+msgid "docsWritingTool"
+msgstr "写作工具"
+
+msgid "docsOnPage"
+msgstr "本页内容"

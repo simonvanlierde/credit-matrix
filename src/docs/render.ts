@@ -53,5 +53,9 @@ export function renderDoc(file: DocFile, source: string): DocPart[] {
     offset = marker.index + marker[0].length;
   }
   if (offset < html.length || rendered.length === 0) rendered.push(html.slice(offset));
-  return rendered;
+  return rendered.map((part, index) =>
+    typeof part === "string" && index > 0 && typeof rendered[index - 1] !== "string"
+      ? part.replace(/^\s*<pre>(?=<code class="language-(?:yaml|json)">)/, "<pre data-doc-fallback>")
+      : part,
+  );
 }

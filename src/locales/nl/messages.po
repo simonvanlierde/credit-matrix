@@ -1742,7 +1742,7 @@ msgid "heatmapRecipeTarget"
 msgstr "Gebruiken in"
 
 msgid "heatmapRecipeMyst"
-msgstr "MyST gebruikt de auteursrollen en taal van de pagina, met ja/nee-bijdragen."
+msgstr "De MyST-export van de app gebruikt rollen met ja/nee. De MyST-plug-in kan ook bijdrageniveaus lezen."
 
 msgid "heatmapRecipeTypst"
 msgstr "Gebruik je Typst-teamgegevens. Lettertypematen en de eigen lay-out kunnen afwijken van SVG."
@@ -1874,7 +1874,7 @@ msgid "docsTitle"
 msgstr "Documentatie"
 
 msgid "docsHowTo"
-msgstr "Gebruik het in uw schrijfprogramma"
+msgstr "Schrijftools"
 
 msgid "docsReference"
 msgstr "Naslag"
@@ -1889,19 +1889,28 @@ msgid "docsSearchFailed"
 msgstr "Zoeken kon niet worden geladen. Herlaad de pagina om het opnieuw te proberen."
 
 msgid "docsLiveExample"
-msgstr "Livevoorbeeld"
+msgstr "Voorbeeld"
 
 msgid "docsLiveLoading"
-msgstr "Je concept laden…"
+msgstr "Voorbeeld laden…"
 
 msgid "docsLiveDraft"
-msgstr "Je concept wordt getoond"
+msgstr "Je concept in deze browser"
 
 msgid "docsLiveSample"
-msgstr "Voorbeeldgegevens worden getoond"
+msgstr "Voorbeeldbijdragers"
 
 msgid "docsUseSample"
-msgstr "Voorbeeldgegevens gebruiken"
+msgstr "Voorbeeldbijdragers gebruiken"
 
 msgid "docsUseDraft"
 msgstr "Je concept gebruiken"
+
+msgid "docsData"
+msgstr "Gegevens en export"
+
+msgid "docsWritingTool"
+msgstr "Schrijftool"
+
+msgid "docsOnPage"
+msgstr "Op deze pagina"

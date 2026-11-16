@@ -507,7 +507,7 @@ for (const width of [1440, 320]) {
     await page.getByRole("combobox", { name: "Use in", exact: true }).click();
     await page.getByRole("option", { name: "MyST / Jupyter Book", exact: true }).click();
     await expect(recipe).toHaveValue(/:::\{credit-heatmap\}/);
-    await expect(page.getByText("MyST uses the page’s author roles", { exact: false })).toBeVisible();
+    await expect(page.getByText("The app’s MyST export uses yes/no roles.", { exact: false })).toBeVisible();
     await page.evaluate(() => sessionStorage.setItem("refuseRecipeCopy", "true"));
     await page.getByRole("button", { name: "Copy export recipe", exact: true }).click();
     await expect(page.getByRole("button", { name: "Copy failed", exact: true })).toBeVisible();

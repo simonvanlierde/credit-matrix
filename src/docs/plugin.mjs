@@ -11,12 +11,25 @@ import { Lexer } from "marked";
  * reference, not a tool, and the CodeMeta README describes a maintainer test.
  */
 const SECTIONS = {
-  howTo: { include: ["integrations/*/README.md"], exclude: ["integrations/{figures,codemeta}/README.md"] },
-  reference: { include: ["integrations/heatmap.md", "integrations/figures/README.md", "docs/element.md"], exclude: [] },
+  howTo: { include: ["integrations/*/README.md"], exclude: ["integrations/{figures,codemeta,ro-crate}/README.md"] },
+  data: { include: ["integrations/ro-crate/README.md"], exclude: [] },
+  reference: {
+    include: [
+      "integrations/heatmap.md",
+      "integrations/figures/README.md",
+      "docs/element.md",
+      "docs/cli.md",
+      "src/core/README.md",
+    ],
+    exclude: [],
+  },
 };
 
 // The Typst README's title is the package name, as Typst Universe shows it; in the docs list it needs the tool's.
-const TITLES = { "integrations/typst/README.md": "CRediT statement for Typst" };
+const TITLES = {
+  "integrations/typst/README.md": "CRediT statement for Typst",
+  "src/core/README.md": "JavaScript API",
+};
 
 // Pages whose first sentence reads badly as a search-result summary.
 const DESCRIPTIONS = {

@@ -15,7 +15,56 @@ project:
     - https://unpkg.com/credit-matrix@0.13.0/dist/myst-plugin.mjs
 ```
 
-MyST caches it in its build folder. The version in the URL is the package version: change that
+Tested with mystmd 1.12 and [Jupyter Book 2.1](../jupyter-book/README.md).
+
+## Use
+
+Add authors under the same `project` key in `myst.yml`. Use the example below,
+or copy the app's MyST YAML export. Native MyST roles have no contribution levels;
+[optional levels](#contribution-levels) use separate metadata.
+
+Indent the copied `authors:` block two spaces under the existing `project:` key.
+
+<!-- live: myst -->
+
+```yaml
+project:
+  authors:
+    - name: Marie Curie
+      roles: [Conceptualization, Software]
+    - name: Albert Einstein
+      roles: [Formal analysis, Investigation]
+```
+
+Add this directive to a Markdown page:
+
+```markdown
+## CRediT authorship contribution statement
+
+:::{credit-statement}
+:::
+```
+
+Build the site:
+
+```sh
+myst build --site
+```
+
+With the sample data, the statement reads:
+
+> **Marie Curie**: Conceptualization, Software; **Albert Einstein**: Formal analysis, Investigation.
+
+For page-specific authors, put `authors` directly in the page's front matter, without the `project` wrapper.
+These replace the project's authors, as in MyST. Role names,
+spellings and aliases follow MyST (`writing`, `editing`, `review`, `analysis`, `funding`, `admin`).
+Roles that are not CRediT roles are left out, and the rest are listed in CRediT order.
+
+[`example/`](example/) is a complete project: run `myst build --site` in it.
+
+## Offline use and updates
+
+MyST caches the plugin in its build folder. The version in the URL is the package version: change that
 number to upgrade. The plugin file is about 1.5 MB. The heatmap directive downloads a figure font
 from jsDelivr the first time a figure needs it (0.6 MB for Latin text, 6-15 MB for a Japanese or
 Chinese face) and keeps it in the machine's font cache. See
@@ -25,43 +74,6 @@ To work offline or pin the file in your repository, copy
 [`credit-matrix.mjs`](credit-matrix.mjs) into your project, run
 `pnpm add credit-matrix credit-matrix-fonts yaml` next to it, and list `credit-matrix.mjs` under
 `plugins` instead.
-
-Tested with mystmd 1.12 and [Jupyter Book 2.1](../jupyter-book/README.md).
-
-## Use
-
-In the app, copy the author block from the writing-tool panel after you choose MyST under "I write in…", or choose **MyST YAML** under Export data when no tool is chosen.
-The CLI equivalent is `credit-matrix convert team.json --to myst`. Indent the block under `project`
-in `myst.yml`, or paste it into a page's front matter. The exported roles have no contribution levels.
-
-<!-- live: myst -->
-
-```yaml
-project:
-  authors:
-    - name: Marie Curie
-      roles: [Conceptualization, Software, writing]
-    - name: Albert Einstein
-      roles: [Investigation, Formal analysis, editing]
-```
-
-```markdown
-## CRediT authorship contribution statement
-
-:::{credit-statement}
-:::
-```
-
-renders as:
-
-> **Marie Curie**: Conceptualization, Software, Writing – original draft; **Albert Einstein**: Formal
-> analysis, Investigation, Writing – review & editing.
-
-Authors in a page's own front matter replace the project's authors, as in MyST. Role names,
-spellings and aliases follow MyST (`writing`, `editing`, `review`, `analysis`, `funding`, `admin`).
-Roles that are not CRediT roles are left out, and the rest are listed in CRediT order.
-
-[`example/`](example/) is a complete project: run `myst build --site` in it.
 
 ## Contribution levels
 
@@ -107,7 +119,15 @@ unsupported languages and Traditional Chinese fall back to English. Write your h
 
 ## Contribution heatmap
 
-[Figure options and examples](../heatmap.md) covers the `credit-heatmap` directive. From about
+Add this beside the statement directive, then run `myst build --site` again:
+
+```markdown
+:::{credit-heatmap}
+:::
+```
+
+The page now includes a heatmap from the same authors.
+[Figure options and examples](../heatmap.md) covers its options. From about
 25 contributors it warns that the labels print under 6 pt, which fails a strict build. The
 [final-size checks](../heatmap.md#final-size-readability-checks) say how to silence the warning.
 For your own font, give the directive `:font: Inter` and `:font-path: fonts` (comma-separated

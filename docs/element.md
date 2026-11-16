@@ -20,10 +20,24 @@ Or put the JSON in the page:
 ```html
 <credit-matrix format="by-author">
   <script type="application/json">
-    {"version":1,"authors":[ ... ]}
+    {
+      "version": 1,
+      "authors": [{
+        "id": "robin",
+        "name": "Robin Example",
+        "firstName": "Robin",
+        "middleName": "",
+        "surname": "Example",
+        "initials": "RE",
+        "contributions": [{"role": "Software", "score": 100}]
+      }]
+    }
   </script>
 </credit-matrix>
 ```
+
+Replace the example with your exported JSON. For programmatic imports and exports, see the
+[JavaScript API](../src/core/README.md) or the [CLI reference](cli.md).
 
 With a bundler, import it once instead of the script tag:
 
@@ -43,7 +57,7 @@ name, which a browser cannot resolve on its own.
 | `src`     | URL of the JSON file. Without it, the element reads its JSON child.                                                                                 |
 | `format`  | `by-role` (default), `by-role-short`, `by-author` or `by-author-short`. Any other value is `by-role`.                                               |
 | `locale`  | Language of the statement and heatmap, such as `fr` or `zh-Hans`. See below.                                                                        |
-| `levels`  | Boolean: present (any value, even `"false"`) or absent. Marks Equal and Supporting contributions in the statement; the heatmap always shows levels. |
+| `levels`  | Add `levels` to mark Equal and Supporting contributions in the statement. Any value, even `"false"`, enables it. The heatmap always shows levels. |
 
 Changing any attribute renders again. A `format`, `locale` or `levels` change reuses the downloaded
 file. Setting `src`, even to the same URL, downloads it again, as does calling `render()`.

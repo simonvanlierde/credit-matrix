@@ -24,7 +24,7 @@ toJats4rXml(authors);
 | `credit-matrix/lookup` | ORCID and DOI lookups | `fetch` |
 | `credit-matrix/i18n` | role names and output strings in nine languages | nothing |
 | `credit-matrix/figures` | embedded-font SVG and PDF heatmaps | the optional `credit-matrix-fonts` peer, or a one-time download of pinned fonts |
-| `credit-matrix/element` | registers the `<credit-matrix>` element ([docs](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/element.md)) | a DOM |
+| `credit-matrix/element` | registers the `<credit-matrix>` element ([docs](../../docs/element.md)) | a DOM |
 
 ## CLI
 
@@ -38,7 +38,7 @@ npx credit-matrix convert team.csv --to jats
 npx credit-matrix convert team.csv --to svg > heatmap.svg
 ```
 
-The [CLI reference](https://github.com/simonvanlierde/credit-matrix/blob/main/docs/cli.md) lists every command, flag, exit code and output format.
+The [CLI reference](../../docs/cli.md) lists every command, flag, exit code and output format.
 
 ### RO-Crate attribution
 
@@ -224,8 +224,9 @@ spreadsheets (CSV or TSV). It returns the `format` it read, plus `asks`, `selfId
 when the format includes them.
 
 `importAny` refuses a `"statement"`: text that assigns CRediT roles ("MG: conceptualization",
-"Methodology, A.B.") or tells in sentences what the authors did. A statement names roles, not
-contributors. It throws `ExportOnlyError` for Quarto or MyST author YAML and an RO-Crate fragment,
+"Methodology, A.B.") or tells in sentences what the authors did. A statement must name CRediT roles
+to be recognized; contributor names alone are not enough. It throws `ExportOnlyError` for Quarto
+or MyST author YAML and an RO-Crate fragment,
 which the app writes but cannot read back.
 
 `parseStatement(text, authors)` reads a free-text CRediT statement against an author list of
