@@ -479,6 +479,69 @@ def test_the_remaining_authors_in_prose_is_not_read_as_a_mention():
     assert parsed.assignments == {(0, "formal-analysis")}
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A.B.: software. The remaining authors, C.D., contributed to review and editing.",
+        "A.B.: software. Remaining authors (C.D.) contributed to review and editing.",
+        "A.B.: software; all other authors (C.D.): review and editing.",
+    ],
+)
+def test_names_right_after_all_other_authors_say_who_it_means(text):
+    # Beside named authors it would be everyone; here the names list who it is, so E.F. gets nothing.
+    parsed = parse_statement(text, THREE)
+    assert parsed.assignments == {(0, "software"), (1, "writing-review-editing")}
+
+
+def test_all_other_authors_including_named_authors_is_still_everyone():
+    parsed = parse_statement("A.B.: software. All other authors, including C.D., contributed to validation.", THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == {0, 1, 2}
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # Only names that resolve to an author say who it means: not an acronym, a degree or a group.
+        ("A.B.: software. All other authors (UCL): validation.", {1, 2}),
+        ("A.B.: software. All other authors, MD, PhD: validation.", {1, 2}),
+        ("A.B.: software. All other authors, PhD students, contributed to validation.", {1, 2}),
+        # The first mention decides: unresolved, so it is beside named authors and means everyone.
+        ("A.B.: software. All other authors (XY and C.D.): validation.", {0, 1, 2}),
+        ("A.B.: software. All other authors, all authors: validation.", {0, 1, 2}),
+        # An exception, not a list of who it means.
+        ("All other authors, A.B. excepted, did validation.", {0, 1, 2}),
+        ("Software: A.B.; validation: all other authors, C.D. excluded.", {0, 1, 2}),
+        # Names after the comma are who it means, also after other names and into a list item.
+        ("A.B. and all other authors, C.D.: validation.", {0, 1}),
+        ("A.B.: software; all other authors, C.D.: validation; E.F.: visualization.", {1}),
+    ],
+)
+def test_all_other_authors_before_other_mentions(text, expected):
+    parsed = parse_statement(text, THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == expected
+
+
+def test_all_other_authors_before_ambiguous_initials_is_unchanged():
+    # "A.B." fits two authors, so it does not say who it means.
+    parsed = parse_statement("C.D.: software. All other authors (A.B.): validation.", [*THREE, Author("Amy", "Bloom")])
+    assert {i for i, s in parsed.assignments if s == "validation"} == {0, 2, 3}
+
+
+@pytest.mark.parametrize("word", ["crıtıcally", "crİtİcally"])
+def test_approval_with_dotless_and_dotted_i_is_not_an_assignment(word):
+    assert parse_statement(f"A.B.: software. All authors {word} reviewed the original draft.", THREE).assignments == {
+        (0, "software")
+    }
+
+
+@pytest.mark.parametrize(
+    ("word", "slug"), [("ınvestigation", "investigation"), ("İnvestigation", "investigation"), ("ſoftware", "software")]
+)
+def test_role_words_match_dotless_and_dotted_i(word, slug):
+    # Python's case-insensitive match reads U+0131 and U+0130 as i, and U+017F as s; the app must match the same.
+    assert parse_statement(f"A.B.: {word}.", THREE).assignments == {(0, slug)}
+
+
 def test_the_remaining_authors_approving_is_not_an_assignment():
     text = (
         "A.B.: software. C.D.: validation. The remaining authors have read and approved the manuscript, "

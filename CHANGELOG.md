@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.13.0] - 2026-11-15
+## [0.13.0] - 2026-11-16
 
 **Upgrade note:** the browser storage format moves from version 5 to 6, so that a build from before
 the 420 cap cannot cut a stored draft back to 200 contributors. Do not roll back past this release.
@@ -167,6 +167,9 @@ See [deploying](docs/deploy.md).
   clause keeps the initials after its full stop ("Visualization. C.D.;"). Initials without accents
   match accented names ("N.N.A." for Nguyễn Ngọc Ánh). "All remaining authors", and "the remaining
   authors" heading a clause ("Remaining authors: validation"), read as "all other authors".
+- In a pasted statement, names right after "all other authors" or "the remaining authors" ("The
+  remaining authors (C.D., E.F.) ...") get its roles, not everyone. Role words typed with a Turkish
+  dotless or dotted i ("ınvestigation") count, as they do in the census.
 - Custom figure fonts use the first matching `--font-path` folder, so a later folder cannot
   replace an explicitly chosen family with a closer weight. See [custom fonts](integrations/figures/README.md#use-your-own-font).
 - A stalled documentation download no longer holds a service-worker update open indefinitely.
