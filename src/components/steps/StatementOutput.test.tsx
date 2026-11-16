@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { type Author, createAuthor } from "@/core";
 import { docFiles } from "@/docs/pages";
@@ -183,7 +183,7 @@ it.each([
   renderStatement();
   const panel = screen.getByRole("region", { name: `Use this in ${label}` });
   expect(screen.queryByRole("button", { name: `Use this in ${label}` })).toBeNull();
-  expect(panel.querySelector(`textarea[aria-label="${format}"]`)?.textContent).toContain("Grace Hopper");
+  expect((within(panel).getByRole("textbox", { name: format }) as HTMLTextAreaElement).value).toContain("Grace Hopper");
   expect(panel.querySelector('textarea[aria-label="CLI equivalent"]')).toBeNull();
   expect(screen.queryByRole("heading", { name: "For the journal" })).toBeNull();
 });

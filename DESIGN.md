@@ -443,12 +443,17 @@ or fills the tab order. Frozen rows disable the items that edit them.
 
 ## Documentation
 
-Docs use the viewport width with a 17rem navigation rail, a flexible article and, from 80rem,
+Docs use up to 100rem, centred, with a 17rem navigation rail, a flexible article and, from 80rem,
 a 12rem section outline. Paragraphs keep a 75ch reading measure; code, tables and figures may
-use the article's width. Navigation has its own small sans-serif headings and short link names.
-Writing tools, Data and exports, and Reference stay separate. The writing-tool selector opens
-the tool's own URL, and never changes a saved draft. On phones it sits above the guide beside
-collapsible documentation navigation.
+use the article's width; search stays at 48rem. Navigation has its own small sans-serif headings
+and short link names. Writing tools, Data and exports, and Reference stay separate.
+
+Switching writing tool is navigation, so it is built from links, never a select that navigates on
+change or a tab widget: links work without JavaScript, open in a new tab, keep the browser's Back,
+and mark the current guide with `aria-current="page"` (WCAG 3.2.2 On Input). From 64rem the
+rail's Writing tools list is the switcher. Below it, a labelled row of the tool links sits under
+the search, then the collapsible documentation navigation, which also holds the link to the docs
+index and the section outline. Neither changes a saved draft.
 
 Each tool guide leads through installation, contributor data, a build command and its result.
 The example offers sample contributors or the current draft in this browser. It shows one export;

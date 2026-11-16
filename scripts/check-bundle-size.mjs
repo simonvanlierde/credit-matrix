@@ -11,8 +11,9 @@ import { join } from "node:path";
 import process from "node:process";
 import { gzipSync } from "node:zlib";
 
-// Measured 2026-11-15: 438.7 kB gzip with shared exports, search controls and nine interface catalogs.
-const LIMIT_GZIP = 445_000;
+// Measured 2026-11-16: 442.9 kB gzip with docs section labels in nine interface catalogs; the
+// writing-tool switcher is links, so docs no longer pull the Radix select into a shared chunk.
+const LIMIT_GZIP = 449_000;
 // Measured 2026-11-16: 5.2 kB for docs navigation, tool selection, section outlines and live examples.
 // Markdown stays prerendered.
 const DOCS_LIMIT_GZIP = 5_500;

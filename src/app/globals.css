@@ -2,6 +2,8 @@
 @import "tailwindcss";
 
 .docs-search {
+  /* The search box's height, held by the loading text so the box does not push the page down. */
+  min-height: 2.25rem;
   --pf-text: var(--color-on-surface);
   --pf-text-secondary: var(--color-on-surface-variant);
   --pf-text-muted: var(--color-on-surface-variant);
@@ -477,8 +479,25 @@ body:has([data-census-page], [data-reading-page]) {
   & :is(h2, h3, h4) {
     scroll-margin-top: 1.5rem;
   }
-  /* Keep the static example until its replacement has actually loaded. */
-  & > [data-doc-live]:has(textarea) + [data-doc-static] > [data-doc-fallback] {
+  /*
+   * Keep the static example until its replacement has rendered: a slot stays empty while its chunk
+   * loads and again if it fails. The slot then holds the loaded example's height from its "Loading"
+   * frame, and the static fragments lay out as the article's own children, so the swap moves the
+   * text below only by the difference between the two examples.
+   */
+  & > [data-doc-static] {
+    display: contents;
+  }
+  & > [data-doc-live]:not(:empty) {
+    min-height: 18.625rem;
+  }
+  @media (min-width: 40rem) {
+    & > [data-doc-live]:not(:empty) {
+      /* The export buttons are shorter from sm (OutputBlock's EXPORT_ITEM_BUTTON). */
+      min-height: 18.125rem;
+    }
+  }
+  & > [data-doc-live]:not(:empty) + [data-doc-static] > [data-doc-fallback] {
     display: none;
   }
 }

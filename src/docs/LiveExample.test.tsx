@@ -39,11 +39,14 @@ it("shows the current draft first and switches sources without changing the draf
   const before = useContributionStore.getState();
   const guide = useGuide.getState();
   render(example());
-  const output = () => (screen.getByRole("textbox", { name: "JSON" }) as HTMLTextAreaElement).value;
+  const output = () => (screen.getByRole("textbox", { name: /JSON$/ }) as HTMLTextAreaElement).value;
   expect(screen.getByText("Using your draft in this browser")).toBeTruthy();
+  // The textarea is named by the visible source and format, so a screen reader hears which data it holds.
+  expect(screen.getByRole("textbox", { name: "Using your draft in this browser JSON" })).toBeTruthy();
   expect(output()).toContain("Morgan Example");
   fireEvent.click(screen.getByRole("button", { name: "Use sample contributors" }));
   expect(screen.getByText("Sample contributors")).toBeTruthy();
+  expect(screen.getByRole("textbox", { name: "Sample contributors JSON" })).toBeTruthy();
   expect(output()).not.toContain("Morgan Example");
   const sample = output();
   fireEvent.click(screen.getByRole("button", { name: "Use your draft" }));
@@ -59,9 +62,9 @@ it("shows stable sample data with an empty draft", () => {
   const view = render(example());
   expect(screen.getByText("Sample contributors")).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Use your draft" })).toBeNull();
-  const output = (screen.getByRole("textbox", { name: "JSON" }) as HTMLTextAreaElement).value;
+  const output = (screen.getByRole("textbox", { name: /JSON$/ }) as HTMLTextAreaElement).value;
   view.rerender(example());
-  expect((screen.getByRole("textbox", { name: "JSON" }) as HTMLTextAreaElement).value).toBe(output);
+  expect((screen.getByRole("textbox", { name: /JSON$/ }) as HTMLTextAreaElement).value).toBe(output);
   expect(useContributionStore.getState().authors).toEqual([]);
 });
 
@@ -69,7 +72,7 @@ it("uses the current draft without claiming it was saved when storage fails", ()
   act(() => useContributionStore.setState({ authors: draftAuthors, saveFailure: "full" }));
   render(example());
   expect(screen.getByText("Using your draft in this browser")).toBeTruthy();
-  expect((screen.getByRole("textbox", { name: "JSON" }) as HTMLTextAreaElement).value).toContain("Morgan Example");
+  expect((screen.getByRole("textbox", { name: /JSON$/ }) as HTMLTextAreaElement).value).toContain("Morgan Example");
   expect(screen.queryByText(/saved/i)).toBeNull();
 });
 
@@ -95,7 +98,7 @@ it("leaves ask history, sign-in identity and the saved writing tool out of docum
     }),
   );
   render(example());
-  const output = JSON.parse((screen.getByRole("textbox", { name: "JSON" }) as HTMLTextAreaElement).value);
+  const output = JSON.parse((screen.getByRole("textbox", { name: /JSON$/ }) as HTMLTextAreaElement).value);
   expect(output.authors).toEqual(draftAuthors);
   expect(output.asks).toBeUndefined();
   expect(output.selfId).toBeUndefined();
@@ -120,7 +123,7 @@ it("keeps source choices local to each example", () => {
 
 it("renders the RO-Crate fragment without a writing-tool recipe", () => {
   render(example("ro-crate"));
-  const output = screen.getByRole("textbox", { name: "RO-Crate fragment" }) as HTMLTextAreaElement;
+  const output = screen.getByRole("textbox", { name: /RO-Crate fragment$/ }) as HTMLTextAreaElement;
   expect(JSON.parse(output.value)["@graph"]).toBeTruthy();
   expect(screen.queryByRole("textbox", { name: "CLI equivalent" })).toBeNull();
 });
@@ -134,7 +137,7 @@ it("marks translated controls and generated output with their own languages", as
   );
   const region = screen.getByRole("region", { name: "Beispiel" });
   expect(region.getAttribute("lang")).toBe("de");
-  await waitFor(() => expect(screen.getByRole("textbox", { name: "JSON" }).getAttribute("lang")).toBe("nl"));
-  const output = screen.getByRole("textbox", { name: "JSON" }) as HTMLTextAreaElement;
+  await waitFor(() => expect(screen.getByRole("textbox", { name: /JSON$/ }).getAttribute("lang")).toBe("nl"));
+  const output = screen.getByRole("textbox", { name: /JSON$/ }) as HTMLTextAreaElement;
   expect(output.value).toContain("Marie Curie");
 });
