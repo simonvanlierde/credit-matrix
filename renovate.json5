@@ -49,6 +49,12 @@
       matchPackageNames: ["tsdown"],
       allowedVersions: "<=0.23.0",
     },
+    // Playwright 1.65.0 ships a Firefox build that crashes the page ("frame.evaluate: Page crashed")
+    // when axe runs label-content-name-mismatch over a whole page. Lift this once a release fixes it.
+    {
+      matchPackageNames: ["@playwright/test"],
+      allowedVersions: "<=1.64.1",
+    },
     // Core and the Vitest runner must move together.
     {
       matchPackageNames: ["/^@stryker-mutator\\//"],
