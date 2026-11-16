@@ -182,3 +182,43 @@ test("phones reach the section outline from the documentation menu", async ({ pa
   await expect(page).toHaveURL(/#use$/);
   await expect(page.locator("article #use")).toBeInViewport();
 });
+
+test("moving between docs pages paints the search box, ground and header icons from the first frame", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.addInitScript(() => {
+      const w = window as unknown as { docsFrames: string[] };
+      w.docsFrames = [];
+      const sample = () => {
+        const search = document.querySelector(".docs-search input");
+        const icons = document.querySelectorAll("[data-app-header] svg.lucide-moon, [data-app-header] svg.lucide-sun");
+        const toggle = Array.from(icons).some((icon) => icon.getBoundingClientRect().width > 0);
+        w.docsFrames.push(
+          [
+            search ? `${search.getBoundingClientRect().height}` : "no search box",
+            getComputedStyle(document.body).backgroundColor,
+            getComputedStyle(document.documentElement).getPropertyValue("--color-mark-0-100").trim(),
+            toggle ? "theme icon" : "no theme icon",
+            document.querySelectorAll('nav[aria-label="On this page"] a').length > 0 ? "outline" : "no outline",
+          ].join(" | "),
+        );
+        if (w.docsFrames.length < 60) requestAnimationFrame(sample);
+      };
+      // From the parsed page on: frames during parsing show a half-read document, not a flash.
+      document.addEventListener("DOMContentLoaded", () => requestAnimationFrame(sample));
+    });
+    await page.goto("/docs/quarto");
+    await page.locator("nav[data-docs-rail]").getByRole("link", { name: "Typst", exact: true }).click();
+    await expect(page).toHaveURL(/\/docs\/typst$/);
+    await expect(page.getByRole("region", { name: "Search documentation" }).getByRole("combobox")).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { docsFrames: string[] }).docsFrames.length))
+      .toBeGreaterThanOrEqual(60);
+    const frames = await page.evaluate(() => (window as unknown as { docsFrames: string[] }).docsFrames);
+    // Every frame of the new page, before and after its scripts run, looks the same.
+    expect(new Set(frames), scheme).toEqual(new Set([frames.at(-1)]));
+  }
+});

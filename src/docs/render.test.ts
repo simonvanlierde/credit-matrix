@@ -9,7 +9,7 @@ import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { renderMarkdown } from "@/lib/markdown";
 import { routes } from "@/routes";
-import { DocArticle, readDocParts } from "./DocArticle";
+import { DocArticle, readDocParts, readOutline } from "./DocArticle";
 import type { DocPart } from "./live-markers";
 import { docFiles } from "./pages";
 import { snippet } from "./plugin.mjs";
@@ -214,6 +214,23 @@ describe("prerendered docs hydration", () => {
     expect(onRecoverableError).not.toHaveBeenCalled();
     await act(() => root?.unmount());
     container.remove();
+  });
+
+  test("the outline reads the same headings from server HTML and from the hydrated page", () => {
+    const parts: DocPart[] = [
+      '<h3 id="use">Use <code>json()</code> &amp; &#39;more&#39;</h3>\n',
+      { live: "typst" },
+      '<h3 id="license">License&nbsp;&lt;MIT&gt;</h3>\n<h4 id="deep">Deep</h4>\n',
+    ];
+    const expected = [
+      { id: "use", title: "Use json() & 'more'" },
+      { id: "license", title: "License\u00a0<MIT>" },
+    ];
+    expect(readOutline(parts)).toEqual(expected);
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(createElement(DocArticle, { parts }));
+    // The browser serializes entities its own way; the outline must not change on hydration.
+    expect(readOutline(readDocParts(container.querySelector("article")))).toEqual(expected);
   });
 
   test("a failed live component leaves the static guide readable", async () => {

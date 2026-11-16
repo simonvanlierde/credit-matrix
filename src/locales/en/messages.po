@@ -1882,6 +1882,9 @@ msgstr "Reference"
 msgid "docsSearch"
 msgstr "Search documentation"
 
+msgid "docsSearchPlaceholder"
+msgstr "Search"
+
 msgid "docsSearchLoading"
 msgstr "Loading search…"
 
@@ -1905,6 +1908,9 @@ msgstr "Use sample contributors"
 
 msgid "docsUseDraft"
 msgstr "Use your draft"
+
+msgid "docsLiveMakeYourOwn"
+msgstr "<link>Add your own contributors in the app</link>, and this example uses them."
 
 msgid "docsData"
 msgstr "Data and exports"

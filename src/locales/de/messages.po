@@ -1882,6 +1882,9 @@ msgstr "Referenz"
 msgid "docsSearch"
 msgstr "Dokumentation durchsuchen"
 
+msgid "docsSearchPlaceholder"
+msgstr "Suchen"
+
 msgid "docsSearchLoading"
 msgstr "Suche wird geladen…"
 
@@ -1905,6 +1908,9 @@ msgstr "Beispielpersonen verwenden"
 
 msgid "docsUseDraft"
 msgstr "Deinen Entwurf verwenden"
+
+msgid "docsLiveMakeYourOwn"
+msgstr "<link>Füge deine eigenen Personen in der App hinzu</link>, dann nutzt dieses Beispiel sie."
 
 msgid "docsData"
 msgstr "Daten und Exporte"

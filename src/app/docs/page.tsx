@@ -2,10 +2,9 @@ import { docs } from "virtual:docs";
 // The browser build emits the images the prerendered articles show.
 import "@/docs/images";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
 import { DocsSearch } from "@/components/DocsSearch";
 import { ReadingPage } from "@/components/ReadingPage";
-import { DocArticle, readDocParts } from "@/docs/DocArticle";
+import { DocArticle, readDocParts, readOutline } from "@/docs/DocArticle";
 import type { DocPart } from "@/docs/live-markers";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";
@@ -98,17 +97,8 @@ function WritingTool({ current }: { current: string }) {
   );
 }
 
-function DocOutline({ className = "" }: { className?: string }) {
+function DocOutline({ headings, className = "" }: { headings: { id: string; title: string }[]; className?: string }) {
   const t = useTranslations();
-  const [headings, setHeadings] = useState<{ id: string; title: string }[]>([]);
-  useEffect(() => {
-    setHeadings(
-      Array.from(document.querySelectorAll("article h3[id]"), (heading) => ({
-        id: heading.id,
-        title: heading.textContent ?? "",
-      })),
-    );
-  }, []);
   if (headings.length < 2) return null;
   return (
     <nav aria-label={t("docsOnPage")} className={`space-y-3 ${className}`}>
@@ -129,10 +119,18 @@ function DocOutline({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * Docs pages are separate documents. Opting both ends of a docs link into a cross-document view
+ * transition keeps the header, rail and search in place while the article changes; a browser
+ * without it, or a reader who asks for reduced motion, gets an ordinary page load.
+ */
+const viewTransition = "@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }";
+
 function DocsIndex() {
   const t = useTranslations();
   return (
     <ReadingPage wide>
+      <style>{viewTransition}</style>
       <div className="space-y-8">
         <h2 className="font-headline text-4xl font-semibold text-on-surface sm:text-5xl">{t("docsTitle")}</h2>
         <div className="max-w-3xl">
@@ -161,12 +159,14 @@ function DocPage() {
   const route = usePathname();
   const doc = docs.find((entry) => entry.route === route);
   const parts = rendered?.get(route) ?? prerendered;
+  const headings = readOutline(parts);
   return (
     <ReadingPage wide>
+      <style>{viewTransition}</style>
       <meta name="pagefind:title" data-pagefind-meta="title[content]" content={doc?.title} />
       <meta name="pagefind:url" data-pagefind-meta="url[content]" content={route} />
       <div className="docs-layout grid items-start gap-8">
-        <nav aria-label={t("docsTitle")} className="hidden space-y-7 lg:sticky lg:top-6 lg:block">
+        <nav aria-label={t("docsTitle")} data-docs-rail className="hidden space-y-7 lg:sticky lg:top-6 lg:block">
           <DocsList current={route} />
         </nav>
         <div className="min-w-0 space-y-6">
@@ -184,13 +184,13 @@ function DocPage() {
                 <nav aria-label={t("docsTitle")} className="grid gap-6">
                   <DocsList current={route} />
                 </nav>
-                <DocOutline key={route} />
+                <DocOutline headings={headings} />
               </div>
             </details>
           </div>
           <DocArticle parts={parts} />
         </div>
-        <DocOutline key={route} className="hidden xl:sticky xl:top-6 xl:block" />
+        <DocOutline headings={headings} className="hidden xl:sticky xl:top-6 xl:block" />
       </div>
     </ReadingPage>
   );

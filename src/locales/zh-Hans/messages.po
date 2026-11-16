@@ -1882,6 +1882,9 @@ msgstr "参考"
 msgid "docsSearch"
 msgstr "搜索文档"
 
+msgid "docsSearchPlaceholder"
+msgstr "搜索"
+
 msgid "docsSearchLoading"
 msgstr "正在加载搜索…"
 
@@ -1905,6 +1908,9 @@ msgstr "使用示例贡献者"
 
 msgid "docsUseDraft"
 msgstr "使用你的草稿"
+
+msgid "docsLiveMakeYourOwn"
+msgstr "<link>在应用中添加你自己的贡献者</link>，此示例就会使用他们。"
 
 msgid "docsData"
 msgstr "数据与导出"

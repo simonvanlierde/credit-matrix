@@ -26,8 +26,9 @@ for (const theme of ["light", "dark"] as const) {
     for (const path of ["/census", "/about", "/accessibility", "/"]) {
       if (path !== "/census") await page.goto(path);
       await expect
+        // A locator waits out the moment mid-navigation when the document has no element yet.
         .poll(() =>
-          page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim()),
+          page.locator("html").evaluate((html) => getComputedStyle(html).getPropertyValue("--color-primary").trim()),
         )
         .toBe(accent);
       await expect

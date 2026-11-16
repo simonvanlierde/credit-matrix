@@ -1882,6 +1882,9 @@ msgstr "リファレンス"
 msgid "docsSearch"
 msgstr "ドキュメントを検索"
 
+msgid "docsSearchPlaceholder"
+msgstr "検索"
+
 msgid "docsSearchLoading"
 msgstr "検索を読み込み中…"
 
@@ -1905,6 +1908,9 @@ msgstr "サンプルの貢献者を使う"
 
 msgid "docsUseDraft"
 msgstr "下書きを使う"
+
+msgid "docsLiveMakeYourOwn"
+msgstr "<link>アプリで自分の貢献者を追加</link>すると、この例で使われます。"
 
 msgid "docsData"
 msgstr "データとエクスポート"

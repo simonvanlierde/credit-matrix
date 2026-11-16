@@ -40,6 +40,27 @@ export function readDocParts(article: Element | null): DocPart[] {
   });
 }
 
+// shortcut: only the entities marked and the browser write; a heading with another named entity
+// (&copy;) would hydrate with different text, so decode those too if a guide ever uses one.
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'", nbsp: "\u00a0" };
+
+/**
+ * The article's section headings, read from the same HTML on the server and in the browser, so the
+ * outline is in the prerendered page and hydrates without changing.
+ */
+export function readOutline(parts: DocPart[]): { id: string; title: string }[] {
+  return parts.flatMap((part) =>
+    typeof part === "string"
+      ? Array.from(part.matchAll(/<h3 id="([^"]+)"[^>]*>([\s\S]*?)<\/h3>/g), ([, id = "", html = ""]) => ({
+          id,
+          title: html
+            .replace(/<[^>]*>/g, "")
+            .replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (entity, name: string) => ENTITIES[name] ?? entity),
+        }))
+      : [],
+  );
+}
+
 export function DocArticle({ parts }: { parts: DocPart[] }) {
   if (parts.length === 1 && typeof parts[0] === "string") {
     return (

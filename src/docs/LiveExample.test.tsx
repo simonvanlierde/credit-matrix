@@ -34,6 +34,16 @@ it("shows one export without repeating installation, recipes or a link to the cu
   expect(screen.queryByText("CLI equivalent")).toBeNull();
 });
 
+it("without a draft, points to the app where the reader's own contributors come from", () => {
+  render(example());
+  expect(screen.getByText("Sample contributors")).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Add your own contributors in the app" }).getAttribute("href")).toBe("/");
+  expect(screen.queryByRole("button", { name: "Use your draft" })).toBeNull();
+  act(() => useContributionStore.getState().loadAuthors(draftAuthors));
+  expect(screen.queryByRole("link", { name: "Add your own contributors in the app" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Use sample contributors" })).toBeTruthy();
+});
+
 it("shows the current draft first and switches sources without changing the draft or getting started guide", () => {
   act(() => useContributionStore.getState().loadAuthors(draftAuthors));
   const before = useContributionStore.getState();

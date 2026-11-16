@@ -48,7 +48,7 @@ export function DocsSearch() {
       {status === "ready" ? (
         createElement(
           "pagefind-searchbox",
-          {},
+          { placeholder: t("docsSearchPlaceholder") },
           <script type="text/pagefind-template">
             {`<a lang="en" class="pf-searchbox-result" id="{{ aria.result_id }}" href="{{ meta.url | default(url) | safeUrl }}" role="option" aria-selected="false">
   <p class="pf-searchbox-result-title" id="{{ aria.title_id }}">{{ meta.title | default("Untitled") }}</p>
@@ -56,10 +56,33 @@ export function DocsSearch() {
 </a>`}
           </script>,
         )
-      ) : (
-        <p role={status === "error" ? "alert" : "status"} className="text-sm text-on-surface-variant">
-          {t(status === "error" ? "docsSearchFailed" : "docsSearchLoading")}
+      ) : status === "error" ? (
+        <p role="alert" className="text-sm text-on-surface-variant">
+          {t("docsSearchFailed")}
         </p>
+      ) : (
+        // Pagefind's own classes draw the box it will become, so the prerendered page and every
+        // docs page load show the search box at first paint rather than text that swaps out.
+        <div className="pf-searchbox">
+          <div className="pf-searchbox-input-wrapper">
+            <input
+              className="pf-searchbox-input"
+              type="text"
+              disabled
+              aria-label={t("docsSearch")}
+              aria-describedby="docs-search-loading"
+              placeholder={t("docsSearchPlaceholder")}
+            />
+            {/* Pagefind shows ⌘ K on a Mac; that one key changes when it loads. */}
+            <span className="pf-trigger-shortcut" aria-hidden="true">
+              <span className="pf-trigger-key">Ctrl</span>
+              <span className="pf-trigger-key">K</span>
+            </span>
+          </div>
+          <p id="docs-search-loading" role="status" className="sr-only">
+            {t("docsSearchLoading")}
+          </p>
+        </div>
       )}
     </section>
   );

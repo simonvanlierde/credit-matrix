@@ -1882,6 +1882,9 @@ msgstr "Naslag"
 msgid "docsSearch"
 msgstr "Documentatie doorzoeken"
 
+msgid "docsSearchPlaceholder"
+msgstr "Zoeken"
+
 msgid "docsSearchLoading"
 msgstr "Zoeken wordt geladen…"
 
@@ -1905,6 +1908,9 @@ msgstr "Voorbeeldbijdragers gebruiken"
 
 msgid "docsUseDraft"
 msgstr "Je concept gebruiken"
+
+msgid "docsLiveMakeYourOwn"
+msgstr "<link>Voeg je eigen bijdragers toe in de app</link>, dan gebruikt dit voorbeeld ze."
 
 msgid "docsData"
 msgstr "Gegevens en export"

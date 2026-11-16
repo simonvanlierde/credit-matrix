@@ -41,9 +41,11 @@
   --color-primary-hover: #183f62; /* opaque, under on-primary text on hover */
   --color-on-primary: #ffffff;
 
-  /* --- The chosen heatmap colour. ThemeHue sets it from the open draft; this is
-     the default before the store loads. It tints the page only, never a figure. --- */
-  --color-theme: #1f4e79;
+  /* --- The chosen heatmap colour. ThemeHue sets it from the open draft, and the head
+     script before first paint. Without a saved draft it stays plain paper, as a new
+     draft (colour by contributor) leaves it, so a first page load does not repaint
+     the ground. It tints the page only, never a figure. --- */
+  --color-theme: var(--color-paper);
 
   /* --- Neutrals (ink on warm paper) --- */
   --color-paper: #fbf8f1;
@@ -456,6 +458,17 @@ body:has([data-census-page], [data-reading-page]) {
   }
 }
 
+/* Shared chrome keeps its place across a docs page change (the view transition in src/app/docs). */
+[data-app-header] {
+  view-transition-name: app-header;
+}
+[data-docs-rail] {
+  view-transition-name: docs-rail;
+}
+.docs-search {
+  view-transition-name: docs-search;
+}
+
 .docs-layout {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -489,12 +502,12 @@ body:has([data-census-page], [data-reading-page]) {
     display: contents;
   }
   & > [data-doc-live]:not(:empty) {
-    min-height: 18.625rem;
+    min-height: 21.375rem;
   }
   @media (min-width: 40rem) {
     & > [data-doc-live]:not(:empty) {
-      /* The export buttons are shorter from sm (OutputBlock's EXPORT_ITEM_BUTTON). */
-      min-height: 18.125rem;
+      /* From sm the source line and its toggle share a row and the export buttons are shorter. */
+      min-height: 19.125rem;
     }
   }
   & > [data-doc-live]:not(:empty) + [data-doc-static] > [data-doc-fallback] {

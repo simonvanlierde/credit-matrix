@@ -455,8 +455,14 @@ rail's Writing tools list is the switcher. Below it, a labelled row of the tool 
 the search, then the collapsible documentation navigation, which also holds the link to the docs
 index and the section outline. Neither changes a saved draft.
 
+Each docs page is its own prerendered document, so everything shared is in that HTML at first
+paint: the search box (drawn with Pagefind's classes until Pagefind loads), the outline, the theme
+icon and the page colours. Docs links use a cross-document view transition that keeps the header,
+rail and search in place; with reduced motion, or in a browser without it, the page just loads.
+
 Each tool guide leads through installation, contributor data, a build command and its result.
-The example offers sample contributors or the current draft in this browser. It shows one export;
+The example offers sample contributors or the current draft in this browser; without a draft it
+links to the app, where the reader's own contributors come from. It shows one export;
 installation, figure instructions and build commands belong in the guide. Once the interactive
 export is ready, it replaces the adjacent static data block. Failed or unavailable JavaScript
 leaves the static example readable. Sample contributors and expected results match in both forms.
