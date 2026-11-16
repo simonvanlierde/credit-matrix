@@ -208,8 +208,9 @@ the rest.
 Under Figure settings, open Export recipe to copy a CLI command or a Sphinx, Quarto/Pandoc,
 MyST/Jupyter Book or Typst snippet. Install the CLI or plugin first and supply the contributor data:
 recipes hold the current style settings and fixed data placeholders, without contributor names or
-PNG settings. MyST uses its page author roles and language, with yes/no contributions. Set `lang` in
-the page front matter or `project.lang` in `myst.yml` to match the app's language. Typst recipes
+PNG settings. The MyST recipe uses page author roles and language, with yes/no contributions.
+The plugin also supports [contribution levels](myst/README.md#contribution-levels) through separate metadata.
+Set `lang` in the page front matter or `project.lang` in `myst.yml` to match the app's language. Typst recipes
 convert CSS pixels to points, so native layout and font metrics can differ from SVG.
 
 PNG width (40–300 mm) and resolution (150, 300 or 600 dpi) set its pixel dimensions and print
