@@ -4,7 +4,7 @@ import "@/docs/images";
 import { ArrowLeft } from "lucide-react";
 import { DocsSearch } from "@/components/DocsSearch";
 import { ReadingPage } from "@/components/ReadingPage";
-import { DocArticle, readDocParts, readOutline } from "@/docs/DocArticle";
+import { DocArticle, type Outline, readDocParts, readOutline } from "@/docs/DocArticle";
 import type { DocPart } from "@/docs/live-markers";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";
@@ -13,10 +13,17 @@ import { useTranslations } from "@/lib/translations";
 const rendered =
   import.meta.env.SSR || import.meta.env.DEV
     ? await import("@/docs/render").then(
-        ({ renderDoc }) => new Map<string, DocPart[]>(docs.map((doc) => [doc.route, renderDoc(doc, doc.source ?? "")])),
+        ({ renderDoc, docOutline }) =>
+          new Map<string, { parts: DocPart[]; outline: Outline }>(
+            docs.map((doc) => [
+              doc.route,
+              { parts: renderDoc(doc, doc.source ?? ""), outline: docOutline(doc.source ?? "") },
+            ]),
+          ),
       )
     : null;
-const prerendered = rendered ? [] : readDocParts(document.querySelector("main article"));
+const article = rendered ? null : document.querySelector("main article");
+const prerendered = { parts: readDocParts(article), outline: readOutline(article) };
 
 const sections = ["howTo", "data", "reference"] as const;
 const sectionKeys = { howTo: "docsHowTo", data: "docsData", reference: "docsReference" } as const;
@@ -158,8 +165,7 @@ function DocPage() {
   const t = useTranslations();
   const route = usePathname();
   const doc = docs.find((entry) => entry.route === route);
-  const parts = rendered?.get(route) ?? prerendered;
-  const headings = readOutline(parts);
+  const { parts, outline: headings } = rendered?.get(route) ?? prerendered;
   return (
     <ReadingPage wide>
       <style>{viewTransition}</style>

@@ -13,7 +13,7 @@ import { DocArticle, readDocParts, readOutline } from "./DocArticle";
 import type { DocPart } from "./live-markers";
 import { docFiles } from "./pages";
 import { snippet } from "./plugin.mjs";
-import { GITHUB, renderDoc, resolveHref } from "./render";
+import { docOutline, GITHUB, renderDoc, resolveHref } from "./render";
 
 const targets = (path: string) => {
   const found: { href: string; image: boolean }[] = [];
@@ -216,21 +216,23 @@ describe("prerendered docs hydration", () => {
     container.remove();
   });
 
-  test("the outline reads the same headings from server HTML and from the hydrated page", () => {
-    const parts: DocPart[] = [
-      '<h3 id="use">Use <code>json()</code> &amp; &#39;more&#39;</h3>\n',
-      { live: "typst" },
-      '<h3 id="license">License&nbsp;&lt;MIT&gt;</h3>\n<h4 id="deep">Deep</h4>\n',
-    ];
-    const expected = [
-      { id: "use", title: "Use json() & 'more'" },
-      { id: "license", title: "License\u00a0<MIT>" },
-    ];
-    expect(readOutline(parts)).toEqual(expected);
+  test.each(docFiles)("$route: the outline from the Markdown matches the prerendered headings", (file) => {
+    const source = readFileSync(file.path, "utf8");
     const container = document.createElement("div");
-    container.innerHTML = renderToString(createElement(DocArticle, { parts }));
-    // The browser serializes entities its own way; the outline must not change on hydration.
-    expect(readOutline(readDocParts(container.querySelector("article")))).toEqual(expected);
+    container.innerHTML = renderToString(createElement(DocArticle, { parts: renderDoc(file, source) }));
+    const outline = docOutline(source);
+    // A mismatch would change the outline on hydration.
+    expect(readOutline(container.querySelector("article"))).toEqual(outline);
+    expect(outline.length).toBeGreaterThan(0);
+  });
+
+  test("an outline title is the heading's text, without its markup", () => {
+    // An HTML entity in a heading would stay escaped here; the per-page test above fails if a guide uses one.
+    const source = "## Use `json()` & 'more'\n\n### Deep\n";
+    const container = document.createElement("div");
+    container.innerHTML = renderMarkdown(source);
+    expect(docOutline(source)).toEqual([{ id: "use-json--more", title: "Use json() & 'more'" }]);
+    expect(readOutline(container)).toEqual(docOutline(source));
   });
 
   test("a failed live component leaves the static guide readable", async () => {
