@@ -11,7 +11,7 @@ import { useTranslations } from "@/lib/translations";
 export function ReadingPage({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const t = useTranslations();
   return (
-    <div data-reading-page className="desk:h-full desk:overflow-y-auto">
+    <div data-reading-page className="desk:relative desk:h-full desk:overflow-y-auto">
       <div className={`mx-auto space-y-6 px-4 pt-6 pb-16 sm:px-8 ${wide ? "max-w-[100rem]" : "max-w-5xl"}`}>
         {/* From lg the header's lockup links home; below it the lockup opens the menu. */}
         <a href="/" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline lg:hidden">
