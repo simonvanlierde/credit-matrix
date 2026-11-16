@@ -53,9 +53,10 @@ export function readOutline(parts: DocPart[]): { id: string; title: string }[] {
     typeof part === "string"
       ? Array.from(part.matchAll(/<h3 id="([^"]+)"[^>]*>([\s\S]*?)<\/h3>/g), ([, id = "", html = ""]) => ({
           id,
-          title: html
-            .replace(/<[^>]*>/g, "")
-            .replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (entity, name: string) => ENTITIES[name] ?? entity),
+          // One pass, so a decoded &lt; is never read as the start of a tag. The title renders as text.
+          title: html.replace(/<[^>]*>|&(amp|lt|gt|quot|#39|nbsp);/g, (match, name?: string) =>
+            name ? (ENTITIES[name] ?? match) : "",
+          ),
         }))
       : [],
   );
