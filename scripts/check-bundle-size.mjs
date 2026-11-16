@@ -13,11 +13,12 @@ import { gzipSync } from "node:zlib";
 
 // Measured 2026-11-15: 438.7 kB gzip with shared exports, search controls and nine interface catalogs.
 const LIMIT_GZIP = 445_000;
-// Measured 2026-11-12: 4.3 kB for docs navigation, search and optional live examples; Markdown stays prerendered.
-const DOCS_LIMIT_GZIP = 4_500;
-// Measured 2026-11-12: 425 kB raw for Component UI and the full English index.
+// Measured 2026-11-16: 5.2 kB for docs navigation, tool selection, section outlines and live examples.
+// Markdown stays prerendered.
+const DOCS_LIMIT_GZIP = 5_500;
+// Measured 2026-11-16: 473 kB raw for Component UI and the English index, including API and CLI guides.
 // Loaded on the first docs visit, separately from the install precache.
-const SEARCH_LIMIT = 470_000;
+const SEARCH_LIMIT = 490_000;
 // Embedded-font PDF generation is loaded on export; keep its cost separate from editing.
 // Measured 2026-11-15: 526.4 kB gzip including bidi-js.
 const FIGURE_LIMIT_GZIP = 555_000;
