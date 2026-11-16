@@ -335,7 +335,7 @@ figures when CodeCarbon can measure them. Tracking errors from an installed MLfl
 command. To browse the runs:
 
 ```sh
-uvx --python 3.14 --from 'mlflow==3.17.2' mlflow ui --backend-store-uri sqlite:///data/mlflow.db --host 127.0.0.1
+uvx --python 3.14 --from 'mlflow==3.18.0' mlflow ui --backend-store-uri sqlite:///data/mlflow.db --host 127.0.0.1
 ```
 
 The UI listens on 127.0.0.1:5000 only. Without `--python 3.14`, uvx picks the newest Python, where pyarrow
