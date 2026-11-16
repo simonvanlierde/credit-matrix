@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { heatCellColor } from "../core/contributor-color";
+import { DEFAULT_MONO_COLOR, heatCellColor } from "../core/contributor-color";
 import { PERSIST_KEY, PERSIST_VERSION } from "../store/persist-meta";
 import { accentFor } from "./theme-color";
 
@@ -49,8 +49,17 @@ it.each([2, 9])("uses the same contributor palette fallback for %s authors", asy
   expect(root.style.getPropertyValue("--color-mark-0-100")).toBe(count > 8 ? green.heatmapMonoColor : "#2a5fa8");
 });
 
+it.each([false, true])("paints a new draft's colours on a first visit (dark: %s)", async (dark) => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: dark })),
+  );
+  await boot();
+  expect(root.style.getPropertyValue("--color-theme")).toBe("var(--color-paper)");
+  expect(root.style.getPropertyValue("--color-mark-0-100")).toBe(heatCellColor(DEFAULT_MONO_COLOR, 100, dark));
+});
+
 it.each([
-  null,
   "{broken",
   savedDraft({ ...green, heatmapMonoColor: "red" }),
   JSON.stringify({ version: PERSIST_VERSION + 1, state: green }),

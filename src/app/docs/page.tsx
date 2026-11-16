@@ -2,11 +2,9 @@ import { docs } from "virtual:docs";
 // The browser build emits the images the prerendered articles show.
 import "@/docs/images";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
 import { DocsSearch } from "@/components/DocsSearch";
 import { ReadingPage } from "@/components/ReadingPage";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DocArticle, readDocParts } from "@/docs/DocArticle";
+import { DocArticle, type Outline, readDocParts, readOutline } from "@/docs/DocArticle";
 import type { DocPart } from "@/docs/live-markers";
 import { usePathname } from "@/lib/pathname";
 import { useTranslations } from "@/lib/translations";
@@ -15,10 +13,17 @@ import { useTranslations } from "@/lib/translations";
 const rendered =
   import.meta.env.SSR || import.meta.env.DEV
     ? await import("@/docs/render").then(
-        ({ renderDoc }) => new Map<string, DocPart[]>(docs.map((doc) => [doc.route, renderDoc(doc, doc.source ?? "")])),
+        ({ renderDoc, docOutline }) =>
+          new Map<string, { parts: DocPart[]; outline: Outline }>(
+            docs.map((doc) => [
+              doc.route,
+              { parts: renderDoc(doc, doc.source ?? ""), outline: docOutline(doc.source ?? "") },
+            ]),
+          ),
       )
     : null;
-const prerendered = rendered ? [] : readDocParts(document.querySelector("main article"));
+const article = rendered ? null : document.querySelector("main article");
+const prerendered = { parts: readDocParts(article), outline: readOutline(article) };
 
 const sections = ["howTo", "data", "reference"] as const;
 const sectionKeys = { howTo: "docsHowTo", data: "docsData", reference: "docsReference" } as const;
@@ -68,45 +73,42 @@ function DocsList({ current, details = false }: { current?: string; details?: bo
   ));
 }
 
-function WritingTool({ current }: { current?: string }) {
+/**
+ * Links to the other tool guides, for screens without the navigation rail, where the rail's
+ * Writing tools list does this job. Plain links: they work without JavaScript, open in a new
+ * tab, and announce the current guide.
+ */
+function WritingTool({ current }: { current: string }) {
   const t = useTranslations();
   return (
-    <div className="grid min-w-0 gap-2 sm:flex sm:items-center sm:gap-3">
+    <nav aria-labelledby="docs-writing-tool-label" className="flex flex-wrap items-center gap-x-3 gap-y-2 lg:hidden">
       <span id="docs-writing-tool-label" className="text-sm font-semibold text-on-surface">
         {t("docsWritingTool")}
       </span>
-      <Select value={current ?? ""} onValueChange={(route) => window.location.assign(route)}>
-        <SelectTrigger aria-labelledby="docs-writing-tool-label" size="touch" className="w-full sm:w-60">
-          <SelectValue placeholder={t("docsWritingTool")} />
-        </SelectTrigger>
-        <SelectContent>
-          {docs
-            .filter((doc) => doc.section === "howTo")
-            .map((doc) => (
-              <SelectItem key={doc.route} value={doc.route} size="touch">
+      <ul className="flex flex-wrap gap-1">
+        {docs
+          .filter((doc) => doc.section === "howTo")
+          .map((doc) => (
+            <li key={doc.route} lang="en">
+              <a
+                href={doc.route}
+                aria-current={doc.route === current ? "page" : undefined}
+                className="flex min-h-10 items-center rounded border border-outline-variant px-3 text-sm text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[current=page]:border-primary aria-[current=page]:bg-surface-container-low aria-[current=page]:font-semibold aria-[current=page]:text-primary"
+              >
                 {docLabel(doc)}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-    </div>
+              </a>
+            </li>
+          ))}
+      </ul>
+    </nav>
   );
 }
 
-function DocOutline() {
+function DocOutline({ headings, className = "" }: { headings: { id: string; title: string }[]; className?: string }) {
   const t = useTranslations();
-  const [headings, setHeadings] = useState<{ id: string; title: string }[]>([]);
-  useEffect(() => {
-    setHeadings(
-      Array.from(document.querySelectorAll("article h3[id]"), (heading) => ({
-        id: heading.id,
-        title: heading.textContent ?? "",
-      })),
-    );
-  }, []);
   if (headings.length < 2) return null;
   return (
-    <nav aria-label={t("docsOnPage")} className="hidden space-y-3 xl:sticky xl:top-6 xl:block">
+    <nav aria-label={t("docsOnPage")} className={`space-y-3 ${className}`}>
       <h2 className="text-sm font-semibold text-on-surface">{t("docsOnPage")}</h2>
       <ul lang="en" className="grid gap-2 text-sm text-on-surface-variant">
         {headings.map(({ id, title }) => (
@@ -124,15 +126,22 @@ function DocOutline() {
   );
 }
 
+/**
+ * Docs pages are separate documents. Opting both ends of a docs link into a cross-document view
+ * transition keeps the header, rail and search in place while the article changes; a browser
+ * without it, or a reader who asks for reduced motion, gets an ordinary page load.
+ */
+const viewTransition = "@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }";
+
 function DocsIndex() {
   const t = useTranslations();
   return (
     <ReadingPage wide>
+      <style>{viewTransition}</style>
       <div className="space-y-8">
         <h2 className="font-headline text-4xl font-semibold text-on-surface sm:text-5xl">{t("docsTitle")}</h2>
-        <div className="max-w-3xl space-y-6">
+        <div className="max-w-3xl">
           <DocsSearch />
-          <WritingTool />
         </div>
         <div className="grid items-start gap-10 border-t border-outline-variant pt-8 md:grid-cols-3">
           <DocsList details />
@@ -142,35 +151,52 @@ function DocsIndex() {
   );
 }
 
+function IndexLink({ className }: { className: string }) {
+  const t = useTranslations();
+  return (
+    <a href="/docs" className={`${className} w-fit items-center gap-1.5 text-sm text-primary hover:underline`}>
+      <ArrowLeft className="size-4" aria-hidden="true" />
+      {t("docsTitle")}
+    </a>
+  );
+}
+
 function DocPage() {
   const t = useTranslations();
   const route = usePathname();
   const doc = docs.find((entry) => entry.route === route);
-  const parts = rendered?.get(route) ?? prerendered;
+  const { parts, outline: headings } = rendered?.get(route) ?? prerendered;
   return (
     <ReadingPage wide>
+      <style>{viewTransition}</style>
       <meta name="pagefind:title" data-pagefind-meta="title[content]" content={doc?.title} />
       <meta name="pagefind:url" data-pagefind-meta="url[content]" content={route} />
       <div className="docs-layout grid items-start gap-8">
-        <nav aria-label={t("docsTitle")} className="hidden space-y-7 lg:sticky lg:top-6 lg:block">
+        <nav aria-label={t("docsTitle")} data-docs-rail className="hidden space-y-7 lg:sticky lg:top-6 lg:block">
           <DocsList current={route} />
         </nav>
         <div className="min-w-0 space-y-6">
-          <a href="/docs" className="flex w-fit items-center gap-1.5 text-sm text-primary hover:underline">
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            {t("docsTitle")}
-          </a>
-          <DocsSearch />
-          {doc?.section === "howTo" && <WritingTool current={route} />}
-          <details className="lg:hidden">
-            <summary className="cursor-pointer py-2 text-sm font-semibold text-primary">{t("docsTitle")}</summary>
-            <nav aria-label={t("docsTitle")} className="grid gap-6 pt-4">
-              <DocsList current={route} />
-            </nav>
-          </details>
+          <div className="space-y-4">
+            {/* Below lg the documentation menu holds this link, to keep the guide's title near the top. */}
+            <IndexLink className="hidden lg:flex" />
+            <div className="max-w-3xl">
+              <DocsSearch />
+            </div>
+            {doc?.section === "howTo" && <WritingTool current={route} />}
+            <details className="lg:hidden">
+              <summary className="cursor-pointer py-2 text-sm font-semibold text-primary">{t("docsTitle")}</summary>
+              <div className="grid gap-6 pt-4">
+                <IndexLink className="flex" />
+                <nav aria-label={t("docsTitle")} className="grid gap-6">
+                  <DocsList current={route} />
+                </nav>
+                <DocOutline headings={headings} />
+              </div>
+            </details>
+          </div>
           <DocArticle parts={parts} />
         </div>
-        <DocOutline key={route} />
+        <DocOutline headings={headings} className="hidden xl:sticky xl:top-6 xl:block" />
       </div>
     </ReadingPage>
   );

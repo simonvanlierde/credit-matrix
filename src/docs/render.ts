@@ -1,5 +1,7 @@
 import { imageSizes } from "virtual:docs";
-import { renderMarkdown } from "@/lib/markdown";
+import { Lexer, marked, Parser } from "marked";
+import { renderMarkdown, slug } from "@/lib/markdown";
+import type { Outline } from "./DocArticle";
 import { images } from "./images";
 import { type DocPart, splitLiveMarkers } from "./live-markers";
 import { type DocFile, docFiles } from "./pages";
@@ -58,4 +60,18 @@ export function renderDoc(file: DocFile, source: string): DocPart[] {
       ? part.replace(/^\s*<pre>(?=<code class="language-(?:yaml|json)">)/, "<pre data-doc-fallback>")
       : part,
   );
+}
+
+/**
+ * The guide's section headings (its `##` lines, h3 on the page) as text, for the outline. Read from
+ * the Markdown, not the HTML, and equal to what readOutline finds in the prerendered page.
+ */
+export function docOutline(source: string): Outline {
+  const outline: Outline = [];
+  const parser = new Parser();
+  marked.walkTokens(Lexer.lex(source), (token) => {
+    if (token.type === "heading" && token.depth === 2)
+      outline.push({ id: slug(token.text), title: parser.parseInline(token.tokens ?? [], parser.textRenderer) });
+  });
+  return outline;
 }

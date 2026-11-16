@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { TOOL_BUTTON } from "@/components/steps/grid-shared";
 import { OutputBlock } from "@/components/steps/OutputBlock";
 import { TOOLCHAIN_OUTPUTS } from "@/components/steps/ToolchainPanel";
@@ -31,6 +31,7 @@ export default function LiveExample({ target }: { target: LiveTarget }) {
   const t = useTranslations();
   const locale = useLocale();
   const hydrated = useHydrated();
+  const sourceId = useId();
   const [useSample, setUseSample] = useState(false);
   const draftAuthors = useContributionStore((s) => s.authors);
   const inputMode = useContributionStore((s) => s.inputMode);
@@ -46,6 +47,7 @@ export default function LiveExample({ target }: { target: LiveTarget }) {
       options={{ includeAnswers: false, yesNo, translateRole, translateUi, outputLanguage }}
       language={outputLanguage}
       rows={10}
+      labelledBy={sourceId}
     />
   );
 
@@ -64,11 +66,17 @@ export default function LiveExample({ target }: { target: LiveTarget }) {
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span>{showingDraft ? t("docsLiveDraft") : t("docsLiveSample")}</span>
-            {hasDraft && (
+            <span id={sourceId}>{showingDraft ? t("docsLiveDraft") : t("docsLiveSample")}</span>
+            {hasDraft ? (
               <button type="button" onClick={() => setUseSample(!useSample)} className={TOOL_BUTTON}>
                 {showingDraft ? t("docsUseSample") : t("docsUseDraft")}
               </button>
+            ) : (
+              // Without a draft in this browser (a first visit, or a preview on another origin) the
+              // toggle has nothing to switch to, so say where the reader's own data comes from.
+              <span className="basis-full text-on-surface-variant">
+                {t.rich("docsLiveMakeYourOwn", { link: (chunks) => <a href="/">{chunks}</a> })}
+              </span>
             )}
           </div>
           {output}

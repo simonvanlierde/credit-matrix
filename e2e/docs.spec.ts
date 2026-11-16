@@ -124,15 +124,101 @@ test("desktop docs use the viewport with compact navigation and a working outlin
   await expect(page.locator("#contribution-heatmap")).toBeInViewport();
 });
 
-test("writing tool selection navigates to a shareable URL and browser Back restores the guide", async ({ page }) => {
+test("the writing tool switcher is a list of links that marks the current guide", async ({ page }) => {
   await asReturningVisitor(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/docs/quarto");
-  await page.getByRole("combobox", { name: "Writing tool", exact: true }).click();
-  await page.getByRole("option", { name: "Typst", exact: true }).click();
+  const tools = page.getByRole("navigation", { name: "Writing tool", exact: true });
+  const links = tools.getByRole("link");
+  await expect(links).toHaveText(["Jupyter Book 2", "MyST", "Pandoc", "Quarto", "Sphinx", "Typst"]);
+  // Links, not a select that navigates on change: no combobox, real hrefs, one current page.
+  await expect(page.getByRole("combobox", { name: "Writing tool" })).toHaveCount(0);
+  await expect(tools.getByRole("link", { name: "Typst", exact: true })).toHaveAttribute("href", "/docs/typst");
+  await expect(tools.locator("[aria-current]")).toHaveCount(1);
+  await expect(tools.getByRole("link", { name: "Quarto", exact: true })).toHaveAttribute("aria-current", "page");
+  // The switcher sits close to the top on a phone, above the guide's title.
+  const title = page.locator("article").getByRole("heading", { level: 2 });
+  expect((await title.boundingBox())?.y).toBeLessThan(400);
+
+  await tools.getByRole("link", { name: "Typst", exact: true }).focus();
+  await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/docs\/typst$/);
-  await expect(page.getByRole("combobox", { name: "Writing tool", exact: true })).toContainText("Typst");
+  await expect(tools.getByRole("link", { name: "Typst", exact: true })).toHaveAttribute("aria-current", "page");
   await page.goBack();
   await expect(page).toHaveURL(/\/docs\/quarto$/);
-  await expect(page.getByRole("combobox", { name: "Writing tool", exact: true })).toContainText("Quarto");
+  await expect(tools.getByRole("link", { name: "Quarto", exact: true })).toHaveAttribute("aria-current", "page");
+});
+
+test("wide screens switch tools from the rail, and the index lists the tools once", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/docs/quarto");
+  await expect(page.getByRole("navigation", { name: "Writing tool", exact: true })).toBeHidden();
+  await page.goto("/docs");
+  await expect(page.getByRole("navigation", { name: "Writing tool", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Writing tool" })).toHaveCount(0);
+});
+
+test("very wide screens keep the docs centred with a readable article and search", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.setViewportSize({ width: 2560, height: 1300 });
+  await page.goto("/docs/typst");
+  const article = await page.locator("article").boundingBox();
+  const search = await page.getByRole("region", { name: "Search documentation" }).boundingBox();
+  const outline = await page.getByRole("navigation", { name: "On this page", exact: true }).boundingBox();
+  expect(article?.width).toBeLessThanOrEqual(1100);
+  expect(search?.width).toBeLessThanOrEqual(768);
+  // Centred: the outline ends as far from the right edge as the rail starts from the left.
+  expect(2560 - ((outline?.x ?? 0) + (outline?.width ?? 0))).toBeGreaterThan(400);
+});
+
+test("phones reach the section outline from the documentation menu", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/docs/typst");
+  const outline = page.getByRole("navigation", { name: "On this page", exact: true });
+  await page.locator("details summary").filter({ hasText: "Documentation" }).click();
+  await outline.getByRole("link", { name: "Use", exact: true }).click();
+  await expect(page).toHaveURL(/#use$/);
+  await expect(page.locator("article #use")).toBeInViewport();
+});
+
+test("moving between docs pages paints the search box, ground and header icons from the first frame", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.addInitScript(() => {
+      const w = window as unknown as { docsFrames: string[] };
+      w.docsFrames = [];
+      const sample = () => {
+        const search = document.querySelector(".docs-search input");
+        const icons = document.querySelectorAll("[data-app-header] svg.lucide-moon, [data-app-header] svg.lucide-sun");
+        const toggle = Array.from(icons).some((icon) => icon.getBoundingClientRect().width > 0);
+        w.docsFrames.push(
+          [
+            search ? `${search.getBoundingClientRect().height}` : "no search box",
+            getComputedStyle(document.body).backgroundColor,
+            getComputedStyle(document.documentElement).getPropertyValue("--color-mark-0-100").trim(),
+            toggle ? "theme icon" : "no theme icon",
+            document.querySelectorAll('nav[aria-label="On this page"] a').length > 0 ? "outline" : "no outline",
+          ].join(" | "),
+        );
+        if (w.docsFrames.length < 60) requestAnimationFrame(sample);
+      };
+      // From the parsed page on: frames during parsing show a half-read document, not a flash.
+      document.addEventListener("DOMContentLoaded", () => requestAnimationFrame(sample));
+    });
+    await page.goto("/docs/quarto");
+    await page.locator("nav[data-docs-rail]").getByRole("link", { name: "Typst", exact: true }).click();
+    await expect(page).toHaveURL(/\/docs\/typst$/);
+    await expect(page.getByRole("region", { name: "Search documentation" }).getByRole("combobox")).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { docsFrames: string[] }).docsFrames.length))
+      .toBeGreaterThanOrEqual(60);
+    const frames = await page.evaluate(() => (window as unknown as { docsFrames: string[] }).docsFrames);
+    // Every frame of the new page, before and after its scripts run, looks the same.
+    expect(new Set(frames), scheme).toEqual(new Set([frames.at(-1)]));
+  }
 });

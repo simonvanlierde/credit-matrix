@@ -168,6 +168,9 @@ test.describe("Accessibility (axe-core)", () => {
     await expect(nav).toHaveCount(1);
     const top = async (loc: Locator) => (await loc.boundingBox())?.y ?? 0;
     expect(await top(nav)).toBeLessThan(await top(page.locator("article")));
+    // The menu starts with the way back to the docs index, which wide screens show above the search.
+    await page.keyboard.press("Tab");
+    await expect(page.locator("main details").getByRole("link", { name: "Documentation", exact: true })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(nav.getByRole("link").first()).toBeFocused();
   });

@@ -82,7 +82,7 @@ and a parity test runs both over the same corpus.
 The `/docs` pages render the integration READMEs at build time. The browser receives navigation
 metadata and prerendered HTML, without the Markdown sources or renderer. A standalone
 `<!-- live: quarto -->` comment inserts a live example; pages without a marker never load that code.
-Examples reuse the app's export controls and recipes with the active draft or local sample data.
+Each example shows one export, from the current draft in this browser or from sample contributors.
 The visible source switch changes only the example, leaving the saved draft unchanged. Static
 instructions remain readable when JavaScript or a live example cannot load.
 

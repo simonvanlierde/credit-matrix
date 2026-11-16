@@ -40,6 +40,16 @@ export function readDocParts(article: Element | null): DocPart[] {
   });
 }
 
+export type Outline = { id: string; title: string }[];
+
+/** The prerendered article's section headings, as the browser reads them, for the outline. */
+export function readOutline(article: Element | null): Outline {
+  return Array.from(article?.querySelectorAll("h3[id]") ?? [], (heading) => ({
+    id: heading.id,
+    title: heading.textContent ?? "",
+  }));
+}
+
 export function DocArticle({ parts }: { parts: DocPart[] }) {
   if (parts.length === 1 && typeof parts[0] === "string") {
     return (

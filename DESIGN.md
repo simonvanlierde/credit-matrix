@@ -443,15 +443,26 @@ or fills the tab order. Frozen rows disable the items that edit them.
 
 ## Documentation
 
-Docs use the viewport width with a 17rem navigation rail, a flexible article and, from 80rem,
+Docs use up to 100rem, centred, with a 17rem navigation rail, a flexible article and, from 80rem,
 a 12rem section outline. Paragraphs keep a 75ch reading measure; code, tables and figures may
-use the article's width. Navigation has its own small sans-serif headings and short link names.
-Writing tools, Data and exports, and Reference stay separate. The writing-tool selector opens
-the tool's own URL, and never changes a saved draft. On phones it sits above the guide beside
-collapsible documentation navigation.
+use the article's width; search stays at 48rem. Navigation has its own small sans-serif headings
+and short link names. Writing tools, Data and exports, and Reference stay separate.
+
+Switching writing tool is navigation, so it is built from links, never a select that navigates on
+change or a tab widget: links work without JavaScript, open in a new tab, keep the browser's Back,
+and mark the current guide with `aria-current="page"` (WCAG 3.2.2 On Input). From 64rem the
+rail's Writing tools list is the switcher. Below it, a labelled row of the tool links sits under
+the search, then the collapsible documentation navigation, which also holds the link to the docs
+index and the section outline. Neither changes a saved draft.
+
+Each docs page is its own prerendered document, so everything shared is in that HTML at first
+paint: the search box (drawn with Pagefind's classes until Pagefind loads), the outline, the theme
+icon and the page colours. Docs links use a cross-document view transition that keeps the header,
+rail and search in place; with reduced motion, or in a browser without it, the page just loads.
 
 Each tool guide leads through installation, contributor data, a build command and its result.
-The example offers sample contributors or the current draft in this browser. It shows one export;
+The example offers sample contributors or the current draft in this browser; without a draft it
+links to the app, where the reader's own contributors come from. It shows one export;
 installation, figure instructions and build commands belong in the guide. Once the interactive
 export is ready, it replaces the adjacent static data block. Failed or unavailable JavaScript
 leaves the static example readable. Sample contributors and expected results match in both forms.

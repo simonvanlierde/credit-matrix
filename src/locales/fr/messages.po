@@ -1882,6 +1882,9 @@ msgstr "Référence"
 msgid "docsSearch"
 msgstr "Rechercher dans la documentation"
 
+msgid "docsSearchPlaceholder"
+msgstr "Rechercher"
+
 msgid "docsSearchLoading"
 msgstr "Chargement de la recherche…"
 
@@ -1905,6 +1908,9 @@ msgstr "Utiliser les contributeurs d’exemple"
 
 msgid "docsUseDraft"
 msgstr "Utiliser votre brouillon"
+
+msgid "docsLiveMakeYourOwn"
+msgstr "<link>Ajoutez vos propres contributeurs dans l’application</link> et cet exemple les utilisera."
 
 msgid "docsData"
 msgstr "Données et exports"

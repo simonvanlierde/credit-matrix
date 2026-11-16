@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "@/lib/translations";
 
 /**
- * Light/dark toggle for the header. Renders nothing until mounted so server and
- * client agree on the icon (the resolved theme is unknown during SSR).
+ * Light/dark toggle for the header. The resolved theme is unknown during SSR, so both icons render
+ * and the `.dark` class the head script sets picks one: the icon is there at first paint.
  */
 export function ThemeToggle() {
   const t = useTranslations();
@@ -22,8 +22,8 @@ export function ThemeToggle() {
       aria-label={mounted ? t(isDark ? "switchToLightTheme" : "switchToDarkTheme") : t("toggleTheme")}
       className="touch-target flex items-center justify-center size-9 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors"
     >
-      {/* Placeholder size during SSR avoids layout shift on mount. */}
-      {mounted && (isDark ? <Sun className="size-4" /> : <Moon className="size-4" />)}
+      <Sun className="hidden size-4 in-[.dark]:block" aria-hidden="true" />
+      <Moon className="size-4 in-[.dark]:hidden" aria-hidden="true" />
     </button>
   );
 }

@@ -1,5 +1,5 @@
 import { Check, Copy, Download } from "lucide-react";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useId, useMemo } from "react";
 import type { Author } from "@/core";
 import {
   DATA_FORMATS,
@@ -34,11 +34,13 @@ function useExport({ authors, format, options }: OutputProps) {
 function OutputButtons({
   format,
   label,
+  labelId,
   text,
   disabled,
 }: {
   format: DataFormat;
   label: string;
+  labelId?: string;
   text: string;
   disabled: boolean;
 }) {
@@ -46,7 +48,9 @@ function OutputButtons({
   const [status, copy] = useCopyStatus({ copied: t("annExportDataCopied") });
   return (
     <div className="flex items-center gap-1">
-      <span className="min-w-0 flex-1">{label}</span>
+      <span id={labelId} className="min-w-0 flex-1">
+        {label}
+      </span>
       <button type="button" onClick={() => void copy(text)} disabled={disabled} className={EXPORT_ITEM_BUTTON}>
         {status === "copied" ? (
           <Check className="size-3.5 text-primary" aria-hidden="true" />
@@ -91,12 +95,19 @@ export function OutputBlock({
   language,
   children,
   rows = 4,
-}: OutputProps & { children?: ReactNode; rows?: number }) {
+  labelledBy,
+}: OutputProps & {
+  children?: ReactNode;
+  rows?: number;
+  /** The id of visible text that names this output, read before the format's name. */
+  labelledBy?: string;
+}) {
   const { label, text } = useExport({ authors, format, options });
+  const labelId = useId();
   return (
     <>
       <textarea
-        aria-label={label}
+        aria-labelledby={labelledBy ? `${labelledBy} ${labelId}` : labelId}
         lang={language}
         readOnly
         value={text}
@@ -110,6 +121,7 @@ export function OutputBlock({
             key={`${format}:${text}`}
             format={format}
             label={label}
+            labelId={labelId}
             text={text}
             disabled={authors.length === 0}
           />

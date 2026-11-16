@@ -9,11 +9,11 @@ import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { renderMarkdown } from "@/lib/markdown";
 import { routes } from "@/routes";
-import { DocArticle, readDocParts } from "./DocArticle";
+import { DocArticle, readDocParts, readOutline } from "./DocArticle";
 import type { DocPart } from "./live-markers";
 import { docFiles } from "./pages";
 import { snippet } from "./plugin.mjs";
-import { GITHUB, renderDoc, resolveHref } from "./render";
+import { docOutline, GITHUB, renderDoc, resolveHref } from "./render";
 
 const targets = (path: string) => {
   const found: { href: string; image: boolean }[] = [];
@@ -214,6 +214,25 @@ describe("prerendered docs hydration", () => {
     expect(onRecoverableError).not.toHaveBeenCalled();
     await act(() => root?.unmount());
     container.remove();
+  });
+
+  test.each(docFiles)("$route: the outline from the Markdown matches the prerendered headings", (file) => {
+    const source = readFileSync(file.path, "utf8");
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(createElement(DocArticle, { parts: renderDoc(file, source) }));
+    const outline = docOutline(source);
+    // A mismatch would change the outline on hydration.
+    expect(readOutline(container.querySelector("article"))).toEqual(outline);
+    expect(outline.length).toBeGreaterThan(0);
+  });
+
+  test("an outline title is the heading's text, without its markup", () => {
+    // An HTML entity in a heading would stay escaped here; the per-page test above fails if a guide uses one.
+    const source = "## Use `json()` & 'more'\n\n### Deep\n";
+    const container = document.createElement("div");
+    container.innerHTML = renderMarkdown(source);
+    expect(docOutline(source)).toEqual([{ id: "use-json--more", title: "Use json() & 'more'" }]);
+    expect(readOutline(container)).toEqual(docOutline(source));
   });
 
   test("a failed live component leaves the static guide readable", async () => {
