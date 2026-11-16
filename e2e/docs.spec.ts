@@ -112,6 +112,7 @@ test("desktop docs use the viewport with compact navigation and a working outlin
   await asReturningVisitor(page);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/docs/quarto");
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(1000);
   const nav = page.getByRole("navigation", { name: "Documentation", exact: true }).first();
   const bounds = await nav.boundingBox();
   expect(bounds?.x).toBeLessThan(64);
