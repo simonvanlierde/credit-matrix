@@ -73,7 +73,7 @@
     "credit-matrix": "workspace:*",
     "fast-check": "4.10.2",
     "harfbuzzjs": "1.6.4",
-    "jsdom": "^30.1.1",
+    "jsdom": "^31.0.0",
     "jupyter-book": "^2.1.7",
     "lefthook": "^2.1.16",
     "marked": "18.1.3",
