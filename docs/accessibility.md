@@ -120,7 +120,7 @@ statement, heatmap and table. Its loading and error messages are marked as Engli
 
 Automated tests use Chromium, Firefox and WebKit in Playwright's desktop profiles, with axe-core.
 WebKit is the engine Safari uses; these tests do not replace testing Safari on Apple hardware.
-Chromium runs on pull requests that change the app. All three run on pushes to `main` and weekly.
+Chromium runs on pull requests that change the app, and all three on one that changes the Playwright version. All three run on pushes to `main` and weekly.
 
 Firefox and WebKit workflow tests use a clipboard kept within the page. They check the app's copy
 handlers, but do not test the browser's own clipboard.

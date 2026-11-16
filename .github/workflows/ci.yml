@@ -47,6 +47,7 @@ jobs:
       web: ${{ steps.files.outputs.web }}
       census: ${{ steps.files.outputs.census }}
       playwright: ${{ steps.playwright.outputs.version }}
+      browsers: ${{ steps.playwright.outputs.browsers }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -54,11 +55,28 @@ jobs:
           sparse-checkout: pnpm-lock.yaml
           sparse-checkout-cone-mode: false
 
-      # The e2e container's tag must match the locked @playwright/test exactly.
+      # The e2e container's tag must match the locked @playwright/test exactly. A pull request
+      # runs Chromium only, unless it changes that version: a new Playwright brings new browser
+      # builds, and Renovate merges its bump once the checks pass.
       - id: playwright
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          EVENT: ${{ github.event_name }}
         run: |
-          version=$(grep -oPm1 "^  '@playwright/test@\K[0-9.]+(?=':)" pnpm-lock.yaml)
+          set -euo pipefail
+          locked() { grep -oPm1 "^  '@playwright/test@\K[0-9.]+(?=':)" "$1"; }
+          version=$(locked pnpm-lock.yaml)
+          browsers='["chromium","firefox","webkit"]'
+          if [ "$EVENT" = pull_request ]; then
+            gh api -H "Accept: application/vnd.github.raw" \
+              "repos/$REPO/contents/pnpm-lock.yaml?ref=$BASE" >"$RUNNER_TEMP/base-lock.yaml"
+            [ "$(locked "$RUNNER_TEMP/base-lock.yaml")" = "$version" ] && browsers='["chromium"]'
+          fi
           echo "version=$version" >>"$GITHUB_OUTPUT"
+          echo "browsers=$browsers" >>"$GITHUB_OUTPUT"
+          echo "playwright $version, browsers $browsers"
 
       - id: files
         if: github.event_name == 'pull_request'
@@ -288,9 +306,10 @@ jobs:
       - name: Train and predict
         run: uv run --no-sync pytest -q tests/test_encoder.py -k "train or predict"
 
-  # One leg per browser, in parallel. Pull requests run Chromium only: Firefox and WebKit took
-  # 65% of a PR's runner minutes. Pushes to main and the weekly run test all three, and the
-  # deploy waits on them. The e2e-result job reports the check the ruleset requires.
+  # One leg per browser, in parallel. Pull requests run Chromium only, unless they change the
+  # Playwright version: Firefox and WebKit took 65% of a PR's runner minutes. Pushes to main and
+  # the weekly run test all three, and the deploy waits on them. The e2e-result job reports the
+  # check the ruleset requires.
   e2e:
     name: E2E (${{ matrix.browser }})
     needs: [changes]
@@ -306,7 +325,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: ${{ fromJSON(github.event_name == 'pull_request' && '["chromium"]' || '["chromium","firefox","webkit"]') }}
+        browser: ${{ fromJSON(needs.changes.outputs.browsers) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
