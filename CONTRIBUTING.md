@@ -51,8 +51,9 @@ which takes about 1.5 minutes. Later runs reuse the cache.
 
 CI runs `pnpm verify`, `pnpm validate:jats`, `pnpm validate:crossref`, the full Playwright suite (with the axe scans)
 and a static export build. Pull requests run the Playwright suite in Chromium; pushes to `main` and a
-weekly run add Firefox and WebKit. A pull request that changes only `census/` skips the web jobs. CI
-deploys `main` only when all of them pass.
+weekly run add Firefox and WebKit, as does a pull request that changes the Playwright version. A
+pull request that changes only `census/` skips the web jobs. CI deploys `main` only when all of
+them pass.
 
 If you change the domain logic, add or update tests in `src/core/__tests__`.
 
