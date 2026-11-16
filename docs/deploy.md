@@ -117,7 +117,10 @@ only when npm does not have that version yet. To release new fonts, bump
 face added in fonts 1.N raises its peer range floor to `^1.N.0` in the same release.
 
 Fonts releases go through trusted publishing like `credit-matrix`. The package's trusted publisher
-is `release-core.yml` with the `npm-release` environment, and
+is `release-core.yml` with the `npm-release` environment, its allowed actions include
+`npm publish` (a trusted publisher added on npmjs.com since September 2026 allows only staged
+publishing unless you tick it, and the workflow then fails with "OIDC permission denied for this
+action"), and
 https://www.npmjs.com/package/credit-matrix-fonts/access is set to "Require two-factor
 authentication and disallow tokens". A tag whose fonts version npm lacks publishes it before core.
 A tag whose fonts version npm has, with other bytes, fails with "differs from src/fonts. Bump its

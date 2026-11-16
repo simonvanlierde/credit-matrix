@@ -138,8 +138,9 @@ through a PR to [typst/packages](https://github.com/typst/packages), only for a 
 `major.minor.patch` version (the release script leaves `typst.toml` alone for a pre-release).
 Copy `integrations/typst` to `packages/preview/credit-matrix/<version>/` there, without
 `credit-matrix.test.ts` and `out/`, and make two changes in the copy: the examples import
-`@preview/credit-matrix:<version>` instead of `../lib.typ`, and the README's CREDITS.md link
-points at the `v<version>` tag instead of `main`.
+`@preview/credit-matrix:<version>` instead of `../lib.typ`, and the README's links into the rest of
+the repository (`../heatmap.md`, `../figures/README.md` and the CREDITS.md link) become GitHub URLs
+at the `v<version>` tag, since Typst Universe shows only the package folder.
 
 ## Testing
 
