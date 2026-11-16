@@ -96,7 +96,9 @@ CREDIT_MATRIX_COMMAND="node node_modules/credit-matrix/dist/cli.js" pandoc paper
 ```
 
 The document now includes a contribution heatmap. If `credit-matrix` is on `PATH`, you can omit
-`CREDIT_MATRIX_COMMAND`. Its value is a command line; no argument can contain a space.
+`CREDIT_MATRIX_COMMAND`. Its value is a command line; no argument can contain a space. In Windows
+PowerShell, set it first with `$env:CREDIT_MATRIX_COMMAND = "node node_modules/credit-matrix/dist/cli.js"`,
+then run the build command without the prefix.
 [Figure options and examples](../heatmap.md) lists every rendering option.
 For your own font, set `font` to the family name. Set `font-path` to its folder, or list of
 folders, relative to the document. Merge these options into the same `credit-matrix` block. [Your own font](../heatmap.md#your-own-font) lists

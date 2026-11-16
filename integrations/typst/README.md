@@ -94,6 +94,8 @@ You can also write the contributor data directly in your document:
 #credit-statement(team, levels: true)
 ```
 
+The output has the same form as the sample above: each person's roles, with levels in brackets.
+
 ### Contributors
 
 An array of dictionaries, one per person:
