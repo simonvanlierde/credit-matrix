@@ -156,28 +156,20 @@ test.describe("Accessibility (axe-core)", () => {
     expect(await box(nav)).toBeLessThan(await box(page.locator("article")));
   });
 
-  test("the docs sidebar comes after the article in tab order and on screen below lg", async ({ page }) => {
+  test("mobile docs navigation opens above the article and follows visual order", async ({ page }) => {
     test.skip(!process.env.CI && !process.env.BASE_URL, "needs /pagefind/ from a production build");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/docs/typst");
-    // One navigation landmark, drawn below the article.
-    const nav = page.getByRole("navigation", { name: "Documentation" });
+    const nav = page.getByRole("navigation", { name: "Documentation", exact: true });
+    await expect(nav).toHaveCount(0);
+    const toggle = page.locator("main details > summary");
+    await toggle.focus();
+    await page.keyboard.press("Enter");
     await expect(nav).toHaveCount(1);
     const top = async (loc: Locator) => (await loc.boundingBox())?.y ?? 0;
-    expect(await top(nav)).toBeGreaterThan(await top(page.locator("article")));
-    // Forward from the search box: the article's links come before the sidebar's.
-    await page.getByRole("region", { name: "Search documentation" }).getByRole("combobox").focus();
-    for (let i = 0; i < 200; i++) {
-      await page.keyboard.press("Tab");
-      if (await page.evaluate(() => !!document.activeElement?.closest("nav[aria-label='Documentation']"))) break;
-    }
-    expect(
-      await page.evaluate(() => {
-        const el = document.activeElement;
-        const article = document.querySelector("article");
-        return !!el && !!article && !!(article.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
-      }),
-    ).toBe(true);
+    expect(await top(nav)).toBeLessThan(await top(page.locator("article")));
+    await page.keyboard.press("Tab");
+    await expect(nav.getByRole("link").first()).toBeFocused();
   });
 
   test("the welcome modal links to About and Documentation alongside the header", async ({ page }) => {

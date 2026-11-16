@@ -1742,7 +1742,7 @@ msgid "heatmapRecipeTarget"
 msgstr "Utiliser dans"
 
 msgid "heatmapRecipeMyst"
-msgstr "MyST utilise les rôles des auteurs et la langue de la page, avec des contributions oui/non."
+msgstr "L’export MyST de l’application indique les rôles par oui ou non. Le plugin MyST peut aussi lire les niveaux de contribution."
 
 msgid "heatmapRecipeTypst"
 msgstr "Utilisez vos données d’équipe Typst. Les métriques des polices et la mise en page native peuvent différer du SVG."
@@ -1874,7 +1874,7 @@ msgid "docsTitle"
 msgstr "Documentation"
 
 msgid "docsHowTo"
-msgstr "L’utiliser dans votre outil d’écriture"
+msgstr "Outils de rédaction"
 
 msgid "docsReference"
 msgstr "Référence"
@@ -1889,19 +1889,28 @@ msgid "docsSearchFailed"
 msgstr "La recherche n’a pas pu se charger. Rechargez la page pour réessayer."
 
 msgid "docsLiveExample"
-msgstr "Exemple en direct"
+msgstr "Exemple"
 
 msgid "docsLiveLoading"
-msgstr "Chargement de votre brouillon…"
+msgstr "Chargement de l’exemple…"
 
 msgid "docsLiveDraft"
-msgstr "Votre brouillon est affiché"
+msgstr "Votre brouillon dans ce navigateur"
 
 msgid "docsLiveSample"
-msgstr "Les données d’exemple sont affichées"
+msgstr "Contributeurs d’exemple"
 
 msgid "docsUseSample"
-msgstr "Utiliser les données d’exemple"
+msgstr "Utiliser les contributeurs d’exemple"
 
 msgid "docsUseDraft"
 msgstr "Utiliser votre brouillon"
+
+msgid "docsData"
+msgstr "Données et exports"
+
+msgid "docsWritingTool"
+msgstr "Outil de rédaction"
+
+msgid "docsOnPage"
+msgstr "Sur cette page"

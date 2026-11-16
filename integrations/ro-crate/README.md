@@ -1,18 +1,18 @@
 # Add contribution roles to an RO-Crate
 
+The fragment adds attribution to an existing [RO-Crate 1.2](https://www.researchobject.org/ro-crate/specification/1.2/). It is not a standalone crate.
+It holds people, CRediT `Role` entities and proposed `author` and `contributor` links for the root.
+It has no dataset name, description, publication date, licence, files or workflow details.
+Your package must already supply those and its metadata descriptor.
+
 In the app, open the Export data menu, choose **RO-Crate fragment**, then Copy or Download.
 The download is `credit-ro-crate-fragment.json`. The CLI produces the same JSON-LD:
 
 <!-- live: ro-crate -->
 
 ```sh
-pnpm dlx credit-matrix convert draft.json --to ro-crate > credit-ro-crate-fragment.json
+pnpm dlx credit-matrix convert contributors.json --to ro-crate > credit-ro-crate-fragment.json
 ```
-
-The fragment adds attribution to an existing [RO-Crate 1.2](https://www.researchobject.org/ro-crate/specification/1.2/). It is not a standalone crate.
-It holds people, CRediT `Role` entities and proposed `author` and `contributor` links for the root.
-It has no dataset name, description, publication date, licence, files or workflow details.
-Your package must already supply those and its metadata descriptor.
 
 ## Merge the fragment
 

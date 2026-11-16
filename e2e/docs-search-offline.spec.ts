@@ -63,7 +63,7 @@ test.describe("Offline docs search", () => {
       const build = await page.locator('meta[name="docs-search-build"]').getAttribute("content");
       expect(build).toBeTruthy();
       if (docPath === "/docs/quarto") {
-        await expect(page.getByText("Showing sample data", { exact: true })).toBeVisible();
+        await expect(page.getByText("Sample contributors", { exact: true })).toBeVisible();
         await page.evaluate(() => document.dispatchEvent(new Event("start-docs-worker")));
       }
       await page.evaluate(() => navigator.serviceWorker.ready);
@@ -103,7 +103,7 @@ test.describe("Offline docs search", () => {
       await context.setOffline(true);
       await page.reload();
       if (docPath === "/docs/quarto")
-        await expect(page.getByText("Showing sample data", { exact: true })).toBeVisible();
+        await expect(page.getByText("Sample contributors", { exact: true })).toBeVisible();
       const search = page.getByRole("region", { name: "Search documentation" });
       await search.getByRole("combobox").fill("quarto");
       await expect(search.getByRole("option").and(page.locator('a[href^="/docs/quarto"]')).first()).toBeVisible();

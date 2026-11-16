@@ -7,7 +7,7 @@ test("a docs example uses sample data without creating a draft", async ({ page }
   await asReturningVisitor(page);
   await grantClipboard(page.context());
   await page.goto("/docs/quarto");
-  await expect(page.getByText("Showing sample data", { exact: true })).toBeVisible();
+  await expect(page.getByText("Sample contributors", { exact: true })).toBeVisible();
   const output = page.getByRole("textbox", { name: "Quarto YAML", exact: true });
   await expect(output).toHaveValue(/author:/);
   const before = await page.evaluate((key) => localStorage.getItem(key), PERSIST_KEY);
@@ -38,12 +38,12 @@ test("draft and sample output toggle without changing saved data or executing na
     if (message.type() === "error") errors.push(message.text());
   });
   await page.goto("/docs/typst");
-  await expect(page.getByText("Showing your draft", { exact: true })).toBeVisible();
+  await expect(page.getByText("Using your draft in this browser", { exact: true })).toBeVisible();
   const output = page.getByRole("textbox", { name: "JSON", exact: true });
   await expect(output).toHaveValue(/Alex/);
   const before = await page.evaluate((key) => localStorage.getItem(key), PERSIST_KEY);
-  await page.getByRole("button", { name: "Use sample data", exact: true }).click();
-  await expect(page.getByText("Showing sample data", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Use sample contributors", exact: true }).click();
+  await expect(page.getByText("Sample contributors", { exact: true })).toBeVisible();
   expect(await output.inputValue()).not.toContain("Alex");
   await page.getByRole("button", { name: "Use your draft", exact: true }).click();
   const json = JSON.parse(await output.inputValue());
@@ -57,7 +57,7 @@ test("live controls fit a narrow page and meet the accessibility checks", async 
   await asReturningVisitor(page);
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/docs/myst");
-  await expect(page.getByText("Showing sample data", { exact: true })).toBeVisible();
+  await expect(page.getByText("Sample contributors", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   expect((await scan(page, "article")).violations).toEqual([]);
 });
@@ -80,4 +80,24 @@ test("the guide remains readable without JavaScript", async ({ browser }) => {
   await expect(page.locator("article pre").first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Pandoc guide" })).toHaveAttribute("href", "/docs/pandoc");
   await context.close();
+});
+
+test("a loaded example replaces only its static data and leaves setup and build instructions", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.goto("/docs/quarto");
+  await expect(page.getByRole("textbox", { name: "Quarto YAML", exact: true })).toBeVisible();
+  await expect(page.locator("article textarea")).toHaveCount(1);
+  await expect(page.locator("article [data-doc-fallback]")).toBeHidden();
+  await expect(page.locator("article pre").filter({ hasText: "filters:" })).toBeVisible();
+  await expect(page.locator("article pre").filter({ hasText: /^quarto render paper.qmd/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Set up Quarto →" })).toHaveCount(0);
+});
+
+test("an unavailable interactive example leaves the static data visible", async ({ page }) => {
+  await asReturningVisitor(page);
+  await page.route(/\/assets\/LiveExample-[\w-]+\.js$/, (route) => route.abort());
+  await page.goto("/docs/quarto");
+  await expect(page.locator("article [data-doc-fallback]")).toBeVisible();
+  await expect(page.locator("article [data-doc-fallback]")).toContainText("Marie Curie");
+  await expect(page.locator("article textarea")).toHaveCount(0);
 });

@@ -1,8 +1,7 @@
 # CRediT statement for Sphinx
 
-The `credit-statement` directive renders a CRediT Matrix export in your Sphinx documentation.
-It calls the [package CLI](../../src/core/README.md) and has no role list or statement generator
-of its own.
+Add a CRediT statement and contribution heatmap to Sphinx from a contributor JSON file.
+Both directives use the [package CLI](../../src/core/README.md).
 
 ## Install
 
@@ -26,9 +25,37 @@ The command is a list of arguments, not a shell command.
 
 ## Use
 
-Export JSON from CRediT Matrix and save it beside your page as `contributors.json`:
+Save your JSON export beside your page as `contributors.json`, or use this sample.
+If the download is named `credit_result.json`, rename it to `contributors.json`.
+The export keeps contribution levels and non-author contributors.
 
 <!-- live: sphinx -->
+
+```json
+{
+  "version": 1,
+  "authors": [
+    {
+      "id": "marie", "name": "Marie Curie",
+      "firstName": "Marie", "middleName": "", "surname": "Curie", "initials": "MC", "contributorType": "author",
+      "contributions": [
+        {"role": "Conceptualization", "score": 100},
+        {"role": "Software", "score": 33}
+      ]
+    },
+    {
+      "id": "albert", "name": "Albert Einstein",
+      "firstName": "Albert", "middleName": "", "surname": "Einstein", "initials": "AE", "contributorType": "author",
+      "contributions": [
+        {"role": "Formal analysis", "score": 66},
+        {"role": "Investigation", "score": 100}
+      ]
+    }
+  ]
+}
+```
+
+Add this to your reStructuredText page:
 
 ```rst
 Contributors
@@ -38,7 +65,15 @@ Contributors
    :levels:
 ```
 
-The directive prints the statement at that position. Paths are relative to the page; a leading `/`
+Build your documentation (replace `docs` with your source folder):
+
+```sh
+sphinx-build -W -b html docs _build/html
+```
+
+With the sample data, the statement lists Marie Curie's Conceptualization and Software (Supporting),
+then Albert Einstein's Formal analysis (Equal) and Investigation.
+The directive prints it at that position. Paths are relative to the page; a leading `/`
 means the Sphinx source root. A change to the export rebuilds the page. The build reads the export,
 not the reader's browser.
 
@@ -62,7 +97,14 @@ uv run --project integrations sphinx-build -W -b html integrations/sphinx/exampl
 
 ## Contribution heatmap
 
-See [figure options and examples](../heatmap.md) for the `credit-heatmap` directive. From about
+Add a second directive using the same file:
+
+```rst
+.. credit-heatmap:: contributors.json
+```
+
+Run the same `sphinx-build` command again. The page now includes a contribution heatmap.
+[Figure options and examples](../heatmap.md) lists its options. From about
 25 contributors it warns that the labels print under 6 pt, which fails a strict build. The
 [final-size checks](../heatmap.md#final-size-readability-checks) say how to silence it.
 

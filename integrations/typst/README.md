@@ -2,8 +2,8 @@
 
 Write a [CRediT](https://credit.niso.org/) authorship statement in Typst, with a role-by-contributor
 table and a contribution heatmap. The wording, levels and translations match the
-[CRediT matrix app](https://github.com/simonvanlierde/credit-matrix). Plan the roles in the app,
-export them as JSON and print them in your paper.
+[CRediT matrix app](https://github.com/simonvanlierde/credit-matrix).
+Use a contributor JSON file to print both in your paper.
 
 ## Install
 
@@ -13,16 +13,77 @@ Import it from [Typst Universe](https://typst.app/universe/package/credit-matrix
 #import "@preview/credit-matrix:0.13.0": *
 ```
 
-To work from the repository, copy this folder (`lib.typ`, `translations.json`,
-`typst.toml`) into your project and import `lib.typ`:
-
-```typ
-#import "credit-matrix/lib.typ": *
-```
-
 This needs Typst 0.14 or later.
 
 ## Use
+
+Save your JSON export as `contributors.json` beside `paper.typ`, or use this sample.
+If the download is named `credit_result.json`, rename it to `contributors.json`.
+The export keeps contribution levels and non-author contributors.
+
+<!-- live: typst -->
+
+```json
+{
+  "version": 1,
+  "authors": [
+    {
+      "id": "marie", "name": "Marie Curie",
+      "firstName": "Marie", "middleName": "", "surname": "Curie", "initials": "MC", "contributorType": "author",
+      "contributions": [
+        {"role": "Conceptualization", "score": 100},
+        {"role": "Software", "score": 33}
+      ]
+    },
+    {
+      "id": "albert", "name": "Albert Einstein",
+      "firstName": "Albert", "middleName": "", "surname": "Einstein", "initials": "AE", "contributorType": "author",
+      "contributions": [
+        {"role": "Formal analysis", "score": 66},
+        {"role": "Investigation", "score": 100}
+      ]
+    }
+  ]
+}
+```
+
+After the import, add this to `paper.typ`:
+
+```typ
+#credit-statement(json("contributors.json"), levels: true)
+```
+
+Build the PDF:
+
+```sh
+typst compile paper.typ
+```
+
+With the sample data, the statement lists Marie Curie's Conceptualization and Software (Supporting),
+then Albert Einstein's Formal analysis (Equal) and Investigation.
+
+![The statement, table and heatmap of examples/basic.typ](examples/basic.png)
+
+## Contribution heatmap options
+
+Add this after the statement, then run `typst compile paper.typ` again:
+
+```typ
+#credit-heatmap(json("contributors.json"))
+```
+
+The PDF now includes a contribution heatmap from the same file.
+
+See [figure options and examples](../heatmap.md) for palettes, shapes, sizing, labels and orientation.
+The figures use the document's fonts. `font: "sans"` and `"serif"` set the built-in stacks, any other
+string is a family name, and an array is a list of them, as in `text(font: ...)`. Add font folders
+with `typst compile --font-path fonts` (or `TYPST_FONT_PATHS`). The other font options are in
+[Your own font](../heatmap.md#your-own-font). For how these figures differ from app and CLI
+exports, see [font portability and PDF export](../figures/README.md).
+
+## Define contributors in Typst
+
+You can also write the contributor data directly in your document:
 
 ```typ
 #let team = (
@@ -32,13 +93,6 @@ This needs Typst 0.14 or later.
 
 #credit-statement(team, levels: true)
 ```
-
-renders as:
-
-> **CRediT: Marie Skłodowska-Curie**: Conceptualization, Software (Supporting), Writing – original draft;
-> **Antonie van Leeuwenhoek**: Formal analysis (Equal), Investigation, Writing – review & editing
-
-![The statement, table and heatmap of examples/basic.typ](examples/basic.png)
 
 ### Contributors
 
@@ -57,14 +111,6 @@ Roles are the slugs of the [CRediT role pages](https://credit.niso.org/): `conce
 `project-administration`, `resources`, `software`, `supervision`, `validation`, `visualization`,
 `writing-original-draft`, `writing-review-editing`. An unknown role stops the build and the message
 names it.
-
-To use the app's export, choose Export data, then JSON, and pass the file:
-
-<!-- live: typst -->
-
-```typ
-#credit-statement(json("team.json"))
-```
 
 ### Functions
 
@@ -112,11 +158,11 @@ The code is [MIT](LICENSE). The role names in `translations.json` come from the 
 under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the translators are listed in
 [CREDITS.md](https://github.com/simonvanlierde/credit-matrix/blob/main/src/core/credit-i18n/translations/CREDITS.md).
 
-## Contribution heatmap options
+## Install from source
 
-See [figure options and examples](../heatmap.md) for palettes, shapes, sizing, labels and orientation.
-The figures use the document's fonts. `font: "sans"` and `"serif"` set the built-in stacks, any other
-string is a family name, and an array is a list of them, as in `text(font: ...)`. Add font folders
-with `typst compile --font-path fonts` (or `TYPST_FONT_PATHS`). The other font options are in
-[Your own font](../heatmap.md#your-own-font). For how these figures differ from app and CLI
-exports, see [font portability and PDF export](../figures/README.md).
+To work from the repository, copy this folder (`lib.typ`, `translations.json`,
+`typst.toml`) into your project and import `lib.typ`:
+
+```typ
+#import "credit-matrix/lib.typ": *
+```

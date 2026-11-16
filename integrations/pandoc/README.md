@@ -10,6 +10,9 @@ Pandoc and Quarto share this file.
 
 ## Use
 
+Add authors and roles to the front matter of `paper.md`. Use the example below, or copy the
+app's Quarto YAML export. Contribution levels are kept; a yes/no export omits them.
+
 <!-- live: pandoc -->
 
 ```yaml
@@ -20,9 +23,10 @@ author:
     roles:
       - conceptualization
       - software: supporting
-      - writing
   - name: Albert Einstein
-    roles: [investigation, analysis]
+    roles:
+      - formal-analysis: equal
+      - investigation
 ---
 ```
 
@@ -30,10 +34,10 @@ author:
 pandoc paper.md --lua-filter=credit-matrix.lua -o paper.html
 ```
 
-The filter adds the statement at the end of the document:
+With the sample data, the filter adds this statement at the end of the document:
 
-> **Marie Curie**: Conceptualization, Software (Supporting), Writing – original draft;
-> **Albert Einstein**: Formal analysis, Investigation.
+> **Marie Curie**: Conceptualization, Software (Supporting);
+> **Albert Einstein**: Formal analysis (Equal), Investigation.
 
 It works with Pandoc's other writers too, including Word and LaTeX.
 
@@ -74,11 +78,28 @@ The [Quarto guide](../quarto/README.md#document-language) lists the languages an
 
 ## Contribution heatmap
 
-Set `credit-matrix.heatmap: true` to add a figure through the package CLI. The filter runs
-`credit-matrix` from `PATH`, or the command line in the `CREDIT_MATRIX_COMMAND` environment variable.
+The figure needs Node 22.19 or later and the package CLI. Install it in your document project:
+
+```sh
+pnpm add -D credit-matrix
+```
+
+Add this to the same front matter, then build with the local CLI:
+
+```yaml
+credit-matrix:
+  heatmap: true
+```
+
+```sh
+CREDIT_MATRIX_COMMAND="node node_modules/credit-matrix/dist/cli.js" pandoc paper.md --lua-filter=credit-matrix.lua -o paper.html
+```
+
+The document now includes a contribution heatmap. If `credit-matrix` is on `PATH`, you can omit
+`CREDIT_MATRIX_COMMAND`. Its value is a command line; no argument can contain a space.
 [Figure options and examples](../heatmap.md) lists every rendering option.
-To use your own font, set `font` to the family name and `font-path` to the folder, or list of
-folders, that holds it, relative to the document. [Your own font](../heatmap.md#your-own-font) lists
+For your own font, set `font` to the family name. Set `font-path` to its folder, or list of
+folders, relative to the document. Merge these options into the same `credit-matrix` block. [Your own font](../heatmap.md#your-own-font) lists
 the other font options:
 
 ```yaml

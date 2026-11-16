@@ -454,6 +454,35 @@ body:has([data-census-page], [data-reading-page]) {
   }
 }
 
+.docs-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 64rem) {
+  .docs-layout {
+    grid-template-columns: 17rem minmax(0, 1fr);
+  }
+}
+@media (min-width: 80rem) {
+  .docs-layout {
+    grid-template-columns: 17rem minmax(0, 1fr) 12rem;
+  }
+}
+
+.docs-article {
+  max-width: none;
+
+  & :is(p, blockquote, ul, ol, dl) {
+    max-width: 75ch;
+  }
+  & :is(h2, h3, h4) {
+    scroll-margin-top: 1.5rem;
+  }
+  /* Keep the static example until its replacement has actually loaded. */
+  & > [data-doc-live]:has(textarea) + [data-doc-static] > [data-doc-fallback] {
+    display: none;
+  }
+}
+
 /* Live examples use the app's controls inside the article's reading layout. */
 .document [data-doc-live] {
   & :is(h3, h4) {

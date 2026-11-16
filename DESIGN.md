@@ -440,3 +440,18 @@ or fills the tab order. Frozen rows disable the items that edit them.
 - **Don't** hide core contribution features on small screens.
 - **Don't** make color the only way to distinguish a matrix value, or a link from the prose it sits
   in.
+
+## Documentation
+
+Docs use the viewport width with a 17rem navigation rail, a flexible article and, from 80rem,
+a 12rem section outline. Paragraphs keep a 75ch reading measure; code, tables and figures may
+use the article's width. Navigation has its own small sans-serif headings and short link names.
+Writing tools, Data and exports, and Reference stay separate. The writing-tool selector opens
+the tool's own URL, and never changes a saved draft. On phones it sits above the guide beside
+collapsible documentation navigation.
+
+Each tool guide leads through installation, contributor data, a build command and its result.
+The example offers sample contributors or the current draft in this browser. It shows one export;
+installation, figure instructions and build commands belong in the guide. Once the interactive
+export is ready, it replaces the adjacent static data block. Failed or unavailable JavaScript
+leaves the static example readable. Sample contributors and expected results match in both forms.
