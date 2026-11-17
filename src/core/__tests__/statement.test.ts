@@ -47,7 +47,7 @@ const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
 
 describe("parity with the census parser", () => {
   it("covers the whole corpus", () => {
-    expect(CORPUS).toHaveLength(63);
+    expect(CORPUS).toHaveLength(64);
   });
 
   it.each(CORPUS.map((c) => [c.pmcid, c] as const))("%s", (_, c) => {
@@ -492,6 +492,48 @@ describe("all other authors after a semicolon", () => {
     ],
     ["A.B. wrote the original draft and all other authors reviewed it.", [[0, "writing-original-draft"]]],
   ])("keeps initials, lower-case words and a role in one clause: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
+  });
+
+  it.each([
+    [
+      "A.B. did the formal analysis under supervision of C.D.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+      ],
+    ],
+    [
+      "A.B. did the formal analysis under the direct supervision of C.D. and E.F.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+        [2, "supervision"],
+      ],
+    ],
+    // The supervisor does not take the next clause's roles, and the subject keeps them.
+    [
+      "A.B. did the formal analysis under the supervision of C.D., and wrote the original draft.",
+      [
+        [0, "formal-analysis"],
+        [0, "writing-original-draft"],
+        [1, "supervision"],
+      ],
+    ],
+    // A name that is no author: no one supervised, and the subject did not.
+    ["A.B. did the formal analysis under the supervision of Prof. Zed.", [[0, "formal-analysis"]]],
+    // The names end at the sentence: EF is not a supervisor.
+    [
+      "AB did the formal analysis under the supervision of CD. EF was involved in funding acquisition.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+        [2, "funding-acquisition"],
+      ],
+    ],
+    // "supervision" with no "under ... of" before it is a role of the subject.
+    ["A.B.: supervision.", [[0, "supervision"]]],
+  ])("gives the supervision role to the supervisor: %s", (text, expected) => {
     expect(pairsOf(text, BELL)).toEqual(expected);
   });
 

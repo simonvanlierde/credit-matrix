@@ -232,6 +232,9 @@ _COLON_RE = re.compile(r"\s*:")
 _APPOSITION_RE = re.compile(r"\s*[(,]\s*(?:authors? \d+\s*[-\u2013]\s*\d+\s*:\s*)?", re.IGNORECASE)
 _NEW_CLAUSE_WORD_RE = re.compile(r"\b(?:under|by|with|from)\b")
 _EXCEPTED_RE = re.compile(r"\s*(?:excepted|excluded|aside)\b")
+_UNDER_RE = re.compile(r"\bunder\s+(?:the\s+)?(?:\w+\s+)?$", re.IGNORECASE)
+_OF_RE = re.compile(r"\s+of\s+", re.IGNORECASE)
+_LIST_JOIN_RE = re.compile(r"\s*(?:,(?:\s*and\b)?|and\b)\s*", re.IGNORECASE)  # a comma or "and", not a full stop
 
 
 def _opens_with_name(lead_in: str) -> bool:
@@ -428,7 +431,33 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         )
     ]
 
+    # "under the supervision of C.D.": the role is C.D.'s, not the subject's. The names after "of" leave
+    # the clause so they do not pair with its other roles; a name that is no author leaves no one with it.
+    # Clause ends are found with them still in, as a full stop after the last name ends the clause.
     ends = _clause_ends(original, mentions)
+    mentions.sort()
+    kept_mentions: list[tuple[int, int, str, int | str]] = []
+    skip = 0
+    for n, mention in enumerate(mentions):
+        start, end, kind, value = mention
+        if n < skip:
+            continue
+        of = _OF_RE.match(original, end) if value == "supervision" and kind == "R" else None
+        if not of or not _UNDER_RE.search(original[max(0, start - 40) : start]):
+            kept_mentions.append(mention)
+            continue
+        at, skip = of.end(), n + 1
+        while (
+            skip < len(mentions)
+            and mentions[skip][2] == "A"
+            and (_LIST_JOIN_RE.fullmatch(original, at, mentions[skip][0]) or at == of.end() == mentions[skip][0])
+        ):
+            at = mentions[skip][1]
+            if int(mentions[skip][3]) >= 0:
+                parsed.assignments.add((int(mentions[skip][3]), "supervision"))
+            skip += 1
+    mentions = kept_mentions
+
     clauses: dict[int, list[tuple[int, str, int | str]]] = {}
     for start, _, kind, value in sorted(mentions):
         clauses.setdefault(bisect_left(ends, start), []).append((start, kind, value))

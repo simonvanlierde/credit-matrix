@@ -197,6 +197,9 @@ const APPROVAL_RE = new RegExp(
 );
 const NEW_CLAUSE_WORD_RE = /(?<![\p{L}\p{N}_])(?:under|by|with|from)(?![\p{L}\p{N}_])/u;
 const APPOSITION_RE = /^\s*[(,]\s*(?:authors? \d+\s*[-\u2013]\s*\d+\s*:\s*)?$/iu;
+const UNDER_RE = new RegExp(String.raw`(?<!${W})under\s+(?:the\s+)?(?:${W}+\s+)?$`, "iu");
+const LIST_JOIN_RE = new RegExp(String.raw`^\s*(?:,(?:\s*and(?!${W}))?|and(?!${W}))\s*$`, "iu"); // a comma or "and", not a full stop
+const OF_RE = /\s+of\s+/iuy;
 const EXCEPTED_RE = /\s*(?:excepted|excluded|aside)(?![\p{L}\p{N}_])/uy;
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
 
@@ -717,7 +720,40 @@ export function parseStatement(statement: string, authorList: readonly Statement
     });
   }
 
+  // "under the supervision of C.D.": the role is C.D.'s, not the subject's. The names after "of" leave
+  // the clause so they do not pair with its other roles; a name that is no author leaves no one with it.
+  // Clause ends are found with them still in, as a full stop after the last name ends the clause.
   const ends = clauseEnds(original, mentions);
+  const assignments = new Set<string>();
+  mentions.sort(compareMentions);
+  const keptMentions: Mention[] = [];
+  for (let n = 0; n < mentions.length; n += 1) {
+    const mention = mentions[n] as Mention;
+    const [start, end, kind, value] = mention;
+    OF_RE.lastIndex = end;
+    if (
+      value !== "supervision" ||
+      kind !== "R" ||
+      !OF_RE.test(original) ||
+      !UNDER_RE.test(original.slice(Math.max(0, start - 40), start))
+    ) {
+      keptMentions.push(mention);
+      continue;
+    }
+    const open = OF_RE.lastIndex;
+    let at = open;
+    for (
+      let next = mentions[n + 1];
+      next?.[2] === "A" && (LIST_JOIN_RE.test(original.slice(at, next[0])) || (at === open && next[0] === open));
+      next = mentions[n + 1]
+    ) {
+      at = next[1];
+      if ((next[3] as number) >= 0) assignments.add(`${next[3]} supervision`);
+      n += 1;
+    }
+  }
+  mentions = keptMentions;
+
   const clauses = new Map<number, [number, Kind, number | string][]>();
   for (const [start, , kind, value] of [...mentions].sort(compareMentions)) {
     const k = bisectLeft(ends, start);
@@ -726,7 +762,6 @@ export function parseStatement(statement: string, authorList: readonly Statement
     else clauses.set(k, [[start, kind, value]]);
   }
 
-  const assignments = new Set<string>();
   let previousPeople: (number | string)[] = [];
   let previousPaired: (number | string)[] = []; // previousPeople, if their clause gave them roles
   // Whom previousPeople's "all other authors" left out, so the clause after it can leave out the same.

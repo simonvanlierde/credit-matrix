@@ -552,6 +552,34 @@ def test_initials_followed_by_lower_case_words_and_a_role_stay_in_one_clause(tex
     assert parse_statement(text, THREE).assignments == expected
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("A.B. did the formal analysis under supervision of C.D.", {(0, "formal-analysis"), (1, "supervision")}),
+        (
+            "A.B. did the formal analysis under the direct supervision of C.D. and E.F.",
+            {(0, "formal-analysis"), (1, "supervision"), (2, "supervision")},
+        ),
+        # The supervisor does not take the next clause's roles, and the subject keeps them.
+        (
+            "A.B. did the formal analysis under the supervision of C.D., and wrote the original draft.",
+            {(0, "formal-analysis"), (0, "writing-original-draft"), (1, "supervision")},
+        ),
+        # A name that is no author: no one supervised, and the subject did not.
+        ("A.B. did the formal analysis under the supervision of Prof. Zed.", {(0, "formal-analysis")}),
+        # The names end at the sentence: EF is not a supervisor.
+        (
+            "AB did the formal analysis under the supervision of CD. EF was involved in funding acquisition.",
+            {(0, "formal-analysis"), (1, "supervision"), (2, "funding-acquisition")},
+        ),
+        # "supervision" with no "under ... of" before it is a role of the subject.
+        ("A.B.: supervision.", {(0, "supervision")}),
+    ],
+)
+def test_under_the_supervision_of_gives_the_role_to_the_supervisor(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
+
+
 def test_all_other_authors_before_ambiguous_initials_is_unchanged():
     # "A.B." fits two authors, so it does not say who it means.
     parsed = parse_statement("C.D.: software. All other authors (A.B.): validation.", [*THREE, Author("Amy", "Bloom")])
