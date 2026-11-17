@@ -711,3 +711,22 @@ def test_long_runs_parse_in_linear_time(unit):
     best(small)  # warm-up
     large = best(small * k)
     assert large < 0.5 or large < 3 * k * best(small)
+
+
+FOUR = [Author("Anna", "Bell"), Author("Chen", "Dong"), Author("Eva", "Fox"), Author("Gus", "Hill")]
+
+
+def pairs_of_four(text):
+    return sorted(parse_statement(text, FOUR).assignments)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A.B.: investigation under the supervision of C.D.; E.F.: software. All other authors: writing – original draft.",
+        "A.B.: investigation, supervised by C.D.; E.F.: software. All other authors: writing – original draft.",
+    ],
+)
+def test_all_other_authors_counts_supervisors_as_named(text):
+    assert (3, "writing-original-draft") in parse_statement(text, FOUR).assignments
+    assert (1, "writing-original-draft") not in parse_statement(text, FOUR).assignments

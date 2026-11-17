@@ -1078,3 +1078,17 @@ describe("readsAsStatement", () => {
     expect(readsAsStatement(text)).toBe(expected);
   });
 });
+
+const FOUR = [author("Anna", "Bell"), author("Chen", "Dong"), author("Eva", "Fox"), author("Gus", "Hill")];
+const pairsOfFour = (text: string) => pairsOf(text, FOUR);
+
+describe("supervision and other lookups", () => {
+  it.each([
+    "A.B.: investigation under the supervision of C.D.; E.F.: software. All other authors: writing – original draft.",
+    "A.B.: investigation, supervised by C.D.; E.F.: software. All other authors: writing – original draft.",
+  ])("all other authors counts supervisors as named: %s", (text) => {
+    const pairs = pairsOfFour(text);
+    expect(pairs).toContainEqual([3, "writing-original-draft"]);
+    expect(pairs).not.toContainEqual([1, "writing-original-draft"]);
+  });
+});

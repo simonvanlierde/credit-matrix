@@ -460,6 +460,14 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
     # names after it leave the clause so they do not pair with its other roles; a name that is no author
     # leaves no one with it. Clause ends are found with them still in, as a full stop after the last name
     # ends the clause.
+    # "All other authors:" means everyone named before it, supervisors included, so that is read first.
+    listed: dict[int, set[int | str]] = {}  # start of each "all other authors:" -> the authors named before it
+    named: set[int | str] = set()
+    for start, end, kind, value in mentions:
+        if value == OTHER_AUTHORS and _COLON_RE.match(original, end):
+            listed[start] = set(named)
+        if kind == "A":
+            named.add(value)
     ends = _clause_ends(original, mentions)
     supervised_by = {m.end() for m in _SUPERVISED_BY_RE.finditer(original)}  # where the names after it start
     if supervised_by or any(kind == "R" and value == "supervision" for _, _, kind, value in mentions):
@@ -496,13 +504,6 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
     previous_people: list[int | str] = []
     previous_paired: list[int | str] = []  # previous_people, if their clause gave them roles
     previous_against: list[int | str] | None = None  # what previous_people's "all other authors" was set against
-    listed: dict[int, set[int | str]] = {}  # start of each "all other authors:" -> the authors named before it
-    named: set[int | str] = set()
-    for start, end, kind, value in mentions:
-        if value == OTHER_AUTHORS and _COLON_RE.match(original, end):
-            listed[start] = set(named)
-        if kind == "A":
-            named.add(value)
     for k, clause in sorted(clauses.items()):
         runs: list[tuple[str, list[int | str]]] = []
         starts: list[int] = []

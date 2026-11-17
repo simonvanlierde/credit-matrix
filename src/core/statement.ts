@@ -751,6 +751,15 @@ export function parseStatement(statement: string, authorList: readonly Statement
   // leaves no one with it. Clause ends are found with them still in, as a full stop after the last name
   // ends the clause.
   mentions.sort(compareMentions);
+  // "All other authors:" means everyone named before it, supervisors included, so that is read first.
+  // Start of each "all other authors:" -> the authors named before it.
+  const listed = new Map<number, Set<number | string>>();
+  const named = new Set<number | string>();
+  for (const [start, end, kind, value] of mentions) {
+    COLON_RE.lastIndex = end;
+    if (value === OTHER_AUTHORS && COLON_RE.test(original)) listed.set(start, new Set(named));
+    if (kind === "A" && ((value as number) >= 0 || value === ALL_AUTHORS)) named.add(value);
+  }
   const ends = clauseEnds(original, mentions);
   const assignments = new Set<string>();
   const supervisedBy = new Set<number>(); // where the names after "supervised by" start
@@ -802,14 +811,6 @@ export function parseStatement(statement: string, authorList: readonly Statement
   let previousPaired: (number | string)[] = []; // previousPeople, if their clause gave them roles
   // Whom previousPeople's "all other authors" left out, so the clause after it can leave out the same.
   let previousLeftOut: Set<number | string> | undefined;
-  // Start of each "all other authors:" -> the authors named before it.
-  const listed = new Map<number, Set<number | string>>();
-  const named = new Set<number | string>();
-  for (const [start, end, kind, value] of [...mentions].sort(compareMentions)) {
-    COLON_RE.lastIndex = end;
-    if (value === OTHER_AUTHORS && COLON_RE.test(original)) listed.set(start, new Set(named));
-    if (kind === "A" && ((value as number) >= 0 || value === ALL_AUTHORS)) named.add(value);
-  }
   for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {
     const runs: [Kind, (number | string)[]][] = [];
     const starts: number[] = [];
