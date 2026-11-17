@@ -1136,3 +1136,17 @@ describe("apposition", () => {
     ]);
   });
 });
+
+describe("supervisor lists", () => {
+  it.each([
+    "A.B. conceived the study. C.D. and E.F. did the investigation under the supervision of A.B. and G.H. wrote the original draft.",
+    "A.B. conceived the study. C.D. and E.F. did the investigation, supervised by A.B. and G.H. wrote the original draft.",
+  ])("stop before the next subject: %s", (text) => {
+    expect(pairsOfFour(text)).toEqual([
+      [0, "supervision"],
+      [1, "investigation"],
+      [2, "investigation"],
+      [3, "writing-original-draft"],
+    ]);
+  });
+});

@@ -788,7 +788,10 @@ export function parseStatement(statement: string, authorList: readonly Statement
       let at = open;
       for (
         let next = mentions[n + 1];
-        next?.[2] === "A" && (LIST_JOIN_RE.test(original.slice(at, next[0])) || (at === open && next[0] === open));
+        next?.[2] === "A" &&
+        (LIST_JOIN_RE.test(original.slice(at, next[0])) || (at === open && next[0] === open)) &&
+        // A later name with a verb after it is the next clause's subject: "of A.B. and G.H. wrote ...".
+        (at === open || !VERB_NEXT_RE.test(original.slice(next[1])));
         next = mentions[n + 1]
       ) {
         at = next[1];

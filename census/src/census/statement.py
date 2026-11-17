@@ -282,6 +282,11 @@ def _lower(text: str) -> str:
 _NEXT_LETTER_RE = re.compile(r"\s*(?!and\b)([^\W\d_])")  # "and" continues a list; a lower-case word is a verb
 
 
+def _verb_follows(text: str, pos: int) -> bool:
+    letter = _NEXT_LETTER_RE.match(text, pos)
+    return bool(letter and letter[1].islower())
+
+
 def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> list[int]:
     """Positions where one assignment clause ends: a semicolon; a full stop after a lower-case word
     ("draft. NZ:"); and a full stop after an author ("Nam KC. Data curation", "A.B. Methodology",
@@ -309,12 +314,10 @@ def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> 
             # "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
             # unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
             continue
-        elif gap == ". " and text[start + 1 : start + 2] == ".":
+        elif gap == ". " and text[start + 1 : start + 2] == "." and not _verb_follows(text, nend):
             # Two initials with only ". " between them were one token before they were split ("M.S.B. D.K.;
             # ..."), unless a verb follows the second ("H.M. R.L. wrote ..." starts a sentence).
-            verb = _NEXT_LETTER_RE.match(text, nend)
-            if not (verb and verb[1].islower()):
-                continue
+            continue
         ends.append(end)
     # Mentions and semicolons are looked up by position, so a long statement stays linear.
     starts = [s for s, _, _, _ in ordered]
@@ -490,6 +493,8 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
                 skip < len(mentions)
                 and mentions[skip][2] == "A"
                 and (_LIST_JOIN_RE.fullmatch(original, at, mentions[skip][0]) or at == open_ == mentions[skip][0])
+                # A later name with a verb after it is the next clause's subject: "of A.B. and G.H. wrote ...".
+                and (at == open_ or not _verb_follows(original, mentions[skip][1]))
             ):
                 at = mentions[skip][1]
                 if int(mentions[skip][3]) >= 0:

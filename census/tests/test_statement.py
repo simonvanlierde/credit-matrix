@@ -760,3 +760,21 @@ def test_apposition_digits_are_ascii():
         (2, "software"),
         (3, "software"),
     ]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A.B. conceived the study. C.D. and E.F. did the investigation under the supervision of A.B. "
+        "and G.H. wrote the original draft.",
+        "A.B. conceived the study. C.D. and E.F. did the investigation, supervised by A.B. "
+        "and G.H. wrote the original draft.",
+    ],
+)
+def test_supervisor_list_stops_before_the_next_subject(text):
+    assert pairs_of_four(text) == [
+        (0, "supervision"),
+        (1, "investigation"),
+        (2, "investigation"),
+        (3, "writing-original-draft"),
+    ]
