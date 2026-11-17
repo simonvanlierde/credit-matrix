@@ -201,7 +201,7 @@ const UNDER_RE = new RegExp(String.raw`(?<!${W})under\s+(?:the\s+)?(?:${W}+\s+)?
 const LIST_JOIN_RE = new RegExp(String.raw`^\s*(?:,(?:\s*and(?!${W}))?|and(?!${W}))\s*$`, "iu"); // a comma or "and", not a full stop
 const OF_RE = /\s+of\s+/iuy;
 // Not a role pattern: that would move the census role counts and style detection.
-const SUPERVISED_BY_RE = new RegExp(String.raw`(?<!${W})supervised\s+by\s+$`, "iu");
+const SUPERVISED_BY_RE = new RegExp(String.raw`(?<!${W})supervised\s+by\s+`, "giu");
 const EXCEPTED_RE = /\s*(?:excepted|excluded|aside)(?![\p{L}\p{N}_])/uy;
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
 
@@ -492,31 +492,36 @@ const compareMentions = (a: Mention, b: Mention) =>
  * "EF. AB is the guarantor"), but not "C.D.: writing", where the colon ties the author to the roles
  * after it. Ends that {@link joins} reads as inside a clause are left out.
  */
-function clauseEnds(text: string, mentions: Mention[]): number[] {
+function clauseEnds(text: string, mentions: readonly Mention[]): number[] {
   const semicolons = Array.from(text.matchAll(/;/g), (m) => m.index);
   const ends = [...semicolons];
   for (const m of text.matchAll(/\.(?=\s|$)/gu)) {
     const before = m.index ? (text[m.index - 1] ?? "") : "";
     if (before === "" || isLowerWord(before) || ")]".includes(before)) ends.push(m.index);
   }
-  const ordered = [...mentions].sort(compareMentions);
+  const ordered = mentions;
   for (let i = 1; i < ordered.length; i += 1) {
     const [, end, kind] = ordered[i - 1] as Mention;
+    if (kind !== "A") continue;
     const [start, nextEnd, nextKind] = ordered[i] as Mention;
     const gap = text.slice(end - 1, start);
-    // "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
-    // unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
-    // Two initials with only ". " between them were one token before they were split ("M.S.B. D.K.; ..."),
-    // unless a verb follows the second ("H.M. R.L. wrote ..." starts a sentence).
-    const joined =
-      JOINED_RE.test(gap) || (gap === ". " && text[start + 1] === "." && !VERB_NEXT_RE.test(text.slice(nextEnd)));
-    // A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a new
-    // clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
-    const after = gap.slice(gap.indexOf(".") + 1);
-    const roleNext = nextKind === "R" && (!/^[^\p{L}\p{N}]*\p{Ll}/u.test(after) || NEW_CLAUSE_WORD_RE.test(after));
-    if (kind === "A" && gap.includes(".") && !gap.includes(":") && (roleNext || (nextKind !== "R" && !joined))) {
-      ends.push(end);
+    if (!gap.includes(".") || gap.includes(":")) continue;
+    if (nextKind === "R") {
+      // A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a new
+      // clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
+      const after = gap.slice(gap.indexOf(".") + 1);
+      if (/^[^\p{L}\p{N}]*\p{Ll}/u.test(after) && !NEW_CLAUSE_WORD_RE.test(after)) continue;
+    } else if (
+      // "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
+      // unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F."). Two initials with only
+      // ". " between them were one token before they were split ("M.S.B. D.K.; ..."), unless a verb follows
+      // the second ("H.M. R.L. wrote ..." starts a sentence).
+      JOINED_RE.test(gap) ||
+      (gap === ". " && text[start + 1] === "." && !VERB_NEXT_RE.test(text.slice(nextEnd)))
+    ) {
+      continue;
     }
+    ends.push(end);
   }
   // Mentions and semicolons are looked up by position, so a long statement stays linear.
   const lookup: Lookup = { text, ordered, starts: ordered.map(([s]) => s), semicolons };
@@ -745,44 +750,48 @@ export function parseStatement(statement: string, authorList: readonly Statement
   // names after it leave the clause so they do not pair with its other roles; a name that is no author
   // leaves no one with it. Clause ends are found with them still in, as a full stop after the last name
   // ends the clause.
+  mentions.sort(compareMentions);
   const ends = clauseEnds(original, mentions);
   const assignments = new Set<string>();
-  mentions.sort(compareMentions);
-  const keptMentions: Mention[] = [];
-  for (let n = 0; n < mentions.length; n += 1) {
-    const mention = mentions[n] as Mention;
-    const [start, end, kind, value] = mention;
-    OF_RE.lastIndex = end;
-    let open: number;
-    if (
-      value === "supervision" &&
-      kind === "R" &&
-      OF_RE.test(original) &&
-      UNDER_RE.test(original.slice(Math.max(0, start - 40), start))
-    ) {
-      open = OF_RE.lastIndex;
-    } else if (kind === "A" && SUPERVISED_BY_RE.test(original.slice(Math.max(0, start - 20), start))) {
-      open = start;
-      n -= 1; // the first name is in the list
-    } else {
-      keptMentions.push(mention);
-      continue;
+  const supervisedBy = new Set<number>(); // where the names after "supervised by" start
+  for (const m of original.matchAll(SUPERVISED_BY_RE)) supervisedBy.add(m.index + m[0].length);
+  if (supervisedBy.size > 0 || mentions.some((m) => m[2] === "R" && m[3] === "supervision")) {
+    const keptMentions: Mention[] = [];
+    for (let n = 0; n < mentions.length; n += 1) {
+      const mention = mentions[n] as Mention;
+      const [start, end, kind, value] = mention;
+      OF_RE.lastIndex = end;
+      let open: number;
+      if (
+        value === "supervision" &&
+        kind === "R" &&
+        OF_RE.test(original) &&
+        UNDER_RE.test(original.slice(Math.max(0, start - 40), start))
+      ) {
+        open = OF_RE.lastIndex;
+      } else if (kind === "A" && supervisedBy.has(start)) {
+        open = start;
+        n -= 1; // the first name is in the list
+      } else {
+        keptMentions.push(mention);
+        continue;
+      }
+      let at = open;
+      for (
+        let next = mentions[n + 1];
+        next?.[2] === "A" && (LIST_JOIN_RE.test(original.slice(at, next[0])) || (at === open && next[0] === open));
+        next = mentions[n + 1]
+      ) {
+        at = next[1];
+        if ((next[3] as number) >= 0) assignments.add(`${next[3]} supervision`);
+        n += 1;
+      }
     }
-    let at = open;
-    for (
-      let next = mentions[n + 1];
-      next?.[2] === "A" && (LIST_JOIN_RE.test(original.slice(at, next[0])) || (at === open && next[0] === open));
-      next = mentions[n + 1]
-    ) {
-      at = next[1];
-      if ((next[3] as number) >= 0) assignments.add(`${next[3]} supervision`);
-      n += 1;
-    }
+    mentions = keptMentions;
   }
-  mentions = keptMentions;
 
   const clauses = new Map<number, [number, Kind, number | string][]>();
-  for (const [start, , kind, value] of [...mentions].sort(compareMentions)) {
+  for (const [start, , kind, value] of mentions) {
     const k = bisectLeft(ends, start);
     const clause = clauses.get(k);
     if (clause) clause.push([start, kind, value]);
