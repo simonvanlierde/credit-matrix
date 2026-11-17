@@ -201,7 +201,7 @@ const UNDER_RE = new RegExp(String.raw`(?<!${W})under\s+(?:the\s+)?(?:${W}+\s+)?
 const LIST_JOIN_RE = new RegExp(String.raw`^\s*(?:,(?:\s*and(?!${W}))?|and(?!${W}))\s*$`, "iu"); // a comma or "and", not a full stop
 const OF_RE = /\s+of\s+/iuy;
 // Not a role pattern: that would move the census role counts and style detection.
-const SUPERVISED_BY_RE = new RegExp(String.raw`(?<!${W})supervised\s+by\s+`, "giu");
+const SUPERVISED_BY_RE = new RegExp(dotlessI(String.raw`(?<!${W})supervised\s+by\s+`), "giu");
 const EXCEPTED_RE = /\s*(?:excepted|excluded|aside)(?![\p{L}\p{N}_])/uy;
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
 

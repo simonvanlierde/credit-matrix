@@ -1092,3 +1092,12 @@ describe("supervision and other lookups", () => {
     expect(pairs).not.toContainEqual([1, "writing-original-draft"]);
   });
 });
+
+describe("supervised by", () => {
+  it.each(["supervised", "supervısed", "SUPERVİSED"])("reads %s with dotted and dotless i", (word) => {
+    expect(pairsOfFour(`A.B. did the formal analysis, ${word} by C.D.`)).toEqual([
+      [0, "formal-analysis"],
+      [1, "supervision"],
+    ]);
+  });
+});

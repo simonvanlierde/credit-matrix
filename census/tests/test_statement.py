@@ -730,3 +730,9 @@ def pairs_of_four(text):
 def test_all_other_authors_counts_supervisors_as_named(text):
     assert (3, "writing-original-draft") in parse_statement(text, FOUR).assignments
     assert (1, "writing-original-draft") not in parse_statement(text, FOUR).assignments
+
+
+@pytest.mark.parametrize("word", ["supervised", "supervısed", "SUPERVİSED"])
+def test_supervised_by_reads_dotted_and_dotless_i(word):
+    parsed = parse_statement(f"A.B. did the formal analysis, {word} by C.D.", FOUR)
+    assert sorted(parsed.assignments) == [(0, "formal-analysis"), (1, "supervision")]
