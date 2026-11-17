@@ -73,7 +73,7 @@ _INITIALS_RE = re.compile(
 # remaining authors"), and so is "the other authors": read as mentions, they would hand the roles nearby to
 # everyone else.
 _ALL_RE = re.compile(
-    r"\ball (?:the )?(?:(other|remaining) )?authors\b"
+    r"\ball (?:(?:of )?the )?(?:(other|remaining) )?authors\b"
     r"|(?:^|(?<=[,;:.])|(?<=[,;:.] ))((?:the )?remaining authors)\b"
     r"|\b((?:the )?remaining authors)(?=\s*:)",
     re.IGNORECASE,
@@ -82,7 +82,7 @@ _ALL_RE = re.compile(
 # authors read and approved it". "All authors contributed to the investigation" is, so only approval wording
 # is dropped.
 _APPROVAL_RE = re.compile(
-    r"\b(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?"
+    r"\b(?:all (?:(?:of )?the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?"
     r"(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)"
     r"[^;]*?(?:\.(?=\s|$)|;|$)",
     re.IGNORECASE,

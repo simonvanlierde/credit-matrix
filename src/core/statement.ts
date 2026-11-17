@@ -178,7 +178,7 @@ const INITIALS_RE = new RegExp(
 // everyone else.
 const ALL_RE = new RegExp(
   dotlessI(
-    `(?<!${W})all (?:the )?(?:(other|remaining) )?authors(?!${W})` +
+    `(?<!${W})all (?:(?:of )?the )?(?:(other|remaining) )?authors(?!${W})` +
       `|(?:^|(?<=[,;:.] ?))((?:the )?remaining authors)(?!${W})` +
       String.raw`|(?<!${W})((?:the )?remaining authors)(?=\s*:)`,
   ),
@@ -189,7 +189,7 @@ const ALL_RE = new RegExp(
 // is dropped.
 const APPROVAL_RE = new RegExp(
   dotlessI(
-    `(?<!${W})(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?` +
+    `(?<!${W})(?:all (?:(?:of )?the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?` +
       "(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)" +
       String.raw`[^;]*?(?:\.(?=\s|$)|;|$)`,
   ),

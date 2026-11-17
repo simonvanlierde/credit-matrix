@@ -47,7 +47,7 @@ const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
 
 describe("parity with the census parser", () => {
   it("covers the whole corpus", () => {
-    expect(CORPUS).toHaveLength(65);
+    expect(CORPUS).toHaveLength(66);
   });
 
   it.each(CORPUS.map((c) => [c.pmcid, c] as const))("%s", (_, c) => {
@@ -575,6 +575,30 @@ describe("all other authors after a semicolon", () => {
     // The active verb is not read here.
     ["A.B. supervised the project.", []],
   ])("gives the supervision role to who supervised: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
+  });
+
+  it.each([
+    [
+      "A.B.: software. All of the authors contributed to validation.",
+      [
+        [0, "software"],
+        [0, "validation"],
+        [1, "validation"],
+        [2, "validation"],
+      ],
+    ],
+    [
+      "A.B.: software. All of the other authors contributed to validation.",
+      [
+        [0, "software"],
+        [1, "validation"],
+        [2, "validation"],
+      ],
+    ],
+    // Approval wording is still dropped.
+    ["A.B.: software. All of the authors read and approved the manuscript.", [[0, "software"]]],
+  ])("reads all of the authors as all authors: %s", (text, expected) => {
     expect(pairsOf(text, BELL)).toEqual(expected);
   });
 

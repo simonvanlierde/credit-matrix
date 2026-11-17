@@ -605,6 +605,25 @@ def test_supervised_by_gives_the_role_to_the_supervisor(text, expected):
     assert parse_statement(text, THREE).assignments == expected
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        (
+            "A.B.: software. All of the authors contributed to validation.",
+            {(0, "software"), (0, "validation"), (1, "validation"), (2, "validation")},
+        ),
+        (
+            "A.B.: software. All of the other authors contributed to validation.",
+            {(0, "software"), (1, "validation"), (2, "validation")},
+        ),
+        # Approval wording is still dropped.
+        ("A.B.: software. All of the authors read and approved the manuscript.", {(0, "software")}),
+    ],
+)
+def test_all_of_the_authors_is_all_authors(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
+
+
 def test_all_other_authors_before_ambiguous_initials_is_unchanged():
     # "A.B." fits two authors, so it does not say who it means.
     parsed = parse_statement("C.D.: software. All other authors (A.B.): validation.", [*THREE, Author("Amy", "Bloom")])
