@@ -200,6 +200,8 @@ const APPOSITION_RE = /^\s*[(,]\s*(?:authors? \d+\s*[-\u2013]\s*\d+\s*:\s*)?$/iu
 const UNDER_RE = new RegExp(String.raw`(?<!${W})under\s+(?:the\s+)?(?:${W}+\s+)?$`, "iu");
 const LIST_JOIN_RE = new RegExp(String.raw`^\s*(?:,(?:\s*and(?!${W}))?|and(?!${W}))\s*$`, "iu"); // a comma or "and", not a full stop
 const OF_RE = /\s+of\s+/iuy;
+// Not a role pattern: that would move the census role counts and style detection.
+const SUPERVISED_BY_RE = new RegExp(String.raw`(?<!${W})supervised\s+by\s+$`, "iu");
 const EXCEPTED_RE = /\s*(?:excepted|excluded|aside)(?![\p{L}\p{N}_])/uy;
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
 
@@ -720,9 +722,10 @@ export function parseStatement(statement: string, authorList: readonly Statement
     });
   }
 
-  // "under the supervision of C.D.": the role is C.D.'s, not the subject's. The names after "of" leave
-  // the clause so they do not pair with its other roles; a name that is no author leaves no one with it.
-  // Clause ends are found with them still in, as a full stop after the last name ends the clause.
+  // "under the supervision of C.D." and "supervised by C.D.": the role is C.D.'s, not the subject's. The
+  // names after it leave the clause so they do not pair with its other roles; a name that is no author
+  // leaves no one with it. Clause ends are found with them still in, as a full stop after the last name
+  // ends the clause.
   const ends = clauseEnds(original, mentions);
   const assignments = new Set<string>();
   mentions.sort(compareMentions);
@@ -731,16 +734,21 @@ export function parseStatement(statement: string, authorList: readonly Statement
     const mention = mentions[n] as Mention;
     const [start, end, kind, value] = mention;
     OF_RE.lastIndex = end;
+    let open: number;
     if (
-      value !== "supervision" ||
-      kind !== "R" ||
-      !OF_RE.test(original) ||
-      !UNDER_RE.test(original.slice(Math.max(0, start - 40), start))
+      value === "supervision" &&
+      kind === "R" &&
+      OF_RE.test(original) &&
+      UNDER_RE.test(original.slice(Math.max(0, start - 40), start))
     ) {
+      open = OF_RE.lastIndex;
+    } else if (kind === "A" && SUPERVISED_BY_RE.test(original.slice(Math.max(0, start - 20), start))) {
+      open = start;
+      n -= 1; // the first name is in the list
+    } else {
       keptMentions.push(mention);
       continue;
     }
-    const open = OF_RE.lastIndex;
     let at = open;
     for (
       let next = mentions[n + 1];

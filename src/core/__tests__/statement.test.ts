@@ -47,7 +47,7 @@ const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
 
 describe("parity with the census parser", () => {
   it("covers the whole corpus", () => {
-    expect(CORPUS).toHaveLength(64);
+    expect(CORPUS).toHaveLength(65);
   });
 
   it.each(CORPUS.map((c) => [c.pmcid, c] as const))("%s", (_, c) => {
@@ -534,6 +534,47 @@ describe("all other authors after a semicolon", () => {
     // "supervision" with no "under ... of" before it is a role of the subject.
     ["A.B.: supervision.", [[0, "supervision"]]],
   ])("gives the supervision role to the supervisor: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
+  });
+
+  it.each([
+    [
+      "The experiments were supervised by A.B. and C.D.",
+      [
+        [0, "supervision"],
+        [1, "supervision"],
+      ],
+    ],
+    // The subject keeps its own roles and does not get the supervision.
+    [
+      "E.F. did the formal analysis, supervised by A.B.",
+      [
+        [0, "supervision"],
+        [2, "formal-analysis"],
+      ],
+    ],
+    [
+      "E.F. did the formal analysis, supervised by A.B., and wrote the original draft.",
+      [
+        [0, "supervision"],
+        [2, "formal-analysis"],
+        [2, "writing-original-draft"],
+      ],
+    ],
+    // A name that is no author: no one supervised, and the subject did not.
+    ["E.F. did the formal analysis, supervised by Prof. Zed.", [[2, "formal-analysis"]]],
+    // The names end at the sentence: EF is not a supervisor.
+    [
+      "AB did the formal analysis, supervised by CD. EF was involved in funding acquisition.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+        [2, "funding-acquisition"],
+      ],
+    ],
+    // The active verb is not read here.
+    ["A.B. supervised the project.", []],
+  ])("gives the supervision role to who supervised: %s", (text, expected) => {
     expect(pairsOf(text, BELL)).toEqual(expected);
   });
 

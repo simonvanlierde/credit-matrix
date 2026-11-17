@@ -580,6 +580,31 @@ def test_under_the_supervision_of_gives_the_role_to_the_supervisor(text, expecte
     assert parse_statement(text, THREE).assignments == expected
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("The experiments were supervised by A.B. and C.D.", {(0, "supervision"), (1, "supervision")}),
+        # The subject keeps its own roles and does not get the supervision.
+        ("E.F. did the formal analysis, supervised by A.B.", {(2, "formal-analysis"), (0, "supervision")}),
+        (
+            "E.F. did the formal analysis, supervised by A.B., and wrote the original draft.",
+            {(2, "formal-analysis"), (2, "writing-original-draft"), (0, "supervision")},
+        ),
+        # A name that is no author: no one supervised, and the subject did not.
+        ("E.F. did the formal analysis, supervised by Prof. Zed.", {(2, "formal-analysis")}),
+        # The names end at the sentence: EF is not a supervisor.
+        (
+            "AB did the formal analysis, supervised by CD. EF was involved in funding acquisition.",
+            {(0, "formal-analysis"), (1, "supervision"), (2, "funding-acquisition")},
+        ),
+        # The active verb is not read here.
+        ("A.B. supervised the project.", set()),
+    ],
+)
+def test_supervised_by_gives_the_role_to_the_supervisor(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
+
+
 def test_all_other_authors_before_ambiguous_initials_is_unchanged():
     # "A.B." fits two authors, so it does not say who it means.
     parsed = parse_statement("C.D.: software. All other authors (A.B.): validation.", [*THREE, Author("Amy", "Bloom")])

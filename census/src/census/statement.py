@@ -234,6 +234,8 @@ _NEW_CLAUSE_WORD_RE = re.compile(r"\b(?:under|by|with|from)\b")
 _EXCEPTED_RE = re.compile(r"\s*(?:excepted|excluded|aside)\b")
 _UNDER_RE = re.compile(r"\bunder\s+(?:the\s+)?(?:\w+\s+)?$", re.IGNORECASE)
 _OF_RE = re.compile(r"\s+of\s+", re.IGNORECASE)
+# Not a role pattern: that would move the census role counts and style detection.
+_SUPERVISED_BY_RE = re.compile(r"\bsupervised\s+by\s+$", re.IGNORECASE)
 _LIST_JOIN_RE = re.compile(r"\s*(?:,(?:\s*and\b)?|and\b)\s*", re.IGNORECASE)  # a comma or "and", not a full stop
 
 
@@ -431,9 +433,10 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         )
     ]
 
-    # "under the supervision of C.D.": the role is C.D.'s, not the subject's. The names after "of" leave
-    # the clause so they do not pair with its other roles; a name that is no author leaves no one with it.
-    # Clause ends are found with them still in, as a full stop after the last name ends the clause.
+    # "under the supervision of C.D." and "supervised by C.D.": the role is C.D.'s, not the subject's. The
+    # names after it leave the clause so they do not pair with its other roles; a name that is no author
+    # leaves no one with it. Clause ends are found with them still in, as a full stop after the last name
+    # ends the clause.
     ends = _clause_ends(original, mentions)
     mentions.sort()
     kept_mentions: list[tuple[int, int, str, int | str]] = []
@@ -443,14 +446,18 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         if n < skip:
             continue
         of = _OF_RE.match(original, end) if value == "supervision" and kind == "R" else None
-        if not of or not _UNDER_RE.search(original[max(0, start - 40) : start]):
+        if of and _UNDER_RE.search(original[max(0, start - 40) : start]):
+            open_, skip = of.end(), n + 1
+        elif kind == "A" and _SUPERVISED_BY_RE.search(original, max(0, start - 20), start):
+            open_, skip = start, n
+        else:
             kept_mentions.append(mention)
             continue
-        at, skip = of.end(), n + 1
+        at = open_
         while (
             skip < len(mentions)
             and mentions[skip][2] == "A"
-            and (_LIST_JOIN_RE.fullmatch(original, at, mentions[skip][0]) or at == of.end() == mentions[skip][0])
+            and (_LIST_JOIN_RE.fullmatch(original, at, mentions[skip][0]) or at == open_ == mentions[skip][0])
         ):
             at = mentions[skip][1]
             if int(mentions[skip][3]) >= 0:
