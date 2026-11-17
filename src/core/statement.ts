@@ -510,7 +510,7 @@ function clauseEnds(text: string, mentions: readonly Mention[]): number[] {
       // A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a new
       // clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
       const after = gap.slice(gap.indexOf(".") + 1);
-      if (/^[^\p{L}\p{N}]*\p{Ll}/u.test(after) && !NEW_CLAUSE_WORD_RE.test(after)) continue;
+      if (/^[^\p{L}\p{N}]*\p{Lowercase}/u.test(after) && !NEW_CLAUSE_WORD_RE.test(after)) continue;
     } else if (
       // "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
       // unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F."). Two initials with only
@@ -540,7 +540,7 @@ interface Lookup {
   semicolons: number[];
 }
 
-const VERB_NEXT_RE = new RegExp(String.raw`^\s*(?!and(?!${W}))\p{Ll}`, "u"); // "and" continues a list; a lower-case word is a verb
+const VERB_NEXT_RE = new RegExp(String.raw`^\s*(?!and(?!${W}))\p{Lowercase}`, "u"); // "and" continues a list; a lower-case word is a verb
 const JOINED_RE = new RegExp(`[,;]|(?<!${W})and(?!${W})`, "u");
 const INITIALS_ONLY_RE = new RegExp(`^(?:${INITIALS_RE.source})$`, "u");
 const AUTHOR_GAP_RE = new RegExp(String.raw`^(?:[\s.,]|(?<!${W})and(?!${W}))*$`, "u");

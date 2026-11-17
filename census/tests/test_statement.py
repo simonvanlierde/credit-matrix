@@ -736,3 +736,15 @@ def test_all_other_authors_counts_supervisors_as_named(text):
 def test_supervised_by_reads_dotted_and_dotless_i(word):
     parsed = parse_statement(f"A.B. did the formal analysis, {word} by C.D.", FOUR)
     assert sorted(parsed.assignments) == [(0, "formal-analysis"), (1, "supervision")]
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # A modifier letter counts as lower case, as in the TypeScript parser.
+        ("Methodology, G.H. A.B. ª contributed to the investigation.", [(0, "investigation"), (3, "methodology")]),
+        ("Investigation: A.B. C.D. ᵃdrafted; software: E.F.", [(0, "investigation"), (2, "software")]),
+    ],
+)
+def test_modifier_letters_are_lower_case(text, expected):
+    assert pairs_of_four(text) == expected

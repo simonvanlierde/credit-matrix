@@ -1101,3 +1101,25 @@ describe("supervised by", () => {
     ]);
   });
 });
+
+describe("modifier letters", () => {
+  // Lower case as in Python's str.islower(): ª, ᵃ and ʰ are not Ll but are Lowercase.
+  it.each([
+    [
+      "Methodology, G.H. A.B. ª contributed to the investigation.",
+      [
+        [0, "investigation"],
+        [3, "methodology"],
+      ],
+    ],
+    [
+      "Investigation: A.B. C.D. ᵃdrafted; software: E.F.",
+      [
+        [0, "investigation"],
+        [2, "software"],
+      ],
+    ],
+  ])("count as lower case: %s", (text, expected) => {
+    expect(pairsOfFour(text)).toEqual(expected);
+  });
+});
