@@ -229,7 +229,7 @@ def _name_variants(author: Author) -> tuple[set[str], set[str]]:
 _AFTER_INITIAL_RE = re.compile(rf"(?<!\w){_U}(?:\.|\.? - )$")
 _CAPITAL_RE = re.compile(_U)
 _COLON_RE = re.compile(r"\s*:")
-_APPOSITION_RE = re.compile(r"\s*[(,]\s*(?:authors? \d+\s*[-\u2013]\s*\d+\s*:\s*)?", re.IGNORECASE)
+_APPOSITION_RE = re.compile(r"\s*[(,]\s*(?:authors? [0-9]+\s*[-\u2013]\s*[0-9]+\s*:\s*)?", re.IGNORECASE)
 _NEW_CLAUSE_WORD_RE = re.compile(r"\b(?:under|by|with|from)\b")
 _EXCEPTED_RE = re.compile(r"\s*(?:excepted|excluded|aside)\b")
 _UNDER_RE = re.compile(r"\bunder\s+(?:the\s+)?(?:\w+\s+)?$", re.IGNORECASE)
@@ -282,6 +282,11 @@ def _lower(text: str) -> str:
 _NEXT_LETTER_RE = re.compile(r"\s*(?!and\b)([^\W\d_])")  # "and" continues a list; a lower-case word is a verb
 
 
+def _verb_follows(text: str, pos: int) -> bool:
+    letter = _NEXT_LETTER_RE.match(text, pos)
+    return bool(letter and letter[1].islower())
+
+
 def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> list[int]:
     """Positions where one assignment clause ends: a semicolon; a full stop after a lower-case word
     ("draft. NZ:"); and a full stop after an author ("Nam KC. Data curation", "A.B. Methodology",
@@ -309,12 +314,10 @@ def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> 
             # "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
             # unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
             continue
-        elif gap == ". " and text[start + 1 : start + 2] == ".":
+        elif gap == ". " and text[start + 1 : start + 2] == "." and not _verb_follows(text, nend):
             # Two initials with only ". " between them were one token before they were split ("M.S.B. D.K.;
             # ..."), unless a verb follows the second ("H.M. R.L. wrote ..." starts a sentence).
-            verb = _NEXT_LETTER_RE.match(text, nend)
-            if not (verb and verb[1].islower()):
-                continue
+            continue
         ends.append(end)
     # Mentions and semicolons are looked up by position, so a long statement stays linear.
     starts = [s for s, _, _, _ in ordered]
@@ -460,6 +463,14 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
     # names after it leave the clause so they do not pair with its other roles; a name that is no author
     # leaves no one with it. Clause ends are found with them still in, as a full stop after the last name
     # ends the clause.
+    # "All other authors:" means everyone named before it, supervisors included, so that is read first.
+    listed: dict[int, set[int | str]] = {}  # start of each "all other authors:" -> the authors named before it
+    named: set[int | str] = set()
+    for start, end, kind, value in mentions:
+        if value == OTHER_AUTHORS and _COLON_RE.match(original, end):
+            listed[start] = set(named)
+        if kind == "A":
+            named.add(value)
     ends = _clause_ends(original, mentions)
     supervised_by = {m.end() for m in _SUPERVISED_BY_RE.finditer(original)}  # where the names after it start
     if supervised_by or any(kind == "R" and value == "supervision" for _, _, kind, value in mentions):
@@ -482,6 +493,8 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
                 skip < len(mentions)
                 and mentions[skip][2] == "A"
                 and (_LIST_JOIN_RE.fullmatch(original, at, mentions[skip][0]) or at == open_ == mentions[skip][0])
+                # A later name with a verb after it is the next clause's subject: "of A.B. and G.H. wrote ...".
+                and (at == open_ or not _verb_follows(original, mentions[skip][1]))
             ):
                 at = mentions[skip][1]
                 if int(mentions[skip][3]) >= 0:
@@ -496,13 +509,6 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
     previous_people: list[int | str] = []
     previous_paired: list[int | str] = []  # previous_people, if their clause gave them roles
     previous_against: list[int | str] | None = None  # what previous_people's "all other authors" was set against
-    listed: dict[int, set[int | str]] = {}  # start of each "all other authors:" -> the authors named before it
-    named: set[int | str] = set()
-    for start, end, kind, value in mentions:
-        if value == OTHER_AUTHORS and _COLON_RE.match(original, end):
-            listed[start] = set(named)
-        if kind == "A":
-            named.add(value)
     for k, clause in sorted(clauses.items()):
         runs: list[tuple[str, list[int | str]]] = []
         starts: list[int] = []

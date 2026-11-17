@@ -711,3 +711,70 @@ def test_long_runs_parse_in_linear_time(unit):
     best(small)  # warm-up
     large = best(small * k)
     assert large < 0.5 or large < 3 * k * best(small)
+
+
+FOUR = [Author("Anna", "Bell"), Author("Chen", "Dong"), Author("Eva", "Fox"), Author("Gus", "Hill")]
+
+
+def pairs_of_four(text):
+    return sorted(parse_statement(text, FOUR).assignments)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A.B.: investigation under the supervision of C.D.; E.F.: software. All other authors: writing – original draft.",
+        "A.B.: investigation, supervised by C.D.; E.F.: software. All other authors: writing – original draft.",
+    ],
+)
+def test_all_other_authors_counts_supervisors_as_named(text):
+    assert (3, "writing-original-draft") in parse_statement(text, FOUR).assignments
+    assert (1, "writing-original-draft") not in parse_statement(text, FOUR).assignments
+
+
+@pytest.mark.parametrize("word", ["supervised", "supervısed", "SUPERVİSED"])
+def test_supervised_by_reads_dotted_and_dotless_i(word):
+    parsed = parse_statement(f"A.B. did the formal analysis, {word} by C.D.", FOUR)
+    assert sorted(parsed.assignments) == [(0, "formal-analysis"), (1, "supervision")]
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # A modifier letter counts as lower case, as in the TypeScript parser.
+        ("Methodology, G.H. A.B. ª contributed to the investigation.", [(0, "investigation"), (3, "methodology")]),
+        ("Investigation: A.B. C.D. ᵃdrafted; software: E.F.", [(0, "investigation"), (2, "software")]),
+    ],
+)
+def test_modifier_letters_are_lower_case(text, expected):
+    assert pairs_of_four(text) == expected
+
+
+def test_apposition_digits_are_ascii():
+    # Full-width digits are no author range: the remaining authors stay everyone else.
+    text = "A.B.: investigation. The remaining authors (authors ２-３: C.D., E.F.): software."
+    assert pairs_of_four(text) == [
+        (0, "investigation"),
+        (0, "software"),
+        (1, "software"),
+        (2, "software"),
+        (3, "software"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A.B. conceived the study. C.D. and E.F. did the investigation under the supervision of A.B. "
+        "and G.H. wrote the original draft.",
+        "A.B. conceived the study. C.D. and E.F. did the investigation, supervised by A.B. "
+        "and G.H. wrote the original draft.",
+    ],
+)
+def test_supervisor_list_stops_before_the_next_subject(text):
+    assert pairs_of_four(text) == [
+        (0, "supervision"),
+        (1, "investigation"),
+        (2, "investigation"),
+        (3, "writing-original-draft"),
+    ]

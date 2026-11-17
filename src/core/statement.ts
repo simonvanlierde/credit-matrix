@@ -201,7 +201,7 @@ const UNDER_RE = new RegExp(String.raw`(?<!${W})under\s+(?:the\s+)?(?:${W}+\s+)?
 const LIST_JOIN_RE = new RegExp(String.raw`^\s*(?:,(?:\s*and(?!${W}))?|and(?!${W}))\s*$`, "iu"); // a comma or "and", not a full stop
 const OF_RE = /\s+of\s+/iuy;
 // Not a role pattern: that would move the census role counts and style detection.
-const SUPERVISED_BY_RE = new RegExp(String.raw`(?<!${W})supervised\s+by\s+`, "giu");
+const SUPERVISED_BY_RE = new RegExp(dotlessI(String.raw`(?<!${W})supervised\s+by\s+`), "giu");
 const EXCEPTED_RE = /\s*(?:excepted|excluded|aside)(?![\p{L}\p{N}_])/uy;
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
 
@@ -510,7 +510,7 @@ function clauseEnds(text: string, mentions: readonly Mention[]): number[] {
       // A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a new
       // clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
       const after = gap.slice(gap.indexOf(".") + 1);
-      if (/^[^\p{L}\p{N}]*\p{Ll}/u.test(after) && !NEW_CLAUSE_WORD_RE.test(after)) continue;
+      if (/^[^\p{L}\p{N}]*\p{Lowercase}/u.test(after) && !NEW_CLAUSE_WORD_RE.test(after)) continue;
     } else if (
       // "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
       // unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F."). Two initials with only
@@ -540,7 +540,7 @@ interface Lookup {
   semicolons: number[];
 }
 
-const VERB_NEXT_RE = new RegExp(String.raw`^\s*(?!and(?!${W}))\p{Ll}`, "u"); // "and" continues a list; a lower-case word is a verb
+const VERB_NEXT_RE = new RegExp(String.raw`^\s*(?!and(?!${W}))\p{Lowercase}`, "u"); // "and" continues a list; a lower-case word is a verb
 const JOINED_RE = new RegExp(`[,;]|(?<!${W})and(?!${W})`, "u");
 const INITIALS_ONLY_RE = new RegExp(`^(?:${INITIALS_RE.source})$`, "u");
 const AUTHOR_GAP_RE = new RegExp(String.raw`^(?:[\s.,]|(?<!${W})and(?!${W}))*$`, "u");
@@ -751,6 +751,15 @@ export function parseStatement(statement: string, authorList: readonly Statement
   // leaves no one with it. Clause ends are found with them still in, as a full stop after the last name
   // ends the clause.
   mentions.sort(compareMentions);
+  // "All other authors:" means everyone named before it, supervisors included, so that is read first.
+  // Start of each "all other authors:" -> the authors named before it.
+  const listed = new Map<number, Set<number | string>>();
+  const named = new Set<number | string>();
+  for (const [start, end, kind, value] of mentions) {
+    COLON_RE.lastIndex = end;
+    if (value === OTHER_AUTHORS && COLON_RE.test(original)) listed.set(start, new Set(named));
+    if (kind === "A" && ((value as number) >= 0 || value === ALL_AUTHORS)) named.add(value);
+  }
   const ends = clauseEnds(original, mentions);
   const assignments = new Set<string>();
   const supervisedBy = new Set<number>(); // where the names after "supervised by" start
@@ -779,7 +788,10 @@ export function parseStatement(statement: string, authorList: readonly Statement
       let at = open;
       for (
         let next = mentions[n + 1];
-        next?.[2] === "A" && (LIST_JOIN_RE.test(original.slice(at, next[0])) || (at === open && next[0] === open));
+        next?.[2] === "A" &&
+        (LIST_JOIN_RE.test(original.slice(at, next[0])) || (at === open && next[0] === open)) &&
+        // A later name with a verb after it is the next clause's subject: "of A.B. and G.H. wrote ...".
+        (at === open || !VERB_NEXT_RE.test(original.slice(next[1])));
         next = mentions[n + 1]
       ) {
         at = next[1];
@@ -802,14 +814,6 @@ export function parseStatement(statement: string, authorList: readonly Statement
   let previousPaired: (number | string)[] = []; // previousPeople, if their clause gave them roles
   // Whom previousPeople's "all other authors" left out, so the clause after it can leave out the same.
   let previousLeftOut: Set<number | string> | undefined;
-  // Start of each "all other authors:" -> the authors named before it.
-  const listed = new Map<number, Set<number | string>>();
-  const named = new Set<number | string>();
-  for (const [start, end, kind, value] of [...mentions].sort(compareMentions)) {
-    COLON_RE.lastIndex = end;
-    if (value === OTHER_AUTHORS && COLON_RE.test(original)) listed.set(start, new Set(named));
-    if (kind === "A" && ((value as number) >= 0 || value === ALL_AUTHORS)) named.add(value);
-  }
   for (const [k, clause] of [...clauses].sort((a, b) => a[0] - b[0])) {
     const runs: [Kind, (number | string)[]][] = [];
     const starts: number[] = [];

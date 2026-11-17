@@ -1078,3 +1078,75 @@ describe("readsAsStatement", () => {
     expect(readsAsStatement(text)).toBe(expected);
   });
 });
+
+const FOUR = [author("Anna", "Bell"), author("Chen", "Dong"), author("Eva", "Fox"), author("Gus", "Hill")];
+const pairsOfFour = (text: string) => pairsOf(text, FOUR);
+
+describe("supervision and other lookups", () => {
+  it.each([
+    "A.B.: investigation under the supervision of C.D.; E.F.: software. All other authors: writing – original draft.",
+    "A.B.: investigation, supervised by C.D.; E.F.: software. All other authors: writing – original draft.",
+  ])("all other authors counts supervisors as named: %s", (text) => {
+    const pairs = pairsOfFour(text);
+    expect(pairs).toContainEqual([3, "writing-original-draft"]);
+    expect(pairs).not.toContainEqual([1, "writing-original-draft"]);
+  });
+});
+
+describe("supervised by", () => {
+  it.each(["supervised", "supervısed", "SUPERVİSED"])("reads %s with dotted and dotless i", (word) => {
+    expect(pairsOfFour(`A.B. did the formal analysis, ${word} by C.D.`)).toEqual([
+      [0, "formal-analysis"],
+      [1, "supervision"],
+    ]);
+  });
+});
+
+describe("modifier letters", () => {
+  // Lower case as in Python's str.islower(): ª, ᵃ and ʰ are not Ll but are Lowercase.
+  it.each([
+    [
+      "Methodology, G.H. A.B. ª contributed to the investigation.",
+      [
+        [0, "investigation"],
+        [3, "methodology"],
+      ],
+    ],
+    [
+      "Investigation: A.B. C.D. ᵃdrafted; software: E.F.",
+      [
+        [0, "investigation"],
+        [2, "software"],
+      ],
+    ],
+  ])("count as lower case: %s", (text, expected) => {
+    expect(pairsOfFour(text)).toEqual(expected);
+  });
+});
+
+describe("apposition", () => {
+  it("reads only ASCII digits in an author range", () => {
+    const text = "A.B.: investigation. The remaining authors (authors ２-３: C.D., E.F.): software.";
+    expect(pairsOfFour(text)).toEqual([
+      [0, "investigation"],
+      [0, "software"],
+      [1, "software"],
+      [2, "software"],
+      [3, "software"],
+    ]);
+  });
+});
+
+describe("supervisor lists", () => {
+  it.each([
+    "A.B. conceived the study. C.D. and E.F. did the investigation under the supervision of A.B. and G.H. wrote the original draft.",
+    "A.B. conceived the study. C.D. and E.F. did the investigation, supervised by A.B. and G.H. wrote the original draft.",
+  ])("stop before the next subject: %s", (text) => {
+    expect(pairsOfFour(text)).toEqual([
+      [0, "supervision"],
+      [1, "investigation"],
+      [2, "investigation"],
+      [3, "writing-original-draft"],
+    ]);
+  });
+});
