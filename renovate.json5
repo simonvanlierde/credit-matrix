@@ -49,11 +49,12 @@
       matchPackageNames: ["tsdown"],
       allowedVersions: "<=0.23.0",
     },
-    // Playwright 1.65.0 ships a Firefox build that crashes the page ("frame.evaluate: Page crashed")
-    // when axe runs label-content-name-mismatch over a whole page. Lift this once a release fixes it.
+    // Playwright 1.65.x ships Firefox build 1572, which crashes the page ("frame.evaluate: Page crashed")
+    // when axe reads ariaLabelledByElements (microsoft/playwright#44135, Mozilla bug 2090055). Build 1578
+    // in the 1.66 alphas passes. Drop this rule once a 1.66 release is merged.
     {
       matchPackageNames: ["@playwright/test"],
-      allowedVersions: "<=1.64.1",
+      allowedVersions: "!/^1\\.65\\./",
     },
     // Core and the Vitest runner must move together.
     {
