@@ -47,7 +47,7 @@ const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
 
 describe("parity with the census parser", () => {
   it("covers the whole corpus", () => {
-    expect(CORPUS).toHaveLength(61);
+    expect(CORPUS).toHaveLength(67);
   });
 
   it.each(CORPUS.map((c) => [c.pmcid, c] as const))("%s", (_, c) => {
@@ -387,7 +387,7 @@ describe("all other authors", () => {
   });
 
   it("keeps authors named without roles", () => {
-    const text = "A.B. wrote the original draft and all other authors reviewed it.";
+    const text = "A.B. was the PI and all other authors wrote the original draft.";
     expect(new Set(pairsOf(text, BELL).map(([i]) => i))).toEqual(new Set([0, 1, 2]));
   });
 
@@ -463,6 +463,184 @@ describe("all other authors after a semicolon", () => {
     ["A.B.: software; all other authors, C.D.: validation; E.F.: visualization.", [1]],
   ])("before other mentions: %s", (text, expected) => {
     expect(holdersOf(text, "validation")).toEqual(expected);
+  });
+
+  it.each([
+    "A.B.: software. All other authors (i.e. C.D.): validation.",
+    "A.B.: software. All other authors (authors 2-2: C.D.): validation.",
+    "A.B.: software. All other authors, i.e. C.D., contributed to validation.",
+  ])("reads a word before the names as who it means: %s", (text) => {
+    expect(holdersOf(text, "validation")).toEqual([1]);
+  });
+
+  it.each([
+    // Lower-case words between the initials and the role: the same clause.
+    [
+      "A.B.: software. E.F. contributed to the writing of the original draft.",
+      [
+        [0, "software"],
+        [2, "writing-original-draft"],
+      ],
+    ],
+    // A role right after, or a capital after the dot: a new clause. All other authors do not share the role.
+    [
+      "A.B. Methodology. E.F. Software.",
+      [
+        [0, "methodology"],
+        [2, "software"],
+      ],
+    ],
+    ["A.B. wrote the original draft and all other authors reviewed it.", [[0, "writing-original-draft"]]],
+  ])("keeps initials, lower-case words and a role in one clause: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
+  });
+
+  it.each([
+    [
+      "A.B. did the formal analysis under supervision of C.D.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+      ],
+    ],
+    [
+      "A.B. did the formal analysis under the direct supervision of C.D. and E.F.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+        [2, "supervision"],
+      ],
+    ],
+    // The supervisor does not take the next clause's roles, and the subject keeps them.
+    [
+      "A.B. did the formal analysis under the supervision of C.D., and wrote the original draft.",
+      [
+        [0, "formal-analysis"],
+        [0, "writing-original-draft"],
+        [1, "supervision"],
+      ],
+    ],
+    // A name that is no author: no one supervised, and the subject did not.
+    ["A.B. did the formal analysis under the supervision of Prof. Zed.", [[0, "formal-analysis"]]],
+    // The names end at the sentence: EF is not a supervisor.
+    [
+      "AB did the formal analysis under the supervision of CD. EF was involved in funding acquisition.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+        [2, "funding-acquisition"],
+      ],
+    ],
+    // "supervision" with no "under ... of" before it is a role of the subject.
+    ["A.B.: supervision.", [[0, "supervision"]]],
+  ])("gives the supervision role to the supervisor: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
+  });
+
+  it.each([
+    [
+      "The experiments were supervised by A.B. and C.D.",
+      [
+        [0, "supervision"],
+        [1, "supervision"],
+      ],
+    ],
+    // The subject keeps its own roles and does not get the supervision.
+    [
+      "E.F. did the formal analysis, supervised by A.B.",
+      [
+        [0, "supervision"],
+        [2, "formal-analysis"],
+      ],
+    ],
+    [
+      "E.F. did the formal analysis, supervised by A.B., and wrote the original draft.",
+      [
+        [0, "supervision"],
+        [2, "formal-analysis"],
+        [2, "writing-original-draft"],
+      ],
+    ],
+    // A name that is no author: no one supervised, and the subject did not.
+    ["E.F. did the formal analysis, supervised by Prof. Zed.", [[2, "formal-analysis"]]],
+    // The names end at the sentence: EF is not a supervisor.
+    [
+      "AB did the formal analysis, supervised by CD. EF was involved in funding acquisition.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+        [2, "funding-acquisition"],
+      ],
+    ],
+    // The active verb is not read here.
+    ["A.B. supervised the project.", []],
+  ])("gives the supervision role to who supervised: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
+  });
+
+  it.each([
+    [
+      "A.B.: software. All of the authors contributed to validation.",
+      [
+        [0, "software"],
+        [0, "validation"],
+        [1, "validation"],
+        [2, "validation"],
+      ],
+    ],
+    [
+      "A.B.: software. All of the other authors contributed to validation.",
+      [
+        [0, "software"],
+        [1, "validation"],
+        [2, "validation"],
+      ],
+    ],
+    // Approval wording is still dropped.
+    ["A.B.: software. All of the authors read and approved the manuscript.", [[0, "software"]]],
+  ])("reads all of the authors as all authors: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
+  });
+
+  it.each([
+    [
+      "The work was done under the supervision of A.B. and C.D. E.F. wrote the original draft.",
+      [
+        [0, "supervision"],
+        [1, "supervision"],
+        [2, "writing-original-draft"],
+      ],
+    ],
+    [
+      "A.B. did the formal analysis under the supervision of C.D. E.F. wrote the original draft.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+        [2, "writing-original-draft"],
+      ],
+    ],
+    // A list missing its comma stays one clause.
+    [
+      "Software, A.B. C.D.; validation, E.F.",
+      [
+        [0, "software"],
+        [1, "software"],
+        [2, "validation"],
+      ],
+    ],
+    // A verb after the second part starts a sentence: C.D. is not in the list before it.
+    [
+      "Project administration, A.B. C.D. wrote the original draft.",
+      [
+        [0, "project-administration"],
+        [1, "writing-original-draft"],
+      ],
+    ],
+    // Every part must be a different author: "C.D. Z.Z." stays one unresolved token.
+    ["C.D. Z.Z. wrote the original draft.", []],
+    ["C.D. C.D. wrote the original draft.", []],
+  ])("splits adjacent initials that are no author together: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
   });
 
   it("does not read ambiguous initials after it as who it means", () => {

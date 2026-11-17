@@ -421,7 +421,7 @@ def test_all_other_authors_leaves_out_the_authors_given_roles_before():
     assert parsed.assignments == {(2, "validation")}
     # After authors with no roles, no one is left out: the draft may be A.B.'s, so A.B. keeps it, and
     # C.D. and E.F. get it too, as before "all other authors" was read apart from "all authors".
-    parsed = parse_statement("A.B. wrote the original draft and all other authors reviewed it.", THREE)
+    parsed = parse_statement("A.B. was the PI and all other authors wrote the original draft.", THREE)
     assert parsed.assignments == {(i, "writing-original-draft") for i in (0, 1, 2)}
     parsed = parse_statement("A.B.: software. All authors: validation.", THREE)
     assert parsed.assignments == {(0, "software"), (0, "validation"), (1, "validation"), (2, "validation")}
@@ -519,6 +519,136 @@ def test_all_other_authors_including_named_authors_is_still_everyone():
 def test_all_other_authors_before_other_mentions(text, expected):
     parsed = parse_statement(text, THREE)
     assert {i for i, s in parsed.assignments if s == "validation"} == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A.B.: software. All other authors (i.e. C.D.): validation.",
+        "A.B.: software. All other authors (authors 2-2: C.D.): validation.",
+        "A.B.: software. All other authors, i.e. C.D., contributed to validation.",
+    ],
+)
+def test_a_word_before_the_names_after_all_other_authors_still_lists_who_it_means(text):
+    parsed = parse_statement(text, THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == {1}
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # Lower-case words between the initials and the role: the same clause.
+        (
+            "A.B.: software. E.F. contributed to the writing of the original draft.",
+            {(0, "software"), (2, "writing-original-draft")},
+        ),
+        # A role right after, or a capital after the dot: a new clause.
+        ("A.B. Methodology. E.F. Software.", {(0, "methodology"), (2, "software")}),
+        # The author keeps a role it names, and "all other authors" do not share it.
+        ("A.B. wrote the original draft and all other authors reviewed it.", {(0, "writing-original-draft")}),
+    ],
+)
+def test_initials_followed_by_lower_case_words_and_a_role_stay_in_one_clause(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("A.B. did the formal analysis under supervision of C.D.", {(0, "formal-analysis"), (1, "supervision")}),
+        (
+            "A.B. did the formal analysis under the direct supervision of C.D. and E.F.",
+            {(0, "formal-analysis"), (1, "supervision"), (2, "supervision")},
+        ),
+        # The supervisor does not take the next clause's roles, and the subject keeps them.
+        (
+            "A.B. did the formal analysis under the supervision of C.D., and wrote the original draft.",
+            {(0, "formal-analysis"), (0, "writing-original-draft"), (1, "supervision")},
+        ),
+        # A name that is no author: no one supervised, and the subject did not.
+        ("A.B. did the formal analysis under the supervision of Prof. Zed.", {(0, "formal-analysis")}),
+        # The names end at the sentence: EF is not a supervisor.
+        (
+            "AB did the formal analysis under the supervision of CD. EF was involved in funding acquisition.",
+            {(0, "formal-analysis"), (1, "supervision"), (2, "funding-acquisition")},
+        ),
+        # "supervision" with no "under ... of" before it is a role of the subject.
+        ("A.B.: supervision.", {(0, "supervision")}),
+    ],
+)
+def test_under_the_supervision_of_gives_the_role_to_the_supervisor(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("The experiments were supervised by A.B. and C.D.", {(0, "supervision"), (1, "supervision")}),
+        # The subject keeps its own roles and does not get the supervision.
+        ("E.F. did the formal analysis, supervised by A.B.", {(2, "formal-analysis"), (0, "supervision")}),
+        (
+            "E.F. did the formal analysis, supervised by A.B., and wrote the original draft.",
+            {(2, "formal-analysis"), (2, "writing-original-draft"), (0, "supervision")},
+        ),
+        # A name that is no author: no one supervised, and the subject did not.
+        ("E.F. did the formal analysis, supervised by Prof. Zed.", {(2, "formal-analysis")}),
+        # The names end at the sentence: EF is not a supervisor.
+        (
+            "AB did the formal analysis, supervised by CD. EF was involved in funding acquisition.",
+            {(0, "formal-analysis"), (1, "supervision"), (2, "funding-acquisition")},
+        ),
+        # The active verb is not read here.
+        ("A.B. supervised the project.", set()),
+    ],
+)
+def test_supervised_by_gives_the_role_to_the_supervisor(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        (
+            "A.B.: software. All of the authors contributed to validation.",
+            {(0, "software"), (0, "validation"), (1, "validation"), (2, "validation")},
+        ),
+        (
+            "A.B.: software. All of the other authors contributed to validation.",
+            {(0, "software"), (1, "validation"), (2, "validation")},
+        ),
+        # Approval wording is still dropped.
+        ("A.B.: software. All of the authors read and approved the manuscript.", {(0, "software")}),
+    ],
+)
+def test_all_of_the_authors_is_all_authors(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        (
+            "The work was done under the supervision of A.B. and C.D. E.F. wrote the original draft.",
+            {(0, "supervision"), (1, "supervision"), (2, "writing-original-draft")},
+        ),
+        (
+            "A.B. did the formal analysis under the supervision of C.D. E.F. wrote the original draft.",
+            {(0, "formal-analysis"), (1, "supervision"), (2, "writing-original-draft")},
+        ),
+        # A list missing its comma stays one clause.
+        ("Software, A.B. C.D.; validation, E.F.", {(0, "software"), (1, "software"), (2, "validation")}),
+        # A verb after the second part starts a sentence: C.D. is not in the list before it.
+        (
+            "Project administration, A.B. C.D. wrote the original draft.",
+            {(0, "project-administration"), (1, "writing-original-draft")},
+        ),
+        # Every part must be a different author: "C.D. Z.Z." stays one unresolved token.
+        ("C.D. Z.Z. wrote the original draft.", set()),
+        ("C.D. C.D. wrote the original draft.", set()),
+    ],
+)
+def test_adjacent_initials_that_are_no_author_together_are_split(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
 
 
 def test_all_other_authors_before_ambiguous_initials_is_unchanged():

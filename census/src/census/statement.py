@@ -50,7 +50,7 @@ OTHER_AUTHORS = -3
 All other authors: validation"), those are everyone named before it, with roles or without, and "all
 authors" among them leaves no one. Anywhere else ("draft, A.B.; review and editing, all other authors"),
 they are the authors given roles just before it, or no one when the authors just before it have no roles
-("A.B. wrote the draft and all other authors reviewed it"), as the roles may be theirs. Beside named
+("A.B. was the PI and all other authors wrote the draft"), as the roles may be theirs. Beside named
 authors ("A.B. and all other authors"), it is everyone. Followed by names, in brackets or after a comma
 ("the remaining authors (C.D., E.F.)", "the remaining authors, C.D. and E.F., ..."), it adds no one: the
 names are who it means, if the first resolves to an author and is not an exception ("C.D. excepted").
@@ -73,7 +73,7 @@ _INITIALS_RE = re.compile(
 # remaining authors"), and so is "the other authors": read as mentions, they would hand the roles nearby to
 # everyone else.
 _ALL_RE = re.compile(
-    r"\ball (?:the )?(?:(other|remaining) )?authors\b"
+    r"\ball (?:(?:of )?the )?(?:(other|remaining) )?authors\b"
     r"|(?:^|(?<=[,;:.])|(?<=[,;:.] ))((?:the )?remaining authors)\b"
     r"|\b((?:the )?remaining authors)(?=\s*:)",
     re.IGNORECASE,
@@ -82,7 +82,7 @@ _ALL_RE = re.compile(
 # authors read and approved it". "All authors contributed to the investigation" is, so only approval wording
 # is dropped.
 _APPROVAL_RE = re.compile(
-    r"\b(?:all (?:the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?"
+    r"\b(?:all (?:(?:of )?the )?(?:remaining )?|(?:the )?remaining )authors (?:have |has )?"
     r"(?:read|approved|agreed|critically reviewed|reviewed and approved|gave)"
     r"[^;]*?(?:\.(?=\s|$)|;|$)",
     re.IGNORECASE,
@@ -229,8 +229,14 @@ def _name_variants(author: Author) -> tuple[set[str], set[str]]:
 _AFTER_INITIAL_RE = re.compile(rf"(?<!\w){_U}(?:\.|\.? - )$")
 _CAPITAL_RE = re.compile(_U)
 _COLON_RE = re.compile(r"\s*:")
-_APPOSITION_RE = re.compile(r"\s*[(,]\s*")
+_APPOSITION_RE = re.compile(r"\s*[(,]\s*(?:authors? \d+\s*[-\u2013]\s*\d+\s*:\s*)?", re.IGNORECASE)
+_NEW_CLAUSE_WORD_RE = re.compile(r"\b(?:under|by|with|from)\b")
 _EXCEPTED_RE = re.compile(r"\s*(?:excepted|excluded|aside)\b")
+_UNDER_RE = re.compile(r"\bunder\s+(?:the\s+)?(?:\w+\s+)?$", re.IGNORECASE)
+_OF_RE = re.compile(r"\s+of\s+", re.IGNORECASE)
+# Not a role pattern: that would move the census role counts and style detection.
+_SUPERVISED_BY_RE = re.compile(r"\bsupervised\s+by\s+", re.IGNORECASE)
+_LIST_JOIN_RE = re.compile(r"\s*(?:,(?:\s*and\b)?|and\b)\s*", re.IGNORECASE)  # a comma or "and", not a full stop
 
 
 def _opens_with_name(lead_in: str) -> bool:
@@ -273,24 +279,43 @@ def _lower(text: str) -> str:
     return lower if len(lower) == len(text) else "".join(c.lower()[0] for c in text)
 
 
+_NEXT_LETTER_RE = re.compile(r"\s*(?!and\b)([^\W\d_])")  # "and" continues a list; a lower-case word is a verb
+
+
 def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> list[int]:
     """Positions where one assignment clause ends: a semicolon; a full stop after a lower-case word
     ("draft. NZ:"); and a full stop after an author ("Nam KC. Data curation", "A.B. Methodology",
     "EF. AB is the guarantor"), but not "C.D.: writing", where the colon ties the author to the roles
-    after it."""
+    after it. `mentions` is sorted."""
     ends = [m.start() for m in re.finditer(";", text)]
     for m in re.finditer(r"\.(?=\s|$)", text):
         before = text[m.start() - 1] if m.start() else ""
         if before.islower() or before in ")]":
             ends.append(m.start())
-    ordered = sorted(mentions)
-    for (_, end, kind, _), (start, _, next_kind, _) in pairwise(ordered):
+    ordered = mentions
+    for (_, end, kind, _), (start, nend, next_kind, _) in pairwise(ordered):
+        if kind != "A":
+            continue
         gap = text[end - 1 : start]
-        # "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
-        # unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
-        joined = re.search(r"[,;]|\band\b", gap)
-        if kind == "A" and "." in gap and ":" not in gap and (next_kind == "R" or not joined):
-            ends.append(end)
+        if "." not in gap or ":" in gap:
+            continue
+        if next_kind == "R":
+            # A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a
+            # new clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
+            after = gap.partition(".")[2]
+            if next((c for c in after if c.isalnum()), "").islower() and _NEW_CLAUSE_WORD_RE.search(after) is None:
+                continue
+        elif re.search(r"[,;]|\band\b", gap):
+            # "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
+            # unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
+            continue
+        elif gap == ". " and text[start + 1 : start + 2] == ".":
+            # Two initials with only ". " between them were one token before they were split ("M.S.B. D.K.;
+            # ..."), unless a verb follows the second ("H.M. R.L. wrote ..." starts a sentence).
+            verb = _NEXT_LETTER_RE.match(text, nend)
+            if not (verb and verb[1].islower()):
+                continue
+        ends.append(end)
     # Mentions and semicolons are looked up by position, so a long statement stays linear.
     starts = [s for s, _, _, _ in ordered]
     semicolons = [m.start() for m in re.finditer(";", text)]
@@ -399,6 +424,16 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         if token not in resolved:
             resolved[token] = resolve_initials(token, authors)
         i = resolved[token]
+        if i is None and ". " in token:
+            # "R.L. H.W." joins two people; "Q. M. L." is one. Split only when every part is a different author.
+            cuts = [0, *(c.end() for c in re.finditer(r"\. ", token)), len(token)]
+            parts = [(m.start() + a, token[a:b].rstrip()) for a, b in pairwise(cuts)]
+            ids = [resolve_initials(part, authors) for _, part in parts]
+            if None not in ids and len(set(ids)) == len(ids):
+                mentions.extend(
+                    (at, at + len(part), "A", j) for (at, part), j in zip(parts, ids, strict=True) if j is not None
+                )
+                continue
         if i is not None:
             mentions.append((m.start(), m.end(), "A", i))
         elif sum(c.isupper() for c in token) >= 2:
@@ -421,9 +456,41 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         )
     ]
 
+    # "under the supervision of C.D." and "supervised by C.D.": the role is C.D.'s, not the subject's. The
+    # names after it leave the clause so they do not pair with its other roles; a name that is no author
+    # leaves no one with it. Clause ends are found with them still in, as a full stop after the last name
+    # ends the clause.
     ends = _clause_ends(original, mentions)
+    supervised_by = {m.end() for m in _SUPERVISED_BY_RE.finditer(original)}  # where the names after it start
+    if supervised_by or any(kind == "R" and value == "supervision" for _, _, kind, value in mentions):
+        kept_mentions: list[tuple[int, int, str, int | str]] = []
+        skip = 0
+        for n, mention in enumerate(mentions):
+            start, end, kind, value = mention
+            if n < skip:
+                continue
+            of = _OF_RE.match(original, end) if value == "supervision" and kind == "R" else None
+            if of and _UNDER_RE.search(original[max(0, start - 40) : start]):
+                open_, skip = of.end(), n + 1
+            elif kind == "A" and start in supervised_by:
+                open_, skip = start, n
+            else:
+                kept_mentions.append(mention)
+                continue
+            at = open_
+            while (
+                skip < len(mentions)
+                and mentions[skip][2] == "A"
+                and (_LIST_JOIN_RE.fullmatch(original, at, mentions[skip][0]) or at == open_ == mentions[skip][0])
+            ):
+                at = mentions[skip][1]
+                if int(mentions[skip][3]) >= 0:
+                    parsed.assignments.add((int(mentions[skip][3]), "supervision"))
+                skip += 1
+        mentions = kept_mentions
+
     clauses: dict[int, list[tuple[int, str, int | str]]] = {}
-    for start, _, kind, value in sorted(mentions):
+    for start, _, kind, value in mentions:
         clauses.setdefault(bisect_left(ends, start), []).append((start, kind, value))
 
     previous_people: list[int | str] = []
@@ -431,7 +498,7 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
     previous_against: list[int | str] | None = None  # what previous_people's "all other authors" was set against
     listed: dict[int, set[int | str]] = {}  # start of each "all other authors:" -> the authors named before it
     named: set[int | str] = set()
-    for start, end, kind, value in sorted(mentions):
+    for start, end, kind, value in mentions:
         if value == OTHER_AUTHORS and _COLON_RE.match(original, end):
             listed[start] = set(named)
         if kind == "A":
