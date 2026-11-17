@@ -34,7 +34,7 @@ test.describe("CRediT census page", () => {
     await expect(page).toHaveURL(/\/census\/?$/);
 
     await expect(page.getByRole("heading", { name: "CRediT census", exact: true })).toBeVisible();
-    await expect(page.getByText("Preliminary figures")).toBeVisible();
+    await expect(page.getByText("How accurate these figures are")).toBeVisible();
     // Two decimals, as the Published practice tab prints it.
     const f1 = (data.paired?.f1 ?? Number.NaN).toFixed(2);
     await expect(page.getByText(`F1 score of ${f1} `)).toBeVisible();

@@ -333,7 +333,7 @@ test.describe("screen-reader view (accessibility tree)", () => {
     await expect(article).toMatchAriaSnapshot(`
       - article:
         - heading "CRediT census" [level=2]
-        - complementary "Preliminary figures"
+        - complementary "How accurate these figures are"
         - heading "Adoption over time" [level=3]
         - paragraph: /^\\d+% in \\d{4} and \\d+% in \\d{4}/
         - img "Adoption over time"

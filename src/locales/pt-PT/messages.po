@@ -1387,14 +1387,14 @@ msgstr "Em {year}, {share} dos artigos de investigação em acesso aberto na Eur
 msgid "censusLead"
 msgstr "Como os artigos publicados usam o CRediT, a Contributor Roles Taxonomy, lido a partir da marcação e das declarações de contribuição de {articles} artigos de acesso aberto na Europe PMC."
 
-msgid "censusPreliminaryTitle"
-msgstr "Números preliminares"
+msgid "censusAccuracyTitle"
+msgstr "Quão exatos são estes números"
 
-msgid "censusPreliminary"
-msgstr "Ainda não verifiquei o analisador com anotações manuais, por isso veja estes números como uma primeira impressão. Em {articles} artigos que etiquetam as suas funções e também imprimem uma declaração, a leitura da declaração pelo analisador coincide com as etiquetas com uma pontuação F1 de {f1} (1 significa todas as funções encontradas e nenhuma errada). Mas {share} desses artigos são da MDPI e da Frontiers, e também ninguém verificou as próprias etiquetas."
+msgid "censusAccuracy"
+msgstr "Verifiquei o analisador com {labelled} declarações anotadas que usam os nomes das funções do CRediT. Encontra {recall} das funções, e {precision} do que encontra está certo. Só lê nomes de funções, por isso uma declaração escrita em prosa conta como não indicando nenhuma função. Em {articles} artigos que etiquetam as suas funções e também imprimem uma declaração, a leitura da declaração pelo analisador coincide com as etiquetas com uma pontuação F1 de {f1} (1 significa todas as funções encontradas e nenhuma errada). Mas {share} desses artigos são da MDPI e da Frontiers, e ninguém verificou as próprias etiquetas."
 
-msgid "censusPreliminaryUnscored"
-msgstr "Ainda não verifiquei o analisador com anotações manuais, por isso veja estes números como uma primeira impressão."
+msgid "censusAccuracyUnscored"
+msgstr "Verifiquei o analisador com {labelled} declarações anotadas que usam os nomes das funções do CRediT. Encontra {recall} das funções, e {precision} do que encontra está certo. Só lê nomes de funções, por isso uma declaração escrita em prosa conta como não indicando nenhuma função."
 
 msgid "censusIncomplete"
 msgstr "Este instantâneo está incompleto: alguns ficheiros de origem não foram lidos, ou há revistas ainda sem área."

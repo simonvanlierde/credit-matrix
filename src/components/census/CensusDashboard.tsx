@@ -11,6 +11,8 @@ import type censusJson from "../../../public/data/census.json";
 
 type CensusData = typeof censusJson;
 
+// Parser scored on the CRediT-worded statements of gold500b; see census/README.md, "Checked labels".
+const CHECKED = { statements: 261, recall: 0.832, precision: 0.988 };
 const PLACES = ["all", "first", "middle", "last"] as const;
 const SOURCE = "https://github.com/simonvanlierde/credit-matrix/tree/main/census";
 const MODEL_CARD = "https://github.com/simonvanlierde/credit-matrix/blob/main/census/MODEL_CARD.md";
@@ -66,6 +68,11 @@ export function CensusDashboard({ data }: { data: CensusData }) {
   const pct = (share: number, digits = 0) =>
     format.number(share, { style: "percent", maximumFractionDigits: digits, minimumFractionDigits: digits });
   const count = (n: number) => format.number(n);
+  const checked = {
+    labelled: count(CHECKED.statements),
+    recall: pct(CHECKED.recall),
+    precision: pct(CHECKED.precision),
+  };
 
   const years = data.years;
   const focusYear = data.focus_year;
@@ -150,22 +157,23 @@ export function CensusDashboard({ data }: { data: CensusData }) {
           )}
           <p className="max-w-[80ch] text-on-surface-variant">{t("censusLead", { articles: count(data.articles) })}</p>
           <aside
-            aria-labelledby="census-preliminary"
+            aria-labelledby="census-accuracy"
             className="flex max-w-[80ch] gap-3 rounded-lg border border-outline bg-surface-container-low p-4 text-sm"
           >
             <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
             <div className="space-y-1">
-              <p id="census-preliminary" className="font-semibold text-on-surface">
-                {t("censusPreliminaryTitle")}
+              <p id="census-accuracy" className="font-semibold text-on-surface">
+                {t("censusAccuracyTitle")}
               </p>
               <p className="text-pretty text-on-surface-variant">
                 {data.paired
-                  ? t("censusPreliminary", {
+                  ? t("censusAccuracy", {
+                      ...checked,
                       f1: format.number(data.paired.f1, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                       articles: count(data.paired.articles),
                       share: pct(data.paired.mdpi_frontiers_share),
                     })
-                  : t("censusPreliminaryUnscored")}
+                  : t("censusAccuracyUnscored", checked)}
               </p>
               {!data.complete && <p className="font-semibold text-on-surface">{t("censusIncomplete")}</p>}
             </div>

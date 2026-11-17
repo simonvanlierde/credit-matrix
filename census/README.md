@@ -242,6 +242,31 @@ at F1 0.993, with 22 of 25 articles exactly the same (`--second`, run B against 
 MDPI disagreements, a language model judged the tag wrong in 18 and both wrong in 2
 (`oa-2026-10-set-disagreements-opus.csv`); it found the parser alone wrong in none.
 
+### Checked labels
+
+`gold500b` is 500 articles from `set2000`. Three Opus runs labelled them under definition B, with an
+adjudication where they differed: 261 are `credit` (statements that mostly use CRediT role names)
+and 239 `narrative`. To check the labels, 40 rows were drawn (20 per stratum, seed 20261117). An
+agent read all 40 and passed 36 as clearly right. A person ruled on the other 4, all `narrative`
+and all wrong as labelled by a few pairs each. So `credit` is 20 of 20 exact and `narrative` 16 of
+20.
+
+Pair-level scores, general view (any wording that names a role). The rule parser is the one the
+census ran (parser hash `0246f5bf4117`, before the parser fixes in #357 and #358, which change about
+1% of statements). The encoder is `ettin-68m-mixnarr7k`, seed 1:
+
+| Label | Parser P | Parser R | Parser F1 | Encoder P | Encoder R | Encoder F1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `credit` | 0.988 | 0.832 | 0.903 | 0.953 | 0.984 | 0.968 |
+| `narrative` | 0.866 | 0.036 | 0.069 | 0.879 | 0.958 | 0.917 |
+| `credit`, strict view (CRediT terms only) | 0.964 | 0.934 | 0.949 | 0.836 | 0.993 | 0.908 |
+
+Over five encoder seeds, `narrative` F1 is 0.917 to 0.923 and `credit` 0.968 to 0.972.
+
+On statements that use CRediT wording, the parser is precise but misses about a sixth of the pairs,
+so the census role counts are low by about that much. It reads no roles from prose. The census page
+quotes the 261, 0.832 and 0.988 above.
+
 ## Training a statement parser
 
 Articles with tagged roles that also print a statement are free training pairs: the statement is the

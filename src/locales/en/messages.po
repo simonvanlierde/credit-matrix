@@ -1387,14 +1387,14 @@ msgstr "In {year}, {share} of open-access research articles in Europe PMC gave C
 msgid "censusLead"
 msgstr "How published papers use CRediT, the Contributor Roles Taxonomy. The roles are read from the markup and contribution statements of {articles} open-access articles in Europe PMC."
 
-msgid "censusPreliminaryTitle"
-msgstr "Preliminary figures"
+msgid "censusAccuracyTitle"
+msgstr "How accurate these figures are"
 
-msgid "censusPreliminary"
-msgstr "I haven't checked the parser against hand labels yet, so treat these numbers as a first look. Where {articles} articles both tag their roles and print a statement, the parser's reading of the statement matches the tags with an F1 score of {f1} (1 means every role found and none wrong). But {share} of those articles are from MDPI and Frontiers, and nobody has checked the tags themselves either."
+msgid "censusAccuracy"
+msgstr "I checked the parser against {labelled} labelled statements that use CRediT role names. It finds {recall} of the roles, and {precision} of what it finds is right. It reads only role names, so a statement written in prose counts as giving no roles. Where {articles} articles both tag their roles and print a statement, the parser's reading of the statement matches the tags with an F1 score of {f1} (1 means every role found and none wrong). But {share} of those articles are from MDPI and Frontiers, and nobody has checked the tags themselves."
 
-msgid "censusPreliminaryUnscored"
-msgstr "I haven't checked the parser against hand labels yet, so treat these numbers as a first look."
+msgid "censusAccuracyUnscored"
+msgstr "I checked the parser against {labelled} labelled statements that use CRediT role names. It finds {recall} of the roles, and {precision} of what it finds is right. It reads only role names, so a statement written in prose counts as giving no roles."
 
 msgid "censusIncomplete"
 msgstr "This snapshot is incomplete: some source files were not read, or some journals have no field yet."

@@ -6,6 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The [census page](https://credit.duinlab.nl/census) no longer says its figures are preliminary. A
+  new note says how accurate they are: checked against 261 labelled statements that use CRediT role
+  names, the parser finds 83% of the roles and 99% of what it finds is right. It reads only role
+  names, so a statement written in prose counts as giving no roles. See
+  [Checked labels](census/README.md#checked-labels).
+
+### Fixed
+
+- The statement parser keeps a role after initials followed by a lower-case word ("E.B. contributed
+  to the writing of the original draft"), reads "(authors 5-48: R.A., ...)" as those authors, and
+  reads "all of the authors" as all authors.
+- Supervision after "under the supervision of X" or "supervised by X" goes to X, not to the
+  statement's subject, and to no one when X is not an author. A supervisor named earlier no longer
+  receives the roles of "All other authors:".
+- Adjacent initials that match no author together ("R.L. H.W.") are split when each part is an
+  author.
+- "A.B. wrote the original draft and all other authors reviewed it" gives the draft to A.B. only.
+- A supervisor list ends at a name followed by a lower-case word, so in "...supervision of A.B. and
+  G.H. wrote the draft" G.H. stays the subject.
+
 ## [0.13.0] - 2026-11-16
 
 **Upgrade note:** the browser storage format moves from version 5 to 6, so that a build from before

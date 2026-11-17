@@ -1387,14 +1387,14 @@ msgstr "{year} 年には、Europe PMC のオープンアクセス研究論文の
 msgid "censusLead"
 msgstr "公開された論文が CRediT（Contributor Roles Taxonomy）をどう使っているかを、Europe PMC のオープンアクセス論文 {articles} 件のマークアップと貢献声明から読み取りました。"
 
-msgid "censusPreliminaryTitle"
-msgstr "暫定的な数値"
+msgid "censusAccuracyTitle"
+msgstr "この数値の精度"
 
-msgid "censusPreliminary"
-msgstr "このパーサーはまだ人手のラベルで検証していないため、数値は暫定的な目安としてご覧ください。ロールをタグ付けし、かつ貢献声明も掲載している {articles} 件の論文では、パーサーによる声明の読み取りとタグとの一致は F1 スコアで {f1} です（1 はすべてのロールを見つけ、誤りがないことを意味します）。ただし、そのうち {share} は MDPI と Frontiers の論文で、タグ自体も誰も検証していません。"
+msgid "censusAccuracy"
+msgstr "CRediT のロール名を使っている、ラベル付き声明 {labelled} 件でパーサーを検証しました。パーサーはロールの {recall} を見つけ、見つけたもののうち {precision} は正しい結果です。読み取るのはロール名だけなので、文章で書かれた声明はロールなしとして数えられます。ロールをタグ付けし、かつ貢献声明も掲載している {articles} 件の論文では、パーサーによる声明の読み取りとタグとの一致は F1 スコアで {f1} です（1 はすべてのロールを見つけ、誤りがないことを意味します）。ただし、そのうち {share} は MDPI と Frontiers の論文で、タグ自体は誰も検証していません。"
 
-msgid "censusPreliminaryUnscored"
-msgstr "このパーサーはまだ人手のラベルで検証していないため、数値は暫定的な目安としてご覧ください。"
+msgid "censusAccuracyUnscored"
+msgstr "CRediT のロール名を使っている、ラベル付き声明 {labelled} 件でパーサーを検証しました。パーサーはロールの {recall} を見つけ、見つけたもののうち {precision} は正しい結果です。読み取るのはロール名だけなので、文章で書かれた声明はロールなしとして数えられます。"
 
 msgid "censusIncomplete"
 msgstr "このスナップショットは不完全です。一部のソースファイルが読み込まれていないか、分野が未設定のジャーナルがあります。"
