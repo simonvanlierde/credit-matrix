@@ -229,7 +229,7 @@ def _name_variants(author: Author) -> tuple[set[str], set[str]]:
 _AFTER_INITIAL_RE = re.compile(rf"(?<!\w){_U}(?:\.|\.? - )$")
 _CAPITAL_RE = re.compile(_U)
 _COLON_RE = re.compile(r"\s*:")
-_APPOSITION_RE = re.compile(r"\s*[(,]\s*(?:authors? \d+\s*[-\u2013]\s*\d+\s*:\s*)?", re.IGNORECASE)
+_APPOSITION_RE = re.compile(r"\s*[(,]\s*(?:authors? [0-9]+\s*[-\u2013]\s*[0-9]+\s*:\s*)?", re.IGNORECASE)
 _NEW_CLAUSE_WORD_RE = re.compile(r"\b(?:under|by|with|from)\b")
 _EXCEPTED_RE = re.compile(r"\s*(?:excepted|excluded|aside)\b")
 _UNDER_RE = re.compile(r"\bunder\s+(?:the\s+)?(?:\w+\s+)?$", re.IGNORECASE)

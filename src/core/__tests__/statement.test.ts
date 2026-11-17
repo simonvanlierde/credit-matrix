@@ -1123,3 +1123,16 @@ describe("modifier letters", () => {
     expect(pairsOfFour(text)).toEqual(expected);
   });
 });
+
+describe("apposition", () => {
+  it("reads only ASCII digits in an author range", () => {
+    const text = "A.B.: investigation. The remaining authors (authors ２-３: C.D., E.F.): software.";
+    expect(pairsOfFour(text)).toEqual([
+      [0, "investigation"],
+      [0, "software"],
+      [1, "software"],
+      [2, "software"],
+      [3, "software"],
+    ]);
+  });
+});

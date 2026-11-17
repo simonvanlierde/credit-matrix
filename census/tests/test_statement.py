@@ -748,3 +748,15 @@ def test_supervised_by_reads_dotted_and_dotless_i(word):
 )
 def test_modifier_letters_are_lower_case(text, expected):
     assert pairs_of_four(text) == expected
+
+
+def test_apposition_digits_are_ascii():
+    # Full-width digits are no author range: the remaining authors stay everyone else.
+    text = "A.B.: investigation. The remaining authors (authors ２-３: C.D., E.F.): software."
+    assert pairs_of_four(text) == [
+        (0, "investigation"),
+        (0, "software"),
+        (1, "software"),
+        (2, "software"),
+        (3, "software"),
+    ]
