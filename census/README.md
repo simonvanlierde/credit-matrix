@@ -258,8 +258,8 @@ census ran (parser hash `0246f5bf4117`, before the parser fixes in #357 and #358
 | Label | Parser P | Parser R | Parser F1 | Encoder P | Encoder R | Encoder F1 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `credit` | 0.988 | 0.832 | 0.903 | 0.953 | 0.984 | 0.968 |
-| `narrative` | - | 0.036 | 0.069 | 0.879 | 0.958 | 0.917 |
-| `credit`, strict view (CRediT terms only) | - | - | 0.949 | - | - | 0.908 |
+| `narrative` | 0.866 | 0.036 | 0.069 | 0.879 | 0.958 | 0.917 |
+| `credit`, strict view (CRediT terms only) | 0.964 | 0.934 | 0.949 | 0.836 | 0.993 | 0.908 |
 
 Over five encoder seeds, `narrative` F1 is 0.917 to 0.923 and `credit` 0.968 to 0.972.
 

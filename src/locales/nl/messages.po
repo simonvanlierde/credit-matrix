@@ -1391,7 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Hoe nauwkeurig deze cijfers zijn"
 
 msgid "censusAccuracy"
-msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen. Op {articles} artikelen die hun rollen taggen én een verklaring afdrukken, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout)."
+msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen. Op {articles} artikelen die hun rollen taggen én een verklaring afdrukken, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout). Maar {share} van die artikelen komt van MDPI en Frontiers, en de tags zelf heeft niemand gecontroleerd."
 
 msgid "censusAccuracyUnscored"
 msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen."

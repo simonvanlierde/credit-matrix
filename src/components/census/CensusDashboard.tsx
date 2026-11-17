@@ -171,6 +171,7 @@ export function CensusDashboard({ data }: { data: CensusData }) {
                       ...checked,
                       f1: format.number(data.paired.f1, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                       articles: count(data.paired.articles),
+                      share: pct(data.paired.mdpi_frontiers_share),
                     })
                   : t("censusAccuracyUnscored", checked)}
               </p>

@@ -1391,7 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Quanto sono accurate queste cifre"
 
 msgid "censusAccuracy"
-msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova {recall} dei ruoli, e {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo. Su {articles} articoli che etichettano i propri ruoli e stampano anche una dichiarazione, la lettura della dichiarazione da parte del parser concorda con le etichette con un punteggio F1 di {f1} (1 significa ogni ruolo trovato e nessuno sbagliato)."
+msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova {recall} dei ruoli, e {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo. Su {articles} articoli che etichettano i propri ruoli e stampano anche una dichiarazione, la lettura della dichiarazione da parte del parser concorda con le etichette con un punteggio F1 di {f1} (1 significa ogni ruolo trovato e nessuno sbagliato). Ma il {share} di questi articoli proviene da MDPI e Frontiers, e nessuno ha verificato le etichette."
 
 msgid "censusAccuracyUnscored"
 msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova {recall} dei ruoli, e {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo."

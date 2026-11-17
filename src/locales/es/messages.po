@@ -1391,7 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Qué tan precisas son estas cifras"
 
 msgid "censusAccuracy"
-msgstr "He comprobado el analizador con {labelled} declaraciones etiquetadas que usan los nombres de rol de CRediT. Encuentra {recall} de los roles, y {precision} de lo que encuentra es correcto. Solo lee nombres de rol, así que una declaración escrita en prosa cuenta como si no diera ningún rol. En {articles} artículos que etiquetan sus roles y además imprimen una declaración, la lectura que hace el analizador de la declaración coincide con las etiquetas con una puntuación F1 de {f1} (1 significa todos los roles encontrados y ninguno erróneo)."
+msgstr "He comprobado el analizador con {labelled} declaraciones etiquetadas que usan los nombres de rol de CRediT. Encuentra {recall} de los roles, y {precision} de lo que encuentra es correcto. Solo lee nombres de rol, así que una declaración escrita en prosa cuenta como si no diera ningún rol. En {articles} artículos que etiquetan sus roles y además imprimen una declaración, la lectura que hace el analizador de la declaración coincide con las etiquetas con una puntuación F1 de {f1} (1 significa todos los roles encontrados y ninguno erróneo). Pero el {share} de esos artículos son de MDPI y Frontiers, y nadie ha comprobado las etiquetas."
 
 msgid "censusAccuracyUnscored"
 msgstr "He comprobado el analizador con {labelled} declaraciones etiquetadas que usan los nombres de rol de CRediT. Encuentra {recall} de los roles, y {precision} de lo que encuentra es correcto. Solo lee nombres de rol, así que una declaración escrita en prosa cuenta como si no diera ningún rol."

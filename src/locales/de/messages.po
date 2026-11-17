@@ -1391,7 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Wie genau diese Zahlen sind"
 
 msgid "censusAccuracy"
-msgstr "Ich habe den Parser an {labelled} annotierten Erklärungen geprüft, die CRediT-Rollennamen verwenden. Er findet {recall} der Rollen, und {precision} dessen, was er findet, ist richtig. Er liest nur Rollennamen, eine Erklärung in Fließtext zählt also als Erklärung ohne Rollen. Bei {articles} Artikeln, die ihre Rollen auszeichnen und zugleich eine Erklärung drucken, stimmt die Lesart des Parsers mit den Auszeichnungen mit einem F1-Wert von {f1} überein (1 hieße: jede Rolle gefunden und keine falsch)."
+msgstr "Ich habe den Parser an {labelled} annotierten Erklärungen geprüft, die CRediT-Rollennamen verwenden. Er findet {recall} der Rollen, und {precision} dessen, was er findet, ist richtig. Er liest nur Rollennamen, eine Erklärung in Fließtext zählt also als Erklärung ohne Rollen. Bei {articles} Artikeln, die ihre Rollen auszeichnen und zugleich eine Erklärung drucken, stimmt die Lesart des Parsers mit den Auszeichnungen mit einem F1-Wert von {f1} überein (1 hieße: jede Rolle gefunden und keine falsch). Aber {share} dieser Artikel stammen von MDPI und Frontiers, und die Auszeichnungen selbst hat niemand geprüft."
 
 msgid "censusAccuracyUnscored"
 msgstr "Ich habe den Parser an {labelled} annotierten Erklärungen geprüft, die CRediT-Rollennamen verwenden. Er findet {recall} der Rollen, und {precision} dessen, was er findet, ist richtig. Er liest nur Rollennamen, eine Erklärung in Fließtext zählt also als Erklärung ohne Rollen."

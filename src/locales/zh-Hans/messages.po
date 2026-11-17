@@ -1391,7 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "这些数据有多准确"
 
 msgid "censusAccuracy"
-msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用散文写成的声明会被算作没有给出角色。在 {articles} 篇既标注了角色、又印有贡献声明的文章中，解析器对声明的解读与标注的一致程度为 F1 值 {f1}（1 表示找到所有角色且没有错误）。"
+msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用散文写成的声明会被算作没有给出角色。在 {articles} 篇既标注了角色、又印有贡献声明的文章中，解析器对声明的解读与标注的一致程度为 F1 值 {f1}（1 表示找到所有角色且没有错误）。但其中 {share} 来自 MDPI 和 Frontiers，而且这些标注本身没有人核查过。"
 
 msgid "censusAccuracyUnscored"
 msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用散文写成的声明会被算作没有给出角色。"

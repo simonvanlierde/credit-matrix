@@ -1391,7 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Quão exatos são estes números"
 
 msgid "censusAccuracy"
-msgstr "Verifiquei o analisador com {labelled} declarações anotadas que usam os nomes das funções do CRediT. Encontra {recall} das funções, e {precision} do que encontra está certo. Só lê nomes de funções, por isso uma declaração escrita em prosa conta como não indicando nenhuma função. Em {articles} artigos que etiquetam as suas funções e também imprimem uma declaração, a leitura da declaração pelo analisador coincide com as etiquetas com uma pontuação F1 de {f1} (1 significa todas as funções encontradas e nenhuma errada)."
+msgstr "Verifiquei o analisador com {labelled} declarações anotadas que usam os nomes das funções do CRediT. Encontra {recall} das funções, e {precision} do que encontra está certo. Só lê nomes de funções, por isso uma declaração escrita em prosa conta como não indicando nenhuma função. Em {articles} artigos que etiquetam as suas funções e também imprimem uma declaração, a leitura da declaração pelo analisador coincide com as etiquetas com uma pontuação F1 de {f1} (1 significa todas as funções encontradas e nenhuma errada). Mas {share} desses artigos são da MDPI e da Frontiers, e ninguém verificou as próprias etiquetas."
 
 msgid "censusAccuracyUnscored"
 msgstr "Verifiquei o analisador com {labelled} declarações anotadas que usam os nomes das funções do CRediT. Encontra {recall} das funções, e {precision} do que encontra está certo. Só lê nomes de funções, por isso uma declaração escrita em prosa conta como não indicando nenhuma função."
