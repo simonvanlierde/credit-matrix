@@ -8,8 +8,6 @@ Last reviewed: 2026-11-12
 
 ## Now
 
-- **Trustworthy census numbers.** Score the parser that reads roles from published papers against
-  checked labels, so the census can drop its "preliminary" note ([#279](https://github.com/simonvanlierde/credit-matrix/issues/279)).
 - **Find the integrations where people look.** The Typst package is on Typst Universe; the Pandoc
   filter waits for its listing ([pandoc-ext/info#8](https://github.com/pandoc-ext/info/pull/8)).
 

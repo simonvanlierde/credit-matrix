@@ -1387,14 +1387,14 @@ msgstr "In {year} gaf {share} van de open-access-onderzoeksartikelen in Europe P
 msgid "censusLead"
 msgstr "Hoe gepubliceerde artikelen CRediT gebruiken, de Contributor Roles Taxonomy, gelezen uit de opmaak en bijdrageverklaringen van {articles} open-access-artikelen in Europe PMC."
 
-msgid "censusPreliminaryTitle"
-msgstr "Voorlopige cijfers"
+msgid "censusAccuracyTitle"
+msgstr "Hoe nauwkeurig deze cijfers zijn"
 
-msgid "censusPreliminary"
-msgstr "Ik heb de parser nog niet met handmatige labels gecontroleerd, dus zie deze cijfers als een eerste indruk. Op {articles} artikelen die hun rollen taggen én een verklaring afdrukken, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout). Maar {share} van die artikelen komt van MDPI en Frontiers, en ook de tags zelf heeft niemand gecontroleerd."
+msgid "censusAccuracy"
+msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen. Op {articles} artikelen die hun rollen taggen én een verklaring afdrukken, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout)."
 
-msgid "censusPreliminaryUnscored"
-msgstr "Ik heb de parser nog niet met handmatige labels gecontroleerd, dus zie deze cijfers als een eerste indruk."
+msgid "censusAccuracyUnscored"
+msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen."
 
 msgid "censusIncomplete"
 msgstr "Deze momentopname is onvolledig: sommige bronbestanden zijn niet gelezen, of tijdschriften hebben nog geen vakgebied."

@@ -1387,14 +1387,14 @@ msgstr "En {year}, {share} des articles de recherche en accès ouvert dans Europ
 msgid "censusLead"
 msgstr "Comment les articles publiés utilisent CRediT, la Contributor Roles Taxonomy, d’après le balisage et les déclarations de contribution de {articles} articles en libre accès dans Europe PMC."
 
-msgid "censusPreliminaryTitle"
-msgstr "Chiffres provisoires"
+msgid "censusAccuracyTitle"
+msgstr "Quelle est la précision de ces chiffres"
 
-msgid "censusPreliminary"
-msgstr "Je n’ai pas encore vérifié l’analyseur par annotation manuelle : ces chiffres sont donc un premier aperçu. Sur {articles} articles qui balisent leurs rôles et impriment aussi une déclaration, la lecture de la déclaration par l’analyseur concorde avec les balises avec un score F1 de {f1} (1 signifie tous les rôles trouvés et aucun faux). Mais {share} de ces articles viennent de MDPI et Frontiers, et personne n’a vérifié les balises elles-mêmes non plus."
+msgid "censusAccuracy"
+msgstr "J’ai vérifié l’analyseur sur {labelled} déclarations annotées qui emploient les noms de rôles CRediT. Il trouve {recall} des rôles, et {precision} de ce qu’il trouve est juste. Il ne lit que les noms de rôles : une déclaration rédigée en prose compte donc comme n’indiquant aucun rôle. Sur {articles} articles qui balisent leurs rôles et impriment aussi une déclaration, la lecture de la déclaration par l’analyseur concorde avec les balises avec un score F1 de {f1} (1 signifie tous les rôles trouvés et aucun faux)."
 
-msgid "censusPreliminaryUnscored"
-msgstr "Je n’ai pas encore vérifié l’analyseur par annotation manuelle : ces chiffres sont donc un premier aperçu."
+msgid "censusAccuracyUnscored"
+msgstr "J’ai vérifié l’analyseur sur {labelled} déclarations annotées qui emploient les noms de rôles CRediT. Il trouve {recall} des rôles, et {precision} de ce qu’il trouve est juste. Il ne lit que les noms de rôles : une déclaration rédigée en prose compte donc comme n’indiquant aucun rôle."
 
 msgid "censusIncomplete"
 msgstr "Cet instantané est incomplet : certains fichiers sources n’ont pas été lus, ou des revues n’ont pas encore de domaine."

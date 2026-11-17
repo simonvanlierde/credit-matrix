@@ -1387,14 +1387,14 @@ msgstr "Nel {year}, il {share} degli articoli di ricerca ad accesso aperto in Eu
 msgid "censusLead"
 msgstr "Come gli articoli pubblicati usano CRediT, la Contributor Roles Taxonomy, letti dal markup e dalle dichiarazioni di contributo di {articles} articoli ad accesso aperto in Europe PMC."
 
-msgid "censusPreliminaryTitle"
-msgstr "Dati preliminari"
+msgid "censusAccuracyTitle"
+msgstr "Quanto sono accurate queste cifre"
 
-msgid "censusPreliminary"
-msgstr "Non ho ancora verificato il parser con etichette manuali, quindi prendete queste cifre come una prima indicazione. Su {articles} articoli che etichettano i propri ruoli e stampano anche una dichiarazione, la lettura della dichiarazione da parte del parser concorda con le etichette con un punteggio F1 di {f1} (1 significa ogni ruolo trovato e nessuno sbagliato). Ma il {share} di questi articoli proviene da MDPI e Frontiers, e nessuno ha verificato nemmeno le etichette."
+msgid "censusAccuracy"
+msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova {recall} dei ruoli, e {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo. Su {articles} articoli che etichettano i propri ruoli e stampano anche una dichiarazione, la lettura della dichiarazione da parte del parser concorda con le etichette con un punteggio F1 di {f1} (1 significa ogni ruolo trovato e nessuno sbagliato)."
 
-msgid "censusPreliminaryUnscored"
-msgstr "Non ho ancora verificato il parser con etichette manuali, quindi prendete queste cifre come una prima indicazione."
+msgid "censusAccuracyUnscored"
+msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova {recall} dei ruoli, e {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo."
 
 msgid "censusIncomplete"
 msgstr "Questa istantanea è incompleta: alcuni file sorgente non sono stati letti, o alcune riviste non hanno ancora un settore."

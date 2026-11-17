@@ -1387,14 +1387,14 @@ msgstr "{year} 年，Europe PMC 中 {share} 的开放获取研究论文为至少
 msgid "censusLead"
 msgstr "已发表论文如何使用 CRediT（贡献者角色分类法），数据读取自 Europe PMC 中 {articles} 篇开放获取论文的标记和贡献声明。"
 
-msgid "censusPreliminaryTitle"
-msgstr "初步数据"
+msgid "censusAccuracyTitle"
+msgstr "这些数据有多准确"
 
-msgid "censusPreliminary"
-msgstr "我还没有用人工标注检验这个解析器，所以这些数字只是初步参考。在 {articles} 篇既标注了角色、又印有贡献声明的文章中，解析器对声明的解读与标注的一致程度为 F1 值 {f1}（1 表示找到所有角色且没有错误）。但其中 {share} 来自 MDPI 和 Frontiers，而且这些标注本身也没有人核查过。"
+msgid "censusAccuracy"
+msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用散文写成的声明会被算作没有给出角色。在 {articles} 篇既标注了角色、又印有贡献声明的文章中，解析器对声明的解读与标注的一致程度为 F1 值 {f1}（1 表示找到所有角色且没有错误）。"
 
-msgid "censusPreliminaryUnscored"
-msgstr "我还没有用人工标注检验这个解析器，所以这些数字只是初步参考。"
+msgid "censusAccuracyUnscored"
+msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用散文写成的声明会被算作没有给出角色。"
 
 msgid "censusIncomplete"
 msgstr "此快照不完整：部分源文件未读取，或有期刊尚无学科领域。"
