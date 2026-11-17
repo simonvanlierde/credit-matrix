@@ -502,11 +502,14 @@ function clauseEnds(text: string, mentions: Mention[]): number[] {
   const ordered = [...mentions].sort(compareMentions);
   for (let i = 1; i < ordered.length; i += 1) {
     const [, end, kind] = ordered[i - 1] as Mention;
-    const [start, , nextKind] = ordered[i] as Mention;
+    const [start, nextEnd, nextKind] = ordered[i] as Mention;
     const gap = text.slice(end - 1, start);
     // "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
     // unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
-    const joined = JOINED_RE.test(gap);
+    // Two initials with only ". " between them were one token before they were split ("M.S.B. D.K.; ..."),
+    // unless a verb follows the second ("H.M. R.L. wrote ..." starts a sentence).
+    const joined =
+      JOINED_RE.test(gap) || (gap === ". " && text[start + 1] === "." && !VERB_NEXT_RE.test(text.slice(nextEnd)));
     // A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a new
     // clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
     const after = gap.slice(gap.indexOf(".") + 1);
@@ -532,6 +535,7 @@ interface Lookup {
   semicolons: number[];
 }
 
+const VERB_NEXT_RE = new RegExp(String.raw`^\s*(?!and(?!${W}))\p{Ll}`, "u"); // "and" continues a list; a lower-case word is a verb
 const JOINED_RE = new RegExp(`[,;]|(?<!${W})and(?!${W})`, "u");
 const INITIALS_ONLY_RE = new RegExp(`^(?:${INITIALS_RE.source})$`, "u");
 const AUTHOR_GAP_RE = new RegExp(String.raw`^(?:[\s.,]|(?<!${W})and(?!${W}))*$`, "u");
@@ -693,6 +697,21 @@ export function parseStatement(statement: string, authorList: readonly Statement
     if (!hits) {
       hits = initialsCandidates(token, authors);
       resolved.set(token, hits);
+    }
+    if (hits.length !== 1 && token.includes(". ")) {
+      // "R.L. H.W." joins two people; "Q. M. L." is one. Split only when every part is a different author.
+      const parts: [number, string][] = [];
+      let from = 0;
+      for (const cut of [...[...token.matchAll(/\. /g)].map((c) => c.index + 2), token.length]) {
+        parts.push([m.index + from, token.slice(from, cut).trimEnd()]);
+        from = cut;
+      }
+      const ids = parts.map(([, part]) => initialsCandidates(part, authors));
+      if (ids.every((h) => h.length === 1) && new Set(ids.map((h) => h[0])).size === ids.length) {
+        for (const [k, [at, part]] of parts.entries())
+          mentions.push([at, at + part.length, "A", ids[k]?.[0] as number]);
+        continue;
+      }
     }
     if (hits.length === 1) {
       mentions.push([m.index, m.index + m[0].length, "A", hits[0] as number]);

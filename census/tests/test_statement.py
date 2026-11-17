@@ -624,6 +624,33 @@ def test_all_of_the_authors_is_all_authors(text, expected):
     assert parse_statement(text, THREE).assignments == expected
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        (
+            "The work was done under the supervision of A.B. and C.D. E.F. wrote the original draft.",
+            {(0, "supervision"), (1, "supervision"), (2, "writing-original-draft")},
+        ),
+        (
+            "A.B. did the formal analysis under the supervision of C.D. E.F. wrote the original draft.",
+            {(0, "formal-analysis"), (1, "supervision"), (2, "writing-original-draft")},
+        ),
+        # A list missing its comma stays one clause.
+        ("Software, A.B. C.D.; validation, E.F.", {(0, "software"), (1, "software"), (2, "validation")}),
+        # A verb after the second part starts a sentence: C.D. is not in the list before it.
+        (
+            "Project administration, A.B. C.D. wrote the original draft.",
+            {(0, "project-administration"), (1, "writing-original-draft")},
+        ),
+        # Every part must be a different author: "C.D. Z.Z." stays one unresolved token.
+        ("C.D. Z.Z. wrote the original draft.", set()),
+        ("C.D. C.D. wrote the original draft.", set()),
+    ],
+)
+def test_adjacent_initials_that_are_no_author_together_are_split(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
+
+
 def test_all_other_authors_before_ambiguous_initials_is_unchanged():
     # "A.B." fits two authors, so it does not say who it means.
     parsed = parse_statement("C.D.: software. All other authors (A.B.): validation.", [*THREE, Author("Amy", "Bloom")])

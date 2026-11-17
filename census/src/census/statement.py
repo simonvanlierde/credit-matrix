@@ -279,6 +279,9 @@ def _lower(text: str) -> str:
     return lower if len(lower) == len(text) else "".join(c.lower()[0] for c in text)
 
 
+_NEXT_LETTER_RE = re.compile(r"\s*(?!and\b)([^\W\d_])")  # "and" continues a list; a lower-case word is a verb
+
+
 def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> list[int]:
     """Positions where one assignment clause ends: a semicolon; a full stop after a lower-case word
     ("draft. NZ:"); and a full stop after an author ("Nam KC. Data curation", "A.B. Methodology",
@@ -290,11 +293,16 @@ def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> 
         if before.islower() or before in ")]":
             ends.append(m.start())
     ordered = sorted(mentions)
-    for (_, end, kind, _), (start, _, next_kind, _) in pairwise(ordered):
+    for (_, end, kind, _), (start, nend, next_kind, _) in pairwise(ordered):
         gap = text[end - 1 : start]
         # "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
         # unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
-        joined = re.search(r"[,;]|\band\b", gap)
+        # Two initials with only ". " between them were one token before they were split ("M.S.B. D.K.; ..."),
+        # unless a verb follows the second ("H.M. R.L. wrote ..." starts a sentence).
+        verb = _NEXT_LETTER_RE.match(text, nend)
+        joined = re.search(r"[,;]|\band\b", gap) or (
+            gap == ". " and text[start + 1 : start + 2] == "." and not (verb and verb[1].islower())
+        )
         # A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a new
         # clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
         after = gap.partition(".")[2]
@@ -411,6 +419,16 @@ def parse_statement(text: str, authors: list[Author]) -> Parsed:
         if token not in resolved:
             resolved[token] = resolve_initials(token, authors)
         i = resolved[token]
+        if i is None and ". " in token:
+            # "R.L. H.W." joins two people; "Q. M. L." is one. Split only when every part is a different author.
+            cuts = [0, *(c.end() for c in re.finditer(r"\. ", token)), len(token)]
+            parts = [(m.start() + a, token[a:b].rstrip()) for a, b in pairwise(cuts)]
+            ids = [resolve_initials(part, authors) for _, part in parts]
+            if None not in ids and len(set(ids)) == len(ids):
+                mentions.extend(
+                    (at, at + len(part), "A", j) for (at, part), j in zip(parts, ids, strict=True) if j is not None
+                )
+                continue
         if i is not None:
             mentions.append((m.start(), m.end(), "A", i))
         elif sum(c.isupper() for c in token) >= 2:

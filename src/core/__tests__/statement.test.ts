@@ -47,7 +47,7 @@ const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
 
 describe("parity with the census parser", () => {
   it("covers the whole corpus", () => {
-    expect(CORPUS).toHaveLength(66);
+    expect(CORPUS).toHaveLength(67);
   });
 
   it.each(CORPUS.map((c) => [c.pmcid, c] as const))("%s", (_, c) => {
@@ -599,6 +599,47 @@ describe("all other authors after a semicolon", () => {
     // Approval wording is still dropped.
     ["A.B.: software. All of the authors read and approved the manuscript.", [[0, "software"]]],
   ])("reads all of the authors as all authors: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
+  });
+
+  it.each([
+    [
+      "The work was done under the supervision of A.B. and C.D. E.F. wrote the original draft.",
+      [
+        [0, "supervision"],
+        [1, "supervision"],
+        [2, "writing-original-draft"],
+      ],
+    ],
+    [
+      "A.B. did the formal analysis under the supervision of C.D. E.F. wrote the original draft.",
+      [
+        [0, "formal-analysis"],
+        [1, "supervision"],
+        [2, "writing-original-draft"],
+      ],
+    ],
+    // A list missing its comma stays one clause.
+    [
+      "Software, A.B. C.D.; validation, E.F.",
+      [
+        [0, "software"],
+        [1, "software"],
+        [2, "validation"],
+      ],
+    ],
+    // A verb after the second part starts a sentence: C.D. is not in the list before it.
+    [
+      "Project administration, A.B. C.D. wrote the original draft.",
+      [
+        [0, "project-administration"],
+        [1, "writing-original-draft"],
+      ],
+    ],
+    // Every part must be a different author: "C.D. Z.Z." stays one unresolved token.
+    ["C.D. Z.Z. wrote the original draft.", []],
+    ["C.D. C.D. wrote the original draft.", []],
+  ])("splits adjacent initials that are no author together: %s", (text, expected) => {
     expect(pairsOf(text, BELL)).toEqual(expected);
   });
 
