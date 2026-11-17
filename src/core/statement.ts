@@ -535,7 +535,7 @@ function clauseEnds(text: string, mentions: readonly Mention[]): number[] {
 interface Lookup {
   text: string;
   /** Mentions by start, and their starts. */
-  ordered: Mention[];
+  ordered: readonly Mention[];
   starts: number[];
   semicolons: number[];
 }
