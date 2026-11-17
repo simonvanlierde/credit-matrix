@@ -150,7 +150,7 @@ const ALL_AUTHORS = -1;
  * in brackets or after a comma ("the remaining authors (C.D., E.F.)", "the remaining authors, C.D. and
  * E.F., ..."), it adds no one: the names are who it means, if the first resolves to an author and is
  * not an exception ("C.D. excepted"). Authors named
- * without roles ("A.B. wrote the draft and all other authors reviewed it") are not left out: which of
+ * without roles ("A.B. was the PI and all other authors wrote the draft") are not left out: which of
  * them the roles belong to is unclear. After "all authors" it is no one. A clause of roles alone after
  * it ("All other authors: validation; visualization"), or another "all other authors" right after it,
  * leaves out the same authors.
@@ -195,7 +195,8 @@ const APPROVAL_RE = new RegExp(
   ),
   "giu",
 );
-const APPOSITION_RE = /^\s*[(,]\s*$/u;
+const NEW_CLAUSE_WORD_RE = /(?<![\p{L}\p{N}_])(?:under|by|with|from)(?![\p{L}\p{N}_])/u;
+const APPOSITION_RE = /^\s*[(,]\s*(?:authors? \d+\s*[-\u2013]\s*\d+\s*:\s*)?$/iu;
 const EXCEPTED_RE = /\s*(?:excepted|excluded|aside)(?![\p{L}\p{N}_])/uy;
 const PARTICLE_RE = /^(?:d[aeiou]s?|del(?:la)?|der|la|le|te[nr]|v[ao]n)$/u; // "da", "dos", "van", ...
 
@@ -501,7 +502,13 @@ function clauseEnds(text: string, mentions: Mention[]): number[] {
     // "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
     // unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
     const joined = JOINED_RE.test(gap);
-    if (kind === "A" && gap.includes(".") && !gap.includes(":") && (nextKind === "R" || !joined)) ends.push(end);
+    // A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a new
+    // clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
+    const after = gap.slice(gap.indexOf(".") + 1);
+    const roleNext = nextKind === "R" && (!/^[^\p{L}\p{N}]*\p{Ll}/u.test(after) || NEW_CLAUSE_WORD_RE.test(after));
+    if (kind === "A" && gap.includes(".") && !gap.includes(":") && (roleNext || (nextKind !== "R" && !joined))) {
+      ends.push(end);
+    }
   }
   // Mentions and semicolons are looked up by position, so a long statement stays linear.
   const lookup: Lookup = { text, ordered, starts: ordered.map(([s]) => s), semicolons };

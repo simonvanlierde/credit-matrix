@@ -47,7 +47,7 @@ const CORPUS: CorpusCase[] = readFileSync("census/tests/corpus.jsonl", "utf8")
 
 describe("parity with the census parser", () => {
   it("covers the whole corpus", () => {
-    expect(CORPUS).toHaveLength(61);
+    expect(CORPUS).toHaveLength(63);
   });
 
   it.each(CORPUS.map((c) => [c.pmcid, c] as const))("%s", (_, c) => {
@@ -387,7 +387,7 @@ describe("all other authors", () => {
   });
 
   it("keeps authors named without roles", () => {
-    const text = "A.B. wrote the original draft and all other authors reviewed it.";
+    const text = "A.B. was the PI and all other authors wrote the original draft.";
     expect(new Set(pairsOf(text, BELL).map(([i]) => i))).toEqual(new Set([0, 1, 2]));
   });
 
@@ -463,6 +463,36 @@ describe("all other authors after a semicolon", () => {
     ["A.B.: software; all other authors, C.D.: validation; E.F.: visualization.", [1]],
   ])("before other mentions: %s", (text, expected) => {
     expect(holdersOf(text, "validation")).toEqual(expected);
+  });
+
+  it.each([
+    "A.B.: software. All other authors (i.e. C.D.): validation.",
+    "A.B.: software. All other authors (authors 2-2: C.D.): validation.",
+    "A.B.: software. All other authors, i.e. C.D., contributed to validation.",
+  ])("reads a word before the names as who it means: %s", (text) => {
+    expect(holdersOf(text, "validation")).toEqual([1]);
+  });
+
+  it.each([
+    // Lower-case words between the initials and the role: the same clause.
+    [
+      "A.B.: software. E.F. contributed to the writing of the original draft.",
+      [
+        [0, "software"],
+        [2, "writing-original-draft"],
+      ],
+    ],
+    // A role right after, or a capital after the dot: a new clause. All other authors do not share the role.
+    [
+      "A.B. Methodology. E.F. Software.",
+      [
+        [0, "methodology"],
+        [2, "software"],
+      ],
+    ],
+    ["A.B. wrote the original draft and all other authors reviewed it.", [[0, "writing-original-draft"]]],
+  ])("keeps initials, lower-case words and a role in one clause: %s", (text, expected) => {
+    expect(pairsOf(text, BELL)).toEqual(expected);
   });
 
   it("does not read ambiguous initials after it as who it means", () => {

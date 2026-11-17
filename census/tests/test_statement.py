@@ -421,7 +421,7 @@ def test_all_other_authors_leaves_out_the_authors_given_roles_before():
     assert parsed.assignments == {(2, "validation")}
     # After authors with no roles, no one is left out: the draft may be A.B.'s, so A.B. keeps it, and
     # C.D. and E.F. get it too, as before "all other authors" was read apart from "all authors".
-    parsed = parse_statement("A.B. wrote the original draft and all other authors reviewed it.", THREE)
+    parsed = parse_statement("A.B. was the PI and all other authors wrote the original draft.", THREE)
     assert parsed.assignments == {(i, "writing-original-draft") for i in (0, 1, 2)}
     parsed = parse_statement("A.B.: software. All authors: validation.", THREE)
     assert parsed.assignments == {(0, "software"), (0, "validation"), (1, "validation"), (2, "validation")}
@@ -519,6 +519,37 @@ def test_all_other_authors_including_named_authors_is_still_everyone():
 def test_all_other_authors_before_other_mentions(text, expected):
     parsed = parse_statement(text, THREE)
     assert {i for i, s in parsed.assignments if s == "validation"} == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "A.B.: software. All other authors (i.e. C.D.): validation.",
+        "A.B.: software. All other authors (authors 2-2: C.D.): validation.",
+        "A.B.: software. All other authors, i.e. C.D., contributed to validation.",
+    ],
+)
+def test_a_word_before_the_names_after_all_other_authors_still_lists_who_it_means(text):
+    parsed = parse_statement(text, THREE)
+    assert {i for i, s in parsed.assignments if s == "validation"} == {1}
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # Lower-case words between the initials and the role: the same clause.
+        (
+            "A.B.: software. E.F. contributed to the writing of the original draft.",
+            {(0, "software"), (2, "writing-original-draft")},
+        ),
+        # A role right after, or a capital after the dot: a new clause.
+        ("A.B. Methodology. E.F. Software.", {(0, "methodology"), (2, "software")}),
+        # The author keeps a role it names, and "all other authors" do not share it.
+        ("A.B. wrote the original draft and all other authors reviewed it.", {(0, "writing-original-draft")}),
+    ],
+)
+def test_initials_followed_by_lower_case_words_and_a_role_stay_in_one_clause(text, expected):
+    assert parse_statement(text, THREE).assignments == expected
 
 
 def test_all_other_authors_before_ambiguous_initials_is_unchanged():

@@ -50,7 +50,7 @@ OTHER_AUTHORS = -3
 All other authors: validation"), those are everyone named before it, with roles or without, and "all
 authors" among them leaves no one. Anywhere else ("draft, A.B.; review and editing, all other authors"),
 they are the authors given roles just before it, or no one when the authors just before it have no roles
-("A.B. wrote the draft and all other authors reviewed it"), as the roles may be theirs. Beside named
+("A.B. was the PI and all other authors wrote the draft"), as the roles may be theirs. Beside named
 authors ("A.B. and all other authors"), it is everyone. Followed by names, in brackets or after a comma
 ("the remaining authors (C.D., E.F.)", "the remaining authors, C.D. and E.F., ..."), it adds no one: the
 names are who it means, if the first resolves to an author and is not an exception ("C.D. excepted").
@@ -229,7 +229,8 @@ def _name_variants(author: Author) -> tuple[set[str], set[str]]:
 _AFTER_INITIAL_RE = re.compile(rf"(?<!\w){_U}(?:\.|\.? - )$")
 _CAPITAL_RE = re.compile(_U)
 _COLON_RE = re.compile(r"\s*:")
-_APPOSITION_RE = re.compile(r"\s*[(,]\s*")
+_APPOSITION_RE = re.compile(r"\s*[(,]\s*(?:authors? \d+\s*[-\u2013]\s*\d+\s*:\s*)?", re.IGNORECASE)
+_NEW_CLAUSE_WORD_RE = re.compile(r"\b(?:under|by|with|from)\b")
 _EXCEPTED_RE = re.compile(r"\s*(?:excepted|excluded|aside)\b")
 
 
@@ -289,7 +290,13 @@ def _clause_ends(text: str, mentions: list[tuple[int, int, str, int | str]]) -> 
         # "A.B. Methodology" ends a role-first clause; "EF. AB is the guarantor" starts a new sentence,
         # unless a comma, semicolon or "and" joins the two authors ("C.D. and E.F.").
         joined = re.search(r"[,;]|\band\b", gap)
-        if kind == "A" and "." in gap and ":" not in gap and (next_kind == "R" or not joined):
+        # A role after lower-case words ("E.B. contributed to the writing") belongs to the author, not a new
+        # clause, unless they name someone else's part ("C.D. ran it under the supervision of E.F.").
+        after = gap.partition(".")[2]
+        role_next = next_kind == "R" and (
+            not next((c for c in after if c.isalnum()), "").islower() or _NEW_CLAUSE_WORD_RE.search(after) is not None
+        )
+        if kind == "A" and "." in gap and ":" not in gap and (role_next or (next_kind != "R" and not joined)):
             ends.append(end)
     # Mentions and semicolons are looked up by position, so a long statement stays linear.
     starts = [s for s, _, _, _ in ordered]
