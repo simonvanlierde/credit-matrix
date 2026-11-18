@@ -1669,7 +1669,7 @@ msgid "heatmapGray"
 msgstr "灰度"
 
 msgid "heatmapPaleColor"
-msgstr "此颜色下难以区分支持级贡献。请尝试更深的颜色。"
+msgstr "此颜色下难以区分“辅助”等级。请尝试更深的颜色。"
 
 msgid "heatmapSharedWithGrid"
 msgstr "与网格共用"

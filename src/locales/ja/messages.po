@@ -507,7 +507,7 @@ msgid "coauthorHeadingUntitled"
 msgstr "この論文でどの役割を担当しましたか？"
 
 msgid "coauthorAnsweringAs"
-msgstr "<b>{name}</b>として回答しています。あなたの名前とORCID iDは、送り返すリンクに含まれます。"
+msgstr "<b>{name}</b> として回答しています。氏名と ORCID iD は、返送するリンクに含まれます。"
 
 msgid "coauthorBlankHint"
 msgstr "担当した役割ごとにレベルを選び、残りは{none}のままにしてください。2分ほどで終わります。"
@@ -779,7 +779,7 @@ msgid "importAuthorList"
 msgstr "著者名リスト"
 
 msgid "importPlaceholder"
-msgstr "{names}\n\nまたは .csv / .tsv / .json / .xml / .cff のエクスポート、あるいは送り返されたリンク"
+msgstr "{names}\n\nまたは .csv / .tsv / .json / .xml / .cff のエクスポート、あるいは返送されたリンク"
 
 msgid "errImportNoNames"
 msgstr "著者名が見つかりませんでした。1 行に 1 名ずつ入力してください。"
@@ -998,7 +998,7 @@ msgid "welcomeAskBody"
 msgstr "「共有」から「共著者に役割の確認を依頼」を選び、各共著者に本人の列へのリンクを送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。"
 
 msgid "importDescription"
-msgstr "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML・Crossref XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。著者貢献声明を貼り付けると、ここにいる貢献者の役割を埋められます。CITATION.cff、codemeta.json、.zenodo.json からは著者名と ORCID iD がインポートされ、役割は空のままになります。"
+msgstr "DOI から始めるか、氏名や返送されたリンクを貼り付けるか、CSV・JSON・JATS4R XML・Crossref XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。著者貢献声明を貼り付けると、ここにいる貢献者の役割を埋められます。CITATION.cff、codemeta.json、.zenodo.json からは著者名と ORCID iD がインポートされ、役割は空のままになります。"
 
 msgid "contributorActions"
 msgstr "{name} に対する操作"
@@ -1076,7 +1076,7 @@ msgid "normsFieldPlaceholder"
 msgstr "分野を選択"
 
 msgid "normsEmpty"
-msgstr "分野を選ぶと割合が表示されます。アプリは論文の分野を知らず、ここでの操作がマトリックスを変えることはありません。"
+msgstr "分野を選ぶと割合が表示されます。アプリは論文の分野を知らず、ここでの操作がグリッドを変えることはありません。"
 
 msgid "normsFieldGone"
 msgstr "保存した分野「<name>{field}</name>」は、このスナップショットにデータがありません。分野を選ぶと割合が表示されます。"

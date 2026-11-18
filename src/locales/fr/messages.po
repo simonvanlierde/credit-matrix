@@ -225,7 +225,7 @@ msgid "importSummary"
 msgstr "Collez ou importez une liste de contributeurs, ou retrouvez-la par DOI."
 
 msgid "importFormatsToggle"
-msgstr "Quels formats sont acceptés ?"
+msgstr "Quels formats sont acceptés ?"
 
 msgid "importOr"
 msgstr "ou"
@@ -237,7 +237,7 @@ msgid "importImporting"
 msgstr "Importation…"
 
 msgid "importChoiceTitle"
-msgstr "Ajouter à ce brouillon ou le remplacer ?"
+msgstr "Ajouter à ce brouillon ou le remplacer ?"
 
 msgid "importAddNew"
 msgstr "Ajouter {count, plural, one {# nouveau} other {# nouveaux}}"
@@ -417,7 +417,7 @@ msgid "errDoiNOT_FOUND"
 msgstr "Aucun enregistrement publié ne correspond à ce DOI."
 
 msgid "errDoiNO_AUTHORS"
-msgstr "Cet enregistrement n’indique aucun contributeur ; il n’y a donc rien à importer."
+msgstr "Cet enregistrement n’indique aucun contributeur ; il n’y a donc rien à importer."
 
 msgid "errDoiTOO_MANY_AUTHORS"
 msgstr "Cet enregistrement indique plus de contributeurs qu’un brouillon ne peut en contenir."
@@ -468,7 +468,7 @@ msgid "deleteDraft"
 msgstr "Supprimer"
 
 msgid "confirmDeleteDraft"
-msgstr "Supprimer ce brouillon ?"
+msgstr "Supprimer ce brouillon ?"
 
 msgid "draftLimitReached"
 msgstr "Vous pouvez conserver {count} brouillons à la fois. Supprimez-en un d’abord."
@@ -486,7 +486,7 @@ msgid "deleteAllDrafts"
 msgstr "Supprimer tous les brouillons"
 
 msgid "confirmDeleteAllDrafts"
-msgstr "Supprimer tous les brouillons de ce navigateur ? Cette action est irréversible."
+msgstr "Supprimer tous les brouillons de ce navigateur ? Cette action est irréversible."
 
 msgid "allDraftsDeleted"
 msgstr "Tous les brouillons ont été supprimés."
@@ -501,10 +501,10 @@ msgid "coauthorPrefilled"
 msgstr "Les cases cochées sont la proposition de la personne qui demande. Corrigez ce qui est faux."
 
 msgid "coauthorHeading"
-msgstr "<work>{title}</work> : qu’avez-vous fait ?"
+msgstr "<work>{title}</work> : qu’avez-vous fait ?"
 
 msgid "coauthorHeadingUntitled"
-msgstr "Qu’avez-vous fait pour cet article ?"
+msgstr "Qu’avez-vous fait pour cet article ?"
 
 msgid "coauthorAnsweringAs"
 msgstr "Vous répondez en tant que <b>{name}</b>. Votre nom et votre iD ORCID repartent dans le lien que vous envoyez."
@@ -651,7 +651,7 @@ msgid "askContributorCopied"
 msgstr "Lien copié. Envoyez-le à {name}."
 
 msgid "mergeUnmatched"
-msgstr "Cette réponse concerne une personne absente de ce brouillon ; rien n’a été intégré."
+msgstr "Cette réponse concerne une personne absente de ce brouillon ; rien n’a été intégré."
 
 msgid "askReplyDiffers"
 msgstr "La réponse de {name} est arrivée : {count, plural, one {# différence} other {# différences}}."
@@ -660,7 +660,7 @@ msgid "askReplyMatches"
 msgstr "La réponse de {name} correspond à la vôtre."
 
 msgid "askReplyStale"
-msgstr "Cette réponse de {name} est plus ancienne que celle que vous avez déjà ; elle n’a pas été utilisée."
+msgstr "Cette réponse de {name} est plus ancienne que celle que vous avez déjà ; elle n’a pas été utilisée."
 
 msgid "askReplyDuplicate"
 msgstr "Vous avez déjà cette réponse de {name}."
@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT est une norme ANSI/NISO (<cc>CC BY 4.0</cc>). Ce projet est indépendant de NISO et n’est pas approuvé par elle."
 
 msgid "aboutPrivacy"
-msgstr "La recherche d’un iD ORCID l’envoie depuis votre navigateur à pub.orcid.org. La recherche d’un DOI l’envoie à api.crossref.org, avec l’adresse de contact de ce site, puis à api.datacite.org si Crossref n’a pas de notice.\n\nCloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur.\n\nL’import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d’exécution Python ; le fichier est traité dans votre navigateur et n’est jamais téléversé.\n\nRien d’autre ne quitte votre navigateur : les brouillons restent dans son stockage local, tout comme le fait d’avoir fermé la liste Premiers pas ou copié une déclaration, et l’outil de rédaction choisi en dernier. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l’iD de cette personne, à l’application que vous choisissez.\n\nSe connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la preuve de connexion est ensuite transmise dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
+msgstr "La recherche d’un iD ORCID l’envoie depuis votre navigateur à pub.orcid.org. La recherche d’un DOI l’envoie à api.crossref.org, avec l’adresse de contact de ce site, puis à api.datacite.org si Crossref n’a pas de notice.\n\nCloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur.\n\nL’import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d’exécution Python ; le fichier est traité dans votre navigateur et n’est jamais téléversé.\n\nRien d’autre ne quitte votre navigateur : les brouillons restent dans son stockage local, tout comme le fait d’avoir fermé la liste Premiers pas ou copié une déclaration, et l’outil de rédaction choisi en dernier. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l’iD de cette personne, à l’application que vous choisissez.\n\nSe connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la preuve de connexion est ensuite transmise dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
 
 msgid "accessibilityStatement"
 msgstr "Déclaration d’accessibilité"
@@ -896,7 +896,7 @@ msgid "annOrcidChecksumsSkipped"
 msgstr "{count, plural, one {# iD ORCID au chiffre de contrôle non valide ignoré} other {# iD ORCID aux chiffres de contrôle non valides ignorés}} ({ids})."
 
 msgid "annOrcidLookupsFailed"
-msgstr "{count, plural, one {Échec de la recherche pour # iD ORCID} other {Échec de la recherche pour # iD ORCID}} ({ids}). Les lignes correspondantes conservent l’iD comme nom ; renommez-les manuellement."
+msgstr "{count, plural, one {Échec de la recherche pour # iD ORCID} other {Échec de la recherche pour # iD ORCID}} ({ids}). Les lignes correspondantes conservent l’iD comme nom ; renommez-les manuellement."
 
 msgid "annContributorsSkippedLimit"
 msgstr "{count, plural, one {# contributeur ignoré} other {# contributeurs ignorés}} : un brouillon accepte au maximum {limit} contributeurs."
@@ -989,7 +989,7 @@ msgid "welcomeDraftsTitle"
 msgstr "Un brouillon par article"
 
 msgid "welcomeDraftsBody"
-msgstr "Plusieurs articles ? Changez de brouillon depuis l’en-tête ; chacun est conservé séparément dans ce navigateur."
+msgstr "Plusieurs articles ? Changez de brouillon depuis l’en-tête ; chacun est conservé séparément dans ce navigateur."
 
 msgid "welcomeAskTitle"
 msgstr "Demandez directement aux coauteurs"
@@ -998,7 +998,7 @@ msgid "welcomeAskBody"
 msgstr "Avec Partager, puis Demander aux coauteurs de vérifier leurs rôles, envoyez à chaque coauteur un lien vers sa propre colonne. Quand le lien revient, ouvrez-le : la réponse est conservée à côté de sa ligne, et vous tranchez les écarts dans l’onglet Revue."
 
 msgid "importDescription"
-msgstr "Partez d’un DOI, collez des noms ou un lien qu’une personne vous a renvoyé, ou téléversez un fichier CSV, JSON, JATS4R XML ou Crossref XML. JSON et XML restaurent aussi les contributions, avec leurs niveaux si le fichier les contient. Une feuille de calcul tenzing (CSV ou TSV) fonctionne aussi. Collez une déclaration de contribution des auteurs pour remplir les rôles des contributeurs déjà présents. CITATION.cff, codemeta.json et .zenodo.json importent les noms des auteurs et les iD ORCID ; les rôles restent vides."
+msgstr "Partez d’un DOI, collez des noms ou un lien qu’une personne vous a renvoyé, ou téléversez un fichier CSV, JSON, JATS4R XML ou Crossref XML. JSON et XML restaurent aussi les contributions, avec leurs niveaux si le fichier les contient. Une feuille de calcul tenzing (CSV ou TSV) fonctionne aussi. Collez une déclaration de contribution des auteurs pour remplir les rôles des contributeurs déjà présents. CITATION.cff, codemeta.json et .zenodo.json importent les noms des auteurs et les iD ORCID ; les rôles restent vides."
 
 msgid "contributorActions"
 msgstr "Actions pour {name}"
@@ -1121,7 +1121,7 @@ msgid "teamEmpty"
 msgstr "Ajoutez d’abord les contributeurs, puis demandez à chacun ce qu’il a fait."
 
 msgid "teamMessage"
-msgstr "Bonjour {name},\n\nJe prépare la déclaration de contributions CRediT pour {work}. Pourriez-vous ouvrir ce lien, cocher les rôles que vous avez assurés et me renvoyer le lien ?\n\n{link}\n\nLe lien contient le titre, votre nom et votre iD. Rien n’est enregistré sur un serveur."
+msgstr "Bonjour {name},\n\nJe prépare la déclaration de contributions CRediT pour {work}. Pourriez-vous ouvrir ce lien, cocher les rôles que vous avez assurés et me renvoyer le lien ?\n\n{link}\n\nLe lien contient le titre, votre nom et votre iD. Rien n’est enregistré sur un serveur."
 
 msgid "teamMessageWork"
 msgstr "« {title} »"
@@ -1298,7 +1298,7 @@ msgid "legendDiffers"
 msgstr "Un coauteur a répondu différemment"
 
 msgid "reviewAskMessage"
-msgstr "Bonjour {name},\n\nJe finalise la déclaration de contributions CRediT pour {work}. Nos réponses diffèrent pour {role}. Pourriez-vous ouvrir ce lien, vérifier votre ligne et me renvoyer le lien ?\n\n{link}\n\nLe lien contient le titre, votre nom et votre iD. Rien n’est enregistré sur un serveur."
+msgstr "Bonjour {name},\n\nJe finalise la déclaration de contributions CRediT pour {work}. Nos réponses diffèrent pour {role}. Pourriez-vous ouvrir ce lien, vérifier votre ligne et me renvoyer le lien ?\n\n{link}\n\nLe lien contient le titre, votre nom et votre iD. Rien n’est enregistré sur un serveur."
 
 msgid "formatStatement"
 msgstr "Déclaration CRediT"
@@ -1469,7 +1469,7 @@ msgid "censusFieldsTitle"
 msgstr "Par domaine"
 
 msgid "censusFieldsCaption"
-msgstr "Part des articles de recherche de {year} avec des rôles CRediT, selon le domaine de la revue dans OpenAlex, un index ouvert des travaux scientifiques. Les domaines sont attribués par revue, non par article. Europe PMC est biomédical par construction ; les autres domaines y sont peu représentés. Les domaines de moins de 1 000 articles sont omis."
+msgstr "Part des articles de recherche de {year} avec des rôles CRediT, selon le domaine de la revue dans OpenAlex, un index ouvert des travaux scientifiques. Les domaines sont attribués par revue, non par article. Europe PMC est biomédical par construction ; les autres domaines y sont peu représentés. Les domaines de moins de 1 000 articles sont omis."
 
 msgid "censusFieldAgriculturalAndBiologicalSciences"
 msgstr "Sciences agricoles et biologiques"
@@ -1598,7 +1598,7 @@ msgid "censusHowModelCard"
 msgstr "La fiche du modèle"
 
 msgid "doiRolesImported"
-msgstr "Rôles CRediT importés. Vérifiez ces attributions avant de les appliquer ; la notice ne fournit aucun niveau de contribution."
+msgstr "Rôles CRediT importés. Vérifiez ces attributions avant de les appliquer ; la notice ne fournit aucun niveau de contribution."
 
 msgid "doiNoRoles"
 msgstr "Cette notice ne contient aucun rôle CRediT déposé. La matrice des contributions restera vide."
@@ -1669,7 +1669,7 @@ msgid "heatmapGray"
 msgstr "Niveaux de gris"
 
 msgid "heatmapPaleColor"
-msgstr "Le niveau de soutien se distingue mal avec cette couleur. Choisissez une teinte plus sombre."
+msgstr "Le niveau Secondaire se distingue mal avec cette couleur. Choisissez une teinte plus sombre."
 
 msgid "heatmapSharedWithGrid"
 msgstr "Partagé avec la grille"
@@ -1723,7 +1723,7 @@ msgid "heatmapResolution"
 msgstr "Résolution"
 
 msgid "heatmapSvgHint"
-msgstr "Le SVG reste net après redimensionnement ; ces dimensions concernent le PNG."
+msgstr "Le SVG reste net après redimensionnement ; ces dimensions concernent le PNG."
 
 
 msgid "heatmapPngTooLarge"
@@ -1771,7 +1771,7 @@ msgid "errFigureFontsUnavailable"
 msgstr "Les polices de la figure n’ont pas pu être chargées."
 
 msgid "heatmapSystemFonts"
-msgstr "Le PDF doit les incorporer et n’est donc pas disponible. SVG et PNG les dessinent avec les polices installées ; le SVG peut s’afficher autrement sur un autre ordinateur."
+msgstr "Le PDF doit les incorporer et n’est donc pas disponible. SVG et PNG les dessinent avec les polices installées ; le SVG peut s’afficher autrement sur un autre ordinateur."
 
 msgid "heatmapLegendPosition"
 msgstr "Légende"
