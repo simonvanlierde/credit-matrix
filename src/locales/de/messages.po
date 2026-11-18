@@ -180,10 +180,10 @@ msgid "editInList"
 msgstr "In der Liste bearbeiten"
 
 msgid "bulkChangeApplied"
-msgstr "Massenänderung angewendet."
+msgstr "Sammelzuweisung angewendet."
 
 msgid "annBulkUndone"
-msgstr "Massenänderung rückgängig gemacht."
+msgstr "Sammelzuweisung rückgängig gemacht."
 
 msgid "contributorToAssign"
 msgstr "Zuzuweisende Mitwirkende"
@@ -222,7 +222,7 @@ msgid "importData"
 msgstr "Daten importieren"
 
 msgid "importSummary"
-msgstr "Fügen Sie eine Liste von Mitwirkenden ein, laden Sie eine hoch oder suchen Sie sie über einen DOI."
+msgstr "Fügen Sie eine Liste von Mitwirkenden ein, laden Sie eine hoch oder rufen Sie sie über eine DOI ab."
 
 msgid "importFormatsToggle"
 msgstr "Welche Formate funktionieren?"
@@ -249,7 +249,7 @@ msgid "importAddedContributors"
 msgstr "{count, plural, one {# mitwirkende Person} other {# mitwirkende Personen}} zu diesem Entwurf hinzugefügt."
 
 msgid "importUndoStale"
-msgstr "Nichts rückgängig gemacht: Der Entwurf hat sich seit dem Import geändert. Ändern Sie ihn stattdessen in der Tabelle."
+msgstr "Nichts rückgängig gemacht: Der Entwurf hat sich seit dem Import geändert. Ändern Sie ihn stattdessen im Raster."
 
 msgid "annImportUndone"
 msgstr "Import rückgängig gemacht."
@@ -450,7 +450,7 @@ msgid "drafts"
 msgstr "Entwürfe"
 
 msgid "draftsHint"
-msgstr "Jeder Entwurf ist ein Aufsatz. Sie bleiben in diesem Browser."
+msgstr "Jeder Entwurf ist ein Artikel. Sie bleiben in diesem Browser."
 
 msgid "untitledDraft"
 msgstr "Entwurf ohne Titel"
@@ -543,7 +543,7 @@ msgid "coauthorOrcidSignIn"
 msgstr "Mit ORCID anmelden"
 
 msgid "coauthorOrcidHint"
-msgstr "Optional: Melden Sie sich mit ORCID an, dann kommt Ihre Antwort als verifiziert an. Die Anmeldung reist in dem Link mit, den Sie zurücksenden, und bleibt bei Ihrer Antwort gespeichert, auch in JSON-Exporten. Sie enthält den Namen aus Ihrem ORCID-Datensatz."
+msgstr "Optional: Melden Sie sich mit ORCID an, dann kommt Ihre Antwort als verifiziert an. Der Anmeldenachweis wird im zurückgesendeten Link mitgesendet und bleibt bei Ihrer Antwort gespeichert, auch in JSON-Exporten. Er enthält den Namen aus Ihrem ORCID-Datensatz."
 
 msgid "coauthorOrcidChanged"
 msgstr "Sie haben Ihre Antwort nach der Anmeldung geändert. Melden Sie sich erneut an, um diese Antwort zu verifizieren."
@@ -561,7 +561,7 @@ msgid "reviewOrcidOtherId"
 msgstr "Das ist nicht die iD in dieser Zeile."
 
 msgid "reviewOrcidNoRowId"
-msgstr "Diese Zeile hat keine ORCID-iD zum Vergleich."
+msgstr "Diese Zeile hat keine ORCID iD zum Vergleich."
 
 msgid "reviewOrcidSignedFor"
 msgstr "Anmeldung für „{title}“."
@@ -606,7 +606,7 @@ msgid "claimRequestUpdated"
 msgstr "Die Anfrage wurde aktualisiert. Ihre früheren Antworten wurden ersetzt."
 
 msgid "claimUndoStale"
-msgstr "Nichts rückgängig gemacht: Der Entwurf hat sich geändert, seit die Anfrage aktualisiert wurde. Ändern Sie ihn stattdessen in der Tabelle."
+msgstr "Nichts rückgängig gemacht: Der Entwurf hat sich geändert, seit die Anfrage aktualisiert wurde. Ändern Sie ihn stattdessen im Raster."
 
 msgid "claimLockedDraft"
 msgstr "Gesperrt: beantwortet eine Anfrage"
@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT ist ein ANSI/NISO-Standard (<cc>CC BY 4.0</cc>). Dieses Projekt ist unabhängig von NISO und wird nicht von NISO unterstützt."
 
 msgid "aboutPrivacy"
-msgstr "Beim Nachschlagen einer ORCID iD wird sie von Ihrem Browser aus an pub.orcid.org gesendet. Beim Nachschlagen einer DOI wird sie zusammen mit der Kontaktadresse dieser Website an api.crossref.org gesendet, und an api.datacite.org, wenn Crossref sie nicht kennt.\n\nCloudflare, der Host dieser Website, zählt Seitenaufrufe auf seinen eigenen Servern und nur in Summe, ohne Skript oder Cookie in Ihrem Browser.\n\nBeim Import von CITATION.cff oder .zenodo.json werden der citesync-Konverter und eine Python-Laufzeitumgebung von dieser Website geladen; die Datei wird in Ihrem Browser verarbeitet und nie hochgeladen.\n\nSonst verlässt nichts Ihren Browser: Entwürfe bleiben im lokalen Speicher, ebenso, ob Sie die Checkliste „Erste Schritte“ geschlossen oder eine Erklärung kopiert haben, und das zuletzt gewählte Schreibwerkzeug. Anfragen an Mitautoren und deren Antworten werden nur in diesem Browser gespeichert und sind in JSON-Exporten enthalten, sofern Sie diese Option nicht abwählen. Wer eine Antwort sendet, übergibt den Link mit Namen und iD dieser Person an die gewählte App.\n\nWer eine Antwort mit ORCID anmeldet, wird zu orcid.org und zurück geleitet; die Anmeldung reist danach im Antwortlink mit und bleibt bei der Antwort gespeichert, auch in JSON-Exporten. Sie enthält den Namen aus dem ORCID-Datensatz der Person. Beim Öffnen einer angemeldeten Antwort oder beim Import einer JSON-Datei mit einer solchen werden die öffentlichen Schlüssel von ORCID von orcid.org geladen, um sie zu prüfen."
+msgstr "Beim Nachschlagen einer ORCID iD wird sie von Ihrem Browser aus an pub.orcid.org gesendet. Beim Nachschlagen einer DOI wird sie zusammen mit der Kontaktadresse dieser Website an api.crossref.org gesendet, und an api.datacite.org, wenn Crossref sie nicht kennt.\n\nCloudflare, der Host dieser Website, zählt Seitenaufrufe auf seinen eigenen Servern und nur in Summe, ohne Skript oder Cookie in Ihrem Browser.\n\nBeim Import von CITATION.cff oder .zenodo.json werden der citesync-Konverter und eine Python-Laufzeitumgebung von dieser Website geladen; die Datei wird in Ihrem Browser verarbeitet und nie hochgeladen.\n\nSonst verlässt nichts Ihren Browser: Entwürfe bleiben im lokalen Speicher, ebenso, ob Sie die Checkliste „Erste Schritte“ geschlossen oder eine Erklärung kopiert haben, und das zuletzt gewählte Schreibwerkzeug. Anfragen an Mitautoren und deren Antworten werden nur in diesem Browser gespeichert und sind in JSON-Exporten enthalten, sofern Sie diese Option nicht abwählen. Wer eine Antwort sendet, übergibt den Link mit Namen und iD dieser Person an die gewählte App.\n\nWer eine Antwort mit ORCID anmeldet, wird zu orcid.org und zurück geleitet; der Anmeldenachweis wird danach im Antwortlink mitgesendet und bleibt bei der Antwort gespeichert, auch in JSON-Exporten. Er enthält den Namen aus dem ORCID-Datensatz der Person. Beim Öffnen einer signierten Antwort oder beim Import einer JSON-Datei mit einer solchen werden die öffentlichen Schlüssel von ORCID von orcid.org geladen, um den Nachweis zu prüfen."
 
 msgid "accessibilityStatement"
 msgstr "Erklärung zur Barrierefreiheit"
@@ -992,7 +992,7 @@ msgid "welcomeDraftsBody"
 msgstr "Mehr als ein Manuskript? Wechseln Sie Entwürfe über die Kopfzeile; jeder wird separat in diesem Browser gespeichert."
 
 msgid "welcomeAskTitle"
-msgstr "Co-Autoren direkt fragen"
+msgstr "Mitautoren direkt fragen"
 
 msgid "welcomeAskBody"
 msgstr "Über „Teilen“ und dann „Mitautoren ihre Rollen prüfen lassen“ schicken Sie jeder Person einen Link zu ihrer eigenen Spalte. Kommt der Link zurück, öffnen Sie ihn: Die Antwort wird neben ihrer Zeile abgelegt, und Abweichungen klären Sie im Tab „Abgleich“."
@@ -1076,7 +1076,7 @@ msgid "normsFieldPlaceholder"
 msgstr "Fachgebiet wählen"
 
 msgid "normsEmpty"
-msgstr "Wählen Sie Ihr Fachgebiet, um die Anteile zu sehen. Die App kennt das Fachgebiet Ihres Artikels nicht, und nichts hier ändert Ihre Matrix."
+msgstr "Wählen Sie Ihr Fachgebiet, um die Anteile zu sehen. Die App kennt das Fachgebiet Ihres Artikels nicht, und nichts hier ändert Ihr Raster."
 
 msgid "normsFieldGone"
 msgstr "Ihr gespeichertes Fachgebiet, <name>{field}</name>, hat in diesem Datenstand keine Daten. Wählen Sie ein Fachgebiet, um die Anteile zu sehen."
@@ -1118,7 +1118,7 @@ msgid "reviewEmptyBody"
 msgstr "Wenn ein Mitautor seinen Link zurückschickt, öffnen Sie ihn, und seine Antwort erscheint hier neben Ihrem Entwurf."
 
 msgid "teamEmpty"
-msgstr "Fügen Sie zuerst Beitragende hinzu und fragen Sie dann jede Person, was sie getan hat."
+msgstr "Fügen Sie zuerst Mitwirkende hinzu und fragen Sie dann jede Person, was sie getan hat."
 
 msgid "teamMessage"
 msgstr "Hallo {name},\n\nich bereite die CRediT-Beitragserklärung für {work} vor. Könnten Sie diesen Link öffnen, Ihre Rollen markieren und mir den Link zurückschicken?\n\n{link}\n\nDer Link enthält den Titel, Ihren Namen und Ihre iD. Nichts wird auf einem Server gespeichert."
@@ -1154,10 +1154,10 @@ msgid "teamCopyMessage"
 msgstr "Nachricht kopieren"
 
 msgid "expandContributors"
-msgstr "Liste der Beitragenden ausklappen"
+msgstr "Liste der Mitwirkenden ausklappen"
 
 msgid "collapseContributors"
-msgstr "Liste der Beitragenden einklappen"
+msgstr "Liste der Mitwirkenden einklappen"
 
 msgid "moveUp"
 msgstr "Nach oben"
@@ -1217,7 +1217,7 @@ msgid "markerSharedFirst"
 msgstr "Geteilte Erstautorschaft"
 
 msgid "markerCorresponding"
-msgstr "Korrespondenzautor"
+msgstr "Korrespondenzautor:in"
 
 msgid "markerYes"
 msgstr "Ja"
@@ -1235,7 +1235,7 @@ msgid "reviewKindDropped"
 msgstr "Weggelassen"
 
 msgid "reviewKindLevel"
-msgstr "Anderer Grad"
+msgstr "Andere Stufe"
 
 msgid "reviewUseTheirs"
 msgstr "Von {name} übernehmen"
@@ -1310,10 +1310,10 @@ msgid "statementReviewTitle"
 msgstr "In der Erklärung gefundene Rollen"
 
 msgid "statementReviewSummary"
-msgstr "{added, plural, one {# Rolle} other {# Rollen}} für {people, plural, one {# mitwirkende Person} other {# mitwirkende Personen}} hinzuzufügen. Rollen, die schon in der Tabelle stehen, bleiben unverändert."
+msgstr "{added, plural, one {# Rolle} other {# Rollen}} für {people, plural, one {# mitwirkende Person} other {# mitwirkende Personen}} hinzuzufügen. Rollen, die schon im Raster stehen, bleiben unverändert."
 
 msgid "statementNothingNew"
-msgstr "Alle gefundenen Rollen stehen schon in der Tabelle."
+msgstr "Alle gefundenen Rollen stehen schon im Raster."
 
 msgid "statementNoRolesFor"
 msgstr "Keine Rollen gefunden für: {names}"
@@ -1322,13 +1322,13 @@ msgid "statementCouldBe"
 msgstr "(könnte {token} sein)"
 
 msgid "statementUnresolvedBody"
-msgstr "Diese Namen oder Initialen passen zu keiner oder zu mehreren Personen in diesem Entwurf. Ihre Rollen werden ausgelassen, außer Sie wählen, wer gemeint ist. Tragen Sie den Rest nach dem Übernehmen in der Tabelle ein."
+msgstr "Diese Namen oder Initialen passen zu keiner oder zu mehreren Personen in diesem Entwurf. Ihre Rollen werden ausgelassen, außer Sie wählen, wer gemeint ist. Tragen Sie den Rest nach dem Übernehmen im Raster ein."
 
 msgid "statementLeaveOut"
 msgstr "Auslassen"
 
 msgid "statementReviewSummaryLevel"
-msgstr "{added, plural, one {# Rolle} other {# Rollen}} als {level} für {people, plural, one {# mitwirkende Person} other {# mitwirkende Personen}} hinzuzufügen. Rollen, die schon in der Tabelle stehen, bleiben unverändert."
+msgstr "{added, plural, one {# Rolle} other {# Rollen}} als {level} für {people, plural, one {# mitwirkende Person} other {# mitwirkende Personen}} hinzuzufügen. Rollen, die schon im Raster stehen, bleiben unverändert."
 
 msgid "statementRoleAlreadySet"
 msgstr "{role} (schon gesetzt)"
@@ -1349,7 +1349,7 @@ msgid "statementAppliedLevel"
 msgstr "{count, plural, one {# Rolle} other {# Rollen}} aus der Erklärung als {level} hinzugefügt."
 
 msgid "statementUndoStale"
-msgstr "Nichts rückgängig gemacht: Der Entwurf hat sich geändert, seit die Rollen hinzugefügt wurden. Ändern Sie sie stattdessen in der Tabelle."
+msgstr "Nichts rückgängig gemacht: Der Entwurf hat sich geändert, seit die Rollen hinzugefügt wurden. Ändern Sie sie stattdessen im Raster."
 
 msgid "statementOnlyCredit"
 msgstr "Gelesen werden nur CRediT-Rollennamen wie Conceptualization oder Writing – original draft, keine Sätze darüber, wer was getan hat."
@@ -1382,7 +1382,7 @@ msgid "censusTitle"
 msgstr "CRediT-Zensus"
 
 msgid "censusHeadline"
-msgstr "{year} nannten {share} der Open-Access-Forschungsartikel in Europe PMC CRediT-Rollen für mindestens eine Person."
+msgstr "{year} nannten {share} der Open-Access-Forschungsartikel in Europe PMC CRediT-Rollen für mindestens eine Autorin oder einen Autor."
 
 msgid "censusLead"
 msgstr "Wie veröffentlichte Artikel CRediT, die Contributor Roles Taxonomy, nutzen – gelesen aus dem Markup und den Beitragserklärungen von {articles} Open-Access-Artikeln in Europe PMC."
@@ -1391,7 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Wie genau diese Zahlen sind"
 
 msgid "censusAccuracy"
-msgstr "Ich habe den Parser an {labelled} annotierten Erklärungen geprüft, die CRediT-Rollennamen verwenden. Er findet {recall} der Rollen, und {precision} dessen, was er findet, ist richtig. Er liest nur Rollennamen, eine Erklärung in Fließtext zählt also als Erklärung ohne Rollen. Bei {articles} Artikeln, die ihre Rollen auszeichnen und zugleich eine Erklärung drucken, stimmt die Lesart des Parsers mit den Auszeichnungen mit einem F1-Wert von {f1} überein (1 hieße: jede Rolle gefunden und keine falsch). Aber {share} dieser Artikel stammen von MDPI und Frontiers, und die Auszeichnungen selbst hat niemand geprüft."
+msgstr "Ich habe den Parser an {labelled} annotierten Erklärungen geprüft, die CRediT-Rollennamen verwenden. Er findet {recall} der Rollen, und {precision} dessen, was er findet, ist richtig. Er liest nur Rollennamen, eine Erklärung in Fließtext zählt also als Erklärung ohne Rollen. Bei {articles} Artikeln, die ihre Rollen auszeichnen und zugleich eine Erklärung abdrucken, stimmt die Lesart des Parsers mit den Auszeichnungen mit einem F1-Wert von {f1} überein (1 bedeutet: jede Rolle gefunden und keine falsch). Aber {share} dieser Artikel stammen von MDPI und Frontiers, und die Auszeichnungen selbst hat niemand geprüft."
 
 msgid "censusAccuracyUnscored"
 msgstr "Ich habe den Parser an {labelled} annotierten Erklärungen geprüft, die CRediT-Rollennamen verwenden. Er findet {recall} der Rollen, und {precision} dessen, was er findet, ist richtig. Er liest nur Rollennamen, eine Erklärung in Fließtext zählt also als Erklärung ohne Rollen."
@@ -1403,13 +1403,13 @@ msgid "censusAdoptionTitle"
 msgstr "Verbreitung im Zeitverlauf"
 
 msgid "censusAdoptionCaption"
-msgstr "Anteil der Forschungsartikel mit CRediT-Rollen für mindestens eine Person, nach Erscheinungsjahr. {year} erscheint noch, daher ist dieses Stück der Linie gestrichelt."
+msgstr "Anteil der Forschungsartikel mit CRediT-Rollen für mindestens eine Autorin oder einen Autor, nach Erscheinungsjahr. {year} erscheint noch, daher ist dieses Stück der Linie gestrichelt."
 
 msgid "censusRolesPerAuthorTitle"
-msgstr "Rollen pro Person"
+msgstr "Rollen pro Autor:in"
 
 msgid "censusRolesPerAuthorCaption"
-msgstr "Durchschnittliche Zahl der Rollen einer Person, die mindestens eine hat, nach Erscheinungsjahr."
+msgstr "Durchschnittliche Zahl der Rollen pro Autor:in (nur Autor:innen mit mindestens einer Rolle), nach Erscheinungsjahr."
 
 msgid "censusShowTable"
 msgstr "Als Tabelle zeigen"
@@ -1445,25 +1445,25 @@ msgid "censusStyleJats4r"
 msgstr "JATS4R-Rollen-Tags"
 
 msgid "censusStyleJats4rNote"
-msgstr "Rollen jeder Person mit dem CRediT-Vokabular ausgezeichnet, wie JATS4R empfiehlt, die Gruppe, die festlegt, wie Zeitschriftenartikel ausgezeichnet werden"
+msgstr "Rollen jeder Autorin und jedes Autors mit dem CRediT-Vokabular ausgezeichnet, wie von JATS4R empfohlen (der Gruppe für Auszeichnungsempfehlungen bei Zeitschriftenartikeln)"
 
 msgid "censusStylePlosUri"
 msgstr "Rollen-URL-Tags"
 
 msgid "censusStylePlosUriNote"
-msgstr "Rollen jeder Person mit einer CRediT-Webadresse ausgezeichnet, wie bei PLOS"
+msgstr "Rollen jeder Autorin und jedes Autors mit einer CRediT-Webadresse ausgezeichnet, wie bei PLOS"
 
 msgid "censusStyleStatement"
 msgstr "Beitragserklärung"
 
 msgid "censusStyleStatementNote"
-msgstr "Ein Absatz, der Personen mit Initialen oder Namen nennt"
+msgstr "Ein Absatz, der Autor:innen mit Initialen oder Namen nennt"
 
 msgid "censusStyleContribText"
-msgstr "Text pro Person"
+msgstr "Text pro Autor:in"
 
 msgid "censusStyleContribTextNote"
-msgstr "Freitext neben jeder Person, etwa eine Rollenliste oder Fußnote"
+msgstr "Freitext neben jeder Autorin und jedem Autor, etwa eine Rollenliste oder Fußnote"
 
 msgid "censusFieldsTitle"
 msgstr "Nach Fachgebiet"
@@ -1529,7 +1529,7 @@ msgid "censusPublishersTitle"
 msgstr "Nach Verlag"
 
 msgid "censusPublishersCaption"
-msgstr "Anteil der Forschungsartikel aus {year} mit CRediT-Rollen, innerhalb des Open-Access-Bestands von Europe PMC, für die {count} Verlage mit den meisten Forschungsartikeln dort in dem Jahr, benannt wie in den Artikeln."
+msgstr "Anteil der Forschungsartikel aus {year} mit CRediT-Rollen für die {count} Verlage mit den meisten Forschungsartikeln im Open-Access-Bestand von Europe PMC in diesem Jahr. Die Verlagsnamen entsprechen den Angaben in den Artikeln."
 
 msgid "censusOfArticles"
 msgstr "von {count, plural, one {# Artikel} other {# Artikeln}}"
@@ -1583,10 +1583,10 @@ msgid "censusHowTitle"
 msgstr "Wie der Zensus Erklärungen liest"
 
 msgid "censusHowRules"
-msgstr "Ein regelbasierter Parser liest jeden Artikel. Wo der Verlag die Rollen jeder Person im JATS-XML auszeichnet, übernimmt er die Auszeichnungen. Sonst liest er die Erklärung im Freitext Satzteil für Satzteil und ordnet Personen Rollen zu. Nur CRediT-Begriffe zählen, „A.B. conceived the study“ ergibt also keine Rollen."
+msgstr "Ein regelbasierter Parser liest jeden Artikel. Wo der Verlag die Rollen jeder Autorin und jedes Autors im JATS-XML auszeichnet, übernimmt er die Auszeichnungen. Sonst liest er die Erklärung im Freitext Satzteil für Satzteil und ordnet Autor:innen Rollen zu. Nur CRediT-Begriffe zählen, „A.B. conceived the study“ ergibt also keine Rollen."
 
 msgid "censusHowModel"
-msgstr "Ein feinabgestimmter Encoder, Ettin-68M, liest außerdem jede Erklärung im Freitext. Er ist das Browsermodell des Zensus, gebaut für den Webbrowser. Er findet mehr der ausgezeichneten Rollen als die Regeln, bei etwa gleicher Präzision, vergibt aber auch Rollen an erzählende Erklärungen, die keine nennen. Die Zahlen auf dieser Seite stammen allein vom Parser mit Regeln."
+msgstr "Ein feinabgestimmter Encoder, Ettin-68M, liest außerdem jede Erklärung im Freitext. Er ist das Browsermodell des Zensus, gebaut für den Webbrowser. Er findet mehr der ausgezeichneten Rollen als die Regeln, bei etwa gleicher Präzision, vergibt aber auch Rollen an erzählende Erklärungen, die keine nennen. Die Zahlen auf dieser Seite stammen allein vom regelbasierten Parser."
 
 msgid "censusHowCaveat"
 msgstr "Beide werden an den Rollen gemessen, die Verlage auszeichnen, und diese Auszeichnungen sind kein Goldstandard. Eine Auszeichnung kann eine Rolle nennen, die die Erklärung nie angibt. Bei 200 MDPI-Artikeln, in denen Parser und Auszeichnungen voneinander abweichen, hielt ein Sprachmodell die Auszeichnungen in 192 Fällen für falsch und den Parser allein in 6. Ein F1-Wert gegen die Auszeichnungen misst also die Übereinstimmung mit ihnen und unterschätzt die Genauigkeit, am stärksten bei MDPI."
@@ -1681,7 +1681,7 @@ msgid "settingsReset"
 msgstr "Zurücksetzen"
 
 msgid "heatmapPerContributorNote"
-msgstr "Farbe pro Beitragendem: Für Graustufendruck in den Heatmap-Optionen eine einzelne Farbe wählen."
+msgstr "Farbe nach Mitwirkenden: Für Graustufendruck wählen Sie in den Heatmap-Optionen eine einzelne Farbe."
 
 msgid "heatmapAdvanced"
 msgstr "Erweitert"
@@ -1736,7 +1736,7 @@ msgid "heatmapRecipe"
 msgstr "Exportvorlage"
 
 msgid "heatmapRecipeHint"
-msgstr "Nur Stileinstellungen. Verwende deine Beitragsdaten und die installierte CLI oder Erweiterung. PNG-Größe und DPI sind nicht enthalten."
+msgstr "Nur Stileinstellungen. Verwenden Sie Ihre Beitragsdaten und die installierte CLI oder das Plugin. PNG-Größe und DPI sind nicht enthalten."
 
 msgid "heatmapRecipeTarget"
 msgstr "Verwenden in"
@@ -1745,10 +1745,10 @@ msgid "heatmapRecipeMyst"
 msgstr "Der MyST-Export der App enthält Rollen mit Ja/Nein-Werten. Das MyST-Plugin kann auch Beitragsstufen lesen."
 
 msgid "heatmapRecipeTypst"
-msgstr "Verwende deine Typst-Teamdaten. Schriftmaße und natives Layout können von SVG abweichen."
+msgstr "Verwenden Sie Ihre Typst-Teamdaten. Schriftmaße und natives Layout können von SVG abweichen."
 
 msgid "heatmapRecipeOneColor"
-msgstr "Rezepte zeichnen eine Farbe. Farben je Mitwirkende gibt es nur im SVG, PNG und PDF der App."
+msgstr "Exportvorlagen verwenden eine Farbe. Farben nach Mitwirkenden gibt es nur im SVG, PNG und PDF der App."
 
 msgid "heatmapCopyRecipe"
 msgstr "Exportvorlage kopieren"
@@ -1759,7 +1759,7 @@ msgid "colorByContributor"
 msgstr "Nach Mitwirkenden einfärben"
 
 msgid "figurePerContributor"
-msgstr "Je Mitwirkende"
+msgstr "Nach Mitwirkenden"
 
 msgid "downloadPdf"
 msgstr "PDF herunterladen"
@@ -1898,19 +1898,19 @@ msgid "docsLiveLoading"
 msgstr "Beispiel wird geladen…"
 
 msgid "docsLiveDraft"
-msgstr "Dein Entwurf in diesem Browser"
+msgstr "Ihr Entwurf in diesem Browser"
 
 msgid "docsLiveSample"
-msgstr "Beispielpersonen"
+msgstr "Beispiel-Mitwirkende"
 
 msgid "docsUseSample"
-msgstr "Beispielpersonen verwenden"
+msgstr "Beispiel-Mitwirkende verwenden"
 
 msgid "docsUseDraft"
-msgstr "Deinen Entwurf verwenden"
+msgstr "Ihren Entwurf verwenden"
 
 msgid "docsLiveMakeYourOwn"
-msgstr "<link>Füge deine eigenen Personen in der App hinzu</link>, dann nutzt dieses Beispiel sie."
+msgstr "<link>Fügen Sie Ihre eigenen Mitwirkenden in der App hinzu</link>, dann nutzt dieses Beispiel sie."
 
 msgid "docsData"
 msgstr "Daten und Exporte"

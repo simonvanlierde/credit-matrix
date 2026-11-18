@@ -324,7 +324,7 @@ msgid "annHeatmapCopiedNoAlt"
 msgstr "Heatmap-PNG naar het klembord gekopieerd. Word kan de alternatieve tekst uit deze browser niet overnemen: kopieer die hieronder."
 
 msgid "heatmapAltHint"
-msgstr "Word neemt de alternatieve tekst niet over als je vanuit deze browser plakt. Kopieer hem hier en plak hem onder Afbeeldingsopmaak > Alternatieve tekst."
+msgstr "Word neemt de alternatieve tekst niet over als u vanuit deze browser plakt. Kopieer hem hier en plak hem onder Afbeeldingsopmaak > Alternatieve tekst."
 
 msgid "copyAltText"
 msgstr "Alternatieve tekst kopiëren"
@@ -543,7 +543,7 @@ msgid "coauthorOrcidSignIn"
 msgstr "Inloggen met ORCID"
 
 msgid "coauthorOrcidHint"
-msgstr "Optioneel: log in met ORCID, dan komt uw antwoord aan als geverifieerd. De inlog reist mee in de link die u terugstuurt en blijft bij uw antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit uw ORCID-record."
+msgstr "Optioneel: log in met ORCID, dan komt uw antwoord aan als geverifieerd. Het inlogbewijs wordt meegestuurd in de link die u terugstuurt en blijft bij uw antwoord bewaard, ook in JSON-exports. Het bevat de naam uit uw ORCID-record."
 
 msgid "coauthorOrcidChanged"
 msgstr "U hebt uw antwoord na het inloggen gewijzigd. Log opnieuw in om dit antwoord te verifiëren."
@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT is een ANSI/NISO-standaard (<cc>CC BY 4.0</cc>). Dit project staat los van NISO en is niet door NISO onderschreven."
 
 msgid "aboutPrivacy"
-msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent.\n\nCloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser.\n\nBij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload.\n\nVerder verlaat niets uw browser: concepten blijven in de lokale opslag, net als of u de lijst Aan de slag hebt gesloten of een verklaring hebt gekopieerd, en welk schrijfprogramma u het laatst koos. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest.\n\nWie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; de inlog reist daarna mee in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Hij bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
+msgstr "Bij het opzoeken van een ORCID iD stuurt uw browser die naar pub.orcid.org. Bij het opzoeken van een DOI gaat die samen met het contactadres van deze site naar api.crossref.org, en naar api.datacite.org als Crossref hem niet kent.\n\nCloudflare, de host van deze site, telt paginaverzoeken op zijn eigen servers en alleen als totalen, zonder script of cookie in uw browser.\n\nBij het importeren van CITATION.cff of .zenodo.json worden de citesync-converter en een Python-runtime van deze site geladen; het bestand wordt in uw browser verwerkt en nooit geüpload.\n\nVerder verlaat niets uw browser: concepten blijven in de lokale opslag, net als of u de lijst Aan de slag hebt gesloten of een verklaring hebt gekopieerd, en welke schrijftool u het laatst koos. Vragen aan coauteurs en hun antwoorden staan alleen in deze browser en gaan mee in JSON-exports, tenzij u die optie uitvinkt. Wie een antwoord verstuurt, geeft de link, met de naam en iD van die persoon, aan de app die u kiest.\n\nWie bij een antwoord inlogt met ORCID, gaat naar orcid.org en weer terug; het inlogbewijs wordt daarna meegestuurd in de antwoordlink en blijft bij het antwoord bewaard, ook in JSON-exports. Het bevat de naam uit het ORCID-record van die persoon. Bij het openen van een ondertekend antwoord, of het importeren van een JSON-bestand met zo'n antwoord, worden de openbare sleutels van ORCID van orcid.org gehaald om het te controleren."
 
 msgid "accessibilityStatement"
 msgstr "Toegankelijkheidsverklaring"
@@ -908,7 +908,7 @@ msgid "annExportDataCopied"
 msgstr "Exportgegevens naar het klembord gekopieerd"
 
 msgid "badgeIntro"
-msgstr "Voeg deze badge toe aan uw artikel of projectpagina."
+msgstr "Voeg deze badge toe aan uw artikel om te laten zien dat het de taxonomie gebruikt."
 
 msgid "copyHtml"
 msgstr "HTML kopiëren"
@@ -932,7 +932,7 @@ msgid "contributorTypeSetNonAuthor"
 msgstr "Markeren als niet-auteur"
 
 msgid "errImportFailed"
-msgstr "Importeren mislukt. Controleer het bestand en probeer het opnieuw."
+msgstr "Kon die bijdragers niet importeren. Controleer de gegevens en probeer het opnieuw."
 
 msgid "errImportNewerVersion"
 msgstr "Dit bestand is gemaakt met een nieuwere versie van CRediT Matrix. Laad de pagina opnieuw om bij te werken en probeer het dan nog eens."
@@ -992,7 +992,7 @@ msgid "welcomeDraftsBody"
 msgstr "Meer dan één artikel? Wissel van concept via de koptekst; elk wordt apart in deze browser bewaard."
 
 msgid "welcomeAskTitle"
-msgstr "Vraag co-auteurs rechtstreeks"
+msgstr "Vraag coauteurs rechtstreeks"
 
 msgid "welcomeAskBody"
 msgstr "Stuur elke coauteur via Delen en dan Vraag coauteurs hun rollen te controleren een link naar hun eigen kolom. Komt de link terug, open die dan: het antwoord wordt naast de rij van die persoon bewaard en verschillen handelt u af op het tabblad Controle."
@@ -1067,19 +1067,19 @@ msgid "tabNorms"
 msgstr "Publicatiepraktijk"
 
 msgid "normsIntro"
-msgstr "Hoe vaak gepubliceerde artikelen in een vakgebied elke rol toekennen, per auteurspositie. Dit is context, geen advies: wat elders gebruikelijk is, zegt niets over wat je coauteurs deden."
+msgstr "Hoe vaak gepubliceerde artikelen in een vakgebied elke rol toekennen, per auteurspositie. Dit is context, geen advies: wat elders gebruikelijk is, zegt niets over wat uw coauteurs deden."
 
 msgid "normsField"
-msgstr "Je vakgebied"
+msgstr "Uw vakgebied"
 
 msgid "normsFieldPlaceholder"
 msgstr "Kies een vakgebied"
 
 msgid "normsEmpty"
-msgstr "Kies je vakgebied om de aandelen te zien. De app weet niet in welk vakgebied je artikel valt, en niets hier verandert je matrix."
+msgstr "Kies uw vakgebied om de aandelen te zien. De app weet niet in welk vakgebied uw artikel valt, en niets hier verandert uw raster."
 
 msgid "normsFieldGone"
-msgstr "Je opgeslagen vakgebied, <name>{field}</name>, heeft geen gegevens in deze momentopname. Kies een vakgebied om de aandelen te zien."
+msgstr "Uw opgeslagen vakgebied, <name>{field}</name>, heeft geen gegevens in deze momentopname. Kies een vakgebied om de aandelen te zien."
 
 msgid "normsCoverage"
 msgstr "{articles, number} open-access onderzoeksartikelen in <name>{field}</name> met CRediT-rollen, uit Europe PMC-bestanden van {date}. Alleen auteurs met minstens één rol tellen mee."
@@ -1088,13 +1088,13 @@ msgid "normsUnvalidated"
 msgstr "De rollen zijn automatisch gelezen en niet met de hand gecontroleerd: in {tagged, number} artikelen waarvan de uitgever de rollen ook tagt, komt de parser met een F1-score van {f1} overeen met die tags (1 is perfect)."
 
 msgid "normsYourPosition"
-msgstr "Je positie in dit concept: {position, select, single {enige auteur} first {eerste auteur} middle {middelste auteur} other {laatste auteur}}."
+msgstr "Uw positie in dit concept: {position, select, single {enige auteur} first {eerste auteur} middle {middelste auteur} other {laatste auteur}}."
 
 msgid "normsNonAuthor"
-msgstr "Je staat in dit concept als niet-auteur, dus er is geen kolom gemarkeerd: de aandelen tellen alleen auteurs."
+msgstr "U staat in dit concept als niet-auteur, dus er is geen kolom gemarkeerd: de aandelen tellen alleen auteurs."
 
 msgid "normsNoSelf"
-msgstr "Kies „Dit ben ik” op je eigen rij in de lijst met bijdragers om je positie te markeren."
+msgstr "Kies ‘Dit ben ik’ op uw eigen rij in de lijst met bijdragers om uw positie te markeren."
 
 msgid "normsCaption"
 msgstr "Aandeel auteurs met elke rol, per auteurspositie"
@@ -1121,7 +1121,7 @@ msgid "teamEmpty"
 msgstr "Voeg eerst bijdragers toe en vraag ze daarna elk wat ze hebben gedaan."
 
 msgid "teamMessage"
-msgstr "Hoi {name},\n\nIk stel de CRediT-bijdrageverklaring op voor {work}. Wil je deze link openen, de rollen aanvinken die je hebt vervuld en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, je naam en je iD. Er wordt niets op een server opgeslagen."
+msgstr "Beste {name},\n\nIk stel de CRediT-bijdrageverklaring op voor {work}. Wilt u deze link openen, de rollen aanvinken die u hebt vervuld en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, uw naam en uw iD. Er wordt niets op een server opgeslagen."
 
 msgid "teamMessageWork"
 msgstr "‘{title}’"
@@ -1298,7 +1298,7 @@ msgid "legendDiffers"
 msgstr "Een coauteur antwoordde anders"
 
 msgid "reviewAskMessage"
-msgstr "Hoi {name},\n\nIk rond de CRediT-bijdrageverklaring voor {work} af. Onze antwoorden verschillen bij {role}. Wil je deze link openen, je rij nakijken en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, je naam en je iD. Er wordt niets op een server opgeslagen."
+msgstr "Beste {name},\n\nIk rond de CRediT-bijdrageverklaring voor {work} af. Onze antwoorden verschillen bij {role}. Wilt u deze link openen, uw rij nakijken en de link naar mij terugsturen?\n\n{link}\n\nDe link bevat de titel, uw naam en uw iD. Er wordt niets op een server opgeslagen."
 
 msgid "formatStatement"
 msgstr "CRediT-verklaring"
@@ -1310,10 +1310,10 @@ msgid "statementReviewTitle"
 msgstr "Rollen gevonden in de verklaring"
 
 msgid "statementReviewSummary"
-msgstr "{added, plural, one {# rol} other {# rollen}} toe te voegen voor {people, plural, one {# bijdrager} other {# bijdragers}}. Rollen die al in de tabel staan, blijven zoals ze zijn."
+msgstr "{added, plural, one {# rol} other {# rollen}} toe te voegen voor {people, plural, one {# bijdrager} other {# bijdragers}}. Rollen die al in het raster staan, blijven zoals ze zijn."
 
 msgid "statementNothingNew"
-msgstr "Alle gevonden rollen staan al in de tabel."
+msgstr "Alle gevonden rollen staan al in het raster."
 
 msgid "statementNoRolesFor"
 msgstr "Geen rollen gevonden voor: {names}"
@@ -1322,7 +1322,7 @@ msgid "statementCouldBe"
 msgstr "(kan {token} zijn)"
 
 msgid "statementUnresolvedBody"
-msgstr "Deze namen of initialen passen bij geen enkele bijdrager in dit concept, of bij meer dan één. Hun rollen worden overgeslagen, tenzij u kiest wie er bedoeld is. Zet de rest na het toepassen in de tabel."
+msgstr "Deze namen of initialen passen bij geen enkele bijdrager in dit concept, of bij meer dan één. Hun rollen worden overgeslagen, tenzij u kiest wie er bedoeld is. Zet de rest na het toepassen in het raster."
 
 msgid "statementLeaveOut"
 msgstr "Overslaan"
@@ -1391,7 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Hoe nauwkeurig deze cijfers zijn"
 
 msgid "censusAccuracy"
-msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen. Op {articles} artikelen die hun rollen taggen én een verklaring afdrukken, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout). Maar {share} van die artikelen komt van MDPI en Frontiers, en de tags zelf heeft niemand gecontroleerd."
+msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen. Op {articles} artikelen die hun rollen taggen én een verklaring bevatten, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout). Maar {share} van die artikelen komt van MDPI en Frontiers, en de tags zelf heeft niemand gecontroleerd."
 
 msgid "censusAccuracyUnscored"
 msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen."
@@ -1445,7 +1445,7 @@ msgid "censusStyleJats4r"
 msgstr "JATS4R-roltags"
 
 msgid "censusStyleJats4rNote"
-msgstr "De rollen van elke auteur getagd met het CRediT-vocabulaire, zoals JATS4R aanbeveelt, de groep die vastlegt hoe tijdschriftartikelen worden getagd"
+msgstr "De rollen van elke auteur getagd met het CRediT-vocabulaire, zoals JATS4R aanbeveelt, de groep die aanbevelingen doet voor het taggen van tijdschriftartikelen"
 
 msgid "censusStylePlosUri"
 msgstr "Rol-URL-tags"
@@ -1529,7 +1529,7 @@ msgid "censusPublishersTitle"
 msgstr "Per uitgever"
 
 msgid "censusPublishersCaption"
-msgstr "Aandeel onderzoeksartikelen uit {year} met CRediT-rollen, binnen de open-access-collectie van Europe PMC, voor de {count} uitgevers met daar de meeste onderzoeksartikelen dat jaar, genoemd zoals de artikelen ze noemen."
+msgstr "Aandeel onderzoeksartikelen uit {year} met CRediT-rollen, binnen de open-access-collectie van Europe PMC, voor de {count} uitgevers met daar de meeste onderzoeksartikelen dat jaar, met de namen zoals die in de artikelen staan."
 
 msgid "censusOfArticles"
 msgstr "van {count, plural, one {# artikel} other {# artikelen}}"
@@ -1583,13 +1583,13 @@ msgid "censusHowTitle"
 msgstr "Hoe de census verklaringen leest"
 
 msgid "censusHowRules"
-msgstr "Een parser met regels leest elk artikel. Waar de uitgever de rollen van elke auteur in de JATS-XML tagt, neemt hij de tags over. Anders leest hij de verklaring in vrije tekst, zinsdeel voor zinsdeel, en koppelt auteurs aan rollen. Alleen CRediT-termen tellen, dus „A.B. conceived the study” levert geen rollen op."
+msgstr "Een regelparser leest elk artikel. Waar de uitgever de rollen van elke auteur in de JATS-XML tagt, neemt hij de tags over. Anders leest hij de verklaring in vrije tekst, zinsdeel voor zinsdeel, en koppelt auteurs aan rollen. Alleen CRediT-termen tellen, dus ‘A.B. conceived the study’ levert geen rollen op."
 
 msgid "censusHowModel"
-msgstr "Een fijngestemde encoder, Ettin-68M, leest ook elke verklaring in vrije tekst. Het is het browsermodel van de census, gemaakt om in een webbrowser te draaien. Hij vindt meer van de getagde rollen dan de regels, bij ongeveer dezelfde precisie, maar hij geeft ook rollen aan verhalende verklaringen die er geen noemen. De tellingen op deze pagina komen alleen van de regelparser."
+msgstr "Een fijn afgestemde encoder, Ettin-68M, leest ook elke verklaring in vrije tekst. Het is het browsermodel van de census, gemaakt om in een webbrowser te draaien. Hij vindt meer van de getagde rollen dan de regelparser, bij ongeveer dezelfde precisie, maar hij geeft ook rollen aan verhalende verklaringen die er geen noemen. De tellingen op deze pagina komen alleen van de regelparser."
 
 msgid "censusHowCaveat"
-msgstr "Beide worden gemeten aan de rollen die uitgevers taggen, en die tags zijn geen gecontroleerde standaard. Een tag kan een rol noemen die de verklaring nergens geeft. Bij 200 MDPI-artikelen waar de regelparser en de tags verschillen, oordeelde een taalmodel dat de tags 192 keer fout waren en de parser alleen 6 keer. Een F1-score tegen de tags meet dus de overeenkomst ermee, en onderschat de nauwkeurigheid, het meest bij MDPI."
+msgstr "Beide worden gemeten aan de rollen die uitgevers taggen, en die tags zijn geen gecontroleerde standaard. Een tag kan een rol noemen die de verklaring nergens vermeldt. Bij 200 MDPI-artikelen waar de regelparser en de tags verschillen, oordeelde een taalmodel dat de tags 192 keer fout waren en de parser alleen 6 keer. Een F1-score tegen de tags meet dus de overeenkomst ermee, en onderschat de nauwkeurigheid, het meest bij MDPI."
 
 msgid "censusHowCode"
 msgstr "De code van de census"
@@ -1610,7 +1610,7 @@ msgid "doiConfirm"
 msgstr "DOI-import bevestigen"
 
 msgid "errCitationConverter"
-msgstr "De citatieconverter kon niet voltooien. Uw bestand staat er nog. Probeer het online opnieuw, of converteer het in de citesync-playground."
+msgstr "De citatieconverter kon de omzetting niet voltooien. Uw bestand staat er nog. Probeer het online opnieuw, of converteer het in de citesync-playground."
 
 msgid "citationPlayground"
 msgstr "citesync-playground openen"
@@ -1736,7 +1736,7 @@ msgid "heatmapRecipe"
 msgstr "Exportrecept"
 
 msgid "heatmapRecipeHint"
-msgstr "Alleen stijlinstellingen. Gebruik je bijdragergegevens en de geïnstalleerde CLI of plug-in. PNG-formaat en DPI zijn niet inbegrepen."
+msgstr "Alleen stijlinstellingen. Gebruik uw bijdragergegevens en de geïnstalleerde CLI of plug-in. PNG-formaat en DPI zijn niet inbegrepen."
 
 msgid "heatmapRecipeTarget"
 msgstr "Gebruiken in"
@@ -1745,7 +1745,7 @@ msgid "heatmapRecipeMyst"
 msgstr "De MyST-export van de app gebruikt rollen met ja/nee. De MyST-plug-in kan ook bijdrageniveaus lezen."
 
 msgid "heatmapRecipeTypst"
-msgstr "Gebruik je Typst-teamgegevens. Lettertypematen en de eigen lay-out kunnen afwijken van SVG."
+msgstr "Gebruik uw Typst-teamgegevens. Lettertypematen en de eigen lay-out kunnen afwijken van SVG."
 
 msgid "heatmapRecipeOneColor"
 msgstr "Recepten tekenen één kleur. Kleuren per bijdrager staan alleen in de SVG, PNG en PDF van de app."
@@ -1796,7 +1796,7 @@ msgid "shareAskTitle"
 msgstr "Vraag coauteurs hun rollen te controleren"
 
 msgid "shareAskBody"
-msgstr "Elke coauteur krijgt een link naar de eigen kolom. De antwoorden komen terug in dit concept, zodat je ze kunt nakijken."
+msgstr "Elke coauteur krijgt een link naar de eigen kolom. De antwoorden komen terug in dit concept, zodat u ze kunt controleren."
 
 msgid "shareCopyTitle"
 msgstr "Of stuur een kopie van het concept"
@@ -1856,13 +1856,13 @@ msgid "toolchainOtherFormats"
 msgstr "Andere formaten"
 
 msgid "toolchainNoSetup"
-msgstr "Geen extensie nodig."
+msgstr "Geen plug-in nodig."
 
 msgid "toolchainWordHint"
 msgstr "Kopieer de verklaring hierboven naar Word. Gebruik Heatmap om de heatmap van bijdragen te kopiëren of te downloaden."
 
 msgid "toolchainLatexHeatmap"
-msgstr "Genereer heatmap.svg met de CLI hieronder en voeg de figuur toe aan je document."
+msgstr "Genereer heatmap.svg met de CLI hieronder en voeg de figuur toe aan uw document."
 
 msgid "toolchainDataHint"
 msgstr "Sla de JSON-export op als contributors.json voor het recept en de CLI hieronder."
@@ -1898,7 +1898,7 @@ msgid "docsLiveLoading"
 msgstr "Voorbeeld laden…"
 
 msgid "docsLiveDraft"
-msgstr "Je concept in deze browser"
+msgstr "Uw concept in deze browser"
 
 msgid "docsLiveSample"
 msgstr "Voorbeeldbijdragers"
@@ -1907,10 +1907,10 @@ msgid "docsUseSample"
 msgstr "Voorbeeldbijdragers gebruiken"
 
 msgid "docsUseDraft"
-msgstr "Je concept gebruiken"
+msgstr "Uw concept gebruiken"
 
 msgid "docsLiveMakeYourOwn"
-msgstr "<link>Voeg je eigen bijdragers toe in de app</link>, dan gebruikt dit voorbeeld ze."
+msgstr "<link>Voeg uw eigen bijdragers toe in de app</link>, dan gebruikt dit voorbeeld ze."
 
 msgid "docsData"
 msgstr "Gegevens en export"

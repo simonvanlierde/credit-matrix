@@ -33,7 +33,7 @@ msgid "reorderContributor"
 msgstr "Riordina"
 
 msgid "undo"
-msgstr "Ripristina"
+msgstr "Annulla"
 
 msgid "cancel"
 msgstr "Annulla"
@@ -117,7 +117,7 @@ msgid "aboutApp"
 msgstr "Informazioni su questa app"
 
 msgid "interfaceLanguage"
-msgstr "Lingua dell'interfaccia"
+msgstr "Lingua dell’interfaccia"
 
 msgid "outputLanguage"
 msgstr "Lingua di output"
@@ -147,7 +147,7 @@ msgid "removeOrcid"
 msgstr "Rimuovi iD ORCID"
 
 msgid "gridEmptyHint"
-msgstr "Aggiungere contributori per iniziare ad assegnare i 14 ruoli CRediT in questa griglia."
+msgstr "Aggiungi contributori per iniziare ad assegnare i 14 ruoli CRediT in questa griglia."
 
 msgid "bulkAssignLevel"
 msgstr "Livello da assegnare"
@@ -177,7 +177,7 @@ msgid "assignToEveryone"
 msgstr "Assegna a tutti…"
 
 msgid "editInList"
-msgstr "Modifica nell'elenco"
+msgstr "Modifica nell’elenco"
 
 msgid "bulkChangeApplied"
 msgstr "Modifica in blocco applicata."
@@ -198,7 +198,7 @@ msgid "legendKey"
 msgstr "Legenda"
 
 msgid "levelHint"
-msgstr "Selezionare per alternare · Frecce per spostarsi · Clic destro o 0–3 imposta un livello."
+msgstr "Seleziona per alternare · Frecce per spostarsi · Clic destro o 0–3 imposta un livello."
 
 msgid "heatmapLabel"
 msgstr "Heatmap"
@@ -258,7 +258,7 @@ msgid "errImportXmlUnreadable"
 msgstr "Impossibile leggere questo XML. Controlla che il file sia completo."
 
 msgid "errImportExportOnly"
-msgstr "I file Quarto, MyST e RO-Crate sono solo di esportazione. Importa invece l'esportazione JSON."
+msgstr "I file Quarto, MyST e RO-Crate sono solo di esportazione. Importa invece l’esportazione JSON."
 
 msgid "close"
 msgstr "Chiudi"
@@ -267,7 +267,7 @@ msgid "browseFiles"
 msgstr "Sfoglia file"
 
 msgid "dragDropFile"
-msgstr "Trascinare e rilasciare un file qui"
+msgstr "Trascina e rilascia un file qui"
 
 msgid "acceptedFileTypes"
 msgstr "Accetta {types}"
@@ -351,49 +351,49 @@ msgid "errNameNoLetter"
 msgstr "Questo non sembra un nome. Deve contenere almeno una lettera."
 
 msgid "errNameTooLong"
-msgstr "Questo nome è troppo lungo. Usare al massimo 500 caratteri."
+msgstr "Questo nome è troppo lungo. Usa al massimo 500 caratteri."
 
 msgid "errFileTooLarge"
-msgstr "Il file è troppo grande. Scegliere un file di dimensioni inferiori a {limit}."
+msgstr "Il file è troppo grande. Scegli un file di dimensioni inferiori a {limit}."
 
 msgid "errFileUnreadable"
 msgstr "Impossibile leggere il file. Controlla il file e riprova."
 
 msgid "errImportTooLarge"
-msgstr "L'importazione è troppo grande. Incollare meno di {limit} di dati."
+msgstr "L’importazione è troppo grande. Incolla meno di {limit} di dati."
 
 msgid "errTooManyContributors"
-msgstr "L'importazione contiene troppi contributori. Il limite è {limit}."
+msgstr "L’importazione contiene troppi contributori. Il limite è {limit}."
 
 msgid "errShareTooLarge"
-msgstr "Questa bozza è troppo grande per essere condivisa come link. Esportarla invece come JSON."
+msgstr "Questa bozza è troppo grande per essere condivisa come link. Esportala invece come JSON."
 
 msgid "errShareUnsupported"
 msgstr "Questo browser non può creare link di condivisione. Esporta la bozza come JSON."
 
 msgid "errShareInvalid"
-msgstr "Questa bozza non può essere condivisa come link così com'è. Ricarica la pagina o controlla i contributori."
+msgstr "Questa bozza non può essere condivisa come link così com’è. Ricarica la pagina o controlla i contributori."
 
 msgid "errShareLinkBroken"
 msgstr "Impossibile aprire il link condiviso. La bozza locale è stata mantenuta."
 
 msgid "errAtContributorLimit"
-msgstr "Una bozza contiene al massimo {limit} contributori. Rimuoverne uno per aggiungerne un altro."
+msgstr "Una bozza contiene al massimo {limit} contributori. Rimuovine uno per aggiungerne un altro."
 
 msgid "errOrcidChecksum"
-msgstr "Questo iD ORCID ha un checksum non valido. Controllare le cifre e riprovare."
+msgstr "Questo iD ORCID ha un checksum non valido. Controlla le cifre e riprova."
 
 msgid "errOffline"
-msgstr "Connessione assente: le ricerche su ORCID non sono disponibili. Digitare il nome manualmente."
+msgstr "Connessione assente: le ricerche su ORCID non sono disponibili. Digita il nome manualmente."
 
 msgid "errOrcidINVALID_ID"
-msgstr "Questo iD ORCID non è valido. Controllare le cifre e riprovare."
+msgstr "Questo iD ORCID non è valido. Controlla le cifre e riprova."
 
 msgid "errOrcidNOT_FOUND"
 msgstr "Nessun record ORCID corrisponde a questo iD."
 
 msgid "errOrcidUNAVAILABLE"
-msgstr "Il servizio ORCID non è disponibile. Riprovare a breve oppure digitare il nome."
+msgstr "Il servizio ORCID non è disponibile. Riprova tra poco oppure digita il nome."
 
 msgid "importFromDoi"
 msgstr "Importa da un DOI"
@@ -408,7 +408,7 @@ msgid "doiLookingUp"
 msgstr "Ricerca in corso…"
 
 msgid "doiHint"
-msgstr "Compila l'elenco dei contributori, i loro iD ORCID e il titolo. I ruoli CRediT depositati vengono mostrati per conferma."
+msgstr "Compila l’elenco dei contributori, i loro iD ORCID e il titolo. I ruoli CRediT depositati vengono mostrati per conferma."
 
 msgid "errDoiINVALID_DOI"
 msgstr "Questo DOI non è valido. Dovrebbe avere il formato 10.1234/abcde."
@@ -417,16 +417,16 @@ msgid "errDoiNOT_FOUND"
 msgstr "Nessun record pubblicato corrisponde a questo DOI."
 
 msgid "errDoiNO_AUTHORS"
-msgstr "Questo record non riporta alcun contributore, quindi non c'è nulla da importare."
+msgstr "Questo record non riporta alcun contributore, quindi non c’è nulla da importare."
 
 msgid "errDoiTOO_MANY_AUTHORS"
 msgstr "Questo record riporta più contributori di quanti una bozza possa contenerne."
 
 msgid "errDoiUNAVAILABLE"
-msgstr "Il servizio Crossref non è disponibile. Riprovare a breve oppure incollare l'elenco degli autori."
+msgstr "Il servizio Crossref non è disponibile. Riprova tra poco oppure incolla l’elenco degli autori."
 
 msgid "errDoiOFFLINE"
-msgstr "Connessione assente: le ricerche DOI non sono disponibili. Incollare l'elenco degli autori."
+msgstr "Connessione assente: le ricerche DOI non sono disponibili. Incolla l’elenco degli autori."
 
 msgid "equalContributionShort"
 msgstr "Co-primo autore"
@@ -435,16 +435,16 @@ msgid "correspondingShort"
 msgstr "Autore corrispondente"
 
 msgid "equalContributionSet"
-msgstr "Segna come primo autore in parti uguali"
+msgstr "Segna come co-primo autore"
 
 msgid "equalContributionUnset"
-msgstr "Togli il primo autore in parti uguali"
+msgstr "Rimuovi co-primo autore"
 
 msgid "correspondingSet"
-msgstr "Segna come autore di corrispondenza"
+msgstr "Segna come autore corrispondente"
 
 msgid "correspondingUnset"
-msgstr "Togli l'autore di corrispondenza"
+msgstr "Rimuovi autore corrispondente"
 
 msgid "drafts"
 msgstr "Bozze"
@@ -486,19 +486,19 @@ msgid "deleteAllDrafts"
 msgstr "Elimina tutte le bozze"
 
 msgid "confirmDeleteAllDrafts"
-msgstr "Eliminare tutte le bozze in questo browser? L'operazione non si può annullare."
+msgstr "Eliminare tutte le bozze in questo browser? L’operazione non si può annullare."
 
 msgid "allDraftsDeleted"
 msgstr "Tutte le bozze sono state eliminate."
 
 msgid "draftUpdatedElsewhere"
-msgstr "Questa bozza è stata aggiornata in un'altra scheda."
+msgstr "Questa bozza è stata aggiornata in un’altra scheda."
 
 msgid "switchToDraft"
 msgstr "Passa a {title}"
 
 msgid "coauthorPrefilled"
-msgstr "Le spunte sono l'ipotesi di chi chiede. Cambia ciò che non è corretto."
+msgstr "Le spunte sono l’ipotesi di chi chiede. Cambia ciò che non è corretto."
 
 msgid "coauthorHeading"
 msgstr "<work>{title}</work>: che cosa hai fatto?"
@@ -507,7 +507,7 @@ msgid "coauthorHeadingUntitled"
 msgstr "Che cosa hai fatto per questo articolo?"
 
 msgid "coauthorAnsweringAs"
-msgstr "Rispondi come <b>{name}</b>. Il tuo nome e il tuo ORCID iD tornano indietro nel link che invii."
+msgstr "Rispondi come <b>{name}</b>. Il tuo nome e il tuo iD ORCID tornano indietro nel link che invii."
 
 msgid "coauthorBlankHint"
 msgstr "Scegli un livello per ogni ruolo che hai svolto e lascia il resto su {none}. Ci vogliono circa due minuti."
@@ -522,19 +522,19 @@ msgid "coauthorFirstAuthor"
 msgstr "Condivido la posizione di primo autore"
 
 msgid "coauthorCorresponding"
-msgstr "Sono autore o autrice di riferimento"
+msgstr "Sono autore o autrice corrispondente"
 
 msgid "coauthorDetails"
 msgstr "I tuoi dati"
 
 msgid "coauthorDetailsHint"
-msgstr "Correggi qui il tuo nome o il tuo ORCID iD se chi chiede li ha sbagliati."
+msgstr "Correggi qui il tuo nome o il tuo iD ORCID se chi chiede li ha sbagliati."
 
 msgid "coauthorName"
 msgstr "Nome"
 
 msgid "coauthorSend"
-msgstr "Rimanda indietro"
+msgstr "Invia risposta"
 
 msgid "coauthorMarked"
 msgstr "{count} ruoli su {total} segnati"
@@ -543,7 +543,7 @@ msgid "coauthorOrcidSignIn"
 msgstr "Accedi con ORCID"
 
 msgid "coauthorOrcidHint"
-msgstr "Facoltativo: accedi con ORCID e la tua risposta arriverà contrassegnata come verificata. L’accesso viaggia nel link che rimandi e resta salvato con la tua risposta, anche negli export JSON. Contiene il nome presente nel tuo record ORCID."
+msgstr "Facoltativo: accedi con ORCID e la tua risposta arriverà contrassegnata come verificata. La prova di accesso è inclusa nel link che rimandi e resta salvata con la tua risposta, anche nelle esportazioni JSON. Contiene il nome presente nel tuo record ORCID."
 
 msgid "coauthorOrcidChanged"
 msgstr "Hai cambiato la risposta dopo l’accesso. Accedi di nuovo per verificare questa risposta."
@@ -603,7 +603,7 @@ msgid "claimResumed"
 msgstr "Ripreso da dove eri rimasto con questa richiesta."
 
 msgid "claimRequestUpdated"
-msgstr "La richiesta è stata aggiornata. Le sue risposte precedenti sono state sostituite."
+msgstr "La richiesta è stata aggiornata. Le tue risposte precedenti sono state sostituite."
 
 msgid "claimUndoStale"
 msgstr "Nulla è stato annullato: la bozza è cambiata dopo l’aggiornamento della richiesta. Modificala nella griglia."
@@ -621,7 +621,7 @@ msgid "askPrefilled"
 msgstr "Chiedi a {name} di verificare la tua ipotesi"
 
 msgid "askLinkHint"
-msgstr "Il link contiene il titolo, il nome e l'iD di questa persona."
+msgstr "Il link contiene il titolo, il nome e l’iD di questa persona."
 
 msgid "ask"
 msgstr "Chiedi"
@@ -636,7 +636,7 @@ msgid "askedChip"
 msgstr "Richiesto"
 
 msgid "askedChipTitle"
-msgstr "Invitato a compilare la propria riga; scompare all'arrivo della risposta."
+msgstr "Invitato a compilare la propria riga; scompare all’arrivo della risposta."
 
 msgid "mergedRowBadge"
 msgstr "Aggiornato"
@@ -657,25 +657,25 @@ msgid "askReplyDiffers"
 msgstr "È arrivata la risposta di {name}: {count, plural, one {# differenza} other {# differenze}}."
 
 msgid "askReplyMatches"
-msgstr "La risposta di {name} coincide con la sua."
+msgstr "La risposta di {name} coincide con la tua."
 
 msgid "askReplyStale"
-msgstr "Questa risposta di {name} è precedente a quella che ha già, quindi non è stata usata."
+msgstr "Questa risposta di {name} è precedente a quella che hai già, quindi non è stata usata."
 
 msgid "askReplyDuplicate"
-msgstr "Ha già questa risposta di {name}."
+msgstr "Hai già questa risposta di {name}."
 
 msgid "annMergeUndone"
 msgstr "Unione annullata."
 
 msgid "welcomeIntro"
-msgstr "Redigere una dichiarazione di contributo pronta per l'invio, in tre passaggi."
+msgstr "Redigere una dichiarazione di contributo pronta per l’invio, in tre passaggi."
 
 msgid "about"
 msgstr "Informazioni"
 
 msgid "statusReady"
-msgstr "Pronto per l'esportazione"
+msgstr "Pronto per l’esportazione"
 
 msgid "statusNotes"
 msgstr "{count, plural, one {# nota da rivedere} other {# note da rivedere}}"
@@ -688,10 +688,10 @@ msgstr "{used} di {total} ruoli usati"
 
 
 msgid "shareWarningBody"
-msgstr "Chiunque abbia questo link può leggere ogni nome, ORCID iD, tipo di contributore e assegnazione di ruolo."
+msgstr "Chiunque abbia questo link può leggere ogni nome, iD ORCID, tipo di contributore e assegnazione di ruolo."
 
 msgid "noContributorsHint"
-msgstr "Incolla qui sotto un DOI o un ORCID iD, digita un nome, oppure usa <b>Importa</b> nell'intestazione."
+msgstr "Incolla qui sotto un DOI o un iD ORCID, digita un nome, oppure usa <b>Importa</b> nell’intestazione."
 
 msgid "a11yContributionGrid"
 msgstr "Griglia dei contributi"
@@ -703,10 +703,10 @@ msgid "a11yStatementNotes"
 msgstr "Note sulla dichiarazione"
 
 msgid "a11yBulkContributor"
-msgstr "Contributore per l'assegnazione in blocco"
+msgstr "Contributore per l’assegnazione in blocco"
 
 msgid "a11yBulkRole"
-msgstr "Ruolo per l'assegnazione in blocco"
+msgstr "Ruolo per l’assegnazione in blocco"
 
 msgid "a11yExportFormat"
 msgstr "Formato di esportazione"
@@ -718,7 +718,7 @@ msgid "a11yOrcidHint"
 msgstr "Digitare un iD ORCID, oppure incollarlo come iD o come URL di orcid.org"
 
 msgid "a11yDismissWelcome"
-msgstr "Chiudere l'introduzione"
+msgstr "Chiudere l’introduzione"
 
 
 msgid "a11yUseInitials"
@@ -749,13 +749,13 @@ msgid "opensInNewTab"
 msgstr "(si apre in una nuova scheda)"
 
 msgid "acknowledgements"
-msgstr "Riconoscimenti"
+msgstr "Ringraziamenti"
 
 msgid "aboutTaxonomy"
 msgstr "CRediT è uno standard ANSI/NISO (<cc>CC BY 4.0</cc>). Questo progetto è indipendente da NISO e non è approvato da NISO."
 
 msgid "aboutPrivacy"
-msgstr "La ricerca di un ORCID iD lo invia dal tuo browser a pub.orcid.org. La ricerca di un DOI lo invia a api.crossref.org, insieme all'indirizzo di contatto di questo sito, e a api.datacite.org se Crossref non ha il record.\n\nCloudflare, che ospita questo sito, conta le richieste di pagina sui propri server, in forma aggregata, senza script né cookie nel tuo browser.\n\nL'importazione di CITATION.cff o .zenodo.json carica da questo sito il convertitore citesync e un runtime Python; il file viene elaborato nel tuo browser e non viene mai caricato.\n\nNient'altro lascia il tuo browser: le bozze restano nella sua memoria locale, così come il fatto di aver chiuso l'elenco Primi passi o copiato una dichiarazione, e lo strumento di scrittura scelto per ultimo. Le richieste ai coautori e le loro risposte restano solo in questo browser e sono incluse negli export JSON, a meno che tu non tolga la spunta. Inviando una risposta, il suo link, con il nome e l'iD di quella persona, passa all'app che scegli.\n\nAccedere con ORCID su una risposta porta la persona su orcid.org e ritorno; l’accesso poi viaggia nel link di risposta e resta salvato con la risposta, anche negli export JSON. Contiene il nome presente nel record ORCID di quella persona. Aprire una risposta firmata, o importare un JSON che ne contiene una, scarica le chiavi pubbliche di ORCID da orcid.org per verificarla."
+msgstr "La ricerca di un iD ORCID lo invia dal tuo browser a pub.orcid.org. La ricerca di un DOI lo invia a api.crossref.org, insieme all’indirizzo di contatto di questo sito, e a api.datacite.org se Crossref non ha il record.\n\nCloudflare, che ospita questo sito, conta le richieste di pagina sui propri server, in forma aggregata, senza script né cookie nel tuo browser.\n\nL’importazione di CITATION.cff o .zenodo.json carica da questo sito il convertitore citesync e un runtime Python; il file viene elaborato nel tuo browser e non viene mai caricato.\n\nNient’altro lascia il tuo browser: le bozze restano nella sua memoria locale, così come il fatto di aver chiuso l’elenco Primi passi o copiato una dichiarazione, e lo strumento di scrittura scelto per ultimo. Le richieste ai coautori e le loro risposte restano solo in questo browser e sono incluse nelle esportazioni JSON, a meno che tu non tolga la spunta. Inviando una risposta, il suo link, con il nome e l’iD di quella persona, passa all’app che scegli.\n\nAccedere con ORCID su una risposta porta la persona su orcid.org e ritorno; la prova di accesso è poi inclusa nel link di risposta e resta salvata con la risposta, anche nelle esportazioni JSON. Contiene il nome presente nel record ORCID di quella persona. Aprire una risposta firmata, o importare un JSON che ne contiene una, scarica le chiavi pubbliche di ORCID da orcid.org per verificarla."
 
 msgid "accessibilityStatement"
 msgstr "Dichiarazione di accessibilità"
@@ -779,10 +779,10 @@ msgid "importAuthorList"
 msgstr "Elenco di nomi di autori"
 
 msgid "importPlaceholder"
-msgstr "{names}\n\noppure un export .csv / .tsv / .json / .xml / .cff, o un link che ti è stato rimandato"
+msgstr "{names}\n\noppure un’esportazione .csv / .tsv / .json / .xml / .cff, o un link che ti è stato rimandato"
 
 msgid "errImportNoNames"
-msgstr "Nessun nome di autore trovato. Inserire un nome per riga."
+msgstr "Nessun nome di autore trovato. Inserisci un nome per riga."
 
 msgid "errImportNoCsvRows"
 msgstr "Nessuna riga di contributori trovata nel CSV."
@@ -791,16 +791,16 @@ msgid "errImportNoJsonContributors"
 msgstr "Questa esportazione JSON non contiene contributori."
 
 msgid "errImportNoXmlContribs"
-msgstr "Nessun elemento <contrib> trovato nell'XML."
+msgstr "Nessun elemento <contrib> trovato nell’XML."
 
 msgid "errImportNoCrossrefContribs"
-msgstr "Nessun blocco <contributors> con <person_name> trovato nell'XML Crossref."
+msgstr "Nessun blocco <contributors> con <person_name> trovato nell’XML Crossref."
 
 msgid "aboutTagline"
 msgstr "Redigere dichiarazioni di contributo CRediT ed esportare la griglia come heatmap dei contributi."
 
 msgid "aboutInspiredBy"
-msgstr "Ispirato all'originale"
+msgstr "Ispirato all’originale"
 
 msgid "aboutOutputTranslations"
 msgstr "Traduzioni dei testi generati a cura di"
@@ -908,7 +908,7 @@ msgid "annExportDataCopied"
 msgstr "Dati di esportazione copiati negli appunti"
 
 msgid "badgeIntro"
-msgstr "Aggiungi questo badge al tuo articolo o alla pagina del progetto."
+msgstr "Aggiungi questo badge al tuo articolo per indicare che utilizza la tassonomia."
 
 msgid "copyHtml"
 msgstr "Copia HTML"
@@ -932,13 +932,13 @@ msgid "contributorTypeSetNonAuthor"
 msgstr "Contrassegna come contributore non autore"
 
 msgid "errImportFailed"
-msgstr "Importazione non riuscita. Controlla il file e riprova."
+msgstr "Impossibile importare questi contributori. Controlla i dati e riprova."
 
 msgid "errImportNewerVersion"
 msgstr "Questo file è stato creato con una versione più recente di CRediT Matrix. Ricarica la pagina per aggiornarla, poi riprova."
 
 msgid "errImportRepeatedId"
-msgstr "Questo file contiene due volte lo stesso ID di collaboratore, quindi non è stato importato."
+msgstr "Questo file contiene due volte lo stesso ID di contributore, quindi non è stato importato."
 
 msgid "errImportScoreCell"
 msgstr "Riga {row}, colonna «{column}»: «{value}» non è un punteggio. Usa un numero da 0 a 100, un livello come Lead, oppure yes/no."
@@ -950,10 +950,10 @@ msgid "errStorageFull"
 msgstr "Lo spazio del browser è esaurito, quindi le modifiche non vengono salvate. Esporta questa bozza o eliminane una che non ti serve più."
 
 msgid "errStorageBlocked"
-msgstr "Questo browser blocca l'archiviazione per questo sito, quindi le modifiche non vengono salvate. Consenti i dati del sito o esporta prima di chiudere la scheda."
+msgstr "Questo browser blocca l’archiviazione per questo sito, quindi le modifiche non vengono salvate. Consenti i dati del sito o esporta prima di chiudere la scheda."
 
 msgid "errNewerVersionSaved"
-msgstr "Una versione più recente di CRediT Matrix ha salvato le tue bozze in un'altra scheda. Ricarica questa pagina: le modifiche fatte qui non vengono salvate."
+msgstr "Una versione più recente di CRediT Matrix ha salvato le tue bozze in un’altra scheda. Ricarica questa pagina: le modifiche fatte qui non vengono salvate."
 
 msgid "formatShareLink"
 msgstr "Link condiviso"
@@ -965,7 +965,7 @@ msgid "replaceWorkspaceBody"
 msgstr "Questa importazione contiene {incoming, plural, one {# contributore} other {# contributori}}. Sostituirà {existing, plural, one {il # contributore attuale} other {i # contributori attuali}}."
 
 msgid "statementEmptyHint"
-msgstr "Nessun contributo ancora assegnato. Selezionare le celle della griglia per assegnare i ruoli."
+msgstr "Nessun contributo ancora assegnato. Seleziona le celle della griglia per assegnare i ruoli."
 
 msgid "separateAcknowledgements"
 msgstr "Separa i ringraziamenti"
@@ -977,10 +977,10 @@ msgid "validationRoleUnassigned"
 msgstr "Il ruolo «{role}» non è assegnato ad alcun contributore."
 
 msgid "welcomeBodyContributors"
-msgstr "Incolla un DOI per compilare l'intero elenco dal record pubblicato, oppure digita i nomi. Un ORCID iD compila il nome per te."
+msgstr "Incolla un DOI per compilare l’intero elenco dal record pubblicato, oppure digita i nomi. Un iD ORCID compila il nome per te."
 
 msgid "welcomeBodyRoles"
-msgstr "Selezionare le celle della griglia per indicare quali dei 14 ruoli CRediT ha svolto ciascuna persona."
+msgstr "Seleziona le celle della griglia per indicare quali dei 14 ruoli CRediT ha svolto ciascuna persona."
 
 msgid "welcomeBodyExport"
 msgstr "La dichiarazione si aggiorna man mano. Copiala, oppure scarica la heatmap, XML, CSV, JSON o Markdown."
@@ -989,13 +989,13 @@ msgid "welcomeDraftsTitle"
 msgstr "Una bozza per articolo"
 
 msgid "welcomeDraftsBody"
-msgstr "Più di un articolo? Cambia bozza dall'intestazione; ognuna è conservata separatamente in questo browser."
+msgstr "Più di un articolo? Cambia bozza dall’intestazione; ognuna è conservata separatamente in questo browser."
 
 msgid "welcomeAskTitle"
 msgstr "Chiedi direttamente ai coautori"
 
 msgid "welcomeAskBody"
-msgstr "Con Condividi e poi Chiedi ai coautori di controllare i loro ruoli, inviare a ogni coautore un link alla sua colonna. Quando il link torna, aprirlo: la risposta viene conservata accanto alla sua riga e le differenze si risolvono nella scheda Revisione."
+msgstr "Con Condividi e poi Chiedi ai coautori di controllare i loro ruoli, invia a ogni coautore un link alla sua colonna. Quando il link torna, aprilo: la risposta viene conservata accanto alla sua riga e le differenze si risolvono nella scheda Revisione."
 
 msgid "importDescription"
 msgstr "Parti da un DOI, incolla i nomi o un link che ti è stato rimandato, oppure carica un file CSV, JSON, JATS4R XML o Crossref XML. JSON e XML ripristinano anche i contributi, con i livelli se il file li contiene. Va bene anche un foglio di calcolo tenzing (CSV o TSV). Incolla una dichiarazione dei contributi degli autori per compilare i ruoli dei contributori già presenti. CITATION.cff, codemeta.json e .zenodo.json importano i nomi degli autori e gli iD ORCID, lasciando vuoti i ruoli."
@@ -1037,7 +1037,7 @@ msgid "stripOpenTeam"
 msgstr "Chiedi ai coautori"
 
 msgid "teamYou"
-msgstr "Lei"
+msgstr "Tu"
 
 msgid "teamNotAsked"
 msgstr "Non ancora interpellato"
@@ -1076,7 +1076,7 @@ msgid "normsFieldPlaceholder"
 msgstr "Scegli un settore"
 
 msgid "normsEmpty"
-msgstr "Scegli il tuo settore per vedere le percentuali. L’app non conosce il settore del tuo articolo, e niente qui cambia la tua matrice."
+msgstr "Scegli il tuo settore per vedere le quote. L’app non conosce il settore del tuo articolo, e niente qui cambia la tua griglia."
 
 msgid "normsFieldGone"
 msgstr "Il settore salvato, <name>{field}</name>, non ha dati in questa istantanea. Scegli un settore per vedere le quote."
@@ -1094,7 +1094,7 @@ msgid "normsNonAuthor"
 msgstr "In questa bozza sei un non autore, quindi nessuna colonna è evidenziata: le quote contano solo gli autori."
 
 msgid "normsNoSelf"
-msgstr "Per segnare la tua posizione, scegli «Sono io» nella tua riga dell’elenco dei collaboratori."
+msgstr "Per segnare la tua posizione, scegli «Sono io» nella tua riga dell’elenco dei contributori."
 
 msgid "normsCaption"
 msgstr "Quota di autori con ciascun ruolo, per posizione dell’autore"
@@ -1130,7 +1130,7 @@ msgid "teamMessageNoTitle"
 msgstr "il nostro manoscritto"
 
 msgid "teamMessageCopied"
-msgstr "Messaggio per {name} copiato. Incollalo in un'email."
+msgstr "Messaggio per {name} copiato. Incollalo in un’email."
 
 msgid "teamAskAllDone"
 msgstr "{count, plural, one {# messaggio copiato.} other {Tutti i # messaggi copiati.}}"
@@ -1142,10 +1142,10 @@ msgid "teamAskAll"
 msgstr "Chiedi a tutti quelli non ancora interpellati ({count})"
 
 msgid "teamAskAllHint"
-msgstr "Copia un messaggio per persona. Incolla ciascuno in un'email prima di copiare il successivo."
+msgstr "Copia un messaggio per persona. Incolla ciascuno in un’email prima di copiare il successivo."
 
 msgid "teamPrivacy"
-msgstr "Ogni link contiene il titolo dell'articolo e il nome e l'iD di quella persona. Nulla viene salvato su un server: la risposta torna per la stessa via con cui la invii."
+msgstr "Ogni link contiene il titolo dell’articolo e il nome e l’iD di quella persona. Nulla viene salvato su un server: la risposta torna per la stessa via con cui la invii."
 
 msgid "teamCopyMessageFor"
 msgstr "Copia messaggio per {name}"
@@ -1154,10 +1154,10 @@ msgid "teamCopyMessage"
 msgstr "Copia messaggio"
 
 msgid "expandContributors"
-msgstr "Espandi l'elenco dei contributori"
+msgstr "Espandi l’elenco dei contributori"
 
 msgid "collapseContributors"
-msgstr "Comprimi l'elenco dei contributori"
+msgstr "Comprimi l’elenco dei contributori"
 
 msgid "moveUp"
 msgstr "Sposta su"
@@ -1253,7 +1253,7 @@ msgid "reviewKeepYoursRole"
 msgstr "Tieni la tua: {role}"
 
 msgid "undoRole"
-msgstr "Ripristina: {role}"
+msgstr "Annulla: {role}"
 
 msgid "reviewAskAboutRole"
 msgstr "{copied, select, true {Copiato. Chiedi a {name}: {role}} other {Chiedi a {name}: {role}}}"
@@ -1328,7 +1328,7 @@ msgid "statementLeaveOut"
 msgstr "Tralascia"
 
 msgid "statementReviewSummaryLevel"
-msgstr "{added, plural, one {# ruolo} other {# ruoli}} da aggiungere come {level} per {people, plural, one {# collaboratore} other {# collaboratori}}. I ruoli già presenti nella griglia restano invariati."
+msgstr "{added, plural, one {# ruolo} other {# ruoli}} da aggiungere come {level} per {people, plural, one {# contributore} other {# contributori}}. I ruoli già presenti nella griglia restano invariati."
 
 msgid "statementRoleAlreadySet"
 msgstr "{role} (già impostato)"
@@ -1340,7 +1340,7 @@ msgid "statementUnmatchedAmbiguous"
 msgstr "{token}: potrebbe essere {names}"
 
 msgid "statementUnmatchedNone"
-msgstr "{token}: nessun collaboratore"
+msgstr "{token}: nessun contributore"
 
 msgid "statementLeftOut"
 msgstr "{who} — esclusi: {roles}"
@@ -1385,16 +1385,16 @@ msgid "censusHeadline"
 msgstr "Nel {year}, il {share} degli articoli di ricerca ad accesso aperto in Europe PMC indicava ruoli CRediT per almeno un autore."
 
 msgid "censusLead"
-msgstr "Come gli articoli pubblicati usano CRediT, la Contributor Roles Taxonomy, letti dal markup e dalle dichiarazioni di contributo di {articles} articoli ad accesso aperto in Europe PMC."
+msgstr "Come gli articoli pubblicati usano CRediT, la Contributor Roles Taxonomy. I ruoli sono letti dal markup e dalle dichiarazioni di contributo di {articles} articoli ad accesso aperto in Europe PMC."
 
 msgid "censusAccuracyTitle"
 msgstr "Quanto sono accurate queste cifre"
 
 msgid "censusAccuracy"
-msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova {recall} dei ruoli, e {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo. Su {articles} articoli che etichettano i propri ruoli e stampano anche una dichiarazione, la lettura della dichiarazione da parte del parser concorda con le etichette con un punteggio F1 di {f1} (1 significa ogni ruolo trovato e nessuno sbagliato). Ma il {share} di questi articoli proviene da MDPI e Frontiers, e nessuno ha verificato le etichette."
+msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova il {recall} dei ruoli, e il {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo. Su {articles} articoli che etichettano i propri ruoli e riportano anche una dichiarazione, la lettura della dichiarazione da parte del parser concorda con le etichette con un punteggio F1 di {f1} (1 significa tutti i ruoli trovati e nessun errore). Ma il {share} di questi articoli proviene da MDPI e Frontiers, e nessuno ha verificato le etichette."
 
 msgid "censusAccuracyUnscored"
-msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova {recall} dei ruoli, e {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo."
+msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova il {recall} dei ruoli, e il {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo."
 
 msgid "censusIncomplete"
 msgstr "Questa istantanea è incompleta: alcuni file sorgente non sono stati letti, o alcune riviste non hanno ancora un settore."
@@ -1439,13 +1439,13 @@ msgid "censusStylesTitle"
 msgstr "Come sono marcati i ruoli"
 
 msgid "censusStylesCaption"
-msgstr "Quota di articoli di ricerca per anno, secondo da dove sono stati letti i ruoli. Ogni articolo conta una volta, sotto la prima delle quattro forme qui sotto che usa. Tutte e quattro usano la stessa scala. Il {year} è ancora in corso di pubblicazione, perciò il suo tratto è tratteggiato."
+msgstr "Quota di articoli di ricerca per anno, in base a dove sono stati letti i ruoli. Ogni articolo conta una volta, sotto la prima delle quattro forme qui sotto che usa. Tutte e quattro usano la stessa scala. Il {year} è ancora in corso di pubblicazione, perciò il suo tratto è tratteggiato."
 
 msgid "censusStyleJats4r"
 msgstr "Tag di ruolo JATS4R"
 
 msgid "censusStyleJats4rNote"
-msgstr "Ruoli di ogni autore marcati con il vocabolario CRediT, come raccomanda JATS4R, il gruppo che stabilisce come si marcano gli articoli di rivista"
+msgstr "Ruoli di ogni autore marcati con il vocabolario CRediT, come raccomanda JATS4R, il gruppo che formula raccomandazioni su come marcare gli articoli di rivista"
 
 msgid "censusStylePlosUri"
 msgstr "Tag di URL di ruolo"
@@ -1589,7 +1589,7 @@ msgid "censusHowModel"
 msgstr "Un encoder affinato, Ettin-68M, legge anche ogni dichiarazione in testo libero. È il modello per browser del censimento, fatto per funzionare in un browser web. Trova più ruoli etichettati delle regole, con una precisione simile, ma assegna ruoli anche a dichiarazioni narrative che non ne nominano nessuno. I conteggi di questa pagina vengono solo dal parser a regole."
 
 msgid "censusHowCaveat"
-msgstr "Entrambi sono valutati rispetto ai ruoli che gli editori etichettano, e queste etichette non sono un riferimento verificato. Un’etichetta può nominare un ruolo che la dichiarazione non dà mai. Su 200 articoli MDPI in cui il parser a regole e le etichette non concordano, un modello linguistico ha giudicato sbagliate le etichette in 192 casi e il solo parser in 6. Quindi un punteggio F1 rispetto alle etichette misura l’accordo con esse e sottostima l’accuratezza, soprattutto per MDPI."
+msgstr "Entrambi sono valutati rispetto ai ruoli che gli editori etichettano, e queste etichette non sono un riferimento verificato. Un’etichetta può nominare un ruolo che la dichiarazione non indica mai. Su 200 articoli MDPI in cui il parser a regole e le etichette non concordano, un modello linguistico ha giudicato sbagliate le etichette in 192 casi e il solo parser in 6. Quindi un punteggio F1 rispetto alle etichette misura l’accordo con esse e sottostima l’accuratezza, soprattutto per MDPI."
 
 msgid "censusHowCode"
 msgstr "Il codice del censimento"
@@ -1607,7 +1607,7 @@ msgid "importToolchainDropped"
 msgstr "Questo file indica uno strumento di scrittura che questa versione non conosce, quindi è stato omesso."
 
 msgid "doiConfirm"
-msgstr "Conferma l'importazione del DOI"
+msgstr "Conferma l’importazione del DOI"
 
 msgid "errCitationConverter"
 msgstr "Il convertitore di citazioni non è riuscito a terminare. Il file è ancora qui. Riprova online, oppure convertilo nel playground di citesync."
@@ -1745,7 +1745,7 @@ msgid "heatmapRecipeMyst"
 msgstr "L’esportazione MyST dell’app indica i ruoli con sì o no. Il plugin MyST può leggere anche i livelli di contributo."
 
 msgid "heatmapRecipeTypst"
-msgstr "Usa i tuoi dati del gruppo Typst. Le metriche dei caratteri e il layout nativo possono differire da SVG."
+msgstr "Usa i tuoi dati del team Typst. Le metriche dei caratteri e il layout nativo possono differire da SVG."
 
 msgid "heatmapRecipeOneColor"
 msgstr "Le ricette usano un solo colore. I colori per contributore sono solo nell’SVG, nel PNG e nel PDF dell’app."
@@ -1771,7 +1771,7 @@ msgid "errFigureFontsUnavailable"
 msgstr "Non è stato possibile caricare i caratteri della figura."
 
 msgid "heatmapSystemFonts"
-msgstr "Il PDF deve incorporarli, quindi non è disponibile. SVG e PNG li disegnano con i font installati; l’SVG può apparire diverso su un altro computer."
+msgstr "Il PDF deve incorporarli, quindi non è disponibile. SVG e PNG li disegnano con i caratteri installati; l’SVG può apparire diverso su un altro computer."
 
 msgid "heatmapLegendPosition"
 msgstr "Legenda"
@@ -1901,16 +1901,16 @@ msgid "docsLiveDraft"
 msgstr "La tua bozza in questo browser"
 
 msgid "docsLiveSample"
-msgstr "Collaboratori di esempio"
+msgstr "Contributori di esempio"
 
 msgid "docsUseSample"
-msgstr "Usa i collaboratori di esempio"
+msgstr "Usa i contributori di esempio"
 
 msgid "docsUseDraft"
 msgstr "Usa la tua bozza"
 
 msgid "docsLiveMakeYourOwn"
-msgstr "<link>Aggiungi i tuoi collaboratori nell’app</link> e questo esempio li userà."
+msgstr "<link>Aggiungi i tuoi contributori nell’app</link> e questo esempio li userà."
 
 msgid "docsData"
 msgstr "Dati ed esportazioni"
