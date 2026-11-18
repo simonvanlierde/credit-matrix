@@ -43,8 +43,8 @@ For a role:
   "supervision", "writing - review and editing", "reviewing and editing").
 - `worded`: the statement's own wording, mapped by the table below ("designed the study",
   "collected the data", "wrote the manuscript").
-- `inferred`: vague or implied ("chief investigators" -> supervision; "supported H.H. with
-  validation" implies H.H. did validation).
+- `inferred`: vague or implied ("chief investigators" of this study -> supervision; "supported H.H.
+  with validation" implies H.H. did validation).
 
 For a degree:
 
@@ -110,7 +110,8 @@ House rules on top of NISO:
   that results hold or reproduce is validation.
 - Obtaining or collecting samples and assessing participants within the study is investigation;
   recruiting the participants is project administration, and providing patients or samples from
-  elsewhere is resources. "Recruited the patients, performed their clinical assessment, and obtained
+  elsewhere is resources. Leading another study that supplied data ("chief investigator of the ELFEP
+  study, which provided part of the dataset") is resources, not supervision. "Recruited the patients, performed their clinical assessment, and obtained
   the samples" gives project administration and investigation.
 - Planning the manuscript is writing, not methodology: "contributed to the ideation, planning and
   drafting of the manuscript" gives original draft.
@@ -176,6 +177,13 @@ and "final approval" nothing.
   elsewhere, "E.A.S." for E. A. Silva-Junior. Mark that assertion `"resolved_by": "near-miss"`.
 - When initials fit several authors (two "MS") and the statement visibly names authors in byline
   order, the order of mention breaks the tie: the first "MS" is the earlier of the two in the byline.
+  Mark that assertion `"resolved_by": "order"`.
+- When two or more mentions each fit the same few authors only as near misses ("AFL" and "ACL" for
+  Alicia Leiva and Alfonso Leiva), give them out in order: the first mentioned goes to the earlier
+  author in the byline. Mark those assertions `"resolved_by": "order"`.
+- When the same initials fit two authors and one task is left once the others are given out by
+  order ("Y.Z. secured the funding"), give it to the candidate the statement gives the fewest other
+  roles.
   Mark that assertion `"resolved_by": "order"`.
 - Otherwise leave `authors` empty (`[]`) and keep the `mentions`: unresolved, never guessed.
 
