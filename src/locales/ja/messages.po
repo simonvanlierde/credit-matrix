@@ -258,7 +258,7 @@ msgid "errImportXmlUnreadable"
 msgstr "この XML を読み取れませんでした。ファイルが欠けていないか確認してください。"
 
 msgid "errImportExportOnly"
-msgstr "Quarto、MyST、RO-Crate のファイルは書き出し専用です。代わりに JSON の書き出しを読み込んでください。"
+msgstr "Quarto、MyST、RO-Crate のファイルはエクスポート専用です。代わりに JSON エクスポートをインポートしてください。"
 
 msgid "close"
 msgstr "閉じる"
@@ -324,7 +324,7 @@ msgid "annHeatmapCopiedNoAlt"
 msgstr "ヒートマップの PNG をクリップボードにコピーしました。このブラウザーからは Word に代替テキストが渡りません。下でコピーしてください。"
 
 msgid "heatmapAltHint"
-msgstr "このブラウザーから貼り付けると、Word は代替テキストを保持しません。ここでコピーし、[図の形式] > [代替テキスト] に貼り付けてください。"
+msgstr "このブラウザーから貼り付けると、Word は代替テキストを保持しません。ここでコピーし、「図の形式」＞「代替テキスト」に貼り付けてください。"
 
 msgid "copyAltText"
 msgstr "代替テキストをコピー"
@@ -441,10 +441,10 @@ msgid "equalContributionUnset"
 msgstr "共同筆頭著者を解除"
 
 msgid "correspondingSet"
-msgstr "連絡著者として設定"
+msgstr "責任著者として設定"
 
 msgid "correspondingUnset"
-msgstr "連絡著者を解除"
+msgstr "責任著者を解除"
 
 msgid "drafts"
 msgstr "下書き"
@@ -486,7 +486,7 @@ msgid "deleteAllDrafts"
 msgstr "すべての下書きを削除"
 
 msgid "confirmDeleteAllDrafts"
-msgstr "このブラウザのすべての下書きを削除しますか？元に戻せません。"
+msgstr "このブラウザーのすべての下書きを削除しますか？元に戻せません。"
 
 msgid "allDraftsDeleted"
 msgstr "すべての下書きを削除しました。"
@@ -501,13 +501,13 @@ msgid "coauthorPrefilled"
 msgstr "チェックは依頼者による推定です。違っている箇所を修正してください。"
 
 msgid "coauthorHeading"
-msgstr "<work>{title}</work>：あなたは何をしましたか？"
+msgstr "<work>{title}</work>：どの役割を担当しましたか？"
 
 msgid "coauthorHeadingUntitled"
-msgstr "この論文であなたは何をしましたか？"
+msgstr "この論文でどの役割を担当しましたか？"
 
 msgid "coauthorAnsweringAs"
-msgstr "<b>{name}</b>として回答しています。あなたの名前とORCID iDは、送り返すリンクに含まれます。"
+msgstr "<b>{name}</b> として回答しています。氏名と ORCID iD は、返送するリンクに含まれます。"
 
 msgid "coauthorBlankHint"
 msgstr "担当した役割ごとにレベルを選び、残りは{none}のままにしてください。2分ほどで終わります。"
@@ -519,7 +519,7 @@ msgid "coauthorRoles"
 msgstr "あなたの役割"
 
 msgid "coauthorFirstAuthor"
-msgstr "筆頭著者を共有している"
+msgstr "共同筆頭著者である"
 
 msgid "coauthorCorresponding"
 msgstr "責任著者である"
@@ -534,7 +534,7 @@ msgid "coauthorName"
 msgstr "名前"
 
 msgid "coauthorSend"
-msgstr "送り返す"
+msgstr "返送する"
 
 msgid "coauthorMarked"
 msgstr "{total}件中{count}件の役割を選択済み"
@@ -543,7 +543,7 @@ msgid "coauthorOrcidSignIn"
 msgstr "ORCIDでサインイン"
 
 msgid "coauthorOrcidHint"
-msgstr "任意：ORCIDでサインインすると、回答は検証済みとして届きます。サインイン情報は送り返すリンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。ORCID レコードに登録された名前も含まれます。"
+msgstr "任意：ORCID でサインインすると、回答は検証済みとして届きます。サインインの証明は返送するリンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。ORCID レコードに登録された氏名も含まれます。"
 
 msgid "coauthorOrcidChanged"
 msgstr "サインイン後に回答を変更しました。この回答を検証するには、もう一度サインインしてください。"
@@ -609,7 +609,7 @@ msgid "claimUndoStale"
 msgstr "元に戻していません：依頼の更新後に下書きが変更されました。グリッドで変更してください。"
 
 msgid "claimLockedDraft"
-msgstr "ロック中: 依頼に回答しています"
+msgstr "ロック中：依頼に回答しています"
 
 msgid "requestLinkOwn"
 msgstr "これは{name}さん宛てに作成した依頼リンクです。"
@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT は ANSI/NISO 標準（<cc>CC BY 4.0</cc>）です。本プロジェクトは NISO から独立しており、NISO の承認を受けたものではありません。"
 
 msgid "aboutPrivacy"
-msgstr "ORCID iD を検索すると、ブラウザーから pub.orcid.org に送信されます。DOI を検索すると、このサイトの連絡先アドレスとともに api.crossref.org に、Crossref に記録がない場合は api.datacite.org にも送信されます。\n\nこのサイトをホストする Cloudflare は、ページへのリクエスト数を自社のサーバー上で集計値としてのみ数えます。ブラウザーではスクリプトも Cookie も使いません。\n\nCITATION.cff や .zenodo.json をインポートすると、このサイトから citesync コンバーターと Python ランタイムが読み込まれます。ファイルはブラウザー内で処理され、アップロードされることはありません。\n\nそれ以外はブラウザーの外に出ません。下書きはローカルストレージにのみ保存されます。「はじめに」チェックリストを閉じたかどうかと、声明をコピーしたかどうか、最後に選んだ執筆ツールも同様です。共著者への依頼と回答はこのブラウザーにのみ保存され、チェックを外さない限り JSON エクスポートに含まれます。回答を送信すると、その人の名前と iD を含むリンクが、選択したアプリに渡されます。\n\n回答でORCIDにサインインすると、共著者はorcid.orgに移動してから戻ります。サインイン情報はその後、返信リンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。これには共著者の ORCID レコードに登録された名前が含まれます。サインイン付きの回答を開くか、それを含む JSON をインポートすると、確認のためにorcid.orgからORCIDの公開鍵を取得します。"
+msgstr "ORCID iD を検索すると、ブラウザーから pub.orcid.org に送信されます。DOI を検索すると、このサイトの連絡先アドレスとともに api.crossref.org に、Crossref に記録がない場合は api.datacite.org にも送信されます。\n\nこのサイトをホストする Cloudflare は、ページへのリクエスト数を自社のサーバー上で集計値としてのみ数えます。ブラウザーではスクリプトも Cookie も使いません。\n\nCITATION.cff や .zenodo.json をインポートすると、このサイトから citesync コンバーターと Python ランタイムが読み込まれます。ファイルはブラウザー内で処理され、アップロードされることはありません。\n\nそれ以外はブラウザーの外に出ません。下書きはローカルストレージにのみ保存されます。「はじめに」チェックリストを閉じたかどうかと、著者貢献をコピーしたかどうか、最後に選んだ執筆ツールも同様です。共著者への依頼と回答はこのブラウザーにのみ保存され、チェックを外さない限り JSON エクスポートに含まれます。回答を送信すると、その人の名前と iD を含むリンクが、選択したアプリに渡されます。\n\n回答で ORCID にサインインすると、共著者は orcid.org に移動してから戻ります。サインインの証明はその後、返信リンクに含まれ、JSON エクスポートも含めて回答と一緒に保存されます。これには共著者の ORCID レコードに登録された氏名が含まれます。署名済みの回答を開くか、それを含む JSON をインポートすると、確認のために orcid.org から ORCID の公開鍵を取得します。"
 
 msgid "accessibilityStatement"
 msgstr "アクセシビリティ方針"
@@ -779,7 +779,7 @@ msgid "importAuthorList"
 msgstr "著者名リスト"
 
 msgid "importPlaceholder"
-msgstr "{names}\n\nまたは .csv / .tsv / .json / .xml / .cff のエクスポート、あるいは送り返されたリンク"
+msgstr "{names}\n\nまたは .csv / .tsv / .json / .xml / .cff のエクスポート、あるいは返送されたリンク"
 
 msgid "errImportNoNames"
 msgstr "著者名が見つかりませんでした。1 行に 1 名ずつ入力してください。"
@@ -845,7 +845,7 @@ msgid "aboutPlugins"
 msgstr "<docs>ドキュメント</docs>に、各プラグイン（MyST、Jupyter Book、Quarto、Pandoc、Typst、Sphinx）の設定ガイドがあります。"
 
 msgid "aboutPluginsSoftware"
-msgstr "ソフトウェア向けには、<cli>コマンドラインツール</cli>が人とロールを CodeMeta 形式でも出力します。<citesync>citesync</citesync> はそのメタデータから CITATION.cff と Zenodo のファイルを作成し、<drift>codemeta-drift</drift> は CodeMeta ファイルの整合性を確認します。"
+msgstr "ソフトウェア向けには、<cli>コマンドラインツール</cli>が人と役割を CodeMeta 形式でも出力します。<citesync>citesync</citesync> はそのメタデータから CITATION.cff と Zenodo のファイルを作成し、<drift>codemeta-drift</drift> は CodeMeta ファイルの整合性を確認します。"
 
 msgid "statementPlugins"
 msgstr "Quarto・MyST・Typst などのプラグイン"
@@ -884,7 +884,7 @@ msgid "a11ySetColor"
 msgstr "色{color}を設定"
 
 msgid "a11yStatementGrouping"
-msgstr "ステートメントのグループ化"
+msgstr "著者貢献のグループ化"
 
 msgid "annContributorsAdded"
 msgstr "{count}名の貢献者を追加しました。"
@@ -908,7 +908,7 @@ msgid "annExportDataCopied"
 msgstr "エクスポートデータをクリップボードにコピーしました"
 
 msgid "badgeIntro"
-msgstr "このバッジを論文またはプロジェクトページに追加できます。"
+msgstr "このバッジを論文に追加して、この分類体系を使用していることを示せます。"
 
 msgid "copyHtml"
 msgstr "HTMLをコピー"
@@ -932,7 +932,7 @@ msgid "contributorTypeSetNonAuthor"
 msgstr "著者以外の貢献者に設定"
 
 msgid "errImportFailed"
-msgstr "インポートできませんでした。ファイルを確認して、もう一度お試しください。"
+msgstr "貢献者をインポートできませんでした。データを確認して、もう一度お試しください。"
 
 msgid "errImportNewerVersion"
 msgstr "このファイルは CRediT Matrix の新しいバージョンで作成されました。ページを再読み込みして更新してから、もう一度お試しください。"
@@ -983,13 +983,13 @@ msgid "welcomeBodyRoles"
 msgstr "グリッドのセルを選択して、各貢献者が担当した CRediT の 14 種類の役割を指定します。"
 
 msgid "welcomeBodyExport"
-msgstr "記述文は入力に合わせて更新されます。コピーするか、ヒートマップ・XML・CSV・JSON・Markdown をダウンロードしてください。"
+msgstr "著者貢献は入力に合わせて更新されます。コピーするか、ヒートマップ・XML・CSV・JSON・Markdown をダウンロードしてください。"
 
 msgid "welcomeDraftsTitle"
 msgstr "論文ごとに1つの下書き"
 
 msgid "welcomeDraftsBody"
-msgstr "複数の論文を執筆中ですか？ヘッダーから下書きを切り替えられます。各下書きはこのブラウザに個別に保存されます。"
+msgstr "複数の論文を執筆中ですか？ヘッダーから下書きを切り替えられます。各下書きはこのブラウザーに個別に保存されます。"
 
 msgid "welcomeAskTitle"
 msgstr "共著者に直接依頼"
@@ -998,7 +998,7 @@ msgid "welcomeAskBody"
 msgstr "「共有」から「共著者に役割の確認を依頼」を選び、各共著者に本人の列へのリンクを送ります。リンクが返ってきたら開いてください。回答はその人の行の横に保存され、違いは「確認」タブで解決します。"
 
 msgid "importDescription"
-msgstr "DOI から始めるか、氏名や送り返されたリンクを貼り付けるか、CSV・JSON・JATS4R XML・Crossref XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。著者貢献声明を貼り付けると、ここにいる貢献者の役割を埋められます。CITATION.cff、codemeta.json、.zenodo.json からは著者名と ORCID iD がインポートされ、役割は空のままになります。"
+msgstr "DOI から始めるか、氏名や返送されたリンクを貼り付けるか、CSV・JSON・JATS4R XML・Crossref XML ファイルをアップロードしてください。JSON と XML は貢献も復元し、ファイルにレベルがあればレベルも復元します。tenzing のスプレッドシート（CSV または TSV）も使えます。著者貢献声明を貼り付けると、ここにいる貢献者の役割を埋められます。CITATION.cff、codemeta.json、.zenodo.json からは著者名と ORCID iD がインポートされ、役割は空のままになります。"
 
 msgid "contributorActions"
 msgstr "{name} に対する操作"
@@ -1043,7 +1043,7 @@ msgid "teamNotAsked"
 msgstr "未依頼"
 
 msgid "toggleKeysHint"
-msgstr "選択で切り替え · 矢印キーで移動、1 または 0 で役割を設定。"
+msgstr "選択で切り替え・矢印キーで移動・1 または 0 で役割を設定。"
 
 msgid "downloadSvg"
 msgstr "SVG をダウンロード"
@@ -1067,7 +1067,7 @@ msgid "tabNorms"
 msgstr "出版論文の傾向"
 
 msgid "normsIntro"
-msgstr "ある分野の出版論文で、各ロールが著者の順番ごとにどれくらい付けられているかを示します。これは参考情報であり、助言ではありません。他の論文での一般的な傾向は、共著者が実際に何をしたかとは関係ありません。"
+msgstr "ある分野の出版論文で、各役割が著者の順番ごとにどれくらい付けられているかを示します。これは参考情報であり、助言ではありません。他の論文での一般的な傾向は、共著者が実際に何をしたかとは関係ありません。"
 
 msgid "normsField"
 msgstr "あなたの分野"
@@ -1076,16 +1076,16 @@ msgid "normsFieldPlaceholder"
 msgstr "分野を選択"
 
 msgid "normsEmpty"
-msgstr "分野を選ぶと割合が表示されます。アプリは論文の分野を知らず、ここでの操作がマトリックスを変えることはありません。"
+msgstr "分野を選ぶと割合が表示されます。アプリは論文の分野を知らず、ここでの操作がグリッドを変えることはありません。"
 
 msgid "normsFieldGone"
 msgstr "保存した分野「<name>{field}</name>」は、このスナップショットにデータがありません。分野を選ぶと割合が表示されます。"
 
 msgid "normsCoverage"
-msgstr "<name>{field}</name>の CRediT ロール付きオープンアクセス研究論文 {articles, number} 件({date} 時点の Europe PMC ファイルより)。少なくとも 1 つのロールを持つ著者のみを数えています。"
+msgstr "<name>{field}</name>の CRediT 役割付きオープンアクセス研究論文 {articles, number} 件（{date} 時点の Europe PMC ファイルより）。少なくとも 1 つの役割を持つ著者のみを数えています。"
 
 msgid "normsUnvalidated"
-msgstr "ロールは自動で読み取ったもので人の手では確認しておらず、出版社もロールをタグ付けしている {tagged, number} 件の論文でのパーサーとタグの一致度は F1 スコア {f1}（1 が完全一致）です。"
+msgstr "役割は自動で読み取ったもので人の手では確認しておらず、出版社も役割をタグ付けしている {tagged, number} 件の論文でのパーサーとタグの一致度は F1 スコア {f1}（1 が完全一致）です。"
 
 msgid "normsYourPosition"
 msgstr "この下書きでのあなたの順番：{position, select, single {単独著者} first {筆頭著者} middle {中間の著者} other {最終著者}}。"
@@ -1097,10 +1097,10 @@ msgid "normsNoSelf"
 msgstr "自分の順番に印を付けるには、貢献者リストの自分の行で「これは自分です」を選んでください。"
 
 msgid "normsCaption"
-msgstr "各ロールを持つ著者の割合(著者の順番別)"
+msgstr "各役割を持つ著者の割合（著者の順番別）"
 
 msgid "normsRole"
-msgstr "ロール"
+msgstr "役割"
 
 msgid "normsPosition"
 msgstr "{position, select, single {単独} first {筆頭} middle {中間} other {最終}}"
@@ -1109,7 +1109,7 @@ msgid "normsTooFew"
 msgstr "著者が少なすぎて判断できません"
 
 msgid "normsFootnote"
-msgstr "該当論文が {minArticles, number} 件未満の分野は表示せず、著者が {minAuthors, number} 人未満の順番はダッシュで示します。分野は OpenAlex による雑誌単位の分類です。出典:CRediT センサス {snapshot}、データセット {version}。"
+msgstr "該当論文が {minArticles, number} 件未満の分野は表示せず、著者が {minAuthors, number} 人未満の順番はダッシュで示します。分野は OpenAlex による雑誌単位の分類です。出典：CRediT センサス {snapshot}、データセット {version}。"
 
 msgid "reviewEmptyTitle"
 msgstr "共著者からの回答はここに表示されます"
@@ -1118,7 +1118,7 @@ msgid "reviewEmptyBody"
 msgstr "共著者からリンクが返ってきたら開いてください。回答が下書きと並んでここに表示されます。"
 
 msgid "teamEmpty"
-msgstr "まず貢献者を追加し、それぞれに何をしたかを尋ねてください。"
+msgstr "まず貢献者を追加し、それぞれに担当した役割を尋ねてください。"
 
 msgid "teamMessage"
 msgstr "{name} 様\n\n{work}の CRediT 貢献声明を準備しています。このリンクを開いて担当した役割にチェックを付け、リンクを返送していただけますか。\n\n{link}\n\nリンクにはタイトル、お名前、iD が含まれます。サーバーには何も保存されません。"
@@ -1136,7 +1136,7 @@ msgid "teamAskAllDone"
 msgstr "{count, plural, other {# 件のメッセージをすべてコピーしました。}}"
 
 msgid "teamAskNext"
-msgstr "次をコピー: {name}（{total}件中{index}件目）"
+msgstr "次をコピー：{name}（{total} 件中 {index} 件目）"
 
 msgid "teamAskAll"
 msgstr "未依頼の全員に依頼（{count}）"
@@ -1214,7 +1214,7 @@ msgid "teamReviewFor"
 msgstr "{name} さんの回答を確認する"
 
 msgid "markerSharedFirst"
-msgstr "筆頭著者を共有"
+msgstr "共同筆頭著者"
 
 msgid "markerCorresponding"
 msgstr "責任著者"
@@ -1235,7 +1235,7 @@ msgid "reviewKindDropped"
 msgstr "外した"
 
 msgid "reviewKindLevel"
-msgstr "程度が異なる"
+msgstr "レベルが異なる"
 
 msgid "reviewUseTheirs"
 msgstr "{name} さんの回答を使う"
@@ -1310,25 +1310,25 @@ msgid "statementReviewTitle"
 msgstr "声明から見つかった役割"
 
 msgid "statementReviewSummary"
-msgstr "{people} 人の貢献者に {added} 件の役割を追加します。表にすでにある役割はそのままです。"
+msgstr "{people} 人の貢献者に {added} 件の役割を追加します。グリッドにすでにある役割はそのままです。"
 
 msgid "statementNothingNew"
-msgstr "見つかった役割はすべて表にあります。"
+msgstr "見つかった役割はすべてグリッドにあります。"
 
 msgid "statementNoRolesFor"
-msgstr "役割が見つからなかった人: {names}"
+msgstr "役割が見つからなかった人：{names}"
 
 msgid "statementCouldBe"
-msgstr "({token} の可能性あり)"
+msgstr "（{token} の可能性あり）"
 
 msgid "statementUnresolvedBody"
-msgstr "これらの名前やイニシャルは、この下書きの貢献者のだれにも一致しないか、複数に一致します。だれを指すかを選ばない限り、その役割は含めません。残りは適用した後に表で設定してください。"
+msgstr "これらの氏名やイニシャルは、この下書きの貢献者のいずれにも一致しないか、複数に一致します。だれを指すかを選ばない限り、その役割は含めません。残りは適用した後にグリッドで設定してください。"
 
 msgid "statementLeaveOut"
 msgstr "含めない"
 
 msgid "statementReviewSummaryLevel"
-msgstr "{people, plural, other {#人}}の貢献者に{added, plural, other {#件}}のロールを{level}として追加します。グリッドに既にあるロールはそのままです。"
+msgstr "{people, plural, other {# 人}}の貢献者に {added, plural, other {# 件}}の役割を {level} として追加します。グリッドにすでにある役割はそのままです。"
 
 msgid "statementRoleAlreadySet"
 msgstr "{role}（設定済み）"
@@ -1346,16 +1346,16 @@ msgid "statementLeftOut"
 msgstr "{who} — 除外：{roles}"
 
 msgid "statementAppliedLevel"
-msgstr "記述から{count, plural, other {#件}}のロールを{level}として追加しました。"
+msgstr "声明から {count, plural, other {# 件}}の役割を {level} として追加しました。"
 
 msgid "statementUndoStale"
-msgstr "元に戻していません：ロールの追加後に下書きが変更されました。グリッドで変更してください。"
+msgstr "元に戻していません：役割の追加後に下書きが変更されました。グリッドで変更してください。"
 
 msgid "statementOnlyCredit"
-msgstr "読み取るのは Conceptualization や Writing – original draft などの CRediT ロール名だけで、誰が何をしたかを述べる文は読み取りません。"
+msgstr "読み取るのは Conceptualization や Writing – original draft などの CRediT の役割名だけで、誰が何をしたかを述べる文は読み取りません。"
 
 msgid "errStatementTooLong"
-msgstr "このテキストは{limit}文字を超えています。貢献の記述だけを貼り付けてください。"
+msgstr "このテキストは {limit} 文字を超えています。貢献声明だけを貼り付けてください。"
 
 msgid "statementBack"
 msgstr "戻る"
@@ -1382,7 +1382,7 @@ msgid "censusTitle"
 msgstr "CRediT センサス"
 
 msgid "censusHeadline"
-msgstr "{year} 年には、Europe PMC のオープンアクセス研究論文の {share} が少なくとも 1 人の著者に CRediT ロールを記載していました。"
+msgstr "{year} 年には、Europe PMC のオープンアクセス研究論文の {share} が少なくとも 1 人の著者に CRediT の役割を記載していました。"
 
 msgid "censusLead"
 msgstr "公開された論文が CRediT（Contributor Roles Taxonomy）をどう使っているかを、Europe PMC のオープンアクセス論文 {articles} 件のマークアップと貢献声明から読み取りました。"
@@ -1391,10 +1391,10 @@ msgid "censusAccuracyTitle"
 msgstr "この数値の精度"
 
 msgid "censusAccuracy"
-msgstr "CRediT のロール名を使っている、ラベル付き声明 {labelled} 件でパーサーを検証しました。パーサーはロールの {recall} を見つけ、見つけたもののうち {precision} は正しい結果です。読み取るのはロール名だけなので、文章で書かれた声明はロールなしとして数えられます。ロールをタグ付けし、かつ貢献声明も掲載している {articles} 件の論文では、パーサーによる声明の読み取りとタグとの一致は F1 スコアで {f1} です（1 はすべてのロールを見つけ、誤りがないことを意味します）。ただし、そのうち {share} は MDPI と Frontiers の論文で、タグ自体は誰も検証していません。"
+msgstr "CRediT の役割名を使っている、ラベル付き声明 {labelled} 件でパーサーを検証しました。パーサーは役割の {recall} を見つけ、見つけたもののうち {precision} は正しい結果です。読み取るのは役割名だけなので、文章で書かれた声明は役割なしとして数えられます。役割をタグ付けし、かつ貢献声明も掲載している {articles} 件の論文では、パーサーによる声明の読み取りとタグとの一致は F1 スコアで {f1} です（1 はすべての役割を見つけ、誤りがないことを意味します）。ただし、そのうち {share} は MDPI と Frontiers の論文で、タグ自体は誰も検証していません。"
 
 msgid "censusAccuracyUnscored"
-msgstr "CRediT のロール名を使っている、ラベル付き声明 {labelled} 件でパーサーを検証しました。パーサーはロールの {recall} を見つけ、見つけたもののうち {precision} は正しい結果です。読み取るのはロール名だけなので、文章で書かれた声明はロールなしとして数えられます。"
+msgstr "CRediT の役割名を使っている、ラベル付き声明 {labelled} 件でパーサーを検証しました。パーサーは役割の {recall} を見つけ、見つけたもののうち {precision} は正しい結果です。読み取るのは役割名だけなので、文章で書かれた声明は役割なしとして数えられます。"
 
 msgid "censusIncomplete"
 msgstr "このスナップショットは不完全です。一部のソースファイルが読み込まれていないか、分野が未設定のジャーナルがあります。"
@@ -1403,13 +1403,13 @@ msgid "censusAdoptionTitle"
 msgstr "採用の推移"
 
 msgid "censusAdoptionCaption"
-msgstr "少なくとも 1 人の著者に CRediT ロールがある研究論文の割合（出版年別）。{year} 年の論文はまだ出版が続いているため、その区間は破線です。"
+msgstr "少なくとも 1 人の著者に CRediT の役割がある研究論文の割合（出版年別）。{year} 年の論文はまだ出版が続いているため、その区間は破線です。"
 
 msgid "censusRolesPerAuthorTitle"
-msgstr "著者あたりのロール数"
+msgstr "著者あたりの役割数"
 
 msgid "censusRolesPerAuthorCaption"
-msgstr "ロールを持つ著者 1 人あたりの平均ロール数（出版年別）。"
+msgstr "役割を持つ著者 1 人あたりの平均役割数（出版年別）。"
 
 msgid "censusShowTable"
 msgstr "表で表示"
@@ -1430,28 +1430,28 @@ msgid "censusResearchArticles"
 msgstr "研究論文"
 
 msgid "censusWithRoles"
-msgstr "ロールあり"
+msgstr "役割あり"
 
 msgid "censusShare"
 msgstr "割合"
 
 msgid "censusStylesTitle"
-msgstr "ロールの記載形式"
+msgstr "役割の記載形式"
 
 msgid "censusStylesCaption"
-msgstr "年ごとの研究論文の割合を、ロールを読み取った箇所別に示します。各論文は、下の 4 つのうち最初に当てはまるもので 1 回だけ数えます。4 つとも同じ目盛りです。{year} 年はまだ出版が続いているため、その区間は破線です。"
+msgstr "年ごとの研究論文の割合を、役割を読み取った箇所別に示します。各論文は、下の 4 つのうち最初に当てはまるもので 1 回だけ数えます。4 つとも同じ目盛りです。{year} 年はまだ出版が続いているため、その区間は破線です。"
 
 msgid "censusStyleJats4r"
-msgstr "JATS4R ロールタグ"
+msgstr "JATS4R 役割タグ"
 
 msgid "censusStyleJats4rNote"
-msgstr "JATS4R（学術誌論文のタグ付け方法を定めるグループ）の推奨どおり、各著者のロールを CRediT 語彙でタグ付け"
+msgstr "JATS4R（学術誌論文のタグ付け方法を推奨するグループ）の方針どおり、各著者の役割を CRediT 語彙でタグ付け"
 
 msgid "censusStylePlosUri"
-msgstr "ロール URL タグ"
+msgstr "役割 URL タグ"
 
 msgid "censusStylePlosUriNote"
-msgstr "PLOS のように、各著者のロールを CRediT のウェブアドレスでタグ付け"
+msgstr "PLOS のように、各著者の役割を CRediT のウェブアドレスでタグ付け"
 
 msgid "censusStyleStatement"
 msgstr "貢献声明"
@@ -1463,13 +1463,13 @@ msgid "censusStyleContribText"
 msgstr "著者ごとのテキスト"
 
 msgid "censusStyleContribTextNote"
-msgstr "各著者の横にある自由記述（ロールの一覧や脚注など）"
+msgstr "各著者の横にある自由記述（役割の一覧や脚注など）"
 
 msgid "censusFieldsTitle"
 msgstr "分野別"
 
 msgid "censusFieldsCaption"
-msgstr "{year} 年の研究論文のうち CRediT ロールがあるものの割合（学術文献のオープンな索引である OpenAlex におけるジャーナルの分野別）。分野は論文ごとではなくジャーナルごとです。Europe PMC はもともと生物医学中心のため、他の分野は少数です。論文が 1,000 件未満の分野は除外しています。"
+msgstr "{year} 年の研究論文のうち CRediT の役割があるものの割合（学術文献のオープンな索引である OpenAlex におけるジャーナルの分野別）。分野は論文ごとではなくジャーナルごとです。Europe PMC はもともと生物医学中心のため、他の分野は少数です。論文が 1,000 件未満の分野は除外しています。"
 
 msgid "censusFieldAgriculturalAndBiologicalSciences"
 msgstr "農学・生物科学"
@@ -1529,19 +1529,19 @@ msgid "censusPublishersTitle"
 msgstr "出版社別"
 
 msgid "censusPublishersCaption"
-msgstr "Europe PMC のオープンアクセス論文のうち、{year} 年の研究論文で CRediT ロールがあるものの割合。その年の研究論文が最も多い {count} 社を、論文に記載された名称で示します。"
+msgstr "Europe PMC のオープンアクセス論文のうち、{year} 年の研究論文で CRediT の役割があるものの割合。その年の研究論文が最も多い {count} 社を、論文に記載された名称で示します。"
 
 msgid "censusOfArticles"
 msgstr "{count, plural, other {（全 # 件）}}"
 
 msgid "censusRolesTitle"
-msgstr "著者順位別のロール"
+msgstr "著者順位別の役割"
 
 msgid "censusRolesCaption"
-msgstr "ロールを 1 つ以上持つ著者のうち、各ロールを担う著者の割合。ロールがあり著者が 3 人以上の論文が対象です。"
+msgstr "役割を 1 つ以上持つ著者のうち、各役割を担う著者の割合。役割があり著者が 3 人以上の論文が対象です。"
 
 msgid "censusRole"
-msgstr "ロール"
+msgstr "役割"
 
 msgid "censusPlaceAll"
 msgstr "全著者"
@@ -1559,7 +1559,7 @@ msgid "censusAboutTitle"
 msgstr "このデータについて"
 
 msgid "censusMethod"
-msgstr "集計対象は研究論文のみで、プレプリントサーバー（Cold Spring Harbor Laboratory Preprints, arXiv）も含みます。論文が 1,000 件未満のグループは除外し、年はロールのある論文が初めて 1,000 件に達した年から始めています。"
+msgstr "集計対象は研究論文のみで、プレプリントサーバー（Cold Spring Harbor Laboratory Preprints, arXiv）も含みます。論文が 1,000 件未満のグループは除外し、年は役割のある論文が初めて 1,000 件に達した年から始めています。"
 
 msgid "censusSnapshot"
 msgstr "スナップショット"
@@ -1583,13 +1583,13 @@ msgid "censusHowTitle"
 msgstr "センサスが貢献声明を読み取る仕組み"
 
 msgid "censusHowRules"
-msgstr "各論文はルールベースのパーサーが読み取ります。出版社が JATS XML で著者ごとのロールをタグ付けしている場合は、そのタグを使います。そうでない場合は、自由記述の声明を節ごとに読み、著者とロールを対応づけます。数えるのは CRediT の用語だけなので、「A.B. conceived the study」からはロールを読み取りません。"
+msgstr "各論文はルールベースのパーサーが読み取ります。出版社が JATS XML で著者ごとの役割をタグ付けしている場合は、そのタグを使います。そうでない場合は、自由記述の声明を節ごとに読み、著者と役割を対応づけます。数えるのは CRediT の用語だけなので、「A.B. conceived the study」からは役割を読み取りません。"
 
 msgid "censusHowModel"
-msgstr "ファインチューニングしたエンコーダー Ettin-68M も、自由記述の声明をすべて読み取ります。これはセンサスのブラウザー用モデルで、ウェブブラウザーで動くように作られています。精度はほぼ同じまま、ルールよりも多くのタグ付きロールを見つけますが、ロールを挙げていない叙述的な声明にもロールを付けてしまいます。このページの件数は、ルールベースのパーサーだけによるものです。"
+msgstr "ファインチューニングしたエンコーダー Ettin-68M も、自由記述の声明をすべて読み取ります。これはセンサスのブラウザー用モデルで、ウェブブラウザーで動くように作られています。精度はほぼ同じまま、ルールよりも多くのタグ付き役割を見つけますが、役割を挙げていない叙述的な声明にも役割を付けてしまいます。このページの件数は、ルールベースのパーサーだけによるものです。"
 
 msgid "censusHowCaveat"
-msgstr "どちらも出版社がタグ付けしたロールを基準に評価していますが、このタグは正解データではありません。タグが、声明に書かれていないロールを挙げていることもあります。ルールベースのパーサーとタグが食い違う MDPI の論文 200 件を言語モデルで判定したところ、タグが誤りだったのが 192 件、パーサーだけが誤りだったのが 6 件でした。そのため、タグに対する F1 スコアはタグとの一致度であり、実際の正確さを低く見積もります。MDPI では特にそうです。"
+msgstr "どちらも出版社がタグ付けした役割を基準に評価していますが、このタグは正解データではありません。タグが、声明に書かれていない役割を挙げていることもあります。ルールベースのパーサーとタグが食い違う MDPI の論文 200 件を言語モデルで判定したところ、タグが誤りだったのが 192 件、パーサーだけが誤りだったのが 6 件でした。そのため、タグに対する F1 スコアはタグとの一致度であり、実際の精度を過小評価します。MDPI では特にその傾向が強くなります。"
 
 msgid "censusHowCode"
 msgstr "センサスのコード"
@@ -1742,13 +1742,13 @@ msgid "heatmapRecipeTarget"
 msgstr "使用先"
 
 msgid "heatmapRecipeMyst"
-msgstr "アプリのMySTエクスポートは役割の有無のみを記録します。MySTプラグインは貢献度も読み取れます。"
+msgstr "アプリの MyST エクスポートは役割の有無のみを記録します。MyST プラグインは貢献レベルも読み取れます。"
 
 msgid "heatmapRecipeTypst"
 msgstr "Typst のチームデータを使用してください。フォントの寸法やネイティブレイアウトは SVG と異なる場合があります。"
 
 msgid "heatmapRecipeOneColor"
-msgstr "レシピは1色で描画します。貢献者ごとの色はアプリのSVG・PNG・PDFだけです。"
+msgstr "書き出し用コードは 1 色で描画します。貢献者ごとの色はアプリの SVG・PNG・PDF だけです。"
 
 msgid "heatmapCopyRecipe"
 msgstr "書き出し用コードをコピー"
@@ -1765,7 +1765,7 @@ msgid "downloadPdf"
 msgstr "PDFをダウンロード"
 
 msgid "errFigureGlyphs"
-msgstr "図のフォントでは次の文字を表示できません: {characters}。"
+msgstr "図のフォントでは次の文字を表示できません：{characters}。"
 
 msgid "errFigureFontsUnavailable"
 msgstr "図のフォントを読み込めませんでした。"
@@ -1865,7 +1865,7 @@ msgid "toolchainLatexHeatmap"
 msgstr "下の CLI コマンドで heatmap.svg を生成し、文書に図を挿入してください。"
 
 msgid "toolchainDataHint"
-msgstr "下のレシピと CLI コマンドで使うため、JSON エクスポートを contributors.json として保存してください。"
+msgstr "下の書き出し用コードと CLI コマンドで使うため、JSON エクスポートを contributors.json として保存してください。"
 
 msgid "navPrimary"
 msgstr "メイン"

@@ -198,7 +198,7 @@ msgid "legendKey"
 msgstr "图例"
 
 msgid "levelHint"
-msgstr "选择以切换 · 方向键移动 · 右键或 0–3 直接设定级别。"
+msgstr "选择以切换 · 方向键移动 · 右键或 0–3 直接设定等级。"
 
 msgid "heatmapLabel"
 msgstr "热图"
@@ -249,7 +249,7 @@ msgid "importAddedContributors"
 msgstr "已向此草稿添加 {count} 位贡献者。"
 
 msgid "importUndoStale"
-msgstr "未撤销：导入后草稿已更改。请在表格中修改。"
+msgstr "未撤销：导入后草稿已更改。请在网格中修改。"
 
 msgid "annImportUndone"
 msgstr "已撤销导入。"
@@ -510,7 +510,7 @@ msgid "coauthorAnsweringAs"
 msgstr "您正以<b>{name}</b>的身份回答。您的姓名和ORCID iD会随您发回的链接一起传回。"
 
 msgid "coauthorBlankHint"
-msgstr "请为您承担的每个角色选择一个级别，其余保持为{none}。大约需要两分钟。"
+msgstr "请为您承担的每个角色选择一个等级，其余保持为 {none}。大约需要两分钟。"
 
 msgid "coauthorBlankHintYesNo"
 msgstr "请为您承担的每个角色选择{contributed}，其余保持为{none}。大约需要两分钟。"
@@ -519,7 +519,7 @@ msgid "coauthorRoles"
 msgstr "您的角色"
 
 msgid "coauthorFirstAuthor"
-msgstr "我共享第一作者身份"
+msgstr "我是共同第一作者"
 
 msgid "coauthorCorresponding"
 msgstr "我是通讯作者"
@@ -543,7 +543,7 @@ msgid "coauthorOrcidSignIn"
 msgstr "使用 ORCID 登录"
 
 msgid "coauthorOrcidHint"
-msgstr "可选：使用 ORCID 登录后，您的回答将标记为已验证。登录信息包含在您发回的链接中，并与您的回答一起保存，JSON 导出中也包括在内。它带有您 ORCID 记录上的姓名。"
+msgstr "可选：使用 ORCID 登录后，您的回答将标记为已验证。登录凭证包含在您发回的链接中，并与您的回答一起保存，JSON 导出中也包括在内。它带有您 ORCID 记录上的姓名。"
 
 msgid "coauthorOrcidChanged"
 msgstr "您在登录后更改了回答。请重新登录以验证此回答。"
@@ -606,7 +606,7 @@ msgid "claimRequestUpdated"
 msgstr "请求已更新。您之前的回答已被替换。"
 
 msgid "claimUndoStale"
-msgstr "未撤销：请求更新后草稿已更改。请在表格中修改。"
+msgstr "未撤销：请求更新后草稿已更改。请在网格中修改。"
 
 msgid "claimLockedDraft"
 msgstr "已锁定：正在回复请求"
@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT 是 ANSI/NISO 标准（<cc>CC BY 4.0</cc>）。本项目独立于 NISO，未获 NISO 认可。"
 
 msgid "aboutPrivacy"
-msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。\n\n本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在你的浏览器中运行脚本或设置 Cookie。\n\n导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在你的浏览器中处理，绝不会上传。\n\n除此之外，任何内容都不会离开你的浏览器：草稿仅保存在本地存储中，你是否关闭了“入门”清单或复制过声明、以及你上次选择的写作工具也一样。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给你选择的应用。\n\n在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录信息包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
+msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。\n\n本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在您的浏览器中运行脚本或设置 Cookie。\n\n导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在您的浏览器中处理，绝不会上传。\n\n除此之外，任何内容都不会离开您的浏览器：草稿仅保存在本地存储中，您是否关闭了“入门”清单或复制过声明、以及您上次选择的写作工具也一样。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给您选择的应用。\n\n在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录凭证包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
 
 msgid "accessibilityStatement"
 msgstr "无障碍声明"
@@ -830,7 +830,7 @@ msgid "aboutCite"
 msgstr "如果您在论文中使用了 CRediT Matrix，请引用其概念 DOI，它始终指向最新版本："
 
 msgid "aboutCiteMetadata"
-msgstr "这些内容来自仓库的 <link>CITATION.cff</link> 文件。<citesync>citesync</citesync> 会在每次发布时保持它同步，它的在线工具也能为你自己的软件生成同样的文件。"
+msgstr "这些内容来自仓库的 <link>CITATION.cff</link> 文件。<citesync>citesync</citesync> 会在每次发布时保持它同步，它的演练场也能为您自己的软件生成同样的文件。"
 
 msgid "aboutCiteFormat"
 msgstr "引用格式"
@@ -908,7 +908,7 @@ msgid "annExportDataCopied"
 msgstr "导出数据已复制到剪贴板"
 
 msgid "badgeIntro"
-msgstr "将此徽章添加到论文或项目页面中。"
+msgstr "将此徽章添加到您的论文中，以表明其使用了该分类体系。"
 
 msgid "copyHtml"
 msgstr "复制 HTML"
@@ -932,7 +932,7 @@ msgid "contributorTypeSetNonAuthor"
 msgstr "标记为非作者贡献者"
 
 msgid "errImportFailed"
-msgstr "导入失败。请检查文件后重试。"
+msgstr "无法导入这些贡献者。请检查数据后重试。"
 
 msgid "errImportNewerVersion"
 msgstr "此文件由更新版本的 CRediT Matrix 创建。请重新加载页面以更新，然后重试。"
@@ -941,7 +941,7 @@ msgid "errImportRepeatedId"
 msgstr "此文件两次列出了同一个贡献者 ID，因此未导入。"
 
 msgid "errImportScoreCell"
-msgstr "第 {row} 行，“{column}”列：“{value}”不是分数。请使用 0 到 100 的数字、Lead 等级别，或 yes/no。"
+msgstr "第 {row} 行，“{column}”列：“{value}”不是分数。请使用 0 到 100 的数字、Lead 等等级，或 yes/no。"
 
 msgid "errHeatmapExport"
 msgstr "无法将贡献热图导出为 {format} 格式。"
@@ -956,7 +956,7 @@ msgid "errNewerVersionSaved"
 msgstr "更新版本的 CRediT Matrix 已在另一个标签页中保存了您的草稿。请重新加载此页面：在此处所做的更改不会被保存。"
 
 msgid "formatShareLink"
-msgstr "共享链接"
+msgstr "分享链接"
 
 msgid "formatJsonExport"
 msgstr "JSON 导出"
@@ -998,7 +998,7 @@ msgid "welcomeAskBody"
 msgstr "点击“分享”，再选“请合著者核对各自的角色”，即可向每位合著者发送指向其本人一列的链接。收到回传的链接后打开它：回复会保存在该贡献者的行旁边，差异在“核对”标签页中处理。"
 
 msgid "importDescription"
-msgstr "可以从 DOI 开始，粘贴姓名或合作者回传的链接，也可以上传 CSV、JSON、JATS4R XML 或 Crossref XML 文件。JSON 和 XML 还会恢复贡献，文件中含有等级时也会恢复等级。也可以导入 tenzing 电子表格（CSV 或 TSV）。粘贴作者贡献声明，即可为已有的贡献者填写角色。CITATION.cff、codemeta.json 和 .zenodo.json 会导入作者姓名和 ORCID iD，角色留空。"
+msgstr "可以从 DOI 开始，粘贴姓名或合著者回传的链接，也可以上传 CSV、JSON、JATS4R XML 或 Crossref XML 文件。JSON 和 XML 还会恢复贡献，文件中含有等级时也会恢复等级。也可以导入 tenzing 电子表格（CSV 或 TSV）。粘贴作者贡献声明，即可为已有的贡献者填写角色。CITATION.cff、codemeta.json 和 .zenodo.json 会导入作者姓名和 ORCID iD，角色留空。"
 
 msgid "contributorActions"
 msgstr "针对 {name} 的操作"
@@ -1037,7 +1037,7 @@ msgid "stripOpenTeam"
 msgstr "询问合著者"
 
 msgid "teamYou"
-msgstr "你"
+msgstr "您"
 
 msgid "teamNotAsked"
 msgstr "尚未询问"
@@ -1067,7 +1067,7 @@ msgid "tabNorms"
 msgstr "已发表论文的做法"
 
 msgid "normsIntro"
-msgstr "某一领域已发表论文中,各作者位次被赋予每种角色的频率。这只是背景信息,不是建议:其他论文中的常见做法与您的合著者实际做了什么无关。"
+msgstr "某一领域已发表论文中，各作者位次被赋予每种角色的频率。这只是背景信息，不是建议：其他论文中的常见做法与您的合著者实际做了什么无关。"
 
 msgid "normsField"
 msgstr "您的领域"
@@ -1076,25 +1076,25 @@ msgid "normsFieldPlaceholder"
 msgstr "选择领域"
 
 msgid "normsEmpty"
-msgstr "选择您的领域即可查看比例。本应用不知道您论文的领域,这里的任何操作都不会改变您的矩阵。"
+msgstr "选择您的领域即可查看比例。本应用不知道您论文的领域，这里的任何操作都不会改变您的网格。"
 
 msgid "normsFieldGone"
 msgstr "您保存的领域“<name>{field}</name>”在此快照中没有数据。请选择一个领域以查看比例。"
 
 msgid "normsCoverage"
-msgstr "<name>{field}</name>领域带有 CRediT 角色的开放获取研究论文 {articles, number} 篇,来自 {date} 的 Europe PMC 文件。仅统计至少有一种角色的作者。"
+msgstr "<name>{field}</name>领域带有 CRediT 角色的开放获取研究论文 {articles, number} 篇，来自 {date} 的 Europe PMC 文件。仅统计至少有一种角色的作者。"
 
 msgid "normsUnvalidated"
 msgstr "角色由程序自动读取，未经人工核查；在出版商同时标注角色的 {tagged, number} 篇论文中，解析器与标注的一致程度为 F1 分数 {f1}（1 为完全一致）。"
 
 msgid "normsYourPosition"
-msgstr "您在此草稿中的位次：{position, select, single {唯一作者} first {第一作者} middle {中间作者} other {最后作者}}。"
+msgstr "您在此草稿中的位次：{position, select, single {唯一作者} first {第一作者} middle {中间作者} other {末位作者}}。"
 
 msgid "normsNonAuthor"
 msgstr "您在此草稿中是非作者，因此不标出任何一列：比例只统计作者。"
 
 msgid "normsNoSelf"
-msgstr "要标出您的位次,请在贡献者列表中您的那一行选择“这是我”。"
+msgstr "要标出您的位次，请在贡献者列表中您的那一行选择“这是我”。"
 
 msgid "normsCaption"
 msgstr "按作者位次统计的各角色作者比例"
@@ -1103,25 +1103,25 @@ msgid "normsRole"
 msgstr "角色"
 
 msgid "normsPosition"
-msgstr "{position, select, single {唯一} first {第一} middle {中间} other {最后}}"
+msgstr "{position, select, single {唯一} first {第一} middle {中间} other {末位}}"
 
 msgid "normsTooFew"
-msgstr "作者太少,无法判断"
+msgstr "作者太少，无法判断"
 
 msgid "normsFootnote"
-msgstr "此类论文少于 {minArticles, number} 篇的领域不列出,作者少于 {minAuthors, number} 人的位次显示为短横线。领域按期刊划分,来自 OpenAlex。来源:CRediT 普查 {snapshot},数据集 {version}。"
+msgstr "此类论文少于 {minArticles, number} 篇的领域不列出，作者少于 {minAuthors, number} 人的位次显示为短横线。领域按期刊划分，来自 OpenAlex。来源：CRediT 普查 {snapshot}，数据集 {version}。"
 
 msgid "reviewEmptyTitle"
 msgstr "合著者的回答会显示在这里"
 
 msgid "reviewEmptyBody"
-msgstr "合著者发回链接后，打开它，他们的回答会显示在这里，与你的草稿并列。"
+msgstr "合著者发回链接后，打开它，他们的回答会显示在这里，与您的草稿并列。"
 
 msgid "teamEmpty"
 msgstr "先添加贡献者，再逐一询问他们做了什么。"
 
 msgid "teamMessage"
-msgstr "{name}，你好：\n\n我正在为{work}准备 CRediT 贡献声明。能否打开此链接，勾选你承担的角色，然后把链接发回给我？\n\n{link}\n\n链接包含标题、你的姓名和 iD。服务器上不会保存任何内容。"
+msgstr "{name}，您好：\n\n我正在为{work}准备 CRediT 贡献声明。能否打开此链接，勾选您承担的角色，然后把链接发回给我？\n\n{link}\n\n链接包含标题、您的姓名和 iD。服务器上不会保存任何内容。"
 
 msgid "teamMessageWork"
 msgstr "《{title}》"
@@ -1145,7 +1145,7 @@ msgid "teamAskAllHint"
 msgstr "每人复制一条消息。复制下一条之前，请先把当前这条粘贴到邮件中。"
 
 msgid "teamPrivacy"
-msgstr "每个链接包含论文标题以及该成员的姓名和 iD。服务器上不会保存任何内容：回答会沿着你发送的方式返回。"
+msgstr "每个链接包含论文标题以及该成员的姓名和 iD。服务器上不会保存任何内容：回答会沿着您发送的方式返回。"
 
 msgid "teamCopyMessageFor"
 msgstr "复制消息（给 {name}）"
@@ -1187,7 +1187,7 @@ msgid "tabReviewOpen"
 msgstr "{count, plural, other {# 处未定差异}}"
 
 msgid "statementDiffers"
-msgstr "{count, plural, other {仍有 # 项贡献不同。}}此声明使用你的版本。"
+msgstr "{count, plural, other {仍有 # 项贡献不同。}}此声明使用您的版本。"
 
 msgid "exportIncludesAnswers"
 msgstr "包含合著者的回复和询问记录（{count}）"
@@ -1205,10 +1205,10 @@ msgid "teamStatusAnswered"
 msgstr "{days, plural, =0 {今天已回复} =1 {昨天已回复} other {# 天前已回复}}·{count} 处待核对"
 
 msgid "teamStatusAsked"
-msgstr "{days, plural, =0 {今天已询问} =1 {昨天已询问} other {# 天前已询问}}·{kind, select, prefilled {你的推测} other {空白}}"
+msgstr "{days, plural, =0 {今天已询问} =1 {昨天已询问} other {# 天前已询问}}·{kind, select, prefilled {您的推测} other {空白}}"
 
 msgid "reviewAnsweredMeta"
-msgstr "{days, plural, =0 {今天已回复} =1 {昨天已回复} other {# 天前已回复}}·{kind, select, prefilled {你的推测} other {空白}}"
+msgstr "{days, plural, =0 {今天已回复} =1 {昨天已回复} other {# 天前已回复}}·{kind, select, prefilled {您的推测} other {空白}}"
 
 msgid "teamReviewFor"
 msgstr "核对 {name} 的回复"
@@ -1235,13 +1235,13 @@ msgid "reviewKindDropped"
 msgstr "未勾选"
 
 msgid "reviewKindLevel"
-msgstr "程度不同"
+msgstr "等级不同"
 
 msgid "reviewUseTheirs"
 msgstr "采用 {name} 的"
 
 msgid "reviewKeepYours"
-msgstr "保留你的"
+msgstr "保留您的"
 
 msgid "reviewAskAbout"
 msgstr "就此询问 {name}"
@@ -1250,7 +1250,7 @@ msgid "reviewUseTheirsRole"
 msgstr "采用 {name} 的：{role}"
 
 msgid "reviewKeepYoursRole"
-msgstr "保留你的：{role}"
+msgstr "保留您的：{role}"
 
 msgid "undoRole"
 msgstr "撤销：{role}"
@@ -1265,13 +1265,13 @@ msgid "reviewUsedTheirs"
 msgstr "已采用 {name} 的回复"
 
 msgid "reviewKeptYours"
-msgstr "已保留你的"
+msgstr "已保留您的"
 
 msgid "annReviewUsed"
 msgstr "{role}：已采用 {name} 的回复。"
 
 msgid "annReviewKept"
-msgstr "{role}：已保留你的。"
+msgstr "{role}：已保留您的。"
 
 msgid "annReviewUsedAll"
 msgstr "已全部采用 {name} 的回复。"
@@ -1298,7 +1298,7 @@ msgid "legendDiffers"
 msgstr "合著者的回复不同"
 
 msgid "reviewAskMessage"
-msgstr "{name}，你好：\n\n我正在完成{work}的 CRediT 贡献声明。我们在“{role}”上的回复不同。能否打开此链接，核对你的那一行，然后把链接发回给我？\n\n{link}\n\n链接包含标题、你的姓名和 iD。服务器上不会保存任何内容。"
+msgstr "{name}，您好：\n\n我正在完成{work}的 CRediT 贡献声明。我们在“{role}”上的回复不同。能否打开此链接，核对您的那一行，然后把链接发回给我？\n\n{link}\n\n链接包含标题、您的姓名和 iD。服务器上不会保存任何内容。"
 
 msgid "formatStatement"
 msgstr "CRediT 声明"
@@ -1310,25 +1310,25 @@ msgid "statementReviewTitle"
 msgstr "在声明中找到的角色"
 
 msgid "statementReviewSummary"
-msgstr "将为 {people} 位贡献者添加 {added} 个角色。表格中已有的角色保持不变。"
+msgstr "将为 {people} 位贡献者添加 {added} 个角色。网格中已有的角色保持不变。"
 
 msgid "statementNothingNew"
-msgstr "找到的角色都已在表格中。"
+msgstr "找到的角色都已在网格中。"
 
 msgid "statementNoRolesFor"
-msgstr "未找到角色的贡献者:{names}"
+msgstr "未找到角色的贡献者：{names}"
 
 msgid "statementCouldBe"
-msgstr "(可能是 {token})"
+msgstr "（可能是 {token}）"
 
 msgid "statementUnresolvedBody"
-msgstr "这些姓名或缩写与本草稿中的任何贡献者都不匹配，或与多位匹配。除非您选择所指的人，否则会略过其角色。其余角色请在应用后在表格中设置。"
+msgstr "这些姓名或缩写与本草稿中的任何贡献者都不匹配，或与多位匹配。除非您选择所指的人，否则会略过其角色。其余角色请在应用后在网格中设置。"
 
 msgid "statementLeaveOut"
 msgstr "略过"
 
 msgid "statementReviewSummaryLevel"
-msgstr "将为 {people, plural, other {# 位贡献者}}以{level}添加 {added, plural, other {# 个角色}}。表格中已有的角色保持不变。"
+msgstr "将为 {people, plural, other {# 位贡献者}}按“{level}”等级添加 {added, plural, other {# 个角色}}。网格中已有的角色保持不变。"
 
 msgid "statementRoleAlreadySet"
 msgstr "{role}（已设置）"
@@ -1346,10 +1346,10 @@ msgid "statementLeftOut"
 msgstr "{who} — 未加入：{roles}"
 
 msgid "statementAppliedLevel"
-msgstr "已从声明中以{level}添加 {count, plural, other {# 个角色}}。"
+msgstr "已从声明中按“{level}”等级添加 {count, plural, other {# 个角色}}。"
 
 msgid "statementUndoStale"
-msgstr "未撤销：添加角色后草稿已更改。请在表格中修改。"
+msgstr "未撤销：添加角色后草稿已更改。请在网格中修改。"
 
 msgid "statementOnlyCredit"
 msgstr "只读取 CRediT 角色名称，例如 Conceptualization 或 Writing – original draft，不读取描述谁做了什么的句子。"
@@ -1391,10 +1391,10 @@ msgid "censusAccuracyTitle"
 msgstr "这些数据有多准确"
 
 msgid "censusAccuracy"
-msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用散文写成的声明会被算作没有给出角色。在 {articles} 篇既标注了角色、又印有贡献声明的文章中，解析器对声明的解读与标注的一致程度为 F1 值 {f1}（1 表示找到所有角色且没有错误）。但其中 {share} 来自 MDPI 和 Frontiers，而且这些标注本身没有人核查过。"
+msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用叙述性文字写成的声明会被算作没有给出角色。在 {articles} 篇既标注了角色、又附有贡献声明的文章中，解析器对声明的解读与标注的一致程度为 F1 值 {f1}（1 表示找到所有角色且没有错误）。但其中 {share} 来自 MDPI 和 Frontiers，而且这些标注本身没有人核查过。"
 
 msgid "censusAccuracyUnscored"
-msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用散文写成的声明会被算作没有给出角色。"
+msgstr "我用 {labelled} 条使用 CRediT 角色名称的已标注声明检验了解析器。它能找出 {recall} 的角色，找出的结果中有 {precision} 是正确的。它只读取角色名称，所以用叙述性文字写成的声明会被算作没有给出角色。"
 
 msgid "censusIncomplete"
 msgstr "此快照不完整：部分源文件未读取，或有期刊尚无学科领域。"
@@ -1445,7 +1445,7 @@ msgid "censusStyleJats4r"
 msgstr "JATS4R 角色标记"
 
 msgid "censusStyleJats4rNote"
-msgstr "按 JATS4R（制定期刊论文标记方式的小组）的建议，用 CRediT 词表标记每位作者的角色"
+msgstr "按 JATS4R（为期刊论文标记方式提供建议的小组）的建议，用 CRediT 词表标记每位作者的角色"
 
 msgid "censusStylePlosUri"
 msgstr "角色网址标记"
@@ -1586,7 +1586,7 @@ msgid "censusHowRules"
 msgstr "每篇文章由基于规则的解析器读取。如果出版商在 JATS XML 中为每位作者标注了角色，就直接采用这些标注。否则，它会逐个分句读取自由文本声明，把作者与角色对应起来。只有 CRediT 用语才算数，所以“A.B. conceived the study”不会得出任何角色。"
 
 msgid "censusHowModel"
-msgstr "一个经过微调的编码器 Ettin-68M 也会读取每一份自由文本声明。它是普查的浏览器模型，专为在网页浏览器中运行而做。它比规则找到更多已标注的角色，精确率大致相同，但它也会给没有列出角色的叙述性声明分配角色。本页的计数只来自规则解析器。"
+msgstr "一个经过微调的编码器 Ettin-68M 也会读取每一份自由文本声明。它是普查的浏览器模型，专为在网页浏览器中运行而设计。它比规则找到更多已标注的角色，精确率大致相同，但它也会给没有列出角色的叙述性声明分配角色。本页的计数只来自规则解析器。"
 
 msgid "censusHowCaveat"
 msgstr "两者都以出版商标注的角色为基准评分，而这些标注并不是金标准。标注可能列出声明中从未提到的角色。在规则解析器与标注不一致的 200 篇 MDPI 文章中，一个语言模型判断其中 192 篇是标注错了，仅 6 篇是解析器错了。因此，相对于标注的 F1 值衡量的是与标注的一致程度，会低估实际准确度，在 MDPI 上尤其如此。"
@@ -1610,7 +1610,7 @@ msgid "doiConfirm"
 msgstr "确认导入 DOI"
 
 msgid "errCitationConverter"
-msgstr "引用转换器未能完成。你的文件仍在这里。请联网后重试，或在 citesync 演练场中转换。"
+msgstr "引用转换器未能完成。您的文件仍在这里。请联网后重试，或在 citesync 演练场中转换。"
 
 msgid "citationPlayground"
 msgstr "打开 citesync 演练场"
@@ -1656,7 +1656,7 @@ msgstr "省略未使用的角色"
 
 
 msgid "heatmapShowLevels"
-msgstr "显示贡献级别"
+msgstr "显示贡献等级"
 
 
 msgid "heatmapBlue"
@@ -1669,7 +1669,7 @@ msgid "heatmapGray"
 msgstr "灰度"
 
 msgid "heatmapPaleColor"
-msgstr "此颜色下难以区分支持级贡献。请尝试更深的颜色。"
+msgstr "此颜色下难以区分“辅助”等级。请尝试更深的颜色。"
 
 msgid "heatmapSharedWithGrid"
 msgstr "与网格共用"
@@ -1736,19 +1736,19 @@ msgid "heatmapRecipe"
 msgstr "导出配置代码"
 
 msgid "heatmapRecipeHint"
-msgstr "仅包含样式设置。请使用你的贡献者数据以及已安装的 CLI 或插件。不包含 PNG 尺寸和 DPI。"
+msgstr "仅包含样式设置。请使用您的贡献者数据以及已安装的 CLI 或插件。不包含 PNG 尺寸和 DPI。"
 
 msgid "heatmapRecipeTarget"
 msgstr "使用于"
 
 msgid "heatmapRecipeMyst"
-msgstr "应用导出的 MyST 数据仅记录是否参与各项角色。MyST 插件还可以读取贡献程度。"
+msgstr "应用导出的 MyST 数据仅记录是否参与各项角色。MyST 插件还可以读取贡献等级。"
 
 msgid "heatmapRecipeTypst"
 msgstr "请使用 Typst 团队数据。字体度量和原生布局可能与 SVG 不同。"
 
 msgid "heatmapRecipeOneColor"
-msgstr "配方只使用一种颜色。按贡献者着色仅见于应用导出的 SVG、PNG 和 PDF。"
+msgstr "导出配置代码只使用一种颜色。按贡献者着色仅见于应用导出的 SVG、PNG 和 PDF。"
 
 msgid "heatmapCopyRecipe"
 msgstr "复制导出配置代码"
@@ -1796,7 +1796,7 @@ msgid "shareAskTitle"
 msgstr "请合著者核对各自的角色"
 
 msgid "shareAskBody"
-msgstr "每位合著者都会收到一个指向自己那一列的链接。他们的回复会返回到此草稿，供你审阅。"
+msgstr "每位合著者都会收到一个指向自己那一列的链接。他们的回复会返回到此草稿，供您审阅。"
 
 msgid "shareCopyTitle"
 msgstr "或发送草稿副本"
@@ -1856,7 +1856,7 @@ msgid "toolchainOtherFormats"
 msgstr "其他格式"
 
 msgid "toolchainNoSetup"
-msgstr "无需扩展。"
+msgstr "无需插件。"
 
 msgid "toolchainWordHint"
 msgstr "将上方声明复制到 Word。使用“热图”复制或下载贡献热图。"
@@ -1907,10 +1907,10 @@ msgid "docsUseSample"
 msgstr "使用示例贡献者"
 
 msgid "docsUseDraft"
-msgstr "使用你的草稿"
+msgstr "使用您的草稿"
 
 msgid "docsLiveMakeYourOwn"
-msgstr "<link>在应用中添加你自己的贡献者</link>，此示例就会使用他们。"
+msgstr "<link>在应用中添加您自己的贡献者</link>，此示例就会使用他们。"
 
 msgid "docsData"
 msgstr "数据与导出"
