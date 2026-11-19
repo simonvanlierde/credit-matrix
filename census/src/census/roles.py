@@ -19,7 +19,7 @@ ROLE_PATTERNS: dict[str, str] = {
     "validation": r"validation",
     "visualization": r"visuali[sz]ation",
     "writing-original-draft": r"(?:writing ?- ?)?original draft(?: preparation)?",
-    "writing-review-editing": r"(?:writing ?- ?)?review(?:ing)? and edit(?:ing)?",
+    "writing-review-editing": r"(?:writing ?- ?)?review(?:ing|ed)? and edit(?:ing|ed)?",
 }
 
 # One group per role, in ROLE_PATTERNS order; the patterns themselves capture nothing.

@@ -104,8 +104,8 @@ figures") cannot shift the rest. Initials are resolved against the author list, 
 non-ASCII initials, initials without the name's accents ("A.A.-A." for Ángel Arias-Arias), particles
 ("F.d.S.N."), given names written as one word ("Q.M. Li" for Qinming Li), Frontiers' extra letters
 ("YiL") and Vancouver style ("Nam KC"). Initials that fit no author or several are listed in
-`articles.unresolved`, never guessed. Only CRediT wording counts, so prose
-such as "A.B. conceived the study" yields no roles, and a statement needs at least one term prose
+`articles.unresolved`, never guessed. Only CRediT wording counts, and its verb form "reviewed and
+edited", so prose such as "A.B. conceived the study" yields no roles, and a statement needs at least one term prose
 rarely uses (conceptualization, data curation, original draft, ...). "Under the supervision of
 B.J." or an ICMJE list with "Supervision" stays `none`, its text kept. Text that Europe PMC's bulk files
 store double-encoded ("â\x80\x94" for an em dash) is repaired before parsing.

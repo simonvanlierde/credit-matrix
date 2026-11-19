@@ -86,7 +86,7 @@ const ROLE_PATTERNS: Record<string, string> = {
   validation: "validation",
   visualization: "visuali[sz]ation",
   "writing-original-draft": "(?:writing ?- ?)?original draft(?: preparation)?",
-  "writing-review-editing": "(?:writing ?- ?)?review(?:ing)? and edit(?:ing)?",
+  "writing-review-editing": "(?:writing ?- ?)?review(?:ing|ed)? and edit(?:ing|ed)?",
 };
 const SLUGS = Object.keys(ROLE_PATTERNS);
 const ROLE_RE = new RegExp(
