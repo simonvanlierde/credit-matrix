@@ -89,7 +89,7 @@ Commands:
       --json prints them with their NISO ids, descriptions and URLs.
 
 Examples:
-  credit-matrix statement contributors.json --format initials
+  credit-matrix statement contributors.json --format by-author-short
   credit-matrix convert names.txt --to json > contributors.json
   credit-matrix roles --json
 `;
@@ -287,6 +287,8 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
     if (!values.json) return CREDIT_ROLES.map((role) => role.name).join("\n");
     return JSON.stringify({ schema_version: ROLES_SCHEMA_VERSION, roles: CREDIT_ROLES }, null, 2);
   }
+  // Other commands ignore a flag they do not use, but --json there would promise JSON and print text.
+  if (values.json) throw new UsageError(`${command} has no --json output; only roles does.`);
   if (!file) throw new UsageError(`${command} needs a file.`);
 
   const imported = await importAny(await read(file), { parser }).catch((error: unknown) => {

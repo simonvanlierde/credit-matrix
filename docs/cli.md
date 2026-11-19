@@ -44,7 +44,8 @@ credit-matrix -h, --help | -v, --version
 | [`roles`](#roles) | The 14 CRediT role names, without reading a file |
 
 The command comes first, then the file, then the flags in any order. A command accepts and
-ignores a flag it does not use (`statement --to csv` prints the statement).
+ignores a flag it does not use (`statement --to csv` prints the statement). The exception is
+`--json`: only `roles` has JSON output, and any other command with `--json` exits 2.
 
 Flags that take a value accept `--flag value` and `--flag=value`. When you repeat a flag, the last
 one wins, except `--font-path`, which collects every value.
@@ -127,8 +128,11 @@ passes the score through, divided by 100.
 
 [`contributors.schema.json`](contributors.schema.json) is the JSON Schema (draft 2020-12) of this
 file, generated from the checks the CLI runs. Validate a file you write against it before you run a
-command. Its `description` lists the three checks JSON Schema cannot express: unique `id`s, a
-`name` with a letter in it, and a valid ORCID check digit. [`roles`](#roles) prints the role names.
+command. Each field has a description, and the schema's own `description` lists the checks JSON
+Schema cannot express: unique `id`s, a `name` with a letter in it, a valid ORCID check digit and a
+file under 2 MB. An `id` may hold letters, digits, `_` and `-`, up to 64 characters; the CLI gives
+any other `id` a random one. The schema leaves out `asks`, the app's ask-and-reply state, which the
+CLI still checks: leave it out of a file you write. [`roles`](#roles) prints the role names.
 
 Keep the names in the file and refer to people by `id` on the command line. Then no name passes
 through shell quoting.
@@ -184,7 +188,7 @@ Limits and special cases:
 | --- | --- | --- |
 | 0 | Success | The result was printed, with or without warnings. `--help` and `--version`. |
 | 1 | The command line was fine but the work failed | File not found, a directory, or permission denied. A spreadsheet, a ZIP or a file over 2 MB. XML that is not well formed. JSON or another format that does not validate. No roles assigned yet, for `statement` and `convert --to latex-credits`. `ask` finds no contributor, or several. The figure fonts cannot draw a character, or the font family is missing. |
-| 2 | The command line is wrong | No command, an unknown command, no file, an unknown option or a missing option value. `convert` without `--to`, or with an unknown one. An unknown `--format`, `--locale` or heatmap value. `ask` without `--contributor`. |
+| 2 | The command line is wrong | No command, an unknown command, no file, an unknown option or a missing option value. `convert` without `--to`, or with an unknown one. An unknown `--format`, `--locale` or heatmap value. `ask` without `--contributor`. `--json` on a command other than `roles`. |
 
 With no roles assigned, only `statement` and `convert --to latex-credits` exit 1. All other
 targets print an empty roster and exit 0.

@@ -358,6 +358,26 @@ describe("credit-matrix usage", () => {
     });
   });
 
+  it("runs every line under Examples: in the usage text", async () => {
+    const examples = USAGE.split("Examples:\n")[1]?.trim().split("\n") ?? [];
+    expect(examples).toHaveLength(3);
+    const names = file("names.txt", "Grace Hopper\nCharles Darwin\n");
+    for (const example of examples) {
+      // The shell's redirect is not an argument; file names point at this test's files.
+      const argv = example
+        .replace(/^\s*credit-matrix /, "")
+        .replace(/ >.*$/, "")
+        .split(" ");
+      const args = argv.map((arg) => ({ "contributors.json": csv, "names.txt": names })[arg] ?? arg);
+      await expect(runCommand(args)).resolves.toBeTruthy();
+    }
+  });
+
+  it("refuses --json on a command without JSON output", async () => {
+    await expect(run(["statement", csv, "--json"])).rejects.toThrow("statement has no --json output; only roles does.");
+    await expect(run(["convert", csv, "--to", "csv", "--json"])).rejects.toThrow(/convert has no --json output/);
+  });
+
   it("shows the short flags -h and -v in the usage text", () => {
     expect(USAGE).toContain("credit-matrix -h, --help | -v, --version");
   });
