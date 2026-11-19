@@ -1,4 +1,4 @@
-// Writes docs/contributors.schema.json, the JSON Schema of the contributors file (the v1 JSON
+// Writes src/core/contributors.schema.json, the JSON Schema of the contributors file (the v1 JSON
 // export) that `credit-matrix` reads, from the zod schema the core validates it with:
 //   node scripts/build-contributors-schema.mjs
 // src/contributors-schema.test.ts fails when the file is stale.
@@ -103,6 +103,7 @@ export function renderContributorsSchema(exportSchema) {
   const { $schema, ...rest } = schema;
   const data = {
     $schema,
+    $id: "https://raw.githubusercontent.com/simonvanlierde/credit-matrix/main/src/core/contributors.schema.json",
     $comment: "By scripts/build-contributors-schema.mjs from src/core. Do not edit.",
     title: "CRediT Matrix contributors file",
     description: [
@@ -121,6 +122,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const { runnerImport } = await import("vite");
   const source = fileURLToPath(new URL("../src/core/export/json.ts", import.meta.url));
   const { module } = await runnerImport(source, { configFile: false, logLevel: "error" });
-  const out = fileURLToPath(new URL("../docs/contributors.schema.json", import.meta.url));
+  const out = fileURLToPath(new URL("../src/core/contributors.schema.json", import.meta.url));
   await writeFile(out, renderContributorsSchema(module.ExportSchema));
 }

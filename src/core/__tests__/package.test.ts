@@ -29,7 +29,7 @@ describe("the built credit-matrix package", () => {
     await expect(declarations).toMatchFileSnapshot("__snapshots__/public-api.d.ts.snap");
   });
 
-  it("publishes dist, the README, the licence and every file the exports map and bin point at", () => {
+  it("publishes dist, the README, the licence, the contributors schema and every file the exports map and bin point at", () => {
     const root = fileURLToPath(new URL("..", import.meta.url));
     // Scripts off: prepack would rebuild dist/ under the other tests reading it.
     const packed = JSON.parse(
@@ -44,6 +44,7 @@ describe("the built credit-matrix package", () => {
         .filter((name) => statSync(`${dist}${name}`).isFile())
         .map((name) => `dist/${name}`),
       "LICENSE",
+      "contributors.schema.json",
       "README.md",
       "package.json",
     ];

@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simonvanlierde/credit-matrix/main/src/core/contributors.schema.json",
   "$comment": "By scripts/build-contributors-schema.mjs from src/core. Do not edit.",
   "title": "CRediT Matrix contributors file",
   "description": "The JSON file `credit-matrix` reads and `convert --to json` writes (version 1). A missing `id` gets a random one. Other unknown fields are ignored. `asks` holds the app's ask-and-reply state: the CLI checks it, but this schema leaves it out, so leave it out of a file you write. JSON Schema cannot express these checks, which the CLI still applies: No two authors share an `id`. `name` holds at least one letter, or is an ORCID iD. `orcid` is an ORCID iD with a valid check digit, bare (`0000-0002-1825-0097`) or as an orcid.org URL. The file is under 2 MB.",
