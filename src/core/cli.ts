@@ -17,6 +17,7 @@ import {
   resolveLocaleTag,
 } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator } from "./credit-i18n/ui-strings";
+import { CREDIT_ROLES } from "./credit-roles";
 import { toCodemeta } from "./export/codemeta";
 import { toCrossrefContributors } from "./export/crossref";
 import { toCsv } from "./export/csv";
@@ -38,6 +39,7 @@ import { normalizeRoster } from "./parse-authors";
 import { encodeShareHash } from "./share-link";
 
 export const USAGE = `Usage: credit-matrix <command> <file> [options]
+       credit-matrix roles [--json]
        credit-matrix -h, --help | -v, --version
 
 Read <file> (or - for standard input) in any format CRediT Matrix imports:
@@ -82,6 +84,14 @@ Commands:
   ask <file> --contributor <name or id> [--blank] [--base-url <url>]
       Print a link that asks one contributor to check their roles,
       or with --blank, to fill them in from scratch.
+  roles [--json]
+      Print the 14 CRediT role names a contributors file uses, one per line.
+      --json prints them with their NISO ids, descriptions and URLs.
+
+Examples:
+  credit-matrix statement contributors.json --format by-author-short
+  credit-matrix convert names.txt --to json > contributors.json
+  credit-matrix roles --json
 `;
 
 const DEFAULT_BASE_URL = "https://credit.duinlab.nl/";
@@ -153,7 +163,10 @@ function requireLocale(candidate: string): LocaleCode {
   throw new UsageError(`Unknown locale: ${candidate}. Use one of ${codes}.`);
 }
 
-const COMMANDS = ["statement", "convert", "ask"];
+const COMMANDS = ["statement", "convert", "ask", "roles"];
+
+/** Bumped only when a field of the `roles --json` output changes or goes; a new field is not a break. */
+export const ROLES_SCHEMA_VERSION = 1;
 
 /** Thrown for a mistake in the command line: printed with a pointer to --help, exit code 2. */
 class UsageError extends Error {}
@@ -256,6 +269,7 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
       "base-url": { type: "string", default: DEFAULT_BASE_URL },
       levels: { type: "boolean", default: false },
       "yes-no": { type: "boolean", default: false },
+      json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h" },
       version: { type: "boolean", short: "v" },
     },
@@ -269,6 +283,12 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
     const closest = COMMANDS.find((c) => distance(command, c) <= 2);
     throw new UsageError(`Unknown command: ${command}.${closest ? ` Did you mean '${closest}'?` : ""}`);
   }
+  if (command === "roles") {
+    if (!values.json) return CREDIT_ROLES.map((role) => role.name).join("\n");
+    return JSON.stringify({ schema_version: ROLES_SCHEMA_VERSION, roles: CREDIT_ROLES }, null, 2);
+  }
+  // Other commands ignore a flag they do not use, but --json there would promise JSON and print text.
+  if (values.json) throw new UsageError(`${command} has no --json output; only roles does.`);
   if (!file) throw new UsageError(`${command} needs a file.`);
 
   const imported = await importAny(await read(file), { parser }).catch((error: unknown) => {

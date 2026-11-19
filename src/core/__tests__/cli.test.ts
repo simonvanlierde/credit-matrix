@@ -7,6 +7,7 @@ import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { assertBalancedTags, run as runCommand, USAGE } from "../cli";
+import { CREDIT_ROLES } from "../credit-roles";
 import { heatmapPrintWarning } from "../export/heatmap-print";
 import { NewerVersionError, toJson, UNKNOWN_TOOLCHAIN_WARNING } from "../export/json";
 import { createFigureRenderer } from "../figures";
@@ -332,11 +333,49 @@ describe("credit-matrix ask", () => {
 
 describe("credit-matrix usage", () => {
   it("prints usage for --help, and refuses no command, an unknown one or a missing file", async () => {
-    await expect(run([])).rejects.toThrow("Give a command: statement, convert, ask.");
+    await expect(run([])).rejects.toThrow("Give a command: statement, convert, ask, roles.");
     expect(await run(["statement", "--help"])).toBe(USAGE);
     await expect(run(["sideways", csv])).rejects.toThrow("Unknown command: sideways.");
     await expect(run(["statment", csv])).rejects.toThrow("Unknown command: statment. Did you mean 'statement'?");
     await expect(run(["statement"])).rejects.toThrow(/needs a file/);
+  });
+
+  it("lists the role names one per line, exactly as a contributors file spells them", async () => {
+    const lines = (await run(["roles"])).split("\n");
+    expect(lines).toEqual(CREDIT_ROLES.map((role) => role.name));
+    expect(lines).toContain("Writing \u2013 original draft");
+  });
+
+  it("prints the roles as JSON with a schema version, and needs no file", async () => {
+    const parsed = JSON.parse(await run(["roles", "--json"]));
+    expect(parsed.schema_version).toBe(1);
+    expect(parsed.roles).toHaveLength(14);
+    expect(parsed.roles[0]).toEqual({
+      name: "Conceptualization",
+      id: "8b73531f-db56-4914-9502-4cc4d4d8ed73",
+      description: "Ideas; formulation or evolution of overarching research goals and aims.",
+      url: "https://credit.niso.org/contributor-roles/conceptualization/",
+    });
+  });
+
+  it("runs every line under Examples: in the usage text", async () => {
+    const examples = USAGE.split("Examples:\n")[1]?.trim().split("\n") ?? [];
+    expect(examples).toHaveLength(3);
+    const names = file("names.txt", "Grace Hopper\nCharles Darwin\n");
+    for (const example of examples) {
+      // The shell's redirect is not an argument; file names point at this test's files.
+      const argv = example
+        .replace(/^\s*credit-matrix /, "")
+        .replace(/ >.*$/, "")
+        .split(" ");
+      const args = argv.map((arg) => ({ "contributors.json": csv, "names.txt": names })[arg] ?? arg);
+      await expect(runCommand(args)).resolves.toBeTruthy();
+    }
+  });
+
+  it("refuses --json on a command without JSON output", async () => {
+    await expect(run(["statement", csv, "--json"])).rejects.toThrow("statement has no --json output; only roles does.");
+    await expect(run(["convert", csv, "--to", "csv", "--json"])).rejects.toThrow(/convert has no --json output/);
   });
 
   it("shows the short flags -h and -v in the usage text", () => {

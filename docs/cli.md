@@ -32,6 +32,7 @@ The `svg` and `pdf` figures need the Noto fonts; see [Fonts and offline use](#fo
 
 ```text
 credit-matrix <command> <file> [options]
+credit-matrix roles [--json]
 credit-matrix -h, --help | -v, --version
 ```
 
@@ -40,9 +41,11 @@ credit-matrix -h, --help | -v, --version
 | [`statement`](#statement) | The CRediT statement, or linked CodeMeta |
 | [`convert`](#convert) | The contributions in another format |
 | [`ask`](#ask) | A link that asks one contributor to check their roles |
+| [`roles`](#roles) | The 14 CRediT role names, without reading a file |
 
 The command comes first, then the file, then the flags in any order. A command accepts and
-ignores a flag it does not use (`statement --to csv` prints the statement).
+ignores a flag it does not use (`statement --to csv` prints the statement). The exception is
+`--json`: only `roles` has JSON output, and any other command with `--json` exits 2.
 
 Flags that take a value accept `--flag value` and `--flag=value`. When you repeat a flag, the last
 one wins, except `--font-path`, which collects every value.
@@ -123,6 +126,14 @@ passes the score through, divided by 100.
 
 `contributorType` is `author` unless the file says `non-author`.
 
+[`contributors.schema.json`](contributors.schema.json) is the JSON Schema (draft 2020-12) of this
+file, generated from the checks the CLI runs. Validate a file you write against it before you run a
+command. Each field has a description, and the schema's own `description` lists the checks JSON
+Schema cannot express: unique `id`s, a `name` with a letter in it, a valid ORCID check digit and a
+file under 2 MB. An `id` may hold letters, digits, `_` and `-`, up to 64 characters; the CLI gives
+any other `id` a random one. The schema leaves out `asks`, the app's ask-and-reply state, which the
+CLI still checks: leave it out of a file you write. [`roles`](#roles) prints the role names.
+
 Keep the names in the file and refer to people by `id` on the command line. Then no name passes
 through shell quoting.
 
@@ -177,7 +188,7 @@ Limits and special cases:
 | --- | --- | --- |
 | 0 | Success | The result was printed, with or without warnings. `--help` and `--version`. |
 | 1 | The command line was fine but the work failed | File not found, a directory, or permission denied. A spreadsheet, a ZIP or a file over 2 MB. XML that is not well formed. JSON or another format that does not validate. No roles assigned yet, for `statement` and `convert --to latex-credits`. `ask` finds no contributor, or several. The figure fonts cannot draw a character, or the font family is missing. |
-| 2 | The command line is wrong | No command, an unknown command, no file, an unknown option or a missing option value. `convert` without `--to`, or with an unknown one. An unknown `--format`, `--locale` or heatmap value. `ask` without `--contributor`. |
+| 2 | The command line is wrong | No command, an unknown command, no file, an unknown option or a missing option value. `convert` without `--to`, or with an unknown one. An unknown `--format`, `--locale` or heatmap value. `ask` without `--contributor`. `--json` on a command other than `roles`. |
 
 With no roles assigned, only `statement` and `convert --to latex-credits` exit 1. All other
 targets print an empty roster and exit 0.
@@ -755,9 +766,61 @@ https://example.org/credit/#s=dcq7CsJAEEbhVwl_PSsmsxdnen0A25BiLwqLYYUEtAh5dxsbCz
 
 The CLI does not set the yes/no flag that links from the app can carry.
 
+## roles
+
+```text
+credit-matrix roles [--json]
+```
+
+Prints the 14 CRediT role names, one per line, spelled as a contributors file needs them. It
+reads no file.
+
+| Flag | Type | Default | Effect |
+| --- | --- | --- | --- |
+| `--json` | boolean | off | Print `{"schema_version": 1, "roles": [...]}`, each role with its `name`, NISO `id`, `description` and `url`. |
+
+`schema_version` changes only when a field is renamed or removed. A new field does not change it.
+
+| Role name | NISO id |
+| --- | --- |
+| `Conceptualization` | `8b73531f-db56-4914-9502-4cc4d4d8ed73` |
+| `Data curation` | `f93e0f44-f2a4-4ea1-824a-4e0853b05c9d` |
+| `Formal analysis` | `95394cbd-4dc8-4735-b589-7e5f9e622b3f` |
+| `Funding acquisition` | `34ff6d68-132f-4438-a1f4-fba61ccf364a` |
+| `Investigation` | `2451924d-425e-4778-9f4c-36c848ca70c2` |
+| `Methodology` | `f21e2be9-4e38-4ab7-8691-d6f72d5d5843` |
+| `Project administration` | `a693fe76-ea33-49ad-9dcc-5e4f3ac5f938` |
+| `Resources` | `ebd781f0-bf79-492c-ac21-b31b9c3c990c` |
+| `Software` | `f89c5233-01b0-4778-93e9-cc7d107aa2c8` |
+| `Supervision` | `0c8ca7d4-06ad-4527-9cea-a8801fcb8746` |
+| `Validation` | `4b1bf348-faf2-4fc4-bd66-4cd3a84b9d44` |
+| `Visualization` | `76b9d56a-e430-4e0a-84c9-59c11be343ae` |
+| `Writing – original draft` | `43ebbd94-98b4-42f1-866b-c930cef228ca` |
+| `Writing – review & editing` | `d3aead86-f2a2-47f7-bb99-79de6421164d` |
+
+The two Writing roles have an en dash (U+2013), not a hyphen. A JSON file with a hyphen fails
+validation; a CSV header accepts either.
+
+### Example
+
+```text
+$ credit-matrix roles --json | jq -r '.roles[12].name'
+Writing – original draft
+```
+
 ## Recipes
 
 All of them keep names in `contributors.json` and out of the command line.
+
+Start a contributors file from a list of names, one per line. Each person gets an `id`, the
+parsed name parts and initials, and every role at score 0. Then fill in the scores:
+
+```sh
+credit-matrix convert names.txt --to json > contributors.json
+printf 'Ada Lovelace\nAlan M. Turing\n' | credit-matrix convert - --to json > contributors.json
+```
+
+The result validates against [`contributors.schema.json`](contributors.schema.json).
 
 Pipe a converted file into the next step:
 

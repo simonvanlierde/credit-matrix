@@ -204,6 +204,10 @@ at the `v<version>` tag, since Typst Universe shows only the package folder.
   The Typst test (`integrations/typst/credit-matrix.test.ts`) fails when the file is stale. With
   `typst` on your `PATH` it also compiles the examples and checks the statement text and the
   initials against the app's; it is skipped without Typst, and CI installs it.
+- **Contributors file schema**: `docs/contributors.schema.json` comes from the JSON export schema in
+  `src/core/export/json.ts`. After changing that schema or `AuthorSchema`, run
+  `node scripts/build-contributors-schema.mjs`; `src/contributors-schema.test.ts`
+  fails when the file is stale.
 - **End-to-end (Playwright)**: the specs in `e2e/`. In CI they run against `wrangler dev`, which
   applies `public/_headers`. On your machine they use `pnpm dev`, which has no Content Security
   Policy (CSP). You only need [wrangler](https://developers.cloudflare.com/workers/wrangler/) for
