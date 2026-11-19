@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "By scripts/build-contributors-schema.mjs from src/core. Do not edit.",
+  "title": "CRediT Matrix contributors file",
+  "description": "The JSON file `credit-matrix` reads and `convert --to json` writes (version 1). A missing `id` gets a random one. Unknown fields are ignored. `asks` is the app's ask-and-reply state, left out here. JSON Schema cannot express these checks, which the CLI still applies: No two authors share an `id`. `name` holds at least one letter, or is an ORCID iD. `orcid` is an ORCID iD with a valid check digit, bare (`0000-0002-1825-0097`) or as an orcid.org URL.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "authors": {
+      "maxItems": 420,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "firstName": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "middleName": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "surname": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "initials": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "orcid": {
+            "type": "string"
+          },
+          "contributorType": {
+            "default": "author",
+            "type": "string",
+            "enum": [
+              "author",
+              "non-author"
+            ]
+          },
+          "contributions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "Conceptualization",
+                    "Data curation",
+                    "Formal analysis",
+                    "Funding acquisition",
+                    "Investigation",
+                    "Methodology",
+                    "Project administration",
+                    "Resources",
+                    "Software",
+                    "Supervision",
+                    "Validation",
+                    "Visualization",
+                    "Writing – original draft",
+                    "Writing – review & editing"
+                  ]
+                },
+                "score": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "role",
+                "score"
+              ]
+            }
+          },
+          "equalContribution": {
+            "default": false,
+            "type": "boolean"
+          },
+          "corresponding": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "firstName",
+          "middleName",
+          "surname",
+          "initials",
+          "contributions"
+        ]
+      }
+    },
+    "selfId": {
+      "type": "string"
+    },
+    "toolchain": {}
+  },
+  "required": [
+    "version",
+    "authors"
+  ]
+}

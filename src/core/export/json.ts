@@ -15,7 +15,7 @@ const REPEATED_ID_MESSAGE = "duplicate contributor ids";
 export const UNKNOWN_TOOLCHAIN_WARNING =
   "The input names a writing tool this version doesn't know, so it was left out.";
 
-const ExportSchema = /* @__PURE__ */ (() =>
+export const ExportSchema = /* @__PURE__ */ (() =>
   z.object({
     version: z.literal(JSON_EXPORT_VERSION),
     authors: z.array(AuthorSchema).check(
