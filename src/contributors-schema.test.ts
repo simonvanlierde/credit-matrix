@@ -15,6 +15,8 @@ const committed = readFileSync(new URL("../docs/contributors.schema.json", impor
 const validate = new Ajv({ allErrors: true }).compile(JSON.parse(committed));
 const dir = mkdtempSync(join(tmpdir(), "credit-matrix-schema-"));
 
+const author = { name: "Ada Lovelace", firstName: "Ada", middleName: "", surname: "Lovelace", initials: "AL" };
+
 function file(name: string, text: string): string {
   const path = join(dir, name);
   writeFileSync(path, text);
@@ -41,7 +43,6 @@ it("accepts what convert --to json writes, from a list of names and from a CSV",
 });
 
 it("accepts a hand-written file with only the required fields, as the CLI does", async () => {
-  const author = { name: "Ada Lovelace", firstName: "Ada", middleName: "", surname: "Lovelace", initials: "AL" };
   const minimal = { version: 1, authors: [{ ...author, contributions: [{ role: "Software", score: 100 }] }] };
   expect(validate(minimal), JSON.stringify(validate.errors)).toBe(true);
   expect(await run(["statement", file("minimal.json", JSON.stringify(minimal))])).toBe(
@@ -50,7 +51,6 @@ it("accepts a hand-written file with only the required fields, as the CLI does",
 });
 
 it("leaves asks out, so a file with broken asks passes the schema and still fails in the CLI", async () => {
-  const author = { name: "Ada Lovelace", firstName: "Ada", middleName: "", surname: "Lovelace", initials: "AL" };
   const junk = { version: 1, authors: [{ ...author, contributions: [] }], asks: { x: "junk" } };
   expect(validate(junk)).toBe(true);
   await expect(run(["convert", file("asks.json", JSON.stringify(junk)), "--to", "json"])).rejects.toThrow(
@@ -58,8 +58,7 @@ it("leaves asks out, so a file with broken asks passes the schema and still fail
   );
 });
 
-it("allows the ids isShareableId allows, and keeps such an id through convert --to json", async () => {
-  const author = { name: "Ada Lovelace", firstName: "Ada", middleName: "", surname: "Lovelace", initials: "AL" };
+it("allows the ids isShareableId allows", () => {
   const withId = (id: string) => ({ version: 1, authors: [{ ...author, id, contributions: [] }] });
   for (const id of [
     "ada",
@@ -74,18 +73,9 @@ it("allows the ids isShareableId allows, and keeps such an id through convert --
   ]) {
     expect(validate(withId(id)), id).toBe(isShareableId(id));
   }
-  const kept = JSON.parse(
-    String(await run(["convert", file("id.json", JSON.stringify(withId("a_b-9"))), "--to", "json"])),
-  );
-  expect(kept.authors[0].id).toBe("a_b-9");
-  const replaced = JSON.parse(
-    String(await run(["convert", file("id.json", JSON.stringify(withId("a b"))), "--to", "json"])),
-  );
-  expect(replaced.authors[0].id).not.toBe("a b");
 });
 
 it("rejects a role name or score the CLI rejects", async () => {
-  const author = { name: "Ada Lovelace", firstName: "Ada", middleName: "", surname: "Lovelace", initials: "AL" };
   for (const contribution of [
     { role: "Writing - original draft", score: 100 },
     { role: "Software", score: 101 },

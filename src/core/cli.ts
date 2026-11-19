@@ -165,9 +165,6 @@ function requireLocale(candidate: string): LocaleCode {
 
 const COMMANDS = ["statement", "convert", "ask", "roles"];
 
-/** Bumped only when a field of the `roles --json` output changes or goes; a new field is not a break. */
-export const ROLES_SCHEMA_VERSION = 1;
-
 /** Thrown for a mistake in the command line: printed with a pointer to --help, exit code 2. */
 class UsageError extends Error {}
 
@@ -285,7 +282,7 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
   }
   if (command === "roles") {
     if (!values.json) return CREDIT_ROLES.map((role) => role.name).join("\n");
-    return JSON.stringify({ schema_version: ROLES_SCHEMA_VERSION, roles: CREDIT_ROLES }, null, 2);
+    return JSON.stringify({ schema_version: 1, roles: CREDIT_ROLES }, null, 2);
   }
   // Other commands ignore a flag they do not use, but --json there would promise JSON and print text.
   if (values.json) throw new UsageError(`${command} has no --json output; only roles does.`);

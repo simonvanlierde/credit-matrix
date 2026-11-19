@@ -781,23 +781,6 @@ reads no file.
 
 `schema_version` changes only when a field is renamed or removed. A new field does not change it.
 
-| Role name | NISO id |
-| --- | --- |
-| `Conceptualization` | `8b73531f-db56-4914-9502-4cc4d4d8ed73` |
-| `Data curation` | `f93e0f44-f2a4-4ea1-824a-4e0853b05c9d` |
-| `Formal analysis` | `95394cbd-4dc8-4735-b589-7e5f9e622b3f` |
-| `Funding acquisition` | `34ff6d68-132f-4438-a1f4-fba61ccf364a` |
-| `Investigation` | `2451924d-425e-4778-9f4c-36c848ca70c2` |
-| `Methodology` | `f21e2be9-4e38-4ab7-8691-d6f72d5d5843` |
-| `Project administration` | `a693fe76-ea33-49ad-9dcc-5e4f3ac5f938` |
-| `Resources` | `ebd781f0-bf79-492c-ac21-b31b9c3c990c` |
-| `Software` | `f89c5233-01b0-4778-93e9-cc7d107aa2c8` |
-| `Supervision` | `0c8ca7d4-06ad-4527-9cea-a8801fcb8746` |
-| `Validation` | `4b1bf348-faf2-4fc4-bd66-4cd3a84b9d44` |
-| `Visualization` | `76b9d56a-e430-4e0a-84c9-59c11be343ae` |
-| `Writing – original draft` | `43ebbd94-98b4-42f1-866b-c930cef228ca` |
-| `Writing – review & editing` | `d3aead86-f2a2-47f7-bb99-79de6421164d` |
-
 The two Writing roles have an en dash (U+2013), not a hyphen. A JSON file with a hyphen fails
 validation; a CSV header accepts either.
 
