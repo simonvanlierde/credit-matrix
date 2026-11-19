@@ -204,7 +204,7 @@ at the `v<version>` tag, since Typst Universe shows only the package folder.
   The Typst test (`integrations/typst/credit-matrix.test.ts`) fails when the file is stale. With
   `typst` on your `PATH` it also compiles the examples and checks the statement text and the
   initials against the app's; it is skipped without Typst, and CI installs it.
-- **Contributors file schema**: `docs/contributors.schema.json` comes from the JSON export schema in
+- **Contributors file schema**: `src/core/contributors.schema.json` (shipped in the npm package) comes from the JSON export schema in
   `src/core/export/json.ts`. After changing that schema or `AuthorSchema`, run
   `node scripts/build-contributors-schema.mjs`; `src/contributors-schema.test.ts`
   fails when the file is stale.

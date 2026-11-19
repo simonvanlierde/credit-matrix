@@ -1,8 +1,10 @@
 // @vitest-environment node
 // biome-ignore-all lint/correctness/noNodejsModules: this test reads the committed schema from disk.
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import Ajv from "ajv/dist/2020";
 import { expect, it } from "vitest";
 import * as z from "zod/mini";
@@ -11,7 +13,8 @@ import { isShareableId } from "./core/author";
 import { run } from "./core/cli";
 import { ExportSchema } from "./core/export/json";
 
-const committed = readFileSync(new URL("../docs/contributors.schema.json", import.meta.url), "utf8");
+const coreDir = fileURLToPath(new URL("./core/", import.meta.url));
+const committed = readFileSync(join(coreDir, "contributors.schema.json"), "utf8");
 const validate = new Ajv({ allErrors: true }).compile(JSON.parse(committed));
 const dir = mkdtempSync(join(tmpdir(), "credit-matrix-schema-"));
 
@@ -23,7 +26,7 @@ function file(name: string, text: string): string {
   return path;
 }
 
-it("keeps docs/contributors.schema.json in step with the core's JSON export schema", () => {
+it("keeps src/core/contributors.schema.json in step with the core's JSON export schema", () => {
   // Regenerate with: node scripts/build-contributors-schema.mjs
   expect(committed).toBe(renderContributorsSchema(ExportSchema));
 });
@@ -84,4 +87,12 @@ it("rejects a role name or score the CLI rejects", async () => {
     expect(validate(bad)).toBe(false);
     await expect(run(["statement", file("bad.json", JSON.stringify(bad))])).rejects.toThrow(/Check authors\.0/);
   }
+});
+
+it("ships the schema in the npm package under a stable $id", () => {
+  const exported = createRequire(import.meta.url)("credit-matrix/contributors.schema.json");
+  expect(exported).toEqual(JSON.parse(committed));
+  expect(exported.$id).toBe(
+    "https://raw.githubusercontent.com/simonvanlierde/credit-matrix/main/src/core/contributors.schema.json",
+  );
 });

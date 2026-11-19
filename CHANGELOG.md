@@ -11,9 +11,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `credit-matrix roles` prints the 14 CRediT role names a contributors file uses, one per line.
   `--json` prints them with their NISO ids, descriptions and URLs under `schema_version` 1. See
   the [CLI reference](docs/cli.md#roles).
-- [`docs/contributors.schema.json`](docs/contributors.schema.json) is the JSON Schema of the
-  contributors file (the version 1 JSON export), generated from the checks the CLI runs. The CLI
-  reference shows how to start one from a list of names with `convert names.txt --to json`.
+- [`contributors.schema.json`](src/core/contributors.schema.json) is the JSON Schema of the
+  contributors file (the version 1 JSON export), generated from the checks the CLI runs. It ships in
+  the npm package, so `require.resolve("credit-matrix/contributors.schema.json")` finds it offline,
+  and its `$id` is a fixed URL. The CLI reference shows how to start one from a list of names with
+  `convert names.txt --to json`.
 
 ### Changed
 

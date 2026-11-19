@@ -126,7 +126,7 @@ passes the score through, divided by 100.
 
 `contributorType` is `author` unless the file says `non-author`.
 
-[`contributors.schema.json`](contributors.schema.json) is the JSON Schema (draft 2020-12) of this
+[`contributors.schema.json`](../src/core/contributors.schema.json) is the JSON Schema (draft 2020-12) of this
 file, generated from the checks the CLI runs. Validate a file you write against it before you run a
 command. Each field has a description, and the schema's own `description` lists the checks JSON
 Schema cannot express: unique `id`s, a `name` with a letter in it, a valid ORCID check digit and a
@@ -803,7 +803,7 @@ credit-matrix convert names.txt --to json > contributors.json
 printf 'Ada Lovelace\nAlan M. Turing\n' | credit-matrix convert - --to json > contributors.json
 ```
 
-The result validates against [`contributors.schema.json`](contributors.schema.json).
+The result validates against [`contributors.schema.json`](../src/core/contributors.schema.json).
 
 Pipe a converted file into the next step:
 
