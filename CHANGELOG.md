@@ -27,6 +27,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - "A.B. wrote the original draft and all other authors reviewed it" gives the draft to A.B. only.
 - A supervisor list ends at a name followed by a lower-case word, so in "...supervision of A.B. and
   G.H. wrote the draft" G.H. stays the subject.
+- "Reviewed and edited the manuscript" counts as Writing – review & editing, as "review and
+  editing" already did.
 
 ## [0.13.0] - 2026-11-16
 

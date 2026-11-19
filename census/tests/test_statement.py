@@ -180,6 +180,23 @@ def test_surname_comma_initials():
     assert parsed.assignments == {(0, "software"), (2, "software")}
 
 
+@pytest.mark.parametrize(
+    ("text", "pairs"),
+    [
+        (
+            "A.B. wrote the original draft. C.D. and E.F. reviewed and edited the manuscript.",
+            {(0, "writing-original-draft"), (1, "writing-review-editing"), (2, "writing-review-editing")},
+        ),
+        (
+            "The original draft was written by A.B. and reviewed and edited by C.D.",
+            {(0, "writing-original-draft"), (1, "writing-review-editing")},
+        ),
+    ],
+)
+def test_reviewed_and_edited_is_review_and_editing(text, pairs):
+    assert parse_statement(text, THREE).assignments == pairs
+
+
 def test_unknown_name_does_not_inherit_the_previous_authors_roles():
     parsed = parse_statement("A.B.: software; Dunne, C: writing - review and editing", THREE)
     assert parsed.assignments == {(0, "software")}
@@ -295,7 +312,8 @@ def test_author_first_initials_before_a_semicolon_do_not_close_the_previous_role
         "final manuscript."
     )
     assert parse_statement(text, _split("Duc-Vinh Pham", "Pil-Hoon Park")).assignments == {
-        (0, "writing-original-draft")
+        (0, "writing-original-draft"),
+        (1, "writing-review-editing"),
     }
     text = (
         "S.C.; experimental design, investigation, formal analysis, prepared all figures, and drafted the original "

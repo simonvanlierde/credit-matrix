@@ -128,6 +128,21 @@ describe("parseStatement", () => {
 
   it.each([
     [
+      "A.L. wrote the original draft. C.D. and E.F. reviewed and edited the manuscript.",
+      [
+        [0, "writing-original-draft"],
+        [1, "writing-review-editing"],
+        [2, "writing-review-editing"],
+      ],
+    ],
+    [
+      "The original draft was written by A.L. and reviewed and edited by C.D.",
+      [
+        [0, "writing-original-draft"],
+        [1, "writing-review-editing"],
+      ],
+    ],
+    [
       "AL: conceptualization. CD: drew the figures. EF: software.",
       [
         [0, "conceptualization"],
@@ -705,7 +720,10 @@ describe("clauses that run across a semicolon or a full stop", () => {
     const parsed = pairsOf(text, split("Emmanuel Luciano", "Sarah Macek", "Felipe Pacheco"));
     expect(parsed.filter(([i]) => i === 2)).toEqual([[2, "writing-review-editing"]]);
     const authorFirst = "DP; wrote the original draft. PP; reviewed and edited the manuscript.";
-    expect(pairsOf(authorFirst, split("Duc-Vinh Pham", "Pil-Hoon Park"))).toEqual([[0, "writing-original-draft"]]);
+    expect(pairsOf(authorFirst, split("Duc-Vinh Pham", "Pil-Hoon Park"))).toEqual([
+      [0, "writing-original-draft"],
+      [1, "writing-review-editing"],
+    ]);
   });
 
   it("does not close a clause of roles with initials in a sentence", () => {
