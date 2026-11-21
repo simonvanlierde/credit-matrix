@@ -16,6 +16,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the npm package, so `require.resolve("credit-matrix/contributors.schema.json")` finds it offline,
   and its `$id` is a fixed URL. The CLI reference shows how to start one from a list of names with
   `convert names.txt --to json`.
+- The census's statement-reading model is on Hugging Face as
+  [`simonvanlierde/credit-statement-reader`](https://huggingface.co/simonvanlierde/credit-statement-reader),
+  under the MIT licence, with int8 and fp32 ONNX copies for transformers.js. It reads statements
+  written in CRediT terms and in the authors' own words. On 200 statements held back until the model
+  was chosen, it finds author-role pairs at F1 0.96 in prose statements and 0.97 in CRediT ones; see
+  its [model card](census/MODEL_CARD.md). `census model publish` uploads it.
 
 ### Changed
 
