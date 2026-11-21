@@ -14,9 +14,19 @@ import time
 from pathlib import Path
 from typing import Any
 
-from census import encoder, labels
+from census import encoder, labels, runinfo
 
 VARIANTS = {"fp32": "model.onnx", "int8": "model_int8.onnx", "q4": "model_q4.onnx"}
+# What the Hub repository gets from an export: q4 stays local, as no one loads it.
+HUB_EXPORT = (
+    "config.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "best.json",
+    "run.json",
+    "onnx/model.onnx",
+    "onnx/model_int8.onnx",
+)
 
 
 def export(run: Path, out: Path) -> dict[str, int]:
@@ -58,6 +68,19 @@ def export(run: Path, out: Path) -> dict[str, int]:
     quantised: Any = q4.model  # an ONNXModel once processed, though typed as either
     quantised.save_model_to_file(str(weights / VARIANTS["q4"]))
     return {name: (weights / file).stat().st_size for name, file in VARIANTS.items()}
+
+
+def hub_files(run: Path, out: Path, card: Path, sha256: dict[str, str]) -> dict[str, Path]:
+    """Path in the Hub repository -> local file: the export without q4, the PyTorch weights, and the model
+    card as README.md. A ValueError when a file is missing or one named in `sha256` has another hash."""
+    files = {name: out / name for name in HUB_EXPORT}
+    files |= {"model.safetensors": run / "checkpoint" / "model.safetensors", "README.md": card}
+    if missing := [str(f) for f in files.values() if not f.exists()]:
+        raise ValueError(f"missing {', '.join(missing)}")
+    for name, want in sha256.items():
+        if (got := runinfo.sha256(files[name])) != want:
+            raise ValueError(f"{name} has sha256 {got}, not the {want} that model.json names")
+    return files
 
 
 def _onnx_probabilities(session: Any, encoded: encoder.Encoded, batch_size: int) -> list[list[float]]:

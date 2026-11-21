@@ -450,8 +450,9 @@ two readers agree at pair F1 0.881, and give exactly the same pairs for 54.4% of
 
 #### In the browser
 
-The browser model is Ettin-68M, fine-tuned the same way as ModernBERT-base. It scores the same at
-under half the download. Its model card is [`MODEL_CARD.md`](MODEL_CARD.md).
+The browser model is Ettin-68M, which scores the same as ModernBERT-base at under half the
+download. The shipped run is `ettin-68m-both-s1`, trained on definition-B labels; its model card is
+[`MODEL_CARD.md`](MODEL_CARD.md). The commands below show the export on the earlier tag-trained run.
 
 ```sh
 uv sync --group train --group browser
@@ -496,6 +497,22 @@ Training only on CC BY and CC0 articles (`--open-licence-only`) costs no F1, tho
 0.01 lower, and those are the weights that can be published. With 1 epoch at 3e-5, CC BY and CC0
 only, and three seeds each, Ettin-32M reaches F1 0.913 but exact 0.584, and Ettin-150M 0.905 and
 0.617: neither beats Ettin-68M.
+
+#### Publishing the model
+
+[`model.json`](model.json) names the shipped run, its Hub repository and the sha256 of its weights.
+`MODEL_CARD.md` quotes all three, and `tests/test_model_card.py` fails when the two disagree. To
+publish, log in with `hf auth login`, then run:
+
+```sh
+uv run --group train census model publish --dry-run
+uv run --group train census model publish
+```
+
+`--dry-run` checks every hash in `model.json` against the local files and lists what would go up.
+`publish` then pushes the int8 and fp32 ONNX files, `model.safetensors`, the tokenizer, `best.json`,
+`run.json` and the card (as `README.md`) to the Hub in one commit, and tags that commit with the
+run's name.
 
 ## Limits
 
