@@ -101,7 +101,8 @@ def read(statement, authors):
     return pairs
 
 
-print(read("A.L. designed the study and wrote the first draft. C.D. analysed the data.", ["Ada Lovelace", "Charles Darwin"]))
+statement = "A.L. designed the study and wrote the first draft. C.D. analysed the data."
+print(read(statement, ["Ada Lovelace", "Charles Darwin"]))
 ```
 
 In transformers.js, load it with
