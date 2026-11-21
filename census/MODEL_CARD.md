@@ -244,7 +244,10 @@ On gold500b the weakest narrative roles are data curation (0.74, 75 gold pairs),
 On 2,000 held-out articles scored against publisher tags, fp32, int8 and q4 ONNX all reach F1
 0.904. int8 gives exactly the same pairs as fp32 on 95.1% of those articles. On gold500b the share
 is 74.0% (61.5% narrative), because narrative statements put more probabilities near the
-threshold. int8 is a quarter of the size (70 MB against 275 MB), so it is the copy the app loads.
+threshold. Paired against the PyTorch model on gold500b, int8 changes narrative F1 by -0.003 (95%
+interval -0.009 to +0.003) and CRediT F1 by -0.001 (-0.003 to +0.002); q4 loses 0.004 on narrative,
+with an interval below zero. int8 is a quarter of the size (70 MB against 275 MB), so it is the copy
+the app loads.
 
 ## Limitations
 
