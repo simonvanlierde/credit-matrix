@@ -124,3 +124,15 @@ def test_aggregate_counts_the_encoder_roles_of_narrative_statements(db, tmp_path
     assert data["encoder"] == "run-1"
     assert data["years"][0] == {"year": 2023, "articles": 2, "with_roles": 2, "roles_per_author": 1.2}
     assert "paired" not in data
+
+
+def test_year_series_starts_with_credit_not_narrative_roles(db, tmp_path):
+    parts = tmp_path / "part-00000.parquet"
+    pq.write_table(pa.table({"pmcid": ["PMC2"], "author_position": [1], "role": ["software"]}), parts)
+    with store.connect(db) as con:
+        # A narrative statement a year before any CRediT one: its encoder roles do not start the series.
+        con.execute("UPDATE articles SET statement = 'Ann wrote the code.', year = 2022 WHERE pmcid = 'PMC2'")
+        readers.apply_encoder(con, str(parts), "run-1")
+    data = run(db, tmp_path / "out.json", min_articles=1)
+    assert data["years"][0]["year"] == 2023
+    assert "with_credit" not in data["years"][0]

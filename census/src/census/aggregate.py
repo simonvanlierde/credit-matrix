@@ -16,8 +16,8 @@ from census.fields import has_fields
 LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/"
 MIN_ARTICLES = 1000
 """A year, field or style with fewer research articles than this is left out: its share is noise. The year
-series also starts at the first year with this many articles with roles, which keeps out the few free-text
-matches from before CRediT existed."""
+series also starts at the first year with this many articles with tagged or CRediT-worded roles, which keeps
+out the years before CRediT existed: narrative statements, which the encoder reads into roles, go back further."""
 TOP_PUBLISHERS = 20
 
 _RESEARCH = "a.article_type = 'research-article' AND a.style NOT IN ('error', 'missing', 'retry')"
@@ -25,6 +25,7 @@ _RESEARCH = "a.article_type = 'research-article' AND a.style NOT IN ('error', 'm
 QUERIES = {
     "years": f"""
         SELECT a.year, count(*) AS articles, count(*) FILTER (a.n_authors_with_roles > 0) AS with_roles,
+               count(*) FILTER (a.n_authors_with_roles > 0 AND a.style <> 'none') AS with_credit,
                round(sum(r.n) / nullif(sum(a.n_authors_with_roles), 0), 2) AS roles_per_author
         FROM census_articles a LEFT JOIN (SELECT pmcid, count(*) AS n FROM census_roles GROUP BY pmcid) r USING (pmcid)
         WHERE {_RESEARCH} AND a.year IS NOT NULL GROUP BY a.year HAVING count(*) >= $min ORDER BY a.year""",
@@ -117,7 +118,7 @@ def aggregate(
         "focus_year": year,
         **{key: rows(key) for key in QUERIES},
     }
-    first = min((row["year"] for row in data["years"] if row["with_roles"] >= min_articles), default=None)
+    first = min((row["year"] for row in data["years"] if row.pop("with_credit") >= min_articles), default=None)
     data["years"] = [row for row in data["years"] if first is not None and row["year"] >= first]
     years = {row["year"] for row in data["years"]}
     data["styles"] = [row for row in data["styles"] if row["year"] in years]
