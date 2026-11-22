@@ -1391,10 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Quanto sono accurate queste cifre"
 
 msgid "censusAccuracy"
-msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova il {recall} dei ruoli, e il {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo. Su {articles} articoli che etichettano i propri ruoli e riportano anche una dichiarazione, la lettura della dichiarazione da parte del parser concorda con le etichette con un punteggio F1 di {f1} (1 significa tutti i ruoli trovati e nessun errore). Ma il {share} di questi articoli proviene da MDPI e Frontiers, e nessuno ha verificato le etichette."
-
-msgid "censusAccuracyUnscored"
-msgstr "Ho verificato il parser su {labelled} dichiarazioni etichettate che usano i nomi dei ruoli CRediT. Trova il {recall} dei ruoli, e il {precision} di ciò che trova è corretto. Legge solo i nomi dei ruoli, quindi una dichiarazione scritta in prosa conta come se non indicasse alcun ruolo."
+msgstr "Ho verificato il modello che legge le dichiarazioni in testo libero su {articles} articoli con cui non è stato addestrato. Rispetto a etichette di riferimento, il suo punteggio F1 è {worded} per le dichiarazioni che usano i nomi dei ruoli CRediT e {narrative} per quelle in prosa (1 significa che ogni ruolo è trovato e nessuno è sbagliato). Le etichette di riferimento vengono da esecuzioni di modelli linguistici, non da una persona. I ruoli che gli editori etichettano sono presi così come sono, e nessuno ha verificato quelle etichette."
 
 msgid "censusIncomplete"
 msgstr "Questa istantanea è incompleta: alcuni file sorgente non sono stati letti, o alcune riviste non hanno ancora un settore."
@@ -1439,7 +1436,7 @@ msgid "censusStylesTitle"
 msgstr "Come sono marcati i ruoli"
 
 msgid "censusStylesCaption"
-msgstr "Quota di articoli di ricerca per anno, in base a dove sono stati letti i ruoli. Ogni articolo conta una volta, sotto la prima delle quattro forme qui sotto che usa. Tutte e quattro usano la stessa scala. Il {year} è ancora in corso di pubblicazione, perciò il suo tratto è tratteggiato."
+msgstr "Quota di articoli di ricerca per anno, in base a dove sono stati letti i ruoli. Ogni articolo conta una volta, sotto la prima delle quattro forme qui sotto che usa. Le dichiarazioni in prosa non hanno marcatura dei ruoli e non sono mostrate, anche se il modello vi legge dei ruoli. Tutte e quattro usano la stessa scala. Il {year} è ancora in corso di pubblicazione, perciò il suo tratto è tratteggiato."
 
 msgid "censusStyleJats4r"
 msgstr "Tag di ruolo JATS4R"
@@ -1583,13 +1580,13 @@ msgid "censusHowTitle"
 msgstr "Come il censimento legge le dichiarazioni"
 
 msgid "censusHowRules"
-msgstr "Un parser a regole legge ogni articolo. Se l’editore etichetta i ruoli di ogni autore nell’XML JATS, prende le etichette. Altrimenti legge la dichiarazione in testo libero, frase per frase, e abbina autori e ruoli. Contano solo i termini CRediT, quindi «A.B. conceived the study» non dà alcun ruolo."
+msgstr "Se l’editore etichetta i ruoli di ogni autore nell’XML JATS, il censimento prende le etichette. Se i ruoli sono testo libero accanto a ogni autore, li legge un parser a regole, che conta solo i termini CRediT."
 
 msgid "censusHowModel"
-msgstr "Un encoder affinato, Ettin-68M, legge anche ogni dichiarazione in testo libero. È il modello per browser del censimento, fatto per funzionare in un browser web. Trova più ruoli etichettati delle regole, con una precisione simile, ma assegna ruoli anche a dichiarazioni narrative che non ne nominano nessuno. I conteggi di questa pagina vengono solo dal parser a regole."
+msgstr "Ogni altra dichiarazione in testo libero è letta da un encoder affinato, Ettin-68M, il modello per browser del censimento. Legge le dichiarazioni con i nomi dei ruoli CRediT e anche quelle in prosa, come «designed the study», da cui il parser a regole non ricava alcun ruolo. Su 200 articoli con cui non è stato addestrato, il suo punteggio F1 è 0,97 con i termini CRediT e 0,96 con la prosa, contro 0,86 e 0,00 del parser a regole."
 
 msgid "censusHowCaveat"
-msgstr "Entrambi sono valutati rispetto ai ruoli che gli editori etichettano, e queste etichette non sono un riferimento verificato. Un’etichetta può nominare un ruolo che la dichiarazione non indica mai. Su 200 articoli MDPI in cui il parser a regole e le etichette non concordano, un modello linguistico ha giudicato sbagliate le etichette in 192 casi e il solo parser in 6. Quindi un punteggio F1 rispetto alle etichette misura l’accordo con esse e sottostima l’accuratezza, soprattutto per MDPI."
+msgstr "Questi punteggi sono misurati rispetto a etichette di riferimento prodotte da esecuzioni di modelli linguistici che hanno etichettato ogni dichiarazione alla cieca, con un’ulteriore esecuzione a decidere i disaccordi. Una persona non ha letto ogni dichiarazione, quindi un punteggio misura l’accordo con quelle etichette. Le etichette degli editori sono prese così come sono, e nessuno le ha verificate."
 
 msgid "censusHowCode"
 msgstr "Il codice del censimento"

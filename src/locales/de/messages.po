@@ -1391,10 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Wie genau diese Zahlen sind"
 
 msgid "censusAccuracy"
-msgstr "Ich habe den Parser an {labelled} annotierten Erklärungen geprüft, die CRediT-Rollennamen verwenden. Er findet {recall} der Rollen, und {precision} dessen, was er findet, ist richtig. Er liest nur Rollennamen, eine Erklärung in Fließtext zählt also als Erklärung ohne Rollen. Bei {articles} Artikeln, die ihre Rollen auszeichnen und zugleich eine Erklärung abdrucken, stimmt die Lesart des Parsers mit den Auszeichnungen mit einem F1-Wert von {f1} überein (1 bedeutet: jede Rolle gefunden und keine falsch). Aber {share} dieser Artikel stammen von MDPI und Frontiers, und die Auszeichnungen selbst hat niemand geprüft."
-
-msgid "censusAccuracyUnscored"
-msgstr "Ich habe den Parser an {labelled} annotierten Erklärungen geprüft, die CRediT-Rollennamen verwenden. Er findet {recall} der Rollen, und {precision} dessen, was er findet, ist richtig. Er liest nur Rollennamen, eine Erklärung in Fließtext zählt also als Erklärung ohne Rollen."
+msgstr "Ich habe das Modell, das Erklärungen im Freitext liest, an {articles} Artikeln geprüft, mit denen es nicht trainiert wurde. Gemessen an Referenzlabels liegt sein F1-Wert bei {worded} für Erklärungen mit CRediT-Rollennamen und bei {narrative} für Erklärungen in Prosa (1 bedeutet: jede Rolle gefunden und keine falsche). Die Referenzlabels stammen von Läufen eines Sprachmodells, nicht von einer Person. Rollen, die Verlage auszeichnen, werden so übernommen, wie sie ausgezeichnet sind, und niemand hat diese Auszeichnungen geprüft."
 
 msgid "censusIncomplete"
 msgstr "Dieser Stand ist unvollständig: Einige Quelldateien wurden nicht gelesen, oder Zeitschriften haben noch kein Fachgebiet."
@@ -1439,7 +1436,7 @@ msgid "censusStylesTitle"
 msgstr "Wie Rollen ausgezeichnet sind"
 
 msgid "censusStylesCaption"
-msgstr "Anteil der Forschungsartikel pro Jahr, nach der Stelle, aus der ihre Rollen gelesen wurden. Jeder Artikel zählt einmal, unter der ersten der vier unten, die er nutzt. Alle vier nutzen dieselbe Skala. {year} erscheint noch, daher ist dieses Stück gestrichelt."
+msgstr "Anteil der Forschungsartikel pro Jahr, nach der Quelle, aus der ihre Rollen gelesen wurden. Jeder Artikel zählt einmal, unter der ersten der vier unten, die er verwendet. Erklärungen in Prosa haben keine Rollenauszeichnung und sind nicht abgebildet, obwohl das Modell Rollen aus ihnen liest. Alle vier Diagramme verwenden dieselbe Skala. {year} wird noch veröffentlicht, daher ist dieser Abschnitt gestrichelt."
 
 msgid "censusStyleJats4r"
 msgstr "JATS4R-Rollen-Tags"
@@ -1583,13 +1580,13 @@ msgid "censusHowTitle"
 msgstr "Wie der Zensus Erklärungen liest"
 
 msgid "censusHowRules"
-msgstr "Ein regelbasierter Parser liest jeden Artikel. Wo der Verlag die Rollen jeder Autorin und jedes Autors im JATS-XML auszeichnet, übernimmt er die Auszeichnungen. Sonst liest er die Erklärung im Freitext Satzteil für Satzteil und ordnet Autor:innen Rollen zu. Nur CRediT-Begriffe zählen, „A.B. conceived the study“ ergibt also keine Rollen."
+msgstr "Wo der Verlag die Rollen jeder Autorin und jedes Autors im JATS-XML auszeichnet, übernimmt der Zensus die Auszeichnungen. Stehen die Rollen als Freitext neben jeder Autorin und jedem Autor, liest sie ein regelbasierter Parser. Er zählt nur CRediT-Begriffe."
 
 msgid "censusHowModel"
-msgstr "Ein feinabgestimmter Encoder, Ettin-68M, liest außerdem jede Erklärung im Freitext. Er ist das Browsermodell des Zensus, gebaut für den Webbrowser. Er findet mehr der ausgezeichneten Rollen als die Regeln, bei etwa gleicher Präzision, vergibt aber auch Rollen an erzählende Erklärungen, die keine nennen. Die Zahlen auf dieser Seite stammen allein vom regelbasierten Parser."
+msgstr "Jede andere Erklärung im Freitext liest ein feinabgestimmter Encoder, Ettin-68M, das Browsermodell des Zensus. Er liest Erklärungen mit CRediT-Rollennamen und auch Erklärungen in Prosa wie „designed the study“, aus denen der regelbasierte Parser keine Rollen liest. An 200 Artikeln, mit denen er nicht trainiert wurde, liegt sein F1-Wert bei 0,97 für CRediT-Begriffe und bei 0,96 für Prosa, gegenüber 0,86 und 0,00 beim regelbasierten Parser."
 
 msgid "censusHowCaveat"
-msgstr "Beide werden an den Rollen gemessen, die Verlage auszeichnen, und diese Auszeichnungen sind kein Goldstandard. Eine Auszeichnung kann eine Rolle nennen, die die Erklärung nie angibt. Bei 200 MDPI-Artikeln, in denen Parser und Auszeichnungen voneinander abweichen, hielt ein Sprachmodell die Auszeichnungen in 192 Fällen für falsch und den Parser allein in 6. Ein F1-Wert gegen die Auszeichnungen misst also die Übereinstimmung mit ihnen und unterschätzt die Genauigkeit, am stärksten bei MDPI."
+msgstr "Diese Werte beziehen sich auf Referenzlabels, die Läufe eines Sprachmodells blind für jede Erklärung vergeben haben, wobei ein weiterer Lauf Meinungsverschiedenheiten entschied. Keine Person hat jede Erklärung gelesen, ein Wert misst also die Übereinstimmung mit diesen Labels. Auszeichnungen der Verlage werden unverändert übernommen, und niemand hat sie geprüft."
 
 msgid "censusHowCode"
 msgstr "Der Code des Zensus"

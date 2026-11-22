@@ -1391,10 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Qual é a exatidão destes números"
 
 msgid "censusAccuracy"
-msgstr "Verifiquei o analisador com {labelled} declarações anotadas que usam os nomes das funções do CRediT. Encontra {recall} das funções, e {precision} do que encontra está correto. Só lê nomes de funções, por isso uma declaração escrita em prosa conta como não indicando nenhuma função. Em {articles} artigos que etiquetam as suas funções e também incluem uma declaração, a leitura da declaração pelo analisador coincide com as etiquetas com uma pontuação F1 de {f1} (1 significa todas as funções encontradas e nenhuma errada). Mas {share} desses artigos são da MDPI e da Frontiers, e ninguém verificou as próprias etiquetas."
-
-msgid "censusAccuracyUnscored"
-msgstr "Verifiquei o analisador com {labelled} declarações anotadas que usam os nomes das funções do CRediT. Encontra {recall} das funções, e {precision} do que encontra está correto. Só lê nomes de funções, por isso uma declaração escrita em prosa conta como não indicando nenhuma função."
+msgstr "Verifiquei o modelo que lê as declarações em texto livre em {articles} artigos com que não foi treinado. Face a etiquetas de referência, a sua pontuação F1 é {worded} nas declarações que usam nomes de funções CRediT e {narrative} nas declarações em prosa (1 significa que cada função é encontrada e nenhuma está errada). As etiquetas de referência vêm de execuções de modelos de linguagem, não de uma pessoa. As funções que as editoras etiquetam são tomadas como estão etiquetadas, e ninguém verificou essas etiquetas."
 
 msgid "censusIncomplete"
 msgstr "Este instantâneo está incompleto: alguns ficheiros de origem não foram lidos, ou há revistas ainda sem área."
@@ -1439,7 +1436,7 @@ msgid "censusStylesTitle"
 msgstr "Como as funções são marcadas"
 
 msgid "censusStylesCaption"
-msgstr "Proporção de artigos de investigação por ano, consoante o local de onde as funções foram lidas. Cada artigo conta uma vez, na primeira das quatro formas abaixo que usa. As quatro usam a mesma escala. {year} ainda está a ser publicado, por isso o seu troço é tracejado."
+msgstr "Proporção de artigos de investigação por ano, consoante o local de onde as funções foram lidas. Cada artigo conta uma vez, na primeira das quatro formas abaixo que usa. As declarações em prosa não têm marcação de funções e não são mostradas, embora o modelo leia funções nelas. As quatro usam a mesma escala. {year} ainda está a ser publicado, por isso o seu troço é tracejado."
 
 msgid "censusStyleJats4r"
 msgstr "Marcas de função JATS4R"
@@ -1583,13 +1580,13 @@ msgid "censusHowTitle"
 msgstr "Como o censo lê as declarações"
 
 msgid "censusHowRules"
-msgstr "Um analisador baseado em regras lê cada artigo. Quando a editora etiqueta as funções de cada autor no XML JATS, usa as etiquetas. Caso contrário, lê a declaração em texto livre, oração a oração, e associa autores a funções. Só contam os termos CRediT, por isso «A.B. conceived the study» não dá nenhuma função."
+msgstr "Quando a editora etiqueta as funções de cada autor no XML JATS, o censo usa as etiquetas. Quando as funções são texto livre junto a cada autor, lê-as um analisador baseado em regras, que só conta os termos CRediT."
 
 msgid "censusHowModel"
-msgstr "Um codificador afinado, Ettin-68M, também lê cada declaração em texto livre. É o modelo de navegador do censo, feito para correr num navegador web. Encontra mais funções etiquetadas do que as regras, com uma precisão semelhante, mas também atribui funções a declarações narrativas que não nomeiam nenhuma. As contagens desta página vêm apenas do analisador de regras."
+msgstr "Qualquer outra declaração em texto livre é lida por um codificador afinado, Ettin-68M, o modelo de navegador do censo. Lê as declarações com nomes de funções CRediT e também as declarações em prosa, como «designed the study», de que o analisador de regras não tira nenhuma função. Em 200 artigos com que não foi treinado, a sua pontuação F1 é 0,97 com termos CRediT e 0,96 com prosa, contra 0,86 e 0,00 do analisador de regras."
 
 msgid "censusHowCaveat"
-msgstr "Ambos são avaliados face às funções que as editoras etiquetam, e essas etiquetas não são uma referência verificada. Uma etiqueta pode nomear uma função que a declaração nunca indica. Em 200 artigos da MDPI em que o analisador de regras e as etiquetas divergem, um modelo de linguagem considerou as etiquetas erradas em 192 e só o analisador errado em 6. Por isso, uma pontuação F1 face às etiquetas mede a concordância com elas e subestima a exatidão, sobretudo na MDPI."
+msgstr "Estas pontuações medem-se face a etiquetas de referência feitas por execuções de modelos de linguagem que etiquetaram cada declaração às cegas, com outra execução a decidir os desacordos. Uma pessoa não leu cada declaração, pelo que uma pontuação mede a concordância com essas etiquetas. As etiquetas das editoras são tomadas como estão, e ninguém as verificou."
 
 msgid "censusHowCode"
 msgstr "O código do censo"
