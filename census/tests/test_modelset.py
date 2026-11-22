@@ -274,3 +274,14 @@ def test_zero_shot_runner_counts_malformed_replies_as_failed(server, tmp_path, b
     items = [{"pmcid": "PMC0", "statement": "s0", "authors": ["Ann Smith"]}]
     assert modelset.run_zero_shot(server, "m", items, out, limit=None, workers=1) == (0, 1)
     assert modelset.read_predictions(out) == {}
+
+
+def test_free_text_chunks_include_narrative_statements(tmp_path):
+    def article(i: int, style: str, statement: str | None) -> Rows:
+        fields = {"pmcid": f"PMC{i}", "stratum": "all", "publisher": "P", "year": 2024, "style": style}
+        return Rows({**fields, "authors": ["A", "B"], "n_authors": 2, "statement": statement})
+
+    rows = [article(1, "statement_text", "text"), article(2, "none", "A designed the study."), article(3, "none", None)]
+    with make_db(tmp_path / "n.duckdb", rows) as con:
+        assert modelset.count_free_text(con) == 2
+        assert [r["pmcid"] for c in modelset.free_text_chunks(con, 10) for r in c] == ["PMC1", "PMC2"]

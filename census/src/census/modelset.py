@@ -193,7 +193,8 @@ def score(
 
 # --- the whole corpus: free-text statements, read by a model and by the rule parser ---
 
-_FREE_TEXT = "FROM articles WHERE style IN ('statement_text', 'contrib_text') AND statement IS NOT NULL"
+# Style 'none' with a statement is a narrative statement: one the rule parser found no CRediT roles in.
+_FREE_TEXT = "FROM articles WHERE style IN ('statement_text', 'contrib_text', 'none') AND statement IS NOT NULL"
 
 
 def count_free_text(con: duckdb.DuckDBPyConnection, limit: int | None = None) -> int:
@@ -202,7 +203,7 @@ def count_free_text(con: duckdb.DuckDBPyConnection, limit: int | None = None) ->
 
 
 def free_text_chunks(con: duckdb.DuckDBPyConnection, size: int, limit: int | None = None) -> Iterator[list[dict]]:
-    """Every article whose roles the rule parser read from free text, in pmcid order, `size` at a time."""
+    """Every article with a free-text statement, CRediT-worded or narrative, in pmcid order, `size` at a time."""
     cursor = con.execute(
         f"SELECT pmcid, statement, coalesce(authors, []) {_FREE_TEXT} ORDER BY pmcid LIMIT ?", [limit or 2**62]
     )
