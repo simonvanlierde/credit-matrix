@@ -3,7 +3,7 @@ import pyarrow.parquet as pq
 import pytest
 from test_modelset import make_db
 
-from census import readers
+from census import cli, readers
 from census.rows import Rows
 
 
@@ -102,3 +102,17 @@ def test_apply_refuses_parts_that_miss_a_statement_and_changes_nothing(tmp_path)
             "SELECT count(*) FROM duckdb_tables() WHERE table_name = 'encoder_assignments'"
         ).fetchone() == (0,)
         assert con.execute("SELECT count(*) FROM meta WHERE key = 'encoder'").fetchone() == (0,)
+
+
+def test_apply_command_works_on_a_database_another_parser_built(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    db = tmp_path / "oa-2026-10.duckdb"
+    make_db(db, ROWS).execute("UPDATE meta SET value = 'older' WHERE key = 'parser'")
+    argv = ["model", "apply", "--name", "run-1", "--snapshot", "oa-2026-10"]
+    assert cli.main(argv) == 1
+    assert "no parts" in capsys.readouterr().err
+    parts = tmp_path / "model" / "oa-2026-10" / "predictions" / "encoder-run-1-corpus"
+    parts.mkdir(parents=True)
+    write_parts(parts / "part-00000.parquet", {"PMC3": [(1, "software")], "PMC4": []})
+    assert cli.main(argv) == 0
+    assert "2 statements, 1 pairs" in capsys.readouterr().out

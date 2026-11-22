@@ -18,6 +18,8 @@ from collections.abc import Iterator
 from dataclasses import asdict
 from pathlib import Path
 
+import duckdb
+
 from census import (
     aggregate,
     bulk,
@@ -451,7 +453,9 @@ def cmd_model_apply(args: argparse.Namespace) -> None:
     parts = _corpus_dir(args)
     if not any(parts.glob("part-*.parquet")):
         raise Failure(f"no parts in {parts}; write them with `census model predict --corpus --name {args.name}`")
-    with store.connect(_db(args)) as con:
+    # Not store.connect: it refuses a database another parser version built, and apply touches only
+    # encoder_assignments and one meta row, whatever read the articles.
+    with duckdb.connect(str(_db(args))) as con:
         articles, pairs = readers.apply_encoder(con, str(parts / "part-*.parquet"), args.name)
     print(f"{articles} statements, {pairs} pairs from {args.name} into {_db(args)}")
 
