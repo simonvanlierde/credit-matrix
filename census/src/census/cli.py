@@ -494,7 +494,8 @@ def cmd_model_publish(args: argparse.Namespace) -> None:
         [CommitOperationAdd(name, str(path)) for name, path in files.items()],
         commit_message=f"Upload {args.name}",
     )
-    api.create_tag(shipped["repo"], tag=args.name, revision=commit.oid)
+    # A later publish (a card change) keeps the tag on the first commit, whose weights the hashes pin.
+    api.create_tag(shipped["repo"], tag=args.name, revision=commit.oid, exist_ok=True)
     print(f"{commit.commit_url} (tag {args.name})")
 
 

@@ -513,7 +513,7 @@ uv run --group train census model publish
 `--dry-run` checks every hash in `model.json` against the local files and lists what would go up.
 `publish` then pushes the int8 and fp32 ONNX files, `model.safetensors`, the tokenizer, `best.json`,
 `run.json` and the card (as `README.md`) to the Hub in one commit, and tags that commit with the
-run's name.
+run's name. After a card change, run it again: it pushes a new commit and leaves the tag where it was.
 
 ## Limits
 

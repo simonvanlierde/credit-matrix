@@ -1,10 +1,12 @@
 import hashlib
 import json
+import sys
+import types
 from pathlib import Path
 
 import pytest
 
-from census import browser
+from census import browser, cli
 
 CENSUS = Path(__file__).resolve().parents[1]
 
@@ -16,8 +18,8 @@ def test_card_names_the_shipped_run_repo_and_hashes():
         assert fact in card, f"MODEL_CARD.md does not quote {fact} from model.json"
 
 
-def _export(tmp_path):
-    run, out, card = tmp_path / "run", tmp_path / "browser", tmp_path / "MODEL_CARD.md"
+def _export(tmp_path, run=None, out=None):
+    run, out, card = run or tmp_path / "run", out or tmp_path / "browser", tmp_path / "MODEL_CARD.md"
     for path in [run / "checkpoint" / "model.safetensors", card, *(out / name for name in browser.HUB_EXPORT)]:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(path.name.encode())
@@ -40,3 +42,34 @@ def test_hub_files_refuse_a_changed_or_missing_file(tmp_path):
     (out / "best.json").unlink()
     with pytest.raises(ValueError, match="missing"):
         browser.hub_files(run, out, card, {})
+
+
+def test_publish_twice_keeps_the_first_tag(tmp_path, monkeypatch):
+    model = tmp_path / "data" / "model" / "s"
+    _export(tmp_path, model / "runs" / "r", model / "browser" / "r")
+    (tmp_path / "model.json").write_text(json.dumps({"run": "r", "snapshot": "s", "repo": "o/m", "sha256": {}}))
+    tags: dict[str, str] = {}
+    commits: list[list[str]] = []
+
+    class Api:
+        def create_repo(self, repo, exist_ok):
+            pass
+
+        def create_commit(self, repo, operations, commit_message):
+            commits.append([op.path_in_repo for op in operations])
+            return types.SimpleNamespace(oid=f"c{len(commits)}", commit_url=f"u{len(commits)}")
+
+        def create_tag(self, repo, tag, revision, exist_ok=False):
+            if tag in tags and not exist_ok:
+                raise RuntimeError("tag exists")
+            tags.setdefault(tag, revision)
+
+    hub = types.SimpleNamespace(
+        HfApi=Api, CommitOperationAdd=lambda path, local: types.SimpleNamespace(path_in_repo=path)
+    )
+    monkeypatch.setitem(sys.modules, "huggingface_hub", hub)
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "DATA", tmp_path / "data")
+    assert cli.main(["model", "publish"]) == 0
+    assert cli.main(["model", "publish"]) == 0
+    assert tags == {"r": "c1"} and len(commits) == 2 and "README.md" in commits[0]
