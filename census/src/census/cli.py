@@ -3,8 +3,9 @@
 Order of use:
   1. census run (a sample, from the PMC bucket) or census bulk (every open-access article)
   2. census fields
-  3. census report, export, aggregate, norms, label or score
-  4. census model split, dataset, score, zero-shot, train or predict
+  3. census model predict --corpus, then census model apply (the encoder's roles for free text)
+  4. census report, export, aggregate, norms, label or score
+  5. census model split, dataset, score, zero-shot, train or predict
 """
 
 import argparse
@@ -28,6 +29,7 @@ from census import (
     norms,
     pipeline,
     pmc_s3,
+    readers,
     runinfo,
     snapshot,
     store,
@@ -168,6 +170,7 @@ def cmd_fields(args: argparse.Namespace) -> None:
 
 def cmd_report(args: argparse.Namespace) -> None:
     with store.connect(_db(args), read_only=True) as con:
+        readers.use_roles(con)
         has_fields = fields.has_fields(con)
         for title, query in REPORTS.items():
             if "article_fields" in query and not has_fields:
@@ -289,15 +292,6 @@ def cmd_model_score(args: argparse.Namespace) -> None:
         for name, n, *rates, low, high in results:
             p, r, f1, exact = ("-" if x is None else x for x in rates)
             print(f"{name[:39]:<40}{n:>9}{p:>11}{r:>8}{f1:>7}{exact:>7}{f'{low}-{high}':>13}")
-
-
-def cmd_model_hybrid(args: argparse.Namespace) -> None:
-    out = args.predictions.with_name("hybrid-" + args.predictions.name.removeprefix("encoder-"))
-    with store.connect(_db(args), read_only=True) as con:
-        combined = modelset.hybrid(con, modelset.read_predictions(args.predictions))
-    with out.open("w", encoding="utf-8") as f:
-        f.writelines(json.dumps({"pmcid": p, "pairs": sorted(pairs)}) + "\n" for p, pairs in combined.items())
-    print(f"{len(combined)} articles in {out}")
 
 
 def _items(args: argparse.Namespace) -> tuple[Iterator[dict], str]:
@@ -427,7 +421,7 @@ def cmd_model_predict(args: argparse.Namespace) -> None:
         )
         t.metrics({"articles": n})
     if args.corpus:
-        print(f"{n} articles in {time.monotonic() - start:.0f} s into {out}; compare with `census model compare`")
+        print(f"{n} articles in {time.monotonic() - start:.0f} s into {out}; load them with `census model apply`")
     else:
         print(f"{n} articles in {time.monotonic() - start:.0f} s; score with `census model score {out}`")
 
@@ -439,7 +433,6 @@ def _corpus_dir(args: argparse.Namespace) -> Path:
 
 
 def cmd_model_compare(args: argparse.Namespace) -> None:
-    import json
 
     parts = _corpus_dir(args)
     if not any(parts.glob("part-*.parquet")):
@@ -454,8 +447,16 @@ def cmd_model_compare(args: argparse.Namespace) -> None:
     print("\n".join(lines[1:]))
 
 
+def cmd_model_apply(args: argparse.Namespace) -> None:
+    parts = _corpus_dir(args)
+    if not any(parts.glob("part-*.parquet")):
+        raise Failure(f"no parts in {parts}; write them with `census model predict --corpus --name {args.name}`")
+    with store.connect(_db(args)) as con:
+        articles, pairs = readers.apply_encoder(con, str(parts / "part-*.parquet"), args.name)
+    print(f"{articles} statements, {pairs} pairs from {args.name} into {_db(args)}")
+
+
 def cmd_model_browser(args: argparse.Namespace) -> None:
-    import json
     import random
 
     from census import browser
@@ -474,7 +475,6 @@ def cmd_model_browser(args: argparse.Namespace) -> None:
 
 
 def cmd_model_publish(args: argparse.Namespace) -> None:
-    import json
 
     from census import browser
 
@@ -598,9 +598,6 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("predictions", type=Path, nargs="?", help='JSONL of {"pmcid", "pairs": [[position, slug]]}')
     cmd.add_argument("--rules", action="store_true", help="score the rule parser on the articles PREDICTIONS covers")
     cmd.set_defaults(func=cmd_model_score)
-    cmd = model_sub.add_parser("hybrid", parents=[snap, db], help="the rule parser's gate with an encoder's roles")
-    cmd.add_argument("predictions", type=Path, help="the encoder's JSONL from `census model predict`")
-    cmd.set_defaults(func=cmd_model_hybrid)
     cmd = model_sub.add_parser("zero-shot", parents=[snap, db], help="predict with a model on a local vLLM server")
     cmd.add_argument("--model", required=True, help="model name the server serves, e.g. Qwen/Qwen3.5-9B")
     cmd.add_argument("--base-url", default="http://localhost:8000/v1", help="root of a chat-completions API")
@@ -643,6 +640,12 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--name", required=True, help="the run's directory name")
     cmd.add_argument("--limit", type=int, help="the --limit the predictions were made with")
     cmd.set_defaults(func=cmd_model_compare)
+    cmd = model_sub.add_parser(
+        "apply", parents=[snap, db], help="load an encoder's corpus predictions as the roles of free-text statements"
+    )
+    cmd.add_argument("--name", required=True, help="the run's directory name")
+    cmd.add_argument("--limit", type=int, help="the --limit the predictions were made with")
+    cmd.set_defaults(func=cmd_model_apply)
     cmd = model_sub.add_parser(
         "browser", parents=[snap], help="export to ONNX with int8 and q4 copies and score each on held-out, on CPU"
     )

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import duckdb
 
-from census import store
+from census import readers, store
 from census.export import DATASET_VERSION, commit
 from census.fields import has_fields
 
@@ -26,19 +26,19 @@ QUERIES = {
     "years": f"""
         SELECT a.year, count(*) AS articles, count(*) FILTER (a.n_authors_with_roles > 0) AS with_roles,
                round(sum(r.n) / nullif(sum(a.n_authors_with_roles), 0), 2) AS roles_per_author
-        FROM articles a LEFT JOIN (SELECT pmcid, count(*) AS n FROM assignments GROUP BY pmcid) r USING (pmcid)
+        FROM census_articles a LEFT JOIN (SELECT pmcid, count(*) AS n FROM census_roles GROUP BY pmcid) r USING (pmcid)
         WHERE {_RESEARCH} AND a.year IS NOT NULL GROUP BY a.year HAVING count(*) >= $min ORDER BY a.year""",
     "styles": f"""
-        SELECT a.year, a.style, count(*) AS articles FROM articles a
+        SELECT a.year, a.style, count(*) AS articles FROM census_articles a
         WHERE {_RESEARCH} AND a.year IS NOT NULL AND a.style <> 'none' GROUP BY ALL ORDER BY a.year, a.style""",
     "fields": f"""
         SELECT f.field, count(*) AS articles, count(*) FILTER (a.n_authors_with_roles > 0) AS with_roles
-        FROM articles a JOIN article_fields f USING (pmcid)
+        FROM census_articles a JOIN article_fields f USING (pmcid)
         WHERE {_RESEARCH} AND a.year = $year AND f.field IS NOT NULL
         GROUP BY ALL HAVING count(*) >= $min ORDER BY f.field""",
     "publishers": f"""
         SELECT a.publisher, count(*) AS articles, count(*) FILTER (a.n_authors_with_roles > 0) AS with_roles
-        FROM articles a WHERE {_RESEARCH} AND a.year = $year AND a.publisher IS NOT NULL
+        FROM census_articles a WHERE {_RESEARCH} AND a.year = $year AND a.publisher IS NOT NULL
         GROUP BY ALL ORDER BY articles DESC, a.publisher LIMIT {TOP_PUBLISHERS}""",
     # Share of the authors with at least one role, in each byline place, who hold each role. Articles with
     # roles and three or more authors only, so first, middle and last are distinct people.
@@ -47,12 +47,12 @@ QUERIES = {
             SELECT a.pmcid, p.position,
                    CASE WHEN p.position = 1 THEN 'first' WHEN p.position = a.n_authors THEN 'last' ELSE 'middle'
                    END AS place
-            FROM articles a, range(1, a.n_authors + 1) p(position)
+            FROM census_articles a, range(1, a.n_authors + 1) p(position)
             WHERE {_RESEARCH} AND a.n_authors_with_roles > 0 AND a.n_authors > 2
         ),
         held AS (
             SELECT r.role, au.pmcid, au.position, au.place FROM authors au
-            JOIN assignments r ON r.pmcid = au.pmcid AND r.author_position = au.position
+            JOIN census_roles r ON r.pmcid = au.pmcid AND r.author_position = au.position
         ),
         counts AS (
             SELECT role, coalesce(place, 'all') AS place, count(*) AS n FROM held
@@ -74,6 +74,7 @@ def aggregate(
 
     Refuses a database with unfinished units or no fields unless `partial`, like `census export`.
     """
+    readers.use_roles(con)
     (units_total, units_finished) = store.one(con, "SELECT count(*), count(*) FILTER (finished) FROM units") or (0, 0)
     fielded = has_fields(con)
     complete = bool(units_total) and units_total == units_finished and fielded
@@ -87,7 +88,7 @@ def aggregate(
     # Newest by volume, not max(year): a few articles dated ahead must not move it.
     (newest,) = store.one(
         con,
-        f"SELECT max(year) FROM (SELECT a.year FROM articles a WHERE {_RESEARCH} GROUP BY a.year"
+        f"SELECT max(year) FROM (SELECT a.year FROM census_articles a WHERE {_RESEARCH} GROUP BY a.year"
         " HAVING count(*) >= $min)",
         {"min": min_articles},
     ) or (None,)
@@ -103,13 +104,6 @@ def aggregate(
 
     parsed = "SELECT count(*) FROM articles WHERE style NOT IN ('error', 'missing', 'retry')"
     (articles,) = store.one(con, parsed) or (0,)
-    paired = store.one(con, "SELECT articles, f1 FROM paired_scores WHERE publisher = '(all)'")
-    # The paired score rests mostly on these two publishers, whose tags are themselves unchecked.
-    (mdpi_frontiers,) = store.one(
-        con,
-        "SELECT coalesce(sum(articles), 0) FROM paired_scores"
-        " WHERE publisher LIKE '%(MDPI)%' OR publisher LIKE 'Frontiers %'",
-    ) or (0,)
     data = {
         "snapshot": name,
         "dataset_version": DATASET_VERSION,
@@ -117,12 +111,10 @@ def aggregate(
         "code_commit": commit(),
         "openalex_sources": meta.get("openalex_sources"),
         "parser": meta.get("parser"),
+        "encoder": meta.get("encoder"),
         "complete": complete,
         "articles": articles,
         "focus_year": year,
-        "paired": {"articles": paired[0], "f1": paired[1], "mdpi_frontiers_share": round(mdpi_frontiers / paired[0], 3)}
-        if paired and paired[0]
-        else None,
         **{key: rows(key) for key in QUERIES},
     }
     first = min((row["year"] for row in data["years"] if row["with_roles"] >= min_articles), default=None)

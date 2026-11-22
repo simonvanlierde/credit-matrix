@@ -13,10 +13,10 @@ from pathlib import Path
 
 import duckdb
 
-from census import store
+from census import readers, store
 from census.fields import MULTIDISCIPLINARY, has_fields
 
-DATASET_VERSION = "1.0.0"
+DATASET_VERSION = "1.1.0"
 """Major: a file schema change that breaks readers. Minor: a new snapshot or an added column. Patch: a fix."""
 EXPORT_SCHEMA = "1"
 """Version of the public files' columns and meanings, separate from the local database's schema."""
@@ -60,7 +60,8 @@ One row per article that parsed.
 | field | string | OpenAlex field of the journal, see below |
 | domain | string | OpenAlex domain of that field, see below |
 | article_type | string | JATS article-type, e.g. `research-article` |
-| style | string | where the roles were read from, see below |
+| style | string | the article's markup, which decides where its roles come from, see below |
+| reader | string | who read the roles: `tags`, `rules` or `encoder`, see below; null when nobody did |
 | n_authors | int32 | authors in the byline, members of a consortium author not counted |
 | n_authors_with_roles | int32 | authors with at least one role |
 | license | string | the raw licence URL or text from the article |
@@ -78,8 +79,19 @@ journal matched no OpenAlex source. Fields are per journal, not per article.
 - `plos_uri`: roles tagged with `<role content-type="http://credit.niso.org/...">`.
 - `contrib_text`: free-text roles per author (`<role>` lists or contribution footnotes).
 - `statement_text`: one contribution statement naming authors by initials or name.
-- `none`: no roles read. This includes statements that name roles only in common words, without a
-  distinctive CRediT term such as conceptualization, data curation or original draft.
+- `none`: no tags and no per-author text. A statement of free text may still be here, in common words
+  without a distinctive CRediT term such as conceptualization, data curation or original draft
+  (a narrative statement); the encoder reads it. Without a statement, no roles were read.
+
+`reader` values:
+
+- `tags`: the publisher's own tags (`jats4r`, `plos_uri`).
+- `rules`: a rule parser read the per-author text (`contrib_text`).
+- `encoder`: a fine-tuned encoder read a free-text statement (`statement_text`, and `none` with a
+  statement), per `meta.json` under `provenance.encoder`. It reads narrative statements ("designed the
+  study") as well as CRediT-worded ones; on 200 articles held out of its training it scores
+  pair F1 0.96 on narrative statements and 0.97 on CRediT-worded ones against the reference labels.
+- null: no roles were read (a `none` article without a statement).
 
 ## assignments.parquet (CC0-1.0)
 
@@ -104,8 +116,9 @@ cite the article by its PMCID.
 | style | string | the article's style, see below |
 | statement | string | the statement as printed, see below |
 
-Roles were read from this text when `style` is `contrib_text` or `statement_text`, from tags when
-it is `jats4r` or `plos_uri`, and not at all when it is `none`. A `contrib_text` statement joins
+Roles were read from this text by the `reader` of the article's row in articles.parquet (`rules` for
+`contrib_text`, `encoder` for `statement_text` and for `none` with a statement), and from tags
+when `style` is `jats4r` or `plos_uri`. A `contrib_text` statement joins
 each author's text by author position: `1: text; 2: text`.
 """
 
@@ -116,6 +129,7 @@ def export(con: duckdb.DuckDBPyConnection, out: Path, name: str, partial: bool =
     Refuses a database with unfinished units or no fields unless `partial`. Writes to a sibling
     directory first, so a failed export leaves the previous one in place.
     """
+    readers.use_roles(con)
     (units_total, units_finished) = store.one(con, "SELECT count(*), count(*) FILTER (finished) FROM units") or (0, 0)
     fielded = has_fields(con)
     complete = bool(units_total) and units_total == units_finished and fielded
@@ -128,12 +142,12 @@ def export(con: duckdb.DuckDBPyConnection, out: Path, name: str, partial: bool =
     join = "LEFT JOIN article_fields f USING (pmcid)" if fielded else ""
     queries = {
         "articles": f"""
-            SELECT a.pmcid, a.doi, a.year, a.publisher, a.journal, {field}, a.article_type, a.style,
+            SELECT a.pmcid, a.doi, a.year, a.publisher, a.journal, {field}, a.article_type, a.style, a.reader,
                    a.n_authors, a.n_authors_with_roles, a.license, a.source_unit, a.version, a.xml_sha256
-            FROM articles a {join} WHERE a.style NOT IN ('error', 'missing', 'retry') ORDER BY a.pmcid""",
+            FROM census_articles a {join} WHERE a.style NOT IN ('error', 'missing', 'retry') ORDER BY a.pmcid""",
         "assignments": """
             SELECT s.pmcid, s.author_position, s.role, a.orcids[s.author_position] AS orcid
-            FROM assignments s JOIN articles a USING (pmcid) ORDER BY ALL""",
+            FROM census_roles s JOIN articles a USING (pmcid) ORDER BY ALL""",
         "statements": f"""
             SELECT pmcid, license, style, statement FROM articles
             WHERE statement IS NOT NULL AND regexp_matches(coalesce(license, ''), '{OPEN_LICENCE}')

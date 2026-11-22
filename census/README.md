@@ -114,13 +114,37 @@ The web app's paste-a-statement import runs a TypeScript port of `roles.py` and 
 (`src/core/statement.ts`). A test there runs it over `tests/corpus.jsonl` and requires the same
 output as `expected` here, so a change to one parser needs the same change in the other.
 
+## Who reads the roles
+
+The rule parser fills `assignments` for every article. The census's figures take the roles from
+the source that suits each style, defined once in `src/census/readers.py` as the temporary views
+`census_roles` and `census_articles` that `report`, `export`, `aggregate` and `norms` read:
+
+| Style | Roles come from | `reader` |
+| --- | --- | --- |
+| `jats4r`, `plos_uri` | the publisher's tags | `tags` |
+| `contrib_text` | the rule parser (per-author text) | `rules` |
+| `statement_text`, and `none` with a statement (narrative) | the encoder | `encoder` |
+| `none` without a statement | no roles | null |
+
+`census model apply --name RUN` replaces the table `encoder_assignments` with the Parquet parts of
+`census model predict --name RUN --corpus` and records the run in `meta` as `encoder`. It refuses
+parts that miss any statement the encoder is to read. Until a run is applied, `statement_text`
+falls back to the rules and a narrative statement has no roles. `census_articles` holds the
+`articles` columns with `n_authors_with_roles` counted from `census_roles`, so the articles with roles
+and the roles per author agree. The `articles.n_authors_with_roles` column and `assignments` keep the
+rule parser's reading, which the paired scores and the label scoring measure.
+
 ## Tables
 
 - `articles`: one row per article: stratum, PMC version and the XML's sha256, article type, DOI,
   journal, ISSNs, publisher, year, licence, style, author names and ORCIDs (bare, in author
   order), author counts, the text the roles were read from, unresolved initials. Style is `error`
   when the XML does not parse and `missing` when the bucket has no XML for it.
-- `assignments`: one row per author and role: PMCID, author position, role slug.
+- `assignments`: one row per author and role: PMCID, author position, role slug. Tags for tagged
+  styles, the rule parser's pairs otherwise.
+- `encoder_assignments` (after `census model apply`): the encoder's pairs for free-text statements;
+  an article it found no role in has one row with a null position and role.
 - `journals`, `journal_keys` and the `article_fields` view (after `fields`): the field holding the
   largest share of each journal's OpenAlex topic counts, matched by ISSN or by a title only one
   journal has. A journal whose top field holds under 45% (PLOS ONE, Scientific Reports) counts as
@@ -131,7 +155,7 @@ output as `expected` here, so a change to one parser needs the same change in th
   measures the parser on tens of thousands of articles without hand labels.
 - `units`: each bulk file or manifest chunk read, with its sha256, article count and whether it is
   finished.
-- `meta`: the source, schema version, parser hash, inventory date, and the OpenAlex snapshot date
+- `meta`: the source, schema version, parser hash, the applied encoder run, inventory date, and the OpenAlex snapshot date
   and code hash the fields came from.
 
 The database is local working data with author names in it. `census export` writes the public
@@ -139,6 +163,8 @@ dataset to `data/export/<snapshot>/`:
 
 - `articles.parquet` and `assignments.parquet`: role facts and bare ORCIDs, CC0. These hold no
   author names.
+- `articles.parquet` has a `reader` column (`tags`, `rules`, `encoder` or null) saying who read an
+  article's roles.
 - `statements.parquet`: the verbatim statement text of CC BY and CC0 articles only, each with its
   licence and style, under CC BY 4.0. The text names authors as the source does.
 - `meta.json`: dataset and file-schema versions, export date, code commit and hashes, whether the
@@ -152,11 +178,10 @@ and replaces the previous export only once the new one is written.
 `census aggregate` writes the counts the app's census page shows to `public/data/census.json` (about
 10 KB, committed): research articles and those with roles per year, roles per author, styles per
 year, fields and the 20 largest publishers in the last full year, the share of authors with roles
-holding each role by byline place, and the paired F1 with how much of it comes from MDPI and
-Frontiers. Groups under 1,000 articles are left out, and the years start at the first with 1,000
+holding each role by byline place. Groups under 1,000 articles are left out, and the years start at the first with 1,000
 articles with roles. The last full year is the one before the newest year with 1,000 articles. It
 is CC0, holds no names and no article rows, and records the snapshot, dataset version, code
-commit, parser hash and OpenAlex sources date. Like `export`, it refuses an incomplete database unless given `--partial`.
+commit, parser hash, encoder run and OpenAlex sources date. Like `export`, it refuses an incomplete database unless given `--partial`.
 
 ## Field norms for the app
 
@@ -401,36 +426,27 @@ against 0.901 and 0.543 for the other 27,671. The cut stays at 512 tokens becaus
 was trained with it. ModernBERT reads up to 8,192 tokens, so a longer limit is an option for a
 later run.
 
-The rule parser and the encoder are good at different things, so `hybrid` combines them. An
-article the rules give no role keeps none, an article with per-author contribution text
-(`contrib_text`) keeps the rules' reading, and every other article takes the encoder's roles:
-
-```sh
-uv run census model hybrid data/model/oa-2026-10/predictions/encoder-modernbert-120k-held_out.jsonl
-```
-
-It writes `hybrid-<run>-<set>.jsonl` beside the input. On the held-out set it scores F1 0.898 and
-exact 0.538, a little under the encoder alone, because tagged articles with statements the rules
-read nothing from now predict nothing. The label set is where it pays off. On its 160 articles
-(labelled by two language-model runs, with a third settling disagreements, and a person checking
-20 rows; scored on `oa-2026-10-set-opus-adj-defb.csv`), counting a statement that names no CRediT
-roles as giving none, F1 by style is:
+On the label set (160 articles labelled by two language-model runs, with a third settling
+disagreements and a person checking 20 rows; scored on `oa-2026-10-set-opus-adj-defb.csv`), counting
+a statement that names no CRediT roles as giving none, F1 by style is:
 
 | | statement_text | contrib_text | articles without roles, exact |
 | --- | --- | --- | --- |
 | rule parser | 0.932 | 0.997 | 0.868 |
 | encoder | **0.949** | 0.885 | 0.000 |
-| hybrid | **0.949** | **0.997** | **0.868** |
 
-The encoder reads roles out of narrative statements ("designed the study") that are not CRediT, and
-the rules' gate keeps them out. It does not keep them out of a statement that mixes CRediT roles
-with narrative: on those, the encoder's extra roles make the hybrid score below the rules alone.
+The encoder reads roles out of narrative statements ("designed the study") that are not CRediT
+wording, which the rule parser reads as none. The census therefore uses the encoder for free-text
+statements and the rules only for `contrib_text` (see "Who reads the roles"). On 200 untouched test
+articles the encoder scores pair F1 0.961 on narrative statements and 0.973 on CRediT-worded ones,
+against 0.000 and 0.860 for the stored rule parser (recall 0.77 against 0.97).
 
 #### Every free-text statement
 
 ```sh
 uv run census model predict --name modernbert-120k --corpus  # Parquet parts in predictions/encoder-<name>-corpus/
 uv run census model compare --name modernbert-120k           # the rule parser against the encoder
+uv run census model apply --name modernbert-120k             # make the encoder the reader of free text
 ```
 
 `--corpus` runs the encoder on every article whose statement is free text (styles `statement_text`
@@ -441,7 +457,7 @@ part. Resume with the same `--chunk` and database: a part that holds other artic
 stops the run. `--limit 1000` reads only the first 1,000 articles, into a directory of its own, to
 try a run.
 
-`compare` prints three tables and writes them to `predictions/encoder-<name>-corpus-comparison.json`:
+`apply` loads the run into the database (see "Who reads the roles"). `compare` prints three tables and writes them to `predictions/encoder-<name>-corpus-comparison.json`:
 research articles with roles per year, the share of authors holding each role by byline position,
 and per publisher how far the rule parser and the encoder agree. On `oa-2026-10` Ettin-68M read
 all 1,297,504 CRediT-worded free-text articles in 65 parts, in 81 minutes on one RTX 4090. Over all of them the
