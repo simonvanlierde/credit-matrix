@@ -434,7 +434,8 @@ uv run census model compare --name modernbert-120k           # the rule parser a
 ```
 
 `--corpus` runs the encoder on every article whose statement is free text (styles `statement_text`
-and `contrib_text`), 20,000 articles to a Parquet part (`--chunk` changes that). Each part is
+and `contrib_text`, and narrative statements, stored as style `none` with a statement), 20,000
+articles to a Parquet part (`--chunk` changes that). Each part is
 renamed into place only once it is complete, so a stopped run starts again at the first missing
 part. Resume with the same `--chunk` and database: a part that holds other articles than its chunk
 stops the run. `--limit 1000` reads only the first 1,000 articles, into a directory of its own, to
@@ -443,7 +444,7 @@ try a run.
 `compare` prints three tables and writes them to `predictions/encoder-<name>-corpus-comparison.json`:
 research articles with roles per year, the share of authors holding each role by byline position,
 and per publisher how far the rule parser and the encoder agree. On `oa-2026-10` Ettin-68M read
-all 1,297,504 free-text articles in 65 parts, in 81 minutes on one RTX 4090. Over all of them the
+all 1,297,504 CRediT-worded free-text articles in 65 parts, in 81 minutes on one RTX 4090. Over all of them the
 two readers agree at pair F1 0.881, and give exactly the same pairs for 54.4% of articles; on MDPI
 (485,266 articles) at 0.946. ModernBERT-base against the previous parser version agreed at 0.885,
 54.9% and 0.947.
