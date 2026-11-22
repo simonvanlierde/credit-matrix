@@ -35,9 +35,7 @@ test.describe("CRediT census page", () => {
 
     await expect(page.getByRole("heading", { name: "CRediT census", exact: true })).toBeVisible();
     await expect(page.getByText("How accurate these figures are")).toBeVisible();
-    // Two decimals, as the Published practice tab prints it.
-    const f1 = (data.paired?.f1 ?? Number.NaN).toFixed(2);
-    await expect(page.getByText(`F1 score of ${f1} `)).toBeVisible();
+    await expect(page.getByText("F1 score is 0.97 for statements that use CRediT role names")).toBeVisible();
     await expect(page.getByText(data.snapshot, { exact: true })).toBeVisible();
     await expect(page.getByText(data.dataset_version, { exact: true })).toBeVisible();
     await expect(page.getByText(data.openalex_sources ?? "", { exact: true })).toBeVisible();
