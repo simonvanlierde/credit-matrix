@@ -1391,10 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "How accurate these figures are"
 
 msgid "censusAccuracy"
-msgstr "I checked the parser against {labelled} labelled statements that use CRediT role names. It finds {recall} of the roles, and {precision} of what it finds is right. It reads only role names, so a statement written in prose counts as giving no roles. Where {articles} articles both tag their roles and print a statement, the parser's reading of the statement matches the tags with an F1 score of {f1} (1 means every role found and none wrong). But {share} of those articles are from MDPI and Frontiers, and nobody has checked the tags themselves."
-
-msgid "censusAccuracyUnscored"
-msgstr "I checked the parser against {labelled} labelled statements that use CRediT role names. It finds {recall} of the roles, and {precision} of what it finds is right. It reads only role names, so a statement written in prose counts as giving no roles."
+msgstr "I checked the model that reads free-text statements on {articles} articles it was not trained on. Against reference labels, its F1 score is {worded} for statements that use CRediT role names and {narrative} for statements in prose (1 means every role found and none wrong). The reference labels come from language-model runs, not from a person. Roles that publishers tag are taken as tagged, and nobody has checked those tags."
 
 msgid "censusIncomplete"
 msgstr "This snapshot is incomplete: some source files were not read, or some journals have no field yet."
@@ -1439,7 +1436,7 @@ msgid "censusStylesTitle"
 msgstr "How roles are marked up"
 
 msgid "censusStylesCaption"
-msgstr "Share of research articles per year, by where their roles were read from. Each article counts once, under the first of the four below that it uses. All four charts use the same scale. {year} is still being published, so its stretch is dashed."
+msgstr "Share of research articles per year, by where their roles were read from. Each article counts once, under the first of the four below that it uses. Statements in prose have no role markup and are not shown, though the model reads roles from them. All four charts use the same scale. {year} is still being published, so its stretch is dashed."
 
 msgid "censusStyleJats4r"
 msgstr "JATS4R role tags"
@@ -1583,13 +1580,13 @@ msgid "censusHowTitle"
 msgstr "How the census reads statements"
 
 msgid "censusHowRules"
-msgstr "A rule parser reads each article. Where the publisher tags each author's roles in the JATS XML, it takes the tags. Otherwise it reads the free-text statement clause by clause and pairs authors with roles. Only CRediT wording counts, so \"A.B. conceived the study\" gives no roles."
+msgstr "Where the publisher tags each author's roles in the JATS XML, the census takes the tags. Where roles are free text beside each author, a rule parser reads them. The rule parser counts only CRediT wording."
 
 msgid "censusHowModel"
-msgstr "A fine-tuned encoder, Ettin-68M, also reads every free-text statement. It is the census's browser model, made to run in a web browser. It finds more of the tagged roles than the rules do, at about the same precision, but it also gives roles to narrative statements that name none. The counts on this page come from the rule parser alone."
+msgstr "Every other free-text statement is read by a fine-tuned encoder, Ettin-68M, the census's browser model. It reads statements with CRediT role names and also statements in prose, such as \"designed the study\", which the rule parser reads as giving no roles. On 200 articles it was not trained on, its F1 score is 0.97 for CRediT wording and 0.96 for prose, against 0.86 and 0.00 for the rule parser."
 
 msgid "censusHowCaveat"
-msgstr "Both are scored against the roles publishers tag, and those tags are not gold. A tag can name a role the statement never gives. On 200 MDPI articles where the rule parser and the tags disagree, a language model judged the tags wrong on 192 and the parser alone wrong on 6. So an F1 score against the tags measures agreement with them, and it understates accuracy, most on MDPI."
+msgstr "These scores are against reference labels made by language-model runs that labelled each statement blind, with a further run settling disagreements. A person did not read every statement, so a score measures agreement with those labels. Tags from publishers are taken as given, and nobody has checked them."
 
 msgid "censusHowCode"
 msgstr "The census code"

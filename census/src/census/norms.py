@@ -9,7 +9,7 @@ from pathlib import Path
 
 import duckdb
 
-from census import store
+from census import readers, store
 from census.export import DATASET_VERSION, commit
 from census.fields import has_fields
 
@@ -39,7 +39,7 @@ ROLES = (
 )
 
 # Research articles with roles and a field, for both the article count and the shares.
-ARTICLES = """articles a JOIN article_fields f USING (pmcid)
+ARTICLES = """census_articles a JOIN article_fields f USING (pmcid)
     WHERE a.article_type = 'research-article' AND a.n_authors_with_roles > 0 AND f.field IS NOT NULL"""
 # The denominator is authors with at least one role: an author the parser gave no role (unresolved
 # initials) would otherwise count as holding none.
@@ -51,7 +51,7 @@ authors AS (
     SELECT s.pmcid, s.author_position, list(s.role) AS roles, any_value(arts.field) AS field,
            CASE WHEN any_value(arts.n_authors) = 1 THEN 'single' WHEN s.author_position = 1 THEN 'first'
                 WHEN s.author_position = any_value(arts.n_authors) THEN 'last' ELSE 'middle' END AS position
-    FROM assignments s JOIN arts USING (pmcid)
+    FROM census_roles s JOIN arts USING (pmcid)
     GROUP BY s.pmcid, s.author_position
 )
 SELECT field, position, count(*) AS authors,
@@ -64,6 +64,7 @@ def build(con: duckdb.DuckDBPyConnection, snapshot: str, min_articles: int = MIN
     """The norms as one JSON-ready dict. Raises ValueError on a database without fields."""
     if not has_fields(con):
         raise ValueError("no fields in this database; run `census fields` first")
+    readers.use_roles(con)
     articles = dict(
         con.execute(
             f"SELECT f.field, count(*) FROM {ARTICLES} GROUP BY f.field HAVING count(*) >= ?",

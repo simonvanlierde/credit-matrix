@@ -1391,10 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Hoe nauwkeurig deze cijfers zijn"
 
 msgid "censusAccuracy"
-msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen. Op {articles} artikelen die hun rollen taggen én een verklaring bevatten, komt wat de parser uit de verklaring leest overeen met de tags met een F1-score van {f1} (1 betekent: elke rol gevonden en geen enkele fout). Maar {share} van die artikelen komt van MDPI en Frontiers, en de tags zelf heeft niemand gecontroleerd."
-
-msgid "censusAccuracyUnscored"
-msgstr "Ik heb de parser gecontroleerd aan de hand van {labelled} gelabelde verklaringen die CRediT-rolnamen gebruiken. Hij vindt {recall} van de rollen, en {precision} van wat hij vindt klopt. Hij leest alleen rolnamen, dus een verklaring in lopende tekst telt als een verklaring zonder rollen."
+msgstr "Ik heb het model dat verklaringen in vrije tekst leest gecontroleerd op {articles} artikelen waarmee het niet is getraind. Tegen referentielabels is de F1-score {worded} voor verklaringen met CRediT-rolnamen en {narrative} voor verklaringen in lopende tekst (1 betekent: elke rol gevonden en geen enkele fout). De referentielabels komen van runs van taalmodellen, niet van een persoon. Rollen die uitgevers taggen worden overgenomen zoals ze getagd zijn, en niemand heeft die tags gecontroleerd."
 
 msgid "censusIncomplete"
 msgstr "Deze momentopname is onvolledig: sommige bronbestanden zijn niet gelezen, of tijdschriften hebben nog geen vakgebied."
@@ -1439,7 +1436,7 @@ msgid "censusStylesTitle"
 msgstr "Hoe rollen zijn opgemaakt"
 
 msgid "censusStylesCaption"
-msgstr "Aandeel onderzoeksartikelen per jaar, naar waar hun rollen uit zijn gelezen. Elk artikel telt één keer, onder de eerste van de vier hieronder die het gebruikt. Alle vier gebruiken dezelfde schaal. {year} wordt nog gepubliceerd, dus dat stuk is gestippeld."
+msgstr "Aandeel onderzoeksartikelen per jaar, naar waar hun rollen uit zijn gelezen. Elk artikel telt één keer, onder de eerste van de vier hieronder die het gebruikt. Verklaringen in lopende tekst hebben geen rolopmaak en staan er niet in, al leest het model er wel rollen uit. Alle vier gebruiken dezelfde schaal. {year} wordt nog gepubliceerd, dus dat stuk is gestippeld."
 
 msgid "censusStyleJats4r"
 msgstr "JATS4R-roltags"
@@ -1583,13 +1580,13 @@ msgid "censusHowTitle"
 msgstr "Hoe de census verklaringen leest"
 
 msgid "censusHowRules"
-msgstr "Een regelparser leest elk artikel. Waar de uitgever de rollen van elke auteur in de JATS-XML tagt, neemt hij de tags over. Anders leest hij de verklaring in vrije tekst, zinsdeel voor zinsdeel, en koppelt auteurs aan rollen. Alleen CRediT-termen tellen, dus ‘A.B. conceived the study’ levert geen rollen op."
+msgstr "Waar de uitgever de rollen van elke auteur in de JATS-XML tagt, neemt de census de tags over. Staan de rollen als vrije tekst naast elke auteur, dan leest een regelparser ze. Die telt alleen CRediT-termen."
 
 msgid "censusHowModel"
-msgstr "Een fijn afgestemde encoder, Ettin-68M, leest ook elke verklaring in vrije tekst. Het is het browsermodel van de census, gemaakt om in een webbrowser te draaien. Hij vindt meer van de getagde rollen dan de regelparser, bij ongeveer dezelfde precisie, maar hij geeft ook rollen aan verhalende verklaringen die er geen noemen. De tellingen op deze pagina komen alleen van de regelparser."
+msgstr "Elke andere verklaring in vrije tekst wordt gelezen door een fijn afgestemde encoder, Ettin-68M, het browsermodel van de census. Hij leest verklaringen met CRediT-rolnamen en ook verklaringen in lopende tekst, zoals ‘designed the study’, waaruit de regelparser geen rollen haalt. Op 200 artikelen waarmee hij niet is getraind, is zijn F1-score 0,97 voor CRediT-termen en 0,96 voor lopende tekst, tegen 0,86 en 0,00 voor de regelparser."
 
 msgid "censusHowCaveat"
-msgstr "Beide worden gemeten aan de rollen die uitgevers taggen, en die tags zijn geen gecontroleerde standaard. Een tag kan een rol noemen die de verklaring nergens vermeldt. Bij 200 MDPI-artikelen waar de regelparser en de tags verschillen, oordeelde een taalmodel dat de tags 192 keer fout waren en de parser alleen 6 keer. Een F1-score tegen de tags meet dus de overeenkomst ermee, en onderschat de nauwkeurigheid, het meest bij MDPI."
+msgstr "Deze scores zijn gemeten tegen referentielabels van runs van taalmodellen die elke verklaring blind labelden, waarbij een extra run meningsverschillen besliste. Een persoon heeft niet elke verklaring gelezen, dus een score meet de overeenstemming met die labels. Tags van uitgevers worden overgenomen zoals ze zijn, en niemand heeft ze gecontroleerd."
 
 msgid "censusHowCode"
 msgstr "De code van de census"

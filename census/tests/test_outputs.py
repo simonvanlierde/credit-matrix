@@ -412,6 +412,8 @@ def test_export(db, tmp_path, monkeypatch):
         "UPDATE articles SET statement = '1: Software; 2: Validation', style = 'contrib_text' WHERE pmcid = 'PMC1'"
     )
     assert export.export(db, out, "t", partial=True) == {"articles": 2, "assignments": 5, "statements": 2}
+    readers_ = dict(db.sql(f"SELECT pmcid, reader FROM '{out}/articles.parquet'").fetchall())
+    assert readers_ == {"PMC1": "rules", "PMC2": "rules"}  # no run applied: the rules read the free text
     names = [n for (a,) in db.sql("SELECT authors FROM articles").fetchall() for n in a]
     for table in ("articles", "assignments"):
         text = " ".join(map(str, db.sql(f"SELECT * FROM read_parquet('{out}/{table}.parquet')").fetchall()))

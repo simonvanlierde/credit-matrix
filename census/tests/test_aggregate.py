@@ -1,9 +1,11 @@
 import json
 
+import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 from helpers import article, contrib
 
-from census import aggregate, cli, store
+from census import aggregate, cli, readers, store
 
 XML = {
     "PMC1": article(
@@ -96,7 +98,6 @@ def test_aggregate_fields_publishers_and_floors(db, tmp_path):
     assert {row["year"] for row in data["styles"]} == {2024}
     assert data["fields"] == [{"field": "Medicine", "articles": 2, "with_roles": 1}]
     assert data["publishers"] == [{"publisher": "Test Press", "articles": 2, "with_roles": 1}]
-    assert data["paired"] is None  # no article both tags its roles and prints a statement
 
 
 def test_aggregate_command_refuses_incomplete(db, tmp_path, capsys):
@@ -107,16 +108,31 @@ def test_aggregate_command_refuses_incomplete(db, tmp_path, capsys):
     assert json.loads(out.read_text(encoding="utf-8"))["years"] == []  # under the size floor
 
 
-def test_aggregate_scores_tags_against_the_statement(tmp_path):
-    role = '<role content-type="http://credit.niso.org/contributor-roles/{}/">x</role>'
-    tagged = article(
-        contrib("Ann", "Smith", role.format("software")) + contrib("Bo", "Jones", role.format("validation")),
-        "<sec><title>Author contributions</title><p>AS: software. BJ: validation, software.</p></sec>",
-    ).replace(b"Test Press", b"Multidisciplinary Digital Publishing Institute (MDPI)")
-    path = tmp_path / "p.duckdb"
-    con = store.connect(path)
-    unit: store.Unit = {"unit": "u1", "sha256": "ab", "articles": 1, "retries": 0, "finished": True}
-    store.insert(con, [store.rows_for("PMC9", "all", tagged)], unit)
+def test_aggregate_counts_the_encoder_roles_of_narrative_statements(db, tmp_path):
+    parts = tmp_path / "part-00000.parquet"
+    # PMC2 is a narrative statement: style none with text. The encoder gives its first two authors roles.
+    pq.write_table(
+        pa.table({"pmcid": ["PMC2", "PMC2"], "author_position": [1, 2], "role": ["software", "software"]}), parts
+    )
+    con = store.connect(db)
+    con.execute("UPDATE articles SET statement = 'Ann and Bo wrote the code.' WHERE pmcid = 'PMC2'")
     con.close()
-    # Two tags, three parsed pairs of which two match: f1 = 2 * 2 / (3 + 2).
-    assert run(path, tmp_path / "census.json")["paired"] == {"articles": 1, "f1": 0.8, "mdpi_frontiers_share": 1.0}
+    assert run(db, tmp_path / "before.json", min_articles=1)["years"][0]["with_roles"] == 1
+    with store.connect(db) as con:
+        readers.apply_encoder(con, str(parts), "run-1")
+    data = run(db, tmp_path / "after.json", min_articles=1)
+    assert data["encoder"] == "run-1"
+    assert data["years"][0] == {"year": 2023, "articles": 2, "with_roles": 2, "roles_per_author": 1.2}
+    assert "paired" not in data
+
+
+def test_year_series_starts_with_credit_not_narrative_roles(db, tmp_path):
+    parts = tmp_path / "part-00000.parquet"
+    pq.write_table(pa.table({"pmcid": ["PMC2"], "author_position": [1], "role": ["software"]}), parts)
+    with store.connect(db) as con:
+        # A narrative statement a year before any CRediT one: its encoder roles do not start the series.
+        con.execute("UPDATE articles SET statement = 'Ann wrote the code.', year = 2022 WHERE pmcid = 'PMC2'")
+        readers.apply_encoder(con, str(parts), "run-1")
+    data = run(db, tmp_path / "out.json", min_articles=1)
+    assert data["years"][0]["year"] == 2023
+    assert "with_credit" not in data["years"][0]

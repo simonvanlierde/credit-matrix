@@ -1391,10 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Precisión de estas cifras"
 
 msgid "censusAccuracy"
-msgstr "He comprobado el analizador con {labelled} declaraciones etiquetadas que usan los nombres de rol de CRediT. Encuentra el {recall} de los roles, y el {precision} de lo que encuentra es correcto. Solo lee nombres de rol, así que una declaración escrita en prosa cuenta como si no indicara ningún rol. En {articles} artículos que etiquetan sus roles y además incluyen una declaración, la lectura que hace el analizador de la declaración coincide con las etiquetas con una puntuación F1 de {f1} (1 significa que encuentra todos los roles sin ningún error). Pero el {share} de esos artículos son de MDPI y Frontiers, y nadie ha comprobado las etiquetas."
-
-msgid "censusAccuracyUnscored"
-msgstr "He comprobado el analizador con {labelled} declaraciones etiquetadas que usan los nombres de rol de CRediT. Encuentra el {recall} de los roles, y el {precision} de lo que encuentra es correcto. Solo lee nombres de rol, así que una declaración escrita en prosa cuenta como si no indicara ningún rol."
+msgstr "He comprobado el modelo que lee las declaraciones en texto libre con {articles} artículos con los que no se entrenó. Frente a etiquetas de referencia, su puntuación F1 es {worded} en las declaraciones que usan nombres de roles CRediT y {narrative} en las declaraciones en prosa (1 significa que se encuentra cada rol y ninguno es erróneo). Las etiquetas de referencia proceden de ejecuciones de modelos de lenguaje, no de una persona. Los roles que las editoriales etiquetan se toman tal como están etiquetados, y nadie ha revisado esas etiquetas."
 
 msgid "censusIncomplete"
 msgstr "Esta instantánea está incompleta: algunos archivos de origen no se leyeron o hay revistas sin campo todavía."
@@ -1439,7 +1436,7 @@ msgid "censusStylesTitle"
 msgstr "Cómo se marcan los roles"
 
 msgid "censusStylesCaption"
-msgstr "Proporción de artículos de investigación por año, según de dónde se leyeron sus roles. Cada artículo cuenta una vez, en la primera de las cuatro formas de abajo que usa. Las cuatro usan la misma escala. {year} aún se está publicando, así que su tramo es discontinuo."
+msgstr "Proporción de artículos de investigación por año, según de dónde se leyeron sus roles. Cada artículo cuenta una vez, en la primera de las cuatro formas de abajo que usa. Las declaraciones en prosa no tienen marcado de roles y no se muestran, aunque el modelo lee roles en ellas. Las cuatro usan la misma escala. {year} aún se está publicando, así que su tramo es discontinuo."
 
 msgid "censusStyleJats4r"
 msgstr "Etiquetas de rol JATS4R"
@@ -1583,13 +1580,13 @@ msgid "censusHowTitle"
 msgstr "Cómo lee el censo las declaraciones"
 
 msgid "censusHowRules"
-msgstr "Un analizador basado en reglas lee cada artículo. Si la editorial etiqueta los roles de cada autor en el XML JATS, toma las etiquetas. Si no, lee la declaración en texto libre, cláusula por cláusula, y empareja autores con roles. Solo cuentan los términos de CRediT, así que «A.B. conceived the study» no da ningún rol."
+msgstr "Si la editorial etiqueta los roles de cada autor en el XML JATS, el censo toma las etiquetas. Si los roles son texto libre junto a cada autor, los lee un analizador basado en reglas, que solo cuenta los términos de CRediT."
 
 msgid "censusHowModel"
-msgstr "Un codificador ajustado, Ettin-68M, también lee cada declaración en texto libre. Es el modelo de navegador del censo, hecho para funcionar en un navegador web. Encuentra más roles etiquetados que las reglas, con una precisión parecida, pero también asigna roles a declaraciones narrativas que no nombran ninguno. Los recuentos de esta página proceden solo del analizador de reglas."
+msgstr "Cualquier otra declaración en texto libre la lee un codificador ajustado, Ettin-68M, el modelo de navegador del censo. Lee las declaraciones con nombres de roles CRediT y también las declaraciones en prosa, como «designed the study», en las que el analizador de reglas no lee ningún rol. Con 200 artículos con los que no se entrenó, su puntuación F1 es 0,97 con términos CRediT y 0,96 con prosa, frente a 0,86 y 0,00 del analizador de reglas."
 
 msgid "censusHowCaveat"
-msgstr "Ambos se miden contra los roles que etiquetan las editoriales, y esas etiquetas no son una referencia verificada. Una etiqueta puede nombrar un rol que la declaración nunca indica. En 200 artículos de MDPI en los que el analizador de reglas y las etiquetas discrepan, un modelo de lenguaje juzgó erróneas las etiquetas en 192 y solo el analizador en 6. Así que una puntuación F1 frente a las etiquetas mide el acuerdo con ellas y subestima la exactitud, sobre todo en MDPI."
+msgstr "Estas puntuaciones se miden frente a etiquetas de referencia hechas por ejecuciones de modelos de lenguaje que etiquetaron cada declaración a ciegas, con otra ejecución que resolvió los desacuerdos. Una persona no leyó cada declaración, así que una puntuación mide la coincidencia con esas etiquetas. Las etiquetas de las editoriales se toman tal cual, y nadie las ha revisado."
 
 msgid "censusHowCode"
 msgstr "El código del censo"

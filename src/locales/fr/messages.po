@@ -1391,10 +1391,7 @@ msgid "censusAccuracyTitle"
 msgstr "Quelle est la précision de ces chiffres"
 
 msgid "censusAccuracy"
-msgstr "J’ai vérifié l’analyseur sur {labelled} déclarations annotées qui emploient les noms de rôles CRediT. Il trouve {recall} des rôles, et {precision} de ce qu’il trouve est juste. Il ne lit que les noms de rôles : une déclaration rédigée en prose compte donc comme n’indiquant aucun rôle. Sur {articles} articles qui balisent leurs rôles et comportent aussi une déclaration, la lecture de la déclaration par l’analyseur concorde avec les balises avec un score F1 de {f1} (1 signifie que tous les rôles sont trouvés sans erreur). Mais {share} de ces articles viennent de MDPI et Frontiers, et personne n’a vérifié les balises elles-mêmes."
-
-msgid "censusAccuracyUnscored"
-msgstr "J’ai vérifié l’analyseur sur {labelled} déclarations annotées qui emploient les noms de rôles CRediT. Il trouve {recall} des rôles, et {precision} de ce qu’il trouve est juste. Il ne lit que les noms de rôles : une déclaration rédigée en prose compte donc comme n’indiquant aucun rôle."
+msgstr "J’ai vérifié le modèle qui lit les déclarations en texte libre sur {articles} articles qu’il n’a pas vus à l’entraînement. Par rapport à des étiquettes de référence, son score F1 est de {worded} pour les déclarations qui emploient les noms de rôles CRediT et de {narrative} pour les déclarations rédigées en prose (1 signifie que chaque rôle est trouvé et qu’aucun n’est faux). Les étiquettes de référence viennent d’exécutions de modèles de langage, pas d’une personne. Les rôles que les éditeurs balisent sont repris tels quels, et personne n’a vérifié ces balises."
 
 msgid "censusIncomplete"
 msgstr "Cet instantané est incomplet : certains fichiers sources n’ont pas été lus, ou des revues n’ont pas encore de domaine."
@@ -1439,7 +1436,7 @@ msgid "censusStylesTitle"
 msgstr "Comment les rôles sont balisés"
 
 msgid "censusStylesCaption"
-msgstr "Part des articles de recherche par année, selon l’endroit d’où leurs rôles ont été lus. Chaque article compte une fois, sous la première des quatre formes ci-dessous qu’il utilise. Les quatre partagent la même échelle. {year} est encore en cours de publication, d’où son tronçon en pointillés."
+msgstr "Part des articles de recherche par année, selon l’endroit d’où leurs rôles ont été lus. Chaque article compte une fois, sous la première des quatre formes ci-dessous qu’il utilise. Les déclarations en prose n’ont pas de balisage de rôles et ne figurent pas ici, bien que le modèle y lise des rôles. Les quatre partagent la même échelle. {year} est encore en cours de publication, d’où son tronçon en pointillés."
 
 msgid "censusStyleJats4r"
 msgstr "Balises de rôle JATS4R"
@@ -1583,13 +1580,13 @@ msgid "censusHowTitle"
 msgstr "Comment le recensement lit les déclarations"
 
 msgid "censusHowRules"
-msgstr "Un analyseur à base de règles lit chaque article. Quand l’éditeur balise les rôles de chaque auteur dans le XML JATS, il utilise les balises. Sinon, il lit la déclaration en texte libre, proposition par proposition, et associe auteurs et rôles. Seuls les termes CRediT comptent : « A.B. conceived the study » ne donne donc aucun rôle."
+msgstr "Quand l’éditeur balise les rôles de chaque auteur dans le XML JATS, le recensement utilise les balises. Quand les rôles sont du texte libre à côté de chaque auteur, un analyseur à base de règles les lit. Il ne compte que les termes CRediT."
 
 msgid "censusHowModel"
-msgstr "Un encodeur affiné, Ettin-68M, lit aussi chaque déclaration en texte libre. C’est le modèle navigateur du recensement, conçu pour s’exécuter dans un navigateur web. Il trouve plus de rôles balisés que les règles, avec une précision proche, mais il attribue aussi des rôles à des déclarations narratives qui n’en nomment aucun. Les chiffres de cette page proviennent uniquement de l’analyseur à base de règles."
+msgstr "Toute autre déclaration en texte libre est lue par un encodeur affiné, Ettin-68M, le modèle navigateur du recensement. Il lit les déclarations qui emploient les noms de rôles CRediT, ainsi que celles en prose, comme « designed the study », dont l’analyseur à base de règles ne tire aucun rôle. Sur 200 articles qu’il n’a pas vus à l’entraînement, son score F1 est de 0,97 pour les termes CRediT et de 0,96 pour la prose, contre 0,86 et 0,00 pour l’analyseur à base de règles."
 
 msgid "censusHowCaveat"
-msgstr "Les deux sont évalués par rapport aux rôles que balisent les éditeurs, et ces balises ne sont pas une référence vérifiée. Une balise peut nommer un rôle que la déclaration ne mentionne jamais. Sur 200 articles MDPI où l’analyseur à base de règles et les balises divergent, un modèle de langage a jugé les balises fausses dans 192 cas et l’analyseur seul en tort dans 6 cas. Un score F1 par rapport aux balises mesure donc l’accord avec elles, et il sous-estime l’exactitude, surtout chez MDPI."
+msgstr "Ces scores sont mesurés par rapport à des étiquettes de référence produites par des modèles de langage qui ont étiqueté chaque déclaration à l’aveugle, une exécution supplémentaire tranchant les désaccords. Une personne n’a pas lu chaque déclaration : un score mesure donc l’accord avec ces étiquettes. Les balises des éditeurs sont prises telles quelles, et personne ne les a vérifiées."
 
 msgid "censusHowCode"
 msgstr "Le code du recensement"
