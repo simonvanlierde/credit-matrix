@@ -473,6 +473,31 @@ def cmd_model_browser(args: argparse.Namespace) -> None:
     print(f"evaluation in {out / 'evaluation.json'}")
 
 
+def cmd_model_publish(args: argparse.Namespace) -> None:
+    import json
+
+    from census import browser
+
+    shipped = json.loads((ROOT / "model.json").read_text(encoding="utf-8"))
+    args.name, args.snapshot = shipped["run"], shipped["snapshot"]
+    out = _model_dir(args) / "browser" / args.name
+    files = browser.hub_files(_run_dir(args), out, ROOT / "MODEL_CARD.md", shipped["sha256"])
+    if args.dry_run:
+        print("\n".join(f"{name}\t{path}" for name, path in files.items()))
+        return
+    from huggingface_hub import CommitOperationAdd, HfApi
+
+    api = HfApi()
+    api.create_repo(shipped["repo"], exist_ok=True)
+    commit = api.create_commit(
+        shipped["repo"],
+        [CommitOperationAdd(name, str(path)) for name, path in files.items()],
+        commit_message=f"Upload {args.name}",
+    )
+    api.create_tag(shipped["repo"], tag=args.name, revision=commit.oid)
+    print(f"{commit.commit_url} (tag {args.name})")
+
+
 def main(argv: list[str] | None = None) -> int:
     def snapshot_option(default: str) -> argparse.ArgumentParser:
         parent = argparse.ArgumentParser(add_help=False)
@@ -626,6 +651,11 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--seed", type=int, default=20261019, help="seed for the sample")
     cmd.add_argument("--threads", type=int, default=16, help="CPU threads for onnxruntime (default: 16)")
     cmd.set_defaults(func=cmd_model_browser, labels=None)  # held-out only: a labelled CSV has no gold pairs
+    cmd = model_sub.add_parser(
+        "publish", help="push the run census/model.json names, with MODEL_CARD.md as README, to the Hugging Face Hub"
+    )
+    cmd.add_argument("--dry-run", action="store_true", help="check the hashes and list the files, upload nothing")
+    cmd.set_defaults(func=cmd_model_publish)
 
     args = parser.parse_args(argv)
     try:
