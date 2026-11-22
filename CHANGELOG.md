@@ -25,11 +25,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- The [census page](https://credit.duinlab.nl/census) no longer says its figures are preliminary. A
-  new note says how accurate they are: checked against 261 labelled statements that use CRediT role
-  names, the parser finds 83% of the roles and 99% of what it finds is right. It reads only role
-  names, so a statement written in prose counts as giving no roles. See
-  [Checked labels](census/README.md#checked-labels).
+- The [census page](https://credit.duinlab.nl/census) now counts roles that the census's encoder
+  reads from free-text statements, including statements in prose ("A.B. designed the study"), which
+  the rule parser read as giving no roles. Publisher tags and per-author role lists are read as
+  before. On 200 statements held back from training, the encoder scores F1 0.97 on CRediT wording
+  and 0.96 on prose, and the page's accuracy note now gives those scores. The share of
+  research articles with roles rises by 3 to 5 points a year (2025: 50% to 55%). The census
+  dataset's `articles.parquet` gains a `reader` column (`tags`, `rules` or `encoder`). See
+  [Who reads the roles](census/README.md#who-reads-the-roles).
 
 ### Fixed
 
