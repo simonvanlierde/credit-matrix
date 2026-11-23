@@ -111,7 +111,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .node-version
           cache: true
@@ -125,13 +125,13 @@ jobs:
       # renovate.json5 included, which biome skips. After the install, so the
       # $schema paths in biome.json and wrangler.jsonc resolve and both files are
       # also checked against their schemas.
-      - uses: simonvanlierde/jsonvet@83df66110a108e0fa4b7d2b2adcef6831f618e05 # v3.3.1
+      - uses: simonvanlierde/jsonvet@b56355ba1b7dd807944177a126592f8cb2cd3255 # v3.5.1
 
       # integrations/quarto/credit-matrix.test.ts renders a document with the filter.
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
 
       # integrations/typst/credit-matrix.test.ts compiles the Typst package's examples.
-      - uses: typst-community/setup-typst@6a2cfaf0b28d636b00148f965e315bae81079aaa # v5.3.1
+      - uses: typst-community/setup-typst@00ad6338f0b34724ea002136bfb701a6c18585b0 # v5.3.2
         with:
           typst-version: 0.15.1
 
@@ -216,7 +216,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .node-version
           cache: true
@@ -331,7 +331,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .node-version
           install: false
@@ -411,7 +411,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .node-version
           cache: true
@@ -497,7 +497,7 @@ jobs:
           persist-credentials: false
 
       - if: steps.gate.outputs.run == 'true'
-        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .node-version
           cache: true
@@ -599,7 +599,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .node-version
           cache: true
