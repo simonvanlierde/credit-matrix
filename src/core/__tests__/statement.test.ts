@@ -1168,3 +1168,296 @@ describe("supervisor lists", () => {
     ]);
   });
 });
+
+describe("initials written without the diacritics of the name", () => {
+  // No author's name has a mark, so only the token can need folding.
+  const plain = [author("Sema", "Yılmaz"), author("Sevil", "Sahin")];
+  // Some names have marks.
+  const marked = [author("Quốc đạt", "Nguyễn"), author("Ada", "Lovelace")];
+  // Only one word of one part has a mark.
+  const partlyMarked = [author("Özge Ay", "Kaya"), author("Ada", "Lovelace")];
+
+  it("falls back to the folded spelling when only some letters of the token lose a mark", () => {
+    // Only the first of the two letters has a mark, so the second pass must not be skipped.
+    expect(pairsOf("ŞY: software", plain)).toEqual([[0, "software"]]);
+  });
+
+  it("falls back to the folded spelling when every letter of the token loses a mark", () => {
+    expect(pairsOf("ŞŞ: software", plain)).toEqual([[1, "software"]]);
+  });
+
+  it("folds the marks of the author's own name, one word of a part at a time", () => {
+    // "Özge Ay": the given name has a mark and a second word has none; the token has none.
+    expect(pairsOf("OK: software", partlyMarked)).toEqual([[0, "software"]]);
+  });
+
+  it("reads a lower-case đ as d", () => {
+    expect(pairsOf("QDN: software", marked)).toEqual([[0, "software"]]);
+  });
+});
+
+describe("a clause of roles after a clause that ends in a name the parser does not know", () => {
+  const authors = [author("Ada", "Lovelace")];
+
+  it("does not give the roles to the people before it when the clause opens with a name", () => {
+    expect(pairsOf("AL: software; Dunn, C: visualization", authors)).toEqual([[0, "software"]]);
+  });
+
+  it("still gives them to the people before it when a lower-case word follows the stray capital", () => {
+    expect(pairsOf("AL: software; Dunn, C wrote visualization", authors)).toEqual([
+      [0, "software"],
+      [0, "visualization"],
+    ]);
+  });
+});
+
+describe("clause boundaries and 'all other authors' in odd layouts", () => {
+  const crew = [
+    author("Ada", "Lovelace"),
+    author("Charles", "Darwin"),
+    author("Rosalind", "Franklin"),
+    author("Grace", "Hopper"),
+  ];
+
+  // What each row pins is the way the statement is cut into clauses, so a row is a whole statement.
+  it.each<[string, string, [number, string][], string[]]>([
+    // Role-first layouts: the full stop between roles and the initials that close their clause.
+    [
+      "a full stop before an unknown name opens a clause",
+      "Software. ZZ; validation, A.L.",
+      [[0, "validation"]],
+      ["ZZ"],
+    ],
+    [
+      "a full stop before initials closes a role clause",
+      "Software. A.L.; Validation, C.D.",
+      [
+        [0, "software"],
+        [1, "validation"],
+      ],
+      [],
+    ],
+    [
+      "a full stop before a full name opens a clause",
+      "Software. Ada Lovelace; Validation, C.D.",
+      [[1, "validation"]],
+      [],
+    ],
+    [
+      "a stray word before the semicolon",
+      "h;RF;HG validation",
+      [
+        [2, "validation"],
+        [3, "validation"],
+      ],
+      [],
+    ],
+    [
+      "a sentence with no name before the closing initials",
+      "supervision;r. AL;ZZ.supervision",
+      [[0, "supervision"]],
+      ["ZZ."],
+    ],
+    ["names after a semicolon with no role to pair", "Software; AL", [], []],
+    ["a statement that names nobody", "Done.", [], []],
+    // Two sets of initials one full stop apart.
+    ["a second author's initials before a role start a sentence", "C.D. R.F. resources", [[2, "resources"]], []],
+    [
+      "two authors one full stop apart in a role-first clause",
+      "Software, A.L.. C.D.; validation, R.F.",
+      [
+        [0, "software"],
+        [2, "validation"],
+      ],
+      [],
+    ],
+    ["initials then a role then a name with a comma", "resources, RF. Dunn, C.", [[2, "resources"]], []],
+    ["initials with a full stop, then initials without", "Investigation, CD. RF", [[1, "investigation"]], []],
+    ["initials that join only with a second known author", "AL. C.", [], ["AL. C."]],
+    ["initials that fit no author keep the token whole", "Rosalind Franklin.funding acquisition ZZ.", [], ["ZZ."]],
+    ["a full stop in a lead-in without a space", "Rosalind Franklin wrote.software, ZZ", [], ["ZZ"]],
+    ["a comma after initials continues the clause", "G.H., and software, Ada Lovelace.", [[3, "software"]], []],
+    // Supervision.
+    ["a dash after 'of' names no supervisor", "under supervision of-AL", [], []],
+    [
+      "the supervisor right after 'of' counts even when a verb follows",
+      "A.L.: methodology, under the supervision of C.D. wrote the draft",
+      [
+        [0, "methodology"],
+        [1, "supervision"],
+      ],
+      [],
+    ],
+    [
+      "'under the ... of' reads as supervision only for the supervision role",
+      "A.L.: supervision; C.D.: validation, under the software of R.F.",
+      [
+        [0, "supervision"],
+        [1, "software"],
+        [1, "validation"],
+      ],
+      [],
+    ],
+    ["'supervised by' before a role names no supervisor", "Software, supervised by software", [], []],
+    [
+      "a capital And joins supervisors",
+      "A.L.: software; C.D.: validation, under the supervision of R.F. And G.H.",
+      [
+        [0, "software"],
+        [1, "validation"],
+        [2, "supervision"],
+        [3, "supervision"],
+      ],
+      [],
+    ],
+    [
+      "a role after words that open a new clause (with, by)",
+      "A.L. wrote the paper with validation by C.D.",
+      [[1, "validation"]],
+      [],
+    ],
+    // "The remaining authors (C.D.)" names who it means, in any of these spellings.
+    [
+      "an apposition naming one author",
+      "Validation: the remaining authors (author 1-2: C.D.)",
+      [[1, "validation"]],
+      [],
+    ],
+    [
+      "an apposition with a range of two-digit numbers",
+      "Validation: the remaining authors (authors 10-12:C.D.)",
+      [[1, "validation"]],
+      [],
+    ],
+    [
+      "an apposition with a space before the colon",
+      "Validation: the remaining authors (authors 1-3 : C.D.)",
+      [[1, "validation"]],
+      [],
+    ],
+    [
+      "names after 'and' and a comma are not an apposition",
+      "Validation: all other authors and, C.D.",
+      [
+        [0, "validation"],
+        [1, "validation"],
+        [2, "validation"],
+        [3, "validation"],
+      ],
+      [],
+    ],
+    [
+      "the remaining authors before a colon, in mid-clause",
+      "A.L.: software and the remaining authors: validation",
+      [
+        [0, "software"],
+        [1, "validation"],
+        [2, "validation"],
+        [3, "validation"],
+      ],
+      [],
+    ],
+    [
+      "an approval-like word in a clause that has roles",
+      "A.L.: gave the software and validation; C.D.: methodology",
+      [
+        [0, "software"],
+        [0, "validation"],
+        [1, "methodology"],
+      ],
+      [],
+    ],
+    [
+      "supervision as a plain role",
+      "A.L.: supervision of the group; C.D.: validation",
+      [
+        [0, "supervision"],
+        [1, "validation"],
+      ],
+      [],
+    ],
+    // "All other authors" and who it leaves out.
+    [
+      "a name after 'all other authors' and a comma is who it means",
+      "all other authors, AL : visualization",
+      [[0, "visualization"]],
+      [],
+    ],
+    [
+      "all other authors after an unknown name and a colon",
+      "Ada Lovelace. XY:remaining authors software",
+      [
+        [0, "software"],
+        [1, "software"],
+        [2, "software"],
+        [3, "software"],
+      ],
+      ["XY"],
+    ],
+    [
+      "all other authors after all authors",
+      "All authors: software. All other authors: validation",
+      [
+        [0, "software"],
+        [1, "software"],
+        [2, "software"],
+        [3, "software"],
+      ],
+      [],
+    ],
+    [
+      "a colon separated from the heading by a space",
+      "Ada Lovelace: software. Charles Darwin: methodology. All other authors : validation",
+      [
+        [0, "software"],
+        [1, "methodology"],
+        [2, "validation"],
+        [3, "validation"],
+      ],
+      [],
+    ],
+    [
+      "all other authors after the first pair of the clause",
+      "Ada Lovelace software, all other authors validation",
+      [
+        [0, "software"],
+        [1, "validation"],
+        [2, "validation"],
+        [3, "validation"],
+      ],
+      [],
+    ],
+    [
+      "all other authors twice in one clause",
+      "Ada Lovelace: software, all other authors: validation, all other authors methodology",
+      [
+        [0, "software"],
+        [1, "methodology"],
+        [1, "validation"],
+        [2, "methodology"],
+        [2, "validation"],
+        [3, "methodology"],
+        [3, "validation"],
+      ],
+      [],
+    ],
+    [
+      "an unknown name before the heading, then the remaining authors",
+      "and;the remaining authors;ZZ visualization",
+      [
+        [0, "visualization"],
+        [1, "visualization"],
+        [2, "visualization"],
+        [3, "visualization"],
+      ],
+      ["ZZ"],
+    ],
+  ])("%s", (_, text, pairs, unresolved) => {
+    expect(run(text, crew)).toEqual({ pairs, unresolved });
+  });
+
+  it("reads a one-letter name that ends right before a semicolon as a name", () => {
+    const withMononym = [author("Ada", "Lovelace"), author("", "Z")];
+    expect(run("Z; validation, A.L.", withMononym)).toEqual({ pairs: [[0, "validation"]], unresolved: [] });
+  });
+});
