@@ -22,6 +22,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   written in CRediT terms and in the authors' own words. On 200 statements held back until the model
   was chosen, it finds author-role pairs at F1 0.96 in prose statements and 0.97 in CRediT ones; see
   its [model card](census/MODEL_CARD.md). `census model publish` uploads it.
+- The CLI reference says [which statements OpenAlex reads](docs/cli.md#which-statements-openalex-reads):
+  all four English formats, but not a French statement or one without a writing role.
 
 ### Changed
 
