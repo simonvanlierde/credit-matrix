@@ -1,6 +1,6 @@
 {
   "run": "ettin-68m-onepass-b8-s2",
-  "revision": "df9376100fb3b7f4ae057d1e52fe54dc0e2e4568",
+  "revision": "eb1b28ed6b489d0967f4dc19f131e1250edb5d71",
   "snapshot": "oa-2026-10",
   "repo": "simonvanlierde/credit-statement-reader",
   "sha256": {
