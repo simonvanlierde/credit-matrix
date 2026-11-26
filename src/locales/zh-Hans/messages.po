@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT 是 ANSI/NISO 标准（<cc>CC BY 4.0</cc>）。本项目独立于 NISO，未获 NISO 认可。"
 
 msgid "aboutPrivacy"
-msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。\n\n本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在您的浏览器中运行脚本或设置 Cookie。\n\n导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在您的浏览器中处理，绝不会上传。\n\n首次用模型读取声明时，会从 huggingface.co (*.hf.co) 下载模型。声明在您的浏览器中读取，绝不会上传。\n\n除此之外，任何内容都不会离开您的浏览器：草稿仅保存在本地存储中，您是否关闭了“入门”清单或复制过声明、以及您上次选择的写作工具也一样。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给您选择的应用。\n\n在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录凭证包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
+msgstr "查询 ORCID iD 时，浏览器会将其发送到 pub.orcid.org。查询 DOI 时，会将其连同本站的联系邮箱一起发送到 api.crossref.org；若 Crossref 没有该记录，则发送到 api.datacite.org。\n\n本站的托管方 Cloudflare 在其自己的服务器上汇总统计页面请求数，不会在您的浏览器中运行脚本或设置 Cookie。\n\n导入 CITATION.cff 或 .zenodo.json 时，会从本站加载 citesync 转换器和 Python 运行时；文件在您的浏览器中处理，绝不会上传。\n\n首次用模型读取声明时，会从 huggingface.co (*.hf.co) 下载模型。声明在您的浏览器中读取，绝不会上传。之后模型会保留在此浏览器的网站数据中，直到您清除。\n\n除此之外，任何内容都不会离开您的浏览器：草稿仅保存在本地存储中，您是否关闭了“入门”清单或复制过声明、以及您上次选择的写作工具也一样。向合著者发出的询问及其回复仅保存在此浏览器中；除非取消勾选，JSON 导出会包含它们。发送回复时，含有该人姓名和 iD 的链接会交给您选择的应用。\n\n在回答中使用 ORCID 登录会将合著者带到 orcid.org 再返回；之后登录凭证包含在回复链接中，并与回答一起保存，JSON 导出中也包括在内；它带有合著者 ORCID 记录上的姓名。打开已签名的回答或导入含有它的 JSON 时，会从 orcid.org 获取 ORCID 的公钥进行核验。"
 
 msgid "accessibilityStatement"
 msgstr "无障碍声明"
@@ -1355,16 +1355,13 @@ msgid "statementOnlyCredit"
 msgstr "只读取 CRediT 角色名称，例如 Conceptualization 或 Writing – original draft，不读取描述谁做了什么的句子。"
 
 msgid "statementReaderAbout"
-msgstr "模型也能读取“A.B. 设计了研究”这类句子。它在本设备上运行，声明不会离开这里。首次使用时会下载 {size}。"
+msgstr "模型也能读取“A.B. 设计了研究”这类句子，并核对规则找到的角色。它在本设备上运行，声明不会离开这里。首次使用时会下载 {size}。"
 
 msgid "statementReaderRead"
 msgstr "用模型读取"
 
-msgid "statementReaderDownloading"
-msgstr "正在下载模型：{percent}%"
-
 msgid "statementReaderReading"
-msgstr "正在读取第 {done} 位贡献者（共 {of} 位）"
+msgstr "正在读取声明"
 
 msgid "statementReaderFailed"
 msgstr "模型无法加载，因此显示的角色来自规则。请检查网络连接后重试。"
@@ -1377,6 +1374,18 @@ msgstr "{role}（请核对）"
 
 msgid "statementMaybe"
 msgstr "请核对，未加入：{roles}"
+
+msgid "statementReaderLoading"
+msgstr "正在加载模型"
+
+msgid "statementReaderChecked"
+msgstr "已由模型核对。标有“模型未找到”的角色可能有误；模型还会建议规则漏掉的角色，请加入声明中写到的那些。"
+
+msgid "statementDoubtRole"
+msgstr "{role}（模型未找到）"
+
+msgid "statementSuggested"
+msgstr "模型还找到："
 
 msgid "errStatementTooLong"
 msgstr "此文本超过 {limit} 个字符。请只粘贴贡献声明。"

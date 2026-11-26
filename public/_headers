@@ -15,12 +15,16 @@
 # - img-src needs blob:/data: for the heatmap PNG (canvas -> createObjectURL).
 # - connect-src names the lookup APIs the browser calls directly
 #   (ORCID, Crossref, and DataCite for DOIs Crossref does not hold), and
-#   orcid.org for the keys that check a co-author's ORCID sign-in, and the
-#   Hugging Face Hub (huggingface.co, which redirects to its *.hf.co CDN) for the
-#   statement reader's model, fetched only when someone asks for it.
+#   orcid.org for the keys that check a co-author's ORCID sign-in. The statement
+#   reader's worker has its own policy below.
+# COEP credentialless with COOP same-origin isolates the page, so the statement
+# reader can run threads (SharedArrayBuffer). Cross-origin requests without CORS
+# then go without cookies; every outside call here uses CORS anyway. Safari
+# ignores credentialless, so the reader runs one thread there.
 # `vite` does not read this file, so the dev server runs without a CSP.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; worker-src 'self'; connect-src 'self' https://pub.orcid.org https://orcid.org https://api.crossref.org https://api.datacite.org https://huggingface.co https://*.hf.co; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; worker-src 'self'; connect-src 'self' https://pub.orcid.org https://orcid.org https://api.crossref.org https://api.datacite.org; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'
+  Cross-Origin-Embedder-Policy: credentialless
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Permissions-Policy: camera=(), geolocation=(), microphone=()
@@ -43,6 +47,13 @@
 /citesync-worker.js
   ! Content-Security-Policy
   Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'
+
+# The statement reader's worker fetches the model from the Hugging Face Hub
+# (huggingface.co, which redirects to its *.hf.co CDN), only when someone asks for
+# it; no page may connect there. Its thread workers load this same script.
+/assets/statement-reader.worker-*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; connect-src 'self' https://huggingface.co https://*.hf.co
 
 # /citesync/* (the runtime and the pinned wheels) keeps Cloudflare's default
 # Cache-Control (max-age=0, must-revalidate, with an ETag): the paths have no

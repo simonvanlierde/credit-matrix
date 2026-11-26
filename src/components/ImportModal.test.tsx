@@ -514,28 +514,46 @@ describe("a pasted CRediT statement", () => {
     expect(screen.queryByText(english.importChoiceTitle)).toBeNull();
   });
 
-  it("reads prose with the model, marks close calls, and applies the roles it gives", async () => {
+  const readButton = () => screen.getByRole("button", { name: english.statementReaderRead });
+  /** A reading that waits for `resolve`, and rejects as the real one does when aborted. */
+  const deferReading = (progress?: Parameters<Parameters<typeof readStatement>[2]>[0]) => {
     const reading = Promise.withResolvers<Awaited<ReturnType<typeof readStatement>>>();
-    vi.mocked(readStatement).mockImplementation((_statement, _names, onProgress) => {
-      onProgress({ phase: "read", done: 1, of: 2 });
+    vi.mocked(readStatement).mockImplementation((_statement, _names, onProgress, signal) => {
+      if (progress) onProgress(progress);
+      signal?.addEventListener("abort", () => reading.reject(new DOMException("stopped", "AbortError")));
       return reading.promise;
     });
+    return reading;
+  };
+
+  it("reads prose with the model, marks close calls, and applies the roles it gives", async () => {
+    const reading = deferReading({ phase: "read", done: 1, of: 2 });
     const { onApplyStatement } = renderModal(2, undefined, {
       authors: [createAuthor("Lovelace, Ada"), createAuthor("Charles Darwin")],
     });
-    paste("A.L. conceived the study and wrote the software. C.D. analysed the data.");
+    paste("A.L. conceived the study and wrote the code. C.D. analysed the data.");
     await review();
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.statementReaderRead })));
+    readButton().focus();
+    await act(async () => fireEvent.click(readButton()));
     expect(vi.mocked(readStatement).mock.calls[0]?.[1]).toEqual(["Ada Lovelace", "Charles Darwin"]);
-    expect(screen.getByText("Reading for contributor 2 of 2")).toBeTruthy();
+    // The words stay the same while it reads, so a screen reader says them once; the number is aria-hidden.
+    const status = screen.getByText(english.statementReaderReading);
+    expect(status.textContent).toBe(`${english.statementReaderReading} 50%`);
+    expect(status.querySelector("[aria-hidden=true]")?.textContent).toBe(" 50%");
+    // Still focusable while busy, and a second click starts nothing.
+    expect(readButton().getAttribute("aria-disabled")).toBe("true");
+    expect(document.activeElement).toBe(readButton());
+    fireEvent.click(readButton());
+    expect(readStatement).toHaveBeenCalledTimes(1);
 
     const labels = ["conceptualization", "formal-analysis", "software"];
     const probabilities = [
       [0.98, 0.1, 0.5],
       [0.05, 0.97, 0.3],
     ];
-    await act(async () => reading.resolve({ labels, probabilities, threshold: 0.4, loadMs: 1, readMs: 1 }));
-    expect(screen.getByText(english.statementReaderUsed)).toBeTruthy();
+    await act(async () => reading.resolve({ labels, probabilities, threshold: 0.4 }));
+    expect(screen.getByText(english.statementReaderUsed).getAttribute("role")).toBe("status");
+    expect(document.activeElement?.id).toBe("statement-review-title");
     expect(listOf("Lovelace, Ada")).toBe("Conceptualization, Software (check this)");
     expect(listOf("Charles Darwin")).toBe("Formal analysisCheck this, not added: Software");
 
@@ -546,14 +564,97 @@ describe("a pasted CRediT statement", () => {
     expect(next.map(roles)).toEqual([["Conceptualization", "Software"], ["Formal analysis"]]);
   });
 
+  it("checks the rules' roles with the model, and adds a suggestion only when taken", async () => {
+    vi.mocked(readStatement).mockResolvedValue({
+      labels: ["conceptualization", "software", "validation"],
+      probabilities: [
+        [0.98, 0.1, 0.9],
+        [0.1, 0.95, 0.1],
+      ],
+      threshold: 0.4,
+    });
+    const { onApplyStatement } = renderModal(2, undefined, {
+      authors: [createAuthor("Ada Lovelace"), createAuthor("Charles Darwin")],
+    });
+    paste("A.L.: conceptualization, software. C.D.: software.");
+    await review();
+    await act(async () => fireEvent.click(readButton()));
+    expect(screen.getByText(english.statementReaderChecked)).toBeTruthy();
+    expect(listOf("Ada Lovelace")).toBe(
+      `Conceptualization, Software (not found by the model)${english.statementSuggested}Validation`,
+    );
+    expect(listOf("Charles Darwin")).toBe("Software");
+    const validation = screen.getByRole("button", { name: "Validation" });
+    expect(validation.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(validation);
+    expect(validation.getAttribute("aria-pressed")).toBe("true");
+    expect(listOf("Ada Lovelace")).toBe(
+      `Conceptualization, Software (not found by the model), Validation${english.statementSuggested}Validation`,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
+    const [next, added] = onApplyStatement.mock.calls[0] ?? [];
+    expect(added).toBe(4);
+    const roles = (author: Author) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(next.map(roles)).toEqual([["Conceptualization", "Software", "Validation"], ["Software"]]);
+  });
+
   it("keeps the rules' roles and says so when the model cannot load", async () => {
     vi.mocked(readStatement).mockRejectedValue(new Error("offline"));
     renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });
     paste("AL: conceptualization.");
     await review();
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.statementReaderRead })));
-    expect(screen.getByText(english.statementReaderFailed)).toBeTruthy();
+    await act(async () => fireEvent.click(readButton()));
+    expect(screen.getByRole("alert").textContent).toBe(english.statementReaderFailed);
     expect(listOf("Ada Lovelace")).toBe("Conceptualization");
+    vi.mocked(readStatement).mockResolvedValue({
+      labels: ["conceptualization"],
+      probabilities: [[0.9]],
+      threshold: 0.4,
+    });
+    await act(async () => fireEvent.click(readButton()));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText(english.statementReaderChecked)).toBeTruthy();
+  });
+
+  it("stops a reading on Back, and reads the same statement afresh after", async () => {
+    deferReading();
+    renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });
+    paste("AL: conceptualization.");
+    await review();
+    await act(async () => fireEvent.click(readButton()));
+    const [, , , signal] = vi.mocked(readStatement).mock.calls[0] ?? [];
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.statementBack })));
+    expect(signal?.aborted).toBe(true);
+    await review();
+    expect(readButton().getAttribute("aria-disabled")).toBe("false");
+    expect(screen.queryByText(english.statementReaderLoading)).toBeNull();
+  });
+
+  it("drops a reading once the roster changes, so roles never land on the wrong contributor", async () => {
+    vi.mocked(readStatement).mockResolvedValue({ labels: ["software"], probabilities: [[0.9]], threshold: 0.4 });
+    const ada = createAuthor("Ada Lovelace");
+    const view = renderModal(1, undefined, { authors: [ada] });
+    paste("AL: conceptualization.");
+    await review();
+    await act(async () => fireEvent.click(readButton()));
+    expect(screen.getByRole("button", { name: "Software" })).toBeTruthy();
+    view.rerender(
+      <IntlProvider locale="en" messages={en}>
+        <ImportModal
+          open
+          existingContributorCount={2}
+          authors={[createAuthor("Charles Darwin"), ada]}
+          graded={false}
+          onImport={vi.fn()}
+          onLink={async () => null}
+          onApplyStatement={vi.fn()}
+          onClose={vi.fn()}
+        />
+      </IntlProvider>,
+    );
+    expect(screen.queryByRole("button", { name: "Software" })).toBeNull();
+    expect(readButton()).toBeTruthy();
   });
 
   it("refuses a statement over the length cap", async () => {

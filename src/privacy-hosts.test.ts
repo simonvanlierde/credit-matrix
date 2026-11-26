@@ -4,10 +4,12 @@ import { expect, it } from "vitest";
 // Vitest runs from the repository root.
 const read = (path: string) => readFileSync(path, "utf8");
 
-// The site-wide policy is the first CSP in _headers; the citation worker's own policy allows no outside host.
-const csp = read("public/_headers").match(/Content-Security-Policy: (.*)/)?.[1] ?? "";
-const hosts = [...(csp.match(/connect-src ([^;]*)/)?.[1] ?? "").matchAll(/https:\/\/([^\s;]+)/g)].map(
-  ([, host]) => host ?? "",
+// Every policy in _headers: the site-wide one, and the workers' own (the statement reader's reaches the Hub).
+const csp = [...read("public/_headers").matchAll(/Content-Security-Policy: (.*)/g)]
+  .map(([, policy]) => policy)
+  .join("\n");
+const hosts = [...csp.matchAll(/connect-src ([^;\n]*)/g)].flatMap(([, sources]) =>
+  [...(sources ?? "").matchAll(/https:\/\/([^\s;]+)/g)].map(([, host]) => host ?? ""),
 );
 const LOCALES = ["de", "en", "es", "fr", "it", "ja", "nl", "pt-PT", "zh-Hans"];
 const privacyOf = (locale: string) =>
@@ -15,7 +17,8 @@ const privacyOf = (locale: string) =>
 const privacy = privacyOf("en");
 
 it("reads the site's outside hosts from _headers", () => {
-  expect(hosts.length).toBeGreaterThan(0);
+  expect(hosts).toContain("api.crossref.org");
+  expect(hosts).toContain("huggingface.co");
   expect(privacy).not.toBe("");
 });
 

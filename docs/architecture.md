@@ -100,11 +100,16 @@ The ORCID and DOI lookups call the public APIs of ORCID, Crossref and DataCite s
 browser. DataCite is only asked about DOIs that Crossref does not hold, such as arXiv and Zenodo
 records. All three send CORS headers that let the browser call them. The Content Security Policy
 (CSP) in [`public/_headers`](../public/_headers) allows exactly those origins, plus `orcid.org`, whose
-public keys check a co-author's ORCID sign-in on a reply, and `huggingface.co` with its `*.hf.co` CDN
-for the statement reader. That reader (`src/lib/statement-reader.ts`) runs the census model, int8
-ONNX, in a worker through transformers.js on onnxruntime-web's CPU build, whose WebAssembly this
-site serves. It loads when someone asks for it, never at install; transformers.js caches the model
-in its own Cache Storage entry, which the service worker leaves alone.
+public keys check a co-author's ORCID sign-in on a reply. The statement reader's worker has its own
+CSP, which adds `huggingface.co` with its `*.hf.co` CDN; no page may connect there. That reader
+(`src/lib/statement-reader.ts`) runs the census model, int8 ONNX, in a worker through
+transformers.js on onnxruntime-web's CPU build, whose WebAssembly this site serves, from the Hub
+commit `census/model.json` pins. It loads when someone asks for it, never at install;
+transformers.js caches the model in its own Cache Storage entry, which the service worker leaves
+alone. `Cross-Origin-Embedder-Policy: credentialless` makes the site cross-origin isolated, so the
+reader runs up to four threads; Safari ignores `credentialless` and gets one. The rules' roles stay
+in the review: the model marks the ones it did not find and offers the ones they missed, and only
+on a prose statement, where the rules find nothing, does its reading stand alone.
 
 Citation files in CFF or Zenodo format are converted locally by a citesync worker that loads on
 first use. The build copies the pinned Pyodide runtime from

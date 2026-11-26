@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cast } from "@/core/__tests__/cast";
-import { authorText, decode, initials } from "./statement-reader";
+import { authorText, combine, decode, initials } from "./statement-reader";
 
 describe("initials", () => {
   // Expected values printed by census.encoder.initials, which built every training input.
@@ -35,13 +35,47 @@ describe("decode", () => {
       ],
     });
     expect(ada).toEqual({
-      roles: [
-        { role: "Conceptualization", check: false },
-        { role: "Software", check: true },
-      ],
+      roles: [{ role: "Conceptualization" }, { role: "Software", note: "check" }],
       maybe: ["Validation"],
     });
-    expect(alan).toEqual({ roles: [{ role: "Conceptualization", check: false }], maybe: ["Software"] });
+    expect(alan).toEqual({ roles: [{ role: "Conceptualization" }], maybe: ["Software"] });
+  });
+});
+
+describe("combine", () => {
+  // Ada: conceptualization (sure), software (close call). Alan: validation only.
+  const result = {
+    labels: ["conceptualization", "software", "validation"],
+    threshold: 0.4,
+    probabilities: [
+      [0.9, 0.5, 0.3],
+      [0.1, 0.1, 0.9],
+    ],
+  };
+
+  it("keeps the rules' roles as they are without the model", () => {
+    expect(combine([["Software"], []])).toEqual([
+      { roles: [{ role: "Software" }], suggested: [], maybe: [] },
+      { roles: [], suggested: [], maybe: [] },
+    ]);
+  });
+
+  it("questions the rules' roles the model did not find, and offers the ones only it found", () => {
+    expect(combine([["Conceptualization"], ["Software"]], result)).toEqual([
+      { roles: [{ role: "Conceptualization" }], suggested: ["Software"], maybe: [] },
+      { roles: [{ role: "Software", note: "doubt" }], suggested: ["Validation"], maybe: [] },
+    ]);
+  });
+
+  it("lets the model's reading stand when the rules found nothing", () => {
+    expect(combine([[], []], result)).toEqual([
+      {
+        roles: [{ role: "Conceptualization" }, { role: "Software", note: "check" }],
+        suggested: [],
+        maybe: ["Validation"],
+      },
+      { roles: [{ role: "Validation" }], suggested: [], maybe: [] },
+    ]);
   });
 });
 
@@ -70,7 +104,7 @@ beforeEach(async () => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-const RESULT = { probabilities: [[0.9]], labels: ["software"], threshold: 0.4, loadMs: 1, readMs: 2 };
+const RESULT = { probabilities: [[0.9]], labels: ["software"], threshold: 0.4 };
 
 describe("readStatement", () => {
   it("sends the author texts, passes progress on, and ignores other requests' replies", async () => {

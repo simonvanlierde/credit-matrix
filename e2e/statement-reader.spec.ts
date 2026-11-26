@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { asReturningVisitor } from "./helpers";
+import { asReturningVisitor, scan } from "./helpers";
 
 // Twenty contributors and a statement in their own words, which the rules cannot read.
 const AUTHORS = [
@@ -32,17 +32,21 @@ const STATEMENT =
   "reagents and equipment. S.R. obtained the funding. C.-S.W. and C.L. wrote the first draft, and all " +
   "authors revised the manuscript.";
 
-// The model comes from the Hugging Face Hub (70 MB) on a cold profile, as on a first visit. CodSpeed runs
-// no browser, so this is the only check on what the reader costs a user. Chromium only: one download per run.
-// Measured 2026-11-26 on a desktop CPU (the reader uses one thread): 2.5 to 4.6 s to load cold (1 s cached), 4.1 s to read the 164-token
-// statement (0.2 s per author; a 1,024-token one took 1.9 s per author). The budgets leave room for a slower
-// runner and download, and still catch a tenfold slowdown.
+// The model comes from the Hugging Face Hub (70 MB) on a cold profile, as on a first visit, then from the
+// browser's cache after a reload. CodSpeed runs no browser, so this is the only check on what the reader
+// costs a user, and on the CSP that lets only its worker reach the Hub. Chromium only: one download per run.
+// Measured 2026-11-26 on eight cores of a desktop CPU, two runs each: 3.1 to 3.7 s to load cold (1.1 to
+// 1.2 s cached), and 2.2 to 2.8 s to read the 164-token statement on four threads, against 8.8 to 9.3 s on
+// one. The budgets leave room for a slower runner and download, and still catch a tenfold slowdown.
 const LOAD_BUDGET_MS = 45_000;
 const READ_BUDGET_MS = 45_000;
 
-test("the model reads a 20-author statement within budget", async ({ page, browserName }, testInfo) => {
+test("the model reads a 20-author statement within budget, and again from the cache", async ({
+  page,
+  browserName,
+}, testInfo) => {
   test.skip(browserName !== "chromium", "times one real download per run");
-  test.setTimeout(LOAD_BUDGET_MS + READ_BUDGET_MS + 60_000);
+  test.setTimeout(2 * (LOAD_BUDGET_MS + READ_BUDGET_MS) + 60_000);
   await asReturningVisitor(page);
   await page.goto("/");
   await page.getByRole("button", { name: "Import", exact: true }).click();
@@ -50,23 +54,32 @@ test("the model reads a 20-author statement within budget", async ({ page, brows
   await page.getByRole("button", { name: "Import data" }).click();
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(AUTHORS.length);
 
-  await page.getByRole("button", { name: "Import", exact: true }).click();
-  await page.locator("#import-text").fill(STATEMENT);
-  await page.getByRole("button", { name: "Review roles" }).click();
-  const review = page.getByRole("region", { name: "Roles found in the statement" });
+  const readOnce = async () => {
+    await page.getByRole("button", { name: "Import", exact: true }).click();
+    await page.locator("#import-text").fill(STATEMENT);
+    await page.getByRole("button", { name: "Review roles" }).click();
+    const review = page.getByRole("region", { name: "Roles found in the statement" });
+    const started = Date.now();
+    await review.getByRole("button", { name: "Read with the model" }).click();
+    await expect(page.getByText(/^Reading the statement/)).toBeVisible({ timeout: LOAD_BUDGET_MS });
+    const loaded = Date.now();
+    // The rules catch "software" here, so the model checks their reading rather than standing alone.
+    await expect(review.getByText(/^Checked by the model\./)).toBeVisible({ timeout: READ_BUDGET_MS });
+    const read = Date.now();
+    await expect(review.getByRole("listitem").filter({ hasText: "Grace Hopper" })).toContainText("Software");
+    await expect(review.getByRole("listitem").filter({ hasText: "Sriniv" })).toContainText("Funding acquisition");
+    return { loadMs: loaded - started, readMs: read - loaded, perAuthorMs: Math.round((read - loaded) / 20) };
+  };
 
-  const started = Date.now();
-  await review.getByRole("button", { name: "Read with the model" }).click();
-  await expect(page.getByText(/^Reading for contributor \d+ of 20$/)).toBeVisible({ timeout: LOAD_BUDGET_MS });
-  const loaded = Date.now();
-  await expect(review.getByText(/^Read by the model\./)).toBeVisible({ timeout: READ_BUDGET_MS });
-  const read = Date.now();
-
-  const timings = { loadMs: loaded - started, readMs: read - loaded, perAuthorMs: Math.round((read - loaded) / 20) };
+  const cold = await readOnce();
+  expect((await scan(page)).violations).toEqual([]);
+  await page.reload();
+  const cached = await readOnce();
+  // Threads need cross-origin isolation (COEP in public/_headers); without it the reader runs on one.
+  const isolated = await page.evaluate(() => crossOriginIsolated);
+  const timings = { isolated, cold, cached };
   testInfo.annotations.push({ type: "timing", description: JSON.stringify(timings) });
   // biome-ignore lint/suspicious/noConsole: the timings go to the CI log, where the line reporter hides annotations.
   console.log(`statement reader: ${JSON.stringify(timings)}`);
-
-  await expect(review.getByRole("listitem").filter({ hasText: "Grace Hopper" })).toContainText("Software");
-  await expect(review.getByRole("listitem").filter({ hasText: "Sriniv" })).toContainText("Funding acquisition");
+  expect(isolated).toBe(true);
 });

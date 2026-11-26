@@ -1,5 +1,6 @@
 {
   "run": "ettin-68m-both-s1",
+  "revision": "5e8a1dbdc474a4fb44200b772da4fa1702dc31d9",
   "snapshot": "oa-2026-10",
   "repo": "simonvanlierde/credit-statement-reader",
   "sha256": {

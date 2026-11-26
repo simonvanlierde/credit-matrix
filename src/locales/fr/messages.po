@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT est une norme ANSI/NISO (<cc>CC BY 4.0</cc>). Ce projet est indépendant de NISO et n’est pas approuvé par elle."
 
 msgid "aboutPrivacy"
-msgstr "La recherche d’un iD ORCID l’envoie depuis votre navigateur à pub.orcid.org. La recherche d’un DOI l’envoie à api.crossref.org, avec l’adresse de contact de ce site, puis à api.datacite.org si Crossref n’a pas de notice.\n\nCloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur.\n\nL’import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d’exécution Python ; le fichier est traité dans votre navigateur et n’est jamais téléversé.\n\nLire une déclaration avec le modèle télécharge le modèle depuis huggingface.co (*.hf.co) la première fois. La déclaration est lue dans votre navigateur et n’est jamais téléversée.\n\nRien d’autre ne quitte votre navigateur : les brouillons restent dans son stockage local, tout comme le fait d’avoir fermé la liste Premiers pas ou copié une déclaration, et l’outil de rédaction choisi en dernier. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l’iD de cette personne, à l’application que vous choisissez.\n\nSe connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la preuve de connexion est ensuite transmise dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
+msgstr "La recherche d’un iD ORCID l’envoie depuis votre navigateur à pub.orcid.org. La recherche d’un DOI l’envoie à api.crossref.org, avec l’adresse de contact de ce site, puis à api.datacite.org si Crossref n’a pas de notice.\n\nCloudflare, qui héberge ce site, compte les requêtes de pages sur ses propres serveurs, de façon agrégée, sans script ni cookie dans votre navigateur.\n\nL’import de CITATION.cff ou de .zenodo.json charge depuis ce site le convertisseur citesync et un environnement d’exécution Python ; le fichier est traité dans votre navigateur et n’est jamais téléversé.\n\nLire une déclaration avec le modèle télécharge le modèle depuis huggingface.co (*.hf.co) la première fois. La déclaration est lue dans votre navigateur et n’est jamais téléversée. Le modèle reste ensuite dans les données de site de ce navigateur jusqu’à ce que vous les effaciez.\n\nRien d’autre ne quitte votre navigateur : les brouillons restent dans son stockage local, tout comme le fait d’avoir fermé la liste Premiers pas ou copié une déclaration, et l’outil de rédaction choisi en dernier. Les demandes aux coauteurs et leurs réponses ne sont conservées que dans ce navigateur et figurent dans les exports JSON, sauf si vous décochez cette option. Envoyer une réponse transmet son lien, avec le nom et l’iD de cette personne, à l’application que vous choisissez.\n\nSe connecter avec ORCID sur une réponse emmène la personne sur orcid.org puis la ramène ici ; la preuve de connexion est ensuite transmise dans le lien de réponse et reste conservée avec la réponse, y compris dans les exports JSON. Elle contient le nom figurant sur la fiche ORCID de la personne. Ouvrir une réponse signée, ou importer un fichier JSON qui en contient une, télécharge les clés publiques d’ORCID depuis orcid.org pour la vérifier."
 
 msgid "accessibilityStatement"
 msgstr "Déclaration d’accessibilité"
@@ -1355,16 +1355,13 @@ msgid "statementOnlyCredit"
 msgstr "Seuls les noms de rôles CRediT sont lus, comme Conceptualization ou Writing – original draft, pas les phrases sur qui a fait quoi."
 
 msgid "statementReaderAbout"
-msgstr "Le modèle lit aussi des phrases comme « A.B. a conçu l’étude ». Il tourne sur cet appareil : la déclaration reste ici. La première fois, il télécharge {size}."
+msgstr "Le modèle lit aussi des phrases comme « A.B. a conçu l’étude » et vérifie les rôles trouvés par les règles. Il tourne sur cet appareil : la déclaration reste ici. La première fois, il télécharge {size}."
 
 msgid "statementReaderRead"
 msgstr "Lire avec le modèle"
 
-msgid "statementReaderDownloading"
-msgstr "Téléchargement du modèle : {percent} %"
-
 msgid "statementReaderReading"
-msgstr "Lecture pour le contributeur {done} sur {of}"
+msgstr "Lecture de la déclaration"
 
 msgid "statementReaderFailed"
 msgstr "Le modèle n’a pas pu se charger : les rôles affichés viennent des règles. Vérifiez la connexion et réessayez."
@@ -1377,6 +1374,18 @@ msgstr "{role} (à vérifier)"
 
 msgid "statementMaybe"
 msgstr "À vérifier, non ajouté : {roles}"
+
+msgid "statementReaderLoading"
+msgstr "Chargement du modèle"
+
+msgid "statementReaderChecked"
+msgstr "Vérifié par le modèle. Les rôles marqués « non trouvé par le modèle » sont peut-être faux, et il propose des rôles que les règles ont manqués : ajoutez ceux que donne la déclaration."
+
+msgid "statementDoubtRole"
+msgstr "{role} (non trouvé par le modèle)"
+
+msgid "statementSuggested"
+msgstr "Le modèle trouve aussi :"
 
 msgid "errStatementTooLong"
 msgstr "Ce texte dépasse {limit} caractères. Collez uniquement la déclaration de contributions."

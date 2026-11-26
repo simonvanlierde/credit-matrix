@@ -21,9 +21,6 @@ export interface ReaderResult {
   /** The model config's id2label: CRediT role slugs ("data-curation"). */
   labels: string[];
   threshold: number;
-  /** Time spent waiting for the model to load: the download, or a cached copy's start-up. */
-  loadMs: number;
-  readMs: number;
 }
 export type ReaderReply =
   | { id?: number; progress: ReaderProgress }
@@ -47,10 +44,13 @@ export function authorText(name: string, position: number, of: number): string {
   return `${name} (${initials(name).join(", ")}); author ${position} of ${of}`;
 }
 
-/** A role the model gives an author; `check` when its probability is too close to the threshold to trust. */
+/**
+ * A role for one author: `check` when the model gave it with a probability too close to the threshold to
+ * trust, `doubt` when the rules found it and the model did not.
+ */
 export interface ReadRole {
   role: CreditRoleName;
-  check: boolean;
+  note?: "check" | "doubt";
 }
 
 const ROLE_BY_SLUG = new Map(CREDIT_ROLES.map((role) => [creditSlug(role.url), role.name]));
@@ -59,11 +59,7 @@ const ROLE_BY_SLUG = new Map(CREDIT_ROLES.map((role) => [creditSlug(role.url), r
  * Per author, the roles at or above the threshold (`check` inside the band) and, apart, the roles just
  * below it that may still be meant.
  */
-export function decode({
-  probabilities,
-  labels,
-  threshold,
-}: Pick<ReaderResult, "probabilities" | "labels" | "threshold">) {
+export function decode({ probabilities, labels, threshold }: ReaderResult) {
   const byIndex = labels.map((slug) => ROLE_BY_SLUG.get(slug));
   return probabilities.map((row) => {
     const roles: ReadRole[] = [];
@@ -71,10 +67,41 @@ export function decode({
     row.forEach((p, i) => {
       const role = byIndex[i];
       if (!role) return;
-      if (p >= threshold) roles.push({ role, check: p < CHECK_ABOVE });
+      if (p >= threshold) roles.push(p < CHECK_ABOVE ? { role, note: "check" } : { role });
       else if (p >= CHECK_BELOW) maybe.push(role);
     });
     return { roles, maybe };
+  });
+}
+
+/** One author's roles from the rules, checked against the model's reading when there is one. */
+export interface AuthorReading {
+  roles: ReadRole[];
+  /** Roles the model found and the rules did not, offered but not added. */
+  suggested: CreditRoleName[];
+  /** Roles the model nearly gave, listed when its reading stands alone. */
+  maybe: CreditRoleName[];
+}
+
+/**
+ * Per author, the rules' roles (`rules`, byline order) and what the model's reading changes: a role the
+ * rules found and the model did not is a `doubt`, one only the model found is `suggested`. When the rules
+ * found nothing at all (prose: "A.B. designed the study"), the model's reading stands alone, close calls
+ * marked `check`. On test200b's CRediT statements the rules' roles were right 98% of the time but found
+ * only 77% of the gold ones, and the model scored F1 0.97: it questions the rules, and offers what it adds.
+ */
+export function combine(rules: CreditRoleName[][], result?: ReaderResult): AuthorReading[] {
+  const model = result && decode(result);
+  if (model && rules.every((roles) => roles.length === 0)) {
+    return model.map(({ roles, maybe }) => ({ roles, suggested: [], maybe }));
+  }
+  return rules.map((mine, i) => {
+    const found = model && new Set(model[i]?.roles.map((r) => r.role));
+    return {
+      roles: mine.map((role) => (found && !found.has(role) ? { role, note: "doubt" } : { role })),
+      suggested: [...(found ?? [])].filter((role) => !mine.includes(role)),
+      maybe: [],
+    };
   });
 }
 

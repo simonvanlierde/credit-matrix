@@ -7,15 +7,19 @@ import shipped from "../../census/model.json";
 import type { ReaderReply, ReaderRequest } from "./statement-reader";
 import { MAX_TOKENS } from "./statement-reader";
 
-const { repo, run: revision } = shipped;
+// The commit, not the tag: a tag can be moved without an app release.
+const { repo, revision } = shipped;
 env.allowLocalModels = false;
 // The runtime is served from this site: the CSP allows no script from a CDN. Not via
 // transformers.js's own WASM cache, which imports the glue from a blob: URL the CSP refuses.
 env.useWasmCache = false;
 const onnx = env.backends.onnx as { wasm: { wasmPaths: unknown; numThreads: number } };
 onnx.wasm.wasmPaths = { wasm };
-// NOTE: one thread; more need cross-origin isolation (COEP), which this site does not set.
-onnx.wasm.numThreads = 1;
+// Threads need SharedArrayBuffer, so cross-origin isolation (public/_headers); Safari ignores
+// COEP: credentialless and gets one. Past four, a 68M model gains little.
+onnx.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
+/** A download that sends nothing for this long has stalled: fail, so the next request starts over. */
+export const STALL_MS = 60_000;
 
 const post = (reply: ReaderReply) => self.postMessage(reply);
 
@@ -33,43 +37,58 @@ async function fetchThreshold(): Promise<number> {
 }
 
 async function load() {
-  const [tokenizer, model, threshold] = await Promise.all([
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let fail!: (error: Error) => void;
+  const stalled = new Promise<never>((_, reject) => {
+    fail = reject;
+  });
+  const poke = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fail(new Error("The model download stalled.")), STALL_MS);
+  };
+  poke();
+  const loaded = Promise.all([
     AutoTokenizer.from_pretrained(repo, { revision }),
     AutoModelForSequenceClassification.from_pretrained(repo, {
       revision,
       dtype: "int8",
       device: "wasm",
       progress_callback: (info: { status: string; progress?: number }) => {
+        poke();
         if (info.status === "progress_total") post({ progress: { phase: "download", percent: info.progress ?? 0 } });
       },
     }),
     fetchThreshold(),
   ]);
-  return { tokenizer, model, threshold };
+  try {
+    const [tokenizer, model, threshold] = await Promise.race([loaded, stalled]);
+    return { tokenizer, model, threshold };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 let loading: ReturnType<typeof load> | undefined;
-let cancelled = -1;
+const cancelled = new Set<number>();
 
-self.onmessage = async ({ data }: MessageEvent<ReaderRequest>) => {
+async function onRequest({ data }: MessageEvent<ReaderRequest>) {
   if ("cancel" in data) {
-    cancelled = data.cancel;
+    cancelled.add(data.cancel);
     return;
   }
   const { id, statement, authors } = data;
   try {
-    const waited = performance.now();
     loading ??= load();
     // A failed load (offline, quota) is retried on the next request.
     const { tokenizer, model, threshold } = await loading.catch((error: unknown) => {
       loading = undefined;
       throw error;
     });
-    const started = performance.now();
-    const loadMs = started - waited;
     const probabilities: number[][] = [];
     for (const [i, text] of authors.entries()) {
-      if (cancelled === id) return;
+      // A cancel waits in the task queue behind this loop's microtasks: let it in first.
+      await new Promise((resolve) => setTimeout(resolve));
+      if (cancelled.has(id)) return;
       post({ id, progress: { phase: "read", done: i, of: authors.length } });
       const encoded = tokenizer(text, { text_pair: statement, return_tensor: false }) as { input_ids: number[] };
       let ids = encoded.input_ids;
@@ -84,8 +103,14 @@ self.onmessage = async ({ data }: MessageEvent<ReaderRequest>) => {
     }
     const id2label = (model.config as unknown as { id2label: Record<string, string> }).id2label;
     const labels = Object.keys(id2label).map((i) => id2label[i] ?? "");
-    post({ id, result: { probabilities, labels, threshold, loadMs, readMs: performance.now() - started } });
+    post({ id, result: { probabilities, labels, threshold } });
   } catch (error) {
     post({ id, error: error instanceof Error ? error.message : String(error) });
+  } finally {
+    cancelled.delete(id);
   }
-};
+}
+
+// onnxruntime-web starts its thread workers from this same script, named em-pthread, and listens on their
+// onmessage itself: taking it over would leave each thread waiting for work forever.
+if (!self.name.startsWith("em-pthread")) self.onmessage = onRequest;

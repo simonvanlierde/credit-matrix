@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT ist ein ANSI/NISO-Standard (<cc>CC BY 4.0</cc>). Dieses Projekt ist unabhängig von NISO und wird nicht von NISO unterstützt."
 
 msgid "aboutPrivacy"
-msgstr "Beim Nachschlagen einer ORCID iD wird sie von Ihrem Browser aus an pub.orcid.org gesendet. Beim Nachschlagen einer DOI wird sie zusammen mit der Kontaktadresse dieser Website an api.crossref.org gesendet, und an api.datacite.org, wenn Crossref sie nicht kennt.\n\nCloudflare, der Host dieser Website, zählt Seitenaufrufe auf seinen eigenen Servern und nur in Summe, ohne Skript oder Cookie in Ihrem Browser.\n\nBeim Import von CITATION.cff oder .zenodo.json werden der citesync-Konverter und eine Python-Laufzeitumgebung von dieser Website geladen; die Datei wird in Ihrem Browser verarbeitet und nie hochgeladen.\n\nWenn Sie eine Erklärung mit dem Modell lesen, wird das Modell beim ersten Mal von huggingface.co (*.hf.co) geladen. Die Erklärung wird in Ihrem Browser gelesen und nie hochgeladen.\n\nSonst verlässt nichts Ihren Browser: Entwürfe bleiben im lokalen Speicher, ebenso, ob Sie die Checkliste „Erste Schritte“ geschlossen oder eine Erklärung kopiert haben, und das zuletzt gewählte Schreibwerkzeug. Anfragen an Mitautoren und deren Antworten werden nur in diesem Browser gespeichert und sind in JSON-Exporten enthalten, sofern Sie diese Option nicht abwählen. Wer eine Antwort sendet, übergibt den Link mit Namen und iD dieser Person an die gewählte App.\n\nWer eine Antwort mit ORCID anmeldet, wird zu orcid.org und zurück geleitet; der Anmeldenachweis wird danach im Antwortlink mitgesendet und bleibt bei der Antwort gespeichert, auch in JSON-Exporten. Er enthält den Namen aus dem ORCID-Datensatz der Person. Beim Öffnen einer signierten Antwort oder beim Import einer JSON-Datei mit einer solchen werden die öffentlichen Schlüssel von ORCID von orcid.org geladen, um den Nachweis zu prüfen."
+msgstr "Beim Nachschlagen einer ORCID iD wird sie von Ihrem Browser aus an pub.orcid.org gesendet. Beim Nachschlagen einer DOI wird sie zusammen mit der Kontaktadresse dieser Website an api.crossref.org gesendet, und an api.datacite.org, wenn Crossref sie nicht kennt.\n\nCloudflare, der Host dieser Website, zählt Seitenaufrufe auf seinen eigenen Servern und nur in Summe, ohne Skript oder Cookie in Ihrem Browser.\n\nBeim Import von CITATION.cff oder .zenodo.json werden der citesync-Konverter und eine Python-Laufzeitumgebung von dieser Website geladen; die Datei wird in Ihrem Browser verarbeitet und nie hochgeladen.\n\nWenn Sie eine Erklärung mit dem Modell lesen, wird das Modell beim ersten Mal von huggingface.co (*.hf.co) geladen. Die Erklärung wird in Ihrem Browser gelesen und nie hochgeladen. Das Modell bleibt danach in den Websitedaten dieses Browsers, bis Sie sie löschen.\n\nSonst verlässt nichts Ihren Browser: Entwürfe bleiben im lokalen Speicher, ebenso, ob Sie die Checkliste „Erste Schritte“ geschlossen oder eine Erklärung kopiert haben, und das zuletzt gewählte Schreibwerkzeug. Anfragen an Mitautoren und deren Antworten werden nur in diesem Browser gespeichert und sind in JSON-Exporten enthalten, sofern Sie diese Option nicht abwählen. Wer eine Antwort sendet, übergibt den Link mit Namen und iD dieser Person an die gewählte App.\n\nWer eine Antwort mit ORCID anmeldet, wird zu orcid.org und zurück geleitet; der Anmeldenachweis wird danach im Antwortlink mitgesendet und bleibt bei der Antwort gespeichert, auch in JSON-Exporten. Er enthält den Namen aus dem ORCID-Datensatz der Person. Beim Öffnen einer signierten Antwort oder beim Import einer JSON-Datei mit einer solchen werden die öffentlichen Schlüssel von ORCID von orcid.org geladen, um den Nachweis zu prüfen."
 
 msgid "accessibilityStatement"
 msgstr "Erklärung zur Barrierefreiheit"
@@ -1355,16 +1355,13 @@ msgid "statementOnlyCredit"
 msgstr "Gelesen werden nur CRediT-Rollennamen wie Conceptualization oder Writing – original draft, keine Sätze darüber, wer was getan hat."
 
 msgid "statementReaderAbout"
-msgstr "Das Modell liest auch Sätze wie „A.B. hat die Studie entworfen“. Es läuft auf diesem Gerät, die Erklärung bleibt also hier. Beim ersten Mal lädt es {size} herunter."
+msgstr "Das Modell liest auch Sätze wie „A.B. hat die Studie entworfen“ und prüft die Rollen, die die Regeln gefunden haben. Es läuft auf diesem Gerät, die Erklärung bleibt also hier. Beim ersten Mal lädt es {size} herunter."
 
 msgid "statementReaderRead"
 msgstr "Mit dem Modell lesen"
 
-msgid "statementReaderDownloading"
-msgstr "Modell wird geladen: {percent} %"
-
 msgid "statementReaderReading"
-msgstr "Lese für Mitwirkende {done} von {of}"
+msgstr "Die Erklärung wird gelesen"
 
 msgid "statementReaderFailed"
 msgstr "Das Modell ließ sich nicht laden, die angezeigten Rollen stammen also aus den Regeln. Prüfen Sie die Verbindung und versuchen Sie es erneut."
@@ -1377,6 +1374,18 @@ msgstr "{role} (bitte prüfen)"
 
 msgid "statementMaybe"
 msgstr "Bitte prüfen, nicht hinzugefügt: {roles}"
+
+msgid "statementReaderLoading"
+msgstr "Das Modell wird geladen"
+
+msgid "statementReaderChecked"
+msgstr "Vom Modell geprüft. Mit „vom Modell nicht gefunden“ markierte Rollen könnten falsch sein, und es schlägt Rollen vor, die den Regeln entgangen sind: Fügen Sie die hinzu, die die Erklärung nennt."
+
+msgid "statementDoubtRole"
+msgstr "{role} (vom Modell nicht gefunden)"
+
+msgid "statementSuggested"
+msgstr "Das Modell findet auch:"
 
 msgid "errStatementTooLong"
 msgstr "Dieser Text ist länger als {limit} Zeichen. Fügen Sie nur die Beitragserklärung ein."

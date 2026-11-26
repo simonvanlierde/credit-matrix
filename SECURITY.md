@@ -45,8 +45,9 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
   The Content Security Policy in [`public/_headers`](public/_headers) allows no other hosts and blocks framing.
   A CITATION.cff or .zenodo.json import runs the citesync converter and its Python runtime
   (Pyodide) in a worker, from files this site serves; the worker's own policy allows no other
-  host, and the file never leaves the browser. The statement reader runs its model in a worker too;
-  the Hub gets the model's file requests, never the statement.
+  host, and the file never leaves the browser. The statement reader runs its model in a worker too,
+  and only that worker's policy allows the Hub; the Hub gets the model's file requests, never the
+  statement.
 - **ORCID sign-in.** A co-author who signs in leaves the page for orcid.org. The request includes a
   hash of the reply, not the reply. ORCID returns a signed token in the URL fragment, and the app
   checks it in the browser against ORCID's public keys. The token then travels inside the reply link.

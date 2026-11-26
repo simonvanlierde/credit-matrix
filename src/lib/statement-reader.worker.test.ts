@@ -1,5 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import shipped from "../../census/model.json";
 import { MAX_TOKENS, type ReaderReply } from "./statement-reader";
+import { STALL_MS } from "./statement-reader.worker";
 
 const hub = vi.hoisted(() => ({
   tokenizer: vi.fn(),
@@ -28,6 +30,7 @@ vi.mock("onnxruntime-web/ort-wasm-simd-threaded.wasm?url", () => ({ default: "/a
 const replies: ReaderReply[] = [];
 const cached = new Map<string, Response>();
 let handle: (data: unknown) => Promise<void>;
+const onnx = () => (hub.env.backends as { onnx: { wasm: Record<string, unknown> } }).onnx.wasm;
 
 beforeEach(async () => {
   replies.length = 0;
@@ -56,17 +59,41 @@ beforeEach(async () => {
   handle = (data) => (self.onmessage as unknown as (e: { data: unknown }) => Promise<void>)({ data });
 });
 
+afterEach(() => vi.unstubAllGlobals());
+
 describe("the statement reader worker", () => {
-  it("runs on this site's CPU runtime, with no CDN and one thread", () => {
+  it("runs on this site's CPU runtime, with no CDN and one thread unless cross-origin isolated", async () => {
     expect(hub.env.allowLocalModels).toBe(false);
     expect(hub.env.useWasmCache).toBe(false);
     expect(hub.env.backends).toEqual({ onnx: { wasm: { wasmPaths: { wasm: "/assets/ort.wasm" }, numThreads: 1 } } });
+    vi.stubGlobal("crossOriginIsolated", true);
+    for (const [cores, threads] of [
+      [16, 4],
+      [2, 2],
+    ]) {
+      vi.stubGlobal("navigator", { hardwareConcurrency: cores });
+      vi.resetModules();
+      await import("./statement-reader.worker");
+      expect(onnx().numThreads).toBe(threads);
+    }
+  });
+
+  it("leaves onnxruntime's thread workers, which load this same script, their own message handler", async () => {
+    self.onmessage = null;
+    vi.stubGlobal("name", "em-pthread-1");
+    vi.resetModules();
+    await import("./statement-reader.worker");
+    expect(self.onmessage).toBeNull();
+  });
+
+  it("loads the commit model.json pins, not a tag that can move", () => {
+    expect(shipped.revision).toMatch(/^[0-9a-f]{40}$/);
   });
 
   it("reads each author with the statement, and returns probabilities with the config's labels", async () => {
     await handle({ id: 3, statement: "S", authors: ["Ada", "Charles"] });
     expect(hub.loadModel.mock.calls[0]?.slice(0, 1)).toEqual(["simonvanlierde/credit-statement-reader"]);
-    expect(hub.loadModel.mock.calls[0]?.[1]).toMatchObject({ revision: "ettin-68m-both-s1", dtype: "int8" });
+    expect(hub.loadModel.mock.calls[0]?.[1]).toMatchObject({ revision: shipped.revision, dtype: "int8" });
     expect(hub.tokenizer.mock.calls).toEqual([
       ["Ada", { text_pair: "S", return_tensor: false }],
       ["Charles", { text_pair: "S", return_tensor: false }],
@@ -99,7 +126,7 @@ describe("the statement reader worker", () => {
     expect(hub.loadModel).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledTimes(1);
     expect([...cached.keys()]).toEqual([
-      "https://huggingface.co/simonvanlierde/credit-statement-reader/resolve/ettin-68m-both-s1/best.json",
+      `https://huggingface.co/simonvanlierde/credit-statement-reader/resolve/${shipped.revision}/best.json`,
     ]);
   });
 
@@ -114,13 +141,33 @@ describe("the statement reader worker", () => {
     expect(replies.at(-1)).toHaveProperty("result");
   });
 
-  it("stops between authors once cancelled", async () => {
-    hub.model.mockImplementationOnce(async () => {
-      await handle({ cancel: 4 });
-      return { logits: { data: Float32Array.from([0, 0]) } };
-    });
-    await handle({ id: 4, statement: "S", authors: ["Ada", "Charles"] });
-    expect(hub.model).toHaveBeenCalledTimes(1);
+  it("stops each cancelled request between authors, not only the last one cancelled", async () => {
+    const cancelling = (id: number) => () => {
+      void handle({ cancel: id });
+      return Promise.resolve({ logits: { data: Float32Array.from([0, 0]) } });
+    };
+    hub.model.mockImplementationOnce(cancelling(4)).mockImplementationOnce(cancelling(5));
+    await Promise.all([4, 5].map((id) => handle({ id, statement: "S", authors: ["Ada", "Charles"] })));
+    expect(hub.model).toHaveBeenCalledTimes(2);
     expect(replies.some((r) => "result" in r || "error" in r)).toBe(false);
+    await handle({ id: 6, statement: "S", authors: ["Ada"] });
+    expect(replies.at(-1)).toHaveProperty("result");
+  });
+
+  it("gives up on a download that sends nothing for a minute, and starts over on the next request", async () => {
+    vi.useFakeTimers();
+    try {
+      hub.loadModel.mockImplementationOnce(() => new Promise(() => undefined));
+      const stalled = handle({ id: 0, statement: "S", authors: ["Ada"] });
+      await vi.advanceTimersByTimeAsync(STALL_MS);
+      await stalled;
+      expect(replies.at(-1)).toEqual({ id: 0, error: "The model download stalled." });
+      const next = handle({ id: 1, statement: "S", authors: ["Ada"] });
+      await vi.runAllTimersAsync();
+      await next;
+      expect(replies.at(-1)).toHaveProperty("result");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

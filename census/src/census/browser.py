@@ -70,9 +70,7 @@ def export(run: Path, out: Path) -> dict[str, int]:
     return {name: (weights / file).stat().st_size for name, file in VARIANTS.items()}
 
 
-def hub_files(
-    run: Path, out: Path, card: Path, sha256: dict[str, str], sizes: dict[str, int] | None = None
-) -> dict[str, Path]:
+def hub_files(run: Path, out: Path, card: Path, sha256: dict[str, str], sizes: dict[str, int]) -> dict[str, Path]:
     """Path in the Hub repository -> local file: the export without q4, the PyTorch weights, and the model
     card as README.md. A ValueError when a file is missing, or one named in `sha256` or `sizes` (bytes)
     differs; the app reads the size it shows from `sizes`, and its build caps it."""
@@ -83,7 +81,7 @@ def hub_files(
     for name, want in sha256.items():
         if (got := runinfo.sha256(files[name])) != want:
             raise ValueError(f"{name} has sha256 {got}, not the {want} that model.json names")
-    for name, size in (sizes or {}).items():
+    for name, size in sizes.items():
         if (got := files[name].stat().st_size) != size:
             raise ValueError(f"{name} is {got} bytes, not the {size} that model.json names")
     return files

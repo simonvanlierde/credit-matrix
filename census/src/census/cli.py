@@ -500,7 +500,11 @@ def cmd_model_publish(args: argparse.Namespace) -> None:
     )
     # A later publish (a card change) keeps the tag on the first commit, whose weights the hashes pin.
     api.create_tag(shipped["repo"], tag=args.name, revision=commit.oid, exist_ok=True)
-    print(f"{commit.commit_url} (tag {args.name})")
+    # The app loads that commit, not the tag, which anyone with write access to the repo can move.
+    tag = next(t for t in api.list_repo_refs(shipped["repo"]).tags if t.name == args.name)
+    shipped["revision"] = tag.target_commit
+    (ROOT / "model.json").write_text(json.dumps(shipped, indent=2) + "\n", encoding="utf-8")
+    print(f"{commit.commit_url} (tag {args.name} at {tag.target_commit})")
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -34,7 +34,8 @@ it.each([false, true])("activation finishes when docs cache warming stalls: %s",
       clients: { claim },
     },
     caches: {
-      keys: async () => ["credit-matrix-v0-docs"],
+      // transformers-cache holds the statement reader's 70 MB model, which a deploy must not delete.
+      keys: async () => ["credit-matrix-v0-docs", "transformers-cache"],
       delete: remove,
       open: async () => ({
         keys: async () => [{ url: "https://example.org/docs/quarto" }],
@@ -62,6 +63,7 @@ it.each([false, true])("activation finishes when docs cache warming stalls: %s",
   ).resolves.toBe("activated");
   if (stalled) expect(timeout).toHaveBeenCalledWith(15_000);
   expect(remove).toHaveBeenCalledWith("credit-matrix-v0-docs");
+  expect(remove).not.toHaveBeenCalledWith("transformers-cache");
   expect(claim).toHaveBeenCalledOnce();
 });
 

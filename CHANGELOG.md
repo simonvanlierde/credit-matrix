@@ -22,11 +22,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   written in CRediT terms and in the authors' own words. On 200 statements held back until the model
   was chosen, it finds author-role pairs at F1 0.96 in prose statements and 0.97 in CRediT ones; see
   its [model card](census/MODEL_CARD.md). `census model publish` uploads it.
-- A pasted statement can be read with that model in the app: "Read with the model" in the review
+- A pasted statement can be checked with that model in the app: "Read with the model" in the review
   downloads it once (70 MB, from Hugging Face) and reads each contributor in the browser, so the
-  statement never leaves it. Close calls show as "check this", and roles it nearly gave are listed
-  but not added. Until it loads, or when it cannot, the review shows the rule parser's roles. A
-  statement in prose now opens the review instead of an error.
+  statement never leaves it. The rule parser's roles stay, and a role the model did not find is
+  marked; roles only the model found are offered, and added only when picked. A statement in prose,
+  where the rules find nothing, opens the review with the model on offer instead of an error; its
+  close calls show as "check this", and roles it nearly gave are listed but not added.
+- The site is cross-origin isolated (`Cross-Origin-Embedder-Policy: credentialless`), so the
+  statement reader runs up to four threads. Safari ignores `credentialless` and reads with one.
 
 ### Changed
 
