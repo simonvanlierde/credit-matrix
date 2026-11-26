@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Ask, AskState, Choice, Target } from "../ask";
 import { ASK_TARGETS, applyPatch, askStep, importAnswers, review, settledAt, signedForTitle } from "../ask";
-import type { Author } from "../author";
+import type { Contributor, Group, Person } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromJson, toJson } from "../export/json";
 import { keepKnownIds } from "../merge-row";
@@ -28,7 +28,7 @@ const NAMES = [
 ];
 const SCORES = [0, 0, 0, 20, 50, 100];
 
-function randomRow(random: () => number, name: string, id: string): Author {
+function randomRow(random: () => number, name: string, id: string): Person {
   const pick = <T>(items: readonly T[]) => items[Math.floor(random() * items.length)] as T;
   return createAuthor(name, {
     id,
@@ -46,7 +46,7 @@ function scenario(seed: number) {
   const authors = deduplicateAuthorInitials(
     Array.from({ length: size }, (_, index) => randomRow(random, NAMES[index] as string, `c${index}`)),
   );
-  const target = authors[Math.floor(random() * size)] as Author;
+  const target = authors[Math.floor(random() * size)] as Person;
   const asks: Record<string, Ask> = { [target.id]: { sentAt: 1000, prefilled: random() < 0.5 } };
   const replyName = random() < 0.5 ? target.name : `${target.name} Jr`;
   const row = randomRow(random, replyName, target.id);
@@ -54,16 +54,16 @@ function scenario(seed: number) {
 }
 
 const STORED = ["name", "orcid", "contributorType", "contributions", "equalContribution", "corresponding"] as const;
-const stored = (author: Author) => STORED.map((field) => JSON.stringify(author[field]));
+const stored = (author: Contributor) => STORED.map((field) => JSON.stringify(author[field]));
 
-function receive(state: AskState, id: string, row: Author, sentAt: number | null, at = 2000) {
+function receive(state: AskState, id: string, row: Person, sentAt: number | null, at = 2000) {
   const step = askStep(state, { kind: "reply", contributorId: id, row, sentAt, at });
   return { ...step, state: applyPatch(state, step.patch) };
 }
 
-function rowOf(state: AskState, id: string): Author {
+function rowOf(state: AskState, id: string): Person {
   const row = state.authors.find((author) => author.id === id);
-  if (!row) throw new Error(`no row ${id}`);
+  if (row?.kind !== "person") throw new Error(`no person row ${id}`);
   return row;
 }
 
@@ -210,9 +210,13 @@ describe("askStep reply", () => {
       const edited = randomRow(random, rowOf(received, target.id).name, target.id);
       const later: AskState = {
         ...received,
-        authors: received.authors.map((author) =>
+        authors: received.authors.map((author): Person | Group =>
           author.id === target.id
-            ? { ...author, contributions: edited.contributions, equalContribution: edited.equalContribution }
+            ? ({
+                ...author,
+                contributions: edited.contributions,
+                equalContribution: edited.equalContribution,
+              } as Person)
             : author,
         ),
       };
@@ -282,7 +286,7 @@ describe("askStep settle", () => {
       if (decided.length === 0) continue;
       const edit = decided[Math.floor(random() * decided.length)] as Target;
       const before = rowOf(settled, target.id);
-      const edited: Author =
+      const edited: Person =
         edit === "equalContribution" || edit === "corresponding"
           ? { ...before, [edit]: !before[edit] }
           : {
@@ -299,7 +303,7 @@ describe("askStep settle", () => {
   });
 
   it("clearing a decision reopens it and puts back the row's value a 'theirs' took", () => {
-    const valueIn = (row: Author, target: Target) =>
+    const valueIn = (row: Person, target: Target) =>
       target === "equalContribution" || target === "corresponding"
         ? row[target]
         : Math.max(0, ...row.contributions.filter((c) => c.role === target).map((c) => c.score));
@@ -431,7 +435,7 @@ describe("askStep reply with a malformed row", () => {
         { role: "Software", score: 100 },
       ],
     });
-    const { outcome, state: next } = receive(state, "ada", payload as Author, 2);
+    const { outcome, state: next } = receive(state, "ada", payload as Person, 2);
     expect(outcome.kind).toBe("received");
     expect(review(rowOf(next, "ada"), next.asks.ada).byTarget.Software?.theirs).toBe("lead");
   });
@@ -517,7 +521,7 @@ describe("asks in JSON", () => {
     const received = receive(state, target.id, row, 1500, 2000).state;
     const ask = received.asks[target.id] as Ask;
     const future = { ...ask, reply: { ...ask.reply, decisions: { preprint: { choice: "theirs", at: 99_999 } } } };
-    const read = fromJson(toJson(received.authors as Author[], { asks: { [target.id]: future as Ask } }));
+    const read = fromJson(toJson(received.authors as Person[], { asks: { [target.id]: future as Ask } }));
     const reply = read.asks?.[target.id]?.reply;
     expect(reply?.decisions).toEqual({ preprint: { choice: "theirs", at: 99_999 } });
     if (!reply) throw new Error("expected a reply");
@@ -527,7 +531,7 @@ describe("asks in JSON", () => {
   });
 
   it("says who made the file, while that row is in it", () => {
-    const authors = scenario(9).state.authors as Author[];
+    const authors = scenario(9).state.authors as Person[];
     const self = authors[0]?.id;
     expect(JSON.parse(toJson(authors, { selfId: self })).selfId).toBe(self);
     expect(JSON.parse(toJson(authors, { selfId: "gone" }))).not.toHaveProperty("selfId");
@@ -554,7 +558,7 @@ describe("asks in JSON", () => {
   });
 
   it("reads back who made the file, through the same id map as the answers", () => {
-    const authors = scenario(9).state.authors as Author[];
+    const authors = scenario(9).state.authors as Person[];
     const self = authors[1]?.id;
     expect(fromJson(toJson(authors, { selfId: self })).selfId).toBe(self);
     expect(fromJson(toJson(authors))).not.toHaveProperty("selfId");

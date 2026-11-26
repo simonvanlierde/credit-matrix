@@ -1,4 +1,4 @@
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { activeContributions } from "../author";
 import { DEFAULT_ROLE_TRANSLATOR, type RoleTranslator } from "../credit-i18n/index";
 import { DEFAULT_UI_TRANSLATOR, type UiTranslator } from "../credit-i18n/ui-strings";
@@ -25,7 +25,7 @@ function escapeCell(s: string): string {
  * with their level, matching the statement's `showLevels` behaviour.
  */
 export function toMarkdown(
-  authors: Author[],
+  authors: Contributor[],
   translateRole: RoleTranslator = DEFAULT_ROLE_TRANSLATOR,
   translateUi: UiTranslator = DEFAULT_UI_TRANSLATOR,
   locale = "en",

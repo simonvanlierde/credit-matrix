@@ -1,8 +1,16 @@
 import * as z from "zod/mini";
-import type { Author } from "./author";
-import { clampScore, isShareableId, MAX_AUTHOR_NAME_LENGTH, MAX_AUTHORS } from "./author";
+import type { Contributor, Person } from "./author";
+import {
+  clampScore,
+  isGroup,
+  isShareableId,
+  MAX_AUTHOR_NAME_LENGTH,
+  MAX_AUTHORS,
+  MAX_GROUP_MEMBERS,
+  MemberSchema,
+} from "./author";
 import { CREDIT_ROLES } from "./credit-roles";
-import { createAuthor, deduplicateAuthorInitials, parseNameParts } from "./parse-authors";
+import { createAuthor, createGroup, deduplicateAuthorInitials, parseNameParts } from "./parse-authors";
 
 import { type Toolchain, ToolchainSchema } from "./toolchain";
 
@@ -21,6 +29,8 @@ import { type Toolchain, ToolchainSchema } from "./toolchain";
  * the claim/reply/source-draft triangle that lets a claim link round-trip back
  * to the draft it came from and be told apart from the reply the claimee sends.
  * Keys added since are optional, so a reader that predates them ignores them.
+ *
+ * v3 adds group rows (`g`). A v2 link still decodes; this build writes v3, which a v2 reader refuses.
  */
 /** An ORCID id_token is under 1 kB; the cap only keeps junk out. */
 const MAX_TOKEN_LENGTH = 4096;
@@ -30,8 +40,8 @@ const namePart = () => z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH));
 const SharePayloadSchema = /* @__PURE__ */ (() =>
   z
     .object({
-      /** Payload version. v2 adds ids and the envelope; nothing older decodes. */
-      v: z.literal(2),
+      /** Payload version. v2 adds ids and the envelope, v3 groups; nothing older decodes. */
+      v: z.union([z.literal(2), z.literal(3)]),
       /** draft title */
       t: z.optional(z.string().check(z.maxLength(500))),
       /** writing tool; one this build does not know is dropped in fromSharePayload, which says so */
@@ -57,6 +67,18 @@ const SharePayloadSchema = /* @__PURE__ */ (() =>
             i: z.string().check(z.refine(isShareableId)),
             /** name */
             n: z.string(),
+            /** 1 for a group: no ORCID iD, name parts or markers, and the group keys below */
+            g: z.optional(z.literal(1)),
+            /** a group's alias */
+            l: z.optional(z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH))),
+            /** a group's ROR id, bare */
+            r: z.optional(z.string()),
+            /** a group's members; a name and, for a member tied to a person row, that row's id */
+            m: z.optional(z.array(MemberSchema).check(z.maxLength(MAX_GROUP_MEMBERS))),
+            /** 1 when a group's members are authors, omitted for collaborators */
+            a: z.optional(z.literal(1)),
+            /** a group's contact: the id of a member's person row */
+            u: z.optional(z.string()),
             /** ORCID iD, omitted when there is none */
             o: z.optional(z.string()),
             /** first, middle and surname, omitted when parsing the name gives the same parts */
@@ -93,7 +115,7 @@ export interface ShareData {
   toolchain?: Toolchain;
   /** The link named a writing tool this build does not know, so `toolchain` left it out. */
   toolchainDropped?: true;
-  authors: Author[];
+  authors: Contributor[];
   /** "" when the payload has none */
   title: string;
   /** contributor id the link is addressed to */
@@ -116,7 +138,7 @@ export interface ShareData {
 
 export interface SharePayloadInput {
   toolchain?: Toolchain;
-  authors: Author[];
+  authors: Contributor[];
   title?: string;
   claimId?: string;
   sourceDraftId?: string;
@@ -152,14 +174,14 @@ export function toSharePayload(input: SharePayloadInput): string {
   // reply comes back the same way, and the merge only ever takes that row.
   const authors = claimId ? input.authors.filter((author) => author.id === claimId) : input.authors;
 
-  const scoreByRole = (author: Author) => {
+  const scoreByRole = (author: Contributor) => {
     if (blank) return CREDIT_ROLES.map(() => 0);
     const scores = new Map(author.contributions.map((contribution) => [contribution.role, contribution.score]));
     return CREDIT_ROLES.map((role) => scores.get(role.name) ?? 0);
   };
 
   const payload = {
-    v: 2,
+    v: 3,
     ...(input.toolchain ? { h: input.toolchain } : {}),
     // Cut at 500 UTF-16 units, the schema's limit, without leaving half an emoji at the end.
     ...(title?.trim()
@@ -179,12 +201,23 @@ export function toSharePayload(input: SharePayloadInput): string {
     a: authors.map((author) => ({
       i: author.id,
       n: author.name,
-      ...(author.orcid ? { o: author.orcid } : {}),
-      ...(sameParts(author) ? {} : { p: [author.firstName, author.middleName, author.surname] }),
+      ...(isGroup(author)
+        ? {
+            g: 1,
+            ...(author.alias ? { l: author.alias } : {}),
+            ...(author.ror ? { r: author.ror } : {}),
+            ...(author.members.length > 0 ? { m: author.members } : {}),
+            ...(author.membersAre === "authors" ? { a: 1 } : {}),
+            ...(author.contactId ? { u: author.contactId } : {}),
+          }
+        : {
+            ...(author.orcid ? { o: author.orcid } : {}),
+            ...(sameParts(author) ? {} : { p: [author.firstName, author.middleName, author.surname] }),
+          }),
       ...(author.contributorType === "non-author" ? { t: 1 } : {}),
       s: scoreByRole(author),
-      ...(author.equalContribution ? { e: 1 } : {}),
-      ...(author.corresponding ? { c: 1 } : {}),
+      ...(!isGroup(author) && author.equalContribution ? { e: 1 } : {}),
+      ...(!isGroup(author) && author.corresponding ? { c: 1 } : {}),
     })),
     // Last, so dropping it gives back the exact payload the token's nonce hashes.
     ...(input.idToken && reply ? { k: input.idToken } : {}),
@@ -200,7 +233,7 @@ function partsOf(name: string, parts: readonly string[]): boolean {
 }
 
 /** Whether the name parses back to the parts the author has, so the link need not carry them. */
-function sameParts(author: Author): boolean {
+function sameParts(author: Person): boolean {
   const parsed = parseNameParts(author.name);
   return (
     parsed.firstName === author.firstName &&
@@ -220,24 +253,37 @@ export function fromSharePayload(json: string): ShareData {
   const { k: _token, ...signed } = raw;
   const toolchain = ToolchainSchema.safeParse(payload.h).data;
   const authors = deduplicateAuthorInitials(
-    payload.a.map((entry) =>
-      createAuthor(entry.n, {
+    payload.a.map((entry) => {
+      const contributions = CREDIT_ROLES.map((role, index) => ({
+        role: role.name,
+        // A payload from a build with fewer roles simply has a shorter array;
+        // the roles it did not know about read as unassigned.
+        score: clampScore(entry.s[index] ?? 0),
+      }));
+      if (entry.g === 1) {
+        return createGroup(entry.n, {
+          id: entry.i,
+          ...(entry.l ? { alias: entry.l } : {}),
+          ...(entry.r ? { ror: entry.r } : {}),
+          members: entry.m ?? [],
+          membersAre: entry.a === 1 ? "authors" : "collaborators",
+          ...(entry.u ? { contactId: entry.u } : {}),
+          contributorType: entry.t === 1 ? "non-author" : "author",
+          contributions,
+        });
+      }
+      return createAuthor(entry.n, {
         id: entry.i,
         ...(entry.o ? { orcid: entry.o } : {}),
         ...(entry.p && partsOf(entry.n, entry.p)
           ? { firstName: entry.p[0], middleName: entry.p[1], surname: entry.p[2] }
           : {}),
         contributorType: entry.t === 1 ? "non-author" : "author",
-        contributions: CREDIT_ROLES.map((role, index) => ({
-          role: role.name,
-          // A payload from a build with fewer roles simply has a shorter array;
-          // the roles it did not know about read as unassigned.
-          score: clampScore(entry.s[index] ?? 0),
-        })),
+        contributions,
         equalContribution: entry.e === 1,
         corresponding: entry.c === 1,
-      }),
-    ),
+      });
+    }),
   );
 
   return {

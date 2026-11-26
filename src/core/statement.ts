@@ -1,21 +1,3 @@
-/**
- * Rule-based parser for free-text CRediT statements, matched against the paper's author list.
- *
- * A port of the census parser (census/src/census/statement.py and roles.py), kept to the same
- * output: the parity test runs both over census/tests/corpus.jsonl. Change the two together.
- *
- * It handles the two layouts publishers use, whatever the punctuation:
- *
- * - author first: "AP: conceptualization, methodology; NZ, LS: writing - original draft."
- * - role first (MDPI): "Conceptualization, A.B. and C.D.; Methodology, A.B."
- *
- * It finds every author mention (full name, surname plus initials, or initials resolved against the
- * author list) and every role name, splits the text into clauses, and within each clause groups
- * neighbours of the same kind into runs and pairs each run with the run that follows it. Prose
- * ("A.B. conceived the study") names no CRediT role, so it yields nothing rather than a guess.
- * Initials that fit no author, or several, are reported, never guessed.
- */
-import type { Author } from "./author";
 import { CREDIT_ROLES, type CreditRoleName, creditSlug } from "./credit-roles";
 
 /** An author as the parser needs it: given names and surname, as separate strings. */
@@ -29,10 +11,16 @@ export interface StatementAuthor {
  * display name before the surname, so "Grace Brewster Murray Hopper" keeps all three, and "Hopper, Grace"
  * reads the part after the comma.
  */
-export function statementAuthor(
-  author: Pick<Author, "name" | "firstName" | "middleName" | "surname">,
-): StatementAuthor {
-  const { name, surname } = author;
+export function statementAuthor(author: {
+  name: string;
+  kind?: "person" | "group";
+  firstName?: string;
+  middleName?: string;
+  surname?: string;
+}): StatementAuthor {
+  // A group has no given name: its whole name stands in the surname slot.
+  if (author.kind === "group") return { given: "", surname: author.name };
+  const { name, surname = "" } = author;
   const comma = name.indexOf(",");
   if (surname && comma > 0 && name.slice(0, comma).includes(surname)) {
     return { given: name.slice(comma + 1).trim(), surname };

@@ -7,17 +7,24 @@ import {
   type Ask,
   type AskEvent,
   AskSchema,
-  type Author,
   applyPatch,
   askStep,
+  type Contributor,
   CREDIT_ROLES,
   type CreditRoleName,
   createAuthor,
+  createGroup,
+  type Group,
+  isGroup,
+  isPerson,
   isValidOrcid,
+  isValidRor,
+  type Member,
   normalizeOrcid,
   normalizeRoster,
   type Outcome,
   type Patch,
+  type Person,
   review,
   type Target,
 } from "@/core";
@@ -56,7 +63,7 @@ export interface Draft {
   toolchain?: Toolchain;
   id: string;
   title: string;
-  authors: Author[];
+  authors: Contributor[];
   inputMode: InputMode;
   heatmapMonoColor: string;
   /** Colour the grid per contributor instead of in `heatmapMonoColor`. */
@@ -129,7 +136,7 @@ interface ContributionState {
   /** Last selected writing tool, used when a draft has no choice yet. */
   lastToolchain?: Toolchain;
   setToolchain: (toolchain: Toolchain | undefined) => void;
-  authors: Author[];
+  authors: Contributor[];
   /** The work's title, filled by a DOI import. Draft data, so `reset` clears it. */
   title: string;
   inputMode: InputMode;
@@ -215,7 +222,7 @@ interface ContributionState {
   activeDraftId: string;
   /** Replace the roster. `asks`, when given, replaces the asks too, for the rows the roster keeps. */
   /** With `selfId`, also marks that row as you, when it survives normalizing. */
-  loadAuthors: (authors: Author[], asks?: Record<string, Ask>, selfId?: string) => void;
+  loadAuthors: (authors: Contributor[], asks?: Record<string, Ask>, selfId?: string) => void;
   setClaim: (claim: DraftClaim | null) => void;
   /** Unlock a draft's claim, active or parked. */
   clearClaimFor: (draftId: string) => void;
@@ -249,15 +256,19 @@ interface ContributionState {
   loadSample: (names: readonly string[]) => void;
   /** Adds a contributor and returns its id; null when the name has no letters to parse. */
   addAuthor: (name: string, orcid?: string) => string | null;
+  /** Adds a group (a consortium) and returns its id; null when the name is unusable or the list is full. */
+  addGroup: (name: string, fields?: GroupFields) => string | null;
+  /** Edit a group's name, alias, ROR id, members, member flag or contact. False when the row is gone, not a group, or a value is refused. */
+  updateGroup: (groupId: string, fields: GroupFields & { name?: string }) => boolean;
   /** Add several in one update, in order, up to the cap; each entry's new id, or null when refused. */
   addAuthors: (entries: { name: string; orcid?: string }[]) => (string | null)[];
   removeAuthor: (authorId: string) => void;
   /** Re-insert a removed contributor. False when the cap or a duplicate id refuses it. */
-  restoreAuthor: (author: Author, index: number) => boolean;
+  restoreAuthor: (author: Contributor, index: number) => boolean;
   moveAuthor: (fromIndex: number, toIndex: number) => void;
   updateAuthorName: (authorId: string, name: string) => boolean;
   updateAuthorOrcid: (authorId: string, orcid: string) => void;
-  setAuthorType: (authorId: string, contributorType: Author["contributorType"]) => void;
+  setAuthorType: (authorId: string, contributorType: Contributor["contributorType"]) => void;
   /** Toggle one of the two markers that sit outside the CRediT taxonomy. */
   setAuthorMarker: (authorId: string, marker: "equalContribution" | "corresponding", value: boolean) => void;
   setAuthorScore: (authorId: string, roleIndex: number, score: number) => void;
@@ -282,6 +293,24 @@ interface ContributionState {
   reset: () => void;
 }
 
+/** What a group holds besides its name and roles. `null` clears an optional field. */
+export interface GroupFields {
+  alias?: string | null;
+  ror?: string | null;
+  members?: readonly Member[];
+  membersAre?: Group["membersAre"];
+  contactId?: string | null;
+}
+
+/** `createGroup` overrides from set fields: `null` and "" clear, `undefined` leaves the field as it is. */
+function groupOverrides(fields: GroupFields = {}): NonNullable<Parameters<typeof createGroup>[1]> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined) out[key] = value === null || value === "" ? undefined : value;
+  }
+  return out;
+}
+
 const ROLE_NAMES = CREDIT_ROLES.map((role) => role.name);
 
 /** Cap on the stored work title. Long enough for any real one, short enough
@@ -297,7 +326,7 @@ const MAX_TITLE_LENGTH = 500;
  * positional, so extra names beyond the three role sets are dropped rather
  * than seeded with an empty row.
  */
-export function buildSampleAuthors(names: readonly string[]): Author[] {
+export function buildSampleAuthors(names: readonly string[]): Contributor[] {
   const roleSets: Partial<Record<CreditRoleName, number>>[] = [
     {
       Conceptualization: 100,
@@ -329,7 +358,7 @@ export function buildSampleAuthors(names: readonly string[]): Author[] {
   );
 }
 
-function findAuthorIndex(authors: Author[], authorId: string): number {
+function findAuthorIndex(authors: Contributor[], authorId: string): number {
   return authors.findIndex((author) => author.id === authorId);
 }
 
@@ -418,7 +447,7 @@ function writeAskPatch(state: ContributionState, draftId: string, patch: Patch):
   if (!target) return false;
   // applyPatch re-derives what a rename changes and leaves every other row the same object.
   const next = applyPatch(target, patch);
-  target.authors = next.authors as Author[];
+  target.authors = next.authors as Contributor[];
   target.asks = next.asks;
   if (!live) (target as Draft).updatedAt = Date.now();
   return true;
@@ -430,11 +459,14 @@ function stashLive(state: ContributionState): void {
 }
 
 /** Drop anything from a draft's contributor list that would make a later edit throw. */
-function repairAuthors(authors: unknown): Author[] {
+function repairAuthors(authors: unknown): Contributor[] {
   if (!Array.isArray(authors)) return [];
   const seenIds = new Set<string>();
+  const personIds = new Set(
+    authors.flatMap((row) => (isRecord(row) && row.kind !== "group" && typeof row.id === "string" ? [row.id] : [])),
+  );
   return authors
-    .filter((author): author is Author => {
+    .filter((author): author is Contributor => {
       if (author === null || typeof author !== "object") return false;
       const name = (author as { name?: unknown }).name;
       // The exact rule createAuthor enforces; anything else throws on the next
@@ -442,39 +474,71 @@ function repairAuthors(authors: unknown): Author[] {
       return typeof name === "string" && name.length <= MAX_AUTHOR_NAME_LENGTH && isUsableAuthorName(name);
     })
     .slice(0, MAX_AUTHORS)
-    .map((author) => {
+    .flatMap((author): Contributor[] => {
+      const raw = author as unknown as Record<string, unknown>;
       // createAuthor fills every role a short list lacks, as the grid and the exports expect.
-      const defaults = createAuthor(author.name, {
-        contributions: Array.isArray(author.contributions)
-          ? author.contributions.filter(
-              (c) => c !== null && typeof c === "object" && typeof c.role === "string" && typeof c.score === "number",
-            )
-          : [],
-      });
+      const contributions = Array.isArray(author.contributions)
+        ? author.contributions.filter(
+            (c) => c !== null && typeof c === "object" && typeof c.role === "string" && typeof c.score === "number",
+          )
+        : [];
+      const contributorType = author.contributorType === "non-author" ? "non-author" : "author";
+      if (raw.kind === "group") {
+        const members = (Array.isArray(raw.members) ? raw.members : []).flatMap((member): Member[] => {
+          if (!isRecord(member) || typeof member.name !== "string" || !member.name) return [];
+          // A link to a row this draft does not have costs the link, not the member.
+          return typeof member.personId === "string" && personIds.has(member.personId)
+            ? [{ name: member.name, personId: member.personId }]
+            : [{ name: member.name }];
+        });
+        try {
+          const group = createGroup(author.name, {
+            alias: typeof raw.alias === "string" ? raw.alias : undefined,
+            ror: typeof raw.ror === "string" && isValidRor(raw.ror) ? raw.ror : undefined,
+            members,
+            membersAre: raw.membersAre === "authors" ? "authors" : "collaborators",
+            contactId: typeof raw.contactId === "string" ? raw.contactId : undefined,
+            contributorType,
+            contributions,
+          });
+          const id =
+            typeof author.id === "string" && isShareableId(author.id) && !seenIds.has(author.id) ? author.id : group.id;
+          seenIds.add(id);
+          return [{ ...group, id }];
+        } catch {
+          return [];
+        }
+      }
+      const defaults = createAuthor(author.name, { contributions });
       // A repeated id would make every id-keyed lookup hit the first row.
       const id =
         typeof author.id === "string" && isShareableId(author.id) && !seenIds.has(author.id) ? author.id : defaults.id;
       seenIds.add(id);
-      const repaired = { ...defaults, ...author };
+      const repaired = { ...defaults, ...(author as Person) };
       for (const field of ["firstName", "middleName", "surname", "initials"] as const) {
         if (typeof repaired[field] !== "string" || repaired[field].length > MAX_AUTHOR_NAME_LENGTH)
           repaired[field] = defaults[field];
       }
-      return {
-        // A save that lacks the name parts, initials or flags (hand-edited, or written by another
-        // tool) gets them derived from the name, as a new contributor would; the page reads them all.
-        ...repaired,
-        id,
-        contributorType: author.contributorType === "non-author" ? "non-author" : "author",
-        equalContribution: typeof author.equalContribution === "boolean" ? author.equalContribution : false,
-        corresponding: typeof author.corresponding === "boolean" ? author.corresponding : false,
-        // Same reasoning as the name check: createAuthor throws on an invalid
-        // iD, and normalizeContributions iterates the array and dereferences
-        // each entry. A malformed field costs that field, not the workspace.
-        orcid:
-          typeof author.orcid === "string" && isValidOrcid(author.orcid) ? normalizeOrcid(author.orcid) : undefined,
-        contributions: defaults.contributions,
-      };
+      const person = author as Person;
+      return [
+        {
+          // A save that lacks the name parts, initials or flags (hand-edited, or written by another
+          // tool) gets them derived from the name, as a new contributor would; the page reads them all.
+          ...repaired,
+          // A save from before groups has no kind.
+          kind: "person",
+          id,
+          contributorType,
+          equalContribution: typeof person.equalContribution === "boolean" ? person.equalContribution : false,
+          corresponding: typeof person.corresponding === "boolean" ? person.corresponding : false,
+          // Same reasoning as the name check: createAuthor throws on an invalid
+          // iD, and normalizeContributions iterates the array and dereferences
+          // each entry. A malformed field costs that field, not the workspace.
+          orcid:
+            typeof person.orcid === "string" && isValidOrcid(person.orcid) ? normalizeOrcid(person.orcid) : undefined,
+          contributions: defaults.contributions,
+        },
+      ];
     });
 }
 
@@ -538,6 +602,7 @@ function repairSingleDraft(value: unknown, id: string): Draft {
   const authors = repairAuthors(raw.authors);
   // An ask or a self pick for a row that is gone points at nothing.
   const authorIds = new Set(authors.map((author) => author.id));
+  const groupIds = new Set(authors.filter(isGroup).map((author) => author.id));
   return {
     ...raw,
     id,
@@ -566,7 +631,8 @@ function repairSingleDraft(value: unknown, id: string): Draft {
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
     claim: isDraftClaim(raw.claim) ? raw.claim : null,
     asks: Object.fromEntries(Object.entries(repairAsks(raw.asks, asked)).filter(([key]) => authorIds.has(key))),
-    selfId: typeof raw.selfId === "string" && authorIds.has(raw.selfId) ? raw.selfId : null,
+    selfId:
+      typeof raw.selfId === "string" && authorIds.has(raw.selfId) && !groupIds.has(raw.selfId) ? raw.selfId : null,
   };
 }
 
@@ -1156,7 +1222,8 @@ export const useContributionStore = create<ContributionState>()(
           state.authors = normalizeRoster(authors);
           // Normalizing re-keys a row whose id was unusable; answers under the old id have no row left.
           const ids = new Set(state.authors.map((author) => author.id));
-          if (selfId !== undefined && ids.has(selfId)) state.selfId = selfId;
+          if (selfId !== undefined && ids.has(selfId) && !state.authors.some((a) => a.id === selfId && isGroup(a)))
+            state.selfId = selfId;
           else if (state.selfId !== null && !ids.has(state.selfId)) state.selfId = null;
           state.asks = Object.fromEntries(Object.entries(asks ?? state.asks).filter(([id]) => ids.has(id)));
         }),
@@ -1204,6 +1271,8 @@ export const useContributionStore = create<ContributionState>()(
 
       setSelfId: (contributorId) =>
         set((state) => {
+          // A group cannot be you, so it never takes the mark.
+          if (contributorId !== null && state.authors.some((a) => a.id === contributorId && isGroup(a))) return;
           state.selfId = contributorId;
         }),
 
@@ -1254,6 +1323,42 @@ export const useContributionStore = create<ContributionState>()(
         }),
 
       addAuthor: (name, orcid) => get().addAuthors([{ name, orcid }])[0] ?? null,
+
+      addGroup: (name, fields) => {
+        let id: string | null = null;
+        set((state) => {
+          if (claimRefuses(state) || state.authors.length >= MAX_AUTHORS) return;
+          try {
+            const group = createGroup(name.trim(), groupOverrides(fields));
+            state.authors = normalizeRoster([...state.authors, group]);
+            id = group.id;
+          } catch {
+            // An unusable name or a bad ROR id: the caller sees null.
+          }
+        });
+        return id;
+      },
+
+      updateGroup: (groupId, fields) => {
+        let updated = false;
+        set((state) => {
+          if (claimRefuses(state, groupId)) return;
+          const group = state.authors[findAuthorIndex(state.authors, groupId)];
+          if (group?.kind !== "group") return;
+          try {
+            const { name, ...rest } = fields;
+            state.authors[findAuthorIndex(state.authors, groupId)] = createGroup(name?.trim() || group.name, {
+              ...group,
+              ...groupOverrides(rest),
+            });
+          } catch {
+            return;
+          }
+          state.authors = normalizeRoster(state.authors);
+          updated = true;
+        });
+        return updated;
+      },
 
       addAuthors: (entries) => {
         const created = entries.map(({ name, orcid }) => {
@@ -1336,14 +1441,16 @@ export const useContributionStore = create<ContributionState>()(
           const trimmed = name.trim();
           if (!(currentAuthor && trimmed)) return;
           try {
-            state.authors[index] = createAuthor(trimmed, {
-              id: currentAuthor.id,
-              orcid: currentAuthor.orcid,
-              contributorType: currentAuthor.contributorType,
-              contributions: currentAuthor.contributions,
-              equalContribution: currentAuthor.equalContribution,
-              corresponding: currentAuthor.corresponding,
-            });
+            state.authors[index] = isGroup(currentAuthor)
+              ? createGroup(trimmed, currentAuthor)
+              : createAuthor(trimmed, {
+                  id: currentAuthor.id,
+                  orcid: currentAuthor.orcid,
+                  contributorType: currentAuthor.contributorType,
+                  contributions: currentAuthor.contributions,
+                  equalContribution: currentAuthor.equalContribution,
+                  corresponding: currentAuthor.corresponding,
+                });
           } catch {
             return;
           }
@@ -1358,7 +1465,7 @@ export const useContributionStore = create<ContributionState>()(
           if (claimRefuses(state, authorId)) return;
           const index = findAuthorIndex(state.authors, authorId);
           const author = state.authors[index];
-          if (!author) return;
+          if (!author || !isPerson(author)) return;
           const trimmed = orcid.trim();
           // Reject invalid values: an unvalidated iD here would make the next
           // normalizeRoster() -> createAuthor() throw inside this reducer.
@@ -1378,7 +1485,8 @@ export const useContributionStore = create<ContributionState>()(
         set((state) => {
           if (claimRefuses(state, authorId)) return;
           const author = state.authors[findAuthorIndex(state.authors, authorId)];
-          if (!author) return;
+          // A group is never corresponding and shares no first authorship.
+          if (!author || !isPerson(author)) return;
           author[marker] = value;
         }),
 
@@ -1577,7 +1685,7 @@ export const useContributionStore = create<ContributionState>()(
  * since), and how many differences still wait for a decision.
  */
 export function askSummary(
-  authors: readonly Author[],
+  authors: readonly Contributor[],
   asks: Readonly<Record<string, Ask>>,
   selfId: string | null,
 ): { total: number; asked: number; answered: number; open: number } {

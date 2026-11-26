@@ -17,6 +17,9 @@ const UNEXPRESSED = {
   "authors[].name": "`name` holds at least one letter, or is an ORCID iD.",
   "authors[].orcid":
     "`orcid` is an ORCID iD with a valid check digit, bare (`0000-0002-1825-0097`) or as an orcid.org URL.",
+  "authors[group].name": "A group's `name` holds at least one letter.",
+  "authors[group].ror":
+    "`ror` is a ROR id with a valid checksum, bare (`05dxps055`) or as a ror.org URL. It is never looked up.",
 };
 
 /** Checks outside the zod schema that a file still has to pass. */
@@ -54,25 +57,53 @@ const FIELDS = {
   },
   "authors[].equalContribution": { description: "Shares first authorship with the others so marked." },
   "authors[].corresponding": { description: "Is a corresponding author." },
+  "authors[].kind": {
+    description: "`person` for a named individual. A row without `kind` is a person, as in every version 1 file.",
+  },
+  "authors[group].kind": { description: "`group`: a consortium credited as one contributor." },
+  "authors[group].id": { description: "Stable id, as for a person." },
+  "authors[group].name": { description: 'The group as it is credited, for example "The COVIDSurg Collaborative".' },
+  "authors[group].initials": { description: "Chip text: the alias, else derived from the name." },
+  "authors[group].alias": { description: "Short form for chips and heatmap labels. Optional." },
+  "authors[group].ror": { description: "ROR id, bare or as a ror.org URL. Optional." },
+  "authors[group].members": { description: "The people the group names, in order. Optional." },
+  "authors[group].members[].name": { description: "The member's name as written." },
+  "authors[group].members[].personId": {
+    description: "The `id` of a person row this member is. A row that does not exist drops the link.",
+  },
+  "authors[group].membersAre": { description: "`authors` or `collaborators`: what the members are to the work." },
+  "authors[group].contactId": {
+    description: "The `id` of the linked person row that answers review requests for the group. Optional.",
+  },
+  "authors[group].contributorType": { description: "As for a person." },
+  "authors[group].contributions": { description: "As for a person." },
 };
 
-/** `["properties","authors","items","properties","name"]` as `authors[].name`. */
+/**
+ * `["properties","authors","items","properties","name"]` as `authors[].name`. A contributor is a person
+ * (`oneOf` entry 0) or a group (entry 1); a group's fields read `authors[group].name`.
+ */
 function fieldName(path) {
-  return path
-    .filter((key) => key !== "properties" && key !== "anyOf" && key !== "allOf")
+  const group = path[path.indexOf("oneOf") + 1] === 1;
+  const name = path
+    .filter((key, i) => key !== "properties" && key !== "oneOf" && key !== "allOf" && path[i - 1] !== "oneOf")
     .map((key) => (key === "items" ? "[]" : `.${key}`))
     .join("")
     .replace(/^\./, "")
     .replaceAll(".[]", "[]");
+  return group ? name.replace("[]", "[group]") : name;
 }
 
 /** The schema of `authors[].contributions[].role` within the generated `schema`; throws if it has none. */
 function fieldSchema(schema, field) {
   let node = schema;
   for (const part of field.split(".")) {
-    const key = part.replace(/\[\]$/, "");
+    const key = part.replace(/\[(group)?\]$/, "");
     node = node?.properties?.[key];
     if (part.endsWith("[]")) node = node?.items;
+    // A contributor is `oneOf` [person, group]: plain fields describe the person.
+    if (part.endsWith("[]")) node = node?.oneOf?.[0] ?? node;
+    if (part.endsWith("[group]")) node = node?.items?.oneOf?.[1];
   }
   if (!node) throw new Error(`FIELDS names ${field}, which the schema does not have.`);
   return node;
@@ -107,7 +138,7 @@ export function renderContributorsSchema(exportSchema) {
     $comment: "By scripts/build-contributors-schema.mjs from src/core. Do not edit.",
     title: "CRediT Matrix contributors file",
     description: [
-      "The JSON file `credit-matrix` reads and `convert --to json` writes (version 1).",
+      "The JSON file `credit-matrix` reads and `convert --to json` writes (version 2; version 1 files, which hold only people, still read).",
       "A missing `id` gets a random one.",
       "Other unknown fields are ignored.",
       "`asks` holds the app's ask-and-reply state: the CLI checks it, but this schema leaves it out, so leave it out of a file you write.",

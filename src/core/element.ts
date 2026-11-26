@@ -1,4 +1,4 @@
-import { type Author, MAX_IMPORT_BYTES, rolesWithContributions, scoreToLevel } from "./author";
+import { type Contributor, MAX_IMPORT_BYTES, rolesWithContributions, scoreToLevel } from "./author";
 import { type LocaleCode, loadRoleCatalog, makeRoleTranslator, resolveLocaleTag } from "./credit-i18n/index";
 import { loadUiCatalog, makeUiTranslator, type UiTranslator } from "./credit-i18n/ui-strings";
 import { buildHeatmapSvg } from "./export/heatmap-svg";
@@ -68,7 +68,7 @@ function englishParagraph(text: string, className?: string): HTMLParagraphElemen
 }
 
 /** The heatmap as a table, for screen readers: a row per role, a column per contributor, levels in the cells. */
-function levelTable(authors: Author[], translateRole: (name: string) => string, translateUi: UiTranslator) {
+function levelTable(authors: Contributor[], translateRole: (name: string) => string, translateUi: UiTranslator) {
   // Hidden through a wrapper: a table ignores its own width and overflow, and would widen the page.
   const wrapper = document.createElement("div");
   wrapper.className = "sr-only";
@@ -170,7 +170,7 @@ export class CreditMatrixElement extends HTMLElement {
 
     // A catalog that fails to load leaves that part in English rather than failing the render.
     const catalogs = Promise.all([loadRoleCatalog(locale).catch(() => null), loadUiCatalog(locale).catch(() => null)]);
-    let authors: Author[];
+    let authors: Contributor[];
     try {
       const json = src
         ? await this.#fetch(src)

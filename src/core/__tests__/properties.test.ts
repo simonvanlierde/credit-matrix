@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import * as z from "zod/mini";
-import { type Author, scoreToLevel } from "../author";
+import { type Contributor, scoreToLevel } from "../author";
 import { CREDIT_ROLES } from "../credit-roles";
 import { fromCsv, toCsv } from "../export/csv";
 import { fromJson, NewerVersionError, toJson } from "../export/json";
@@ -51,7 +51,7 @@ const draftArb = fc
   .map((authors) => deduplicateAuthorInitials(authors.map((author, i) => ({ ...author, id: `id-${i}` }))));
 
 /** Who is in the draft and what each is credited with, as exact scores or only their levels. */
-function summary(authors: Author[], { exact, byInitials = false }: { exact: boolean; byInitials?: boolean }) {
+function summary(authors: Contributor[], { exact, byInitials = false }: { exact: boolean; byInitials?: boolean }) {
   return authors.map((author) => ({
     name: byInitials ? author.initials : author.name,
     orcid: author.orcid,

@@ -79,7 +79,7 @@ describe("round-trip exports", () => {
   });
 
   it("rejects only a numeric version above the supported one as newer", () => {
-    expect(() => fromJson('{"version": 2, "authors": []}')).toThrow(NewerVersionError);
+    expect(() => fromJson('{"version": 3, "authors": []}')).toThrow(NewerVersionError);
     expect(() => fromJson('{"version": "2", "authors": []}')).not.toThrow(NewerVersionError);
     expect(() => fromJson("[]")).not.toThrow(NewerVersionError);
     expect(() => fromJson("null")).not.toThrow(NewerVersionError);
@@ -130,7 +130,7 @@ describe("round-trip exports", () => {
       }
     })();
     expect(error).toBeInstanceOf(NewerVersionError);
-    expect(error).toMatchObject({ name: "NewerVersionError", message: "JSON export version 7 is newer than 1" });
+    expect(error).toMatchObject({ name: "NewerVersionError", message: "JSON export version 7 is newer than 2" });
   });
 
   it("refuses JSON null as a shape error, not a crash", () => {

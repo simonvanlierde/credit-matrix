@@ -1,4 +1,4 @@
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { rolesWithContributions } from "../author";
 import { contributorHues, DEFAULT_MONO_COLOR, HEX_COLOR, heatCellColor, onColor } from "../contributor-color";
 import type { RoleTranslator } from "../credit-i18n/index";
@@ -106,7 +106,7 @@ export interface HeatmapSvgOptions {
  * same language and with the same levels as the figure. The SVG stores it as
  * `<desc>`; a PNG export can store it as a Description text chunk.
  */
-export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions): string {
+export function heatmapDescription(authors: Contributor[], opts?: HeatmapSvgOptions): string {
   return generateStatement(authors, {
     format: "by-author",
     showLevels: opts?.levels ?? opts?.showLevels ?? true,
@@ -132,7 +132,7 @@ export function heatmapDescription(authors: Author[], opts?: HeatmapSvgOptions):
  * alternative: the by-author contribution statement, so a screen reader hears
  * who did what. Assistive technology reads both and nothing draws them.
  */
-export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): string {
+export function buildHeatmapSvg(authors: Contributor[], opts?: HeatmapSvgOptions): string {
   const transpose = opts?.horizontal ?? !!opts?.transpose;
   const scale = typeof opts?.scale === "number" ? Math.max(0.1, opts.scale) : 1;
   if (!Number.isFinite(scale)) throw new HeatmapOptionError("Heatmap scale must be finite.");
@@ -243,7 +243,7 @@ export function buildHeatmapSvg(authors: Author[], opts?: HeatmapSvgOptions): st
   const nAuthors = authors.length;
   const nRoles = roles.length;
 
-  const scoreFor = (author: Author | undefined, roleName: string): number =>
+  const scoreFor = (author: Contributor | undefined, roleName: string): number =>
     author?.contributions.find((c) => c.role === roleName)?.score ?? 0;
   // Flat mode collapses any contribution to full intensity.
   const fillScore = (score: number): number => (showLevels ? score : score > 0 ? 100 : 0);

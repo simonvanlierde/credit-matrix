@@ -1,4 +1,4 @@
-import type { Author } from "./author";
+import type { Contributor } from "./author";
 import { hasContributions, rolesWithContributions } from "./author";
 import type { CreditRoleName } from "./credit-roles";
 
@@ -19,7 +19,7 @@ const EXPECTED_ROLES: CreditRoleName[] = ["Conceptualization", "Writing – orig
  * statement looks complete). Returns nothing for an empty author list, since
  * "no authors yet" is a starting state rather than a mistake.
  */
-export function validateContributions(authors: Author[]): ValidationIssue[] {
+export function validateContributions(authors: Contributor[]): ValidationIssue[] {
   if (authors.length === 0) return [];
 
   const issues: ValidationIssue[] = [];

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { type AskState, applyPatch, askStep, importAnswers, recheckSignIns } from "../ask";
-import type { Author } from "../author";
+import type { Person } from "../author";
 import { fromJson, toJson } from "../export/json";
 import { keepKnownIds } from "../merge-row";
 import {
@@ -215,7 +215,7 @@ describe("a signed reply in the ask record", () => {
   it("flags a signed reply that changed the row's iD, keeping the iD the ask went to", async () => {
     const orcid = await proof();
     const asked = "0000-0001-5109-3700";
-    const state = { authors: [{ ...(lead()[0] as Author), orcid: asked }], asks: {} };
+    const state = { authors: [{ ...(lead()[0] as Person), orcid: asked }], asks: {} };
     const changing = { ...row(), orcid: ORCID };
     const step = askStep(state, {
       kind: "reply",
@@ -241,7 +241,7 @@ describe("a signed reply in the ask record", () => {
   it("keeps the iD the ask went to through later replies, signed or not", async () => {
     const orcid = await proof();
     const asked = "0000-0001-5109-3700";
-    const start: AskState = { authors: [{ ...(lead()[0] as Author), orcid: asked }], asks: {} };
+    const start: AskState = { authors: [{ ...(lead()[0] as Person), orcid: asked }], asks: {} };
     const changing = { ...row(), orcid: ORCID };
     const reply = (state: AskState, at: number, answer: unknown, signed: boolean) =>
       applyPatch(
@@ -329,7 +329,7 @@ describe("a signed reply in the ask record", () => {
 
     describe("compared with the row it lands on", () => {
       // An import into an empty draft: the file's rows are the rows the answers land on.
-      async function landed(file: { authors: Author[] }) {
+      async function landed(file: { authors: Person[] }) {
         const { authors, asks } = fromJson(JSON.stringify(file));
         const checked = await recheckSignIns(asks ?? {}, keys);
         return importAnswers([], authors, authors, {}, { asks: checked }).asks?.charles?.reply?.provenance;
@@ -405,7 +405,7 @@ describe("a signed reply in the ask record", () => {
         const file = await withImpostor();
         const checked = await recheckSignIns(file.asks, keys);
         const current = [createAuthor("Charles Darwin", { id: "charles" })];
-        const incoming = file.authors as Author[];
+        const incoming = file.authors as Person[];
         const out = importAnswers(current, incoming, incoming, {}, { asks: checked });
         expect(normalizeRoster(incoming)[0]).toMatchObject({ id: "charles", name: "Mallory Evil" });
         expect(out.asks?.charles?.reply?.provenance).toMatchObject({ orcid: { orcid: ORCID }, signedElsewhere: true });

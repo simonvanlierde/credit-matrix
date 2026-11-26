@@ -88,36 +88,80 @@ export function isUsableAuthorName(name: string): boolean {
   return /[\p{L}\p{M}]/u.test(name) || ORCID_INPUT_REGEX.test(name.trim());
 }
 
-export const AuthorSchema = /* @__PURE__ */ (() =>
+/** Most members one group lists; a consortium paper can name thousands. */
+export const MAX_GROUP_MEMBERS = 5000;
+
+/** ROR id alphabet: Crockford base32 without i, l, o and u. */
+// biome-ignore lint/security/noSecrets: an alphabet, not a credential.
+const ROR_ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
+const ROR_REGEX = /^0[0-9a-hjkmnp-tv-z]{6}\d{2}$/;
+
+/** The bare nine-character ROR id from what people paste: the ror.org address or the id alone. */
+export function normalizeRor(id: string): string {
+  return id
+    .trim()
+    .replace(/^(?:https?:\/\/)?(?:www\.)?ror\.org\//i, "")
+    .replace(/\/$/, "")
+    .toLowerCase();
+}
+
+/** A ROR id with the right shape and checksum (98 minus the base-32 body times 100, mod 97). No lookup. */
+export function isValidRor(id: string): boolean {
+  const bare = normalizeRor(id);
+  if (!ROR_REGEX.test(bare)) return false;
+  let n = 0;
+  for (const char of bare.slice(1, 7)) n = n * 32 + ROR_ALPHABET.indexOf(char);
+  return 98 - ((n * 100) % 97) === Number(bare.slice(7));
+}
+
+const NAME_MESSAGE = "Author name must contain at least one letter.";
+
+/** Field schemas a person and a group share; each builds its own, in its own key order. */
+const idField = () => z._default(z.string().check(z.minLength(1)), () => globalThis.crypto.randomUUID());
+const nameField = () =>
+  /**
+   * Display name as entered by the user (e.g. "Grace B. Hopper").
+   *
+   * The letter check mirrors `createAuthor`, which throws on a name that keeps
+   * no letters once punctuation and digits are stripped. Without it the schema
+   * accepts names (e.g. "123") that every downstream `normalizeRoster` call
+   * then throws on, turning a bad import into a crash instead of an error.
+   */
+  z.string().check(z.minLength(1), z.maxLength(MAX_AUTHOR_NAME_LENGTH), z.refine(isUsableAuthorName, NAME_MESSAGE));
+/**
+ * Unique initials (e.g. "GBH"). Generated automatically, deduplicated
+ * across the author list. Used in the short statement format.
+ */
+const initialsField = () => z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH));
+/**
+ * Whether this contributor is a named author or a non-author contributor credited
+ * in an Acknowledgements section. CRediT applies to both (see NISO guidance);
+ * the distinction drives the JATS `contrib-type`. Defaults to "author".
+ */
+const typeField = () => z._default(z.enum(["author", "non-author"]), "author");
+/**
+ * Scores for each of the 14 CRediT roles, keyed by role name.
+ *
+ * Deliberately not capped at `CREDIT_ROLES.length`: an imported array may
+ * legally repeat a role, and `normalizeContributions` merges duplicates by
+ * keeping the highest score. A cap here rejects that payload outright.
+ */
+const contributionsField = () => z.array(ContributionSchema);
+
+export const PersonSchema = /* @__PURE__ */ (() =>
   z.object({
+    /** Absent in a file or save from before groups: such a row is a person. */
+    kind: z._default(z.literal("person"), "person"),
     /** Stable unique identifier for UI state and persistence */
-    id: z._default(z.string().check(z.minLength(1)), () => globalThis.crypto.randomUUID()),
-    /**
-     * Display name as entered by the user (e.g. "Grace B. Hopper").
-     *
-     * The letter check mirrors `createAuthor`, which throws on a name that keeps
-     * no letters once punctuation and digits are stripped. Without it the schema
-     * accepts names (e.g. "123") that every downstream `normalizeRoster` call
-     * then throws on, turning a bad import into a crash instead of an error.
-     */
-    name: z
-      .string()
-      .check(
-        z.minLength(1),
-        z.maxLength(MAX_AUTHOR_NAME_LENGTH),
-        z.refine(isUsableAuthorName, "Author name must contain at least one letter."),
-      ),
+    id: idField(),
+    name: nameField(),
     /** Parsed first name */
     firstName: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
     /** Parsed middle name (may be empty) */
     middleName: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
     /** Parsed surname */
     surname: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
-    /**
-     * Unique initials (e.g. "GBH"). Generated automatically, deduplicated
-     * across the author list. Used in the short statement format.
-     */
-    initials: z.string().check(z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
+    initials: initialsField(),
     /**
      * ORCID iD, stored bare ("0000-0002-1825-0097"). Input may also be the
      * orcid.org URL form; the transform strips it. Optional.
@@ -125,23 +169,11 @@ export const AuthorSchema = /* @__PURE__ */ (() =>
     orcid: z.optional(
       z.pipe(z.string().check(z.refine(isValidOrcid, "Invalid ORCID iD.")), z.transform(normalizeOrcid)),
     ),
-    /**
-     * Whether this person is a named author or a non-author contributor credited
-     * in an Acknowledgements section. CRediT applies to both (see NISO guidance);
-     * the distinction drives the JATS `contrib-type`. Defaults to "author".
-     */
-    contributorType: z._default(z.enum(["author", "non-author"]), "author"),
-    /**
-     * Scores for each of the 14 CRediT roles, keyed by role name.
-     *
-     * Deliberately not capped at `CREDIT_ROLES.length`: an imported array may
-     * legally repeat a role, and `normalizeContributions` merges duplicates by
-     * keeping the highest score. A cap here rejects that payload outright.
-     */
-    contributions: z.array(ContributionSchema),
+    contributorType: typeField(),
+    contributions: contributionsField(),
     /**
      * Whether this person shares first authorship with others so marked. Not a
-     * CRediT role — the taxonomy has no slot for it — but journals ask for it in
+     * CRediT role: the taxonomy has no slot for it, but journals ask for it in
      * the same paragraph, so it travels with the contributions.
      */
     equalContribution: z._default(z.boolean(), false),
@@ -149,10 +181,74 @@ export const AuthorSchema = /* @__PURE__ */ (() =>
     corresponding: z._default(z.boolean(), false),
   }))();
 
-export type Author = z.infer<typeof AuthorSchema>;
+/** A group member: a name, optionally tied to a person row of the same draft. */
+export const MemberSchema = /* @__PURE__ */ (() =>
+  z.object({
+    name: z.string().check(z.minLength(1), z.maxLength(MAX_AUTHOR_NAME_LENGTH)),
+    /** Id of a person row. A row delete or merge drops it and keeps the name. */
+    personId: z.optional(z.string().check(z.minLength(1))),
+  }))();
+
+/**
+ * A consortium or collaborative credited as one contributor ("COVIDSurg Collaborative").
+ * It has no ORCID, never corresponds, and cannot be the signed-in or claimed row.
+ */
+export const GroupSchema = /* @__PURE__ */ (() =>
+  z.object({
+    kind: z.literal("group"),
+    id: idField(),
+    name: nameField(),
+    initials: initialsField(),
+    contributorType: typeField(),
+    contributions: contributionsField(),
+    /** Short form for chips and heatmap labels. Without it, `initials` come from the name. */
+    alias: z.optional(z.string().check(z.minLength(1), z.maxLength(MAX_AUTHOR_NAME_LENGTH))),
+    /** ROR id, stored bare ("05dxps055"). Format and checksum only; never looked up. */
+    ror: z.optional(z.pipe(z.string().check(z.refine(isValidRor, "Invalid ROR id.")), z.transform(normalizeRor))),
+    members: z._default(z.array(MemberSchema).check(z.maxLength(MAX_GROUP_MEMBERS)), []),
+    /** Whether the members are authors of the work or collaborators. One flag for the whole list. */
+    membersAre: z._default(z.enum(["authors", "collaborators"]), "collaborators"),
+    /** Person row that answers review requests for the group. Must be a linked member. */
+    contactId: z.optional(z.string().check(z.minLength(1))),
+  }))();
+
+/** One row of the contributor list. */
+export const ContributorSchema = /* @__PURE__ */ (() => z.discriminatedUnion("kind", [PersonSchema, GroupSchema]))();
+
+export type Person = z.infer<typeof PersonSchema>;
+/**
+ * The person-only fields, typed as always absent on a group, so `row.orcid` or `row.corresponding`
+ * reads as `undefined` on any contributor without a `kind` check. The schema strips them from a group.
+ */
+interface PersonOnly {
+  readonly orcid?: undefined;
+  readonly firstName?: undefined;
+  readonly middleName?: undefined;
+  readonly surname?: undefined;
+  readonly equalContribution?: undefined;
+  readonly corresponding?: undefined;
+}
+export type Group = z.infer<typeof GroupSchema> & PersonOnly;
+export type Member = z.infer<typeof MemberSchema>;
+export type Contributor = Person | Group;
+
+/** True for a person row; groups have no ORCID, name parts or corresponding flag. */
+export function isPerson(contributor: Contributor): contributor is Person {
+  return contributor.kind === "person";
+}
+
+/** The ORCID iD of a row; a group has none. */
+export function orcidOf(contributor: Contributor): string | undefined {
+  return isPerson(contributor) ? contributor.orcid : undefined;
+}
+
+/** True for a group row. */
+export function isGroup(contributor: Contributor): contributor is Group {
+  return contributor.kind === "group";
+}
 
 /** Author (named on the byline) vs. non-author contributor (Acknowledgements). */
-export type ContributorType = Author["contributorType"];
+export type ContributorType = Contributor["contributorType"];
 
 /**
  * Contribution level derived from a 0-100 score, using NISO's optional
@@ -183,7 +279,7 @@ export function scoreToLevel(score: number): ContributionLevel {
 }
 
 /** True if the author has any non-zero contribution */
-export function hasContributions(author: Author): boolean {
+export function hasContributions(author: Contributor): boolean {
   return author.contributions.some((c) => c.score > 0);
 }
 
@@ -192,12 +288,12 @@ export function hasContributions(author: Author): boolean {
  * no intermediate levels exist, so a "show levels" control has nothing to show.
  * Treats an empty author list as binary.
  */
-export function isAllBinary(authors: Author[]): boolean {
+export function isAllBinary(authors: Contributor[]): boolean {
   return authors.every((author) => author.contributions.every((c) => c.score === 0 || c.score === 100));
 }
 
 /** Role names that at least one author contributed to (score > 0), in CRediT order. */
-export function rolesWithContributions(authors: Author[]): string[] {
+export function rolesWithContributions(authors: Contributor[]): string[] {
   const active = new Set<string>();
   for (const author of authors) {
     for (const c of author.contributions) {
@@ -208,6 +304,6 @@ export function rolesWithContributions(authors: Author[]): string[] {
 }
 
 /** Return only roles where score > 0 for a given author */
-export function activeContributions(author: Author): Contribution[] {
+export function activeContributions(author: Contributor): Contribution[] {
   return author.contributions.filter((c) => c.score > 0);
 }

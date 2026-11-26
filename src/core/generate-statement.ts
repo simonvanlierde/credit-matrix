@@ -1,4 +1,4 @@
-import type { Author } from "./author";
+import type { Contributor } from "./author";
 import { activeContributions, scoreToLevel } from "./author";
 import { DEFAULT_ROLE_TRANSLATOR, type RoleTranslator } from "./credit-i18n/index";
 import { DEFAULT_UI_TRANSLATOR, fillTemplate, type UiTranslator } from "./credit-i18n/ui-strings";
@@ -143,7 +143,7 @@ const SPAN_FORMATTER: Formatter<StatementSpan[]> = {
  * `by-author-short`:
  *   "CRediT: GBH: Conceptualization, Data curation; CD: Investigation; ..."
  */
-export function generateStatement(authors: Author[], options: StatementOptions): string {
+export function generateStatement(authors: Contributor[], options: StatementOptions): string {
   if (!options.asHtml) return statementLines(authors, options, TEXT_FORMATTER).join(LINE_BREAK);
   return statementLines(authors, options, HTML_FORMATTER)
     .map((line) => `<p>${line}</p>`)
@@ -156,13 +156,13 @@ export function generateStatement(authors: Author[], options: StatementOptions):
  * `generateStatement` (`asHtml` is ignored), and the spans' text joined in
  * order is exactly its plain-text output; no spans when that is empty.
  */
-export function statementSpans(authors: Author[], options: StatementOptions): StatementSpan[] {
+export function statementSpans(authors: Contributor[], options: StatementOptions): StatementSpan[] {
   return SPAN_FORMATTER.join(statementLines(authors, options, SPAN_FORMATTER), LINE_BREAK);
 }
 
 /** The statement's lines (CRediT, Acknowledgements, then the notes); none when nobody contributed. */
 function statementLines<T extends string | StatementSpan[]>(
-  authors: Author[],
+  authors: Contributor[],
   options: StatementOptions,
   fmt: Formatter<T>,
 ): T[] {
@@ -177,7 +177,7 @@ function statementLines<T extends string | StatementSpan[]>(
   const useInitials = format === "by-author-short" || format === "by-role-short";
   const byRole = format === "by-role" || format === "by-role-short";
 
-  const body = (people: Author[]): T =>
+  const body = (people: Contributor[]): T =>
     byRole
       ? generateByRole(people, useInitials, showLevels, translateRole, translateUi, fmt)
       : generateByAuthor(people, useInitials, showLevels, translateRole, translateUi, fmt);
@@ -217,7 +217,7 @@ export function withLevel(label: string, score: number, translateUi: UiTranslato
 
 /** Body of a by-role statement (no `CRediT:`/`Acknowledgements:` prefix); empty if nobody contributed. */
 function generateByRole<T extends string | StatementSpan[]>(
-  authors: Author[],
+  authors: Contributor[],
   useInitials: boolean,
   showLevels: boolean,
   translateRole: RoleTranslator,
@@ -258,7 +258,7 @@ function generateByRole<T extends string | StatementSpan[]>(
 
 /** Body of a by-author statement (no `CRediT:`/`Acknowledgements:` prefix); empty if nobody contributed. */
 function generateByAuthor<T extends string | StatementSpan[]>(
-  authors: Author[],
+  authors: Contributor[],
   useInitials: boolean,
   showLevels: boolean,
   translateRole: RoleTranslator,

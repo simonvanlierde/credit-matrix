@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AuthorSchema } from "../author";
+import { PersonSchema } from "../author";
 import { loadUiCatalog, makeUiTranslator } from "../credit-i18n/ui-strings";
 import { fromCsv, toCsv } from "../export/csv";
 import { fromJson, toJson } from "../export/json";
@@ -38,7 +38,8 @@ describe("marker data model", () => {
   });
 
   it("accepts an older payload that predates the markers", () => {
-    const parsed = AuthorSchema.parse({
+    const parsed = PersonSchema.parse({
+      kind: "person",
       id: "abc",
       name: "Grace B. Hopper",
       firstName: "Grace",

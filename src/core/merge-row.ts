@@ -1,4 +1,5 @@
-import type { Author } from "./author";
+import type { Contributor } from "./author";
+import { orcidOf } from "./author";
 
 /**
  * Give imported contributors the ids they already have in `current`.
@@ -12,15 +13,15 @@ import type { Author } from "./author";
  *
  * This is for your own import. A reply is matched by its claimed id alone.
  */
-const nameKey = (author: Author) => author.name.trim().replace(/\s+/g, " ").toLowerCase();
+const nameKey = (author: Contributor) => author.name.trim().replace(/\s+/g, " ").toLowerCase();
 
-export function keepKnownIds(current: Author[], incoming: Author[]): Author[] {
+export function keepKnownIds(current: Contributor[], incoming: Contributor[]): Contributor[] {
   const free = new Map(current.map((author) => [author.id, author]));
   // Ids the import already has are spoken for, so a name match cannot take one first.
   const kept = new Set(incoming.map((author) => author.id).filter((id) => free.has(id)));
   for (const id of kept) free.delete(id);
 
-  const take = (match: (author: Author) => boolean): string | undefined => {
+  const take = (match: (author: Contributor) => boolean): string | undefined => {
     for (const [id, author] of free) {
       if (match(author)) {
         free.delete(id);
@@ -33,16 +34,18 @@ export function keepKnownIds(current: Author[], incoming: Author[]): Author[] {
   return incoming.map((author) => {
     if (kept.has(author.id)) return author;
     const id =
-      (author.orcid ? take((known) => known.orcid === author.orcid) : undefined) ??
+      (orcidOf(author) ? take((known) => orcidOf(known) === orcidOf(author)) : undefined) ??
       take((known) => samePerson(known, author));
     return id ? { ...author, id } : author;
   });
 }
 
 /** Same id, same ORCID iD, or the same name when at least one of them has no ORCID iD. */
-function samePerson(a: Author, b: Author): boolean {
+function samePerson(a: Contributor, b: Contributor): boolean {
   if (a.id === b.id) return true;
-  if (a.orcid && b.orcid) return a.orcid === b.orcid;
+  // A group and a person never match, even when the name does.
+  if (a.kind !== b.kind) return false;
+  if (orcidOf(a) && orcidOf(b)) return orcidOf(a) === orcidOf(b);
   return nameKey(a) === nameKey(b);
 }
 
@@ -51,8 +54,8 @@ function samePerson(a: Author, b: Author): boolean {
  * `incoming`, as they came in. Unlike {@link keepKnownIds} a match is not used
  * up, so a file listing someone twice adds them at most once.
  */
-export function newContributors(current: Author[], incoming: Author[]): Author[] {
-  const added: Author[] = [];
+export function newContributors(current: Contributor[], incoming: Contributor[]): Contributor[] {
+  const added: Contributor[] = [];
   for (const author of incoming) {
     if (!current.some((known) => samePerson(known, author)) && !added.some((known) => samePerson(known, author)))
       added.push(author);

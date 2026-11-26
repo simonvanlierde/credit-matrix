@@ -1,8 +1,9 @@
-import type { Author } from "./author";
+import type { Contributor } from "./author";
+import { isPerson } from "./author";
 import { DEFAULT_UI_TRANSLATOR, fillTemplate, type UiTranslator } from "./credit-i18n/ui-strings";
 
 /** How a statement names a contributor: their initials, or their name with whitespace collapsed. */
-export function contributorLabel(author: Author, useInitials: boolean): string {
+export function contributorLabel(author: Contributor, useInitials: boolean): string {
   return useInitials ? author.initials : author.name.replace(/\s+/g, " ").trim();
 }
 
@@ -16,17 +17,17 @@ export function contributorLabel(author: Author, useInitials: boolean): string {
  * same thing once, and reads the way a journal prints it.
  */
 export function markerNotes(
-  authors: Author[],
+  authors: Contributor[],
   options: { useInitials?: boolean; translateUi?: UiTranslator; locale?: string } = {},
 ): string[] {
   const { useInitials = false, translateUi = DEFAULT_UI_TRANSLATOR, locale = "en" } = options;
   // CLDR owns the list wording ("A, B, and C" / "A、B") per locale.
   const list = new Intl.ListFormat(locale, { type: "conjunction" });
-  const join = (people: Author[]) => list.format(people.map((author) => contributorLabel(author, useInitials)));
+  const join = (people: Contributor[]) => list.format(people.map((author) => contributorLabel(author, useInitials)));
 
   const notes: string[] = [];
-  const equal = authors.filter((author) => author.equalContribution);
-  const corresponding = authors.filter((author) => author.corresponding);
+  const equal = authors.filter((author) => isPerson(author) && author.equalContribution);
+  const corresponding = authors.filter((author) => isPerson(author) && author.corresponding);
 
   // One marked contributor cannot have contributed "equally" with anyone, so
   // the note would be nonsense. The marker stays in the data, JSON and CSV, so
