@@ -23,6 +23,7 @@ def _export(tmp_path, run=None, out=None):
     for path in [run / "checkpoint" / "model.safetensors", card, *(out / name for name in browser.HUB_EXPORT)]:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(path.name.encode())
+    (run / "config.json").write_text("{}")  # a per-author run: no marker
     return run, out, card
 
 
@@ -81,4 +82,9 @@ def test_publish_twice_keeps_the_first_tag(tmp_path, monkeypatch):
     assert cli.main(["model", "publish"]) == 0
     assert cli.main(["model", "publish"]) == 0
     assert tags == {"r": "c1"} and len(commits) == 2 and "README.md" in commits[0]
-    assert json.loads((tmp_path / "model.json").read_text())["revision"] == "c1"
+    shipped = json.loads((tmp_path / "model.json").read_text())
+    assert shipped["revision"] == "c1"
+    # The app's worker refuses any file model.json does not pin by sha256 and size.
+    for name in ["tokenizer.json", "config.json", "best.json"]:
+        assert shipped["sha256"][name] == hashlib.sha256(name.encode()).hexdigest()
+        assert shipped["bytes"][name] == len(name)

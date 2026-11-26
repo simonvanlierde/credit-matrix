@@ -30,12 +30,14 @@ const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-12: 4.30 MB including pages, their linked UI fonts and the offline manifest.
 // Docs pages and search are cached separately on a docs visit.
 const PRECACHE_LIMIT = 4_400_000;
-// The statement reader's worker (transformers.js and the onnxruntime-web glue), loaded only when someone asks
-// for the model, never at install. Measured 2026-11-26: 142.9 kB gzip.
-const READER_LIMIT_GZIP = 150_000;
-// The int8 model it downloads from the Hugging Face Hub, as census/model.json records it (`census model
-// publish` refuses a file of another size). Measured 2026-11-26: 70.0 MB; fp32 is 275 MB.
-const MODEL_LIMIT = 75_000_000;
+// The statement reader's worker (the onnxruntime-web glue and a BPE tokenizer), loaded only when someone asks
+// for the model, never at install. Measured 2026-11-26: 28.2 kB gzip (142.9 kB with transformers.js).
+const READER_LIMIT_GZIP = 35_000;
+// The w8 model it downloads from the Hugging Face Hub, as census/model.json records it (the worker refuses a
+// file of another size or hash). Measured 2026-11-26: 75.2 MB; int8 is 70.0 MB, fp32 275 MB.
+const MODEL_LIMIT = 80_000_000;
+// MODEL_FILE in src/lib/statement-reader.ts.
+const MODEL_FILE = "onnx/model_w8.onnx";
 // Measured 2026-11-12: 2.5 MB unpacked once the fonts moved out (0.12.0 was 43 MB).
 const PACKAGE_LIMIT = 5_000_000;
 
@@ -77,11 +79,11 @@ for (const [label, limit, group] of [
 }
 
 const modelBytes = JSON.parse(readFileSync(join(import.meta.dirname, "..", "census", "model.json"), "utf8")).bytes?.[
-  "onnx/model_int8.onnx"
+  MODEL_FILE
 ];
 console.log(`check-bundle-size: statement reader model: ${kb(modelBytes ?? 0)} (limit ${kb(MODEL_LIMIT)})`);
 if (!(modelBytes > 0) || modelBytes > MODEL_LIMIT) {
-  console.error("check-bundle-size: census/model.json records no int8 model size, or one over its budget.");
+  console.error(`check-bundle-size: census/model.json records no ${MODEL_FILE} size, or one over its budget.`);
   process.exit(1);
 }
 

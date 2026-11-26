@@ -27,10 +27,27 @@ HUB_EXPORT = (
     "onnx/model.onnx",
     "onnx/model_int8.onnx",
 )
+# A one-pass export ships w8 instead of int8, whose per-call activation scales cost it pairs.
+ONE_PASS_HUB_EXPORT = (*HUB_EXPORT[:-1], "onnx/model_w8.onnx")
+# What the app's worker downloads (src/lib/statement-reader.worker.ts), which refuses a file model.json does not
+# pin by sha256 and size: `census model publish` records them.
+APP_FILES = ("tokenizer.json", "config.json", "best.json", "onnx/model_w8.onnx")
+
+
+def variants(run: Path) -> dict[str, str]:
+    """The ONNX copies an export of this run (or export directory) holds, by name."""
+    from census import onepass
+
+    return onepass.VARIANTS if encoder.one_pass(run) else VARIANTS
 
 
 def export(run: Path, out: Path) -> dict[str, int]:
-    """Write the run's best checkpoint as ONNX with its int8 and q4 copies. Returns each file's size in bytes."""
+    """Write the run's best checkpoint as ONNX with its int8 and q4 copies (a one-pass run: `onepass.export`).
+    Returns each file's size in bytes."""
+    if encoder.one_pass(run):
+        from census import onepass
+
+        return onepass.export(run, out)
     import onnx
     import torch
     from onnxruntime.quantization import QuantType, quantize_dynamic
@@ -74,7 +91,7 @@ def hub_files(run: Path, out: Path, card: Path, sha256: dict[str, str], sizes: d
     """Path in the Hub repository -> local file: the export without q4, the PyTorch weights, and the model
     card as README.md. A ValueError when a file is missing, or one named in `sha256` or `sizes` (bytes)
     differs; the app reads the size it shows from `sizes`, and its build caps it."""
-    files = {name: out / name for name in HUB_EXPORT}
+    files = {name: out / name for name in (ONE_PASS_HUB_EXPORT if encoder.one_pass(run) else HUB_EXPORT)}
     files |= {"model.safetensors": run / "checkpoint" / "model.safetensors", "README.md": card}
     if missing := [str(f) for f in files.values() if not f.exists()]:
         raise ValueError(f"missing {', '.join(missing)}")
@@ -102,23 +119,35 @@ def _onnx_probabilities(session: Any, encoded: encoder.Encoded, batch_size: int)
 
 def evaluate(out: Path, rows: list[dict[str, Any]], threads: int, batch_size: int = 16) -> dict[str, dict[str, Any]]:
     """Per variant on CPU: pair-level precision, recall and F1 against the rows' gold, as `census model score`
-    counts them, the share of articles whose pairs match the fp32 model's exactly, and the seconds taken."""
+    counts them, the share of articles whose pairs match the fp32 model's exactly, and the seconds taken.
+    A one-pass export reads one article per call, as the app does."""
     import onnxruntime as ort
     from transformers import AutoTokenizer
 
+    from census import onepass
+
     tokenizer: Any = AutoTokenizer.from_pretrained(out)
     threshold = json.loads((out / "best.json").read_text(encoding="utf-8"))["threshold"]
-    max_length = json.loads((out / "run.json").read_text(encoding="utf-8"))["max_length"]
-    encoded = encoder.Encoded(tokenizer, rows, max_length)
+    config = json.loads((out / "run.json").read_text(encoding="utf-8"))
+    if "marker" in config:
+        marked = onepass.Encoded(tokenizer, rows, config["max_length"], config["marker"])
+    else:
+        encoded = encoder.Encoded(tokenizer, rows, config["max_length"])
+
+    def read(session: Any) -> list[list[list[float]]]:
+        if "marker" in config:
+            return onepass.onnx_probabilities(session, marked, 1)
+        return encoder._per_article(rows, encoded, _onnx_probabilities(session, encoded, batch_size))
+
     gold = [{(int(p), s) for p, s in r["gold"]} for r in rows]
     options = ort.SessionOptions()
     options.intra_op_num_threads = threads
     results: dict[str, dict[str, Any]] = {}
     reference: list[encoder.Pairs] = []
-    for name, file in VARIANTS.items():
+    for name, file in variants(out).items():
         session = ort.InferenceSession(str(out / "onnx" / file), options, providers=["CPUExecutionProvider"])
         start = time.monotonic()
-        probs = encoder._per_article(rows, encoded, _onnx_probabilities(session, encoded, batch_size))
+        probs = read(session)
         seconds = time.monotonic() - start
         found = [encoder.decode(p, threshold) for p in probs]
         reference = reference or found

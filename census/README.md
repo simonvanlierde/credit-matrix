@@ -560,9 +560,10 @@ only, and three seeds each, Ettin-32M reaches F1 0.913 but exact 0.584, and Etti
 
 #### Publishing the model
 
-[`model.json`](model.json) names the shipped run, its Hub repository and the sha256 of its weights.
-`MODEL_CARD.md` quotes all three, and `tests/test_model_card.py` fails when the two disagree. To
-publish, log in with `hf auth login`, then run:
+[`model.json`](model.json) names the shipped run, its Hub repository, the sha256 of its weights,
+and the sha256 and size of each file the app downloads: the app refuses a file that differs.
+`MODEL_CARD.md` quotes the run, the repository and the hashes, and `tests/test_model_card.py` fails
+when the two disagree. To publish, log in with `hf auth login`, then run:
 
 ```sh
 uv run --group train census model publish --dry-run
@@ -570,9 +571,11 @@ uv run --group train census model publish
 ```
 
 `--dry-run` checks every hash in `model.json` against the local files and lists what would go up.
-`publish` then pushes the int8 and fp32 ONNX files, `model.safetensors`, the tokenizer, `best.json`,
-`run.json` and the card (as `README.md`) to the Hub in one commit, and tags that commit with the
-run's name. After a card change, run it again: it pushes a new commit and leaves the tag where it was.
+`publish` then pushes the fp32 ONNX file and the int8 one (w8 for a one-pass run),
+`model.safetensors`, the tokenizer, `best.json`, `run.json` and the card (as `README.md`) to the Hub
+in one commit, and tags that commit with the run's name. It records the tagged commit, and the sha256
+and size of each file the app downloads, in `model.json`. After a card change, run it again: it
+pushes a new commit and leaves the tag where it was.
 
 ## Limits
 

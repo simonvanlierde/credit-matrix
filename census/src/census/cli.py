@@ -431,12 +431,17 @@ def _run_dir(args: argparse.Namespace) -> Path:
 
 
 def cmd_model_train(args: argparse.Namespace) -> None:
-    from census import encoder
+    from census import encoder, onepass
 
     run = _run_dir(args)
     if (run / "checkpoint").exists():
         raise Failure(f"{run} has a checkpoint; pick a new --name")
-    dataset = _model_dir(args) / "dataset"
+    dataset = _model_dir(args) / args.dataset
+    if args.init and not args.one_pass:
+        raise Failure("--init goes with --one-pass")
+    init = _model_dir(args) / "runs" / args.init / "checkpoint" if args.init else None
+    if init and not init.exists():
+        raise Failure(f"no checkpoint in {init.parent}")
     if not (dataset / "train.jsonl").exists():
         raise Failure(f"no {dataset / 'train.jsonl'}; write it with `census model dataset`")
     if args.model and not args.revision:
@@ -448,13 +453,15 @@ def cmd_model_train(args: argparse.Namespace) -> None:
         "dev_articles",
         "epochs",
         "batch_size",
+        "max_length",
         "learning_rate",
         "seed",
         "open_licence_only",
         "device",
     )
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
-    config = encoder.Config(**overrides)
+    one = onepass.Config(**overrides, init=str(init or "")) if args.one_pass else None
+    config = one or encoder.Config(**overrides)
     with runinfo.tracking(DATA / "mlflow.db", f"census-{args.snapshot}", args.name, "train") as t:
         t.params(
             {f"config.{k}": v for k, v in asdict(config).items()}
@@ -468,7 +475,7 @@ def cmd_model_train(args: argparse.Namespace) -> None:
             t.dataset(path, "held_out" if path.name == "held_out.jsonl" else "train")
         try:
             with runinfo.track_energy() as energy:
-                best = encoder.train(config, dataset, run)
+                best = onepass.train(one, dataset, run) if one else encoder.train(config, dataset, run)
         finally:
             t.energy(energy)
         base = runinfo.base_model(config.model, config.revision)
@@ -574,7 +581,7 @@ def cmd_model_browser(args: argparse.Namespace) -> None:
     run, out = _run_dir(args), _model_dir(args) / "browser" / args.name
     if not (run / "best.json").exists():
         raise Failure(f"no trained model in {run}")
-    if not (out / "onnx" / browser.VARIANTS["q4"]).exists():
+    if not all((out / "onnx" / file).exists() for file in browser.variants(run).values()):
         print(json.dumps({"bytes": browser.export(run, out)}), flush=True)
     items, _ = _items(args)
     rows = list(items)
@@ -582,6 +589,16 @@ def cmd_model_browser(args: argparse.Namespace) -> None:
     results = browser.evaluate(out, rows, args.threads)
     (out / "evaluation.json").write_text(json.dumps(results, indent=1) + "\n", encoding="utf-8")
     print(f"evaluation in {out / 'evaluation.json'}")
+
+
+def cmd_model_fixtures(args: argparse.Namespace) -> None:
+    from census import onepass
+
+    out = _model_dir(args) / "browser" / args.name
+    if not (out / "onnx" / onepass.VARIANTS["w8"]).exists():
+        raise Failure(f"no one-pass export in {out}; write it with `census model browser --name {args.name}`")
+    cases = onepass.parity(out)
+    print(f"{len(cases)} cases, {sum(len(c['chunks']) for c in cases)} chunks in {out / 'parity.json'}")
 
 
 def cmd_model_publish(args: argparse.Namespace) -> None:
@@ -609,6 +626,10 @@ def cmd_model_publish(args: argparse.Namespace) -> None:
     # The app loads that commit, not the tag, which anyone with write access to the repo can move.
     tag = next(t for t in api.list_repo_refs(shipped["repo"]).tags if t.name == args.name)
     shipped["revision"] = tag.target_commit
+    # hub_files checked any pins already there, so these are the uploaded files' own.
+    for name in [name for name in browser.APP_FILES if name in files]:
+        shipped["sha256"][name] = runinfo.sha256(files[name])
+        shipped["bytes"][name] = files[name].stat().st_size
     (ROOT / "model.json").write_text(json.dumps(shipped, indent=2) + "\n", encoding="utf-8")
     print(f"{commit.commit_url} (tag {args.name} at {tag.target_commit})")
 
@@ -763,6 +784,10 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--dev-articles", type=int, help="dev articles carved from train (default: 2000)")
     cmd.add_argument("--epochs", type=int, help="passes over the drawn articles (default: 1)")
     cmd.add_argument("--batch-size", type=int, help="examples per step (default: 32)")
+    cmd.add_argument("--max-length", type=int, help="tokens per example (default: 512)")
+    cmd.add_argument("--dataset", default="dataset", help="directory under data/model/<snapshot>/ with train.jsonl")
+    cmd.add_argument("--one-pass", action="store_true", help="read all of a statement's authors in one example")
+    cmd.add_argument("--init", help="with --one-pass: start from this run's checkpoint (encoder and head)")
     cmd.add_argument("--learning-rate", type=float, help="peak learning rate for AdamW (default: 3e-5)")
     cmd.add_argument("--seed", type=int, help="seed for the draw, the dev set and the batches (default: 20261018)")
     cmd.add_argument("--open-licence-only", action="store_true", help="train and dev only on CC BY and CC0 articles")
@@ -797,13 +822,20 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--limit", type=int, help="the --limit the predictions were made with")
     cmd.set_defaults(func=cmd_model_apply)
     cmd = model_sub.add_parser(
-        "browser", parents=[snap], help="export to ONNX with int8 and q4 copies and score each on held-out, on CPU"
+        "browser",
+        parents=[snap],
+        help="export to ONNX (int8 and q4 copies; one-pass: int8 and w8) and score each on held-out, on CPU",
     )
     cmd.add_argument("--name", required=True, help="the run's directory name")
     cmd.add_argument("--sample", type=int, default=2000, help="held-out articles to score (default: 2000)")
     cmd.add_argument("--seed", type=int, default=20261019, help="seed for the sample")
     cmd.add_argument("--threads", type=int, default=16, help="CPU threads for onnxruntime (default: 16)")
     cmd.set_defaults(func=cmd_model_browser, labels=None)  # held-out only: a labelled CSV has no gold pairs
+    cmd = model_sub.add_parser(
+        "fixtures", parents=[snap], help="write parity.json: a one-pass export's inputs and outputs for the app's tests"
+    )
+    cmd.add_argument("--name", required=True, help="the run's directory name")
+    cmd.set_defaults(func=cmd_model_fixtures)
     cmd = model_sub.add_parser(
         "publish", help="push the run census/model.json names, with MODEL_CARD.md as README, to the Hugging Face Hub"
     )

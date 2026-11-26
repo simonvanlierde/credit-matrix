@@ -1,14 +1,20 @@
 {
-  "run": "ettin-68m-both-s1",
-  "revision": "5e8a1dbdc474a4fb44200b772da4fa1702dc31d9",
+  "run": "ettin-68m-onepass-b8-s2",
+  "revision": "df9376100fb3b7f4ae057d1e52fe54dc0e2e4568",
   "snapshot": "oa-2026-10",
   "repo": "simonvanlierde/credit-statement-reader",
   "sha256": {
-    "model.safetensors": "a48dff938802fef29959e193d2ed7c3a5bd6ca3a3ae1fef6ff5f308f128e8e86",
-    "onnx/model.onnx": "ea66c786ba8d7fa33a490f707444a62f6e2589420b963afd129bc27440b85530",
-    "onnx/model_int8.onnx": "0157d52635f2a0a5482591ef525a40ddaac02b5ecb774587f945480b4a6b67ee"
+    "best.json": "529baba95800ccb09a1168bbfab9519f268b4c1b00a8cfd71cf096bce00b678d",
+    "config.json": "d9f7523bcc0248102608c85d698876886fbf45ce93c75176ae70edd241ca77d3",
+    "model.safetensors": "1e74f68491f212b746c89f1e5c1cc4e03b9a3a0cf9c0c43b68f07d8e10afc54d",
+    "onnx/model.onnx": "ad261fb9b72b4e1f05bf7702ea8c5b7e43ccdb7976afd292a321c6b78f7b79cd",
+    "onnx/model_w8.onnx": "f720cbbb47529e521d80be75dd1aa1b08449f57489edd7f8067c71591930ccf5",
+    "tokenizer.json": "6c8aaa9a542084f2457eab775d4eeb51f92a70c0fd9de28d5edb0ddec3c08d30"
   },
   "bytes": {
-    "onnx/model_int8.onnx": 70038085
+    "best.json": 111,
+    "config.json": 2733,
+    "onnx/model_w8.onnx": 75232106,
+    "tokenizer.json": 3583228
   }
 }
