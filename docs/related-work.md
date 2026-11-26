@@ -14,3 +14,7 @@ CRediT Matrix builds on earlier research on who gets credit for what in a paper:
 - Holcombe, A. O., Kovacs, M., Lagisz, M., et al. (2026). Facilitating multilingual research
   publishing: Translations of the Contributor Roles Taxonomy (CRediT). *MetaArXiv*.
   <https://doi.org/10.31222/osf.io/2rp7s_v2>
+- OpenAlex. (2026, November 23). OpenAlex now shows who did what on a paper. *OpenAlex blog*.
+  <https://blog.openalex.org/who-did-what-on-a-paper/>. Per-author CRediT roles for about 3
+  million works, under CC0, from Crossref deposits, PubMed Central XML and article full text; see
+  also [Contributor roles](https://help.openalex.org/data/contributor-roles/) in the OpenAlex help.
