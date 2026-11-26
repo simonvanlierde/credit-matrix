@@ -40,6 +40,9 @@
       matchUpdateTypes: ["minor", "patch"],
       groupName: "dev tooling",
     },
+    // onnxruntime-web runs the statement reader's model, and no test runs it on the parity fixture's
+    // logits, so a bump that changes its numerics would pass CI. After the runtime rule, so it wins.
+    { matchPackageNames: ["onnxruntime-web"], automerge: false },
     // Actions updates wait for a person: the release and deploy steps that use them run only
     // after the merge. After the runtime rule, so it wins for actions.
     { matchManagers: ["github-actions"], groupName: "actions", automerge: false },
