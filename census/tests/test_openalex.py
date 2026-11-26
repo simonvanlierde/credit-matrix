@@ -20,18 +20,25 @@ def work(doi: str, *roles: list[str]) -> dict:
 
 
 class Api:
-    """Stands in for urlopen: answers each DOI filter from `works`, or raises the queued errors first."""
+    """Stands in for urlopen: answers each DOI filter from `works`, or raises the queued errors first.
 
-    def __init__(self, works: dict[str, dict], *errors: BaseException):
+    A filter holding a DOI in `refused` answers HTTP 400; `hidden` works count in meta but stay off the page.
+    """
+
+    def __init__(self, works: dict[str, dict], *errors: BaseException, refused=(), hidden=0):
         self.works, self.errors, self.urls = works, list(errors), []
+        self.refused, self.hidden = set(refused), hidden
 
     def __call__(self, request, timeout):
         self.urls.append(request.full_url)
         if self.errors:
             raise self.errors.pop(0)
         query = urllib.parse.parse_qs(urllib.parse.urlsplit(request.full_url).query)
-        found = [self.works[d] for d in query["filter"][0].removeprefix("doi:").split("|") if d in self.works]
-        return io.BytesIO(json.dumps({"meta": {"count": len(found)}, "results": found}).encode())
+        dois = query["filter"][0].removeprefix("doi:").split("|")
+        if self.refused & set(dois):
+            raise urllib.error.HTTPError("u", 400, "bad filter", Message(), None)
+        found = [self.works[d] for d in dois if d in self.works]
+        return io.BytesIO(json.dumps({"meta": {"count": len(found) + self.hidden}, "results": found}).encode())
 
 
 @pytest.fixture
@@ -39,8 +46,8 @@ def api(monkeypatch):
     monkeypatch.setattr(net.time, "sleep", lambda s: None)
     monkeypatch.setattr(openalex.time, "sleep", lambda s: None)
 
-    def install(works, *errors):
-        fake = Api(works, *errors)
+    def install(works, *errors, **options):
+        fake = Api(works, *errors, **options)
         monkeypatch.setattr(net.urllib.request, "urlopen", fake)
         return fake
 
@@ -81,6 +88,51 @@ def test_fetch_survives_a_half_line_from_a_killed_run(api, tmp_path):
     assert openalex.cached(cache)["10.1/a"][2] is not None
 
 
+def test_cached_skips_a_line_cut_inside_a_multibyte_character(tmp_path):
+    cache = tmp_path / "roles.jsonl"
+    whole = json.dumps({"fetched": "2026-11-26", "dois": ["10.1/a"], "results": []}) + "\n"
+    cut = '{"fetched": "2026-11-26", "dois": ["10.1/b"], "results": [{"name": "Zoë'.encode()[:-1]
+    cache.write_bytes(whole.encode() + cut)
+    assert list(openalex.cached(cache)) == ["10.1/a"]
+
+
+def test_fetch_asks_a_refused_batch_one_doi_at_a_time(api, tmp_path, monkeypatch):
+    monkeypatch.setattr(openalex, "BATCH", 2)
+    fake = api(WORKS, refused={"10.1/bad"})
+    cache = tmp_path / "roles.jsonl"
+    # Batches: [a, b], [bad, c]; the second is refused and asked again as [bad] and [c].
+    assert openalex.fetch(["10.1/a", "10.1/b", "10.1/bad", "10.1/c"], cache) == 4
+    assert len(fake.urls) == 4
+    known = openalex.cached(cache)
+    assert known["10.1/bad"][2] is None and known["10.1/c"][2] is not None
+    assert openalex.fetch(["10.1/bad"], cache) == 0  # recorded, so a rerun goes past it
+
+
+def test_fetch_asks_again_for_dois_an_overflowing_page_left_out(api, tmp_path):
+    api(WORKS, hidden=1)
+    cache = tmp_path / "roles.jsonl"
+    openalex.fetch(["10.1/a", "10.1/x"], cache)
+    assert list(openalex.cached(cache)) == ["10.1/a"]  # 10.1/x may be on the page not sent
+    api(WORKS)
+    assert openalex.fetch(["10.1/a", "10.1/x"], cache) == 1
+
+
+def test_cached_takes_another_version_only_when_it_is_the_only_one(api, tmp_path):
+    cache = tmp_path / "roles.jsonl"
+    v3 = work("10.7554/elife.89892.3", ["software"])
+    lines = [
+        {"fetched": "2026-11-26", "dois": ["10.7554/elife.89892"], "results": [v3]},
+        {"fetched": "2026-11-26", "dois": ["10.1/e"], "results": [work("10.1/e.1"), work("10.1/e.2")]},
+        {"fetched": "2026-11-26", "dois": ["10.1371/journal.pone"], "results": [work("10.1371/journal.pone.0123456")]},
+    ]
+    cache.write_text("".join(json.dumps(x) + "\n" for x in lines), encoding="utf-8")
+    known = openalex.cached(cache)
+    assert known["10.7554/elife.89892"][2] == (1, [(1, "software")])
+    assert known["10.1/e"][2] is None  # two versions came back: neither is taken
+    assert known["10.1371/journal.pone"][2] is None  # a seven-digit article id is not a version
+    assert openalex.unversioned("10.1/x/v2") == "10.1/x"
+
+
 def article(i: int, doi: str | None, n_authors: int, roles: list) -> Rows:
     fields = {"pmcid": f"PMC{i}", "stratum": "all", "style": "statement_text", "doi": doi, "n_authors": n_authors}
     return Rows(fields | {"statement": "text", "authors": [f"Author {n}" for n in range(n_authors)]}, roles=roles)
@@ -110,6 +162,19 @@ def test_write_maps_by_position_and_keeps_the_schema_pin(api, tmp_path):
     assert meta["openalex_roles_requests"] == "1" and meta["openalex_roles_fetched"]
     with store.connect(db) as con:  # a writer still accepts the database: the schema pin is unchanged
         assert store.mismatched_pins(con) == []
+    api(WORKS | {"10.1/x": work("10.1/x", ["software"])})
+    cache.unlink()
+    openalex.fetch(["10.1/a", "10.1/x"], cache)
+    with store.connect(db) as con:  # a second write replaces the rows of the articles it is given
+        con.execute("INSERT INTO openalex_assignments VALUES ('P9', 1, 'resources')")
+        openalex.write(con, {"P1": ("10.1/a", 2), "P4": ("10.1/x", 1)}, cache)
+        rows = con.execute("SELECT * FROM openalex_assignments ORDER BY ALL").fetchall()
+    assert rows == [
+        ("P1", 1, "software"),
+        ("P1", 2, "writing-review-editing"),
+        ("P4", 1, "software"),
+        ("P9", 1, "resources"),
+    ]
 
 
 def test_paired_f1_differences_and_their_interval():
@@ -146,6 +211,15 @@ def test_cli_fetches_a_sheet_and_scores_gold_beside_the_census(api, tmp_path, ca
         "0.667",
     ]
     assert cli.main(["score", str(gold), "--db", str(db), "--key", str(sheet)]) == 1
+
+    ood = tmp_path / "ood-gold.jsonl"  # a set outside the database leaves the others their census rows
+    ood.write_text(json.dumps({"pmcid": "PMC99", "label": []}) + "\n", encoding="utf-8")
+    assert cli.main(["score", str(gold), str(ood), "--db", str(db)]) == 0
+    captured = capsys.readouterr()
+    tables = captured.out.split("\n\n")
+    assert all("rule parser" in t for t in tables if t.startswith("set,"))
+    assert not any("rule parser" in t for t in tables if t.startswith(("ood,", "pooled,")))
+    assert "ood: 1 articles are not in the database" in captured.err
 
 
 def test_cli_exits_2_when_throttled(api, tmp_path, capsys):

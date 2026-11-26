@@ -277,23 +277,25 @@ def _score_gold(args: argparse.Namespace) -> None:
             raise Failure("no openalex_assignments in the database; fetch them with `census openalex`")
         readers.use_roles(con)
         systems["openalex"] = _pairs_in(con, "openalex_assignments", ids)
-        (in_db,) = store.one(con, "SELECT count(*) FROM articles WHERE pmcid IN (SELECT unnest(?))", [ids]) or (0,)
-        if in_db == len(ids):
-            systems["rule parser"] = _pairs_in(con, "assignments", ids)
-            systems["census as published"] = _pairs_in(con, "census_roles", ids)
-        else:
-            print(
-                f"{len(ids) - in_db} articles are not in the database: no rule parser or census rows", file=sys.stderr
-            )
+        sql = "SELECT pmcid FROM articles WHERE pmcid IN (SELECT unnest(?))"
+        in_db = {pmcid for (pmcid,) in con.execute(sql, [ids]).fetchall()}
+        if in_db:
+            systems["rule parser"] = _pairs_in(con, "assignments", list(in_db))
+            systems["census as published"] = _pairs_in(con, "census_roles", list(in_db))
     if args.predictions:
         systems[args.predictions.stem] = modelset.read_predictions(args.predictions)
+    database_only = {"rule parser", "census as published"}
     # "-" is a rate with nothing to count; the difference is F1 minus OpenAlex's, its interval paired.
     for name, gold in sets.items():
+        # A set with articles outside the database (ood200b) gets no rule parser or census rows.
+        if missing := sum(i not in in_db for i in gold):
+            print(f"{name}: {missing} articles are not in the database: no rule parser or census rows", file=sys.stderr)
+        scored = {k: v for k, v in systems.items() if not (missing and k in database_only)}
         covered = [i for i in gold if systems["openalex"].get(i)]
         for subset, chosen in (("all articles", list(gold)), ("OpenAlex has roles", covered)):
             title = f"{name}, {subset}"
             print(f"{title:<40}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'vs openalex (95%)':>26}")
-            for system, n, p, r, f1, diff, low, high in labels.paired_f1(gold, systems, chosen, "openalex"):
+            for system, n, p, r, f1, diff, low, high in labels.paired_f1(gold, scored, chosen, "openalex"):
                 p, r, f1 = ("-" if x is None else x for x in (p, r, f1))
                 versus = "" if diff is None else f"{diff:+.3f} ({low:+.3f} to {high:+.3f})"
                 print(f"{system[:39]:<40}{n:>9}{p:>11}{r:>8}{f1:>7}{versus:>26}")

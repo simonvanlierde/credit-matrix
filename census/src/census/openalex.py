@@ -9,6 +9,7 @@ differs from the census's.
 import datetime
 import http.client
 import json
+import re
 import sys
 import time
 import urllib.error
@@ -16,6 +17,7 @@ import urllib.parse
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import duckdb
 
@@ -39,6 +41,14 @@ def normal(doi: str) -> str:
     return doi.strip().lower().removeprefix("https://doi.org/")
 
 
+_VERSION_RE = re.compile(r"(?:\.\d{1,2}|/v\d+)$")
+
+
+def unversioned(doi: str) -> str:
+    """The DOI without a version suffix: ".3" (one or two digits, so "pone.0123456" keeps its id) or "/v2"."""
+    return _VERSION_RE.sub("", doi)
+
+
 def askable(doi: str) -> bool:
     """A DOI the works filter can take: a comma or a bar would split the filter."""
     return doi.startswith("10.") and "," not in doi and "|" not in doi
@@ -59,21 +69,30 @@ def cached(cache: Path) -> dict[str, tuple[int, str, Work | None]]:
     out: dict[str, tuple[int, str, Work | None]] = {}
     if not cache.exists():
         return out
-    with cache.open(encoding="utf-8") as f:
+    # errors="replace": a run killed inside a multibyte character leaves bytes that are not UTF-8.
+    with cache.open(encoding="utf-8", errors="replace") as f:
         for n, line in enumerate(f):
             try:
                 entry = json.loads(line)
             except json.JSONDecodeError:  # the half line of a killed run: its DOIs are asked again
                 continue
             works = {normal(w["doi"]): _work(w) for w in entry["results"] if w.get("doi")}
+            # OpenAlex can answer a versioned DOI with another version's work (elife.89892 with
+            # elife.89892.3): an unmatched work counts when it is the only one with the same base.
+            bases = Counter(unversioned(d) for d in works if d not in entry["dois"])
+            other = {unversioned(d): w for d, w in works.items() if d not in entry["dois"]}
             for doi in entry["dois"]:
-                out[doi] = (n, entry["fetched"], works.get(doi))
+                work = works.get(doi)
+                if work is None and bases[unversioned(doi)] == 1:
+                    work = other[unversioned(doi)]
+                out[doi] = (n, entry["fetched"], work)
     return out
 
 
 def fetch(dois: Iterable[str], cache: Path, key: str | None = None, pause: float = PAUSE) -> int:
     """Ask OpenAlex for each askable DOI the cache lacks; returns the requests sent. `key` goes into the
-    query as `api_key` and never into a message. Raises Stopped on HTTP 429 or a failed request."""
+    query as `api_key` and never into a message. Raises Stopped on HTTP 429 or a failed request; a batch
+    refused with another 4xx is asked one DOI at a time instead."""
     done = cached(cache)
     todo = sorted({d for d in map(normal, dois) if askable(d) and d not in done})
     cache.parent.mkdir(parents=True, exist_ok=True)
@@ -83,24 +102,35 @@ def fetch(dois: Iterable[str], cache: Path, key: str | None = None, pause: float
             if f.read(1) != b"\n":
                 f.write(b"\n")  # end a killed run's half line, so the next answer starts a line of its own
     sent = 0
-    for start in range(0, len(todo), BATCH):
-        batch = todo[start : start + BATCH]
+    batches = [todo[start : start + BATCH] for start in range(0, len(todo), BATCH)]
+    while batches:
+        batch = batches.pop(0)
         params = {"filter": "doi:" + "|".join(batch), "select": "id,doi,authorships", "per-page": BATCH}
         if key:
             params["api_key"] = key
         if sent:
             time.sleep(pause)
+        body: dict[str, Any]
         try:
             body = json.loads(net.get(f"{API}?{urllib.parse.urlencode(params)}", give_up=frozenset({429})))
         except urllib.error.HTTPError as error:
-            raise Stopped(f"OpenAlex answered HTTP {error.code} after {sent} requests") from None
+            if error.code == 429 or not 400 <= error.code < 500:
+                raise Stopped(f"OpenAlex answered HTTP {error.code} after {sent} requests") from None
+            # A DOI the filter refuses would stop every rerun at this batch: ask its DOIs one at a
+            # time, and record a lone DOI that is still refused as not in OpenAlex.
+            if len(batch) > 1:
+                sent += 1
+                batches[:0] = [[d] for d in batch]
+                continue
+            body = {"results": [], "meta": {"count": 0}}
         except (OSError, http.client.HTTPException, ValueError) as error:
             raise Stopped(f"an OpenAlex request failed after {sent} requests ({type(error).__name__})") from None
         sent += 1
         results = body["results"]
         # A DOI two works share can push the answer past one page: the DOIs not in it are asked again next run.
         if body["meta"]["count"] > len(results):
-            batch = [d for d in batch if d in {normal(w["doi"]) for w in results if w.get("doi")}]
+            back = {unversioned(normal(w["doi"])) for w in results if w.get("doi")}
+            batch = [d for d in batch if unversioned(d) in back]
         line = {"fetched": datetime.date.today().isoformat(), "dois": batch, "results": results}
         with cache.open("a", encoding="utf-8") as f:
             f.write(json.dumps(line, ensure_ascii=False) + "\n")

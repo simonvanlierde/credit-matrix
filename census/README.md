@@ -232,11 +232,11 @@ pair precision, recall and F1 for OpenAlex, the rule parser (`assignments`) and 
 published (`census_roles`), on all articles and on those where OpenAlex has roles, each set and
 pooled. Each system's F1 minus OpenAlex's comes with a 95% interval from 1,000 paired resamples of
 the articles. `--predictions` adds a model's file; for a set not in the database (`ood200b`) it and OpenAlex are
-the only systems. The reference is model-made, so these figures are
-agreement with it, not accuracy. On the 216 gold500b and test200b articles where OpenAlex has roles,
-pooled F1 is 0.933 for OpenAlex, 0.951 for the rules and 0.979 for the census as published (+0.046,
-+0.026 to +0.069). OpenAlex has roles for 31% of these 700 articles and almost none of the narrative
-ones.
+the only systems, and the other sets keep theirs. The reference is model-made, so these figures are
+agreement with it, not accuracy. On the 66 test200b articles where OpenAlex has roles, F1 is 0.932
+for OpenAlex, 0.943 for the rules and 0.991 for the census as published (+0.059, +0.025 to +0.114).
+gold500b chose the census's encoder, so its rows flatter the census. OpenAlex has roles for 31% of
+the 700 gold500b and test200b articles and almost none of the narrative ones.
 
 ## Validation
 
