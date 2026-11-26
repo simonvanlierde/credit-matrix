@@ -184,7 +184,8 @@ def _pairs(pairs: set[tuple[int, str]]) -> str:
     """(position, slug) pairs written the way a `gold` cell is: "1: software, validation; 2: resources"."""
     roles: dict[int, list[str]] = defaultdict(list)
     for position, slug in sorted(pairs):
-        roles[position].append(slug.replace("-", " "))
+        # parse_gold needs the "and": "review editing" matches no role pattern.
+        roles[position].append(slug.replace("-", " ").replace("review editing", "review and editing"))
     return "; ".join(f"{p}: {', '.join(r)}" for p, r in roles.items())
 
 
