@@ -8,7 +8,8 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { DOMParser } from "linkedom";
 import * as z from "zod/mini";
-import type { Author } from "./author";
+import type { Contributor } from "./author";
+import { isPerson } from "./author";
 import {
   AVAILABLE_LOCALES,
   type LocaleCode,
@@ -215,14 +216,16 @@ function distance(a: string, b: string): number {
 }
 
 /** The contributor `wanted` names: by id, full name, then a first name or surname only one person has. */
-function findContributor(authors: Author[], wanted: string): Author {
+function findContributor(authors: Contributor[], wanted: string): Contributor {
   // Typed or pasted names may be decomposed (NFD); the roster is composed.
   const lower = wanted.normalize("NFC").toLowerCase();
   const exact =
     authors.find((a) => a.id === wanted) ?? authors.find((a) => a.name.normalize("NFC").toLowerCase() === lower);
   if (exact) return exact;
   const partial = authors.filter(
-    (a) => a.firstName.normalize("NFC").toLowerCase() === lower || a.surname.normalize("NFC").toLowerCase() === lower,
+    (a) =>
+      isPerson(a) &&
+      (a.firstName.normalize("NFC").toLowerCase() === lower || a.surname.normalize("NFC").toLowerCase() === lower),
   );
   if (partial.length === 1 && partial[0]) return partial[0];
   const listed = (partial.length > 1 ? partial : authors).map((a) => a.name);

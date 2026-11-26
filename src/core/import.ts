@@ -1,12 +1,27 @@
 import type { Ask } from "./ask";
-import type { Author } from "./author";
-import { isValidOrcid, MAX_AUTHORS, MAX_IMPORT_BYTES, normalizeOrcid } from "./author";
+import type { Contributor } from "./author";
+import {
+  isValidOrcid,
+  isValidRor,
+  MAX_AUTHORS,
+  MAX_IMPORT_BYTES,
+  normalizeOrcid,
+  normalizeRor,
+  orcidOf,
+} from "./author";
 import { fromCrossrefContributors, isCrossrefContributors } from "./export/crossref";
 import { fromCsv, headerCells } from "./export/csv";
 import { fromJson, UNKNOWN_TOOLCHAIN_WARNING } from "./export/json";
 import { fromTenzing, isTenzing } from "./export/tenzing";
 import { fromJats4rXml, type XmlParser } from "./export/xml-import";
-import { createAuthor, deduplicateAuthorInitials, readUpToCap, splitNameList, tryCreateAuthor } from "./parse-authors";
+import {
+  createAuthor,
+  deduplicateAuthorInitials,
+  readUpToCap,
+  splitNameList,
+  tryCreateAuthor,
+  tryCreateGroup,
+} from "./parse-authors";
 import { decodeShareHash } from "./share-link";
 import { readsAsStatement } from "./statement";
 import type { Toolchain } from "./toolchain";
@@ -86,7 +101,7 @@ function exportOnlyFormat(trimmed: string): string | undefined {
 /** What {@link importAny} read. `asks` and `selfId` come only from JSON, `title` only from a link. */
 export interface Imported {
   format: Exclude<DetectedFormat, "unknown" | "statement">;
-  authors: Author[];
+  authors: Contributor[];
   asks?: Record<string, Ask>;
   selfId?: string;
   title?: string;
@@ -166,13 +181,13 @@ export async function importAny(
 }
 
 /** Citation metadata supplies names and ORCIDs, never contribution scores. */
-function fromCodemeta(text: string): Author[] {
+function fromCodemeta(text: string): Contributor[] {
   if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES)
     throw new Error(`Use a file smaller than ${MAX_IMPORT_BYTES / 1_000_000} MB.`);
   const data = JSON.parse(text);
   const authors = readPeople(data?.author, "author");
   // Zenodo and CodeMeta often list a person as both author and contributor: keep the author row.
-  const key = (person: Author) => person.orcid ?? person.name.toLowerCase();
+  const key = (person: Contributor) => orcidOf(person) ?? person.name.toLowerCase();
   const listed = new Set(authors.map(key));
   const others = readPeople(data?.contributor, "non-author", (person) => !listed.has(key(person)));
   return deduplicateAuthorInitials([...authors, ...others]);
@@ -184,11 +199,11 @@ function fromCodemeta(text: string): Author[] {
  */
 function readPeople(
   field: unknown,
-  contributorType: Author["contributorType"],
-  keep: (person: Author) => boolean = () => true,
-): Author[] {
+  contributorType: Contributor["contributorType"],
+  keep: (person: Contributor) => boolean = () => true,
+): Contributor[] {
   const entries: unknown[] = Array.isArray(field) ? field : field ? [field] : [];
-  return readUpToCap(entries, (entry) => {
+  return readUpToCap<unknown, Contributor>(entries, (entry) => {
     if (!entry || typeof entry !== "object") return [];
     const person = entry as Record<string, unknown>;
     if ((person["@type"] ?? person.type) === "Role") return [];
@@ -200,12 +215,21 @@ function readPeople(
     if (!name.trim()) return [];
     const id = person["@id"] ?? person.id;
     const organization = (person["@type"] ?? person.type) === "Organization";
-    const orcid = !organization && typeof id === "string" && isValidOrcid(id) ? normalizeOrcid(id) : undefined;
+    const orcid = typeof id === "string" && isValidOrcid(id) ? normalizeOrcid(id) : undefined;
     const given = typeof person.givenName === "string" ? person.givenName.trim().split(/\s+/) : [];
+    if (organization) {
+      const ror = typeof id === "string" ? normalizeRor(id) : "";
+      const alias = typeof person.alternateName === "string" ? person.alternateName.trim() : "";
+      return tryCreateGroup(name, {
+        contributorType,
+        ...(alias ? { alias } : {}),
+        ...(isValidRor(ror) ? { ror } : {}),
+      }).filter(keep);
+    }
     return tryCreateAuthor(name, {
       contributorType,
       ...(orcid ? { orcid } : {}),
-      ...(!organization && (typeof person.givenName === "string" || typeof person.familyName === "string")
+      ...(typeof person.givenName === "string" || typeof person.familyName === "string"
         ? {
             firstName: given[0] ?? "",
             middleName: given.slice(1).join(" "),

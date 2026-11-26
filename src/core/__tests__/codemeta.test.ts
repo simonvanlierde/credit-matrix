@@ -2,12 +2,12 @@
 import { readFileSync } from "node:fs";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import type { Author } from "../author";
+import type { Contributor } from "../author";
 import { toCodemeta } from "../export/codemeta";
 import { createAuthor } from "../parse-authors";
 
 const software = [{ role: "Software" as const, score: 100 }];
-const corpus: { cases: { display: string; matrix: Partial<Author>; codemeta: object }[] } = JSON.parse(
+const corpus: { cases: { display: string; matrix: Partial<Contributor>; codemeta: object }[] } = JSON.parse(
   readFileSync("conformance/names/people-v1.json", "utf8"),
 );
 

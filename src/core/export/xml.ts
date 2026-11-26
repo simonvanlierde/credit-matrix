@@ -1,14 +1,21 @@
 // spell-checker: ignore archivearticle, mathml
 
-import type { Author } from "../author";
-import { activeContributions, isAllBinary, normalizeOrcid, scoreToLevel } from "../author";
+import type { Contributor, Group, Person } from "../author";
+import { activeContributions, isAllBinary, isGroup, isPerson, normalizeOrcid, scoreToLevel } from "../author";
 import { getRoleByName } from "../credit-roles";
 import { cleanNamePart, isSuffix, splitCommaSuffix } from "../parse-authors";
 import { escapeXml } from "./escape-xml";
 import { GENERATOR_NOTE } from "./generator-note";
 
-const DOCTYPE =
-  '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.3 20210610//EN" "JATS-archivearticle1-3-mathml3.dtd">';
+/** JATS versions the export writes. 1.4 wraps a group in `<collab-wrap>`; 1.3 has `<collab>` alone. */
+export type JatsVersion = "1.3" | "1.4";
+
+const DOCTYPES: Record<JatsVersion, string> = {
+  "1.3":
+    '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.3 20210610//EN" "JATS-archivearticle1-3-mathml3.dtd">',
+  "1.4":
+    '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.4 20241031//EN" "JATS-archivearticle1-4-mathml3.dtd">',
+};
 
 /**
  * Serialize authors to a JATS4R-compliant XML string.
@@ -17,18 +24,26 @@ const DOCTYPE =
  * `degree-contribution`: the author never chose a level, so writing every role
  * as "lead" would claim one.
  */
-export function toJats4rXml(authors: Author[], { yesNo = false }: { yesNo?: boolean } = {}): string {
+export function toJats4rXml(
+  authors: Contributor[],
+  { yesNo = false, jatsVersion = "1.3" }: { yesNo?: boolean; jatsVersion?: JatsVersion } = {},
+): string {
   const withLevels = !(yesNo && isAllBinary(authors));
   // JATS4R rejects equal-contrib on a single author: equal with whom? A lone
   // flag stays in JSON and CSV, where the draft round-trips, but not here.
   const sharedFirst =
-    authors.filter((author) => author.equalContribution && author.contributorType !== "non-author").length > 1;
-  const contributions = authors.map((author) => authorToXml(author, sharedFirst, withLevels)).join("\n    ");
+    authors.filter((author) => isPerson(author) && author.equalContribution && author.contributorType !== "non-author")
+      .length > 1;
+  const contributions = authors
+    .map((author) =>
+      isGroup(author) ? groupToXml(author, withLevels, jatsVersion) : authorToXml(author, sharedFirst, withLevels),
+    )
+    .join("\n    ");
 
   return `<?xml version='1.0' encoding='UTF-8'?>
-${DOCTYPE}
+${DOCTYPES[jatsVersion]}
 <!-- ${GENERATOR_NOTE} -->
-<article article-type="other" dtd-version="1.3">
+<article article-type="other" dtd-version="${jatsVersion}">
   <front>
     <article-meta>
       <contrib-group>
@@ -46,7 +61,7 @@ ${DOCTYPE}
  * ("María José García López" → "María José López"). Take the name minus its surname
  * instead, unless complete stored parts describe a family-first name.
  */
-export function givenNamesOf(author: Author): string {
+export function givenNamesOf(author: Person): string {
   // The suffix goes in its own element, whichever order the name is in.
   const suffix = suffixOf(author);
   const [unsuffixed, commaSuffix] = splitCommaSuffix(author.name);
@@ -77,7 +92,7 @@ export function givenNamesOf(author: Author): string {
  * or "King, Martin, Jr."), unless the surname already ends in it ("Jr", or
  * "King Jr." from another tool).
  */
-export function suffixOf(author: Author): string {
+export function suffixOf(author: Person): string {
   const [unsuffixed, commaSuffix] = splitCommaSuffix(author.name);
   if (commaSuffix) return wordsOf(unsuffixed.split(",")[0] ?? "") === wordsOf(author.surname) ? commaSuffix : "";
   const words = author.name.trim().split(/\s+/);
@@ -89,7 +104,7 @@ function wordsOf(text: string): string {
   return cleanNamePart(text).split(/\s+/).filter(Boolean).join(" ");
 }
 
-function authorToXml(author: Author, sharedFirst: boolean, withLevels: boolean): string {
+function authorToXml(author: Person, sharedFirst: boolean, withLevels: boolean): string {
   const givenNames = givenNamesOf(author);
 
   // JATS4R wants the full URI, not the bare iD.
@@ -97,15 +112,7 @@ function authorToXml(author: Author, sharedFirst: boolean, withLevels: boolean):
     ? `\n      <contrib-id contrib-id-type="orcid">https://orcid.org/${escapeXml(normalizeOrcid(author.orcid))}</contrib-id>`
     : "";
 
-  // JATS 1.3 stores the level as `degree-contribution` (lead / equal /
-  // supporting); the exact 0–100 score within a level is not kept.
-  const roles = activeContributions(author)
-    .map((c) => {
-      const role = getRoleByName(c.role);
-      const degree = withLevels ? ` degree-contribution="${scoreToLevel(c.score)}"` : "";
-      return `        <role vocab="credit" vocab-identifier="https://credit.niso.org/" vocab-term="${escapeXml(c.role)}" vocab-term-identifier="${role.url}"${degree}>${escapeXml(c.role)}</role>`;
-    })
-    .join("\n");
+  const roles = rolesToXml(author, withLevels);
 
   // Named authors use contrib-type="author"; people credited only in an
   // Acknowledgements section use the generic "contributor" (JATS contrib-type
@@ -124,5 +131,45 @@ function authorToXml(author: Author, sharedFirst: boolean, withLevels: boolean):
         <surname>${escapeXml(author.surname)}</surname>${suffix ? `\n        <suffix>${escapeXml(suffix)}</suffix>` : ""}
       </string-name>
 ${roles}
+    </contrib>`;
+}
+
+/** JATS 1.3 stores the level as `degree-contribution` (lead / equal / supporting); the exact 0-100 score within a level is not kept. */
+function rolesToXml(contributor: Contributor, withLevels: boolean): string {
+  return activeContributions(contributor)
+    .map((c) => {
+      const role = getRoleByName(c.role);
+      const degree = withLevels ? ` degree-contribution="${scoreToLevel(c.score)}"` : "";
+      return `        <role vocab="credit" vocab-identifier="https://credit.niso.org/" vocab-term="${escapeXml(c.role)}" vocab-term-identifier="${role.url}"${degree}>${escapeXml(c.role)}</role>`;
+    })
+    .join("\n");
+}
+
+/**
+ * A group is a `<collab>` holding its name and members, with the ROR id as a `<contrib-id>`.
+ * Members sit in a nested `<contrib-group>` whose `content-type` says whether they are authors or
+ * collaborators. The alias and the links between members and person rows stay in JSON.
+ */
+function groupToXml(group: Group, withLevels: boolean, version: JatsVersion): string {
+  const rorEl = group.ror
+    ? `\n      <contrib-id contrib-id-type="ror">https://ror.org/${escapeXml(group.ror)}</contrib-id>`
+    : "";
+  const members =
+    group.members.length === 0
+      ? ""
+      : `<contrib-group content-type="${group.membersAre}">${group.members
+          .map(
+            (member) => `<contrib contrib-type="author"><string-name>${escapeXml(member.name)}</string-name></contrib>`,
+          )
+          .join("")}</contrib-group>`;
+  const name = escapeXml(group.name);
+  const collab =
+    version === "1.4"
+      ? `<collab-wrap><collab>${name}</collab>${members}</collab-wrap>`
+      : `<collab>${name}${members}</collab>`;
+  const contribType = group.contributorType === "non-author" ? "contributor" : "author";
+  return `<contrib contrib-type="${contribType}">${rorEl}
+      ${collab}
+${rolesToXml(group, withLevels)}
     </contrib>`;
 }

@@ -1,7 +1,7 @@
-import type { Author, Contribution } from "../author";
-import { isValidOrcid, LEVEL_SCORE, normalizeOrcid } from "../author";
+import type { Contribution, Contributor, Person } from "../author";
+import { isValidOrcid, isValidRor, LEVEL_SCORE, normalizeOrcid, normalizeRor } from "../author";
 import { CREDIT_ROLES, roleNamed } from "../credit-roles";
-import { cleanNamePart, createAuthor, deduplicateAuthorInitials, readUpToCap } from "../parse-authors";
+import { cleanNamePart, createAuthor, createGroup, deduplicateAuthorInitials, readUpToCap } from "../parse-authors";
 
 /** The score each `degree-contribution` level imports as. "none" is not one: a listed role counts. */
 const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(([level]) => level !== "none"));
@@ -9,6 +9,10 @@ const LEVEL_SCORES = new Map<string, number>(Object.entries(LEVEL_SCORE).filter(
 /** The part of a DOM element the importer reads. Browser and linkedom elements both fit. */
 export interface XmlElement {
   readonly textContent: string | null;
+  /** Browser and linkedom elements have both. Without `localName` a Crossref `<organization>` reads as nothing. */
+  readonly localName?: string;
+  /** Text nodes are `nodeType` 3; a group's name is the text of its `<collab>` outside the member list. */
+  readonly childNodes?: ArrayLike<{ readonly nodeType: number; readonly textContent: string | null }>;
   getAttribute(name: string): string | null;
   querySelector(selectors: string): XmlElement | null;
   querySelectorAll(selectors: string): ArrayLike<XmlElement>;
@@ -24,7 +28,7 @@ export interface XmlParser {
  * Python app) back into an Author array. `parser` defaults to the global
  * `DOMParser`; pass one where there is none, such as linkedom's in Node.
  */
-export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParser } = {}): Author[] {
+export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParser } = {}): Contributor[] {
   const doc = parseXml(xmlString, parser, "fromJats4rXml");
 
   const roleNameByUrl = new Map<string, string>(CREDIT_ROLES.map((r) => [normalizeRoleUrl(r.url), r.name]));
@@ -32,14 +36,13 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   const contribEls = Array.from(doc.querySelectorAll("contrib"));
   if (contribEls.length === 0) return [];
 
-  const authors = readUpToCap(contribEls, (contrib) => {
+  // A group's members are contribs inside its <collab>; they belong to the group, not the list.
+  const memberEls = new Set<XmlElement>(Array.from(doc.querySelectorAll("collab contrib")));
+  const authors = readUpToCap<XmlElement, Contributor>(contribEls, (contrib) => {
+    if (memberEls.has(contrib)) return [];
     // Editors, reviewers and other non-credited contrib types are not authors.
     const contribType = contrib.getAttribute("contrib-type");
     if (contribType && contribType !== "author" && contribType !== "contributor") return [];
-    // A <collab> with members holds their contribs: they import on their own,
-    // and reading the group would pick up the first member's name again.
-    if (contrib.querySelector("contrib")) return [];
-
     // Parse role elements. The `vocab-term-identifier` URL is authoritative; then
     // `vocab-term`, then the text content, read whatever their case or dash
     // ("Writing - original draft").
@@ -65,6 +68,44 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     // JATS spells both markers "yes"; anything else, including absence, is no.
     const equalContribution = contrib.getAttribute("equal-contrib") === "yes";
     const corresponding = contrib.getAttribute("corresp") === "yes";
+
+    const collab = contrib.querySelector("collab");
+    if (collab) {
+      // JATS 1.3 has <collab> in the contrib; 1.4 wraps it in <collab-wrap> with the member list beside it.
+      const name = squash(
+        collab.childNodes
+          ? Array.from(collab.childNodes)
+              .filter((node) => node.nodeType === 3)
+              .map((node) => node.textContent)
+              .join(" ")
+          : collab.textContent,
+      );
+      if (!name) return [];
+      const members = Array.from(contrib.querySelectorAll("contrib")).flatMap((member) => {
+        const parts = ["given-names", "surname", "suffix"].map((tag) => squash(member.querySelector(tag)?.textContent));
+        const text = parts.some(Boolean)
+          ? parts.filter(Boolean).join(" ")
+          : squash(member.querySelector("string-name")?.textContent ?? member.querySelector("name")?.textContent);
+        return text ? [{ name: text }] : [];
+      });
+      const ror = normalizeRor(squash(contrib.querySelector('contrib-id[contrib-id-type="ror"]')?.textContent));
+      try {
+        return [
+          createGroup(name, {
+            contributions,
+            contributorType,
+            members,
+            membersAre:
+              contrib.querySelector("contrib-group")?.getAttribute("content-type") === "authors"
+                ? "authors"
+                : "collaborators",
+            ...(ror && isValidRor(ror) ? { ror } : {}),
+          }),
+        ];
+      } catch {
+        return [];
+      }
+    }
 
     const person = readPerson(
       {
@@ -126,8 +167,8 @@ const squash = (text: string | null | undefined) => (text ?? "").replace(/\s+/g,
  */
 export function readPerson(
   text: { given?: string | null; surname?: string | null; suffix?: string | null; orcid?: string | null },
-  overrides: Partial<Pick<Author, "contributions" | "contributorType" | "equalContribution" | "corresponding">>,
-): Author | null {
+  overrides: Partial<Pick<Person, "contributions" | "contributorType" | "equalContribution" | "corresponding">>,
+): Person | null {
   const given = squash(text.given);
   const surname = squash(text.surname);
   const displayName = [given, surname, squash(text.suffix)].filter(Boolean).join(" ");

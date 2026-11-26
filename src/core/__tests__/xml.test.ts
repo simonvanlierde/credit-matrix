@@ -280,10 +280,10 @@ describe("toJats4rXml", () => {
     expect(xml).toContain('<contrib contrib-type="contributor">');
   });
 
-  it("skips a nameless contrib (e.g. a <collab> group) instead of aborting the import", () => {
+  it("skips a nameless contrib (e.g. an empty <collab>) instead of aborting the import", () => {
     const xml = `<article><contrib-group>
       <contrib contrib-type="author"><name><surname>Hopper</surname><given-names>Grace</given-names></name></contrib>
-      <contrib contrib-type="author"><collab>The Working Group</collab></contrib>
+      <contrib contrib-type="author"><collab>  </collab></contrib>
     </contrib-group></article>`;
 
     const parsed = fromJats4rXml(xml);
@@ -311,7 +311,7 @@ describe("toJats4rXml", () => {
     expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Grace Hopper", "Charles Darwin"]);
   });
 
-  it("imports each member of a collab once, and collapses spaces inside names", () => {
+  it("imports a collab as one group holding its members, and collapses spaces inside names", () => {
     const xml = `<article><contrib-group>
       <contrib contrib-type="author"><collab>The Lab
         <contrib-group>
@@ -321,7 +321,13 @@ describe("toJats4rXml", () => {
       </collab></contrib>
     </contrib-group></article>`;
 
-    expect(fromJats4rXml(xml).map((a) => a.name)).toEqual(["Grace Ann Hopper", "Charles Darwin"]);
+    const [group, ...rest] = fromJats4rXml(xml);
+    expect(rest).toEqual([]);
+    expect(group).toMatchObject({
+      kind: "group",
+      name: "The Lab",
+      members: [{ name: "Grace Ann Hopper" }, { name: "Charles Darwin" }],
+    });
   });
 
   it("keeps a double surname as JATS splits it, with single spaces", () => {

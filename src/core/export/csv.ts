@@ -1,7 +1,7 @@
-import type { Author, Contribution } from "../author";
-import { clampScore, isValidOrcid, LEVEL_SCORE } from "../author";
+import type { Contribution, Contributor } from "../author";
+import { clampScore, isGroup, isPerson, isValidOrcid, isValidRor, LEVEL_SCORE, normalizeRor, orcidOf } from "../author";
 import { CREDIT_ROLES, headerKey } from "../credit-roles";
-import { deduplicateAuthorInitials, readUpToCap, tryCreateAuthor } from "../parse-authors";
+import { deduplicateAuthorInitials, readUpToCap, tryCreateAuthor, tryCreateGroup } from "../parse-authors";
 
 const NAME_HEADER = "Name";
 const ORCID_HEADER = "ORCID";
@@ -9,12 +9,19 @@ const TYPE_HEADER = "Type";
 const EQUAL_HEADER = "Equal contribution";
 const CORRESPONDING_HEADER = "Corresponding";
 
-const CSV_HEADERS = [
-  NAME_HEADER,
-  ORCID_HEADER,
-  TYPE_HEADER,
-  EQUAL_HEADER,
-  CORRESPONDING_HEADER,
+/** Written only when the draft holds a group, so a roster of people keeps the columns it always had. */
+const KIND_HEADER = "Kind";
+const ALIAS_HEADER = "Alias";
+const ROR_HEADER = "ROR";
+const MEMBERS_HEADER = "Members";
+const GROUP_HEADERS = [KIND_HEADER, ALIAS_HEADER, ROR_HEADER, MEMBERS_HEADER];
+/** Between members in the Members cell; names are split on it again, so a comma in a name is safe. */
+const MEMBER_SEPARATOR = "; ";
+
+const BASE_HEADERS = [NAME_HEADER, ORCID_HEADER, TYPE_HEADER, EQUAL_HEADER, CORRESPONDING_HEADER];
+const csvHeaders = (withGroups: boolean) => [
+  ...BASE_HEADERS,
+  ...(withGroups ? GROUP_HEADERS : []),
   ...CREDIT_ROLES.map((role) => role.name),
 ];
 
@@ -165,9 +172,10 @@ export function headerCells(text: string): string[] {
   return (parseCsvRecords(line, delimiterOf(line))[0] ?? []).map((cell) => cell.trim().toLowerCase());
 }
 
-export function toCsv(authors: Author[]): string {
+export function toCsv(authors: Contributor[]): string {
+  const withGroups = authors.some(isGroup);
   const rows = [
-    CSV_HEADERS.map(escapeCsvValue).join(","),
+    csvHeaders(withGroups).map(escapeCsvValue).join(","),
     ...authors.map((author) => {
       const contributionByRole = new Map(
         author.contributions.map((contribution) => [contribution.role, contribution.score]),
@@ -175,10 +183,20 @@ export function toCsv(authors: Author[]): string {
 
       return [
         author.name,
-        author.orcid ?? "",
+        orcidOf(author) ?? "",
         author.contributorType,
-        yesNo(author.equalContribution),
-        yesNo(author.corresponding),
+        yesNo(isPerson(author) && author.equalContribution),
+        yesNo(isPerson(author) && author.corresponding),
+        ...(withGroups
+          ? isGroup(author)
+            ? [
+                "group",
+                author.alias ?? "",
+                author.ror ? `https://ror.org/${author.ror}` : "",
+                author.members.map((m) => m.name).join(MEMBER_SEPARATOR),
+              ]
+            : ["person", "", "", ""]
+          : []),
         ...CREDIT_ROLES.map((role) => String(contributionByRole.get(role.name) ?? 0)),
       ]
         .map(escapeCsvValue)
@@ -190,7 +208,7 @@ export function toCsv(authors: Author[]): string {
 }
 
 /** Read people from a CSV, stopping one past `MAX_AUTHORS`: refuse a result longer than that. */
-export function fromCsv(csv: string): Author[] {
+export function fromCsv(csv: string): Contributor[] {
   // Each record keeps its spreadsheet row number, for the score cell error.
   const records = parseCsvRecords(csv, delimiterOf(csv))
     .map((cells, index) =>
@@ -216,11 +234,15 @@ export function fromCsv(csv: string): Author[] {
   // and the lookup below reads as "no", which is the right default.
   const equalIndex = headers.indexOf(headerKey(EQUAL_HEADER));
   const correspondingIndex = headers.indexOf(headerKey(CORRESPONDING_HEADER));
+  const kindIndex = headers.indexOf(headerKey(KIND_HEADER));
+  const aliasIndex = headers.indexOf(headerKey(ALIAS_HEADER));
+  const rorIndex = headers.indexOf(headerKey(ROR_HEADER));
+  const membersIndex = headers.indexOf(headerKey(MEMBERS_HEADER));
   const roleIndexes = CREDIT_ROLES.map((role) => headers.indexOf(headerKey(role.name)));
 
   // A row with no usable name is skipped, as JATS import skips a nameless
   // contrib, rather than aborting the whole import.
-  const authors = readUpToCap(records.slice(1), (cells) => {
+  const authors = readUpToCap<string[] & { row: number }, Contributor>(records.slice(1), (cells) => {
     const name = cells[nameIndex] ?? "";
     if (!name) return [];
 
@@ -236,6 +258,21 @@ export function fromCsv(csv: string): Author[] {
     const contributorType = headerKey(cells[typeIndex] ?? "") === "non-author" ? "non-author" : "author";
     // Drop an unparseable ORCID rather than aborting the whole import.
     const orcid = cells[orcidIndex];
+
+    if (headerKey(cells[kindIndex] ?? "") === "group") {
+      const alias = cells[aliasIndex];
+      const ror = normalizeRor(cells[rorIndex] ?? "");
+      return tryCreateGroup(name, {
+        contributorType,
+        contributions,
+        ...(alias ? { alias } : {}),
+        ...(isValidRor(ror) ? { ror } : {}),
+        members: (cells[membersIndex] ?? "")
+          .split(";")
+          .map((member) => ({ name: member.trim() }))
+          .filter((member) => member.name),
+      });
+    }
 
     return tryCreateAuthor(name, {
       orcid: orcid && isValidOrcid(orcid) ? orcid : undefined,
