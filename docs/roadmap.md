@@ -4,24 +4,28 @@ What I plan to work on next. It is a plan, not a promise: CRediT Matrix has one 
 ([GOVERNANCE.md](../GOVERNANCE.md)), and the order changes when users report problems. Each item
 links to the issue that tracks it, and shipped changes are in the [changelog](../CHANGELOG.md).
 
-Last reviewed: 2026-11-12
+Last reviewed: 2026-11-26
 
 ## Now
 
 - **Find the integrations where people look.** The Typst package is on Typst Universe; the Pandoc
   filter waits for its listing ([pandoc-ext/info#8](https://github.com/pandoc-ext/info/pull/8)).
+- **A census export anyone can check**: one small, openly licensed export that records its input
+  hashes, licence policy and attribution, so a changed input shows up ([#205](https://github.com/simonvanlierde/credit-matrix/issues/205)).
 
 ## Next
 
 - **More export formats** that contributorship tools and journal systems read ([#204](https://github.com/simonvanlierde/credit-matrix/issues/204)).
 - **Reviewed translations** of the eight machine-made interface languages ([#280](https://github.com/simonvanlierde/credit-matrix/issues/280)).
-- **Signed releases** with attested tarballs and signed tags ([#213](https://github.com/simonvanlierde/credit-matrix/issues/213)).
-- **Quarto and MyST plugins** tested in a real build ([#217](https://github.com/simonvanlierde/credit-matrix/issues/217)).
+- **A census beyond Europe PMC**, with Crossref's CRediT deposits as a second source of roles, once
+  enough publishers deposit them ([#209](https://github.com/simonvanlierde/credit-matrix/issues/209)).
 
 ## Later, or only if asked
 
 - **Replies without copy and paste**, through an optional end-to-end encrypted relay ([#281](https://github.com/simonvanlierde/credit-matrix/issues/281),
   [ADR 0004](adr/0004-encrypted-relay.md)). It waits until people other than me ask for it.
+- **The census on an orchestrator**: one asset per step, partitioned by monthly snapshot, in place
+  of chained timers ([#214](https://github.com/simonvanlierde/credit-matrix/issues/214)).
 
 ## Not planned
 
