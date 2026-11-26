@@ -598,8 +598,8 @@ uv run --group train census model publish
 `model.safetensors`, the tokenizer, `best.json`, `run.json` and the card (as `README.md`) to the Hub
 in one commit, and tags that commit with the run's name. The same commit deletes every file in the
 repository that this export does not ship, except `.gitattributes`. It records the tagged commit, and the sha256
-and size of each file the app downloads, in `model.json`. After a card change, run it again: it
-pushes a new commit and leaves the tag where it was.
+and size of each file the app downloads, in `model.json`. After a card change, run it again: the
+hashes must still match, so it pushes a new commit, moves the tag to it and records that commit.
 
 ## Limits
 

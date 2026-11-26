@@ -49,7 +49,7 @@ def test_hub_files_refuse_a_changed_or_missing_file(tmp_path):
         browser.hub_files(run, out, card, {}, {})
 
 
-def test_publish_twice_keeps_the_first_tag_and_deletes_what_an_earlier_run_shipped(tmp_path, monkeypatch):
+def test_publish_twice_moves_the_tag_and_deletes_what_an_earlier_run_shipped(tmp_path, monkeypatch):
     model = tmp_path / "data" / "model" / "s"
     _export(tmp_path, model / "runs" / "r", model / "browser" / "r", one_pass=True)
     (tmp_path / "model.json").write_text(
@@ -72,10 +72,13 @@ def test_publish_twice_keeps_the_first_tag_and_deletes_what_an_earlier_run_shipp
             deleted.append([op.path_in_repo for op in operations if op.delete])
             return types.SimpleNamespace(oid=f"c{len(commits)}", commit_url=f"u{len(commits)}")
 
-        def create_tag(self, repo, tag, revision, exist_ok=False):
-            if tag in tags and not exist_ok:
+        def create_tag(self, repo, tag, revision):
+            if tag in tags:
                 raise RuntimeError("tag exists")
-            tags.setdefault(tag, revision)
+            tags[tag] = revision
+
+        def delete_tag(self, repo, tag):
+            del tags[tag]
 
         def list_repo_refs(self, repo):
             refs = [types.SimpleNamespace(name=name, target_commit=oid) for name, oid in tags.items()]
@@ -91,10 +94,10 @@ def test_publish_twice_keeps_the_first_tag_and_deletes_what_an_earlier_run_shipp
     monkeypatch.setattr(cli, "DATA", tmp_path / "data")
     assert cli.main(["model", "publish"]) == 0
     assert cli.main(["model", "publish"]) == 0
-    assert tags == {"r": "c1"} and len(commits) == 2 and "README.md" in commits[0]
+    assert tags == {"r": "c2"} and len(commits) == 2 and "README.md" in commits[0]
     assert deleted[0] == ["onnx/model_int8.onnx"]
     shipped = json.loads((tmp_path / "model.json").read_text())
-    assert shipped["revision"] == "c1"
+    assert shipped["revision"] == "c2"
     # The app's worker refuses any file model.json does not pin by sha256 and size.
     worker_reads = ["tokenizer.json", "config.json", "best.json", "onnx/model_w8.onnx"]
     assert sorted(shipped["sha256"]) == sorted(shipped["bytes"]) == sorted(worker_reads)

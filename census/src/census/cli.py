@@ -626,17 +626,19 @@ def cmd_model_publish(args: argparse.Namespace) -> None:
         ],
         commit_message=f"Upload {args.name}",
     )
-    # A later publish (a card change) keeps the tag on the first commit, whose weights the hashes pin.
-    api.create_tag(shipped["repo"], tag=args.name, revision=commit.oid, exist_ok=True)
-    # The app loads that commit, not the tag, which anyone with write access to the repo can move.
-    tag = next(t for t in api.list_repo_refs(shipped["repo"]).tags if t.name == args.name)
-    shipped["revision"] = tag.target_commit
+    # hub_files checked the app's files against the pins, so a later publish (a card change, a cleanup)
+    # holds the same weights: the run's tag moves to it, and older commits keep their stale files.
+    if any(t.name == args.name for t in api.list_repo_refs(shipped["repo"]).tags):
+        api.delete_tag(shipped["repo"], tag=args.name)
+    api.create_tag(shipped["repo"], tag=args.name, revision=commit.oid)
+    # The app loads this commit, not the tag, which anyone with write access to the repo can move.
+    shipped["revision"] = commit.oid
     # hub_files checked any pins already there, so these are the uploaded files' own.
     for name in [name for name in browser.APP_FILES if name in files]:
         shipped["sha256"][name] = runinfo.sha256(files[name])
         shipped["bytes"][name] = files[name].stat().st_size
     (ROOT / "model.json").write_text(json.dumps(shipped, indent=2) + "\n", encoding="utf-8")
-    print(f"{commit.commit_url} (tag {args.name} at {tag.target_commit})")
+    print(f"{commit.commit_url} (tag {args.name} at {commit.oid})")
 
 
 def main(argv: list[str] | None = None) -> int:
