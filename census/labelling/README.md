@@ -60,7 +60,8 @@ flowchart LR
 
 Each labeller works alone and does not see the others' files. The gate refuses any label with a
 quote that is not in the statement or with a bad author number. The vote keeps a label that two
-labellers gave in full. Only the rows with three different labels go to the adjudicator. When a rule
+labellers gave in full. Only the rows with three different labels go to the adjudicator, who marks
+each one `"confidence": "high"` or `"low"`; the project owner rules on the low ones. When a rule
 in `definition-b.md` changes later, fix the labels it touches in `NAME-adjudicated.jsonl`: a row there
 wins over the majority, so the fix survives a rerun of the vote.
 
