@@ -60,23 +60,35 @@ async function download(
   const refused = new Error(`${file} is not the file census/model.json pins.`);
   const response = await fetch(url, { signal });
   if (!(response.ok && response.body)) throw new Error(`${file}: HTTP ${response.status}`);
-  const parts: Uint8Array<ArrayBuffer>[] = [];
+  // One copy of the model in memory, not the pieces plus a joined copy.
+  const body = new Uint8Array(size);
   let received = 0;
   const reader = response.body.getReader();
   for (let read = await reader.read(); !read.done; read = await reader.read()) {
-    received += read.value.length;
     // Not buffered past the pinned size; load() aborts the fetch.
-    if (received > size) throw refused;
-    parts.push(read.value);
+    if (received + read.value.length > size) throw refused;
+    body.set(read.value, received);
+    received += read.value.length;
     onChunk(read.value.length);
   }
-  const body = await new Blob(parts).arrayBuffer();
-  if (body.byteLength !== size || hex(await crypto.subtle.digest("SHA-256", body)) !== want) throw refused;
+  if (received !== size || hex(await crypto.subtle.digest("SHA-256", body)) !== want) throw refused;
   // A load that failed meanwhile caches nothing more.
   signal.throwIfAborted();
   // Out of space: read without the offline copy.
   await cache?.put(url, new Response(body)).catch(() => undefined);
-  return body;
+  return body.buffer;
+}
+
+/**
+ * Deletes what no request reads again: an earlier release's files (75 MB a model) under another commit's
+ * `base`, and the cache of the transformers.js reader, which an old tab can write again after public/sw.js
+ * deleted it.
+ */
+async function prune(cache: Cache | undefined) {
+  // Cached URLs are absolute, and a local export's `base` is a path.
+  const current = new URL(base, self.location.href).href;
+  const stale = ((await cache?.keys()) ?? []).filter(({ url }) => !url.startsWith(current));
+  await Promise.all([...stale.map((request) => cache?.delete(request)), caches.delete("transformers-cache")]);
 }
 
 async function load() {
@@ -95,20 +107,19 @@ async function load() {
   const cache = await openCache();
   const json = async <T>(file: string) =>
     JSON.parse(new TextDecoder().decode(await download(file, cache, controller.signal, poke))) as T;
-  const loaded = Promise.all([
-    json<TokenizerJson>("tokenizer.json"),
-    json<{ id2label: Record<string, string> }>("config.json"),
-    json<{ threshold: number }>("best.json"),
-    download(MODEL_FILE, cache, controller.signal, (n) => {
-      poke();
-      received += n;
-      post({ progress: { phase: "download", percent: Math.min(100, (100 * received) / (bytes[MODEL_FILE] ?? 1)) } });
-    }).then((model) => InferenceSession.create(new Uint8Array(model), { executionProviders: ["wasm"] })),
-  ]);
+  const vocabulary = json<TokenizerJson>("tokenizer.json");
+  const config = json<{ id2label: Record<string, string> }>("config.json");
+  const best = json<{ threshold: number }>("best.json");
+  const created = download(MODEL_FILE, cache, controller.signal, (n) => {
+    poke();
+    received += n;
+    post({ progress: { phase: "download", percent: Math.min(100, (100 * received) / (bytes[MODEL_FILE] ?? 1)) } });
+  }).then((model) => InferenceSession.create(new Uint8Array(model), { executionProviders: ["wasm"] }));
+  const loaded = Promise.all([vocabulary, config, best, created]);
   try {
-    const [vocabulary, { id2label }, { threshold }, session] = await Promise.race([loaded, stalled]);
+    const [vocab, { id2label }, { threshold }, session] = await Promise.race([loaded, stalled]);
     if (typeof threshold !== "number") throw new Error("best.json has no threshold.");
-    const tokens = tokenizer(vocabulary);
+    const tokens = tokenizer(vocab);
     const special = (token: string) => {
       const id = tokens.id(token);
       if (id === undefined) throw new Error(`tokenizer.json has no ${token}.`);
@@ -116,14 +127,12 @@ async function load() {
     };
     const ids = { cls: special("[CLS]"), sep: special("[SEP]"), marker: special(MARKER) };
     const labels = Object.keys(id2label).map((i) => id2label[i] ?? "");
-    // An earlier release's files (75 MB a model) under another commit's `base`: no request reads them again.
-    // Cached URLs are absolute, and a local export's `base` is a path.
-    const current = new URL(base, self.location.href).href;
-    const stale = (await cache?.keys().catch(() => [])) ?? [];
-    await Promise.all(stale.filter(({ url }) => !url.startsWith(current)).map((r) => cache?.delete(r))).catch(
-      () => undefined,
-    );
+    await prune(cache).catch(() => undefined);
     return { encode: tokens.encode, ids, session, labels, threshold };
+  } catch (error) {
+    // create cannot be cancelled: a session it makes for a failed load would hold ~75 MB until the page closes.
+    created.then((session) => session.release()).catch(() => undefined);
+    throw error;
   } finally {
     clearTimeout(timer);
     // After a stall or a failed file, the other downloads stop too.

@@ -13,7 +13,12 @@ const pins = vi.hoisted(() => ({
   base: undefined as string | undefined,
 }));
 vi.mock("../../census/model.json", () => ({ default: pins }));
-const ort = vi.hoisted(() => ({ env: { wasm: {} as Record<string, unknown> }, create: vi.fn(), run: vi.fn() }));
+const ort = vi.hoisted(() => ({
+  env: { wasm: {} as Record<string, unknown> },
+  create: vi.fn(),
+  run: vi.fn(),
+  release: vi.fn(),
+}));
 vi.mock("onnxruntime-web/wasm", () => ({
   env: ort.env,
   InferenceSession: { create: ort.create },
@@ -41,6 +46,7 @@ let files: Record<string, string | Uint8Array<ArrayBuffer>>;
 const replies: ReaderReply[] = [];
 const cached = new Map<string, Response>();
 const opened: string[] = [];
+const dropped: string[] = [];
 let handle: (data: unknown) => Promise<void>;
 const last = () => replies.at(-1);
 const logits = (...rows: number[][]) => ({ logits: { data: Float32Array.from(rows.flat()) } });
@@ -78,6 +84,7 @@ beforeEach(async () => {
   replies.length = 0;
   cached.clear();
   opened.length = 0;
+  dropped.length = 0;
   files = {
     "tokenizer.json": JSON.stringify(TOKENIZER),
     "config.json": JSON.stringify({ id2label: { 0: "software", 1: "validation" } }),
@@ -87,6 +94,7 @@ beforeEach(async () => {
   for (const file of Object.keys(files)) pin(file);
   vi.stubGlobal("postMessage", (reply: ReaderReply) => replies.push(reply));
   vi.stubGlobal("caches", {
+    delete: async (name: string) => dropped.push(name) > 0,
     open: (name: string) => {
       opened.push(name);
       return Promise.resolve({
@@ -105,7 +113,7 @@ beforeEach(async () => {
       return Promise.resolve(body === undefined ? new Response("", { status: 404 }) : new Response(body));
     }),
   );
-  ort.create.mockResolvedValue({ run: ort.run });
+  ort.create.mockResolvedValue({ run: ort.run, release: ort.release });
   ort.run.mockImplementation(async ({ marker_positions }) =>
     logits(...Array.from(marker_positions.data, () => [0, 10])),
   );
@@ -255,6 +263,46 @@ describe("the statement reader worker", () => {
     expect(last()).toHaveProperty("result");
   });
 
+  it("releases a session that loads after a JSON file was refused", async () => {
+    files["best.json"] = JSON.stringify({ threshold: "0.4" });
+    pin("best.json");
+    await handle({ id: 0, statement: "S", authors: ["Ada"] });
+    expect(last()).toEqual({ id: 0, error: "best.json has no threshold." });
+    expect(ort.release).toHaveBeenCalledOnce();
+  });
+
+  it("releases a session the runtime makes after the load failed, which it cannot cancel", async () => {
+    let made!: (session: unknown) => void;
+    let creating!: () => void;
+    const created = new Promise<void>((resolve) => {
+      creating = resolve;
+    });
+    ort.create.mockImplementationOnce(() => {
+      creating();
+      return new Promise((resolve) => {
+        made = resolve;
+      });
+    });
+    vi.mocked(fetch).mockImplementation(async (url) => {
+      const file = String(url).slice(BASE.length);
+      if (file !== "best.json") return new Response(files[file]);
+      await created;
+      return new Response("", { status: 404 });
+    });
+    await handle({ id: 0, statement: "S", authors: ["Ada"] });
+    expect(last()).toEqual({ id: 0, error: "best.json: HTTP 404" });
+    expect(ort.release).not.toHaveBeenCalled();
+    made({ run: ort.run, release: ort.release });
+    await vi.waitFor(() => expect(ort.release).toHaveBeenCalledOnce());
+  });
+
+  it("puts a model that arrives in uneven pieces back together", async () => {
+    serveModel([Uint8Array.of(1), Uint8Array.of(2, 3), new Uint8Array(), Uint8Array.of(4)]);
+    await handle({ id: 0, statement: "S", authors: ["Ada"] });
+    expect(ort.create).toHaveBeenCalledWith(new Uint8Array(MODEL), { executionProviders: ["wasm"] });
+    expect(last()).toHaveProperty("result");
+  });
+
   it("stops each cancelled request between chunks, not only the last one cancelled", async () => {
     const long = "A".repeat(300);
     // A cancel reaches the worker as its own message task, so it only lands while the read yields.
@@ -345,6 +393,8 @@ describe("the statement reader worker", () => {
         .map((f) => BASE + f)
         .sort(),
     );
+    // An old tab still on the transformers.js reader can write its cache again after public/sw.js deleted it.
+    expect(dropped).toEqual(["transformers-cache"]);
   });
 
   it("keeps a local export's files, whose base is a path on this site", async () => {
