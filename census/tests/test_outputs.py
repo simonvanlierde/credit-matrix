@@ -6,7 +6,7 @@ from itertools import pairwise
 import pytest
 from helpers import article, contrib
 
-from census import cli, export, fields, labels, store
+from census import cli, export, fields, labels, roles, store
 
 XML = {
     "PMC1": article(
@@ -449,3 +449,8 @@ def test_label_set_exclude_draws_new_articles(set_db, tmp_path):
 def test_check_label_refuses_a_non_object_assertion(item):
     with pytest.raises(ValueError, match="assertion 0"):
         labels.check_label([item], _TEXT, 3)
+
+
+def test_gold_string_round_trips_every_role():
+    pairs = {(1, slug) for slug in roles.ROLE_PATTERNS}
+    assert labels.parse_gold(labels.gold_string(pairs), 1) == pairs

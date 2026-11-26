@@ -30,6 +30,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   close calls show as "check this", and roles it nearly gave are listed but not added.
 - The site is cross-origin isolated (`Cross-Origin-Embedder-Policy: credentialless`), so the
   statement reader runs up to four threads. Safari ignores `credentialless` and reads with one.
+- The CLI reference says [which statements OpenAlex reads](docs/cli.md#which-statements-openalex-reads):
+  all four English formats, but not a French statement or one without a writing role.
 
 ### Changed
 
