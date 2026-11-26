@@ -242,17 +242,17 @@ On gold500b the weakest narrative roles are data curation (0.74, 75 gold pairs),
 
 ### int8 against fp32
 
-On 2,000 held-out articles scored against publisher tags, fp32, int8 and q4 ONNX all reach F1
-0.904. int8 gives exactly the same pairs as fp32 on 95.1% of those articles. On gold500b the share
-is 74.0% (61.5% narrative), because narrative statements put more probabilities near the
-threshold. Paired against the PyTorch model on gold500b, int8 changes narrative F1 by -0.003 (95%
-interval -0.009 to +0.003) and CRediT F1 by -0.001 (-0.003 to +0.002); q4 loses 0.004 on narrative,
-with an interval below zero. Exact match falls further. Reading one author at a time, as the app does, int8 matches the gold
-labels on whole CRediT articles of gold500b 0.793 of the time against 0.812 for PyTorch (-0.019, 95%
-interval -0.038 to -0.004). On narrative articles it is 0.473 against 0.510 (-0.038, -0.075 to
-+0.000), a borderline drop. A single threshold fitted to int8 on the 2,000-article dev set (0.34) does
-not win this back, and CRediT exact match stays down under every threshold variant tried. int8 is a quarter of the size (70 MB
-against 275 MB), so it is the copy the app loads.
+On 2,000 held-out articles scored against publisher tags, fp32, int8 and q4 ONNX all reach F1 0.904.
+int8 gives exactly the same pairs as fp32 on 95.1% of those articles. On gold500b the share is 74.0%
+(61.5% narrative), because narrative statements put more probabilities near the threshold. Paired
+against the PyTorch model on gold500b, int8 changes narrative F1 by -0.003 (95% interval -0.009 to
++0.003) and CRediT F1 by -0.001 (-0.003 to +0.002); q4 loses 0.004 on narrative, with an interval
+below zero. Exact match falls further. Reading one author at a time, as the app does, int8 matches
+the gold labels on whole CRediT articles of gold500b 0.793 of the time against 0.812 for PyTorch
+(-0.019, 95% interval -0.038 to -0.004). On narrative articles it is 0.473 against 0.510 (-0.038,
+-0.075 to +0.000), a borderline drop. A single threshold fitted to int8 on the 2,000-article dev set
+(0.34) does not win this back, and CRediT exact match stays down under every threshold variant
+tried. int8 is a quarter of the size (70 MB against 275 MB), so it is the copy the app loads.
 
 ## Limitations
 
