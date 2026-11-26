@@ -119,6 +119,25 @@ def test_fetch_waits_out_a_few_throttles_then_stops(api, tmp_path, sleeps):
     assert [s for s in sleeps if s != openalex.PAUSE] == [60.0, 120.0, 240.0, 480.0, 960.0]
 
 
+def test_fetch_stops_at_once_when_the_daily_budget_is_spent(api, tmp_path, sleeps):
+    fake = api(WORKS, http_error(429, X_RateLimit_Remaining="0", X_RateLimit_Reset="48675"))
+    with pytest.raises(openalex.Stopped, match="daily budget is spent after 1 requests; it resets in 48675 s"):
+        openalex.fetch(["10.1/a"], tmp_path / "roles.jsonl")
+    assert len(fake.urls) == 1 and sleeps == []
+
+
+def test_fetch_reports_progress_with_the_time_left(api, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(openalex, "BATCH", 1)
+    api({})
+    openalex.fetch([f"10.1/{i}" for i in range(250)], tmp_path / "roles.jsonl", pause=0)
+    lines = capsys.readouterr().err.splitlines()
+    assert [line.split(", about")[0] for line in lines] == [
+        "100 requests sent, 150 of 250 DOIs left",
+        "200 requests sent, 50 of 250 DOIs left",
+    ]
+    assert all(line.endswith(" h to go") for line in lines)
+
+
 def test_fetch_counts_throttles_in_a_row_only(api, tmp_path, monkeypatch):
     monkeypatch.setattr(openalex, "BATCH", 1)
     throttles = [http_error(429) for _ in range(openalex.THROTTLES)]
@@ -367,3 +386,17 @@ def test_cli_all_asks_only_articles_with_census_roles_and_exits_2_when_throttled
     assert cli.main(["openalex", "--all", "--db", str(db), "--cache", str(cache)]) == 0
     assert [urllib.parse.parse_qs(urllib.parse.urlsplit(u).query)["filter"] for u in fake.urls] == [["doi:10.1/a"]]
     assert cli.main(["openalex", "--all", str(tmp_path / "set.csv"), "--db", str(db)]) == 1
+
+
+def test_cli_exits_2_when_another_process_holds_the_database(api, tmp_path, monkeypatch, capsys):
+    db, cache = tmp_path / "c.duckdb", tmp_path / "r.jsonl"
+    make_db(db, [article(1, "10.1/a", 2, [(1, "software")])]).close()
+    api(WORKS)
+
+    def busy(*args):
+        raise duckdb.IOException('Could not set lock on file "c.duckdb": Conflicting lock is held')
+
+    monkeypatch.setattr(openalex, "write", busy)
+    assert cli.main(["openalex", "--all", "--db", str(db), "--cache", str(cache)]) == 2
+    assert f"the answers are in {cache}, rerun once the database is free" in capsys.readouterr().err
+    assert "10.1/a" in openalex.cached(cache)

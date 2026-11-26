@@ -253,8 +253,11 @@ def cmd_openalex(args: argparse.Namespace) -> None:
     except openalex.Stopped as error:
         raise Unfinished(f"{error}; rerun to resume from {args.cache}") from None
     # Not store.connect, as for `model apply`: this touches only openalex_assignments and two meta rows.
-    with duckdb.connect(str(db)) as con:
-        counts = openalex.write(con, articles, args.cache)
+    try:
+        with duckdb.connect(str(db)) as con:
+            counts = openalex.write(con, articles, args.cache)
+    except duckdb.IOException as error:  # another process holds the database's write lock
+        raise Unfinished(f"{error}; the answers are in {args.cache}, rerun once the database is free") from None
     print(
         f"{len(articles)} articles, {sent} requests sent: " + ", ".join(f"{n} {k}" for k, n in sorted(counts.items()))
     )

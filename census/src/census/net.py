@@ -49,7 +49,9 @@ def _fetch(url: str, out: BinaryIO, retries: int, give_up: frozenset[int] = froz
         try:
             end = time.monotonic() + DEADLINE
             with urllib.request.urlopen(request, timeout=60) as response:
-                while chunk := response.read(1 << 20):
+                # read1, not read: read(n) blocks until n bytes arrive, so a trickle smaller than n
+                # would never reach the deadline check.
+                while chunk := response.read1(1 << 16):
                     out.write(chunk)
                     if time.monotonic() > end:
                         raise TimeoutError(f"{url} took over {DEADLINE} s")

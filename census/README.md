@@ -227,15 +227,20 @@ of each answer (per work: the DOI, the author count and the (position, role) pai
 `data/openalex-roles.jsonl`, so a rerun sends only the DOIs not yet asked. That is about 400 bytes a
 DOI on the gold sets, where most works have roles. On HTTP 429 it waits for Retry-After (60 s,
 doubling, when the header is missing) up to 5 times in a row, then stops with exit code 2; so does
-any other refusal, such as 401 for a bad key. Rerun to resume. A DOI the filter refuses (400 or 414)
-is asked alone and, if still refused, recorded as not in OpenAlex. OpenAlex may answer a DOI with
-another version's work (`.1` with `.2`); when that work is the only one with the same base, its roles
-count, on purpose. `--all` asks about 2.4 million DOIs in about 47,000 requests: at least 13 hours at
-one request a second, and a cache of up to about 1 GB. It sends only DOIs, with no email;
-`OPENALEX_API_KEY`, if set, is passed as the key. It needs no `--fresh`: like `model apply`, it
-writes only `openalex_assignments` and two `meta` rows, `openalex_roles_fetched` and
-`openalex_roles_requests`, which describe the last `census openalex` write only (its oldest fetch date
-and its cache lines). `census export` leaves both out of `meta.json`.
+any other refusal, such as 401 for a bad key, and a database another process holds. Rerun to resume;
+for `--all`, `while uv run census openalex --all; [ $? -eq 2 ]; do sleep 3600; done` reruns an hour
+after each exit 2 and ends on success or any other error. A DOI the filter refuses (400 or 414) is
+asked alone and, if still refused, recorded as not in OpenAlex. OpenAlex may answer a DOI with
+another version's work (`.1` with `.2`); when that work is the only one with the same base, its
+roles count, on purpose. `--all` asks about 2.4 million DOIs in about 47,000 requests: at least 13
+hours at one request a second, and a cache of up to about 1 GB. A request costs $0.0001 of
+OpenAlex's daily budget: $0.10 (1,000 requests) without a key, shared by everyone on the IP, or $1
+(10,000) with a free key. So `--all` needs `OPENALEX_API_KEY` and, on the free key, about five days
+of reruns; a 429 that says the budget is spent stops the run at once and says when it resets. It
+sends only DOIs, with no email. It needs no `--fresh`: like `model apply`, it writes only
+`openalex_assignments` and two `meta` rows, `openalex_roles_fetched` and `openalex_roles_requests`,
+which describe the last `census openalex` write only (its oldest fetch date and its cache lines).
+`census export` leaves both out of `meta.json`.
 
 Given definition-B gold files (JSON Lines of `pmcid` and `label`, see Checked labels), `score` prints
 pair precision, recall and F1 for OpenAlex, the rule parser (`assignments`) and the census as

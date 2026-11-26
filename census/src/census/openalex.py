@@ -103,7 +103,8 @@ def _retry_after(error: urllib.error.HTTPError, waited: int) -> float:
 
 def fetch(dois: Iterable[str], cache: Path, key: str | None = None, pause: float = PAUSE) -> int:
     """Ask OpenAlex for each askable DOI the cache lacks; returns the requests sent. `key` goes into the
-    query as `api_key` and never into a message. HTTP 429 is waited out THROTTLES times in a row; a batch
+    query as `api_key` and never into a message. HTTP 429 is waited out THROTTLES times in a row,
+    unless it says the daily budget is spent; a batch
     refused with 400 or 414 is asked one DOI at a time, and a lone DOI still refused is recorded as not in
     OpenAlex. Raises Stopped past the throttles, on any other 4xx, a failed request or an answer of
     another shape, before anything of that request is written."""
@@ -116,6 +117,7 @@ def fetch(dois: Iterable[str], cache: Path, key: str | None = None, pause: float
             if f.read(1) != b"\n":
                 f.write(b"\n")  # end a killed run's half line, so the next answer starts a line of its own
     sent = throttled = 0
+    began = time.monotonic()
     batches = [todo[start : start + BATCH] for start in range(0, len(todo), BATCH)]
     while batches:
         batch = batches.pop(0)
@@ -133,6 +135,13 @@ def fetch(dois: Iterable[str], cache: Path, key: str | None = None, pause: float
                 back = {unversioned(doi) for doi, _, _ in works}
                 batch = [d for d in batch if unversioned(d) in back]
         except urllib.error.HTTPError as error:
+            headers = error.headers or {}
+            if error.code == 429 and headers.get("X-RateLimit-Remaining") == "0":
+                # The daily budget is spent (keyless: 1,000 requests a day per IP); waiting minutes will not help.
+                reset = headers.get("X-RateLimit-Reset", "?")
+                raise Stopped(
+                    f"OpenAlex's daily budget is spent after {sent} requests; it resets in {reset} s"
+                ) from None
             if error.code == 429 and throttled < THROTTLES:
                 time.sleep(_retry_after(error, throttled))
                 throttled += 1
@@ -154,7 +163,12 @@ def fetch(dois: Iterable[str], cache: Path, key: str | None = None, pause: float
             f.write(json.dumps(line, ensure_ascii=False) + "\n")
         if sent % 100 == 0:
             left = sum(map(len, batches))
-            print(f"{sent} requests sent, {left} of {len(todo)} DOIs left", file=sys.stderr, flush=True)
+            hours = (time.monotonic() - began) / sent * -(-left // BATCH) / 3600  # at this run's pace, waits included
+            print(
+                f"{sent} requests sent, {left} of {len(todo)} DOIs left, about {hours:.1f} h to go",
+                file=sys.stderr,
+                flush=True,
+            )
     return sent
 
 
