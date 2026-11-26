@@ -686,7 +686,11 @@ def main(argv: list[str] | None = None) -> int:
         "--cache", type=Path, default=DATA / "openalex-roles.jsonl", help="OpenAlex's answers, appended per request"
     )
     cmd.set_defaults(func=cmd_openalex)
-    cmd = sub.add_parser("score", parents=[snap, db], help="score the parser against a labelled CSV")
+    cmd = sub.add_parser(
+        "score",
+        parents=[snap, db],
+        help="score the parser against a labelled CSV, or the census and OpenAlex against gold",
+    )
     cmd.add_argument(
         "labels",
         type=Path,
