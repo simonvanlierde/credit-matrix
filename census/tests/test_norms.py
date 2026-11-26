@@ -78,3 +78,14 @@ def test_norms_needs_fields(tmp_path):
     path = tmp_path / "e.duckdb"
     store.connect(path).close()
     assert cli.main(["norms", "--db", str(path)]) == 1
+
+
+def test_norms_tied_fields_sort_by_name(db):
+    _, con = db
+    con.execute("DROP VIEW article_fields")
+    con.execute(
+        """CREATE VIEW article_fields AS SELECT * FROM (VALUES ('P1', 'Zoology'), ('P2', 'Ecology'),
+           ('P6', 'Botany')) t(pmcid, field)"""
+    )
+    # One article each: the tie breaks by name, so the file is the same on every run.
+    assert list(norms.build(con, "snap", min_articles=1)["fields"]) == ["Botany", "Ecology", "Zoology"]
