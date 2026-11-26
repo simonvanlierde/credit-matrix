@@ -161,7 +161,9 @@ def export(con: duckdb.DuckDBPyConnection, out: Path, name: str, partial: bool =
             path = tmp / f"{table}.parquet"
             con.execute(f"COPY ({query}) TO '{path}' (FORMAT parquet)")
             (counts[table],) = store.one(con, f"SELECT count(*) FROM read_parquet('{path}')") or (0,)
-        provenance = dict(con.execute("SELECT key, value FROM meta ORDER BY key").fetchall())
+        # The OpenAlex roles are scoring data, never exported: their meta keys are not this export's provenance.
+        sql = "SELECT key, value FROM meta WHERE NOT starts_with(key, 'openalex_roles_') ORDER BY key"
+        provenance = dict(con.execute(sql).fetchall())
         # One digest over every finished unit's file hash: names the exact bulk files the data came from.
         (units, digest) = store.one(
             con,

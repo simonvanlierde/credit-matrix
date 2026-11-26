@@ -230,7 +230,11 @@ def cmd_openalex(args: argparse.Namespace) -> None:
     sheets = args.labels or [DATA / "labels" / f"{args.snapshot}-{s}.csv" for s in GOLD_SETS]
     with duckdb.connect(str(db), read_only=True) as con:
         if args.all:
-            sql = "SELECT pmcid, doi, n_authors FROM articles WHERE doi IS NOT NULL"
+            readers.use_roles(con)
+            sql = (
+                "SELECT pmcid, doi, n_authors FROM articles"
+                " WHERE doi IS NOT NULL AND pmcid IN (SELECT pmcid FROM census_roles)"
+            )
             articles = {p: (d, n) for p, d, n in con.execute(sql).fetchall()}
         else:
             # Author counts from the sheet's byline: ood200b is not in the database.
@@ -267,7 +271,12 @@ def _pairs_in(con: duckdb.DuckDBPyConnection, table: str, ids: list[str]) -> dic
 def _score_gold(args: argparse.Namespace) -> None:
     if args.key or args.second:
         raise Failure("--key and --second go with a label CSV, not a gold JSONL")
-    sets = {p.name.removesuffix(".jsonl").removesuffix("-gold"): labels.read_gold(p) for p in args.labels}
+    sets = {}
+    for path in args.labels:
+        try:
+            sets[path.name.removesuffix(".jsonl").removesuffix("-gold")] = labels.read_gold(path)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+            raise Failure(f"cannot read gold file {path}: {type(error).__name__} {error}") from None
     if len(sets) > 1:
         sets["pooled"] = {i: g for gold in list(sets.values()) for i, g in gold.items()}
     ids = list(sets.get("pooled") or next(iter(sets.values())))
@@ -304,8 +313,11 @@ def _score_gold(args: argparse.Namespace) -> None:
 
 
 def cmd_score(args: argparse.Namespace) -> None:
-    if all(p.suffix == ".jsonl" for p in args.labels):
+    gold = [p.suffix == ".jsonl" for p in args.labels]
+    if all(gold):
         return _score_gold(args)
+    if any(gold):
+        raise Failure("give gold JSONL files or one label CSV, not both")
     if len(args.labels) > 1:
         raise Failure("score one label CSV at a time (several files only for gold JSONL)")
     args.labels = args.labels[0]
@@ -676,16 +688,26 @@ def main(argv: list[str] | None = None) -> int:
         help="with --set: leave out the articles in these label files, to draw a second set",
     )
     cmd.set_defaults(func=cmd_label)
-    cmd = sub.add_parser("openalex", parents=[snap, db], help="fetch OpenAlex's CRediT roles by DOI, to score")
+    cmd = sub.add_parser(
+        "openalex",
+        parents=[snap, db],
+        help="fetch OpenAlex's CRediT roles by DOI, to score",
+        description="Fetch OpenAlex's CRediT roles by DOI into the cache and write them to openalex_assignments."
+        " OPENALEX_API_KEY, if set, is sent as the key. Exit code 2 when OpenAlex throttled or stopped the run:"
+        " rerun to resume from the cache.",
+    )
     cmd.add_argument(
         "labels",
         type=Path,
         nargs="*",
         help="label sheets whose articles to fetch (default: the gold sets' sheets in census/data/labels/)",
     )
-    cmd.add_argument("--all", action="store_true", help="every article in the database with a DOI instead")
+    cmd.add_argument("--all", action="store_true", help="every article with census roles and a DOI instead")
     cmd.add_argument(
-        "--cache", type=Path, default=DATA / "openalex-roles.jsonl", help="OpenAlex's answers, appended per request"
+        "--cache",
+        type=Path,
+        default=DATA / "openalex-roles.jsonl",
+        help="OpenAlex's answers, appended per request (default: census/data/openalex-roles.jsonl)",
     )
     cmd.set_defaults(func=cmd_openalex)
     cmd = sub.add_parser(
@@ -702,7 +724,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     cmd.add_argument("--second", type=Path, help="a second labeller's copy, scored against the first on the overlap")
     cmd.add_argument("--key", type=Path, help="the label set's strata and weights (default: <labels>-key.csv if there)")
-    cmd.add_argument("--predictions", type=Path, help="score the JSONL `census model zero-shot` wrote, not the parser")
+    cmd.add_argument(
+        "--predictions",
+        type=Path,
+        help="score the JSONL `census model zero-shot` wrote, not the parser; with gold JSONL, score it beside the"
+        " others",
+    )
     cmd.set_defaults(func=cmd_score)
     model = sub.add_parser("model", help="train/held-out split, dataset and baselines for a statement-parsing model")
     model_sub = model.add_subparsers(dest="model_command", required=True)

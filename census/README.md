@@ -159,7 +159,8 @@ rule parser's reading, which the paired scores and the label scoring measure.
 - `units`: each bulk file or manifest chunk read, with its sha256, article count and whether it is
   finished.
 - `meta`: the source, schema version, parser hash, the applied encoder run, inventory date, the OpenAlex snapshot date
-  and code hash the fields came from, and the date and request count of the OpenAlex roles.
+  and code hash the fields came from, and the oldest fetch date and request count of the last
+  `census openalex` write.
 
 The database is local working data with author names in it. `census export` writes the public
 dataset to `data/export/<snapshot>/`:
@@ -217,22 +218,32 @@ takes the style from the database, not the CSV.
 OpenAlex publishes per-author CRediT roles (CC0). To score them beside the census:
 
 ```sh
-uv run census openalex   # the gold sets' articles; --all for every article with a DOI
+uv run census openalex   # the gold sets' articles; --all for every article with census roles and a DOI
 uv run census score data/labels/gold500b-gold.jsonl data/labels/test200b-gold.jsonl
 ```
 
-`openalex` asks the works API for 50 DOIs a request, one request a second, and appends each answer
-to `data/openalex-roles.jsonl`, so a rerun sends only the DOIs not yet asked. It stops on HTTP 429
-with exit code 2; rerun to resume. It sends only DOIs, with no email; `OPENALEX_API_KEY`, if set, is
-passed as the key. It needs no `--fresh`: like `model apply`, it writes only `openalex_assignments`
-and two `meta` rows.
+`openalex` asks the works API for 50 DOIs a request, one request a second, and appends what it needs
+of each answer (per work: the DOI, the author count and the (position, role) pairs) to
+`data/openalex-roles.jsonl`, so a rerun sends only the DOIs not yet asked. That is about 400 bytes a
+DOI on the gold sets, where most works have roles. On HTTP 429 it waits for Retry-After (60 s,
+doubling, when the header is missing) up to 5 times in a row, then stops with exit code 2; so does
+any other refusal, such as 401 for a bad key. Rerun to resume. A DOI the filter refuses (400 or 414)
+is asked alone and, if still refused, recorded as not in OpenAlex. OpenAlex may answer a DOI with
+another version's work (`.1` with `.2`); when that work is the only one with the same base, its roles
+count, on purpose. `--all` asks about 2.4 million DOIs in about 47,000 requests: at least 13 hours at
+one request a second, and a cache of up to about 1 GB. It sends only DOIs, with no email;
+`OPENALEX_API_KEY`, if set, is passed as the key. It needs no `--fresh`: like `model apply`, it
+writes only `openalex_assignments` and two `meta` rows, `openalex_roles_fetched` and
+`openalex_roles_requests`, which describe the last `census openalex` write only (its oldest fetch date
+and its cache lines). `census export` leaves both out of `meta.json`.
 
 Given definition-B gold files (JSON Lines of `pmcid` and `label`, see Checked labels), `score` prints
 pair precision, recall and F1 for OpenAlex, the rule parser (`assignments`) and the census as
 published (`census_roles`), on all articles and on those where OpenAlex has roles, each set and
 pooled. Each system's F1 minus OpenAlex's comes with a 95% interval from 1,000 paired resamples of
 the articles. `--predictions` adds a model's file; for a set not in the database (`ood200b`) it and OpenAlex are
-the only systems, and the other sets keep theirs. The reference is model-made, so these figures are
+the only systems, and the other sets keep theirs. Pooled with such a set, the pooled table has only
+OpenAlex and `--predictions` too. The reference is model-made, so these figures are
 agreement with it, not accuracy. On the 66 test200b articles where OpenAlex has roles, F1 is 0.932
 for OpenAlex, 0.943 for the rules and 0.991 for the census as published (+0.059, +0.025 to +0.114).
 gold500b chose the census's encoder, so its rows flatter the census. OpenAlex has roles for 31% of
