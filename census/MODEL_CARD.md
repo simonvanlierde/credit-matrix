@@ -254,6 +254,31 @@ The three labellers agreed exactly with each other on 85% to 91% of narrative ar
 96% of CRediT articles. The model's exact scores (61% and 71%) sit well below that: it gets most
 pairs right, but often one pair per article wrong.
 
+### Outside biomedicine
+
+`ood200b`: 147 CC BY / CC0 articles from 2022 on, drawn on 2026-11-23 from publishers outside Europe
+PMC: Copernicus (40), Pensoft (40), Scientific Research Publishing (SRP, 40), Frontiers (25) and Open
+Research Europe (2); about half are earth science. 71 statements are narrative and 76 use CRediT names.
+They were labelled as the test set was, and a person ruled on the 5 rows where all three labellers
+differed.
+
+| | narrative F1 | narrative exact | CRediT F1 | CRediT exact |
+| --- | --- | --- | --- | --- |
+| this model, PyTorch | 0.883 (0.851 to 0.913) | 0.42 | 0.949 (0.920 to 0.974) | 0.71 |
+| previous per-author model, PyTorch | 0.894 (0.863 to 0.925) | 0.41 | 0.951 (0.922 to 0.973) | 0.68 |
+| previous per-author model, int8 ONNX | 0.884 (0.854 to 0.914) | 0.35 | 0.949 (0.920 to 0.972) | 0.66 |
+| rule parser | 0.000 | 0.17 | 0.857 (0.799 to 0.907) | 0.49 |
+
+Narrative statements score clearly lower than in the test set (0.883 against 0.964). Against the
+per-author model, F1 differs by -0.011 (-0.025 to +0.003, paired) on narrative statements and -0.002
+on CRediT ones. CRediT statements hold up once SRP is left out (0.968 on the other 56), and
+narrative rises only to 0.895 without SRP, whose statements are often loosely worded. The labellers
+also agreed less: 78% to 82% of narrative articles and 87% to 95% of CRediT articles. Training on
+269 more narrative statements from these publishers (Pensoft left out) did not close the per-author
+model's gap over two seeds. OpenAlex's role data, which reads CRediT names in full text, has roles
+for 43 of the 76 CRediT articles and none of the narrative ones; on those 43 the per-author model
+scores F1 0.968 and OpenAlex 0.899 (checked 2026-11-26).
+
 ### Dev set used for model choice
 
 `gold500b`: 500 articles (239 narrative, 261 CRediT). Every candidate run was scored on it, so
@@ -301,11 +326,13 @@ per-author int8 model took 2.5 to 2.7 s and 21.6 to 24.0 s. The model loads in 2
   surname. Bylines in other orders, and statements with swapped or misspelled initials, depend on
   the model reading the name itself.
 - **Biomedical sources.** Europe PMC is biomedical by construction, and Frontiers and MDPI lead the
-  training data. Other fields and statement layouts are less well covered.
-- **Labels.** The gold sets were made by language-model labellers with a vote and an adjudicator.
-  A person checked 40 rows of the pilot set (36 right) and ruled on 4 of 40 sampled gold500b rows,
-  which changed the definition. Nobody checked the test set by hand. Part of the training data
-  comes from publisher tags, which can name roles a statement never gives.
+  training data. Outside biomedicine, narrative statements score about 0.08 F1 lower (see
+  [Outside biomedicine](#outside-biomedicine)).
+- **Labels.** The gold sets were made by language-model labellers with a vote and an adjudicator. A
+  person checked 40 rows of the pilot set (36 right) and ruled on 4 of 40 sampled gold500b rows,
+  which changed the definition. Nobody checked the test set by hand; a person ruled on the 5 split
+  rows of ood200b. Part of the training data comes from publisher tags, which can name roles a
+  statement never gives.
 - **Long statements.** A statement is cut at 1,024 tokens less the room its authors need (at most a
   quarter), so very long statements lose more text than the per-author model's cut did.
 
