@@ -5,6 +5,7 @@ import { MAX_AUTHORS } from "@/core/author";
 import { type DoiLookupResult, lookupDoiWork } from "@/core/lookup";
 import { fetchOrcidKeys, type OrcidKey } from "@/core/orcid-proof";
 import { ConverterUnavailableError, convertCitation } from "@/lib/citation-import";
+import { readStatement } from "@/lib/statement-reader";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
 import { messages as en } from "@/locales/en/messages";
@@ -15,6 +16,10 @@ vi.mock("@/lib/citation-import", async (importOriginal) => ({
   convertCitation: vi.fn(),
 }));
 vi.mock("@/lib/announce", () => ({ announce: vi.fn() }));
+vi.mock("@/lib/statement-reader", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/statement-reader")>()),
+  readStatement: vi.fn(),
+}));
 vi.mock("@/core/orcid-proof", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/core/orcid-proof")>()),
   fetchOrcidKeys: vi.fn(),
@@ -500,12 +505,55 @@ describe("a pasted CRediT statement", () => {
     expect(screen.getByText(english.errStatementNoRoles)).toBeTruthy();
   });
 
-  it("explains that prose is not read, and never offers to replace the workspace", async () => {
+  it("explains that the rules skip prose, offers the model, and never offers to replace the workspace", async () => {
     renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });
     paste("A.L. conceived the study. A.L. wrote the paper and analysed the data.");
     await review();
     expect(screen.getByText(`${english.errStatementNoRoles} ${english.statementOnlyCredit}`)).toBeTruthy();
+    expect(screen.getByRole("button", { name: english.statementReaderRead })).toBeTruthy();
     expect(screen.queryByText(english.importChoiceTitle)).toBeNull();
+  });
+
+  it("reads prose with the model, marks close calls, and applies the roles it gives", async () => {
+    const reading = Promise.withResolvers<Awaited<ReturnType<typeof readStatement>>>();
+    vi.mocked(readStatement).mockImplementation((_statement, _names, onProgress) => {
+      onProgress({ phase: "read", done: 1, of: 2 });
+      return reading.promise;
+    });
+    const { onApplyStatement } = renderModal(2, undefined, {
+      authors: [createAuthor("Lovelace, Ada"), createAuthor("Charles Darwin")],
+    });
+    paste("A.L. conceived the study and wrote the software. C.D. analysed the data.");
+    await review();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.statementReaderRead })));
+    expect(vi.mocked(readStatement).mock.calls[0]?.[1]).toEqual(["Ada Lovelace", "Charles Darwin"]);
+    expect(screen.getByText("Reading for contributor 2 of 2")).toBeTruthy();
+
+    const labels = ["conceptualization", "formal-analysis", "software"];
+    const probabilities = [
+      [0.98, 0.1, 0.5],
+      [0.05, 0.97, 0.3],
+    ];
+    await act(async () => reading.resolve({ labels, probabilities, threshold: 0.4, loadMs: 1, readMs: 1 }));
+    expect(screen.getByText(english.statementReaderUsed)).toBeTruthy();
+    expect(listOf("Lovelace, Ada")).toBe("Conceptualization, Software (check this)");
+    expect(listOf("Charles Darwin")).toBe("Formal analysisCheck this, not added: Software");
+
+    fireEvent.click(screen.getByRole("button", { name: english.statementApply }));
+    const [next, added] = onApplyStatement.mock.calls[0] ?? [];
+    expect(added).toBe(3);
+    const roles = (author: Author) => author.contributions.filter((c) => c.score > 0).map((c) => c.role);
+    expect(next.map(roles)).toEqual([["Conceptualization", "Software"], ["Formal analysis"]]);
+  });
+
+  it("keeps the rules' roles and says so when the model cannot load", async () => {
+    vi.mocked(readStatement).mockRejectedValue(new Error("offline"));
+    renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });
+    paste("AL: conceptualization.");
+    await review();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: english.statementReaderRead })));
+    expect(screen.getByText(english.statementReaderFailed)).toBeTruthy();
+    expect(listOf("Ada Lovelace")).toBe("Conceptualization");
   });
 
   it("refuses a statement over the length cap", async () => {

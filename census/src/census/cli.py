@@ -485,7 +485,7 @@ def cmd_model_publish(args: argparse.Namespace) -> None:
     shipped = json.loads((ROOT / "model.json").read_text(encoding="utf-8"))
     args.name, args.snapshot = shipped["run"], shipped["snapshot"]
     out = _model_dir(args) / "browser" / args.name
-    files = browser.hub_files(_run_dir(args), out, ROOT / "MODEL_CARD.md", shipped["sha256"])
+    files = browser.hub_files(_run_dir(args), out, ROOT / "MODEL_CARD.md", shipped["sha256"], shipped["bytes"])
     if args.dry_run:
         print("\n".join(f"{name}\t{path}" for name, path in files.items()))
         return

@@ -39,13 +39,14 @@ This is a single-maintainer project ([GOVERNANCE.md](GOVERNANCE.md)).
   with page requests, and the app clears it from the address bar once it has read it. Until then,
   scripts on the page can read it, and the Content Security Policy lets only the app's own scripts
   run. There are no accounts and no passwords to steal.
-- **Few outside calls.** Only the ORCID and DOI lookups and the fetch of ORCID's public keys leave
-  the browser. The host, Cloudflare, counts page requests on its own servers; no analytics script
+- **Few outside calls.** Only the ORCID and DOI lookups, the fetch of ORCID's public keys and, on
+  request, the statement reader's model download from the Hugging Face Hub leave the browser. The host, Cloudflare, counts page requests on its own servers; no analytics script
   runs on the page. A lookup sends the ORCID iD or DOI you typed to ORCID, Crossref or DataCite.
   The Content Security Policy in [`public/_headers`](public/_headers) allows no other hosts and blocks framing.
   A CITATION.cff or .zenodo.json import runs the citesync converter and its Python runtime
   (Pyodide) in a worker, from files this site serves; the worker's own policy allows no other
-  host, and the file never leaves the browser.
+  host, and the file never leaves the browser. The statement reader runs its model in a worker too;
+  the Hub gets the model's file requests, never the statement.
 - **ORCID sign-in.** A co-author who signs in leaves the page for orcid.org. The request includes a
   hash of the reply, not the reply. ORCID returns a signed token in the URL fragment, and the app
   checks it in the browser against ORCID's public keys. The token then travels inside the reply link.

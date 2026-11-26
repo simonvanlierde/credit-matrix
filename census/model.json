@@ -6,5 +6,8 @@
     "model.safetensors": "a48dff938802fef29959e193d2ed7c3a5bd6ca3a3ae1fef6ff5f308f128e8e86",
     "onnx/model.onnx": "ea66c786ba8d7fa33a490f707444a62f6e2589420b963afd129bc27440b85530",
     "onnx/model_int8.onnx": "0157d52635f2a0a5482591ef525a40ddaac02b5ecb774587f945480b4a6b67ee"
+  },
+  "bytes": {
+    "onnx/model_int8.onnx": 70038085
   }
 }

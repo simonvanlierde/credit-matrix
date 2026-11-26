@@ -39,6 +39,8 @@ def test_hub_files_refuse_a_changed_or_missing_file(tmp_path):
     run, out, card = _export(tmp_path)
     with pytest.raises(ValueError, match="not the"):
         browser.hub_files(run, out, card, {"onnx/model_int8.onnx": "0" * 64})
+    with pytest.raises(ValueError, match="bytes, not the"):
+        browser.hub_files(run, out, card, {}, {"onnx/model_int8.onnx": 1})
     (out / "best.json").unlink()
     with pytest.raises(ValueError, match="missing"):
         browser.hub_files(run, out, card, {})
@@ -47,7 +49,9 @@ def test_hub_files_refuse_a_changed_or_missing_file(tmp_path):
 def test_publish_twice_keeps_the_first_tag(tmp_path, monkeypatch):
     model = tmp_path / "data" / "model" / "s"
     _export(tmp_path, model / "runs" / "r", model / "browser" / "r")
-    (tmp_path / "model.json").write_text(json.dumps({"run": "r", "snapshot": "s", "repo": "o/m", "sha256": {}}))
+    (tmp_path / "model.json").write_text(
+        json.dumps({"run": "r", "snapshot": "s", "repo": "o/m", "sha256": {}, "bytes": {}})
+    )
     tags: dict[str, str] = {}
     commits: list[list[str]] = []
 

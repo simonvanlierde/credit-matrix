@@ -30,6 +30,7 @@ flowchart LR
   census["census/<br/>Python pipeline"]
   norms["src/data/field-norms.json"]
   apis["pub.orcid.org · orcid.org<br/>api.crossref.org · api.datacite.org"]
+  hub["huggingface.co<br/>statement reader model"]
 
   app --> core
   app --> fonts
@@ -38,9 +39,11 @@ flowchart LR
   integrations -- "import or CLI" --> core
   census -- "census norms" --> norms --> app
   app -- "ORCID and DOI lookups,<br/>ORCID sign-in on replies" --> apis
+  app -- "model download, on request" --> hub
 ```
 
-The lookups to ORCID, Crossref and DataCite are the only calls that leave the browser.
+The lookups to ORCID, Crossref and DataCite, and the statement reader's model download from the
+Hugging Face Hub, are the only calls that leave the browser.
 
 ## `src/core`
 
@@ -97,7 +100,11 @@ The ORCID and DOI lookups call the public APIs of ORCID, Crossref and DataCite s
 browser. DataCite is only asked about DOIs that Crossref does not hold, such as arXiv and Zenodo
 records. All three send CORS headers that let the browser call them. The Content Security Policy
 (CSP) in [`public/_headers`](../public/_headers) allows exactly those origins, plus `orcid.org`, whose
-public keys check a co-author's ORCID sign-in on a reply.
+public keys check a co-author's ORCID sign-in on a reply, and `huggingface.co` with its `*.hf.co` CDN
+for the statement reader. That reader (`src/lib/statement-reader.ts`) runs the census model, int8
+ONNX, in a worker through transformers.js on onnxruntime-web's CPU build, whose WebAssembly this
+site serves. It loads when someone asks for it, never at install; transformers.js caches the model
+in its own Cache Storage entry, which the service worker leaves alone.
 
 Citation files in CFF or Zenodo format are converted locally by a citesync worker that loads on
 first use. The build copies the pinned Pyodide runtime from

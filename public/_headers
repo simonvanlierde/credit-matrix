@@ -15,10 +15,12 @@
 # - img-src needs blob:/data: for the heatmap PNG (canvas -> createObjectURL).
 # - connect-src names the lookup APIs the browser calls directly
 #   (ORCID, Crossref, and DataCite for DOIs Crossref does not hold), and
-#   orcid.org for the keys that check a co-author's ORCID sign-in.
+#   orcid.org for the keys that check a co-author's ORCID sign-in, and the
+#   Hugging Face Hub (huggingface.co, which redirects to its *.hf.co CDN) for the
+#   statement reader's model, fetched only when someone asks for it.
 # `vite` does not read this file, so the dev server runs without a CSP.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; worker-src 'self'; connect-src 'self' https://pub.orcid.org https://orcid.org https://api.crossref.org https://api.datacite.org; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; worker-src 'self'; connect-src 'self' https://pub.orcid.org https://orcid.org https://api.crossref.org https://api.datacite.org https://huggingface.co https://*.hf.co; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Permissions-Policy: camera=(), geolocation=(), microphone=()

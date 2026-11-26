@@ -22,6 +22,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   written in CRediT terms and in the authors' own words. On 200 statements held back until the model
   was chosen, it finds author-role pairs at F1 0.96 in prose statements and 0.97 in CRediT ones; see
   its [model card](census/MODEL_CARD.md). `census model publish` uploads it.
+- A pasted statement can be read with that model in the app: "Read with the model" in the review
+  downloads it once (70 MB, from Hugging Face) and reads each contributor in the browser, so the
+  statement never leaves it. Close calls show as "check this", and roles it nearly gave are listed
+  but not added. Until it loads, or when it cannot, the review shows the rule parser's roles. A
+  statement in prose now opens the review instead of an error.
 
 ### Changed
 

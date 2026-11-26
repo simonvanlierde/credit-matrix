@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT is an ANSI/NISO standard (<cc>CC BY 4.0</cc>). This project is independent of NISO and not endorsed by it."
 
 msgid "aboutPrivacy"
-msgstr "Drafts stay in this browser's local storage. The app also remembers whether you closed the getting-started checklist or copied a statement, and the writing tool you last chose. Co-author requests and answers stay here too. JSON exports include them unless you untick that option.\n\nORCID lookups send the iD to pub.orcid.org. DOI lookups send the DOI and this site's contact address to api.crossref.org. If Crossref has no record, the DOI goes to api.datacite.org.\n\nImporting CITATION.cff or .zenodo.json loads the citesync converter and a Python runtime from this site. Your file is processed in your browser and never uploaded.\n\nSending a reply gives your chosen app a link containing that person's name and iD. Optional ORCID sign-in opens orcid.org and returns here. The reply link, saved answer and JSON exports include the sign-in proof and name from the ORCID record. Opening a signed answer or importing one fetches public keys from orcid.org to check the proof.\n\nCloudflare hosts this site and counts page requests in aggregate on its servers, without scripts or cookies in your browser."
+msgstr "Drafts stay in this browser's local storage. The app also remembers whether you closed the getting-started checklist or copied a statement, and the writing tool you last chose. Co-author requests and answers stay here too. JSON exports include them unless you untick that option.\n\nORCID lookups send the iD to pub.orcid.org. DOI lookups send the DOI and this site's contact address to api.crossref.org. If Crossref has no record, the DOI goes to api.datacite.org.\n\nImporting CITATION.cff or .zenodo.json loads the citesync converter and a Python runtime from this site. Your file is processed in your browser and never uploaded.\n\nReading a statement with the model downloads the model from huggingface.co (*.hf.co) the first time. The statement is read in your browser and never uploaded.\n\nSending a reply gives your chosen app a link containing that person's name and iD. Optional ORCID sign-in opens orcid.org and returns here. The reply link, saved answer and JSON exports include the sign-in proof and name from the ORCID record. Opening a signed answer or importing one fetches public keys from orcid.org to check the proof.\n\nCloudflare hosts this site and counts page requests in aggregate on its servers, without scripts or cookies in your browser."
 
 msgid "accessibilityStatement"
 msgstr "Accessibility statement"
@@ -1353,6 +1353,30 @@ msgstr "Nothing undone: the draft changed after the roles were added. Change the
 
 msgid "statementOnlyCredit"
 msgstr "Only CRediT role names are read, such as Conceptualization or Writing – original draft, not sentences about who did what."
+
+msgid "statementReaderAbout"
+msgstr "The model also reads sentences such as “A.B. designed the study”. It runs on this device, so the statement stays here. The first time, it downloads {size}."
+
+msgid "statementReaderRead"
+msgstr "Read with the model"
+
+msgid "statementReaderDownloading"
+msgstr "Downloading the model: {percent}%"
+
+msgid "statementReaderReading"
+msgstr "Reading for contributor {done} of {of}"
+
+msgid "statementReaderFailed"
+msgstr "The model could not load, so the roles shown come from the rules. Check the connection and try again."
+
+msgid "statementReaderUsed"
+msgstr "Read by the model. Roles marked “check this” are close calls: compare them with the statement."
+
+msgid "statementCheckRole"
+msgstr "{role} (check this)"
+
+msgid "statementMaybe"
+msgstr "Check this, not added: {roles}"
 
 msgid "errStatementTooLong"
 msgstr "This text is longer than {limit} characters. Paste the contribution statement on its own."
