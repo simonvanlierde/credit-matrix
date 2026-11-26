@@ -73,7 +73,7 @@ log(vote)
 phase('Adjudicate')
 const adjudicated = await agent(`You are the adjudicator for a CRediT labelling set. ${reading}
 
-${LAB}/${NAME}-splits.jsonl holds the rows where three blind labellers (a, b, c) gave three different labels: each line has pmcid, authors, text and the three labels. Agreement means the same (author, role, evidence) triples, degrees and pledges. For each row, read the statement and the author list yourself, judge which label follows the definition and the worked examples (or write your own when none does), and write ${LAB}/${NAME}-adjudicated.jsonl, one {"pmcid": "...", "label": [...], "notes": "which labeller was right and why, one line"} per split. If the splits file is empty, write an empty file.
+${LAB}/${NAME}-splits.jsonl holds the rows where three blind labellers (a, b, c) gave three different labels: each line has pmcid, authors, text and the three labels. Agreement means the same (author, role, evidence) triples, degrees and pledges. For each row, read the statement and the author list yourself, judge which label follows the definition and the worked examples (or write your own when none does), and write ${LAB}/${NAME}-adjudicated.jsonl, one {"pmcid": "...", "label": [...], "confidence": "high" | "low", "notes": "which labeller was right and why, one line"} per split. Mark a row low when the statement leaves the reading open and the project owner should rule on it. If the splits file is empty, write an empty file.
 
 Then run the gate on it, fixing faults until it prints ok:
   ${PY} ${S}/check_b.py ${INPUT} ${LAB}/${NAME}-adjudicated.jsonl partial
