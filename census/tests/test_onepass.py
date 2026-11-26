@@ -68,6 +68,14 @@ def test_encoded_uses_author_text_and_flags_cut_and_split_articles():
         onepass.Encoded(MarkerTokenizer(), rows, 40, marker="[nope]")
 
 
+def test_a_statement_that_just_fits_is_not_flagged_as_cut():
+    (author,) = WordTokenizer()([encoder.author_text("Cy Li", 1, 1)])["input_ids"]
+    room = onepass.statement_room([author], 40)
+    for words, cut in [(room, set()), (room + 1, {0})]:
+        rows = [{"statement": " ".join(["x"] * words), "authors": ["Cy Li"]}]
+        assert onepass.Encoded(MarkerTokenizer(), rows, max_length=40).truncated == cut
+
+
 def test_train_predict_and_export_on_a_tiny_model(tmp_path):
     pytest.importorskip("onnxruntime")
     tiny_model(tmp_path / "tiny")
@@ -80,8 +88,9 @@ def test_train_predict_and_export_on_a_tiny_model(tmp_path):
             "publisher": "P",
             "style": "jats4r",
             "statement": f"{i} software validation",
-            "authors": ["Ann Smith", "Bo Jones", "Cy Li"],
-            "gold": [[1, "software"], [2, "validation"]],
+            # 1, 3 and 5 authors, so a batch pads marker_positions to its longest byline.
+            "authors": ["Ann Smith", "Bo Jones", "Cy Li", "Di Ng", "Ed Oh"][: 1 + 2 * (i % 3)],
+            "gold": [[1, "software"], [2, "validation"]] if i % 3 else [[1, "software"]],
         }
         for i in range(40)
     ]
@@ -93,7 +102,7 @@ def test_train_predict_and_export_on_a_tiny_model(tmp_path):
     best = onepass.train(config, dataset, run)
     assert str(best["threshold"]) in map(str, encoder.THRESHOLDS)
     probs = onepass.probabilities(run, rows[:2], "cpu")
-    assert [len(a) for a in probs] == [3, 3] and all(len(p) == 14 for a in probs for p in a)
+    assert [len(a) for a in probs] == [1, 3] and all(len(p) == 14 for a in probs for p in a)
 
     import onnxruntime as ort
     from transformers import AutoTokenizer
@@ -108,7 +117,7 @@ def test_train_predict_and_export_on_a_tiny_model(tmp_path):
     assert [i.name for i in session.get_inputs()] == ["input_ids", "attention_mask", "marker_positions"]
     encoded = onepass.Encoded(AutoTokenizer.from_pretrained(run / "checkpoint"), rows[:2], 512, "[MASK]")
     from_onnx = onepass.onnx_probabilities(session, encoded, 4)
-    assert from_onnx[0][2] == pytest.approx(probs[0][2], abs=1e-4)
+    assert from_onnx[1][2] == pytest.approx(probs[1][2], abs=1e-4)
     w8 = ort.InferenceSession(str(tmp_path / "browser" / "onnx" / "model_w8.onnx"))
     assert onepass.onnx_probabilities(w8, encoded, 1)[1][0] == pytest.approx(probs[1][0], abs=0.02)
     cases = onepass.parity(tmp_path / "browser")

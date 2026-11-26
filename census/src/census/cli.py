@@ -612,13 +612,18 @@ def cmd_model_publish(args: argparse.Namespace) -> None:
     if args.dry_run:
         print("\n".join(f"{name}\t{path}" for name, path in files.items()))
         return
-    from huggingface_hub import CommitOperationAdd, HfApi
+    from huggingface_hub import CommitOperationAdd, CommitOperationDelete, HfApi
 
     api = HfApi()
     api.create_repo(shipped["repo"], exist_ok=True)
+    # A commit only adds files: one an earlier run shipped (a per-author int8 graph) would stay beside this run's.
+    stale = [name for name in api.list_repo_files(shipped["repo"]) if name not in files and name != ".gitattributes"]
     commit = api.create_commit(
         shipped["repo"],
-        [CommitOperationAdd(name, str(path)) for name, path in files.items()],
+        [
+            *(CommitOperationAdd(name, str(path)) for name, path in files.items()),
+            *(CommitOperationDelete(path_in_repo=name) for name in stale),
+        ],
         commit_message=f"Upload {args.name}",
     )
     # A later publish (a card change) keeps the tag on the first commit, whose weights the hashes pin.
