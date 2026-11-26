@@ -34,10 +34,19 @@ export function toJats4rXml(
   const sharedFirst =
     authors.filter((author) => isPerson(author) && author.equalContribution && author.contributorType !== "non-author")
       .length > 1;
+  const memberGroups: string[] = [];
   const contributions = authors
-    .map((author) =>
-      isGroup(author) ? groupToXml(author, withLevels, jatsVersion) : authorToXml(author, sharedFirst, withLevels),
-    )
+    .map((author) => {
+      if (!isGroup(author)) return authorToXml(author, sharedFirst, withLevels);
+      const { contrib, after } = groupToXml(
+        author,
+        withLevels,
+        jatsVersion,
+        `collab-members-${memberGroups.length + 1}`,
+      );
+      if (after) memberGroups.push(after);
+      return contrib;
+    })
     .join("\n    ");
 
   return `<?xml version='1.0' encoding='UTF-8'?>
@@ -48,7 +57,7 @@ ${DOCTYPES[jatsVersion]}
     <article-meta>
       <contrib-group>
     ${contributions}
-      </contrib-group>
+      </contrib-group>${memberGroups.map((g) => `\n      ${g}`).join("")}
     </article-meta>
   </front>
   <body/>
@@ -145,31 +154,44 @@ function rolesToXml(contributor: Contributor, withLevels: boolean): string {
     .join("\n");
 }
 
+/** A group's `<contrib>`, and its member `<contrib-group>` when that sits outside it (JATS 1.3). */
+interface GroupXml {
+  contrib: string;
+  after: string;
+}
+
 /**
- * A group is a `<collab>` holding its name and members, with the ROR id as a `<contrib-id>`.
- * Members sit in a nested `<contrib-group>` whose `content-type` says whether they are authors or
- * collaborators. The alias and the links between members and person rows stay in JSON.
+ * A group is a name, with the ROR id as a `<contrib-id>`, and members in a `<contrib-group>` whose
+ * `content-type` says whether they are authors or collaborators. JATS 1.4 nests that group in a
+ * `<collab-wrap>` beside the `<collab-name>`. JATS 1.3 cannot hold it inside the `<contrib>`, and the
+ * JATS4R rules forbid a `<contrib>` inside a `<collab>`, so the members go in a `<contrib-group>`
+ * after the main one, which the group's `<xref>` names. The alias and the links between members and
+ * person rows stay in JSON.
  */
-function groupToXml(group: Group, withLevels: boolean, version: JatsVersion): string {
+function groupToXml(group: Group, withLevels: boolean, version: JatsVersion, membersId: string): GroupXml {
   const rorEl = group.ror
     ? `\n      <contrib-id contrib-id-type="ror">https://ror.org/${escapeXml(group.ror)}</contrib-id>`
     : "";
   const members =
     group.members.length === 0
       ? ""
-      : `<contrib-group content-type="${group.membersAre}">${group.members
+      : `<contrib-group id="${membersId}" content-type="${group.membersAre}">${group.members
           .map(
             (member) => `<contrib contrib-type="author"><string-name>${escapeXml(member.name)}</string-name></contrib>`,
           )
           .join("")}</contrib-group>`;
   const name = escapeXml(group.name);
-  const collab =
-    version === "1.4"
-      ? `<collab-wrap><collab>${name}</collab>${members}</collab-wrap>`
-      : `<collab>${name}${members}</collab>`;
+  const nested = version === "1.4";
+  const collab = nested
+    ? `<collab-wrap><collab-name>${name}</collab-name>${members}</collab-wrap>`
+    : `<collab>${name}</collab>`;
+  const link = !nested && members ? `\n      <xref ref-type="other" rid="${membersId}"/>` : "";
   const contribType = group.contributorType === "non-author" ? "contributor" : "author";
-  return `<contrib contrib-type="${contribType}">${rorEl}
-      ${collab}
+  return {
+    contrib: `<contrib contrib-type="${contribType}">${rorEl}
+      ${collab}${link}
 ${rolesToXml(group, withLevels)}
-    </contrib>`;
+    </contrib>`,
+    after: nested ? "" : members,
+  };
 }

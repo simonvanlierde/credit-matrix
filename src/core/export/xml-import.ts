@@ -36,8 +36,16 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
   const contribEls = Array.from(doc.querySelectorAll("contrib"));
   if (contribEls.length === 0) return [];
 
-  // A group's members are contribs inside its <collab>; they belong to the group, not the list.
-  const memberEls = new Set<XmlElement>(Array.from(doc.querySelectorAll("collab contrib")));
+  // A group's members belong to the group, not the list: contribs nested in the group's own contrib
+  // (1.4 <collab-wrap>, or a <collab> from older files), or in the <contrib-group> its <xref> names (1.3).
+  const groupMembers = (contrib: XmlElement): { els: XmlElement[]; type: string | null } => {
+    const rid = contrib.querySelector("xref")?.getAttribute("rid");
+    const linked = Array.from(doc.querySelectorAll("contrib-group")).find((g) => rid && g.getAttribute("id") === rid);
+    const holder = linked ?? contrib.querySelector("contrib-group");
+    const els = holder ? Array.from(holder.querySelectorAll("contrib")) : [];
+    return { els, type: holder?.getAttribute("content-type") ?? null };
+  };
+  const memberEls = new Set<XmlElement>(contribEls.flatMap((contrib) => groupMembers(contrib).els));
   const authors = readUpToCap<XmlElement, Contributor>(contribEls, (contrib) => {
     if (memberEls.has(contrib)) return [];
     // Editors, reviewers and other non-credited contrib types are not authors.
@@ -69,9 +77,9 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
     const equalContribution = contrib.getAttribute("equal-contrib") === "yes";
     const corresponding = contrib.getAttribute("corresp") === "yes";
 
-    const collab = contrib.querySelector("collab");
+    const collab = contrib.querySelector("collab-name") ?? contrib.querySelector("collab");
     if (collab) {
-      // JATS 1.3 has <collab> in the contrib; 1.4 wraps it in <collab-wrap> with the member list beside it.
+      // JATS 1.3 has <collab> in the contrib; 1.4 wraps a <collab-name> and the member list in <collab-wrap>.
       const name = squash(
         collab.childNodes
           ? Array.from(collab.childNodes)
@@ -81,7 +89,8 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
           : collab.textContent,
       );
       if (!name) return [];
-      const members = Array.from(contrib.querySelectorAll("contrib")).flatMap((member) => {
+      const { els: memberContribs, type: membersType } = groupMembers(contrib);
+      const members = memberContribs.flatMap((member) => {
         const parts = ["given-names", "surname", "suffix"].map((tag) => squash(member.querySelector(tag)?.textContent));
         const text = parts.some(Boolean)
           ? parts.filter(Boolean).join(" ")
@@ -95,10 +104,7 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
             contributions,
             contributorType,
             members,
-            membersAre:
-              contrib.querySelector("contrib-group")?.getAttribute("content-type") === "authors"
-                ? "authors"
-                : "collaborators",
+            membersAre: membersType === "authors" ? "authors" : "collaborators",
             ...(ror && isValidRor(ror) ? { ror } : {}),
           }),
         ];

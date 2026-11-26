@@ -16,7 +16,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `Group`, `createGroup`, `isGroup`, `isPerson` and `shortName`; `AuthorSchema` is now
   `PersonSchema`, with `GroupSchema` and `ContributorSchema` beside it.
 - Groups in every export: JATS `<collab>` (1.3) or `<collab-wrap>` (1.4, `--jats-version 1.4`) with
-  members as a nested `<contrib-group>`, CodeMeta and RO-Crate `Organization` with `alternateName`
+  members as a `<contrib-group>` (nested in 1.4, linked by `<xref>` in 1.3), CodeMeta and RO-Crate `Organization` with `alternateName`
   and a ROR `@id`, Crossref `<organization>` (roles dropped), Tenzing with the whole name as the
   surname, and CSV rows of kind `group`. JATS imports read both forms. The Typst package reads
   `kind: "group"` entries and the app's JSON export.

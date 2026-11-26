@@ -163,10 +163,12 @@ describe("share links", () => {
 describe("JATS", () => {
   const roster = () => [covid(), createAuthor("Ada Lovelace", { contributions: [{ role: "Software", score: 100 }] })];
 
-  it("writes a 1.3 <collab> with a nested member contrib-group, and reads it back", () => {
+  it("writes a 1.3 <collab> with its members in a linked contrib-group, and reads it back", () => {
     const xml = toJats4rXml(roster());
     expect(xml).toContain('dtd-version="1.3"');
-    expect(xml).toContain("<collab>The COVIDSurg Collaborative<contrib-group");
+    expect(xml).toContain("<collab>The COVIDSurg Collaborative</collab>");
+    expect(xml).toContain('<xref ref-type="other" rid="collab-members-1"/>');
+    expect(xml).toContain('<contrib-group id="collab-members-1"');
     expect(xml).toContain('<contrib-id contrib-id-type="ror">https://ror.org/05dxps055</contrib-id>');
     expect(xml).not.toContain("collab-wrap");
     const [group, person] = fromJats4rXml(xml);
@@ -184,7 +186,7 @@ describe("JATS", () => {
   it("writes a 1.4 <collab-wrap>, and reads it back", () => {
     const xml = toJats4rXml(roster(), { jatsVersion: "1.4" });
     expect(xml).toContain('dtd-version="1.4"');
-    expect(xml).toContain("<collab-wrap><collab>The COVIDSurg Collaborative</collab><contrib-group");
+    expect(xml).toContain("<collab-wrap><collab-name>The COVIDSurg Collaborative</collab-name><contrib-group");
     const [group] = fromJats4rXml(xml);
     expect(group).toMatchObject({
       kind: "group",
