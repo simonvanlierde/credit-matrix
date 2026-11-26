@@ -358,17 +358,23 @@ describe("the statement reader worker", () => {
   });
 
   it("keeps a slow download that sends a piece every 40 seconds", async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     try {
       serveModel(
         [...MODEL].map((b) => Uint8Array.of(b)),
         40_000,
       );
-      const reading = handle({ id: 0, statement: "S", authors: ["Ada"] });
+      let done = false;
+      void handle({ id: 0, statement: "S", authors: ["Ada"] }).then(() => {
+        done = true;
+      });
       await vi.advanceTimersByTimeAsync(MODEL.length * 40_000);
-      // Hashing and reading need no more time, and take real event-loop turns.
-      vi.useRealTimers();
-      await reading;
+      // Hashing takes real event-loop turns, and the reading yields on a timer that may be set only
+      // after them: run due timers without moving the clock until it is done.
+      while (!done) {
+        await vi.advanceTimersByTimeAsync(0);
+        await new Promise((resolve) => setImmediate(resolve));
+      }
       expect(last()).toHaveProperty("result");
     } finally {
       vi.useRealTimers();
