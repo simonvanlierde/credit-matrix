@@ -603,3 +603,16 @@ describe("isSuffix", () => {
     for (const word of ["J.r", "", "IV", "Junior"]) expect(isSuffix(word)).toBe(false);
   });
 });
+
+describe("splitNameList serial comma", () => {
+  it("drops 'and' and '&' only from the start of a later chunk", () => {
+    expect(splitNameList("Ada Lovelace, and Grace Hopper, & Mary Quinn")).toEqual([
+      "Ada Lovelace",
+      "Grace Hopper",
+      "Mary Quinn",
+    ]);
+    // Not from the first chunk, and not from the middle of a name.
+    expect(splitNameList("And Bell, Mia")).toEqual(["And Bell", "Mia"]);
+    expect(splitNameList("Marie Curie, Brand New")).toEqual(["Marie Curie", "Brand New"]);
+  });
+});

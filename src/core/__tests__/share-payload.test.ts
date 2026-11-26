@@ -275,3 +275,48 @@ describe("share payload envelope validation", () => {
     expect(fromSharePayload(withKey("w", String(farFuture))).sentAt).toBe(farFuture);
   });
 });
+
+describe("share payload name parts and refusals", () => {
+  const partsOf = (author: ReturnType<typeof createAuthor>) =>
+    JSON.parse(toSharePayload({ authors: [author] })).a[0].p as string[] | undefined;
+
+  it("carries the parts when any one of them differs from what the name parses to", () => {
+    // "Ana Maria Lopez" parses as Ana / Maria / Lopez.
+    const same = { firstName: "Ana", middleName: "Maria", surname: "Lopez" };
+    expect(partsOf(createAuthor("Ana Maria Lopez", same))).toBeUndefined();
+    expect(partsOf(createAuthor("Ana Maria Lopez", { ...same, firstName: "Anna" }))).toEqual([
+      "Anna",
+      "Maria",
+      "Lopez",
+    ]);
+    expect(partsOf(createAuthor("Ana Maria Lopez", { ...same, middleName: "Mar" }))).toEqual(["Ana", "Mar", "Lopez"]);
+    expect(partsOf(createAuthor("Ana Maria Lopez", { ...same, surname: "Maria Lopez" }))).toEqual([
+      "Ana",
+      "Maria",
+      "Maria Lopez",
+    ]);
+  });
+
+  it("names the refusal and the reason in the error", () => {
+    const grace = createAuthor("Grace Hopper");
+    expect(() => toSharePayload({ authors: [grace], claimId: grace.id })).toThrow(
+      "This draft cannot be shared as a link: claim without source draft.",
+    );
+    expect(() => toSharePayload({ authors: [grace], claimId: grace.id })).toThrow(UnsharableDraftError);
+    expect(() => toSharePayload({ authors: [grace], claimId: grace.id })).toThrow(
+      expect.objectContaining({ name: "UnsharableDraftError" }),
+    );
+  });
+
+  it("ignores link parts that have no surname or are not found in the name", () => {
+    const read = (p: string[]) => {
+      const json = JSON.stringify({ v: 2, a: [{ i: "abc", n: "Ana Lopez", p, s: [] }] });
+      const [ana] = fromSharePayload(json).authors;
+      return [ana?.firstName, ana?.middleName, ana?.surname];
+    };
+    expect(read(["Ana", "", "Lopez"])).toEqual(["Ana", "", "Lopez"]);
+    expect(read(["Ana", "", ""])).toEqual(["Ana", "", "Lopez"]);
+    expect(read(["Ana", "", "Smith"])).toEqual(["Ana", "", "Lopez"]);
+    expect(read(["Eve", "", "Lopez"])).toEqual(["Ana", "", "Lopez"]);
+  });
+});

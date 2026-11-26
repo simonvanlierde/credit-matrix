@@ -117,3 +117,13 @@ describe("toLatexCredits", () => {
     }
   });
 });
+
+describe("toLatexCredits with a row that lacks roles", () => {
+  it("reads a role the author has no entry for as 0", () => {
+    const listed = createAuthor("Hua Luogeng", { contributions: [{ role: "Software", score: 100 }] });
+    const bare = { ...createAuthor("Ada Lovelace"), contributions: [] };
+    const lines = toLatexCredits([listed, bare]).split("\n");
+    expect(lines.at(-2)).toMatch(/^\\credit\{Hua Luogeng\}\{/);
+    expect(lines.at(-1)?.replace(/\n$/, "")).toBe(`\\credit{Ada Lovelace}{${"0,".repeat(13)}0}`);
+  });
+});
