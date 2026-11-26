@@ -38,14 +38,21 @@ export function fromJats4rXml(xmlString: string, { parser }: { parser?: XmlParse
 
   // A group's members belong to the group, not the list: contribs nested in the group's own contrib
   // (1.4 <collab-wrap>, or a <collab> from older files), or in the <contrib-group> its <xref> names (1.3).
+  const groupsById = new Map(
+    Array.from(doc.querySelectorAll("contrib-group")).map((group) => [group.getAttribute("id"), group]),
+  );
   const groupMembers = (contrib: XmlElement): { els: XmlElement[]; type: string | null } => {
-    const rid = contrib.querySelector("xref")?.getAttribute("rid");
-    const linked = Array.from(doc.querySelectorAll("contrib-group")).find((g) => rid && g.getAttribute("id") === rid);
-    const holder = linked ?? contrib.querySelector("contrib-group");
+    const rid = contrib.querySelector('xref[ref-type="other"]')?.getAttribute("rid");
+    const holder = (rid ? groupsById.get(rid) : undefined) ?? contrib.querySelector("contrib-group");
     const els = holder ? Array.from(holder.querySelectorAll("contrib")) : [];
     return { els, type: holder?.getAttribute("content-type") ?? null };
   };
-  const memberEls = new Set<XmlElement>(contribEls.flatMap((contrib) => groupMembers(contrib).els));
+  // Only a contrib that names a group has members; a file of people at the byte cap skips the lookups.
+  const memberEls = new Set<XmlElement>(
+    contribEls
+      .filter((contrib) => contrib.querySelector("collab, collab-name"))
+      .flatMap((contrib) => groupMembers(contrib).els),
+  );
   const authors = readUpToCap<XmlElement, Contributor>(contribEls, (contrib) => {
     if (memberEls.has(contrib)) return [];
     // Editors, reviewers and other non-credited contrib types are not authors.
