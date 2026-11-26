@@ -15,11 +15,13 @@ census = "census.cli:main"
 
 [dependency-groups]
 browser = [
+  "numpy>=2.5.5",
   "onnx>=1.23.2",
   "onnxruntime>=1.31.0",
   "onnxscript>=0.7.2",
 ]
 dev = [
+  "numpy>=2.5.5",
   "pytest>=9.1",
   "pytest-codspeed>=5.0.3",
   "ruff>=0.17",
@@ -34,6 +36,7 @@ tracking = [
 train = [
   { include-group = "tracking" },
   "codecarbon>=3.3.2",
+  "numpy>=2.5.5",
   "torch>=2.14",
   "transformers>=5.20",
 ]
@@ -67,4 +70,5 @@ module-name = "census"
 
 [tool.ty.analysis]
 # CI type-checks without the `train` and `browser` groups: torch's wheels are too large to install there.
+# numpy, which their code imports, is small, so the dev group has it and ty checks its use.
 allowed-unresolved-imports = ["torch", "transformers", "tokenizers", "onnx", "onnxruntime.**", "codecarbon", "huggingface_hub", "mlflow", "mlflow.**"]

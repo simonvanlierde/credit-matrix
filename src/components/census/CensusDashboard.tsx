@@ -11,8 +11,8 @@ import type censusJson from "../../../public/data/census.json";
 
 type CensusData = typeof censusJson;
 
-// The encoder's pair F1 on the untouched test200b set; see census/MODEL_CARD.md.
-const CHECKED = { articles: 200, worded: 0.973, narrative: 0.961 };
+// The shipped encoder's (census/model.json) pair F1 on the untouched test200b set; see census/MODEL_CARD.md.
+const CHECKED = { articles: 200, worded: 0.971, narrative: 0.964 };
 const PLACES = ["all", "first", "middle", "last"] as const;
 const SOURCE = "https://github.com/simonvanlierde/credit-matrix/tree/main/census";
 const MODEL_CARD = "https://github.com/simonvanlierde/credit-matrix/blob/main/census/MODEL_CARD.md";

@@ -18,7 +18,7 @@
  * - other same-origin GETs: cache first, unhashed ones refreshed in the background
  * - cross-origin (the ORCID, Crossref, and DataCite lookups): never cached, so a lookup
  *   fails honestly when offline. The statement reader's model, from the Hugging Face Hub,
- *   is cached by transformers.js in its own cache, which activation leaves alone.
+ *   is cached by its worker in its own cache (statement-reader), which activation leaves alone.
  *
  * The cache is named per build (scripts/postbuild.mjs stamps BUILD_ID), so
  * activating a new version drops the previous build's chunks instead of
@@ -132,12 +132,13 @@ async function cachedPage(request) {
 }
 
 async function dropOldCaches() {
-  // Only this app's caches: the statement reader's model (transformers-cache) outlives builds.
+  // Only this app's caches: the statement reader's model (statement-reader) outlives builds.
   const old = (await caches.keys()).filter((key) => key !== CACHE && key.startsWith("credit-matrix-"));
   await carryVisitedDocs(old).catch(() => {
     // Reading an old cache failed: those docs lose their offline copy, the update still activates.
   });
-  await Promise.all(old.map((key) => caches.delete(key)));
+  // transformers-cache: the model an earlier reader kept through transformers.js, which nothing reads now.
+  await Promise.all([...old, "transformers-cache"].map((key) => caches.delete(key)));
   await self.clients.claim();
 }
 

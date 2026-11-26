@@ -102,11 +102,13 @@ records. All three send CORS headers that let the browser call them. The Content
 (CSP) in [`public/_headers`](../public/_headers) allows exactly those origins, plus `orcid.org`, whose
 public keys check a co-author's ORCID sign-in on a reply. The statement reader's worker has its own
 CSP, which adds `huggingface.co` with its `*.hf.co` CDN; no page may connect there. That reader
-(`src/lib/statement-reader.ts`) runs the census model, int8 ONNX, in a worker through
-transformers.js on onnxruntime-web's CPU build, whose WebAssembly this site serves, from the Hub
-commit `census/model.json` pins. It loads when someone asks for it, never at install;
-transformers.js caches the model in its own Cache Storage entry, which the service worker leaves
-alone. `Cross-Origin-Embedder-Policy: credentialless` makes the site cross-origin isolated, so the
+(`src/lib/statement-reader.ts`) runs the census model in a worker on onnxruntime-web's CPU build,
+whose WebAssembly this site serves. It reads the whole byline in one pass (a long one in chunks
+that each repeat the statement), with its own BPE tokenizer (`src/lib/tokenizer.ts`). The files
+come from the Hub commit `census/model.json` pins. Each of the four (the tokenizer, the model
+config, `best.json` and the 8-bit model) must match the size and SHA-256 it records. They load when someone asks for them, never at install, and the worker caches
+them in its own Cache Storage entry (`statement-reader`), which the service worker leaves alone.
+`Cross-Origin-Embedder-Policy: credentialless` makes the site cross-origin isolated, so the
 reader runs up to four threads; Safari ignores `credentialless` and gets one. The rules' roles stay
 in the review: the model marks the ones it did not find and offers the ones they missed, and only
 on a prose statement, where the rules find nothing, does its reading stand alone.

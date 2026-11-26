@@ -4,12 +4,16 @@ import { CREDIT_ROLES, type CreditRoleName } from "@/core";
 import { creditSlug } from "@/core/credit-roles";
 import shipped from "../../census/model.json";
 
-/** The int8 ONNX file's size in bytes, for the download notice; scripts/check-bundle-size.mjs caps it. */
-export const MODEL_BYTES = shipped.bytes["onnx/model_int8.onnx"];
-/** Training's max length; longer inputs lose the statement's end. */
+/** The model file the worker downloads, a key of census/model.json's `sha256` and `bytes`. */
+export const MODEL_FILE = "onnx/model_w8.onnx";
+/** Its size in bytes, for the download notice; scripts/check-bundle-size.mjs caps it. */
+export const MODEL_BYTES = shipped.bytes[MODEL_FILE];
+/** Training's max length (run.json `max_length`): the most tokens one chunk holds. */
 export const MAX_TOKENS = 1024;
-// On gold500b (the dev set), read one author at a time in int8, a pair at 0.2 to 0.7 was in the gold
-// 28% to 67% of the time; below it at most 17%, above it at least 74%. About 1.7 such pairs per article.
+/** The token before each author's text, as `onepass.MARKER` in census/src/census/onepass.py. */
+export const MARKER = "[unused0]";
+// On gold500b (the dev set), read in one pass in w8, a pair at 0.2 to 0.7 was in the gold 22% to 66% of
+// the time; below it at most 13%, above it at least 71%. About 1.8 such pairs per article.
 export const CHECK_BELOW = 0.2;
 export const CHECK_ABOVE = 0.7;
 
@@ -39,9 +43,63 @@ export function initials(name: string): string[] {
   return [...new Set([dotted, compact + first(surname), ...(compact ? [`${surname} ${compact}`] : [])])];
 }
 
-/** The first input of the pair the model reads, as `encoder.author_text`. */
+/** An author as the model reads them, after a marker, as `encoder.author_text`. */
 export function authorText(name: string, position: number, of: number): string {
   return `${name} (${initials(name).join(", ")}); author ${position} of ${of}`;
+}
+
+/** One input of the model: some of the byline's authors (indexes from 0), each marked, then the statement. */
+export interface Chunk {
+  authors: number[];
+  ids: number[];
+  /** Where each author's marker sits in `ids`: the model gives one row of logits per marker. */
+  markers: number[];
+}
+
+/**
+ * How many statement tokens a chunk keeps, as `onepass.statement_room`: all that fit beside the whole
+ * byline, but at least `maxLength` less a quarter for authors (or the longest author, if longer).
+ */
+export function statementRoom(authors: number[][], maxLength = MAX_TOKENS): number {
+  const lengths = authors.map((a) => 1 + Math.min(a.length, Math.floor(maxLength / 4)));
+  const byline = lengths.reduce((sum, n) => sum + n, 0);
+  return maxLength - 3 - Math.min(byline, Math.max(...lengths, Math.floor(maxLength / 4)));
+}
+
+/**
+ * The model's inputs for one statement, as `onepass.chunks`: `[CLS] <m> author ... [SEP] statement [SEP]`
+ * with as many authors per chunk as fit, so a long byline repeats the statement in each. An author is cut
+ * at a quarter of `maxLength` and the statement to `statementRoom`, so every chunk holds one author at least.
+ */
+export function chunks(
+  authors: number[][],
+  statement: number[],
+  { cls, sep, marker }: { cls: number; sep: number; marker: number },
+  maxLength = MAX_TOKENS,
+): Chunk[] {
+  if (authors.length === 0) return [];
+  const kept = statement.slice(0, statementRoom(authors, maxLength));
+  const cut = authors.map((a) => a.slice(0, Math.floor(maxLength / 4)));
+  const room = maxLength - 3 - kept.length;
+  const groups: number[][] = [[]];
+  let used = 0;
+  cut.forEach((a, i) => {
+    if ((groups.at(-1)?.length ?? 0) > 0 && used + 1 + a.length > room) {
+      groups.push([]);
+      used = 0;
+    }
+    groups.at(-1)?.push(i);
+    used += 1 + a.length;
+  });
+  return groups.map((group) => {
+    const ids = [cls];
+    const markers: number[] = [];
+    for (const i of group) {
+      markers.push(ids.length);
+      ids.push(marker, ...(cut[i] ?? []));
+    }
+    return { authors: group, ids: [...ids, sep, ...kept, sep], markers };
+  });
 }
 
 /**
@@ -115,7 +173,7 @@ let nextId = 0;
 
 /**
  * Read `statement` for each author (full names, in byline order). The first call downloads the model
- * (`MODEL_BYTES`, then cached by the browser); later calls reuse it. Aborting stops after the current author.
+ * (`MODEL_BYTES`, then cached by the browser); later calls reuse it. Aborting stops after the current chunk.
  */
 export function readStatement(
   statement: string,

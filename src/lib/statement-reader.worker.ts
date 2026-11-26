@@ -1,42 +1,98 @@
 /// <reference lib="webworker" />
-// The census model (census/MODEL_CARD.md) in the browser: int8 ONNX through transformers.js on
+// The census model (census/MODEL_CARD.md) in the browser: the one-pass graph, 8-bit weights, on
 // onnxruntime-web's CPU build. Loaded on the first request, then kept for the page's life.
-import { AutoModelForSequenceClassification, AutoTokenizer, env, Tensor } from "@huggingface/transformers";
+
 import wasm from "onnxruntime-web/ort-wasm-simd-threaded.wasm?url";
+import { env, InferenceSession, Tensor } from "onnxruntime-web/wasm";
 import shipped from "../../census/model.json";
 import type { ReaderReply, ReaderRequest } from "./statement-reader";
-import { MAX_TOKENS } from "./statement-reader";
+import { chunks, MARKER, MODEL_FILE } from "./statement-reader";
+import { type TokenizerJson, tokenizer } from "./tokenizer";
 
-// The commit, not the tag: a tag can be moved without an app release.
-const { repo, revision } = shipped;
-env.allowLocalModels = false;
-// The runtime is served from this site: the CSP allows no script from a CDN. Not via
-// transformers.js's own WASM cache, which imports the glue from a blob: URL the CSP refuses.
-env.useWasmCache = false;
-const onnx = env.backends.onnx as { wasm: { wasmPaths: unknown; numThreads: number } };
-onnx.wasm.wasmPaths = { wasm };
+// The commit, not the tag: a tag can be moved without an app release. `base` is set only by vite.config.mts's
+// READER_MODEL_DIR, which serves a local export in place of the Hub.
+const {
+  repo,
+  revision,
+  base = `https://huggingface.co/${repo}/resolve/${revision}/`,
+  ...pinned
+} = shipped as typeof shipped & { base?: string };
+const sha256: Record<string, string | undefined> = pinned.sha256;
+const bytes: Record<string, number | undefined> = pinned.bytes;
+/** The Cache Storage entry for the model's files, which public/sw.js leaves alone. */
+export const CACHE = "statement-reader";
+// The runtime is served from this site: the CSP allows no script from a CDN.
+env.wasm.wasmPaths = { wasm };
 // Threads need SharedArrayBuffer, so cross-origin isolation (public/_headers); Safari ignores
 // COEP: credentialless and gets one. Past four, a 68M model gains little.
-onnx.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
+env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
 /** A download that sends nothing for this long has stalled: fail, so the next request starts over. */
 export const STALL_MS = 60_000;
 
 const post = (reply: ReaderReply) => self.postMessage(reply);
+const hex = (buffer: ArrayBuffer) =>
+  Array.from(new Uint8Array(buffer), (b) => b.toString(16).padStart(2, "0")).join("");
 
-/** best.json beside the weights: the threshold the config does not hold. Cached for offline use. */
-async function fetchThreshold(): Promise<number> {
-  const url = `${env.remoteHost}${repo}/resolve/${revision}/best.json`;
-  const cache = await caches.open(env.cacheKey);
-  let response = await cache.match(url);
-  if (!response) {
-    response = await fetch(url);
-    if (!response.ok) throw new Error(`best.json: HTTP ${response.status}`);
-    await cache.put(url, response.clone());
+/** The offline copy, or none where storage is blocked (some private windows): the reader works without it. */
+async function openCache(): Promise<Cache | undefined> {
+  try {
+    return await caches.open(CACHE);
+  } catch {
+    return undefined;
   }
-  return ((await response.json()) as { threshold: number }).threshold;
+}
+
+/**
+ * A file of the pinned export, from the cache or else the Hub, where it must have the size and sha256
+ * census/model.json pins before it is cached; `onChunk` hears each piece downloaded.
+ */
+async function download(
+  file: string,
+  cache: Cache | undefined,
+  signal: AbortSignal,
+  onChunk: (bytes: number) => void,
+): Promise<ArrayBuffer> {
+  const url = base + file;
+  const hit = await cache?.match(url);
+  if (hit) return hit.arrayBuffer();
+  const [want, size] = [sha256[file], bytes[file]];
+  if (!(want && size)) throw new Error(`census/model.json pins no ${file}.`);
+  const refused = new Error(`${file} is not the file census/model.json pins.`);
+  const response = await fetch(url, { signal });
+  if (!(response.ok && response.body)) throw new Error(`${file}: HTTP ${response.status}`);
+  // One copy of the model in memory, not the pieces plus a joined copy.
+  const body = new Uint8Array(size);
+  let received = 0;
+  const reader = response.body.getReader();
+  for (let read = await reader.read(); !read.done; read = await reader.read()) {
+    // Not buffered past the pinned size; load() aborts the fetch.
+    if (received + read.value.length > size) throw refused;
+    body.set(read.value, received);
+    received += read.value.length;
+    onChunk(read.value.length);
+  }
+  if (received !== size || hex(await crypto.subtle.digest("SHA-256", body)) !== want) throw refused;
+  // A load that failed meanwhile caches nothing more.
+  signal.throwIfAborted();
+  // Out of space: read without the offline copy.
+  await cache?.put(url, new Response(body)).catch(() => undefined);
+  return body.buffer;
+}
+
+/**
+ * Deletes what no request reads again: an earlier release's files (75 MB a model) under another commit's
+ * `base`, and the cache of the transformers.js reader, which an old tab can write again after public/sw.js
+ * deleted it.
+ */
+async function prune(cache: Cache | undefined) {
+  // Cached URLs are absolute, and a local export's `base` is a path.
+  const current = new URL(base, self.location.href).href;
+  const stale = ((await cache?.keys()) ?? []).filter(({ url }) => !url.startsWith(current));
+  await Promise.all([...stale.map((request) => cache?.delete(request)), caches.delete("transformers-cache")]);
 }
 
 async function load() {
+  const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   let fail!: (error: Error) => void;
   const stalled = new Promise<never>((_, reject) => {
@@ -47,29 +103,54 @@ async function load() {
     timer = setTimeout(() => fail(new Error("The model download stalled.")), STALL_MS);
   };
   poke();
-  const loaded = Promise.all([
-    AutoTokenizer.from_pretrained(repo, { revision }),
-    AutoModelForSequenceClassification.from_pretrained(repo, {
-      revision,
-      dtype: "int8",
-      device: "wasm",
-      progress_callback: (info: { status: string; progress?: number }) => {
-        poke();
-        if (info.status === "progress_total") post({ progress: { phase: "download", percent: info.progress ?? 0 } });
-      },
-    }),
-    fetchThreshold(),
-  ]);
+  let received = 0;
+  const cache = await openCache();
+  const [vocabularyFile, configFile, bestFile] = ["tokenizer.json", "config.json", "best.json"].map((file) =>
+    download(file, cache, controller.signal, poke),
+  ) as [Promise<ArrayBuffer>, Promise<ArrayBuffer>, Promise<ArrayBuffer>];
+  const model = download(MODEL_FILE, cache, controller.signal, (n) => {
+    poke();
+    received += n;
+    post({ progress: { phase: "download", percent: Math.min(100, (100 * received) / (bytes[MODEL_FILE] ?? 1)) } });
+  });
+  // The timer guards downloads only: parsing and InferenceSession.create on a slow phone may take longer.
+  Promise.all([vocabularyFile, configFile, bestFile, model]).then(
+    () => clearTimeout(timer),
+    () => undefined,
+  );
+  const json = async <T>(body: Promise<ArrayBuffer>) => JSON.parse(new TextDecoder().decode(await body)) as T;
+  const vocabulary = json<TokenizerJson>(vocabularyFile);
+  const config = json<{ id2label: Record<string, string> }>(configFile);
+  const best = json<{ threshold: number }>(bestFile);
+  const created = model.then((body) => InferenceSession.create(new Uint8Array(body), { executionProviders: ["wasm"] }));
+  const loaded = Promise.all([vocabulary, config, best, created]);
   try {
-    const [tokenizer, model, threshold] = await Promise.race([loaded, stalled]);
-    return { tokenizer, model, threshold };
+    const [vocab, { id2label }, { threshold }, session] = await Promise.race([loaded, stalled]);
+    if (typeof threshold !== "number") throw new Error("best.json has no threshold.");
+    const tokens = tokenizer(vocab);
+    const special = (token: string) => {
+      const id = tokens.id(token);
+      if (id === undefined) throw new Error(`tokenizer.json has no ${token}.`);
+      return id;
+    };
+    const ids = { cls: special("[CLS]"), sep: special("[SEP]"), marker: special(MARKER) };
+    const labels = Object.keys(id2label).map((i) => id2label[i] ?? "");
+    await prune(cache).catch(() => undefined);
+    return { encode: tokens.encode, ids, session, labels, threshold };
+  } catch (error) {
+    // create cannot be cancelled: a session it makes for a failed load would hold ~75 MB until the page closes.
+    created.then((session) => session.release()).catch(() => undefined);
+    throw error;
   } finally {
     clearTimeout(timer);
+    // After a stall or a failed file, the other downloads stop too.
+    controller.abort();
   }
 }
 
 let loading: ReturnType<typeof load> | undefined;
 const cancelled = new Set<number>();
+const int64 = (values: number[]) => new Tensor("int64", BigInt64Array.from(values, BigInt), [1, values.length]);
 
 async function onRequest({ data }: MessageEvent<ReaderRequest>) {
   if ("cancel" in data) {
@@ -80,29 +161,30 @@ async function onRequest({ data }: MessageEvent<ReaderRequest>) {
   try {
     loading ??= load();
     // A failed load (offline, quota) is retried on the next request.
-    const { tokenizer, model, threshold } = await loading.catch((error: unknown) => {
+    const { encode, ids, session, labels, threshold } = await loading.catch((error: unknown) => {
       loading = undefined;
       throw error;
     });
-    const probabilities: number[][] = [];
-    for (const [i, text] of authors.entries()) {
+    const probabilities: number[][] = authors.map(() => []);
+    let done = 0;
+    for (const chunk of chunks(authors.map(encode), encode(statement), ids)) {
       // A cancel waits in the task queue behind this loop's microtasks: let it in first.
       await new Promise((resolve) => setTimeout(resolve));
       if (cancelled.has(id)) return;
-      post({ id, progress: { phase: "read", done: i, of: authors.length } });
-      const encoded = tokenizer(text, { text_pair: statement, return_tensor: false }) as { input_ids: number[] };
-      let ids = encoded.input_ids;
-      // Training cut the statement, never the author text, and kept the closing [SEP] ("only_second").
-      if (ids.length > MAX_TOKENS) ids = [...ids.slice(0, MAX_TOKENS - 1), ids.at(-1) ?? 0];
-      const shape = [1, ids.length];
-      const { logits } = (await model({
-        input_ids: new Tensor("int64", BigInt64Array.from(ids, BigInt), shape),
-        attention_mask: new Tensor("int64", new BigInt64Array(ids.length).fill(1n), shape),
-      })) as { logits: Tensor };
-      probabilities.push(Array.from(logits.data as Float32Array, (x) => 1 / (1 + Math.exp(-x))));
+      post({ id, progress: { phase: "read", done, of: authors.length } });
+      const { logits } = await session.run({
+        input_ids: int64(chunk.ids),
+        attention_mask: int64(chunk.ids.map(() => 1)),
+        marker_positions: int64(chunk.markers),
+      });
+      // logits [1, authors in the chunk, labels]
+      const rows = logits?.data as Float32Array;
+      chunk.authors.forEach((author, k) => {
+        const row = rows.subarray(k * labels.length, (k + 1) * labels.length);
+        probabilities[author] = Array.from(row, (x) => 1 / (1 + Math.exp(-x)));
+      });
+      done += chunk.authors.length;
     }
-    const id2label = (model.config as unknown as { id2label: Record<string, string> }).id2label;
-    const labels = Object.keys(id2label).map((i) => id2label[i] ?? "");
     post({ id, result: { probabilities, labels, threshold } });
   } catch (error) {
     post({ id, error: error instanceof Error ? error.message : String(error) });

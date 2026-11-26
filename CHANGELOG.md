@@ -18,16 +18,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `convert names.txt --to json`.
 - The census's statement-reading model is on Hugging Face as
   [`simonvanlierde/credit-statement-reader`](https://huggingface.co/simonvanlierde/credit-statement-reader),
-  under the MIT licence, with int8 and fp32 ONNX copies for transformers.js. It reads statements
-  written in CRediT terms and in the authors' own words. On 200 statements held back until the model
-  was chosen, it finds author-role pairs at F1 0.96 in prose statements and 0.97 in CRediT ones; see
-  its [model card](census/MODEL_CARD.md). `census model publish` uploads it.
+  under the MIT licence, with 8-bit-weight and fp32 ONNX copies. It reads statements written in
+  CRediT terms and in the authors' own words, every author of a statement in one pass. On 200
+  statements held back until the model was chosen, it finds author-role pairs at F1 0.96 in prose
+  statements and 0.97 in CRediT ones; see its [model card](census/MODEL_CARD.md). The census reads
+  free-text statements with it too, and `census model publish` uploads it.
 - A pasted statement can be checked with that model in the app: "Read with the model" in the review
-  downloads it once (70 MB, from Hugging Face) and reads each contributor in the browser, so the
-  statement never leaves it. The rule parser's roles stay, and a role the model did not find is
-  marked; roles only the model found are offered, and added only when picked. A statement in prose,
-  where the rules find nothing, opens the review with the model on offer instead of an error; its
-  close calls show as "check this", and roles it nearly gave are listed but not added.
+  downloads it once (75 MB, from Hugging Face) and reads all contributors in one pass in the
+  browser, so the statement never leaves it. The rule parser's roles stay, and a role the model
+  did not find is marked; roles only the model found are offered, and added only when picked. A
+  statement in prose, where the rules find nothing, opens the review with the model on offer
+  instead of an error; its close calls show as "check this", and roles it nearly gave are listed
+  but not added.
 - The site is cross-origin isolated (`Cross-Origin-Embedder-Policy: credentialless`), so the
   statement reader runs up to four threads. Safari ignores `credentialless` and reads with one.
 - The CLI reference says [which statements OpenAlex reads](docs/cli.md#which-statements-openalex-reads):
@@ -43,6 +45,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   research articles with roles rises by 3 to 5 points a year (2025: 50% to 55%). The census
   dataset's `articles.parquet` gains a `reader` column (`tags`, `rules` or `encoder`). See
   [Who reads the roles](census/README.md#who-reads-the-roles).
+- The Published practice tab's field shares now count the roles the encoder reads too. Every field
+  has more articles (Medicine 18% more). Mathematics and Veterinary now pass the 1,000-article
+  minimum and are listed.
+- The statement reader no longer uses transformers.js. Its worker runs the model on onnxruntime-web
+  with its own tokenizer. The service worker deletes `transformers-cache`, the 70 MB Cache Storage
+  entry the earlier reader kept, and so does the reader once its model loads.
 
 ### Fixed
 

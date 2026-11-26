@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cast } from "@/core/__tests__/cast";
-import { authorText, combine, decode, initials } from "./statement-reader";
+import shipped from "../../census/model.json";
+import { authorText, chunks, combine, decode, initials, statementRoom } from "./statement-reader";
 
 describe("initials", () => {
   // Expected values printed by census.encoder.initials, which built every training input.
@@ -22,8 +23,71 @@ describe("initials", () => {
   });
 });
 
+describe("chunks", () => {
+  // As census/tests/test_onepass.py, with the same token ids.
+  const [CLS, SEP, M] = [1, 2, 99];
+  const ids = { cls: CLS, sep: SEP, marker: M };
+  const fill = (n: number, id: number) => Array<number>(n).fill(id);
+
+  it("marks each author before the statement in one chunk", () => {
+    const [chunk, ...rest] = chunks([[5, 6], [7]], [8, 8, 8], ids, 40);
+    expect(rest).toEqual([]);
+    expect(chunk).toEqual({ authors: [0, 1], ids: [CLS, M, 5, 6, M, 7, SEP, 8, 8, 8, SEP], markers: [1, 4] });
+    expect(chunks([], [8], ids, 40)).toEqual([]);
+  });
+
+  it("splits a long byline into chunks that each repeat the statement", () => {
+    const authors = [0, 1, 2, 3, 4].map((i) => fill(3, 10 + i)); // 4 tokens each with its marker
+    const statement = fill(9, 8);
+    const made = chunks(authors, statement, ids, 20); // room for 8 author tokens: 2 authors per chunk
+    expect(made.map((c) => c.authors)).toEqual([[0, 1], [2, 3], [4]]);
+    for (const c of made) {
+      expect(c.ids.length).toBeLessThanOrEqual(20);
+      expect(c.ids.slice(-statement.length - 2)).toEqual([SEP, ...statement, SEP]);
+      expect(c.markers.map((p) => c.ids[p + 1])).toEqual(c.authors.map((i) => 10 + i));
+    }
+  });
+
+  it("cuts a long statement to leave room for its authors", () => {
+    const [made, ...rest] = chunks([fill(4, 5), [6]], fill(100, 8), ids, 32); // the whole byline fits in 7
+    expect(rest).toEqual([]);
+    expect(made?.ids).toHaveLength(32);
+    expect(made?.ids.filter((id) => id === 8)).toHaveLength(32 - 3 - 7);
+    const [runaway] = chunks([fill(50, 5)], fill(100, 8), ids, 32); // an author cut at a quarter
+    expect(runaway?.ids.slice(0, 10)).toEqual([CLS, M, ...fill(8, 5)]);
+    expect(runaway?.ids).toHaveLength(32);
+    // Near max_length, a quarter goes to authors: 5 per chunk here, not 1.
+    const many = chunks(
+      fill(10, 0).map(() => [5]),
+      fill(100, 8),
+      ids,
+      40,
+    );
+    expect(many.map((c) => [c.authors.length, c.ids.length])).toEqual([
+      [5, 40],
+      [5, 40],
+    ]);
+    expect(
+      statementRoom(
+        fill(10, 0).map(() => [5]),
+        40,
+      ),
+    ).toBe(27);
+  });
+
+  it("cuts at the model's 1,024 tokens by default, an author at 256", () => {
+    expect(statementRoom([fill(300, 5)])).toBe(1024 - 3 - 257);
+  });
+});
+
 describe("decode", () => {
   const labels = ["conceptualization", "software", "validation", "not-a-role"];
+
+  it("marks close calls with bands tuned on the shipped run", () => {
+    // CHECK_BELOW and CHECK_ABOVE come from this run's dev-set scores: a new census/model.json run needs them
+    // tuned again, and this name changed with them.
+    expect(shipped.run).toBe("ettin-68m-onepass-b8-s2");
+  });
 
   it("keeps roles at the threshold, marks close calls, and lists near misses apart", () => {
     const [ada, alan] = decode({

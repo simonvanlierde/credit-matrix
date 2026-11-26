@@ -17,7 +17,7 @@ import re
 import sys
 import time
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -309,6 +309,13 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     return best
 
 
+def one_pass(run: Path) -> bool:
+    """Whether a run (or a browser export, whose run.json is the run's config) reads all authors at once
+    (`census.onepass`): its config names the marker token."""
+    config = run / "config.json" if (run / "checkpoint").exists() else run / "run.json"
+    return "marker" in json.loads(config.read_text(encoding="utf-8"))
+
+
 def _load(run: Path, device: str) -> tuple[Any, Any, float, int]:
     """The run's tokenizer, model, best threshold and max length."""
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -320,17 +327,36 @@ def _load(run: Path, device: str) -> tuple[Any, Any, float, int]:
     return tokenizer, model, threshold, config["max_length"]
 
 
-def predict(run: Path, items: Iterable[dict[str, Any]], out: Path, device: str, batch_size: int = 32) -> int:
-    """Write one line {"pmcid", "pairs"} per item with the run's best checkpoint and threshold, in the format
-    `run_zero_shot` writes. Returns the number of articles."""
+Reader = Callable[[list[dict[str, Any]]], tuple[list[list[list[float]]], int]]
+"""Rows -> per article, per author, the role probabilities; and how many statements were cut."""
+
+
+def reader(run: Path, device: str, batch_size: int = 32) -> tuple[Reader, float, int]:
+    """A function that reads rows with the run's best checkpoint, either kind; its threshold and max length."""
+    if one_pass(run):
+        from census import onepass
+
+        return onepass.reader(run, device, batch_size)
     import torch
 
     tokenizer, model, threshold, max_length = _load(run, device)
+
+    def read(rows: list[dict[str, Any]]) -> tuple[list[list[list[float]]], int]:
+        encoded = Encoded(tokenizer, rows, max_length)
+        probs = _probabilities(torch, model, encoded, batch_size, device)
+        return _per_article(rows, encoded, probs), len(encoded.truncated)
+
+    return read, threshold, max_length
+
+
+def predict(run: Path, items: Iterable[dict[str, Any]], out: Path, device: str, batch_size: int = 32) -> int:
+    """Write one line {"pmcid", "pairs"} per item with the run's best checkpoint and threshold, in the format
+    `run_zero_shot` writes. Returns the number of articles."""
+    read, threshold, max_length = reader(run, device, batch_size)
     rows = list(items)
-    encoded = Encoded(tokenizer, rows, max_length)
-    if encoded.truncated:
-        print(f"{len(encoded.truncated)} of {len(rows)} statements cut to {max_length} tokens", file=sys.stderr)
-    probs = _per_article(rows, encoded, _probabilities(torch, model, encoded, batch_size, device))
+    probs, cut = read(rows)
+    if cut:
+        print(f"{cut} of {len(rows)} statements cut to {max_length} tokens", file=sys.stderr)
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8") as f:
         for row, p in zip(rows, probs, strict=True):
@@ -358,9 +384,8 @@ def predict_corpus(
     other articles than its chunk. Prints progress per part. Returns the number of articles read in this call."""
     import pyarrow as pa
     import pyarrow.parquet as pq
-    import torch
 
-    tokenizer, model, threshold, max_length = _load(run, device)
+    read, threshold, max_length = reader(run, device, batch_size)
     out.mkdir(parents=True, exist_ok=True)
     schema = pa.schema([("pmcid", pa.string()), ("author_position", pa.int32()), ("role", pa.string())])
     start, done, seen = time.monotonic(), 0, 0
@@ -374,8 +399,7 @@ def predict_corpus(
                     f"{part} holds other articles than chunk {n}; resume with the same --chunk and database"
                 )
             continue
-        encoded = Encoded(tokenizer, rows, max_length)
-        probs = _per_article(rows, encoded, _probabilities(torch, model, encoded, batch_size, device))
+        probs, cut = read(rows)
         partial = part.with_suffix(".tmp")
         table = pa.table(pair_rows([r["pmcid"] for r in rows], [decode(p, threshold) for p in probs]), schema=schema)
         pq.write_table(table, partial)
@@ -384,7 +408,7 @@ def predict_corpus(
         rate = done / (time.monotonic() - start)
         left = (total - seen) / rate / 60
         print(
-            f"{part.name}: {seen} of {total} articles ({len(encoded.truncated)} cut to {max_length} tokens),"
+            f"{part.name}: {seen} of {total} articles ({cut} cut to {max_length} tokens),"
             f" {rate:.0f} articles/s, {left:.0f} min left",
             flush=True,
         )
