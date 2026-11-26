@@ -29,7 +29,7 @@ def _export(tmp_path, run=None, out=None):
 def test_hub_files_put_the_card_at_readme_and_leave_q4_out(tmp_path):
     run, out, card = _export(tmp_path)
     want = hashlib.sha256(b"model_int8.onnx").hexdigest()
-    files = browser.hub_files(run, out, card, {"onnx/model_int8.onnx": want})
+    files = browser.hub_files(run, out, card, {"onnx/model_int8.onnx": want}, {})
     assert files["README.md"] == card
     assert files["model.safetensors"] == run / "checkpoint" / "model.safetensors"
     assert "onnx/model_q4.onnx" not in files
@@ -38,16 +38,20 @@ def test_hub_files_put_the_card_at_readme_and_leave_q4_out(tmp_path):
 def test_hub_files_refuse_a_changed_or_missing_file(tmp_path):
     run, out, card = _export(tmp_path)
     with pytest.raises(ValueError, match="not the"):
-        browser.hub_files(run, out, card, {"onnx/model_int8.onnx": "0" * 64})
+        browser.hub_files(run, out, card, {"onnx/model_int8.onnx": "0" * 64}, {})
+    with pytest.raises(ValueError, match="bytes, not the"):
+        browser.hub_files(run, out, card, {}, {"onnx/model_int8.onnx": 1})
     (out / "best.json").unlink()
     with pytest.raises(ValueError, match="missing"):
-        browser.hub_files(run, out, card, {})
+        browser.hub_files(run, out, card, {}, {})
 
 
 def test_publish_twice_keeps_the_first_tag(tmp_path, monkeypatch):
     model = tmp_path / "data" / "model" / "s"
     _export(tmp_path, model / "runs" / "r", model / "browser" / "r")
-    (tmp_path / "model.json").write_text(json.dumps({"run": "r", "snapshot": "s", "repo": "o/m", "sha256": {}}))
+    (tmp_path / "model.json").write_text(
+        json.dumps({"run": "r", "snapshot": "s", "repo": "o/m", "sha256": {}, "bytes": {}})
+    )
     tags: dict[str, str] = {}
     commits: list[list[str]] = []
 
@@ -64,6 +68,10 @@ def test_publish_twice_keeps_the_first_tag(tmp_path, monkeypatch):
                 raise RuntimeError("tag exists")
             tags.setdefault(tag, revision)
 
+        def list_repo_refs(self, repo):
+            refs = [types.SimpleNamespace(name=name, target_commit=oid) for name, oid in tags.items()]
+            return types.SimpleNamespace(tags=refs)
+
     hub = types.SimpleNamespace(
         HfApi=Api, CommitOperationAdd=lambda path, local: types.SimpleNamespace(path_in_repo=path)
     )
@@ -73,3 +81,4 @@ def test_publish_twice_keeps_the_first_tag(tmp_path, monkeypatch):
     assert cli.main(["model", "publish"]) == 0
     assert cli.main(["model", "publish"]) == 0
     assert tags == {"r": "c1"} and len(commits) == 2 and "README.md" in commits[0]
+    assert json.loads((tmp_path / "model.json").read_text())["revision"] == "c1"

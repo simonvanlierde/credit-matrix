@@ -36,6 +36,7 @@ jobs, and the outside services. Attacks that need the user's device are out of
 | Static host (Cloudflare) | Built files, headers in [`_headers`](../public/_headers) | Trusted to serve what CI built. Runs no code of ours |
 | ORCID | An iD out, a name back; sign-in; public signing keys | Schema-checked ([`orcid-lookup.ts`](../src/core/orcid-lookup.ts), [`orcid-proof.ts`](../src/core/orcid-proof.ts)) |
 | Crossref, DataCite | A DOI out, metadata back | Schema-checked ([`doi-lookup.ts`](../src/core/doi-lookup.ts)) |
+| Statement reader | The model's files from huggingface.co, pinned to the commit in [`census/model.json`](../census/model.json); the statement stays in the browser | Lazy worker, the only context whose CSP allows the Hub; the int8 file's size is capped in CI ([`statement-reader.ts`](../src/lib/statement-reader.ts), [`check-bundle-size.mjs`](../scripts/check-bundle-size.mjs)) |
 | Citation converter | Pyodide runtime (pinned by the pnpm lockfile) and checksum-pinned Python wheels, both served from this site; no file uploaded | Lazy, isolated worker with its own CSP ([`citation-import.ts`](../src/lib/citation-import.ts), [`citesync-worker.js`](../public/citesync-worker.js)) |
 | Share and reply links | A draft or one row from someone else | Untrusted (T7, T8) |
 | Imported files, pasted text | JATS XML, JSON, CSV, tenzing, citation metadata, name lists, statements | Untrusted ([`import.ts`](../src/core/import.ts), T4 to T6) |
@@ -48,7 +49,8 @@ jobs, and the outside services. Attacks that need the user's device are out of
 - **Economy of mechanism.** No server, accounts or database (ADR 0002, ADR 0003). `src/core` has
   `zod` for validation and Lingui for translation ([architecture](architecture.md)).
 - **Minimal attack surface.** No code runs per request. `connect-src` allows only pub.orcid.org,
-  orcid.org, api.crossref.org and api.datacite.org ([`_headers`](../public/_headers)).
+  orcid.org, api.crossref.org and api.datacite.org, and the statement reader's worker the Hugging
+  Face Hub (huggingface.co, *.hf.co) as well ([`_headers`](../public/_headers)).
 - **Fail-safe defaults.** Bad links open the normal app (T7), bad proofs are dropped (T9), and the
   build fails rather than ship a wrong CSP (T2).
 - **Least privilege.** CI starts at `contents: read` and only the jobs that need OIDC or secrets get

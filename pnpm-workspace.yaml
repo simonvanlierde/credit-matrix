@@ -7,6 +7,9 @@ minimumReleaseAge: 4320 # minutes (3 days); blocks installing very fresh (often 
 allowBuilds:
   esbuild: true
   lefthook: true
+  # Node-only dependencies of @huggingface/transformers; the app runs onnxruntime-web.
+  onnxruntime-node: false
+  protobufjs: false
   sharp: true
   workerd: true
 

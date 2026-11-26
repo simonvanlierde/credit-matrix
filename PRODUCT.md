@@ -37,6 +37,8 @@ and can be shared as a URL or imported from a file.
 - Keep contribution data in the browser. The ORCID and DOI lookups and the ORCID sign-in on a
   co-author's reply go straight to ORCID, Crossref and DataCite. Citation-file imports download
   the citesync converter and a Python runtime; the file is processed locally and never uploaded.
+  Reading a statement with the model downloads it from the Hugging Face Hub once, on request; the
+  statement is read in the browser.
 - Protect scientific accuracy, privacy, accessibility, and translations. Data you export and import
   back must come back the same.
 

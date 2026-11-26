@@ -755,7 +755,7 @@ msgid "aboutTaxonomy"
 msgstr "CRediT es un estándar ANSI/NISO (<cc>CC BY 4.0</cc>). Este proyecto es independiente de NISO y no cuenta con su respaldo."
 
 msgid "aboutPrivacy"
-msgstr "Al buscar un iD de ORCID, su navegador lo envía a pub.orcid.org. Al buscar un DOI, lo envía a api.crossref.org junto con la dirección de contacto de este sitio, y a api.datacite.org si Crossref no lo tiene.\n\nCloudflare, que aloja este sitio, cuenta las solicitudes de páginas en sus propios servidores, de forma agregada, sin ningún script ni cookie en su navegador.\n\nAl importar CITATION.cff o .zenodo.json se cargan desde este sitio el conversor citesync y un entorno de ejecución de Python; el archivo se procesa en su navegador y nunca se sube.\n\nNada más sale de su navegador: los borradores se quedan en su almacenamiento local, igual que si cerró la lista de Primeros pasos o copió una declaración, y la herramienta de escritura que eligió por última vez. Las consultas a coautores y sus respuestas se guardan solo en este navegador y se incluyen en las exportaciones JSON salvo que desmarque esa opción. Al enviar una respuesta, su enlace, con el nombre y el iD de esa persona, pasa a la aplicación que elija.\n\nIniciar sesión con ORCID en una respuesta lleva a la persona a orcid.org y de vuelta; después, la prueba de inicio de sesión se incluye en el enlace de respuesta y se guarda con la respuesta, también en las exportaciones JSON. Incluye el nombre que figura en el registro ORCID de esa persona. Al abrir una respuesta firmada, o al importar un JSON que la contenga, se descargan las claves públicas de ORCID desde orcid.org para comprobarla."
+msgstr "Al buscar un iD de ORCID, su navegador lo envía a pub.orcid.org. Al buscar un DOI, lo envía a api.crossref.org junto con la dirección de contacto de este sitio, y a api.datacite.org si Crossref no lo tiene.\n\nCloudflare, que aloja este sitio, cuenta las solicitudes de páginas en sus propios servidores, de forma agregada, sin ningún script ni cookie en su navegador.\n\nAl importar CITATION.cff o .zenodo.json se cargan desde este sitio el conversor citesync y un entorno de ejecución de Python; el archivo se procesa en su navegador y nunca se sube.\n\nLeer una declaración con el modelo descarga el modelo de huggingface.co (*.hf.co) la primera vez. La declaración se lee en su navegador y nunca se sube. Después, el modelo se queda en los datos de sitio de este navegador hasta que los borre.\n\nNada más sale de su navegador: los borradores se quedan en su almacenamiento local, igual que si cerró la lista de Primeros pasos o copió una declaración, y la herramienta de escritura que eligió por última vez. Las consultas a coautores y sus respuestas se guardan solo en este navegador y se incluyen en las exportaciones JSON salvo que desmarque esa opción. Al enviar una respuesta, su enlace, con el nombre y el iD de esa persona, pasa a la aplicación que elija.\n\nIniciar sesión con ORCID en una respuesta lleva a la persona a orcid.org y de vuelta; después, la prueba de inicio de sesión se incluye en el enlace de respuesta y se guarda con la respuesta, también en las exportaciones JSON. Incluye el nombre que figura en el registro ORCID de esa persona. Al abrir una respuesta firmada, o al importar un JSON que la contenga, se descargan las claves públicas de ORCID desde orcid.org para comprobarla."
 
 msgid "accessibilityStatement"
 msgstr "Declaración de accesibilidad"
@@ -1353,6 +1353,39 @@ msgstr "No se ha deshecho nada: el borrador cambió después de añadir los role
 
 msgid "statementOnlyCredit"
 msgstr "Solo se leen los nombres de roles CRediT, como Conceptualization o Writing – original draft, no frases sobre quién hizo qué."
+
+msgid "statementReaderAbout"
+msgstr "El modelo también lee frases como «A.B. diseñó el estudio» y comprueba los roles que encontraron las reglas. Se ejecuta en este dispositivo, así que la declaración no sale de aquí. La primera vez descarga {size}."
+
+msgid "statementReaderRead"
+msgstr "Leer con el modelo"
+
+msgid "statementReaderReading"
+msgstr "Leyendo la declaración"
+
+msgid "statementReaderFailed"
+msgstr "No se pudo cargar el modelo, así que los roles que se muestran vienen de las reglas. Compruebe la conexión y vuelva a intentarlo."
+
+msgid "statementReaderUsed"
+msgstr "Leído por el modelo. Los roles marcados con «revíselo» son dudosos: compárelos con la declaración."
+
+msgid "statementCheckRole"
+msgstr "{role} (revíselo)"
+
+msgid "statementMaybe"
+msgstr "Revíselo, no se añade: {roles}"
+
+msgid "statementReaderLoading"
+msgstr "Cargando el modelo"
+
+msgid "statementReaderChecked"
+msgstr "Comprobado por el modelo. Los roles marcados con «el modelo no lo encontró» pueden estar mal, y el modelo propone roles que las reglas no vieron: añada los que dé la declaración."
+
+msgid "statementDoubtRole"
+msgstr "{role} (el modelo no lo encontró)"
+
+msgid "statementSuggested"
+msgstr "El modelo también encuentra:"
 
 msgid "errStatementTooLong"
 msgstr "Este texto tiene más de {limit} caracteres. Pegue solo la declaración de contribuciones."

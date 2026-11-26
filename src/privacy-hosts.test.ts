@@ -4,10 +4,12 @@ import { expect, it } from "vitest";
 // Vitest runs from the repository root.
 const read = (path: string) => readFileSync(path, "utf8");
 
-// The site-wide policy is the first CSP in _headers; the citation worker's own policy allows no outside host.
-const csp = read("public/_headers").match(/Content-Security-Policy: (.*)/)?.[1] ?? "";
-const hosts = [...(csp.match(/connect-src ([^;]*)/)?.[1] ?? "").matchAll(/https:\/\/([^\s;]+)/g)].map(
-  ([, host]) => host ?? "",
+// Every policy in _headers: the site-wide one, and the workers' own (the statement reader's reaches the Hub).
+const csp = [...read("public/_headers").matchAll(/Content-Security-Policy: (.*)/g)]
+  .map(([, policy]) => policy)
+  .join("\n");
+const hosts = [...csp.matchAll(/connect-src ([^;\n]*)/g)].flatMap(([, sources]) =>
+  [...(sources ?? "").matchAll(/https:\/\/([^\s;]+)/g)].map(([, host]) => host ?? ""),
 );
 const LOCALES = ["de", "en", "es", "fr", "it", "ja", "nl", "pt-PT", "zh-Hans"];
 const privacyOf = (locale: string) =>
@@ -15,7 +17,8 @@ const privacyOf = (locale: string) =>
 const privacy = privacyOf("en");
 
 it("reads the site's outside hosts from _headers", () => {
-  expect(hosts.length).toBeGreaterThan(0);
+  expect(hosts).toContain("api.crossref.org");
+  expect(hosts).toContain("huggingface.co");
   expect(privacy).not.toBe("");
 });
 
@@ -28,6 +31,20 @@ it.each([
   ["docs/assurance-case.md", read("docs/assurance-case.md")],
 ])("%s names every host the browser may contact", (_, text) => {
   expect(hosts.filter((host) => !text.includes(host))).toEqual([]);
+});
+
+// The policy each path rule in _headers sets: the rule's line, then its indented header lines.
+const policyFor = (path: string) =>
+  read("public/_headers")
+    .split(/\n(?=\S)/)
+    .find((block) => block.startsWith(`${path}\n`))
+    ?.match(/^ {2}Content-Security-Policy: (.*)$/m)?.[1];
+
+it("lets only the statement reader's worker reach the Hub, not the pages", () => {
+  // scripts/check-bundle-size.mjs fails the build when no chunk starts with this name.
+  expect(policyFor("/assets/statement-reader.worker-*")).toMatch(/connect-src [^;]*https:\/\/huggingface\.co/);
+  expect(policyFor("/*")).toMatch(/connect-src /);
+  expect(policyFor("/*")).not.toMatch(/huggingface|hf\.co/);
 });
 
 it("never lets the browser reach jsDelivr, since the app bundles its figure fonts", () => {

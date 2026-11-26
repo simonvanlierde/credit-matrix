@@ -1,4 +1,4 @@
-import { ChevronDown, CircleAlert, FileUp, LoaderCircle, Search, X } from "lucide-react";
+import { Check, ChevronDown, CircleAlert, FileUp, LoaderCircle, Plus, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   type Ask,
@@ -30,8 +30,10 @@ import { fetchOrcidKeys } from "@/core/orcid-proof";
 import { announce } from "@/lib/announce";
 import { ConverterUnavailableError, convertCitation } from "@/lib/citation-import";
 import { closeOnBackdrop, useModalDialog } from "@/lib/dialog";
+import { type AuthorReading, combine, MODEL_BYTES, type ReaderResult, type ReadRole } from "@/lib/statement-reader";
 import { useFormatter, useTranslations } from "@/lib/translations";
 import { useCreditTranslators } from "@/lib/use-credit-translators";
+import { useStatementReading } from "@/lib/use-statement-reading";
 import type { MessageKey } from "@/locales/keys";
 import { MAX_DRAFTS } from "@/store/contribution-store";
 import { ASSIGNABLE_LEVELS, DEFAULT_BULK_LEVEL } from "./steps/BulkAssignMenu";
@@ -67,15 +69,29 @@ interface Props {
 
 /** A pasted statement read against the open draft, waiting for Apply. */
 interface StatementReview {
-  /** Per contributor, the roles the statement gives them; `set` ones the grid already has. */
-  rows: { id: string; name: string; roles: { role: CreditRoleName; set: boolean }[] }[];
+  /**
+   * Per contributor, the roles Apply gives them (`set` ones the grid already has; `note` as in ReadRole),
+   * the model's suggestions (`accepted` ones are in `roles` too), and the roles the model nearly gave.
+   */
+  rows: {
+    id: string;
+    name: string;
+    roles: (ReadRole & { set: boolean })[];
+    suggested: { role: CreditRoleName; accepted: boolean }[];
+    maybe: CreditRoleName[];
+  }[];
   /** Names or initials that fit no contributor, or several, with the roles left out unless picked. */
   unmatched: { token: string; candidates: { id: string; name: string }[]; roles: CreditRoleName[] }[];
   /** Roles the roster does not have yet. Ones already set are left as they are. */
   added: number;
   /** Contributors who gain at least one role. */
   people: number;
+  /** Whether the rules found any role; when not, a model reading stands alone. */
+  rulesFound: boolean;
 }
+
+/** A model suggestion the user took, as `${contributor id} ${role}`. */
+const suggestionKey = (id: string, role: CreditRoleName) => `${id} ${role}`;
 
 // A line that ends on one of these runs on into the next: "Conceptualization, A.B.,\nC.D.".
 const RUNS_ON_RE = /(?:[,:&‐-―−-]|(?<!\p{L})and)$/iu;
@@ -103,33 +119,86 @@ function breakLines(text: string): string {
 }
 
 /**
- * Read a prepared statement against the roster. `picks` maps an unmatched token to the
- * contributor id the user chose for it, who then gets that token's roles.
+ * Read a prepared statement against the roster, checked against the model's reading when there is one.
+ * `picks` maps an unmatched token to the contributor id the user chose for it, who then gets that token's
+ * roles; `accepted` holds the model suggestions the user took (suggestionKey).
  */
-function reviewStatement(text: string, authors: Author[], picks: Record<string, string> = {}): StatementReview {
+function reviewStatement(
+  text: string,
+  authors: Author[],
+  picks: Record<string, string>,
+  model?: ReaderResult,
+  accepted: ReadonlySet<string> = new Set(),
+): StatementReview {
   const { assignments, unmatched } = parseStatement(text, authors.map(statementAuthor));
   const picked = unmatched.flatMap(({ token, roles }) => {
     const author = authors.findIndex((a) => a.id === picks[token]);
     return author < 0 ? [] : roles.map((role) => ({ author, role }));
   });
+  const found = [...assignments, ...picked];
+  // Counted before picks, so picking who a token means never switches to or from the model's own reading.
+  const rulesRead = assignments.length > 0 || unmatched.some(({ roles }) => roles.length > 0);
+  return summarize(
+    authors,
+    combine(
+      authors.map((_, i) => found.filter((a) => a.author === i).map(({ role }) => role)),
+      model,
+      rulesRead,
+    ),
+    unmatched.map((u) => ({
+      ...u,
+      candidates: u.candidates.flatMap((i) => (authors[i] ? [{ id: authors[i].id, name: authors[i].name }] : [])),
+    })),
+    accepted,
+    rulesRead,
+  );
+}
+
+/** The name the model reads: given names, then the surname, as in the census's training bylines. */
+function modelName(author: Author): string {
+  const { given, surname } = statementAuthor(author);
+  return [given, surname].filter(Boolean).join(" ") || author.name;
+}
+
+const byCreditOrder = (roles: Iterable<CreditRoleName>) => {
+  const wanted = new Set(roles);
+  return CREDIT_ROLES.filter(({ name }) => wanted.has(name)).map(({ name }) => name);
+};
+
+function summarize(
+  authors: Author[],
+  readings: AuthorReading[],
+  unmatched: StatementReview["unmatched"],
+  accepted: ReadonlySet<string>,
+  rulesFound: boolean,
+): StatementReview {
   const rows = authors.map((author, i) => {
     const set = new Set(author.contributions.filter((c) => c.score > 0).map((c) => c.role));
-    const mine = new Set([...assignments, ...picked].filter((a) => a.author === i).map((a) => a.role));
+    const reading = readings[i] ?? { roles: [], suggested: [], maybe: [] };
+    const notes = new Map(reading.roles.map(({ role, note }) => [role, note]));
+    // A suggestion the grid already has adds nothing, so it is not offered.
+    const suggested = byCreditOrder(reading.suggested)
+      .filter((role) => !set.has(role))
+      .map((role) => ({ role, accepted: accepted.has(suggestionKey(author.id, role)) }));
+    for (const { role } of suggested.filter((s) => s.accepted)) notes.set(role, undefined);
     return {
       id: author.id,
       name: author.name,
-      roles: CREDIT_ROLES.filter(({ name }) => mine.has(name)).map(({ name }) => ({ role: name, set: set.has(name) })),
+      roles: byCreditOrder(notes.keys()).map((role) => {
+        const note = notes.get(role);
+        return { role, set: set.has(role), ...(note ? { note } : {}) };
+      }),
+      suggested,
+      maybe: reading.maybe,
     };
   });
   const gaining = rows.filter((row) => row.roles.some((r) => !r.set));
   return {
     rows,
-    unmatched: unmatched.map((u) => ({
-      ...u,
-      candidates: u.candidates.flatMap((i) => (authors[i] ? [{ id: authors[i].id, name: authors[i].name }] : [])),
-    })),
+    unmatched,
     added: gaining.reduce((sum, row) => sum + row.roles.filter((r) => !r.set).length, 0),
     people: gaining.length,
+    rulesFound,
   };
 }
 
@@ -255,11 +324,28 @@ export function ImportModal({
   const { translateInterfaceRole, translateInterfaceUi } = useCreditTranslators();
   const formatter = useFormatter();
   const [text, setText] = useState("");
-  // The statement under review and the contributor chosen per ambiguous token; the review itself
-  // is derived, so a choice updates the counts, the rows and Apply together.
-  const [reviewed, setReviewed] = useState<{ statement: string; picks: Record<string, string> } | null>(null);
-  const review = reviewed && reviewStatement(reviewed.statement, draftAuthors, reviewed.picks);
-  const noRoles = review?.rows.filter((row) => row.roles.length === 0) ?? [];
+  // The statement under review, the contributor chosen per ambiguous token, and the model suggestions taken
+  // (suggestionKey); the review itself is derived, so a choice updates the counts, the rows and Apply together.
+  const [reviewed, setReviewed] = useState<{
+    statement: string;
+    picks: Record<string, string>;
+    accepted: string[];
+  } | null>(null);
+  // Keyed on the statement and the names read: a new statement, a roster change, Back or closing drops it.
+  const { reading: modelRead, read: readWithModel } = useStatementReading(
+    reviewed?.statement ?? null,
+    draftAuthors.map(modelName),
+  );
+  const review =
+    reviewed &&
+    reviewStatement(
+      reviewed.statement,
+      draftAuthors,
+      reviewed.picks,
+      modelRead?.status === "done" ? modelRead.result : undefined,
+      new Set(reviewed.accepted),
+    );
+  const noRoles = review?.rows.filter((row) => row.roles.length === 0 && row.suggested.length === 0) ?? [];
   const reviewOpen = reviewed !== null;
   const [statementLevel, setStatementLevel] = useState(String(DEFAULT_BULK_LEVEL));
   const reviewHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -324,6 +410,11 @@ export function ImportModal({
       importRef.current?.focus();
     }
   }, [reviewOpen]);
+
+  // Success replaces the read button with its outcome; if focus went with the button, the heading takes it.
+  useEffect(() => {
+    if (modelRead?.status === "done" && !dialog?.contains(document.activeElement)) reviewHeadingRef.current?.focus();
+  }, [modelRead?.status, dialog]);
 
   const format = detectFormat(text);
 
@@ -423,17 +514,9 @@ export function ImportModal({
           showError(t("errStatementNoContributors"));
           return;
         }
-        const found = reviewStatement(statement, draftAuthors);
-        if (found.rows.every((row) => row.roles.length === 0)) {
-          // Prose ("A.B. wrote the paper") lands here too: say what the reader looks for.
-          showError(
-            namesCredit(statement)
-              ? t("errStatementNoRoles")
-              : `${t("errStatementNoRoles")} ${t("statementOnlyCredit")}`,
-          );
-          return;
-        }
-        setReviewed({ statement, picks: {} });
+        // Opened even when the rules find nothing, as for prose ("A.B. wrote the paper"): the review
+        // offers the model.
+        setReviewed({ statement, picks: {}, accepted: [] });
         return;
       }
       const parsed = await importAny(text, {
@@ -864,15 +947,19 @@ export function ImportModal({
                 {t("statementReviewTitle")}
               </h3>
               <p id="statement-review-summary" className="mt-1 text-on-surface-variant">
-                {review.added === 0
-                  ? t("statementNothingNew")
-                  : graded
-                    ? t("statementReviewSummaryLevel", {
-                        added: review.added,
-                        people: review.people,
-                        level: translateInterfaceUi(scoreToLevel(Number(statementLevel))),
-                      })
-                    : t("statementReviewSummary", { added: review.added, people: review.people })}
+                {review.rows.every((row) => row.roles.length === 0)
+                  ? namesCredit(reviewed.statement) || modelRead?.status === "done"
+                    ? t("errStatementNoRoles")
+                    : `${t("errStatementNoRoles")} ${t("statementOnlyCredit")}`
+                  : review.added === 0
+                    ? t("statementNothingNew")
+                    : graded
+                      ? t("statementReviewSummaryLevel", {
+                          added: review.added,
+                          people: review.people,
+                          level: translateInterfaceUi(scoreToLevel(Number(statementLevel))),
+                        })
+                      : t("statementReviewSummary", { added: review.added, people: review.people })}
               </p>
               {graded && review.added > 0 && (
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -893,30 +980,112 @@ export function ImportModal({
                   </Select>
                 </div>
               )}
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                {/* A live region from the start, so the outcome replacing this text is spoken; the layout's
+                    announcer is outside this modal dialog and inert while it is open. */}
+                <p role="status" className="min-w-0 flex-1 basis-64 text-on-surface-variant">
+                  {modelRead?.status === "done"
+                    ? t(review.rulesFound ? "statementReaderChecked" : "statementReaderUsed")
+                    : t("statementReaderAbout", {
+                        size: formatter.number(MODEL_BYTES / 1e6, {
+                          style: "unit",
+                          unit: "megabyte",
+                          maximumFractionDigits: 0,
+                        }),
+                      })}
+                </p>
+                {modelRead?.status !== "done" && (
+                  <button
+                    type="button"
+                    // Not `disabled` while loading: that would drop keyboard focus to the page.
+                    onClick={() => modelRead?.status !== "loading" && void readWithModel()}
+                    aria-disabled={modelRead?.status === "loading"}
+                    aria-busy={modelRead?.status === "loading"}
+                    className={`inline-flex shrink-0 items-center gap-2 ${secondary} ${modelRead?.status === "loading" ? "cursor-progress opacity-70" : ""}`}
+                  >
+                    {modelRead?.status === "loading" && (
+                      <LoaderCircle aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" />
+                    )}
+                    {t("statementReaderRead")}
+                  </button>
+                )}
+                {modelRead?.status === "failed" && (
+                  <p role="alert" className="basis-full text-on-surface">
+                    {t("statementReaderFailed")}
+                  </p>
+                )}
+              </div>
               <ul className="mt-3 divide-y divide-outline-variant/30 border-y border-outline-variant/30">
                 {review.rows
-                  .filter((row) => row.roles.length > 0)
+                  .filter((row) => row.roles.length > 0 || row.suggested.length > 0 || row.maybe.length > 0)
                   .map((row) => (
                     <li
                       key={row.id}
                       className="grid gap-x-4 gap-y-0.5 py-2 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]"
                     >
                       <span className="font-medium break-words text-on-surface">{row.name}</span>
-                      {/* Commas only: an "and" would read as part of "Review and editing". */}
-                      <span className="text-on-surface">
-                        {row.roles.map(({ role, set }, i) => (
-                          <span key={role}>
-                            {i > 0 && ", "}
-                            {set ? (
-                              <span className="text-on-surface-variant">
-                                {t("statementRoleAlreadySet", { role: translateInterfaceRole(role) })}
+                      <div className="min-w-0 space-y-1">
+                        {row.roles.length > 0 && (
+                          // Commas only: an "and" would read as part of "Review and editing".
+                          <p className="text-on-surface">
+                            {row.roles.map(({ role, set, note }, i) => (
+                              <span key={role}>
+                                {i > 0 && ", "}
+                                {set ? (
+                                  <span className="text-on-surface-variant">
+                                    {t("statementRoleAlreadySet", { role: translateInterfaceRole(role) })}
+                                  </span>
+                                ) : note ? (
+                                  <span className="font-semibold">
+                                    {t(note === "check" ? "statementCheckRole" : "statementDoubtRole", {
+                                      role: translateInterfaceRole(role),
+                                    })}
+                                  </span>
+                                ) : (
+                                  translateInterfaceRole(role)
+                                )}
                               </span>
-                            ) : (
-                              translateInterfaceRole(role)
-                            )}
-                          </span>
-                        ))}
-                      </span>
+                            ))}
+                          </p>
+                        )}
+                        {row.suggested.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span id={`statement-suggest-${row.id}`} className="text-on-surface-variant">
+                              {t("statementSuggested")}
+                            </span>
+                            {row.suggested.map(({ role, accepted }) => (
+                              <button
+                                key={role}
+                                type="button"
+                                aria-pressed={accepted}
+                                aria-describedby={`statement-suggest-${row.id}`}
+                                onClick={() => {
+                                  const key = suggestionKey(row.id, role);
+                                  setReviewed({
+                                    ...reviewed,
+                                    accepted: accepted
+                                      ? reviewed.accepted.filter((k) => k !== key)
+                                      : [...reviewed.accepted, key],
+                                  });
+                                }}
+                                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${accepted ? "border-primary bg-primary text-on-primary" : "border-outline-variant text-on-surface hover:bg-surface-container"}`}
+                              >
+                                {accepted ? (
+                                  <Check aria-hidden="true" className="size-3.5" />
+                                ) : (
+                                  <Plus aria-hidden="true" className="size-3.5" />
+                                )}
+                                {translateInterfaceRole(role)}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {row.maybe.length > 0 && (
+                          <p className="text-on-surface-variant">
+                            {t("statementMaybe", { roles: row.maybe.map(translateInterfaceRole).join(", ") })}
+                          </p>
+                        )}
+                      </div>
                     </li>
                   ))}
               </ul>
@@ -1029,7 +1198,27 @@ export function ImportModal({
           {/* Always mounted, and two lines tall when empty, so progress appearing beside Import never moves
               it; the layout's announcer is outside this modal dialog and inert while it is open. */}
           <p role="status" className="min-h-8 min-w-0 flex-1 basis-56 text-xs text-on-surface-variant">
-            {importing && citation ? t("citationConverting") : doiLoading ? t("doiLookingUp") : null}
+            {modelRead?.status === "loading" ? (
+              // Constant words, so a screen reader says them once; the number beside them is for the eye.
+              <>
+                {t(modelRead.progress?.phase === "read" ? "statementReaderReading" : "statementReaderLoading")}
+                {modelRead.progress && (
+                  <span aria-hidden="true">
+                    {" "}
+                    {formatter.number(
+                      modelRead.progress.phase === "read"
+                        ? modelRead.progress.done / modelRead.progress.of
+                        : modelRead.progress.percent / 100,
+                      { style: "percent", maximumFractionDigits: 0 },
+                    )}
+                  </span>
+                )}
+              </>
+            ) : importing && citation ? (
+              t("citationConverting")
+            ) : doiLoading ? (
+              t("doiLookingUp")
+            ) : null}
           </p>
           {/* The confirmation has its own way back and its own way on. */}
           {!pending && (

@@ -56,6 +56,13 @@
       matchPackageNames: ["@playwright/test"],
       allowedVersions: "!/^1\\.65\\./",
     },
+    // onnxruntime-web is pinned to the nightly that @huggingface/transformers depends on (the reader's
+    // worker aliases its WebGPU build to this CPU one): it moves only with transformers.js, by hand.
+    {
+      matchPackageNames: ["@huggingface/transformers", "onnxruntime-web"],
+      groupName: "transformers.js",
+      automerge: false,
+    },
     // Core and the Vitest runner must move together.
     {
       matchPackageNames: ["/^@stryker-mutator\\//"],

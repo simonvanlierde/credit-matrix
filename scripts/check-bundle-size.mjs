@@ -3,7 +3,8 @@
 // Fails when the app or its separately loaded figure exporter outgrows its budget, when the service worker's
 // install precache grows (a figure font in it costs every first visit megabytes), or when the npm package
 // does (every `npm i credit-matrix` downloads it; the fonts live in credit-matrix-fonts). Script sizes are the sum of
-// each file compressed alone, as a static host serves them; the precache is raw bytes. Run after `pnpm build`.
+// each file compressed alone, as a static host serves them; the precache is raw bytes. It also caps the statement
+// reader's model download. Run after `pnpm build`.
 // Raise a limit on purpose, in the same commit as the change that needs it.
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -13,7 +14,8 @@ import { gzipSync } from "node:zlib";
 
 // Measured 2026-11-16: 443.4 kB gzip with docs section labels in nine interface catalogs; the
 // writing-tool switcher is links, so docs no longer pull the Radix select into a shared chunk.
-const LIMIT_GZIP = 449_000;
+// Measured 2026-11-26: 449.7 kB with the statement review's model checks and their strings.
+const LIMIT_GZIP = 451_000;
 // Measured 2026-11-16: 5.4 kB for docs navigation, tool links, section outlines read from the
 // prerendered HTML, and live examples. Markdown stays prerendered.
 const DOCS_LIMIT_GZIP = 6_000;
@@ -28,6 +30,12 @@ const FIGURE_LIMIT_GZIP = 555_000;
 // Measured 2026-11-12: 4.30 MB including pages, their linked UI fonts and the offline manifest.
 // Docs pages and search are cached separately on a docs visit.
 const PRECACHE_LIMIT = 4_400_000;
+// The statement reader's worker (transformers.js and the onnxruntime-web glue), loaded only when someone asks
+// for the model, never at install. Measured 2026-11-26: 142.9 kB gzip.
+const READER_LIMIT_GZIP = 150_000;
+// The int8 model it downloads from the Hugging Face Hub, as census/model.json records it (`census model
+// publish` refuses a file of another size). Measured 2026-11-26: 70.0 MB; fp32 is 275 MB.
+const MODEL_LIMIT = 75_000_000;
 // Measured 2026-11-12: 2.5 MB unpacked once the fonts moved out (0.12.0 was 43 MB).
 const PACKAGE_LIMIT = 5_000_000;
 
@@ -53,10 +61,12 @@ const docsFiles = new Set(
     .map(([, { file }]) => file.replace(/^assets\//, "")),
 );
 const docs = ({ name }) => docsFiles.has(name);
+const reader = ({ name }) => name.startsWith("statement-reader.worker-");
 for (const [label, limit, group] of [
-  ["app", LIMIT_GZIP, files.filter((file) => !(figure(file) || docs(file)))],
+  ["app", LIMIT_GZIP, files.filter((file) => !(figure(file) || docs(file) || reader(file)))],
   ["figure exporter", FIGURE_LIMIT_GZIP, files.filter(figure)],
   ["docs", DOCS_LIMIT_GZIP, files.filter(docs)],
+  ["statement reader", READER_LIMIT_GZIP, files.filter(reader)],
 ]) {
   const gzip = group.reduce((n, { bytes }) => n + gzipSync(bytes, { level: 9 }).length, 0);
   console.log(`check-bundle-size: ${label}: ${kb(gzip)} gzip (limit ${kb(limit)})`);
@@ -64,6 +74,15 @@ for (const [label, limit, group] of [
     console.error(`check-bundle-size: ${label} is missing or over its gzip budget.`);
     process.exit(1);
   }
+}
+
+const modelBytes = JSON.parse(readFileSync(join(import.meta.dirname, "..", "census", "model.json"), "utf8")).bytes?.[
+  "onnx/model_int8.onnx"
+];
+console.log(`check-bundle-size: statement reader model: ${kb(modelBytes ?? 0)} (limit ${kb(MODEL_LIMIT)})`);
+if (!(modelBytes > 0) || modelBytes > MODEL_LIMIT) {
+  console.error("check-bundle-size: census/model.json records no int8 model size, or one over its budget.");
+  process.exit(1);
 }
 
 const sw = existsSync(join(dir, "..", "sw.js")) ? readFileSync(join(dir, "..", "sw.js"), "utf8") : "";
