@@ -105,16 +105,24 @@ async function load() {
   poke();
   let received = 0;
   const cache = await openCache();
-  const json = async <T>(file: string) =>
-    JSON.parse(new TextDecoder().decode(await download(file, cache, controller.signal, poke))) as T;
-  const vocabulary = json<TokenizerJson>("tokenizer.json");
-  const config = json<{ id2label: Record<string, string> }>("config.json");
-  const best = json<{ threshold: number }>("best.json");
-  const created = download(MODEL_FILE, cache, controller.signal, (n) => {
+  const [vocabularyFile, configFile, bestFile] = ["tokenizer.json", "config.json", "best.json"].map((file) =>
+    download(file, cache, controller.signal, poke),
+  ) as [Promise<ArrayBuffer>, Promise<ArrayBuffer>, Promise<ArrayBuffer>];
+  const model = download(MODEL_FILE, cache, controller.signal, (n) => {
     poke();
     received += n;
     post({ progress: { phase: "download", percent: Math.min(100, (100 * received) / (bytes[MODEL_FILE] ?? 1)) } });
-  }).then((model) => InferenceSession.create(new Uint8Array(model), { executionProviders: ["wasm"] }));
+  });
+  // The timer guards downloads only: parsing and InferenceSession.create on a slow phone may take longer.
+  Promise.all([vocabularyFile, configFile, bestFile, model]).then(
+    () => clearTimeout(timer),
+    () => undefined,
+  );
+  const json = async <T>(body: Promise<ArrayBuffer>) => JSON.parse(new TextDecoder().decode(await body)) as T;
+  const vocabulary = json<TokenizerJson>(vocabularyFile);
+  const config = json<{ id2label: Record<string, string> }>(configFile);
+  const best = json<{ threshold: number }>(bestFile);
+  const created = model.then((body) => InferenceSession.create(new Uint8Array(body), { executionProviders: ["wasm"] }));
   const loaded = Promise.all([vocabulary, config, best, created]);
   try {
     const [vocab, { id2label }, { threshold }, session] = await Promise.race([loaded, stalled]);

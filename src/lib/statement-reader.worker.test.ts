@@ -55,8 +55,8 @@ const pin = (file: string) => {
   pins.sha256[file] = createHash("sha256").update(body).digest("hex");
   pins.bytes[file] = Buffer.byteLength(body);
 };
-/** The model's body, sent as these pieces, `apart` ms apart, and then ended unless `open`. */
-function serveModel(pieces: Uint8Array[], apart = 0, open = false) {
+/** The model's body, sent as these pieces, each once `gate` resolves, and then ended unless `open`. */
+function serveModel(pieces: Uint8Array[], gate?: () => Promise<void>, open = false) {
   vi.mocked(fetch).mockImplementation((url) => {
     const file = String(url).slice(BASE.length);
     if (file !== "onnx/model_w8.onnx") return Promise.resolve(new Response(files[file]));
@@ -64,7 +64,7 @@ function serveModel(pieces: Uint8Array[], apart = 0, open = false) {
     const body = new ReadableStream<Uint8Array>({
       async pull(controller) {
         if (sent === pieces.length) return open ? new Promise(() => undefined) : controller.close();
-        if (apart) await new Promise((resolve) => setTimeout(resolve, apart));
+        await gate?.();
         controller.enqueue(pieces[sent++] ?? new Uint8Array());
       },
     });
@@ -375,7 +375,7 @@ describe("the statement reader worker", () => {
 
   it("stops reading a model body once it runs past the pinned size", async () => {
     // One byte too many, and then the body stays open: a read to its end would wait for good.
-    serveModel([new Uint8Array(MODEL.length + 1)], 0, true);
+    serveModel([new Uint8Array(MODEL.length + 1)], undefined, true);
     await handle({ id: 0, statement: "S", authors: ["Ada"] });
     expect(last()).toEqual({ id: 0, error: "onnx/model_w8.onnx is not the file census/model.json pins." });
   });
@@ -410,28 +410,65 @@ describe("the statement reader worker", () => {
     expect(cached.size).toBe(4);
   });
 
-  it("keeps a slow download that sends a piece every 40 seconds", async () => {
+  it("gives the session as long as it needs once the downloads are done", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     try {
-      serveModel(
-        [...MODEL].map((b) => Uint8Array.of(b)),
-        40_000,
+      ort.create.mockImplementationOnce(
+        () => new Promise((resolve) => setTimeout(() => resolve({ run: ort.run, release: ort.release }), 2 * STALL_MS)),
       );
       let done = false;
       void handle({ id: 0, statement: "S", authors: ["Ada"] }).then(() => {
         done = true;
       });
-      // The stream and the hash take real event-loop turns before each next timer exists, so the
-      // clock moves a second at a time with a real turn between: a jump would pass timers set later.
+      // The downloads take real event-loop turns (hashing): only once they are done may the clock move.
+      while (ort.create.mock.calls.length === 0) await new Promise((resolve) => setImmediate(resolve));
       while (!done) {
         await vi.advanceTimersByTimeAsync(1_000);
         await new Promise((resolve) => setImmediate(resolve));
       }
       expect(last()).toHaveProperty("result");
-      const percents = replies.flatMap((r) =>
-        "progress" in r && r.progress.phase === "download" ? [r.progress.percent] : [],
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps a slow download that sends a piece every 40 seconds", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    // setImmediate stays real: the stream and the hash need real event-loop turns.
+    const until = async (ready: () => boolean) => {
+      while (!ready()) await new Promise((resolve) => setImmediate(resolve));
+    };
+    const percents = () =>
+      replies.flatMap((r) => ("progress" in r && r.progress.phase === "download" ? [r.progress.percent] : []));
+    try {
+      let open: (() => void) | undefined;
+      serveModel(
+        [...MODEL].map((b) => Uint8Array.of(b)),
+        () =>
+          new Promise((resolve) => {
+            open = resolve;
+          }),
       );
-      expect(percents).toEqual([25, 50, 75, 100]);
+      const waiting = (piece: number) => () => open !== undefined && percents().length === piece;
+      let done = false;
+      void handle({ id: 0, statement: "S", authors: ["Ada"] }).then(() => {
+        done = true;
+      });
+      // Each piece comes 40 s after the worker took the last one, however slow this machine is.
+      for (let piece = 0; piece < MODEL.length; piece++) {
+        await until(waiting(piece));
+        await vi.advanceTimersByTimeAsync(40_000);
+        const send = open;
+        open = undefined;
+        send?.();
+      }
+      // The read yields to messages on a timer between chunks: run those without moving the clock.
+      while (!done) {
+        await vi.advanceTimersByTimeAsync(0);
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+      expect(last()).toHaveProperty("result");
+      expect(percents()).toEqual([25, 50, 75, 100]);
     } finally {
       vi.useRealTimers();
     }
