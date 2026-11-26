@@ -21,10 +21,10 @@ DEADLINE = 15 * 60
 trickle would otherwise hold a worker forever. A bulk file is about 130 MB."""
 
 
-def get(url: str, retries: int = 5) -> bytes:
-    """The body of `url`; see `_fetch`."""
+def get(url: str, retries: int = 5, give_up: frozenset[int] = frozenset()) -> bytes:
+    """The body of `url`; see `_fetch`. A status in `give_up` raises at once, even one that is retried."""
     body = io.BytesIO()
-    _fetch(url, body, retries)
+    _fetch(url, body, retries, give_up)
     return body.getvalue()
 
 
@@ -34,7 +34,7 @@ def download(url: str, path: Path, retries: int = 5) -> None:
         _fetch(url, f, retries)
 
 
-def _fetch(url: str, out: BinaryIO, retries: int) -> None:
+def _fetch(url: str, out: BinaryIO, retries: int, give_up: frozenset[int] = frozenset()) -> None:
     """Write the body of `url` to `out`, starting over on each attempt.
 
     Retries throttling, server errors, dropped connections, bodies cut short (http.client raises
@@ -58,7 +58,7 @@ def _fetch(url: str, out: BinaryIO, retries: int) -> None:
                     raise http.client.IncompleteRead(b"", left)
             return
         except urllib.error.HTTPError as error:
-            if error.code not in RETRY_STATUS or attempt == retries - 1:
+            if error.code not in RETRY_STATUS or error.code in give_up or attempt == retries - 1:
                 raise
         except OSError, http.client.HTTPException:
             if attempt == retries - 1:

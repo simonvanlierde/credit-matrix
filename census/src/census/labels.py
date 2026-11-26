@@ -14,6 +14,7 @@ disagree, to be judged by hand.
 """
 
 import csv
+import json
 import math
 import random
 from collections import Counter, defaultdict
@@ -473,3 +474,49 @@ def verdicts(path: Path) -> Counter[str]:
     if bad := sorted(set(counts) - set(VERDICTS)):
         raise ValueError(f"wrong is {', '.join(bad)}; use one of {', '.join(VERDICTS)}")
     return counts
+
+
+def read_gold(path: Path) -> dict[str, set[tuple[int, str]]]:
+    """The general-view pairs of each article in a definition-B gold file (JSON Lines of pmcid and label)."""
+    with path.open(encoding="utf-8") as f:
+        return {r["pmcid"]: label_pairs(r["label"]) for r in map(json.loads, f)}
+
+
+def _f1(c: tuple[int, ...] | list[int]) -> float:
+    return 2 * c[0] / max(2 * c[0] + c[1] + c[2], 1)
+
+
+def paired_f1(
+    gold: dict[str, set],
+    systems: dict[str, dict[str, set]],
+    ids: list[str],
+    base: str,
+    draws: int = 1000,
+    seed: int = 20261127,
+) -> list[tuple]:
+    """Per system: (name, articles, precision, recall, F1, F1 minus `base`'s, and that difference's 95%
+    interval) over the (author, role) pairs of `ids`. One resample of the articles per draw scores every
+    system, so the interval is paired. An article a system lacks predicts nothing; a rate with nothing
+    to count is None, and `base` has no difference."""
+    per = {name: [_counts(pred.get(i, set()), gold[i]) for i in ids] for name, pred in systems.items()}
+    diffs: dict[str, list[float]] = {name: [] for name in systems if name != base}
+    rng = random.Random(seed)
+    for _ in range(draws if ids else 0):
+        pick = [rng.randrange(len(ids)) for _ in ids]
+        f1 = {name: _f1([sum(c[j][k] for j in pick) for k in range(3)]) for name, c in per.items()}
+        for name, out in diffs.items():
+            out.append(f1[name] - f1[base])
+    totals = {name: tuple(sum(x[k] for x in c) for k in range(3)) for name, c in per.items()}
+    rows = []
+    for name, (tp, fp, fn) in totals.items():
+        f1 = _f1((tp, fp, fn)) if tp + fp + fn else None
+        diff = None if name == base or f1 is None else f1 - _f1(totals[base])
+        d = sorted(diffs.get(name, []))
+        interval = (d[int(0.025 * len(d))], d[int(0.975 * len(d)) - 1]) if d else (None, None)
+        rates = (tp / (tp + fp) if tp + fp else None, tp / (tp + fn) if tp + fn else None, f1, diff, *interval)
+        rows.append((name, len(ids), *(None if x is None else round(x, 3) for x in rates)))
+    return rows
+
+
+def _counts(predicted: set, gold: set) -> tuple[int, int, int]:
+    return len(predicted & gold), len(predicted - gold), len(gold - predicted)

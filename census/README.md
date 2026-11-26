@@ -145,6 +145,9 @@ rule parser's reading, which the paired scores and the label scoring measure.
   styles, the rule parser's pairs otherwise.
 - `encoder_assignments` (after `census model apply`): the encoder's pairs for free-text statements;
   an article it found no role in has one row with a null position and role.
+- `openalex_assignments` (after `census openalex`): OpenAlex's CRediT roles for the articles fetched,
+  mapped to author positions by byline order. Only articles with roles have rows; an article whose
+  OpenAlex author count differs from `n_authors` has none. The census's figures never read it.
 - `journals`, `journal_keys` and the `article_fields` view (after `fields`): the field holding the
   largest share of each journal's OpenAlex topic counts, matched by ISSN or by a title only one
   journal has. A journal whose top field holds under 45% (PLOS ONE, Scientific Reports) counts as
@@ -155,8 +158,8 @@ rule parser's reading, which the paired scores and the label scoring measure.
   measures the parser on tens of thousands of articles without hand labels.
 - `units`: each bulk file or manifest chunk read, with its sha256, article count and whether it is
   finished.
-- `meta`: the source, schema version, parser hash, the applied encoder run, inventory date, and the OpenAlex snapshot date
-  and code hash the fields came from.
+- `meta`: the source, schema version, parser hash, the applied encoder run, inventory date, the OpenAlex snapshot date
+  and code hash the fields came from, and the date and request count of the OpenAlex roles.
 
 The database is local working data with author names in it. `census export` writes the public
 dataset to `data/export/<snapshot>/`:
@@ -210,6 +213,30 @@ the file, so a label is not anchored to its guess. It also leaves out the style 
 on the text) and shuffles the rows. `score` prints precision, recall and F1 over
 (author, role) pairs, and the share of articles exactly right with a 95% interval, per style. It
 takes the style from the database, not the CSV.
+
+OpenAlex publishes per-author CRediT roles (CC0). To score them beside the census:
+
+```sh
+uv run census openalex   # the gold sets' articles; --all for every article with a DOI
+uv run census score data/labels/gold500b-gold.jsonl data/labels/test200b-gold.jsonl
+```
+
+`openalex` asks the works API for 50 DOIs a request, one request a second, and appends each answer
+to `data/openalex-roles.jsonl`, so a rerun sends only the DOIs not yet asked. It stops on HTTP 429
+with exit code 2; rerun to resume. It sends only DOIs, with no email; `OPENALEX_API_KEY`, if set, is
+passed as the key. It needs no `--fresh`: like `model apply`, it writes only `openalex_assignments`
+and two `meta` rows.
+
+Given definition-B gold files (JSON Lines of `pmcid` and `label`, see Checked labels), `score` prints
+pair precision, recall and F1 for OpenAlex, the rule parser (`assignments`) and the census as
+published (`census_roles`), on all articles and on those where OpenAlex has roles, each set and
+pooled. Each system's F1 minus OpenAlex's comes with a 95% interval from 1,000 paired resamples of
+the articles. `--predictions` adds a model's file; for a set not in the database (`ood200b`) it and OpenAlex are
+the only systems. The reference is model-made, so these figures are
+agreement with it, not accuracy. On the 216 gold500b and test200b articles where OpenAlex has roles,
+pooled F1 is 0.933 for OpenAlex, 0.951 for the rules and 0.979 for the census as published (+0.046,
++0.026 to +0.069). OpenAlex has roles for 31% of these 700 articles and almost none of the narrative
+ones.
 
 ## Validation
 
