@@ -31,6 +31,20 @@ test.describe("the contributor list", () => {
     await expect(page.getByRole("button", { name: "Remove Ada Lovelace" })).toBeVisible();
   });
 
+  test("adds a consortium as a group row with its details", async ({ page }) => {
+    await page.goto("/");
+    await addField(page).fill("The COVIDSurg Collaborative");
+    await page.getByRole("button", { name: "Add a group (consortium or collaborative)" }).click();
+    await expect(nameField(page)).toHaveValue("The COVIDSurg Collaborative");
+    await expect(page.getByText("Group details")).toBeVisible();
+    await page.getByLabel("Short name (chips and figure)").fill("CovidSurg");
+    await page.getByLabel("Short name (chips and figure)").press("Enter");
+    await expect(page.getByLabel("Short name (chips and figure)")).toHaveValue("CovidSurg");
+    await page.getByLabel("ROR id or URL").fill("nonsense");
+    await page.getByLabel("ROR id or URL").press("Enter");
+    await expect(page.getByText("That is not a valid ROR id.")).toBeVisible();
+  });
+
   test("keeps the name typed with an ORCID iD", async ({ page }) => {
     // Any lookup fails, so a name that survives was not fetched.
     await page.route("https://pub.orcid.org/**", (route) => route.abort("failed"));

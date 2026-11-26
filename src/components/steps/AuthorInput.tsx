@@ -385,19 +385,8 @@ export function AuthorList() {
             aria-describedby={addError !== null ? addErrorId : undefined}
             placeholder={t("addPlaceholder")}
             aria-label={t("addContributor")}
-            className="w-full text-ellipsis rounded border border-edge bg-surface-bright py-2 pr-[4.5rem] pl-3 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary"
+            className="w-full text-ellipsis rounded border border-edge bg-surface-bright py-2 pr-10 pl-3 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary"
           />
-          {/* The typed name as a group: one contributor for a consortium, with its members listed inside. */}
-          <button
-            type="button"
-            onClick={handleAddGroup}
-            disabled={!newName.trim()}
-            aria-label={t("addGroupButton")}
-            title={t("addGroupButton")}
-            className="hit-area absolute inset-y-1 right-9 flex w-8 items-center justify-center rounded text-primary transition-colors enabled:hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:text-on-surface-variant/50"
-          >
-            <Users className="h-4 w-4" />
-          </button>
           <button
             type="button"
             onClick={() => void handleAdd()}
@@ -409,6 +398,17 @@ export function AuthorList() {
             <PlusCircle className="h-4 w-4" />
           </button>
         </div>
+      )}
+      {!locked && newName.trim() && (
+        // The typed name as a group: one contributor for a consortium, with its members listed inside.
+        <button
+          type="button"
+          onClick={handleAddGroup}
+          className="mt-1 flex min-h-6 items-center gap-1.5 self-start rounded text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <Users className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("addGroupButton")}
+        </button>
       )}
 
       {/* No footer note: the Drafts menu already says drafts stay in this
