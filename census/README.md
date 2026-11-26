@@ -145,6 +145,9 @@ rule parser's reading, which the paired scores and the label scoring measure.
   styles, the rule parser's pairs otherwise.
 - `encoder_assignments` (after `census model apply`): the encoder's pairs for free-text statements;
   an article it found no role in has one row with a null position and role.
+- `openalex_assignments` (after `census openalex`): OpenAlex's CRediT roles for the articles fetched,
+  mapped to author positions by byline order. Only articles with roles have rows; an article whose
+  OpenAlex author count differs from `n_authors` has none. The census's figures never read it.
 - `journals`, `journal_keys` and the `article_fields` view (after `fields`): the field holding the
   largest share of each journal's OpenAlex topic counts, matched by ISSN or by a title only one
   journal has. A journal whose top field holds under 45% (PLOS ONE, Scientific Reports) counts as
@@ -155,8 +158,9 @@ rule parser's reading, which the paired scores and the label scoring measure.
   measures the parser on tens of thousands of articles without hand labels.
 - `units`: each bulk file or manifest chunk read, with its sha256, article count and whether it is
   finished.
-- `meta`: the source, schema version, parser hash, the applied encoder run, inventory date, and the OpenAlex snapshot date
-  and code hash the fields came from.
+- `meta`: the source, schema version, parser hash, the applied encoder run, inventory date, the OpenAlex snapshot date
+  and code hash the fields came from, and the oldest fetch date and request count of the last
+  `census openalex` write.
 
 The database is local working data with author names in it. `census export` writes the public
 dataset to `data/export/<snapshot>/`:
@@ -210,6 +214,45 @@ the file, so a label is not anchored to its guess. It also leaves out the style 
 on the text) and shuffles the rows. `score` prints precision, recall and F1 over
 (author, role) pairs, and the share of articles exactly right with a 95% interval, per style. It
 takes the style from the database, not the CSV.
+
+OpenAlex publishes per-author CRediT roles (CC0). To score them beside the census:
+
+```sh
+uv run census openalex   # the gold sets' articles; --all for every article with census roles and a DOI
+uv run census score data/labels/gold500b-gold.jsonl data/labels/test200b-gold.jsonl
+```
+
+`openalex` asks the works API for 50 DOIs a request, one request a second, and appends what it needs
+of each answer (per work: the DOI, the author count and the (position, role) pairs) to
+`data/openalex-roles.jsonl`, so a rerun sends only the DOIs not yet asked. That is about 400 bytes a
+DOI on the gold sets, where most works have roles. On HTTP 429 it waits for Retry-After (60 s,
+doubling, when the header is missing) up to 5 times in a row, then stops with exit code 2; so does
+any other refusal, such as 401 for a bad key, and a database another process holds. Rerun to resume;
+for `--all`, `while uv run census openalex --all; [ $? -eq 2 ]; do sleep 3600; done` reruns an hour
+after each exit 2 and ends on success or any other error. A DOI the filter refuses (400 or 414) is
+asked alone and, if still refused, recorded as not in OpenAlex. OpenAlex may answer a DOI with
+another version's work (`.1` with `.2`); when that work is the only one with the same base, its
+roles count, on purpose. `--all` asks about 2.4 million DOIs in about 47,000 requests: at least 13
+hours at one request a second, and a cache of up to about 1 GB. A request costs $0.0001 of
+OpenAlex's daily budget: $0.10 (1,000 requests) without a key, shared by everyone on the IP, or $1
+(10,000) with a free key. So `--all` needs `OPENALEX_API_KEY` and, on the free key, about five days
+of reruns; a 429 that says the budget is spent stops the run at once and says when it resets. It
+sends only DOIs, with no email. It needs no `--fresh`: like `model apply`, it writes only
+`openalex_assignments` and two `meta` rows, `openalex_roles_fetched` and `openalex_roles_requests`,
+which describe the last `census openalex` write only (its oldest fetch date and its cache lines).
+`census export` leaves both out of `meta.json`.
+
+Given definition-B gold files (JSON Lines of `pmcid` and `label`, see Checked labels), `score` prints
+pair precision, recall and F1 for OpenAlex, the rule parser (`assignments`) and the census as
+published (`census_roles`), on all articles and on those where OpenAlex has roles, each set and
+pooled. Each system's F1 minus OpenAlex's comes with a 95% interval from 1,000 paired resamples of
+the articles. `--predictions` adds a model's file; for a set not in the database (`ood200b`) it and OpenAlex are
+the only systems, and the other sets keep theirs. Pooled with such a set, the pooled table has only
+OpenAlex and `--predictions` too. The reference is model-made, so these figures are
+agreement with it, not accuracy. On the 66 test200b articles where OpenAlex has roles, F1 is 0.932
+for OpenAlex, 0.943 for the rules and 0.991 for the census as published (+0.059, +0.025 to +0.114).
+gold500b chose the census's encoder, so its rows flatter the census. OpenAlex has roles for 31% of
+the 700 gold500b and test200b articles and almost none of the narrative ones.
 
 ## Validation
 
@@ -269,7 +312,7 @@ MDPI disagreements, a language model judged the tag wrong in 18 and both wrong i
 
 ### Checked labels
 
-`gold500b` is 500 articles from `set2000`. Three Opus runs labelled them under definition B, with an
+`gold500b` is 500 articles from `set2000`. Three runs of a large language model labelled them under definition B, with an
 adjudication where they differed: 261 are `credit` (statements that mostly use CRediT role names)
 and 239 `narrative`. To check the labels, 40 rows were drawn (20 per stratum, seed 20261117). An
 agent read all 40 and passed 36 as clearly right. A person ruled on the other 4, all `narrative`

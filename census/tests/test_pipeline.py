@@ -315,9 +315,11 @@ def test_export_names_the_bulk_files_it_came_from(tmp_path):
             "finished": True,
         }
         store.insert(con, [store.rows_for("PMC1", "all", XML["PMC1"])], unit)
+        con.execute("INSERT INTO meta VALUES ('openalex_roles_fetched', '2026-11-26')")
         export.export(con, tmp_path / "out", "test", partial=True)
     meta = (tmp_path / "out" / "meta.json").read_text()
     assert '"files": "1"' in meta and '"files_digest"' in meta
+    assert "openalex_roles" not in meta  # scoring data, not exported
 
 
 def pmc(pmcid: str) -> rows.Rows:

@@ -69,6 +69,22 @@ def test_get_gives_up_on_a_trickle_past_the_deadline(monkeypatch, no_sleep):
         net.get(URL)
 
 
+class Trickle(io.BytesIO):
+    """A response that hands over a byte at a time: read(n) would wait for all n."""
+
+    def read1(self, size=-1):
+        return super().read1(1)
+
+
+def test_get_checks_the_deadline_while_a_small_body_trickles_in(monkeypatch, no_sleep):
+    monkeypatch.setattr(net, "DEADLINE", 3)
+    clock = iter(range(1000))
+    monkeypatch.setattr(net.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(net.urllib.request, "urlopen", Responses(*(Trickle(b"0123456789") for _ in range(5))))
+    with pytest.raises(TimeoutError):
+        net.get(URL)
+
+
 def test_download_streams_to_the_file_and_leaves_no_temp_on_failure(tmp_path, monkeypatch, no_sleep):
     monkeypatch.setattr(net.urllib.request, "urlopen", Responses(b"body", *[http_error(503)] * 5))
     net.download(URL, tmp_path / "ok")

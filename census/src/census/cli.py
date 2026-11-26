@@ -4,13 +4,14 @@ Order of use:
   1. census run (a sample, from the PMC bucket) or census bulk (every open-access article)
   2. census fields
   3. census model predict --corpus, then census model apply (the encoder's roles for free text)
-  4. census report, export, aggregate, norms, label or score
+  4. census report, export, aggregate, norms, label or score (census openalex first, to score OpenAlex too)
   5. census model split, dataset, score, zero-shot, train or predict
 """
 
 import argparse
 import csv
 import json
+import os
 import re
 import sys
 import time
@@ -29,6 +30,7 @@ from census import (
     modelset,
     net,
     norms,
+    openalex,
     pipeline,
     pmc_s3,
     readers,
@@ -217,7 +219,111 @@ def cmd_label(args: argparse.Namespace) -> None:
     print(f"{n} articles to label in {out} (strata in {labels.key_path(out)}), {m} to judge in {disagreements}")
 
 
+GOLD_SETS = ("gold500b", "test200b", "ood200b")
+"""The definition-B gold sets in data/labels/, each with its label sheet `<snapshot>-<set>.csv`."""
+
+
+def cmd_openalex(args: argparse.Namespace) -> None:
+    if args.all and args.labels:
+        raise Failure("give label sheets or --all, not both")
+    db = _db(args)
+    sheets = args.labels or [DATA / "labels" / f"{args.snapshot}-{s}.csv" for s in GOLD_SETS]
+    with duckdb.connect(str(db), read_only=True) as con:
+        if args.all:
+            readers.use_roles(con)
+            sql = (
+                "SELECT pmcid, doi, n_authors FROM articles"
+                " WHERE doi IS NOT NULL AND pmcid IN (SELECT pmcid FROM census_roles)"
+            )
+            articles = {p: (d, n) for p, d, n in con.execute(sql).fetchall()}
+        else:
+            # Author counts from the sheet's byline: ood200b is not in the database.
+            rows = [r for path in sheets for r in labels.read_rows(path)]
+            sql = "SELECT pmcid, doi FROM articles WHERE pmcid IN (SELECT unnest(?))"
+            dois = dict(con.execute(sql, [[r["pmcid"] for r in rows]]).fetchall())
+            articles = {
+                r["pmcid"]: (
+                    dois.get(r["pmcid"], r["pmcid"] if r["pmcid"].startswith("10.") else None),
+                    len(r["authors"].split(" | ")) if r["authors"] else 0,
+                )
+                for r in rows
+            }
+    try:
+        sent = openalex.fetch((d for d, _ in articles.values() if d), args.cache, os.environ.get("OPENALEX_API_KEY"))
+    except openalex.Stopped as error:
+        raise Unfinished(f"{error}; rerun to resume from {args.cache}") from None
+    # Not store.connect, as for `model apply`: this touches only openalex_assignments and two meta rows.
+    try:
+        with duckdb.connect(str(db)) as con:
+            counts = openalex.write(con, articles, args.cache)
+    except duckdb.IOException as error:  # another process holds the database's write lock
+        raise Unfinished(f"{error}; the answers are in {args.cache}, rerun once the database is free") from None
+    print(
+        f"{len(articles)} articles, {sent} requests sent: " + ", ".join(f"{n} {k}" for k, n in sorted(counts.items()))
+    )
+
+
+def _pairs_in(con: duckdb.DuckDBPyConnection, table: str, ids: list[str]) -> dict[str, set[tuple[int, str]]]:
+    out: dict[str, set[tuple[int, str]]] = {}
+    sql = f"SELECT pmcid, author_position, role FROM {table} WHERE pmcid IN (SELECT unnest(?)) AND role IS NOT NULL"
+    for pmcid, position, role in con.execute(sql, [ids]).fetchall():
+        out.setdefault(pmcid, set()).add((position, role))
+    return out
+
+
+def _score_gold(args: argparse.Namespace) -> None:
+    if args.key or args.second:
+        raise Failure("--key and --second go with a label CSV, not a gold JSONL")
+    sets = {}
+    for path in args.labels:
+        try:
+            sets[path.name.removesuffix(".jsonl").removesuffix("-gold")] = labels.read_gold(path)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+            raise Failure(f"cannot read gold file {path}: {type(error).__name__} {error}") from None
+    if len(sets) > 1:
+        sets["pooled"] = {i: g for gold in list(sets.values()) for i, g in gold.items()}
+    ids = list(sets.get("pooled") or next(iter(sets.values())))
+    systems = {}
+    with store.connect(_db(args), read_only=True) as con:
+        if not store.one(con, "SELECT 1 FROM duckdb_tables() WHERE table_name = 'openalex_assignments'"):
+            raise Failure("no openalex_assignments in the database; fetch them with `census openalex`")
+        readers.use_roles(con)
+        systems["openalex"] = _pairs_in(con, "openalex_assignments", ids)
+        sql = "SELECT pmcid FROM articles WHERE pmcid IN (SELECT unnest(?))"
+        in_db = {pmcid for (pmcid,) in con.execute(sql, [ids]).fetchall()}
+        if in_db:
+            systems["rule parser"] = _pairs_in(con, "assignments", list(in_db))
+            systems["census as published"] = _pairs_in(con, "census_roles", list(in_db))
+    if args.predictions:
+        systems[args.predictions.stem] = modelset.read_predictions(args.predictions)
+    database_only = {"rule parser", "census as published"}
+    # "-" is a rate with nothing to count; the difference is F1 minus OpenAlex's, its interval paired.
+    for name, gold in sets.items():
+        # A set with articles outside the database (ood200b) gets no rule parser or census rows.
+        if missing := sum(i not in in_db for i in gold):
+            print(f"{name}: {missing} articles are not in the database: no rule parser or census rows", file=sys.stderr)
+        scored = {k: v for k, v in systems.items() if not (missing and k in database_only)}
+        covered = [i for i in gold if systems["openalex"].get(i)]
+        for subset, chosen in (("all articles", list(gold)), ("OpenAlex has roles", covered)):
+            title = f"{name}, {subset}"
+            print(f"{title:<40}{'articles':>9}{'precision':>11}{'recall':>8}{'f1':>7}{'vs openalex (95%)':>26}")
+            for system, n, p, r, f1, diff, low, high in labels.paired_f1(gold, scored, chosen, "openalex"):
+                p, r, f1 = ("-" if x is None else x for x in (p, r, f1))
+                versus = "" if diff is None else f"{diff:+.3f} ({low:+.3f} to {high:+.3f})"
+                print(f"{system[:39]:<40}{n:>9}{p:>11}{r:>8}{f1:>7}{versus:>26}")
+            print()
+    print("The reference is model-made (definition-B gold: language-model labels and an adjudicator), not human.")
+
+
 def cmd_score(args: argparse.Namespace) -> None:
+    gold = [p.suffix == ".jsonl" for p in args.labels]
+    if all(gold):
+        return _score_gold(args)
+    if any(gold):
+        raise Failure("give gold JSONL files or one label CSV, not both")
+    if len(args.labels) > 1:
+        raise Failure("score one label CSV at a time (several files only for gold JSONL)")
+    args.labels = args.labels[0]
     with args.labels.open(encoding="utf-8-sig") as f:
         header = f.readline()
     predictions = args.predictions and modelset.read_predictions(args.predictions)
@@ -585,13 +691,48 @@ def main(argv: list[str] | None = None) -> int:
         help="with --set: leave out the articles in these label files, to draw a second set",
     )
     cmd.set_defaults(func=cmd_label)
-    cmd = sub.add_parser("score", parents=[snap, db], help="score the parser against a labelled CSV")
+    cmd = sub.add_parser(
+        "openalex",
+        parents=[snap, db],
+        help="fetch OpenAlex's CRediT roles by DOI, to score",
+        description="Fetch OpenAlex's CRediT roles by DOI into the cache and write them to openalex_assignments."
+        " OPENALEX_API_KEY, if set, is sent as the key. Exit code 2 when OpenAlex throttled or stopped the run:"
+        " rerun to resume from the cache.",
+    )
     cmd.add_argument(
-        "labels", type=Path, help="the CSV from `census label`, gold filled (or a disagreement file, wrong filled)"
+        "labels",
+        type=Path,
+        nargs="*",
+        help="label sheets whose articles to fetch (default: the gold sets' sheets in census/data/labels/)",
+    )
+    cmd.add_argument("--all", action="store_true", help="every article with census roles and a DOI instead")
+    cmd.add_argument(
+        "--cache",
+        type=Path,
+        default=DATA / "openalex-roles.jsonl",
+        help="OpenAlex's answers, appended per request (default: census/data/openalex-roles.jsonl)",
+    )
+    cmd.set_defaults(func=cmd_openalex)
+    cmd = sub.add_parser(
+        "score",
+        parents=[snap, db],
+        help="score the parser against a labelled CSV, or the census and OpenAlex against gold",
+    )
+    cmd.add_argument(
+        "labels",
+        type=Path,
+        nargs="+",
+        help="the CSV from `census label`, gold filled (or a disagreement file, wrong filled); or definition-B"
+        " gold JSONL files, to score the rule parser, the census as published and OpenAlex",
     )
     cmd.add_argument("--second", type=Path, help="a second labeller's copy, scored against the first on the overlap")
     cmd.add_argument("--key", type=Path, help="the label set's strata and weights (default: <labels>-key.csv if there)")
-    cmd.add_argument("--predictions", type=Path, help="score the JSONL `census model zero-shot` wrote, not the parser")
+    cmd.add_argument(
+        "--predictions",
+        type=Path,
+        help="score the JSONL `census model zero-shot` wrote, not the parser; with gold JSONL, score it beside the"
+        " others",
+    )
     cmd.set_defaults(func=cmd_score)
     model = sub.add_parser("model", help="train/held-out split, dataset and baselines for a statement-parsing model")
     model_sub = model.add_subparsers(dest="model_command", required=True)
