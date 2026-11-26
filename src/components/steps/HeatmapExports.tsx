@@ -1,7 +1,7 @@
 import { ChevronDown, Copy, Download, Scan, Settings2, Shrink } from "lucide-react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type Author, heatmapDescription } from "@/core";
+import { type Contributor, heatmapDescription } from "@/core";
 import { heatmapPrintSize, SMALL_PRINT_PT, svgDimensions } from "@/core/export/heatmap-print";
 import { announce } from "@/lib/announce";
 import { copyFigure } from "@/lib/copy-figure";
@@ -108,7 +108,7 @@ export function HeatmapExports({
   showLevels,
   triggerClassName = TOOL_BUTTON,
 }: {
-  authors: Author[];
+  authors: Contributor[];
   showLevels: boolean;
   /** The trigger's look where it sits: the grid's toolbar by default, the statement's export row on a phone. */
   triggerClassName?: string;

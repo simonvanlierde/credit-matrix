@@ -43,6 +43,7 @@ export {
   orcidOf,
   PersonSchema,
   scoreToLevel,
+  shortName,
 } from "./author";
 export type { CreditRoleName } from "./credit-roles";
 export { CREDIT_ROLES, getRoleByName } from "./credit-roles";

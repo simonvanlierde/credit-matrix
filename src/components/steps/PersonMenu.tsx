@@ -41,6 +41,7 @@ export function PersonMenu({
   const { translateInterfaceUi: translateUi } = useCreditTranslators();
   const { locked, editableAuthorId } = useClaimLock();
   const author = useContributionStore((s) => s.authors.find((a) => a.id === authorId));
+  const authors = useContributionStore((s) => s.authors);
   const index = useContributionStore((s) => s.authors.findIndex((a) => a.id === authorId));
   const rowCount = useContributionStore((s) => s.authors.length);
   const isSelf = useContributionStore((s) => s.selfId === authorId);
@@ -65,6 +66,7 @@ export function PersonMenu({
 
   if (!author) return trigger;
   const name = author.name;
+  const contact = author.kind === "group" ? authors.find((a) => a.id === author.contactId) : undefined;
   const frozen = locked && authorId !== editableAuthorId;
   const label = t("contributorActions", { name });
 
@@ -93,7 +95,10 @@ export function PersonMenu({
     openChange(false);
   }
 
-  const showOrcid = surface === "list" ? (canAddOrcid ?? false) : !(author.orcid ?? "").length;
+  // A group has no ORCID iD, no markers and cannot be you; its review requests go to its contact.
+  const group = author.kind === "group";
+  const addressee = group ? contact?.name : name;
+  const showOrcid = !group && (surface === "list" ? (canAddOrcid ?? false) : !(author.orcid ?? "").length);
   const canMoveUp = !locked && index > 0;
   const canMoveDown = !locked && index < rowCount - 1;
 
@@ -132,25 +137,29 @@ export function PersonMenu({
                 {t("moveDown")}
               </MenuItem>
             </div>
-            {!locked && (
+            {!(locked || group) && (
               <MenuItem icon={<UserRound className={MENU_ICON} />} onClick={() => setSelfId(isSelf ? null : authorId)}>
                 {isSelf ? t("thisIsNotMe") : t("thisIsMe")}
               </MenuItem>
             )}
-            <MenuItem
-              icon={<Users className={MENU_ICON} />}
-              disabled={frozen}
-              onClick={() => setAuthorMarker(authorId, "equalContribution", !author.equalContribution)}
-            >
-              {author.equalContribution ? t("equalContributionUnset") : t("equalContributionSet")}
-            </MenuItem>
-            <MenuItem
-              icon={<AtSign className={MENU_ICON} />}
-              disabled={frozen}
-              onClick={() => setAuthorMarker(authorId, "corresponding", !author.corresponding)}
-            >
-              {author.corresponding ? t("correspondingUnset") : t("correspondingSet")}
-            </MenuItem>
+            {!group && (
+              <>
+                <MenuItem
+                  icon={<Users className={MENU_ICON} />}
+                  disabled={frozen}
+                  onClick={() => setAuthorMarker(authorId, "equalContribution", !author.equalContribution)}
+                >
+                  {author.equalContribution ? t("equalContributionUnset") : t("equalContributionSet")}
+                </MenuItem>
+                <MenuItem
+                  icon={<AtSign className={MENU_ICON} />}
+                  disabled={frozen}
+                  onClick={() => setAuthorMarker(authorId, "corresponding", !author.corresponding)}
+                >
+                  {author.corresponding ? t("correspondingUnset") : t("correspondingSet")}
+                </MenuItem>
+              </>
+            )}
             <div className="my-1 border-y border-outline-variant/40 py-1">
               <MenuItem
                 icon={<ListChecks className={MENU_ICON} />}
@@ -163,7 +172,7 @@ export function PersonMenu({
                 {t("bulkClearAll")}
               </MenuItem>
             </div>
-            {!(locked || isSelf) && (
+            {!(locked || isSelf) && (!group || contact) && (
               <div className="mb-1 border-b border-outline-variant/40 pb-1">
                 {(["blank", "prefilled"] as const).map((kind) => (
                   <MenuItem
@@ -180,8 +189,8 @@ export function PersonMenu({
                     {askCopied === kind
                       ? t("askCopied")
                       : kind === "blank"
-                        ? t("askBlank", { name })
-                        : t("askPrefilled", { name })}
+                        ? t("askBlank", { name: addressee ?? name })
+                        : t("askPrefilled", { name: addressee ?? name })}
                   </MenuItem>
                 ))}
                 <p className="px-2 pt-0.5 pb-1 text-[11px] leading-snug text-on-surface-variant">{t("askLinkHint")}</p>

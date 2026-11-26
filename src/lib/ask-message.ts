@@ -1,4 +1,4 @@
-import type { Author } from "@/core";
+import type { Contributor } from "@/core";
 import { announce } from "@/lib/announce";
 import { buildShareUrl, shareFailureKey } from "@/lib/share";
 import type { useTranslations } from "@/lib/translations";
@@ -11,7 +11,7 @@ import { useContributionStore } from "@/store/contribution-store";
  * the title the link was built with. Returns whether it was copied.
  */
 export async function copyAskLink(
-  author: Author,
+  author: Contributor,
   t: ReturnType<typeof useTranslations>,
   blank: boolean,
   copy: (link: string, title: string) => Promise<boolean>,
@@ -44,6 +44,13 @@ export async function copyAskLink(
   return true;
 }
 
+/** Who gets the message: a group's contact person when it has one, else the row itself. */
+function addressee(author: Contributor): string {
+  if (author.kind !== "group") return author.name;
+  const contact = useContributionStore.getState().authors.find((a) => a.id === author.contactId);
+  return contact?.name ?? author.name;
+}
+
 /**
  * Copy an email-ready message asking one contributor, around their ask link,
  * and record the ask once it reached the clipboard. With `role`, the message
@@ -51,7 +58,7 @@ export async function copyAskLink(
  * Returns whether the message was copied.
  */
 export function copyAskMessage(
-  author: Author,
+  author: Contributor,
   t: ReturnType<typeof useTranslations>,
   { role }: { role?: string } = {},
 ): Promise<boolean> {
@@ -60,15 +67,15 @@ export function copyAskMessage(
     const work = title ? t("teamMessageWork", { title }) : t("teamMessageNoTitle");
     const text =
       role === undefined
-        ? t("teamMessage", { name: author.name, work, link })
-        : t("reviewAskMessage", { name: author.name, work, role, link });
+        ? t("teamMessage", { name: addressee(author), work, link })
+        : t("reviewAskMessage", { name: addressee(author), work, role, link });
     try {
       await navigator.clipboard.writeText(text);
     } catch {
       announce(t("annCopyFailed"), { assertive: true });
       return false;
     }
-    announce(t("teamMessageCopied", { name: author.name }));
+    announce(t("teamMessageCopied", { name: addressee(author) }));
     return true;
   });
 }

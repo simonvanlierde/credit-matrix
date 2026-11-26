@@ -1950,3 +1950,42 @@ msgstr "Schrijftool"
 
 msgid "docsOnPage"
 msgstr "Op deze pagina"
+
+msgid "addGroupButton"
+msgstr "Groep toevoegen (consortium of samenwerkingsverband)"
+
+msgid "groupBadge"
+msgstr "Groep"
+
+msgid "groupDetails"
+msgstr "Groepsgegevens"
+
+msgid "groupAliasLabel"
+msgstr "Korte naam (chips en figuur)"
+
+msgid "groupRorLabel"
+msgstr "ROR-id of URL"
+
+msgid "errRorInvalid"
+msgstr "Dat is geen geldige ROR-id."
+
+msgid "groupMembersLabel"
+msgstr "Leden (één naam per regel)"
+
+msgid "groupMembersAre"
+msgstr "Leden zijn"
+
+msgid "groupMembersAuthors"
+msgstr "Auteurs"
+
+msgid "groupMembersCollaborators"
+msgstr "Medewerkers"
+
+msgid "groupContactLabel"
+msgstr "Contactpersoon (beantwoordt beoordelingsverzoeken)"
+
+msgid "groupContactNone"
+msgstr "Geen contactpersoon"
+
+msgid "annGroupAdded"
+msgstr "{name} toegevoegd als groep."

@@ -237,6 +237,11 @@ export function isPerson(contributor: Contributor): contributor is Person {
   return contributor.kind === "person";
 }
 
+/** The name a chip row or figure label shows: a group's alias when it has one, else the name. */
+export function shortName(contributor: Contributor): string {
+  return isGroup(contributor) && contributor.alias ? contributor.alias : contributor.name;
+}
+
 /** The ORCID iD of a row; a group has none. */
 export function orcidOf(contributor: Contributor): string | undefined {
   return isPerson(contributor) ? contributor.orcid : undefined;

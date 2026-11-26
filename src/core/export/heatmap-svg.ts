@@ -1,5 +1,5 @@
 import type { Contributor } from "../author";
-import { rolesWithContributions } from "../author";
+import { rolesWithContributions, shortName } from "../author";
 import { contributorHues, DEFAULT_MONO_COLOR, HEX_COLOR, heatCellColor, onColor } from "../contributor-color";
 import type { RoleTranslator } from "../credit-i18n/index";
 import { makeUiTranslator, type UiTranslator } from "../credit-i18n/ui-strings";
@@ -178,7 +178,7 @@ export function buildHeatmapSvg(authors: Contributor[], opts?: HeatmapSvgOptions
   const acronyms = opts?.acronyms ?? true;
   const lang = opts?.locale ? ` xml:lang="${escapeXml(opts.locale)}" lang="${escapeXml(opts.locale)}"` : "";
   const authorLabel = (ai: number): string =>
-    (acronyms ? authors[ai]?.initials : authors[ai]?.name) ?? authors[ai]?.initials ?? "";
+    (acronyms ? authors[ai]?.initials : authors[ai] && shortName(authors[ai])) ?? authors[ai]?.initials ?? "";
 
   // By default, omit roles nobody contributed to.
   const activeRoleNames = new Set(rolesWithContributions(authors));

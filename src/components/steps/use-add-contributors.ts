@@ -36,11 +36,12 @@ async function forEachWithConcurrency<T>(items: T[], limit: number, task: (item:
 export function useAddContributors() {
   const t = useTranslations();
   const format = useFormatter();
-  const { authorCount, addAuthor, addAuthors, removeAuthor, updateAuthorName } = useContributionStore(
+  const { authorCount, addAuthor, addAuthors, addGroup, removeAuthor, updateAuthorName } = useContributionStore(
     useShallow((s) => ({
       authorCount: s.authors.length,
       addAuthor: s.addAuthor,
       addAuthors: s.addAuthors,
+      addGroup: s.addGroup,
       removeAuthor: s.removeAuthor,
       updateAuthorName: s.updateAuthorName,
     })),
@@ -181,6 +182,26 @@ export function useAddContributors() {
     }
   }
 
+  /** Add the typed name as one group (a consortium) instead of a person. */
+  function handleAddGroup() {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    setAddError(null);
+    if (authorCount >= MAX_AUTHORS) {
+      const message = t("errAtContributorLimit", { limit: MAX_AUTHORS });
+      setAddError(message);
+      announce(message, { assertive: true });
+      return;
+    }
+    if (addGroup(trimmed)) {
+      setNewName("");
+      announce(t("annGroupAdded", { name: trimmed }));
+    } else {
+      setAddError(t("errNameNoLetter"));
+      announce(t("errNameNoLetter"), { assertive: true });
+    }
+  }
+
   /** Pasting a whole author list adds every name; single names paste normally. */
   function handleAddPaste(event: React.ClipboardEvent<HTMLInputElement>) {
     const tokens = splitNameList(event.clipboardData.getData("text"));
@@ -190,5 +211,5 @@ export function useAddContributors() {
     void addMany(tokens);
   }
 
-  return { newName, setNewName, addError, setAddError, handleAdd, handleAddPaste };
+  return { newName, setNewName, addError, setAddError, handleAdd, handleAddGroup, handleAddPaste };
 }

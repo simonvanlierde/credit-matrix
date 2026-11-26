@@ -2,7 +2,7 @@ import { Check, ChevronDown, CircleAlert, FileUp, LoaderCircle, Plus, Search, X 
 import { useEffect, useRef, useState } from "react";
 import {
   type Ask,
-  type Author,
+  type Contributor,
   CREDIT_ROLES,
   type CreditRoleName,
   createAuthor,
@@ -56,14 +56,14 @@ interface Props {
   /** `current` turns false once the dialog closes: a link that finishes loading after that must not open. */
   onLink: (url: string, current: () => boolean) => Promise<LinkFailure | null>;
   /** The open draft's roster, which a pasted statement is matched against. */
-  authors: Author[];
+  authors: Contributor[];
   /** Whether the draft records levels; a yes/no draft sets every role to 100. */
   graded: boolean;
   /**
    * Write the roster with a pasted statement's roles added; `added` counts the new roles, and
    * `level` names the level they got in a graded draft.
    */
-  onApplyStatement: (authors: Author[], added: number, level?: string) => void;
+  onApplyStatement: (authors: Contributor[], added: number, level?: string) => void;
   onClose: () => void;
 }
 
@@ -125,7 +125,7 @@ function breakLines(text: string): string {
  */
 function reviewStatement(
   text: string,
-  authors: Author[],
+  authors: Contributor[],
   picks: Record<string, string>,
   model?: ReaderResult,
   accepted: ReadonlySet<string> = new Set(),
@@ -155,7 +155,7 @@ function reviewStatement(
 }
 
 /** The name the model reads: given names, then the surname, as in the census's training bylines. */
-function modelName(author: Author): string {
+function modelName(author: Contributor): string {
   const { given, surname } = statementAuthor(author);
   return [given, surname].filter(Boolean).join(" ") || author.name;
 }
@@ -166,7 +166,7 @@ const byCreditOrder = (roles: Iterable<CreditRoleName>) => {
 };
 
 function summarize(
-  authors: Author[],
+  authors: Contributor[],
   readings: AuthorReading[],
   unmatched: StatementReview["unmatched"],
   accepted: ReadonlySet<string>,
@@ -206,7 +206,7 @@ function summarize(
  * The roster with the reviewed roles set to `score`, matched by contributor id. A role already
  * set keeps its level, and a contributor the review does not know is left alone.
  */
-function withStatementRoles(authors: Author[], review: StatementReview, score: number): [Author[], number] {
+function withStatementRoles(authors: Contributor[], review: StatementReview, score: number): [Contributor[], number] {
   const byId = new Map(review.rows.map((row) => [row.id, new Set(row.roles.map((r) => r.role))]));
   let added = 0;
   const next = authors.map((author) => {
@@ -231,7 +231,7 @@ export type ImportMode = "add" | "replace";
 
 /** What a resolved import is waiting to write, once any replace is confirmed. */
 export interface PendingImport {
-  authors: Author[];
+  authors: Contributor[];
   doiNotice?: "doiRolesImported" | "doiNoRoles";
   /** Set only by the DOI path; the other importers give no title. */
   title?: string;

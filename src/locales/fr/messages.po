@@ -1950,3 +1950,42 @@ msgstr "Outil de rédaction"
 
 msgid "docsOnPage"
 msgstr "Sur cette page"
+
+msgid "addGroupButton"
+msgstr "Ajouter un groupe (consortium ou collaboration)"
+
+msgid "groupBadge"
+msgstr "Groupe"
+
+msgid "groupDetails"
+msgstr "Détails du groupe"
+
+msgid "groupAliasLabel"
+msgstr "Nom court (pastilles et figure)"
+
+msgid "groupRorLabel"
+msgstr "Identifiant ou URL ROR"
+
+msgid "errRorInvalid"
+msgstr "Ce n'est pas un identifiant ROR valide."
+
+msgid "groupMembersLabel"
+msgstr "Membres (un nom par ligne)"
+
+msgid "groupMembersAre"
+msgstr "Les membres sont"
+
+msgid "groupMembersAuthors"
+msgstr "Auteurs"
+
+msgid "groupMembersCollaborators"
+msgstr "Collaborateurs"
+
+msgid "groupContactLabel"
+msgstr "Personne de contact (répond aux demandes de relecture)"
+
+msgid "groupContactNone"
+msgstr "Aucun contact"
+
+msgid "annGroupAdded"
+msgstr "{name} ajouté comme groupe."

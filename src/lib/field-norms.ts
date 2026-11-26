@@ -1,4 +1,4 @@
-import { type Author, CREDIT_ROLES, type CreditRoleName } from "@/core";
+import { type Contributor, CREDIT_ROLES, type CreditRoleName } from "@/core";
 import { creditSlug } from "@/core/credit-roles";
 import data from "@/data/field-norms.json";
 
@@ -45,7 +45,7 @@ export function positionOf(index: number, count: number): Position | null {
  * Where `selfId` sits among the authors only, as the census counts the byline: non-authors sit in
  * the acknowledgements, not the byline. "non-author" when that contributor is one, null when nobody is marked.
  */
-export function selfPosition(authors: readonly Author[], selfId: string | null): Position | "non-author" | null {
+export function selfPosition(authors: readonly Contributor[], selfId: string | null): Position | "non-author" | null {
   const self = authors.find((author) => author.id === selfId);
   if (!self) return null;
   if (self.contributorType === "non-author") return "non-author";

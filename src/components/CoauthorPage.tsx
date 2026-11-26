@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { BrandMark, PRODUCT_NAME } from "@/components/BrandMark";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Switch } from "@/components/ui/switch";
-import { type Author, CREDIT_ROLES, isValidOrcid, type OrcidProof, type SharePayloadInput } from "@/core";
+import { CREDIT_ROLES, isPerson, isValidOrcid, type OrcidProof, type Person, type SharePayloadInput } from "@/core";
 import { LEVEL_SCORE, MAX_AUTHOR_NAME_LENGTH } from "@/core/author";
 import { DEFAULT_MONO_COLOR, heatCellColor, onColor } from "@/core/contributor-color";
 import { toSharePayload } from "@/core/share-payload";
@@ -299,25 +299,30 @@ function CoauthorPage() {
       </ol>
 
       <div className="flex flex-col px-4 pt-3 sm:px-6">
-        <MarkerSwitch
-          id={firstAuthorId}
-          label={t("coauthorFirstAuthor")}
-          checked={author.equalContribution}
-          onChange={(value) => setAuthorMarker(author.id, "equalContribution", value)}
-        />
-        <MarkerSwitch
-          id={correspondingId}
-          label={t("coauthorCorresponding")}
-          checked={author.corresponding}
-          onChange={(value) => setAuthorMarker(author.id, "corresponding", value)}
-        />
-        <YourDetails author={author} />
-        <OrcidSignIn
-          signedIn={signedIn?.proof ?? null}
-          failed={signIn === "failed"}
-          changed={signIn !== null && !signedIn}
-          onSignIn={() => void handleSignIn()}
-        />
+        {/* A group has no markers, no ORCID iD and no sign-in: only its roles are answered. */}
+        {isPerson(author) && (
+          <>
+            <MarkerSwitch
+              id={firstAuthorId}
+              label={t("coauthorFirstAuthor")}
+              checked={author.equalContribution}
+              onChange={(value) => setAuthorMarker(author.id, "equalContribution", value)}
+            />
+            <MarkerSwitch
+              id={correspondingId}
+              label={t("coauthorCorresponding")}
+              checked={author.corresponding}
+              onChange={(value) => setAuthorMarker(author.id, "corresponding", value)}
+            />
+            <YourDetails author={author} />
+            <OrcidSignIn
+              signedIn={signedIn?.proof ?? null}
+              failed={signIn === "failed"}
+              changed={signIn !== null && !signedIn}
+              onSignIn={() => void handleSignIn()}
+            />
+          </>
+        )}
         <p className="mt-6 mb-4 text-xs text-on-surface-variant">
           <button
             type="button"
@@ -519,7 +524,7 @@ function OrcidSignIn({
  * Name and iD correction, out of the way: the asker usually has them right, and
  * whatever is here travels back with the answer.
  */
-function YourDetails({ author }: { author: Author }) {
+function YourDetails({ author }: { author: Person }) {
   const t = useTranslations();
   const updateAuthorName = useContributionStore((s) => s.updateAuthorName);
   const updateAuthorOrcid = useContributionStore((s) => s.updateAuthorOrcid);

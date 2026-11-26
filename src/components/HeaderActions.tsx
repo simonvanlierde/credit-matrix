@@ -4,7 +4,7 @@ import { DraftPicker } from "@/components/DraftPicker";
 import { ImportModal, type ImportMode, type LinkFailure, type PendingImport } from "@/components/ImportModal";
 import { dismissStatus, type Status, showStatus } from "@/components/StatusBanner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type Author, decodeShareHash, importAnswers, type OrcidProof, type ShareData } from "@/core";
+import { type Contributor, decodeShareHash, importAnswers, type OrcidProof, type ShareData } from "@/core";
 import { isAllBinary } from "@/core/author";
 import { keepKnownIds, newContributors } from "@/core/merge-row";
 import { announce } from "@/lib/announce";
@@ -20,7 +20,7 @@ import {
   useContributionStore,
 } from "@/store/contribution-store";
 
-const NO_AUTHORS: Author[] = [];
+const NO_AUTHORS: Contributor[] = [];
 
 /** Answer the way the asker works: yes/no only when the link says so and the row holds nothing finer. */
 function claimMode(shared: ShareData): InputMode {
@@ -438,7 +438,7 @@ export function HeaderActions() {
    * Add a pasted statement's roles in one write. Undo restores the roster only while it is still
    * the one this wrote: after an edit or a draft switch it would throw away newer work.
    */
-  function handleApplyStatement(next: Author[], added: number, level?: string) {
+  function handleApplyStatement(next: Contributor[], added: number, level?: string) {
     const before = useContributionStore.getState().authors;
     loadAuthors(next);
     const applied = useContributionStore.getState().authors;

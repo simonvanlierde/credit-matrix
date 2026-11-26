@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { type Author, CREDIT_ROLES, createAuthor } from "@/core";
+import { type Contributor, CREDIT_ROLES, createAuthor } from "@/core";
 import { announce } from "@/lib/announce";
 import { english } from "@/lib/test-messages";
 import { IntlProvider } from "@/lib/translations";
@@ -15,7 +15,7 @@ vi.mock("@/lib/use-settled", () => ({ useSettled: () => true }));
 const store = () => useContributionStore.getState();
 const initial = store();
 
-function twoAuthors(): Author[] {
+function twoAuthors(): Contributor[] {
   return [
     createAuthor("Grace Hopper", { contributions: [{ role: "Conceptualization", score: 100 }] }),
     createAuthor("Charles Darwin", { contributions: [{ role: "Investigation", score: 100 }] }),
@@ -23,7 +23,7 @@ function twoAuthors(): Author[] {
 }
 
 /** A reply from `author` that says exactly what the draft says. */
-function agreeingReply(author: Author) {
+function agreeingReply(author: Contributor) {
   return {
     contributions: author.contributions,
     equalContribution: false,
@@ -174,7 +174,7 @@ it("keeps a focused cell's mark when the mouse passes over another cell and leav
   if (!(grace && charles)) throw new Error("expected 2 authors");
   act(() => store().loadAuthors(authors));
   const { container } = renderGrid();
-  const cellOf = (author: Author, role: number) => {
+  const cellOf = (author: Contributor, role: number) => {
     const cell = container.querySelector<HTMLButtonElement>(`table [data-cell-key="${author.id}:${role}"]`);
     if (!cell) throw new Error("expected the cell");
     return cell;
