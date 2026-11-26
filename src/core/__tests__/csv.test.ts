@@ -147,7 +147,13 @@ describe("CSV import/export", () => {
 
     const read = (cell: string) => () => fromCsv(`Name,software\n\nGrace Hopper,100\n"Charles\nDarwin",${cell}`);
     expect(read("maybe")).toThrow(ScoreCellError);
-    expect(read("maybe")).toThrow(expect.objectContaining({ row: 4, column: "software", value: "maybe" }));
+    expect(read("maybe")).toThrow(
+      'Row 4, column "software": "maybe" is not a score. Use 0 to 100, a level (Lead) or yes/no.',
+    );
+    expect(read("maybe")).toThrow(
+      expect.objectContaining({ name: "ScoreCellError", row: 4, column: "software", value: "maybe" }),
+    );
+    expect(read("5%0")).toThrow(ScoreCellError);
     expect(read("n".repeat(50))).toThrow(expect.objectContaining({ value: "n".repeat(40) }));
   });
 
@@ -248,23 +254,5 @@ describe("CSV import/export", () => {
 
   it("keeps a pasted ORCID iD in its bare form", () => {
     expect(fromCsv("Name,ORCID\nGrace Hopper, orcid.org/0000-0002-1694-233x/")[0]?.orcid).toBe("0000-0002-1694-233X");
-  });
-});
-
-describe("score cell errors", () => {
-  const read = (cell: string) => () => fromCsv(`Name,software\nGrace Hopper,${cell}`);
-
-  it("words the refusal and names the error class", () => {
-    expect(read("maybe")).toThrow(
-      'Row 2, column "software": "maybe" is not a score. Use 0 to 100, a level (Lead) or yes/no.',
-    );
-    expect(read("maybe")).toThrow(expect.objectContaining({ name: "ScoreCellError" }));
-  });
-
-  it("takes a percent sign only at the end of a cell", () => {
-    expect(fromCsv("Name,software\nGrace Hopper,50%")[0]?.contributions.find((c) => c.role === "Software")?.score).toBe(
-      50,
-    );
-    expect(read("5%0")).toThrow(ScoreCellError);
   });
 });

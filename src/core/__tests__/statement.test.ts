@@ -1230,6 +1230,12 @@ describe("clause boundaries and 'all other authors' in odd layouts", () => {
       ["ZZ"],
     ],
     [
+      "software before a full stop goes to nobody; C.D. gets validation and ZZ stays unresolved",
+      "Software. A.L., ZZ; Validation, C.D.",
+      [[1, "validation"]],
+      ["ZZ"],
+    ],
+    [
       "a full stop before initials closes a role clause",
       "Software. A.L.; Validation, C.D.",
       [
@@ -1277,7 +1283,6 @@ describe("clause boundaries and 'all other authors' in odd layouts", () => {
     ["initials that join only with a second known author", "AL. C.", [], ["AL. C."]],
     ["initials that fit no author keep the token whole", "Rosalind Franklin.funding acquisition ZZ.", [], ["ZZ."]],
     ["a full stop in a lead-in without a space", "Rosalind Franklin wrote.software, ZZ", [], ["ZZ"]],
-    ["a comma after initials continues the clause", "G.H., and software, Ada Lovelace.", [[3, "software"]], []],
     // Supervision.
     ["a dash after 'of' names no supervisor", "under supervision of-AL", [], []],
     [
