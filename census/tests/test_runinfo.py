@@ -178,7 +178,7 @@ def test_epoch_metrics_come_from_the_training_log(mlflow_store, tmp_path):
 
 @pytest.mark.parametrize("corpus", [False, True])
 def test_cli_train_and_predict_are_tracked(mlflow_store, tmp_path, monkeypatch, corpus):
-    from census import cli, encoder
+    from census import cli, encoder, onepass
 
     monkeypatch.setattr(cli, "DATA", tmp_path)
     base_weights = tmp_path / "base.safetensors"
@@ -219,7 +219,7 @@ def test_cli_train_and_predict_are_tracked(mlflow_store, tmp_path, monkeypatch, 
     monkeypatch.setattr(cli.store, "connect", lambda *a, **kw: contextlib.nullcontext(None))
     monkeypatch.setattr(cli.modelset, "count_free_text", lambda con, limit: 1)
     monkeypatch.setattr(cli.modelset, "free_text_chunks", lambda con, chunk, limit: [[{"pmcid": "PMC1"}]])
-    monkeypatch.setattr(encoder, "train", fake_train)
+    monkeypatch.setattr(onepass, "train", fake_train)
     monkeypatch.setattr(encoder, "predict", fake_predict)
     monkeypatch.setitem(sys.modules, "codecarbon", None)
     assert cli.main(["model", "train", "--snapshot", "s", "--name", "r", "--seed", "5"]) == 0
@@ -255,7 +255,7 @@ def test_energy_failure_still_cleans_up_and_preserves_job_error(monkeypatch, fai
 
 @pytest.mark.parametrize("kind", ["train", "predict"])
 def test_failed_command_records_energy(mlflow_store, tmp_path, monkeypatch, kind):
-    from census import cli, encoder
+    from census import cli, encoder, onepass
 
     monkeypatch.setattr(cli, "DATA", tmp_path)
     monkeypatch.setattr(
@@ -274,7 +274,7 @@ def test_failed_command_records_energy(mlflow_store, tmp_path, monkeypatch, kind
     def fail(*args, **kwargs):
         raise RuntimeError("training failed")
 
-    monkeypatch.setattr(encoder, kind, fail)
+    monkeypatch.setattr(onepass if kind == "train" else encoder, kind, fail)
     _fake_codecarbon(monkeypatch, ["CPU(Intel Rapl)"])
     with pytest.raises(RuntimeError, match="training failed"):
         cli.main(["model", kind, "--snapshot", "s", "--name", "r"])
@@ -327,7 +327,7 @@ def test_backfill_skips_a_live_tracked_run(mlflow_store, tmp_path, monkeypatch):
 
 
 def test_cli_train_tags_run_dir(mlflow_store, tmp_path, monkeypatch):
-    from census import cli, encoder
+    from census import cli, onepass
 
     monkeypatch.setattr(cli, "DATA", tmp_path)
     monkeypatch.setattr(runinfo, "base_model", lambda repo, rev: {"repo": repo, "revision": rev})
@@ -341,7 +341,7 @@ def test_cli_train_tags_run_dir(mlflow_store, tmp_path, monkeypatch):
         (run / "checkpoint" / "model.safetensors").write_bytes(b"w")
         return {"epoch": 1, "threshold": 0.5, "f1": 0.9}
 
-    monkeypatch.setattr(encoder, "train", train)
+    monkeypatch.setattr(onepass, "train", train)
     _fake_codecarbon(monkeypatch, ["CPU(Intel Rapl)"])
     cli.main(["model", "train", "--snapshot", "s", "--name", "r"])
     assert _only_run(mlflow_store, "census-s").data.tags["run_dir"] == "r"

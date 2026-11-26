@@ -431,14 +431,12 @@ def _run_dir(args: argparse.Namespace) -> Path:
 
 
 def cmd_model_train(args: argparse.Namespace) -> None:
-    from census import encoder, onepass
+    from census import onepass
 
     run = _run_dir(args)
     if (run / "checkpoint").exists():
         raise Failure(f"{run} has a checkpoint; pick a new --name")
     dataset = _model_dir(args) / args.dataset
-    if args.init and not args.one_pass:
-        raise Failure("--init goes with --one-pass")
     init = _model_dir(args) / "runs" / args.init / "checkpoint" if args.init else None
     if init and not init.exists():
         raise Failure(f"no checkpoint in {init.parent}")
@@ -460,8 +458,7 @@ def cmd_model_train(args: argparse.Namespace) -> None:
         "device",
     )
     overrides = {k: v for k in options if (v := getattr(args, k)) is not None}
-    one = onepass.Config(**overrides, init=str(init or "")) if args.one_pass else None
-    config = one or encoder.Config(**overrides)
+    config = onepass.Config(**overrides, init=str(init or ""))
     with runinfo.tracking(DATA / "mlflow.db", f"census-{args.snapshot}", args.name, "train") as t:
         t.params(
             {f"config.{k}": v for k, v in asdict(config).items()}
@@ -475,7 +472,7 @@ def cmd_model_train(args: argparse.Namespace) -> None:
             t.dataset(path, "held_out" if path.name == "held_out.jsonl" else "train")
         try:
             with runinfo.track_energy() as energy:
-                best = onepass.train(one, dataset, run) if one else encoder.train(config, dataset, run)
+                best = onepass.train(config, dataset, run)
         finally:
             t.energy(energy)
         base = runinfo.base_model(config.model, config.revision)
@@ -576,13 +573,13 @@ def cmd_model_apply(args: argparse.Namespace) -> None:
 def cmd_model_browser(args: argparse.Namespace) -> None:
     import random
 
-    from census import browser
+    from census import browser, onepass
 
     run, out = _run_dir(args), _model_dir(args) / "browser" / args.name
     if not (run / "best.json").exists():
         raise Failure(f"no trained model in {run}")
-    if not all((out / "onnx" / file).exists() for file in browser.variants(run).values()):
-        print(json.dumps({"bytes": browser.export(run, out)}), flush=True)
+    if not all((out / "onnx" / file).exists() for file in onepass.VARIANTS.values()):
+        print(json.dumps({"bytes": onepass.export(run, out)}), flush=True)
     items, _ = _items(args)
     rows = list(items)
     rows = random.Random(args.seed).sample(rows, min(args.sample, len(rows)))
@@ -596,7 +593,7 @@ def cmd_model_fixtures(args: argparse.Namespace) -> None:
 
     out = _model_dir(args) / "browser" / args.name
     if not (out / "onnx" / onepass.VARIANTS["w8"]).exists():
-        raise Failure(f"no one-pass export in {out}; write it with `census model browser --name {args.name}`")
+        raise Failure(f"no export in {out}; write it with `census model browser --name {args.name}`")
     cases = onepass.parity(out)
     print(f"{len(cases)} cases, {sum(len(c['chunks']) for c in cases)} chunks in {out / 'parity.json'}")
 
@@ -616,7 +613,7 @@ def cmd_model_publish(args: argparse.Namespace) -> None:
 
     api = HfApi()
     api.create_repo(shipped["repo"], exist_ok=True)
-    # A commit only adds files: one an earlier run shipped (a per-author int8 graph) would stay beside this run's.
+    # A commit only adds files: one an earlier run shipped (an int8 graph) would stay beside this run's.
     stale = [name for name in api.list_repo_files(shipped["repo"]) if name not in files and name != ".gitattributes"]
     commit = api.create_commit(
         shipped["repo"],
@@ -793,8 +790,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--batch-size", type=int, help="examples per step (default: 32)")
     cmd.add_argument("--max-length", type=int, help="tokens per example (default: 512)")
     cmd.add_argument("--dataset", default="dataset", help="directory under data/model/<snapshot>/ with train.jsonl")
-    cmd.add_argument("--one-pass", action="store_true", help="read all of a statement's authors in one example")
-    cmd.add_argument("--init", help="with --one-pass: start from this run's checkpoint (encoder and head)")
+    cmd.add_argument("--init", help="start from this run's checkpoint (encoder and head)")
     cmd.add_argument("--learning-rate", type=float, help="peak learning rate for AdamW (default: 3e-5)")
     cmd.add_argument("--seed", type=int, help="seed for the draw, the dev set and the batches (default: 20261018)")
     cmd.add_argument("--open-licence-only", action="store_true", help="train and dev only on CC BY and CC0 articles")
@@ -831,7 +827,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd = model_sub.add_parser(
         "browser",
         parents=[snap],
-        help="export to ONNX (int8 and q4 copies; one-pass: int8 and w8) and score each on held-out, on CPU",
+        help="export to ONNX (fp32 and w8 copies) and score each on held-out, on CPU",
     )
     cmd.add_argument("--name", required=True, help="the run's directory name")
     cmd.add_argument("--sample", type=int, default=2000, help="held-out articles to score (default: 2000)")
@@ -839,7 +835,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--threads", type=int, default=16, help="CPU threads for onnxruntime (default: 16)")
     cmd.set_defaults(func=cmd_model_browser, labels=None)  # held-out only: a labelled CSV has no gold pairs
     cmd = model_sub.add_parser(
-        "fixtures", parents=[snap], help="write parity.json: a one-pass export's inputs and outputs for the app's tests"
+        "fixtures", parents=[snap], help="write parity.json: an export's inputs and outputs for the app's tests"
     )
     cmd.add_argument("--name", required=True, help="the run's directory name")
     cmd.set_defaults(func=cmd_model_fixtures)

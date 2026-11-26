@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from census import encoder, modelset
+from census import encoder
 
 
 def test_initials_cover_dotted_compact_and_vancouver_forms():
@@ -56,42 +56,6 @@ class WordTokenizer:
         return {"input_ids": [[len(w) for w in t.split()] for t in texts]}
 
 
-class CharTokenizer(WordTokenizer):
-    """One id per character, so a long name runs past the author cap."""
-
-    def __call__(self, texts, add_special_tokens=False):
-        return {"input_ids": [[ord(c) for c in t] for t in texts]}
-
-
-def test_examples_join_author_and_statement_and_cut_long_statements():
-    rows = [
-        {"statement": "aa bbb", "authors": ["Ann Smith", "Bo Jones"]},
-        {"statement": " ".join("x" * (i % 7 + 1) for i in range(100)), "authors": ["Cy Li"]},
-    ]
-    encoded = encoder.Encoded(WordTokenizer(), rows, max_length=40)
-    assert [k for k, _ in encoded.examples] == [0, 0, 1]
-    ids = encoded.ids(0)
-    # [CLS], ten words of "Ann Smith (A.S., AS, Smith A); author 1 of 2", [SEP], "aa bbb", [SEP]
-    assert ids[0] == 1 and ids[-3:] == [2, 3, 2] and len(ids) == 15
-    ids = encoded.ids(2)
-    author = encoded.examples[2][1]
-    assert len(ids) == 40 and ids[0] == 1 and ids[-1] == 2
-    assert ids[1 : len(author) + 2] == [*author, 2]  # the author survives whole
-    assert ids[len(author) + 2 : -1] == encoded.statements[1][: 40 - len(author) - 3]
-    assert encoded.truncated == {1}
-
-
-def test_a_runaway_author_name_is_cut_at_a_quarter_of_the_length():
-    name = " ".join(f"Name{i:02d}" for i in range(40))
-    rows = [{"statement": "s" * 600, "authors": [name]}]
-    encoded = encoder.Encoded(CharTokenizer(), rows, max_length=512)
-    ids = encoded.ids(0)
-    assert len(encoded.examples[0][1]) > 128
-    assert len(ids) == 512
-    assert ids[1:130] == [*encoded.examples[0][1][:128], 2]
-    assert ids[130:-1] == encoded.statements[0][: 512 - 128 - 3]
-
-
 def test_evaluate_scores_dev_like_census_model_score():
     rows = [{"pmcid": "A", "gold": [[1, "software"]]}, {"pmcid": "B", "gold": [[1, "validation"]]}]
     sure = [[0.0] * 14]
@@ -135,66 +99,6 @@ def tiny_model(path):
     ModernBertModel(config).save_pretrained(path)
 
 
-def test_train_and_predict_write_a_run_and_scorable_predictions(tmp_path):
-    tiny_model(tmp_path / "tiny")
-    dataset = tmp_path / "dataset"
-    dataset.mkdir()
-    rows = [
-        {
-            "pmcid": f"PMC{i}",
-            "publisher": f"P{i % 2}",
-            "style": "jats4r",
-            "statement": f"{i} software validation",
-            "authors": ["Ann Smith", "Bo Jones"],
-            "gold": [[1, "software"], [2, "validation"]],
-        }
-        for i in range(40)
-    ]
-    (dataset / "train.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
-    config = encoder.Config(
-        model=str(tmp_path / "tiny"), train_articles=30, dev_every=4, epochs=2, batch_size=8, device="cpu"
-    )
-    run = tmp_path / "run"
-    best = encoder.train(config, dataset, run)
-    assert best["epoch"] in (1, 2) and str(best["threshold"]) in map(str, encoder.THRESHOLDS)
-    epochs = [json.loads(line) for line in (run / "metrics.jsonl").read_text().splitlines()]
-    assert [e["epoch"] for e in epochs if "epoch" in e] == [1, 2]
-    assert json.loads((run / "config.json").read_text())["seed"] == config.seed
-    assert json.loads((run / "checkpoint" / "config.json").read_text())["id2label"]["13"] == encoder.ROLES[13]
-
-    out = tmp_path / "preds.jsonl"
-    items = [*rows[:3], {"pmcid": "PMC99", "statement": "x", "authors": []}]
-    assert encoder.predict(run, items, out, "cpu") == 4
-    predicted = modelset.read_predictions(out)
-    assert set(predicted) == {"PMC0", "PMC1", "PMC2", "PMC99"} and predicted["PMC99"] == set()
-    assert all(p in {1, 2} for pairs in predicted.values() for p, _ in pairs)
-
-
-def test_train_on_open_licences_only(tmp_path):
-    tiny_model(tmp_path / "tiny")
-    dataset = tmp_path / "dataset"
-    dataset.mkdir()
-    rows = [
-        {
-            "pmcid": f"PMC{i}",
-            "publisher": "P",
-            "style": "jats4r",
-            "publishable": i % 4 != 0,
-            "statement": f"{i} software",
-            "authors": ["Ann Smith"],
-            "gold": [[1, "software"]],
-        }
-        for i in range(40)
-    ]
-    (dataset / "train.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
-    config = encoder.Config(
-        model=str(tmp_path / "tiny"), train_articles=100, dev_every=4, epochs=1, device="cpu", open_licence_only=True
-    )
-    encoder.train(config, dataset, tmp_path / "run")
-    first = json.loads((tmp_path / "run" / "metrics.jsonl").read_text().splitlines()[0])
-    assert first["train_articles"] + first["dev_articles"] == 30
-
-
 def test_pair_rows_keep_articles_given_no_role():
     columns = encoder.pair_rows(["A", "B"], [{(2, "software"), (1, "validation")}, set()])
     assert columns == {
@@ -205,14 +109,14 @@ def test_pair_rows_keep_articles_given_no_role():
 
 
 def tiny_run(run, threshold=0.0):
-    """An untrained run of `tiny_model` with a classification head, as `train` leaves one."""
+    """An untrained run of `tiny_model` with a classification head, as `onepass.train` leaves one."""
     tiny_model(run / "checkpoint")
     from transformers import AutoModelForSequenceClassification
 
     model = AutoModelForSequenceClassification.from_pretrained(run / "checkpoint", num_labels=14)
     model.save_pretrained(run / "checkpoint")
     (run / "best.json").write_text(json.dumps({"threshold": threshold}))
-    (run / "config.json").write_text('{"max_length": 32}')
+    (run / "config.json").write_text('{"max_length": 32, "marker": "[MASK]"}')
 
 
 def test_predict_corpus_writes_parts_and_resumes(tmp_path):
@@ -232,32 +136,6 @@ def test_predict_corpus_writes_parts_and_resumes(tmp_path):
     assert encoder.predict_corpus(run, chunks, out, "cpu", total=5) == 2  # only the missing part
     with pytest.raises(ValueError, match="other articles than chunk 0"):  # resumed with another chunk size
         encoder.predict_corpus(run, [items[:3], items[3:]], out, "cpu", total=5)
-
-
-def test_browser_build_matches_torch(tmp_path):
-    pytest.importorskip("onnxruntime")
-    from census import browser
-
-    run, out = tmp_path / "run", tmp_path / "browser"
-    tiny_run(run, threshold=0.5)
-    sizes = browser.export(run, out)
-    assert set(sizes) == set(browser.VARIANTS) and all(sizes.values())
-    rows = [
-        {"pmcid": f"PMC{i}", "statement": "1 software 2 validation", "authors": ["Ann Smith", "Bo Jones"][: i % 2 + 1]}
-        for i in range(6)
-    ]
-    rows = [{**r, "gold": [[1, "software"]]} for r in rows]
-    import onnxruntime as ort
-    import torch
-
-    tokenizer, model, _, max_length = encoder._load(run, "cpu")
-    encoded = encoder.Encoded(tokenizer, rows, max_length)
-    expected = encoder._probabilities(torch, model, encoded, 4, "cpu")
-    session = ort.InferenceSession(str(out / "onnx" / "model.onnx"), providers=["CPUExecutionProvider"])
-    got = browser._onnx_probabilities(session, encoded, 4)
-    assert [p for e in got for p in e] == pytest.approx([p for e in expected for p in e], abs=1e-4)
-    results = browser.evaluate(out, rows, threads=1)
-    assert results["fp32"]["same_as_fp32"] == 1.0 and results["fp32"]["articles"] == 6
 
 
 def test_cli_train_refuses_a_run_with_a_checkpoint(tmp_path, monkeypatch, capsys):

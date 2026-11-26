@@ -18,21 +18,18 @@ def test_card_names_the_shipped_run_repo_and_hashes():
         assert fact in card, f"MODEL_CARD.md does not quote {fact} from model.json"
 
 
-def _export(tmp_path, run=None, out=None, one_pass=False):
+def _export(tmp_path, run=None, out=None):
     run, out, card = run or tmp_path / "run", out or tmp_path / "browser", tmp_path / "MODEL_CARD.md"
-    export = browser.ONE_PASS_HUB_EXPORT if one_pass else browser.HUB_EXPORT
-    for path in [run / "checkpoint" / "model.safetensors", card, *(out / name for name in export)]:
+    for path in [run / "checkpoint" / "model.safetensors", card, *(out / name for name in browser.HUB_EXPORT)]:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(path.name.encode())
-    # A one-pass run's config names its marker token.
-    (run / "config.json").write_text(json.dumps({"marker": "[unused0]"} if one_pass else {}))
     return run, out, card
 
 
 def test_hub_files_put_the_card_at_readme_and_leave_q4_out(tmp_path):
     run, out, card = _export(tmp_path)
-    want = hashlib.sha256(b"model_int8.onnx").hexdigest()
-    files = browser.hub_files(run, out, card, {"onnx/model_int8.onnx": want}, {})
+    want = hashlib.sha256(b"model_w8.onnx").hexdigest()
+    files = browser.hub_files(run, out, card, {"onnx/model_w8.onnx": want}, {})
     assert files["README.md"] == card
     assert files["model.safetensors"] == run / "checkpoint" / "model.safetensors"
     assert "onnx/model_q4.onnx" not in files
@@ -41,9 +38,9 @@ def test_hub_files_put_the_card_at_readme_and_leave_q4_out(tmp_path):
 def test_hub_files_refuse_a_changed_or_missing_file(tmp_path):
     run, out, card = _export(tmp_path)
     with pytest.raises(ValueError, match="not the"):
-        browser.hub_files(run, out, card, {"onnx/model_int8.onnx": "0" * 64}, {})
+        browser.hub_files(run, out, card, {"onnx/model_w8.onnx": "0" * 64}, {})
     with pytest.raises(ValueError, match="bytes, not the"):
-        browser.hub_files(run, out, card, {}, {"onnx/model_int8.onnx": 1})
+        browser.hub_files(run, out, card, {}, {"onnx/model_w8.onnx": 1})
     (out / "best.json").unlink()
     with pytest.raises(ValueError, match="missing"):
         browser.hub_files(run, out, card, {}, {})
@@ -51,7 +48,7 @@ def test_hub_files_refuse_a_changed_or_missing_file(tmp_path):
 
 def test_publish_twice_moves_the_tag_and_deletes_what_an_earlier_run_shipped(tmp_path, monkeypatch):
     model = tmp_path / "data" / "model" / "s"
-    _export(tmp_path, model / "runs" / "r", model / "browser" / "r", one_pass=True)
+    _export(tmp_path, model / "runs" / "r", model / "browser" / "r")
     (tmp_path / "model.json").write_text(
         json.dumps({"run": "r", "snapshot": "s", "repo": "o/m", "sha256": {}, "bytes": {}})
     )
@@ -64,7 +61,7 @@ def test_publish_twice_moves_the_tag_and_deletes_what_an_earlier_run_shipped(tmp
             pass
 
         def list_repo_files(self, repo):
-            # An earlier per-author run's int8 copy, and the file the Hub writes itself.
+            # An earlier run's int8 copy, and the file the Hub writes itself.
             return [".gitattributes", "README.md", "onnx/model_int8.onnx"]
 
         def create_commit(self, repo, operations, commit_message):

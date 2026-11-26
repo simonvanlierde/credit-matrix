@@ -1,24 +1,19 @@
-"""The encoder for a browser: ONNX export, smaller quantised copies, and their F1 against the full model.
+"""The encoder for a browser: its ONNX files (`onepass.export`), and their F1 against the full model.
 
-The output directory holds the config and tokenizer files at the top and the weights under onnx/. A
-per-author run gets onnx/model.onnx, model_int8.onnx and model_q4.onnx. int8 stores every weight matrix
-in 8 bits and quantises activations on the fly; q4 stores the weight matrices of the linear layers in
-4-bit blocks of 32, which onnxruntime-web runs as MatMulNBits. A one-pass run gets model.onnx,
-model_int8.onnx and model_w8.onnx (`onepass.VARIANTS`); the app's worker loads w8.
+The output directory holds the config and tokenizer files at the top and the weights under onnx/: the fp32
+model and its w8 copy (`onepass.VARIANTS`), which the app's worker loads.
 
 Needs the `train` and `browser` dependency groups.
 """
 
 import json
-import shutil
 import time
 from pathlib import Path
 from typing import Any
 
-from census import encoder, labels, runinfo
+from census import encoder, labels, onepass, runinfo
 
-VARIANTS = {"fp32": "model.onnx", "int8": "model_int8.onnx", "q4": "model_q4.onnx"}
-# What the Hub repository gets from an export: q4 stays local, as no one loads it.
+# What the Hub repository gets from an export.
 HUB_EXPORT = (
     "config.json",
     "tokenizer.json",
@@ -26,73 +21,18 @@ HUB_EXPORT = (
     "best.json",
     "run.json",
     "onnx/model.onnx",
-    "onnx/model_int8.onnx",
+    "onnx/model_w8.onnx",
 )
-# A one-pass export ships w8 instead of int8, whose per-call activation scales cost it pairs.
-ONE_PASS_HUB_EXPORT = (*HUB_EXPORT[:-1], "onnx/model_w8.onnx")
 # What the app's worker downloads (src/lib/statement-reader.worker.ts), which refuses a file model.json does not
 # pin by sha256 and size: `census model publish` records them.
 APP_FILES = ("tokenizer.json", "config.json", "best.json", "onnx/model_w8.onnx")
 
 
-def variants(run: Path) -> dict[str, str]:
-    """The ONNX copies an export of this run (or export directory) holds, by name."""
-    from census import onepass
-
-    return onepass.VARIANTS if encoder.one_pass(run) else VARIANTS
-
-
-def export(run: Path, out: Path) -> dict[str, int]:
-    """Write the run's best checkpoint as ONNX with its int8 and q4 copies (a one-pass run: `onepass.export`).
-    Returns each file's size in bytes."""
-    if encoder.one_pass(run):
-        from census import onepass
-
-        return onepass.export(run, out)
-    import onnx
-    import torch
-    from onnxruntime.quantization import QuantType, quantize_dynamic
-    from onnxruntime.quantization.matmul_nbits_quantizer import MatMulNBitsQuantizer
-    from transformers import AutoModelForSequenceClassification
-
-    weights = out / "onnx"
-    weights.mkdir(parents=True, exist_ok=True)
-    for name in ("config.json", "tokenizer.json", "tokenizer_config.json"):
-        shutil.copy(run / "checkpoint" / name, out / name)
-    # The decision threshold and the max length, which the model config does not hold.
-    shutil.copy(run / "best.json", out / "best.json")
-    shutil.copy(run / "config.json", out / "run.json")
-    model = AutoModelForSequenceClassification.from_pretrained(run / "checkpoint", attn_implementation="eager").eval()
-    ids = torch.ones((2, 16), dtype=torch.long)
-    batch, length = torch.export.Dim("batch"), torch.export.Dim("length", max=8192)
-    torch.onnx.export(
-        model,
-        (),
-        weights / VARIANTS["fp32"],
-        kwargs={"input_ids": ids, "attention_mask": torch.ones_like(ids)},
-        input_names=["input_ids", "attention_mask"],
-        output_names=["logits"],
-        dynamic_shapes={"input_ids": {0: batch, 1: length}, "attention_mask": {0: batch, 1: length}},
-        external_data=False,
-        dynamo=True,
-    )
-    # The exporter's recorded intermediate shapes trip onnx's shape inference, which quantising runs: drop them.
-    graph = onnx.load(weights / VARIANTS["fp32"])
-    del graph.graph.value_info[:]
-    onnx.save(graph, weights / VARIANTS["fp32"])
-    quantize_dynamic(weights / VARIANTS["fp32"], weights / VARIANTS["int8"], weight_type=QuantType.QInt8)
-    q4 = MatMulNBitsQuantizer(onnx.load(weights / VARIANTS["fp32"]), block_size=32, is_symmetric=True)
-    q4.process()
-    quantised: Any = q4.model  # an ONNXModel once processed, though typed as either
-    quantised.save_model_to_file(str(weights / VARIANTS["q4"]))
-    return {name: (weights / file).stat().st_size for name, file in VARIANTS.items()}
-
-
 def hub_files(run: Path, out: Path, card: Path, sha256: dict[str, str], sizes: dict[str, int]) -> dict[str, Path]:
-    """Path in the Hub repository -> local file: the export without q4, the PyTorch weights, and the model
+    """Path in the Hub repository -> local file: the export, the PyTorch weights, and the model
     card as README.md. A ValueError when a file is missing, or one named in `sha256` or `sizes` (bytes)
     differs; the app reads the size it shows from `sizes`, and its build caps it."""
-    files = {name: out / name for name in (ONE_PASS_HUB_EXPORT if encoder.one_pass(run) else HUB_EXPORT)}
+    files = {name: out / name for name in HUB_EXPORT}
     files |= {"model.safetensors": run / "checkpoint" / "model.safetensors", "README.md": card}
     if missing := [str(f) for f in files.values() if not f.exists()]:
         raise ValueError(f"missing {', '.join(missing)}")
@@ -105,47 +45,27 @@ def hub_files(run: Path, out: Path, card: Path, sha256: dict[str, str], sizes: d
     return files
 
 
-def _onnx_probabilities(session: Any, encoded: encoder.Encoded, batch_size: int) -> list[list[float]]:
-    import torch
-
-    lengths = [len(encoded.ids(i)) for i in range(len(encoded.examples))]
-    out: list[list[float]] = [[] for _ in lengths]
-    for batch in encoder._batches(lengths, batch_size, None):
-        inputs = {k: v.numpy() for k, v in encoder._tensors(torch, encoded, batch, "cpu").items()}
-        (logits,) = session.run(["logits"], inputs)
-        for i, p in zip(batch, torch.sigmoid(torch.from_numpy(logits)).tolist(), strict=True):
-            out[i] = p
-    return out
-
-
-def evaluate(out: Path, rows: list[dict[str, Any]], threads: int, batch_size: int = 16) -> dict[str, dict[str, Any]]:
+def evaluate(out: Path, rows: list[dict[str, Any]], threads: int) -> dict[str, dict[str, Any]]:
     """Per variant on CPU: pair-level precision, recall and F1 against the rows' gold, as `census model score`
     counts them, the share of articles whose pairs match the fp32 model's exactly, and the seconds taken.
-    A one-pass export reads one article per call, as the app does."""
+    It reads one article per call, as the app does."""
     import onnxruntime as ort
     from transformers import AutoTokenizer
-
-    from census import onepass
 
     tokenizer: Any = AutoTokenizer.from_pretrained(out)
     threshold = json.loads((out / "best.json").read_text(encoding="utf-8"))["threshold"]
     config = json.loads((out / "run.json").read_text(encoding="utf-8"))
-    if "marker" in config:
-        marked = onepass.Encoded(tokenizer, rows, config["max_length"], config["marker"])
-    else:
-        encoded = encoder.Encoded(tokenizer, rows, config["max_length"])
+    marked = onepass.Encoded(tokenizer, rows, config["max_length"], config["marker"])
 
     def read(session: Any) -> list[list[list[float]]]:
-        if "marker" in config:
-            return onepass.onnx_probabilities(session, marked, 1)
-        return encoder._per_article(rows, encoded, _onnx_probabilities(session, encoded, batch_size))
+        return onepass.onnx_probabilities(session, marked, 1)
 
     gold = [{(int(p), s) for p, s in r["gold"]} for r in rows]
     options = ort.SessionOptions()
     options.intra_op_num_threads = threads
     results: dict[str, dict[str, Any]] = {}
     reference: list[encoder.Pairs] = []
-    for name, file in variants(out).items():
+    for name, file in onepass.VARIANTS.items():
         session = ort.InferenceSession(str(out / "onnx" / file), options, providers=["CPUExecutionProvider"])
         start = time.monotonic()
         probs = read(session)

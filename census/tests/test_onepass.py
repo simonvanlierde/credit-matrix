@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from test_encoder import WordTokenizer, tiny_model
+from test_encoder import WordTokenizer, tiny_model, tiny_run
 
 from census import encoder, modelset, onepass, runinfo
 
@@ -52,7 +52,7 @@ class MarkerTokenizer(WordTokenizer):
         return M if token == onepass.MARKER else self.unk_token_id
 
 
-def test_encoded_uses_author_text_and_flags_cut_and_split_articles():
+def test_encoded_uses_author_text_and_flags_cut_articles():
     rows = [
         {"statement": "aa bbb", "authors": ["Ann Smith", "Bo Jones"]},
         {"statement": " ".join(["x"] * 60), "authors": ["Cy Li"]},
@@ -63,7 +63,7 @@ def test_encoded_uses_author_text_and_flags_cut_and_split_articles():
     tokens = WordTokenizer()([encoder.author_text("Ann Smith", 1, 2)])["input_ids"][0]
     assert first.ids[first.markers[0] + 1 : first.markers[1]] == tokens
     assert encoded.truncated == {1}
-    assert encoded.split == {2} and sum(c.row == 2 for c in encoded.chunks) == 2
+    assert sum(c.row == 2 for c in encoded.chunks) == 2  # six authors do not fit one chunk
     with pytest.raises(ValueError, match="vocabulary"):
         onepass.Encoded(MarkerTokenizer(), rows, 40, marker="[nope]")
 
@@ -101,7 +101,7 @@ def test_train_predict_and_export_on_a_tiny_model(tmp_path):
     run = tmp_path / "run"
     best = onepass.train(config, dataset, run)
     assert str(best["threshold"]) in map(str, encoder.THRESHOLDS)
-    probs = onepass.probabilities(run, rows[:2], "cpu")
+    probs = onepass.reader(run, "cpu")[0](rows[:2])[0]
     assert [len(a) for a in probs] == [1, 3] and all(len(p) == 14 for a in probs for p in a)
 
     import onnxruntime as ort
@@ -110,8 +110,7 @@ def test_train_predict_and_export_on_a_tiny_model(tmp_path):
     from census import browser
 
     out = tmp_path / "browser"
-    assert set(browser.export(run, out)) == {"fp32", "int8", "w8"}  # browser.export hands a one-pass run on
-    assert encoder.one_pass(run) and encoder.one_pass(out)
+    assert set(onepass.export(run, out)) == {"fp32", "w8"}
     assert json.loads((out / "run.json").read_text())["init"] == ""
     session = ort.InferenceSession(str(tmp_path / "browser" / "onnx" / "model.onnx"))
     assert [i.name for i in session.get_inputs()] == ["input_ids", "attention_mask", "marker_positions"]
@@ -132,14 +131,14 @@ def test_train_predict_and_export_on_a_tiny_model(tmp_path):
     assert [a for c in long["chunks"] for a in c["authors"]] == list(range(1, 26))
     assert all(len(c["logits"]) == len(c["marker_positions"]) for c in long["chunks"])
     results = browser.evaluate(out, [{**r, "gold": r["gold"]} for r in rows[:4]], threads=1)
-    assert set(results) == {"fp32", "int8", "w8"} and results["fp32"]["same_as_fp32"] == 1.0
-    for name in browser.ONE_PASS_HUB_EXPORT:
+    assert set(results) == {"fp32", "w8"} and results["fp32"]["same_as_fp32"] == 1.0
+    for name in browser.HUB_EXPORT:
         assert (out / name).exists(), name
     (run / "card.md").write_text("card")
     files = browser.hub_files(run, out, run / "card.md", {}, {})
-    assert "onnx/model_w8.onnx" in files and "onnx/model_int8.onnx" not in files
+    assert "onnx/model_w8.onnx" in files and len(files) == len(browser.HUB_EXPORT) + 2
 
-    # The census's prediction paths read a one-pass run as they read a per-author one.
+    # The prediction writers read the run.
     import pyarrow.parquet as pq
 
     items = [*rows[:3], {"pmcid": "PMC99", "statement": "x", "authors": []}]
@@ -152,13 +151,61 @@ def test_train_predict_and_export_on_a_tiny_model(tmp_path):
     assert {(r["author_position"], r["role"]) for r in table if r["pmcid"] == "PMC1"} == predicted["PMC1"]
 
 
-def test_cli_train_refuses_init_without_one_pass_or_a_checkpoint(tmp_path, monkeypatch, capsys):
+def test_train_on_open_licences_only(tmp_path):
+    tiny_model(tmp_path / "tiny")
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+    rows = [
+        {
+            "pmcid": f"PMC{i}",
+            "publisher": "P",
+            "style": "jats4r",
+            "publishable": i % 4 != 0,
+            "statement": f"{i} software",
+            "authors": ["Ann Smith"],
+            "gold": [[1, "software"]],
+        }
+        for i in range(40)
+    ]
+    (dataset / "train.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    config = onepass.Config(
+        model=str(tmp_path / "tiny"),
+        train_articles=100,
+        dev_every=4,
+        epochs=1,
+        device="cpu",
+        open_licence_only=True,
+        marker="[MASK]",
+    )
+    onepass.train(config, dataset, tmp_path / "run")
+    first = json.loads((tmp_path / "run" / "metrics.jsonl").read_text().splitlines()[0])
+    assert first["train_articles"] + first["dev_articles"] == 30
+
+
+def test_predict_corpus_writes_parts_and_resumes(tmp_path):
+    run = tmp_path / "run"
+    tiny_run(run)  # threshold 0: every role, so every author gets 14 rows
+    import pyarrow.parquet as pq
+
+    items = [{"pmcid": f"PMC{i}", "statement": "software", "authors": ["Ann Smith"] * (i % 2)} for i in range(5)]
+    chunks = [items[:2], items[2:4], items[4:]]
+    out = tmp_path / "parts"
+    assert encoder.predict_corpus(run, chunks, out, "cpu", total=5) == 5
+    rows = pq.read_table(out).to_pylist()
+    assert sorted({r["pmcid"] for r in rows}) == [f"PMC{i}" for i in range(5)]
+    assert sum(r["pmcid"] == "PMC1" for r in rows) == 14
+    assert [r["role"] for r in rows if r["pmcid"] == "PMC0"] == [None]  # no authors, still listed
+    (out / "part-00001.parquet").unlink()
+    assert encoder.predict_corpus(run, chunks, out, "cpu", total=5) == 2  # only the missing part
+    with pytest.raises(ValueError, match="other articles than chunk 0"):  # resumed with another chunk size
+        encoder.predict_corpus(run, [items[:3], items[3:]], out, "cpu", total=5)
+
+
+def test_cli_train_refuses_init_without_a_checkpoint(tmp_path, monkeypatch, capsys):
     from census import cli
 
     monkeypatch.setattr(cli, "DATA", tmp_path)
     (tmp_path / "model" / "s" / "dataset").mkdir(parents=True)
     (tmp_path / "model" / "s" / "dataset" / "train.jsonl").write_text("")
     assert cli.main(["model", "train", "--snapshot", "s", "--name", "r", "--init", "base"]) == 1
-    assert "--init goes with --one-pass" in capsys.readouterr().err
-    assert cli.main(["model", "train", "--snapshot", "s", "--name", "r", "--one-pass", "--init", "base"]) == 1
     assert "no checkpoint" in capsys.readouterr().err

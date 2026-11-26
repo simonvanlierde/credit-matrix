@@ -1,12 +1,12 @@
 """A fine-tuned encoder that reads CRediT statements: the smallest model to compare with the rule parser.
 
-One example per (article, author): the author's name, its initials and its place in the byline, then the
-statement. The model answers 14 yes/no questions, one per CRediT role, so its output maps straight onto
-the (position, slug) pairs `modelset.score` counts. Pair-level precision and recall pooled over examples
-are the same numbers `census model score` prints.
+The model answers 14 yes/no questions per author, one per CRediT role, so its output maps straight onto
+the (position, slug) pairs `modelset.score` counts. Pair-level precision and recall pooled over articles
+are the same numbers `census model score` prints. `census.onepass` builds the inputs and trains and
+exports the model; this module holds the settings, the author text, the dev split, decoding to pairs,
+scoring and the prediction writers.
 
-The helpers that turn rows into examples and probabilities into pairs need no torch; training and
-prediction import torch and transformers from the optional `train` dependency group.
+None of it needs torch; `onepass` imports torch and transformers from the optional `train` dependency group.
 """
 
 import hashlib
@@ -18,12 +18,12 @@ import sys
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from census import labels, runinfo
-from census.modelset import Pairs, read_jsonl
+from census import labels
+from census.modelset import Pairs
 from census.roles import ROLE_PATTERNS
 
 ROLES = list(ROLE_PATTERNS)
@@ -57,7 +57,7 @@ THRESHOLDS = (0.3, 0.4, 0.5, 0.6, 0.7)
 """Decision thresholds tried on dev after each epoch; the best one is kept with the checkpoint."""
 
 
-# --- rows to examples, and back ---
+# --- rows to labels, and probabilities back to pairs ---
 
 
 def initials(name: str) -> list[str]:
@@ -129,28 +129,7 @@ def subsample(rows: list[dict[str, Any]], target: int, seed: int) -> list[dict[s
     return picked
 
 
-# --- training and prediction (torch) ---
-
-
-class Encoded:
-    """Token ids for each article's statement and each author, tokenised once; examples join them."""
-
-    def __init__(self, tokenizer: Any, rows: list[dict[str, Any]], max_length: int):
-        self.cls, self.sep, self.pad = tokenizer.cls_token_id, tokenizer.sep_token_id, tokenizer.pad_token_id
-        self.max_length = max_length
-        self.statements = tokenizer([r["statement"] for r in rows], add_special_tokens=False)["input_ids"]
-        texts = [author_text(a, i, len(r["authors"])) for r in rows for i, a in enumerate(r["authors"], 1)]
-        author_ids = iter(tokenizer(texts, add_special_tokens=False)["input_ids"]) if texts else iter(())
-        self.examples: list[tuple[int, list[int]]] = []  # (row index, author ids)
-        for k, row in enumerate(rows):
-            self.examples += [(k, next(author_ids)) for _ in row["authors"]]
-        self.truncated = {k for k, a in self.examples if len(a) + len(self.statements[k]) + 3 > max_length}
-
-    def ids(self, example: int) -> list[int]:
-        k, author = self.examples[example]
-        author = author[: self.max_length // 4]  # a name this long is an error in the byline
-        room = self.max_length - len(author) - 3
-        return [self.cls, *author, self.sep, *self.statements[k][:room], self.sep]
+# --- batching, scoring and prediction ---
 
 
 def _batches(lengths: list[int], size: int, rng: random.Random | None) -> list[list[int]]:
@@ -166,37 +145,6 @@ def _batches(lengths: list[int], size: int, rng: random.Random | None) -> list[l
     if rng:
         rng.shuffle(batches)
     return batches
-
-
-def _tensors(torch: Any, encoded: Encoded, batch: list[int], device: str) -> dict[str, Any]:
-    ids = [encoded.ids(i) for i in batch]
-    width = max(map(len, ids))
-    input_ids = torch.tensor([x + [encoded.pad] * (width - len(x)) for x in ids], device=device)
-    mask = torch.tensor([[1] * len(x) + [0] * (width - len(x)) for x in ids], device=device)
-    return {"input_ids": input_ids, "attention_mask": mask}
-
-
-def _probabilities(torch: Any, model: Any, encoded: Encoded, batch_size: int, device: str) -> list[list[float]]:
-    """Per example, the probability of each role."""
-    lengths = [len(encoded.ids(i)) for i in range(len(encoded.examples))]
-    out: list[list[float]] = [[] for _ in lengths]
-    model.eval()
-    with (
-        torch.inference_mode(),
-        torch.autocast(device, dtype=torch.bfloat16, enabled=torch.device(device).type == "cuda"),
-    ):
-        for batch in _batches(lengths, batch_size * 4, None):
-            probs = torch.sigmoid(model(**_tensors(torch, encoded, batch, device)).logits.float()).tolist()
-            for i, p in zip(batch, probs, strict=True):
-                out[i] = p
-    return out
-
-
-def _per_article(rows: list[dict[str, Any]], encoded: Encoded, probs: list[list[float]]) -> list[list[list[float]]]:
-    grouped: list[list[list[float]]] = [[] for _ in rows]
-    for (k, _), p in zip(encoded.examples, probs, strict=True):
-        grouped[k].append(p)
-    return grouped
 
 
 def evaluate(rows: list[dict[str, Any]], per_article: list[list[list[float]]]) -> dict[str, dict[str, float]]:
@@ -216,143 +164,16 @@ def _log(log: Path, record: dict[str, Any]) -> None:
         f.write(json.dumps(record) + "\n")
 
 
-def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
-    """Fine-tune on a subsample of `dataset/train.jsonl`, scoring dev after each epoch. Writes config.json,
-    metrics.jsonl (a first line with the git commit, the data's hash, library versions and example counts,
-    then one line per epoch, plus progress lines) and the best epoch's model to `run/checkpoint/` with its
-    threshold in `run/best.json`. Returns best.json's content."""
-    import torch
-    import transformers
-    from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
-
-    torch.manual_seed(config.seed)
-    run.mkdir(parents=True, exist_ok=True)
-    (run / "config.json").write_text(json.dumps(asdict(config), indent=2) + "\n", encoding="utf-8")
-    log = run / "metrics.jsonl"
-    log.write_text("", encoding="utf-8")
-
-    pool: dict[bool, list[dict[str, Any]]] = {True: [], False: []}
-    for row in read_jsonl(dataset / "train.jsonl"):
-        if row["authors"] and (not config.open_licence_only or row["publishable"]):
-            pool[is_dev(row["statement"], config.dev_every)].append(row)
-    train_rows = subsample(pool[False], config.train_articles, config.seed)
-    dev_rows = random.Random(config.seed).sample(pool[True], min(config.dev_articles, len(pool[True])))
-
-    with (dataset / "train.jsonl").open("rb") as f:
-        train_sha256 = hashlib.file_digest(f, "sha256").hexdigest()
-    tokenizer: Any = AutoTokenizer.from_pretrained(config.model, revision=config.revision)
-    train_set = Encoded(tokenizer, train_rows, config.max_length)
-    dev_set = Encoded(tokenizer, dev_rows, config.max_length)
-    targets = [v for r in train_rows for v in label_vectors(r["gold"], len(r["authors"]))]
-    _log(
-        log,
-        {
-            "git_commit": runinfo.git_commit(),
-            "train_jsonl_sha256": train_sha256,
-            "torch": torch.__version__,
-            "transformers": transformers.__version__,
-            "train_articles": len(train_rows),
-            "train_examples": len(train_set.examples),
-            "dev_articles": len(dev_rows),
-            "dev_examples": len(dev_set.examples),
-            "train_truncated_articles": len(train_set.truncated),
-            "dev_truncated_articles": len(dev_set.truncated),
-        },
-    )
-
-    model = AutoModelForSequenceClassification.from_pretrained(
-        config.model,
-        revision=config.revision,
-        num_labels=len(ROLES),
-        id2label=dict(enumerate(ROLES)),
-        label2id={role: i for i, role in enumerate(ROLES)},
-        problem_type="multi_label_classification",
-    ).to(config.device)
-    lengths = [len(train_set.ids(i)) for i in range(len(train_set.examples))]
-    rng = random.Random(config.seed)
-    steps = config.epochs * math.ceil(len(lengths) / config.batch_size)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
-    schedule = get_linear_schedule_with_warmup(optimizer, int(steps * config.warmup_share), steps)
-    loss_fn = torch.nn.BCEWithLogitsLoss()
-    use_bf16 = torch.device(config.device).type == "cuda"
-    best: dict[str, Any] = {"f1": -1.0}
-    start, step = time.monotonic(), 0
-    for epoch in range(1, config.epochs + 1):
-        model.train()
-        for batch in _batches(lengths, config.batch_size, rng):
-            inputs = _tensors(torch, train_set, batch, config.device)
-            target = torch.tensor([targets[i] for i in batch], device=config.device)
-            with torch.autocast(config.device, dtype=torch.bfloat16, enabled=use_bf16):
-                logits = model(**inputs).logits
-            loss = loss_fn(logits.float(), target)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
-            schedule.step()
-            optimizer.zero_grad(set_to_none=True)
-            step += 1
-            if step % 200 == 0 or step == 1:
-                seconds = time.monotonic() - start
-                _log(log, {"step": step, "of": steps, "loss": round(loss.item(), 4), "seconds": round(seconds)})
-        probs = _per_article(dev_rows, dev_set, _probabilities(torch, model, dev_set, config.batch_size, config.device))
-        metrics = evaluate(dev_rows, probs)
-        threshold, top = max(metrics.items(), key=lambda kv: kv[1]["f1"])
-        record = {"epoch": epoch, "seconds": round(time.monotonic() - start), "dev": metrics}
-        if use_bf16:
-            record["max_gpu_memory_gb"] = round(torch.cuda.max_memory_allocated() / 1e9, 2)
-        _log(log, record)
-        if top["f1"] > best["f1"]:
-            best = {"epoch": epoch, "threshold": float(threshold), **top}
-            model.save_pretrained(run / "checkpoint")
-            tokenizer.save_pretrained(run / "checkpoint")
-            (run / "best.json").write_text(json.dumps(best, indent=2) + "\n", encoding="utf-8")
-    return best
-
-
-def one_pass(run: Path) -> bool:
-    """Whether a run (or a browser export, whose run.json is the run's config) reads all authors at once
-    (`census.onepass`): its config names the marker token."""
-    config = run / "config.json" if (run / "checkpoint").exists() else run / "run.json"
-    return "marker" in json.loads(config.read_text(encoding="utf-8"))
-
-
-def _load(run: Path, device: str) -> tuple[Any, Any, float, int]:
-    """The run's tokenizer, model, best threshold and max length."""
-    from transformers import AutoModelForSequenceClassification, AutoTokenizer
-
-    threshold = json.loads((run / "best.json").read_text(encoding="utf-8"))["threshold"]
-    config = json.loads((run / "config.json").read_text(encoding="utf-8"))
-    tokenizer = AutoTokenizer.from_pretrained(run / "checkpoint")
-    model = AutoModelForSequenceClassification.from_pretrained(run / "checkpoint").to(device)
-    return tokenizer, model, threshold, config["max_length"]
-
-
 Reader = Callable[[list[dict[str, Any]]], tuple[list[list[list[float]]], int]]
 """Rows -> per article, per author, the role probabilities; and how many statements were cut."""
-
-
-def reader(run: Path, device: str, batch_size: int = 32) -> tuple[Reader, float, int]:
-    """A function that reads rows with the run's best checkpoint, either kind; its threshold and max length."""
-    if one_pass(run):
-        from census import onepass
-
-        return onepass.reader(run, device, batch_size)
-    import torch
-
-    tokenizer, model, threshold, max_length = _load(run, device)
-
-    def read(rows: list[dict[str, Any]]) -> tuple[list[list[list[float]]], int]:
-        encoded = Encoded(tokenizer, rows, max_length)
-        probs = _probabilities(torch, model, encoded, batch_size, device)
-        return _per_article(rows, encoded, probs), len(encoded.truncated)
-
-    return read, threshold, max_length
 
 
 def predict(run: Path, items: Iterable[dict[str, Any]], out: Path, device: str, batch_size: int = 32) -> int:
     """Write one line {"pmcid", "pairs"} per item with the run's best checkpoint and threshold, in the format
     `run_zero_shot` writes. Returns the number of articles."""
-    read, threshold, max_length = reader(run, device, batch_size)
+    from census import onepass
+
+    read, threshold, max_length = onepass.reader(run, device, batch_size)
     rows = list(items)
     probs, cut = read(rows)
     if cut:
@@ -385,7 +206,9 @@ def predict_corpus(
     import pyarrow as pa
     import pyarrow.parquet as pq
 
-    read, threshold, max_length = reader(run, device, batch_size)
+    from census import onepass
+
+    read, threshold, max_length = onepass.reader(run, device, batch_size)
     out.mkdir(parents=True, exist_ok=True)
     schema = pa.schema([("pmcid", pa.string()), ("author_position", pa.int32()), ("role", pa.string())])
     start, done, seen = time.monotonic(), 0, 0
