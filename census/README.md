@@ -296,7 +296,7 @@ MDPI disagreements, a language model judged the tag wrong in 18 and both wrong i
 
 ### Checked labels
 
-`gold500b` is 500 articles from `set2000`. Three Opus runs labelled them under definition B, with an
+`gold500b` is 500 articles from `set2000`. Three runs of a large language model labelled them under definition B, with an
 adjudication where they differed: 261 are `credit` (statements that mostly use CRediT role names)
 and 239 `narrative`. To check the labels, 40 rows were drawn (20 per stratum, seed 20261117). An
 agent read all 40 and passed 36 as clearly right. A person ruled on the other 4, all `narrative`
