@@ -369,6 +369,14 @@ describe("splitNameList", () => {
     ]);
     expect(splitNameList("Ada Lovelace, & Grace Hopper")).toEqual(["Ada Lovelace", "Grace Hopper"]);
     expect(splitNameList("Lovelace, Ada, and Hopper, Grace")).toEqual(["Lovelace, Ada", "Hopper, Grace"]);
+    // 'and' and '&' go only from the start of a later chunk: not the first chunk, nor mid-name.
+    expect(splitNameList("Ada Lovelace, and Grace Hopper, & Katherine Johnson")).toEqual([
+      "Ada Lovelace",
+      "Grace Hopper",
+      "Katherine Johnson",
+    ]);
+    expect(splitNameList("And Bell, Mia")).toEqual(["And Bell", "Mia"]);
+    expect(splitNameList("Dorothy Hodgkin, Brand New")).toEqual(["Dorothy Hodgkin", "Brand New"]);
   });
 
   it("splits on newlines, semicolons, and commas", () => {
@@ -601,18 +609,5 @@ describe("isSuffix", () => {
   it("takes each generational suffix, with or without a final dot, and nothing else", () => {
     for (const word of ["Jr", "jr.", "Sr", "SR.", "II", "iii"]) expect(isSuffix(word)).toBe(true);
     for (const word of ["J.r", "", "IV", "Junior"]) expect(isSuffix(word)).toBe(false);
-  });
-});
-
-describe("splitNameList serial comma", () => {
-  it("drops 'and' and '&' only from the start of a later chunk", () => {
-    expect(splitNameList("Ada Lovelace, and Grace Hopper, & Mary Quinn")).toEqual([
-      "Ada Lovelace",
-      "Grace Hopper",
-      "Mary Quinn",
-    ]);
-    // Not from the first chunk, and not from the middle of a name.
-    expect(splitNameList("And Bell, Mia")).toEqual(["And Bell", "Mia"]);
-    expect(splitNameList("Marie Curie, Brand New")).toEqual(["Marie Curie", "Brand New"]);
   });
 });

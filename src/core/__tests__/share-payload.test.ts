@@ -169,6 +169,10 @@ describe("share payload v2", () => {
     ]) {
       expect(() => toSharePayload(input)).toThrow(UnsharableDraftError);
     }
+    const grace = createAuthor("Grace Hopper");
+    expect(() => toSharePayload({ authors: [grace], claimId: grace.id })).toThrow(
+      "This draft cannot be shared as a link: claim without source draft.",
+    );
     expect(new UnsharableDraftError("x").name).toBe("UnsharableDraftError");
     // Whatever it does write, it reads back.
     const ok = { authors, claimId: authors[0]?.id, sourceDraftId: draft, sentAt: 0, reply: true };
@@ -284,28 +288,20 @@ describe("share payload name parts and refusals", () => {
     // "Ana Maria Lopez" parses as Ana / Maria / Lopez.
     const same = { firstName: "Ana", middleName: "Maria", surname: "Lopez" };
     expect(partsOf(createAuthor("Ana Maria Lopez", same))).toBeUndefined();
-    expect(partsOf(createAuthor("Ana Maria Lopez", { ...same, firstName: "Anna" }))).toEqual([
-      "Anna",
-      "Maria",
-      "Lopez",
-    ]);
-    expect(partsOf(createAuthor("Ana Maria Lopez", { ...same, middleName: "Mar" }))).toEqual(["Ana", "Mar", "Lopez"]);
-    expect(partsOf(createAuthor("Ana Maria Lopez", { ...same, surname: "Maria Lopez" }))).toEqual([
-      "Ana",
-      "Maria",
-      "Maria Lopez",
-    ]);
-  });
-
-  it("names the refusal and the reason in the error", () => {
-    const grace = createAuthor("Grace Hopper");
-    expect(() => toSharePayload({ authors: [grace], claimId: grace.id })).toThrow(
-      "This draft cannot be shared as a link: claim without source draft.",
-    );
-    expect(() => toSharePayload({ authors: [grace], claimId: grace.id })).toThrow(UnsharableDraftError);
-    expect(() => toSharePayload({ authors: [grace], claimId: grace.id })).toThrow(
-      expect.objectContaining({ name: "UnsharableDraftError" }),
-    );
+    // Every part sits inside the name, so the reader keeps the split and the link round-trips.
+    const cases = [
+      ["Ana Maria Lopez", { ...same, firstName: "Ana Maria", middleName: "" }, ["Ana Maria", "", "Lopez"]],
+      ["Ana Maria Lopez", { ...same, middleName: "Mar" }, ["Ana", "Mar", "Lopez"]],
+      ["Ana Maria Lopez", { ...same, surname: "Maria Lopez" }, ["Ana", "Maria", "Maria Lopez"]],
+      // Only the given name differs from what the name parses to.
+      ["Ana Lopez", { firstName: "An", middleName: "", surname: "Lopez" }, ["An", "", "Lopez"]],
+    ] as const;
+    for (const [name, parts, expected] of cases) {
+      const author = createAuthor(name, parts);
+      expect(partsOf(author)).toEqual(expected);
+      const [back] = fromSharePayload(toSharePayload({ authors: [author] })).authors;
+      expect([back?.firstName, back?.middleName, back?.surname]).toEqual(expected);
+    }
   });
 
   it("ignores link parts that have no surname or are not found in the name", () => {
