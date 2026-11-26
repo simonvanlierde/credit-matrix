@@ -3,7 +3,7 @@ import json
 import pytest
 from test_encoder import WordTokenizer, tiny_model
 
-from census import encoder, modelset, onepass
+from census import encoder, modelset, onepass, runinfo
 
 CLS, SEP, M = 1, 2, 99
 
@@ -123,6 +123,11 @@ def test_train_predict_and_export_on_a_tiny_model(tmp_path):
     cases = onepass.parity(tmp_path / "browser")
     written = json.loads((tmp_path / "browser" / "parity.json").read_text())
     assert written["model"]["marker"] == "[MASK]" and len(written["cases"]) == len(onepass.PARITY_CASES)
+    w8_sha256 = runinfo.sha256(out / "onnx" / "model_w8.onnx")
+    assert written["model"]["sha256"] == {
+        "tokenizer.json": runinfo.sha256(out / "tokenizer.json"),
+        "onnx/model_w8.onnx": w8_sha256,
+    }
     long = next(c for c in cases if c["case"].startswith("25 authors"))
     assert [a for c in long["chunks"] for a in c["authors"]] == list(range(1, 26))
     assert all(len(c["logits"]) == len(c["marker_positions"]) for c in long["chunks"])

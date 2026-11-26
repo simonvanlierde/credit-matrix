@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { CREDIT_ROLES } from "@/core";
 import { creditSlug } from "@/core/credit-roles";
+import shipped from "../../census/model.json";
 // From the census export's parity.json, cut by scripts/reader-parity-fixture.mjs: what Python's tokenizer,
 // `onepass.Encoded` and onnxruntime (w8) gave for each case.
 import parity from "./__fixtures__/reader-parity.json";
-import { authorText, chunks, decode, MARKER, MAX_TOKENS, statementRoom } from "./statement-reader";
+import { authorText, chunks, decode, MARKER, MAX_TOKENS, MODEL_FILE, statementRoom } from "./statement-reader";
 import { type TokenizerJson, tokenizer } from "./tokenizer";
 
 const tokens = tokenizer(parity.tokenizer as TokenizerJson);
@@ -14,7 +15,12 @@ const slug = new Map(CREDIT_ROLES.map((role) => [role.name, creditSlug(role.url)
 
 describe("the reader's inputs and outputs match the census model's", () => {
   it("in the export it reads", () => {
-    expect(parity.model).toMatchObject({ file: "onnx/model_w8.onnx", max_length: MAX_TOKENS, marker: MARKER });
+    expect(parity.model).toMatchObject({ file: MODEL_FILE, max_length: MAX_TOKENS, marker: MARKER });
+    // The tokenizer and model the app downloads: a new census/model.json needs a new fixture.
+    expect(parity.model.sha256).toEqual({
+      "tokenizer.json": shipped.sha256["tokenizer.json"],
+      [MODEL_FILE]: shipped.sha256[MODEL_FILE],
+    });
   });
 
   it.each(parity.cases.map((c) => [c.case, c] as const))("%s", (_, c) => {

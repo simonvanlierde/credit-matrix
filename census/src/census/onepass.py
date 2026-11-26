@@ -426,6 +426,12 @@ PARITY_CASES = [
         "\t the 1ª draft «in full» of the co\u00adauthored text \U0001f9ea.\nmulti\n\nline  a  b   c   ",
     },
     {
+        "case": "lower-case and curly-apostrophe contractions, and a name with an apostrophe",
+        "authors": ["Seán O\u2019Brien", "Ada Lovelace"],
+        "statement": "I'm sure S.O\u2019B. didn\u2019t write it; i'm told A.L. didn't either, but I\u2019m told"
+        " O\u2019Brien checked the data and we\u2019re done.",
+    },
+    {
         "case": "a word longer than any token",
         "authors": _CAST[:2],
         "statement": "M.C. deposited the sequence " + "ACGTTGCA" * 80 + " and A.L. checked it.",
@@ -481,7 +487,10 @@ def parity(out: Path, variant: str = "w8") -> list[dict[str, Any]]:
                 "pairs": sorted(encoder.decode(probs, threshold)),
             }
         )
-    meta = {"file": f"onnx/{VARIANTS[variant]}", "threshold": threshold, "roles": encoder.ROLES}
+    file = f"onnx/{VARIANTS[variant]}"
+    meta = {"file": file, "threshold": threshold, "roles": encoder.ROLES}
     meta |= {k: config[k] for k in ("max_length", "marker")}
+    # What the app checks against census/model.json, so a fixture from another export fails its test.
+    meta["sha256"] = {name: runinfo.sha256(out / name) for name in ("tokenizer.json", file)}
     (out / "parity.json").write_text(json.dumps({"model": meta, "cases": results}, indent=1) + "\n", encoding="utf-8")
     return results

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cast } from "@/core/__tests__/cast";
+import shipped from "../../census/model.json";
 import { authorText, chunks, combine, decode, initials, statementRoom } from "./statement-reader";
 
 describe("initials", () => {
@@ -81,6 +82,12 @@ describe("chunks", () => {
 
 describe("decode", () => {
   const labels = ["conceptualization", "software", "validation", "not-a-role"];
+
+  it("marks close calls with bands tuned on the shipped run", () => {
+    // CHECK_BELOW and CHECK_ABOVE come from this run's dev-set scores: a new census/model.json run needs them
+    // tuned again, and this name changed with them.
+    expect(shipped.run).toBe("ettin-68m-onepass-b8-s2");
+  });
 
   it("keeps roles at the threshold, marks close calls, and lists near misses apart", () => {
     const [ada, alan] = decode({
