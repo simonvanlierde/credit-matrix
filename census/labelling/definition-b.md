@@ -108,6 +108,11 @@ House rules on top of NISO:
   review & editing.
 - Testing or debugging code is software (NISO: "testing of existing code components"); checking
   that results hold or reproduce is validation.
+- "Conceived the study design" (or the design and approach) gives conceptualization and
+  methodology, as "conception and design" does.
+- "Completed" or "finalized" the manuscript, said of people after someone else wrote the first
+  draft, is review & editing, not original draft.
+- A heading such as "Access to raw data" or "Provided the data" is resources.
 - Obtaining or collecting samples and assessing participants within the study is investigation;
   recruiting the participants is project administration, and providing patients or samples from
   elsewhere is resources. Leading another study that supplied data ("chief investigator of the ELFEP
