@@ -118,7 +118,8 @@ def test_names_are_text_in_html():
 
 @pytest.mark.parametrize("format", ["by-author", "by-role", "table"])
 @given(st.permutations(["software", "validation", "writing", "software"]))
-@settings(max_examples=12)
+# Each example starts a pandoc process, which can pass the 200 ms default deadline on a loaded host.
+@settings(max_examples=12, deadline=None)
 def test_role_order_and_deduplication(format, roles):
     result = render({"author": [{"name": "Marie Curie", "roles": list(roles)}], "credit-matrix": {"format": format}})
     labels = ["Software", "Validation", "Writing – original draft"]
