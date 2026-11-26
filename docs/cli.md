@@ -357,6 +357,25 @@ credit-matrix: CodeMeta omits scores and contribution levels; keep the original 
 }
 ```
 
+### Which statements OpenAlex reads
+
+[OpenAlex](https://help.openalex.org/data/contributor-roles/) records each author's CRediT roles. One
+of its routes reads the statement in the article's full text with a pattern-matching parser. We
+tested that parser on 2026-11-26 (version `credit-fulltext-4` in
+[openalex-walden](https://github.com/ourresearch/openalex-walden), commit `a0b3c98`):
+
+- It read all four English formats, with and without `--levels`, under the headings "CRediT
+  authorship contribution statement" and "Author contributions". It got every role right in all 16
+  statements. It ignores the levels, because OpenAlex records no degree of contribution.
+- It found no statement in French (`--locale fr`). It also found none in a statement with no
+  "Writing – original draft" or "Writing – review & editing" role, because it finds the statement by
+  those role names.
+
+For a manuscript in another language, also give the English statement. Or deposit the roles with
+Crossref: OpenAlex reads Crossref's CRediT deposits before the full text. OpenAlex also reads the
+CRediT tags in PubMed Central's JATS XML. The `crossref` and `jats` targets of [convert](#convert)
+write those two formats.
+
 ## convert
 
 ```text
