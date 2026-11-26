@@ -1,6 +1,6 @@
-# Renew Expires by 2027-04-15: RFC 9116 wants under one year, so set it about six months ahead.
+# Renew Expires by 2027-10-15: RFC 9116 wants under one year, so set it just under a year ahead.
 Contact: https://github.com/simonvanlierde/credit-matrix/security/advisories/new
-Expires: 2027-05-15T00:00:00.000Z
+Expires: 2027-11-15T00:00:00.000Z
 Preferred-Languages: en, nl
 Policy: https://github.com/simonvanlierde/credit-matrix/blob/main/SECURITY.md
 Canonical: https://credit.duinlab.nl/.well-known/security.txt
