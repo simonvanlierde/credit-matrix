@@ -247,8 +247,11 @@ On 2,000 held-out articles scored against publisher tags, fp32, int8 and q4 ONNX
 is 74.0% (61.5% narrative), because narrative statements put more probabilities near the
 threshold. Paired against the PyTorch model on gold500b, int8 changes narrative F1 by -0.003 (95%
 interval -0.009 to +0.003) and CRediT F1 by -0.001 (-0.003 to +0.002); q4 loses 0.004 on narrative,
-with an interval below zero. int8 is a quarter of the size (70 MB against 275 MB), so it is the copy
-the app loads.
+with an interval below zero. Exact match falls further: reading one author at a time, as the app
+does, int8 matches whole CRediT articles of gold500b 0.793 of the time against 0.812 (-0.019, 95%
+interval -0.038 to -0.004) and narrative ones 0.473 against 0.510 (-0.038, -0.075 to +0.000). A
+threshold fitted to int8 on the dev set does not win this back. int8 is a quarter of the size (70 MB
+against 275 MB), so it is the copy the app loads.
 
 ## Limitations
 
