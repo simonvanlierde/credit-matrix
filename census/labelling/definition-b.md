@@ -108,11 +108,11 @@ House rules on top of NISO:
   review & editing.
 - Testing or debugging code is software (NISO: "testing of existing code components"); checking
   that results hold or reproduce is validation.
-- "Conceived the study design" (or the design and approach) gives conceptualization and
-  methodology, as "conception and design" does.
-- "Completed" or "finalized" the manuscript, said of people after someone else wrote the first
-  draft, is review & editing, not original draft.
-- A heading such as "Access to raw data" or "Provided the data" is resources.
+- "Conceived the study design" ("helped to conceive the study design and analytical approach")
+  gives conceptualization and methodology.
+- "Completed" or "finalized" a manuscript someone else drafted is review & editing ("BA wrote the
+  first draft. BA, SAS, and HAG completed the manuscript" gives SAS and HAG review & editing);
+  completing one's own first draft stays original draft.
 - Obtaining or collecting samples and assessing participants within the study is investigation;
   recruiting the participants is project administration, and providing patients or samples from
   elsewhere is resources. Leading another study that supplied data ("chief investigator of the ELFEP
@@ -125,6 +125,8 @@ House rules on top of NISO:
 - A heading that lists tasks with "or" followed by named authors ("Acquisition, analysis, or
   interpretation of data: A, B") gives each named author every listed task. The either-or rule
   under "No role" covers only a sentence said of everyone.
+- The heading "Access to raw data: A, B" gives the named authors resources. Collecting the data
+  stays investigation.
 - Suggesting or advising on a named task gives that task with a worded `supporting` degree:
   "provided constructive suggestions for data visualization" gives visualization (supporting). NISO
   defines degrees only where several people share a role, so a degree for a lone adviser is ours.
