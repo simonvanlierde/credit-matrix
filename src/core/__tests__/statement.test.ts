@@ -1203,8 +1203,9 @@ describe("a clause of roles after a clause that ends in a name the parser does n
     expect(pairsOf("AL: software; Dunn, C: visualization", authors)).toEqual([[0, "software"]]);
   });
 
-  it("still gives them to the people before it when a lower-case word follows the stray capital", () => {
-    expect(pairsOf("AL: software; Dunn, C wrote visualization", authors)).toEqual([
+  it("still gives them to the people before it when the clause opens with a capital but no colon", () => {
+    // Only "Name:" marks an unknown person; a pronoun or adverb starts many sentences.
+    expect(pairsOf("AL: software; She also did visualization", authors)).toEqual([
       [0, "software"],
       [0, "visualization"],
     ]);
