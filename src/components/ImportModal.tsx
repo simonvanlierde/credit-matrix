@@ -136,18 +136,21 @@ function reviewStatement(
     return author < 0 ? [] : roles.map((role) => ({ author, role }));
   });
   const found = [...assignments, ...picked];
+  // Counted before picks, so picking who a token means never switches to or from the model's own reading.
+  const rulesRead = assignments.length > 0 || unmatched.some(({ roles }) => roles.length > 0);
   return summarize(
     authors,
     combine(
       authors.map((_, i) => found.filter((a) => a.author === i).map(({ role }) => role)),
       model,
+      rulesRead,
     ),
     unmatched.map((u) => ({
       ...u,
       candidates: u.candidates.flatMap((i) => (authors[i] ? [{ id: authors[i].id, name: authors[i].name }] : [])),
     })),
     accepted,
-    found.length > 0,
+    rulesRead,
   );
 }
 

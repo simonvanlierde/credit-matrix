@@ -599,6 +599,33 @@ describe("a pasted CRediT statement", () => {
     expect(next.map(roles)).toEqual([["Conceptualization", "Software", "Validation"], ["Software"]]);
   });
 
+  it("keeps the same reading when a contributor is picked for an ambiguous token", async () => {
+    vi.mocked(readStatement).mockResolvedValue({
+      labels: ["conceptualization", "data-curation"],
+      probabilities: [
+        [0.1, 0.1],
+        [0.1, 0.1],
+        [0.1, 0.1],
+        [0.95, 0.1],
+      ],
+      threshold: 0.4,
+    });
+    renderModal(4, undefined, { authors: roster() });
+    paste("YL: data curation.");
+    await review();
+    await act(async () => fireEvent.click(readButton()));
+    const suggestion = () => screen.getByRole("button", { name: "Conceptualization" });
+    // The rules read roles for YL, so the model checks them rather than standing alone, before and after a pick.
+    expect(screen.getByText(english.statementReaderChecked)).toBeTruthy();
+    expect(suggestion().getAttribute("aria-pressed")).toBe("false");
+    await pick("YL", "Yang Lin");
+    expect(screen.getByText(english.statementReaderChecked)).toBeTruthy();
+    expect(suggestion().getAttribute("aria-pressed")).toBe("false");
+    expect(listOf("Yang Lin")).toBe(
+      `Data curation (not found by the model)${english.statementSuggested}Conceptualization`,
+    );
+  });
+
   it("keeps the rules' roles and says so when the model cannot load", async () => {
     vi.mocked(readStatement).mockRejectedValue(new Error("offline"));
     renderModal(1, undefined, { authors: [createAuthor("Ada Lovelace")] });

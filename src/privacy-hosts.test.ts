@@ -33,6 +33,20 @@ it.each([
   expect(hosts.filter((host) => !text.includes(host))).toEqual([]);
 });
 
+// The policy each path rule in _headers sets: the rule's line, then its indented header lines.
+const policyFor = (path: string) =>
+  read("public/_headers")
+    .split(/\n(?=\S)/)
+    .find((block) => block.startsWith(`${path}\n`))
+    ?.match(/^ {2}Content-Security-Policy: (.*)$/m)?.[1];
+
+it("lets only the statement reader's worker reach the Hub, not the pages", () => {
+  // scripts/check-bundle-size.mjs fails the build when no chunk starts with this name.
+  expect(policyFor("/assets/statement-reader.worker-*")).toMatch(/connect-src [^;]*https:\/\/huggingface\.co/);
+  expect(policyFor("/*")).toMatch(/connect-src /);
+  expect(policyFor("/*")).not.toMatch(/huggingface|hf\.co/);
+});
+
 it("never lets the browser reach jsDelivr, since the app bundles its figure fonts", () => {
   expect(csp).not.toContain("jsdelivr");
 });

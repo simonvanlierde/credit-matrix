@@ -86,13 +86,18 @@ export interface AuthorReading {
 /**
  * Per author, the rules' roles (`rules`, byline order) and what the model's reading changes: a role the
  * rules found and the model did not is a `doubt`, one only the model found is `suggested`. When the rules
- * found nothing at all (prose: "A.B. designed the study"), the model's reading stands alone, close calls
- * marked `check`. On test200b's CRediT statements the rules' roles were right 98% of the time but found
+ * read no role at all (`rulesRead` false; prose: "A.B. designed the study"), the model's reading stands alone,
+ * close calls marked `check`. A caller whose rules read roles for a token no author matched yet passes true,
+ * so naming who the token means cannot switch the reading the review shows. On test200b's CRediT statements the rules' roles were right 98% of the time but found
  * only 77% of the gold ones, and the model scored F1 0.97: it questions the rules, and offers what it adds.
  */
-export function combine(rules: CreditRoleName[][], result?: ReaderResult): AuthorReading[] {
+export function combine(
+  rules: CreditRoleName[][],
+  result?: ReaderResult,
+  rulesRead = rules.some((roles) => roles.length > 0),
+): AuthorReading[] {
   const model = result && decode(result);
-  if (model && rules.every((roles) => roles.length === 0)) {
+  if (model && !rulesRead) {
     return model.map(({ roles, maybe }) => ({ roles, suggested: [], maybe }));
   }
   return rules.map((mine, i) => {

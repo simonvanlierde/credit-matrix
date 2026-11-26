@@ -142,8 +142,9 @@ describe("the statement reader worker", () => {
   });
 
   it("stops each cancelled request between authors, not only the last one cancelled", async () => {
+    // A cancel reaches the worker as its own message task, so it only lands while the read yields.
     const cancelling = (id: number) => () => {
-      void handle({ cancel: id });
+      setTimeout(() => void handle({ cancel: id }), 0);
       return Promise.resolve({ logits: { data: Float32Array.from([0, 0]) } });
     };
     hub.model.mockImplementationOnce(cancelling(4)).mockImplementationOnce(cancelling(5));
