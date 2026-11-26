@@ -55,6 +55,12 @@ describe("MyST plugin", () => {
     expect(normalizeRole("Coffee")).toBeUndefined();
   });
 
+  it("names a consortium listed as an author as written", () => {
+    expect(text(statementNode([{ name: "The COVIDSurg Collaborative", roles: ["investigation"] }]))).toBe(
+      "The COVIDSurg Collaborative: Investigation.",
+    );
+  });
+
   it("renders one entry per author with CRediT roles, in canonical role order", () => {
     const nodes = statementNode([
       { name: "Marie Curie", roles: ["writing", "Conceptualization", "Coffee"] },

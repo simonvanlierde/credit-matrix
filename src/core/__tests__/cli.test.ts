@@ -238,6 +238,15 @@ describe("credit-matrix convert", () => {
     expect(await run(["statement", xml])).toBe(await run(["statement", csv]));
   });
 
+  it("writes a group as <collab-wrap> with --jats-version 1.4 and rejects other versions", async () => {
+    const csv = file("group.csv", "Name,Kind,Investigation\nThe COVIDSurg Collaborative,group,100\n");
+    const v13 = await run(["convert", csv, "--to", "jats"]);
+    const v14 = await run(["convert", csv, "--to", "jats", "--jats-version", "1.4"]);
+    expect(v13).toContain("<collab>");
+    expect(v14).toContain("<collab-wrap>");
+    await expect(run(["convert", csv, "--to", "jats", "--jats-version", "2"])).rejects.toThrow(/1\.3 or 1\.4/);
+  });
+
   it("writes JATS without degree-contribution with --yes-no, and reads it back", async () => {
     const ticks = file("ticks.csv", "Name,Conceptualization,Software\nGrace Hopper,100,100\nCharles Darwin,,100\n");
     const xml = await run(["convert", ticks, "--to", "jats", "--yes-no"]);

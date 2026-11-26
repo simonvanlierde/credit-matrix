@@ -103,6 +103,18 @@
   }).join()
 }
 
+// Chip text for a group: its alias, else the first letter of each word of the name, skipping a leading "The".
+#let _group-initials(name, alias) = {
+  if alias != none and alias.trim() != "" { return alias.trim() }
+  let words = name.split(regex("\s+")).filter(_has-letter)
+  let kept = if words.len() > 1 and lower(words.first()) == "the" { words.slice(1) } else { words }
+  let letters = kept.map(w => {
+    let first = w.codepoints().find(c => c.match(regex("\p{L}")) != none)
+    if upper(first).codepoints().len() == 1 { upper(first) } else { first }
+  }).join()
+  if letters == none { name } else { letters }
+}
+
 // Later people who repeat taken initials gain the next letters of their surname, then a number.
 // Initials a document sets itself stay as written and count as taken, unless an earlier person set
 // the same ones.
@@ -182,10 +194,14 @@
     (first: _clean(stored.at(0)), middle: _clean(stored.at(1)), surname: _clean(stored.at(2)))
   } else { _name-parts(name) }
   let given = entry.at("initials", default: none)
-  let own = type(given) == str and given.trim() != ""
+  let group = entry.at("kind", default: "person") == "group"
+  let alias = entry.at("alias", default: none)
+  let own = group or (type(given) == str and given.trim() != "")
   (
     name: name,
-    initials: if own { given.trim() } else { _initials(name, parts) },
+    // What the heatmap's name mode shows: a group's alias, else the name.
+    label: if group and type(alias) == str and alias.trim() != "" { alias.trim() } else { name },
+    initials: if group { _group-initials(name, alias) } else if own { given.trim() } else { _initials(name, parts) },
     own-initials: own,
     surname: parts.surname,
     ack: entry.at("contributorType", default: none) == "non-author" or entry.at("non-author", default: false),
@@ -406,7 +422,7 @@
       }
     ]
   }
-  let author-label(p) = if initials { p.initials } else { p.name }
+  let author-label(p) = if initials { p.initials } else { p.label }
   let top-labels = if horizontal { roles.map(role-label) } else { people.map(author-label) }
   let left-labels = if horizontal { people.map(author-label) } else { roles.map(role-label) }
   let top = top-labels.map(label => text(size: 8pt * font-ratio, fill: _ink, label))

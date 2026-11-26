@@ -269,6 +269,7 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
       "base-url": { type: "string", default: DEFAULT_BASE_URL },
       levels: { type: "boolean", default: false },
       "yes-no": { type: "boolean", default: false },
+      "jats-version": { type: "string" },
       json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h" },
       version: { type: "boolean", short: "v" },
@@ -327,8 +328,12 @@ export async function run(argv: string[]): Promise<string | Uint8Array> {
           return toJson(authors, { asks: imported.asks, selfId: imported.selfId, toolchain: imported.toolchain });
         case "csv":
           return toCsv(authors);
-        case "jats":
-          return toJats4rXml(authors, { yesNo: values["yes-no"] });
+        case "jats": {
+          const jatsVersion = values["jats-version"] ?? "1.3";
+          if (jatsVersion !== "1.3" && jatsVersion !== "1.4")
+            throw new UsageError("--jats-version must be 1.3 or 1.4.");
+          return toJats4rXml(authors, { yesNo: values["yes-no"], jatsVersion });
+        }
         case "crossref":
           return toCrossrefContributors(authors);
         case "md": {

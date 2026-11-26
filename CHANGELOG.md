@@ -8,6 +8,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A draft can hold a consortium, such as "The COVIDSurg Collaborative", as one contributor. The
+  author list has an "Add a group" button; a group takes roles, an optional short name for chips
+  and the heatmap, an optional ROR id, optional members and a contact person who answers review
+  requests. It has no ORCID, sign-in or corresponding flag. Statements print its name as written
+  ("The COVIDSurg Collaborative: Investigation."). The package exports `Contributor`, `Person`,
+  `Group`, `createGroup`, `isGroup`, `isPerson` and `shortName`; `AuthorSchema` is now
+  `PersonSchema`, with `GroupSchema` and `ContributorSchema` beside it.
+- Groups in every export: JATS `<collab>` (1.3) or `<collab-wrap>` (1.4, `--jats-version 1.4`) with
+  members as a nested `<contrib-group>`, CodeMeta and RO-Crate `Organization` with `alternateName`
+  and a ROR `@id`, Crossref `<organization>` (roles dropped), Tenzing with the whole name as the
+  surname, and CSV rows of kind `group`. JATS imports read both forms. The Typst package reads
+  `kind: "group"` entries and the app's JSON export.
 - `credit-matrix roles` prints the 14 CRediT role names a contributors file uses, one per line.
   `--json` prints them with their NISO ids, descriptions and URLs under `schema_version` 1. See
   the [CLI reference](docs/cli.md#roles).
@@ -37,6 +49,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The JSON export is version 2 (version 1 files still import), the share link is version 3
+  (version 2 links still open), and saved drafts migrate to storage version 7.
 - The [census page](https://credit.duinlab.nl/census) now counts roles that the census's encoder
   reads from free-text statements, including statements in prose ("A.B. designed the study"), which
   the rule parser read as giving no roles. Publisher tags and per-author role lists are read as

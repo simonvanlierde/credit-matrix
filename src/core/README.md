@@ -75,9 +75,19 @@ For CITATION.cff and Zenodo, see the [citesync integration check](../../integrat
 
 ## Domain model
 
-An **`Author`** has identity fields (`id`, `name`, parsed name parts, deduplicated `initials`, and an
+A **`Contributor`** is a `Person` or a `Group` (`kind: "person" | "group"`; a row without `kind` is a
+person). A **`Person`** has identity fields (`id`, `name`, parsed name parts, deduplicated `initials`, and an
 optional `orcid`), a `contributorType`, and a fixed array of 14 **`Contribution`** entries, one per
 CRediT role.
+
+A **`Group`** is a consortium such as "The COVIDSurg Collaborative": one `name`, an optional `alias` (the
+chip and heatmap label; the default chip skips a leading "The"), an optional `ror` id (format and
+check digits only, no lookup), optional `members` (names, each optionally tied to a person row by
+`personId`), `membersAre` (`authors` or `collaborators`) and a `contactId`, the person row that
+answers review requests. A group has no ORCID, name parts or corresponding flag, and no per-member
+roles. `createGroup(name, fields)` builds one. In JATS a group is `<collab>` (1.3) or
+`<collab-wrap>` (1.4, `jatsVersion: "1.4"`); CodeMeta and RO-Crate write an `Organization`, Crossref an
+`<organization>`, Tenzing the whole name as the surname.
 
 Particles such as `van`, `de la` or `bin`, in any case, stay with the surname: "Anne van der Berg"
 and "van der Berg, Anne" both have surname `van der Berg`. Initials skip them, so both are `AB`.
@@ -103,7 +113,7 @@ CRediT's optional levels of contribution:
 `credit-roles.ts` defines the 14 roles once, with their NISO UUIDs, descriptions and URLs. The
 `CreditRoleName` union derives from them.
 
-`AuthorSchema` and `ContributionSchema` validate imported data and any other data you can't trust.
+`ContributorSchema` (a `PersonSchema` or a `GroupSchema`, told apart by `kind`) and `ContributionSchema` validate imported data and any other data you can't trust.
 Scores must be `0–100` integers, and roles must be known CRediT names. ORCID iDs are checked for
 shape and checksum.
 
@@ -319,10 +329,10 @@ The public API is what the entry points export. The
 holds its exact shape. By entry point:
 
 - `credit-matrix`
-  - Model: `Author`, `Contribution`, `ContributionLevel`, `ContributorType`, `AuthorSchema`,
+  - Model: `Contributor` (`Person` or `Group`), `Contribution`, `ContributionLevel`, `ContributorType`, `PersonSchema`, `GroupSchema`, `ContributorSchema`, `isGroup`, `isPerson`, `shortName`,
     `ContributionSchema`, `scoreToLevel`, `isValidOrcid`, `normalizeOrcid`, `MAX_AUTHORS`, `MAX_AUTHOR_NAME_LENGTH`, `MAX_IMPORT_BYTES`
   - Roles: `CREDIT_ROLES`, `getRoleByName`, `CreditRoleName`
-  - Rosters: `createAuthor`, `parseAuthorText`, `normalizeRoster`
+  - Rosters: `createAuthor`, `createGroup`, `parseAuthorText`, `normalizeRoster`
   - Statements: `generateStatement`, `statementSpans`, `STATEMENT_FORMATS`, `StatementFormat`, `StatementOptions`,
     `StatementSpan`, `StatementCell`
   - Formats: `toJson`, `fromJson`, `NewerVersionError`, `RepeatedIdError`, `toCsv`, `fromCsv`, `ScoreCellError`, `toJats4rXml`,

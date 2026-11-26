@@ -16,7 +16,7 @@ import {
 } from "@/core";
 import { cast } from "@/core/__tests__/cast";
 import * as i18n from "@/core/i18n";
-import { deduplicateAuthorInitials } from "@/core/parse-authors";
+import { createGroup, deduplicateAuthorInitials } from "@/core/parse-authors";
 import { heatmapRecipe } from "@/lib/heatmap-recipe";
 import { DEFAULT_HEATMAP_SETTINGS } from "@/lib/heatmap-settings";
 import { renderTypstTranslations } from "../../scripts/build-typst-translations.mjs";
@@ -427,6 +427,18 @@ describe.skipIf(!hasTypst && !process.env.CI)("Typst package, compiled", () => {
       `#import "../lib.typ": *\n#credit-statement(((name: "Ana", roles: (conceptualization: true)),), lang: "zh-Hans-TW")`,
     );
     expect(autoStatement(file)).toBe(await appStatement1(["Ana"], "zh-Hans", false));
+  });
+
+  it("names a group in the statement as the app does", async () => {
+    mkdirSync(new URL("out", import.meta.url), { recursive: true });
+    const file = "out/group.typ";
+    writeFileSync(
+      new URL(file, import.meta.url),
+      `#import "../lib.typ": *\n#credit-statement(((name: "The COVIDSurg Collaborative", kind: "group", roles: (investigation: true)),))`,
+    );
+    const group = createGroup("The COVIDSurg Collaborative");
+    for (const c of group.contributions) c.score = c.role === "Investigation" ? 100 : 0;
+    expect(autoStatement(file)).toBe(generateStatement([group], { format: "by-author", showLevels: false }));
   });
 
   it("joins Spanish names like ICU, with e before an i sound", async () => {
