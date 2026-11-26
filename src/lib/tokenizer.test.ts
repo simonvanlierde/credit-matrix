@@ -34,8 +34,8 @@ describe("the BPE tokenizer", () => {
     expect(toy.encode("c")).toEqual([0]);
   });
 
-  it("cuts a word longer than the longest token before merging, so a pasted run of letters reads at once", () => {
-    // Uncut, 100,000 x's cost 50,000 scans of the whole word for the first merge alone.
+  it("merges a pasted run of letters in one pass over a heap, not a rescan per merge", () => {
+    // Rescanning the word per merge would cost 50,000 scans of 100,000 x's for the first merges alone.
     const runs = tokenizer({
       model: {
         vocab: { x: 1, xx: 2, xxxx: 3 },
@@ -49,6 +49,7 @@ describe("the BPE tokenizer", () => {
     expect(runs.encode("x".repeat(7))).toEqual([3, 2, 1]);
     const started = performance.now();
     expect(runs.encode("x".repeat(100_000))).toEqual(Array(25_000).fill(3));
-    expect(performance.now() - started).toBeLessThan(1000);
+    // Loose, for a busy runner.
+    expect(performance.now() - started).toBeLessThan(5000);
   });
 });

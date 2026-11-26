@@ -150,6 +150,8 @@ describe("the statement reader worker", () => {
     const { input_ids, attention_mask, marker_positions } = ort.run.mock.calls[0]?.[0] ?? {};
     expect([...input_ids.data]).toEqual([1n, 3n, 10n, 11n, 12n, 3n, 14n, 2n, 13n, 2n]);
     expect(input_ids.dims).toEqual([1, 10]);
+    // The graph's inputs are int64: int32 tensors fail in onnxruntime.
+    expect([input_ids.type, attention_mask.type, marker_positions.type]).toEqual(["int64", "int64", "int64"]);
     expect([...attention_mask.data]).toEqual(Array(10).fill(1n));
     expect([...marker_positions.data]).toEqual([1n, 5n]);
     expect(replies.slice(0, -1)).toEqual([
@@ -319,6 +321,7 @@ describe("the statement reader worker", () => {
   });
 
   it("gives up on a download that sends nothing for a minute, and starts over on the next request", async () => {
+    expect(STALL_MS).toBe(60_000);
     vi.useFakeTimers();
     try {
       let signal: AbortSignal | undefined;
@@ -418,14 +421,17 @@ describe("the statement reader worker", () => {
       void handle({ id: 0, statement: "S", authors: ["Ada"] }).then(() => {
         done = true;
       });
-      await vi.advanceTimersByTimeAsync(MODEL.length * 40_000);
-      // Hashing takes real event-loop turns, and the reading yields on a timer that may be set only
-      // after them: run due timers without moving the clock until it is done.
+      // The stream and the hash take real event-loop turns before each next timer exists, so the
+      // clock moves a second at a time with a real turn between: a jump would pass timers set later.
       while (!done) {
-        await vi.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(1_000);
         await new Promise((resolve) => setImmediate(resolve));
       }
       expect(last()).toHaveProperty("result");
+      const percents = replies.flatMap((r) =>
+        "progress" in r && r.progress.phase === "download" ? [r.progress.percent] : [],
+      );
+      expect(percents).toEqual([25, 50, 75, 100]);
     } finally {
       vi.useRealTimers();
     }

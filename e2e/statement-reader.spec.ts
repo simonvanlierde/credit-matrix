@@ -82,6 +82,11 @@ test("the model reads a 20-author statement within budget, and again from the ca
       }
     };
   });
+  // The worker's requests for the model file, from the Hub or the local export.
+  let modelRequests = 0;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/onnx/model_w8.onnx")) modelRequests += 1;
+  });
   await page.goto("/");
   await page.getByRole("button", { name: "Import", exact: true }).click();
   await page.locator("#import-text").fill(AUTHORS.join("\n"));
@@ -122,9 +127,12 @@ test("the model reads a 20-author statement within budget, and again from the ca
   const cold = await readOnce(STATEMENT);
   expect((await scan(page)).violations).toEqual([]);
   const coldLong = await readOnce(LONG_STATEMENT);
+  expect(modelRequests).toBe(1);
   await page.reload();
   const cached = await readOnce(STATEMENT);
   const cachedLong = await readOnce(LONG_STATEMENT);
+  // After the reload the model comes from Cache Storage.
+  expect(modelRequests).toBe(1);
   // Threads need cross-origin isolation (COEP in public/_headers); without it the reader runs on one.
   const isolated = await page.evaluate(() => crossOriginIsolated);
   const timings = { isolated, cold, coldLong, cached, cachedLong };
