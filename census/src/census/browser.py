@@ -1,9 +1,10 @@
 """The encoder for a browser: ONNX export, smaller quantised copies, and their F1 against the full model.
 
-The output directory has the layout transformers.js loads (config and tokenizer files at the top, weights
-in onnx/model.onnx, onnx/model_int8.onnx, onnx/model_q4.onnx), so `dtype: "int8"` or `"q4"` picks a copy.
-int8 stores every weight matrix in 8 bits and quantises activations on the fly; q4 stores the weight
-matrices of the linear layers in 4-bit blocks of 32, which onnxruntime-web runs as MatMulNBits.
+The output directory holds the config and tokenizer files at the top and the weights under onnx/. A
+per-author run gets onnx/model.onnx, model_int8.onnx and model_q4.onnx. int8 stores every weight matrix
+in 8 bits and quantises activations on the fly; q4 stores the weight matrices of the linear layers in
+4-bit blocks of 32, which onnxruntime-web runs as MatMulNBits. A one-pass run gets model.onnx,
+model_int8.onnx and model_w8.onnx (`onepass.VARIANTS`); the app's worker loads w8.
 
 Needs the `train` and `browser` dependency groups.
 """

@@ -105,8 +105,8 @@ CSP, which adds `huggingface.co` with its `*.hf.co` CDN; no page may connect the
 (`src/lib/statement-reader.ts`) runs the census model in a worker on onnxruntime-web's CPU build,
 whose WebAssembly this site serves. It reads the whole byline in one pass (a long one in chunks
 that each repeat the statement), with its own BPE tokenizer (`src/lib/tokenizer.ts`). The files
-come from the Hub commit `census/model.json` pins, and the 8-bit model must match the size and
-SHA-256 it records. They load when someone asks for them, never at install, and the worker caches
+come from the Hub commit `census/model.json` pins. Each of the four (the tokenizer, the model
+config, `best.json` and the 8-bit model) must match the size and SHA-256 it records. They load when someone asks for them, never at install, and the worker caches
 them in its own Cache Storage entry (`statement-reader`), which the service worker leaves alone.
 `Cross-Origin-Embedder-Policy: credentialless` makes the site cross-origin isolated, so the
 reader runs up to four threads; Safari ignores `credentialless` and gets one. The rules' roles stay

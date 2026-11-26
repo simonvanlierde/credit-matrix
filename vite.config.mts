@@ -12,8 +12,9 @@ const MODEL_JSON = fileURLToPath(new URL("./census/model.json", import.meta.url)
 
 /**
  * For development only, never in CI: `READER_MODEL_DIR=<a census browser export>` points the statement
- * reader at that export, served at /reader-model/ by `pnpm dev` and `pnpm preview` (e2e/statement-reader.spec.ts
- * routes it in a production build), in place of the Hub commit census/model.json pins.
+ * reader at that export, served at /reader-model/ by `pnpm dev` and `vite preview` (not `pnpm preview`, which
+ * runs wrangler; e2e/statement-reader.spec.ts routes it in a production build), in place of the Hub commit
+ * census/model.json pins.
  */
 function readerModel(dir: string | undefined): Plugin[] {
   if (!dir) return [];

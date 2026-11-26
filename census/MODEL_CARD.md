@@ -13,7 +13,6 @@ tags:
   - multi-label-classification
   - modernbert
   - onnx
-  - transformers.js
 ---
 
 # CRediT statement reader (Ettin-68M)
@@ -138,9 +137,10 @@ statement = "A.L. designed the study and wrote the first draft. C.D. analysed th
 print(read(statement, ["Ada Lovelace", "Charles Darwin"]))
 ```
 
-In a browser, run `onnx/model_w8.onnx` with onnxruntime-web and build the inputs as above; the
-`parity.json` file in the census data gives the exact inputs and outputs for six statements to test
-a port against. Reading one article per call, the w8 copy gave the same pairs as the PyTorch model
+In a browser, run `onnx/model_w8.onnx` with onnxruntime-web and build the inputs as above.
+transformers.js cannot load it, as the graph needs `marker_positions`. To test a port, use
+[`reader-parity.json`](https://github.com/simonvanlierde/credit-matrix/blob/main/src/lib/__fixtures__/reader-parity.json)
+in the app's repository. It gives the exact inputs and outputs for nine statements. Reading one article per call, the w8 copy gave the same pairs as the PyTorch model
 on 92% of narrative and 98% of CRediT test articles.
 
 ## Intended use

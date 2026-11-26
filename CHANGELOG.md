@@ -45,6 +45,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   research articles with roles rises by 3 to 5 points a year (2025: 50% to 55%). The census
   dataset's `articles.parquet` gains a `reader` column (`tags`, `rules` or `encoder`). See
   [Who reads the roles](census/README.md#who-reads-the-roles).
+- The Published practice tab's field shares now count the roles the encoder reads too. Every field
+  has more articles (Medicine 18% more). Mathematics and Veterinary now pass the 1,000-article
+  minimum and are listed.
+- The statement reader no longer uses transformers.js. Its worker runs the model on onnxruntime-web
+  with its own tokenizer. The service worker deletes `transformers-cache`, the 70 MB Cache Storage
+  entry the earlier reader kept, and so does the reader once its model loads.
 
 ### Fixed
 
