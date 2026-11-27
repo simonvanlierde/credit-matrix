@@ -203,6 +203,7 @@ def test_cli_train_and_predict_are_tracked(mlflow_store, tmp_path, monkeypatch, 
         (run / "checkpoint" / "model.safetensors").write_bytes(b"weights")
         (run / "metrics.jsonl").write_text(json.dumps({"epoch": 1, "seconds": 9, "dev": {"0.4": {"f1": 0.5}}}) + "\n")
         (run / "best.json").write_text("{}")
+        (run / "config.json").write_text('{"marker": "[MASK]"}')
         return {"epoch": 1, "f1": 0.5, "precision": 0.4, "recall": 0.6, "exact": 0.3, "threshold": 0.4}
 
     def fake_predict(run, items, out, device):
@@ -270,6 +271,7 @@ def test_failed_command_records_energy(mlflow_store, tmp_path, monkeypatch, kind
         (run / "checkpoint").mkdir(parents=True)
         (run / "checkpoint" / "model.safetensors").write_bytes(b"weights")
         (run / "best.json").write_text("{}")
+        (run / "config.json").write_text('{"marker": "[MASK]"}')
 
     def fail(*args, **kwargs):
         raise RuntimeError("training failed")

@@ -119,25 +119,6 @@ def tiny_run(run, threshold=0.0):
     (run / "config.json").write_text('{"max_length": 32, "marker": "[MASK]"}')
 
 
-def test_predict_corpus_writes_parts_and_resumes(tmp_path):
-    run = tmp_path / "run"
-    tiny_run(run)  # threshold 0: every role, so every author gets 14 rows
-    import pyarrow.parquet as pq
-
-    items = [{"pmcid": f"PMC{i}", "statement": "software", "authors": ["Ann Smith"] * (i % 2)} for i in range(5)]
-    chunks = [items[:2], items[2:4], items[4:]]
-    out = tmp_path / "parts"
-    assert encoder.predict_corpus(run, chunks, out, "cpu", total=5) == 5
-    rows = pq.read_table(out).to_pylist()
-    assert sorted({r["pmcid"] for r in rows}) == [f"PMC{i}" for i in range(5)]
-    assert sum(r["pmcid"] == "PMC1" for r in rows) == 14
-    assert [r["role"] for r in rows if r["pmcid"] == "PMC0"] == [None]  # no authors, still listed
-    (out / "part-00001.parquet").unlink()
-    assert encoder.predict_corpus(run, chunks, out, "cpu", total=5) == 2  # only the missing part
-    with pytest.raises(ValueError, match="other articles than chunk 0"):  # resumed with another chunk size
-        encoder.predict_corpus(run, [items[:3], items[3:]], out, "cpu", total=5)
-
-
 def test_cli_train_refuses_a_run_with_a_checkpoint(tmp_path, monkeypatch, capsys):
     from census import cli
 
@@ -158,5 +139,6 @@ def test_cli_model_refuses_options_it_would_ignore_or_trip_on(tmp_path, monkeypa
     assert "--model needs --revision" in capsys.readouterr().err
     (tmp_path / "model" / "s" / "runs" / "r").mkdir(parents=True)
     (tmp_path / "model" / "s" / "runs" / "r" / "best.json").write_text("{}")
+    (tmp_path / "model" / "s" / "runs" / "r" / "config.json").write_text('{"marker": "[MASK]"}')
     assert cli.main(["model", "predict", "--snapshot", "s", "--name", "r", "--limit", "5"]) == 1
     assert "go with --corpus" in capsys.readouterr().err

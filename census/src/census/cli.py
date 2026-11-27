@@ -430,6 +430,13 @@ def _run_dir(args: argparse.Namespace) -> Path:
     return _model_dir(args) / "runs" / args.name
 
 
+def _trained(run: Path, hint: str = "") -> None:
+    if not (run / "best.json").exists():
+        raise Failure(f"no trained model in {run}{hint}")
+    if "marker" not in json.loads((run / "config.json").read_text(encoding="utf-8")):
+        raise Failure(f"{run} is a per-author run; this code reads one-pass runs only")
+
+
 def cmd_model_train(args: argparse.Namespace) -> None:
     from census import onepass
 
@@ -499,8 +506,7 @@ def cmd_model_predict(args: argparse.Namespace) -> None:
     from census import encoder
 
     run = _run_dir(args)
-    if not (run / "best.json").exists():
-        raise Failure(f"no trained model in {run}; train it with `census model train --name {args.name}`")
+    _trained(run, f"; train it with `census model train --name {args.name}`")
     if not args.corpus and (args.limit or args.chunk):
         raise Failure("--limit and --chunk go with --corpus")
     start = time.monotonic()
@@ -576,8 +582,7 @@ def cmd_model_browser(args: argparse.Namespace) -> None:
     from census import browser, onepass
 
     run, out = _run_dir(args), _model_dir(args) / "browser" / args.name
-    if not (run / "best.json").exists():
-        raise Failure(f"no trained model in {run}")
+    _trained(run)
     if not all((out / "onnx" / file).exists() for file in onepass.VARIANTS.values()):
         print(json.dumps({"bytes": onepass.export(run, out)}), flush=True)
     items, _ = _items(args)

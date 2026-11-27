@@ -209,3 +209,16 @@ def test_cli_train_refuses_init_without_a_checkpoint(tmp_path, monkeypatch, caps
     (tmp_path / "model" / "s" / "dataset" / "train.jsonl").write_text("")
     assert cli.main(["model", "train", "--snapshot", "s", "--name", "r", "--init", "base"]) == 1
     assert "no checkpoint" in capsys.readouterr().err
+
+
+def test_cli_refuses_a_per_author_run(tmp_path, monkeypatch, capsys):
+    from census import cli
+
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    run = tmp_path / "model" / "s" / "runs" / "old"
+    run.mkdir(parents=True)
+    (run / "best.json").write_text('{"threshold": 0.5}')
+    (run / "config.json").write_text('{"max_length": 32}')  # no "marker": the per-author encoder's config
+    for command in ("predict", "browser"):
+        assert cli.main(["model", command, "--snapshot", "s", "--name", "old"]) == 1
+        assert "a per-author run" in capsys.readouterr().err
