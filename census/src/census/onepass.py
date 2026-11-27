@@ -1,13 +1,13 @@
-"""The encoder read once per statement for all its authors, instead of once per author.
+"""The encoder, read once per statement for all its authors.
 
 One input per article: `[CLS] <m> author 1 <m> author 2 ... [SEP] statement [SEP]`, with a marker token
-`<m>` before each author's `encoder.author_text`. The classification head of `encoder` reads the hidden
+`<m>` before each author's `encoder.author_text`. The classification head reads the hidden
 state at each marker, so the model gives 14 role logits per author. A byline too long to fit `max_length`
 with the statement is split into chunks of authors that each repeat the statement; each author keeps its
 "author i of n" text, so a chunk still knows where its authors sit.
 
-The checkpoint has the same layout as `encoder`'s (a `ModernBertForSequenceClassification`); only the
-inputs differ, so `run/config.json` names the marker token. Input building and decoding need no torch.
+The checkpoint is a `ModernBertForSequenceClassification`; `run/config.json` names the marker token. Input
+building and decoding need no torch.
 """
 
 import hashlib
@@ -55,7 +55,7 @@ def chunks(
     authors: list[list[int]], statement: list[int], max_length: int, cls: int, sep: int, marker: int, row: int = 0
 ) -> list[Chunk]:
     """The inputs for one article: as many authors per chunk as fit with the statement. An author's ids are
-    cut at a quarter of `max_length`, as `encoder.Encoded` does, and the statement to `statement_room`, so
+    cut at a quarter of `max_length`, and the statement to `statement_room`, so
     every chunk holds at least one author. No authors, no chunks."""
     if not authors:
         return []
@@ -109,7 +109,6 @@ class Encoded:
             if authors and len(statement) > statement_room(authors, max_length):
                 self.truncated.add(k)
             self.chunks += made
-        self.split = {c.row for c in self.chunks if len(c.authors) < self.n_authors[c.row]}
 
 
 # --- training, prediction and export (torch) ---
@@ -176,8 +175,11 @@ def _load_seq(path: str | Path, revision: str | None = None) -> Any:
 
 
 def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
-    """As `encoder.train`, with one example per chunk and the loss over each chunk's authors. With
-    `config.init`, the encoder and head start from that checkpoint, and its tokenizer is used."""
+    """Fine-tune on a subsample of `dataset/train.jsonl`, one example per chunk and the loss over each chunk's
+    authors, scoring dev after each epoch. With `config.init`, the encoder and head start from that checkpoint,
+    and its tokenizer is used. Writes config.json, metrics.jsonl (a first line with the git commit, the data's
+    hash, library versions and example counts, then one line per epoch, plus progress lines) and the best
+    epoch's model to `run/checkpoint/` with its threshold in `run/best.json`. Returns best.json's content."""
     import torch
     import transformers
     from transformers import AutoTokenizer, get_linear_schedule_with_warmup
@@ -203,8 +205,7 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
     dev_set = Encoded(tokenizer, dev_rows, config.max_length, config.marker)
     vectors = [encoder.label_vectors(r["gold"], len(r["authors"])) for r in train_rows]
     targets = [[vectors[c.row][i] for i in c.authors] for c in train_set.chunks]
-    _log = encoder._log
-    _log(
+    encoder._log(
         log,
         {
             "git_commit": runinfo.git_commit(),
@@ -213,7 +214,6 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
             "transformers": transformers.__version__,
             "train_articles": len(train_rows),
             "train_chunks": len(train_set.chunks),
-            "train_split_articles": len(train_set.split),
             "dev_articles": len(dev_rows),
             "dev_chunks": len(dev_set.chunks),
             "train_truncated_articles": len(train_set.truncated),
@@ -249,14 +249,14 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
             step += 1
             if step % 200 == 0 or step == 1:
                 seconds = time.monotonic() - start
-                _log(log, {"step": step, "of": steps, "loss": round(loss.item(), 4), "seconds": round(seconds)})
+                encoder._log(log, {"step": step, "of": steps, "loss": round(loss.item(), 4), "seconds": round(seconds)})
         probs = _probabilities(torch, model, dev_set, config.batch_size, config.device)
         metrics = encoder.evaluate(dev_rows, probs)
         threshold, top = max(metrics.items(), key=lambda kv: kv[1]["f1"])
         record = {"epoch": epoch, "seconds": round(time.monotonic() - start), "dev": metrics}
         if use_bf16:
             record["max_gpu_memory_gb"] = round(torch.cuda.max_memory_allocated() / 1e9, 2)
-        _log(log, record)
+        encoder._log(log, record)
         if top["f1"] > best["f1"]:
             best = {"epoch": epoch, "threshold": float(threshold), **top}
             seq.save_pretrained(run / "checkpoint")
@@ -266,7 +266,7 @@ def train(config: Config, dataset: Path, run: Path) -> dict[str, Any]:
 
 
 def reader(run: Path, device: str, batch_size: int = 32) -> tuple[encoder.Reader, float, int]:
-    """As `encoder.reader`, for a one-pass run."""
+    """A function that reads rows with the run's best checkpoint; its threshold and max length."""
     import torch
     from transformers import AutoTokenizer
 
@@ -282,15 +282,9 @@ def reader(run: Path, device: str, batch_size: int = 32) -> tuple[encoder.Reader
     return read, threshold, config["max_length"]
 
 
-def probabilities(run: Path, rows: list[dict[str, Any]], device: str, batch_size: int = 32) -> list[list[list[float]]]:
-    """Per article, per author, the role probabilities of the run's best checkpoint."""
-    return reader(run, device, batch_size)[0](rows)[0]
-
-
-VARIANTS = {"fp32": "model.onnx", "int8": "model_int8.onnx", "w8": "model_w8.onnx"}
-"""int8 quantises activations per call, which costs this graph more pairs than the per-author one (one call
-reads every author). w8 keeps activations in fp32: 8-bit weights in blocks of 32 (MatMulNBits, which
-onnxruntime-web runs) and an int8 embedding table, at about the size of int8."""
+VARIANTS = {"fp32": "model.onnx", "w8": "model_w8.onnx"}
+"""w8 keeps activations in fp32: 8-bit weights in blocks of 32 (MatMulNBits, which onnxruntime-web runs)
+and an int8 embedding table. A per-call int8 activation scale holds every author of the call, and costs pairs."""
 
 
 def export(run: Path, out: Path) -> dict[str, int]:
@@ -340,16 +334,15 @@ def export(run: Path, out: Path) -> dict[str, int]:
         dynamo=True,
     )
     graph = onnx.load(weights / VARIANTS["fp32"])
-    del graph.graph.value_info[:]  # see browser.export
+    del graph.graph.value_info[:]  # the exporter's recorded shapes trip onnx's shape inference, which quantising runs
     onnx.save(graph, weights / VARIANTS["fp32"])
-    quantize_dynamic(weights / VARIANTS["fp32"], weights / VARIANTS["int8"], weight_type=QuantType.QInt8)
     blocks = MatMulNBitsQuantizer(
         onnx.load(weights / VARIANTS["fp32"]),
         algo_config=DefaultWeightOnlyQuantConfig(block_size=32, is_symmetric=True, bits=8),
     )
     blocks.process()
     partial = weights / "model_w8_matmul.onnx"
-    quantised: Any = blocks.model  # an ONNXModel once processed, as in browser.export
+    quantised: Any = blocks.model  # an ONNXModel once processed, though typed as either
     quantised.save_model_to_file(str(partial))
     # The quantizer packs Gather in 4 bits only; quantize_dynamic stores the embedding table in int8.
     quantize_dynamic(partial, weights / VARIANTS["w8"], weight_type=QuantType.QInt8, op_types_to_quantize=["Gather"])
