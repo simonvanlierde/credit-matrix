@@ -32,7 +32,7 @@ def test_hub_files_put_the_card_at_readme_and_leave_q4_out(tmp_path):
     files = browser.hub_files(run, out, card, {"onnx/model_w8.onnx": want}, {})
     assert files["README.md"] == card
     assert files["model.safetensors"] == run / "checkpoint" / "model.safetensors"
-    assert "onnx/model_q4.onnx" not in files
+    assert set(files) == {*browser.HUB_EXPORT, "model.safetensors", "README.md"}
 
 
 def test_hub_files_refuse_a_changed_or_missing_file(tmp_path):
