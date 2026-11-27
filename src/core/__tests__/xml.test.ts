@@ -547,19 +547,34 @@ describe("reading stops one past the contributor cap", () => {
     expect(fromJats4rXml(jats(MAX_AUTHORS + 50))).toHaveLength(MAX_AUTHORS + 1);
   });
 
-  it("reads a file of group contribs that all name one long member list in under a second", () => {
+  it("reads a file of group contribs that all name one long member list about as fast as people", () => {
     // Half the byte cap of group contribs, each linked to the other half: one shared member list.
+    // Reading the list once per group took 13 s here; a file of people at the cap takes about 60 ms.
     const holder = '<contrib contrib-type="author"><collab>X</collab><xref ref-type="other" rid="g"/></contrib>';
     const member = "<contrib><string-name>A</string-name></contrib>";
-    const fanOut = `<article><front><article-meta><contrib-group>${holder.repeat(
-      Math.floor(MAX_IMPORT_BYTES / 2 / holder.length),
-    )}</contrib-group><contrib-group id="g">${member.repeat(
-      Math.floor((MAX_IMPORT_BYTES / 2 - 200) / member.length),
-    )}</contrib-group></article-meta></front></article>`;
+    const wrap = (contribs: string, after = "") =>
+      `<article><front><article-meta><contrib-group>${contribs}</contrib-group>${after}</article-meta></front></article>`;
+    const half = MAX_IMPORT_BYTES / 2;
+    const fanOut = wrap(
+      holder.repeat(Math.floor(half / holder.length)),
+      `<contrib-group id="g">${member.repeat(Math.floor((half - 200) / member.length))}</contrib-group>`,
+    );
+    const person =
+      '<contrib contrib-type="author"><name><surname>Curie</surname><given-names>Marie</given-names></name></contrib>';
+    const people = wrap(person.repeat(Math.floor((MAX_IMPORT_BYTES - 200) / person.length)));
     expect(fanOut.length).toBeLessThanOrEqual(MAX_IMPORT_BYTES);
-    const start = performance.now();
+    // Best of 3, and compared with the people file on the same machine: CI under coverage is slow.
+    const best = (xml: string) =>
+      Math.min(
+        ...[0, 1, 2].map(() => {
+          const start = performance.now();
+          fromJats4rXml(xml);
+          return performance.now() - start;
+        }),
+      );
+    const fanOutMs = best(fanOut);
+    expect(fanOutMs < 1000 || fanOutMs < 5 * best(people), `${Math.round(fanOutMs)} ms`).toBe(true);
     const groups = fromJats4rXml(fanOut);
-    expect(performance.now() - start).toBeLessThan(1000);
     expect(groups).toHaveLength(MAX_AUTHORS + 1);
     expect(groups[0]).toHaveProperty("members.length", MAX_GROUP_MEMBERS);
   });
