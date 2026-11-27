@@ -304,7 +304,7 @@ jobs:
           uv run --no-sync python -c "import torch, transformers"
 
       - name: Train and predict
-        run: uv run --no-sync pytest -q tests/test_encoder.py -k "train or predict"
+        run: uv run --no-sync pytest -q tests/test_onepass.py
 
   # One leg per browser, in parallel. Pull requests run Chromium only, unless they change the
   # Playwright version: Firefox and WebKit took 65% of a PR's runner minutes. Pushes to main and
