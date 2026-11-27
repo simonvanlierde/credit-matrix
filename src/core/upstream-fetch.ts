@@ -1,11 +1,11 @@
 /**
- * The one upstream JSON fetch both lookups share: same headers,
- * same deadline, same failure ladder. Each caller maps the kinds onto its own
- * error codes and messages and parses the body with its own schema.
+ * The one upstream JSON fetch the ORCID name lookup, the DOI lookup (Crossref, then DataCite) and the
+ * ORCID sign-in key fetch share: same headers, same deadline, same failure ladder. Each caller maps the
+ * kinds onto its own error codes and messages and parses the body with its own schema.
  */
 export type UpstreamResult = { kind: "ok"; body: unknown } | { kind: "not-found" } | { kind: "unavailable" };
 
-/** Upstream deadline. Crossref and ORCID both normally answer well inside this. */
+/** Upstream deadline. ORCID, Crossref and DataCite all normally answer well inside this. */
 const UPSTREAM_TIMEOUT_MS = 5000;
 
 export async function fetchUpstreamJson(url: string, fetcher: typeof fetch): Promise<UpstreamResult> {
