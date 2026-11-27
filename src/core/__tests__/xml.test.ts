@@ -547,7 +547,9 @@ describe("reading stops one past the contributor cap", () => {
     expect(fromJats4rXml(jats(MAX_AUTHORS + 50))).toHaveLength(MAX_AUTHORS + 1);
   });
 
-  it("reads a file of group contribs that all name one long member list about as fast as people", () => {
+  it("reads a file of group contribs that all name one long member list about as fast as people", {
+    timeout: 60_000,
+  }, () => {
     // Half the byte cap of group contribs, each linked to the other half: one shared member list.
     // Reading the list once per group took 13 s here; a file of people at the cap takes about 60 ms.
     const holder = '<contrib contrib-type="author"><collab>X</collab><xref ref-type="other" rid="g"/></contrib>';
@@ -563,18 +565,19 @@ describe("reading stops one past the contributor cap", () => {
       '<contrib contrib-type="author"><name><surname>Curie</surname><given-names>Marie</given-names></name></contrib>';
     const people = wrap(person.repeat(Math.floor((MAX_IMPORT_BYTES - 200) / person.length)));
     expect(fanOut.length).toBeLessThanOrEqual(MAX_IMPORT_BYTES);
-    // Best of 3, and compared with the people file on the same machine: CI under coverage is slow.
+    // Best of 2, and compared with the people file on the same machine: CI under coverage is slow.
+    let groups: ReturnType<typeof fromJats4rXml> = [];
     const best = (xml: string) =>
       Math.min(
-        ...[0, 1, 2].map(() => {
+        ...[0, 1].map(() => {
           const start = performance.now();
-          fromJats4rXml(xml);
+          groups = fromJats4rXml(xml);
           return performance.now() - start;
         }),
       );
+    const peopleMs = best(people);
     const fanOutMs = best(fanOut);
-    expect(fanOutMs < 1000 || fanOutMs < 5 * best(people), `${Math.round(fanOutMs)} ms`).toBe(true);
-    const groups = fromJats4rXml(fanOut);
+    expect(fanOutMs < 1000 || fanOutMs < 5 * peopleMs, `${Math.round(fanOutMs)} ms`).toBe(true);
     expect(groups).toHaveLength(MAX_AUTHORS + 1);
     expect(groups[0]).toHaveProperty("members.length", MAX_GROUP_MEMBERS);
   });
